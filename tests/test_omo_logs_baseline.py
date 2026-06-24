@@ -10,6 +10,7 @@
   4. --baseline-check baseline 不存在 → exit 1 + 提示 ❌ baseline 不存在
   5. --baseline-check 改善 (drift 减少) → exit 0 + 提示 ✅ 改善
 """
+
 from __future__ import annotations
 
 import json
@@ -35,6 +36,7 @@ def fake_workspace(tmp_path, monkeypatch):
     """
     # 修 omo_logs 模块常量, 让 _list_log_paths() 走 tmp_path
     from omo import omo_logs
+
     monkeypatch.setattr(omo_logs, "_WORKSPACE", tmp_path)
     monkeypatch.setattr(omo_logs, "KNOWLEDGE_DIR", tmp_path / ".omo" / "_knowledge")
     knowledge = tmp_path / ".omo" / "_knowledge"
@@ -45,6 +47,7 @@ def fake_workspace(tmp_path, monkeypatch):
 def _append_drift_record(jsonl_path: Path, date_str: str) -> None:
     """Append 1 条 schema 不全的 record (drift). 模拟 omo_history 缺字段."""
     from omo.omo_io import AppendOnlyLog
+
     log = AppendOnlyLog(jsonl_path)
     # 故意缺 timestamp / total_score / grade / watchlist_count 字段
     log.append({"date": date_str})
@@ -171,8 +174,9 @@ def test_baseline_check_passes_on_improvement(fake_workspace, capsys):
     init_payload = json.loads(baseline.read_text(encoding="utf-8"))
     assert init_payload["drift_by_consumer"]["omo_history"] == 2
 
-# 删 1 条 (模拟"修好" — 清空 + 重写 1 条)
+    # 删 1 条 (模拟"修好" — 清空 + 重写 1 条)
     from omo.omo_io import AppendOnlyLog
+
     log = AppendOnlyLog(knowledge / "omo-history.jsonl")
     log.path.write_text("", encoding="utf-8")  # 物理清空
     _append_drift_record(knowledge / "omo-history.jsonl", "2026-06-09")

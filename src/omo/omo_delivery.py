@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """OMO delivery CLI — list and view _delivery/ artifacts."""
+
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
 from .omo_paths import find_omo_dir
+
 
 def _find_omo_dir() -> Path:
     return find_omo_dir()
@@ -53,12 +55,16 @@ def cmd_delivery_archive(omo_dir: Path, phase_prefix: str) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="omo delivery", description="OMO delivery artifact browser")
+    parser = argparse.ArgumentParser(
+        prog="omo delivery", description="OMO delivery artifact browser"
+    )
     sub = parser.add_subparsers(dest="command")
     dl = sub.add_parser("list", help="List delivery artifacts")
     dl.add_argument("--phase", "-p", help="Filter by phase prefix (e.g. phase28)")
     da = sub.add_parser("archive", help="Archive old delivery artifacts")
-    da.add_argument("--phase", "-p", required=True, help="Phase prefix to archive (e.g. phase27)")
+    da.add_argument(
+        "--phase", "-p", required=True, help="Phase prefix to archive (e.g. phase27)"
+    )
     args = parser.parse_args(argv)
     omo_dir = _find_omo_dir()
     if args.command == "list":

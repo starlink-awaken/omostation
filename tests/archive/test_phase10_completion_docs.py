@@ -32,7 +32,10 @@ def test_phase10_completion_is_recorded_with_wave4_closeout_and_retrospective() 
     ]:
         assert (OMO_ROOT / rel_path).exists(), rel_path
 
-    assert "Wave 4 closes only after historical debt is moved out of current-phase assumptions" in program_plan
+    assert (
+        "Wave 4 closes only after historical debt is moved out of current-phase assumptions"
+        in program_plan
+    )
     assert "phase10-wave4-execution-plan.md" in root_index
     assert "phase10-wave4-closeout.md" in root_index
     assert "phase10-closeout-retrospective.md" in root_index

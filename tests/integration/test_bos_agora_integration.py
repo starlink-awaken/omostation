@@ -5,6 +5,7 @@ omo 进程调 omo_bos (P33-W1 战役 2) → agora 进程 spawn kairon 子进程 
 
 P34-W2 验证: 12 条 Analysis URI 全部在 registry, 3 条在 resolver 可真活.
 """
+
 from __future__ import annotations
 
 import json
@@ -38,6 +39,7 @@ ANALYSIS_URIS = [
 
 # ── Registry 一致性 ─────────────────────────────────
 
+
 def test_bos_registry_exists():
     """W2 验证: bos-registry.json 存在."""
     assert BOS_REGISTRY.exists(), f"Registry missing: {BOS_REGISTRY}"
@@ -62,19 +64,23 @@ def test_analysis_12_uris_in_registry():
     """W2 验证: 12 条 Analysis URI 全部在 registry."""
     regs = json.loads(BOS_REGISTRY.read_text())
     analysis_uris = [r["uri"] for r in regs if r.get("domain") == "analysis"]
-    assert len(analysis_uris) == 12, f"Expected 12 analysis URIs, got {len(analysis_uris)}"
+    assert len(analysis_uris) == 12, (
+        f"Expected 12 analysis URIs, got {len(analysis_uris)}"
+    )
     for uri in ANALYSIS_URIS:
         assert uri in analysis_uris, f"Missing: {uri}"
 
 
 # ── 跨进程调用 (BOS CLI) ────────────────────────────
 
+
 @pytest.mark.skip(reason="omo CLI not always available; integration smoke only")
 def test_omo_bos_cli_list():
     """W2 验证: `omo bos list` CLI 可列出 URI (P33-W1 战役 2 落地)."""
     r = subprocess.run(
         ["uv", "run", "omo", "bos", "list"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
         cwd=str(OMO_ROOT),
         timeout=30,
     )
@@ -91,14 +97,19 @@ def test_agora_resolver_importable_from_omo_path():
     # 用 subprocess 调 python, 不在 omo 进程直接 import agora (M3 边界)
     r = subprocess.run(
         [
-            "uv", "run", "--directory", str(AGORA_ROOT),
-            "python", "-c",
+            "uv",
+            "run",
+            "--directory",
+            str(AGORA_ROOT),
+            "python",
+            "-c",
             "from agora.mcp.bos_resolver import POC_SERVICES, list_services; "
             "print('services:', len(POC_SERVICES)); "
             "print('analysis:', sum(1 for u in POC_SERVICES if u.startswith('bos://analysis/'))); "
-            "print('first_analysis:', next(u for u in POC_SERVICES if u.startswith('bos://analysis/')))"
+            "print('first_analysis:', next(u for u in POC_SERVICES if u.startswith('bos://analysis/')))",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
         timeout=30,
     )
     assert r.returncode == 0, f"Failed: {r.stderr}"
@@ -109,6 +120,7 @@ def test_agora_resolver_importable_from_omo_path():
 
 
 # ── 跨进程 Stdio 真调 (走 agora 子进程) ──────────────
+
 
 @pytest.mark.integration
 def test_cross_process_minerva_research():
@@ -125,10 +137,16 @@ def test_cross_process_minerva_research():
     )
     r = subprocess.run(
         [
-            "uv", "run", "--directory", str(AGORA_ROOT),
-            "python", "-c", code,
+            "uv",
+            "run",
+            "--directory",
+            str(AGORA_ROOT),
+            "python",
+            "-c",
+            code,
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
         timeout=30,
     )
     assert r.returncode == 0, f"Failed: {r.stderr}"
@@ -161,10 +179,16 @@ def test_cross_process_3_gap_samples_return_error():
         )
         r = subprocess.run(
             [
-                "uv", "run", "--directory", str(AGORA_ROOT),
-                "python", "-c", code,
+                "uv",
+                "run",
+                "--directory",
+                str(AGORA_ROOT),
+                "python",
+                "-c",
+                code,
             ],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
             timeout=15,
         )
         assert r.returncode == 0, f"Failed for {uri}: {r.stderr}"
@@ -173,10 +197,13 @@ def test_cross_process_3_gap_samples_return_error():
         payload = json.loads(last_line)
         assert payload.get("status") == "error", f"{uri} expected error, got {payload}"
         err_msg = payload.get("error", "")
-        assert "unknown_bos_uri" in err_msg or "eof_no_response" in err_msg, f"{uri} bad error: {payload}"
+        assert "unknown_bos_uri" in err_msg or "eof_no_response" in err_msg, (
+            f"{uri} bad error: {payload}"
+        )
 
 
 # ── 摘要 ─────────────────────────────────────────────
+
 
 def test_p34w2_cross_process_summary():
     """W2 验证: 摘要 — registry 12, resolver 3, 缺 9 (跨进程可见)."""
@@ -196,10 +223,16 @@ def test_p34w2_cross_process_summary():
     )
     r = subprocess.run(
         [
-            "uv", "run", "--directory", str(AGORA_ROOT),
-            "python", "-c", code,
+            "uv",
+            "run",
+            "--directory",
+            str(AGORA_ROOT),
+            "python",
+            "-c",
+            code,
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
         timeout=30,
     )
     assert r.returncode == 0, f"Failed: {r.stderr}"

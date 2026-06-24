@@ -31,7 +31,9 @@ def loop_history_path(workspace_root: Path) -> Path:
 
 
 def trace_index_path(workspace_root: Path) -> Path:
-    return workspace_root / ".omo" / "_control" / "evolution" / "loop" / "trace-index.json"
+    return (
+        workspace_root / ".omo" / "_control" / "evolution" / "loop" / "trace-index.json"
+    )
 
 
 def load_loop_history(workspace_root: Path) -> dict[str, Any]:
@@ -69,7 +71,9 @@ def consecutive_weeks(runs: list[dict[str, Any]]) -> int:
     return best
 
 
-def update_loop_history(workspace_root: Path, payload: dict[str, Any]) -> dict[str, Any]:
+def update_loop_history(
+    workspace_root: Path, payload: dict[str, Any]
+) -> dict[str, Any]:
     history = load_loop_history(workspace_root)
     runs = history.setdefault("runs", [])
     runs = [run for run in runs if run.get("week") != payload["week"]]
@@ -114,7 +118,9 @@ def update_trace_index(
             index = {"weeks": []}
     else:
         index = {"weeks": []}
-    weeks = [item for item in index.get("weeks", []) if item.get("week") != payload["week"]]
+    weeks = [
+        item for item in index.get("weeks", []) if item.get("week") != payload["week"]
+    ]
     weeks.append(
         {
             "week": payload["week"],
@@ -122,7 +128,9 @@ def update_trace_index(
             "radar_archive_path": payload["radar"]["output"].get("archive_path"),
             "weekly_json_path": str(weekly_json_path.relative_to(workspace_root)),
             "weekly_md_path": str(weekly_md_path.relative_to(workspace_root)),
-            "planned_task_ids": [item["id"] for item in payload["task"].get("planned", [])],
+            "planned_task_ids": [
+                item["id"] for item in payload["task"].get("planned", [])
+            ],
             "approval_lane": payload["swarm"].get("approval_lane"),
             "drift_count": payload["drift"].get("drift_count", 0),
         }
@@ -177,7 +185,9 @@ def write_weekly_markdown(md_path: Path, payload: dict[str, Any]) -> None:
     lines.append(f"- note: {payload['swarm'].get('note')}")
     lines.append("")
     lines.append("## 6. Audit (跨仓 trail)")
-    lines.append(f"- llm_audit_tail_count: {payload['audit'].get('llm_audit_count', 0)}")
+    lines.append(
+        f"- llm_audit_tail_count: {payload['audit'].get('llm_audit_count', 0)}"
+    )
     for line in payload["audit"].get("llm_audit_tail", [])[-3:]:
         lines.append(
             f"  - {line.get('ts')} task_id={line.get('task_id')} role={line.get('role')} cost={line.get('total_cost_usd')}"
@@ -211,7 +221,9 @@ def write_weekly_evidence(
 ) -> tuple[Path, Path]:
     out_dir = workspace_root / ".omo" / "_control" / "evolution" / "loop"
     json_path = out_dir / f"{week}.json"
-    write_text_atomic(json_path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    write_text_atomic(
+        json_path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    )
     md_dir = workspace_root / ".omo" / "tasks" / "registry" / "done" / "OPC-P6-G1"
     md_path = md_dir / f"weekly-{week}.md"
     write_weekly_markdown(md_path, payload)
@@ -219,7 +231,9 @@ def write_weekly_evidence(
     return md_path, json_path
 
 
-def write_mof_state_bridge_snapshot(workspace_root: Path, payload: dict[str, Any]) -> Path:
+def write_mof_state_bridge_snapshot(
+    workspace_root: Path, payload: dict[str, Any]
+) -> Path:
     out_dir = workspace_root / ".omo" / "_delivery" / "audit-rollout"
     stamp = str(payload["generated_at"])
     date = stamp[:10]
@@ -257,16 +271,31 @@ def call_radar(workspace_root: Path) -> dict[str, Any]:
             text=True,
         )
         if result.returncode != 0:
-            return {"scenario": "technical-radar", "candidates": [], "error": f"{exc} | {result.stderr}"}
+            return {
+                "scenario": "technical-radar",
+                "candidates": [],
+                "error": f"{exc} | {result.stderr}",
+            }
         try:
             return json.loads(result.stdout.strip())
         except json.JSONDecodeError:
-            return {"scenario": "technical-radar", "candidates": [], "error": "subprocess parse fail"}
+            return {
+                "scenario": "technical-radar",
+                "candidates": [],
+                "error": "subprocess parse fail",
+            }
 
 
 def call_drift(workspace_root: Path, *, now_iso: str | None = None) -> dict[str, Any]:
     stamp = now_iso or utc_now_iso()
-    drift_path = workspace_root / ".omo" / "_control" / "evolution" / "drift" / f"{stamp[:10]}.json"
+    drift_path = (
+        workspace_root
+        / ".omo"
+        / "_control"
+        / "evolution"
+        / "drift"
+        / f"{stamp[:10]}.json"
+    )
     if drift_path.exists():
         try:
             return json.loads(drift_path.read_text(encoding="utf-8"))
@@ -284,17 +313,31 @@ def call_drift(workspace_root: Path, *, now_iso: str | None = None) -> dict[str,
         return {"kinds": 0, "drift_count": 0, "results": []}
 
 
-def stage_radar(workspace_root: Path, *, now_iso: str | None = None, radar_output: dict[str, Any] | None = None) -> dict[str, Any]:
-    return {"stage": "radar", "ts": now_iso or utc_now_iso(), "output": radar_output or call_radar(workspace_root)}
+def stage_radar(
+    workspace_root: Path,
+    *,
+    now_iso: str | None = None,
+    radar_output: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "stage": "radar",
+        "ts": now_iso or utc_now_iso(),
+        "output": radar_output or call_radar(workspace_root),
+    }
 
 
-def stage_gap(radar: dict[str, Any], drift: dict[str, Any], *, now_iso: str | None = None) -> dict[str, Any]:
+def stage_gap(
+    radar: dict[str, Any], drift: dict[str, Any], *, now_iso: str | None = None
+) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
     for candidate in radar.get("output", {}).get("candidates", []):
         score = 0.0
         if candidate.get("evidence_id"):
             score += 1.0
-        if any(key in (candidate.get("title") or "").lower() for key in ("p4", "p5", "p6", "cockpit", "agora")):
+        if any(
+            key in (candidate.get("title") or "").lower()
+            for key in ("p4", "p5", "p6", "cockpit", "agora")
+        ):
             score += 0.5
         candidates.append({"candidate": candidate, "score": score, "lane": "radar"})
 
@@ -322,7 +365,9 @@ def stage_gap(radar: dict[str, Any], drift: dict[str, Any], *, now_iso: str | No
     }
 
 
-def stage_task(gap: dict[str, Any], *, week: str, now_iso: str | None = None) -> dict[str, Any]:
+def stage_task(
+    gap: dict[str, Any], *, week: str, now_iso: str | None = None
+) -> dict[str, Any]:
     planned: list[dict[str, Any]] = []
     stamp = now_iso or utc_now_iso()
     for index, item in enumerate(gap.get("candidates", [])):
@@ -358,7 +403,9 @@ def stage_swarm(task: dict[str, Any], *, now_iso: str | None = None) -> dict[str
 
 
 def stage_audit(workspace_root: Path, *, now_iso: str | None = None) -> dict[str, Any]:
-    audit_path = workspace_root / "projects" / "llm-gateway" / "audit" / "llm_calls.jsonl"
+    audit_path = (
+        workspace_root / "projects" / "llm-gateway" / "audit" / "llm_calls.jsonl"
+    )
     audit_lines: list[dict[str, Any]] = []
     if audit_path.exists():
         try:
@@ -375,18 +422,26 @@ def stage_audit(workspace_root: Path, *, now_iso: str | None = None) -> dict[str
     }
 
 
-def stage_retro(loop_payload: dict[str, Any], *, now_iso: str | None = None) -> dict[str, Any]:
+def stage_retro(
+    loop_payload: dict[str, Any], *, now_iso: str | None = None
+) -> dict[str, Any]:
     return {
         "stage": "retro",
         "ts": now_iso or utc_now_iso(),
         "summary": {
-            "radar_candidates": len(loop_payload["radar"]["output"].get("candidates", [])),
+            "radar_candidates": len(
+                loop_payload["radar"]["output"].get("candidates", [])
+            ),
             "radar_archive_path": loop_payload["radar"]["output"].get("archive_path"),
             "drift_count": loop_payload["drift"].get("drift_count", 0),
             "planned_tasks": len(loop_payload["task"]["planned"]),
             "audit_records": loop_payload["audit"]["llm_audit_count"],
-            "history_weeks_recorded": loop_payload.get("history", {}).get("summary", {}).get("weeks_recorded", 0),
-            "history_max_consecutive_weeks": loop_payload.get("history", {}).get("summary", {}).get("max_consecutive_weeks", 0),
+            "history_weeks_recorded": loop_payload.get("history", {})
+            .get("summary", {})
+            .get("weeks_recorded", 0),
+            "history_max_consecutive_weeks": loop_payload.get("history", {})
+            .get("summary", {})
+            .get("max_consecutive_weeks", 0),
         },
         "next_action": "next week's loop continues; if drift > 0 trigger self-evolve register",
         "evidence_complete": True,
@@ -428,7 +483,12 @@ def run_weekly_loop(
 def run_mof_state_bridge_cron_snapshot(workspace_root: Path) -> Path:
     stamp = utc_now_iso()
     result = subprocess.run(
-        ["python3", "projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json", "--strict"],
+        [
+            "python3",
+            "projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py",
+            "--json",
+            "--strict",
+        ],
         cwd=str(workspace_root),
         capture_output=True,
         text=True,

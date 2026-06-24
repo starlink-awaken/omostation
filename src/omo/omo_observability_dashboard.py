@@ -12,6 +12,7 @@
 
 P38-W2 真正落地, 让 P36-W2 的观测性从"可调"演进到"可视化".
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,12 @@ import socketserver
 import sys
 from pathlib import Path
 
-HISTORY_PATH = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))) / ".omo" / "_knowledge" / "governance-history.jsonl"
+HISTORY_PATH = (
+    Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    / ".omo"
+    / "_knowledge"
+    / "governance-history.jsonl"
+)
 
 
 def load_history() -> list[dict]:
@@ -146,7 +152,11 @@ def render_dashboard_html() -> str:
             f"<tr><td>{ts}</td><td>{score}</td><td>{grade}</td>"
             f"<td>{watch}</td><td>{source}</td></tr>"
         )
-    rows_html = "\n        ".join(table_rows) if table_rows else "<tr><td colspan='5'>无数据</td></tr>"
+    rows_html = (
+        "\n        ".join(table_rows)
+        if table_rows
+        else "<tr><td colspan='5'>无数据</td></tr>"
+    )
 
     last_date = summary.get("last_date") or "-"
     first_date = summary.get("first_date") or "-"
@@ -180,8 +190,8 @@ def render_dashboard_html() -> str:
     <p class="subtitle">P38-W2 真正落地 | 观测性从可调到可视化 | 数据源: governance-history.jsonl</p>
 
     <div class="summary">
-        <div class="card"><h3>治理历史条数</h3><div class="value">{summary.get('count', 0)}</div></div>
-        <div class="card"><h3>独立日期数</h3><div class="value">{summary.get('date_count', 0)}</div></div>
+        <div class="card"><h3>治理历史条数</h3><div class="value">{summary.get("count", 0)}</div></div>
+        <div class="card"><h3>独立日期数</h3><div class="value">{summary.get("date_count", 0)}</div></div>
         <div class="card"><h3>平均健康分</h3><div class="value">{avg_score:.1f}</div></div>
         <div class="card"><h3>首次记录</h3><div class="value-small">{first_date}</div></div>
         <div class="card"><h3>最近记录</h3><div class="value-small">{last_date}</div></div>

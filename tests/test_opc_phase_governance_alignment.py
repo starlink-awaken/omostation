@@ -39,7 +39,10 @@ def _read_opc_doc(name: str) -> str:
 def test_master_playbook_baseline_reflects_p3_pass_and_p4_open():
     text = _read_opc_doc("OPC-MASTER-EXECUTION-PLAYBOOK.md")
     assert "- P3: implementation complete; Gate D passed (2026-06-12)" in text
-    assert "- P4: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)" in text
+    assert (
+        "- P4: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)"
+        in text
+    )
     assert "- P7: implementation complete; Gate H passed" in text
     assert "P3 D1: blocked" not in text
 
@@ -58,7 +61,10 @@ def test_p3_gate_d_registry_is_fully_closed():
 
 
 def test_p4_to_p7_prerequisites_require_prior_gate_passes():
-    assert _read_phase_task("OPC-P4-MODEL-COMPUTE")["prerequisites"][0] == "opc_phase3_gate_d_passed"
+    assert (
+        _read_phase_task("OPC-P4-MODEL-COMPUTE")["prerequisites"][0]
+        == "opc_phase3_gate_d_passed"
+    )
     assert _read_phase_task("OPC-P5")["prerequisites"][:2] == [
         "opc_phase3_gate_d_passed",
         "opc_phase4_gate_e_passed",
@@ -88,9 +94,18 @@ def test_p4_gate_e_three_way_alignment_closed_2026_06_12():
 
     # E1-E4 must all be passed; P4-FINAL is an extra three-way alignment
     # sub-gate added in the A3 closeout and is allowed to be present.
-    e1_to_e4 = {f"P4-E{i}": plan_sub["status"] for i, plan_sub in enumerate(plan["sub_gates"], start=1) if plan_sub.get("id", "").startswith("P4-E") and plan_sub.get("id") in {"P4-E1", "P4-E2", "P4-E3", "P4-E4"}}
+    e1_to_e4 = {
+        f"P4-E{i}": plan_sub["status"]
+        for i, plan_sub in enumerate(plan["sub_gates"], start=1)
+        if plan_sub.get("id", "").startswith("P4-E")
+        and plan_sub.get("id") in {"P4-E1", "P4-E2", "P4-E3", "P4-E4"}
+    }
     # fallback: use any sub_gate key beginning with P4-E (Pydantic-ish dict comprehension for clarity)
-    e1_to_e4 = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id") in {"P4-E1", "P4-E2", "P4-E3", "P4-E4"}}
+    e1_to_e4 = {
+        sg["id"]: sg["status"]
+        for sg in plan["sub_gates"]
+        if sg.get("id") in {"P4-E1", "P4-E2", "P4-E3", "P4-E4"}
+    }
     assert e1_to_e4 == {
         "P4-E1": "passed",
         "P4-E2": "passed",
@@ -102,7 +117,10 @@ def test_p4_gate_e_three_way_alignment_closed_2026_06_12():
     assert "opc_phase4_gate_e_passed" in phase_doc
     assert "opc_phase4_gate_e_not_yet_passed" not in phase_doc
 
-    assert "P4: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)" in playbook
+    assert (
+        "P4: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)"
+        in playbook
+    )
     assert "Gate E in progress" not in playbook
 
 
@@ -118,7 +136,11 @@ def test_p5_gate_f_alignment_reflects_f1_open_and_f2_f4_closed():
     phase_doc = _read_opc_doc("OPC-PHASE5-SCENARIOS.md")
     playbook = _read_opc_doc("OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
-    statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P5-F")}
+    statuses = {
+        sg["id"]: sg["status"]
+        for sg in plan["sub_gates"]
+        if sg.get("id", "").startswith("P5-F")
+    }
     assert statuses == {
         "P5-F1": "passed",
         "P5-F2": "passed",
@@ -139,7 +161,11 @@ def test_p6_gate_g_three_way_alignment_consistent_with_plan():
     phase_doc = _read_opc_doc("OPC-PHASE6-EVOLUTION-LOOP.md")
     playbook = _read_opc_doc("OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
-    g_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P6-G")}
+    g_statuses = {
+        sg["id"]: sg["status"]
+        for sg in plan["sub_gates"]
+        if sg.get("id", "").startswith("P6-G")
+    }
     assert len(g_statuses) == 4, f"应该 4 个 P6-G sub-gate, 实际 {len(g_statuses)}"
 
     assert plan["gate_status"] == "not_yet_passed"
@@ -154,9 +180,21 @@ def test_p6_self_evolution_tasks_never_leak_into_active_directory():
     planned_dir = ROOT / ".omo" / "tasks" / "planned"
     active_dir = ROOT / ".omo" / "tasks" / "active"
     archived_dir = ROOT / ".omo" / "tasks" / "archived"
-    self_evo_planned = list(planned_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml")) if planned_dir.exists() else []
-    self_evo_active = list(active_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml")) if active_dir.exists() else []
-    self_evo_archived = list(archived_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml")) if archived_dir.exists() else []
+    self_evo_planned = (
+        list(planned_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml"))
+        if planned_dir.exists()
+        else []
+    )
+    self_evo_active = (
+        list(active_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml"))
+        if active_dir.exists()
+        else []
+    )
+    self_evo_archived = (
+        list(archived_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml"))
+        if archived_dir.exists()
+        else []
+    )
     assert self_evo_active == [], (
         f"self-evolution task leaked into active/: {[p.name for p in self_evo_active]}"
     )
@@ -177,7 +215,11 @@ def test_p6_drift_detector_covers_all_four_kinds():
     import re
 
     src = (ROOT / "scripts" / "opc_p6_drift_detector.py").read_text(encoding="utf-8")
-    found = {m.group(1) for m in re.finditer(r"detect_(\w+)\(", src) if not m.group(1).startswith("_")}
+    found = {
+        m.group(1)
+        for m in re.finditer(r"detect_(\w+)\(", src)
+        if not m.group(1).startswith("_")
+    }
     assert expected.issubset(found), f"drift detector missing kinds: {expected - found}"
 
 
@@ -190,7 +232,11 @@ def test_p7_gate_h_three_way_alignment_closed_2026_06_12():
     plan = _read_phase_task("OPC-P7")
     playbook = _read_opc_doc("OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
-    h_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P7-H")}
+    h_statuses = {
+        sg["id"]: sg["status"]
+        for sg in plan["sub_gates"]
+        if sg.get("id", "").startswith("P7-H")
+    }
     assert len(h_statuses) == 5, f"应该 5 个 P7-H sub-gate, 实际 {len(h_statuses)}"
 
     phase_gate_path = ROOT / ".omo" / "_delivery" / "phase-gate" / "2026-06-12.md"
@@ -238,6 +284,7 @@ def test_p7_doc_lint_zero_drift_at_closeout():
     """P7-H4: doc lint must report drift_total=0 (or have an explicit evidence for any drift)."""
     import json
     from datetime import datetime, timezone
+
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     lint_path = ROOT / ".omo" / "_delivery" / "doc-lint" / f"{today}.json"
     if not lint_path.exists():
@@ -267,9 +314,9 @@ def test_p4_to_p7_use_consistent_evidence_requirement_field():
             # field name for already-closed sub-gates. The legacy field name
             # `evidence_requirement` is still required for `not_started` /
             # in-progress sub-gates so the original spec is preserved.
-            assert (
-                "evidence_requirement" in sub_gate or "evidence" in sub_gate
-            ), f"sub_gate {sub_gate.get('id')} missing evidence/evidence_requirement"
+            assert "evidence_requirement" in sub_gate or "evidence" in sub_gate, (
+                f"sub_gate {sub_gate.get('id')} missing evidence/evidence_requirement"
+            )
             assert "evidencia_requirement" not in sub_gate
 
 
@@ -289,7 +336,11 @@ def test_phase_gate_snapshot_matches_reviewed_truth():
     assert "| P7 | Gate H | not_yet_passed | 3/5 passed, 2 open |" in phase_gate_md
 
     rows = {row["phase"]: row for row in phase_gate_json["rows"]}
-    assert phase_gate_json["summary"] == {"phases_total": 9, "phases_passed": 3, "phases_open": 6}
+    assert phase_gate_json["summary"] == {
+        "phases_total": 9,
+        "phases_passed": 3,
+        "phases_open": 6,
+    }
     assert rows["P5"]["gate_status"] == "not_yet_passed"
     assert rows["P5"]["sub_gate_passed"] == 3
     assert rows["P5"]["sub_gate_open"] == 1

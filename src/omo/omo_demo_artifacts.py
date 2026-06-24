@@ -16,7 +16,9 @@ def write_budget_audit_llm_sample(workspace_root: Path, audit_record: dict) -> P
         / "OPC-P4-E4"
         / "llm-audit-sample.json"
     )
-    write_text_atomic(out_path, json.dumps(audit_record, ensure_ascii=False, indent=2) + "\n")
+    write_text_atomic(
+        out_path, json.dumps(audit_record, ensure_ascii=False, indent=2) + "\n"
+    )
     return out_path
 
 
@@ -52,7 +54,9 @@ def write_budget_audit_rollout_summary(
     return out_path
 
 
-def write_budget_reject_summary(workspace_root: Path, debt_path: Path, error: str) -> Path:
+def write_budget_reject_summary(
+    workspace_root: Path, debt_path: Path, error: str
+) -> Path:
     out_path = (
         workspace_root
         / ".omo"

@@ -12,6 +12,7 @@ API:
      写时 Pydantic 校验守住 §11 X1 审计契约.
      与 omo_io_schemas.SCHEMA_REGISTRY 第 2 个 key 对齐.
 """
+
 from __future__ import annotations
 
 import os
@@ -22,17 +23,18 @@ from typing import Any, Literal
 
 # 复用 omo_bos.parse_bos_uri (顶层 import, summary() 每次调用都需用到)
 from omo.omo_bos import parse_bos_uri  # noqa: E402
+
 # 复用 omo_audit._utc_now (统一时间戳格式为 "Z" 结尾, 消灭 3 种格式并存)
 from omo.omo_audit import _utc_now  # noqa: E402  (private import 是有意的, 见 #7)
+
 # 复用 omo_io.AppendOnlyLog (Round 2: JSONL 物理读写唯一入口)
 from omo.omo_io import AppendOnlyLog
+
 # Round 17 P0: 改用 Pydantic OmoBosMetricsRecord + BosStatus enum (替代旧 dataclass)
 from omo.omo_io_schemas import BosStatus, OmoBosMetricsRecord
 
 # 复用 omo_bos 的工作区根
-_WORKSPACE = Path(
-    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
-)
+_WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 DEFAULT_METRICS_PATH = _WORKSPACE / ".omo" / "_knowledge" / "bos-metrics.jsonl"
 
 # 注意: 不在模块级 instantiate log, 让 monkeypatch.DEFAULT_METRICS_PATH 仍生效.
@@ -41,12 +43,12 @@ DEFAULT_METRICS_PATH = _WORKSPACE / ".omo" / "_knowledge" / "bos-metrics.jsonl"
 # Status 白名单 (type hint, caller 兼容 — Round 17 P0 保留作为向后兼容)
 # 内部 record() 走 BosStatus enum (Pydantic 校验)
 Status = Literal[
-    "resolved",         # invoke 成功 (含 agora / stdio / internal 各种 transport)
+    "resolved",  # invoke 成功 (含 agora / stdio / internal 各种 transport)
     "agora_unavailable",  # agora 不可达 (offline 模式)
-    "invalid_uri",      # URI 格式错
-    "endpoint_missing", # 模块找不到
-    "timeout",          # invoke 超时
-    "error",            # 其他 exception
+    "invalid_uri",  # URI 格式错
+    "endpoint_missing",  # 模块找不到
+    "timeout",  # invoke 超时
+    "error",  # 其他 exception
 ]
 
 
@@ -75,7 +77,9 @@ def record(
         error=error,
         recorded_at=_utc_now(),
     )
-    AppendOnlyLog(path).append(rec.model_dump(), schema=OmoBosMetricsRecord, sort_keys=True)
+    AppendOnlyLog(path).append(
+        rec.model_dump(), schema=OmoBosMetricsRecord, sort_keys=True
+    )
 
 
 def time_invoke(uri: str, transport: str = "") -> "_Timer":
@@ -192,8 +196,12 @@ def summary(
             "timeout": timeout,
             "success_rate": round(success / n, 3) if n else 0.0,
             "p50_ms": round(latencies[n // 2], 2) if n else 0.0,
-            "p95_ms": round(latencies[int(n * 0.95)] if n > 1 else latencies[-1], 2) if n else 0.0,
-            "p99_ms": round(latencies[int(n * 0.99)] if n > 1 else latencies[-1], 2) if n else 0.0,
+            "p95_ms": round(latencies[int(n * 0.95)] if n > 1 else latencies[-1], 2)
+            if n
+            else 0.0,
+            "p99_ms": round(latencies[int(n * 0.99)] if n > 1 else latencies[-1], 2)
+            if n
+            else 0.0,
             "max_ms": round(max(latencies), 2) if n else 0.0,
         }
         for r in items:
@@ -237,7 +245,7 @@ __all__ = (
     "DEFAULT_METRICS_PATH",
     "Status",
     "OmoBosMetricsRecord",  # Round 17 P0: Pydantic 替代旧 BosInvokeRecord dataclass
-    "BosStatus",             # Round 17 P0: Pydantic enum 替代旧 Literal
+    "BosStatus",  # Round 17 P0: Pydantic enum 替代旧 Literal
     "record",
     "time_invoke",
     "get_metrics",

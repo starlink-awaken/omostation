@@ -28,13 +28,21 @@ def _phase15_evidence_dir(root: Path) -> Path:
 def _sharedbrain_ref() -> str:
     archived = "projects/_archived/SharedBrain-original/README.md"
     current = "projects/SharedBrain/README.md"
-    return archived if not (Path(__file__).resolve().parents[3] / current).exists() else current
+    return (
+        archived
+        if not (Path(__file__).resolve().parents[3] / current).exists()
+        else current
+    )
 
 
 def _sharedbrain_pyproject_ref() -> str:
     archived = "projects/_archived/SharedBrain-original/pyproject.toml"
     current = "projects/SharedBrain/pyproject.toml"
-    return archived if not (Path(__file__).resolve().parents[3] / current).exists() else current
+    return (
+        archived
+        if not (Path(__file__).resolve().parents[3] / current).exists()
+        else current
+    )
 
 
 def _agentmesh_ref(name: str, *, fallback: str = "src/index.ts") -> str:
@@ -224,7 +232,9 @@ def ledger_payload() -> dict[str, Any]:
         {
             "id": "p15-recovery-drill-entry",
             "type": "recovery-drill",
-            "evidence_refs": [".omo/_delivery/evidence/phase15/recovery-drill-report.yaml"],
+            "evidence_refs": [
+                ".omo/_delivery/evidence/phase15/recovery-drill-report.yaml"
+            ],
             "verification": "Selected rollback drills pass in fixture/dry-run mode.",
             "rollback": "Block mutation-capable promotion until recovery drill passes.",
         },
@@ -572,13 +582,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     compile_parser = sub.add_parser("compile")
     compile_parser.add_argument(
-        "--output", default=".omo/_delivery/evidence/phase15/proposal-to-task-dry-run.yaml"
+        "--output",
+        default=".omo/_delivery/evidence/phase15/proposal-to-task-dry-run.yaml",
     )
     compile_parser.set_defaults(func=compile_command)
 
     dashboard = sub.add_parser("dashboard")
     dashboard.add_argument(
-        "--output", default=".omo/_delivery/evidence/phase15/operating-dashboard-snapshot.yaml"
+        "--output",
+        default=".omo/_delivery/evidence/phase15/operating-dashboard-snapshot.yaml",
     )
     dashboard.set_defaults(func=dashboard_command)
 

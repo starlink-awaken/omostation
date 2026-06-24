@@ -324,7 +324,9 @@ def test_import_pitch_uses_governed_goal_and_task_ingress(tmp_path, capfd):
 
     bet_id = f"BET-{hashlib.md5(pitch.name.encode()).hexdigest()[:4]}"
     task_id = f"IMPORTED-{hashlib.md5(bet_id.encode()).hexdigest()[:6]}"
-    goals_payload = yaml.safe_load((goals_dir / "current.yaml").read_text(encoding="utf-8"))
+    goals_payload = yaml.safe_load(
+        (goals_dir / "current.yaml").read_text(encoding="utf-8")
+    )
     assert any(goal["id"] == bet_id for goal in goals_payload["goals"])
     task_payload = yaml.safe_load(
         (omo / "tasks" / "planned" / f"{task_id}.yaml").read_text(encoding="utf-8")
@@ -335,12 +337,18 @@ def test_import_pitch_uses_governed_goal_and_task_ingress(tmp_path, capfd):
     registry = yaml.safe_load(
         (omo / "_delivery" / "ingress" / "registry.yaml").read_text(encoding="utf-8")
     )
-    assert registry["goals"]["by_source_ref"][
-        f"omo:bridge:pitch-goal:{pitch.name}:{bet_id}"
-    ] == bet_id
-    assert registry["tasks"]["by_source_ref"][
-        f"omo:bridge:pitch-task:{pitch.name}:{task_id}"
-    ] == task_id
+    assert (
+        registry["goals"]["by_source_ref"][
+            f"omo:bridge:pitch-goal:{pitch.name}:{bet_id}"
+        ]
+        == bet_id
+    )
+    assert (
+        registry["tasks"]["by_source_ref"][
+            f"omo:bridge:pitch-task:{pitch.name}:{task_id}"
+        ]
+        == task_id
+    )
 
     out, _ = capfd.readouterr()
     assert "Bet 下注成功" in out

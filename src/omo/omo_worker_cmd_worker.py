@@ -23,6 +23,7 @@ from .omo_worker_dispatch import (
     _worker_gc,
 )
 
+
 def _print_worker_status(root: Path, omo_dir: str | Path = ".omo") -> int:
     status = collect_worker_status(root, omo_dir=omo_dir)
     print(f"active_dispatches={status['active_dispatches']}")
@@ -33,6 +34,7 @@ def _print_worker_status(root: Path, omo_dir: str | Path = ".omo") -> int:
             f"reclaim={run['reclaim_ref']}"
         )
     return 0
+
 
 def _print_worker_watchdog(
     root: Path, now: str | None = None, omo_dir: str | Path = ".omo"
@@ -50,6 +52,7 @@ def _print_worker_watchdog(
         )
     return 0
 
+
 def _print_worker_admission_eval(
     root: Path, envelope_ref: str, matrix_ref: str | None = None
 ) -> int:
@@ -63,6 +66,7 @@ def _print_worker_admission_eval(
         f"decision={result['decision']} approval_required={result['approval_required']}"
     )
     return 0
+
 
 def _request_worker_admission_approval(
     root: Path,
@@ -78,6 +82,7 @@ def _request_worker_admission_approval(
     )
     return 0
 
+
 def _print_worker_rollout_eval(root: Path, envelope_ref: str) -> int:
     result = evaluate_rollout_envelope(root, Path(envelope_ref))
     print(
@@ -85,6 +90,7 @@ def _print_worker_rollout_eval(root: Path, envelope_ref: str) -> int:
         f"decision={result['decision']} acceptance_ready={result['acceptance_ready']}"
     )
     return 0
+
 
 def _accept_worker_rollout(
     root: Path, envelope_ref: str, accepted_by: str, now: str
@@ -94,6 +100,7 @@ def _accept_worker_rollout(
     )
     print(f"acceptance_ref={result['acceptance_ref']} decision={result['decision']}")
     return 0
+
 
 def _print_worker_rules_eval(root: Path, envelope_ref: str) -> int:
     result = evaluate_rule_bundle(root, Path(envelope_ref))
@@ -107,6 +114,7 @@ def _print_worker_rules_eval(root: Path, envelope_ref: str) -> int:
         f"runtime_boundary={result['runtime_boundary_ref']}"
     )
     return 0
+
 
 def setup_worker_parser(subparsers: Any) -> None:
     worker_parser = subparsers.add_parser("worker")
@@ -176,6 +184,7 @@ def setup_worker_parser(subparsers: Any) -> None:
     rollout_accept_parser.add_argument("envelope_ref")
     rollout_accept_parser.add_argument("--accepted-by", required=True)
     rollout_accept_parser.add_argument("--now", required=True)
+
 
 def execute_worker_command(args: argparse.Namespace) -> int:
     if args.worker_command == "dispatch":

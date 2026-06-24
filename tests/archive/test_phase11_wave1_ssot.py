@@ -13,7 +13,9 @@ SCRIPT_PATH = REPO_ROOT / "scripts" / "check-system-consistency.sh"
 
 def _write_yaml(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
 
 
 def _seed_active_task(omo: Path) -> None:
@@ -46,7 +48,9 @@ def _seed_active_task(omo: Path) -> None:
     )
 
 
-def test_check_system_consistency_script_refreshes_freshness_and_control(tmp_path: Path) -> None:
+def test_check_system_consistency_script_refreshes_freshness_and_control(
+    tmp_path: Path,
+) -> None:
     omo = tmp_path / ".omo"
     _write_yaml(
         omo / "goals" / "current.yaml",
@@ -54,7 +58,13 @@ def test_check_system_consistency_script_refreshes_freshness_and_control(tmp_pat
             "phase": 11,
             "status": "in_progress",
             "current_wave": 1,
-            "goals": [{"id": "G11.1", "status": "in_progress", "tasks": ["P11-W1-SSOT-BASELINE"]}],
+            "goals": [
+                {
+                    "id": "G11.1",
+                    "status": "in_progress",
+                    "tasks": ["P11-W1-SSOT-BASELINE"],
+                }
+            ],
         },
     )
     _write_yaml(
@@ -81,22 +91,36 @@ def test_check_system_consistency_script_refreshes_freshness_and_control(tmp_pat
     result = subprocess.run(
         ["bash", str(SCRIPT_PATH)],
         cwd=REPO_ROOT,
-        env={**os.environ, "OMO_ROOT": str(tmp_path), "OMO_NOW": "2026-06-01T00:00:00Z"},
+        env={
+            **os.environ,
+            "OMO_ROOT": str(tmp_path),
+            "OMO_NOW": "2026-06-01T00:00:00Z",
+        },
         capture_output=True,
         text=True,
         check=False,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    freshness = yaml.safe_load((omo / "_delivery" / "task-center" / "freshness" / "current.yaml").read_text(encoding="utf-8"))
-    control = yaml.safe_load((omo / "_delivery" / "task-center" / "control" / "current.yaml").read_text(encoding="utf-8"))
+    freshness = yaml.safe_load(
+        (omo / "_delivery" / "task-center" / "freshness" / "current.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+    control = yaml.safe_load(
+        (omo / "_delivery" / "task-center" / "control" / "current.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
     assert freshness["freshness_score"] == 100
     assert freshness["stale_items"] == []
     assert control["decision"] == "allow"
     assert control["freshness_score"] == 100
 
 
-def test_check_system_consistency_script_fails_when_plans_readme_misses_current_wave(tmp_path: Path) -> None:
+def test_check_system_consistency_script_fails_when_plans_readme_misses_current_wave(
+    tmp_path: Path,
+) -> None:
     omo = tmp_path / ".omo"
     _write_yaml(
         omo / "goals" / "current.yaml",
@@ -104,7 +128,13 @@ def test_check_system_consistency_script_fails_when_plans_readme_misses_current_
             "phase": 11,
             "status": "in_progress",
             "current_wave": 1,
-            "goals": [{"id": "G11.1", "status": "in_progress", "tasks": ["P11-W1-SSOT-BASELINE"]}],
+            "goals": [
+                {
+                    "id": "G11.1",
+                    "status": "in_progress",
+                    "tasks": ["P11-W1-SSOT-BASELINE"],
+                }
+            ],
         },
     )
     _write_yaml(
@@ -119,23 +149,33 @@ def test_check_system_consistency_script_fails_when_plans_readme_misses_current_
         },
     )
     (omo / "plans").mkdir(parents=True, exist_ok=True)
-    (omo / "plans" / "README.md").write_text("phase11-program-plan.md\n", encoding="utf-8")
+    (omo / "plans" / "README.md").write_text(
+        "phase11-program-plan.md\n", encoding="utf-8"
+    )
     _seed_active_task(omo)
 
     result = subprocess.run(
         ["bash", str(SCRIPT_PATH)],
         cwd=REPO_ROOT,
-        env={**os.environ, "OMO_ROOT": str(tmp_path), "OMO_NOW": "2026-06-01T00:00:00Z"},
+        env={
+            **os.environ,
+            "OMO_ROOT": str(tmp_path),
+            "OMO_NOW": "2026-06-01T00:00:00Z",
+        },
         capture_output=True,
         text=True,
         check=False,
     )
 
     assert result.returncode == 1
-    assert "plans/README.md missing phase11-wave1-execution-plan.md" in (result.stdout + result.stderr)
+    assert "plans/README.md missing phase11-wave1-execution-plan.md" in (
+        result.stdout + result.stderr
+    )
 
 
-def test_check_system_consistency_script_recomputes_state_before_alignment(tmp_path: Path) -> None:
+def test_check_system_consistency_script_recomputes_state_before_alignment(
+    tmp_path: Path,
+) -> None:
     omo = tmp_path / ".omo"
     _write_yaml(
         omo / "goals" / "current.yaml",
@@ -143,7 +183,9 @@ def test_check_system_consistency_script_recomputes_state_before_alignment(tmp_p
             "phase": 11,
             "status": "active",
             "current_wave": 1,
-            "goals": [{"id": "G11.1", "status": "active", "tasks": ["P11-W1-SSOT-BASELINE"]}],
+            "goals": [
+                {"id": "G11.1", "status": "active", "tasks": ["P11-W1-SSOT-BASELINE"]}
+            ],
         },
     )
     _write_yaml(
@@ -189,12 +231,18 @@ def test_check_system_consistency_script_recomputes_state_before_alignment(tmp_p
             },
         },
     )
-    (omo / "workers" / "runs" / "phase11-wave1-ssot-baseline-review.md").write_text("# review\n", encoding="utf-8")
+    (omo / "workers" / "runs" / "phase11-wave1-ssot-baseline-review.md").write_text(
+        "# review\n", encoding="utf-8"
+    )
 
     result = subprocess.run(
         ["bash", str(SCRIPT_PATH)],
         cwd=REPO_ROOT,
-        env={**os.environ, "OMO_ROOT": str(tmp_path), "OMO_NOW": "2026-06-01T00:00:00Z"},
+        env={
+            **os.environ,
+            "OMO_ROOT": str(tmp_path),
+            "OMO_NOW": "2026-06-01T00:00:00Z",
+        },
         capture_output=True,
         text=True,
         check=False,

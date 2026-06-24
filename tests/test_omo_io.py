@@ -6,6 +6,7 @@ Covers:
 - 锁: 注入自定义锁 (用于跨进程 fcntl 升级)
 - 并发: 4 线程各 10 次 append, 全数到达
 """
+
 from __future__ import annotations
 
 import sys
@@ -47,10 +48,7 @@ class TestReadJsonl:
     def test_tolerates_malformed_lines_as_raw(self, tmp_path):
         p = tmp_path / "test.jsonl"
         p.write_text(
-            '{"a": 1}\n'
-            'INVALID JSON LINE\n'
-            '{"b": 2}\n'
-            '{broken json too\n',
+            '{"a": 1}\nINVALID JSON LINE\n{"b": 2}\n{broken json too\n',
             encoding="utf-8",
         )
         records = read_jsonl(p)
@@ -392,7 +390,11 @@ class TestTail:
 class TestSince:
     def test_since_filters_by_default_ts_field(self, tmp_path):
         log = AppendOnlyLog(tmp_path / "test.jsonl")
-        for ts in ["2026-06-09T00:00:00Z", "2026-06-09T01:00:00Z", "2026-06-09T02:00:00Z"]:
+        for ts in [
+            "2026-06-09T00:00:00Z",
+            "2026-06-09T01:00:00Z",
+            "2026-06-09T02:00:00Z",
+        ]:
             log.append({"ts": ts, "value": "x"})
         result = log.since("2026-06-09T01:00:00Z")
         assert len(result) == 2

@@ -22,7 +22,10 @@ def test_phase10_wave3_live_runtime_observe_bundle_uses_normalized_contracts() -
     )
 
     assert bundle["action"] == "runtime.observe"
-    assert bundle["delivery_contract_ref"] == ".omo/_delivery/task-center/contracts/runtime-observe-delivery-contract.yaml"
+    assert (
+        bundle["delivery_contract_ref"]
+        == ".omo/_delivery/task-center/contracts/runtime-observe-delivery-contract.yaml"
+    )
     assert bundle["delivery_contract"] == {
         "proposal_ref": ".omo/workers/runs/phase9-wave3-identity-admission-approval.yaml",
         "apply_ref": ".omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml",
@@ -101,7 +104,10 @@ def test_phase10_wave3_project_dispatch_bundle_uses_normalized_contracts_without
         Path(".omo/workers/runs/example-envelope.yaml"),
     )
 
-    assert bundle["delivery_contract_ref"] == ".omo/_delivery/task-center/contracts/delivery.yaml"
+    assert (
+        bundle["delivery_contract_ref"]
+        == ".omo/_delivery/task-center/contracts/delivery.yaml"
+    )
     assert bundle["delivery_contract"] == {
         "proposal_ref": ".omo/workers/runs/example-approval.yaml",
         "apply_ref": ".omo/_delivery/task-center/proposals/example/apply.yaml",

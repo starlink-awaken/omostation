@@ -28,7 +28,9 @@ def test_build_contract_request_creates_structured_artifact_with_deliverables():
     )
 
     assert record["version"] == 1
-    assert record["request_id"] == "P19-W4-TASK-001-contract-request-2026-06-03T12-00-00Z"
+    assert (
+        record["request_id"] == "P19-W4-TASK-001-contract-request-2026-06-03T12-00-00Z"
+    )
     assert record["task_id"] == "P19-W4-TASK-001"
     assert record["request_status"] == "requested"
     assert record["deliverables"] == deliverables
@@ -55,7 +57,10 @@ def test_build_contract_proposal_targets_task_yaml_and_sets_deliverables():
         request_ref=request_ref,
     )
 
-    assert proposal["id"] == "P19-W4-TASK-001-contract-request-2026-06-03T12-00-00Z-proposal"
+    assert (
+        proposal["id"]
+        == "P19-W4-TASK-001-contract-request-2026-06-03T12-00-00Z-proposal"
+    )
     assert proposal["title"] == "Declare contract deliverables for P19-W4-TASK-001"
     assert proposal["operation_level"] == "L2"
     assert proposal["requested_by"] == "copilot-cli"

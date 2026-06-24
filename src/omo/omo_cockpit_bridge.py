@@ -49,7 +49,9 @@ def list_hitl_proposals(omo_dir: Path) -> list[dict[str, Any]]:
     return proposals
 
 
-def append_hitl_override(omo_dir: Path, stream_name: str, record: dict[str, Any]) -> str:
+def append_hitl_override(
+    omo_dir: Path, stream_name: str, record: dict[str, Any]
+) -> str:
     path = _jsonl_path(omo_dir, stream_name)
     lock = path.with_suffix(path.suffix + ".lock")
     AppendOnlyLog(path, lock=fcntl_lock(lock)).append(record, sort_keys=False)
@@ -145,10 +147,19 @@ def archive_scenario_receipt(omo_dir: Path, result: dict[str, Any]) -> str:
     out_dir = _scenario_root(omo_dir) / scenario
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = _utc_now().replace(":", "").replace("-", "")
-    query_hint = str(result.get("query", scenario)).strip().lower().replace("/", "-").replace(" ", "-")
+    query_hint = (
+        str(result.get("query", scenario))
+        .strip()
+        .lower()
+        .replace("/", "-")
+        .replace(" ", "-")
+    )
     if not query_hint:
         query_hint = scenario
-    query_hint = "".join(ch for ch in query_hint if ch.isalnum() or ch in {"-", "_"})[:48] or scenario
+    query_hint = (
+        "".join(ch for ch in query_hint if ch.isalnum() or ch in {"-", "_"})[:48]
+        or scenario
+    )
     out_path = out_dir / f"{ts}-{query_hint}-{uuid4().hex[:8]}.json"
     write_text_atomic(out_path, json.dumps(result, ensure_ascii=False, indent=2) + "\n")
     return str(out_path)

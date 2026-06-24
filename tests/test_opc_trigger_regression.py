@@ -17,6 +17,7 @@
   - 不用 mock, 直接调 wrapper
   - 每个 test 跑完清理: 移除 tmp .omo 创建的临时文件
 """
+
 from __future__ import annotations
 
 import json
@@ -131,7 +132,9 @@ class T01ReleaseWrapperTrigger(unittest.TestCase):
 
     def test_t3b_explicit_cron_passthrough(self) -> None:
         """explicit: 设 OPC_TRIGGER=cron (有 INVOCATION_ID=manual) → OPC_TRIGGER 优先."""
-        result = _run_wrapper(self.wrapper, env={"OPC_TRIGGER": "cron", "INVOCATION_ID": "manual"})
+        result = _run_wrapper(
+            self.wrapper, env={"OPC_TRIGGER": "cron", "INVOCATION_ID": "manual"}
+        )
         self.assertEqual(
             result["trigger_injected"],
             "cron",
@@ -148,14 +151,16 @@ class T02AuditRolloutWrapperTrigger(unittest.TestCase):
     def test_t1_manual_unset(self) -> None:
         result = _run_wrapper(self.wrapper, env={})
         self.assertEqual(
-            result["trigger_injected"], "manual",
+            result["trigger_injected"],
+            "manual",
             f"manual 应注入 manual, 实际: {result}",
         )
 
     def test_t2_cron_invocation_id(self) -> None:
         result = _run_wrapper(self.wrapper, env={"INVOCATION_ID": "cron"})
         self.assertEqual(
-            result["trigger_injected"], "cron",
+            result["trigger_injected"],
+            "cron",
             f"INVOCATION_ID=cron 应注入 cron, 实际: {result}",
         )
 
@@ -202,25 +207,34 @@ class T05ApprovalBoardLatestWeek(unittest.TestCase):
             text=True,
             timeout=15,
         )
-        self.assertEqual(result.returncode, 0, f"approval board failed: {result.stderr}")
+        self.assertEqual(
+            result.returncode, 0, f"approval board failed: {result.stderr}"
+        )
         board = json.loads(
-            (REPO_ROOT / ".omo" / "_control" / "evolution" / "approval-board" / "current.json").read_text(
-                encoding="utf-8"
-            )
+            (
+                REPO_ROOT
+                / ".omo"
+                / "_control"
+                / "evolution"
+                / "approval-board"
+                / "current.json"
+            ).read_text(encoding="utf-8")
         )
         loop_history = json.loads(
-            (REPO_ROOT / ".omo" / "_control" / "evolution" / "loop" / "history.json").read_text(
-                encoding="utf-8"
-            )
+            (
+                REPO_ROOT / ".omo" / "_control" / "evolution" / "loop" / "history.json"
+            ).read_text(encoding="utf-8")
         )
         loop_latest_week = loop_history.get("summary", {}).get("latest_week")
         board_latest_week = board.get("summary", {}).get("latest_week")
         self.assertEqual(
-            board_latest_week, loop_latest_week,
+            board_latest_week,
+            loop_latest_week,
             f"approval_board.latest_week ({board_latest_week}) 应等于 loop_history.latest_week ({loop_latest_week})",
         )
         self.assertEqual(
-            board["summary"].get("latest_week_source"), "loop_history",
+            board["summary"].get("latest_week_source"),
+            "loop_history",
             f"latest_week_source 应为 loop_history, 实际: {board['summary'].get('latest_week_source')}",
         )
 
@@ -234,8 +248,12 @@ class T06AuditRolloutDaemonWriteback(unittest.TestCase):
 
     def setUp(self) -> None:
         # 保存原始 index, 跑完恢复
-        self.index_path = REPO_ROOT / ".omo" / "_delivery" / "audit-rollout" / "index.json"
-        self.index_backup = self.index_path.read_bytes() if self.index_path.exists() else None
+        self.index_path = (
+            REPO_ROOT / ".omo" / "_delivery" / "audit-rollout" / "index.json"
+        )
+        self.index_backup = (
+            self.index_path.read_bytes() if self.index_path.exists() else None
+        )
 
     def tearDown(self) -> None:
         if self.index_backup is not None:
@@ -272,9 +290,18 @@ class T06AuditRolloutDaemonWriteback(unittest.TestCase):
                 }
             }
             # 真写 5repos.json 让 daemon 读
-            fallback_path = REPO_ROOT / ".omo" / "_delivery" / "audit-rollout" / f"{daemon._today()}-5repos.json"
+            fallback_path = (
+                REPO_ROOT
+                / ".omo"
+                / "_delivery"
+                / "audit-rollout"
+                / f"{daemon._today()}-5repos.json"
+            )
             fallback_path.parent.mkdir(parents=True, exist_ok=True)
-            fallback_path.write_text(json.dumps(fake_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            fallback_path.write_text(
+                json.dumps(fake_payload, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
             return {
                 "returncode": 0,
                 "stdout_tail": ["ok"],
@@ -289,18 +316,25 @@ class T06AuditRolloutDaemonWriteback(unittest.TestCase):
             # 跑前 baseline
             pre_count = 0
             if self.index_path.exists():
-                pre_count = len(json.loads(self.index_path.read_text(encoding="utf-8")).get("runs", []))
+                pre_count = len(
+                    json.loads(self.index_path.read_text(encoding="utf-8")).get(
+                        "runs", []
+                    )
+                )
 
             os.environ["OPC_TRIGGER"] = "manual"
             os.environ["OPC_MODE"] = "weekly"
             rc = daemon.main()
 
-            self.assertEqual(rc, 0, f"daemon.main returncode 应为 0 (fallback 成功), 实际 {rc}")
+            self.assertEqual(
+                rc, 0, f"daemon.main returncode 应为 0 (fallback 成功), 实际 {rc}"
+            )
             self.assertTrue(self.index_path.exists(), "index.json 必须存在")
             index = json.loads(self.index_path.read_text(encoding="utf-8"))
             new_count = len(index.get("runs", []))
             self.assertEqual(
-                new_count, pre_count + 1,
+                new_count,
+                pre_count + 1,
                 f"index 应新增 1 条, pre={pre_count}, post={new_count}",
             )
             latest = index["runs"][-1]
@@ -308,7 +342,9 @@ class T06AuditRolloutDaemonWriteback(unittest.TestCase):
             self.assertEqual(latest["returncode"], 0)
             self.assertTrue(latest["fallback_used"], "fallback_used 必须为 True")
             self.assertEqual(latest["fallback_returncode"], 0)
-            self.assertIsNotNone(latest["fallback_output_path"], "fallback output_path 必须非 None")
+            self.assertIsNotNone(
+                latest["fallback_output_path"], "fallback output_path 必须非 None"
+            )
             self.assertIsNotNone(latest["primary_error"], "primary_error 必须有")
         finally:
             daemon._run_primary_audit_rollout = original_primary
@@ -353,12 +389,15 @@ class T06AuditRolloutDaemonWriteback(unittest.TestCase):
             os.environ["OPC_MODE"] = "weekly"
             rc = daemon.main()
 
-            self.assertEqual(rc, 1, f"daemon.main returncode 应为 1 (双失败), 实际 {rc}")
+            self.assertEqual(
+                rc, 1, f"daemon.main returncode 应为 1 (双失败), 实际 {rc}"
+            )
             self.assertTrue(self.index_path.exists(), "index.json 必须存在 (失败也写)")
             index = json.loads(self.index_path.read_text(encoding="utf-8"))
             new_count = len(index.get("runs", []))
             self.assertEqual(
-                new_count, pre_count + 1,
+                new_count,
+                pre_count + 1,
                 f"index 应新增 1 条 (失败也写), pre={pre_count}, post={new_count}",
             )
             latest = index["runs"][-1]
@@ -369,7 +408,8 @@ class T06AuditRolloutDaemonWriteback(unittest.TestCase):
             self.assertEqual(latest["fallback_returncode"], 3)
             # failed_count delta 应为 1 (此次新增 1 条失败)
             self.assertEqual(
-                index["summary"]["failed_count"], pre_failed_count + 1,
+                index["summary"]["failed_count"],
+                pre_failed_count + 1,
                 f"summary.failed_count delta 应为 +1, pre={pre_failed_count}, post={index['summary']['failed_count']}",
             )
         finally:

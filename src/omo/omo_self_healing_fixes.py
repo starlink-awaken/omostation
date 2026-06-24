@@ -17,7 +17,11 @@ logger = logging.getLogger("omo.self_healing.fixes")
 
 def fix_clear_pytest_cache(context: dict | None = None) -> tuple[bool, str]:
     """清理 .pytest_cache 和 .ruff_cache 目录。"""
-    roots = [Path.home() / "Workspace" / "projects" / p for p in os.listdir(Path.home() / "Workspace" / "projects") if not p.startswith("_")]
+    roots = [
+        Path.home() / "Workspace" / "projects" / p
+        for p in os.listdir(Path.home() / "Workspace" / "projects")
+        if not p.startswith("_")
+    ]
     cleaned = 0
     for root in roots:
         for cache_dir in [".pytest_cache", ".ruff_cache", "__pycache__"]:
@@ -78,7 +82,10 @@ def fix_disk_check(context: dict | None = None) -> tuple[bool, str]:
         usage = shutil.disk_usage(Path.home())
         pct = usage.used / usage.total * 100
         if pct > 80:
-            return False, f"Disk usage critical: {pct:.1f}% ({_fmt_bytes(usage.free)} free)"
+            return (
+                False,
+                f"Disk usage critical: {pct:.1f}% ({_fmt_bytes(usage.free)} free)",
+            )
         return True, f"Disk OK: {pct:.1f}% used"
     except Exception as e:
         return False, f"Disk check failed: {e}"
@@ -127,13 +134,19 @@ FIX_REGISTRY: dict[str, callable] = {
 def run_fix(fix_name: str, context: dict | None = None) -> dict:
     """按名称运行修复脚本，返回 {success, output, fix_name}。"""
     if fix_name not in FIX_REGISTRY:
-        return {"success": False, "output": f"Unknown fix: {fix_name}", "fix_name": fix_name}
+        return {
+            "success": False,
+            "output": f"Unknown fix: {fix_name}",
+            "fix_name": fix_name,
+        }
 
     try:
         success, output = FIX_REGISTRY[fix_name](context)
         logger.info(
             "fix_executed fix=%s success=%s output=%s",
-            fix_name, success, output[:200],
+            fix_name,
+            success,
+            output[:200],
         )
         return {"success": success, "output": output, "fix_name": fix_name}
     except Exception as exc:

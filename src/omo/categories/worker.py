@@ -1,4 +1,5 @@
 """omo.categories.worker — Worker 调度模块索引."""
+
 from omo import (  # noqa: F401
     omo_worker,  # noqa: F401
     omo_worker_cmd_task,  # noqa: F401

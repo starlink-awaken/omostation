@@ -24,6 +24,7 @@
   - "C (omo_trail baseline 纳入) — 等 trail 业务真上线"
   - 现在由本 seed 工具代为触发, 真业务上线后 caller 直接 omo trail record
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,11 +35,41 @@ from omo.omo_trail import DEFAULT_TRAIL_PATH, record_step
 
 # 5 条代表性 step (反映老王 Round 12-18 工作模式)
 SEED_STEPS: list[dict[str, Any]] = [
-    {"actor": "agent:laowang", "action": "edit", "target": "omo_lint.py", "status": "ok", "duration_ms": 450},
-    {"actor": "agent:laowang", "action": "exec", "target": "pytest tests/test_omo_lint_schemas.py", "status": "ok", "duration_ms": 1520},
-    {"actor": "agent:laowang", "action": "test", "target": "omo_lint_schemas (7/7 PASS)", "status": "ok", "duration_ms": 50},
-    {"actor": "agent:laowang", "action": "commit", "target": "ebc1c41b (Round 18 P0)", "status": "ok", "duration_ms": 120},
-    {"actor": "agent:laowang", "action": "audit", "target": "omo logs audit --baseline-check", "status": "ok", "duration_ms": 35},
+    {
+        "actor": "agent:laowang",
+        "action": "edit",
+        "target": "omo_lint.py",
+        "status": "ok",
+        "duration_ms": 450,
+    },
+    {
+        "actor": "agent:laowang",
+        "action": "exec",
+        "target": "pytest tests/test_omo_lint_schemas.py",
+        "status": "ok",
+        "duration_ms": 1520,
+    },
+    {
+        "actor": "agent:laowang",
+        "action": "test",
+        "target": "omo_lint_schemas (7/7 PASS)",
+        "status": "ok",
+        "duration_ms": 50,
+    },
+    {
+        "actor": "agent:laowang",
+        "action": "commit",
+        "target": "ebc1c41b (Round 18 P0)",
+        "status": "ok",
+        "duration_ms": 120,
+    },
+    {
+        "actor": "agent:laowang",
+        "action": "audit",
+        "target": "omo logs audit --baseline-check",
+        "status": "ok",
+        "duration_ms": 35,
+    },
 ]
 
 

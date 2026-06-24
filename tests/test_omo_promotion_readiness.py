@@ -161,4 +161,7 @@ def test_build_promotion_readiness_packet_sorts_unphased_after_phased_ready_item
         ),
     )
 
-    assert [entry["task_id"] for entry in packet["tasks"]] == ["P17-W1-READY", "UNPHASED-A"]
+    assert [entry["task_id"] for entry in packet["tasks"]] == [
+        "P17-W1-READY",
+        "UNPHASED-A",
+    ]

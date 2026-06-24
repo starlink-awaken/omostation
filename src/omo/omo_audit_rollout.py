@@ -96,7 +96,11 @@ def update_history_index(
             else:
                 index = {"runs": []}
             runs = index.setdefault("runs", [])
-            payload = rollout.get("payload") if isinstance(rollout.get("payload"), dict) else {}
+            payload = (
+                rollout.get("payload")
+                if isinstance(rollout.get("payload"), dict)
+                else {}
+            )
             repos = payload.get("repos", {}) if isinstance(payload, dict) else {}
             run_entry: dict[str, Any] = {
                 "generated_at": generated_at,
@@ -122,16 +126,30 @@ def update_history_index(
             index["summary"] = {
                 "run_count": len(runs),
                 "weekly_runs": sum(1 for item in runs if item.get("mode") == "weekly"),
-                "monthly_runs": sum(1 for item in runs if item.get("mode") == "monthly"),
-                "pre_release_runs": sum(1 for item in runs if item.get("mode") == "pre-release"),
-                "cron_run_count": sum(1 for item in runs if item.get("trigger_source") == "cron"),
-                "manual_run_count": sum(1 for item in runs if item.get("trigger_source") == "manual"),
-                "fallback_used_count": sum(1 for item in runs if item.get("fallback_used")),
-                "failed_count": sum(1 for item in runs if item.get("returncode") not in (0, None)),
+                "monthly_runs": sum(
+                    1 for item in runs if item.get("mode") == "monthly"
+                ),
+                "pre_release_runs": sum(
+                    1 for item in runs if item.get("mode") == "pre-release"
+                ),
+                "cron_run_count": sum(
+                    1 for item in runs if item.get("trigger_source") == "cron"
+                ),
+                "manual_run_count": sum(
+                    1 for item in runs if item.get("trigger_source") == "manual"
+                ),
+                "fallback_used_count": sum(
+                    1 for item in runs if item.get("fallback_used")
+                ),
+                "failed_count": sum(
+                    1 for item in runs if item.get("returncode") not in (0, None)
+                ),
                 "latest_output_path": runs[-1]["output_path"] if runs else None,
                 "latest_trigger_source": runs[-1]["trigger_source"] if runs else None,
             }
-            write_text_atomic(path, json.dumps(index, ensure_ascii=False, indent=2) + "\n")
+            write_text_atomic(
+                path, json.dumps(index, ensure_ascii=False, indent=2) + "\n"
+            )
         finally:
             fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
     finally:

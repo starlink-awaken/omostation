@@ -23,4 +23,6 @@ def test_run_continuation_moves_to_runtime_root() -> None:
     ]:
         assert "runtime/run-continuation/" in _read_workspace(rel_path)
 
-    assert ".omo/run-continuation" not in _read_workspace("scripts/check-index-coverage.py")
+    assert ".omo/run-continuation" not in _read_workspace(
+        "scripts/check-index-coverage.py"
+    )

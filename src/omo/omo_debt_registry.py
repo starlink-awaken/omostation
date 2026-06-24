@@ -120,19 +120,30 @@ def _parse_debt_item(payload: dict) -> DebtItem:
     return DebtItem(
         id=str(payload.get("id", "UNKNOWN")),
         title=str(payload.get("title", "")),
-        dimension=str(payload.get("dimension") or payload.get("category") or "uncategorized"),
+        dimension=str(
+            payload.get("dimension") or payload.get("category") or "uncategorized"
+        ),
         subdimension=str(payload.get("subdimension", "")),
         domain=str(payload.get("domain") or payload.get("category") or ""),
         scope=str(payload.get("scope", "")),
         severity=severity,
         weight=float(weight) if weight is not None else 0.0,
         entropy_class=str(payload.get("entropy_class", "")),
-        lifecycle_state=str(payload.get("lifecycle_state") or payload.get("status") or "active"),
+        lifecycle_state=str(
+            payload.get("lifecycle_state") or payload.get("status") or "active"
+        ),
         owner=str(payload.get("owner", "")),
-        affected_roots=_as_tuple(payload.get("affected_roots") or payload.get("affected_files")),
+        affected_roots=_as_tuple(
+            payload.get("affected_roots") or payload.get("affected_files")
+        ),
         evidence_refs=_as_tuple(payload.get("evidence_refs")),
         mitigation_refs=_as_tuple(payload.get("mitigation_refs")),
-        opened_at=str(payload.get("opened_at") or payload.get("created") or payload.get("resolved") or ""),
+        opened_at=str(
+            payload.get("opened_at")
+            or payload.get("created")
+            or payload.get("resolved")
+            or ""
+        ),
         last_reviewed_at=payload.get("last_reviewed_at"),
         next_review_at=payload.get("next_review_at"),
         gate_level=str(payload.get("gate_level", "")),

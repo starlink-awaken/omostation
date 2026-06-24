@@ -105,7 +105,10 @@ def test_system_space_manifest_matches_schema_contract() -> None:
         "data": "data",
         "runtime": "runtime",
     }
-    assert manifest["routing"]["default_project"] == "projects/_archived/SharedBrain-original"
+    assert (
+        manifest["routing"]["default_project"]
+        == "projects/_archived/SharedBrain-original"
+    )
     assert manifest["routing"]["runtime_project"] == "projects/runtime"
 
     for rel_path in manifest["owners"]["capability_roots"]:

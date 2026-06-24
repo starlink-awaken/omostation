@@ -66,7 +66,10 @@ def _campaign_packet() -> dict[str, object]:
 def test_build_reporting_packet_summarizes_counts_and_rates() -> None:
     packet = build_reporting_packet(_campaign_packet())
 
-    assert packet["dispatch_run_ref"] == ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
+    assert (
+        packet["dispatch_run_ref"]
+        == ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
+    )
     assert packet["summary"] == {
         "owner_count": 2,
         "total_items": 3,

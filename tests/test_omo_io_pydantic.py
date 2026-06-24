@@ -1,4 +1,5 @@
 """Tests for AppendOnlyLog Pydantic 写时校验 (Round 9 P1)."""
+
 from __future__ import annotations
 
 import sys

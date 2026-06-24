@@ -1,7 +1,7 @@
 """
 OMO Evolution Loop — Active remediation daemon (Phase 6).
 
-Watches .omo/debt/items/ for new debt records and dispatches 
+Watches .omo/debt/items/ for new debt records and dispatches
 auto-remediation tasks via MetaOS.
 """
 
@@ -63,36 +63,39 @@ class EvolutionLoop:
         # For Phase 6, we focus on BUDGET_EXHAUSTED
         debt_id = debt.get("id", "")
         status = debt.get("status", "open")
-        
+
         if status != "open":
             return False
-            
+
         if "BUDGET" in debt_id or "BUDGET" in debt.get("title", "").upper():
             return True
-            
+
         return False
 
     def _dispatch_remediation(self, debt: dict[str, Any]) -> None:
         """[Phase 9] Generate a MutationProposal for human review."""
         debt_id = debt.get("id", "unknown")
         _log.info("[EvolutionLoop] Generating MutationProposal for: %s", debt_id)
-        
+
         from datetime import UTC, datetime
+
         now_iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-        
+
         # ── 1. Create the Proposal Envelope ──
         proposal_id = f"PROP-{debt_id.replace('DEBT-', '')}"
         proposal_path = PROPOSAL_DIR / f"{proposal_id}.yaml"
-        
+
         # Define automated fix logic (Mapping debt type to suggested action)
         remediation_type = "config_change"
         target_file = ""
         suggestion = "Manual review required."
-        
+
         if "BUDGET" in debt_id.upper():
             remediation_type = "budget_increase"
-            suggestion = "Increase RUNTIME_LLM_BUDGET_USD by 20% or downgrade to deepseek-chat."
-            
+            suggestion = (
+                "Increase RUNTIME_LLM_BUDGET_USD by 20% or downgrade to deepseek-chat."
+            )
+
         payload = {
             "id": proposal_id,
             "title": f"Auto-remediation for {debt_id}",
@@ -103,14 +106,16 @@ class EvolutionLoop:
             "target": target_file,
             "suggestion": suggestion,
             "risk": debt.get("severity", "medium"),
-            "impact": debt.get("description", "")
+            "impact": debt.get("description", ""),
         }
-        
+
         # ── 2. Persist to State Plane ──
         try:
             write_yaml_atomic(proposal_path, payload)
             _log.info("[EvolutionLoop] Proposal created: %s", proposal_path)
-            print(f"📦  Evolution Loop: Generated MutationProposal {proposal_id} (Awaiting Cockpit Approval)")
+            print(
+                f"📦  Evolution Loop: Generated MutationProposal {proposal_id} (Awaiting Cockpit Approval)"
+            )
         except Exception as e:
             _log.error("[EvolutionLoop] Failed to save proposal: %s", e)
 

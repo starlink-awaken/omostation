@@ -69,9 +69,9 @@ def detect_entry_drift(workspace_root: Path) -> dict[str, Any]:
 
 def detect_doc_drift(workspace_root: Path) -> dict[str, Any]:
     plan_rel = str(
-        resolve_opc_phase_task_path(
-            workspace_root, "OPC-P4-MODEL-COMPUTE"
-        ).relative_to(workspace_root)
+        resolve_opc_phase_task_path(workspace_root, "OPC-P4-MODEL-COMPUTE").relative_to(
+            workspace_root
+        )
     )
     plan = _read_yaml(workspace_root, plan_rel)
     phase_doc_path = workspace_root / "docs" / "OPC-PHASE4-MODEL-COMPUTE.md"

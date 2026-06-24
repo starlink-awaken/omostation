@@ -56,7 +56,11 @@ def test_build_campaign_packet_classifies_pending_ready_and_executed() -> None:
         "executed": 1,
     }
     owner = packet["owners"][0]
-    assert owner["state_counts"] == {"pending_approval": 0, "ready_to_execute": 1, "executed": 1}
+    assert owner["state_counts"] == {
+        "pending_approval": 0,
+        "ready_to_execute": 1,
+        "executed": 1,
+    }
     assert owner["entries"][0]["campaign_state"] == "ready_to_execute"
     assert owner["entries"][1]["campaign_state"] == "executed"
     assert owner["entries"][1]["execution_record_ref"] == (

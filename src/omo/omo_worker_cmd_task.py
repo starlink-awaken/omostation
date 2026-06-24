@@ -32,6 +32,7 @@ from .omo_worker_promotion import (
     _write_task_governance_overlay_run_next,
 )
 
+
 def _normalize_planned_packets(
     root: Path,
     *,
@@ -103,7 +104,9 @@ def setup_task_parser(subparsers: Any) -> None:
     promote_apply_parser.add_argument("--promoted-by", required=True)
     promote_apply_parser.add_argument("--now", required=True)
     promote_apply_parser.add_argument("--omo-dir", default=".omo")
-    self_evolution_route_parser = task_sub.add_parser("route-self-evolution-remediation")
+    self_evolution_route_parser = task_sub.add_parser(
+        "route-self-evolution-remediation"
+    )
     self_evolution_route_parser.add_argument("task_id")
     self_evolution_route_parser.add_argument("--actor", required=True)
     self_evolution_route_parser.add_argument("--now", required=True)
@@ -193,6 +196,7 @@ def setup_task_parser(subparsers: Any) -> None:
     governance_overlay_run_next_parser.add_argument("--omo-dir", default=".omo")
     governance_overlay_run_next_parser.add_argument("--actor", required=True)
     governance_overlay_run_next_parser.add_argument("--now")
+
 
 def execute_task_command(args: argparse.Namespace) -> int:
     if args.task_command == "validate":

@@ -104,7 +104,11 @@ def test_build_status_packet_orders_blocked_then_lifecycle_then_task_id():
         ],
     )
 
-    assert [entry["task_id"] for entry in packet["tasks"]] == ["TASK-B", "TASK-A", "TASK-C"]
+    assert [entry["task_id"] for entry in packet["tasks"]] == [
+        "TASK-B",
+        "TASK-A",
+        "TASK-C",
+    ]
 
 
 def test_render_status_markdown_emits_operator_action_hints():

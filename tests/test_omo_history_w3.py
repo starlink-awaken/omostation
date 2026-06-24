@@ -1,4 +1,5 @@
 """Tests for omo.omo_history — Round 7 P2 (AppendOnlyLog 第 6 个 consumer)."""
+
 from __future__ import annotations
 
 import json
@@ -23,7 +24,11 @@ def test_append_entry_uses_append_only_log(tmp_path):
     assert result == log_path
 
     # 验证: log 文件 1 条结构化 record
-    records = [json.loads(line_) for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    records = [
+        json.loads(line_)
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(records) == 1
     rec = records[0]
     assert rec["total_score"] == 99.0
@@ -56,8 +61,14 @@ def test_append_entry_preserves_sort_keys_compatibility(tmp_path):
     keys = [k for k, _ in parsed]
     # 8 个 key 全字母序: a_field, date, grade, m_field, timestamp, total_score, watchlist_count, z_field
     assert keys == [
-        "a_field", "date", "grade", "m_field", "timestamp",
-        "total_score", "watchlist_count", "z_field",
+        "a_field",
+        "date",
+        "grade",
+        "m_field",
+        "timestamp",
+        "total_score",
+        "watchlist_count",
+        "z_field",
     ], f"keys must be globally sorted (sort_keys=True), got: {keys}"
 
 
@@ -77,11 +88,16 @@ def test_append_entry_overrides_user_date_timestamp(tmp_path):
         },
         path=log_path,
     )
-    records = [json.loads(line_) for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    records = [
+        json.loads(line_)
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert records[0]["date"] != "user-attempt-1900-01-01"
     assert records[0]["timestamp"] != "user-bad-ts"
     # 注入的 date 应是今天
     from datetime import date
+
     assert records[0]["date"] == date.today().isoformat()
 
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .omo_debt_registry import DebtItem
 
+
 def append_history(
     payload: dict, action: str, note: str, actor: str = "", timestamp: str = ""
 ) -> None:
@@ -45,7 +46,11 @@ def register_item(args: argparse.Namespace, timestamp: str) -> dict:
     }
     actor = getattr(args, "actor", "")
     append_history(
-        payload, "register", f"Registered debt item {args.id}.", actor=actor, timestamp=timestamp
+        payload,
+        "register",
+        f"Registered debt item {args.id}.",
+        actor=actor,
+        timestamp=timestamp,
     )
     return payload
 
@@ -60,12 +65,24 @@ def append_registry_ref(omo_dir: Path, item_ref: str, _load_yaml, _write_yaml) -
     _write_yaml(registry_path, registry)
 
 
-def schedule_item(omo_dir: Path, item_id: str, next_review_at: str, _load_yaml, _write_yaml, timestamp: str) -> None:
+def schedule_item(
+    omo_dir: Path,
+    item_id: str,
+    next_review_at: str,
+    _load_yaml,
+    _write_yaml,
+    timestamp: str,
+) -> None:
     item_path = omo_dir / "debt" / "items" / f"{item_id}.yaml"
     payload = _load_yaml(item_path)
     payload["lifecycle_state"] = "scheduled"
     payload["next_review_at"] = next_review_at
-    append_history(payload, "schedule", f"Next review set to {next_review_at}.", timestamp=timestamp)
+    append_history(
+        payload,
+        "schedule",
+        f"Next review set to {next_review_at}.",
+        timestamp=timestamp,
+    )
     _write_yaml(item_path, payload)
 
 

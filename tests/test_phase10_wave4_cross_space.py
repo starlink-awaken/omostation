@@ -17,17 +17,27 @@ def _read_yaml(rel_path: str) -> dict:
 def test_phase10_wave4_runtime_space_surfaces_are_registered() -> None:
     registry = _read_yaml("spaces/registry.yaml")
     runtime_space = _read_yaml("spaces/runtime-space.yaml")
-    runtime_entry = next(space for space in registry["spaces"] if space["id"] == "runtime-space")
+    runtime_entry = next(
+        space for space in registry["spaces"] if space["id"] == "runtime-space"
+    )
 
     assert runtime_space["space_kind"] == "runtime"
     assert runtime_space["routing"]["default_project"] == "projects/agentmesh"
-    assert "spaces/runtime-space-identity-admission.yaml" in runtime_space["policy_refs"]
+    assert (
+        "spaces/runtime-space-identity-admission.yaml" in runtime_space["policy_refs"]
+    )
     assert "spaces/runtime-space-rollout-policy.yaml" in runtime_space["policy_refs"]
-    assert "spaces/runtime-space-cross-root-rule-registry.yaml" in runtime_space["policy_refs"]
+    assert (
+        "spaces/runtime-space-cross-root-rule-registry.yaml"
+        in runtime_space["policy_refs"]
+    )
     assert "data/runtime-space-access-policy.yaml" in runtime_space["policy_refs"]
     assert runtime_entry["manifest"] == "spaces/runtime-space.yaml"
     assert runtime_entry["space_kind"] == "runtime"
-    assert "spaces/runtime-space-cross-root-rule-registry.yaml" in runtime_entry["policy_refs"]
+    assert (
+        "spaces/runtime-space-cross-root-rule-registry.yaml"
+        in runtime_entry["policy_refs"]
+    )
     assert "data/runtime-space-access-policy.yaml" in runtime_entry["policy_refs"]
 
 

@@ -17,6 +17,7 @@ The two roles share this module because both produce audit-style output
 audit trail functions remain at the top of the file for backward
 compatibility; the compliance checks follow under a clear section header.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,6 +38,7 @@ from omo.omo_paths import (
     TASKS_PLANNED_DIR,
     WORKSPACE_ROOT,
 )
+
 # 复用 omo_io.AppendOnlyLog (P49+ AppendOnlyLog 抽象: JSONL 物理读写唯一入口)
 from omo.omo_io import AppendOnlyLog
 
@@ -87,17 +89,19 @@ def record(
 
 def record_compute_node_state(node_id: str, **fields: dict) -> dict:
     """Safe audit write-back for M1 compute node state. (R3 Adaptive Feedback)
-    
+
     Loads the corresponding YAML file from projects/ecos/src/ecos/ssot/mof/m1/compute_engine/,
     updates fields (like status, last_seen), and writes back safely.
     """
     from omo.omo_shared import load_yaml
     from omo.omo_io import write_yaml_atomic
-    
-    m1_dir = Path("~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/compute_engine").expanduser()
+
+    m1_dir = Path(
+        "~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/compute_engine"
+    ).expanduser()
     m1_dir.mkdir(parents=True, exist_ok=True)
     target_file = None
-    
+
     for f in m1_dir.glob("*.yaml"):
         try:
             data = load_yaml(f)
@@ -106,16 +110,19 @@ def record_compute_node_state(node_id: str, **fields: dict) -> dict:
                 break
         except Exception:
             pass
-            
+
     if target_file is None:
         target_file = m1_dir / f"{node_id}.yaml"
         data = {"node_id": node_id, "schema_version": 1}
-        
+
     for k, v in fields.items():
         data[k] = v
-        
+
     write_yaml_atomic(target_file, data)
-    return record(action="mesh_node_state_update", details=f"Updated M1 YAML for node {node_id}: {fields.get('status')}")
+    return record(
+        action="mesh_node_state_update",
+        details=f"Updated M1 YAML for node {node_id}: {fields.get('status')}",
+    )
 
 
 def query(limit: int = 50, audit_file: str | Path | None = None) -> list[dict]:
@@ -201,7 +208,9 @@ class GovernanceReport:
         ]
         for c in self.checks:
             sev = sev_emoji.get(c.severity, c.severity)
-            lines.append(f"| {c.name} | {c.category} | {sev} | {c.score:.0f} | {c.message} |")
+            lines.append(
+                f"| {c.name} | {c.category} | {sev} | {c.score:.0f} | {c.message} |"
+            )
 
         lines += ["", "## 2. 检查细节", ""]
         for c in self.checks:
@@ -271,7 +280,12 @@ def _mini_yaml_parse(text: str) -> dict:
     out: dict = {}
     for line in text.splitlines():
         line = line.rstrip()
-        if not line or line.startswith("#") or line.startswith(" ") or line.startswith("\t"):
+        if (
+            not line
+            or line.startswith("#")
+            or line.startswith(" ")
+            or line.startswith("\t")
+        ):
             continue
         if ":" not in line:
             continue
@@ -458,7 +472,9 @@ def governance_check_adr_links() -> CheckResult:
     referenced: set[str] = set()
     for m in re.finditer(r"\b(\d{4})-([a-z0-9-]+)\.md\b", content):
         referenced.add(f"{m.group(1)}-{m.group(2)}.md")
-    existing: set[str] = {p.name for p in decisions_dir.glob("[0-9][0-9][0-9][0-9]-*.md")}
+    existing: set[str] = {
+        p.name for p in decisions_dir.glob("[0-9][0-9][0-9][0-9]-*.md")
+    }
     broken = sorted(referenced - existing)
     orphan = sorted(existing - referenced)
     if not broken and not orphan:
@@ -522,11 +538,11 @@ def governance_check_task_consistency() -> CheckResult:
                 matches = list((_WORKSPACE_ROOT).glob(d))
                 if matches:
                     continue
-                inconsistent.append(
-                    f"{yaml_file.stem} → {d} (glob 展开无匹配)"
-                )
+                inconsistent.append(f"{yaml_file.stem} → {d} (glob 展开无匹配)")
                 continue
-            inconsistent.append(f"{yaml_file.stem} → {d} (status=completed 但文件不存在)")
+            inconsistent.append(
+                f"{yaml_file.stem} → {d} (status=completed 但文件不存在)"
+            )
     if checked == 0:
         return CheckResult(
             name="task consistency",
@@ -579,7 +595,9 @@ def governance_check_doc_lifecycle() -> CheckResult:
         )
 
     md_files = [f for f in omo.rglob("*.md")] + [f for f in omo.rglob("*.yaml")]
-    md_files = [f for f in md_files if "_delivery" not in f.parts and "/drafts/" not in str(f)]
+    md_files = [
+        f for f in md_files if "_delivery" not in f.parts and "/drafts/" not in str(f)
+    ]
 
     need_fm_total = 0
     frontmatter_active = 0
@@ -600,7 +618,12 @@ def governance_check_doc_lifecycle() -> CheckResult:
             except Exception:
                 continue
             fm = _parse_frontmatter(content)
-            if fm and fm.get("status") in {"active", "deprecated", "archived", "experimental"}:
+            if fm and fm.get("status") in {
+                "active",
+                "deprecated",
+                "archived",
+                "experimental",
+            }:
                 frontmatter_active += 1
             else:
                 frontmatter_missing += 1
@@ -650,7 +673,7 @@ def governance_check_doc_lifecycle() -> CheckResult:
         severity = "fail"
 
     message = (
-        f"frontmatter {frontmatter_active}/{need_fm_total} ({frontmatter_active/max(need_fm_total,1)*100:.0f}%), "
+        f"frontmatter {frontmatter_active}/{need_fm_total} ({frontmatter_active / max(need_fm_total, 1) * 100:.0f}%), "
         f"dead docs {dead_docs}, contradictory {contradictory_refs}"
     )
 
@@ -706,17 +729,19 @@ def governance_check_agora_health() -> CheckResult:
             )
         import asyncio
         import threading
-        
+
         coro = check_all_health(endpoints)
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = None
-            
+
         if loop is not None and loop.is_running():
             res_container = []
+
             def _run_in_thread():
                 res_container.append(asyncio.run(coro))
+
             t = threading.Thread(target=_run_in_thread)
             t.start()
             t.join()
@@ -792,16 +817,24 @@ def build_recommendations(checks: list[CheckResult]) -> list[str]:
         if c.severity == "ok":
             continue
         if c.category == "lint":
-            recs.append("修复 ruff 错误, 参考 `cd projects/kairon && uv run ruff check packages/ --fix`")
+            recs.append(
+                "修复 ruff 错误, 参考 `cd projects/kairon && uv run ruff check packages/ --fix`"
+            )
         elif c.category == "tests":
             sample = ", ".join(d.split(":")[0] for d in c.details[:3])
             recs.append(f"为 {sample} 等包至少添加 1 个 smoke test")
         elif c.category == "debt":
-            recs.append("给 resolved/closed 债务补上 `resolution_evidence` 字段(>= 20 字符)")
+            recs.append(
+                "给 resolved/closed 债务补上 `resolution_evidence` 字段(>= 20 字符)"
+            )
         elif c.category == "knowledge":
-            recs.append("清理 ADR INDEX.md 中的死链 / 补齐未列出的 ADR / 创建缺失的 ADR")
+            recs.append(
+                "清理 ADR INDEX.md 中的死链 / 补齐未列出的 ADR / 创建缺失的 ADR"
+            )
         elif c.category == "tasks":
-            recs.append("补齐任务 YAML 中声明的 deliverables, 或将 status 回退到 in_progress")
+            recs.append(
+                "补齐任务 YAML 中声明的 deliverables, 或将 status 回退到 in_progress"
+            )
         elif c.category == "agora":
             unhealthy = ", ".join(d for d in c.details[:5])
             recs.append(
@@ -855,10 +888,13 @@ def render_markdown(report: GovernanceReport) -> str:
 def governance_main(argv: list[str] | None = None) -> int:
     """CLI: omo governance audit [--output PATH] [--json] [--no-history]."""
     parser = argparse.ArgumentParser(prog="omo governance audit")
-    parser.add_argument("--output", "-o", default=None, help="Markdown 报告输出路径(默认 stdout)")
+    parser.add_argument(
+        "--output", "-o", default=None, help="Markdown 报告输出路径(默认 stdout)"
+    )
     parser.add_argument("--json", action="store_true", help="同时输出 JSON 数据")
     parser.add_argument(
-        "--no-history", action="store_true",
+        "--no-history",
+        action="store_true",
         help="不写入治理历史 JSONL(默认会写)",
     )
     args = parser.parse_args(argv)
@@ -874,7 +910,9 @@ def governance_main(argv: list[str] | None = None) -> int:
         print(md)
 
     if args.json:
-        json_target = Path(args.output) if args.output else Path("/tmp/governance_audit.json")
+        json_target = (
+            Path(args.output) if args.output else Path("/tmp/governance_audit.json")
+        )
         json_path = json_target.with_suffix(".json")
         json_path.write_text(
             json.dumps(asdict(report), ensure_ascii=False, indent=2),
@@ -890,15 +928,22 @@ def governance_main(argv: list[str] | None = None) -> int:
         try:
             from omo.omo_history import append_entry
 
-            target = append_entry({
-                "total_score": report.total_score,
-                "grade": report.grade,
-                "checks": [
-                    {"name": c.name, "category": c.category, "score": c.score, "severity": c.severity}
-                    for c in report.checks
-                ],
-                "watchlist_count": len(report.watchlist),
-            })
+            target = append_entry(
+                {
+                    "total_score": report.total_score,
+                    "grade": report.grade,
+                    "checks": [
+                        {
+                            "name": c.name,
+                            "category": c.category,
+                            "score": c.score,
+                            "severity": c.severity,
+                        }
+                        for c in report.checks
+                    ],
+                    "watchlist_count": len(report.watchlist),
+                }
+            )
             print(f"[AUDIT] 治理历史已 append: {target}")
         except Exception as exc:
             print(f"[AUDIT] 治理历史写入失败(不影响主流程): {exc}", file=sys.stderr)
@@ -934,7 +979,9 @@ def governance_history_main(argv: list[str] | None = None) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     """主 CLI 入口: `omo audit` 子命令路由."""
-    parser = argparse.ArgumentParser(prog="omo audit", description="OMO governance audit")
+    parser = argparse.ArgumentParser(
+        prog="omo audit", description="OMO governance audit"
+    )
     sub = parser.add_subparsers(dest="cmd")
     sub.add_parser("governance", help="Run 6-check workspace compliance audit")
     sub.add_parser("history", help="View governance history")

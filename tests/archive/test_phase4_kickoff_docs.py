@@ -46,9 +46,26 @@ def test_phase4_wave1_closure_is_recorded():
     ]:
         assert (OMO_ROOT / rel_path).exists(), rel_path
 
-    assert "[phase4-execution-roadmap.md](plans/phase4-execution-roadmap.md)" in index_text
-    assert "[worker-collaboration-effectiveness-review.md](summaries/worker-collaboration-effectiveness-review.md)" in index_text
-    assert "[p4-wave1-worker-ops-baseline.md](summaries/p4-wave1-worker-ops-baseline.md)" in index_text
-    assert "[phase4-execution-roadmap.md](../../plans/phase4-execution-roadmap.md)" in design_text
-    assert "[worker-collaboration-effectiveness-review.md](../../summaries/worker-collaboration-effectiveness-review.md)" in process_text
-    assert "[p4-wave1-worker-ops-baseline.md](../../summaries/p4-wave1-worker-ops-baseline.md)" in process_text
+    assert (
+        "[phase4-execution-roadmap.md](plans/phase4-execution-roadmap.md)" in index_text
+    )
+    assert (
+        "[worker-collaboration-effectiveness-review.md](summaries/worker-collaboration-effectiveness-review.md)"
+        in index_text
+    )
+    assert (
+        "[p4-wave1-worker-ops-baseline.md](summaries/p4-wave1-worker-ops-baseline.md)"
+        in index_text
+    )
+    assert (
+        "[phase4-execution-roadmap.md](../../plans/phase4-execution-roadmap.md)"
+        in design_text
+    )
+    assert (
+        "[worker-collaboration-effectiveness-review.md](../../summaries/worker-collaboration-effectiveness-review.md)"
+        in process_text
+    )
+    assert (
+        "[p4-wave1-worker-ops-baseline.md](../../summaries/p4-wave1-worker-ops-baseline.md)"
+        in process_text
+    )

@@ -1,4 +1,5 @@
 """Tests for omo.model_driven_bridge (Round 5 P2)."""
+
 from __future__ import annotations
 
 import sys
@@ -34,10 +35,15 @@ def test_make_pipeline_tracker_with_log_writes_events(tmp_path):
 
     # 验证 log 文件包含 1 条 event
     assert log_path.exists()
-    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    lines = [
+        line_
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(lines) == 1
 
     import json
+
     event = json.loads(lines[0])
     assert event["action"] == "start_phase"
     assert event["phase"] == "cold_start"
@@ -60,7 +66,11 @@ def test_wire_pipeline_tracker_attaches_to_existing(tmp_path):
 
     # 触发 → 写 log
     tracker.start_phase(PipelinePhase.COLD_START)
-    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    lines = [
+        line_
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(lines) == 1
 
 
@@ -87,6 +97,8 @@ def test_bridge_returns_chainable_tracker(tmp_path):
     """make_pipeline_tracker_with_log 返回可链式调用."""
     from omo.model_driven_bridge import make_pipeline_tracker_with_log
 
-    tracker = make_pipeline_tracker_with_log(entity_id="chain-test", log_path=tmp_path / "x.jsonl")
+    tracker = make_pipeline_tracker_with_log(
+        entity_id="chain-test", log_path=tmp_path / "x.jsonl"
+    )
     assert tracker.entity_id == "chain-test"
     assert tracker._on_event is not None

@@ -17,7 +17,9 @@ def _generate_task_id(title: str) -> str:
     return f"IMPORTED-{hash_slug}"
 
 
-def _resolve_depends_on(depends_on: list[str], title_to_imported: dict[str, str]) -> list[str]:
+def _resolve_depends_on(
+    depends_on: list[str], title_to_imported: dict[str, str]
+) -> list[str]:
     resolved: list[str] = []
     for ref in depends_on:
         ref = ref.strip()
@@ -25,7 +27,11 @@ def _resolve_depends_on(depends_on: list[str], title_to_imported: dict[str, str]
             continue
         matched = None
         for title, imported_id in title_to_imported.items():
-            if title == ref or title.startswith(ref + ":") or title.startswith(ref + " "):
+            if (
+                title == ref
+                or title.startswith(ref + ":")
+                or title.startswith(ref + " ")
+            ):
                 matched = imported_id
                 break
         resolved.append(matched if matched else ref)
@@ -223,7 +229,9 @@ def _import_pitch(source_file: Path, omo_dir: Path):
             appetite = line.replace("**Appetite:**", "").strip()
 
     if not upstream:
-        print("  ❌ [CR-STRATEGY-01 孤儿拦截] Pitch 缺乏 Upstream 锚点，拒绝转化为 Bet。请在文档头部声明 `> **Upstream**: MS-XXX`。")
+        print(
+            "  ❌ [CR-STRATEGY-01 孤儿拦截] Pitch 缺乏 Upstream 锚点，拒绝转化为 Bet。请在文档头部声明 `> **Upstream**: MS-XXX`。"
+        )
         return
 
     bet_id = f"BET-{hashlib.md5(source_file.name.encode()).hexdigest()[:4]}"
@@ -278,7 +286,9 @@ def _import_pitch(source_file: Path, omo_dir: Path):
 
 
 def main(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(description="OMO Bridge (Connect external tools like BMAD, OpenSpec, Pitches)")
+    parser = argparse.ArgumentParser(
+        description="OMO Bridge (Connect external tools like BMAD, OpenSpec, Pitches)"
+    )
     parser.add_argument("source_file", type=str, help="The file to import from")
     parser.add_argument(
         "--format",

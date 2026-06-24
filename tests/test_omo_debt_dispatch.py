@@ -79,12 +79,16 @@ def _owner_routing() -> dict[str, object]:
 
 
 def test_build_dispatch_packet_freezes_commands_and_adds_run_ref() -> None:
-    packet = build_dispatch_packet(_owner_routing(), dispatched_at="2026-06-10T00:00:00Z")
+    packet = build_dispatch_packet(
+        _owner_routing(), dispatched_at="2026-06-10T00:00:00Z"
+    )
 
     assert packet["dispatched_at"] == "2026-06-10T00:00:00Z"
     assert packet["source_owner_routing_ref"] == ".omo/debt/owner-routing/current.yaml"
     assert packet["source_owner_routing_generated_at"] == "2026-06-10T00:00:00Z"
-    assert packet["latest_run_ref"] == ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
+    assert (
+        packet["latest_run_ref"] == ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
+    )
     first_entry = packet["owners"][0]["entries"][0]
     assert first_entry["command"] == (
         "python3 scripts/omo_debt.py revalidate --omo-dir .omo --id SB_DECOMPOSITION "
@@ -98,7 +102,9 @@ def test_build_dispatch_packet_freezes_commands_and_adds_run_ref() -> None:
 
 
 def test_build_dispatch_packet_uses_shell_command_for_non_revalidate_lanes() -> None:
-    packet = build_dispatch_packet(_owner_routing(), dispatched_at="2026-06-10T00:00:00Z")
+    packet = build_dispatch_packet(
+        _owner_routing(), dispatched_at="2026-06-10T00:00:00Z"
+    )
 
     schedule_entry = packet["owners"][0]["entries"][1]
     assert schedule_entry["command"] == (

@@ -16,30 +16,75 @@ SCRIPT_DIR = Path.home() / "Workspace" / "projects" / "omo" / "scripts"
 
 # X3 Tier definitions from x3-value-stack.yaml
 X3_TIERS = [
-    {"id": "Axiom",     "color": "#c084fc", "weight": 2.0, "half_life": "50 years"},
+    {"id": "Axiom", "color": "#c084fc", "weight": 2.0, "half_life": "50 years"},
     {"id": "Principle", "color": "#818cf8", "weight": 1.5, "half_life": "8 years"},
-    {"id": "Theory",    "color": "#38bdf8", "weight": 1.5, "half_life": "20 years"},
+    {"id": "Theory", "color": "#38bdf8", "weight": 1.5, "half_life": "20 years"},
     {"id": "Framework", "color": "#4ade80", "weight": 1.2, "half_life": "4 years"},
     {"id": "Knowledge", "color": "#fbbf24", "weight": 1.0, "half_life": "2 years"},
-    {"id": "Skill",     "color": "#fb923c", "weight": 0.8, "half_life": "9 months"},
-    {"id": "Tool",      "color": "#f87171", "weight": 0.6, "half_life": "3 months"},
+    {"id": "Skill", "color": "#fb923c", "weight": 0.8, "half_life": "9 months"},
+    {"id": "Tool", "color": "#f87171", "weight": 0.6, "half_life": "3 months"},
 ]
 
 # X1 Governance Policies from x1-governance-policies.yaml
 X1_POLICIES = [
-    {"id": "X1-AUDIT-001",   "name": "审计完整性",     "category": "audit",          "level": "mandatory"},
-    {"id": "X1-AUDIT-002",   "name": "权限最小化",     "category": "authorization",  "level": "mandatory"},
-    {"id": "X1-AUTH-001",    "name": "身份追踪",       "category": "identity",       "level": "advisory"},
-    {"id": "X1-TRUST-001",   "name": "治理链完整性",   "category": "trust",          "level": "advisory"},
-    {"id": "X1-CONST-001",   "name": "宪法遵从",       "category": "constitution",   "level": "mandatory"},
+    {
+        "id": "X1-AUDIT-001",
+        "name": "审计完整性",
+        "category": "audit",
+        "level": "mandatory",
+    },
+    {
+        "id": "X1-AUDIT-002",
+        "name": "权限最小化",
+        "category": "authorization",
+        "level": "mandatory",
+    },
+    {
+        "id": "X1-AUTH-001",
+        "name": "身份追踪",
+        "category": "identity",
+        "level": "advisory",
+    },
+    {
+        "id": "X1-TRUST-001",
+        "name": "治理链完整性",
+        "category": "trust",
+        "level": "advisory",
+    },
+    {
+        "id": "X1-CONST-001",
+        "name": "宪法遵从",
+        "category": "constitution",
+        "level": "mandatory",
+    },
 ]
 
 # X2 Lifecycle Rules from x2-lifecycle-rules.yaml
 X2_RULES = [
-    {"id": "X2-FRESH-001",      "name": "服务保鲜",     "category": "freshness",  "interval": "30 days"},
-    {"id": "X2-FRESH-002",      "name": "知识保鲜",     "category": "freshness",  "interval": "7 days"},
-    {"id": "X2-LIFECYCLE-001",  "name": "闲置退役",     "category": "lifecycle",  "interval": "30 days"},
-    {"id": "X2-LIFECYCLE-002",  "name": "债务半衰期",   "category": "lifecycle",  "interval": "N/A"},
+    {
+        "id": "X2-FRESH-001",
+        "name": "服务保鲜",
+        "category": "freshness",
+        "interval": "30 days",
+    },
+    {
+        "id": "X2-FRESH-002",
+        "name": "知识保鲜",
+        "category": "freshness",
+        "interval": "7 days",
+    },
+    {
+        "id": "X2-LIFECYCLE-001",
+        "name": "闲置退役",
+        "category": "lifecycle",
+        "interval": "30 days",
+    },
+    {
+        "id": "X2-LIFECYCLE-002",
+        "name": "债务半衰期",
+        "category": "lifecycle",
+        "interval": "N/A",
+    },
 ]
 
 # X3 tier mapping based on debt dimension
@@ -176,7 +221,9 @@ def load_debt_items():
         data["x2_freshness"] = data.get("x2_freshness", "")
 
         items.append(data)
-        print(f"  LOADED: {data['id']} | sev={data.get('severity','?')} | x3={data['x3_tier']} | x1={','.join(data['x1_policy_refs'])}")
+        print(
+            f"  LOADED: {data['id']} | sev={data.get('severity', '?')} | x3={data['x3_tier']} | x1={','.join(data['x1_policy_refs'])}"
+        )
 
     print(f"Total loaded: {len(items)} debt items")
     return items
@@ -204,7 +251,12 @@ def generate_html(items):
     # X1 policy coverage
     policy_counts = {}
     for p in X1_POLICIES:
-        policy_counts[p["id"]] = {"name": p["name"], "count": 0, "category": p["category"], "level": p["level"]}
+        policy_counts[p["id"]] = {
+            "name": p["name"],
+            "count": 0,
+            "category": p["category"],
+            "level": p["level"],
+        }
     for d in items:
         for ref in d.get("x1_policy_refs", []):
             if ref in policy_counts:
@@ -213,14 +265,24 @@ def generate_html(items):
     # Build X2 rule coverage
     rule_counts = {}
     for r in X2_RULES:
-        rule_counts[r["id"]] = {"name": r["name"], "count": 0, "category": r["category"]}
+        rule_counts[r["id"]] = {
+            "name": r["name"],
+            "count": 0,
+            "category": r["category"],
+        }
     for d in items:
         for rule in d.get("x2_rules", []):
             if rule in rule_counts:
                 rule_counts[rule]["count"] += 1
 
     # Sort items by severity (critical first)
-    sorted_items = sorted(items, key=lambda d: (SEVERITY_ORDER.get(d.get("severity", "low"), 99), d.get("id", "")))
+    sorted_items = sorted(
+        items,
+        key=lambda d: (
+            SEVERITY_ORDER.get(d.get("severity", "low"), 99),
+            d.get("id", ""),
+        ),
+    )
 
     # JSON data for embedding in HTML
     debt_json = json.dumps(sorted_items, ensure_ascii=False)

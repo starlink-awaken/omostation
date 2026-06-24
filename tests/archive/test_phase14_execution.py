@@ -25,7 +25,10 @@ def test_phase14_evidence_completes_deferred_ecosystem_scope() -> None:
     security = _read_yaml("evidence/phase14/security-review.yaml")
 
     assert triage["mode"] == "governed-triage"
-    assert len([item for item in triage["ranked_items"] if item["selected_for_phase14"]]) >= 3
+    assert (
+        len([item for item in triage["ranked_items"] if item["selected_for_phase14"]])
+        >= 3
+    )
     assert pilots["mode"] == "adapter-contract-only"
     assert pilots["mutation"] == "disabled"
     assert len(pilots["pilots"]) == 3
@@ -43,7 +46,9 @@ def test_phase14_evidence_completes_deferred_ecosystem_scope() -> None:
 def test_phase14_closeout_and_tasks_are_recorded() -> None:
     assert "Status: GO" in _read("summaries/phase14-closeout.md")
     assert "Phase 14 is complete" in _read("summaries/phase14-closeout.md")
-    assert "Phase 14 executed the deferred ecosystem backlog" in _read("summaries/phase14-retrospective.md")
+    assert "Phase 14 executed the deferred ecosystem backlog" in _read(
+        "summaries/phase14-retrospective.md"
+    )
     assert "Status: completed" in _read("plans/phase14-deferred-ecosystem-backlog.md")
     assert "Status: completed" in _read("plans/phase14-program-plan.md")
     assert "Status: pass" in _read("_knowledge/management/phase14-cross-audit.md")
@@ -59,14 +64,17 @@ def test_phase14_closeout_and_tasks_are_recorded() -> None:
         assert "status: done" in task
 
 
-def test_phase14_remains_completed_after_phase16_completion_allowing_only_authorized_active_tasks() -> None:
+def test_phase14_remains_completed_after_phase16_completion_allowing_only_authorized_active_tasks() -> (
+    None
+):
     goals = _read_yaml("goals/current.yaml")
     state = _read_yaml("state/system.yaml")
     active_tasks = list((OMO_ROOT / "tasks" / "active").glob("*.yaml"))
-    active_payloads = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in active_tasks]
+    active_payloads = [
+        yaml.safe_load(path.read_text(encoding="utf-8")) for path in active_tasks
+    ]
     stale_active = [
-        task for task in active_payloads
-        if task.get("phase", 0) <= goals["phase"]
+        task for task in active_payloads if task.get("phase", 0) <= goals["phase"]
     ]
     unauthorized_active = [
         task["id"]
@@ -77,7 +85,12 @@ def test_phase14_remains_completed_after_phase16_completion_allowing_only_author
 
     assert goals["phase"] == 16
     assert goals["status"] == "completed"
-    assert [goal["status"] for goal in goals["goals"]] == ["completed", "completed", "completed", "completed"]
+    assert [goal["status"] for goal in goals["goals"]] == [
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+    ]
     assert state["current_phase"] == 16
     assert state["phase_status"] == "completed"
     assert state["phase14_status"] == "completed"
@@ -85,4 +98,6 @@ def test_phase14_remains_completed_after_phase16_completion_allowing_only_author
     assert state["phase16_status"] == "completed"
     assert state["active_tasks"] == len(active_tasks)
     assert stale_active == [], f"Unexpected non-future active tasks: {stale_active}"
-    assert unauthorized_active == [], f"Unexpected non-authorized active tasks: {unauthorized_active}"
+    assert unauthorized_active == [], (
+        f"Unexpected non-authorized active tasks: {unauthorized_active}"
+    )

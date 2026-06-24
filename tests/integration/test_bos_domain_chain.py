@@ -8,6 +8,7 @@ omo 端 (本测试) 验证:
   - 至少 5 条跨域跳转 (memory↔analysis, analysis↔persona, persona↔capability,
     capability↔governance, governance↔analysis)
 """
+
 from __future__ import annotations
 
 import json
@@ -19,6 +20,7 @@ OMOSTATION_ROOT = Path("/Users/xiamingxing/Workspace")
 
 
 # ── Registry 元数据 ─────────────────────────────────
+
 
 def test_bos_registry_exists():
     """W0 验证: bos-registry.json 存在 (P33-W1 战役 2 落地)."""
@@ -44,6 +46,7 @@ def test_each_domain_has_at_least_5_uris():
     """W0 验证: 每个 Domain 至少 5 条 URI (P34-W0 战役 2 拓展后底线)."""
     regs = json.loads(BOS_REGISTRY.read_text())
     from collections import Counter
+
     counts = Counter(r.get("domain") for r in regs)
     for domain in ("memory", "governance", "analysis", "persona", "capability"):
         assert counts[domain] >= 5, (
@@ -103,6 +106,7 @@ def test_cross_domain_chain_count():
 
 # ── 5 域 cross-link 验证 (W0 元数据) ──────────────────
 
+
 def test_5_domain_cross_link_coverage():
     """W0 验证: 5 域 (memory / governance / analysis / persona / capability) 都在跨域链中."""
     domains_hit: set[str] = set()
@@ -111,16 +115,22 @@ def test_5_domain_cross_link_coverage():
             domain = uri.split("/")[2]  # bos://<domain>/...
             domains_hit.add(domain)
     assert domains_hit == {
-        "memory", "governance", "analysis", "persona", "capability",
+        "memory",
+        "governance",
+        "analysis",
+        "persona",
+        "capability",
     }, f"跨域链未覆盖 5 域: {domains_hit}"
 
 
 # ── W0 总结 (P35 报告用) ─────────────────────────────
 
+
 def test_p35w0_summary():
     """W0 总结: 5 域 + ≥ 40 URI + 5 跨域链 — 跨 Domain 串联基础设施就绪."""
     regs = json.loads(BOS_REGISTRY.read_text())
     from collections import Counter
+
     counts = Counter(r.get("domain") for r in regs)
     summary = {
         "total_uris": len(regs),

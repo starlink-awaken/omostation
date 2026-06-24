@@ -11,7 +11,7 @@ def test_apply_diff_uses_system_projection_broker(tmp_path: Path) -> None:
     system_path = tmp_path / ".omo" / "state" / "system.yaml"
     system_path.parent.mkdir(parents=True, exist_ok=True)
     system_path.write_text(
-        "current_phase: 42\ncompleted_tasks: 0\nupdated_at: \"2026-06-22T00:00:00Z\"\n",
+        'current_phase: 42\ncompleted_tasks: 0\nupdated_at: "2026-06-22T00:00:00Z"\n',
         encoding="utf-8",
     )
 
@@ -32,4 +32,7 @@ def test_apply_diff_uses_system_projection_broker(tmp_path: Path) -> None:
     assert data["completed_tasks"] == 5
     assert "completed_tasks: 5" in rendered
     artifact_dir = tmp_path / ".omo" / "_delivery" / "ingress" / "state"
-    assert any(path.name.startswith("system-projection-") for path in artifact_dir.glob("*.yaml"))
+    assert any(
+        path.name.startswith("system-projection-")
+        for path in artifact_dir.glob("*.yaml")
+    )

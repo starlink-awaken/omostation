@@ -1,4 +1,5 @@
 """omo.categories.governance — 治理面模块索引."""
+
 from omo import (  # noqa: F401
     omo_governance,  # noqa: F401
     omo_governance_overlay,  # noqa: F401

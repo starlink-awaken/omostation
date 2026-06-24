@@ -8,6 +8,7 @@
   5. 默认路径 = .omo/_knowledge/omo-trail.jsonl
   6. 第 7 个 schema 在 SCHEMA_REGISTRY 中
 """
+
 from __future__ import annotations
 
 import json
@@ -50,7 +51,11 @@ def test_record_step_writes_seven_fields(tmp_path):
     assert rec["ts"].endswith("Z"), "ts must end with Z (omo_audit convention)"
 
     # 落盘: 1 行 JSONL
-    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    lines = [
+        line_
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(lines) == 1
     on_disk = json.loads(lines[0])
     assert on_disk == rec, "落盘内容与返回 record 一致"
@@ -67,7 +72,9 @@ def test_read_trail_reverse_and_filters(tmp_path):
 
     # 写 5 条 (混合 actor/action)
     record_step(actor="user", action="edit", target="a.py", log_path=log_path)
-    record_step(actor="agent:foo", action="exec", target="git status", log_path=log_path)
+    record_step(
+        actor="agent:foo", action="exec", target="git status", log_path=log_path
+    )
     record_step(actor="user", action="read", target="b.py", log_path=log_path)
     record_step(actor="agent:foo", action="edit", target="c.py", log_path=log_path)
     record_step(actor="user", action="edit", target="d.py", log_path=log_path)
@@ -122,6 +129,7 @@ def test_pydantic_schema_in_registry_and_validates():
 
     # 非法 status 抛 ValidationError
     import pydantic
+
     with pytest.raises(pydantic.ValidationError):
         OmoTrailRecord(
             ts="2026-06-09T12:00:00Z",
@@ -152,16 +160,36 @@ def test_append_only_log_writes_via_schema_rejects_drift(tmp_path):
     log = AppendOnlyLog(log_path)
 
     # 合法: schema 校验通过
-    good = {"ts": "2026-06-09T01:00:00Z", "actor": "u", "action": "a", "target": "t", "status": "ok", "duration_ms": 0, "parent_step_id": ""}
+    good = {
+        "ts": "2026-06-09T01:00:00Z",
+        "actor": "u",
+        "action": "a",
+        "target": "t",
+        "status": "ok",
+        "duration_ms": 0,
+        "parent_step_id": "",
+    }
     log.append(good, schema=OmoTrailRecord)
 
     # 非法: status 不在 enum → 抛 ValidationError
-    bad = {"ts": "2026-06-09T01:00:00Z", "actor": "u", "action": "a", "target": "t", "status": "wrong", "duration_ms": 0, "parent_step_id": ""}
+    bad = {
+        "ts": "2026-06-09T01:00:00Z",
+        "actor": "u",
+        "action": "a",
+        "target": "t",
+        "status": "wrong",
+        "duration_ms": 0,
+        "parent_step_id": "",
+    }
     with pytest.raises(pydantic.ValidationError):
         log.append(bad, schema=OmoTrailRecord)
 
     # 落盘: 仅 1 条 (good)
-    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    lines = [
+        line_
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(lines) == 1
 
 
@@ -173,22 +201,37 @@ def test_cli_record_subprocess(tmp_path):
     log_path = tmp_path / "cli-trail.jsonl"
     r = subprocess.run(
         [
-            sys.executable, "-m", "omo.omo_trail", "record",
-            "--actor", "user",
-            "--action", "edit",
-            "--target", "omo_trail.py",
-            "--status", "ok",
-            "--duration-ms", "250",
-            "--log", str(log_path),
+            sys.executable,
+            "-m",
+            "omo.omo_trail",
+            "record",
+            "--actor",
+            "user",
+            "--action",
+            "edit",
+            "--target",
+            "omo_trail.py",
+            "--status",
+            "ok",
+            "--duration-ms",
+            "250",
+            "--log",
+            str(log_path),
         ],
-        capture_output=True, text=True, timeout=15,
+        capture_output=True,
+        text=True,
+        timeout=15,
         cwd=str(OMO_SRC.parent.parent),
     )
     assert r.returncode == 0, f"stderr: {r.stderr}"
     assert "✅ trail step recorded" in r.stdout
 
     # 验证 log 写 1 条 7-字段 record
-    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    lines = [
+        line_
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(lines) == 1
     rec = json.loads(lines[0])
     assert rec["actor"] == "user"
@@ -207,24 +250,41 @@ def test_cli_show_subprocess(tmp_path):
     for tgt in ("alpha.py", "beta.py", "gamma.py"):
         subprocess.run(
             [
-                sys.executable, "-m", "omo.omo_trail", "record",
-                "--actor", "user",
-                "--action", "edit",
-                "--target", tgt,
-                "--log", str(log_path),
+                sys.executable,
+                "-m",
+                "omo.omo_trail",
+                "record",
+                "--actor",
+                "user",
+                "--action",
+                "edit",
+                "--target",
+                tgt,
+                "--log",
+                str(log_path),
             ],
-            check=True, capture_output=True, text=True, timeout=10,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=str(OMO_SRC.parent.parent),
         )
 
     # show --limit 2
     r = subprocess.run(
         [
-            sys.executable, "-m", "omo.omo_trail", "show",
-            "--limit", "2",
-            "--log", str(log_path),
+            sys.executable,
+            "-m",
+            "omo.omo_trail",
+            "show",
+            "--limit",
+            "2",
+            "--log",
+            str(log_path),
         ],
-        capture_output=True, text=True, timeout=10,
+        capture_output=True,
+        text=True,
+        timeout=10,
         cwd=str(OMO_SRC.parent.parent),
     )
     assert r.returncode == 0
@@ -239,7 +299,9 @@ def test_cli_help_renders():
     """omo trail --help 应列出 record + show 子命令."""
     r = subprocess.run(
         [sys.executable, "-m", "omo.omo_trail", "--help"],
-        capture_output=True, text=True, timeout=10,
+        capture_output=True,
+        text=True,
+        timeout=10,
         cwd=str(OMO_SRC.parent.parent),
     )
     assert r.returncode == 0
@@ -253,6 +315,7 @@ def test_cli_help_renders():
 def test_default_trail_path():
     """不传 --log 时落 .omo/_knowledge/omo-trail.jsonl (默认)."""
     from omo.omo_trail import DEFAULT_TRAIL_PATH
+
     assert ".omo" in str(DEFAULT_TRAIL_PATH)
     assert "_knowledge" in str(DEFAULT_TRAIL_PATH)
     assert DEFAULT_TRAIL_PATH.name == "omo-trail.jsonl"
@@ -265,7 +328,9 @@ def test_trail_uses_append_only_log():
 
     src = inspect.getsource(record_step)
     assert "AppendOnlyLog" in src, "record_step should use AppendOnlyLog abstraction"
-    assert "schema=OmoTrailRecord" in src, "record_step should pass schema= for Pydantic 校验"
+    assert "schema=OmoTrailRecord" in src, (
+        "record_step should pass schema= for Pydantic 校验"
+    )
 
 
 def test_seventh_consumer_registered():
@@ -273,11 +338,18 @@ def test_seventh_consumer_registered():
     from omo.omo_io_schemas import SCHEMA_REGISTRY
 
     expected_keys = {
-        "omo_audit", "omo_bos_metrics", "omo_sync", "omo_alert",
-        "omo_event", "omo_history", "omo_trail",
+        "omo_audit",
+        "omo_bos_metrics",
+        "omo_sync",
+        "omo_alert",
+        "omo_event",
+        "omo_history",
+        "omo_trail",
     }
     actual_keys = set(SCHEMA_REGISTRY.keys())
     assert expected_keys.issubset(actual_keys), (
         f"missing: {expected_keys - actual_keys}"
     )
-    assert len(SCHEMA_REGISTRY) >= 7, f"expected ≥ 7 consumers, got {len(SCHEMA_REGISTRY)}"
+    assert len(SCHEMA_REGISTRY) >= 7, (
+        f"expected ≥ 7 consumers, got {len(SCHEMA_REGISTRY)}"
+    )

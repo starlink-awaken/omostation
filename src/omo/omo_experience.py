@@ -55,7 +55,11 @@ def _relative_ref(path: Path, root: Path) -> str:
 
 def _phase_and_wave(root: Path) -> tuple[int | None, int | None]:
     omo_root = _omo_root(root)
-    state = _load_yaml(omo_root / "state" / "system.yaml") if (omo_root / "state" / "system.yaml").exists() else {}
+    state = (
+        _load_yaml(omo_root / "state" / "system.yaml")
+        if (omo_root / "state" / "system.yaml").exists()
+        else {}
+    )
     goal_candidates = [
         omo_root / "_truth" / "goals" / "current.yaml",
         omo_root / "goals" / "current.yaml",
@@ -109,7 +113,11 @@ def _find_task_file(root: Path, task_id: str) -> Path:
 def build_session_bootstrap(root: Path) -> dict[str, object]:
     workspace_root = _workspace_root(root)
     omo_root = _omo_root(root)
-    state = _load_yaml(omo_root / "state" / "system.yaml") if (omo_root / "state" / "system.yaml").exists() else {}
+    state = (
+        _load_yaml(omo_root / "state" / "system.yaml")
+        if (omo_root / "state" / "system.yaml").exists()
+        else {}
+    )
     goal_candidates = [
         omo_root / "_truth" / "goals" / "current.yaml",
         omo_root / "goals" / "current.yaml",

@@ -10,7 +10,9 @@ def _read(rel_path: str) -> str:
     return (OMO_ROOT / rel_path).read_text(encoding="utf-8")
 
 
-def test_phase12_completion_and_phase13_plus_backlog_boundaries_are_registered() -> None:
+def test_phase12_completion_and_phase13_plus_backlog_boundaries_are_registered() -> (
+    None
+):
     plans_readme = _read("plans/README.md")
     root_index = _read("INDEX.md")
     control_index = _read("_control/INDEX.md")
@@ -50,7 +52,10 @@ def test_phase12_completion_and_phase13_plus_backlog_boundaries_are_registered()
     assert "Status: completed" in phase12
     assert "Canonical program: `phase12-program-plan.md`" in phase12
     assert "Entry gate: Phase 11 Wave 4 closeout GO" in phase12
-    assert "Phase 12 task packets have not been added to `tasks/active/` before human approval" in phase12
+    assert (
+        "Phase 12 task packets have not been added to `tasks/active/` before human approval"
+        in phase12
+    )
     assert "one fusion pilot" in phase12
 
     assert "Canonical: yes" in phase12_program
@@ -67,7 +72,9 @@ def test_phase12_completion_and_phase13_plus_backlog_boundaries_are_registered()
 
     assert "Status: completed" in phase13
     assert "Entry gate: Phase 12 closeout GO + explicit human approval" in phase13
-    assert "Supersedes as planning source: `archive/phase13-metacognition.md`" in phase13
+    assert (
+        "Supersedes as planning source: `archive/phase13-metacognition.md`" in phase13
+    )
     assert "Auto-apply remains disabled by default" in phase13
     assert "capability registry, scenario trace, one fusion pilot" in phase13
     assert ".omo/evidence/phase13/metacognition-baseline.yaml" in phase13
@@ -92,7 +99,10 @@ def test_phase12_completion_and_phase13_plus_backlog_boundaries_are_registered()
     assert "Mutation gate" in architecture_1214
     assert "Phase 15 supervised autonomous governance loop" in architecture_15
     assert "Compilation is not activation" in architecture_15
-    assert "Proposal-to-task compiler output must be inactive by construction" in architecture_15
+    assert (
+        "Proposal-to-task compiler output must be inactive by construction"
+        in architecture_15
+    )
     assert "Auto-apply remains disabled by default" in architecture_15
     assert "Deferred scope ledger" in review_1214
     assert "Do not create Phase 12, 13, or 14 active tasks" in review_1214

@@ -1020,7 +1020,11 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo / "_delivery" / "ingress" / "capabilities" / "bundle-2026-06-18T00-03-00Z.yaml",
+        omo
+        / "_delivery"
+        / "ingress"
+        / "capabilities"
+        / "bundle-2026-06-18T00-03-00Z.yaml",
         {
             "kind": "capability_registry_bundle_written",
             "capability_registry_id": "bundle",
@@ -1039,7 +1043,11 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo / "_delivery" / "ingress" / "capabilities" / "manual-capabilities-2026-06-18T00-04-00Z.yaml",
+        omo
+        / "_delivery"
+        / "ingress"
+        / "capabilities"
+        / "manual-capabilities-2026-06-18T00-04-00Z.yaml",
         {
             "kind": "manual_capabilities_written",
             "capability_registry_id": "manual-capabilities",
@@ -1247,7 +1255,9 @@ def test_build_governance_surfaces_report_ok(tmp_path: Path) -> None:
     assert report["ingress_registry"]["debt_ids"] == ["DEBT-1"]
 
 
-def test_build_governance_surfaces_report_accepts_multi_document_registry(tmp_path: Path) -> None:
+def test_build_governance_surfaces_report_accepts_multi_document_registry(
+    tmp_path: Path,
+) -> None:
     _seed_workspace(tmp_path)
     _write(
         tmp_path / ".omo" / "_truth" / "registry" / "omo-governance-surfaces.yaml",
@@ -1514,8 +1524,7 @@ def test_build_governance_surfaces_report_requires_mutation_ledger_gate(
 
     assert report["status"] == "error"
     assert any(
-        "pre-commit mutation ledger gate missing" in issue
-        for issue in report["issues"]
+        "pre-commit mutation ledger gate missing" in issue for issue in report["issues"]
     )
 
 

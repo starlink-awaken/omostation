@@ -11,6 +11,7 @@ Covers OMO-CLI-TEST-GAP debt remediation for:
 - omo_task
 - omo_evidence
 """
+
 from __future__ import annotations
 
 import json
@@ -23,7 +24,12 @@ import yaml
 # Ensure omo src is importable
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from omo.omo_goal import cmd_goal_create, cmd_goal_list, cmd_goal_progress, cmd_goal_status
+from omo.omo_goal import (
+    cmd_goal_create,
+    cmd_goal_list,
+    cmd_goal_progress,
+    cmd_goal_status,
+)
 from omo.omo_state import cmd_state_health, cmd_state_show, cmd_state_sync_tasks
 from omo.omo_debt_cli import cmd_debt_close, cmd_debt_desc, cmd_debt_list
 from omo.omo_knowledge import cmd_knowledge_add, cmd_knowledge_list
@@ -61,8 +67,18 @@ class TestOmoGoal:
             "status": "active",
             "current_wave": "W1",
             "goals": [
-                {"id": "G31.1", "desc": "Fix tests", "progress": 50.0, "status": "active"},
-                {"id": "G31.2", "desc": "Clean debt", "progress": 100.0, "status": "done"},
+                {
+                    "id": "G31.1",
+                    "desc": "Fix tests",
+                    "progress": 50.0,
+                    "status": "active",
+                },
+                {
+                    "id": "G31.2",
+                    "desc": "Clean debt",
+                    "progress": 100.0,
+                    "status": "done",
+                },
             ],
         }
         (goals_dir / "current.yaml").write_text(yaml.dump(goal_data))
@@ -83,8 +99,18 @@ class TestOmoGoal:
             "phase": 31,
             "current_wave": "W1",
             "goals": [
-                {"id": "G31.1", "desc": "Fix tests", "progress": 100.0, "status": "done"},
-                {"id": "G31.2", "desc": "Clean debt", "progress": 0.0, "status": "pending"},
+                {
+                    "id": "G31.1",
+                    "desc": "Fix tests",
+                    "progress": 100.0,
+                    "status": "done",
+                },
+                {
+                    "id": "G31.2",
+                    "desc": "Clean debt",
+                    "progress": 0.0,
+                    "status": "pending",
+                },
             ],
         }
         (goals_dir / "current.yaml").write_text(yaml.dump(goal_data))
@@ -96,7 +122,9 @@ class TestOmoGoal:
         assert data["done"] == 1
         assert data["pending"] == 1
 
-    def test_cmd_goal_status_accepts_multi_document_yaml(self, capsys, tmp_path: Path) -> None:
+    def test_cmd_goal_status_accepts_multi_document_yaml(
+        self, capsys, tmp_path: Path
+    ) -> None:
         omo_dir = tmp_path
         goals_dir = omo_dir / "goals"
         goals_dir.mkdir()
@@ -131,7 +159,9 @@ class TestOmoGoal:
         artifact = omo_dir / "_delivery" / "ingress" / "goals" / "G31.3.yaml"
         assert artifact.exists()
         registry = yaml.safe_load(
-            (omo_dir / "_delivery" / "ingress" / "registry.yaml").read_text(encoding="utf-8")
+            (omo_dir / "_delivery" / "ingress" / "registry.yaml").read_text(
+                encoding="utf-8"
+            )
         )
         assert registry["goals"]["by_source_ref"]["reviewer:goal:create"] == "G31.3"
 
@@ -150,7 +180,10 @@ class TestOmoGoal:
         omo_dir = tmp_path
         goals_dir = omo_dir / "goals"
         goals_dir.mkdir()
-        goal_data = {"phase": 31, "goals": [{"id": "G31.1", "desc": "Test", "progress": 0.0}]}
+        goal_data = {
+            "phase": 31,
+            "goals": [{"id": "G31.1", "desc": "Test", "progress": 0.0}],
+        }
         (goals_dir / "current.yaml").write_text(yaml.dump(goal_data))
         ret = cmd_goal_progress(omo_dir, "G31.1", 75.0)
         assert ret == 0
@@ -165,7 +198,10 @@ class TestOmoGoal:
         omo_dir = tmp_path
         goals_dir = omo_dir / "goals"
         goals_dir.mkdir()
-        goal_data = {"phase": 31, "goals": [{"id": "G31.1", "desc": "Test", "progress": 0.0}]}
+        goal_data = {
+            "phase": 31,
+            "goals": [{"id": "G31.1", "desc": "Test", "progress": 0.0}],
+        }
         (goals_dir / "current.yaml").write_text(yaml.dump(goal_data))
         ret = cmd_goal_progress(omo_dir, "G31.1", 100.0)
         assert ret == 0
@@ -228,7 +264,9 @@ class TestOmoState:
         data = json.loads(captured.out)
         assert data["current_phase"] == 31
 
-    def test_cmd_state_show_json_accepts_multi_document_yaml(self, capsys, tmp_path: Path) -> None:
+    def test_cmd_state_show_json_accepts_multi_document_yaml(
+        self, capsys, tmp_path: Path
+    ) -> None:
         omo_dir = tmp_path
         state_dir = omo_dir / "state"
         state_dir.mkdir()
@@ -308,7 +346,9 @@ class TestOmoState:
         assert any("TASK-planned0" in s for s in data["next_planned_tasks"])
         assert data["current_phase"] == 42  # 其他字段保真
         artifacts = sorted(
-            (omo_dir / "_delivery" / "ingress" / "state").glob("system-projection-*.yaml")
+            (omo_dir / "_delivery" / "ingress" / "state").glob(
+                "system-projection-*.yaml"
+            )
         )
         assert artifacts
         artifact = yaml.safe_load(artifacts[-1].read_text(encoding="utf-8"))
@@ -588,7 +628,11 @@ class TestOmoKnowledge:
         doc = omo_dir / "_knowledge" / "design" / "my-doc.md"
         assert doc.exists()
         assert "Hello world" in doc.read_text()
-        artifacts = list((omo_dir / "_delivery" / "ingress" / "knowledge").glob("design-my-doc-*.yaml"))
+        artifacts = list(
+            (omo_dir / "_delivery" / "ingress" / "knowledge").glob(
+                "design-my-doc-*.yaml"
+            )
+        )
         assert len(artifacts) == 1
 
     def test_cmd_knowledge_add_duplicate(self, capsys, tmp_path: Path) -> None:
@@ -601,7 +645,9 @@ class TestOmoKnowledge:
         captured = capsys.readouterr()
         assert "already exists" in captured.err
 
-    def test_cmd_knowledge_list_skips_missing_symlink(self, capsys, tmp_path: Path) -> None:
+    def test_cmd_knowledge_list_skips_missing_symlink(
+        self, capsys, tmp_path: Path
+    ) -> None:
         omo_dir = tmp_path
         mgmt_dir = omo_dir / "_knowledge" / "management"
         mgmt_dir.mkdir(parents=True)
@@ -697,14 +743,20 @@ class TestOmoStandard:
         omo_dir = tmp_path
         standards_dir = omo_dir / "standards"
         standards_dir.mkdir()
-        ret = cmd_standard_add(omo_dir, "New Standard", "This is the content.", stdin=False)
+        ret = cmd_standard_add(
+            omo_dir, "New Standard", "This is the content.", stdin=False
+        )
         assert ret == 0
         captured = capsys.readouterr()
         assert "Created standards/new-standard.md" in captured.out
         doc = standards_dir / "new-standard.md"
         assert doc.exists()
         assert "# New Standard" in doc.read_text()
-        artifacts = list((omo_dir / "_delivery" / "ingress" / "standards").glob("new-standard-*.yaml"))
+        artifacts = list(
+            (omo_dir / "_delivery" / "ingress" / "standards").glob(
+                "new-standard-*.yaml"
+            )
+        )
         assert len(artifacts) == 1
 
     def test_cmd_standard_add_duplicate(self, capsys, tmp_path: Path) -> None:
@@ -732,7 +784,9 @@ class TestOmoI0:
 
     def test_cmd_i0_status_running(self, capsys) -> None:
         mock_resp = MagicMock()
-        mock_resp.read.return_value = json.dumps({"routes": 42, "service_count": 5}).encode()
+        mock_resp.read.return_value = json.dumps(
+            {"routes": 42, "service_count": 5}
+        ).encode()
         with patch("omo.omo_i0.urlopen", return_value=mock_resp):
             ret = cmd_i0_status()
         assert ret == 0
@@ -805,7 +859,9 @@ class TestOmoTask:
         assert "id: T1" in captured.out
         assert "id: T2" not in captured.out
 
-    def test_cmd_task_create_uses_governed_ingress(self, capsys, tmp_path: Path) -> None:
+    def test_cmd_task_create_uses_governed_ingress(
+        self, capsys, tmp_path: Path
+    ) -> None:
         omo_dir = tmp_path
         ret = cmd_task_create(
             omo_dir,
@@ -830,9 +886,14 @@ class TestOmoTask:
         artifact = omo_dir / "_delivery" / "ingress" / "tasks" / f"{payload['id']}.yaml"
         assert artifact.exists()
         registry = yaml.safe_load(
-            (omo_dir / "_delivery" / "ingress" / "registry.yaml").read_text(encoding="utf-8")
+            (omo_dir / "_delivery" / "ingress" / "registry.yaml").read_text(
+                encoding="utf-8"
+            )
         )
-        assert registry["tasks"]["by_source_ref"]["reviewer:task:create-governed"] == payload["id"]
+        assert (
+            registry["tasks"]["by_source_ref"]["reviewer:task:create-governed"]
+            == payload["id"]
+        )
 
         captured = capsys.readouterr()
         assert "Created governed task:" in captured.out
@@ -884,12 +945,7 @@ class TestOmoTask:
         assert payload["completed_at"]
         assert payload["metadata"]["completed_at"]
         assert payload["metadata"]["completed_via"] == "omo task done"
-        artifact = (
-            omo_dir
-            / "_delivery"
-            / "ingress"
-            / "tasks"
-        )
+        artifact = omo_dir / "_delivery" / "ingress" / "tasks"
         assert list(artifact.glob("IMPORTED-test1-done-*.yaml"))
         captured = capsys.readouterr()
         assert "归档完成" in captured.out
@@ -901,7 +957,9 @@ class TestOmoTask:
         captured = capsys.readouterr()
         assert "未找到" in captured.out
 
-    def test_cmd_task_refresh_evidence_updates_done_task(self, capsys, tmp_path: Path) -> None:
+    def test_cmd_task_refresh_evidence_updates_done_task(
+        self, capsys, tmp_path: Path
+    ) -> None:
         omo_dir = tmp_path
         done_dir = omo_dir / "tasks" / "done"
         done_dir.mkdir(parents=True)
@@ -946,10 +1004,19 @@ class TestOmoTask:
         )
 
         assert ret == 0
-        payload = yaml.safe_load((done_dir / "TASK-DONE-1.yaml").read_text(encoding="utf-8"))
+        payload = yaml.safe_load(
+            (done_dir / "TASK-DONE-1.yaml").read_text(encoding="utf-8")
+        )
         assert payload["evidence_paths"] == ["evidence.md"]
-        assert payload["metadata"]["evidence_paths_refresh_source_ref"] == "tests:refresh-evidence"
-        artifacts = list((omo_dir / "_delivery" / "ingress" / "tasks").glob("TASK-DONE-1-evidence-refresh-*.yaml"))
+        assert (
+            payload["metadata"]["evidence_paths_refresh_source_ref"]
+            == "tests:refresh-evidence"
+        )
+        artifacts = list(
+            (omo_dir / "_delivery" / "ingress" / "tasks").glob(
+                "TASK-DONE-1-evidence-refresh-*.yaml"
+            )
+        )
         assert len(artifacts) == 1
         captured = capsys.readouterr()
         assert "evidence_paths 已刷新" in captured.out
@@ -993,7 +1060,9 @@ class TestOmoEvidence:
         assert "report.md" in captured.out
         assert "data.md" not in captured.out
 
-    def test_cmd_evidence_list_prefers_legacy_when_modern_empty(self, capsys, tmp_path: Path) -> None:
+    def test_cmd_evidence_list_prefers_legacy_when_modern_empty(
+        self, capsys, tmp_path: Path
+    ) -> None:
         omo_dir = tmp_path
         modern = omo_dir / "_delivery" / "evidence"
         modern.mkdir(parents=True)

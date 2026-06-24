@@ -7,6 +7,7 @@ facade (omo_llm_bos_bridge.py) 留: schema + invoke/list 入口 + backward compa
 
 W3: 集成 omo_bos_metrics — 每次 invoke 自动记录 (uri, status, elapsed_ms).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -38,8 +39,12 @@ def _dispatch_sync(name: str, args: dict[str, Any]) -> dict[str, Any]:
 
 # Status 白名单 — 镜像 omo_bos_metrics.Status, 用于 unknown-status 兜底.
 _KNOWN_STATUSES = (
-    "resolved", "agora_unavailable", "invalid_uri",
-    "endpoint_missing", "timeout", "error",
+    "resolved",
+    "agora_unavailable",
+    "invalid_uri",
+    "endpoint_missing",
+    "timeout",
+    "error",
 )
 
 
@@ -59,7 +64,9 @@ def _instrumented_invoke(args: dict[str, Any]) -> dict[str, Any]:
     # 把 dispatch 内的 status 透传到 metric
     status = result.get("status", "error") if isinstance(result, dict) else "error"
     if status in _KNOWN_STATUSES:
-        timer.set_status(status, error=result.get("error", "") if isinstance(result, dict) else "")
+        timer.set_status(
+            status, error=result.get("error", "") if isinstance(result, dict) else ""
+        )
     else:
         timer.set_status("error", error=f"unknown_status: {status}")
     return result
@@ -95,9 +102,7 @@ def _self_test() -> int:
         {"uri": "bos://memory/kos/search", "args": {"query": "kairon commits"}}
     )
     print(f"[OK] invoke bos://memory/kos/search: status={r.get('status', '?')}")
-    assert r.get("status") in ("resolved", "agora_unavailable"), (
-        f"invoke 状态错: {r}"
-    )
+    assert r.get("status") in ("resolved", "agora_unavailable"), f"invoke 状态错: {r}"
 
     # 4) invoke (invalid)
     r = TOOL_DISPATCHER["invoke_bos_uri"]({"uri": "bos://bad/foo/bar"})

@@ -4,6 +4,7 @@
 Previously at scripts/omo_debt.py, moved to src/omo/omo_debt.py.
 This wrapper ensures old callers (tests, scripts) still work.
 """
+
 from __future__ import annotations
 
 import sys

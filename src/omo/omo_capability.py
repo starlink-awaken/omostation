@@ -74,7 +74,9 @@ def load_capability_registry(root: Path, filename: str) -> Any:
     return _load_yaml(capability_registry_path(root, filename))
 
 
-def write_capability_registry(root: Path, filename: str, payload: dict[str, Any]) -> Path:
+def write_capability_registry(
+    root: Path, filename: str, payload: dict[str, Any]
+) -> Path:
     path = _capabilities_dir(root) / filename
     path.parent.mkdir(parents=True, exist_ok=True)
     write_yaml_atomic(path, payload)
@@ -381,7 +383,9 @@ def register_command(args: argparse.Namespace) -> int:
             json.dumps({"status": "failed", "errors": errors}, ensure_ascii=False)
         )
 
-    existing = load_capability_registry(root, "manual-capabilities.yaml") or {"capabilities": []}
+    existing = load_capability_registry(root, "manual-capabilities.yaml") or {
+        "capabilities": []
+    }
     by_id = {record["id"]: record for record in existing.get("capabilities", [])}
     for record in records:
         by_id[record["id"]] = record
@@ -566,7 +570,9 @@ def build_parser() -> argparse.ArgumentParser:
     pkg_sub = pkg.add_subparsers(dest="command", required=True)
     sync = pkg_sub.add_parser("sync")
     sync.add_argument("--dry-run", action="store_true")
-    sync.add_argument("--output", default=".omo/_delivery/evidence/phase12/package-dry-run.yaml")
+    sync.add_argument(
+        "--output", default=".omo/_delivery/evidence/phase12/package-dry-run.yaml"
+    )
     sync.set_defaults(func=pkg_sync_command)
     return parser
 

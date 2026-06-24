@@ -9,15 +9,16 @@
     parents[4] = Workspace   (WORKSPACE_ROOT)
     parents[5] = $HOME
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 _MODULE_DIR = Path(__file__).resolve().parent
 OMO_SRC_PARENT = _MODULE_DIR.parents[1]  # /Users/xiamingxing/Workspace/projects/omo
-PROJECTS_DIR = _MODULE_DIR.parents[2]    # /Users/xiamingxing/Workspace/projects
+PROJECTS_DIR = _MODULE_DIR.parents[2]  # /Users/xiamingxing/Workspace/projects
 WORKSPACE_ROOT = _MODULE_DIR.parents[3]  # /Users/xiamingxing/Workspace
-HOME_DIR = _MODULE_DIR.parents[4]        # /Users/xiamingxing
+HOME_DIR = _MODULE_DIR.parents[4]  # /Users/xiamingxing
 
 # 关键路径
 OMO_ROOT = WORKSPACE_ROOT / ".omo"
@@ -84,6 +85,7 @@ def find_omo_dir(start: Path | None = None) -> Path:
             return candidate
         current = current.parent
     return (start or Path.cwd()) / ".omo"
+
 
 __all__ = (
     "AGORA_ROUTES_PATH",

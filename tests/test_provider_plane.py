@@ -17,6 +17,7 @@ _WORKSPACE = Path(__file__).resolve().parents[2]
 import os  # noqa: E402
 from unittest.mock import patch  # noqa: E402
 
+
 def _seed_m1_dir(tmp_path: Path) -> Path:
     m1_dir = tmp_path / "m1" / "compute_engine"
     m1_dir.mkdir(parents=True)
@@ -34,7 +35,9 @@ status: active
     return m1_dir
 
 
-def test_select_cc_switch_provider_prefers_healthy_entry_and_extracts_runtime(tmp_path: Path) -> None:
+def test_select_cc_switch_provider_prefers_healthy_entry_and_extracts_runtime(
+    tmp_path: Path,
+) -> None:
     m1_dir = _seed_m1_dir(tmp_path)
 
     with patch.dict(os.environ, {"ANTHROPIC_AUTH_TOKEN": "secret-token"}):
@@ -47,7 +50,9 @@ def test_select_cc_switch_provider_prefers_healthy_entry_and_extracts_runtime(tm
         assert provider.is_healthy is True
 
 
-def test_apply_provider_to_litellm_config_updates_target_model_only(tmp_path: Path) -> None:
+def test_apply_provider_to_litellm_config_updates_target_model_only(
+    tmp_path: Path,
+) -> None:
     config_path = tmp_path / "litellm_config.yaml"
     config_path.write_text(
         yaml.safe_dump(
@@ -55,11 +60,17 @@ def test_apply_provider_to_litellm_config_updates_target_model_only(tmp_path: Pa
                 "model_list": [
                     {
                         "model_name": "gpt-4o",
-                        "litellm_params": {"model": "openai/gpt-4o", "api_key": "os.environ/OPENAI_API_KEY"},
+                        "litellm_params": {
+                            "model": "openai/gpt-4o",
+                            "api_key": "os.environ/OPENAI_API_KEY",
+                        },
                     },
                     {
                         "model_name": "claude-3-5-sonnet",
-                        "litellm_params": {"model": "anthropic/claude-3-5-sonnet-20241022", "api_key": "os.environ/ANTHROPIC_API_KEY"},
+                        "litellm_params": {
+                            "model": "anthropic/claude-3-5-sonnet-20241022",
+                            "api_key": "os.environ/ANTHROPIC_API_KEY",
+                        },
                     },
                 ]
             },
@@ -71,16 +82,26 @@ def test_apply_provider_to_litellm_config_updates_target_model_only(tmp_path: Pa
     with patch.dict(os.environ, {"ANTHROPIC_AUTH_TOKEN": "secret-token"}):
         provider = select_cc_switch_provider(m1_dir=m1_dir, app_type="claude")
 
-    apply_provider_to_litellm_config(config_path, target_model_name="claude-3-5-sonnet", provider=provider)
+    apply_provider_to_litellm_config(
+        config_path, target_model_name="claude-3-5-sonnet", provider=provider
+    )
 
     data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    assert data["model_list"][0]["litellm_params"] == {"model": "openai/gpt-4o", "api_key": "os.environ/OPENAI_API_KEY"}
+    assert data["model_list"][0]["litellm_params"] == {
+        "model": "openai/gpt-4o",
+        "api_key": "os.environ/OPENAI_API_KEY",
+    }
     assert data["model_list"][1]["litellm_params"]["api_key"] == "secret-token"
-    assert data["model_list"][1]["litellm_params"]["api_base"] == "https://api.deepseek.com/anthropic"
+    assert (
+        data["model_list"][1]["litellm_params"]["api_base"]
+        == "https://api.deepseek.com/anthropic"
+    )
     assert data["model_list"][1]["litellm_params"]["model"] == "anthropic/gpt-4o"
 
 
-def test_apply_provider_to_litellm_config_accepts_multi_document_yaml(tmp_path: Path) -> None:
+def test_apply_provider_to_litellm_config_accepts_multi_document_yaml(
+    tmp_path: Path,
+) -> None:
     config_path = tmp_path / "litellm_config.yaml"
     config_path.write_text(
         "---\nstatus: active\nowner: runtime\n---\n---\n"

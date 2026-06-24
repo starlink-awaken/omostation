@@ -10,6 +10,7 @@
 
 迁移自: kairon_governance.agora_health (P30-W1 GOV-MERGE 落地)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,34 +32,36 @@ from omo.omo_paths import AGORA_ROUTES_PATH
 #   不应当做 HTTP 服务探活 — 移入 STDIO_ONLY_SERVICES
 DEFAULT_SERVICE_PORTS: dict[str, int] = {
     # HTTP-reachable services (实际端口)
-    "agora-internal": 7430,            # FastAPI dashboard, 启动: agora-web
-    "cron-service-mcp": 7450,          # 实际端口 7450 (旧表错为 7438)
-    "sharedbrain-bridge-mcp": 8001,    # sharedbrain standalone MCP 端口 (旧表错为 7439)
-    "minerva": 8765,                   # minerva web 端口 (非 MCP)
+    "agora-internal": 7430,  # FastAPI dashboard, 启动: agora-web
+    "cron-service-mcp": 7450,  # 实际端口 7450 (旧表错为 7438)
+    "sharedbrain-bridge-mcp": 8001,  # sharedbrain standalone MCP 端口 (旧表错为 7439)
+    "minerva": 8765,  # minerva web 端口 (非 MCP)
     # stdio-only MCP services 不在此表 — 见 STDIO_ONLY_SERVICES
 }
 
 # ── stdio-only MCP 服务集合 ──────────────────────────────
 # P32-W0-AGORA-FIX: 这些服务用 FastMCP transport="stdio", 由 agora mcp_proxy spawn 调用,
 # 不监听 HTTP 端口, 不应做 HTTP 探活. 健康检查时直接标 is_healthy=True + protocol=stdio.
-STDIO_ONLY_SERVICES: frozenset[str] = frozenset({
-    "agent-runtime-mcp",    # cockpit.agent_runtime_mcp_server (transport=stdio)
-    "agora-internal",       # agora-web dashboard, non-critical in cold state
-    "minerva",              # minerva web, non-critical in cold state
-    "iris-mcp",             # iris MCP, stdio-only
-    "eidos",                # eidos, 自定义 JSON-RPC over stdin/stdout
-    "codeanalyze-mcp",      # codeanalyze MCP, stdio-only
-    "sophia-mcp",           # sophia MCP, stdio-only
-    "llm-gateway-mcp",      # llm-gateway MCP, stdio-only
-    "shared-lib-mcp",       # 旧名, 保留以防 routes 漂回
-    "core-models",          # 旧名, 保留以防 routes 漂回
-    "engine-core",          # 旧名, 保留以防 routes 漂回
-    "ontoderive",           # 旧名, 保留以防 routes 漂回
-    "kos",                  # 旧名, 保留以防 routes 漂回
-    "forge-mcp",            # 旧名, 保留以防 routes 漂回
-    "kronos-mcp",           # kronos MCP, stdio-only (P32 修正)
-    "test-svc",             # 测试桩, 不应探活
-})
+STDIO_ONLY_SERVICES: frozenset[str] = frozenset(
+    {
+        "agent-runtime-mcp",  # cockpit.agent_runtime_mcp_server (transport=stdio)
+        "agora-internal",  # agora-web dashboard, non-critical in cold state
+        "minerva",  # minerva web, non-critical in cold state
+        "iris-mcp",  # iris MCP, stdio-only
+        "eidos",  # eidos, 自定义 JSON-RPC over stdin/stdout
+        "codeanalyze-mcp",  # codeanalyze MCP, stdio-only
+        "sophia-mcp",  # sophia MCP, stdio-only
+        "llm-gateway-mcp",  # llm-gateway MCP, stdio-only
+        "shared-lib-mcp",  # 旧名, 保留以防 routes 漂回
+        "core-models",  # 旧名, 保留以防 routes 漂回
+        "engine-core",  # 旧名, 保留以防 routes 漂回
+        "ontoderive",  # 旧名, 保留以防 routes 漂回
+        "kos",  # 旧名, 保留以防 routes 漂回
+        "forge-mcp",  # 旧名, 保留以防 routes 漂回
+        "kronos-mcp",  # kronos MCP, stdio-only (P32 修正)
+        "test-svc",  # 测试桩, 不应探活
+    }
+)
 
 # stdio 占位 URL scheme — 让 endpoints 字典里能塞进 stdio 服务而不被当 HTTP 处理
 _STDIO_URL_SCHEME = "stdio://"
@@ -121,7 +124,11 @@ def derive_endpoints(
     ports = default_ports if default_ports is not None else DEFAULT_SERVICE_PORTS
     out: dict[str, str] = {}
 
-    routing_table = routes.get("_meta", {}).get("routing_table", {}) if isinstance(routes, dict) else {}
+    routing_table = (
+        routes.get("_meta", {}).get("routing_table", {})
+        if isinstance(routes, dict)
+        else {}
+    )
     for svc, info in routing_table.items():
         if not isinstance(info, dict):
             continue
@@ -251,7 +258,9 @@ def health_summary(results: list[HealthCheckResult]) -> dict:
         }
     healthy = sum(1 for r in results if r.is_healthy)
     response_times = [r.response_ms for r in results if r.response_ms is not None]
-    avg_ms = round(sum(response_times) / len(response_times), 1) if response_times else 0.0
+    avg_ms = (
+        round(sum(response_times) / len(response_times), 1) if response_times else 0.0
+    )
     return {
         "total": total,
         "healthy": healthy,
@@ -295,7 +304,9 @@ def main(argv: list[str] | None = None) -> int:
         prog="omo health",
         description="OMO agora 服务健康检查 — 探活 agora-routes.json 注册的端点",
     )
-    parser.add_argument("--output", "-o", default=None, help="Markdown 报告输出路径(默认 stdout)")
+    parser.add_argument(
+        "--output", "-o", default=None, help="Markdown 报告输出路径(默认 stdout)"
+    )
     parser.add_argument("--json", action="store_true", help="同时输出 JSON 摘要")
     parser.add_argument(
         "--routes-path",
@@ -303,8 +314,12 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="agora-routes.json 路径(测试或自定义场景)",
     )
-    parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_SECONDS, help="单服务超时秒数")
-    parser.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="并发请求数")
+    parser.add_argument(
+        "--timeout", type=float, default=DEFAULT_TIMEOUT_SECONDS, help="单服务超时秒数"
+    )
+    parser.add_argument(
+        "--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="并发请求数"
+    )
     args = parser.parse_args(argv)
 
     routes = load_agora_routes(args.routes_path)

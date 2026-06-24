@@ -29,7 +29,10 @@ def test_archive_scenario_receipt_writes_delivery_artifact(tmp_path: Path) -> No
     archive_path = Path(archive_scenario_receipt(tmp_path / ".omo", result))
 
     assert archive_path.exists()
-    assert archive_path.parent == tmp_path / ".omo" / "_delivery" / "scenarios" / "assistant"
+    assert (
+        archive_path.parent
+        == tmp_path / ".omo" / "_delivery" / "scenarios" / "assistant"
+    )
     payload = json.loads(archive_path.read_text(encoding="utf-8"))
     assert payload["scenario"] == "assistant"
     assert payload["query"] == "OPC P5 progress"

@@ -2,6 +2,7 @@
 
 工作区根 VERSION 文件权威 (ADR-0007), 此处只镜像.
 """
+
 from pathlib import Path
 
 _workspace_root = Path(__file__).resolve().parent.parent.parent.parent

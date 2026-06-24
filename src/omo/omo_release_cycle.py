@@ -38,7 +38,9 @@ def next_release_version(workspace_root: Path, today: str) -> str:
 def update_release_index(workspace_root: Path, cycle: dict[str, Any]) -> dict[str, Any]:
     index = load_release_index(workspace_root)
     releases = [
-        item for item in index.get("releases", []) if item.get("version") != cycle["version"]
+        item
+        for item in index.get("releases", [])
+        if item.get("version") != cycle["version"]
     ]
     latest_existing = releases[-1] if releases else None
     interval_days: int | None = None
@@ -77,8 +79,12 @@ def update_release_index(workspace_root: Path, cycle: dict[str, Any]) -> dict[st
     index["summary"] = {
         "release_count": len(releases),
         "latest_version": releases[-1]["version"] if releases else None,
-        "cron_run_count": sum(1 for item in releases if item.get("trigger_source") == "cron"),
-        "manual_run_count": sum(1 for item in releases if item.get("trigger_source") == "manual"),
+        "cron_run_count": sum(
+            1 for item in releases if item.get("trigger_source") == "cron"
+        ),
+        "manual_run_count": sum(
+            1 for item in releases if item.get("trigger_source") == "manual"
+        ),
         "latest_interval_days": cadence_intervals[-1] if cadence_intervals else None,
         "min_interval_days": min(cadence_intervals) if cadence_intervals else None,
         "max_interval_days": max(cadence_intervals) if cadence_intervals else None,
@@ -108,7 +114,9 @@ def trigger_source() -> str:
     return os.environ.get("OPC_TRIGGER", "manual")
 
 
-def gather_changes(workspace_root: Path, *, cutoff: str | None = None) -> dict[str, Any]:
+def gather_changes(
+    workspace_root: Path, *, cutoff: str | None = None
+) -> dict[str, Any]:
     index = load_release_index(workspace_root)
     previous_release = index.get("releases", [])[-1] if index.get("releases") else None
     effective_cutoff = cutoff or os.environ.get(
@@ -132,7 +140,9 @@ def gather_changes(workspace_root: Path, *, cutoff: str | None = None) -> dict[s
         "cutoff": effective_cutoff,
         "commit_count": len(commits),
         "commits": commits[:50],
-        "previous_release_version": previous_release.get("version") if previous_release else None,
+        "previous_release_version": previous_release.get("version")
+        if previous_release
+        else None,
     }
 
 
@@ -162,7 +172,10 @@ def gather_validation(workspace_root: Path) -> dict[str, Any]:
     )
     try:
         drift_payload = json.loads(drift_test.stdout.strip())
-        out["drift"] = {"kinds": drift_payload.get("kinds"), "drift_count": drift_payload.get("drift_count")}
+        out["drift"] = {
+            "kinds": drift_payload.get("kinds"),
+            "drift_count": drift_payload.get("drift_count"),
+        }
     except json.JSONDecodeError:
         out["drift"] = {"error": "drift parse fail"}
     return out
@@ -176,7 +189,9 @@ def gather_debt(workspace_root: Path) -> dict[str, Any]:
     for debt_file in debt_dir.glob("*.yaml"):
         try:
             payload = load_yaml(debt_file)
-            items.append({"file": debt_file.name, "status": payload.get("status", "unknown")})
+            items.append(
+                {"file": debt_file.name, "status": payload.get("status", "unknown")}
+            )
         except Exception:
             items.append({"file": debt_file.name, "status": "parse-fail"})
     total = len(items)
@@ -184,7 +199,9 @@ def gather_debt(workspace_root: Path) -> dict[str, Any]:
     return {"total": total, "open": open_count, "resolved": total - open_count}
 
 
-def write_release_notes(workspace_root: Path, version: str, cycle: dict[str, Any]) -> Path:
+def write_release_notes(
+    workspace_root: Path, version: str, cycle: dict[str, Any]
+) -> Path:
     notes_path = workspace_root / ".omo" / "_delivery" / "release" / "CHANGELOG.md"
     changes = cycle["changes"]
     validation = cycle["validation"]
@@ -229,7 +246,9 @@ def write_cycle_json(workspace_root: Path, version: str, cycle: dict[str, Any]) 
     return out_path
 
 
-def write_retrospective(workspace_root: Path, version: str, cycle: dict[str, Any]) -> Path:
+def write_retrospective(
+    workspace_root: Path, version: str, cycle: dict[str, Any]
+) -> Path:
     retro_dir = workspace_root / ".omo" / "tasks" / "registry" / "done" / "OPC-P7-H1"
     retro_path = retro_dir / f"retrospective-{version}.md"
     lines: list[str] = []
@@ -249,7 +268,9 @@ def write_retrospective(workspace_root: Path, version: str, cycle: dict[str, Any
             {
                 "summary": {
                     "commit_count": cycle["changes"]["commit_count"],
-                    "drift_count": cycle["validation"].get("drift", {}).get("drift_count"),
+                    "drift_count": cycle["validation"]
+                    .get("drift", {})
+                    .get("drift_count"),
                 },
                 "validation": cycle["validation"],
                 "debt": cycle["debt"],
@@ -284,7 +305,9 @@ def run_release_cycle(
     effective_generated_at = generated_at or utc_now_iso()
     effective_trigger = trigger or trigger_source()
     gather_changes_impl = gather_changes_fn or (lambda: gather_changes(workspace_root))
-    gather_validation_impl = gather_validation_fn or (lambda: gather_validation(workspace_root))
+    gather_validation_impl = gather_validation_fn or (
+        lambda: gather_validation(workspace_root)
+    )
     gather_debt_impl = gather_debt_fn or (lambda: gather_debt(workspace_root))
     cycle: dict[str, Any] = {
         "version": effective_version,
@@ -296,8 +319,20 @@ def run_release_cycle(
         "validation": gather_validation_impl(),
         "debt": gather_debt_impl(),
     }
-    cycle["notes_path"] = str(write_release_notes(workspace_root, effective_version, cycle).relative_to(workspace_root))
-    cycle["cycle_json_path"] = str(write_cycle_json(workspace_root, effective_version, cycle).relative_to(workspace_root))
-    cycle["retro_path"] = str(write_retrospective(workspace_root, effective_version, cycle).relative_to(workspace_root))
+    cycle["notes_path"] = str(
+        write_release_notes(workspace_root, effective_version, cycle).relative_to(
+            workspace_root
+        )
+    )
+    cycle["cycle_json_path"] = str(
+        write_cycle_json(workspace_root, effective_version, cycle).relative_to(
+            workspace_root
+        )
+    )
+    cycle["retro_path"] = str(
+        write_retrospective(workspace_root, effective_version, cycle).relative_to(
+            workspace_root
+        )
+    )
     cycle["release_index"] = update_release_index(workspace_root, cycle)
     return cycle

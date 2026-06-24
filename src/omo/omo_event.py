@@ -4,6 +4,7 @@
 Round 5 (P3): 新增 ``emit`` 子命令, 用户主动写结构化事件到 .jsonl.
 这是 AppendOnlyLog 模式的样板 (第 5 个 consumer): 用户面向的'写事件'接口.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,9 +16,7 @@ from urllib.request import Request, urlopen
 from omo.omo_io import AppendOnlyLog
 
 
-_WORKSPACE = Path(
-    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
-)
+_WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 DEFAULT_EVENT_LOG_PATH = _WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"
 
 

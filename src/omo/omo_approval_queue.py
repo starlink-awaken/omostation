@@ -16,24 +16,34 @@ def _entry_priority(entry: dict[str, object]) -> tuple[int, int, str]:
         bucket = 3
     else:
         bucket = 4
-    proposal_status = _PROPOSAL_STATUS_ORDER.get(str(entry.get("proposal_status", "missing")), 99)
+    proposal_status = _PROPOSAL_STATUS_ORDER.get(
+        str(entry.get("proposal_status", "missing")), 99
+    )
     return (bucket, proposal_status, str(entry.get("task_id", "")))
 
 
-def build_approval_queue_packet(*, generated_at: str, tasks: list[dict[str, object]]) -> dict[str, object]:
+def build_approval_queue_packet(
+    *, generated_at: str, tasks: list[dict[str, object]]
+) -> dict[str, object]:
     ordered = sorted(tasks, key=_entry_priority)
     return {
         "generated_at": generated_at,
         "task_count": len(ordered),
-        "approval_missing_count": sum(1 for entry in ordered if entry.get("approval_status") == "missing"),
-        "proposed_count": sum(1 for entry in ordered if entry.get("proposal_status") == "proposed"),
+        "approval_missing_count": sum(
+            1 for entry in ordered if entry.get("approval_status") == "missing"
+        ),
+        "proposed_count": sum(
+            1 for entry in ordered if entry.get("proposal_status") == "proposed"
+        ),
         "approved_pending_apply_count": sum(
             1
             for entry in ordered
             if entry.get("proposal_status") == "approved"
             and str(entry.get("approval_status")) in {"requested", "granted"}
         ),
-        "ready_to_promote_count": sum(1 for entry in ordered if entry.get("next_action") == "promote_apply"),
+        "ready_to_promote_count": sum(
+            1 for entry in ordered if entry.get("next_action") == "promote_apply"
+        ),
         "blocked_count": sum(1 for entry in ordered if entry.get("blockers")),
         "tasks": ordered,
     }

@@ -56,7 +56,9 @@ def test_propose_truth_mutation_writes_proposal_record(tmp_path: Path):
     )
 
     assert proposal["status"] == "proposed"
-    proposal_path = tmp_path / ".omo" / "_truth" / "task-center" / "proposals" / "p-001.yaml"
+    proposal_path = (
+        tmp_path / ".omo" / "_truth" / "task-center" / "proposals" / "p-001.yaml"
+    )
     assert proposal_path.exists()
 
     payload = _load_yaml(proposal_path)
@@ -106,10 +108,14 @@ def test_apply_truth_mutation_rejects_unapproved_proposal(tmp_path: Path):
         apply_truth_mutation(tmp_path, "p-002", now="2026-05-31T07:05:00Z")
 
 
-def test_approved_truth_mutation_applies_yaml_patch_and_writes_audit_artifacts(tmp_path: Path):
+def test_approved_truth_mutation_applies_yaml_patch_and_writes_audit_artifacts(
+    tmp_path: Path,
+):
     target = tmp_path / ".omo" / "state" / "system.yaml"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("next_milestone: planning\nphase_status: pending\n", encoding="utf-8")
+    target.write_text(
+        "next_milestone: planning\nphase_status: pending\n", encoding="utf-8"
+    )
 
     propose_truth_mutation(
         tmp_path,
@@ -155,8 +161,24 @@ def test_approved_truth_mutation_applies_yaml_patch_and_writes_audit_artifacts(t
     assert target_payload["phase_status"] == "in_progress"
     assert applied["status"] == "verified"
 
-    apply_artifact = tmp_path / ".omo" / "_delivery" / "task-center" / "proposals" / "p-003" / "apply.yaml"
-    verify_artifact = tmp_path / ".omo" / "_delivery" / "task-center" / "proposals" / "p-003" / "verify.yaml"
+    apply_artifact = (
+        tmp_path
+        / ".omo"
+        / "_delivery"
+        / "task-center"
+        / "proposals"
+        / "p-003"
+        / "apply.yaml"
+    )
+    verify_artifact = (
+        tmp_path
+        / ".omo"
+        / "_delivery"
+        / "task-center"
+        / "proposals"
+        / "p-003"
+        / "verify.yaml"
+    )
     assert apply_artifact.exists()
     assert verify_artifact.exists()
 
@@ -191,7 +213,9 @@ def test_propose_truth_mutation_rejects_secret_like_values(tmp_path: Path):
                     "blast_radius": "high",
                     "touches": [".omo/state/system.yaml"],
                 },
-                "verification_plan": ["python3 scripts/sync_omo_state.py --omo-dir .omo"],
+                "verification_plan": [
+                    "python3 scripts/sync_omo_state.py --omo-dir .omo"
+                ],
                 "rollback_plan": ["restore prior YAML snapshot"],
                 "secret_refs": [],
                 "trace_id": "trace-004",
@@ -249,8 +273,18 @@ def test_list_truth_mutations_returns_status_summary(tmp_path: Path):
     rows = list_truth_mutations(tmp_path)
 
     assert rows == [
-        {"id": "p-005", "status": "proposed", "operation_level": "L2", "target_ref": ".omo/state/system.yaml"},
-        {"id": "p-006", "status": "proposed", "operation_level": "L3", "target_ref": ".omo/goals/current.yaml"},
+        {
+            "id": "p-005",
+            "status": "proposed",
+            "operation_level": "L2",
+            "target_ref": ".omo/state/system.yaml",
+        },
+        {
+            "id": "p-006",
+            "status": "proposed",
+            "operation_level": "L3",
+            "target_ref": ".omo/goals/current.yaml",
+        },
     ]
 
 
@@ -319,11 +353,23 @@ def test_governance_cli_apply_executes_approved_proposal(tmp_path: Path, monkeyp
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo-governance", "approve", "p-008", "--approver", "copilot-cli", "--now", "2026-05-31T07:22:00Z"],
+        [
+            "omo-governance",
+            "approve",
+            "p-008",
+            "--approver",
+            "copilot-cli",
+            "--now",
+            "2026-05-31T07:22:00Z",
+        ],
     )
     assert omo_governance_main() == 0
 
-    monkeypatch.setattr(sys, "argv", ["omo-governance", "apply", "p-008", "--now", "2026-05-31T07:23:00Z"])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo-governance", "apply", "p-008", "--now", "2026-05-31T07:23:00Z"],
+    )
     assert omo_governance_main() == 0
 
     payload = _load_yaml(target)
@@ -369,11 +415,19 @@ def test_governance_cli_propose_accepts_multi_document_yaml_file(
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo-governance", "propose", str(proposal_file), "--now", "2026-05-31T07:21:00Z"],
+        [
+            "omo-governance",
+            "propose",
+            str(proposal_file),
+            "--now",
+            "2026-05-31T07:21:00Z",
+        ],
     )
 
     assert omo_governance_main() == 0
-    payload = _load_yaml(tmp_path / ".omo" / "_truth" / "task-center" / "proposals" / "p-008b.yaml")
+    payload = _load_yaml(
+        tmp_path / ".omo" / "_truth" / "task-center" / "proposals" / "p-008b.yaml"
+    )
     assert payload["status"] == "proposed"
     assert payload["target"]["ref"] == ".omo/state/system.yaml"
 

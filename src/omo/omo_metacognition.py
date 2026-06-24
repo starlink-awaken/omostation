@@ -47,7 +47,9 @@ def _load_registry(root: Path) -> list[dict[str, Any]]:
 def _phase12_evidence(root: Path) -> dict[str, Any]:
     omo = _omo(root)
     trace = (
-        _load_yaml(omo / "_delivery" / "evidence" / "phase12" / "research-pipeline-trace.yaml")
+        _load_yaml(
+            omo / "_delivery" / "evidence" / "phase12" / "research-pipeline-trace.yaml"
+        )
         or _load_yaml(omo / "evidence" / "phase12" / "research-pipeline-trace.yaml")
         or {}
     )
@@ -70,7 +72,7 @@ def baseline_command(args: argparse.Namespace) -> int:
     records = _load_registry(root)
 
     # Apply lens filter if specified
-    lens = getattr(args, 'lens', None)
+    lens = getattr(args, "lens", None)
     if lens and lens != "all":
         filtered = []
         for record in records:
@@ -202,7 +204,9 @@ def proposals_command(args: argparse.Namespace) -> int:
                 "confidence": 0.86,
                 "risk": "medium",
                 "operation_level": "L1",
-                "evidence_refs": [".omo/_delivery/evidence/phase12/research-pipeline-trace.yaml"],
+                "evidence_refs": [
+                    ".omo/_delivery/evidence/phase12/research-pipeline-trace.yaml"
+                ],
                 "rollback": "Remove draft scenario and rerun policy tests.",
                 "verification": "scenario trace fixture must remain reproducible",
             },
@@ -228,7 +232,9 @@ def proposals_command(args: argparse.Namespace) -> int:
                 "confidence": 0.84,
                 "risk": "medium",
                 "operation_level": "L2",
-                "evidence_refs": [".omo/_delivery/evidence/phase12/package-dry-run.yaml"],
+                "evidence_refs": [
+                    ".omo/_delivery/evidence/phase12/package-dry-run.yaml"
+                ],
                 "rollback": "Restore package baseline and confirm mutations_applied remains 0.",
                 "verification": f"current package mutations: {evidence['package_mutations']}",
             },
@@ -330,11 +336,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     baseline = subparsers.add_parser("baseline")
     baseline.add_argument(
-        "--output", default=".omo/_delivery/evidence/phase13/metacognition-baseline.yaml"
+        "--output",
+        default=".omo/_delivery/evidence/phase13/metacognition-baseline.yaml",
     )
     baseline.add_argument(
-        "--lens", choices=["X1", "X2", "X3", "all"], default="all",
-        help="Lens filter: X1 (policy_ref), X2 (freshness), X3 (tier), all (no filter)"
+        "--lens",
+        choices=["X1", "X2", "X3", "all"],
+        default="all",
+        help="Lens filter: X1 (policy_ref), X2 (freshness), X3 (tier), all (no filter)",
     )
     baseline.set_defaults(func=baseline_command)
 
@@ -346,13 +355,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     collaboration = subparsers.add_parser("collaboration")
     collaboration.add_argument(
-        "--output", default=".omo/_delivery/evidence/phase13/supervised-collaboration.yaml"
+        "--output",
+        default=".omo/_delivery/evidence/phase13/supervised-collaboration.yaml",
     )
     collaboration.set_defaults(func=collaboration_command)
 
     rehearse = subparsers.add_parser("rehearse")
     rehearse.add_argument(
-        "--output", default=".omo/_delivery/evidence/phase13/self-healing-rehearsal.yaml"
+        "--output",
+        default=".omo/_delivery/evidence/phase13/self-healing-rehearsal.yaml",
     )
     rehearse.set_defaults(func=rehearse_command)
     return parser

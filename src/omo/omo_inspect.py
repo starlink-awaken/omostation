@@ -15,7 +15,9 @@ def inspect_omo_daemon() -> dict:
     try:
         r = subprocess.run(
             ["launchctl", "list"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if r.returncode != 0:
             return {"status": "error", "error": r.stderr}
@@ -57,7 +59,11 @@ def inspect_kairon_packages() -> dict:
     kairon_pkgs = ws / "projects" / "kairon" / "packages"
     if not kairon_pkgs.exists():
         return {"status": "error", "error": "kairon_not_found"}
-    packages = [d.name for d in kairon_pkgs.iterdir() if d.is_dir() and not d.name.startswith(".")]
+    packages = [
+        d.name
+        for d in kairon_pkgs.iterdir()
+        if d.is_dir() and not d.name.startswith(".")
+    ]
     return {
         "status": "ok",
         "package_count": len(packages),
@@ -82,4 +88,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

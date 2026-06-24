@@ -13,6 +13,7 @@
     from omo.omo_mesh_event_handler import register_mesh_event_handlers
     register_mesh_event_handlers()
 """
+
 from __future__ import annotations
 
 import logging
@@ -43,6 +44,7 @@ _DEBOUNCE_SECONDS = 3.0  # 状态变更防抖：3s 内无新事件才写盘
 # ─────────────────────────────────────────────────────────────────
 # 公开 API
 # ─────────────────────────────────────────────────────────────────
+
 
 def register_mesh_event_handlers() -> None:
     """订阅所有 mesh / swarm 事件并注册处理器。
@@ -96,12 +98,15 @@ def register_mesh_event_handlers() -> None:
                 },
             )
 
-    logger.info("Mesh event handlers registered (topics: mesh:node:status_changed, swarm:worker:*)")
+    logger.info(
+        "Mesh event handlers registered (topics: mesh:node:status_changed, swarm:worker:*)"
+    )
 
 
 # ─────────────────────────────────────────────────────────────────
 # 内部实现
 # ─────────────────────────────────────────────────────────────────
+
 
 def _schedule_write(node_id: str, new_fields: dict[str, Any]) -> None:
     """防抖写入调度：合并短时间内的多次状态更新后再落盘。"""
@@ -148,6 +153,7 @@ def _safe_write_back(node_id: str, fields: dict[str, Any]) -> None:
     # ── 方案 1：走 omo_audit 正式审计路径 ──
     try:
         from omo.omo_audit import record_compute_node_state  # type: ignore[import]
+
         record_compute_node_state(node_id=node_id, **fields)
         logger.debug("omo_audit.record_compute_node_state OK for node=%s", node_id)
         return

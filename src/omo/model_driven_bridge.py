@@ -13,6 +13,7 @@
   - 提供 factory 函数, consumer 显式 wire on_event
   - 失败时 try/except 兜底, 业务不受影响
 """
+
 from __future__ import annotations
 
 import os
@@ -21,9 +22,7 @@ from typing import Any
 
 from omo.omo_io import AppendOnlyLog
 
-_WORKSPACE = Path(
-    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
-)
+_WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 DEFAULT_PIPELINE_LOG_PATH = _WORKSPACE / ".omo" / "_knowledge" / "pipeline-events.jsonl"
 
 

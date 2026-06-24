@@ -22,6 +22,7 @@ Persistence (P33-W3+):
 P32 收官约束: 不改 agora 核心, 不重启 omo daemon, 0 破坏性操作.
 本模块纯加法, 文件锁保护并发写, 原子 rename 防半写状态。
 """
+
 from __future__ import annotations
 
 import argparse
@@ -38,9 +39,14 @@ from typing import Any, Literal
 
 # ── 路径配置 (P33-W3 暴露给外部) ──────────────────────
 # kairon packages 根目录 — kairon 23 个包, 包含 kos 实体存储
-_KAIRON_PACKAGES_SRC = Path(
-    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
-) / "projects" / "kairon" / "packages" / "kos" / "src"
+_KAIRON_PACKAGES_SRC = (
+    Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    / "projects"
+    / "kairon"
+    / "packages"
+    / "kos"
+    / "src"
+)
 
 # ── BOS URI 命名空间 ────────────────────────────────────────
 # 5 个 domain 固定不可扩展 (北星 ADR-0007 约束)
@@ -83,9 +89,12 @@ Protocol = Literal["http", "stdio", "internal"]
 
 # ── 持久化路径 ────────────────────────────────────────────
 # P33-W1: 战役 2 起步故意走本地 JSON (避开 KOS 写入复杂)
-DEFAULT_REGISTRY_PATH = Path(
-    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
-) / ".omo" / "_knowledge" / "bos-registry.json"
+DEFAULT_REGISTRY_PATH = (
+    Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    / ".omo"
+    / "_knowledge"
+    / "bos-registry.json"
+)
 
 
 # ── 数据类 ───────────────────────────────────────────────
@@ -144,8 +153,7 @@ def validate_bos_uri(uri: str) -> tuple[bool, str]:
         if pkg in LEGACY_DOMAIN_MAP:
             return (
                 True,
-                f"legacy 3-segment URI, auto-mapped to "
-                f"domain={LEGACY_DOMAIN_MAP[pkg]}",
+                f"legacy 3-segment URI, auto-mapped to domain={LEGACY_DOMAIN_MAP[pkg]}",
             )
         return (
             False,
@@ -213,8 +221,7 @@ def load_registry(path: Path = DEFAULT_REGISTRY_PATH) -> list[dict[str, Any]]:
         return []
     if not isinstance(data, list):
         print(
-            f"[omo_bos] WARN: registry {path} is not a JSON list; "
-            f"treating as empty",
+            f"[omo_bos] WARN: registry {path} is not a JSON list; treating as empty",
             file=sys.stderr,
         )
         return []
@@ -309,6 +316,7 @@ def save_to_kos(
     # 自愈: 给老 KOS DB 加缺失列 (KOS store.py 已有 zone 自愈, 我们补 source/status 等)
     try:
         import sqlite3
+
         conn = _get_conn()
         for col, ddl in [
             ("source", "TEXT"),
@@ -528,14 +536,22 @@ def verify_endpoint(endpoint: str) -> dict[str, Any]:
         ``{"endpoint": str, "module_found": bool, "error": str|None}``
     """
     if not isinstance(endpoint, str) or not endpoint:
-        return {"endpoint": endpoint or "", "module_found": False, "error": "no_endpoint"}
+        return {
+            "endpoint": endpoint or "",
+            "module_found": False,
+            "error": "no_endpoint",
+        }
     if ":" in endpoint:
         module_path = endpoint.split(":", 1)[0]
     else:
         module_path = endpoint
     module_path = module_path.strip()
     if not module_path:
-        return {"endpoint": endpoint, "module_found": False, "error": "empty_module_path"}
+        return {
+            "endpoint": endpoint,
+            "module_found": False,
+            "error": "empty_module_path",
+        }
     try:
         spec = importlib.util.find_spec(module_path)
     except (ImportError, ModuleNotFoundError, ValueError) as exc:
@@ -606,7 +622,11 @@ def verify_all_endpoints(
         uri = r.get("uri", "")
         ep = r.get("endpoint", "")
         if not isinstance(ep, str) or not ep:
-            result: dict[str, Any] = {"endpoint": ep or "", "module_found": False, "error": "no_endpoint"}
+            result: dict[str, Any] = {
+                "endpoint": ep or "",
+                "module_found": False,
+                "error": "no_endpoint",
+            }
         else:
             found, err = module_found.get(ep, (False, "module_not_found"))
             result = {"endpoint": ep, "module_found": found, "error": err}
@@ -660,9 +680,7 @@ def main(argv: list[str] | None = None) -> int:
         help="服务协议 (default: internal)",
     )
     reg.add_argument("--description", default="", help="注册描述")
-    reg.add_argument(
-        "--registered-by", default="omo-bos-cli", help="注册来源标识"
-    )
+    reg.add_argument("--registered-by", default="omo-bos-cli", help="注册来源标识")
 
     # list
     lst = sub.add_parser("list", help="列出已注册 BOS URI")
@@ -672,9 +690,7 @@ def main(argv: list[str] | None = None) -> int:
         choices=list(ALLOWED_DOMAINS),
         help="按 domain 过滤",
     )
-    lst.add_argument(
-        "--json", action="store_true", help="输出 JSON 格式"
-    )
+    lst.add_argument("--json", action="store_true", help="输出 JSON 格式")
     lst.add_argument(
         "--path",
         default=None,
@@ -709,7 +725,9 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     # W3: status (metrics) / discover (schema-validated listing) / health (verify + status)
-    st = sub.add_parser("status", help="显示 invoke metrics 汇总 (总调用/成功率/p95 latency)")
+    st = sub.add_parser(
+        "status", help="显示 invoke metrics 汇总 (总调用/成功率/p95 latency)"
+    )
     st.add_argument("--json", action="store_true", help="输出 JSON 格式")
 
     disc = sub.add_parser(
@@ -819,6 +837,7 @@ def main(argv: list[str] | None = None) -> int:
         s = metrics_summary()
         if args.json:
             import json as _json
+
             print(_json.dumps(s, ensure_ascii=False, indent=2))
             return 0
         print(f"BOS Metrics  (generated {s['generated_at']})")
@@ -826,10 +845,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  by_status: {s['by_status']}")
         print("\n  by_domain:")
         for d, st in s["by_domain"].items():
-            print(f"    {d:12s} count={st['count']:5d} success_rate={st['success_rate']:.1%}")
+            print(
+                f"    {d:12s} count={st['count']:5d} success_rate={st['success_rate']:.1%}"
+            )
         if s["by_uri"]:
-            print(f"\n  by_uri (top {min(10, len(s['by_uri']))} of {len(s['by_uri'])}):")
-            for uri, st in sorted(s["by_uri"].items(), key=lambda kv: -kv[1]["count"])[:10]:
+            print(
+                f"\n  by_uri (top {min(10, len(s['by_uri']))} of {len(s['by_uri'])}):"
+            )
+            for uri, st in sorted(s["by_uri"].items(), key=lambda kv: -kv[1]["count"])[
+                :10
+            ]:
                 print(
                     f"    {uri:48s} n={st['count']:4d} "
                     f"success={st['success_rate']:.0%} "
@@ -841,6 +866,7 @@ def main(argv: list[str] | None = None) -> int:
         # W3 discover: 扫注册表 + 用 Pydantic schema 验证 + 按 domain 分组
         from omo.omo_bos_schema import BosRegistryModel
         from pydantic import TypeAdapter
+
         path = Path(args.path) if args.path else DEFAULT_REGISTRY_PATH
         raw = load_registry(path)
         # 批量 validate (一次跑 40 条, 比 40 次 model_validate 快 ~5x)
@@ -849,15 +875,21 @@ def main(argv: list[str] | None = None) -> int:
         registry = BosRegistryModel(registrations=validated_list)
         if args.json:
             import json as _json
-            print(_json.dumps(
-                {
-                    "version": registry.version,
-                    "generated_at": registry.generated_at,
-                    "count": registry.count,
-                    "registrations": [r.to_legacy_dict() for r in registry.registrations],
-                },
-                ensure_ascii=False, indent=2,
-            ))
+
+            print(
+                _json.dumps(
+                    {
+                        "version": registry.version,
+                        "generated_at": registry.generated_at,
+                        "count": registry.count,
+                        "registrations": [
+                            r.to_legacy_dict() for r in registry.registrations
+                        ],
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
             return 0
         print(f"BOS Registry (schema-validated, {registry.count} entries)")
         print(f"  source: {path}")
@@ -879,6 +911,7 @@ def main(argv: list[str] | None = None) -> int:
         ep_ok = sum(1 for r in ep_results if r.get("module_found"))
         try:
             from omo.omo_bos_metrics import summary as metrics_summary
+
             metrics = metrics_summary()
         except ImportError:
             metrics = {"total_invocations": 0, "by_status": {}, "by_domain": {}}
@@ -897,8 +930,7 @@ def main(argv: list[str] | None = None) -> int:
             print("\n  STATUS: 🟡 no traffic yet (endpoints informational only)")
             return 0
         failed = sum(
-            v for k, v in metrics.get("by_status", {}).items()
-            if k != "resolved"
+            v for k, v in metrics.get("by_status", {}).items() if k != "resolved"
         )
         fail_rate = failed / total_inv if total_inv else 0.0
         if fail_rate > 0.25:

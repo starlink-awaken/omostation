@@ -150,7 +150,9 @@ def validate_task_data(task: dict, group: str | None = None) -> list[str]:
         evidence_req = task.get("evidence_required", [])
         evidence_paths = task.get("evidence_paths", [])
         if evidence_req and not evidence_paths:
-            errors.append("status=done requires physical 'evidence_paths' to satisfy 'evidence_required'")
+            errors.append(
+                "status=done requires physical 'evidence_paths' to satisfy 'evidence_required'"
+            )
 
     return errors
 

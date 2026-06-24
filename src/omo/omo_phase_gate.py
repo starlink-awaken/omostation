@@ -12,9 +12,16 @@ def write_phase_gate_audit(
 ) -> tuple[Path, Path]:
     out_dir = workspace_root / ".omo" / "_delivery" / "phase-gate"
     json_path = out_dir / f"{today}.json"
-    write_text_atomic(json_path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    write_text_atomic(
+        json_path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    )
     md_path = out_dir / f"{today}.md"
-    lines = [f"# Phase Gate Matrix — {today}", "", f"Generated: {payload['generated_at']}", ""]
+    lines = [
+        f"# Phase Gate Matrix — {today}",
+        "",
+        f"Generated: {payload['generated_at']}",
+        "",
+    ]
     lines.append("## Summary")
     lines.append(f"- phases_total: {payload['summary']['phases_total']}")
     lines.append(f"- phases_passed: **{payload['summary']['phases_passed']}**")

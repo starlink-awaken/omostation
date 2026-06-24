@@ -10,6 +10,7 @@ Covers:
 - SEED_REGISTRATIONS consistency
 - CLI subcommands dispatch (validate/list/register/seed/verify)
 """
+
 from __future__ import annotations
 
 import json
@@ -68,15 +69,15 @@ def test_validate_bos_uri_invalid_domain() -> None:
 def test_validate_bos_uri_invalid_format() -> None:
     """格式错误 (缺 //, 段数错, 大写) 一律 FAIL."""
     bad_uris = [
-        "memory/kos/search",         # 缺 bos:// 前缀
-        "bos:/memory/kos/search",    # 单斜杠
-        "bos://memory",              # 段数不足
-        "bos://memory/kos",          # 段数不足
+        "memory/kos/search",  # 缺 bos:// 前缀
+        "bos:/memory/kos/search",  # 单斜杠
+        "bos://memory",  # 段数不足
+        "bos://memory/kos",  # 段数不足
         "bos://memory/kos/search/extra",  # 段数过多
-        "bos://memory/KOS/search",   # 大写不通过 kebab-case
+        "bos://memory/KOS/search",  # 大写不通过 kebab-case
         "bos://memory/-kos/search",  # 开头不能 -
         "bos://memory/kos-/search",  # 末尾 - 也不行
-        "",                          # 空
+        "",  # 空
     ]
     for uri in bad_uris:
         valid, err = validate_bos_uri(uri)
@@ -192,8 +193,14 @@ def test_register_seeds_idempotent(tmp_path: Path) -> None:
 def test_save_registry_atomic_writes_valid_json(tmp_path: Path) -> None:
     """save_registry 写出可解析 JSON, 不留临时文件."""
     reg_path = tmp_path / "bos-registry.json"
-    sample = [{"uri": "bos://memory/kos/search", "domain": "memory",
-               "package": "kos", "action": "search"}]
+    sample = [
+        {
+            "uri": "bos://memory/kos/search",
+            "domain": "memory",
+            "package": "kos",
+            "action": "search",
+        }
+    ]
     save_registry(sample, path=reg_path)
     assert reg_path.exists()
     parsed = json.loads(reg_path.read_text(encoding="utf-8"))
@@ -239,11 +246,18 @@ def test_cli_list_subcommand_runs(tmp_path: Path) -> None:
     register_seeds(path=reg_path)
     proc = subprocess.run(
         [
-            sys.executable, "-m", "omo.cli", "bos", "list",
-            "--path", str(reg_path),
+            sys.executable,
+            "-m",
+            "omo.cli",
+            "bos",
+            "list",
+            "--path",
+            str(reg_path),
         ],
         cwd="/Users/xiamingxing/Workspace/projects/omo",
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     assert proc.returncode == 0, proc.stderr
     assert "bos://memory/kos/search" in proc.stdout
@@ -255,19 +269,21 @@ def test_cli_validate_subcommand() -> None:
     """`omo bos validate <uri>` 跑通, exit code 区分有效/无效."""
     # 有效
     p1 = subprocess.run(
-        [sys.executable, "-m", "omo.cli", "bos", "validate",
-         "bos://memory/kos/search"],
+        [sys.executable, "-m", "omo.cli", "bos", "validate", "bos://memory/kos/search"],
         cwd="/Users/xiamingxing/Workspace/projects/omo",
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     assert p1.returncode == 0
     assert "OK" in p1.stdout
     # 无效
     p2 = subprocess.run(
-        [sys.executable, "-m", "omo.cli", "bos", "validate",
-         "bos://invalid/foo/bar"],
+        [sys.executable, "-m", "omo.cli", "bos", "validate", "bos://invalid/foo/bar"],
         cwd="/Users/xiamingxing/Workspace/projects/omo",
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     assert p2.returncode == 1
     assert "FAIL" in p2.stdout
@@ -334,9 +350,13 @@ def test_register_3_domains_persists(tmp_path: Path) -> None:
     )
 
     # 按 domain 过滤读回
-    analysis = list_registrations(domain="analysis", path=tmp_path / "bos-registry.json")
+    analysis = list_registrations(
+        domain="analysis", path=tmp_path / "bos-registry.json"
+    )
     persona = list_registrations(domain="persona", path=tmp_path / "bos-registry.json")
-    capability = list_registrations(domain="capability", path=tmp_path / "bos-registry.json")
+    capability = list_registrations(
+        domain="capability", path=tmp_path / "bos-registry.json"
+    )
     assert any(r.uri == "bos://analysis/minerva/research" for r in analysis)
     assert any(r.uri == "bos://persona/sharedbrain-bridge/recall" for r in persona)
     assert any(r.uri == "bos://capability/forge/register-tool" for r in capability)
@@ -364,14 +384,16 @@ def test_save_to_kos_writes_entity(tmp_path: Path) -> None:
             "backend": "kos",
             "zone": "bos_registry",
         }
-        result = mock_save({
-            "uri": "bos://test/x/y",
-            "domain": "test",
-            "package": "x",
-            "action": "y",
-            "endpoint": "x.y:z",
-            "description": "test",
-        })
+        result = mock_save(
+            {
+                "uri": "bos://test/x/y",
+                "domain": "test",
+                "package": "x",
+                "action": "y",
+                "endpoint": "x.y:z",
+                "description": "test",
+            }
+        )
         assert result.get("backend") == "kos"
         assert result.get("saved") == "bos://test/x/y"
         assert mock_save.called
@@ -403,6 +425,7 @@ def test_save_to_kos_direct_call_fallback() -> None:
                 "/Users/xiamingxing/Workspace/projects/kairon/packages/kos/src",
             )
             from kos.ontology.store import delete_entity  # type: ignore
+
             delete_entity(result["entity_id"])
         except Exception:
             pass  # 清理失败不阻塞测试
@@ -511,7 +534,13 @@ def test_seeds_5_domain_distribution() -> None:
     counts: dict[str, int] = {}
     for r in SEED_REGISTRATIONS:
         counts[r.domain] = counts.get(r.domain, 0) + 1
-    assert counts == {"memory": 5, "governance": 8, "analysis": 12, "persona": 7, "capability": 8}
+    assert counts == {
+        "memory": 5,
+        "governance": 8,
+        "analysis": 12,
+        "persona": 7,
+        "capability": 8,
+    }
     assert sum(counts.values()) == 40
 
 
@@ -552,15 +581,25 @@ def test_list_filter_by_5_domains_w34(tmp_path: Path) -> None:
     """W34 验证: --domain filter 对 5 Domain 全生效, 每域精确条数."""
     reg_path = tmp_path / "bos-registry.json"
     register_seeds(path=reg_path)
-    expected = {"memory": 5, "governance": 8, "analysis": 12, "persona": 7, "capability": 8}
+    expected = {
+        "memory": 5,
+        "governance": 8,
+        "analysis": 12,
+        "persona": 7,
+        "capability": 8,
+    }
     for d, expected_count in expected.items():
         regs = list_registrations(domain=d, path=reg_path)
         assert all(r.domain == d for r in regs), f"域 {d} 过滤不纯"
-        assert len(regs) == expected_count, f"域 {d} 应 {expected_count} 条, 实得 {len(regs)}"
+        assert len(regs) == expected_count, (
+            f"域 {d} 应 {expected_count} 条, 实得 {len(regs)}"
+        )
 
 
 def test_no_duplicate_uris() -> None:
     """W34 验证: 40 URI 不重复."""
     uris = [r.uri for r in SEED_REGISTRATIONS]
-    assert len(uris) == len(set(uris)), f"URI 重复: {[u for u in uris if uris.count(u) > 1]}"
+    assert len(uris) == len(set(uris)), (
+        f"URI 重复: {[u for u in uris if uris.count(u) > 1]}"
+    )
     assert len(uris) == 40

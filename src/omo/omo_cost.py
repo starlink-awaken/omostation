@@ -4,6 +4,7 @@
 Reads cost records from ~/.runtime/data/llm_cost.jsonl.
 Records written by llm-gateway hook in providers/base.py.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
-COST_FILE = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime"))) / "data" / "llm_cost.jsonl"
+COST_FILE = (
+    Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime")))
+    / "data"
+    / "llm_cost.jsonl"
+)
 
 # Approximate cost per 1K tokens (USD), updated 2026-06
 MODEL_COST_MAP: dict[str, dict[str, float]] = {
@@ -32,33 +37,33 @@ MODEL_COST_MAP: dict[str, dict[str, float]] = {
 
 def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     from omo.omo_quota import get_cached_rates_and_quota
-    
+
     model_lower = model.lower()
-    
+
     # Try dynamic rates first
     dynamic_data = get_cached_rates_and_quota()
     rates = dynamic_data.get("rates", {}).get(model_lower)
-    
+
     if not rates:
         rates = MODEL_COST_MAP.get(model_lower)
-        
+
     if not rates:
         # Try prefix matching in dynamic rates
         for key, val in dynamic_data.get("rates", {}).items():
             if model_lower.startswith(key):
                 rates = val
                 break
-        
+
     if not rates:
         # Try prefix matching in static rates
         for key, val in MODEL_COST_MAP.items():
             if model_lower.startswith(key):
                 rates = val
                 break
-                
+
     if not rates:
         rates = {"input": 0.002, "output": 0.008}  # fallback: ~deepseek rates
-        
+
     input_cost = (input_tokens / 1000) * rates["input"]
     output_cost = (output_tokens / 1000) * rates["output"]
     return round(input_cost + output_cost, 6)
@@ -111,7 +116,9 @@ def cmd_cost_estimate(period_days: int, model_filter: str | None) -> int:
 
     # Filter by model if requested
     if model_filter:
-        model_stats = {k: v for k, v in model_stats.items() if model_filter.lower() in k.lower()}
+        model_stats = {
+            k: v for k, v in model_stats.items() if model_filter.lower() in k.lower()
+        }
 
     if not model_stats:
         print(f"No records matching model filter '{model_filter}'")
@@ -131,17 +138,25 @@ def cmd_cost_estimate(period_days: int, model_filter: str | None) -> int:
         inp_k = f"{stats['input']:,}"
         out_k = f"{stats['output']:,}"
         cost_s = f"${stats['cost']:.4f}"
-        print(f"{model[:24]:25s} {stats['calls']:6d} {inp_k:>8s} {out_k:>8s} {cost_s:>10s}")
+        print(
+            f"{model[:24]:25s} {stats['calls']:6d} {inp_k:>8s} {out_k:>8s} {cost_s:>10s}"
+        )
     print("-" * 60)
-    print(f"{'TOTAL':25s} {total_calls:6d} {total_input:>8,} {total_output:>8,} ${total_cost:.4f}")
+    print(
+        f"{'TOTAL':25s} {total_calls:6d} {total_input:>8,} {total_output:>8,} ${total_cost:.4f}"
+    )
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="omo cost", description="OMO LLM cost estimation")
+    parser = argparse.ArgumentParser(
+        prog="omo cost", description="OMO LLM cost estimation"
+    )
     sub = parser.add_subparsers(dest="command")
     ce = sub.add_parser("estimate", help="Estimate LLM costs")
-    ce.add_argument("--period", "-p", type=int, default=7, help="Days to look back (default: 7)")
+    ce.add_argument(
+        "--period", "-p", type=int, default=7, help="Days to look back (default: 7)"
+    )
     ce.add_argument("--model", "-m", help="Filter by model name")
     args = parser.parse_args(argv)
     if args.command == "estimate":

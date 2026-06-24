@@ -40,8 +40,16 @@ def get_computed_weight(item: dict) -> float:
 
 # LEGACY — use load_debt_items_from_ledger() for new code
 DEBT_ITEMS: dict[str, dict] = {
-    "D2_CI_E2E": {"weight": 0.15, "desc": "CI E2E 测试环境容器化", "x3_tier": "Framework"},
-    "D3_EU_PRICING": {"weight": 0.15, "desc": "eu-pricing 独立测试覆盖", "x3_tier": "Framework"},
+    "D2_CI_E2E": {
+        "weight": 0.15,
+        "desc": "CI E2E 测试环境容器化",
+        "x3_tier": "Framework",
+    },
+    "D3_EU_PRICING": {
+        "weight": 0.15,
+        "desc": "eu-pricing 独立测试覆盖",
+        "x3_tier": "Framework",
+    },
     "SB_DECOMPOSITION": {
         "weight": 0.20,
         "desc": "SharedBrain 拆解进度 (19器官→核+迁移+废弃)",
@@ -52,11 +60,31 @@ DEBT_ITEMS: dict[str, dict] = {
         "desc": "kairon 4个untested包 (core-models, shared-lib, sharedbrain-bridge, wksp)",
         "x3_tier": "Framework",
     },
-    "SB_ORPHANED_TASKS": {"weight": 0.10, "desc": "orphaned_tasks 结构化 registry", "x3_tier": "Tool"},
-    "SB_ROOT_CLEANUP": {"weight": 0.05, "desc": "根目录 SharedBrain/ 空壳清理", "x3_tier": "Skill"},
-    "SB_BRIDGE_FIX": {"weight": 0.10, "desc": "sharedbrain-bridge 死代码清理或重连", "x3_tier": "Tool"},
-    "SB_PROJECTS_YAML": {"weight": 0.05, "desc": "PROJECTS.yaml 行数更新 (71K→824K)", "x3_tier": "Knowledge"},
-    "SB_PHASE17_PLAN": {"weight": 0.05, "desc": "Phase 17 Wave 1 实施计划创建", "x3_tier": "Knowledge"},
+    "SB_ORPHANED_TASKS": {
+        "weight": 0.10,
+        "desc": "orphaned_tasks 结构化 registry",
+        "x3_tier": "Tool",
+    },
+    "SB_ROOT_CLEANUP": {
+        "weight": 0.05,
+        "desc": "根目录 SharedBrain/ 空壳清理",
+        "x3_tier": "Skill",
+    },
+    "SB_BRIDGE_FIX": {
+        "weight": 0.10,
+        "desc": "sharedbrain-bridge 死代码清理或重连",
+        "x3_tier": "Tool",
+    },
+    "SB_PROJECTS_YAML": {
+        "weight": 0.05,
+        "desc": "PROJECTS.yaml 行数更新 (71K→824K)",
+        "x3_tier": "Knowledge",
+    },
+    "SB_PHASE17_PLAN": {
+        "weight": 0.05,
+        "desc": "Phase 17 Wave 1 实施计划创建",
+        "x3_tier": "Knowledge",
+    },
 }
 
 

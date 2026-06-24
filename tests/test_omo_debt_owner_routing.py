@@ -41,8 +41,19 @@ def test_build_owner_routing_groups_entries_by_owner_and_sets_flags() -> None:
         "defaults": {"review_window_days": 7, "escalation_threshold_days": 3},
         "lanes": {
             "revalidate_now": [
-                _entry("A_GATE", owner="sharedbrain-governance", severity="critical", gate_level="gate", overdue_by=4),
-                _entry("A_FIRST", owner="omo-governance", overdue_by=2, last_reviewed_at=None),
+                _entry(
+                    "A_GATE",
+                    owner="sharedbrain-governance",
+                    severity="critical",
+                    gate_level="gate",
+                    overdue_by=4,
+                ),
+                _entry(
+                    "A_FIRST",
+                    owner="omo-governance",
+                    overdue_by=2,
+                    last_reviewed_at=None,
+                ),
             ],
             "schedule_now": [
                 _entry(
@@ -75,8 +86,13 @@ def test_build_owner_routing_groups_entries_by_owner_and_sets_flags() -> None:
         "omo-governance",
         "commerce-governance",
     ]
-    assert packet["owners"][0]["entries"][0]["priority_flags"] == ["gate_attention", "escalation_watch"]
-    assert packet["owners"][1]["entries"][0]["priority_flags"] == ["initial_review_required"]
+    assert packet["owners"][0]["entries"][0]["priority_flags"] == [
+        "gate_attention",
+        "escalation_watch",
+    ]
+    assert packet["owners"][1]["entries"][0]["priority_flags"] == [
+        "initial_review_required"
+    ]
     assert packet["owners"][1]["entries"][1]["priority_flags"] == ["active_mitigation"]
     assert packet["summary"] == {
         "owner_count": 3,
@@ -91,7 +107,9 @@ def test_build_owner_routing_groups_entries_by_owner_and_sets_flags() -> None:
     }
 
 
-def test_build_owner_routing_normalizes_ownerless_entries_and_rejects_unknown_lanes() -> None:
+def test_build_owner_routing_normalizes_ownerless_entries_and_rejects_unknown_lanes() -> (
+    None
+):
     action_packet = {
         "generated_at": "2026-06-10T00:00:00Z",
         "defaults": {"review_window_days": 7, "escalation_threshold_days": 3},

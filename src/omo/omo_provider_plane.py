@@ -35,42 +35,57 @@ def select_cc_switch_provider(
     import os
     from llm_gateway_kernel.llm_gateway.scheduler import ModelScheduler
     from llm_gateway_kernel.llm_gateway.types import ModelRequest, ModelRoutePolicy
-    
+
     if m1_dir is None:
-        m1_dir = Path(__file__).resolve().parents[3] / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "compute_engine"
-        
+        m1_dir = (
+            Path(__file__).resolve().parents[3]
+            / "ecos"
+            / "src"
+            / "ecos"
+            / "ssot"
+            / "mof"
+            / "m1"
+            / "compute_engine"
+        )
+
     async def _do_select() -> ProviderRuntime:
         scheduler = ModelScheduler.from_m1_dir(str(m1_dir))
         await scheduler._registry.refresh()
-        
+
         req = ModelRequest(required_capabilities=["chat"])
         policy = ModelRoutePolicy(priority=preferred_names or [])
         sel = await scheduler.select_model(req, policy=policy)
-        
+
         if not sel:
-            raise ValueError(f"No healthy provider found in M1 registry for app_type={app_type}")
-            
+            raise ValueError(
+                f"No healthy provider found in M1 registry for app_type={app_type}"
+            )
+
         provider_name = sel.provider_name
         adapter = scheduler._registry._providers.get(provider_name)
-        
+
         base_url = ""
         if adapter and hasattr(adapter, "base_url"):
             base_url = adapter.base_url or ""
-            
+
         if app_type == "claude":
-            api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY", "dummy-key")
+            api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get(
+                "ANTHROPIC_API_KEY", "dummy-key"
+            )
         elif app_type in {"codex", "openai"}:
             api_key = os.environ.get("OPENAI_API_KEY", "dummy-key")
         else:
             api_key = os.environ.get("API_KEY", "dummy-key")
-            
+
         if app_type == "claude" and not base_url:
             base_url = os.environ.get("ANTHROPIC_BASE_URL", base_url)
         if app_type in {"codex", "openai"} and not base_url:
             base_url = os.environ.get("OPENAI_BASE_URL", base_url)
-            
-        real_model = sel.model.id.split("/")[-1] if "/" in sel.model.id else sel.model.id
-            
+
+        real_model = (
+            sel.model.id.split("/")[-1] if "/" in sel.model.id else sel.model.id
+        )
+
         return ProviderRuntime(
             provider_id=sel.model.provider,
             app_type=app_type,
@@ -82,7 +97,7 @@ def select_cc_switch_provider(
             last_success_at=None,
             source="llm-gateway",
         )
-        
+
     return asyncio.run(_do_select())
 
 

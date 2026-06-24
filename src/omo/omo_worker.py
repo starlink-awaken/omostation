@@ -8,6 +8,7 @@ import argparse
 from .omo_worker_cmd_worker import setup_worker_parser, execute_worker_command
 from .omo_worker_cmd_task import setup_task_parser, execute_task_command
 
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="omo")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -23,6 +24,7 @@ def main(argv: list[str] | None = None) -> int:
         return execute_task_command(args)
 
     return 1
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

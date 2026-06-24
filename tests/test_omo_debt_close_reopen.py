@@ -9,6 +9,7 @@
 实现: in-process 调 omo.omo_debt.main(), 注入 sys.argv. 不用 subprocess, 避免
 跨 venv 问题 (pytest 可能跑在 kairon venv 里, omo 不在 kairon venv site-packages).
 """
+
 from __future__ import annotations
 
 import sys
@@ -45,10 +46,14 @@ def _run_omo_debt(omo_dir: Path, command: str, debt_id: str, actor: str) -> int:
     old_argv = sys.argv
     try:
         sys.argv = [
-            "omo-debt", command,
-            "--omo-dir", str(omo_dir),
-            "--id", debt_id,
-            "--actor", actor,
+            "omo-debt",
+            command,
+            "--omo-dir",
+            str(omo_dir),
+            "--id",
+            debt_id,
+            "--actor",
+            actor,
         ]
         return omo_debt.main()
     except (FileNotFoundError, SystemExit) as exc:
@@ -62,7 +67,9 @@ def _run_omo_debt(omo_dir: Path, command: str, debt_id: str, actor: str) -> int:
 
 def test_close_writes_lifecycle_state_and_history(tmp_omo_dir: Path) -> None:
     """omo-debt close 走正路, yaml 真改 lifecycle_state=closed + history append."""
-    rc = _run_omo_debt(tmp_omo_dir, "close", "DEBT-TEST-CLOSE-REOPEN", "test-actor-close")
+    rc = _run_omo_debt(
+        tmp_omo_dir, "close", "DEBT-TEST-CLOSE-REOPEN", "test-actor-close"
+    )
     assert rc == 0, f"close 失败 rc={rc}"
 
     yaml_path = tmp_omo_dir / "debt" / "items" / "DEBT-TEST-CLOSE-REOPEN.yaml"
@@ -81,11 +88,15 @@ def test_close_writes_lifecycle_state_and_history(tmp_omo_dir: Path) -> None:
 def test_reopen_writes_lifecycle_state_and_history(tmp_omo_dir: Path) -> None:
     """omo-debt reopen 走正路, yaml 真改 lifecycle_state=identified + history append."""
     # 先 close 一次
-    rc_close = _run_omo_debt(tmp_omo_dir, "close", "DEBT-TEST-CLOSE-REOPEN", "test-actor-step1")
+    rc_close = _run_omo_debt(
+        tmp_omo_dir, "close", "DEBT-TEST-CLOSE-REOPEN", "test-actor-step1"
+    )
     assert rc_close == 0
 
     # 再 reopen
-    rc_reopen = _run_omo_debt(tmp_omo_dir, "reopen", "DEBT-TEST-CLOSE-REOPEN", "test-actor-step2")
+    rc_reopen = _run_omo_debt(
+        tmp_omo_dir, "reopen", "DEBT-TEST-CLOSE-REOPEN", "test-actor-step2"
+    )
     assert rc_reopen == 0
 
     yaml_path = tmp_omo_dir / "debt" / "items" / "DEBT-TEST-CLOSE-REOPEN.yaml"
@@ -115,11 +126,14 @@ def test_yaml_bypass_lint_accepts_cli_written_yaml(tmp_omo_dir: Path) -> None:
     反向场景 (手工注入 status 字段越权) 在 audit 报告里有真实证据, 不在单测内复现.
     """
     # 1. 用 omo-debt close 走正路改 yaml
-    rc_close = _run_omo_debt(tmp_omo_dir, "close", "DEBT-TEST-CLOSE-REOPEN", "lint-integration-test")
+    rc_close = _run_omo_debt(
+        tmp_omo_dir, "close", "DEBT-TEST-CLOSE-REOPEN", "lint-integration-test"
+    )
     assert rc_close == 0
 
     # 2. 调 omo lint yaml-bypass (通过 _check_yaml_bypass 函数, 显式传 omo_dir)
     from omo.omo_lint import _check_yaml_bypass
+
     issues = _check_yaml_bypass(tmp_omo_dir)
     assert issues == [], (
         f"omo-debt close 写的 yaml 应 0 issue (合规), got: {issues}. "
@@ -135,6 +149,7 @@ def test_yaml_bypass_lint_detects_status_field_bypass(tmp_omo_dir: Path) -> None
     """
     # 1. 干净 baseline: 0 issue
     from omo.omo_lint import _check_yaml_bypass
+
     issues = _check_yaml_bypass(tmp_omo_dir)
     assert issues == [], f"干净 baseline 不应报 issue, got: {issues}"
 
@@ -142,7 +157,9 @@ def test_yaml_bypass_lint_detects_status_field_bypass(tmp_omo_dir: Path) -> None
     yaml_path = tmp_omo_dir / "debt" / "items" / "DEBT-TEST-CLOSE-REOPEN.yaml"
     data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
     data["status"] = "closed"  # 越权: OMO 不读 status
-    yaml_path.write_text(yaml.dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    yaml_path.write_text(
+        yaml.dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
 
     # 3. lint 应报 R2 (status=closed 但 lifecycle_state=identified 不一致)
     issues = _check_yaml_bypass(tmp_omo_dir)

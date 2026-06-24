@@ -19,6 +19,7 @@
 
 迁移自: kairon_governance.sync_state (P30-W1 GOV-MERGE 落地)
 """
+
 from __future__ import annotations
 
 import re
@@ -87,7 +88,9 @@ class FieldDiff:
     reason: str
 
     def __str__(self) -> str:
-        return f"  {self.field}: {self.old_value!r} -> {self.new_value!r}  ({self.reason})"
+        return (
+            f"  {self.field}: {self.old_value!r} -> {self.new_value!r}  ({self.reason})"
+        )
 
 
 # ── 真实状态收集 ─────────────────────────────────────────────
@@ -133,14 +136,17 @@ def _collect_task_state() -> dict[str, Any]:
     current_wave = "W0"
     if tasks:
         phase_tasks = [
-            t for t in tasks
+            t
+            for t in tasks
             if t.get("phase", "").isdigit() and int(t["phase"]) == max_phase
         ]
         waves = [t.get("wave", "W0") for t in phase_tasks]
         if waves:
+
             def wave_key(w: str) -> tuple[int, str]:
                 m = re.match(r"W(\d+)", w)
                 return (int(m.group(1)) if m else 0, w)
+
             current_wave = sorted(waves, key=wave_key)[-1]
     return {
         "total": len(tasks),
@@ -217,7 +223,11 @@ def _collect_audit_data() -> dict[str, Any]:
         )
         if watch_section:
             for line in watch_section.group(0).splitlines():
-                if re.match(r"^\s*-\s+", line) and "无" not in line and "_(" not in line:
+                if (
+                    re.match(r"^\s*-\s+", line)
+                    and "无" not in line
+                    and "_(" not in line
+                ):
                     watchlist_count += 1
         return {"score": score, "watchlist_count": watchlist_count}
     return {"score": None, "watchlist_count": 0}
@@ -227,7 +237,9 @@ def _count_adrs() -> int:
     """ADR 文件数(不含 README/INDEX)."""
     if not DECISIONS_DIR.exists():
         return 0
-    return sum(1 for f in DECISIONS_DIR.glob("*.md") if f.stem not in {"README", "INDEX"})
+    return sum(
+        1 for f in DECISIONS_DIR.glob("*.md") if f.stem not in {"README", "INDEX"}
+    )
 
 
 def _count_packages() -> int:
@@ -235,7 +247,9 @@ def _count_packages() -> int:
     if not KAIRON_PACKAGES.exists():
         return 0
     return sum(
-        1 for p in KAIRON_PACKAGES.iterdir() if p.is_dir() and not p.name.startswith(".")
+        1
+        for p in KAIRON_PACKAGES.iterdir()
+        if p.is_dir() and not p.name.startswith(".")
     )
 
 
@@ -375,7 +389,7 @@ def _remove_duplicate_keys(text: str, key: str, keep_last: bool = True) -> str:
     keep_line = matches[keep_idx].group(0)
     new_text = re.sub(pattern, "", text, flags=re.MULTILINE)
     last = matches[-1]
-    new_text = new_text[: last.start()] + keep_line + "\n" + new_text[last.start():]
+    new_text = new_text[: last.start()] + keep_line + "\n" + new_text[last.start() :]
     return new_text
 
 
@@ -531,26 +545,30 @@ def render_report(
         lines.append("| 字段 | 旧值 | 新值 | 理由 |")
         lines.append("|------|------|------|------|")
         for d in diffs:
-            lines.append(f"| {d.field} | `{d.old_value}` | `{d.new_value}` | {d.reason} |")
+            lines.append(
+                f"| {d.field} | `{d.old_value}` | `{d.new_value}` | {d.reason} |"
+            )
     lines.extend(["", "## 3. 白名单", "", "同步器**只**改以下字段:", ""])
     for f in sorted(ALLOWED_FIELDS):
         lines.append(f"- `{f}`")
-    lines.extend([
-        "",
-        "严禁改动(被显式排除):",
-        "- `goals` (人类专属)",
-        "- `debt_weight_items` / `resolved_debt_items` (事实沉淀)",
-        "- `next_active_tasks` (语义复杂)",
-        "- `divergence_*` (其他治理通道)",
-        "- 各 `phase*_status` 历史时间戳",
-        "",
-        "## 4. 安全机制",
-        "",
-        "- 默认 `--dry-run` 模式",
-        "- `--apply` 才真写(写前备份 `.bak-{timestamp}`)",
-        "- 非白名单字段一律拒绝(raise PermissionError)",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "严禁改动(被显式排除):",
+            "- `goals` (人类专属)",
+            "- `debt_weight_items` / `resolved_debt_items` (事实沉淀)",
+            "- `next_active_tasks` (语义复杂)",
+            "- `divergence_*` (其他治理通道)",
+            "- 各 `phase*_status` 历史时间戳",
+            "",
+            "## 4. 安全机制",
+            "",
+            "- 默认 `--dry-run` 模式",
+            "- `--apply` 才真写(写前备份 `.bak-{timestamp}`)",
+            "- 非白名单字段一律拒绝(raise PermissionError)",
+            "",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 

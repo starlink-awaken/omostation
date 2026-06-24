@@ -41,8 +41,7 @@ def validate_system_health_snapshot(payload: Any) -> dict[str, Any]:
     mixed = sorted(_GOVERNANCE_ONLY_KEYS.intersection(snapshot))
     if mixed:
         raise ValueError(
-            "system_health snapshot contains governance-only keys: "
-            + ", ".join(mixed)
+            "system_health snapshot contains governance-only keys: " + ", ".join(mixed)
         )
     services = snapshot.get("services")
     if services is not None and not isinstance(services, dict):

@@ -5,6 +5,7 @@
   2. CHANGELOG.md 含 [0.1.0] 段
   3. omo.__version__ 等于 VERSION 文件内容
 """
+
 from __future__ import annotations
 
 import re

@@ -117,7 +117,11 @@ class TestSelfHealingEngine:
         asyncio.run(_run())
 
     def test_trigger_above_threshold(self):
-        rules = [HealingRule(name="test", event_types=["ERROR"], threshold=2, cooldown_seconds=0)]
+        rules = [
+            HealingRule(
+                name="test", event_types=["ERROR"], threshold=2, cooldown_seconds=0
+            )
+        ]
         engine = SelfHealingEngine(rules=rules)
         event = {"type": "ERROR", "source": "test"}
 
@@ -130,7 +134,11 @@ class TestSelfHealingEngine:
         asyncio.run(_run())
 
     def test_cool_down_prevents_retrigger(self):
-        rules = [HealingRule(name="test", event_types=["ERROR"], threshold=1, cooldown_seconds=3600)]
+        rules = [
+            HealingRule(
+                name="test", event_types=["ERROR"], threshold=1, cooldown_seconds=3600
+            )
+        ]
         engine = SelfHealingEngine(rules=rules)
         event = {"type": "ERROR"}
 
@@ -154,8 +162,12 @@ class TestSelfHealingEngine:
 
     def test_multiple_rules_can_trigger(self):
         rules = [
-            HealingRule(name="r1", event_types=["ERROR"], threshold=1, cooldown_seconds=0),
-            HealingRule(name="r2", event_types=["ERROR"], threshold=1, cooldown_seconds=0),
+            HealingRule(
+                name="r1", event_types=["ERROR"], threshold=1, cooldown_seconds=0
+            ),
+            HealingRule(
+                name="r2", event_types=["ERROR"], threshold=1, cooldown_seconds=0
+            ),
         ]
         engine = SelfHealingEngine(rules=rules)
 
@@ -181,7 +193,15 @@ class TestSelfHealingEngine:
     def test_debt_action_creates_file(self, tmp_path, monkeypatch):
         monkeypatch.setattr("omo.omo_self_healing.OMO_ROOT", tmp_path)
 
-        rules = [HealingRule(name="test", event_types=["ERR"], threshold=1, cooldown_seconds=0, action="debt")]
+        rules = [
+            HealingRule(
+                name="test",
+                event_types=["ERR"],
+                threshold=1,
+                cooldown_seconds=0,
+                action="debt",
+            )
+        ]
         engine = SelfHealingEngine(rules=rules, window_seconds=60)
 
         async def _run():
@@ -191,10 +211,21 @@ class TestSelfHealingEngine:
         items = list((tmp_path / ".omo" / "debt" / "items").glob("auto-*.yaml"))
         assert len(items) > 0
 
-        registry = yaml.safe_load((tmp_path / ".omo" / "_truth" / "registry" / "debt.yaml").read_text(encoding="utf-8"))
-        assert any(path.startswith(".omo/debt/items/auto-test-") for path in registry["seed_items"])
+        registry = yaml.safe_load(
+            (tmp_path / ".omo" / "_truth" / "registry" / "debt.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        assert any(
+            path.startswith(".omo/debt/items/auto-test-")
+            for path in registry["seed_items"]
+        )
 
-        artifact = yaml.safe_load((tmp_path / ".omo" / "_delivery" / "ingress" / "debts" / items[0].name).read_text(encoding="utf-8"))
+        artifact = yaml.safe_load(
+            (
+                tmp_path / ".omo" / "_delivery" / "ingress" / "debts" / items[0].name
+            ).read_text(encoding="utf-8")
+        )
         assert artifact["kind"] == "debt_upserted"
         assert artifact["ingress_plane"] == "projects/omo:self_healing"
 

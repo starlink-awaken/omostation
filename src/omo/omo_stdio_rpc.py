@@ -22,6 +22,7 @@
 P64-W0: 加 daemon_mode 参数 (镜像 P63-W0-D kairon 模式) — launchd plist 没 pipe stdin,
 daemon 模式 EOF sleep 30s 重试, 避免 KeepAlive 重启风暴. 正常模式立即 return 0 (P49-W0 era).
 """
+
 from __future__ import annotations
 
 import json
@@ -63,7 +64,8 @@ def run_stdio_dispatch(
                 req = json.loads(line)
             except json.JSONDecodeError as exc:
                 sys.stdout.write(
-                    json.dumps({"status": "error", "error": f"json_decode: {exc}"}) + "\n"
+                    json.dumps({"status": "error", "error": f"json_decode: {exc}"})
+                    + "\n"
                 )
                 sys.stdout.flush()
                 continue
@@ -71,10 +73,14 @@ def run_stdio_dispatch(
             args = req.get("args", {}) or {}
             try:
                 result = dispatch_fn(action, args)
-                resp = result if isinstance(result, dict) and "status" in result else {
-                    "status": "ok",
-                    "result": result,
-                }
+                resp = (
+                    result
+                    if isinstance(result, dict) and "status" in result
+                    else {
+                        "status": "ok",
+                        "result": result,
+                    }
+                )
             except Exception as exc:
                 resp = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
             sys.stdout.write(json.dumps(resp, ensure_ascii=False, default=str) + "\n")
@@ -83,7 +89,9 @@ def run_stdio_dispatch(
         if not daemon_mode:
             return 0
         if restart_delay_sec > 0:
-            sys.stderr.write(f"[daemon] stdin EOF, sleep {restart_delay_sec}s then exit (launchd restart)\n")
+            sys.stderr.write(
+                f"[daemon] stdin EOF, sleep {restart_delay_sec}s then exit (launchd restart)\n"
+            )
             sys.stderr.flush()
             time.sleep(restart_delay_sec)
             return 0

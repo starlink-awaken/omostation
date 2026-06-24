@@ -13,6 +13,7 @@ from .omo_worker_core import (
     _write_yaml,
 )
 
+
 def collect_worker_status(
     root: Path, omo_dir: str | Path = ".omo"
 ) -> dict[str, object]:

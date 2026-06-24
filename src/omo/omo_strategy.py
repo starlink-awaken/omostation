@@ -27,7 +27,9 @@ def strategy_gc(workspace_root: Path):
     decay_threshold_days = 28
     decay_threshold_seconds = decay_threshold_days * 24 * 3600
 
-    print(f"♻️ [Entropy GC] 正在扫描 Sandbox 中的滞留 Pitch (Threshold: {decay_threshold_days} days)...")
+    print(
+        f"♻️ [Entropy GC] 正在扫描 Sandbox 中的滞留 Pitch (Threshold: {decay_threshold_days} days)..."
+    )
     decayed_count = 0
 
     for md_file in sandbox_dir.glob("*.md"):

@@ -53,7 +53,10 @@ def test_system_space_identity_contract_is_linked_and_concrete() -> None:
     contract = _load_workspace_yaml("spaces/system-space-identity-admission.yaml")
 
     assert "spaces/system-space-identity-admission.yaml" in manifest["policy_refs"]
-    assert ".omo/_knowledge/design/plans/archive/phase9-wave3-execution-plan.md" in manifest["policy_refs"]
+    assert (
+        ".omo/_knowledge/design/plans/archive/phase9-wave3-execution-plan.md"
+        in manifest["policy_refs"]
+    )
 
     assert contract["apiVersion"] == "omo/v1"
     assert contract["kind"] == "SpaceIdentityAdmission"
@@ -90,8 +93,13 @@ def test_system_space_identity_contract_links_taxonomy_and_matrix() -> None:
     assert schema["capability_taxonomy_ref_field"] == "capability_taxonomy_ref"
     assert schema["admission_matrix_ref_field"] == "admission_matrix_ref"
 
-    assert contract["capability_taxonomy_ref"] == "spaces/system-space-capability-taxonomy.yaml"
-    assert contract["admission_matrix_ref"] == "spaces/system-space-admission-matrix.yaml"
+    assert (
+        contract["capability_taxonomy_ref"]
+        == "spaces/system-space-capability-taxonomy.yaml"
+    )
+    assert (
+        contract["admission_matrix_ref"] == "spaces/system-space-admission-matrix.yaml"
+    )
 
     assert taxonomy["apiVersion"] == "omo/v1"
     assert taxonomy["kind"] == "SpaceCapabilityTaxonomy"
@@ -127,7 +135,9 @@ def test_system_space_identity_contract_links_taxonomy_and_matrix() -> None:
 
 def test_worker_envelope_binds_action_and_membership_to_admission_contract() -> None:
     template = _load_workspace_yaml(".omo/workers/templates/worker-task-envelope.yaml")
-    envelope = _load_workspace_yaml(".omo/workers/runs/phase9/phase9-wave3-identity-admission-envelope.yaml")
+    envelope = _load_workspace_yaml(
+        ".omo/workers/runs/phase9/phase9-wave3-identity-admission-envelope.yaml"
+    )
 
     assert template["execution_context"] == {
         "space_ref": "<space manifest path>",

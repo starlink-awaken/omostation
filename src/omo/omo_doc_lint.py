@@ -25,7 +25,9 @@ def load_doc_lint_index(workspace_root: Path) -> dict[str, Any]:
         return {"runs": []}
 
 
-def update_doc_lint_index(workspace_root: Path, findings: dict[str, Any]) -> dict[str, Any]:
+def update_doc_lint_index(
+    workspace_root: Path, findings: dict[str, Any]
+) -> dict[str, Any]:
     index = load_doc_lint_index(workspace_root)
     runs = [
         run
@@ -44,7 +46,9 @@ def update_doc_lint_index(workspace_root: Path, findings: dict[str, Any]) -> dic
     index["runs"] = runs[-30:]
     index["summary"] = {
         "run_count": len(index["runs"]),
-        "latest_drift_total": index["runs"][-1]["drift_total"] if index["runs"] else None,
+        "latest_drift_total": index["runs"][-1]["drift_total"]
+        if index["runs"]
+        else None,
     }
     write_text_atomic(
         doc_lint_index_path(workspace_root),
@@ -53,7 +57,9 @@ def update_doc_lint_index(workspace_root: Path, findings: dict[str, Any]) -> dic
     return index
 
 
-def write_doc_lint_outputs(workspace_root: Path, findings: dict[str, Any], today: str) -> tuple[Path, Path]:
+def write_doc_lint_outputs(
+    workspace_root: Path, findings: dict[str, Any], today: str
+) -> tuple[Path, Path]:
     out_dir = workspace_root / ".omo" / "_delivery" / "doc-lint"
     json_path = out_dir / f"{today}.json"
     write_text_atomic(
@@ -61,7 +67,12 @@ def write_doc_lint_outputs(workspace_root: Path, findings: dict[str, Any], today
         json.dumps(findings, ensure_ascii=False, indent=2) + "\n",
     )
     md_path = out_dir / f"{today}.md"
-    lines = [f"# OPC Doc Lint — {today}", "", f"Drift total: **{findings['drift_total']}**", ""]
+    lines = [
+        f"# OPC Doc Lint — {today}",
+        "",
+        f"Drift total: **{findings['drift_total']}**",
+        "",
+    ]
     lines.append("## Key docs presence")
     lines.append(f"- expected: {findings['key_docs']['expected']}")
     lines.append(f"- present: {len(findings['key_docs']['present'])}")
@@ -89,7 +100,9 @@ def write_doc_lint_outputs(workspace_root: Path, findings: dict[str, Any], today
     lines.append("")
     lines.append("## History")
     lines.append(f"- run_count: {findings['history']['summary']['run_count']}")
-    lines.append(f"- latest_drift_total: {findings['history']['summary']['latest_drift_total']}")
+    lines.append(
+        f"- latest_drift_total: {findings['history']['summary']['latest_drift_total']}"
+    )
     write_text_atomic(md_path, "\n".join(lines) + "\n")
     return json_path, md_path
 
@@ -145,7 +158,11 @@ def check_phase_doc_consistency(
     findings: list[dict[str, Any]] = []
     for phase, task_id, doc_rel in phase_plan_docs:
         try:
-            plan_rel = str(resolve_opc_phase_task_path(workspace_root, task_id).relative_to(workspace_root))
+            plan_rel = str(
+                resolve_opc_phase_task_path(workspace_root, task_id).relative_to(
+                    workspace_root
+                )
+            )
             plan = read_yaml(workspace_root, plan_rel)
             doc = read_text(workspace_root, doc_rel)
         except FileNotFoundError:
@@ -153,7 +170,10 @@ def check_phase_doc_consistency(
             continue
         plan_status = plan.get("gate_status", "unknown")
         if plan_status == "passed":
-            if "passed" not in doc.lower() and f"Gate {plan['gate'][-1]} passed" not in doc:
+            if (
+                "passed" not in doc.lower()
+                and f"Gate {plan['gate'][-1]} passed" not in doc
+            ):
                 findings.append(
                     {
                         "phase": phase,
@@ -173,7 +193,14 @@ def check_phase_doc_consistency(
                     }
                 )
         else:
-            findings.append({"phase": phase, "plan_status": plan_status, "doc": doc_rel, "drift": False})
+            findings.append(
+                {
+                    "phase": phase,
+                    "plan_status": plan_status,
+                    "doc": doc_rel,
+                    "drift": False,
+                }
+            )
     return findings
 
 
@@ -191,7 +218,9 @@ def check_dead_links(workspace_root: Path, key_docs: list[str]) -> list[dict[str
                 continue
             target = (workspace_root / rel).parent / link_target
             if not target.exists():
-                dead.append({"doc": rel, "link_text": link_text, "link_target": link_target})
+                dead.append(
+                    {"doc": rel, "link_text": link_text, "link_target": link_target}
+                )
     return dead
 
 
@@ -202,7 +231,11 @@ def check_term_consistency(
     issues: list[dict[str, Any]] = []
     for phase, task_id, doc_rel in phase_plan_docs:
         try:
-            plan_rel = str(resolve_opc_phase_task_path(workspace_root, task_id).relative_to(workspace_root))
+            plan_rel = str(
+                resolve_opc_phase_task_path(workspace_root, task_id).relative_to(
+                    workspace_root
+                )
+            )
             plan = read_yaml(workspace_root, plan_rel)
             doc = read_text(workspace_root, doc_rel)
         except FileNotFoundError:
@@ -213,7 +246,11 @@ def check_term_consistency(
             continue
         head_text = "\n".join(doc.splitlines()[:30]).lower()
         has_current_pass_signal = "closed" in head_text or "passed" in head_text
-        if "not_yet_passed" in head_text and gate.lower() in head_text and not has_current_pass_signal:
+        if (
+            "not_yet_passed" in head_text
+            and gate.lower() in head_text
+            and not has_current_pass_signal
+        ):
             issues.append(
                 {
                     "phase": phase,
@@ -235,9 +272,13 @@ def run_doc_lint(
     findings: dict[str, Any] = {
         "generated_at": generated_at or utc_now_iso(),
         "key_docs": check_key_docs_exist(workspace_root, key_docs),
-        "phase_doc_consistency": check_phase_doc_consistency(workspace_root, phase_plan_docs),
+        "phase_doc_consistency": check_phase_doc_consistency(
+            workspace_root, phase_plan_docs
+        ),
         "dead_links": check_dead_links(workspace_root, key_docs),
-        "term_consistency_issues": check_term_consistency(workspace_root, phase_plan_docs),
+        "term_consistency_issues": check_term_consistency(
+            workspace_root, phase_plan_docs
+        ),
     }
     total_drift = (
         (1 if findings["key_docs"]["drift"] else 0)
@@ -247,5 +288,7 @@ def run_doc_lint(
     )
     findings["drift_total"] = total_drift
     findings["history"] = update_doc_lint_index(workspace_root, findings)
-    json_path, md_path = write_doc_lint_outputs(workspace_root, findings, today or utc_today())
+    json_path, md_path = write_doc_lint_outputs(
+        workspace_root, findings, today or utc_today()
+    )
     return findings, json_path, md_path

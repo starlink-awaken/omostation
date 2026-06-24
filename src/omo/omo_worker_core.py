@@ -9,6 +9,7 @@ from .omo_io import write_text_atomic, write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
 from .omo_shared import load_yaml
 
+
 def _timestamp_slug(now: str | None = None) -> str:
     if now:
         return now.replace("-", "").replace(":", "").replace("T", "-").replace("Z", "")
@@ -164,7 +165,6 @@ def _omo_path(root: Path, omo_dir: str | Path = ".omo") -> Path:
     return root / Path(omo_dir)
 
 
-
 def _build_launch_argv(
     registry: dict, worker_id: str, transport: str, prompt_text: str
 ) -> list[str]:
@@ -180,4 +180,3 @@ def _build_launch_argv(
         if ";" in arg and arg != ";" and not arg.startswith("-c"):
             raise ValueError(f"unsafe worker command template: {template}")
     return [prompt_text if arg == sentinel else arg for arg in argv]
-

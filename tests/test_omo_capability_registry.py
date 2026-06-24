@@ -17,17 +17,17 @@ def test_load_capability_registry_prefers_new_path_and_falls_back_to_legacy(tmp_
         yaml.safe_dump({"capabilities": [{"id": "legacy-only"}]}, sort_keys=False),
         encoding="utf-8",
     )
-    assert omo_capability.load_capability_registry(tmp_path, "projects-capabilities.yaml") == {
-        "capabilities": [{"id": "legacy-only"}]
-    }
+    assert omo_capability.load_capability_registry(
+        tmp_path, "projects-capabilities.yaml"
+    ) == {"capabilities": [{"id": "legacy-only"}]}
 
     (new_dir / "projects-capabilities.yaml").write_text(
         yaml.safe_dump({"capabilities": [{"id": "new-primary"}]}, sort_keys=False),
         encoding="utf-8",
     )
-    assert omo_capability.load_capability_registry(tmp_path, "projects-capabilities.yaml") == {
-        "capabilities": [{"id": "new-primary"}]
-    }
+    assert omo_capability.load_capability_registry(
+        tmp_path, "projects-capabilities.yaml"
+    ) == {"capabilities": [{"id": "new-primary"}]}
 
 
 def test_load_capability_registry_accepts_multi_document_yaml(tmp_path):
@@ -48,14 +48,20 @@ def test_load_capability_registry_accepts_multi_document_yaml(tmp_path):
     assert payload["capabilities"] == [{"id": "multi-primary"}]
 
 
-def test_scan_command_writes_capability_registry_into_capabilities_dir(tmp_path, monkeypatch):
-    (tmp_path / "projects" / "kairon" / "packages" / "alpha").mkdir(parents=True, exist_ok=True)
+def test_scan_command_writes_capability_registry_into_capabilities_dir(
+    tmp_path, monkeypatch
+):
+    (tmp_path / "projects" / "kairon" / "packages" / "alpha").mkdir(
+        parents=True, exist_ok=True
+    )
     (tmp_path / "scripts").mkdir(parents=True, exist_ok=True)
     (tmp_path / "scripts" / "omo").write_text("#!/bin/sh\n", encoding="utf-8")
 
     monkeypatch.setattr(omo_capability, "WORKSPACE_ROOT", tmp_path)
     monkeypatch.setattr(omo_capability, "OMO_ROOT", tmp_path / ".omo")
-    monkeypatch.setattr(omo_capability, "CAPABILITIES_DIR", tmp_path / ".omo" / "capabilities")
+    monkeypatch.setattr(
+        omo_capability, "CAPABILITIES_DIR", tmp_path / ".omo" / "capabilities"
+    )
 
     rc = omo_capability.scan_command(SimpleNamespace(write=True))
 
@@ -64,17 +70,30 @@ def test_scan_command_writes_capability_registry_into_capabilities_dir(tmp_path,
     assert (tmp_path / ".omo" / "capabilities" / "system-packages.yaml").exists()
     assert (tmp_path / ".omo" / "capabilities" / "agent-clis.yaml").exists()
     assert not (tmp_path / ".omo" / "registry" / "projects-capabilities.yaml").exists()
-    bundle_artifacts = list((tmp_path / ".omo" / "_delivery" / "ingress" / "capabilities").glob("bundle-*.yaml"))
+    bundle_artifacts = list(
+        (tmp_path / ".omo" / "_delivery" / "ingress" / "capabilities").glob(
+            "bundle-*.yaml"
+        )
+    )
     assert len(bundle_artifacts) == 1
     payload = yaml.safe_load(bundle_artifacts[0].read_text(encoding="utf-8"))
     assert payload["kind"] == "capability_registry_bundle_written"
     assert ".omo/capabilities/projects-capabilities.yaml" in payload["registry_refs"]
     assert payload["actor"] == "omo-capability capability scan"
-    ingress_registry = yaml.safe_load((tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml").read_text(encoding="utf-8"))
-    assert ingress_registry["capabilities"]["by_id"]["bundle"]["source_ref"] == "omo-capability:scan"
+    ingress_registry = yaml.safe_load(
+        (tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert (
+        ingress_registry["capabilities"]["by_id"]["bundle"]["source_ref"]
+        == "omo-capability:scan"
+    )
 
 
-def test_register_command_writes_manual_capabilities_via_ingress_artifact(tmp_path, monkeypatch):
+def test_register_command_writes_manual_capabilities_via_ingress_artifact(
+    tmp_path, monkeypatch
+):
     capabilities_dir = tmp_path / ".omo" / "capabilities"
     capabilities_dir.mkdir(parents=True, exist_ok=True)
     payload_file = tmp_path / "capability.yaml"
@@ -105,15 +124,30 @@ def test_register_command_writes_manual_capabilities_via_ingress_artifact(tmp_pa
     rc = omo_capability.register_command(SimpleNamespace(file=str(payload_file)))
 
     assert rc == 0
-    manual_registry = yaml.safe_load((capabilities_dir / "manual-capabilities.yaml").read_text(encoding="utf-8"))
+    manual_registry = yaml.safe_load(
+        (capabilities_dir / "manual-capabilities.yaml").read_text(encoding="utf-8")
+    )
     assert manual_registry["capabilities"][0]["id"] == "manual.demo"
-    artifacts = list((tmp_path / ".omo" / "_delivery" / "ingress" / "capabilities").glob("manual-capabilities-*.yaml"))
+    artifacts = list(
+        (tmp_path / ".omo" / "_delivery" / "ingress" / "capabilities").glob(
+            "manual-capabilities-*.yaml"
+        )
+    )
     assert len(artifacts) == 1
     artifact_payload = yaml.safe_load(artifacts[0].read_text(encoding="utf-8"))
     assert artifact_payload["kind"] == "manual_capabilities_written"
-    assert artifact_payload["registry_ref"] == ".omo/capabilities/manual-capabilities.yaml"
-    ingress_registry = yaml.safe_load((tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml").read_text(encoding="utf-8"))
-    assert ingress_registry["capabilities"]["by_id"]["manual-capabilities"]["source_ref"] == "omo-capability:register:capability.yaml"
+    assert (
+        artifact_payload["registry_ref"] == ".omo/capabilities/manual-capabilities.yaml"
+    )
+    ingress_registry = yaml.safe_load(
+        (tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert (
+        ingress_registry["capabilities"]["by_id"]["manual-capabilities"]["source_ref"]
+        == "omo-capability:register:capability.yaml"
+    )
 
 
 def test_phase14_ecosystem_command_reads_new_capability_registry(tmp_path, monkeypatch):
@@ -123,7 +157,11 @@ def test_phase14_ecosystem_command_reads_new_capability_registry(tmp_path, monke
         yaml.safe_dump(
             {
                 "packages": [
-                    {"id": "pkg-a", "manager": "uv", "manifest": "projects/demo/pyproject.toml"},
+                    {
+                        "id": "pkg-a",
+                        "manager": "uv",
+                        "manifest": "projects/demo/pyproject.toml",
+                    },
                     {"id": "pkg-b", "manager": "brew", "manifest": "Brewfile"},
                 ]
             },
@@ -132,7 +170,9 @@ def test_phase14_ecosystem_command_reads_new_capability_registry(tmp_path, monke
         encoding="utf-8",
     )
     (capabilities_dir / "article-samples.yaml").write_text(
-        yaml.safe_dump({"samples": [{"id": "article-1"}, {"id": "article-2"}]}, sort_keys=False),
+        yaml.safe_dump(
+            {"samples": [{"id": "article-1"}, {"id": "article-2"}]}, sort_keys=False
+        ),
         encoding="utf-8",
     )
 

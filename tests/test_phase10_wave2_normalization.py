@@ -14,7 +14,10 @@ def test_phase10_wave2_live_bundle_includes_typed_delivery_contract() -> None:
         Path(".omo/workers/runs/phase10-wave2-normalized-rules-envelope.yaml"),
     )
 
-    assert bundle["delivery_contract_ref"] == ".omo/_delivery/task-center/contracts/project-dispatch-delivery-contract.yaml"
+    assert (
+        bundle["delivery_contract_ref"]
+        == ".omo/_delivery/task-center/contracts/project-dispatch-delivery-contract.yaml"
+    )
     assert bundle["delivery_contract"] == {
         "proposal_ref": ".omo/workers/runs/phase9-wave3-identity-admission-approval.yaml",
         "apply_ref": ".omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml",

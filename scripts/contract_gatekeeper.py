@@ -16,6 +16,7 @@ Usage:
 
 Exit 0 = clean, Exit 1 = violations found.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -54,7 +55,10 @@ def _is_exempt(path: Path) -> bool:
 
 def _has_forbidden_prefix(value: str) -> bool:
     """Check whether a string literal starts with a forbidden path prefix."""
-    return any(value.startswith(p) or ("/" + p) in value or ("\\" + p) in value for p in FORBIDDEN_PREFIXES)
+    return any(
+        value.startswith(p) or ("/" + p) in value or ("\\" + p) in value
+        for p in FORBIDDEN_PREFIXES
+    )
 
 
 class _GatekeeperVisitor(ast.NodeVisitor):
@@ -72,7 +76,11 @@ class _GatekeeperVisitor(ast.NodeVisitor):
         """If the call's positional arg[arg_index] is a forbidden string literal, record."""
         if isinstance(node, ast.Call) and node.args:
             arg = node.args[arg_index]
-            if isinstance(arg, ast.Constant) and isinstance(arg.value, str) and _has_forbidden_prefix(arg.value):
+            if (
+                isinstance(arg, ast.Constant)
+                and isinstance(arg.value, str)
+                and _has_forbidden_prefix(arg.value)
+            ):
                 self._add(arg, f"forbidden path in call arg: {arg.value!r}")
 
     # ── open(...) ──────────────────────────────────────────────
@@ -122,9 +130,14 @@ class _GatekeeperVisitor(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign) -> None:  # noqa: N802
         for target in node.targets:
             if isinstance(target, ast.Name) and "path" in target.id.lower():
-                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                if isinstance(node.value, ast.Constant) and isinstance(
+                    node.value.value, str
+                ):
                     if _has_forbidden_prefix(node.value.value):
-                        self._add(node.value, f"forbidden path assigned to {target.id}: {node.value.value!r}")
+                        self._add(
+                            node.value,
+                            f"forbidden path assigned to {target.id}: {node.value.value!r}",
+                        )
         self.generic_visit(node)
 
 
@@ -163,7 +176,9 @@ def _git_diff_files() -> list[Path]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="OMO Contract Gatekeeper")
     parser.add_argument("paths", nargs="*", help="Files or directories to check")
-    parser.add_argument("--diff", action="store_true", help="Only check Python files in git diff")
+    parser.add_argument(
+        "--diff", action="store_true", help="Only check Python files in git diff"
+    )
     args = parser.parse_args(argv)
 
     if args.diff:

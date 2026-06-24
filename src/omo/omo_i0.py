@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """OMO I0 CLI — query Agora integration fabric state."""
+
 from __future__ import annotations
 
 import argparse
@@ -59,7 +60,9 @@ def cmd_i0_routes() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="omo i0", description="OMO I0 Integration Fabric query")
+    parser = argparse.ArgumentParser(
+        prog="omo i0", description="OMO I0 Integration Fabric query"
+    )
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("status", help="Show Agora I0 fabric status")
     sub.add_parser("routes", help="List Agora routing table")

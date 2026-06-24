@@ -12,6 +12,7 @@
   - 验证 Pydantic 校验通过 (schema=OmoTrailRecord 写时锁)
   - 验证业务接入模式: 写完后 omo_trail.read_trail 立即可查
 """
+
 from __future__ import annotations
 
 import json
@@ -94,14 +95,20 @@ def test_cli_trail_seed_subprocess(tmp_path):
     log_path = tmp_path / "cli-seed.jsonl"
     r = subprocess.run(
         [sys.executable, "-m", "omo.cli", "trail", "seed", "--log", str(log_path)],
-        capture_output=True, text=True, timeout=15,
+        capture_output=True,
+        text=True,
+        timeout=15,
         cwd=str(OMO_SRC.parent.parent),
     )
     assert r.returncode == 0, f"stderr: {r.stderr}"
     assert "✅ trail seed 写入 5 条 step" in r.stdout
 
     # log 文件 5 条
-    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    lines = [
+        line_
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(lines) == 5
     for line in lines:
         rec = json.loads(line)
@@ -119,4 +126,6 @@ def test_seed_uses_append_only_log_via_omo_trail():
     # cmd_trail_seed 内部用 record_step (走 AppendOnlyLog)
     src = inspect.getsource(cmd_trail_seed)
     assert "record_step" in src
-    assert "AppendOnlyLog" not in src, "seed 不应直接 AppendOnlyLog (应走 record_step wrapper)"
+    assert "AppendOnlyLog" not in src, (
+        "seed 不应直接 AppendOnlyLog (应走 record_step wrapper)"
+    )

@@ -276,7 +276,9 @@ class SelfHealingEngine:
             )
 
             rule.mark_triggered()
-            self._triggered_count[rule.name] = self._triggered_count.get(rule.name, 0) + 1
+            self._triggered_count[rule.name] = (
+                self._triggered_count.get(rule.name, 0) + 1
+            )
 
             actions = []
             if rule.action in ("debt", "both"):
@@ -299,20 +301,27 @@ class SelfHealingEngine:
                 await self._publish_healing_event(rule, ev_type, count, actions)
 
             if actions:
-                triggered.append({
-                    "rule": rule.name,
-                    "event_type": ev_type,
-                    "count": count,
-                    "actions": actions,
-                })
+                triggered.append(
+                    {
+                        "rule": rule.name,
+                        "event_type": ev_type,
+                        "count": count,
+                        "actions": actions,
+                    }
+                )
 
         return triggered
 
     # ── Debt Creation ──────────────────────────────────────────────────
 
-    async def _create_debt(self, rule: HealingRule, event_type: str, count: int) -> str | None:
+    async def _create_debt(
+        self, rule: HealingRule, event_type: str, count: int
+    ) -> str | None:
         """基于规则和事件创建债务条目。"""
-        event_slug = str(event_type).strip().lower().replace(" ", "-").replace("/", "-") or "event"
+        event_slug = (
+            str(event_type).strip().lower().replace(" ", "-").replace("/", "-")
+            or "event"
+        )
         debt_id = f"auto-{rule.name}-{event_slug}"
         now = datetime.now(UTC).isoformat()
 
@@ -356,13 +365,15 @@ class SelfHealingEngine:
                 source_ref=f"self_healing:{debt_id}",
                 now=now,
             )
-            logger.info("self_healing_debt_created debt_id=%s ref=.omo/debt/items/%s.yaml", debt_id, debt_id)
+            logger.info(
+                "self_healing_debt_created debt_id=%s ref=.omo/debt/items/%s.yaml",
+                debt_id,
+                debt_id,
+            )
             return str(payload.get("id") or debt_id)
         except Exception as exc:
             logger.error("self_healing_debt_create_failed error=%s", str(exc))
             return None
-
-    
 
     # ── Workflow Trigger ───────────────────────────────────────────────
 
@@ -390,7 +401,9 @@ class SelfHealingEngine:
                 "returncode": result.returncode,
             }
         except subprocess.TimeoutExpired:
-            logger.error("self_healing_workflow_timeout workflow_id=%s", rule.workflow_id)
+            logger.error(
+                "self_healing_workflow_timeout workflow_id=%s", rule.workflow_id
+            )
             return {"status": "timeout", "workflow_id": rule.workflow_id}
         except Exception as exc:
             logger.error("self_healing_workflow_error error=%s", str(exc))
@@ -408,13 +421,18 @@ class SelfHealingEngine:
             # 失败自动重试 1 次
             if not result["success"]:
                 logger.warning("fix_retrying fix=%s", fix_name)
-                result = run_fix(fix_name, {"rule": rule.name, "severity": rule.severity, "retry": True})
-            self._fix_history.append({
-                "rule": rule.name,
-                "fix_name": fix_name,
-                "success": result["success"],
-                "output": result["output"][:200],
-            })
+                result = run_fix(
+                    fix_name,
+                    {"rule": rule.name, "severity": rule.severity, "retry": True},
+                )
+            self._fix_history.append(
+                {
+                    "rule": rule.name,
+                    "fix_name": fix_name,
+                    "success": result["success"],
+                    "output": result["output"][:200],
+                }
+            )
             if len(self._fix_history) > 100:
                 self._fix_history = self._fix_history[-100:]
             results.append(result)
@@ -427,7 +445,6 @@ class SelfHealingEngine:
     ) -> None:
         """向 Agora 发布自愈事件。"""
         try:
-
             import httpx
 
             payload = {
@@ -468,7 +485,9 @@ class SelfHealingEngine:
 
 
 def _severity_weight(severity: str) -> float:
-    return {"critical": 10.0, "high": 7.0, "warning": 4.0, "info": 2.0}.get(severity, 4.0)
+    return {"critical": 10.0, "high": 7.0, "warning": 4.0, "info": 2.0}.get(
+        severity, 4.0
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -557,6 +576,7 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
                     self._json(200, _engine_ref.get_status())
                 elif self.path == "/fixes":
                     from omo.omo_self_healing_fixes import list_fixes
+
                     self._json(200, {"fixes": list_fixes()})
                 elif self.path == "/trends":
                     self._json(200, {"trends": _engine_ref._trends.get_trends()})
@@ -567,6 +587,7 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
                 if self.path.startswith("/fix/run/"):
                     fix_name = self.path.split("/fix/run/")[1]
                     from omo.omo_self_healing_fixes import run_fix
+
                     result = run_fix(fix_name)
                     self._json(200, result)
                 else:
@@ -574,6 +595,7 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
 
             def _json(self, code, data):
                 import json
+
                 self.send_response(code)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Access-Control-Allow-Origin", "http://localhost:8090")
@@ -584,8 +606,11 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
                 pass  # suppress logs
 
         import threading
+
         server = HTTPServer(("127.0.0.1", _HEALING_HTTP_PORT), _Handler)
-        t = threading.Thread(target=server.serve_forever, daemon=True, name="healing-http")
+        t = threading.Thread(
+            target=server.serve_forever, daemon=True, name="healing-http"
+        )
         t.start()
         logger.info("healing_http_started port=%s", _HEALING_HTTP_PORT)
     except Exception:
@@ -605,19 +630,23 @@ def save_rules(rules: list[HealingRule], path: Path | None = None) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     data = []
     for r in rules:
-        data.append({
-            "name": r.name,
-            "event_types": r.event_types,
-            "threshold": r.threshold,
-            "severity": r.severity,
-            "action": r.action,
-            "cooldown_seconds": r.cooldown_seconds,
-            "workflow_id": r.workflow_id,
-            "fix_names": r.fix_names,
-            "publish_event": r.publish_event,
-            "description": r.description,
-        })
-    target.write_text(yaml.dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        data.append(
+            {
+                "name": r.name,
+                "event_types": r.event_types,
+                "threshold": r.threshold,
+                "severity": r.severity,
+                "action": r.action,
+                "cooldown_seconds": r.cooldown_seconds,
+                "workflow_id": r.workflow_id,
+                "fix_names": r.fix_names,
+                "publish_event": r.publish_event,
+                "description": r.description,
+            }
+        )
+    target.write_text(
+        yaml.dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
     logger.info("healing_rules_saved path=%s count=%s", target, len(data))
 
 
@@ -633,18 +662,20 @@ def load_rules(path: Path | None = None) -> list[HealingRule]:
         return []
     rules = []
     for d in data:
-        rules.append(HealingRule(
-            name=d["name"],
-            event_types=d.get("event_types", []),
-            threshold=d.get("threshold", 5),
-            severity=d.get("severity", "warning"),
-            action=d.get("action", "debt"),
-            cooldown_seconds=d.get("cooldown_seconds", 600),
-            workflow_id=d.get("workflow_id", ""),
-            fix_names=d.get("fix_names", []),
-            publish_event=d.get("publish_event", True),
-            description=d.get("description", ""),
-        ))
+        rules.append(
+            HealingRule(
+                name=d["name"],
+                event_types=d.get("event_types", []),
+                threshold=d.get("threshold", 5),
+                severity=d.get("severity", "warning"),
+                action=d.get("action", "debt"),
+                cooldown_seconds=d.get("cooldown_seconds", 600),
+                workflow_id=d.get("workflow_id", ""),
+                fix_names=d.get("fix_names", []),
+                publish_event=d.get("publish_event", True),
+                description=d.get("description", ""),
+            )
+        )
     return rules
 
 
@@ -662,7 +693,9 @@ def get_healing_engine() -> SelfHealingEngine:
         custom_rules = load_rules()
         if custom_rules:
             _engine = SelfHealingEngine(rules=custom_rules)
-            logger.info("healing_engine_loaded_custom_rules count=%s", len(custom_rules))
+            logger.info(
+                "healing_engine_loaded_custom_rules count=%s", len(custom_rules)
+            )
         else:
             _engine = SelfHealingEngine()
     return _engine
@@ -733,18 +766,25 @@ def notify_webhook(rule_name: str, event_type: str, count: int, severity: str) -
         import json as _json
         import urllib.request
 
-        color = {"critical": "#FF0000", "high": "#FF6600", "warning": "#FFCC00", "info": "#36A64F"}.get(severity, "#CCCCCC")
+        color = {
+            "critical": "#FF0000",
+            "high": "#FF6600",
+            "warning": "#FFCC00",
+            "info": "#36A64F",
+        }.get(severity, "#CCCCCC")
         payload = {
-            "attachments": [{
-                "color": color,
-                "title": f"OMO Self-Healing: {rule_name}",
-                "text": f"事件 *{event_type}* × {count} 触发规则 *{rule_name}*",
-                "fields": [
-                    {"title": "Severity", "value": severity, "short": True},
-                    {"title": "Count", "value": str(count), "short": True},
-                ],
-                "ts": int(__import__("time").time()),
-            }]
+            "attachments": [
+                {
+                    "color": color,
+                    "title": f"OMO Self-Healing: {rule_name}",
+                    "text": f"事件 *{event_type}* × {count} 触发规则 *{rule_name}*",
+                    "fields": [
+                        {"title": "Severity", "value": severity, "short": True},
+                        {"title": "Count", "value": str(count), "short": True},
+                    ],
+                    "ts": int(__import__("time").time()),
+                }
+            ]
         }
         data = _json.dumps(payload).encode()
         req = urllib.request.Request(NOTIFY_WEBHOOK_URL, data=data, method="POST")

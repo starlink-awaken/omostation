@@ -6,6 +6,7 @@ Usage:
   python3 scripts/omo_audit.py query [--limit 50]
   python3 scripts/omo_audit.py summary
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,20 +31,37 @@ def main() -> int:
 
     # record subcommand
     record_parser = subparsers.add_parser("record", help="Record a governance action")
-    record_parser.add_argument("--action", required=True, help="Action name (e.g., close, reopen, escalate)")
+    record_parser.add_argument(
+        "--action", required=True, help="Action name (e.g., close, reopen, escalate)"
+    )
     record_parser.add_argument("--debt-id", default="", help="Debt item ID (optional)")
-    record_parser.add_argument("--actor", default="", help="Who performed the action (optional)")
-    record_parser.add_argument("--details", default="", help="Additional details (optional)")
-    record_parser.add_argument("--audit-file", default="", help="Path to audit JSONL file (optional)")
+    record_parser.add_argument(
+        "--actor", default="", help="Who performed the action (optional)"
+    )
+    record_parser.add_argument(
+        "--details", default="", help="Additional details (optional)"
+    )
+    record_parser.add_argument(
+        "--audit-file", default="", help="Path to audit JSONL file (optional)"
+    )
 
     # query subcommand
     query_parser = subparsers.add_parser("query", help="Query recent audit records")
-    query_parser.add_argument("--limit", type=int, default=50, help="Number of records to return (default: 50)")
-    query_parser.add_argument("--audit-file", default="", help="Path to audit JSONL file (optional)")
+    query_parser.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        help="Number of records to return (default: 50)",
+    )
+    query_parser.add_argument(
+        "--audit-file", default="", help="Path to audit JSONL file (optional)"
+    )
 
     # summary subcommand
     summary_parser = subparsers.add_parser("summary", help="Show audit summary")
-    summary_parser.add_argument("--audit-file", default="", help="Path to audit JSONL file (optional)")
+    summary_parser.add_argument(
+        "--audit-file", default="", help="Path to audit JSONL file (optional)"
+    )
 
     args = parser.parse_args()
 

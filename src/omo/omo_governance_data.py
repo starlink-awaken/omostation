@@ -36,8 +36,12 @@ def build_governance_data(workspace_root: Path) -> dict[str, Any]:
             "debt_health": system_data.get("debt_metrics", {}).get("debt_health", 0),
         },
         "debt": {
-            "resolved_count": system_data.get("debt_metrics", {}).get("resolved_count", 0),
-            "unresolved_count": system_data.get("debt_metrics", {}).get("unresolved_count", 0),
+            "resolved_count": system_data.get("debt_metrics", {}).get(
+                "resolved_count", 0
+            ),
+            "unresolved_count": system_data.get("debt_metrics", {}).get(
+                "unresolved_count", 0
+            ),
             "total_count": (
                 system_data.get("debt_metrics", {}).get("resolved_count", 0)
                 + system_data.get("debt_metrics", {}).get("unresolved_count", 0)

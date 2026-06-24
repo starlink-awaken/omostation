@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """OMO state CLI — show system state from state/."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,6 +12,7 @@ import yaml
 from .omo_ingress import write_system_projection_fields
 from .omo_paths import find_omo_dir
 from .omo_shared import load_yaml, load_yaml_required
+
 
 def _find_omo_dir() -> Path:
     return find_omo_dir()
@@ -53,8 +55,11 @@ def cmd_state_health(omo_dir: Path) -> int:
     failed = 0
     for name, svc in svc_dict.items():
         if isinstance(svc, dict):
-            st = (svc.get("health_check") or
-                  svc.get("runtime", {}).get("status", "") or "")
+            st = (
+                svc.get("health_check")
+                or svc.get("runtime", {}).get("status", "")
+                or ""
+            )
             if st == "healthy":
                 running += 1
             elif st in ("failed", "stopped"):
@@ -66,7 +71,15 @@ def cmd_state_health(omo_dir: Path) -> int:
         if not isinstance(svc, dict):
             continue
         st = svc.get("health_check") or svc.get("runtime", {}).get("status", "") or "?"
-        icon = "🟢" if st == "healthy" else "🟡" if st in ("idle", "unmanaged") else "🔴" if st in ("failed", "stopped") else "⚪"
+        icon = (
+            "🟢"
+            if st == "healthy"
+            else "🟡"
+            if st in ("idle", "unmanaged")
+            else "🔴"
+            if st in ("failed", "stopped")
+            else "⚪"
+        )
         detail = svc.get("name", name)
         print(f"  {icon} {detail}: {st}")
     return 0
@@ -85,7 +98,9 @@ def cmd_state_refresh(omo_dir: Path, dry_run: bool) -> int:
 
     health_file = omo_dir / "state" / "system_health.yaml"
     current_data = load_yaml(health_file) if health_file.exists() else {"services": {}}
-    services = current_data.get("services", {}) if isinstance(current_data, dict) else {}
+    services = (
+        current_data.get("services", {}) if isinstance(current_data, dict) else {}
+    )
     now = time.time()
 
     updates = 0
@@ -93,11 +108,14 @@ def cmd_state_refresh(omo_dir: Path, dry_run: bool) -> int:
     try:
         result = subprocess.run(
             ["python3", "-m", "runtime", "matrix", "list", "--json"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=str(Path.home() / "Workspace" / "projects" / "runtime"),
         )
         if result.returncode == 0 and result.stdout.strip():
             import json as _json
+
             matrix_data = _json.loads(result.stdout)
             for svc in matrix_data if isinstance(matrix_data, list) else []:
                 name = svc.get("name", "?")
@@ -134,7 +152,9 @@ def cmd_state_refresh(omo_dir: Path, dry_run: bool) -> int:
         print(json.dumps(output, indent=2, default=str))
         print(f"\n(dry-run: {updates} services would be updated)")
     else:
-        health_file.write_text(yaml.dump(output, default_flow_style=False, allow_unicode=True))
+        health_file.write_text(
+            yaml.dump(output, default_flow_style=False, allow_unicode=True)
+        )
         print(f"✅ system_health.yaml refreshed: {updates} services updated")
     return 0
 
@@ -243,24 +263,34 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
     print("✅ system.yaml task 计数已同步 (真源=tasks/ 目录)")
     for k in ("completed_tasks", "planned_tasks", "active_tasks", "total_tasks"):
         print(f"  {k}: {old[k]} → {data[k]}")
-    print(f"  next_planned_tasks: {len(new_planned_list)} 项 (从 planned/ 重建, 僵尸已清)")
+    print(
+        f"  next_planned_tasks: {len(new_planned_list)} 项 (从 planned/ 重建, 僵尸已清)"
+    )
     print(f"  next_active_tasks:  {len(new_active_list)} 项 (从 active/ 重建)")
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="omo state", description="OMO system state viewer")
+    parser = argparse.ArgumentParser(
+        prog="omo state", description="OMO system state viewer"
+    )
     sub = parser.add_subparsers(dest="command")
     sp = sub.add_parser("show", help="Show system state")
     sp.add_argument("--format", "-f", choices=["text", "json"], default="text")
     sub.add_parser("health", help="Show service health")
-    rp = sub.add_parser("refresh", help="Scan runtime Matrix and refresh system_health.yaml")
-    rp.add_argument("--dry-run", action="store_true", help="Preview changes without writing")
+    rp = sub.add_parser(
+        "refresh", help="Scan runtime Matrix and refresh system_health.yaml"
+    )
+    rp.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without writing"
+    )
     stp = sub.add_parser(
         "sync-tasks",
         help="从 tasks/ 真实文件数重算 system.yaml 计数 (治本手动维护漂移)",
     )
-    stp.add_argument("--dry-run", action="store_true", help="Preview changes without writing")
+    stp.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without writing"
+    )
     args = parser.parse_args(argv)
     omo_dir = _find_omo_dir()
     if args.command == "show":

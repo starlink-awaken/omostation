@@ -6,6 +6,7 @@ Usage:
   python3 scripts/omo_cost.py query [--limit 50]
   python3 scripts/omo_cost.py summary
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,22 +31,47 @@ def main() -> int:
 
     # record subcommand
     record_parser = subparsers.add_parser("record", help="Record a cost entry")
-    record_parser.add_argument("--service", required=True, help="Service name (e.g., agora, runtime)")
-    record_parser.add_argument("--amount", type=float, required=True, help="Cost amount")
-    record_parser.add_argument("--unit", default="credits", help="Cost unit (default: credits)")
-    record_parser.add_argument("--category", default="compute", help="Cost category (compute, storage, maintenance, network)")
-    record_parser.add_argument("--debt-id", default="", help="Associated debt item ID (optional)")
-    record_parser.add_argument("--details", default="", help="Additional details (optional)")
-    record_parser.add_argument("--cost-file", default="", help="Path to cost JSONL file (optional)")
+    record_parser.add_argument(
+        "--service", required=True, help="Service name (e.g., agora, runtime)"
+    )
+    record_parser.add_argument(
+        "--amount", type=float, required=True, help="Cost amount"
+    )
+    record_parser.add_argument(
+        "--unit", default="credits", help="Cost unit (default: credits)"
+    )
+    record_parser.add_argument(
+        "--category",
+        default="compute",
+        help="Cost category (compute, storage, maintenance, network)",
+    )
+    record_parser.add_argument(
+        "--debt-id", default="", help="Associated debt item ID (optional)"
+    )
+    record_parser.add_argument(
+        "--details", default="", help="Additional details (optional)"
+    )
+    record_parser.add_argument(
+        "--cost-file", default="", help="Path to cost JSONL file (optional)"
+    )
 
     # query subcommand
     query_parser = subparsers.add_parser("query", help="Query recent cost entries")
-    query_parser.add_argument("--limit", type=int, default=50, help="Number of entries to return (default: 50)")
-    query_parser.add_argument("--cost-file", default="", help="Path to cost JSONL file (optional)")
+    query_parser.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        help="Number of entries to return (default: 50)",
+    )
+    query_parser.add_argument(
+        "--cost-file", default="", help="Path to cost JSONL file (optional)"
+    )
 
     # summary subcommand
     summary_parser = subparsers.add_parser("summary", help="Show cost summary")
-    summary_parser.add_argument("--cost-file", default="", help="Path to cost JSONL file (optional)")
+    summary_parser.add_argument(
+        "--cost-file", default="", help="Path to cost JSONL file (optional)"
+    )
 
     args = parser.parse_args()
 

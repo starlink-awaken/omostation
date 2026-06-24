@@ -10,10 +10,14 @@ from omo.omo_governance_overlay import build_governance_overlay_status
 
 def _write_yaml(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
 
 
-def test_build_governance_overlay_status_reports_candidate_and_blocked_items(tmp_path: Path):
+def test_build_governance_overlay_status_reports_candidate_and_blocked_items(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -69,11 +73,21 @@ def test_build_governance_overlay_status_reports_candidate_and_blocked_items(tmp
             ]
         },
     )
-    _write_yaml(tmp_path / ".omo" / "tasks" / "planned" / "D2-CI-E2E-TEST-ENV.yaml", {"id": "D2-CI-E2E-TEST-ENV"})
-    _write_yaml(tmp_path / ".omo" / "tasks" / "planned" / "D3-EU-PRICING-TEST.yaml", {"id": "D3-EU-PRICING-TEST"})
-    _write_yaml(tmp_path / ".omo" / "debt" / "dashboard" / "current.yaml", {"items": []})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "D2-CI-E2E-TEST-ENV.yaml",
+        {"id": "D2-CI-E2E-TEST-ENV"},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "D3-EU-PRICING-TEST.yaml",
+        {"id": "D3-EU-PRICING-TEST"},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "debt" / "dashboard" / "current.yaml", {"items": []}
+    )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z"
+    )
 
     assert result["yaml"]["eligible_count"] == 1
     assert result["yaml"]["blocked_count"] == 1
@@ -82,7 +96,9 @@ def test_build_governance_overlay_status_reports_candidate_and_blocked_items(tmp
     assert result["yaml"]["next_action"] == "advance:GOV-M1-ROADMAP-E2E"
 
 
-def test_build_governance_overlay_status_marks_missing_target_refs_invalid(tmp_path: Path):
+def test_build_governance_overlay_status_marks_missing_target_refs_invalid(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -125,7 +141,9 @@ def test_build_governance_overlay_status_marks_missing_target_refs_invalid(tmp_p
         },
     )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z"
+    )
 
     assert result["yaml"]["eligible_count"] == 0
     assert result["yaml"]["blocked_count"] == 1
@@ -135,12 +153,18 @@ def test_build_governance_overlay_status_marks_missing_target_refs_invalid(tmp_p
 
 def test_build_governance_overlay_status_requires_overlay_inputs(tmp_path: Path):
     with pytest.raises(FileNotFoundError, match="governance-overlay/current.yaml"):
-        build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z")
+        build_governance_overlay_status(
+            tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z"
+        )
 
 
 def test_build_governance_overlay_status_accepts_multi_document_yaml(tmp_path: Path):
-    (tmp_path / ".omo" / "_control" / "governance-overlay").mkdir(parents=True, exist_ok=True)
-    (tmp_path / ".omo" / "_truth" / "governance-overlay").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo" / "_control" / "governance-overlay").mkdir(
+        parents=True, exist_ok=True
+    )
+    (tmp_path / ".omo" / "_truth" / "governance-overlay").mkdir(
+        parents=True, exist_ok=True
+    )
     (tmp_path / ".omo" / "tasks" / "planned").mkdir(parents=True, exist_ok=True)
     (tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml").write_text(
         "---\nstatus: active\nowner: governance\n---\n---\n"
@@ -154,7 +178,9 @@ def test_build_governance_overlay_status_accepts_multi_document_yaml(tmp_path: P
         "updated_at: 2026-06-03T06:30:00Z\n",
         encoding="utf-8",
     )
-    (tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml").write_text(
+    (
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml"
+    ).write_text(
         "---\nstatus: active\n---\n---\nautopilot_mode: full_omo_autopilot\nauto_select: true\n",
         encoding="utf-8",
     )
@@ -175,15 +201,21 @@ def test_build_governance_overlay_status_accepts_multi_document_yaml(tmp_path: P
         "      - TASK-A promoted\n",
         encoding="utf-8",
     )
-    (tmp_path / ".omo" / "tasks" / "planned" / "TASK-A.yaml").write_text("id: TASK-A\n", encoding="utf-8")
+    (tmp_path / ".omo" / "tasks" / "planned" / "TASK-A.yaml").write_text(
+        "id: TASK-A\n", encoding="utf-8"
+    )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z"
+    )
 
     assert result["yaml"]["eligible_count"] == 1
     assert result["yaml"]["autopilot_candidates"][0]["id"] == "GOV-M1"
 
 
-def test_build_governance_overlay_status_reports_active_roadmap_item_and_target_states(tmp_path: Path):
+def test_build_governance_overlay_status_reports_active_roadmap_item_and_target_states(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -213,16 +245,27 @@ def test_build_governance_overlay_status_reports_active_roadmap_item_and_target_
                     "status": "in_progress",
                     "depends_on": [],
                     "source_refs": [".omo/MASTER-BLUEPRINT.md"],
-                    "target_refs": [".omo/tasks/planned/TASK-A.yaml", ".omo/tasks/planned/TASK-B.yaml"],
+                    "target_refs": [
+                        ".omo/tasks/planned/TASK-A.yaml",
+                        ".omo/tasks/planned/TASK-B.yaml",
+                    ],
                     "success_criteria": ["execution hardening closed"],
                 }
             ]
         },
     )
-    _write_yaml(tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml", {"id": "TASK-A", "status": "pending"})
-    _write_yaml(tmp_path / ".omo" / "tasks" / "done" / "TASK-B.yaml", {"id": "TASK-B", "status": "done"})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml",
+        {"id": "TASK-A", "status": "pending"},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "done" / "TASK-B.yaml",
+        {"id": "TASK-B", "status": "done"},
+    )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T06:50:00Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T06:50:00Z"
+    )
 
     assert result["yaml"]["active_roadmap_item"]["id"] == "GOV-M1-EXECUTION-HARDENING"
     assert result["yaml"]["active_target_states"][0]["state"] == "active_pending"
@@ -230,7 +273,9 @@ def test_build_governance_overlay_status_reports_active_roadmap_item_and_target_
     assert result["yaml"]["next_action"] == "dispatch:TASK-A"
 
 
-def test_build_governance_overlay_status_prefers_verify_for_active_review_target(tmp_path: Path):
+def test_build_governance_overlay_status_prefers_verify_for_active_review_target(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -266,15 +311,22 @@ def test_build_governance_overlay_status_prefers_verify_for_active_review_target
             ]
         },
     )
-    _write_yaml(tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml", {"id": "TASK-A", "status": "review"})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml",
+        {"id": "TASK-A", "status": "review"},
+    )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T07:00:00Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T07:00:00Z"
+    )
 
     assert result["yaml"]["active_target_states"][0]["state"] == "active_review"
     assert result["yaml"]["next_action"] == "verify:TASK-A"
 
 
-def test_build_governance_overlay_status_surfaces_contract_gap_for_dispatched_empty_scope(tmp_path: Path):
+def test_build_governance_overlay_status_surfaces_contract_gap_for_dispatched_empty_scope(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -324,14 +376,23 @@ def test_build_governance_overlay_status_surfaces_contract_gap_for_dispatched_em
         {"dispatch_state": "dispatched"},
     )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T07:12:00Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T07:12:00Z"
+    )
 
-    assert result["yaml"]["active_target_states"][0]["state"] == "active_dispatch_blocked"
-    assert result["yaml"]["active_target_states"][0]["detail"] == "dispatch exists but task has no launch-ready write scope"
+    assert (
+        result["yaml"]["active_target_states"][0]["state"] == "active_dispatch_blocked"
+    )
+    assert (
+        result["yaml"]["active_target_states"][0]["detail"]
+        == "dispatch exists but task has no launch-ready write scope"
+    )
     assert result["yaml"]["next_action"] == "contract:TASK-A"
 
 
-def test_build_governance_overlay_status_surfaces_launch_for_dispatched_ready_scope(tmp_path: Path):
+def test_build_governance_overlay_status_surfaces_launch_for_dispatched_ready_scope(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -381,13 +442,17 @@ def test_build_governance_overlay_status_surfaces_launch_for_dispatched_ready_sc
         {"dispatch_state": "dispatched"},
     )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T07:13:00Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T07:13:00Z"
+    )
 
     assert result["yaml"]["active_target_states"][0]["state"] == "active_dispatched"
     assert result["yaml"]["next_action"] == "launch:TASK-A"
 
 
-def test_build_governance_overlay_status_surfaces_planned_approval_pending_for_active_item(tmp_path: Path):
+def test_build_governance_overlay_status_surfaces_planned_approval_pending_for_active_item(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -451,7 +516,11 @@ def test_build_governance_overlay_status_surfaces_planned_approval_pending_for_a
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml",
         {
             "task_id": "P24-W2-NUCLEUS-REPLACE",
             "approval_status": "requested",
@@ -460,14 +529,22 @@ def test_build_governance_overlay_status_surfaces_planned_approval_pending_for_a
         },
     )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T01:49:10Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T01:49:10Z"
+    )
 
-    assert result["yaml"]["active_target_states"][0]["state"] == "planned_approval_pending"
-    assert result["yaml"]["active_target_states"][0]["task_id"] == "P24-W2-NUCLEUS-REPLACE"
+    assert (
+        result["yaml"]["active_target_states"][0]["state"] == "planned_approval_pending"
+    )
+    assert (
+        result["yaml"]["active_target_states"][0]["task_id"] == "P24-W2-NUCLEUS-REPLACE"
+    )
     assert result["yaml"]["next_action"] == "monitor:GOV-M3-FUTURE-PROMOTION-OPERATIONS"
 
 
-def test_build_governance_overlay_status_surfaces_planned_promotion_blocked_for_phase_mismatch(tmp_path: Path):
+def test_build_governance_overlay_status_surfaces_planned_promotion_blocked_for_phase_mismatch(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -531,7 +608,11 @@ def test_build_governance_overlay_status_surfaces_planned_promotion_blocked_for_
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T02-27-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T02-27-00Z.yaml",
         {
             "task_id": "P24-W2-NUCLEUS-REPLACE",
             "approval_status": "requested",
@@ -540,14 +621,21 @@ def test_build_governance_overlay_status_surfaces_planned_promotion_blocked_for_
         },
     )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T01:49:10Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T01:49:10Z"
+    )
 
-    assert result["yaml"]["active_target_states"][0]["state"] == "planned_promotion_blocked"
+    assert (
+        result["yaml"]["active_target_states"][0]["state"]
+        == "planned_promotion_blocked"
+    )
     assert result["yaml"]["active_target_states"][0]["blockers"] == ["phase_mismatch"]
     assert result["yaml"]["next_action"] == "monitor:GOV-M3-FUTURE-PROMOTION-OPERATIONS"
 
 
-def test_build_governance_overlay_status_summarizes_monitor_blockers_for_active_phase_bridge(tmp_path: Path):
+def test_build_governance_overlay_status_summarizes_monitor_blockers_for_active_phase_bridge(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -614,7 +702,11 @@ def test_build_governance_overlay_status_summarizes_monitor_blockers_for_active_
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T02-27-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T02-27-00Z.yaml",
         {
             "task_id": "P24-W2-NUCLEUS-REPLACE",
             "approval_status": "requested",
@@ -649,7 +741,12 @@ def test_build_governance_overlay_status_summarizes_monitor_blockers_for_active_
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T02:35:00Z",
             "prep_task_count": 1,
@@ -659,16 +756,33 @@ def test_build_governance_overlay_status_summarizes_monitor_blockers_for_active_
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "trend" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "trend"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T02:43:00Z",
             "trend_status": "trend_available",
             "window_event_count": 2,
-            "burndown": {"current_backlog": 1, "peak_backlog_estimate": 1, "resolved_estimate": 0, "net_change_from_peak": 0},
+            "burndown": {
+                "current_backlog": 1,
+                "peak_backlog_estimate": 1,
+                "resolved_estimate": 0,
+                "net_change_from_peak": 0,
+            },
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "diff" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "diff"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T10:55:00Z",
             "diff_status": "diff_available",
@@ -678,22 +792,37 @@ def test_build_governance_overlay_status_summarizes_monitor_blockers_for_active_
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "aging" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "aging"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T11:01:00Z",
             "aging_status": "aging_available",
-            "attention_summary": {"fresh_count": 1, "watch_count": 0, "escalate_count": 0},
+            "attention_summary": {
+                "fresh_count": 1,
+                "watch_count": 0,
+                "escalate_count": 0,
+            },
             "followup_task_ids": [],
             "escalation_task_ids": [],
         },
     )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T02:27:56Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T02:27:56Z"
+    )
 
     assert result["yaml"]["next_action"] == "monitor:GOV-M3-FUTURE-PROMOTION-OPERATIONS"
     assert result["yaml"]["monitor_summary"] == {
         "blocked_target_count": 2,
-        "state_histogram": {"planned_approval_prep_pending": 1, "planned_promotion_blocked": 1},
+        "state_histogram": {
+            "planned_approval_prep_pending": 1,
+            "planned_promotion_blocked": 1,
+        },
         "blocker_histogram": {"phase_mismatch": 2, "approval_invalid": 1},
         "approval_blocked_task_ids": ["P24-W2-NUCLEUS-REPLACE"],
         "phase_blocked_task_ids": [
@@ -708,7 +837,11 @@ def test_build_governance_overlay_status_summarizes_monitor_blockers_for_active_
             "window_event_count": 2,
             "changed_current_task_ids": ["P24-W2-NUCLEUS-REPLACE"],
             "no_longer_current_task_ids": [],
-            "attention_summary": {"fresh_count": 1, "watch_count": 0, "escalate_count": 0},
+            "attention_summary": {
+                "fresh_count": 1,
+                "watch_count": 0,
+                "escalate_count": 0,
+            },
             "followup_task_ids": [],
             "escalation_task_ids": [],
         },
@@ -719,7 +852,9 @@ def test_build_governance_overlay_status_summarizes_monitor_blockers_for_active_
     assert "prep_changed=P24-W2-NUCLEUS-REPLACE" in result["markdown"]
 
 
-def test_build_governance_overlay_status_advances_phase_blocked_target_into_approval_prep(tmp_path: Path):
+def test_build_governance_overlay_status_advances_phase_blocked_target_into_approval_prep(
+    tmp_path: Path,
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -783,9 +918,17 @@ def test_build_governance_overlay_status_advances_phase_blocked_target_into_appr
         },
     )
 
-    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T02:30:30Z")
+    result = build_governance_overlay_status(
+        tmp_path, omo_dir=".omo", now="2026-06-03T02:30:30Z"
+    )
 
-    assert result["yaml"]["active_target_states"][0]["state"] == "planned_approval_prep_needed"
+    assert (
+        result["yaml"]["active_target_states"][0]["state"]
+        == "planned_approval_prep_needed"
+    )
     assert result["yaml"]["active_target_states"][0]["action"] == "request_approval"
-    assert result["yaml"]["active_target_states"][0]["blockers"] == ["phase_mismatch", "approval_missing"]
+    assert result["yaml"]["active_target_states"][0]["blockers"] == [
+        "phase_mismatch",
+        "approval_missing",
+    ]
     assert result["yaml"]["next_action"] == "advance:GOV-M3-FUTURE-PROMOTION-OPERATIONS"

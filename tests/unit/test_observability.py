@@ -6,6 +6,7 @@
   - omo cost estimate: LLM 成本估算
   - omo alert check: KEI 告警阈值
 """
+
 from __future__ import annotations
 
 import os

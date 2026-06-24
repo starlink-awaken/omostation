@@ -28,7 +28,9 @@ WORKSPACE_ROOT = PROJECTS_ROOT.parent
 
 def _write_yaml(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
 
 
 def _load_yaml(path: Path) -> dict:
@@ -102,8 +104,14 @@ def test_sync_state_ignores_orphaned_tasks_from_other_phases(tmp_path: Path):
             ],
         },
     )
-    _write_yaml(omo / "tasks" / "active" / "task.yaml", {"id": "TASK-P6", "phase": 6, "status": "pending"})
-    _write_yaml(omo / "tasks" / "done" / "legacy.yaml", {"id": "TASK-P4", "phase": 4, "status": "done"})
+    _write_yaml(
+        omo / "tasks" / "active" / "task.yaml",
+        {"id": "TASK-P6", "phase": 6, "status": "pending"},
+    )
+    _write_yaml(
+        omo / "tasks" / "done" / "legacy.yaml",
+        {"id": "TASK-P4", "phase": 4, "status": "done"},
+    )
 
     state = sync_state(omo, test_output="1 passed")
 
@@ -122,8 +130,13 @@ def test_sync_state_ignores_unphased_historical_done_tasks(tmp_path: Path):
             ],
         },
     )
-    _write_yaml(omo / "tasks" / "done" / "current.yaml", {"id": "TASK-P6", "phase": 6, "status": "done"})
-    _write_yaml(omo / "tasks" / "done" / "legacy.yaml", {"id": "TASK-LEGACY", "status": "done"})
+    _write_yaml(
+        omo / "tasks" / "done" / "current.yaml",
+        {"id": "TASK-P6", "phase": 6, "status": "done"},
+    )
+    _write_yaml(
+        omo / "tasks" / "done" / "legacy.yaml", {"id": "TASK-LEGACY", "status": "done"}
+    )
 
     state = sync_state(omo, test_output="1 passed")
 
@@ -151,7 +164,9 @@ def test_sync_state_bridges_runtime_health_as_summary_only(tmp_path: Path):
             },
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 28, "status": "active", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"phase": 28, "status": "active", "goals": []}
+    )
     for group in ("active", "planned", "blocked", "done"):
         (omo / "tasks" / group).mkdir(parents=True, exist_ok=True)
 
@@ -191,12 +206,19 @@ def test_sync_state_derives_current_wave_and_phase_status_from_goals(tmp_path: P
             "current_wave": 2,
             "next_milestone": "Phase 11 Wave 2 exit gate",
             "goals": [
-                {"id": "G11.1", "status": "completed", "tasks": ["P11-W1-SSOT-BASELINE"]},
+                {
+                    "id": "G11.1",
+                    "status": "completed",
+                    "tasks": ["P11-W1-SSOT-BASELINE"],
+                },
                 {"id": "G11.2", "status": "active", "tasks": ["P11-W2-CORE-DEBT"]},
             ],
         },
     )
-    _write_yaml(omo / "tasks" / "done" / "w1.yaml", {"id": "P11-W1-SSOT-BASELINE", "phase": 11, "status": "done"})
+    _write_yaml(
+        omo / "tasks" / "done" / "w1.yaml",
+        {"id": "P11-W1-SSOT-BASELINE", "phase": 11, "status": "done"},
+    )
     _write_yaml(
         omo / "tasks" / "active" / "w2.yaml",
         {
@@ -225,7 +247,9 @@ def test_sync_state_derives_current_wave_and_phase_status_from_goals(tmp_path: P
         },
     )
     (omo / "workers" / "runs" / "review-2.md").parent.mkdir(parents=True, exist_ok=True)
-    (omo / "workers" / "runs" / "review-2.md").write_text("# review\n", encoding="utf-8")
+    (omo / "workers" / "runs" / "review-2.md").write_text(
+        "# review\n", encoding="utf-8"
+    )
 
     state = sync_state(omo, test_output="1 passed", now="2026-06-01T00:00:00Z")
 
@@ -290,7 +314,9 @@ def test_sync_state_derives_debt_summary_from_registry(tmp_path: Path) -> None:
     for group in ("active", "done", "blocked"):
         (omo / "tasks" / group).mkdir(parents=True, exist_ok=True)
     _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []}
+    )
 
     state = sync_state(omo, test_output="5 passed", now="2026-06-10T00:00:00Z")
 
@@ -309,7 +335,9 @@ def test_sync_state_derives_debt_summary_from_registry(tmp_path: Path) -> None:
     assert state["debt_weight"] == 0.3
 
 
-def test_sync_state_promotes_debt_reporting_ref_but_not_campaign_ref(tmp_path: Path) -> None:
+def test_sync_state_promotes_debt_reporting_ref_but_not_campaign_ref(
+    tmp_path: Path,
+) -> None:
     omo = tmp_path / ".omo"
     _write_debt_registry_fixture(
         omo,
@@ -351,7 +379,9 @@ def test_sync_state_promotes_debt_reporting_ref_but_not_campaign_ref(tmp_path: P
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("generated\n", encoding="utf-8")
     _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []}
+    )
 
     state = sync_state(omo, test_output="5 passed", now="2026-06-10T00:00:00Z")
 
@@ -363,17 +393,24 @@ def test_sync_state_flags_missing_debt_generated_refs(tmp_path: Path) -> None:
     omo = tmp_path / ".omo"
     _write_debt_registry_fixture(omo, [])
     (omo / "debt" / "dashboard").mkdir(parents=True, exist_ok=True)
-    (omo / "debt" / "dashboard" / "current.yaml").write_text("generated\n", encoding="utf-8")
+    (omo / "debt" / "dashboard" / "current.yaml").write_text(
+        "generated\n", encoding="utf-8"
+    )
     (omo / "state").mkdir(parents=True, exist_ok=True)
     (omo / "goals").mkdir(parents=True, exist_ok=True)
     for group in ("active", "done", "blocked"):
         (omo / "tasks" / group).mkdir(parents=True, exist_ok=True)
     _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []}
+    )
 
     state = sync_state(omo, test_output="5 passed", now="2026-06-10T00:00:00Z")
 
-    assert any(flag.startswith("missing_debt_generated_ref:") for flag in state["divergence_flags"])
+    assert any(
+        flag.startswith("missing_debt_generated_ref:")
+        for flag in state["divergence_flags"]
+    )
     assert "debt_generated_refs" in state["divergence_detail_refs"]
 
 
@@ -413,7 +450,9 @@ def test_sync_state_uses_fixture_root_when_registry_refs_are_current(
     (omo / "tasks" / "registry").mkdir(parents=True, exist_ok=True)
     mitigation_path = omo / "tasks" / "registry" / "INDEX.md"
     mitigation_path.write_text("mitigation\n", encoding="utf-8")
-    reviewed_ts = 1_749_513_600  # 2025-06-10T00:00:00Z, deterministic < reviewed_at in fixture
+    reviewed_ts = (
+        1_749_513_600  # 2025-06-10T00:00:00Z, deterministic < reviewed_at in fixture
+    )
     os.utime(evidence_path, (reviewed_ts, reviewed_ts))
     os.utime(mitigation_path, (reviewed_ts, reviewed_ts))
     (omo / "state").mkdir(parents=True, exist_ok=True)
@@ -421,7 +460,9 @@ def test_sync_state_uses_fixture_root_when_registry_refs_are_current(
     for group in ("active", "done", "blocked"):
         (omo / "tasks" / group).mkdir(parents=True, exist_ok=True)
     _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []}
+    )
 
     state = sync_state(omo, test_output="5 passed", now="2026-06-10T00:00:00Z")
 
@@ -489,7 +530,9 @@ def test_sync_state_uses_registry_items_for_debt_weight(tmp_path: Path) -> None:
             "resolved_debt_items": ["D2_CI_E2E", "D3_EU_PRICING"],
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []}
+    )
 
     state = sync_state(omo, test_output="5 passed", now="2026-06-10T00:00:00Z")
 
@@ -497,7 +540,9 @@ def test_sync_state_uses_registry_items_for_debt_weight(tmp_path: Path) -> None:
     assert state["debt_weight"] == 0.4
 
 
-def test_sync_state_falls_back_to_legacy_debt_items_without_registry(tmp_path: Path) -> None:
+def test_sync_state_falls_back_to_legacy_debt_items_without_registry(
+    tmp_path: Path,
+) -> None:
     omo = tmp_path / ".omo"
     (omo / "state").mkdir(parents=True, exist_ok=True)
     (omo / "goals").mkdir(parents=True, exist_ok=True)
@@ -510,7 +555,9 @@ def test_sync_state_falls_back_to_legacy_debt_items_without_registry(tmp_path: P
             "resolved_debt_items": ["D2_CI_E2E"],
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"phase": 17, "status": "active", "goals": []}
+    )
 
     state = sync_state(omo, test_output="5 passed", now="2026-06-10T00:00:00Z")
 
@@ -559,7 +606,12 @@ def test_sync_omo_state_script_runs_from_repo_root(tmp_path: Path):
         (omo / "tasks" / group).mkdir(parents=True, exist_ok=True)
 
     result = subprocess.run(
-        [sys.executable, str(WORKSPACE_ROOT / "scripts" / "sync_omo_state.py"), "--omo-dir", str(omo)],
+        [
+            sys.executable,
+            str(WORKSPACE_ROOT / "scripts" / "sync_omo_state.py"),
+            "--omo-dir",
+            str(omo),
+        ],
         cwd=WORKSPACE_ROOT,
         capture_output=True,
         text=True,
@@ -646,7 +698,9 @@ def test_dispatch_task_launch_redacts_stdout_log(tmp_path: Path):
         launch=True,
     )
 
-    stdout_text = (root / ".omo" / "workers" / "runs" / f"{result['dispatch_id']}-stdout.log").read_text(encoding="utf-8")
+    stdout_text = (
+        root / ".omo" / "workers" / "runs" / f"{result['dispatch_id']}-stdout.log"
+    ).read_text(encoding="utf-8")
     assert "abc123" not in stdout_text
     assert "hunter2" not in stdout_text
     assert stdout_text.count("***REDACTED***") == 2
@@ -685,7 +739,10 @@ def test_sync_state_updates_counts_health_and_divergence_flags(tmp_path: Path):
             "health_score": 0.0,
         },
     )
-    _write_yaml(omo / "tasks" / "active" / "a.yaml", {"id": "TASK-A", "phase": 6, "status": "in_progress"})
+    _write_yaml(
+        omo / "tasks" / "active" / "a.yaml",
+        {"id": "TASK-A", "phase": 6, "status": "in_progress"},
+    )
     _write_yaml(omo / "tasks" / "blocked" / "b.yaml", {"id": "TASK-B", "phase": 6})
     _write_yaml(omo / "tasks" / "done" / "c.yaml", {"id": "TASK-C"})
     _write_yaml(
@@ -694,7 +751,7 @@ def test_sync_state_updates_counts_health_and_divergence_flags(tmp_path: Path):
             "phase": 6,
             "goals": [
                 {"id": "G1", "tasks": ["TASK-A", "TASK-C", "TASK-MISSING"]},
-            ]
+            ],
         },
     )
 
@@ -718,12 +775,19 @@ def test_sync_state_updates_counts_health_and_divergence_flags(tmp_path: Path):
     orphaned_detail = state["divergence_detail_refs"]["orphaned_tasks"]
     assert missing_goal_detail["count"] == 1
     assert orphaned_detail["count"] == 1
-    assert _load_yaml(tmp_path / missing_goal_detail["ref"])["task_ids"] == ["TASK-MISSING"]
+    assert _load_yaml(tmp_path / missing_goal_detail["ref"])["task_ids"] == [
+        "TASK-MISSING"
+    ]
     assert _load_yaml(tmp_path / orphaned_detail["ref"])["task_ids"] == ["TASK-B"]
-    assert state["next_active_tasks"][0] == "Current active queue from .omo/tasks/active/ (1 task)"
+    assert (
+        state["next_active_tasks"][0]
+        == "Current active queue from .omo/tasks/active/ (1 task)"
+    )
 
 
-def test_sync_state_uses_custom_omo_root_for_divergence_artifacts_and_headers(tmp_path: Path):
+def test_sync_state_uses_custom_omo_root_for_divergence_artifacts_and_headers(
+    tmp_path: Path,
+):
     omo = tmp_path / ".kos"
     _write_yaml(
         omo / "state" / "system.yaml",
@@ -735,32 +799,56 @@ def test_sync_state_uses_custom_omo_root_for_divergence_artifacts_and_headers(tm
             "health_score": 0.0,
         },
     )
-    _write_yaml(omo / "tasks" / "active" / "a.yaml", {"id": "TASK-A", "phase": 8, "status": "pending"})
+    _write_yaml(
+        omo / "tasks" / "active" / "a.yaml",
+        {"id": "TASK-A", "phase": 8, "status": "pending"},
+    )
     _write_yaml(omo / "tasks" / "blocked" / "b.yaml", {"id": "TASK-B", "phase": 8})
     _write_yaml(
         omo / "goals" / "current.yaml",
         {
             "phase": 8,
-            "goals": [{"id": "G8.2", "status": "in_progress", "tasks": ["TASK-A", "TASK-MISSING"]}],
+            "goals": [
+                {
+                    "id": "G8.2",
+                    "status": "in_progress",
+                    "tasks": ["TASK-A", "TASK-MISSING"],
+                }
+            ],
         },
     )
 
     state = sync_state(omo, test_output="1 passed")
 
-    assert state["next_active_tasks"][0] == "Current active queue from .kos/tasks/active/ (1 task)"
-    assert state["divergence_detail_refs"]["missing_goal_tasks"]["ref"] == ".kos/evidence/divergence/missing_goal_tasks.yaml"
-    assert state["divergence_detail_refs"]["orphaned_tasks"]["ref"] == ".kos/evidence/divergence/orphaned_tasks.yaml"
-    assert (tmp_path / ".kos" / "evidence" / "divergence" / "missing_goal_tasks.yaml").exists()
+    assert (
+        state["next_active_tasks"][0]
+        == "Current active queue from .kos/tasks/active/ (1 task)"
+    )
+    assert (
+        state["divergence_detail_refs"]["missing_goal_tasks"]["ref"]
+        == ".kos/evidence/divergence/missing_goal_tasks.yaml"
+    )
+    assert (
+        state["divergence_detail_refs"]["orphaned_tasks"]["ref"]
+        == ".kos/evidence/divergence/orphaned_tasks.yaml"
+    )
+    assert (
+        tmp_path / ".kos" / "evidence" / "divergence" / "missing_goal_tasks.yaml"
+    ).exists()
 
 
-def test_sync_state_removes_stale_orphaned_task_artifact_when_divergence_is_resolved(tmp_path: Path):
+def test_sync_state_removes_stale_orphaned_task_artifact_when_divergence_is_resolved(
+    tmp_path: Path,
+):
     omo = tmp_path / ".omo"
     _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
     _write_yaml(
         omo / "goals" / "current.yaml",
         {
             "phase": 11,
-            "goals": [{"id": "G11.2", "status": "active", "tasks": ["P11-W2-CORE-DEBT"]}],
+            "goals": [
+                {"id": "G11.2", "status": "active", "tasks": ["P11-W2-CORE-DEBT"]}
+            ],
         },
     )
     _write_yaml(
@@ -780,7 +868,9 @@ def test_sync_state_removes_stale_orphaned_task_artifact_when_divergence_is_reso
     assert stale_artifact.exists() is False
 
 
-def test_sync_state_writes_divergence_artifact_to_legacy_target_when_evidence_is_symlink(tmp_path: Path):
+def test_sync_state_writes_divergence_artifact_to_legacy_target_when_evidence_is_symlink(
+    tmp_path: Path,
+):
     omo = tmp_path / ".omo"
     (omo / "_delivery" / "evidence-legacy").mkdir(parents=True)
     (omo / "evidence").symlink_to("_delivery/evidence-legacy")
@@ -789,16 +879,27 @@ def test_sync_state_writes_divergence_artifact_to_legacy_target_when_evidence_is
         omo / "goals" / "current.yaml",
         {
             "phase": 8,
-            "goals": [{"id": "G8.2", "status": "in_progress", "tasks": ["TASK-A", "TASK-MISSING"]}],
+            "goals": [
+                {
+                    "id": "G8.2",
+                    "status": "in_progress",
+                    "tasks": ["TASK-A", "TASK-MISSING"],
+                }
+            ],
         },
     )
-    _write_yaml(omo / "tasks" / "active" / "a.yaml", {"id": "TASK-A", "phase": 8, "status": "pending"})
+    _write_yaml(
+        omo / "tasks" / "active" / "a.yaml",
+        {"id": "TASK-A", "phase": 8, "status": "pending"},
+    )
 
     state = sync_state(omo, test_output="1 passed")
 
     ref = state["divergence_detail_refs"]["missing_goal_tasks"]["ref"]
     assert ref == ".omo/evidence/divergence/missing_goal_tasks.yaml"
-    assert (omo / "_delivery" / "evidence-legacy" / "divergence" / "missing_goal_tasks.yaml").exists()
+    assert (
+        omo / "_delivery" / "evidence-legacy" / "divergence" / "missing_goal_tasks.yaml"
+    ).exists()
     assert _load_yaml(tmp_path / ref)["task_ids"] == ["TASK-MISSING"]
 
 
@@ -810,7 +911,10 @@ def test_sync_state_reads_multi_document_goals_current_yaml(tmp_path: Path):
         "---\nstatus: active\nowner: governance-team\n---\n---\nphase: 8\ngoals:\n  - id: G8.2\n    status: in_progress\n    tasks:\n      - TASK-A\n      - TASK-MISSING\n",
         encoding="utf-8",
     )
-    _write_yaml(omo / "tasks" / "active" / "a.yaml", {"id": "TASK-A", "phase": 8, "status": "pending"})
+    _write_yaml(
+        omo / "tasks" / "active" / "a.yaml",
+        {"id": "TASK-A", "phase": 8, "status": "pending"},
+    )
 
     state = sync_state(omo, test_output="1 passed")
 
@@ -850,9 +954,7 @@ def test_dispatch_task_and_worker_status_use_custom_omo_root(tmp_path: Path):
             "workers": [
                 {
                     "id": "mockworker",
-                    "transports": {
-                        "cli_prompt": {"command": 'mockworker "{prompt}"'}
-                    },
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
                 }
             ]
         },
@@ -878,7 +980,9 @@ def test_dispatch_task_and_worker_status_use_custom_omo_root(tmp_path: Path):
     assert status["runs"][0]["task_id"] == "TASK-CUSTOM-OMO"
 
 
-def test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time(tmp_path: Path):
+def test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time(
+    tmp_path: Path,
+):
     root = tmp_path
     omo = root / ".omo"
 
@@ -974,7 +1078,11 @@ def test_dispatch_task_launch_marks_dispatch_active_and_updates_lease(tmp_path: 
             "workers": [
                 {
                     "id": "mockworker",
-                    "transports": {"cli_prompt": {"command": 'python3 -c "print(\'launched\')" "{prompt}"'}},
+                    "transports": {
+                        "cli_prompt": {
+                            "command": 'python3 -c "print(\'launched\')" "{prompt}"'
+                        }
+                    },
                 }
             ]
         },
@@ -993,13 +1101,15 @@ def test_dispatch_task_launch_marks_dispatch_active_and_updates_lease(tmp_path: 
     assert dispatch["lease"]["last_material_write_at"] is not None
 
 
-def test_install_all_bridges_defaults_to_wrapper_only_without_running_legacy_installers(tmp_path: Path):
+def test_install_all_bridges_defaults_to_wrapper_only_without_running_legacy_installers(
+    tmp_path: Path,
+):
     home = tmp_path / "home"
     workspace = home / "Workspace" / "demo" / "scripts"
     workspace.mkdir(parents=True, exist_ok=True)
     installer = workspace / "install-hermes-bridge.sh"
     installer.write_text(
-        "#!/bin/bash\nset -euo pipefail\ntouch \"$HOME/legacy-installer-ran\"\n",
+        '#!/bin/bash\nset -euo pipefail\ntouch "$HOME/legacy-installer-ran"\n',
         encoding="utf-8",
     )
     installer.chmod(0o755)
@@ -1023,13 +1133,17 @@ def test_install_all_bridges_can_opt_into_legacy_installers(tmp_path: Path):
     workspace.mkdir(parents=True, exist_ok=True)
     installer = workspace / "install-hermes-bridge.sh"
     installer.write_text(
-        "#!/bin/bash\nset -euo pipefail\ntouch \"$HOME/legacy-installer-ran\"\n",
+        '#!/bin/bash\nset -euo pipefail\ntouch "$HOME/legacy-installer-ran"\n',
         encoding="utf-8",
     )
     installer.chmod(0o755)
 
     result = subprocess.run(
-        ["bash", str(WORKSPACE_ROOT / "scripts" / "shell" / "install-all-bridges.sh"), "--legacy-installers"],
+        [
+            "bash",
+            str(WORKSPACE_ROOT / "scripts" / "shell" / "install-all-bridges.sh"),
+            "--legacy-installers",
+        ],
         cwd=WORKSPACE_ROOT,
         env={**os.environ, "HOME": str(home)},
         capture_output=True,
@@ -1043,7 +1157,10 @@ def test_install_all_bridges_can_opt_into_legacy_installers(tmp_path: Path):
 def test_sync_state_flags_stale_dispatch_and_writes_detail_artifact(tmp_path: Path):
     omo = tmp_path / ".omo"
     _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
-    _write_yaml(omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-STALE"]}]})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"goals": [{"id": "G1", "tasks": ["TASK-STALE"]}]},
+    )
     _write_yaml(
         omo / "tasks" / "active" / "task.yaml",
         {
@@ -1080,10 +1197,14 @@ def test_sync_state_flags_stale_dispatch_and_writes_detail_artifact(tmp_path: Pa
     assert _load_yaml(tmp_path / detail["ref"])["task_ids"] == ["TASK-STALE"]
 
 
-def test_sync_state_records_dangling_refs_for_missing_run_review_and_handoff_files(tmp_path: Path):
+def test_sync_state_records_dangling_refs_for_missing_run_review_and_handoff_files(
+    tmp_path: Path,
+):
     omo = tmp_path / ".omo"
     _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
-    _write_yaml(omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-1"]}]})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-1"]}]}
+    )
     _write_yaml(
         omo / "tasks" / "active" / "task.yaml",
         {
@@ -1124,8 +1245,13 @@ def test_sync_state_clears_stale_active_queue_when_no_active_tasks(tmp_path: Pat
             ],
         },
     )
-    _write_yaml(omo / "tasks" / "done" / "done.yaml", {"id": "TASK-DONE", "status": "done"})
-    _write_yaml(omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-DONE"]}]})
+    _write_yaml(
+        omo / "tasks" / "done" / "done.yaml", {"id": "TASK-DONE", "status": "done"}
+    )
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"goals": [{"id": "G1", "tasks": ["TASK-DONE"]}]},
+    )
 
     sync_state(omo, test_output="1 passed")
 
@@ -1148,10 +1274,19 @@ def test_sync_state_drops_stale_task_lines_from_next_active_queue(tmp_path: Path
             ],
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 11, "goals": [{"id": "G11.2", "tasks": ["P11-W2-CORE-DEBT"]}]})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"phase": 11, "goals": [{"id": "G11.2", "tasks": ["P11-W2-CORE-DEBT"]}]},
+    )
     _write_yaml(
         omo / "tasks" / "active" / "w2.yaml",
-        {"id": "P11-W2-CORE-DEBT", "phase": 11, "status": "in_progress", "run_ref": "run.yaml", "review_ref": "review.md"},
+        {
+            "id": "P11-W2-CORE-DEBT",
+            "phase": 11,
+            "status": "in_progress",
+            "run_ref": "run.yaml",
+            "review_ref": "review.md",
+        },
     )
 
     state = sync_state(omo, test_output="1 passed")
@@ -1166,18 +1301,35 @@ def test_sync_state_drops_stale_task_lines_from_next_active_queue(tmp_path: Path
 def test_sync_state_tracks_planned_tasks_and_preview(tmp_path: Path):
     omo = tmp_path / ".omo"
     _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 16, "status": "completed", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"phase": 16, "status": "completed", "goals": []},
+    )
     _write_yaml(
         omo / "tasks" / "active" / "gate.yaml",
-        {"id": "P17-DEBT-GOVERNANCE-GATE-RULES", "phase": 17, "status": "in_progress", "run_ref": "run.yaml", "review_ref": "review.md"},
+        {
+            "id": "P17-DEBT-GOVERNANCE-GATE-RULES",
+            "phase": 17,
+            "status": "in_progress",
+            "run_ref": "run.yaml",
+            "review_ref": "review.md",
+        },
     )
-    _write_yaml(omo / "tasks" / "planned" / "p18.yaml", {"id": "P18-W1-NEURAL-CENTER", "phase": 18, "status": "pending"})
+    _write_yaml(
+        omo / "tasks" / "planned" / "p18.yaml",
+        {"id": "P18-W1-NEURAL-CENTER", "phase": 18, "status": "pending"},
+    )
     _write_yaml(
         omo / "tasks" / "planned" / "p19.yaml",
         {"id": "P19-W1-AGENT-RUNTIME-ENHANCE", "phase": 19, "status": "pending"},
     )
-    _write_yaml(omo / "tasks" / "blocked" / "blocked.yaml", {"id": "TASK-BLOCKED", "phase": 16})
-    _write_yaml(omo / "tasks" / "done" / "done.yaml", {"id": "TASK-DONE", "phase": 16, "status": "done"})
+    _write_yaml(
+        omo / "tasks" / "blocked" / "blocked.yaml", {"id": "TASK-BLOCKED", "phase": 16}
+    )
+    _write_yaml(
+        omo / "tasks" / "done" / "done.yaml",
+        {"id": "TASK-DONE", "phase": 16, "status": "done"},
+    )
 
     state = sync_state(omo, test_output="5 passed")
 
@@ -1210,10 +1362,19 @@ def test_sync_state_drops_stale_active_headers_when_count_changes(tmp_path: Path
             ],
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 16, "status": "completed", "goals": []})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"phase": 16, "status": "completed", "goals": []},
+    )
     _write_yaml(
         omo / "tasks" / "active" / "gate.yaml",
-        {"id": "P17-DEBT-GOVERNANCE-GATE-RULES", "phase": 17, "status": "in_progress", "run_ref": "run.yaml", "review_ref": "review.md"},
+        {
+            "id": "P17-DEBT-GOVERNANCE-GATE-RULES",
+            "phase": 17,
+            "status": "in_progress",
+            "run_ref": "run.yaml",
+            "review_ref": "review.md",
+        },
     )
 
     state = sync_state(omo, test_output="1 passed")
@@ -1257,9 +1418,7 @@ def test_dispatch_task_creates_packet_and_preclaims_task(tmp_path: Path):
             "workers": [
                 {
                     "id": "mockworker",
-                    "transports": {
-                        "cli_prompt": {"command": 'mockworker "{prompt}"'}
-                    },
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
                 }
             ]
         },
@@ -1345,7 +1504,9 @@ def test_validate_task_file_allows_planned_packet_without_approval_ref(tmp_path:
     assert validate_task_file(task_path) == []
 
 
-def test_validate_task_file_rejects_planned_packet_with_live_dispatch_chain(tmp_path: Path):
+def test_validate_task_file_rejects_planned_packet_with_live_dispatch_chain(
+    tmp_path: Path,
+):
     task_path = tmp_path / ".omo" / "tasks" / "planned" / "planned.yaml"
     _write_yaml(
         task_path,
@@ -1381,7 +1542,9 @@ def test_validate_task_file_rejects_planned_packet_with_live_dispatch_chain(tmp_
     ]
 
 
-def test_worker_validate_command_reports_all_planned_errors(tmp_path: Path, monkeypatch, capsys):
+def test_worker_validate_command_reports_all_planned_errors(
+    tmp_path: Path, monkeypatch, capsys
+):
     task_path = tmp_path / ".omo" / "tasks" / "planned" / "planned.yaml"
     _write_yaml(
         task_path,
@@ -1417,7 +1580,9 @@ def test_worker_validate_command_reports_all_planned_errors(tmp_path: Path, monk
     assert "planned tasks must use candidate or pending status" in output
 
 
-def test_worker_normalize_planned_command_repairs_and_archives_invalid_packets(tmp_path: Path, monkeypatch, capsys):
+def test_worker_normalize_planned_command_repairs_and_archives_invalid_packets(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI.yaml",
         {
@@ -1460,12 +1625,28 @@ def test_worker_normalize_planned_command_repairs_and_archives_invalid_packets(t
     assert "TASK-LEGACY-CLI: normalized -> status=candidate" in output
     assert "TASK-LEGACY-CLI-DONE: archived -> status=archived" in output
     assert "failed=0" in output
-    assert validate_task_file(tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI.yaml") == []
-    assert not (tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI-DONE.yaml").exists()
-    assert (tmp_path / ".omo" / "tasks" / "archived" / "legacy-normalized" / "TASK-LEGACY-CLI-DONE.yaml").exists()
+    assert (
+        validate_task_file(
+            tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI.yaml"
+        )
+        == []
+    )
+    assert not (
+        tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI-DONE.yaml"
+    ).exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "archived"
+        / "legacy-normalized"
+        / "TASK-LEGACY-CLI-DONE.yaml"
+    ).exists()
 
 
-def test_task_promote_eval_rejects_phase_beyond_next_wave(tmp_path: Path, monkeypatch, capsys):
+def test_task_promote_eval_rejects_phase_beyond_next_wave(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P18-W1-TOO-FAR.yaml",
@@ -1495,7 +1676,11 @@ def test_task_promote_eval_rejects_phase_beyond_next_wave(tmp_path: Path, monkey
     )
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(sys, "argv", ["omo", "task", "promote-eval", "P18-W1-TOO-FAR", "--omo-dir", ".omo"])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promote-eval", "P18-W1-TOO-FAR", "--omo-dir", ".omo"],
+    )
 
     assert omo_worker_main() == 1
     output = capsys.readouterr().out
@@ -1504,7 +1689,9 @@ def test_task_promote_eval_rejects_phase_beyond_next_wave(tmp_path: Path, monkey
     assert "phase_mismatch" in output
 
 
-def test_task_promote_eval_rejects_missing_required_approval_ref(tmp_path: Path, monkeypatch, capsys):
+def test_task_promote_eval_rejects_missing_required_approval_ref(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-NEEDS-APPROVAL.yaml",
@@ -1547,8 +1734,16 @@ def test_task_promote_eval_rejects_missing_required_approval_ref(tmp_path: Path,
     assert "approval_missing" in output
 
 
-def test_task_promote_eval_rejects_shared_backlog_presence_ref_for_human_approval_task(tmp_path: Path, monkeypatch, capsys):
-    approval_note = tmp_path / ".omo" / "workers" / "runs" / "future-active-l2l3-pending-approval-2026-06-02.md"
+def test_task_promote_eval_rejects_shared_backlog_presence_ref_for_human_approval_task(
+    tmp_path: Path, monkeypatch, capsys
+):
+    approval_note = (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "future-active-l2l3-pending-approval-2026-06-02.md"
+    )
     approval_note.parent.mkdir(parents=True, exist_ok=True)
     approval_note.write_text("# planning backlog presence only\n", encoding="utf-8")
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 18})
@@ -1580,7 +1775,11 @@ def test_task_promote_eval_rejects_shared_backlog_presence_ref_for_human_approva
     )
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(sys, "argv", ["omo", "task", "promote-eval", "P19-W3-ARCHIVE-TS", "--omo-dir", ".omo"])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promote-eval", "P19-W3-ARCHIVE-TS", "--omo-dir", ".omo"],
+    )
 
     assert omo_worker_main() == 1
     output = capsys.readouterr().out
@@ -1589,7 +1788,9 @@ def test_task_promote_eval_rejects_shared_backlog_presence_ref_for_human_approva
     assert "approval_invalid" in output
 
 
-def test_task_promote_apply_moves_task_and_writes_envelope(tmp_path: Path, monkeypatch, capsys):
+def test_task_promote_apply_moves_task_and_writes_envelope(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml",
@@ -1642,18 +1843,31 @@ def test_task_promote_apply_moves_task_and_writes_envelope(tmp_path: Path, monke
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    active_task = _load_yaml(tmp_path / ".omo" / "tasks" / "active" / "P17-W1-READY.yaml")
+    active_task = _load_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "P17-W1-READY.yaml"
+    )
 
-    assert "promotion_ref=.omo/workers/runs/P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml" in output
+    assert (
+        "promotion_ref=.omo/workers/runs/P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml"
+        in output
+    )
     assert active_task["status"] == "pending"
     assert active_task["handoff_refs"] == [
         ".omo/workers/runs/P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml"
     ]
-    assert (tmp_path / ".omo" / "workers" / "runs" / "P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml"
+    ).exists()
     assert not (tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml").exists()
 
 
-def test_task_promote_apply_accepts_unphased_candidate_packets(tmp_path: Path, monkeypatch, capsys):
+def test_task_promote_apply_accepts_unphased_candidate_packets(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "OPT-BOS-GATEWAY.yaml",
@@ -1704,24 +1918,41 @@ def test_task_promote_apply_accepts_unphased_candidate_packets(tmp_path: Path, m
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    active_task = _load_yaml(tmp_path / ".omo" / "tasks" / "active" / "OPT-BOS-GATEWAY.yaml")
+    active_task = _load_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "OPT-BOS-GATEWAY.yaml"
+    )
     envelope = _load_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml"
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml"
     )
 
-    assert "promotion_ref=.omo/workers/runs/OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml" in output
+    assert (
+        "promotion_ref=.omo/workers/runs/OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml"
+        in output
+    )
     assert active_task["status"] == "candidate"
     assert active_task["handoff_refs"] == [
         ".omo/workers/runs/OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml"
     ]
     assert envelope["phase_gate"]["target_phase"] is None
-    assert not (tmp_path / ".omo" / "tasks" / "planned" / "OPT-BOS-GATEWAY.yaml").exists()
+    assert not (
+        tmp_path / ".omo" / "tasks" / "planned" / "OPT-BOS-GATEWAY.yaml"
+    ).exists()
 
 
-def test_task_promote_apply_rejects_self_evolution_packet(tmp_path: Path, monkeypatch, capsys):
+def test_task_promote_apply_rejects_self_evolution_packet(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
-        tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "planned"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
         {
             "id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
             "priority": "P1",
@@ -1747,7 +1978,11 @@ def test_task_promote_apply_rejects_self_evolution_packet(tmp_path: Path, monkey
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
         {
             "approval_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z",
             "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
@@ -1779,8 +2014,16 @@ def test_task_promote_apply_rejects_self_evolution_packet(tmp_path: Path, monkey
 
     assert "eligible=false" in output
     assert "task_policy_blocked" in output
-    assert (tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml").exists()
-    assert not (tmp_path / ".omo" / "tasks" / "active" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "planned"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml"
+    ).exists()
+    assert not (
+        tmp_path / ".omo" / "tasks" / "active" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml"
+    ).exists()
 
 
 def test_task_promote_apply_rolls_back_when_sync_fails(tmp_path: Path, monkeypatch):
@@ -1837,15 +2080,27 @@ def test_task_promote_apply_rolls_back_when_sync_fails(tmp_path: Path, monkeypat
 
     assert omo_worker_main() == 1
     assert (tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-ROLLBACK.yaml").exists()
-    assert not (tmp_path / ".omo" / "tasks" / "active" / "P17-W1-ROLLBACK.yaml").exists()
     assert not (
-        tmp_path / ".omo" / "workers" / "runs" / "P17-W1-ROLLBACK-promotion-2026-06-03T00-00-00Z.yaml"
+        tmp_path / ".omo" / "tasks" / "active" / "P17-W1-ROLLBACK.yaml"
+    ).exists()
+    assert not (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P17-W1-ROLLBACK-promotion-2026-06-03T00-00-00Z.yaml"
     ).exists()
 
 
-def test_task_promotion_history_command_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+def test_task_promotion_history_command_writes_current_surfaces(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "TASK-A-promotion-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "TASK-A-promotion-2026-06-03T00-00-00Z.yaml",
         {
             "promotion_id": "TASK-A-promotion-2026-06-03T00-00-00Z",
             "task_id": "TASK-A",
@@ -1859,7 +2114,9 @@ def test_task_promotion_history_command_writes_current_surfaces(tmp_path: Path, 
     )
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(sys, "argv", ["omo", "task", "promotion-history", "--omo-dir", ".omo"])
+    monkeypatch.setattr(
+        sys, "argv", ["omo", "task", "promotion-history", "--omo-dir", ".omo"]
+    )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
@@ -1869,9 +2126,15 @@ def test_task_promotion_history_command_writes_current_surfaces(tmp_path: Path, 
     assert (tmp_path / ".omo" / "workers" / "promotion" / "current.md").exists()
 
 
-def test_task_promotion_history_command_accepts_deterministic_now(tmp_path: Path, monkeypatch):
+def test_task_promotion_history_command_accepts_deterministic_now(
+    tmp_path: Path, monkeypatch
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "TASK-A-promotion-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "TASK-A-promotion-2026-06-03T00-00-00Z.yaml",
         {
             "promotion_id": "TASK-A-promotion-2026-06-03T00-00-00Z",
             "task_id": "TASK-A",
@@ -1904,7 +2167,9 @@ def test_task_promotion_history_command_accepts_deterministic_now(tmp_path: Path
     assert packet["generated_at"] == "2026-06-03T00:00:00Z"
 
 
-def test_task_promotion_readiness_command_writes_readiness_surfaces(tmp_path: Path, monkeypatch, capsys):
+def test_task_promotion_readiness_command_writes_readiness_surfaces(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml",
@@ -1984,12 +2249,23 @@ def test_task_promotion_readiness_command_writes_readiness_surfaces(tmp_path: Pa
     assert packet["target_phase"] == 17
     assert packet["ready_count"] == 1
     assert packet["blocked_count"] == 1
-    assert [entry["task_id"] for entry in packet["tasks"]] == ["P17-W1-READY", "P18-W1-BLOCKED"]
+    assert [entry["task_id"] for entry in packet["tasks"]] == [
+        "P17-W1-READY",
+        "P18-W1-BLOCKED",
+    ]
     assert (tmp_path / ".omo" / "workers" / "promotion" / "readiness.md").exists()
 
 
-def test_task_promotion_readiness_reports_approval_invalid_for_future_human_approval_packets(tmp_path: Path, monkeypatch):
-    approval_note = tmp_path / ".omo" / "workers" / "runs" / "future-active-l2l3-pending-approval-2026-06-02.md"
+def test_task_promotion_readiness_reports_approval_invalid_for_future_human_approval_packets(
+    tmp_path: Path, monkeypatch
+):
+    approval_note = (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "future-active-l2l3-pending-approval-2026-06-02.md"
+    )
     approval_note.parent.mkdir(parents=True, exist_ok=True)
     approval_note.write_text("# planning backlog presence only\n", encoding="utf-8")
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
@@ -2024,7 +2300,15 @@ def test_task_promotion_readiness_reports_approval_invalid_for_future_human_appr
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "promotion-readiness", "--omo-dir", ".omo", "--now", "2026-06-03T00:00:00Z"],
+        [
+            "omo",
+            "task",
+            "promotion-readiness",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:00:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
@@ -2033,7 +2317,9 @@ def test_task_promotion_readiness_reports_approval_invalid_for_future_human_appr
     assert packet["tasks"][0]["blockers"] == ["phase_mismatch", "approval_invalid"]
 
 
-def test_task_promotion_readiness_accepts_unphased_candidate_packets(tmp_path: Path, monkeypatch, capsys):
+def test_task_promotion_readiness_accepts_unphased_candidate_packets(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "OPT-BOS-GATEWAY.yaml",
@@ -2087,10 +2373,16 @@ def test_task_promotion_readiness_accepts_unphased_candidate_packets(tmp_path: P
     assert packet["tasks"][0]["checks"]["phase_ok"] is True
 
 
-def test_task_promotion_readiness_blocks_self_evolution_packets(tmp_path: Path, monkeypatch, capsys):
+def test_task_promotion_readiness_blocks_self_evolution_packets(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
-        tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "planned"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
         {
             "id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
             "priority": "P1",
@@ -2116,7 +2408,11 @@ def test_task_promotion_readiness_blocks_self_evolution_packets(tmp_path: Path, 
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
         {
             "approval_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z",
             "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
@@ -2150,10 +2446,16 @@ def test_task_promotion_readiness_blocks_self_evolution_packets(tmp_path: Path, 
     assert packet["tasks"][0]["checks"]["task_policy_ready"] is False
 
 
-def test_task_route_self_evolution_remediation_moves_task_out_of_planned(tmp_path: Path, monkeypatch, capsys):
+def test_task_route_self_evolution_remediation_moves_task_out_of_planned(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
-        tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "planned"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
         {
             "id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
             "title": "Self evolution packet",
@@ -2172,7 +2474,9 @@ def test_task_route_self_evolution_remediation_moves_task_out_of_planned(tmp_pat
             "handoff_refs": [],
             "entry_gate": ["human_review"],
             "evidence_required": ["approval granted"],
-            "test_plan": ["python3 scripts/omo/omo_worker.py task approval-queue-status --omo-dir .omo"],
+            "test_plan": [
+                "python3 scripts/omo/omo_worker.py task approval-queue-status --omo-dir .omo"
+            ],
             "allowed_operation_level": "L1",
             "approval_required": True,
             "approval_state": "awaiting_human",
@@ -2180,7 +2484,11 @@ def test_task_route_self_evolution_remediation_moves_task_out_of_planned(tmp_pat
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
         {
             "approval_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z",
             "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
@@ -2209,21 +2517,51 @@ def test_task_route_self_evolution_remediation_moves_task_out_of_planned(tmp_pat
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    remediation_task = _load_yaml(tmp_path / ".omo" / "tasks" / "remediation" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml")
-    review_note = tmp_path / ".omo" / "tasks" / "remediation-notes" / "OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md"
+    remediation_task = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "remediation"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml"
+    )
+    review_note = (
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "remediation-notes"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md"
+    )
 
-    assert "remediation_ref=.omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml" in output
+    assert (
+        "remediation_ref=.omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml"
+        in output
+    )
     assert remediation_task["status"] == "review"
     assert remediation_task["assigned_to"] == "copilot-cli"
-    assert remediation_task["review_note"] == ".omo/tasks/remediation-notes/OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md"
+    assert (
+        remediation_task["review_note"]
+        == ".omo/tasks/remediation-notes/OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md"
+    )
     assert review_note.exists()
-    assert not (tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml").exists()
+    assert not (
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "planned"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml"
+    ).exists()
 
 
-def test_task_approval_queue_status_writes_unified_queue_surface(tmp_path: Path, monkeypatch, capsys):
+def test_task_approval_queue_status_writes_unified_queue_surface(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 42})
     _write_yaml(
-        tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+        tmp_path
+        / ".omo"
+        / "tasks"
+        / "planned"
+        / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
         {
             "id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
             "title": "Doc reconcile",
@@ -2264,7 +2602,9 @@ def test_task_approval_queue_status_writes_unified_queue_surface(tmp_path: Path,
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "approval-queue" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path / ".omo" / "workers" / "promotion" / "approval-queue" / "current.yaml"
+    )
 
     assert "approval_queue_task_count=1" in output
     assert packet["approval_missing_count"] == 1
@@ -2275,7 +2615,9 @@ def test_task_approval_queue_status_writes_unified_queue_surface(tmp_path: Path,
     ).exists()
 
 
-def test_task_promotion_request_approval_rejects_non_human_approval_task(tmp_path: Path, monkeypatch):
+def test_task_promotion_request_approval_rejects_non_human_approval_task(
+    tmp_path: Path, monkeypatch
+):
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml",
         {
@@ -2375,7 +2717,9 @@ def test_task_promotion_request_approval_writes_requested_record_and_governance_
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    task_packet = _load_yaml(tmp_path / ".omo" / "tasks" / "planned" / "P19-W3-ARCHIVE-TS.yaml")
+    task_packet = _load_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P19-W3-ARCHIVE-TS.yaml"
+    )
     approval_ref = ".omo/workers/runs/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml"
     proposal_ref = ".omo/_truth/task-center/proposals/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml"
 
@@ -2386,7 +2730,9 @@ def test_task_promotion_request_approval_writes_requested_record_and_governance_
     assert (tmp_path / proposal_ref).exists()
 
 
-def test_task_promotion_request_approval_keeps_readiness_blocked_until_granted(tmp_path: Path, monkeypatch):
+def test_task_promotion_request_approval_keeps_readiness_blocked_until_granted(
+    tmp_path: Path, monkeypatch
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-NEEDS-APPROVAL.yaml",
@@ -2437,7 +2783,15 @@ def test_task_promotion_request_approval_keeps_readiness_blocked_until_granted(t
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "promotion-readiness", "--omo-dir", ".omo", "--now", "2026-06-03T00:00:00Z"],
+        [
+            "omo",
+            "task",
+            "promotion-readiness",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:00:00Z",
+        ],
     )
     assert omo_worker_main() == 0
     packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
@@ -2518,7 +2872,11 @@ def test_task_contract_declare_deliverables_writes_request_record_and_governance
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "task-a-mockworker-20260603-074000-dispatch.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "task-a-mockworker-20260603-074000-dispatch.yaml",
         {
             "dispatch_id": "task-a-mockworker-20260603-074000",
             "task_id": "TASK-A",
@@ -2572,10 +2930,15 @@ def test_task_contract_declare_deliverables_writes_request_record_and_governance
     assert f"proposal_ref={proposal_ref}" in output
     assert request["deliverables"] == ["src/app.py", "tests/test_app.py"]
     assert proposal["target"]["ref"] == ".omo/tasks/active/TASK-A.yaml"
-    assert proposal["changes"]["set"]["deliverables"] == ["src/app.py", "tests/test_app.py"]
+    assert proposal["changes"]["set"]["deliverables"] == [
+        "src/app.py",
+        "tests/test_app.py",
+    ]
 
 
-def test_task_contract_declare_deliverables_rejects_tasks_not_in_contract_gap(tmp_path: Path, monkeypatch):
+def test_task_contract_declare_deliverables_rejects_tasks_not_in_contract_gap(
+    tmp_path: Path, monkeypatch
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -2643,7 +3006,11 @@ def test_task_contract_declare_deliverables_rejects_tasks_not_in_contract_gap(tm
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "task-a-mockworker-20260603-074000-dispatch.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "task-a-mockworker-20260603-074000-dispatch.yaml",
         {
             "dispatch_id": "task-a-mockworker-20260603-074000",
             "task_id": "TASK-A",
@@ -2685,11 +3052,15 @@ def test_task_contract_declare_deliverables_rejects_tasks_not_in_contract_gap(tm
         ],
     )
 
-    with pytest.raises(ValueError, match="task is not currently blocked on contract gap"):
+    with pytest.raises(
+        ValueError, match="task is not currently blocked on contract gap"
+    ):
         omo_worker_main()
 
 
-def test_contract_declaration_apply_advances_overlay_from_contract_gap_to_launch(tmp_path: Path, monkeypatch, capsys):
+def test_contract_declaration_apply_advances_overlay_from_contract_gap_to_launch(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -2757,7 +3128,11 @@ def test_contract_declaration_apply_advances_overlay_from_contract_gap_to_launch
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "task-a-mockworker-20260603-074000-dispatch.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "task-a-mockworker-20260603-074000-dispatch.yaml",
         {
             "dispatch_id": "task-a-mockworker-20260603-074000",
             "task_id": "TASK-A",
@@ -2816,20 +3191,36 @@ def test_contract_declaration_apply_advances_overlay_from_contract_gap_to_launch
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-status", "--omo-dir", ".omo", "--now", "2026-06-03T07:44:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-status",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T07:44:00Z",
+        ],
     )
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    current = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml")
+    current = _load_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml"
+    )
 
     assert "next_action=launch:TASK-A" in output
     assert current["active_target_states"][0]["state"] == "active_dispatched"
     assert current["next_action"] == "launch:TASK-A"
 
 
-def test_task_promotion_request_approval_rejects_duplicate_task_specific_request(tmp_path: Path, monkeypatch):
+def test_task_promotion_request_approval_rejects_duplicate_task_specific_request(
+    tmp_path: Path, monkeypatch
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml",
         {
             "version": 1,
             "approval_id": "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z",
@@ -2893,11 +3284,15 @@ def test_task_promotion_request_approval_rejects_duplicate_task_specific_request
         ],
     )
 
-    with pytest.raises(ValueError, match="task already points to a task-specific promotion approval"):
+    with pytest.raises(
+        ValueError, match="task already points to a task-specific promotion approval"
+    ):
         omo_worker_main()
 
 
-def test_task_promotion_approval_status_rejects_task_without_task_specific_request(tmp_path: Path, monkeypatch):
+def test_task_promotion_approval_status_rejects_task_without_task_specific_request(
+    tmp_path: Path, monkeypatch
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml",
@@ -2930,14 +3325,26 @@ def test_task_promotion_approval_status_rejects_task_without_task_specific_reque
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "promotion-approval-status", "--task-id", "P17-W1-READY", "--omo-dir", ".omo"],
+        [
+            "omo",
+            "task",
+            "promotion-approval-status",
+            "--task-id",
+            "P17-W1-READY",
+            "--omo-dir",
+            ".omo",
+        ],
     )
 
-    with pytest.raises(ValueError, match="task does not point to a task-specific promotion approval"):
+    with pytest.raises(
+        ValueError, match="task does not point to a task-specific promotion approval"
+    ):
         omo_worker_main()
 
 
-def test_task_promotion_approval_status_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+def test_task_promotion_approval_status_writes_current_surfaces(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-NEEDS-APPROVAL.yaml",
@@ -2966,7 +3373,11 @@ def test_task_promotion_approval_status_writes_current_surfaces(tmp_path: Path, 
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml",
         {
             "version": 1,
             "approval_id": "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z",
@@ -3005,20 +3416,34 @@ def test_task_promotion_approval_status_writes_current_surfaces(tmp_path: Path, 
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "promotion-approval-status", "--omo-dir", ".omo", "--now", "2026-06-03T00:00:00Z"],
+        [
+            "omo",
+            "task",
+            "promotion-approval-status",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:00:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "current.yaml"
+    )
 
     assert "approval_task_count=1" in output
     assert packet["requested_count"] == 1
     assert packet["tasks"][0]["proposal_status"] == "proposed"
-    assert (tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "current.md").exists()
+    assert (
+        tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "current.md"
+    ).exists()
 
 
-def test_governance_apply_clears_promotion_approval_invalid_blocker(tmp_path: Path, monkeypatch):
+def test_governance_apply_clears_promotion_approval_invalid_blocker(
+    tmp_path: Path, monkeypatch
+):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-NEEDS-APPROVAL.yaml",
@@ -3047,7 +3472,11 @@ def test_governance_apply_clears_promotion_approval_invalid_blocker(tmp_path: Pa
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml",
         {
             "version": 1,
             "approval_id": "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z",
@@ -3114,7 +3543,15 @@ def test_governance_apply_clears_promotion_approval_invalid_blocker(tmp_path: Pa
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "promotion-readiness", "--omo-dir", ".omo", "--now", "2026-06-03T00:15:00Z"],
+        [
+            "omo",
+            "task",
+            "promotion-readiness",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:15:00Z",
+        ],
     )
     assert omo_worker_main() == 0
     packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
@@ -3122,9 +3559,15 @@ def test_governance_apply_clears_promotion_approval_invalid_blocker(tmp_path: Pa
     assert packet["tasks"][0]["blockers"] == []
 
 
-def test_task_promotion_approval_history_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+def test_task_promotion_approval_history_writes_current_surfaces(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "TASK-A-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "TASK-A-promotion-approval-2026-06-03T00-00-00Z.yaml",
         {
             "approval_id": "TASK-A-promotion-approval-2026-06-03T00-00-00Z",
             "task_id": "TASK-A",
@@ -3139,27 +3582,63 @@ def test_task_promotion_approval_history_writes_current_surfaces(tmp_path: Path,
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "_truth" / "task-center" / "proposals" / "TASK-A-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml",
-        {"id": "TASK-A-promotion-approval-2026-06-03T00-00-00Z-proposal", "status": "proposed"},
+        tmp_path
+        / ".omo"
+        / "_truth"
+        / "task-center"
+        / "proposals"
+        / "TASK-A-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml",
+        {
+            "id": "TASK-A-promotion-approval-2026-06-03T00-00-00Z-proposal",
+            "status": "proposed",
+        },
     )
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "promotion-approval-history", "--omo-dir", ".omo", "--now", "2026-06-03T00:15:00Z"],
+        [
+            "omo",
+            "task",
+            "promotion-approval-history",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:15:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "history" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "promotion"
+        / "approvals"
+        / "history"
+        / "current.yaml"
+    )
 
     assert "approval_count=1" in output
-    assert packet["latest_approval_id"] == "TASK-A-promotion-approval-2026-06-03T00-00-00Z"
-    assert (tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "history" / "current.md").exists()
+    assert (
+        packet["latest_approval_id"] == "TASK-A-promotion-approval-2026-06-03T00-00-00Z"
+    )
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "promotion"
+        / "approvals"
+        / "history"
+        / "current.md"
+    ).exists()
 
 
-def test_task_promotion_approval_analytics_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+def test_task_promotion_approval_analytics_writes_current_surfaces(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "current.yaml",
         {
@@ -3184,7 +3663,13 @@ def test_task_promotion_approval_analytics_writes_current_surfaces(tmp_path: Pat
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "history" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "promotion"
+        / "approvals"
+        / "history"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T06:00:00Z",
             "approval_count": 1,
@@ -3213,19 +3698,45 @@ def test_task_promotion_approval_analytics_writes_current_surfaces(tmp_path: Pat
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "promotion-approval-analytics", "--omo-dir", ".omo", "--now", "2026-06-03T06:00:00Z"],
+        [
+            "omo",
+            "task",
+            "promotion-approval-analytics",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T06:00:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "analytics" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "promotion"
+        / "approvals"
+        / "analytics"
+        / "current.yaml"
+    )
 
     assert "approval_task_count=1" in output
     assert packet["action_queues"]["approve_now"][0]["task_id"] == "TASK-A"
-    assert (tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "analytics" / "current.md").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "promotion"
+        / "approvals"
+        / "analytics"
+        / "current.md"
+    ).exists()
 
 
-def test_task_governance_overlay_status_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_status_writes_current_surfaces(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -3267,25 +3778,42 @@ def test_task_governance_overlay_status_writes_current_surfaces(tmp_path: Path, 
             ]
         },
     )
-    _write_yaml(tmp_path / ".omo" / "tasks" / "planned" / "D2-CI-E2E-TEST-ENV.yaml", {"id": "D2-CI-E2E-TEST-ENV"})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "D2-CI-E2E-TEST-ENV.yaml",
+        {"id": "D2-CI-E2E-TEST-ENV"},
+    )
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-status", "--omo-dir", ".omo", "--now", "2026-06-03T06:35:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-status",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T06:35:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml"
+    )
 
     assert "eligible_count=1" in output
     assert packet["next_action"] == "advance:GOV-M1-ROADMAP-E2E"
-    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "current.md").exists()
+    assert (
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "current.md"
+    ).exists()
 
 
-def test_task_governance_overlay_status_writes_prep_monitor_aggregation(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_status_writes_prep_monitor_aggregation(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -3345,7 +3873,11 @@ def test_task_governance_overlay_status_writes_prep_monitor_aggregation(tmp_path
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "P24-W2-NUCLEUS-REPLACE-promotion-approval.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "P24-W2-NUCLEUS-REPLACE-promotion-approval.yaml",
         {
             "task_id": "P24-W2-NUCLEUS-REPLACE",
             "approval_status": "requested",
@@ -3354,21 +3886,51 @@ def test_task_governance_overlay_status_writes_prep_monitor_aggregation(tmp_path
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "current.yaml",
         {"prep_task_count": 1, "request_now_count": 0, "awaiting_approval_count": 1},
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "trend" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "trend"
+        / "current.yaml",
         {"trend_status": "trend_available", "window_event_count": 2},
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "diff" / "current.yaml",
-        {"changed_current_task_ids": ["P24-W2-NUCLEUS-REPLACE"], "no_longer_current_task_ids": []},
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "diff"
+        / "current.yaml",
+        {
+            "changed_current_task_ids": ["P24-W2-NUCLEUS-REPLACE"],
+            "no_longer_current_task_ids": [],
+        },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "aging" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "aging"
+        / "current.yaml",
         {
-            "attention_summary": {"fresh_count": 1, "watch_count": 0, "escalate_count": 0},
+            "attention_summary": {
+                "fresh_count": 1,
+                "watch_count": 0,
+                "escalate_count": 0,
+            },
             "followup_task_ids": [],
             "escalation_task_ids": [],
         },
@@ -3378,19 +3940,35 @@ def test_task_governance_overlay_status_writes_prep_monitor_aggregation(tmp_path
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-status", "--omo-dir", ".omo", "--now", "2026-06-03T11:02:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-status",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T11:02:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml"
+    )
 
     assert "next_action=monitor:GOV-M3-FUTURE-PROMOTION-OPERATIONS" in output
-    assert packet["monitor_summary"]["approval_prep"]["trend_status"] == "trend_available"
-    assert packet["monitor_summary"]["approval_prep"]["changed_current_task_ids"] == ["P24-W2-NUCLEUS-REPLACE"]
+    assert (
+        packet["monitor_summary"]["approval_prep"]["trend_status"] == "trend_available"
+    )
+    assert packet["monitor_summary"]["approval_prep"]["changed_current_task_ids"] == [
+        "P24-W2-NUCLEUS-REPLACE"
+    ]
 
 
-def test_task_governance_overlay_run_next_writes_run_artifact(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_run_next_writes_run_artifact(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -3460,21 +4038,45 @@ def test_task_governance_overlay_run_next_writes_run_artifact(tmp_path: Path, mo
             "retry_count": 0,
         },
     )
-    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16, "status": "completed", "goals": []})
-    _write_yaml(tmp_path / ".omo" / "state" / "system.yaml", {"current_phase": 16, "health_score": 0.0})
+    _write_yaml(
+        tmp_path / ".omo" / "goals" / "current.yaml",
+        {"phase": 16, "status": "completed", "goals": []},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "state" / "system.yaml",
+        {"current_phase": 16, "health_score": 0.0},
+    )
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr("omo.omo_worker._sync_omo_state", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T06:40:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-run-next",
+            "--omo-dir",
+            ".omo",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T06:40:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T06-40-00Z.yaml")
-    roadmap = _load_yaml(tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml")
+    run_packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T06-40-00Z.yaml"
+    )
+    roadmap = _load_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml"
+    )
 
     assert "summary=advanced" in output
     assert run_packet["roadmap_item_id"] == "GOV-M1-EXECUTION-HARDENING"
@@ -3483,7 +4085,9 @@ def test_task_governance_overlay_run_next_writes_run_artifact(tmp_path: Path, mo
     assert (tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml").exists()
 
 
-def test_task_governance_overlay_run_next_closes_done_active_item_and_advances_control(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_run_next_closes_done_active_item_and_advances_control(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -3533,20 +4137,43 @@ def test_task_governance_overlay_run_next_closes_done_active_item_and_advances_c
             ]
         },
     )
-    _write_yaml(tmp_path / ".omo" / "tasks" / "done" / "TASK-A.yaml", {"id": "TASK-A", "status": "done"})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "done" / "TASK-A.yaml",
+        {"id": "TASK-A", "status": "done"},
+    )
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T06:50:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-run-next",
+            "--omo-dir",
+            ".omo",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T06:50:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    control = _load_yaml(tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml")
-    roadmap = _load_yaml(tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml")
-    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T06-50-00Z.yaml")
+    control = _load_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml"
+    )
+    roadmap = _load_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml"
+    )
+    run_packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T06-50-00Z.yaml"
+    )
 
     assert "summary=closed" in output
     assert control["current_milestone"] == "GOV-M2-SHAREDBRAIN-DEBT"
@@ -3555,7 +4182,9 @@ def test_task_governance_overlay_run_next_closes_done_active_item_and_advances_c
     assert run_packet["mode"] == "continue_active"
 
 
-def test_task_governance_overlay_run_next_dispatches_first_active_pending_target(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_run_next_dispatches_first_active_pending_target(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -3589,7 +4218,10 @@ def test_task_governance_overlay_run_next_dispatches_first_active_pending_target
                     "status": "in_progress",
                     "depends_on": [],
                     "source_refs": [".omo/MASTER-BLUEPRINT.md"],
-                    "target_refs": [".omo/tasks/planned/TASK-A.yaml", ".omo/tasks/planned/TASK-B.yaml"],
+                    "target_refs": [
+                        ".omo/tasks/planned/TASK-A.yaml",
+                        ".omo/tasks/planned/TASK-B.yaml",
+                    ],
                     "success_criteria": ["execution hardening closed"],
                 }
             ]
@@ -3673,13 +4305,29 @@ def test_task_governance_overlay_run_next_dispatches_first_active_pending_target
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T06:58:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-run-next",
+            "--omo-dir",
+            ".omo",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T06:58:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
     task_a = _load_yaml(tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml")
-    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T06-58-00Z.yaml")
+    run_packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T06-58-00Z.yaml"
+    )
 
     assert "summary=dispatched" in output
     assert task_a["status"] == "in_progress"
@@ -3757,7 +4405,11 @@ def test_task_governance_overlay_run_next_records_contract_gap_for_dispatched_ta
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "task-a-mockworker-20260603-071500-dispatch.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "task-a-mockworker-20260603-071500-dispatch.yaml",
         {
             "dispatch_id": "task-a-mockworker-20260603-071500",
             "task_id": "TASK-A",
@@ -3773,7 +4425,9 @@ def test_task_governance_overlay_run_next_records_contract_gap_for_dispatched_ta
             "execution": {
                 "launch_command": 'python3 -c "print(\\"launched\\")"',
                 "log_ref": ".omo/workers/runs/task-a-mockworker-20260603-071500-stdout.log",
-                "checkpoint_refs": [".omo/workers/runs/task-a-mockworker-20260603-071500-checkpoint.md"],
+                "checkpoint_refs": [
+                    ".omo/workers/runs/task-a-mockworker-20260603-071500-checkpoint.md"
+                ],
             },
             "lease": {
                 "heartbeat_interval_seconds": 300,
@@ -3802,12 +4456,28 @@ def test_task_governance_overlay_run_next_records_contract_gap_for_dispatched_ta
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T07:16:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-run-next",
+            "--omo-dir",
+            ".omo",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T07:16:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T07-16-00Z.yaml")
+    run_packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T07-16-00Z.yaml"
+    )
 
     assert "summary=contract_gap" in output
     assert run_packet["summary"] == "contract_gap"
@@ -3885,7 +4555,11 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "task-a-mockworker-20260603-071500-dispatch.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "task-a-mockworker-20260603-071500-dispatch.yaml",
         {
             "dispatch_id": "task-a-mockworker-20260603-071500",
             "task_id": "TASK-A",
@@ -3901,7 +4575,9 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
             "execution": {
                 "launch_command": 'python3 -c "print(\\"launched\\")"',
                 "log_ref": ".omo/workers/runs/task-a-mockworker-20260603-071500-stdout.log",
-                "checkpoint_refs": [".omo/workers/runs/task-a-mockworker-20260603-071500-checkpoint.md"],
+                "checkpoint_refs": [
+                    ".omo/workers/runs/task-a-mockworker-20260603-071500-checkpoint.md"
+                ],
             },
             "lease": {
                 "heartbeat_interval_seconds": 300,
@@ -3913,9 +4589,13 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
             },
         },
     )
-    (tmp_path / ".omo" / "workers" / "runs" / "task-a-mockworker-20260603-071500-prompt.md").write_text(
-        "# prompt\n", encoding="utf-8"
-    )
+    (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "task-a-mockworker-20260603-071500-prompt.md"
+    ).write_text("# prompt\n", encoding="utf-8")
     _write_yaml(
         tmp_path / ".omo" / "_truth" / "registry" / "workers.yaml",
         {
@@ -3923,7 +4603,9 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
                 {
                     "id": "mockworker",
                     "enabled": True,
-                    "transports": {"cli_prompt": {"command": 'python3 -c "print(\\"launched\\")"'}},
+                    "transports": {
+                        "cli_prompt": {"command": 'python3 -c "print(\\"launched\\")"'}
+                    },
                 }
             ]
         },
@@ -3933,16 +4615,42 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T07:17:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-run-next",
+            "--omo-dir",
+            ".omo",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T07:17:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T07-17-00Z.yaml")
-    dispatch = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "task-a-mockworker-20260603-071500-dispatch.yaml")
-    stdout_text = (tmp_path / ".omo" / "workers" / "runs" / "task-a-mockworker-20260603-071500-stdout.log").read_text(
-        encoding="utf-8"
+    run_packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T07-17-00Z.yaml"
     )
+    dispatch = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "task-a-mockworker-20260603-071500-dispatch.yaml"
+    )
+    stdout_text = (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "task-a-mockworker-20260603-071500-stdout.log"
+    ).read_text(encoding="utf-8")
 
     assert "summary=launched" in output
     assert run_packet["summary"] == "launched"
@@ -3950,7 +4658,9 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
     assert "launched" in stdout_text
 
 
-def test_task_governance_overlay_run_next_marks_verify_ready_for_active_review_target(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_run_next_marks_verify_ready_for_active_review_target(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
         {
@@ -4024,12 +4734,28 @@ def test_task_governance_overlay_run_next_marks_verify_ready_for_active_review_t
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T07:01:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-run-next",
+            "--omo-dir",
+            ".omo",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T07:01:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T07-01-00Z.yaml")
+    run_packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T07-01-00Z.yaml"
+    )
 
     assert "summary=verify_ready" in output
     assert run_packet["target_results"][0]["state"] == "active_review"
@@ -4059,8 +4785,14 @@ def test_task_governance_overlay_run_next_continues_active_item_with_planned_app
             "auto_promote_when_safe": True,
         },
     )
-    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 23, "status": "in_progress", "goals": []})
-    _write_yaml(tmp_path / ".omo" / "state" / "system.yaml", {"current_phase": 23, "health_score": 0.0})
+    _write_yaml(
+        tmp_path / ".omo" / "goals" / "current.yaml",
+        {"phase": 23, "status": "in_progress", "goals": []},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "state" / "system.yaml",
+        {"current_phase": 23, "health_score": 0.0},
+    )
     _write_yaml(
         tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
         {
@@ -4110,13 +4842,31 @@ def test_task_governance_overlay_run_next_continues_active_item_with_planned_app
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T01:50:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-run-next",
+            "--omo-dir",
+            ".omo",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T01:50:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T01-50-00Z.yaml")
-    task = _load_yaml(tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml")
+    run_packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T01-50-00Z.yaml"
+    )
+    task = _load_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml"
+    )
 
     assert "summary=advanced" in output
     assert run_packet["mode"] == "continue_active"
@@ -4148,8 +4898,14 @@ def test_task_governance_overlay_run_next_prepares_approval_even_when_phase_is_s
             "auto_promote_when_safe": True,
         },
     )
-    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16, "status": "in_progress", "goals": []})
-    _write_yaml(tmp_path / ".omo" / "state" / "system.yaml", {"current_phase": 16, "health_score": 0.0})
+    _write_yaml(
+        tmp_path / ".omo" / "goals" / "current.yaml",
+        {"phase": 16, "status": "in_progress", "goals": []},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "state" / "system.yaml",
+        {"current_phase": 16, "health_score": 0.0},
+    )
     _write_yaml(
         tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
         {
@@ -4199,13 +4955,31 @@ def test_task_governance_overlay_run_next_prepares_approval_even_when_phase_is_s
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T02:31:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-run-next",
+            "--omo-dir",
+            ".omo",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T02:31:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T02-31-00Z.yaml")
-    task = _load_yaml(tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml")
+    run_packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T02-31-00Z.yaml"
+    )
+    task = _load_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml"
+    )
 
     assert "summary=advanced" in output
     assert run_packet["mode"] == "continue_active"
@@ -4213,7 +4987,9 @@ def test_task_governance_overlay_run_next_prepares_approval_even_when_phase_is_s
     assert task["approval_ref"] == run_packet["target_results"][0]["approval_ref"]
 
 
-def test_task_governance_overlay_approval_prep_status_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_approval_prep_status_writes_current_surface(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml",
         {
@@ -4243,21 +5019,49 @@ def test_task_governance_overlay_approval_prep_status_writes_current_surface(tmp
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-approval-prep-status", "--omo-dir", ".omo", "--now", "2026-06-03T02:35:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-approval-prep-status",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T02:35:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "current.yaml"
+    )
 
     assert "prep_task_count=1" in output
     assert packet["awaiting_approval_count"] == 1
-    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.md").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "current.md"
+    ).exists()
 
 
-def test_task_governance_overlay_approval_prep_history_writes_history_surface(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_approval_prep_history_writes_history_surface(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T02-31-00Z.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "runs"
+        / "governance-overlay-2026-06-03T02-31-00Z.yaml",
         {
             "run_id": "governance-overlay-2026-06-03T02-31-00Z",
             "started_at": "2026-06-03T02:31:00Z",
@@ -4280,21 +5084,52 @@ def test_task_governance_overlay_approval_prep_history_writes_history_surface(tm
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-approval-prep-history", "--omo-dir", ".omo", "--now", "2026-06-03T02:35:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-approval-prep-history",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T02:35:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "history"
+        / "current.yaml"
+    )
 
     assert "event_count=1" in output
     assert packet["latest_run_id"] == "governance-overlay-2026-06-03T02-31-00Z"
-    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.md").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "history"
+        / "current.md"
+    ).exists()
 
 
-def test_task_governance_overlay_approval_prep_analytics_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_approval_prep_analytics_writes_current_surface(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T02:38:16Z",
             "prep_task_count": 1,
@@ -4312,7 +5147,13 @@ def test_task_governance_overlay_approval_prep_analytics_writes_current_surface(
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "history"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T02:38:46Z",
             "event_count": 1,
@@ -4331,21 +5172,53 @@ def test_task_governance_overlay_approval_prep_analytics_writes_current_surface(
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-approval-prep-analytics", "--omo-dir", ".omo", "--now", "2026-06-03T02:39:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-approval-prep-analytics",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T02:39:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "analytics"
+        / "current.yaml"
+    )
 
     assert "prep_task_count=1" in output
     assert packet["awaiting_approval_count"] == 1
-    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.md").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "analytics"
+        / "current.md"
+    ).exists()
 
 
-def test_task_governance_overlay_approval_prep_trend_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_approval_prep_trend_writes_current_surface(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "analytics"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T02:42:32Z",
             "prep_task_count": 1,
@@ -4354,7 +5227,10 @@ def test_task_governance_overlay_approval_prep_trend_writes_current_surface(tmp_
             "awaiting_approval_count": 1,
             "blocker_histogram": {"phase_mismatch": 1, "approval_invalid": 1},
             "age_buckets": {"lt_1d": 1, "d1_to_d3": 0, "d3_plus": 0},
-            "action_queues": {"request_now": [], "awaiting_approval": [{"task_id": "P24-W2-NUCLEUS-REPLACE"}]},
+            "action_queues": {
+                "request_now": [],
+                "awaiting_approval": [{"task_id": "P24-W2-NUCLEUS-REPLACE"}],
+            },
             "tasks": [
                 {
                     "task_id": "P24-W2-NUCLEUS-REPLACE",
@@ -4369,7 +5245,13 @@ def test_task_governance_overlay_approval_prep_trend_writes_current_surface(tmp_
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "history"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T02:38:46Z",
             "event_count": 2,
@@ -4400,21 +5282,52 @@ def test_task_governance_overlay_approval_prep_trend_writes_current_surface(tmp_
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-approval-prep-trend", "--omo-dir", ".omo", "--now", "2026-06-03T02:43:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-approval-prep-trend",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T02:43:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "trend" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "trend"
+        / "current.yaml"
+    )
 
     assert "trend_status=trend_available" in output
     assert packet["window_event_count"] == 2
-    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "trend" / "current.md").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "trend"
+        / "current.md"
+    ).exists()
 
 
-def test_task_governance_overlay_approval_prep_diff_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_approval_prep_diff_writes_current_surface(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T02:35:00Z",
             "prep_task_count": 1,
@@ -4433,7 +5346,13 @@ def test_task_governance_overlay_approval_prep_diff_writes_current_surface(tmp_p
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "history"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T02:38:46Z",
             "event_count": 2,
@@ -4464,28 +5383,64 @@ def test_task_governance_overlay_approval_prep_diff_writes_current_surface(tmp_p
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-approval-prep-diff", "--omo-dir", ".omo", "--now", "2026-06-03T02:43:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-approval-prep-diff",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T02:43:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "diff" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "diff"
+        / "current.yaml"
+    )
 
     assert "diff_status=diff_available" in output
     assert packet["changed_current_task_ids"] == ["P24-W2-NUCLEUS-REPLACE"]
-    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "diff" / "current.md").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "diff"
+        / "current.md"
+    ).exists()
 
 
-def test_task_governance_overlay_approval_prep_aging_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+def test_task_governance_overlay_approval_prep_aging_writes_current_surface(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.yaml",
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "analytics"
+        / "current.yaml",
         {
             "generated_at": "2026-06-03T10:58:00Z",
             "prep_task_count": 2,
             "history_event_count": 2,
             "request_now_count": 1,
             "awaiting_approval_count": 1,
-            "blocker_histogram": {"phase_mismatch": 2, "approval_invalid": 1, "approval_missing": 1},
+            "blocker_histogram": {
+                "phase_mismatch": 2,
+                "approval_invalid": 1,
+                "approval_missing": 1,
+            },
             "age_buckets": {"lt_1d": 0, "d1_to_d3": 1, "d3_plus": 1},
             "action_queues": {
                 "request_now": [{"task_id": "P30-W1-REQUEST-LONGTAIL"}],
@@ -4518,19 +5473,45 @@ def test_task_governance_overlay_approval_prep_aging_writes_current_surface(tmp_
     monkeypatch.setattr(
         sys,
         "argv",
-        ["omo", "task", "governance-overlay-approval-prep-aging", "--omo-dir", ".omo", "--now", "2026-06-03T11:00:00Z"],
+        [
+            "omo",
+            "task",
+            "governance-overlay-approval-prep-aging",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T11:00:00Z",
+        ],
     )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
-    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "aging" / "current.yaml")
+    packet = _load_yaml(
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "aging"
+        / "current.yaml"
+    )
 
     assert "aging_status=aging_available" in output
     assert packet["escalation_task_ids"] == ["P30-W1-REQUEST-LONGTAIL"]
-    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "aging" / "current.md").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "aging"
+        / "current.md"
+    ).exists()
 
 
-def test_yield_task_updates_dispatch_and_brokers_active_task_back_to_planned(tmp_path: Path) -> None:
+def test_yield_task_updates_dispatch_and_brokers_active_task_back_to_planned(
+    tmp_path: Path,
+) -> None:
     omo = tmp_path / ".omo"
     dispatch_path = omo / "workers" / "runs" / "dispatch-yield-2.yaml"
     _write_yaml(
@@ -4584,7 +5565,9 @@ def test_yield_task_updates_dispatch_and_brokers_active_task_back_to_planned(tmp
     assert not (omo / "tasks" / "active" / "TASK-YIELD-2.yaml").exists()
 
 
-def test_fast_track_compaction_archives_done_tasks_via_broker_and_writes_audit_report(tmp_path: Path) -> None:
+def test_fast_track_compaction_archives_done_tasks_via_broker_and_writes_audit_report(
+    tmp_path: Path,
+) -> None:
     omo = tmp_path / ".omo"
     done_dir = omo / "tasks" / "done"
     for idx in range(1, 6):
@@ -4623,12 +5606,31 @@ def test_fast_track_compaction_archives_done_tasks_via_broker_and_writes_audit_r
         assert not (done_dir / f"FAST-{idx}.yaml").exists()
         archived = _load_yaml(omo / "tasks" / "archived" / f"FAST-{idx}.yaml")
         assert archived["status"] == "archived"
-        assert archived["archived_by"] == "projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction"
+        assert (
+            archived["archived_by"]
+            == "projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction"
+        )
 
     reports = sorted((omo / "_knowledge" / "audits").glob("Fast-Track-Compaction-*.md"))
     assert len(reports) == 1
     report_text = reports[0].read_text(encoding="utf-8")
     assert "FAST-1" in report_text
     assert "FAST-5" in report_text
-    assert len(list((omo / "_delivery" / "ingress" / "tasks").glob("FAST-*-archive-*.yaml"))) == 5
-    assert len(list((omo / "_delivery" / "ingress" / "audits").glob("Fast-Track-Compaction-*.yaml"))) == 1
+    assert (
+        len(
+            list(
+                (omo / "_delivery" / "ingress" / "tasks").glob("FAST-*-archive-*.yaml")
+            )
+        )
+        == 5
+    )
+    assert (
+        len(
+            list(
+                (omo / "_delivery" / "ingress" / "audits").glob(
+                    "Fast-Track-Compaction-*.yaml"
+                )
+            )
+        )
+        == 1
+    )

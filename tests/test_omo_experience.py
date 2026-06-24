@@ -26,7 +26,9 @@ from omo.omo_task_schema import validate_task_file  # noqa: E402
 
 def _write_yaml(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
 
 
 def _load_yaml(path: Path) -> dict:
@@ -56,7 +58,13 @@ def test_build_session_bootstrap_reads_live_phase_and_active_packet(tmp_path: Pa
             "phase": 7,
             "status": "in_progress",
             "current_wave": 1,
-            "goals": [{"id": "G7.1", "status": "in_progress", "tasks": ["P7-W1-USER-JOURNEY-ENABLEMENT"]}],
+            "goals": [
+                {
+                    "id": "G7.1",
+                    "status": "in_progress",
+                    "tasks": ["P7-W1-USER-JOURNEY-ENABLEMENT"],
+                }
+            ],
         },
     )
     _write_yaml(
@@ -67,7 +75,15 @@ def test_build_session_bootstrap_reads_live_phase_and_active_packet(tmp_path: Pa
             "status": "pending",
         },
     )
-    _write_text(root / ".omo" / "_knowledge" / "summaries" / "phase7" / "phase7-planning-ratification.md", "# ratified\n")
+    _write_text(
+        root
+        / ".omo"
+        / "_knowledge"
+        / "summaries"
+        / "phase7"
+        / "phase7-planning-ratification.md",
+        "# ratified\n",
+    )
 
     bootstrap = build_session_bootstrap(root)
 
@@ -75,7 +91,10 @@ def test_build_session_bootstrap_reads_live_phase_and_active_packet(tmp_path: Pa
     assert bootstrap["wave"] == 1
     assert bootstrap["active_task_ids"] == ["P7-W1-USER-JOURNEY-ENABLEMENT"]
     assert bootstrap["divergence_flags"] == ["orphaned_tasks:1"]
-    assert bootstrap["latest_summary_ref"] == ".omo/_knowledge/summaries/phase7/phase7-planning-ratification.md"
+    assert (
+        bootstrap["latest_summary_ref"]
+        == ".omo/_knowledge/summaries/phase7/phase7-planning-ratification.md"
+    )
 
 
 def test_build_session_bootstrap_accepts_multi_document_yaml(tmp_path: Path):
@@ -83,7 +102,9 @@ def test_build_session_bootstrap_accepts_multi_document_yaml(tmp_path: Path):
     (root / ".omo" / "state").mkdir(parents=True, exist_ok=True)
     (root / ".omo" / "_truth" / "goals").mkdir(parents=True, exist_ok=True)
     (root / ".omo" / "tasks" / "active").mkdir(parents=True, exist_ok=True)
-    (root / ".omo" / "_knowledge" / "summaries" / "phase8").mkdir(parents=True, exist_ok=True)
+    (root / ".omo" / "_knowledge" / "summaries" / "phase8").mkdir(
+        parents=True, exist_ok=True
+    )
     (root / ".omo" / "state" / "system.yaml").write_text(
         "---\nstatus: active\nowner: governance\n---\n---\n"
         "current_phase: 8\n"
@@ -112,7 +133,10 @@ def test_build_session_bootstrap_accepts_multi_document_yaml(tmp_path: Path):
             "status": "pending",
         },
     )
-    _write_text(root / ".omo" / "_knowledge" / "summaries" / "phase8" / "phase8-closeout.md", "# closeout\n")
+    _write_text(
+        root / ".omo" / "_knowledge" / "summaries" / "phase8" / "phase8-closeout.md",
+        "# closeout\n",
+    )
 
     bootstrap = build_session_bootstrap(root)
 
@@ -124,14 +148,19 @@ def test_build_session_bootstrap_accepts_multi_document_yaml(tmp_path: Path):
 
 def test_bridge_request_to_task_creates_governed_blocked_packet(tmp_path: Path):
     root = tmp_path
-    _write_yaml(root / ".omo" / "_truth" / "goals" / "current.yaml", {"phase": 7, "current_wave": 1})
+    _write_yaml(
+        root / ".omo" / "_truth" / "goals" / "current.yaml",
+        {"phase": 7, "current_wave": 1},
+    )
 
     result = bridge_request_to_task(
         root,
         task_id="P7-W1-COMPLEX-REQUEST",
         title="Bridge a complex Wave 1 request",
         request_text="Please推进phase7 wave1并完成一次治理整改。",
-        source_docs=[".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"],
+        source_docs=[
+            ".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"
+        ],
     )
 
     task_path = root / result["task_ref"]
@@ -140,7 +169,9 @@ def test_bridge_request_to_task_creates_governed_blocked_packet(tmp_path: Path):
     assert task["phase"] == 7
     assert task["milestone"] == "W1"
     assert task["status"] == "blocked"
-    assert task["source_docs"] == [".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"]
+    assert task["source_docs"] == [
+        ".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"
+    ]
     assert validate_task_file(task_path) == []
 
 
@@ -160,7 +191,9 @@ def test_record_confirmation_evidence_attaches_delivery_ref_to_task(tmp_path: Pa
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"],
+            "source_docs": [
+                ".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"
+            ],
             "deliverables": [],
             "risk_level": "L1",
             "allowed_operation_level": "L1",
@@ -187,11 +220,19 @@ def test_record_confirmation_evidence_attaches_delivery_ref_to_task(tmp_path: Pa
     assert result["evidence_ref"] in task["handoff_refs"]
 
 
-def test_write_resource_accounting_report_persists_truth_and_summary(tmp_path: Path, monkeypatch):
+def test_write_resource_accounting_report_persists_truth_and_summary(
+    tmp_path: Path, monkeypatch
+):
     root = tmp_path
     _write_yaml(
         root / ".omo" / "state" / "system.yaml",
-        {"current_phase": 7, "current_wave": 2, "active_tasks": 1, "blocked_tasks": 0, "completed_tasks": 2},
+        {
+            "current_phase": 7,
+            "current_wave": 2,
+            "active_tasks": 1,
+            "blocked_tasks": 0,
+            "completed_tasks": 2,
+        },
     )
     _write_yaml(
         root / ".omo" / "workers" / "runs" / "dispatch-one-dispatch.yaml",
@@ -205,7 +246,9 @@ def test_write_resource_accounting_report_persists_truth_and_summary(tmp_path: P
 
     monkeypatch.setattr(
         "omo.omo_experience.cost_summary_by_org",
-        lambda days=7: [{"org": "starlink-core", "calls": 3, "cost": 1.25, "tokens": 2048}],
+        lambda days=7: [
+            {"org": "starlink-core", "calls": 3, "cost": 1.25, "tokens": 2048}
+        ],
     )
 
     result = write_resource_accounting_report(root, now="2026-05-31T09:45:00Z")
@@ -230,7 +273,10 @@ def test_write_freshness_report_scores_staleness_and_refs(tmp_path: Path):
             "updated_at": "2026-05-31T08:00:00Z",
         },
     )
-    _write_yaml(root / ".omo" / "_truth" / "goals" / "current.yaml", {"phase": 7, "current_wave": 3})
+    _write_yaml(
+        root / ".omo" / "_truth" / "goals" / "current.yaml",
+        {"phase": 7, "current_wave": 3},
+    )
     _write_yaml(
         root / ".omo" / "tasks" / "active" / "wave3.yaml",
         {
@@ -239,7 +285,15 @@ def test_write_freshness_report_scores_staleness_and_refs(tmp_path: Path):
             "status": "pending",
         },
     )
-    _write_text(root / ".omo" / "_knowledge" / "summaries" / "phase7" / "phase7-planning-ratification.md", "# ratified\n")
+    _write_text(
+        root
+        / ".omo"
+        / "_knowledge"
+        / "summaries"
+        / "phase7"
+        / "phase7-planning-ratification.md",
+        "# ratified\n",
+    )
 
     result = write_freshness_report(root, now="2026-05-31T10:00:00Z")
 
@@ -252,7 +306,9 @@ def test_write_freshness_report_scores_staleness_and_refs(tmp_path: Path):
     assert "orphaned_tasks:1" in summary_text
 
 
-def test_cost_summary_by_org_migrates_existing_usage_db_without_org(tmp_path: Path, monkeypatch):
+def test_cost_summary_by_org_migrates_existing_usage_db_without_org(
+    tmp_path: Path, monkeypatch
+):
     usage_db = tmp_path / "usage.db"
     conn = sqlite3.connect(usage_db)
     conn.execute(
@@ -281,7 +337,9 @@ def test_cost_summary_by_org_migrates_existing_usage_db_without_org(tmp_path: Pa
 
     summary = cost_summary_by_org(days=7)
 
-    assert summary == [{"org": "starlink-core", "calls": 1, "cost": 1.25, "tokens": 100}]
+    assert summary == [
+        {"org": "starlink-core", "calls": 1, "cost": 1.25, "tokens": 100}
+    ]
 
 
 def test_control_gate_blocks_when_budget_is_exceeded(tmp_path: Path) -> None:
@@ -289,7 +347,9 @@ def test_control_gate_blocks_when_budget_is_exceeded(tmp_path: Path) -> None:
     _write_yaml(
         root / ".omo" / "_truth" / "task-center" / "usage-accounting.yaml",
         {
-            "cost_by_org": [{"org": "starlink-core", "cost": 5.0, "calls": 10, "tokens": 3000}],
+            "cost_by_org": [
+                {"org": "starlink-core", "cost": 5.0, "calls": 10, "tokens": 3000}
+            ],
             "dispatches": {"total": 2, "workers": {"mockworker": 2}},
         },
     )
@@ -312,7 +372,9 @@ def test_control_gate_degrades_on_warning_freshness(tmp_path: Path) -> None:
     _write_yaml(
         root / ".omo" / "_truth" / "task-center" / "usage-accounting.yaml",
         {
-            "cost_by_org": [{"org": "starlink-core", "cost": 1.0, "calls": 2, "tokens": 512}],
+            "cost_by_org": [
+                {"org": "starlink-core", "cost": 1.0, "calls": 2, "tokens": 512}
+            ],
             "dispatches": {"total": 1, "workers": {"mockworker": 1}},
         },
     )
@@ -324,19 +386,28 @@ def test_control_gate_degrades_on_warning_freshness(tmp_path: Path) -> None:
         },
     )
 
-    decision = evaluate_control_gate(root, budget_limit_usd=2.5, warning_score=80, critical_score=50)
+    decision = evaluate_control_gate(
+        root, budget_limit_usd=2.5, warning_score=80, critical_score=50
+    )
 
     assert decision["decision"] == "degrade"
     assert "freshness_warning" in decision["reasons"]
 
 
-def test_route_request_with_control_gate_writes_decision_and_routes_task(tmp_path: Path) -> None:
+def test_route_request_with_control_gate_writes_decision_and_routes_task(
+    tmp_path: Path,
+) -> None:
     root = tmp_path
-    _write_yaml(root / ".omo" / "_truth" / "goals" / "current.yaml", {"phase": 8, "current_wave": 1})
+    _write_yaml(
+        root / ".omo" / "_truth" / "goals" / "current.yaml",
+        {"phase": 8, "current_wave": 1},
+    )
     _write_yaml(
         root / ".omo" / "_truth" / "task-center" / "usage-accounting.yaml",
         {
-            "cost_by_org": [{"org": "starlink-core", "cost": 0.9, "calls": 1, "tokens": 256}],
+            "cost_by_org": [
+                {"org": "starlink-core", "cost": 0.9, "calls": 1, "tokens": 256}
+            ],
             "dispatches": {"total": 1, "workers": {"mockworker": 1}},
         },
     )
@@ -353,7 +424,9 @@ def test_route_request_with_control_gate_writes_decision_and_routes_task(tmp_pat
         task_id="P8-W1-CONTROLLED-REQUEST",
         title="Control-routed request",
         request_text="Please execute a complex controlled request",
-        source_docs=[".omo/_knowledge/design/plans/archive/phase8-starter-packet-spec.md"],
+        source_docs=[
+            ".omo/_knowledge/design/plans/archive/phase8-starter-packet-spec.md"
+        ],
         budget_limit_usd=2.5,
     )
 

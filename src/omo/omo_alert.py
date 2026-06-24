@@ -10,6 +10,7 @@ Round 4 (P1-2): 接入 AppendOnlyLog (第 4 个 consumer).
   - 读源: KEI_AUDIT (其他模块写) → 用 AppendOnlyLog.since(hour_ago) 替代手写时间过滤
   - 写汇: 新增 ALERT_LOG (自身写) → 每次 alert 触发落盘, 历史可查
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,8 +21,14 @@ from pathlib import Path
 
 from omo.omo_io import AppendOnlyLog
 
-KEI_AUDIT = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime"))) / "data" / "kei_audit.jsonl"
-NOTIFY_SCRIPT = Path.home() / "Workspace" / "projects" / "runtime" / "scripts" / "notify-alerts.sh"
+KEI_AUDIT = (
+    Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime")))
+    / "data"
+    / "kei_audit.jsonl"
+)
+NOTIFY_SCRIPT = (
+    Path.home() / "Workspace" / "projects" / "runtime" / "scripts" / "notify-alerts.sh"
+)
 
 # Round 4: 自身写的 alert 历史 (AppendOnlyLog consumer)
 _WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
@@ -46,12 +53,18 @@ def cmd_alert_check(threshold: int, notify: bool) -> int:
 
     alerts: list[str] = []
     if blocked_rate >= threshold:
-        alerts.append(f"🔴 KEI blocked rate: {blocked_rate}/hour (threshold: {threshold})")
+        alerts.append(
+            f"🔴 KEI blocked rate: {blocked_rate}/hour (threshold: {threshold})"
+        )
     if failed_rate >= threshold:
-        alerts.append(f"🔴 KEI failure rate: {failed_rate}/hour (threshold: {threshold})")
+        alerts.append(
+            f"🔴 KEI failure rate: {failed_rate}/hour (threshold: {threshold})"
+        )
 
     if not alerts:
-        print(f"✅ All KEI metrics normal (blocked: {blocked_rate}/h, failed: {failed_rate}/h)")
+        print(
+            f"✅ All KEI metrics normal (blocked: {blocked_rate}/h, failed: {failed_rate}/h)"
+        )
         if notify:
             print("   (no alert needed)")
         return 0
@@ -123,12 +136,22 @@ echo "[NOTIFY] $TITLE: $BODY"
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="omo alert", description="OMO alert management")
+    parser = argparse.ArgumentParser(
+        prog="omo alert", description="OMO alert management"
+    )
     sub = parser.add_subparsers(dest="command")
 
     ac = sub.add_parser("check", help="Check KEI audit thresholds")
-    ac.add_argument("--threshold", "-t", type=int, default=10, help="Blocked/failed per hour threshold")
-    ac.add_argument("--notify", action="store_true", help="Send notification if threshold exceeded")
+    ac.add_argument(
+        "--threshold",
+        "-t",
+        type=int,
+        default=10,
+        help="Blocked/failed per hour threshold",
+    )
+    ac.add_argument(
+        "--notify", action="store_true", help="Send notification if threshold exceeded"
+    )
 
     ch = sub.add_parser("channel", help="Configure notification channel")
     ch.add_argument("--enable", action="store_true", help="Enable notifications")

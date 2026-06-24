@@ -3,6 +3,7 @@
 验证 benchmark 脚本本身不破, 用 1000 records 跑小规模版, 数字格式正确.
 不是性能测试 (100K records 那个在 bench 脚本本身跑).
 """
+
 from __future__ import annotations
 
 import sys

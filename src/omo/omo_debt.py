@@ -50,6 +50,7 @@ from .omo_debt_lifecycle import (
     classify_review_sections,
 )
 
+
 def _timestamp() -> str:
     return (
         datetime.now(timezone.utc)
@@ -128,7 +129,6 @@ def _write_debt_sidecar(
         },
     }
     _write_yaml(artifact_path, sidecar)
-
 
 
 def write_dashboard(
@@ -338,10 +338,7 @@ def write_dispatch_packet(omo_dir: Path, dispatch_packet: dict[str, object]) -> 
             f"Dispatch timestamp: {payload['dispatched_at']}\n",
             f"Owner count: {payload['summary']['owner_count']}\n",
             f"Total dispatched items: {payload['summary']['total_dispatched_items']}\n",
-            *[
-                _render_dispatch_owner_section(owner)
-                for owner in payload["owners"]
-            ],
+            *[_render_dispatch_owner_section(owner) for owner in payload["owners"]],
         ]
     )
     run_yaml_path = omo_dir.parent / payload["latest_run_ref"]
@@ -849,10 +846,20 @@ def main() -> int:
     register_parser.add_argument("--subdimension", required=True)
     register_parser.add_argument("--severity", required=True)
     register_parser.add_argument("--owner", required=True)
-    register_parser.add_argument("--actor", default="", help="Who performed this action (default: empty)")
-    register_parser.add_argument("--x1-policy-ref", default="", help="X1 governance policy reference ID")
-    register_parser.add_argument("--x2-freshness", default="", help="X2 freshness timestamp (ISO 8601)")
-    register_parser.add_argument("--x3-tier", default="", help="X3 value tier (Axiom/Principle/Theory/Framework/Knowledge/Skill/Tool)")
+    register_parser.add_argument(
+        "--actor", default="", help="Who performed this action (default: empty)"
+    )
+    register_parser.add_argument(
+        "--x1-policy-ref", default="", help="X1 governance policy reference ID"
+    )
+    register_parser.add_argument(
+        "--x2-freshness", default="", help="X2 freshness timestamp (ISO 8601)"
+    )
+    register_parser.add_argument(
+        "--x3-tier",
+        default="",
+        help="X3 value tier (Axiom/Principle/Theory/Framework/Knowledge/Skill/Tool)",
+    )
 
     schedule_parser = subparsers.add_parser("schedule")
     schedule_parser.add_argument("--omo-dir", default=".omo")

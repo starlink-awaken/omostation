@@ -11,35 +11,44 @@ mcp = FastMCP("omo")
 OMO_ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(OMO_ROOT.parents[1])))
 
+
 class BridgeRequest(BaseModel):
     spec_path: str
+
 
 class DispatchRequest(BaseModel):
     task_id: str
     worker_id: str
 
+
 class ReclaimRequest(BaseModel):
     task_id: str
     worker_id: str
+
 
 class YieldRequest(BaseModel):
     task_id: str
     reason: str
 
+
 class DebtListRequest(BaseModel):
     omo_dir: str = ".omo"
     status: Optional[str] = None  # filter: open, closed, or None for all
 
+
 class DebtSummaryRequest(BaseModel):
     omo_dir: str = ".omo"
+
 
 class MetacognitionRequest(BaseModel):
     command: str = "baseline"
     lens: Optional[str] = None  # X1, X2, X3, or None/empty for all
 
+
 class ValidateTaskRequest(BaseModel):
     task_data: dict
     group: Optional[str] = "planned"
+
 
 @mcp.tool()
 async def validate_task(req: ValidateTaskRequest) -> str:
@@ -48,9 +57,12 @@ async def validate_task(req: ValidateTaskRequest) -> str:
         from .omo_task_schema import validate_task_data
 
         errors = validate_task_data(req.task_data, group=req.group)
-        return json.dumps({"valid": len(errors) == 0, "errors": errors}, ensure_ascii=False)
+        return json.dumps(
+            {"valid": len(errors) == 0, "errors": errors}, ensure_ascii=False
+        )
     except Exception as e:
         return json.dumps({"valid": False, "errors": [str(e)]}, ensure_ascii=False)
+
 
 @mcp.tool()
 async def omo_bridge(req: BridgeRequest) -> str:
@@ -58,47 +70,86 @@ async def omo_bridge(req: BridgeRequest) -> str:
     try:
         result = subprocess.run(
             ["python3", "-m", "omo.cli", "bridge", req.spec_path, "--sequential"],
-            capture_output=True, text=True, check=True
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error bridging spec: {e.stderr}"
+
 
 @mcp.tool()
 async def omo_worker_dispatch(req: DispatchRequest) -> str:
     """Dispatch an OMO task to a worker."""
     try:
         result = subprocess.run(
-            ["python3", "-m", "omo.cli", "worker", "dispatch", req.task_id, "--worker", req.worker_id],
-            capture_output=True, text=True, check=True
+            [
+                "python3",
+                "-m",
+                "omo.cli",
+                "worker",
+                "dispatch",
+                req.task_id,
+                "--worker",
+                req.worker_id,
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error dispatching task: {e.stderr}"
+
 
 @mcp.tool()
 async def omo_worker_reclaim(req: ReclaimRequest) -> str:
     """Reclaim a completed or failed OMO task."""
     try:
         result = subprocess.run(
-            ["python3", "-m", "omo.cli", "worker", "reclaim", req.task_id, "--worker", req.worker_id],
-            capture_output=True, text=True, check=True
+            [
+                "python3",
+                "-m",
+                "omo.cli",
+                "worker",
+                "reclaim",
+                req.task_id,
+                "--worker",
+                req.worker_id,
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error reclaiming task: {e.stderr}"
+
 
 @mcp.tool()
 async def omo_yield_task(req: YieldRequest) -> str:
     """[C2G v2] Abort and yield an active OMO task back to the ideation sandbox."""
     try:
         result = subprocess.run(
-            ["python3", "-m", "omo.cli", "worker", "yield", req.task_id, "--reason", req.reason],
-            capture_output=True, text=True, check=True
+            [
+                "python3",
+                "-m",
+                "omo.cli",
+                "worker",
+                "yield",
+                req.task_id,
+                "--reason",
+                req.reason,
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error yielding task: {e.stderr}"
+
 
 @mcp.tool()
 async def omo_gc() -> str:
@@ -106,11 +157,14 @@ async def omo_gc() -> str:
     try:
         result = subprocess.run(
             ["python3", "-m", "omo.cli", "worker", "gc"],
-            capture_output=True, text=True, check=True
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error running GC: {e.stderr}"
+
 
 @mcp.tool()
 async def omo_debt_list(req: DebtListRequest) -> str:
@@ -126,29 +180,42 @@ async def omo_debt_list(req: DebtListRequest) -> str:
 
         items = []
         for item in ledger.items:
-            if req.status and req.status.lower() == "open" and item.lifecycle_state == "closed":
+            if (
+                req.status
+                and req.status.lower() == "open"
+                and item.lifecycle_state == "closed"
+            ):
                 continue
-            if req.status and req.status.lower() == "closed" and item.lifecycle_state != "closed":
+            if (
+                req.status
+                and req.status.lower() == "closed"
+                and item.lifecycle_state != "closed"
+            ):
                 continue
-            items.append({
-                "id": item.id,
-                "title": item.title,
-                "dimension": item.dimension,
-                "subdimension": item.subdimension,
-                "severity": item.severity,
-                "weight": item.weight,
-                "lifecycle_state": item.lifecycle_state,
-                "owner": item.owner,
-                "x1_policy_ref": item.x1_policy_ref or "",
-                "x2_freshness": item.x2_freshness or "",
-                "x3_tier": item.x3_tier or "",
-                "gate_level": item.gate_level,
-                "opened_at": item.opened_at,
-            })
+            items.append(
+                {
+                    "id": item.id,
+                    "title": item.title,
+                    "dimension": item.dimension,
+                    "subdimension": item.subdimension,
+                    "severity": item.severity,
+                    "weight": item.weight,
+                    "lifecycle_state": item.lifecycle_state,
+                    "owner": item.owner,
+                    "x1_policy_ref": item.x1_policy_ref or "",
+                    "x2_freshness": item.x2_freshness or "",
+                    "x3_tier": item.x3_tier or "",
+                    "gate_level": item.gate_level,
+                    "opened_at": item.opened_at,
+                }
+            )
 
-        return json.dumps({"count": len(items), "items": items}, indent=2, ensure_ascii=False)
+        return json.dumps(
+            {"count": len(items), "items": items}, indent=2, ensure_ascii=False
+        )
     except Exception as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
+
 
 @mcp.tool()
 async def omo_debt_summary(req: DebtSummaryRequest) -> str:
@@ -157,39 +224,47 @@ async def omo_debt_summary(req: DebtSummaryRequest) -> str:
         debt_script = OMO_ROOT / "scripts" / "omo_debt.py"
         result = subprocess.run(
             ["python3", str(debt_script), "report", "--omo-dir", req.omo_dir],
-            capture_output=True, text=True, check=True
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error generating debt report: {e.stderr}"
+
 
 @mcp.tool()
 async def omo_metacognition(req: MetacognitionRequest) -> str:
     """Run metacognition with optional lens parameter (X1/X2/X3) for filtered baseline."""
     try:
         cmd = [
-            "python3", "-m", "omo.omo_metacognition",
+            "python3",
+            "-m",
+            "omo.omo_metacognition",
             req.command,
         ]
         if req.lens:
             cmd.extend(["--lens", req.lens])
 
         result = subprocess.run(
-            cmd, capture_output=True, text=True, check=True,
-            cwd=str(OMO_ROOT)
+            cmd, capture_output=True, text=True, check=True, cwd=str(OMO_ROOT)
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error running metacognition: {e.stderr}"
 
+
 # ── CARDS tools ───────────────────────────────────────────
+
 
 class CardsStatusRequest(BaseModel):
     limit: int = 15
 
+
 class CardsSearchRequest(BaseModel):
     query: str
     limit: int = 20
+
 
 class CardsCreateRequest(BaseModel):
     card_type: str  # idea|task|debt|delivery|research
@@ -202,6 +277,7 @@ class CardsCreateRequest(BaseModel):
     deadline: str = ""
     severity: str = ""
     tags: str = ""
+
 
 class CardsUpdateRequest(BaseModel):
     card_id: str
@@ -218,7 +294,10 @@ async def cards_status(req: CardsStatusRequest) -> str:
     try:
         result = subprocess.run(
             ["python3", "-m", "omo.omo_cards", "list", "--limit", str(req.limit)],
-            capture_output=True, text=True, check=True, cwd=str(OMO_ROOT)
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=str(OMO_ROOT),
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
@@ -230,8 +309,19 @@ async def cards_search(req: CardsSearchRequest) -> str:
     """Search cards by keyword in title, summary, content, and tags."""
     try:
         result = subprocess.run(
-            ["python3", "-m", "omo.omo_cards", "search", req.query, "--limit", str(req.limit)],
-            capture_output=True, text=True, check=True, cwd=str(OMO_ROOT)
+            [
+                "python3",
+                "-m",
+                "omo.omo_cards",
+                "search",
+                req.query,
+                "--limit",
+                str(req.limit),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=str(OMO_ROOT),
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
@@ -244,7 +334,9 @@ async def cards_check() -> str:
     try:
         result = subprocess.run(
             ["python3", "-m", "omo.omo_cards", "check"],
-            capture_output=True, text=True, cwd=str(OMO_ROOT)
+            capture_output=True,
+            text=True,
+            cwd=str(OMO_ROOT),
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
@@ -256,10 +348,16 @@ async def cards_create(req: CardsCreateRequest) -> str:
     """Create a new card (idea, task, debt, or delivery)."""
     try:
         cmd = [
-            "python3", "-m", "omo.omo_cards", "create",
-            req.card_type, req.title,
-            "--domain", req.domain,
-            "--priority", req.priority,
+            "python3",
+            "-m",
+            "omo.omo_cards",
+            "create",
+            req.card_type,
+            req.title,
+            "--domain",
+            req.domain,
+            "--priority",
+            req.priority,
         ]
         if req.summary:
             cmd.extend(["--summary", req.summary])
@@ -273,7 +371,9 @@ async def cards_create(req: CardsCreateRequest) -> str:
             cmd.extend(["--severity", req.severity])
         if req.tags:
             cmd.extend(["--tags"] + req.tags.split(","))
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=str(OMO_ROOT))
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=True, cwd=str(OMO_ROOT)
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error: {e.stderr}"
@@ -284,7 +384,10 @@ async def cards_update(req: CardsUpdateRequest) -> str:
     """Update a card's status, summary, content, or priority."""
     try:
         cmd = [
-            "python3", "-m", "omo.omo_cards", "update",
+            "python3",
+            "-m",
+            "omo.omo_cards",
+            "update",
             req.card_id,
         ]
         if req.status:
@@ -297,7 +400,9 @@ async def cards_update(req: CardsUpdateRequest) -> str:
             cmd.extend(["--priority", req.priority])
         if req.note:
             cmd.extend(["--note", req.note])
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=str(OMO_ROOT))
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=True, cwd=str(OMO_ROOT)
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error: {e.stderr}"
@@ -309,12 +414,22 @@ def read_omo_debt() -> str:
     try:
         debt_script = WORKSPACE_ROOT / "projects" / "omo" / "scripts" / "omo_debt.py"
         result = subprocess.run(
-            ["python3", str(debt_script), "report", "--omo-dir", str(WORKSPACE_ROOT / ".omo")],
-            capture_output=True, text=True, check=True, cwd=str(WORKSPACE_ROOT)
+            [
+                "python3",
+                str(debt_script),
+                "report",
+                "--omo-dir",
+                str(WORKSPACE_ROOT / ".omo"),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=str(WORKSPACE_ROOT),
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error generating debt report: {e.stderr}"
+
 
 @mcp.resource("bos://omo/tasks/active")
 def read_omo_active_tasks() -> str:
@@ -322,40 +437,45 @@ def read_omo_active_tasks() -> str:
     try:
         result = subprocess.run(
             ["python3", "-m", "omo.omo_cards", "list", "--limit", "20"],
-            capture_output=True, text=True, check=True, cwd=str(WORKSPACE_ROOT / "projects" / "omo")
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=str(WORKSPACE_ROOT / "projects" / "omo"),
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error fetching active tasks: {e.stderr}"
+
 
 @mcp.resource("bos://omo/standards/{rule}")
 def read_omo_standard(rule: str) -> str:
     """Read static standard rules from .omo/standards/."""
     try:
         import urllib.parse
-        
+
         rule = urllib.parse.unquote(rule)
         # Ensure it has .md extension
-        if not rule.endswith('.md'):
-            rule += '.md'
-            
+        if not rule.endswith(".md"):
+            rule += ".md"
+
         omo_root = WORKSPACE_ROOT / ".omo"
         target_path = (omo_root / "standards" / rule).resolve()
-        
+
         if not str(target_path).startswith(str(omo_root / "standards")):
             return "Error: Path traversal detected."
-            
+
         if not target_path.exists() or not target_path.is_file():
             return f"Error: Standard not found at {rule}"
-            
-        with open(target_path, 'r', encoding='utf-8') as f:
+
+        with open(target_path, "r", encoding="utf-8") as f:
             return f.read()
     except Exception as e:
         return f"Error reading standard: {str(e)}"
 
+
 def main():
     mcp.run()
 
+
 if __name__ == "__main__":
     main()
-

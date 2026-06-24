@@ -17,7 +17,9 @@ def _read_yaml(rel_path: str) -> dict:
 def test_system_space_wave4_rollout_contracts_are_linked() -> None:
     system_space = _read_yaml("spaces/system-space.yaml")
     registry = _read_yaml("spaces/registry.yaml")
-    system_entry = next(space for space in registry["spaces"] if space["id"] == "system-space")
+    system_entry = next(
+        space for space in registry["spaces"] if space["id"] == "system-space"
+    )
 
     assert (ROOT / "spaces/system-space-rollout-policy.yaml").exists()
     assert (ROOT / "runtime/system-runtime-boundary.yaml").exists()
@@ -52,8 +54,16 @@ def test_wave4_live_rollout_path_is_allow_and_acceptance_is_recorded() -> None:
     }
 
     envelope = _read_yaml(".omo/workers/runs/phase9-wave4-rollout-ops-envelope.yaml")
-    acceptance = _read_yaml(".omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml")
+    acceptance = _read_yaml(
+        ".omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml"
+    )
 
-    assert envelope["gates"]["acceptance_ref"] == ".omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml"
+    assert (
+        envelope["gates"]["acceptance_ref"]
+        == ".omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml"
+    )
     assert acceptance["decision"] == "allow"
-    assert acceptance["refs"]["approval_ref"] == ".omo/workers/runs/phase9-wave3-identity-admission-approval.yaml"
+    assert (
+        acceptance["refs"]["approval_ref"]
+        == ".omo/workers/runs/phase9-wave3-identity-admission-approval.yaml"
+    )

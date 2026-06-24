@@ -27,11 +27,14 @@ from omo.omo_worker_status import (  # noqa: E402
 
 def _write_yaml(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
 
 
 def _load_yaml(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
+
 
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
@@ -65,9 +68,7 @@ def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Pat
             "workers": [
                 {
                     "id": "mockworker",
-                    "transports": {
-                        "cli_prompt": {"command": 'mockworker "{prompt}"'}
-                    },
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
                 }
             ]
         },
@@ -83,7 +84,9 @@ def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Pat
         )
 
 
-def test_dispatch_task_launch_handles_quoted_prompt_without_shell_breakage(tmp_path: Path):
+def test_dispatch_task_launch_handles_quoted_prompt_without_shell_breakage(
+    tmp_path: Path,
+):
     root = tmp_path
     omo = root / ".omo"
     captured = root / "captured.txt"
@@ -138,7 +141,9 @@ def test_dispatch_task_launch_handles_quoted_prompt_without_shell_breakage(tmp_p
     assert 'Worker "quoted" task' in captured.read_text(encoding="utf-8")
 
 
-def test_dispatch_prompt_includes_required_deliverables_when_task_declares_them(tmp_path: Path):
+def test_dispatch_prompt_includes_required_deliverables_when_task_declares_them(
+    tmp_path: Path,
+):
     root = tmp_path
     omo = root / ".omo"
 
@@ -171,9 +176,7 @@ def test_dispatch_prompt_includes_required_deliverables_when_task_declares_them(
             "workers": [
                 {
                     "id": "mockworker",
-                    "transports": {
-                        "cli_prompt": {"command": 'mockworker "{prompt}"'}
-                    },
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
                 }
             ]
         },
@@ -188,11 +191,18 @@ def test_dispatch_prompt_includes_required_deliverables_when_task_declares_them(
     )
 
     prompt_text = (root / result["prompt_path"]).read_text(encoding="utf-8")
-    envelope = yaml.safe_load((root / result["envelope_path"]).read_text(encoding="utf-8"))
+    envelope = yaml.safe_load(
+        (root / result["envelope_path"]).read_text(encoding="utf-8")
+    )
 
-    assert "- Required deliverable: `.omo/_knowledge/design/plans/output.md`" in prompt_text
+    assert (
+        "- Required deliverable: `.omo/_knowledge/design/plans/output.md`"
+        in prompt_text
+    )
     assert "Updating only the review note is not sufficient" in prompt_text
-    assert envelope["outputs"]["required_deliverables"] == [".omo/_knowledge/design/plans/output.md"]
+    assert envelope["outputs"]["required_deliverables"] == [
+        ".omo/_knowledge/design/plans/output.md"
+    ]
 
 
 def test_dispatch_task_creates_checkpoint_and_reclaim_artifacts(tmp_path: Path):
@@ -227,9 +237,7 @@ def test_dispatch_task_creates_checkpoint_and_reclaim_artifacts(tmp_path: Path):
             "workers": [
                 {
                     "id": "mockworker",
-                    "transports": {
-                        "cli_prompt": {"command": 'mockworker "{prompt}"'}
-                    },
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
                 }
             ]
         },
@@ -250,7 +258,10 @@ def test_dispatch_task_creates_checkpoint_and_reclaim_artifacts(tmp_path: Path):
     status = collect_worker_status(root)
 
     assert dispatch["execution"]["checkpoint_refs"] == [result["checkpoint_path"]]
-    assert task["handoff_refs"][-2:] == [result["prompt_path"], result["checkpoint_path"]]
+    assert task["handoff_refs"][-2:] == [
+        result["prompt_path"],
+        result["checkpoint_path"],
+    ]
     assert "## Last completed step" in checkpoint_text
     assert "## Reclaim reason" in reclaim_text
     assert status["active_dispatches"] == 1
@@ -280,7 +291,9 @@ def test_sync_state_flags_in_progress_tasks_missing_run_and_review_refs(tmp_path
             "review_ref": None,
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-A"]}]})
+    _write_yaml(
+        omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-A"]}]}
+    )
 
     sync_state(omo)
 
@@ -323,7 +336,10 @@ def test_sync_state_derives_gate_facts_and_promotion_blockers(tmp_path: Path):
             "test_plan": ["sync state"],
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-GATE"]}]})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"goals": [{"id": "G1", "tasks": ["TASK-GATE"]}]},
+    )
     _write_yaml(
         omo / "workers" / "runs" / "dispatch-1-dispatch.yaml",
         {
@@ -383,7 +399,10 @@ def test_sync_state_dispatched_gate_requires_dispatch_id(tmp_path: Path):
             "test_plan": ["sync state"],
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-DISPATCH"]}]})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"goals": [{"id": "G1", "tasks": ["TASK-DISPATCH"]}]},
+    )
 
     state = sync_state(omo)
 
@@ -391,7 +410,9 @@ def test_sync_state_dispatched_gate_requires_dispatch_id(tmp_path: Path):
     assert "dispatched" not in gate["gate_facts"]
 
 
-def test_sync_state_done_task_requires_completion_summary_before_acceptance(tmp_path: Path):
+def test_sync_state_done_task_requires_completion_summary_before_acceptance(
+    tmp_path: Path,
+):
     omo = tmp_path / ".omo"
     _write_yaml(
         omo / "state" / "system.yaml",
@@ -425,7 +446,10 @@ def test_sync_state_done_task_requires_completion_summary_before_acceptance(tmp_
             "test_plan": ["sync state"],
         },
     )
-    _write_yaml(omo / "goals" / "current.yaml", {"goals": [{"id": "G1", "tasks": ["TASK-DONE"]}]})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"goals": [{"id": "G1", "tasks": ["TASK-DONE"]}]},
+    )
     _write_yaml(
         omo / "workers" / "runs" / "dispatch-done-dispatch.yaml",
         {
@@ -434,7 +458,9 @@ def test_sync_state_done_task_requires_completion_summary_before_acceptance(tmp_
             "dispatch_state": "completed",
         },
     )
-    (omo / "workers" / "runs" / "dispatch-done-review.md").parent.mkdir(parents=True, exist_ok=True)
+    (omo / "workers" / "runs" / "dispatch-done-review.md").parent.mkdir(
+        parents=True, exist_ok=True
+    )
     (omo / "workers" / "runs" / "dispatch-done-review.md").write_text(
         "# Review Note\n\ncompleted\n",
         encoding="utf-8",
@@ -461,16 +487,33 @@ def test_sync_state_joins_divergence_snapshot_with_triage_registry(tmp_path: Pat
     )
     _write_yaml(
         omo / "tasks" / "active" / "a.yaml",
-        {"id": "TASK-A", "phase": 6, "status": "in_progress", "run_ref": None, "review_ref": None},
+        {
+            "id": "TASK-A",
+            "phase": 6,
+            "status": "in_progress",
+            "run_ref": None,
+            "review_ref": None,
+        },
     )
     _write_yaml(omo / "tasks" / "blocked" / "b.yaml", {"id": "TASK-B", "phase": 6})
-    _write_yaml(omo / "goals" / "current.yaml", {"phase": 6, "goals": [{"id": "G1", "tasks": ["TASK-A"]}]})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {"phase": 6, "goals": [{"id": "G1", "tasks": ["TASK-A"]}]},
+    )
     _write_yaml(
         omo / "standards" / "divergence-triage.yaml",
         {
             "rules": {
-                "orphaned_tasks": {"severity": "medium", "owner": "truth", "disposition": "must_fix"},
-                "active_task_missing_review_ref": {"severity": "high", "owner": "delivery", "disposition": "must_fix"},
+                "orphaned_tasks": {
+                    "severity": "medium",
+                    "owner": "truth",
+                    "disposition": "must_fix",
+                },
+                "active_task_missing_review_ref": {
+                    "severity": "high",
+                    "owner": "delivery",
+                    "disposition": "must_fix",
+                },
             }
         },
     )
@@ -483,7 +526,9 @@ def test_sync_state_joins_divergence_snapshot_with_triage_registry(tmp_path: Pat
     assert triage["active_task_missing_run_ref:TASK-A"]["disposition"] == "monitor"
 
 
-def test_worker_status_command_prints_checkpoint_summary(tmp_path: Path, monkeypatch, capsys):
+def test_worker_status_command_prints_checkpoint_summary(
+    tmp_path: Path, monkeypatch, capsys
+):
     root = tmp_path
     omo = root / ".omo"
 
@@ -515,9 +560,7 @@ def test_worker_status_command_prints_checkpoint_summary(tmp_path: Path, monkeyp
             "workers": [
                 {
                     "id": "mockworker",
-                    "transports": {
-                        "cli_prompt": {"command": 'mockworker "{prompt}"'}
-                    },
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
                 }
             ]
         },
@@ -563,10 +606,19 @@ def test_update_dispatch_checkpoint_records_step_and_refreshes_lease(tmp_path: P
     )
     _write_yaml(
         omo / "_truth" / "registry" / "workers.yaml",
-        {"workers": [{"id": "mockworker", "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}}}]},
+        {
+            "workers": [
+                {
+                    "id": "mockworker",
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
+                }
+            ]
+        },
     )
 
-    dispatch = dispatch_task(root, "TASK-CHECKPOINT", "mockworker", ["src/app.py"], launch=False)
+    dispatch = dispatch_task(
+        root, "TASK-CHECKPOINT", "mockworker", ["src/app.py"], launch=False
+    )
 
     result = update_dispatch_checkpoint(
         root,
@@ -593,15 +645,30 @@ def test_scan_runtime_watchdog_classifies_warning_stale_and_reclaim_due(tmp_path
     omo = root / ".omo"
     _write_yaml(
         omo / "tasks" / "active" / "a.yaml",
-        {"id": "TASK-A", "title": "A", "status": "in_progress", "run_ref": ".omo/workers/runs/a-dispatch.yaml"},
+        {
+            "id": "TASK-A",
+            "title": "A",
+            "status": "in_progress",
+            "run_ref": ".omo/workers/runs/a-dispatch.yaml",
+        },
     )
     _write_yaml(
         omo / "tasks" / "active" / "b.yaml",
-        {"id": "TASK-B", "title": "B", "status": "in_progress", "run_ref": ".omo/workers/runs/b-dispatch.yaml"},
+        {
+            "id": "TASK-B",
+            "title": "B",
+            "status": "in_progress",
+            "run_ref": ".omo/workers/runs/b-dispatch.yaml",
+        },
     )
     _write_yaml(
         omo / "tasks" / "active" / "c.yaml",
-        {"id": "TASK-C", "title": "C", "status": "in_progress", "run_ref": ".omo/workers/runs/c-dispatch.yaml"},
+        {
+            "id": "TASK-C",
+            "title": "C",
+            "status": "in_progress",
+            "run_ref": ".omo/workers/runs/c-dispatch.yaml",
+        },
     )
     _write_yaml(
         omo / "workers" / "runs" / "a-dispatch.yaml",
@@ -657,7 +724,12 @@ def test_scan_runtime_watchdog_classifies_warning_stale_and_reclaim_due(tmp_path
 
     watchdog = scan_runtime_watchdog(root, now="2026-05-31T08:00:00Z")
 
-    assert watchdog["counts"] == {"healthy": 0, "warning": 1, "stale": 1, "reclaim_due": 1}
+    assert watchdog["counts"] == {
+        "healthy": 0,
+        "warning": 1,
+        "stale": 1,
+        "reclaim_due": 1,
+    }
     assert watchdog["runs"][0]["task_id"] == "TASK-A"
     assert watchdog["runs"][0]["health"] == "warning"
     assert watchdog["runs"][1]["task_id"] == "TASK-B"
@@ -666,12 +738,19 @@ def test_scan_runtime_watchdog_classifies_warning_stale_and_reclaim_due(tmp_path
     assert watchdog["runs"][2]["health"] == "reclaim_due"
 
 
-def test_worker_watchdog_command_prints_runtime_health(tmp_path: Path, monkeypatch, capsys):
+def test_worker_watchdog_command_prints_runtime_health(
+    tmp_path: Path, monkeypatch, capsys
+):
     root = tmp_path
     omo = root / ".omo"
     _write_yaml(
         omo / "tasks" / "active" / "watch.yaml",
-        {"id": "TASK-WATCH", "title": "Watch task", "status": "in_progress", "run_ref": ".omo/workers/runs/watch-dispatch.yaml"},
+        {
+            "id": "TASK-WATCH",
+            "title": "Watch task",
+            "status": "in_progress",
+            "run_ref": ".omo/workers/runs/watch-dispatch.yaml",
+        },
     )
     _write_yaml(
         omo / "workers" / "runs" / "watch-dispatch.yaml",
@@ -692,7 +771,9 @@ def test_worker_watchdog_command_prints_runtime_health(tmp_path: Path, monkeypat
     )
 
     monkeypatch.chdir(root)
-    monkeypatch.setattr(sys, "argv", ["omo", "worker", "watchdog", "--now", "2026-05-31T08:00:00Z"])
+    monkeypatch.setattr(
+        sys, "argv", ["omo", "worker", "watchdog", "--now", "2026-05-31T08:00:00Z"]
+    )
 
     assert omo_worker_main() == 0
     output = capsys.readouterr().out
@@ -724,7 +805,9 @@ def test_worker_admission_eval_command_prints_decision(monkeypatch, capsys):
     assert "decision=conditional_approval" in output
 
 
-def test_worker_admission_request_approval_command_writes_governance_artifacts(tmp_path: Path, monkeypatch, capsys):
+def test_worker_admission_request_approval_command_writes_governance_artifacts(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / "spaces" / "contract.yaml",
         {
@@ -801,11 +884,18 @@ def test_worker_admission_request_approval_command_writes_governance_artifacts(t
     assert "approval_ref=.omo/workers/runs/example-approval.yaml" in output
     assert (tmp_path / ".omo" / "workers" / "runs" / "example-approval.yaml").exists()
     assert (
-        tmp_path / ".omo" / "_truth" / "task-center" / "proposals" / "example-approval-proposal.yaml"
+        tmp_path
+        / ".omo"
+        / "_truth"
+        / "task-center"
+        / "proposals"
+        / "example-approval-proposal.yaml"
     ).exists()
 
 
-def test_worker_rollout_eval_command_prints_allow_for_granted_approval(tmp_path: Path, monkeypatch, capsys):
+def test_worker_rollout_eval_command_prints_allow_for_granted_approval(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / "spaces" / "rollout-policy.yaml",
         {
@@ -835,11 +925,23 @@ def test_worker_rollout_eval_command_prints_allow_for_granted_approval(tmp_path:
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "_delivery" / "task-center" / "proposals" / "example-approval-proposal" / "apply.yaml",
+        tmp_path
+        / ".omo"
+        / "_delivery"
+        / "task-center"
+        / "proposals"
+        / "example-approval-proposal"
+        / "apply.yaml",
         {"status": "applied"},
     )
     _write_yaml(
-        tmp_path / ".omo" / "_delivery" / "task-center" / "proposals" / "example-approval-proposal" / "verify.yaml",
+        tmp_path
+        / ".omo"
+        / "_delivery"
+        / "task-center"
+        / "proposals"
+        / "example-approval-proposal"
+        / "verify.yaml",
         {"status": "verified"},
     )
     _write_yaml(
@@ -888,7 +990,9 @@ def test_worker_rollout_eval_command_prints_allow_for_granted_approval(tmp_path:
     assert "decision=allow" in output
 
 
-def test_worker_rollout_accept_command_writes_acceptance_record(tmp_path: Path, monkeypatch, capsys):
+def test_worker_rollout_accept_command_writes_acceptance_record(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / "spaces" / "rollout-policy.yaml",
         {
@@ -918,11 +1022,23 @@ def test_worker_rollout_accept_command_writes_acceptance_record(tmp_path: Path, 
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "_delivery" / "task-center" / "proposals" / "example-approval-proposal" / "apply.yaml",
+        tmp_path
+        / ".omo"
+        / "_delivery"
+        / "task-center"
+        / "proposals"
+        / "example-approval-proposal"
+        / "apply.yaml",
         {"status": "applied"},
     )
     _write_yaml(
-        tmp_path / ".omo" / "_delivery" / "task-center" / "proposals" / "example-approval-proposal" / "verify.yaml",
+        tmp_path
+        / ".omo"
+        / "_delivery"
+        / "task-center"
+        / "proposals"
+        / "example-approval-proposal"
+        / "verify.yaml",
         {"status": "verified"},
     )
     _write_yaml(
@@ -977,11 +1093,18 @@ def test_worker_rollout_accept_command_writes_acceptance_record(tmp_path: Path, 
 
     assert "acceptance_ref=.omo/workers/runs/example-acceptance.yaml" in output
     assert (tmp_path / ".omo" / "workers" / "runs" / "example-acceptance.yaml").exists()
-    envelope = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "example-envelope.yaml")
-    assert envelope["gates"]["acceptance_ref"] == ".omo/workers/runs/example-acceptance.yaml"
+    envelope = _load_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "example-envelope.yaml"
+    )
+    assert (
+        envelope["gates"]["acceptance_ref"]
+        == ".omo/workers/runs/example-acceptance.yaml"
+    )
 
 
-def test_worker_rules_eval_command_prints_normalized_bundle_refs(tmp_path: Path, monkeypatch, capsys):
+def test_worker_rules_eval_command_prints_normalized_bundle_refs(
+    tmp_path: Path, monkeypatch, capsys
+):
     _write_yaml(
         tmp_path / ".omo" / "_delivery" / "task-center" / "contracts" / "delivery.yaml",
         {
@@ -1004,7 +1127,9 @@ def test_worker_rules_eval_command_prints_normalized_bundle_refs(tmp_path: Path,
                     },
                     "data": {"policy_ref": "data/data-policy.yaml"},
                     "runtime": {"boundary_ref": "runtime/runtime-boundary.yaml"},
-                    "delivery": {"contract_ref": ".omo/_delivery/task-center/contracts/delivery.yaml"},
+                    "delivery": {
+                        "contract_ref": ".omo/_delivery/task-center/contracts/delivery.yaml"
+                    },
                 }
             ]
         },
@@ -1051,7 +1176,9 @@ def test_worker_rules_eval_command_prints_normalized_bundle_refs(tmp_path: Path,
     assert "action=project.dispatch" in output
     assert "registry=spaces/cross-root-rules.yaml" in output
     assert "data_policy=data/data-policy.yaml" in output
-    assert "delivery_contract=.omo/_delivery/task-center/contracts/delivery.yaml" in output
+    assert (
+        "delivery_contract=.omo/_delivery/task-center/contracts/delivery.yaml" in output
+    )
     assert "runtime_boundary=runtime/runtime-boundary.yaml" in output
 
 
@@ -1080,7 +1207,9 @@ def test_worker_rules_eval_command_prints_normalized_bundle_refs_for_wave3_packe
                     },
                     "data": {"policy_ref": "data/data-policy.yaml"},
                     "runtime": {"boundary_ref": "runtime/runtime-boundary.yaml"},
-                    "delivery": {"contract_ref": ".omo/_delivery/task-center/contracts/delivery.yaml"},
+                    "delivery": {
+                        "contract_ref": ".omo/_delivery/task-center/contracts/delivery.yaml"
+                    },
                 }
             ]
         },
@@ -1127,7 +1256,9 @@ def test_worker_rules_eval_command_prints_normalized_bundle_refs_for_wave3_packe
     assert "action=project.dispatch" in output
     assert "registry=spaces/cross-root-rules.yaml" in output
     assert "data_policy=data/data-policy.yaml" in output
-    assert "delivery_contract=.omo/_delivery/task-center/contracts/delivery.yaml" in output
+    assert (
+        "delivery_contract=.omo/_delivery/task-center/contracts/delivery.yaml" in output
+    )
     assert "runtime_boundary=runtime/runtime-boundary.yaml" in output
 
 
@@ -1156,7 +1287,9 @@ def test_worker_rules_eval_command_prints_normalized_bundle_refs_for_cross_space
                     },
                     "data": {"policy_ref": "data/runtime-data-policy.yaml"},
                     "runtime": {"boundary_ref": "runtime/runtime-space-boundary.yaml"},
-                    "delivery": {"contract_ref": ".omo/_delivery/task-center/contracts/delivery.yaml"},
+                    "delivery": {
+                        "contract_ref": ".omo/_delivery/task-center/contracts/delivery.yaml"
+                    },
                 }
             ]
         },
@@ -1203,7 +1336,9 @@ def test_worker_rules_eval_command_prints_normalized_bundle_refs_for_cross_space
     assert "action=runtime.observe" in output
     assert "registry=spaces/cross-root-rules.yaml" in output
     assert "data_policy=data/runtime-data-policy.yaml" in output
-    assert "delivery_contract=.omo/_delivery/task-center/contracts/delivery.yaml" in output
+    assert (
+        "delivery_contract=.omo/_delivery/task-center/contracts/delivery.yaml" in output
+    )
     assert "runtime_boundary=runtime/runtime-space-boundary.yaml" in output
 
 
@@ -1218,7 +1353,10 @@ def test_write_worker_utilization_summary_aggregates_runs(tmp_path: Path):
             "dispatch_state": "completed",
             "launched_at": "2026-05-30T10:00:00Z",
             "handoff": {"output_summary_ref": ".omo/workers/runs/one-review.md"},
-            "reclaim": {"successor_dispatch_id": "two", "successor_worker_id": "worker-b"},
+            "reclaim": {
+                "successor_dispatch_id": "two",
+                "successor_worker_id": "worker-b",
+            },
         },
     )
     _write_yaml(
@@ -1289,21 +1427,19 @@ def test_reclaim_task_reassigns_from_checkpoint_context(tmp_path: Path):
             "workers": [
                 {
                     "id": "worker-a",
-                    "transports": {
-                        "cli_prompt": {"command": 'mockworker "{prompt}"'}
-                    },
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
                 },
                 {
                     "id": "worker-b",
-                    "transports": {
-                        "cli_prompt": {"command": 'mockworker "{prompt}"'}
-                    },
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
                 },
             ]
         },
     )
 
-    first = dispatch_task(root, "TASK-RECLAIM", "worker-a", ["src/app.py"], launch=False)
+    first = dispatch_task(
+        root, "TASK-RECLAIM", "worker-a", ["src/app.py"], launch=False
+    )
     (root / first["checkpoint_path"]).write_text(
         "# Checkpoint Note\n\n## Last completed step\n\nImplemented the parser.\n",
         encoding="utf-8",
@@ -1334,12 +1470,17 @@ def test_reclaim_task_reassigns_from_checkpoint_context(tmp_path: Path):
     assert task["run_ref"] == second["dispatch_path"]
     assert first["checkpoint_path"] in second_prompt
     assert first["reclaim_path"] in second_prompt
-    assert second_envelope["inputs"]["prior_evidence"] == [first["checkpoint_path"], first["reclaim_path"]]
+    assert second_envelope["inputs"]["prior_evidence"] == [
+        first["checkpoint_path"],
+        first["reclaim_path"],
+    ]
     assert "lease expired" in reclaim_note
     assert second_dispatch["task_id"] == "TASK-RECLAIM"
 
 
-def test_write_handoff_index_links_dispatch_checkpoint_reclaim_and_review(tmp_path: Path):
+def test_write_handoff_index_links_dispatch_checkpoint_reclaim_and_review(
+    tmp_path: Path,
+):
     root = tmp_path
     omo = root / ".omo"
     _write_yaml(
@@ -1368,18 +1509,35 @@ def test_write_handoff_index_links_dispatch_checkpoint_reclaim_and_review(tmp_pa
         omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
-                {"id": "worker-a", "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}}},
-                {"id": "worker-b", "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}}},
+                {
+                    "id": "worker-a",
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
+                },
+                {
+                    "id": "worker-b",
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
+                },
             ]
         },
     )
 
-    dispatch = dispatch_task(root, "TASK-RECLAIM", "worker-a", ["src/app.py"], launch=False)
-    reclaim = reclaim_task(root, "TASK-RECLAIM", "worker-b", ["src/app.py"], reason="lease expired", launch=False)
+    dispatch = dispatch_task(
+        root, "TASK-RECLAIM", "worker-a", ["src/app.py"], launch=False
+    )
+    reclaim = reclaim_task(
+        root,
+        "TASK-RECLAIM",
+        "worker-b",
+        ["src/app.py"],
+        reason="lease expired",
+        launch=False,
+    )
 
     task = _load_yaml(omo / "tasks" / "active" / "reclaim.yaml")
     task["review_ref"] = dispatch["review_path"]
-    task["completion_summary"] = "Recovered via reclaim and closed with a successor worker."
+    task["completion_summary"] = (
+        "Recovered via reclaim and closed with a successor worker."
+    )
     _write_yaml(omo / "tasks" / "active" / "reclaim.yaml", task)
 
     index_path = write_handoff_index(root, "TASK-RECLAIM")

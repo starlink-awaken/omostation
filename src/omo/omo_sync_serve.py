@@ -3,6 +3,7 @@
 P47 简化版: internal transport (同进程 importlib).
 P48-W2: stdio subprocess 模式, command 走 'python -m omo.omo_sync serve'.
 """
+
 from __future__ import annotations
 
 from typing import Any

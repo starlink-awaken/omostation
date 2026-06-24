@@ -4,11 +4,13 @@ Phase A.1 demo: 验证 agora.bus facade 能被 omo 项目用 (跨仓 import).
 
 依赖: omo/pyproject.toml 加了 agora workspace dep (one-way).
 """
+
 from __future__ import annotations
 
 import uuid
 
 from bus_foundation.facade import event as bus_event  # X1 规范迁移
+
 
 def emit_demo_event(task_id: str, dispatch_id: str | None = None) -> str:
     """Emit a single omo:dispatched event via bus facade."""
@@ -17,14 +19,14 @@ def emit_demo_event(task_id: str, dispatch_id: str | None = None) -> str:
         "task_id": task_id,
         "dispatch_id": dispatch_id or f"dispatch-{uuid.uuid4().hex[:8]}",
     }
-    
-    # Facade returns None, so we return a dummy ID or trace_id 
+
+    # Facade returns None, so we return a dummy ID or trace_id
     # to keep the return type as str for this demo
     bus_event.publish(
         topic="omo:dispatched",
         payload=payload,
         source_uri="bos://governance/omo_worker_dispatch",
-        trace_id=trace_id
+        trace_id=trace_id,
     )
     return trace_id
 

@@ -3,7 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from .omo_shared import load_yaml as shared_load_yaml, load_yaml_required as shared_load_yaml_required
+from .omo_shared import (
+    load_yaml as shared_load_yaml,
+    load_yaml_required as shared_load_yaml_required,
+)
 
 _PREP_STATES = {"planned_approval_prep_needed", "planned_approval_prep_pending"}
 _PREP_RESULTS = {"approval_requested", "approval_prep_needed", "approval_prep_pending"}

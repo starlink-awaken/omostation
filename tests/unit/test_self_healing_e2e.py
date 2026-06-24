@@ -25,7 +25,9 @@ def engine_with_tmp(tmp_path, monkeypatch):
     (tmp_path / ".omo" / "debt" / "registry.yaml").write_text("seed_items: []\n")
     monkeypatch.setattr(sh, "OMO_ROOT", tmp_path)
     monkeypatch.setattr(sh, "DEBT_ITEMS_DIR", tmp_path / ".omo" / "debt" / "items")
-    monkeypatch.setattr(sh, "DEBT_REGISTRY", tmp_path / ".omo" / "debt" / "registry.yaml")
+    monkeypatch.setattr(
+        sh, "DEBT_REGISTRY", tmp_path / ".omo" / "debt" / "registry.yaml"
+    )
     engine = SelfHealingEngine(window_seconds=60)
     return engine, tmp_path
 
@@ -43,7 +45,9 @@ class TestE2ESelfHealing:
         async def run():
             actions = []
             for i in range(3):
-                result = await engine.on_event({"type": "SYSTEM_ERROR", "source": "e2e", "msg": f"err{i}"})
+                result = await engine.on_event(
+                    {"type": "SYSTEM_ERROR", "source": "e2e", "msg": f"err{i}"}
+                )
                 if result:
                     actions.extend(result)
             return actions
@@ -116,19 +120,23 @@ class TestTrendAnalysis:
     def test_is_escalating_true(self):
         tracker = TrendTracker(max_snapshots=10)
         for i in range(5):
-            tracker.record(EventTrend(
-                events_by_type={"ERROR": i * 2, "INFO": i},
-                total_events=i * 3,
-            ))
+            tracker.record(
+                EventTrend(
+                    events_by_type={"ERROR": i * 2, "INFO": i},
+                    total_events=i * 3,
+                )
+            )
         assert tracker.is_escalating("ERROR") is True
 
     def test_is_escalating_false_stable(self):
         tracker = TrendTracker(max_snapshots=10)
         for _ in range(5):
-            tracker.record(EventTrend(
-                events_by_type={"ERROR": 3},
-                total_events=5,
-            ))
+            tracker.record(
+                EventTrend(
+                    events_by_type={"ERROR": 3},
+                    total_events=5,
+                )
+            )
         assert tracker.is_escalating("ERROR") is False
 
     def test_is_escalating_insufficient_data(self):
@@ -199,14 +207,18 @@ class TestConfigPersistence:
 class TestEngineState:
     def test_fix_history_tracks(self):
         engine = SelfHealingEngine()
-        engine._fix_history.append({"rule": "test", "fix_name": "disk_check", "success": True, "output": "ok"})
+        engine._fix_history.append(
+            {"rule": "test", "fix_name": "disk_check", "success": True, "output": "ok"}
+        )
         status = engine.get_status()
         assert status["fixes_executed"] == 1
         assert len(status["recent_fixes"]) == 1
 
     def test_trigger_count_accumulates(self, monkeypatch):
         monkeypatch.setattr(sh, "OMO_ROOT", Path(tempfile.mkdtemp()))
-        rules = [HealingRule(name="test", threshold=1, cooldown_seconds=0, action="debt")]
+        rules = [
+            HealingRule(name="test", threshold=1, cooldown_seconds=0, action="debt")
+        ]
         engine = SelfHealingEngine(rules=rules)
 
         async def run():

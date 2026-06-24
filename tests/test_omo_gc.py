@@ -9,24 +9,32 @@ import yaml
 from omo.omo_gc import archive_resolved_debt_items
 
 
-def test_archive_resolved_debt_items_moves_only_old_resolved_entries(tmp_path: Path) -> None:
+def test_archive_resolved_debt_items_moves_only_old_resolved_entries(
+    tmp_path: Path,
+) -> None:
     omo_dir = tmp_path / ".omo"
     debt_dir = omo_dir / "debt" / "items"
     debt_dir.mkdir(parents=True, exist_ok=True)
 
     old_resolved = debt_dir / "DEBT-OLD.yaml"
     old_resolved.write_text(
-        yaml.safe_dump({"id": "DEBT-OLD", "resolved": True}, sort_keys=False, allow_unicode=True),
+        yaml.safe_dump(
+            {"id": "DEBT-OLD", "resolved": True}, sort_keys=False, allow_unicode=True
+        ),
         encoding="utf-8",
     )
     fresh_resolved = debt_dir / "DEBT-FRESH.yaml"
     fresh_resolved.write_text(
-        yaml.safe_dump({"id": "DEBT-FRESH", "resolved": True}, sort_keys=False, allow_unicode=True),
+        yaml.safe_dump(
+            {"id": "DEBT-FRESH", "resolved": True}, sort_keys=False, allow_unicode=True
+        ),
         encoding="utf-8",
     )
     old_open = debt_dir / "DEBT-OPEN.yaml"
     old_open.write_text(
-        yaml.safe_dump({"id": "DEBT-OPEN", "resolved": False}, sort_keys=False, allow_unicode=True),
+        yaml.safe_dump(
+            {"id": "DEBT-OPEN", "resolved": False}, sort_keys=False, allow_unicode=True
+        ),
         encoding="utf-8",
     )
 

@@ -9,7 +9,12 @@ from omo.omo_doc_lint import run_doc_lint, update_doc_lint_index, write_doc_lint
 def test_doc_lint_persistence_helpers(tmp_path: Path) -> None:
     findings = {
         "generated_at": "2026-06-20T00:00:00Z",
-        "key_docs": {"expected": 6, "present": ["docs/PANORAMA.md"], "missing": [], "drift": False},
+        "key_docs": {
+            "expected": 6,
+            "present": ["docs/PANORAMA.md"],
+            "missing": [],
+            "drift": False,
+        },
         "phase_doc_consistency": [{"phase": "P4", "drift": False}],
         "dead_links": [],
         "term_consistency_issues": [],
@@ -39,7 +44,9 @@ def test_run_doc_lint_executes_full_check(tmp_path: Path) -> None:
         (docs / name).write_text("> Status: passed\n", encoding="utf-8")
     planned = tmp_path / ".omo" / "tasks" / "planned"
     planned.mkdir(parents=True)
-    (planned / "OPC-P4-MODEL-COMPUTE.yaml").write_text("gate: Gate E\ngate_status: passed\n", encoding="utf-8")
+    (planned / "OPC-P4-MODEL-COMPUTE.yaml").write_text(
+        "gate: Gate E\ngate_status: passed\n", encoding="utf-8"
+    )
     findings, json_path, md_path = run_doc_lint(
         tmp_path,
         key_docs=[
@@ -50,7 +57,9 @@ def test_run_doc_lint_executes_full_check(tmp_path: Path) -> None:
             "docs/OPC-MASTER-EXECUTION-PLAYBOOK.md",
             "docs/OPC-GOVERNANCE-CARRIERS-INDEX.md",
         ],
-        phase_plan_docs=[("P4", "OPC-P4-MODEL-COMPUTE", "docs/OPC-PHASE4-MODEL-COMPUTE.md")],
+        phase_plan_docs=[
+            ("P4", "OPC-P4-MODEL-COMPUTE", "docs/OPC-PHASE4-MODEL-COMPUTE.md")
+        ],
         generated_at="2026-06-21T00:00:00Z",
         today="2026-06-21",
     )
@@ -91,7 +100,9 @@ def test_run_doc_lint_accepts_multi_document_phase_plan_yaml(tmp_path: Path) -> 
             "docs/OPC-MASTER-EXECUTION-PLAYBOOK.md",
             "docs/OPC-GOVERNANCE-CARRIERS-INDEX.md",
         ],
-        phase_plan_docs=[("P4", "OPC-P4-MODEL-COMPUTE", "docs/OPC-PHASE4-MODEL-COMPUTE.md")],
+        phase_plan_docs=[
+            ("P4", "OPC-P4-MODEL-COMPUTE", "docs/OPC-PHASE4-MODEL-COMPUTE.md")
+        ],
         generated_at="2026-06-21T01:00:00Z",
         today="2026-06-21",
     )

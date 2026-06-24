@@ -7,6 +7,7 @@ Covers:
 - record 字段形状固化 (不再 f-string 拍扁)
 - 显式 log_path 参数支持测试覆盖
 """
+
 from __future__ import annotations
 
 import sys
@@ -31,10 +32,15 @@ def test_omo_sync_writes_structured_record(tmp_path):
     assert "health_score" in result
 
     # 验证: log 文件被创建, record 结构化
-    records = [line for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    records = [
+        line
+        for line in log_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     assert len(records) == 1, f"expected 1 record, got {len(records)}"
 
     import json
+
     rec = json.loads(records[0])
     # Round 3 锁: 字段固化, 不再 f-string 拍扁
     assert rec["kind"] == "omo_sync"
@@ -72,7 +78,14 @@ def test_omo_sync_returns_summary_dict(tmp_path):
     """返回 dict 形状固化 (cli 调用方依赖)."""
     log_path = tmp_path / "omo-sync.jsonl"
     result = run_sync({"dry_run": False, "log_path": log_path})
-    expected_keys = {"status", "phase", "health_score", "synced_at", "audit_checks", "dry_run"}
+    expected_keys = {
+        "status",
+        "phase",
+        "health_score",
+        "synced_at",
+        "audit_checks",
+        "dry_run",
+    }
     assert expected_keys <= set(result.keys())
 
 
@@ -104,6 +117,7 @@ def test_omo_sync_accepts_multi_document_state_yaml(tmp_path, monkeypatch):
 def test_omo_sync_default_log_path_in_omo_knowledge():
     """默认 log path 应在 .omo/_knowledge/ (与 bos-metrics.jsonl 一致)."""
     from omo.omo_sync import DEFAULT_SYNC_LOG_PATH
+
     assert ".omo" in str(DEFAULT_SYNC_LOG_PATH)
     assert "knowledge" in str(DEFAULT_SYNC_LOG_PATH)
 
@@ -121,6 +135,8 @@ def test_omo_sync_no_details_string_smell():
     assert "details" not in rec, "Round 3 锁: record 不应有 details 字段 (结构化取代)"
     # 也不应有 f-string 痕迹
     raw_line = tmp.read_text(encoding="utf-8").strip()
-    assert "phase=" not in raw_line, "Round 3 锁: record 不应含 f-string 拍扁 (e.g. 'phase=28')"
+    assert "phase=" not in raw_line, (
+        "Round 3 锁: record 不应含 f-string 拍扁 (e.g. 'phase=28')"
+    )
     assert "health_score=" not in raw_line
     tmp.unlink()

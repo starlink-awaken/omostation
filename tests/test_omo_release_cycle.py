@@ -43,7 +43,10 @@ def test_release_cycle_persistence_helpers(tmp_path: Path) -> None:
     assert cycle_json_path.exists()
     assert retro_path.exists()
     assert index["summary"]["release_count"] == 1
-    assert json.loads(cycle_json_path.read_text(encoding="utf-8"))["version"] == cycle["version"]
+    assert (
+        json.loads(cycle_json_path.read_text(encoding="utf-8"))["version"]
+        == cycle["version"]
+    )
 
 
 def test_run_release_cycle_uses_injected_collectors(tmp_path: Path) -> None:
@@ -73,13 +76,11 @@ def test_gather_debt_accepts_multi_document_yaml(tmp_path: Path) -> None:
     debt_dir = tmp_path / ".omo" / "debt" / "items"
     debt_dir.mkdir(parents=True, exist_ok=True)
     (debt_dir / "debt-a.yaml").write_text(
-        "---\nstatus: active\nowner: governance\n---\n---\n"
-        "status: open\n",
+        "---\nstatus: active\nowner: governance\n---\n---\nstatus: open\n",
         encoding="utf-8",
     )
     (debt_dir / "debt-b.yaml").write_text(
-        "---\nstatus: active\nowner: governance\n---\n---\n"
-        "status: resolved\n",
+        "---\nstatus: active\nowner: governance\n---\n---\nstatus: resolved\n",
         encoding="utf-8",
     )
 

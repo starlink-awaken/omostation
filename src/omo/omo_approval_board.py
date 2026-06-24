@@ -48,7 +48,12 @@ def _load_tasks(workspace_root: Path) -> list[dict[str, Any]]:
 
 def _load_approval_queue_index(workspace_root: Path) -> dict[str, dict[str, Any]]:
     queue_path = (
-        workspace_root / ".omo" / "workers" / "promotion" / "approval-queue" / "current.yaml"
+        workspace_root
+        / ".omo"
+        / "workers"
+        / "promotion"
+        / "approval-queue"
+        / "current.yaml"
     )
     if not queue_path.exists():
         return {}
@@ -69,7 +74,9 @@ def _load_approval_queue_index(workspace_root: Path) -> dict[str, dict[str, Any]
     return index
 
 
-def _board_task_entry(base: dict[str, Any], queue_entry: dict[str, Any] | None) -> dict[str, Any]:
+def _board_task_entry(
+    base: dict[str, Any], queue_entry: dict[str, Any] | None
+) -> dict[str, Any]:
     queue_entry = queue_entry or {}
     blockers = queue_entry.get("blockers")
     if not isinstance(blockers, list):
@@ -78,7 +85,9 @@ def _board_task_entry(base: dict[str, Any], queue_entry: dict[str, Any] | None) 
     if base.get("task_root") == "remediation":
         return {
             **base,
-            "approval_status": queue_entry.get("approval_status") or base.get("approval_state") or "granted",
+            "approval_status": queue_entry.get("approval_status")
+            or base.get("approval_state")
+            or "granted",
             "proposal_status": queue_entry.get("proposal_status"),
             "eligible": False,
             "blockers": blockers,
@@ -97,7 +106,9 @@ def _board_task_entry(base: dict[str, Any], queue_entry: dict[str, Any] | None) 
 
 def _queue_summary(tasks: list[dict[str, Any]]) -> dict[str, int]:
     return {
-        "awaiting_human_count": sum(1 for item in tasks if item.get("approval_state") == "awaiting_human"),
+        "awaiting_human_count": sum(
+            1 for item in tasks if item.get("approval_state") == "awaiting_human"
+        ),
         "approval_pending_count": sum(
             1
             for item in tasks
@@ -111,10 +122,18 @@ def _queue_summary(tasks: list[dict[str, Any]]) -> dict[str, int]:
             and item.get("approval_status") == "granted"
             and not item.get("eligible")
         ),
-        "approval_ready_count": sum(1 for item in tasks if item.get("next_action") == "promote_apply"),
-        "task_policy_blocked_count": sum(1 for item in tasks if "task_policy_blocked" in item.get("blockers", [])),
-        "phase_blocked_count": sum(1 for item in tasks if "phase_mismatch" in item.get("blockers", [])),
-        "remediation_count": sum(1 for item in tasks if item.get("task_root") == "remediation"),
+        "approval_ready_count": sum(
+            1 for item in tasks if item.get("next_action") == "promote_apply"
+        ),
+        "task_policy_blocked_count": sum(
+            1 for item in tasks if "task_policy_blocked" in item.get("blockers", [])
+        ),
+        "phase_blocked_count": sum(
+            1 for item in tasks if "phase_mismatch" in item.get("blockers", [])
+        ),
+        "remediation_count": sum(
+            1 for item in tasks if item.get("task_root") == "remediation"
+        ),
         "review_lane_count": sum(1 for item in tasks if item.get("status") == "review"),
     }
 
@@ -169,9 +188,7 @@ def build_approval_board(workspace_root: Path) -> dict[str, Any]:
 def write_approval_board(
     workspace_root: Path, board: dict[str, Any]
 ) -> tuple[Path, Path]:
-    out_dir = (
-        workspace_root / ".omo" / "_control" / "evolution" / "approval-board"
-    )
+    out_dir = workspace_root / ".omo" / "_control" / "evolution" / "approval-board"
     json_path = out_dir / "current.json"
     md_path = out_dir / "current.md"
     write_text_atomic(json_path, json.dumps(board, ensure_ascii=False, indent=2) + "\n")
@@ -201,7 +218,11 @@ def write_approval_board(
     for item in board["tasks"]:
         approval_label = item.get("approval_status") or item.get("approval_state")
         blockers = ", ".join(item.get("blockers", [])) or "-"
-        queue_status = "ready" if item.get("next_action") == "promote_apply" else ("blocked" if blockers != "-" else "pending")
+        queue_status = (
+            "ready"
+            if item.get("next_action") == "promote_apply"
+            else ("blocked" if blockers != "-" else "pending")
+        )
         lines.append(
             f"| {item['task_id']} | {item.get('task_root') or '-'} | {item['status']} | {approval_label} | {queue_status} | {blockers} | {item.get('next_action') or '-'} | {item.get('latest_week') or '-'} | `{item['task_ref']}` |"
         )

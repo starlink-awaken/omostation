@@ -14,6 +14,7 @@
 GAP URI 行为 (P43-W1 修正): omo invoke 层 status=resolved, agora 内部 result.status=error (unknown_bos_uri)
 不依赖 LLM, 不需要 ANTHROPIC_API_KEY, 只测跨进程派发闭环.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -43,8 +44,18 @@ def _load_registry() -> list[dict]:
 def _default_args_for(uri: str) -> dict:
     """给 URI 一个合理的默认 args."""
     action = uri.split("/")[-1]
-    if action in ("search", "query", "recall", "scan", "lint", "discover",
-                  "list-tools", "agent-list", "schema", "ingest"):
+    if action in (
+        "search",
+        "query",
+        "recall",
+        "scan",
+        "lint",
+        "discover",
+        "list-tools",
+        "agent-list",
+        "schema",
+        "ingest",
+    ):
         return {"query": "smoke test"}
     return {"topic": "smoke test"}
 
@@ -58,7 +69,9 @@ def test_40_uri_registry_loads():
     domains = Counter(r.get("domain") for r in regs)
     # Verify domain structure exists (counts may grow)
     expected_domains = {"memory", "governance", "analysis", "persona", "capability"}
-    assert set(domains.keys()) == expected_domains, f"Domain set drift: {set(domains.keys())}"
+    assert set(domains.keys()) == expected_domains, (
+        f"Domain set drift: {set(domains.keys())}"
+    )
 
 
 @pytest.mark.bos_40
@@ -80,7 +93,9 @@ def test_smoke_25_resolved_15_gap_single_loop():
             # GAP URI: omo invoke 层 status=resolved, agora 内部 result.status=error + unknown_bos_uri
             if out.get("status") == "resolved":
                 result = out.get("result", {})
-                if result.get("status") == "error" and "unknown_bos_uri" in result.get("error", ""):
+                if result.get("status") == "error" and "unknown_bos_uri" in result.get(
+                    "error", ""
+                ):
                     results.append((uri, "gap"))
                     continue
                 results.append((uri, "resolved"))
@@ -117,6 +132,7 @@ def test_smoke_25_resolved_15_gap_single_loop():
 def test_5_domain_each_resolves_at_least_one():
     """P43-W1 验证: 5 Domain 全部有 URI, 每个域至少有 1 个 resolved (POC_SERVICES 覆盖)."""
     import omo.omo_llm_bos_bridge as bridge
+
     bridge._MANAGER = None  # reset singleton (跨 asyncio.run 边界)
 
     async def _check():
@@ -129,7 +145,10 @@ def test_5_domain_each_resolves_at_least_one():
             if out.get("status") == "resolved":
                 result = out.get("result", {})
                 # 排除 GAP URI (status=error + unknown_bos_uri)
-                if not (result.get("status") == "error" and "unknown_bos_uri" in result.get("error", "")):
+                if not (
+                    result.get("status") == "error"
+                    and "unknown_bos_uri" in result.get("error", "")
+                ):
                     dom = uri.replace("bos://", "").split("/")[0]
                     resolved_domains.add(dom)
         return resolved_domains

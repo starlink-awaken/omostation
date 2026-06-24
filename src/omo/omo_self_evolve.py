@@ -38,15 +38,21 @@ def write_planned_self_evolution_tasks(
             "handoff_refs": [],
             "entry_gate": ["P6 drift review accepted"],
             "evidence_required": ["human approval granted before promotion"],
-            "test_plan": ["python3 scripts/omo/omo_worker.py task promotion-readiness --omo-dir .omo"],
+            "test_plan": [
+                "python3 scripts/omo/omo_worker.py task promotion-readiness --omo-dir .omo"
+            ],
             "allowed_operation_level": "L1",
-            "human_approval_required": bool(task.get("human_approval_required", task["approval_required"])),
+            "human_approval_required": bool(
+                task.get("human_approval_required", task["approval_required"])
+            ),
             "approval_required": bool(task["approval_required"]),
             "approval_state": task.get("approval_state", "awaiting_human"),
             "created_at": generated_at,
             "source": task["source"],
             "drift_ref": task["drift_ref"],
-            "loop_history_ref": task.get("loop_history_ref", ".omo/_control/evolution/loop/history.json"),
+            "loop_history_ref": task.get(
+                "loop_history_ref", ".omo/_control/evolution/loop/history.json"
+            ),
             "review_lane": "opc-p6-self-evolution-board",
             "prerequisite_for": "OPC-P6",
             "red_lines": [

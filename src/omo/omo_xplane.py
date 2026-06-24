@@ -14,6 +14,7 @@
 对应设计: .omo/_knowledge/management/x-plane-architecture-design-v1.md §4-§7
 注册表:   protocols/x-axis-registry.yaml
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,10 +33,10 @@ except ImportError:  # pragma: no cover
     yaml = None
 
 # ── status 常量 ──
-GREEN = "GREEN"      # 活且新鲜
-YELLOW = "YELLOW"    # 活但接近 SLA 边界
-RED = "RED"          # 探活失败/报错(机制坏了)
-DEAD = "DEAD"        # 声明存在但无活动证据(声明/现实分裂)
+GREEN = "GREEN"  # 活且新鲜
+YELLOW = "YELLOW"  # 活但接近 SLA 边界
+RED = "RED"  # 探活失败/报错(机制坏了)
+DEAD = "DEAD"  # 声明存在但无活动证据(声明/现实分裂)
 PENDING = "PENDING"  # runner 待实现,未探活(不计入存活率分母)
 
 _ICON = {GREEN: "✅", YELLOW: "🟡", RED: "❌", DEAD: "💀", PENDING: "⏳"}
@@ -120,7 +121,9 @@ def _probe_jsonl_freshness(m: dict) -> ProbeResult:
         return ProbeResult(**base, status=DEAD, detail="尾行无可解析时间戳")
     age_h = (datetime.now(timezone.utc) - ts).total_seconds() / 3600
     max_h = float(sla.get("max_silence_h", 24))
-    detail = f"age={age_h:.1f}h / sla={max_h:.0f}h · last={ts.isoformat(timespec='seconds')}"
+    detail = (
+        f"age={age_h:.1f}h / sla={max_h:.0f}h · last={ts.isoformat(timespec='seconds')}"
+    )
     if age_h < max_h * 0.8:
         return ProbeResult(**base, status=GREEN, detail=detail)
     if age_h < max_h:
@@ -146,8 +149,11 @@ def _probe_command(m: dict, root: Path) -> ProbeResult:
         return ProbeResult(**base, status=RED, detail=f"cwd 不存在: {cwd}")
     try:
         r = subprocess.run(
-            shlex.split(probe.get("run", "")), capture_output=True, text=True,
-            timeout=float(probe.get("timeout_s", 30)), cwd=str(cwd),
+            shlex.split(probe.get("run", "")),
+            capture_output=True,
+            text=True,
+            timeout=float(probe.get("timeout_s", 30)),
+            cwd=str(cwd),
         )
     except subprocess.TimeoutExpired:
         return ProbeResult(**base, status=RED, detail="探活超时")
@@ -156,7 +162,11 @@ def _probe_command(m: dict, root: Path) -> ProbeResult:
     if r.returncode == probe.get("expect_exit", 0):
         return ProbeResult(**base, status=GREEN, detail=f"exit={r.returncode}")
     err = (r.stderr or r.stdout or "").strip().splitlines()
-    return ProbeResult(**base, status=RED, detail=f"exit={r.returncode} · {err[-1][:80] if err else ''}")
+    return ProbeResult(
+        **base,
+        status=RED,
+        detail=f"exit={r.returncode} · {err[-1][:80] if err else ''}",
+    )
 
 
 def _probe_http(m: dict) -> ProbeResult:
@@ -168,15 +178,18 @@ def _probe_http(m: dict) -> ProbeResult:
     import urllib.request
     import urllib.error
     import re
+
     probe = m["probe"]
     base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
     if m.get("runner") != "ready":
         return ProbeResult(**base, status=PENDING, detail="runner 待实现 (档位②)")
     url = probe["url"]
+
     # 解析 ${VAR:-default} 模式(os.path.expandvars 不支持)
     def _resolve(matched: re.Match) -> str:
         var, default = matched.group(1), matched.group(2)
         return os.environ.get(var, default or "")
+
     url = re.sub(r"\$\{([A-Z_][A-Z0-9_]*):-([^}]*)\}", _resolve, url)
     try:
         req = urllib.request.Request(url, method="GET")
@@ -184,7 +197,11 @@ def _probe_http(m: dict) -> ProbeResult:
             code = r.getcode()
         if code == probe.get("expect_status", 200):
             return ProbeResult(**base, status=GREEN, detail=f"HTTP {code} · {url}")
-        return ProbeResult(**base, status=RED, detail=f"HTTP {code} (期望 {probe.get('expect_status', 200)}) · {url}")
+        return ProbeResult(
+            **base,
+            status=RED,
+            detail=f"HTTP {code} (期望 {probe.get('expect_status', 200)}) · {url}",
+        )
     except urllib.error.URLError as e:
         return ProbeResult(**base, status=RED, detail=f"端点不可达: {e.reason} · {url}")
     except Exception as e:  # noqa: BLE001
@@ -228,7 +245,10 @@ def _aggregate(results: list[ProbeResult]) -> dict:
     for axis, items in axes.items():
         probed = [r for r in items if r.status != PENDING]
         if probed:
-            pts = sum(1.0 if r.status == GREEN else 0.5 if r.status == YELLOW else 0.0 for r in probed)
+            pts = sum(
+                1.0 if r.status == GREEN else 0.5 if r.status == YELLOW else 0.0
+                for r in probed
+            )
             survival[axis] = round(pts / len(probed) * 100, 1)
         else:
             survival[axis] = None
@@ -258,7 +278,11 @@ def compute_xplane_score(quick: bool = True) -> dict:
         return {"xplane_score": 0.0, "xplane_factor": 1.0, "error": "pyyaml missing"}
     reg = _find_registry()
     if reg is None:
-        return {"xplane_score": 0.0, "xplane_factor": 1.0, "error": "registry not found"}
+        return {
+            "xplane_score": 0.0,
+            "xplane_factor": 1.0,
+            "error": "registry not found",
+        }
     from .omo_shared import load_yaml
 
     data = load_yaml(reg)
@@ -273,7 +297,11 @@ def compute_xplane_score(quick: bool = True) -> dict:
 
 
 def _render(results: list[ProbeResult], agg: dict) -> str:
-    out = ["═" * 66, f"  X-Plane 探活报告  ·  {datetime.now(timezone.utc).isoformat(timespec='seconds')}", "═" * 66]
+    out = [
+        "═" * 66,
+        f"  X-Plane 探活报告  ·  {datetime.now(timezone.utc).isoformat(timespec='seconds')}",
+        "═" * 66,
+    ]
     for axis in sorted({r.axis for r in results}):
         items = [r for r in results if r.axis == axis]
         surv = agg["survival"].get(axis)
@@ -298,7 +326,9 @@ def _render(results: list[ProbeResult], agg: dict) -> str:
 
 def cmd_check(args: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="omo x-axis check")
-    ap.add_argument("--quick", action="store_true", help="只跑 jsonl_freshness (只读,秒级)")
+    ap.add_argument(
+        "--quick", action="store_true", help="只跑 jsonl_freshness (只读,秒级)"
+    )
     ap.add_argument("--json", action="store_true", help="输出 JSON")
     ns = ap.parse_args(args)
 

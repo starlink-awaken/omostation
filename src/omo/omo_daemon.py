@@ -11,6 +11,7 @@
 
 迁移自: kairon_governance.daemon (P30-W1 GOV-MERGE 落地)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -236,6 +237,7 @@ def run_daemon(
 
     # R3 闭环: 注册 mesh event handlers
     from omo.omo_mesh_event_handler import register_mesh_event_handlers
+
     register_mesh_event_handlers()
 
     stop_event = threading.Event()
@@ -306,7 +308,9 @@ def main(argv: list[str] | None = None) -> int:
 
     p_start = sub.add_parser("start", help="启动 daemon (阻塞)")
     p_start.add_argument(
-        "--interval", type=int, default=DEFAULT_INTERVAL_SECONDS,
+        "--interval",
+        type=int,
+        default=DEFAULT_INTERVAL_SECONDS,
         help=f"tick 间隔秒数 (默认 {DEFAULT_INTERVAL_SECONDS})",
     )
 

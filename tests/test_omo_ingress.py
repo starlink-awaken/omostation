@@ -50,7 +50,11 @@ def _load_yaml(path: Path) -> dict:
 
 
 def _load_jsonl(path: Path) -> list[dict]:
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def test_create_goal_writes_current_goal_and_delivery_artifact(tmp_path: Path) -> None:
@@ -149,7 +153,9 @@ def test_create_planned_task_validates_and_writes_artifacts(tmp_path: Path) -> N
     mutation = _load_jsonl(mutation_log)[0]
     assert mutation["action"] == "create_planned_task"
     assert mutation["target"] == ".omo/tasks/planned/IMPORTED-123456.yaml"
-    assert mutation["artifact_ref"] == ".omo/_delivery/ingress/tasks/IMPORTED-123456.yaml"
+    assert (
+        mutation["artifact_ref"] == ".omo/_delivery/ingress/tasks/IMPORTED-123456.yaml"
+    )
 
 
 def test_create_planned_task_rejects_invalid_planned_schema(tmp_path: Path) -> None:
@@ -161,7 +167,9 @@ def test_create_planned_task_rejects_invalid_planned_schema(tmp_path: Path) -> N
         )
 
 
-def test_write_capability_registry_bundle_writes_bundle_and_artifact(tmp_path: Path) -> None:
+def test_write_capability_registry_bundle_writes_bundle_and_artifact(
+    tmp_path: Path,
+) -> None:
     artifact = write_capability_registry_bundle(
         tmp_path / ".omo",
         bundle={
@@ -201,7 +209,11 @@ def test_write_manual_capabilities_writes_registry_and_artifact(tmp_path: Path) 
                 "protocol": "cli",
                 "entrypoint": "bin/demo",
                 "lifecycle": "active",
-                "metadata": {"description": "demo", "tags": ["demo"], "scenario_tags": ["demo"]},
+                "metadata": {
+                    "description": "demo",
+                    "tags": ["demo"],
+                    "scenario_tags": ["demo"],
+                },
             }
         ]
     }
@@ -215,7 +227,9 @@ def test_write_manual_capabilities_writes_registry_and_artifact(tmp_path: Path) 
     )
 
     assert written["capabilities"][0]["id"] == "manual.demo"
-    registry = _load_yaml(tmp_path / ".omo" / "capabilities" / "manual-capabilities.yaml")
+    registry = _load_yaml(
+        tmp_path / ".omo" / "capabilities" / "manual-capabilities.yaml"
+    )
     assert registry["capabilities"][0]["id"] == "manual.demo"
     artifact = _load_yaml(
         tmp_path
@@ -229,7 +243,9 @@ def test_write_manual_capabilities_writes_registry_and_artifact(tmp_path: Path) 
     assert artifact["registry_ref"] == ".omo/capabilities/manual-capabilities.yaml"
 
 
-def test_write_system_projection_fields_updates_system_and_artifact(tmp_path: Path) -> None:
+def test_write_system_projection_fields_updates_system_and_artifact(
+    tmp_path: Path,
+) -> None:
     system_path = tmp_path / ".omo" / "state" / "system.yaml"
     system_path.parent.mkdir(parents=True, exist_ok=True)
     system_path.write_text(
@@ -355,7 +371,10 @@ def test_repair_task_promotion_approval_rehydrates_missing_runtime_artifact(
         / "runs"
         / "TASK-R-promotion-approval-2026-06-23T00-00-00Z.yaml"
     )
-    assert payload["approval_ref"] == ".omo/workers/runs/TASK-R-promotion-approval-2026-06-23T00-00-00Z.yaml"
+    assert (
+        payload["approval_ref"]
+        == ".omo/workers/runs/TASK-R-promotion-approval-2026-06-23T00-00-00Z.yaml"
+    )
     assert approval["task_id"] == "TASK-R"
     assert approval["approval_status"] == "granted"
     assert approval["refs"]["task_ref"] == ".omo/tasks/remediation/TASK-R.yaml"
@@ -680,7 +699,9 @@ def test_create_blocked_task_writes_packet_and_ingress_artifact(tmp_path: Path) 
     assert artifact["task_ref"] == ".omo/tasks/blocked/task-blocked-1.yaml"
 
 
-def test_record_task_consensus_updates_task_handoff_refs_and_artifacts(tmp_path: Path) -> None:
+def test_record_task_consensus_updates_task_handoff_refs_and_artifacts(
+    tmp_path: Path,
+) -> None:
     task_path = tmp_path / ".omo" / "tasks" / "active" / "TASK-CONSENSUS-1.yaml"
     task_path.parent.mkdir(parents=True, exist_ok=True)
     task_path.write_text(
@@ -733,21 +754,33 @@ def test_record_task_consensus_updates_task_handoff_refs_and_artifacts(tmp_path:
 def test_write_task_center_runtime_artifacts_go_through_ingress(tmp_path: Path) -> None:
     usage = write_usage_accounting(
         tmp_path / ".omo",
-        registry={"generated_at": "2026-06-21T08:20:00Z", "dispatches": {"total": 0, "workers": {}}, "cost_by_org": []},
+        registry={
+            "generated_at": "2026-06-21T08:20:00Z",
+            "dispatches": {"total": 0, "workers": {}},
+            "cost_by_org": [],
+        },
         actor="projects/omo/tests",
         source_ref="tests:usage",
         now="2026-06-21T08:20:00Z",
     )
     freshness = write_task_center_freshness(
         tmp_path / ".omo",
-        report={"generated_at": "2026-06-21T08:21:00Z", "freshness_score": 100, "stale_items": []},
+        report={
+            "generated_at": "2026-06-21T08:21:00Z",
+            "freshness_score": 100,
+            "stale_items": [],
+        },
         actor="projects/omo/tests",
         source_ref="tests:freshness",
         now="2026-06-21T08:21:00Z",
     )
     control = write_task_center_control_decision(
         tmp_path / ".omo",
-        artifact={"generated_at": "2026-06-21T08:22:00Z", "decision": "allow", "reasons": ["within_budget_and_fresh"]},
+        artifact={
+            "generated_at": "2026-06-21T08:22:00Z",
+            "decision": "allow",
+            "reasons": ["within_budget_and_fresh"],
+        },
         actor="projects/omo/tests",
         source_ref="tests:control",
         now="2026-06-21T08:22:00Z",
@@ -756,12 +789,20 @@ def test_write_task_center_runtime_artifacts_go_through_ingress(tmp_path: Path) 
     assert usage["kind"] == "task_center_usage_accounting_written"
     assert freshness["kind"] == "task_center_freshness_written"
     assert control["kind"] == "task_center_control_decision_written"
-    assert (tmp_path / ".omo" / "_truth" / "task-center" / "usage-accounting.yaml").exists()
-    assert (tmp_path / ".omo" / "_delivery" / "task-center" / "freshness" / "current.yaml").exists()
-    assert (tmp_path / ".omo" / "_delivery" / "task-center" / "control" / "current.yaml").exists()
+    assert (
+        tmp_path / ".omo" / "_truth" / "task-center" / "usage-accounting.yaml"
+    ).exists()
+    assert (
+        tmp_path / ".omo" / "_delivery" / "task-center" / "freshness" / "current.yaml"
+    ).exists()
+    assert (
+        tmp_path / ".omo" / "_delivery" / "task-center" / "control" / "current.yaml"
+    ).exists()
 
 
-def test_update_governance_overlay_state_writes_truth_control_and_artifact(tmp_path: Path) -> None:
+def test_update_governance_overlay_state_writes_truth_control_and_artifact(
+    tmp_path: Path,
+) -> None:
     artifact = update_governance_overlay_state(
         tmp_path / ".omo",
         roadmap={"items": [{"id": "GOV-M1", "status": "in_progress"}]},
@@ -772,11 +813,17 @@ def test_update_governance_overlay_state_writes_truth_control_and_artifact(tmp_p
     )
 
     assert artifact["kind"] == "governance_overlay_state_updated"
-    assert (tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml").exists()
-    assert (tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml").exists()
+    assert (
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml"
+    ).exists()
+    assert (
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml"
+    ).exists()
 
 
-def test_create_skill_manifest_writes_truth_and_ingress_artifact(tmp_path: Path) -> None:
+def test_create_skill_manifest_writes_truth_and_ingress_artifact(
+    tmp_path: Path,
+) -> None:
     manifest = create_skill_manifest(
         tmp_path / ".omo",
         manifest={
@@ -794,14 +841,29 @@ def test_create_skill_manifest_writes_truth_and_ingress_artifact(tmp_path: Path)
     )
 
     assert manifest["id"] == "skill.review.refresh"
-    assert (tmp_path / ".omo" / "_truth" / "task-center" / "skills" / "skill.review.refresh.yaml").exists()
+    assert (
+        tmp_path
+        / ".omo"
+        / "_truth"
+        / "task-center"
+        / "skills"
+        / "skill.review.refresh.yaml"
+    ).exists()
     artifact = _load_yaml(
-        tmp_path / ".omo" / "_delivery" / "ingress" / "task-center" / "skills" / "skill.review.refresh.yaml"
+        tmp_path
+        / ".omo"
+        / "_delivery"
+        / "ingress"
+        / "task-center"
+        / "skills"
+        / "skill.review.refresh.yaml"
     )
     assert artifact["kind"] == "skill_manifest_written"
 
 
-def test_write_discovery_registry_writes_truth_and_ingress_artifact(tmp_path: Path) -> None:
+def test_write_discovery_registry_writes_truth_and_ingress_artifact(
+    tmp_path: Path,
+) -> None:
     registry = write_discovery_registry(
         tmp_path / ".omo",
         registry={
@@ -814,7 +876,9 @@ def test_write_discovery_registry_writes_truth_and_ingress_artifact(tmp_path: Pa
     )
 
     assert registry["entries"][0]["blueprint_id"] == "BP-ALPHA"
-    assert (tmp_path / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml").exists()
+    assert (
+        tmp_path / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
+    ).exists()
     artifact = _load_yaml(
         tmp_path
         / ".omo"
@@ -880,7 +944,10 @@ def test_request_task_promotion_approval_updates_planned_task_and_writes_artifac
     )
 
     payload = _load_yaml(task_path)
-    assert updated["approval_ref"] == ".omo/workers/runs/TASK-APPROVAL-1-promotion-approval-2026-06-21T06-00-00Z.yaml"
+    assert (
+        updated["approval_ref"]
+        == ".omo/workers/runs/TASK-APPROVAL-1-promotion-approval-2026-06-21T06-00-00Z.yaml"
+    )
     assert payload["approval_ref"] == updated["approval_ref"]
     approval = _load_yaml(
         tmp_path
@@ -954,7 +1021,10 @@ def test_record_task_contract_request_updates_active_task_and_writes_artifact(
     )
 
     payload = _load_yaml(task_path)
-    assert ".omo/workers/runs/TASK-CONTRACT-1-contract-request-2026-06-21T06-10-00Z.yaml" in updated["handoff_refs"]
+    assert (
+        ".omo/workers/runs/TASK-CONTRACT-1-contract-request-2026-06-21T06-10-00Z.yaml"
+        in updated["handoff_refs"]
+    )
     assert payload["handoff_refs"] == updated["handoff_refs"]
     request = _load_yaml(
         tmp_path

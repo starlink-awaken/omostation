@@ -31,5 +31,8 @@ def test_phase_gate_helper_writes_json_and_md(tmp_path: Path) -> None:
     }
     json_path, md_path = write_phase_gate_audit(tmp_path, payload, "2026-06-20")
 
-    assert json.loads(json_path.read_text(encoding="utf-8"))["summary"]["phases_total"] == 2
+    assert (
+        json.loads(json_path.read_text(encoding="utf-8"))["summary"]["phases_total"]
+        == 2
+    )
     assert md_path.exists()

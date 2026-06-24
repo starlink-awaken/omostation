@@ -7,6 +7,7 @@
 
 平台: 仅 POSIX (macOS/Linux). Windows 跳过.
 """
+
 from __future__ import annotations
 
 import json
@@ -29,7 +30,9 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def _worker_process(worker_id: int, log_path: Path, lock_path: Path, writes: int) -> None:
+def _worker_process(
+    worker_id: int, log_path: Path, lock_path: Path, writes: int
+) -> None:
     """子进程 worker 模板: 实际测试用 inline subprocess, 此函数保留作 reference."""
     from omo.omo_io import AppendOnlyLog, fcntl_lock
 
@@ -49,7 +52,8 @@ def test_cross_process_fcntl_lock_no_loss(tmp_path):
     for wid in range(2):
         p = subprocess.Popen(
             [
-                sys.executable, "-c",
+                sys.executable,
+                "-c",
                 f"""
 import sys
 sys.path.insert(0, {repr(str(OMO_SRC))})
@@ -72,7 +76,11 @@ for j in range({writes_per_worker}):
         assert rc == 0, f"worker exited with {rc}, stderr: {p.stderr}"
 
     # 验证: 100 条 records 全部到达, 每行 JSON 完整
-    records = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    records = [
+        json.loads(line)
+        for line in log_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     assert len(records) == 100, f"expected 100 records, got {len(records)}"
 
     # 验证: worker id 分布正确 (50 + 50)
@@ -97,7 +105,8 @@ def test_cross_process_default_lock_loses(tmp_path):
     for wid in range(2):
         p = subprocess.Popen(
             [
-                sys.executable, "-c",
+                sys.executable,
+                "-c",
                 f"""
 import sys
 sys.path.insert(0, {repr(str(OMO_SRC))})
@@ -121,10 +130,16 @@ for j in range({writes_per_worker}):
     # 验证: 实际到达的可能 < 100 (因为跨进程 threading.Lock 不保护)
     # 注意: 这不是稳定失败 — 短时间窗口内 CPython GIL 可能意外通过.
     # 我们只验证: 用 fcntl_lock 比不用强 (上一个 test).
-    records = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    records = [
+        json.loads(line)
+        for line in log_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     # 这个断言不严格 — 跨进程时 CPython GIL 顺序偶然可能完整
     # 我们只是记录观察, 不强求失败
-    print(f"\n[info] default-lock cross-process: {len(records)}/100 records (CPython GIL 偶然可能完整)")
+    print(
+        f"\n[info] default-lock cross-process: {len(records)}/100 records (CPython GIL 偶然可能完整)"
+    )
     assert len(records) > 0  # 至少能写
 
 
@@ -137,7 +152,8 @@ def test_fcntl_lock_serial_workers_ok(tmp_path):
     for wid in range(2):
         subprocess.run(
             [
-                sys.executable, "-c",
+                sys.executable,
+                "-c",
                 f"""
 import sys
 sys.path.insert(0, {repr(str(OMO_SRC))})
@@ -157,7 +173,11 @@ for j in range(10):
         )
 
     # 验证: 20 条全部到达, 顺序按 worker 0 → 1
-    records = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    records = [
+        json.loads(line)
+        for line in log_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     assert len(records) == 20
     assert all(r["worker"] == 0 for r in records[:10])
     assert all(r["worker"] == 1 for r in records[10:])

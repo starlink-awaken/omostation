@@ -10,6 +10,7 @@
 P34-W5 目标: 5 URI 全部 ok (W2 报告 2/5 ok, 3 错误: ontoderive 包名 / resolver
 未注册 / __main__ 缺失). W5 修复后应 5/5 全 ok.
 """
+
 from __future__ import annotations
 
 import json
@@ -23,7 +24,9 @@ AGORA_ROOT = Path("/Users/xiamingxing/Workspace/projects/agora")
 KAIRON_ROOT = Path("/Users/xiamingxing/Workspace/projects/kairon")
 
 
-def _invoke_agora_stdio(uri: str, action: str, args: list | None = None, kwargs: dict | None = None) -> dict:
+def _invoke_agora_stdio(
+    uri: str, action: str, args: list | None = None, kwargs: dict | None = None
+) -> dict:
     """跨进程调 agora stdio invoke (不在 omo 进程 import kairon)."""
     args_str = json.dumps(args or [])
     kwargs_str = json.dumps(kwargs or {})
@@ -35,10 +38,16 @@ def _invoke_agora_stdio(uri: str, action: str, args: list | None = None, kwargs:
     )
     r = subprocess.run(
         [
-            "uv", "run", "--directory", str(AGORA_ROOT),
-            "python", "-c", code,
+            "uv",
+            "run",
+            "--directory",
+            str(AGORA_ROOT),
+            "python",
+            "-c",
+            code,
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
         timeout=30,
     )
     if r.returncode != 0:
@@ -60,11 +69,21 @@ def test_real_scenario_p34w5_5of5():
       5. bos://analysis/iris/transform — transform 转换
     """
     scenario = [
-        ("bos://analysis/minerva/research", "research", ["P34-W5 真实场景 5/5 ok"], None),
+        (
+            "bos://analysis/minerva/research",
+            "research",
+            ["P34-W5 真实场景 5/5 ok"],
+            None,
+        ),
         ("bos://analysis/minerva/audit", "audit", ["P34-W5 audit"], None),
         ("bos://analysis/ontoderive/derive", "derive", ["P34-W5 derivation"], None),
         ("bos://analysis/minerva/draft", "draft", ["P34-W5 draft"], None),
-        ("bos://analysis/iris/transform", "transform", [{"input": "P34-W5", "format": "json"}], None),
+        (
+            "bos://analysis/iris/transform",
+            "transform",
+            [{"input": "P34-W5", "format": "json"}],
+            None,
+        ),
     ]
 
     results = []
@@ -72,13 +91,17 @@ def test_real_scenario_p34w5_5of5():
         t0 = time.monotonic()
         r = _invoke_agora_stdio(uri, action, args, kwargs)
         elapsed = time.monotonic() - t0
-        results.append({
-            "uri": uri,
-            "action": action,
-            "elapsed_s": round(elapsed, 2),
-            "status": r.get("status"),
-            "result": r.get("result") if r.get("status") == "ok" else r.get("error"),
-        })
+        results.append(
+            {
+                "uri": uri,
+                "action": action,
+                "elapsed_s": round(elapsed, 2),
+                "status": r.get("status"),
+                "result": r.get("result")
+                if r.get("status") == "ok"
+                else r.get("error"),
+            }
+        )
         # 不应 timeout (跨进程)
         if r.get("error"):
             assert "timeout" not in r["error"].lower(), f"{uri} timed out: {r['error']}"
@@ -131,6 +154,7 @@ def test_real_scenario_spawn_lifecycle():
 
 
 # ── 摘要 ─────────────────────────────────────────────
+
 
 @pytest.mark.integration
 def test_p34w5_real_scenario_summary():

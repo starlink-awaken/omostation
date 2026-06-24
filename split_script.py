@@ -1,6 +1,7 @@
-
 def split_omo_worker():
-    with open('/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker.py', 'r') as f:
+    with open(
+        "/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker.py", "r"
+    ) as f:
         lines = f.readlines()
 
     imports_worker = """from __future__ import annotations
@@ -70,14 +71,23 @@ from .omo_worker_promotion import (
     exec_worker = """def execute_worker_command(args: argparse.Namespace) -> int:
 """ + "".join(["    " + line if line.strip() else line for line in lines[311:376]])
 
-    exec_task = """def execute_task_command(args: argparse.Namespace) -> int:
-""" + "".join(["    " + line if line.strip() else line for line in lines[376:526]]) + """    return 1
+    exec_task = (
+        """def execute_task_command(args: argparse.Namespace) -> int:
 """
+        + "".join(["    " + line if line.strip() else line for line in lines[376:526]])
+        + """    return 1
+"""
+    )
 
-    with open('/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker_cmd_worker.py', 'w') as f:
+    with open(
+        "/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker_cmd_worker.py",
+        "w",
+    ) as f:
         f.write(imports_worker + print_funcs + "\n" + setup_worker + "\n" + exec_worker)
 
-    with open('/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker_cmd_task.py', 'w') as f:
+    with open(
+        "/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker_cmd_task.py", "w"
+    ) as f:
         f.write(imports_task + setup_task + "\n" + exec_task)
 
     new_omo_worker = """#!/usr/bin/env python3
@@ -107,8 +117,11 @@ def main(argv: list[str] | None = None) -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 """
-    with open('/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker.py', 'w') as f:
+    with open(
+        "/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker.py", "w"
+    ) as f:
         f.write(new_omo_worker)
+
 
 if __name__ == "__main__":
     split_omo_worker()

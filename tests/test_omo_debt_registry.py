@@ -14,9 +14,7 @@ from omo.omo_debt_registry import load_debt_ledger
 
 def _load_yaml(omo_test_dir: Path, rel_path: str) -> dict:
     """Load YAML from ``omo_test_dir / rel_path``."""
-    return yaml.safe_load(
-        (omo_test_dir / rel_path).read_text(encoding="utf-8")
-    )
+    return yaml.safe_load((omo_test_dir / rel_path).read_text(encoding="utf-8"))
 
 
 # ── tests ───────────────────────────────────────────────────────────────────

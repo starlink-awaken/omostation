@@ -5,6 +5,7 @@ control (heartbeat, reconnect backoff, SIGTERM handling). This adapter
 adds the bus-facade subscription layer for *new* consumers, without
 modifying the legacy daemon's internals.
 """
+
 from __future__ import annotations
 
 from typing import Callable
@@ -24,6 +25,7 @@ def subscribe_to_governance_events(callback: Callable) -> Callable:
     Currently subscribes to: pipeline:*, debt:*, node_completed
     (matches omo_sse_daemon's _governance_types filter in listen_to_sse).
     """
+
     @bus_event.subscribe("pipeline:*")
     def on_pipeline(env) -> None:
         callback(env)

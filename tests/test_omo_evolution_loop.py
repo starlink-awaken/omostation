@@ -28,4 +28,6 @@ def test_evolution_loop_run_once_accepts_multi_document_yaml(
     triggered = loop.run_once()
 
     assert triggered == 1
-    assert any(path.name.startswith("PROP-BUDGET-001") for path in proposal_dir.glob("*.yaml"))
+    assert any(
+        path.name.startswith("PROP-BUDGET-001") for path in proposal_dir.glob("*.yaml")
+    )

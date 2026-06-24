@@ -123,7 +123,10 @@ def test_phase9_wave3_packet_is_seeded_with_membership_anchor() -> None:
 
     assert "actor + space membership" in wave3_plan
     assert "status: done" in done_task_text
-    assert "run_ref: .omo/workers/runs/phase9-wave3-identity-admission-dispatch.yaml" in done_task_text
+    assert (
+        "run_ref: .omo/workers/runs/phase9-wave3-identity-admission-dispatch.yaml"
+        in done_task_text
+    )
     assert "review_ref: .omo/summaries/phase9-wave3-closeout.md" in done_task_text
     assert "phase9-wave3-execution-plan.md" in done_task_text
     assert "phase9-wave2-closeout.md" in done_task_text
@@ -136,9 +139,15 @@ def test_phase9_wave3_closeout_is_recorded_and_archived() -> None:
 
     closeout_summary = OMO_ROOT / "summaries" / "phase9-wave3-closeout.md"
     done_task = OMO_ROOT / "tasks" / "done" / "P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml"
-    active_task = OMO_ROOT / "tasks" / "active" / "P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml"
-    approval_record = OMO_ROOT / "workers" / "runs" / "phase9-wave3-identity-admission-approval.yaml"
-    envelope = OMO_ROOT / "workers" / "runs" / "phase9-wave3-identity-admission-envelope.yaml"
+    active_task = (
+        OMO_ROOT / "tasks" / "active" / "P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml"
+    )
+    approval_record = (
+        OMO_ROOT / "workers" / "runs" / "phase9-wave3-identity-admission-approval.yaml"
+    )
+    envelope = (
+        OMO_ROOT / "workers" / "runs" / "phase9-wave3-identity-admission-envelope.yaml"
+    )
 
     assert closeout_summary.exists()
     assert done_task.exists()
@@ -151,14 +160,24 @@ def test_phase9_wave3_closeout_is_recorded_and_archived() -> None:
     envelope_text = envelope.read_text(encoding="utf-8")
     assert "status: done" in done_task_text
     assert "review_ref: .omo/summaries/phase9-wave3-closeout.md" in done_task_text
-    assert "approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml" in done_task_text
+    assert (
+        "approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml"
+        in done_task_text
+    )
     assert "completed_at:" in done_task_text
     assert "completion_summary:" in done_task_text
-    assert ".omo/tasks/done/P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml" in approval_record_text
+    assert (
+        ".omo/tasks/done/P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml" in approval_record_text
+    )
     assert ".omo/summaries/phase9-wave3-closeout.md" in approval_record_text
     assert ".omo/tasks/done/P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml" in envelope_text
-    assert ".omo/tasks/active/P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml" not in approval_record_text
-    assert ".omo/tasks/active/P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml" not in envelope_text
+    assert (
+        ".omo/tasks/active/P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml"
+        not in approval_record_text
+    )
+    assert (
+        ".omo/tasks/active/P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml" not in envelope_text
+    )
 
     assert "phase9-wave3-closeout.md" in root_index
     assert "phase9-wave3-closeout.md" in process_index

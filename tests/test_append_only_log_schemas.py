@@ -3,6 +3,7 @@
 读 .omo/_knowledge/*.jsonl, 按 schema SSOT 文档检查必填字段存在.
 失败时报告具体哪个文件哪条 record 缺哪个字段.
 """
+
 from __future__ import annotations
 
 import json
@@ -33,11 +34,27 @@ SCHEMAS: dict[str, dict] = {
     },
     "omo-sync": {
         "path_pattern": "omo-sync.jsonl",
-        "required_fields": {"ts", "kind", "phase", "health_score", "dry_run", "audit_checks", "status"},
+        "required_fields": {
+            "ts",
+            "kind",
+            "phase",
+            "health_score",
+            "dry_run",
+            "audit_checks",
+            "status",
+        },
     },
     "omo-alert": {
         "path_pattern": "omo-alerts.jsonl",
-        "required_fields": {"ts", "kind", "severity", "message", "blocked_rate", "failed_rate", "threshold"},
+        "required_fields": {
+            "ts",
+            "kind",
+            "severity",
+            "message",
+            "blocked_rate",
+            "failed_rate",
+            "threshold",
+        },
     },
     "omo-event": {
         "path_pattern": "omo-events.jsonl",
@@ -46,14 +63,26 @@ SCHEMAS: dict[str, dict] = {
     "omo-history": {
         "path_pattern": "governance-history.jsonl",
         # source 是 Round 8 P2 新加的, 老记录没有 — 故 omitted
-        "required_fields": {"date", "timestamp", "total_score", "grade", "watchlist_count"},
+        "required_fields": {
+            "date",
+            "timestamp",
+            "total_score",
+            "grade",
+            "watchlist_count",
+        },
     },
 }
 
 
 def test_schemas_doc_exists():
     """Schema SSOT 文档必须存在 (防文档漂移)."""
-    doc_path = WORKSPACE_ROOT / ".omo" / "_knowledge" / "management" / "append-only-log-schemas-2026-06-09.md"
+    doc_path = (
+        WORKSPACE_ROOT
+        / ".omo"
+        / "_knowledge"
+        / "management"
+        / "append-only-log-schemas-2026-06-09.md"
+    )
     assert doc_path.exists(), f"schema SSOT doc missing: {doc_path}"
 
 
@@ -79,7 +108,11 @@ def test_consumer_log_schema_when_exists(consumer_name, schema, tmp_path):
         pytest.skip(f"{consumer_name} log not yet created: {log_path}")
 
     # 抽前 5 + 后 5 条 (避免读 1MB+ 大文件)
-    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    lines = [
+        line_
+        for line_ in log_path.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     if not lines:
         pytest.skip(f"{consumer_name} log empty")
 
@@ -92,7 +125,9 @@ def test_consumer_log_schema_when_exists(consumer_name, schema, tmp_path):
         except json.JSONDecodeError as exc:
             parse_errors.append((i, str(exc)))
     if not parsed:
-        pytest.skip(f"{consumer_name} log: all lines malformed (parse errors: {len(parse_errors)})")
+        pytest.skip(
+            f"{consumer_name} log: all lines malformed (parse errors: {len(parse_errors)})"
+        )
 
     # 取前 5 + 后 5 条 (avoid reading 1MB+ file)
     sample = parsed[:5] + (parsed[-5:] if len(parsed) > 10 else [])
@@ -101,7 +136,9 @@ def test_consumer_log_schema_when_exists(consumer_name, schema, tmp_path):
     for i, rec in sample:
         missing = required - set(rec.keys())
         if missing:
-            failures.append(f"line {i}: missing fields {sorted(missing)} (record keys: {list(rec.keys())})")
+            failures.append(
+                f"line {i}: missing fields {sorted(missing)} (record keys: {list(rec.keys())})"
+            )
 
     if failures:
         # 顺便报告 parse errors (非 fatal, 仅信息)
@@ -140,7 +177,12 @@ def test_round_trip_omo_history_append(tmp_path):
 
     log_path = tmp_path / "governance-history.jsonl"
     append_entry(
-        {"total_score": 100.0, "grade": "A+", "watchlist_count": 0, "source": "pytest_round_trip"},
+        {
+            "total_score": 100.0,
+            "grade": "A+",
+            "watchlist_count": 0,
+            "source": "pytest_round_trip",
+        },
         path=log_path,
     )
     rec = json.loads(log_path.read_text(encoding="utf-8").strip())
@@ -155,11 +197,16 @@ def test_round_trip_omo_history_append(tmp_path):
     assert rec["grade"] in ("A+", "A", "B", "C", "D", "F")
     assert isinstance(rec["watchlist_count"], int)
     # sort_keys 锁: 全字母序
-    parsed_order = [k for k, _ in json.loads(
-        log_path.read_text(encoding="utf-8").strip(),
-        object_pairs_hook=list,
-    )]
-    expected_order = sorted(["date", "timestamp", "total_score", "grade", "watchlist_count", "source"])
+    parsed_order = [
+        k
+        for k, _ in json.loads(
+            log_path.read_text(encoding="utf-8").strip(),
+            object_pairs_hook=list,
+        )
+    ]
+    expected_order = sorted(
+        ["date", "timestamp", "total_score", "grade", "watchlist_count", "source"]
+    )
     assert parsed_order == expected_order, (
         f"omo_history sort_keys 失守: {parsed_order} != {expected_order}"
     )

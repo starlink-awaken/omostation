@@ -10,6 +10,7 @@ Round 3: 摆脱 omo_audit 应急方案 (把 phase/health_score 拍扁成 details
   改用专用 omo_sync_log (AppendOnlyLog) + 结构化 record. 字段含义固化,
   下游消费者按字段读, 不再 split 字符串.
 """
+
 from __future__ import annotations
 
 import os
@@ -24,9 +25,7 @@ from omo.omo_shared import load_yaml
 AUDIT_CHECKS = 6
 
 # 复用 omo_bos / omo_bos_metrics 的工作区根约定
-_WORKSPACE = Path(
-    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
-)
+_WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 DEFAULT_SYNC_LOG_PATH = _WORKSPACE / ".omo" / "_knowledge" / "omo-sync.jsonl"
 
 

@@ -6,6 +6,7 @@ freshness metadata current (recommended: every 30 minutes).
 
 Usage: python3 scripts/update_debt_freshness.py [--omo-dir PATH]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -70,9 +71,7 @@ def main() -> int:
         # seed_ref is like ".omo/debt/items/DEBT-OMO-001.yaml"
         # omo_dir is Path(".omo"), so omo_dir.parent is Path(".")
         item_path = (
-            omo_dir.parent / seed_ref
-            if seed_ref.startswith(".omo")
-            else Path(seed_ref)
+            omo_dir.parent / seed_ref if seed_ref.startswith(".omo") else Path(seed_ref)
         )
 
         if not item_path.exists():

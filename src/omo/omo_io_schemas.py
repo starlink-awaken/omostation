@@ -16,6 +16,7 @@ SSOT: 与 ``.omo/_knowledge/management/append-only-log-schemas-2026-06-09.md`` �
     rec = OmoAuditRecord.model_validate({"ts": "...", "action": "...", ...})
     AppendOnlyLog(path).append(rec.model_dump(), schema=OmoAuditRecord)
 """
+
 from __future__ import annotations
 
 from enum import Enum
@@ -132,6 +133,7 @@ class OmoEventRecord(ZTimestampModel):
     def _check_payload_is_json(cls, v: str) -> str:
         # payload 字段约定是 JSON 字符串, 但不强校验 schema (业务方负责)
         import json as _json
+
         try:
             _json.loads(v)
         except _json.JSONDecodeError as exc:

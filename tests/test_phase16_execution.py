@@ -36,7 +36,9 @@ def _read(rel_path: str) -> str:
 
 
 def test_phase16_plan_promotes_knowledge_capture_search_scope() -> None:
-    plan = _read("_knowledge/design/plans/phase16-product-surface-convergence-preplanning.md")
+    plan = _read(
+        "_knowledge/design/plans/phase16-product-surface-convergence-preplanning.md"
+    )
 
     assert "Status: completed" in plan
     assert "Knowledge Capture/Search Product Surface Convergence" in plan
@@ -57,30 +59,68 @@ def test_phase16_scenario_shell_defines_user_contract_and_boundaries() -> None:
     assert scenario["status"] == "ready"
     assert scenario["authorization"] == "scenario-contract-only"
     assert scenario["input_contract"] == ["text_or_markdown_file", "query"]
-    assert scenario["output_contract"] == ["capture_receipt", "search_hits", "result_summary", "evidence_refs", "status"]
-    assert set(scenario["status_enum"]) == {"ready", "needs_approval", "blocked", "failed_with_recovery", "completed"}
-    assert scenario["project_boundaries"]["SharedBrain"] == "runtime-home and result-home"
+    assert scenario["output_contract"] == [
+        "capture_receipt",
+        "search_hits",
+        "result_summary",
+        "evidence_refs",
+        "status",
+    ]
+    assert set(scenario["status_enum"]) == {
+        "ready",
+        "needs_approval",
+        "blocked",
+        "failed_with_recovery",
+        "completed",
+    }
+    assert (
+        scenario["project_boundaries"]["SharedBrain"] == "runtime-home and result-home"
+    )
     assert scenario["project_boundaries"]["gbrain"] == "capture, search, retrieval"
-    assert scenario["project_boundaries"]["kairon"] == "capability binding and governance trace"
-    assert scenario["project_boundaries"]["agentmesh"] == "future orchestration candidate only"
+    assert (
+        scenario["project_boundaries"]["kairon"]
+        == "capability binding and governance trace"
+    )
+    assert (
+        scenario["project_boundaries"]["agentmesh"]
+        == "future orchestration candidate only"
+    )
 
     assert shell["scenario_id"] == "knowledge-capture-search"
     assert shell["status"] == "ready"
-    assert shell["binds"] == ["intent", "context", "policy", "execution", "verification", "recovery"]
+    assert shell["binds"] == [
+        "intent",
+        "context",
+        "policy",
+        "execution",
+        "verification",
+        "recovery",
+    ]
     assert shell["does_not_authorize_live_mutation"] is True
     assert shell["phase15_guardrails_preserved"] is True
 
 
-def test_phase16_baseline_and_walkthrough_tie_omo_back_to_projects_and_user_value() -> None:
+def test_phase16_baseline_and_walkthrough_tie_omo_back_to_projects_and_user_value() -> (
+    None
+):
     baseline = _read_yaml("_delivery/evidence/phase16/journey-baseline.yaml")
-    walkthrough = _read_yaml("_delivery/evidence/phase16/capture-search-walkthrough.yaml")
-    run_record = _read_yaml("_delivery/evidence/phase16/knowledge-capture-run-record.yaml")
+    walkthrough = _read_yaml(
+        "_delivery/evidence/phase16/capture-search-walkthrough.yaml"
+    )
+    run_record = _read_yaml(
+        "_delivery/evidence/phase16/knowledge-capture-run-record.yaml"
+    )
     adoption = _read_yaml("_delivery/evidence/phase16/adoption-closeout.yaml")
 
     assert baseline["status"] == "ready"
     assert baseline["primary_scenario"] == "knowledge-capture-search"
     assert baseline["gap"] == "control-plane-strong-user-entry-fragmented"
-    assert set(baseline["project_roles"]) == {"SharedBrain", "gbrain", "kairon", "agentmesh"}
+    assert set(baseline["project_roles"]) == {
+        "SharedBrain",
+        "gbrain",
+        "kairon",
+        "agentmesh",
+    }
     assert baseline["phase15_inputs"]
 
     assert walkthrough["status"] in {"completed", "failed_with_recovery"}
@@ -89,7 +129,10 @@ def test_phase16_baseline_and_walkthrough_tie_omo_back_to_projects_and_user_valu
     assert len(walkthrough["user_visible_result"]["search_hits"]) >= 1
     assert walkthrough["user_visible_result"]["result_summary"]
     assert walkthrough["evidence_refs"]
-    assert ".omo/_delivery/evidence/phase16/knowledge-capture-run-record.yaml" in walkthrough["evidence_refs"]
+    assert (
+        ".omo/_delivery/evidence/phase16/knowledge-capture-run-record.yaml"
+        in walkthrough["evidence_refs"]
+    )
     if walkthrough["mode"] == "fixture-backed":
         assert walkthrough["blocked_reason"]
         assert walkthrough["next_live_demo_condition"]
@@ -100,12 +143,19 @@ def test_phase16_baseline_and_walkthrough_tie_omo_back_to_projects_and_user_valu
     assert run_record["kairon_trace_id"] == "trace-knowledge-capture-001"
     assert run_record["gbrain_execution_ref"] == "eval_candidate:1"
     assert run_record["capture_receipt"]["slug"] == "inbox/knowledge-capture-run-record"
-    assert run_record["search_hit_refs"][0]["slug"] == "inbox/knowledge-capture-run-record"
+    assert (
+        run_record["search_hit_refs"][0]["slug"] == "inbox/knowledge-capture-run-record"
+    )
     assert run_record["verification_refs"]
 
     assert adoption["status"] == "ready"
     assert adoption["user_can_complete_task"] is True
-    assert adoption["result_states"] == ["completed", "blocked", "needs_approval", "failed_with_recovery"]
+    assert adoption["result_states"] == [
+        "completed",
+        "blocked",
+        "needs_approval",
+        "failed_with_recovery",
+    ]
     assert adoption["remaining_limits"]
 
 
@@ -125,8 +175,15 @@ def test_phase16_recovery_and_policy_keep_phase15_guardrails() -> None:
 
 
 def test_phase16_external_omo_records_method_without_shadow_ssot() -> None:
-    case = EXTERNAL_OMO_ROOT / "_delivery" / "cases" / "2026-06-01-phase16-knowledge-capture-search-retrospective.md"
-    pattern = EXTERNAL_OMO_ROOT / "_delivery" / "patterns" / "03-控制面不能替代用户价值.md"
+    case = (
+        EXTERNAL_OMO_ROOT
+        / "_delivery"
+        / "cases"
+        / "2026-06-01-phase16-knowledge-capture-search-retrospective.md"
+    )
+    pattern = (
+        EXTERNAL_OMO_ROOT / "_delivery" / "patterns" / "03-控制面不能替代用户价值.md"
+    )
     playbook = EXTERNAL_OMO_ROOT / "_control" / "07-从OMO计划到项目能力升级Playbook.md"
 
     for path in [case, pattern, playbook]:
@@ -166,16 +223,19 @@ def test_phase16_cli_commands_are_usable(tmp_path: Path) -> None:
         assert expected in result.stdout
 
 
-def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_active_tasks() -> None:
+def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_active_tasks() -> (
+    None
+):
     goals = _read_yaml("goals/current.yaml")
     state = _read_yaml("state/system.yaml")
     active_tasks = list((OMO_ROOT / "tasks" / "active").glob("*.yaml"))
-    active_payloads = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in active_tasks]
+    active_payloads = [
+        yaml.safe_load(path.read_text(encoding="utf-8")) for path in active_tasks
+    ]
     # After Phase 16 closeout, future backlog must live in planned/ unless the coordinator
     # explicitly promotes one packet and records that promotion in handoff_refs.
     stale_active = [
-        task for task in active_payloads
-        if task.get("phase", 0) <= goals["phase"]
+        task for task in active_payloads if task.get("phase", 0) <= goals["phase"]
     ]
     unauthorized_active = [
         task["id"]
@@ -186,15 +246,24 @@ def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_acti
 
     assert goals["phase"] >= 16
     assert goals["status"] in ("completed", "active", "done")
-    assert all(s in ("completed", "active", "done") for s in [goal["status"] for goal in goals["goals"]])
+    assert all(
+        s in ("completed", "active", "done")
+        for s in [goal["status"] for goal in goals["goals"]]
+    )
     assert state["current_phase"] >= 16
     assert state["phase_status"] in ("completed", "active")
     assert state["phase15_status"] == "completed"
     assert state["phase16_status"] == "completed"
     assert stale_active == [], f"Unexpected non-future active tasks: {stale_active}"
-    assert unauthorized_active == [], f"Unexpected non-authorized active tasks: {unauthorized_active}"
+    assert unauthorized_active == [], (
+        f"Unexpected non-authorized active tasks: {unauthorized_active}"
+    )
 
-    assert "Phase 16 is complete" in _read("_knowledge/summaries/phase16/phase16-closeout.md")
+    assert "Phase 16 is complete" in _read(
+        "_knowledge/summaries/phase16/phase16-closeout.md"
+    )
     assert "Status: GO" in _read("_knowledge/summaries/phase16/phase16-closeout.md")
-    assert "knowledge capture/search" in _read("_knowledge/summaries/phase16/phase16-retrospective.md")
+    assert "knowledge capture/search" in _read(
+        "_knowledge/summaries/phase16/phase16-retrospective.md"
+    )
     assert "Status: pass" in _read("_knowledge/management/phase16-cross-audit.md")

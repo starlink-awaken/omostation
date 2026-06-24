@@ -4,7 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from omo.omo_debt_execution import build_execution_record, execution_record_path, run_slug_from_ref
+from omo.omo_debt_execution import (
+    build_execution_record,
+    execution_record_path,
+    run_slug_from_ref,
+)
 
 
 def test_execution_record_helpers_build_run_scoped_paths(tmp_path: Path) -> None:
@@ -13,7 +17,12 @@ def test_execution_record_helpers_build_run_scoped_paths(tmp_path: Path) -> None
 
     assert run_slug_from_ref(dispatch_run_ref) == "2026-06-10T00-00-00Z"
     assert execution_record_path(omo_dir, dispatch_run_ref, "SB_DECOMPOSITION") == (
-        omo_dir / "debt" / "dispatch" / "executions" / "2026-06-10T00-00-00Z" / "SB_DECOMPOSITION.yaml"
+        omo_dir
+        / "debt"
+        / "dispatch"
+        / "executions"
+        / "2026-06-10T00-00-00Z"
+        / "SB_DECOMPOSITION.yaml"
     )
     assert build_execution_record(
         item_id="SB_DECOMPOSITION",

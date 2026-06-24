@@ -8,6 +8,7 @@ P45-W4 真测并发: 4 URI 串行 vs 4 URI 并发 (asyncio.gather) 时间对比.
 
 注: 测试依赖 agora venv (Protocols-Layer workspace 错配 修了才能跑).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -39,6 +40,7 @@ async def test_4uri_serial_vs_concurrent_speedup():
 
     # 并发 (reset manager 先, 避免重用上轮的连接)
     import omo.omo_llm_bos_bridge as bridge
+
     bridge._MANAGER = None
 
     t0 = time.time()
@@ -66,6 +68,7 @@ async def test_4uri_serial_vs_concurrent_speedup():
 async def test_4uri_concurrent_status_count():
     """W4 验证: 4 URI 并发都返回 status=resolved (P45 加的 POC 应真可调)."""
     import omo.omo_llm_bos_bridge as bridge
+
     bridge._MANAGER = None
 
     results = await asyncio.gather(
@@ -81,15 +84,14 @@ async def test_4uri_concurrent_status_count():
     if by_status.get("resolved", 0) == 0:
         pytest.skip("agora downstream services unavailable")
     # 期望 4 resolved (P45 加的 4 POC 都已实施)
-    assert by_status.get("resolved", 0) == 4, (
-        f"期望 4 resolved, 实际: {by_status}"
-    )
+    assert by_status.get("resolved", 0) == 4, f"期望 4 resolved, 实际: {by_status}"
 
 
 @pytest.mark.integration
 async def test_4uri_concurrent_transport():
     """W4 验证: 4 URI 并发都走 agora_pool transport (长驻池复用)."""
     import omo.omo_llm_bos_bridge as bridge
+
     bridge._MANAGER = None
 
     results = await asyncio.gather(
@@ -113,4 +115,5 @@ async def cleanup_manager():
         await _MANAGER.close_all()
     # Reset module-level lock so next test gets a fresh one on its event loop
     import omo.omo_llm_bos_bridge as bridge
+
     bridge._MANAGER_INIT_LOCK = None

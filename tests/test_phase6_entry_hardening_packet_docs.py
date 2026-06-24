@@ -14,7 +14,9 @@ def test_phase6_entry_hardening_plan_is_indexed_as_current_pre_gate_artifact():
 
 
 def test_phase6_entry_hardening_closeout_records_go_no_go_judgment():
-    closeout = (OMO / "summaries" / "phase6-entry-hardening-closeout.md").read_text(encoding="utf-8")
+    closeout = (OMO / "summaries" / "phase6-entry-hardening-closeout.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "GO/NO-GO judgment" in closeout
     assert "Security GO" in closeout

@@ -3,8 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 
-NEW_EXTERNAL_OMO_ROOT = Path("/Users/xiamingxing/Documents/学习进化/2-knowledge/体系/OMO")
-LEGACY_EXTERNAL_OMO_ROOT = Path("/Users/xiamingxing/Documents/学习进化/2-knowledge/经验积累/OMO")
+NEW_EXTERNAL_OMO_ROOT = Path(
+    "/Users/xiamingxing/Documents/学习进化/2-knowledge/体系/OMO"
+)
+LEGACY_EXTERNAL_OMO_ROOT = Path(
+    "/Users/xiamingxing/Documents/学习进化/2-knowledge/经验积累/OMO"
+)
 
 
 def test_new_external_omo_root_exists_with_core_surfaces() -> None:

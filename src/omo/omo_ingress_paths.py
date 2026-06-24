@@ -3,6 +3,7 @@
 纯函数工具: UTC 时间 / timestamp slug / doc 名 / delivery 路径 / task 查找 / artifact lifecycle.
 无业务逻辑, 被 omo_ingress.py (治理 broker 入口) 复用.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

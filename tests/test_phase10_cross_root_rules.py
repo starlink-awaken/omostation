@@ -17,12 +17,20 @@ def _read_yaml(rel_path: str) -> dict:
 def test_phase10_rule_registry_is_linked_from_system_space_surfaces() -> None:
     system_space = _read_yaml("spaces/system-space.yaml")
     registry = _read_yaml("spaces/registry.yaml")
-    system_entry = next(space for space in registry["spaces"] if space["id"] == "system-space")
+    system_entry = next(
+        space for space in registry["spaces"] if space["id"] == "system-space"
+    )
 
     assert (ROOT / "spaces/system-space-cross-root-rule-registry.yaml").exists()
     assert (ROOT / "data/system-data-access-policy.yaml").exists()
-    assert "spaces/system-space-cross-root-rule-registry.yaml" in system_space["policy_refs"]
-    assert "spaces/system-space-cross-root-rule-registry.yaml" in system_entry["policy_refs"]
+    assert (
+        "spaces/system-space-cross-root-rule-registry.yaml"
+        in system_space["policy_refs"]
+    )
+    assert (
+        "spaces/system-space-cross-root-rule-registry.yaml"
+        in system_entry["policy_refs"]
+    )
     assert "data/system-data-access-policy.yaml" in system_space["policy_refs"]
     assert "data/system-data-access-policy.yaml" in system_entry["policy_refs"]
 

@@ -42,17 +42,17 @@ omo:
 
     registry = discover_task_blueprints(tmp_path, docs)
 
-    registry_path = tmp_path / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
+    registry_path = (
+        tmp_path / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
+    )
     assert registry_path.exists()
     artifact_path = (
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
-        / "task-center"
-        / "discovery"
+        tmp_path / ".omo" / "_delivery" / "ingress" / "task-center" / "discovery"
     )
-    assert any(path.name.startswith("discovery-registry-") for path in artifact_path.glob("*.yaml"))
+    assert any(
+        path.name.startswith("discovery-registry-")
+        for path in artifact_path.glob("*.yaml")
+    )
     assert registry["entries"] == [
         {
             "blueprint_id": "BP-ALPHA",
@@ -143,16 +143,23 @@ omo:
     assert task["status"] == "blocked"
     assert task["phase"] == 6
     assert task["milestone"] == "W2"
-    assert task["source_docs"] == [".omo/_knowledge/design/plans/archive/phase6-program-plan.md", "docs/template.md"]
+    assert task["source_docs"] == [
+        ".omo/_knowledge/design/plans/archive/phase6-program-plan.md",
+        "docs/template.md",
+    ]
     assert any(
         path.name.startswith("P6-G2-DISCOVERY-TEMPLATES-PACKET-blocked-")
-        for path in (tmp_path / ".omo" / "_delivery" / "ingress" / "tasks").glob("*.yaml")
+        for path in (tmp_path / ".omo" / "_delivery" / "ingress" / "tasks").glob(
+            "*.yaml"
+        )
     )
     assert validate_task_file(task_path) == []
 
 
 def test_instantiate_task_template_accepts_multi_document_registry(tmp_path: Path):
-    registry_path = tmp_path / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
+    registry_path = (
+        tmp_path / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
+    )
     registry_path.parent.mkdir(parents=True, exist_ok=True)
     registry_path.write_text(
         "---\nstatus: active\nowner: governance\n---\n---\n"

@@ -31,7 +31,9 @@ def load_radar_history(workspace_root: Path) -> dict[str, Any]:
         return {"runs": []}
 
 
-def update_radar_history(workspace_root: Path, payload: dict[str, Any]) -> dict[str, Any]:
+def update_radar_history(
+    workspace_root: Path, payload: dict[str, Any]
+) -> dict[str, Any]:
     history = load_radar_history(workspace_root)
     runs = history.setdefault("runs", [])
     candidates = payload.get("candidates", [])
@@ -41,7 +43,9 @@ def update_radar_history(workspace_root: Path, payload: dict[str, Any]) -> dict[
             "day": _day_bucket(),
             "trigger_source": payload.get("trigger_source"),
             "candidate_count": payload.get("candidates_count", len(candidates)),
-            "real_candidate_count": sum(1 for item in candidates if classify_candidate(item)),
+            "real_candidate_count": sum(
+                1 for item in candidates if classify_candidate(item)
+            ),
             "all_fields_present": all(
                 bool(item.get("source"))
                 and bool(item.get("timestamp"))
@@ -56,8 +60,12 @@ def update_radar_history(workspace_root: Path, payload: dict[str, Any]) -> dict[
     history["runs"] = runs
     history["summary"] = {
         "run_count": len(runs),
-        "cron_run_count": sum(1 for item in runs if item.get("trigger_source") == "cron"),
-        "manual_run_count": sum(1 for item in runs if item.get("trigger_source") == "manual"),
+        "cron_run_count": sum(
+            1 for item in runs if item.get("trigger_source") == "cron"
+        ),
+        "manual_run_count": sum(
+            1 for item in runs if item.get("trigger_source") == "manual"
+        ),
         "latest_generated_at": runs[-1]["generated_at"] if runs else None,
         "latest_archive_path": runs[-1]["archive_path"] if runs else None,
         "latest_day": runs[-1]["day"] if runs else None,

@@ -12,6 +12,7 @@ Collection hooks
   tests that read real workspace ``.omo/`` state.  Skipped when the real
   ``.omo`` directory does not exist at the workspace root.
 """
+
 from __future__ import annotations
 
 import fnmatch
@@ -71,17 +72,20 @@ def write_yaml(omo_dir: Path) -> Any:
 
         write_yaml("_control/governance-overlay/current.yaml", {"key": "val"})
     """
+
     def _write(rel_path: str, data: dict[str, Any]) -> Path:
         full_path = omo_dir / rel_path
         full_path.parent.mkdir(parents=True, exist_ok=True)
         full_path.write_text(yaml.dump(data, allow_unicode=True, sort_keys=False))
         return full_path
+
     return _write
 
 
 # ---------------------------------------------------------------------------
 # Marker registration & collection-time skip for real-OMO-dependent tests
 # ---------------------------------------------------------------------------
+
 
 def pytest_configure(config: pytest.Config) -> None:
     """Register the ``requires_real_omo`` marker."""
@@ -144,39 +148,41 @@ def pytest_collection_modifyitems(
     # workspace state (e.g. file-based registries, actual subprocess CLI
     # entry points, existing phase artifacts, etc.)
     # They are ALWAYS skipped unless --run-real-omo is passed.
-    _EXPLICIT_MODULES = frozenset({
-        "test_architecture_baseline_phase15_phase16.py",
-        "test_fusion_optimization_docs.py",
-        "test_external_omo_reroot.py",
-        "test_worker_mechanism_consistency.py",
-        "test_provider_plane.py",
-        "test_omo_verification_contract.py",
-        "test_omo_debt_cli.py",
-        "test_omo_debt_docs.py",
-        "test_omo_debt_metrics.py",
-        "test_omo_debt_outputs.py",
-        "test_omo_experience.py",
-        "test_omo_admission.py",
-        "test_phase9_space_registry.py",
-        "test_phase9_identity_admission_contract.py",
-        "test_phase9_rollout_governance.py",
-        "test_phase9_runtime_boundary_refactor.py",
-        "test_active_task_schema.py",
-        "test_all_active_tasks_pass_current_task_schema.py",
-        "test_kairon_makefile.py",
-        "test_phase11_ci_baseline.py",
-        "test_phase11_wave2_ci_baseline.py",
-        "test_phase11_wave2_path_debt.py",
-        "test_phase11_wave4_governance_ci.py",
-        "test_phase4_wave2_docs.py",
-        "test_phase6_entry_hardening_packet_docs.py",
-        "test_phase8_wave1_closeout_docs.py",
-        "test_phase10_cross_root_rules.py",
-        "test_phase10_wave2_normalization.py",
-        "test_phase10_wave3_matrix.py",
-        "test_phase10_wave4_cross_space.py",
-        "test_governance_workflow.py",
-    })
+    _EXPLICIT_MODULES = frozenset(
+        {
+            "test_architecture_baseline_phase15_phase16.py",
+            "test_fusion_optimization_docs.py",
+            "test_external_omo_reroot.py",
+            "test_worker_mechanism_consistency.py",
+            "test_provider_plane.py",
+            "test_omo_verification_contract.py",
+            "test_omo_debt_cli.py",
+            "test_omo_debt_docs.py",
+            "test_omo_debt_metrics.py",
+            "test_omo_debt_outputs.py",
+            "test_omo_experience.py",
+            "test_omo_admission.py",
+            "test_phase9_space_registry.py",
+            "test_phase9_identity_admission_contract.py",
+            "test_phase9_rollout_governance.py",
+            "test_phase9_runtime_boundary_refactor.py",
+            "test_active_task_schema.py",
+            "test_all_active_tasks_pass_current_task_schema.py",
+            "test_kairon_makefile.py",
+            "test_phase11_ci_baseline.py",
+            "test_phase11_wave2_ci_baseline.py",
+            "test_phase11_wave2_path_debt.py",
+            "test_phase11_wave4_governance_ci.py",
+            "test_phase4_wave2_docs.py",
+            "test_phase6_entry_hardening_packet_docs.py",
+            "test_phase8_wave1_closeout_docs.py",
+            "test_phase10_cross_root_rules.py",
+            "test_phase10_wave2_normalization.py",
+            "test_phase10_wave3_matrix.py",
+            "test_phase10_wave4_cross_space.py",
+            "test_governance_workflow.py",
+        }
+    )
 
     for item in items:
         fspath = str(item.fspath)

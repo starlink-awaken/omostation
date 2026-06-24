@@ -17,6 +17,7 @@ P59-W2: facade 再拆 — dispatcher (omo_bos_dispatcher) 抽出 TOOL_DISPATCHER
 P32 收官约束: 不改 agora 核心, 不重启 omo daemon, 0 破坏性操作.
 本模块纯加法, 只读 BOS URI 注册表, 不写.
 """
+
 from __future__ import annotations
 
 import sys
@@ -122,7 +123,9 @@ def bos_uri_tool_schema() -> list[dict[str, Any]]:
 # ── 工具实现 (派发器 target) ────────────────────────────────
 
 
-async def invoke_bos_uri_tool(uri: str, args: dict[str, Any] | None = None) -> dict[str, Any]:
+async def invoke_bos_uri_tool(
+    uri: str, args: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """LLM 调 BOS URI 工具入口.
 
     返回: 标准 dict (JSON 序列化友好), 供 LLM 二次 round 解析.

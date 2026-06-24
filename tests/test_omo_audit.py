@@ -16,7 +16,10 @@ def test_governance_check_agora_health_with_active_event_loop(monkeypatch):
         return [_Result("agora", True), _Result("forge", False)]
 
     monkeypatch.setattr("omo.omo_health.load_agora_routes", lambda: {"routes": {}})
-    monkeypatch.setattr("omo.omo_health.derive_endpoints", lambda routes: {"agora": "http://localhost:7422/health"})
+    monkeypatch.setattr(
+        "omo.omo_health.derive_endpoints",
+        lambda routes: {"agora": "http://localhost:7422/health"},
+    )
     monkeypatch.setattr("omo.omo_health.check_all_health", _fake_check_all_health)
 
     async def _invoke():

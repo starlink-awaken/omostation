@@ -11,6 +11,7 @@ Round 20 P0: 拆到独立 OmoHealthRecord + 写 omo-health.jsonl (治本)
   5. OmoHealthRecord 在 SCHEMA_REGISTRY 第 8 个
   6. 不污染生产: 跑完测试后 unset override env
 """
+
 from __future__ import annotations
 
 import json
@@ -69,7 +70,11 @@ def _run_dashboard_monitor(
 def _read_last_record(tmp_path: Path) -> dict:
     """读 omo-health.jsonl 最后一条 JSON record (Round 20 P0: 新路径)."""
     health = tmp_path / ".omo" / "_knowledge" / "omo-health.jsonl"
-    lines = [line_ for line_ in health.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    lines = [
+        line_
+        for line_ in health.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(lines) == 1, f"expected 1 record, got {len(lines)}"
     return json.loads(lines[-1])
 
@@ -136,7 +141,9 @@ def test_dashboard_monitor_record_has_all_required_fields(fake_workspace):
         ("running", "200", 0),
     ],
 )
-def test_dashboard_monitor_exit_codes(fake_workspace, launchd_state, http_code, expected_exit):
+def test_dashboard_monitor_exit_codes(
+    fake_workspace, launchd_state, http_code, expected_exit
+):
     """脚本退出码反映健康状态, 不因 schema 改动而破坏."""
     r = _run_dashboard_monitor(
         fake_workspace,
@@ -157,7 +164,9 @@ def test_dashboard_monitor_exit_codes(fake_workspace, launchd_state, http_code, 
 
 def test_dashboard_monitor_writes_to_omo_health_not_governance_history(fake_workspace):
     """Round 20 P0: dashboard_monitor 写 .omo/_knowledge/omo-health.jsonl, 不再写 governance-history.jsonl."""
-    _run_dashboard_monitor(fake_workspace, launchd_state="running", http_code="200", pid="42")
+    _run_dashboard_monitor(
+        fake_workspace, launchd_state="running", http_code="200", pid="42"
+    )
 
     knowledge_dir = fake_workspace / ".omo" / "_knowledge"
     health_log = knowledge_dir / "omo-health.jsonl"
@@ -165,7 +174,11 @@ def test_dashboard_monitor_writes_to_omo_health_not_governance_history(fake_work
 
     # omo-health.jsonl 必须出现 (1 条)
     assert health_log.exists(), "omo-health.jsonl 必须出现 (Round 20 P0)"
-    health_lines = [line_ for line_ in health_log.read_text(encoding="utf-8").splitlines() if line_.strip()]
+    health_lines = [
+        line_
+        for line_ in health_log.read_text(encoding="utf-8").splitlines()
+        if line_.strip()
+    ]
     assert len(health_lines) == 1
 
     # governance-history.jsonl 必须 NOT 出现 (本脚本不再写)
@@ -184,10 +197,18 @@ def test_omo_health_schema_is_eighth_in_registry():
 
     assert "omo_health" in SCHEMA_REGISTRY
     assert SCHEMA_REGISTRY["omo_health"] is OmoHealthRecord
-    assert len(SCHEMA_REGISTRY) >= 8, f"expected ≥ 8 consumers, got {len(SCHEMA_REGISTRY)}"
+    assert len(SCHEMA_REGISTRY) >= 8, (
+        f"expected ≥ 8 consumers, got {len(SCHEMA_REGISTRY)}"
+    )
     expected_keys = {
-        "omo_audit", "omo_bos_metrics", "omo_sync", "omo_alert",
-        "omo_event", "omo_history", "omo_trail", "omo_health",
+        "omo_audit",
+        "omo_bos_metrics",
+        "omo_sync",
+        "omo_alert",
+        "omo_event",
+        "omo_history",
+        "omo_trail",
+        "omo_health",
     }
     actual_keys = set(SCHEMA_REGISTRY.keys())
     assert expected_keys.issubset(actual_keys), (

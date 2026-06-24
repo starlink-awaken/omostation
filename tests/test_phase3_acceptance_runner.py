@@ -28,7 +28,13 @@ def test_run_suite_collects_counts_and_category(tmp_path, monkeypatch):
             name="wksp",
             category="workspace",
             cwd=ROOT / "projects" / "kairon",
-            command=[sys.executable, "-m", "pytest", "packages/wksp/src/wksp/tests/test_e2e_journey.py", "-q"],
+            command=[
+                sys.executable,
+                "-m",
+                "pytest",
+                "packages/wksp/src/wksp/tests/test_e2e_journey.py",
+                "-q",
+            ],
             timeout=120,
             env={"PHASE3_ACCEPTANCE": "1"},
         )

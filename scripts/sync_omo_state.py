@@ -4,6 +4,7 @@
 Previously at scripts/sync_omo_state.py. This wrapper points to the
 workspace-level script at ~/Workspace/scripts/sync_omo_state.py.
 """
+
 from __future__ import annotations
 
 import sys
@@ -13,7 +14,10 @@ _workspace = Path.home() / "Workspace"
 _script = _workspace / "scripts" / "sync_omo_state.py"
 
 if not _script.exists():
-    print(f"ERROR: {_script} not found. Run from a full workspace checkout.", file=sys.stderr)
+    print(
+        f"ERROR: {_script} not found. Run from a full workspace checkout.",
+        file=sys.stderr,
+    )
     raise SystemExit(1)
 
 # Inject workspace root so imports (omo.*) resolve

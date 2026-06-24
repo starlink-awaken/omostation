@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from omo.omo_debt_reporting_diff import build_reporting_diff_packet, render_reporting_diff_markdown
+from omo.omo_debt_reporting_diff import (
+    build_reporting_diff_packet,
+    render_reporting_diff_markdown,
+)
 
 
 def _owner_packet(
@@ -107,9 +110,21 @@ def test_build_reporting_diff_packet_computes_summary_deltas() -> None:
     assert packet["latest_run_stamp"] == "2026-06-10T00-00-00Z"
     assert packet["prior_run_stamp"] == "2026-06-01T00-00-00Z"
     assert packet["owners"] == {"compared": [], "added": [], "removed": []}
-    assert packet["summary_diff"]["total_items"] == {"latest": 9, "prior": 9, "delta": 0}
-    assert packet["summary_diff"]["state_counts"]["executed"] == {"latest": 2, "prior": 0, "delta": 2}
-    assert packet["summary_diff"]["approval_coverage_rate"] == {"latest": 1.0, "prior": 0.0, "delta": 1.0}
+    assert packet["summary_diff"]["total_items"] == {
+        "latest": 9,
+        "prior": 9,
+        "delta": 0,
+    }
+    assert packet["summary_diff"]["state_counts"]["executed"] == {
+        "latest": 2,
+        "prior": 0,
+        "delta": 2,
+    }
+    assert packet["summary_diff"]["approval_coverage_rate"] == {
+        "latest": 1.0,
+        "prior": 0.0,
+        "delta": 1.0,
+    }
     assert "owner_count" not in packet["summary_diff"]
 
 
@@ -203,8 +218,16 @@ def test_build_reporting_diff_packet_matches_shared_owners_by_name() -> None:
         "commerce-governance",
         "omo-governance",
     ]
-    assert packet["owners"]["compared"][0]["item_count"] == {"latest": 2, "prior": 1, "delta": 1}
-    assert packet["owners"]["compared"][1]["executed_item_count"] == {"latest": 1, "prior": 0, "delta": 1}
+    assert packet["owners"]["compared"][0]["item_count"] == {
+        "latest": 2,
+        "prior": 1,
+        "delta": 1,
+    }
+    assert packet["owners"]["compared"][1]["executed_item_count"] == {
+        "latest": 1,
+        "prior": 0,
+        "delta": 1,
+    }
     assert packet["owners"]["added"] == []
     assert packet["owners"]["removed"] == []
 
@@ -295,7 +318,9 @@ def test_build_reporting_diff_packet_surfaces_added_and_removed_owners() -> None
         prior_packet=prior,
     )
 
-    assert [entry["owner"] for entry in packet["owners"]["compared"]] == ["commerce-governance"]
+    assert [entry["owner"] for entry in packet["owners"]["compared"]] == [
+        "commerce-governance"
+    ]
     assert packet["owners"]["added"] == [{"owner": "new-owner"}]
     assert packet["owners"]["removed"] == [{"owner": "old-owner"}]
 
@@ -325,7 +350,11 @@ def test_build_reporting_diff_packet_writes_no_prior_run_state() -> None:
     assert packet["prior_run_stamp"] is None
     assert packet["prior_dispatch_run_ref"] is None
     assert packet["owners"] is None
-    assert packet["summary_diff"]["total_items"] == {"latest": 9, "prior": None, "delta": None}
+    assert packet["summary_diff"]["total_items"] == {
+        "latest": 9,
+        "prior": None,
+        "delta": None,
+    }
     assert packet["summary_diff"]["state_counts"]["pending_approval"] == {
         "latest": 1,
         "prior": None,

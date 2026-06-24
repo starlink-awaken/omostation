@@ -5,6 +5,7 @@ debt resolved 真源: resolved_debt_items 列表 (system.yaml) + debt_weight_ite
 旧 debt_weight_items 手动维护 → 漂移 (debt_summary/compute_debt_weight 无调用者, 声明≠实现, 同 OPT-7 计数漂移同病).
 此命令补齐标记入口, 守防虚标 (--confirm 必填).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,7 +45,9 @@ def cmd_debt_list(omo_dir: Path) -> int:
     items = data.get("debt_weight_items") or {}
     open_items = [(k, v) for k, v in items.items() if not v.get("resolved")]
     done_items = [(k, v) for k, v in items.items() if v.get("resolved")]
-    print(f"=== Debt ({len(items)} total: {len(open_items)} open / {len(done_items)} resolved) ===")
+    print(
+        f"=== Debt ({len(items)} total: {len(open_items)} open / {len(done_items)} resolved) ==="
+    )
     print(f"debt_weight: {data.get('debt_weight')}")
     if open_items:
         print("\n--- open ---")
@@ -136,10 +139,14 @@ def cmd_debt_desc(omo_dir: Path, debt_id: str, new_desc: str, dry_run: bool) -> 
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="omo debt", description="OMO debt 标记管理 (治本标记滞后/漂移)")
+    parser = argparse.ArgumentParser(
+        prog="omo debt", description="OMO debt 标记管理 (治本标记滞后/漂移)"
+    )
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("list", help="列 debt_weight_items + resolved 状态")
-    cp = sub.add_parser("close", help="标 debt resolved (治本标记滞后, --confirm 防虚标)")
+    cp = sub.add_parser(
+        "close", help="标 debt resolved (治本标记滞后, --confirm 防虚标)"
+    )
     cp.add_argument("debt_id", help="Debt ID (如 DEBT-FUTURE-ANNOTATIONS)")
     cp.add_argument("--dry-run", action="store_true", help="预览不写")
     cp.add_argument("--confirm", action="store_true", help="确认标记 (防虚标必填)")

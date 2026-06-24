@@ -13,6 +13,7 @@ Used by mcp_server.py (``bos://omo/debt`` etc., P30 era). Accepted via
 
 God Module 拆分 (2026-06): 本模块从 ``omo_bos.py`` 提取 — BOS URI 核心定义 + 解析.
 """
+
 from __future__ import annotations
 
 import os
@@ -24,9 +25,14 @@ from typing import Any, Literal
 
 # ── 路径配置 (P33-W3 暴露给外部) ──────────────────────
 # kairon packages 根目录 — kairon 23 个包, 包含 kos 实体存储
-_KAIRON_PACKAGES_SRC = Path(
-    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
-) / "projects" / "kairon" / "packages" / "kos" / "src"
+_KAIRON_PACKAGES_SRC = (
+    Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    / "projects"
+    / "kairon"
+    / "packages"
+    / "kos"
+    / "src"
+)
 
 # ── BOS URI 命名空间 ────────────────────────────────────────
 # 5 个 domain 固定不可扩展 (北星 ADR-0007 约束)
@@ -69,9 +75,12 @@ Protocol = Literal["http", "stdio", "internal"]
 
 # ── 持久化路径 ────────────────────────────────────────────
 # P33-W1: 战役 2 起步故意走本地 JSON (避开 KOS 写入复杂)
-DEFAULT_REGISTRY_PATH = Path(
-    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
-) / ".omo" / "_knowledge" / "bos-registry.json"
+DEFAULT_REGISTRY_PATH = (
+    Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    / ".omo"
+    / "_knowledge"
+    / "bos-registry.json"
+)
 
 
 # ── 数据类 ───────────────────────────────────────────────
@@ -127,8 +136,7 @@ def validate_bos_uri(uri: str) -> tuple[bool, str]:
         if pkg in LEGACY_DOMAIN_MAP:
             return (
                 True,
-                f"legacy 3-segment URI, auto-mapped to "
-                f"domain={LEGACY_DOMAIN_MAP[pkg]}",
+                f"legacy 3-segment URI, auto-mapped to domain={LEGACY_DOMAIN_MAP[pkg]}",
             )
         return (
             False,

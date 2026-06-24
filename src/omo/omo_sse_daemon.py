@@ -3,6 +3,7 @@ OMO SSE Daemon (Experimental)
 Phase 34 Wave 3: Event-Driven Transition.
 Listens to Agora's SSE Event Bus instead of polling.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -17,9 +18,15 @@ import httpx
 
 from omo.omo_daemon import run_once, _write_pid_file, _clear_pid_file, _setup_logging
 from omo.omo_paths import OMO_ROOT
+
 SSE_DAEMON_PORT = os.environ.get("OMO_SSE_DAEMON_PORT", "9091")
 
-from omo.omo_self_healing import get_healing_engine, start_http_status_server, start_hot_reload, notify_webhook  # noqa: E402
+from omo.omo_self_healing import (  # noqa: E402
+    get_healing_engine,
+    start_http_status_server,
+    start_hot_reload,
+    notify_webhook,
+)
 
 DAEMON_PID_FILE = OMO_ROOT / "_delivery" / "sse_daemon.pid"
 DAEMON_LOG_FILE = OMO_ROOT / "_delivery" / "sse_daemon.log"
@@ -34,10 +41,15 @@ def _send_notification(title: str, message: str) -> None:
     if not ENABLE_NOTIFICATIONS:
         return
     try:
-        subprocess.run([
-            "osascript", "-e",
-            f'display notification "{message}" with title "{title}"',
-        ], capture_output=True, timeout=3)
+        subprocess.run(
+            [
+                "osascript",
+                "-e",
+                f'display notification "{message}" with title "{title}"',
+            ],
+            capture_output=True,
+            timeout=3,
+        )
     except Exception:
         pass
 
@@ -47,7 +59,9 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
     logger.info(f"Connecting to Agora SSE bus at {AGORA_SSE_URL}...")
     healing = get_healing_engine() if ENABLE_SELF_HEALING else None
     if healing:
-        logger.info(f"Self-healing engine enabled: {len(healing._rules)} rules configured")
+        logger.info(
+            f"Self-healing engine enabled: {len(healing._rules)} rules configured"
+        )
 
     timeout = httpx.Timeout(None)
     async with httpx.AsyncClient(timeout=timeout) as client:
@@ -55,7 +69,9 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
             try:
                 async with client.stream("GET", AGORA_SSE_URL) as response:
                     if response.status_code != 200:
-                        logger.error(f"Failed to connect to SSE: HTTP {response.status_code}")
+                        logger.error(
+                            f"Failed to connect to SSE: HTTP {response.status_code}"
+                        )
                         await asyncio.sleep(5)
                         continue
 
@@ -82,13 +98,22 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                                 # 其他 → 仅计数 (不触发全量 audit)
 
                                 _governance_types = (
-                                    "pipeline:completed", "pipeline:step:ok",
-                                    "registry:service.registered", "node_completed",
-                                    "debt:created", "debt:reviewed",
+                                    "pipeline:completed",
+                                    "pipeline:step:ok",
+                                    "registry:service.registered",
+                                    "node_completed",
+                                    "debt:created",
+                                    "debt:reviewed",
                                 )
-                                if ev_type in _governance_types or ev_type.startswith("pipeline:") or ev_type.startswith("debt:"):
+                                if (
+                                    ev_type in _governance_types
+                                    or ev_type.startswith("pipeline:")
+                                    or ev_type.startswith("debt:")
+                                ):
                                     loop = asyncio.get_running_loop()
-                                    tick_result = await loop.run_in_executor(None, run_once)
+                                    tick_result = await loop.run_in_executor(
+                                        None, run_once
+                                    )
                                     if tick_result.error:
                                         logger.error(f"tick_error: {tick_result.error}")
                                     else:
@@ -102,32 +127,45 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                                     if healing_actions:
                                         logger.warning(
                                             "self_healing_triggered actions=%s",
-                                            json.dumps(healing_actions, default=str)[:500],
+                                            json.dumps(healing_actions, default=str)[
+                                                :500
+                                            ],
                                         )
                                         # 通知
                                         for ha in healing_actions:
-                                            if ha.get("severity") in ("critical", "high") or any(
-                                                a.get("type") == "debt_created" for a in ha.get("actions", [])
+                                            if ha.get("severity") in (
+                                                "critical",
+                                                "high",
+                                            ) or any(
+                                                a.get("type") == "debt_created"
+                                                for a in ha.get("actions", [])
                                             ):
                                                 _send_notification(
                                                     f"OMO Self-Healing: {ha['rule']}",
                                                     f"事件 {ha['event_type']} × {ha['count']} 触发 {ha['rule']}",
                                                 )
-                                                notify_webhook(ha["rule"], ha["event_type"], ha["count"], ha.get("severity", "warning"))
+                                                notify_webhook(
+                                                    ha["rule"],
+                                                    ha["event_type"],
+                                                    ha["count"],
+                                                    ha.get("severity", "warning"),
+                                                )
 
                             except json.JSONDecodeError:
                                 logger.warning(f"Failed to parse SSE data: {data_str}")
 
                         elif line == ": ping":
                             pass
-                            
+
             except httpx.RequestError as e:
                 if not stop_event.is_set():
                     logger.error(f"SSE connection error: {e}. Retrying in 5s...")
                     await asyncio.sleep(5)
             except Exception as e:
                 if not stop_event.is_set():
-                    logger.exception(f"Unexpected error in SSE loop: {e}. Retrying in 5s...")
+                    logger.exception(
+                        f"Unexpected error in SSE loop: {e}. Retrying in 5s..."
+                    )
                     await asyncio.sleep(5)
 
 

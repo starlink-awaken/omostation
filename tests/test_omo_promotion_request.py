@@ -24,7 +24,10 @@ def test_build_promotion_approval_request_creates_requested_record():
         approval_ref=approval_ref,
     )
 
-    assert record["approval_id"] == "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z"
+    assert (
+        record["approval_id"]
+        == "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z"
+    )
     assert record["approval_status"] == "requested"
     assert record["approval_scope"] == "task.promote_apply"
     assert record["refs"]["task_ref"] == ".omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml"
@@ -40,7 +43,10 @@ def test_build_promotion_approval_proposal_targets_requested_record():
         approval_ref=approval_ref,
     )
 
-    assert proposal["id"] == "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal"
+    assert (
+        proposal["id"]
+        == "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal"
+    )
     assert proposal["target"]["ref"] == approval_ref
     assert proposal["changes"]["set"]["approval_status"] == "granted"
     assert proposal["requested_by"] == "copilot-cli"

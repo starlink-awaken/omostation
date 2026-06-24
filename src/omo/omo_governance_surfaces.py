@@ -1401,7 +1401,9 @@ def _check_ingress_registry(
         capabilities_by_id if isinstance(capabilities_by_id, dict) else {}
     )
     capabilities_by_source_ref = (
-        capabilities_by_source_ref if isinstance(capabilities_by_source_ref, dict) else {}
+        capabilities_by_source_ref
+        if isinstance(capabilities_by_source_ref, dict)
+        else {}
     )
 
     for item_id, meta in goals_by_id.items():
@@ -1485,7 +1487,9 @@ def _check_ingress_registry(
     }
     for item_id, meta in capabilities_by_id.items():
         if not isinstance(meta, dict):
-            issues.append(f"ingress registry: capabilities.by_id.{item_id} not a mapping")
+            issues.append(
+                f"ingress registry: capabilities.by_id.{item_id} not a mapping"
+            )
             continue
         artifact_ref = meta.get("artifact_ref")
         if not isinstance(artifact_ref, str) or not artifact_ref.startswith(

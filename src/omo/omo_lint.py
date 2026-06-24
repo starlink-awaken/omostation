@@ -721,13 +721,13 @@ def _string_literals_in_expr(
             out.extend(_string_literals_in_expr(kw.value, assignments, seen=seen))
         return out
     if isinstance(node, ast.BinOp):
-        return _string_literals_in_expr(node.left, assignments, seen=seen) + _string_literals_in_expr(
-            node.right, assignments, seen=seen
-        )
+        return _string_literals_in_expr(
+            node.left, assignments, seen=seen
+        ) + _string_literals_in_expr(node.right, assignments, seen=seen)
     if isinstance(node, ast.Subscript):
-        return _string_literals_in_expr(node.value, assignments, seen=seen) + _string_literals_in_expr(
-            node.slice, assignments, seen=seen
-        )
+        return _string_literals_in_expr(
+            node.value, assignments, seen=seen
+        ) + _string_literals_in_expr(node.slice, assignments, seen=seen)
     if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
         out: list[str] = []
         for elt in node.elts:
@@ -776,27 +776,40 @@ def _sensitive_write_issues_in_file(path: Path) -> list[str]:
         target_expr: ast.AST | None = None
         op_name: str | None = None
 
-        if isinstance(node.func, ast.Attribute) and node.func.attr in _SENSITIVE_WRITE_METHODS:
+        if (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr in _SENSITIVE_WRITE_METHODS
+        ):
             target_expr = node.func.value
             op_name = node.func.attr
-        elif isinstance(node.func, ast.Name) and node.func.id in _SENSITIVE_WRITE_HELPERS:
+        elif (
+            isinstance(node.func, ast.Name) and node.func.id in _SENSITIVE_WRITE_HELPERS
+        ):
             if node.args:
                 target_expr = node.args[0]
                 op_name = node.func.id
         elif isinstance(node.func, ast.Name) and node.func.id == "open":
             mode_value: str | None = None
-            if len(node.args) >= 2 and isinstance(node.args[1], ast.Constant) and isinstance(
-                node.args[1].value, str
+            if (
+                len(node.args) >= 2
+                and isinstance(node.args[1], ast.Constant)
+                and isinstance(node.args[1].value, str)
             ):
                 mode_value = node.args[1].value
             else:
                 for kw in node.keywords:
-                    if kw.arg == "mode" and isinstance(kw.value, ast.Constant) and isinstance(
-                        kw.value.value, str
+                    if (
+                        kw.arg == "mode"
+                        and isinstance(kw.value, ast.Constant)
+                        and isinstance(kw.value.value, str)
                     ):
                         mode_value = kw.value.value
                         break
-            if mode_value and any(flag in mode_value for flag in ("w", "a", "x")) and node.args:
+            if (
+                mode_value
+                and any(flag in mode_value for flag in ("w", "a", "x"))
+                and node.args
+            ):
                 target_expr = node.args[0]
                 op_name = "open"
 
@@ -842,8 +855,7 @@ def cmd_lint_sensitive_governed_writes(paths: list[str] | None = None) -> int:
         return 1
 
     print(
-        "✅ omo lint sensitive-governed-writes pass: "
-        f"checked={checked} direct_writes=0"
+        f"✅ omo lint sensitive-governed-writes pass: checked={checked} direct_writes=0"
     )
     return 0
 
@@ -1026,18 +1038,12 @@ def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
     root = Path(workspace_root).resolve()
     ledger_path = root / ".omo" / "change-log" / "mutations.jsonl"
     if not ledger_path.exists():
-        print(
-            "❌ omo lint mutation-ledger fail: "
-            f"missing ledger file {ledger_path}"
-        )
+        print(f"❌ omo lint mutation-ledger fail: missing ledger file {ledger_path}")
         return 1
 
     entries = read_jsonl(ledger_path)
     if not entries:
-        print(
-            "❌ omo lint mutation-ledger fail: "
-            f"ledger is empty: {ledger_path}"
-        )
+        print(f"❌ omo lint mutation-ledger fail: ledger is empty: {ledger_path}")
         return 1
 
     issues: list[str] = []
@@ -1068,9 +1074,7 @@ def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
             continue
         artifact_path = root / artifact_ref
         if not artifact_path.exists():
-            issues.append(
-                f"entry {idx}: artifact_ref missing on disk {artifact_ref}"
-            )
+            issues.append(f"entry {idx}: artifact_ref missing on disk {artifact_ref}")
 
     if committed == 0:
         issues.append("no committed mutations found in ledger")
@@ -1117,7 +1121,9 @@ def main(argv: list[str] | None = None) -> int:
         help="拦截对 system/goals/tasks/capabilities 等敏感治理面的直接落盘",
     )
     sensitive_governed.add_argument(
-        "paths", nargs="*", help="要检查的 Python 文件/目录；默认扫 projects/omo/src/omo"
+        "paths",
+        nargs="*",
+        help="要检查的 Python 文件/目录；默认扫 projects/omo/src/omo",
     )
     ingress_registry = sub.add_parser(
         "ingress-registry",
@@ -1340,9 +1346,7 @@ def _check_doc_referenced(
     return (len(refs) > 0, refs)
 
 
-def cmd_lint_doc_lifecycle(
-    workspace_root: str = ".", verbose: bool = False
-) -> int:
+def cmd_lint_doc_lifecycle(workspace_root: str = ".", verbose: bool = False) -> int:
     """P45 R2: 文档生命周期 lint (第 14 维度).
 
     扫描 .omo/ 全部 .md/.yaml:
@@ -1362,7 +1366,9 @@ def cmd_lint_doc_lifecycle(
 
     md_files = list(omo.rglob("*.md")) + list(omo.rglob("*.yaml"))
     # 排除 _delivery (机器写) + drafts
-    md_files = [f for f in md_files if "_delivery" not in f.parts and "/drafts/" not in str(f)]
+    md_files = [
+        f for f in md_files if "_delivery" not in f.parts and "/drafts/" not in str(f)
+    ]
 
     total = len(md_files)
     by_category: dict[str, int] = {"ssot": 0, "contract": 0, "pattern": 0, "history": 0}
@@ -1436,9 +1442,7 @@ def cmd_lint_doc_lifecycle(
     print()
 
     need_fm_total = sum(by_category[c] for c in _DOC_LIFECYCLE_NEED_FRONTMATTER)
-    fm_coverage = (
-        (frontmatter_active / need_fm_total * 100) if need_fm_total else 100.0
-    )
+    fm_coverage = (frontmatter_active / need_fm_total * 100) if need_fm_total else 100.0
     print(f"📋 frontmatter 覆盖率 (ssot/contract/pattern): {fm_coverage:.1f}%")
     print(f"   active/deprecated/archived/experimental: {frontmatter_active}")
     print(f"   缺 frontmatter: {len(frontmatter_missing)}")
@@ -1539,10 +1543,10 @@ def cmd_lint_doc_archival_suggestions(workspace_root: str = ".") -> int:
     print("---")
     print()
     print("🔧 批量 frontmatter 脚本 (for standards):")
-    print('  for f in .omo/standards/*.md; do')
+    print("  for f in .omo/standards/*.md; do")
     print('    if ! head -1 "$f" | grep -q "^---$"; then')
     print('      { echo "---"; echo "status: deprecated"; echo "lifecycle: contract";')
-    print("        echo \"owner: governance-team\"; echo \"last-reviewed: 2026-06-22\";")
+    print('        echo "owner: governance-team"; echo "last-reviewed: 2026-06-22";')
     print('        echo "---"; cat "$f"; } > "$f.new" && mv "$f.new" "$f"')
     print("    fi")
     print("  done")

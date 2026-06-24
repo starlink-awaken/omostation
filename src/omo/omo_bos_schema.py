@@ -10,6 +10,7 @@ W3 升级: 引入 Pydantic BaseModel, 让:
 保持 backward compat: 旧 @dataclass BosRegistration 仍可 import.
 新代码推荐用 BosRegistrationModel.
 """
+
 from __future__ import annotations
 
 import re
@@ -53,6 +54,7 @@ class BosRegistrationModel(BaseModel):
         # 复用 omo_bos.parse_bos_uri (含 4-段 + 3-段 legacy 自动升级到 4-段),
         # 避免 URI 规则在 3 处 (BOS_URI_PATTERN / validate_bos_uri / schema) 漂移.
         from omo.omo_bos import parse_bos_uri
+
         try:
             parsed = parse_bos_uri(v)
         except ValueError as exc:
@@ -64,7 +66,11 @@ class BosRegistrationModel(BaseModel):
     @classmethod
     def _validate_endpoint(cls, v: str) -> str:
         # 占位符 (seed 但尚未实装) 允许
-        if v.startswith("placeholder://") or v.startswith("http://") or v.startswith("https://"):
+        if (
+            v.startswith("placeholder://")
+            or v.startswith("http://")
+            or v.startswith("https://")
+        ):
             return v
         # module:function 形式 — module 部分必须以字母开头
         if ":" in v:
@@ -74,7 +80,9 @@ class BosRegistrationModel(BaseModel):
             return v
         # 纯 module path
         if not re.match(r"^[a-zA-Z_][\w.]*$", v.strip()):
-            raise ValueError(f"endpoint must be module:function, http(s)://, or placeholder://, got: {v!r}")
+            raise ValueError(
+                f"endpoint must be module:function, http(s)://, or placeholder://, got: {v!r}"
+            )
         return v
 
     @model_validator(mode="after")
@@ -85,6 +93,7 @@ class BosRegistrationModel(BaseModel):
         (BOS_URI_PATTERN / validate_bos_uri / 此处) 漂移风险.
         """
         from omo.omo_bos import parse_bos_uri
+
         try:
             parsed = parse_bos_uri(self.uri)
         except ValueError:

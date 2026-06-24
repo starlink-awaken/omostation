@@ -31,7 +31,10 @@ def test_state_counts_match_task_directories_and_do_not_use_active_extras_shadow
     assert state["planned_tasks"] == planned_count
     assert state["blocked_tasks"] == blocked_count
     assert state["completed_tasks"] == done_count
-    assert state["total_tasks"] == active_count + planned_count + blocked_count + done_count
+    assert (
+        state["total_tasks"]
+        == active_count + planned_count + blocked_count + done_count
+    )
     assert "active_extras" not in state
 
 
@@ -80,7 +83,9 @@ def test_future_phase_pending_packets_in_active_require_promotion_handoff_ref():
         task = _load_yaml(task_file)
         if task.get("phase", 0) <= current_phase or task.get("status") != "pending":
             continue
-        has_promotion_ref = any("-promotion-" in ref for ref in task.get("handoff_refs", []))
+        has_promotion_ref = any(
+            "-promotion-" in ref for ref in task.get("handoff_refs", [])
+        )
         if not has_promotion_ref:
             failures.append(task["id"])
 
@@ -101,7 +106,10 @@ def test_coordinator_preclaims_worker_tasks_before_execution():
     ).read_text(encoding="utf-8")
 
     assert "coordinator 预占 lease" in tasks_readme
-    assert "Coordinator preclaims the task lease before worker execution." in worker_standard
+    assert (
+        "Coordinator preclaims the task lease before worker execution."
+        in worker_standard
+    )
     assert "Worker claims the task by setting:" not in worker_standard
 
 
@@ -147,7 +155,10 @@ def test_state_document_is_positioned_as_architecture_history_not_live_status_so
     state_text = (OMO / "STATE.md").read_text(encoding="utf-8")
 
     assert "架构历史与演进里程碑（legacy summary）" in index_text
-    assert "当前运行状态请以 `.omo/state/system.yaml` 与 `.omo/goals/current.yaml` 为准。" in state_text
+    assert (
+        "当前运行状态请以 `.omo/state/system.yaml` 与 `.omo/goals/current.yaml` 为准。"
+        in state_text
+    )
     assert "Phase 2 核心完成" not in state_text
 
 
@@ -329,10 +340,16 @@ def test_standards_registry_tracks_active_and_legacy_merged_docs():
 def test_legacy_standard_docs_redirect_to_consolidated_sources():
     mcp_standard = (OMO / "standards" / "MCP_STANDARDS.md").read_text(encoding="utf-8")
     mcp_transport = (OMO / "standards" / "mcp-transport.md").read_text(encoding="utf-8")
-    operation_rollout = (OMO / "standards" / "operation-level-rollout-plan.md").read_text(encoding="utf-8")
+    operation_rollout = (
+        OMO / "standards" / "operation-level-rollout-plan.md"
+    ).read_text(encoding="utf-8")
 
-    assert "已合并至 `.omo/standards/mcp-tool-and-transport-standard.md`" in mcp_standard
-    assert "已合并至 `.omo/standards/mcp-tool-and-transport-standard.md`" in mcp_transport
+    assert (
+        "已合并至 `.omo/standards/mcp-tool-and-transport-standard.md`" in mcp_standard
+    )
+    assert (
+        "已合并至 `.omo/standards/mcp-tool-and-transport-standard.md`" in mcp_transport
+    )
     assert "已合并至 `.omo/standards/operation-levels.md`" in operation_rollout
 
 
@@ -359,8 +376,12 @@ def test_diagram_index_lists_control_plane_state_flow():
 def test_llm_convergence_requirements_are_folded_into_future_planning():
     plans_readme = (OMO / "plans" / "README.md").read_text(encoding="utf-8")
     blueprint = (OMO / "MASTER-BLUEPRINT.md").read_text(encoding="utf-8")
-    phase3_specs = (OMO / "plans" / "phase3-task-specs-v2.md").read_text(encoding="utf-8")
-    llm_packet = (OMO / "plans" / "llm-convergence-planning-packet.md").read_text(encoding="utf-8")
+    phase3_specs = (OMO / "plans" / "phase3-task-specs-v2.md").read_text(
+        encoding="utf-8"
+    )
+    llm_packet = (OMO / "plans" / "llm-convergence-planning-packet.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "llm-convergence-requirements.md" in plans_readme
     assert "llm-convergence-requirements.md" in blueprint

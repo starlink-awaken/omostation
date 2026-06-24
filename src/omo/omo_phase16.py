@@ -597,7 +597,9 @@ def all_command(args: argparse.Namespace) -> int:
     for path, text in external_docs().items():
         write_text(path, text)
     print(
-        json.dumps({"status": "ready", "phase": 16, "artifacts": 10}, ensure_ascii=False)
+        json.dumps(
+            {"status": "ready", "phase": 16, "artifacts": 10}, ensure_ascii=False
+        )
     )
     return 0
 
@@ -620,13 +622,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     walkthrough = sub.add_parser("walkthrough")
     walkthrough.add_argument(
-        "--output", default=".omo/_delivery/evidence/phase16/capture-search-walkthrough.yaml"
+        "--output",
+        default=".omo/_delivery/evidence/phase16/capture-search-walkthrough.yaml",
     )
     walkthrough.set_defaults(func=walkthrough_command)
 
     run_record = sub.add_parser("run-record")
     run_record.add_argument(
-        "--output", default=".omo/_delivery/evidence/phase16/knowledge-capture-run-record.yaml"
+        "--output",
+        default=".omo/_delivery/evidence/phase16/knowledge-capture-run-record.yaml",
     )
     run_record.set_defaults(func=run_record_command)
 

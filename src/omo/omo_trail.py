@@ -32,6 +32,7 @@ CLI:
     omo trail show --limit 20
     omo trail show --actor user --limit 50
 """
+
 from __future__ import annotations
 
 import argparse
@@ -189,7 +190,9 @@ def main(argv: list[str] | None = None) -> int:
 
     # record 子命令
     rec = sub.add_parser("record", help="追加一条 trail step (走 Pydantic 校验)")
-    rec.add_argument("--actor", required=True, help="actor (e.g. user, agent:foo, cli:omo)")
+    rec.add_argument(
+        "--actor", required=True, help="actor (e.g. user, agent:foo, cli:omo)"
+    )
     rec.add_argument("--action", required=True, help="action (e.g. edit, read, exec)")
     rec.add_argument("--target", required=True, help="target (file path / command)")
     rec.add_argument(
@@ -218,14 +221,28 @@ def main(argv: list[str] | None = None) -> int:
 
     # show 子命令
     show = sub.add_parser("show", help="显示最近 trail (倒序)")
-    show.add_argument("--limit", "-n", type=int, default=20, help="最多显示 N 条 (默认 20)")
+    show.add_argument(
+        "--limit", "-n", type=int, default=20, help="最多显示 N 条 (默认 20)"
+    )
     show.add_argument("--actor", default=None, help="按 actor 过滤")
     show.add_argument("--action", default=None, help="按 action 过滤")
-    show.add_argument("--log", type=Path, default=DEFAULT_TRAIL_PATH, help=f"源 .jsonl (默认: {DEFAULT_TRAIL_PATH})")
+    show.add_argument(
+        "--log",
+        type=Path,
+        default=DEFAULT_TRAIL_PATH,
+        help=f"源 .jsonl (默认: {DEFAULT_TRAIL_PATH})",
+    )
 
     # seed 子命令 (Round 19 P0: 让 trail 业务真落地, 写 5 条样例 step)
-    seed = sub.add_parser("seed", help="写 5 条样例 step (Round 19 P0 — 让 trail.jsonl 出现)")
-    seed.add_argument("--log", type=str, default=str(DEFAULT_TRAIL_PATH), help=f"落点 .jsonl (默认: {DEFAULT_TRAIL_PATH})")
+    seed = sub.add_parser(
+        "seed", help="写 5 条样例 step (Round 19 P0 — 让 trail.jsonl 出现)"
+    )
+    seed.add_argument(
+        "--log",
+        type=str,
+        default=str(DEFAULT_TRAIL_PATH),
+        help=f"落点 .jsonl (默认: {DEFAULT_TRAIL_PATH})",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "record":
@@ -234,6 +251,7 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_trail_show(args)
     if args.command == "seed":
         from omo.omo_trail_seed import cmd_trail_seed
+
         # 把 str 转 Path-like 给 record_step (record_step 接 Path | str)
         args.log = Path(args.log)
         return cmd_trail_seed(args)

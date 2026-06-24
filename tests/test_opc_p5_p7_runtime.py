@@ -17,7 +17,9 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_p5_radar_history_tracks_manual_and_cron_runs(tmp_path):
-    module = _load_module("opc_p5_radar_cron_test", ROOT / "scripts" / "opc_p5_radar_cron.py")
+    module = _load_module(
+        "opc_p5_radar_cron_test", ROOT / "scripts" / "opc_p5_radar_cron.py"
+    )
     module.ROOT = tmp_path
     payload = {
         "generated_at": "2026-06-12T00:00:00Z",
@@ -26,9 +28,24 @@ def test_p5_radar_history_tracks_manual_and_cron_runs(tmp_path):
         "archive_path": "/tmp/archive-1.json",
         "db_path": "/tmp/data.db",
         "candidates": [
-            {"source": "cockpit:research", "timestamp": "2026-06-12T00:00:00Z", "next_action": "x", "evidence_id": 1},
-            {"source": "cockpit:research", "timestamp": "2026-06-12T00:00:01Z", "next_action": "y", "evidence_id": 2},
-            {"source": "cockpit:research (DB unavailable)", "timestamp": "2026-06-12T00:00:02Z", "next_action": "z", "evidence_id": None},
+            {
+                "source": "cockpit:research",
+                "timestamp": "2026-06-12T00:00:00Z",
+                "next_action": "x",
+                "evidence_id": 1,
+            },
+            {
+                "source": "cockpit:research",
+                "timestamp": "2026-06-12T00:00:01Z",
+                "next_action": "y",
+                "evidence_id": 2,
+            },
+            {
+                "source": "cockpit:research (DB unavailable)",
+                "timestamp": "2026-06-12T00:00:02Z",
+                "next_action": "z",
+                "evidence_id": None,
+            },
         ],
     }
     history1 = module._update_history(payload)
@@ -46,7 +63,9 @@ def test_p5_radar_history_tracks_manual_and_cron_runs(tmp_path):
 
 
 def test_p6_weekly_loop_history_tracks_consecutive_weeks(tmp_path):
-    module = _load_module("opc_p6_weekly_loop_test", ROOT / "scripts" / "opc_p6_weekly_loop.py")
+    module = _load_module(
+        "opc_p6_weekly_loop_test", ROOT / "scripts" / "opc_p6_weekly_loop.py"
+    )
     module.ROOT = tmp_path
     module._call_radar = lambda: {
         "scenario": "technical-radar",
@@ -67,9 +86,15 @@ def test_p6_weekly_loop_history_tracks_consecutive_weeks(tmp_path):
     module.write_evidence("2026-W23", payload1)
     module.write_evidence("2026-W24", payload2)
 
-    history_path = tmp_path / ".omo" / "_control" / "evolution" / "loop" / "history.json"
+    history_path = (
+        tmp_path / ".omo" / "_control" / "evolution" / "loop" / "history.json"
+    )
     history = json.loads(history_path.read_text(encoding="utf-8"))
-    trace_index = json.loads((tmp_path / ".omo" / "_control" / "evolution" / "loop" / "trace-index.json").read_text(encoding="utf-8"))
+    trace_index = json.loads(
+        (
+            tmp_path / ".omo" / "_control" / "evolution" / "loop" / "trace-index.json"
+        ).read_text(encoding="utf-8")
+    )
     assert history["summary"]["weeks_recorded"] == 2
     assert history["summary"]["max_consecutive_weeks"] == 2
     assert payload2["history"]["summary"]["latest_week"] == "2026-W24"
@@ -106,7 +131,9 @@ def test_p6_weekly_loop_runtime_executes_pipeline(tmp_path):
 
 
 def test_p6_self_evolve_nop_carries_loop_history_ref(tmp_path):
-    module = _load_module("opc_p6_self_evolve_test", ROOT / "scripts" / "opc_p6_self_evolve.py")
+    module = _load_module(
+        "opc_p6_self_evolve_test", ROOT / "scripts" / "opc_p6_self_evolve.py"
+    )
     module.ROOT = tmp_path
     drift_dir = tmp_path / ".omo" / "_control" / "evolution" / "drift"
     drift_dir.mkdir(parents=True, exist_ok=True)
@@ -130,7 +157,9 @@ def test_p6_self_evolve_nop_carries_loop_history_ref(tmp_path):
 
 
 def test_p6_approval_board_writes_current_board(tmp_path):
-    module = _load_module("opc_p6_approval_board_test", ROOT / "scripts" / "opc_p6_approval_board.py")
+    module = _load_module(
+        "opc_p6_approval_board_test", ROOT / "scripts" / "opc_p6_approval_board.py"
+    )
     module.ROOT = tmp_path
     planned_dir = tmp_path / ".omo" / "tasks" / "planned"
     planned_dir.mkdir(parents=True, exist_ok=True)
@@ -157,7 +186,9 @@ def test_p6_approval_board_writes_current_board(tmp_path):
 
 
 def test_p7_release_cycle_uses_incrementing_index(tmp_path):
-    module = _load_module("opc_p7_release_cycle_test", ROOT / "scripts" / "opc_p7_release_cycle.py")
+    module = _load_module(
+        "opc_p7_release_cycle_test", ROOT / "scripts" / "opc_p7_release_cycle.py"
+    )
     module.ROOT = tmp_path
     module._today = lambda: "2026-06-12"
     module._gather_changes = lambda: {
@@ -177,7 +208,11 @@ def test_p7_release_cycle_uses_incrementing_index(tmp_path):
 
     assert cycle1["version"] == "v2026-06-12-r1"
     assert cycle2["version"] == "v2026-06-12-r2"
-    index = json.loads((tmp_path / ".omo" / "_delivery" / "release" / "index.json").read_text(encoding="utf-8"))
+    index = json.loads(
+        (tmp_path / ".omo" / "_delivery" / "release" / "index.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert index["summary"]["release_count"] == 2
     assert index["summary"]["latest_version"] == "v2026-06-12-r2"
     assert index["summary"]["manual_run_count"] == 2
@@ -185,12 +220,22 @@ def test_p7_release_cycle_uses_incrementing_index(tmp_path):
 
 
 def test_p7_audit_rollout_history_index_tracks_mode_and_trigger(tmp_path):
-    module = _load_module("opc_p7_audit_rollout_daemon_test", ROOT / "scripts" / "opc_p7_audit_rollout_daemon.py")
+    module = _load_module(
+        "opc_p7_audit_rollout_daemon_test",
+        ROOT / "scripts" / "opc_p7_audit_rollout_daemon.py",
+    )
     module.ROOT = tmp_path
     module._today = lambda: "2026-06-12"
     module._now_iso = lambda: "2026-06-12T00:00:00Z"
     module._trigger_source = lambda: "cron"
-    history_path = tmp_path / ".omo" / "_control" / "evolution" / "drift-history" / "2026-06-12.json"
+    history_path = (
+        tmp_path
+        / ".omo"
+        / "_control"
+        / "evolution"
+        / "drift-history"
+        / "2026-06-12.json"
+    )
     history_path.parent.mkdir(parents=True, exist_ok=True)
     history_path.write_text("{}", encoding="utf-8")
     rollout = {
@@ -209,7 +254,10 @@ def test_p7_audit_rollout_fallback_writes_mode_output(tmp_path):
 
     fake_run 模拟 5repos.py 跑出 mode-specific 文件 (5repos.py 内部读 OPC_MODE).
     """
-    module = _load_module("opc_p7_audit_rollout_daemon_fallback_test", ROOT / "scripts" / "opc_p7_audit_rollout_daemon.py")
+    module = _load_module(
+        "opc_p7_audit_rollout_daemon_fallback_test",
+        ROOT / "scripts" / "opc_p7_audit_rollout_daemon.py",
+    )
     module.ROOT = tmp_path
     module._today = lambda: "2026-06-12"
     out_dir = tmp_path / ".omo" / "_delivery" / "audit-rollout"
@@ -249,7 +297,9 @@ def test_p7_audit_rollout_fallback_writes_mode_output(tmp_path):
 
 
 def test_p7_doc_lint_tracks_run_history(tmp_path):
-    module = _load_module("opc_p7_doc_lint_test", ROOT / "scripts" / "opc_p7_doc_lint.py")
+    module = _load_module(
+        "opc_p7_doc_lint_test", ROOT / "scripts" / "opc_p7_doc_lint.py"
+    )
     module.ROOT = tmp_path
     docs = tmp_path / "docs"
     docs.mkdir()
@@ -270,11 +320,21 @@ def test_p7_doc_lint_tracks_run_history(tmp_path):
     planned.mkdir(parents=True)
     yaml_body = "gate: Gate E\ngate_status: passed\n"
     (planned / "OPC-P4-MODEL-COMPUTE.yaml").write_text(yaml_body, encoding="utf-8")
-    (planned / "OPC-P5-SCENARIOS.yaml").write_text("gate: Gate F\ngate_status: not_yet_passed\n", encoding="utf-8")
-    (planned / "OPC-P6-EVOLUTION-LOOP.yaml").write_text("gate: Gate G\ngate_status: not_yet_passed\n", encoding="utf-8")
-    (planned / "OPC-P7-RELEASE-TRAIN.yaml").write_text("gate: Gate H\ngate_status: not_yet_passed\n", encoding="utf-8")
+    (planned / "OPC-P5-SCENARIOS.yaml").write_text(
+        "gate: Gate F\ngate_status: not_yet_passed\n", encoding="utf-8"
+    )
+    (planned / "OPC-P6-EVOLUTION-LOOP.yaml").write_text(
+        "gate: Gate G\ngate_status: not_yet_passed\n", encoding="utf-8"
+    )
+    (planned / "OPC-P7-RELEASE-TRAIN.yaml").write_text(
+        "gate: Gate H\ngate_status: not_yet_passed\n", encoding="utf-8"
+    )
 
     rc = module.main()
     assert rc == 0
-    index = json.loads((tmp_path / ".omo" / "_delivery" / "doc-lint" / "index.json").read_text(encoding="utf-8"))
+    index = json.loads(
+        (tmp_path / ".omo" / "_delivery" / "doc-lint" / "index.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert index["summary"]["run_count"] == 1

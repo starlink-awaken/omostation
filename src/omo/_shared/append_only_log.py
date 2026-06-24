@@ -28,6 +28,7 @@
       lock=fcntl_lock(path.with_suffix(".lock")),
   )
 """
+
 from __future__ import annotations
 
 import json
@@ -57,6 +58,7 @@ class fcntl_lock:
 
     def __enter__(self) -> "fcntl_lock":
         import fcntl  # POSIX-only; 延迟 import 让 Windows 测试可 import
+
         self.lock_path.parent.mkdir(parents=True, exist_ok=True)
         self._fd = os.open(str(self.lock_path), os.O_CREAT | os.O_RDWR, 0o644)
         fcntl.flock(self._fd, fcntl.LOCK_EX)
@@ -65,6 +67,7 @@ class fcntl_lock:
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
         if self._fd is not None:
             import fcntl
+
             try:
                 fcntl.flock(self._fd, fcntl.LOCK_UN)
             finally:
@@ -130,7 +133,9 @@ class AppendOnlyLog:
         Round 9 P1: 加 Pydantic 写时校验 (opt-in). 不传 schema = 旧行为不变.
         """
         # 1. Pydantic instance → dict (透明转换)
-        if hasattr(record, "model_dump") and callable(getattr(record, "model_dump", None)):
+        if hasattr(record, "model_dump") and callable(
+            getattr(record, "model_dump", None)
+        ):
             record = record.model_dump()
 
         # 2. Pydantic schema 校验 (fail-fast, 不静默)
@@ -156,15 +161,19 @@ class AppendOnlyLog:
         """读所有 records (容错: 错行保留为 ``{"raw": ...}``)."""
         # 延迟 import 避免循环依赖 (omo_io.read_jsonl 在原 omo_io.py)
         from omo.omo_io import read_jsonl
+
         return read_jsonl(self.path)
 
-    def tail(self, n: int, *, initial_chunk_size: int = 8192, max_chunk_size: int = 1_048_576) -> list[dict[str, Any]]:
+    def tail(
+        self, n: int, *, initial_chunk_size: int = 8192, max_chunk_size: int = 1_048_576
+    ) -> list[dict[str, Any]]:
         """读最近 N 条 records (Round 9 P2 真正 O(n) 性能).
 
         算法: windowed seek — 从末尾 8KB 起始, 读 + parse 累计, 不够 n 条就
         把窗口翻倍 (doubling), 直到满足或触顶 1MB. 真正 O(n) 而非 O(file_size).
         """
         from omo.omo_io import read_jsonl
+
         if n <= 0 or not self.path.exists():
             return []
         file_size = self.path.stat().st_size
@@ -260,6 +269,7 @@ class AppendOnlyLog:
         注: 文件保留 (空文件), 不删除 — 避免消费者误判文件不存在.
         """
         from omo.omo_io import write_text_atomic
+
         if not self.path.exists():
             return 0
         n = len(self.read_all())
@@ -286,6 +296,7 @@ class AppendOnlyLog:
         """按 ``field`` 分组统计 record 数 (Round 7 P0 通用聚合)."""
         log = AppendOnlyLog(path) if path is not None else self
         from collections import defaultdict
+
         counter: dict[str, int] = defaultdict(int)
         for r in log.read_all():
             v = r.get(field, "<missing>")

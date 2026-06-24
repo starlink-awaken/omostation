@@ -6,6 +6,7 @@ P44-W1: 死连接 LRU 淘汰
 P45-W5: 后台 heartbeat 清理 idle 死连接
 P58-W1: 从 omo_llm_bos_bridge.py 716 行抽出
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -113,9 +114,7 @@ class _AgoraPool:
                 return None, {"type": "pool_broken_pipe", "details": str(exc)}
 
             try:
-                line = await asyncio.wait_for(
-                    self._proc.stdout.readline(), timeout=30
-                )
+                line = await asyncio.wait_for(self._proc.stdout.readline(), timeout=30)
             except asyncio.TimeoutError:
                 return None, {"type": "pool_read_timeout", "details": "30s timeout"}
 
@@ -159,9 +158,7 @@ class _AgoraPoolManager:
     P58-W1: 移到独立 module.
     """
 
-    HEARTBEAT_INTERVAL_SEC = float(
-        os.environ.get("OMO_AGORA_HEARTBEAT_SEC", "30.0")
-    )
+    HEARTBEAT_INTERVAL_SEC = float(os.environ.get("OMO_AGORA_HEARTBEAT_SEC", "30.0"))
 
     def __init__(
         self,
@@ -314,7 +311,9 @@ async def _get_agora_pool() -> _AgoraPoolManager | None:
             return None
 
 
-async def _resolve_via_agora_subprocess(uri: str, args: dict[str, Any]) -> dict[str, Any] | None:
+async def _resolve_via_agora_subprocess(
+    uri: str, args: dict[str, Any]
+) -> dict[str, Any] | None:
     """跨进程调 agora venv 跑 resolve_bos_uri (P32 跨进程架构, P42-W2 落地, P43-W0 长驻池).
 
     设计理由:
@@ -339,14 +338,22 @@ async def _resolve_via_agora_subprocess(uri: str, args: dict[str, Any]) -> dict[
                 await manager.release(pool, alive=alive)
                 if err is not None:
                     record_agora_failure(uri, err["type"], err["details"])
-                    return {"_subprocess_error": err["details"], "transport": "agora_pool"}
+                    return {
+                        "_subprocess_error": err["details"],
+                        "transport": "agora_pool",
+                    }
                 if isinstance(result, dict):
                     result.setdefault("_transport", "agora_pool")
                 return result
             except Exception as exc:
                 await manager.release(pool, alive=False)
-                record_agora_failure(uri, "invoke_exception", f"{type(exc).__name__}: {exc}")
-                return {"_subprocess_error": f"{type(exc).__name__}: {exc}", "transport": "agora_pool"}
+                record_agora_failure(
+                    uri, "invoke_exception", f"{type(exc).__name__}: {exc}"
+                )
+                return {
+                    "_subprocess_error": f"{type(exc).__name__}: {exc}",
+                    "transport": "agora_pool",
+                }
 
     # Fallback: 一次性 subprocess (P42-W2 行为, 长驻池启动失败时)
     result = await _resolve_via_oneoff_subprocess(uri, args)
@@ -413,7 +420,9 @@ async def _resolve_via_oneoff_subprocess(
 
     if proc.returncode != 0:
         stderr_text = stderr.decode("utf-8", errors="replace")
-        record_agora_failure(uri, "non_zero_exit", f"rc={proc.returncode} stderr={stderr_text[:200]}")
+        record_agora_failure(
+            uri, "non_zero_exit", f"rc={proc.returncode} stderr={stderr_text[:200]}"
+        )
         return {"_subprocess_error": stderr_text}
 
     try:

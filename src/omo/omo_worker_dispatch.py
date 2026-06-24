@@ -20,6 +20,7 @@ from .omo_worker_core import (
     _write_yaml,
 )
 
+
 def dispatch_task(
     root: Path,
     task_id: str,
@@ -258,9 +259,11 @@ def dispatch_task(
         prompt_text = (root / prompt_path).read_text(encoding="utf-8")
         argv = _build_launch_argv(registry, worker_id, transport, prompt_text)
         result = subprocess.run(argv, cwd=root, capture_output=True, text=True)
-        log_content = redact_sensitive_text((result.stdout or "") + (result.stderr or ""))
+        log_content = redact_sensitive_text(
+            (result.stdout or "") + (result.stderr or "")
+        )
         write_text_atomic(root / stdout_path, log_content)
-        
+
         # Phase 28 Step 3: Tri-Plane Bus - Broadcast event to Agora EventBus
         def push_log_to_agora(dispatch_id: str, content: str):
             """Push log synchronization event to Agora via internal Event Bus."""
@@ -268,43 +271,45 @@ def dispatch_task(
                 import urllib.request
                 import json
                 import os
+
                 req = urllib.request.Request(
                     "http://127.0.0.1:7430/api/events",
-                    data=json.dumps({
-                        "type": "omo:log_sync",
-                        "source": "omo_worker",
-                        "payload": {
-                            "dispatch_id": dispatch_id,
-                            "content": content
+                    data=json.dumps(
+                        {
+                            "type": "omo:log_sync",
+                            "source": "omo_worker",
+                            "payload": {"dispatch_id": dispatch_id, "content": content},
                         }
-                    }).encode("utf-8"),
-                    method="POST"
+                    ).encode("utf-8"),
+                    method="POST",
                 )
                 req.add_header("Content-Type", "application/json")
-                
+
                 jwt_secret = os.environ.get("AGORA_JWT_SECRET")
                 api_key = os.environ.get("AGORA_API_KEY")
                 if jwt_secret:
                     import jwt
                     import time
+
                     token = jwt.encode(
-                        {"role": "system_daemon", "exp": time.time() + 3600}, 
-                        jwt_secret, 
-                        algorithm="HS256"
+                        {"role": "system_daemon", "exp": time.time() + 3600},
+                        jwt_secret,
+                        algorithm="HS256",
                     )
                     req.add_header("Authorization", f"Bearer {token}")
                 elif api_key:
                     req.add_header("X-API-Key", api_key)
-                    
+
                 # Bypass proxy for 127.0.0.1
                 proxy_handler = urllib.request.ProxyHandler({})
                 opener = urllib.request.build_opener(proxy_handler)
                 opener.open(req, timeout=3.0)
             except Exception as e:
                 print(f"⚠️ Failed to broadcast log via Tri-Plane Bus: {e}")
+
         push_log_to_agora(dispatch_id, log_content)
         print(f"✅ Sync'ed {dispatch_id} log via Tri-Plane Bus")
-            
+
         dispatch["dispatch_state"] = "active"
         dispatch["lease"]["last_material_write_at"] = _utc_now()
         _write_yaml(root / dispatch_path, dispatch)
@@ -442,7 +447,6 @@ def yield_task(
     return 0
 
 
-
 def _worker_gc(
     root: Path, dry_run: bool = False, retain: int = 50, omo_dir: str | Path = ".omo"
 ) -> int:
@@ -514,11 +518,12 @@ def _worker_gc(
         f"GC complete: retained {retain} dispatch runs, "
         f"cleaned {len(to_delete)} old runs ({total_files} files)"
     )
-    
+
     if not dry_run:
         _fast_track_compaction(root, omo_dir=omo_dir)
-        
+
     return 0
+
 
 def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
     """[C2G v2] Fast-Track 碎片聚变机制
@@ -527,33 +532,35 @@ def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
     omo_path = _omo_path(root, omo_dir)
     done_dir = omo_path / "tasks" / "done"
     audit_dir = omo_path / "_knowledge" / "audits"
-    
+
     if not done_dir.exists():
         return
-        
+
     fast_tasks = list(done_dir.glob("FAST-*.yaml"))
     if len(fast_tasks) < 5:
         # 数量不够，暂不聚变
         return
-        
+
     audit_dir.mkdir(parents=True, exist_ok=True)
-    
+
     compaction_time = _timestamp_slug(_utc_now())
     report_name = f"Fast-Track-Compaction-{compaction_time}"
-    
+
     report_lines = [
         f"# 微小价值交付聚变报告 ({compaction_time})",
         "",
         "| Task ID | 标题 | 锚点 | 归档时间 |",
-        "|---|---|---|---|"
+        "|---|---|---|---|",
     ]
-    
+
     for task_file in fast_tasks:
         try:
             task = _load_yaml(task_file)
             title = task.get("title", "Unknown")
             context_uri = task.get("context_uri", "N/A")
-            report_lines.append(f"| {task_file.stem} | {title} | `{context_uri}` | {_utc_now()} |")
+            report_lines.append(
+                f"| {task_file.stem} | {title} | `{context_uri}` | {_utc_now()} |"
+            )
 
             archive_done_task(
                 omo_path,
@@ -573,5 +580,6 @@ def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
             actor="projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction",
             source_ref="omo:worker-dispatch:fast-track-compaction",
         )
-        print(f"✅ Fast-Track 微观碎片已聚变: 归档了 {len(fast_tasks)} 个任务，生成报告 {report_name}.md")
-
+        print(
+            f"✅ Fast-Track 微观碎片已聚变: 归档了 {len(fast_tasks)} 个任务，生成报告 {report_name}.md"
+        )

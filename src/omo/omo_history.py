@@ -16,6 +16,7 @@ API:
   - 容忍历史文件缺失/损坏(坏行被跳过)
   - 与 kairon-governance 旧 JSONL 完全兼容(history 路径不变)
 """
+
 from __future__ import annotations
 
 import json
@@ -24,7 +25,9 @@ from typing import Any
 
 from omo.omo_io import AppendOnlyLog
 from omo.omo_audit import _utc_now  # Round 8 P2 锁: 时间戳 Z 结尾统一
-from omo.omo_io_schemas import OmoHistoryRecord  # Round 18 P0: 写时 Pydantic 校验 (X1 审计契约)
+from omo.omo_io_schemas import (
+    OmoHistoryRecord,
+)  # Round 18 P0: 写时 Pydantic 校验 (X1 审计契约)
 from omo.omo_paths import GOVERNANCE_HISTORY_PATH
 
 # 默认历史文件路径

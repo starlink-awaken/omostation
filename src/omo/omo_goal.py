@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """OMO goal CLI — read and display Phase goals from _truth/goals/."""
+
 from __future__ import annotations
 
 import argparse
@@ -59,14 +60,19 @@ def cmd_goal_status(omo_dir: Path) -> int:
     done = sum(1 for g in goals if g.get("status") == "done")
     active = sum(1 for g in goals if g.get("status") == "active")
     pending = sum(1 for g in goals if g.get("status") not in ("done", "active"))
-    print(json.dumps({
-        "phase": data.get("phase"),
-        "wave": data.get("current_wave"),
-        "total": len(goals),
-        "done": done,
-        "active": active,
-        "pending": pending,
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "phase": data.get("phase"),
+                "wave": data.get("current_wave"),
+                "total": len(goals),
+                "done": done,
+                "active": active,
+                "pending": pending,
+            },
+            indent=2,
+        )
+    )
     return 0
 
 
@@ -91,7 +97,9 @@ def cmd_goal_create(
         print(f"❌ {exc}", file=sys.stderr)
         return 1
     print(f"✅ Governed goal {goal_id} created")
-    print(f"Artifact: {omo_dir / '_delivery' / 'ingress' / 'goals' / f'{goal_id}.yaml'}")
+    print(
+        f"Artifact: {omo_dir / '_delivery' / 'ingress' / 'goals' / f'{goal_id}.yaml'}"
+    )
     return 0
 
 
@@ -117,17 +125,23 @@ def cmd_goal_progress(omo_dir: Path, goal_id: str, progress: float) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="omo goal", description="OMO Phase goal management")
+    parser = argparse.ArgumentParser(
+        prog="omo goal", description="OMO Phase goal management"
+    )
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("list", help="List all Phase goals")
     sub.add_parser("status", help="Show goal completion (JSON)")
     gc = sub.add_parser("create", help="Create a new goal")
     gc.add_argument("--id", required=True, help="Goal ID (e.g. G29.1)")
     gc.add_argument("--desc", required=True, help="Goal description")
-    gc.add_argument("--source-ref", default="", help="Stable source ref for ingress registry")
+    gc.add_argument(
+        "--source-ref", default="", help="Stable source ref for ingress registry"
+    )
     gp = sub.add_parser("progress", help="Update goal progress")
     gp.add_argument("--id", required=True, help="Goal ID")
-    gp.add_argument("--pct", type=float, required=True, help="Progress percentage (0-100)")
+    gp.add_argument(
+        "--pct", type=float, required=True, help="Progress percentage (0-100)"
+    )
     args = parser.parse_args(argv)
     omo_dir = _find_omo_dir()
     if args.command == "list":

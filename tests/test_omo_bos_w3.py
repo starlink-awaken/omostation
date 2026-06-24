@@ -5,6 +5,7 @@ Covers:
 - Metrics (omo_bos_metrics.py): record, summary, percentile, p95/p99
 - CLI: omo bos status / discover / health (subprocess smoke)
 """
+
 from __future__ import annotations
 
 import json
@@ -26,6 +27,7 @@ if str(OMO_SRC) not in sys.path:
 class TestBosRegistrationModel:
     def test_valid_4_segment(self):
         from omo.omo_bos_schema import BosRegistrationModel
+
         m = BosRegistrationModel(
             uri="bos://memory/kos/search",
             domain="memory",
@@ -40,6 +42,7 @@ class TestBosRegistrationModel:
     def test_invalid_domain_rejected(self):
         from omo.omo_bos_schema import BosRegistrationModel
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError) as exc_info:
             BosRegistrationModel(
                 uri="bos://bad/foo/bar",
@@ -47,11 +50,15 @@ class TestBosRegistrationModel:
                 package="foo",
                 action="bar",
             )
-        assert "domain" in str(exc_info.value).lower() or "uri" in str(exc_info.value).lower()
+        assert (
+            "domain" in str(exc_info.value).lower()
+            or "uri" in str(exc_info.value).lower()
+        )
 
     def test_uri_domain_field_mismatch_rejected(self):
         from omo.omo_bos_schema import BosRegistrationModel
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError):
             BosRegistrationModel(
                 uri="bos://memory/kos/search",
@@ -62,6 +69,7 @@ class TestBosRegistrationModel:
 
     def test_legacy_3_segment_auto_mapped(self):
         from omo.omo_bos_schema import BosRegistrationModel
+
         m = BosRegistrationModel(
             uri="bos://omo/audit",  # 3-段, LEGACY_DOMAIN_MAP 自动升级
             domain="governance",
@@ -73,6 +81,7 @@ class TestBosRegistrationModel:
 
     def test_endpoint_placeholder_allowed(self):
         from omo.omo_bos_schema import BosRegistrationModel
+
         m = BosRegistrationModel(
             uri="bos://memory/kos/search",
             domain="memory",
@@ -84,6 +93,7 @@ class TestBosRegistrationModel:
 
     def test_endpoint_http_allowed(self):
         from omo.omo_bos_schema import BosRegistrationModel
+
         m = BosRegistrationModel(
             uri="bos://memory/kos/search",
             domain="memory",
@@ -95,6 +105,7 @@ class TestBosRegistrationModel:
 
     def test_endpoint_module_colon_func(self):
         from omo.omo_bos_schema import BosRegistrationModel
+
         m = BosRegistrationModel(
             uri="bos://memory/kos/search",
             domain="memory",
@@ -106,10 +117,26 @@ class TestBosRegistrationModel:
 
     def test_registry_model_groups(self):
         from omo.omo_bos_schema import BosRegistryModel, BosRegistrationModel
+
         regs = [
-            BosRegistrationModel(uri="bos://memory/kos/search", domain="memory", package="kos", action="search"),
-            BosRegistrationModel(uri="bos://memory/kos/ingest", domain="memory", package="kos", action="ingest"),
-            BosRegistrationModel(uri="bos://governance/omo/audit", domain="governance", package="omo", action="audit"),
+            BosRegistrationModel(
+                uri="bos://memory/kos/search",
+                domain="memory",
+                package="kos",
+                action="search",
+            ),
+            BosRegistrationModel(
+                uri="bos://memory/kos/ingest",
+                domain="memory",
+                package="kos",
+                action="ingest",
+            ),
+            BosRegistrationModel(
+                uri="bos://governance/omo/audit",
+                domain="governance",
+                package="omo",
+                action="audit",
+            ),
         ]
         reg = BosRegistryModel(registrations=regs)
         assert reg.count == 3
@@ -124,6 +151,7 @@ class TestBosRegistrationModel:
 class TestBosMetrics:
     def test_record_and_summary(self, tmp_path, monkeypatch):
         from omo import omo_bos_metrics
+
         # 重定向 metrics 路径到 tmp
         metrics_path = tmp_path / "bos-metrics.jsonl"
         monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
@@ -131,7 +159,9 @@ class TestBosMetrics:
         for _ in range(5):
             omo_bos_metrics.record("bos://memory/kos/search", "resolved", 10.0)
         for _ in range(2):
-            omo_bos_metrics.record("bos://analysis/minerva/research", "error", 50.0, error="timeout")
+            omo_bos_metrics.record(
+                "bos://analysis/minerva/research", "error", 50.0, error="timeout"
+            )
 
         s = omo_bos_metrics.summary(path=metrics_path)
         assert s["total_invocations"] == 7
@@ -146,13 +176,16 @@ class TestBosMetrics:
 
     def test_get_metrics_filter(self, tmp_path, monkeypatch):
         from omo import omo_bos_metrics
+
         metrics_path = tmp_path / "bos-metrics.jsonl"
         monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
         omo_bos_metrics.record("bos://memory/kos/search", "resolved", 1.0)
         omo_bos_metrics.record("bos://memory/kos/ingest", "resolved", 2.0)
         omo_bos_metrics.record("bos://analysis/minerva/research", "resolved", 3.0)
         # 单 URI 过滤
-        r = omo_bos_metrics.get_metrics(uri="bos://memory/kos/search", path=metrics_path)
+        r = omo_bos_metrics.get_metrics(
+            uri="bos://memory/kos/search", path=metrics_path
+        )
         assert len(r) == 1
         assert r[0]["uri"] == "bos://memory/kos/search"
         # 全量
@@ -161,10 +194,14 @@ class TestBosMetrics:
 
     def test_time_invoke_context_manager(self, tmp_path, monkeypatch):
         from omo import omo_bos_metrics
+
         metrics_path = tmp_path / "bos-metrics.jsonl"
         monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
         import time
-        with omo_bos_metrics.time_invoke("bos://test/foo/bar", transport="stdio") as timer:
+
+        with omo_bos_metrics.time_invoke(
+            "bos://test/foo/bar", transport="stdio"
+        ) as timer:
             time.sleep(0.001)
         timer.set_status("resolved")
         recs = omo_bos_metrics.get_metrics(path=metrics_path)
@@ -177,17 +214,23 @@ class TestBosMetrics:
     def test_timestamp_format_uses_z_suffix(self, tmp_path, monkeypatch):
         """Reuse #7 锁: timestamp 格式必须以 'Z' 结尾 (与 omo_audit 对齐, 消灭 3 种格式)."""
         from omo import omo_bos_metrics
+
         metrics_path = tmp_path / "bos-metrics.jsonl"
         monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
         omo_bos_metrics.record("bos://test/foo", "resolved", 1.0)
         recs = omo_bos_metrics.get_metrics(path=metrics_path)
         ts = recs[0]["recorded_at"]
         # 必须以 'Z' 结尾, 不能是 '+00:00' 或 naive
-        assert ts.endswith("Z"), f"timestamp must end with 'Z' (omo_audit convention), got: {ts!r}"
-        assert "+00:00" not in ts, f"timestamp must not contain '+00:00' (replaced by 'Z'), got: {ts!r}"
+        assert ts.endswith("Z"), (
+            f"timestamp must end with 'Z' (omo_audit convention), got: {ts!r}"
+        )
+        assert "+00:00" not in ts, (
+            f"timestamp must not contain '+00:00' (replaced by 'Z'), got: {ts!r}"
+        )
 
     def test_percentile_calculation(self, tmp_path, monkeypatch):
         from omo import omo_bos_metrics
+
         metrics_path = tmp_path / "bos-metrics.jsonl"
         monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
         # 100 次调用, 延迟 1-100ms
@@ -204,6 +247,7 @@ class TestBosMetrics:
 
     def test_reset_clears_file(self, tmp_path, monkeypatch):
         from omo import omo_bos_metrics
+
         metrics_path = tmp_path / "bos-metrics.jsonl"
         monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
         omo_bos_metrics.record("bos://test/foo", "resolved", 1.0)
@@ -221,10 +265,12 @@ class TestBosMetrics:
 class TestDispatcherInstrumentation:
     def test_dispatcher_records_metric(self, tmp_path, monkeypatch):
         from omo import omo_bos_metrics
+
         metrics_path = tmp_path / "bos-metrics.jsonl"
         monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
         # 触发 invoke
         from omo.omo_bos_dispatcher import TOOL_DISPATCHER
+
         TOOL_DISPATCHER["invoke_bos_uri"](
             {"uri": "bos://memory/kos/search", "args": {"query": "test"}}
         )
@@ -237,9 +283,11 @@ class TestDispatcherInstrumentation:
 
     def test_dispatcher_records_invalid(self, tmp_path, monkeypatch):
         from omo import omo_bos_metrics
+
         metrics_path = tmp_path / "bos-metrics.jsonl"
         monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
         from omo.omo_bos_dispatcher import TOOL_DISPATCHER
+
         TOOL_DISPATCHER["invoke_bos_uri"]({"uri": "bos://bad/foo/bar", "args": {}})
         recs = omo_bos_metrics.get_metrics(path=metrics_path)
         assert len(recs) >= 1
@@ -254,7 +302,9 @@ class TestCli:
         """omo bos status 子进程测试."""
         result = subprocess.run(
             [sys.executable, "-m", "omo.cli", "bos", "status"],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True,
+            text=True,
+            timeout=30,
             cwd=OMO_SRC.parent.parent,
         )
         assert result.returncode == 0, f"stderr: {result.stderr}"
@@ -263,7 +313,9 @@ class TestCli:
     def test_bos_discover_json(self):
         result = subprocess.run(
             [sys.executable, "-m", "omo.cli", "bos", "discover", "--json"],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True,
+            text=True,
+            timeout=30,
             cwd=OMO_SRC.parent.parent,
         )
         assert result.returncode == 0, f"stderr: {result.stderr}"

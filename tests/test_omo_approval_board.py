@@ -10,7 +10,9 @@ from omo.omo_approval_board import build_approval_board, write_approval_board
 
 def _write_yaml(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
 
 
 def test_approval_board_joins_queue_status_and_blockers(tmp_path: Path) -> None:
@@ -77,7 +79,9 @@ def test_approval_board_joins_queue_status_and_blockers(tmp_path: Path) -> None:
     assert board["summary"]["latest_week"] == "2026-W29"
     assert board["summary"]["latest_week_source"] == "loop_history"
     by_id = {item["task_id"]: item for item in board["tasks"]}
-    assert by_id["OPC-P6-SELF-EVOLUTION-doc-gate-e"]["blockers"] == ["task_policy_blocked"]
+    assert by_id["OPC-P6-SELF-EVOLUTION-doc-gate-e"]["blockers"] == [
+        "task_policy_blocked"
+    ]
     assert by_id["OPC-P6-SELF-EVOLUTION-followup"]["blockers"] == ["phase_mismatch"]
 
 
@@ -95,7 +99,9 @@ def test_approval_board_accepts_multi_document_queue_yaml(tmp_path: Path) -> Non
             "loop_history_ref": ".omo/_control/evolution/loop/history.json",
         },
     )
-    queue_path = tmp_path / ".omo" / "workers" / "promotion" / "approval-queue" / "current.yaml"
+    queue_path = (
+        tmp_path / ".omo" / "workers" / "promotion" / "approval-queue" / "current.yaml"
+    )
     queue_path.parent.mkdir(parents=True, exist_ok=True)
     queue_path.write_text(
         "---\nstatus: active\nowner: governance\n---\n---\ntasks:\n"
@@ -150,8 +156,16 @@ def test_write_approval_board_renders_queue_status_columns(tmp_path: Path) -> No
 
     json_path, md_path = write_approval_board(tmp_path, board)
 
-    assert json.loads(json_path.read_text(encoding="utf-8"))["summary"]["approval_granted_blocked_count"] == 1
+    assert (
+        json.loads(json_path.read_text(encoding="utf-8"))["summary"][
+            "approval_granted_blocked_count"
+        ]
+        == 1
+    )
     text = md_path.read_text(encoding="utf-8")
     assert "approval_granted_blocked_count: 1" in text
     assert "task_policy_blocked" in text
-    assert "| Task | Root | Status | Approval | Queue Status | Blockers | Next Action | Latest Week | Ref |" in text
+    assert (
+        "| Task | Root | Status | Approval | Queue Status | Blockers | Next Action | Latest Week | Ref |"
+        in text
+    )
