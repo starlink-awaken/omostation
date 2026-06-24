@@ -1,13 +1,22 @@
 {
   "week": "2026-W26",
-  "generated_at": "2026-06-23T08:22:42Z",
+  "generated_at": "2026-06-24T09:02:52Z",
   "radar": {
     "stage": "radar",
-    "ts": "2026-06-23T08:22:42Z",
+    "ts": "2026-06-24T09:02:52Z",
     "output": {
       "scenario": "technical-radar",
-      "generated_at": "2026-06-23T08:22:42Z",
+      "generated_at": "2026-06-24T09:02:52Z",
       "candidates": [
+        {
+          "title": "🔥 高频复用: search-trace: test (强烈建议沉淀共享模块)",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:96",
+          "timestamp": "2026-06-24T07:32:41Z",
+          "next_action": "立即创建共享模块 + 文档 (高频, 沉淀收益大)",
+          "evidence_id": 96,
+          "score": 15
+        },
         {
           "title": "📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)",
           "source": "cockpit:research",
@@ -36,22 +45,81 @@
           "score": 3
         }
       ],
-      "candidates_count": 3,
+      "candidates_count": 4,
       "source": "cockpit:research",
       "db_path": "/Users/xiamingxing/.workspace/data.db",
       "trigger_source": "cron",
-      "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260623T082242Z-technical-radar-1ed9a943.json"
+      "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260624T090252Z-technical-radar-2fd22cd1.json"
     }
   },
   "drift": {
-    "kinds": 0,
+    "generated_at": "2026-06-24T09:02:52Z",
+    "kinds": 4,
     "drift_count": 0,
-    "results": []
+    "results": [
+      {
+        "kind": "entry_drift",
+        "ts": "2026-06-24T09:02:52Z",
+        "expected": [
+          "radar",
+          "assistant",
+          "health"
+        ],
+        "present": [
+          "radar",
+          "assistant",
+          "health"
+        ],
+        "missing": [],
+        "drift": false
+      },
+      {
+        "kind": "doc_drift",
+        "ts": "2026-06-24T09:02:52Z",
+        "plan_ref": ".omo/tasks/done/OPC-P4-MODEL-COMPUTE.yaml",
+        "doc_ref": "docs/opc/OPC-PHASE4-MODEL-COMPUTE.md",
+        "doc_exists": true,
+        "plan_gate_status": "passed",
+        "doc_says_passed": true,
+        "consistent": true,
+        "drift": false
+      },
+      {
+        "kind": "duplicate_facts",
+        "ts": "2026-06-24T09:02:52Z",
+        "findings": [],
+        "drift": false
+      },
+      {
+        "kind": "agora_bypass",
+        "ts": "2026-06-24T09:02:52Z",
+        "scanned_files": [
+          "projects/runtime/src/runtime/executor/engine.py",
+          "projects/cockpit/src/cockpit/commands/scenario.py",
+          "projects/runtime/src/runtime/executor/config/__init__.py"
+        ],
+        "bypass_patterns": [],
+        "drift": false
+      }
+    ]
   },
   "gap": {
     "stage": "gap",
-    "ts": "2026-06-23T08:22:42Z",
+    "ts": "2026-06-24T09:02:52Z",
     "candidates": [
+      {
+        "candidate": {
+          "title": "🔥 高频复用: search-trace: test (强烈建议沉淀共享模块)",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:96",
+          "timestamp": "2026-06-24T07:32:41Z",
+          "next_action": "立即创建共享模块 + 文档 (高频, 沉淀收益大)",
+          "evidence_id": 96,
+          "score": 15
+        },
+        "score": 1.0,
+        "lane": "radar"
+      },
       {
         "candidate": {
           "title": "📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)",
@@ -92,59 +160,70 @@
         "lane": "radar"
       }
     ],
-    "candidates_count": 3
+    "candidates_count": 4
   },
   "task": {
     "stage": "task",
-    "ts": "2026-06-23T08:22:42Z",
+    "ts": "2026-06-24T09:02:52Z",
     "planned": [
       {
         "id": "OPC-P6-LOOP-2026-W26-00",
+        "title": "🔥 高频复用: search-trace: test (强烈建议沉淀共享模块)",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-24T09:02:52Z"
+      },
+      {
+        "id": "OPC-P6-LOOP-2026-W26-01",
         "title": "📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)",
         "source": "cockpit:research",
         "score": 1.0,
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-23T08:22:42Z"
+        "ts": "2026-06-24T09:02:52Z"
       },
       {
-        "id": "OPC-P6-LOOP-2026-W26-01",
+        "id": "OPC-P6-LOOP-2026-W26-02",
         "title": "🔍 待观察: 向量数据库选型对比 (来自 研究)",
         "source": "cockpit:research",
         "score": 1.0,
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-23T08:22:42Z"
+        "ts": "2026-06-24T09:02:52Z"
       },
       {
-        "id": "OPC-P6-LOOP-2026-W26-02",
+        "id": "OPC-P6-LOOP-2026-W26-03",
         "title": "🔍 待观察: good research (来自 研究)",
         "source": "cockpit:research",
         "score": 1.0,
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-23T08:22:42Z"
+        "ts": "2026-06-24T09:02:52Z"
       }
     ],
     "red_line_held": "all tasks status=planned; human approval required for active"
   },
   "swarm": {
     "stage": "swarm",
-    "ts": "2026-06-23T08:22:42Z",
+    "ts": "2026-06-24T09:02:52Z",
     "note": "P6 closeout 范围内只 plan; 实际派发受红线 'self-evolution task 仅落 planned' 约束",
     "planned_dispatch": [
       "OPC-P6-LOOP-2026-W26-00",
       "OPC-P6-LOOP-2026-W26-01",
-      "OPC-P6-LOOP-2026-W26-02"
+      "OPC-P6-LOOP-2026-W26-02",
+      "OPC-P6-LOOP-2026-W26-03"
     ],
     "approval_lane": "opc-p6-self-evolution-board"
   },
   "audit": {
     "stage": "audit",
-    "ts": "2026-06-23T08:22:42Z",
+    "ts": "2026-06-24T09:02:52Z",
     "llm_audit_tail": [],
     "llm_audit_count": 0
   },
@@ -168,9 +247,9 @@
       },
       {
         "week": "2026-W26",
-        "generated_at": "2026-06-23T08:22:42Z",
-        "candidate_count": 3,
-        "planned_count": 3,
+        "generated_at": "2026-06-24T09:02:52Z",
+        "candidate_count": 4,
+        "planned_count": 4,
         "drift_count": 0,
         "approval_required_all": true
       },
@@ -207,12 +286,12 @@
   },
   "retro": {
     "stage": "retro",
-    "ts": "2026-06-23T08:22:42Z",
+    "ts": "2026-06-24T09:02:52Z",
     "summary": {
-      "radar_candidates": 3,
-      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260623T082242Z-technical-radar-1ed9a943.json",
+      "radar_candidates": 4,
+      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260624T090252Z-technical-radar-2fd22cd1.json",
       "drift_count": 0,
-      "planned_tasks": 3,
+      "planned_tasks": 4,
       "audit_records": 0,
       "history_weeks_recorded": 6,
       "history_max_consecutive_weeks": 6

@@ -1,8 +1,13 @@
 # OPC P6 weekly retro — 2026-W26
 
-Generated: 2026-06-23T08:22:42Z
+Generated: 2026-06-24T09:02:52Z
 
 ## 1. Radar (P5-F1)
+- **🔥 高频复用: search-trace: test (强烈建议沉淀共享模块)**
+  - source: `cockpit:research`
+  - timestamp: `2026-06-24T07:32:41Z`
+  - next_action: 立即创建共享模块 + 文档 (高频, 沉淀收益大)
+  - evidence_id: 96
 - **📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)**
   - source: `cockpit:research`
   - timestamp: `2026-05-27T00:22:14Z`
@@ -20,21 +25,27 @@ Generated: 2026-06-23T08:22:42Z
   - evidence_id: 8
 
 ## 2. Drift detector (P6-G3)
-- kinds: 0
+- kinds: 4
 - drift_count: **0**
+  - `entry_drift` → ok
+  - `doc_drift` → ok
+  - `duplicate_facts` → ok
+  - `agora_bypass` → ok
 
 ## 3. Gap → top candidates (sorted)
-1. score=1.0 lane=radar title=📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)
-2. score=1.0 lane=radar title=🔍 待观察: 向量数据库选型对比 (来自 研究)
-3. score=1.0 lane=radar title=🔍 待观察: good research (来自 研究)
+1. score=1.0 lane=radar title=🔥 高频复用: search-trace: test (强烈建议沉淀共享模块)
+2. score=1.0 lane=radar title=📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)
+3. score=1.0 lane=radar title=🔍 待观察: 向量数据库选型对比 (来自 研究)
+4. score=1.0 lane=radar title=🔍 待观察: good research (来自 研究)
 
 ## 4. Task (planned, 人工审批)
-- `OPC-P6-LOOP-2026-W26-00` | 📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象) | approval_required=True
-- `OPC-P6-LOOP-2026-W26-01` | 🔍 待观察: 向量数据库选型对比 (来自 研究) | approval_required=True
-- `OPC-P6-LOOP-2026-W26-02` | 🔍 待观察: good research (来自 研究) | approval_required=True
+- `OPC-P6-LOOP-2026-W26-00` | 🔥 高频复用: search-trace: test (强烈建议沉淀共享模块) | approval_required=True
+- `OPC-P6-LOOP-2026-W26-01` | 📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象) | approval_required=True
+- `OPC-P6-LOOP-2026-W26-02` | 🔍 待观察: 向量数据库选型对比 (来自 研究) | approval_required=True
+- `OPC-P6-LOOP-2026-W26-03` | 🔍 待观察: good research (来自 研究) | approval_required=True
 
 ## 5. Swarm (派发受红线约束)
-- planned_dispatch: ['OPC-P6-LOOP-2026-W26-00', 'OPC-P6-LOOP-2026-W26-01', 'OPC-P6-LOOP-2026-W26-02']
+- planned_dispatch: ['OPC-P6-LOOP-2026-W26-00', 'OPC-P6-LOOP-2026-W26-01', 'OPC-P6-LOOP-2026-W26-02', 'OPC-P6-LOOP-2026-W26-03']
 - note: P6 closeout 范围内只 plan; 实际派发受红线 'self-evolution task 仅落 planned' 约束
 
 ## 6. Audit (跨仓 trail)
@@ -44,12 +55,12 @@ Generated: 2026-06-23T08:22:42Z
 ```json
 {
   "stage": "retro",
-  "ts": "2026-06-23T08:22:42Z",
+  "ts": "2026-06-24T09:02:52Z",
   "summary": {
-    "radar_candidates": 3,
-    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260623T082242Z-technical-radar-1ed9a943.json",
+    "radar_candidates": 4,
+    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260624T090252Z-technical-radar-2fd22cd1.json",
     "drift_count": 0,
-    "planned_tasks": 3,
+    "planned_tasks": 4,
     "audit_records": 0,
     "history_weeks_recorded": 6,
     "history_max_consecutive_weeks": 6
