@@ -148,14 +148,6 @@ def compute_attribution(cards: list[dict]) -> dict:
         }
 
     # 终态集合
-    CLOSED_STATUSES = {
-        "done",
-        "resolved",
-        "discarded",
-        "archived",
-        "cancelled",
-        "superseded",
-    }  # noqa: F841
 
     total_active = sum(d["active"] for d in domains.values())
     total_closed = sum(d["closed"] for d in domains.values())
