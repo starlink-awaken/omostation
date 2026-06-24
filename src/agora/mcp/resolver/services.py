@@ -375,6 +375,15 @@ _FALLBACK_SERVICES: list[BosService] = [
         description="Agent Runtime 状态",
     ),
     BosService(
+        uri="bos://capability/swarm/run",
+        domain="capability",
+        package="swarm",
+        action="run",
+        transport="stdio",
+        command=["uv", "run", "--package", "aetherforge", "python", "-m", "aetherforge.cli", "swarm", "run"],
+        description="AetherForge Swarm 执行入口",
+    ),
+    BosService(
         uri="bos://capability/forge/agent-list",
         domain="capability",
         package="forge",

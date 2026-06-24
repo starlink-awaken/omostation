@@ -57,7 +57,7 @@ _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
 def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str]:
     """检查 BOS URI 的域级别权限，并执行 CR-RBAC-01 鉴权。"""
-    from agora.server.mcp import agora_role_ctx
+    from agora.server.tools_auth import agora_role_ctx
 
     role = agora_role_ctx.get()
 
@@ -79,7 +79,7 @@ def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str
     # CR-DOMAIN-AUTH-01: 注册表驱动的域鉴权
     # 如果 bos_router 中存在该 domain 的任何路由，即视为合法域
     # (更精细的 read/write 权限由 L0 审计与 IAM 中间件后续接管)
-    routes = _bos_router.list_all(prefix=f"bos://{domain}/")
+    routes = _bos_router.list_all(prefix_filter=f"bos://{domain}/")
     if not routes:
         return False, f"Domain '{domain}' is not registered in BOSRouter"
         

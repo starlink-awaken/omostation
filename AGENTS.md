@@ -2,11 +2,20 @@
 
 > I0 织层 | MCP Hub-Spoke 架构 | 动态反向代理 Mesh
 
-## Quick Start
+## Quick Commands
 
 ```bash
 cd projects/agora && uv sync
-uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
+
+# 快速测试 (排除 e2e + integration + slow, ~114s)
+uv run pytest tests/ --ignore=tests/e2e -k "not slow and not integration and not bos_resolver" -q
+
+# 全量测试 (含集成测试，部分需服务运行)
+uv run pytest tests/ --ignore=tests/e2e -q
+
+# 单模块测试
+uv run pytest tests/test_bus_envelope.py -q
+uv run pytest tests/test_router.py -q
 ```
 
 ## Architecture

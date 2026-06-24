@@ -163,15 +163,16 @@ try:
             from structlog.contextvars import bind_contextvars
 
             # Extract Trace ID with anti-spoofing
-            meta = getattr(context.request, "meta", {}) or {}
+            request_obj = getattr(context, "message", getattr(context, "request", None))
+            meta = getattr(request_obj, "meta", {}) or {}
             agent_id = self._validate_agent_token(meta)
             conv_id = meta.get("x-conversation-id", "none")
             bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
 
             try:
-                # FastMCP context.request is CallToolRequestParams which has 'name' and 'arguments'
-                tool_name = context.request.name
-                args = context.request.arguments
+                # FastMCP context.message is CallToolRequestParams which has 'name' and 'arguments'
+                tool_name = getattr(request_obj, "name", "unknown")
+                args = getattr(request_obj, "arguments", {})
                 self._logger.info("mcp_tool_call", tool=tool_name, arguments=args)
                 result = await call_next(context)
 
@@ -194,7 +195,8 @@ try:
             from structlog.contextvars import bind_contextvars
 
             # Extract Trace ID with anti-spoofing
-            meta = getattr(context.request, "meta", {}) or {}
+            request_obj = getattr(context, "message", getattr(context, "request", None))
+            meta = getattr(request_obj, "meta", {}) or {}
             agent_id = self._validate_agent_token(meta)
             conv_id = meta.get("x-conversation-id", "none")
             bind_contextvars(agent_id=agent_id, conversation_id=conv_id)

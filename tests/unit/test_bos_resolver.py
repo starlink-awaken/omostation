@@ -281,7 +281,11 @@ class TestKaironMainEntries:
         )
         assert result.returncode == 0, f"kos --help failed: {result.stderr}"
 
-    @pytest.mark.xfail(reason="需要 kairon workspace 安装, 仅 CI 环境可用")
+    @pytest.mark.xfail(
+        condition=not KAIRON_ROOT.exists(),
+        reason="需要 kairon workspace 安装 (KAIRON_ROOT 不存在时 xfail; 存在时正常跑, strict 防 XPASS 误标)",
+        strict=True,
+    )
     def test_health_profile_main_help(self):
         import subprocess
 
@@ -296,7 +300,11 @@ class TestKaironMainEntries:
         )
         assert result.returncode == 0, f"health_profile --help failed: {result.stderr}"
 
-    @pytest.mark.xfail(reason="需要 kairon workspace 安装, 仅 CI 环境可用")
+    @pytest.mark.xfail(
+        condition=not KAIRON_ROOT.exists(),
+        reason="需要 kairon workspace 安装 (KAIRON_ROOT 不存在时 xfail; 存在时正常跑, strict 防 XPASS 误标)",
+        strict=True,
+    )
     def test_minerva_main_help(self):
         import subprocess
 
@@ -349,7 +357,11 @@ class TestP34W1StdioProtocol:
         assert r.get("status") == "error"
         assert "unknown_bos_uri" in r["error"]
 
-    @pytest.mark.xfail(reason="需要 minerva 包安装, 仅 CI 环境可用")
+    @pytest.mark.xfail(
+        condition=not KAIRON_ROOT.exists(),
+        reason="需要 minerva 包安装 (KAIRON_ROOT 含 packages/minerva; 不存在时 xfail, 存在时正常跑, strict 防 XPASS 误标)",
+        strict=True,
+    )
     def test_invoke_stdio_minerva(self):
         """W1 验证: minerva mcp_stdio 协议 (analysis domain)."""
         r = invoke_stdio("bos://analysis/minerva/research", "research", {"topic": "test"})

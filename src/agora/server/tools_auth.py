@@ -24,10 +24,37 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
     if not _AGORA_API_KEY:
         agora_role_ctx.set("admin")
         return True  # permissive mode for local development
-    if ctx.token is None:
-        return False
 
-    token = ctx.token.token
+    import structlog
+    logger = structlog.get_logger(__name__)
+    
+    token_str = None
+    if ctx.token is not None:
+        token_str = ctx.token.token
+        logger.info("auth check token found in ctx", token_str=token_str)
+    else:
+        # Fallback to checking HTTP headers directly (for our REST backdoor)
+        try:
+            from fastmcp.server.dependencies import get_http_request, _current_http_request
+            try:
+                req = _current_http_request.get()
+            except LookupError:
+                req = get_http_request()
+            logger.info("auth check all headers", headers=dict(req.headers))
+            auth_header = req.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                token_str = auth_header[7:]
+            logger.info("auth check auth_header", auth_header=auth_header)
+            if auth_header.startswith("Bearer "):
+                token_str = auth_header[7:]
+        except Exception as e:
+            logger.exception("auth check fallback error", exc=e)
+
+    if not token_str:
+        logger.info("auth check failed: no token_str")
+        return False
+    
+    token = token_str
 
     if token.startswith("eyJ"):
         try:
@@ -39,10 +66,12 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
         except jwt.InvalidTokenError:
             return False
 
+    logger.info("Comparing token with _AGORA_API_KEY", token_len=len(token), key_len=len(_AGORA_API_KEY))
     if token == _AGORA_API_KEY:
         agora_role_ctx.set("admin")
         return True
 
+    logger.warning("Token mismatch in require_agora_api_key")
     return False
 
 

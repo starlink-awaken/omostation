@@ -629,9 +629,65 @@ def http_main():
     Proxy connections are initialized inside the lifespan context manager,
     keeping subprocesses alive for the entire server lifetime.
     """
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+    from starlette.requests import Request
+    
+    async def health_endpoint(request):
+        return JSONResponse(
+            {
+                "status": "ok",
+                "service": "agora-mcp-http",
+                "tools": len(await mcp.list_tools()),
+            }
+        )
+
+    async def tool_call_endpoint(request: Request):
+        from fastmcp.server.dependencies import _current_http_request
+        
+        # FastMCP dependency injection looks at _current_http_request to find the HTTP request
+        token = _current_http_request.set(request)
+        try:
+            payload = await request.json()
+            tool_name = payload.get("name")
+            arguments = payload.get("arguments", {})
+            if not tool_name:
+                return JSONResponse({"error": "Missing tool name"}, status_code=400)
+
+            # If AGORA_API_KEY is present in env, FastMCP's AuthMiddleware will look for it
+            # It will extract it from the Authorization header of the request object we just set.
+            result = await mcp.call_tool(tool_name, arguments)
+            
+            # FastMCP call_tool returns a CallToolResult object or string
+            res_content = ""
+            if hasattr(result, "content") and isinstance(result.content, list) and result.content:
+                res_content = getattr(result.content[0], "text", str(result.content[0]))
+            elif isinstance(result, list) and result:
+                res_content = getattr(result[0], "text", str(result[0]))
+            else:
+                res_content = str(result)
+            
+            try:
+                # Try parsing it as JSON so it is returned as an object instead of a string
+                parsed_res = json.loads(res_content)
+            except (json.JSONDecodeError, TypeError):
+                parsed_res = res_content
+                
+            # Format according to what ecos expects
+            return JSONResponse({
+                "status": "ok",
+                "result": parsed_res
+            })
+        except Exception as e:
+            logger.exception("REST tool call failed")
+            return JSONResponse({"error": str(e)}, status_code=500)
+        finally:
+            _current_http_request.reset(token)
+
+    mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))
+    mcp._additional_http_routes.append(Route("/v1/tools/call", endpoint=tool_call_endpoint, methods=["POST"]))
 
     asyncio.run(mcp.run_http_async(host="0.0.0.0", port=7422))  # noqa: S104 — MCP server intentionally binds all interfaces
-
 
 def sse_main():
     """Start the Agora MCP server in SSE mode with proxy initialization.
