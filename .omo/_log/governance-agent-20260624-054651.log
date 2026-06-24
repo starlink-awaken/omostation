@@ -1,0 +1,23 @@
+=== P61 自治治理代理 @ 20260624-054651 ===
+/Users/xiamingxing/Workspace/bin/governance-readiness.py:178: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = _dt.datetime.utcnow()
+======================================================================
+🛡️  P60 治理就绪度评估 (5 维度)
+======================================================================
+
+🔍 R (Research): 收集治理指标...
+
+──────────────────────────────────────────────────────────────────────
+维度                          得分      指标             阈值             
+──────────────────────────────────────────────────────────────────────
+1. 元数据覆盖 (frontmatter)       25/25  703 文档    cov=97.7%     ≥95%
+2. 漂移检测 (drift LOW)          18/20  drift=4        ≤5
+3. 闭环纪律 (commit closure)     18/20  uncommitted=23  ≤50
+4. 决策可追溯 (ADR INDEX)         20/20  unlisted=0     =0
+5. 治理评分 (omo governance)     15/15  score=100.0      =100
+──────────────────────────────────────────────────────────────────────
+总分                           96/100
+======================================================================
+🟢 评级: A+ L4 稳态治理
+
+✅ 全部维度达标, 治理成熟

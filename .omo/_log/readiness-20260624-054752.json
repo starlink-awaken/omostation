@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-06-24T05:47:52.881181Z",
+  "score": 96,
+  "grade": "A+ L4 稳态治理",
+  "phase": "P60+",
+  "dimensions": {
+    "frontmatter": {
+      "score": 25,
+      "metric": 703,
+      "coverage": 0.9772403982930299,
+      "max": 25
+    },
+    "drift_low": {
+      "score": 18,
+      "metric": 4,
+      "max": 20
+    },
+    "commit_closure": {
+      "score": 18,
+      "metric": 23,
+      "max": 20
+    },
+    "adr_index": {
+      "score": 20,
+      "metric": 0,
+      "max": 20
+    },
+    "governance_score": {
+      "score": 15,
+      "metric": 100.0,
+      "max": 15
+    }
+  },
+  "thresholds": {
+    "A+_L4_stable": 90,
+    "A_L3_mature": 80,
+    "B_L2_basic": 70,
+    "C_L1_starting": 60
+  }
+}

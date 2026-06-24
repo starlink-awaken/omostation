@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-06-24T05:53:30Z",
+  "score": 95,
+  "grade": "A+ L4 稳态治理",
+  "phase": "P60+",
+  "dimensions": {
+    "frontmatter": {
+      "score": 25,
+      "metric": 100,
+      "coverage": 0.98,
+      "max": 25
+    }
+  },
+  "thresholds": {
+    "A+_L4_stable": 90
+  },
+  "actor": "omo-readiness-cli",
+  "source_ref": "omo:readiness:snapshot:cli"
+}
