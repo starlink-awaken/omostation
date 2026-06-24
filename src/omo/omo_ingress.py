@@ -1663,6 +1663,9 @@ def route_self_evolution_to_remediation(
         payload["review_note"] = str(review_note_rel)
         payload["started_at"] = timestamp
         payload["approval_state"] = "granted"
+        payload["approval_ref"] = (
+            f"self-evolution-remediation-approval-{_timestamp_slug(timestamp)}"
+        )
 
         metadata = payload.setdefault("metadata", {})
         if isinstance(metadata, dict):

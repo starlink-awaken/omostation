@@ -135,7 +135,8 @@ def _promotion_eval(
     checks = {
         "queue_membership_ok": True,
         "status_ok": task.get("status") in {"candidate", "pending"},
-        "phase_ok": task.get("phase") == int(goals["phase"]) + 1,
+        "phase_ok": task.get("phase") is None
+        or task.get("phase") == int(goals["phase"]) + 1,
         "approval_ready": approval_result["approval_ready"],
         "target_path_clear": not active_target.exists(),
         "task_policy_ready": not is_self_evolve,
@@ -532,7 +533,7 @@ def _write_task_promotion_readiness(
         readiness_dir / "readiness.md", render_promotion_readiness_markdown(packet)
     )
     print(
-        f"ready_count={packet['ready_count']} blocked_count={packet['blocked_count']}"
+        f"ready_count={packet['ready_count']} blocked_count={packet['blocked_count']} unphased_count={packet['unphased_count']}"
     )
     return 0
 
