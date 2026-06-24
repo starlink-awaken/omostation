@@ -130,3 +130,12 @@ uv run pytest tests/test_l0/test_distributed.py -v  # 分布式场景
 | 在线域 | 12 个在线 |
 | MOF 规则 | 5,234 |
 | Git | 74 commits |
+
+## Workspace-Wide Governance (2026-06-24)
+
+This project follows the workspace-level governance conventions documented in the root `AGENTS.md`:
+
+- **Agent Mutation Protocol**: Any autonomous agent/cron/daemon that modifies workspace state must emit `agent_mutation_intent`, avoid direct file I/O to `.omo/`/`spaces/`, and commit immediately. See `.omo/standards/agent-mutation-protocol.md` for the full protocol.
+- **SSOT Guardian**: Run `python3 bin/ssot-guardian.py` from the workspace root before committing to detect task-count, current-wave, submodule-pointer, or direct-omo-io drift.
+- **direct-omo-io**: Scripts must route writes to `.omo/` through `omo CLI`, `projects/omo` core, or `projects/c2g` ingress — never via raw `open()/mkdir()/write_text()`.
+- **Submodule Governance**: Commit changes inside the submodule first, then bump the root-repo pointer; `git submodule status` with a `+` prefix indicates pending drift.
