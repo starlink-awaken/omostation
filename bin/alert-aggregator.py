@@ -147,18 +147,61 @@ def aggregate(alerts: list[dict], storm_threshold: int = 3, total_threshold: int
     }
 
 
-def emit_notification(root: Path, agg: dict, window_hours: int) -> int:
+def is_suppressed(root: Path, level: str, suppression_minutes: int) -> tuple[bool, dict | None]:
+    """P68 增: 告警抑制 — 检查最近 N 分钟是否已通知同级别.
+
+    返回: (是否抑制, 最近通知记录)
+    """
+    notif_log = root / ".omo" / "_log" / "alert-notifications.jsonl"
+    if not notif_log.exists():
+        return False, None
+    import json as _json
+    from datetime import datetime, timezone, timedelta
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=suppression_minutes)
+    try:
+        with open(notif_log, encoding="utf-8") as f:
+            lines = f.readlines()
+        # 从后向前找最近同级别通知
+        for line in reversed(lines[-50:]):  # 限制 50 行
+            try:
+                rec = _json.loads(line.strip())
+                rec_level = rec.get("level", "P3")
+                if rec_level != level:
+                    continue
+                ts = rec.get("timestamp", "")
+                if ts:
+                    rec_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    if rec_dt >= cutoff:
+                        return True, rec
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return False, None
+
+
+def emit_notification(root: Path, agg: dict, window_hours: int,
+                     suppression_minutes: int = 60) -> int:
     """P66 增: 主动通知 — 告警风暴时调 omo event emit.
 
     触发条件 (P67 级别判定):
     - P0/P1/P2 都触发
     - P3 (默认) 不触发
+
+    P68 抑制:
+    - 同级别在 suppression_minutes 内已通知 → 抑制
+    - 返回: 0=未触发, 1=触发, 2=抑制
     """
     import json as _json
     from subprocess import run as _run
     level = agg.get("level", "P3")
     if level == "P3":
         return 0
+
+    # P68 抑制检查
+    suppressed, prev_record = is_suppressed(root, level, suppression_minutes)
+    if suppressed:
+        return 2  # 抑制标记
 
     payload = {
         "window_hours": window_hours,
@@ -209,6 +252,8 @@ def main() -> int:
     parser.add_argument("--output", help="输出文件")
     parser.add_argument("--notify", action="store_true",
                         help="P66: 告警时调 omo event emit + 写 alert-notifications.jsonl")
+    parser.add_argument("--suppression-minutes", type=int, default=60,
+                        help="P68: 同级别告警抑制时间窗 (分钟, 默认 60)")
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -254,7 +299,10 @@ def main() -> int:
 
     # P66 增: --notify 模式触发主动通知
     if args.notify:
-        return emit_notification(root, agg, args.window)
+        rc = emit_notification(root, agg, args.window, args.suppression_minutes)
+        if rc == 2:
+            print("🔕 同级别告警在抑制时间窗内, 跳过通知")
+        return rc
     return 0
 
 

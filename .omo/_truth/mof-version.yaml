@@ -220,4 +220,8 @@ history:
     21 个 ADR'
   timestamp: '2026-06-24T15:04:28.366421'
   version: 0.0.56
-version: 0.0.56
+- description: 'P68 R1-R3: 告警抑制时间窗 (is_suppressed 60min 同级别, 三态返回码 0/1/2) + alert-history
+    趋势报告 (7d 跨天, 按级别/类型, 高峰日 P0+P1>=3) + ADR-0062 + 10 独立 bin 工具'
+  timestamp: '2026-06-24T15:27:23.643036'
+  version: 0.0.57
+version: 0.0.57
