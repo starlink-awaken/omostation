@@ -17,7 +17,7 @@ on:
       - "LAYER-INDEX.md"
   pull_request:
   schedule:
-    - cron: "0 8 * * 1"  # 每周一早8点自动运行
+    - cron: "0 */6 * * *"  # 每6小时自动运行，确保SSOT长期绿色
 
 jobs:
   interface-check:
@@ -84,3 +84,26 @@ jobs:
       - name: Check documentation freshness
         run: |
           python3 scripts/check-interfaces.py --doc-only
+
+  governance-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      - name: Run full governance verification
+        run: make governance-verify
+      - name: Emit failure signal on break
+        if: failure()
+        run: |
+          uv run --package omo python -m omo.cli event emit \
+            --type governance_verify_failed \
+            --source ci/governance-check.yml \
+            --payload '{"ref":"${{ github.ref }}","sha":"${{ github.sha }}","run_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
+            --workspace-root .
+          echo "❌ governance-verify failed; signal emitted"
