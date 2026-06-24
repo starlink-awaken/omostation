@@ -680,6 +680,7 @@ _SENSITIVE_WRITE_METHODS = {"write_text", "write_bytes"}
 _SENSITIVE_WRITE_EXEMPT_FILES = {
     "omo_demo_artifacts.py",
     "omo_ingress.py",
+    "omo_ingress_goal.py",  # goal ingress writes are authorized broker surface
     "omo_ingress_registry_writes.py",  # ingress registry writes are authorized broker surface
     "omo_ingress_task_lifecycle.py",  # task lifecycle writes are authorized ingress broker surface
     "omo_release_cycle.py",

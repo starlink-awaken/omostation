@@ -428,3 +428,158 @@ def complete_task(
             extra={"task_id": task_id, "source_group": src_group},
         )
         return payload
+
+
+def update_done_task_evidence_paths(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    evidence_paths: list[str],
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    task_path = omo_dir / "tasks" / "done" / f"{task_id}.yaml"
+    if not task_path.exists():
+        raise ValueError(f"done task not found: {task_id}")
+    if not isinstance(evidence_paths, list) or not all(
+        isinstance(item, str) and item for item in evidence_paths
+    ):
+        raise ValueError("evidence_paths must be a non-empty list[str]")
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        payload = _load_yaml(task_path)
+        payload["evidence_paths"] = evidence_paths
+        metadata = payload.setdefault("metadata", {})
+        metadata["evidence_paths_refreshed_at"] = timestamp
+        metadata["evidence_paths_refreshed_by"] = actor
+        metadata["evidence_paths_refresh_source_ref"] = source_ref
+        write_yaml_atomic(task_path, payload)
+
+        artifact = {
+            "kind": "done_task_evidence_paths_updated",
+            "task_ref": f".omo/tasks/done/{task_id}.yaml",
+            "evidence_paths": evidence_paths,
+            "actor": actor,
+            "source_ref": source_ref,
+            "updated_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-evidence-refresh-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+        parent_step_id = f"ingress:task-evidence-refresh:{task_id}:{timestamp}"
+        details = (
+            f"task_id={task_id} actor={actor} source_ref={source_ref or '-'} "
+            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_update_done_task_evidence_paths",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="update_done_task_evidence_paths",
+            target=f".omo/tasks/done/{task_id}.yaml",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="update_done_task_evidence_paths",
+            target=f".omo/tasks/done/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
+        )
+        return deepcopy(payload)
+
+
+def update_planned_task_evidence_paths(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    evidence_paths: list[str],
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    """Add evidence_paths to a planned/active task (未归档, done 前补 evidence).
+
+    解决归档 gap: done 需 evidence, refresh-evidence 只查 done/, planned 无加 evidence 命令.
+    """
+    timestamp = now or _utc_now()
+    task_path: Path | None = None
+    for sub in ("planned", "active"):
+        candidate = omo_dir / "tasks" / sub / f"{task_id}.yaml"
+        if candidate.exists():
+            task_path = candidate
+            break
+    if task_path is None:
+        raise ValueError(f"planned/active task not found: {task_id}")
+    if not isinstance(evidence_paths, list) or not all(
+        isinstance(item, str) and item for item in evidence_paths
+    ):
+        raise ValueError("evidence_paths must be a non-empty list[str]")
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        payload = _load_yaml(task_path)
+        payload["evidence_paths"] = evidence_paths
+        metadata = payload.setdefault("metadata", {})
+        metadata["evidence_paths_refreshed_at"] = timestamp
+        metadata["evidence_paths_refreshed_by"] = actor
+        metadata["evidence_paths_refresh_source_ref"] = source_ref
+        write_yaml_atomic(task_path, payload)
+
+        artifact = {
+            "kind": "planned_task_evidence_paths_added",
+            "task_ref": str(task_path.relative_to(omo_dir)),
+            "evidence_paths": evidence_paths,
+            "actor": actor,
+            "source_ref": source_ref,
+            "updated_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-evidence-add-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+        parent_step_id = f"ingress:task-evidence-add:{task_id}:{timestamp}"
+        details = (
+            f"task_id={task_id} actor={actor} source_ref={source_ref or '-'} "
+            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_update_planned_task_evidence_paths",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="update_planned_task_evidence_paths",
+            target=str(task_path.relative_to(omo_dir)),
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="update_planned_task_evidence_paths",
+            target=str(task_path.relative_to(omo_dir.parent)),
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
+        )
+        return deepcopy(payload)

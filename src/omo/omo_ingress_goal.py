@@ -1,8 +1,7 @@
-"""omo_ingress goal 辅助函数 (从 God Module 拆出, SRP · P60+ 第四步).
+"""omo_ingress goal 入口 (从 God Module 拆出, SRP · P60+ 第四步).
 
-_goal_fingerprint / _goal_existing_fingerprint / _resolve_existing_goal.
-goal 指纹计算 + 已存在 goal 解析. 被 omo_ingress.create_goal/update_goal_progress 复用.
-(public create_goal/update_goal_progress 体大, 暂留 omo_ingress, 后续可移此.)
+_goal_fingerprint / _goal_existing_fingerprint / _resolve_existing_goal / create_goal.
+goal 指纹计算 + 已存在 goal 解析 + goal 创建. 被 omo_ingress / omo_governance 复用.
 """
 
 from __future__ import annotations
@@ -11,7 +10,23 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from omo.omo_ingress_paths import _load_yaml
+from omo.omo_audit import record as record_audit
+from omo.omo_io import fcntl_lock, write_yaml_atomic
+from omo.omo_ingress_paths import (
+    _artifact_lifecycle_fields,
+    _audit_log_path,
+    _delivery_root,
+    _load_yaml,
+    _lock_path,
+    _utc_now,
+)
+from omo.omo_ingress_registry import (
+    _load_registry,
+    _record_mutation,
+    _register_ingress,
+    _write_registry,
+)
+from omo.omo_ingress_trail import _record_trail
 
 
 def _goal_fingerprint(
@@ -73,3 +88,132 @@ def _resolve_existing_goal(omo_dir: Path, goal_id: str) -> dict[str, Any] | None
         if goal.get("id") == goal_id:
             return goal
     return None
+
+
+def create_goal(
+    omo_dir: Path,
+    *,
+    goal_id: str,
+    title: str,
+    description: str,
+    ingress_plane: str,
+    source_ref: str = "",
+    extra_fields: dict[str, Any] | None = None,
+    now: str | None = None,
+) -> dict[str, Any]:
+    """在 goals/current.yaml 中创建新 goal, 并写 ingress artifact."""
+    goal_file = omo_dir / "goals" / "current.yaml"
+    if not goal_file.exists():
+        raise FileNotFoundError(f"missing goals/current.yaml: {goal_file}")
+
+    timestamp = now or _utc_now()
+    fingerprint = _goal_fingerprint(
+        goal_id=goal_id,
+        title=title,
+        description=description,
+        ingress_plane=ingress_plane,
+        source_ref=source_ref,
+        extra_fields=extra_fields,
+    )
+    artifact_ref = f".omo/_delivery/ingress/goals/{goal_id}.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        registry = _load_registry(omo_dir)
+        existing_goal = _resolve_existing_goal(omo_dir, goal_id)
+
+        if source_ref:
+            mapped_goal_id = registry["goals"]["by_source_ref"].get(source_ref)
+            if mapped_goal_id and mapped_goal_id != goal_id:
+                raise ValueError(
+                    f"source_ref already mapped to different goal: {source_ref} -> {mapped_goal_id}"
+                )
+
+        if existing_goal is not None:
+            existing_fingerprint = _goal_existing_fingerprint(existing_goal)
+            if existing_fingerprint == fingerprint:
+                _register_ingress(
+                    registry,
+                    kind="goals",
+                    item_id=goal_id,
+                    source_ref=source_ref,
+                    artifact_ref=artifact_ref,
+                    fingerprint=fingerprint,
+                    created_at=str(existing_goal.get("created_at", timestamp)),
+                )
+                _write_registry(omo_dir, registry)
+                return existing_goal
+            raise ValueError(f"goal already exists with different payload: {goal_id}")
+
+        payload = _load_yaml(goal_file)
+        goals = payload.get("goals", [])
+        new_goal: dict[str, Any] = {
+            "id": goal_id,
+            "title": title,
+            "desc": description,
+            "progress": 0.0,
+            "status": "pending",
+            "tasks": [],
+            "ingress_plane": ingress_plane,
+            "source_ref": source_ref,
+            "created_at": timestamp,
+        }
+        if extra_fields:
+            new_goal.update(deepcopy(extra_fields))
+
+        goals.append(new_goal)
+        payload["goals"] = goals
+        write_yaml_atomic(goal_file, payload)
+
+        artifact = {
+            "kind": "goal_created",
+            "goal_id": goal_id,
+            "title": title,
+            "ingress_plane": ingress_plane,
+            "source_ref": source_ref,
+            "created_at": timestamp,
+            "goal_ref": ".omo/goals/current.yaml",
+            **_artifact_lifecycle_fields(artifact_ref=artifact_ref),
+        }
+        artifact_path = _delivery_root(omo_dir) / "goals" / f"{goal_id}.yaml"
+        write_yaml_atomic(artifact_path, artifact)
+        _register_ingress(
+            registry,
+            kind="goals",
+            item_id=goal_id,
+            source_ref=source_ref,
+            artifact_ref=artifact_ref,
+            fingerprint=fingerprint,
+            created_at=timestamp,
+        )
+        _write_registry(omo_dir, registry)
+
+        parent_step_id = f"ingress:goal:{goal_id}:{timestamp}"
+        details = (
+            f"goal_id={goal_id} ingress_plane={ingress_plane} "
+            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_create_goal",
+            debt_id="",
+            actor=ingress_plane,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{ingress_plane}",
+            action="create_goal",
+            target=f".omo/goals/current.yaml#{goal_id}",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=ingress_plane,
+            action="create_goal",
+            target=f".omo/goals/current.yaml#{goal_id}",
+            artifact_ref=artifact["artifact_ref"],
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"goal_id": goal_id, "ingress_plane": ingress_plane},
+        )
+        return new_goal
