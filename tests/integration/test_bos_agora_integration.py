@@ -45,10 +45,10 @@ def test_bos_registry_exists():
     assert BOS_REGISTRY.exists(), f"Registry missing: {BOS_REGISTRY}"
 
 
-def test_bos_registry_has_40_uris():
-    """W2 验证: bos-registry.json 总计 40 条 URI (P34-W0 战役 2 拓展)."""
+def test_bos_registry_has_42_uris():
+    """W2 验证: bos-registry.json 总计 42 条 URI (P34-W0 拓展 + C2G v4 strategy-audit/gc)."""
     regs = json.loads(BOS_REGISTRY.read_text())
-    assert len(regs) == 40, f"Expected 40 URIs, got {len(regs)}"
+    assert len(regs) == 42, f"Expected 42 URIs, got {len(regs)}"
 
 
 def test_bos_registry_5_domains():
