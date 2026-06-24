@@ -1,0 +1,34 @@
+id: P22-W1-PONTUS-DSL-SCHEDULER
+phase: 22
+milestone: M22.1
+priority: P0
+title: 'Pontus管线引擎: YAML DSL + DAG调度器'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on: []
+entry_gate:
+- phase21_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- kairon/packages/pontus/ 包结构
+- YAML管线DSL定义和解析器
+- DAG依赖解析+拓扑排序
+- 并行执行引擎
+acceptance_criteria:
+- 至少2个管线模板可定义和执行
+- DAG调度正确按依赖顺序执行
+- 编译通过+ruff check
+test_plan:
+- 实现 Pontus DSL 与 DAG 调度器后验证主调度链路
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

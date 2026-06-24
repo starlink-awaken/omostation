@@ -1,0 +1,36 @@
+id: P18-W3-NEURON-POOL
+phase: 18
+milestone: M18.3
+priority: P0
+title: 实现NeuronPool — BaseNeuron+6个神经元+故障转移
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P18-W1-NEURAL-CENTER
+entry_gate:
+- phase17_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- sharedbrain/neurons/base.py BaseNeuron实现
+- identity-neuron, genesis-neuron, knowledge-neuron
+- monitoring-neuron, economy-neuron, excretion-neuron
+- 健康探测+故障转移逻辑
+- 连接池复用
+acceptance_criteria:
+- 神经元健康探测 <5s检测后端不可用
+- 故障转移在后端不可用时自动切换
+- 连接池复用，避免频繁建连
+test_plan:
+- 实现后验证 BaseNeuron、六类神经元与故障转移链路
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'
