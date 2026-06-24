@@ -201,4 +201,9 @@ history:
     (--dry-run/--snapshot-only/--include-trend) + ADR-0057'
   timestamp: '2026-06-24T13:50:43.066701'
   version: 0.0.52
-version: 0.0.52
+- description: 'P64 R1-R3: dashboard-readiness-summary 工具 (4 卡片 JSON/text 双格式, 10
+    快照验证) + governance-readiness-trend --alert 自动告警 (omo event emit + jsonl 持久化 +
+    非 0 exit) + ADR-0058'
+  timestamp: '2026-06-24T14:15:30.006728'
+  version: 0.0.53
+version: 0.0.53

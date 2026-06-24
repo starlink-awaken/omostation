@@ -93,8 +93,59 @@ def analyze_trend(snaps: list[dict]) -> dict:
     return result
 
 
+def emit_alert(root: Path, trend: dict, alerts: list) -> int:
+    """P64 增: 异常告警 — 通过 omo event 发射 + 写 .omo/_log/readiness-alerts.jsonl.
+
+    返回 0=健康 1=异常告警.
+    """
+    import json as _json
+    import datetime as _dt
+    from subprocess import run as _run
+    now = _dt.datetime.utcnow().isoformat() + "Z"
+
+    # 写 alerts log
+    alert_log = root / ".omo" / "_log" / "readiness-alerts.jsonl"
+    alert_log.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "timestamp": now,
+        "trend": trend.get("trend"),
+        "mean": trend.get("mean"),
+        "stdev": trend.get("stdev"),
+        "alerts": alerts,
+    }
+    try:
+        with open(alert_log, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"⚠️  alert log 写入失败: {e}")
+
+    # 发射 omo event (如可用)
+    if alerts:
+        try:
+            _run(
+                ["omo", "event", "emit",
+                 "--type", "governance_readiness_alert",
+                 "--source", "readiness-trend",
+                 "--payload", _json.dumps(record, ensure_ascii=False)],
+                timeout=10, capture_output=True,
+            )
+        except Exception:
+            pass  # omo 不可用时静默
+
+    if alerts:
+        print(f"\n🚨 触发 {len(alerts)} 个告警, 退出码 1")
+        return 1
+    return 0
+
+
 def main() -> int:
-    root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+    import argparse
+    parser = argparse.ArgumentParser(description="Governance readiness trend")
+    parser.add_argument("root", nargs="?", default=".", help="workspace root")
+    parser.add_argument("--alert", action="store_true", help="P64: 异常时发射 omo event")
+    args = parser.parse_args()
+
+    root = Path(args.root).resolve()
     if not (root / ".omo").exists():
         print(f"❌ .omo/ not found at {root}")
         return 1
@@ -133,12 +184,21 @@ def main() -> int:
 
     # 与 L0 规则关联
     print("🔗 L0 规则关联:")
+    alerts = []
     if trend["mean"] >= 90:
         print("  ✅ governance 评分稳态 ≥ 90, 无需告警")
     else:
-        print(f"  ⚠️  governance 评分 < 90, 建议检查: {trend['mean']:.1f}")
+        msg = f"governance 评分 < 90, 建议检查: {trend['mean']:.1f}"
+        print(f"  ⚠️  {msg}")
+        alerts.append({"type": "low_mean", "severity": "high", "message": msg, "value": trend["mean"]})
     if trend["stdev"] > 3:
-        print(f"  ⚠️  评分波动 > 3, stdev={trend['stdev']:.2f}, 可能有未发现的不稳定因素")
+        msg = f"评分波动 > 3, stdev={trend['stdev']:.2f}"
+        print(f"  ⚠️  {msg}, 可能有未发现的不稳定因素")
+        alerts.append({"type": "high_volatility", "severity": "medium", "message": msg, "value": trend["stdev"]})
+
+    # P64 增: --alert 模式发射事件
+    if args.alert and alerts:
+        return emit_alert(root, trend, alerts)
     return 0
 
 
