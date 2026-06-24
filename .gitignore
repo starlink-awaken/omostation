@@ -32,6 +32,10 @@ projects/.omc/
 
 # ---- Daemon 日志 ----
 .omo/_delivery/
+.omc/logs/
+
+# ---- OMO 运行时日志 ----
+.omo/_log/
 
 # ---- 治理审计日志 ----
 .omo/_knowledge/governance-history.jsonl
