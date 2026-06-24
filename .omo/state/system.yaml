@@ -68,19 +68,18 @@ phase30_completed_at: '2026-06-06T01:30:00Z'
 phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
 phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
-divergence_flags:
-- missing_goal_tasks:6
+divergence_flags: []
 task_gate_summary: {}
 promotion_blockers: {}
-divergence_triage_summary:
-  missing_goal_tasks:6:
-    severity: medium
-    owner: control
-    disposition: must_fix
+divergence_triage_summary: {}
 divergence_detail_refs:
-  missing_goal_tasks:
-    count: 6
-    ref: .omo/evidence/divergence/missing_goal_tasks.yaml
+  resolved:
+  - rule: missing_goal_tasks
+    resolution_ref: .omo/evidence/divergence/missing_goal_tasks_reconciliation.yaml
+    note: REMEDIATE-ARC-CONV-P1 done, P2-P6 archived under BET-ARCH-CONVERGENCE; flag cleared after reconciliation
+  - rule: current_wave_mismatch
+    resolution_ref: .omo/evidence/divergence/current_wave_mismatch.yaml
+    note: goals/current.yaml current_wave synced from W1 to W3 to align with system.yaml
 phase12_status: completed
 phase12_completed_at: '2026-06-01T00:50:00Z'
 ecosystem_maturity_score: 100

@@ -52,6 +52,15 @@ repos:
         # 触发场景: 修改 .omo/state/system.yaml 或 .omo/state/health.yaml 时
         # 校验: 引用路径存在 + 数值一致 + 24h 内生成
         # 刷新: python3 bin/compass_radar.py
+      - id: ssot-guardian
+        name: SSOT guardian (task count + current_wave drift detection)
+        entry: python3 bin/ssot-guardian.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P62+: 防止 system.yaml task 计数、goals/current.yaml current_wave 与真实目录漂移.
+        # 检测模式: 有漂移则阻塞提交,提示跑 `python3 bin/ssot-guardian.py --auto-fix`.
+        # 自动修复由每日 cron 负责,避免 pre-commit 隐式写治理文件.
       - id: port-hardcode-check
         name: port hardcode check (端口必须在 protocols/port-registry.yaml)
         entry: python3 scripts/check-vault-paths.py --check-ports

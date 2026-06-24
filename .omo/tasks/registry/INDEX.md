@@ -56,3 +56,4 @@
 
 ---
 *Updated: 2026-06-24 (依据 `omo state sync-tasks` 与真实目录重算: done=114, planned=1, active=0, archived=6 顶层)*
+*Sync command: `omo state sync-tasks`*
