@@ -318,12 +318,16 @@ def _action_complete_quest(params: dict) -> dict:
             "summary": f"complete_quest: 无效的 quest_id ({quest_id})",
         }
 
-    db_path = (
-        Path(__file__).resolve().parents[4]
-        / "projects"
-        / "family-hub"
-        / "family_hub.db"
-    )
+    cur = Path(__file__).resolve()
+    workspace_root = None
+    for parent in cur.parents:
+        if (parent / ".omo").exists() or (parent / "projects").exists():
+            workspace_root = parent
+            break
+    if not workspace_root:
+        workspace_root = cur.parents[5]
+
+    db_path = workspace_root / "projects" / "family-hub" / "family_hub.db"
     if not db_path.exists():
         return {"passed": False, "summary": f"数据库不存在: {db_path}"}
 

@@ -32,23 +32,19 @@ _HEAL_WORKFLOW = "WORKFLOW-ECOS-DAILY-HEALTH"
 
 
 def build_trigger_registry() -> dict[str, list[str]]:
-    """从 M1 节点的 relations.triggers 构建触发器注册表
-
-    遍历 M1 workflow 节点的 relations 字段，
-    收集每条的 trigger target 映射到 workflow_id。
-    """
-    from ecos.workflow.loader import list_from_m1, load_workflow
+    """从 M1 节点与 definitions 目录构建触发器注册表"""
+    from ecos.workflow.loader import list_workflows, load_workflow
 
     registry: dict[str, list[str]] = {}
 
-    m1_workflows = list_from_m1()
-    for wf_meta in m1_workflows:
-        wf_id = wf_meta.get("id", "")
+    all_workflows = list_workflows()
+    for wf_meta in all_workflows:
+        wf_id = wf_meta.get("id") or wf_meta.get("name", "")
         wf = load_workflow(wf_id)
         if not wf:
             continue
 
-        # 读取 relations.triggers
+        # 1. 扫描 M1 relations.triggers
         relations = wf.get("relations", [])
         if isinstance(relations, list):
             for rel in relations:
@@ -63,10 +59,15 @@ def build_trigger_registry() -> dict[str, list[str]]:
                 if target:
                     registry.setdefault(target, []).append(wf_id)
 
+        # 2. 扫描 definitions 中的 root-level trigger 字段 (如 trigger: QuestCompleted)
+        trigger = wf.get("trigger")
+        if trigger and isinstance(trigger, str):
+            registry.setdefault(trigger, []).append(wf_id)
+
     logger.info(
         "Trigger registry built: %d triggers → %d workflows",
         len(registry),
-        len(m1_workflows),
+        len(all_workflows),
     )
     return registry
 

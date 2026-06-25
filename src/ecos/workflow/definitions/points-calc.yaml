@@ -3,6 +3,11 @@ name: points-calc
 description: "家庭积分游戏化清算工作流"
 trigger: "QuestCompleted"
 
+execution:
+  backend: default
+  mode: sequential
+  timeout: 60
+
 steps:
   - name: complete-quest
     action: complete_quest
