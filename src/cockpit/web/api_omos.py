@@ -282,3 +282,62 @@ if router:
             }
         except Exception as e:
             return {"status": "error", "error": str(e)}
+
+    @router.get("/violations")
+    async def get_omos_violations():
+        """扫描并定位直接写入 .omo/ 或 spaces/ 的违规代码行 (direct_omo_io_violation)"""
+        import re
+        import subprocess
+
+        gatekeeper = _REPO_ROOT / "projects" / "ecos" / "scripts" / "contract_gatekeeper.py"
+        if not gatekeeper.exists():
+            return {"status": "error", "error": "contract_gatekeeper.py not found"}
+
+        default_paths = [
+            "projects/aetherforge/packages",
+            "projects/agora/src",
+            "projects/c2g/src",
+            "projects/cockpit/src",
+            "projects/ecos/src",
+            "projects/family-hub/src",
+            "projects/l4-kernel/src",
+            "projects/metaos/src",
+            "projects/model-driven/src",
+            "projects/omo/src",
+            "projects/runtime/src",
+            "scripts",
+            "bin",
+        ]
+
+        cmd = [sys.executable, str(gatekeeper)]
+        existing_paths = []
+        for p in default_paths:
+            full_p = _REPO_ROOT / p
+            if full_p.exists():
+                existing_paths.append(str(full_p))
+        cmd.extend(existing_paths)
+
+        try:
+            proc = subprocess.run(cmd, cwd=str(_REPO_ROOT), capture_output=True, text=True)
+            output = proc.stdout
+            violations = []
+
+            current_file = None
+            for line in output.splitlines():
+                line_str = line.strip()
+                if not line_str:
+                    continue
+                if line_str.startswith("Gatekeeper:") or line_str.startswith("Remediation:"):
+                    continue
+                m_violation = re.match(r"^\s*(\d+):\s*(.*)$", line)
+                if m_violation:
+                    if current_file:
+                        violations.append(
+                            {"file": current_file, "line": int(m_violation.group(1)), "detail": m_violation.group(2)}
+                        )
+                else:
+                    current_file = line_str
+
+            return {"status": "ok", "passed": proc.returncode == 0, "violations": violations}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
