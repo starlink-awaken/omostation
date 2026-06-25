@@ -260,4 +260,9 @@ history:
     + ADR-0069 + 29 个 ADR'
   timestamp: '2026-06-25T09:09:22.438677'
   version: 0.0.64
-version: 0.0.64
+- description: 'P76 R1+R2: p0-event-listener --watch 实时 tail 模式 (0.5s 延迟 + inode 轮转检测,
+    替代 P74 60s 轮询) + install-governance-agent-cron --status-json (JSON 输出供 dashboard
+    消费) + ADR-0070 + 30 个 ADR (2/4 候选实施)'
+  timestamp: '2026-06-25T09:21:48.634249'
+  version: 0.0.65
+version: 0.0.65

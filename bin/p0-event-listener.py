@@ -99,6 +99,7 @@ def main() -> int:
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--once", action="store_true", help="单次轮询 (不后台)")
     parser.add_argument("--daemon", action="store_true", help="后台守护 (每 60s 轮询)")
+    parser.add_argument("--watch", action="store_true", help="P76: 实时 tail -f 模式")
     parser.add_argument("--interval", type=int, default=60, help="守护间隔 (秒)")
     args = parser.parse_args()
 
@@ -127,6 +128,57 @@ def main() -> int:
                     print(f"  - {rec.get('ts', '?')} P0")
             last_ts = get_last_ts(root / ".omo" / "_knowledge" / "omo-events.jsonl") or last_ts
             time.sleep(args.interval)
+
+    # P76: --watch 实时 tail 模式 (按文件 inode + position 检测新行)
+    if args.watch:
+        print(f"👁️  P76 实时 tail P0 事件 (Ctrl+C 退出)")
+        import os
+        events_log = root / ".omo" / "_knowledge" / "omo-events.jsonl"
+        last_pos = events_log.stat().st_size if events_log.exists() else 0
+        last_inode = events_log.stat().st_ino if events_log.exists() else 0
+        while True:
+            try:
+                if events_log.exists():
+                    cur_inode = events_log.stat().st_ino
+                    cur_pos = events_log.stat().st_size
+                    if cur_inode != last_inode:
+                        # 文件被轮转 (新 inode)
+                        last_inode = cur_inode
+                        last_pos = 0
+                    if cur_pos > last_pos:
+                        with open(events_log, encoding="utf-8") as f:
+                            f.seek(last_pos)
+                            for line in f:
+                                line = line.strip()
+                                if not line:
+                                    continue
+                                try:
+                                    rec = json.loads(line)
+                                except Exception:
+                                    continue
+                                if rec.get("kind") != "governance_alert_aggregated":
+                                    continue
+                                payload_str = rec.get("payload", "{}")
+                                if isinstance(payload_str, str):
+                                    try:
+                                        payload = json.loads(payload_str)
+                                    except Exception:
+                                        payload = {}
+                                else:
+                                    payload = payload_str
+                                if payload.get("level") == "P0":
+                                    message = payload.get("level_reason", "P0 触发")
+                                    subprocess.run(
+                                        ["python3", str(root / "bin" / "alert-mock-p0-notify.py"),
+                                         "--message", message, "--all-channels"],
+                                        capture_output=True, timeout=10, cwd=str(root),
+                                    )
+                                    print(f"🚨 [{rec.get('ts', '?')}] P0 → mock 通知已触发: {message}")
+                        last_pos = cur_pos
+                time.sleep(0.5)
+            except KeyboardInterrupt:
+                print("\n👁️  P76 watch 退出")
+                return 0
 
     # 默认行为: 打印用法
     parser.print_help()
