@@ -778,6 +778,8 @@ services:
     domain: system
     action: "list"
     transport: internal
+    module_path: "agora.mcp.resolver.api"
+    func_name: "list_services"
     package: "agora"
     description: "列出所有已注册 MCP backend (代理 KNOWN_BACKENDS)"
 
@@ -792,6 +794,8 @@ services:
     domain: system
     action: "health"
     transport: internal
+    module_path: "agora.mcp.resolver.api"
+    func_name: "list_backend_health"
     package: "agora"
     description: "后端健康探活 — 每个 backend 的状态/失败计数"
 
@@ -806,6 +810,8 @@ services:
     domain: system
     action: "status"
     transport: internal
+    module_path: "agora.mcp.resolver.api"
+    func_name: "governance_status"
     package: "cockpit"
     description: "治理管道健康状态 (心跳时间/日志条目/健康等级)"
 

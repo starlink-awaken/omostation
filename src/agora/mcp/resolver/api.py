@@ -59,6 +59,45 @@ def list_services() -> list[dict]:
     ]
 
 
+def list_backend_health() -> dict:
+    """backend 健康状态 (调 _health_checker 单例, robust 兜底).
+
+    整合 bos://system/backends/health internal transport (TASK-9B363829).
+    """
+    try:
+        from agora.auth.mcp_gateway import _health_checker
+
+        if _health_checker is None:
+            return {"status": "unavailable", "reason": "health_checker not initialized"}
+        result = _health_checker.get_all_status()
+        import asyncio
+
+        if asyncio.iscoroutine(result):
+            result = asyncio.run(result)
+        return {"status": "ok", "backends": result}
+    except Exception as e:
+        return {"status": "error", "error": f"{type(e).__name__}: {e}"}
+
+
+def governance_status() -> dict:
+    """治理状态 (调 Orchestrator, robust 兜底).
+
+    整合 bos://system/governance/status internal transport.
+    """
+    try:
+        from agora.mcp_registry.orchestrator import Orchestrator
+
+        orch = Orchestrator()
+        result = orch.get_status()
+        import asyncio
+
+        if asyncio.iscoroutine(result):
+            result = asyncio.run(result)
+        return {"status": "ok", "governance": result}
+    except Exception as e:
+        return {"status": "error", "error": f"{type(e).__name__}: {e}"}
+
+
 def get_service(uri: str) -> BosService | None:
     """通过 URI 查找 BOS 服务."""
     norm = normalize_bos_uri(uri)
