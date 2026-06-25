@@ -92,13 +92,14 @@ def add_rule_to_yaml(yaml_path: Path, new_rule: dict) -> int:
             encoding="utf-8",
         )
 
-    # 新 rule YAML 块
+    # 新 rule YAML 块 (title 用引号包裹防 YAML 解析问题, e.g. 含 ":" 时)
     rid = new_rule["rule_id"]
     target = new_rule["target"]
     fresh = new_rule["freshness"]
+    title = new_rule.get("title", rid).replace('"', '\\"')
     new_yaml = (
-        f"  - rule_id: {rid}\n"
-        f"    title: {new_rule.get('title', rid)}\n"
+        f'  - rule_id: {rid}\n'
+        f'    title: "{title}"\n'
         f"    type: {new_rule.get('type', 'governance_loop_freshness')}\n"
         f"    status: active\n"
         f"    target: {target}\n"
@@ -108,7 +109,7 @@ def add_rule_to_yaml(yaml_path: Path, new_rule: dict) -> int:
         f"      action: {fresh['action']}\n"
         f"    owner: {new_rule.get('owner', 'governance-team')}\n"
         f"    notes: >\n"
-        f"      P87 R2 新增 rule.\n\n"
+        f"      P90 R2 新增 rule (omo_lint.py 抗 god-module 监控).\n\n"
     )
 
     # 追加到文件末尾 (YAML 允许多 document, 用 --- 分隔)

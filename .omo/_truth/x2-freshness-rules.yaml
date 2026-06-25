@@ -169,3 +169,16 @@ rules:
       拆为 freshness 子字段, 单一 action).
       实现: bin/check-commit-fatigue.py (P60+ 实现) + pre-commit 钩子。
       参考: L0-constraints.yaml:CR-GOV-COMMIT-FREQUENCY-01
+  - rule_id: X2-FRESH-OMO-LINT-SIZE
+    title: "P90 omo_lint.py 抗 god-module 拆解监控 (P89-A 待拆 schemas 432L)"
+    type: governance_loop_freshness
+    status: active
+    target: projects/omo/src/omo/omo_lint.py
+    freshness:
+      mechanism: manual-review
+      threshold_days: 7
+      action: warn
+    owner: governance-team
+    notes: >
+      P90 R2 新增 rule (omo_lint.py 抗 god-module 监控).
+

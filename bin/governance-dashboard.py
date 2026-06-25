@@ -32,7 +32,7 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     # (id, 描述, bin_path, args)
     ("governance-history", "P83 governance 评分历史", "bin/governance-history-insight.py", []),
     ("drift-history", "P83 drift 漂移历史", "bin/drift-history-insight.py", []),
-    ("x2-freshness", "P84 X2 freshness 9 规则", "bin/x2-freshness-check.py", []),
+    ("x2-freshness", "P84 X2 freshness 10 规则", "bin/x2-freshness-check.py", []),
     ("x2-rule-lint", "P85 X2 rule schema lint", "bin/x2-rule-lint.py", []),
     ("x2-rule-add", "P87 X2 rule 交互式添加 (template 模式)", "bin/x2-rule-add.py", ["--template"]),
     ("adr-coverage", "P85 ADR 治理健康度", "bin/adr-coverage.py", []),
@@ -44,6 +44,7 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
      ["--window", "weekly"]),
     ("rule-history-insight", "P89 X2 rule 状态洞察", "bin/rule-history-insight.py", []),
     ("adr-drift-check", "P89 ADR 引用 drift (信息性, 全量扫描)", "bin/adr-drift-check.py", []),
+    ("adr-drift-classify", "P90 ADR drift 归类 (历史 vs 新增)", "bin/adr-drift-classify.py", []),
 ]
 
 

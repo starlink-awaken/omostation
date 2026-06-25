@@ -60,6 +60,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 | 0081 | P87 god-module 拆解 roadmap + X2 rule 交互式添加 + dashboard 扩展 9 工具 (31 bin) | ACCEPTED | 2026-06-25 | omostation P87 | 0081-p87-god-module-roadmap-x2-rule-add.md |
 | 0082 | P88 omo_lint 拆解 (1560→1257L, -19.4%) + X2 rule template standard + gov-trend-report (32 bin, 10 dashboard) | ACCEPTED | 2026-06-25 | omostation P88 | 0082-p88-omo-lint-split-x2-template-trend.md |
 | 0083 | P89 rule-history-insight (8/9 fresh) + adr-drift-check (109 历史 issues) + dashboard 12 工具 (34 bin) | ACCEPTED | 2026-06-25 | omostation P89 | 0083-p89-rule-history-adr-drift.md |
+| 0084 | P90 X2-FRESH-OMO-LINT-SIZE rule + adr-drift-classify + governance dashboard cron + dashboard 13 工具 (35 bin) | ACCEPTED | 2026-06-25 | omostation P90 | 0084-p90-x2-rule-adr-classify-cron.md |
 
 ---
 

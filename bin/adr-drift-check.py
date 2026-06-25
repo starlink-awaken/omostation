@@ -103,6 +103,9 @@ def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set
             if "." not in path.split("/")[-1] and full.is_dir():
                 continue
             if not full.exists():
+                # 兼容: 自动补 .md 后缀
+                if not path.endswith(".md") and (root / f"{path}.md").exists():
+                    continue
                 # 兼容: 路径可能是 stdlib name (如 `argparse`), 不报
                 # 启发: 如果 path 完全没 /, 或 path 长度 < 8, 视为 stdlib
                 if len(path) < 8:
