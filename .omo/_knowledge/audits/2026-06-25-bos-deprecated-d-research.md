@@ -50,7 +50,7 @@ chat/run-task 对齐 (最小可行):
 |------|:---:|---------|
 | sharedbrain/sot-bridge | 8 | 查 8001 端口实况 (omo_health.py:37 `sharedbrain-bridge-mcp: 8001`) + debt 记录 |
 | system/* | 9 | internal 缺 module_path, 查 agora 内部工具真实入口 |
-| gbrain | 3 | mcp_proxy 缺 http_url, 查 gbrain MCP endpoint |
+| gbrain | 3 | ✅ **已整合 (2026-06-25)** — 指向 gbrain serve stdio MCP (不建入口) |
 | protocols-layer | 1 | routes.json 有路由, 查有无实现 |
 
 ## 5. 关键教训
@@ -76,7 +76,7 @@ chat/run-task 对齐 (最小可行):
 | 类别 | 数量 | 修复性质 | 复杂度 |
 |------|:---:|---------|:---:|
 | agent-runtime | 7 | ✅ **已整合 (2026-06-25)** — runtime.mcp_server 补 7 agent 工具, BOS 指向它 (消除 cockpit 壳) | 完成 |
-| gbrain | 3 | **建 TS stdio 入口脚本** + 改 transport | 中-高 (跨 TS) |
+| gbrain | 3 | ✅ **已整合** — 指向 gbrain serve (不用建入口) | 完成 |
 | sharedbrain/sot-bridge | 8 | ✅ **已清理 (2026-06-25)** — 包不存在+8001不跑, 删声明+routes+health+seeds | 完成 |
 | system/* | 9 | 补 internal module_path (查 agora 内部入口) | 中 |
 | protocols-layer | 1 | 查有无实现 → 补/删 | 调研 |

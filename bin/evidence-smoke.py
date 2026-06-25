@@ -59,8 +59,8 @@ W_FEEDBACK = 20  # 反馈回路存活
 KNOWN_GAP_PREFIXES: dict[str, str] = {
     # agent-runtime 已整合 (2026-06-25, runtime.mcp_server 补 7 agent 工具, BOS 指向它)
     # sharedbrain/sot-bridge 已删 (2026-06-25, 包不存在+8001不跑, 连带清理 routes/health/seeds)
+    # gbrain 已整合 (2026-06-25, 指向 gbrain serve stdio MCP)
     "bos://governance/protocols-layer/": "无实现 (routes.json 有路由)",
-    "bos://memory/gbrain/": "缺 mcp endpoint (mcp_proxy 无 http_url)",
     "bos://system/": "internal 缺 module_path (agora 内部工具声明不完整)",
 }
 KNOWN_GAP_EXPIRES = "2026-07-25"  # 30天复查, 过期未对齐升级为真实鸿沟
@@ -154,7 +154,7 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
             package = command[i + 1]
         elif arg == "-m" and i + 1 < len(command):
             module = command[i + 1]
-        elif arg.endswith(".py"):
+        elif arg.endswith((".py", ".ts", ".js")):
             script = arg
 
     # 路径 1: 直接脚本路径 (family-hub: projects/family-hub/mcp_server.py)
