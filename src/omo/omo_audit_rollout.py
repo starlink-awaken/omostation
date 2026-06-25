@@ -167,3 +167,25 @@ def write_daemon_summary(
     summary_path = out_dir / f"{today}-{mode}-daemon-summary.json"
     _locked_write_json(summary_path, summary)
     return summary_path
+
+
+def main(argv: list[str] | None = None) -> int:
+    """omo cli audit-rollout 入口 — 调 scripts/opc_audit_rollout_5repos.py 聚合.
+
+    本模块提供 history helpers (write_drift_history/update_history_index/write_daemon_summary);
+    跨仓 baseline 聚合逻辑在 scripts/opc_audit_rollout_5repos.py.
+    本 main 是 cli 薄包装, 复用 5repos 聚合 (不重复造轮, DRY).
+    """
+    import subprocess
+    import sys
+
+    workspace_root = Path(__file__).resolve().parents[4]
+    script = workspace_root / "scripts" / "opc_audit_rollout_5repos.py"
+    if not script.exists():
+        print(
+            f"❌ {script} 不存在 (audit-rollout 5repos 聚合脚本缺失)",
+            file=sys.stderr,
+        )
+        return 1
+    cmd = [sys.executable, str(script)] + (argv or [])
+    return subprocess.call(cmd, cwd=str(workspace_root))
