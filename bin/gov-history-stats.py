@@ -113,6 +113,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="P91: gov history stats 深化")
     parser.add_argument("--file", default=".omo/_knowledge/governance-history.jsonl")
     parser.add_argument("--days", type=int, default=30, help="最近 N 天")
+    parser.add_argument("--compare", action="store_true", help="对比最近 N/2 vs 前 N/2")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -143,12 +144,36 @@ def main() -> int:
     transitions = grade_transitions(by_d)
     cat_trend = category_trend(recent_entries)
 
+    # 对比模式: 拆 N/2 最近 + 前 N/2
+    compare = None
+    if args.compare and len(recent_entries) >= 4:
+        sorted_recent = sorted(recent_entries, key=lambda e: e.get("timestamp", ""))
+        mid = len(sorted_recent) // 2
+        first_half = sorted_recent[:mid]
+        second_half = sorted_recent[mid:]
+        first_scores = [e.get("total_score", 0) for e in first_half]
+        second_scores = [e.get("total_score", 0) for e in second_half]
+        first_avg = round(sum(first_scores) / len(first_scores), 2) if first_scores else 0
+        second_avg = round(sum(second_scores) / len(second_scores), 2) if second_scores else 0
+        compare = {
+            "first_half": {
+                "count": len(first_half),
+                "avg_score": first_avg,
+            },
+            "second_half": {
+                "count": len(second_half),
+                "avg_score": second_avg,
+            },
+            "delta": round(second_avg - first_avg, 2),
+        }
+
     result = {
         "window_days": args.days,
         "total_recent": len(recent_entries),
         "date_count": len(by_d),
         "transitions": transitions,
         "category_trend": cat_trend,
+        "compare": compare,
     }
 
     if args.json:
@@ -160,10 +185,17 @@ def main() -> int:
     print("=" * 60)
     print(f"📁 最近 {args.days} 天: {len(recent_entries)} entries, {len(by_d)} 天")
     print()
+    if compare:
+        print("🔄 对比分析 (前 N/2 vs 后 N/2):")
+        print(f"   前半: count={compare['first_half']['count']:>3d}  avg={compare['first_half']['avg_score']:>5.1f}")
+        print(f"   后半: count={compare['second_half']['count']:>3d}  avg={compare['second_half']['avg_score']:>5.1f}")
+        sign = "+" if compare['delta'] > 0 else ""
+        print(f"   delta: {sign}{compare['delta']:>5.1f}")
+        print()
     if transitions:
         print("📅 Grade 比例变迁:")
         print(f"  {'日期':<12s}  {'A+':>6s}  {'A':>6s}  {'B':>6s}  {'C':>6s}  {'D':>6s}  {'F':>6s}")
-        for t in transitions[-15:]:  # 最近 15 天
+        for t in transitions[-15:]:
             print(f"  {t['date']:<12s}  {t['a_plus_pct']:>5.1f}%  {t['a_pct']:>5.1f}%  "
                   f"{t['b_pct']:>5.1f}%  {t['c_pct']:>5.1f}%  {t['d_pct']:>5.1f}%  {t['f_pct']:>5.1f}%")
     print()

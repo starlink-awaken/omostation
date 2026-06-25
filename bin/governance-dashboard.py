@@ -48,6 +48,7 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     ("gov-history-stats", "P91 gov history 深化 (30 天 + 类别趋势)", "bin/gov-history-stats.py",
      ["--days", "30"]),
     ("adr-trend-insight", "P92 ADR 趋势 (phase 分布 + 提交历史)", "bin/adr-trend-insight.py", []),
+    ("adr-drift-auto-fix", "P93 ADR drift 自动归类 (TEMPLATE/SUBDIR/TYPO/REAL)", "bin/adr-drift-auto-fix.py", []),
 ]
 
 
