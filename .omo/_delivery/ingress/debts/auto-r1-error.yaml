@@ -4,8 +4,8 @@ title: '[自动] r1: ERROR × 1'
 ingress_plane: projects/omo:self_healing
 source_ref: self_healing:auto-r1-error
 created_at: '2026-06-22T02:23:15.051255+00:00'
-last_seen_at: '2026-06-25T01:48:01.949732+00:00'
-occurrence_count: 10
+last_seen_at: '2026-06-25T01:48:32.042446+00:00'
+occurrence_count: 11
 debt_ref: .omo/debt/items/auto-r1-error.yaml
 lifecycle_state: open
 artifact_ref: .omo/_delivery/ingress/debts/auto-r1-error.yaml

@@ -259,8 +259,7 @@ def summary(
           "generated_at": iso8601
         }
     """
-    use_default = path is None
-    if use_default:
+    if path is None:
         path = DEFAULT_METRICS_PATH
         # 长期机制: 默认路径自动同步 Agora SQLite metrics, 保证 OMO 看到真实 BOS 流量.
         # 显式传 path 时跳过 — 调用方/test 控制自己的 metrics 源, 不 auto-sync 污染.
