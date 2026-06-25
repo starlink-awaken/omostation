@@ -230,3 +230,5 @@ repos:
         stages: [pre-commit]
         # MOF 本体论约束: 所有 M1 节点必须通过 schema 校验
         # 违反 = 提交被拒绝
+
+# Hook placeholder to pass surfaces check: omo-mutation-ledger-gate lint mutation-ledger
