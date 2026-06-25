@@ -190,7 +190,79 @@ def analyze_history(records: list[dict], suppressions: list[dict]) -> dict:
         "suppression_rate": round(suppression_rate, 3),
         "suppression_efficiency": round(efficiency, 3),  # P71 新增
         "record_count": len(records),
+        "anomalies": detect_anomalies(records, suppressions),  # P78 增
     }
+
+
+def detect_anomalies(records: list[dict], suppressions: list[dict]) -> list[dict]:
+    """P78 增: 异常检测 — 识别告警历史中的异常模式.
+
+    类型:
+    - sudden_spike: 1h 内同类型 > 5 次
+    - level_escalation: 7d 内 P0 出现
+    - type_concentration: 单一类型占 > 80%
+    - suppression_heavy: 抑制率 > 70%
+    """
+    anomalies = []
+    # 1. sudden_spike: 按小时桶统计
+    hour_type: dict[str, int] = {}
+    for r in records:
+        ts = r.get("timestamp", "")
+        for a in r.get("alerts", []):
+            atype = a.get("type", "?")
+            if ts:
+                hour = ts[:13]
+                key = f"{hour}|{atype}"
+                hour_type[key] = hour_type.get(key, 0) + 1
+    for k, count in hour_type.items():
+        if count > 5:
+            hour, atype = k.split("|", 1)
+            anomalies.append({
+                "type": "sudden_spike",
+                "severity": "high",
+                "hour": hour,
+                "alert_type": atype,
+                "count": count,
+                "message": f"⚠️  {atype} 在 {hour} 1h 内触发 {count} 次 (> 5 阈值)",
+            })
+    # 2. level_escalation: 7d 内 P0
+    for r in records:
+        if r.get("level") == "P0":
+            anomalies.append({
+                "type": "level_escalation",
+                "severity": "critical",
+                "timestamp": r.get("timestamp", ""),
+                "message": f"🚨 7d 内 P0 触发: {r.get('level_reason', '?')}",
+            })
+            break  # 只报首个
+    # 3. type_concentration
+    if records:
+        type_counter: dict[str, int] = {}
+        for r in records:
+            for bt in r.get("by_type", {}):
+                type_counter[bt] = type_counter.get(bt, 0) + 1
+        total = sum(type_counter.values())
+        if total > 0:
+            for t, c in type_counter.items():
+                if c / total > 0.8:
+                    anomalies.append({
+                        "type": "type_concentration",
+                        "severity": "medium",
+                        "alert_type": t,
+                        "percentage": round(c / total * 100, 1),
+                        "message": f"📊 {t} 占 {c / total * 100:.1f}% (> 80% 集中度)",
+                    })
+    # 4. suppression_heavy
+    total_suppressions = len(suppressions)
+    total_notifications = len(records)
+    if total_notifications > 0 and total_suppressions / (total_suppressions + total_notifications) > 0.7:
+        anomalies.append({
+            "type": "suppression_heavy",
+            "severity": "medium",
+            "suppression_rate": round(total_suppressions / (total_suppressions + total_notifications) * 100, 1),
+            "message": f"🔕 抑制率 {total_suppressions / (total_suppressions + total_notifications) * 100:.1f}% (> 70% 阈值)",
+        })
+    return anomalies
 
 
 def main() -> int:
@@ -292,6 +364,15 @@ def main() -> int:
                         border_style="red",
                     )
                 )
+                # P78 增: anomalies 显示
+                if hist.get("anomalies"):
+                    console.print(Panel(
+                        "\n".join(
+                            f"  [{a['severity']}] {a['message']}" for a in hist["anomalies"]
+                        ),
+                        title=f"🔍 P78 异常洞察 ({len(hist['anomalies'])} 个)",
+                        border_style="yellow",
+                    ))
             output = ""  # rich 自身渲染
         except ImportError:
             # fallback: 纯文本

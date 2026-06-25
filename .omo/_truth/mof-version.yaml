@@ -270,4 +270,10 @@ history:
     bin) + ADR-0071 + 31 个 ADR (1/3 候选实施, 跨子仓联动 + graphify 留 P78+)'
   timestamp: '2026-06-25T09:41:25.424640'
   version: 0.0.66
-version: 0.0.66
+- description: 'P78 R1+R2+R3: cross-submodule-check (6 子仓 ecos/agora/cockpit/omo/runtime/scripts
+    联动检查) + management/INDEX.md (3 子目录结构) + alert-history 自动洞察 (4 类异常: sudden_spike
+    / level_escalation / type_concentration / suppression_heavy) + ADR-0072 + 17 独立
+    bin 工具 + 32 个 ADR (4/5 候选实施, P0 inotify 评估沿用 P76 --watch 足够)'
+  timestamp: '2026-06-25T09:59:18.215834'
+  version: 0.0.67
+version: 0.0.67

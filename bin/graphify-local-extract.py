@@ -67,6 +67,8 @@ def main() -> int:
     )
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--output-only", action="store_true", help="只输出统计")
+    parser.add_argument("--report-only", action="store_true",
+                        help="P77: 仅读旧 graph.json 输出报告 (无需 API key)")
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
