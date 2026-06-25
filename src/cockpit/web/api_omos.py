@@ -228,16 +228,14 @@ if router:
             def _utc_now() -> str:
                 return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
-            try:
-                omo_ingress.complete_task(
-                    omo_dir,
-                    task_id=task_id,
-                    actor="projects/cockpit",
-                    source_ref=f"cockpit:quest:done:{task_id}",
-                    now=_utc_now(),
-                )
-            except Exception:
-                pass
+            omo_ingress.complete_task(
+                omo_dir,
+                task_id=task_id,
+                actor="projects/cockpit",
+                source_ref=f"cockpit:quest:done:{task_id}",
+                now=_utc_now(),
+                evidence_paths=[f"sqlite://family-hub/quests/{quest_id}"],
+            )
 
             bus_event.publish(
                 topic="QuestCompleted",
