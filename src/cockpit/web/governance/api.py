@@ -12,7 +12,7 @@ try:
 except ImportError:
     router = None
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = Path(__file__).resolve().parents[6]
 
 
 if router:
