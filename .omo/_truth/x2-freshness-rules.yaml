@@ -84,7 +84,7 @@ rules:
     type: governance_loop_freshness
     status: active
     created: '2026-06-20'
-    target: .omo/debt/items/DEBT-*.yaml
+    target: .omo/debt/items/D-*.yaml
     freshness:
       mechanism: governance-audit
       threshold_days: 14
@@ -92,6 +92,7 @@ rules:
     owner: governance-team
     notes: >
       P43 闭环确立 debt closure 必带 resolution_evidence 的强制约束。
+      P84 R2 修正: target 改为 D-*.yaml (历史 debt 用 D- 前缀, 非 DEBT-).
       `omo governance` 每 14 天自动审计: lifecycle_state=closed 的 debt
       必须有 ≥ 20 字符的 resolution_evidence；lifecycle_state=deferred 的 debt
       必须有 next_review_at + gate_level。审计失败触发 debt integrity score 扣分。
