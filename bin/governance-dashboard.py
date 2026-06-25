@@ -34,9 +34,12 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     ("drift-history", "P83 drift 漂移历史", "bin/drift-history-insight.py", []),
     ("x2-freshness", "P84 X2 freshness 9 规则", "bin/x2-freshness-check.py", []),
     ("x2-rule-lint", "P85 X2 rule schema lint", "bin/x2-rule-lint.py", []),
+    ("x2-rule-add", "P87 X2 rule 交互式添加 (template 模式)", "bin/x2-rule-add.py", ["--template"]),
     ("adr-coverage", "P85 ADR 治理健康度", "bin/adr-coverage.py", []),
     ("mof-m2-coverage", "P84 M2 schema coverage 修正版", "bin/mof-m2-coverage.py", []),
     ("management-cross-ref", "P82+P83 management 跨文件引用", "bin/management-cross-ref-check.py", ["."]),
+    ("god-module-roadmap", "P87 god-module refactor (示例文件)", "bin/god-module-roadmap.py",
+     ["projects/omo/src/omo/omo_lint.py", "--top", "3"]),
 ]
 
 
