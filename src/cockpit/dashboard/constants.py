@@ -69,10 +69,10 @@ a{color:#58a6ff;text-decoration:none}a:hover{text-decoration:underline}
 <h1>&#x25C8; Cockpit — 统一状态概览</h1>
 <div class="sub">L3 聚合入口 · 自动检测各层状态</div>
 <div class="nav">
-  <a href="/">&#x1F4CA; 债务驾驶舱 (原有)</a>
+  <a href="/overview">&#x1F4CA; 债务驾驶舱 (原有)</a>
   <a href="/bos">&#x1F4E6; BOS 可观测</a>
   <a href="/arch">&#x1F527; 架构健康</a>
-  <a href="/hermes/">&#x2728; Hermes Console</a>
+  <a href="/">&#x2728; Hermes Console</a>
   <a href="/api/v1/status">&#x1F4CB; API JSON</a>
   <a href="/api/v1/m0">&#x1F4CA; M0 快照</a>
   <a href="http://localhost:7430">&#x2197; Agora (I0)</a>
@@ -328,10 +328,10 @@ td{padding:6px 4px;border-bottom:1px solid #21262d}
 <div class="sub">治理管道 · 系统健康 · Git 状态 · Ruff Lint · 审计存档</div>
 <div class="nav">
   <a href="/overview">&#x1F30D; 统一状态</a>
-  <a href="/">&#x1F4CA; 债务驾驶舱</a>
+  <a href="/overview">&#x1F4CA; 债务驾驶舱</a>
   <a href="/bos">&#x1F4E6; BOS 可观测</a>
   <a href="/api/v1/arch-health">&#x1F4CB; API JSON</a>
-  <a href="/hermes/">&#x2728; Hermes Console</a>
+  <a href="/">&#x2728; Hermes Console</a>
 </div>
 <div id="arch-grid" class="grid"></div>
 <div id="pipeline-detail" class="grid" style="margin-top:16px"></div>
