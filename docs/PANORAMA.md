@@ -322,7 +322,7 @@ script / wrapper / cron
 | c2g | X | [ARCHITECTURE.md](../projects/c2g/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/c2g/CALLCHAIN.md) · [BOUNDARY.md](../projects/c2g/BOUNDARY.md) |
 | compute-mesh | L1 | **ARCHIVED** — 快照在 `/_archived/compute-mesh/`，能力已并入 [aetherforge/packages/mesh](../projects/aetherforge/packages/mesh/) |
 | family-hub | X | [ARCHITECTURE.md](../projects/family-hub/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/family-hub/CALLCHAIN.md) · [BOUNDARY.md](../projects/family-hub/BOUNDARY.md) |
-| hermes-console | L3 | [ARCHITECTURE.md](../projects/hermes-console/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/hermes-console/CALLCHAIN.md) · [BOUNDARY.md](../projects/hermes-console/BOUNDARY.md) |
+| hermes-console | L3 | **ARCHIVED** — 项目已移除（L3 入口能力已收敛到 cockpit/agora）|
 | l4-kernel | L4 | [ARCHITECTURE.md](../projects/l4-kernel/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/l4-kernel/CALLCHAIN.md) · [BOUNDARY.md](../projects/l4-kernel/BOUNDARY.md) |
 | llm-gateway | X | **ARCHIVED** — 快照在 `/_archived/llm-gateway/`，能力已并入 [aetherforge/packages/gateway](../projects/aetherforge/packages/gateway/) |
 | model-driven | M0 | [ARCHITECTURE.md](../projects/model-driven/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/model-driven/CALLCHAIN.md) · [BOUNDARY.md](../projects/model-driven/BOUNDARY.md) |
