@@ -124,7 +124,7 @@ def _maybe_enforce_budget(
     route_info: dict[str, Any],
     messages: list[dict],
 ) -> dict[str, Any] | None:
-    from llm_gateway.budget import check_budget_limit, BudgetExhausted
+    from llm_gateway.budget import check_budget_limit, BudgetExhaustedError
 
     context = request_context or {}
 
@@ -153,7 +153,7 @@ def _maybe_enforce_budget(
             if raw_budget not in ("", None)
             else None,
         )
-    except BudgetExhausted as e:
+    except BudgetExhaustedError as e:
         import re
 
         suffix = (
