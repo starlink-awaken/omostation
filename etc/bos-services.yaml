@@ -232,25 +232,25 @@ services:
   - uri: "bos://capability/agent-runtime/execute"
     domain: capability
     action: "execute"
-    transport: stdio
+    transport: mcp_stdio
     package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "execute"]
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
     description: "Agent Runtime 执行入口"
 
   - uri: "bos://capability/agent-runtime/list-tools"
     domain: capability
     action: "list-tools"
-    transport: stdio
+    transport: mcp_stdio
     package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "list-tools"]
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
     description: "Agent Runtime 工具列表"
 
   - uri: "bos://capability/agent-runtime/status"
     domain: capability
     action: "status"
-    transport: stdio
+    transport: mcp_stdio
     package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "status"]
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
     description: "Agent Runtime 状态"
 
   - uri: "bos://capability/forge/agent-list"
@@ -639,33 +639,33 @@ services:
   - uri: "bos://capability/agent-runtime/chat"
     domain: capability
     action: "chat"
-    transport: stdio
+    transport: mcp_stdio
     package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "chat"]
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
     description: "Agent 交互式对话接口"
 
   - uri: "bos://capability/agent-runtime/run-task"
     domain: capability
     action: "run-task"
-    transport: stdio
+    transport: mcp_stdio
     package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "execute"]
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
     description: "Agent 任务执行接口"
 
   - uri: "bos://capability/agent-runtime/task-status"
     domain: capability
     action: "task-status"
-    transport: stdio
+    transport: mcp_stdio
     package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "status"]
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
     description: "Agent 任务状态查询"
 
   - uri: "bos://capability/agent-runtime/agent-list"
     domain: capability
     action: "agent-list"
-    transport: stdio
+    transport: mcp_stdio
     package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "list"]
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
     description: "列出所有可用 Agent 实例"
 
   - uri: "bos://analysis/eidos/validate"
