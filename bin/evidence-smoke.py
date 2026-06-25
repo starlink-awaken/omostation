@@ -58,9 +58,7 @@ W_FEEDBACK = 20  # 反馈回路存活
 # 来源: 全仓 grep 发现硬依赖 (routes.json/health/debt), 非简单死声明, 不能一刀切删
 KNOWN_GAP_PREFIXES: dict[str, str] = {
     "bos://capability/agent-runtime/": "迁移 cockpit (omo goals M2 拆分 runtime+ext/cockpit)",
-    "bos://persona/sharedbrain-bridge/": "死活待查 (debt 承认死代码 + 8001 端口实况)",
-    "bos://persona/sot-bridge-persona/": "死活待查 (sharedbrain 桥)",
-    "bos://governance/sot-bridge/": "死活待查 (sharedbrain 桥)",
+    # sharedbrain/sot-bridge 已删 (2026-06-25, 包不存在+8001不跑, 连带清理 routes/health/seeds)
     "bos://governance/protocols-layer/": "无实现 (routes.json 有路由)",
     "bos://memory/gbrain/": "缺 mcp endpoint (mcp_proxy 无 http_url)",
     "bos://system/": "internal 缺 module_path (agora 内部工具声明不完整)",

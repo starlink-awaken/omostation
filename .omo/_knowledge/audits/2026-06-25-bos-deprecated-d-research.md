@@ -77,7 +77,7 @@ chat/run-task 对齐 (最小可行):
 |------|:---:|---------|:---:|
 | agent-runtime | 7 | 改声明指向 cockpit MCP (chat/run-task) + 5 个决策 | 中 |
 | gbrain | 3 | **建 TS stdio 入口脚本** + 改 transport | 中-高 (跨 TS) |
-| sharedbrain/sot-bridge | 8 | 查 8001 端口实况 → 死活决策 | 调研 |
+| sharedbrain/sot-bridge | 8 | ✅ **已清理 (2026-06-25)** — 包不存在+8001不跑, 删声明+routes+health+seeds | 完成 |
 | system/* | 9 | 补 internal module_path (查 agora 内部入口) | 中 |
 | protocols-layer | 1 | 查有无实现 → 补/删 | 调研 |
 
