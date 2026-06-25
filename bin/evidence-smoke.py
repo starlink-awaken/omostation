@@ -76,6 +76,54 @@ def _is_known_gap(uri: str) -> tuple[bool, str]:
     return False, ""
 
 
+# 声明源 (查消费者时排除, 避免把自己当消费者)
+_DECL_SOURCES = (
+    "services.py",
+    "bos-services.yaml",
+    "omo_bos_seeds",
+    "/test",
+    "_legacy",
+    "evidence-smoke",
+    "check-god-module",
+    "node_modules",
+)
+
+
+def check_consumers(uri: str) -> list[str]:
+    """grep 全仓 uri 的消费者引用 (排除声明源本身).
+
+    教训物化 (2026-06-25): 第一轮 grep(.py/.ts) 漏 .json/.yaml/.md 误判零硬依赖,
+    差点盲目删 break routes.json/health. 此函数做全类型扫描, 服务 D 调研"能不能删".
+    返回引用该 uri 的文件列表 (相对 workspace).
+    """
+    import subprocess
+
+    # grep uri 的可识别片段 (bos://capability/agent-runtime/chat → agent-runtime/chat)
+    # 用 uri 去掉 bos:// 前缀的后半段 (domain/pkg/action), 避免匹配太多噪音
+    needle = uri.replace("bos://", "")
+    try:
+        result = subprocess.run(
+            [
+                "rg",
+                "-l",
+                "--no-messages",
+                "--glob",
+                "*.{py,ts,yaml,yml,json,md}",
+                needle,
+            ],
+            cwd=str(WORKSPACE),
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        files = [f.strip() for f in result.stdout.splitlines() if f.strip()]
+        return [f for f in files if not any(x in f for x in _DECL_SOURCES)]
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return []
+    except Exception:
+        return []
+
+
 def _utc_now() -> str:
     return (
         datetime.now(timezone.utc)
@@ -361,8 +409,11 @@ def compute_evidence_score(bos_rate: float, tree: dict, feedback: dict) -> dict:
 # ── 主流程 ──────────────────────────────────────────────────────
 
 
-def run_smoke(spawn_n: int = 0) -> dict:
-    """跑全量证据 smoke, 返回报告 dict."""
+def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
+    """跑全量证据 smoke, 返回报告 dict.
+
+    consumers=True 时对 deprecated 项查消费者引用 (服务 D 调研"能不能删", 慢).
+    """
     # 动态 import (避免脚本加载时就崩 — agora 不在时给清晰报错)
     try:
         from agora.mcp.resolver.services import POC_SERVICES  # type: ignore[import-not-found]
@@ -419,7 +470,11 @@ def run_smoke(spawn_n: int = 0) -> dict:
             "failure_buckets": dict(failure_buckets),
         },
         "deprecated": [
-            {"uri": r["uri"], "reason": r.get("deprecated_reason", "")}
+            {
+                "uri": r["uri"],
+                "reason": r.get("deprecated_reason", ""),
+                **({"consumers": check_consumers(r["uri"])} if consumers else {}),
+            }
             for r in deprecated_fails
         ],
         "working_tree": tree,
@@ -513,9 +568,14 @@ def main() -> int:
         help="L3 抽样 spawn N 个 stdio service (慢, 默认 0 不跑)",
     )
     parser.add_argument("--quiet", action="store_true", help="只输出 score")
+    parser.add_argument(
+        "--consumers",
+        action="store_true",
+        help="对 deprecated 项查消费者引用 (服务 D 调研能不能删, 慢)",
+    )
     args = parser.parse_args()
 
-    report = run_smoke(spawn_n=args.spawn)
+    report = run_smoke(spawn_n=args.spawn, consumers=args.consumers)
     if "error" in report:
         return 1
 
