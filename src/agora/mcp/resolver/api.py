@@ -86,8 +86,9 @@ def governance_status() -> dict:
     """
     try:
         from agora.mcp_registry.orchestrator import Orchestrator
+        from agora.mcp_registry.repository import ToolCatalog
 
-        orch = Orchestrator()
+        orch = Orchestrator(ToolCatalog())
         result = orch.get_status()
         import asyncio
 
