@@ -76,8 +76,11 @@ for _router_module in (
 
 @app.api_route("/admin/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 async def proxy_gbrain_admin(path: str, request: Request):
-    """Forward /admin requests to the GBrain service on port 3131 (with Streaming/SSE support)."""
-    target_url = f"http://127.0.0.1:3131/admin/{path}"
+    """Forward /admin requests to the GBrain service (with Streaming/SSE support)."""
+    import os
+
+    gbrain_port = int(os.environ.get("GBRAIN_PORT", "3131"))
+    target_url = f"http://127.0.0.1:{gbrain_port}/admin/{path}"
 
     # Pass along query parameters
     params = dict(request.query_params)
@@ -126,7 +129,7 @@ async def proxy_gbrain_admin(path: str, request: Request):
                 resp_headers = {k: v for k, v in resp.headers.items() if k.lower() not in excluded_headers}
                 return Response(content=resp.content, status_code=resp.status_code, headers=resp_headers)
     except httpx.RequestError as e:
-        return Response(content=f"Proxy error connecting to GBrain (3131): {str(e)}", status_code=502)
+        return Response(content=f"Proxy error connecting to GBrain ({gbrain_port}): {str(e)}", status_code=502)
 
 
 # ─── Main dashboard router ────────────────────────────────────
