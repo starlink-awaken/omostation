@@ -58,3 +58,27 @@ chat/run-task 对齐 (最小可行):
 - **证据驱动要全类型扫描**: 第一轮 grep(.py/.ts) 说零硬依赖, 第二轮(.json/.yaml/.md) 翻出 routes.json+health 硬依赖 → 推翻一刀切删方案, 改 C+D
 - **deprecated 机制价值**: 28 项分类跟踪, 区分"调研中"vs"真实新鸿沟", 不掩盖
 - **部分迁移**: agent-runtime 不是废弃, 是迁移到 cockpit 但未完成 (2/7 实现)
+
+## 6. gbrain 调研结论 (3 项, 有 6 消费者 — 必须修非删)
+
+**真实接入**: stdio MCP (`projects/gbrain/src/mcp/server.ts`)
+- `startMcpServer(engine: BrainEngine)` + `StdioServerTransport` (server.ts:11,50)
+- port-registry.yaml: `gbrain: stdio` (同 cockpit-mcp/kairon/omo)
+- 当前 BOS 声明 `mcp_proxy` (HTTP, 缺 http_url) 是**声明错误** — gbrain 真实是 stdio
+
+**修复障碍**: startMcpServer 非自入口 (需传 engine 参数), cli.ts 无 `mcp` 子命令, 无现成 stdio 启动命令.
+**修复方案**: 建 gbrain stdio 入口脚本 (如 `src/mcp/stdio-entry.ts` 调 startMcpServer + 传 engine), 然后 BOS 改 transport mcp_proxy→stdio + command `bun run src/mcp/stdio-entry.ts`. 涉及 3 处源 (yaml + omo seeds; services.py 无 gbrain 声明).
+
+**消费者证据** (--consumers): gbrain/search → 6 consumers 含 `scripts/scenario_great_search.py` 真实脚本 → 必须修不能删.
+
+## 7. 剩余修复复杂度评估
+
+| 类别 | 数量 | 修复性质 | 复杂度 |
+|------|:---:|---------|:---:|
+| agent-runtime | 7 | 改声明指向 cockpit MCP (chat/run-task) + 5 个决策 | 中 |
+| gbrain | 3 | **建 TS stdio 入口脚本** + 改 transport | 中-高 (跨 TS) |
+| sharedbrain/sot-bridge | 8 | 查 8001 端口实况 → 死活决策 | 调研 |
+| system/* | 9 | 补 internal module_path (查 agora 内部入口) | 中 |
+| protocols-layer | 1 | 查有无实现 → 补/删 | 调研 |
+
+**结论**: 21 项都是"查真实入口 + 改声明/建脚本"工程, 非机械修. 按 TASK-AB15691F 逐类推进, expires 2026-07-25.
