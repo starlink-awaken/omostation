@@ -34,7 +34,6 @@ DEFAULT_SERVICE_PORTS: dict[str, int] = {
     # HTTP-reachable services (实际端口)
     "agora-internal": 7430,  # FastAPI dashboard, 启动: agora-web
     "cron-service-mcp": 7450,  # 实际端口 7450 (旧表错为 7438)
-    "sharedbrain-bridge-mcp": 8001,  # sharedbrain standalone MCP 端口 (旧表错为 7439)
     "minerva": 8765,  # minerva web 端口 (非 MCP)
     # stdio-only MCP services 不在此表 — 见 STDIO_ONLY_SERVICES
 }
