@@ -63,6 +63,43 @@ def scan_management(root: Path) -> dict:
     dead_links: list[tuple[Path, str, str]] = []  # (from_file, link, reason)
     external_links: list[tuple[Path, str]] = []  # (from_file, link) - 跨管理目录引用, 单独统计
     internal_resolved: list[tuple[Path, str]] = []  # (from_file, resolved_path) 内部解析成功
+    gitignored_links: list[tuple[Path, str]] = []  # (from_file, link) 指向 gitignore 路径
+
+    # 加载 .gitignore 模式 (P83 R3)
+    gitignore_patterns: list[str] = []
+    gitignore_path = root / ".gitignore"
+    if gitignore_path.exists():
+        for line in gitignore_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            gitignore_patterns.append(line)
+
+    def is_gitignored(rel_path: str) -> bool:
+        """简单 .gitignore 匹配 (支持前缀/glob 简化)."""
+        from fnmatch import fnmatch
+        for pattern in gitignore_patterns:
+            # 保留原始 pattern, 同时处理 '/', '*', '**'
+            is_dir_pattern = pattern.endswith("/")
+            p = pattern.rstrip("/")
+            if not p:
+                continue
+            # 1) 完整路径匹配
+            if fnmatch(rel_path, p) or fnmatch(rel_path, pattern):
+                return True
+            # 2) 目录模式: 路径以该目录开头
+            if is_dir_pattern:
+                if rel_path.startswith(p + "/") or rel_path == p:
+                    return True
+            # 3) basename 匹配
+            basename = rel_path.rsplit("/", 1)[-1]
+            if fnmatch(basename, p) or fnmatch(basename, pattern):
+                return True
+            # 4) 任何目录段匹配
+            for part in rel_path.split("/"):
+                if fnmatch(part, p):
+                    return True
+        return False
 
     # 文件 frontmatter status 缓存 (避免重复 IO)
     file_status: dict[Path, str] = {}
@@ -110,17 +147,35 @@ def scan_management(root: Path) -> dict:
             if is_external:
                 # 跨域引用: 不算死链, 单独记录
                 external_links.append((f, link))
+                # P83 R3 预处理: 如果 link 含有 gitignored 目录段 (如 .omc/), 立即标记
+                link_has_gitignored_segment = any(
+                    is_gitignored(part + "/x") or part.startswith(".")
+                    for part in link.replace("\\", "/").split("/")
+                    if part in {".omc", "data"}
+                )
                 # 但尝试解析一次, 看看目标是否真存在
                 try:
                     if link.startswith("/"):
                         resolved = root / link.lstrip("/")
+                        rel_check = link.lstrip("/")
                     else:
                         resolved = (f.parent / link).resolve()
-                    if not resolved.exists():
+                        try:
+                            rel_check = str(resolved.relative_to(root.resolve()))
+                        except ValueError:
+                            rel_check = str(resolved)
+                    # P83 R3: 检查目标是否被 gitignore
+                    if is_gitignored(rel_check) or link_has_gitignored_segment:
+                        gitignored_links.append((f, link))
+                    elif not resolved.exists():
                         # 外部引用但目标不存在 → 算 dead
                         dead_links.append((f, link, f"external: {resolved} not found"))
                 except Exception:
-                    pass
+                    if link_has_gitignored_segment:
+                        gitignored_links.append((f, link))
+                    else:
+                        # 解析失败且无 gitignore 标识, 不确定, 跳过
+                        pass
                 continue
             # 相对路径, 在同目录或子目录
             # 先看 target 是否在 files_by_cat 中
@@ -152,11 +207,13 @@ def scan_management(root: Path) -> dict:
             (str(src), link, reason) for src, link, reason in dead_links if parse_status(src) == "archived"
         ],
         "external_links": [(str(src), link) for src, link in external_links],
+        "gitignored_links": [(str(src), link) for src, link in gitignored_links],
         "internal_resolved": [(str(src), path) for src, path in internal_resolved],
         "total_files": len(all_files),
         "totals": {
             "internal_resolved": len(internal_resolved),
             "external_links": len(external_links),
+            "gitignored_links": len(gitignored_links),
             "dead_links": len(dead_links),
             "dead_links_active": sum(1 for s, _, _ in dead_links if parse_status(s) != "archived"),
             "dead_links_archived": sum(1 for s, _, _ in dead_links if parse_status(s) == "archived"),
@@ -187,7 +244,7 @@ def main() -> int:
         return 0
 
     print("=" * 60)
-    print("📊 P81 management 跨文件引用检查 (P82 scope-aware)")
+    print("📊 management 跨文件引用检查 (P82 scope + P83 gitignore)")
     print("=" * 60)
     print(f"📁 总文件: {result['total_files']}")
     print(f"📄 INDEX.md 存在: {result['index_present']}")
@@ -199,6 +256,7 @@ def main() -> int:
     totals = result["totals"]
     print(f"🔗 内部引用 (已解析): {totals['internal_resolved']}")
     print(f"🌐 外部引用 (跨域):  {totals['external_links']}")
+    print(f"📦 gitignored 引用:   {totals['gitignored_links']}")
     print(f"❌ 死链 (目标不存在): {totals['dead_links']} = "
           f"active:{totals['dead_links_active']} + archived:{totals['dead_links_archived']}")
     print()
