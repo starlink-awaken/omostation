@@ -50,6 +50,9 @@ for _router_module in (
     "cockpit.web.governance.api",
     "cockpit.web.api_omos",
     "cockpit.web.api_ecos",
+    "cockpit.web.api_knowledge",
+    "cockpit.web.api_bos",
+    "cockpit.web.api_proposals",
 ):
     try:
         _mod = importlib.import_module(_router_module)

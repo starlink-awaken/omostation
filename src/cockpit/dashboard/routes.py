@@ -180,6 +180,7 @@ async def api_debt():
 
 
 @router.get("/api/compute", dependencies=_AUTH_DEPS)
+@router.get("/api/compute/status", dependencies=_AUTH_DEPS)
 async def api_compute():
     return JSONResponse(content=load_compute())
 
