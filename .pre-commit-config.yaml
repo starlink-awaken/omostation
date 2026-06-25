@@ -231,4 +231,43 @@ repos:
         # MOF 本体论约束: 所有 M1 节点必须通过 schema 校验
         # 违反 = 提交被拒绝
 
+      - id: x2-rule-lint
+        name: X2 freshness rule lint (schema 静态检查)
+        entry: python3 bin/x2-rule-lint.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P86 R1: 校验 .omo/_truth/x2-freshness-rules.yaml 9 rules schema 健康度
+        # 必填字段 / action enum / threshold_days 类型 / target glob 命中
+        # 字段错配自动捕获, 拒绝提交
+
+      - id: mof-m2-coverage
+        name: M2 schema coverage (修正版)
+        entry: python3 bin/mof-m2-coverage.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P86 R2: 修正 mof-schema-validate.py --type-coverage 噪音 (alias 误报)
+        # 直接比较 M2 m2_type (PascalCase) vs M1 type, 真正孤儿精确化
+        # 治理精度提升 34× (69→2 真孤儿)
+
+      - id: adr-coverage
+        name: ADR coverage (编号连续 + frontmatter + INDEX 一致)
+        entry: python3 bin/adr-coverage.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P86 R3: 校验 .omo/_knowledge/decisions/ 治理健康度
+        # 37 ADRs, 编号连续 (排除 0009-0049 命名约定 gap), frontmatter 完整, INDEX 100% 一致
+
+      - id: governance-dashboard
+        name: governance dashboard (P83-P86 治理工具统一汇总)
+        entry: python3 bin/governance-dashboard.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P86 R4: 统一调用 7 个治理工具 (governance-history, drift-history, x2-freshness,
+        # x2-rule-lint, adr-coverage, mof-m2-coverage, management-cross-ref)
+        # 任一失败阻塞提交, 防止治理质量回归
+
 # Hook placeholder to pass surfaces check: omo-mutation-ledger-gate lint mutation-ledger
