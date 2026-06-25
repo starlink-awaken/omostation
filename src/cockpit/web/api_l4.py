@@ -19,8 +19,9 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-# L4-kernel 项目路径
-L4_KERNEL_DIR = Path(__file__).parent.parent.parent.parent.parent / "projects" / "l4-kernel"
+# L4-kernel 项目路径 (硬编码，因为 cockpit 和 l4-kernel 是兄弟目录)
+WORKSPACE_DIR = Path("/Users/xiamingxing/Workspace")
+L4_KERNEL_DIR = WORKSPACE_DIR / "projects" / "l4-kernel"
 
 
 def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | None:

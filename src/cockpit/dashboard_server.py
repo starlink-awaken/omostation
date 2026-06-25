@@ -76,7 +76,7 @@ for _router_module in (
 
 @app.api_route("/admin/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 async def proxy_gbrain_admin(path: str, request: Request):
-    """Forward /admin requests to the GBrain service on port 3131."""
+    """Forward /admin requests to the GBrain service on port 3131 (with Streaming/SSE support)."""
     target_url = f"http://127.0.0.1:3131/admin/{path}"
 
     # Pass along query parameters
@@ -88,21 +88,45 @@ async def proxy_gbrain_admin(path: str, request: Request):
     # Read raw body
     body = await request.body()
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        try:
-            resp = await client.request(
-                method=request.method,
-                url=target_url,
-                params=params,
-                headers=headers,
-                content=body,
-            )
-            # Remove connection/length headers to allow FastAPI to handle body streaming naturally
-            excluded_headers = ["content-length", "transfer-encoding", "connection"]
-            resp_headers = {k: v for k, v in resp.headers.items() if k.lower() not in excluded_headers}
-            return Response(content=resp.content, status_code=resp.status_code, headers=resp_headers)
-        except httpx.RequestError as e:
-            return Response(content=f"Proxy error connecting to GBrain (3131): {str(e)}", status_code=502)
+    # Detect if this is an SSE / EventStream connection
+    is_sse = "events" in path or "events" in request.url.path or request.headers.get("accept") == "text/event-stream"
+
+    try:
+        if is_sse:
+            from fastapi.responses import StreamingResponse
+
+            async def event_generator():
+                async with httpx.AsyncClient(timeout=3600.0) as client:
+                    req = client.build_request(
+                        method=request.method,
+                        url=target_url,
+                        params=params,
+                        headers=headers,
+                        content=body,
+                    )
+                    resp = await client.send(req, stream=True)
+                    try:
+                        async for chunk in resp.aiter_raw():
+                            yield chunk
+                    finally:
+                        await resp.aclose()
+
+            return StreamingResponse(event_generator(), media_type="text/event-stream")
+        else:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.request(
+                    method=request.method,
+                    url=target_url,
+                    params=params,
+                    headers=headers,
+                    content=body,
+                )
+                # Remove connection/length headers to allow FastAPI to handle body streaming naturally
+                excluded_headers = ["content-length", "transfer-encoding", "connection"]
+                resp_headers = {k: v for k, v in resp.headers.items() if k.lower() not in excluded_headers}
+                return Response(content=resp.content, status_code=resp.status_code, headers=resp_headers)
+    except httpx.RequestError as e:
+        return Response(content=f"Proxy error connecting to GBrain (3131): {str(e)}", status_code=502)
 
 
 # ─── Main dashboard router ────────────────────────────────────
