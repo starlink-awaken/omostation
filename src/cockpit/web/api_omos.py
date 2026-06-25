@@ -15,6 +15,7 @@ P45 W3 发现: port-registry 注释 9190 (omo-dashboard) "converged to cockpit /
 
 from __future__ import annotations
 
+from contextlib import closing
 from pathlib import Path
 
 import yaml
@@ -115,20 +116,18 @@ if router:
 
             import sqlite3
 
-            conn = sqlite3.connect(str(db_path))
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
+            with closing(sqlite3.connect(str(db_path))) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
 
-            cursor.execute("SELECT * FROM quests ORDER BY id DESC")
-            quests = [dict(row) for row in cursor.fetchall()]
+                cursor.execute("SELECT * FROM quests ORDER BY id DESC")
+                quests = [dict(row) for row in cursor.fetchall()]
 
-            cursor.execute("SELECT role, name, level, wisdomPoints, responsibilityPoints, inventory FROM profiles")
-            profiles = [dict(row) for row in cursor.fetchall()]
+                cursor.execute("SELECT role, name, level, wisdomPoints, responsibilityPoints, inventory FROM profiles")
+                profiles = [dict(row) for row in cursor.fetchall()]
 
-            cursor.execute("SELECT * FROM logs ORDER BY id DESC LIMIT 15")
-            raw_logs = [dict(row) for row in cursor.fetchall()]
-
-            conn.close()
+                cursor.execute("SELECT * FROM logs ORDER BY id DESC LIMIT 15")
+                raw_logs = [dict(row) for row in cursor.fetchall()]
 
             # ─── 动态注入 1：扫描并注入 direct-omo-io 违规作为 Dev Quests ───
             violation_count = 0
@@ -268,15 +267,14 @@ if router:
 
             import sqlite3
 
-            conn = sqlite3.connect(str(db_path))
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO quests (title, type, reward, completed, assignee) VALUES (?, ?, ?, 0, ?)",
-                (title, q_type, reward, assignee),
-            )
-            quest_id = cursor.lastrowid
-            conn.commit()
-            conn.close()
+            with closing(sqlite3.connect(str(db_path))) as conn:
+                with conn:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "INSERT INTO quests (title, type, reward, completed, assignee) VALUES (?, ?, ?, 0, ?)",
+                        (title, q_type, reward, assignee),
+                    )
+                    quest_id = cursor.lastrowid
 
             def _utc_now() -> str:
                 return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -355,16 +353,15 @@ if router:
                         }
 
                 # 校验通过！给 parent 发放 100 积分
-                conn = sqlite3.connect(str(db_path))
-                cursor = conn.cursor()
-                cursor.execute("UPDATE profiles SET wisdomPoints = wisdomPoints + 100 WHERE role = 'parent'")
-                log_msg = "parent completed quest: 消除 AST 直写违规行为 for 100 points"
-                cursor.execute(
-                    "INSERT INTO logs (message, type, timestamp) VALUES (?, 'quest_completion', datetime('now', 'localtime'))",
-                    (log_msg,),
-                )
-                conn.commit()
-                conn.close()
+                with closing(sqlite3.connect(str(db_path))) as conn:
+                    with conn:
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE profiles SET wisdomPoints = wisdomPoints + 100 WHERE role = 'parent'")
+                        log_msg = "parent completed quest: 消除 AST 直写违规行为 for 100 points"
+                        cursor.execute(
+                            "INSERT INTO logs (message, type, timestamp) VALUES (?, 'quest_completion', datetime('now', 'localtime'))",
+                            (log_msg,),
+                        )
 
                 try:
                     bus_event.publish(
@@ -422,23 +419,33 @@ if router:
                 content = card_file_path.read_text(encoding="utf-8")
                 import re
 
-                new_content = re.sub(r"status:\s*[a-zA-Z0-9_\-]+", "status: done", content)
+                # 仅在首个 Frontmatter 区替换 status 字段以确保安全
+                frontmatter_pattern = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+                match = frontmatter_pattern.match(content)
+                if match:
+                    frontmatter = match.group(1)
+                    new_frontmatter = re.sub(r"status:\s*[a-zA-Z0-9_\-]+", "status: done", frontmatter)
+                    new_content = content[: match.start(1)] + new_frontmatter + content[match.end(1) :]
+                else:
+                    new_content = re.sub(r"status:\s*[a-zA-Z0-9_\-]+", "status: done", content, count=1)
+
                 card_file_path.write_text(new_content, encoding="utf-8")
 
                 reward = (
                     150 if target_card.get("priority") == "P0" else 100 if target_card.get("priority") == "P1" else 50
                 )
 
-                conn = sqlite3.connect(str(db_path))
-                cursor = conn.cursor()
-                cursor.execute("UPDATE profiles SET wisdomPoints = wisdomPoints + ? WHERE role = 'parent'", (reward,))
-                log_msg = f"parent completed quest: [Dev Card] {target_card['title']} for {reward} points"
-                cursor.execute(
-                    "INSERT INTO logs (message, type, timestamp) VALUES (?, 'quest_completion', datetime('now', 'localtime'))",
-                    (log_msg,),
-                )
-                conn.commit()
-                conn.close()
+                with closing(sqlite3.connect(str(db_path))) as conn:
+                    with conn:
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "UPDATE profiles SET wisdomPoints = wisdomPoints + ? WHERE role = 'parent'", (reward,)
+                        )
+                        log_msg = f"parent completed quest: [Dev Card] {target_card['title']} for {reward} points"
+                        cursor.execute(
+                            "INSERT INTO logs (message, type, timestamp) VALUES (?, 'quest_completion', datetime('now', 'localtime'))",
+                            (log_msg,),
+                        )
 
                 try:
                     omo_dir = _REPO_ROOT / ".omo"
@@ -474,32 +481,31 @@ if router:
 
             # 3. 正常家庭 Quest 任务
             else:
-                conn = sqlite3.connect(str(db_path))
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
-                quest = cursor.execute("SELECT * FROM quests WHERE id = ? AND completed = 0", (quest_id,)).fetchone()
+                with closing(sqlite3.connect(str(db_path))) as conn:
+                    conn.row_factory = sqlite3.Row
+                    cursor = conn.cursor()
+                    quest = cursor.execute(
+                        "SELECT * FROM quests WHERE id = ? AND completed = 0", (quest_id,)
+                    ).fetchone()
 
-                if not quest:
-                    conn.close()
-                    return {"status": "error", "error": "Quest not found or already completed"}
+                    if not quest:
+                        return {"status": "error", "error": "Quest not found or already completed"}
 
-                cursor.execute("UPDATE quests SET completed = 1 WHERE id = ?", (quest_id,))
+                    with conn:
+                        cursor.execute("UPDATE quests SET completed = 1 WHERE id = ?", (quest_id,))
 
-                assignee = quest["assignee"]
-                reward = quest["reward"]
-                q_type = quest["type"]
+                        assignee = quest["assignee"]
+                        reward = quest["reward"]
+                        q_type = quest["type"]
 
-                col = "wisdomPoints" if q_type == "wisdom" else "responsibilityPoints"
-                cursor.execute(f"UPDATE profiles SET {col} = {col} + ? WHERE role = ?", (reward, assignee))
+                        col = "wisdomPoints" if q_type == "wisdom" else "responsibilityPoints"
+                        cursor.execute(f"UPDATE profiles SET {col} = {col} + ? WHERE role = ?", (reward, assignee))
 
-                log_msg = f"{assignee} completed quest: {quest['title']} (ID={quest_id}) for {reward} points"
-                cursor.execute(
-                    "INSERT INTO logs (message, type, timestamp) VALUES (?, 'quest_completion', datetime('now', 'localtime'))",
-                    (log_msg,),
-                )
-
-                conn.commit()
-                conn.close()
+                        log_msg = f"{assignee} completed quest: {quest['title']} (ID={quest_id}) for {reward} points"
+                        cursor.execute(
+                            "INSERT INTO logs (message, type, timestamp) VALUES (?, 'quest_completion', datetime('now', 'localtime'))",
+                            (log_msg,),
+                        )
 
                 task_id = f"QUEST-{quest_id}"
                 omo_dir = _REPO_ROOT / ".omo"
