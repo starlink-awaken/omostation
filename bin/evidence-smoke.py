@@ -130,6 +130,7 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
         dir_path / "src" / module.replace(".", "/"),             # 完整 module 路径
         dir_path / "packages" / pkg_root / "src" / pkg_root,     # monorepo workspace (kairon)
         dir_path / "packages" / pkg_root,                        # monorepo 包根
+        dir_path / "packages" / pkg_root.replace("_", "-") / "src" / pkg_root,  # dash包名/underscore module (core-models→core_models)
     ]
     if any(p.exists() for p in candidates):
         return True, "ok"
