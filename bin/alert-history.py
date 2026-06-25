@@ -158,6 +158,18 @@ def analyze_history(records: list[dict], suppressions: list[dict]) -> dict:
             hour_counter[hour] = hour_counter.get(hour, 0) + 1
     peak_hour = max(hour_counter, key=lambda k: hour_counter[k]) if hour_counter else "N/A"
 
+    # P75 增: by_hour_detail (全小时桶, 24h 分布)
+    by_hour_detail = dict(sorted(hour_counter.items()))
+
+    # P75 增: by_type_by_level (按类型按级别)
+    by_type_by_level: dict[str, dict[str, int]] = {}
+    for rec in records:
+        level = rec.get("level", "?")
+        for bt, count in rec.get("by_type", {}).items():
+            if bt not in by_type_by_level:
+                by_type_by_level[bt] = {}
+            by_type_by_level[bt][level] = by_type_by_level[bt].get(level, 0) + count
+
     return {
         "total_notifications": total,
         "by_level": dict(by_level),
@@ -171,6 +183,8 @@ def analyze_history(records: list[dict], suppressions: list[dict]) -> dict:
         "by_level_sup_state": by_level_sup_state,  # P74 增
         "by_time_window": by_time_window,  # P74 增
         "peak_hour": peak_hour,  # P74 增
+        "by_hour_detail": by_hour_detail,  # P75 增
+        "by_type_by_level": by_type_by_level,  # P75 增
         "peak_days": peak_days,
         "suppression_count": suppress_count,
         "suppression_rate": round(suppression_rate, 3),

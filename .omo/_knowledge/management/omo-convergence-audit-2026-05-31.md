@@ -1,4 +1,5 @@
 ---
+category: workflows
 plane: knowledge
 type: audit
 status: archived

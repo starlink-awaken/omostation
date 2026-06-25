@@ -1,4 +1,5 @@
 ---
+category: playbooks
 status: deprecated
 lifecycle: history
 owner: governance-team

@@ -1,4 +1,5 @@
 ---
+category: playbooks
 status: archived
 lifecycle: history
 owner: governance-team

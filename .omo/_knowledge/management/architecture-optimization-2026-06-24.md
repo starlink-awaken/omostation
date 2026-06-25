@@ -1,4 +1,5 @@
 ---
+category: workflows
 status: active
 lifecycle: contract
 owner: governance-team

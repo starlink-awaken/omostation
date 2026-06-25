@@ -1,4 +1,5 @@
 ---
+category: workflows
 plane: knowledge
 type: management
 status: archived

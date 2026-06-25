@@ -254,4 +254,10 @@ history:
     + by_time_window + peak_hour) + ADR-0068 + 13 独立 bin 工具 + 28 个 ADR'
   timestamp: '2026-06-24T18:01:27.385040'
   version: 0.0.63
-version: 0.0.63
+- description: 'P75 R1-R3: management 142 frontmatter 分类 (workflows 127 / playbooks
+    5 / guides 12, 沿 P53 双指针不物理迁移) + alert-history 多维深化 (by_hour_detail + by_type_by_level,
+    9 维→10 维→12 维) + graphify-local-extract wrapper (新工具 2 个, 15 独立 bin, 需 OPENAI_API_KEY)
+    + ADR-0069 + 29 个 ADR'
+  timestamp: '2026-06-25T09:09:22.438677'
+  version: 0.0.64
+version: 0.0.64
