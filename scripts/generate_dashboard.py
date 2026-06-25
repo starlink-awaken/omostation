@@ -10,7 +10,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-DEBT_DIR = Path.home() / "Workspace" / ".omo" / "debt" / "items"
+DEBT_DIR = Path.home() / "Workspace" / ".omo" / "debt"
 OUTPUT = Path.home() / "Workspace" / "projects" / "omo" / "debt" / "dashboard.html"
 SCRIPT_DIR = Path.home() / "Workspace" / "projects" / "omo" / "scripts"
 
@@ -149,7 +149,7 @@ def get_x1_policy_refs(debt):
     refs = set()
     subdim = debt.get("subdimension", "").lower()
     domain = debt.get("domain", "").lower()
-    debt.get("id", "")  # noqa: F841 (debt_id computed but unused in this branch)
+    debt_id = debt.get("id", "")
 
     # Direct mapping from subdimension
     if subdim in SUBDIM_TO_X1:

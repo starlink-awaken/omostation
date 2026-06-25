@@ -125,6 +125,9 @@ class T02ModePassthrough(unittest.TestCase):
     def _run_5repos(self, mode: str) -> subprocess.CompletedProcess:
         env = os.environ.copy()
         env["OPC_MODE"] = mode
+        env["OPC_GENERATED_AT"] = (
+            "2026-06-12"  # 注入语义时间点 (T3 设计, 匹配硬编码期望)
+        )
         return subprocess.run(
             [sys.executable, str(SCRIPTS / "opc_audit_rollout_5repos.py")],
             cwd=str(WORKSPACE),
