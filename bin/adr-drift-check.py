@@ -103,23 +103,27 @@ def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set
             if "." not in path.split("/")[-1] and full.is_dir():
                 continue
             if not full.exists():
-                # 兼容: 自动补 .md 后缀
-                if not path.endswith(".md") and (root / f"{path}.md").exists():
-                    continue
-                # 兼容: 路径可能是 stdlib name (如 `argparse`), 不报
-                # 启发: 如果 path 完全没 /, 或 path 长度 < 8, 视为 stdlib
-                if len(path) < 8:
-                    continue
-                # 排除 _delivery 内的 _archive 已迁移文件
-                if "_archive" in path:
-                    continue
-                # 排除 .omc 引用 (gitignored)
-                if path.startswith(".omc/"):
-                    continue
-                issues.append({
-                    "type": "missing_path",
-                    "msg": f"路径不存在: {path}",
-                })
+                # 兼容: 自动补 .md / .yaml / .yml 后缀
+                if not any(path.endswith(ext) for ext in (".md", ".yaml", ".yml", ".py")):
+                    for ext in (".md", ".yaml", ".yml"):
+                        if (root / f"{path}{ext}").exists():
+                            full = root / f"{path}{ext}"
+                            break
+                if not full.exists():
+                    # 兼容: 路径可能是 stdlib name (如 `argparse`), 不报
+                    # 启发: 如果 path 完全没 /, 或 path 长度 < 8, 视为 stdlib
+                    if len(path) < 8:
+                        continue
+                    # 排除 _delivery 内的 _archive 已迁移文件
+                    if "_archive" in path:
+                        continue
+                    # 排除 .omc 引用 (gitignored)
+                    if path.startswith(".omc/"):
+                        continue
+                    issues.append({
+                        "type": "missing_path",
+                        "msg": f"路径不存在: {path}",
+                    })
 
         results.append({
             "adr_number": n,

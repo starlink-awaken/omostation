@@ -182,3 +182,16 @@ rules:
     notes: >
       P90 R2 新增 rule (omo_lint.py 抗 god-module 监控).
 
+  - rule_id: X2-FRESH-GOV-DASHBOARD
+    title: "P91 governance-dashboard cron 持续运行监控 (确保 7 天内 dashboard 跑过)"
+    type: governance_loop_freshness
+    status: active
+    target: .omo/cron/governance-dashboard-crontab
+    freshness:
+      mechanism: manual-review
+      threshold_days: 7
+      action: warn
+    owner: governance-team
+    notes: >
+      P90 R2 新增 rule (omo_lint.py 抗 god-module 监控).
+
