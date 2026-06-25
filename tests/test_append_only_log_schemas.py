@@ -81,6 +81,7 @@ def test_schemas_doc_exists():
         / ".omo"
         / "_knowledge"
         / "management"
+        / "playbooks"
         / "append-only-log-schemas-2026-06-09.md"
     )
     assert doc_path.exists(), f"schema SSOT doc missing: {doc_path}"

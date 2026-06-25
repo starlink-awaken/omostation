@@ -213,16 +213,16 @@ debts:
         mitigation_refs: []
         opened_at: '2026-06-22T02:23:14.924448+00:00'
         last_reviewed_at: null
-        next_review_at: '2026-06-26T01:08:49.175275+00:00'
+        next_review_at: '2026-06-26T01:48:01.920507+00:00'
         gate_level: L1
         history:
-        - at: '2026-06-25T01:08:49.175265+00:00'
+        - at: '2026-06-25T01:48:01.920496+00:00'
           action: created
           trigger: self_healing_rule:test
           event_count: '1'
-        - at: '2026-06-25T01:08:49.175265+00:00'
+        - at: '2026-06-25T01:48:01.920496+00:00'
           action: seen_again
-          note: Observed debt auto-test-error again (occurrence_count=16).
+          note: Observed debt auto-test-error again (occurrence_count=20).
           actor: projects/omo:self_healing
         x1_policy_ref: auto-healing-policy
         x2_freshness: new
@@ -232,8 +232,8 @@ debts:
         source: projects/omo:self_healing
         registered_at: '2026-06-22T02:23:14.924448+00:00'
         first_seen_at: '2026-06-22T02:23:14.924448+00:00'
-        last_seen_at: '2026-06-25T01:08:49.175265+00:00'
-        occurrence_count: 16
+        last_seen_at: '2026-06-25T01:48:01.920496+00:00'
+        occurrence_count: 20
         status: open
       created_at: '2026-06-22T02:23:14.924448+00:00'
     auto-r1-error:
@@ -259,16 +259,16 @@ debts:
         mitigation_refs: []
         opened_at: '2026-06-22T02:23:15.051255+00:00'
         last_reviewed_at: null
-        next_review_at: '2026-06-26T01:08:49.212064+00:00'
+        next_review_at: '2026-06-26T01:48:01.949741+00:00'
         gate_level: L1
         history:
-        - at: '2026-06-25T01:08:49.212054+00:00'
+        - at: '2026-06-25T01:48:01.949732+00:00'
           action: created
           trigger: self_healing_rule:r1
           event_count: '1'
-        - at: '2026-06-25T01:08:49.212054+00:00'
+        - at: '2026-06-25T01:48:01.949732+00:00'
           action: seen_again
-          note: Observed debt auto-r1-error again (occurrence_count=8).
+          note: Observed debt auto-r1-error again (occurrence_count=10).
           actor: projects/omo:self_healing
         x1_policy_ref: auto-healing-policy
         x2_freshness: new
@@ -278,8 +278,8 @@ debts:
         source: projects/omo:self_healing
         registered_at: '2026-06-22T02:23:15.051255+00:00'
         first_seen_at: '2026-06-22T02:23:15.051255+00:00'
-        last_seen_at: '2026-06-25T01:08:49.212054+00:00'
-        occurrence_count: 8
+        last_seen_at: '2026-06-25T01:48:01.949732+00:00'
+        occurrence_count: 10
         status: open
       created_at: '2026-06-22T02:23:15.051255+00:00'
     auto-r2-error:
@@ -305,16 +305,16 @@ debts:
         mitigation_refs: []
         opened_at: '2026-06-22T02:23:15.077950+00:00'
         last_reviewed_at: null
-        next_review_at: '2026-06-26T01:08:49.238527+00:00'
+        next_review_at: '2026-06-26T01:48:01.979247+00:00'
         gate_level: L1
         history:
-        - at: '2026-06-25T01:08:49.238519+00:00'
+        - at: '2026-06-25T01:48:01.979235+00:00'
           action: created
           trigger: self_healing_rule:r2
           event_count: '1'
-        - at: '2026-06-25T01:08:49.238519+00:00'
+        - at: '2026-06-25T01:48:01.979235+00:00'
           action: seen_again
-          note: Observed debt auto-r2-error again (occurrence_count=8).
+          note: Observed debt auto-r2-error again (occurrence_count=10).
           actor: projects/omo:self_healing
         x1_policy_ref: auto-healing-policy
         x2_freshness: new
@@ -324,8 +324,8 @@ debts:
         source: projects/omo:self_healing
         registered_at: '2026-06-22T02:23:15.077950+00:00'
         first_seen_at: '2026-06-22T02:23:15.077950+00:00'
-        last_seen_at: '2026-06-25T01:08:49.238519+00:00'
-        occurrence_count: 8
+        last_seen_at: '2026-06-25T01:48:01.979235+00:00'
+        occurrence_count: 10
         status: open
       created_at: '2026-06-22T02:23:15.077950+00:00'
     auto-test-any:
@@ -351,16 +351,16 @@ debts:
         mitigation_refs: []
         opened_at: '2026-06-22T02:23:22.054749+00:00'
         last_reviewed_at: null
-        next_review_at: '2026-06-26T01:08:55.881893+00:00'
+        next_review_at: '2026-06-26T01:48:09.112633+00:00'
         gate_level: L1
         history:
-        - at: '2026-06-25T01:08:55.881871+00:00'
+        - at: '2026-06-25T01:48:09.112615+00:00'
           action: created
           trigger: self_healing_rule:test
           event_count: '1'
-        - at: '2026-06-25T01:08:55.881871+00:00'
+        - at: '2026-06-25T01:48:09.112615+00:00'
           action: seen_again
-          note: Observed debt auto-test-any again (occurrence_count=8).
+          note: Observed debt auto-test-any again (occurrence_count=10).
           actor: projects/omo:self_healing
         x1_policy_ref: auto-healing-policy
         x2_freshness: new
@@ -370,8 +370,8 @@ debts:
         source: projects/omo:self_healing
         registered_at: '2026-06-22T02:23:22.054749+00:00'
         first_seen_at: '2026-06-22T02:23:22.054749+00:00'
-        last_seen_at: '2026-06-25T01:08:55.881871+00:00'
-        occurrence_count: 8
+        last_seen_at: '2026-06-25T01:48:09.112615+00:00'
+        occurrence_count: 10
         status: open
       created_at: '2026-06-22T02:23:22.054749+00:00'
   by_source_ref:
