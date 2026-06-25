@@ -222,8 +222,8 @@ if router:
     async def list_skills():
         """列出系统中定义的所有技能 (Custom Skills)"""
         try:
-
             from fastapi.responses import JSONResponse
+
             skills = []
 
             # 1. 扫描 Workspace 技能

@@ -82,7 +82,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "tags": task_data.get("tags", []),
                     }
                 )
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
     # 读取计划任务
@@ -108,7 +108,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "tags": task_data.get("tags", []),
                     }
                 )
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
     # 读取完成任务
@@ -134,7 +134,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "tags": task_data.get("tags", []),
                     }
                 )
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
     return tasks
