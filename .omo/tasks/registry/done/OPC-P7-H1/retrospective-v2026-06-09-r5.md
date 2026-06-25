@@ -11,13 +11,13 @@ Generated: 2026-06-09T23:00:00Z
 ```json
 {
   "summary": {
-    "commit_count": 680,
+    "commit_count": 332,
     "drift_count": 0
   },
   "validation": {
     "omo_tests": {
       "returncode": 0,
-      "summary": "20 passed in 0.23s"
+      "summary": "18 passed in 0.07s"
     },
     "drift": {
       "kinds": 4,
@@ -25,9 +25,9 @@ Generated: 2026-06-09T23:00:00Z
     }
   },
   "debt": {
-    "total": 4,
-    "open": 1,
-    "resolved": 3
+    "total": 0,
+    "open": 0,
+    "resolved": 0
   }
 }
 ```

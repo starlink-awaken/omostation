@@ -1,6 +1,6 @@
 # OPC P6 weekly retro — 2026-W26
 
-Generated: 2026-06-24T09:02:52Z
+Generated: 2026-06-25T01:48:30Z
 
 ## 1. Radar (P5-F1)
 - **🔥 高频复用: search-trace: test (强烈建议沉淀共享模块)**
@@ -55,10 +55,10 @@ Generated: 2026-06-24T09:02:52Z
 ```json
 {
   "stage": "retro",
-  "ts": "2026-06-24T09:02:52Z",
+  "ts": "2026-06-25T01:48:30Z",
   "summary": {
     "radar_candidates": 4,
-    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260624T090252Z-technical-radar-2fd22cd1.json",
+    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260625T014830Z-technical-radar-7dcc4203.json",
     "drift_count": 0,
     "planned_tasks": 4,
     "audit_records": 0,

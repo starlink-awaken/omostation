@@ -1,17 +1,17 @@
 # OPC P6 approval board
 
-Generated: 2026-06-24T09:02:53Z
+Generated: 2026-06-25T01:48:30Z
 
-- task_count: 3
-- awaiting_human_count: 2
-- approval_pending_count: 2
+- task_count: 9
+- awaiting_human_count: 8
+- approval_pending_count: 8
 - approval_granted_blocked_count: 0
 - approval_ready_count: 0
 - task_policy_blocked_count: 0
 - phase_blocked_count: 0
 - remediation_count: 1
 - review_lane_count: 1
-- approval_required_count: 3
+- approval_required_count: 9
 - latest_week: 2026-W29
 - latest_week_source: loop_history
 
@@ -19,4 +19,10 @@ Generated: 2026-06-24T09:02:53Z
 |------|------|--------|----------|--------------|----------|-------------|-------------|-----|
 | OPC-P6-SELF-EVOLUTION-nop-20260624T074719Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260624T074719Z.yaml` |
 | OPC-P6-SELF-EVOLUTION-nop-20260624T090253Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260624T090253Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260624T092459Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260624T092459Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260625T010754Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T010754Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260625T010847Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T010847Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260625T014602Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T014602Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260625T014800Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T014800Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260625T014830Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T014830Z.yaml` |
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | remediation | review | granted | pending | - | execute_review_lane | 2026-W29 | `.omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml` |

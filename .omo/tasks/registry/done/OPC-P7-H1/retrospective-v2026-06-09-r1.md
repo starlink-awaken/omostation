@@ -11,13 +11,13 @@ Generated: 2026-06-09T23:00:00Z
 ```json
 {
   "summary": {
-    "commit_count": 307,
+    "commit_count": 317,
     "drift_count": 0
   },
   "validation": {
     "omo_tests": {
-      "returncode": 0,
-      "summary": "18 passed in 0.08s"
+      "returncode": 1,
+      "summary": "2 failed, 16 passed in 0.09s"
     },
     "drift": {
       "kinds": 4,
