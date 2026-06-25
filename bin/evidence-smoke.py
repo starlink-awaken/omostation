@@ -53,6 +53,28 @@ W_BOS = 60  # BOS resolve 率 (最重 — 这是核心鸿沟)
 W_TREE = 20  # working tree 清洁度
 W_FEEDBACK = 20  # 反馈回路存活
 
+# 已知调研中项 — 声明指向过时位置/缺字段, 配套 D 对齐迁移调研 (TASK-9B363829)
+# 不计真实鸿沟 (单独 deprecated 桶), 有效期至 KNOWN_GAP_EXPIRES (30天复查)
+# 来源: 全仓 grep 发现硬依赖 (routes.json/health/debt), 非简单死声明, 不能一刀切删
+KNOWN_GAP_PREFIXES: dict[str, str] = {
+    "bos://capability/agent-runtime/": "迁移 cockpit (omo goals M2 拆分 runtime+ext/cockpit)",
+    "bos://persona/sharedbrain-bridge/": "死活待查 (debt 承认死代码 + 8001 端口实况)",
+    "bos://persona/sot-bridge-persona/": "死活待查 (sharedbrain 桥)",
+    "bos://governance/sot-bridge/": "死活待查 (sharedbrain 桥)",
+    "bos://governance/protocols-layer/": "无实现 (routes.json 有路由)",
+    "bos://memory/gbrain/": "缺 mcp endpoint (mcp_proxy 无 http_url)",
+    "bos://system/": "internal 缺 module_path (agora 内部工具声明不完整)",
+}
+KNOWN_GAP_EXPIRES = "2026-07-25"  # 30天复查, 过期未对齐升级为真实鸿沟
+
+
+def _is_known_gap(uri: str) -> tuple[bool, str]:
+    """URI 是否匹配已知调研中项 (deprecated). 返回 (是否匹配, 原因)."""
+    for prefix, reason in KNOWN_GAP_PREFIXES.items():
+        if uri.startswith(prefix):
+            return True, reason
+    return False, ""
+
 
 def _utc_now() -> str:
     return (
@@ -355,12 +377,25 @@ def run_smoke(spawn_n: int = 0) -> dict:
     resolvable = [r for r in results if r["resolvable"]]
     failures = [r for r in results if not r["resolvable"]]
 
-    # 失败原因分桶
+    # failures 分 deprecated (已知调研中, 不计鸿沟) vs real_gap (真实要修的)
+    deprecated_fails: list[dict] = []
+    real_fails: list[dict] = []
+    for r in failures:
+        is_gap, reason = _is_known_gap(r["uri"])
+        if is_gap:
+            r["deprecated_reason"] = reason
+            deprecated_fails.append(r)
+        else:
+            real_fails.append(r)
+
+    # 失败原因分桶 (仅真实 gap, deprecated 不混入)
     failure_buckets = Counter(
         (r.get("reason") or "unknown").split(":")[0].split("(")[0].strip()
-        for r in failures
+        for r in real_fails
     )
 
+    # bos_rate: deprecated 也算未 resolve (诚实, 不 gaming score); deprecated 只是分类标签
+    # 价值: 输出告诉你 "鸿沟 X 里 Y 调研中 / Z 真实新鸿沟要立即修"
     bos_rate = len(resolvable) / len(results) if results else 0.0
 
     # 反馈回路维度
@@ -376,11 +411,17 @@ def run_smoke(spawn_n: int = 0) -> dict:
         "bos": {
             "declaration_count": len(results),
             "resolvable_count": len(resolvable),
-            "gap": len(failures),
+            "gap": len(real_fails),  # 真实鸿沟 (不含 deprecated)
+            "deprecated_count": len(deprecated_fails),
+            "deprecated_expires": KNOWN_GAP_EXPIRES,
             "resolve_rate": round(bos_rate, 3),
             "by_transport": dict(by_transport),
             "failure_buckets": dict(failure_buckets),
         },
+        "deprecated": [
+            {"uri": r["uri"], "reason": r.get("deprecated_reason", "")}
+            for r in deprecated_fails
+        ],
         "working_tree": tree,
         "feedback_loop": feedback,
         "evidence_health_score": score["evidence_health_score"],
@@ -439,6 +480,11 @@ def print_summary(report: dict, quiet: bool = False) -> None:
     print(f"  transport:   {bos.get('by_transport', {})}")
     if bos.get("failure_buckets"):
         print(f"  失败分桶:    {bos['failure_buckets']}")
+    dep_n = bos.get("deprecated_count", 0)
+    if dep_n:
+        print(
+            f"  deprecated:  {dep_n} (调研中, expires {bos.get('deprecated_expires', '?')}, 不计鸿沟)"
+        )
     print()
     print("── working tree 累积 (权重 20%) ──")
     print(f"  dirty 文件:  {tree.get('dirty_count', '?')}")
