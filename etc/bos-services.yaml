@@ -213,30 +213,6 @@ services:
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "core_models.cli", "validate"]
     description: "Core Models 校验"
 
-  - uri: "bos://persona/sharedbrain-bridge/recall-entity"
-    domain: persona
-    action: "recall-entity"
-    transport: stdio
-    package: "sharedbrain-bridge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall-entity"]
-    description: "SharedBrain Bridge 实体召回"
-
-  - uri: "bos://persona/sharedbrain-bridge/recall"
-    domain: persona
-    action: "recall"
-    transport: stdio
-    package: "sharedbrain-bridge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall"]
-    description: "SharedBrain Bridge 通用召回"
-
-  - uri: "bos://persona/sharedbrain-bridge/sync"
-    domain: persona
-    action: "sync"
-    transport: stdio
-    package: "sharedbrain-bridge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "sync"]
-    description: "SharedBrain Bridge 同步"
-
   - uri: "bos://persona/health-profile/query"
     domain: persona
     action: "query"
@@ -691,46 +667,6 @@ services:
     package: "agent-runtime"
     command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "list"]
     description: "列出所有可用 Agent 实例"
-
-  - uri: "bos://persona/sot-bridge-persona/recall"
-    domain: persona
-    action: "recall"
-    transport: stdio
-    package: "sharedbrain-bridge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall"]
-    description: "SSOT 人格召回"
-
-  - uri: "bos://persona/sot-bridge-persona/recall-entity"
-    domain: persona
-    action: "recall-entity"
-    transport: stdio
-    package: "sharedbrain-bridge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall-entity"]
-    description: "SSOT 实体召回"
-
-  - uri: "bos://persona/sot-bridge-persona/sync"
-    domain: persona
-    action: "sync"
-    transport: stdio
-    package: "sharedbrain-bridge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "sync"]
-    description: "SSOT 人格同步"
-
-  - uri: "bos://governance/sot-bridge/register"
-    domain: governance
-    action: "register"
-    transport: stdio
-    package: "sharedbrain-bridge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "register"]
-    description: "SSOT 桥接器注册"
-
-  - uri: "bos://governance/sot-bridge/query"
-    domain: governance
-    action: "query"
-    transport: stdio
-    package: "sharedbrain-bridge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "query"]
-    description: "SSOT 桥接器查询"
 
   - uri: "bos://analysis/eidos/validate"
     domain: analysis
