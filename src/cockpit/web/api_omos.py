@@ -104,7 +104,7 @@ if router:
     async def get_quests():
         """列出家庭 Quests 和家庭排行榜"""
         try:
-            db_path = _REPO_ROOT / "family-hub" / "family_hub.db"
+            db_path = _REPO_ROOT / "projects" / "family-hub" / "family_hub.db"
             if not db_path.exists():
                 return {"error": f"family_hub.db not found at {db_path}"}
 
@@ -132,7 +132,7 @@ if router:
     async def create_quest_api(title: str, q_type: str, reward: int, assignee: str):
         """新建一个 Quest，同时在 SQLite 和 OMO 中建立任务"""
         try:
-            db_path = _REPO_ROOT / "family-hub" / "family_hub.db"
+            db_path = _REPO_ROOT / "projects" / "family-hub" / "family_hub.db"
             if not db_path.exists():
                 return {"error": "family_hub.db not found"}
 
@@ -207,7 +207,7 @@ if router:
     async def complete_quest_api(quest_id: int):
         """将 Quest 标记为完成：归档 OMO 任务并发布事件进行清算"""
         try:
-            db_path = _REPO_ROOT / "family-hub" / "family_hub.db"
+            db_path = _REPO_ROOT / "projects" / "family-hub" / "family_hub.db"
             if not db_path.exists():
                 return {"error": "family_hub.db not found"}
 

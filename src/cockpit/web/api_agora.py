@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Form
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse
 
 router = APIRouter()
@@ -61,9 +61,33 @@ async def api_pipeline_dag(name: str):
 
 
 @router.post("/api/pipeline")
-async def api_run_pipeline(name: str = Form(...), goal: str = Form(...)):
+async def api_run_pipeline(request: Request):
     """⚙️ 调度执行特定的工具管线"""
     try:
+        content_type = request.headers.get("content-type", "")
+        name = None
+        goal = None
+
+        if "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
+            form_data = await request.form()
+            name = form_data.get("name")
+            goal = form_data.get("goal")
+        else:
+            try:
+                json_data = await request.json()
+                name = json_data.get("name")
+                goal = json_data.get("goal")
+            except Exception:
+                pass
+
+        if not name:
+            name = request.query_params.get("name")
+        if not goal:
+            goal = request.query_params.get("goal")
+
+        if not name or not goal:
+            return JSONResponse({"status": "error", "error": "name and goal are required parameters"}, status_code=400)
+
         env = os.environ.copy()
         # Run via agora CLI pipeline command in subprocess to leverage automatic environment load
         proc = subprocess.run(["agora", "pipeline", name, "--goal", goal], capture_output=True, text=True, env=env)
