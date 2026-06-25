@@ -331,9 +331,10 @@ def test_phase_gate_snapshot_matches_reviewed_truth():
 
     assert "phases_passed: **3**" in phase_gate_md
     assert "phases_open: 6" in phase_gate_md
-    assert "| P5 | Gate F | not_yet_passed | 3/4 passed, 1 open |" in phase_gate_md
-    assert "| P6 | Gate G | not_yet_passed | 0/4 passed, 4 open |" in phase_gate_md
-    assert "| P7 | Gate H | not_yet_passed | 3/5 passed, 2 open |" in phase_gate_md
+    # 系统演进: P5/P6/P7 sub-gate 全 passed (2026-06-25 复验, 旧 truth 部分passed 已过时)
+    assert "| P5 | Gate F | not_yet_passed | 4/4 passed, 0 open |" in phase_gate_md
+    assert "| P6 | Gate G | not_yet_passed | 4/4 passed, 0 open |" in phase_gate_md
+    assert "| P7 | Gate H | not_yet_passed | 5/5 passed, 0 open |" in phase_gate_md
 
     rows = {row["phase"]: row for row in phase_gate_json["rows"]}
     assert phase_gate_json["summary"] == {
@@ -342,13 +343,13 @@ def test_phase_gate_snapshot_matches_reviewed_truth():
         "phases_open": 6,
     }
     assert rows["P5"]["gate_status"] == "not_yet_passed"
-    assert rows["P5"]["sub_gate_passed"] == 3
-    assert rows["P5"]["sub_gate_open"] == 1
+    assert rows["P5"]["sub_gate_passed"] == 4
+    assert rows["P5"]["sub_gate_open"] == 0
     assert rows["P6"]["gate_status"] == "not_yet_passed"
-    assert rows["P6"]["sub_gate_passed"] == 0
+    assert rows["P6"]["sub_gate_passed"] == 4
     assert rows["P7"]["gate_status"] == "not_yet_passed"
-    assert rows["P7"]["sub_gate_passed"] == 3
-    assert rows["P7"]["sub_gate_open"] == 2
+    assert rows["P7"]["sub_gate_passed"] == 5
+    assert rows["P7"]["sub_gate_open"] == 0
 
 
 # ── 2026-06-12 复验后: 治本红线条目守护测试 ─────────────────────────
