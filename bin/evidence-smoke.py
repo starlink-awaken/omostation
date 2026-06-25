@@ -57,7 +57,7 @@ W_FEEDBACK = 20  # 反馈回路存活
 # 不计真实鸿沟 (单独 deprecated 桶), 有效期至 KNOWN_GAP_EXPIRES (30天复查)
 # 来源: 全仓 grep 发现硬依赖 (routes.json/health/debt), 非简单死声明, 不能一刀切删
 KNOWN_GAP_PREFIXES: dict[str, str] = {
-    "bos://capability/agent-runtime/": "迁移 cockpit (omo goals M2 拆分 runtime+ext/cockpit)",
+    # agent-runtime 已整合 (2026-06-25, runtime.mcp_server 补 7 agent 工具, BOS 指向它)
     # sharedbrain/sot-bridge 已删 (2026-06-25, 包不存在+8001不跑, 连带清理 routes/health/seeds)
     "bos://governance/protocols-layer/": "无实现 (routes.json 有路由)",
     "bos://memory/gbrain/": "缺 mcp endpoint (mcp_proxy 无 http_url)",
