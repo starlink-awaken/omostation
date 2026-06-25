@@ -75,41 +75,61 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
 
     command 形如 ['uv','run','--directory','projects/kairon','python','-m','kos.cli','search']
     """
-    # 提取 --directory
-    directory = None
+    # 一次遍历提取所有关键参数: --directory / --package / -m module / 直接 .py 脚本
+    directory = package = module = script = None
     for i, arg in enumerate(command):
         if arg == "--directory" and i + 1 < len(command):
             directory = command[i + 1]
-            break
-        if arg.startswith("--directory="):
+        elif arg.startswith("--directory="):
             directory = arg.split("=", 1)[1]
-            break
+        elif arg == "--package" and i + 1 < len(command):
+            package = command[i + 1]
+        elif arg == "-m" and i + 1 < len(command):
+            module = command[i + 1]
+        elif arg.endswith(".py"):
+            script = arg
 
+    # 路径 1: 直接脚本路径 (family-hub: projects/family-hub/mcp_server.py)
+    if script:
+        sp = Path(script)
+        sp = sp if sp.is_absolute() else WORKSPACE / sp
+        return (True, "ok (script)") if sp.exists() else (False, f"script not found: {script}")
+
+    # 路径 2: --package (workspace 根跑, uv workspace 运行时解析)
+    # e.g. uv run --package cockpit python -m cockpit.scripts.cockpit_mcp
+    if package and not directory:
+        pkg_underscore = package.replace("-", "_")
+        for proj in (
+            WORKSPACE / "projects" / package,
+            WORKSPACE / "projects" / pkg_underscore,
+        ):
+            for cand in (proj / "src" / package, proj / "src" / pkg_underscore):
+                if cand.exists():
+                    return True, "ok (--package)"
+        # package 可能在 monorepo workspace (kairon), L2 不深查 uv 运行时解析
+        return True, "ok (--package workspace)"
+
+    # 路径 3: --directory + -m module (原逻辑)
     if not directory:
-        return False, "no --directory in command"
+        return False, "no --directory/--package/script in command"
 
     dir_path = WORKSPACE / directory
     if not dir_path.exists():
         return False, f"--directory not found: {directory}"
 
-    # 提取 -m module
-    module = None
-    for i, arg in enumerate(command):
-        if arg == "-m" and i + 1 < len(command):
-            module = command[i + 1]
-            break
-
     if not module:
         # 没 -m 也算通过 (可能直接跑脚本), directory 在就行
         return True, "ok (no -m, directory exists)"
 
-    # module 包目录可定位? 检查 src/<module 第一段>/ 存在 (kairon monorepo 结构)
+    # module 包目录可定位? 查多种布局 (项目根 src / monorepo workspace)
     # 老王务实: 不做完整 import 验证 (慢), 只查包根目录在不在
     pkg_root = module.split(".")[0]
     candidates = [
-        dir_path / "src" / pkg_root,
-        dir_path / pkg_root,
-        dir_path / "src" / module.replace(".", "/"),
+        dir_path / "src" / pkg_root,                              # 标准布局 (projects/omo/src/omo)
+        dir_path / pkg_root,                                      # 根布局
+        dir_path / "src" / module.replace(".", "/"),             # 完整 module 路径
+        dir_path / "packages" / pkg_root / "src" / pkg_root,     # monorepo workspace (kairon)
+        dir_path / "packages" / pkg_root,                        # monorepo 包根
     ]
     if any(p.exists() for p in candidates):
         return True, "ok"
