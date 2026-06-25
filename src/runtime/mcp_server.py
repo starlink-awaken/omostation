@@ -193,6 +193,102 @@ def handle_kv_get(key: str) -> dict:
     return result
 
 
+# ── Agent handlers (整合 agent-runtime 7 action, 调 executor 核心) ──────────
+# agent-runtime BOS 声明统一指向 runtime.mcp_server, 消除 cockpit 壳层间接.
+# 核心 API 已存在 (AgentRuntime/Tools/TaskScheduler/AgentHub), 这里只做 MCP 暴露.
+
+
+def handle_agent_list_tools() -> dict:
+    """列出 AgentRuntime 可用工具 (Tools.build_tool_registry)."""
+    from runtime.executor.tools import Tools
+
+    try:
+        registry = Tools().build_tool_registry()
+        return {"tools": list(registry.keys()), "count": len(registry)}
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+
+def handle_agent_list() -> dict:
+    """列出已注册 agent (AgentHub.list_all)."""
+    from runtime.executor.agent_hub import AgentHub
+
+    try:
+        agents = AgentHub().list_all()
+        return {
+            "agents": [
+                {"id": a.id, "name": a.name, "endpoint": a.endpoint, "status": a.status}
+                for a in agents
+            ],
+            "count": len(agents),
+        }
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+
+def handle_agent_status() -> dict:
+    """AgentRuntime 状态 (model + 工具数)."""
+    from runtime.executor.engine import AgentRuntime
+
+    try:
+        rt = AgentRuntime()
+        return {
+            "model": rt.model,
+            "tool_count": len(rt._tool_registry),
+            "status": "ready",
+        }
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+
+def handle_agent_task_status(task_id: str) -> dict:
+    """查询任务状态 (TaskScheduler.get_status)."""
+    from runtime.executor.task_scheduler import TaskScheduler
+
+    try:
+        sched = TaskScheduler()
+        status = sched.get_status(task_id)
+        return {"task_id": task_id, "status": str(status)}
+    except KeyError:
+        return {"error": f"Task not found: {task_id}"}
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+
+def handle_agent_run_task(prompt: str, tools: str = "") -> dict:
+    """执行任务 (AgentRuntime.run_task). 注意: 需要 LLM provider 才能真跑."""
+    from runtime.executor.engine import AgentRuntime
+
+    try:
+        rt = AgentRuntime()
+        tools_enabled = [t.strip() for t in tools.split(",") if t.strip()] or None
+        return rt.run_task(prompt, tools_enabled=tools_enabled)
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+
+def handle_agent_chat(message: str, history: str = "[]") -> dict:
+    """对话交互 (AgentRuntime chat). 需要 LLM provider."""
+    import json as _json
+
+    from runtime.executor.engine import AgentRuntime
+
+    try:
+        rt = AgentRuntime()
+        messages = [{"role": "system", "content": "You are a helpful assistant."}]
+        messages.extend(_json.loads(history) if history and history != "[]" else [])
+        messages.append({"role": "user", "content": message})
+        result = rt._call_llm(messages)
+        return {"response": result.get("content", ""), "model": rt.model}
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+
+def handle_agent_execute(prompt: str) -> dict:
+    """执行任务 (execute = run_task 语义, 别名)."""
+    return handle_agent_run_task(prompt)
+
+
 # ── FastMCP server ──────────────────────────────────────────────────────────
 
 try:
@@ -227,6 +323,35 @@ try:
     @mcp.tool()
     def runtime_kv_get(key: str) -> dict:
         return handle_kv_get(key)
+
+    # agent-runtime 整合工具 (调 executor 核心 API, 消除 cockpit 壳层)
+    @mcp.tool()
+    def runtime_agent_list_tools() -> dict:
+        return handle_agent_list_tools()
+
+    @mcp.tool()
+    def runtime_agent_list() -> dict:
+        return handle_agent_list()
+
+    @mcp.tool()
+    def runtime_agent_status() -> dict:
+        return handle_agent_status()
+
+    @mcp.tool()
+    def runtime_agent_task_status(task_id: str) -> dict:
+        return handle_agent_task_status(task_id)
+
+    @mcp.tool()
+    def runtime_agent_run_task(prompt: str, tools: str = "") -> dict:
+        return handle_agent_run_task(prompt, tools)
+
+    @mcp.tool()
+    def runtime_agent_chat(message: str, history: str = "[]") -> dict:
+        return handle_agent_chat(message, history)
+
+    @mcp.tool()
+    def runtime_agent_execute(prompt: str) -> dict:
+        return handle_agent_execute(prompt)
 
 except ImportError as _e:
     mcp = None
@@ -273,6 +398,13 @@ def main():
             "runtime_ontology_get",
             "runtime_brief",
             "runtime_kv_get",
+            "runtime_agent_list_tools",
+            "runtime_agent_list",
+            "runtime_agent_status",
+            "runtime_agent_task_status",
+            "runtime_agent_run_task",
+            "runtime_agent_chat",
+            "runtime_agent_execute",
         ]
         for t in tools:
             print(f"  {t}")
