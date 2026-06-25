@@ -58,6 +58,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 | 0079 | P85 X2 rule lint + adr-coverage + COMMIT-FATIGUE rule 修正 (37 ADRs 100% 健康, 28 bin) | ACCEPTED | 2026-06-25 | omostation P85 | 0079-p85-x2-rule-lint-adr-coverage.md |
 | 0080 | P86 pre-commit 集成 4 工具 (x2-rule-lint/mof-m2-coverage/adr-coverage/dashboard) + governance dashboard (29 bin, 26 hooks) | ACCEPTED | 2026-06-25 | omostation P86 | 0080-p86-precommit-integration-dashboard.md |
 | 0081 | P87 god-module 拆解 roadmap + X2 rule 交互式添加 + dashboard 扩展 9 工具 (31 bin) | ACCEPTED | 2026-06-25 | omostation P87 | 0081-p87-god-module-roadmap-x2-rule-add.md |
+| 0082 | P88 omo_lint 拆解 (1560→1257L, -19.4%) + X2 rule template standard + gov-trend-report (32 bin, 10 dashboard) | ACCEPTED | 2026-06-25 | omostation P88 | 0082-p88-omo-lint-split-x2-template-trend.md |
 
 ---
 

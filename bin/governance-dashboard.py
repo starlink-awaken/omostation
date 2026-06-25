@@ -40,6 +40,8 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     ("management-cross-ref", "P82+P83 management 跨文件引用", "bin/management-cross-ref-check.py", ["."]),
     ("god-module-roadmap", "P87 god-module refactor (示例文件)", "bin/god-module-roadmap.py",
      ["projects/omo/src/omo/omo_lint.py", "--top", "3"]),
+    ("gov-trend-report", "P88 governance 趋势 (weekly 窗口)", "bin/gov-trend-report.py",
+     ["--window", "weekly"]),
 ]
 
 
