@@ -39,10 +39,15 @@ for _path in (
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
+import time
 from datetime import UTC, datetime
 
 import bus_foundation.facade.event as bus_event
 import omo.omo_ingress as omo_ingress
+
+_VIOLATIONS_CACHE = None
+_VIOLATIONS_CACHE_TIME = 0.0
+_VIOLATIONS_TTL = 15.0  # 15秒缓存
 
 if router:
 
@@ -566,6 +571,11 @@ if router:
     @router.get("/violations")
     async def get_omos_violations():
         """扫描并定位直接写入 .omo/ 或 spaces/ 的违规代码行 (direct_omo_io_violation)"""
+        global _VIOLATIONS_CACHE, _VIOLATIONS_CACHE_TIME
+        now = time.time()
+        if _VIOLATIONS_CACHE is not None and (now - _VIOLATIONS_CACHE_TIME) < _VIOLATIONS_TTL:
+            return _VIOLATIONS_CACHE
+
         import re
         import subprocess
 
@@ -618,7 +628,10 @@ if router:
                 else:
                     current_file = line_str
 
-            return {"status": "ok", "passed": proc.returncode == 0, "violations": violations}
+            res = {"status": "ok", "passed": proc.returncode == 0, "violations": violations}
+            _VIOLATIONS_CACHE = res
+            _VIOLATIONS_CACHE_TIME = now
+            return res
         except Exception as e:
             return {"status": "error", "error": str(e)}
 
