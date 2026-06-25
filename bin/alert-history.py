@@ -202,8 +202,39 @@ def detect_anomalies(records: list[dict], suppressions: list[dict]) -> list[dict
     - level_escalation: 7d 内 P0 出现
     - type_concentration: 单一类型占 > 80%
     - suppression_heavy: 抑制率 > 70%
+    - statistical_zscore: P81: 7d 通知数 z-score > 2 (统计异常)
     """
     anomalies = []
+    # 0. P81: statistical_zscore - 7d 通知数 z-score
+    if len(records) >= 5:
+        # 按天统计通知数
+        day_counts: dict[str, int] = {}
+        for r in records:
+            ts = r.get("timestamp", "")
+            if ts:
+                day = ts[:10]
+                day_counts[day] = day_counts.get(day, 0) + 1
+        counts = list(day_counts.values())
+        if len(counts) >= 3:
+            mean_c = sum(counts) / len(counts)
+            # 简化标准差 (避免 import statistics)
+            var_c = sum((c - mean_c) ** 2 for c in counts) / len(counts)
+            std_c = var_c ** 0.5
+            if std_c > 0:
+                # 找 z-score > 2 的天
+                for day, c in day_counts.items():
+                    z = (c - mean_c) / std_c
+                    if z > 2:
+                        anomalies.append({
+                            "type": "statistical_zscore",
+                            "severity": "high",
+                            "day": day,
+                            "count": c,
+                            "z_score": round(z, 2),
+                            "mean": round(mean_c, 2),
+                            "std": round(std_c, 2),
+                            "message": f"📊 {day} 通知数 {c} (z={z:.1f}, mean={mean_c:.1f}, std={std_c:.1f}) 异常高 (>2σ)",
+                        })
     # 1. sudden_spike: 按小时桶统计
     hour_type: dict[str, int] = {}
     for r in records:

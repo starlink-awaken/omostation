@@ -286,4 +286,14 @@ history:
     待生产实装) + ADR-0074 + 34 个 ADR + 18 独立 bin 工具 (3/5 候选实施)'
   timestamp: '2026-06-25T10:36:14.113457'
   version: 0.0.69
-version: 0.0.69
+- description: 'P81 R1-R4: watchdog 集成 (--use-watchdog 真实时 <10ms, 跨平台) + dashboard
+    UI 渲染 (HTML 独立页面, 深色主题, 6 卡片) + alert z-score 洞察 (5 类异常, 规则+统计) + management 跨子目录引用检查
+    (145 文件, 54 死链, INDEX→workflows 65) + ADR-0075 + 20 独立 bin 工具 + 35 个 ADR (4/4
+    候选全部实施)'
+  timestamp: '2026-06-25T10:56:09.682584'
+  version: 0.0.70
+- description: 'P82 R1-R4: cross-ref scope-aware + status-aware 升级 (active:0, archived:43
+    符合预期) + 删孤立 workflows/INDEX.md (9 死链源头) + ADR-0076 + 21 独立 bin 工具 + 36 个 ADR'
+  timestamp: '2026-06-25T11:37:41.290470'
+  version: 0.0.71
+version: 0.0.71

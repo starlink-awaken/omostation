@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-25T02:24:39Z",
+  "generated_at": "2026-06-25T02:39:29Z",
   "tasks": [
     {
       "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260624T074719Z",
@@ -164,6 +164,24 @@
       "next_action": "await_human_review"
     },
     {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260625T023929Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T023929Z.yaml",
+      "task_root": "planned",
+      "status": "candidate",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W29",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-25T02:39:29Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues",
+      "review_note": null,
+      "approval_status": null,
+      "proposal_status": null,
+      "eligible": null,
+      "blockers": [],
+      "next_action": "await_human_review"
+    },
+    {
       "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
       "task_ref": ".omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
       "task_root": "remediation",
@@ -183,10 +201,10 @@
     }
   ],
   "summary": {
-    "task_count": 10,
-    "approval_required_count": 10,
-    "awaiting_human_count": 9,
-    "approval_pending_count": 9,
+    "task_count": 11,
+    "approval_required_count": 11,
+    "awaiting_human_count": 10,
+    "approval_pending_count": 10,
     "approval_granted_blocked_count": 0,
     "approval_ready_count": 0,
     "task_policy_blocked_count": 0,

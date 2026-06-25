@@ -1,10 +1,7 @@
----
 status: active
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-22
----
-
 version: 1
 items_dir: .omo/debt/items
 dashboard_ref: .omo/debt/dashboard/current.yaml
@@ -37,3 +34,12 @@ seed_items:
 - .omo/debt/items/DEBT-OMC-GBRAIN-PERSISTENCE.yaml
 - .omo/debt/items/DEBT-OMC-METAOS-OMO-PLANE.yaml
 - .omo/debt/items/DEBT-SWARM-ENGINE-20260614104223.yaml
+- .omo/debt/items/D-AETHERFORGE-BUG-002.yaml
+- .omo/debt/items/D-AETHERFORGE-BUG-001.yaml
+- .omo/debt/items/D-AETHERFORGE-ARCH-002.yaml
+- .omo/debt/items/D-AETHERFORGE-ARCH-001.yaml
+- .omo/debt/items/D-AETHERFORGE-ARCH-003.yaml
+- .omo/debt/items/D-AETHERFORGE-ARCH-004.yaml
+- .omo/debt/items/D-AETHERFORGE-ARCH-005.yaml
+- .omo/debt/items/D-AETHERFORGE-LINT-001.yaml
+- .omo/debt/items/D-AETHERFORGE-CONFIG-001.yaml

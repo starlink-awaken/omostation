@@ -100,6 +100,8 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", help="单次轮询 (不后台)")
     parser.add_argument("--daemon", action="store_true", help="后台守护 (每 60s 轮询)")
     parser.add_argument("--watch", action="store_true", help="P76: 实时 tail -f 模式")
+    parser.add_argument("--use-watchdog", action="store_true",
+                        help="P81: 用 watchdog (跨平台真实时, 替代 polling)")
     parser.add_argument("--interval", type=int, default=60, help="守护间隔 (秒)")
     args = parser.parse_args()
 
@@ -115,6 +117,80 @@ def main() -> int:
         print(f"📡 P74 事件驱动 P0 检测: 处理 {len(processed)} 个 P0 事件")
         for rec in processed:
             print(f"  - {rec.get('ts', '?')} P0 → mock 通知已触发")
+        return 0
+
+    # P81: --use-watchdog 真实时 (替代 polling)
+    if args.use_watchdog:
+        try:
+            from watchdog.observers import Observer
+            from watchdog.events import FileSystemEventHandler
+        except ImportError as e:
+            print(f"❌ watchdog 未安装: {e}")
+            print("  安装: uv pip install watchdog")
+            return 1
+
+        print(f"👁️  P81 watchdog 真实时 (跨平台, 安装 watchdog)")
+
+        class EventsHandler(FileSystemEventHandler):
+            def __init__(self):
+                self.last_pos = 0
+                self.last_inode = 0
+
+            def on_modified(self, event):
+                if not event.is_directory:
+                    return
+                p = root / ".omo" / "_knowledge" / "omo-events.jsonl"
+                try:
+                    cur_inode = p.stat().st_ino
+                    cur_pos = p.stat().st_size
+                    if cur_inode != self.last_inode:
+                        self.last_inode = cur_inode
+                        self.last_pos = 0
+                    if cur_pos > self.last_pos:
+                        with open(p, encoding="utf-8") as f:
+                            f.seek(self.last_pos)
+                            for line in f:
+                                line = line.strip()
+                                if not line:
+                                    continue
+                                try:
+                                    rec = json.loads(line)
+                                except Exception:
+                                    continue
+                                if rec.get("kind") != "governance_alert_aggregated":
+                                    continue
+                                payload_str = rec.get("payload", "{}")
+                                if isinstance(payload_str, str):
+                                    try:
+                                        payload = json.loads(payload_str)
+                                    except Exception:
+                                        payload = {}
+                                else:
+                                    payload = payload_str
+                                if payload.get("level") == "P0":
+                                    message = payload.get("level_reason", "P0 触发")
+                                    subprocess.run(
+                                        ["python3", str(root / "bin" / "alert-mock-p0-notify.py"),
+                                         "--message", message, "--all-channels"],
+                                        capture_output=True, timeout=10, cwd=str(root),
+                                    )
+                                    print(f"🚨 [{rec.get('ts', '?')}] P0 → mock 通知已触发: {message}")
+                        self.last_pos = cur_pos
+                except Exception as e:
+                    pass
+
+        observer = Observer()
+        watch_path = str(root / ".omo" / "_knowledge")
+        observer.schedule(EventsHandler(), watch_path, recursive=False)
+        observer.start()
+        print(f"👁️  watching {watch_path}")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
+            print("\n👁️  P81 watchdog 退出")
+        observer.join()
         return 0
 
     if args.daemon:

@@ -1,0 +1,43 @@
+id: TASK-6B868907
+title: 'P1 产品门户: c2g draft→bet路径 + 全场景门户'
+description: 杠杆点3(目标重定义). Phase completed前提=端到端smoke
+status: candidate
+task_type: feature
+risk_level: L2
+depends_on: []
+source_docs:
+- Plans/c2g-enchanted-coral.md
+deliverables:
+- c2g draft→bet路径修复(brainstorm已修真)
+- '全场景门户: 公文/家庭/健康升一等公民'
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-6B868907
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- 端到端smoke通过(非功能写完即completed)
+test_plan:
+- c2g draft→bet端到端跑通 + 公文/家庭/健康入口可用
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  priority: P1
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-06-25T06:42:59Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: sys-product-portal

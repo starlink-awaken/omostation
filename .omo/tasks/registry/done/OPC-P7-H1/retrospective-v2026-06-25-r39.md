@@ -1,10 +1,10 @@
-# OPC P7-H1 retrospective — v2026-06-09-r7
+# OPC P7-H1 retrospective — v2026-06-25-r39
 
-Generated: 2026-06-09T23:00:00Z
+Generated: 2026-06-25T02:39:26Z
 
 ## cycle state
 - stage: ship
-- version: v2026-06-09-r7
+- version: v2026-06-25-r39
 - notes: .omo/_delivery/release/CHANGELOG.md
 
 ## 3 字段 (summary/validation/debt)

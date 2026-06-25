@@ -1,0 +1,44 @@
+id: TASK-F7114ABA
+title: 'P1 GodModule: omo_ingress354L/agora1945L/gbrain3841L'
+description: 原型A5(Growth&Underinvestment), 杠杆点7+5. 用omo-srp-refactor skill渐进拆
+status: candidate
+task_type: refactor
+risk_level: L2
+depends_on: []
+source_docs:
+- Plans/c2g-enchanted-coral.md
+deliverables:
+- omo_ingress write_system_projection_fields 354L拆分(D任务剩余)
+- 单文件>800L触发lint-error硬规则
+- agora server/mcp.py1945L + gbrain operations.ts排期拆分
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-F7114ABA
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- 无>800L单文件(lint-gate)
+test_plan:
+- 各子模块ruff+pytest通过
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  priority: P1
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-06-25T06:42:59Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: sys-arch-god-module
