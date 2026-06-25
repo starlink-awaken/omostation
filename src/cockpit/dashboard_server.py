@@ -59,6 +59,7 @@ for _router_module in (
     "cockpit.web.api_metaos",
     "cockpit.web.api_agora",
     "cockpit.web.api_sandbox",
+    "cockpit.web.api_l4",
 ):
     try:
         _mod = importlib.import_module(_router_module)
