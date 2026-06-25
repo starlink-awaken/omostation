@@ -787,6 +787,8 @@ services:
     domain: system
     action: "register"
     transport: internal
+    module_path: "agora.mcp.resolver.api"
+    func_name: "register_backend"
     package: "agora"
     description: "动态注册新 MCP backend (POST /v1/backends/register)"
 
@@ -803,6 +805,8 @@ services:
     domain: system
     action: "reload"
     transport: internal
+    module_path: "agora.mcp.resolver.api"
+    func_name: "reload_routes"
     package: "agora"
     description: "BOS 路由表热重载 (从 YAML 重新加载)"
 
@@ -815,31 +819,21 @@ services:
     package: "cockpit"
     description: "治理管道健康状态 (心跳时间/日志条目/健康等级)"
 
-  - uri: "bos://system/health/scan"
-    domain: system
-    action: "scan"
-    transport: internal
-    package: "cockpit"
-    description: "跨项目健康扫描 — 全量项目测试基线 + lint + git 状态"
-
   - uri: "bos://system/governance/heartbeat"
     domain: system
     action: "heartbeat"
     transport: internal
+    module_path: "agora.mcp.resolver.api"
+    func_name: "governance_heartbeat"
     package: "scripts"
     description: "写入治理管道心跳 (governance.jsonl)"
-
-  - uri: "bos://system/convergence/score"
-    domain: system
-    action: "score"
-    transport: internal
-    package: "cockpit"
-    description: "结构收敛评分 (CLI/MCP/治理/pre-commit 四维加权)"
 
   - uri: "bos://system/omo/debt"
     domain: system
     action: "debt"
     transport: internal
+    module_path: "agora.mcp.resolver.api"
+    func_name: "omo_debt_summary"
     package: "omo"
     description: "OMO 技术债务评分 — 当前总债务/趋势/热点"
 

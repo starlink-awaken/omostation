@@ -99,6 +99,78 @@ def governance_status() -> dict:
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
+def register_backend(name: str = "", endpoint: str = "") -> dict:
+    """注册 backend (调 register_service, async + robust).
+
+    整合 bos://system/backends/register internal transport.
+    """
+    try:
+        import asyncio
+
+        from agora.server.tools_registry import register_service
+
+        result = register_service(name or "default", mcp_endpoint=endpoint)
+        if asyncio.iscoroutine(result):
+            result = asyncio.run(result)
+        return {"status": "ok", "registered": result}
+    except Exception as e:
+        return {"status": "error", "error": f"{type(e).__name__}: {e}"}
+
+
+def governance_heartbeat(max_age: float = 300) -> dict:
+    """治理心跳 (查过期 heartbeat, 调 ServiceRegistry.stale_heartbeats).
+
+    整合 bos://system/governance/heartbeat internal transport.
+    """
+    try:
+        from agora.core.registry import ServiceRegistry
+
+        reg = ServiceRegistry()
+        stale = reg.stale_heartbeats(max_age)
+        return {"status": "ok", "stale_count": len(stale), "stale": stale}
+    except Exception as e:
+        return {"status": "error", "error": f"{type(e).__name__}: {e}"}
+
+
+def reload_routes(yaml_path: str = "") -> dict:
+    """重载 BOS 路由 (调 bos_reload_routes, async + robust).
+
+    整合 bos://system/routes/reload internal transport.
+    """
+    try:
+        from agora.mcp.resolver.services import POC_SERVICES, _load_services
+
+        # 真重载 BOS services (从 YAML), 同 bos_reload_routes 但不经 @mcp.tool wrap
+        services = _load_services()
+        POC_SERVICES.clear()
+        POC_SERVICES.extend(services)
+        return {"status": "ok", "reloaded": len(POC_SERVICES)}
+    except Exception as e:
+        return {"status": "error", "error": f"{type(e).__name__}: {e}"}
+
+
+def omo_debt_summary() -> dict:
+    """OMO 债务摘要 (调 omo.debt_summary, 跨包 omo).
+
+    整合 bos://system/omo/debt internal transport.
+    """
+    try:
+        import subprocess
+
+        # omo 跨包, agora 通过 subprocess 调 (CLAUDE.md: omo 依赖声明但 subprocess 调用)
+        result = subprocess.run(
+            ["omo", "debt", "list"], capture_output=True, text=True, timeout=10
+        )
+        return {
+            "status": "ok" if result.returncode == 0 else "error",
+            "exit_code": result.returncode,
+            "stdout": result.stdout[:500],
+            "stderr": result.stderr[:200] if result.stderr else "",
+        }
+    except Exception as e:
+        return {"status": "error", "error": f"{type(e).__name__}: {e}"}
+
+
 def get_service(uri: str) -> BosService | None:
     """通过 URI 查找 BOS 服务."""
     norm = normalize_bos_uri(uri)
