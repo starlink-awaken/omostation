@@ -51,6 +51,7 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     ("adr-drift-auto-fix", "P93 ADR drift 自动归类 (TEMPLATE/SUBDIR/TYPO/REAL)", "bin/adr-drift-auto-fix.py", []),
     ("adr-drift-apply", "P94 ADR drift 应用 (touch SUBDIR_MISSING)", "bin/adr-drift-apply.py", []),
     ("god-module-13-list", "P94 god-module 13 error 清单 (24252L excess)", "bin/god-module-13-error-list.py", []),
+    ("adr-typo-fix", "P95 ADR TYPO 字符级自动修复 (conservative)", "bin/adr-typo-fix.py", []),
 ]
 
 
