@@ -60,8 +60,8 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     # agent-runtime 已整合 (2026-06-25, runtime.mcp_server 补 7 agent 工具, BOS 指向它)
     # sharedbrain/sot-bridge 已删 (2026-06-25, 包不存在+8001不跑, 连带清理 routes/health/seeds)
     # gbrain 已整合 (2026-06-25, 指向 gbrain serve stdio MCP)
-    "bos://governance/protocols-layer/": "无实现 (routes.json 有路由)",
-    "bos://system/": "internal 缺 module_path (agora 内部工具声明不完整)",
+    # system 已整合 (2026-06-25, 补 7 wrapper + 删 2 死声明, resolve率 99%)
+    "bos://governance/protocols-layer/": "架构声明 (ecos M1 + kairon INTERFACE, 需产品决策)",
 }
 KNOWN_GAP_EXPIRES = "2026-07-25"  # 30天复查, 过期未对齐升级为真实鸿沟
 
