@@ -252,3 +252,33 @@ if router:
             return {"status": "ok", "task_id": task_id, "event_published": True}
         except Exception as e:
             return {"status": "error", "error": str(e)}
+
+    @router.post("/fix-drift")
+    async def api_fix_drift():
+        """执行 SSOT 自动修复 (ssot-guardian.py --auto-fix)"""
+        try:
+            import subprocess
+
+            # 执行 ssot-guardian 自动修复
+            proc = subprocess.run(
+                ["python3", str(_REPO_ROOT / "bin" / "ssot-guardian.py"), "--auto-fix"], capture_output=True, text=True
+            )
+            # 同样我们再顺便运行 git add && commit 保证自愈闭环
+            subprocess.run(
+                ["git", "add", ".omo/state/system.yaml", ".omo/change-log/mutations.jsonl"], cwd=str(_REPO_ROOT)
+            )
+            subprocess.run(
+                ["git", "commit", "-m", "chore: auto-fix ssot task_count_drift via cockpit-ui"], cwd=str(_REPO_ROOT)
+            )
+
+            return {
+                "status": "ok",
+                "returncode": proc.returncode,
+                "stdout": proc.stdout,
+                "stderr": proc.stderr,
+                "msg": "SSOT 自动修复及状态固化提交完成！"
+                if proc.returncode == 0 or "自动修复" in proc.stdout
+                else "修复完成，部分漂移仍需人工核对。",
+            }
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
