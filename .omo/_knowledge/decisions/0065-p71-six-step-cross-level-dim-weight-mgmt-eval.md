@@ -74,7 +74,7 @@ P70 收口后, P71 调研 7 项候选, 选 4 项轻量实施:
 
 ### D4: management/ 142 拆 3 类评估 (P71 R5)
 
-**评估文件**: `audits/2026-06-23-p71-management-split-evaluation.md`
+**评估文件**: `.omo/_knowledge/audits/2026-06-23-p71-management-split-evaluation.md`
 
 **4 维度评估**:
 - Value 4/10 (历史快照, 无活跃引用)
