@@ -1,17 +1,17 @@
 # OPC P6 approval board
 
-Generated: 2026-06-25T01:48:30Z
+Generated: 2026-06-25T02:24:39Z
 
-- task_count: 9
-- awaiting_human_count: 8
-- approval_pending_count: 8
+- task_count: 10
+- awaiting_human_count: 9
+- approval_pending_count: 9
 - approval_granted_blocked_count: 0
 - approval_ready_count: 0
 - task_policy_blocked_count: 0
 - phase_blocked_count: 0
 - remediation_count: 1
 - review_lane_count: 1
-- approval_required_count: 9
+- approval_required_count: 10
 - latest_week: 2026-W29
 - latest_week_source: loop_history
 
@@ -25,4 +25,5 @@ Generated: 2026-06-25T01:48:30Z
 | OPC-P6-SELF-EVOLUTION-nop-20260625T014602Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T014602Z.yaml` |
 | OPC-P6-SELF-EVOLUTION-nop-20260625T014800Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T014800Z.yaml` |
 | OPC-P6-SELF-EVOLUTION-nop-20260625T014830Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T014830Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260625T022439Z | planned | candidate | awaiting_human | pending | - | await_human_review | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260625T022439Z.yaml` |
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | remediation | review | granted | pending | - | execute_review_lane | 2026-W29 | `.omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml` |

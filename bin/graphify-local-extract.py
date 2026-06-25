@@ -76,6 +76,27 @@ def main() -> int:
         print(f"❌ .omo/ not found at {root}")
         return 1
 
+    # P79: --report-only 仅读旧 graph.json (无需 API key)
+    if args.report_only:
+        old = load_old_graph(root)
+        if not old:
+            print(f"❌ 旧 graph.json 不存在: {OLD_GRAPH}")
+            return 1
+        total_files = old.get("total_files", 0)
+        total_words = old.get("total_words", 0)
+        print("=" * 60)
+        print("📊 P79 graphify 旧报告 (无需 API key)")
+        print("=" * 60)
+        print(f"📁 来源: {OLD_GRAPH}")
+        print(f"📈 总文件: {total_files}")
+        print(f"📝 总词数: {total_words}")
+        if "communities" in old:
+            print(f"🏘  社区数: {len(old['communities'])}")
+        if "extraction" in old:
+            ex = old["extraction"]
+            print(f"📂 提取: {ex.get('total_files', '?')} files, {ex.get('total_words', '?')} words")
+        return 0
+
     api_key = check_api_key()
     if not api_key:
         print("=" * 60)

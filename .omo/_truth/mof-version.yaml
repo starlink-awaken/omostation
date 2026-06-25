@@ -276,4 +276,14 @@ history:
     bin 工具 + 32 个 ADR (4/5 候选实施, P0 inotify 评估沿用 P76 --watch 足够)'
   timestamp: '2026-06-25T09:59:18.215834'
   version: 0.0.67
-version: 0.0.67
+- description: 'P79 R1-R3: dim-weight 真实调优 (30 快照验证 commit_closure 突出 76/20) + graphify
+    --report-only 补全 (无需 API key) + inotify 评估 (沿用 P76 --watch 0.5s 足够) + ADR-0073
+    + 33 个 ADR (3/8 候选实施)'
+  timestamp: '2026-06-25T10:23:36.207456'
+  version: 0.0.68
+- description: 'P80 R1-R3: dim-weight 集成 readiness (USE_TUNED_WEIGHTS=1 启用, 33 快照下加权总分
+    15.7) + cross-submodule-events 路由 (7 kind × 3 子仓, 44 事件统计) + cron 评估 (5 命令完善,
+    待生产实装) + ADR-0074 + 34 个 ADR + 18 独立 bin 工具 (3/5 候选实施)'
+  timestamp: '2026-06-25T10:36:14.113457'
+  version: 0.0.69
+version: 0.0.69

@@ -11,9 +11,11 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
+import json
 from pathlib import Path
 
 import yaml
@@ -234,6 +236,27 @@ def main() -> int:
     s4, unlisted = score_adr_index(root)
     s5, gov_score = score_governance(root)
     total = s1 + s2 + s3 + s4 + s5
+
+    # P80: 环境变量 USE_TUNED_WEIGHTS=1 启用调优权重 (基于 dim-weight 调优结果)
+    if os.environ.get("USE_TUNED_WEIGHTS") == "1":
+        try:
+            from subprocess import run as _run
+            r = _run(["python3", "bin/dim-weight.py", "--format", "json"],
+                      capture_output=True, text=True, cwd=str(root), timeout=30)
+            if r.returncode == 0:
+                dw = json.loads(r.stdout)
+                tuned = dw.get("weights", {})
+                w1 = tuned.get("frontmatter", 25)
+                w2 = tuned.get("drift_low", 20)
+                w3 = tuned.get("commit_closure", 20)
+                w4 = tuned.get("adr_index", 20)
+                w5 = tuned.get("governance_score", 15)
+                weighted = (s1 * w1 + s2 * w2 + s3 * w3 + s4 * w4 + s5 * w5) / 100
+                print(f"  ⚖️  P80 调优权重: frontmatter={w1} drift_low={w2} commit_closure={w3} adr_index={w4} governance_score={w5}")
+                print(f"  📊 加权总分: {weighted:.1f} (原始 {total})")
+                total = int(round(weighted))
+        except Exception as e:
+            print(f"⚠️  dim-weight 集成失败: {e}")
 
     print()
     print("─" * 70)
