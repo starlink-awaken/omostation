@@ -242,14 +242,6 @@ async def overview_page():
     return OVERVIEW_HTML
 
 
-@router.get("/", response_class=HTMLResponse)
-async def dashboard_page():
-    """Redirect root to overview page."""
-    from fastapi.responses import RedirectResponse
-
-    return RedirectResponse(url="/overview")
-
-
 @router.get("/bos", response_class=HTMLResponse)
 @router.get("/bos/", response_class=HTMLResponse)
 async def bos_dashboard():
