@@ -60,6 +60,11 @@ for _router_module in (
     "cockpit.web.api_agora",
     "cockpit.web.api_sandbox",
     "cockpit.web.api_l4",
+    "cockpit.web.api_health",
+    "cockpit.web.api_alerts",
+    "cockpit.web.api_tasks",
+    "cockpit.web.api_logs",
+    "cockpit.web.api_metrics",
 ):
     try:
         _mod = importlib.import_module(_router_module)

@@ -217,3 +217,73 @@ if router:
             return safe
         except Exception as e:
             return {"error": str(e)}
+
+    @router.get("/skills")
+    async def list_skills():
+        """列出系统中定义的所有技能 (Custom Skills)"""
+        try:
+
+            from fastapi.responses import JSONResponse
+            skills = []
+
+            # 1. 扫描 Workspace 技能
+            ws_skills_dir = _REPO_ROOT / ".agents" / "skills"
+            if ws_skills_dir.exists():
+                for d in ws_skills_dir.iterdir():
+                    if d.is_dir() and (d / "SKILL.md").exists():
+                        skills.append({"name": d.name, "source": "workspace", "path": str(d / "SKILL.md")})
+
+            # 2. 扫描全局技能
+            global_plugins_dir = Path.home() / ".gemini" / "config" / "plugins"
+            if global_plugins_dir.exists():
+                for plugin_dir in global_plugins_dir.iterdir():
+                    if plugin_dir.is_dir():
+                        skills_dir = plugin_dir / "skills"
+                        if skills_dir.exists():
+                            for d in skills_dir.iterdir():
+                                if d.is_dir() and (d / "SKILL.md").exists():
+                                    skills.append(
+                                        {
+                                            "name": d.name,
+                                            "source": f"plugin:{plugin_dir.name}",
+                                            "path": str(d / "SKILL.md"),
+                                        }
+                                    )
+
+            # 3. 补充内置技能
+            builtin_skills_dir = Path.home() / ".gemini" / "antigravity-cli" / "builtin" / "skills"
+            if builtin_skills_dir.exists():
+                for d in builtin_skills_dir.iterdir():
+                    if d.is_dir() and (d / "SKILL.md").exists():
+                        skills.append({"name": d.name, "source": "builtin", "path": str(d / "SKILL.md")})
+
+            # 解析 Frontmatter YAML
+            parsed_skills = []
+            for s in skills:
+                try:
+                    content = Path(s["path"]).read_text(encoding="utf-8")
+                    desc = ""
+                    name = s["name"]
+                    if content.startswith("---"):
+                        parts = content.split("---", 2)
+                        if len(parts) >= 3:
+                            yaml_content = yaml.safe_load(parts[1]) or {}
+                            name = yaml_content.get("name", name)
+                            desc = yaml_content.get("description", desc)
+                    parsed_skills.append(
+                        {"id": s["name"], "name": name, "description": desc, "source": s["source"], "path": s["path"]}
+                    )
+                except Exception:
+                    parsed_skills.append(
+                        {
+                            "id": s["name"],
+                            "name": s["name"],
+                            "description": "自定义开发辅助技能",
+                            "source": s["source"],
+                            "path": s["path"],
+                        }
+                    )
+
+            return JSONResponse(content={"status": "ok", "skills": parsed_skills})
+        except Exception as e:
+            return JSONResponse(content={"status": "error", "error": str(e)}, status_code=500)
