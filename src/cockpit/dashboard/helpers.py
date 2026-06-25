@@ -217,6 +217,8 @@ def load_compute() -> dict:
     selected_provider = provider_plane.get("selected_provider") or {}
     provider_name = selected_provider.get("name")
     selected_cloud_model = selected_provider.get("model") or "gpt-4o"
+    circuit_broken = bool(provider_plane.get("circuit_broken", False))
+    daily_budget = float(provider_plane.get("daily_budget", 100.0))
 
     records = []
     if LLM_COST_LOG_PATH.exists():
@@ -603,6 +605,8 @@ def load_compute() -> dict:
         "nodes": frontend_nodes,
         "quota": {"quota": frontend_quotas},
         "available_models": available_models_list,
+        "circuit_broken": circuit_broken,
+        "daily_budget": daily_budget,
     }
 
 
