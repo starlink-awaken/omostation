@@ -24,15 +24,15 @@ P90 收口后, P91 调研 4 项治理深化, 实施 3 项 (P91-A 推迟):
 
 ## Decision
 
-### D1: install-dashboard-cron.sh (P91 R1)
+### D1: install-dashboard-cron.sh (P91 R1) [推迟 - scripts/ 子模块]
 
-**新脚本**: `scripts/omo/install-dashboard-cron.sh`
+**计划脚本**: `scripts/omo/install-dashboard-cron.sh`
 - 4 模式: install / uninstall / dry-run / status
 - 隔离块标记: `GOV_DASHBOARD_BEGIN/END` (与 X2 freshness 标记块互不干扰)
 - 备份当前 crontab 到 `.omo/cron/crontab-backup-<timestamp>.txt`
 - 幂等: 重复运行只覆盖标记块, 不破坏其他 crontab
 
-**验证**: `--dry-run` 输出 13 工具 dashboard crontab 内容, 不真安装.
+**状态**: **脚本已写但 `scripts/` 是子模块**, per CLAUDE.md "子仓指针不自动 bump", 脚本留在 submodule working tree, 需人类审批 commit 节奏. P92+ 推入 submodule 时一并提交.
 
 ### D2: X2-FRESH-GOV-DASHBOARD rule (P91 R2)
 
