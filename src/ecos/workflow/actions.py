@@ -322,8 +322,9 @@ def _action_complete_quest(params: dict) -> dict:
     workspace_root = None
     for parent in cur.parents:
         if (parent / ".omo").is_dir() or (parent / "projects").is_dir():
-            workspace_root = parent
-            break
+            if parent.name != "projects":
+                workspace_root = parent
+                break
     if not workspace_root:
         workspace_root = cur.parents[5]
 
