@@ -511,3 +511,141 @@ def register_proxy_tools(mcp: FastMCP) -> None:
                 "by_transport": dict(transports),
             }
         )
+
+    # ── proxy_omo_debt ───────────────────────────────────────────────
+
+    @mcp.tool()
+    async def proxy_omo_debt() -> dict:
+        """Query OMO governance debt state.
+
+        Returns current OMO debt report: total count, trend, hotspots.
+        Delegates to `omo state` CLI via subprocess.
+        """
+        import shutil
+        import subprocess
+
+        omo_script = shutil.which("omo")
+        if not omo_script:
+            return _error("OMO CLI not found on PATH")
+
+        from agora.server._response import _ok
+
+        try:
+            result = subprocess.run(
+                [omo_script, "state"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "stdout": result.stdout[:2000],
+                    "stderr": result.stderr[:500],
+                    "exit_code": result.returncode,
+                }
+            )
+        except subprocess.TimeoutExpired:
+            return _error("OMO CLI timed out after 15s")
+        except Exception as e:
+            return _error(f"OMO debt query failed: {e}")
+
+    # ── proxy_governance_status ──────────────────────────────────────
+
+    @mcp.tool()
+    async def proxy_governance_status() -> dict:
+        """Get governance pipeline status.
+
+        Returns last heartbeat timestamp, health classification
+        (fresh/aging/stale), total log entries, and recent entries.
+        """
+        from agora.server._response import _ok
+        from datetime import datetime, timezone
+
+        gov_log = Path.home() / ".hermes/architecture/governance_log/governance.jsonl"
+        if not gov_log.exists():
+            return _ok({"format_version": FORMAT_VERSION, "status": "no_log_found"})
+
+        try:
+            lines = [line for line in gov_log.read_text().splitlines() if line.strip()]
+            entries = []
+            for line in lines[-10:]:
+                try:
+                    entries.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+
+            if entries:
+                last = entries[-1]
+                last_ts = last.get("ts", "")
+                days_since = None
+                health = "unknown"
+                try:
+                    dt = datetime.fromisoformat(last_ts)
+                    delta = (datetime.now(timezone.utc) - dt).days
+                    days_since = delta
+                    health = (
+                        "fresh" if delta <= 2 else "aging" if delta <= 14 else "stale"
+                    )
+                except (ValueError, TypeError):
+                    pass
+
+                return _ok(
+                    {
+                        "format_version": FORMAT_VERSION,
+                        "total_entries": len(lines),
+                        "health": health,
+                        "days_since_last": days_since,
+                        "last_ts": last_ts,
+                        "last_action": last.get("action", ""),
+                        "recent_entries": entries[-5:],
+                    }
+                )
+
+            return _ok({"format_version": FORMAT_VERSION, "status": "empty_log"})
+        except Exception as e:
+            return _error(f"Failed to read governance log: {e}")
+
+    # ── proxy_arch_health ────────────────────────────────────────────
+
+    @mcp.tool()
+    async def proxy_arch_health() -> dict:
+        """Get full architecture health snapshot.
+
+        Returns governance freshness, convergence score, MCP backend
+        counts, cron job health, git status, and ruff lint results
+        from Cockpit's load_arch_health() function.
+        """
+        import sys
+        from pathlib import Path
+
+        # Try to import cockpit dashboard helpers
+        cockpit_helpers = Path.home() / "Workspace/projects/cockpit/src"
+        if str(cockpit_helpers) not in sys.path:
+            sys.path.insert(0, str(cockpit_helpers))
+
+        try:
+            from cockpit.dashboard.helpers import load_arch_health
+
+            data = load_arch_health()
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "governance": data.get("governance"),
+                    "system_health": data.get("system", {}).get("health_score"),
+                    "convergence": data.get("convergence"),
+                    "cron": {
+                        "ok": data.get("cron", {}).get("ok"),
+                        "total": data.get("cron", {}).get("total"),
+                        "error": data.get("cron", {}).get("error"),
+                    },
+                    "mcp_backends": data.get("mcp", {}).get("total"),
+                    "ruff": data.get("ruff", {}).get("check"),
+                    "git_status": data.get("git", {}).get("status"),
+                    "timestamp": data.get("timestamp"),
+                }
+            )
+        except ImportError as e:
+            return _error(f"Cockpit helpers unavailable: {e}")
+        except Exception as e:
+            return _error(f"Arch health query failed: {e}")
