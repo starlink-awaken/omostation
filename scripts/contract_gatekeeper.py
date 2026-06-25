@@ -269,9 +269,34 @@ def main(argv: list[str] | None = None) -> int:
             if path.is_file():
                 files.append(path)
             elif path.is_dir():
-                files.extend(path.rglob("*.py"))
+                for f in path.rglob("*.py"):
+                    if not any(
+                        part in f.parts
+                        for part in (
+                            ".venv",
+                            "venv",
+                            "node_modules",
+                            ".git",
+                            "dist",
+                            "__pycache__",
+                        )
+                    ):
+                        files.append(f)
     else:
-        files = list(Path(".").rglob("*.py"))
+        files = []
+        for f in Path(".").rglob("*.py"):
+            if not any(
+                part in f.parts
+                for part in (
+                    ".venv",
+                    "venv",
+                    "node_modules",
+                    ".git",
+                    "dist",
+                    "__pycache__",
+                )
+            ):
+                files.append(f)
 
     if args.baseline_file:
         baseline_file = Path(args.baseline_file)
