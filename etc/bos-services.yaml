@@ -593,21 +593,24 @@ services:
   - uri: "bos://memory/gbrain/search"
     domain: memory
     action: "search"
-    transport: mcp_proxy
+    transport: mcp_stdio
+    command: ["bun", "run", "projects/gbrain/src/cli.ts", "serve"]
     package: "gbrain"
     description: "gbrain 知识库全文搜索 (高性能 Postgres)"
 
   - uri: "bos://memory/gbrain/query"
     domain: memory
     action: "query"
-    transport: mcp_proxy
+    transport: mcp_stdio
+    command: ["bun", "run", "projects/gbrain/src/cli.ts", "serve"]
     package: "gbrain"
     description: "gbrain 知识库结构化查询"
 
   - uri: "bos://memory/gbrain/sync"
     domain: memory
     action: "sync"
-    transport: mcp_proxy
+    transport: mcp_stdio
+    command: ["bun", "run", "projects/gbrain/src/cli.ts", "serve"]
     package: "gbrain"
     description: "gbrain 知识库增量同步"
 
