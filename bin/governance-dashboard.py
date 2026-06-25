@@ -42,6 +42,8 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
      ["projects/omo/src/omo/omo_lint.py", "--top", "3"]),
     ("gov-trend-report", "P88 governance 趋势 (weekly 窗口)", "bin/gov-trend-report.py",
      ["--window", "weekly"]),
+    ("rule-history-insight", "P89 X2 rule 状态洞察", "bin/rule-history-insight.py", []),
+    ("adr-drift-check", "P89 ADR 引用 drift (信息性, 全量扫描)", "bin/adr-drift-check.py", []),
 ]
 
 
