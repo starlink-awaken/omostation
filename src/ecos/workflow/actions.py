@@ -321,7 +321,7 @@ def _action_complete_quest(params: dict) -> dict:
     cur = Path(__file__).resolve()
     workspace_root = None
     for parent in cur.parents:
-        if (parent / ".omo").exists() or (parent / "projects").exists():
+        if (parent / ".omo").is_dir() or (parent / "projects").is_dir():
             workspace_root = parent
             break
     if not workspace_root:
