@@ -404,4 +404,8 @@ history:
     顺序校正)'
   timestamp: '2026-06-26T15:34:16.330196'
   version: 0.0.90
-version: 0.0.90
+- description: 'P102: omo_lint surfaces 子模块拆分 (731→594L, <600L ideal 首次达成, 累计 -53%
+    行数)'
+  timestamp: '2026-06-26T15:40:58.214876'
+  version: 0.0.91
+version: 0.0.91
