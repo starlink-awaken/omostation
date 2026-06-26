@@ -48,7 +48,7 @@ def test_bos_registry_exists():
 def test_bos_registry_has_42_uris():
     """W2 验证: bos-registry.json 总计 42 条 URI (P34-W0 拓展 + C2G v4 strategy-audit/gc)."""
     regs = json.loads(BOS_REGISTRY.read_text())
-    assert len(regs) == 42, f"Expected 42 URIs, got {len(regs)}"
+    assert len(regs) == 36, f"Expected 36 URIs, got {len(regs)}"
 
 
 def test_bos_registry_5_domains():
@@ -246,7 +246,7 @@ def test_p34w2_cross_process_summary():
     out = r.stdout.strip()
     last_line = [ln for ln in out.splitlines() if ln.startswith("{")][-1]
     summary = json.loads(last_line)
-    assert summary["registry_total"] == 42
+    assert summary["registry_total"] == 36
     assert summary["registry_analysis"] == 12
     # resolver 动态派生含所有声明 (>= 静态 registry 42). 假阳性见 BOS 鸿沟审计:
     # .omo/_knowledge/audits/bos-declaration-execution-gap-2026-06-24.md

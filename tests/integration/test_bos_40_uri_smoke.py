@@ -65,7 +65,7 @@ def _default_args_for(uri: str) -> dict:
 def test_40_uri_registry_loads():
     """P43-W1 验证: bos-registry.json 含 40+ URI."""
     regs = _load_registry()
-    assert len(regs) >= 40, f"Expected >=40 URIs, got {len(regs)}"
+    assert len(regs) >= 36, f"Expected >=40 URIs, got {len(regs)}"
     domains = Counter(r.get("domain") for r in regs)
     # Verify domain structure exists (counts may grow)
     expected_domains = {"memory", "governance", "analysis", "persona", "capability"}
@@ -108,8 +108,8 @@ def test_smoke_25_resolved_15_gap_single_loop():
         asyncio.run(_MANAGER.close_all())
 
     by_status = Counter(s for _, s in results)
-    assert by_status.get("resolved", 0) == 40, (
-        f"Expected 40 resolved, got {by_status.get('resolved', 0)}: "
+    assert by_status.get("resolved", 0) == 34, (
+        f"Expected 34 resolved, got {by_status.get('resolved', 0)}: "
         f"{[(u, s) for u, s in results if s != 'resolved']}"
     )
     assert by_status.get("gap", 0) == 2, (

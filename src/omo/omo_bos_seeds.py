@@ -5,7 +5,7 @@ Extracted from omo_bos.py to reduce God Module size (1313 → ~600 lines).
 P33-W1: 6 (memory + governance)
 P33-W2: 15 (analysis + persona + capability)
 P34-W0: 19 (战役 2 扩展)
-Total : 40 SEED URI 覆盖 5 Domain
+Total : 34 SEED URI 覆盖 5 Domain (删 protocols-layer 死声明后)
 """
 
 from __future__ import annotations
@@ -50,15 +50,8 @@ SEED_REGISTRATIONS: list[BosRegistration] = [
         protocol="internal",
         description="metaos 免疫门控入口 (P33-W1 战役 2 起步)",
     ),
-    BosRegistration(
-        uri="bos://governance/protocols-layer/trigger",
-        domain="governance",
-        package="protocols-layer",
-        action="trigger",
-        endpoint="kairon.packages.protocols_layer.symphony:trigger",
-        protocol="internal",
-        description="protocols-layer 协议触发器入口 (P33-W1 战役 2 起步)",
-    ),
+    # protocols-layer 死声明已删 (历史别名, kairon CLAUDE.md 明确非 live package;
+    # endpoint kairon.packages.protocols_layer.symphony 不存在. 同 sharedbrain/sot-bridge 清理).
     # ── P33-W2 战役 2 余下 3 Domain: Analysis + Persona + Capability ──
     BosRegistration(
         uri="bos://analysis/minerva/research",

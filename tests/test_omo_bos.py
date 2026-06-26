@@ -44,7 +44,7 @@ from omo.omo_bos import (
 
 def test_validate_bos_uri_valid_40_seed_uris() -> None:
     """40 条 SEED URI 全部通过验证 (21 W33 + 19 W34)."""
-    assert len(SEED_REGISTRATIONS) == 40
+    assert len(SEED_REGISTRATIONS) == 34
     for r in SEED_REGISTRATIONS:
         valid, err = validate_bos_uri(r.uri)
         assert valid, f"{r.uri} 验证失败: {err}"
@@ -163,14 +163,14 @@ def test_register_seeds_writes_40(tmp_path: Path) -> None:
     """register_seeds 一次性写 40 条 SEED (21 W33 + 19 W34)."""
     reg_path = tmp_path / "bos-registry.json"
     results = register_seeds(path=reg_path)
-    assert len(results) == 40
+    assert len(results) == 34
     for r in results:
         assert "error" not in r, f"SEED 注册失败: {r}"
         assert r["status"] in ("registered", "updated")
     # 文件存在且有 40 条
     assert reg_path.exists()
     raw = load_registry(path=reg_path)
-    assert len(raw) == 40
+    assert len(raw) == 34
     uris = {r["uri"] for r in raw}
     expected_uris = {s.uri for s in SEED_REGISTRATIONS}
     assert uris == expected_uris
@@ -181,13 +181,13 @@ def test_register_seeds_idempotent(tmp_path: Path) -> None:
     reg_path = tmp_path / "bos-registry.json"
     r1 = register_seeds(path=reg_path)
     r2 = register_seeds(path=reg_path)
-    assert len(r1) == 40
-    assert len(r2) == 40
+    assert len(r1) == 34
+    assert len(r2) == 34
     # 第二次全部应是 updated
     assert all(r["status"] == "updated" for r in r2)
     # 落盘总数仍 40
     raw = load_registry(path=reg_path)
-    assert len(raw) == 40
+    assert len(raw) == 34
 
 
 def test_save_registry_atomic_writes_valid_json(tmp_path: Path) -> None:
@@ -226,9 +226,9 @@ def test_list_registrations_domain_filter(tmp_path: Path) -> None:
     persona_only = list_registrations(domain="persona", path=reg_path)
     capability_only = list_registrations(domain="capability", path=reg_path)
     assert len(memory_only) == 5
-    assert len(governance_only) == 8
+    assert len(governance_only) == 5
     assert len(analysis_only) == 12
-    assert len(persona_only) == 7
+    assert len(persona_only) == 4
     assert len(capability_only) == 8
     assert all(r.domain == "memory" for r in memory_only)
     assert all(r.domain == "governance" for r in governance_only)
@@ -262,7 +262,7 @@ def test_cli_list_subcommand_runs(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr
     assert "bos://memory/kos/search" in proc.stdout
     assert "bos://governance/omo/audit" in proc.stdout
-    assert "共 40 条" in proc.stdout
+    assert "共 34 条" in proc.stdout
 
 
 def test_cli_validate_subcommand() -> None:
@@ -320,11 +320,11 @@ def test_seeds_cover_5_domains() -> None:
     for r in SEED_REGISTRATIONS:
         counts[r.domain] = counts.get(r.domain, 0) + 1
     assert counts["memory"] == 5
-    assert counts["governance"] == 8
+    assert counts["governance"] == 5
     assert counts["analysis"] == 12
-    assert counts["persona"] == 7
+    assert counts["persona"] == 4
     assert counts["capability"] == 8
-    assert sum(counts.values()) == 40
+    assert sum(counts.values()) == 34
 
 
 def test_register_3_domains_persists(tmp_path: Path) -> None:
@@ -509,7 +509,7 @@ def test_verify_all_endpoints_runs(tmp_path: Path) -> None:
     reg_path = tmp_path / "bos-registry.json"
     register_seeds(path=reg_path)
     results = verify_all_endpoints(path=reg_path)
-    assert len(results) == 40
+    assert len(results) == 34
     for r in results:
         assert "uri" in r
         assert "endpoint" in r
@@ -526,7 +526,7 @@ def test_verify_all_endpoints_runs(tmp_path: Path) -> None:
 
 def test_seeds_count_40() -> None:
     """W34 验证: SEED_REGISTRATIONS 扩到 40 条 (21 W33 + 19 W34)."""
-    assert len(SEED_REGISTRATIONS) == 40
+    assert len(SEED_REGISTRATIONS) == 34
 
 
 def test_seeds_5_domain_distribution() -> None:
@@ -536,12 +536,12 @@ def test_seeds_5_domain_distribution() -> None:
         counts[r.domain] = counts.get(r.domain, 0) + 1
     assert counts == {
         "memory": 5,
-        "governance": 8,
+        "governance": 5,
         "analysis": 12,
-        "persona": 7,
+        "persona": 4,
         "capability": 8,
     }
-    assert sum(counts.values()) == 40
+    assert sum(counts.values()) == 34
 
 
 def test_register_19_new_uris_persists(tmp_path: Path) -> None:
@@ -583,9 +583,9 @@ def test_list_filter_by_5_domains_w34(tmp_path: Path) -> None:
     register_seeds(path=reg_path)
     expected = {
         "memory": 5,
-        "governance": 8,
+        "governance": 5,
         "analysis": 12,
-        "persona": 7,
+        "persona": 4,
         "capability": 8,
     }
     for d, expected_count in expected.items():
@@ -602,4 +602,4 @@ def test_no_duplicate_uris() -> None:
     assert len(uris) == len(set(uris)), (
         f"URI 重复: {[u for u in uris if uris.count(u) > 1]}"
     )
-    assert len(uris) == 40
+    assert len(uris) == 34
