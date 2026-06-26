@@ -1,0 +1,111 @@
+---
+m2_type: GacRule
+version: 1.0.0
+created: '2026-06-26'
+---
+
+# GaC 治理规则元模型 (M2 type, 机制 7, ADR-0106)
+#
+# 定义 GaC 规则 (CR-*) 的标准结构 (M2 元模型层).
+# 实例 (M1): .omo/_truth/registry/governance-checks.yaml::gac.rules (7 条 CR-* 规则)
+# 校验: bin/gac-validate.py (机制 2 schema + 机制 5 矛盾 + 机制 6 lifecycle)
+# 详见: .omo/_knowledge/gac/NORTH-STAR.md + stage3-4-design.md
+
+GacRule:
+  m3_parent: GovernanceElement
+  description: >-
+    GaC 治理规则——声明式规则注册表的元模型 (机制 7, ADR-0106).
+    定义 CR-* 规则的标准结构, 支持动态注册 + drift 自愈 + lifecycle 状态机.
+    对标 OPA policy (策略即数据) + omostation 独有 MOF 元模型约束派生.
+  icon: 📋
+
+  # GaC schema (和 governance-checks.yaml::gac.schema + bin/gac-validate.py REQUIRED_FIELDS 对齐)
+  fields:
+    id:
+      type: string
+      pattern: "^CR-[A-Z0-9-]+$"
+      required: true
+      unique: true
+      description: 规则唯一标识 (e.g. CR-X4-HEALTH-SSOT)
+    dimension:
+      type: enum
+      values: [X1, X2, X3, X4]
+      required: true
+      description: 治理维度 (X1 审计 / X2 抗熵 / X3 价值 / X4 一致)
+    layer:
+      type: enum
+      values: [M0, L0, L1, L2, L3, meta]
+      required: true
+      description: 架构层 (M0 模型 / L0 协议 / L1 运行时 / L2 引擎 / L3 入口 / meta 横切)
+    check_type:
+      type: enum
+      values: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain]
+      required: true
+      description: 检查类型 (泛化执行器按此分发, 机制 3)
+    executor:
+      type: list
+      item_type: enum
+      item_values: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron]
+      required: true
+      min_items: 1
+      description: 执行通道列表 (至少一个, 防 rule 声明不执行, 机制 3 前提)
+    lifecycle:
+      type: enum
+      values: [draft, active, deprecated, removed]
+      required: true
+      description: 规则生命周期状态 (机制 6)
+    version:
+      type: semver
+      required: true
+      description: 规则语义化版本 (演进追踪)
+    created_at:
+      type: date
+      required: true
+      description: 创建日期 (机制 6 draft 超期追踪, draft_to_active_days=7)
+    target:
+      type: string
+      optional: true
+      description: 检查目标 (文件路径::field 或逻辑名)
+    forbid_copy_in:
+      type: list
+      item_type: glob
+      optional: true
+      description: SSOT 规则禁止复制位置 (ssot_pointer check_type 用, gac-drift 扫描)
+    adr:
+      type: string
+      optional: true
+      description: 决策记录引用 (e.g. ADR-0106)
+
+  # lifecycle 状态机 (机制 6, gac-validate.check_lifecycle_timeliness + gc 清理)
+  stateMachine:
+    draft:
+      description: 草案 (新规则, 待 radar 验证执行后转 active)
+      transitions: [active, removed]
+    active:
+      description: 活跃 (规则生效, 执行通道检查)
+      transitions: [deprecated]
+    deprecated:
+      description: 废弃 (不再推荐, gc 28 天后清理 removed)
+      transitions: [removed, active]
+    removed:
+      description: 已移除 (终态, gc 清理后)
+      transitions: []
+
+  # GaC 元治理 (递归: GaC 治一切, GaC 自己也要被治)
+  meta_governance:
+    north_star: ".omo/_knowledge/gac/NORTH-STAR.md"
+    roadmap: ".omo/_knowledge/gac/roadmap-v1.md"
+    validator: "bin/gac-validate.py (机制 2 schema + 机制 5 矛盾 + 机制 6 lifecycle)"
+    drift_detector: "bin/gac-drift.py (机制 4 drift 检测)"
+    ci_gate: ".github/workflows/gac-gate.yml (validate 阻塞 + drift 报告)"
+    cron: ".omo/cron/gac-crontab (radar 每日 + gc 每周)"
+
+  # 动态一致性 7 机制 (本元模型支撑)
+  mechanisms:
+    - {id: 1, name: 声明式规则, impl: "gac.rules YAML 数据"}
+    - {id: 2, name: schema 校验, impl: "gac-validate REQUIRED_FIELDS + enum"}
+    - {id: 3, name: 泛化执行器, impl: "hook/MCP 读注册表按 check_type (阶段 1)"}
+    - {id: 4, name: drift 检测自愈, impl: "gac-drift + radar cron"}
+    - {id: 5, name: 矛盾检测, impl: "gac-validate detect_conflicts"}
+    - {id: 6, name: 版本lifecycle, impl: "stateMachine + check_lifecycle_timeliness + gc"}
+    - {id: 7, name: MOF元模型派生, impl: "本文件 GacRule M2 type (机制 7 起点)"}
