@@ -424,4 +424,8 @@ history:
     re-export 修复)'
   timestamp: '2026-06-26T16:33:19.323432'
   version: 0.0.95
-version: 0.0.95
+- description: 'P107: omo_governance_surfaces 6 子模块化 (763→556L, <600L ideal 首次达成,
+    cross-sibling import 范式)'
+  timestamp: '2026-06-26T16:45:30.920210'
+  version: 0.0.96
+version: 0.0.96
