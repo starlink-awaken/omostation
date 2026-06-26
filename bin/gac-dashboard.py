@@ -54,7 +54,7 @@ def generate_html(report: dict) -> str:
         f'<span class="tag">{d}</span><b>{n}</b> ' for d, n in dims.items()
     )
     layer_tags = "".join(
-        f'<span class="tag">{l}</span><b>{n}</b> ' for l, n in layers.items()
+        f'<span class="tag">{layer}</span><b>{n}</b> ' for layer, n in layers.items()
     )
     drift_closed = " (闭环归零)" if drift.get("drift_count", 1) == 0 else ""
 
