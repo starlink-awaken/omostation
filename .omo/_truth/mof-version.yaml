@@ -447,4 +447,8 @@ history:
     + 12 mappings, 70% 覆盖)'
   timestamp: '2026-06-26T17:49:33.055957'
   version: 0.0.101
-version: 0.0.101
+- description: 'Phase 3: mof-contract-agent + /quest fix-bos-contract (30 天作战包收官,
+    v0.2 --impact --json bug 修复)'
+  timestamp: '2026-06-26T19:59:48.574765'
+  version: 0.0.102
+version: 0.0.102
