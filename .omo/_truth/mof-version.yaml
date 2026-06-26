@@ -408,4 +408,8 @@ history:
     行数)'
   timestamp: '2026-06-26T15:40:58.214876'
   version: 0.0.91
-version: 0.0.91
+- description: 'P103: omo_lint mutation-ledger 子模块拆分 (594→544L, ADR-0093 4 步路径完整兑现,
+    累计 -57%)'
+  timestamp: '2026-06-26T15:53:04.632337'
+  version: 0.0.92
+version: 0.0.92
