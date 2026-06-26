@@ -1,0 +1,43 @@
+id: TASK-13AD0B21
+title: 'AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升)'
+description: 'AUDIT: M1 命名空间37个, aetherforge只消费4个(11%), 33未接入(agent/entity/protocol/workflow/skill/...).
+  同 BOS 鸿沟病根 (定义层丰富/执行层薄弱).'
+status: candidate
+task_type: feature
+risk_level: L2
+depends_on: []
+source_docs:
+- projects/aetherforge/AUDIT.md
+deliverables:
+- '优先接入: agent/protocol/workflow/skill/decision (与蜂群/网关相关)'
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-13AD0B21
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- M1 消费命名空间数提升
+test_plan:
+- L0 MOF 消费率 11%→提升 (33 命名空间接入)
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  priority: P1
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-06-26T06:44:34Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: aetherforge-l0-consumption

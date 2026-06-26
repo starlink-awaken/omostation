@@ -1,0 +1,42 @@
+id: TASK-67C63D6C
+title: 'AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾)'
+description: 'AUDIT: QuotaEngine 已加载但数据未完全利用 (376行21class, 半实现). Phase 1 收尾.'
+status: candidate
+task_type: feature
+risk_level: L2
+depends_on: []
+source_docs:
+- projects/aetherforge/ARCHITECTURE-v2.md
+deliverables:
+- 'QuotaEngine 配额数据完全利用 (当前半实现: 加载未全用)'
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-67C63D6C
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- 配额查询接入路由决策
+test_plan:
+- quota_engine 配额查询 + codexbar 集成测试
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  priority: P1
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-06-26T06:44:33Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: aetherforge-quota-engine
