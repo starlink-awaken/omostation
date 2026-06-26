@@ -416,4 +416,8 @@ history:
     -962L excess)'
   timestamp: '2026-06-26T16:01:09.551443'
   version: 0.0.93
-version: 0.0.93
+- description: 'P105: omo_governance_surfaces ingress-check 子模块拆分 (1244→1022L, circular
+    import 修复范式)'
+  timestamp: '2026-06-26T16:11:16.574408'
+  version: 0.0.94
+version: 0.0.94
