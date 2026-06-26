@@ -443,4 +443,8 @@ history:
     + 19 errors 发现)'
   timestamp: '2026-06-26T17:37:30.847768'
   version: 0.0.100
-version: 0.0.100
+- description: 'Phase 2: mof-contract-lint v0.2 (--explain + --impact 智能增强, 4 explanations
+    + 12 mappings, 70% 覆盖)'
+  timestamp: '2026-06-26T17:49:33.055957'
+  version: 0.0.101
+version: 0.0.101
