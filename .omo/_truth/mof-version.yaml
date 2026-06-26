@@ -435,4 +435,8 @@ history:
 - description: 'P109: 治理赋能三件套 (验证模板 + 智能化 + TS 工具), 100 阶段关键转折'
   timestamp: '2026-06-26T17:07:50.488789'
   version: 0.0.98
-version: 0.0.98
+- description: 'P110: omo_ingress_task_lifecycle 3 子模块化 (1530→614L, 13→11 god-module,
+    -60%)'
+  timestamp: '2026-06-26T17:18:59.537639'
+  version: 0.0.99
+version: 0.0.99
