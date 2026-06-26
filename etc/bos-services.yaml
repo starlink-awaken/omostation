@@ -93,14 +93,6 @@ services:
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "validate"]
     description: "Eidos Schema 约束校验"
 
-  - uri: "bos://governance/protocols-layer/trigger"
-    domain: governance
-    action: "trigger"
-    transport: stdio
-    package: "protocols-layer"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "protocols_layer.cli", "trigger"]
-    description: "Protocols Layer 触发器规则 (P33-W1 战役 2 起步)"
-
   - uri: "bos://analysis/minerva/research"
     domain: analysis
     action: "research"
