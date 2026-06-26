@@ -52,8 +52,14 @@ runtime/data/kei_audit.jsonl
 # ---- MOF 快照（自动生成） ----
 projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml
 
+# ---- 本地开发沙箱与临时防呆 ----
+/scratch/
+**/_tmp_*
+**/temp_*
+
 # ---- 构建产物 ----
 .env
+
 __pycache__/
 *.pyc
 node_modules/
