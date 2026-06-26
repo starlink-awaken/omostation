@@ -28,3 +28,6 @@ jobs:
       # 机制 4 (drift): 报告不阻塞 (drift 是发现性, 逐步修; 避免 CI 红到全部漂移修复)
       - name: gac-drift (drift 检测, 报告)
         run: python3 bin/gac-drift.py || true
+      # CR-X4-DOC-SSOT: 文档 SSOT 检查 (markdown 禁硬编码项目元数据, doc-ssot-lint)
+      - name: doc-ssot-lint (文档 SSOT, CR-X4-DOC-SSOT)
+        run: python3 bin/doc-ssot-lint.py

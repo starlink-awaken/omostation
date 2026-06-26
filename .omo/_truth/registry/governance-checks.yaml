@@ -298,6 +298,21 @@ gac:
       created_at: "2026-06-27"
       adr: "ADR-0106"
 
+    # ── 文档 SSOT: doc-ssot-lint (正交拆分, 禁硬编码项目元数据) ──
+    - id: CR-X4-DOC-SSOT
+      dimension: X4
+      layer: meta
+      name: "文档 SSOT (markdown 禁硬编码项目元数据, 引用 project-registry)"
+      description: "101 markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/doc-ssot-lint.py)"
+      check_type: ssot_pointer
+      target: "docs/project-registry.yaml + 101 markdown"
+      forbid_copy_in: ["AGENTS.md", "CLAUDE.md", "**/README.md", "LAYER-INDEX.md"]
+      executor: [ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
   drift:
     schedule: "daily"  # radar 频率
