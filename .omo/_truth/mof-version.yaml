@@ -428,4 +428,8 @@ history:
     cross-sibling import 范式)'
   timestamp: '2026-06-26T16:45:30.920210'
   version: 0.0.96
-version: 0.0.96
+- description: 'P108: omo_governance_surfaces 8 子模块化 (556→443L, 黄金值 400-500L 首次达成,
+    累计 -75%)'
+  timestamp: '2026-06-26T16:53:32.331879'
+  version: 0.0.97
+version: 0.0.97
