@@ -138,9 +138,9 @@ def check_ssot_drift(rule: dict) -> list[str]:
             except OSError:
                 continue
             for match in pattern.finditer(content):
-                # 排除指针引用 (上下文含 _ref/见/see/指向/SSOT/system.yaml)
+                # 排除指针引用 (上下文含 _ref/见/see/指向/SSOT/system.yaml; +80 覆盖同行 SSOT 注释)
                 start = max(0, match.start() - 40)
-                ctx = content[start : match.end() + 10]
+                ctx = content[start : match.end() + 80]
                 if any(
                     kw in ctx
                     for kw in [
