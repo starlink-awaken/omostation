@@ -229,6 +229,34 @@ gac:
       created_at: "2026-06-26"
       adr: "ADR-0106"
 
+    # ── L1 运行时: 健康新鲜 (补 layer 覆盖) ──
+    - id: CR-L1-RUNTIME-HEALTH
+      dimension: X2
+      layer: L1
+      name: "运行时健康监控新鲜"
+      description: "runtime 健康监控数据新鲜 (不超 24h, X2 抗熵)"
+      check_type: freshness
+      target: "projects/runtime (健康监控)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
+    # ── L3 入口: cockpit 唯一 CLI (补 layer 覆盖) ──
+    - id: CR-L3-COCKPIT-ENTRY
+      dimension: X4
+      layer: L3
+      name: "cockpit 唯一人类 CLI 入口"
+      description: "cockpit 是唯一人类 CLI/Web 入口 (其他 CLI 程序接口, X4 一致)"
+      check_type: ssot_pointer
+      target: "projects/cockpit (唯一入口)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
   drift:
     schedule: "daily"  # radar 频率
