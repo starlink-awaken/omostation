@@ -64,3 +64,5 @@ src/ecos/ssot/mof/m0/snapshot.yaml
 
 # LADS/SSB 运行时链数据
 LADS/
+.omc/
+*.tmp
