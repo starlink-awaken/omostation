@@ -125,8 +125,9 @@ def check_ssot_drift(rule: dict) -> list[str]:
     if not forbid:
         return drifts
 
-    # 搜 field + 数字 (YAML/config 硬编码值: field: 88 / field=88)
-    pattern = re.compile(rf"{re.escape(field)}\s*[:=]\s*\d")
+    # 搜 field + 数字 (YAML key 冒号 only; 排除 Python = 赋值 / 字典 ["] / 属性 . — 多是代码示例假阳性).
+    # (?<![\[\.]) lookbehind 排除字典/属性访问; : 只 YAML key (排除 = Python 赋值).
+    pattern = re.compile(rf"(?<![\[\.]){re.escape(field)}\s*:\s*\d")
 
     for glob_pattern in forbid:
         for fpath in WORKSPACE.glob(glob_pattern):
