@@ -50,6 +50,31 @@ class ValidateTaskRequest(BaseModel):
     group: Optional[str] = "planned"
 
 
+# ── Advisory Lock (TASK-94BB9C70, 防 concurrent-agent-contention) ──
+
+
+class AcquireLockRequest(BaseModel):
+    resource: str  # 被锁资源 (文件路径或逻辑名)
+    holder: str  # 持有者标识 (session_id / agent_id)
+    ttl: int = 300  # 锁有效期秒 (过期可抢占, 防死锁)
+    omo_dir: str = ".omo"
+
+
+class ReleaseLockRequest(BaseModel):
+    resource: str
+    holder: str
+    omo_dir: str = ".omo"
+
+
+class CheckLockRequest(BaseModel):
+    resource: str
+    omo_dir: str = ".omo"
+
+
+class ListLocksRequest(BaseModel):
+    omo_dir: str = ".omo"
+
+
 @mcp.tool()
 async def validate_task(req: ValidateTaskRequest) -> str:
     """Validate a task data dict against the OMO task schema. Returns {"valid": bool, "errors": [...]}."""
@@ -406,6 +431,52 @@ async def cards_update(req: CardsUpdateRequest) -> str:
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error: {e.stderr}"
+
+
+@mcp.tool()
+async def acquire_lock(req: AcquireLockRequest) -> str:
+    """获取 advisory lock — agent 编辑共享文件前调用 (TASK-94BB9C70).
+
+    防 concurrent-agent-contention: 多 agent 并发改同文件, 第二个被拒.
+    返回 {"status": "ok"} (获取/reentrant) 或 {"status": "locked", "holder": ...} (被拒).
+    拿到 ok 才编辑, 编辑完调 release_lock.
+    """
+    from omo._shared.advisory_lock import AdvisoryLock
+
+    lock = AdvisoryLock(WORKSPACE_ROOT / req.omo_dir / "state" / "locks")
+    return json.dumps(
+        lock.acquire(req.resource, req.holder, req.ttl), ensure_ascii=False
+    )
+
+
+@mcp.tool()
+async def release_lock(req: ReleaseLockRequest) -> str:
+    """释放 advisory lock — agent 编辑完后调用 (TASK-94BB9C70).
+
+    验证 holder (B 不能释放 A 的锁). 返回 {"status": "ok"} 或 {"status": "forbidden"}.
+    """
+    from omo._shared.advisory_lock import AdvisoryLock
+
+    lock = AdvisoryLock(WORKSPACE_ROOT / req.omo_dir / "state" / "locks")
+    return json.dumps(lock.release(req.resource, req.holder), ensure_ascii=False)
+
+
+@mcp.tool()
+async def check_lock(req: CheckLockRequest) -> str:
+    """查询锁状态 (不获取). agent 编辑前 peek. 返回 free/locked/stale."""
+    from omo._shared.advisory_lock import AdvisoryLock
+
+    lock = AdvisoryLock(WORKSPACE_ROOT / req.omo_dir / "state" / "locks")
+    return json.dumps(lock.check(req.resource), ensure_ascii=False)
+
+
+@mcp.tool()
+async def list_locks(req: ListLocksRequest) -> str:
+    """列出所有 advisory lock (含过期, 供审计/dashboard)."""
+    from omo._shared.advisory_lock import AdvisoryLock
+
+    lock = AdvisoryLock(WORKSPACE_ROOT / req.omo_dir / "state" / "locks")
+    return json.dumps(lock.list_locks(), ensure_ascii=False)
 
 
 @mcp.resource("bos://omo/debt")
