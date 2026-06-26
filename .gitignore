@@ -102,6 +102,9 @@ data/**/*.sqlite3
 # ---- 第三方工具缓存 ----
 .grok/
 .reasonix/
+.antigravitycli/
+.deepeval/
+.codebuddy/
 
 # ---- Token 存储 ----
 .metaos/
@@ -146,6 +149,8 @@ _archived/
 # ---- 本地工具/节点配置 (含私钥，务必 ignore) ----
 .qoder/
 config/
+*.local.json
+.claude/*.local.json
 
 # ---- 证据目录已改为软链到 _delivery/evidence-legacy ----
 .omo/evidence
