@@ -400,4 +400,8 @@ history:
 - description: 'P100: omo_lint schemas 子模块拆分 (1269→800L, god-module error 清零, 11 轮推迟闭环)'
   timestamp: '2026-06-26T15:16:23.660419'
   version: 0.0.89
-version: 0.0.89
+- description: 'P101: omo_lint yaml-bypass 子模块拆分 (800→731L, god-module warn 清零, ADR-0093
+    顺序校正)'
+  timestamp: '2026-06-26T15:34:16.330196'
+  version: 0.0.90
+version: 0.0.90
