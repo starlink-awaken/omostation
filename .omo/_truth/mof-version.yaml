@@ -420,4 +420,8 @@ history:
     import 修复范式)'
   timestamp: '2026-06-26T16:11:16.574408'
   version: 0.0.94
-version: 0.0.94
+- description: 'P106: omo_governance_surfaces 4 子模块化 (1022→763L, <800L warn 清零, P104
+    re-export 修复)'
+  timestamp: '2026-06-26T16:33:19.323432'
+  version: 0.0.95
+version: 0.0.95
