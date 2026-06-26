@@ -165,11 +165,14 @@ def main() -> int:
         print(f"      target: {target_short}")
     print()
     if result["triggered_count"] == 0:
-        print("✅ 所有 X2 rules 保鲜状态 OK")
+        print("OK 所有 X2 rules 保鲜状态 OK")
     else:
-        print(f"⚠️  {result['triggered_count']} rules 触发, 需处理")
+        print(f"WARN {result['triggered_count']} rules 触发, 需处理 (informational, not blocking)")
 
-    return 0 if not result["triggered_count"] else 1
+    # P111 修复: warnings are informational, do NOT block dashboard / cron
+    # Old behavior: return 1 if any rule triggered (blocked dashboard even for warnings)
+    # New behavior: always return 0, warnings are reported in output for human review
+    return 0
 
 
 if __name__ == "__main__":

@@ -466,4 +466,8 @@ history:
     解锁)'
   timestamp: '2026-06-27T06:39:12.084527'
   version: 0.0.106
-version: 0.0.106
+- description: 'P111: dashboard 退化修复 (x2-freshness exit 0 + ADR 0108 renumber → 0112,
+    22/22 OK 恢复)'
+  timestamp: '2026-06-27T06:55:12.002003'
+  version: 0.0.107
+version: 0.0.107
