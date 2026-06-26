@@ -1,0 +1,30 @@
+name: gac-gate
+# GaC 治理即代码 gate (ADR-0104, 阶段 1 T1.4)
+# governance-checks.yaml 变更时校验: 机制 2 (schema) + 机制 5 (矛盾) 阻塞; 机制 4 (drift) 报告
+on:
+  push:
+    paths:
+      - '.omo/_truth/registry/governance-checks.yaml'
+      - 'bin/gac-validate.py'
+      - 'bin/gac-drift.py'
+      - '.github/workflows/gac-gate.yml'
+  pull_request:
+    paths:
+      - '.omo/_truth/registry/governance-checks.yaml'
+
+jobs:
+  gac-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: install pyyaml
+        run: pip install pyyaml
+      # 机制 2 (schema) + 机制 5 (矛盾): 阻塞 (规则结构错必 fail)
+      - name: gac-validate (schema + 矛盾, 阻塞)
+        run: python3 bin/gac-validate.py --gate
+      # 机制 4 (drift): 报告不阻塞 (drift 是发现性, 逐步修; 避免 CI 红到全部漂移修复)
+      - name: gac-drift (drift 检测, 报告)
+        run: python3 bin/gac-drift.py || true

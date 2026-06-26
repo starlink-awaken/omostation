@@ -69,6 +69,34 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 | X4 Consistency | `.omo/_truth/x4-consistency-rules.yaml` | `AGENTS.md`, `.omo/standards/omo-governance-surfaces.md` |
 | L0 Enforcement | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 所有上层文档只引用，不复制规则正文 |
 
+### GaC 治理即代码 (Governance-as-Code, ADR-0104)
+
+> X1-X4 + M0/L0/L2 治理规则的**声明式注册表 + 统一执行通道**. 详见 `.omo/_knowledge/gac/NORTH-STAR.md`.
+
+**规则注册表 SSOT**: `.omo/_truth/registry/governance-checks.yaml::gac.rules`
+
+**agent 必遵守 (协议层)**:
+- 编辑共享文件前 check GaC 规则 (阶段 1 hook 绑定后强制; 当前靠自觉 + CI gate 兜底)
+- 加治理规则 = 加 `governance-checks.yaml::gac.rules` 条目 (声明式, 不硬编码)
+- 规则变更走 ADR + `gac-validate --gate` 校验
+
+**校验工具 (CI gate)**:
+- `python3 bin/gac-validate.py --gate` — schema 校验 + 矛盾检测 (阻塞)
+- `python3 bin/gac-drift.py` — drift 检测 (报告, 治 SSOT 值被复制)
+
+**关键规则速览** (全量见注册表):
+
+| 规则 | 维度 | 层 | 要求 |
+|------|:---:|:---:|------|
+| CR-X4-HEALTH-SSOT | X4 | L2 | health 分唯一源 system.yaml, 文档用指针 |
+| CR-M0-STAGE-GATE | X4 | M0 | M1→M2→M3 派生走 mof Stage/Gate |
+| CR-L0-BOS-RESOLVE | X1 | L0 | BOS URI 声明必须 resolve |
+| CR-L2-TASK-DELIVERABLE | X4 | L2 | 任务必声明 deliverable 路径 |
+| CR-X2-GAC-DRIFT | X2 | meta | GaC drift 自检 (防走偏) |
+| CR-X1-AGENT-AUDIT | X1 | meta | agent 操作经 MCP/omo CLI 留痕 |
+
+**不走偏红线**: 任何规则变更 → ADR + 注册表 + drift 检测. 详见 `NORTH-STAR.md`.
+
 ## Project Overview
 
 > 本节是工作区清单，不是运行时事实源。项目测试数、路由数、工具数若与实际不一致，
