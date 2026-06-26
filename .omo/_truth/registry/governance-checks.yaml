@@ -110,14 +110,14 @@ sla:
     resolution_hours: 72
 
 # ════════════════════════════════════════════════════════════
-# GaC 治理即代码 (Governance-as-Code) — ADR-0104 / 北极星 NORTH-STAR.md
+# GaC 治理即代码 (Governance-as-Code) — ADR-0106 / 北极星 NORTH-STAR.md
 # ════════════════════════════════════════════════════════════
 # 动态一致性 7 机制: 声明式 + schema + 泛化执行器 + drift + 矛盾 + lifecycle + MOF 派生
 # 加规则 = 加 YAML 条目 (不改代码); 执行器 (hook/MCP/gate) 读注册表泛化执行
 gac:
   version: "1.0"
   north_star: ".omo/_knowledge/gac/NORTH-STAR.md"
-  adr: "ADR-0104"
+  adr: "ADR-0106"
 
   # GaC schema (每条规则必填字段; 阶段 2 实现 pydantic 校验)
   schema:
@@ -142,7 +142,7 @@ gac:
       executor: [hook_pre_edit, ci_gate, omo_audit]
       lifecycle: active
       version: "1.0.0"
-      adr: "ADR-0104"
+      adr: "ADR-0106"
 
     # ── M0 model-driven: 7 阶段 Stage/Gate 派生一致 ──
     - id: CR-M0-STAGE-GATE
@@ -155,7 +155,7 @@ gac:
       executor: [mof_validate, mof_audit, ci_gate]
       lifecycle: active
       version: "1.0.0"
-      adr: "ADR-0104"
+      adr: "ADR-0106"
 
     # ── L0 ecos: BOS 声明必须 resolve (治 102:0 声明/执行鸿沟) ──
     - id: CR-L0-BOS-RESOLVE
@@ -168,7 +168,7 @@ gac:
       executor: [evidence_smoke, ci_gate]
       lifecycle: active
       version: "1.0.0"
-      adr: "ADR-0104"
+      adr: "ADR-0106"
 
     # ── L2 omo: 任务必声明 deliverable ──
     - id: CR-L2-TASK-DELIVERABLE
@@ -181,7 +181,7 @@ gac:
       executor: [omo_audit, ci_gate]
       lifecycle: active
       version: "1.0.0"
-      adr: "ADR-0104"
+      adr: "ADR-0106"
 
     # ── X2 抗熵: GaC drift 自检 (元治理核心, 防 GaC 自己走偏) ──
     - id: CR-X2-GAC-DRIFT
@@ -194,7 +194,7 @@ gac:
       executor: [radar_cron]
       lifecycle: active
       version: "1.0.0"
-      adr: "ADR-0104"
+      adr: "ADR-0106"
 
     # ── X1 审计: agent 操作留痕 ──
     - id: CR-X1-AGENT-AUDIT
@@ -207,7 +207,7 @@ gac:
       executor: [mcp_tool, omo_audit]
       lifecycle: active
       version: "1.0.0"
-      adr: "ADR-0104"
+      adr: "ADR-0106"
 
     # ── X3 价值栈: 投入产出分级 (补 dimension 覆盖) ──
     - id: CR-X3-DEBT-TIER
@@ -220,7 +220,7 @@ gac:
       executor: [omo_audit, ci_gate]
       lifecycle: active
       version: "1.0.0"
-      adr: "ADR-0104"
+      adr: "ADR-0106"
 
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
   drift:

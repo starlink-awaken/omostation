@@ -1,7 +1,7 @@
 # GaC 北极星 — 治理即代码 (Governance-as-Code)
 
 > **锚定 GaC 体系的方向 / 不变量 / 反模式. 防走偏的北极星.**
-> 日期: 2026-06-26 | 决策: ADR-0104 | SSOT: 本文件 + `.omo/_truth/registry/governance-checks.yaml`
+> 日期: 2026-06-26 | 决策: ADR-0106 | SSOT: 本文件 + `.omo/_truth/registry/governance-checks.yaml`
 > 维护: 任何 GaC 方向变更必须更新本文件 + 记 ADR
 
 ---
@@ -117,7 +117,7 @@ gc          →  过时规则清理 (lifecycle deprecate)  ← 机制 6
 
 - 任何**规则变更** → 走 ADR + 注册表 + drift 检测
 - 任何**执行通道变更** → 注册表 `executor` 字段同步
-- 任何**架构偏离** → 对照本北极星 + ADR-0104, 不符则先改 ADR
+- 任何**架构偏离** → 对照本北极星 + ADR-0106, 不符则先改 ADR
 - 任何**新规则** → schema 校验 + lifecycle=draft 起步 + radar 验证执行
 - 任何**规则废弃** → lifecycle=deprecated + gc 28 天清理
 
@@ -145,4 +145,4 @@ gc          →  过时规则清理 (lifecycle deprecate)  ← 机制 6
 
 ---
 
-*北极星 v1.0 · 2026-06-26 · ADR-0104 · GaC 防走偏锚定*
+*北极星 v1.0 · 2026-06-26 · ADR-0106 · GaC 防走偏锚定*

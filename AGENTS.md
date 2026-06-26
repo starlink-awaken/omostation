@@ -69,7 +69,7 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 | X4 Consistency | `.omo/_truth/x4-consistency-rules.yaml` | `AGENTS.md`, `.omo/standards/omo-governance-surfaces.md` |
 | L0 Enforcement | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 所有上层文档只引用，不复制规则正文 |
 
-### GaC 治理即代码 (Governance-as-Code, ADR-0104)
+### GaC 治理即代码 (Governance-as-Code, ADR-0106)
 
 > X1-X4 + M0/L0/L2 治理规则的**声明式注册表 + 统一执行通道**. 详见 `.omo/_knowledge/gac/NORTH-STAR.md`.
 

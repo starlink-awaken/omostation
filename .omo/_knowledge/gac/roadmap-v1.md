@@ -1,4 +1,4 @@
-# GaC Roadmap v1 — 治理即代码落地路线 (ADR-0104)
+# GaC Roadmap v1 — 治理即代码落地路线 (ADR-0106)
 
 > **北极星**: [NORTH-STAR.md](./NORTH-STAR.md) | **注册表**: `.omo/_truth/registry/governance-checks.yaml::gac`
 > **状态**: 阶段 0 ✅ done | 阶段 2 部分 ✅ (gac-validate) | 阶段 1/3/4/5 待推
@@ -10,7 +10,7 @@
 - [x] T0.1 `NORTH-STAR.md` 北极星 (目标/不变量/反模式/7 机制/元治理递归/不走偏红线)
 - [x] T0.2 `governance-checks.yaml::gac` schema (7 必填字段 + enum) + drift/lifecycle 配置
 - [x] T0.3 登记 6 条代表规则 (X4 SSOT / M0 Stage-Gate / L0 BOS / L2 task / X2 drift / X1 audit)
-- [x] T0.4 `ADR-0104` GaC 架构决策
+- [x] T0.4 `ADR-0106` GaC 架构决策
 - [x] 附: 修原文件 `^>` block scalar 误用 (为阶段 2 schema 校验铺路)
 
 ---

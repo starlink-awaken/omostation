@@ -5,7 +5,7 @@ owner: governance-team
 last-reviewed: 2026-06-26
 ---
 
-# ADR-0104: GaC 治理即代码架构 (Governance-as-Code)
+# ADR-0106: GaC 治理即代码架构 (Governance-as-Code)
 
 - **Status**: ACCEPTED
 - **Date**: 2026-06-26
@@ -115,7 +115,7 @@ c2g 的 radar 天然是 GaC drift 检测 (机制 4), gc 天然是规则 lifecycl
 
 - ✅ `.omo/_knowledge/gac/NORTH-STAR.md` (北极星)
 - ✅ `governance-checks.yaml::gac` (schema + 6 条代表规则 + drift + lifecycle 配置)
-- ✅ 本 ADR-0104
+- ✅ 本 ADR-0106
 
 ## References
 
@@ -126,4 +126,4 @@ c2g 的 radar 天然是 GaC drift 检测 (机制 4), gc 天然是规则 lifecycl
 
 ---
 
-*ADR-0104 v1.0 · 2026-06-26 · GaC 治理即代码 · 动态一致性 7 机制 · 元治理递归*
+*ADR-0106 v1.0 · 2026-06-26 · GaC 治理即代码 · 动态一致性 7 机制 · 元治理递归*
