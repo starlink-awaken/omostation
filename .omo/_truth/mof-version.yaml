@@ -412,4 +412,8 @@ history:
     累计 -57%)'
   timestamp: '2026-06-26T15:53:04.632337'
   version: 0.0.92
-version: 0.0.92
+- description: 'P104: omo_governance_surfaces snapshots 子模块拆分 (1762→1244L, 13→12 god-module,
+    -962L excess)'
+  timestamp: '2026-06-26T16:01:09.551443'
+  version: 0.0.93
+version: 0.0.93
