@@ -154,9 +154,13 @@ def main() -> int:
     rules = load_gac_rules(REGISTRY) if REGISTRY.exists() else []
     print(f"规则数: {len(rules)}")
 
-    # lifecycle 分布 (draft 太多 = 未激活)
+    # lifecycle 分布 (机制 6 健康告警: draft 待 radar 激活, deprecated 待 gc 清理)
     lc = Counter(r.get("lifecycle", "?") for r in rules)
     print(f"lifecycle 分布: {dict(lc)}")
+    if lc.get("draft", 0) > 0:
+        print(f"⚠️  {lc['draft']} 条 draft 规则待 radar 验证激活 (机制 6: draft→active)")
+    if lc.get("deprecated", 0) > 0:
+        print(f"⚠️  {lc['deprecated']} 条 deprecated 规则待 gc 清理 (机制 6: deprecated→removed)")
 
     # dimension/layer 覆盖
     dims = Counter(r.get("dimension", "?") for r in rules)
