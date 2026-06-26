@@ -12,3 +12,7 @@ __pycache__/
 *.pyo
 
 etc/graphify-out/
+.omc/
+cache/
+*.tmp
+.DS_Store
