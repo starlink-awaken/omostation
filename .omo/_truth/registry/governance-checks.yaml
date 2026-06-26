@@ -7,8 +7,8 @@ last-reviewed: 2026-06-22
 
 # X1-X4 治理检查器注册表
 #
-> 统一管理所有治理检查器，支持动态注册和执行
-> 位置: .omo/_truth/registry/governance-checks.yaml
+# 统一管理所有治理检查器，支持动态注册和执行
+# 位置: .omo/_truth/registry/governance-checks.yaml
 
 version: 1.0
 description: X1-X4 治理检查器注册表
@@ -108,3 +108,114 @@ sla:
   X4:
     response_hours: 24
     resolution_hours: 72
+
+# ════════════════════════════════════════════════════════════
+# GaC 治理即代码 (Governance-as-Code) — ADR-0104 / 北极星 NORTH-STAR.md
+# ════════════════════════════════════════════════════════════
+# 动态一致性 7 机制: 声明式 + schema + 泛化执行器 + drift + 矛盾 + lifecycle + MOF 派生
+# 加规则 = 加 YAML 条目 (不改代码); 执行器 (hook/MCP/gate) 读注册表泛化执行
+gac:
+  version: "1.0"
+  north_star: ".omo/_knowledge/gac/NORTH-STAR.md"
+  adr: "ADR-0104"
+
+  # GaC schema (每条规则必填字段; 阶段 2 实现 pydantic 校验)
+  schema:
+    required: [id, dimension, layer, check_type, executor, lifecycle, version]
+    dimension_enum: [X1, X2, X3, X4]
+    layer_enum: [M0, L0, L1, L2, L3, meta]
+    check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain]
+    lifecycle_enum: [draft, active, deprecated, removed]
+    executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron]
+
+  # GaC 规则注册 (声明式; 阶段 0 登记代表规则, 阶段 2 补全)
+  rules:
+    # ── X4 一致性: 跨层 SSOT (治 system.yaml vs CLAUDE.md vs 报告三处不一致病根) ──
+    - id: CR-X4-HEALTH-SSOT
+      dimension: X4
+      layer: L2
+      name: "健康分 SSOT"
+      description: "health_score 唯一源 system.yaml, 文档用指针不复制"
+      check_type: ssot_pointer
+      target: ".omo/state/system.yaml::health_score"
+      forbid_copy_in: ["CLAUDE.md", "**/*.md", "HEALTH_DASHBOARD.md"]
+      executor: [hook_pre_edit, ci_gate, omo_audit]
+      lifecycle: active
+      version: "1.0.0"
+      adr: "ADR-0104"
+
+    # ── M0 model-driven: 7 阶段 Stage/Gate 派生一致 ──
+    - id: CR-M0-STAGE-GATE
+      dimension: X4
+      layer: M0
+      name: "M0 7 阶段 Stage/Gate 派生一致"
+      description: "M1→M2→M3 派生必走 mof Stage/Gate (零风险派生)"
+      check_type: mof_stage_gate
+      target: "projects/model-driven (7 阶段引擎)"
+      executor: [mof_validate, mof_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      adr: "ADR-0104"
+
+    # ── L0 ecos: BOS 声明必须 resolve (治 102:0 声明/执行鸿沟) ──
+    - id: CR-L0-BOS-RESOLVE
+      dimension: X1
+      layer: L0
+      name: "BOS 声明/执行一致"
+      description: "BOS URI 声明必须 resolve (evidence-smoke 防 alive 标志假阳)"
+      check_type: bos_resolve
+      target: "projects/agora/etc/bos-services.yaml"
+      executor: [evidence_smoke, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      adr: "ADR-0104"
+
+    # ── L2 omo: 任务必声明 deliverable ──
+    - id: CR-L2-TASK-DELIVERABLE
+      dimension: X4
+      layer: L2
+      name: "任务 deliverable 文件路径必填"
+      description: "OMO 任务必声明 deliverables (task-yaml-rules 规则 1)"
+      check_type: task_field
+      target: ".omo/tasks/**/*.yaml::deliverables"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      adr: "ADR-0104"
+
+    # ── X2 抗熵: GaC drift 自检 (元治理核心, 防 GaC 自己走偏) ──
+    - id: CR-X2-GAC-DRIFT
+      dimension: X2
+      layer: meta
+      name: "GaC drift 自检 (注册表 vs 实际执行)"
+      description: "防 GaC 自己走偏: 注册表规则 vs hook/mcp/gate 实际注册, drift 告警 + 自愈"
+      check_type: drift_audit
+      target: "governance-checks.yaml::gac.rules vs executor 实际注册"
+      executor: [radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      adr: "ADR-0104"
+
+    # ── X1 审计: agent 操作留痕 ──
+    - id: CR-X1-AGENT-AUDIT
+      dimension: X1
+      layer: meta
+      name: "agent 操作审计链"
+      description: "agent 编辑经 MCP/omo CLI, 自动记 AppendOnlyLog (可追溯)"
+      check_type: audit_chain
+      target: ".omo/_delivery/ingress/ingress-trail.jsonl"
+      executor: [mcp_tool, omo_audit]
+      lifecycle: active
+      version: "1.0.0"
+      adr: "ADR-0104"
+
+  # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
+  drift:
+    schedule: "daily"  # radar 频率
+    auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
+    alert_on: [missing_executor, ghost_rule, version_mismatch]
+
+  # lifecycle 配置 (机制 6; 阶段 2 实现状态机, gc 原语清理)
+  lifecycle:
+    draft_to_active_days: 7       # draft 7 天后 radar 验证执行 → 转 active
+    deprecated_to_removed_days: 28  # gc 28 天清理 deprecated 规则
