@@ -177,17 +177,41 @@ def main() -> int:
     args = sys.argv[1:]
     gate_mode = "--gate" in args
     report_mode = "--report" in args
+    json_mode = "--json" in args
 
     exit_code, errors, warnings = validate()
 
+    rules = load_gac_rules(REGISTRY) if REGISTRY.exists() else []
+    lc = Counter(r.get("lifecycle", "?") for r in rules)
+    dims = Counter(r.get("dimension", "?") for r in rules)
+    layers = Counter(r.get("layer", "?") for r in rules)
+
+    # JSON 模式 (阶段 4 仪表盘/cron 数据源): 输出 JSON, 跳过人读 print
+    if json_mode:
+        import json
+
+        print(
+            json.dumps(
+                {
+                    "rules": len(rules),
+                    "lifecycle": dict(lc),
+                    "dimension": dict(dims),
+                    "layer": dict(layers),
+                    "errors": errors,
+                    "warnings": warnings,
+                    "ok": not errors,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 1 if (gate_mode and (errors or warnings)) else exit_code
+
     rel_path = REGISTRY.relative_to(WORKSPACE) if REGISTRY.exists() else REGISTRY
     print(f"=== GaC 校验 ({rel_path}) ===")
-
-    rules = load_gac_rules(REGISTRY) if REGISTRY.exists() else []
     print(f"规则数: {len(rules)}")
 
     # lifecycle 分布 (机制 6 健康告警: draft 待 radar 激活, deprecated 待 gc 清理)
-    lc = Counter(r.get("lifecycle", "?") for r in rules)
     print(f"lifecycle 分布: {dict(lc)}")
     if lc.get("draft", 0) > 0:
         print(f"⚠️  {lc['draft']} 条 draft 规则待 radar 验证激活 (机制 6: draft→active)")
@@ -196,9 +220,6 @@ def main() -> int:
             f"⚠️  {lc['deprecated']} 条 deprecated 规则待 gc 清理 (机制 6: deprecated→removed)"
         )
 
-    # dimension/layer 覆盖
-    dims = Counter(r.get("dimension", "?") for r in rules)
-    layers = Counter(r.get("layer", "?") for r in rules)
     print(f"dimension 覆盖: {dict(dims)}")
     print(f"layer 覆盖: {dict(layers)}")
 

@@ -164,6 +164,7 @@ def main() -> int:
     args = sys.argv[1:]
     gate_mode = "--gate" in args
     report_mode = "--report" in args
+    json_mode = "--json" in args
 
     if not REGISTRY.exists():
         print(f"❌ 注册表不存在: {REGISTRY}")
@@ -176,6 +177,23 @@ def main() -> int:
         all_drifts.extend(check_target_exists(rule))
         all_drifts.extend(check_executor_valid(rule))
         all_drifts.extend(check_ssot_drift(rule))
+
+    # JSON 模式 (阶段 4 仪表盘/cron 数据源): 输出 JSON, 跳过人读 print
+    if json_mode:
+        import json
+
+        print(
+            json.dumps(
+                {
+                    "rules": len(rules),
+                    "drifts": all_drifts,
+                    "drift_count": len(all_drifts),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 1 if (gate_mode and all_drifts) else 0
 
     rel = REGISTRY.relative_to(WORKSPACE)
     print(f"=== GaC drift 检测 ({rel}) ===")
