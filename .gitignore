@@ -67,3 +67,4 @@ tests/archive/test_opc_p3_thin_binding_demo.py
 # ── Docker ──
 .docker/
 debt/
+*.tmp
