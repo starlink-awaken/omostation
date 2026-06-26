@@ -75,6 +75,12 @@ class ListLocksRequest(BaseModel):
     omo_dir: str = ".omo"
 
 
+class CheckGacRuleRequest(BaseModel):
+    resource: str  # 文件路径
+    content: str  # 待检查内容
+    omo_dir: str = ".omo"
+
+
 @mcp.tool()
 async def validate_task(req: ValidateTaskRequest) -> str:
     """Validate a task data dict against the OMO task schema. Returns {"valid": bool, "errors": [...]}."""
@@ -477,6 +483,82 @@ async def list_locks(req: ListLocksRequest) -> str:
 
     lock = AdvisoryLock(WORKSPACE_ROOT / req.omo_dir / "state" / "locks")
     return json.dumps(lock.list_locks(), ensure_ascii=False)
+
+
+@mcp.tool()
+async def check_gac_rule(req: "CheckGacRuleRequest") -> str:
+    """检查内容是否违反 GaC SSOT 规则 (机制 3 跨工具主力, ADR-0106).
+
+    agent 经 MCP 调 (Cursor/Codex/Devin), 编辑前检查 SSOT drift.
+    与 gac-hook-pre-edit.py (Claude Code 通道) + CI gate (兜底) 多通道.
+    """
+    import fnmatch
+    import re
+
+    reg = (
+        WORKSPACE_ROOT / req.omo_dir / "_truth" / "registry" / "governance-checks.yaml"
+    )
+    if not reg.exists():
+        return json.dumps(
+            {"status": "ok", "warnings": [], "reason": "registry not found"}
+        )
+
+    import yaml
+
+    docs = [d for d in yaml.safe_load_all(reg.read_text(encoding="utf-8")) if d]
+    rules = docs[-1].get("gac", {}).get("rules", []) if docs else []
+    ssot_rules = [
+        r
+        for r in rules
+        if r.get("check_type") == "ssot_pointer" and r.get("lifecycle") == "active"
+    ]
+
+    try:
+        rel = str(Path(req.resource).resolve().relative_to(WORKSPACE_ROOT))
+    except (ValueError, OSError):
+        rel = req.resource
+
+    warnings = []
+    for rule in ssot_rules:
+        target = rule.get("target", "")
+        if "::" not in target:
+            continue
+        field = target.split("::", 1)[1]
+        forbid = rule.get("forbid_copy_in", [])
+        matched = any(
+            fnmatch.fnmatch(rel, p) or fnmatch.fnmatch(rel, f"**/{p}") for p in forbid
+        )
+        if not matched:
+            continue
+        pattern = re.compile(rf"(?<![\[\.]){re.escape(field)}\s*:\s*\d")
+        for m in pattern.finditer(req.content):
+            ctx = req.content[max(0, m.start() - 40) : m.end() + 80]
+            if any(
+                kw in ctx
+                for kw in [
+                    "_ref",
+                    "见 ",
+                    "see ",
+                    "指向",
+                    "指针",
+                    "SSOT",
+                    "system.yaml",
+                    "示例值",
+                ]
+            ):
+                continue
+            warnings.append(
+                f"{rule['id']}: {rel} 硬编码 {field} 值 (违反 SSOT, 应用指针引用 system.yaml)"
+            )
+
+    return json.dumps(
+        {
+            "status": "ok" if not warnings else "warn",
+            "warnings": warnings,
+            "rules_checked": len(ssot_rules),
+        },
+        ensure_ascii=False,
+    )
 
 
 @mcp.resource("bos://omo/debt")
