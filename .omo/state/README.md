@@ -44,7 +44,7 @@ errors:
 # system.yaml (通过 sync-omo-state 自动刷新)
 current_phase: 2
 current_sprint: 2
-health_score: 75.0
+health_score: 75.0  # 示例值, 实际见 .omo/state/system.yaml (SSOT, 勿在文档硬编码)
 active_agents: 3
 idle_agents: 1
 dead_agents: 0

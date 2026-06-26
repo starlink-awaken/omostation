@@ -23,7 +23,7 @@ completed_gates:
   M2.2: ✅ done  # 操作分级定义 + Agent Registry 设计
 remaining_blocks: []
 phase1_status: reconciled_closed
-health_score: 82.0
+health_score: 82.0  # 示例值, 实际见 .omo/state/system.yaml (SSOT)
 ```
 
 ## 2. Full Execution Go 条件
