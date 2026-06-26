@@ -59,6 +59,17 @@ def list_services() -> list[dict]:
     ]
 
 
+def _run_maybe_async(result):
+    """sync/async 兼容: coroutine 则 asyncio.run, 否则原样返回.
+
+    BOS internal wrapper 调的目标函数可能 sync 或 async (register_service/get_status),
+    此 helper 统一处理 (消除各 wrapper 重复的 iscoroutine+run 模式).
+    """
+    import asyncio
+
+    return asyncio.run(result) if asyncio.iscoroutine(result) else result
+
+
 def list_backend_health() -> dict:
     """backend 健康状态 (调 _health_checker 单例, robust 兜底).
 
@@ -69,11 +80,7 @@ def list_backend_health() -> dict:
 
         if _health_checker is None:
             return {"status": "unavailable", "reason": "health_checker not initialized"}
-        result = _health_checker.get_all_status()
-        import asyncio
-
-        if asyncio.iscoroutine(result):
-            result = asyncio.run(result)
+        result = _run_maybe_async(_health_checker.get_all_status())
         return {"status": "ok", "backends": result}
     except Exception as e:
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
@@ -89,11 +96,7 @@ def governance_status() -> dict:
         from agora.mcp_registry.repository import ToolCatalog
 
         orch = Orchestrator(ToolCatalog())
-        result = orch.get_status()
-        import asyncio
-
-        if asyncio.iscoroutine(result):
-            result = asyncio.run(result)
+        result = _run_maybe_async(orch.get_status())
         return {"status": "ok", "governance": result}
     except Exception as e:
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
@@ -105,13 +108,11 @@ def register_backend(name: str = "", endpoint: str = "") -> dict:
     整合 bos://system/backends/register internal transport.
     """
     try:
-        import asyncio
-
         from agora.server.tools_registry import register_service
 
-        result = register_service(name or "default", mcp_endpoint=endpoint)
-        if asyncio.iscoroutine(result):
-            result = asyncio.run(result)
+        result = _run_maybe_async(
+            register_service(name or "default", mcp_endpoint=endpoint)
+        )
         return {"status": "ok", "registered": result}
     except Exception as e:
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
