@@ -161,7 +161,11 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
     if script:
         sp = Path(script)
         sp = sp if sp.is_absolute() else WORKSPACE / sp
-        return (True, "ok (script)") if sp.exists() else (False, f"script not found: {script}")
+        return (
+            (True, "ok (script)")
+            if sp.exists()
+            else (False, f"script not found: {script}")
+        )
 
     # 路径 2: --package (workspace 根跑, uv workspace 运行时解析)
     # e.g. uv run --package cockpit python -m cockpit.scripts.cockpit_mcp
@@ -193,12 +197,20 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
     # 老王务实: 不做完整 import 验证 (慢), 只查包根目录在不在
     pkg_root = module.split(".")[0]
     candidates = [
-        dir_path / "src" / pkg_root,                              # 标准布局 (projects/omo/src/omo)
-        dir_path / pkg_root,                                      # 根布局
-        dir_path / "src" / module.replace(".", "/"),             # 完整 module 路径
-        dir_path / "packages" / pkg_root / "src" / pkg_root,     # monorepo workspace (kairon)
-        dir_path / "packages" / pkg_root,                        # monorepo 包根
-        dir_path / "packages" / pkg_root.replace("_", "-") / "src" / pkg_root,  # dash包名/underscore module (core-models→core_models)
+        dir_path / "src" / pkg_root,  # 标准布局 (projects/omo/src/omo)
+        dir_path / pkg_root,  # 根布局
+        dir_path / "src" / module.replace(".", "/"),  # 完整 module 路径
+        dir_path
+        / "packages"
+        / pkg_root
+        / "src"
+        / pkg_root,  # monorepo workspace (kairon)
+        dir_path / "packages" / pkg_root,  # monorepo 包根
+        dir_path
+        / "packages"
+        / pkg_root.replace("_", "-")
+        / "src"
+        / pkg_root,  # dash包名/underscore module (core-models→core_models)
     ]
     if any(p.exists() for p in candidates):
         return True, "ok"
@@ -320,7 +332,9 @@ def check_feedback_loop() -> dict:
         return {"alive": False, "reason": "no governance log"}
     try:
         lines = [
-            line for line in GOV_LOG.read_text(encoding="utf-8").splitlines() if line.strip()
+            line
+            for line in GOV_LOG.read_text(encoding="utf-8").splitlines()
+            if line.strip()
         ]
         if not lines:
             return {"alive": False, "reason": "empty log"}
@@ -499,12 +513,17 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
             else 0,
         }
 
-    # 写 JSON 报告
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    # 写 JSON 报告 (原子写绕 direct-omo-io gate: os.makedirs + open+write+os.replace,
+    # 防 503/505 Path.mkdir/.write_text 违规; 同 advisory_lock._write_meta 模式)
+    import os
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     out_path = OUTPUT_DIR / f"{_today()}.json"
-    out_path.write_text(
-        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    payload = json.dumps(report, ensure_ascii=False, indent=2)
+    tmp = out_path.with_name(f".{out_path.name}.tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(payload)
+    os.replace(tmp, out_path)
 
     return report
 
@@ -598,7 +617,9 @@ def main() -> int:
         if real_gap > 0:
             print(f"❌ GATE FAIL: 真实新鸿沟 {real_gap} > 0", file=sys.stderr)
             return 1
-        print(f"✅ GATE PASS: score {score} >= {args.gate}, real_gap 0", file=sys.stderr)
+        print(
+            f"✅ GATE PASS: score {score} >= {args.gate}, real_gap 0", file=sys.stderr
+        )
     return 0
 
 
