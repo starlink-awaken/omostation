@@ -571,6 +571,12 @@ def main() -> int:
         action="store_true",
         help="对 deprecated 项查消费者引用 (服务 D 调研能不能删, 慢)",
     )
+    parser.add_argument(
+        "--gate",
+        type=float,
+        default=None,
+        help="gate 模式: score<N 或 real_gap>0 则 exit 1 (挂 pre-commit/CI 防鸿沟复发)",
+    )
     args = parser.parse_args()
 
     report = run_smoke(spawn_n=args.spawn, consumers=args.consumers)
@@ -578,6 +584,21 @@ def main() -> int:
         return 1
 
     print_summary(report, quiet=args.quiet)
+
+    # gate 模式: 防声明/执行鸿沟复发 (Meadows 层7规则 + 层8回路固化)
+    if args.gate is not None:
+        score = report.get("evidence_health_score", 0)
+        real_gap = report.get("bos", {}).get("gap", 0)
+        if score < args.gate:
+            print(
+                f"❌ GATE FAIL: evidence_health_score {score} < 阈值 {args.gate}",
+                file=sys.stderr,
+            )
+            return 1
+        if real_gap > 0:
+            print(f"❌ GATE FAIL: 真实新鸿沟 {real_gap} > 0", file=sys.stderr)
+            return 1
+        print(f"✅ GATE PASS: score {score} >= {args.gate}, real_gap 0", file=sys.stderr)
     return 0
 
 

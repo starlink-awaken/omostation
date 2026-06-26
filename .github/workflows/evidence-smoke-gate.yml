@@ -1,0 +1,30 @@
+name: evidence-smoke-gate
+# BOS 声明/执行鸿沟 gate (Meadows 层7规则 + 层8回路固化)
+# 防"声明驱动开发"复发: 新 BOS 声明必须 resolve, score<95 或 real_gap>0 则 fail
+on:
+  push:
+    paths:
+      - 'projects/agora/etc/bos-services.yaml'
+      - 'projects/agora/src/agora/mcp/resolver/services.py'
+      - 'bin/evidence-smoke.py'
+  pull_request:
+    paths:
+      - 'projects/agora/etc/bos-services.yaml'
+      - 'projects/agora/src/agora/mcp/resolver/services.py'
+      - 'bin/evidence-smoke.py'
+
+jobs:
+  evidence-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v3
+      # evidence-smoke 依赖 agora venv (pydantic + resolver.services)
+      - name: evidence-smoke gate (score>=95, real_gap=0)
+        run: uv run --directory projects/agora python ${{ github.workspace }}/bin/evidence-smoke.py --gate 95
+        working-directory: ${{ github.workspace }}
