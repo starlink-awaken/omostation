@@ -1,0 +1,20 @@
+# GaC 治理即代码 Cron (ADR-0104, 阶段 5)
+#
+# 定时执行 GaC drift 检测 (机制 4 radar) + schema 校验 (机制 2) + lifecycle 清理 (机制 6 gc):
+#   - radar: 每日 drift 检测 (注册表 vs 实际, 报告到 _delivery)
+#   - validate: 每日 schema + 矛盾校验 (规则结构健康)
+#   - gc: 每周 lifecycle 清理 (deprecated 规则, 阶段 2 机制 6 完整后激活)
+#
+# 安装: crontab .omo/cron/gac-crontab
+# 查看: crontab -l | grep gac
+# 卸载: crontab -r (慎用, 影响所有 cron)
+# 输出: .omo/_delivery/gac-radar-YYYY-MM-DD.txt, .omo/_delivery/gac-validate-YYYY-MM-DD.txt
+
+# 每日 03:00 GaC radar (机制 4 drift 检测, 报告到 _delivery)
+0 3 * * * cd /Users/xiamingxing/Workspace && python3 bin/gac-drift.py --report > .omo/_delivery/gac-radar-$(date +\%Y\%m\%d).txt 2>&1
+
+# 每日 03:30 GaC validate (机制 2 schema + 机制 5 矛盾, 报告)
+30 3 * * * cd /Users/xiamingxing/Workspace && python3 bin/gac-validate.py --report > .omo/_delivery/gac-validate-$(date +\%Y\%m\%d).txt 2>&1
+
+# 每周一 04:00 GaC gc (机制 6 lifecycle 清理; 阶段 2 bin/gac-gc.py 实现后取消注释)
+# 0 4 * * 1 cd /Users/xiamingxing/Workspace && python3 bin/gac-gc.py --dry-run >> /tmp/gac-gc.log 2>&1

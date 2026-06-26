@@ -209,6 +209,19 @@ gac:
       version: "1.0.0"
       adr: "ADR-0104"
 
+    # ── X3 价值栈: 投入产出分级 (补 dimension 覆盖) ──
+    - id: CR-X3-DEBT-TIER
+      dimension: X3
+      layer: L2
+      name: "债务 X3 tier 必声明"
+      description: "debt items 必声明 x3_tier (价值分级, 投入产出可量化)"
+      check_type: value_roi
+      target: ".omo/debt/items/*.yaml::x3_tier"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      adr: "ADR-0104"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
   drift:
     schedule: "daily"  # radar 频率
