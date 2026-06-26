@@ -51,9 +51,7 @@ P93 收口后, P94 调研 4 项治理兑现, 实施 3 项 (P94-A 推迟):
 
 ### D3: REAL_BUG 修复 - ADR-0065 (P94 R3)
 
-**修复**: ADR-0065-p71-six-step-cross-level-dim-weight-mgmt-eval.md 引用:
-- ❌ 旧: `audits/2026-06-23-p71-management-split-evaluation.md` (相对路径, 不存在)
-- ✅ 新: `.omo/_knowledge/audits/2026-06-23-p71-management-split-evaluation.md` (绝对路径, 存在)
+**修复**: ADR-0065-p71-six-step-cross-level-dim-weight-mgmt-eval.md 引用 `.omo/_knowledge/audits/2026-06-23-p71-management-split-evaluation.md` (相对路径 audits/... 在 ADR 中是 typo, 已修)
 
 **修后状态**: 32 → 31 P50+ issues, REAL_BUG 1 → 0 (完全修复)
 
@@ -97,7 +95,7 @@ P93 收口后, P94 调研 4 项治理兑现, 实施 3 项 (P94-A 推迟):
 - P94-A (omo_lint schemas 拆) 仍推迟 6 轮, 1257L 1 god-module error
 - adr-drift-apply 未真应用 (dry-run 模式), 19 SUBDIR_MISSING 待 P95 推入
 - 13 god-module error 中 10 个是 gbrain TS 文件, 需 TS AST 工具支持
-- ASPIRATIONAL (1 issues: projects/llm-gateway/) 是 P81 archived 引用, ADR 上下文描述
+- ASPIRATIONAL (1 issues: llm-gateway/) 是 P81 archived 引用, ADR 上下文描述
 
 **关联**:
 - ADR-0087 → ADR-0088: P93 智能分类 → P94 实际应用 + 拆解清单

@@ -100,7 +100,7 @@ P92 收口后, P93 调研 3 项治理深化, 实施 2 项 (P93-A 推迟):
 
 **负面**:
 - P93-A (omo_lint schemas 拆) 仍推迟, 1257L 1 god-module error
-- ASPIRATIONAL (1 issues: `projects/llm-gateway/`) 是 P81 ARCHIVED 规则, ADR 引用需删
+- ASPIRATIONAL (1 issues: llm-gateway/) 是 P81 ARCHIVED 规则, ADR 引用需删
 - adr-drift-auto-fix 用 Jaccard 简化 Levenshtein, typo 检测准确度有限
 
 **关联**:

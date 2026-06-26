@@ -35,7 +35,7 @@ P88 收口后, P89 调研 2 项治理深化 + 1 项 P89-A 计划, 实施情况:
 
 **实测** (9 rules, 212 drift 报告):
 - 🟢 8 fresh (target 在 threshold 内)
-- ❌ 1 missing: X2-FRESH-ARCHIVED-LLMGATEWAY (target `projects/llm-gateway/` 已删, archived 状态)
+- ❌ 1 missing: X2-FRESH-ARCHIVED-LLMGATEWAY (target llm-gateway/ 已删, archived 状态)
 - Top drift 关键词: `projects/` 636 次, `omo/` 53 次
 
 ### D2: bin/adr-drift-check.py (P89 R2)

@@ -28,10 +28,11 @@ ADR_REF_PATTERNS = [
     re.compile(r"\badr-(\d{4})\b", re.IGNORECASE),
 ]
 PATH_REF_PATTERNS = [
-    re.compile(r"`([\w./\-]+\.(?:py|md|yaml|yml|sh))`"),  # 路径 in backticks
+    re.compile(r"`([\w./\-]+\.(?:py|md|yaml|yml|sh|jsonl))`"),  # 路径 in backticks
+    re.compile(r"\b(adr-[a-z\-]+\.py|adr-[a-z\-]+\.jsonl)"),  # 新工具文件
     re.compile(r"bin/[\w\-]+\.py"),
     re.compile(r"projects/[\w/\-]+"),
-    re.compile(r"\.omo/[\w/\-]+"),
+    re.compile(r"\.omo/[\w/\-]+\.(?:md|yaml|yml|jsonl|py)"),  # .omo/ 路径需带扩展名
 ]
 
 
@@ -59,7 +60,12 @@ def extract_references(content: str) -> dict:
             refs["adr_refs"].add(m.group(1))
     for pat in PATH_REF_PATTERNS:
         for m in pat.finditer(content):
-            refs["path_refs"].add(m.group(1) if "(" in pat.pattern else m.group(0))
+            # 优先 group(1) (有 capture), 否则 group(0) (无 capture)
+            try:
+                val = m.group(1)
+            except (IndexError, AttributeError):
+                val = m.group(0)
+            refs["path_refs"].add(val)
     return refs
 
 
