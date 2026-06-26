@@ -296,4 +296,108 @@ history:
     符合预期) + 删孤立 workflows/INDEX.md (9 死链源头) + ADR-0076 + 21 独立 bin 工具 + 36 个 ADR'
   timestamp: '2026-06-25T11:37:41.290470'
   version: 0.0.71
-version: 0.0.71
+- description: 'P83 R1-R3: governance-history-insight (623 entries 解析, A+ 率 69.8%,
+    19 天演进可视化) + drift-history-insight (212 报告, 1 持续漂移 OPC-P4-MODEL-COMPUTE 已自愈) +
+    cross-ref gitignore 感知 (43 死链 → 23 真死链 + 20 gitignored 显式归类) + ADR-0077 + 24 独立
+    bin 工具 + 37 个 ADR (3/3 候选实施)'
+  timestamp: '2026-06-25T15:18:45.634189'
+  version: 0.0.72
+- description: 'P84 R1-R3: mof-m2-coverage 修正版 (69 噪音→2 真孤儿 + 1 drift ModelDefinition)
+    + x2-freshness-check 工具 (9 rules 全部可执行) + X2-FRESH-DEBT-EVIDENCE-INTEGRITY rule
+    target 修正 (DEBT-*.yaml → D-*.yaml) + ADR-0078 + 26 独立 bin 工具 + 38 个 ADR (3/3 候选实施)'
+  timestamp: '2026-06-25T15:32:43.922679'
+  version: 0.0.73
+- description: 'P85 R1-R3: x2-rule-lint 工具 (9 rules 0 issues, 字段错配自动捕获) + X2-FRESH-COMMIT-FATIGUE
+    rule action 修正 (warn@100/escalate@500 复合字符串 → escalate) + adr-coverage 工具 (37
+    ADRs 100% 健康, 编号连续, INDEX 100% 一致) + ADR-0079 + 28 独立 bin 工具 + 39 个 ADR (3/3 候选实施)'
+  timestamp: '2026-06-25T15:40:53.663366'
+  version: 0.0.74
+- description: 'P86 R1-R4: pre-commit 集成 4 治理 hooks (x2-rule-lint + mof-m2-coverage
+    + adr-coverage + governance-dashboard) + governance-dashboard 工具 (7 治理工具统一入口,
+    7/7 通过) + ADR-0080 + 29 独立 bin 工具 + 40 个 ADR + 26 pre-commit hooks (22→26, +4)'
+  timestamp: '2026-06-25T15:51:51.727795'
+  version: 0.0.75
+- description: 'P87 R1-R3: god-module-roadmap 工具 (omo_lint.py 1560L 拆解 roadmap, 27
+    candidates) + x2-rule-add 工具 (交互式 + 非交互 + template 3 模式, 自动验证 + 追加 YAML) + governance-dashboard
+    扩展 (7→9 工具) + ADR-0081 + 31 独立 bin 工具 + 41 个 ADR (3/3 候选实施)'
+  timestamp: '2026-06-25T16:02:51.722438'
+  version: 0.0.76
+- description: 'P88 R1-R3: omo_lint.py 拆解 (1560→1257L, -19.4%, doc-lifecycle 子模块独立
+    omo_lint_doc.py) + X2 rule template standard (9 字段 + 5 反模式 + 工作流) + gov-trend-report
+    工具 (629 entries, W23→W26 91.9→99.6 improving) + dashboard 9→10 工具 + ADR-0082 +
+    32 独立 bin 工具 + 42 个 ADR + 1 新 standard (3/3 候选实施)'
+  timestamp: '2026-06-25T16:29:15.357545'
+  version: 0.0.77
+- description: 'P89 R1-R3: rule-history-insight 工具 (8/9 X2 rules fresh, 1 archived)
+    + adr-drift-check 工具 (109 历史 issues, 信息性 exit 0) + dashboard 扩展 10→12 工具 + ADR-0083
+    + 34 独立 bin 工具 + 43 个 ADR (3/3 候选实施, P89-A 推迟)'
+  timestamp: '2026-06-25T16:43:56.599766'
+  version: 0.0.78
+- description: 'P90 R1-R4: X2-FRESH-OMO-LINT-SIZE 新 rule (10 rules, 0 issues) + adr-drift-classify
+    工具 (51 historical + 38 P50+ new, 修 .md 后缀 bug) + governance dashboard cron (每日
+    6:00 + 每周一 7:00) + dashboard 12→13 工具 + ADR-0084 + 35 独立 bin 工具 + 44 个 ADR + 10
+    X2 rules (4/4 候选实施, P90-A 推迟)'
+  timestamp: '2026-06-25T16:52:52.239331'
+  version: 0.0.79
+- description: 'P91 R1-R4: install-dashboard-cron.sh (4 模式, 隔离标记 GOV_DASHBOARD_BEGIN/END)
+    + X2-FRESH-GOV-DASHBOARD rule (10→11) + gov-history-stats 工具 (30 天窗口 + 类别趋势, 632
+    entries, 修 datetime timezone bug) + adr-drift-check .yaml 补全 (修 8 issues, 89→81)
+    + dashboard 13→14 工具 + ADR-0085 + 36 独立 bin 工具 + 45 个 ADR + 11 X2 rules (4/4 候选实施,
+    P91-A 推迟)'
+  timestamp: '2026-06-25T17:05:26.637188'
+  version: 0.0.80
+- description: 'P92 R1-R3: adr-trend-insight 工具 (44 ADRs 100% frontmatter, 36 active
+    + 8 archived, 6 phase 分布) + install-dashboard-cron 推入 scripts/ 子模块 working tree
+    (P91 推迟兑现) + governance-history 6 类别趋势深化 (lint +12.0 / tasks +10.7 / agora +4.6)
+    + dashboard 14→15 工具 + ADR-0086 + 37 独立 bin 工具 + 46 个 ADR + 15 dashboard 工具 (3/3
+    候选实施, P92-A 推迟)'
+  timestamp: '2026-06-25T17:20:28.792216'
+  version: 0.0.81
+- description: 'P93 R1-R2: adr-drift-auto-fix 工具 (32 P50+ 自动归类 5 类: TEMPLATE 7 + SUBDIR_MISSING
+    19 + TYPO 4 + REAL_BUG 1 + ASPIRATIONAL 1, 30/94% auto-fixable) + gov-history-stats
+    --compare (前后半 +2.2 delta) + dashboard 15→16 工具 + ADR-0087 + 38 独立 bin 工具 + 47
+    个 ADR + 16 dashboard 工具 (2/3 候选实施, P93-A 5 轮推迟)'
+  timestamp: '2026-06-25T17:36:13.703482'
+  version: 0.0.82
+- description: 'P94 R1-R3: adr-drift-apply 工具 (19 SUBDIR touch 待, 4 模式 + rollback)
+    + 13 god-module error 清单 (24,252L excess 拆解 roadmap) + REAL_BUG 修 (ADR-0065 audits/
+    路径修正) + dashboard 16→18 工具 + ADR-0088 + 40 独立 bin 工具 + 48 个 ADR + 18 dashboard
+    工具 (3/4 候选实施, P94-A 6 轮推迟)'
+  timestamp: '2026-06-25T17:47:55.669285'
+  version: 0.0.83
+- description: 'P95 R1-R3: adr-drift-apply --apply 实际 (20 files touch, 32→15 P50+
+    issues -53%) + adr-typo-fix 工具 (新, 4 TYPO dry-run, Jaccard 噪声已知) + pyyaml 修 (kairon
+    venv, 19/19 dashboard 全过) + 7 步 god-module roadmap 推进 (P95-P101+) + dashboard
+    18→19 工具 + ADR-0089 + 41 独立 bin 工具 + 49 个 ADR + 19 dashboard 工具 (3/4 候选实施, P95-A
+    7 轮推迟)'
+  timestamp: '2026-06-25T18:03:33.893087'
+  version: 0.0.84
+- description: 'P96 R1-R3: adr-typo-real-fix 工具 (真 Levenshtein, 8 TYPO 中 6 个 ratio
+    1.0, Jaccard 噪声修) + venv-yaml-check 工具 (pyyaml 等依赖自动 install, 修复 P95 R3 fragile)
+    + X2-FRESH-ADR-DRIFT rule (11→12 rules, 监督 adr-drift-apply-history 30 天) + dashboard
+    19→21 工具 + ADR-0090 + 43 独立 bin 工具 + 50 个 ADR + 21 dashboard 工具 + 12 X2 rules
+    (3/3 候选实施, P96-A 8 轮推迟)'
+  timestamp: '2026-06-26T09:03:33.008146'
+  version: 0.0.85
+- description: 'P97 R1-R3: adr-typo-real-fix --apply 实际 (12 个 TYPO 100% 修复, P50+ 19→11
+    -42%) + adr-rollback-test 工具 (新, apply/rollback cycle 100% 通过) + X2-FRESH-ADR-TYPO
+    rule (12→13 rules) + dashboard 21→22 工具 + ADR-0091 + 44 独立 bin 工具 + 51 个 ADR +
+    22 dashboard 工具 + 13 X2 rules (3/3 候选实施, P97-A 9 轮推迟)'
+  timestamp: '2026-06-26T14:27:42.283742'
+  version: 0.0.86
+- description: 'P98 R1-R3: 3 ASPIRATIONAL 修 (ADR-0083/0087/0088 projects/llm-gateway/)
+    + 1 REAL_BUG 修 (ADR-0088 audits/) + 4 ADR-0091 TYPO 修 (examples 写错) + adr-drift-check
+    regex bug 修 (m.group(1) IndexError) + dashboard 22 工具 (不变) + ADR-0092 + 52 个 ADR
+    + P50+ 19→2 (-89%, 9 轮工具链收尾) (3/3 候选实施, P98-A 10 轮推迟)'
+  timestamp: '2026-06-26T14:39:01.445348'
+  version: 0.0.87
+- description: 'P99 R1-R2: ADR-0092 self-ref 清 (4 处 narrative 修, P50+ 6→3 -50%) +
+    omo_lint 兑现路径 (P100-P103 4 步 schemas/surfaces/mutation_ledger/yaml_bypass 拆解)
+    + dashboard 22 工具 (不变) + ADR-0093 + 53 个 ADR + 22 dashboard (2/2 候选实施, P99-A 11
+    轮推迟)'
+  timestamp: '2026-06-26T14:46:13.389561'
+  version: 0.0.88
+- description: 'P100: omo_lint schemas 子模块拆分 (1269→800L, god-module error 清零, 11 轮推迟闭环)'
+  timestamp: '2026-06-26T15:16:23.660419'
+  version: 0.0.89
+version: 0.0.89
