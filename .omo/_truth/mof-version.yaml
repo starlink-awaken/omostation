@@ -454,4 +454,8 @@ history:
 - description: 'P110-A: ecos domain_manager 2 子模块化 (1914→1406L, 跨 submodule 治理模式验证)'
   timestamp: '2026-06-27T06:32:06.501981'
   version: 0.0.103
-version: 0.0.103
+- description: 'P110-B: omo_governance_surfaces build_report 子模块化 (443→276L, <300L
+    ideal)'
+  timestamp: '2026-06-27T06:34:05.810337'
+  version: 0.0.104
+version: 0.0.104
