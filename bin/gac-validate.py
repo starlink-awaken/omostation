@@ -38,6 +38,7 @@ REQUIRED_FIELDS = [
     "executor",
     "lifecycle",
     "version",
+    "created_at",
 ]
 DIMENSION_ENUM = {"X1", "X2", "X3", "X4"}
 LAYER_ENUM = {"M0", "L0", "L1", "L2", "L3", "meta"}
@@ -113,6 +114,34 @@ def detect_conflicts(rules: list[dict]) -> list[str]:
     return warnings
 
 
+def check_lifecycle_timeliness(rules: list[dict], draft_days: int = 7) -> list[str]:
+    """机制 6: draft 规则超期告警 (draft 超 draft_days 未转 active).
+
+    时间追踪需 created_at (机制 6 完整状态机). draft 超 7 天告警
+    (gac.lifecycle.draft_to_active_days). 当前全 active 不触发, 未来加 draft 规则生效.
+    """
+    import datetime
+
+    warnings: list[str] = []
+    today = datetime.date.today()
+    for r in rules:
+        if r.get("lifecycle") != "draft":
+            continue
+        created = r.get("created_at")
+        if not created:
+            continue
+        try:
+            cd = datetime.date.fromisoformat(created)
+        except (ValueError, TypeError):
+            continue
+        age = (today - cd).days
+        if age > draft_days:
+            warnings.append(
+                f"{r['id']}: draft 超 {age} 天 (>{draft_days} 天 draft_to_active), 待 radar 验证激活"
+            )
+    return warnings
+
+
 def validate(path: Path = REGISTRY) -> tuple[int, list[str], list[str]]:
     """主校验. 返回 (exit_code, errors, warnings)."""
     errors: list[str] = []
@@ -138,6 +167,9 @@ def validate(path: Path = REGISTRY) -> tuple[int, list[str], list[str]]:
     # 机制 5: 矛盾检测
     warnings.extend(detect_conflicts(rules))
 
+    # 机制 6: draft 超期检查 (时间追踪, 需 created_at)
+    warnings.extend(check_lifecycle_timeliness(rules))
+
     return (1 if errors else 0, errors, warnings)
 
 
@@ -160,7 +192,9 @@ def main() -> int:
     if lc.get("draft", 0) > 0:
         print(f"⚠️  {lc['draft']} 条 draft 规则待 radar 验证激活 (机制 6: draft→active)")
     if lc.get("deprecated", 0) > 0:
-        print(f"⚠️  {lc['deprecated']} 条 deprecated 规则待 gc 清理 (机制 6: deprecated→removed)")
+        print(
+            f"⚠️  {lc['deprecated']} 条 deprecated 规则待 gc 清理 (机制 6: deprecated→removed)"
+        )
 
     # dimension/layer 覆盖
     dims = Counter(r.get("dimension", "?") for r in rules)
