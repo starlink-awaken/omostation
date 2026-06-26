@@ -44,28 +44,6 @@
     "registered_by": "omo-bos-cli"
   },
   {
-    "uri": "bos://governance/sot-bridge/register",
-    "domain": "governance",
-    "package": "sot-bridge",
-    "action": "register",
-    "endpoint": "kairon.packages.sot_bridge.sharedbrain_bridge:register",
-    "protocol": "internal",
-    "description": "sot-bridge SSOT 注册入口 (P31-W1 合并后, P33-W1 战役 2 起步)",
-    "registered_at": "2026-06-06T13:40:39.452200+00:00",
-    "registered_by": "omo-bos-cli"
-  },
-  {
-    "uri": "bos://governance/protocols-layer/trigger",
-    "domain": "governance",
-    "package": "protocols-layer",
-    "action": "trigger",
-    "endpoint": "kairon.packages.protocols_layer.symphony:trigger",
-    "protocol": "internal",
-    "description": "protocols-layer 协议触发器入口 (P31-W1 合并后, P33-W1 战役 2 起步)",
-    "registered_at": "2026-06-06T13:40:39.452358+00:00",
-    "registered_by": "omo-bos-cli"
-  },
-  {
     "uri": "bos://analysis/minerva/research",
     "domain": "analysis",
     "package": "minerva",
@@ -140,28 +118,6 @@
     "protocol": "internal",
     "description": "Iris 数据连接 (P33-W2 战役 2 余下)",
     "registered_at": "2026-06-06T13:58:51.295706+00:00",
-    "registered_by": "omo-bos-cli"
-  },
-  {
-    "uri": "bos://persona/sharedbrain-bridge/recall",
-    "domain": "persona",
-    "package": "sharedbrain-bridge",
-    "action": "recall",
-    "endpoint": "kairon.packages.sharedbrain_bridge.recall:recall",
-    "protocol": "internal",
-    "description": "sharedbrain 回忆 (P33-W2 战役 2 余下)",
-    "registered_at": "2026-06-06T13:58:51.295886+00:00",
-    "registered_by": "omo-bos-cli"
-  },
-  {
-    "uri": "bos://persona/sharedbrain-bridge/sync",
-    "domain": "persona",
-    "package": "sharedbrain-bridge",
-    "action": "sync",
-    "endpoint": "kairon.packages.sharedbrain_bridge.sync:sync",
-    "protocol": "internal",
-    "description": "sharedbrain 同步 (P33-W2 战役 2 余下)",
-    "registered_at": "2026-06-06T13:58:51.296066+00:00",
     "registered_by": "omo-bos-cli"
   },
   {
@@ -297,17 +253,6 @@
     "registered_by": "omo-bos-cli"
   },
   {
-    "uri": "bos://governance/sot-bridge/query",
-    "domain": "governance",
-    "package": "sot-bridge",
-    "action": "query",
-    "endpoint": "kairon.packages.sot_bridge.sharedbrain_bridge:query",
-    "protocol": "internal",
-    "description": "sot-bridge 跨系统查询 (P34-W0 战役 2 扩展)",
-    "registered_at": "2026-06-06T16:14:12.311353+00:00",
-    "registered_by": "omo-bos-cli"
-  },
-  {
     "uri": "bos://analysis/minerva/audit",
     "domain": "analysis",
     "package": "minerva",
@@ -360,17 +305,6 @@
     "protocol": "internal",
     "description": "ontoderive 事实核查 (P34-W0 战役 2 扩展)",
     "registered_at": "2026-06-06T16:14:12.318010+00:00",
-    "registered_by": "omo-bos-cli"
-  },
-  {
-    "uri": "bos://persona/sharedbrain-bridge/recall-entity",
-    "domain": "persona",
-    "package": "sharedbrain-bridge",
-    "action": "recall-entity",
-    "endpoint": "kairon.packages.sharedbrain_bridge.recall:recall_entity",
-    "protocol": "internal",
-    "description": "共享实体回忆 (P34-W0 战役 2 扩展)",
-    "registered_at": "2026-06-06T16:14:12.319446+00:00",
     "registered_by": "omo-bos-cli"
   },
   {
