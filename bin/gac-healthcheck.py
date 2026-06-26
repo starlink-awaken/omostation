@@ -44,6 +44,7 @@ CORE_FILES = {
     "stage1_design": ".omo/_knowledge/gac/stage1-hook-design.md",
     "hook": "bin/gac-hook-pre-edit.py",
     "dashboard": "bin/gac-dashboard.py",
+    "mof_validate": "bin/gac-mof-validate.py",
 }
 
 
