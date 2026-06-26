@@ -61,7 +61,7 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     # sharedbrain/sot-bridge 已删 (2026-06-25, 包不存在+8001不跑, 连带清理 routes/health/seeds)
     # gbrain 已整合 (2026-06-25, 指向 gbrain serve stdio MCP)
     # system 已整合 (2026-06-25, 补 7 wrapper + 删 2 死声明, resolve率 99%)
-    "bos://governance/protocols-layer/": "架构声明 (ecos M1 + kairon INTERFACE, 需产品决策)",
+    # protocols-layer 已删 (2026-06-26, kairon CLAUDE.md 明确历史别名非 live package, 删 BOS 声明)
 }
 KNOWN_GAP_EXPIRES = "2026-07-25"  # 30天复查, 过期未对齐升级为真实鸿沟
 

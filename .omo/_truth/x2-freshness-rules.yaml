@@ -195,3 +195,16 @@ rules:
     notes: >
       P90 R2 新增 rule (omo_lint.py 抗 god-module 监控).
 
+  - rule_id: X2-FRESH-ADR-DRIFT
+    title: "P96 ADR drift 持续监督 (15 P50+ issues 待清, threshold 30 天)"
+    type: governance_loop_freshness
+    status: active
+    target: .omo/_delivery/adr-drift-apply-history.jsonl
+    freshness:
+      mechanism: manual-review
+      threshold_days: 30
+      action: warn
+    owner: governance-team
+    notes: >
+      P90 R2 新增 rule (omo_lint.py 抗 god-module 监控).
+

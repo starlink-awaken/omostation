@@ -66,6 +66,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 | 0087 | P93 adr-drift-auto-fix (32 P50+, 30/94% auto-fix) + gov-history-stats --compare (+2.2 delta) (38 bin, 16 dashboard) | ACCEPTED | 2026-06-25 | omostation P93 | 0087-p93-adr-drift-auto-fix-compare.md |
 | 0088 | P94 adr-drift-apply (19 SUBDIR touch 待) + 13 god-module list (24252L excess) + REAL_BUG 修 (40 bin, 18 dashboard) | ACCEPTED | 2026-06-25 | omostation P94 | 0088-p94-adr-apply-god-module-bugfix.md |
 | 0089 | P95 adr-drift-apply --apply (20 files) + adr-typo-fix (新) + pyyaml 修 + 7 步 roadmap (41 bin, 19 dashboard) | ACCEPTED | 2026-06-25 | omostation P95 | 0089-p95-adr-apply-typo-fix-7step.md |
+| 0090 | P96 adr-typo-real-fix (真 Levenshtein, 6/8 ratio 1.0) + venv-yaml-check + X2-FRESH-ADR-DRIFT (12 rules) (43 bin, 21 dashboard) | ACCEPTED | 2026-06-25 | omostation P96 | 0090-p96-typo-levenshtein-venv-x2.md |
 
 ---
 
