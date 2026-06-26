@@ -57,3 +57,5 @@ coverage.xml
 
 # ── Local OMO runtime state ──
 .omo/
+.omc/
+*.tmp
