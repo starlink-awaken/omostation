@@ -439,4 +439,8 @@ history:
     -60%)'
   timestamp: '2026-06-26T17:18:59.537639'
   version: 0.0.99
-version: 0.0.99
+- description: 'Phase 0: BOS Contract Linter 落地 (mof-contract-lint v0.1 + pre-commit
+    + 19 errors 发现)'
+  timestamp: '2026-06-26T17:37:30.847768'
+  version: 0.0.100
+version: 0.0.100
