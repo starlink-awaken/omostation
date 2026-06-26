@@ -44,7 +44,7 @@ P54-P55 实施 3 项中量级收敛 + 1 项断链修复:
 - **新建**: `.omo/_knowledge/design/specs/` 作为"通用设计契约"统一入口
 - **迁移**: memtheta-operators 从 `designs/` (孤儿) 真迁移入 design/specs/
 - **状态升级**: `Approved` → `active` (lifecycle: contract)
-- **原位保留**: `designs/2026-06-13-memtheta-operators.md` 改为 deprecated 指针 (双指针可追溯)
+- **原位保留**: `.omo/_knowledge/designs/2026-06-13-memtheta-operators.md` 改为 deprecated 指针 (双指针可追溯)
 - **边界**: design/specs/ = 通用设计契约 vs superpowers/specs/ = 能力建设设计
 
 ### D3: graphify-out 标注 (P54 R2 旁支)
@@ -72,7 +72,7 @@ P54-P55 实施 3 项中量级收敛 + 1 项断链修复:
   - `summaries/` 根目录 28 文件
   - `summaries/phase*/` 69 文件
   - `management/` 3 个旧式 frontmatter → 新式
-  - `management/eCOS-v5-Architecture-SSOT.md` deprecated
+  - `.omo/_knowledge/management/eCOS-v5-Architecture-SSOT.md` deprecated
 - **总覆盖**: ~501 文件 (74% 显式标注) + 剩余 ~177 简短索引/legacy 内容
 
 ## Consequences

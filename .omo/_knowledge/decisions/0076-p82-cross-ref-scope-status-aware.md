@@ -21,7 +21,7 @@ P81 R4 引入 `bin/management-cross-ref-check.py` (扫描 .omo/_knowledge/manage
 1. **P81 工具缺陷**: 仅按"文件名 basename 匹配 files_by_cat"判定死链, 把"跨管理目录的外部引用"误判为死链
 2. **JSON 序列化 bug**: `refs_matrix` 用 tuple key + `dead_links` 含 Path 对象, 触发 `json.dumps` 失败
 3. **status 误报**: 不区分 active/archived 文档, 误把历史 archived 文档的预期死链当 actionable bug
-4. **tools 误用**: `workflows/INDEX.md` 标记 archived, 但 P77 物理迁移后已被 `management/INDEX.md` 取代, 仍残留
+4. **tools 误用**: `.omo/INDEX.md` 标记 archived, 但 P77 物理迁移后已被 `.omo/INDEX.md` 取代, 仍残留
 
 ## Decision
 
@@ -38,15 +38,15 @@ P81 R4 引入 `bin/management-cross-ref-check.py` (扫描 .omo/_knowledge/manage
 - 修复 `json.dumps` bug: tuple key → str key, Path → str
 - 删除 `Counter` / `file_names` 等未使用 import + 变量, ruff 0 错
 
-### D2: 删除孤立 `workflows/INDEX.md` (P82 R3)
+### D2: 删除孤立 `.omo/INDEX.md` (P82 R3)
 
 **前置**:
-- `workflows/INDEX.md` 标记 `status: archived`, `archived-since: 2026-06-22`, `lifecycle: history`
-- P77 R1 物理迁移后, 新 INDEX 在 `.omo/_knowledge/management/INDEX.md` (status: active)
+- `.omo/INDEX.md` 标记 `status: archived`, `archived-since: 2026-06-22`, `lifecycle: history`
+- P77 R1 物理迁移后, 新 INDEX 在 `.omo/INDEX.md` (status: active)
 - `grep workflows/INDEX` 全仓 0 引用 → 真正孤立
 
 **决策**:
-- `git rm .omo/_knowledge/management/workflows/INDEX.md` (9 死链源头一次性清掉)
+- `git rm .omo/_knowledge/management/.omo/INDEX.md` (9 死链源头一次性清掉)
 - 不修改历史 archived 文档 (尊重 P45 审计决策: 历史状态不变)
 
 ### D3: P82 收口: active:0 + archived:43 (P82 R4)

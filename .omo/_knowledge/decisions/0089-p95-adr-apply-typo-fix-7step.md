@@ -50,10 +50,10 @@ python3 bin/adr-drift-apply.py --apply
 
 **实测** (dry-run):
 - 4 TYPO 待修:
-  - ADR-0052: `management/eCOS-v5-Architecture-SSOT.md` → `.omo/_knowledge/summaries/phase5/phase5-closeout-retrospective.md` ⚠️ (Jaccard 不准, 误报)
-  - ADR-0052: `designs/2026-06-13-memtheta-operators.md` → `task-p3-research...prompt.md` ⚠️ (Jaccard 误报)
-  - ADR-0076: `workflows/INDEX.md` → `projects/aetherforge/docs/index.md` ⚠️ (误报)
-  - ADR-0076: `management/INDEX.md` → `projects/aetherforge/docs/index.md` ⚠️ (误报)
+  - ADR-0052: `.omo/_knowledge/management/eCOS-v5-Architecture-SSOT.md` → `.omo/_knowledge/summaries/phase5/phase5-closeout-retrospective.md` ⚠️ (Jaccard 不准, 误报)
+  - ADR-0052: `.omo/_knowledge/designs/2026-06-13-memtheta-operators.md` → `task-p3-research...prompt.md` ⚠️ (Jaccard 误报)
+  - ADR-0076: `.omo/INDEX.md` → `projects/aetherforge/docs/index.md` ⚠️ (误报)
+  - ADR-0076: `.omo/INDEX.md` → `projects/aetherforge/docs/index.md` ⚠️ (误报)
 
 **工具价值** (设计意图): 提供字符级修改入口, **不主动 apply** (Jaccard 噪声大, 仅 human review 后用)
 
