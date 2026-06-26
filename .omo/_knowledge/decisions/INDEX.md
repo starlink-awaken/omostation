@@ -69,6 +69,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 | 0090 | P96 adr-typo-real-fix (真 Levenshtein, 6/8 ratio 1.0) + venv-yaml-check + X2-FRESH-ADR-DRIFT (12 rules) (43 bin, 21 dashboard) | ACCEPTED | 2026-06-25 | omostation P96 | 0090-p96-typo-levenshtein-venv-x2.md |
 | 0091 | P97 TYPO apply (12 实际修复, 19→11 -42%) + apply/rollback 集成测试 + X2-FRESH-ADR-TYPO (13 rules) (44 bin, 22 dashboard) | ACCEPTED | 2026-06-25 | omostation P97 | 0091-p97-typo-apply-rollback-test-x2.md |
 | 0092 | P98 3 ASPIRATIONAL + 1 REAL_BUG + 4 TYPO + regex bug 修 (P50+ 19→2 -89%, 44 bin, 22 dashboard) | ACCEPTED | 2026-06-25 | omostation P98 | 0092-p98-adr-drift-final-fixes.md |
+| 0093 | P99 ADR-0092 self-ref 清 (P50+ 6→3 -50%) + omo_lint 兑现路径 P100-P103 (4 步) + 53 ADR + 22 dashboard | ACCEPTED | 2026-06-25 | omostation P99 | 0093-p99-selfref-omo-lint-roadmap.md |
 
 ---
 

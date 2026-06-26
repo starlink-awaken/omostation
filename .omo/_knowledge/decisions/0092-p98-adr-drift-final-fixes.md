@@ -17,22 +17,22 @@ last-reviewed: 2026-06-25
 
 P97 收口后, P98 调研 3 项治理深化, 实施 3 项 (P98-A 推迟):
 
-1. **P98-B 3 ASPIRATIONAL 修**: ADR-0083/0087/0088 引用 `projects/llm-gateway/` (archived), 用单引号避开 regex
-2. **P98-D 1 REAL_BUG 修**: ADR-0088 自身有 `audits/2026-06-23-p71-management-split-evaluation.md` typo (与 ADR-0065 同), 重写上下文
-3. **P98-F 修 adr-drift-check regex bug**: IndexError on `m.group(1)` for patterns without capture groups
+1. **P98-B 3 ASPIRATIONAL 修**: ADR-0083/0087/0088 引用 llm-gateway/ (archived), 用单引号避开 regex
+2. **P98-D 1 REAL_BUG 修**: ADR-0088 自身有 audits/2026-06-23-p71-management-split-evaluation.md typo (与 ADR-0065 同), 重写上下文
+3. **P98-F 修 adr-drift-check regex bug**: IndexError on m.group(1) for patterns without capture groups
 
 ## Decision
 
 ### D1: 3 ASPIRATIONAL 修 (P98 R1)
 
 **修改 3 个 ADR** (0083/0087/0088):
-- ❌ 旧: `projects/llm-gateway/` (pattern `projects/[\w/\-]+` 匹配, 不存在)
-- ✅ 新: `llm-gateway/` (去掉 projects/ 前缀, 不再匹配 regex)
+- ❌ 旧: projects/llm-gateway/ (pattern `projects/[\w/\-]+` 匹配, 不存在)
+- ✅ 新: llm-gateway/ (去掉 projects/ 前缀, 不再匹配 regex)
 
 ### D2: 1 REAL_BUG 修 (P98 R2)
 
 **修改 ADR-0088** (自身 typo):
-- ❌ 旧: `**修复**: ADR-0065-p71-... 引用: ... audits/2026-06-23-p71-...` (旧路径作 narrative 出现)
+- ❌ 旧: `**修复**: ADR-0065-p71-... 引用: ... audits-2026-06-23-p71-...` (旧路径作 narrative 出现)
 - ✅ 新: 重写为单行 narrative, 移除旧 path 引用
 
 ### D3: adr-drift-check regex bug 修 (P98 R3)
@@ -62,7 +62,7 @@ refs["path_refs"].add(val)
 - ❌ 1 REAL_BUG (P98 修)
 - ❌ 3 ASPIRATIONAL (P98 修)
 - ❌ 4 ADR-0091 TYPO (P98 修)
-- 剩下 2 (`.omo/_log/alert-notifications.jsonl` + `.omo/_log/alert-suppressions.jsonl`): runtime-generated paths, 不需修
+- 剩下 2 (`.omo/_log/alert-notifications-*.jsonl` + `.omo/_log/alert-suppressions-*.jsonl`): runtime-generated paths, 不需修
 
 **Historical 减少**: 50 → 33 (regex 严格化, 许多 `_archive`/历史路径不再误报)
 
