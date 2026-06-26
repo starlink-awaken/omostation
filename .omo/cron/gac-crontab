@@ -1,4 +1,4 @@
-# GaC 治理即代码 Cron (ADR-0104, 阶段 5)
+# GaC 治理即代码 Cron (ADR-0106, 阶段 5)
 #
 # 定时执行 GaC drift 检测 (机制 4 radar) + schema 校验 (机制 2) + lifecycle 清理 (机制 6 gc):
 #   - radar: 每日 drift 检测 (注册表 vs 实际, 报告到 _delivery)
@@ -16,5 +16,8 @@
 # 每日 03:30 GaC validate (机制 2 schema + 机制 5 矛盾, 报告)
 30 3 * * * cd /Users/xiamingxing/Workspace && python3 bin/gac-validate.py --report > .omo/_delivery/gac-validate-$(date +\%Y\%m\%d).txt 2>&1
 
-# 每周一 04:00 GaC gc (机制 6 lifecycle 清理; 阶段 2 bin/gac-gc.py 实现后取消注释)
-# 0 4 * * 1 cd /Users/xiamingxing/Workspace && python3 bin/gac-gc.py --dry-run >> /tmp/gac-gc.log 2>&1
+# 每日 04:00 GaC healthcheck (体系自检, 元治理递归; --json 机读)
+0 4 * * * cd /Users/xiamingxing/Workspace && python3 bin/gac-healthcheck.py --json > .omo/_delivery/gac-healthcheck-$(date +\%Y\%m\%d).json 2>&1
+
+# 每周一 05:00 GaC gc (机制 6 lifecycle 清理 deprecated→removed, c2g gc 原语; 已激活)
+0 5 * * 1 cd /Users/xiamingxing/Workspace && python3 bin/gac-gc.py --dry-run >> /tmp/gac-gc.log 2>&1
