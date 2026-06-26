@@ -124,7 +124,7 @@ gac:
     required: [id, dimension, layer, check_type, executor, lifecycle, version, created_at]
     dimension_enum: [X1, X2, X3, X4]
     layer_enum: [M0, L0, L1, L2, L3, meta]
-    check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain]
+    check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case]
     lifecycle_enum: [draft, active, deprecated, removed]
     executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron]
 
@@ -252,6 +252,47 @@ gac:
       check_type: ssot_pointer
       target: "projects/cockpit (唯一入口)"
       executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
+    # ── 直写红线: .omo 直写拦截 (报告债务①, direct-omo-io gate) ──
+    - id: CR-L2-DIRECT-IO
+      dimension: X1
+      layer: L2
+      name: ".omo 直写拦截 (走 omo ingress, 禁原生 write_text/mkdir)"
+      description: "禁止绕过 omo ingress 直写 .omo (防状态竞态死锁, 报告债务① Critical)"
+      check_type: direct_io_gate
+      target: ".omo/ (omo lint direct-omo-io gate)"
+      executor: [ci_gate, omo_audit]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
+    # ── hygiene: 0字节文件 + 大小写 inode (报告债务③, 防复发) ──
+    - id: CR-HYG-01
+      dimension: X4
+      layer: meta
+      name: "0 字节文件检查 (防空文件污染)"
+      description: "pre-commit 扫描 0 字节文件 (报告建议3 CR-HYG-01)"
+      check_type: hygiene_zero_byte
+      target: "**/* (0 字节文件)"
+      executor: [ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
+    - id: CR-HYG-02
+      dimension: X4
+      layer: meta
+      name: "大小写 inode 一致 (防 APFS plan/Plans 混淆)"
+      description: "pre-commit 大小写拼写一致性 (报告建议3 CR-HYG-02, APFS case-insensitive)"
+      check_type: hygiene_case
+      target: "**/* (大小写 inode 冲突)"
+      executor: [ci_gate]
       lifecycle: active
       version: "1.0.0"
       created_at: "2026-06-27"
