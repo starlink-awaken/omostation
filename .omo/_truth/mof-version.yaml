@@ -462,4 +462,8 @@ history:
     monitor)'
   timestamp: '2026-06-27T06:36:24.528172'
   version: 0.0.105
-version: 0.0.105
+- description: 'P110-D: TS AST 工具升级 (ts-analyze.mjs + ts-file-analyze.py, 10 TS god-module
+    解锁)'
+  timestamp: '2026-06-27T06:39:12.084527'
+  version: 0.0.106
+version: 0.0.106
