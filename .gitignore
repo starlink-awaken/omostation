@@ -10,3 +10,5 @@ bos_metrics.db
 __pycache__/
 *.pyc
 *.pyo
+
+etc/graphify-out/
