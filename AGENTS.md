@@ -1,7 +1,7 @@
 # AGENTS.md — Workspace Development Guide
 
 > Multi-project knowledge engineering & research workspace (root directory).
-> 最后更新: 2026-06-17
+> 最后更新: 2026-06-27
 
 > **运行时 SSOT**: `.omo/state/system.yaml` · `.omo/goals/current.yaml`
 > **治理面 SSOT**: `.omo/standards/omo-governance-surfaces.md` · `.omo/_truth/registry/omo-governance-surfaces.yaml`
@@ -36,7 +36,7 @@ bos://persona/    ← core-models/sot-bridge         — 人格与心智
 bos://capability/ ← forge/runtime                  — 能力与生态
 ```
 
-**BOS 路由定义位置**: `projects/agora/etc/bos-services.yaml` (声明式 YAML 注册表, 71 条目)
+**BOS 路由定义位置**: `projects/agora/etc/bos-services.yaml` (声明式 YAML 注册表, 100 条目)
 **BOS URI 解析器**: `projects/agora/src/agora/mcp/resolver/` (6 模块: services/bos_registry/pool/adapter/api/__init__)
 
 ### 架构决策
@@ -45,7 +45,7 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 |:----|:-----|
 | L3 收敛 | cockpit 是唯一 Web 入口；agora-dashboard 独立入口已收敛，仓库仅保留历史快照；cockpit-ui 与 dashboard_server 作为子应用挂载。 |
 | CLI 收敛 | cockpit = 唯一人类 CLI 入口。ecos-ssb/mof/workflow 等旧入口已收敛到 cockpit（`cockpit ssb`/`cockpit mof`/`cockpit workflow`）。其他 CLI (agora/runtime/omo/metaos) 保留为程序接口。 |
-| 子模块 | 18 子模块，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
+| 子模块 | 17 子模块 (16 项目子模块 + scripts)，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
 | 治理收敛 | `.omo/` = state plane；`projects/omo/` = governance kernel；`projects/c2g/` = strategic ingress |
 
 ### 治理写入收敛
@@ -58,6 +58,26 @@ bos://capability/ ← forge/runtime                  — 能力与生态
   - `.omo/_truth/registry/internal-write-profiles.yaml`
   - `.omo/_truth/registry/task-policies.yaml`
 - 新增治理写面时，必须同时补 runtime 实现、truth registry、lint/CI 门禁；只改文档不算落地。
+
+### 并发协调 (AdvisoryLock + worktree 隔离, TASK-94BB9C70)
+
+eCOS 多会话设计 (并发 governance agent / 多 Claude 会话) 会同改热路径文件 (omo_ingress / .omo 注册表), 需两层协调防互相吃改动:
+
+| 层 | 机制 | 适用 | 状态 |
+|----|------|------|------|
+| **session 级文件锁** | `omo AdvisoryLock` (`projects/omo/_shared/advisory_lock.py` + MCP `acquire_lock`/`release_lock`/`check_lock`/`list_locks`) | agent 编辑共享文件的声明式长事务 (跨 session lockfile + ttl 防死锁) | ✅ 机制 done (11 测试 + MCP 端到端) |
+| **物理隔离** | git worktree | 大重构 / 批量迁移 / God Module 拆分等长期占用热路径的工作 | 操作策略 |
+
+**何时用哪个**:
+- 改单个共享文件 (几分钟) → `acquire_lock(resource, holder=session_id)` → 编辑 → `release_lock`
+- 大型重构 / 长事务 (数十文件, 数十分钟+) → `git worktree add ../Workspace-<feature> -b feature/<name>` 物理隔离, 完成后 merge 回 main 并 `git worktree remove`
+- fcntl_lock (进程级 runtime 写, omo CLI 持有) 与 AdvisoryLock (session 级 agent 编辑, 跨 session 可见) 互补, 别混用
+
+**习惯** (memory concurrent-agent-contention):
+1. 改 omo 子模块前 `pgrep -fl governance` 看有无并发会话
+2. 快速连续操作 (Read→Write→Edit→commit 一气), 最小化窗口
+3. 若 2 次被打断, 按 CR-ENG-LOOP-HONESTY **stop**, 换 worktree 隔离或停并发
+4. pre-push 全项目 gate 陷阱: 钩子跑全项目 ruff (非只 commit 涉及文件), 被并发 agent 半成品卡 → 修并发债 (ruff --fix 级) 解锁, 或 `--no-verify` (我的 commit 已 pre-commit 验证干净)
 
 ### X1-X4 SSOT 链
 
@@ -123,7 +143,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | X | `observability` | Docker | `projects/observability/` | 🟢 Active — Langfuse 可观测性 |
 | X | `family-hub` | Python (FastMCP) | `projects/family-hub/` | 🟢 Active — 家庭数字枢纽 |
 | X | `cockpit-ui` | TypeScript (Vite) | `projects/cockpit-ui/` | 🟢 Active — 已挂载至 cockpit `/hermes/*` |
-| X | `spaces` | YAML | `projects/spaces/` | 🟢 Active — 空间配置 |
+| X | `spaces` | YAML | `spaces/` | 🟢 Active — 空间配置 |
 
 **Also contains:**
 - `.omo/` — Workspace governance (goals, state, standards, tasks, audits)
@@ -141,7 +161,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 > 用 `make help` 查看全部可用 target。
 
 ```bash
-# Run kairon tests (all 19 active packages)
+# Run kairon tests (all 16 packages)
 make kairon-test
 
 # Fast diff test — only packages changed since HEAD (推荐日常使用)
@@ -238,7 +258,7 @@ cd projects/gbrain && bun run ci:local
 ### BOS URI 挂载骨架
 
 > 这里只保留稳定域划分。具体服务映射以 `projects/agora/src/agora/mcp/resolver/services.py`
-> 与 `docs/PANORAMA.md` 为准。
+> 与 `docs/PANORAMA.md` 为准。BOS 注册表 SSOT: `projects/agora/etc/bos-services.yaml` (100 声明式服务, 9 域)。
 
 *   **域 1：记忆与事实源 `bos://memory`** ── `kos` (跨域搜索)、`kronos` (摄取管线)、`gbrain` (TS知识库)、`sot-bridge` (SSOT 桥接)
 *   **域 2：治理与律法 `bos://governance`** ── `omo`、`metaos`、`eidos`、`cockpit`
@@ -522,7 +542,7 @@ python3 bin/ssot-guardian.py --emit       # 发事件到 OMO event log
 - `.github/workflows/` — CI configurations
 - `.hermes/` — Hermes-related scripts and adapters
 
-## 🤖 Agentic Protocols & BOS URIs (eCOS v5 Mandatory Rules)
+## 🤖 Agentic Protocols & BOS URIs (eCOS v6 Mandatory Rules)
 
 **All AI Agents operating in this workspace MUST follow these architectural constraints:**
 
@@ -568,7 +588,7 @@ python3 bin/ssot-guardian.py --emit       # 发事件到 OMO event log
 **参考实现**: `scripts/omo/governance-agent.sh` 已按此协议改造 (P72)。
 **标准文档**: `.omo/standards/agent-mutation-protocol.md`
 
-## 🏛️ OMO 强制流程 (eCOS v5 Governance Mandatory)
+## 🏛️ OMO 强制流程 (eCOS v6 Governance Mandatory)
 
 **所有操作，无论入口 (Agent/MCP/CLI/Cron)，必须通过 OMO 治理机制:**
 
@@ -661,7 +681,7 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 
 ## 🧬 Model-Driven Bridge (2026-06-14 确立)
 
-> `projects/model-driven` 是 eCOS v5 的**横切面框架 (Cross-Cutting Framework)**, 被 L0/L2/L3/L4 四层消费, 零内部依赖。
+> `projects/model-driven` 是 eCOS v6 的**横切面框架 (Cross-Cutting Framework)**, 被 L0/L2/L3/L4 四层消费, 零内部依赖。
 > 通过 M3→M2→M1 链路把"模型驱动"理念物化到 SSOT, 任何新增阶段/门禁都必须双向追溯。
 
 ### 桥接 SSOT 链
