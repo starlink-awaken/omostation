@@ -52,6 +52,17 @@ EXECUTOR_PRESENCE: dict[str, list[str]] = {
     "hook_post": [],  # 声明占位, 无独立文件 (hook_post 是 PostToolUse 事件, 非文件)
 }
 
+# 可调度 CLI executor (机制3深化 POC: GaC 驱动执行, --run 去重跑每种一次)
+# 不可直接调度: ci_gate (CI workflow push 触发), omo_audit (omo governance 慢),
+#               hook_pre_edit/mcp_tool (事件驱动, 非 CLI)
+RUNNABLE_EXECUTORS: dict[str, list[str]] = {
+    "mof_validate": ["bin/gac-mof-validate.py"],
+    "radar_cron": ["bin/gac-drift.py", "--json"],
+    "gc_cron": ["bin/gac-gc.py", "--dry-run"],
+    "evidence_smoke": ["bin/evidence-smoke.py"],
+    "mof_audit": ["projects/ecos/src/ecos/ssot/tools/mof-audit.py"],
+}
+
 
 def load_rules() -> list[dict]:
     docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
@@ -132,8 +143,55 @@ def run_check(as_json: bool = False) -> int:
     return 0 if report["ok"] else 1
 
 
+def run_executors(as_json: bool = False) -> int:
+    """机制3深化 POC: 调度可跑 CLI executor (去重, 每种一次).
+
+    证明 GaC 规则声明的 executor 真能被调度 (不只声明存在).
+    不替代 cron (cron 触发实际脚本, GaC 是注册+调度层).
+    """
+    import subprocess
+
+    results: dict[str, dict] = {}
+    rules = load_rules()
+    exec_rule_count: dict[str, int] = {}
+    for r in rules:
+        for e in r.get("executor", []):
+            exec_rule_count[e] = exec_rule_count.get(e, 0) + 1
+
+    for executor, rel_cmd in RUNNABLE_EXECUTORS.items():
+        cmd = [sys.executable, str(WORKSPACE / rel_cmd[0]), *rel_cmd[1:]]
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd=WORKSPACE)
+            results[executor] = {
+                "ok": r.returncode == 0,
+                "exit": r.returncode,
+                "rules_covered": exec_rule_count.get(executor, 0),
+            }
+        except subprocess.TimeoutExpired:
+            results[executor] = {"ok": False, "error": "timeout 120s", "rules_covered": exec_rule_count.get(executor, 0)}
+        except (subprocess.SubprocessError, OSError) as e:
+            results[executor] = {"ok": False, "error": str(e), "rules_covered": exec_rule_count.get(executor, 0)}
+
+    all_ok = all(r.get("ok") for r in results.values())
+
+    if as_json:
+        print(json.dumps({"executors": results, "ok": all_ok}, ensure_ascii=False, indent=2))
+        return 0 if all_ok else 1
+
+    print("═══ GaC 执行器调度 POC (机制3深化: GaC 驱动执行) ═══")
+    for executor, r in results.items():
+        status = "✅" if r.get("ok") else "❌"
+        detail = f"exit={r['exit']}" if "exit" in r else f"err={r.get('error', '?')[:40]}"
+        print(f"  {status} {executor} (规则={r['rules_covered']}): {detail}")
+    print(f"\n═══ 总体: {'✅ 可调度 executor 全活' if all_ok else '❌ 有 executor 调度失败'} ═══")
+    return 0 if all_ok else 1
+
+
 def main() -> int:
-    return run_check(as_json="--json" in sys.argv[1:])
+    args = sys.argv[1:]
+    if "--run" in args:
+        return run_executors(as_json="--json" in args)
+    return run_check(as_json="--json" in args)
 
 
 if __name__ == "__main__":
