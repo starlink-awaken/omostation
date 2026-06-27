@@ -372,6 +372,20 @@ gac:
       created_at: "2026-06-27"
       adr: "ADR-0106"
 
+    # ── X2 元治理递归: GaC executor 注册 drift (机制3/4深化, 声明 vs 实际存在) ──
+    - id: CR-X2-GAC-EXEC-DRIFT
+      dimension: X2
+      layer: meta
+      name: "GaC executor 注册 drift (声明 vs 实际存在)"
+      description: "GaC 规则声明 executor (ci_gate/omo_audit/evidence_smoke 等), 验证实际存在 (文件/命令/CI workflow); bin/gac-executor.py 检测 missing executor = 规则声明不存在的执行器"
+      check_type: drift_audit
+      target: "bin/gac-executor.py (executor 声明 vs 实际存在性)"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
     - id: X1-OMNI-BUS-ROUTING-20260617

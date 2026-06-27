@@ -50,6 +50,7 @@ CORE_FILES = {
     "gen_registry": "bin/gen-project-registry.py",
     "ingest_legacy": "bin/gac-ingest-legacy.py",
     "bootstrap": "bin/gac-bootstrap.py",
+    "executor": "bin/gac-executor.py",
 }
 
 
@@ -255,7 +256,20 @@ def healthcheck() -> dict:
         "schema_issues": bs_json.get("schema_self", {}).get("issues_count", 0),
     }
 
-    # 总体健康 (含 bootstrap: GaC 自身完整才算全绿)
+    # 12. GaC executor 注册 drift (机制3/4深化: 声明 vs 实际存在, CR-X2-GAC-EXEC-DRIFT)
+    ex_code, ex_out = run_tool("bin/gac-executor.py", ["--json"])
+    try:
+        ex_json = json.loads(ex_out) if ex_out else {}
+    except json.JSONDecodeError:
+        ex_json = {}
+    report["executor_drift"] = {
+        "ok": ex_code == 0,
+        "declared_executors": len(ex_json.get("declared_executors", [])),
+        "missing_executors": len(ex_json.get("missing_executors", [])),
+        "rules_with_missing": ex_json.get("rules_with_missing_executor", 0),
+    }
+
+    # 总体健康 (含 executor drift: 声明的 executor 必须实际存在)
     report["healthy"] = (
         not missing
         and report["validate"]["ok"]
@@ -268,6 +282,7 @@ def healthcheck() -> dict:
         and report["registry_drift"]["ok"]
         and report["legacy_drift"]["ok"]
         and report["bootstrap"]["ok"]
+        and report["executor_drift"]["ok"]
     )
     return report
 
@@ -353,6 +368,13 @@ def print_report(report: dict) -> None:
     bs_status = "✅" if bs["ok"] else "❌"
     print(
         f"▶ bootstrap (GaC 治 GaC): {bs_status} 工具={bs['tools_alive']}/{bs['tools_total']} indexed缺={bs['indexed_missing']} exec错={bs['exec_issues']} schema错={bs['schema_issues']}"
+    )
+
+    # executor 注册 drift (声明 vs 实际存在)
+    ex = report["executor_drift"]
+    ex_status = "✅" if ex["ok"] else "❌"
+    print(
+        f"▶ executor-drift (声明vs实际): {ex_status} executor={ex['declared_executors']} missing={ex['missing_executors']} 受影响规则={ex['rules_with_missing']}"
     )
 
     print()
