@@ -24,10 +24,10 @@ related-task: F7114ABA
 
 ## 剩 8 文件评估 (按风险/优先级排序)
 
-| 文件 | 行数 | 类型数 | 切入点 | 风险 | 优先级 |
-|------|------|:------:|--------|:----:|:------:|
-| **cli.ts** | 1735 | 1 | 命令 dispatch 表 → 按域拆子路由 (像 cockpit status.py) | 中 | P2 |
-| **commands/sync.ts** | 1609 | 2 | performSync 编排 vs pure helpers 分离 (core/sync.ts 已是 pure) | 中 | P2 |
+| 文件 | 行数 | 类型数 | 切入点 | 风险 | 优先级 | 状态 |
+|------|------|:------:|--------|:----:|:------:|:----:|
+| **cli.ts** | 1735→1495 | 1 | 独立功能区提取 (help→cli-help.ts, identity→cli-identity.ts) | 中 | P2 | ✅ done (40550f12) |
+| **commands/sync.ts** | 1609 | 2 | performSync 编排 vs pure helpers 分离 (core/sync.ts 已是 pure) | 中 | P2 | ⬜ 待拆 |
 | **cycle.ts** | 1707 | 7 | 类型区(56-254, ~200L)提取不够达标; 需 phase wrappers 拆到 cycle/phases/ | 中高 | P3 |
 | **serve-http.ts** | 1756 | 3 | OAuth/admin/SSE/MCP 四职责 → 子模块 (oauth/server-sse/mcp-dispatch) | 高 | P3 |
 | **gateway.ts** | 2895 | 14 | 类型分散 + 模块状态耦合 (_config/_modelCache/_embedTransport); 子模块: rerank/voyage-compat/dims | 高 | P3 |
