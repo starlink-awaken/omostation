@@ -122,11 +122,14 @@ def check_m2_type() -> dict:
     if not docs:
         return {"ok": False, "error": "m2 空文档"}
     g = docs[-1].get("GacRule", {})
+    # 机制7深化: gac-mof-validate drift 检测 (规则 vs M2 type, 不只结构可读)
+    mv_code, _ = run_tool("bin/gac-mof-validate.py", [])
     return {
-        "ok": True,
+        "ok": mv_code == 0,  # M2 drift 检测 (gac-mof-validate 0 drift 才 ok)
         "fields": len(g.get("fields", {})),
         "states": len(g.get("stateMachine", {})),
         "mechanisms": len(g.get("mechanisms", [])),
+        "drift_check": "PASS" if mv_code == 0 else "FAIL",
     }
 
 
@@ -330,10 +333,10 @@ def print_report(report: dict) -> None:
     m = report["m2_type"]
     if m.get("ok"):
         print(
-            f"▶ GacRule M2 (机制7): ✅ fields={m['fields']} 状态机={m['states']} 机制={m['mechanisms']}"
+            f"▶ GacRule M2 (机制7): ✅ fields={m['fields']} 状态机={m['states']} 机制={m['mechanisms']} drift={m.get('drift_check','?')}"
         )
     else:
-        print(f"▶ GacRule M2 (机制7): ❌ {m.get('error')}")
+        print(f"▶ GacRule M2 (机制7): ❌ {m.get('error', 'drift FAIL')}")
 
     # doc-ssot (CR-X4-DOC-SSOT)
     ds = report["doc_ssot"]
