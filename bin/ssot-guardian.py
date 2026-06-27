@@ -191,9 +191,32 @@ def _check_submodules() -> dict:
     return {"dirty": dirty, "count": len(dirty)}
 
 
+OMO_PROJECT_DIR = WORKSPACE_ROOT / "projects" / "omo"
+
+
+def _run_omo_lint(subcmd: str) -> subprocess.CompletedProcess[str]:
+    """调用真正的 omo governance lint 子命令 (projects/omo/.venv).
+
+    全局 PATH 里的 `omo` 已被 oh-my-opencode 占用, 不能直接 `omo lint ...`.
+    """
+    return _run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(OMO_PROJECT_DIR),
+            "python",
+            "-m",
+            "omo.omo_lint",
+            subcmd,
+        ],
+        check=False,
+    )
+
+
 def _check_direct_omo_io() -> dict:
     """运行 omo lint direct-omo-io, 检测直接 .omo/ 写入."""
-    result = _run(["omo", "lint", "direct-omo-io"], check=False)
+    result = _run_omo_lint("direct-omo-io")
     passed = "PASS" in result.stdout or result.returncode == 0
     return {
         "passed": passed,
