@@ -596,6 +596,11 @@ def main() -> int:
         default=None,
         help="gate 模式: score<N 或 real_gap>0 则 exit 1 (挂 pre-commit/CI 防鸿沟复发)",
     )
+    parser.add_argument(
+        "--require-deprecated-zero",
+        action="store_true",
+        help="gate 模式额外要求 bos.deprecated_count == 0 (锁定 TASK-AB15691F D 调研闭环)",
+    )
     args = parser.parse_args()
 
     report = run_smoke(spawn_n=args.spawn, consumers=args.consumers)
@@ -617,8 +622,19 @@ def main() -> int:
         if real_gap > 0:
             print(f"❌ GATE FAIL: 真实新鸿沟 {real_gap} > 0", file=sys.stderr)
             return 1
+        if args.require_deprecated_zero:
+            deprecated = report.get("bos", {}).get("deprecated_count", 0)
+            if deprecated > 0:
+                print(
+                    f"❌ GATE FAIL: deprecated_count {deprecated} > 0 "
+                    f"(TASK-AB15691F D 调研 2026-07-25 到期前必须 0)",
+                    file=sys.stderr,
+                )
+                return 1
         print(
-            f"✅ GATE PASS: score {score} >= {args.gate}, real_gap 0", file=sys.stderr
+            f"✅ GATE PASS: score {score} >= {args.gate}, real_gap 0"
+            + (f", deprecated 0" if args.require_deprecated_zero else ""),
+            file=sys.stderr,
         )
     return 0
 
