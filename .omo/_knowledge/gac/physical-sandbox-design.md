@@ -91,14 +91,47 @@ gate 检测: 任何**非 ingress** 文件写 `.omo` = 违规.
 | **P2** | ingress 强制单一写入口 | 大 | P1 + 全路径审查 | 所有 `.omo` 写经 omo_ingress; 非 broker 直写 = 0 |
 | **P3** | 文件系统沙箱 | 极大 | P2 + 架构重构 | 非 omo 进程写 `.omo` = EACCES |
 
-## 当前进展 (2026-06-27)
+## 当前进展 (2026-06-27, P1 完成后)
 
-- ✅ direct-omo-io gate 基础 (`Path.write_text/write_bytes` + 原子 helper)
-- ✅ `CR-L2-DIRECT-IO` GaC 规则 (X1 审计, executor=ci_gate/omo_audit)
-- ✅ evidence-smoke 自省 (发现 os.makedirs+open+replace 绕过 → evidence-smoke 已修)
-- ⬜ **P1 gate 扩展 os.\*** (下一步专项, 需 omo 测试 + 白名单调优)
-- ⬜ P2 ingress 强制 (长期)
-- ⬜ P3 文件系统沙箱 (长期)
+- ✅ direct-omo-io gate 基础 (Path.write_text/write_bytes + 原子 helper)
+- ✅ CR-L2-DIRECT-IO GaC 规则 (X1 审计)
+- ✅ evidence-smoke 自省 (发现 os.* 绕过)
+- ✅ **P1 双层完成** (omo_lint.py sensitive-governed-writes + contract_gatekeeper.py direct-omo-io gate)
+  - `_OS_MUTATION_NAMES` AST 检测 os.makedirs/mkdir/replace/rename
+  - 揭示修复 evidence-smoke os.makedirs/replace 绕过
+  - GaC 工具白名单 (bin/gac-* + evidence-smoke) + l4-kernel/opc 运行时工具白名单
+  - **omo lint direct-omo-io PASS** (1005 files 0 violation)
+- 🟡 **P2 部分达成** (敏感目标 ingress 强制 by contract_gatekeeper)
+  - 已强制: 非 src/omo/ broker 写 system.yaml/goals/tasks/capabilities = 拦
+  - 剩余: 运行时产物白名单工具 (_delivery/_knowledge) 是否走 ingress (当前白名单合理, 非敏感)
+- ⬜ P3 文件系统沙箱 (长期, 架构级)
+
+## P2 详细步骤 (ingress 强制, 基于 P1 完成后现状)
+
+**当前状态**: omo lint PASS (合法白名单 + os.* 拦截). P2 进一步收紧:
+
+1. **审查白名单工具写路径** (bin/gac-* + l4-kernel/opc):
+   - 写敏感目标 (system.yaml/goals/tasks)? → 必走 omo ingress (contract_gatekeeper 已强制)
+   - 写运行时产物 (_delivery/_knowledge/audits)? → 白名单保留 (非敏感, broker 特例)
+2. **ingress 强化** (omo_ingress*.py 覆盖所有敏感目标写):
+   - Agent → MCP check_gac_rule / omo CLI (已通)
+   - 脚本 → omo CLI (contract_gatekeeper 拦非 broker)
+3. **白名单收敛** (运行时产物工具逐步走 omo delivery ingress, 减少 EXEMPT)
+4. **验收**: 非 broker 写 .omo 敏感目标 = 0 (contract_gatekeeper 拦) + 白名单只保留真运行时产物
+
+**P2 当前结论**: 敏感目标已 ingress 强制 (P1 contract_gatekeeper 达成核心). 运行时白名单合理. P2 完整 = 白名单收敛 (渐进, 非阻塞).
+
+## P3 方案评估 (FS 沙箱, 长期)
+
+当前 P1+P2 稳态 (合法 PASS + 恶意 os.* 拦 + 敏感目标 ingress 强制). P3 是**纵深防御** (文件系统级):
+
+| 方案 | 可行性 | 建议 |
+|------|--------|------|
+| A. Unix setuid | macOS/Linux setuid omo 进程 | ❌ 安全风险 (权限提升), 不推荐 |
+| B. omo daemon 独占写 | Agent/脚本 → daemon socket → omo 写 | 🟡 架构重构, 中期可行 |
+| C. eBPF/LSM | 内核级 .omo 写拦截 | ❌ Linux only + 极大工程 |
+
+**P3 建议**: B (omo daemon) 中期可行, 但当前 P1+P2 稳态足够. P3 留长期纵深防御.
 
 ## 下一步行动 (P1 专项)
 
