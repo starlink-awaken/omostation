@@ -161,6 +161,48 @@ def check_ssot_drift(rule: dict) -> list[str]:
     return drifts
 
 
+def check_indexed_drift(rule: dict) -> list[str]:
+    """indexed 规则 drift: source_ref 指向的文件是否存在, 规则 ID 是否在源文件中找到.
+
+    检测 GaC indexed 条目与 source_ref 真值文件之间的漂移.
+    不比较字段值 (enforcement 等), 只验证:
+    1. source_ref 文件存在
+    2. 规则 ID 在源文件中能找到 (rule_id 字符串匹配)
+    """
+    drifts: list[str] = []
+    source_type = rule.get("source_type", "native")
+    if source_type != "indexed":
+        return drifts
+
+    source_ref = rule.get("source_ref", "")
+    if not source_ref:
+        drifts.append(f"{rule['id']}: indexed 规则缺少 source_ref")
+        return drifts
+
+    # 解析 source_ref: "path::field" 格式
+    ref_parts = source_ref.split("::")
+    ref_path_str = ref_parts[0]
+    ref_path = WORKSPACE / ref_path_str
+
+    if not ref_path.exists():
+        drifts.append(f"{rule['id']}: source_ref 文件不存在 {ref_path_str}")
+        return drifts
+
+    # 检查规则 ID 是否在源文件中出现
+    try:
+        content = ref_path.read_text(encoding="utf-8")
+    except OSError:
+        return drifts
+
+    rule_id = rule.get("id", "")
+    if rule_id and rule_id not in content:
+        drifts.append(
+            f"{rule['id']}: 规则 ID 在 source_ref ({ref_path_str}) 中未找到 — 可能已重命名或删除"
+        )
+
+    return drifts
+
+
 def main() -> int:
     args = sys.argv[1:]
     gate_mode = "--gate" in args
@@ -178,6 +220,7 @@ def main() -> int:
         all_drifts.extend(check_target_exists(rule))
         all_drifts.extend(check_executor_valid(rule))
         all_drifts.extend(check_ssot_drift(rule))
+        all_drifts.extend(check_indexed_drift(rule))
 
     # JSON 模式 (阶段 4 仪表盘/cron 数据源): 输出 JSON, 跳过人读 print
     if json_mode:
