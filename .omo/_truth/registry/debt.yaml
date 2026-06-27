@@ -1,7 +1,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-06-28
 version: 1
 items_dir: .omo/debt/items
 dashboard_ref: .omo/debt/dashboard/current.yaml

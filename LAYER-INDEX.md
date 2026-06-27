@@ -1,54 +1,53 @@
 # LAYER-INDEX.md — 5+4+1+1 项目分层索引
 
-> 基于 eCOS v6 架构 (5 层 L0-L4 + 4 维 X1-X4 + 1 织 I0 + 1 横切 M0) · 2026-06-15 · 14 项目 · 30+ 包
-> **当前 Phase 42** — 治理面 SSOT 同步纪元 (Governance SSOT Catch-up) · 健康分 77.5/100
+> 基于 eCOS v6 架构 (5 层 L0-L4 + 4 维 X1-X4 + 1 织 I0 + 1 横切 M0) · 2026-06-27 · 17 项目 · 16 包
+> 运行时状态 (Phase/健康分/任务数) 见 `.omo/state/system.yaml`，不在此硬编码
 
 ## I0 — 集成织层
 
 | 项目 | 角色 | 端口 | 状态 |
 |------|------|------|------|
-| **agora** | MCP 服务发现 + 代理 + 断路器 | 7422 (HTTP), 7431 (SSE) | 🟢 运行中 · 42 MCP 工具 |
+| **agora** | MCP 服务发现 + 代理 + 断路器 | 7422 (HTTP), 7431 (SSE) | 🟢 运行中 · 100 BOS 声明式服务 |
 
 ## L0 — 协议编织
 
 | 项目 | 位置 | 说明 |
 |------|------|------|
 | **protocols** | `protocols/` | 16 协议 YAML + 端口注册表 |
-| **ecos** | `projects/ecos/` | SSB 签名链 + 涌现计算 · 122 tests |
+| **ecos** | `projects/ecos/` | SSB 签名链 + 涌现计算 · MOF + L0 约束 |
 
 ## L1 — 运行时基础设施
 
 | 项目 | 位置 | 核心模块 | 状态 |
 |------|------|---------|------|
-| **runtime** | `projects/runtime/` | Matrix 注册表 · 健康监控 · KEI 沙箱 · Scheduler | 🟢 171 tests |
+| **runtime** | `projects/runtime/` | Matrix 注册表 · 健康监控 · KEI 沙箱 · Scheduler | 🟢 |
 
 ## L2 — 内核三平面
 
 ### 治理面
 | 项目 | 位置 | 说明 |
 |------|------|------|
-| **omo** | `projects/omo/` | Phase 管理 · 债务追踪 · 状态管理 · 221 tests |
+| **omo** | `projects/omo/` | Phase 管理 · 债务追踪 · 状态管理 |
 
-### 引擎面 (kairon · 25 包)
+### 引擎面 (kairon · 16 包)
 | 领域 | 包 |
 |------|-----|
-| 知识查询 | eidos(7 MCP, 35K) · kos(26 MCP, 14K) · minerva(5 tools, 25K) |
-| 知识推导 | ontoderive(5 tools, 6K) · sophia(8 tools) · kronos(9 tools) |
-| 知识存储 | ssot(6 tools, 14K) · iris(8 tools) |
-| 工具注册 | forge(70 tools, 8K) · codeanalyze |
-| 数据模型 | core-models(1.6K, 8 包引用) |
-| 支撑 | shared-lib(5 子包已拆) · engine-core · llm-gateway · sharedbrain-bridge |
-| 新拆出 | kairon-lib-events · kairon-utils · kairon-plugin-sdk · kairon-observability · kairon-pipeline |
+| 知识查询 | eidos · kos · minerva |
+| 知识推导 | ontoderive · sophia · kronos |
+| 知识存储 | iris |
+| 工具注册 | forge · codeanalyze |
+| 数据模型 | core-models |
+| 支撑 | health-profile · kairon-lib-events · kairon-observability · kairon-pipeline · kairon-plugin-sdk · kairon-utils |
 
 ### 记忆面
 | 项目 | 位置 | 说明 |
 |------|------|------|
-| **gbrain** | `projects/gbrain/` | TypeScript · Postgres 知识脑 · 67 MCP 工具 · 163K TS |
+| **gbrain** | `projects/gbrain/` | TypeScript · Postgres 知识脑 |
 
 ### 编排
 | 项目 | 位置 | 说明 |
 |------|------|------|
-| **metaos** | `projects/metaos/` | 决策门控 · 免疫监控 · 路由 · 163 tests |
+| **metaos** | `projects/metaos/` | 决策门控 · 免疫监控 · 路由 |
 
 ## L3 — 统一入口
 
@@ -119,4 +118,18 @@
 
 ---
 
-*架构定义完成。实现细节见注册表。*
+## 术语消歧
+
+本工作区存在三种 "workflow" 概念，按上下文区分：
+
+| 术语 | 含义 | 位置 |
+|------|------|------|
+| **lifecycle stage** | model-driven 7 阶段生命周期引擎 (M0) | `projects/model-driven/src/model_driven/mof/m3_extended.py` + `ecos/m1/lifecycle/` |
+| **execution DAG** | M1 执行编排工作流 (29 个 WORKFLOW-*.yaml) | `ecos/src/ecos/ssot/mof/m1/workflow/` |
+| **CI workflow** | GitHub Actions 工作流 | `.github/workflows/*.yml` |
+
+文档中 "workflow" 不带限定词时，按上下文判断；新建文档应使用上表限定词。
+
+---
+
+*架构定义完成。实现细节见注册表。最后更新: 2026-06-28*
