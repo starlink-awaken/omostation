@@ -152,6 +152,55 @@ gate 检测: 任何**非 ingress** 文件写 `.omo` = 违规.
 
 **P3 建议**: B (omo daemon) 中期可行, 但当前 P1+P2 稳态足够. P3 留长期纵深防御.
 
+### P3 深化设计 (omo daemon 架构 + macOS sandbox, 2026-06-27)
+
+#### B. omo daemon 独占写 (推荐, 跨平台)
+
+**架构**:
+```
+Agent/脚本 → omo daemon socket (unix domain) → daemon (独占 .omo 写) → .omo/
+                                                                ↑
+                                     daemon 持 .omo 写权限, 其他进程只读
+```
+
+**实施步骤**:
+1. omo daemon 进程 (`projects/omo/src/omo/omo_daemon.py`): unix socket + 写请求队列 + AppendOnlyLog
+2. `.omo` 目录权限收归 daemon 用户 (chmod 0700 + chown, daemon 独占写)
+3. 写 API: `omo daemon write <path> <content>` (替代直写, 走 ingress 鉴权)
+4. Agent/脚本改调 daemon (bin/gac-* + evidence-smoke + l4-kernel + opc)
+5. omo ingress 整合 (daemon 是 ingress 的执行后端, 已鉴权写经 daemon)
+
+**成本**: 大 (daemon 进程 + 重构所有写 + 灰度 + 单点风险)
+**收益**: 文件系统级强制 (非 daemon 进程物理写不了 .omo)
+**风险**: daemon 单点 (需高可用) + 性能 (socket 开销) + 启动顺序 (daemon 先于 agent)
+
+#### macOS sandbox-exec (Seatbelt, darwin 平台 POC)
+
+**机制**: macOS 内核沙箱 (sandbox-exec), profile 限制非 omo 进程写 `.omo`
+
+**POC profile (概念)**:
+```
+;; omo-sandbox.sb: 非 omo 进程禁写 .omo
+(deny file-write*
+  (subpath "${WORKSPACE}/.omo")
+  (process-exec-path-filter (require-not "omo_daemon")))
+```
+
+**可行性**: macOS 原生 sandbox-exec (seatbelt), 不需 daemon 重构 (轻量 POC).
+**限制**: macOS only (Linux 用 LSM/eBPF); profile 语法复杂; 调试难; CI (ubuntu) 不适用.
+
+### P3 实施评估 + 触发条件
+
+| 方案 | 成本 | 跨平台 | 建议 |
+|------|------|--------|------|
+| **B. omo daemon** | 大 | ✅ | 中期 (P1+P2 足够时不急) |
+| macOS sandbox-exec | 中 | ❌ darwin | 轻量 POC 可选 (平台特定) |
+| A. setuid | 中 | ✅ | ❌ 安全风险 (Python setuid) |
+| C. eBPF/LSM | 极大 | ❌ Linux | ❌ 过度工程 |
+
+**P3 触发条件** (何时实施): P1+P2 被绕过 (新写 API 漏洞 / 白名单逃逸 / agent 越权) → P3 纵深防御激活.
+**当前结论**: P1+P2 稳态 (omo lint PASS 1005 files + 敏感目标 ingress 强制) 足够, P3 待触发 (防御纵深, 非阻塞).
+
 ## 下一步行动 (P1 专项)
 
 1. Read `omo_lint.py:238-300` 完整 `_sensitive_write_issues_in_file` 逻辑
