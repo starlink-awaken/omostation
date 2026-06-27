@@ -32,16 +32,16 @@ last-reviewed: 2026-06-27
 
 **剩余**: 全场景门户盲区 (公文/家庭/健康非一等公民) — 产品层 (c2g 原语支持多场景), 非路径断.
 
-### 2. omo 5 任务 (P0-P1)
+### 2. omo 5 任务 (P0 ✅ 达成, P1 评估完成)
 
-**任务锚点** (systematic-issues-tasks):
-- 9B363829 (P0 鸿沟)
-- 26348641 (P0 反馈闭环)
-- F7114ABA (P1 God Module)
-- 94BB9C70 (P1 并发锁)
-- 6B868907 (P1 产品门户)
+**P0 达成**:
+- 9B363829 (P0 BOS 鸿沟) ✅ resolve 100% (任务4 验证)
+- 26348641 (P0 反馈闭环) ✅ GaC 覆盖 (cron 9项+healthcheck 12项+feedback-loop-guard 并发 agent 落地), 剩 mypy baseline (任务3 达成)
 
-**推进**: 逐个 omo task 评估 + 推进 (P0 优先).
+**P1 评估 (2026-06-27)**:
+- F7114ABA (God Module): check-god-module 65 超阈值 (warn 55 + error 10); **error 10 全 gbrain TS** (doctor 4825/engine 4514/migrate 4333 等); memory check-god-module-mechanism (baseline 14) 过时; 拆分留 omo-srp-refactor skill 专项 (gbrain TS 重构, 中-大工程)
+- 94BB9C70 (并发锁): 治本 = 停并发孤立 agent (操作策略, 非代码); memory concurrent-agent-contention 已记录; 推进靠流程纪律 (worktree per session + branch protection P2)
+- 6B868907 (产品门户): c2g 全场景 (公文/家庭/健康一等公民); 产品层, 依赖 c2g 全场景门户设计 (BET-6 roadmap)
 
 ### 3. mypy 清理 (P1, ✅ 大幅清零 862→2, 2026-06-27)
 
