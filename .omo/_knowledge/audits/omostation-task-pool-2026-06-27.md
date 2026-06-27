@@ -30,7 +30,7 @@ last-reviewed: 2026-06-27
 
 **结论**: draft→bet 路径代码通 + LLM 容错通. memory "断" 过时 (现已修: brainstorm 真生成 + LLM except mock).
 
-**剩余**: ✅ BET-6 原语多场景落地 (2026-06-27, c2g brainstorm/draft `--scenario` 场景化, 6 场景注册表 gongwen/vault/research/family/health/finance, commit 5b2914b); cockpit 门户层 + c2g 引擎层双齐. 剩 scenario 透传 bet/metadata (BET-7, 涉及 M2 schema 变更, 单独评估).
+**剩余**: ✅ BET-6 + BET-7 全落地 (2026-06-27): BET-6 brainstorm/draft `--scenario` 场景化 (6 场景注册表, commit 5b2914b) + BET-7 scenario 透传 task metadata (commit 4a8de9e, M2 metadata 开放不需 schema 变更); cockpit 门户 + c2g 引擎 scenario 全闭环.
 
 ### 2. omo 5 任务 (P0 ✅ 达成, P1 评估完成)
 
