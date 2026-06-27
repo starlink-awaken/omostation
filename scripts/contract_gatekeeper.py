@@ -38,6 +38,9 @@ EXEMPT_PATH_PATTERNS = (
     r"/scripts/contract_gatekeeper\.py$",
     r"__init__\.py$",
     r"src/omo/",  # omo core modules are the authorized brokers for .omo/
+    # GaC 治理工具 (维护 GaC 注册表/报告/证据, broker 特例; P1 揭示 os.* 后白名单)
+    r"/bin/gac-.*\.py$",
+    r"/bin/evidence-smoke\.py$",
 )
 
 # AST node types that mutate actual files/dirs when given a path
@@ -54,6 +57,8 @@ MUTATION_METHOD_NAMES = {
 }
 IO_PATHLIB_CTOR = {"Path", "PurePath", "PosixPath", "WindowsPath"}
 MUTATION_HELPER_NAMES = {"write_yaml_atomic", "write_text_atomic"}
+# P1 物理沙箱: os.* 函数写 .omo/spaces (堵 os.makedirs/replace/rename 绕过 Pathlib 检测)
+_OS_MUTATION_NAMES = {"makedirs", "mkdir", "replace", "rename"}
 
 
 def _is_exempt(path: Path) -> bool:
@@ -168,6 +173,19 @@ class _GatekeeperVisitor(ast.NodeVisitor):
         if isinstance(func, ast.Attribute) and func.attr in MUTATION_METHOD_NAMES:
             if self._expr_is_forbidden_path(func.value):
                 self._add(node, f"forbidden direct mutation via .{func.attr}()")
+
+        # P1: os.makedirs/os.mkdir/os.replace/os.rename 写 .omo/spaces (堵 os.* 绕过)
+        # os.replace(src, dst) / os.rename(src, dst) / os.makedirs(path) — 检查 args 含 forbidden path
+        if (
+            isinstance(func, ast.Attribute)
+            and isinstance(func.value, ast.Name)
+            and func.value.id == "os"
+            and func.attr in _OS_MUTATION_NAMES
+        ):
+            for arg in node.args:
+                if self._expr_is_forbidden_path(arg):
+                    self._add(node, f"forbidden direct mutation via os.{func.attr}()")
+                    break
 
         self.generic_visit(node)
 
