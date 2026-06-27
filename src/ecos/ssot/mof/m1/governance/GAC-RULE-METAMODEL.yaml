@@ -1,0 +1,45 @@
+id: "GAC-RULE-METAMODEL"
+type: GacRule
+name: "GaC 规则元模型实例"
+description: >-
+  GaC (Governance-as-Code, ADR-0106) 规则注册表的 M1 元模型节点.
+  此节点是 GacRule M2 schema 的首个 M1 实例, 标记 M1 层已注册 GaC 规则元模型.
+  具体规则实例不在此节点, SSOT 在 .omo/_truth/registry/governance-checks.yaml::gac.rules (115 条).
+  此节点的作用: 让 mof-schema-validate.py 能发现 GacRule 类型, 并验证未来 M1 实例节点.
+status: active
+domain: "meta"
+layer: "meta"
+created: "2026-06-28"
+version: "1.0.0"
+properties:
+  m3_parent: "GovernanceElement.GacRule"
+  id: "GAC-RULE-METAMODEL"
+  dimension: "X4"
+  layer: "meta"
+  check_type: "drift_audit"
+  executor: ["ci_gate", "omo_audit", "radar_cron"]
+  lifecycle: "active"
+  version: "1.0.0"
+  created_at: "2026-06-28"
+  target: ".omo/_truth/registry/governance-checks.yaml::gac.rules"
+  adr: "ADR-0106"
+  rule_count: 115
+  native_count: 18
+  indexed_count: 97
+  m2_schema: "projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml"
+  validator: "bin/gac-validate.py"
+  drift_detector: "bin/gac-drift.py"
+  mof_validator: "bin/gac-mof-validate.py"
+
+source: ".omo/_truth/registry/governance-checks.yaml"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  north_star: ".omo/_knowledge/gac/NORTH-STAR.md"
+  stage3_4_design: ".omo/_knowledge/gac/stage3-4-design.md"
+
+state_history:
+  - state: active
+    timestamp: '2026-06-28T00:00:00Z'
+    reason: Phase 4A M1 元模型实例化 (ADR-0106 机制 7)
