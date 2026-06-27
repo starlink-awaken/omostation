@@ -45,6 +45,8 @@ CORE_FILES = {
     "hook": "bin/gac-hook-pre-edit.py",
     "dashboard": "bin/gac-dashboard.py",
     "mof_validate": "bin/gac-mof-validate.py",
+    "doc_ssot_lint": "bin/doc-ssot-lint.py",
+    "hygiene": "bin/gac-hygiene-check.py",
 }
 
 
@@ -182,7 +184,32 @@ def healthcheck() -> dict:
     # 6. 机制 7 GacRule M2
     report["m2_type"] = check_m2_type()
 
-    # 总体健康 (全绿 = 文件全 + validate ok + drift ok + M2 ok + 无 ADR 残留 + dimension 全)
+    # 7. doc-ssot (CR-X4-DOC-SSOT: 文档 SSOT 正交契约)
+    ds_code, ds_out = run_tool("bin/doc-ssot-lint.py", ["--json"])
+    try:
+        ds_json = json.loads(ds_out) if ds_out else {}
+    except json.JSONDecodeError:
+        ds_json = {}
+    report["doc_ssot"] = {
+        "ok": ds_code == 0,
+        "conflicts": ds_json.get("conflicts", 0),
+        "files_scanned": ds_json.get("files_scanned", 0),
+    }
+
+    # 8. hygiene (CR-HYG-01/02: 工作区卫生)
+    hy_code, hy_out = run_tool("bin/gac-hygiene-check.py", ["--json"])
+    try:
+        hy_json = json.loads(hy_out) if hy_out else {}
+    except json.JSONDecodeError:
+        hy_json = {}
+    report["hygiene"] = {
+        "ok": hy_code == 0,
+        "issues": hy_json.get("issues", 0),
+        "zero_byte": hy_json.get("zero_byte_count", 0),
+        "case_conflicts": hy_json.get("case_conflict_count", 0),
+    }
+
+    # 总体健康 (文件全 + validate/drift/M2 ok + 无 ADR 残留 + dimension 全 + doc-ssot/hygiene ok)
     report["healthy"] = (
         not missing
         and report["validate"]["ok"]
@@ -190,6 +217,8 @@ def healthcheck() -> dict:
         and report["m2_type"].get("ok", False)
         and report["adr_residue_0104"] == 0
         and report["coverage"]["dimension_complete"]
+        and report["doc_ssot"]["ok"]
+        and report["hygiene"]["ok"]
     )
     return report
 
@@ -241,6 +270,20 @@ def print_report(report: dict) -> None:
         )
     else:
         print(f"▶ GacRule M2 (机制7): ❌ {m.get('error')}")
+
+    # doc-ssot (CR-X4-DOC-SSOT)
+    ds = report["doc_ssot"]
+    ds_status = "✅" if ds["ok"] else "❌"
+    print(
+        f"▶ doc-ssot (CR-X4-DOC-SSOT): {ds_status} 扫描={ds['files_scanned']} 冲突={ds['conflicts']}"
+    )
+
+    # hygiene (CR-HYG-01/02)
+    h = report["hygiene"]
+    h_status = "✅" if h["ok"] else "❌"
+    print(
+        f"▶ hygiene (CR-HYG-01/02): {h_status} 0字节={h['zero_byte']} 大小写冲突={h['case_conflicts']}"
+    )
 
     print()
     overall = "✅ 全绿 (GaC 体系闭环生效)" if report["healthy"] else "❌ 有红 (见上)"
