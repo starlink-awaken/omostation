@@ -1,0 +1,212 @@
+# docs/project-registry.yaml — 项目元数据 SSOT
+#
+# 本文件是所有项目元数据的唯一读源 (Single Source of Truth)。
+# 所有 markdown 文档 (CLAUDE.md / AGENTS.md / README.md / LAYER-INDEX.md 等)
+# 必须引用本文件，不得硬编码以下任何值。
+#
+# 更新方式: 修改实际代码后，同步更新本文件。CI 门禁 (bin/doc-ssot-lint.py) 会检测
+# markdown 中的硬编码数字是否与本注册表冲突。
+#
+# drift 检测: python3 bin/gen-project-registry.py (registry version/python vs pyproject.toml)
+# 自动修复: python3 bin/gen-project-registry.py --write (修复 version/python drift)
+
+workspace:
+  architecture: "5+4+1+1"
+  ecos_version: "v6"
+  total_submodules: 17          # git submodule status | wc -l
+  total_projects: 17            # ls projects/*/ | wc -l (含 cockpit-ui 非子模块)
+
+layers:
+  L0: "协议层 (ecos)"
+  L1: "运行时 (runtime)"
+  L2: "引擎面 (kairon / gbrain / omo / metaos)"
+  L3: "入口层 (cockpit / cockpit-ui)"
+  L4: "自我层 (l4-kernel)"
+  I0: "织层 (agora)"
+  M0: "横切框架 (model-driven)"
+  X:  "横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub / cockpit-ui)"
+
+projects:
+  # ── Python projects ──
+  agora:
+    layer: "I0"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "3.0.0"
+    role: "MCP Hub · BOS URI 路由"
+    bos_services: 100             # grep -c 'uri: "bos://' etc/bos-services.yaml
+    src_dir: "src/agora/"
+
+  kairon:
+    layer: "L2"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "知识引擎 monorepo"
+    packages: 16                 # ls packages/*/ | wc -l
+    package_list:
+      - codeanalyze
+      - core-models
+      - eidos
+      - forge
+      - health-profile
+      - iris
+      - kairon-lib-events
+      - kairon-observability
+      - kairon-pipeline
+      - kairon-plugin-sdk
+      - kairon-utils
+      - kos
+      - kronos
+      - minerva
+      - ontoderive
+      - sophia
+
+  gbrain:
+    layer: "L2"
+    stack: "TypeScript (bun)"
+    role: "Postgres 知识数据库"
+    src_dir: "src/"
+
+  omo:
+    layer: "L2"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "uv_build"
+    version: "1.0.0"
+    role: "治理中枢 · Agent OS 内核"
+    src_files: 173               # find src/omo -name "*.py" | wc -l
+    cli_subcommands: 39          # grep -c 'args\[0\]' cli.py
+    mcp_tools: 19                # grep -c '@mcp.tool()' mcp_server.py
+
+  metaos:
+    layer: "L2"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "编排引擎 · 决策门控/免疫/路由"
+
+  runtime:
+    layer: "L1"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "运行时 · Matrix/Scheduler/KEI 沙箱"
+
+  ecos:
+    layer: "L0"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "0.8.0"
+    role: "SSB 签名链 + MOF 元模型 + L0 约束"
+    mof_tools: 34                # find ssot/tools -name "*.py" ! -name "__init__" ! -name "_*" | wc -l
+    m1_yaml: 1196                # find mof/m1 -name "*.yaml" | wc -l
+    m2_yaml: 48                  # find mof/m2 -name "*.yaml" | wc -l
+    m1_domains: 28               # find mof/m1/domain -name "*.yaml" | wc -l
+    governance_modules: 15       # find l0/governance -name "*.py" ! -name "__init__" | wc -l
+
+  cockpit:
+    layer: "L3"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "0.4.0"
+    role: "统一入口 (CLI + MCP + Web)"
+
+  l4-kernel:
+    layer: "L4"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "自我层管理面 · 域统一注册 · KEMS"
+    domains: 28                 # grep -c "Domain(" registry.py
+
+  model-driven:
+    layer: "M0"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "生命周期横切框架 · M3→M2→M1 桥接"
+
+  aetherforge:
+    layer: "X"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "能力与算力框架 (gateway/mesh/swarm)"
+
+  c2g:
+    layer: "X"
+    stack: "Python (uv)"
+    python: ">=3.13"
+    build_backend: "uv_build"
+    version: "0.1.0"
+    role: "战略需求引擎 (V2P → C2G)"
+
+  bus-foundation:
+    layer: "X"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "0.2.0"
+    role: "Omni-Bus (Data/Event/Control)"
+
+  omo-debt:
+    layer: "X"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "技术债务评分 CLI"
+
+  observability:
+    layer: "X"
+    stack: "Docker"
+    role: "Langfuse 可观测性"
+
+  family-hub:
+    layer: "X"
+    stack: "Python (FastMCP)"
+    python: ">=3.13"
+    build_backend: "uv_build"
+    version: "0.1.0"
+    role: "家庭数字枢纽"
+
+  cockpit-ui:
+    layer: "X"
+    stack: "TypeScript (Vite, React)"
+    role: "Web 控制台 UI (挂载至 cockpit /hermes/*)"
+    note: "非 git 子模块，直接在 projects/ 下"
+
+# ── Cross-project facts ──
+bos:
+  service_count: 100            # grep -c 'uri: "bos://' bos-services.yaml
+  domains:
+    primary: ["memory", "governance", "analysis", "persona", "capability"]
+    extended: ["meta", "omo", "swarm", "system"]
+
+gac:
+  rules_count: 9                 # grep -c '^  - id:' governance-checks.yaml
+
+# ── Archived projects (historical reference) ──
+archived:
+  - name: "compute-mesh"
+    merged_into: "aetherforge/packages/mesh"
+  - name: "swarm-engine"
+    merged_into: "aetherforge/packages/swarm"
+  - name: "hermes-console"
+    merged_into: "cockpit-ui"
+  - name: "agora-dashboard"
+    merged_into: "cockpit HTTP :8090"
+
+# ── Metadata ──
+_last_updated: "2026-06-27"
+_update_method: "Manual version/python; drift 由 bin/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"

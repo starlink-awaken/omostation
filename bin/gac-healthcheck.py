@@ -47,6 +47,7 @@ CORE_FILES = {
     "mof_validate": "bin/gac-mof-validate.py",
     "doc_ssot_lint": "bin/doc-ssot-lint.py",
     "hygiene": "bin/gac-hygiene-check.py",
+    "gen_registry": "bin/gen-project-registry.py",
 }
 
 
@@ -209,7 +210,19 @@ def healthcheck() -> dict:
         "case_conflicts": hy_json.get("case_conflict_count", 0),
     }
 
-    # 总体健康 (文件全 + validate/drift/M2 ok + 无 ADR 残留 + dimension 全 + doc-ssot/hygiene ok)
+    # 9. registry drift (代码→registry SSOT 链闭环; doc-ssot 第4步)
+    gr_code, gr_out = run_tool("bin/gen-project-registry.py", ["--json"])
+    try:
+        gr_json = json.loads(gr_out) if gr_out else {}
+    except json.JSONDecodeError:
+        gr_json = {}
+    report["registry_drift"] = {
+        "ok": gr_code == 0,
+        "drift_count": gr_json.get("drift_count", 0),
+        "projects_scanned": gr_json.get("projects_scanned", 0),
+    }
+
+    # 总体健康 (文件全 + validate/drift/M2 ok + 无 ADR 残留 + dimension 全 + doc-ssot/hygiene/registry-drift ok)
     report["healthy"] = (
         not missing
         and report["validate"]["ok"]
@@ -219,6 +232,7 @@ def healthcheck() -> dict:
         and report["coverage"]["dimension_complete"]
         and report["doc_ssot"]["ok"]
         and report["hygiene"]["ok"]
+        and report["registry_drift"]["ok"]
     )
     return report
 
@@ -283,6 +297,13 @@ def print_report(report: dict) -> None:
     h_status = "✅" if h["ok"] else "❌"
     print(
         f"▶ hygiene (CR-HYG-01/02): {h_status} 0字节={h['zero_byte']} 大小写冲突={h['case_conflicts']}"
+    )
+
+    # registry drift (代码→registry SSOT 链)
+    gr = report["registry_drift"]
+    gr_status = "✅" if gr["ok"] else "❌"
+    print(
+        f"▶ registry-drift (代码→SSOT): {gr_status} 扫描={gr['projects_scanned']} drift={gr['drift_count']}"
     )
 
     print()
