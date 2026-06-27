@@ -52,11 +52,14 @@ last-reviewed: 2026-06-27
 
 **范式**: MYPYPATH=src 真相 + 增量清零 (kos 范式).
 
-### 4. BOS 鸿沟 (P1)
+### 4. BOS 鸿沟 (P1, ✅ 已修复 2026-06-27)
 
-**现状** (bos-decl-exec-gap): 102 URI 声明 alive 但 resolve 全失败. 静态 42 vs 动态 102 (60 假阳性). evidence-smoke 基线 53.0.
+**现状验证** (evidence-smoke 2026-06-27): resolve 率 **100% (100/100, 鸿沟 0)**.
+- memory `bos-decl-exec-gap` (102 URI resolve 全失败) **过时** — 现已全 resolve.
+- 任务 9B363829 (P0 BOS 鸿沟 resolve 21.6%→≥90%) **已达成** (100%).
+- transport: stdio 44 / mcp_stdio 37 / internal 19.
 
-**推进**: evidence-smoke 量化 + 逐个 resolve 修复.
+**结论**: BOS 鸿沟闭环 (前面工作或并发 agent 修复). memory 待更新.
 
 ## 推进计划
 
