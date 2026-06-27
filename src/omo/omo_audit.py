@@ -8,9 +8,9 @@ This module serves two roles:
      `debt_id` field.
 
   2. **Workspace compliance checks** (P30-W1 GOV-MERGE, migrated from
-     kairon_governance.audit) — `run_governance_audit()` and helpers run 6
-     checks (lint, tests, debt, ADR, tasks, agora-health) and produce a
-     Markdown + dataclass report.
+     kairon_governance.audit) — `run_governance_audit()` and helpers run 7
+     checks (lint, tests, debt, ADR, tasks, agora-health, doc-lifecycle) and
+     produce a Markdown + dataclass report.
 
 The two roles share this module because both produce audit-style output
 (JSONL / Markdown) and both underpin governance visibility. The debt
@@ -240,7 +240,7 @@ class GovernanceReport:
         lines += [
             "## 5. 评分方法",
             "",
-            "- 总分 = 6 项检查分数的算术平均(等权)",
+            "- 总分 = 7 项检查分数的算术平均(等权)",
             "- 等级阈值: 98+=A+ | 90-97=A | 80-89=B | 70-79=C | 60-69=D | <60=F",
             "- 扣分规则:",
             "  - **lint**: 每个 ruff error 扣 5 分",
@@ -300,7 +300,7 @@ def _mini_yaml_parse(text: str) -> dict:
     return out
 
 
-# ── 6 项检查 ─────────────────────────────────────────────
+# ── 7 项检查 ─────────────────────────────────────────────
 
 
 def governance_check_lint() -> CheckResult:
@@ -845,7 +845,7 @@ def build_recommendations(checks: list[CheckResult]) -> list[str]:
 
 
 def run_governance_audit(workspace: Path | None = None) -> GovernanceReport:
-    """跑 6 项检查并聚合报告.
+    """跑 7 项检查并聚合报告.
 
     workspace 参数允许测试时传入 tmp_path, 默认读 WORKSPACE_ROOT.
     """
