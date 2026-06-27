@@ -8,7 +8,7 @@ related-task: F7114ABA
 
 # F7114ABA gbrain God Module SRP 拆分计划
 
-> check-god-module error 文件 (>1500L) 拆分路线图. engine.ts 范式已建立, 剩 8 文件留 srp-refactor 专项 wave.
+> check-god-module error 文件 (>1500L) 拆分路线图. Wave 0-1 完成 (engine.ts 类型提取 + cli.ts 函数提取 + sync.ts helpers 提取), error 10→7. 剩 7 文件留 wave 2-3.
 
 ## 范式总结: engine.ts 类型提取 (已完成 ✅)
 
@@ -27,7 +27,7 @@ related-task: F7114ABA
 | 文件 | 行数 | 类型数 | 切入点 | 风险 | 优先级 | 状态 |
 |------|------|:------:|--------|:----:|:------:|:----:|
 | **cli.ts** | 1735→1495 | 1 | 独立功能区提取 (help→cli-help.ts, identity→cli-identity.ts) | 中 | P2 | ✅ done (40550f12) |
-| **commands/sync.ts** | 1609 | 2 | performSync 编排 vs pure helpers 分离 (core/sync.ts 已是 pure) | 中 | P2 | ⬜ 待拆 |
+| **commands/sync.ts** | 1609→1361 | 2 | helpers→sync-helpers.ts (cost-preview/slug-resolve/git-helpers/anchor 持久化), export * 向后兼容 | 中 | P2 | ✅ done (7253cc30) |
 | **cycle.ts** | 1707 | 7 | 类型区(56-254, ~200L)提取不够达标; 需 phase wrappers 拆到 cycle/phases/ | 中高 | P3 |
 | **serve-http.ts** | 1756 | 3 | OAuth/admin/SSE/MCP 四职责 → 子模块 (oauth/server-sse/mcp-dispatch) | 高 | P3 |
 | **gateway.ts** | 2895 | 14 | 类型分散 + 模块状态耦合 (_config/_modelCache/_embedTransport); 子模块: rerank/voyage-compat/dims | 高 | P3 |
@@ -52,9 +52,10 @@ cycle.ts 已拆出 cycle/ 子目录 (14 模块: anomaly/auto-think/base-phase/bu
 
 ## srp wave 建议
 
-**Wave 1 (低风险, P2)**: cli.ts + commands/sync.ts
-- 命令 dispatch 拆分有成熟模式 (cockpit status.py 范式)
-- core/sync.ts 已是 pure, commands/sync.ts 编排层可薄化
+**Wave 1 (低风险, P2)**: cli.ts + commands/sync.ts ✅ 完成 (2026-06-28)
+- cli.ts 1735→1495 (40550f12): help→cli-help.ts, identity→cli-identity.ts (函数提取范式, 参数化依赖)
+- sync.ts 1609→1361 (7253cc30): helpers→sync-helpers.ts (cost-preview/slug-resolve/git-helpers/anchor 持久化), `export *` 向后兼容
+- 范式确立: 独立功能区提取 + `export * from './x-helpers.ts'` 保持消费者 import 不变 (mirror engine.ts wave-0) + typecheck + 相关 test 双验证
 
 **Wave 2 (中风险, P3)**: cycle.ts + gateway.ts + serve-http.ts
 - cycle.ts phase wrappers → cycle/phases/
