@@ -333,6 +333,7 @@ def main() -> int:
     mcp_p.add_argument("--list-tools", action="store_true", help="列出已注册的工具，不启动 server")
 
     sub.add_parser("gongwen", help="📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域)")
+    sub.add_parser("finance", help="💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)")
     gov_p = sub.add_parser("governance", help="架构治理 (委派 arcnode-*)")
     gov_p.add_argument(
         "subcommand",
@@ -727,6 +728,7 @@ def main() -> int:
         "contracts": dispatch_contracts,
         "product-health": cmd_product_health,
         "gongwen": lambda a: __import__("cockpit.commands.gongwen", fromlist=["cmd_gongwen"]).cmd_gongwen(a),
+        "finance": lambda a: __import__("cockpit.commands.finance", fromlist=["cmd_finance"]).cmd_finance(a),
         "governance": cmd_governance,
         "domains": _c_domains,
         "skill": _c_skill,

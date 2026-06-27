@@ -26,11 +26,11 @@ def _cmd_discover(args: Namespace) -> int:
     console.print("  [cyan]docs/ENTRY-CONVERGENCE.md[/]  — 入口收敛方案\n")
     # 产品走查 v5 #V5-05: 同步 help 全量命令地图 (之前 discover 仅列 ~10 入口,
     # 与 help 矛盾; 现补全 37 命令分 6 组, 两个发现入口一致)
-    console.print("[bold]命令地图 (38 个, 分 6 组)[/]")
+    console.print("[bold]命令地图 (39 个, 分 6 组)[/]")
     console.print("  [green]入门导览[/] demo · status · daily · help · quickstart · discover · version")
     console.print("  [green]知识研究[/] research · import · vault · search · skill")
     console.print(
-        "  [green]生活场景(6一等公民)[/] gongwen公文 · vault知识 · research学习 · scenario家庭 · health健康 · finance(规划中)"
+        "  [green]生活场景(6一等公民)[/] gongwen公文 · vault知识 · research学习 · scenario家庭 · health健康 · finance财务"
     )
     console.print("  [green]个人家庭工作[/] profile · cards · scenario · brief · context · domains · gongwen")
     console.print("  [green]健康治理[/] health · product-health · audit · governance · monitor")

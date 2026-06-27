@@ -506,7 +506,7 @@ def cmd_help(_: argparse.Namespace) -> int:
             "  [cyan]search[/] 跨源搜索 · [cyan]skill[/] 定时技能\n\n"
             "[bold green]🌿 生活场景 (6 一等公民, 为夏服务) — TASK-08B2A2C5 P0[/]\n"
             "  [cyan]gongwen[/] 公文 · [cyan]vault[/] 知识 · [cyan]research[/] 学习\n"
-            "  [cyan]scenario[/] 家庭 · [cyan]health[/] 健康 · [cyan]finance[/] 财务(规划中)\n\n"
+            "  [cyan]scenario[/] 家庭 · [cyan]health[/] 健康 · [cyan]finance[/] 财务\n\n"
             "[bold green]👨‍👩‍👧 个人 & 家庭 & 工作[/]\n"
             "  [cyan]profile[/] 身份档案 · [cyan]cards[/] 卡片状态 · [cyan]scenario[/] 家庭/工作场景 · [cyan]gongwen[/] 公文门户\n"
             "  [cyan]brief[/] 会话简报 · [cyan]context[/] 上下文 · [cyan]domains[/] 域\n\n"
