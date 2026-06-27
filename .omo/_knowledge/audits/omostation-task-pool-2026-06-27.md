@@ -20,18 +20,17 @@ last-reviewed: 2026-06-27
 
 ## 任务详情
 
-### 1. c2g 自治盲区 (P0, 推进中)
+### 1. c2g 自治盲区 (P0, draft→bet 已通验证, 剩全场景门户)
 
-**现状**: c2g 五原语 (brainstorm/draft/bet/radar/gc) 天然匹配 GaC 元治理循环. 但:
-- brainstorm 已修真 (memory: product-walkthrough-focus)
-- **draft→bet 路径断** (draft 产出无法顺畅转 bet)
-- 全场景门户盲区 (公文/家庭/健康非一等公民)
+**draft→bet 路径验证 (2026-06-27)**: ✅ **已通** (memory `product-walkthrough-focus` 过时更新)
+- brainstorm 真生成 Pitch (非 mock, cli.py:58-73)
+- bet 接受 Pitch → `_import_pitch` (Upstream 验证 CR-STRATEGY-01 + LLM 提取 + 物化)
+- **LLM 容错**: httpx ConnectError → `except Exception` (llm.py:144) → `_mock_extract` fallback (行 148)
+- 物化: local adapter `.c2g_data/`, ecos adapter 需 omo (goals/planned)
 
-**推进步骤**:
-1. 探查 c2g cli brainstorm/draft/bet 命令现状
-2. 定位 draft→bet 断点 (schema/流程/入口)
-3. 修复 draft→bet 路径
-4. (扩展) 全场景门户 (公文/家庭/健康 一等公民)
+**结论**: draft→bet 路径代码通 + LLM 容错通. memory "断" 过时 (现已修: brainstorm 真生成 + LLM except mock).
+
+**剩余**: 全场景门户盲区 (公文/家庭/健康非一等公民) — 产品层 (c2g 原语支持多场景), 非路径断.
 
 ### 2. omo 5 任务 (P0-P1)
 
