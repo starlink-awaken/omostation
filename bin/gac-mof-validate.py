@@ -38,7 +38,11 @@ REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
 
 
 def load_m2_fields() -> dict:
-    """读 GacRule M2 type fields (元模型 schema 源)."""
+    """读 GacRule M2 type fields (元模型 schema 源).
+
+    Phase 4A: 支持 requiredProperties + optionalProperties (mof-schema-validate.py 兼容格式).
+    旧格式 fields (带 required: true/false) 仍兼容.
+    """
     import yaml
 
     if not M2.exists():
@@ -46,7 +50,22 @@ def load_m2_fields() -> dict:
     docs = [d for d in yaml.safe_load_all(M2.read_text(encoding="utf-8")) if d]
     if not docs:
         return {}
-    return docs[-1].get("GacRule", {}).get("fields", {})
+    gac_rule = docs[-1].get("GacRule", {})
+
+    # 新格式: requiredProperties + optionalProperties (mof-schema-validate.py 兼容)
+    req = gac_rule.get("requiredProperties", {})
+    opt = gac_rule.get("optionalProperties", {})
+    if req or opt:
+        # 合并, requiredProperties 的字段标记 required=true
+        merged = {}
+        for fname, fspec in req.items():
+            merged[fname] = {**fspec, "required": True}
+        for fname, fspec in opt.items():
+            merged[fname] = {**fspec, "required": False}
+        return merged
+
+    # 旧格式: fields (带 required: true/false)
+    return gac_rule.get("fields", {})
 
 
 def load_rules() -> list[dict]:
