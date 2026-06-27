@@ -49,6 +49,7 @@ CORE_FILES = {
     "hygiene": "bin/gac-hygiene-check.py",
     "gen_registry": "bin/gen-project-registry.py",
     "ingest_legacy": "bin/gac-ingest-legacy.py",
+    "bootstrap": "bin/gac-bootstrap.py",
 }
 
 
@@ -239,7 +240,22 @@ def healthcheck() -> dict:
         "ghost": len(lg_json.get("ghost", [])),
     }
 
-    # 总体健康 (文件全 + validate/drift/M2 ok + 无 ADR 残留 + dimension 全 + doc-ssot/hygiene/registry-drift/legacy-drift ok)
+    # 11. GaC 自举递归 (元治理核心: GaC 治 GaC 自身, CR-X2-GAC-BOOTSTRAP)
+    bs_code, bs_out = run_tool("bin/gac-bootstrap.py", ["--json"])
+    try:
+        bs_json = json.loads(bs_out) if bs_out else {}
+    except json.JSONDecodeError:
+        bs_json = {}
+    report["bootstrap"] = {
+        "ok": bs_code == 0,
+        "tools_alive": bs_json.get("tools", {}).get("alive", 0),
+        "tools_total": bs_json.get("tools", {}).get("total", 0),
+        "indexed_missing": bs_json.get("indexed_integrity", {}).get("missing_count", 0),
+        "exec_issues": bs_json.get("exec_effective", {}).get("issues_count", 0),
+        "schema_issues": bs_json.get("schema_self", {}).get("issues_count", 0),
+    }
+
+    # 总体健康 (含 bootstrap: GaC 自身完整才算全绿)
     report["healthy"] = (
         not missing
         and report["validate"]["ok"]
@@ -251,6 +267,7 @@ def healthcheck() -> dict:
         and report["hygiene"]["ok"]
         and report["registry_drift"]["ok"]
         and report["legacy_drift"]["ok"]
+        and report["bootstrap"]["ok"]
     )
     return report
 
@@ -329,6 +346,13 @@ def print_report(report: dict) -> None:
     lg_status = "✅" if lg["ok"] else "❌"
     print(
         f"▶ legacy-drift (收敛同步): {lg_status} 源={lg['legacy_count']} indexed={lg['indexed_count']} missing={lg['missing']} ghost={lg['ghost']}"
+    )
+
+    # GaC 自举递归 (元治理: GaC 治 GaC 自身)
+    bs = report["bootstrap"]
+    bs_status = "✅" if bs["ok"] else "❌"
+    print(
+        f"▶ bootstrap (GaC 治 GaC): {bs_status} 工具={bs['tools_alive']}/{bs['tools_total']} indexed缺={bs['indexed_missing']} exec错={bs['exec_issues']} schema错={bs['schema_issues']}"
     )
 
     print()

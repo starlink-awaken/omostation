@@ -358,6 +358,20 @@ gac:
       created_at: "2026-06-27"
       adr: "ADR-0106"
 
+    # ── X2 元治理递归: GaC 自举 (GaC 治 GaC 自身完整性, 深度分析 gap1/2/4) ──
+    - id: CR-X2-GAC-BOOTSTRAP
+      dimension: X2
+      layer: meta
+      name: "GaC 自举递归 (工具活/indexed 完整/exec 有效/schema 自洽)"
+      description: "GaC 治一切, GaC 自己也要被治 (NORTH-STAR 元治理递归); bin/gac-bootstrap.py 检测 4 层: 工具活/死 + indexed source_ref 完整 + executor 执行有效 + schema 自洽"
+      check_type: drift_audit
+      target: "bin/gac-bootstrap.py (GaC 自身完整性自检)"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
     - id: X1-OMNI-BUS-ROUTING-20260617
