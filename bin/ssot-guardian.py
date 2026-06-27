@@ -296,6 +296,23 @@ def _check_bos_unimplemented() -> dict:
     }
 
 
+def _check_hygiene() -> dict:
+    """CR-HYG-01/02: 工作区卫生 (0字节文件 + 大小写 inode). 复用 gac-hygiene-check (DRY)."""
+    result = _run(
+        ["python3", str(WORKSPACE_ROOT / "bin" / "gac-hygiene-check.py"), "--json"],
+        check=False,
+    )
+    try:
+        data = json.loads(result.stdout) if result.stdout else {}
+    except json.JSONDecodeError:
+        return {"passed": False, "error": "gac-hygiene-check JSON parse failed"}
+    return {
+        "passed": result.returncode == 0,
+        "zero_byte": data.get("zero_byte_count", 0),
+        "case_conflicts": data.get("case_conflict_count", 0),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="SSOT 漂移守门员")
     parser.add_argument("--auto-fix", action="store_true", help="自动修复白名单字段")
@@ -403,6 +420,20 @@ def main(argv: list[str] | None = None) -> int:
             }
         )
 
+    # 6. CR-HYG-01/02 工作区卫生 (0字节 + 大小写 inode; 复用 gac-hygiene-check, DRY)
+    hyg_check = _check_hygiene()
+    if not hyg_check.get("passed"):
+        issues.append(
+            {
+                "type": "workspace_hygiene",
+                "severity": "medium",
+                "zero_byte": hyg_check.get("zero_byte", 0),
+                "case_conflicts": hyg_check.get("case_conflicts", 0),
+                "auto_fix": False,
+                "note": "0字节文件或大小写 inode 冲突 (CR-HYG-01/02); 见 bin/gac-hygiene-check.py",
+            }
+        )
+
     # 报告
     unresolved = [i for i in issues if not i.get("fixed")]
     fixed = [i for i in issues if i.get("fixed")]
@@ -429,6 +460,8 @@ def main(argv: list[str] | None = None) -> int:
             elif i["type"] == "unimplemented_bos_decay":
                 for b in i.get("broken", []):
                     print(f"     + {b['uri']}: {b['reason']}")
+            elif i["type"] == "workspace_hygiene":
+                print(f"     0字节={i['zero_byte']} 大小写冲突={i['case_conflicts']}")
     else:
         print("✅ SSOT 一致性检查通过")
 

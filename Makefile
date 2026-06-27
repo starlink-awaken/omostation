@@ -40,13 +40,15 @@ help:
 	@echo "make doc-lint            检查文档格式"
 	@echo ""
 	@echo "=== 开发环境 ==="
-	@echo "make install-hooks       装 git pre-push 钩子 (子模块自动同步, 防 CI 悬空)"
+	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + 工作区卫生)"
 	@echo ""
 	@echo "make help                显示本消息"
 
-install-hooks:  ## 装 git pre-push 钩子 (主仓 push 时自动 sync 子模块, 防 CI 悬空). 新 clone 必跑.
+install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + 工作区卫生). 新 clone 必跑.
 	install -m 755 .githooks/pre-push .git/hooks/pre-push
-	@echo "✅ 已装 .git/hooks/pre-push (主仓 push 时自动 sync 子模块, 防 CI 悬空)"
+	install -m 755 .githooks/pre-commit .git/hooks/pre-commit
+	@echo "✅ 已装 .git/hooks/pre-push (push 时 sync 子模块, 防 CI 悬空)"
+	@echo "✅ 已装 .git/hooks/pre-commit (commit 时工作区卫生守门 CR-HYG-01/02)"
 
 kairon-test:
 	cd projects/kairon && make test
