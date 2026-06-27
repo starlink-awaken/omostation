@@ -43,14 +43,14 @@ last-reviewed: 2026-06-27
 
 **推进**: 逐个 omo task 评估 + 推进 (P0 优先).
 
-### 3. mypy 清理 (P1)
+### 3. mypy 清理 (P1, ✅ 大幅清零 862→2, 2026-06-27)
 
-**现状** (kairon-mypy-cleanup-progress): kos 清零 / iris 61→11 / baseline 873. 剩:
-- minerva 175 errors
-- eidos 217 errors
-- ontoderive 470 + iris 架构债 11
+**现状验证**: minerva 1 + eidos 0 + ontoderive 1 + kos 0 + iris 0 = **2 errors**.
+- memory `kairon-mypy-cleanup-progress` (862) **大幅过时** — 并发 agent + 本轮 ontoderive 推进.
+- 本轮 ontoderive 7→1 (pipeline _OD 重构 + None 检查, kairon baecc50).
+- 剩 2 baseline: minerva init.py (命名冲突, 被 3 处 import) + ontoderive pipeline:18 (_OD no-redef, try/except import 限制).
 
-**范式**: MYPYPATH=src 真相 + 增量清零 (kos 范式).
+**结论**: mypy 接近全清 (862→2). 剩 2 是 baseline 存量/配置 (typecheck-gate 绿).
 
 ### 4. BOS 鸿沟 (P1, ✅ 已修复 2026-06-27)
 
