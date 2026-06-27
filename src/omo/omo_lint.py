@@ -73,6 +73,11 @@ from .omo_lint_yaml_bypass import (  # noqa: E402, F401
     _check_yaml_bypass,
     cmd_lint_yaml_bypass,
 )
+from .omo_lint_god_module import (  # noqa: E402, F401
+    cmd_lint_god_module,
+    ERROR_LOC as _GOD_MODULE_ERROR_LOC,
+    WARN_LOC as _GOD_MODULE_WARN_LOC,
+)
 
 
 def cmd_lint_direct_omo_io(
@@ -516,6 +521,13 @@ def main(argv: list[str] | None = None) -> int:
     task_policy.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"
     )
+    god_module = sub.add_parser(
+        "god-module",
+        help="单文件 LOC 硬规则 (TASK-F7114ABA: warn>600L, error>800L)",
+    )
+    god_module.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
 
     args = parser.parse_args(argv)
     if args.command == "schemas":
@@ -552,6 +564,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_lint_doc_lifecycle(args.workspace_root, verbose=args.verbose)
     if args.command == "doc-archival-suggestions":
         return cmd_lint_doc_archival_suggestions(args.workspace_root)
+    if args.command == "god-module":
+        return cmd_lint_god_module(args.workspace_root)
     parser.print_help()
     return 1
 
