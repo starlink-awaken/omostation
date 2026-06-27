@@ -23,10 +23,10 @@ GacRule:
   fields:
     id:
       type: string
-      pattern: "^CR-[A-Z0-9-]+$"
+      pattern: "^[A-Z][A-Z0-9_-]+$"
       required: true
       unique: true
-      description: 规则唯一标识 (e.g. CR-X4-HEALTH-SSOT)
+      description: 规则唯一标识 (native CR-* 或 indexed 原真 id 如 X1-OMNI/MCP/L0_YAML)
     dimension:
       type: enum
       values: [X1, X2, X3, X4]
@@ -39,7 +39,7 @@ GacRule:
       description: 架构层 (M0 模型 / L0 协议 / L1 运行时 / L2 引擎 / L3 入口 / meta 横切)
     check_type:
       type: enum
-      values: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case]
+      values: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index]
       required: true
       description: 检查类型 (泛化执行器按此分发, 机制 3)
     executor:
