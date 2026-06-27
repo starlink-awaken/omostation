@@ -32,3 +32,13 @@
 
 # 每日 06:30 X2 freshness 审计 (GaC indexed X2-FRESH-* 13 条执行; 收编 x2-freshness-crontab)
 30 6 * * * cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=x2-freshness uv run python scripts/omo/x2_freshness_audit.py >> /tmp/gac-x2-freshness.log 2>&1
+
+# 每日 07:00 自反馈回路监控 (TASK-26348641 P0 闭环: governance/mypy 假绿告警)
+#   - 检查 governance-history.jsonl + ingress-audit.jsonl 时间戳 (>24h 告警)
+#   - 检查 working-tree 累积 (L0:CR-GOV-COMMIT-FREQUENCY-01 — >100 warn, >500 error)
+#   - 检查 mypy baseline (L0:CR-ENG-MYPY-TRUTH-01 — 强制 MYPYPATH=src, 防假绿)
+#   - 越界时通过 omo event emit 上报 feedback_loop_{warn,error} 事件
+0 7 * * * cd /Users/xiamingxing/Workspace && python3 bin/feedback-loop-guard.py >> /tmp/feedback-loop-guard.log 2>&1
+
+# 每日 07:15 mypy baseline gate (工作区级 MYPYPATH=src 真相检查; 委托 kairon mypy_report)
+15 7 * * * cd /Users/xiamingxing/Workspace && python3 bin/mypy-baseline-gate --dry-run >> /tmp/mypy-baseline-gate.log 2>&1
