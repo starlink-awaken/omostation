@@ -17,23 +17,32 @@ opened_at: '2026-06-05T14:28:47Z'
 last_reviewed_at: null
 next_review_at: null
 gate_level: none
-status: "resolved"
-priority: "P1"
-created_at: "2026-06-06T10:15:00Z"
-resolved_at: "2026-06-06T16:34:00Z"
-assigned_to: "system"
-tags: ["kairon", "minerva", "l4", "cards"]
+priority: P1
+created_at: '2026-06-06T10:15:00Z'
+resolved_at: '2026-06-06T16:34:00Z'
+assigned_to: system
+tags:
+- kairon
+- minerva
+- l4
+- cards
+description: 'CARDS（L4）层面的目标上下文已成功注入。 - minerva: TriageRouter和ParadigmRouter中通过get_cards_context()在LLM提示词注入了CARDS上下文。
+  - metaos: WorkflowPlanner在LLM规划时注入了CARDS上下文。 Kairon和MetaOS已经可以根据用户的当前活跃P0目标规划研究方向。
 
-description: >
-  CARDS（L4）层面的目标上下文已成功注入。
-  - minerva: TriageRouter和ParadigmRouter中通过get_cards_context()在LLM提示词注入了CARDS上下文。
-  - metaos: WorkflowPlanner在LLM规划时注入了CARDS上下文。
-  Kairon和MetaOS已经可以根据用户的当前活跃P0目标规划研究方向。
+  '
 history:
 - at: '2026-06-05T14:28:47Z'
   action: register
   note: Registered debt item P1-CARDS_KAIRON_GAP.
   actor: 全景分析 2026-06-05
+- at: '2026-06-27T09:11:51.745340+00:00'
+  action: close
+  note: Closed debt item.
+  actor: crush-agent
+- at: '2026-06-27T09:14:45.993016+00:00'
+  action: close
+  note: Closed debt item.
+  actor: crush-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Framework

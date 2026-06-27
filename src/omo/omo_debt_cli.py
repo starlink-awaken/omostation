@@ -32,7 +32,26 @@ def _find_omo_dir() -> Path:
 
 
 def _debt_item_path(omo_dir: Path, debt_id: str) -> Path:
-    return omo_dir / "debt" / "items" / f"{debt_id}.yaml"
+    """Locate the canonical debt item YAML.
+
+    Search order:
+      1. workspace-root .omo/debt/items/  (preferred, omo lifecycle 真源)
+      2. projects/omo/.omo/debt/items/   (submodule-local state, 2026-Q1
+         era of split roots; still tracked by omo submodule git)
+      3. legacy: omo_dir/debt/items/{id}.yaml (CLI-injected path)
+
+    Returns the path of the FIRST existing file. If none exists, returns
+    the workspace-root path (which is the canonical SSOT and will trigger
+    the existing 'unknown debt_id' error in cmd_debt_close).
+    """
+    candidates = [
+        omo_dir / "debt" / "items" / f"{debt_id}.yaml",
+        omo_dir.parent / "omo" / ".omo" / "debt" / "items" / f"{debt_id}.yaml",
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return candidates[0]
 
 
 def cmd_debt_list(omo_dir: Path) -> int:
@@ -95,6 +114,11 @@ def cmd_debt_close(omo_dir: Path, debt_id: str, dry_run: bool, confirm: bool) ->
     payload["gate_level"] = "none"
     payload["last_reviewed_at"] = timestamp
     payload["closed_at"] = timestamp
+    # 治本: 剥离越权的 legacy `status` 字段 (yaml-bypass lint 期望 lifecycle_state 唯一)
+    # R2 violation: status='closed'/'resolved' 与 lifecycle_state='closed' 不一致, OMO 不认.
+    if "status" in payload:
+        legacy_status = payload.pop("status")
+        print(f"   剥离 legacy status 字段: {legacy_status!r}")
     append_history(
         payload,
         "close",

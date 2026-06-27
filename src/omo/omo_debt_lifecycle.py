@@ -87,8 +87,23 @@ def schedule_item(
 
 
 def update_item(omo_dir: Path, item_id: str, _load_yaml) -> tuple[Path, dict]:
-    item_path = omo_dir / "debt" / "items" / f"{item_id}.yaml"
-    return item_path, _load_yaml(item_path)
+    """Locate the canonical debt item YAML and return (path, payload).
+
+    Search order (mirrors omo_debt_cli._debt_item_path):
+      1. omo_dir/debt/items/{id}.yaml  (canonical SSOT)
+      2. omo_dir.parent/omo/.omo/debt/items/{id}.yaml  (submodule-local state)
+
+    Returns the first existing file; if none, returns the canonical path
+    (which will then fail at the caller with a clear "not found" message).
+    """
+    candidates = [
+        omo_dir / "debt" / "items" / f"{item_id}.yaml",
+        omo_dir.parent / "omo" / ".omo" / "debt" / "items" / f"{item_id}.yaml",
+    ]
+    for path in candidates:
+        if path.exists():
+            return path, _load_yaml(path)
+    return candidates[0], _load_yaml(candidates[0])
 
 
 def classify_review_sections(items: tuple[DebtItem, ...]) -> dict[str, list[str]]:

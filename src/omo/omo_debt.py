@@ -1050,6 +1050,9 @@ def main() -> int:
             return 1
         payload["lifecycle_state"] = "closed"
         payload["gate_level"] = "none"
+        # 治本: 剥离越权的 legacy `status` 字段 (yaml-bypass lint 期望 lifecycle_state 唯一)
+        if "status" in payload:
+            payload.pop("status")
         append_history(
             payload,
             "close",
