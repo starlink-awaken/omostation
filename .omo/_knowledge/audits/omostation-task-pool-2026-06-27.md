@@ -30,7 +30,7 @@ last-reviewed: 2026-06-27
 
 **结论**: draft→bet 路径代码通 + LLM 容错通. memory "断" 过时 (现已修: brainstorm 真生成 + LLM except mock).
 
-**剩余**: 全场景门户盲区 (公文/家庭/健康非一等公民) — 产品层 (c2g 原语支持多场景), 非路径断.
+**剩余**: cockpit 门户层 6 场景一等公民已齐 (finance 落地 6B868907, 2026-06-27); 剩 c2g 原语多场景 (引擎层, BET-6+ roadmap), 非路径断.
 
 ### 2. omo 5 任务 (P0 ✅ 达成, P1 评估完成)
 
@@ -40,8 +40,8 @@ last-reviewed: 2026-06-27
 
 **P1 评估 (2026-06-27)**:
 - F7114ABA (God Module): check-god-module 65 超阈值 (warn 55 + error 10); **error 10 全 gbrain TS** (doctor 4825/engine 4514/migrate 4333 等); memory check-god-module-mechanism (baseline 14) 过时; 拆分留 omo-srp-refactor skill 专项 (gbrain TS 重构, 中-大工程)
-- 94BB9C70 (并发锁): 治本 = 停并发孤立 agent (操作策略, 非代码); memory concurrent-agent-contention 已记录; 推进靠流程纪律 (worktree per session + branch protection P2)
-- 6B868907 (产品门户): c2g 全场景 (公文/家庭/健康一等公民); 产品层, 依赖 c2g 全场景门户设计 (BET-6 roadmap)
+- 94BB9C70 (并发锁): ✅ worktree 隔离专项落地 (2026-06-27, AGENTS.md §并发协调: AdvisoryLock session 锁 + git worktree 物理隔离双层策略 + 4 习惯); memory concurrent-agent-contention 更新; AdvisoryLock 机制 2026-06-26 done (11测试+MCP); agent 使用习惯待培养
+- 6B868907 (产品门户): ✅ finance 门户落地 (2026-06-27, cockpit finance 命令 仿 gongwen C 方案); 6 生活场景一等公民齐全 (gongwen公文/vault知识/research学习/scenario家庭/health健康/finance财务); commit 1781da2
 
 ### 3. mypy 清理 (P1, ✅ 大幅清零 862→2, 2026-06-27)
 
