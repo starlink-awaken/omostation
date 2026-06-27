@@ -63,6 +63,26 @@ jobs:
           echo "## mof-extract" >> $GITHUB_STEP_SUMMARY
           cat ../../mof-extract.txt >> $GITHUB_STEP_SUMMARY
 
+      - name: mof-state-bridge (.omo/tasks ↔ M1 OMOTask drift report)
+        working-directory: projects/ecos
+        env:
+          WORKSPACE_ROOT: ${{ github.workspace }}
+        run: |
+          set +e
+          uv run python3 src/ecos/ssot/tools/mof-state-bridge.py --diff | tee ../../mof-state-bridge.txt
+          echo "## mof-state-bridge (drift report)" >> $GITHUB_STEP_SUMMARY
+          cat ../../mof-state-bridge.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: mof-bridge-sync (M3 ↔ M1 lifecycle drift report)
+        working-directory: projects/ecos
+        env:
+          WORKSPACE_ROOT: ${{ github.workspace }}
+        run: |
+          set +e
+          uv run python3 src/ecos/ssot/tools/mof-bridge-sync.py --diff | tee ../../mof-bridge-sync.txt
+          echo "## mof-bridge-sync (drift report)" >> $GITHUB_STEP_SUMMARY
+          cat ../../mof-bridge-sync.txt >> $GITHUB_STEP_SUMMARY
+
       - name: check-vault-paths (SSOT 反 sed)
         env:
           WORKSPACE_ROOT: ${{ github.workspace }}
