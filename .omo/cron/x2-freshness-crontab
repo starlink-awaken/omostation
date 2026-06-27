@@ -1,5 +1,8 @@
 # X2 Freshness Audit Cron (P43 R7)
 #
+# ⚠️ DEPRECATED: X2 freshness 审计已收编到 gac-crontab (06:30, GaC indexed X2-FRESH-* 13 条).
+#   建议卸载本 cron, 统一调度: crontab .omo/cron/gac-crontab
+#
 # 定时执行 .omo/_truth/x2-freshness-rules.yaml 中定义的 3 条 P43 巡检规则:
 #   - X2-FRESH-DEBT-EVIDENCE-INTEGRITY (14 天)
 #   - X2-FRESH-CROSS-PROJECT-LINT (7 天)

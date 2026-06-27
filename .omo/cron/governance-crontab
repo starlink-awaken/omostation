@@ -1,5 +1,9 @@
 # 治理检查 Cron 配置
 #
+# ⚠️ DEPRECATED (部分): X1-X4 检查 (x1-x4-check.sh) 已收编到 gac-crontab (06:00).
+#   建议卸载本 cron 的 X1-X4 部分, 保留 debt-audit/dashboard (独立).
+#   统一调度: crontab .omo/cron/gac-crontab
+#
 > 定时执行 X1-X4 治理检查
 >
 > 安装: crontab .omo/cron/governance-crontab

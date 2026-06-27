@@ -24,3 +24,11 @@
 
 # 每周一 05:00 GaC gc (机制 6 lifecycle 清理 deprecated→removed, c2g gc 原语; 已激活)
 0 5 * * 1 cd /Users/xiamingxing/Workspace && python3 bin/gac-gc.py --dry-run >> /tmp/gac-gc.log 2>&1
+
+# ═══ GaC indexed 规则执行收编 (原 governance/x2-freshness-crontab, 统一到 GaC 调度) ═══
+
+# 每日 06:00 X1-X4 治理检查 (GaC indexed X1-X4 policy 25 条执行; 收编 governance-crontab)
+0 6 * * * cd /Users/xiamingxing/Workspace && bash scripts/x1-x4-check.sh >> /tmp/gac-x1-x4-check.log 2>&1
+
+# 每日 06:30 X2 freshness 审计 (GaC indexed X2-FRESH-* 13 条执行; 收编 x2-freshness-crontab)
+30 6 * * * cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=x2-freshness uv run python scripts/omo/x2_freshness_audit.py >> /tmp/gac-x2-freshness.log 2>&1
