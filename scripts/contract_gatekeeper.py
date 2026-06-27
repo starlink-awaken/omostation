@@ -41,6 +41,9 @@ EXEMPT_PATH_PATTERNS = (
     # GaC 治理工具 (维护 GaC 注册表/报告/证据, broker 特例; P1 揭示 os.* 后白名单)
     r"/bin/gac-.*\.py$",
     r"/bin/evidence-smoke\.py$",
+    # 治理运行时工具 (写 audits/debts/_delivery 产物, broker 特例; P1 揭示预先存在债)
+    r"/l4_kernel/monitor/contract_monitor\.py$",
+    r"/scripts/opc_p5_radar_cron\.py$",
 )
 
 # AST node types that mutate actual files/dirs when given a path
