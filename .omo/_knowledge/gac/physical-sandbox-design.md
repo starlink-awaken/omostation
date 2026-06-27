@@ -121,6 +121,25 @@ gate 检测: 任何**非 ingress** 文件写 `.omo` = 违规.
 
 **P2 当前结论**: 敏感目标已 ingress 强制 (P1 contract_gatekeeper 达成核心). 运行时白名单合理. P2 完整 = 白名单收敛 (渐进, 非阻塞).
 
+### P2 白名单审计 (POC, 2026-06-27)
+
+审计 contract_gatekeeper EXEMPT 白名单能否走 omo ingress (12 模块: debt/doc/goal/registry/task_*/trail) 收敛:
+
+| 白名单 | 写路径 | omo ingress 能接管? | 结论 |
+|--------|--------|:-------------------:|------|
+| bin/gac-* | governance-checks.yaml (GaC 注册表) + _delivery/gac-* | ❌ omo_ingress_registry 是 omo 任务注册表, 非 GaC | GaC 元层特例, 保留 |
+| evidence-smoke | _delivery/evidence-smoke/*.json (BOS 证据) | ❌ 无 delivery ingress | 运行时产物, 保留 |
+| l4-kernel/contract_monitor | _knowledge/audits/*.log + debts | ❌ omo_ingress_doc 是治理文档, 非审计日志 | 运行时审计, 保留 |
+| opc_p5_radar_cron | _delivery/audit-rollout/* (radar 报告) | ❌ 无 delivery ingress | 运行时报告, 保留 |
+
+**P2 审计结论**: 白名单工具写的都是 **omo ingress 不管的路径** (GaC 注册表 + 运行时产物 _delivery/_knowledge). 白名单合理, **无收敛空间** (不能强行让 GaC/运行时工具走任务 ingress).
+
+**P2 完整性确认** (2026-06-27 POC):
+- 敏感目标 (system.yaml/goals/tasks) = ingress 强制 (contract_gatekeeper) ✅
+- GaC 注册表 (governance-checks.yaml) = GaC 工具白名单 (元层特例) ✅
+- 运行时产物 (_delivery/_knowledge) = 工具白名单 (omo ingress 不管) ✅
+- **P2 达成** (白名单分类清晰 + 合理, 非偷懒豁免)
+
 ## P3 方案评估 (FS 沙箱, 长期)
 
 当前 P1+P2 稳态 (合法 PASS + 恶意 os.* 拦 + 敏感目标 ingress 强制). P3 是**纵深防御** (文件系统级):
