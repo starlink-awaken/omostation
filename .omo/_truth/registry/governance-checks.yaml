@@ -389,6 +389,7 @@ gac:
     - id: X1-OMO-GOVERNANCE-SURFACES-20260616
       source_type: indexed
       source_ref: ".omo/_truth/x1-governance-policies.yaml::policies"
+      relates_to: "CR-L2-SURFACES-INTEGRITY"
       dimension: X1
       layer: meta
       check_type: legacy_index
@@ -462,6 +463,7 @@ gac:
     - id: X2-FRESH-OMO-GOVERNANCE-SURFACES
       source_type: indexed
       source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      relates_to: "CR-L2-SURFACES-INTEGRITY"
       dimension: X2
       layer: meta
       check_type: legacy_index
@@ -594,6 +596,7 @@ gac:
     - id: X2-FRESH-ADR-DRIFT
       source_type: indexed
       source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      relates_to: "CR-X2-GAC-DRIFT"
       dimension: X2
       layer: meta
       check_type: legacy_index
@@ -618,6 +621,7 @@ gac:
     - id: X4-CONS-OMO-GOVERNANCE-SURFACES
       source_type: indexed
       source_ref: ".omo/_truth/x4-consistency-rules.yaml::rules"
+      relates_to: "CR-L2-SURFACES-INTEGRITY"
       dimension: X4
       layer: meta
       check_type: legacy_index
@@ -666,6 +670,7 @@ gac:
     - id: X4-CONS-DRIFT-VS-GOVERNANCE
       source_type: indexed
       source_ref: ".omo/_truth/x4-consistency-rules.yaml::rules"
+      relates_to: "CR-X2-GAC-DRIFT"
       dimension: X4
       layer: meta
       check_type: legacy_index

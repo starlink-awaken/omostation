@@ -72,8 +72,14 @@ LEGACY_SOURCES = [
 
 # 重叠识别: X1-X4 规则 → GaC native 执行入口 (同一件事, indexed 指向 native)
 # 原 policy 保留为策略定义 (富语义), native 是机器执行入口
+# gap3 闭环: 扩展重叠识别 (surfaces/drift/commit-loop 语义重叠)
 OVERLAP_MAP = {
     "X1-OMO-DIRECT-MUTATION-GATE-20260617": "CR-L2-DIRECT-IO",
+    "X1-OMO-GOVERNANCE-SURFACES-20260616": "CR-L2-SURFACES-INTEGRITY",
+    "X2-FRESH-OMO-GOVERNANCE-SURFACES": "CR-L2-SURFACES-INTEGRITY",
+    "X4-CONS-OMO-GOVERNANCE-SURFACES": "CR-L2-SURFACES-INTEGRITY",
+    "X4-CONS-DRIFT-VS-GOVERNANCE": "CR-X2-GAC-DRIFT",
+    "X2-FRESH-ADR-DRIFT": "CR-X2-GAC-DRIFT",
 }
 
 
@@ -133,6 +139,40 @@ def check_drift() -> dict:
         "ghost": ghost,
         "ok": not missing and not ghost,
     }
+
+
+def update_relates() -> int:
+    """gap3 回填: 补已有 indexed 规则的 relates_to (OVERLAP_MAP 扩展后回填).
+
+    对每条 OVERLAP_MAP 中的 indexed, 若 GaC 已 ingest 但缺 relates_to, 插入.
+    保留 frontmatter + 注释 (文本精确插入, 非 YAML dump).
+    """
+    import re
+
+    content = REGISTRY.read_text(encoding="utf-8")
+    updated = 0
+    for indexed_id, native_id in OVERLAP_MAP.items():
+        id_pat = re.compile(rf"(    - id: {re.escape(indexed_id)}\n)")
+        m = id_pat.search(content)
+        if not m:
+            continue
+        block_start = m.end()
+        rest = content[block_start:]
+        block_end_rel = re.search(r"\n    - id:|\n  [a-z][a-z_]*:", rest)
+        block_end = block_start + (block_end_rel.start() if block_end_rel else len(rest))
+        block = content[m.start():block_end]
+        if "relates_to" in block:
+            continue  # 已有 relates_to 跳过
+        sr_match = re.search(r"(      source_ref: [^\n]+\n)", block)
+        if not sr_match:
+            continue
+        insert_pos = m.start() + sr_match.end()
+        insert_line = f'      relates_to: "{native_id}"\n'
+        content = content[:insert_pos] + insert_line + content[insert_pos:]
+        updated += 1
+    if updated:
+        REGISTRY.write_text(content, encoding="utf-8")
+    return updated
 
 
 def build_indexed_entry(rule: dict) -> dict:
@@ -209,8 +249,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="收敛 X1-X4 + L0 原有规则到 GaC indexed 层 (动态)")
     parser.add_argument("--write", action="store_true", help="append indexed 到 governance-checks.yaml")
     parser.add_argument("--check", action="store_true", help="drift 检测 (源 vs GaC indexed 差异, 动态收敛核心)")
+    parser.add_argument("--update-relates", action="store_true", help="补已有 indexed 的 relates_to (gap3 回填)")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
+
+    # --update-relates: gap3 回填已有 indexed 的 relates_to (OVERLAP_MAP 扩展后)
+    if args.update_relates:
+        n = update_relates()
+        print(f"✅ 回填 {n} 条 indexed 的 relates_to (OVERLAP_MAP)")
+        if n:
+            print("   验证: python3 bin/gac-validate.py --gate")
+        return 0
 
     # --check: 动态 drift 检测 (源 vs GaC indexed)
     if args.check:
