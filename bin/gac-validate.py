@@ -102,21 +102,28 @@ def validate_rule(rule: dict, idx: int) -> list[str]:
 
 
 def detect_conflicts(rules: list[dict]) -> list[str]:
-    """矛盾检测 (机制 5): 同 target + 同 dimension 多规则告警.
+    """矛盾检测 (机制 5 深化): 多维冲突 + relates_to 豁免.
 
+    多维: 同 target + 同 dimension + 同 check_type = 可能重复执行.
+    豁免: 有 relates_to 的规则 (indexed→native 已识别重叠) 不算冲突.
     返回 warnings (非 error, 需人工确认是否真矛盾).
     """
     warnings: list[str] = []
     groups: dict[tuple, list[dict]] = {}
     for r in rules:
-        key = (r.get("target", ""), r.get("dimension", ""))
+        # 多维 key: target + dimension + check_type
+        key = (r.get("target", ""), r.get("dimension", ""), r.get("check_type", ""))
         groups.setdefault(key, []).append(r)
 
-    for (target, dim), group in groups.items():
-        if len(group) > 1 and target:
-            ids = [r["id"] for r in group]
+    for (target, dim, ct), group in groups.items():
+        if len(group) <= 1 or not target:
+            continue
+        # relates_to 豁免: 已识别的 indexed→native 重叠不算冲突
+        unrelated = [r for r in group if "relates_to" not in r]
+        if len(unrelated) > 1:
+            ids = [r["id"] for r in unrelated]
             warnings.append(
-                f"潜在矛盾: {dim} @ {target} 有 {len(group)} 条规则 {ids} (人工确认是否矛盾)"
+                f"潜在矛盾: {dim}/{ct} @ {target} 有 {len(unrelated)} 条无 relates_to {ids} (人工确认)"
             )
 
     return warnings
