@@ -48,6 +48,7 @@ CORE_FILES = {
     "doc_ssot_lint": "bin/doc-ssot-lint.py",
     "hygiene": "bin/gac-hygiene-check.py",
     "gen_registry": "bin/gen-project-registry.py",
+    "ingest_legacy": "bin/gac-ingest-legacy.py",
 }
 
 
@@ -168,15 +169,17 @@ def healthcheck() -> dict:
         "drift_count": drift_json.get("drift_count", 0),
     }
 
-    # 4. 注册表 dimension/layer 覆盖
+    # 4. 注册表 dimension/layer/source_type 覆盖
     rules = load_rules()
     dims = Counter(r.get("dimension", "?") for r in rules)
     layers = Counter(r.get("layer", "?") for r in rules)
+    source_types = Counter(r.get("source_type", "native") for r in rules)
     report["coverage"] = {
         "rules": len(rules),
         "dimension": dict(dims),
         "dimension_complete": set(dims) >= {"X1", "X2", "X3", "X4"},
         "layer": dict(layers),
+        "source_type": dict(source_types),  # native=GaC SSOT, indexed=收敛的原真策略
     }
 
     # 5. ADR 引用一致
@@ -222,7 +225,21 @@ def healthcheck() -> dict:
         "projects_scanned": gr_json.get("projects_scanned", 0),
     }
 
-    # 总体健康 (文件全 + validate/drift/M2 ok + 无 ADR 残留 + dimension 全 + doc-ssot/hygiene/registry-drift ok)
+    # 10. legacy drift (动态收敛: X1-X4+L0 源 vs GaC indexed, 多套并行检测)
+    lg_code, lg_out = run_tool("bin/gac-ingest-legacy.py", ["--check", "--json"])
+    try:
+        lg_json = json.loads(lg_out) if lg_out else {}
+    except json.JSONDecodeError:
+        lg_json = {}
+    report["legacy_drift"] = {
+        "ok": lg_code == 0,
+        "legacy_count": lg_json.get("legacy_count", 0),
+        "indexed_count": lg_json.get("indexed_count", 0),
+        "missing": len(lg_json.get("missing", [])),
+        "ghost": len(lg_json.get("ghost", [])),
+    }
+
+    # 总体健康 (文件全 + validate/drift/M2 ok + 无 ADR 残留 + dimension 全 + doc-ssot/hygiene/registry-drift/legacy-drift ok)
     report["healthy"] = (
         not missing
         and report["validate"]["ok"]
@@ -233,6 +250,7 @@ def healthcheck() -> dict:
         and report["doc_ssot"]["ok"]
         and report["hygiene"]["ok"]
         and report["registry_drift"]["ok"]
+        and report["legacy_drift"]["ok"]
     )
     return report
 
@@ -304,6 +322,13 @@ def print_report(report: dict) -> None:
     gr_status = "✅" if gr["ok"] else "❌"
     print(
         f"▶ registry-drift (代码→SSOT): {gr_status} 扫描={gr['projects_scanned']} drift={gr['drift_count']}"
+    )
+
+    # legacy drift (动态收敛: X1-X4+L0 源 vs GaC indexed)
+    lg = report["legacy_drift"]
+    lg_status = "✅" if lg["ok"] else "❌"
+    print(
+        f"▶ legacy-drift (收敛同步): {lg_status} 源={lg['legacy_count']} indexed={lg['indexed_count']} missing={lg['missing']} ghost={lg['ghost']}"
     )
 
     print()

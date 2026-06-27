@@ -19,5 +19,8 @@
 # 每日 04:00 GaC healthcheck (体系自检, 元治理递归; --json 机读)
 0 4 * * * cd /Users/xiamingxing/Workspace && python3 bin/gac-healthcheck.py --json > .omo/_delivery/gac-healthcheck-$(date +\%Y\%m\%d).json 2>&1
 
+# 每日 04:30 GaC legacy drift (动态收敛: X1-X4+L0 源 vs GaC indexed, drift 告警 + 修复提示)
+30 4 * * * cd /Users/xiamingxing/Workspace && python3 bin/gac-ingest-legacy.py --check > .omo/_delivery/gac-legacy-drift-$(date +\%Y\%m\%d).txt 2>&1
+
 # 每周一 05:00 GaC gc (机制 6 lifecycle 清理 deprecated→removed, c2g gc 原语; 已激活)
 0 5 * * 1 cd /Users/xiamingxing/Workspace && python3 bin/gac-gc.py --dry-run >> /tmp/gac-gc.log 2>&1

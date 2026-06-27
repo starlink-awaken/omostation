@@ -122,9 +122,11 @@ gac:
   # GaC schema (每条规则必填字段; 阶段 2 实现 pydantic 校验)
   schema:
     required: [id, dimension, layer, check_type, executor, lifecycle, version, created_at]
+    source_type_enum: [native, indexed]  # native=GaC 是 SSOT; indexed=原真是策略 SSOT, GaC 执行索引
+    indexed_required: [source_ref]  # source_type=indexed 时必填 (指向原真策略文件)
     dimension_enum: [X1, X2, X3, X4]
     layer_enum: [M0, L0, L1, L2, L3, meta]
-    check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case]
+    check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index]
     lifecycle_enum: [draft, active, deprecated, removed]
     executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron]
 
@@ -314,6 +316,1177 @@ gac:
       adr: "ADR-0106"
 
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
+    # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
+    - id: X1-OMNI-BUS-ROUTING-20260617
+      source_type: indexed
+      source_ref: ".omo/_truth/x1-governance-policies.yaml::policies"
+      dimension: X1
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X1-OMO-GOVERNANCE-SURFACES-20260616
+      source_type: indexed
+      source_ref: ".omo/_truth/x1-governance-policies.yaml::policies"
+      dimension: X1
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X1-OMO-DIRECT-MUTATION-GATE-20260617
+      source_type: indexed
+      source_ref: ".omo/_truth/x1-governance-policies.yaml::policies"
+      dimension: X1
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+      relates_to: "CR-L2-DIRECT-IO"
+    - id: X1-ARCH-MERGE-LLMGATEWAY-20260616
+      source_type: indexed
+      source_ref: ".omo/_truth/x1-governance-policies.yaml::policies"
+      dimension: X1
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "log-and-notify"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X1-DEBT-EVIDENCE-CLOSURE-20260620
+      source_type: indexed
+      source_ref: ".omo/_truth/x1-governance-policies.yaml::policies"
+      dimension: X1
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X1-CROSS-PROJECT-LINT-ENFORCE-20260620
+      source_type: indexed
+      source_ref: ".omo/_truth/x1-governance-policies.yaml::policies"
+      dimension: X1
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X1-AUD-COMMIT-LOOP
+      source_type: indexed
+      source_ref: ".omo/_truth/x1-governance-policies.yaml::policies"
+      dimension: X1
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: commit_closure
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-OMO-GOVERNANCE-SURFACES
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: governance_surface_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-EVIDENCE-ALIAS
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: compatibility_alias_watch
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-ARCHIVED-LLMGATEWAY
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: project_archive
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-MERGE-CHECKLIST
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: artifact_review
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-DEBT-EVIDENCE-INTEGRITY
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: governance_loop_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-CROSS-PROJECT-LINT
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: governance_loop_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-MOF-VERSION-BUMP
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: model_drift_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-DOC-LIFECYCLE
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: doc_lifecycle_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-COMMIT-FATIGUE
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: commit_closure_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-OMO-LINT-SIZE
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: governance_loop_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-GOV-DASHBOARD
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: governance_loop_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-ADR-DRIFT
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: governance_loop_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-FRESH-ADR-TYPO
+      source_type: indexed
+      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
+      dimension: X2
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: governance_loop_freshness
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X4-CONS-OMO-GOVERNANCE-SURFACES
+      source_type: indexed
+      source_ref: ".omo/_truth/x4-consistency-rules.yaml::rules"
+      dimension: X4
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X4-CONS-LLMGATEWAY-ARCHIVED
+      source_type: indexed
+      source_ref: ".omo/_truth/x4-consistency-rules.yaml::rules"
+      dimension: X4
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X4-CONS-P43-CLOSED-LOOP-SSOT
+      source_type: indexed
+      source_ref: ".omo/_truth/x4-consistency-rules.yaml::rules"
+      dimension: X4
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X4-CONS-DEBT-GITIGNORE-BOUNDARY
+      source_type: indexed
+      source_ref: ".omo/_truth/x4-consistency-rules.yaml::rules"
+      dimension: X4
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X4-CONS-DRIFT-VS-GOVERNANCE
+      source_type: indexed
+      source_ref: ".omo/_truth/x4-consistency-rules.yaml::rules"
+      dimension: X4
+      layer: meta
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: cross_metric_consistency
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X1-C01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X1-C02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MCP-LAZY-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CS-10
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-VIBEOPS-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-VIBEOPS-02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-RBAC-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ADMISSION-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X1-C03
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-OMO-SURFACE-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-OMO-SURFACE-02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-C2G-INGRESS-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-OMO-DIRECT-IO-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-C01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-C02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: preferred
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-C03
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-C04
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: preferred
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X2-C05
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: preferred
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X3-C01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X3
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: preferred
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X3-C02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X3
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X3-C03
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X3
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X4-C01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: X4-C02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: preferred
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
+    # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
+    - id: CR-TRIGGER-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::trigger_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-TRIGGER-02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::trigger_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-TRIGGER-03
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::trigger_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-TRIGGER-04
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::trigger_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-TRIGGER-05
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::trigger_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: preferred
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-TRIGGER-06
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::trigger_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
+    # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
+    - id: MCP
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::protocol_registry"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: ACP
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::protocol_registry"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: A2A
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::protocol_registry"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: BOS_URI
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::protocol_registry"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: L0_YAML
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::protocol_registry"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-CADENCE-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::opc_cadence_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-INDEX-LOCK-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::opc_cadence_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MODE-ENV-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::opc_cadence_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-TIME-ENV-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::opc_cadence_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MODE-COPY-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::opc_cadence_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-DRIFT-LOOP-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::opc_cadence_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-AUDIT-5REPOS-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::opc_cadence_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MOF-VALIDATE-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::mof_schema_validate_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: {'ci_pre_commit': 'projects/ecos/.githooks/pre-commit 调用 mof-schema-validate.py', 'cli_invoke': 'cd projects/ecos && python3 src/ecos/ssot/tools/mof-schema-validate.py --strict'}
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MOF-ALIAS-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::mof_schema_validate_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MOF-BIDIR-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::mof_schema_validate_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MOF-BRIDGE-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::mof_schema_validate_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: {'ci_pre_commit': 'projects/ecos/.githooks/pre-commit 调用 mof-bridge-sync.py + mof-derive.py', 'cli_invoke': 'cd projects/ecos && python3 src/ecos/ssot/tools/mof-bridge-sync.py --strict && python3 src/ecos/ssot/tools/mof-derive.py --strict'}
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MOF-STATE-BRIDGE-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::mof_schema_validate_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: {'ci_pre_commit': 'projects/ecos/.githooks/pre-commit 调用 mof-state-bridge.py (omo_layer 改动触发)', 'cli_invoke': 'cd projects/ecos && python3 src/ecos/ssot/tools/mof-state-bridge.py --strict'}
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-C2G-V3-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::c2g_v3_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-C2G-V3-02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::c2g_v3_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-C2G-V3-03
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::c2g_v3_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-STRATEGY-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::c2g_v4_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-STRATEGY-02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::c2g_v4_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-STRATEGY-03
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::c2g_v4_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-OMNIBUS-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::omni_bus_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-OMNIBUS-02
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::omni_bus_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-OMNIBUS-03
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::omni_bus_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-DEBT-GATE-ENUM-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::debt_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-DEBT-CLOSURE-EVIDENCE-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::debt_constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-CROSS-PROJECT-LINT-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::debt_constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-MOF-VERSION-COUPLED-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::debt_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "block-write"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-GOV-CLOSED-LOOP-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "pre-commit + post-commit correlation"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-GOV-FRONTMATTER-SCHEMA-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "omo lint doc-lifecycle"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-GOV-DOC-CATEGORY-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "omo lint doc-lifecycle (4 类分类)"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-GOV-DIMENSION-SATURATION-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "linter-developer-guide (review checklist)"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-GOV-COMMIT-FREQUENCY-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "pre-commit + health check"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ENG-MYPY-TRUTH-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "CI gate (kairon-ci.yml MYPYPATH) + X1 审计"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ENG-SSOT-POINTER-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X2
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "pre-commit (SSOT 全文档扫描) + X2 抗熵"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ENG-BUG-CHAIN-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "skill (bug-chain-diagnostic) + code review"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ENG-CWD-ABSOLUTE-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: Agent 行为规范 (根 CLAUDE.md) + skill 纪律
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ENG-TOOL-GREP-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: Agent 行为规范 + skill 纪律
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ENG-SRP-INCREMENTAL-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X3
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "skill (governance-phase-orchestrator Strategize) + ADR"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ENG-TEST-ISOLATION-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X1
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: code review + CI (flaky 检测)
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+    - id: CR-ENG-LOOP-HONESTY-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: Agent 元认知 (skill 循环检测)
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)

@@ -86,6 +86,14 @@ def validate_rule(rule: dict, idx: int) -> list[str]:
             f"{rid}: lifecycle '{rule['lifecycle']}' 不在 {sorted(LIFECYCLE_ENUM)}"
         )
 
+    # source_type 校验 (收敛: native=GaC SSOT, indexed=原真策略 SSOT, GaC 执行索引)
+    source_type = rule.get("source_type", "native")  # 默认 native (向后兼容已有 13 条)
+    if source_type not in {"native", "indexed"}:
+        errors.append(f"{rid}: source_type '{source_type}' 不在 [native, indexed]")
+    # indexed 必填 source_ref (指向原真策略文件, SSOT 收敛核心)
+    if source_type == "indexed" and not rule.get("source_ref"):
+        errors.append(f"{rid}: source_type=indexed 必填 source_ref (指向原真策略文件)")
+
     # executor 必须非空 list (机制 3 前提: 规则至少一个执行通道)
     if not isinstance(rule["executor"], list) or not rule["executor"]:
         errors.append(f"{rid}: executor 必须非空 list (至少一个执行通道, 防声明不执行)")
