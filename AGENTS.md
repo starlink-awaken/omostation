@@ -530,7 +530,7 @@ python3 bin/ssot-guardian.py --emit       # 发事件到 OMO event log
 - `runtime/` — Ephemeral runtime residue; avoid storing durable truth here
 - `_archived/` — Archived project snapshots (e.g. `SharedBrain-original`)
 - `tests/integration/` — E2E test scripts
-- `scripts/` — Utility scripts and automation (独立 git 仓库, `omo/` + `shell/`)
+- `scripts/` — Utility scripts and governance automation (独立 git 仓库, `lib/` + `omo/` + `shell/`)
 - `bin/` — Executable tools:
   - `bin/workspace` — Workspace CLI 入口
   - `bin/verify-omo.sh` — 治理验证链 (= `make governance-verify`)
