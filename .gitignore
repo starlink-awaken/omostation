@@ -161,3 +161,6 @@ config/
 # ---- 证据目录已改为软链到 _delivery/evidence-legacy ----
 .omo/evidence
 projects/cockpit-ui/
+
+# omo 运行时并发锁 (0字节占位, 非源文件; 债务②)
+.omo/_control/evolution/drift-history/*.json.lock
