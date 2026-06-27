@@ -159,6 +159,9 @@ _SENSITIVE_WRITE_EXEMPT_FILES = {
     "omo_ingress_goal.py",  # goal ingress writes are authorized broker surface
     "omo_ingress_registry_writes.py",  # ingress registry writes are authorized broker surface
     "omo_ingress_task_lifecycle.py",  # task lifecycle writes are authorized ingress broker surface
+    "omo_ingress_task_archive.py",  # P110 split: task yield/archive (parent: omo_ingress_task_lifecycle)
+    "omo_ingress_task_contract.py",  # P110 split: task contract + self-evolution routing
+    "omo_ingress_task_promotion.py",  # P110 split: task promote/revert/approval repair
     "omo_release_cycle.py",
     "omo_weekly_loop.py",
     "omo_worker_promotion.py",
