@@ -315,6 +315,34 @@ gac:
       created_at: "2026-06-27"
       adr: "ADR-0106"
 
+    # ── L2 omo: governance surfaces 面定义完整性 (阶段2, 架构 OWN 引用非 ingest) ──
+    - id: CR-L2-SURFACES-INTEGRITY
+      dimension: X4
+      layer: L2
+      name: "governance surfaces 面定义完整 (state/kernel/ingress plane)"
+      description: "omo-governance-surfaces.yaml 面定义权威 (plane 资产归属), GaC 引用不复制; omo governance surfaces 校验完整"
+      check_type: ssot_pointer
+      target: ".omo/_truth/registry/omo-governance-surfaces.yaml::governance_stack"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
+    # ── L2 omo: mutation surfaces broker 写权限 (阶段2, 架构 OWN 引用非 ingest) ──
+    - id: CR-L2-MUTATION-BROKER
+      dimension: X1
+      layer: L2
+      name: "mutation surfaces broker 写权限注册 (非 broker 禁写)"
+      description: "mutation-surfaces.yaml broker 注册权威 (entrypoint+target+mode), workspace governance verify 校验; 非 broker 写 .omo = 违规"
+      check_type: audit_chain
+      target: ".omo/_truth/registry/mutation-surfaces.yaml::surfaces"
+      executor: [omo_audit]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
     - id: X1-OMNI-BUS-ROUTING-20260617
