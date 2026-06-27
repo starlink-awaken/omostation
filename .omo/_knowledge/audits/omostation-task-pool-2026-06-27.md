@@ -39,7 +39,7 @@ last-reviewed: 2026-06-27
 - 26348641 (P0 反馈闭环) ✅ GaC 覆盖 (cron 9项+healthcheck 12项+feedback-loop-guard 并发 agent 落地), 剩 mypy baseline (任务3 达成)
 
 **P1 评估 (2026-06-27)**:
-- F7114ABA (God Module): check-god-module 65 超阈值 (warn 55 + error 10); **error 10 全 gbrain TS** (doctor 4825/engine 4514/migrate 4333 等); memory check-god-module-mechanism (baseline 14) 过时; 拆分留 omo-srp-refactor skill 专项 (gbrain TS 重构, 中-大工程)
+- F7114ABA (God Module): ✅ engine.ts 首个拆分落地 (2026-06-27, 类型提取 1563→1060, TS SRP 范式建立, commit 6b27c9df); error 10→9; 剩 9 文件 (doctor 4825/postgres-engine 4514/pglite-engine 4509/migrate 4333/gateway 2895/serve-http 1756/cli 1735/cycle 1707/sync 1609) 留 srp-refactor 专项 wave
 - 94BB9C70 (并发锁): ✅ worktree 隔离专项落地 (2026-06-27, AGENTS.md §并发协调: AdvisoryLock session 锁 + git worktree 物理隔离双层策略 + 4 习惯); memory concurrent-agent-contention 更新; AdvisoryLock 机制 2026-06-26 done (11测试+MCP); agent 使用习惯待培养
 - 6B868907 (产品门户): ✅ finance 门户落地 (2026-06-27, cockpit finance 命令 仿 gongwen C 方案); 6 生活场景一等公民齐全 (gongwen公文/vault知识/research学习/scenario家庭/health健康/finance财务); commit 1781da2
 
