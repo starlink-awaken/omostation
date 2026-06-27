@@ -148,46 +148,18 @@ def write_dashboard(
     _write_yaml(omo_dir / "debt" / "dashboard" / "current.yaml", payload)
 
 
-def _render_section(title: str, item_ids: list[str]) -> str:
-    lines = [f"## {title}", ""]
-    if item_ids:
-        lines.extend([f"- `{item_id}`" for item_id in item_ids])
-    else:
-        lines.append("- none")
-    lines.append("")
-    return "\n".join(lines)
-
-
-def _render_queue_section(
-    title: str, entries: list[dict[str, object]], reason_key: str
-) -> str:
-    lines = [f"## {title}", ""]
-    if entries:
-        for entry in entries:
-            reason = entry.get(reason_key, "n/a")
-            next_review = entry.get("next_review_at") or "unscheduled"
-            lines.append(f"- `{entry['id']}` — {reason} ({next_review})")
-    else:
-        lines.append("- none")
-    lines.append("")
-    return "\n".join(lines)
+# _render_* 模板函数 (P110 拆分, omo_debt_render.py). TASK-F7114ABA 治本.
+from omo.omo_debt_render import (  # noqa: E402, F401
+    _render_section,
+    _render_queue_section,
+    _render_action_packet_section,
+    _render_owner_routing_section,
+    _render_dispatch_owner_section,
+)
 
 
 def write_review_queue(omo_dir: Path, review_queue: dict[str, object]) -> None:
     _write_yaml(omo_dir / "debt" / "review-queue" / "current.yaml", review_queue)
-
-
-def _render_action_packet_section(title: str, entries: list[dict[str, object]]) -> str:
-    lines = [f"## {title}", ""]
-    if entries:
-        for entry in entries:
-            lines.append(
-                f"- `{entry['id']}` — {entry['reason']} — `{entry['suggested_command']}`"
-            )
-    else:
-        lines.append("- none")
-    lines.append("")
-    return "\n".join(lines)
 
 
 def write_action_packet(omo_dir: Path, action_packet: dict[str, object]) -> None:
@@ -223,41 +195,6 @@ def write_action_packet(omo_dir: Path, action_packet: dict[str, object]) -> None
     path = omo_dir / "debt" / "action-packet" / "current.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(markdown, encoding="utf-8")
-
-
-def _render_owner_routing_section(owner_packet: dict[str, object]) -> str:
-    lines = [f"## Owner: {owner_packet['owner']}", ""]
-    lines.append(
-        "Summary: "
-        f"{owner_packet['summary']['total_count']} items; "
-        f"revalidate_now={owner_packet['summary']['lane_counts']['revalidate_now']}, "
-        f"schedule_now={owner_packet['summary']['lane_counts']['schedule_now']}, "
-        f"escalate_now={owner_packet['summary']['lane_counts']['escalate_now']}"
-    )
-    lines.append("")
-
-    for lane_title, lane_name in [
-        ("Revalidate Now", "revalidate_now"),
-        ("Schedule Now", "schedule_now"),
-        ("Escalate Now", "escalate_now"),
-        ("Continue Mitigation", "continue_mitigation"),
-        ("Watch Only", "watch_only"),
-    ]:
-        lane_entries = [
-            entry
-            for entry in owner_packet["entries"]
-            if entry["primary_lane"] == lane_name
-        ]
-        if not lane_entries:
-            continue
-        lines.extend([f"### {lane_title}", ""])
-        for entry in lane_entries:
-            flags = ", ".join(entry["priority_flags"]) or "none"
-            lines.append(
-                f"- `{entry['id']}` — {entry['reason']} — flags: {flags} — `{entry['shell_command']}`"
-            )
-        lines.append("")
-    return "\n".join(lines)
 
 
 def write_owner_routing(omo_dir: Path, owner_routing: dict[str, object]) -> None:
@@ -298,21 +235,6 @@ def write_owner_routing(omo_dir: Path, owner_routing: dict[str, object]) -> None
     path = omo_dir / "debt" / "owner-routing" / "current.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(markdown, encoding="utf-8")
-
-
-def _render_dispatch_owner_section(owner_packet: dict[str, object]) -> str:
-    lines = [f"## Owner: {owner_packet['owner']}", ""]
-    lines.append(f"Dispatched items: {owner_packet['item_count']}")
-    lines.append("")
-    lines.append("### Frozen Commands")
-    lines.append("")
-    if owner_packet["entries"]:
-        for entry in owner_packet["entries"]:
-            lines.append(f"- `{entry['id']}` — `{entry['command']}`")
-    else:
-        lines.append("- none")
-    lines.append("")
-    return "\n".join(lines)
 
 
 def write_dispatch_packet(omo_dir: Path, dispatch_packet: dict[str, object]) -> None:
