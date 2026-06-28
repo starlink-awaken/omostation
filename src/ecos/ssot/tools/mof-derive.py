@@ -628,6 +628,11 @@ def main():
     parser.add_argument(
         "--strict", action="store_true", help="有 high 风险时退出码非 0"
     )
+    parser.add_argument(
+        "--gac-check",
+        action="store_true",
+        help="派生后附 GaC M2 drift 检查 (调 bin/gac-mof-validate.py, ADR-0106 机制7 ecos↔GaC 集成)",
+    )
     args = parser.parse_args()
 
     # 加载 SSOT
@@ -703,6 +708,27 @@ def main():
                 print(f"  {icon} [{r['id']}] {r['detail']}")
         else:
             print(format_report(stage_cov, gate_cov, phase_assess, risks))
+
+    # GaC M2 drift 检查 (ecos mof-derive ↔ GaC 机制7 集成, ADR-0106 第3项)
+    if args.gac_check:
+        import subprocess as _sp
+        from pathlib import Path as _Path
+
+        workspace = (
+            _Path(__file__).resolve().parents[6]
+        )  # tools→ssot→ecos→src→projects→workspace
+        gac_tool = workspace / "bin" / "gac-mof-validate.py"
+        if gac_tool.exists():
+            print("\n=== GaC M2 drift (gac-mof-validate, ecos↔GaC 集成) ===")
+            _r = _sp.run(
+                ["python3", str(gac_tool)],
+                capture_output=True,
+                text=True,
+                cwd=str(workspace),
+            )
+            print((_r.stdout or _r.stderr or "(无输出)")[-600:])
+        else:
+            print(f"\n⚠️ gac-mof-validate 未找到: {gac_tool}")
 
     if args.strict and any(r["severity"] == "high" for r in risks):
         sys.exit(1)
