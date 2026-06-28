@@ -506,6 +506,16 @@ def main() -> int:
     code_impact_p.add_argument("--symbol", help="目标符号名称")
     code_workflow_sub.add_parser("onboarding", help="为 AI 构建项目全貌上下文")
 
+    # ── CLI 收敛: 算力与 LLM 网关 (替代 deprecated aetherforge CLI) ──
+    compute_p = sub.add_parser(
+        "compute",
+        help="算力与 LLM 网关操作 (委派 aetherforge)",
+        epilog="子命令: gateway generate / gateway list / mesh list / mesh status / mesh cost / swarm run\n示例: cockpit compute gateway generate 'hello'",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    compute_p.add_argument("compute_command", nargs="?", help="gateway/mesh/swarm")
+    compute_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 aetherforge 的参数")
+
     args = parser.parse_args()
 
     # ── Registry-Based Dispatch ──
@@ -716,6 +726,11 @@ def main() -> int:
         console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
         return 0
 
+    def cmd_compute(a):
+        from cockpit.commands.compute import cmd_compute as _c
+
+        return _c(a)
+
     handlers = {
         "import": cmd_import,
         "mcp": cmd_mcp,
@@ -752,6 +767,7 @@ def main() -> int:
         "events": _c_events,
         "ssb": cmd_ssb,
         "mof": cmd_mof,
+        "compute": cmd_compute,
         "gac": cmd_gac,
         "omo": lambda a: __import__("cockpit.commands.omo", fromlist=["cmd_omo"]).cmd_omo(a),
         "runtime": lambda a: __import__("cockpit.commands.runtime", fromlist=["cmd_runtime"]).cmd_runtime(a),
