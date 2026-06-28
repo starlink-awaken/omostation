@@ -77,7 +77,7 @@ def _probe_port(host: str, port: int, timeout: float = 2.0) -> bool:
         result = s.connect_ex((host, port))
         s.close()
         return result == 0
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return False
 
 

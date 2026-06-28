@@ -135,7 +135,7 @@ async def parallel_run(
                 )
                 aggregator.add_result(task_.task_id, pr)
                 scheduler.mark_complete(task_.task_id)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 pr = PartialResult(
                     task_id=task_.task_id,
                     agent_name=task_.agent_name,

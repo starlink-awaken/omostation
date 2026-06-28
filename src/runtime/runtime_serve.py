@@ -57,7 +57,7 @@ def _action_run_task(args: dict[str, Any]) -> dict[str, Any]:
         result = (
             executor.execute(task) if hasattr(executor, "execute") else {"echo": task}
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         result = {"_execute_error": f"{type(exc).__name__}: {exc}"}
     _TASK_STATE[task_id] = {
         "task": task,
@@ -105,7 +105,7 @@ def _call_action(action: str, args: dict[str, Any]) -> dict[str, Any]:
         return {"status": "error", "error": f"unknown action: {action}"}
     try:
         return fn(args)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
 
 

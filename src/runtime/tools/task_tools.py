@@ -96,7 +96,7 @@ def _taskobject_submit(payload: dict) -> str:
             "source": payload.get("context", {}).get("source", "unknown"),
         }
         return json.dumps(out)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps(
             {"status": "error", "error": str(e), "task_id": payload.get("id", "")}
         )

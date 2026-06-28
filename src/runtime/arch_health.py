@@ -46,7 +46,7 @@ def load_arch_health() -> dict:
     if test_lock.exists():
         try:
             tests["ecos"] = json.loads(test_lock.read_text())
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     # ── Governance pipeline ───────────────────────────────────
@@ -69,7 +69,7 @@ def load_arch_health() -> dict:
                     else:
                         gov["health"] = "stale"
                 gov["total_entries"] = len(lines)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             gov["error"] = str(e)
 
     # ── System health ─────────────────────────────────────────
@@ -78,7 +78,7 @@ def load_arch_health() -> dict:
     if sys_yaml.exists():
         try:
             sys_info = yaml.safe_load(sys_yaml.read_text(encoding="utf-8")) or {}
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     # ── Git status ────────────────────────────────────────────
@@ -94,7 +94,7 @@ def load_arch_health() -> dict:
         changed = [line for line in result.stdout.splitlines() if line.strip()]
         git["uncommitted"] = len(changed)
         git["status"] = "clean" if not changed else "dirty"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         git["error"] = str(e)
 
     # ── Ruff status (src/ only, lightweight) ──────────────────
@@ -111,7 +111,7 @@ def load_arch_health() -> dict:
         ruff["errors"] = (
             len(result.stdout.splitlines()) if result.returncode != 0 else 0
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         ruff["error"] = str(e)
 
     # ── Audit trail ───────────────────────────────────────────
@@ -124,7 +124,7 @@ def load_arch_health() -> dict:
             if files:
                 audits["latest"] = files[0].stem
             audits["recent"] = [f.stem for f in files[:5]]
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             audits["error"] = str(e)
 
     # ── Cron job health ──────────────────────────────────────
@@ -147,7 +147,7 @@ def load_arch_health() -> dict:
                 }
                 for j in sorted(jobs, key=lambda x: x.get("name", ""))
             ]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         cron["error"] = str(e)
 
     # ── MCP backend health (from Agora) ──────────────────────
@@ -173,7 +173,7 @@ def load_arch_health() -> dict:
             backends = json.loads(result.stdout.strip())
             mcp["total"] = len(backends)
             mcp["backends"] = backends
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
     # ── Convergence score ──────────────────────────────────────
@@ -226,7 +226,7 @@ def load_arch_health() -> dict:
         convergence["grade"] = (
             "GOOD" if total >= 80 else "WARNING" if total >= 60 else "LOW"
         )
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
     return {

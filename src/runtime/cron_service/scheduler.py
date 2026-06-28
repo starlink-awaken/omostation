@@ -300,7 +300,7 @@ class CronScheduler:
             logger.info(
                 "Successfully synced %d triggers from L0 registry", len(triggers)
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("Failed to sync L0 triggers: %s", e)
 
     async def stop(self):
@@ -319,7 +319,7 @@ class CronScheduler:
         while self._running:
             try:
                 await self._tick()
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error("Scheduler tick error: %s", e, exc_info=True)
             await asyncio.sleep(config.TICK_INTERVAL)
 

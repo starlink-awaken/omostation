@@ -138,7 +138,7 @@ class StepExecutor:
         for key, expr in inputs.items():
             try:
                 resolved[key] = self._expr_eval.evaluate(expr, context)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 raise ValueError(f"Failed to resolve input '{key}': {e}") from e
         return resolved
 
@@ -193,7 +193,7 @@ class StepExecutor:
                 if call_result.outputs is None:
                     call_result.outputs = {}
                 call_result.outputs[target_var] = value
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 raise OutputMappingFailedError(
                     target_var, source_path, str(e), e
                 ) from e
@@ -254,7 +254,7 @@ class StepExecutor:
         if logger and hasattr(logger, "error"):
             try:
                 self._deps.logger.error(f"Step '{step_name}' failed: {error}")
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
 

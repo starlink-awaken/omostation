@@ -61,7 +61,7 @@ class LoopExecutor:
             if loop.loop_type == "for":
                 return await self._execute_for(loop, loop_context, trace, errors)
             raise ValueError(f"Unsupported loop type: {loop.loop_type}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return ExecutionResult(
                 success=False, value=None, trace=trace, errors=[*errors, e]
             )

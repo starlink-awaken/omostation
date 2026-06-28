@@ -123,7 +123,7 @@ class ConditionStepExecutor:
             return ExecutionResult(
                 success=True, value=None, trace=[], errors=[], outputs=collected
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return ExecutionResult(
                 success=False, value=None, trace=[], errors=[e], outputs={}
             )
@@ -152,7 +152,7 @@ class ConditionStepExecutor:
                 logger.error(
                     f"Conditional step '{getattr(step, 'name', 'unknown')}' failed: {message}"
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
 

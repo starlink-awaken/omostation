@@ -158,7 +158,7 @@ class Guardian:
                 if alert is not None:
                     self._record_alert(alert)
                     alerts.append(alert)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
         return alerts
 

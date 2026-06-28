@@ -97,7 +97,7 @@ async def health():
             broken = sum(
                 1 for f in hermes_scripts.iterdir() if f.is_symlink() and not f.exists()
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     # Count job errors
@@ -115,7 +115,7 @@ async def health():
             health_scan_mtime = datetime.fromtimestamp(
                 system_health_path.stat().st_mtime, UTC
             ).isoformat()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     return {

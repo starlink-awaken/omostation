@@ -108,7 +108,7 @@ class AgentExecutor:
                 state.completed_at = time.time()
                 state.error = None
                 return state
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 state.error = str(exc)
                 if attempt >= self._max_retries:
                     state.status = AgentExecutionStatus.FAILED

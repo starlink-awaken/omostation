@@ -84,7 +84,7 @@ class RollbackHistory:
                 self._history.pop(project_id, None)
             self._save()
             return restored
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             raise ValueError(f"Failed to undo rollback: {exc}") from exc
 
     def get_undoable_count(self, project_id: str) -> int:
@@ -104,7 +104,7 @@ class RollbackHistory:
                 data = json.loads(raw)
                 for pid, recs in data.items():
                     self._history[pid] = [RollbackRecord(**r) for r in recs]
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             self._history.clear()
         self._loaded = True
 
@@ -117,7 +117,7 @@ class RollbackHistory:
                 json.dumps(data, indent=2, ensure_ascii=False),
                 encoding="utf-8",
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass  # swallow write errors
 
     @property

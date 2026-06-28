@@ -285,7 +285,7 @@ async def _async_post(url: str, payload: dict[str, object]) -> None:
 
         async with httpx.AsyncClient(timeout=5.0) as client:
             await client.post(url, json=payload)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
 

@@ -73,7 +73,7 @@ class MatrixScheduler:
                 return {"status": "idle"}
             else:
                 return {"status": "failed", "exit_code": last_exit}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     def _check_docker(self, container: str) -> dict:
@@ -97,7 +97,7 @@ class MatrixScheduler:
                 return {"status": "running", "details": status}
             else:
                 return {"status": "stopped"}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     def _check_port(self, port: int) -> bool:
@@ -108,7 +108,7 @@ class MatrixScheduler:
                 ["lsof", f"-iTCP:{port}", "-sTCP:LISTEN", "-P"], capture_output=True
             )
             return r.returncode == 0
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return False
 
     def scan_once(self):
@@ -124,7 +124,7 @@ class MatrixScheduler:
             try:
                 with open(state_file, "r") as f:
                     state = json.load(f)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
         # Heartbeat & run statistics
@@ -143,7 +143,7 @@ class MatrixScheduler:
             ts.add(svc.name, *svc.depends_on)
         try:
             order = list(ts.static_order())
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             print(f"Cycle detected in DAG: {e}")
             order = [s.name for s in services]
 
@@ -323,7 +323,7 @@ class MatrixScheduler:
         try:
             with open(state_file, "w") as f:
                 json.dump(state, f)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
         self.state = {"last_scan": current_time, "services": scan_results}
@@ -344,7 +344,7 @@ class MatrixScheduler:
                     f"({'state transition' if state_transitioned else 'force write'})"
                 )
                 self.last_state_hash = state_hash
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 print(f"Failed to update OMO state: {e}")
 
         # Alert on health transitions: healthy → unreachable
@@ -374,7 +374,7 @@ class MatrixScheduler:
                         text=True,
                         timeout=10,
                     )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     print(f"Failed to run notify script for {svc_name}: {e}")
             self._prev_health[svc_name] = current_hc
 
@@ -441,7 +441,7 @@ class MatrixScheduler:
                 )
         except subprocess.TimeoutExpired:
             print(f"⚠️ [P1-AUTO_HEAL] {svc_name}: autoheal timed out after 30s")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             print(f"⚠️ [P1-AUTO_HEAL] {svc_name}: autoheal error: {e}")
 
     def _run_cycle(self):

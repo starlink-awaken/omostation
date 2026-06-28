@@ -50,7 +50,7 @@ class SkillRegistry:
             return SkillResult(
                 success=True, output=result, duration_ms=(time.time() - t0) * 1000
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return SkillResult(
                 success=False, error=str(e), duration_ms=(time.time() - t0) * 1000
             )

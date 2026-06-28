@@ -117,7 +117,7 @@ class SkillCallExecutor(ICallExecutor):
                 return result
             except (SkillNotFoundError, SkillInvalidInputError):
                 raise
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 last_error = exc
                 if attempt >= max_retries:
                     break

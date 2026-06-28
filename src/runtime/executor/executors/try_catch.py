@@ -67,7 +67,7 @@ class TryCatchExecutor:
                 result = await self._stmt_exec.execute_statement(try_stmt, child_ctx)
                 trace.extend(getattr(result, "trace", []) or [])
                 errors.extend(getattr(result, "errors", []) or [])
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             caught_error = exc
             errors.append(caught_error)
             if self._enable_tracing:
@@ -95,7 +95,7 @@ class TryCatchExecutor:
                     )
                     trace.extend(getattr(result, "trace", []) or [])
                     errors.extend(getattr(result, "errors", []) or [])
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001  # defensive fallback
                     errors.append(exc)
 
         # 3. Execute finally_block
@@ -108,7 +108,7 @@ class TryCatchExecutor:
                     )
                     trace.extend(getattr(result, "trace", []) or [])
                     errors.extend(getattr(result, "errors", []) or [])
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001  # defensive fallback
                     errors.append(exc)
                     finally_error = exc
 

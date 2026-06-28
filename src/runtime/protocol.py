@@ -143,7 +143,7 @@ def dispatch_protocol_message(protocol_name: str, message: dict) -> tuple[bool, 
 
     try:
         return handler(message)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return False, {"error": str(e), "protocol": protocol_name}
 
 

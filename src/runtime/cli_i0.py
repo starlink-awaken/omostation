@@ -30,7 +30,7 @@ def _bool_icon(val: bool) -> str:
 def cmd_i0_status() -> int:
     try:
         status = i0_status()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ i0_status failed: {e}", file=sys.stderr)
         return 1
 
@@ -62,7 +62,7 @@ def cmd_i0_status() -> int:
 def cmd_i0_services() -> int:
     try:
         services = i0_services()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ i0_services failed: {e}", file=sys.stderr)
         return 1
 
@@ -87,7 +87,7 @@ def cmd_i0_services() -> int:
 def cmd_i0_events(limit: int = 20) -> int:
     try:
         events = i0_events(limit)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ i0_events failed: {e}", file=sys.stderr)
         return 1
 
@@ -111,7 +111,7 @@ def cmd_i0_events(limit: int = 20) -> int:
 def cmd_i0_protocols() -> int:
     try:
         protocols = i0_protocols()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ i0_protocols failed: {e}", file=sys.stderr)
         return 1
 
@@ -143,7 +143,7 @@ def cmd_i0_protocols() -> int:
 def cmd_i0_graph() -> int:
     try:
         graph = i0_graph()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ i0_graph failed: {e}", file=sys.stderr)
         return 1
 

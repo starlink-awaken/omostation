@@ -113,7 +113,7 @@ class InterventionExecutor:
             elif action == InterventionAction.IGNORE:
                 success = True
                 message = "Anomaly ignored"
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             error = str(exc)
             message = f"Execution failed: {error}"
             success = False

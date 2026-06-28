@@ -235,7 +235,7 @@ class SelfHealingEngine:
                 result = self._handle_notify(component, params)
             else:
                 logger.warning("[SelfHealing] Unknown action: %s", action.value)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             logger.exception("[SelfHealing] Repair failed for %s: %s", component, exc)
 
         if result:
@@ -280,7 +280,7 @@ class SelfHealingEngine:
         while not stop_event.is_set():
             try:
                 self._health_check_cycle()
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 logger.exception("[SelfHealing] Error in healing cycle: %s", exc)
 
             # Wait with early exit on stop

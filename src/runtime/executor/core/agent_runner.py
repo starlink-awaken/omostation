@@ -193,7 +193,7 @@ class AgentRunner:
                 self._states[definition.name] = state
                 return state
 
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 state.error = str(exc)
                 if attempt >= max_retries:
                     state.status = AgentStatus.FAILED

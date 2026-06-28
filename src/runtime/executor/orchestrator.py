@@ -182,7 +182,7 @@ class Orchestrator:
                     {"project_id": self._project_state.project_id},
                 )
 
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             self._project_state.current_phase = Phase.FAILED.value
             self._emit(
                 EngineEvent.PHASE_FAILED,
@@ -272,7 +272,7 @@ class Orchestrator:
                     import asyncio as _asyncio
 
                     _asyncio.ensure_future(result)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
     # -- Internals -----------------------------------------------------------
@@ -330,7 +330,7 @@ class Orchestrator:
                     EngineEvent.AGENT_FAILED,
                     {"agent_name": definition.name, "error": state.last_error},
                 )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             self._emit(
                 EngineEvent.AGENT_FAILED,
                 {"agent_name": definition.name, "error": str(exc)},

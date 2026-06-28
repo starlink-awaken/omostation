@@ -169,7 +169,7 @@ class TaskScheduler:
                         task.status = TaskStatus.COMPLETED
                 except asyncio.CancelledError:
                     task.status = TaskStatus.CANCELLED
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001  # defensive fallback
                     task.error = str(exc)
                     if task.status != TaskStatus.CANCELLED:
                         task.status = TaskStatus.FAILED

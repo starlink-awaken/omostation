@@ -236,7 +236,7 @@ class MessageBus:
 
         try:
             return await future
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             self._pending_requests.pop(message.id, None)
             raise
 
@@ -313,5 +313,5 @@ class MessageBus:
     def _safe_invoke(handler: MessageHandler, message: AgentMessage) -> None:
         try:
             handler(message)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass  # Swallow subscriber errors to protect the bus

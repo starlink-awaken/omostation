@@ -180,7 +180,7 @@ def _maybe_enforce_budget(
             "error": (f"Budget policy blocked task {task_id}: {str(e)}"),
             "route": route_info,
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         log.warning(f"Budget check bypassed due to error: {e}")
 
     return None
@@ -211,7 +211,7 @@ def _log_execution(
             duration_sec=duration_sec,
             error=result.get("error"),
         )
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass  # Matrix bridge failure must not break execution logging
 
 
@@ -341,7 +341,7 @@ class AgentRuntime:
                     int(usage.get("prompt_tokens", 0)),
                     int(usage.get("completion_tokens", 0)),
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 total_cost_usd = 0.0
 
             record_llm_audit(
@@ -392,7 +392,7 @@ class AgentRuntime:
                 result["finish_reason"] = "tool_calls"
 
             return result
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             log.error(f"LLM Gateway error: {e}")
             return {
                 "role": "assistant",

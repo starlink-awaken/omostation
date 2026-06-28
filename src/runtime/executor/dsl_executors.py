@@ -146,7 +146,7 @@ class DSLExecutors:
             if asyncio.iscoroutine(result):
                 result = await result
             return ExecutorResult(success=True, output=result)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return ExecutorResult(success=False, error=str(e))
 
     async def skill_call(
@@ -161,7 +161,7 @@ class DSLExecutors:
             if asyncio.iscoroutine(result):
                 result = await result
             return ExecutorResult(success=True, output=result)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return ExecutorResult(success=False, error=str(e))
 
     async def tool_call(
@@ -176,7 +176,7 @@ class DSLExecutors:
             if asyncio.iscoroutine(result):
                 result = await result
             return ExecutorResult(success=True, output=result)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return ExecutorResult(success=False, error=str(e))
 
     async def conditional(
@@ -192,7 +192,7 @@ class DSLExecutors:
             result = _safe_eval(condition, eval_ctx)
             next_s = true_step if result else false_step
             return ExecutorResult(success=True, output=result, next_step=next_s)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return ExecutorResult(success=False, error=str(e))
 
     async def loop(
@@ -210,7 +210,7 @@ class DSLExecutors:
                 try:
                     if not _safe_eval(condition, eval_ctx):
                         break
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     break
             for step_def in sub_steps:
                 step_ctx = ExecutorContext(
@@ -278,7 +278,7 @@ class DSLExecutors:
         try:
             result = await self._execute_substep(ctx, try_step)
             return result
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             if catch_step:
                 catch_ctx = ExecutorContext(
                     workflow_id=ctx.workflow_id,

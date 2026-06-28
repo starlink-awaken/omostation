@@ -83,7 +83,7 @@ class PluginManager:
         try:
             plugin.state = PluginState.ACTIVE
             return True
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             plugin.state = PluginState.FAILED
             return False
 

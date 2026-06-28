@@ -63,7 +63,7 @@ def _read_shebang(path: Path) -> str | None:
         with open(path) as f:
             first = f.readline().strip()
         return first
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return None
 
 
@@ -172,7 +172,7 @@ def execute(
 
     except FileNotFoundError as e:
         return ExecutionResult(False, "", f"Interpreter not found: {interpreter} — {e}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return ExecutionResult(False, "", str(e))
 
     finally:
@@ -192,5 +192,5 @@ def _kill_process(proc: subprocess.Popen):
                 os.killpg(pgid, signal.SIGKILL)
             else:
                 proc.kill()
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass

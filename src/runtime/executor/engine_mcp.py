@@ -142,7 +142,7 @@ class MCPHandler:
             return MCPCallResult(
                 success=True, content=str(content), request_id=request.request_id
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return MCPCallResult(
                 success=False,
                 error=f"Tool {request.tool} failed: {e}",

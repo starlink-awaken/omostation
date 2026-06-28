@@ -101,7 +101,7 @@ class InteractiveController:
             self._paused = True
             self._pause_reason = reason
             return self._complete_cmd(cmd)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return self._fail_cmd(cmd, str(exc))
 
     def resume(self) -> ControlCommand:
@@ -113,7 +113,7 @@ class InteractiveController:
             self._paused = False
             self._pause_reason = None
             return self._complete_cmd(cmd)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return self._fail_cmd(cmd, str(exc))
 
     def is_paused(self) -> bool:
@@ -135,7 +135,7 @@ class InteractiveController:
             self._delegate.checkpoint(description)
             self._last_checkpoint_at = time.time()
             return self._complete_cmd(cmd)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return self._fail_cmd(cmd, str(exc))
 
     def rollback_to(self, checkpoint_id: str) -> ControlCommand:
@@ -143,7 +143,7 @@ class InteractiveController:
         try:
             self._delegate.rollback(checkpoint_id)
             return self._complete_cmd(cmd)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return self._fail_cmd(cmd, str(exc))
 
     # -- Status -----------------------------------------------------------
@@ -250,5 +250,5 @@ class InteractiveController:
                 return self._complete_cmd(cmd, self.get_status())
             else:
                 return self._fail_cmd(cmd, f"Unknown command type: {cmd.type}")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return self._fail_cmd(cmd, str(exc))

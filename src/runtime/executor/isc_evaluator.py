@@ -81,7 +81,7 @@ class ISCEvaluator:
             return self._eval(expr, ctx)
         except ISCEvaluationError:
             raise
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             raise ISCEvaluationError(
                 f"Unexpected error during evaluation: {exc}"
             ) from exc

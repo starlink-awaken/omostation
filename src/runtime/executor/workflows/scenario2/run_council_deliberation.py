@@ -84,7 +84,7 @@ async def _call_kairon_llm(prompt: str) -> str | None:
         result = await provider.complete(prompt, options)
         if result and result.content and result.content.strip():
             return result.content
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
     return None
 

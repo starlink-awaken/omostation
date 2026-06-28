@@ -146,7 +146,7 @@ class SkillsManager:
             )
 
             return result
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             self._stats.failed += 1
             raise
 
@@ -254,7 +254,7 @@ class SkillsManager:
                     "trace_id": self._current_trace_id,
                 }
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass  # fire-and-forget
 
     # ------------------------------------------------------------------

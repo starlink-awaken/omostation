@@ -80,7 +80,7 @@ def _sql_pattern_fallback(db_path: str, min_frequency: int = 2) -> list[dict[str
             )
         conn.close()
         return patterns
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         _log.debug("SQL pattern fallback failed: %s", exc)
         return []
 
@@ -106,7 +106,7 @@ def _kairon_org_memory_patterns(
                 )
         om.close()
         return patterns
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         _log.debug("OrgMemory pattern lookup failed: %s", exc)
         return []
 

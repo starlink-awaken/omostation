@@ -69,7 +69,7 @@ class SharedBrainIdentityProvider:
             req = Request(url, method="GET")  # noqa: S310
             resp = urlopen(req, timeout=self.timeout)  # noqa: S310
             return json.loads(resp.read().decode())
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.error("SharedBrain identity query failed (%s): %s", path, e)
             return None
 
@@ -81,6 +81,6 @@ class SharedBrainIdentityProvider:
             req.add_header("Content-Type", "application/json")
             resp = urlopen(req, timeout=self.timeout)  # noqa: S310
             return json.loads(resp.read().decode())
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.error("SharedBrain identity mutation failed (%s): %s", path, e)
             return {"ok": False, "error": str(e)}

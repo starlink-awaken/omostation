@@ -7,7 +7,7 @@ def _i0_status() -> str:
     try:
         status = _i0_status_fn()
         return json.dumps(status, indent=2, default=str)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"❌ i0_status failed: {e}"
 
 
@@ -30,7 +30,7 @@ def _i0_services() -> str:
             f"\nTotal: {len(services)} services ({sum(1 for s in services if s.get('port_listening'))} online)"
         )
         return "\n".join(parts)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"❌ i0_services failed: {e}"
 
 
@@ -54,7 +54,7 @@ def _i0_events(limit: int = 20) -> str:
             parts.append(f"{eid:6s} {ts:22s} {src:20s} {etype:20s} {payload:40s}")
         parts.append(f"\nShowing {len(events)} events")
         return "\n".join(parts)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"❌ i0_events failed: {e}"
 
 
@@ -79,7 +79,7 @@ def _i0_protocols() -> str:
                 f"{p['name']:25s} {p['version']:10s} {p['category']:22s} {p['status']:10s} {p['usage']:10s}"
             )
         return "\n".join(lines)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"❌ i0_protocols failed: {e}"
 
 
@@ -106,7 +106,7 @@ def _i0_graph() -> str:
         else:
             lines.append("\nNo dependency edges defined")
         return "\n".join(lines)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"❌ i0_graph failed: {e}"
 
 

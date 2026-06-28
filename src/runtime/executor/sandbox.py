@@ -97,7 +97,7 @@ class Sandbox:
         except TimeoutError:
             elapsed = (time.time() - t0) * 1000
             return SandboxResult(success=False, error="Timeout", duration_ms=elapsed)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             elapsed = (time.time() - t0) * 1000
             return SandboxResult(success=False, error=str(exc), duration_ms=elapsed)
         finally:

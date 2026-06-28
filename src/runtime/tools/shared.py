@@ -58,7 +58,7 @@ def _summarize_executor_costs(log_file: Path | None = None) -> dict:
     for line in log_file.read_text().strip().splitlines():
         try:
             entry = json.loads(line)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
         total_calls += 1
         total_tokens += entry.get("tokens_used", 0)
@@ -92,7 +92,7 @@ def _record_taskobject_envelope(tool_name: str, params: dict, status: str) -> No
             import json
 
             f.write(json.dumps(envelope) + "\n")
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
 

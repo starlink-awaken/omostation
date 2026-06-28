@@ -172,7 +172,7 @@ class ToolCallExecutor(ICallExecutor):
                     retry_count=attempt,
                     outputs=outputs,
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 if attempt < max_retries and self._should_retry(exc):
                     await asyncio.sleep(_calc_tool_backoff(attempt, rc) / 1000)
                     continue
@@ -215,7 +215,7 @@ class ToolCallExecutor(ICallExecutor):
                     if isinstance(expr, DSLExpression)
                     else expr
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 raise ValueError(f"Failed to resolve input '{key}': {e}") from e
         return resolved
 

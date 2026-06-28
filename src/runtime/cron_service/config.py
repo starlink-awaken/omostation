@@ -26,7 +26,7 @@ def _load_config() -> dict[str, Any]:
     try:
         with open(CONFIG_FILE, encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return {}
 
 

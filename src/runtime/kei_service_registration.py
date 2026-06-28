@@ -62,7 +62,7 @@ def _audit(action: str, status: str, details: str) -> None:
     if _has_audit and _sandbox_audit is not None:
         try:
             _sandbox_audit(action, EXTENSION_ID, status, details)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass  # Best-effort
 
     # Also write to local audit file as fallback
@@ -207,7 +207,7 @@ def validate_matrix_file(filepath: str | Path) -> dict:
         result["errors"].append(f"YAML parse error: {e}")
         _audit("validate", "fail", f"YAML parse error in {path}: {e}")
         return result
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         result["valid"] = False
         result["errors"].append(f"Read error: {e}")
         _audit("validate", "fail", f"Read error in {path}: {e}")

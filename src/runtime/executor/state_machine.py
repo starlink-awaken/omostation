@@ -226,7 +226,7 @@ class PhaseStateMachine:
                 on_exit(
                     PhaseRecord(from_phase=from_phase, to_phase=target, reason=reason)
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
         # PAUSE/RESUME bookkeeping
@@ -250,7 +250,7 @@ class PhaseStateMachine:
         if on_enter:
             try:
                 on_enter(record)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
         return record

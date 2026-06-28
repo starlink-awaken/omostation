@@ -134,7 +134,7 @@ def process_event(conn, event_id, payload):
                 )
                 conn.commit()
                 return False  # Need retry
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         logger.error(f"Exception while running gbrain put: {e}")
         retries += 1
         if retries >= 3:
@@ -206,7 +206,7 @@ def main():
                                             set_last_seen_id(conn, evt_id)
                                     else:
                                         set_last_seen_id(conn, evt_id)
-                                except Exception as e:
+                                except Exception as e:  # noqa: BLE001  # defensive fallback
                                     logger.error(f"Error parsing SSE data: {e}")
                 else:
                     logger.error(
@@ -216,7 +216,7 @@ def main():
         except requests.exceptions.RequestException as e:
             logger.error(f"Connection error to Agora stream: {e}")
             time.sleep(5)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.exception(f"Unexpected error in loop: {e}")
             time.sleep(5)
 

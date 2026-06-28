@@ -52,7 +52,7 @@ class DSLParser:
             return ParseResult(
                 success=len(self._errors) == 0, ast=ast, errors=self._errors
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             self._errors.append(
                 {"kind": "syntax", "message": str(e), "loc": self._current().loc}
             )  # type: ignore[attr-defined]
@@ -67,7 +67,7 @@ class DSLParser:
             return ParseResult(
                 success=len(self._errors) == 0, ast=ast, errors=self._errors
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             self._errors.append({"kind": "syntax", "message": str(e)})
             return ParseResult(success=False, errors=self._errors)
 

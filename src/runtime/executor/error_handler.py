@@ -163,7 +163,7 @@ class ErrorHandler:
                     raise
                 delay = self._calculate_delay(attempt, strategy)
                 await asyncio.sleep(delay / 1000.0)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 last_error = e
                 if attempt >= strategy.max_retries:
                     break
@@ -201,5 +201,5 @@ async def with_error_handling(
     """Execute with automatic retry and error handling."""
     try:
         return await handler.execute_with_retry(fn, category, context)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         raise handler.handle_error(e, context)

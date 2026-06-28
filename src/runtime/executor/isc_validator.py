@@ -149,7 +149,7 @@ class ISCValidator:
                     "Expression contains no variables - this may be a constant value"
                 )
             return ValidationResult(True, [], warnings)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             errors.append(ValidationError("$", str(exc), "PARSE_ERROR"))
             return ValidationResult(False, errors, warnings)
 
@@ -157,7 +157,7 @@ class ISCValidator:
         try:
             ast = self._parser.parse(expression)
             return self._extract_vars_from_ast(ast)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return []
 
     def _extract_vars_from_ast(self, node: dict[str, Any]) -> list[str]:

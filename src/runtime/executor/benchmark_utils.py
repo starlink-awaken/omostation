@@ -187,7 +187,7 @@ def _guess_cpu_cores() -> int:
             import multiprocessing
 
             return multiprocessing.cpu_count()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return 4
 
 

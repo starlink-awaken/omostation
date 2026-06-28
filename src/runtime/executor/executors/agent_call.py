@@ -94,7 +94,7 @@ class AgentCallExecutor(ICallExecutor):
                 return result
             except AgentCallError:
                 raise
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 if attempt >= max_retries:
                     raise AgentCallError(
                         f"Agent '{config.name}' failed after {max_retries} retries"

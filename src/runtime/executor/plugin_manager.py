@@ -70,7 +70,7 @@ class PluginSandbox:
             return await fn(*args, **kw) if hasattr(fn, "__call__") else fn(*args, **kw)
         try:
             return await fn(*args, **kw) if hasattr(fn, "__call__") else fn(*args, **kw)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             raise EngineError(
                 f"Sandbox error in {self._plugin_id}: {e}",
                 ErrorCategory.PLUGIN,
@@ -191,7 +191,7 @@ class PluginManager:
                 try:
                     await self.start(pid)
                     results.append(PluginLoadResult(pid, True))
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     results.append(PluginLoadResult(pid, False, str(e)))
         return results
 
@@ -202,7 +202,7 @@ class PluginManager:
                 try:
                     await self.stop(pid)
                     results.append(PluginLoadResult(pid, True))
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     results.append(PluginLoadResult(pid, False, str(e)))
         return results
 
@@ -210,7 +210,7 @@ class PluginManager:
         for pid in reversed(self._topological_sort(list(self._plugins.keys()))):
             try:
                 await self.unload(pid)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
     def has_permission(self, plugin_id: str, permission: PluginPermission) -> bool:

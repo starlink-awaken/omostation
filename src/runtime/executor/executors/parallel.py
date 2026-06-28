@@ -122,7 +122,7 @@ class ParallelExecutor:
                     result = await self._stmt_exec.execute_statement(stmt, ctx)
                     branch_trace.extend(getattr(result, "trace", []))
                     branch_errors.extend(getattr(result, "errors", []))
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     branch_errors.append(e)
             return ExecutionResult(
                 success=len(branch_errors) == 0,

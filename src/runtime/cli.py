@@ -234,7 +234,7 @@ def cmd_kei_dashboard() -> int:
             print("\nBy status:")
             for status, count in sorted(statuses.items()):
                 print(f"  {status:20s} {count}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ Error reading audit log: {e}", file=sys.stderr)
         return 1
     return 0
@@ -457,7 +457,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"✅ KEI Manifest valid: {manifest.name} v{manifest.version}")
                 print(f"  Permissions: {manifest.permissions}")
                 return 0
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 print(f"❌ KEI Validation failed: {e}", file=sys.stderr)
                 return 1
         elif args.kei_cmd == "dashboard":

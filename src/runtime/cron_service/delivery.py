@@ -129,7 +129,7 @@ def _send_weixin(text: str, target: str) -> str | None:
         return None
     except httpx.TimeoutException:
         return "Weixin send timed out"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"Weixin send error: {e}"
 
 

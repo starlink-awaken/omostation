@@ -52,7 +52,7 @@ def health_scan_once(force_write: bool = True) -> dict | None:
             sched.state.get("last_scan", 0),
         )
         return sched.state
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         logger.exception("Health scan failed")
         return None
 

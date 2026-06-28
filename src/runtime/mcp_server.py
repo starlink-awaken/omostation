@@ -205,7 +205,7 @@ def handle_agent_list_tools() -> dict:
     try:
         registry = Tools().build_tool_registry()
         return {"tools": list(registry.keys()), "count": len(registry)}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"error": f"{type(e).__name__}: {e}"}
 
 
@@ -222,7 +222,7 @@ def handle_agent_list() -> dict:
             ],
             "count": len(agents),
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"error": f"{type(e).__name__}: {e}"}
 
 
@@ -237,7 +237,7 @@ def handle_agent_status() -> dict:
             "tool_count": len(rt._tool_registry),
             "status": "ready",
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"error": f"{type(e).__name__}: {e}"}
 
 
@@ -251,7 +251,7 @@ def handle_agent_task_status(task_id: str) -> dict:
         return {"task_id": task_id, "status": str(status)}
     except KeyError:
         return {"error": f"Task not found: {task_id}"}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"error": f"{type(e).__name__}: {e}"}
 
 
@@ -263,7 +263,7 @@ def handle_agent_run_task(prompt: str, tools: str = "") -> dict:
         rt = AgentRuntime()
         tools_enabled = [t.strip() for t in tools.split(",") if t.strip()] or None
         return rt.run_task(prompt, tools_enabled=tools_enabled)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"error": f"{type(e).__name__}: {e}"}
 
 
@@ -280,7 +280,7 @@ def handle_agent_chat(message: str, history: str = "[]") -> dict:
         messages.append({"role": "user", "content": message})
         result = rt._call_llm(messages)
         return {"response": result.get("content", ""), "model": rt.model}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"error": f"{type(e).__name__}: {e}"}
 
 

@@ -109,7 +109,7 @@ def _direct_mcp_call(server: str, tool_name: str, args: dict) -> dict:
         content = result.get("content", [])
         texts = [c.get("text", "") for c in content if c.get("type") == "text"]
         return {"content": "\n".join(texts), "raw": result, "direct": True}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"error": f"Direct MCP call failed: {e}", "direct": True}
 
 
@@ -129,7 +129,7 @@ def _is_safe_url(url: str) -> bool:
     try:
         parsed = urlparse(url)
         hostname = parsed.hostname or ""
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return False
 
     # 禁止 localhost / 0.0.0.0
@@ -203,7 +203,7 @@ class Tools:
                 "stdout": "",
                 "stderr": f"Timed out after {timeout}s",
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"exit_code": -1, "stdout": "", "stderr": str(e)}
 
     @staticmethod
@@ -217,7 +217,7 @@ class Tools:
         except PermissionError as e:
             log.warning(f"  ⛔ file_read blocked: {e}")
             return {"error": str(e)}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"error": str(e)}
 
     @staticmethod
@@ -231,7 +231,7 @@ class Tools:
         except PermissionError as e:
             log.warning(f"  ⛔ file_write blocked: {e}")
             return {"error": str(e)}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"error": str(e)}
 
     @staticmethod
@@ -251,7 +251,7 @@ class Tools:
             return {"rows": result, "count": len(result)}
         except PermissionError as e:
             return {"error": str(e)}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"error": str(e)}
 
     @staticmethod
@@ -295,7 +295,7 @@ class Tools:
             texts = [c.get("text", "") for c in content if c.get("type") == "text"]
             _record_agora_success()
             return {"content": "\n".join(texts), "raw": result}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             log.warning(f"  ⚠️  Agora MCP call failed for {server}.{tool_name}: {e}")
             _record_agora_failure()
             # Fallback: try direct MCP endpoint for this server
@@ -313,7 +313,7 @@ class Tools:
             with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310
                 body = resp.read().decode("utf-8")[:5000]
                 return {"status": resp.status, "body": body}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"error": str(e)}
 
     @staticmethod
@@ -332,7 +332,7 @@ class Tools:
             with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
                 body = resp.read().decode("utf-8")[:5000]
                 return {"status": resp.status, "body": body}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"error": str(e)}
 
     @staticmethod
@@ -361,7 +361,7 @@ class Tools:
             with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
                 body = resp.read().decode()[:500]
             return {"status": resp.status, "body": body}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"error": str(e)}
 
     def build_tool_registry(self) -> dict:
