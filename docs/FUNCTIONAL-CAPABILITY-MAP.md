@@ -1,8 +1,9 @@
 # omostation 全量功能能力地图
 
-> **SSOT**: 本文档是 omostation 系统功能能力的唯一全景地图
+> **SSOT**: 本文档是 omostation 系统功能能力的唯一全景地图 (聚焦 WHAT: 谁提供什么能力)
 > **更新**: 2026-06-28 | **范围**: 17 项目 (5+4+1+1 架构) | **方法**: 4 组 subagent 并行扫描 + 缺口修复
 > **状态**: 8 域 32 能力全覆盖, 5 缺口全部修复, 3 重叠 (互补/分层)
+> **配套文档**: `docs/ARCHITECTURE-DETAILED-MAP.md` (聚焦 HOW: 架构层次/依赖矩阵/内部模块/数据流/控制流/逻辑流)
 
 ---
 
@@ -16,7 +17,7 @@
 | MCP 工具总数 | ~280+ |
 | HTTP 端点 | ~30+ |
 | 核心源文件 | ~800+ |
-| M1 元模型节点 | 1315 (含 119 GacRule) |
+| M1 元模型节点 | 1315 (含 118 GacRule 实例 + 1 元模型) |
 | GaC 治理规则 | 118 |
 | BOS 声明式服务 | 100 (9 域) |
 | L4 管理域 | 28 |
@@ -216,7 +217,7 @@ M3 (元元模型) → m3_extended.py: STANDARD_STAGES (7) + STANDARD_GATES (4) +
        ↓ mof-derive
 M2 (schema)   → m2/*.yaml: 48 个类型 schema (含 GacRule)
        ↓ mof-schema-validate
-M1 (实例)     → m1/**/*.yaml: 1315 节点 (含 119 GacRule + 96 OMOTask + 25 GOV-* + ...)
+M1 (实例)     → m1/**/*.yaml: 1315 节点 (含 118 GacRule 实例 + 1 元模型 + 96 OMOTask + 25 GOV-* + ...)
        ↓ gac-m1-sync
 SSOT          → governance-checks.yaml::gac.rules (118 规则)
 ```
@@ -289,61 +290,34 @@ Web/API  → cockpit HTTP :8090 → /api/* (services/compute/health/events/knowl
 
 ---
 
-## 11. BOS URI 域映射 (100 服务 × 9 域)
+## 11. BOS URI 域映射
 
-| BOS 域 | 前端项目 | 核心能力 | 服务数 |
-|--------|---------|---------|:------:|
-| `bos://memory/` | kos, kronos, gbrain, sot-bridge | 记忆与事实源 | ~15 |
-| `bos://governance/` | omo, metaos, eidos, cockpit | 治理与律法 | ~15 |
-| `bos://analysis/` | ontoderive, minerva, codeanalyze | 认知与推演 | ~12 |
-| `bos://persona/` | sot-bridge | 人格与心智 | ~5 |
-| `bos://capability/` | aetherforge, runtime, bus | 能力与生态 | ~10 |
-| `bos://meta/` | ecos, model-driven | 元治理 | ~10 |
-| `bos://omo/` | omo (内省) | OMO 自有 | ~15 |
-| `bos://swarm/` | agora (蜂群) | 蜂群协调 | ~8 |
-| `bos://system/` | ecos, runtime | 系统级 | ~10 |
+> BOS 声明式注册表 SSOT: `projects/agora/etc/bos-services.yaml` (100 服务, 9 域)
+> 运行时调用图 (调用方→被调方): 见 [`ARCHITECTURE-DETAILED-MAP.md` §2.3](./ARCHITECTURE-DETAILED-MAP.md#23-bos-uri-运行时调用图)
+
+| BOS 域 | 前端项目 | 核心能力 |
+|--------|---------|---------|
+| `bos://memory/` | kos, kronos, gbrain, sot-bridge | 记忆与事实源 |
+| `bos://governance/` | omo, metaos, eidos, cockpit | 治理与律法 |
+| `bos://analysis/` | ontoderive, minerva, codeanalyze | 认知与推演 |
+| `bos://persona/` | sot-bridge | 人格与心智 |
+| `bos://capability/` | aetherforge, runtime, bus | 能力与生态 |
+| `bos://meta/` | ecos, model-driven | 元治理 |
+| `bos://omo/` | omo (内省) | OMO 自有 |
+| `bos://swarm/` | agora (蜂群) | 蜂群协调 |
+| `bos://system/` | ecos, runtime | 系统级 |
 
 ---
 
 ## 12. 三大核心闭环
 
-### 知识闭环 (数据 → 记忆 → 检索)
+> 详细数据流/控制流/逻辑流图: 见 [`ARCHITECTURE-DETAILED-MAP.md` §4-6](./ARCHITECTURE-DETAILED-MAP.md#4-数据流-data-flow)
 
-```
-URL/文件 ──kronos fetch──→ 内容抽取 ──gbrain import──→ Postgres 知识库 (向量化)
-                                                         ↓
-用户查询 ──kos search──→ 语义搜索 ──gbrain query──→ 混合 RAG 结果
-                                                         ↓
-深度研究 ──minerva research──→ 多源搜索 ──gbrain put_page──→ 知识图谱更新
-                                                         ↓
-知识推导 ──ontoderive derive──→ 事实推导 ──eidos validate──→ Schema 校验
-```
-
-### 治理闭环 (规则 → 检测 → 自愈)
-
-```
-规则声明 ──gac.rules (118)──→ M1 实例 (118) ──mof-schema-validate──→ 校验 OK
-       ↓                                                         ↓
-drift 检测 ──gac-drift (6层)──→ 0 drift ──gac-m1-sync──→ registry↔M1 同步
-       ↓                                                         ↓
-omo governance ──7 项审计──→ 100 A+ ──omo healing──→ 自愈修复
-       ↓
-mof-state-bridge ──.omo/tasks ↔ M1──→ 0 字段漂移 (G4 修复)
-```
-
-### 执行闭环 (需求 → 任务 → 执行 → 证据)
-
-```
-c2g brainstorm → Pitch (Upstream + Appetite) → c2g bet → OMO Planned Task
-    ↓
-omo worker dispatch → Worker 认领 → metaos admit (G3) → metaos gate → 决策门控
-    ↓
-runtime agent execute → KEI 沙箱 → 执行结果
-    ↓
-omo evidence → 证据收集 → omo task complete → 晋升
-    ↓
-omo audit → 审计记录 → gac-drift → 规则校验 → git commit → mof-extract
-```
+| 闭环 | 一句话 | 详细位置 |
+|------|--------|---------|
+| **知识闭环** | URL→kronos→gbrain→kos→minerva→ontoderive (摄取→存储→检索→研究→推导) | [§4.1 数据流](./ARCHITECTURE-DETAILED-MAP.md#41-url--知识库-kronos--gbrain) |
+| **治理闭环** | gac.rules→M1→validate→drift→m1-sync→governance→healing (声明→校验→检测→自愈) | [§4.4 + §5.3](./ARCHITECTURE-DETAILED-MAP.md#44-治理事件--审计日志-omo--appendonlylog) |
+| **执行闭环** | c2g→omo task→metaos gate→runtime KEI→evidence→晋升 (需求→任务→门控→执行→证据) | [§4.2 + §5.2](./ARCHITECTURE-DETAILED-MAP.md#42-用户需求--任务-c2g--omo) |
 
 ---
 
