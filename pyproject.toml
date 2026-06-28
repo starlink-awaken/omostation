@@ -55,7 +55,7 @@ ignore = ["S101", "S603", "S607", "S108", "S110", "S314", "S608", "E402", "E501"
 quote-style = "double"
 
 [tool.uv.sources]
-runtime = { path = "../runtime" }
+runtime = { path = "../runtime", editable = true }
 agora = { path = "../agora", editable = true }
 omo = { path = "../omo", editable = true }
 l4-kernel = { path = "../l4-kernel", editable = true }
