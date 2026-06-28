@@ -71,10 +71,67 @@ def _parse_frontmatter(content: str) -> dict[str, Any] | None:
 def _check_doc_referenced(
     rel_path: str, workspace_root: Path
 ) -> tuple[bool, list[str]]:
-    """检查文档是否被引用 (path 中含 basename)."""
+    """检查文档是否被引用 (path 中含 basename).
+
+    优先用 ripgrep (rg) 扫描大 workspace, 避免 O(N*M) 的 Python rglob;
+    rg 不可用时回退到受限 rglob。
+    """
+    import shutil
+    import subprocess
+
     base = Path(workspace_root)
-    refs: list[str] = []
     name = Path(rel_path).name
+    refs: list[str] = []
+
+    if shutil.which("rg"):
+        try:
+            result = subprocess.run(
+                [
+                    "rg",
+                    "-l",
+                    "-g",
+                    "*.py",
+                    "-g",
+                    "*.sh",
+                    "-g",
+                    "*.md",
+                    "-g",
+                    "*.yaml",
+                    "-g",
+                    "*.yml",
+                    "--glob",
+                    "!.git/**",
+                    "--glob",
+                    "!.venv/**",
+                    "--glob",
+                    "!node_modules/**",
+                    "--glob",
+                    "!__pycache__/**",
+                    "--glob",
+                    "!_delivery/**",
+                    name,
+                    str(base),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            for line in result.stdout.strip().split("\n"):
+                if not line:
+                    continue
+                p = Path(line)
+                try:
+                    rel_p = p.relative_to(base)
+                except ValueError:
+                    rel_p = p
+                refs.append(str(rel_p))
+                if len(refs) > 5:
+                    break
+            return (len(refs) > 0, refs)
+        except Exception:
+            pass  # fallback to rglob
+
     skip_dirs = {".git", ".venv", "node_modules", "__pycache__", "_delivery"}
     for path in base.rglob("*"):
         if not path.is_file():
