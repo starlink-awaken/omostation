@@ -10,16 +10,15 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 100
+health_score: 85
 health_score_source: compass_radar
-health_score_generated_at: '2026-06-28T11:00:00+08:00'
-# 2026-06-28 债项审计修复: 9项债务全部为DRIFT→标记已解决, debt_weight=0, debt_adjusted_health_score修正为88.0, code_freeze解除
+health_score_generated_at: '2026-06-28T13:11:32Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 128
-total_tasks: 157
+completed_tasks: 89
+total_tasks: 105
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -57,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-28T11:00:00+08:00'
+updated_at: '2026-06-28T23:28:26Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -69,11 +68,19 @@ phase30_completed_at: '2026-06-06T01:30:00Z'
 phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
 phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
-divergence_flags: []
+divergence_flags:
+- missing_goal_tasks:7
 task_gate_summary: {}
 promotion_blockers: {}
-divergence_triage_summary: {}
-divergence_detail_refs: {}
+divergence_triage_summary:
+  missing_goal_tasks:7:
+    severity: medium
+    owner: control
+    disposition: must_fix
+divergence_detail_refs:
+  missing_goal_tasks:
+    count: 7
+    ref: .omo/evidence/divergence/missing_goal_tasks.yaml
 phase12_status: completed
 phase12_completed_at: '2026-06-01T00:50:00Z'
 ecosystem_maturity_score: 100
@@ -107,8 +114,44 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 0.0
-debt_weight_items: {}
+debt_weight: 1.0
+debt_weight_items:
+  D2_CI_E2E:
+    resolved: true
+    weight: 0.15
+    desc: CI E2E 测试环境容器化
+  D3_EU_PRICING:
+    resolved: true
+    weight: 0.15
+    desc: eu-pricing 独立测试覆盖
+  SB_DECOMPOSITION:
+    resolved: true
+    weight: 0.2
+    desc: SharedBrain 拆解进度 (19器官→核+迁移+废弃)
+  SB_UNTESTED_PKGS:
+    resolved: true
+    weight: 0.15
+    desc: kairon 4个untested包 (core-models, shared-lib, sharedbrain-bridge, wksp)
+  SB_ORPHANED_TASKS:
+    resolved: true
+    weight: 0.1
+    desc: orphaned_tasks 结构化 registry
+  SB_ROOT_CLEANUP:
+    resolved: true
+    weight: 0.05
+    desc: 根目录 SharedBrain/ 空壳清理
+  SB_BRIDGE_FIX:
+    resolved: true
+    weight: 0.1
+    desc: sharedbrain-bridge 死代码清理或重连
+  SB_PROJECTS_YAML:
+    resolved: true
+    weight: 0.05
+    desc: PROJECTS.yaml 行数更新 (71K→824K)
+  SB_PHASE17_PLAN:
+    resolved: true
+    weight: 0.05
+    desc: Phase 17 Wave 1 实施计划创建
 resolved_debt_items:
 - D2_CI_E2E
 - D3_EU_PRICING
@@ -146,38 +189,40 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 29
+planned_tasks: 16
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- 'OPC-P6-SELF-EVOLUTION-nop-20260624T074719Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260624T090253Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260624T092459Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260625T010754Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260625T010847Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260625T014602Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260625T014800Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260625T014830Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260625T022439Z (No-op: drift detector reported 0 drift;
-  loop con)'
-- 'OPC-P6-SELF-EVOLUTION-nop-20260625T023929Z (No-op: drift detector reported 0 drift;
-  loop con)'
+- Current planned queue from .omo/tasks/planned/ (16 tasks)
+- OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z
+- QUEST-5
+- QUEST-6
+- QUEST-7
+- QUEST-8
+- TASK-02788FE2
+- TASK-13AD0B21
+- TASK-26348641
+- TASK-67C63D6C
+- TASK-6B868907
+- TASK-94BB9C70
+- TASK-9B363829
+- TASK-AB15691F
+- TASK-D0D38295
+- TASK-F68B791B
+- TASK-F7114ABA
 - QUEST-5 (测试每日打扫)
 - QUEST-6 (测试每日打扫)
 - QUEST-7 (测试每日打扫)
 - QUEST-8 (测试每日打扫)
+- 'TASK-02788FE2 (AETHERFORGE P0: RouteScheduler 实现 (v2 Phase 2, 路)'
+- 'TASK-13AD0B21 (AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升))'
 - 'TASK-26348641 (P0 自反馈闭环: governance停摆/mypy假绿无报警)'
+- 'TASK-67C63D6C (AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾))'
 - 'TASK-6B868907 (P1 产品门户: c2g draft→bet路径 + 全场景门户)'
 - 'TASK-94BB9C70 (P1 并发Agent抢占: 共享文件advisory-lock)'
 - 'TASK-9B363829 (P0 BOS声明/执行鸿沟: resolve率21.6%→≥90%)'
 - 'TASK-AB15691F (P1 D调研: 28 deprecated BOS声明对齐真实位置 (expires 2026-)'
+- 'TASK-D0D38295 (AETHERFORGE P2: 路径硬编码清 (AUDIT 1.2, CI 可移植))'
+- 'TASK-F68B791B (AETHERFORGE P2: swarm/mesh 测试补 (各5, 薄))'
 - 'TASK-F7114ABA (P1 GodModule: omo_ingress354L/agora1945L/gbrain3)'
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
@@ -185,20 +230,21 @@ phase28_status: completed
 phase28_completed_at: '2026-06-05T22:10:00Z'
 governance:
   code_freeze: false
-  code_freeze_note: "已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截"
+  code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  last_scan: 1782286194.2486799
+  last_scan: 1782653102.586956
   total_services: 9
-  online_services: 4
-  healthy_services: 8
-  offline_services: 5
+  online_services: 3
+  healthy_services: 2
+  offline_services: 2
   unhealthy_services:
-  - gbrain-index
-  stale_services: []
+  - ollama
+  stale_services:
+  - cron-service
+  - hermes-gateway
 phase42_status: active
 health_score_raw: 88.0
 xplane_score: 0.0
 xplane_coverage: 100.0
 xplane_factor: 0.7
-debt_adjusted_health_score: 88.0
-# 公式: adjusted = raw × (1 - debt_weight × xplane_factor) = 88.0 × (1 - 0.0 × 0.7)
+debt_adjusted_health_score: 61.6

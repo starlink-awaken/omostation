@@ -1,20 +1,39 @@
 #!/bin/bash
-# pre-commit — 工作区卫生守门 (CR-HYG-01/02, 债务③防复发)
+# pre-commit — GaC + SSOT 本地硬门
 #
-# commit 前跑 gac-hygiene-check, 防 0字节文件 / 大小写 inode 冲突进 git.
-# 轻量 (git tracked 模式, 只扫 tracked 文件); advisory (不阻塞 commit, CI gate 是硬门禁).
-#
-# 设计: advisory 而非阻塞 — gac-hygiene-check 边界情况误报不卡正常 commit;
-#       CI gate (gac-gate.yml) 是硬兜底. 开发者见 [hygiene] 警告自行修.
+# commit 前:
+#   1. hygiene advisory: 0 字节/大小写冲突提示
+#   2. GaC local gate: validate + drift + doc SSOT + snapshot + doc links
+#   3. SSOT guardian: task count/current wave/submodule/direct-io 等漂移
 #
 # 安装: make install-hooks (从 .githooks/ 复制到 .git/hooks/)
 # 新 clone 必跑: make install-hooks
+
+set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 
 if [ -x "$ROOT/bin/gac-hygiene-check.py" ]; then
   # advisory: 输出到 stderr, 不阻断 commit (|| true)
   python3 "$ROOT/bin/gac-hygiene-check.py" 2>&1 | sed 's/^/[hygiene] /' >&2 || true
+fi
+
+run_py_with_yaml() {
+  local script="$1"
+  shift
+  if command -v uv >/dev/null 2>&1; then
+    uv run --with pyyaml python "$script" "$@"
+  else
+    python3 "$script" "$@"
+  fi
+}
+
+if [ -f "$ROOT/bin/gac-local-gate.py" ]; then
+  run_py_with_yaml "$ROOT/bin/gac-local-gate.py" 2>&1 | sed 's/^/[gac] /' >&2
+fi
+
+if [ -f "$ROOT/bin/ssot-guardian.py" ]; then
+  run_py_with_yaml "$ROOT/bin/ssot-guardian.py" 2>&1 | sed 's/^/[ssot] /' >&2
 fi
 
 exit 0

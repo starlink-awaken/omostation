@@ -39,6 +39,7 @@ from pathlib import Path
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 OMO_DIR = WORKSPACE_ROOT / ".omo"
+OMO_PROJECT_DIR = WORKSPACE_ROOT / "projects" / "omo"
 SYSTEM_YAML = OMO_DIR / "state" / "system.yaml"
 GOALS_YAML = OMO_DIR / "goals" / "current.yaml"
 INDEX_MD = OMO_DIR / "tasks" / "registry" / "INDEX.md"
@@ -103,7 +104,17 @@ def _count_tasks() -> dict[str, int]:
 
 def _sync_tasks(auto_fix: bool) -> dict:
     """调用 omo state sync-tasks, 返回差异信息."""
-    cmd = ["omo", "state", "sync-tasks"]
+    cmd = [
+        "uv",
+        "run",
+        "--project",
+        str(OMO_PROJECT_DIR),
+        "python",
+        "-m",
+        "omo.cli",
+        "state",
+        "sync-tasks",
+    ]
     if not auto_fix:
         cmd.append("--dry-run")
     try:
@@ -189,9 +200,6 @@ def _check_submodules() -> dict:
                 {"sha": parts[0], "path": parts[1], "ref": " ".join(parts[2:])}
             )
     return {"dirty": dirty, "count": len(dirty)}
-
-
-OMO_PROJECT_DIR = WORKSPACE_ROOT / "projects" / "omo"
 
 
 def _run_omo_lint(subcmd: str) -> subprocess.CompletedProcess[str]:

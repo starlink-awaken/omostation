@@ -1,421 +1,90 @@
-# ARCHITECTURE.md — eCOS v6 全景架构
+# ARCHITECTURE.md — eCOS v6 Architecture Contracts
 
-**2026-06-15 | 根仓库 `starlink-awaken/omostation`**
+> This document owns stable architecture concepts: layers, dependency direction, routing contracts, and governance boundaries.
+> It does not own runtime facts, current phase, health score, test counts, tool counts, service counts, or ports.
 
-> 5+4+1+1 架构 (5 层 L0-L4 + 4 维 X1-X4 + 1 织 I0 + 1 横切 M0) · 14+ 核心项目 · 20 子项目 · ~3,500+ Python + 500 TS 源文件
-> **当前 Phase 42** — 治理面 SSOT 同步纪元 (Governance SSOT Catch-up) · 健康分 77.5/100
+## 1. Source-Of-Truth Map
 
----
+| Fact Type | Authoritative Source |
+|-----------|----------------------|
+| Runtime state, health, active tasks | [`.omo/state/system.yaml`](.omo/state/system.yaml) |
+| Current goals | [`.omo/goals/current.yaml`](.omo/goals/current.yaml) |
+| Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
+| BOS services | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
+| Ports | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
+| Governance surfaces | [`.omo/standards/omo-governance-surfaces.md`](.omo/standards/omo-governance-surfaces.md) |
+| L0 constraints | [`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`](projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml) |
+| X1-X4 rules | [`.omo/_truth/`](.omo/_truth/) |
+| Documentation ownership | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) |
 
-## 一、分层架构全景
-
-```
-                          ┌─────────────────────────────────────┐
-                          │           L4 · 自我层 (21域)          │
-                          │  l4-kernel(管理面) + 21域(数据面)     │
-                          │  42 MCP tools · 15场景 · 7插件         │
-                          └──────────────┬──────────────────────┘
-                                         │ MCP
-                          ┌──────────────▼──────────────────────┐
-                          │          L3 · 统一入口层              │
-                          │  cockpit · CLI 18 + MCP 20 + Web     │
-                          │  用户/Agent 的唯一交互面               │
-                          └──────────────┬──────────────────────┘
-                                         │ bos://
-                    ┌────────────────────┼────────────────────┐
-                    │                    ▼                    │
-                    │  ┌─────────────────────────────────┐    │
-                    │  │       I0 · 集成织层 (Agora Mesh)  │    │
-                    │  │  MCP 服务发现 · 动态代理 · 蜂群   │    │
-                    │  │  92+ tools · :7422(HTTP) / :7455(UDP) │
-                    │  └───────┬───────────┬─────────────┘    │
-                    │          │           │                  │
-                    │    ┌─────▼───┐ ┌─────▼──────────┐      │
-                    │    │ bos://  │ │ bos://omo      │      │
-                    │    │ memory  │ │ governance     │      │
-                    │    └─────┬───┘ └─────┬──────────┘      │
-                    │          │           │                  │
-         ┌──────────▼──────────▼───────────▼──────────────┐  │
-         │                 L2 · 引擎面                     │  │
-         │  ┌──────────┐ ┌───────────┐ ┌───────────────┐  │  │
-         │  │  kairon  │ │  gbrain   │ │     omo       │  │  │
-         │  │ 16 包     │ │ 67 MCP    │ │ 债务·进化循环 │  │  │
-         │  │ 知识引擎  │ │ TS 知识脑  │ │               │  │  │
-         │  └──────────┘ └───────────┘ └───────────────┘  │  │
-         │  ┌──────────────────┐                           │  │
-         │  │     metaos       │                           │  │
-         │  │ 准入网关·决策控制  │                           │  │
-         │  └──────────────────┘                           │  │
-         └──────────────────────┬─────────────────────────┘  │
-                                │                            │
-                    ┌───────────▼──────────────┐             │
-                    │    L1 · 运行时基础设施     │             │
-                    │  计算网关 + Quota Ledger    │             │
-                    │  KEI Sandbox + Scheduler  │             │
-                    └───────────┬──────────────┘             │
-                                │                            │
-                    ┌───────────▼──────────────┐             │
-                    │     L0 · 协议层           │             │
-                    │  ecos · SSB 签名链        │◄────────────┘
-                    │  涌现计算 · MOF M1 模型    │
-                    └──────────────────────────┘
-```
-
-### 各层定位
-
-| 层 | 项目 | 核心职责 | 通信方式 |
-|----|------|---------|---------|
-| L4 | l4-kernel + 21域 | 域管理 + KEMS六面 + 跨域场景 + 联邦 | CLI + MCP (43 tools, :7456) + Python API |
-| L3 | cockpit | 统一入口，用户/Agent 的唯一交互面 (HITL Gate) | CLI + MCP + FastAPI Web (:8090) |
-| I0 | agora | 服务发现、MCP 代理、路由、分布式蜂群(Swarm) | bos:// URI 路由, :7422 / :7455 |
-| L2 | kairon/gbrain/omo/metaos | 知识引擎、治理进化循环、编排、准入决策 | MCP Daemon |
-| L1 | runtime | 预算中心、健康监控、沙箱执行 | FastAPI + MCP |
-| L0 | ecos | 协议定义、签名链、MOF M1 元模型 | SSB + YAML |
-
----
-
-## 二、BOS URI 5 域命名空间
-
-
-eCOS v5 通过 `agora` 作为动态反向代理 Mesh，所有项目和包被抽象为 5 大 BOS URI 命名空间：
+## 2. Layer Model
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  Agora Service Mesh                      │
-│              bos:// 前缀拦截 → 路由 → 代理                │
-├───────────────┬──────────────┬─────────────┬────────────┤
-│  bos://memory │  bos://omo   │bos://analysis│bos://forge │
-│  记忆与事实源  │  治理与律法   │ 认知与推演    │ 能力与生态  │
-│              │              │             │            │
-│ kos          │ metaos       │ ontoderive  │ forge      │
-│ kronos       │ eidos        │ minerva     │ runtime    │
-│ gbrain       │ protocols    │ codeanalyze │ KEI        │
-│ sot-bridge   │ omo          │ sophia      │            │
-└──────────────┴──────────────┴─────────────┴────────────┘
-                              │
-                    bos://persona
-                    人格与心智
-                    sot-bridge
+L4  Self layer       -> l4-kernel
+L3  Entry layer      -> cockpit / cockpit-ui
+I0  Weave layer      -> agora
+L2  Engine layer     -> kairon / gbrain / omo / metaos
+L1  Runtime layer    -> runtime
+L0  Protocol layer   -> ecos
+M0  Lifecycle layer  -> model-driven
+X   Cross-cutting    -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub / spaces
 ```
 
-### 域映射表
+## 3. Entry Architecture
 
-| BOS URI | 域 | 包/服务 | 职责 |
-|----------|----|---------|------|
-| `bos://memory/` | 记忆与事实 | kos, kronos, gbrain, sot-bridge | 跨域搜索、知识摄取、持久化、SSOT 桥接 |
-| `bos://omo/` | 治理与律法 | metaos, eidos, protocols-layer, omo | 决策门控、Schema 约束、触发器规则、债务管理 |
-| `bos://analysis/` | 认知与推演 | ontoderive, minerva, codeanalyze, sophia | 本体推导、深度研究、AST 理解、智慧推理 |
-| `bos://persona/` | 人格与心智 | sot-bridge | SharedBrain 桥接，Agent 人格面 |
-| `bos://forge/` | 能力与生态 | forge, runtime (KEI) | 服务集市、注册表、沙箱执行 |
+| Audience | Preferred Entry | Contract |
+|----------|-----------------|----------|
+| Human operator | `cockpit` CLI/Web | One human-facing entry surface |
+| AI agent | `agora` MCP via `bos://` URI | Cross-layer calls go through the mesh |
+| Governance automation | `omo` CLI/MCP broker | Governed state mutations are audited |
+| Web/API consumers | cockpit-mounted HTTP surfaces | Public web entry remains converged at L3 |
 
-### Agent 协议约束
+Do not introduce a new top-level human or agent entry without updating the relevant registry, boundary documentation, and governance checks.
 
-1. **禁止裸文件 I/O** — 状态读写使用 `bos://` URI，由 Agora Mesh 路由
-2. **使用 `read_resource("bos://agora/registry")`** — 获取当前 Mesh 工具/资源注册表
-3. **使用 `mutate_resource(uri, payload, action)`** — 修改 Mesh 管理对象
-4. **MANDATORY ATOMIC COMMITS** — 每次修改后立即 commit，触发 `mof-extract` 知识萃取
+## 4. BOS URI Domains
 
----
+| Domain | URI Prefix | Role |
+|--------|------------|------|
+| Memory | `bos://memory/` | Knowledge, facts, search, storage |
+| Governance | `bos://governance/` | OMO, policy, task/debt/audit flows |
+| Analysis | `bos://analysis/` | Research, ontology derivation, code analysis |
+| Persona | `bos://persona/` | Persona and personal knowledge bridges |
+| Capability | `bos://capability/` | Tools, runtime capabilities, execution surfaces |
 
-## 三、数据流与调用链
+The complete machine-readable service map is [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml). Markdown should reference that file rather than duplicating service counts or route inventories.
 
-### 3.1 典型请求路径
-
-```
-用户/Agent
-  │
-  ▼
-cockpit CLI/MCP ("cockpit research ...")
-  │
-  ├─► cockpit.cli → commands/research.py
-  │     │
-  │     ├─► cockpit.storage (SQLite 本地持久化)
-  │     │
-  │     └─► runtime.cron_service (任务调度)
-  │           │
-  │           └─► agora Mesh (bos:// 路由)
-  │                 │
-  │         ┌───────┼───────┬─────────┐
-  │         ▼       ▼       ▼         ▼
-  │      kairon   gbrain   omo     metaos
-  │      (知识)   (存储)   (治理)   (决策)
-  │         │       │
-  │         └───┬───┘
-  │             ▼
-  │        data/kos/  data/sharedbrain/
-  │
-  ▼
-响应 (JSON / 流式 / Markdown)
-```
-
-### 3.2 服务注册与健康监控 (Matrix 节奏)
+## 5. Governance Surfaces
 
 ```
-runtime.matrix (15s 心跳)
-  │
-  ├─► 读取 ~/runtime/matrix.yaml (服务定义)
-  ├─► 轮询 agora :7430/api/events (服务状态 SSE)
-  ├─► 写入 matrix_state.json (新鲜度追踪)
-  ├─► 检测过时 → 触发 auto-heal (launchd 重启)
-  └─► 写入 OMO_STATE_FILE (债务注册)
+.omo/                 -> state plane: goals, state, evidence, tasks, audits
+projects/omo/         -> kernel plane: schemas, brokers, audit/lint/sync logic
+projects/c2g/         -> ingress plane: strategy/pitch-to-task materialization
+projects/ecos/        -> protocol plane: MOF and L0 constraints
 ```
 
-### 3.3 知识摄入管线
+Rules:
+
+- `.omo/` is data and evidence, not a place for new long-lived execution logic.
+- State mutations should use OMO CLI/MCP, C2G ingress, or registered brokers.
+- New governance surfaces require runtime behavior, registry entries, and validation gates. Documentation alone is not implementation.
+- Direct `.omo/` or `spaces/` writes are violations unless routed through an approved audited path.
+
+## 6. Core Flows
 
 ```
-外部源 (文件/URL/API)
-  │
-  ▼
-kairon/kronos (摄取管线)
-  │
-  ├─► 解析 → 结构化
-  ├─► kairon/eidos (Schema 校验)
-  ├─► kairon/kos (向量化索引)
-  └─► gbrain (Postgres 持久化)
-       │
-       ▼
-     RAG 混合搜索 (向量 + 全文)
+user or agent -> cockpit or agora -> bos:// route -> target service -> audited response or state transition
+external or local source -> kairon ingestion/schema/search -> gbrain or local substrate -> retrieval
+intent or pitch -> c2g or OMO broker -> task/debt/audit registry -> validation -> evidence
+service definition -> runtime scheduler/matrix/sandbox -> health observation -> governance alert or recovery
 ```
 
-### 3.4 决策门控流 (metaos)
+## 7. Related Documents
 
-```
-请求 → metaos.core.engine (SEngine 六步)
-  │
-  ├─ 1. DecisionGate (红/黄/绿灯)
-  │     └─► config/decision_matrix.json (外部规则)
-  ├─ 2. Router (任务→模型映射)
-  │     └─► config/task_routes.json (外部规则)
-  ├─ 3. MLayer (LLM 执行)
-  │     └─► OllamaBackend / OpenAIBackend / MockBackend
-  ├─ 4. ImmuneMonitor (免疫检查)
-  │     └─► WARNING → FREEZE → MELTDOWN 三级
-  ├─ 5. 结果组装
-  └─ 6. H 确认
-```
-
----
-
-## 四、项目组件级架构
-
-### 4.1 Agora (I0 · MCP 服务网格)
-
-```
-agora/
-├── mcp_registry/   — 服务注册表 (YAML → 动态)
-├── auth/           — Bearer/JWT 认证中间件
-├── core/           — 代理核心 · 断路 · 限流
-├── plugins/        — 插件市场
-├── mcp/            — MCP 协议适配 (stdio/SSE/HTTP)
-├── extensions/     — 扩展点注册
-├── pipelines/      — 请求/响应处理管线
-├── growth/         — 服务发现 (动态注册)
-├── federation/     — 跨集群联邦
-└── metrics/        — Prometheus 指标
-```
-
-### 4.2 Kairon (L2 · 知识引擎 · 16 包)
-
-```
-kairon/packages/
-├── eidos/          — Schema 约束与校验 (171 py, 7 MCP tools)
-├── kos/            — 跨域知识搜索 (110 py, 26 MCP tools)
-├── minerva/        — 深度研究 (185 py, 5 tools)
-├── ontoderive/     — 本体推导 (187 py, 5 tools)
-├── codeanalyze/    — AST 代码理解 (90 py)
-├── forge/          — 集市与注册表 (59 py, 70 tools)
-├── iris/           — 感知输入 (59 py, 8 tools)
-├── kronos/         — 摄取管线 (27 py, 9 tools)
-├── sophia/         — 智慧推理 (14 py, 8 tools)
-├── ssot/           — SSOT 桥接 (6 tools)
-├── core-models/    — 核心数据模型 (27 py)
-├── kairon-utils/   — 工具函数 (26 py)
-├── kairon-pipeline/  — 流水线框架 (13 py)
-├── kairon-observability/ — 可观测性 (12 py)
-├── kairon-plugin-sdk/ — 插件 SDK (8 py)
-└── kairon-lib-events/ — 事件库 (5 py)
-```
-
-### 4.3 Runtime (L1 · 运行时底座)
-
-```
-runtime/
-├── cli.py                — 主 CLI (7 子命令)
-├── matrix.py             — 服务注册表 (ServiceEntry)
-├── scheduler.py          — Matrix 调度器 (15s 心跳 + 自愈)
-├── protocol.py           — L0 协议注册 (ProtocolEntry)
-├── mcp_server.py         — FastMCP stdio (7 tools)
-├── bus_consumer.py       — Agora SSE 事件消费
-├── kei.py / kei_sandbox.py — KEI 沙箱 + audit hook
-├── cron_service/         — Cron 调度服务 (13 files)
-│   ├── server.py         — FastAPI HTTP + MCP
-│   ├── scheduler.py      — Tick-based 调度
-│   ├── executor.py       — 子进程执行
-│   └── db.py             — SQLite 持久化
-├── executor/             — Agent 编排引擎 (100+ files)
-│   ├── engine.py         — AgentRuntime 核心
-│   ├── orchestrator.py   — DAG 任务编排 (8 Phase)
-│   ├── dsl.py            — DSL 系统 (YAML/JSON)
-│   └── swarm.py          — Swarm 蜂群协议
-└── tools/                — MCP 工具集 (5 工具组)
-```
-
-### 4.4 Cockpit (L3 · 统一入口)
-
-```
-cockpit/
-├── cli.py                — 主 CLI (23 子命令)
-├── storage.py            — SQLite 持久化 + IDataAccess Protocol
-├── dashboard_server.py   — FastAPI Web Dashboard
-├── agent_runtime_server.py — Agent Runtime HTTP 服务
-├── agent_runtime_mcp_server.py — Agent Runtime MCP Server
-├── commands/
-│   ├── research.py       — 研究命令 (最大模块, 1257 行)
-│   ├── status.py         — 状态概览
-│   ├── contracts.py      — 契约管理
-│   ├── quickstart.py     — 快速初始化
-│   └── ...
-└── scripts/
-    └── cockpit_mcp.py    — MCP Server (13 tools)
-```
-
----
-
-## 五、X 轴保障体系 (贯穿所有层)
-
-```
-         L4 ──────────────────────────────────────
-              │ X1  │ X2  │ X3  │ X4  │
-         L3 ──┼─────┼─────┼─────┼─────┼──────────
-              │     │     │     │     │
-         I0 ──┼─────┼─────┼─────┼─────┼──────────
-              │     │     │     │     │
-         L2 ──┼─────┼─────┼─────┼─────┼──────────
-              │     │     │     │     │
-         L1 ──┼─────┼─────┼─────┼─────┼──────────
-              │     │     │     │     │
-         L0 ──┼─────┼─────┼─────┼─────┼──────────
-              │     │     │     │     │
-              ▼     ▼     ▼     ▼     ▼
-         审计链  抗熵   价值栈  一致性
-```
-
-| 轴 | 定义 | 实现位置 | 债务治理融合 |
-|----|------|---------|-------------|
-| **X1 审计链** | 操作是否安全 | kei_sandbox (audit hook), agora auth (JWT), metaos gate (决策门控) | debt-audit.sh, pre-commit hook |
-| **X2 抗熵** | 数据是否新鲜 | runtime scheduler (15s 健康心跳), matrix auto-heal, omo debt staleness | debt_weight, debt_health, health-trend |
-| **X3 价值栈** | 投入是否合理 | omo cost tracking, cockpit priority, kairon health-profile | 债务优先级, SLA 标准 |
-| **X4 一致性** | 规则是否被遵守 | CI (20 workflows), pre-commit hooks (ruff + mof-validate), protocol validation | x1-x4-check, debt-audit.yml |
-
-### X1-X4 检查命令
-
-```bash
-make x1-check      # X1 审计链检查
-make x2-check      # X2 抗熵检查
-make x3-check      # X3 价值栈检查
-make x4-check      # X4 一致性检查
-make x1-x4-check   # X1-X4 全维度检查
-```
-
-### 治理优化组件
-
-| 组件 | L0 位置 | 说明 |
-|------|---------|------|
-| 告警引擎 | ecos/l0/governance/alert_engine.py | 基于规则的告警触发 |
-| 历史存储 | ecos/l0/governance/history_store.py | SQLite 历史数据 |
-| 优化原语 | ecos/l0/governance/optimization.py | Alert/Dashboard/History 原语 |
-
-### 治理 MCP 工具 (cockpit)
-
-| 工具 | 说明 |
-|------|------|
-| governance_check | 运行 X1-X4 检查 |
-| governance_status | 查看治理状态 |
-| governance_sla | 查看 SLA 达成 |
-| governance_leaderboard | 债务排行榜 |
-| governance_dashboard | 仪表板数据 |
-| governance_history | 历史数据 |
-
-### 治理注册表
-
-| 注册表 | 路径 | 说明 |
-|--------|------|------|
-| 检查器注册 | .omo/_truth/registry/governance-checks.yaml | X1-X4 检查器 |
-| 告警规则 | .omo/_truth/registry/governance-alerts.yaml | 告警配置 |
-
----
-
-## 六、治理体系 (.omo/ 四平面)
-
-```
-.omo/
-├── _control/       ← 控制面 (人类修改)
-│   ├── goals/      — 阶段目标 (current.yaml)
-│   └── state/      — 系统状态 (system.yaml, SOTI 健康分)
-│
-├── _truth/         ← 事实面 (单一事实源 SSOT)
-│   ├── tasks/      — 活跃任务 (YAML)
-│   ├── standards/  — 架构标准
-│   └── registries/ — 端口/依赖/Worker 注册表
-│
-├── _knowledge/     ← 知识面 (引用事实面，不复制内容)
-│   ├── designs/    — 设计文档
-│   ├── audits/     — 审计报告
-│   └── retrospects/— 复盘
-│
-└── _delivery/      ← 交付面 (运行证据)
-    ├── logs/       — 运行日志
-    └── evidence/   — 测试/CI 证据
-```
-
-**铁律**: 知识面引用事实面必须用**相对路径指针**，禁止复制内容。同一事实不在多处写。
-
----
-
-## 七、关键协议与端口
-
-### 服务端口分配
-
-| 服务 | 端口 | 协议 | 用途 |
-|------|------|------|------|
-| agora | 7422 | HTTP | MCP HTTP 代理 |
-| agora | 7431 | SSE | 事件推送 (Server-Sent Events) |
-| agora | 8080 | HTTP | Web Dashboard |
-| ecos | 9090 | HTTP | SSB Dashboard |
-| cockpit | 8090 | HTTP | Web Dashboard |
-| runtime cron | 动态 | HTTP | FastAPI Cron Service |
-
-### 端口注册规则
-
-1. 涉及端口时**必须先查** `protocols/port-registry.yaml`
-2. 确认端口未被占用
-3. 注册新端口
-4. 使用环境变量 `{SERVICE}_PORT`
-5. CI 和 Agora runtime 双重阻断端口冲突
-
----
-
-## 八、技术栈速查
-
-| 项目 | 语言 | 包管理 | 构建 | 测试 | 格式化 | Python |
-|------|------|--------|------|------|--------|--------|
-| agora | Python | uv | hatchling | pytest | ruff | 3.13+ |
-| cockpit | Python | uv | hatchling | pytest | ruff | 3.13+ |
-| kairon | Python | uv | hatchling | pytest | ruff | 3.13+ |
-| gbrain | TypeScript | bun | bun | bun test | bun fmt | — |
-| omo | Python | uv | uv_build | pytest | ruff | 3.13+ |
-| metaos | Python | uv | hatchling | pytest | ruff | 3.13+ |
-| runtime | Python | uv | setuptools | pytest | ruff | 3.13+ |
-| ecos | Python | uv | hatchling | pytest | ruff | 3.13+ |
-
----
-
-## 九、近期架构演进方向
-
-| 主题 | 状态 | 说明 |
-|------|------|------|
-| BOS URI 大一统 | 95% | agora Mesh 拦截 bos:// 流量，5 域完整覆盖 |
-| Plist/Daemon 化 | P68 收尾 | launchd + KeepAlive + auto-restart |
-| MCP Proxy Phase 2 | 完成 | 动态加载/卸载、空闲超时、引用计数 |
-| 工作流统一建模 | L0 完成 | 26 工作流 M1 节点建模 + CLI + MCP |
-| 目录治理 | 完成 | 根目录清理、SharedBrain 归档 |
+| Document | Role |
+|----------|------|
+| [`README.md`](README.md) | Front door and quick orientation |
+| [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
+| [`CLAUDE.md`](CLAUDE.md) | AI session context loader |
+| [`LAYER-INDEX.md`](LAYER-INDEX.md) | Human-readable layer index |
+| [`docs/PANORAMA.md`](docs/PANORAMA.md) | Broader product/capability panorama |
+| [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | Documentation ownership contract |

@@ -28,9 +28,6 @@
 [submodule "projects/family-hub"]
 	path = projects/family-hub
 	url = https://github.com/starlink-awaken/omostation-family-hub.git
-[submodule "projects/hermes-console"]
-	path = projects/hermes-console
-	url = https://github.com/starlink-awaken/omostation-hermes-console.git
 [submodule "projects/model-driven"]
 	path = projects/model-driven
 	url = https://github.com/starlink-awaken/omostation-model-driven.git

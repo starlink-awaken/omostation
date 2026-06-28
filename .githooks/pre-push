@@ -6,14 +6,15 @@
 #   拉不到 → "not our ref" → 整条 CI 红. (2026-06-17 实测 14/18 子模块悬空)
 #
 # 此钩子: 主仓 push(触发 CI)前, 把本地领先远程的子模块 push 上去, 让 gitlink 可达.
-# best-effort: 子模块 push 失败不阻断主仓 push (失败由 CI 暴露).
+# 子模块 push 失败会阻断主仓 push,避免把不可达 gitlink 推到远端.
 #
 # 安装: make install-hooks  (从本文件复制到 .git/hooks/pre-push)
 # 新 clone 必跑: make install-hooks
 
+set -euo pipefail
+
 while read -r _ref _local _remote _sha; do :; done  # 消费 pre-push stdin (ref 信息)
 ROOT="$(git rev-parse --show-toplevel)"
-# sync 子模块, 结果显示到 stderr (失败告警可见, 不阻断 push — best-effort).
-# 之前 >/dev/null 静默 → agora 悬空漏网. 现在显示: push 时能看到哪些子模块 sync 失败.
-"$ROOT/bin/sync-submodules-push.sh" 2>&1 | sed 's/^/[pre-push] /' >&2 || true
+# sync 子模块, 结果显示到 stderr; 失败即阻断 push.
+"$ROOT/bin/sync-submodules-push.sh" 2>&1 | sed 's/^/[pre-push] /' >&2
 exit 0

@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-06-28T22:12:11Z",
+  "tasks_emitted": 1,
+  "tasks_written": 1,
+  "red_line_held": "all tasks written to planned/ only, never active/",
+  "tasks": [
+    {
+      "id": "OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z",
+      "approval_required": true
+    }
+  ],
+  "paths": [
+    ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z.yaml"
+  ]
+}

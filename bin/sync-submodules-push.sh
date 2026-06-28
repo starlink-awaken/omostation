@@ -18,17 +18,39 @@ cd "$(git rev-parse --show-toplevel)" || { echo "❌ 不在 git 仓"; exit 1; }
 dry=0
 [ "${1:-}" = "--dry-run" ] && dry=1
 
-pushed=0; pending=0; noupstream=0; failed=0
+pushed=0; pending=0; noupstream=0; missing=0; failed=0
 
 while IFS= read -r sm; do
   [ -z "$sm" ] && continue
-  # 子模块有上游吗
-  upstream=$(git -C "$sm" rev-parse --abbrev-ref '@{u}' 2>/dev/null) || { noupstream=$((noupstream+1)); continue; }
+  if [ ! -d "$sm/.git" ] && [ ! -f "$sm/.git" ]; then
+    missing=$((missing+1))
+    echo "❌ $sm: .gitmodules 已登记, 但工作树不存在或未初始化"
+    failed=$((failed+1))
+    continue
+  fi
+
+  branch=$(git -C "$sm" rev-parse --abbrev-ref HEAD 2>/dev/null) || {
+    failed=$((failed+1))
+    echo "❌ $sm: 无法读取当前分支"
+    continue
+  }
+
+  # 子模块有上游吗；没有 upstream 时回退到 origin/<当前分支>.
+  upstream=$(git -C "$sm" rev-parse --abbrev-ref '@{u}' 2>/dev/null) || {
+    if git -C "$sm" show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+      upstream="origin/$branch"
+      echo "ℹ $sm: 无 upstream, 使用 $upstream 做未推检测"
+    else
+      noupstream=$((noupstream+1))
+      failed=$((failed+1))
+      echo "❌ $sm: 无 upstream, 且 origin/$branch 不存在; 请先配置上游或手动 push"
+      continue
+    fi
+  }
   # 本地领先远程多少 (未推 commit)
   cnt=$(git -C "$sm" log --oneline "${upstream}..HEAD" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$cnt" -gt 0 ]; then
     pending=$((pending+1))
-    branch=$(git -C "$sm" rev-parse --abbrev-ref HEAD)
     echo "⬆ $sm: $cnt 个未推 → origin/$branch"
     if [ "$dry" = "0" ]; then
       if git -C "$sm" push origin "$branch" >/dev/null 2>&1; then
@@ -41,6 +63,6 @@ while IFS= read -r sm; do
 done < <(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
 
 echo "---"
-echo "统计: 待push=$pending 成功=$pushed 失败=$failed 无上游跳过=$noupstream (dry-run=$dry)"
+echo "统计: 待push=$pending 成功=$pushed 失败=$failed 无上游=$noupstream 缺失=$missing (dry-run=$dry)"
 [ "$failed" -gt 0 ] && exit 1
 exit 0

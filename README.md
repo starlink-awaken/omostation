@@ -2,15 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![CI Status](https://img.shields.io/badge/CI-20%20workflows-brightgreen)](.github/workflows/)
-[![Tests](https://img.shields.io/badge/tests-16,800+-blue)](AGENTS.md)
-[![SOTI](https://img.shields.io/badge/health-SSOT-success)](.omo/state/system.yaml)
+[![CI](https://github.com/starlink-awaken/omostation/actions/workflows/workspace.yml/badge.svg)](https://github.com/starlink-awaken/omostation/actions)
 
-> **eCOS v6** — 多项目知识工程与研究 Workspace。5+4+1+1 架构（5 层 L0-L4 + 4 维 X1-X4 + 1 织 I0 + 1 横切 M0），20 子项目（8 活跃核心 + 12 扩展），~520K 行代码，16,800+ 测试。
-> **当前 Phase 42** — 治理面 SSOT 同步纪元。健康分/governance 见 SSOT ([.omo/state/system.yaml](.omo/state/system.yaml) 为 SSOT）。
->
-> **eCOS v6** — Multi-project knowledge engineering & research workspace. 5+4+1+1 architecture (5 layers L0-L4 + 4 dimensions X1-X4 + 1 weave I0 + 1 cross-cutting M0), 20 sub-projects (8 active core + 12 extensions), ~520K LOC, 16,800+ tests.
-> **Phase 42** — Governance SSOT Catch-up Era. Health 见 SSOT · governance 100 A+ (double-perfect; see [.omo/state/system.yaml](.omo/state/system.yaml) as SSOT).
+> Multi-project knowledge engineering and AI operating-system workspace.
+> Runtime state lives in [`.omo/state/system.yaml`](.omo/state/system.yaml).
+> Project metadata lives in [`docs/project-registry.yaml`](docs/project-registry.yaml).
 
 [English](#english) | [中文](#中文)
 
@@ -20,104 +16,66 @@
 
 ## English
 
+### What This Is
+
+`omostation` is the root workspace for eCOS v6: a layered system for knowledge engineering, agent governance, BOS service routing, runtime orchestration, and personal/work knowledge operations.
+
+This README is only the front door. It intentionally avoids hard-coded runtime numbers such as phase, health score, test counts, tool counts, service counts, and ports.
+
 ### Architecture
 
 ```
- L4  Self      ── Personal CARDS + Learning Evolution (SQLite/MD)
- L3  Entry     ── cockpit (CLI 18 commands + MCP + FastAPI Web Dashboard)
- I0  Weave     ── agora (Dynamic MCP Proxy Mesh, 90+ tools)
- L2  Engine    ── kairon (16 packages) · gbrain (TypeScript) · omo · metaos
- L1  Runtime   ── runtime (Compute Gateway + Scheduler + KEI Sandbox)
- L0  Protocol  ── ecos (SSB Protocol Layer + Emergence + M1 MOF Models)
+L4  Self       -> l4-kernel
+L3  Entry      -> cockpit / cockpit-ui
+I0  Weave      -> agora
+L2  Engine     -> kairon / gbrain / omo / metaos
+L1  Runtime    -> runtime
+L0  Protocol   -> ecos
+M0  Lifecycle  -> model-driven
+X   Frameworks -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub / spaces
 ```
 
-### Core Spines (Phase 2-9)
-- **🧠 Memory Spine**: Unified cross-domain knowledge aggregation (`bos://memory/local/all-search`) over KOS, gbrain, and local Vaults.
-- **📡 Swarm Spine**: Distributed multi-node agent coordination with A2ANetworkTransport, Auto-Proxying, and **Ed25519 Trust Verification (X1)**.
-- **⚙️ Compute Spine**: Centralized LLM orchestration with **Real-time Atomic Budget Deductions (X2)** and Quota-Low adaptive scheduling.
-- **⚖️ Evolution Loop**: OMO daemon for active debt remediation with **Cockpit HITL Gate (X4)** and **MetaOS Admission Gates (X3)**.
+For the complete architecture, read [`ARCHITECTURE.md`](ARCHITECTURE.md). For layer placement, read [`LAYER-INDEX.md`](LAYER-INDEX.md).
 
-### Active Projects
+### Entry Points
 
-| Project | Layer | Language | Source | Tests | Pass Rate |
-|---------|-------|----------|--------|-------|-----------|
-| [agora](./projects/agora/) | I0 | Python | 38,905 LOC | 1,200 | 97.1% |
-| [cockpit](./projects/cockpit/) | L3 | Python | 16,260 LOC | 514 | 96.9% |
-| [kairon](./projects/kairon/) | L2 | Python | 208,540 LOC | 4,199 | 99.8% |
-| [gbrain](./projects/gbrain/) | L2 | TypeScript | 163,204 LOC | ~9,737 | ~99.6% |
-| [omo](./projects/omo/) | L2 | Python | 19,921 LOC | 530 | 97.4% |
-| [metaos](./projects/metaos/) | L2 | Python | 7,341 LOC | 188 | 100% |
-| [runtime](./projects/runtime/) | L1 | Python | 25,012 LOC | 176 | 97.2% |
-| [ecos](./projects/ecos/) | L0 | Python | 10,601 LOC | 122 | 91.8% |
+| Audience | Entry | Source Of Truth |
+|----------|-------|-----------------|
+| Human CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
+| AI agent | `agora` MCP with `bos://` URIs | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
+| Governance | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 
 ### Quick Start
 
 ```bash
-# Clone workspace
-git clone https://github.com/starlink-awaken/omostation.git
+git clone --recursive https://github.com/starlink-awaken/omostation.git
 cd omostation
 
-# Run all integration tests
 bash tests/integration/run-all.sh
 
-# Per-project tests
-cd projects/kairon && make test         # Kairon: all 16 packages
-cd projects/agora && uv run pytest      # Agora: 1165/1200 pass
-cd projects/gbrain && bun test          # Gbrain: ~9,700 pass
+cd projects/kairon && make test-diff
+cd projects/agora && uv run pytest tests/ -q
+cd projects/gbrain && bun test
 ```
+
+### Documentation Map
+
+| Document | Purpose |
+|----------|---------|
+| [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
+| [`CLAUDE.md`](CLAUDE.md) | AI session context loader |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stable architecture contracts |
+| [`LAYER-INDEX.md`](LAYER-INDEX.md) | Layer and project placement |
+| [`docs/PANORAMA.md`](docs/PANORAMA.md) | Product and capability panorama |
+| [`docs/project-registry.yaml`](docs/project-registry.yaml) | Project metadata SSOT |
+| [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | Documentation SSOT contract |
 
 ### Governance
 
-- **[OMO](./projects/omo/)** — Operating System for AI Agents (debt registry, task management, health monitoring)
-- **[Self-Healing Engine](./projects/omo/src/omo/omo_self_healing.py)** — Automatic error detection, debt generation, and fix execution
-- **[Audit Report](./.omo/_delivery/audits/architecture_audit_20260607.md)** — Comprehensive architecture audit (2026-06-07)
-- **[Tech Debt Roadmap](./.omo/_delivery/audits/tech_debt_roadmap_20260607.md)** — Remaining debt items
-
-### AppendOnlyLog Pattern (Round 1-5 收口)
-
-L0 SSOT 抽象, 5 个领域共享同一 JSONL 物理写盘. 详见 [.omo/_knowledge/management/append-only-log-pattern-2026-06-09.md](.omo/_knowledge/management/append-only-log-pattern-2026-06-09.md).
-
-| Consumer | 落点 | 角色 |
-|----------|------|------|
-| `omo_audit` | `~/runtime/audit/governance-audit.jsonl` | governance actions |
-| `omo_bos_metrics` | `.omo/_knowledge/bos-metrics.jsonl` | BOS invocations |
-| `omo_sync` | `.omo/_knowledge/omo-sync.jsonl` | omo state sync |
-| `omo_alert` | `.omo/_knowledge/omo-alerts.jsonl` | KEI threshold alerts |
-| `omo_event` | `.omo/_knowledge/omo-events.jsonl` | 用户面向 emit (P3 样板) |
-
-**关键命令**:
-
-```bash
-# 观测
-omo bos status                          # BOS invoke metrics (p50/p95/p99)
-omo bos discover                        # Pydantic 验证后的注册表
-omo bos health                          # endpoint + metrics 健康
-omo observability log tail --type knowledge   # 多文件 tail
-
-# 用户写
-omo event emit --type my_event --source my_script --payload '{"k":"v"}'
-
-# 跨项目桥接
-from omo.model_driven_bridge import make_pipeline_tracker_with_log
-tracker = make_pipeline_tracker_with_log(entity_id="my-domain")
-# PipelineTracker.on_event 自动流到 .omo/_knowledge/pipeline-events.jsonl
-```
-
-### Documentation
-
-| Document | Description |
-|----------|-------------|
-| [AGENTS.md](./AGENTS.md) | Development guide for AI agents |
-| [CLAUDE.md](./CLAUDE.md) | AI assistant operational rules |
-| [LAYER-INDEX.md](./LAYER-INDEX.md) | 7-layer architecture index |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guidelines |
-| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | Community code of conduct |
-| [SECURITY.md](./SECURITY.md) | Security policy |
-| [WIKI.md](./WIKI.md) | Technical Wiki |
-
-### CI/CD
-
-19 workflows covering all 8 projects. See [.github/workflows/](./.github/workflows/).
+- Runtime state: [`.omo/state/system.yaml`](.omo/state/system.yaml)
+- Current goals: [`.omo/goals/current.yaml`](.omo/goals/current.yaml)
+- Governance kernel: [`projects/omo/`](projects/omo/)
+- Governance-as-Code registry: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
 
 ### License
 
@@ -129,68 +87,66 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 
 ## 中文
 
-### 架构
+### 这是什么
+
+`omostation` 是 eCOS v6 的根工作区，用来承载知识工程、Agent 治理、BOS 服务路由、运行时编排，以及个人/工作知识操作。
+
+本 README 只做入口导航，不维护 Phase、健康分、测试数、工具数、服务数、端口等易漂移事实。那些事实有各自的 SSOT。
+
+### 架构速览
 
 ```
- L4  自我层     ── ~/Documents/驾驶舱/CARDS/ (SQLite) + ~/Documents/学习进化/ (MD)
- L3  入口层     ── cockpit (CLI 13 + MCP + Web 仪表板)
- I0  织层       ── agora (动态反向代理 MCP 网格, 42+ 工具)
- L2  引擎面     ── kairon (16 包) · gbrain (67 MCP 工具) · omo · metaos
- L1  运行时     ── runtime (Matrix + Scheduler + KEI 沙箱)
- L0  协议层     ── ecos (SSB 签名链 + 涌现计算)
+L4  自我层     -> l4-kernel
+L3  入口层     -> cockpit / cockpit-ui
+I0  织层       -> agora
+L2  引擎面     -> kairon / gbrain / omo / metaos
+L1  运行时     -> runtime
+L0  协议层     -> ecos
+M0  生命周期   -> model-driven
+X   横切框架   -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub / spaces
 ```
 
-### 活跃项目
+完整架构见 [`ARCHITECTURE.md`](ARCHITECTURE.md)，分层项目索引见 [`LAYER-INDEX.md`](LAYER-INDEX.md)。
 
-| 项目 | 层级 | 语言 | 代码量 | 测试数 | 通过率 |
-|------|------|------|--------|--------|--------|
-| [agora](./projects/agora/) | I0 | Python | 38,905 行 | 1,200 | 97.1% |
-| [cockpit](./projects/cockpit/) | L3 | Python | 16,260 行 | 514 | 96.9% |
-| [kairon](./projects/kairon/) | L2 | Python | 208,540 行 | 4,199 | 99.8% |
-| [gbrain](./projects/gbrain/) | L2 | TypeScript | 163,204 行 | ~9,737 | ~99.6% |
-| [omo](./projects/omo/) | L2 | Python | 19,921 行 | 530 | 97.4% |
-| [metaos](./projects/metaos/) | L2 | Python | 7,341 行 | 188 | 100% |
-| [runtime](./projects/runtime/) | L1 | Python | 25,012 行 | 176 | 97.2% |
-| [ecos](./projects/ecos/) | L0 | Python | 10,601 行 | 122 | 91.8% |
+### 入口
+
+| 受众 | 入口 | 权威来源 |
+|------|------|----------|
+| 人类 CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
+| AI Agent | `agora` MCP + `bos://` URI | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
+| 治理操作 | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 
 ### 快速开始
 
 ```bash
-# 克隆工作区
-git clone https://github.com/starlink-awaken/omostation.git
+git clone --recursive https://github.com/starlink-awaken/omostation.git
 cd omostation
 
-# 运行所有集成测试
 bash tests/integration/run-all.sh
 
-# 单项目测试
-cd projects/kairon && make test         # Kairon: 16 个包全量测试
-cd projects/agora && uv run pytest      # Agora: 1165/1200 通过
-cd projects/gbrain && bun test          # Gbrain: ~9,700 通过
+cd projects/kairon && make test-diff
+cd projects/agora && uv run pytest tests/ -q
+cd projects/gbrain && bun test
 ```
 
-### 治理体系
+### 文档地图
 
-- **[OMO](./projects/omo/)** — AI Agent 操作系统 (债务注册、任务管理、健康监控)
-- **[自愈引擎](./projects/omo/src/omo/omo_self_healing.py)** — 自动错误检测、债务生成、修复执行
-- **[审计报告](./.omo/_delivery/audits/architecture_audit_20260607.md)** — 全面架构审计 (2026-06-07)
-- **[技术债务路线图](./.omo/_delivery/audits/tech_debt_roadmap_20260607.md)** — 剩余债务项目
-
-### 文档
-
-| 文档 | 说明 |
+| 文档 | 用途 |
 |------|------|
-| [AGENTS.md](./AGENTS.md) | AI Agent 开发指南 |
-| [CLAUDE.md](./CLAUDE.md) | AI 助手操作规则 |
-| [LAYER-INDEX.md](./LAYER-INDEX.md) | 5+4+1+1 架构索引 |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献指南 |
-| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | 社区行为准则 |
-| [SECURITY.md](./SECURITY.md) | 安全策略 |
-| [WIKI.md](./WIKI.md) | 技术 Wiki |
+| [`AGENTS.md`](AGENTS.md) | Agent / 开发者操作指南 |
+| [`CLAUDE.md`](CLAUDE.md) | AI 会话上下文加载器 |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | 稳定架构契约 |
+| [`LAYER-INDEX.md`](LAYER-INDEX.md) | 分层与项目位置索引 |
+| [`docs/PANORAMA.md`](docs/PANORAMA.md) | 产品与能力全景 |
+| [`docs/project-registry.yaml`](docs/project-registry.yaml) | 项目元数据 SSOT |
+| [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | 文档 SSOT 契约 |
 
-### CI/CD
+### 治理
 
-20 个 workflows 覆盖全部 8 个项目。详见 [.github/workflows/](./.github/workflows/)。
+- 运行时状态: [`.omo/state/system.yaml`](.omo/state/system.yaml)
+- 当前目标: [`.omo/goals/current.yaml`](.omo/goals/current.yaml)
+- 治理内核: [`projects/omo/`](projects/omo/)
+- Governance-as-Code 注册表: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
 
 ### 许可证
 

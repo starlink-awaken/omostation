@@ -1,4 +1,4 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint gac-local-gate governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -12,6 +12,7 @@ help:
 	@echo "make kairon-build      安装 kairon 依赖 (uv sync)"
 	@echo ""
 	@echo "=== 治理 ==="
+	@echo "make gac-local-gate     运行 GaC 本地硬门"
 	@echo "make governance-verify   运行 canonical .omo 验证链"
 	@echo "make governance-check    全量治理检查 (verify → index)"
 	@echo "make governance-audit    全量治理审计 (债务+文档+健康度)"
@@ -40,15 +41,18 @@ help:
 	@echo "make doc-lint            检查文档格式"
 	@echo ""
 	@echo "=== 开发环境 ==="
-	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + 工作区卫生)"
+	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate)"
 	@echo ""
 	@echo "make help                显示本消息"
 
-install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + 工作区卫生). 新 clone 必跑.
+install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate). 新 clone 必跑.
 	install -m 755 .githooks/pre-push .git/hooks/pre-push
 	install -m 755 .githooks/pre-commit .git/hooks/pre-commit
-	@echo "✅ 已装 .git/hooks/pre-push (push 时 sync 子模块, 防 CI 悬空)"
-	@echo "✅ 已装 .git/hooks/pre-commit (commit 时工作区卫生守门 CR-HYG-01/02)"
+	@echo "✅ 已装 .git/hooks/pre-push (push 时 sync 子模块, 失败阻断, 防 CI 悬空)"
+	@echo "✅ 已装 .git/hooks/pre-commit (commit 时 GaC/SSOT 本地硬门)"
+
+gac-local-gate:
+	uv run --with pyyaml python bin/gac-local-gate.py
 
 kairon-test:
 	cd projects/kairon && make test

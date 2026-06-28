@@ -28,7 +28,7 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 
-# 11 核心文件 (相对 WORKSPACE)
+# Core GaC files (relative to WORKSPACE)
 CORE_FILES = {
     "north_star": ".omo/_knowledge/gac/NORTH-STAR.md",
     "roadmap": ".omo/_knowledge/gac/roadmap-v1.md",
@@ -51,11 +51,14 @@ CORE_FILES = {
     "ingest_legacy": "bin/gac-ingest-legacy.py",
     "bootstrap": "bin/gac-bootstrap.py",
     "executor": "bin/gac-executor.py",
+    "local_gate": "bin/gac-local-gate.py",
+    "doc_link_check": "bin/doc-link-check.py",
+    "doc_snapshot_check": "scripts/check-doc-ssot-snapshots.py",
 }
 
 
 def check_files() -> tuple[list[str], list[str]]:
-    """11 核心文件落地检查. 返回 (ok_names, missing_paths)."""
+    """核心文件落地检查. 返回 (ok_names, missing_paths)."""
     ok, missing = [], []
     for name, rel in CORE_FILES.items():
         if (WORKSPACE / rel).exists():
@@ -205,6 +208,24 @@ def healthcheck() -> dict:
         "files_scanned": ds_json.get("files_scanned", 0),
     }
 
+    # 7b. doc snapshot hardcoding guard (entry docs must point to SSOT)
+    snap_code, _snap_out = run_tool("scripts/check-doc-ssot-snapshots.py", [])
+    report["doc_snapshots"] = {
+        "ok": snap_code == 0,
+    }
+
+    # 7c. local Markdown link contract for agent-facing docs
+    link_code, link_out = run_tool("bin/doc-link-check.py", ["--json"])
+    try:
+        link_json = json.loads(link_out) if link_out else {}
+    except json.JSONDecodeError:
+        link_json = {}
+    report["doc_links"] = {
+        "ok": link_code == 0,
+        "broken_links": link_json.get("broken_links", 0),
+        "files_scanned": link_json.get("files_scanned", 0),
+    }
+
     # 8. hygiene (CR-HYG-01/02: 工作区卫生)
     hy_code, hy_out = run_tool("bin/gac-hygiene-check.py", ["--json"])
     try:
@@ -302,6 +323,8 @@ def healthcheck() -> dict:
         and report["adr_residue_0104"] == 0
         and report["coverage"]["dimension_complete"]
         and report["doc_ssot"]["ok"]
+        and report["doc_snapshots"]["ok"]
+        and report["doc_links"]["ok"]
         and report["hygiene"]["ok"]
         and report["registry_drift"]["ok"]
         and report["legacy_drift"]["ok"]
@@ -365,6 +388,16 @@ def print_report(report: dict) -> None:
     ds_status = "✅" if ds["ok"] else "❌"
     print(
         f"▶ doc-ssot (CR-X4-DOC-SSOT): {ds_status} 扫描={ds['files_scanned']} 冲突={ds['conflicts']}"
+    )
+
+    snap = report["doc_snapshots"]
+    snap_status = "✅" if snap["ok"] else "❌"
+    print(f"▶ doc-snapshots (禁止运行时快照): {snap_status}")
+
+    links = report["doc_links"]
+    link_status = "✅" if links["ok"] else "❌"
+    print(
+        f"▶ doc-links (入口文档链接): {link_status} 扫描={links['files_scanned']} 死链={links['broken_links']}"
     )
 
     # hygiene (CR-HYG-01/02)
