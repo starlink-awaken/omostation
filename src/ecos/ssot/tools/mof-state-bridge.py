@@ -42,8 +42,37 @@ OMO_SRC = WORKSPACE_ROOT / "projects" / "omo" / "src"
 if str(OMO_SRC) not in sys.path:
     sys.path.insert(0, str(OMO_SRC))
 
-from omo.omo_ingress import create_planned_task  # noqa: E402
-from omo.omo_io import write_yaml_atomic  # noqa: E402
+# 懒加载 — 仅在 --omo-to-m1 方向需要 omo 模块
+_omo_ingress_mod = None
+_omo_io_mod = None
+
+
+def _get_omo_ingress_mod():
+    global _omo_ingress_mod
+    if _omo_ingress_mod is None:
+        from omo import omo_ingress as om  # noqa: E402
+
+        _omo_ingress_mod = om
+    return _omo_ingress_mod
+
+
+def _get_omo_io_mod():
+    global _omo_io_mod
+    if _omo_io_mod is None:
+        from omo import omo_io as oi  # noqa: E402
+
+        _omo_io_mod = oi
+    return _omo_io_mod
+
+
+# 模块级函数包装（保持测试可 monkeypatch，同时避免import时实际加载omo模块）
+def create_planned_task(*args, **kwargs):
+    return _get_omo_ingress_mod().create_planned_task(*args, **kwargs)
+
+
+def write_yaml_atomic(*args, **kwargs):
+    return _get_omo_io_mod().write_yaml_atomic(*args, **kwargs)
+
 
 M1_OMO_LAYER = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m1" / "omo_layer"
 OMOTASK_SCHEMA = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m2" / "omo_task.yaml"
