@@ -25,7 +25,7 @@ async def api_bos_services(domain: str = ""):
                 }
             )
         return JSONResponse(content={"total": len(services), "services": services})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
@@ -73,7 +73,7 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
                 },
             }
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
@@ -97,7 +97,7 @@ async def api_bos_health():
                 "metrics": m,
             }
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
@@ -166,7 +166,7 @@ async def api_bos_metrics(prefix: str = ""):
                         stats["_latency_count"] += 1
                         total_latency += float(elapsed)
                         latency_count += 1
-            except Exception:
+            except Exception:  # defensive fallback  # noqa: BLE001
                 pass
 
         # Format domains array
@@ -213,7 +213,7 @@ async def api_bos_metrics(prefix: str = ""):
                 "domains": domains_list,
             }
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 

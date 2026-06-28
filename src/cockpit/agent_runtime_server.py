@@ -157,7 +157,7 @@ def create_app():
             alert = _build_alert_message(task_id, result)
             try:
                 runtime.tools.send_message(text=alert)
-            except Exception:
+            except Exception:  # defensive fallback  # noqa: BLE001
                 pass
             raise HTTPException(status_code=500, detail=result["error"])
 

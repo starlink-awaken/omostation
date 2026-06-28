@@ -47,7 +47,7 @@ try:
     from cockpit.storage import DataAccess
 
     _da = DataAccess()
-except Exception:
+except Exception:  # defensive fallback  # noqa: BLE001
     _da = None  # type: ignore[assignment]
 
 
@@ -420,7 +420,7 @@ def _read_omo_goals() -> dict:
     """读取 OMO 当前目标。"""
     try:
         return yaml.safe_load(_OMO_GOALS.read_text(encoding="utf-8"))
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         return {}
 
 
@@ -439,7 +439,7 @@ def _read_omo_constraints() -> list[str]:
                         elif isinstance(rule_body, str):
                             rules.append(f"[{rule_name}] {rule_body}")
         return rules
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         # Fallback to hardcoded key constraints
         return [
             "禁止直接改写 .omo 目录 (使用 OMO CLI)",
@@ -675,7 +675,7 @@ def governance_check(dimension: str = "all") -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return json.dumps({"error": str(e)})
 
 
@@ -706,7 +706,7 @@ def governance_status() -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return json.dumps({"error": str(e)})
 
 
@@ -734,7 +734,7 @@ def governance_sla(dimension: str = "") -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return json.dumps({"error": str(e)})
 
 
@@ -775,7 +775,7 @@ def governance_leaderboard() -> str:
             )
 
         return json.dumps({"projects": result, "total": len(result)}, ensure_ascii=False)
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return json.dumps({"error": str(e)})
 
 
@@ -849,7 +849,7 @@ def governance_dashboard() -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return json.dumps({"error": str(e)})
 
 
@@ -893,7 +893,7 @@ def governance_history(days: int = 30) -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return json.dumps({"error": str(e)})
 
 

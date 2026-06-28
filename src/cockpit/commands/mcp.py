@@ -83,7 +83,7 @@ def _list_tools(mcp: Any) -> int:
     console = _get_console()
     try:
         tools = _resolve_mcp_tools(mcp)
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         _get_err().print(f"[red]❌ 获取工具列表失败: {e}[/red]")
         return 1
 

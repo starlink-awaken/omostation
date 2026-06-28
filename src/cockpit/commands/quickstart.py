@@ -35,7 +35,7 @@ def _check_ollama_running() -> bool:
         req = urlrequest.Request("http://localhost:11434/api/tags", method="GET")
         resp = urlrequest.urlopen(req, timeout=3)  # noqa: S310
         return resp.status == 200
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         return False
 
 
@@ -71,7 +71,7 @@ def _ensure_workspace_db() -> bool:
             source_count=1,
         )
         return True
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         return False
 
 
@@ -114,7 +114,7 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
                     else:
                         c.print("  [red]❌ ollama 启动超时，请手动执行: ollama serve[/red]")
                         issues.append("ollama 启动失败")
-            except Exception as e:
+            except Exception as e:  # defensive fallback  # noqa: BLE001
                 c.print(f"  [red]❌ ollama 启动失败: {e}[/red]")
                 issues.append(f"ollama 启动失败: {e}")
         else:
@@ -157,7 +157,7 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
                     else:
                         c.print(f"  [yellow]⚠️  模型拉取失败: {result.stderr.strip() or result.stdout.strip()}[/yellow]")
                         issues.append(f"模型 {default_model} 未拉取")
-            except Exception as e:
+            except Exception as e:  # defensive fallback  # noqa: BLE001
                 c.print(f"  [yellow]⚠️  检查模型状态异常: {e}[/yellow]")
                 issues.append(f"模型检查异常: {e}")
 

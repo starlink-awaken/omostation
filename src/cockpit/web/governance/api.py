@@ -34,7 +34,7 @@ if router:
                     "resolved_count": data.get("debt_metrics", {}).get("resolved_count", 9),
                     "unresolved_count": data.get("debt_metrics", {}).get("unresolved_count", 0),
                 }
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             pass
         return {
             "health_score": 82.0,

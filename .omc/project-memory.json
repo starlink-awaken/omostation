@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1781859929836,
+  "lastScanned": 1782617981379,
   "projectRoot": "/Users/xiamingxing/Workspace/projects/cockpit",
   "techStack": {
     "languages": [
@@ -38,7 +38,7 @@
   },
   "build": {
     "buildCommand": "make build",
-    "testCommand": "echo \"=== agora 顶层结构 ===\"; ls projects/agora/ 2>/dev/null\necho \"\"\necho \"=== src/agora/tests ===\"; ls projects/agora/src/agora/tests/unit/test_bos_resolver.py 2>/dev/null && echo \"FOUND src-layout\" || echo \"not in src/agora/tests\"\necho \"\"\necho \"=== find 全域 ===\"; find projects/agora -name \"test_bos_resolver.py\" 2>/dev/null | head -3\necho \"\"\necho \"=== pyproject pytest 配置 ===\"; grep -A8 \"tool.pytest\\|testpaths\" projects/agora/pyproject.toml 2>/dev/null | head -12",
+    "testCommand": "make test",
     "lintCommand": "ruff check",
     "devCommand": null,
     "scripts": {}
@@ -67,7 +67,7 @@
       "path": "config",
       "purpose": "Configuration files",
       "fileCount": 1,
-      "lastAccessed": 1781859929827,
+      "lastAccessed": 1782617981370,
       "keyFiles": [
         "api_keys.yaml.example"
       ]
@@ -76,7 +76,7 @@
       "path": "scripts",
       "purpose": "Build/utility scripts",
       "fileCount": 2,
-      "lastAccessed": 1781859929827,
+      "lastAccessed": 1782617981370,
       "keyFiles": [
         "com.cockpit.dashboard.plist",
         "contract_gatekeeper.py"
@@ -86,72 +86,10 @@
       "path": "src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1781859929828,
+      "lastAccessed": 1782617981370,
       "keyFiles": []
-    },
-    "web": {
-      "path": "web",
-      "purpose": null,
-      "fileCount": 8,
-      "lastAccessed": 1781859929828,
-      "keyFiles": [
-        "README.md",
-        "__init__.py",
-        "app.py",
-        "auth.py",
-        "compat.py"
-      ]
     }
   },
-  "hotPaths": [
-    {
-      "path": "src/cockpit/cli.py",
-      "accessCount": 4,
-      "lastAccessed": 1781873312144,
-      "type": "file"
-    },
-    {
-      "path": "src/cockpit/tests/test_governance_command.py",
-      "accessCount": 3,
-      "lastAccessed": 1781873585180,
-      "type": "file"
-    },
-    {
-      "path": "src/cockpit/commands/discover.py",
-      "accessCount": 3,
-      "lastAccessed": 1781873679979,
-      "type": "file"
-    },
-    {
-      "path": "src/cockpit/commands/status.py",
-      "accessCount": 3,
-      "lastAccessed": 1781873694728,
-      "type": "file"
-    },
-    {
-      "path": "src/cockpit/data_index.py",
-      "accessCount": 2,
-      "lastAccessed": 1781860186488,
-      "type": "file"
-    },
-    {
-      "path": "src/cockpit/commands/scenario.py",
-      "accessCount": 1,
-      "lastAccessed": 1781860113746,
-      "type": "file"
-    },
-    {
-      "path": "src/cockpit/commands/gongwen.py",
-      "accessCount": 1,
-      "lastAccessed": 1781873310099,
-      "type": "file"
-    },
-    {
-      "path": "src/cockpit/commands/governance.py",
-      "accessCount": 1,
-      "lastAccessed": 1781873439206,
-      "type": "file"
-    }
-  ],
+  "hotPaths": [],
   "userDirectives": []
 }

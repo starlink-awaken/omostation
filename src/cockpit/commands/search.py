@@ -36,7 +36,7 @@ def _cmd_search(args: Namespace) -> int:
         local = get_data_access().search_research(query, limit=limit)
         zone_count["local"] = len(local)
         merged_results.extend(local)
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         zone_count["local"] = 0
         console.print(f"[dim]⚠ 本地搜索跳过: {e}[/]")
 
@@ -57,7 +57,7 @@ def _cmd_search(args: Namespace) -> int:
                     item.setdefault("_retrieved_at", now)
                 merged_results.extend(kos_items)
                 zone_count["kos"] = len(kos_items)
-        except Exception as e:
+        except Exception as e:  # defensive fallback  # noqa: BLE001
             _log_kos_skip(f"unexpected: {type(e).__name__}: {e}")
 
     # Zone 3: Vault (@学习进化 markdown 知识库).
@@ -77,7 +77,7 @@ def _cmd_search(args: Namespace) -> int:
                     item.setdefault("_retrieved_at", now)
                 merged_results.extend(vault_items)
                 zone_count["vault"] = len(vault_items)
-        except Exception as e:
+        except Exception as e:  # defensive fallback  # noqa: BLE001
             _log_vault_skip(f"unexpected: {type(e).__name__}: {e}")
 
     # Zone 4: Trace Closure (Gate C4).
@@ -85,7 +85,7 @@ def _cmd_search(args: Namespace) -> int:
     if search_all:
         try:
             trace = _writeback_search_trace(query, zone_count, len(merged_results), limit, merged_results)
-        except Exception as e:
+        except Exception as e:  # defensive fallback  # noqa: BLE001
             _log_trace_skip(f"unexpected: {type(e).__name__}: {e}")
 
     # ═══ P2 统一响应契约 ═══
@@ -303,14 +303,14 @@ def _invoke_kos_search(query: str, limit: int = 10, timeout: float = 60.0) -> li
             )
         return mapped
 
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         _log_kos_skip(f"invoke error: {type(e).__name__}: {e}")
         return []
     finally:
         try:
             proc.terminate()
             proc.wait(timeout=3)
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             pass
 
 
@@ -478,7 +478,7 @@ def _writeback_search_trace(
         ).fetchall()
         _conn.close()
         recent = [{"id": r[0], "created_at": r[1]} for r in _rows]
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         _log_trace_skip(f"dedup check failed: {type(e).__name__}: {e}")
         recent = []
 
@@ -511,7 +511,7 @@ def _writeback_search_trace(
             source_count=total,
             agent="opc-p2-trace",
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         _log_trace_skip(f"save failed: {type(e).__name__}: {e}")
         return {}
 

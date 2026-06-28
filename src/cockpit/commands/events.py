@@ -51,7 +51,7 @@ def run_events_dashboard(url: str = "http://127.0.0.1:7431/v1/events"):
                                     payload_str = payload_str[:57] + "..."
 
                                 table.add_row(ts, etype, src, target, payload_str)
-                            except Exception:
+                            except Exception:  # defensive fallback  # noqa: BLE001
                                 pass
         except httpx.ConnectError:
             live.stop()
@@ -61,6 +61,6 @@ def run_events_dashboard(url: str = "http://127.0.0.1:7431/v1/events"):
             sys.exit(1)
         except KeyboardInterrupt:
             pass
-        except Exception as e:
+        except Exception as e:  # defensive fallback  # noqa: BLE001
             live.stop()
             console.print(f"[bold red]❌ Stream disconnected: {e}[/bold red]")

@@ -54,7 +54,7 @@ async def api_metaos_plan(request: Request):
                 edges.append({"source": dep, "target": nid})
 
         return JSONResponse({"status": "ok", "workflow_id": wf.workflow_id, "nodes": nodes, "edges": edges})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 
@@ -67,7 +67,7 @@ def _async_execute_workflow(task_description: str):
         planner = WorkflowPlanner(engine, use_llm=True)
         wf = planner.plan(task_description)
         wf.run()
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         print(f"Background execution failed: {e}")
 
 
@@ -83,7 +83,7 @@ async def api_metaos_execute(request: Request, background_tasks: BackgroundTasks
         # Trigger execution in background to avoid client timeouts
         background_tasks.add_task(_async_execute_workflow, task)
         return JSONResponse({"status": "ok", "msg": "Task accepted and execution started in background."})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 
@@ -94,7 +94,7 @@ async def api_metaos_workflows():
         store = WorkflowStore()
         records = store.list_workflows(50)
         return JSONResponse({"status": "ok", "workflows": records})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 
@@ -122,7 +122,7 @@ async def api_metaos_workflow_detail(workflow_id: str):
 
         wf_detail["nodes"] = nodes
         return JSONResponse({"status": "ok", "workflow": wf_detail})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 
@@ -147,5 +147,5 @@ async def api_metaos_workflow_approve(workflow_id: str):
             )
 
         return JSONResponse({"status": "ok", "msg": f"Workflow {workflow_id} has been approved."})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)

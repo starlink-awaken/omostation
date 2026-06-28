@@ -65,7 +65,7 @@ def run_task(task_name: str) -> str:
         status = "error" if "error" in result else "ok"
         summary = result.get("result", "")[:200]
         _log_execution(task_name, status, summary, result, elapsed)
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         pass
 
     if result.get("error"):

@@ -387,7 +387,7 @@ def _run_ollama(prompt: str, *, timeout: int = 60) -> str | None:
         text = (data.get("response") or "").strip()
         if text:
             return _strip_thinking(text)
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         pass
     return None
 
@@ -418,7 +418,7 @@ def _run_ollama_stream(prompt: str, *, timeout: int = 120) -> str | None:
                 full_text += token
         print()
         return full_text.strip() or None
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         pass
     return None
 

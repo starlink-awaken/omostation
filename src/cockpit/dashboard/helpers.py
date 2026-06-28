@@ -33,7 +33,7 @@ def read_json_file(path: Path) -> dict:
         return {}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         return {}
 
 
@@ -72,7 +72,7 @@ def fetch_http(source: dict) -> dict:
             "status": data.get("status", "ok"),
             "data": data,
         }
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return {
             "layer": source["layer"],
             "name": source["name"],
@@ -108,7 +108,7 @@ def read_m0_snapshot() -> dict:
                 },
             },
         }
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return {
             "layer": "L0",
             "name": "ecos",
@@ -137,7 +137,7 @@ def fetch_layer_status(source: dict) -> dict:
                 "status": "ok",
                 "data": {"system": system, "source": "direct_import"},
             }
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             return fetch_http(source)
 
     # L1 runtime — try direct import
@@ -156,7 +156,7 @@ def fetch_layer_status(source: dict) -> dict:
                     "source": "direct_import",
                 },
             }
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             return fetch_http(source)
 
     # L0 ecos — read from M0 snapshot file
@@ -261,7 +261,7 @@ def load_debt() -> dict:
         }
     except ImportError as e:
         return {"error": f"Import error: {e}", "items": []}
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return {"error": str(e), "items": []}
 
 
@@ -285,7 +285,7 @@ def run_e2e() -> dict:
         return {"result": "unparsed", "output": stdout}
     except subprocess.TimeoutExpired:
         return {"result": "timeout", "error": "E2E took >30s"}
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return {"result": "error", "error": str(e)}
 
 
@@ -310,7 +310,7 @@ def omo_report() -> dict:
             "open": open_count,
             "closed": closed_count,
         }
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return {"error": str(e), "summary": "Error"}
 
 

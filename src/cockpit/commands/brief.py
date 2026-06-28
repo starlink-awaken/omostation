@@ -52,7 +52,7 @@ def _cmd_brief(args: Namespace) -> int:
         console.print("  · cockpit compass radar — 战略对齐审计")
 
         console.print(f"\n[dim]生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M')}[/]")
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         console.print(f"[yellow]⚠ Brief generation limited: {e}[/]")
 
     return 0

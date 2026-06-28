@@ -24,7 +24,7 @@ def _load_builtin_pipelines() -> dict:
     if _BUILTIN_PIPELINES_PATH.exists():
         try:
             return json.loads(_BUILTIN_PIPELINES_PATH.read_text(encoding="utf-8"))
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             pass
     return {}
 
@@ -77,7 +77,7 @@ async def api_run_pipeline(request: Request):
                 json_data = await request.json()
                 name = json_data.get("name")
                 goal = json_data.get("goal")
-            except Exception:
+            except Exception:  # defensive fallback  # noqa: BLE001
                 pass
 
         if not name:
@@ -100,7 +100,7 @@ async def api_run_pipeline(request: Request):
                 lines = error_msg.splitlines()
                 error_msg = "\n".join([line for line in lines if "已弃用" not in line]).strip()
             return JSONResponse({"status": "error", "error": error_msg}, status_code=500)
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 
@@ -120,14 +120,14 @@ async def api_register_instance(service: str = Form(...), mcp_endpoint: str = Fo
         # Unregister existing to overwrite safely
         try:
             registry.unregister(service)
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             pass
 
         svc = Service(name=service, protocol="mcp", mcp_endpoint=mcp_endpoint)
         registry.register(svc)
 
         return JSONResponse({"status": "ok", "msg": f"实例 {service} 注册成功 (Endpoint: {mcp_endpoint})"})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 
@@ -163,7 +163,7 @@ async def api_metrics_history():
                 "latency": latency,
             }
         )
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 

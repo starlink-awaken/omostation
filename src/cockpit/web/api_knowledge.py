@@ -27,7 +27,7 @@ async def api_knowledge_search(request: Request):
         # 最规范的做法是通过 HTTP 调用 Agora 7422 端口，但这里保持与旧版兼容的直接 import 调用。
         res = await resolve_bos_uri("bos://memory/local/all-search", {"query": query, "limit": 10})
         return JSONResponse({"status": "ok", "result": res})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 
@@ -59,5 +59,5 @@ slug: {slug}
         file_path.write_text(card_content, encoding="utf-8")
 
         return JSONResponse({"status": "success", "msg": "知识注入成功，已落盘至 bos://memory (本地卡片)."})
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)

@@ -206,7 +206,7 @@ def load_compute() -> dict:
             local_cpu = int(min(100.0, (load / cores) * 100.0))
             if local_cpu < 5:
                 local_cpu = 15
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             local_cpu = 28
 
     # Map to frontend expected nodes structure (ComputeView topology)

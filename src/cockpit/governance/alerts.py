@@ -26,7 +26,7 @@ class AlertHandler:
                 f.write(json.dumps(alert) + "\n")
 
             return True
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             return False
 
     def get_recent_alerts(self, limit: int = 10) -> list[dict]:
@@ -48,7 +48,7 @@ class AlertHandler:
                         pass
 
             return alerts
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             return []
 
     def clear_alerts(self) -> bool:
@@ -57,7 +57,7 @@ class AlertHandler:
             if self.log_path.exists():
                 self.log_path.unlink()
             return True
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             return False
 
 

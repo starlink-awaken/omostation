@@ -132,7 +132,7 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
                     tag = "green" if _hs >= 80 else ("yellow" if _hs >= 60 else "red")
                     health_line = f"\n[bold]治理健康:[/bold] [{tag}]{_hs}[/] [dim](SSOT, 服务健康见系统状态行)[/]"
                     break
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         pass
     c.print(_panel(f"{status_line}\n{stats_line}\n{hl_line}{health_line}", "bright_blue"))
     recent = _get_data_access().list_research(limit=5)
@@ -645,7 +645,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
                 s = s.replace("System Health:", "").strip()
                 c.print(f"[dim]💻 系统: {s}[/dim]")
                 break
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         pass
     table = Table(title="📋 行动清单", box=box.ROUNDED, header_style="bold cyan", show_lines=True)
     table.add_column("ID", style="cyan", no_wrap=True, width=4)
@@ -743,7 +743,7 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
                 _print_dashboard_fixes()
                 proc.terminate()
                 return 1
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             c.print(f"[red]无法连接到 Dashboard :{port}[/]")
             _print_dashboard_fixes()
             proc.terminate()

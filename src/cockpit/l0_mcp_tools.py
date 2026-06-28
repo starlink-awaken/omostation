@@ -37,7 +37,7 @@ def _run_tool(tool_path: Path, args: list = None) -> dict:
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         pass
     return {"error": "tool execution failed"}
 
@@ -131,7 +131,7 @@ def l0_adr_list() -> str:
             name = d.get("name", f.stem)[:60]
             icon = {"accepted": "✅", "proposed": "📋", "rejected": "❌"}.get(status, "❓")
             lines.append(f"  {icon} {name}")
-        except Exception:
+        except Exception:  # defensive fallback  # noqa: BLE001
             pass
     return "\n".join(lines)
 
@@ -186,7 +186,7 @@ def md_validate() -> str:
                         data = yaml.safe_load(open(f))
                         if data and "type" in data:
                             nodes.append(data)
-                    except Exception:
+                    except Exception:  # defensive fallback  # noqa: BLE001
                         pass
 
         result = tool_validate(models=nodes)

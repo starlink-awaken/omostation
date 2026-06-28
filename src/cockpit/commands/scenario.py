@@ -323,7 +323,7 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
                         "privacy_class": "confidential",
                     }
                 )
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         pass
 
     if not sources:

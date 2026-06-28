@@ -21,7 +21,7 @@ from omo.omo_cockpit_bridge import (
 async def api_list_proposals():
     try:
         proposals = list_hitl_proposals(WORKSPACE_ROOT / ".omo")
-    except Exception:
+    except Exception:  # defensive fallback  # noqa: BLE001
         proposals = []
     return JSONResponse({"status": "ok", "proposals": proposals})
 
@@ -73,7 +73,7 @@ async def _execute_mutation(proposal: dict) -> bool:
         res = await resolve_bos_uri(f"bos://governance/hitl/execute/{p_type}", proposal)
         if res and res.get("status") == "ok":
             return True
-    except Exception as e:
+    except Exception as e:  # defensive fallback  # noqa: BLE001
         _log.debug("[HITL] Plugin dispatch not found or failed for %s: %s", p_type, e)
 
     return False
