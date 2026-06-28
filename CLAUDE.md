@@ -1,94 +1,44 @@
-# CLAUDE.md — Agora I0 Service Mesh
+# CLAUDE.md — Agora AI Context
 
-> AI Agent 操作指南。修改此项目前请先阅读。
+    > Session loader for AI work inside `agora`.
+    > Keep durable engineering rules in [`AGENTS.md`](AGENTS.md) and volatile facts in SSOT files.
 
-## 核心概念
+    ## Load First
 
-Agora 是 eCOS v5 架构中的 **I0 织层** — 所有跨服务通信的 MCP 动态反向代理枢纽。
+    1. [`AGENTS.md`](AGENTS.md)
+    2. [`README.md`](README.md) when present
+    3. The source files and tests directly related to the task
+    4. Workspace context in [`../../CLAUDE.md`](../../CLAUDE.md) when the task crosses project boundaries
 
-- **Hub-Spoke**: 服务只认识 Agora，Agora 认识所有服务
-- **工具代理**: 所有下游 MCP 工具通过 Agora 透明代理
-- **智能路由**: SmartRouter 支持 direct/recommend/auto 三种策略
-- **联邦路由**: FederationRouter 跨节点路由
+    ## Project Role
 
-## 关键模式
+    - Layer: I0
+    - Responsibility: BOS URI 路由与 MCP Hub
+    - Stack: Python / uv / pytest
 
-### 返回格式
-```python
-def _ok(data: dict) -> dict:    # 成功: {"ok": True, ...data}
-def _error(msg: str) -> dict:   # 失败: {"ok": False, "error": msg}
-```
+    ## Commands
 
-### MCP 工具注册
-工具在 `server/mcp.py` 中用 `@mcp.tool()` 装饰器注册，无需额外配置。
+    ```bash
+    uv sync
+uv run pytest "tests/" -q
+uv run ruff check "src/"
+    ```
 
-### 导入约定
-- 包内: `from agora.xxx import ...`
-- 禁止裸 `except:` (全部指定异常类型)
-- 使用 `hmac.compare_digest()` 防时序攻击
+    ## Safe Editing Rules
 
-## 文件职责
+    - `BOS 服务清单以 etc/bos-services.yaml 为唯一读源。`
+- `端口以 ../../protocols/port-registry.yaml 为准，不在文档里硬编码。`
+- `server/mcp 类入口不要继续膨胀，新增能力优先落到专门模块。`
 
-| 文件 | 职责 | 风险 |
-|------|------|------|
-| `server/mcp.py` | MCP 入口 + 工具注册 + 代理管理 | God Module — 勿再添加代码 |
-| `mcp_proxy/client.py` | Stdio/HTTP MCP 客户端 | 稳定 |
-| `core/router.py` | 服务路由决策 | 稳定 |
-| `federation/federation_router.py` | 跨节点联邦路由 | SSRF 已修复 |
-| `adapters/node_adapter.py` | 外部节点适配器 | SSRF 已修复 |
-| `ssrf_guard.py` | URL 安全验证 | 新增 |
-| `auth/` | 认证授权 (9 files) | 密钥敏感 |
-| `mcp_registry/` | 服务发现 + 生命周期 | Phase 2 新增 |
+    - Do not commit, push, reset, or bump submodule pointers unless the user explicitly asks.
+    - Preserve unrelated dirty changes in this repository.
+    - Keep Markdown pointed at SSOT files instead of copying generated facts.
 
-## 测试规范
+    ## Closeout
 
-- 测试文件: `tests/` 下按 `test_*.py` 命名
-- 网络测试用 `@pytest.mark.network` 标记
-- conftest.py 自动清理 `AGORA_*`, `OPENAI_*`, `ANTHROPIC_*` 环境变量
-- 修改 `server/mcp.py` 时要警惕 — 这是 God Module，牵一发而动全身
+    ```bash
+    git status --short
+    uv run --with "pyyaml" python "../../bin/doc-ssot-lint.py" --json
+    ```
 
-## 已知技术债务
-
-1. **server/mcp.py God Module** (1,757行) — 需拆分为 proxy/repo/a2a 三个模块
-2. **_ok/_error 重复** — 在 `mcp/tools_template.py` 和 `server/mcp.py` 中重复定义
-3. **ecos/omo 依赖声明但无静态 import** — pyproject.toml 有声明但实际通过 subprocess
-4. **缺少 mypy 配置** — pyproject.toml 无 `[tool.mypy]`
-
-## §bus 子包 (Phase A.0, R57)
-
-### 文件职责
-| 文件 | 职责 | 风险 |
-|------|------|------|
-| `bus/__init__.py` | facade (publish/subscribe/schedule) | god module 风险 — 单文件 < 50 行 |
-| `bus/envelope.py` | BusEnvelope wire format | - |
-| `bus/router.py` | backend 分发 + DLQ fallback | 路由逻辑集中点 |
-| `bus/dlq.py` | SQLite DLQ (WAL + 50MB GC) | 落 `~/.runtime/bus_dlq.db` |
-| `bus/backends/base.py` | BusBackend Protocol | - |
-| `bus/backends/eventbus.py` | 包裹 agora EventBus (Phase A.0 唯一) | - |
-
-### 已知技术债
-1. **bus/ 子包只有 1 个 backend** (eventbus) — Phase A.1 (R58) 加 7 个
-2. **schedule() stub** — NotImplementedError, Phase A.1 实现
-3. **无 Pydantic** — envelope 暂用 simple class, Phase A.1 升 Pydantic
-
-### Owner
-**Phase B (R66-R69) complete**: bus moved to standalone package
-`projects/bus-foundation/`. See `projects/bus-foundation/CLAUDE.md` and
-`projects/bus-foundation/OWNERS.md` for the new home.
-
-agora.bus continues to exist as a backward-compat alias / premium-backend
-shim (persistent EventBusBackend + global sse_manager). New code should
-import from `bus_foundation` (zero agora dep).
-
-### 安全检查清单
-- [ ] bus adapter 自身不重试 (透传给底层)
-- [ ] DLQ 路径用 WAL + busy_timeout
-- [ ] 失败 event 入 DLQ 不抛 (避免丢失)
-
-## 安全检查清单
-
-修改涉及网络请求/端点/认证的代码时：
-- [ ] 调用 `validate_external_url()` 进行 SSRF 防护
-- [ ] 使用 `hmac.compare_digest()` 而非 `==` 比较密钥
-- [ ] 所有密钥通过 `os.environ.get()` 读取，无硬编码
-- [ ] 无 `eval()` / `exec()` / `pickle.load()`
+    Report the checks you actually ran and any pre-existing dirty state that remains.
