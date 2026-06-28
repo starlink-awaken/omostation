@@ -108,7 +108,7 @@ def main() -> int:
         if age > timedelta(hours=args.max_age_hours):
             errors.append(
                 f"health.yaml 已过期 {age.total_seconds() / 3600:.1f}h "
-                f"(阈值 {args.max_age_hours}h). 跑 python3 scripts/compass_radar.py 刷新"
+                f"(阈值 {args.max_age_hours}h). 跑 python3 bin/compass_radar.py 刷新"
             )
         else:
             print(f"✅ health.yaml 保鲜: {age.total_seconds() / 3600:.1f}h 前生成 (阈值 {args.max_age_hours}h)")
