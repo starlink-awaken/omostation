@@ -29,6 +29,9 @@ from pathlib import Path
 
 import yaml
 
+# P110-D (TASK-F7114ABA 治本): EventTrend + TrendTracker 拆分 → omo_self_healing_trend.py
+from .omo_self_healing_trend import EventTrend, TrendTracker  # noqa: E402, F401
+
 from .omo_ingress import upsert_debt_item
 
 logger = logging.getLogger("omo.self_healing")
@@ -492,59 +495,6 @@ def _severity_weight(severity: str) -> float:
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Trend Analysis
-# ═══════════════════════════════════════════════════════════════════════════
-
-
-@dataclass
-class EventTrend:
-    """事件趋势快照。"""
-
-    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
-    total_events: int = 0
-    events_by_type: dict[str, int] = field(default_factory=dict)
-    triggers: int = 0
-    fixes: int = 0
-    debts: int = 0
-
-
-class TrendTracker:
-    """追踪事件趋势 (10 个快照点)。"""
-
-    def __init__(self, max_snapshots: int = 10):
-        self._snapshots: deque[EventTrend] = deque(maxlen=max_snapshots)
-        self._total_triggers: int = 0
-        self._total_fixes: int = 0
-        self._total_debts: int = 0
-
-    def record(self, trend: EventTrend) -> None:
-        self._snapshots.append(trend)
-        self._total_triggers += trend.triggers
-        self._total_fixes += trend.fixes
-        self._total_debts += trend.debts
-
-    def get_trends(self) -> list[dict]:
-        return [
-            {
-                "ts": t.timestamp,
-                "events": t.total_events,
-                "by_type": t.events_by_type,
-                "triggers": t.triggers,
-                "fixes": t.fixes,
-            }
-            for t in self._snapshots
-        ]
-
-    def is_escalating(self, event_type: str) -> bool:
-        """检测事件是否在升级 (最近 3 个快照连续增长)。"""
-        if len(self._snapshots) < 3:
-            return False
-        recent = list(self._snapshots)[-3:]
-        counts = [s.events_by_type.get(event_type, 0) for s in recent]
-        return counts[0] < counts[1] < counts[2]
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# HTTP Health Server (status + fix execution)
 # ═══════════════════════════════════════════════════════════════════════════
 
 _HEALING_HTTP_PORT = int(os.environ.get("OMO_HEALING_HTTP_PORT", "9091"))
