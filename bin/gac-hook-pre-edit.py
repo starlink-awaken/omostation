@@ -39,7 +39,7 @@ REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
 
 
 def load_ssot_rules() -> list[dict]:
-    """加载 gac ssot_pointer active 规则 (机制 3 检查对象)."""
+    """加载 gac active 规则 (机制 3 检查对象, 扩展到多 check_type)."""
     import yaml
 
     if not REGISTRY.exists():
@@ -48,15 +48,21 @@ def load_ssot_rules() -> list[dict]:
     if not docs:
         return []
     rules = docs[-1].get("gac", {}).get("rules", [])
-    return [
-        r
-        for r in rules
-        if r.get("check_type") == "ssot_pointer" and r.get("lifecycle") == "active"
-    ]
+    return [r for r in rules if r.get("lifecycle") == "active"]
+
+
+# Pattern-based check types that can be enforced at edit time
+HOOKABLE_CHECK_TYPES = {
+    "ssot_pointer",
+    "port_hardcode",
+    "import_nucleus",
+    "direct_omo_io",
+    "broad_except",
+}
 
 
 def check_content(file_path: str, new_content: str) -> list[str]:
-    """检查内容是否违反 SSOT 规则. 返回 warnings 列表."""
+    """检查内容是否违反 GaC 规则. 返回 warnings 列表."""
     warnings: list[str] = []
     if not new_content:
         return warnings
@@ -67,43 +73,94 @@ def check_content(file_path: str, new_content: str) -> list[str]:
     except (ValueError, OSError):
         rel = file_path
 
+    # Only check Python/YAML files for pattern-based rules
+    is_py = rel.endswith(".py")
+    is_yaml = rel.endswith((".yaml", ".yml"))
+
     for rule in rules:
-        target = rule.get("target", "")
-        if "::" not in target:
-            continue
-        field = target.split("::", 1)[1]
-        forbid = rule.get("forbid_copy_in", [])
-
-        # file 是否在 forbid_copy_in glob
-        matched = any(
-            fnmatch.fnmatch(rel, pat) or fnmatch.fnmatch(rel, f"**/{pat}")
-            for pat in forbid
-        )
-        if not matched:
+        check_type = rule.get("check_type", "")
+        if check_type not in HOOKABLE_CHECK_TYPES:
             continue
 
-        # new_content 硬编码 field + 数字 (排除指针引用)
-        pattern = re.compile(rf"(?<![\[\.]){re.escape(field)}\s*:\s*\d")
-        for m in pattern.finditer(new_content):
-            ctx = new_content[max(0, m.start() - 40) : m.end() + 80]
-            if any(
-                kw in ctx
-                for kw in [
-                    "_ref",
-                    "见 ",
-                    "see ",
-                    "指向",
-                    "指针",
-                    "SSOT",
-                    "system.yaml",
-                    "示例值",
-                ]
-            ):
-                continue  # 指针引用/示例标注, 合法
-            warnings.append(
-                f"GaC {rule['id']}: {rel} 硬编码 {field} 值 "
-                f"(违反 SSOT, 应用指针引用 system.yaml 或加 # 示例值 注释)"
-            )
+        rid = rule.get("id", "?")
+
+        if check_type == "ssot_pointer":
+            warnings.extend(_check_ssot_pointer(rule, rid, rel, new_content))
+        elif check_type == "port_hardcode" and (is_py or is_yaml):
+            warnings.extend(_check_port_hardcode(rule, rid, rel, new_content))
+        elif check_type == "import_nucleus" and is_py:
+            warnings.extend(_check_import_nucleus(rule, rid, rel, new_content))
+        elif check_type == "direct_omo_io" and is_py:
+            warnings.extend(_check_direct_omo_io(rule, rid, rel, new_content))
+        elif check_type == "broad_except" and is_py:
+            warnings.extend(_check_broad_except(rule, rid, rel, new_content))
+
+    return warnings
+
+
+def _check_ssot_pointer(rule, rid, rel, content):
+    """SSOT 指针检查: 禁止在 markdown/yaml 中硬编码易变值."""
+    warnings = []
+    target = rule.get("target", "")
+    if "::" not in target:
+        return warnings
+    field = target.split("::", 1)[1]
+    forbid = rule.get("forbid_copy_in", [])
+    matched = any(fnmatch.fnmatch(rel, pat) or fnmatch.fnmatch(rel, f"**/{pat}") for pat in forbid)
+    if not matched:
+        return warnings
+    pattern = re.compile(rf"(?<![\[\.]){re.escape(field)}\s*:\s*\d")
+    for m in pattern.finditer(content):
+        ctx = content[max(0, m.start() - 40): m.end() + 80]
+        if any(kw in ctx for kw in ["_ref", "见 ", "see ", "指向", "指针", "SSOT", "system.yaml", "示例值"]):
+            continue
+        warnings.append(f"GaC {rid}: {rel} 硬编码 {field} 值 (违反 SSOT, 用指针引用)")
+    return warnings
+
+
+def _check_port_hardcode(rule, rid, rel, content):
+    """端口硬编码检查: 禁止在源码中硬编码端口号."""
+    warnings = []
+    # Match patterns like :7422 or port=7422 (not in comments or env defaults)
+    pattern = re.compile(r'(?<!\w)[:=](\d{4,5})(?!\d)')
+    for m in pattern.finditer(content):
+        port = int(m.group(1))
+        if 1024 < port < 65536:
+            ctx = content[max(0, m.start() - 30): m.end() + 30]
+            if any(kw in ctx.lower() for kw in ["env", "os.environ", "getenv", "default", "registry", "port-registry"]):
+                continue
+            warnings.append(f"GaC {rid}: {rel} 疑似端口硬编码 :{port} (应走 protocols/port-registry.yaml + env)")
+    return warnings
+
+
+def _check_import_nucleus(rule, rid, rel, content):
+    """nucleus import 检查: 禁止顶层 import nucleus."""
+    warnings = []
+    pattern = re.compile(r'^from\s+nucleus\b|^import\s+nucleus\b', re.MULTILINE)
+    for m in pattern.finditer(content):
+        ctx = content[max(0, m.start() - 20): m.end() + 20]
+        if "type: ignore" in ctx or "TYPE_CHECKING" in ctx:
+            continue
+        warnings.append(f"GaC {rid}: {rel} 顶层 import nucleus (已废弃, 改为 lazy import 或移除)")
+    return warnings
+
+
+def _check_direct_omo_io(rule, rid, rel, content):
+    """direct-omo-io 检查: 禁止直接 open()/write 到 .omo/."""
+    warnings = []
+    pattern = re.compile(r'(open|write_text|mkdir|Path)\s*\(\s*["\'].*\.omo/', re.IGNORECASE)
+    for m in pattern.finditer(content):
+        warnings.append(f"GaC {rid}: {rel} 疑似 direct .omo I/O (应走 omo CLI / projects/omo broker)")
+    return warnings
+
+
+def _check_broad_except(rule, rid, rel, content):
+    """broad except 检查: 警告 bare except / except Exception."""
+    warnings = []
+    pattern = re.compile(r'except\s*(\s*:|\s+Exception\s*:)', re.MULTILINE)
+    count = len(pattern.findall(content))
+    if count > 3:
+        warnings.append(f"GaC {rid}: {rel} 有 {count} 处 broad except (建议细化异常类型)")
     return warnings
 
 
