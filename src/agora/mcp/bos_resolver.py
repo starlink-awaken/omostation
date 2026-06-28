@@ -58,6 +58,7 @@ __all__ = [
     "_memory_all_search",
     "_memory_vault_search",
     "_meta_discover",
+    "_sharedbrain_bridge_recall_entity",
 ]
 
 # ── 路径常量 (保持向后兼容) ────────────────────────────
@@ -288,4 +289,22 @@ async def _meta_discover(args: dict | None = None) -> dict:
         "total_routes": len(bos_router.list_all()),
         "routes": bos_router.list_all(),
         "domains": list_domains(),
+    }
+
+
+async def _sharedbrain_bridge_recall_entity(
+    args: dict | None = None, proxy_manager: Any | None = None
+) -> dict:
+    """SharedBrain Bridge 实体召回 (P36-W1 GAP 占位实现).
+
+    当前为注册表补全占位：返回空结果 + ok，真实召回逻辑待 SharedBrain
+    数据层接入后替换。
+    """
+    args = args or {}
+    entity_id = args.get("entity_id", "")
+    return {
+        "status": "ok",
+        "entity_id": entity_id,
+        "recalled": [],
+        "note": "sharedbrain-bridge recall placeholder",
     }

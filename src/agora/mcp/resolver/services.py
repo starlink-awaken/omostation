@@ -569,6 +569,16 @@ _FALLBACK_SERVICES: list[BosService] = [
         ],
         description="Health Profile 更新",
     ),
+    BosService(
+        uri="bos://persona/sot-bridge-persona/recall-entity",
+        domain="persona",
+        package="sot-bridge-persona",
+        action="recall-entity",
+        transport="internal",
+        module_path="agora.mcp.bos_resolver",
+        func_name="_sharedbrain_bridge_recall_entity",
+        description="SharedBrain Bridge 实体召回 (P36-W1 GAP 补全, canonical URI)",
+    ),
     # ════════════════════════════════════════════════════════════════
     # Domain: capability (8)
     # ════════════════════════════════════════════════════════════════
