@@ -78,7 +78,7 @@ def bos_health():
     )
     try:
         return json.loads(r.stdout)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return {"output": r.stdout[:500]}
 
 
@@ -131,12 +131,12 @@ def bos_search(query, domains=None, max_r=10):
                     if line and len(results) < max_r:
                         try:
                             rel = str(Path(line).relative_to(p))
-                        except Exception:
+                        except Exception:  # noqa: BLE001  # defensive fallback
                             rel = line
                         results.append(
                             {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
                         )
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return {"results": results, "total": len(results)}
 

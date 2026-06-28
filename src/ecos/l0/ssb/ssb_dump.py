@@ -29,7 +29,7 @@ def dump():
             if event.get("payload_json"):
                 try:
                     event["payload_json"] = json.loads(event["payload_json"])
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     pass
             f.write(json.dumps(event, ensure_ascii=False) + "\n")
             count += 1

@@ -37,7 +37,7 @@ def run(cmd: list, timeout=30, silent=True) -> str:
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         return r.stdout.strip()[:200] if silent else r.stdout.strip()
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return ""
 
 

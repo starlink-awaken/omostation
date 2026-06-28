@@ -60,7 +60,7 @@ def trail_cards(since: datetime | None = None) -> list[dict]:
                         "timestamp": str(row[-1]) if row[-1] else "",
                     }
                 )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     # Also check cards table for recent changes
@@ -125,7 +125,7 @@ def trail_daemon(since: datetime | None = None) -> list[dict]:
                     "timestamp": row[3],
                 }
             )
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
     conn.close()

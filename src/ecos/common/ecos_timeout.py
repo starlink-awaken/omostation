@@ -19,7 +19,7 @@ def timeout(seconds: int):
             def runner():
                 try:
                     result["value"] = func(*args, **kwargs)
-                except Exception as exc:  # pragma: no cover
+                except Exception as exc:  # pragma: no cover  # noqa: BLE001
                     error["value"] = exc
 
             thread = threading.Thread(target=runner, daemon=True)

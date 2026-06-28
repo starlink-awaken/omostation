@@ -3,7 +3,7 @@ status: active
 engine_ref: ENG-CC-SWITCH
 model_driven_refs:
   source: brew+cc-switch
-  synced_at: '2026-06-25T07:17:10Z'
+  synced_at: '2026-06-28T22:09:52Z'
 governance:
   owner: aetherforge-gateway
   steward: m1-sync

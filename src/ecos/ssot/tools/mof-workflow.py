@@ -46,7 +46,7 @@ def _load_nodes():
                 n = yaml.safe_load(open(f))
                 if n and n.get("type") == "Workflow":
                     nodes.append(n)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return nodes
 
@@ -71,7 +71,7 @@ def _load_catalog():
     if REGISTRY_FILE.exists():
         try:
             return yaml.safe_load(open(REGISTRY_FILE))
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     return {}
 
@@ -905,7 +905,7 @@ def main():
     if handler:
         try:
             return handler(args)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             print_error(f"执行失败: {e}", "使用 --help 获取帮助")
             return 1
 

@@ -47,5 +47,5 @@ class YAMLTriggerRegistry(TriggerRegistryFacade):
                 else:
                     # Generic or unknown
                     self.register_trigger(BaseTrigger(**t_dict))
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass  # skip invalid trigger

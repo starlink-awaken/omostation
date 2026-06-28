@@ -259,7 +259,7 @@ class PerformanceRegressionDetector:
             return PerformanceBaseline.from_dict(data)
         except FileNotFoundError:
             return None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             print(f"⚠️  加载基线失败: {e}")
             return None
 

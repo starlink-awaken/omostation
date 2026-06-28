@@ -200,7 +200,7 @@ def handle_search(query, domains=None, max_results=10):
                                 "file": str(Path(line).relative_to(p)),
                             }
                         )
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
     return {"results": results, "total": len(results)}
@@ -224,7 +224,7 @@ def handle_workflow_run(name, params=None, dry_run=False):
                 if name_lower == nid or name_lower in nid or name_lower == kebab:
                     node = n
                     break
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     if not node:
@@ -267,7 +267,7 @@ def main():
     for line in sys.stdin:
         try:
             req = json.loads(line)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
 
         method = req.get("method", "")

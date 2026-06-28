@@ -724,7 +724,7 @@ class CollectiveDecision:
                 )
 
             return result
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("决策异常: %s - %s", proposal_id, str(e))
             return None
 

@@ -87,7 +87,7 @@ def load_all_m1_nodes(m1_dir: Path) -> list[dict]:
             data = load_yaml(f)
             if isinstance(data, dict) and "id" in data:
                 nodes.append(data)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     return nodes
 
@@ -216,7 +216,7 @@ def main():
 
     try:
         m2 = load_m2(m2_file)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"⚠️ M2 加载失败 ({m2_file}): {e}", file=sys.stderr)
         if not args.json:
             sys.exit(2)

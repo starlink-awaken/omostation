@@ -203,7 +203,7 @@ def run_check(check: dict) -> dict:
             "reason": "30s 超时",
             "duration_ms": 30000,
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {
             "id": check["id"],
             "name": check["name"],

@@ -157,7 +157,7 @@ class PersonalKnowledgeManager(PersonalKnowledgePrimitive):
                 "添加知识: %s, type=%s", node.node_id, node.knowledge_type.value
             )
             return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("添加知识失败: %s - %s", node.node_id, str(e))
             return False
 
@@ -179,7 +179,7 @@ class PersonalKnowledgeManager(PersonalKnowledgePrimitive):
             self._idf_dirty = True
             logger.info("移除知识: %s", node_id)
             return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("移除知识失败: %s - %s", node_id, str(e))
             return False
 

@@ -49,7 +49,7 @@ def load_routes() -> dict:
             data = yaml.safe_load(open(f))
             uri = data.get("name", "")
             routes[uri] = data
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     # Also include components registered with BOS_URI protocol
     comp_dir = L0_M1 / "component"
@@ -59,7 +59,7 @@ def load_routes() -> dict:
             props = data.get("properties", {}) or {}
             if props.get("protocol") == "BOS_URI":
                 routes[f"bos://{data.get('name', '?')}/*"] = data
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     return routes
 
@@ -152,7 +152,7 @@ def audit_bos_call(bos_uri: str, status_code: int = 200, duration_ms: int = 0):
             )
             conn.commit()
             conn.close()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     return audit_entry

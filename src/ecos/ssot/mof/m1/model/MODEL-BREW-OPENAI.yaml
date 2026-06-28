@@ -3,7 +3,7 @@ status: active
 engine_ref: ENG-OPENROUTER-CLOUD
 model_driven_refs:
   source: brew+cc-switch
-  synced_at: '2026-06-25T07:16:55Z'
+  synced_at: '2026-06-28T22:09:42Z'
 governance:
   owner: aetherforge-gateway
   steward: m1-sync

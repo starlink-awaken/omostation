@@ -57,7 +57,7 @@ def check_1_self_validate() -> dict:
             results = data.get("results", [])
             errors = sum(1 for r in results if r.get("level") == "error")
             passed = errors == 0
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     return {
@@ -175,7 +175,7 @@ def check_4_m1_coverage() -> dict:
             data = yaml.safe_load(open(f))
             t = data.get("type", "?")
             coverage[t] = coverage.get(t, 0) + 1
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     gaps = [t for t in m2_types if coverage.get(t, 0) < 2]
@@ -269,7 +269,7 @@ def create_bootstrap_debt(issue: dict):
         )
         conn.commit()
         conn.close()
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
 

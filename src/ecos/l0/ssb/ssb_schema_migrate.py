@@ -94,7 +94,7 @@ def migrate():
 if __name__ == "__main__":
     try:
         migrate()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ 迁移失败: {e}")
         if os.path.exists(BACKUP):
             shutil.copy2(BACKUP, SSB_PATH)

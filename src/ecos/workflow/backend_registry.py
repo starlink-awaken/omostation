@@ -262,7 +262,7 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
                     delay,
                 )
                 time.sleep(delay)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 last_error = str(e)
                 if attempt >= max_attempts or not _should_retry(policy, {}, e):
                     break
@@ -468,6 +468,6 @@ def _ensure_backends_registered() -> None:
     ]:
         try:
             register(name, mod_path, entry, description=desc)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             # 可选依赖缺失不报错
             pass

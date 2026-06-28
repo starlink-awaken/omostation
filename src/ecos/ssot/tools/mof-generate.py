@@ -40,7 +40,7 @@ def load_nodes(m2type: str) -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict):
                 nodes.append(data)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     return nodes
 
@@ -158,7 +158,7 @@ def generate_all(dry_run: bool = True):
                     fp.write_text(content, encoding="utf-8")
                 print(f"  {'📝' if dry_run else '✅'} {filename}")
                 generated += 1
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 print(f"  ❌ {node.get('id', '?')}: {e}")
 
     print(f"\n{'═' * 40}")

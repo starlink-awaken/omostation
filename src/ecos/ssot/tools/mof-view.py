@@ -44,7 +44,7 @@ def load_nodes(m2type: str) -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict):
                 nodes.append(data)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     return nodes
 

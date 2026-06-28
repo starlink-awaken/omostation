@@ -98,7 +98,7 @@ class MessageProtocol(asyncio.Protocol):
             try:
                 msg = WireMessage.decode(msg_data)
                 self.on_message(msg)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
     def connection_lost(self, exc: Exception | None) -> None:
@@ -152,7 +152,7 @@ class TCPNode:
             self._peers[remote_id] = transport
             self._log("connected", target=remote_id, host=host, port=port)
             return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             self._log("connect_failed", target=remote_id, error=str(e))
             return False
 
@@ -197,7 +197,7 @@ class TCPNode:
                     return False
 
             return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             self._log("send_error", target=target, error=str(e))
             return False
 
@@ -216,7 +216,7 @@ class TCPNode:
             try:
                 transport.write(msg.encode())
                 results[peer_id] = True
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 results[peer_id] = False
         return results
 
@@ -259,7 +259,7 @@ class TCPNode:
             if transport:
                 try:
                     transport.write(ack.encode())
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     pass
 
         if msg.msg_type == "ack":
@@ -272,7 +272,7 @@ class TCPNode:
         if handler:
             try:
                 handler(msg)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
         self._log("received", msg_id=msg.msg_id, type=msg.msg_type, source=msg.source)

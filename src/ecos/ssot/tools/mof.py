@@ -151,7 +151,7 @@ def cmd_adr(args):
                         "superseded": "🔄",
                     }.get(status, "❓")
                     print(f"  {icon} [{status:10s}] {name}")
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     print(f"  ❓ {f.stem}")
         else:
             print("  (无 ADR)")

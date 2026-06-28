@@ -149,7 +149,7 @@ class FailoverManager:
 
             logger.warning("故障转移失败: 无可用目标节点 %s", source_node)
             return None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("故障转移异常: %s - %s", source_node, str(e))
             return None
 
@@ -199,7 +199,7 @@ class FailoverManager:
             saved = self._persistence.load("failover")
             if saved:
                 logger.info("从持久化加载状态: failover")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("加载状态失败: %s", str(e))
 
     def _save_state(self):
@@ -209,5 +209,5 @@ class FailoverManager:
         try:
             self._persistence.save("failover", {"placeholder": True})
             logger.debug("保存状态: failover")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("保存状态失败: %s", str(e))

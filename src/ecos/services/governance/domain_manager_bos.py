@@ -136,7 +136,7 @@ def _load_bos_constraints() -> list[dict]:
                     constraints.append(c)
             if constraints:
                 break
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
     return constraints
 

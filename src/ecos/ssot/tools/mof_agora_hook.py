@@ -64,7 +64,7 @@ def _get_ssb_client():
             from ecos.l0.ssb.ssb_client import SSBClient
 
             _SSB_CLIENT = SSBClient(auto_init=False)
-        except Exception:
+        except Exception:  # noqa: BLE001  # import/init may fail in any way; sentinel prevents retry
             _SSB_CLIENT = False  # Sentinel: don't retry on every call
     return _SSB_CLIENT if _SSB_CLIENT is not False else None
 
@@ -92,7 +92,7 @@ def _load_routes() -> dict:
                         "layer": (data.get("properties", {}) or {}).get("layer", "?"),
                         "description": data.get("description", ""),
                     }
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
     # Load from Component nodes with BOS_URI protocol
@@ -110,7 +110,7 @@ def _load_routes() -> dict:
                         "layer": props.get("layer", "?"),
                         "description": data.get("description", ""),
                     }
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
     ROUTES_CACHE = routes
@@ -175,7 +175,7 @@ def post_audit(bos_uri: str, status_code: int, duration_ms: int = 0):
         AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
         with open(AUDIT_LOG, "a") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
     # 写入 SSB 签名链 (惰性初始化，失败不阻塞)
@@ -214,7 +214,7 @@ def post_audit(bos_uri: str, status_code: int, duration_ms: int = 0):
                 },
                 write_file=False,
             )
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass  # Best-effort SSB write; never block the audit path
 
     # 异常时自动创建 CARDS 债务卡片
@@ -239,7 +239,7 @@ def post_audit(bos_uri: str, status_code: int, duration_ms: int = 0):
             )
             conn.commit()
             conn.close()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
 

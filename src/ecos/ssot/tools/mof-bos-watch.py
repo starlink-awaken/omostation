@@ -38,7 +38,7 @@ def load_audit_log(hours: int = 24) -> list[dict]:
                 ts = datetime.fromisoformat(e.get("timestamp", ""))
                 if ts > cutoff:
                     entries.append(e)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return entries
 

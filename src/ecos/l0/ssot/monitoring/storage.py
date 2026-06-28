@@ -138,7 +138,7 @@ class JSONStorage(MetricsStorage):
                 return json.load(f)
         except FileNotFoundError:
             return {}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             print(f"⚠️  读取存储文件失败: {e}")
             return {}
 

@@ -115,7 +115,7 @@ class LoadBalancer:
                 return self._ip_hash(healthy_nodes)
 
             return None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("选择节点失败: %s", str(e))
             return None
 
@@ -197,7 +197,7 @@ class LoadBalancer:
             saved = self._persistence.load("load_balancer")
             if saved:
                 logger.info("从持久化加载状态: load_balancer")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("加载状态失败: %s", str(e))
 
     def _save_state(self):
@@ -207,5 +207,5 @@ class LoadBalancer:
         try:
             self._persistence.save("load_balancer", {"placeholder": True})
             logger.debug("保存状态: load_balancer")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("保存状态失败: %s", str(e))

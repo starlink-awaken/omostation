@@ -27,7 +27,7 @@ class ECOSConfig:
             if Path(self.config_path).exists():
                 with open(self.config_path, "r") as f:
                     self._config = json.load(f)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             self._config = {}
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -60,5 +60,5 @@ class ECOSConfig:
             with open(self.config_path, "w") as f:
                 json.dump(self._config, f, indent=2)
             return True
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return False

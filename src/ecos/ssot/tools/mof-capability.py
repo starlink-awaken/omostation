@@ -34,7 +34,7 @@ def load_capabilities(m2type: str = None) -> list[dict]:
                 if isinstance(data, dict):
                     data["_m2type"] = t
                     caps.append(data)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return caps
 

@@ -109,6 +109,6 @@ def get_audit_log(domain: str = None, since: str = None, limit: int = 50) -> lis
                 if domain and e.get("domain") != domain:
                     continue
                 entries.append(e)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return entries[-limit:]

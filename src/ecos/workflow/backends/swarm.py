@@ -171,7 +171,7 @@ def _execute_step_swarm(
                         "Agora MCP Gateway returned HTTP %d. Falling back to subprocess.",
                         resp.status_code,
                     )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.warning(
                 "Agora MCP RPC call failed or unavailable: %s. Falling back to subprocess.",
                 e,

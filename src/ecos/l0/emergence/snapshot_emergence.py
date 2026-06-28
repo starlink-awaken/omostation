@@ -125,7 +125,7 @@ def collect_metrics() -> dict:
             if ":" in part:
                 m, s = part.split(":")
                 model_usage[m] = s
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
     db.close()

@@ -64,7 +64,7 @@ def extract_lessons(lessons_dir: Path) -> list[dict]:
         try:
             with open(md, encoding="utf-8") as f:
                 content = f.read()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
 
         # Extract title from first heading
@@ -133,7 +133,7 @@ def extract_decisions(reviews_dir: Path) -> list[dict]:
         try:
             with open(md, encoding="utf-8") as f:
                 content = f.read()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
 
         title_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
@@ -259,7 +259,7 @@ def extract_ssot_writeback(workspace_root: Path):
         try:
             with open(task_file, "r", encoding="utf-8") as f:
                 task = yaml.safe_load(f)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
 
         if not isinstance(task, dict):
@@ -287,7 +287,7 @@ def extract_ssot_writeback(workspace_root: Path):
             with open(task_file, "w", encoding="utf-8") as f:
                 yaml.dump(task, f, allow_unicode=True, sort_keys=False)
             written_count += 1
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     if written_count > 0:

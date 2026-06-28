@@ -69,7 +69,7 @@ class OllamaBackend(LLMBackend):
             return f"Ollama 不可达: {e.reason}"
         except TimeoutError:
             return f"Ollama ({self.base_url}) 2 秒无响应"
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return f"Ollama 检测异常: {e}"
 
     @property
@@ -313,7 +313,7 @@ class LLMExtractor(Extractor):
         for backend in self.backends:
             try:
                 response = backend.complete(SYSTEM_PROMPT, user_prompt, temperature=0.1)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 errors.append(f"[{backend.name}] {e}")
                 continue
 
@@ -379,7 +379,7 @@ class LLMExtractor(Extractor):
                 response = backend.complete(
                     SYSTEM_PROMPT, context_prompt, temperature=0.1
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 print(f"    ❌ 块{i + 1} {backend.name} 调用失败: {e}", file=sys.stderr)
                 import traceback
 
@@ -490,7 +490,7 @@ class LLMExtractor(Extractor):
             import yaml
 
             data = yaml.safe_load(cleaned)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
         if not data or not isinstance(data, dict):
@@ -501,7 +501,7 @@ class LLMExtractor(Extractor):
                     import yaml
 
                     data = yaml.safe_load(fallback.group(1))
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     pass
 
         if not data or not isinstance(data, dict):
@@ -611,7 +611,7 @@ class LLMExtractor(Extractor):
                 print(
                     f"  🔌 [{len(backends)}] Ollama (模型: {chosen})", file=sys.stderr
                 )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
         # ── 2. 硅基流动（国内用户友好，价格便宜） ──────

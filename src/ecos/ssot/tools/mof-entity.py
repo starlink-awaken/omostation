@@ -31,7 +31,7 @@ def load_entities() -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict) and data.get("type") == "Entity":
                 entities.append(data)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     return entities
 

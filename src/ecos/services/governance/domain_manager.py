@@ -507,7 +507,7 @@ def cmd_cache_status(args):
                 l2_age = int(
                     (datetime.now() - datetime.fromisoformat(updated)).total_seconds()
                 )
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
     mtime = 0
@@ -516,7 +516,7 @@ def cmd_cache_status(args):
             m = p.stat().st_mtime if p.exists() else 0
             if m > mtime:
                 mtime = m
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     ssot_age = int(__import__("time").time() - mtime) if mtime else 0
 
@@ -552,7 +552,7 @@ def cmd_cache_clear(args):
     try:
         if BOS_CACHE_FILE.exists():
             BOS_CACHE_FILE.unlink()
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
     print("  ✅ 所有缓存已清空 (L1 + L2)")
 

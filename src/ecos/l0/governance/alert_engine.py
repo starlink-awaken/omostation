@@ -29,7 +29,7 @@ class LogHandler(AlertHandler):
             with open(self.log_path, "a") as f:
                 f.write(json.dumps(alert.to_dict()) + "\n")
             return True
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return False
 
 
@@ -50,7 +50,7 @@ class WebhookHandler(AlertHandler):
                 timeout=self.timeout,
             )
             return response.status_code == 200
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return False
 
 

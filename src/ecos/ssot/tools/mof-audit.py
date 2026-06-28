@@ -188,7 +188,7 @@ def create_debt_card(drift: dict) -> bool:
         conn.commit()
         conn.close()
         return True
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return False
 
 

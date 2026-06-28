@@ -58,7 +58,7 @@ def read_memory_resource(path: str) -> str:
 
         with open(target_path, "r", encoding="utf-8") as f:
             return f.read()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"Error reading resource: {str(e)}"
 
 
@@ -118,7 +118,7 @@ async def write_memory_resource(req: WriteMemoryRequest) -> str:
             f.write(req.content)
 
         return f"Successfully wrote to {req.uri}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"Error writing resource: {str(e)}"
 
 
@@ -140,7 +140,7 @@ def read_omo_resource(path: str) -> str:
 
         with open(target_path, "r", encoding="utf-8") as f:
             return f.read()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"Error reading OMO resource: {str(e)}"
 
 
@@ -174,5 +174,5 @@ async def append_ssb_log(req: SSBLogRequest) -> str:
         }
         event_id = ssb.publish(event)
         return f"Successfully anchored event {event_id} to L0 SSB Log."
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"Error appending to SSB log: {str(e)}"

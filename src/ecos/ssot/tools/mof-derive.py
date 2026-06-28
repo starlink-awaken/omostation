@@ -182,7 +182,7 @@ def load_standard_stages() -> list[dict]:
             }
             for s in STANDARD_STAGES.values()
         ]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"⚠️  M3 import 失败, 使用 fallback: {e}", file=sys.stderr)
         return fallback
 
@@ -233,7 +233,7 @@ def load_standard_gates() -> list[dict]:
             }
             for g in STANDARD_GATES
         ]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"⚠️  M3 import 失败, 使用 fallback: {e}", file=sys.stderr)
         return fallback
 
@@ -279,7 +279,7 @@ def load_pipeline_phases() -> list[dict]:
             }
             for p in PipelinePhase
         ]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"⚠️  Pipeline import 失败, 使用 fallback: {e}", file=sys.stderr)
         return fallback
 

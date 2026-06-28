@@ -452,7 +452,7 @@ class MonitoringArchitecture:
                     component, "get_health", lambda: {"status": "healthy"}
                 )()
                 health["components"][name] = component_health
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 health["components"][name] = {"status": "error", "error": str(e)}
 
         # 检查配置问题

@@ -46,7 +46,7 @@ def compute_signature(seq, event_id, agent, payload_str):
         from .ssb_auth import compute_signature as cs
 
         return cs(seq, event_id, agent, payload_str) or ""
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         # 降级
         import hashlib
         import hmac
@@ -200,7 +200,7 @@ def migrate(dry_run=False):
 
         conn.commit()
         print("\n✅ 迁移完成")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         conn.rollback()
         print(f"\n❌ 迁移失败: {e}")
         conn.close()
@@ -310,7 +310,7 @@ def rebuild_chain():
         CHAIN_CHECKPOINT.write_text(new_hash)
         print(f"  🔗 哈希链更新: {old_hash} → {new_hash[:16]} ({count} events)")
         return True
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"  ⚠️ 哈希链重建失败: {e}")
         return False
 

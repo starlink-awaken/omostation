@@ -243,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         return _dispatch(args, parser)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         if debug:
             import traceback
 

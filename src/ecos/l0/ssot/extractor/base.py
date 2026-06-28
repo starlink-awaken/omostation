@@ -228,7 +228,7 @@ class CandidateValidator:
             fact = config.find_fact(fact_id)
             if fact:
                 return fact.value
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
         return None
 

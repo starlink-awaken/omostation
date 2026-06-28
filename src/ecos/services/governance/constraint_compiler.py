@@ -217,7 +217,7 @@ def run_compiled(output_path: Path) -> dict:
     try:
         result = module.run()
         return result
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"error": f"执行失败: {e}"}
 
 
@@ -285,7 +285,7 @@ def watch_and_compile(output_path: Path, interval: int = 60):
                     print(format_report(result))
 
                 last_mtime = current_mtime
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             print(f"  ⚠️ 错误: {e}")
 
         time.sleep(interval)

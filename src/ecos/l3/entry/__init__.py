@@ -558,7 +558,7 @@ class GovernanceMCP:
             except ECOSException as e:
                 logger.error("工具调用失败: %s - %s", tool_name, str(e))
                 return {"error": str(e), "tool": tool_name}
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error("工具调用异常: %s - %s", tool_name, str(e))
                 return {"error": f"内部错误: {e}", "tool": tool_name}
         return {"error": f"未实现的工具: {tool_name}"}

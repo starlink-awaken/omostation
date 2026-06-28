@@ -253,7 +253,7 @@ class CommunicationProtocol:
             )
             self._log("send_failed", message_id=message.message_id, target=target)
             return False
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("消息发送异常: %s - %s", message.message_id, str(e))
             return False
 
@@ -500,7 +500,7 @@ class FailoverExecutor:
                         }
                     )
                 return success
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 return False
         return False
 

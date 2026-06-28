@@ -40,7 +40,7 @@ def _run_tool(tool_path: Path, args: list = None) -> dict:
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
     return {"error": "tool execution failed"}
 
@@ -139,7 +139,7 @@ def l0_adr_list() -> str:
                 status, "❓"
             )
             lines.append(f"  {icon} {name}")
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     return "\n".join(lines)
 

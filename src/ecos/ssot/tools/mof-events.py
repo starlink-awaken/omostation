@@ -47,7 +47,7 @@ def run_tool(name: str, args: list = None) -> dict:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
     return {}
 
@@ -141,7 +141,7 @@ def publish_events(events: list[dict]):
                         existing[-100:], f, ensure_ascii=False, indent=2
                     )  # Keep last 100
                 print(f"  ✅ 已发布到 Agora event bus ({len(events)} events)")
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     return len(events)

@@ -104,7 +104,7 @@ class TaskScheduler:
                     self.tasks[task_id] = task
                 self.task_queue = saved.get("queue", [])
                 logger.info("从持久化加载任务: %d 个", len(self.tasks))
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("加载状态失败: %s", str(e))
 
     def _save_state(self):
@@ -117,7 +117,7 @@ class TaskScheduler:
                 }
                 self._persistence.save("task_scheduler", state)
                 logger.debug("保存任务状态: %d 个", len(self.tasks))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error("保存状态失败: %s", str(e))
 
     def submit_task(
@@ -147,7 +147,7 @@ class TaskScheduler:
             logger.info("提交任务: %s, name=%s, priority=%d", task_id, name, priority)
             self._save_state()
             return task
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("提交任务失败: %s - %s", task_id, str(e))
             raise
 

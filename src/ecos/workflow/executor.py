@@ -166,7 +166,7 @@ def execute_m1_workflow(
                 results["passed"] += 1
             else:
                 results["failed"] += 1
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         logger.error("Workflow execution failed: %s", e)
         results["failed"] += 1
         results["steps"].append(
@@ -327,7 +327,7 @@ def _execute_command(step: dict) -> dict:
         return {"passed": False, "summary": f"命令超时 ({timeout}s)"}
     except FileNotFoundError:
         return {"passed": False, "summary": f"命令未找到: {cmd[0] if cmd else ''}"}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         logger.error("Custom command failed: %s", e)
         return {"passed": False, "summary": str(e)}
 
@@ -413,7 +413,7 @@ def test_workflow(name: str) -> dict:
         backend_fn = resolve_backend(m1_node)
         assert callable(backend_fn), "后端不可调用"
         print(f"  ✅  backend 解析: {backend_name}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"  ❌  backend 解析失败 ({backend_name}): {e}")
         results["failed"] += 1
         results["finished"] = datetime.now().isoformat()

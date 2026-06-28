@@ -241,12 +241,12 @@ def domain_search(query: str, max_results: int = 10) -> str:
                     if line and len(results) < max_results:
                         try:
                             rel = str(Path(line).relative_to(p))
-                        except Exception:
+                        except Exception:  # noqa: BLE001  # defensive fallback
                             rel = line
                         results.append(
                             {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
                         )
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return json.dumps({"results": results, "total": len(results)}, ensure_ascii=False)
 
@@ -297,7 +297,7 @@ def ecos_health() -> str:
     )
     try:
         return json.dumps(json.loads(r.stdout), ensure_ascii=False)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return r.stdout[:500]
 
 
@@ -312,7 +312,7 @@ def ecos_brief() -> str:
     )
     try:
         return json.dumps(json.loads(r.stdout), ensure_ascii=False)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return r.stdout[:500]
 
 
@@ -343,7 +343,7 @@ def workflow_list(domain: str = "", layer: str = "", status: str = "") -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e), "workflows": [], "total": 0})
 
 
@@ -357,7 +357,7 @@ def workflow_show(name: str) -> str:
         if not wf:
             return json.dumps({"error": f"工作流未找到: {name}"}, ensure_ascii=False)
         return json.dumps(wf, ensure_ascii=False)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -381,7 +381,7 @@ def workflow_run(name: str, dry_run: bool = False) -> str:
             except (TypeError, ValueError):
                 safe[k] = str(v)
         return json.dumps(safe, ensure_ascii=False)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e), "workflow": name}, ensure_ascii=False)
 
 
@@ -408,7 +408,7 @@ def workflow_validate(name: str) -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -419,7 +419,7 @@ def workflow_backends() -> str:
         from ecos.workflow import list_backends
 
         return json.dumps({"backends": list_backends()}, ensure_ascii=False)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -430,7 +430,7 @@ def workflow_actions() -> str:
         from ecos.workflow.actions import list_actions
 
         return json.dumps({"actions": list_actions()}, ensure_ascii=False)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -466,7 +466,7 @@ def workflow_logs(recent: int = 10, status: str = "") -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -485,7 +485,7 @@ def workflow_test(name: str) -> str:
             except (TypeError, ValueError):
                 safe[k] = str(v)
         return json.dumps(safe, ensure_ascii=False)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -496,7 +496,7 @@ def workflow_cache_status() -> str:
         from ecos.workflow.cache import status
 
         return json.dumps(status(), ensure_ascii=False)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -530,7 +530,7 @@ def workflow_cache_invalidate(workflow_name: str = "") -> str:
                 },
                 ensure_ascii=False,
             )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -541,7 +541,7 @@ def workflow_circuit_breaker_status() -> str:
         from ecos.workflow.circuit_breaker import status
 
         return json.dumps(status(), ensure_ascii=False)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -563,7 +563,7 @@ def workflow_circuit_breaker_reset(backend: str = "") -> str:
             return json.dumps(
                 {"reset": True, "all": True, "entries_reset": count}, ensure_ascii=False
             )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 

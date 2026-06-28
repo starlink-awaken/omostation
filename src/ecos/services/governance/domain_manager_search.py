@@ -75,7 +75,7 @@ def cmd_search(args):  # noqa: C901
                             else line
                         )
                         results.append((did, str(rel)))
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
     if results:

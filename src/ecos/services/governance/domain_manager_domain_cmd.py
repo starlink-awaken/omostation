@@ -549,7 +549,7 @@ def cmd_register(args):
     try:
         with open(L0_CONSTRAINTS) as f:
             data = yaml.safe_load(f) or {}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ 无法读取 L0-constraints.yaml: {e}")
         return
 

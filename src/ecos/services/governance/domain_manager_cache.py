@@ -102,7 +102,7 @@ def _l2_get(key: str) -> any:
             entry = data.get(key)
             if entry and (__import__("time").time() - entry.get("ts", 0)) < L2_TTL:
                 return entry["data"]
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
     return None
 
@@ -123,7 +123,7 @@ def _l2_set(key: str, data: any) -> None:
         tmp = BOS_CACHE_FILE.with_suffix(".json.tmp")
         tmp.write_text(json.dumps(cache_data, indent=2, ensure_ascii=False))
         tmp.replace(BOS_CACHE_FILE)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
 
@@ -161,7 +161,7 @@ def _cache_warm() -> dict:
                         _L1_CACHE[key] = {"data": entry["data"], "ts": entry["ts"]}
                         stats["warmed"] += 1
                     stats["l2_items"] += 1
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
     stats["l1_after"] = len(_L1_CACHE)
     return stats

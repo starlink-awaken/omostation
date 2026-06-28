@@ -262,7 +262,7 @@ def handle_ecos_health(args):
     )
     try:
         return json.loads(r.stdout)
-    except Exception:
+    except (json.JSONDecodeError, TypeError):
         return {"output": r.stdout[:500]}
 
 
@@ -275,7 +275,7 @@ def handle_ecos_brief(args):
     )
     try:
         return json.loads(r.stdout)
-    except Exception:
+    except (json.JSONDecodeError, TypeError):
         return {"output": r.stdout[:500]}
 
 
@@ -303,7 +303,7 @@ def _load_workflow_nodes():
                 node = yaml.safe_load(open(f))
                 if node and node.get("type") == "Workflow":
                     nodes.append(node)
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return nodes
 
@@ -357,7 +357,7 @@ def handle_workflow_relations(args):
     if WF_CATALOG.exists():
         try:
             catalog = yaml.safe_load(open(WF_CATALOG))
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     global_rels = catalog.get("global_relations", {})
     if name:
@@ -468,12 +468,12 @@ def handle_search(args):
                     if line and len(results) < max_r:
                         try:
                             rel = str(Path(line).relative_to(p))
-                        except Exception:
+                        except ValueError:
                             rel = line
                         results.append(
                             {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
                         )
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return {"results": results, "total": len(results)}
 
@@ -499,7 +499,7 @@ def main():
     for line in sys.stdin:
         try:
             req = json.loads(line)
-        except Exception:
+        except (json.JSONDecodeError, TypeError):
             continue
         method = req.get("method", "")
         rid = req.get("id")
@@ -569,12 +569,12 @@ def handle_search(args):
                     if line and len(results) < max_r:
                         try:
                             rel = str(Path(line).relative_to(p))
-                        except Exception:
+                        except ValueError:
                             rel = line
                         results.append(
                             {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
                         )
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
     return {"results": results, "total": len(results)}
 
@@ -600,7 +600,7 @@ def main():
     for line in sys.stdin:
         try:
             req = json.loads(line)
-        except Exception:
+        except (json.JSONDecodeError, TypeError):
             continue
         method = req.get("method", "")
         rid = req.get("id")

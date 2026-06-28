@@ -47,7 +47,7 @@ def _load_forge_env() -> None:
                         key, val = parts[0], parts[1]
                         if key not in os.environ:
                             os.environ[key] = val
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
 
@@ -101,7 +101,7 @@ def check_url(url):
         with urllib.request.urlopen(req, timeout=5) as resp:  # noqa: S310
             body = resp.read().decode()
             return resp.status == 200, body[:200]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return False, str(e)
 
 
@@ -115,7 +115,7 @@ def check_port(port):
         s.connect(("127.0.0.1", port))
         s.close()
         return True, ""
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return False, str(e)
 
 
@@ -129,7 +129,7 @@ def check_proc(proc_match):
             timeout=5,
         )
         return result.returncode == 0, result.stdout.strip()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return False, str(e)
 
 
@@ -145,7 +145,7 @@ def restart_daemon(name, cmd):
         )
         print(f"🔧 WATCHDOG: {name} 重启信号已发送")
         return True
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ WATCHDOG: {name} 重启失败: {e}")
         return False
 

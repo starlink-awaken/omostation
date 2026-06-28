@@ -263,7 +263,7 @@ def _poll_jsonl(
                         )
                         if not dry_run:
                             execute_matched(event)
-                except (json.JSONDecodeError, Exception) as e:
+                except (json.JSONDecodeError, Exception) as e:  # noqa: BLE001  # defensive fallback
                     logger.warning("Failed to process event: %s", e)
 
         last_position = current_size

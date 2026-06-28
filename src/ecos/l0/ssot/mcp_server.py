@@ -376,7 +376,7 @@ def handle_message(msg: dict) -> dict | None:
                 "id": msg_id,
                 "result": {"content": content, "meta": result},
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {
                 "jsonrpc": "2.0",
                 "id": msg_id,

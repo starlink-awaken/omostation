@@ -218,7 +218,7 @@ class CRDTSync(DistributedPrimitive):
                     conflicts=conflicts,
                     strategy=SyncStrategy.CRDT,
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error("同步失败: %s", str(e))
                 raise SyncException(f"同步失败: {e}")
 
@@ -506,7 +506,7 @@ class StateSyncService:
                     conflicts=conflicts,
                     strategy=self.strategy,
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error("同步失败: %s", str(e))
                 raise SyncException(f"同步失败: {e}")
 
@@ -573,7 +573,7 @@ class StateSyncService:
                     conflicts=conflicts,
                     strategy=self.strategy,
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error("批量合并失败: %s", str(e))
                 raise SyncException(f"批量合并失败: {e}")
 
@@ -679,7 +679,7 @@ class CommunicationProtocol:
                 )
                 return True
 
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 retry_count += 1
                 self._log_retry(message.message_id, retry_count, "exception")
 

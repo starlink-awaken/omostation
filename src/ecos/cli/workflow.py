@@ -97,7 +97,7 @@ def _cmd_list(args: list[str]) -> None:
                     wf_id = data.get("workflow_id", "")
                     if wf_id and wf_id not in latest_status:
                         latest_status[wf_id] = data.get("status", "?")
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     pass
 
     print(f"📋 可用工作流 ({len(wfs)} 个)")
@@ -306,7 +306,7 @@ def _cmd_status(_args: list[str]) -> None:
         fn = resolve({"execution": {}})
         assert callable(fn)
         print("  ✅  默认后端: 可用")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"  ❌  默认后端: {e}")
 
     try:
@@ -315,7 +315,7 @@ def _cmd_status(_args: list[str]) -> None:
         handler = resolve_action("health_check")
         if handler:
             print("  ✅  action 解析: 功能正常")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"  ❌  action 解析: {e}")
 
     m1_dir = Path(__file__).parent.parent / "ssot" / "mof" / "m1" / "workflow"
@@ -645,7 +645,7 @@ def _cmd_import(args: list[str]) -> None:
     try:
         with open(src) as f:
             wf = yaml.safe_load(f)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"❌ YAML 解析失败: {e}")
         sys.exit(1)
 

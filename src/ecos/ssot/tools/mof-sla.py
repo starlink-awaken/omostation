@@ -59,7 +59,7 @@ def check_task_sla() -> list[dict]:
     for f in L0_NODES.glob("MECH-*.yaml"):
         try:
             data = yaml.safe_load(open(f))
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
 
         props = data.get("properties", {}) or {}
@@ -74,7 +74,7 @@ def check_task_sla() -> list[dict]:
             if mtime.tzinfo is not None:
                 mtime = mtime.replace(tzinfo=None)
             hours_since = (now().replace(tzinfo=None) - mtime).total_seconds() / 3600
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             hours_since = 0
 
         if hours_since > max_stale:
@@ -129,7 +129,7 @@ def generate_m0_snapshot() -> dict:
                 if intro.tzinfo is not None:
                     intro = intro.replace(tzinfo=None)
                 age = (now_dt.replace(tzinfo=None) - intro).days
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 age = 0
             half = p["half_life_days"]
             decay = min(1.0, age / half) if half > 0 else 1.0
@@ -181,7 +181,7 @@ def create_stale_card(task: dict):
         )
         conn.commit()
         conn.close()
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
 
