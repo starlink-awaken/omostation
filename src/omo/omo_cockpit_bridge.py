@@ -85,7 +85,7 @@ def approve_hitl_proposal(
             return False, f"No execution logic for type {proposal.get('type')}"
         processing_path.unlink()
         return True, None
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         if processing_path.exists():
             processing_path.rename(proposal_path)
         return False, str(exc)
@@ -128,7 +128,7 @@ async def approve_hitl_proposal_async(
 
         processing_path.unlink()
         return True, None
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         if processing_path.exists():
             processing_path.rename(proposal_path)
         return False, str(exc)
@@ -184,5 +184,5 @@ def update_provider_plane_settings(
 
         write_yaml_atomic(plane_path, data)
         return True
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return False

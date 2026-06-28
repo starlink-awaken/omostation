@@ -59,7 +59,7 @@ def _load_approval_queue_index(workspace_root: Path) -> dict[str, dict[str, Any]
         return {}
     try:
         payload = load_yaml(queue_path)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return {}
     tasks = payload.get("tasks")
     if not isinstance(tasks, list):
@@ -156,7 +156,7 @@ def build_approval_board(workspace_root: Path) -> dict[str, Any]:
                 if isinstance(payload, dict)
                 else None
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             latest_week_from_loop = None
 
     latest_week_task = next(

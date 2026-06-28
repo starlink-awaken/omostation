@@ -601,7 +601,7 @@ def cmd_daemon(args=None):
         cmd_dashboard(args)
         dashboard_output = _sys.stdout.getvalue()
         _sys.stdout = old_stdout
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         dashboard_output = "# DASHBOARD\n\n(update failed)\n"
 
     if dashboard_path.exists():

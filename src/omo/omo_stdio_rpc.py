@@ -81,7 +81,7 @@ def run_stdio_dispatch(
                         "result": result,
                     }
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 resp = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
             sys.stdout.write(json.dumps(resp, ensure_ascii=False, default=str) + "\n")
             sys.stdout.flush()

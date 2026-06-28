@@ -51,7 +51,7 @@ def wire_pipeline_tracker(
     def on_event(event: dict[str, Any]) -> None:
         try:
             log.append(event)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass  # 落盘失败不影响主流程 (AppendOnlyLog 自身已 fsync)
 
     # 直接挂到 _on_event (避免改 tracker API 假设)
@@ -76,7 +76,7 @@ def make_pipeline_tracker_with_log(
     def on_event(event: dict[str, Any]) -> None:
         try:
             log.append(event)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     return PipelineTracker(

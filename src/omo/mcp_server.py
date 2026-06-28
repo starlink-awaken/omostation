@@ -91,7 +91,7 @@ async def validate_task(req: ValidateTaskRequest) -> str:
         return json.dumps(
             {"valid": len(errors) == 0, "errors": errors}, ensure_ascii=False
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"valid": False, "errors": [str(e)]}, ensure_ascii=False)
 
 
@@ -244,7 +244,7 @@ async def omo_debt_list(req: DebtListRequest) -> str:
         return json.dumps(
             {"count": len(items), "items": items}, indent=2, ensure_ascii=False
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -622,7 +622,7 @@ def read_omo_standard(rule: str) -> str:
 
         with open(target_path, "r", encoding="utf-8") as f:
             return f.read()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return f"Error reading standard: {str(e)}"
 
 

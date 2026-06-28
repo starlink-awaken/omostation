@@ -173,7 +173,7 @@ def baseline_command(args: argparse.Namespace) -> int:
             t = i.x3_tier or "Unknown"
             tiers[t] = tiers.get(t, 0) + 1
         report["debt_lens"]["x3_tier_breakdown"] = tiers
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         report["debt_lens"] = {"error": str(e)}
 
     output = Path(args.output)

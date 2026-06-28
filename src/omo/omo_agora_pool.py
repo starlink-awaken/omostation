@@ -260,7 +260,7 @@ class _AgoraPoolManager:
                 p = self._idle.popleft()
                 try:
                     await p.close()
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     pass
             self._active = 0
 
@@ -307,7 +307,7 @@ async def _get_agora_pool() -> _AgoraPoolManager | None:
             await manager.start_heartbeat()
             _MANAGER = manager
             return _MANAGER
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return None
 
 
@@ -345,7 +345,7 @@ async def _resolve_via_agora_subprocess(
                 if isinstance(result, dict):
                     result.setdefault("_transport", "agora_pool")
                 return result
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001  # defensive fallback
                 await manager.release(pool, alive=False)
                 record_agora_failure(
                     uri, "invoke_exception", f"{type(exc).__name__}: {exc}"
@@ -373,7 +373,7 @@ async def _resolve_via_oneoff_subprocess(
         from omo.omo_paths import PROJECTS_DIR
 
         _AGORA_PROJECT = PROJECTS_DIR / "agora"
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return None
 
     if not (_AGORA_PROJECT / "pyproject.toml").exists():

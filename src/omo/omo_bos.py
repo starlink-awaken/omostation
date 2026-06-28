@@ -310,7 +310,7 @@ def save_to_kos(
     try:
         from kos.ontology._types import Entity, EntityType  # type: ignore[import-not-found]
         from kos.ontology.store import _get_conn, put_entity  # type: ignore[import-not-found]
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover
         return {"error": f"kos_import_failed: {exc}"}
 
     # 自愈: 给老 KOS DB 加缺失列 (KOS store.py 已有 zone 自愈, 我们补 source/status 等)
@@ -331,7 +331,7 @@ def save_to_kos(
                 pass  # 列已存在
         conn.commit()
         conn.close()
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass  # 自愈失败不阻塞
 
     uri = registration.get("uri", "")
@@ -366,7 +366,7 @@ def save_to_kos(
             "backend": "kos",
             "zone": zone,
         }
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover
         return {"error": f"kos_save_exception: {exc}"[:200]}
 
 
@@ -560,7 +560,7 @@ def verify_endpoint(endpoint: str) -> dict[str, Any]:
             "module_found": False,
             "error": f"import_error: {exc}"[:160],
         }
-    except Exception as exc:  # pragma: no cover - 其他异常
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover - 其他异常
         return {
             "endpoint": endpoint,
             "module_found": False,
@@ -612,7 +612,7 @@ def verify_all_endpoints(
         except (ImportError, ModuleNotFoundError, ValueError) as exc:
             module_found[ep] = (False, f"import_error: {exc}"[:160])
             continue
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:  # pragma: no cover  # noqa: BLE001
             module_found[ep] = (False, f"unexpected: {type(exc).__name__}: {exc}"[:160])
             continue
         module_found[ep] = (spec is not None, None if spec else "module_not_found")

@@ -257,7 +257,7 @@ def call_radar(workspace_root: Path) -> dict[str, Any]:
         else:
             os.environ["OPC_TRIGGER"] = prior
         return payload
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         result = subprocess.run(
             [
                 sys.executable,

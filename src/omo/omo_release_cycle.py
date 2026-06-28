@@ -192,7 +192,7 @@ def gather_debt(workspace_root: Path) -> dict[str, Any]:
             items.append(
                 {"file": debt_file.name, "status": payload.get("status", "unknown")}
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             items.append({"file": debt_file.name, "status": "parse-fail"})
     total = len(items)
     open_count = sum(1 for item in items if item["status"] == "open")

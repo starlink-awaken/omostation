@@ -107,7 +107,7 @@ def load_debt_items_from_ledger(omo_dir: Optional[Path] = None) -> dict[str, dic
             }
             for item in ledger.items
         }
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return {}
 
 

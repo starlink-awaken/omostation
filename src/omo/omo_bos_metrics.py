@@ -102,7 +102,7 @@ def sync_from_agora_metrics(
             (last_id,),
         ).fetchall()
         conn.close()
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return 0
 
     if not rows:
@@ -124,7 +124,7 @@ def sync_from_agora_metrics(
         try:
             log.append(rec.model_dump(), schema=OmoBosMetricsRecord, sort_keys=True)
             appended += 1
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
 
     if appended:

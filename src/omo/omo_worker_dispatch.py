@@ -304,7 +304,7 @@ def dispatch_task(
                 proxy_handler = urllib.request.ProxyHandler({})
                 opener = urllib.request.build_opener(proxy_handler)
                 opener.open(req, timeout=3.0)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 print(f"⚠️ Failed to broadcast log via Tri-Plane Bus: {e}")
 
         push_log_to_agora(dispatch_id, log_content)
@@ -568,7 +568,7 @@ def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
                 actor="projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction",
                 source_ref=f"omo:worker-dispatch:fast-track-compaction:{task_file.stem}",
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             print(f"Failed to compact {task_file}: {e}")
 
     if len(report_lines) > 4:

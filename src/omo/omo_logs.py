@@ -65,7 +65,7 @@ def cmd_logs_list() -> int:
         try:
             records = log.read_all()
             count = len(records)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             count = -1
         size = p.stat().st_size
         mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc).strftime(

@@ -176,7 +176,7 @@ def list_bos_uris_tool(domain: str | None = None) -> dict[str, Any]:
     """列出已注册 URI (走本地 bos-registry.json via load_registry)."""
     try:
         regs = load_registry()
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {"error": f"registry_load_failed: {exc}", "count": 0, "uris": []}
 
     if domain:

@@ -41,7 +41,7 @@ def cmd_event_list(limit: int) -> int:
             print(f"\nTotal: {len(events)} events")
         else:
             print(f"EventBus 返回了: {events}")
-    except Exception as ex:
+    except Exception as ex:  # noqa: BLE001  # defensive fallback
         print(f"⚠️  EventBus 不可用 ({ex})")
     return 0
 

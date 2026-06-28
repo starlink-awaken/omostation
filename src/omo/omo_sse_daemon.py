@@ -50,7 +50,7 @@ def _send_notification(title: str, message: str) -> None:
             capture_output=True,
             timeout=3,
         )
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
 
 
@@ -161,7 +161,7 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                 if not stop_event.is_set():
                     logger.error(f"SSE connection error: {e}. Retrying in 5s...")
                     await asyncio.sleep(5)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 if not stop_event.is_set():
                     logger.exception(
                         f"Unexpected error in SSE loop: {e}. Retrying in 5s..."

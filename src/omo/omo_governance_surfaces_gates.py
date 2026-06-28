@@ -100,7 +100,7 @@ def _read_c2g_governance_refs(workspace_root: Path) -> tuple[list[str], list[str
         metadata = task.get("metadata", {})
         if metadata.get("ingress_plane") != "projects/c2g":
             issues.append("c2g task builder ingress_plane metadata mismatch")
-    except Exception as exc:  # pragma: no cover - defensive
+    except Exception as exc:  # pragma: no cover - defensive  # noqa: BLE001
         issues.append(f"failed to load c2g governance refs: {exc}")
     finally:
         if sys.path and sys.path[0] == str(c2g_src):

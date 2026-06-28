@@ -27,7 +27,7 @@ def main():
                         "input": m.get("input_cost", 0.0),
                         "output": m.get("output_cost", 0.0),
                     }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.debug("Failed to fetch from models: %s", e)
 
         # 2. Fetch from codexbar
@@ -41,7 +41,7 @@ def main():
             )
             if codexbar_res.returncode == 0:
                 quota = json.loads(codexbar_res.stdout)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.debug("Failed to fetch from codexbar: %s", e)
 
         # Write to cache atomically
@@ -51,7 +51,7 @@ def main():
         tmp.write_text(json.dumps(data, indent=2))
         tmp.replace(CACHE_FILE)
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         _log.debug("Failed to update quota cache: %s", e)
 
 

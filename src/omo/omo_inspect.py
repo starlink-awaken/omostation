@@ -34,7 +34,7 @@ def inspect_omo_daemon() -> dict:
                         "exit_code": exit_code,
                     }
         return {"status": "not_found"}
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {"status": "error", "error": str(exc)}
 
 

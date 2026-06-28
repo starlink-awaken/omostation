@@ -51,7 +51,7 @@ def record_agora_failure(uri: str, failure_type: str, details: str) -> None:
             actor="omo-bridge",
             details=f"uri={uri} failure={failure_type} {details}",
         )
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         # audit 自身失败不阻塞业务流
         pass
 

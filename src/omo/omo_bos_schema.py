@@ -157,7 +157,7 @@ if __name__ == "__main__":
             package="kos",
             action="search",
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"[OK] bad domain caught: {type(e).__name__}")
 
     # Case 3: uri 内的 domain 与 field domain 不一致应该抛
@@ -168,7 +168,7 @@ if __name__ == "__main__":
             package="kos",
             action="search",
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"[OK] domain mismatch caught: {type(e).__name__}")
 
     # Case 4: legacy 3-段 URI 应该被自动升级

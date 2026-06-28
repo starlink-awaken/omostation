@@ -22,7 +22,7 @@ _OMO_DASHBOARD_API_KEY = os.environ.get("OMO_DASHBOARD_API_KEY", "")
 def _load_json(path: Path) -> dict:
     try:
         return load_yaml(path)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return {}
 
 
@@ -38,7 +38,7 @@ def _generate_html() -> str:
             / "kei_audit.jsonl"
         )
         kei_lines = len(kei.read_text().strip().split("\n")) if kei.exists() else 0
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         kei_lines = 0
 
     phase = system.get("current_phase", "?")
@@ -165,7 +165,7 @@ def cmd_dashboard_serve(port: int) -> int:
                         {"valid": len(errors) == 0, "errors": errors},
                         ensure_ascii=False,
                     )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     result = json.dumps(
                         {"valid": False, "errors": [str(e)]}, ensure_ascii=False
                     )

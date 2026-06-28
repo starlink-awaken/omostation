@@ -108,7 +108,7 @@ def record_compute_node_state(node_id: str, **fields: dict) -> dict:
             if data.get("node_id") == node_id or f.stem == node_id:
                 target_file = f
                 break
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     if target_file is None:
@@ -270,7 +270,7 @@ def _load_yaml_safely(path: Path) -> dict | None:
         return load_yaml_docs(text)
     except ImportError:
         pass
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return None
     return _mini_yaml_parse(text)
 
@@ -615,7 +615,7 @@ def governance_check_doc_lifecycle() -> CheckResult:
             need_fm_total += 1
             try:
                 content = f.read_text(encoding="utf-8", errors="ignore")
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 continue
             fm = _parse_frontmatter(content)
             if fm and fm.get("status") in {
@@ -634,7 +634,7 @@ def governance_check_doc_lifecycle() -> CheckResult:
                     try:
                         content = f.read_text(encoding="utf-8", errors="ignore")
                         fm = _parse_frontmatter(content)
-                    except Exception:
+                    except Exception:  # noqa: BLE001  # defensive fallback
                         fm = None
                     if fm and fm.get("status") in {"deprecated", "archived"}:
                         pass  # 已标注, OK
@@ -644,7 +644,7 @@ def governance_check_doc_lifecycle() -> CheckResult:
         if f.suffix in {".py", ".sh"}:
             try:
                 content = f.read_text(encoding="utf-8", errors="ignore")
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 continue
             if ".omo/_archive/" in content or ".omo/_knowledge/management/" in content:
                 contradictory_refs += 1
@@ -774,7 +774,7 @@ def governance_check_agora_health() -> CheckResult:
             message=f"{healthy_n}/{len(results)} services healthy",
             details=unhealthy,
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return CheckResult(
             name="agora health",
             category="agora",
@@ -945,7 +945,7 @@ def governance_main(argv: list[str] | None = None) -> int:
                 }
             )
             print(f"[AUDIT] 治理历史已 append: {target}")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             print(f"[AUDIT] 治理历史写入失败(不影响主流程): {exc}", file=sys.stderr)
     return 0
 

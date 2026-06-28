@@ -53,7 +53,7 @@ class EvolutionLoop:
                     self._dispatch_remediation(debt_data)
                     triggered += 1
                     self._processed_debts.add(debt_file.name)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 _log.error("Failed to process debt %s: %s", debt_file.name, e)
 
         return triggered
@@ -116,7 +116,7 @@ class EvolutionLoop:
             print(
                 f"📦  Evolution Loop: Generated MutationProposal {proposal_id} (Awaiting Cockpit Approval)"
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.error("[EvolutionLoop] Failed to save proposal: %s", e)
 
 
