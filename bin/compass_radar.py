@@ -98,8 +98,8 @@ def render_yaml(report: dict) -> str:
     lines: list[str] = []
     lines.append("# governance health — 治理健康分 SSOT")
     lines.append(f"# generated_at: {report['generated_at']}")
-    lines.append(f"# source: c2g.strategy (real audit, no mock)")
-    lines.append(f"# range: 0-100, higher = healthier")
+    lines.append("# source: c2g.strategy (real audit, no mock)")
+    lines.append("# range: 0-100, higher = healthier")
     lines.append("")
     lines.append("generated_at: " + _yaml_str(report["generated_at"]))
     lines.append("source: " + _yaml_str(report["source"]))

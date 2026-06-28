@@ -165,7 +165,7 @@ timeline
 | 文档 | 路径 | 用途 |
 |:--|:--|:--|
 | 历史收敛提案 | `.omo/standards/ARCHITECTURE_CONVERGENCE.md` | agent-runtime / agentmesh / agora 三足鼎立分析 |
-| 当前全景 | `docs/PANORAMA.md` | eCOS v5/v6 系统全景 |
+| 当前全景 | `docs/PANORAMA.md` | eCOS v6/v6 系统全景 |
 | 分层索引 | `LAYER-INDEX.md` | 项目与域映射 |
 | I0 调用链 | `docs/I0-AGORA-CALLCHAIN.md` | agora BOS URI 9 步路由链 |
 | 架构图 | `docs/ARCHITECTURE-DIAGRAM.md` | Mermaid 可视化 |

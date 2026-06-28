@@ -122,7 +122,7 @@ def aggregate(alerts: list[dict], storm_threshold: int = 3, total_threshold: int
         elif storm_warnings or total > total_threshold:
             level = "P2"
             if storm_warnings:
-                level_reason = f"storm detected"
+                level_reason = "storm detected"
             else:
                 level_reason = f"total({total}) > {total_threshold}"
         else:
@@ -206,8 +206,6 @@ def emit_notification(root: Path, agg: dict, window_hours: int,
     - 同级别在 suppression_minutes 内已通知 → 抑制
     - 返回: 0=未触发, 1=触发, 2=抑制
     """
-    import json as _json
-    from subprocess import run as _run
     level = agg.get("level", "P3")
     if level == "P3":
         return 0

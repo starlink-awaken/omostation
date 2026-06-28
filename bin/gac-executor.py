@@ -137,7 +137,7 @@ def run_check(as_json: bool = False) -> int:
         print(f"\n❌ missing executor ({len(missing_executors)}): {missing_executors}")
         print(f"   受影响规则: {report['rules_with_missing_executor']}")
     else:
-        print(f"\n✅ 全 executor 实际存在 (声明 vs 实际 0 drift)")
+        print("\n✅ 全 executor 实际存在 (声明 vs 实际 0 drift)")
 
     print(f"\n═══ 总体: {'✅ executor drift 闭环' if report['ok'] else '❌ 有 missing executor'} ═══")
     return 0 if report["ok"] else 1

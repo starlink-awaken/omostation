@@ -264,7 +264,7 @@ script / wrapper / cron
 | 系统 | 范围 | Phase | 读源 |
 |------|------|:-----:|------|
 | Documents Phase | L4 自我层·个人知识管理 | 0→8.3 | `@驾驶舱/_control/DASHBOARD.md` |
-| Workspace Phase | eCOS v5 工程 | 1→33+ | `.omo/state/system.yaml` |
+| Workspace Phase | eCOS v6 工程 | 1→33+ | `.omo/state/system.yaml` |
 
 ---
 

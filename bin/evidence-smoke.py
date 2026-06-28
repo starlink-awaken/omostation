@@ -633,7 +633,7 @@ def main() -> int:
                 return 1
         print(
             f"✅ GATE PASS: score {score} >= {args.gate}, real_gap 0"
-            + (f", deprecated 0" if args.require_deprecated_zero else ""),
+            + (", deprecated 0" if args.require_deprecated_zero else ""),
             file=sys.stderr,
         )
     return 0

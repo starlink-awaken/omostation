@@ -120,7 +120,7 @@ def main() -> int:
         print("=" * 60)
         print("📊 P75 graphify 本地扫描 (management 144 files)")
         print("=" * 60)
-        print(f"📁 扫描目录: .omo/_knowledge/management/")
+        print("📁 扫描目录: .omo/_knowledge/management/")
         print(f"📈 旧 graph.json (P29): {old_files} files")
         print(f"🔑 OPENAI_API_KEY: {api_key[:8]}...")
         print()

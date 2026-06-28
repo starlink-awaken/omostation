@@ -309,7 +309,7 @@ def _check_bos_unimplemented() -> dict:
                 if s.get("transport") in ("stdio", "mcp_stdio"):
                     broken.append({
                         "uri": uri,
-                        "reason": f"Entry file do_default.py or __main__.py not found for stdio transport",
+                        "reason": "Entry file do_default.py or __main__.py not found for stdio transport",
                     })
 
     return {

@@ -102,7 +102,6 @@ def compute_weights(snaps):
         return DEFAULT_WEIGHTS, "样本不足, 使用默认权重"
 
     # 计算各维度 stdev 和与总分相关性
-    import statistics
 
     weights = {}
     analysis = {}

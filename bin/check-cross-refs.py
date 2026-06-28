@@ -49,7 +49,7 @@ def resolve_link(source: Path, link: str, root: Path) -> Path | None:
         return None
 
     # 跳过根仓外的绝对路径
-    if link.startswith("/") and not str(root) in link:
+    if link.startswith("/") and str(root) not in link:
         return None
 
     # 跳过 ~/Documents/ 引用 (外部)

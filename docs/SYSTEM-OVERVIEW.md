@@ -1,4 +1,4 @@
-# eCOS v5 系统全景
+# eCOS v6 系统全景
 
 > 架构 · 应用场景 · 能力地图 · 核心链路 · 子项目详情
 
@@ -10,7 +10,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            eCOS v5 系统架构                                      │
+│                            eCOS v6 系统架构                                      │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
@@ -357,7 +357,7 @@
 - 健康追踪: 健康数据追踪
 - 财务管理: 家庭财务记录
 
-#### hermes-console
+#### cockpit-ui
 
 | 指标 | 值 |
 |------|-----|
@@ -656,8 +656,8 @@ Agent → agora MCP (resolve_bos_uri)
 
 | 工具 | 版本 | 项目 |
 |------|------|------|
-| 运行时 | Bun | gbrain, family-hub, hermes-console |
-| 构建 | Vite | family-hub, hermes-console |
+| 运行时 | Bun | gbrain, family-hub, cockpit-ui |
+| 构建 | Vite | family-hub, cockpit-ui |
 | 测试 | bun test | gbrain |
 
 ---
@@ -719,7 +719,7 @@ runtime: FastAPI (服务注册)
 | omo-debt | projects/omo-debt/CAPABILITY-MAP.md |
 | compute-mesh | **ARCHIVED** — 见 `projects/aetherforge/packages/mesh/` |
 | family-hub | projects/family-hub/CAPABILITY-MAP.md |
-| hermes-console | projects/hermes-console/CAPABILITY-MAP.md |
+| cockpit-ui | projects/cockpit-ui/CAPABILITY-MAP.md |
 | llm-gateway | **ARCHIVED** — 见 [aetherforge/packages/gateway](../projects/aetherforge/packages/gateway/) |
 | swarm-engine | **ARCHIVED** — 见 [aetherforge/packages/swarm](../projects/aetherforge/packages/swarm/) |
 | aetherforge-swarm-ext | **ARCHIVED** — 见 [aetherforge/packages/swarm/src/swarm_engine/ext](../projects/aetherforge/packages/swarm/src/swarm_engine/ext/) |

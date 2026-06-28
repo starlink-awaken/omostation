@@ -377,7 +377,7 @@ uv run python -m omo.cli lint direct-omo-io
 | `omo` | ruff + 非原子写入 |
 | `metaos` | ruff + 非原子写入 |
 | `runtime` | YAML / kei.yaml / protocol registry 校验 |
-| `gbrain` / `family-hub` / `hermes-console` / `omo-debt` | 存在 pre-commit |
+| `gbrain` / `family-hub` / `cockpit-ui` / `omo-debt` | 存在 pre-commit |
 
 **注意**：`.husky/pre-commit` 与 `.pre-commit-config.yaml` 是两套独立机制，同时生效。
 
@@ -409,7 +409,7 @@ uv run python -m omo.cli lint direct-omo-io
 
 ### 8.2 项目 CI 类
 
-- `kairon-ci.yml` / `agora-ci.yml` / `cockpit-ci.yml` / `ecos-ci.yml` / `omo-ci` 同类 / `metaos-ci.yml` / `runtime-ci.yml` / `gbrain-ci.yml` / `family-hub-ci.yml` / `observability-ci.yml` / `hermes-console-ci.yml`
+- `kairon-ci.yml` / `agora-ci.yml` / `cockpit-ci.yml` / `ecos-ci.yml` / `omo-ci` 同类 / `metaos-ci.yml` / `runtime-ci.yml` / `gbrain-ci.yml` / `family-hub-ci.yml` / `observability-ci.yml` / `cockpit-ui-ci.yml`
 
 ### 8.3 强制校验类
 

@@ -1,4 +1,4 @@
-# eCOS v5 愿景与 Roadmap
+# eCOS v6 愿景与 Roadmap
 
 > 蜂群式AI超级大脑 · 多机多角色多场景多领域 · 个人OPC外置数字大脑
 

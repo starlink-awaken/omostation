@@ -237,9 +237,9 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
             print(f"    发现: {label}")
             print(f"    原因: {reason}")
             print()
-        print(f"修复方式:")
-        print(f"  1. 手动修改为 SSOT 指针 (见 .omo/standards/doc-ssot-contract.md)")
-        print(f"  2. 或运行: python3 bin/doc-ssot-lint.py --fix")
+        print("修复方式:")
+        print("  1. 手动修改为 SSOT 指针 (见 .omo/standards/doc-ssot-contract.md)")
+        print("  2. 或运行: python3 bin/doc-ssot-lint.py --fix")
         return 1
     else:
         print(f"✅ 文档 SSOT 检查通过 (扫描 {len(files)} 文件, 0 冲突)")

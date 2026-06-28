@@ -1,4 +1,4 @@
-# eCOS v5 用户旅程设计 + Workflow SOP
+# eCOS v6 用户旅程设计 + Workflow SOP
 
 > 用户场景 · 操作流程 · 标准化 SOP
 

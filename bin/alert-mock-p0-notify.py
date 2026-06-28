@@ -80,7 +80,7 @@ def main() -> int:
     results = send_mock(root, args.level, args.message, channels, args.dry_run)
 
     print("=" * 60)
-    print(f"📤 P72 P0 mock 通知")
+    print("📤 P72 P0 mock 通知")
     print("=" * 60)
     print(f"  Level: {args.level}")
     print(f"  Message: {args.message}")
@@ -93,7 +93,7 @@ def main() -> int:
         print(f"  [{ch:<6s}] → {p['target']:<40s} {status}")
     if not args.dry_run:
         print()
-        print(f"📁 Log: runtime/logs/p0-notifications.log")
+        print("📁 Log: runtime/logs/p0-notifications.log")
     return 0
 
 

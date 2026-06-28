@@ -41,8 +41,8 @@ def export_markdown(rules):
     lines.append("")
     lines.append(f"### GaC 规则速览 ({len(rules)} 条)")
     lines.append("")
-    lines.append(f"> SSOT: `.omo/_truth/registry/governance-checks.yaml::gac.rules`")
-    lines.append(f"> 校验: `python3 bin/gac-validate.py --gate` | 漂移: `python3 bin/gac-drift.py`")
+    lines.append("> SSOT: `.omo/_truth/registry/governance-checks.yaml::gac.rules`")
+    lines.append("> 校验: `python3 bin/gac-validate.py --gate` | 漂移: `python3 bin/gac-drift.py`")
     lines.append("")
 
     for dim in ["X1", "X2", "X3", "X4"]:

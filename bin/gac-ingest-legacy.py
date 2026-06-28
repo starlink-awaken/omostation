@@ -267,7 +267,7 @@ def main() -> int:
         if args.json:
             print(json.dumps(drift, ensure_ascii=False, indent=2))
             return 0 if drift["ok"] else 1
-        print(f"═══ Legacy drift 检测 (动态收敛) ═══")
+        print("═══ Legacy drift 检测 (动态收敛) ═══")
         print(f"  源规则: {drift['legacy_count']} | GaC indexed: {drift['indexed_count']}")
         if drift["missing"]:
             print(f"  ⚠️  源有 GaC 没 ({len(drift['missing'])}): {drift['missing'][:5]}")
@@ -299,7 +299,7 @@ def main() -> int:
         )
         return 0
 
-    print(f"═══ X1-X4 收敛到 GaC indexed ═══")
+    print("═══ X1-X4 收敛到 GaC indexed ═══")
     print(f"  legacy 规则: {len(legacy)} 条 (x1:7 + x2:13 + x4:5)")
     print(f"  新 indexed:  {len(new_entries)} 条")
     print(f"  已在 GaC:    {len(legacy) - len(new_entries)} 条")

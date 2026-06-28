@@ -326,7 +326,7 @@ def main() -> int:
     if args.roadmap:
         roadmap = make_roadmap(errors)
         print("=" * 60)
-        print(f"🗺️  P109-B god-module 4-步 roadmap (按 ROI 排序)")
+        print("🗺️  P109-B god-module 4-步 roadmap (按 ROI 排序)")
         print("=" * 60)
         for step in roadmap:
             print(f"  {step['step']}. {step['phase']}: {step['target']}")
@@ -338,7 +338,7 @@ def main() -> int:
     # P109-B: suggest-modules mode
     if args.suggest_modules:
         print("=" * 60)
-        print(f"🧩 P109-B 子模块拆分建议 (基于 P104-P108 模式)")
+        print("🧩 P109-B 子模块拆分建议 (基于 P104-P108 模式)")
         print("=" * 60)
         for p in plans:
             suggestions = suggest_modules(p["path"], p["current_lines"], p.get("analysis"))
@@ -354,7 +354,7 @@ def main() -> int:
     # P109-B: auto-classify mode
     if args.auto_classify:
         print("=" * 60)
-        print(f"🏷️  P109-B god-module 智能归类 (category / difficulty / ROI)")
+        print("🏷️  P109-B god-module 智能归类 (category / difficulty / ROI)")
         print("=" * 60)
         classified = [(p, classify_module(p["path"], p["current_lines"], p.get("analysis"))) for p in plans]
         # Group by ROI

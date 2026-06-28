@@ -288,7 +288,7 @@ async def dev_kos_search(q: str = ""):
 - 更新架构图
 - 更新服务清单
 
-#### 4.4 hermes-console 集成
+#### 4.4 cockpit-ui 集成
 
 - 标记为 P3（中期），不阻塞本轮
 

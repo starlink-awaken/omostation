@@ -18,7 +18,6 @@ import sys
 import json
 from pathlib import Path
 
-import yaml
 
 
 def run(cmd: str, cwd: Path | None = None) -> tuple[int, str]:

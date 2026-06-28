@@ -233,7 +233,7 @@ def main() -> int:
         # P70 增: alerts_card
         ac = summary["alerts_card"]
         lines.append("")
-        lines.append(f"--- 告警 (24h) ---")
+        lines.append("--- 告警 (24h) ---")
         lines.append(f"  通知: {ac['notifications']}  抑制: {ac['suppressions']}  抑制率: {ac['suppression_rate'] * 100:.1f}%")
         if ac["by_level"]:
             levels = " ".join(f"{k}={v}" for k, v in sorted(ac["by_level"].items()))

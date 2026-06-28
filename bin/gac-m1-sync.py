@@ -105,7 +105,7 @@ def rule_to_m1_yaml(rule: dict) -> str:
             "derived_by": "bin/gac-m1-sync.py",
         },
         "state_history": [
-            {"state": lifecycle, "timestamp": f"{created_at}T00:00:00Z", "reason": f"M1 实例由 gac-m1-sync.py 从 registry 派生"},
+            {"state": lifecycle, "timestamp": f"{created_at}T00:00:00Z", "reason": "M1 实例由 gac-m1-sync.py 从 registry 派生"},
         ],
     }
 
@@ -125,9 +125,9 @@ def rule_to_m1_yaml(rule: dict) -> str:
         m1["properties"]["relates_to"] = relates_to
 
     header = (
-        f"# M1 GacRule instance — DERIVED by gac-m1-sync.py\n"
-        f"# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules\n"
-        f"# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync\n"
+        "# M1 GacRule instance — DERIVED by gac-m1-sync.py\n"
+        "# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules\n"
+        "# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync\n"
     )
     return header + yaml_mod.dump(m1, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
@@ -249,7 +249,7 @@ def main() -> int:
 
     if sync_mode:
         actions = do_sync(rules, m1_nodes, diff)
-        print(f"\n同步完成:")
+        print("\n同步完成:")
         print(f"  创建: {len(actions['created'])}")
         print(f"  更新: {len(actions['updated'])}")
         print(f"  删除: {len(actions['deleted'])}")

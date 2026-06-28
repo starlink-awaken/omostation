@@ -19,7 +19,6 @@ import json
 import sys
 import time
 from collections import Counter
-from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -88,7 +87,7 @@ def main() -> int:
         return 0
 
     if args.watch:
-        print(f"👁️  P80 跨子仓 omo event 实时订阅 (Ctrl+C 退出)")
+        print("👁️  P80 跨子仓 omo event 实时订阅 (Ctrl+C 退出)")
         last_pos = events_log.stat().st_size if events_log.exists() else 0
         last_inode = events_log.stat().st_ino if events_log.exists() else 0
         while True:

@@ -107,7 +107,7 @@ def main() -> int:
                 modified += 1
 
     print("=" * 60)
-    print(f"📊 P75 management/ 142 分类统计")
+    print("📊 P75 management/ 142 分类统计")
     print("=" * 60)
     print(f"📁 总文件: {total}")
     if not args.stats:

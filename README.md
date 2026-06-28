@@ -26,7 +26,7 @@
  L4  Self      ── Personal CARDS + Learning Evolution (SQLite/MD)
  L3  Entry     ── cockpit (CLI 18 commands + MCP + FastAPI Web Dashboard)
  I0  Weave     ── agora (Dynamic MCP Proxy Mesh, 90+ tools)
- L2  Engine    ── kairon (19 packages) · gbrain (TypeScript) · omo · metaos
+ L2  Engine    ── kairon (16 packages) · gbrain (TypeScript) · omo · metaos
  L1  Runtime   ── runtime (Compute Gateway + Scheduler + KEI Sandbox)
  L0  Protocol  ── ecos (SSB Protocol Layer + Emergence + M1 MOF Models)
 ```
@@ -61,7 +61,7 @@ cd omostation
 bash tests/integration/run-all.sh
 
 # Per-project tests
-cd projects/kairon && make test         # Kairon: all 19 packages
+cd projects/kairon && make test         # Kairon: all 16 packages
 cd projects/agora && uv run pytest      # Agora: 1165/1200 pass
 cd projects/gbrain && bun test          # Gbrain: ~9,700 pass
 ```
@@ -135,7 +135,7 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
  L4  自我层     ── ~/Documents/驾驶舱/CARDS/ (SQLite) + ~/Documents/学习进化/ (MD)
  L3  入口层     ── cockpit (CLI 13 + MCP + Web 仪表板)
  I0  织层       ── agora (动态反向代理 MCP 网格, 42+ 工具)
- L2  引擎面     ── kairon (19 包) · gbrain (67 MCP 工具) · omo · metaos
+ L2  引擎面     ── kairon (16 包) · gbrain (67 MCP 工具) · omo · metaos
  L1  运行时     ── runtime (Matrix + Scheduler + KEI 沙箱)
  L0  协议层     ── ecos (SSB 签名链 + 涌现计算)
 ```
@@ -164,7 +164,7 @@ cd omostation
 bash tests/integration/run-all.sh
 
 # 单项目测试
-cd projects/kairon && make test         # Kairon: 19 个包全量测试
+cd projects/kairon && make test         # Kairon: 16 个包全量测试
 cd projects/agora && uv run pytest      # Agora: 1165/1200 通过
 cd projects/gbrain && bun test          # Gbrain: ~9,700 通过
 ```
@@ -182,7 +182,7 @@ cd projects/gbrain && bun test          # Gbrain: ~9,700 通过
 |------|------|
 | [AGENTS.md](./AGENTS.md) | AI Agent 开发指南 |
 | [CLAUDE.md](./CLAUDE.md) | AI 助手操作规则 |
-| [LAYER-INDEX.md](./LAYER-INDEX.md) | 7 层架构索引 |
+| [LAYER-INDEX.md](./LAYER-INDEX.md) | 5+4+1+1 架构索引 |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献指南 |
 | [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | 社区行为准则 |
 | [SECURITY.md](./SECURITY.md) | 安全策略 |

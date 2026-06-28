@@ -42,7 +42,7 @@
 | 项目 | 层 | 实际状态 | 风险 |
 |:--|:--|:--|:--|
 | `agora-dashboard` | L3 | Next.js 项目，无 test runner | Web 视图回归无保障 |
-| `hermes-console` | L3 | 仅 3 个 `bus_adapter` tests | 组件渲染、视图集成无测试 |
+| `cockpit-ui` | L3 | 仅 3 个 `bus_adapter` tests | 组件渲染、视图集成无测试 |
 | `observability` | X | 仅 `docker-compose.yml`，无代码测试 | 可观测性链路实际不可验证 |
 | `spaces` | L0/L1 | 纯 YAML，无 schema/集成测试 | 配置错误依赖运行时暴露 |
 
@@ -105,7 +105,7 @@
 | 项目 | 最小补齐项 |
 |:--|:--|
 | `agora-dashboard` | Next.js 渲染测试 或至少将 `npm run build` 纳入 CI |
-| `hermes-console` | 组件渲染测试 + `bus_adapter` 测试扩展 |
+| `cockpit-ui` | 组件渲染测试 + `bus_adapter` 测试扩展 |
 | `observability` | `docker compose up` health check test |
 | `spaces` | YAML schema validation + admission matrix 集成测试 |
 

@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-import sys
 import yaml
-import json
 from pathlib import Path
 import os
-from pathlib import Path
 
 WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[1])))
 WORKSPACE = WORKSPACE_ROOT

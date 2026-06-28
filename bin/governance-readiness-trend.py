@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import statistics
 import sys
-from datetime import datetime, timezone
+from datetime import timezone
 from pathlib import Path
 
 

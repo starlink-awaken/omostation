@@ -129,7 +129,7 @@ def main() -> int:
             print("  安装: uv pip install watchdog")
             return 1
 
-        print(f"👁️  P81 watchdog 真实时 (跨平台, 安装 watchdog)")
+        print("👁️  P81 watchdog 真实时 (跨平台, 安装 watchdog)")
 
         class EventsHandler(FileSystemEventHandler):
             def __init__(self):
@@ -176,7 +176,7 @@ def main() -> int:
                                     )
                                     print(f"🚨 [{rec.get('ts', '?')}] P0 → mock 通知已触发: {message}")
                         self.last_pos = cur_pos
-                except Exception as e:
+                except Exception:
                     pass
 
         observer = Observer()
@@ -207,8 +207,7 @@ def main() -> int:
 
     # P76: --watch 实时 tail 模式 (按文件 inode + position 检测新行)
     if args.watch:
-        print(f"👁️  P76 实时 tail P0 事件 (Ctrl+C 退出)")
-        import os
+        print("👁️  P76 实时 tail P0 事件 (Ctrl+C 退出)")
         events_log = root / ".omo" / "_knowledge" / "omo-events.jsonl"
         last_pos = events_log.stat().st_size if events_log.exists() else 0
         last_inode = events_log.stat().st_ino if events_log.exists() else 0

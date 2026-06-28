@@ -274,7 +274,7 @@ cockpit / runtime scheduler → cron / event → KEI sandbox → executor
 |------|------|------|----------|
 | **可观测性** | next_milestone 含可观测性 | 难以定位跨层故障 | Langfuse / OpenTelemetry + BOS trace_id |
 | **自动发现** | OPT-AUTO-DISCOVERY 为 candidate | 新增服务需手动注册 | cockpit 启动扫描并注册服务 |
-| **React Dashboard** | pitches 列为 P2 | 前端现代化 | hermes-console 模式 |
+| **React Dashboard** | pitches 列为 P2 | 前端现代化 | cockpit-ui 模式 |
 
 ---
 
@@ -388,7 +388,7 @@ agora unit:     156 passed, 6 xfailed, 1 xpassed
 
 1. **P0 任务 57 个** — 需要治理 review 降级
 2. **CARDS frontmatter 解析错误** — 大量 debt 卡片标题含 `:` 导致 YAML 解析失败
-3. **其余子模块 dirty** — aetherforge / c2g / family-hub / gbrain / hermes-console / l4-kernel / model-driven / observability / omo-debt / scripts 仍有未提交修改
+3. **其余子模块 dirty** — aetherforge / c2g / family-hub / gbrain / cockpit-ui / l4-kernel / model-driven / observability / omo-debt / scripts 仍有未提交修改
 4. **未跟踪文件** — `docs/OPC-*.md`、`plan/pitches/15-deep-defensive-hardening.md`、`runtime/data/atomic_test.jsonl`
 5. **cockpit health --full 健康检查失真** — I0/L4/L1 探测路径与实际运行状态不一致
 6. **:7422 / :9090 / :9091 / :8765 / :8080(kairon)** 已释放或未启动，符合收敛规划

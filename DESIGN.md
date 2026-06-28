@@ -10,7 +10,7 @@ The `team-plan` → `team-exec` handoff distributes work across 6 workers with n
 
 | Worker | Scope (exclusive) | Path root | Risk if violated |
 |--------|-------------------|-----------|------------------|
-| worker-1 | Hermes Console Phase B + Tests | `hermes-console/` | Self-contained; low collision risk |
+| worker-1 | Hermes Console Phase B + Tests | `cockpit-ui/` | Self-contained; low collision risk |
 | worker-2 | Nucleus 123 引用替换 | `kairon/` (subset) | Edit conflicts with worker-4 → separate files |
 | worker-3 | SharedBrain 107K 清理 | `SharedBrain/` | Archived organs, low risk |
 | worker-4 | BaseMembrane 114 引用清零 | `kairon/` (subset) | Edit conflicts with worker-2 → separate files |
@@ -23,7 +23,7 @@ The `team-plan` → `team-exec` handoff distributes work across 6 workers with n
 
 ## Architecture
 
-The remaining omostation architecture work follows the `5+3+1` governance model (per `.omo/_knowledge/management/governance-charter-v1.md`) layered as:
+The remaining omostation architecture work follows the `5+4+1+1` governance model (per `.omo/_knowledge/management/governance-charter-v1.md`) layered as:
 
 ```
 I0  路由层  →  agora (MCP service hub, 1105 tests)

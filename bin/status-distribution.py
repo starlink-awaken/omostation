@@ -12,7 +12,6 @@
 
 from __future__ import annotations
 
-import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -151,9 +150,9 @@ def main() -> int:
 
     # 健康度评估
     if active_pct < 30 and archived_pct > 50:
-        print(f"  • ✅ 健康: 大量历史归档 + 少量活跃 = 治理成熟态")
+        print("  • ✅ 健康: 大量历史归档 + 少量活跃 = 治理成熟态")
     elif active_pct > 50:
-        print(f"  • ⚠️  警告: active 占比过高, 可能存在未及时归档")
+        print("  • ⚠️  警告: active 占比过高, 可能存在未及时归档")
 
     print()
     return 0
