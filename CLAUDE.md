@@ -2,7 +2,7 @@
 
 > Personal AI Operating System · Multi-project Knowledge Engineering Workspace
 > 基于 omostation (starlink-awaken/omostation) 根仓库
-> **version: v2.1** | 最后更新: 2026-06-19 · CI 治本机制 + M0/L0 模型驱动一致 + 硬编码清 + debt 全关
+> **version: v2.2** | 最后更新: 2026-06-27 · 文档 SSOT 漂移修正 + 过期工作记录归档
 
 ---
 
@@ -13,7 +13,7 @@
 1. **通过 MCP**: 连接 `cockpit` MCP server，调用 `workspace_context` 工具
    - 返回: 当前 Phase、活跃 P0 卡片、治理约束、下一步引导
 2. **备选 (无 MCP 时)**: 读取 `.omo/_truth/goals/current.yaml` 获取当前阶段和目标
-3. **治理宪章**: 所有 5+3+1 架构规范见 `.omo/_knowledge/management/governance-charter-v1.md`
+3. **治理宪章**: 所有 5+4+1+1 架构规范见 `.omo/_knowledge/management/governance-charter-v1.md`
 4. **X 轴保障**: X1(审计)/X2(保鲜)/X3(价值)/X4(一致性) 原则见 `LAYER-INDEX.md`，实现见 `.omo/_knowledge/management/x-axis-implementation-registry.md`
 
 **涉及端口时必须**: 先查 `protocols/port-registry.yaml` → 确认端口未被占用 → 注册新端口 → 使用环境变量 `{SERVICE}_PORT`。CI 和 Agora runtime 双重阻断端口冲突。
@@ -103,55 +103,10 @@ python3 bin/governance-readiness.py
 
 ---
 
-## 今日工作记录 (2026-06-24)
+## 工作记录归档
 
-### 完成的工作 (P60+ 四任务推进)
-
-| 任务 | 交付 | commit |
-|------|------|--------|
-| A. 子模块止血 | 137 文件闭环 (14 子模块 commit+push+主仓 bump), ruff 历史格式债清 (agora103/runtime140/omo224), gbrain operations.ts BET-c9e3 拆分收口 (3841→23 aggregator) | 多 |
-| B. 运行时服务 | scheduler scheduled 分类 bug 修 (gbrain-index cron 被当 daemon → 短路), failed 服务 12→0 | runtime c051797 |
-| C. BOS 鸿沟诊断 | 102 URI 声明 alive 但 resolve 全失败 (11 包无 mcp_server + 5 包路径错), 声明/执行 102:0, 审计文档 | audit 3b338930 |
-| D. omo_ingress SRP | registry-writes 前 4 拆出 (285 行), omo_ingress 2609→2324, re-export noqa | omo 747a62a |
-| 附: bos test | BosService.uri API 修 + 动态 count `>= 静态` (鸿沟诚实标记非 gaming), 7 passed | omo a6d229b/937fa7e |
-| 附: 2 high CVE | cryptography 41→49 + starlette→1.3.1, 363 测试过 | agora uv.lock |
-
-### 关键发现 (待专项)
-
-- **BOS 声明/执行鸿沟 102:0**: smoke 不能只看 alive 标志, 必须 resolve_bos_uri() 真调. 详见 `.omo/_knowledge/audits/bos-declaration-execution-gap-2026-06-24.md`
-- **并发 governance agent 抢改**: 别的 Claude/cockpit 会话同改 omo_ingress, 老王 4-5 次被打断 (策略冲突). 治本: 停并发后单一 session 孤立. 详见 memory `concurrent-agent-contention`
-- **D 剩余受并发阻塞**: registry-writes 后 4 + write_system_projection_fields (354 行 God Function) + task lifecycle 第七步, 需专项孤立环境
-
-### 当前状态 (SSOT 指针, 勿硬编码)
-
-- Phase/健康分/任务数: 见 `.omo/state/system.yaml` (会话启动第[5]步读; 实测 runtime failed 12→0, health_score_raw 88, governance readiness 96 A+)
-- 主仓最新: 8248696b (含本轮全部 bump)
-
-## 今日工作记录 (2026-06-12)
-
-### 完成的工作
-
-| 类别 | 工作项 | 数量 |
-|------|--------|------|
-| 债务治理 | 清理所有债务 | 9 项 |
-| X1-X4 框架 | 治理体系化 | 8 个文件 |
-| L0 治理模块 | 原语+检查器+引擎 | 8 个文件 |
-| 能力地图 | 17 个项目 | 17 个文件 |
-| 文档完善 | CHANGELOG/CONTRIBUTING/LICENSE | 51 个文件 |
-| Git Hooks | 17 个项目配置 | 17 个 |
-| 测试优化 | 新增测试 | 3 个 |
-| KOS 修复 | 领域配置 | 10 域 |
-
-### 当前状态
-
-| 指标 | 值 |
-|------|-----|
-| debt_weight | 1.0 |
-| debt_health | 100.0 |
-| 测试文件 | 2,053 |
-| 估算测试用例 | ~16,424 |
-| 能力地图 | 17/17 (100%) |
-| Git Hooks | 17/17 (100%) |
+> 工作记录已归档至 `.omo/_knowledge/audits/` 和 git log。本文件不再维护过期工作记录快照，以避免硬编码易变值与 SSOT 漂移。
+> 当前状态以 `.omo/state/system.yaml` 为唯一真源。
 
 ---
 
@@ -170,13 +125,13 @@ L4  自我层     文档域 (纯文档)
 L3  入口层     cockpit (CLI + MCP + Web)
 L2  引擎面     omo(治理) + kairon(引擎) + gbrain(记忆) + metaos(编排)
 L1  运行时     runtime + 健康监控 + KEI + 矩阵调度
-L0  协议层     ecos — SSB + MOF + BOS URI（984 M1 节点）
+L0  协议层     ecos — SSB + MOF + BOS URI
 
-I0  织层       agora — MCP Hub（43 MCP 工具 · 1200+ 测试）
+I0  织层       agora — MCP Hub（BOS URI 路由, 100 声明式服务）
 
 X1-X4          审计 · 抗熵 · 价值栈 · 一致性
 
-M0             model-driven — 7阶段引擎 · 12工具链 · 190测试
+M0             model-driven — 7阶段引擎 · 生命周期横切框架
                （跨层消费，零内部依赖）
 ```
 
@@ -203,18 +158,27 @@ Worker/User → SharedBrain (轻量数据持久层)
 
 ## 子项目清单 (17 项目 · 5+4+1+1 架构, 全量见 `projects/`)
 
-| 项目 | 层 | 位置 | 栈 | 测试 | 状态 |
-|------|:---:|------|:---:|:----:|:----:|
-| **cockpit** | L3 | `projects/cockpit/` | Python (uv, pytest) | 486 | 🟢 |
-| **agora** | I0 | `projects/agora/` | Python (uv, pytest) | 1371 | 🟢 |
-| **kairon** | L2 | `projects/kairon/` | Python 31 包 monorepo | ~4000 | 🟢 |
-| **gbrain** | L2 | `projects/gbrain/` | TypeScript (bun) | ~9700 | 🟢 |
-| **omo** | L2 | `projects/omo/` | Python (uv, pytest) | 100+ | 🟢 |
-| **metaos** | L2 | `projects/metaos/` | Python (uv, pytest) | 189 | 🟢 |
-| **runtime** | L1 | `projects/runtime/` | Python (uv, pytest) | 171 | 🟢 |
-| **ecos** | L0 | `projects/ecos/` | Python (uv, pytest) | 195 | 🟢 |
-| **protocols** | L0 | `protocols/` | YAML | — | 🟢 |
-| **model-driven** | M0 | `projects/model-driven/` | Python | 190 | 🟢 |
+> 测试数高度漂移，不在此维护。以各项目本地 `pytest`/`bun test`/CI 结果为准。
+
+| 项目 | 层 | 位置 | 栈 | 状态 |
+|------|:---:|------|:---:|:----:|
+| **cockpit** | L3 | `projects/cockpit/` | Python (uv, pytest) | 🟢 |
+| **agora** | I0 | `projects/agora/` | Python (uv, pytest) | 🟢 |
+| **kairon** | L2 | `projects/kairon/` | Python 16 包 monorepo | 🟢 |
+| **gbrain** | L2 | `projects/gbrain/` | TypeScript (bun) | 🟢 |
+| **omo** | L2 | `projects/omo/` | Python (uv, pytest) | 🟢 |
+| **metaos** | L2 | `projects/metaos/` | Python (uv, pytest) | 🟢 |
+| **runtime** | L1 | `projects/runtime/` | Python (uv, pytest) | 🟢 |
+| **ecos** | L0 | `projects/ecos/` | Python (uv, pytest) | 🟢 |
+| **protocols** | L0 | `protocols/` | YAML | 🟢 |
+| **model-driven** | M0 | `projects/model-driven/` | Python | 🟢 |
+| **l4-kernel** | L4 | `projects/l4-kernel/` | Python (uv, pytest) | 🟢 |
+| **aetherforge** | X | `projects/aetherforge/` | Python (uv, pytest) | 🟢 |
+| **c2g** | X | `projects/c2g/` | Python (uv) | 🟢 |
+| **bus-foundation** | X | `projects/bus-foundation/` | Python (uv, pytest) | 🟢 |
+| **omo-debt** | X | `projects/omo-debt/` | Python (uv, pytest) | 🟢 |
+| **observability** | X | `projects/observability/` | Docker | 🟢 |
+| **family-hub** | X | `projects/family-hub/` | Python (FastMCP) | 🟢 |
 
 ---
 
@@ -314,6 +278,9 @@ bash tests/integration/run-all.sh
 ## SSOT 铁律
 
 > **同一事实不在多处写。知识面文档引用事实面数据时，必须使用相对路径指针，不得复制内容。**
+> **文档 SSOT 正交契约**: 见 `.omo/standards/doc-ssot-contract.md` — 每个文档类型只 own 一个维度，禁止跨维度复制易变数字。
+> **项目元数据 SSOT**: `docs/project-registry.yaml` — 包数/工具数/Python 版本/项目层级的唯一读源。
+> **CI 门禁**: `python3 bin/doc-ssot-lint.py` — 检测 markdown 中与注册表冲突的硬编码值。
 
 | 数据 | 唯一读源 | 禁止行为 |
 |------|---------|---------|
@@ -321,6 +288,10 @@ bash tests/integration/run-all.sh
 | 系统状态 | `.omo/state/system.yaml` | 从旧快照文件取状态 |
 | 目标 | `.omo/goals/current.yaml` | 直接修改 goals (仅人类可改) |
 | 标准 | `.omo/standards/` | 从计划文档读标准 |
+| 项目元数据 | `docs/project-registry.yaml` | 在 markdown 中硬编码包数/工具数/版本号 |
+| BOS 服务 | `projects/agora/etc/bos-services.yaml` | 在 markdown 中硬编码服务数 |
+| 端口 | `protocols/port-registry.yaml` | 在 markdown 中硬编码端口号 |
+| 测试通过率 | 各项目本地 CI/pytest | 在 markdown 中硬编码测试数 |
 
 ---
 
@@ -356,12 +327,14 @@ bash tests/integration/run-all.sh
 | `README.md` | 项目总览、快速开始 |
 | `AGENTS.md` | 开发者指南、命令、陷阱 |
 | `LAYER-INDEX.md` | 分层架构索引（5+4+1+1） |
-| `.omo/_knowledge/management/governance-charter-v1.md` | 5+3+1 治理宪章 |
+| `.omo/_knowledge/management/governance-charter-v1.md` | 5+4+1+1 治理宪章 |
+| `.omo/standards/doc-ssot-contract.md` | 文档 SSOT 正交契约 |
+| `docs/project-registry.yaml` | 项目元数据 SSOT (包数/工具数/版本) |
 | `.omo/INDEX.md` | 治理知识库导航 |
 | `.omo/state/system.yaml` | 当前系统运行状态 |
 | `.omo/goals/current.yaml` | 当前 Phase 目标 |
 | `projects/ecos/src/ecos/ssot/mof/m3.yaml` | MOF M3 元元模型 |
-| `projects/ecos/src/ecos/ssot/mof/m1/domain/` | 24 域实例模型 |
+| `projects/ecos/src/ecos/ssot/mof/m1/domain/` | 28 域实例模型 |
 
 ---
 
@@ -369,8 +342,8 @@ bash tests/integration/run-all.sh
 
 > 运行时数字 (Phase/健康分/任务数/活跃任务) 每会话变化, **禁止在本文件硬编码** — 以 `.omo/state/system.yaml` 为唯一真源, `goals/current.yaml` 为目标源。本段只保留稳定的架构原则 + 实测快照。
 
-- **当前 Phase/健康分/任务状态**: 见 `.omo/state/system.yaml` (会话启动第[5]步已读; 实测 Phase 42 active, health 100, governance 100 A+, mof-version v0.0.40, 2026-06-23)
-- **当前目标/Wave**: 见 `.omo/goals/current.yaml` (第[6]步; W1-W4 全 done)
+- **当前 Phase/健康分/任务状态**: 见 `.omo/state/system.yaml` (会话启动第[5]步读)
+- **当前目标/Wave**: 见 `.omo/goals/current.yaml` (第[6]步)
 - **稳定架构原则 (不随 phase 变)**: OMO MCP 化, agora 网关隔离固化, llm-gateway 统一算力调度, gbrain 图谱记忆, 5+4+1+1 分层
 
 ---
@@ -398,5 +371,5 @@ bash tests/integration/run-all.sh
 
 ---
 
-*~Workspace 层网关 v2.1 · 2026-06-19 · CI 治本 + M0/L0 一致 + 硬编码清 + debt 0*
+*~Workspace 层网关 v2.2 · 2026-06-27 · 文档 SSOT 漂移修正 + 过期工作记录归档*
 *全局入口 → ~/Documents/CLAUDE_GLOBAL.md*
