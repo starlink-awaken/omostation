@@ -4,14 +4,14 @@ owner: governance-team
 last-reviewed: 2026-06-28
 version: 1
 items_dir: .omo/debt/items
-dashboard_ref: .omo/_control/debt-dashboard/current.yaml
-review_pack_ref: .omo/_control/debt-dashboard/health-trend.md
-review_queue_ref: .omo/_control/debt-dashboard/review-queue/current.yaml
-action_packet_ref: .omo/_control/debt-dashboard/action-packet/current.yaml
-owner_routing_ref: .omo/_control/debt-dashboard/owner-routing/current.yaml
-dispatch_ref: .omo/_control/debt-dashboard/dispatch/current.yaml
-campaign_ref: .omo/_control/debt-dashboard/campaign/current.yaml
-reporting_ref: .omo/_control/debt-dashboard/current.yaml
+dashboard_ref: .omo/debt/dashboard/current.yaml
+review_pack_ref: .omo/debt/reviews/current.md
+review_queue_ref: .omo/debt/review-queue/current.yaml
+action_packet_ref: .omo/debt/action-packet/current.yaml
+owner_routing_ref: .omo/debt/owner-routing/current.yaml
+dispatch_ref: .omo/debt/dispatch/current.yaml
+campaign_ref: .omo/debt/campaign/current.yaml
+reporting_ref: .omo/debt/reporting/current.yaml
 seed_items:
 - .omo/debt/items/D2_CI_E2E.yaml
 - .omo/debt/items/D3_EU_PRICING.yaml
