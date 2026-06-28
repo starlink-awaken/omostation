@@ -40,25 +40,34 @@ graph TB
 
 | Type | Entry | Port / Notes |
 |:--|:--|:--|
-| CLI | `omo` | 26+ 子命令 |
-| CLI | `omo-debt / cards` |  |
-| MCP stdio | `omo-mcp` | 10+ tools |
-| SSE daemon | `omo-sse-daemon` |  |
+| CLI | `omo` | 39 子命令 (含 deprecated bridge/strategy) |
+| CLI | `omo-debt` / `cards` | 债务/CARDS 专用入口 |
+| MCP stdio | `omo-mcp` | 19 tools |
+| SSE daemon | `omo-sse-daemon` | |
 
 ## 3. 核心模块
 
 | Module | Responsibility |
 |:--|:--|
-| `src/omo/cli.py` | CLI entry |
-| `src/omo/mcp_server.py` | MCP server |
+| `src/omo/cli.py` | CLI entry (39 subcommands) |
+| `src/omo/mcp_server.py` | MCP server (19 tools) |
 | `src/omo/omo_io.py` | AppendOnlyLog + fcntl 跨进程锁 |
-| `src/omo/omo_worker_core.py` | Worker dispatch |
-| `src/omo/omo_debt_registry.py` | Debt registry |
-| `src/omo/omo_audit*.py` | Audit / sync / rollout |
-| `src/omo/omo_bos_*.py` | BOS registry / metrics / dispatch |
-| `src/omo/omo_governance_surfaces.py` | Governance surface lint + ingress registry checks |
-| `src/omo/omo_task_policy.py` | Reusable task policy checker (planned/active leak detection) |
-| `src/omo/model_driven_bridge.py` | model-driven bridge |
+| `src/omo/_shared/` | advisory_lock, append_only_log, timestamp_model |
+| `src/omo/categories/` | audit, bos, debt, governance, worker 分类聚合 |
+| `src/omo/omo_debt_*.py` | 债务管理 (17 模块) |
+| `src/omo/omo_audit*.py` | 审计 + 同步 + 去重 + rollout (4 模块) |
+| `src/omo/omo_bos_*.py` | BOS registry / metrics / dispatch (6 模块) |
+| `src/omo/omo_governance_surfaces*.py` | 治理面 lint + ingress registry (11 模块) |
+| `src/omo/omo_ingress_*.py` | 入口写入 (9 模块) |
+| `src/omo/omo_lint*.py` | 静态校验 (5 模块) |
+| `src/omo/omo_worker_*.py` | Worker 调度 (6 模块) |
+| `src/omo/omo_self_healing*.py` | 自愈引擎 (2 模块) |
+| `src/omo/omo_promotion_*.py` | 晋升流程 (5 模块) |
+| `src/omo/omo_task_policy.py` | Reusable task policy checker |
+| `src/omo/model_driven_bridge.py` | model-driven 桥接 (factory 模式, 不硬依赖) |
+| `src/omo/omo_agora_pool.py` | Agora 连接池 |
+| `src/omo/omo_bus_adapter.py` | bus-foundation 适配器 |
+| `src/omo/omo_cockpit_bridge.py` | cockpit 桥接 |
 
 ## 4. 测试
 

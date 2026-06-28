@@ -1,36 +1,205 @@
-generated_at: '2026-06-05T11:14:41Z'
+generated_at: '2026-06-27T12:00:00Z'
 defaults:
   review_window_days: 7
   escalation_threshold_days: 3
-due_now: []
-upcoming: []
-escalation_candidates: []
-unscheduled:
-- id: DEBT-OMO-030
-  title: 'P3: 红蓝对抗第二轮 — 集成层面安全审计'
-  owner: omo-agent
-  severity: high
-  dimension: security
-  subdimension: layer-i0
-  lifecycle_state: scheduled
-  gate_level: gate
-  next_review_at: null
+due_now:
+- id: auto-r1-1782094852
+  title: '[自动] r1: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-23T02:20:52.229088+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 4
+  affected_roots: &id001
+  - omo
+  - agora
+  priority_reason: stale_and_overdue
+- id: auto-r2-1782094852
+  title: '[自动] r2: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-23T02:20:52.247544+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 4
+  affected_roots: &id002
+  - omo
+  - agora
+  priority_reason: stale_and_overdue
+- id: auto-test-1782094852
+  title: '[自动] test: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-23T02:20:52.208940+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 4
+  affected_roots: &id003
+  - omo
+  - agora
+  priority_reason: stale_and_overdue
+- id: auto-test-1782094861
+  title: '[自动] test: ANY × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-23T02:21:01.090361+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 4
+  affected_roots: &id004
+  - omo
+  - agora
+  priority_reason: stale_and_overdue
+- id: auto-r1-error
+  title: '[自动] r1: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-27T08:38:44.149337+00:00'
   last_reviewed_at: null
   stale_evidence: true
   overdue_by: 0
   affected_roots:
-  - $RUNTIME_HOME/matrix.yaml
-  - $RUNTIME_HOME/protocols/
-  - ~/Workspace/projects/omo/.omo/debt/
+  - omo
+  - agora
   priority_reason: upcoming
+- id: auto-r2-error
+  title: '[自动] r2: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-27T08:38:44.176031+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - omo
+  - agora
+  priority_reason: upcoming
+- id: auto-test-any
+  title: '[自动] test: ANY × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-27T08:38:51.014085+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - omo
+  - agora
+  priority_reason: upcoming
+- id: auto-test-error
+  title: '[自动] test: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-27T08:38:44.122374+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - omo
+  - agora
+  priority_reason: upcoming
+upcoming: []
+escalation_candidates:
+- id: auto-r1-1782094852
+  title: '[自动] r1: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-23T02:20:52.229088+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 4
+  affected_roots: *id001
+  priority_reason: stale_and_overdue
+  escalation_reason: stale_and_overdue
+- id: auto-r2-1782094852
+  title: '[自动] r2: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-23T02:20:52.247544+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 4
+  affected_roots: *id002
+  priority_reason: stale_and_overdue
+  escalation_reason: stale_and_overdue
+- id: auto-test-1782094852
+  title: '[自动] test: ERROR × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-23T02:20:52.208940+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 4
+  affected_roots: *id003
+  priority_reason: stale_and_overdue
+  escalation_reason: stale_and_overdue
+- id: auto-test-1782094861
+  title: '[自动] test: ANY × 1'
+  owner: omo-self-healing
+  severity: warning
+  dimension: operational
+  subdimension: auto_healing
+  lifecycle_state: open
+  gate_level: L1
+  next_review_at: '2026-06-23T02:21:01.090361+00:00'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 4
+  affected_roots: *id004
+  priority_reason: stale_and_overdue
+  escalation_reason: stale_and_overdue
+unscheduled: []
 summary:
-  due_now_count: 0
+  due_now_count: 8
   upcoming_count: 0
-  escalation_candidate_count: 0
-  unscheduled_count: 1
-  by_severity:
-    high: 1
-  by_gate_level:
-    gate: 1
+  escalation_candidate_count: 4
+  unscheduled_count: 0
+  by_severity: {}
+  by_gate_level: {}
   by_owner:
-    omo-agent: 1
+    omo-self-healing: 8

@@ -45,3 +45,26 @@ history:
   action: close
   note: Closed debt item.
   actor: crush-agent
+- at: ''
+  action: reclassify
+  note: Reclassified to platform/cli.
+- at: '2026-06-27T12:19:25.950473+00:00'
+  action: close
+  note: Closed debt item.
+  actor: crush-agent
+- at: ''
+  action: reclassify
+  note: Reclassified to platform/cli.
+- at: ''
+  action: reclassify
+  note: Reclassified to platform/cli.
+- at: ''
+  action: reclassify
+  note: Reclassified to platform/cli.
+- at: ''
+  action: reclassify
+  note: Reclassified to platform/cli.
+- at: '2026-06-27T21:57:12.515385+00:00'
+  action: close
+  note: Closed debt item.
+  actor: crush-agent

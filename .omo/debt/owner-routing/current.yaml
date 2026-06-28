@@ -1,55 +1,259 @@
-generated_at: '2026-06-05T11:14:41Z'
+generated_at: '2026-06-27T12:00:00Z'
 source_action_packet_ref: .omo/debt/action-packet/current.yaml
 defaults:
   review_window_days: 7
   escalation_threshold_days: 3
 owners:
-- owner: omo-agent
+- owner: omo-self-healing
   summary:
-    total_count: 1
+    total_count: 8
     lane_counts:
-      revalidate_now: 0
-      schedule_now: 1
+      revalidate_now: 8
+      schedule_now: 0
       escalate_now: 0
       continue_mitigation: 0
       watch_only: 0
   entries:
-  - id: DEBT-OMO-030
-    title: 'P3: 红蓝对抗第二轮 — 集成层面安全审计'
-    owner: omo-agent
-    severity: high
-    dimension: security
-    subdimension: layer-i0
-    lifecycle_state: scheduled
-    gate_level: gate
-    next_review_at: null
+  - id: auto-r1-1782094852
+    title: '[自动] r1: ERROR × 1'
+    owner: omo-self-healing
+    severity: warning
+    dimension: operational
+    subdimension: auto_healing
+    lifecycle_state: open
+    gate_level: L1
+    next_review_at: '2026-06-23T02:20:52.229088+00:00'
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 4
+    affected_roots:
+    - omo
+    - agora
+    priority_reason: stale_and_overdue
+    current_lane: revalidate_now
+    recommended_action: revalidate
+    reason: stale_due_item
+    command_template: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-r1-1782094852
+      --reviewed-at <RUN_AT>
+    shell_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-r1-1782094852
+      --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    suggested_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id
+      auto-r1-1782094852 --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    primary_lane: revalidate_now
+    priority_flags:
+    - initial_review_required
+    - escalation_watch
+  - id: auto-r2-1782094852
+    title: '[自动] r2: ERROR × 1'
+    owner: omo-self-healing
+    severity: warning
+    dimension: operational
+    subdimension: auto_healing
+    lifecycle_state: open
+    gate_level: L1
+    next_review_at: '2026-06-23T02:20:52.247544+00:00'
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 4
+    affected_roots:
+    - omo
+    - agora
+    priority_reason: stale_and_overdue
+    current_lane: revalidate_now
+    recommended_action: revalidate
+    reason: stale_due_item
+    command_template: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-r2-1782094852
+      --reviewed-at <RUN_AT>
+    shell_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-r2-1782094852
+      --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    suggested_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id
+      auto-r2-1782094852 --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    primary_lane: revalidate_now
+    priority_flags:
+    - initial_review_required
+    - escalation_watch
+  - id: auto-test-1782094852
+    title: '[自动] test: ERROR × 1'
+    owner: omo-self-healing
+    severity: warning
+    dimension: operational
+    subdimension: auto_healing
+    lifecycle_state: open
+    gate_level: L1
+    next_review_at: '2026-06-23T02:20:52.208940+00:00'
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 4
+    affected_roots:
+    - omo
+    - agora
+    priority_reason: stale_and_overdue
+    current_lane: revalidate_now
+    recommended_action: revalidate
+    reason: stale_due_item
+    command_template: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-test-1782094852
+      --reviewed-at <RUN_AT>
+    shell_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-test-1782094852
+      --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    suggested_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id
+      auto-test-1782094852 --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    primary_lane: revalidate_now
+    priority_flags:
+    - initial_review_required
+    - escalation_watch
+  - id: auto-test-1782094861
+    title: '[自动] test: ANY × 1'
+    owner: omo-self-healing
+    severity: warning
+    dimension: operational
+    subdimension: auto_healing
+    lifecycle_state: open
+    gate_level: L1
+    next_review_at: '2026-06-23T02:21:01.090361+00:00'
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 4
+    affected_roots:
+    - omo
+    - agora
+    priority_reason: stale_and_overdue
+    current_lane: revalidate_now
+    recommended_action: revalidate
+    reason: stale_due_item
+    command_template: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-test-1782094861
+      --reviewed-at <RUN_AT>
+    shell_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-test-1782094861
+      --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    suggested_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id
+      auto-test-1782094861 --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    primary_lane: revalidate_now
+    priority_flags:
+    - initial_review_required
+    - escalation_watch
+  - id: auto-r1-error
+    title: '[自动] r1: ERROR × 1'
+    owner: omo-self-healing
+    severity: warning
+    dimension: operational
+    subdimension: auto_healing
+    lifecycle_state: open
+    gate_level: L1
+    next_review_at: '2026-06-27T08:38:44.149337+00:00'
     last_reviewed_at: null
     stale_evidence: true
     overdue_by: 0
     affected_roots:
-    - $RUNTIME_HOME/matrix.yaml
-    - $RUNTIME_HOME/protocols/
-    - ~/Workspace/projects/omo/.omo/debt/
+    - omo
+    - agora
     priority_reason: upcoming
-    current_lane: schedule_now
-    recommended_action: schedule
-    reason: missing_next_review_at
-    command_template: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-030
-      --next-review-at <NEXT_REVIEW_AT>
-    shell_command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-030
-      --next-review-at 2026-06-12T11:14:41Z
-    suggested_command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-030
-      --next-review-at 2026-06-12T11:14:41Z
-    primary_lane: schedule_now
+    current_lane: revalidate_now
+    recommended_action: revalidate
+    reason: stale_due_item
+    command_template: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-r1-error
+      --reviewed-at <RUN_AT>
+    shell_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-r1-error
+      --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    suggested_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id
+      auto-r1-error --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    primary_lane: revalidate_now
     priority_flags:
     - initial_review_required
-    - gate_attention
+  - id: auto-r2-error
+    title: '[自动] r2: ERROR × 1'
+    owner: omo-self-healing
+    severity: warning
+    dimension: operational
+    subdimension: auto_healing
+    lifecycle_state: open
+    gate_level: L1
+    next_review_at: '2026-06-27T08:38:44.176031+00:00'
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - omo
+    - agora
+    priority_reason: upcoming
+    current_lane: revalidate_now
+    recommended_action: revalidate
+    reason: stale_due_item
+    command_template: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-r2-error
+      --reviewed-at <RUN_AT>
+    shell_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-r2-error
+      --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    suggested_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id
+      auto-r2-error --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    primary_lane: revalidate_now
+    priority_flags:
+    - initial_review_required
+  - id: auto-test-any
+    title: '[自动] test: ANY × 1'
+    owner: omo-self-healing
+    severity: warning
+    dimension: operational
+    subdimension: auto_healing
+    lifecycle_state: open
+    gate_level: L1
+    next_review_at: '2026-06-27T08:38:51.014085+00:00'
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - omo
+    - agora
+    priority_reason: upcoming
+    current_lane: revalidate_now
+    recommended_action: revalidate
+    reason: stale_due_item
+    command_template: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-test-any
+      --reviewed-at <RUN_AT>
+    shell_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-test-any
+      --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    suggested_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id
+      auto-test-any --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    primary_lane: revalidate_now
+    priority_flags:
+    - initial_review_required
+  - id: auto-test-error
+    title: '[自动] test: ERROR × 1'
+    owner: omo-self-healing
+    severity: warning
+    dimension: operational
+    subdimension: auto_healing
+    lifecycle_state: open
+    gate_level: L1
+    next_review_at: '2026-06-27T08:38:44.122374+00:00'
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - omo
+    - agora
+    priority_reason: upcoming
+    current_lane: revalidate_now
+    recommended_action: revalidate
+    reason: stale_due_item
+    command_template: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-test-error
+      --reviewed-at <RUN_AT>
+    shell_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id auto-test-error
+      --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    suggested_command: python3 scripts/omo_debt.py revalidate --omo-dir .omo --id
+      auto-test-error --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    primary_lane: revalidate_now
+    priority_flags:
+    - initial_review_required
 summary:
   owner_count: 1
-  total_routed_items: 1
+  total_routed_items: 8
   lane_counts:
-    revalidate_now: 0
-    schedule_now: 1
+    revalidate_now: 8
+    schedule_now: 0
     escalate_now: 0
     continue_mitigation: 0
     watch_only: 0
+artifact_meta:
+  artifact_kind: debt_owner_routing
+  broker_ref: null
+  writer_ref: projects/omo/src/omo/omo_debt.py
+  retention_mode: until_replaced
+  lifecycle_state: active

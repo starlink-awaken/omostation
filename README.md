@@ -1,6 +1,6 @@
 # OMO — OS for AI Agents
 
-eCOS v5 L2 引擎面 · 治理中枢 · Phase/Task/Debt/Audit 全生命周期管理。
+eCOS v6 L2 引擎面 · 治理中枢 · Phase/Task/Debt/Audit 全生命周期管理。
 
 ## 核心能力
 
