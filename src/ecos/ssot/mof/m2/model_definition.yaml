@@ -1,0 +1,65 @@
+# M2: ModelDefinition — LLM 模型定义 (brew 同步产物)
+
+m2_type: ModelDefinition
+version: 1.0.0
+created: '2026-06-28'
+ModelDefinition:
+  m3_parent: DescriptiveElement.Model
+  description: LLM 模型定义——由 aetherforge brew 同步生成的模型清单, 含 cost/capabilities/context_window 等运行时属性。
+  icon: 🤖
+  stateMachine:
+    draft:
+      description: 草稿·模型待验证
+      transitions:
+      - active
+      - discarded
+    active:
+      description: 生效中·被系统引用
+      transitions:
+      - deprecated
+    deprecated:
+      description: 已废弃·模型下线
+      transitions:
+      - archived
+    discarded:
+      description: 放弃
+      transitions: []
+    archived:
+      description: 归档·仅历史参考
+      transitions: []
+  requiredProperties:
+    engine_ref:
+      type: ref
+      description: 引擎节点 (COMP-AETHERFORGE-GATEWAY 或 ENGINE-*)
+    models:
+      type: list
+      description: 模型列表, 每项含 model_id/display_name/cost_per_1k_input/cost_per_1k_output/context_window/capabilities
+  optionalProperties:
+    model_driven_refs:
+      type: map
+      description: 模型驱动桥接引用 (source + synced_at)
+    governance:
+      type: map
+      description: 治理元数据 (owner/steward/freshness_policy)
+  validationRules:
+  - rule: models.size > 0
+    level: error
+    message: 模型定义必须包含至少一个模型
+  - rule: engine_ref != null
+    level: error
+    message: 模型定义必须声明引擎引用
+  relationConstraints:
+    can_be_source_of:
+    - References
+    can_be_target_of:
+    - Realizes
+    cardinality_rules:
+    - relation: Realizes
+      from: Component
+      to: ModelDefinition
+      cardinality: 1:N
+      note: 一个组件可定义多个模型
+  examples:
+  - id: MODEL-BREW-OPENAI
+    name: OpenAI 模型清单
+    description: 由 aetherforge brew sync 从 OpenAI API 同步的模型定义

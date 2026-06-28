@@ -1,6 +1,7 @@
 id: WORKFLOW-TEST-SWARM
 type: Workflow
 subtype: PipelineWorkflow
+workflow_name: test-swarm
 name: test-swarm
 description: '自定义工作流: test-swarm'
 status: active

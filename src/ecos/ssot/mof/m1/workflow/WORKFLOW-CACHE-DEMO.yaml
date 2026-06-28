@@ -1,6 +1,7 @@
 id: WORKFLOW-CACHE-DEMO
 type: Workflow
 subtype: PipelineWorkflow
+workflow_name: cache-demo
 name: 缓存演示
 description: '缓存 E2E 验证：简单工作流，cache_ttl=60s'
 status: active
