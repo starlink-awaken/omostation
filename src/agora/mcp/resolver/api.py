@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import threading
+from concurrent.futures import Future
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +14,21 @@ from .adapter import get_stdio_adapter
 _log = logging.getLogger(__name__)
 
 _WS = str(Path.home() / "Workspace")
+
+
+def _run_sync_with_timeout(func: Any, timeout: float) -> Any:
+    """在线程中执行同步函数并带超时；超时后返回/抛异常，工作线程设为 daemon 不阻塞事件循环关闭."""
+    fut: Future[Any] = Future()
+
+    def _target() -> None:
+        try:
+            fut.set_result(func())
+        except BaseException as exc:  # noqa: BLE001
+            fut.set_exception(exc)
+
+    t = threading.Thread(target=_target, daemon=True)
+    t.start()
+    return fut.result(timeout=timeout)
 
 
 def normalize_bos_uri(uri: str) -> str:
@@ -30,11 +47,15 @@ def normalize_bos_uri(uri: str) -> str:
 
 
 def parse_bos_uri(uri: str) -> dict[str, str]:
-    """Parse a BOS URI into its components."""
+    """Parse a BOS URI into its components.
+
+    保持与 services.BOS_URI_PATTERN 的 domain 集合一致，但要求 action 存在
+    (本函数用于解析完整服务 URI, 而非 domain/package 前缀).
+    """
     import re
 
     pattern = re.compile(
-        r"^bos://(?P<domain>memory|governance|omo|analysis|persona|capability|forge|meta|ecos|agora)"
+        r"^bos://(?P<domain>memory|governance|omo|analysis|persona|capability|forge|meta|ecos|agora|cockpit|l4-kernel|runtime|swarm|system)"
         r"/(?P<package>[a-z][a-z0-9-]+)/(?P<action>[a-z][a-z0-9-]+)$"
     )
     m = pattern.match(uri)
@@ -84,6 +105,77 @@ def list_backend_health() -> dict:
         return {"status": "ok", "backends": result}
     except Exception as e:
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
+
+
+def get_bos_contract_health(yaml_path: str = "") -> dict:
+    """BOS Contract 健康度 (Phase 1, ADR-0110).
+
+    Subprocess 跑 `mof contract-lint --json` 解析 bos-services.yaml, 映射 status:
+      - success → GREEN (零 error)
+      - warning → YELLOW (零 error, 有 warning)
+      - error   → RED (有 error, 当前 19 个 INTERNAL_MODULE_NOT_FOUND)
+
+    Args:
+        yaml_path: 留空用默认 (projects/agora/etc/bos-services.yaml).
+
+    Returns:
+        dict with keys: status, summary, raw (full mof output), error (if any).
+    """
+    import json
+    import os
+    import subprocess
+    from pathlib import Path
+
+    try:
+        # Resolve yaml path (relative to workspace root or absolute)
+        repo_root = Path(
+            os.environ.get("WORKSPACE_ROOT", "/Users/xiamingxing/Workspace")
+        )
+        if yaml_path:
+            yaml_full = Path(yaml_path)
+            if not yaml_full.is_absolute():
+                yaml_full = repo_root / yaml_path
+        else:
+            yaml_full = repo_root / "projects" / "agora" / "etc" / "bos-services.yaml"
+
+        if not yaml_full.exists():
+            return {
+                "status": "RED",
+                "error": f"bos-services.yaml not found: {yaml_full}",
+            }
+
+        # Run mof-contract-lint --json from projects/ecos cwd
+        result = subprocess.run(
+            ["uv", "run", "mof-contract-lint", "--json", "--bos-yaml", str(yaml_full)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(repo_root / "projects" / "ecos"),
+        )
+        if result.returncode not in (0, 1):
+            return {
+                "status": "RED",
+                "error": f"mof-contract-lint exit {result.returncode}: {result.stderr[:200]}",
+            }
+
+        try:
+            lint_report = json.loads(result.stdout)
+        except json.JSONDecodeError as e:
+            return {
+                "status": "RED",
+                "error": f"JSON parse failed: {e}",
+                "raw": result.stdout[:200],
+            }
+
+        return {
+            "status": lint_report.get("status", "RED").upper(),
+            "summary": lint_report.get("summary", {}),
+            "raw": lint_report,
+        }
+    except subprocess.TimeoutExpired:
+        return {"status": "RED", "error": "mof-contract-lint timeout (>30s)"}
+    except Exception as e:
+        return {"status": "RED", "error": f"{type(e).__name__}: {e}"}
 
 
 def governance_status() -> dict:
@@ -251,12 +343,15 @@ async def resolve_bos_uri(
             "status": "error",
             "error": f"unimplemented_bos_service: {uri}",
             "description": service.description,
+            "uri": uri,
+            "transport": service.transport,
         }
 
     result: dict
     if service.transport == "internal":
-        # internal transport: 同进程 importlib
+        # internal transport: 同进程 importlib, 统一加超时防止挂死
         try:
+            import asyncio as _asyncio
             import importlib
             import inspect
             import sys
@@ -271,14 +366,23 @@ async def resolve_bos_uri(
 
             # 尝试传递 proxy_manager (Phase 3)
             sig = inspect.signature(func)
-            if "proxy_manager" in sig.parameters:
-                raw = func(*args, proxy_manager=proxy_manager, **kwargs)
-            else:
-                raw = func(*args, **kwargs)
+            has_pm = "proxy_manager" in sig.parameters
 
-            if inspect.isawaitable(raw):
-                raw = await raw
+            def _invoke() -> Any:
+                if has_pm:
+                    return func(*args, proxy_manager=proxy_manager, **kwargs)
+                return func(*args, **kwargs)
+
+            loop = _asyncio.get_running_loop()
+            raw = await loop.run_in_executor(
+                None, lambda: _run_sync_with_timeout(_invoke, timeout=10.0)
+            )
             result = {"status": "ok", "result": raw}
+        except _asyncio.TimeoutError:
+            result = {
+                "status": "error",
+                "error": f"internal_bos_service_timeout: {uri}",
+            }
         except Exception as e:
             result = {"status": "error", "error": str(e)}
     else:

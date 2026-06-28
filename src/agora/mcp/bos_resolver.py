@@ -87,12 +87,19 @@ async def _memory_all_search(
         bool(proxy_manager),
     )
 
-    # 待检索的子目标
-    targets = [
+    # 待检索的子目标 — 只调用实际注册的服务，避免对不存在的 URI 发请求
+    candidate_targets = [
         "bos://memory/kos/search",
         "bos://memory/gbrain/search",
         "bos://memory/vault/search",
     ]
+    targets = [t for t in candidate_targets if get_service(t) is not None]
+    if not targets:
+        return {
+            "status": "error",
+            "error": "no_search_backend_available",
+            "query": query,
+        }
 
     import asyncio
 
@@ -144,14 +151,15 @@ async def _memory_all_search(
 
     # Phase 9: Quality Audit/Partitioning
     # 引入对质量审计路由的并发调用，基于置信度阈值过滤聚合结果。
-    if top_results:
+    audit_uri = "bos://governance/quality/audit"
+    if top_results and get_service(audit_uri) is not None:
 
         async def _audit(res: dict) -> dict | None:
             try:
                 # 调用轻量级评价模型或启发式审计器
                 audit_res = await asyncio.wait_for(
                     resolve_bos_uri(
-                        "bos://governance/quality/audit",
+                        audit_uri,
                         {"text": res.get("snippet", str(res)[:500]), "query": query},
                         proxy_manager=proxy_manager,
                     ),

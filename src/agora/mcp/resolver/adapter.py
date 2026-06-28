@@ -33,28 +33,49 @@ class StdioAdapter:
                 stderr=subprocess.PIPE,
                 text=True,
             )
+            pid = proc.pid
             request = json.dumps({"args": args, "kwargs": kwargs})
             stdout, stderr = proc.communicate(input=request, timeout=self.timeout)
             if proc.returncode != 0:
                 return {
                     "status": "error",
                     "error": stderr or f"exit code {proc.returncode}",
+                    "pid": pid,
+                    "alive_at_spawn": True,
                 }
             try:
                 result = json.loads(stdout)
             except json.JSONDecodeError:
                 result = {"raw": stdout}
-            return {"status": "ok", "result": result}
+            return {
+                "status": "ok",
+                "result": result,
+                "pid": pid,
+                "alive_at_spawn": True,
+            }
         except subprocess.TimeoutExpired:
             if proc:
                 proc.kill()
-            return {"status": "error", "error": "timeout"}
+            return {
+                "status": "error",
+                "error": "timeout",
+                "pid": proc.pid if proc else None,
+                "alive_at_spawn": True,
+            }
         except Exception as e:
-            return {"status": "error", "error": str(e)}
+            return {
+                "status": "error",
+                "error": str(e),
+                "pid": proc.pid if proc else None,
+                "alive_at_spawn": True,
+            }
 
 
 _adapter = StdioAdapter()
 
 
 def get_stdio_adapter(timeout: float = _STDIO_TIMEOUT_DEFAULT) -> StdioAdapter:
-    return _adapter
+    """返回 StdioAdapter 实例；非默认 timeout 时创建独立实例."""
+    if timeout == _STDIO_TIMEOUT_DEFAULT:
+        return _adapter
+    return StdioAdapter(timeout=timeout)

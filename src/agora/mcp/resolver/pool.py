@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .services import BosService, _with_uv_package
+from .services import BosService, POC_SERVICES, _with_uv_package
 
 _log = logging.getLogger(__name__)
+
+
+def _workspace_root() -> Path:
+    return Path(os.environ.get("WORKSPACE_ROOT", Path.home() / "Workspace"))
 
 
 @dataclass
@@ -43,7 +48,7 @@ class ProcessPool:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            cwd=str(Path.home() / "Workspace"),
+            cwd=str(_workspace_root()),
         )
         self._procs[uri] = proc
         return proc
@@ -57,13 +62,23 @@ class ProcessPool:
             return False
         return True
 
-    def respawn_dead(self) -> list[str]:
+    def respawn_dead(self, services: list[BosService] | None = None) -> list[str]:
+        """检查并重新 spawn 已退出进程.
+
+        Args:
+            services: 可选服务列表；未提供时从 POC_SERVICES 查找。
+        """
+        services = services or POC_SERVICES
+        by_uri = {s.uri: s for s in services}
         respawned: list[str] = []
         for uri, proc in list(self._procs.items()):
             if proc.poll() is not None:
                 _log.info("respawn dead process: %s", uri)
                 self._procs.pop(uri, None)
-                # Need service to respawn — caller must provide
+                svc = by_uri.get(uri)
+                if svc is not None:
+                    self.get_or_spawn(svc)
+                    respawned.append(uri)
         return respawned
 
     def shutdown(self, uri: str | None = None) -> int:
@@ -71,12 +86,23 @@ class ProcessPool:
             proc = self._procs.pop(uri, None)
             if proc:
                 proc.terminate()
+                try:
+                    proc.wait(timeout=2.0)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait(timeout=2.0)
                 return 0
             return 1
         count = 0
-        for proc in self._procs.values():
+        for proc in list(self._procs.values()):
             proc.terminate()
             count += 1
+        for uri, proc in list(self._procs.items()):
+            try:
+                proc.wait(timeout=2.0)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=2.0)
         self._procs.clear()
         return count
 

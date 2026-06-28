@@ -896,7 +896,7 @@ _FALLBACK_SERVICES: list[BosService] = [
     ),
     BosService(
         uri="bos://meta/discover",
-        domain="governance",
+        domain="meta",
         package="meta",
         action="discover",
         transport="internal",
