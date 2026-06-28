@@ -7,7 +7,7 @@ status: done
 title: "修 P35 任务 YAML 描述债务 — audit 100 (A+ 守)"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

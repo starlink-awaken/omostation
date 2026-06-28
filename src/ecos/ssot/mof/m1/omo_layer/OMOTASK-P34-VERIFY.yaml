@@ -7,7 +7,7 @@ status: done
 title: "P34 验收 — 6 wave 全完成, 40 URI 真活, 5/5 真实场景 ok"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

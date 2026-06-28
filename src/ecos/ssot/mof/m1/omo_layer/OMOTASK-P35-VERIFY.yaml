@@ -7,7 +7,7 @@ status: done
 title: "P35 验收 — 4 wave 全完成, 跨域 9/11 ok, audit 100 守 12+ wave"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

@@ -7,7 +7,7 @@ status: done
 title: "CI 真触发 + 跨域 LLM 真调用 (W0 + W1 合并)"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

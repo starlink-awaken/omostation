@@ -7,7 +7,7 @@ status: done
 title: "LLM 用 ollama + 修 GitHub workflow failure (W0 + W1 合并)"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

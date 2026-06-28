@@ -4,7 +4,7 @@ subtype: RoadmapPhase
 name: OPC personal swarm AI brain roadmap
 description: ''
 status: done
-priority: P0
+priority: P3
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

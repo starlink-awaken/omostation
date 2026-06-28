@@ -7,7 +7,7 @@ status: done
 title: "跨 Domain 串联 — 5 场景验证 (memory→analysis→persona→capability→governance)"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

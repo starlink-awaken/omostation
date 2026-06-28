@@ -8,7 +8,7 @@ status: done
 title: "'战役 2 前置: 5 Domain 边界 + BOS URI 命名约定 (ADR-0007)'"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

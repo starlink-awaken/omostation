@@ -7,7 +7,7 @@ status: done
 title: "P33 启动评估 — 3 战役可行性 + 建首批 3 任务"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

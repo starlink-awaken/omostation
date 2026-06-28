@@ -8,7 +8,7 @@ status: done
 title: "dashboard 持续服务化 + P40 验收 (W2 + W3 合并)"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

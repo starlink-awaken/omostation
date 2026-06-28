@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 'BOS URI 网关: cockpit 成为人类访问 BOS URI 入口'
 description: ''
-status: proposed
+status: done
 priority: P3
 domain: opc
 properties:

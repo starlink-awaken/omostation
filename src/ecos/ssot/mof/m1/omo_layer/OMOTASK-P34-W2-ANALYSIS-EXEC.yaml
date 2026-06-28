@@ -7,7 +7,7 @@ status: done
 title: "Analysis 域 12 URI 实战化验证 — 真实 stdio 串联"
 gate: none
 gate_status: passed
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask

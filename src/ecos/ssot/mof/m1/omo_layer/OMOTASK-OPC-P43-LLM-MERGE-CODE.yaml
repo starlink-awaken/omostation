@@ -4,7 +4,7 @@ subtype: RoadmapPhase
 name: 合并 llm-gateway 代码到 aetherforge/packages/gateway/
 description: ''
 status: done
-priority: P0
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask
