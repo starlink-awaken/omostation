@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic
+from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic, write_yaml_atomic
 from omo.omo_shared import load_yaml
 
 
@@ -163,3 +163,26 @@ def archive_scenario_receipt(omo_dir: Path, result: dict[str, Any]) -> str:
     out_path = out_dir / f"{ts}-{query_hint}-{uuid4().hex[:8]}.json"
     write_text_atomic(out_path, json.dumps(result, ensure_ascii=False, indent=2) + "\n")
     return str(out_path)
+
+
+def update_provider_plane_settings(
+    omo_dir: Path,
+    circuit_broken: bool | None = None,
+    daily_budget: float | None = None,
+) -> bool:
+    plane_path = omo_dir / "state" / "provider-plane.yaml"
+    if not plane_path.exists():
+        return False
+    try:
+        data = load_yaml(plane_path) or {}
+        if not isinstance(data, dict):
+            data = {}
+        if circuit_broken is not None:
+            data["circuit_broken"] = circuit_broken
+        if daily_budget is not None:
+            data["daily_budget"] = daily_budget
+
+        write_yaml_atomic(plane_path, data)
+        return True
+    except Exception:
+        return False
