@@ -296,6 +296,6 @@ def _listen_agora_sse(
                                     execute_matched(event)
                         except json.JSONDecodeError:
                             continue
-        except (httpx.ConnectError, httpx.TimeoutException) as e:
+        except (httpx.ConnectError, httpx.TimeoutException) as e:  # noqa: BLE001
             logger.warning("SSE disconnected: %s, reconnecting in 10s...", e)
             time.sleep(10)

@@ -44,7 +44,7 @@ def retry(max_attempts: int = 3, delay: float = 1.0):
             for attempt in range(1, max_attempts + 1):
                 try:
                     return func(*args, **kwargs)
-                except Exception as exc:  # pragma: no cover
+                except Exception as exc:  # pragma: no cover  # noqa: BLE001
                     last_error = exc
                     if attempt == max_attempts:
                         raise
