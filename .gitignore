@@ -11,6 +11,9 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Runtime trace logs (not source code)
+src/trace_log.jsonl
+
 etc/graphify-out/
 .omc/
 cache/
