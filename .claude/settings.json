@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "_doc": "GaC PreToolUse hook (ADR-0106 机制3) — advisory, 编辑时检查 GaC SSOT drift, 违规 stderr 警告不阻塞. bin/gac-hook-pre-edit.py exit 0 (advisory 设计, 稳定后可改 exit 2 阻塞).",
+        "matcher": "Edit|Write|MultiEdit",
+        "command": "python3 /Users/xiamingxing/Workspace/bin/gac-hook-pre-edit.py"
+      }
+    ]
+  }
+}
