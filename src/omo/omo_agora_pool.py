@@ -51,7 +51,7 @@ def _write_agora_daemon_script() -> str | None:
             "            payload = json.loads(line[4:])\n"
             "            r = asyncio.run(resolve_bos_uri(payload['uri'], **payload.get('args') or {}))\n"
             "            sys.stdout.write('JSON ' + json.dumps(r, ensure_ascii=False) + '\\n')\n"
-            "        except Exception as exc:\n"
+            "        except Exception as exc:\n"  # noqa: BLE001
             "            sys.stdout.write('ERR ' + f'{type(exc).__name__}: {exc}' + '\\n')\n"
             "        sys.stdout.flush()\n"
         )
