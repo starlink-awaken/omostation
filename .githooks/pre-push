@@ -11,9 +11,9 @@ if command -v ruff &>/dev/null; then
   ruff format --check src/omo/ || { echo "❌ format check failed"; exit 1; }
 fi
 
-# smoke test
+# smoke test: 本地 pre-push 跳过 archive/integration 等慢/旧测试
 if [ -d tests ]; then
-  uv run pytest tests/ -q --tb=no -x 2>/dev/null || echo "⚠️  tests failed (non-blocking in dev)"
+  uv run pytest tests/ -q --tb=no -x --ignore=tests/archive --ignore=tests/integration 2>/dev/null || echo "⚠️  tests failed (non-blocking in dev)"
 fi
 
 echo "✅ Pre-push check passed"
