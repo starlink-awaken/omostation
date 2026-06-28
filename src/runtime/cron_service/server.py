@@ -20,6 +20,7 @@ from fastmcp import FastMCP
 
 from . import config as svc_config
 from . import db, mcp_server, scheduler
+from .health_scan import run_scan_if_due, should_scan
 from .models import JobCreate
 
 # ── Logging ────────────────────────────────────────────────────────
@@ -42,6 +43,12 @@ async def lifespan(app: FastAPI):
     """Start/stop the scheduler with the FastAPI app."""
     db.init_db()
     await sched.start()
+
+    # Route B: run initial health scan (force write to populate system_health.yaml)
+    logger.info("Running initial health scan...")
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, lambda: run_scan_if_due(force=True))
+
     logger.info(
         "cron-service started (HTTP:%d, DATA:%s)",
         svc_config.HTTP_PORT,
@@ -97,6 +104,20 @@ async def health():
     all_jobs = db.list_jobs()
     error_jobs = [j for j in all_jobs if j.last_status in ("error", "timeout")]
 
+    # Health scan status
+    health_scan_due = should_scan()
+    system_health_path = (
+        Path.home() / "Workspace" / ".omo" / "state" / "system_health.yaml"
+    )
+    health_scan_mtime = None
+    if system_health_path.exists():
+        try:
+            health_scan_mtime = datetime.fromtimestamp(
+                system_health_path.stat().st_mtime, UTC
+            ).isoformat()
+        except Exception:
+            pass
+
     return {
         "status": "ok",
         "version": "1.0.0",
@@ -112,6 +133,11 @@ async def health():
             "with_errors": len(error_jobs),
         },
         "broken_symlinks": broken,
+        "health_scan": {
+            "latest_mtime": health_scan_mtime,
+            "scan_overdue": health_scan_due,
+            "interval_seconds": 900,
+        },
     }
 
 
