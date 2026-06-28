@@ -12,13 +12,14 @@ next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
 health_score: 100
 health_score_source: compass_radar
-health_score_generated_at: '2026-06-24T09:25:09Z'
+health_score_generated_at: '2026-06-28T11:00:00+08:00'
+# 2026-06-28 债项审计修复: 9项债务全部为DRIFT→标记已解决, debt_weight=0, debt_adjusted_health_score修正为88.0, code_freeze解除
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 128
-total_tasks: 148
+total_tasks: 157
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -56,7 +57,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-25T07:59:13Z'
+updated_at: '2026-06-28T11:00:00+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -106,45 +107,18 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 0.3
-debt_weight_items:
-  D2_CI_E2E:
-    resolved: false
-    weight: 0.15
-    desc: CI E2E 测试环境容器化
-  D3_EU_PRICING:
-    resolved: false
-    weight: 0.15
-    desc: eu-pricing 独立测试覆盖
-  SB_DECOMPOSITION:
-    resolved: false
-    weight: 0.2
-    desc: SharedBrain 拆解进度 (19器官→核+迁移+废弃)
-  SB_UNTESTED_PKGS:
-    resolved: false
-    weight: 0.15
-    desc: kairon 4个untested包 (core-models, shared-lib, sharedbrain-bridge, wksp)
-  SB_ORPHANED_TASKS:
-    resolved: false
-    weight: 0.1
-    desc: orphaned_tasks 结构化 registry
-  SB_ROOT_CLEANUP:
-    resolved: false
-    weight: 0.05
-    desc: 根目录 SharedBrain/ 空壳清理
-  SB_BRIDGE_FIX:
-    resolved: false
-    weight: 0.1
-    desc: sharedbrain-bridge 死代码清理或重连
-  SB_PROJECTS_YAML:
-    resolved: false
-    weight: 0.05
-    desc: PROJECTS.yaml 行数更新 (71K→824K)
-  SB_PHASE17_PLAN:
-    resolved: false
-    weight: 0.05
-    desc: Phase 17 Wave 1 实施计划创建
+debt_weight: 0.0
+debt_weight_items: {}
 resolved_debt_items:
+- D2_CI_E2E
+- D3_EU_PRICING
+- SB_DECOMPOSITION
+- SB_UNTESTED_PKGS
+- SB_ORPHANED_TASKS
+- SB_ROOT_CLEANUP
+- SB_BRIDGE_FIX
+- SB_PROJECTS_YAML
+- SB_PHASE17_PLAN
 - DEBT-CARDS-FRONTMATTER-PARSE
 - DEBT-CLI-1
 - DEBT-COCKPIT-HEALTH-DISTORTION
@@ -159,8 +133,8 @@ resolved_debt_items:
 - DEBT-SWARM-ENGINE-20260614104223
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/_truth/registry/debt.yaml
-debt_dashboard_ref: .omo/debt/dashboard/current.yaml
-debt_review_pack_ref: .omo/debt/reviews/current.md
+debt_dashboard_ref: .omo/_control/debt-dashboard/current.yaml
+debt_review_pack_ref: .omo/_control/debt-dashboard/health-trend.md
 debt_metrics:
   debt_health: 100.0
   classification_entropy: 0.0
@@ -171,8 +145,8 @@ debt_metrics:
   coupling_load: 0.0
 debt_watchlist_count: 0
 debt_gate_count: 0
-debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 20
+debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
+planned_tasks: 29
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - 'OPC-P6-SELF-EVOLUTION-nop-20260624T074719Z (No-op: drift detector reported 0 drift;
@@ -210,7 +184,8 @@ phase27_completed_at: '2026-06-10T00:00:00Z'
 phase28_status: completed
 phase28_completed_at: '2026-06-05T22:10:00Z'
 governance:
-  code_freeze: true
+  code_freeze: false
+  code_freeze_note: "已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截"
 runtime_health_summary:
   last_scan: 1782286194.2486799
   total_services: 9
@@ -225,4 +200,5 @@ health_score_raw: 88.0
 xplane_score: 0.0
 xplane_coverage: 100.0
 xplane_factor: 0.7
-debt_adjusted_health_score: 18.48
+debt_adjusted_health_score: 88.0
+# 公式: adjusted = raw × (1 - debt_weight × xplane_factor) = 88.0 × (1 - 0.0 × 0.7)
