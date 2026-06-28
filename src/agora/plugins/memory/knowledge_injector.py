@@ -251,7 +251,7 @@ class KnowledgeInjector:
                             source="nks",
                         )
                     )
-            except (OSError, ValueError, RuntimeError, Exception) as exc:
+            except (OSError, ValueError, RuntimeError, Exception) as exc:  # noqa: BLE001
                 logger.warning(
                     "[KnowledgeInjector] NKS query for '%s' failed (non-fatal): %s",
                     concept,

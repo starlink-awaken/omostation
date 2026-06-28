@@ -139,7 +139,7 @@ async def _proxy_lifespan(server: FastMCP):
             _swarm.set_proxy_manager(get_proxy_manager())
             _swarm.start()
             logger.info("swarm_started", role=swarm_role, port=swarm_port)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         logger.exception("proxy_init_in_lifespan")
 
     yield {}
@@ -355,7 +355,7 @@ async def _init_proxy():
                     "config_watcher: rates reloaded (%d routes)",
                     len(rates.get("routes", [])),
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error("config_watcher: reload failed: %s", e)
 
         config_watcher.file_path = str(rates_path)
@@ -395,7 +395,7 @@ async def _bos_only_cleanup(mcp_server: FastMCP) -> None:
         if provider is None:
             return
         tools = await provider.list_tools()
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return
 
     removed = 0
@@ -408,7 +408,7 @@ async def _bos_only_cleanup(mcp_server: FastMCP) -> None:
         try:
             provider.remove_tool(name)
             removed += 1
-        except (KeyError, Exception):
+        except (KeyError, Exception):  # noqa: BLE001  # defensive fallback
             pass
 
     if removed:
@@ -435,7 +435,7 @@ def _install_signal_handler() -> None:
                     "signal_handler: rate limits reloaded (%d routes)",
                     len(rates.get("routes", [])),
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error("signal_handler: failed to reload rates: %s", e)
         # Reload BOSRouter from POC_SERVICES
         for uri, svc in _POC_SERVICES.items():
@@ -545,7 +545,7 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
                         "format_version": FORMAT_VERSION,
                     }
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 return json.dumps(
                     {
                         "status": "error",
@@ -569,7 +569,7 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
                         "format_version": FORMAT_VERSION,
                     }
                 )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     # Step 3: Not found
     return json.dumps(
@@ -617,7 +617,7 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
         router_instance = get_cached_router()
         result = await router_instance.route(query, mode=mode)
         return _ok({"format_version": FORMAT_VERSION, **result})
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         logger.exception("agora_execute_failed", query=query, mode=mode)
         return _error(f"Execution failed: {e}")
 

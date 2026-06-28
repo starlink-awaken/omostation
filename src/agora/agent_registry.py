@@ -102,10 +102,10 @@ def verify_signature(
             try:
                 public_key.verify(signature, message)
                 return True
-            except Exception:  # noqa: S112
+            except Exception:  # noqa: BLE001, S112  # defensive fallback
                 continue
         return False
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         _log.warning("Signature verification failed: %s", e)
         return False
 
@@ -388,7 +388,7 @@ class AgentRegistry:
             return False
         try:
             return os.path.exists(self._backup_cache_file)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return False
 
     def restore_from_backup(self) -> int:
@@ -410,7 +410,7 @@ class AgentRegistry:
                         count += 1
                 self._save_cache()
             return count
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.warning("Failed to restore from backup: %s", e)
             return 0
 
@@ -425,7 +425,7 @@ class AgentRegistry:
             Path(self._backup_cache_file).parent.mkdir(parents=True, exist_ok=True)
             with open(self._backup_cache_file, "w") as f:
                 json.dump(data, f, indent=2)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.warning("Failed to sync to backup registry: %s", e)
 
     # ── 缓存 ────────────────────────────────────────────
@@ -441,7 +441,7 @@ class AgentRegistry:
                 json.dump(data, f, indent=2)
             # 同步 backup
             self._sync_to_backup()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.warning("Failed to save agent registry cache: %s", e)
 
     def _load_cache(self) -> None:
@@ -459,7 +459,7 @@ class AgentRegistry:
                 loaded = True
                 _log.info("Loaded %d agents from cache: %s", len(data), cache_path)
                 break
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 _log.warning("Failed to load cache %s: %s", cache_path, e)
         if not loaded:
             _log.info("No cache found, starting with empty registry")

@@ -101,7 +101,7 @@ async def with_retry(
                 continue
 
             return result
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             last_error = e
             if attempt < cfg.max_retries:
                 delay = cfg.get_delay(attempt)

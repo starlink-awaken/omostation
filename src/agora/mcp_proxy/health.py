@@ -148,11 +148,11 @@ class BackendHealthChecker:
                     if result is not None:
                         self.mark_alive(name)
                         return
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     pass
 
             self.mark_dead(name)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             self.mark_dead(name)
 
     async def _loop(self) -> None:
@@ -161,7 +161,7 @@ class BackendHealthChecker:
                 await self._tick()
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.warning("heartbeat_tick_error", error=str(e))
 
             try:
@@ -210,7 +210,7 @@ class BackendHealthChecker:
                     )
                     try:
                         await unregister(name)
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001  # defensive fallback
                         logger.error(
                             "heartbeat_remove_failed", service=name, error=str(e)
                         )

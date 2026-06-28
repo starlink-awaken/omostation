@@ -206,6 +206,23 @@ KNOWN_BACKENDS: list[dict] = [
         "description": "aetherforge 能力框架 MCP",
     },
     {
+        "name": "aetherforge-gateway",
+        "mcp_endpoint": "",
+        "command": "uv",
+        "args": [
+            "run",
+            "--directory",
+            "projects/aetherforge",
+            "--package",
+            "aetherforge-gateway",
+            "python",
+            "-m",
+            "llm_gateway.cli",
+            "mcp",
+        ],
+        "description": "AetherForge LLM Gateway — 本地/远程模型统一路由 (SSOT)",
+    },
+    {
         "name": "model-driven",
         "mcp_endpoint": "",
         "command": "uv",

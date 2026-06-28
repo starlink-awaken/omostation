@@ -135,7 +135,7 @@ def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDi
             "type": classified_request_type,
             "note": str(exc),
         }
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {
             "status": "failed",
             "type": classified_request_type,

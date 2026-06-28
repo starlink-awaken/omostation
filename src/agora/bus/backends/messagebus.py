@@ -40,7 +40,7 @@ class MessageBusBackend:
             if self._match(pattern, envelope.type):
                 try:
                     callback(envelope)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     logger.error("messagebus_callback_error", e)
         return envelope.id
 

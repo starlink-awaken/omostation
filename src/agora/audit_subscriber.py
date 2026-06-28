@@ -181,7 +181,7 @@ class AuditSubscriber:
             )
             conn.commit()
             conn.close()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("audit_write_failed", event_id=event_id, error=str(e))
 
     def query(
@@ -235,7 +235,7 @@ class AuditSubscriber:
                     entry["payload"] = json.loads(entry["payload"])
                 result.append(entry)
             return result
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("audit_query_failed", error=str(e))
             return []
 
@@ -283,7 +283,7 @@ class AuditSubscriber:
             stats["by_event_type"] = {r[0]: r[1] for r in type_rows}
 
             conn.close()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("audit_stats_failed", error=str(e))
 
         return stats

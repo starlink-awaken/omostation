@@ -89,7 +89,7 @@ class CroniterBackend:
                 if self._is_due(cron_expr, last_run, now):
                     try:
                         callback()
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001  # defensive fallback
                         logger.error("croniter_callback_error", job_id, e)
                     with self._lock:
                         if job_id in self._jobs:

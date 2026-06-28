@@ -95,7 +95,7 @@ def handle_cli_error(func):
         except KeyboardInterrupt:
             print("\n中断。", file=sys.stderr)
             return 130
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _print_formatted_error(
                 str(e), "使用 'agora --help' 获取帮助，或检查日志了解详情"
             )

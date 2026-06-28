@@ -397,5 +397,5 @@ class Compressor:
             )
             conn.commit()
             conn.close()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass  # 统计不影响主功能

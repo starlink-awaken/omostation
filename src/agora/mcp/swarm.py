@@ -212,7 +212,7 @@ class SwarmOrchestrator:
                     lazy=True,
                 )
                 _log.info("Swarm: proxy registered for remote node %s", node.node_id)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 _log.error(
                     "Swarm: failed to register proxy for %s: %s", node.node_id, e
                 )

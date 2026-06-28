@@ -71,7 +71,7 @@ def _scan_bosroute_nodes() -> list[dict]:
                     "description": data.get("description", ""),
                 }
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
     return routes
 
@@ -100,7 +100,7 @@ def _scan_component_nodes() -> list[dict]:
                     "domain": data.get("domain", ""),
                 }
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             continue
     return comps
 

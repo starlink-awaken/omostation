@@ -134,7 +134,7 @@ class BaseTool:
             self._status = ToolStatus.SUCCESS if result.success else ToolStatus.FAILURE
             self._last_duration_ms = (time.perf_counter() - start) * 1000
             return result.with_duration(self._last_duration_ms)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             self._status = ToolStatus.FAILURE
             self._last_duration_ms = (time.perf_counter() - start) * 1000
             _log.exception("[%s] Unhandled error in execute", self._config.name)

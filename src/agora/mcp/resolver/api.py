@@ -103,7 +103,7 @@ def list_backend_health() -> dict:
             return {"status": "unavailable", "reason": "health_checker not initialized"}
         result = _run_maybe_async(_health_checker.get_all_status())
         return {"status": "ok", "backends": result}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
@@ -174,7 +174,7 @@ def get_bos_contract_health(yaml_path: str = "") -> dict:
         }
     except subprocess.TimeoutExpired:
         return {"status": "RED", "error": "mof-contract-lint timeout (>30s)"}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"status": "RED", "error": f"{type(e).__name__}: {e}"}
 
 
@@ -190,7 +190,7 @@ def governance_status() -> dict:
         orch = Orchestrator(ToolCatalog())
         result = _run_maybe_async(orch.get_status())
         return {"status": "ok", "governance": result}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
@@ -206,7 +206,7 @@ def register_backend(name: str = "", endpoint: str = "") -> dict:
             register_service(name or "default", mcp_endpoint=endpoint)
         )
         return {"status": "ok", "registered": result}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
@@ -221,7 +221,7 @@ def governance_heartbeat(max_age: float = 300) -> dict:
         reg = ServiceRegistry()
         stale = reg.stale_heartbeats(max_age)
         return {"status": "ok", "stale_count": len(stale), "stale": stale}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
@@ -238,7 +238,7 @@ def reload_routes(yaml_path: str = "") -> dict:
         POC_SERVICES.clear()
         POC_SERVICES.extend(services)
         return {"status": "ok", "reloaded": len(POC_SERVICES)}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
@@ -260,7 +260,7 @@ def omo_debt_summary() -> dict:
             "stdout": result.stdout[:500],
             "stderr": result.stderr[:200] if result.stderr else "",
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
@@ -329,7 +329,7 @@ async def resolve_bos_uri(
             if res.get("status") == "ok":
                 return res
             # 如果 proxy dispatch 失败，继续尝试本地回退
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         _log.debug("[Resolver] Router lookup failed: %s", e)
 
     # ── Step 2: 本地执行逻辑 (POC / Internal) ──
@@ -383,7 +383,7 @@ async def resolve_bos_uri(
                 "status": "error",
                 "error": f"internal_bos_service_timeout: {uri}",
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             result = {"status": "error", "error": str(e)}
     else:
         result = invoke_stdio(uri, *args, **kwargs)

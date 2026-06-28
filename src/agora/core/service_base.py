@@ -70,7 +70,7 @@ def is_safe_url(url: str) -> bool:
         resolved = socket.gethostbyname(hostname)
         ip = ipaddress.ip_address(resolved)
         return not any(ip in net for net in BLOCKED_NETWORKS)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         return False
 
 

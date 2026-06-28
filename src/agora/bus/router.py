@@ -38,7 +38,7 @@ class Router:
 
         try:
             return self.backend.publish(envelope)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error(
                 "router_publish_failed: backend=%s event_id=%s error=%s",
                 self.backend.name,

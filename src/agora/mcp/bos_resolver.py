@@ -116,7 +116,7 @@ async def _memory_all_search(
                 timeout=5.0,
             )
             return {"uri": uri, "data": res}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"uri": uri, "error": str(e)}
 
     # 并行并发调用
@@ -184,7 +184,7 @@ async def _memory_all_search(
 
                 res["_audit_score"] = confidence
                 return res
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 _log.debug("[MemorySpine] Audit failed for hit: %s", e)
                 return res
 
@@ -272,9 +272,9 @@ async def _memory_vault_search(args: dict | None = None) -> list[dict]:
                     }
                 )
                 count += 1
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 continue
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         _log.error("[VaultSearch] ripgrep failed: %s", e)
         return []
 

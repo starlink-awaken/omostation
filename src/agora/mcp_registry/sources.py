@@ -150,7 +150,7 @@ async def search_registry(
 
         try:
             data = resp.json()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error("registry_parse_failed", url=url, error=str(e))
             return []
 

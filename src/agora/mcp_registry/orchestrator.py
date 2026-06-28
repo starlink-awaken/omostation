@@ -37,7 +37,7 @@ class Orchestrator:
             try:
                 self._catalog.add_tool(item)
                 saved.append(item)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.warning(
                     "save_discovered_failed",
                     name=item.get("name"),

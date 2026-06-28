@@ -34,7 +34,7 @@ def cmd_a2a(args):
             task = tm.create_task("", args.tool_name, arguments, args.session)
             try:
                 result = asyncio.run(tm.execute_task(task.id))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 raise CLIError(f"任务执行失败: {e}", suggestion="检查目标服务和工具")
             if result:
                 out.print_json(result.to_dict())
@@ -85,7 +85,7 @@ def cmd_a2a(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -115,7 +115,7 @@ def cmd_agent_card(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -143,7 +143,7 @@ def cmd_transitions(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -183,6 +183,6 @@ def cmd_event(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1

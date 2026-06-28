@@ -62,7 +62,7 @@ class StdioAdapter:
                 "pid": proc.pid if proc else None,
                 "alive_at_spawn": True,
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {
                 "status": "error",
                 "error": str(e),

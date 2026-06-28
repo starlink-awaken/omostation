@@ -38,7 +38,7 @@ def cmd_pipeline(args):
 
             try:
                 asyncio.run(_stream())
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 raise CLIError(
                     f"Pipeline stream failed: {e}",
                     suggestion="检查 Pipeline 定义和工具状态",
@@ -46,7 +46,7 @@ def cmd_pipeline(args):
         elif args.parallel:
             try:
                 result = asyncio.run(pl.run_parallel(args.name, variables))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 raise CLIError(
                     f"Pipeline parallel execute failed: {e}",
                     suggestion="检查 Pipeline 定义和工具状态",
@@ -65,7 +65,7 @@ def cmd_pipeline(args):
         else:
             try:
                 result = asyncio.run(pl.run(args.name, variables))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 raise CLIError(
                     f"Pipeline execute failed: {e}",
                     suggestion="检查 Pipeline 定义和工具状态",
@@ -85,7 +85,7 @@ def cmd_pipeline(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -107,7 +107,7 @@ def cmd_pipelines(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -125,6 +125,6 @@ def cmd_pipeline_define(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1

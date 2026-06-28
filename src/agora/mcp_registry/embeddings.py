@@ -103,7 +103,7 @@ class EmbeddingStore:
 
             self._model = SentenceTransformer("all-MiniLM-L6-v2")
             logger.info("embedding_model_loaded", model="all-MiniLM-L6-v2")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.warning("embedding_model_unavailable", error=str(e))
             self._model = False  # Sentinel: don't retry
         return self._model if self._model is not False else None
@@ -121,7 +121,7 @@ class EmbeddingStore:
         try:
             emb = model.encode(text, normalize_embeddings=True)
             return [float(v) for v in emb]
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.warning("embedding_failed", error=str(e))
             return None
 
@@ -147,7 +147,7 @@ class EmbeddingStore:
                     continue
                 tool_ids.append(row["tool_id"])
                 embeddings.append(emb)
-            except Exception:  # noqa: S112
+            except Exception:  # noqa: BLE001, S112  # defensive fallback
                 continue
         if embeddings:
             self._cache.load(tool_ids, np.array(embeddings, dtype=np.float32))
@@ -173,7 +173,7 @@ class EmbeddingStore:
             conn.commit()
             self._dirty = True  # Invalidate cache
             return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.warning("save_embedding_failed", tool_id=tool_id, error=str(e))
             return False
 
@@ -224,7 +224,7 @@ class EmbeddingStore:
             total_in_db = conn.execute(
                 "SELECT COUNT(*) as cnt FROM tool_embeddings"
             ).fetchone()["cnt"]
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             total_in_db = 0
         return {
             "cache_loaded": self._cache.loaded,

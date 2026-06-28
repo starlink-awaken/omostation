@@ -162,7 +162,7 @@ def register_diagnostics_tools(mcp: FastMCP) -> None:
                     "check_interval": check_interval,
                 }
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.exception("lifecycle_start_watch_error")
             return _error(f"Failed to start watch: {e}")
 
@@ -186,7 +186,7 @@ def register_diagnostics_tools(mcp: FastMCP) -> None:
                     "action": "watch_stopped",
                 }
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.exception("lifecycle_stop_watch_error")
             return _error(f"Failed to stop watch: {e}")
 
@@ -212,7 +212,7 @@ def register_diagnostics_tools(mcp: FastMCP) -> None:
                     "count": count,
                 }
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.exception("lifecycle_load_all_error")
             return _error(f"Load all failed: {e}")
 
@@ -238,6 +238,6 @@ def register_diagnostics_tools(mcp: FastMCP) -> None:
                     "count": count,
                 }
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.exception("lifecycle_unload_all_error")
             return _error(f"Unload all failed: {e}")

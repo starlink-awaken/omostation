@@ -222,7 +222,7 @@ class Market:
                 forge_market = json.loads(data)
                 if forge_market:
                     return {**BUILTIN_MARKET, **forge_market}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.debug(
                 "Failed to fetch dynamic market from bos://forge, using builtin",
                 error=str(e),
@@ -308,7 +308,7 @@ class Market:
                     "entry": "server.py",
                     "tags": ["github", "mcp"],
                 }
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
         return {
             "name": repo.split("/")[-1],

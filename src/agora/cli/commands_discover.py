@@ -30,7 +30,7 @@ def cmd_discover(args):
             with contextlib.suppress(KeyboardInterrupt):
                 try:
                     asyncio.run(_watch())
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     raise CLIError(
                         f"服务监听失败: {e}", suggestion="检查 workspace 路径和网络连接"
                     )
@@ -39,7 +39,7 @@ def cmd_discover(args):
         if args.probe:
             try:
                 services = asyncio.run(engine.discover_all_async())
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 raise CLIError(
                     f"异步发现失败: {e}", suggestion="检查网络连接和服务端口"
                 )
@@ -93,7 +93,7 @@ def cmd_discover(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -162,6 +162,6 @@ def cmd_sync(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1

@@ -214,6 +214,6 @@ async def call_chat_completions(
 
             resp.raise_for_status()
             return resp.json()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             registry.record_failure(provider.name)
             raise

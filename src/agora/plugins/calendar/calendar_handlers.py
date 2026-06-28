@@ -42,7 +42,7 @@ def tool_calendar_list_calendars(params: dict, ctx: Any) -> dict:
             "count": result.metadata.get("count", 0),
             "success": result.success,
         }
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {"calendars": [], "count": 0, "success": False, "error": str(exc)}
 
 
@@ -69,7 +69,7 @@ def tool_calendar_get_events(params: dict, ctx: Any) -> dict:
         }
     except ValueError as exc:
         return {"events": [], "count": 0, "success": False, "error": str(exc)}
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {"events": [], "count": 0, "success": False, "error": str(exc)}
 
 
@@ -99,7 +99,7 @@ def tool_calendar_create_event(params: dict, ctx: Any) -> dict:
         return {"event": result.data, "success": result.success, "error": result.error}
     except (KeyError, ValueError) as exc:
         return {"event": None, "success": False, "error": str(exc)}
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {"event": None, "success": False, "error": str(exc)}
 
 
@@ -111,7 +111,7 @@ def tool_calendar_update_event(params: dict, ctx: Any) -> dict:
             ToolRequest(tool_name="calendar", action="update_event", params=params)
         )
         return {"event": result.data, "success": result.success, "error": result.error}
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {"event": None, "success": False, "error": str(exc)}
 
 
@@ -131,7 +131,7 @@ def tool_calendar_delete_event(params: dict, ctx: Any) -> dict:
             "success": result.success,
             "error": result.error,
         }
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {"deleted": False, "success": False, "error": str(exc)}
 
 
@@ -164,7 +164,7 @@ def tool_calendar_check_conflicts(params: dict, ctx: Any) -> dict:
             "success": False,
             "error": str(exc),
         }
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
         return {
             "has_conflicts": False,
             "conflicts": [],

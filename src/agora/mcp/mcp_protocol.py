@@ -104,7 +104,7 @@ def handle_resources_list(params: dict, ctx: ToolContext) -> dict:
             proxy_resources = loop.run_until_complete(pm.list_resources())
             if proxy_resources:
                 base_resources.extend(proxy_resources)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             _log.warning("[MCPServer] resources/list proxy fetch failed: %s", exc)
 
     return {"resources": base_resources}
@@ -127,7 +127,7 @@ def handle_resources_read(params: dict, ctx: ToolContext) -> dict:
                 _log.warning(
                     "[MCPServer] resources/read error from proxy: %s", res["error"]
                 )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             _log.warning("[MCPServer] resources/read proxy fetch failed: %s", exc)
 
     # Fallbacks for builtin endpoints

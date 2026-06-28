@@ -129,7 +129,7 @@ try:
                                     now - os.path.getmtime(fpath) > 86400
                                 ):
                                     os.remove(fpath)
-                        except Exception as ce:
+                        except Exception as ce:  # noqa: BLE001
                             self._logger.warning(
                                 "mcp_cache_cleanup_error", error=str(ce)
                             )
@@ -183,7 +183,7 @@ try:
 
                 self._logger.info("mcp_tool_success", tool=tool_name)
                 return result
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 # fallback if context doesn't have request.name
                 tool_name = getattr(
                     getattr(context, "request", None), "name", "unknown"
@@ -210,7 +210,7 @@ try:
                 result = await self._apply_shield_and_cleanup(result, f"uri:{uri}")
 
                 return result
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 self._logger.error("mcp_read_error", uri=uri, error=str(e))
                 raise
 except ImportError:

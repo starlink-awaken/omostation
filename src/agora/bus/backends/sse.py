@@ -69,7 +69,7 @@ class SSEBackend:
             # No running loop — drain synchronously via asyncio.run.
             try:
                 asyncio.run(coro)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 # Surface failure to caller; router catches and writes DLQ.
                 raise RuntimeError(f"sse_broadcast_failed: {e}") from e
         return envelope.id

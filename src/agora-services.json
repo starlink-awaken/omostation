@@ -523,6 +523,34 @@
       "provider_info": null,
       "healthy": true,
       "last_health_check": 0.0
+    },
+    {
+      "name": "test-monitor-agent",
+      "description": "",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "http://127.0.0.1:9099",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
+    },
+    {
+      "name": "default",
+      "description": "",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
     }
   ]
 }

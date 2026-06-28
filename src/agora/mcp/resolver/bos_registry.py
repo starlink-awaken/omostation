@@ -58,7 +58,7 @@ def _get_valid_transports() -> set[str]:
         # Transport = Literal["stdio", "internal", "http", "mcp_stdio"]
         if hasattr(Transport, "__args__"):
             return set(Transport.__args__)
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         pass
     return {"stdio", "internal", "http", "mcp_stdio", "mcp_proxy"}
 

@@ -56,7 +56,7 @@ class Pipeline:
                 self._definitions.update(data)
         except FileNotFoundError:
             logger.warning("builtin_pipelines_not_found", path=str(builtin_path))
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.warning(
                 "builtin_pipelines_load_failed", path=str(builtin_path), error=str(e)
             )
@@ -155,7 +155,7 @@ class Pipeline:
                     "status": "ok",
                     "output": str(result)[:200],
                 }
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # defensive fallback
                 logger.error(
                     "pipeline_step_failed", pipeline=name, step=i, error=str(e)
                 )
@@ -232,7 +232,7 @@ class Pipeline:
                         tool_name, args, caller_id=caller_identity or "pipeline"
                     )
                     return i, label, result, None
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     return i, label, None, str(e)
 
             tasks = [_exec(i, step) for i, step in ready]

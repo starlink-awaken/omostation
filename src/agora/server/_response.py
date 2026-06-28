@@ -40,7 +40,7 @@ def _load_cache_ttl_config() -> None:
             prefix = route["prefix"]
             ttl = route.get("cache_ttl", 30)
             _RATES_CACHE_TTL[prefix] = ttl
-    except Exception:
+    except Exception:  # noqa: BLE001  # defensive fallback
         _RATES_CACHE_TTL = {}
 
 

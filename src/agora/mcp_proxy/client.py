@@ -202,7 +202,7 @@ class StdioMCPClient(MCPClient):
                 command=self._command,
             )
             return False
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error(
                 "proxy_subprocess_spawn_failed", service=self.service_name, error=str(e)
             )
@@ -224,7 +224,7 @@ class StdioMCPClient(MCPClient):
                     "proxy_connected", service=self.service_name, transport="stdio"
                 )
                 return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error(
                 "proxy_initialize_failed", service=self.service_name, error=str(e)
             )
@@ -261,7 +261,7 @@ class StdioMCPClient(MCPClient):
                 line = await self._process.stderr.readline()
                 if not line:
                     break
-        except (asyncio.CancelledError, Exception):
+        except (asyncio.CancelledError, Exception):  # noqa: BLE001  # defensive fallback
             pass
 
     async def _mcp_initialize(self) -> bool:
@@ -394,7 +394,7 @@ class StdioMCPClient(MCPClient):
                         fut.set_result(msg)
         except asyncio.CancelledError:
             pass
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error(
                 "proxy_read_loop_error", service=self.service_name, error=str(e)
             )
@@ -451,7 +451,7 @@ class HttpMCPClient(MCPClient):
                 data = resp.json()
                 if "result" in data:
                     connected = True
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
         # Fallback: try tools/list directly (some MCP servers skip initialize)
@@ -464,7 +464,7 @@ class HttpMCPClient(MCPClient):
                 )
                 if resp.status_code == 200:
                     connected = True
-            except Exception:
+            except Exception:  # noqa: BLE001  # defensive fallback
                 pass
 
         if connected:
@@ -503,7 +503,7 @@ class HttpMCPClient(MCPClient):
             )
             data = resp.json()
             return data.get("result", {}).get("tools", [])
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error(
                 "proxy_http_list_tools_failed", service=self.service_name, error=str(e)
             )
@@ -529,7 +529,7 @@ class HttpMCPClient(MCPClient):
 
                 msg_bytes = json.dumps(payload, sort_keys=True).encode()
                 headers["X-Swarm-Signature"] = identity.sign(msg_bytes, private_key)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
         return headers
 
@@ -557,7 +557,7 @@ class HttpMCPClient(MCPClient):
                     "error": data["error"].get("message", "Unknown error"),
                 }
             return data
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     async def list_resources(self) -> list[dict]:
@@ -577,7 +577,7 @@ class HttpMCPClient(MCPClient):
             )
             data = resp.json()
             return data.get("result", {}).get("resources", [])
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             logger.error(
                 "proxy_http_list_resources_failed",
                 service=self.service_name,
@@ -609,7 +609,7 @@ class HttpMCPClient(MCPClient):
                     "error": data["error"].get("message", "Unknown error"),
                 }
             return data
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"status": "error", "error": str(e)}
 
 

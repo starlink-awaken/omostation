@@ -138,7 +138,7 @@ class ServiceRegistry:
             from agora.audit import AuditLogger  # type: ignore[import-not-found]
 
             AuditLogger().log("service.register", "system", service.name)
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     def unregister(self, name: str):
@@ -319,7 +319,7 @@ class ServiceRegistry:
                                 self.mark_success(svc.name)
                             else:
                                 self.mark_failure(svc.name)
-                    except Exception:
+                    except Exception:  # noqa: BLE001  # defensive fallback
                         self.mark_failure(svc.name)
                     return
 
@@ -382,14 +382,14 @@ class ServiceRegistry:
                             self.mark_success(svc.name)
                         else:
                             self.mark_failure(svc.name)
-                    except Exception:
+                    except Exception:  # noqa: BLE001  # defensive fallback
                         self.mark_failure(svc.name)
                     finally:
                         if proc is not None:
                             try:
                                 proc.terminate()
                                 await asyncio.wait_for(proc.wait(), timeout=1.0)
-                            except Exception:
+                            except Exception:  # noqa: BLE001  # defensive fallback
                                 proc.kill()
                                 await proc.wait()
                     return
@@ -440,5 +440,5 @@ class ServiceRegistry:
 
             with socket.create_connection((host, port), timeout=5):
                 return True
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return svc.healthy

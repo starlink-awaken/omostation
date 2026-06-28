@@ -191,7 +191,7 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
         except MCPAuthError as auth_exc:
             self._send_rpc_error(None, auth_exc.code, auth_exc.message)
             return
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             _log.warning("[MCPServer] Authentication error: %s", exc)
             self._send_rpc_error(None, _INTERNAL_ERROR, "Authentication failed")
             return
@@ -229,7 +229,7 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
             self._send_rpc_result(rpc_id, result)
         except _ParamError as exc:
             self._send_rpc_error(rpc_id, _INVALID_PARAMS, str(exc))
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             _log.exception("[MCPServer] Internal error in method '%s': %s", method, exc)
             self._send_rpc_error(rpc_id, _INTERNAL_ERROR, str(exc))
 

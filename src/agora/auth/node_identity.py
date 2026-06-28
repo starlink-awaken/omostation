@@ -119,7 +119,7 @@ class NodeIdentity:
             pk = Ed25519PublicKey.from_public_bytes(pk_bytes)
             pk.verify(sig_bytes, message)
             return True
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return False
 
     @classmethod
@@ -192,7 +192,7 @@ class NodeIdentityManager:
         try:
             raw = json.loads(self._path.read_text(encoding="utf-8"))
             return raw.get("_private_key")
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return None
 
     # ------------------------------------------------------------------

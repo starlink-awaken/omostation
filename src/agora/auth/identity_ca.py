@@ -306,7 +306,7 @@ def run_mcp_stdio():
                             },
                         }
                     )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     send_jsonrpc(
                         {
                             "jsonrpc": "2.0",

@@ -54,7 +54,7 @@ def _ensure_sse_registered() -> None:
     try:
         # We don't need to load SSE or memory since it's lazy anyway.
         _sse_registered = True
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         logger.warning(f"Failed to register SSE backend: {e}")  # pragma: no cover
 
 

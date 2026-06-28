@@ -77,7 +77,7 @@ class MCPStdioAdapter:
                 "mcp_adapter_initialized: %s (%d tools)", self.command, len(self._tools)
             )
             return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.error("mcp_adapter_start_failed: %s — %s", self.command, e)
             return False
 
@@ -105,7 +105,7 @@ class MCPStdioAdapter:
                 "status": "ok",
                 "result": text_results[0] if len(text_results) == 1 else text_results,
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     async def _request(self, method: str, params: dict) -> dict:
@@ -158,7 +158,7 @@ async def test_adapter():
         ok = await adapter.start()
         print(f"MCP adapter started: {ok}, tools: {list(adapter._tools.keys())}")
         adapter.shutdown()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         print(f"Test failed (expected in non-MCP env): {e}")
         return False
     return True

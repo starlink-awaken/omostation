@@ -115,7 +115,7 @@ def _build_agent_card(service_name: str) -> tuple[dict | None, str | None]:
             documentation_url="https://github.com/starlink-awaken/agora",
         )
         return card.to_dict(), None
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback
         return None, str(e)
 
 

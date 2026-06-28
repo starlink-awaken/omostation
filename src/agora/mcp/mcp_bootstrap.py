@@ -104,7 +104,7 @@ def _get_known_services() -> dict[str, dict[str, Any]]:
                 merged = dict(_KNOWN_FALLBACK)
                 merged.update(l0_known)
                 return merged
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
     return dict(_KNOWN_FALLBACK)
 

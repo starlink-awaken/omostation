@@ -92,7 +92,7 @@ class MCPStdioServer:
                     "content": [{"type": "text", "text": json.dumps(result)}],
                 },
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             return self._error(req_id, -32000, str(e))
 
     def _error(self, req_id, code: int, message: str) -> dict:

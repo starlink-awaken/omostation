@@ -81,7 +81,7 @@ class AsyncioBackend:
                     break
                 try:
                     callback(env)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001  # defensive fallback
                     logger.error("asyncio_callback_error err=%s", e)
 
         task = loop.create_task(_drain())

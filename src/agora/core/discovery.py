@@ -201,10 +201,10 @@ class DiscoveryEngine:
                     continue
                 try:
                     data = tomllib.loads(pyproject.read_text())
-                except Exception:
+                except Exception:  # noqa: BLE001  # defensive fallback
                     try:
                         content = pyproject.read_text()
-                    except Exception:  # noqa: S112
+                    except Exception:  # noqa: BLE001, S112  # defensive fallback
                         continue
                     if (
                         "mcp" not in content.lower()
@@ -302,7 +302,7 @@ class DiscoveryEngine:
                             confidence=0.70,
                         )
                     )
-            except Exception:  # noqa: S112
+            except Exception:  # noqa: BLE001, S112  # defensive fallback
                 continue
         return found
 
@@ -316,7 +316,7 @@ class DiscoveryEngine:
                 sock.settimeout(timeout)
                 result = sock.connect_ex(sockaddr)
                 return result == 0
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             return False
 
     async def _probe_mcp_endpoint(
@@ -337,7 +337,7 @@ class DiscoveryEngine:
                     r = await client.get(url)
                     if r.status_code < 500:
                         return url
-            except Exception:  # noqa: S112
+            except Exception:  # noqa: BLE001, S112  # defensive fallback
                 continue
         return ""
 

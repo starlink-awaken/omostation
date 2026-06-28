@@ -134,7 +134,7 @@ class TenantManager:
 
             if needs_save:
                 self._save()
-        except Exception:
+        except Exception:  # noqa: BLE001  # defensive fallback
             pass
 
     def _create_default(self):

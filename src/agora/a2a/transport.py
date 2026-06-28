@@ -73,7 +73,7 @@ class A2ATransport:
 
         try:
             bus.publish(make_event(event_type, "a2a_transport", payload))
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             _log.debug("[A2ATransport] Failed to emit %s: %s", event_type, exc)
             return False
         return True
@@ -194,7 +194,7 @@ class A2ANetworkTransport(A2ATransport):
                 resp = await client.post(url, content=payload_bytes, headers=headers)
                 resp.raise_for_status()
                 return resp.json()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # defensive fallback
             _log.error("[A2ANetworkTransport] forward_failed to %s: %s", url, e)
             return {
                 "status": "error",

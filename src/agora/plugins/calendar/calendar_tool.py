@@ -95,7 +95,7 @@ class CalendarTool(BaseTool):
                 metadata={"count": len(calendars)},
                 status=ToolStatus.SUCCESS,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return ToolResult(success=False, error=str(exc), status=ToolStatus.FAILURE)
 
     def _get_events(self, params: dict) -> ToolResult:
@@ -129,7 +129,7 @@ class CalendarTool(BaseTool):
                 metadata={"count": len(events), "start": start_str, "end": end_str},
                 status=ToolStatus.SUCCESS,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return ToolResult(success=False, error=str(exc), status=ToolStatus.FAILURE)
 
     def _create_event(self, params: dict) -> ToolResult:
@@ -172,7 +172,7 @@ class CalendarTool(BaseTool):
                 metadata={"event_id": event.event_id},
                 status=ToolStatus.SUCCESS,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return ToolResult(success=False, error=str(exc), status=ToolStatus.FAILURE)
 
     def _update_event(self, params: dict) -> ToolResult:
@@ -199,7 +199,7 @@ class CalendarTool(BaseTool):
                 error="update_event not supported for this platform",
                 status=ToolStatus.FAILURE,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return ToolResult(success=False, error=str(exc), status=ToolStatus.FAILURE)
 
     def _delete_event(self, params: dict) -> ToolResult:
@@ -225,7 +225,7 @@ class CalendarTool(BaseTool):
                 error="Delete operation returned false",
                 status=ToolStatus.FAILURE,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return ToolResult(success=False, error=str(exc), status=ToolStatus.FAILURE)
 
     def _check_conflicts(self, params: dict) -> ToolResult:
@@ -267,7 +267,7 @@ class CalendarTool(BaseTool):
                 metadata={"checked_start": start_str, "checked_end": end_str},
                 status=ToolStatus.SUCCESS,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return ToolResult(success=False, error=str(exc), status=ToolStatus.FAILURE)
 
     def _sync_to_factgraph(self, params: dict) -> ToolResult:
@@ -305,7 +305,7 @@ class CalendarTool(BaseTool):
                 metadata={"count": len(events)},
                 status=ToolStatus.SUCCESS,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             return ToolResult(success=False, error=str(exc), status=ToolStatus.FAILURE)
 
     def _ingest_to_factgraph(self, event: CalendarEvent) -> None:
@@ -358,5 +358,5 @@ class CalendarTool(BaseTool):
                 event.event_id,
                 event.title,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # defensive fallback
             _log.warning("[CalendarTool] FactGraph ingestion failed: %s", exc)
