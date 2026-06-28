@@ -104,7 +104,7 @@ class StepExecutor:
             self._record_trace(step_name, call_config, call_result, start_time, context)
 
             return context
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001
             duration_ms = (time.time() - start_time) * 1000
             call_type = getattr(step.call, "type", "agent") if step.call else "agent"
             target = self._get_call_target(step.call) if step.call else "unknown"
