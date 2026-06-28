@@ -11,9 +11,11 @@ ports:
   8081: 'kairon-internal            # kairon INTERFACE 内部声明端口'
   9190: 'omo-dashboard              # omo dashboard (converged to cockpit)'
   9290: 'llm-gateway                # LLM Gateway HTTP (legacy)'
+  7450: 'runtime-cron-http          # runtime-cron service (http via --http flag)'
+  8080: 'ontoderive-web/health-dashboard  # web serve default (agora-api-gateway 已移除, 重用)'
 
 # 收敛后已释放端口 (2026-06-17)
-# 8080: agora-api-gateway — 已从 A2A/Swarm 逻辑中彻底移除，下游环境变量 AGORA_HTTP_PORT 默认为 7422
+# 8080: agora-api-gateway 已移除 → 重用于 ontoderive-web/health-dashboard (代码现状注册)
 # 8765: minerva/kos/ontoderive — 功能收敛至 cockpit :8090
 # 9090: ecos-dashboard — 功能收敛至 cockpit :8090 /api/ecos/*
 # swarm-engine 无独立端口，已并入 aetherforge/packages/swarm (UDP: 7455)
@@ -42,8 +44,6 @@ conflicts_resolved:
   - agora
   - cockpit
   - l4-kernel
-  8080:
-  - (resolved: port released, agora-api-gateway removed)
   8765:
   - minerva
   - omo
