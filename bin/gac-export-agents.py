@@ -4,6 +4,8 @@
 T1.1: AGENTS.md GaC 段导出 (GaC Stage 1 执行绑定)
 读取注册表 → 按维度+层分组 → 输出 markdown 表格 → 追加到 AGENTS.md
 """
+from __future__ import annotations
+
 import sys
 from pathlib import Path
 

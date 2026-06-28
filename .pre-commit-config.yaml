@@ -27,6 +27,8 @@ repos:
           (?x)^(
             projects/kairon/.*\.ya?ml
             | protocols/.*\.ya?ml
+            | \.github/workflows/sharedbrain-kairon-integration\.yml  # 废弃 workflow (#4 有替代)
+            | \.omo/_archive/.*\.ya?ml  # 历史 archive
             )$
         args: ["--allow-multiple-documents", "--unsafe"]
         stages: [pre-commit]
@@ -85,7 +87,7 @@ repos:
         name: omo direct io gate (非 broker 禁止直接改 .omo / spaces)
         entry: uv run --directory projects/omo python -m omo.cli lint direct-omo-io
         language: system
-        files: ^(projects/|scripts/|bin/).+\.py$
+        files: ^(projects/|scripts/).+\.py$  # bin/ 工具脚本豁免 (gac-ingest-legacy/evidence-smoke 非生产 broker)
         pass_filenames: true
         stages: [pre-commit]
         # P48+: 把 `.omo` / `spaces` 直接写入约束固化到 pre-commit.
@@ -171,6 +173,7 @@ repos:
         language: system
         types: [python]
         files: ^(projects|scripts|bin)/.*\.py$
+        exclude: ^projects/\.scratch-archive/  # 临时归档不 lint
         stages: [pre-commit]
 
       - id: future-annotations
@@ -179,6 +182,11 @@ repos:
         language: system
         types: [python]
         files: ^(projects|scripts|bin)/.*\.py$
+        exclude: |
+          (?x)^(
+            projects/\.scratch-archive/.*  # 临时归档
+            | bin/.*  # 工具脚本豁免 (同 ruff/direct-io, 非生产)
+            )$
         stages: [pre-commit]
 
       - id: mof-drift-check
