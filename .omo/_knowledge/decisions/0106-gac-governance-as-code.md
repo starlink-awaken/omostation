@@ -126,4 +126,10 @@ c2g 的 radar 天然是 GaC drift 检测 (机制 4), gc 天然是规则 lifecycl
 
 ---
 
+## 变更日志
+
+- **2026-06-28**: GaC 5 项剩余任务全完成 — (1) PreToolUse hook 激活 (主仓 `.claude/settings.json`, advisory, ADR-0106 机制3 Claude Code 通道); (2) omo MCP `check_gac_rule` 确认已存在 (mcp_server.py:489, 机制3 跨工具 Cursor/Codex/Devin 通道); (3) ecos `mof-derive --gac-check` 集成 GaC M2 drift (机制7 ecos↔GaC, commit ecos 45212ce); (4) cockpit `gac` 子命令 (L3 入口暴露 GaC healthcheck, cockpit d178a5b); (5) `gac-daemon --lockdown/--unlock` P3 独占写 (chmod OMO_DIR 0700 owner-only, 主仓 16b61cd1). 全项目 typecheck 0 + GaC healthcheck 全绿 + 3 通道 (hook/MCP/cockpit) 全活 + bootstrap 13/13 工具.
+
+---
+
 *ADR-0106 v1.0 · 2026-06-26 · GaC 治理即代码 · 动态一致性 7 机制 · 元治理递归*
