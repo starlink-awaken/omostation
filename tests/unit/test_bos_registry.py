@@ -229,3 +229,33 @@ class TestDefaultPath:
         assert len(errors) == 1 and "✅" in errors[0], (
             f"主注册表 etc/bos-services.yaml 校验失败: {errors}"
         )
+
+
+def test_unimplemented_services_are_tracked():
+    """所有 [UNIMPLEMENTED] 服务必须在 etc/bos-unimplemented.yaml 登记。"""
+    from pathlib import Path
+
+    from agora.mcp.bos_resolver import POC_SERVICES
+
+    registry_path = (
+        Path(__file__).parent.parent.parent / "etc" / "bos-unimplemented.yaml"
+    )
+    assert registry_path.exists(), f"缺失未实现服务跟踪注册表: {registry_path}"
+
+    with registry_path.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    tracked_uris = {entry["uri"] for entry in data.get("unimplemented", [])}
+    unimplemented = [
+        s.uri for s in POC_SERVICES if s.description.startswith("[UNIMPLEMENTED]")
+    ]
+
+    missing = [uri for uri in unimplemented if uri not in tracked_uris]
+    unknown = [uri for uri in tracked_uris if uri not in unimplemented]
+
+    assert not missing, (
+        f"以下 [UNIMPLEMENTED] 服务未在 {registry_path.name} 登记: {missing}"
+    )
+    assert not unknown, (
+        f"以下服务已登记为 unimplemented 但 bos-services.yaml 中未标记 [UNIMPLEMENTED]: {unknown}"
+    )

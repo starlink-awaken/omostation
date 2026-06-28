@@ -1,0 +1,95 @@
+# BOS [UNIMPLEMENTED] 服务跟踪注册表
+# 用途：CI 门禁 — 任何新增的 [UNIMPLEMENTED] 服务必须在此登记，
+#       否则 test_unimplemented_services_are_tracked 失败。
+# 规则：
+#   - 删除条目 = 服务已实现，需同时从 bos-services.yaml 移除 [UNIMPLEMENTED] 标记
+#   - 新增条目 = 必须说明原因、依赖、预计实现阶段
+#   - 数量只减不增；增加需 review
+
+schema_version: "1.0"
+last_reviewed: "2026-06-28"
+unimplemented:
+  - uri: "bos://analysis/minerva/draft"
+    reason: "Minerva draft CLI 尚未实现 serve 模式"
+    dependency: "kairon/packages/minerva"
+    target_phase: "P44+"
+
+  - uri: "bos://analysis/minerva/audit"
+    reason: "Minerva audit CLI 尚未实现 serve 模式"
+    dependency: "kairon/packages/minerva"
+    target_phase: "P44+"
+
+  - uri: "bos://analysis/ontoderive/audit"
+    reason: "OntoDerive audit 端点待 OntoDerive MCP 接入"
+    dependency: "kairon/packages/ontoderive"
+    target_phase: "P44+"
+
+  - uri: "bos://analysis/ontoderive/fact-check"
+    reason: "OntoDerive fact-check 端点待 OntoDerive MCP 接入"
+    dependency: "kairon/packages/ontoderive"
+    target_phase: "P44+"
+
+  - uri: "bos://analysis/codeanalyze/report"
+    reason: "CodeAnalyze report 服务尚未暴露为 MCP"
+    dependency: "kairon/packages/codeanalyze"
+    target_phase: "P44+"
+
+  - uri: "bos://analysis/codeanalyze/lint"
+    reason: "CodeAnalyze lint 服务尚未暴露为 MCP"
+    dependency: "kairon/packages/codeanalyze"
+    target_phase: "P44+"
+
+  - uri: "bos://analysis/iris/connect"
+    reason: "IRIS connect 适配层未实现"
+    dependency: "kairon/packages/iris"
+    target_phase: "P45+"
+
+  - uri: "bos://analysis/iris/transform"
+    reason: "IRIS transform 适配层未实现"
+    dependency: "kairon/packages/iris"
+    target_phase: "P45+"
+
+  - uri: "bos://analysis/iris/validate"
+    reason: "IRIS validate 适配层未实现"
+    dependency: "kairon/packages/iris"
+    target_phase: "P45+"
+
+  - uri: "bos://persona/health-profile/summary"
+    reason: "Health Profile summary CLI 待实现"
+    dependency: "kairon/packages/health_profile"
+    target_phase: "P44+"
+
+  - uri: "bos://persona/health-profile/alert"
+    reason: "Health Profile alert CLI 待实现"
+    dependency: "kairon/packages/health_profile"
+    target_phase: "P44+"
+
+  - uri: "bos://capability/forge/discover"
+    reason: "Forge discover 工具注册表未接入 MCP"
+    dependency: "kairon/packages/forge"
+    target_phase: "P44+"
+
+  - uri: "bos://capability/forge/exec-tool"
+    reason: "Forge exec-tool 执行器未接入 MCP"
+    dependency: "kairon/packages/forge"
+    target_phase: "P44+"
+
+  - uri: "bos://capability/forge/list-tools"
+    reason: "Forge list-tools 注册表未接入 MCP"
+    dependency: "kairon/packages/forge"
+    target_phase: "P44+"
+
+  - uri: "bos://capability/forge/register-tool"
+    reason: "Forge register-tool 注册接口未接入 MCP"
+    dependency: "kairon/packages/forge"
+    target_phase: "P44+"
+
+  - uri: "bos://memory/kronos/query"
+    reason: "Kronos query CLI 待实现 serve 模式"
+    dependency: "kairon/packages/kronos"
+    target_phase: "P44+"
+
+  - uri: "bos://memory/kronos/schedule"
+    reason: "Kronos schedule CLI 待实现 serve 模式"
+    dependency: "kairon/packages/kronos"
+    target_phase: "P44+"
