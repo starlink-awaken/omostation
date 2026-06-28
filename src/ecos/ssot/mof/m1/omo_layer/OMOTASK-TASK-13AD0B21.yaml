@@ -4,7 +4,7 @@ subtype: Task
 name: 'AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升)'
 description: 'AUDIT: M1 命名空间37个, aetherforge只消费4个(11%), 33未接入(agent/entity/protocol/workflow/skill/...).
   同 BOS 鸿沟病根 (定义层丰富/执行层薄弱).'
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

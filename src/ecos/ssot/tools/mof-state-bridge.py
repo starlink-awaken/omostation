@@ -184,6 +184,8 @@ def diff_m1_vs_omo(m1_nodes: dict, omo_tasks: dict) -> dict:
             or (m1_status == "active" and omo_status == "in_progress")
             or (m1_status == "proposed" and omo_status == "planned")
             or (m1_status == "planned" and omo_status == "proposed")
+            or (m1_status == "proposed" and omo_status == "candidate")
+            or (m1_status == "candidate" and omo_status == "proposed")
         )
         if title_match:
             m1_title = omo_title

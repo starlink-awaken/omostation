@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 'P0 自反馈闭环: governance停摆/mypy假绿无报警'
 description: 原型A3, 杠杆点8. 反馈信号不回决策输入端
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

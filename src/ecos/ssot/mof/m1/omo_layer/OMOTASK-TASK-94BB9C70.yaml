@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 'P1 并发Agent抢占: 共享文件advisory-lock'
 description: 原型A4(TragedyOfCommons), 杠杆点7+6
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 'P1 GodModule: omo_ingress354L/agora1945L/gbrain3841L'
 description: 原型A5(Growth&Underinvestment), 杠杆点7+5. 用omo-srp-refactor skill渐进拆
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

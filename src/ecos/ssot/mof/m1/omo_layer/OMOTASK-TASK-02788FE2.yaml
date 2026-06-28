@@ -4,7 +4,7 @@ subtype: Task
 name: 'AETHERFORGE P0: RouteScheduler 实现 (v2 Phase 2, 路由核心)'
 description: 'AUDIT: RouteScheduler 尚未实现 (routing_policy 命名空间没消费). v2 Phase 2 核心路由引擎,
   4d. policies 框架(filter+score)有但没调度器落地.'
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 'AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾)'
 description: 'AUDIT: QuotaEngine 已加载但数据未完全利用 (376行21class, 半实现). Phase 1 收尾.'
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

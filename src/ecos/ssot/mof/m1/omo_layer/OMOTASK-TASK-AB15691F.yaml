@@ -4,7 +4,7 @@ subtype: Task
 name: 'P1 D调研: 28 deprecated BOS声明对齐真实位置 (expires 2026-07-25)'
 description: C方案 deprecated 过渡后的 D 对齐调研. 28项非简单死声明(有routes.json/health硬依赖), 需逐个调研真实实现位置.
   有效期2026-07-25, 过期未对齐升级为真实鸿沟
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

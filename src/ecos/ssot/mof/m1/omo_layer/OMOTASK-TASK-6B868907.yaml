@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 'P1 产品门户: c2g draft→bet路径 + 全场景门户'
 description: 杠杆点3(目标重定义). Phase completed前提=端到端smoke
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

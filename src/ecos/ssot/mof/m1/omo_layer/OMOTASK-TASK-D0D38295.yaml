@@ -4,7 +4,7 @@ subtype: Task
 name: 'AETHERFORGE P2: 路径硬编码清 (AUDIT 1.2, CI 可移植)'
 description: 'AUDIT 1.2: 路径硬编码问题. pricing.py M1_MODEL_DIR = Path.home()/Workspace/...
   硬编码. 改相对路径 (CLAUDE.md CI 治本机制).'
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

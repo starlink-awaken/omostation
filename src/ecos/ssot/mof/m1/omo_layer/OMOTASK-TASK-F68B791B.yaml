@@ -4,7 +4,7 @@ subtype: Task
 name: 'AETHERFORGE P2: swarm/mesh 测试补 (各5, 薄)'
 description: gateway 12 测试 (成熟), swarm/mesh 各5 (薄). 拍卖蜂群(auctioneer/bidder)+算力网格逻辑复杂,
   测试覆盖要加.
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

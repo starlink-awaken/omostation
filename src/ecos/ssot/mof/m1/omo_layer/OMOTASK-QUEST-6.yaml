@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 测试每日打扫
 description: '游戏化任务: 奖励 20 积分, 归属于 child'
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:

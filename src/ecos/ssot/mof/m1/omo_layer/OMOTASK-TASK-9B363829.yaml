@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 'P0 BOS声明/执行鸿沟: resolve率21.6%→≥90%'
 description: 原型A1(ShiftingBurden)+A3(SuccessTheater), 杠杆点8(反馈回路)+2(证据驱动). evidence-smoke量化87gap
-status: candidate
+status: proposed
 priority: P2
 domain: opc
 properties:
