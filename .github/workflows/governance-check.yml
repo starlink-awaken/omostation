@@ -85,6 +85,11 @@ jobs:
         run: |
           bin/mof-scan || echo "⚠️ Security scan found issues (non-blocking)"
 
+      - name: Agent 准入检查 (metaos admit)
+        run: |
+          cd projects/metaos
+          uv run metaos admit --domain ci --role generator --values "safety,transparency" --otlp --audit-id "ci-${{ github.sha }}" || echo "⚠️ Agent admit check (non-blocking, informational)"
+
   doc-freshness:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'

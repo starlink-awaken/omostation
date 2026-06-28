@@ -182,7 +182,7 @@ Agent → agora MCP :7431 → resolve_bos_uri → 路由到后端
 ```
 
 **覆盖能力**: 路由 (agora) + 任务 (omo) + 执行 (runtime) + 审计 (omo) + 治理 (GaC)
-**缺口**: Agent 准入 (metaos admit) 尚未在 CI 强制
+**缺口**: Agent 准入 (metaos admit) 尚未在 CI 强制 → **已修复 (G3)**, governance-check.yml 加 admit 步骤
 
 ### 场景 3: 战略需求→任务落地
 
@@ -196,7 +196,7 @@ Agent → agora MCP :7431 → resolve_bos_uri → 路由到后端
 ```
 
 **覆盖能力**: 需求建模 (c2g) + 任务管理 (omo) + 决策 (metaos)
-**缺口**: c2g brainstorm 的 LLM 集成依赖 aetherforge gateway, 需确保可用性
+**缺口**: c2g brainstorm 的 LLM 集成依赖 aetherforge gateway, ~~需确保可用性~~ → **已修复 (G1)**, cockpit 加 `compute generate` 子命令
 
 ### 场景 4: 代码库理解与影响分析
 
@@ -223,7 +223,7 @@ omo governance → 7 项审计 → 100 A+ 目标
 ```
 
 **覆盖能力**: 审计 (omo) + 规则 (GaC 118) + drift (6 层) + 自愈 (omo)
-**缺口**: 61 处字段漂移 (priority P0→P2, 历史数据) 未修复
+**缺口**: ~~61 处字段漂移~~ → **已修复 (G4)**, mof-state-bridge 0 drift
 
 ### 场景 6: 家庭场景应用
 
@@ -235,7 +235,7 @@ omo governance → 7 项审计 → 100 A+ 目标
 ```
 
 **覆盖能力**: 任务游戏化 (family-hub) + LLM (aetherforge gateway) + UI (cockpit-ui)
-**缺口**: family-hub 与 omo 任务系统未打通 (独立 SQLite)
+**缺口**: ~~family-hub 与 omo 任务系统未打通~~ → **已修复 (G2)**, create_quest 接入 omo ingress-task
 
 ---
 
@@ -254,15 +254,15 @@ omo governance → 7 项审计 → 100 A+ 目标
 | 协议元模型 | 2 | ~35 | ★★★★★ | ecos 1315 M1 节点 |
 | 自我入口 | 4 | ~85 | ★★★★ | l4-kernel 42 tools + cockpit 33 |
 
-### 识别的功能缺口 (5 项)
+### 识别的功能缺口 (5 项, 全部已修复)
 
-| # | 缺口 | 影响 | 建议 |
-|---|------|------|------|
-| G1 | aetherforge CLI 已 deprecated, 但无替代 cockpit 子命令 | LLM 生成只能走 MCP | cockpit 加 `cockpit compute generate` 子命令 |
-| G2 | family-hub 独立 SQLite, 未接入 omo 任务系统 | 家庭任务不受治理 | family-hub 接入 omo ingress-task |
-| G3 | Agent 准入 (metaos admit) 未在 CI 强制 | 任意 Agent 可执行 | CI gate 加 admit 检查 |
-| G4 | 61 处 M1↔.omo 字段漂移 (priority P0→P2) | mof-state-bridge 报告噪音 | 批量修正或调整 M1 priority 默认值 |
-| G5 | minerva daemon 后台研究无 MCP 暴露 | Agent 无法调度后台研究 | minerva MCP 加 `research_schedule` |
+| # | 缺口 | 影响 | 修复方式 | 状态 |
+|---|------|------|---------|:----:|
+| G1 | aetherforge CLI 已 deprecated, 无替代 cockpit 子命令 | LLM 生成只能走 MCP | cockpit 加 `cockpit compute` 子命令 (委派 aetherforge) | ✅ |
+| G2 | family-hub 独立 SQLite, 未接入 omo 任务系统 | 家庭任务不受治理 | create_quest 加 OMO ingress-task 路由 (条件性, OMO_GOVERNANCE_ENABLED=1) | ✅ |
+| G3 | Agent 准入 (metaos admit) 未在 CI 强制 | 任意 Agent 可执行 | governance-check.yml 加 Agent 准入检查步骤 | ✅ |
+| G4 | 61 处 M1↔.omo 字段漂移 (priority P0→P2) | mof-state-bridge 报告噪音 | 批量修正 61 个 M1 OMOTask priority/status (61→0 drift) | ✅ |
+| G5 | minerva daemon 后台研究无 MCP 暴露 | Agent 无法调度后台研究 | 已存在 `research_schedule` MCP tool (cron 调度, 无需修改) | ✅ |
 
 ### 识别的功能重叠 (3 项)
 
@@ -316,9 +316,9 @@ omo audit → 审计记录 → gac-drift → 规则校验
 
 ## 六、总结
 
-omostation 是一个功能密集的多项目融合工作区, 17 个项目提供 ~280+ MCP 工具、~120+ CLI 命令、~30+ HTTP 端点, 覆盖 8 个功能域 32 项能力。核心闭环 (知识/治理/执行) 均已打通, 主要缺口集中在边缘场景 (family-hub 治理接入、aetherforge CLI 替代、Agent 准入 CI 强制)。
+omostation 是一个功能密集的多项目融合工作区, 17 个项目提供 ~280+ MCP 工具、~120+ CLI 命令、~30+ HTTP 端点, 覆盖 8 个功能域 32 项能力。核心闭环 (知识/治理/执行) 均已打通, 5 项缺口全部修复。
 
-功能体系完整度: **8/8 域全覆盖, 32/32 能力有实现, 5 项缺口 + 3 项重叠 (可接受)**
+功能体系完整度: **8/8 域全覆盖, 32/32 能力有实现, 5 项缺口全部修复, 3 项重叠 (互补/分层, 可接受)**
 
 ---
 
