@@ -1,80 +1,34 @@
-# Cockpit — L3 统一入口 (统一研究驾驶舱)
+# Cockpit
 
-> 5+3+1 架构 L3 层 · Agent 桥接 · CLI + MCP + Web
-> `projects/cockpit/` · 498 tests
+    > L3 · 统一人类 CLI/Web 入口与 HITL 操作面
+    > Metadata SSOT: [`../../docs/project-registry.yaml`](../../docs/project-registry.yaml)
 
-## 接口
+    ## What It Owns
 
-| 接口类型 | 入口 | 说明 |
-|---------|------|------|
-| CLI | `cockpit`, `workspace` | 18 子命令 (context/cards/vault/health/brief + research/status/code/...) |
-| MCP | `cockpit-mcp` | 20 个工具 (research_* × 15 + status_* × 2 + L4 bridge × 4) |
-| Web | `dashboard_server.py` | stdlib http, I0 状态面板 |
+    统一人类 CLI/Web 入口与 HITL 操作面.
 
-## MCP Server 配置 (SSOT)
+    ## Quick Start
 
-**所有 Agent 共用此配置。** 添加到 MCP client 配置中：
+    ```bash
+    uv sync
+uv run pytest "src/cockpit/tests/" -q
+uv run ruff check "src/"
+    ```
 
-```json
-{
-  "mcpServers": {
-    "cockpit": {
-      "command": "uv",
-      "args": ["run", "--package", "cockpit", "cockpit-mcp"]
-    }
-  }
-}
-```
+    ## Key Surfaces
 
-或直接运行: `uv run --package cockpit python -m cockpit.scripts.cockpit_mcp`
+    - `src/cockpit/cli.py`
+- `src/cockpit/commands/`
+- `src/cockpit/dashboard_server.py`
+- `scripts/cockpit_mcp.py`
 
-## MCP 工具清单
+    ## Documentation
 
-### L4 Bridge (Agent 启动第一步)
-| 工具 | 说明 |
-|------|------|
-| `workspace_context` | ★ 聚合 OMO 阶段 + CARDS + 约束 + next_guidance |
-| `cards_status` | 活跃卡片, 按优先级排序 |
-| `cards_check` | 操作前约束合规验证 |
-| `vault_search` | L4 Vault 知识检索 |
+    - Developer guide: [`AGENTS.md`](AGENTS.md)
+    - AI context loader: [`CLAUDE.md`](CLAUDE.md) when present
+    - Workspace architecture: [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md)
+    - Layer placement: [`../../LAYER-INDEX.md`](../../LAYER-INDEX.md)
 
-### Research (研究管理)
-`research_list`, `research_search`, `research_create`, `research_open`, `research_ask`, `research_archive`, `research_restore`, `research_tag`, `research_rename`, `research_dossier`, `research_half_life`, `research_agent_list`
+    ## SSOT Rules
 
-### Status (状态查询)
-`status_summary`, `status_json`, `daily_summary`
-
-## 测试
-
-```bash
-uv run --package cockpit pytest src/cockpit/tests/ -q
-# 498 passed
-```
-
-## 治理入口
-
-```bash
-workspace governance verify
-workspace governance surfaces --json
-workspace governance ingress-goal BET-001 "标题" "描述" --ingress-plane projects/c2g
-workspace governance ingress-task /abs/path/to/task.yaml --ingress-plane projects/c2g
-workspace governance ingress-debt /abs/path/to/debt.yaml --ingress-plane projects/aetherforge
-```
-
-`workspace governance` 现在会把 `.omo` 治理面巡检与 ingress 持久化写入统一转发到 `projects/omo` 的受审计 broker，而不是让入口层直接改 `.omo/`。
-其中 `workspace governance verify` 是面向人类与 agent 的统一治理验收入口，默认串行执行 surfaces / ingress-registry / mutation-surfaces / internal-write-profiles / `task-policy --all`；`surfaces` 输出里会带上 `task_policy_registry`、`mutation_surface_registry`、`internal_write_profile_registry` 与 gate presence，用来核对代码注册表和 truth registry 是否漂移。
-
-## 架构位置
-
-```
-L4 (知识面) → cockpit MCP bridge → Agent 获取上下文
-L3 (工具面) → cockpit CLI + MCP + Web
-I0 (织层)  → Agora 路由 L2 调用
-```
-
-### X4 治理一致性 (7 项规则检查)
-
-Cockpit 承载 X4 横切面的运行时实现:
-- `workspace_context` → Agent 启动链合规检查 (GC-007)
-- `cards_check` → 操作前约束验证 (GC-001~GC-006)
-- `governance_compliance` → X4 一键检查 (待实现)
+    Runtime facts, counts, ports, health, and generated inventories are intentionally not maintained here. Use the workspace registries and project source as the truth.
