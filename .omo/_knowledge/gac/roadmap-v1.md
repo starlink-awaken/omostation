@@ -38,15 +38,14 @@
 
 ---
 
-## 阶段 3: 元模型派生 (W5)
+## 阶段 3: 元模型派生 (W5) ✅ done (2026-06-28)
 
 规则上 MOF, 元模型约束派生 (机制 7, omostation 独有).
 
-- [ ] T3.1 规则 M1 元模型 (`RuleDefinition` 注册到 MOF)
-- [ ] T3.2 派生链 M1→M2→M3 (mof-derive)
-- [ ] T3.3 mof-validate 集成规则校验
-
-⚠️ 需 ecos/model-driven (待查并发状态)
+- [x] T3.1 规则 M1 元模型 (`GAC-RULE-METAMODEL.yaml` 注册到 MOF, Phase 4A)
+- [x] T3.2 派生链 M1→M2→M3 (gac-m1-sync.py 自动派生 118 M1 实例, Phase 4B)
+- [x] T3.3 mof-validate 集成规则校验 (gac-mof-validate.py + mof-schema-validate.py, 118/118 pass)
+- [x] T3.4 M1 实例 drift 检测 (gac-m1-sync.py + gac-healthcheck 第13项, Phase 4C)
 
 ---
 

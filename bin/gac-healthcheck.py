@@ -272,7 +272,28 @@ def healthcheck() -> dict:
         "rules_with_missing": ex_json.get("rules_with_missing_executor", 0),
     }
 
-    # 总体健康 (含 executor drift: 声明的 executor 必须实际存在)
+    # 13. GaC M1 实例 drift (机制7深化: registry↔M1 双向校验, Phase 4B)
+    m1_code, m1_out = run_tool("bin/gac-m1-sync.py", ["--json"])
+    try:
+        m1_json = json.loads(m1_out) if m1_out else {}
+    except json.JSONDecodeError:
+        m1_json = {}
+    m1_diff = m1_json.get("diff", {})
+    m1_drift = (
+        len(m1_diff.get("missing_in_m1", []))
+        + len(m1_diff.get("orphan_in_m1", []))
+        + len(m1_diff.get("stale", []))
+    )
+    report["m1_instance_drift"] = {
+        "ok": m1_drift == 0,
+        "registry_rules": m1_json.get("registry_rules", 0),
+        "m1_instances": m1_json.get("m1_instances", 0),
+        "missing_in_m1": len(m1_diff.get("missing_in_m1", [])),
+        "orphan_in_m1": len(m1_diff.get("orphan_in_m1", [])),
+        "stale": len(m1_diff.get("stale", [])),
+    }
+
+    # 总体健康 (含 executor drift + M1 instance drift: 声明的 executor 必须实际存在)
     report["healthy"] = (
         not missing
         and report["validate"]["ok"]
@@ -286,6 +307,7 @@ def healthcheck() -> dict:
         and report["legacy_drift"]["ok"]
         and report["bootstrap"]["ok"]
         and report["executor_drift"]["ok"]
+        and report["m1_instance_drift"]["ok"]
     )
     return report
 
@@ -378,6 +400,13 @@ def print_report(report: dict) -> None:
     ex_status = "✅" if ex["ok"] else "❌"
     print(
         f"▶ executor-drift (声明vs实际): {ex_status} executor={ex['declared_executors']} missing={ex['missing_executors']} 受影响规则={ex['rules_with_missing']}"
+    )
+
+    # M1 实例 drift (机制7深化: registry↔M1 双向校验)
+    m1 = report["m1_instance_drift"]
+    m1_status = "✅" if m1["ok"] else "❌"
+    print(
+        f"▶ M1实例drift (机制7): {m1_status} registry={m1['registry_rules']} M1={m1['m1_instances']} 缺={m1['missing_in_m1']} 多余={m1['orphan_in_m1']} 过期={m1['stale']}"
     )
 
     print()

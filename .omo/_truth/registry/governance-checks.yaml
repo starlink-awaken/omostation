@@ -1563,6 +1563,46 @@ gac:
       created_at: "2026-06-27"
       adr: "ADR-0106"
 
+    # ── Phase 4: 孤儿检查补全 (omo-audit-rule-map.md 2 个孤儿) ──
+    - id: CR-X4-TEST-COVERAGE
+      dimension: X4
+      layer: L2
+      name: "测试覆盖检查"
+      description: "每个非归档 kairon 包至少 1 个 test_*.py (omo_audit 检查 #2)"
+      check_type: test_coverage
+      target: "projects/kairon/packages/*/tests/"
+      executor: ['omo_audit', 'ci_gate']
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-28"
+      adr: "ADR-0106"
+    - id: CR-X4-ADR-LINKS
+      dimension: X4
+      layer: L2
+      name: "ADR 链接完整性"
+      description: "ADR INDEX.md 引用的所有 ADR 文件必须存在 (omo_audit 检查 #4)"
+      check_type: doc_lifecycle
+      target: ".omo/_knowledge/decisions/"
+      executor: ['omo_audit', 'ci_gate']
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-28"
+      adr: "ADR-0106"
+
+    # ── Phase 4B: M1 实例 drift 约束 (机制 7 闭环) ──
+    - id: CR-GAC-M1-INSTANCE-DRIFT-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X4
+      layer: meta
+      check_type: drift_audit
+      executor: ['ci_gate', 'radar_cron']
+      enforcement: "bin/gac-m1-sync.py (drift 检测) + gac-healthcheck.py 第13项"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-28"
+      adr: "ADR-0106"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)

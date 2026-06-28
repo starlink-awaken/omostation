@@ -95,16 +95,16 @@
 
 ---
 
-## 当前进展 (2026-06-27, 7 机制全闭环 + 物理沙箱)
+## 当前进展 (2026-06-28, 7 机制全闭环 + M1 实例化 + 物理沙箱)
 
 **GaC 体系达成稳态**:
-- ✅ **7 机制全闭环 + 深化**: 115 规则 (18 native + 97 indexed 全域收敛) + schema(source_type) + 执行器(executor drift + --run POC) + drift 5 层(gac/legacy/bootstrap/executor/M2) + 矛盾多维(relates_to 豁免) + lifecycle + MOF(M2 drift healthcheck)
-- ✅ **元治理递归实战**: bootstrap (GaC 治 GaC 4 层) + executor drift (声明 vs 实际) + M2 drift (gac-mof-validate 进 healthcheck) — **GaC 用自己的机制治 GaC 自己**
+- ✅ **7 机制全闭环 + M1 实例化**: 118 规则 (21 native + 97 indexed 全域收敛) + schema(source_type) + 执行器(executor drift + --run POC) + drift 6 层(gac/legacy/bootstrap/executor/M2/M1) + 矛盾多维(relates_to 豁免) + lifecycle + MOF(M2 + M1 118 实例 + gac-m1-sync)
+- ✅ **元治理递归实战**: bootstrap (GaC 治 GaC 4 层) + executor drift (声明 vs 实际) + M2 drift (gac-mof-validate) + M1 drift (gac-m1-sync) — **GaC 用自己的机制治 GaC 自己**
 - ✅ **物理沙箱 P1 完成**: contract_gatekeeper os.* 检测 + 全白名单 → omo lint direct-omo-io PASS (1005 files)
 - ✅ **cron 统一**: gac-crontab 唯一入口 (收编 X1-X4/X2 执行, governance/x2 deprecated)
 - ✅ **healthcheck 12 项全绿**: 文件/validate/drift/M2/doc-ssot/hygiene/registry-drift/legacy-drift/bootstrap/executor-drift + omo lint PASS
 
-**工具链** (11 个 bin/gac-*.py): validate/drift/healthcheck/gc/hook-pre-edit/hygiene-check/ingest-legacy/mof-validate/dashboard/bootstrap/executor
+**工具链** (12 个 bin/gac-*.py): validate/drift/healthcheck/gc/hook-pre-edit/hygiene-check/ingest-legacy/mof-validate/dashboard/bootstrap/executor/m1-sync
 
 **剩余** (渐进/长期): P2 白名单收敛 (渐进) / P3 omo daemon (长期纵深, 当前 P1+P2 稳态足够)
 
