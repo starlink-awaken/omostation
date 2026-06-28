@@ -92,7 +92,43 @@ def main() -> int:
     parser.add_argument("--write", nargs=2, metavar=("PATH", "CONTENT"), help="经 daemon 写")
     parser.add_argument("--stop", action="store_true", help="停 daemon")
     parser.add_argument("--ping", action="store_true", help="查 daemon 活")
+    parser.add_argument(
+        "--lockdown",
+        metavar="OMO_DIR",
+        help="P3 独占写激活: chmod OMO_DIR 0700 (owner-only, agent 直写失败需经 daemon --write). ⚠️影响全局",
+    )
+    parser.add_argument(
+        "--unlock",
+        metavar="OMO_DIR",
+        help="解锁 P3 lockdown: chmod OMO_DIR 0755 恢复默认",
+    )
     args = parser.parse_args()
+
+    if args.lockdown:
+        from pathlib import Path
+
+        omo = Path(args.lockdown).resolve()
+        if not omo.exists():
+            print(f"❌ OMO_DIR not found: {omo}", file=sys.stderr)
+            return 1
+        for p in [omo, *omo.rglob("*")]:
+            if p.is_dir():
+                p.chmod(0o700)
+        print(f"🔒 P3 lockdown: {omo} chmod 0700 (owner-only write, agent 需经 daemon --write)")
+        print(f"   解锁: gac-daemon.py --unlock {omo}")
+        return 0
+    if args.unlock:
+        from pathlib import Path
+
+        omo = Path(args.unlock).resolve()
+        if not omo.exists():
+            print(f"❌ OMO_DIR not found: {omo}", file=sys.stderr)
+            return 1
+        for p in [omo, *omo.rglob("*")]:
+            if p.is_dir():
+                p.chmod(0o755)
+        print(f"🔓 P3 unlock: {omo} chmod 0755 (默认恢复)")
+        return 0
 
     if args.start:
         daemon_loop()
