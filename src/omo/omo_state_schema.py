@@ -63,6 +63,8 @@ def validate_system_state(payload: Any) -> dict[str, Any]:
 _UNHEALTHY_STATES = frozenset(
     {"failed", "error", "unhealthy", "critical", "down", "unreachable"}
 )
+# 常驻服务类型: 需要 port_listening (非常驻 cli/scheduled/integrated/mcp 按需调用, 不算 offline)
+_RESIDENT_TYPES = frozenset({"daemon", "service", "server"})
 
 
 def summarize_system_health_snapshot(payload: Any) -> dict[str, Any]:
@@ -73,6 +75,7 @@ def summarize_system_health_snapshot(payload: Any) -> dict[str, Any]:
     healthy = 0
     unhealthy_services: list[str] = []
     stale_services: list[str] = []
+    resident_offline = 0
 
     for name, service in services.items():
         if not isinstance(service, dict):
@@ -86,13 +89,19 @@ def summarize_system_health_snapshot(payload: Any) -> dict[str, Any]:
         freshness_seconds = service.get("runtime", {}).get("freshness_seconds")
         if isinstance(freshness_seconds, int) and freshness_seconds > 86400:
             stale_services.append(str(name))
+        # offline: 只算常驻服务没监听端口 (非常驻类型按需, 不计离线)
+        if (
+            service.get("type") in _RESIDENT_TYPES
+            and service.get("port_listening") is not True
+        ):
+            resident_offline += 1
 
     return {
         "last_scan": snapshot.get("last_scan"),
         "total_services": total,
         "online_services": online,
         "healthy_services": healthy,
-        "offline_services": max(total - online, 0),
+        "offline_services": resident_offline,
         "unhealthy_services": sorted(unhealthy_services),
         "stale_services": sorted(stale_services),
     }
