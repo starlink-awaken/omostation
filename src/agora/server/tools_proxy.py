@@ -614,18 +614,18 @@ def register_proxy_tools(mcp: FastMCP) -> None:
 
         Returns governance freshness, convergence score, MCP backend
         counts, cron job health, git status, and ruff lint results
-        from Cockpit's load_arch_health() function.
+        from runtime.arch_health (workspace 级聚合, L1 共享).
         """
         import sys
         from pathlib import Path
 
-        # Try to import cockpit dashboard helpers
-        cockpit_helpers = Path.home() / "Workspace/projects/cockpit/src"
-        if str(cockpit_helpers) not in sys.path:
-            sys.path.insert(0, str(cockpit_helpers))
+        # runtime.arch_health (workspace 级聚合, 从 cockpit 提取到 L1 共享, 破跨层 I0→L3)
+        runtime_src = Path.home() / "Workspace/projects/runtime/src"
+        if str(runtime_src) not in sys.path:
+            sys.path.insert(0, str(runtime_src))
 
         try:
-            from cockpit.dashboard.helpers import load_arch_health
+            from runtime.arch_health import load_arch_health
 
             data = load_arch_health()
             return _ok(
