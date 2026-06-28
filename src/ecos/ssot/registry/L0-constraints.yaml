@@ -965,3 +965,25 @@ governance_closure_constraints:
     references:
       - "复盘: 2 次思维循环 (compact 疲劳)"
     violation: "思维循环 (同操作反复不执行); 装懂不承认"
+
+  - id: CR-GAC-M1-INSTANCE-DRIFT-01
+    applies_to: [L0, meta]
+    description: |
+      GaC 治理规则 (governance-checks.yaml::gac.rules) 必须有对应 M1 GAC-RULE-*.yaml 实例节点.
+      SSOT 仍在 governance-checks.yaml, M1 节点是 derived (gac-m1-sync.py 自动生成).
+      drift = registry 有但 M1 无 (missing) + M1 有但 registry 无 (orphan) + 字段不一致 (stale).
+      北极星不变量 5: 规则上 MOF M1, 元模型派生保证结构一致 (机制 7).
+    dimension: X4
+    rule: "gac.m1_instance_count == gac.registry_rule_count and drift_count == 0"
+    type: required
+    severity: warn
+    enforcement: "bin/gac-m1-sync.py (drift 检测) + gac-healthcheck.py 第13项 + CI gate"
+    introduced: '2026-06-28'
+    value_tier: 1
+    references:
+      - ".omo/_truth/registry/governance-checks.yaml::gac.rules"
+      - "projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-*.yaml"
+      - "bin/gac-m1-sync.py"
+      - ".omo/_knowledge/gac/NORTH-STAR.md (不变量 5)"
+      - ".omo/_knowledge/gac/stage3-4-design.md (派生链 M1→M2→M3)"
+    violation: "GaC 规则缺 M1 实例 (机制7 未完整); 或 registry↔M1 drift (字段不一致)"
