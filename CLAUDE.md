@@ -1,85 +1,43 @@
-# CLAUDE.md — ecos 认知层
+# CLAUDE.md — ecos AI Context
 
-> eCOS v6 L0 Cognitive Layer · MOF 模型 · SSB 签名链 · BOS 路由
+    > Session loader for AI work inside `ecos`.
+    > Keep durable engineering rules in [`AGENTS.md`](AGENTS.md) and volatile facts in SSOT files.
 
----
+    ## Load First
 
-## 项目身份
+    1. [`AGENTS.md`](AGENTS.md)
+    2. [`README.md`](README.md) when present
+    3. The source files and tests directly related to the task
+    4. Workspace context in [`../../CLAUDE.md`](../../CLAUDE.md) when the task crosses project boundaries
 
-ecos 是 eCOS v6 的 **L0 协议层**。负责系统信息架构的底层根定义。
+    ## Project Role
 
-**核心职责**：
-1. **MOF 元模型** — M3/M2/M1 三层 YAML 定义 (以实际文件为准)
-2. **SSB 签名链** — 认知操作的不可篡改签名
-3. **BOS URI 路由** — `bos://<domain>/<package>/<action>` 统一寻址
-4. **X1-X4 治理维度** — 审计/新鲜度/价值/一致性
+    - Layer: L0
+    - Responsibility: 协议层：SSB、MOF、L0 约束与治理规则
+    - Stack: Python / uv / pytest
 
----
+    ## Commands
 
-## 架构
+    ```bash
+    uv sync
+uv run pytest "tests/" -q
+uv run ruff check "src/"
+    ```
 
-```
-L0 ecos
-├── src/ecos/ssot/mof/       ← MOF 元模型 (SSOT)
-│   ├── m3.yaml              ← 元元模型 (Layer/Type/Relation)
-│   ├── ontology.yaml        ← 本体映射
-│   ├── m2/                  ← 类型定义 (M2 schema YAML)
-│   └── m1/                  ← 实例定义 (M1 YAML, 以实际为准)
-│       ├── architecture/    ← 架构定义
-│       ├── domain/          ← 19 个域定义 (L0-L4)
-│       ├── process/         ← 流程 (CARDS 等)
-│       ├── specification/   ← 约束 (12 个 CLAUDE 规范)
-│       ├── bosroute/        ← BOS URI 路由
-│       ├── artifact/        ← 制品脚本 (24 个 L4)
-│       ├── skill/           ← 定时技能 (30 个)
-│       ├── mechanism/       ← 执行机制
-│       └── entity/          ← 实体定义
-├── src/ecos/core/           ← 核心库 (ssb_client, signature)
-├── src/ecos/ssot/tools/     ← MOF 工具链 (mof + OutputFormatter)
-├── src/ecos/cli/            ← CLI 入口 (dashboard, scheduler)
-└── src/ecos/services/       ← 服务层 (governance, integration)
-```
+    ## Safe Editing Rules
 
----
+    - `M1/M2/M3 节点数量以 ssot/mof 实际文件为准。`
+- 新增约束要落注册表、工具和验证链，不能只改文档。
 
-## 快速命令
+    - Do not commit, push, reset, or bump submodule pointers unless the user explicitly asks.
+    - Preserve unrelated dirty changes in this repository.
+    - Keep Markdown pointed at SSOT files instead of copying generated facts.
 
-```bash
-cd projects/ecos
+    ## Closeout
 
-# 测试
-uv run pytest tests/ -q
+    ```bash
+    git status --short
+    uv run --with "pyyaml" python "../../bin/doc-ssot-lint.py" --json
+    ```
 
-# MOF 验证
-uv run mof list      # 列出 MOF 定义的域
-uv run mof-validate  # 验证 YAML schema
-uv run mof-audit     # 审计 MOF 一致性
-
-# 格式化 + 检查
-uv run ruff format src/ecos/
-uv run ruff check src/ecos/
-
-# 安装
-uv sync
-```
-
----
-
-## MOF 建模约定
-
-1. **M3 → M2 → M1 自上而下** — 修改 M1 前先检查 M2 类型定义
-2. **每个 YAML 有 `id` + `layer`** — 唯一标识 + 层级归属
-3. **层归属**: L0=认知/L1=运行时/L2=引擎/L3=入口/L4=自我
-4. **SSOT 级联** — MOF YAML 是操作模型的唯一真相源
-5. **`mof-validate` 应始终通过** — 新增 M1 后立即跑验证
-
----
-
-## GPTCHAS
-
-1. **MOF 是 SSOT** — L0 模型定义驱动所有上层代码生成
-2. **不要直接改 MOF tool 的 output** — 修改 `_output.py` 影响所有 CLI
-3. **Python 3.13+** — ecos targets Python 3.13+ (pyproject.toml: requires-python >=3.13)
-4. **测试路径是 `tests/`** — `pythonpath = ["src"]`
-5. **SSB 签名链不可篡改** — 所有认知操作有签名验证
-6. **MOF M1 目录按类型组织** — architecture/domain/process/specification/...
+    Report the checks you actually ran and any pre-existing dirty state that remains.
