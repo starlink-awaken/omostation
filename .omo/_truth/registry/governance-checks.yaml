@@ -620,18 +620,6 @@ gac:
       version: 1.0.0
       created_at: "2026-06-27"
       adr: "ADR-0106"
-    - id: X2-FRESH-ADR-TYPO
-      source_type: indexed
-      source_ref: ".omo/_truth/x2-freshness-rules.yaml::rules"
-      dimension: X2
-      layer: meta
-      check_type: legacy_index
-      executor: ['omo_audit', 'ci_gate']
-      enforcement: governance_loop_freshness
-      lifecycle: active
-      version: 1.0.0
-      created_at: "2026-06-27"
-      adr: "ADR-0106"
     - id: X4-CONS-OMO-GOVERNANCE-SURFACES
       source_type: indexed
       source_ref: ".omo/_truth/x4-consistency-rules.yaml::rules"

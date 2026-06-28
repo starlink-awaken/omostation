@@ -38,7 +38,7 @@ P110-D 收官后 dashboard 退化: 22/22 OK → **20/22 (2 失败)**:
 
 ### D1: ADR 0108 duplicate 修复 (Step 1.2)
 
-**操作**: `mv 0108-phase2-bos-contract-linter.md 0112-phase2-bos-contract-linter.md`
+**操作**: `mv 0108-phase2-bos-contract-linter.md 0113-phase2-bos-contract-linter.md`
 
 **结果**:
 - ✅ ADR 总数 71 (不变)
@@ -151,7 +151,7 @@ PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py 2>&1 | tail -3
 - **ADR-0108**: P110-A ecos domain_manager 2 子模块化 (0108 占用 #1)
 - **ADR-0111**: P110-D TS AST 工具升级 (P110 收官, 但引发 dashboard 退化)
 - **ADR-0112**: P111 dashboard 修复 (本 ADR, 紧急修复 + 教训沉淀)
-- **生态**: `bin/x2-freshness-check.py` (修复), `.omo/_knowledge/decisions/0112-phase2-bos-contract-linter.md` (renumbered)
+- **生态**: `bin/x2-freshness-check.py` (修复), `.omo/_knowledge/decisions/0113-phase2-bos-contract-linter.md` (renumbered)
 
 ---
 

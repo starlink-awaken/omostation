@@ -35,7 +35,7 @@ repos:
     hooks:
       - id: omo-logs-audit
         name: omo logs audit (baseline check, 0 增量才通过)
-        entry: uv run --directory projects/omo python -m omo.cli logs audit --baseline-check .omo/_knowledge/_audit_baseline.json
+        entry: uv run --directory projects/omo python -m omo.cli logs audit --baseline-check ../../.omo/_knowledge/_audit_baseline.json
         language: system
         pass_filenames: false
         stages: [pre-commit]
