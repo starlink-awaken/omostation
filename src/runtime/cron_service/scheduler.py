@@ -25,6 +25,11 @@ from . import config, db
 from . import delivery as delivery_module
 from . import executor as executor_module
 
+try:
+    from .health_scan import run_scan_if_due
+except ImportError:
+    run_scan_if_due = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -319,16 +324,20 @@ class CronScheduler:
             await asyncio.sleep(config.TICK_INTERVAL)
 
     async def _tick(self):
-        """Check for due jobs and run them."""
+        """Check for due jobs and run them. Also triggers periodic health scans."""
         self.last_tick_time = datetime.now(UTC)
         self.tick_count += 1
         jobs = db.list_jobs(enabled_only=True)
-        datetime.now(UTC)
 
         for job in jobs:
             last = job.last_run_at
             if _is_due(job.id, job.schedule, last, created_at=job.created_at):
                 await _run_job(job.id, self._executor)
+
+        # Route B: periodic health scan (every ~15 min via health_scan.should_scan)
+        if run_scan_if_due is not None:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(self._executor, run_scan_if_due)
 
     @property
     def is_running(self) -> bool:

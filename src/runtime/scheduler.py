@@ -43,6 +43,8 @@ class MatrixScheduler:
         # P1-AUTO_HEAL: consecutive failure tracking
         self._consecutive_failures: dict[str, int] = {}
         self._autoheal_enabled = True
+        # Route B: force-write OMO state even without state transition
+        self._force_write = False
 
     def _check_launchd(self, label: str) -> dict:
         if not label:
@@ -330,15 +332,16 @@ class MatrixScheduler:
         STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
         STATE_FILE.write_text(json.dumps(self.state, indent=2))
 
-        # HealthPulse: Only write to OMO SSOT if state transitioned
-        if state_transitioned:
+        # HealthPulse: Only write to OMO SSOT if state transitioned or force_write
+        if state_transitioned or self._force_write:
             OMO_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
             try:
                 validate_runtime_health_snapshot(self.state)
                 with open(OMO_STATE_FILE, "w") as f:
                     yaml.safe_dump(self.state, f, default_flow_style=False)
                 print(
-                    f"💓 HealthPulse: State transition detected. Updated {OMO_STATE_FILE}"
+                    f"💓 HealthPulse: Updated {OMO_STATE_FILE} "
+                    f"({'state transition' if state_transitioned else 'force write'})"
                 )
                 self.last_state_hash = state_hash
             except Exception as e:
