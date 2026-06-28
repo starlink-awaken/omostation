@@ -743,18 +743,8 @@ _FALLBACK_SERVICES: list[BosService] = [
         description="Forge Lint 检查",
     ),
     # ════════════════════════════════════════════════════════════════
-    # Internal / MCP-stdio services (from legacy POC_SERVICES dict)
+    # MCP-stdio services (from legacy POC_SERVICES dict)
     # ════════════════════════════════════════════════════════════════
-    BosService(
-        uri="bos://memory/local/all-search",
-        domain="memory",
-        package="memory",
-        action="all-search",
-        transport="internal",
-        module_path="agora.mcp.bos_resolver",
-        func_name="_memory_all_search",
-        description="P2 多区聚合搜索 — cockpit local + KOS + vault",
-    ),
     BosService(
         uri="bos://persona/family-hub/health",
         domain="persona",
@@ -763,26 +753,6 @@ _FALLBACK_SERVICES: list[BosService] = [
         transport="mcp_stdio",
         command=["uv", "run", "python", "projects/family-hub/mcp_server.py"],
         description="Family Hub local MCP Server",
-    ),
-    BosService(
-        uri="bos://governance/omo/audit",
-        domain="governance",
-        package="omo",
-        action="audit",
-        transport="internal",
-        module_path="omo.omo_audit",
-        func_name="run_governance_audit",
-        description="OMO 治理审计 (internal — 同进程 importlib)",
-    ),
-    BosService(
-        uri="bos://governance/omo/inspect",
-        domain="governance",
-        package="omo",
-        action="inspect",
-        transport="internal",
-        module_path="omo.omo_inspect",
-        func_name="run_full_inspection",
-        description="OMO 系统检查 (internal 同进程)",
     ),
     BosService(
         uri="bos://governance/omo/sync",
@@ -903,26 +873,6 @@ _FALLBACK_SERVICES: list[BosService] = [
             "runtime.mcp_server",
         ],
         description="Runtime MCP (短路径别名)",
-    ),
-    BosService(
-        uri="bos://meta/discover",
-        domain="meta",
-        package="meta",
-        action="discover",
-        transport="internal",
-        module_path="agora.mcp.bos_resolver",
-        func_name="_meta_discover",
-        description="发现所有可用 BOS 资源和入口",
-    ),
-    BosService(
-        uri="bos://memory/vault/search",
-        domain="memory",
-        package="memory",
-        action="vault-search",
-        transport="internal",
-        module_path="agora.mcp.bos_resolver",
-        func_name="_memory_vault_search",
-        description="L4 Vault 知识库搜索",
     ),
     # [UNIMPLEMENTED] POC stdio URIs — 标记为 mcp_stdio 但无 serve CLI
     BosService(
@@ -1311,17 +1261,24 @@ _FALLBACK_SERVICES: list[BosService] = [
 # 向后兼容：所有 from .services import POC_SERVICES 继续工作
 
 
+def _fallback_services() -> list[BosService]:
+    """硬编码 fallback + internal transport 单源 (services_internal)."""
+    from .services_internal import _INTERNAL_SERVICES
+
+    return list(_FALLBACK_SERVICES) + list(_INTERNAL_SERVICES)
+
+
 def _load_services() -> list[BosService]:
     """加载 BOS 服务注册表，优先 YAML 声明式，fallback 到硬编码。
 
     加载顺序:
     1. AGORA_BOS_REGISTRY 环境变量指定的 YAML 路径
     2. etc/bos-services.yaml (项目默认)
-    3. _FALLBACK_SERVICES (硬编码，零依赖)
+    3. _FALLBACK_SERVICES + _INTERNAL_SERVICES (硬编码，零依赖)
     """
     # env=none → 强制 fallback
     if os.environ.get("AGORA_BOS_REGISTRY", "").lower() == "none":
-        return list(_FALLBACK_SERVICES)
+        return _fallback_services()
 
     candidates = []
     env_path = os.environ.get("AGORA_BOS_REGISTRY", "")
@@ -1356,7 +1313,7 @@ def _load_services() -> list[BosService]:
                 )
                 break
 
-    return list(_FALLBACK_SERVICES)
+    return _fallback_services()
 
 
 POC_SERVICES: list[BosService] = _load_services()
