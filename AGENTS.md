@@ -1,88 +1,55 @@
-# AGENTS.md — OMO 引擎开发规范
+# AGENTS.md — OMO
 
-> **⚠️ 注意：你现在身处的是 OMO OS 内核源代码仓库 (projects/omo)。**  
-> 这里是系统的底层执行引擎（Engine），它不同于工作区根目录下的 `.omo/` 实例。
+    > Scope: project-local developer guide for `omo`.
+    > Workspace rules live in [`../../AGENTS.md`](../../AGENTS.md); project metadata lives in [`../../docs/project-registry.yaml`](../../docs/project-registry.yaml).
 
-## 定位与边界
+    ## Role
 
-1. **这里是什么**：
-   - 这里的代码构成了 OMO 的命令行工具 (`omo_worker.py`, `cli.py` 等)。
-   - 它是管理各个 L1-L4 Organism（如 Kairon, GBrain）的“操作系统层”的基础设施。
-2. **这里绝对不是什么**：
-   - 这里**绝对没有**具体的业务任务池 (`tasks/`)、工作态快照 (`workers/`) 或者项目真相库 (`_truth/`)。
-   - 不要在这个仓库下生成任何 `.omo/` 的运行时数据。
+    - Layer: L2
+    - Stack: Python / uv / pytest
+    - Responsibility: 治理内核：Phase/Task/Debt/Audit 生命周期
 
-## 开发与行为准则
+    Do not copy volatile facts such as test counts, tool counts, service counts, ports, or current health into this file.
 
-- **纯代码环境**：在这个项目中，你的角色是**系统内核开发工程师**。请专注于编写、重构和测试 Python 代码（特别是并发安全、状态流转逻辑）。
-- **工具链**：本项目使用 `uv` 进行依赖管理和构建。如果你需要添加新依赖，请使用 `uv add <package>`。
-- **架构心智**：修改调度代码（如 `omo_worker.py`）时，务必牢记你的修改将影响所有未来挂载的 `.omo/` 实例的生死存亡。**并发安全（SQLite Locks）**和**原子性**是第一要义。
+    ## Before Editing
 
-## AppendOnlyLog (Round 1-13 收口)
+    1. Read this file and [`CLAUDE.md`](CLAUDE.md) when it exists.
+    2. Check `git status --short` inside this project and at the workspace root.
+    3. Read the specific source or tests you are about to change.
+    4. Prefer project-local commands and targeted tests.
 
-本仓 `omo_io.AppendOnlyLog` 是 L0 JSONL 物理写盘 SSOT (Round 1-5 收口 + Round 12-13 扩展).
-**7 个 consumer** 共享同一物理层 (Round 5 后 Round 12 又加 2 个, 证明模式 OCP):
+    ## Commands
 
-| # | Consumer | 加入轮次 | 角色 | 落点 .jsonl |
-|---|----------|---------|------|-------------|
-| 1 | `omo_audit` | R1 | governance actions | `~/runtime/audit/governance-audit.jsonl` |
-| 2 | `omo_bos_metrics` | R2 | BOS invocations | `.omo/_knowledge/bos-metrics.jsonl` |
-| 3 | `omo_sync` | R3 | omo state sync | `.omo/_knowledge/omo-sync.jsonl` |
-| 4 | `omo_alert` | R4 | KEI threshold alerts | `.omo/_knowledge/omo-alerts.jsonl` |
-| 5 | `omo_event` | R5 P3 | 用户面向 emit | `.omo/_knowledge/omo-events.jsonl` |
-| 6 | `omo_history` | R12 (Round 5 漏登) | 治理评分历史快照 | `.omo/_knowledge/governance-history.jsonl` |
-| 7 | `omo_trail` | R12 P0 | 细粒度 step-by-step 操作轨迹 | `.omo/_knowledge/omo-trail.jsonl` |
+    ```bash
+    uv sync
+uv run pytest "tests/" -q
+uv run python -m omo.cli governance audit
+uv run python -m omo.cli lint direct-omo-io
+    ```
 
-修改 AppendOnlyLog 时, 外部 API 0 破坏 (append/read_all/tail/since/clear + lock= 参数),
-新增 consumer 加 import 就完事 (样板 = 2 行 `AppendOnlyLog(p).append(rec, schema=...)`).
-Round 12 加 `omo_trail` 真·OCP 验证: 改 0 行既有代码, 仅 1 文件新增 + 1 schema + SCHEMA_REGISTRY 1 行.
+    ## Key Files
 
-**Audit 机制 (Round 13 P0)**:
-```bash
-uv run --directory projects/omo python -m omo.cli logs audit                           # fail on any drift
-uv run --directory projects/omo python -m omo.cli logs audit --baseline-init PATH     # 写 baseline (lock-file)
-uv run --directory projects/omo python -m omo.cli logs audit --baseline-check PATH    # pre-commit 用, 增量 fail
-```
+    - `src/omo/cli.py`
+- `src/omo/mcp_server.py`
+- `src/omo/omo_ingress*.py`
+- `src/omo/omo_lint*.py`
+- `src/omo/_shared/`
 
-完整设计见 `.omo/_knowledge/management/append-only-log-pattern-2026-06-09.md` (§11 Round 12-13 扩展).
+    ## Gotchas
 
+    - `不要直接写 ../../.omo/，状态变更走 OMO CLI/MCP/broker。`
+- `新增治理写面必须同时有 runtime 实现、truth registry、lint/CI 门禁。`
+- `CLI/MCP 工具数量以代码和 docs/project-registry.yaml 为准。`
 
-## Bus foundation (跨仓依赖)
+    ## Verification
 
-本项目通过 `omo_bus_adapter.py` 接入 [bus-foundation](https://github.com/starlink-awaken/omostation/tree/main/projects/bus-foundation) (R66 独立仓):
+    - Documentation-only changes: run `uv run --with "pyyaml" python "../../bin/doc-ssot-lint.py" --json` from this project or from the workspace root.
+    - Code changes: run the narrowest relevant project test first, then broaden if shared contracts changed.
+    - Cross-layer behavior: verify the caller and the callee, not just the touched module.
 
-```python
-from bus_foundation import publish, subscribe, schedule, BusEnvelope
-```
+    ## SSOT Pointers
 
-- **Public API**: `publish` / `subscribe` / `schedule` / `BusEnvelope` / `EventType`
-- **零 agora 依赖**: bus-foundation 是 standalone Python package
-- **公共 API 冻结 6 月** (从 2026-06-12 起)
-- **L0 协议层提升**: 评估 R70-R72, 决策 **Path C: Defer Indefinitely** (见 `projects/bus-foundation/docs/ADR-0003-no-l0-promotion.md`)
-- **修改 bus-foundation**: 提 PR 到 `projects/bus-foundation/`, 改完跑该项目的 `uv run pytest -q` 验证
-
-> 不要直接 import `agora.bus` (那是 backward-compat shim)。新代码用 `from bus_foundation import ...`。
-
-## Task Policy (任务红线)
-
-新增 task policy  checker 位于 `src/omo/omo_task_policy.py`，供 `omo lint task-policy <name>` 调用：
-
-- `self-evolution-approval` — OPC P6 self-evolution 任务必须保留在 `planned/`，且携带 `approval_required` / `human_approval_required` / `approval_state: awaiting_human`
-- `human-approval-ref` — 需要人工审批的任务必须提供指向 `.omo/workers/runs/*.yaml` 的 `approval_ref`
-
-新增 policy 时只需在 `omo_task_policy.py` 的 `TASK_POLICIES` 注册表中添加 `TaskPolicy` 实例，无需修改 `omo_lint.py` 的 CLI 代码（choices 自动从注册表派生）。
-
-CI 调用示例：
-```bash
-uv run python -m omo.cli lint task-policy self-evolution-approval --workspace-root ../../..
-uv run python -m omo.cli lint task-policy human-approval-ref --workspace-root ../../..
-```
-
-## Workspace-Wide Governance (2026-06-24)
-
-This project follows the workspace-level governance conventions documented in the root `AGENTS.md`:
-
-- **Agent Mutation Protocol**: Any autonomous agent/cron/daemon that modifies workspace state must emit `agent_mutation_intent`, avoid direct file I/O to `.omo/`/`spaces/`, and commit immediately. See `.omo/standards/agent-mutation-protocol.md` for the full protocol.
-- **SSOT Guardian**: Run `python3 bin/ssot-guardian.py` from the workspace root before committing to detect task-count, current-wave, submodule-pointer, or direct-omo-io drift.
-- **direct-omo-io**: Scripts must route writes to `.omo/` through `omo CLI`, `projects/omo` core, or `projects/c2g` ingress — never via raw `open()/mkdir()/write_text()`.
-- **Submodule Governance**: Commit changes inside the submodule first, then bump the root-repo pointer; `git submodule status` with a `+` prefix indicates pending drift.
+    - Workspace architecture: [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md)
+    - Layer index: [`../../LAYER-INDEX.md`](../../LAYER-INDEX.md)
+    - Project metadata: [`../../docs/project-registry.yaml`](../../docs/project-registry.yaml)
+    - Runtime state: [`../../.omo/state/system.yaml`](../../.omo/state/system.yaml)
