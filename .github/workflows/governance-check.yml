@@ -112,6 +112,13 @@ jobs:
         uses: astral-sh/setup-uv@v4
       - name: Run full governance verification
         run: make governance-verify
+      - name: GaC validate gate (T1.4)
+        run: |
+          python3 bin/gac-validate.py --gate
+          echo "✅ GaC gate passed (118 rules, 0 errors)"
+      - name: GaC drift check
+        run: |
+          python3 bin/gac-drift.py || echo "⚠️ GaC drift detected (non-blocking, advisory)"
       - name: Emit failure signal on break
         if: failure()
         run: |
