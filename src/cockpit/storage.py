@@ -3,11 +3,9 @@
 IDataAccess Protocol 接口层支持 SQLite 和未来 MCP/HTTP 后端切换。
 """
 
-from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
-DB_PATH = Path.home() / ".workspace" / "data.db"
-
+# P110-F (TASK-F7114ABA 治本): DB_PATH SSOT 提 cockpit.paths (避免 storage↔storage_sqlite 循环重复)
 # P110-F (TASK-F7114ABA 治本): SQLiteDataAccess 拆分
 from .storage_sqlite import SQLiteDataAccess
 

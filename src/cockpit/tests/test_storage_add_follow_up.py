@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cockpit import storage
+from cockpit import storage, storage_sqlite
 
 
 def test_add_follow_up_appends_correctly(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
 
     rid = storage.save_research("topic", "summary", "body", source_count=1)
 
@@ -23,7 +23,7 @@ def test_add_follow_up_appends_correctly(monkeypatch, tmp_path: Path):
 
 
 def test_add_follow_up_nonexistent_research_does_not_raise(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
 
     # 对不存在的研究 ID 调用，不应抛出异常
     storage.add_follow_up(9999, "question?", "answer.")

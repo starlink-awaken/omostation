@@ -17,11 +17,10 @@ import json
 import sqlite3
 import time
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
-# DB_PATH 从拆分前 cockpit/storage.py 恢复 (F7114ABA 拆分漏 import, 45 F821 修复)
-DB_PATH = Path.home() / ".workspace" / "data.db"
+# DB_PATH SSOT: cockpit.paths (治本循环依赖, 避免 storage↔storage_sqlite 重复定义)
+from .paths import DB_PATH
 
 
 class SQLiteDataAccess:
