@@ -94,6 +94,22 @@ def cmd_mof(a):
     return _c(a)
 
 
+def cmd_gac(a):
+    """GaC 治理健康检查 (ADR-0106, 调 bin/gac-healthcheck.py). cockpit GaC 集成入口 (第4项)."""
+    import subprocess
+    from pathlib import Path
+
+    workspace = Path(__file__).resolve().parents[4]  # cli.py→src/cockpit→src→cockpit(proj)→projects→workspace
+    r = subprocess.run(
+        ["python3", str(workspace / "bin" / "gac-healthcheck.py")],
+        capture_output=True,
+        text=True,
+        cwd=str(workspace),
+    )
+    print(r.stdout or r.stderr or "(无输出)")
+    return 0 if r.returncode == 0 else 1
+
+
 def _c_context(a):
     from cockpit.commands.l4bridge import cmd_context as _c
 
@@ -271,6 +287,7 @@ def main() -> int:
     readiness_p.set_defaults(func=_readiness_mod.cmd_readiness)
 
     sub.add_parser("demo", help="快速演示")
+    sub.add_parser("gac", help="GaC 治理健康检查 (ADR-0106, 7 机制 + 115 规则 + drift)")
     daily_p = sub.add_parser("daily", help="每日研究简报")
     daily_p.add_argument("--days", type=int, default=1, help="回顾最近 N 天")
     daily_p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
@@ -735,6 +752,7 @@ def main() -> int:
         "events": _c_events,
         "ssb": cmd_ssb,
         "mof": cmd_mof,
+        "gac": cmd_gac,
         "omo": lambda a: __import__("cockpit.commands.omo", fromlist=["cmd_omo"]).cmd_omo(a),
         "runtime": lambda a: __import__("cockpit.commands.runtime", fromlist=["cmd_runtime"]).cmd_runtime(a),
         "help": cmd_help,
