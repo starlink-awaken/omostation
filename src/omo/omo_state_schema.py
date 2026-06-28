@@ -59,6 +59,12 @@ def validate_system_state(payload: Any) -> dict[str, Any]:
     return state
 
 
+# 健康检查白名单: 只有明确失败状态才算 unhealthy (避免 scheduled/integrated 等合法状态误判)
+_UNHEALTHY_STATES = frozenset(
+    {"failed", "error", "unhealthy", "critical", "down", "unreachable"}
+)
+
+
 def summarize_system_health_snapshot(payload: Any) -> dict[str, Any]:
     snapshot = validate_system_health_snapshot(payload)
     services = snapshot.get("services") or {}
@@ -75,7 +81,7 @@ def summarize_system_health_snapshot(payload: Any) -> dict[str, Any]:
             online += 1
         if service.get("health_check") == "healthy":
             healthy += 1
-        elif service.get("health_check") not in (None, "unknown"):
+        elif service.get("health_check") in _UNHEALTHY_STATES:
             unhealthy_services.append(str(name))
         freshness_seconds = service.get("runtime", {}).get("freshness_seconds")
         if isinstance(freshness_seconds, int) and freshness_seconds > 86400:
