@@ -1,0 +1,131 @@
+type: ModelDefinition
+status: active
+engine_ref: ENG-CC-SWITCH
+model_driven_refs:
+  source: brew+cc-switch
+  synced_at: '2026-06-25T07:17:06Z'
+governance:
+  owner: aetherforge-gateway
+  steward: m1-sync
+  freshness_policy: weekly
+models:
+- model_id: glm-4.5
+  display_name: GLM-4.5
+  cost_per_1k_input: 0.0006
+  cost_per_1k_output: 0.0022
+  context_window: 131100
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-4.5-air
+  display_name: GLM-4.5-Air
+  cost_per_1k_input: 0.0002
+  cost_per_1k_output: 0.0011
+  context_window: 131100
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-4.5-flash
+  display_name: GLM-4.5-Flash
+  cost_per_1k_input: 0
+  cost_per_1k_output: 0
+  context_window: 131100
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-4.5v
+  display_name: GLM-4.5V
+  cost_per_1k_input: 0.0006
+  cost_per_1k_output: 0.0018
+  context_window: 64000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: glm-4.6
+  display_name: GLM-4.6
+  cost_per_1k_input: 0.002
+  cost_per_1k_output: 0.008
+  context_window: 204800
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-4.6v
+  display_name: GLM-4.6V
+  cost_per_1k_input: 0.0003
+  cost_per_1k_output: 0.0009
+  context_window: 128000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: glm-4.7
+  display_name: GLM-4.7
+  cost_per_1k_input: 0.002
+  cost_per_1k_output: 0.008
+  context_window: 204800
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-4.7-flash
+  display_name: GLM-4.7-Flash
+  cost_per_1k_input: 0
+  cost_per_1k_output: 0
+  context_window: 200000
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-4.7-flashx
+  display_name: GLM-4.7-FlashX
+  cost_per_1k_input: 7.0e-05
+  cost_per_1k_output: 0.0004
+  context_window: 200000
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-5
+  display_name: GLM-5
+  cost_per_1k_input: 0.001
+  cost_per_1k_output: 0.0032
+  context_window: 204800
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-5.1
+  display_name: GLM-5.1
+  cost_per_1k_input: 0.006
+  cost_per_1k_output: 0.024
+  context_window: 200000
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-5.2
+  display_name: GLM-5.2
+  cost_per_1k_input: 0.0014
+  cost_per_1k_output: 0.0044
+  context_window: 1000000
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: glm-5v-turbo
+  display_name: GLM-5V-Turbo
+  cost_per_1k_input: 0.005
+  cost_per_1k_output: 0.022
+  context_window: 200000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning

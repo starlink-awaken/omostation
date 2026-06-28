@@ -1,15 +1,15 @@
 # CLAUDE.md — ecos 认知层
 
-> eCOS v5 L0 Cognitive Layer · MOF 模型 · SSB 签名链 · BOS 路由
+> eCOS v6 L0 Cognitive Layer · MOF 模型 · SSB 签名链 · BOS 路由
 
 ---
 
 ## 项目身份
 
-ecos 是 eCOS v5 7 层架构的 **L0 认知层**。负责系统信息架构的底层根定义。
+ecos 是 eCOS v6 的 **L0 协议层**。负责系统信息架构的底层根定义。
 
 **核心职责**：
-1. **MOF 元模型** — M3/M2/M1 三层 ~130 个 YAML 定义
+1. **MOF 元模型** — M3/M2/M1 三层 YAML 定义 (以实际文件为准)
 2. **SSB 签名链** — 认知操作的不可篡改签名
 3. **BOS URI 路由** — `bos://<domain>/<package>/<action>` 统一寻址
 4. **X1-X4 治理维度** — 审计/新鲜度/价值/一致性
@@ -23,8 +23,8 @@ L0 ecos
 ├── src/ecos/ssot/mof/       ← MOF 元模型 (SSOT)
 │   ├── m3.yaml              ← 元元模型 (Layer/Type/Relation)
 │   ├── ontology.yaml        ← 本体映射
-│   ├── m2/                  ← 类型定义 (12 个 YAML)
-│   └── m1/                  ← 实例定义 (~100+ 个 YAML)
+│   ├── m2/                  ← 类型定义 (M2 schema YAML)
+│   └── m1/                  ← 实例定义 (M1 YAML, 以实际为准)
 │       ├── architecture/    ← 架构定义
 │       ├── domain/          ← 19 个域定义 (L0-L4)
 │       ├── process/         ← 流程 (CARDS 等)
@@ -47,7 +47,7 @@ L0 ecos
 ```bash
 cd projects/ecos
 
-# 测试 (197 tests)
+# 测试
 uv run pytest tests/ -q
 
 # MOF 验证
@@ -79,7 +79,7 @@ uv sync
 
 1. **MOF 是 SSOT** — L0 模型定义驱动所有上层代码生成
 2. **不要直接改 MOF tool 的 output** — 修改 `_output.py` 影响所有 CLI
-3. **Python 3.10+** — 非 kairon 的 3.13+
+3. **Python 3.13+** — ecos targets Python 3.13+ (pyproject.toml: requires-python >=3.13)
 4. **测试路径是 `tests/`** — `pythonpath = ["src"]`
 5. **SSB 签名链不可篡改** — 所有认知操作有签名验证
 6. **MOF M1 目录按类型组织** — architecture/domain/process/specification/...

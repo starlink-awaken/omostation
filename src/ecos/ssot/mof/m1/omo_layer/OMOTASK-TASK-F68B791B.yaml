@@ -1,0 +1,22 @@
+id: OMOTASK-TASK-F68B791B
+type: OMOTask
+subtype: Task
+name: 'AETHERFORGE P2: swarm/mesh 测试补 (各5, 薄)'
+description: gateway 12 测试 (成熟), swarm/mesh 各5 (薄). 拍卖蜂群(auctioneer/bidder)+算力网格逻辑复杂,
+  测试覆盖要加.
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-F68B791B.yaml
+title: 'AETHERFORGE P2: swarm/mesh 测试补 (各5, 薄)'
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

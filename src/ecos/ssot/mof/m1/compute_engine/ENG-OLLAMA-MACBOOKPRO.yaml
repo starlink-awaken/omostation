@@ -1,0 +1,17 @@
+id: ENG-OLLAMA-MACBOOKPRO
+type: ComputeEngine
+node_ref: NODE-MACBOOKPRO
+engine_type: local_daemon
+base_url: "http://localhost:11434/v1"
+supported_protocols: ["openai"]
+cost_multiplier: 0.0001
+status: active
+description: "MacBook Pro M5 Max 上的 Ollama (本机)"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-25T00:00:00Z'
+    reason: added via tailscale integration

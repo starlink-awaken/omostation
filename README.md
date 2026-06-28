@@ -61,7 +61,7 @@ ecos 是 L0 编织层，独立于知识工程栈，可被任意上层调用。
 - **2026-06-06 (P31-W0)**: 从 `projects/kairon/packages/ecos` 拆出为独立项目
   - 决策依据: `.omo/_knowledge/management/architecture-pure-analysis.md` v3 终态标注"0 依赖、0 被依赖"
   - 补做原因: P30 决策文档 `decision-p30-architecture-final.md` 未明列 ecos，但 v3 终态要求独立
-  - 包数变化: kairon 21 → **20 包**（达成 W2-PKG-SLIM ≤20 目标）
+  - 包数变化: kairon 21 → 16 包 (见 docs/project-registry.yaml)
   - 物理迁移: P30-M1.2 commit `32bccb4` 已完成源码移动（git 跟踪已无 kairon/packages/ecos/），P31-W0 补做收尾：清理空壳目录 + 移除 workspace 引用 + 文档同步
 
 ## 治理归属

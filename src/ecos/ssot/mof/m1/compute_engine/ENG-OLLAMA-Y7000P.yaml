@@ -1,0 +1,17 @@
+id: ENG-OLLAMA-Y7000P
+type: ComputeEngine
+node_ref: NODE-Y7000P
+engine_type: local_daemon
+base_url: "http://100.64.43.36:11434/v1"
+supported_protocols: ["openai"]
+cost_multiplier: 0.0001
+status: active
+description: "Y7000P (Windows 11) 上的 Ollama — via Tailscale"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-25T00:00:00Z'
+    reason: added via tailscale integration

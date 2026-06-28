@@ -1,0 +1,217 @@
+type: ModelDefinition
+status: active
+engine_ref: ENG-CC-SWITCH
+model_driven_refs:
+  source: brew+cc-switch
+  synced_at: '2026-06-25T07:17:02Z'
+governance:
+  owner: aetherforge-gateway
+  steward: m1-sync
+  freshness_policy: weekly
+models:
+- model_id: gemini-2.0-flash
+  display_name: Gemini 2.0 Flash
+  cost_per_1k_input: 0.0001
+  cost_per_1k_output: 0.0004
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+- model_id: gemini-2.0-flash-lite
+  display_name: Gemini 2.0 Flash-Lite
+  cost_per_1k_input: 7.5e-05
+  cost_per_1k_output: 0.0003
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+- model_id: gemini-2.5-flash
+  display_name: Gemini 2.5 Flash
+  cost_per_1k_input: 0.0003
+  cost_per_1k_output: 0.0025
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-2.5-flash-image
+  display_name: Nano Banana
+  cost_per_1k_input: 0.0003
+  cost_per_1k_output: 0.03
+  context_window: 32800
+  capabilities:
+  - chat
+  - vision
+  - reasoning
+- model_id: gemini-2.5-flash-lite
+  display_name: Gemini 2.5 Flash-Lite
+  cost_per_1k_input: 0.0001
+  cost_per_1k_output: 0.0004
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-2.5-flash-preview-tts
+  display_name: Gemini 2.5 Flash Preview TTS
+  cost_per_1k_input: 0.0005
+  cost_per_1k_output: 0.01
+  context_window: 8200
+  capabilities:
+  - chat
+- model_id: gemini-2.5-pro
+  display_name: Gemini 2.5 Pro
+  cost_per_1k_input: 0.00125
+  cost_per_1k_output: 0.01
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-2.5-pro-preview-tts
+  display_name: Gemini 2.5 Pro Preview TTS
+  cost_per_1k_input: 0.001
+  cost_per_1k_output: 0.02
+  context_window: 8200
+  capabilities:
+  - chat
+- model_id: gemini-3-flash-preview
+  display_name: Gemini 3 Flash Preview
+  cost_per_1k_input: 0.0005
+  cost_per_1k_output: 0.003
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-3-pro-image-preview
+  display_name: Nano Banana Pro
+  cost_per_1k_input: 0.002
+  cost_per_1k_output: 0.12
+  context_window: 131100
+  capabilities:
+  - chat
+  - vision
+  - reasoning
+- model_id: gemini-3-pro-preview
+  display_name: Gemini 3 Pro Preview
+  cost_per_1k_input: 0.002
+  cost_per_1k_output: 0.012
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-3.1-flash-image-preview
+  display_name: Nano Banana 2
+  cost_per_1k_input: 0.0005
+  cost_per_1k_output: 0.06
+  context_window: 65500
+  capabilities:
+  - chat
+  - vision
+  - reasoning
+- model_id: gemini-3.1-flash-lite
+  display_name: Gemini 3.1 Flash Lite
+  cost_per_1k_input: 0.00025
+  cost_per_1k_output: 0.0015
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-3.1-flash-lite-preview
+  display_name: Gemini 3.1 Flash Lite Preview
+  cost_per_1k_input: 0.00025
+  cost_per_1k_output: 0.0015
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-3.1-pro-preview
+  display_name: Gemini 3.1 Pro Preview
+  cost_per_1k_input: 0.002
+  cost_per_1k_output: 0.012
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-3.1-pro-preview-customtools
+  display_name: Gemini 3.1 Pro Preview Custom Tools
+  cost_per_1k_input: 0.002
+  cost_per_1k_output: 0.012
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-3.5-flash
+  display_name: Gemini 3.5 Flash
+  cost_per_1k_input: 0.0015
+  cost_per_1k_output: 0.009
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-embedding-001
+  display_name: Gemini Embedding 001
+  cost_per_1k_input: 0.00015
+  cost_per_1k_output: 0
+  context_window: 2000
+  capabilities:
+  - chat
+- model_id: gemini-flash-latest
+  display_name: Gemini Flash Latest
+  cost_per_1k_input: 0.0003
+  cost_per_1k_output: 0.0025
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemini-flash-lite-latest
+  display_name: Gemini Flash-Lite Latest
+  cost_per_1k_input: 0.0001
+  cost_per_1k_output: 0.0004
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemma-4-26b-a4b-it
+  display_name: Gemma 4 26B A4B IT
+  cost_per_1k_input: 0
+  cost_per_1k_output: 0
+  context_window: 262100
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gemma-4-31b-it
+  display_name: Gemma 4 31B IT
+  cost_per_1k_input: 0
+  cost_per_1k_output: 0
+  context_window: 262100
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning

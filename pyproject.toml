@@ -36,6 +36,25 @@ ecos-watchdog = "ecos.cli.watchdog:main"
 # MCP Server (含 workflow MCP tools) — 由 Agora gateway 管理
 ecos-mcp = "ecos.mcp_server:main"
 
+# Phase 0 (BOS Contract Linter 30-day plan) — P110+ added
+# File: src/ecos/ssot/tools/mof_contract_lint.py (underscore for Python import)
+# CLI name: mof-contract-lint (hyphen for CLI convention, matches other mof-*.py tools)
+# Validates bos-services.yaml: internal transport module/function existence,
+# required_scopes (omo.scopes fallback), action naming convention
+mof-contract-lint = "ecos.ssot.tools.mof_contract_lint:main"
+
+# Phase 3 (Autonomy) — P110+ added
+# File: src/ecos/ssot/agents/mof_contract_agent.py
+# Subcommands: analyze <uri>, diagnose <error_log>
+# Reuses Phase 2 v0.2 explain_error() for 4 IDs
+# Real subprocess --json output (NOT mock, Phase 3 C2 adjustment)
+mof-contract-agent = "ecos.ssot.agents.mof_contract_agent:main"
+
+# Phase 3 agent entry-points (Phase 3 C1: use ecos.agents NOT qoder.agents)
+# Standard setuptools entry-points for AI agent discovery
+[project.entry-points."ecos.agents"]
+mof-contract-agent = "ecos.ssot.agents.mof_contract_agent:main"
+
 # MOF 元模型工具链 (通过 cockpit mof 调用)
 # 入口已收敛: mof → cockpit mof
 

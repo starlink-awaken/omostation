@@ -18,10 +18,10 @@ graph TB
     Agora[agora I0]
     MCP[ecos MCP]
     M3[model-driven M3]
-    M2[M2 Schema 45 YAML]
-    M1[M1 Instances 984 YAML]
+    M2[M2 Schema YAML]
+    M1[M1 Instances YAML]
     SSB[SSB Chain]
-    Tools[25+ mof-* tools]
+    Tools[mof-* tools]
 
     Agora --> MCP
     MCP --> Tools
@@ -38,7 +38,7 @@ graph TB
 | Type | Entry | Port / Notes |
 |:--|:--|:--|
 | CLI | `ecos-ssb, ecos-dashboard, ecos-scheduler` |  |
-| MCP stdio | `src/ecos/mcp_server.py` | ~19 tools |
+| MCP stdio | `src/ecos/mcp_server.py` | MOF + L0 tools |
 | HTTP | `ecos-dashboard` | :9090 |
 | Tools | `mof-validate, mof-derive, mof-bridge-sync, ...` |  |
 
@@ -46,12 +46,21 @@ graph TB
 
 | Module | Responsibility |
 |:--|:--|
-| `src/ecos/l0/ssb/` | SSB signature chain |
-| `src/ecos/l0/ssot/` | SSOT engine + MOF meta-model |
-| `src/ecos/l0/ssot/tools/` | 25+ MOF toolchain |
-| `src/ecos/l0/governance/` | 16 L0 governance primitives |
-| `src/ecos/l0/emergence/` | Emergence calculation |
+| `src/ecos/l0/ssb/` | SSB signature chain (auth, client, dump, init, integrity, schema_migrate, seq_migrate) |
+| `src/ecos/l0/ssot/` | SSOT engine + MOF meta-model + extractor + evolution + monitoring + patterns + performance + recovery |
+| `src/ecos/ssot/tools/` | MOF toolchain (34 tool files: mof-*.py, l0_mcp_tools.py, mof_contract_lint.py 等) |
+| `src/ecos/l0/governance/` | 15 L0 governance primitives (distributed, role, swarm, personal, task_scheduler, failover, load_balancer, agent_registry, alert_engine, checkers, event_bus, history_store, optimization, primitives, registry) |
+| `src/ecos/l0/emergence/` | Emergence calculation (calc, auto, watch, snapshot) |
+| `src/ecos/l0/symphony/` | State machine orchestration (matcher, models, state_machine, triggers) |
+| `src/ecos/l0/bus/` | Bus protocol |
+| `src/ecos/l0/concurrency/` | Lock facade + sqlite lock |
+| `src/ecos/l0/triggers/` | Trigger registry + yaml loader |
+| `src/ecos/protocol/` | Protocol layer (ssb/ + emergence/, 与 l0/ 同构的兼容映射) |
+| `src/ecos/workflow/` | Workflow engine (13 模块: loader, validator, executor, cache, circuit_breaker, backends/, event_listener 等) |
+| `src/ecos/services/` | Service layer (governance, integration, monitoring, core, constitution_watcher) |
+| `src/ecos/common/` | Common libs (logger, exceptions, config, security, cache, persistence, metrics, governed_fs) |
 | `src/ecos/mcp_server.py` | L0 MCP entry |
+| `src/ecos/cli/` | CLI (dashboard, scheduler, watchdog, workflow, workflow_runs) |
 
 ## 4. 测试
 

@@ -1,0 +1,50 @@
+type: ModelDefinition
+status: active
+engine_ref: ENG-CC-SWITCH
+model_driven_refs:
+  source: brew+cc-switch
+  synced_at: '2026-06-25T07:17:10Z'
+governance:
+  owner: aetherforge-gateway
+  steward: m1-sync
+  freshness_policy: weekly
+models:
+- model_id: k2p5
+  display_name: Kimi K2.5
+  cost_per_1k_input: 0
+  cost_per_1k_output: 0
+  context_window: 262100
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: k2p6
+  display_name: Kimi K2.6
+  cost_per_1k_input: 0
+  cost_per_1k_output: 0
+  context_window: 262100
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: k2p7
+  display_name: Kimi K2.7 Code
+  cost_per_1k_input: 0
+  cost_per_1k_output: 0
+  context_window: 262100
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: kimi-k2-thinking
+  display_name: Kimi K2 Thinking
+  cost_per_1k_input: 0.004
+  cost_per_1k_output: 0.016
+  context_window: 262100
+  capabilities:
+  - chat
+  - tools
+  - reasoning

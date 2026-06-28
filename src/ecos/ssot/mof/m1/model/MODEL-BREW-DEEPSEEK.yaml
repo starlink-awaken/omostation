@@ -1,0 +1,46 @@
+type: ModelDefinition
+status: active
+engine_ref: ENG-DEEPSEEK-CLOUD
+model_driven_refs:
+  source: brew+cc-switch
+  synced_at: '2026-06-25T07:16:59Z'
+governance:
+  owner: aetherforge-gateway
+  steward: m1-sync
+  freshness_policy: weekly
+models:
+- model_id: deepseek-chat
+  display_name: DeepSeek Chat
+  cost_per_1k_input: 0.00014
+  cost_per_1k_output: 0.00028
+  context_window: 1000000
+  capabilities:
+  - chat
+  - tools
+- model_id: deepseek-reasoner
+  display_name: DeepSeek Reasoner
+  cost_per_1k_input: 0.00014
+  cost_per_1k_output: 0.00028
+  context_window: 1000000
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: deepseek-v4-flash
+  display_name: DeepSeek V4 Flash
+  cost_per_1k_input: 0.00014
+  cost_per_1k_output: 0.00028
+  context_window: 1000000
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: deepseek-v4-pro
+  display_name: DeepSeek V4 Pro
+  cost_per_1k_input: 0.000435
+  cost_per_1k_output: 0.00087
+  context_window: 1000000
+  capabilities:
+  - chat
+  - tools
+  - reasoning

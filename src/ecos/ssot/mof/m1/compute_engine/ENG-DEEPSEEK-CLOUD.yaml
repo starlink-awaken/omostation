@@ -1,0 +1,18 @@
+id: ENG-DEEPSEEK-CLOUD
+type: ComputeEngine
+node_ref: NODE-CLOUD
+engine_type: cloud_api
+base_url: "https://api.deepseek.com/anthropic"
+supported_protocols: ["anthropic"]
+auth_source: credentials
+cost_multiplier: 1.0
+status: active
+description: "DeepSeek 系列 — 通过 DeepSeek Anthropic 兼容接口"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-25T00:00:00Z'
+    reason: 从 cc-switch 分离，独立 compute_engine

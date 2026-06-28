@@ -1,0 +1,21 @@
+id: OMOTASK-TASK-F7114ABA
+type: OMOTask
+subtype: Task
+name: 'P1 GodModule: omo_ingress354L/agora1945L/gbrain3841L'
+description: 原型A5(Growth&Underinvestment), 杠杆点7+5. 用omo-srp-refactor skill渐进拆
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-F7114ABA.yaml
+title: 'P1 GodModule: omo_ingress354L/agora1945L/gbrain3841L'
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

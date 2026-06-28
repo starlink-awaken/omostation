@@ -1,0 +1,21 @@
+id: OMOTASK-TASK-67C63D6C
+type: OMOTask
+subtype: Task
+name: 'AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾)'
+description: 'AUDIT: QuotaEngine 已加载但数据未完全利用 (376行21class, 半实现). Phase 1 收尾.'
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-67C63D6C.yaml
+title: 'AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾)'
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

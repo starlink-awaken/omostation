@@ -1,0 +1,21 @@
+id: OMOTASK-QUEST-8
+type: OMOTask
+subtype: Task
+name: 测试每日打扫
+description: '游戏化任务: 奖励 20 积分, 归属于 child'
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/QUEST-8.yaml
+title: 测试每日打扫
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

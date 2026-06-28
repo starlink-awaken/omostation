@@ -1,0 +1,21 @@
+id: OMOTASK-TASK-94BB9C70
+type: OMOTask
+subtype: Task
+name: 'P1 并发Agent抢占: 共享文件advisory-lock'
+description: 原型A4(TragedyOfCommons), 杠杆点7+6
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-94BB9C70.yaml
+title: 'P1 并发Agent抢占: 共享文件advisory-lock'
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

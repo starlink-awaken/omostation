@@ -1,0 +1,22 @@
+id: OMOTASK-TASK-13AD0B21
+type: OMOTask
+subtype: Task
+name: 'AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升)'
+description: 'AUDIT: M1 命名空间37个, aetherforge只消费4个(11%), 33未接入(agent/entity/protocol/workflow/skill/...).
+  同 BOS 鸿沟病根 (定义层丰富/执行层薄弱).'
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-13AD0B21.yaml
+title: 'AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升)'
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

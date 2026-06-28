@@ -1,0 +1,21 @@
+id: OMOTASK-TASK-9B363829
+type: OMOTask
+subtype: Task
+name: 'P0 BOS声明/执行鸿沟: resolve率21.6%→≥90%'
+description: 原型A1(ShiftingBurden)+A3(SuccessTheater), 杠杆点8(反馈回路)+2(证据驱动). evidence-smoke量化87gap
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-9B363829.yaml
+title: 'P0 BOS声明/执行鸿沟: resolve率21.6%→≥90%'
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

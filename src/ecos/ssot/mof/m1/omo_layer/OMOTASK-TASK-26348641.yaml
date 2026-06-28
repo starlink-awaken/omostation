@@ -1,0 +1,21 @@
+id: OMOTASK-TASK-26348641
+type: OMOTask
+subtype: Task
+name: 'P0 自反馈闭环: governance停摆/mypy假绿无报警'
+description: 原型A3, 杠杆点8. 反馈信号不回决策输入端
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-26348641.yaml
+title: 'P0 自反馈闭环: governance停摆/mypy假绿无报警'
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

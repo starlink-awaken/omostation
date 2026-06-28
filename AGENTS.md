@@ -1,12 +1,12 @@
 # AGENTS.md — ecos Development Guide
 
-> eCOS v5 L0 Protocol Layer · SSB 签名链 + MOF 元模型 + BOS URI 路由
+> eCOS v6 L0 Protocol Layer · SSB 签名链 + MOF 元模型 + BOS URI 路由
 
 ## Quick Commands
 
 ```bash
 cd projects/ecos
-uv run pytest tests/ -q          # 859 tests
+uv run pytest tests/ -q          # 测试 (以实际为准)
 uv run ruff check src/           # Lint check
 uv run ruff check --fix src/     # Auto-fix
 uv run ruff format src/          # Format
@@ -14,51 +14,52 @@ uv run ruff format src/          # Format
 
 ## Architecture
 
-ecos 是 eCOS v5 7 层架构的 L0 协议层，负责系统底层的不可变日志和元模型定义。
+ecos 是 eCOS v6 的 L0 协议层，负责系统底层的不可变日志和元模型定义。
 
 ```
 src/ecos/
-├── common/      # 公共库 (logger, exceptions, config, security, cache, persistence)
-├── l0/          # L0 核心
-│   ├── governance/  # 蜂群式AI超级大脑原语 (16个模块)
-│   ├── ssb/     # SSB 签名链 (auth, client, dump, init, integrity)
-│   ├── emergence/   # 涌现计算
-│   ├── ssot/    # SSOT 引擎 + 工具链 (25 mof-* 工具)
-│   └── symphony/    # 状态机编排
-├── l1/          # L1 运行时 (委托 L0)
-│   ├── runtime/     # CommunicationProtocol, StateSyncService, FailoverExecutor, LoadBalancerExecutor
-│   └── transport.py # TCPNode (asyncio TCP 通信)
-├── l2/          # L2 引擎 (委托 L0)
-│   └── engine/      # CollaborationEngine, SwarmEngine, PersonalEngine
-├── l3/          # L3 入口 (调用 L0)
-│   └── entry/       # GovernanceCLI (6 命令), GovernanceMCP (14 工具)
-├── cli/         # CLI (dashboard, scheduler, watchdog)
-├── services/    # 服务层 (core, governance, integration, monitoring)
-└── workflow/    # 工作流引擎 (9 模块) — 统一编排调度器
-│              M1 DSL → loader → validator(X1-X4) → executor → backend_registry
-│              缓存: cache.py (内存 + TTL + 线程安全)
-│              熔断: circuit_breaker.py (后端不可达缓存, TTL=10s)
-│              后端: metaos(可选) / agora(跨层路由) / symphony(状态机) / swarm(多Agent)
-│                    runtime(项目生命周期) / default(硬编码兼容)
-│              事件驱动: event_listener → bos:// 事件 → 自动触发工作流
-│              测试: 859 tests, 全绿覆盖
-│              收敛状态: 5/5 backends 注册, 26/26 M1 节点带 explicit backend
-│              架构评分: 93/100
-└── ssot/tools/  # MOF 工具链
+├── common/          # 公共库 (logger, exceptions, config, security, cache, persistence, metrics, governed_fs)
+├── l0/              # L0 核心
+│   ├── governance/  # L0 治理原语 (15 模块: distributed, role, swarm, personal, task_scheduler, failover, load_balancer, agent_registry, alert_engine, checkers, event_bus, history_store, optimization, primitives, registry)
+│   ├── ssb/         # SSB 签名链 (auth, client, dump, init, integrity, schema_migrate, seq_migrate)
+│   ├── emergence/   # 涌现计算 (calc, auto, watch, snapshot)
+│   ├── ssot/        # SSOT 引擎 + MOF 元模型 + extractor + evolution + monitoring + patterns + performance + recovery
+│   ├── symphony/    # 状态机编排 (matcher, models, state_machine, triggers)
+│   ├── bus/         # Bus protocol
+│   ├── concurrency/ # Lock facade + sqlite lock
+│   └── triggers/    # Trigger registry + yaml loader
+├── protocol/        # 协议层 (ssb/ + emergence/, 与 l0/ 同构兼容映射)
+├── ssot/tools/      # MOF 工具链 (34 工具文件: mof-*.py, l0_mcp_tools.py, mof_contract_lint.py)
+│                    #   mof-validate, mof-audit, mof-derive, mof-bridge-sync, mof-state-bridge,
+│                    #   mof-enforce, mof-reason, mof-extract, mof-contract-lint 等
+├── cli/             # CLI (dashboard, scheduler, watchdog, workflow, workflow_runs)
+├── services/        # 服务层 (governance, integration, monitoring, core, constitution_watcher)
+└── workflow/        # 工作流引擎 (13 模块) — 统一编排调度器
+                     #   M1 DSL → loader → validator(X1-X4) → executor → backend_registry
+                     #   缓存: cache.py | 熔断: circuit_breaker.py
+                     #   后端: metaos / agora / symphony / swarm / runtime / default
+                     #   事件驱动: event_listener → bos:// 事件 → 自动触发工作流
 ```
 
-## L0 治理模块 (16个核心模块)
+## L0 治理模块 (15 核心模块)
 
-| 模块 | 功能 | 测试 |
-|------|------|------|
-| distributed.py | CRDTSync + StateSyncService + NodeManager + CommunicationProtocol | ✅ |
-| role.py | RoleManager + RoleCollaboration + RoleSwitcher + RoleEvaluator | ✅ |
-| swarm.py | SwarmManager + EmergenceDetector + CollectiveDecision + SwarmVisualizer | ✅ |
-| personal.py | PersonalKnowledgeManager + KnowledgeGraphBuilder + PreferenceEngine + RecommendationEngine | ✅ |
-| task_scheduler.py | TaskScheduler + DAGScheduler | ✅ |
-| failover.py | FailoverManager | ✅ |
-| load_balancer.py | LoadBalancer | ✅ |
-| agent_registry.py | AgentRegistry | ✅ |
+| 模块 | 功能 |
+|------|------|
+| distributed.py | CRDTSync + StateSyncService + NodeManager + CommunicationProtocol |
+| role.py | RoleManager + RoleCollaboration + RoleSwitcher + RoleEvaluator |
+| swarm.py | SwarmManager + EmergenceDetector + CollectiveDecision + SwarmVisualizer |
+| personal.py | PersonalKnowledgeManager + KnowledgeGraphBuilder + PreferenceEngine + RecommendationEngine |
+| task_scheduler.py | TaskScheduler + DAGScheduler |
+| failover.py | FailoverManager |
+| load_balancer.py | LoadBalancer |
+| agent_registry.py | AgentRegistry |
+| alert_engine.py | 告警引擎 |
+| checkers.py | 检查器 |
+| event_bus.py | 事件总线 |
+| history_store.py | 历史存储 |
+| optimization.py | 优化器 |
+| primitives.py | 基础原语 |
+| registry.py | 注册表 |
 
 ## 架构委托链
 
@@ -87,7 +88,7 @@ L3 入口 (调用 L0/L1/L2)
 
 ```bash
 cd projects/ecos
-uv run pytest tests/ -q                     # 472 tests
+uv run pytest tests/ -q                     # 测试
 uv run pytest tests/ -k "keyword" -q        # 按关键字
 uv run pytest tests/test_l0/test_distributed.py -v  # 分布式场景测试
 ```
@@ -102,17 +103,17 @@ uv run pytest tests/test_l0/test_distributed.py -v  # 分布式场景测试
 
 ```bash
 cd projects/ecos
-uv run pytest tests/ -q                     # 全量 (472 tests)
+uv run pytest tests/ -q                     # 全量测试
 uv run pytest tests/ -k "keyword" -q        # 按关键字
 uv run pytest tests/test_l0/test_distributed.py -v  # 分布式场景
 ```
 
 ## File Organization
 
-- `src/ecos/` — 60+ 源文件, 6,982 行
-- `src/ecos/l0/governance/` — 16 个蜂群式AI超级大脑核心模块
-- `src/ecos/common/` — 6 个公共库 (logger, exceptions, config, security, cache, persistence)
-- `tests/` — 472 测试用例
+- `src/ecos/` — 源码 (以实际文件为准)
+- `src/ecos/l0/governance/` — 蜂群式AI超级大脑核心模块
+- `src/ecos/common/` — 公共库 (logger, exceptions, config, security, cache, persistence)
+- `tests/` — 测试用例 (以实际为准)
 
 ## Gotchas
 
@@ -124,12 +125,7 @@ uv run pytest tests/test_l0/test_distributed.py -v  # 分布式场景
 
 ## 治理状态
 
-| 指标 | 值 |
-|------|-----|
-| Phase | **9** |
-| 在线域 | 12 个在线 |
-| MOF 规则 | 5,234 |
-| Git | 74 commits |
+> 运行时状态以 `../../.omo/state/system.yaml` 为 SSOT，不在此硬编码。
 
 ## Workspace-Wide Governance (2026-06-24)
 

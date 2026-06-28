@@ -1,0 +1,22 @@
+id: OMOTASK-TASK-02788FE2
+type: OMOTask
+subtype: Task
+name: 'AETHERFORGE P0: RouteScheduler 实现 (v2 Phase 2, 路由核心)'
+description: 'AUDIT: RouteScheduler 尚未实现 (routing_policy 命名空间没消费). v2 Phase 2 核心路由引擎,
+  4d. policies 框架(filter+score)有但没调度器落地.'
+status: candidate
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-02788FE2.yaml
+title: 'AETHERFORGE P0: RouteScheduler 实现 (v2 Phase 2, 路由核心)'
+gate: pending
+gate_status: open
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: proposed
+  timestamp: '2026-06-28T00:00:00Z'
+  reason: synced_from_omo_tasks

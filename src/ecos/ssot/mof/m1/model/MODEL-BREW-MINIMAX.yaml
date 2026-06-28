@@ -1,0 +1,75 @@
+type: ModelDefinition
+status: active
+engine_ref: ENG-CC-SWITCH
+model_driven_refs:
+  source: brew+cc-switch
+  synced_at: '2026-06-25T07:17:13Z'
+governance:
+  owner: aetherforge-gateway
+  steward: m1-sync
+  freshness_policy: weekly
+models:
+- model_id: MiniMax-M2
+  display_name: MiniMax-M2
+  cost_per_1k_input: 0.0003
+  cost_per_1k_output: 0.0012
+  context_window: 196600
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: MiniMax-M2.1
+  display_name: MiniMax-M2.1
+  cost_per_1k_input: 0.0003
+  cost_per_1k_output: 0.0012
+  context_window: 204800
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: MiniMax-M2.5
+  display_name: MiniMax-M2.5
+  cost_per_1k_input: 0.0003
+  cost_per_1k_output: 0.0012
+  context_window: 204800
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: MiniMax-M2.5-highspeed
+  display_name: MiniMax-M2.5-highspeed
+  cost_per_1k_input: 0.0006
+  cost_per_1k_output: 0.0024
+  context_window: 204800
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: MiniMax-M2.7
+  display_name: MiniMax-M2.7
+  cost_per_1k_input: 0.0003
+  cost_per_1k_output: 0.0012
+  context_window: 204800
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: MiniMax-M2.7-highspeed
+  display_name: MiniMax-M2.7-highspeed
+  cost_per_1k_input: 0.0006
+  cost_per_1k_output: 0.0024
+  context_window: 204800
+  capabilities:
+  - chat
+  - tools
+  - reasoning
+- model_id: MiniMax-M3
+  display_name: MiniMax-M3
+  cost_per_1k_input: 0.0006
+  cost_per_1k_output: 0.0024
+  context_window: 512000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning

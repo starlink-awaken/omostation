@@ -1,0 +1,18 @@
+id: ENG-OPENROUTER-CLOUD
+type: ComputeEngine
+node_ref: NODE-CLOUD
+engine_type: cloud_api
+base_url: "https://openrouter.ai/api/v1"
+supported_protocols: ["openai"]
+auth_source: credentials
+cost_multiplier: 1.0
+status: active
+description: "OpenRouter — 统一 API 网关 (OpenAI 兼容)"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-25T00:00:00Z'
+    reason: 从 cc-switch 分离，独立 compute_engine
