@@ -122,6 +122,8 @@ Historical closeout details are useful evidence but should not be pasted into th
 | OMO governance surfaces | [`.omo/standards/omo-governance-surfaces.md`](.omo/standards/omo-governance-surfaces.md) |
 | GaC North Star | [`.omo/_knowledge/gac/NORTH-STAR.md`](.omo/_knowledge/gac/NORTH-STAR.md) |
 | P43 closed-loop pattern | [`.omo/_knowledge/patterns/p43-closed-loop-pattern.md`](.omo/_knowledge/patterns/p43-closed-loop-pattern.md) |
+| L0/SSOT/M0/MOF 对齐审计 (2026-06-29) | [audit](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) + [remediation](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment-remediation.md) + [ADR-0114 L4 豁免](.omo/_knowledge/decisions/0114-l4-gac-exemption.md) |
+| Frontmatter'd yaml 读法 (safe_load_all) | 读 `_truth/` 多文档 yaml 必 `safe_load_all` 取正文 (agent 私有 memory, 不入仓) |
 | Executable agent workflows | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
 
 ## 9. Closeout Checklist

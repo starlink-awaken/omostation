@@ -81,6 +81,7 @@ cd "projects/gbrain" && bun test
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | External adapter contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" adapters` |
 | External adapter health | `uv run --with "pyyaml" python "bin/agent-workflow.py" doctor` |
+| L0/SSOT/M0/MOF 对齐审计 | [`.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md`](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) (D1-D6 drift + 四者关系图) |
 
 ## 6. Closeout
 
