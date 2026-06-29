@@ -15,6 +15,7 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("gac-validate", ["bin/gac-validate.py", "--gate"]),
     ("gac-drift", ["bin/gac-drift.py"]),
+    ("agent-workflow-lint", ["bin/agent-workflow.py", "lint"]),
     ("doc-ssot-lint", ["bin/doc-ssot-lint.py"]),
     ("doc-ssot-snapshots", ["scripts/check-doc-ssot-snapshots.py"]),
     ("doc-link-check", ["bin/doc-link-check.py"]),

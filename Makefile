@@ -1,4 +1,4 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint gac-local-gate governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflows gac-local-gate governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -12,6 +12,9 @@ help:
 	@echo "make kairon-build      安装 kairon 依赖 (uv sync)"
 	@echo ""
 	@echo "=== 治理 ==="
+	@echo "make agent-workflows    列出 agent 可执行治理流程"
+	@echo "make agent-workflow-lint 校验 agent workflow SSOT"
+	@echo "make agent-workflow-doctor 检查 BMAD/OpenSpec/GStack/beads 适配器"
 	@echo "make gac-local-gate     运行 GaC 本地硬门"
 	@echo "make governance-release-gate 运行发布前远端可达性硬门"
 	@echo "make submodule-pointer-transaction 运行子模块指针事务 dry-run"
@@ -52,6 +55,15 @@ install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/S
 	install -m 755 .githooks/pre-commit .git/hooks/pre-commit
 	@echo "✅ 已装 .git/hooks/pre-push (push 时 sync 子模块, 失败阻断, 防 CI 悬空)"
 	@echo "✅ 已装 .git/hooks/pre-commit (commit 时 GaC/SSOT 本地硬门)"
+
+agent-workflows:
+	uv run --with pyyaml python bin/agent-workflow.py list
+
+agent-workflow-lint:
+	uv run --with pyyaml python bin/agent-workflow.py lint
+
+agent-workflow-doctor:
+	uv run --with pyyaml python bin/agent-workflow.py doctor
 
 gac-local-gate:
 	uv run --with pyyaml python bin/gac-local-gate.py

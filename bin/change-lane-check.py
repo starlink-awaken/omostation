@@ -38,6 +38,17 @@ def changed_paths(staged: bool) -> list[str]:
 def classify(path: str, submodules: set[str]) -> str:
     if path in submodules:
         return "submodule_pointer"
+    if path in {
+        ".omo/_truth/registry/governance-checks.yaml",
+        ".omo/_truth/registry/agent-clis.yaml",
+        ".omo/_truth/registry/agent-workflows.yaml",
+        ".omo/capabilities/agent-clis.yaml",
+        ".omo/standards/agent-workflow-contract.md",
+        ".agents/skills/project-governance/SKILL.md",
+        "bin/agent-workflow.py",
+        "tests/test_agent_workflow.py",
+    }:
+        return "governance_code"
     if path == ".omo/state/system_health.yaml" or path.startswith("runtime/"):
         return "runtime_snapshot"
     if path.startswith(".omo/"):
@@ -45,6 +56,7 @@ def classify(path: str, submodules: set[str]) -> str:
     if path.endswith(".md") and (
         path in {"AGENTS.md", "CLAUDE.md", "README.md", "ARCHITECTURE.md", "LAYER-INDEX.md"}
         or path.startswith("projects/")
+        or path.startswith("spaces/")
         or path.startswith("docs/")
     ):
         return "docs"
