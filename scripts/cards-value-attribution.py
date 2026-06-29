@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 X3 — CARDS 价值归因脚本
+eCOS v6 X3 — CARDS 价值归因脚本
 ==================================
 Phase X3 / BKL-015 / DEBT-X-007
 读取 cards.db，按域/状态/周期统计价值贡献。
@@ -170,7 +170,7 @@ def format_report(result: dict) -> str:
     """人类可读报告"""
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — CARDS 价值归因报告")
+    lines.append("  eCOS v6 — CARDS 价值归因报告")
     lines.append("=" * 64)
     lines.append(f"  生成时间: {result['generated_at'][:19]}")
     lines.append(f"  总卡片数: {result['total_cards']}")
@@ -213,7 +213,7 @@ def format_report(result: dict) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 CARDS 价值归因")
+    parser = argparse.ArgumentParser(description="eCOS v6 CARDS 价值归因")
     parser.add_argument("--db", required=True, help="cards.db 路径")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()

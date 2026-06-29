@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L3 — 适配器桩 (Adapter Stubs)
+eCOS v6 L3 — 适配器桩 (Adapter Stubs)
 =========================================
 Phase 8.2 / DEBT-L3-002 (🟡)
 WeChat/Web/API/Event 适配器的结构定义和桩实现。
@@ -126,7 +126,7 @@ ADAPTERS = {
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 L3 适配器桩")
+    parser = argparse.ArgumentParser(description="eCOS v6 L3 适配器桩")
     parser.add_argument("--list", action="store_true", help="列出适配器")
     parser.add_argument(
         "--test", type=str, choices=list(ADAPTERS.keys()), help="测试适配器"

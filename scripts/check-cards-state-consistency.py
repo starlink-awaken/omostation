@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 X2 — CARDS↔STATE 一致性校验器
+eCOS v6 X2 — CARDS↔STATE 一致性校验器
 ========================================
 Phase X2 / BKL-013 / DEBT-X-005
 对比各域 STATE.md 中的 CARDS 指针与 cards.db 实际状态，检测漂移。
@@ -158,7 +158,7 @@ def format_report(results: dict) -> str:
     """人类可读报告"""
     lines = []
     lines.append("=" * 60)
-    lines.append("  eCOS v5 — CARDS↔STATE 一致性检查报告")
+    lines.append("  eCOS v6 — CARDS↔STATE 一致性检查报告")
     lines.append("=" * 60)
     lines.append(f"  检查时间: {results['checked_at'][:19]}")
     lines.append(f"  活跃卡片: {results['total_cards']}")
@@ -178,7 +178,7 @@ def format_report(results: dict) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 CARDS↔STATE 一致性校验")
+    parser = argparse.ArgumentParser(description="eCOS v6 CARDS↔STATE 一致性校验")
     parser.add_argument("--db", required=True, help="cards.db 路径")
     parser.add_argument("--vault", required=True, help="Documents vault 根路径")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
