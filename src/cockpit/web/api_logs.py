@@ -45,7 +45,7 @@ def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | Non
         else:
             print(f"Script {script_name} failed: {result.stderr}")
             return None
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, Exception) as e:  # defensive fallback  # noqa: BLE001
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, Exception) as e:  # defensive fallback
         print(f"Error running {script_name}: {e}")
         return None
 
@@ -71,7 +71,7 @@ def get_logs_from_files() -> list[dict]:
                                     "message": line,
                                 }
                             )
-            except Exception:  # noqa: BLE001, S112  # defensive fallback
+            except Exception:  # noqa: S112  # defensive fallback
                 continue
 
     # 从 runtime 日志获取
@@ -91,7 +91,7 @@ def get_logs_from_files() -> list[dict]:
                                     "message": line,
                                 }
                             )
-            except Exception:  # noqa: BLE001, S112  # defensive fallback
+            except Exception:  # noqa: S112  # defensive fallback
                 continue
 
     return logs

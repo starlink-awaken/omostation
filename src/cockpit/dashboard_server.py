@@ -72,7 +72,7 @@ for _router_module in (
         if _router is not None:
             app.include_router(_router, dependencies=_AUTH_DEPS)
             print(f"Successfully loaded router: {_router_module}")
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         print(f"Error loading router {_router_module}: {e}", file=sys.stderr)
         traceback.print_exc()
 

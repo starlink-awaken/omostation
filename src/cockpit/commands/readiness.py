@@ -26,7 +26,7 @@ def _run_readiness_summary(args: list[str], workspace_root: Path) -> int:
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=workspace_root, timeout=60)
         return result.returncode
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         console = _get_console()
         console.print(f"[red]❌ 执行失败: {e}[/red]")
         return 1

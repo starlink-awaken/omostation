@@ -41,7 +41,7 @@ def read_omo_tasks(root: Path, state: str) -> list[dict]:
                     data = yaml.safe_load(file)
                     if data:
                         tasks.append(data)
-            except Exception:  # defensive fallback  # noqa: BLE001
+            except Exception:  # defensive fallback
                 # 并发控制：如果 omo_bridge 正在写文件，可能读到残缺 YAML
                 # 此处保持静默，等待下一个 1.5s 周期重试
                 pass

@@ -14,8 +14,7 @@ _mock_runtime_config.EXEC_LOG_FILE = mock.MagicMock()
 _mock_runtime_config.log = mock.MagicMock()
 _mock_runtime_config.setup_logging = mock.MagicMock()
 
-sys.modules["runtime"] = _mock_runtime
-sys.modules["runtime.executor"] = _mock_runtime_executor
+# 只 mock runtime.executor 子模块, 保留真实的 runtime 包.
 sys.modules["runtime.executor.config"] = _mock_runtime_config
 sys.modules["runtime.executor.engine"] = _mock_runtime_engine
 

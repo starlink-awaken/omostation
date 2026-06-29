@@ -41,5 +41,5 @@ async def api_sandbox_execute(request: Request):
                 "error": res.error,
             }
         )
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)

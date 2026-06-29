@@ -31,7 +31,7 @@ def cmd_context(_args: Namespace) -> int:
 
     try:
         ctx = json.loads(workspace_context())
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ workspace_context 调用失败: {e}[/]")
         return 1
 
@@ -92,7 +92,7 @@ def cmd_domains(_args: Namespace) -> int:
         from cockpit.scripts.cockpit_mcp import domains_list
 
         result = json.loads(domains_list())
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ domains_list 失败: {e}[/]")
         return 1
 
@@ -140,7 +140,7 @@ def cmd_skill(args: Namespace) -> int:
         console.print(f"  [dim]描述: {desc}[/]")
         console.print("  [green]✓ 技能已调度 (由 cron_service 执行)[/]")
         return 0
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ 技能执行失败: {e}[/]")
         return 1
 
@@ -157,7 +157,7 @@ def cmd_cards(args: Namespace) -> int:
         card_id = getattr(args, "card_id", "") or ""
         try:
             result = json.loads(cards_check(card_id=card_id))
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             _get_err().print(f"[red]❌ cards_check 失败: {e}[/]")
             return 1
 
@@ -172,7 +172,7 @@ def cmd_cards(args: Namespace) -> int:
 
     try:
         items = json.loads(cards_status())
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ cards_status 失败: {e}[/]")
         return 1
 
@@ -217,7 +217,7 @@ def cmd_vault(args: Namespace) -> int:
 
     try:
         result = json.loads(vault_search(keyword=keyword))
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ vault_search 失败: {e}[/]")
         return 1
 

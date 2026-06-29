@@ -25,7 +25,7 @@ def cmd_bos_status(args):
         print(f"   Success rate: {summary['success_rate'] * 100:.1f}%")
         print(f"   Avg latency: {summary['avg_latency_ms']:.1f}ms")
         print(f"   Cache: {cache['active_entries']} active / {cache['total']} total")
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         print(f"   BOS Metrics unavailable: {e}")
 
     # Swarm status
@@ -40,7 +40,7 @@ def cmd_bos_status(args):
         print(f"   Role: {status['role']}")
         print(f"   Total nodes: {status['total_nodes']}")
         print(f"   Online nodes: {status['online_nodes']}")
-    except Exception:  # defensive fallback  # noqa: BLE001
+    except Exception:  # defensive fallback
         print()
         print("🐝 Agora Swarm: standalone mode")
 
@@ -78,7 +78,7 @@ def cmd_bos_list(args):
             print(f"\n  {domain} ({len(services)}):")
             for uri in sorted(services):
                 print(f"    {uri}")
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         print(f"  BOS 服务不可用: {e}")
 
 
@@ -95,7 +95,7 @@ def cmd_bos_discover(args):
 
             with open(pyproject, "rb") as f:
                 data = tomllib.load(f)
-        except Exception:  # noqa: BLE001, S112  # defensive fallback
+        except Exception:  # noqa: S112  # defensive fallback
             continue
 
         scripts = data.get("project", {}).get("scripts", {})
@@ -195,7 +195,7 @@ else:
 
         console.print(table)
         return 0
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         console.print(f"[red]错误:[/] {e}")
         return 1
 
@@ -418,6 +418,6 @@ else:
         console.print(table)
         return 0
 
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         console.print(f"[red]错误:[/] {e}")
         return 1

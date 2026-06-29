@@ -65,7 +65,7 @@ if router:
                 "m0_snapshot": m0_status,
                 "architecture": "eCOS v6 Core Backbone (4 Spine: Memory/Swarm/Compute/OMO)",
             }
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {
                 "service": "ecos-dashboard",
                 "status": "degraded",
@@ -94,7 +94,7 @@ if router:
                     {k: v for k, v in w.items() if isinstance(v, (str, int, float, bool, list, dict)) or v is None}
                 )
             return {"workflows": safe, "total": len(safe)}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"error": str(e), "workflows": [], "total": 0}
 
     @router.post("/workflow/run")
@@ -120,7 +120,7 @@ if router:
                 except (TypeError, ValueError):
                     safe[k] = str(v)
             return safe
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"error": str(e), "workflow": name, "passed": 0, "failed": 0}
 
     @router.get("/workflow/describe/{name}")
@@ -133,7 +133,7 @@ if router:
             if not wf:
                 return {"error": f"工作流不存在: {name}"}
             return wf
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"error": str(e)}
 
     @router.get("/workflow/backends")
@@ -143,7 +143,7 @@ if router:
             from ecos.workflow import list_backends
 
             return {"backends": list_backends()}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"error": str(e), "backends": []}
 
     @router.get("/workflow/actions")
@@ -153,7 +153,7 @@ if router:
             from ecos.workflow.actions import list_actions
 
             return {"actions": list_actions()}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"error": str(e), "actions": []}
 
     @router.get("/workflow/validate/{name}")
@@ -176,7 +176,7 @@ if router:
                 "warnings": warnings,
                 "total_violations": len(violations),
             }
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"error": str(e)}
 
     @router.get("/workflow/logs")
@@ -195,7 +195,7 @@ if router:
                     {k: v for k, v in r.items() if isinstance(v, (str, int, float, bool, list, dict)) or v is None}
                 )
             return {"runs": safe, "total": len(safe)}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"error": str(e), "runs": []}
 
     @router.post("/workflow/test")
@@ -215,7 +215,7 @@ if router:
                 except (TypeError, ValueError):
                     safe[k] = str(v)
             return safe
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"error": str(e)}
 
     @router.get("/skills")
@@ -273,7 +273,7 @@ if router:
                     parsed_skills.append(
                         {"id": s["name"], "name": name, "description": desc, "source": s["source"], "path": s["path"]}
                     )
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     parsed_skills.append(
                         {
                             "id": s["name"],
@@ -285,5 +285,5 @@ if router:
                     )
 
             return JSONResponse(content={"status": "ok", "skills": parsed_skills})
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return JSONResponse(content={"status": "error", "error": str(e)}, status_code=500)

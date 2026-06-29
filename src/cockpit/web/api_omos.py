@@ -93,7 +93,7 @@ if router:
                     "planned": health.get("planned"),
                 },
             }
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {
                 "service": "omo-dashboard",
                 "status": "degraded",
@@ -135,7 +135,7 @@ if router:
                 violations_res = await get_omos_violations()
                 if isinstance(violations_res, dict) and violations_res.get("status") == "ok":
                     violation_count = len(violations_res.get("violations", []))
-            except Exception:  # defensive fallback  # noqa: BLE001
+            except Exception:  # defensive fallback
                 pass
 
             if violation_count > 0:
@@ -180,7 +180,7 @@ if router:
                             "assignee": "parent",
                         },
                     )
-            except Exception:  # defensive fallback  # noqa: BLE001
+            except Exception:  # defensive fallback
                 pass
 
             # ─── 动态注入 3：解析已完成任务日志并放入荣誉殿堂 ───
@@ -254,7 +254,7 @@ if router:
                 )
 
             return {"status": "ok", "quests": quests, "profiles": profiles, "logs": formatted_logs}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @router.post("/quests")
@@ -328,7 +328,7 @@ if router:
             )
 
             return {"status": "ok", "quest_id": quest_id, "task_id": task_id}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @router.post("/quests/{quest_id}/complete")
@@ -375,7 +375,7 @@ if router:
                         },
                         source_uri="bos://governance/cockpit/quests",
                     )
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
                 return {"status": "ok", "task_id": "QUEST-VIOLATION-FIX", "event_published": True}
 
@@ -410,7 +410,7 @@ if router:
                         if target_card["id"] in text:
                             card_file_path = f
                             break
-                    except Exception:  # defensive fallback  # noqa: BLE001
+                    except Exception:  # defensive fallback
                         pass
 
                 if not card_file_path:
@@ -459,7 +459,7 @@ if router:
                         now=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                         evidence_paths=[str(card_file_path.relative_to(_REPO_ROOT))],
                     )
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
 
                 try:
@@ -474,7 +474,7 @@ if router:
                         },
                         source_uri="bos://governance/cockpit/quests",
                     )
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
 
                 return {"status": "ok", "task_id": f"CARD-{target_card['id']}", "event_published": True}
@@ -522,7 +522,7 @@ if router:
                         now=_utc_now(),
                         evidence_paths=[f"sqlite://family-hub/quests/{quest_id}"],
                     )
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
 
                 try:
@@ -537,11 +537,11 @@ if router:
                         },
                         source_uri="bos://governance/cockpit/quests",
                     )
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
 
                 return {"status": "ok", "task_id": task_id, "event_published": True}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @router.post("/fix-drift")
@@ -571,7 +571,7 @@ if router:
                 if proc.returncode == 0 or "自动修复" in proc.stdout
                 else "修复完成，部分漂移仍需人工核对。",
             }
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @router.get("/violations")
@@ -638,7 +638,7 @@ if router:
             _VIOLATIONS_CACHE = res
             _VIOLATIONS_CACHE_TIME = now
             return res
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @router.post("/circuit-break")
@@ -657,12 +657,12 @@ if router:
                         payload={"circuit_broken": broken},
                         source_uri="bos://governance/cockpit/circuit_breaker",
                     )
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
                 return {"status": "ok", "circuit_broken": broken}
             else:
                 return {"status": "error", "error": "Failed to update provider-plane.yaml"}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @router.post("/budget")
@@ -681,12 +681,12 @@ if router:
                         payload={"daily_budget": budget},
                         source_uri="bos://governance/cockpit/daily_budget",
                     )
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
                 return {"status": "ok", "daily_budget": budget}
             else:
                 return {"status": "error", "error": "Failed to update provider-plane.yaml"}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @router.get("/thoughts")
@@ -704,7 +704,7 @@ if router:
                         state = yaml.safe_load(f) or {}
                         health_score = state.get("health_score", 100)
                         phase = state.get("current_phase", "未知")
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
 
             plane_path = _REPO_ROOT / ".omo" / "state" / "provider-plane.yaml"
@@ -716,7 +716,7 @@ if router:
                         plane = yaml.safe_load(f) or {}
                         circuit_broken = plane.get("circuit_broken", False)
                         daily_budget = plane.get("daily_budget", 100.0)
-                except Exception:  # defensive fallback  # noqa: BLE001
+                except Exception:  # defensive fallback
                     pass
 
             violation_count = 0
@@ -724,7 +724,7 @@ if router:
                 v_res = await get_omos_violations()
                 if isinstance(v_res, dict) and v_res.get("status") == "ok":
                     violation_count = len(v_res.get("violations", []))
-            except Exception:  # defensive fallback  # noqa: BLE001
+            except Exception:  # defensive fallback
                 pass
 
             timestamp = datetime.now(UTC).isoformat()
@@ -780,5 +780,5 @@ if router:
                 {"role": "keeper", "name": "Keeper", "avatar": "👁️", "content": k_text},
             ]
             return {"status": "ok", "timestamp": timestamp, "thoughts": thoughts}
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}

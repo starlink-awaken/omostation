@@ -15,8 +15,8 @@ _mock_runtime_config.DEFAULT_MODEL = "mock-model"
 _mock_runtime_config.log = mock.MagicMock()
 _mock_runtime_config.setup_logging = mock.MagicMock()
 
-sys.modules["runtime"] = _mock_runtime
-sys.modules["runtime.executor"] = _mock_runtime_executor
+# 只 mock runtime.executor 子模块, 保留真实的 runtime 包 (避免污染 dashboard
+# 等需要 runtime.arch_health 的测试).
 sys.modules["runtime.executor.config"] = _mock_runtime_config
 sys.modules["runtime.executor.engine"] = _mock_runtime_engine
 sys.modules["runtime.executor.server"] = mock.MagicMock()

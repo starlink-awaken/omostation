@@ -81,7 +81,7 @@ async def api_v1_status():
         for future in concurrent.futures.as_completed(futures, timeout=5):
             try:
                 layers.append(future.result())
-            except Exception as e:  # defensive fallback  # noqa: BLE001
+            except Exception as e:  # defensive fallback
                 source = futures[future]
                 layers.append(
                     {
@@ -127,7 +127,7 @@ async def api_v1_m0():
             )
         raw = yaml.safe_load(M0_SNAPSHOT_PATH.read_text(encoding="utf-8"))
         return JSONResponse(raw)
-    except Exception as e:  # defensive fallback  # noqa: BLE001
+    except Exception as e:  # defensive fallback
         return JSONResponse({"error": f"M0 snapshot read error: {e}"}, status_code=500)
 
 

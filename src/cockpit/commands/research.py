@@ -105,7 +105,7 @@ def cmd_research(args: argparse.Namespace) -> int:
             _get_err().print(f"[red]⚠️ minerva 超时 ({e.timeout}s) — 降级 ollama[/red]")
         except FileNotFoundError:
             _get_err().print("[yellow]⚠️ minerva 未安装 — 降级 ollama[/yellow]")
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             _get_err().print(f"[yellow]⚠️ minerva 异常 ({type(e).__name__}) — 降级 ollama[/yellow]")
 
     if not output:
@@ -239,7 +239,7 @@ def _human_summary(raw) -> str:
             if q:
                 return f"🔍 {q}" + (f" ({total}命中)" if total is not None else "")
             return "[搜索追踪]"
-        except Exception:  # defensive fallback  # noqa: BLE001
+        except Exception:  # defensive fallback
             return "[数据记录]"
     return _short(s, 80)
 
@@ -623,7 +623,7 @@ def _show_active_ids_hint(missing_ids: list[int]) -> None:
         if recent:
             lines = "\n".join(f"  [cyan]{r['id']:>4}[/]  {_short(r['topic'], 50)}" for r in recent)
             _get_console().print("[yellow]最近的研究记录:[/yellow]\n" + lines)
-    except Exception:  # defensive fallback  # noqa: BLE001
+    except Exception:  # defensive fallback
         pass
 
 
@@ -1339,7 +1339,7 @@ def _cmd_research_batch(args) -> int:
             results.append({"topic": t, "status": "ok" if ret == 0 else "error", "code": ret})
             status_icon = "[green]✅[/]" if ret == 0 else "[red]❌[/]"
             console.print(f"  {status_icon} 完成 [{i}/{len(topics)}]")
-        except Exception as e:  # defensive fallback  # noqa: BLE001
+        except Exception as e:  # defensive fallback
             results.append({"topic": t, "status": "error", "error": str(e)})
             console.print(f"  [red]❌ 失败: {e}[/]")
 

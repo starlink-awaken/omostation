@@ -49,7 +49,7 @@ def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | Non
         else:
             print(f"Script {script_name} failed: {result.stderr}")
             return None
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, Exception) as e:  # defensive fallback  # noqa: BLE001
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, Exception) as e:  # defensive fallback
         print(f"Error running {script_name}: {e}")
         return None
 
@@ -82,7 +82,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "tags": task_data.get("tags", []),
                     }
                 )
-            except Exception:  # noqa: BLE001, S112  # defensive fallback
+            except Exception:  # noqa: S112  # defensive fallback
                 continue
 
     # 读取计划任务
@@ -108,7 +108,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "tags": task_data.get("tags", []),
                     }
                 )
-            except Exception:  # noqa: BLE001, S112  # defensive fallback
+            except Exception:  # noqa: S112  # defensive fallback
                 continue
 
     # 读取完成任务
@@ -134,7 +134,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "tags": task_data.get("tags", []),
                     }
                 )
-            except Exception:  # noqa: BLE001, S112  # defensive fallback
+            except Exception:  # noqa: S112  # defensive fallback
                 continue
 
     return tasks

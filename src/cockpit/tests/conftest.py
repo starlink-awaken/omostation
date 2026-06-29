@@ -6,10 +6,10 @@ from pathlib import Path
 # 确保 cockpit/ 的父目录在 sys.path 中（from cockpit.xxx import ...）
 # cockpit 是一个包（有 __init__.py），所以需要它的父目录在 sys.path 中
 _project_root = str(Path(__file__).resolve().parent.parent)  # cockpit/
-_parent_dir = str(Path(__file__).resolve().parent.parent.parent)  # ~/Workspace/
-for p in [_project_root, _parent_dir]:
-    if p not in sys.path:
-        sys.path.insert(0, p)
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+# NOTE: 不再把 ~/Workspace/ 根目录插入 sys.path，避免根目录下的 runtime/
+# 等目录被识别为 namespace package，覆盖 editable install 的真实包。
 
 import pytest
 

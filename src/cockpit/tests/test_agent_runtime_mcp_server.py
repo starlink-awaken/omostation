@@ -8,8 +8,7 @@ _mock_runtime = mock.MagicMock()
 _mock_runtime_executor = mock.MagicMock()
 _mock_runtime_engine = mock.MagicMock()
 
-sys.modules["runtime"] = _mock_runtime
-sys.modules["runtime.executor"] = _mock_runtime_executor
+# 只 mock runtime.executor 子模块, 保留真实的 runtime 包.
 sys.modules["runtime.executor.engine"] = _mock_runtime_engine
 sys.modules["runtime.executor.config"] = mock.MagicMock()
 

@@ -102,9 +102,9 @@ quota_summary:
             encoding="utf-8",
         )
 
-        monkeypatch.setattr("cockpit.dashboard.helpers.LLM_QUOTA_SUMMARY_PATH", quota_path)
-        monkeypatch.setattr("cockpit.dashboard.helpers.LLM_COST_LOG_PATH", cost_path)
-        monkeypatch.setattr("cockpit.dashboard.helpers.PROVIDER_PLANE_PATH", provider_plane_path)
+        monkeypatch.setattr("cockpit.dashboard.constants.LLM_QUOTA_SUMMARY_PATH", quota_path)
+        monkeypatch.setattr("cockpit.dashboard.constants.LLM_COST_LOG_PATH", cost_path)
+        monkeypatch.setattr("cockpit.dashboard.constants.PROVIDER_PLANE_PATH", provider_plane_path)
 
         result = _load_compute()
 
