@@ -83,6 +83,7 @@ node_modules/
 .serena/
 .claude/
 skills/
+data/_index/
 
 
 # ---- 本地工具与敏感配置 ----
