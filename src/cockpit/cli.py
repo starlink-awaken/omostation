@@ -466,6 +466,24 @@ def main() -> int:
     )
     wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")
 
+    agent_wf_p = sub.add_parser(
+        "agent-workflow",
+        help="🤖 Agent 可执行治理流程 (委派 root bin/agent-workflow.py)",
+        epilog=(
+            "示例:\n"
+            "  cockpit agent-workflow list\n"
+            "  cockpit agent-workflow lint\n"
+            "  cockpit agent-workflow doctor\n"
+            "  cockpit agent-workflow show project-code-change --project omo"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    agent_wf_p.add_argument(
+        "agent_workflow_args",
+        nargs=argparse.REMAINDER,
+        help="Arguments passed to bin/agent-workflow.py",
+    )
+
     # Gap #8: C2G 双擎编排流入口 (Phase 40)
     iterate_p = sub.add_parser("iterate", help="♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)")
     iterate_p.add_argument("topic", nargs="?", default="未命名探索主题", help="要发起探索的主题")
@@ -537,6 +555,7 @@ def main() -> int:
                 "  [cyan]cockpit search --all KEY[/]  — 跨源搜索 (本地+BOS)\n"
                 "  [cyan]cockpit discover[/]           — 发现可用功能\n"
                 "  [cyan]cockpit status[/]            — 工作台\n"
+                "  [cyan]cockpit agent-workflow[/]    — Agent 可执行治理流程\n"
                 "  [cyan]cockpit dashboard[/]         — Web 驾驶舱\n"
                 "  [cyan]cockpit mcp[/]               — MCP Server\n"
                 "  [cyan]cockpit demo[/]              — 5 分钟体验\n"
@@ -649,6 +668,11 @@ def main() -> int:
 
         return handle_workflow(getattr(a, "workflow_args", []))
 
+    def dispatch_agent_workflow(a):
+        from cockpit.commands.agent_workflow import cmd_agent_workflow
+
+        return cmd_agent_workflow(a)
+
     def dispatch_monitor(a):
         from cockpit.commands.monitor import cmd_monitor
 
@@ -755,6 +779,7 @@ def main() -> int:
         "iterate": dispatch_iterate,
         "compass": dispatch_compass,
         "workflow": dispatch_workflow,
+        "agent-workflow": dispatch_agent_workflow,
         "monitor": dispatch_monitor,
         "data": dispatch_data,
         "contracts": dispatch_contracts,
