@@ -1,11 +1,11 @@
 name: observability-ci
-# P47 E: observability 是纯 docker-compose (Langfuse, 无代码). CI = compose config 语法校验.
-# 不跑容器 (省资源), 只验证 docker-compose.yml 合法.
+# P47 E: observability 是 docker-compose (Langfuse + webhook-bridge → omo).
+# CI = compose config 语法校验 + webhook-bridge.py 语法检查.
 on: [push, pull_request]
 
 jobs:
   validate:
-    name: observability compose config
+    name: observability compose config + bridge lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,3 +14,5 @@ jobs:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
       - name: docker compose config -q (语法校验)
         run: cd projects/observability && docker compose config -q
+      - name: webhook-bridge.py syntax check
+        run: python3 -m py_compile projects/observability/webhook-bridge.py

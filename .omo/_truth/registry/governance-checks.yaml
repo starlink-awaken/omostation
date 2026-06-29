@@ -125,7 +125,7 @@ gac:
     source_type_enum: [native, indexed]  # native=GaC 是 SSOT; indexed=原真是策略 SSOT, GaC 执行索引
     indexed_required: [source_ref]  # source_type=indexed 时必填 (指向原真策略文件)
     dimension_enum: [X1, X2, X3, X4]
-    layer_enum: [M0, L0, L1, L2, L3, meta]
+    layer_enum: [M0, L0, L1, L2, L3, I0, X, meta]
     check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index, schema_integrity, yaml_bypass, sensitive_write, mutation_surface, registry_integrity, internal_write_profile, state_plane_asset, ingress_boundary, ingress_artifact, mutation_ledger, doc_lifecycle, doc_archival, self_evolution_approval, task_policy, god_module, test_coverage]
     lifecycle_enum: [draft, active, deprecated, removed]
     executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron]
@@ -1589,6 +1589,209 @@ gac:
       lifecycle: active
       version: 1.0.0
       created_at: "2026-06-28"
+      adr: "ADR-0106"
+
+    # ── X3 价值栈补全: L1/L3 覆盖 + 价值流 (5→20) ──
+
+    # L1 运行时: 投入产出可见
+    - id: CR-X3-L1-HEALTH-COST
+      dimension: X3
+      layer: L1
+      name: "运行时健康监控成本可见"
+      description: "runtime 健康监控必须有成本标记 (探针开销 ≤ 总资源 5%, X3 投入产出)"
+      check_type: value_roi
+      target: "projects/runtime (健康探针成本)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-L1-PORT-CONSOLIDATION
+      dimension: X3
+      layer: L1
+      name: "端口合并 ROI"
+      description: "runtime 暴露端口数 ≤ 注册表上限 (每多一个端口 = +1 运维成本, X3 投入)"
+      check_type: value_roi
+      target: "protocols/port-registry.yaml::ports"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    # L3 入口: 用户价值链
+    - id: CR-X3-L3-COCKPIT-LATENCY
+      dimension: X3
+      layer: L3
+      name: "cockpit 响应延迟 SLA"
+      description: "cockpit CLI 命令 P95 延迟 ≤ 2s (用户价值 = 响应速度, X3 产出)"
+      check_type: value_roi
+      target: "projects/cockpit (CLI 响应 SLA)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-L3-COCKPIT-COVERAGE
+      dimension: X3
+      layer: L3
+      name: "cockpit 功能覆盖率"
+      description: "cockpit 命令覆盖 ≥ 80% L2 功能 (用户入口完整性, X3 价值)"
+      check_type: value_roi
+      target: "projects/cockpit (功能覆盖率)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    # L2 引擎: 测试投入产出
+    - id: CR-X3-L2-TEST-ROI
+      dimension: X3
+      layer: L2
+      name: "测试投入产出比"
+      description: "每个 L2 项目测试/代码比 ≥ 0.5 (测试投入 ≤ 代码量 2x, X3 产出)"
+      check_type: value_roi
+      target: "projects/*/tests/ (测试代码比)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-L2-DEBT-VELOCITY
+      dimension: X3
+      layer: L2
+      name: "债务清偿速率"
+      description: "debt items 关闭速率 ≥ 新增速率 (债务不增长, X3 价值流)"
+      check_type: value_roi
+      target: ".omo/debt/items/*.yaml (关闭/新增比)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-L2-MYPY-CLEAN
+      dimension: X3
+      layer: L2
+      name: "mypy 零错误"
+      description: "kairon mypy 类型检查 0 错误 (类型安全 = 产出质量, X3 价值)"
+      check_type: value_roi
+      target: "projects/kairon (mypy 类型检查)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-L2-LINT-CLEAN
+      dimension: X3
+      layer: L2
+      name: "ruff lint 零错误"
+      description: "全项目 ruff check 0 错误 (代码质量 = 产出质量, X3 价值)"
+      check_type: value_roi
+      target: "projects/*/src/ (ruff lint)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    # I0 路由层: 服务可用性
+    - id: CR-X3-I0-AGORA-UPTIME
+      dimension: X3
+      layer: I0
+      name: "agora 服务可用性"
+      description: "agora BOS 服务可用性 ≥ 99% (路由层 = 价值命脉, X3 产出)"
+      check_type: value_roi
+      target: "projects/agora (服务可用性)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-I0-MCP-COVERAGE
+      dimension: X3
+      layer: I0
+      name: "MCP 工具覆盖率"
+      description: "agora MCP 工具覆盖 ≥ 90% BOS 服务 (工具缺失 = 价值缺口, X3)"
+      check_type: value_roi
+      target: "projects/agora (MCP 覆盖率)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    # L0 协议: SSOT 一致性价值
+    - id: CR-X3-L0-DOC-SSOT
+      dimension: X3
+      layer: L0
+      name: "文档 SSOT 零冲突"
+      description: "doc-ssot-lint 0 冲突 (文档一致性 = 减少误导成本, X3 投入产出)"
+      check_type: value_roi
+      target: "docs/ + *.md (doc-ssot-lint)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-L0-GAC-COVERAGE
+      dimension: X3
+      layer: L0
+      name: "GaC 规则覆盖率"
+      description: "GaC 规则覆盖 4 dimension × 5+ layer (规则缺口 = 治理盲区, X3 价值)"
+      check_type: value_roi
+      target: ".omo/_truth/registry/governance-checks.yaml (规则覆盖)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    # X 框架: 工具链价值
+    - id: CR-X3-X-DEBT-SCORING
+      dimension: X3
+      layer: X
+      name: "omo-debt 评分覆盖率"
+      description: "omo-debt 评分覆盖所有 L2 项目 (债务可量化 = 投入可决策, X3 价值)"
+      check_type: value_roi
+      target: "projects/omo-debt (评分覆盖)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-X-OBSERVABILITY
+      dimension: X3
+      layer: X
+      name: "可观测性覆盖"
+      description: "observability 部署覆盖所有 L2 项目 (追踪覆盖 = 价值可见, X3 产出)"
+      check_type: value_roi
+      target: "projects/observability (追踪覆盖)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
+      adr: "ADR-0106"
+
+    - id: CR-X3-X-SUBMODULE-FRESH
+      dimension: X3
+      layer: X
+      name: "子模块新鲜度"
+      description: "submodule 滞后 ≤ 3 天 (滞后 = 价值流失, X3 投入产出)"
+      check_type: value_roi
+      target: "projects/*/ (submodule freshness)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-06-29"
       adr: "ADR-0106"
 
   drift:

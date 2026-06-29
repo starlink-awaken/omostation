@@ -1,11 +1,11 @@
-last_scan: 1782653102.586956
+last_scan: 1782689837.411071
 services:
   agora-gateway:
     name: agora-gateway
     port_listening: true
     runtime:
       status: unmanaged
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: daemon
   agora-sse:
     health_check: healthy
@@ -13,56 +13,56 @@ services:
     port_listening: true
     runtime:
       status: unmanaged
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 2010155
+      freshness_seconds: 2046890
       pid: '5663'
       status: running
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       status: unmanaged
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: scheduled
   hermes-gateway:
     name: hermes-gateway
     runtime:
-      freshness_seconds: 2010155
+      freshness_seconds: 2046890
       pid: '33452'
       status: running
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: daemon
   kos:
     name: kos
     runtime:
       status: unmanaged
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: integrated
   ollama:
-    health_check: unreachable
+    health_check: healthy
     name: ollama
-    port_listening: false
+    port_listening: true
     runtime:
       status: unmanaged
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       status: unmanaged
-    timestamp: 1782653102.586956
+    timestamp: 1782689837.411071
     type: mcp

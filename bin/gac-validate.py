@@ -41,7 +41,7 @@ REQUIRED_FIELDS = [
     "created_at",
 ]
 DIMENSION_ENUM = {"X1", "X2", "X3", "X4"}
-LAYER_ENUM = {"M0", "L0", "L1", "L2", "L3", "meta"}
+LAYER_ENUM = {"M0", "L0", "L1", "L2", "L3", "I0", "X", "meta"}
 LIFECYCLE_ENUM = {"draft", "active", "deprecated", "removed"}
 
 
