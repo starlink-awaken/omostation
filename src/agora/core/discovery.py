@@ -107,7 +107,7 @@ class DiscoveryEngine:
     def _find_workspace() -> str:
         cwd = Path.cwd()
         for ancestor in [cwd] + list(cwd.parents):
-            # 新布局: eCOS v5 5+3+1 architecture
+            # 新布局: eCOS v6 5+4+1+1 architecture
             if (ancestor / "projects" / "agora").is_dir() and (
                 ancestor / "projects" / "kairon"
             ).is_dir():
