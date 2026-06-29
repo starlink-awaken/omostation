@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# ecos-link — eCOS v5 工具一键安装 / 同步脚本
+# ecos-link — eCOS v6 工具一键安装 / 同步脚本
 # =============================================================================
 # macOS 兼容 (bash 3.2+)，使用函数替代关联数组
 #
@@ -77,7 +77,7 @@ get_venv_bin() {
 # ── list ────────────────────────────────────────────────────────────
 cmd_list() {
   local total=$(tool_count)
-  echo -e "\n${B}${C}eCOS v5 可用工具 (${total} 个)${Z}\n"
+  echo -e "\n${B}${C}eCOS v6 可用工具 (${total} 个)${Z}\n"
   printf "  %-26s %-8s %s\n" "工具" "层级" "项目"
   printf "  %-26s %-8s %s\n" "────" "───" "────"
 
@@ -102,7 +102,7 @@ cmd_install() {
   mkdir -p "$BIN_DIR"
   local i=0 s=0 f=0
 
-  echo -e "\n${B}安装 eCOS v5 工具到 ${BIN_DIR}${Z}\n"
+  echo -e "\n${B}安装 eCOS v6 工具到 ${BIN_DIR}${Z}\n"
 
   for entry in "${TOOL_LIST[@]}"; do
     local name="${entry%%:*}" proj="${entry##*:}"
@@ -219,7 +219,7 @@ case "${1:-}" in
   list)    cmd_list ;;     check) cmd_check ;;
   clean)   cmd_clean ;;
   *)
-    echo -e "\n${B}ecos-link — eCOS v5 工具管理${Z}\n"
+    echo -e "\n${B}ecos-link — eCOS v6 工具管理${Z}\n"
     echo "  用法: ecos-link <命令>"
     echo ""
     echo "  命令:"

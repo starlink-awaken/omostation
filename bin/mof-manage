@@ -13,7 +13,9 @@ REGISTRY_FILE = Path(__file__).parent.parent / ".omo/_truth/registry/mof-capabil
 def load_registry() -> dict:
     if not REGISTRY_FILE.exists():
         return {}
-    return yaml.safe_load(REGISTRY_FILE.read_text())
+    # mof-capabilities.yaml 是多文档 (P45 frontmatter + 正文), safe_load_all 取正文
+    docs = list(yaml.safe_load_all(REGISTRY_FILE.read_text()))
+    return next((d for d in reversed(docs) if d is not None), {})
 
 
 def show_status():
