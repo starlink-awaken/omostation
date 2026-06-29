@@ -194,7 +194,7 @@ bos:
     extended: ["meta", "omo", "swarm", "system"]
 
 gac:
-  rules_count: 9                 # grep -c '^  - id:' governance-checks.yaml
+  rules_count: 89                # grep -c '    - id: CR-' .omo/_truth/registry/governance-checks.yaml
 
 # ── Archived projects (historical reference) ──
 archived:
@@ -208,5 +208,5 @@ archived:
     merged_into: "cockpit HTTP :8090"
 
 # ── Metadata ──
-_last_updated: "2026-06-27"
+_last_updated: "2026-06-29"
 _update_method: "Manual version/python; drift 由 bin/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"

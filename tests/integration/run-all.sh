@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
 echo "=================================================="
-echo " eCOS v5 (5+3+1) Unified Test Harness"
+echo " eCOS v6 (5+4+1+1) Unified Test Harness"
 echo "=================================================="
 TOTAL=0
 PASS=0

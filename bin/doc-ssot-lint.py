@@ -6,7 +6,8 @@
 规则 (见 .omo/standards/doc-ssot-contract.md):
   1. 禁止 markdown 包含与 registry 冲突的易变数字 (包数/工具数/源文件数等)
   2. 禁止 markdown 出现过期架构版本 ("eCOS v5", "5+3+1")
-  3. 禁止 markdown 硬编码 Phase / 健康分 (应引用 system.yaml)
+  3. 入口文档必须使用 agent-workflow bootstrap, 不复制 workflow/profile/adapter 清单
+  4. 入口文档不得重新粘贴完整 GaC 规则表或手写项目分层表
 
 用法:
   python3 bin/doc-ssot-lint.py              # 检测, 有冲突返回 1
@@ -30,6 +31,8 @@ from pathlib import Path
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_PATH = WORKSPACE_ROOT / "docs" / "project-registry.yaml"
 SYSTEM_YAML = WORKSPACE_ROOT / ".omo" / "state" / "system.yaml"
+GENERATED_GAC_DIGEST = WORKSPACE_ROOT / "docs/generated/agent-gac-rules.md"
+GENERATED_LAYER_DIGEST = WORKSPACE_ROOT / "docs/generated/project-layer-index.md"
 
 # ── Stale patterns (always wrong, regardless of registry) ──
 STALE_PATTERNS = [
@@ -44,8 +47,10 @@ STALE_PATTERNS = [
 SCAN_GLOBS = [
     "CLAUDE.md",
     "AGENTS.md",
+    "ARCHITECTURE.md",
     "LAYER-INDEX.md",
     "README.md",
+    "CONTRIBUTING.md",
     "DESIGN.md",
     "docs/*.md",
     "projects/AGENTS.md",
@@ -154,12 +159,53 @@ def check_registry_conflicts(filepath: Path, content: str, registry: dict) -> li
                         f"{proj_name} 包数应为 {pkg_count} (见 project-registry.yaml)"
                     ))
 
-    # Check for hardcoded Phase numbers
-    phase_patterns = re.findall(r"Phase\s*(\d+)", content)
-    system_phase = registry.get("workspace", {}).get("current_phase")
-    # We don't check phase against system.yaml here because Phase is volatile
-    # and markdown shouldn't have it at all. Just flag any "Phase N" in non-registry files.
+    return findings
 
+
+def check_semantic_contracts(filepath: Path, content: str) -> list[tuple[int, str, str]]:
+    """Check doc ownership rules that are not simple numeric conflicts."""
+    findings: list[tuple[int, str, str]] = []
+    rel = filepath.relative_to(WORKSPACE_ROOT).as_posix()
+
+    if rel in {"CLAUDE.md", "AGENTS.md", "projects/AGENTS.md"} and "agent-workflow.py\" bootstrap" not in content:
+        findings.append((1, "missing bootstrap", "入口文档必须使用 bin/agent-workflow.py bootstrap 作为单入口"))
+
+    if rel == "AGENTS.md":
+        start_marker = "<!-- GaC-RULES-START -->"
+        end_marker = "<!-- GaC-RULES-END -->"
+        if start_marker in content and end_marker in content:
+            section = content.split(start_marker, 1)[1].split(end_marker, 1)[0]
+            if "| 规则 ID |" in section or "#### X1" in section:
+                line_num = content[: content.index(start_marker)].count("\n") + 1
+                findings.append((line_num, "embedded GaC table", "AGENTS.md 只能保留 GaC 指针, 完整表应在 docs/generated/agent-gac-rules.md"))
+
+    layer_docs = {"README.md", "AGENTS.md", "ARCHITECTURE.md", "LAYER-INDEX.md", "projects/AGENTS.md"}
+    if rel in layer_docs:
+        layer_table_patterns = [
+            r"(?m)^L4\s+.*->",
+            r"(?m)^\| L4(?:\s|\|)",
+            r"(?m)^\| L3(?:\s|\|)",
+            r"(?m)^\| Layer \| Projects",
+            r"(?m)^\| Layer \| Role \| Projects",
+        ]
+        for pattern in layer_table_patterns:
+            match = re.search(pattern, content)
+            if match:
+                line_num = content[: match.start()].count("\n") + 1
+                findings.append((line_num, "embedded layer table", "项目分层表必须从 docs/project-registry.yaml 生成到 docs/generated/project-layer-index.md"))
+                break
+
+    return findings
+
+
+def check_required_generated_artifacts() -> list[tuple[Path, int, str, str]]:
+    findings: list[tuple[Path, int, str, str]] = []
+    for path, label in [
+        (GENERATED_GAC_DIGEST, "agent-gac-rules.md"),
+        (GENERATED_LAYER_DIGEST, "project-layer-index.md"),
+    ]:
+        if not path.exists():
+            findings.append((WORKSPACE_ROOT / "AGENTS.md", 1, label, f"缺少生成物 {path.relative_to(WORKSPACE_ROOT)}"))
     return findings
 
 
@@ -188,6 +234,13 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
         conflicts = check_registry_conflicts(filepath, content, registry)
         for line_num, label, reason in conflicts:
             all_findings.append((filepath, line_num, label, reason))
+
+        semantic_findings = check_semantic_contracts(filepath, content)
+        for line_num, label, reason in semantic_findings:
+            all_findings.append((filepath, line_num, label, reason))
+
+    if single_file is None:
+        all_findings.extend(check_required_generated_artifacts())
 
     # Apply fixes
     if all_fixes:
