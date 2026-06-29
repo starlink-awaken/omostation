@@ -70,7 +70,7 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
         # 共享硬门: 本地 hook / pre-commit / CI 使用同一脚本, 防止 GaC validate、
-        # drift、doc-ssot、快照硬编码、入口文档链接检查在不同入口走散.
+        # drift、doc-ssot、快照硬编码、入口文档链接和变更车道检查在不同入口走散.
       - id: port-hardcode-check
         name: port hardcode check (端口必须在 protocols/port-registry.yaml)
         entry: python3 scripts/check-vault-paths.py --check-ports
@@ -279,7 +279,7 @@ repos:
 
       - id: governance-dashboard
         name: governance dashboard (P83-P86 治理工具统一汇总)
-        entry: python3 bin/governance-dashboard.py
+        entry: python3 bin/governance-dashboard.py --tools governance-history,drift-history,x2-freshness,x2-rule-lint,adr-coverage,mof-m2-coverage,management-cross-ref,venv-yaml-check
         language: system
         pass_filenames: false
         stages: [pre-commit]

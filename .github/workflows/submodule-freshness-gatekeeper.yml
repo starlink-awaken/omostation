@@ -37,6 +37,9 @@ jobs:
             echo "CHANGED=true" >> $GITHUB_ENV
           fi
 
+      - name: Verify gitlink reachability
+        run: python3 bin/submodule-reachability-gate.py --source worktree --fetch
+
       - name: Run Workspace Tests (kairon, agora, omo, bus-foundation)
         if: env.CHANGED == 'true'
         run: |

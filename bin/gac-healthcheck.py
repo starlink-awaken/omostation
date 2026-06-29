@@ -54,6 +54,9 @@ CORE_FILES = {
     "local_gate": "bin/gac-local-gate.py",
     "doc_link_check": "bin/doc-link-check.py",
     "doc_snapshot_check": "scripts/check-doc-ssot-snapshots.py",
+    "change_lane_check": "bin/change-lane-check.py",
+    "submodule_reachability": "bin/submodule-reachability-gate.py",
+    "submodule_transaction": "bin/submodule-pointer-transaction.sh",
 }
 
 
@@ -226,6 +229,18 @@ def healthcheck() -> dict:
         "files_scanned": link_json.get("files_scanned", 0),
     }
 
+    # 7d. root gitlink reachability (no network fetch; pre-push/CI run with --fetch)
+    reach_code, reach_out = run_tool("bin/submodule-reachability-gate.py", ["--source", "head", "--json"])
+    try:
+        reach_json = json.loads(reach_out) if reach_out else {}
+    except json.JSONDecodeError:
+        reach_json = {}
+    report["submodule_reachability"] = {
+        "ok": reach_code == 0,
+        "checked": reach_json.get("checked", 0),
+        "failures": len(reach_json.get("failures", [])),
+    }
+
     # 8. hygiene (CR-HYG-01/02: 工作区卫生)
     hy_code, hy_out = run_tool("bin/gac-hygiene-check.py", ["--json"])
     try:
@@ -325,6 +340,7 @@ def healthcheck() -> dict:
         and report["doc_ssot"]["ok"]
         and report["doc_snapshots"]["ok"]
         and report["doc_links"]["ok"]
+        and report["submodule_reachability"]["ok"]
         and report["hygiene"]["ok"]
         and report["registry_drift"]["ok"]
         and report["legacy_drift"]["ok"]
@@ -398,6 +414,12 @@ def print_report(report: dict) -> None:
     link_status = "✅" if links["ok"] else "❌"
     print(
         f"▶ doc-links (入口文档链接): {link_status} 扫描={links['files_scanned']} 死链={links['broken_links']}"
+    )
+
+    reach = report["submodule_reachability"]
+    reach_status = "✅" if reach["ok"] else "❌"
+    print(
+        f"▶ submodule-reachability (gitlink远端可达): {reach_status} 检查={reach['checked']} 失败={reach['failures']}"
     )
 
     # hygiene (CR-HYG-01/02)

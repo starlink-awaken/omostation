@@ -17,4 +17,5 @@ while read -r _ref _local _remote _sha; do :; done  # 消费 pre-push stdin (ref
 ROOT="$(git rev-parse --show-toplevel)"
 # sync 子模块, 结果显示到 stderr; 失败即阻断 push.
 "$ROOT/bin/sync-submodules-push.sh" 2>&1 | sed 's/^/[pre-push] /' >&2
+python3 "$ROOT/bin/submodule-reachability-gate.py" --source head --fetch 2>&1 | sed 's/^/[reachability] /' >&2
 exit 0

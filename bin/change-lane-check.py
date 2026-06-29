@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+"""Guard against mixing unrelated change lanes in one commit."""
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+
+WORKSPACE = Path(__file__).resolve().parents[1]
+ALLOWED_COMBOS = [
+    {"governance_code", "docs"},
+    {"governance_code", "config"},
+    {"governance_code", "docs", "config"},
+    {"submodule_pointer", "config"},
+]
+
+
+def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(cmd, cwd=WORKSPACE, capture_output=True, text=True, check=False)
+
+
+def submodule_paths() -> set[str]:
+    result = run(["git", "config", "--file", ".gitmodules", "--get-regexp", r"^submodule\..*\.path$"])
+    if result.returncode != 0:
+        return set()
+    return {line.split(maxsplit=1)[1] for line in result.stdout.splitlines() if line.strip()}
+
+
+def changed_paths(staged: bool) -> list[str]:
+    cmd = ["git", "diff", "--cached", "--name-only"] if staged else ["git", "diff", "--name-only"]
+    result = run(cmd)
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def classify(path: str, submodules: set[str]) -> str:
+    if path in submodules:
+        return "submodule_pointer"
+    if path == ".omo/state/system_health.yaml" or path.startswith("runtime/"):
+        return "runtime_snapshot"
+    if path.startswith(".omo/"):
+        return "governance_state"
+    if path.endswith(".md") and (
+        path in {"AGENTS.md", "CLAUDE.md", "README.md", "ARCHITECTURE.md", "LAYER-INDEX.md"}
+        or path.startswith("projects/")
+        or path.startswith("docs/")
+    ):
+        return "docs"
+    if (
+        path.startswith("bin/gac")
+        or path in {
+            "bin/ssot-guardian.py",
+            "bin/sync-submodules-push.sh",
+            "bin/submodule-reachability-gate.py",
+            "bin/submodule-pointer-transaction.sh",
+            "bin/change-lane-check.py",
+            "bin/doc-link-check.py",
+        }
+        or path.startswith(".githooks/")
+        or path in {".pre-commit-config.yaml", ".github/workflows/gac-gate.yml", ".github/workflows/governance-check.yml"}
+    ):
+        return "governance_code"
+    if path in {".gitmodules", "Makefile"} or path.startswith(".github/workflows/"):
+        return "config"
+    if path.endswith((".py", ".ts", ".js", ".sh", ".json", ".yaml", ".yml")):
+        return "code"
+    return "other"
+
+
+def allowed(lanes: set[str]) -> bool:
+    if len(lanes) <= 1:
+        return True
+    if "runtime_snapshot" in lanes and len(lanes) > 1:
+        return False
+    if "submodule_pointer" in lanes and not any(lanes <= combo for combo in ALLOWED_COMBOS):
+        return False
+    if "governance_state" in lanes and len(lanes) > 1:
+        return False
+    return any(lanes <= combo for combo in ALLOWED_COMBOS)
+
+
+def check(staged: bool) -> dict[str, object]:
+    submodules = submodule_paths()
+    paths = changed_paths(staged)
+    by_lane: dict[str, list[str]] = {}
+    for path in paths:
+        lane = classify(path, submodules)
+        by_lane.setdefault(lane, []).append(path)
+    lanes = set(by_lane)
+    return {
+        "ok": allowed(lanes),
+        "staged": staged,
+        "lanes": sorted(lanes),
+        "by_lane": by_lane,
+        "files": len(paths),
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Check staged or unstaged change lanes")
+    parser.add_argument("--staged", action="store_true", help="Check staged changes")
+    parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    parser.add_argument("--advisory", action="store_true", help="Always exit 0")
+    args = parser.parse_args()
+
+    report = check(staged=args.staged)
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    elif report["ok"]:
+        print(f"change-lane-check: PASS ({report['files']} files, lanes={','.join(report['lanes']) or '-'})")
+    else:
+        print(f"change-lane-check: FAIL mixed lanes={','.join(report['lanes'])}")
+        for lane, paths in report["by_lane"].items():
+            preview = ", ".join(paths[:5])
+            suffix = "" if len(paths) <= 5 else f" ... +{len(paths) - 5}"
+            print(f"  {lane}: {preview}{suffix}")
+    return 0 if report["ok"] or args.advisory else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

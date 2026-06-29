@@ -1,4 +1,4 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint gac-local-gate governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint gac-local-gate governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -13,6 +13,8 @@ help:
 	@echo ""
 	@echo "=== 治理 ==="
 	@echo "make gac-local-gate     运行 GaC 本地硬门"
+	@echo "make governance-release-gate 运行发布前远端可达性硬门"
+	@echo "make submodule-pointer-transaction 运行子模块指针事务 dry-run"
 	@echo "make governance-verify   运行 canonical .omo 验证链"
 	@echo "make governance-check    全量治理检查 (verify → index)"
 	@echo "make governance-audit    全量治理审计 (债务+文档+健康度)"
@@ -53,6 +55,12 @@ install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/S
 
 gac-local-gate:
 	uv run --with pyyaml python bin/gac-local-gate.py
+
+governance-release-gate:
+	uv run --with pyyaml python bin/submodule-reachability-gate.py --source head --fetch
+
+submodule-pointer-transaction:
+	bash bin/submodule-pointer-transaction.sh --dry-run
 
 kairon-test:
 	cd projects/kairon && make test

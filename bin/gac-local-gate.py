@@ -18,6 +18,7 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("doc-ssot-lint", ["bin/doc-ssot-lint.py"]),
     ("doc-ssot-snapshots", ["scripts/check-doc-ssot-snapshots.py"]),
     ("doc-link-check", ["bin/doc-link-check.py"]),
+    ("change-lane-check", ["bin/change-lane-check.py", "--staged"]),
 )
 
 
