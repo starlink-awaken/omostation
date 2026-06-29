@@ -158,3 +158,6 @@ skills/
 
 # governance-dashboard hook transient specs
 .omo/autopilot/
+
+# Runtime session continuation (transient)
+runtime/run-continuation/
