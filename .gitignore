@@ -154,3 +154,7 @@ skills/
 # 10. 系统文件
 # ---------------------------------------------------------------------------
 .DS_Store
+/.c2g_data/
+
+# governance-dashboard hook transient specs
+.omo/autopilot/

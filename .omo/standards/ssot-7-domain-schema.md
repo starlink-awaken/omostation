@@ -2,12 +2,12 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-06-29
 ---
 
 # SSOT 7 Domain Schema — Full Execution Governance Standard
 
-> 日期: 2026-05-30 | 版本: v1.0 | 状态: active
+> 日期: 2026-06-29 | 版本: v1.1 | 状态: active
 > 关联: `../_knowledge/design/MASTER-BLUEPRINT.md` §VIII, `.omo/tasks/`, `goals/current.yaml`, `state/system.yaml`, `convergence.yaml`, KOS index
 > 适用范围: Phase 2 full_execution 下所有 SSOT domain 的注册、读写、同步、审计
 
@@ -39,7 +39,7 @@ last-reviewed: 2026-06-22
 | Work | KOS index 自动发现 | ❌ 只读 | 同上 |
 | Family | 暂未入 KOS | ❌ 只读 | blocked until Safe Mesh |
 | AI | `M2.3-OPERATION-LEVEL-ROLLOUT-PLAN` | ✅ 可写 | governance agent 可注册 AI 工具 |
-| System | `.omo/tasks/active/*.yaml` | ✅ 通过 coordinator | 任务 SSOT 的唯一写入口 |
+| System | `.omo/tasks/planned/*.yaml` | ✅ 通过 coordinator | 任务 SSOT 的唯一写入口 |
 | Data | KOS index 自动发现 | ❌ 只读 | 由 indexer 管理 |
 | Media | 暂未入 KOS | ❌ 只读 | blocked until Safe Mesh |
 
@@ -135,7 +135,7 @@ Schema field:  snake_case                                  e.g. "domain_id", "so
 
 | 文件/目录 | 可读 | 可写 | 写者 | 同步方式 |
 |-----------|:----:|:----:|------|----------|
-| `.omo/tasks/active/*.yaml` | ✅ 全部 | ✅ 认领的任务 | assigned agent | 直接写 |
+| `.omo/tasks/planned/*.yaml` | ✅ 全部 | ✅ 认领的任务 | assigned agent | 直接写 |
 | `.omo/tasks/done/*.yaml` | ✅ 全部 | ❌ 只读 | — | 由 active 迁移 |
 | `.omo/tasks/blocked/*.yaml` | ✅ 全部 | ✅ 认领的任务 | assigned agent | 直接写 |
 | `.omo/state/system.yaml` | ✅ 全部 | ❌ 只读 | aggregator 独写 | 必须通过 coordinator |
@@ -151,7 +151,7 @@ Schema field:  snake_case                                  e.g. "domain_id", "so
 
 以下操作**必须**通过 coordinator 统一同步：
 
-1. **任务状态变更**（task YAML 迁移 active→done→blocked）
+1. **任务状态变更**（task YAML 迁移 planned→done→blocked）
 2. **治理状态更新**（`system.yaml`, `goals/current.yaml`, `convergence.yaml`）
 3. **domain schema 变更**（新建/修改 domain schema 文件）
 4. **跨 Agent 依赖协调**（Task A 完成触发 Task B 认领）
@@ -252,4 +252,4 @@ checklist:
 
 ---
 
-*文档版本: v1.0 | 维护者: governance | 同步模式: coordinator_only*
+*文档版本: v1.1 | 维护者: governance | 同步模式: coordinator_only*

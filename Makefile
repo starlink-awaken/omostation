@@ -1,4 +1,4 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflows gac-local-gate governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflows project-layer-index gac-local-gate governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -12,10 +12,15 @@ help:
 	@echo "make kairon-build      安装 kairon 依赖 (uv sync)"
 	@echo ""
 	@echo "=== 治理 ==="
+	@echo "make agent-workflow-bootstrap 一次性输出 agent 启动上下文"
 	@echo "make agent-workflows    列出 agent 可执行治理流程"
+	@echo "make agent-workflow-agents 列出 agent profile 角色注册表"
+	@echo "make agent-workflow-integrations 列出内部治理能力契约"
+	@echo "make agent-workflow-adapters 列出外部工具 adapter 契约"
 	@echo "make agent-workflow-lint 校验 agent workflow SSOT"
 	@echo "make agent-workflow-doctor 检查 BMAD/OpenSpec/GStack/beads 适配器"
-	@echo "make gac-local-gate     运行 GaC 本地硬门"
+	@echo "make agent-workflow-observe 审计 agent workflow run/lock/ledger"
+	@echo "make gac-local-gate     运行 GaC 本地硬门 (含 adapter/MOF/doc/lane checks)"
 	@echo "make governance-release-gate 运行发布前远端可达性硬门"
 	@echo "make submodule-pointer-transaction 运行子模块指针事务 dry-run"
 	@echo "make governance-verify   运行 canonical .omo 验证链"
@@ -44,6 +49,7 @@ help:
 	@echo ""
 	@echo "=== 文档 ==="
 	@echo "make doc-lint            检查文档格式"
+	@echo "make project-layer-index 重新生成项目分层索引 digest"
 	@echo ""
 	@echo "=== 开发环境 ==="
 	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate)"
@@ -59,11 +65,29 @@ install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/S
 agent-workflows:
 	uv run --with pyyaml python bin/agent-workflow.py list
 
+agent-workflow-bootstrap:
+	uv run --with pyyaml python bin/agent-workflow.py bootstrap
+
 agent-workflow-lint:
 	uv run --with pyyaml python bin/agent-workflow.py lint
 
 agent-workflow-doctor:
 	uv run --with pyyaml python bin/agent-workflow.py doctor
+
+agent-workflow-observe:
+	uv run --with pyyaml python bin/agent-workflow.py observe
+
+agent-workflow-agents:
+	uv run --with pyyaml python bin/agent-workflow.py agents
+
+agent-workflow-integrations:
+	uv run --with pyyaml python bin/agent-workflow.py integrations
+
+agent-workflow-adapters:
+	uv run --with pyyaml python bin/agent-workflow.py adapters
+
+project-layer-index:
+	uv run --with pyyaml python bin/project-layer-index.py --write
 
 gac-local-gate:
 	uv run --with pyyaml python bin/gac-local-gate.py
