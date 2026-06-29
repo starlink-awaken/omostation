@@ -13,10 +13,11 @@ This skill is a thin bootloader. The source of truth is:
 
 ## Required First Step
 
-Run the workflow lint before making changes:
+Run the bootstrap before making changes. It includes lint, workflow/profile summaries,
+integration contracts, adapter contracts, health summaries, and next commands.
 
 ```bash
-uv run --with pyyaml python bin/agent-workflow.py lint
+uv run --with pyyaml python bin/agent-workflow.py bootstrap
 ```
 
 ## Choose A Workflow
@@ -26,6 +27,7 @@ List the available workflows:
 ```bash
 uv run --with pyyaml python bin/agent-workflow.py list
 uv run --with pyyaml python bin/agent-workflow.py agents
+uv run --with pyyaml python bin/agent-workflow.py integrations
 uv run --with pyyaml python bin/agent-workflow.py adapters
 ```
 
@@ -96,6 +98,7 @@ uv run --with pyyaml python bin/agent-workflow.py observe
 
 `adapters` is the contract view: it declares each external tool's authority, ingress workflow,
 SSOT rule, bridge command, and fallback. `doctor` is the health view.
+`integrations` is the internal contract view for GaC, OMO, C2G, Cockpit, and MOF.
 
 `bmad` and `openspec` are routed through C2G/OMO bridge commands when source files exist. `gstack` and `beads` are optional adapters and must degrade to advisory mode when missing.
 MOF changes use `.omo/_truth/registry/mof-capabilities.yaml` plus `mof-model-change` /
