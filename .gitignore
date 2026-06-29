@@ -11,7 +11,7 @@
 .omo/_control/evolution/drift-history/*.json.lock
 .omo/capabilities/
 .omo/debt/
-.omo/evidence/
+.omo/evidence
 .omo/plans/
 .omo/run-continuation/
 .omo/tests/
@@ -33,13 +33,21 @@ projects/cockpit-ui/
 projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml
 
 # === 2. Runtime 运行时残渣（非持久数据） ===
-# runtime/ 只保留 README 和边界契约 YAML；其余全部忽略
+# runtime/ 保留 README、边界契约 YAML 和 sandbox 中的持久化治理 artifacts；
+# 日志/数据/会话 marker/图片等全部忽略
 runtime/**/*.log
 runtime/**/*.jsonl
 runtime/data/
 runtime/run-continuation/*.json
 runtime/server.log
 runtime/wechat-main.png
+
+# sandbox 中由 c2g 等工具自动生成的目录（保留已跟踪文件，新文件忽略）
+runtime/sandbox/decayed/
+runtime/sandbox/pitches/
+
+# === 2.5 生成文档 ===
+docs/generated/
 
 # === 3. Data 共享数据底座的运行时文件 ===
 # 保留：README、访问策略 YAML、驾驶舱 CARDS Markdown
