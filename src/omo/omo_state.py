@@ -190,6 +190,82 @@ def _read_task_title(task_file: Path) -> str:
     return "(no title)"
 
 
+def _rebuild_tasks_registry_index(
+    omo_dir: Path,
+    planned_list: list[str],
+    done_n: int,
+    updated_at: str,
+) -> bool:
+    """重建 tasks/registry/INDEX.md 动态段 (Planned 表 + 标题计数 + Updated 行).
+
+    治本: sync-tasks 之前只刷 system.yaml, INDEX.md 手维护 → planned_tasks_ref
+    指针长期指向过期文档 (2026-06-29 发现 INDEX 写 planned=1/done=114 的 06-24
+    旧值, 实际 14/91). INDEX.md 自述"由验证流程生成, 与实际目录保持同步", 同
+    system.yaml 计数一样从 tasks/ 真源派生, sync 时一并刷, 根治指针漂移.
+
+    保留段 (手维护不动): Active 正文 / Completed 里程碑列表 / Archived / Blocked.
+    刷新段 (派生): Planned Tasks 表格 + Planned/Completed 标题计数 + Updated 行.
+
+    Returns False 当 INDEX 缺失或结构不符预期 (不报错, 保留手维护兜底).
+    """
+    import re
+
+    index_file = omo_dir / "tasks" / "registry" / "INDEX.md"
+    if not index_file.exists():
+        return False
+    text = index_file.read_text(encoding="utf-8")
+    planned_n = len(planned_list)
+
+    # Planned 表格 (ID | Title | candidate) — title 清洗 | 与换行避免破坏表格
+    rows: list[str] = []
+    for item in planned_list:
+        tid, _, rest = item.partition(" (")
+        title = rest.rstrip(")").replace("|", "/").replace("\n", " ").strip()[:80]
+        rows.append(f"| {tid} | {title} | candidate |")
+    table = (
+        "| ID | Title | Status |\n|----|-------|--------|\n" + "\n".join(rows) + "\n\n"
+    )
+
+    # 1. Planned Tasks 段 (## 标题 → 补充规划注释前, 表格整段重建)
+    text, n1 = re.subn(
+        r"(## Planned Tasks \()\d+( 个\)\n).*?(> \*\*补充规划\*\*)",
+        lambda m: f"{m.group(1)}{planned_n}{m.group(2)}{table}{m.group(3)}",
+        text,
+        count=1,
+        flags=re.DOTALL,
+    )
+    # 2. Completed Tasks 标题计数 (匹配 \d+ 替换, 非 f-string 插值)
+    text, _ = re.subn(
+        r"(## Completed Tasks \()\d+( 个\))",
+        lambda m: f"{m.group(1)}{done_n}{m.group(2)}",
+        text,
+    )
+
+    # 3. Updated 行 (整行替换, capture 原 archived 数保留)
+    def _repl_updated(m: "re.Match[str]") -> str:
+        archived = m.group(1)
+        return (
+            f"*Updated: {updated_at[:10]} (依据 `omo state sync-tasks` 与真实目录重算: "
+            f"done={done_n}, planned={planned_n}, active=0, archived={archived} 顶层)*"
+        )
+
+    text, n3 = re.subn(
+        r"\*Updated: \d{4}-\d{2}-\d{2}.*?archived=(\d+)[^\n]*\*",
+        _repl_updated,
+        text,
+    )
+    # 4. Completed 段正文 "tasks/done/ — N 个顶层 YAML 文件" (与标题计数同源, 防正文残留)
+    text, _ = re.subn(
+        r"(`tasks/done/`\s+—\s+)\d+( 个顶层)",
+        lambda m: f"{m.group(1)}{done_n}{m.group(2)}",
+        text,
+    )
+    if not (n1 and n3):
+        return False  # INDEX 结构不符预期, 跳过 (n2/n4 可能为 0 若已是正确数, 不卡)
+    index_file.write_text(text, encoding="utf-8")
+    return True
+
+
 def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
     """从 tasks/ 真实文件数重算 system.yaml 计数 (治本: 真源=目录, 计数是派生缓存).
 
@@ -275,6 +351,13 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
             "updated_at",
         },
     )
+    # 治本: 同步重建 tasks/registry/INDEX.md (之前只刷 system.yaml, INDEX 手维护→指针漂移)
+    index_ok = _rebuild_tasks_registry_index(
+        omo_dir,
+        planned_list=new_planned_list,
+        done_n=done_n,
+        updated_at=updated_at,
+    )
     print("✅ system.yaml task 计数已同步 (真源=tasks/ 目录)")
     for k in ("completed_tasks", "planned_tasks", "active_tasks", "total_tasks"):
         print(f"  {k}: {old[k]} → {data[k]}")
@@ -282,6 +365,13 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
         f"  next_planned_tasks: {len(new_planned_list)} 项 (从 planned/ 重建, 僵尸已清)"
     )
     print(f"  next_active_tasks:  {len(new_active_list)} 项 (从 active/ 重建)")
+    if index_ok:
+        print(
+            f"  tasks/registry/INDEX.md: Planned 表+计数+Updated 已重建 "
+            f"(planned={planned_n}, done={done_n})"
+        )
+    else:
+        print("  ⚠️ tasks/registry/INDEX.md 未重建 (缺失或结构不符, 保留手维护)")
     return 0
 
 
