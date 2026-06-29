@@ -200,7 +200,7 @@ def cmd_adr(args):
 def print_help():
     print("""织星 MOF — L0 统一命令行 | v2.0
 ═══════════════════════════════════════════════
-  eCOS v5 架构治理统一入口
+  eCOS v6 架构治理统一入口
 
 架构治理:
   mof check          全量检查 (gate+validate+audit+enforce)

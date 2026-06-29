@@ -3,7 +3,7 @@
 id: ARCH-L1-RUNTIME
 type: Architecture
 name: L1 运行时矩阵架构
-description: 服务编排·资源管理·健康监控·进程生命周期——eCOS v5 的运行时基础设施
+description: 服务编排·资源管理·健康监控·进程生命周期——eCOS v6 的运行时基础设施
 status: active
 domain: infra
 created: '2026-06-05'

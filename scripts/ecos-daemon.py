@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 自治运维守护进程 (ecos-daemon.py)
+eCOS v6 — 自治运维守护进程 (ecos-daemon.py)
 =============================================
 Phase 7.6 / ADT-02 修复 — Python 替代 bash daemon。
 消除单点故障：try/except 兜底 · 持久 SQLite · 信号处理 · 结构化日志。
@@ -443,7 +443,7 @@ def show_status(conn: sqlite3.Connection):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 自治运维守护进程")
+    parser = argparse.ArgumentParser(description="eCOS v6 自治运维守护进程")
     parser.add_argument("--watch", action="store_true", help="持续监听模式")
     parser.add_argument("--status", action="store_true", help="查看状态")
     parser.add_argument("--once", action="store_true", help="单次运行")

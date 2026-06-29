@@ -3,7 +3,7 @@
 id: ARCH-L3-ENTRY
 type: Architecture
 name: L3 入口桥接矩阵架构
-description: 多入口适配·ACP协议桥接·TaskObject编排——eCOS v5 的统一入口层
+description: 多入口适配·ACP协议桥接·TaskObject编排——eCOS v6 的统一入口层
 status: active
 domain: infra
 created: '2026-06-05'

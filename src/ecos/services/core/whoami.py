@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 系统自述 (ecos-whoami)
+eCOS v6 — 系统自述 (ecos-whoami)
 ====================================
 一个命令回答所有问题:
   我是谁？我有什么能力？我的结构是什么？
@@ -43,7 +43,7 @@ def run(cmd: list, timeout=30, silent=True) -> str:
 
 def get_topology() -> dict:
     return {
-        "version": "eCOS v5.3.0",
+        "version": "eCOS v6.3.0",
         "phases": ["7.0/7.5/7.6", "8.1/8.2/8.3"],
         "layers": {
             "L4_self": {
@@ -262,7 +262,7 @@ def get_capabilities() -> list:
 def format_brief(topology: dict, health: dict, debts: dict, scripts_count: int) -> str:
     now = datetime.now()
     lines = []
-    lines.append(f"# eCOS v5 — 系统自述 ({now.strftime('%Y-%m-%d %H:%M')})")
+    lines.append(f"# eCOS v6 — 系统自述 ({now.strftime('%Y-%m-%d %H:%M')})")
     lines.append("")
 
     lines.append(
@@ -326,7 +326,7 @@ def format_brief(topology: dict, health: dict, debts: dict, scripts_count: int) 
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 系统自述")
+    parser = argparse.ArgumentParser(description="eCOS v6 系统自述")
     parser.add_argument("--brief", action="store_true", help="精简版")
     parser.add_argument("--json", action="store_true", help="JSON 格式")
     parser.add_argument("--topology", action="store_true", help="仅拓扑")
@@ -339,7 +339,7 @@ def main():
     caps = get_capabilities()
 
     result = {
-        "name": "eCOS v5",
+        "name": "eCOS v6",
         "version": topology["version"],
         "generated_at": datetime.now().isoformat(),
         "topology": topology,
@@ -368,7 +368,7 @@ def main():
 
     # 完整自述
     print(f"\n{'=' * 56}")
-    print("  eCOS v5 — 系统自述 (whoami)")
+    print("  eCOS v6 — 系统自述 (whoami)")
     print(f"  版本: {topology['version']}")
     print(f"  Phase: {topology['phases'][0]} → {topology['phases'][1]}")
     print(f"  生成: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")

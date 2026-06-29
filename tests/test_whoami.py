@@ -45,7 +45,7 @@ class TestGetTopology:
         )
         mock_run.return_value = ""
         topo = get_topology()
-        assert topo["version"] == "eCOS v5.3.0"
+        assert topo["version"] == "eCOS v6.3.0"
         assert "L4_self" in topo["layers"]
         assert "L3_entry" in topo["layers"]
         assert "L2_kernel" in topo["layers"]

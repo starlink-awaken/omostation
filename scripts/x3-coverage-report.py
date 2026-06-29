@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 X3 — X 轴覆盖率报告 v2.0
+eCOS v6 X3 — X 轴覆盖率报告 v2.0
 ==================================
 Phase X-Final / BKL-017
 输出二值覆盖率 + 深度分级矩阵。
@@ -100,7 +100,7 @@ def compute_depth_stats() -> dict:
 def format_report(results: dict, depth_stats: dict) -> str:
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — X 轴覆盖率报告 v2.0 (含深度分级)")
+    lines.append("  eCOS v6 — X 轴覆盖率报告 v2.0 (含深度分级)")
     lines.append("=" * 64)
     lines.append(f"  生成: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append("")

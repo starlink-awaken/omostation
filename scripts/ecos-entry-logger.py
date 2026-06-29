@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L3 — 入口价值对比 (ecos-entry-logger)
+eCOS v6 L3 — 入口价值对比 (ecos-entry-logger)
 =============================================
 Phase7.5 / v5 设计能力补全 — L3 各入口的使用频率和价值贡献统计。
 记录每次 Agent 启动的入口、耗时和结果到事件流。
@@ -88,7 +88,7 @@ def format_report(entries: list[dict]) -> str:
 
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — L3 入口价值对比报告")
+    lines.append("  eCOS v6 — L3 入口价值对比报告")
     lines.append("=" * 64)
 
     if not entries:
@@ -133,7 +133,7 @@ def format_report(entries: list[dict]) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 L3 入口价值对比")
+    parser = argparse.ArgumentParser(description="eCOS v6 L3 入口价值对比")
     parser.add_argument(
         "--entry",
         type=str,

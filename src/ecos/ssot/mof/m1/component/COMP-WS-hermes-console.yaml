@@ -6,7 +6,7 @@ id: COMP-WS-hermes-console
 type: Component
 subtype: Project
 name: hermes-console
-description: '项目: hermes-console (eCOS v5 Observatory Web)'
+description: '项目: hermes-console (eCOS v6 Observatory Web)'
 status: active
 domain: meta
 created: '2026-06-15'

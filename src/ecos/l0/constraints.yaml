@@ -1,4 +1,4 @@
-# eCOS v5 L0 — 协议级约束定义 (PoC)
+# eCOS v6 L0 — 协议级约束定义 (PoC)
 # =========================================
 # Phase7 / ADT-04 / v5 设计能力 — 协议约束最低可行产品
 # 宪法约束编译为 YAML，由 ecos-constraint-validator.py 在协议映射阶段校验。

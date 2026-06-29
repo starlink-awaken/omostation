@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 X3 — Vault 价值归因脚本
+eCOS v6 X3 — Vault 价值归因脚本
 ==================================
 Phase X3 / DEBT-X-007 扩展
 分析 Vault (学习进化/) 中 Markdown 文件的规模、更新频率与引用密度。
@@ -106,7 +106,7 @@ def format_report(results: dict) -> str:
     """人类可读报告"""
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — Vault 价值归因报告 (X3)")
+    lines.append("  eCOS v6 — Vault 价值归因报告 (X3)")
     lines.append("=" * 64)
     lines.append(f"  生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append("")
@@ -158,7 +158,7 @@ def format_report(results: dict) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 Vault 价值归因")
+    parser = argparse.ArgumentParser(description="eCOS v6 Vault 价值归因")
     parser.add_argument("--vault", required=True, help="Documents vault 路径")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()

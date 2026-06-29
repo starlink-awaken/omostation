@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 Phase 8.1 — 会话简报生成器 (ecos-brief)
+eCOS v6 Phase 8.1 — 会话简报生成器 (ecos-brief)
 ===================================================
 Agent 每次会话启动时运行，聚合当前系统状态到一页简报。
 
@@ -201,7 +201,7 @@ def format_brief(
 
     # 头部
     lines.append(f"# 📋 会话简报 — {now.strftime('%Y-%m-%d %H:%M')}")
-    lines.append("> eCOS v5 Phase 8.1 · 自动生成 · Agent 启动必读")
+    lines.append("> eCOS v6 Phase 8.1 · 自动生成 · Agent 启动必读")
     lines.append("")
 
     # ── 保鲜前移: Agent 使用 CLAUDE.md 前的即时校验 (第一条) ──
@@ -353,7 +353,7 @@ def check_freshness(output_path: str) -> bool:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 会话简报")
+    parser = argparse.ArgumentParser(description="eCOS v6 会话简报")
     parser.add_argument(
         "--output",
         type=str,

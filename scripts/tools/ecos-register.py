@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L1 — Runtime Matrix 注册桩 (ecos-register)
+eCOS v6 L1 — Runtime Matrix 注册桩 (ecos-register)
 =====================================================
 Phase X2-W3 / L3 深度奠基
 将 ecos-daemon 注册到 L1 Runtime Matrix，提供 health() 端点。
@@ -111,7 +111,7 @@ def health_check() -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 L1 Runtime Matrix 注册桩")
+    parser = argparse.ArgumentParser(description="eCOS v6 L1 Runtime Matrix 注册桩")
     parser.add_argument("--register", action="store_true", help="注册服务")
     parser.add_argument("--name", type=str, default="ecos-daemon", help="服务名")
     parser.add_argument("--type", type=str, default="daemon", help="服务类型")

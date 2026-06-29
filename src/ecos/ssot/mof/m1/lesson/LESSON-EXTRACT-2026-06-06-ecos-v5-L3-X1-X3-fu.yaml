@@ -4,7 +4,7 @@
 
 id: LESSON-EXTRACT-2026-06-06-ecos-v5-L3-X1-X3-fu
 type: Lesson
-name: eCOS v5 L3+X1-X3 全量架构升级复盘
+name: eCOS v6 L3+X1-X3 全量架构升级复盘
 description: L3 的问题本质是"设计超前于实现"——规范说该有的都有，但实际上不存在。红队审计抓住了这个矛盾。
 status: recorded
 domain: meta

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 X3 — Kairon 成本核算脚本
+eCOS v6 X3 — Kairon 成本核算脚本
 ==================================
 Phase X3 / BKL-016 / DEBT-X-007
 按 package 统计 Kairon 31 包的规模、依赖与维护成本。
@@ -132,7 +132,7 @@ def format_report(packages: dict, costs: dict, total: dict) -> str:
     """人类可读报告"""
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — Kairon 成本核算报告")
+    lines.append("  eCOS v6 — Kairon 成本核算报告")
     lines.append("=" * 64)
     lines.append(f"  生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(f"  分析包数: {total['analyzed']}/{total['total']}")
@@ -173,7 +173,7 @@ def format_report(packages: dict, costs: dict, total: dict) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 Kairon 成本核算")
+    parser = argparse.ArgumentParser(description="eCOS v6 Kairon 成本核算")
     parser.add_argument(
         "--workspace",
         required=True,

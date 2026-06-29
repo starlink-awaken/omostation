@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L3 — Runtime MCP Server 最小实现
+eCOS v6 L3 — Runtime MCP Server 最小实现
 ==========================================
 Phase 8.2 / DEBT-L3-001 (🔴)
 通过 MCP stdio 协议暴露 7 个入口工具。
@@ -246,7 +246,7 @@ from pathlib import Path  # noqa: E402
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 Runtime MCP Server")
+    parser = argparse.ArgumentParser(description="eCOS v6 Runtime MCP Server")
     parser.add_argument("--test", type=str, help="测试模式: 工具名")
     parser.add_argument("--list", action="store_true", help="列出所有工具")
     args = parser.parse_args()

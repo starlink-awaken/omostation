@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L3 — 入口深度统计 (ecos-entry-profiler)
+eCOS v6 L3 — 入口深度统计 (ecos-entry-profiler)
 ===================================================
 Phase 8.2 / v5 能力补全
 自动记录 Agent 每次会话的入口行为:
@@ -154,7 +154,7 @@ def generate_report(events: list[dict]) -> str:
     """生成入口深度统计报告"""
     lines = []
     lines.append("=" * 60)
-    lines.append("  eCOS v5 L3 — 入口深度统计报告")
+    lines.append("  eCOS v6 L3 — 入口深度统计报告")
     lines.append("=" * 60)
 
     if not events:
@@ -247,7 +247,7 @@ def watch_mode():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 L3 入口深度统计")
+    parser = argparse.ArgumentParser(description="eCOS v6 L3 入口深度统计")
     parser.add_argument("--session-start", action="store_true", help="标记会话开始")
     parser.add_argument("--session-end", action="store_true", help="标记会话结束")
     parser.add_argument("--read", type=str, help="记录文件读取")

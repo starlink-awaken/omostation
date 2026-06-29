@@ -50,5 +50,5 @@ Goal:
       - References
   examples:
     - id: GOAL-ECOS-V5-COMPLETE
-      name: eCOS v5 全栈交付
+      name: eCOS v6 全栈交付
       description: 4 KRs (9 层集成 / 250 tests / 43 MCP tools / lifecycle)

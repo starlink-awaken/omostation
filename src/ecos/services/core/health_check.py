@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 健康检查集成测试 (ecos-health-check)
+eCOS v6 — 健康检查集成测试 (ecos-health-check)
 =================================================
 端到端验证全部 X1-X3 治理脚本，输出统一健康报告。
 
@@ -224,7 +224,7 @@ def format_report(results: list[dict]) -> str:
 
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — 治理健康检查 (X1-X3 集成测试)")
+    lines.append("  eCOS v6 — 治理健康检查 (X1-X3 集成测试)")
     lines.append("=" * 64)
     lines.append(f"  时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(
@@ -277,7 +277,7 @@ def format_report(results: list[dict]) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 健康检查集成测试")
+    parser = argparse.ArgumentParser(description="eCOS v6 健康检查集成测试")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--skip", nargs="*", help="跳过的检查 ID")
     args = parser.parse_args()

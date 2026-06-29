@@ -1,4 +1,4 @@
-# eCOS v5 — Agent 能力注册表 (Machine-Readable Manifest)
+# eCOS v6 — Agent 能力注册表 (Machine-Readable Manifest)
 # =========================================================
 # 机器可读。外部 Agent/工具通过此文件发现系统全部能力。
 # v1.0 | 2026-06-06

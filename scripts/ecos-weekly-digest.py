@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 Phase 7.6 — 每周健康摘要 (ecos-weekly-digest)
+eCOS v6 Phase 7.6 — 每周健康摘要 (ecos-weekly-digest)
 =========================================================
 读取 SLA 数据 + 最新健康检查结果，生成每周趋势报告。
 
@@ -43,7 +43,7 @@ def format_digest(entries: list[dict]) -> str:
 
     lines = []
     lines.append(f"# 健康摘要 — {now.strftime('%Y-%m-%d %H:%M')}")
-    lines.append("> 自动生成 · eCOS v5 Phase 7.6 · 自治运维")
+    lines.append("> 自动生成 · eCOS v6 Phase 7.6 · 自治运维")
     lines.append("")
 
     # SLA
@@ -161,7 +161,7 @@ def format_digest(entries: list[dict]) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 每周健康摘要")
+    parser = argparse.ArgumentParser(description="eCOS v6 每周健康摘要")
     parser.add_argument("--json", action="store_true")
     parser.add_argument(
         "--output", type=str, default=None, help="输出路径 (默认 stdout)"

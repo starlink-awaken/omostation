@@ -18,7 +18,7 @@ m2_ontology:
   equivalences:
     - { a: "M3.Element",     b: "Element",     relation: EquivalentTo, note: "M3 定义 ≡ MOF 内部类型系统" }
     - { a: "L0-L4 的 L4",   b: "5+4+1 的 L4",  relation: EquivalentTo, note: "两个架构视图中的自我层是同一个" }
-    - { a: "织星架构",       b: "eCOS v5 架构", relation: EquivalentTo, note: "同一架构的正式名称与代号" }
+    - { a: "织星架构",       b: "eCOS v6 架构", relation: EquivalentTo, note: "同一架构的正式名称与代号" }
     - { a: "CARDS卡片",      b: "Entity(卡片)", relation: EquivalentTo, note: "CARDS 中的卡片是 Entity 的子类型" }
     - { a: "X4(一致性)",     b: "SSOT 级联原则", relation: EquivalentTo, note: "X4 治理维是 SSOT 原则的形式化实现" }
 

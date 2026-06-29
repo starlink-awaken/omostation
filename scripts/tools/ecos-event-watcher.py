@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L1 — 事件驱动保鲜 (ecos-event-watcher)
+eCOS v6 L1 — 事件驱动保鲜 (ecos-event-watcher)
 =================================================
 Phase 8.2 / v5 能力补全
 替代 cron-based daemon 检查 — 当文件变更时自动触发保鲜。
@@ -224,7 +224,7 @@ def once_scan():
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="eCOS v5 L1 事件驱动保鲜")
+    parser = argparse.ArgumentParser(description="eCOS v6 L1 事件驱动保鲜")
     parser.add_argument("--daemon", action="store_true", help="后台 daemon 模式")
     parser.add_argument("--once", action="store_true", help="单次扫描")
     args = parser.parse_args()

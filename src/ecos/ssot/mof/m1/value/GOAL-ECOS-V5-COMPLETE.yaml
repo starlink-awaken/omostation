@@ -1,8 +1,8 @@
 id: "GOAL-ECOS-V5-COMPLETE"
 type: Goal
 subtype: "OKR"
-name: "eCOS v5 全栈交付"
-description: "完成 eCOS v5 全栈架构的完整交付，包括 9 层集成、全量测试、文档同步"
+name: "eCOS v6 全栈交付"
+description: "完成 eCOS v6 全栈架构的完整交付，包括 9 层集成、全量测试、文档同步"
 status: "active"
 domain: "meta"
 layer: "L0"

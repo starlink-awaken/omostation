@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 定时任务状态查询 (task-status)
+eCOS v6 — 定时任务状态查询 (task-status)
 =============================================
 读取 task-index.json 和 runlog，输出任务看板。
 Phase 8.3+ / DEBT-006 台账治理

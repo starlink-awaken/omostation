@@ -245,7 +245,7 @@ m3:
     Architecture:
       id: Architecture
       name: "架构"
-      description: "系统的组件-连接器-拓扑描述。如 eCOS v5、织星架构。"
+      description: "系统的组件-连接器-拓扑描述。如 eCOS v6、织星架构。"
       parent: DescriptiveElement
       abstract: false
       properties:

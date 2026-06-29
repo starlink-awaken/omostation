@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L0 — 协议编译器 (ecos-constraint-compiler)
+eCOS v6 L0 — 协议编译器 (ecos-constraint-compiler)
 =====================================================
 Phase 8.2 / v5 能力补全
 从 L0-constraints.yaml 读取协议约束 → 编译为可执行的强制规则模块。
@@ -53,7 +53,7 @@ def compile_constraints(data: dict) -> str:
     now = datetime.now(timezone.utc)
 
     lines = []
-    lines.append("# eCOS v5 L0 — 编译约束 (自动生成)")
+    lines.append("# eCOS v6 L0 — 编译约束 (自动生成)")
     lines.append(f"# 源文件: {CONSTRAINTS_FILE}")
     lines.append(f"# 编译时间: {now.isoformat()}")
     lines.append(f"# 版本: {version}")
@@ -225,7 +225,7 @@ def format_report(result: dict) -> str:
     """格式化报告"""
     lines = []
     lines.append("=" * 56)
-    lines.append("  eCOS v5 L0 — 编译约束报告")
+    lines.append("  eCOS v6 L0 — 编译约束报告")
     lines.append("=" * 56)
 
     decay = result.get("decay", [])
@@ -292,7 +292,7 @@ def watch_and_compile(output_path: Path, interval: int = 60):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 L0 协议编译器")
+    parser = argparse.ArgumentParser(description="eCOS v6 L0 协议编译器")
     parser.add_argument(
         "--output", type=str, default=str(DEFAULT_OUTPUT), help="输出路径"
     )

@@ -48,4 +48,4 @@ CostModel:
   examples:
     - id: COST-MODEL-ECOS-INFRA
       name: eCOS 基础设施成本
-      description: eCOS v5 全栈基础设施成本归因
+      description: eCOS v6 全栈基础设施成本归因

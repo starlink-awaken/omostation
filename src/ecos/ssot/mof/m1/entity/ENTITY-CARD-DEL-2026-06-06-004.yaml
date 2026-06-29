@@ -6,7 +6,7 @@ id: ENTITY-CARD-DEL-2026-06-06-004
 type: Entity
 subtype: Card
 name: Phase 33 大一统：BOS URI 挂载与 Agora Mesh
-description: 实现 eCOS v5 终态架构大一统，通过 BOS URI 与 Agora Mesh 完成物理层与协议层统一
+description: 实现 eCOS v6 终态架构大一统，通过 BOS URI 与 Agora Mesh 完成物理层与协议层统一
 status: active
 domain: infra
 created: '2026-06-06T11:28:56Z'

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 Phase 7.6 — 健康 SLA 追踪器 (ecos-sla-tracker)
+eCOS v6 Phase 7.6 — 健康 SLA 追踪器 (ecos-sla-tracker)
 ==========================================================
 追踪 daemon 健康检查的历史记录，计算 uptime 和趋势。
 
@@ -122,7 +122,7 @@ def format_report(sla: dict) -> str:
     """格式化 SLA 报告"""
     lines = []
     lines.append("=" * 56)
-    lines.append("  eCOS v5 — 健康 SLA 报告")
+    lines.append("  eCOS v6 — 健康 SLA 报告")
     lines.append("=" * 56)
 
     if sla["total"] == 0:
@@ -174,7 +174,7 @@ def format_report(sla: dict) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 健康 SLA 追踪器")
+    parser = argparse.ArgumentParser(description="eCOS v6 健康 SLA 追踪器")
     parser.add_argument(
         "--log", type=str, choices=["pass", "fail", "warn"], help="记录一次检查结果"
     )

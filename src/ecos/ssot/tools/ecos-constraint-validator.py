@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L0 — 协议约束校验器 (ecos-constraint-validator)
+eCOS v6 L0 — 协议约束校验器 (ecos-constraint-validator)
 ===========================================================
 Phase7 / ADT-04 / v5 设计能力 PoC
 读取 L0-constraints.yaml，校验当前系统状态是否满足协议级约束。
@@ -145,7 +145,7 @@ def format_report(results: list[dict], mode: str, constraints: dict = None) -> s
     now = datetime.now()
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — L0 协议约束校验报告 (PoC)")
+    lines.append("  eCOS v6 — L0 协议约束校验报告 (PoC)")
     lines.append("=" * 64)
     lines.append(f"  时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(f"  模式: {mode}  |  约束数: {len(results)}")

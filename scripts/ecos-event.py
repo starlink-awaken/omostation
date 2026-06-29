@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 I0 — Agora 事件发布 (ecos-event)
+eCOS v6 I0 — Agora 事件发布 (ecos-event)
 ===========================================
 Phase 8.4 / DEBT-I0-001 修复
 支持双格式: JSON lines (v1) + MCP Event (v2)
@@ -76,7 +76,7 @@ def tail(n: int = 10, event_type: str = None, mcp: bool = False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 I0 Agora 事件")
+    parser = argparse.ArgumentParser(description="eCOS v6 I0 Agora 事件")
     parser.add_argument("--type", type=str)
     parser.add_argument("--payload", type=str, default="{}")
     parser.add_argument("--source", type=str, default="ecos-daemon")

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 交互式接入向导 (ecos-onboard)
+eCOS v6 — 交互式接入向导 (ecos-onboard)
 =========================================
 引导新 Agent/工具逐步接入 MetaOS 体系。
 
@@ -90,14 +90,14 @@ def check_cmd(cmd, name, timeout=15):
 def print_header():
     print()
     print(f"  {BOLD}{'=' * 56}{RESET}")
-    print(f"  {BOLD}  eCOS v5 — 接入引导向导 (ecos-onboard){RESET}")
+    print(f"  {BOLD}  eCOS v6 — 接入引导向导 (ecos-onboard){RESET}")
     print(f"  {BOLD}{'=' * 56}{RESET}")
     print(f"  时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 交互式接入向导")
+    parser = argparse.ArgumentParser(description="eCOS v6 交互式接入向导")
     parser.add_argument("--check", action="store_true", help="仅检查模式")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()

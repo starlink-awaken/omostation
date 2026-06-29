@@ -1,4 +1,4 @@
-# eCOS v5 Pattern Registry (SSOT)
+# eCOS v6 Pattern Registry (SSOT)
 # ==================================
 # Defines the architectural patterns that are allowed or mandated across the system.
 # Enforced by ecos-architecture-validator at CI/CD time or by L0 runtime hooks.

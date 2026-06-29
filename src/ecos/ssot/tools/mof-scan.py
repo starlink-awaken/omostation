@@ -219,7 +219,7 @@ def scan_architecture() -> list[dict]:
         {
             "id": "ARCH-ECOS-V5",
             "type": "Architecture",
-            "name": "织星架构 (eCOS v5)",
+            "name": "织星架构 (eCOS v6)",
             "description": "5层技术栈(L0-L4) + 4维治理(X1-X4) + 1织物(I0) + 1界面(P0)",
             "status": "active",
             "domain": "meta",
@@ -242,7 +242,7 @@ def scan_architecture() -> list[dict]:
                     "auditability": "X1-X4全覆盖",
                 },
                 "evolution_path": [
-                    "v4.2(5+3+1)",
+                    "v4.2(5+4+1+1)",
                     "v5.0(5+4+1+X4)",
                     "v5.3(织星·MOF基座)",
                 ],

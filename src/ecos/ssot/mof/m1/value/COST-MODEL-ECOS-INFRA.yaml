@@ -2,7 +2,7 @@ id: "COST-MODEL-ECOS-INFRA"
 type: CostModel
 subtype: "Infrastructure"
 name: "eCOS 基础设施成本模型"
-description: "eCOS v5 全栈的基础设施运行成本归因"
+description: "eCOS v6 全栈的基础设施运行成本归因"
 status: "active"
 domain: "meta"
 layer: "L0"

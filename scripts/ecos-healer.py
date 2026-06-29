@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 自治愈框架 (ecos-healer)
+eCOS v6 — 自治愈框架 (ecos-healer)
 =====================================
 Phase 8.3 / 自愈能力
 失败自动恢复 + 重试逻辑 + 降级策略。
@@ -242,7 +242,7 @@ def heal_daemon(conn: sqlite3.Connection, dry_run: bool = False) -> dict:
 def format_report(results: list[dict]) -> str:
     lines = []
     lines.append("=" * 56)
-    lines.append("  eCOS v5 — 自治愈报告")
+    lines.append("  eCOS v6 — 自治愈报告")
     lines.append("=" * 56)
     for r in results:
         icon = {
@@ -274,7 +274,7 @@ def show_status(conn: sqlite3.Connection):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 自治愈框架")
+    parser = argparse.ArgumentParser(description="eCOS v6 自治愈框架")
     parser.add_argument(
         "--check-health", action="store_true", help="检查所有项目并自愈"
     )

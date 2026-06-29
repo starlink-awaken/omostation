@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 统一部署器 (ecos-deploy)
+eCOS v6 — 统一部署器 (ecos-deploy)
 =====================================
 四模式部署状态机: COLD → HOT → SHARED | SWARM
 
@@ -87,7 +87,7 @@ def deploy_cold(target: Path = None):
 
     # 网关
     (target / "CLAUDE_COWORK_GLOBAL.md").write_text(
-        f"# L4 网关\n\n> eCOS v5 · 冷启动\n> {datetime.now().strftime('%Y-%m-%d')}\n\n"
+        f"# L4 网关\n\n> eCOS v6 · 冷启动\n> {datetime.now().strftime('%Y-%m-%d')}\n\n"
         "## §0 我是谁\n\n**[你的名字]** — **[你的身份]**\n\n"
         "## §1 启动链\n\n"
         "1. `python3 驾驶舱/scripts/ecos-brief.py`\n"
@@ -101,7 +101,7 @@ def deploy_cold(target: Path = None):
     for sname, content in {
         "ecos-brief.py": '#!/usr/bin/env python3\nfrom pathlib import Path\nfrom datetime import datetime\nstale = 0\nfor f in Path.home().glob("Documents/**/CLAUDE.md"):\n    if f.is_file() and not f.is_symlink():\n        age = (datetime.now() - datetime.fromtimestamp(f.stat().st_mtime)).days\n        if age > 60: stale += 1\nprint(f"# 会话简报\\n\\nCLAUDE.md: {stale} 过期\\n检查时间: {datetime.now()}")\n',
         "ecos-health-check.py": '#!/usr/bin/env python3\nfrom pathlib import Path\nDOCS = Path.home() / "Documents"\nissues = []\nfor p in ["CLAUDE_COWORK_GLOBAL.md", "驾驶舱/CLAUDE.md", "学习进化/CLAUDE.md"]:\n    if not (DOCS / p).exists(): issues.append(p)\nprint(f"健康检查: {len(issues)} 项异常" if issues else "✅ 全部通过")\n',
-        "ecos-whoami.py": '#!/usr/bin/env python3\nfrom pathlib import Path\nfrom datetime import datetime\nDOCS = Path.home() / "Documents"\nprint(f"eCOS v5 · 冷启动\\n时间: {datetime.now().strftime(\'%Y-%m-%d %H:%M\')}\\n位置: {DOCS}")\nfor d in ["驾驶舱", "学习进化", "工作文档", "家庭生活"]:\n    print(f"  {\"✅\" if (DOCS/d).exists() else \"❌\"} {d}")\n',
+        "ecos-whoami.py": '#!/usr/bin/env python3\nfrom pathlib import Path\nfrom datetime import datetime\nDOCS = Path.home() / "Documents"\nprint(f"eCOS v6 · 冷启动\\n时间: {datetime.now().strftime(\'%Y-%m-%d %H:%M\')}\\n位置: {DOCS}")\nfor d in ["驾驶舱", "学习进化", "工作文档", "家庭生活"]:\n    print(f"  {\"✅\" if (DOCS/d).exists() else \"❌\"} {d}")\n',
     }.items():
         p = target / "驾驶舱/scripts" / sname
         if not p.exists():
@@ -289,7 +289,7 @@ def show_status():
 
     mode_icons = {"cold": "🥶", "hot": "🔥", "shared": "👥", "swarm": "🐝", "unknown": "❓"}
 
-    print(f"\n{B}  eCOS v5 — 部署状态{N}\n")
+    print(f"\n{B}  eCOS v6 — 部署状态{N}\n")
     print(f"  {mode_icons.get(mode, '?')} 模式: {mode.upper()}")
     print(f"  初始化: {init_at}")
     if role:
@@ -316,7 +316,7 @@ def show_status():
 # ── MAIN ──
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 统一部署器")
+    parser = argparse.ArgumentParser(description="eCOS v6 统一部署器")
     parser.add_argument("--mode", choices=["cold", "hot", "shared", "swarm"],
                         help="部署模式")
     parser.add_argument("--from", dest="scripts_src", type=str,

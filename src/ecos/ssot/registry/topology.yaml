@@ -1,4 +1,4 @@
-# eCOS v5 Topology Registry (SSOT)
+# eCOS v6 Topology Registry (SSOT)
 # ==================================
 # Defines the physical bounds and allowed import paths for the 5+4+1 architecture.
 # Enforced by ecos-architecture-validator

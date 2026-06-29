@@ -3,7 +3,7 @@
 id: ARCH-L2-KERNEL
 type: Architecture
 name: L2 内核三平面架构
-description: OMO(治理平面) + Kairon(引擎平面) + gBrain(记忆平面)——eCOS v5 的知识与治理内核
+description: OMO(治理平面) + Kairon(引擎平面) + gBrain(记忆平面)——eCOS v6 的知识与治理内核
 status: active
 domain: infra
 created: '2026-06-05'

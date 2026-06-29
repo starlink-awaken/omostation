@@ -28,7 +28,7 @@ def generate_brief(json_output: bool = False) -> dict:
     ws = Path.home() / "Workspace"
     brief = {
         "generated_at": now(),
-        "system": "eCOS v5",
+        "system": "eCOS v6",
         "sections": {},
     }
 
@@ -120,7 +120,7 @@ def main():
     if json_output:
         print(json.dumps(brief, indent=2, ensure_ascii=False))
     else:
-        print(f"eCOS v5 系统简报 — {brief['generated_at']}")
+        print(f"eCOS v6 系统简报 — {brief['generated_at']}")
         for section, data in brief["sections"].items():
             print(f"  [{section}]: {data}")
 

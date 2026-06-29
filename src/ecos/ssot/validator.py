@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 L0 — 统一架构校验器 (ecos-validator)
+eCOS v6 L0 — 统一架构校验器 (ecos-validator)
 ================================================
 整合 SSOT 拓扑校验 + 模式校验 + MOF 元模型校验。
 L0 协议编织层的统一入口校验工具。
