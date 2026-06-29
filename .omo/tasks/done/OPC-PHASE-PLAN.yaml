@@ -27,7 +27,7 @@ constraints:
 phases:
 - id: OPC-P0
   title: Fact baseline
-  goal: Freeze current Workspace/eCOS v5 factual baseline for OPC planning.
+  goal: Freeze current Workspace/eCOS v6 factual baseline for OPC planning.
   tasks:
   - OPC-P0-T1-project-inventory
   - OPC-P0-T2-doc-drift-audit

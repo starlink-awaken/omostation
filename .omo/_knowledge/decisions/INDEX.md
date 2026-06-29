@@ -1,10 +1,9 @@
 ---
-status: archived
-lifecycle: history
+status: active
+lifecycle: index
 owner: governance-team
-last-reviewed: 2026-06-22
-archived-since: 2026-06-22
-note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+last-reviewed: 2026-06-29
+note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 active"
 ---
 
 # Architecture Decision Records — 索引
