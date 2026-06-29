@@ -10,17 +10,29 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (1 个)
-
+## Planned Tasks (14 个)
 | ID | Title | Status |
 |----|-------|--------|
-| OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
+| OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z | No-op: drift detector reported 0 drift; loop con | candidate |
+| QUEST-5 | 测试每日打扫 | candidate |
+| QUEST-6 | 测试每日打扫 | candidate |
+| QUEST-7 | 测试每日打扫 | candidate |
+| QUEST-8 | 测试每日打扫 | candidate |
+| TASK-02788FE2 | AETHERFORGE P0: RouteScheduler 实现 (v2 Phase 2, 路 | candidate |
+| TASK-13AD0B21 | AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升 | candidate |
+| TASK-67C63D6C | AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾 | candidate |
+| TASK-6B868907 | P1 产品门户: c2g draft→bet路径 + 全场景门户 | candidate |
+| TASK-94BB9C70 | P1 并发Agent抢占: 共享文件advisory-lock | candidate |
+| TASK-AB15691F | P1 D调研: 28 deprecated BOS声明对齐真实位置 (expires 2026- | candidate |
+| TASK-D0D38295 | AETHERFORGE P2: 路径硬编码清 (AUDIT 1.2, CI 可移植 | candidate |
+| TASK-F68B791B | AETHERFORGE P2: swarm/mesh 测试补 (各5, 薄 | candidate |
+| TASK-F7114ABA | P1 GodModule: omo_ingress354L/agora1945L/gbrain3 | candidate |
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
-## Completed Tasks (114 个)
+## Completed Tasks (91 个)
 
-> `tasks/done/` — 114 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
+> `tasks/done/` — 91 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
 
 近期关键完成里程碑（done/ 顶层）:
 - P42-W0-W1-COMBO / P42-W2-COMBO — P42 治理面 SSOT 同步
@@ -33,6 +45,8 @@
 - SHAREDBRAIN-FORMAL-DECISION — SharedBrain 归档决策
 - TASK-DEBT-CLOSURE-EVIDENCE-20260620 — 债务关闭 evidence
 - TASK-KAIRON-MYPY-STRICT — kairon mypy strict 启用
+- TASK-9B363829 — BOS 声明/执行鸿沟修复 (evidence-smoke resolve_rate=100)
+- TASK-26348641 — 自反馈闭环 (feedback-loop-guard 3 维度 + mypy MYPYPATH=src baseline-gate)
 
 完整列表请见 `tasks/done/` 目录及子目录。
 
@@ -55,5 +69,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-06-24 (依据 `omo state sync-tasks` 与真实目录重算: done=114, planned=1, active=0, archived=6 顶层)*
+*Updated: 2026-06-29 (依据 `omo state sync-tasks` 与真实目录重算: done=91, planned=14, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
