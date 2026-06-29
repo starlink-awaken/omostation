@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 债务 closeout 批量修复
+eCOS v6 — 债务 closeout 批量修复
 ===================================
 Phase 8.2 — 一次性处理 4 个小型债务:
   DEBT-L0-001 (🟡): 约束表达式引擎升级
@@ -14,7 +14,6 @@ Phase 8.2 — 一次性处理 4 个小型债务:
     python3 fix-debts.py --json    # JSON 输出
 """
 
-import sys
 import json
 import argparse
 from datetime import datetime, timezone
@@ -117,7 +116,7 @@ def fix_mcp_half_life() -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 债务 closeout 批量修复")
+    parser = argparse.ArgumentParser(description="eCOS v6 债务 closeout 批量修复")
     parser.add_argument("--dry-run", action="store_true", help="仅预览")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
@@ -145,7 +144,7 @@ def main():
         print(json.dumps({"fixes": results}, ensure_ascii=False, indent=2))
     else:
         print(f"\n{'='*56}")
-        print(f"  eCOS v5 — 债务 closeout 批量修复")
+        print("  eCOS v6 — 债务 closeout 批量修复")
         print(f"{'='*56}\n")
         for r in results:
             status = "✅" if r.get("status") in ("fixed", "tracked") else "⚠️"

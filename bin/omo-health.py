@@ -15,7 +15,7 @@ def print_header(title):
     print(f"\n{'='*50}\n{title}\n{'='*50}")
 
 def render_dashboard():
-    print_header("👁️  KEEPER DASHBOARD (eCOS v5.0)")
+    print_header("👁️  KEEPER DASHBOARD (eCOS v6.0)")
     
     # 1. System Phase & Freeze Status
     try:
