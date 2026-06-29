@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 X2 — CLAUDE.md Freshness Checker
+eCOS v6 X2 — CLAUDE.md Freshness Checker
 =========================================
 Phase X1 / BKL-011 / DEBT-X-003
 扫描全量 CLAUDE.md 文件，标记超过 60 天未更新的文件。
@@ -124,7 +124,7 @@ def format_report(results: dict) -> str:
     """人类可读报告"""
     lines = []
     lines.append("=" * 60)
-    lines.append("  eCOS v5 — CLAUDE.md 保鲜检查报告")
+    lines.append("  eCOS v6 — CLAUDE.md 保鲜检查报告")
     lines.append("=" * 60)
     lines.append(f"  检查时间: {results['checked_at'][:19]}")
     lines.append(f"  保鲜阈值: {results['max_age_days']} 天")
@@ -171,7 +171,7 @@ def format_report(results: dict) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 CLAUDE.md Freshness Checker")
+    parser = argparse.ArgumentParser(description="eCOS v6 CLAUDE.md Freshness Checker")
     parser.add_argument(
         "--max-age-days", type=int, default=60, help="保鲜阈值（天），默认 60"
     )

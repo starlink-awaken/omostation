@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 X1 — Vault 审计钩子 (Git 变更追踪)
+eCOS v6 X1 — Vault 审计钩子 (Git 变更追踪)
 =============================================
 Phase X1 / BKL-010 / DEBT-X-001
 追踪 Vault 中 Markdown 文件的 Git 变更，映射到审计记录。
@@ -142,7 +142,7 @@ def format_report(entries: list[dict], domains: dict, since: str) -> str:
 
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — Vault 变更审计报告")
+    lines.append("  eCOS v6 — Vault 变更审计报告")
     lines.append("=" * 64)
     lines.append(f"  审计区间: {since} → {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     lines.append(f"  提交数: {total_commits}  变更文件: {total_files}")
@@ -184,7 +184,7 @@ def format_report(entries: list[dict], domains: dict, since: str) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 Vault 审计钩子")
+    parser = argparse.ArgumentParser(description="eCOS v6 Vault 审计钩子")
     parser.add_argument("--vault", required=True, help="Vault Git 仓库路径")
     parser.add_argument("--since", default="7 days ago", help="审计区间")
     parser.add_argument("--json", action="store_true", help="JSON 输出")

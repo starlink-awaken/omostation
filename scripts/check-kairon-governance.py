@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 X1/X2 — Kairon 审计 + 保鲜包装器
+eCOS v6 X1/X2 — Kairon 审计 + 保鲜包装器
 =============================================
 为 Kairon 功能域提供 X1（审计）和 X2（保鲜）覆盖。
 扫描 Kairon packages 目录，检查 minerva audit log 和包保鲜状态。
@@ -102,7 +102,7 @@ def format_report(packages: list[dict], audit: dict, max_age: int) -> str:
 
     lines = []
     lines.append("=" * 64)
-    lines.append("  eCOS v5 — Kairon 治理检查报告 (X1 审计 + X2 保鲜)")
+    lines.append("  eCOS v6 — Kairon 治理检查报告 (X1 审计 + X2 保鲜)")
     lines.append("=" * 64)
     lines.append(f"  检查时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(f"  扫描包数: {len(packages)}")
@@ -149,7 +149,7 @@ def format_report(packages: list[dict], audit: dict, max_age: int) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="eCOS v5 Kairon 治理检查")
+    parser = argparse.ArgumentParser(description="eCOS v6 Kairon 治理检查")
     parser.add_argument("--workspace", required=True, help="Workspace 路径")
     parser.add_argument("--max-age-days", type=int, default=60, help="保鲜阈值")
     parser.add_argument("--json", action="store_true")
