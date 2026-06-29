@@ -2,7 +2,7 @@
 # 根仓库只追踪元配置、基础设施和文档。
 # 项目代码在各子仓库中独立管理。
 
-# ---- OMO / OMC 运行时与治理产物 ----
+# === 1. OMO / OMC 治理运行时产物 ===
 .omo/.omo/
 .omo/_archive/
 .omo/_delivery/
@@ -11,7 +11,7 @@
 .omo/_control/evolution/drift-history/*.json.lock
 .omo/capabilities/
 .omo/debt/
-.omo/evidence
+.omo/evidence/
 .omo/plans/
 .omo/run-continuation/
 .omo/tests/
@@ -32,30 +32,35 @@ projects/.omc/
 projects/cockpit-ui/
 projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml
 
-# ---- 运行时数据与日志 ----
-agent-runtime/
-runtime/agent-runtime/
+# === 2. Runtime 运行时残渣（非持久数据） ===
+# runtime/ 只保留 README 和边界契约 YAML；其余全部忽略
 runtime/**/*.log
-runtime/data/kei_audit.jsonl
-runtime/sandbox/decayed/
-runtime/sandbox/pitches/
+runtime/**/*.jsonl
+runtime/data/
+runtime/run-continuation/*.json
+runtime/server.log
+runtime/wechat-main.png
 
-data/backups/
-data/kos/
-data/sharedbrain/data/
-data/驾驶舱/
+# === 3. Data 共享数据底座的运行时文件 ===
+# 保留：README、访问策略 YAML、驾驶舱 CARDS Markdown
+# 忽略：数据库、备份、索引、捕获等生成/运行时文件
 data/**/*.db
 data/**/*.db-shm
 data/**/*.db-wal
 data/**/*.sqlite
 data/**/*.sqlite3
+data/_index/
+data/backups/
+data/cards/*.db
+data/db/
+data/kos/
+data/sharedbrain/data/
+data/驾驶舱/documents.db
 
+# === 4. KOS 历史根目录（已合并到 data/kos/） ===
 kos/
-graphify-out/
-spaces/*.db
-_derivation_logs/
 
-# ---- 构建产物与缓存 ----
+# === 5. 构建产物与缓存 ===
 .env
 __pycache__/
 *.egg-info/
@@ -70,6 +75,7 @@ node_modules/
 .ruff_cache/
 .runtime/
 
+# === 6. 本地工具与 IDE 配置 ===
 .grok/
 .reasonix/
 .antigravitycli/
@@ -82,17 +88,12 @@ node_modules/
 .idea/
 .serena/
 .claude/
-skills/
-data/_index/
-
-
-# ---- 本地工具与敏感配置 ----
 .metaos/
 .qoder/
 config/
 *.local.json
 
-# ---- 本地开发沙箱与一次性脚本 ----
+# === 7. 本地开发沙箱与临时文件 ===
 /scratch/
 **/_tmp_*
 **/temp_*
@@ -107,10 +108,17 @@ config/
 /patch_test.py
 /patch_test2.py
 
-# ---- c2g / 历史归档临时文件 ----
-bets.json
-tasks.json
+# === 8. 历史归档目录（保留已跟踪文件，忽略新文件） ===
 _archived/
 
-# ---- 系统文件 ----
+# === 9. 其他运行时/历史文件 ===
+agent-runtime/
+graphify-out/
+spaces/*.db
+_derivation_logs/
+bets.json
+tasks.json
+skills/
+
+# === 10. 系统文件 ===
 .DS_Store
