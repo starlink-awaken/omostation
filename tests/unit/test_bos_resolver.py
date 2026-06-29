@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 
 import pytest
 
@@ -538,6 +539,36 @@ class TestP35W1Respawn:
         assert result["description"] == unimpl_svc.description
 
 
+_MCP_MOCK_SERVER = """
+import json, sys
+
+def send(msg):
+    print(json.dumps(msg), flush=True)
+
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        req = json.loads(line)
+    except Exception:
+        continue
+    method = req.get("method", "")
+    req_id = req.get("id")
+    if method == "initialize":
+        send({"jsonrpc": "2.0", "id": req_id, "result": {"protocolVersion": "2024-11-05", "serverInfo": {"name": "mock"}, "capabilities": {"tools": {}}}})
+    elif method == "notifications/initialized":
+        pass
+    elif method == "tools/call":
+        name = req.get("params", {}).get("name")
+        args = req.get("params", {}).get("arguments", {})
+        if name == "pkg/boom":
+            send({"jsonrpc": "2.0", "id": req_id, "error": {"code": -32600, "message": "boom"}})
+        else:
+            send({"jsonrpc": "2.0", "id": req_id, "result": {"content": [{"type": "text", "text": f"ok:{name}:{json.dumps(args)}"}]}})
+"""
+
+
 class TestStdioAdapterProtocol:
     def test_stdio_transport_uses_custom_json(self):
         """transport=stdio 向后兼容：发送自定义 {args, kwargs} JSON."""
@@ -556,8 +587,8 @@ class TestStdioAdapterProtocol:
         assert result["status"] == "ok"
         assert result["result"] == {"args": [{"x": 1}], "kwargs": {}}
 
-    def test_mcp_stdio_transport_uses_jsonrpc(self):
-        """transport=mcp_stdio 发送标准 JSON-RPC 2.0 tools/call."""
+    def test_mcp_stdio_full_session_ok(self):
+        """transport=mcp_stdio 走完整 initialize / initialized / tools/call."""
         from agora.mcp.resolver.adapter import StdioAdapter
 
         svc = BosService(
@@ -566,30 +597,28 @@ class TestStdioAdapterProtocol:
             package="pkg",
             action="action",
             transport="mcp_stdio",
-            command=["cat"],
+            command=[sys.executable, "-c", _MCP_MOCK_SERVER],
         )
-        adapter = StdioAdapter(timeout=2.0)
+        adapter = StdioAdapter(timeout=5.0)
         result = adapter.call(svc, {"x": 1})
         assert result["status"] == "ok"
-        echoed = result["result"]
-        assert echoed["jsonrpc"] == "2.0"
-        assert echoed["method"] == "tools/call"
-        assert echoed["params"]["name"] == "pkg/action"
-        assert echoed["params"]["arguments"]["args"] == [{"x": 1}]
+        text = result["result"]["content"][0]["text"]
+        assert "ok:pkg/action" in text
+        assert '"x": 1' in text
 
-    def test_mcp_stdio_parses_jsonrpc_response(self):
-        """transport=mcp_stdio 能正确解析 JSON-RPC result/error."""
+    def test_mcp_stdio_full_session_error(self):
+        """transport=mcp_stdio 正确传播 tools/call error."""
         from agora.mcp.resolver.adapter import StdioAdapter
 
         svc = BosService(
-            uri="bos://test/pkg/action",
+            uri="bos://test/pkg/boom",
             domain="test",
             package="pkg",
-            action="action",
+            action="boom",
             transport="mcp_stdio",
-            command=["printf", '{"jsonrpc":"2.0","result":{"ok":true},"id":1}'],
+            command=[sys.executable, "-c", _MCP_MOCK_SERVER],
         )
-        adapter = StdioAdapter(timeout=2.0)
+        adapter = StdioAdapter(timeout=5.0)
         result = adapter.call(svc)
-        assert result["status"] == "ok"
-        assert result["result"] == {"ok": True}
+        assert result["status"] == "error"
+        assert "boom" in str(result["error"])
