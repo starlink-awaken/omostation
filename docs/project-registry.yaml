@@ -20,7 +20,7 @@ layers:
   L0: "协议层 (ecos)"
   L1: "运行时 (runtime)"
   L2: "引擎面 (kairon / gbrain / omo / metaos)"
-  L3: "入口层 (cockpit / cockpit-ui)"
+  L3: "入口层 (cockpit; cockpit-ui 挂载至 cockpit, layer=X)"
   L4: "自我层 (l4-kernel)"
   I0: "织层 (agora)"
   M0: "横切框架 (model-driven)"

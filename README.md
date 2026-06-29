@@ -26,13 +26,13 @@ This README is only the front door. It intentionally avoids hard-coded runtime n
 
 ```
 L4  Self       -> l4-kernel
-L3  Entry      -> cockpit / cockpit-ui
+L3  Entry      -> cockpit (cockpit-ui: layer=X, 挂载至 cockpit)
 I0  Weave      -> agora
 L2  Engine     -> kairon / gbrain / omo / metaos
 L1  Runtime    -> runtime
 L0  Protocol   -> ecos
 M0  Lifecycle  -> model-driven
-X   Frameworks -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub / spaces
+X   Frameworks -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub
 ```
 
 For the complete architecture, read [`ARCHITECTURE.md`](ARCHITECTURE.md). For layer placement, read [`LAYER-INDEX.md`](LAYER-INDEX.md).
@@ -43,6 +43,7 @@ For the complete architecture, read [`ARCHITECTURE.md`](ARCHITECTURE.md). For la
 |----------|-------|-----------------|
 | Human CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI agent | `agora` MCP with `bos://` URIs | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
+| Agent workflow | `bin/agent-workflow.py` / `cockpit agent-workflow` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
 | Governance | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 
 ### Quick Start
@@ -76,6 +77,7 @@ cd projects/gbrain && bun test
 - Current goals: [`.omo/goals/current.yaml`](.omo/goals/current.yaml)
 - Governance kernel: [`projects/omo/`](projects/omo/)
 - Governance-as-Code registry: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
+- Executable agent workflows: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
 
 ### License
 
@@ -97,13 +99,13 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 
 ```
 L4  自我层     -> l4-kernel
-L3  入口层     -> cockpit / cockpit-ui
+L3  入口层     -> cockpit (cockpit-ui: layer=X, 挂载至 cockpit)
 I0  织层       -> agora
 L2  引擎面     -> kairon / gbrain / omo / metaos
 L1  运行时     -> runtime
 L0  协议层     -> ecos
 M0  生命周期   -> model-driven
-X   横切框架   -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub / spaces
+X   横切框架   -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub
 ```
 
 完整架构见 [`ARCHITECTURE.md`](ARCHITECTURE.md)，分层项目索引见 [`LAYER-INDEX.md`](LAYER-INDEX.md)。
@@ -114,6 +116,7 @@ X   横切框架   -> aetherforge / c2g / bus-foundation / omo-debt / observabil
 |------|------|----------|
 | 人类 CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI Agent | `agora` MCP + `bos://` URI | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
+| Agent 工作流 | `bin/agent-workflow.py` / `cockpit agent-workflow` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
 | 治理操作 | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 
 ### 快速开始
@@ -147,6 +150,7 @@ cd projects/gbrain && bun test
 - 当前目标: [`.omo/goals/current.yaml`](.omo/goals/current.yaml)
 - 治理内核: [`projects/omo/`](projects/omo/)
 - Governance-as-Code 注册表: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
+- 可执行 Agent 工作流: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
 
 ### 许可证
 

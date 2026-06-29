@@ -18,13 +18,13 @@
 | Layer | Role | Projects / Surfaces |
 |-------|------|---------------------|
 | L4 Self | Domain-facing self layer | `l4-kernel` |
-| L3 Entry | Human CLI/Web and user-facing orchestration | `cockpit`, `cockpit-ui` |
+| L3 Entry | Human CLI/Web and user-facing orchestration | `cockpit` (cockpit-ui: layer=X, 挂载至 cockpit) |
 | I0 Weave | BOS routing and MCP hub | `agora` |
 | L2 Engine | Knowledge, memory, governance, orchestration | `kairon`, `gbrain`, `omo`, `metaos` |
 | L1 Runtime | Scheduling, health, sandbox, service lifecycle | `runtime` |
 | L0 Protocol | Protocol, MOF, L0 constraints | `ecos` |
 | M0 Lifecycle | Model-driven lifecycle framework | `model-driven` |
-| X Cross-cutting | Shared capabilities across layers | `aetherforge`, `c2g`, `bus-foundation`, `omo-debt`, `observability`, `family-hub`, `spaces` |
+| X Cross-cutting | Shared capabilities across layers | `aetherforge`, `c2g`, `bus-foundation`, `omo-debt`, `observability`, `family-hub`, `cockpit-ui` |
 
 ## BOS Domains
 

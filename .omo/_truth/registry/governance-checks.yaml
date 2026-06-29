@@ -305,9 +305,9 @@ gac:
       dimension: X4
       layer: meta
       name: "文档 SSOT (markdown 禁硬编码项目元数据, 引用 project-registry)"
-      description: "101 markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/doc-ssot-lint.py)"
+      description: "markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/doc-ssot-lint.py 扫描)"
       check_type: ssot_pointer
-      target: "docs/project-registry.yaml + 101 markdown"
+      target: "docs/project-registry.yaml + bin/doc-ssot-lint.py 扫描范围"
       forbid_copy_in: ["AGENTS.md", "CLAUDE.md", "**/README.md", "LAYER-INDEX.md"]
       executor: [ci_gate]
       lifecycle: active

@@ -29,7 +29,47 @@ def load_rules():
     return []
 
 
+def load_source_descriptions():
+    """从 source_ref 拉取 legacy_index 规则的描述.
+
+    legacy_index 规则在 governance-checks.yaml 中 description 为空,
+    实际描述在 source_ref 指向的源文件中.
+    源文件使用不同的 ID 字段名 (id / rule_id) 和描述字段名 (description / title / name).
+    """
+    source_map = {}
+
+    source_files = [
+        WORKSPACE / ".omo/_truth/x1-governance-policies.yaml",
+        WORKSPACE / ".omo/_truth/x2-freshness-rules.yaml",
+        WORKSPACE / ".omo/_truth/x4-consistency-rules.yaml",
+        WORKSPACE / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml",
+    ]
+
+    for sf_path in source_files:
+        if not sf_path.exists():
+            continue
+        with open(sf_path) as f:
+            docs = [d for d in yaml.safe_load_all(f) if d]
+        for doc in docs:
+            if not isinstance(doc, dict):
+                continue
+            for _key, val in doc.items():
+                if not isinstance(val, list):
+                    continue
+                for item in val:
+                    if not isinstance(item, dict):
+                        continue
+                    rid = item.get("id", "") or item.get("rule_id", "") or item.get("policy_id", "")
+                    desc = item.get("description", "") or item.get("title", "") or item.get("name", "") or item.get("desc", "")
+                    if rid and desc:
+                        source_map[rid] = desc
+
+    return source_map
+
+
 def export_markdown(rules):
+    source_descs = load_source_descriptions()
+
     by_dim = {}
     for r in rules:
         dim = r.get("dimension", "?")
@@ -45,6 +85,7 @@ def export_markdown(rules):
     lines.append("")
     lines.append("> SSOT: `.omo/_truth/registry/governance-checks.yaml::gac.rules`")
     lines.append("> 校验: `python3 bin/gac-validate.py --gate` | 漂移: `python3 bin/gac-drift.py`")
+    lines.append("> legacy_index 规则描述从 source_ref 源文件拉取 (x1-policies / x2-freshness / x4-consistency / L0-constraints)")
     lines.append("")
 
     for dim in ["X1", "X2", "X3", "X4"]:
@@ -60,7 +101,13 @@ def export_markdown(rules):
             rid = r.get("id", "")
             layer = r.get("layer", "?")
             check_type = r.get("check_type", "?")
-            desc = r.get("description", "")[:60]
+            # Use source_ref description if registry description is empty
+            desc = r.get("description", "")
+            if not desc.strip() and rid in source_descs:
+                desc = source_descs[rid]
+            # Truncate to 120 chars (was 60, caused truncation)
+            if len(desc) > 120:
+                desc = desc[:117] + "..."
             lines.append(f"| `{rid}` | {layer} | {check_type} | {desc} |")
         lines.append("")
 

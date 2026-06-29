@@ -21,13 +21,14 @@
 
 ```
 L4  Self layer       -> l4-kernel
-L3  Entry layer      -> cockpit / cockpit-ui
+L3  Entry layer      -> cockpit (cockpit-ui: layer=X, 挂载至 cockpit)
 I0  Weave layer      -> agora
 L2  Engine layer     -> kairon / gbrain / omo / metaos
 L1  Runtime layer    -> runtime
 L0  Protocol layer   -> ecos
 M0  Lifecycle layer  -> model-driven
-X   Cross-cutting    -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub / spaces
+X   Cross-cutting    -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub
+                       spaces/ (配置仓, 非 git submodule)
 ```
 
 ## 3. Entry Architecture

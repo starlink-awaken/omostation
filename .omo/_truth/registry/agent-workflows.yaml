@@ -1,0 +1,348 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-29
+---
+
+version: 1
+description: Project-level executable workflows for AI agents working in omostation.
+ssot:
+  governance_rules: .omo/_truth/registry/governance-checks.yaml
+  agent_protocol: .omo/standards/agent-mutation-protocol.md
+  omo_surfaces: .omo/standards/omo-governance-surfaces.md
+  doc_contract: .omo/standards/doc-ssot-contract.md
+internal_integrations:
+  gac:
+    gate: make gac-local-gate
+    runner_lint_binding: bin/gac-local-gate.py::agent-workflow-lint
+  omo:
+    bridge_compat: uv run --project projects/omo omo bridge --format <format> <source-file>
+    state_broker: projects/omo
+  c2g:
+    pitch_bet: uv run --project projects/c2g c2g bet <pitch.md>
+    cockpit_entry: uv run --project projects/cockpit cockpit compass bet <pitch.md>
+  cockpit:
+    compass: uv run --project projects/cockpit cockpit compass --help
+    workflow: uv run --project projects/cockpit cockpit workflow --help
+runner:
+  entrypoint: bin/agent-workflow.py
+  generated_skill: .agents/skills/project-governance/SKILL.md
+  run_state_dir: .omo/_delivery/agent-workflows/runs
+  lock_state_dir: .omo/_delivery/agent-workflows/locks
+  ledger_path: .omo/_delivery/agent-workflows/events.jsonl
+  lock_ttl_hours: 24
+external_patterns:
+  superpowers:
+    status: integrated
+    pattern: skill-first execution with explicit checklist and verification before closeout
+    adapter: project-governance skill points back to this registry and runner
+  bmad:
+    status: optional_adapter
+    command: bmad
+    bridge: uv run --project projects/omo omo bridge --format bmad <source-file>
+    pattern: structured product/agent specs become governed OMO planned tasks through the OMO bridge compatibility path
+  openspec:
+    status: optional_adapter
+    command: openspec
+    bridge: uv run --project projects/omo omo bridge --format openspec <source-file>
+    pattern: specs become contracts before implementation and then enter OMO through the bridge compatibility path
+  gstack:
+    status: optional_adapter
+    command: gstack
+    pattern: per-worktree memory, learnings, and handoff logs can feed workflow resume evidence
+    degrade_to: bin/agent-workflow.py handoff <run-id>
+  beads:
+    status: optional_adapter
+    command: beads
+    pattern: small dependency-tracked work items can be imported as OMO planned tasks when available
+    degrade_to: c2g-spec-ingress plus OMO planned tasks
+commands:
+  lint:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  doctor:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - doctor
+doctor_checks:
+  - id: root-agent-workflow-list
+    description: Root runner can list workflows.
+    required: true
+    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, list]
+  - id: cockpit-agent-workflow-list
+    description: Cockpit L3 entry can delegate to the root runner.
+    required: true
+    command: [uv, run, --project, projects/cockpit, cockpit, agent-workflow, list]
+  - id: cockpit-compass-help
+    description: Cockpit C2G compass entry is available.
+    required: true
+    command: [uv, run, --project, projects/cockpit, cockpit, compass, --help]
+  - id: c2g-bet-help
+    description: C2G pitch-to-task ingress command is available.
+    required: true
+    command: [uv, run, --project, projects/c2g, c2g, bet, --help]
+  - id: omo-bridge-help
+    description: OMO bridge compatibility path for BMAD/OpenSpec is available.
+    required: true
+    command: [uv, run, --project, projects/omo, omo, bridge, --help]
+workflows:
+  - id: project-doc-change
+    title: Project documentation change
+    purpose: Keep documentation changes executable, SSOT-safe, and verifiable.
+    agents:
+      roles: [docs-agent, governance-agent]
+      observer_policy: optional_for_broad_doc_rewrites
+    allowed_lanes: [docs, governance_code, config]
+    lock_scopes: [docs, doc-ssot]
+    surfaces:
+      read:
+        - AGENTS.md
+        - CLAUDE.md
+        - README.md
+        - docs/**
+        - projects/*/AGENTS.md
+        - projects/*/CLAUDE.md
+        - projects/*/README.md
+      write:
+        - AGENTS.md
+        - CLAUDE.md
+        - README.md
+        - docs/**
+        - projects/*/AGENTS.md
+        - projects/*/CLAUDE.md
+        - projects/*/README.md
+    phases:
+      preflight:
+        - id: status
+          mode: required
+          command: [git, status, --short]
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+      execute:
+        - id: edit-docs
+          mode: manual
+          command: [agent, edit, docs-with-ssot-pointers]
+      verification:
+        - id: doc-ssot-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/doc-ssot-lint.py, --json]
+        - id: ssot-guardian
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+        - id: gac-local-gate
+          mode: required
+          command: [make, gac-local-gate]
+      closeout:
+        - id: diff-stat
+          mode: required
+          command: [git, diff, --stat]
+
+  - id: project-code-change
+    title: Project code change
+    purpose: Route code changes through project-local verification and workspace governance gates.
+    agents:
+      roles: [engineering-agent, qa-agent, governance-agent]
+      observer_policy: use_for_high_blast_radius_or_unattended_runs
+    allowed_lanes: [code, governance_code, config]
+    lock_scopes: ["project:{project}", root-gate]
+    surfaces:
+      read:
+        - projects/{project}/**
+        - docs/project-registry.yaml
+        - .omo/_truth/registry/governance-checks.yaml
+      write:
+        - projects/{project}/**
+    phases:
+      preflight:
+        - id: root-status
+          mode: required
+          command: [git, status, --short]
+        - id: project-status
+          mode: advisory
+          cwd: projects/{project}
+          command: [git, status, --short]
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+      execute:
+        - id: implement
+          mode: manual
+          command: [agent, edit, project-code]
+      verification:
+        - id: project-tests
+          mode: manual
+          cwd: projects/{project}
+          command: [project-local, test-command]
+        - id: gac-local-gate
+          mode: required
+          command: [make, gac-local-gate]
+      closeout:
+        - id: diff-stat
+          mode: required
+          command: [git, diff, --stat]
+
+  - id: governance-state-mutation
+    title: Governed OMO or spaces mutation
+    purpose: Force state-plane changes through OMO/C2G broker paths instead of ad-hoc file writes.
+    agents:
+      roles: [governance-agent, c2g-agent]
+      observer_policy: recommended
+    allowed_lanes: [governance_state]
+    lock_scopes: [.omo, spaces, omo-broker]
+    surfaces:
+      read:
+        - .omo/**
+        - spaces/**
+        - projects/omo/**
+        - projects/c2g/**
+      write:
+        - .omo/**
+        - spaces/**
+    phases:
+      preflight:
+        - id: status
+          mode: required
+          command: [git, status, --short]
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+      execute:
+        - id: broker-write
+          mode: manual
+          command: [omo-or-c2g, broker, mutate-state]
+      verification:
+        - id: ssot-guardian
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+        - id: gac-local-gate
+          mode: required
+          command: [make, gac-local-gate]
+      closeout:
+        - id: mutation-ledger
+          mode: manual
+          command: [omo, event, emit, agent_mutation_complete]
+
+  - id: c2g-spec-ingress
+    title: C2G external spec ingress
+    purpose: Convert BMAD/OpenSpec/Pitch inputs into governed OMO planned tasks.
+    agents:
+      roles: [strategy-agent, c2g-agent, governance-agent]
+      observer_policy: optional
+    allowed_lanes: [governance_state, docs]
+    lock_scopes: [c2g-ingress, .omo/tasks/planned]
+    surfaces:
+      read:
+        - runtime/sandbox/**
+        - .omo/pitches/**
+        - projects/c2g/**
+        - projects/omo/**
+      write:
+        - .omo/tasks/planned/**
+        - .omo/_delivery/ingress/**
+    phases:
+      preflight:
+        - id: adapter-doctor
+          mode: advisory
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+      execute:
+        - id: import-spec
+          mode: manual
+          command: [uv, run, --project, projects/omo, omo, bridge, --format, "{format}", "{source_file}"]
+        - id: pitch-bet
+          mode: manual
+          command: [uv, run, --project, projects/cockpit, cockpit, compass, bet, "{source_file}"]
+      verification:
+        - id: ssot-guardian
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+        - id: gac-local-gate
+          mode: required
+          command: [make, gac-local-gate]
+      closeout:
+        - id: planned-task-review
+          mode: manual
+          command: [agent, inspect, .omo/tasks/planned]
+
+  - id: submodule-pointer-close
+    title: Submodule pointer closeout
+    purpose: Close project submodule work without dangling root pointers or unreachable SHAs.
+    agents:
+      roles: [release-agent, governance-agent]
+      observer_policy: recommended_for_multi_submodule_updates
+    allowed_lanes: [submodule_pointer, config]
+    lock_scopes: [root-gitlinks, submodules]
+    surfaces:
+      read:
+        - .gitmodules
+        - projects/**
+      write:
+        - projects/*
+    phases:
+      preflight:
+        - id: status
+          mode: required
+          command: [git, status, --short]
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+      execute:
+        - id: pointer-transaction
+          mode: required
+          command: [bash, bin/submodule-pointer-transaction.sh, --dry-run]
+      verification:
+        - id: reachability
+          mode: required
+          command: [make, governance-release-gate]
+        - id: gac-local-gate
+          mode: required
+          command: [make, gac-local-gate]
+      closeout:
+        - id: diff-stat
+          mode: required
+          command: [git, diff, --stat]
+
+  - id: handoff-resume
+    title: Compression-safe handoff and resume
+    purpose: Persist enough workflow state that another agent or a compressed session can continue.
+    agents:
+      roles: [any-agent]
+      observer_policy: optional
+    allowed_lanes: [docs, code, governance_code, governance_state, config, submodule_pointer]
+    lock_scopes: ["agent-run:{run_id}"]
+    surfaces:
+      read:
+        - .omo/_delivery/agent-workflows/runs/**
+        - .agents/**
+      write:
+        - .omo/_delivery/agent-workflows/runs/**
+    phases:
+      preflight:
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+      execute:
+        - id: resume
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, resume, "{run_id}"]
+      verification:
+        - id: run-record
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, show-run, "{run_id}"]
+      closeout:
+        - id: close-run
+          mode: manual
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, close, "{run_id}", --status, ok]

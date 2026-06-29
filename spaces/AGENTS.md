@@ -1,6 +1,6 @@
 # AGENTS.md — Spaces
 
-> eCOS v5 空间配置 · 租户空间 + 系统空间权限策略定义
+> eCOS 空间配置 · 租户空间 + 系统空间权限策略定义 (架构版本见根 ARCHITECTURE.md)
 
 ## Overview
 
