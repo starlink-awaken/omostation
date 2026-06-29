@@ -132,7 +132,7 @@ class DiscoveryEngine:
             proj_dir = self.root / proj_name
             venv_bin = proj_dir / ".venv" / "bin"
 
-            # 1. First check eCOS v5 layout (projects/*)
+            # 1. First check eCOS v6 layout (projects/*)
             if (self.root / "projects").is_dir():
                 if (self.root / "projects" / proj_name).is_dir():
                     proj_dir = self.root / "projects" / proj_name
