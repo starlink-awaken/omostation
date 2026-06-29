@@ -5,7 +5,7 @@ owner: governance-team
 last-reviewed: 2026-06-22
 ---
 
-# eCOS v5 Interface Contract
+# Interface Contract (架构版本见根 ARCHITECTURE.md)
 
 This file is the **Single Source of Truth (SSOT)** for L0 and L3 communication models.
 The `omo-parser` will dynamically parse these markdown tables to generate Pydantic models at runtime.

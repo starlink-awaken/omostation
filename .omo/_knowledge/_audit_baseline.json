@@ -1,10 +1,11 @@
 {
   "_comment": "AppendOnlyLog audit baseline (Round 13 P0). 漂移 = 已知/历史缺失, pre-commit 应忽略. 新代码引入'增量'漂移才 fail. 刷新: omo logs audit --baseline-init <this_path>.",
   "drift_by_consumer": {
+    "omo_bos_metrics": 0,
     "omo_event": 0,
-    "omo_history": 1817
+    "omo_history": 1818
   },
-  "generated_at": "2026-06-28T23:28:26Z",
-  "total_drift": 1817,
-  "total_records": 2072
+  "generated_at": "2026-06-29T09:36:19Z",
+  "total_drift": 1818,
+  "total_records": 2198
 }

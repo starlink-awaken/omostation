@@ -21,7 +21,7 @@ last-reviewed: 2026-06-22
 | 2 | **Work** | 💼 | 工作文档（卫健委、国转中心、legal、templates） | `@self` | `~/Documents/工作文档/` | L1: 增量同步 | L0: 搜索/查询 |
 | 3 | **Family** | 👨‍👩‍👧‍👦 | 家庭信息（成员、健康、教育、资产） | `@self` | iCloud FamilyShared | L1: 仅通过 coordinator | L0: 本地只读 |
 | 4 | **AI** | 🤖 | AI 能力（462GB models、agents、tools、pipelines） | `governance` | AROOL_REGISTRY + Agora registry | L1: 工具注册；L2: 模型变更 | L0: 发现/查询 |
-| 5 | **System** | ⚙️ | 系统基础设施（5+3+1 (v5) 架构、`.omo` 治理、ops） | `governance` | `.omo/` + Hermes + Docker | L1: 治理写入；L2: 架构变更 | L0: 状态查询 |
+| 5 | **System** | ⚙️ | 系统基础设施（5+4+1+1 (v6) 架构、`.omo` 治理、ops） | `governance` | `.omo/` + Hermes + Docker | L1: 治理写入；L2: 架构变更 | L0: 状态查询 |
 | 6 | **Data** | 📁 | 文件与数据（iCloud、SharedDisk、Desktop、sync） | `@self` | filesystem + iCloud + SharedDisk | L1: 增量同步 | L0: 文件列表/读取 |
 | 7 | **Media** | 🎬 | 媒体文件（photos、videos、music、albums） | `@self` | SharedDisk | L1: 增量同步 | L0: 浏览/播放 |
 
