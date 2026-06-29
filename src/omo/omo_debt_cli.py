@@ -15,6 +15,123 @@ import argparse
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def cmd_debt_list(omo_dir: Path) -> int:
+    """List debt items from state/system.yaml."""
+    system_path = omo_dir / "state" / "system.yaml"
+    if not system_path.exists():
+        print("No debt state found.")
+        return 0
+
+    docs = list(yaml.safe_load_all(system_path.read_text(encoding="utf-8")))
+    system = {}
+    for doc in docs:
+        if isinstance(doc, dict):
+            system.update(doc)
+
+    items = system.get("debt_weight_items", {})
+    resolved = set(system.get("resolved_debt_items", []))
+    resolved.update(
+        {
+            debt_id
+            for debt_id, info in items.items()
+            if isinstance(info, dict) and info.get("resolved")
+        }
+    )
+    total = len(items)
+    resolved_count = len(resolved)
+    open_count = total - resolved_count
+
+    print(f"{total} total: {open_count} open / {resolved_count} resolved")
+    for debt_id, info in items.items():
+        status = "resolved" if debt_id in resolved else "open"
+        desc = info.get("desc", "") if isinstance(info, dict) else ""
+        print(f"  {debt_id} [{status}] {desc}")
+    return 0
+
+
+def cmd_debt_close(
+    omo_dir: Path,
+    debt_id: str,
+    *,
+    dry_run: bool = False,
+    confirm: bool = True,
+    actor: str = "",
+) -> int:
+    """Close a canonical debt item."""
+    from omo.omo_debt import _load_yaml, _write_yaml
+    from omo.omo_debt_lifecycle import append_history, update_item
+
+    item_path, payload = update_item(omo_dir, debt_id, _load_yaml)
+    if not item_path.exists():
+        print(f"❌ 未知 debt_id: {debt_id} (不在 .omo/debt/items)")
+        return 1
+
+    payload["lifecycle_state"] = "closed"
+    payload["gate_level"] = "none"
+    payload["closed_at"] = _now_iso()
+    # 治本: 剥离越权的 legacy `status` 字段 (yaml-bypass lint 期望 lifecycle_state 唯一)
+    if "status" in payload:
+        payload.pop("status")
+    append_history(
+        payload,
+        "close",
+        "Closed debt item.",
+        actor=actor,
+        timestamp=_now_iso(),
+    )
+    if dry_run:
+        print(f"[dry-run] would close {debt_id}")
+        return 0
+
+    if not confirm:
+        print("❌ 请显式传入 confirm=True 以关闭债务项")
+        return 1
+
+    _write_yaml(item_path, payload)
+    print(f"closed {debt_id} (债务项已关闭)")
+    return 0
+
+
+def cmd_debt_desc(
+    omo_dir: Path,
+    debt_id: str,
+    description: str,
+    *,
+    dry_run: bool = False,
+    actor: str = "",
+) -> int:
+    """Update the description of a canonical debt item."""
+    from omo.omo_debt import _load_yaml, _write_yaml
+    from omo.omo_debt_lifecycle import append_history, update_item
+
+    item_path, payload = update_item(omo_dir, debt_id, _load_yaml)
+    if not item_path.exists():
+        print(f"❌ 未知 debt_id: {debt_id} (不在 .omo/debt/items)")
+        return 1
+
+    old_desc = payload.get("description", "")
+    payload["description"] = description
+    append_history(
+        payload,
+        "update_description",
+        f"Updated description from '{old_desc}' to '{description}'.",
+        actor=actor,
+        timestamp=_now_iso(),
+    )
+    if dry_run:
+        print(f"[dry-run] would update description for {debt_id}")
+        return 0
+    _write_yaml(item_path, payload)
+    print(f"{debt_id} description 已更新")
+    return 0
+
 
 def main() -> int:
     """CLI 入口. 业务函数从 omo_debt 惰性导入 (避免循环)."""
@@ -67,6 +184,9 @@ def main() -> int:
         default="",
         help="X3 value tier (Axiom/Principle/Theory/Framework/Knowledge/Skill/Tool)",
     )
+
+    list_parser = subparsers.add_parser("list")
+    list_parser.add_argument("--omo-dir", default=".omo")
 
     schedule_parser = subparsers.add_parser("schedule")
     schedule_parser.add_argument("--omo-dir", default=".omo")
@@ -129,6 +249,24 @@ def main() -> int:
     close_parser.add_argument("--omo-dir", default=".omo")
     close_parser.add_argument("--id", required=True)
     close_parser.add_argument("--actor", default="", help="Who performed this action")
+    close_parser.add_argument(
+        "--dry-run", action="store_true", help="Print what would be done without writing"
+    )
+    close_parser.add_argument(
+        "--no-confirm",
+        dest="confirm",
+        action="store_false",
+        default=True,
+        help="Refuse to close without this safety flag (default: confirm)",
+    )
+
+    desc_parser = subparsers.add_parser("desc")
+    desc_parser.add_argument("--omo-dir", default=".omo")
+    desc_parser.add_argument("--id", required=True)
+    desc_parser.add_argument("--description", required=True)
+    desc_parser.add_argument(
+        "--dry-run", action="store_true", help="Print what would be done without writing"
+    )
 
     reopen_parser = subparsers.add_parser("reopen")
     reopen_parser.add_argument("--omo-dir", default=".omo")
@@ -139,7 +277,7 @@ def main() -> int:
     omo_dir = Path(args.omo_dir)
 
     if args.command == "register":
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = _now_iso()
         payload = register_item(args, timestamp=timestamp)
         item_ref = f".omo/debt/items/{args.id}.yaml"
         item_path = omo_dir / "debt" / "items" / f"{args.id}.yaml"
@@ -148,6 +286,9 @@ def main() -> int:
         print(f"registered {args.id}")
         return 0
 
+    if args.command == "list":
+        return cmd_debt_list(omo_dir)
+
     if args.command == "schedule":
         schedule_item(
             omo_dir,
@@ -155,7 +296,7 @@ def main() -> int:
             args.next_review_at,
             _load_yaml,
             _write_yaml,
-            datetime.now(timezone.utc).isoformat(),
+            _now_iso(),
         )
         print(f"scheduled {args.id}")
         return 0
@@ -254,25 +395,21 @@ def main() -> int:
         return 0
 
     if args.command == "close":
-        item_path, payload = update_item(omo_dir, args.id, _load_yaml)
-        if not item_path.exists():
-            print(f"❌ 未知 debt_id: {args.id} (不在 .omo/debt/items)")
-            return 1
-        payload["lifecycle_state"] = "closed"
-        payload["gate_level"] = "none"
-        # 治本: 剥离越权的 legacy `status` 字段 (yaml-bypass lint 期望 lifecycle_state 唯一)
-        if "status" in payload:
-            payload.pop("status")
-        append_history(
-            payload,
-            "close",
-            "Closed debt item.",
+        return cmd_debt_close(
+            omo_dir,
+            args.id,
+            dry_run=args.dry_run,
+            confirm=args.confirm,
             actor=getattr(args, "actor", ""),
-            timestamp=datetime.now(timezone.utc).isoformat(),
         )
-        _write_yaml(item_path, payload)
-        print(f"closed {args.id}")
-        return 0
+
+    if args.command == "desc":
+        return cmd_debt_desc(
+            omo_dir,
+            args.id,
+            args.description,
+            dry_run=args.dry_run,
+        )
 
     if args.command == "reopen":
         item_path, payload = update_item(omo_dir, args.id, _load_yaml)
@@ -282,7 +419,7 @@ def main() -> int:
             "reopen",
             "Reopened debt item.",
             actor=getattr(args, "actor", ""),
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=_now_iso(),
         )
         _write_yaml(item_path, payload)
         print(f"reopened {args.id}")
