@@ -1,7 +1,7 @@
 """Kernel Extension Interface (KEI) Sandbox Specification.
 
 This module defines the permission schema and sandbox rules for
-external Skills/Plugins connecting to the eCOS v5 Kernel.
+external Skills/Plugins connecting to the eCOS v6 Kernel.
 """
 
 from dataclasses import dataclass, field

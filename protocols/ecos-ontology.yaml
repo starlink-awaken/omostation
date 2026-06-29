@@ -1,6 +1,6 @@
 # =============================================================================
 # L0 Protocol Weave — eCOS Meta-Model Ontology (SSOT)
-# Defines the types, relationships, and enumerations of all entities in eCOS v5.
+# Defines the types, relationships, and enumerations of all entities in eCOS v6.
 # =============================================================================
 version: 1.0.0
 updated: "2026-06-05"

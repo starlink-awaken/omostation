@@ -320,7 +320,7 @@ protocols:
     spec_url: null
     transport: [\"bos\"]
     implementations: []
-    notes: "DEPRECATED. BOS URI was defined in PAT-45 eCOS v5 protocol mapping matrix (tools/call, task, discovery, health) but never implemented in any codebase. Kept here for traceability. See DEBT-OMO-021."
+    notes: "DEPRECATED. BOS URI was defined in PAT-45 eCOS v6 protocol mapping matrix (tools/call, task, discovery, health) but never implemented in any codebase. Kept here for traceability. See DEBT-OMO-021."
 
   - name: "Agent Runtime API"
     version: "1"
