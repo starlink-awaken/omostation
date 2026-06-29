@@ -510,7 +510,13 @@ async def check_gac_rule(req: "CheckGacRuleRequest") -> str:
     rules = docs[-1].get("gac", {}).get("rules", []) if docs else []
     active_rules = [r for r in rules if r.get("lifecycle") == "active"]
 
-    HOOKABLE = {"ssot_pointer", "port_hardcode", "import_nucleus", "direct_omo_io", "broad_except"}
+    HOOKABLE = {
+        "ssot_pointer",
+        "port_hardcode",
+        "import_nucleus",
+        "direct_omo_io",
+        "broad_except",
+    }
 
     try:
         rel = str(Path(req.resource).resolve().relative_to(WORKSPACE_ROOT))
@@ -534,50 +540,82 @@ async def check_gac_rule(req: "CheckGacRuleRequest") -> str:
                 continue
             field = target.split("::", 1)[1]
             forbid = rule.get("forbid_copy_in", [])
-            matched = any(fnmatch.fnmatch(rel, p) or fnmatch.fnmatch(rel, f"**/{p}") for p in forbid)
+            matched = any(
+                fnmatch.fnmatch(rel, p) or fnmatch.fnmatch(rel, f"**/{p}")
+                for p in forbid
+            )
             if not matched:
                 continue
             pattern = re.compile(rf"(?<![\[\.]){re.escape(field)}\s*:\s*\d")
             for m in pattern.finditer(content):
-                ctx = content[max(0, m.start() - 40): m.end() + 80]
-                if any(kw in ctx for kw in ["_ref", "见 ", "see ", "指向", "指针", "SSOT", "system.yaml", "示例值"]):
+                ctx = content[max(0, m.start() - 40) : m.end() + 80]
+                if any(
+                    kw in ctx
+                    for kw in [
+                        "_ref",
+                        "见 ",
+                        "see ",
+                        "指向",
+                        "指针",
+                        "SSOT",
+                        "system.yaml",
+                        "示例值",
+                    ]
+                ):
                     continue
-                warnings.append(f"{rid}: {rel} 硬编码 {field} 值 (违反 SSOT, 应用指针引用)")
+                warnings.append(
+                    f"{rid}: {rel} 硬编码 {field} 值 (违反 SSOT, 应用指针引用)"
+                )
 
         elif ct == "port_hardcode" and (is_py or is_yaml):
-            pattern = re.compile(r'(?<!\w)[:=](\d{4,5})(?!\d)')
+            pattern = re.compile(r"(?<!\w)[:=](\d{4,5})(?!\d)")
             for m in pattern.finditer(content):
                 port = int(m.group(1))
                 if 1024 < port < 65536:
-                    ctx = content[max(0, m.start() - 30): m.end() + 30]
-                    if any(kw in ctx.lower() for kw in ["env", "os.environ", "getenv", "default", "registry"]):
+                    ctx = content[max(0, m.start() - 30) : m.end() + 30]
+                    if any(
+                        kw in ctx.lower()
+                        for kw in ["env", "os.environ", "getenv", "default", "registry"]
+                    ):
                         continue
-                    warnings.append(f"{rid}: {rel} 疑似端口硬编码 :{port} (应走 port-registry + env)")
+                    warnings.append(
+                        f"{rid}: {rel} 疑似端口硬编码 :{port} (应走 port-registry + env)"
+                    )
 
         elif ct == "import_nucleus" and is_py:
-            pattern = re.compile(r'^from\s+nucleus\b|^import\s+nucleus\b', re.MULTILINE)
+            pattern = re.compile(r"^from\s+nucleus\b|^import\s+nucleus\b", re.MULTILINE)
             for m in pattern.finditer(content):
-                ctx = content[max(0, m.start() - 20): m.end() + 20]
+                ctx = content[max(0, m.start() - 20) : m.end() + 20]
                 if "type: ignore" in ctx or "TYPE_CHECKING" in ctx:
                     continue
-                warnings.append(f"{rid}: {rel} 顶层 import nucleus (已废弃, 改为 lazy import)")
+                warnings.append(
+                    f"{rid}: {rel} 顶层 import nucleus (已废弃, 改为 lazy import)"
+                )
 
         elif ct == "direct_omo_io" and is_py:
-            pattern = re.compile(r'(open|write_text|mkdir|Path)\s*\(\s*["\'].*\.omo/', re.IGNORECASE)
+            pattern = re.compile(
+                r'(open|write_text|mkdir|Path)\s*\(\s*["\'].*\.omo/', re.IGNORECASE
+            )
             for m in pattern.finditer(content):
-                warnings.append(f"{rid}: {rel} 疑似 direct .omo I/O (应走 omo CLI / broker)")
+                warnings.append(
+                    f"{rid}: {rel} 疑似 direct .omo I/O (应走 omo CLI / broker)"
+                )
 
         elif ct == "broad_except" and is_py:
-            pattern = re.compile(r'except\s*(\s*:|\s+Exception\s*:)', re.MULTILINE)
+            pattern = re.compile(r"except\s*(\s*:|\s+Exception\s*:)", re.MULTILINE)
             count = len(pattern.findall(content))
             if count > 3:
-                warnings.append(f"{rid}: {rel} 有 {count} 处 broad except (建议细化异常类型)")
+                warnings.append(
+                    f"{rid}: {rel} 有 {count} 处 broad except (建议细化异常类型)"
+                )
 
     return json.dumps(
         {
             "status": "ok" if not warnings else "warn",
             "warnings": warnings,
-            "rules_checked": len([r for r in active_rules if r.get("check_type", "") in HOOKABLE]),
+            "rules_checked": len(
+                [r for r in active_rules if r.get("check_type", "") in HOOKABLE]
+            ),
         },
         ensure_ascii=False,
     )
