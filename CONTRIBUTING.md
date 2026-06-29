@@ -14,12 +14,12 @@
 
 ### Project Scope
 
-8 active projects across 7 layers. The primary development areas are:
+See [`docs/project-registry.yaml`](docs/project-registry.yaml) for the authoritative project list, layer assignments, and package counts. The primary development areas are:
 
-- **kairon**: Python monorepo (19 packages) — knowledge engineering pipeline
+- **kairon**: Python monorepo — knowledge engineering pipeline
 - **agora**: Python — I0 MCP service mesh
 - **cockpit**: Python — L3 unified entry (CLI + Web)
-- **gbrain**: TypeScript — knowledge database (67 MCP tools)
+- **gbrain**: TypeScript — knowledge database
 - **omo**: Python — governance & self-healing
 
 ### Development Workflow
@@ -71,12 +71,12 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### 项目范围
 
-8 个活跃项目，7 层架构。主要开发领域：
+项目数量、分层、包数等元数据见 [`docs/project-registry.yaml`](docs/project-registry.yaml)。主要开发领域：
 
-- **kairon**: Python monorepo (19 包) — 知识工程管线
+- **kairon**: Python monorepo — 知识工程管线
 - **agora**: Python — I0 MCP 服务网格
 - **cockpit**: Python — L3 统一入口 (CLI + Web)
-- **gbrain**: TypeScript — 知识数据库 (67 MCP 工具)
+- **gbrain**: TypeScript — 知识数据库
 - **omo**: Python — 治理与自愈引擎
 
 ### 开发流程
