@@ -536,3 +536,60 @@ class TestP35W1Respawn:
         assert result["status"] == "error"
         assert "unimplemented_bos_service" in result["error"]
         assert result["description"] == unimpl_svc.description
+
+
+class TestStdioAdapterProtocol:
+    def test_stdio_transport_uses_custom_json(self):
+        """transport=stdio 向后兼容：发送自定义 {args, kwargs} JSON."""
+        from agora.mcp.resolver.adapter import StdioAdapter
+
+        svc = BosService(
+            uri="bos://test/pkg/action",
+            domain="test",
+            package="pkg",
+            action="action",
+            transport="stdio",
+            command=["cat"],
+        )
+        adapter = StdioAdapter(timeout=2.0)
+        result = adapter.call(svc, {"x": 1})
+        assert result["status"] == "ok"
+        assert result["result"] == {"args": [{"x": 1}], "kwargs": {}}
+
+    def test_mcp_stdio_transport_uses_jsonrpc(self):
+        """transport=mcp_stdio 发送标准 JSON-RPC 2.0 tools/call."""
+        from agora.mcp.resolver.adapter import StdioAdapter
+
+        svc = BosService(
+            uri="bos://test/pkg/action",
+            domain="test",
+            package="pkg",
+            action="action",
+            transport="mcp_stdio",
+            command=["cat"],
+        )
+        adapter = StdioAdapter(timeout=2.0)
+        result = adapter.call(svc, {"x": 1})
+        assert result["status"] == "ok"
+        echoed = result["result"]
+        assert echoed["jsonrpc"] == "2.0"
+        assert echoed["method"] == "tools/call"
+        assert echoed["params"]["name"] == "pkg/action"
+        assert echoed["params"]["arguments"]["args"] == [{"x": 1}]
+
+    def test_mcp_stdio_parses_jsonrpc_response(self):
+        """transport=mcp_stdio 能正确解析 JSON-RPC result/error."""
+        from agora.mcp.resolver.adapter import StdioAdapter
+
+        svc = BosService(
+            uri="bos://test/pkg/action",
+            domain="test",
+            package="pkg",
+            action="action",
+            transport="mcp_stdio",
+            command=["printf", '{"jsonrpc":"2.0","result":{"ok":true},"id":1}'],
+        )
+        adapter = StdioAdapter(timeout=2.0)
+        result = adapter.call(svc)
+        assert result["status"] == "ok"
+        assert result["result"] == {"ok": True}
