@@ -82,6 +82,7 @@ node_modules/
 .idea/
 .serena/
 .claude/
+skills/
 
 
 # ---- 本地工具与敏感配置 ----
