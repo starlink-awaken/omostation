@@ -2,135 +2,99 @@
 # 根仓库只追踪元配置、基础设施和文档。
 # 项目代码在各子仓库中独立管理。
 
-# ---- 项目目录（独立 git 仓库） ----
+# ---- OMO / OMC 运行时与治理产物 ----
+.omo/.omo/
+.omo/_archive/
+.omo/_delivery/
+.omo/_log/
+.omo/_knowledge/*.jsonl
+.omo/_control/evolution/drift-history/*.json.lock
+.omo/capabilities/
+.omo/debt/
+.omo/evidence
+.omo/plans/
+.omo/run-continuation/
+.omo/tests/
+.omo/workers/
 
-# ---- 运行时数据 ----
-data/sharedbrain/data/
-data/kos/
-data/驾驶舱/
-
-# ---- 运行时日志 ----
-runtime/agent-runtime/
-agent-runtime/
-
-# ---- OMO C2G Sandbox 工作区（OMO 治理引擎 auto-loop 产物，勿 commit） ----
-runtime/sandbox/pitches/
-runtime/sandbox/decayed/
-
-# ---- OMC 工具运行时状态 (autopilot/handoffs/plans/spec 是治理产物应 add) ----
+.omc/autopilot/
+.omc/handoffs/
 .omc/logs/
 .omc/notepads/
-.omc/sessions/
-.omc/state/
+.omc/plans/
 .omc/project-memory.json
 .omc/prd.json
 .omc/progress.txt
+.omc/sessions/
+.omc/state/
+
 projects/.omc/
-
-# ---- OMO 嵌套目录（OMO_ROOT 解析错导致 daemon log 落到 .omo/.omo/） ----
-.omo/.omo/
-
-# ---- Daemon 日志 ----
-.omo/_delivery/
-.omc/logs/
-
-# ---- OMO 运行时日志 ----
-.omo/_log/
-
-# ---- 治理审计日志 ----
-.omo/_knowledge/governance-history.jsonl
-
-# ---- ECOS Kernel Sandbox 运行时审计 (199 行 JSONL, 拒绝记录) ----
-runtime/data/kei_audit.jsonl
-
-# ---- 旧归档（2026-02 遗留数据） ----
-.omo/_archive/
-
-# ---- 债务仪表板（自动生成） ----
-.omo/debt/
-
-# ---- MOF 快照（自动生成） ----
+projects/cockpit-ui/
 projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml
 
-# ---- 本地开发沙箱与临时防呆 ----
-/scratch/
-**/_tmp_*
-**/temp_*
+# ---- 运行时数据与日志 ----
+agent-runtime/
+runtime/agent-runtime/
+runtime/**/*.log
+runtime/data/kei_audit.jsonl
+runtime/sandbox/decayed/
+runtime/sandbox/pitches/
 
-# ---- 构建产物 ----
-.env
-
-__pycache__/
-*.pyc
-node_modules/
-dist/
-*.egg-info/
-*.so
-
-# ---- macOS ----
-.DS_Store
-
-# ---- 缓存 ----
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.coverage
-.runtime/
-
-# ---- KOS 运行时索引 ----
-kos/
-graphify-out/
-
-# ---- 外部工具数据 ----
-spaces/*.db
-_derivation_logs/
-
-# ---- 运行时数据 ----
 data/backups/
+data/kos/
+data/sharedbrain/data/
+data/驾驶舱/
 data/**/*.db
 data/**/*.db-shm
 data/**/*.db-wal
 data/**/*.sqlite
 data/**/*.sqlite3
 
-# ---- 工具运行时状态 ----
-.omc/state/
-.omc/project-memory.json
-.omc/state/agent-replay-*.jsonl
-.omc/state/last-tool-error.json
-.omc/state/subagent-tracking.json
-.omc/state/sessions/
-.omc/state/checkpoints/
-.omc/sessions/
-.omo/plans/
-.omo/run-continuation/
+kos/
+graphify-out/
+spaces/*.db
+_derivation_logs/
 
-# ---- 第三方工具缓存 ----
+# ---- 构建产物与缓存 ----
+.env
+__pycache__/
+*.egg-info/
+*.pyc
+*.so
+dist/
+node_modules/
+
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.runtime/
+
 .grok/
 .reasonix/
 .antigravitycli/
+.hermes/
+.mimocode/
 .deepeval/
 .codebuddy/
+.crush/
+.husky/
+.idea/
+.serena/
+.claude/
 
-# ---- Token 存储 ----
+
+# ---- 本地工具与敏感配置 ----
 .metaos/
+.qoder/
+config/
+*.local.json
 
-# PAI 框架运行时测试数据(.omo/capabilities/ 全部)
-.omo/capabilities/
+# ---- 本地开发沙箱与一次性脚本 ----
+/scratch/
+**/_tmp_*
+**/temp_*
 
-# Agent 运行时工作态（自动生成，gitignore）
-.omo/workers/
-
-# 治理审计日志（运行时 JSONL）
-.omo/_knowledge/*.jsonl
-
-# 运行时备份（自动创建，不入仓）
-data/backups/
-
-# 防 pytest 误把 .omo/ 当 test root 产生 dummy 文件
-.omo/tests/
-
-# ---- 一次性本地补丁脚本 ----
 /fix_indent.py
 /patch.py
 /patch_all.py
@@ -141,26 +105,10 @@ data/backups/
 /patch_test.py
 /patch_test2.py
 
-# c2g 端到端测试临时落盘 (local adapter 写到 workspace 根, 治理证据应走 .omo/_delivery/)
+# ---- c2g / 历史归档临时文件 ----
 bets.json
 tasks.json
 _archived/
 
-# .omc 治理产物 (autopilot 运行时生成, 不入 git)
-.omc/autopilot/
-.omc/handoffs/
-.omc/plans/
-.omc/state/
-
-# ---- 本地工具/节点配置 (含私钥，务必 ignore) ----
-.qoder/
-config/
-*.local.json
-.claude/*.local.json
-
-# ---- 证据目录已改为软链到 _delivery/evidence-legacy ----
-.omo/evidence
-projects/cockpit-ui/
-
-# omo 运行时并发锁 (0字节占位, 非源文件; 债务②)
-.omo/_control/evolution/drift-history/*.json.lock
+# ---- 系统文件 ----
+.DS_Store
