@@ -151,7 +151,7 @@ def _c_version(a):
     from cockpit import __version__
 
     console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
-    console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
+    console.print("[dim]L3 统一入口 · 5+4+1+1 架构[/]")
     return 0
 
 
@@ -747,7 +747,7 @@ def main() -> int:
         from cockpit import __version__
 
         console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
-        console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
+        console.print("[dim]L3 统一入口 · 5+4+1+1 架构[/]")
         return 0
 
     def cmd_compute(a):
