@@ -1,3 +1,9 @@
+# ⚠️ DEPRECATED (2026-06-29): 本文件已迁移至 docs/project-registry.yaml
+# 真实项目注册表 SSOT 是 docs/project-registry.yaml (CI 门禁 doc-ssot-lint + drift 检测 gen-project-registry).
+# 本文件保留作历史/渐进迁移, 请勿新增元数据 — 改 docs/project-registry.yaml.
+# 审计: .omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment-remediation.md §1 (D1 双 SSOT 分裂)
+#
+# 原内容 (停更 2026-06-17, 保留历史):
 # PROJECTS.yaml — 全系统项目注册表
 # 只记录稳定项目身份、分层、状态与技术栈；运行时计数/测试统计以项目本地验证与 workspace SSOT 为准。
 # 更新: 2026-06-17

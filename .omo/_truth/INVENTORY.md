@@ -2,19 +2,19 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-06-29
 ---
 
 # Workspace 项目资产索引
 
 > 更新: 2026-06-21 (post-P43 R5)
 > 性质: 项目资产导航，不是 live runtime snapshot。
-> 当前项目身份、状态、路径与技术栈以 [../PROJECTS.yaml](../PROJECTS.yaml) 为准；
+> 当前项目身份、状态、路径与技术栈以 [../../docs/project-registry.yaml](../../docs/project-registry.yaml) 为准；
 > 项目级边界与调用链以各项目 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` 为准。
 >
-> **P43 收口状态**: governance 100 A+, 9 子项目 ruff 全 0,
-> mof-version v0.0.12, c2g→omo→mof 闭环模式文档化
-> (`.omo/_knowledge/patterns/p43-closed-loop-pattern.md`)。
+> 运行时状态 (governance score / mof-version / lint) 见各自 SSOT:
+> `bin/mof-version show` / `.omo/_truth/mof-version.yaml`. P43 闭环模式文档化:
+> `.omo/_knowledge/patterns/p43-closed-loop-pattern.md`.
 
 ---
 
@@ -23,7 +23,7 @@ last-reviewed: 2026-06-22
 | 维度 | 当前事实 |
 |------|----------|
 | 根仓库 | `omostation` workspace root |
-| 项目注册表 SSOT | [../PROJECTS.yaml](../PROJECTS.yaml) |
+| 项目注册表 SSOT | [../../docs/project-registry.yaml](../../docs/project-registry.yaml) |
 | 架构全景 SSOT | [../../docs/PANORAMA.md](../../docs/PANORAMA.md) |
 | `.omo` 角色 | 治理状态面与证据锚点，不替代各 repo 自身说明 |
 | 项目运行时事实 | 以各项目本地 CI / 测试 / 探针为准 |
@@ -60,7 +60,7 @@ last-reviewed: 2026-06-22
 
 ### 1.3 使用原则
 
-1. 项目身份、状态、路径变更先改 [../PROJECTS.yaml](../PROJECTS.yaml)，不要先改派生文档。
+1. 项目身份、状态、路径变更先改 [../../docs/project-registry.yaml](../../docs/project-registry.yaml)，不要先改派生文档。
 2. 项目级运行时计数、测试数、MCP/route 数不写入本文件。
 3. 具体架构、边界、调用链以项目内三件套文档为准。
 4. 历史快照可以保留，但必须显式标记为 legacy / archived，不能继续冒充 active 入口。
@@ -69,7 +69,7 @@ last-reviewed: 2026-06-22
 
 ## 二、关键指针
 
-- 项目注册表: [../PROJECTS.yaml](../PROJECTS.yaml)
+- 项目注册表: [../../docs/project-registry.yaml](../../docs/project-registry.yaml)
 - 架构全景: [../../docs/PANORAMA.md](../../docs/PANORAMA.md)
 - `.omo` 治理面边界: [../standards/omo-governance-surfaces.md](../standards/omo-governance-surfaces.md)
 - `.omo` 根导航: [../INDEX.md](../INDEX.md)
@@ -79,5 +79,5 @@ last-reviewed: 2026-06-22
 ## 三、治理约束
 
 1. `_truth/INVENTORY.md` 只做索引与路由，不复写运行时快照。
-2. 项目状态漂移先收敛到 [../PROJECTS.yaml](../PROJECTS.yaml)，再由派生文档引用。
+2. 项目状态漂移先收敛到 [../../docs/project-registry.yaml](../../docs/project-registry.yaml)，再由派生文档引用。
 3. 历史清单、旧阶段快照、旧包数只能作为迁移证据，不得继续被当成当前事实源。

@@ -208,3 +208,22 @@ rules:
     notes: >
       P90 R2 新增 rule (omo_lint.py 抗 god-module 监控).
 
+  - rule_id: X2-FRESH-NAV-DOC-REVIEW
+    title: "导航/契约文档定期 review 运行时声称 (禁内嵌版本号/分数)"
+    type: nav_doc_freshness
+    status: active
+    created: '2026-06-29'
+    target: .omo/_truth/INVENTORY.md
+    freshness:
+      mechanism: registry-review
+      threshold_days: 14
+      action: warn
+    owner: governance-team
+    notes: >
+      2026-06-29 L0/SSOT/M0/MOF 对齐审计新增 (审计: .omo/_knowledge/audits/
+      2026-06-29-l0-ssot-m0-mof-alignment-remediation.md §6). INVENTORY 等导航
+      文档易内嵌过时运行时声称 (mof-version vX.Y.Z / governance score / 任务数).
+      14 天 review, 确保要么指针化, 要么刷新. 时间软约束 (owner 定期 review),
+      非内容机器 check. 若内嵌版本号漂移反复 ≥3 次, 升级为 doc-ssot-lint
+      STALE_PATTERNS content check (遵 YAGNI, 当前不建).
+

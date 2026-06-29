@@ -2,14 +2,14 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-28
+last-reviewed: 2026-06-29
 ---
 
 # MOF 能力注册表 — 所有 MOF 工具/约束/流程的唯一注册点
 # 本文件是 MOF 体系的 SSOT，防止遗忘或混乱
 
-version: "2.0"
-updated_at: "2026-06-20"
+version: "2.1"
+updated_at: "2026-06-29"
 
 # ═══════════════════════════════════════════════════════════
 # 四层架构
@@ -131,6 +131,12 @@ tools:
     description: Agent 约束强制
     commands: [pre-check, post-check, impact, state, value, validate]
     usage: "bin/mof-enforce pre-check COMP-WS-agora"
+
+  mof-manage:
+    path: bin/mof-manage
+    description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)
+    commands: [status, validate, update]
+    usage: "bin/mof-manage status"
 
 # ═══════════════════════════════════════════════════════════
 # 约束注册表
