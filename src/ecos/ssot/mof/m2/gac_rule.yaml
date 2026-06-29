@@ -31,8 +31,8 @@ GacRule:
       description: 治理维度 (X1 审计 / X2 抗熵 / X3 价值 / X4 一致)
     layer:
       type: enum
-      values: [M0, L0, L1, L2, L3, meta]
-      description: 架构层 (M0 模型 / L0 协议 / L1 运行时 / L2 引擎 / L3 入口 / meta 横切)
+      values: [M0, L0, L1, L2, L3, I0, X, meta]
+      description: 架构层 (M0 模型 / L0 协议 / L1 运行时 / L2 引擎 / L3 入口 / I0 路由 / X 框架 / meta 横切)
     check_type:
       type: enum
       values: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index, schema_integrity, yaml_bypass, sensitive_write, mutation_surface, registry_integrity, internal_write_profile, state_plane_asset, ingress_boundary, ingress_artifact, mutation_ledger, doc_lifecycle, doc_archival, self_evolution_approval, task_policy, god_module, test_coverage]
