@@ -100,7 +100,7 @@ TOOLS = [
     },
     {
         "name": "runtime_ontology_get",
-        "description": "Get the eCOS v5 Meta-Model Ontology (L0 SSOT).",
+        "description": "Get the eCOS v6 Meta-Model Ontology (L0 SSOT).",
         "inputSchema": {"type": "object", "properties": {}},
         "handler": lambda args: (
             (PROJECT_HOME / "protocols" / "ecos-ontology.yaml").read_text()
