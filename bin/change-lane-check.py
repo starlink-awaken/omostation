@@ -46,6 +46,7 @@ def classify(path: str, submodules: set[str]) -> str:
         ".omo/standards/agent-workflow-contract.md",
         ".agents/skills/project-governance/SKILL.md",
         "bin/agent-workflow.py",
+        "bin/project-layer-index.py",
         "tests/test_agent_workflow.py",
     }:
         return "governance_code"

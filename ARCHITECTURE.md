@@ -12,23 +12,26 @@
 | Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
 | BOS services | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
 | Ports | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
+| Vault paths (iCloud/local) | [`protocols/vault-paths.yaml`](protocols/vault-paths.yaml) |
+| X-axis guarantees | [`protocols/x-axis-registry.yaml`](protocols/x-axis-registry.yaml) |
 | Governance surfaces | [`.omo/standards/omo-governance-surfaces.md`](.omo/standards/omo-governance-surfaces.md) |
 | L0 constraints | [`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`](projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml) |
-| X1-X4 rules | [`.omo/_truth/`](.omo/_truth/) |
+| GaC rules (X1-X4) | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) |
+| Agent workflows | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Debt registry | [`.omo/_truth/registry/debt.yaml`](.omo/_truth/registry/debt.yaml) |
+| Task lifecycle | [`.omo/tasks/README.md`](.omo/tasks/README.md) |
+| ADR index & process | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [process standard](.omo/standards/adr-process.md) |
+| Registry index (all registries) | [`.omo/_truth/registry/INDEX.md`](.omo/_truth/registry/INDEX.md) |
 | Documentation ownership | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) |
 
 ## 2. Layer Model
 
-```
-L4  Self layer       -> l4-kernel
-L3  Entry layer      -> cockpit (cockpit-ui: layer=X, 挂载至 cockpit)
-I0  Weave layer      -> agora
-L2  Engine layer     -> kairon / gbrain / omo / metaos
-L1  Runtime layer    -> runtime
-L0  Protocol layer   -> ecos
-M0  Lifecycle layer  -> model-driven
-X   Cross-cutting    -> aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub
-                       spaces/ (配置仓, 非 git submodule)
+Layer names and project placement are owned by [`docs/project-registry.yaml`](docs/project-registry.yaml) and generated into [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md).
+
+The stable dependency direction remains:
+
+```text
+entry surfaces -> routing mesh -> engines/runtime/protocol -> governed state and evidence
 ```
 
 ## 3. Entry Architecture

@@ -2,24 +2,24 @@
 
 > 本文是全景骨架与导航，不是运行时快照。
 > 任何会漂移的测试数、路由数、健康分、Phase、端口状态，以各自 SSOT 与运行时探针为准。
-> 配套: [JOURNEY-PROBES.md](./JOURNEY-PROBES.md)
+> 配套: [I0-AGORA-CALLCHAIN.md](./I0-AGORA-CALLCHAIN.md)
 > 项目级 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` 也只保留骨架与指针，不承担运行时快照职责。
 
 ## 全景 SSOT
 
 | 主题 | 权威读源 |
 |------|----------|
-| Workspace 运行时状态 | `/.omo/state/system.yaml` |
-| Workspace 当前目标 | `/.omo/goals/current.yaml` |
-| `.omo` 三层治理契约 | `/.omo/standards/omo-governance-surfaces.md` |
-| `.omo` 治理面注册表 | `/.omo/_truth/registry/omo-governance-surfaces.yaml` |
-| `.omo` 持久化写入入口清单 | `/.omo/_truth/registry/mutation-surfaces.yaml` |
-| `.omo` internal/runtime 写路径清单 | `/.omo/_truth/registry/internal-write-profiles.yaml` |
-| `.omo` task policy 注册表 | `/.omo/_truth/registry/task-policies.yaml` |
-| `.omo` direct-io 基线 | `/.omo/_truth/registry/direct-io-baseline.yaml` |
-| X1-X4 治理规则 | `/.omo/_truth/x1-governance-policies.yaml` ~ `x4-consistency-rules.yaml` |
-| L0 强制约束 | `/projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` |
-| BOS 路由实现 | `/projects/agora/src/agora/mcp/resolver/services.py` |
+| Workspace 运行时状态 | `.omo/state/system.yaml` |
+| Workspace 当前目标 | `.omo/goals/current.yaml` |
+| `.omo` 三层治理契约 | `.omo/standards/omo-governance-surfaces.md` |
+| `.omo` 治理面注册表 | `.omo/_truth/registry/omo-governance-surfaces.yaml` |
+| `.omo` 持久化写入入口清单 | `.omo/_truth/registry/mutation-surfaces.yaml` |
+| `.omo` internal/runtime 写路径清单 | `.omo/_truth/registry/internal-write-profiles.yaml` |
+| `.omo` task policy 注册表 | `.omo/_truth/registry/task-policies.yaml` |
+| `.omo` direct-io 基线 | `.omo/_truth/registry/direct-io-baseline.yaml` |
+| X1-X4 治理规则 | `.omo/_truth/x1-governance-policies.yaml` ~ `x4-consistency-rules.yaml` |
+| L0 强制约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` |
+| BOS 路由实现 | `projects/agora/src/agora/mcp/resolver/services.py` |
 | 项目边界与调用链 | 各项目 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` |
 
 ---
@@ -280,7 +280,7 @@ script / wrapper / cron
 
 ## 九、用户旅程韧性 (6 条核心链路)
 
-详细白盒探针分析 → [JOURNEY-PROBES.md](./JOURNEY-PROBES.md)
+详细白盒探针分析见 `docs/_archived/JOURNEY-PROBES.md` (归档历史参考)
 
 | 旅程 | 入口 | 链路深度 | 故障点 | 韧性评分 |
 |:----:|:----:|:-------:|:------:|:-------:|
@@ -297,9 +297,8 @@ script / wrapper / cron
 
 ## 附录：架构可视化与演进
 
-- [ARCHITECTURE-DIAGRAM.md](./ARCHITECTURE-DIAGRAM.md) — eCOS v6 5+4+1+1 Mermaid 全景图
 - [I0-AGORA-CALLCHAIN.md](./I0-AGORA-CALLCHAIN.md) — I0 织层 BOS URI 9 步派发调用链
-- [ARCHITECTURE-EVOLUTION.md](./ARCHITECTURE-EVOLUTION.md) — 2026-05 收敛提案 vs eCOS v6 当前状态
+- 架构图和历史演进文档已归档至 `docs/_archived/`
 
 ## 附录：项目级架构文档索引
 

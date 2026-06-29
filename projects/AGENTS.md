@@ -14,28 +14,13 @@ Facts such as project count, layer, package count, versions, and roles are owned
 1. Read [`../AGENTS.md`](../AGENTS.md).
 2. Read the target project `AGENTS.md` and `CLAUDE.md` when present.
 3. Check `git status --short` at the workspace root and inside the target project.
-4. For multi-step work, pick an executable workflow with `uv run --with "pyyaml" python "../bin/agent-workflow.py" list`.
+4. For multi-step work, run `uv run --with "pyyaml" python "../bin/agent-workflow.py" bootstrap`, then create a run with `uv run --with "pyyaml" python "../bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"`.
 5. Identify whether the target is a submodule or a normal directory.
 6. Use the project-local build and test commands.
 
 ## 3. Layer Placement
 
-Use [`../LAYER-INDEX.md`](../LAYER-INDEX.md) for the human-readable layer map and [`../docs/project-registry.yaml`](../docs/project-registry.yaml) for machine-readable metadata.
-
-Stable project families:
-
-| Layer | Projects |
-|-------|----------|
-| L4 | `l4-kernel` |
-| L3 | `cockpit`, `cockpit-ui` |
-| I0 | `agora` |
-| L2 | `kairon`, `gbrain`, `omo`, `metaos` |
-| L1 | `runtime` |
-| L0 | `ecos` |
-| M0 | `model-driven` |
-| X | `aetherforge`, `c2g`, `bus-foundation`, `omo-debt`, `observability`, `family-hub` |
-
-If this table conflicts with the registry, fix the registry-driven docs instead of trusting memory.
+Use [`../LAYER-INDEX.md`](../LAYER-INDEX.md) for the human-readable layer map, [`../docs/project-registry.yaml`](../docs/project-registry.yaml) for machine-readable metadata, and [`../docs/generated/project-layer-index.md`](../docs/generated/project-layer-index.md) for the generated layer digest.
 
 ## 4. Common Workflows
 

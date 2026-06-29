@@ -9,13 +9,10 @@
 Before changing code or governed state, load the current context:
 
 ```bash
-uv run --with "pyyaml" python "bin/agent-workflow.py" lint
-sed -n '1,220p' ".omo/state/system.yaml"
-sed -n '1,220p' ".omo/goals/current.yaml"
-find ".omo/tasks/active" -maxdepth 1 -type f -name "*.yaml" -print 2>/dev/null || find ".omo/tasks/planned" -maxdepth 1 -type f -name "*.yaml" -print
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
 ```
 
-If MCP context is available, prefer the cockpit workspace-context tool. If it is not available, the files above are the fallback read path.
+If task-specific runtime facts are needed, read the SSOT files reported by `bootstrap` instead of copying values into this document. If MCP context is available, prefer the cockpit workspace-context tool.
 
 Do not copy values from those files into this document. They are runtime facts and drift quickly.
 
@@ -39,6 +36,7 @@ The authoritative SSOT map (all fact types and their sources) lives in [`ARCHITE
 | Runtime state | Read from `.omo/state/system.yaml`; do not hard-code | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
 | Governed `.omo/` writes | Use `omo` CLI/MCP or approved broker, not ad-hoc file I/O | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | Ports | Read and register through `protocols/port-registry.yaml` | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
+| Vault paths | Read from `protocols/vault-paths.yaml`; do not hard-code `~/Documents/` paths | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
 | Project metadata | Read from `docs/project-registry.yaml` | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
 | Agent workflows | Use `bin/agent-workflow.py`; do not rely on prompt memory alone | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
 
@@ -56,6 +54,11 @@ The authoritative SSOT map (all fact types and their sources) lives in [`ARCHITE
 ```bash
 make gac-local-gate
 uv run --with "pyyaml" python "bin/agent-workflow.py" list
+uv run --with "pyyaml" python "bin/agent-workflow.py" agents
+uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
+uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
 uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
 uv run --with "pyyaml" python "bin/ssot-guardian.py"
@@ -74,6 +77,10 @@ cd "projects/gbrain" && bun test
 | Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
 | OMO governance kernel rules | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | Executable agent workflows | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Internal integration contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" integrations` |
+| MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
+| External adapter contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" adapters` |
+| External adapter health | `uv run --with "pyyaml" python "bin/agent-workflow.py" doctor` |
 
 ## 6. Closeout
 

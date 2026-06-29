@@ -20,6 +20,14 @@ import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = WORKSPACE / ".omo/_truth/registry/agent-workflows.yaml"
+ADAPTER_AUTHORITIES = {"discipline_layer", "input_adapter", "memory_adapter"}
+INTEGRATION_AUTHORITIES = {
+    "entrypoint",
+    "governance_gate",
+    "model_registry",
+    "state_broker",
+    "strategy_ingress",
+}
 
 
 class WorkflowError(RuntimeError):
@@ -52,6 +60,37 @@ def workflow_by_id(registry: dict[str, Any], workflow_id: str) -> dict[str, Any]
     raise WorkflowError(f"unknown workflow: {workflow_id}")
 
 
+def workflow_roles(workflow: dict[str, Any]) -> list[str]:
+    agents = workflow.get("agents") or {}
+    roles = agents.get("roles") if isinstance(agents, dict) else []
+    if not isinstance(roles, list):
+        return []
+    return [role for role in roles if isinstance(role, str)]
+
+
+def validate_agent_profile(
+    registry: dict[str, Any],
+    workflow: dict[str, Any],
+    profile_id: str,
+    require: bool,
+) -> None:
+    roles = workflow_roles(workflow)
+    workflow_id = str(workflow.get("id") or "")
+    if not profile_id:
+        if require and roles:
+            raise WorkflowError(f"{workflow_id} requires --profile ({', '.join(roles)})")
+        return
+    profiles = registry.get("agent_profiles") or {}
+    profile = profiles.get(profile_id) if isinstance(profiles, dict) else None
+    if not isinstance(profile, dict):
+        raise WorkflowError(f"unknown agent profile: {profile_id}")
+    allowed = profile.get("allowed_workflows", [])
+    if allowed != ["*"] and workflow_id not in allowed:
+        raise WorkflowError(f"agent profile {profile_id} cannot run workflow {workflow_id}")
+    if roles and profile_id not in roles:
+        raise WorkflowError(f"agent profile {profile_id} is not listed in {workflow_id}.agents.roles")
+
+
 def context_from_args(args: argparse.Namespace) -> dict[str, str]:
     return {
         "project": str(getattr(args, "project", "") or ""),
@@ -59,6 +98,7 @@ def context_from_args(args: argparse.Namespace) -> dict[str, str]:
         "source_file": str(getattr(args, "source_file", "") or ""),
         "run_id": str(getattr(args, "run_id", "") or ""),
         "actor": str(getattr(args, "actor", "") or "agent"),
+        "profile": str(getattr(args, "profile", "") or ""),
     }
 
 
@@ -94,6 +134,10 @@ def validate_command(workflow_id: str, phase: str, index: int, item: dict[str, A
 def lint_registry(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
+    agent_profiles = registry.get("agent_profiles") or {}
+    if agent_profiles and not isinstance(agent_profiles, dict):
+        errors.append("registry.agent_profiles must be a mapping")
+        agent_profiles = {}
     workflows = registry.get("workflows")
     if not isinstance(workflows, list) or not workflows:
         errors.append("registry.workflows must be a non-empty list")
@@ -118,6 +162,22 @@ def lint_registry(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
             values = workflow.get(field, [])
             if not isinstance(values, list) or not all(isinstance(item, str) for item in values):
                 errors.append(f"{workflow_id}: {field} must be a list of strings")
+        agents = workflow.get("agents")
+        if agents is not None:
+            if not isinstance(agents, dict):
+                errors.append(f"{workflow_id}: agents must be a mapping")
+            else:
+                roles = agents.get("roles", [])
+                if not isinstance(roles, list) or not all(isinstance(item, str) for item in roles):
+                    errors.append(f"{workflow_id}: agents.roles must be a list of strings")
+                for role in roles if isinstance(roles, list) else []:
+                    profile = agent_profiles.get(role) if isinstance(agent_profiles, dict) else None
+                    if not isinstance(profile, dict):
+                        errors.append(f"{workflow_id}: unknown agent role: {role}")
+                        continue
+                    allowed = profile.get("allowed_workflows", [])
+                    if allowed != ["*"] and workflow_id not in allowed:
+                        errors.append(f"{workflow_id}: role {role} does not allow this workflow")
         phases = workflow.get("phases", {})
         if not isinstance(phases, dict):
             errors.append(f"{workflow_id}: phases must be a mapping")
@@ -130,10 +190,74 @@ def lint_registry(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
             for index, item in enumerate(entries):
                 errors.extend(validate_command(workflow_id, phase, index, item))
 
+    if isinstance(agent_profiles, dict):
+        for profile_id, profile in agent_profiles.items():
+            if not isinstance(profile, dict):
+                errors.append(f"agent_profiles.{profile_id}: profile must be a mapping")
+                continue
+            for field in ("purpose", "allowed_workflows", "can_write_lanes"):
+                if field not in profile:
+                    errors.append(f"agent_profiles.{profile_id}: missing {field}")
+            allowed = profile.get("allowed_workflows", [])
+            if not isinstance(allowed, list) or not all(isinstance(item, str) for item in allowed):
+                errors.append(f"agent_profiles.{profile_id}: allowed_workflows must be a list of strings")
+            else:
+                for workflow_ref in allowed:
+                    if workflow_ref != "*" and workflow_ref not in seen:
+                        errors.append(
+                            f"agent_profiles.{profile_id}: unknown workflow in allowed_workflows: {workflow_ref}"
+                        )
+            lanes = profile.get("can_write_lanes", [])
+            if not isinstance(lanes, list) or not all(isinstance(item, str) for item in lanes):
+                errors.append(f"agent_profiles.{profile_id}: can_write_lanes must be a list of strings")
+
+    for name, integration in (registry.get("internal_integrations") or {}).items():
+        if not isinstance(integration, dict):
+            errors.append(f"internal_integrations.{name}: integration must be a mapping")
+            continue
+        for field in ("status", "authority", "owner", "ssot_rule", "health_command", "health_required"):
+            if field not in integration:
+                errors.append(f"internal_integrations.{name}: missing {field}")
+        authority = integration.get("authority")
+        if authority and authority not in INTEGRATION_AUTHORITIES:
+            errors.append(
+                "internal_integrations."
+                f"{name}: authority must be one of {', '.join(sorted(INTEGRATION_AUTHORITIES))}"
+            )
+        health_command = integration.get("health_command")
+        if health_command is not None and (
+            not isinstance(health_command, list)
+            or not health_command
+            or not all(isinstance(part, str) for part in health_command)
+        ):
+            errors.append(f"internal_integrations.{name}: health_command must be a non-empty list of strings")
+        if "health_required" in integration and not isinstance(integration.get("health_required"), bool):
+            errors.append(f"internal_integrations.{name}: health_required must be a boolean")
+
     for name, adapter in (registry.get("external_patterns") or {}).items():
-        command = adapter.get("command") if isinstance(adapter, dict) else None
+        if not isinstance(adapter, dict):
+            errors.append(f"external_patterns.{name}: adapter must be a mapping")
+            continue
+        for field in ("status", "pattern", "authority", "ssot_rule", "ingress_workflow"):
+            if not adapter.get(field):
+                errors.append(f"external_patterns.{name}: missing {field}")
+        authority = adapter.get("authority")
+        if authority and authority not in ADAPTER_AUTHORITIES:
+            errors.append(
+                f"external_patterns.{name}: authority must be one of {', '.join(sorted(ADAPTER_AUTHORITIES))}"
+            )
+        command = adapter.get("command")
         if command and shutil.which(str(command)) is None:
             warnings.append(f"optional adapter not installed: {name} ({command})")
+        health_command = adapter.get("health_command")
+        if health_command is not None and (
+            not isinstance(health_command, list)
+            or not health_command
+            or not all(isinstance(part, str) for part in health_command)
+        ):
+            errors.append(f"external_patterns.{name}: health_command must be a non-empty list of strings")
+        if "health_required" in adapter and not isinstance(adapter.get("health_required"), bool):
+            errors.append(f"external_patterns.{name}: health_required must be a boolean")
     for index, check_item in enumerate(registry.get("doctor_checks") or []):
         prefix = f"doctor_checks[{index}]"
         if not isinstance(check_item, dict):
@@ -163,7 +287,27 @@ def print_lint(errors: list[str], warnings: list[str], as_json: bool) -> None:
 
 
 def list_workflows(registry: dict[str, Any], as_json: bool) -> None:
-    rows = [
+    rows = workflow_rows(registry)
+    if as_json:
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+        return
+    for row in rows:
+        print(f"{row['id']:<28} {row['title']} [{', '.join(row['lanes'])}]")
+
+
+def list_agents(registry: dict[str, Any], as_json: bool) -> None:
+    rows = agent_rows(registry)
+    if as_json:
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+        return
+    for row in rows:
+        workflows = ", ".join(row["allowed_workflows"])
+        lanes = ", ".join(row["can_write_lanes"])
+        print(f"{row['id']:<20} workflows=[{workflows}] lanes=[{lanes}]")
+
+
+def workflow_rows(registry: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
         {
             "id": workflow["id"],
             "title": workflow.get("title", ""),
@@ -171,11 +315,115 @@ def list_workflows(registry: dict[str, Any], as_json: bool) -> None:
         }
         for workflow in registry.get("workflows", [])
     ]
+
+
+def agent_rows(registry: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {
+            "id": profile_id,
+            "purpose": profile.get("purpose", ""),
+            "allowed_workflows": profile.get("allowed_workflows", []),
+            "can_write_lanes": profile.get("can_write_lanes", []),
+        }
+        for profile_id, profile in sorted((registry.get("agent_profiles") or {}).items())
+        if isinstance(profile, dict)
+    ]
+
+
+def integration_rows(registry: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for name, integration in (registry.get("internal_integrations") or {}).items():
+        if not isinstance(integration, dict):
+            continue
+        rows.append(
+            {
+                "name": name,
+                "status": integration.get("status"),
+                "authority": integration.get("authority"),
+                "owner": integration.get("owner"),
+                "ssot_rule": integration.get("ssot_rule"),
+                "gate_binding": integration.get("gate_binding"),
+                "health_command": integration.get("health_command"),
+                "health_required": bool(integration.get("health_required", False)),
+                "commands": {
+                    key: value
+                    for key, value in integration.items()
+                    if key
+                    not in {
+                        "status",
+                        "authority",
+                        "owner",
+                        "ssot_rule",
+                        "gate_binding",
+                        "health_command",
+                        "health_required",
+                    }
+                },
+            }
+        )
+    return rows
+
+
+def list_integrations(registry: dict[str, Any], as_json: bool) -> None:
+    rows = integration_rows(registry)
     if as_json:
         print(json.dumps(rows, ensure_ascii=False, indent=2))
         return
     for row in rows:
-        print(f"{row['id']:<28} {row['title']} [{', '.join(row['lanes'])}]")
+        print(
+            f"{row['name']:<14} {row['status']:<12} {row['authority']:<16} "
+            f"owner={row['owner']} gate={row.get('gate_binding') or '-'}"
+        )
+        if row.get("ssot_rule"):
+            print(f"  ssot: {row['ssot_rule']}")
+
+
+def adapter_rows(registry: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for name, adapter in (registry.get("external_patterns") or {}).items():
+        if not isinstance(adapter, dict):
+            continue
+        command = adapter.get("command")
+        found = shutil.which(str(command)) if command else None
+        rows.append(
+            {
+                "name": name,
+                "status": adapter.get("status"),
+                "authority": adapter.get("authority"),
+                "ssot_rule": adapter.get("ssot_rule"),
+                "ingress_workflow": adapter.get("ingress_workflow"),
+                "skill": adapter.get("skill"),
+                "command": command,
+                "available": bool(found) if command else True,
+                "path": found,
+                "bridge": adapter.get("bridge"),
+                "pattern": adapter.get("pattern"),
+                "degrade_to": adapter.get("degrade_to"),
+                "health_command": adapter.get("health_command"),
+                "health_required": bool(adapter.get("health_required", False)),
+            }
+        )
+    return rows
+
+
+def list_adapters(registry: dict[str, Any], as_json: bool) -> None:
+    rows = adapter_rows(registry)
+    if as_json:
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+        return
+    for row in rows:
+        availability = "available" if row["available"] else "missing"
+        command = row["command"] or row["skill"] or "-"
+        print(
+            f"{row['name']:<14} {row['status']:<16} {row['authority']:<16} "
+            f"workflow={row['ingress_workflow']} command={command} {availability}"
+        )
+        if row.get("bridge"):
+            print(f"  bridge: {row['bridge']}")
+        if row.get("degrade_to"):
+            print(f"  degrade_to: {row['degrade_to']}")
+        if row.get("ssot_rule"):
+            print(f"  ssot: {row['ssot_rule']}")
 
 
 def workflow_plan(workflow: dict[str, Any], context: dict[str, str]) -> dict[str, Any]:
@@ -184,6 +432,7 @@ def workflow_plan(workflow: dict[str, Any], context: dict[str, str]) -> dict[str
         "id": resolved["id"],
         "title": resolved.get("title", ""),
         "purpose": resolved.get("purpose", ""),
+        "agents": resolved.get("agents", {}),
         "allowed_lanes": resolved.get("allowed_lanes", []),
         "lock_scopes": resolved.get("lock_scopes", []),
         "phases": resolved.get("phases", {}),
@@ -196,6 +445,9 @@ def print_plan(plan: dict[str, Any], as_json: bool) -> None:
         return
     print(f"{plan['id']} — {plan['title']}")
     print(plan["purpose"])
+    roles = plan.get("agents", {}).get("roles") or []
+    if roles:
+        print(f"agents: {', '.join(roles)}")
     print(f"lanes: {', '.join(plan['allowed_lanes'])}")
     print(f"locks: {', '.join(plan['lock_scopes'])}")
     for phase, entries in plan["phases"].items():
@@ -362,6 +614,7 @@ def start_run(
     dry_run: bool,
     force_lock: bool,
 ) -> dict[str, Any]:
+    validate_agent_profile(registry, workflow, context.get("profile", ""), require=True)
     plan = workflow_plan(workflow, context)
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     run_id = f"{stamp}-{plan['id']}-{uuid.uuid4().hex[:8]}"
@@ -372,6 +625,7 @@ def start_run(
         "workflow_id": plan["id"],
         "status": "active",
         "actor": context["actor"],
+        "agent_profile": context.get("profile", ""),
         "objective": objective,
         "created_at": utc_now(),
         "updated_at": utc_now(),
@@ -395,6 +649,7 @@ def start_run(
             "run_id": run_id,
             "workflow_id": plan["id"],
             "actor": context["actor"],
+            "agent_profile": context.get("profile", ""),
             "objective": objective,
             "path": record["path"],
             "locks": record["locks"],
@@ -409,6 +664,172 @@ def read_run(registry: dict[str, Any], run_id: str) -> tuple[Path, dict[str, Any
     if not isinstance(payload, dict) or not payload.get("run_id"):
         raise WorkflowError(f"invalid run file: {path}")
     return path, payload
+
+
+def parse_utc_timestamp(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def load_run_records(registry: dict[str, Any]) -> dict[str, tuple[Path, dict[str, Any]]]:
+    run_dir = run_state_dir(registry)
+    records: dict[str, tuple[Path, dict[str, Any]]] = {}
+    if not run_dir.exists():
+        return records
+    for path in sorted(run_dir.glob("*.yaml")):
+        try:
+            payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            payload = {}
+        run_id = payload.get("run_id") if isinstance(payload, dict) else None
+        if run_id:
+            records[str(run_id)] = (path, payload)
+    return records
+
+
+def load_lock_records(registry: dict[str, Any]) -> list[tuple[Path, dict[str, Any]]]:
+    lock_dir = lock_state_dir(registry)
+    records: list[tuple[Path, dict[str, Any]]] = []
+    if not lock_dir.exists():
+        return records
+    for path in sorted(lock_dir.glob("*.lock.yaml")):
+        try:
+            payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            payload = {"run_id": None, "parse_error": True}
+        records.append((path, payload if isinstance(payload, dict) else {"run_id": None, "parse_error": True}))
+    return records
+
+
+def ledger_mentions_run(registry: dict[str, Any], run_id: str) -> bool:
+    path = ledger_path(registry)
+    if not path.exists():
+        return False
+    needle = f'"run_id": "{run_id}"'
+    return needle in path.read_text(encoding="utf-8", errors="replace")
+
+
+def observe(registry: dict[str, Any], run_id: str | None, as_json: bool) -> int:
+    runs = load_run_records(registry)
+    locks = load_lock_records(registry)
+    now = datetime.now(UTC)
+    findings: list[dict[str, Any]] = []
+
+    selected_runs = {run_id: runs[run_id]} if run_id and run_id in runs else runs
+    if run_id and run_id not in runs:
+        findings.append(
+            {
+                "severity": "halt",
+                "kind": "run_missing",
+                "message": f"run not found: {run_id}",
+                "run_id": run_id,
+            }
+        )
+
+    for lock_path, lock in locks:
+        lock_run_id = str(lock.get("run_id") or "")
+        if run_id and lock_run_id != run_id:
+            continue
+        lock_rel = display_path(lock_path)
+        if lock.get("parse_error"):
+            findings.append(
+                {
+                    "severity": "halt",
+                    "kind": "lock_parse_error",
+                    "message": f"lock file is not valid YAML: {lock_rel}",
+                    "path": lock_rel,
+                }
+            )
+            continue
+        if not lock_run_id or lock_run_id not in runs:
+            findings.append(
+                {
+                    "severity": "halt",
+                    "kind": "orphan_lock",
+                    "message": f"lock has no matching run record: {lock_rel}",
+                    "path": lock_rel,
+                    "run_id": lock_run_id or None,
+                }
+            )
+            continue
+        expires_at = parse_utc_timestamp(str(lock.get("expires_at") or ""))
+        if expires_at and expires_at < now:
+            findings.append(
+                {
+                    "severity": "escalate",
+                    "kind": "expired_lock",
+                    "message": f"lock expired: {lock_rel}",
+                    "path": lock_rel,
+                    "run_id": lock_run_id,
+                    "expires_at": lock.get("expires_at"),
+                }
+            )
+        run_status = runs[lock_run_id][1].get("status")
+        if run_status in {"ok", "failed", "blocked"}:
+            findings.append(
+                {
+                    "severity": "halt",
+                    "kind": "closed_run_lock",
+                    "message": f"closed run still holds a lock: {lock_rel}",
+                    "path": lock_rel,
+                    "run_id": lock_run_id,
+                    "status": run_status,
+                }
+            )
+
+    lock_paths_by_run: dict[str, set[str]] = {}
+    for lock_path, lock in locks:
+        lock_run_id = str(lock.get("run_id") or "")
+        if lock_run_id:
+            lock_paths_by_run.setdefault(lock_run_id, set()).add(display_path(lock_path))
+
+    for current_run_id, (path, payload) in selected_runs.items():
+        expected_locks = set(payload.get("locks") or [])
+        if payload.get("status") == "active":
+            missing_locks = sorted(expected_locks - lock_paths_by_run.get(current_run_id, set()))
+            if missing_locks:
+                findings.append(
+                    {
+                        "severity": "halt",
+                        "kind": "active_run_missing_locks",
+                        "message": f"active run is missing lock files: {current_run_id}",
+                        "run_id": current_run_id,
+                        "missing_locks": missing_locks,
+                    }
+                )
+        if not ledger_mentions_run(registry, current_run_id):
+            findings.append(
+                {
+                    "severity": "warn",
+                    "kind": "ledger_missing_run",
+                    "message": f"ledger has no event for run: {current_run_id}",
+                    "run_id": current_run_id,
+                    "path": display_path(path),
+                }
+            )
+
+    severities = {finding["severity"] for finding in findings}
+    decision = "escalate" if "escalate" in severities else "halt" if "halt" in severities else "continue"
+    report = {
+        "ok": decision == "continue",
+        "decision": decision,
+        "run_count": len(selected_runs),
+        "lock_count": len([lock for _, lock in locks if not run_id or str(lock.get("run_id") or "") == run_id]),
+        "ledger": display_path(ledger_path(registry)),
+        "findings": findings,
+    }
+    if as_json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print(f"agent-workflow observe: {decision}")
+        print(f"runs={report['run_count']} locks={report['lock_count']} ledger={report['ledger']}")
+        for finding in findings:
+            print(f"[{finding['severity'].upper()}] {finding['kind']}: {finding['message']}")
+    return 0 if decision == "continue" else 1
 
 
 def close_run(
@@ -451,6 +872,7 @@ def handoff_markdown(payload: dict[str, Any]) -> str:
         f"- workflow: `{payload.get('workflow_id')}`",
         f"- status: `{payload.get('status')}`",
         f"- actor: `{payload.get('actor')}`",
+        f"- agent_profile: `{payload.get('agent_profile') or context.get('profile') or '-'}`",
         f"- objective: {payload.get('objective') or '(none)'}",
         f"- created_at: `{payload.get('created_at')}`",
         f"- updated_at: `{payload.get('updated_at')}`",
@@ -526,42 +948,199 @@ def run_doctor_check(check_item: dict[str, Any]) -> dict[str, Any]:
         }
 
 
-def doctor(registry: dict[str, Any], as_json: bool) -> int:
-    adapters = []
-    for name, adapter in (registry.get("external_patterns") or {}).items():
-        command = adapter.get("command") if isinstance(adapter, dict) else None
-        found = shutil.which(str(command)) if command else None
-        adapters.append(
-            {
-                "name": name,
-                "status": adapter.get("status") if isinstance(adapter, dict) else None,
-                "command": command,
-                "available": bool(found) if command else True,
-                "path": found,
-            }
-        )
+def build_doctor_report(registry: dict[str, Any]) -> dict[str, Any]:
+    integrations = integration_rows(registry)
+    for integration in integrations:
+        name = str(integration["name"])
+        health = None
+        health_command = integration.get("health_command")
+        health_required = bool(integration.get("health_required", False))
+        if isinstance(health_command, list) and health_command:
+            health = run_doctor_check(
+                {
+                    "id": f"integration-{name}-health",
+                    "description": f"Internal integration health check for {name}.",
+                    "required": health_required,
+                    "command": health_command,
+                }
+            )
+        integration["health"] = health
+
+    adapters = adapter_rows(registry)
+    for adapter in adapters:
+        name = str(adapter["name"])
+        health = None
+        health_command = adapter.get("health_command")
+        health_required = bool(adapter.get("health_required", False))
+        if isinstance(health_command, list) and health_command:
+            health = run_doctor_check(
+                {
+                    "id": f"adapter-{name}-health",
+                    "description": f"External adapter health check for {name}.",
+                    "required": health_required,
+                    "command": health_command,
+                }
+            )
+        adapter["health"] = health
     checks = [run_doctor_check(item) for item in registry.get("doctor_checks", [])]
-    ok = all((not item["required"]) or item["ok"] for item in checks)
-    report = {
+    required_integration_health = [
+        integration["health"]
+        for integration in integrations
+        if integration.get("health_required") and isinstance(integration.get("health"), dict)
+    ]
+    required_adapter_health = [
+        adapter["health"]
+        for adapter in adapters
+        if adapter.get("health_required") and isinstance(adapter.get("health"), dict)
+    ]
+    ok = all(
+        (not item["required"]) or item["ok"]
+        for item in [*checks, *required_integration_health, *required_adapter_health]
+    )
+    return {
         "ok": ok,
         "registry": str(REGISTRY_PATH.relative_to(WORKSPACE)),
+        "integrations": integrations,
         "adapters": adapters,
         "checks": checks,
     }
+
+
+def print_doctor_report(report: dict[str, Any], as_json: bool) -> None:
     if as_json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
-        return 0 if ok else 1
+        return
     print(f"registry: {report['registry']}")
-    for adapter in adapters:
+    for integration in report["integrations"]:
+        health = integration.get("health")
+        health_status = ""
+        if isinstance(health, dict):
+            label = "PASS" if health["ok"] else ("FAIL" if integration.get("health_required") else "WARN")
+            health_status = f" health={label}"
+        print(
+            f"{integration['name']:<14} {integration['status']:<12} "
+            f"{integration['authority']:<16}{health_status}"
+        )
+    for adapter in report["adapters"]:
         status = "available" if adapter["available"] else "missing"
         suffix = f" ({adapter['path']})" if adapter["path"] else ""
+        health = adapter.get("health")
+        if isinstance(health, dict):
+            health_status = "PASS" if health["ok"] else ("FAIL" if adapter.get("health_required") else "WARN")
+            suffix += f" health={health_status}"
         print(f"{adapter['name']:<14} {status}{suffix}")
-    for item in checks:
+    for item in report["checks"]:
         status = "PASS" if item["ok"] else ("WARN" if not item["required"] else "FAIL")
         print(f"[{status}] {item['id']} :: {item['command']}")
         if not item["ok"] and item.get("stderr"):
             print(item["stderr"], file=sys.stderr)
-    return 0 if ok else 1
+
+
+def doctor(registry: dict[str, Any], as_json: bool) -> int:
+    report = build_doctor_report(registry)
+    print_doctor_report(report, as_json)
+    return 0 if report["ok"] else 1
+
+
+def health_summary(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    summary: list[dict[str, Any]] = []
+    for row in rows:
+        health = row.get("health")
+        summary.append(
+            {
+                "name": row.get("name"),
+                "status": row.get("status"),
+                "authority": row.get("authority"),
+                "required": bool(row.get("health_required", False)),
+                "health_ok": health.get("ok") if isinstance(health, dict) else None,
+                "command": health.get("command") if isinstance(health, dict) else command_display(row.get("health_command", [])),
+                "advisory": not bool(row.get("health_required", False)),
+            }
+        )
+    return summary
+
+
+def check_summary(checks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "id": check.get("id"),
+            "required": bool(check.get("required", True)),
+            "ok": bool(check.get("ok", False)),
+            "command": check.get("command"),
+        }
+        for check in checks
+    ]
+
+
+def bootstrap_report(registry: dict[str, Any], include_health: bool) -> dict[str, Any]:
+    errors, warnings = lint_registry(registry)
+    doctor_report = build_doctor_report(registry) if include_health else None
+    integrations = (
+        doctor_report["integrations"] if isinstance(doctor_report, dict) else integration_rows(registry)
+    )
+    adapters = doctor_report["adapters"] if isinstance(doctor_report, dict) else adapter_rows(registry)
+    ok = not errors and (doctor_report is None or bool(doctor_report["ok"]))
+    return {
+        "ok": ok,
+        "registry": str(REGISTRY_PATH.relative_to(WORKSPACE)),
+        "version": registry.get("version"),
+        "ssot": registry.get("ssot", {}),
+        "runner": registry.get("runner", {}),
+        "lint": {"ok": not errors, "errors": errors, "warnings": warnings},
+        "workflows": workflow_rows(registry),
+        "agent_profiles": agent_rows(registry),
+        "integrations": [
+            {key: value for key, value in row.items() if key != "health"}
+            for row in integrations
+        ],
+        "adapters": [
+            {key: value for key, value in row.items() if key != "health"}
+            for row in adapters
+        ],
+        "health": None
+        if doctor_report is None
+        else {
+            "ok": doctor_report["ok"],
+            "integrations": health_summary(doctor_report["integrations"]),
+            "adapters": health_summary(doctor_report["adapters"]),
+            "checks": check_summary(doctor_report["checks"]),
+        },
+        "next_commands": {
+            "start": "uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> --profile <agent-profile> --objective \"<summary>\"",
+            "doctor": "uv run --with pyyaml python bin/agent-workflow.py doctor",
+            "gate": "make gac-local-gate",
+        },
+    }
+
+
+def print_bootstrap_report(report: dict[str, Any], as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return
+    print(f"registry: {report['registry']}")
+    print(f"lint: {'PASS' if report['lint']['ok'] else 'FAIL'}")
+    for warning in report["lint"]["warnings"]:
+        print(f"[WARN] {warning}")
+    health = report.get("health")
+    if isinstance(health, dict):
+        print(f"health: {'PASS' if health['ok'] else 'FAIL'}")
+    print("\nworkflows:")
+    for row in report["workflows"]:
+        print(f"  {row['id']:<28} {row['title']}")
+    print("\nagent profiles:")
+    for row in report["agent_profiles"]:
+        print(f"  {row['id']:<20} workflows={len(row['allowed_workflows'])} lanes={','.join(row['can_write_lanes'])}")
+    print("\ninternal integrations:")
+    for row in report["integrations"]:
+        print(f"  {row['name']:<14} {row['authority']:<16} owner={row['owner']}")
+    print("\nexternal adapters:")
+    for row in report["adapters"]:
+        availability = "available" if row["available"] else "missing"
+        command = row["command"] or row["skill"] or "-"
+        print(f"  {row['name']:<14} {row['authority']:<16} {availability} command={command}")
+    print("\nnext:")
+    for command in report["next_commands"].values():
+        print(f"  {command}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -575,8 +1154,29 @@ def build_parser() -> argparse.ArgumentParser:
     p_doctor = sub.add_parser("doctor", help="Report optional adapter availability")
     p_doctor.add_argument("--json", action="store_true")
 
+    p_observe = sub.add_parser("observe", help="Read-only observer audit for workflow runs and locks")
+    p_observe.add_argument("run_id", nargs="?")
+    p_observe.add_argument("--json", action="store_true")
+
     p_list = sub.add_parser("list", help="List workflows")
     p_list.add_argument("--json", action="store_true")
+
+    p_agents = sub.add_parser("agents", help="List registered agent profiles")
+    p_agents.add_argument("--json", action="store_true")
+
+    p_adapters = sub.add_parser("adapters", help="List external adapter contracts")
+    p_adapters.add_argument("--json", action="store_true")
+
+    p_integrations = sub.add_parser("integrations", help="List internal integration contracts")
+    p_integrations.add_argument("--json", action="store_true")
+
+    p_bootstrap = sub.add_parser("bootstrap", help="Show one-shot startup context for agents")
+    p_bootstrap.add_argument("--json", action="store_true")
+    p_bootstrap.add_argument("--skip-health", action="store_true")
+
+    p_context = sub.add_parser("context", help="Alias for bootstrap")
+    p_context.add_argument("--json", action="store_true")
+    p_context.add_argument("--skip-health", action="store_true")
 
     p_show = sub.add_parser("show", help="Show a workflow plan")
     p_show.add_argument("workflow_id")
@@ -584,6 +1184,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_show.add_argument("--format", default="openspec")
     p_show.add_argument("--source-file", default="")
     p_show.add_argument("--run-id", default="")
+    p_show.add_argument("--profile", default="")
     p_show.add_argument("--json", action="store_true")
 
     p_run = sub.add_parser("run", help="Run or print a workflow stage")
@@ -594,6 +1195,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--format", default="openspec")
     p_run.add_argument("--source-file", default="")
     p_run.add_argument("--run-id", default="")
+    p_run.add_argument("--profile", default="")
     p_run.add_argument("--json", action="store_true")
 
     p_start = sub.add_parser("start", help="Create a resumable workflow run record")
@@ -602,6 +1204,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_start.add_argument("--format", default="openspec")
     p_start.add_argument("--source-file", default="")
     p_start.add_argument("--actor", default=os.environ.get("USER", "agent"))
+    p_start.add_argument("--profile", default="")
     p_start.add_argument("--objective", default="")
     p_start.add_argument("--dry-run", action="store_true")
     p_start.add_argument("--force-lock", action="store_true")
@@ -639,16 +1242,35 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if not errors else 1
         if args.command == "doctor":
             return doctor(registry, args.json)
+        if args.command == "observe":
+            return observe(registry, args.run_id, args.json)
         if args.command == "list":
             list_workflows(registry, args.json)
             return 0
+        if args.command == "agents":
+            list_agents(registry, args.json)
+            return 0
+        if args.command == "adapters":
+            list_adapters(registry, args.json)
+            return 0
+        if args.command == "integrations":
+            list_integrations(registry, args.json)
+            return 0
+        if args.command in {"bootstrap", "context"}:
+            report = bootstrap_report(registry, not args.skip_health)
+            print_bootstrap_report(report, args.json)
+            return 0 if report["ok"] else 1
         if args.command == "show":
             workflow = workflow_by_id(registry, args.workflow_id)
-            print_plan(workflow_plan(workflow, context_from_args(args)), args.json)
+            context = context_from_args(args)
+            validate_agent_profile(registry, workflow, context["profile"], require=False)
+            print_plan(workflow_plan(workflow, context), args.json)
             return 0
         if args.command == "run":
             workflow = workflow_by_id(registry, args.workflow_id)
-            return run_stage(workflow, args.stage, context_from_args(args), args.execute, args.json)
+            context = context_from_args(args)
+            validate_agent_profile(registry, workflow, context["profile"], require=args.execute)
+            return run_stage(workflow, args.stage, context, args.execute, args.json)
         if args.command == "start":
             workflow = workflow_by_id(registry, args.workflow_id)
             record = start_run(
