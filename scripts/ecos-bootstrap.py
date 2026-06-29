@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-eCOS v5 — 极小骨架引导 (ecos-bootstrap)
+eCOS v6 — 极小骨架引导 (ecos-bootstrap)
 ==========================================
 给新用户最少的、最干净的起点。
 只搭建框架骨架，不预装任何有外部依赖的脚本。
@@ -69,7 +69,7 @@ def main():
     now = datetime.now()
     
     print(f\"# 会话简报 — {now.strftime('%Y-%m-%d %H:%M')}\")
-    print(f\"> eCOS v5 · 自动生成\")
+    print(f\"> eCOS v6 · 自动生成\")
     print()
     print(f\"## 🟢 系统健康\" if not stale else \"## 🟡 保鲜告警\")
     print(f\"CLAUDE.md 文件: {len(stale)} 过期\" if stale else \"全部新鲜 ✅\")
@@ -108,7 +108,7 @@ CHECKS = [
 DOCS = Path.home() / \"Documents\"
 
 print(\"=\" * 48)
-print(\"  eCOS v5 — 健康检查\")
+print(\"  eCOS v6 — 健康检查\")
 print(\"=\" * 48)
 
 passed = 0
@@ -137,7 +137,7 @@ DOCS = Path.home() / \"Documents\"
 now = datetime.now()
 
 print()
-print(f\"  eCOS v5 — 系统自述\")
+print(f\"  eCOS v6 — 系统自述\")
 print(f\"  时间: {now.strftime('%Y-%m-%d %H:%M')}\")
 print()
 print(f\"  📍 位置: {DOCS}\")
@@ -201,7 +201,7 @@ def generate_gateway(name: str, role: str, has_work: bool, has_family: bool) -> 
     return f"""# CLAUDE_COWORK_GLOBAL.md — L4 自我层网关
 
 > **L4 网关** — 身份锚 + 域路由 + 执行纪律
-> eCOS v5 | {now} | 由 ecos-bootstrap 生成
+> eCOS v6 | {now} | 由 ecos-bootstrap 生成
 
 ---
 
@@ -261,7 +261,7 @@ def main():
     src = Path(__file__).parent.resolve()
 
     # ── 头部 ──
-    print(f"\n{B}  eCOS v5 — 极小骨架引导{N}")
+    print(f"\n{B}  eCOS v6 — 极小骨架引导{N}")
     print("  只搭框架，不填内容。扩展按需安装。\n")
 
     # ── 交互 ──
