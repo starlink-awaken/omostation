@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
-import select
+import queue
 import subprocess
-import sys
+import threading
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -41,18 +41,29 @@ class _McpStdioSession:
         self.proc.stdin.flush()
 
     def _recv(self) -> dict[str, Any]:
-        """读取一行 JSON-RPC 响应，带超时。"""
+        """读取一行 JSON-RPC 响应，带跨平台超时。"""
         if self.proc.stdout is None:
             raise RuntimeError("mcp_stdio stdout not available")
 
-        # select 在 Windows 原生管道上不支持；macOS/Linux 可用。
-        # 为保持简单，Unix 用 select，其它平台用阻塞 readline + 外层总超时兜底。
-        if sys.platform != "win32":
-            ready, _, _ = select.select([self.proc.stdout], [], [], self.timeout)
-            if not ready:
-                raise subprocess.TimeoutExpired(self.proc.args, self.timeout)
+        q: queue.Queue[tuple[str, Any]] = queue.Queue()
 
-        line = self.proc.stdout.readline()
+        def _read() -> None:
+            try:
+                line = self.proc.stdout.readline()
+                q.put(("line", line))
+            except Exception as exc:  # noqa: BLE001
+                q.put(("exc", exc))
+
+        t = threading.Thread(target=_read, daemon=True)
+        t.start()
+        try:
+            kind, value = q.get(timeout=self.timeout)
+        except queue.Empty as exc:
+            raise subprocess.TimeoutExpired(self.proc.args, self.timeout) from exc
+
+        if kind == "exc":
+            raise value
+        line = value
         if not line:
             raise RuntimeError("mcp_stdio server closed stdout before response")
         try:
@@ -201,36 +212,38 @@ class StdioAdapter:
             pid = proc.pid
             session = _McpStdioSession(proc, self.timeout)
 
-            init_resp = session.initialize()
-            if "error" in init_resp:
+            try:
+                init_resp = session.initialize()
+                if "error" in init_resp:
+                    return {
+                        "status": "error",
+                        "error": init_resp["error"],
+                        "pid": pid,
+                        "alive_at_spawn": True,
+                    }
+
+                session.initialized()
+
+                tool_resp = session.call_tool(
+                    f"{service.package}/{service.action}",
+                    {"args": args, "kwargs": kwargs},
+                )
+
+                if "error" in tool_resp:
+                    return {
+                        "status": "error",
+                        "error": tool_resp["error"],
+                        "pid": pid,
+                        "alive_at_spawn": True,
+                    }
                 return {
-                    "status": "error",
-                    "error": init_resp["error"],
+                    "status": "ok",
+                    "result": tool_resp.get("result"),
                     "pid": pid,
                     "alive_at_spawn": True,
                 }
-
-            session.initialized()
-
-            tool_resp = session.call_tool(
-                f"{service.package}/{service.action}",
-                {"args": args, "kwargs": kwargs},
-            )
-            session.close()
-
-            if "error" in tool_resp:
-                return {
-                    "status": "error",
-                    "error": tool_resp["error"],
-                    "pid": pid,
-                    "alive_at_spawn": True,
-                }
-            return {
-                "status": "ok",
-                "result": tool_resp.get("result"),
-                "pid": pid,
-                "alive_at_spawn": True,
-            }
+            finally:
+                session.close()
         except subprocess.TimeoutExpired:
             if proc:
                 proc.kill()

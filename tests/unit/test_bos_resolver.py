@@ -568,6 +568,19 @@ for line in sys.stdin:
             send({"jsonrpc": "2.0", "id": req_id, "result": {"content": [{"type": "text", "text": f"ok:{name}:{json.dumps(args)}"}]}})
 """
 
+_MCP_MOCK_SERVER_INIT_ERROR = """
+import json, sys
+
+def send(msg):
+    print(json.dumps(msg), flush=True)
+
+for line in sys.stdin:
+    req = json.loads(line.strip())
+    req_id = req.get("id")
+    if req.get("method") == "initialize":
+        send({"jsonrpc": "2.0", "id": req_id, "error": {"code": -32600, "message": "init rejected"}})
+"""
+
 
 class TestStdioAdapterProtocol:
     def test_stdio_transport_uses_custom_json(self):
@@ -622,3 +635,20 @@ class TestStdioAdapterProtocol:
         result = adapter.call(svc)
         assert result["status"] == "error"
         assert "boom" in str(result["error"])
+
+    def test_mcp_stdio_initialize_error_closes_process(self):
+        """initialize 失败时也应关闭子进程，避免泄漏."""
+        from agora.mcp.resolver.adapter import StdioAdapter
+
+        svc = BosService(
+            uri="bos://test/pkg/action",
+            domain="test",
+            package="pkg",
+            action="action",
+            transport="mcp_stdio",
+            command=[sys.executable, "-c", _MCP_MOCK_SERVER_INIT_ERROR],
+        )
+        adapter = StdioAdapter(timeout=5.0)
+        result = adapter.call(svc)
+        assert result["status"] == "error"
+        assert "init rejected" in str(result["error"])
