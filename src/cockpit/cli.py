@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""cockpit — eCOS v5 L3 入口层。"""
+"""cockpit — eCOS v6 L3 入口层。"""
 
 from __future__ import annotations
 

@@ -60,7 +60,7 @@ def generate_layout(root: Path) -> Layout:
     # 顶部状态栏
     layout["header"].update(
         Panel(
-            "[bold cyan]eCOS v5 C2G 双擎编排监控大盘[/] | [bold red][READ-ONLY 严禁在此修改][/] | 轮询间隔: 1.5s",
+            "[bold cyan]eCOS v6 C2G 双擎编排监控大盘[/] | [bold red][READ-ONLY 严禁在此修改][/] | 轮询间隔: 1.5s",
             box=box.ROUNDED,
         )
     )
