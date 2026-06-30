@@ -1,6 +1,6 @@
 # eCOS v6 Topology Registry (SSOT)
 # ==================================
-# Defines the physical bounds and allowed import paths for the 5+4+1 architecture.
+# Defines the physical bounds and allowed import paths for the 5+4+1+1 architecture.
 # Enforced by ecos-architecture-validator
 
 version: "1.0.0"

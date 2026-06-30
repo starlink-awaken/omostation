@@ -502,7 +502,7 @@ m3:
     EquivalentTo:
       id: EquivalentTo
       name: "等价"
-      description: "元素 A 与元素 B 语义等价。如 5+4+1 的 L4 ≡ L0-L4 的 L4。"
+      description: "元素 A 与元素 B 语义等价。如 5+4+1+1 的 L4 ≡ L0-L4 的 L4。"
       parent: SemanticRelation
       abstract: false
 

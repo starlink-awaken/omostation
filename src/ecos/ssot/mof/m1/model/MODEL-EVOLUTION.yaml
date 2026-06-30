@@ -4,7 +4,7 @@
 id: MODEL-EVOLUTION
 type: Model
 name: 架构演化模型
-description: 织星架构从 4+1+3→5+3+1→5+4+1 的演化路径模型
+description: 织星架构从 4+1+3→5+3+1→5+4+1+1 的演化路径模型
 status: active
 domain: meta
 created: '2026-06-06'
@@ -15,7 +15,7 @@ properties:
   mapping:
     v1: 4+1+3 (原始)
     v2: 5+3+1 (功能域)
-    v3: 5+4+1 (治理升级·X4新增)
+    v3: 5+4+1+1 (治理升级·X4新增)
     v4: 5+4+1+MOF (模型驱动·L0基座)
   formality: semiformal
   m3_parent: DescriptiveElement.Model

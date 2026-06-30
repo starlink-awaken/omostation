@@ -77,7 +77,7 @@ Architecture:
   examples:
   - id: ARCH-2026-06-05-001
     name: eCOS v6 架构
-    description: '5+4+1 层结构: L0-L4+X1-X4+I0+P0'
+    description: '5+4+1+1 层结构: L0-L4+X1-X4+I0+P0'
   - id: ARCH-2026-06-06-001
     name: 织星架构
     description: 5层技术栈·4维治理·1织物·1界面

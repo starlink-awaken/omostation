@@ -9,7 +9,7 @@
   1. @驾驶舱/scripts/*.py          → Artifact
   2. L0-constraints.yaml           → Protocol + Specification
   3. CARDS SQLite                  → Entity (卡片)
-  4. 5+4+1架构全景.md              → Architecture
+  4. 5+4+1+1架构全景.md              → Architecture
   5. 领域知识库/**/实体/*.md        → Entity (领域实体)
   6. CLAUDE.md 文件                → Specification (Agent契约)
 
@@ -35,7 +35,7 @@ CONSTRAINTS_FILE = (
     DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
 )
 CARDS_DB = Path.home() / "Workspace" / "data" / "cards" / "cards.db"
-ARCH_FILE = DOCS / "驾驶舱" / "5+4+1架构全景.md"
+ARCH_FILE = DOCS / "驾驶舱" / "5+4+1+1架构全景.md"
 ENTITY_DIR = DOCS / "领域知识库"
 
 
@@ -260,14 +260,14 @@ def scan_architecture() -> list[dict]:
             "id": "MODEL-UNIFIED-ARCH",
             "type": "Model",
             "name": "统一架构模型",
-            "description": "5+4+1 ↔ L0-L4+X1-X4 双向映射矩阵——三视图统一的 SSOT",
+            "description": "5+4+1+1 ↔ L0-L4+X1-X4 双向映射矩阵——三视图统一的 SSOT",
             "status": "active",
             "domain": "meta",
             "created": "2026-06-05",
             "version": "1.1.0",
             "properties": {
-                "source": "5+4+1 织星架构",
-                "mapping": {"功能域视图": "5+4+1", "技术栈视图": "L0-L4+X1-X4+I0+P0"},
+                "source": "5+4+1+1 织星架构",
+                "mapping": {"功能域视图": "5+4+1+1", "技术栈视图": "L0-L4+X1-X4+I0+P0"},
                 "formality": "semiformal",
                 "projects_to": ["MADF V1-V8"],
             },

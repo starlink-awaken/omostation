@@ -4,12 +4,12 @@
 
 id: ARCH-ECOS-V5
 type: Architecture
-name: 织星架构 (eCOS v5)
+name: 织星架构 (eCOS v6)
 description: 5层技术栈(L0-L4) + 4维治理(X1-X4) + 1织物(I0) + 1界面(P0)
 status: active
 domain: meta
 created: '2026-06-05'
-version: 5.3.0
+version: 6.0.0
 properties:
   topology: layered
   components:
@@ -32,10 +32,11 @@ properties:
   - v4.2(5+3+1)
   - v5.0(5+4+1+X4)
   - v5.3(织星·MOF基座)
+  - v6.0(5+4+1+1·P0界面层独立)
 layer: multi
 sources:
-- 驾驶舱/5+4+1架构全景.md
-- 学习进化/2-knowledge/基建架构/eCOS-v5-Architecture-SSOT.md
+- 驾驶舱/5+4+1+1架构全景.md
+- 学习进化/2-knowledge/基建架构/eCOS-v6-Architecture-SSOT.md
 
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m1/
@@ -44,3 +45,6 @@ state_history:
   - state: active
     timestamp: '2026-06-19T00:00:00Z'
     reason: initial_modeling
+  - state: active
+    timestamp: '2026-06-30T00:00:00Z'
+    reason: 'v5→v6 命名对齐: 5+4+1+1 架构 (P0 界面层独立)'
