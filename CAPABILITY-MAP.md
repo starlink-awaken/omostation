@@ -11,7 +11,7 @@
 │                    Cockpit — L3 统一入口                      │
 ├─────────────────────────────────────────────────────────────┤
 │  CLI 入口  │  MCP Server  │  Web Dashboard  │  研究管理     │
-│  18 cmds  │  20 tools    │  REST API       │  Lifecycle    │
+│  CLI cmds (见 project-registry.yaml)  │  MCP tools (见 project-registry.yaml)    │  REST API       │  Lifecycle    │
 └─────────────────────────────────────────────────────────────┘
 ```
 

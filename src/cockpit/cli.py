@@ -363,6 +363,7 @@ def main() -> int:
             "drift-check",
             "validate",
             "verify",
+            "evolution",
             "surfaces",
             "ingress-goal",
             "ingress-task",
@@ -485,10 +486,11 @@ def main() -> int:
     )
     agent_p = sub.add_parser(
         "agent",
-        help="🤖 Agent 治理控制入口 (bootstrap / start / claim / verify / closeout)",
+        help="🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)",
         epilog=(
             "示例:\n"
             "  cockpit agent\n"
+            "  cockpit agent status --json\n"
             '  cockpit agent start project-doc-change --profile governance-agent --objective "docs"\n'
             "  cockpit agent claim <run-id> --path AGENTS.md\n"
             "  cockpit agent verify <run-id> --from-diff --execute\n"

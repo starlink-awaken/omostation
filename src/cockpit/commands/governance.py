@@ -102,6 +102,20 @@ def _run_omo_verify(workspace_root: Path) -> int:
     return 0
 
 
+def _run_governance_evolution(args: list[str], workspace_root: Path) -> int:
+    forwarded = args or ["status"]
+    cmd = [
+        "uv",
+        "run",
+        "--with",
+        "pyyaml",
+        "python",
+        str(workspace_root / "bin" / "governance-evolution.py"),
+        *forwarded,
+    ]
+    return subprocess.run(cmd, cwd=str(workspace_root)).returncode
+
+
 def cmd_governance(args: argparse.Namespace) -> int:
     import shutil
 
@@ -119,6 +133,9 @@ def cmd_governance(args: argparse.Namespace) -> int:
     if subcmd in _OMO_GOVERNANCE_SUBCOMMANDS:
         workspace_root = resolve_workspace_root()
         return _run_omo_governance([subcmd, *(args.extra_args or [])], workspace_root)
+    if subcmd == "evolution":
+        workspace_root = resolve_workspace_root()
+        return _run_governance_evolution(args.extra_args or [], workspace_root)
     if subcmd == "verify":
         workspace_root = resolve_workspace_root()
         return _run_omo_verify(workspace_root)

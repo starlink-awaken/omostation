@@ -10,9 +10,12 @@ WORKSPACE = Path(__file__).resolve().parents[5]
 
 def cmd_agent_workflow(args) -> int:
     """Delegate to the workspace agent-workflow runner."""
-    forwarded = list(getattr(args, "agent_workflow_args", []) or [])
+    forwarded = getattr(args, "agent_workflow_args", None)
+    if forwarded is None:
+        forwarded = getattr(args, "agent_args", [])
+    forwarded = list(forwarded or [])
     if not forwarded:
-        forwarded = ["list"]
+        forwarded = ["bootstrap"] if getattr(args, "command", "") == "agent" else ["list"]
     command = [
         "uv",
         "run",

@@ -6,7 +6,7 @@
 > **Health**: See local CI and runtime probes
 > **SSOT**: 运行时健康、测试通过率、入口/工具计数以本项目 CI、运行时探针和 workspace governance SSOT 为准
 >
-> 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
+> 系统全景参见：[`../../docs/PANORAMA.md`](../../docs/PANORAMA.md)
 
 ---
 
@@ -39,7 +39,7 @@ graph LR
 | Type | Entry | Port / Notes |
 |:--|:--|:--|
 | CLI | `cockpit / workspace` | 25+ 子命令 |
-| MCP stdio | `cockpit-mcp / cockpit/scripts/cockpit_mcp.py` | ~20 tools |
+| MCP stdio | `cockpit-mcp / cockpit/scripts/cockpit_mcp.py` | ~MCP tools (见 project-registry.yaml) |
 | HTTP | `cockpit-dashboard` | :8090 |
 
 ## 3. 核心模块
