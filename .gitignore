@@ -20,16 +20,7 @@
 .omo/tests/
 .omo/workers/
 
-.omc/autopilot/
-.omc/handoffs/
-.omc/logs/
-.omc/notepads/
-.omc/plans/
-.omc/project-memory.json
-.omc/prd.json
-.omc/progress.txt
-.omc/sessions/
-.omc/state/
+.omc/
 
 projects/.omc/
 projects/cockpit-ui/
@@ -104,22 +95,12 @@ node_modules/
 
 # ---------------------------------------------------------------------------
 # 7. 本地工具、Agent 与 IDE 配置
-#    这些是个人/环境相关的配置，不应进入版本控制。
+#    AI 编码工具目录 (.claude/.crush/.serena/.reasonix/.grok/.hermes/.husky/
+#    .antigravitycli/.mimocode/.qoder/.deepeval/.idea) 已由
+#    ~/.gitignore_global 统一忽略, 此处不再重复。
+#    以下仅保留项目特有的忽略规则。
 # ---------------------------------------------------------------------------
-.grok/
-.reasonix/
-.antigravitycli/
-.hermes/
-.mimocode/
-.deepeval/
-.codebuddy/
-.crush/
-.husky/
-.idea/
-.serena/
-.claude/
 .metaos/
-.qoder/
 config/
 *.local.json
 

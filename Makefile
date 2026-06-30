@@ -1,4 +1,4 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflows project-layer-index gac-local-gate governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -18,6 +18,9 @@ help:
 	@echo "make agent-workflow-integrations 列出内部治理能力契约"
 	@echo "make agent-workflow-adapters 列出外部工具 adapter 契约"
 	@echo "make agent-workflow-lint 校验 agent workflow SSOT"
+	@echo "make agent-workflow-verify 基于当前 diff 规划 agent 验证"
+	@echo "make agent-workflow-compliance 审计 agent workflow 合规闭环"
+	@echo "make agent-workflow-closeout RUN_ID=<id> 执行验证并关闭 run"
 	@echo "make agent-workflow-doctor 检查 BMAD/OpenSpec/GStack/beads 适配器"
 	@echo "make agent-workflow-observe 审计 agent workflow run/lock/ledger"
 	@echo "make gac-local-gate     运行 GaC 本地硬门 (含 adapter/MOF/doc/lane checks)"
@@ -50,6 +53,7 @@ help:
 	@echo "=== 文档 ==="
 	@echo "make doc-lint            检查文档格式"
 	@echo "make project-layer-index 重新生成项目分层索引 digest"
+	@echo "make dir-hygiene         检查根目录卫生 (未追踪未忽略的目录)"
 	@echo ""
 	@echo "=== 开发环境 ==="
 	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate)"
@@ -71,6 +75,16 @@ agent-workflow-bootstrap:
 agent-workflow-lint:
 	uv run --with pyyaml python bin/agent-workflow.py lint
 
+agent-workflow-verify:
+	uv run --with pyyaml python bin/agent-workflow.py verify --from-diff
+
+agent-workflow-compliance:
+	uv run --with pyyaml python bin/agent-workflow.py compliance
+
+agent-workflow-closeout:
+	@test -n "$(RUN_ID)" || (echo "RUN_ID is required"; exit 2)
+	uv run --with pyyaml python bin/agent-workflow.py closeout "$(RUN_ID)"
+
 agent-workflow-doctor:
 	uv run --with pyyaml python bin/agent-workflow.py doctor
 
@@ -89,8 +103,16 @@ agent-workflow-adapters:
 project-layer-index:
 	uv run --with pyyaml python bin/project-layer-index.py --write
 
+domain-m1-alignment:  ## 校验 project-registry.yaml ↔ eCOS M1 domain 节点对齐 (drift 检测)
+	uv run --with pyyaml python bin/check-domain-m1-alignment.py
+
+toolbox-ssot-check:  ## 校验 ToolBox docs SSOT 契约 (硬编码值检测)
+	uv run --with pyyaml python bin/check-toolbox-ssot.py
+
 gac-local-gate:
 	uv run --with pyyaml python bin/gac-local-gate.py
+dir-hygiene:  ## 检查根目录卫生 (未追踪未忽略的目录)
+	uv run --with pyyaml python bin/dir-hygiene-check.py
 
 governance-release-gate:
 	uv run --with pyyaml python bin/submodule-reachability-gate.py --source head --fetch
