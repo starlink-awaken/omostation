@@ -105,6 +105,22 @@ Prefer targeted checks for narrow edits. Broaden verification when the change to
 - Most `projects/*` directories are independent repositories. Commit inside the submodule first only when the user requested commits, then update the root pointer.
 - Never revert unrelated dirty files. Treat them as user or concurrent-agent work.
 
+### 6.1 PR 工作流(Phase 2,渐进推进)
+
+主仓 main 变更走 **per-session worktree + PR**,消灭 direct push to main(多 agent 撞车根因)。工具:`bin/gac-worktree.sh`。
+
+```bash
+bash bin/gac-worktree.sh claim <session>   # 起隔离 worktree (work/<session> 分支)
+cd ../ws-<session>                          # 改文件 + commit (改子模块先 git submodule update --init)
+bash bin/gac-worktree.sh submit <session>   # push 分支 + 开 PR (base main)
+bash bin/gac-worktree.sh merge <session>    # squash 合并 PR + release + 删分支
+```
+
+- **当前状态(2026-06-30)**: advisory 阶段——pre-push 对 direct push to main 发警告但不阻断(Phase 2a-2)。Phase 2c 升级为 blocking(本地拒绝)。
+- **子模块**: 保持 direct push(子模块 main 不保护,复用 `sync-submodules-push.sh`);仅主仓 main 走 PR。详见 [`docs/SUBMODULE-PR-STRATEGY.md`](docs/SUBMODULE-PR-STRATEGY.md)。
+- **L0 萃取不破坏**: `post-commit` 是 commit 级触发(worktree 共享 `.git/hooks`),worktree 内 commit 照样萃取,派生文件进 PR。
+- **完整计划**: [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) §4 Phase 2。
+
 ## 7. Testing Guidance
 
 | Change Surface | Minimum Verification |

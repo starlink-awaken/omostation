@@ -63,7 +63,7 @@ help:
 install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate). 新 clone 必跑.
 	install -m 755 .githooks/pre-push .git/hooks/pre-push
 	install -m 755 .githooks/pre-commit .git/hooks/pre-commit
-	@echo "✅ 已装 .git/hooks/pre-push (push 时 sync 子模块, 失败阻断, 防 CI 悬空)"
+	@echo "✅ 已装 .git/hooks/pre-push (push 时 sync 子模块 + Phase 2a direct-push-to-main advisory 守卫, 防 CI 悬空)"
 	@echo "✅ 已装 .git/hooks/pre-commit (commit 时 GaC/SSOT 本地硬门)"
 
 agent-workflows:

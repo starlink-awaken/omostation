@@ -8,13 +8,46 @@
 # 此钩子: 主仓 push(触发 CI)前, 把本地领先远程的子模块 push 上去, 让 gitlink 可达.
 # 子模块 push 失败会阻断主仓 push,避免把不可达 gitlink 推到远端.
 #
+# Phase 2a (2026-06-30): 加 direct-push-to-main advisory 守卫.
+#   push 目标含 refs/heads/main 且当前分支非 work/* → stderr 警告.
+#   advisory 阶段不阻断 (exit 0). Phase 2c 升级为 blocking (exit 1).
+#   详见 docs/AGENT-ISOLATION-ROLLOUT.md §4 Phase 2 (ISC-3b).
+#
 # 安装: make install-hooks  (从本文件复制到 .git/hooks/pre-push)
 # 新 clone 必跑: make install-hooks
 
 set -euo pipefail
 
-while read -r _ref _local _remote _sha; do :; done  # 消费 pre-push stdin (ref 信息)
 ROOT="$(git rev-parse --show-toplevel)"
+
+# ── 读 pre-push stdin (push ref 列表), 供 advisory 守卫 ──────────
+# stdin 格式每行: <local-ref> <local-sha> <remote-ref> <remote-sha>
+PUSH_REFS=""
+while read -r _lref _lsha _rref _rsha; do
+  PUSH_REFS="${PUSH_REFS}${_rref}
+"
+done
+
+# ── Phase 2a: direct-push-to-main advisory 守卫 ─────────────────
+# advisory 设计: 绝不阻断 push (即使守卫内部出错). { ... } || true 兜底.
+{
+  CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  # push 目标含 refs/heads/main 且当前分支非 work/* → 警告
+  if printf '%s\n' "$PUSH_REFS" | grep -qE 'refs/heads/main'; then
+    if [ -z "$CURRENT_BRANCH" ] || ! printf '%s' "$CURRENT_BRANCH" | grep -qE '^work/'; then
+      cat >&2 <<EOF
+[advisory] ⚠️ direct push to main 检测到 (当前分支: ${CURRENT_BRANCH:-detached})
+   Phase 2c 后将本地拒绝. 建议走 PR 流程:
+     bash bin/gac-worktree.sh claim <session>   # 起隔离 worktree
+     # ... 改文件, commit ...
+     bash bin/gac-worktree.sh submit <session>   # push 分支 + 开 PR
+   (advisory 阶段不阻断, 继续本次 push)
+EOF
+    fi
+  fi
+} || true
+
+# ── 治本 D: sync 子模块, 防 gitlink 悬空 ─────────────────────────
 # sync 子模块, 结果显示到 stderr; 失败即阻断 push.
 "$ROOT/bin/sync-submodules-push.sh" 2>&1 | sed 's/^/[pre-push] /' >&2
 python3 "$ROOT/bin/submodule-reachability-gate.py" --source head --fetch 2>&1 | sed 's/^/[reachability] /' >&2
