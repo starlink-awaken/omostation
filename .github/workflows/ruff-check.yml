@@ -5,6 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
       - uses: astral-sh/ruff-action@v1
         with:
           # P41-W1 fix: scope ruff to tracked Python source only (omo, agora, ecos, cockpit, scripts).

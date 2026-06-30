@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
       - name: Init scripts submodule
         # port 检查只需 scripts 子模块 (远程 omostation-scripts 存在). 不用
         # submodules: recursive — 会撞 omo/aetherforge/observability 等缺失远程

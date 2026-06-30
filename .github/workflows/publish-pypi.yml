@@ -41,6 +41,9 @@ jobs:
           - health-profile
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

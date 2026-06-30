@@ -5,6 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
       # P41-W1 fix: projects/gbrain is .gitignore'd (separate repo). The gBrain CI is intentionally
       # scoped to a no-op here because gbrain has its own CI in the gbrain repository. The main
       # omostation CI must not fail just because this monorepo excludes a sub-repo.
