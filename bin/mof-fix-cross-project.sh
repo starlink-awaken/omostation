@@ -107,9 +107,9 @@ for proj in "${SELECTED[@]}"; do
   proj_dir="$WORKSPACE_ROOT/projects/$proj"
   [[ ! -d "$proj_dir" ]] && continue
   if [[ "$proj" == "kairon" ]]; then
-    errs=$(cd "$proj_dir" && uv run ruff check packages/ --statistics 2>/dev/null | grep -E "^Found" | head -1)
+    errs=$(cd "$proj_dir" && uv run ruff check packages/ --statistics 2>/dev/null | grep -E "^Found" | head -1 || true)
   else
-    errs=$(cd "$proj_dir" && uv run ruff check src/ --statistics 2>/dev/null | grep -E "^Found" | head -1)
+    errs=$(cd "$proj_dir" && uv run ruff check src/ --statistics 2>/dev/null | grep -E "^Found" | head -1 || true)
   fi
   echo "  $proj: $errs"
 done
