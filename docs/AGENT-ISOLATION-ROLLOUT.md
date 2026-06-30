@@ -111,8 +111,9 @@
 - **ISC-3**(Phase 2,重定义 2026-06-30): main 变更走 `work/<session>` + PR,direct push main 消失。细化为子 ISC:
   - **ISC-3a**(2a): `gac-worktree.sh merge <session>` 跑通(gh pr merge --squash + release + 删分支)
   - **ISC-3b**(2c): pre-push blocking 守卫拒绝 direct push to main(非 work/* 分支,exit 1)
-  - **ISC-3c**(2d): 真实任务 PR merge 后,`post-commit` L0 萃取正常触发(`~/.ecos/commit-impact.log` 有 merge commit 记录 + 派生文件生成)
-  - **ISC-3d**(2d): 连续 ≥1 次完整 PR 流程跑通(claim→submit→merge→release),gitlink 不悬空
+  - **ISC-3c**(2d,修正): worktree commit 时 `post-commit` L0 萃取触发 (commit 级, worktree 共享 `.git/hooks`; `~/.ecos/commit-impact.log` 有记录). PR merge 是服务端 commit, **不触发本地 post-commit** — 萃取已在 worktree commit 时完成, 派生文件进 PR
+  - **ISC-3d**(2d): ≥1 次完整 PR 流程跑通(claim→submit→merge→release),gitlink 不悬空
+  - **ISC-3e**(2d smoke 发现,⚠️ 前置阻塞): worktree claim 后**必须** `git submodule update --init` 才能跑 GaC gate —— `mof-schema-validate`/`mof-state-bridge`/`mof-drift`/`governance-evolution`/`doc-ssot-lint`/`doc-ssot-snapshots` 依赖子模块(`projects/ecos`/`scripts`)内脚本, 未 init 则 6+ check FAIL. **C+D(doc-link-check scope + sync-submodules 跳过)只局部治本, 真治本是 claim 自动 init 子模块**(待实现, 见 §10 followup)
 - **ISC-4**(Phase 3): `gh api repos/starlink-awaken/omostation/branches/main/protection` 返回 **200**(非 404)。
 - **ISC-5**(Phase 3): direct push main 被拒(实测 `git push origin main` 被 GitHub 拒,提示需 PR)。
 - **ISC-6**(全程): `gac-local-gate` 在 per-session worktree 下仍 PASS(临时治本兼容,第二道防线不破)。
@@ -157,3 +158,5 @@
 | 2026-06-30 | 创建: 现状铁证 + 三阶段落地计划(基于 commit 死循环治本的后续终态规划) |
 | 2026-06-30 | 脚本优化: `gac-branch-protection.sh` +`--yes` 非交互(agent/CI 可跑)/`--check` 解析各项保护状态/`--help`; `gac-worktree.sh` +session 命名校验/claim 分支冲突检测(claim→release 全链路验证 PASS, 无残留) |
 | 2026-06-30 | **Phase 0 OBSERVE 真相纠正**: 代码实证推翻"eCOS X-Plane Audit Agent 程序化 auto push"旧认知(X-Plane Audit Agent = git identity;post-commit 不 push 只 L0 萃取;无 watcher/daemon)。Phase 2 重定义为 direct-push→PR 范式转变 + 5 子阶段(2a-2e)。TL;DR/Phase 2/前置依赖/ISC-3/关联 全部纠正 |
+| 2026-06-30 | Phase 2a/2b 落地(commit `74c4b444`): pre-push advisory 守卫(实战验证 PASS — direct push main 警告不阻断) + `gac-worktree.sh merge` 子命令 + 子模块 PR 策略(方案 A', `docs/SUBMODULE-PR-STRATEGY.md`) + AGENTS.md §6.1 |
+| 2026-06-30 | **Phase 2d smoke 深层发现 + C+D 治本**(commit `fda2c0f0`): smoke 暴露 worktree 隔离 + worktree-wide GaC check 冲突. C+D 局部治本(doc-link-check `--files` scope staged + sync-submodules 未 init 跳过, ISC-W1/W2 验证 PASS). **ISC-3e 发现**: 6+ check 依赖子模块脚本(mof-*/governance-evolution/doc-ssot-*), 未 init 跑不了 → **真治本是 claim 自动 init 子模块**(C+D 只局部). smoke 已 release, 核心发现已得, submit/merge 待 claim-init 实现后重跑 |
