@@ -1,0 +1,32 @@
+# M1 Node: DOMAIN-spaces
+# Type: Domain | Subtype: WorkspaceDomain
+# Generated: 2026-06-30 · l4-kernel registry 对齐补建
+
+id: DOMAIN-spaces
+type: Domain
+name: Spaces
+description: Workspace 空间域 — 多 Agent / 会话空间准入与隔离
+status: active
+domain: meta
+created: '2026-06-30'
+version: 1.0.0
+layer: L0
+properties:
+  bos_uri_pattern: bos://spaces/**
+  domain_type: workspace
+  layer: L0
+  governance_tier: 1
+  storage: ~/Workspace/spaces
+  capabilities:
+  - space.read
+  - space.write
+  - space.admission
+subtype: WorkspaceDomain
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-30T00:00:00Z'
+    reason: backfill_from_registry  # 域 2026-06-24 注册，M1 节点 2026-06-30 补建对齐 l4-kernel registry

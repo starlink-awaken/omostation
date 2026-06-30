@@ -1,0 +1,69 @@
+id: WORKFLOW-AGENT-GOVERNANCE-CONTROL-PLANE
+type: Workflow
+subtype: AgentGovernanceWorkflow
+name: Agent Governance Control Plane
+description: Executable agent governance workflow that replaces prompt-memory-only constraints with bootstrap, status, claim, verify, closeout, and compliance evidence.
+status: active
+version: 1.0.0
+domain: governance
+layer: L3
+created: '2026-06-30'
+bos_uri: bos://ecos/workflow/agent-governance-control-plane
+cross_layer:
+  realized_by:
+    - project: workspace
+      package: agent-workflow
+      entrypoint: bin/agent-workflow.py
+    - project: cockpit
+      package: cockpit
+      entrypoint: src/cockpit/commands/agent_workflow.py
+  invoked_by:
+    - layer: L3
+      component: cockpit
+      mechanism: cockpit agent
+    - layer: I0
+      component: agora
+      mechanism: bos://governance/agent-workflow/*
+    - layer: L0
+      component: gac
+      mechanism: make gac-local-gate
+properties:
+  workflow_name: Agent Governance Control Plane
+  steps:
+    - bootstrap
+    - status
+    - start
+    - claim
+    - verify
+    - closeout
+    - compliance
+  trigger: agent-invoke
+execution:
+  mode: workflow
+  backend: agent-workflow
+  max_retries: 1
+  timeout: 1800
+  on_failure: abort
+  audit_enabled: true
+relations:
+  - type: realizes
+    target: .omo/_truth/registry/agent-workflows.yaml
+    note: Workflow registry remains the SSOT for agent profiles, lanes, locks, diff checks, integrations, and adapters.
+  - type: enforces
+    target: .omo/_truth/registry/governance-checks.yaml
+    note: GaC remains the governance rule SSOT and gate authority.
+  - type: brokers_state
+    target: projects/omo
+    note: OMO remains the governed state mutation authority.
+  - type: routes_strategy
+    target: projects/c2g
+    note: C2G remains the strategy/spec ingress authority.
+  - type: models
+    target: .omo/_truth/registry/mof-capabilities.yaml
+    note: MOF remains the model registry and state bridge authority.
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+  - state: active
+    timestamp: '2026-06-30T00:00:00Z'
+    reason: agent_governance_control_plane_landed

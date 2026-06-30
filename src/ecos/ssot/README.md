@@ -1,6 +1,6 @@
 # 织星 L0 — 协议编织层
 
-> eCOS v5.3 | 织星架构 (Stellar Weave) | 2026-06-06
+> eCOS v6.3 | 织星架构 (Stellar Weave) | 2026-06-06
 > L0 是 MetaOS 的架构 DNA 编译器——系统的自我描述与治理引擎
 
 ---

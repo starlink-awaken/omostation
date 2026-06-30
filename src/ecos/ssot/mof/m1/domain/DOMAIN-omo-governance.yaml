@@ -1,0 +1,32 @@
+# M1 Node: DOMAIN-omo-governance
+# Type: Domain | Subtype: WorkspaceDomain
+# Generated: 2026-06-30 · l4-kernel registry 对齐补建
+
+id: DOMAIN-omo-governance
+type: Domain
+name: OMO Governance
+description: Workspace 治理面 — .omo 任务/状态/目标/事件 SSOT
+status: active
+domain: meta
+created: '2026-06-30'
+version: 1.0.0
+layer: L0
+properties:
+  bos_uri_pattern: bos://omo-governance/**
+  domain_type: workspace
+  layer: L0
+  governance_tier: 1
+  storage: ~/Workspace/.omo
+  capabilities:
+  - governance.read
+  - governance.write
+  - governance.audit
+subtype: WorkspaceDomain
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-30T00:00:00Z'
+    reason: backfill_from_registry  # 域 2026-06-24 注册，M1 节点 2026-06-30 补建对齐 l4-kernel registry

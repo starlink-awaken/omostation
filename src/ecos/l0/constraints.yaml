@@ -464,6 +464,26 @@ domain_registry:
     domain_type: tool
     storage: "/Users/xiamingxing/ToolBox/"
     description: "MCP工具集 — bos-skill-cli/wps-office-mcp/wps-skills"
+    # 2026-06-30: 补全 governance 字段 (CS-10 BOS URI 元数据)
+    governance_tier: 2
+    status: active
+    claude_md: "CLAUDE.md"
+    state_md: "AUDIT.md"
+    cards_domain: "tool"
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: false
+    x3_value: false
+    # 收敛到 bos://capability/ 域 (5 域锁定), 不创建新域
+    bos_uri_root: "bos://capability"
+    bos_services:
+      - "bos://capability/wps-office-mcp/invoke"
+      - "bos://capability/wps-skills/load"
+      - "bos://capability/bos-skill-cli/exec"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/"
 
   - id: sharedwork
     name: "SharedWork"
@@ -471,6 +491,22 @@ domain_registry:
     domain_type: workspace
     storage: "/Users/xiamingxing/SharedWork/"
     description: "协作工作空间 — Agent/CLI/DeepResearch/Design/Ecology/Edu/Gateway/Knowledge/MCP"
+    # 2026-06-30: 补全 governance 字段
+    governance_tier: 2
+    status: active
+    claude_md: "CLAUDE.md"
+    state_md: "INDEX.md"
+    cards_domain: "tool"
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: false
+    x3_value: false
+    bos_uri_root: "bos://sharedwork"
+    bos_services:
+      - "bos://sharedwork/agent/*"
+      - "bos://sharedwork/mcp/*"
+      - "bos://sharedwork/skills/*"
+      - "bos://sharedwork/project/*"
 
   # ── 存储域 + 模型域 (Volumes) ──
   - id: shareddisk

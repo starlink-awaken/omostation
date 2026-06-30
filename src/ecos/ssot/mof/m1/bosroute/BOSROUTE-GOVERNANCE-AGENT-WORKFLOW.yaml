@@ -1,0 +1,28 @@
+id: BOSROUTE-GOVERNANCE-AGENT-WORKFLOW
+type: Component
+subtype: BOSRoute
+name: bos://governance/agent-workflow/*
+description: Agora BOS governance route family for agent workflow bootstrap, verify-plan, observe, compliance, and doctor services.
+status: active
+domain: governance
+created: '2026-06-30'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI
+  uri_pattern: bos://governance/agent-workflow/*
+  adapter_type: stdio
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: etc/bos-services.yaml
+  related_workflows:
+    - WORKFLOW-AGENT-GOVERNANCE-CONTROL-PLANE
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+  - state: active
+    timestamp: '2026-06-30T00:00:00Z'
+    reason: agent_workflow_bos_routes_landed
