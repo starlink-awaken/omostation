@@ -29,7 +29,7 @@
                     └──────────────────────────────┬──────────────────────────────────┘
                                                    │
                     ┌──────────────────────────────┴──────────────────────────────────┐
-                    │                    L3 入口层 (cockpit + cockpit-ui)               │
+                    │                    L3 入口层 (cockpit + mounted cockpit-ui)      │
                     │    CLI 子命令 · Web · MCP tools (见 project-registry.yaml: cockpit)         │
                     │    cockpit-ui 视图组件 (Vite/React)                          │
                     └──────────┬───────────────────────────────────┬──────────────────┘
@@ -78,7 +78,7 @@
 | 层 | 项目 | 核心职责 |
 |:--:|------|---------|
 | **L4** | l4-kernel | 自我层管理面: 域注册 (见 project-registry.yaml: l4-kernel.domains), KEMS 六面, 健康聚合, 信号总线 |
-| **L3** | cockpit, cockpit-ui | 统一入口: CLI + Web + MCP, 唯一人类入口 |
+| **L3** | cockpit | 统一入口: CLI + Web + MCP, 唯一人类入口 (cockpit-ui 挂载至 cockpit, layer=X) |
 | **I0** | agora | 织层: MCP Hub, BOS URI 路由, A2A, 联邦, 限流/熔断/缓存 |
 | **L2** | kairon, gbrain, omo, metaos | 引擎面: 知识/治理/编排 |
 | **L1** | runtime | 运行时: Matrix, KEI 沙箱, Cron, Executor |

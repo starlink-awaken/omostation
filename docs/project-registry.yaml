@@ -187,7 +187,8 @@ projects:
     note: "非 git 子模块，直接在 projects/ 下"
 
   toolbox:
-    layer: "X"
+    layer: "L1-L3"
+    layer_aligned_with: "ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-toolbox-tools.yaml"
     stack: "Multi (TypeScript MCP / JS Skills / Python CLI)"
     role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP / Skill / CLI)"
     storage: "/Users/xiamingxing/ToolBox/"
