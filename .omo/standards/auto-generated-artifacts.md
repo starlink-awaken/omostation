@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-29
+---
+
 # 自动生成产物治理标准
 
 > 作用域: 根仓库 `.omo/`、`bin/`、`docs/` 中由 post-commit hook / CI / Agent 自动生成的文件。

@@ -1,7 +1,13 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-29
+---
+
 # Agent Mutation Protocol — 自治代理写入协议
 
 > 适用范围: 所有在 workspace 中自动运行的 AI Agent / cron / daemon
-> 确立时间: 2026-06-24
 > 关联规则: direct-omo-io baseline, SSOT guardian, OMO event log
 
 ## 1. 核心原则

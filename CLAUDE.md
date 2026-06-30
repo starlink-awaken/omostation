@@ -10,6 +10,7 @@ Before changing code or governed state, load the current context:
 
 ```bash
 uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
 ```
 
 If task-specific runtime facts are needed, read the SSOT files reported by `bootstrap` instead of copying values into this document. If MCP context is available, prefer the cockpit workspace-context tool.
@@ -58,8 +59,14 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" agents
 uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
 uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
 uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
+uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
+uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
+uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
 uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
+uv run --with "pyyaml" python "bin/gac-local-gate.py" --scope files --file <path> --json
 uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
 uv run --with "pyyaml" python "bin/ssot-guardian.py"
 bash "tests/integration/run-all.sh"
@@ -75,8 +82,14 @@ cd "projects/gbrain" && bun test
 | Layer/project placement | [`LAYER-INDEX.md`](LAYER-INDEX.md) |
 | Agent development rules | [`AGENTS.md`](AGENTS.md) |
 | Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
+| System panorama & BOS routing | [`docs/PANORAMA.md`](docs/PANORAMA.md) |
+| Architecture deep-dive | [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) |
+| Functional capability map | [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) |
+| Agora callchain | [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) |
+| Vision & roadmap | [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) |
 | OMO governance kernel rules | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | Executable agent workflows | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| AGCP status/scoped gate/claim policy | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
 | Internal integration contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" integrations` |
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | External adapter contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" adapters` |

@@ -51,7 +51,7 @@ last-reviewed: 2026-06-29
 | `x3-value-stack-standard.md` | X3 价值栈与成本归因标准 |
 | `x4-hitl-mutation-standard.md` | X4 HITL 变更生命周期 |
 
-## Archived (moved to .omo/_archived/standards/)
+## Archived (moved to .omo/_archive/standards/)
 
 | 文件 | 原状态 | 归档原因 |
 |------|--------|----------|

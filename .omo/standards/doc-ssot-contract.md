@@ -1,9 +1,11 @@
-# 文档 SSOT 正交契约 (Doc SSOT Orthogonal Contract)
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-29
+---
 
-> **status**: active
-> **lifecycle**: contract
-> **owner**: governance-team
-> **last-reviewed**: 2026-06-27
+# 文档 SSOT 正交契约 (Doc SSOT Orthogonal Contract)
 
 ## 问题
 

@@ -41,7 +41,7 @@
 | 步骤 | 操作 | 工具 | 输出 |
 |------|------|------|------|
 | 1. 发现 | 搜索相关文档/代码 | cockpit search | 相关文件列表 |
-| 2. 学习 | 阅读 CAPABILITY-MAP + README | 文档 | 理解架构 |
+| 2. 学习 | 阅读 docs/FUNCTIONAL-CAPABILITY-MAP.md + README | 文档 | 理解架构 |
 | 3. 编码 | 编写代码 | IDE | 代码文件 |
 | 4. 测试 | 运行测试 | make test | 测试报告 |
 | 5. 提交 | git commit | git | 提交记录 |
@@ -93,9 +93,9 @@
 
 | 步骤 | 操作 | 工具 | 输出 |
 |------|------|------|------|
-| 1. 评估现状 | 审查现有架构 | CAPABILITY-MAP | 架构评估 |
+| 1. 评估现状 | 审查现有架构 | docs/FUNCTIONAL-CAPABILITY-MAP.md | 架构评估 |
 | 2. 设计方案 | 设计新方案 | 手动 | 设计文档 |
-| 3. 验证 | 治理检查 | make x1-x4-check | 检查报告 |
+| 3. 验证 | 治理检查 | make gac-local-gate | 检查报告 |
 | 4. 实施 | 编码实现 | IDE | 代码 |
 | 5. 治理 | 持续监控 | governance_check | 治理报告 |
 
@@ -321,7 +321,7 @@ steps:
     name: 触发检查
     inputs: [检查请求]
     outputs: [检查任务]
-    tools: [make x1-x4-check]
+    tools: [make gac-local-gate]
     
   - id: execute
     name: 执行检查
@@ -418,7 +418,7 @@ steps:
 ## 前置条件
 - 已安装 uv/bun
 - 已配置 git
-- 已阅读 CAPABILITY-MAP.md
+- 已阅读 docs/FUNCTIONAL-CAPABILITY-MAP.md
 
 ## 操作步骤
 
@@ -482,8 +482,8 @@ steps:
 - **文档过时**: 更新文档内容
 
 ## 相关文档
-- CAPABILITY-MAP.md
-- USAGE-GUIDE.md
+- docs/FUNCTIONAL-CAPABILITY-MAP.md
+- AGENTS.md
 - CONTRIBUTING.md
 ```
 
@@ -501,7 +501,7 @@ steps:
 ## 前置条件
 - 已安装 kairon
 - 已配置 KOS
-- 已阅读 CAPABILITY-MAP.md
+- 已阅读 docs/FUNCTIONAL-CAPABILITY-MAP.md
 
 ## 操作步骤
 
@@ -558,8 +558,8 @@ steps:
 - **结论不确定**: 标注置信度
 
 ## 相关文档
-- CAPABILITY-MAP.md
-- KOS 使用指南
+- docs/FUNCTIONAL-CAPABILITY-MAP.md
+- projects/kairon/README.md
 ```
 
 ### 4.4 治理检查 SOP
@@ -576,13 +576,13 @@ steps:
 ## 前置条件
 - 已安装 ecos
 - 已配置治理框架
-- 已阅读 CAPABILITY-MAP.md
+- 已阅读 docs/FUNCTIONAL-CAPABILITY-MAP.md
 
 ## 操作步骤
 
 ### 步骤1: 触发检查
 **操作**: 启动治理检查
-**工具**: make x1-x4-check
+**工具**: make gac-local-gate
 **输入**: 检查请求
 **输出**: 检查任务
 **注意事项**: 定期执行
@@ -640,7 +640,7 @@ steps:
 - **修复困难**: 寻求专家帮助
 
 ## 相关文档
-- X1-X4 治理框架
+- .omo/standards/ (x1-x4 标准)
 - 治理 SLA 标准
 ```
 
@@ -658,7 +658,7 @@ steps:
 ## 前置条件
 - 已安装 runtime
 - 已配置监控
-- 已阅读 CAPABILITY-MAP.md
+- 已阅读 docs/FUNCTIONAL-CAPABILITY-MAP.md
 
 ## 操作步骤
 
@@ -715,8 +715,8 @@ steps:
 - **告警误报**: 调整告警规则
 
 ## 相关文档
-- runtime 使用指南
-- 监控配置文档
+- projects/runtime/README.md
+- projects/observability/README.md
 ```
 
 ---
@@ -766,7 +766,7 @@ steps:
 
 ### 7.1 开发最佳实践
 
-1. **先读文档** — 开发前阅读 CAPABILITY-MAP
+1. **先读文档** — 开发前阅读 docs/FUNCTIONAL-CAPABILITY-MAP.md
 2. **遵循规范** — 遵循代码规范和提交规范
 3. **测试先行** — 编写测试再编写代码
 4. **持续集成** — 使用 CI 自动化测试

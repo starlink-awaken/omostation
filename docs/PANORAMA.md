@@ -225,20 +225,20 @@ script / wrapper / cron
 
 > 这一节只保留验证点类型，不记录会漂移的通过数/版本号。
 
-| 集成点 | 详情 | 状态 |
-|--------|------|:----:|
-| cockpit MCP `workspace_context` | cocktail_mcp.py:473 | ✅ |
-| cockpit HTTP `/api/context` | dashboard_server.py → delegation | ✅ |
-| cockpit MCP `cards_status`, `cards_check` | cocktail_mcp.py:514,541 | ✅ |
-| cockpit CLI `cards --check` | cli.py:432 → l4bridge.py | ✅ |
+| 集成点 | 验证方式 | 状态 |
+|--------|---------|:----:|
+| cockpit MCP `workspace_context` | `cockpit_mcp.py` workspace_context 工具 | ✅ |
+| cockpit HTTP `/api/context` | `dashboard_server.py` → delegation | ✅ |
+| cockpit MCP `cards_status`, `cards_check` | `cockpit_mcp.py` cards 工具 | ✅ |
+| cockpit CLI `cards --check` | `cli.py` → `l4bridge.py` | ✅ |
 | l4-kernel ↔ DOMAIN-INDEX ID | 域注册表对齐 | ✅ |
 | l4-kernel ↔ DOMAIN-INDEX 路径 | `expanduser()` 一致 | ✅ |
-| `_runtime/` 治理脚本 | 有共享治理脚本链路 | ✅ |
-| `cockpit health --full` L4 | 新增 L4 文档域子进程 | ✅ |
+| 治理脚本链路 | 共享治理脚本链路存在 | ✅ |
+| `cockpit health --full` L4 | L4 文档域子进程 | ✅ |
 | 架构版本 | 统一 5+4+1+1 口径 | ✅ |
 | Phase 映射 | 双系统映射存在 | ✅ |
 | @驾驶舱跟踪 | 受版本控制 | ✅ |
-| Dashboard 刷新 | 有独立状态面与刷新链路 | ✅ |
+| Dashboard 刷新 | 独立状态面与刷新链路 | ✅ |
 | 子模块指针 | ecos/l4-kernel 同步 | ✅ |
 
 ---
