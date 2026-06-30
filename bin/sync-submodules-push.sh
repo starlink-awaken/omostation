@@ -23,9 +23,10 @@ pushed=0; pending=0; noupstream=0; missing=0; failed=0
 while IFS= read -r sm; do
   [ -z "$sm" ] && continue
   if [ ! -d "$sm/.git" ] && [ ! -f "$sm/.git" ]; then
+    # Phase 2a (2026-06-30): worktree 按需 init 子模块是合法的 (主仓文件改动不涉子模块).
+    # 未 init 无"领先"可言, 跳过 (不计 failed). gitlink 可达性由 submodule-reachability-gate 单独管.
     missing=$((missing+1))
-    echo "❌ $sm: .gitmodules 已登记, 但工作树不存在或未初始化"
-    failed=$((failed+1))
+    echo "⏭ $sm: 子模块未初始化 (worktree 按需 init 合法), 跳过"
     continue
   fi
 

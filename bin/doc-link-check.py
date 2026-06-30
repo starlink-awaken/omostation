@@ -120,12 +120,47 @@ def run() -> dict[str, object]:
     }
 
 
+def run_files(paths: list[str]) -> dict[str, object]:
+    """scope 模式: 只检查指定文件的链接 (worktree-aware, 避免子模块未 init 误报).
+
+    用于 GaC gate 非-strict 模式: pre-commit 只查 staged 文档的链接,
+    agent 没碰的文档既有断链不计 (CI strict 跑全量兜底).
+    """
+    seen: set[Path] = set()
+    docs: list[Path] = []
+    for raw in paths:
+        path = WORKSPACE / raw
+        if not path.is_file():
+            continue
+        resolved = path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        docs.append(path)
+    findings: list[dict[str, object]] = []
+    for doc in docs:
+        findings.extend(check_file(doc))
+    return {
+        "ok": not findings,
+        "files_scanned": len(docs),
+        "broken_links": len(findings),
+        "findings": findings,
+        "scoped": True,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check local links in agent-facing Markdown docs")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    parser.add_argument(
+        "--files",
+        nargs="*",
+        default=[],
+        help="scope 模式: 只查指定文件链接 (默认扫所有 agent-facing docs; GaC gate 非-strict 用此模式避免 worktree 子模块未 init 误报)",
+    )
     args = parser.parse_args()
 
-    result = run()
+    result = run_files(args.files) if args.files else run()
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     elif result["ok"]:

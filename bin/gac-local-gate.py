@@ -127,6 +127,27 @@ def scoped_change_lane_command(
     return ["bin/change-lane-check.py", *[part for path in scoped_files for part in ("--file", path)]]
 
 
+def scoped_doc_link_command(
+    scope: str = "staged",
+    files: list[str] | None = None,
+    run_id: str = "",
+    strict: bool = False,
+) -> list[str] | None:
+    """doc-link-check scope staged (worktree-aware, Phase 2 C 治本 2026-06-30).
+
+    非-strict: 只查 staged 文档的链接, 避免子模块未 init/generated/untracked
+    在 worktree 误报断链 (主仓全 init PASS, worktree 按需 init). 无 staged md → None (skip).
+    strict (CI): 跑全量兜底 (仓库整体链接健康).
+    """
+    if strict:
+        return ["bin/doc-link-check.py"]
+    scoped_files = change_lane_files_for_scope(scope, files, run_id)
+    md_files = sorted({f for f in scoped_files if f.endswith(".md")})
+    if not md_files:
+        return None  # agent 没改文档 → 不需查链接, skip
+    return ["bin/doc-link-check.py", "--files", *md_files]
+
+
 # doctor/compliance/verify-plan 用 worktree-wide 命令, 并发 dirty 会污染.
 # 只在 staged 涉 agent-workflow 时跑 (隔离并发), strict 模式 (CI) 跑全套.
 AGENT_WORKFLOW_GATE_CHECKS = {"agent-workflow-verify-plan", "agent-workflow-compliance", "agent-workflow-doctor"}
@@ -169,6 +190,11 @@ def gate_checks(
             continue  # 全局 digest pre-commit 不稳定 (hook stash 并发 dirty) → CI 兜底
         if name == "change-lane-check":
             result.append((name, scoped_change_lane_command(scope, files, run_id)))
+        elif name == "doc-link-check":
+            cmd = scoped_doc_link_command(scope, files, run_id, strict)
+            if cmd is None:
+                continue  # 无 staged md → skip (worktree-aware, Phase 2 C 治本)
+            result.append((name, cmd))
         else:
             result.append((name, command))
     return tuple(result)
