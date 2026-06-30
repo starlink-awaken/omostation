@@ -7,6 +7,7 @@ DRY: 复用 projects/c2g/ CLI, 不重复造轮子
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -78,7 +79,9 @@ def main() -> int:
     elif args.command == "gc" and getattr(args, "dry_run", False):
         cmd.append("--dry-run")
 
-    return subprocess.run(cmd, cwd=str(_WORKSPACE_ROOT)).returncode
+    # 清 VIRTUAL_ENV/PYTHONHOME 避免 uv venv 冲突 (cockpit → c2g subprocess 继承父环境)
+    env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
+    return subprocess.run(cmd, cwd=str(_WORKSPACE_ROOT), env=env).returncode
 
 
 if __name__ == "__main__":

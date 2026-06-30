@@ -483,6 +483,24 @@ def main() -> int:
         nargs=argparse.REMAINDER,
         help="Arguments passed to bin/agent-workflow.py",
     )
+    agent_p = sub.add_parser(
+        "agent",
+        help="🤖 Agent 治理控制入口 (bootstrap / start / claim / verify / closeout)",
+        epilog=(
+            "示例:\n"
+            "  cockpit agent\n"
+            '  cockpit agent start project-doc-change --profile governance-agent --objective "docs"\n'
+            "  cockpit agent claim <run-id> --path AGENTS.md\n"
+            "  cockpit agent verify <run-id> --from-diff --execute\n"
+            "  cockpit agent closeout <run-id>"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    agent_p.add_argument(
+        "agent_args",
+        nargs=argparse.REMAINDER,
+        help="Arguments passed to bin/agent-workflow.py",
+    )
 
     # Gap #8: C2G 双擎编排流入口 (Phase 40)
     iterate_p = sub.add_parser("iterate", help="♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)")
@@ -657,11 +675,14 @@ def main() -> int:
         return cmd_iterate(a)
 
     def dispatch_compass(a):
+        import os
         import subprocess
 
         c2g_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "c2g").resolve())
         cmd = ["uv", "run", "--project", c2g_project, "c2g"] + getattr(a, "compass_args", [])
-        return subprocess.call(cmd)
+        # 清 VIRTUAL_ENV 避免 uv venv 冲突 (cockpit → c2g subprocess 继承父环境)
+        env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
+        return subprocess.call(cmd, env=env)
 
     def dispatch_workflow(a):
         from cockpit.commands.workflow import handle_workflow
@@ -780,6 +801,7 @@ def main() -> int:
         "compass": dispatch_compass,
         "workflow": dispatch_workflow,
         "agent-workflow": dispatch_agent_workflow,
+        "agent": dispatch_agent_workflow,
         "monitor": dispatch_monitor,
         "data": dispatch_data,
         "contracts": dispatch_contracts,

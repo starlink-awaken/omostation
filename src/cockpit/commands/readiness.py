@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+import sys
 from pathlib import Path
 
 from ..data_index import resolve_workspace_root
@@ -25,6 +26,11 @@ def _run_readiness_summary(args: list[str], workspace_root: Path) -> int:
     cmd = ["python3", str(bin_tool), *args]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=workspace_root, timeout=60)
+        # 转发子进程输出 (修复 capture_output 吞输出 → readiness 空显示 bug)
+        if result.stdout:
+            sys.stdout.write(result.stdout)
+        if result.stderr:
+            sys.stderr.write(result.stderr)
         return result.returncode
     except Exception as e:  # defensive fallback
         console = _get_console()
