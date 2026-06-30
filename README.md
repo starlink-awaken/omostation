@@ -32,7 +32,8 @@ For the complete architecture, read [`ARCHITECTURE.md`](ARCHITECTURE.md). Projec
 |----------|-------|-----------------|
 | Human CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI agent | `agora` MCP with `bos://` URIs | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
-| Agent workflow | `bin/agent-workflow.py` / `cockpit agent-workflow` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Agent workflow | `bin/agent-workflow.py status` / `cockpit agent status` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Governance evolution | `cockpit governance evolution` | [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml) |
 | Governance | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | MOF model governance | `mof-*` tools via agent workflow | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | External adapter contracts | `bin/agent-workflow.py adapters` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
@@ -58,7 +59,11 @@ cd projects/gbrain && bun test
 | [`CLAUDE.md`](CLAUDE.md) | AI session context loader |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stable architecture contracts |
 | [`LAYER-INDEX.md`](LAYER-INDEX.md) | Layer and project placement |
-| [`docs/PANORAMA.md`](docs/PANORAMA.md) | Product and capability panorama |
+| [`docs/PANORAMA.md`](docs/PANORAMA.md) | System panorama and BOS routing |
+| [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) | Architecture deep-dive |
+| [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) | Functional capability map |
+| [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) | Agora BOS URI callchain |
+| [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) | Vision and roadmap |
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | Project metadata SSOT |
 | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | Documentation SSOT contract |
 
@@ -68,7 +73,8 @@ cd projects/gbrain && bun test
 - Current goals: [`.omo/goals/current.yaml`](.omo/goals/current.yaml)
 - Governance kernel: [`projects/omo/`](projects/omo/)
 - Governance-as-Code registry: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
-- Executable agent workflows: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
+- Executable agent workflows and AGCP status: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
+- Governance evolution roadmap: [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml)
 - MOF capability registry: [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml)
 
 ### License
@@ -97,7 +103,8 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 |------|------|----------|
 | 人类 CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI Agent | `agora` MCP + `bos://` URI | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
-| Agent 工作流 | `bin/agent-workflow.py` / `cockpit agent-workflow` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Agent 工作流 | `bin/agent-workflow.py status` / `cockpit agent status` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| 治理演进 | `cockpit governance evolution` | [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml) |
 | 治理操作 | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | MOF 模型治理 | agent workflow 调用 `mof-*` 工具 | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | 外部适配器契约 | `bin/agent-workflow.py adapters` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
@@ -123,7 +130,11 @@ cd projects/gbrain && bun test
 | [`CLAUDE.md`](CLAUDE.md) | AI 会话上下文加载器 |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | 稳定架构契约 |
 | [`LAYER-INDEX.md`](LAYER-INDEX.md) | 分层与项目位置索引 |
-| [`docs/PANORAMA.md`](docs/PANORAMA.md) | 产品与能力全景 |
+| [`docs/PANORAMA.md`](docs/PANORAMA.md) | 系统全景与 BOS 路由 |
+| [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) | 架构细化地图 |
+| [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) | 功能能力地图 |
+| [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) | Agora BOS URI 调用链 |
+| [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) | 愿景与路线图 |
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | 项目元数据 SSOT |
 | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | 文档 SSOT 契约 |
 
@@ -133,7 +144,8 @@ cd projects/gbrain && bun test
 - 当前目标: [`.omo/goals/current.yaml`](.omo/goals/current.yaml)
 - 治理内核: [`projects/omo/`](projects/omo/)
 - Governance-as-Code 注册表: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
-- 可执行 Agent 工作流: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
+- 可执行 Agent 工作流与 AGCP 状态入口: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
+- 治理演进路线图: [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml)
 - MOF 能力注册表: [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml)
 
 ### 许可证

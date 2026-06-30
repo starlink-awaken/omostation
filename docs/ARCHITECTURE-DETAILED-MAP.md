@@ -25,19 +25,19 @@
 ```
                     ┌─────────────────────────────────────────────────────────────────┐
                     │                    L4 自我层 (l4-kernel)                        │
-                    │           28 域注册 · KEMS 六面 · 42 MCP tools · 信号总线         │
+                    │           域注册 · KEMS 六面 · MCP tools · 信号总线 (见 project-registry.yaml)         │
                     └──────────────────────────────┬──────────────────────────────────┘
                                                    │
                     ┌──────────────────────────────┴──────────────────────────────────┐
                     │                    L3 入口层 (cockpit + cockpit-ui)               │
-                    │    CLI 24 子命令 · Web :8090 (15 routers) · MCP 33 tools         │
-                    │    cockpit-ui 24+ 视图组件 (Vite/React)                          │
+                    │    CLI 子命令 · Web · MCP tools (见 project-registry.yaml: cockpit)         │
+                    │    cockpit-ui 视图组件 (Vite/React)                          │
                     └──────────┬───────────────────────────────────┬──────────────────┘
                                │                                   │
                     ┌──────────▼──────────┐          ┌────────────▼──────────────────┐
                     │  I0 织层 (agora)     │          │  X 横切框架                    │
-                    │  MCP Hub 48+ tools    │          │  model-driven (M0): 7阶段+门禁 │
-                    │  BOS URI 100 服务     │          │  bus-foundation: Omni-Bus 三平面│
+                    │  MCP Hub (见 project-registry.yaml: agora)    │          │  model-driven (M0): 7阶段+门禁 │
+                    │  BOS URI 服务 (见 project-registry.yaml: bos)     │          │  bus-foundation: Omni-Bus 三平面│
                     │  A2A · 联邦 · 代理    │          │  aetherforge: LLM网关+网格+蜂群 │
                     │  限流/熔断/缓存       │          │  c2g: 战略需求引擎              │
                     └──┬──────┬──────┬─────┘          │  omo-debt: 债务评分             │
@@ -47,7 +47,7 @@
          │                    │                    │
 ┌────────▼─────────┐ ┌───────▼────────┐ ┌────────▼─────────┐
 │  L2 知识引擎      │ │  L2 治理面     │ │  L2 编排引擎      │
-│  kairon (16 包)   │ │  omo (173 文件) │ │  metaos          │
+│  kairon (见 project-registry.yaml: kairon.packages)   │ │  omo (见 project-registry.yaml: omo.src_files) │ │  metaos          │
 │  gbrain (70 ops)  │ │  治理/任务/债务  │ │  门控/DAG/免疫    │
 │  搜索/摄取/推导    │ │  自愈/GaC      │ │  认知框架         │
 └────────┬─────────┘ └────────┬───────┘ └────────┬────────┘
@@ -66,7 +66,7 @@
          │  MOF M3→M2→M1        │
          │  SSB 签名链           │
          │  M1 节点 (见 project-registry.yaml: m1_yaml)         │
-         │  34 mof-* 工具        │
+         │  mof-* 工具 (见 project-registry.yaml: ecos.mof_tools)        │
          │  workflow 引擎        │
          └─────────────────────┘
 ```
@@ -77,7 +77,7 @@
 
 | 层 | 项目 | 核心职责 |
 |:--:|------|---------|
-| **L4** | l4-kernel | 自我层管理面: 28 域注册, KEMS 六面, 健康聚合, 信号总线 |
+| **L4** | l4-kernel | 自我层管理面: 域注册 (见 project-registry.yaml: l4-kernel.domains), KEMS 六面, 健康聚合, 信号总线 |
 | **L3** | cockpit, cockpit-ui | 统一入口: CLI + Web + MCP, 唯一人类入口 |
 | **I0** | agora | 织层: MCP Hub, BOS URI 路由, A2A, 联邦, 限流/熔断/缓存 |
 | **L2** | kairon, gbrain, omo, metaos | 引擎面: 知识/治理/编排 |
@@ -153,7 +153,7 @@
 
 ## 3. 各项目内部模块架构
 
-### 3.1 omo — 治理内核 (173 文件)
+### 3.1 omo — 治理内核 (见 project-registry.yaml: omo.src_files)
 
 | 模块组 | 文件数 | 职责 | 核心数据结构 |
 |--------|:------:|------|-------------|
@@ -186,7 +186,7 @@ omo_audit/omo_event/omo_bos_metrics → AppendOnlyLog.append() → fcntl_lock �
 |--------|------|------|-------------|
 | SSOT (MOF) | `ssot/mof/` | M3→M2→M1 元模型层次 | MOF M3 (7 阶段), M2 (48 schema), M1 (见 project-registry.yaml: m1_yaml) |
 | SSOT 注册表 | `ssot/registry/` | L0 约束 SSOT | `L0-constraints.yaml` (GaC 规则 (见 project-registry.yaml: gac.rules_count)) |
-| SSOT 工具 | `ssot/tools/` (34 文件) | MOF 工具链 | validate/audit/derive/bridge-sync/state-bridge |
+| SSOT 工具 | `ssot/tools/` (见 project-registry.yaml: ecos.mof_tools) | MOF 工具链 | validate/audit/derive/bridge-sync/state-bridge |
 | Workflow | `workflow/` | M1 DSL → loader → validator → executor | `WorkflowEngine` |
 | L0 核心 | `l0/` | SSB + emergence + governance | SSB 签名链 |
 | Services | `services/` | 治理/集成/监控 | — |
@@ -194,7 +194,7 @@ omo_audit/omo_event/omo_bos_metrics → AppendOnlyLog.append() → fcntl_lock �
 
 **状态管理**: YAML SSOT (M3/M2/M1 + 注册表) + SSB 签名链 (不可篡改)
 
-### 3.3 kairon — 知识引擎 (16 包 monorepo)
+### 3.3 kairon — 知识引擎 (见 project-registry.yaml: kairon.packages) monorepo
 
 | 包 | 职责 | 依赖 |
 |---|------|------|
@@ -222,25 +222,25 @@ omo_audit/omo_event/omo_bos_metrics → AppendOnlyLog.append() → fcntl_lock �
 | Matrix | `matrix.py` | 服务注册表 (`ServiceEntry`) |
 | Scheduler | `scheduler.py` (19KB) | 15s 心跳 + auto-heal |
 | Protocol | `protocol.py` | L0 协议注册 (`ProtocolEntry`, 7 类) |
-| KEI 沙箱 | `kei*.py` (4 文件) | `sys.addaudithook` FS mutation 拦截 |
-| Cron Service | `cron_service/` (11 文件) | FastAPI + SQLite 调度 |
+| KEI 沙箱 | `kei*.py` (见源码) | `sys.addaudithook` FS mutation 拦截 |
+| Cron Service | `cron_service/` (见源码) | FastAPI + SQLite 调度 |
 | Executor 核心 | `engine.py` (19KB) | AgentRuntime (LLM→tools→result) |
 | 编排 | `orchestrator.py` | DAG 8-Phase 编排 |
-| DSL | `dsl*.py` (5 文件) | YAML/JSON DSL 解析 |
+| DSL | `dsl*.py` (见源码) | YAML/JSON DSL 解析 |
 | Swarm | `swarm*.py` | 蜂群协议 |
-| ISC | `isc_*.py` (4 文件) | Ideal State Criteria |
+| ISC | `isc_*.py` (见源码) | Ideal State Criteria |
 | 韧性 | `self_healing.py`, `guardian.py` | 自愈 + 守卫 |
 
 ### 3.5 agora — MCP Hub
 
 | 模块组 | 目录 | 职责 |
 |--------|------|------|
-| MCP Server | `server/` (8 文件) | 工具注册 + proxy + a2a (God Module 25KB) |
+| MCP Server | `server/` (见源码) | 工具注册 + proxy + a2a (God Module 25KB) |
 | BOS Resolver | `mcp/resolver/` (6 模块) | BOS URI 解析 (services 37KB) |
 | Core | `core/` | ServiceRegistry + SmartRouter + CircuitBreaker |
-| Proxy | `mcp_proxy/` (10 文件) | Stdio/HTTP MCP 客户端代理 |
+| Proxy | `mcp_proxy/` (见源码) | Stdio/HTTP MCP 客户端代理 |
 | Registry | `mcp_registry/` (7 模块) | 服务发现 + 生命周期 |
-| Auth | `auth/` (13 文件) | OAuth2/HMAC/Tenant/Ed25519 |
+| Auth | `auth/` (见源码) | OAuth2/HMAC/Tenant/Ed25519 |
 | Bus | `bus/` | Omni-Bus shim (→ bus-foundation) |
 | A2A | `a2a/` | Agent-to-Agent 协议 |
 
@@ -248,12 +248,12 @@ omo_audit/omo_event/omo_bos_metrics → AppendOnlyLog.append() → fcntl_lock �
 
 | 模块组 | 文件 | 职责 |
 |--------|------|------|
-| CLI | `cli.py` (35KB) | argparse 路由 24 子命令 |
-| Commands | `commands/` (35 文件) | 子命令实现 (research 57KB 最大) |
-| Web API | `web/` (16 文件) | FastAPI 路由 (agora/alerts/bos/ecos/health/...) |
+| CLI | `cli.py` (35KB) | argparse 路由 (见 project-registry.yaml) |
+| Commands | `commands/` (见源码) | 子命令实现 (research 57KB 最大) |
+| Web API | `web/` (见源码) | FastAPI 路由 (agora/alerts/bos/ecos/health/...) |
 | Dashboard | `dashboard/` | 数据聚合 + 路由 (constants 27KB) |
 | Storage | `storage.py` + `storage_sqlite.py` | `IDataAccess` Protocol + SQLite 实现 |
-| Agent Runtime | `agent_runtime_*.py` (3 文件) | HTTP + MCP 桥接到 runtime |
+| Agent Runtime | `agent_runtime_*.py` (见源码) | HTTP + MCP 桥接到 runtime |
 | L4 Bridge | `l4bridge.py` (14KB) | L4 域桥接 |
 
 ### 3.7 其余项目 (简要)
@@ -262,7 +262,7 @@ omo_audit/omo_event/omo_bos_metrics → AppendOnlyLog.append() → fcntl_lock �
 |------|:--:|---------|------|
 | **bus-foundation** | X | `bus/` (Data/Event/Control 三平面) | Omni-Bus 基础设施: ring buffer (Data) + 扇出 (Event) + ACK/NACK+DLQ (Control). 零依赖叶子, 被 7 个项目 import |
 | **c2g** | X | `brainstorm/` + `bet/` + `bridge_import.py` | 战略需求引擎: V2P (Voice to Pitch) → C2G (Challenge to Governance). IOC + 双适配器 (ecos/local) |
-| **l4-kernel** | L4 | `registry.py` (28 域) + `kems/` (六面) + `signal_bus.py` | 自我层管理面: 域注册 + KEMS 六面健康 + 信号总线 + 42 MCP tools |
+| **l4-kernel** | L4 | `registry.py` (见 project-registry.yaml: l4-kernel.domains) + `kems/` (六面) + `signal_bus.py` | 自我层管理面: 域注册 + KEMS 六面健康 + 信号总线 + MCP tools (见 project-registry.yaml) |
 | **model-driven** | M0 | `mof/m3_extended.py` + `lifecycle/pipeline.py` + `trigger/` | 横切生命周期引擎: 7 阶段 + 4 门禁 + 3 PipelinePhase + 10 触发机制. 零依赖叶子 |
 | **aetherforge** | X | `gateway/` + `mesh/` + `swarm/` | 算力框架: LLM 网关 (多 Provider 路由) + 算力网格 (节点池) + 蜂群 (GraphWorkflow DAG) |
 | **family-hub** | X | `mcp_server.py` (FastMCP) | 家庭数字枢纽: 任务游戏化 + LLM 生成 + OMO 治理接入 (G2 修复) |
@@ -357,7 +357,7 @@ runtime scheduler.py (每 15s)
  ↓ 双文件写入:
  │  ~/runtime/matrix_state.json (freshness, status)
  │  .omo/state/system_health.yaml (schema 校验)
- ↓ cockpit dashboard_server.py (:8090)
+ ↓ cockpit dashboard_server.py (:port (见 port-registry))
  ↓ HTTP API → cockpit-ui (React) 渲染
 ```
 
@@ -370,10 +370,10 @@ runtime scheduler.py (每 15s)
 ```
 Agent → resolve_bos_uri("bos://memory/kos/search", {query: "..."})
  ↓
-agora MCP Hub (:7431 SSE / :7422 HTTP / stdio)
+agora MCP Hub (:port (见 port-registry) SSE / :port (见 port-registry) HTTP / stdio)
  ↓ BOS Resolver (services.py)
  │  regex 匹配: bos://<domain>/<package>/<action>
- │  POC_SERVICES 注册表: etc/bos-services.yaml (100 服务)
+ │  POC_SERVICES 注册表: etc/bos-services.yaml (服务 (见 project-registry.yaml: bos.service_count))
  ↓ BosService {transport, command, module_path, func_name, http_url}
  ↓ Transport 决策:
  ├→ stdio: subprocess.run(uv run ...)
@@ -561,7 +561,7 @@ M1 实例 (ecos/m1/**/*.yaml, 节点 (见 project-registry.yaml: m1_yaml))
 | 模式 | 实现 | 应用位置 |
 |------|------|---------|
 | **AppendOnlyLog SSOT** | 7 consumers 共享 JSONL 物理层 (fcntl 锁) | omo (审计/事件/指标/告警/同步/历史/trail) |
-| **BOS URI 抽象** | 声明式注册表 + 泛化路由 (SmartRouter) | agora (100 服务, 9 域) |
+| **BOS URI 抽象** | 声明式注册表 + 泛化路由 (SmartRouter) | agora (服务 (见 project-registry.yaml: bos.service_count), 9 域) |
 | **X1-X4 校验管线** | preflight (X1+X2) → execute → postflight (X4+X3+M0) | ecos workflow |
 | **M3→M2→M1 派生链** | SSOT 级联校验 (6 处同步) | ecos MOF + model-driven |
 | **门控决策** | GREEN/YELLOW/RED + 免疫三层 | metaos DecisionGate + ImmuneMonitor |

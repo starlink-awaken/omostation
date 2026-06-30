@@ -208,8 +208,8 @@ script / wrapper / cron
 | 入口 | 协议 | 端口 | 用途 | 鉴权 | 状态 |
 |:----:|:----:|:----:|------|:----:|:----:|
 | **cockpit CLI** | subprocess | — | 终端入口（人类唯一） | shell | 🟢 |
-| **agora MCP** | SSE | `:7431` | 统一 MCP 入口 | API key | 🟢 已收敛 |
-| **cockpit HTTP** | FastAPI | :8090 | Web Dashboard / REST | API key | 🟢 |
+| **agora MCP** | SSE | 见 `protocols/port-registry.yaml` | 统一 MCP 入口 | API key | 🟢 已收敛 |
+| **cockpit HTTP** | FastAPI | 见 `protocols/port-registry.yaml` | Web Dashboard / REST | API key | 🟢 |
 
 **已下线入口**:
 | 原入口 | 协议 | 下线原因 | 替代方式 |
@@ -217,7 +217,7 @@ script / wrapper / cron
 | cockpit MCP | stdio | 入口收敛 Phase 1 | agora MCP `bos://cockpit/context` |
 | l4-kernel MCP | stdio | 入口收敛 Phase 2 | agora MCP `bos://l4-kernel/domains` |
 | runtime MCP | stdio | 入口收敛 Phase 2 | agora MCP `bos://runtime/health` |
-| agora HTTP | — | 从未独立存在 | cockpit HTTP :8090 |
+| agora HTTP | — | 从未独立存在 | cockpit HTTP |
 
 ---
 

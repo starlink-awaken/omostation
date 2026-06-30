@@ -23,7 +23,7 @@
 | `bos_cache` | `server/mcp/bos_middleware.py` | TTL 缓存 |
 | `BOSRouter` / `bos_router` | `mcp/bos_router.py:27` | Trie 前缀索引，O(k) 最长前缀匹配 |
 | `ProxyManager` | `server/mcp.py` | MCP 下游代理管理 |
-| `POC_SERVICES` | `mcp/resolver/services.py:51` | 34+ 条 BOS 服务注册表 |
+| `POC_SERVICES` | `mcp/resolver/services.py:51` | BOS 服务注册表 (见 project-registry.yaml: bos) |
 | `resolve_bos_uri` (resolver API) | `mcp/resolver/api.py:96` | 异步解析，处理 internal/stdio transport |
 | `StdioAdapter` | `mcp/resolver/adapter.py` | stdio 子进程调用封装 |
 | `mof_agora_hook` | `projects/ecos/src/ecos/ssot/tools/mof_agora_hook.py` | L0 审计钩子 |

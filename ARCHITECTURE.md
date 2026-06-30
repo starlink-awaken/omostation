@@ -90,5 +90,9 @@ service definition -> runtime scheduler/matrix/sandbox -> health observation -> 
 | [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
 | [`CLAUDE.md`](CLAUDE.md) | AI session context loader |
 | [`LAYER-INDEX.md`](LAYER-INDEX.md) | Human-readable layer index |
-| [`docs/PANORAMA.md`](docs/PANORAMA.md) | Broader product/capability panorama |
+| [`docs/PANORAMA.md`](docs/PANORAMA.md) | System panorama and BOS routing |
+| [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) | Architecture deep-dive (modules, data flow, control flow) |
+| [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) | Functional capability map (8 domains, 32 capabilities) |
+| [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) | Agora BOS URI callchain white-box |
+| [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) | Vision and roadmap |
 | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | Documentation ownership contract |
