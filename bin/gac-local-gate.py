@@ -25,6 +25,7 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("agent-workflow-compliance", ["bin/agent-workflow.py", "compliance"]),
     ("agent-workflow-doctor", ["bin/agent-workflow.py", "doctor"]),
     ("agent-workflow-observe", ["bin/agent-workflow.py", "observe"]),
+    ("governance-evolution", ["bin/governance-evolution.py", "validate", "--json"]),
     ("mof-schema-validate", ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]),
     ("mof-state-bridge", ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]),
     ("mof-drift", ["bin/mof-drift"]),
@@ -130,6 +131,11 @@ def scoped_change_lane_command(
 # 只在 staged 涉 agent-workflow 时跑 (隔离并发), strict 模式 (CI) 跑全套.
 AGENT_WORKFLOW_GATE_CHECKS = {"agent-workflow-verify-plan", "agent-workflow-compliance", "agent-workflow-doctor"}
 
+# project-layer-index 是全局 layer digest, pre-commit 环境 (hook stash unstaged + 并发 dirty)
+# 让 digest stale 不稳定. pre-commit 跳过 (打破死结), strict (CI) 跑全套兜底.
+# (doctor 那套 has_unstaged_dirty 检测对它无效 — gate 跑在 stash 后环境, 读不到原 dirty)
+CI_ONLY_CHECKS = {"project-layer-index"}
+
 
 def staged_files_git() -> list[str]:
     """git diff --cached 读 staged 文件."""
@@ -159,6 +165,8 @@ def gate_checks(
     for name, command in CHECKS:
         if name in AGENT_WORKFLOW_GATE_CHECKS and not touch_aw:
             continue  # staged 不涉 agent-workflow → skip, 隔离并发 dirty
+        if name in CI_ONLY_CHECKS and not strict:
+            continue  # 全局 digest pre-commit 不稳定 (hook stash 并发 dirty) → CI 兜底
         if name == "change-lane-check":
             result.append((name, scoped_change_lane_command(scope, files, run_id)))
         else:
@@ -222,7 +230,7 @@ def main() -> int:
     parser.add_argument("--file", action="append", default=[], help="Repo path for --scope files")
     parser.add_argument("--run-id", default="", help="Run id for --scope run")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
-    parser.add_argument("--strict", action="store_true", help="跑全套 (CI 用; 默认 pre-commit skip 不涉 agent-workflow 的 doctor/compliance/verify)")
+    parser.add_argument("--strict", action="store_true", help="跑全套 (CI 用; 默认 pre-commit skip: 不涉 agent-workflow 的 doctor/compliance/verify + project-layer-index 全局 digest)")
     args = parser.parse_args()
 
     try:
