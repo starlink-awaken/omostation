@@ -20,7 +20,7 @@ tiers:
     half_life_years: 4
     weight_multiplier: 1.2
     maintenance: "semi-annual check"
-    examples: ["eCOS 5+3+1 架构", "OMO 四平面"]
+    examples: ["eCOS 5+4+1+1 架构", "OMO 四平面"]
   - id: "Knowledge"
     half_life_years: 2
     weight_multiplier: 1.0
