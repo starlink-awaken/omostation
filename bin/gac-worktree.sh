@@ -10,8 +10,10 @@
 #   gac-worktree.sh release <session>    # 清理 worktree (合并后)
 #   gac-worktree.sh list                 # 列所有 worktree
 #
-# 模式: 主仓 worktree (子模块共享, 简化). 子模块独立 worktree 后续.
+# session 命名: 只允许 [a-z0-9-] (防 git 分支非法字符), 如 "fix-route-bug".
+# 模式: 主仓 worktree (子模块共享). 子模块撞车则需独立 worktree (Phase 1 验证后定).
 # 对标: git worktree + PR 流程 (Linux kernel / Devin / Codex).
+# 落地计划: docs/AGENT-ISOLATION-ROLLOUT.md (Phase 1).
 
 set -e
 
@@ -25,11 +27,26 @@ WS_PARENT="$(dirname "$WS_ROOT")"
 cmd="${1:-list}"
 session="${2:-}"
 
+# session 名只允许小写字母/数字/连字符 (防 work/<session> 含 git 分支非法字符)
+validate_session() {
+  local s="$1"
+  if ! printf '%s' "$s" | grep -qE '^[a-z0-9][a-z0-9-]*$'; then
+    echo "❌ session 名非法: '$s' (只允许 [a-z0-9-], 首字符须字母/数字)" >&2
+    exit 1
+  fi
+}
+
 case "$cmd" in
   claim)
     [ -z "$session" ] && echo "用法: claim <session>" >&2 && exit 1
+    validate_session "$session"
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
+    # 分支已存在但 worktree 缺失 → 残留/重名, 提示清理 (防 claim 撞残留分支)
+    if git show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null && [ ! -d "$wt" ]; then
+      echo "⚠️  分支 $branch 已存在但 worktree 缺失 (残留? 清理: git branch -D $branch)" >&2
+      exit 1
+    fi
     if [ -d "$wt" ]; then
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
@@ -46,6 +63,7 @@ case "$cmd" in
 
   submit)
     [ -z "$session" ] && echo "用法: submit <session>" >&2 && exit 1
+    validate_session "$session"
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
     if [ ! -d "$wt" ]; then
@@ -74,6 +92,7 @@ case "$cmd" in
 
   release)
     [ -z "$session" ] && echo "用法: release <session>" >&2 && exit 1
+    validate_session "$session"
     wt="$WS_PARENT/ws-$session"
     if [ ! -d "$wt" ]; then
       echo "⚠️  worktree 不存在: $wt (已释放?)"
@@ -106,6 +125,8 @@ case "$cmd" in
     echo "  submit <session>     push 分支 + 开 PR (base main)"
     echo "  release <session>    清理 worktree (合并后)"
     echo "  list                 列所有 worktree"
+    echo ""
+    echo "session 命名: 只允许 [a-z0-9-] (如 fix-route-bug)"
     exit 1
     ;;
 esac
