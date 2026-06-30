@@ -4,6 +4,31 @@
 > 9 项目 (agora / kairon / gbrain / omo / metaos / cockpit / runtime / ecos / aetherforge) 共享版本号.
 > 详见 ADR-0007.
 
+## [Unreleased] - 2026-06-30
+
+### Fixed (文档 SSOT 深度收敛 + 子项目全覆盖)
+- **v5→v6 全量清理** (workspace): 80+ 文件跨 bin/ + projects/ecos/ (scripts/services/ssot/M1/M2/M3) + cockpit + agora + runtime + aetherforge + kairon + family-hub + omo + cockpit-ui. 历史节点 (ARCH-ECOS-V5.yaml, MODEL-EVOLUTION.yaml) 保留.
+- **5+3+1→5+4+1+1** (source code): cockpit/cli.py (2处) + agora/discovery.py + 兼容性检查. doc-ssot-lint 仅扫描 .md, 源码需手动 batch sed.
+- **../docs/→../../docs/ 路径修正** (16 子项目): BOUNDARY/ARCHITECTURE/CALLCHAIN/README/AGENTS/CLAUDE ~70 文件. 归档文件引用 (ARCHITECTURE-EVOLUTION/DIAGRAM) → ../../docs/PANORAMA.md.
+- **硬编码数字→SSOT 指针** (docs + projects): FUNCTIONAL-CAPABILITY-MAP.md (~20处), ARCHITECTURE-DETAILED-MAP.md (~25处), I0-AGORA-CALLCHAIN.md, PANORAMA.md 端口号→port-registry, metaos/omo/l4-kernel/agora/cockpit/gbrain/model-driven/runtime 项目文档.
+- **GaC rules_count** (registry): project-registry.yaml 9→89 (实际 grep count).
+- **.env.example** (workspace): 6→21 env vars (+Ollama/Langfuse/C2G/OTEL/Azure/DeepSeek/Google). WORKSPACE_ROOT→WORKSPACE (匹配源码). port 9100 注册到 port-registry.
+- **x3-value-stack.yaml** (omo): "eCOS 5+3+1 架构"→"5+4+1+1 架构" (example 字段).
+- **PANORAMA.md** (docs): agora-dashboard 路径修正 (projects/→_archived/), toolbox 补全, cocktail_mcp→cockpit_mcp typo, 硬编码行号→描述, 日期更新.
+
+### Added (文档补全 + 治理工具文档化)
+- **observability/README.md** (observability): 项目缺失, 新建含服务表/配置/部署说明.
+- **bus-foundation/CAPABILITY-MAP.md** (bus-foundation): 新建, 三平面能力地图.
+- **c2g/CAPABILITY-MAP.md** (c2g): 新建, 战略需求引擎能力地图.
+- **observability/CAPABILITY-MAP.md** (observability): 新建, 可观测性能力地图.
+- **tests/README.md** (workspace): 7 单元测试 + 8 集成测试文档. 后补 test_governance_evolution.py.
+- **.github/workflows/README.md** (workspace): 1→42 CI workflows 文档 (6 分类).
+- **ADR metadata** (governance): README.md + INDEX.md status: archived→active (113 ADRs 仍在使用).
+- **3 standards frontmatter** (governance): agent-mutation-protocol.md, auto-generated-artifacts.md, doc-ssot-contract.md 获得 YAML frontmatter.
+- **SSOT Map 扩展** (ARCHITECTURE.md): §1 9→17 条目 (+vault-paths/x-axis-registry/governance-checks/agent-workflows/debt/task-lifecycle/ADR/registry-index).
+- **文档地图补全** (README.md + ARCHITECTURE.md): +4 文档条目 (ARCHITECTURE-DETAILED-MAP/FUNCTIONAL-CAPABILITY-MAP/I0-AGORA-CALLCHAIN/VISION-ROADMAP) EN+CN.
+- **CLAUDE.md §5 routing** (CLAUDE.md): +5 docs/ 路由条目.
+
 ## [Unreleased] - 2026-06-24
 
 ### Fixed (P60+ 子模块止血 + scheduler + bos test + CVE)
