@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 
 WORKSPACE = Path(__file__).resolve().parents[1]
+REGISTRY_PATH = WORKSPACE / ".omo/_truth/registry/agent-workflows.yaml"
 
 
 CHECKS: tuple[tuple[str, list[str]], ...] = (
@@ -19,6 +21,8 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("agent-workflow-integrations", ["bin/agent-workflow.py", "integrations"]),
     ("agent-workflow-adapters", ["bin/agent-workflow.py", "adapters"]),
     ("agent-workflow-bootstrap", ["bin/agent-workflow.py", "bootstrap", "--skip-health"]),
+    ("agent-workflow-verify-plan", ["bin/agent-workflow.py", "verify", "--file", "bin/agent-workflow.py"]),
+    ("agent-workflow-compliance", ["bin/agent-workflow.py", "compliance"]),
     ("agent-workflow-doctor", ["bin/agent-workflow.py", "doctor"]),
     ("agent-workflow-observe", ["bin/agent-workflow.py", "observe"]),
     ("mof-schema-validate", ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]),
@@ -30,6 +34,136 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("doc-link-check", ["bin/doc-link-check.py"]),
     ("change-lane-check", ["bin/change-lane-check.py", "--staged"]),
 )
+
+
+def normalize_repo_path(raw_path: str) -> str:
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        path = path.resolve().relative_to(WORKSPACE)
+    normalized = path.as_posix().strip("/")
+    return normalized or "."
+
+
+def load_run_state_dir() -> Path:
+    if not REGISTRY_PATH.exists():
+        return WORKSPACE / ".omo/_delivery/agent-workflows/runs"
+    import yaml
+
+    documents = [doc for doc in yaml.safe_load_all(REGISTRY_PATH.read_text(encoding="utf-8")) if doc]
+    for document in documents:
+        if isinstance(document, dict) and "runner" in document:
+            run_dir = str((document.get("runner") or {}).get("run_state_dir") or "")
+            if run_dir:
+                return WORKSPACE / run_dir
+    return WORKSPACE / ".omo/_delivery/agent-workflows/runs"
+
+
+def load_run_claim_paths(run_id: str) -> list[str]:
+    import yaml
+
+    run_dir = load_run_state_dir()
+    direct = run_dir / f"{run_id}.yaml"
+    if direct.exists():
+        path = direct
+    else:
+        matches = list(run_dir.glob(f"*{run_id}*.yaml")) if run_dir.exists() else []
+        if len(matches) != 1:
+            if matches:
+                choices = ", ".join(str(item) for item in matches)
+                raise ValueError(f"ambiguous run id for --scope run: {run_id} ({choices})")
+            raise ValueError(f"run not found for --scope run: {run_id}")
+        path = matches[0]
+    payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    claims = payload.get("claims") if isinstance(payload, dict) else []
+    files: set[str] = set()
+    for claim in claims if isinstance(claims, list) else []:
+        if not isinstance(claim, dict):
+            continue
+        for item in claim.get("paths") or []:
+            if isinstance(item, str) and item.strip():
+                files.add(normalize_repo_path(item))
+    if not files:
+        raise ValueError(f"run has no claimed paths for --scope run: {run_id}")
+    return sorted(files)
+
+
+def matched_files_from_env() -> list[str]:
+    raw_files = os.environ.get("AGENT_WORKFLOW_MATCHED_FILES")
+    if not raw_files:
+        return []
+    try:
+        files = json.loads(raw_files)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(files, list) or not all(isinstance(item, str) for item in files) or not files:
+        return []
+    return sorted({normalize_repo_path(item) for item in files})
+
+
+def change_lane_files_for_scope(scope: str, files: list[str] | None, run_id: str) -> list[str]:
+    explicit_files = sorted({normalize_repo_path(item) for item in (files or []) if item})
+    if scope == "files":
+        if not explicit_files:
+            raise ValueError("--scope files requires at least one --file")
+        return explicit_files
+    if scope == "run":
+        if not run_id:
+            raise ValueError("--scope run requires --run-id")
+        return load_run_claim_paths(run_id)
+    if scope == "staged":
+        return matched_files_from_env()
+    raise ValueError(f"unknown scope: {scope}")
+
+
+def scoped_change_lane_command(
+    scope: str = "staged",
+    files: list[str] | None = None,
+    run_id: str = "",
+) -> list[str]:
+    scoped_files = change_lane_files_for_scope(scope, files, run_id)
+    if not scoped_files:
+        return ["bin/change-lane-check.py", "--staged"]
+    return ["bin/change-lane-check.py", *[part for path in scoped_files for part in ("--file", path)]]
+
+
+# doctor/compliance/verify-plan 用 worktree-wide 命令, 并发 dirty 会污染.
+# 只在 staged 涉 agent-workflow 时跑 (隔离并发), strict 模式 (CI) 跑全套.
+AGENT_WORKFLOW_GATE_CHECKS = {"agent-workflow-verify-plan", "agent-workflow-compliance", "agent-workflow-doctor"}
+
+
+def staged_files_git() -> list[str]:
+    """git diff --cached 读 staged 文件."""
+    result = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"],
+        cwd=WORKSPACE, capture_output=True, text=True, check=False,
+    )
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def staged_touches_agent_workflow() -> bool:
+    """staged 是否涉 agent-workflow (doctor/compliance/verify 只在涉时跑)."""
+    return any(
+        "bin/agent-workflow.py" in f or "tests/test_agent-workflow.py" in f or "agent-workflows.yaml" in f
+        for f in staged_files_git()
+    )
+
+
+def gate_checks(
+    scope: str = "staged",
+    files: list[str] | None = None,
+    run_id: str = "",
+    strict: bool = False,
+) -> tuple[tuple[str, list[str]], ...]:
+    touch_aw = strict or staged_touches_agent_workflow()
+    result: list[tuple[str, list[str]]] = []
+    for name, command in CHECKS:
+        if name in AGENT_WORKFLOW_GATE_CHECKS and not touch_aw:
+            continue  # staged 不涉 agent-workflow → skip, 隔离并发 dirty
+        if name == "change-lane-check":
+            result.append((name, scoped_change_lane_command(scope, files, run_id)))
+        else:
+            result.append((name, command))
+    return tuple(result)
 
 
 def run_check(name: str, command: list[str]) -> dict[str, object]:
@@ -51,16 +185,26 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
     }
 
 
-def run_gate() -> dict[str, object]:
-    results = [run_check(name, command) for name, command in CHECKS]
+def run_gate(
+    scope: str = "staged",
+    files: list[str] | None = None,
+    run_id: str = "",
+    strict: bool = False,
+) -> dict[str, object]:
+    change_lane_files = change_lane_files_for_scope(scope, files, run_id)
+    results = [run_check(name, command) for name, command in gate_checks(scope, files, run_id, strict)]
     return {
         "ok": all(item["ok"] for item in results),
+        "scope": scope,
+        "run_id": run_id or None,
+        "change_lane_files": change_lane_files,
         "checks": results,
     }
 
 
 def print_human(report: dict[str, object]) -> None:
     print("═══ GaC local gate ═══")
+    print(f"scope={report['scope']} change_lane_files={len(report['change_lane_files'])}")
     for item in report["checks"]:
         status = "PASS" if item["ok"] else "FAIL"
         print(f"[{status}] {item['name']} :: {item['command']}")
@@ -74,10 +218,17 @@ def print_human(report: dict[str, object]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the shared local GaC gate")
+    parser.add_argument("--scope", choices=["staged", "files", "run"], default="staged")
+    parser.add_argument("--file", action="append", default=[], help="Repo path for --scope files")
+    parser.add_argument("--run-id", default="", help="Run id for --scope run")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    parser.add_argument("--strict", action="store_true", help="跑全套 (CI 用; 默认 pre-commit skip 不涉 agent-workflow 的 doctor/compliance/verify)")
     args = parser.parse_args()
 
-    report = run_gate()
+    try:
+        report = run_gate(args.scope, args.file, args.run_id, args.strict)
+    except ValueError as exc:
+        parser.error(str(exc))
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
