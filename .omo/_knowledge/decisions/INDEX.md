@@ -69,6 +69,28 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0091 | P97 TYPO apply (12 实际修复, 19→11 -42%) + apply/rollback 集成测试 + X2-FRESH-ADR-TYPO (13 rules) (44 bin, 22 dashboard) | ACCEPTED | 2026-06-25 | omostation P97 | 0091-p97-typo-apply-rollback-test-x2.md |
 | 0092 | P98 3 ASPIRATIONAL + 1 REAL_BUG + 4 TYPO + regex bug 修 (P50+ 19→2 -89%, 44 bin, 22 dashboard) | ACCEPTED | 2026-06-25 | omostation P98 | 0092-p98-adr-drift-final-fixes.md |
 | 0093 | P99 ADR-0092 self-ref 清 (P50+ 6→3 -50%) + omo_lint 兑现路径 P100-P103 (4 步) + 53 ADR + 22 dashboard | ACCEPTED | 2026-06-25 | omostation P99 | 0093-p99-selfref-omo-lint-roadmap.md |
+| 0094 | P100 omo_lint schemas 子模块拆分 (1269→800L, 兑现 11 轮推迟) | ACCEPTED | 2026-06-25 | omostation | 0094-p100-omo-lint-schemas-split.md |
+| 0095 | P101 omo_lint yaml-bypass 子模块拆分 (800→731L, 校正 P102-P103 | ACCEPTED | 2026-06-25 | omostation | 0095-p101-omo-lint-yaml-bypass-split.md |
+| 0096 | P102 omo_lint surfaces 子模块拆分 (731→594L, <600L ideal 达成) | ACCEPTED | 2026-06-25 | omostation | 0096-p102-omo-lint-surfaces-split.md |
+| 0097 | P103 omo_lint mutation-ledger 子模块拆分 (594→544L, ADR-0093 | ACCEPTED | 2026-06-25 | omostation | 0097-p103-omo-lint-mutation-ledger-split.md |
+| 0098 | P104 omo_governance_surfaces snapshots 子模块拆分 (1762→1244 | ACCEPTED | 2026-06-25 | omostation | 0098-p104-governance-surfaces-snapshots-split.md |
+| 0099 | P105 omo_governance_surfaces ingress-check 子模块拆分 (1244→ | ACCEPTED | 2026-06-25 | omostation | 0099-p105-governance-surfaces-ingress-split.md |
+| 0100 | P106 omo_governance_surfaces 4 子模块化 (1022→763L, <800L w | ACCEPTED | 2026-06-25 | omostation | 0100-p106-governance-surfaces-4-submodules.md |
+| 0101 | P107 omo_governance_surfaces 6 子模块化 (763→556L, <600L id | ACCEPTED | 2026-06-25 | omostation | 0101-p107-governance-surfaces-6-submodules.md |
+| 0102 | P108 omo_governance_surfaces 8 子模块化 (556→443L, 黄金值 400- | ACCEPTED | 2026-06-25 | omostation | 0102-p108-governance-surfaces-8-submodules.md |
+| 0103 | P109 治理赋能三件套 (验证模板 + 智能化 + TS 工具) | ACCEPTED | 2026-06-25 | omostation | 0103-p109-governance-tooling-trio.md |
+| 0104 | P110 omo_ingress_task_lifecycle 3 子模块化 (1530→614L, <800 | ACCEPTED | 2026-06-25 | omostation | 0104-p110-ingress-task-lifecycle-3-submodules.md |
+| 0105 | Phase 0 BOS Contract Linter (mof-contract-lint) 落地 | ACCEPTED | 2026-06-25 | omostation | 0105-phase0-bos-contract-linter.md |
+| 0106 | GaC 治理即代码架构 (Governance-as-Code) | ACCEPTED | 2026-06-26 | omostation | 0106-gac-governance-as-code.md |
+| 0107 | Phase 3 BOS Contract Linter v0.3 (mof-contract-agent) | ACCEPTED | 2026-06-25 | omostation | 0107-phase3-bos-contract-linter.md |
+| 0108 | P110-A ecos domain_manager 2 子模块化 (1914→1406L) | ACCEPTED | 2026-06-25 | omostation | 0108-p110a-ecos-domain-manager-split.md |
+| 0109 | P110-B omo_governance_surfaces build_report 子模块化 (443→2 | ACCEPTED | 2026-06-25 | omostation | 0109-p110b-build-report-split.md |
+| 0110 | P110-C Phase 1 BOS Contract Linter 强制接入 (3 交付物) | ACCEPTED | 2026-06-25 | omostation | 0110-p110c-phase1-enforcement.md |
+| 0111 | P110-D TS AST 工具升级 (ts-morph 替代, 10 TS god-module 解锁) | ACCEPTED | 2026-06-25 | omostation | 0111-p110d-ts-ast-tool-upgrade.md |
+| 0112 | P111 修复 dashboard 退化 (2 工具退出码语义 + ADR 0108 duplicate) | ACCEPTED | 2026-06-25 | omostation | 0112-p111-dashboard-fix.md |
+| 0113 | Phase 2 BOS Contract Linter v0.2 (--explain + --impact) | ACCEPTED | 2026-06-25 | omostation | 0113-phase2-bos-contract-linter.md |
+| 0114 | L4 自我层 GaC 强约束豁免 | ACCEPTED | 2026-06-29 | omostation | 0114-l4-gac-exemption.md |
+| 0115 | P52 model-driven LifecycleStage 7→8 阶段 (P60 GOVERNANCE_MAINTENANCE) | ACCEPTED | 2026-06-30 | governance-team | 0115-p52-model-driven-8-stages.md |
 
 ---
 
@@ -140,4 +162,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-06-23 · Owner: governance-team · 0050/0051 状态 ACCEPTED (P50/P52)*
+*最近更新: 2026-06-30 · Owner: governance-team · 0094-0114 补录 (P100-P111 omo_lint/governance-surfaces 拆分 + BOS linter + GaC + L4 豁免)*
