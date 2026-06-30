@@ -91,6 +91,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0113 | Phase 2 BOS Contract Linter v0.2 (--explain + --impact) | ACCEPTED | 2026-06-25 | omostation | 0113-phase2-bos-contract-linter.md |
 | 0114 | L4 自我层 GaC 强约束豁免 | ACCEPTED | 2026-06-29 | omostation | 0114-l4-gac-exemption.md |
 | 0115 | P52 model-driven LifecycleStage 7→8 阶段 (P60 GOVERNANCE_MAINTENANCE) | ACCEPTED | 2026-06-30 | governance-team | 0115-p52-model-driven-8-stages.md |
+| 0116 | Tier 1 渐进式修复 vs Tier 2 真治本 (Meta-Reflection) | ACCEPTED | 2026-06-30 | governance-team | 0116-p52-meta-tier1-vs-tier2.md |
 
 ---
 
