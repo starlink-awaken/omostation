@@ -85,6 +85,78 @@ services:
     command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.cli", "debt"]
     description: "OMO 债务查询"
 
+  - uri: "bos://governance/agent-workflow/bootstrap"
+    domain: governance
+    action: "bootstrap"
+    transport: stdio
+    package: "agent-workflow"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "bootstrap", "--skip-health", "--json"]
+    description: "Agent Governance Control Plane 启动上下文"
+
+  - uri: "bos://governance/agent-workflow/verify-plan"
+    domain: governance
+    action: "verify-plan"
+    transport: stdio
+    package: "agent-workflow"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "verify", "--file", "bin/agent-workflow.py", "--json"]
+    description: "Agent Governance Control Plane diff-aware 验证规划"
+
+  - uri: "bos://governance/agent-workflow/observe"
+    domain: governance
+    action: "observe"
+    transport: stdio
+    package: "agent-workflow"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "observe", "--json"]
+    description: "Agent Governance Control Plane run/lock/ledger 观察"
+
+  - uri: "bos://governance/agent-workflow/compliance"
+    domain: governance
+    action: "compliance"
+    transport: stdio
+    package: "agent-workflow"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "compliance", "--json"]
+    description: "Agent Governance Control Plane 合规审计"
+
+  - uri: "bos://governance/agent-workflow/doctor"
+    domain: governance
+    action: "doctor"
+    transport: stdio
+    package: "agent-workflow"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "doctor", "--json"]
+    description: "Agent Governance Control Plane 内外部集成健康检查"
+
+  - uri: "bos://governance/evolution/status"
+    domain: governance
+    action: "status"
+    transport: stdio
+    package: "governance-evolution"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "status", "--json"]
+    description: "治理演进路线图状态入口"
+
+  - uri: "bos://governance/evolution/validate"
+    domain: governance
+    action: "validate"
+    transport: stdio
+    package: "governance-evolution"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "validate", "--json"]
+    description: "治理演进路线图结构与追踪校验"
+
+  - uri: "bos://governance/evolution/traces"
+    domain: governance
+    action: "traces"
+    transport: stdio
+    package: "governance-evolution"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "traces", "--json"]
+    description: "治理能力到入口/SSOT/验证器的追踪视图"
+
+  - uri: "bos://governance/evolution/golden-paths"
+    domain: governance
+    action: "golden-paths"
+    transport: stdio
+    package: "governance-evolution"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "golden-paths", "--json"]
+    description: "治理 Golden Path 端到端流程视图"
+
   - uri: "bos://governance/eidos/validate"
     domain: governance
     action: "validate"
@@ -639,7 +711,6 @@ services:
     func_name: "audit_knowledge_quality"
     description: "记忆脊知识质量审计与评分"
 
-
   - uri: "bos://capability/agent-runtime/chat"
     domain: capability
     action: "chat"
@@ -703,7 +774,6 @@ services:
     package: "eidos"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "pipeline"]
     description: "Eidos 治理管线调度"
-
 
   # ── ecos workflow (L0 协议层工作流引擎) ──
   - uri: "bos://ecos/workflow/list"
@@ -769,7 +839,6 @@ services:
     package: "ecos"
     command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "cb-reset"]
     description: "eCOS 后端熔断器全部重置"
-
 
 # ═══════════════════════════════════════════════════════
 # 系统管理域 — system (后台管理 + 治理管道 + 健康检查)
@@ -838,4 +907,50 @@ services:
     package: "omo"
     description: "OMO 技术债务评分 — 当前总债务/趋势/热点"
 
+  # ── ToolBox 3 instances (L1-L3 local service entry) ──
+  # 收敛到 bos://capability/ 域 (5 域锁定约定) — 不创建新域
+  # CS-10 元数据: cross_references.realized_by 指向 omo broker
+  # 外部域: /Users/xiamingxing/ToolBox/{wps-office-mcp,wps-skills,bos-skill-cli}/
+  - uri: "bos://capability/wps-office-mcp/invoke"
+    domain: capability
+    action: "invoke"
+    transport: stdio
+    package: "toolbox/wps-office-mcp"
+    command: ["node", "/Users/xiamingxing/ToolBox/wps-office-mcp/dist/index.js"]
+    tools_count: 243
+    description: "WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/wps-office-mcp/.git"
+    i0_route: pending
+    status: active
+
+  - uri: "bos://capability/wps-skills/load"
+    domain: capability
+    action: "load"
+    transport: stdio
+    package: "toolbox/wps-skills"
+    command: ["node", "/Users/xiamingxing/ToolBox/wps-skills/dist/index.js"]
+    description: "WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/wps-skills/.git"
+    i0_route: pending
+    status: active
+
+  - uri: "bos://capability/bos-skill-cli/exec"
+    domain: capability
+    action: "exec"
+    transport: stdio
+    package: "toolbox/bos-skill-cli"
+    command: ["uv", "run", "--directory", "/Users/xiamingxing/ToolBox/bos-skill-cli", "bos-skill-cli"]
+    description: "BOS Skill 管理 CLI/TUI — 搜索/暂存/promote/回退 skill 包"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/bos-skill-cli/.git"
+    i0_route: pending
+    status: active
 

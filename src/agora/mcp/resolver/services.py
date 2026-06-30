@@ -11,8 +11,28 @@ from typing import Literal
 Transport = Literal["stdio", "internal", "http", "mcp_stdio", "mcp_proxy"]
 
 # ── BOS URI 模式 ─────────────────────────────────────
+BOS_URI_DOMAINS = (
+    "memory",
+    "governance",
+    "omo",
+    "analysis",
+    "persona",
+    "capability",
+    "forge",
+    "meta",
+    "ecos",
+    "agora",
+    "cockpit",
+    "l4-kernel",
+    "runtime",
+    "swarm",
+    "system",
+    "toolbox",
+)
+BOS_URI_DOMAIN_PATTERN = "|".join(BOS_URI_DOMAINS)
+
 BOS_URI_PATTERN = re.compile(
-    r"^bos://(?P<domain>memory|governance|omo|analysis|persona|capability|forge|meta|ecos|agora|cockpit|l4-kernel|runtime|swarm|system)"
+    rf"^bos://(?P<domain>{BOS_URI_DOMAIN_PATTERN})"
     r"/(?P<package>[a-z][a-z0-9-]+)(?:/(?P<action>[a-z][a-z0-9-]+))?$"
 )
 

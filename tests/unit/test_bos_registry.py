@@ -230,6 +230,45 @@ class TestDefaultPath:
             f"主注册表 etc/bos-services.yaml 校验失败: {errors}"
         )
 
+    def test_agent_workflow_governance_routes_are_registered(self):
+        """Agent Governance Control Plane 固定入口必须注册到 BOS。"""
+        from agora.mcp.resolver.bos_registry import load_from_yaml
+
+        services = {service.uri: service for service in load_from_yaml()}
+        expected = {
+            "bos://governance/agent-workflow/bootstrap",
+            "bos://governance/agent-workflow/verify-plan",
+            "bos://governance/agent-workflow/observe",
+            "bos://governance/agent-workflow/compliance",
+            "bos://governance/agent-workflow/doctor",
+        }
+        assert expected <= set(services)
+        for uri in expected:
+            service = services[uri]
+            assert service.domain == "governance"
+            assert service.package == "agent-workflow"
+            assert service.transport == "stdio"
+            assert service.command[:5] == ["uv", "run", "--with", "pyyaml", "python"]
+
+    def test_governance_evolution_routes_are_registered(self):
+        """治理演进路线图必须能通过 BOS 暴露给 Agent。"""
+        from agora.mcp.resolver.bos_registry import load_from_yaml
+
+        services = {service.uri: service for service in load_from_yaml()}
+        expected = {
+            "bos://governance/evolution/status",
+            "bos://governance/evolution/validate",
+            "bos://governance/evolution/traces",
+            "bos://governance/evolution/golden-paths",
+        }
+        assert expected <= set(services)
+        for uri in expected:
+            service = services[uri]
+            assert service.domain == "governance"
+            assert service.package == "governance-evolution"
+            assert service.transport == "stdio"
+            assert "bin/governance-evolution.py" in service.command
+
 
 def test_unimplemented_services_are_tracked():
     """所有 [UNIMPLEMENTED] 服务必须在 etc/bos-unimplemented.yaml 登记。"""

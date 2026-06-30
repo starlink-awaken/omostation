@@ -8,7 +8,7 @@ from concurrent.futures import Future
 from pathlib import Path
 from typing import Any
 
-from .services import POC_SERVICES, BosService
+from .services import BOS_URI_DOMAIN_PATTERN, POC_SERVICES, BosService
 from .adapter import get_stdio_adapter
 
 _log = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def parse_bos_uri(uri: str) -> dict[str, str]:
     import re
 
     pattern = re.compile(
-        r"^bos://(?P<domain>memory|governance|omo|analysis|persona|capability|forge|meta|ecos|agora|cockpit|l4-kernel|runtime|swarm|system)"
+        rf"^bos://(?P<domain>{BOS_URI_DOMAIN_PATTERN})"
         r"/(?P<package>[a-z][a-z0-9-]+)/(?P<action>[a-z][a-z0-9-]+)$"
     )
     m = pattern.match(uri)

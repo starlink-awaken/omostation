@@ -2,7 +2,7 @@
 
 > 本文档描述 agora 与 eCOS 系统其他部分的边界：暴露的接口、依赖的上游、影响的下游。
 >
-> 架构演进对比参见：[`docs/ARCHITECTURE-EVOLUTION.md`](../docs/ARCHITECTURE-EVOLUTION.md)
+> 系统全景参见：[`../../docs/PANORAMA.md`](../../docs/PANORAMA.md)
 
 ---
 
@@ -16,7 +16,7 @@
 
 ### 入口
 
-- **CLI**: `agora` 37 子命令
+- **CLI**: `agora` 子命令 (见 project-registry.yaml: agora)
 - **MCP stdio**: `agora-mcp` 
 - **SSE**: `agora-server` :7431
 - **HTTP**: `agora-web` :7422 / :8080

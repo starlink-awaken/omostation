@@ -6,7 +6,7 @@
 > **Health**: See local CI and runtime probes
 > **SSOT**: 运行时健康、测试通过率、路由/工具计数以本项目 CI、运行时探针和 workspace governance SSOT 为准
 >
-> 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
+> 系统全景参见：[`../../docs/PANORAMA.md`](../../docs/PANORAMA.md)
 
 ---
 
@@ -42,7 +42,7 @@ graph TB
 
 | Type | Entry | Port / Notes |
 |:--|:--|:--|
-| CLI | `agora` | 37 子命令 |
+| CLI | `agora` | 子命令 (见 project-registry.yaml: agora) |
 | MCP stdio | `agora-mcp` |  |
 | SSE | `agora-server` | :7431 |
 | HTTP | `agora-web` | :7422 / :8080 |
