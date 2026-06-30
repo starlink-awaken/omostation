@@ -161,19 +161,21 @@ repos:
         name: omo c2g/omo boundary gate (单一 facade 接入)
         entry: uv run --directory projects/omo python -m omo.cli lint c2g-omo-boundary --workspace-root .
         language: system
-        files: ^(projects/c2g/src/c2g/.*\.py|projects/omo/src/omo/omo_governance_surfaces\.py|projects/omo/src/omo/omo_lint\.py|projects/omo/tests/test_omo_governance_surfaces\.py|\.omo/standards/omo-governance-surfaces\.md|AGENTS\.md).*
+        files: ^(projects/c2g/src/c2g/.*\.py|projects/omo/src/omo/omo_governance_surfaces\.py|projects/omo/src/omo/omo_lint\.py|projects/omo/tests/test_omo_governance_surfaces\.py|\.omo/standards/omo-governance-surfaces\.md).*
         pass_filenames: false
         stages: [pre-commit]
         # P53+: c2g 只能通过 c2g/omo_client.py 接入 OMO，避免散弹式 import 内核模块.
+        # 2026-06-30: AGENTS\.md 移出 files — 同 omo-ingress-artifact-gate 治本 (改 doc 不触发全局 boundary lint, 防同类 worktree-wide 死结).
 
       - id: omo-ingress-artifact-gate
         name: omo ingress artifact gate (registry -> artifact -> carrier 对齐)
         entry: uv run --directory projects/omo python -m omo.cli lint ingress-artifacts --workspace-root .
         language: system
-        files: ^(\.omo/_delivery/ingress/|projects/omo/src/omo/omo_ingress\.py|projects/omo/src/omo/omo_governance_surfaces\.py|projects/omo/src/omo/omo_lint\.py|projects/omo/tests/test_omo_ingress\.py|projects/omo/tests/test_omo_governance_surfaces\.py|\.omo/standards/omo-governance-surfaces\.md|AGENTS\.md).*
+        files: ^(\.omo/_delivery/ingress/|projects/omo/src/omo/omo_ingress\.py|projects/omo/src/omo/omo_governance_surfaces\.py|projects/omo/src/omo/omo_lint\.py|projects/omo/tests/test_omo_ingress\.py|projects/omo/tests/test_omo_governance_surfaces\.py|\.omo/standards/omo-governance-surfaces\.md).*
         pass_filenames: false
         stages: [pre-commit]
         # P54+: ingress artifact 不只是“有文件”，还要和 registry、carrier 元数据一致.
+        # 2026-06-30: AGENTS\.md 移出 files — 改 doc 不触发全局 ingress lint (worktree-wide, 被并发 .omo dirty 干扰拦无关 commit c824ad5b). ingress 实现/standard 改动仍触发, 治理不削弱.
 
       - id: ruff
         name: Ruff Linter
