@@ -6,7 +6,7 @@
 > **Health**: See local CI and governance audit outputs
 > **SSOT**: 运行时健康、测试通过率、CLI/MCP 子命令规模以本项目 CI、治理审计和 workspace governance SSOT 为准
 >
-> 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
+> 系统全景参见：[`../../docs/PANORAMA.md`](../../docs/PANORAMA.md)
 
 ---
 
@@ -40,9 +40,9 @@ graph TB
 
 | Type | Entry | Port / Notes |
 |:--|:--|:--|
-| CLI | `omo` | 39 子命令 (含 deprecated bridge/strategy) |
+| CLI | `omo` | 子命令 (见 project-registry.yaml: omo.cli_subcommands) (含 deprecated bridge/strategy) |
 | CLI | `omo-debt` / `cards` | 债务/CARDS 专用入口 |
-| MCP stdio | `omo-mcp` | 19 tools |
+| MCP stdio | `omo-mcp` | MCP tools (见 project-registry.yaml: omo.mcp_tools) |
 | SSE daemon | `omo-sse-daemon` | |
 
 ## 3. 核心模块
@@ -50,7 +50,7 @@ graph TB
 | Module | Responsibility |
 |:--|:--|
 | `src/omo/cli.py` | CLI entry (39 subcommands) |
-| `src/omo/mcp_server.py` | MCP server (19 tools) |
+| `src/omo/mcp_server.py` | MCP server (MCP tools (见 project-registry.yaml: omo.mcp_tools)) |
 | `src/omo/omo_io.py` | AppendOnlyLog + fcntl 跨进程锁 |
 | `src/omo/_shared/` | advisory_lock, append_only_log, timestamp_model |
 | `src/omo/categories/` | audit, bos, debt, governance, worker 分类聚合 |

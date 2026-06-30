@@ -16,9 +16,9 @@
 
 ### 入口
 
-- **CLI**: `omo` 39 子命令 (含 deprecated bridge/strategy)
+- **CLI**: `omo` 子命令 (见 project-registry.yaml: omo.cli_subcommands) (含 deprecated bridge/strategy)
 - **CLI**: `omo-debt` / `cards`
-- **MCP stdio**: `omo-mcp` 19 tools
+- **MCP stdio**: `omo-mcp` MCP tools (见 project-registry.yaml: omo.mcp_tools)
 - **SSE daemon**: `omo-sse-daemon`
 
 ## 2. 上游依赖
