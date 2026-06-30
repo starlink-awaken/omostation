@@ -32,8 +32,8 @@ check_launchd() {
   local out
   out=$(launchctl list "$label" 2>/dev/null) || return 2
   local pid exit_code
-  pid=$(echo "$out" | grep -o '"PID" = [0-9]*' | awk '{print $3}')
-  exit_code=$(echo "$out" | grep -o '"LastExitStatus" = [0-9]*' | awk '{print $3}')
+  pid=$(echo "$out" | grep -o '"PID" = [0-9]*' | awk '{print $3}' || true)
+  exit_code=$(echo "$out" | grep -o '"LastExitStatus" = [0-9]*' | awk '{print $3}' || true)
   if [[ -n "$pid" && "$pid" != "0" ]]; then
     echo "running:$pid"
   elif [[ "$exit_code" == "0" ]]; then
@@ -182,7 +182,7 @@ for entry in "${SERVICES[@]}"; do
   [[ "$s" == failed:* ]] && ((failed_ct++))
 done
 echo "Launchd: $running_ct running, $failed_ct failed"
-docker_ok=$(for c in "${DOCKER_SERVICES[@]}"; do check_docker "$c"; done | grep -c "running")
+docker_ok=$(for c in "${DOCKER_SERVICES[@]}"; do check_docker "$c"; done | grep -c "running" || true)
 echo "Docker:  $docker_ok/${#DOCKER_SERVICES[@]} running"
 echo ""
 echo "📁 $RUNTIME_MATRIX"

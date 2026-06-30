@@ -71,7 +71,7 @@ case "$ACTION" in
       svc_name="${entry%%|*}"
       rest="${entry#*|}"
       label="${rest%%|*}"
-      pid=$(launchctl list "$label" 2>/dev/null | grep -o '"PID" = [0-9]*' | awk '{print $3}')
+      pid=$(launchctl list "$label" 2>/dev/null | grep -o '"PID" = [0-9]*' | awk '{print $3}' || true)
       if [[ -n "$pid" && "$pid" != "0" ]]; then
         echo "  ✅ $svc_name (PID $pid)"
       else
@@ -117,11 +117,11 @@ IFS='|' read -r _ LABEL PORT WORKDIR <<< "$SERVICE_DATA"
 case "$ACTION" in
   status)
     out=$(launchctl list "$LABEL" 2>/dev/null || echo "not found")
-    pid=$(echo "$out" | grep -o '"PID" = [0-9]*' | awk '{print $3}')
-    exit_code=$(echo "$out" | grep -o '"LastExitStatus" = [0-9]*' | awk '{print $3}')
+    pid=$(echo "$out" | grep -o '"PID" = [0-9]*' | awk '{print $3}' || true)
+    exit_code=$(echo "$out" | grep -o '"LastExitStatus" = [0-9]*' | awk '{print $3}' || true)
     if [[ -n "$pid" && "$pid" != "0" ]]; then
       echo "✅ $SERVICE_NAME: running (PID $pid)"
-      [[ "$PORT" != "—" ]] && echo "   Port $PORT: $(lsof -iTCP:$PORT -sTCP:LISTEN -P 2>/dev/null | grep -q LISTEN && echo 'listening' || echo 'closed')"
+      [[ "$PORT" != "—" ]] && echo "   Port $PORT: $(lsof -iTCP:$PORT -sTCP:LISTEN -P 2>/dev/null | grep -q LISTEN && echo 'listening' || echo 'closed' || true)"
     elif [[ "$exit_code" == "0" ]]; then
       echo "⏸  $SERVICE_NAME: idle (loaded, not running)"
     else
@@ -133,7 +133,7 @@ case "$ACTION" in
     launchctl kickstart -kp "gui/$(id -u)/$LABEL" 2>/dev/null || true
     launchctl start "$LABEL" 2>/dev/null || true
     sleep 1
-    pid=$(launchctl list "$LABEL" 2>/dev/null | grep -o '"PID" = [0-9]*' | awk '{print $3}')
+    pid=$(launchctl list "$LABEL" 2>/dev/null | grep -o '"PID" = [0-9]*' | awk '{print $3}' || true)
     if [[ -n "$pid" && "$pid" != "0" ]]; then
       echo "✅ $SERVICE_NAME started (PID $pid)"
     else
@@ -152,7 +152,7 @@ case "$ACTION" in
     launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$LABEL.plist" 2>/dev/null || \
       launchctl start "$LABEL" 2>/dev/null || true
     sleep 2
-    pid=$(launchctl list "$LABEL" 2>/dev/null | grep -o '"PID" = [0-9]*' | awk '{print $3}')
+    pid=$(launchctl list "$LABEL" 2>/dev/null | grep -o '"PID" = [0-9]*' | awk '{print $3}' || true)
     [[ -n "$pid" && "$pid" != "0" ]] && echo "✅ $SERVICE_NAME restarted (PID $pid)" || echo "❌ $SERVICE_NAME restart failed"
     ;;
   *)

@@ -118,7 +118,7 @@ case "$CMD" in
       while read -r group; do
         desc=$(sed -n "/^      $group:/,/^    [a-z_]/{/description: /s/.*description: \"\(.*\)\"/\1/p}" "$RUNTIME_MATRIX" 2>/dev/null || echo "")
         [[ -z "$desc" ]] && desc=$(sed -n "/^  groups:/,//{/^    $group:/,/^    [a-z_]/{/description: /p}}" "$RUNTIME_MATRIX" | head -1 | sed 's/.*description: "//;s/"//')
-        members=$(sed -n "/^    $group:/,/^    [a-z_]/p" "$RUNTIME_MATRIX" | grep "members:" | sed 's/.*\[//;s/\]//' | tr ',' ' ')
+        members=$(sed -n "/^    $group:/,/^    [a-z_]/p" "$RUNTIME_MATRIX" | grep "members:" | sed 's/.*\[//;s/\]//' | tr ',' ' ' || true)
         echo "  • $group"
         echo "    $desc"
         echo "    Members: $members"
@@ -127,8 +127,8 @@ case "$CMD" in
     ;;
 
   version)
-    ver=$(grep "version:" "$RUNTIME_MATRIX" | head -1 | sed 's/.*version: //')
-    updated=$(grep "updated:" "$RUNTIME_MATRIX" | head -1 | sed 's/.*updated: "//;s/"//')
+    ver=$(grep "version:" "$RUNTIME_MATRIX" | head -1 | sed 's/.*version: //' || true)
+    updated=$(grep "updated:" "$RUNTIME_MATRIX" | head -1 | sed 's/.*updated: "//;s/"//' || true)
     echo "Runtime Matrix v$ver"
     echo "Updated: $updated"
     echo "Path:    $RUNTIME_MATRIX"
