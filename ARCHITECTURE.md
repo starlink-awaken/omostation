@@ -6,7 +6,7 @@
 > **Health**: See local CI and runtime probes
 > **SSOT**: 运行时健康、测试通过率、服务端口/工具计数以本项目 CI、运行时探针和 workspace governance SSOT 为准
 >
-> 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
+> 系统全景参见：[`../../docs/PANORAMA.md`](../../docs/PANORAMA.md)
 
 ---
 
@@ -39,7 +39,7 @@ graph TB
 | Type | Entry | Port / Notes |
 |:--|:--|:--|
 | CLI | `runtime / ecos-matrix-scheduler` |  |
-| MCP stdio | `runtime.mcp_server` | 30 tools |
+| MCP stdio | `runtime.mcp_server` | MCP tools (见 project-registry.yaml: runtime) |
 | HTTP | `cron_service/server.py` | :7450 |
 
 ## 3. 核心模块
