@@ -186,12 +186,45 @@ projects:
     role: "Web 控制台 UI (挂载至 cockpit /hermes/*)"
     note: "非 git 子模块，直接在 projects/ 下"
 
+  toolbox:
+    layer: "X"
+    stack: "Multi (TypeScript MCP / JS Skills / Python CLI)"
+    role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP / Skill / CLI)"
+    storage: "/Users/xiamingxing/ToolBox/"
+    # 收敛到 bos://capability/ 域 (eCOS 5 域锁定), 不创建新域
+    bos_uri_root: "bos://capability"
+    bos_services:
+      - id: wps-office-mcp
+        bos_uri: "bos://capability/wps-office-mcp/invoke"
+        git: "/Users/xiamingxing/ToolBox/wps-office-mcp/.git"
+        tools_count: 243
+        status: active
+      - id: wps-skills
+        bos_uri: "bos://capability/wps-skills/load"
+        git: "/Users/xiamingxing/ToolBox/wps-skills/.git"
+        status: active
+      - id: bos-skill-cli
+        bos_uri: "bos://capability/bos-skill-cli/exec"
+        git: "/Users/xiamingxing/ToolBox/bos-skill-cli/.git"
+        status: active
+    note: "非 git 子模块 — 外部域, 通过 bos://capability/{package}/{action} 暴露 3 个 L3 实例"
+    crosscut:
+      consumes: [L4-A, L4-B, L4-C, L5, L∞]
+      produces: [I0-capability-services, L0-tools-registry]
+      governed_by: [X1-C02-I0/Agora, X1-C03-agora.register, CS-10-BOS-URI, CR-ADMISSION-01]
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: false
+    x3_value: false
+    status: active
+    added: "2026-06-30"
+
 # ── Cross-project facts ──
 bos:
-  service_count: 100            # grep -c 'uri: "bos://' bos-services.yaml
+  service_count: 113            # grep -c 'uri: "bos://' bos-services.yaml (110 baseline + 3 ToolBox)
   domains:
     primary: ["memory", "governance", "analysis", "persona", "capability"]
-    extended: ["meta", "omo", "swarm", "system"]
+    extended: ["meta", "omo", "swarm", "system", "toolbox"]
 
 gac:
   rules_count: 89                # grep -c '    - id: CR-' .omo/_truth/registry/governance-checks.yaml
@@ -208,5 +241,5 @@ archived:
     merged_into: "cockpit HTTP :8090"
 
 # ── Metadata ──
-_last_updated: "2026-06-29"
+_last_updated: "2026-06-30"
 _update_method: "Manual version/python; drift 由 bin/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"
