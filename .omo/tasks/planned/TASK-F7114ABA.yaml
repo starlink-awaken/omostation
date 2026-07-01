@@ -16,7 +16,7 @@ context_uri: bos://governance/tasks/planned/TASK-F7114ABA
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: "auto_promote_eligible:ISC-32-ADR (risk L2, depends_on=[], human_approval_required=false)"
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
