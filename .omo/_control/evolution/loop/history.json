@@ -26,10 +26,10 @@
     },
     {
       "week": "2026-W27",
-      "generated_at": "2026-06-12T07:32:37Z",
-      "candidate_count": 8,
-      "planned_count": 8,
-      "drift_count": 0,
+      "generated_at": "2026-07-01T02:48:08Z",
+      "candidate_count": 4,
+      "planned_count": 4,
+      "drift_count": 1,
       "approval_required_all": true
     },
     {

@@ -28,6 +28,7 @@ last-reviewed: 2026-06-28
 | `direct-io-baseline.yaml` | Grandfathered direct I/O baseline (policy: must stay empty) |
 | `governance-checks.yaml` | GaC declarative rule registry (ADR-0106) + X1-X4 checker classes |
 | `governance-alerts.yaml` | X1-X4 alert rules when checks fail |
+| `governance-evolution-roadmap.yaml` | Systemic governance evolution roadmap, capability traces, and golden path contracts |
 | `task-policies.yaml` | Task YAML field validators (red-line policies) |
 | `debt.yaml` | Tech debt item catalog + dashboard/report refs |
 | `dependency-baseline.yaml` | Workspace-wide min version constraints |

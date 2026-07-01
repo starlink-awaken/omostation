@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-06-30T09:08:45Z",
+  "mode": "weekly",
+  "rollout": {
+    "returncode": 1,
+    "fallback_used": true,
+    "output_path": null
+  }
+}

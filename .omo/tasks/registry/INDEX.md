@@ -10,9 +10,10 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (10 个)
+## Planned Tasks (11 个)
 | ID | Title | Status |
 |----|-------|--------|
+| OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
 | OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z | No-op: drift detector reported 0 drift; loop con | candidate |
 | QUEST-5 | 测试每日打扫 | candidate |
 | QUEST-6 | 测试每日打扫 | candidate |
@@ -22,7 +23,7 @@
 | TASK-67C63D6C | AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾 | candidate |
 | TASK-6B868907 | P1 产品门户: c2g draft→bet路径 + 全场景门户 | candidate |
 | TASK-94BB9C70 | P1 并发Agent抢占: 共享文件advisory-lock | candidate |
-| TASK-F7114ABA | P1 GodModule: omo_ingress354L/agora1945L/gbrain3 | candidate |
+| TASK-F7114ABA | P1 GodModule: omo_ingress/agora/gbrain (行数见源码实测, | candidate |
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
@@ -65,5 +66,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-06-30 (依据 `omo state sync-tasks` 与真实目录重算: done=95, planned=10, active=0, archived=6 顶层)*
+*Updated: 2026-07-01 (依据 `omo state sync-tasks` 与真实目录重算: done=95, planned=11, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*

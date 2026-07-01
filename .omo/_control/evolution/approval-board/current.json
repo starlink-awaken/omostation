@@ -1,6 +1,24 @@
 {
-  "generated_at": "2026-06-29T09:21:53Z",
+  "generated_at": "2026-07-01T02:48:09Z",
   "tasks": [
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+      "task_root": "planned",
+      "status": "candidate",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W29",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-30T14:04:40Z",
+      "title": "Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml",
+      "review_note": null,
+      "approval_status": null,
+      "proposal_status": null,
+      "eligible": null,
+      "blockers": [],
+      "next_action": "await_human_review"
+    },
     {
       "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z",
       "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z.yaml",
@@ -39,10 +57,10 @@
     }
   ],
   "summary": {
-    "task_count": 2,
-    "approval_required_count": 2,
-    "awaiting_human_count": 1,
-    "approval_pending_count": 1,
+    "task_count": 3,
+    "approval_required_count": 3,
+    "awaiting_human_count": 2,
+    "approval_pending_count": 2,
     "approval_granted_blocked_count": 0,
     "approval_ready_count": 0,
     "task_policy_blocked_count": 0,

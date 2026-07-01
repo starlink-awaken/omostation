@@ -1,0 +1,319 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-30
+---
+
+version: 1
+description: Systemic governance evolution roadmap and traceability contract.
+ssot:
+  architecture: ARCHITECTURE.md
+  agent_workflows: .omo/_truth/registry/agent-workflows.yaml
+  bos_routes: projects/agora/etc/bos-services.yaml
+  capabilities: .omo/_truth/registry/projects-capabilities.yaml
+  mof_capabilities: .omo/_truth/registry/mof-capabilities.yaml
+entrypoints:
+  human: cockpit governance evolution
+  agent: uv run --with pyyaml python bin/governance-evolution.py status --json
+  bos:
+    - bos://governance/evolution/status
+    - bos://governance/evolution/validate
+    - bos://governance/evolution/traces
+    - bos://governance/evolution/golden-paths
+    - bos://governance/evolution/packages
+    - bos://governance/evolution/loop
+preferred_entrypoints:
+  human:
+    command: cockpit
+    role: Human-facing operating surface.
+  agent:
+    command: cockpit agent
+    role: Agent governance control entry.
+  gate:
+    command: make gac-local-gate
+    role: Local and CI governance gate.
+  internal:
+    command: bin/*
+    role: Implementation detail unless surfaced by Cockpit, BOS, or the gate.
+initiatives:
+  - id: worktree-release-convergence
+    title: Release and worktree convergence
+    recommendation: Separate completed governance evolution changes from unrelated dirty submodule or runtime state.
+    status: active
+    meadows_level: 6
+    owner: governance-team
+    layer: X4
+    ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
+    entrypoints:
+      - git status --short
+      - uv run --with pyyaml python bin/agent-workflow.py status --json
+      - uv run --with pyyaml python bin/governance-evolution.py packages --json
+      - make gac-local-gate
+    deliverables:
+      - .omo/_delivery/agent-workflows/runs/**
+      - bin/governance-evolution.py
+      - tests/test_governance_evolution.py
+    verification:
+      - command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, compliance, --json]
+      - command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, packages, --json]
+      - command: [make, gac-local-gate]
+    acceptance:
+      - governance-evolution packages reports unknown_count=0 or documents intentional runtime/data exclusions.
+      - governance-evolution packages reports release_ready and review_findings for submodule, runtime/control, and data-output packages.
+      - AGCP compliance is clean with no stale locks before release packaging.
+      - Submodule pointer changes are reviewed through the submodule-pointer package.
+    done_when: Release package classification and release readiness are machine-readable for the active worktree.
+    blocked_by: []
+    next_step: Review governance-evolution package findings and explicitly include or exclude review-required packages before release.
+  - id: cockpit-governance-status-plane
+    title: Cockpit governance status plane
+    recommendation: Surface AGCP and governance evolution status through Cockpit instead of making users assemble state from low-level commands.
+    status: active
+    meadows_level: 6
+    owner: cockpit-team
+    layer: L3
+    ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
+    entrypoints:
+      - cockpit agent status --json
+      - cockpit governance evolution status --json
+      - cockpit governance evolution traces --json
+      - cockpit governance evolution golden-paths --json
+      - cockpit governance evolution packages --json
+    deliverables:
+      - projects/cockpit/src/cockpit/commands/governance.py
+    verification:
+      - command: [uv, run, --project, projects/cockpit, pytest, projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py, -q]
+    acceptance:
+      - Cockpit exposes AGCP status and governance evolution status/traces/golden-paths/packages through human-facing commands.
+      - The Cockpit commands delegate to the registry-backed runners instead of duplicating dynamic facts.
+      - governance-evolution validate checks the Cockpit delegation contract.
+    done_when: Operators can inspect AGCP and governance evolution views from Cockpit without reading low-level files.
+    blocked_by: []
+  - id: claim-policy-tiering
+    title: Claim policy tiering
+    recommendation: Keep core governance paths on required claim tiers while broader docs and entrypoint paths stay advisory.
+    status: active
+    meadows_level: 5
+    owner: governance-team
+    layer: X1
+    ssot: .omo/_truth/registry/agent-workflows.yaml
+    entrypoints:
+      - uv run --with pyyaml python bin/agent-workflow.py status --json
+    deliverables:
+      - .omo/_truth/registry/agent-workflows.yaml
+      - bin/agent-workflow.py
+      - tests/test_agent_workflow.py
+    verification:
+      - command: [uv, run, pytest, tests/test_agent_workflow.py, -q]
+    acceptance:
+      - Core governance paths require current-run claims before verify or closeout.
+      - Broader agent entrypoint docs remain advisory and visible in status output.
+      - Claim coverage reports required and advisory misses separately.
+    done_when: Claim policy tiering blocks unclaimed core governance changes while keeping broad docs advisory.
+    blocked_by: []
+  - id: bos-governance-evolution-routes
+    title: BOS governance evolution routes
+    recommendation: Expose governance roadmap, validation, traces, golden paths, release packages, and loop status through BOS so MCP agents can discover them without prompt memory.
+    status: active
+    meadows_level: 6
+    owner: agora-team
+    layer: I0
+    ssot: projects/agora/etc/bos-services.yaml
+    entrypoints:
+      - bos://governance/evolution/status
+      - bos://governance/evolution/validate
+      - bos://governance/evolution/traces
+      - bos://governance/evolution/golden-paths
+      - bos://governance/evolution/packages
+      - bos://governance/evolution/loop
+    deliverables:
+      - projects/agora/etc/bos-services.yaml
+    verification:
+      - command: [uv, run, --project, projects/agora, pytest, projects/agora/tests/unit/test_bos_registry.py, -q]
+    acceptance:
+      - All governance evolution CLI views have matching BOS routes.
+      - Non-CLI governance evolution routes such as loop status are explicitly listed in this roadmap.
+      - Agora BOS tests assert the fixed governance evolution route set.
+      - BOS routes execute the same registry-backed runner commands as direct CLI usage.
+    done_when: Agents can discover every governance evolution status view and loop monitor through BOS.
+    blocked_by: []
+  - id: capability-traceability
+    title: Capability to entrypoint to verifier traceability
+    recommendation: Every strategic capability should map to owner, entrypoint, SSOT, and verification command.
+    status: active
+    meadows_level: 6
+    owner: governance-team
+    layer: X4
+    ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
+    entrypoints:
+      - uv run --with pyyaml python bin/governance-evolution.py traces --json
+    deliverables:
+      - .omo/_truth/registry/governance-evolution-roadmap.yaml
+      - bin/governance-evolution.py
+    verification:
+      - command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, validate, --json]
+    acceptance:
+      - Each strategic capability maps to owner, entrypoint, SSOT, and verifier.
+      - Release package convergence is represented as a capability trace.
+      - Trace output stays machine-readable for agents and Cockpit.
+    done_when: governance-evolution traces covers AGCP, roadmap, packages, C2G ingress, and MOF bridge.
+    blocked_by: []
+  - id: governance-operating-rhythm
+    title: OMO C2G MOF operating rhythm
+    recommendation: Make state bridge, ingress, and drift checks part of a visible operating cadence instead of ad-hoc deep maintenance.
+    status: active
+    meadows_level: 9
+    owner: governance-team
+    layer: L2-L0
+    ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
+    entrypoints:
+      - python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json
+      - bos://governance/evolution/loop
+      - uv run --project projects/c2g c2g bet --help
+      - uv run --project projects/omo omo bridge --help
+    deliverables:
+      - .omo/_truth/registry/governance-evolution-roadmap.yaml
+    verification:
+      - command: [python3, projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py, --json]
+    acceptance:
+      - OMO, C2G, and MOF checks are represented in the operating rhythm.
+      - OMO evolution loop monitoring is discoverable through BOS.
+      - The rhythm points to executable commands rather than narrative process.
+      - Missing optional adapters degrade through AGCP doctor instead of bypassing governance.
+    done_when: Governance maintenance has daily, weekly, and pre-release executable checks.
+    blocked_by: []
+  - id: golden-path-e2e
+    title: Golden path end-to-end checks
+    recommendation: "Keep three canonical flows visible and verifiable: agent change, strategy ingress, and BOS invocation."
+    status: active
+    meadows_level: 5
+    owner: governance-team
+    layer: X1-X4
+    ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
+    entrypoints:
+      - uv run --with pyyaml python bin/governance-evolution.py golden-paths --json
+    deliverables:
+      - .omo/_truth/registry/governance-evolution-roadmap.yaml
+    verification:
+      - command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, validate, --json]
+    acceptance:
+      - Agent change, strategy ingress, BOS invocation, and release packaging are visible as golden paths.
+      - Each golden path has an executable verifier.
+      - The roadmap validator enforces golden path structure.
+    done_when: Golden paths cover agent execution, strategy ingress, BOS discovery, and release package review.
+    blocked_by: []
+  - id: entrypoint-convergence
+    title: Entry point convergence
+    recommendation: Keep human, agent, and gate entrypoints narrow while leaving lower-level commands as implementation details.
+    status: active
+    meadows_level: 5
+    owner: architecture-team
+    layer: L3-I0-X
+    ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
+    entrypoints:
+      - cockpit
+      - cockpit agent
+      - make gac-local-gate
+    deliverables:
+      - README.md
+      - AGENTS.md
+      - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+    verification:
+      - command: [uv, run, --with, pyyaml, python, bin/doc-ssot-lint.py, --json]
+    acceptance:
+      - Human, agent, BOS, and gate entrypoints are explicitly narrow.
+      - Markdown files point to registry-backed commands instead of copying dynamic state.
+      - Lower-level bin commands remain implementation details unless surfaced by Cockpit, BOS, or GaC.
+    done_when: Entrypoint documentation matches the registry-backed control plane and has no SSOT drift.
+    blocked_by: []
+capability_traces:
+  - id: trace.agent-governance-control-plane
+    capability: Agent governance control plane
+    owner: governance-team
+    entry: cockpit agent status --json
+    ssot: .omo/_truth/registry/agent-workflows.yaml
+    verifier: uv run --with pyyaml python bin/agent-workflow.py compliance --json
+  - id: trace.governance-evolution-roadmap
+    capability: Governance evolution roadmap
+    owner: governance-team
+    entry: cockpit governance evolution status --json
+    ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
+    verifier: uv run --with pyyaml python bin/governance-evolution.py validate --json
+  - id: trace.release-package-convergence
+    capability: Release package convergence
+    owner: governance-team
+    entry: cockpit governance evolution packages --json
+    ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
+    verifier: uv run --with pyyaml python bin/governance-evolution.py packages --json
+  - id: trace.omo-evolution-loop
+    capability: OMO evolution loop monitoring
+    owner: omo-team
+    entry: bos://governance/evolution/loop
+    ssot: projects/agora/etc/bos-services.yaml
+    verifier: uv run --project projects/agora pytest projects/agora/tests/unit/test_bos_registry.py -q
+  - id: trace.strategy-ingress
+    capability: Strategy to governed task ingress
+    owner: strategy-team
+    entry: cockpit compass bet <pitch.md>
+    ssot: projects/c2g
+    verifier: uv run --project projects/c2g c2g bet --help
+  - id: trace.mof-state-bridge
+    capability: MOF to OMO state bridge
+    owner: ecos-team
+    entry: python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json
+    ssot: .omo/_truth/registry/mof-capabilities.yaml
+    verifier: python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json
+golden_paths:
+  - id: agent-change
+    title: Agent changes governed code or docs
+    owner: governance-team
+    steps:
+      - bootstrap
+      - start
+      - claim
+      - verify
+      - closeout
+      - compliance
+    verifier: uv run --with pyyaml python bin/agent-workflow.py compliance --json
+  - id: strategy-ingress
+    title: Strategy input becomes governed work
+    owner: strategy-team
+    steps:
+      - cockpit compass bet
+      - c2g bet
+      - OMO planned task
+      - AGCP run
+      - evidence closeout
+    verifier: uv run --project projects/c2g c2g bet --help
+  - id: bos-invocation
+    title: Agent discovers governance capability through BOS
+    owner: agora-team
+    steps:
+      - resolve bos://governance/evolution/status
+      - run governance-evolution status
+      - inspect traces
+      - pick verifier
+    verifier: uv run --project projects/agora pytest projects/agora/tests/unit/test_bos_registry.py -q
+  - id: release-package-review
+    title: Active worktree is grouped into release packages
+    owner: governance-team
+    steps:
+      - run governance-evolution packages
+      - inspect unknown_count
+      - review runtime/data exclusions
+      - review submodule-pointer package
+      - ship through AGCP closeout
+    verifier: uv run --with pyyaml python bin/governance-evolution.py packages --json
+operating_rhythm:
+  daily:
+    - uv run --with pyyaml python bin/agent-workflow.py status --json
+    - uv run --with pyyaml python bin/governance-evolution.py status --json
+    - uv run --with pyyaml python bin/governance-evolution.py packages --json
+  pre_release:
+    - make gac-local-gate
+    - uv run --with pyyaml python bin/agent-workflow.py compliance --json
+    - uv run --with pyyaml python bin/governance-evolution.py validate --json
+  weekly:
+    - python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json
+    - bin/mof-drift

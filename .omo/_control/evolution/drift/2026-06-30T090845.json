@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-06-30T09:08:45Z",
+  "kinds": 4,
+  "drift_count": 1,
+  "results": [
+    {
+      "kind": "entry_drift",
+      "ts": "2026-06-30T09:08:45Z",
+      "expected": [
+        "radar",
+        "assistant",
+        "health"
+      ],
+      "present": [
+        "radar",
+        "assistant",
+        "health"
+      ],
+      "missing": [],
+      "drift": false
+    },
+    {
+      "kind": "doc_drift",
+      "ts": "2026-06-30T09:08:45Z",
+      "plan_ref": ".omo/tasks/done/OPC-P4-MODEL-COMPUTE.yaml",
+      "doc_ref": "docs/OPC-PHASE4-MODEL-COMPUTE.md",
+      "doc_exists": false,
+      "plan_gate_status": "passed",
+      "doc_says_passed": false,
+      "consistent": false,
+      "drift": true
+    },
+    {
+      "kind": "duplicate_facts",
+      "ts": "2026-06-30T09:08:45Z",
+      "findings": [],
+      "drift": false
+    },
+    {
+      "kind": "agora_bypass",
+      "ts": "2026-06-30T09:08:45Z",
+      "scanned_files": [
+        "projects/runtime/src/runtime/executor/engine.py",
+        "projects/cockpit/src/cockpit/commands/scenario.py",
+        "projects/runtime/src/runtime/executor/config/__init__.py"
+      ],
+      "bypass_patterns": [],
+      "drift": false
+    }
+  ]
+}

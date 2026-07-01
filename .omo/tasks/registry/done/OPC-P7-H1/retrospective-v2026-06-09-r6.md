@@ -11,17 +11,17 @@ Generated: 2026-06-09T23:00:00Z
 ```json
 {
   "summary": {
-    "commit_count": 337,
-    "drift_count": 0
+    "commit_count": 485,
+    "drift_count": 1
   },
   "validation": {
     "omo_tests": {
-      "returncode": 0,
-      "summary": "18 passed in 0.07s"
+      "returncode": 1,
+      "summary": "\u001b[31m\u001b[31m\u001b[1m9 failed\u001b[0m, \u001b[32m9 passed\u001b[0m\u001b[31m in 0.12s\u001b[0m\u001b[0m"
     },
     "drift": {
       "kinds": 4,
-      "drift_count": 0
+      "drift_count": 1
     }
   },
   "debt": {
