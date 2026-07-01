@@ -1,0 +1,37 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+id: GAC-RULE-CR-L4-DOMAIN-REGISTRY-FRESHNESS
+type: GacRule
+name: L4 域注册表新鲜度
+description: 'L4 DomainRegistry 新鲜度, 防 stale 域配置 (治审计 D5: L4 整层 0 GaC 规则盲区, 打破完全无约束)'
+status: active
+domain: meta
+layer: L4
+created: '2026-07-01'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-L4-DOMAIN-REGISTRY-FRESHNESS
+  dimension: X2
+  layer: L4
+  check_type: freshness
+  executor:
+  - omo_audit
+  - ci_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-07-01'
+  target: projects/l4-kernel/src/l4_kernel/registry.py (DomainRegistry)
+  adr: ADR-0114
+  source_type: native
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-07-01T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生
