@@ -1,6 +1,6 @@
 # OPC P6 weekly retro — 2026-W27
 
-Generated: 2026-07-01T07:20:04Z
+Generated: 2026-07-01T07:21:01Z
 
 ## 1. Radar (P5-F1)
 - **📈 复用机会: renamed topic (多次出现, 值得抽象)**
@@ -57,10 +57,10 @@ Generated: 2026-07-01T07:20:04Z
 ```json
 {
   "stage": "retro",
-  "ts": "2026-07-01T07:20:04Z",
+  "ts": "2026-07-01T07:21:01Z",
   "summary": {
     "radar_candidates": 4,
-    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260701T072004Z-technical-radar-c114fc97.json",
+    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260701T072101Z-technical-radar-9b67919e.json",
     "drift_count": 1,
     "planned_tasks": 5,
     "audit_records": 0,

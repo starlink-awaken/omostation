@@ -49,6 +49,7 @@ initiatives:
       - git status --short
       - uv run --with pyyaml python bin/agent-workflow.py status --json
       - uv run --with pyyaml python bin/governance-evolution.py packages --json
+      - uv run --with pyyaml python bin/governance-evolution.py packages --write-decisions-template /tmp/release-decisions.yaml --json
       - make gac-local-gate
     deliverables:
       - .omo/_delivery/agent-workflows/runs/**
@@ -61,9 +62,10 @@ initiatives:
     acceptance:
       - governance-evolution packages reports unknown_count=0 or documents intentional runtime/data exclusions.
       - governance-evolution packages reports release_ready and review_findings for submodule, runtime/control, and data-output packages.
+      - governance-evolution packages can materialize a release decision template and replay a filled decision file through --require-ready.
       - AGCP compliance is clean with no stale locks before release packaging.
       - Submodule pointer changes are reviewed through the submodule-pointer package.
-    done_when: Release package classification and release readiness are machine-readable for the active worktree.
+    done_when: Release package classification, decision materialization, and release readiness are machine-readable for the active worktree.
     blocked_by: []
     next_step: Review governance-evolution package findings and explicitly include or exclude review-required packages before release.
   - id: cockpit-governance-status-plane
@@ -301,6 +303,8 @@ golden_paths:
     steps:
       - run governance-evolution packages
       - inspect unknown_count
+      - materialize decision_template when review_count is non-zero
+      - re-run packages with --decisions <file> --require-ready after workflow review
       - review runtime/data exclusions
       - review submodule-pointer package
       - ship through AGCP closeout

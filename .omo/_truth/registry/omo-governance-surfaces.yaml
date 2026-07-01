@@ -493,6 +493,35 @@ assets:
     status: active
     alias_target: .omo/_delivery/evidence-legacy/
     note: compatibility alias only; real storage must live under .omo/_delivery/
+  - id: OMO-GENERATED
+    ref: .omo/_generated/
+    plane: state_plane
+    asset_type: derived_state
+    persistence_mode: derived
+    retention_mode: until_replaced
+    truth_owner: governance
+    write_via:
+      - agents
+      - scripts
+    consumed_by:
+      - agents
+      - humans
+    notes: P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册
+    status: active
+  - id: OMO-AUTOPILOT
+    ref: .omo/autopilot/
+    plane: state_plane
+    asset_type: ephemeral_runtime
+    persistence_mode: ephemeral
+    retention_mode: session_only
+    truth_owner: agents
+    write_via:
+      - agents
+      - cron
+    consumed_by:
+      - agents
+    notes: P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册
+    status: active
 policies:
   top_level_asset_registration_required: true
   nested_omo_forbidden_for_new_writes: true

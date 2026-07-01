@@ -1,0 +1,164 @@
+# Release package decision evidence for AGCP closeout.
+# Not an ADR; keep outside .omo/_knowledge/decisions/ to avoid ADR number drift.
+decisions:
+- decision_id: governance-state-mutation:governance-task-lifecycle:.omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W27.md
+  path: .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W27.md
+  workflow: governance-state-mutation
+  package: governance-task-lifecycle
+  owner: governance-team
+  decision: defer
+  notes: Confirm task lifecycle changes were brokered and should ship.
+- decision_id: governance-state-mutation:governance-task-lifecycle:.omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-09-r11.md
+  path: .omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-09-r11.md
+  workflow: governance-state-mutation
+  package: governance-task-lifecycle
+  owner: governance-team
+  decision: defer
+  notes: Confirm task lifecycle changes were brokered and should ship.
+- decision_id: governance-state-mutation:governance-task-lifecycle:.omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r33.md
+  path: .omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r33.md
+  workflow: governance-state-mutation
+  package: governance-task-lifecycle
+  owner: governance-team
+  decision: defer
+  notes: Confirm task lifecycle changes were brokered and should ship.
+- decision_id: governance-state-mutation:governance-task-lifecycle:.omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r34.md
+  path: .omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r34.md
+  workflow: governance-state-mutation
+  package: governance-task-lifecycle
+  owner: governance-team
+  decision: defer
+  notes: Confirm task lifecycle changes were brokered and should ship.
+- decision_id: governance-state-mutation:governance-task-lifecycle:.omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r35.md
+  path: .omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r35.md
+  workflow: governance-state-mutation
+  package: governance-task-lifecycle
+  owner: governance-team
+  decision: defer
+  notes: Confirm task lifecycle changes were brokered and should ship.
+- decision_id: governance-state-mutation:governance-task-lifecycle:.omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r36.md
+  path: .omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r36.md
+  workflow: governance-state-mutation
+  package: governance-task-lifecycle
+  owner: governance-team
+  decision: defer
+  notes: Confirm task lifecycle changes were brokered and should ship.
+- decision_id: governance-state-mutation:governance-task-lifecycle:.omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r37.md
+  path: .omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r37.md
+  workflow: governance-state-mutation
+  package: governance-task-lifecycle
+  owner: governance-team
+  decision: defer
+  notes: Confirm task lifecycle changes were brokered and should ship.
+- decision_id: governance-state-mutation:governance-task-lifecycle:.omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r38.md
+  path: .omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r38.md
+  workflow: governance-state-mutation
+  package: governance-task-lifecycle
+  owner: governance-team
+  decision: defer
+  notes: Confirm task lifecycle changes were brokered and should ship.
+- decision_id: submodule-pointer-close:submodule-pointer:projects/omo
+  path: projects/omo
+  workflow: submodule-pointer-close
+  package: submodule-pointer
+  owner: release-team
+  decision: defer
+  notes: Close child repository changes before updating or releasing root pointers.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/approval-board/current.json
+  path: .omo/_control/evolution/approval-board/current.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/approval-board/current.md
+  path: .omo/_control/evolution/approval-board/current.md
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/drift-history/2026-07-01.json
+  path: .omo/_control/evolution/drift-history/2026-07-01.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/loop/2026-W27.json
+  path: .omo/_control/evolution/loop/2026-W27.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/loop/history.json
+  path: .omo/_control/evolution/loop/history.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/loop/trace-index.json
+  path: .omo/_control/evolution/loop/trace-index.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/self-evolve/2026-07-01.json
+  path: .omo/_control/evolution/self-evolve/2026-07-01.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/state/system.yaml
+  path: .omo/state/system.yaml
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/state/system_health.yaml
+  path: .omo/state/system_health.yaml
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/drift/2026-07-01T072057.json
+  path: .omo/_control/evolution/drift/2026-07-01T072057.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/drift/2026-07-01T072058.json
+  path: .omo/_control/evolution/drift/2026-07-01T072058.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/drift/2026-07-01T072059.json
+  path: .omo/_control/evolution/drift/2026-07-01T072059.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/drift/2026-07-01T072100.json
+  path: .omo/_control/evolution/drift/2026-07-01T072100.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.
+- decision_id: observer-audit:runtime-or-control-output:.omo/_control/evolution/drift/2026-07-01T072101.json
+  path: .omo/_control/evolution/drift/2026-07-01T072101.json
+  workflow: observer-audit
+  package: runtime-or-control-output
+  owner: governance-team
+  decision: defer
+  notes: Exclude runtime/control output unless it is deliberate release evidence.

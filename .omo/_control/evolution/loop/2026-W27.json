@@ -1,12 +1,12 @@
 {
   "week": "2026-W27",
-  "generated_at": "2026-07-01T07:20:04Z",
+  "generated_at": "2026-07-01T07:21:01Z",
   "radar": {
     "stage": "radar",
-    "ts": "2026-07-01T07:20:04Z",
+    "ts": "2026-07-01T07:21:01Z",
     "output": {
       "scenario": "technical-radar",
-      "generated_at": "2026-07-01T07:20:04Z",
+      "generated_at": "2026-07-01T07:21:01Z",
       "candidates": [
         {
           "title": "📈 复用机会: renamed topic (多次出现, 值得抽象)",
@@ -49,17 +49,17 @@
       "source": "cockpit:research",
       "db_path": "/Users/xiamingxing/.workspace/data.db",
       "trigger_source": "cron",
-      "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260701T072004Z-technical-radar-c114fc97.json"
+      "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260701T072101Z-technical-radar-9b67919e.json"
     }
   },
   "drift": {
-    "generated_at": "2026-07-01T07:20:04Z",
+    "generated_at": "2026-07-01T07:21:01Z",
     "kinds": 4,
     "drift_count": 1,
     "results": [
       {
         "kind": "entry_drift",
-        "ts": "2026-07-01T07:20:04Z",
+        "ts": "2026-07-01T07:21:01Z",
         "expected": [
           "radar",
           "assistant",
@@ -75,7 +75,7 @@
       },
       {
         "kind": "doc_drift",
-        "ts": "2026-07-01T07:20:04Z",
+        "ts": "2026-07-01T07:21:01Z",
         "plan_ref": ".omo/tasks/done/OPC-P4-MODEL-COMPUTE.yaml",
         "doc_ref": "docs/OPC-PHASE4-MODEL-COMPUTE.md",
         "doc_exists": false,
@@ -86,13 +86,13 @@
       },
       {
         "kind": "duplicate_facts",
-        "ts": "2026-07-01T07:20:04Z",
+        "ts": "2026-07-01T07:21:01Z",
         "findings": [],
         "drift": false
       },
       {
         "kind": "agora_bypass",
-        "ts": "2026-07-01T07:20:04Z",
+        "ts": "2026-07-01T07:21:01Z",
         "scanned_files": [
           "projects/runtime/src/runtime/executor/engine.py",
           "projects/cockpit/src/cockpit/commands/scenario.py",
@@ -105,13 +105,13 @@
   },
   "gap": {
     "stage": "gap",
-    "ts": "2026-07-01T07:20:04Z",
+    "ts": "2026-07-01T07:21:01Z",
     "candidates": [
       {
         "candidate": {
           "title": "Fix doc_drift drift",
           "source": "drift:doc_drift",
-          "timestamp": "2026-07-01T07:20:04Z",
+          "timestamp": "2026-07-01T07:21:01Z",
           "next_action": "see drift report: doc_drift"
         },
         "score": 2.0,
@@ -174,7 +174,7 @@
   },
   "task": {
     "stage": "task",
-    "ts": "2026-07-01T07:20:04Z",
+    "ts": "2026-07-01T07:21:01Z",
     "planned": [
       {
         "id": "OPC-P6-LOOP-2026-W27-00",
@@ -184,7 +184,7 @@
         "lane": "drift",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-07-01T07:20:04Z"
+        "ts": "2026-07-01T07:21:01Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W27-01",
@@ -194,7 +194,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-07-01T07:20:04Z"
+        "ts": "2026-07-01T07:21:01Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W27-02",
@@ -204,7 +204,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-07-01T07:20:04Z"
+        "ts": "2026-07-01T07:21:01Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W27-03",
@@ -214,7 +214,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-07-01T07:20:04Z"
+        "ts": "2026-07-01T07:21:01Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W27-04",
@@ -224,14 +224,14 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-07-01T07:20:04Z"
+        "ts": "2026-07-01T07:21:01Z"
       }
     ],
     "red_line_held": "all tasks status=planned; human approval required for active"
   },
   "swarm": {
     "stage": "swarm",
-    "ts": "2026-07-01T07:20:04Z",
+    "ts": "2026-07-01T07:21:01Z",
     "note": "P6 closeout 范围内只 plan; 实际派发受红线 'self-evolution task 仅落 planned' 约束",
     "planned_dispatch": [
       "OPC-P6-LOOP-2026-W27-00",
@@ -244,7 +244,7 @@
   },
   "audit": {
     "stage": "audit",
-    "ts": "2026-07-01T07:20:04Z",
+    "ts": "2026-07-01T07:21:01Z",
     "llm_audit_tail": [],
     "llm_audit_count": 0
   },
@@ -276,7 +276,7 @@
       },
       {
         "week": "2026-W27",
-        "generated_at": "2026-07-01T07:20:04Z",
+        "generated_at": "2026-07-01T07:21:01Z",
         "candidate_count": 5,
         "planned_count": 5,
         "drift_count": 1,
@@ -307,10 +307,10 @@
   },
   "retro": {
     "stage": "retro",
-    "ts": "2026-07-01T07:20:04Z",
+    "ts": "2026-07-01T07:21:01Z",
     "summary": {
       "radar_candidates": 4,
-      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260701T072004Z-technical-radar-c114fc97.json",
+      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260701T072101Z-technical-radar-9b67919e.json",
       "drift_count": 1,
       "planned_tasks": 5,
       "audit_records": 0,

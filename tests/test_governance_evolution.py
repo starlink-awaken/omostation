@@ -165,6 +165,61 @@ def test_governance_evolution_packages_accepts_decision_file(tmp_path: Path) -> 
     assert {item["decision"] for item in decided_report["decision_template"]} <= {"defer"}
 
 
+def test_governance_evolution_packages_writes_decision_template(tmp_path: Path) -> None:
+    decision_file = tmp_path / "release-decisions.yaml"
+
+    result = _run_evolution("packages", "--write-decisions-template", str(decision_file), "--json")
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["decision_template_written"] == str(decision_file)
+    template_text = decision_file.read_text(encoding="utf-8")
+    assert template_text.startswith("decisions:")
+    assert template_text.count("decision_id:") == report["decision_count"]
+    assert template_text.count("decision: null") == report["decision_count"]
+
+
+def test_governance_evolution_packages_writes_defaulted_decisions(tmp_path: Path) -> None:
+    decision_file = tmp_path / "release-decisions.yaml"
+
+    result = _run_evolution(
+        "packages",
+        "--write-decisions-template",
+        str(decision_file),
+        "--decision-default",
+        "defer",
+        "--require-ready",
+        "--json",
+    )
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["ok"] is True
+    assert report["release_ready"] is True
+    assert report["decision_template_default"] == "defer"
+    assert report["decision_summary"]["pending"] == 0
+    assert report["decision_summary"]["defer"] == report["decision_count"]
+    template_text = decision_file.read_text(encoding="utf-8")
+    assert template_text.count("decision: defer") == report["decision_count"]
+
+    decided = _run_evolution("packages", "--decisions", str(decision_file), "--require-ready", "--json")
+
+    assert decided.returncode == 0, decided.stderr
+    decided_report = json.loads(decided.stdout)
+    assert decided_report["release_ready"] is True
+    assert decided_report["decision_summary"]["pending"] == 0
+
+
+def test_governance_evolution_packages_rejects_missing_decision_template_parent(tmp_path: Path) -> None:
+    decision_file = tmp_path / "missing" / "release-decisions.yaml"
+
+    result = _run_evolution("packages", "--write-decisions-template", str(decision_file), "--json")
+
+    assert result.returncode == 2
+    assert "release decisions output parent not found" in result.stderr
+    assert not decision_file.exists()
+
+
 def test_governance_evolution_packages_require_ready_blocks_pending_decisions() -> None:
     result = _run_evolution("packages", "--require-ready", "--json")
 

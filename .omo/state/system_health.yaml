@@ -1,60 +1,60 @@
-last_scan: 1782889337.0186582
+last_scan: 1782890548.974092
 services:
   agora-gateway:
     name: agora-gateway
     port_listening: false
     runtime:
-      freshness_seconds: 122
+      freshness_seconds: 1334
       pid: '30640'
       status: running
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: daemon
   agora-sse:
     health_check: healthy
     name: agora-sse
     port_listening: true
     runtime:
-      freshness_seconds: 16
-      pid: '30638'
+      freshness_seconds: 1228
+      pid: '55238'
       status: running
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 2246389
+      freshness_seconds: 2247601
       pid: '5663'
       status: running
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       status: unmanaged
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: scheduled
   hermes-gateway:
     name: hermes-gateway
     runtime:
-      freshness_seconds: 2246389
+      freshness_seconds: 2247601
       pid: '33452'
       status: running
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: daemon
   kos:
     name: kos
     runtime:
       status: unmanaged
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: integrated
   ollama:
     health_check: healthy
@@ -62,11 +62,11 @@ services:
     port_listening: true
     runtime:
       status: unmanaged
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       status: unmanaged
-    timestamp: 1782889337.0186582
+    timestamp: 1782890548.974092
     type: mcp
