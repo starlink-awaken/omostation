@@ -14,7 +14,7 @@ Facts such as project count, layer, package count, versions, and roles are owned
 1. Read [`../AGENTS.md`](../AGENTS.md).
 2. Read the target project `AGENTS.md` and `CLAUDE.md` when present.
 3. Check `git status --short` at the workspace root and inside the target project.
-4. For multi-step work, run `uv run --with "pyyaml" python "../bin/agent-workflow.py" bootstrap`, then create a run with `uv run --with "pyyaml" python "../bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"`.
+4. For multi-step work, run `uv run --with "pyyaml" python "../bin/agent-workflow.py" bootstrap`, check `status`, create a run with `start`, then claim the project path with `uv run --with "pyyaml" python "../bin/agent-workflow.py" claim <run-id> --path projects/<project>`.
 5. Identify whether the target is a submodule or a normal directory.
 6. Use the project-local build and test commands.
 
@@ -120,7 +120,10 @@ From the workspace root:
 
 ```bash
 git status --short
+uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
 uv run --with "pyyaml" python "bin/agent-workflow.py" lint
+uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
 uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
 ```
 
