@@ -72,6 +72,7 @@ uv run --with pyyaml python bin/governance-evolution.py packages --decisions <fi
 uv run --with pyyaml python bin/governance-evolution.py packages --decisions <file> --require-ready --json
 uv run --project projects/cockpit cockpit governance evolution status --json
 uv run --project projects/cockpit cockpit governance evolution packages --json
+uv run --project projects/cockpit cockpit governance evolution packages --decisions <file> --require-ready --json
 ```
 
 `packages` reports classification health (`ok` / `unknown_count`), release readiness
