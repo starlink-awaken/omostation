@@ -72,7 +72,7 @@
 |:---|:---|:---|:---|
 | **2a 工具补全** | pre-push direct-push advisory 守卫 + `gac-worktree.sh merge` 子命令(PR 合并+release 一体) + 子模块两段式 PR 机制 | 零(不改现有行为) | ✅ |
 | **2b 指令更新** | CLAUDE.md/AGENTS.md §6 明确 PR 工作流,direct push main 列禁忌(2c 后强制) | 低(文档) | ✅ |
-| **2c 守卫升级** ⚠️ | pre-push advisory→blocking:direct push main(非 work/* 分支)本地拒绝 | 中(改行为) | 需确认 |
+| **2c 守卫升级** ✅源/⏳install | pre-push advisory→blocking (源 done+验证, 副本待 install 生效) + `DIRECT_PUSH_MAIN_OK` escape hatch | 中(install 改行为) | install 待拍板 |
 | **2d 灰度验证** | 真实低风险任务走完整 PR 流程(claim→submit→merge→release),验证 L0 萃取在 merge commit 触发 | 低(验证) | ✅ |
 | **2e Phase 3 解锁** | branch protection 启用(ISC-4/5 达成后) | 高(平台级) | `--remove` 回退 |
 
@@ -110,7 +110,7 @@
 - **ISC-2**(Phase 1): worktree 内子模块 commit/push 后,主仓 gitlink 不悬空(`bin/ssot-guardian.py` submodule_pointer_drift PASS)。
 - **ISC-3**(Phase 2,重定义 2026-06-30): main 变更走 `work/<session>` + PR,direct push main 消失。细化为子 ISC:
   - **ISC-3a**(2a): `gac-worktree.sh merge <session>` 跑通(gh pr merge --squash + release + 删分支)
-  - **ISC-3b**(2c): pre-push blocking 守卫拒绝 direct push to main(非 work/* 分支,exit 1)
+  - **ISC-3b**(2c, ✅ 源 done + 验证 PASS / ⏳ install 待拍板 2026-07-01): pre-push 源 `.githooks/pre-push` advisory→blocking (direct push main 非 work/* → exit 1) + `DIRECT_PUSH_MAIN_OK=1` escape hatch. 验证: direct push main exit 1 / env 放行 rc=0 (sync+reachability 仍跑). **未 `make install-hooks`** → `.git/hooks/pre-push` 副本仍 advisory, 真实 push 行为未变 (不扰并发 agent). install 后 blocking 生效 (影响所有 direct push main), 待用户拍板 + Phase 3 一起上
   - **ISC-3c**(2d,修正): worktree commit 时 `post-commit` L0 萃取触发 (commit 级, worktree 共享 `.git/hooks`; `~/.ecos/commit-impact.log` 有记录). PR merge 是服务端 commit, **不触发本地 post-commit** — 萃取已在 worktree commit 时完成, 派生文件进 PR
   - **ISC-3d**(2d): ≥1 次完整 PR 流程跑通(claim→submit→merge→release),gitlink 不悬空
   - **ISC-3e**(2d smoke 发现,✅ 已治本 commit `2f78a9e9`): `gac-worktree.sh claim` 自动 init GaC gate 依赖子模块 (`projects/ecos` + `scripts`, ~7s) → `mof-schema-validate`/`mof-state-bridge`/`mof-drift`/`doc-ssot-snapshots` PASS. `INIT_ALL_SUBMODULES=1` 全部 (~60s), `SKIP_SUBMODULE_INIT=1` 跳过. 8x 加速 vs 全部 init
@@ -161,4 +161,5 @@
 | 2026-06-30 | **Phase 0 OBSERVE 真相纠正**: 代码实证推翻"eCOS X-Plane Audit Agent 程序化 auto push"旧认知(X-Plane Audit Agent = git identity;post-commit 不 push 只 L0 萃取;无 watcher/daemon)。Phase 2 重定义为 direct-push→PR 范式转变 + 5 子阶段(2a-2e)。TL;DR/Phase 2/前置依赖/ISC-3/关联 全部纠正 |
 | 2026-06-30 | Phase 2a/2b 落地(commit `74c4b444`): pre-push advisory 守卫(实战验证 PASS — direct push main 警告不阻断) + `gac-worktree.sh merge` 子命令 + 子模块 PR 策略(方案 A', `docs/SUBMODULE-PR-STRATEGY.md`) + AGENTS.md §6.1 |
 | 2026-06-30 | **Phase 2d smoke 深层发现 + C+D 治本**(commit `fda2c0f0`): smoke 暴露 worktree 隔离 + worktree-wide GaC check 冲突. C+D 局部治本(doc-link-check `--files` scope staged + sync-submodules 未 init 跳过, ISC-W1/W2 验证 PASS). **ISC-3e 发现**: 6+ check 依赖子模块脚本(mof-*/governance-evolution/doc-ssot-*), 未 init 跑不了 → **真治本是 claim 自动 init 子模块**(C+D 只局部). smoke 已 release, 核心发现已得, submit/merge 待 claim-init 实现后重跑 |
-| 2026-07-01 | **ISC-3f 治本**(待提交): `governance-evolution` + `doc-ssot-lint` 归 `CI_ONLY_CHECKS` (仓库级不变量, 同 project-layer-index 模式). KISS 选 reclassify 而非 worktree 检测. 解锁 worktree 完整 PR 流程 (gate 不再被这俩拦). 三路验证: 主仓 non-strict ok=True 俩跳过 / strict 仍含俩 (CI 兜底) / pilot worktree 直接跑俩均 FAIL (证死是 blocker). ⚠️ 残留债: governance-evolution.py + roadmap.yaml untracked (并发 agent WIP), CI strict fresh checkout 跑不了 → 单独 followup |
+| 2026-07-01 | **ISC-3f 治本**(commit `af2444e3`): `governance-evolution` + `doc-ssot-lint` 归 `CI_ONLY_CHECKS` (仓库级不变量, 同 project-layer-index 模式). KISS 选 reclassify 而非 worktree 检测. 解锁 worktree 完整 PR 流程 (gate 不再被这俩拦). 三路验证: 主仓 non-strict ok=True 俩跳过 / strict 仍含俩 (CI 兜底) / pilot worktree 直接跑俩均 FAIL (证死是 blocker). ⚠️ 残留债: governance-evolution.py + roadmap.yaml untracked (并发 agent WIP), CI strict fresh checkout 跑不了 → 单独 followup |
+| 2026-07-01 | **Phase 2c blocking 守卫**(源 done, 未 install): `.githooks/pre-push` advisory→blocking, direct push main (非 work/*) → exit 1 + `DIRECT_PUSH_MAIN_OK=1` escape hatch. 验证: 测试1 direct push exit 1 / 测试2 env 放行 rc=0 (sync+reachability 仍跑). 未 `make install-hooks` → `.git/hooks/pre-push` 副本仍 advisory, 真实 push 行为未变 (不扰并发 agent). install 即影响所有 direct push main, 待拍板 (建议 + Phase 3 一起) |
