@@ -104,7 +104,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-31: `overdue_approval` 告警——dispatcher 加 `_eval_overdue_approval` evaluator + governance-alerts.yaml 加 `x3-overdue-approval` rule。Verified: dry-run `x3-overdue-approval: 'overdue_approval_count > 0' → miss (current=0)`（5 个 P1 任务 age 6 天 < 14 天阈值，预防性，未来超时触发）。
 - [x] ISC-32: `auto_promote_eligible` 评估 ADR——无依赖低风险 P1 自动晋升通道（probe: `.omo/_knowledge/decisions/` 含该 ADR）。
 - [~] ISC-33: `omo_ingress` 系列 God Module 用 `omo-srp-refactor` skill 拆分，单文件 ≤600 行（probe: `wc -l projects/omo/src/omo/omo_ingress_*.py` max ≤600）。
-- [ ] ISC-34: `agora/mcp/resolver/services.py` 拆分至 ≤800 行（probe: `wc -l` 验证；BOS 路由测试全绿）。
+- [~] ISC-34: `agora/mcp/resolver/services.py` 拆分至 ≤800 行（probe: `wc -l` 验证；BOS 路由测试全绿）。
 - [ ] ISC-35: `cockpit/commands/research.py` 拆分至 ≤800 行（probe: `wc -l` 验证；cockpit research 子命令契约不变）。
 - [x] ISC-36: `gbrain todo-ingress` 命令新建，解析 `TODOS.md` 为 omo debt item（probe: `--dry-run` 对 T8 输出 debt item 结构）。
 - [x] ISC-37: gbrain TODOS.md 的 planned 项 ingress 进 `debt.yaml`（probe: registry 含 `source_ref: gbrain/TODOS.md` 条目）。
