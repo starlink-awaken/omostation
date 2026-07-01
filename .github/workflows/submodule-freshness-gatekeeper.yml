@@ -52,11 +52,31 @@ jobs:
           make governance-verify || true
           # 暂时允许通过，后续由真实的单测取代
 
-      - name: Auto-Commit and Push Submodule Bumps
+      - name: Auto-Commit and Push Submodule Bumps (只升不降, 防覆盖手动 bump)
         if: env.CHANGED == 'true' && success()
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add projects/
-          git commit -m "chore: auto-bump submodule freshness pointers [bot]"
-          git push
+          # 只 bump 升级 (工作树 gitlink 是 HEAD gitlink 的后代), 跳过降级/无变化.
+          # 防 bot 基于旧 base checkout 覆盖手动 bump (auto-bump-bot-downgrade-bug).
+          for sm in $(git submodule status | awk '{print $2}'); do
+            head_sha=$(git ls-tree HEAD "$sm" | awk '{print $3}')
+            wt_sha=$(git submodule status "$sm" | awk '{print $1}' | sed 's/^[+-]//')
+            if [ -z "$head_sha" ] || [ -z "$wt_sha" ]; then
+              continue
+            fi
+            if [ "$head_sha" = "$wt_sha" ]; then
+              echo "= $sm: 无变化 (skip)"
+            elif git merge-base --is-ancestor "$head_sha" "$wt_sha" 2>/dev/null; then
+              echo "⬆ $sm: 升级 ${head_sha:0:8} → ${wt_sha:0:8} (bump)"
+              git add "$sm"
+            else
+              echo "⚠️  $sm: 降级 detected (${head_sha:0:8} → ${wt_sha:0:8}), 跳过防覆盖手动 bump"
+            fi
+          done
+          if git diff --cached --quiet; then
+            echo "No upgrades (all downgrades/no-change skipped). Skip commit."
+          else
+            git commit -m "chore: auto-bump submodule freshness pointers [bot] (只升不降)"
+            git push
+          fi
