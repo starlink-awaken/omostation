@@ -191,7 +191,7 @@ jobs:
             sleep 3
           done
 
-      - name: Run E2E tests (core path: ontoderive smoke)
+      - name: Run E2E tests (ontoderive smoke)
         run: |
           docker compose -f docker/docker-compose.e2e.yml run --rm kairon-e2e \
             uv run --no-sync pytest packages/ontoderive/tests/test_e2e.py \
