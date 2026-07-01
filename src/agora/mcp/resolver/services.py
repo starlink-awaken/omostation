@@ -2,55 +2,24 @@
 
 from __future__ import annotations
 
-import re
-
 import os
-from dataclasses import dataclass, field
-from typing import Literal
 
-Transport = Literal["stdio", "internal", "http", "mcp_stdio", "mcp_proxy"]
-
-# ── BOS URI 模式 ─────────────────────────────────────
-BOS_URI_DOMAINS = (
-    "memory",
-    "governance",
-    "omo",
-    "analysis",
-    "persona",
-    "capability",
-    "forge",
-    "meta",
-    "ecos",
-    "agora",
-    "cockpit",
-    "l4-kernel",
-    "runtime",
-    "swarm",
-    "system",
-    "toolbox",
-)
-BOS_URI_DOMAIN_PATTERN = "|".join(BOS_URI_DOMAINS)
-
-BOS_URI_PATTERN = re.compile(
-    rf"^bos://(?P<domain>{BOS_URI_DOMAIN_PATTERN})"
-    r"/(?P<package>[a-z][a-z0-9-]+)(?:/(?P<action>[a-z][a-z0-9-]+))?$"
+from .services_types import (  # ISC-34 第一步: types/patterns 提取 (God Module 拆分)
+    BOS_URI_DOMAIN_PATTERN,
+    BOS_URI_DOMAINS,
+    BOS_URI_PATTERN,
+    BosService,
+    Transport,
 )
 
-
-@dataclass
-class BosService:
-    """BOS 服务描述 — 怎么调用一个 URI."""
-
-    uri: str
-    domain: str
-    package: str
-    action: str
-    transport: Transport = "stdio"
-    command: list[str] = field(default_factory=list)
-    module_path: str = ""
-    func_name: str = ""
-    http_url: str = ""
-    description: str = ""
+# re-export 保下游兼容 (from agora.mcp.resolver.services import BosService 仍工作)
+__all__ = [
+    "BOS_URI_DOMAINS",
+    "BOS_URI_DOMAIN_PATTERN",
+    "BOS_URI_PATTERN",
+    "BosService",
+    "Transport",
+]
 
 
 def _with_uv_package(service: BosService) -> list[str]:
