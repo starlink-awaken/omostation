@@ -10,8 +10,8 @@
 
 | ID | 债务 | 优先级 | 阻塞于 | 治法 | 状态 |
 |:---|:---|:---|:---|:---|:---|
-| **C2** | baseline 写入机制缺 (omo registry 只 browse, 无写命令) | P0 | — | ❌ gen --write 直写触发 ssot-guardian direct_omo_io 静态红线 (实测: 加 write_text → critical; 撤销 → 消). 方向错, 需 omo broker 写或白名单 gen | 🔴 重新设计 |
-| **A1** | dependency-baseline-drift (7 项版本下限落后 derived) | P0 | C2 + 版本兼容评估 | ⚠️ 真实阻塞 = baseline 更新**无合规路径** (omo registry 只 browse 无写 + gen --write 触发 direct_omo_io 静态红线 = 设计 gap). 待 C2 治本路径决策 (omo 写命令 / 白名单 broker) | 🔴 设计 gap |
+| **C2** | baseline 写入机制缺 (omo registry 只 browse, 无写命令) | P0 | — | ✅ 方案 C 落地: omo apply_baseline_patches broker + omo baseline write CLI + gen --write subprocess 调 broker (跟 omo_readiness P63 同构). 全链验证: drift 消 + direct_omo_io 合规. omo commit a4650c6 | ✅ done |
+| **A1** | dependency-baseline-drift (7 项版本下限落后 derived) | P0 | C2 | ✅ 7 项 patched (apscheduler/click/croniter/pytest×3/ruff → derived), gen --write → omo broker patch. drift 消 (52 deps 对齐) | ✅ done |
 | **B1** | 协调并发 agent 切 PR (drift 循环根治) | P0 | 人/agent 协调 | 定规则: 子模块 push 必 bump 主仓, 或全切 PR | 🔴 协调层 |
 | **E1** | 配 `ANTHROPIC_API_KEY` GitHub secret | P0 | 用户侧 | repo Settings → Secrets → Actions | 🔴 用户侧 |
 | **A2** | gac-gate strict 化 (去 paths 过滤 + `--strict`) | P1 | A1 | A1 治后改 `gac-gate.yml` | 🔴 待 A1 |
@@ -62,3 +62,4 @@
 |:---|:---|
 | 2026-07-01 | 建立: 13 项剩余债盘点 (P0×5 / P1×6 / P2×2) + 依赖图 + 启动 C2 |
 | 2026-07-01 | **C2 探索发现**: gen --write 直写方向**错** (触发 ssot-guardian direct_omo_io 静态红线, 实测加 write_text→critical / 撤销→消, 已撤销 gen 改动). A1 真实阻塞 = baseline 更新**无合规路径** (omo registry 只 browse 无写 + gen 直写触发红线 = 设计 gap). 待治本路径决策 (omo 写命令 / 白名单 broker) |
+| 2026-07-01 | **C2+i 落地** (grill-me 决策 → 实现): 方案 C (扩展 ingress_registry_writes broker) + 策略 a (patch) + 方式 i (subprocess CLI). omo apply_baseline_patches (write+audit+trail) + omo baseline write CLI + cli.py 分发 + gen --write subprocess 调 broker. 全链验证: gen --write rc=0 + drift 消 (52 deps) + direct_omo_io 合规 + contract_gatekeeper 扫 gen PASS. A1 治 (7 项 patched). omo commit a4650c6 |
