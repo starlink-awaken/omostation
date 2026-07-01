@@ -1,11 +1,11 @@
 id: WORKFLOW-AGENT-GOVERNANCE-CONTROL-PLANE
 type: Workflow
-subtype: AgentGovernanceWorkflow
+subtype: AgentWorkflow
 name: Agent Governance Control Plane
 description: Executable agent governance workflow that replaces prompt-memory-only constraints with bootstrap, status, claim, verify, closeout, and compliance evidence.
 status: active
 version: 1.0.0
-domain: governance
+domain: omo
 layer: L3
 created: '2026-06-30'
 bos_uri: bos://ecos/workflow/agent-governance-control-plane
