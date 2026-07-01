@@ -276,7 +276,9 @@ def _refresh_dashboard_safely(trigger: str = "") -> None:
         omo_dir = ws / ".omo"
         if not omo_dir.is_dir():
             return
-        now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        now = (
+            datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        )
         refresh_outputs(omo_dir, now)
     except Exception as e:  # noqa: BLE001 — dashboard refresh 失败不阻塞 task 命令, 但记 stderr 日志方便 debug
         print(f"⚠️  [dashboard refresh skipped via {trigger}]: {e}", file=sys.stderr)

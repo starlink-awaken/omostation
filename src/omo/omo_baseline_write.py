@@ -8,6 +8,7 @@ gen-dependency-baseline --write 算 mismatched patch (业务), subprocess 调本
 用法:
   omo baseline write --patches '{"apscheduler": ">=3.11.2"}' [--actor <name>] [--source-ref <ref>]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,14 +23,22 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="omo baseline write — dependency-baseline patch broker (C2 方案 C)",
     )
-    parser.add_argument("action", choices=["write"], help="动作 (目前仅 write, 跟 omo readiness snapshot 同构)")
+    parser.add_argument(
+        "action",
+        choices=["write"],
+        help="动作 (目前仅 write, 跟 omo readiness snapshot 同构)",
+    )
     parser.add_argument(
         "--patches",
         required=True,
         help='JSON object {dep_name: new_baseline}, e.g. \'{"apscheduler": ">=3.11.2"}\'',
     )
-    parser.add_argument("--actor", default="gen-dependency-baseline", help="actor (谁触发 patch)")
-    parser.add_argument("--source-ref", default="", help="source ref (commit sha / agent id)")
+    parser.add_argument(
+        "--actor", default="gen-dependency-baseline", help="actor (谁触发 patch)"
+    )
+    parser.add_argument(
+        "--source-ref", default="", help="source ref (commit sha / agent id)"
+    )
     args = parser.parse_args(argv)
 
     try:

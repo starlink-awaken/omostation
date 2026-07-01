@@ -600,13 +600,21 @@ def apply_baseline_patches(
                         break
             i += 1
         if not applied:
-            return {"applied": 0, "patches": [], "note": "no patch targets matched in baseline yaml"}
+            return {
+                "applied": 0,
+                "patches": [],
+                "note": "no patch targets matched in baseline yaml",
+            }
         write_text_atomic(baseline_path, "\n".join(lines))
         record_audit(
             action="apply_dependency_baseline_patches",
             debt_id="",
             actor=actor,
-            details={"applied": applied, "source_ref": source_ref, "timestamp": timestamp},
+            details={
+                "applied": applied,
+                "source_ref": source_ref,
+                "timestamp": timestamp,
+            },
             audit_file=_audit_log_path(omo_dir),
         )
         _record_trail(
@@ -614,6 +622,6 @@ def apply_baseline_patches(
             actor=f"broker:{actor}",
             action="apply_dependency_baseline_patches",
             target=".omo/_truth/registry/dependency-baseline.yaml",
-            parent_step_id=None,
+            parent_step_id="dependency-baseline",
         )
     return {"applied": len(applied), "patches": applied, "source_ref": source_ref}
