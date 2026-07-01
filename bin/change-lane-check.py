@@ -52,6 +52,7 @@ def classify(path: str, submodules: set[str]) -> str:
         "bin/governance-evolution.py",
         "bin/project-layer-index.py",
         "tests/test_agent_workflow.py",
+        "tests/test_governance_evolution.py",
     }:
         return "governance_code"
     if path == ".omo/state/system_health.yaml" or path.startswith("runtime/"):
