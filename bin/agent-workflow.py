@@ -1602,7 +1602,8 @@ def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str,
                     "run_id": current_run_id,
                 }
             )
-        if status == "ok" and "agent_workflow_closeout" not in event_names:
+        close_event_names = {"agent_workflow_closeout", "agent_workflow_close"}
+        if status == "ok" and not event_names.intersection(close_event_names):
             findings.append(
                 {
                     "severity": "warn",

@@ -68,10 +68,12 @@ uv run --with pyyaml python bin/governance-evolution.py status --json
 uv run --with pyyaml python bin/governance-evolution.py traces --json
 uv run --with pyyaml python bin/governance-evolution.py golden-paths --json
 uv run --with pyyaml python bin/governance-evolution.py packages --json
+uv run --with pyyaml python bin/governance-evolution.py packages --write-decisions-template /tmp/release-decisions.yaml --json
 uv run --with pyyaml python bin/governance-evolution.py packages --decisions <file> --json
 uv run --with pyyaml python bin/governance-evolution.py packages --decisions <file> --require-ready --json
 uv run --project projects/cockpit cockpit governance evolution status --json
 uv run --project projects/cockpit cockpit governance evolution packages --json
+uv run --project projects/cockpit cockpit governance evolution packages --write-decisions-template /tmp/release-decisions.yaml --json
 uv run --project projects/cockpit cockpit governance evolution packages --decisions <file> --require-ready --json
 ```
 
@@ -84,6 +86,9 @@ Use `decision_template` as the path-level release checklist: every review-requir
 with `decision: null` and must be marked include, exclude, or defer by the responsible workflow.
 Pass a filled decision file back through `packages --decisions <file> --json` before release;
 the runner reports invalid, pending, and ready counts without writing governed state.
+Use `--write-decisions-template <file>` to materialize the current checklist for review. Keep
+generated decision files outside the working tree unless they are deliberately part of release
+evidence; otherwise they can become package findings themselves.
 Use `--require-ready` for blocking release gates; it returns non-zero until all current review
 decisions are valid and complete.
 Runtime/data outputs, submodule pointers, OMO task lifecycle artifacts, root governance audit

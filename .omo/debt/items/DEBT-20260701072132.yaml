@@ -1,0 +1,7 @@
+description: missing file
+id: DEBT-20260701072132
+registered_at: '2026-07-01T07:21:32.691158+00:00'
+severity: high
+source: model-driven
+status: registered
+title: 'Schema violation: viol-test'
