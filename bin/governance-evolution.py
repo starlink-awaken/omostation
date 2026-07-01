@@ -668,7 +668,56 @@ def apply_release_decisions(
     return decisions, summary
 
 
-def build_package_report(decisions_path: str | None = None, *, require_ready: bool = False) -> dict[str, Any]:
+def release_decision_template_records(
+    decision_template: list[dict[str, Any]], default_decision: str = ""
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for item in decision_template:
+        records.append(
+            {
+                "decision_id": item["decision_id"],
+                "path": item["path"],
+                "workflow": item["workflow"],
+                "package": item["package"],
+                "owner": item["owner"],
+                "decision": default_decision or None,
+                "notes": item["recommended_action"],
+            }
+        )
+    return records
+
+
+def write_release_decision_template(
+    decision_template: list[dict[str, Any]], output_path: str, default_decision: str = ""
+) -> str:
+    if default_decision and default_decision not in ALLOWED_RELEASE_DECISIONS:
+        raise RoadmapError(
+            "release decision default must be one of: " + ", ".join(ALLOWED_RELEASE_DECISIONS)
+        )
+    decision_path = Path(output_path)
+    if not decision_path.is_absolute():
+        decision_path = WORKSPACE / decision_path
+    if not decision_path.parent.exists():
+        raise RoadmapError(f"release decisions output parent not found: {display_path(decision_path.parent)}")
+    if decision_path.exists() and decision_path.is_dir():
+        raise RoadmapError(f"release decisions output is a directory: {display_path(decision_path)}")
+    payload = {
+        "decisions": release_decision_template_records(decision_template, default_decision),
+    }
+    decision_path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+    return display_path(decision_path)
+
+
+def build_package_report(
+    decisions_path: str | None = None,
+    *,
+    require_ready: bool = False,
+    write_decisions_template: str = "",
+    decision_default: str = "",
+) -> dict[str, Any]:
     entries: list[dict[str, Any]] = []
     packages: dict[str, dict[str, Any]] = {}
     for line in git_status_lines():
@@ -693,8 +742,20 @@ def build_package_report(decisions_path: str | None = None, *, require_ready: bo
     review_findings = release_review_findings(packages)
     review_plan = release_review_plan(review_findings)
     decision_template = release_decision_template(review_findings)
-    decision_records = load_release_decisions(decisions_path)
+    generated_decision_records = (
+        release_decision_template_records(decision_template, decision_default)
+        if write_decisions_template and decision_default
+        else []
+    )
+    decision_records = load_release_decisions(decisions_path) if decisions_path else generated_decision_records
     decision_template, decision_summary = apply_release_decisions(decision_template, decision_records)
+    written_template = ""
+    if write_decisions_template:
+        written_template = write_release_decision_template(
+            release_decision_template(review_findings),
+            write_decisions_template,
+            decision_default,
+        )
     release_ready = not review_findings or decision_summary["ready"]
     release_gate = {
         "required": require_ready,
@@ -718,6 +779,8 @@ def build_package_report(decisions_path: str | None = None, *, require_ready: bo
         "review_count": sum(item["count"] for item in review_findings),
         "decision_count": len(decision_template),
         "decision_source": decisions_path or "",
+        "decision_template_written": written_template,
+        "decision_template_default": decision_default,
         "decision_summary": decision_summary,
         "review_workflows": review_workflows,
         "review_plan": review_plan,
@@ -776,6 +839,17 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Return non-zero unless release decisions make the package set ready.",
     )
+    packages_parser.add_argument(
+        "--write-decisions-template",
+        default="",
+        help="Write the current release decision template to a YAML file.",
+    )
+    packages_parser.add_argument(
+        "--decision-default",
+        choices=ALLOWED_RELEASE_DECISIONS,
+        default="",
+        help="Decision value to prefill when writing a release decision template.",
+    )
     return parser
 
 
@@ -797,7 +871,12 @@ def main(argv: list[str] | None = None) -> int:
             print_report(report, args.json)
             return 0
         if args.command == "packages":
-            report = build_package_report(args.decisions, require_ready=args.require_ready)
+            report = build_package_report(
+                args.decisions,
+                require_ready=args.require_ready,
+                write_decisions_template=args.write_decisions_template,
+                decision_default=args.decision_default,
+            )
             print_report(report, args.json)
             return 0 if report["ok"] else 1
     except RoadmapError as exc:

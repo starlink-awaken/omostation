@@ -861,6 +861,49 @@ def test_closeout_verifies_observes_closes_and_compliance_passes(tmp_path: Path)
     assert "agent_workflow_closeout" in ledger
 
 
+def test_compliance_accepts_legacy_close_event_after_verify(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "legacy close test",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+
+    verify = _run_workflow("--registry", str(registry), "verify", run_id, "--file", "README.md", "--json")
+    assert verify.returncode == 0, verify.stderr
+
+    close = _run_workflow(
+        "--registry",
+        str(registry),
+        "close",
+        run_id,
+        "--status",
+        "ok",
+        "--evidence",
+        "legacy close evidence",
+        "--json",
+    )
+    assert close.returncode == 0, close.stderr
+
+    compliance = _run_workflow("--registry", str(registry), "compliance", run_id, "--json")
+
+    assert compliance.returncode == 0, compliance.stderr
+    compliance_report = json.loads(compliance.stdout)
+    assert compliance_report["decision"] == "continue"
+    assert compliance_report["findings"] == []
+    ledger = (tmp_path / "events.jsonl").read_text(encoding="utf-8")
+    assert "agent_workflow_verify" in ledger
+    assert "agent_workflow_close" in ledger
+
+
 def test_observe_flags_orphan_lock(tmp_path: Path) -> None:
     registry = tmp_path / "agent-workflows.yaml"
     locks = tmp_path / "locks"
