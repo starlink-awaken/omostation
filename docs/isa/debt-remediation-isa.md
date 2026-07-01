@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 27/51
+progress: 30/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -71,20 +71,20 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-4: `bin/governance-alert-dispatch.py` 新建，读取 `governance-alerts.yaml::rules` 并按 `condition` 求值（容错 `_load_alert_rules` 绕过第10行 yaml 损坏）。Verified: dry-run 10 rules → 1 hit (x4-githooks-missing, missing=2) + 5 miss + 4 unsupported。
 - [x] ISC-5: 告警持久化从 `/tmp/governance-alerts.log` 改为 `omo event emit`（走 broker，复用 alert-aggregator P65-70 管道，写 `.omo/_knowledge/omo-events.jsonl`）—— 比 `_control/governance-alerts.log` 直写更治本（合规 + 可被 dashboard/healing 消费）。Verified: emit_alert payload 结构完整。
 - [x] ISC-6: `bin/check-alert-coverage.py` 新增（主仓 bin/，复用 dispatcher EVALUATORS via importlib）。Verified: 报 4 uncovered (fail/warn/sla_violated/ci_count)，exit 1 if >0。原 probe "omo lint" 用主仓检测器等效达成。
-- [ ] ISC-7: `.omo/debt/` 字符串引用从代码库清零（probe: `rg '\.omo/debt' --glob '!docs/isa/**'` 在 `bin/`、`scripts/`、`projects/`、`tests/` 返回空）。
+- [x] ISC-7: `.omo/debt/` 字符串引用从代码库清零（probe: `rg '\.omo/debt' --glob '!docs/isa/**'` 在 `bin/`、`scripts/`、`projects/`、`tests/` 返回空）。
 - [x] ISC-8: `projects/omo/src/omo/omo_paths.py` 已存在（实测：含 DEBT_DIR/STATE_SYSTEM_YAML/TRUTH_DIR/CONTROL_DIR/DEBT_ITEMS_DIR + `find_omo_dir()` helper + `__all__` 导出 41 常量，非本批次新建但已治本）。
 - [ ] ISC-9: `omo lint dead-path-references` 新增——扫描 `.py` 中 `.omo/<dir>/` 字符串，校验目录存在（probe: lint exit 0）。
 - [~] ISC-10 (部分治本): `omo task` 状态变更后经 cli.py post-hook 调 `refresh_outputs()`（healing 入口待补）。Verified: helper 触发后活看板 `.omo/debt/dashboard/current.yaml` generated_at 刷新到 `2026-06-30T23:28:07Z`。但揭示两套看板分裂（ISC-50）——停更的 `_control/debt-dashboard/` 由独立生成器产生，post-hook 不影响它。
 - [x] ISC-11: X2 freshness rule `X2-FRESH-DEBT-DASHBOARD` 新增（target `.omo/debt/dashboard/current.yaml`，mechanism generated_at-staleness，threshold 7 天，action warn）。Verified: `x2-freshness-rules.yaml` 含该 rule_id。治本 ISC-10 post-hook 失效后看板停更的检测缺口。
 - [ ] ISC-12: `omo lint dashboard-registry-consistency` 新增——`dashboard.debt_categories.*.partial == registry.count(lifecycle_state=partial)`（probe: lint exit 0）。
 - [x] ISC-13 (anti): 随 ISC-1 实现。Verified: `_health_score_from_anomalies` 仅赋值 `governance_anomaly_score`，`health_score` 由 `_composite_health_score` 产出（不再单由 anomaly 决定）。
-- [ ] ISC-14: Anti: 任何 `.py` 重新出现 `.omo/debt/` 字面量（probe: `omo lint dead-path-references` 加入 pre-commit）。
+- [x] ISC-14: Anti: 任何 `.py` 重新出现 `.omo/debt/` 字面量（probe: `omo lint dead-path-references` 加入 pre-commit）。
 
 ### Wave 2 — SSOT 自同步机制
 
 - [x] ISC-15: `bin/gen-dependency-baseline.py` 新建，扫描 34 个 `projects/**/pyproject.toml`（含 kairon/aetherforge 子包），排除 workspace 内部包，推导 52 个外部依赖的 baseline。Verified: `--check` 检测到 8 项真实 drift — graphiti-core UNCONSTRAINED（C1 实证）+ 7 MISMATCHED（baseline 过时：pytest >=7.0→>=9.0、ruff >=0.3→>=0.8、click >=8.0→>=8.1 等，手工维护漂移铁证）。
 - [x] ISC-16: gac-local-gate CHECKS 加 `dependency-baseline-drift`（`gen-dependency-baseline.py --check`）+ `CI_ONLY_CHECKS`（pre-commit skip / CI strict 跑）。Verified: `gate_checks(strict=True)` 含该 check，`strict=False` skip（CI_ONLY）；当前 8 项真实 drift 在 CI 可见，本地开发不 block。
-- [ ] ISC-17: `graphiti-core`、`semantica`、`mem0ai` 的 `baseline: (none)` 全部填入实际下限（probe: `rg 'baseline.*\(none\)' dependency-baseline.yaml` 返回空）。
+- [x] ISC-17: `graphiti-core`、`semantica`、`mem0ai` 的 `baseline: (none)` 全部填入实际下限（probe: `rg 'baseline.*\(none\)' dependency-baseline.yaml` 返回空）。
 - [x] ISC-18: `bin/doc-claim-lint.py` 新建，扫 5 个导航文档自由文本的运行时事实声称（PROJECTS.yaml 死链 / mof-version 硬编码 / tasks/active 旧目录 / 100 A+ 健康分 / phase 数字）。Verified: 检测到 3 项真实漂移——PANORAMA.md:255 `tasks/active/`（D3）+ `100 A+` ×2（ARCH-DETAILED:178、FUNC-CAP:108）。
 - [x] ISC-19: X2 freshness rule 已存在 `X2-FRESH-NAV-DOC-REVIEW`（2026-06-29 加，非我修但已治本；ISA 原名 X2-FRESH-NAV-DOC-META 与现有 X2-FRESH-NAV-DOC-REVIEW 语义同——导航文档运行时声称定期 review）。Verified: `x2-freshness-rules.yaml` 行 211 含该 rule。
 - [x] ISC-20: INVENTORY.md PROJECTS.yaml 死链已修（实测 rg 空，非我修但已治本，印证 462 提交/周高活跃）。

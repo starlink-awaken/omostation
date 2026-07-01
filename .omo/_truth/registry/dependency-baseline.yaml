@@ -110,7 +110,7 @@ rules:
         - aetherforge-gateway[legacy]
         - omo-debt
     - name: graphiti-core
-      baseline: '(none)'
+      baseline: '>=0.28'
       reason: 'Consumed by 1 project(s)'
       consumers:
         - minerva[tier2]
