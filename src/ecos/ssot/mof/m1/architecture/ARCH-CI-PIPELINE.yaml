@@ -1,0 +1,64 @@
+# M1 Node: ARCH-CI-PIPELINE
+# Type: Architecture
+# CI Pipeline 抽象模型 — 用于 L0 校验和一致性检查
+
+id: ARCH-CI-PIPELINE
+type: Architecture
+name: CI Pipeline 架构模型
+description: >
+  GitHub Actions 工作流的生命周期、触发器、依赖关系和治理边界的 MOF L0 抽象。
+  用于校验: 路径覆盖完整性、触发器一致性、子模块 token 完整性、死工作流检测。
+status: active
+domain: infra
+created: '2026-07-01'
+version: 1.0.0
+
+properties:
+  topology: event-driven
+  total_workflows: 37
+  categories:
+    - governance-gates     # PR-blocking, 阻断合并
+    - enforcement          # 策略强制 CI
+    - code-quality         # lint/test/coverage
+    - per-project-ci       # 按项目路径过滤
+    - scheduled            # cron 定时
+    - publishing           # PyPI 发布
+  design_principles:
+    - "每个项目 CI 必须有 path filter (避免全量触发)"
+    - "所有 submodules: recursive 必须配 CROSS_REPO_TOKEN"
+    - "归档项目的工作流必须删除或改为 workflow_dispatch"
+    - "scheduled 工作流的 git push 需要明确 permissions"
+    - "artifact upload 必须有 if: always()"
+    - "非关键步骤必须有 || true 或 || echo fallback"
+  validation_rules:
+    - rule: "path-filter-required"
+      description: "项目特定 CI 必须有 paths: filter"
+      check: "每个 *-ci.yml 的 push/pull_request 必须有 paths"
+    - rule: "token-required-for-submodules"
+      description: "submodules: recursive 必须配 token: CROSS_REPO_TOKEN"
+      check: "所有 checkout with submodules: recursive 必须有 token"
+    - rule: "no-dead-workflows"
+      description: "不允许引用不存在的项目路径"
+      check: "path filter 中的路径必须存在于 .gitmodules 或仓库中"
+    - rule: "no-bare-trigger"
+      description: "不允许 on: [push, pull_request] 无 path filter"
+      check: "除非是全局工作流 (governance/lint), 否则必须有 path filter"
+    - rule: "shell-var-scope"
+      description: "shell 变量不能跨 step 传递, 必须用 GITHUB_ENV"
+      check: "run: 中设置的变量不能在 with:/env: 中引用"
+
+  evolution_path:
+    - v1.0 (2026-07-01): 初始建模, 修复 6 BUG + 清理 3 DEAD + 添加 7 path filters
+
+layer: infra
+sources:
+  - .github/workflows/README.md
+  - .github/workflows/ (37 files)
+
+model_driven_refs:
+  source_file: .github/workflows/
+
+state_history:
+  - state: active
+    timestamp: '2026-07-01T00:00:00Z'
+    reason: '初始建模: CI 白盒审计 + MOF L0 抽象'
