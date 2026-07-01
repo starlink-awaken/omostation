@@ -8,7 +8,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
-      - uses: astral-sh/ruff-action@v1
+      - uses: astral-sh/ruff-action@v3
         with:
           # P41-W1 fix: scope ruff to tracked Python source only (omo, agora, ecos, cockpit, scripts).
           # Also ignore F401/F821/E402/E722 (historic violations, separately tracked).

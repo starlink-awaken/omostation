@@ -8,6 +8,9 @@ on:
     - cron: '0 1 1 * *'
   workflow_dispatch:  # 支持手动触发
 
+permissions:
+  contents: write
+
 jobs:
   aggregate-rollout:
     name: Aggregate cross-repo audit baseline

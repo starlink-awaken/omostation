@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Set up uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v4
       - name: Install dependencies
         # P41-W1 fix: skip [kairon] extra — projects/kairon is a separate repo (.gitignore'd)
         run: cd projects/agora && uv sync --no-extra kairon

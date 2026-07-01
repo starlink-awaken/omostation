@@ -8,6 +8,9 @@ on:
     - cron: '0 0 * * *' # Run daily at midnight to check for drifted submodules
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   check-and-bump-submodules:
     runs-on: ubuntu-latest

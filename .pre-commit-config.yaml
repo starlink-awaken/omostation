@@ -27,7 +27,6 @@ repos:
           (?x)^(
             projects/kairon/.*\.ya?ml
             | protocols/.*\.ya?ml
-            | \.github/workflows/sharedbrain-kairon-integration\.yml  # 废弃 workflow (#4 有替代)
             | \.omo/_archive/.*\.ya?ml  # 历史 archive
             )$
         args: ["--allow-multiple-documents", "--unsafe"]

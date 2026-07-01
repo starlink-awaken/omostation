@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v4
       # evidence-smoke 依赖 agora venv (pydantic + resolver.services)
       - name: evidence-smoke gate (score>=95, real_gap=0)
         run: uv run --directory projects/agora python ${{ github.workspace }}/bin/evidence-smoke.py --gate 95

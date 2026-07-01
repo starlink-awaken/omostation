@@ -16,6 +16,20 @@ on:
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
   pull_request:
+    paths:
+      - ".github/workflows/governance-check.yml"
+      - ".pre-commit-config.yaml"
+      - ".omo/**"
+      - "docs/OPC-*.md"
+      - "projects/*/pyproject.toml"
+      - "projects/*/src/**"
+      - "projects/omo/tests/**"
+      - "projects/ecos/scripts/contract_gatekeeper.py"
+      - "scripts/check-*.py"
+      - "scripts/opc_*.py"
+      - "bin/workspace-audit"
+      - "CLAUDE.md"
+      - "LAYER-INDEX.md"
   schedule:
     - cron: "0 */6 * * *"  # 每6小时自动运行，确保SSOT长期绿色
 

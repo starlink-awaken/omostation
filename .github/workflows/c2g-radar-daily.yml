@@ -9,6 +9,9 @@ on:
     - cron: '0 8 * * *'
   workflow_dispatch:  # 支持手动触发
 
+permissions:
+  contents: write
+
 jobs:
   radar-audit:
     name: Run c2g radar + write health.yaml
