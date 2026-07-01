@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -17,6 +19,7 @@ def test_kairon_makefile_uses_python3_and_propagates_test_failures() -> None:
     assert "test $$fail -eq 0" in makefile
 
 
+@pytest.mark.skip(reason="phase11-ci.yml was deleted in CI cleanup (2026-07-01), superseded by pytest.yml")
 def test_phase11_ci_workflow_bootstraps_uv_and_runs_kairon_test_target() -> None:
     workflow = (REPO_ROOT / ".github" / "workflows" / "phase11-ci.yml").read_text(
         encoding="utf-8"
