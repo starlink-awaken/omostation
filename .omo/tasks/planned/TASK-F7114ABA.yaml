@@ -1,5 +1,5 @@
 id: TASK-F7114ABA
-title: 'P1 GodModule: omo_ingress354L/agora1945L/gbrain3841L'
+title: 'P1 GodModule: omo_ingress/agora/gbrain (行数见源码实测, ISC-27 不硬编码)'
 description: 原型A5(Growth&Underinvestment), 杠杆点7+5. 用omo-srp-refactor skill渐进拆
 status: candidate
 task_type: refactor
@@ -8,9 +8,9 @@ depends_on: []
 source_docs:
 - Plans/c2g-enchanted-coral.md
 deliverables:
-- omo_ingress write_system_projection_fields 354L拆分(D任务剩余)
+- omo_ingress write_system_projection_fields 拆分 (D任务剩余, 行数见 projects/omo/src/omo/omo_ingress_*.py 实测, ISC-27 不硬编码)
 - 单文件>800L触发lint-error硬规则
-- agora server/mcp.py1945L + gbrain operations.ts排期拆分
+- agora server/mcp.py + gbrain operations.ts 排期拆分 (行数见源码实测, ISC-27 不硬编码)
 imported_via: omo_task_cli
 context_uri: bos://governance/tasks/planned/TASK-F7114ABA
 assigned_to: null

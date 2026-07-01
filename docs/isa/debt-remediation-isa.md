@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 16/51
+progress: 22/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -87,14 +87,14 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [ ] ISC-17: `graphiti-core`、`semantica`、`mem0ai` 的 `baseline: (none)` 全部填入实际下限（probe: `rg 'baseline.*\(none\)' dependency-baseline.yaml` 返回空）。
 - [x] ISC-18: `bin/doc-claim-lint.py` 新建，扫 5 个导航文档自由文本的运行时事实声称（PROJECTS.yaml 死链 / mof-version 硬编码 / tasks/active 旧目录 / 100 A+ 健康分 / phase 数字）。Verified: 检测到 3 项真实漂移——PANORAMA.md:255 `tasks/active/`（D3）+ `100 A+` ×2（ARCH-DETAILED:178、FUNC-CAP:108）。
 - [x] ISC-19: X2 freshness rule 已存在 `X2-FRESH-NAV-DOC-REVIEW`（2026-06-29 加，非我修但已治本；ISA 原名 X2-FRESH-NAV-DOC-META 与现有 X2-FRESH-NAV-DOC-REVIEW 语义同——导航文档运行时声称定期 review）。Verified: `x2-freshness-rules.yaml` 行 211 含该 rule。
-- [ ] ISC-20: `.omo/_truth/INVENTORY.md` 的 5 处 `../PROJECTS.yaml` 死链改向 `docs/project-registry.yaml`（probe: `check-cross-refs.py` 对 INVENTORY 0 死链）。
-- [ ] ISC-21: INVENTORY 的 `mof-version v0.0.12` 硬编码改指针 `见 .omo/_truth/mof-version.yaml`（probe: `rg 'mof-version v0\.0\.12'` 返回空）。
-- [ ] ISC-22: `.omo/standards/ssot-7-domain-schema.md` 的 `tasks/active` → `tasks/planned` + `last-reviewed` bump（probe: `rg 'tasks/active' ssot-7-domain-schema.md` 返回空）。
-- [ ] ISC-23: `mof-capabilities.yaml` 补注册 `mof-manage` + `updated_at` bump + `version: 2.1`（probe: `rg 'mof-manage' mof-capabilities.yaml` 命中 registry 段）。
+- [x] ISC-20: INVENTORY.md PROJECTS.yaml 死链已修（实测 rg 空，非我修但已治本，印证 462 提交/周高活跃）。
+- [x] ISC-21: INVENTORY mof-version 硬编码已修（实测 rg 空，非我修但已治本）。
+- [x] ISC-22: ssot-7-domain-schema.md tasks/active 已修（实测 rg 空，非我修但已治本）。
+- [x] ISC-23: mof-capabilities.yaml mof-manage 已注册 + version 2.1 + updated_at 2026-06-29（实测确认，非我修但已治本）。
 - [x] ISC-24: GaC `layer_enum` 已含 `L4`（实测确认 `layer_enum: [M0,L0,L1,L2,L3,L4,I0,X,meta]`，非本批次修但已治本；gac-validate layer 覆盖确认）。
 - [x] ISC-25: 加 `CR-L4-DOMAIN-REGISTRY-FRESHNESS`（dimension X2, check_type freshness, executor omo_audit/ci_gate, ADR-0114）。Verified: gac-validate **133 规则**过 schema，layer 覆盖 `L4: 1`（治审计 D5: L4 整层 0 GaC 规则盲区）。
-- [ ] ISC-26: ADR-0114（L4 豁免）评估记录补 `next-review-date`（probe: ADR 文件含该字段）。
-- [ ] ISC-27: TASK-F7114ABA 描述里 `omo_ingress354L/agora1945L` 硬编码行数改指针 `见 omo_ingress_*.py / agora/mcp/resolver/services.py`（probe: task yaml 不含三位数+`L` 模式）。
+- [x] ISC-26: ADR-0114 补 `next-review-date: '2026-10-29'`（frontmatter，配合 Revisit triggers 3 个月评估 L4 是否补规则）。Verified。
+- [x] ISC-27: TASK-F7114ABA title + deliverables 行数硬编码（354L/1945L/3841L）→ 指针化（"见源码实测, 不硬编码"）。Verified: `rg '\d{2,4}L\b' TASK-F7114ABA.yaml` 返回空。
 - [ ] ISC-28: Anti: 导航文档重新内嵌运行时版本号（probe: `doc-claim-lint` 加入 `make gac-local-gate`）。
 - [ ] ISC-29: Anti: `dependency-baseline.yaml` 重新出现 `baseline: (none)`（probe: lint 拒绝空 baseline）。
 
