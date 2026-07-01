@@ -6,21 +6,20 @@ import sqlite3
 from pathlib import Path
 
 import cockpit.storage as storage
-import cockpit.storage_sqlite as storage_sqlite
 
 # ── not-found / 空值分支 ──
 
 
 def test_set_research_tags_not_found(monkeypatch, tmp_path: Path):
     """set_research_tags 不存在的 ID → 返回空列表。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     result = storage.set_research_tags(999, ["llm", "agents"])
     assert result == []
 
 
 def test_rename_research_empty_title(monkeypatch, tmp_path: Path):
     """rename_research 空标题 → 返回 False。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     rid = storage.save_research("original", "summary", "body", source_count=1)
     result = storage.rename_research(rid, "  ")
     assert result is False
@@ -32,21 +31,21 @@ def test_rename_research_empty_title(monkeypatch, tmp_path: Path):
 
 def test_rename_research_not_found(monkeypatch, tmp_path: Path):
     """rename_research 不存在的 ID → 返回 False。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     result = storage.rename_research(999, "new title")
     assert result is False
 
 
 def test_get_research_timeline_not_found(monkeypatch, tmp_path: Path):
     """get_research_timeline 不存在的 ID → 返回空列表。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     result = storage.get_research_timeline(999)
     assert result == []
 
 
 def test_get_research_dossier_not_found(monkeypatch, tmp_path: Path):
     """get_research_dossier 不存在的 ID → 返回 None。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     result = storage.get_research_dossier(999)
     assert result is None
 
@@ -56,7 +55,7 @@ def test_get_research_dossier_not_found(monkeypatch, tmp_path: Path):
 
 def test_quarantine_all_missing(monkeypatch, tmp_path: Path):
     """quarantine_research 全部 ID 不存在 → 全在 missing 列表。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     quarantined, missing = storage.quarantine_research([1, 2], reason="test")
     assert quarantined == []
     assert missing == [1, 2]
@@ -64,7 +63,7 @@ def test_quarantine_all_missing(monkeypatch, tmp_path: Path):
 
 def test_restore_all_missing(monkeypatch, tmp_path: Path):
     """restore_research 全部 ID 不存在 → 全在 missing 列表。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     restored, missing = storage.restore_research([1, 2])
     assert restored == []
     assert missing == [1, 2]
@@ -72,7 +71,7 @@ def test_restore_all_missing(monkeypatch, tmp_path: Path):
 
 def test_archive_all_missing(monkeypatch, tmp_path: Path):
     """archive_research 全部 ID 不存在 → 全在 missing 列表。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     archived, missing = storage.archive_research([1, 2], reason="test")
     assert archived == []
     assert missing == [1, 2]
@@ -80,7 +79,7 @@ def test_archive_all_missing(monkeypatch, tmp_path: Path):
 
 def test_restore_archived_all_missing(monkeypatch, tmp_path: Path):
     """restore_archived_research 全部 ID 不存在 → 全在 missing 列表。"""
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     restored, missing = storage.restore_archived_research([1, 2])
     assert restored == []
     assert missing == [1, 2]
@@ -95,7 +94,7 @@ def test_ensure_db_alter_table_migration(monkeypatch, tmp_path: Path):
     创建一个没有全字段的旧表，调用 _ensure_db 后验证列已补充。
     """
     db_path = tmp_path / "data.db"
-    monkeypatch.setattr(storage_sqlite, "DB_PATH", db_path)
+    monkeypatch.setattr("cockpit.paths.DB_PATH", db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     # 创建旧版 DB — 只有 id/topic/summary/created_at

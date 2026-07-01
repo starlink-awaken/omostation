@@ -10,7 +10,7 @@ def _approx(a: float, b: float, epsilon: float = 0.02) -> bool:
 
 
 def test_compute_half_life_no_record(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     result = storage.compute_half_life(9999)
 
     assert result["decay"] == 0.0
@@ -19,7 +19,7 @@ def test_compute_half_life_no_record(monkeypatch, tmp_path: Path):
 
 
 def test_compute_half_life_fresh_record_no_events(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     rid = storage.save_research("fresh topic", "summary", "body", source_count=1)
 
     result = storage.compute_half_life(rid)
@@ -32,7 +32,7 @@ def test_compute_half_life_fresh_record_no_events(monkeypatch, tmp_path: Path):
 
 
 def test_compute_half_life_with_follow_up(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     rid = storage.save_research("topic", "summary", "body", source_count=1)
     storage.add_follow_up(rid, "追问?", "回答")
 
@@ -45,7 +45,7 @@ def test_compute_half_life_with_follow_up(monkeypatch, tmp_path: Path):
 
 
 def test_compute_half_life_with_published(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     rid = storage.save_research("topic", "summary", "body", source_count=1)
     storage.save_published_report(rid, "brief", "/tmp/report.md")
 
@@ -57,7 +57,7 @@ def test_compute_half_life_with_published(monkeypatch, tmp_path: Path):
 
 
 def test_compute_half_life_follow_up_and_published(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
     rid = storage.save_research("topic", "summary", "body", source_count=1)
     storage.add_follow_up(rid, "追问?", "回答")
     storage.save_published_report(rid, "memo", "/tmp/memo.md")
@@ -70,7 +70,7 @@ def test_compute_half_life_follow_up_and_published(monkeypatch, tmp_path: Path):
 
 def test_compute_half_life_formula_verification(monkeypatch, tmp_path: Path):
     """验证半衰期核心公式 decay = 2^(-days_since / 14)。"""
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
 
     # 创建记录后，用已知的 created_at 替换来验证公式
     rid = storage.save_research("topic", "summary", "body", source_count=1)

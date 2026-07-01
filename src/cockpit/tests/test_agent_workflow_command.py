@@ -102,3 +102,33 @@ def test_cli_routes_governance_evolution(monkeypatch) -> None:
     assert command[:5] == ["uv", "run", "--with", "pyyaml", "python"]
     assert Path(command[5]).name == "governance-evolution.py"
     assert command[6:] == ["validate", "--json"]
+
+
+def test_cli_routes_governance_evolution_default_status(monkeypatch) -> None:
+    completed = subprocess.CompletedProcess(args=[], returncode=0)
+    mock_run = MagicMock(return_value=completed)
+    monkeypatch.setattr(subprocess, "run", mock_run)
+    monkeypatch.setattr(governance_cmd, "resolve_workspace_root", lambda: WORKSPACE)
+    monkeypatch.setattr(sys, "argv", ["cockpit", "governance", "evolution"])
+
+    code = cli.main()
+
+    assert code == 0
+    command = mock_run.call_args.args[0]
+    assert Path(command[5]).name == "governance-evolution.py"
+    assert command[6:] == ["status"]
+
+
+def test_cli_routes_governance_evolution_packages(monkeypatch) -> None:
+    completed = subprocess.CompletedProcess(args=[], returncode=0)
+    mock_run = MagicMock(return_value=completed)
+    monkeypatch.setattr(subprocess, "run", mock_run)
+    monkeypatch.setattr(governance_cmd, "resolve_workspace_root", lambda: WORKSPACE)
+    monkeypatch.setattr(sys, "argv", ["cockpit", "governance", "evolution", "packages", "--json"])
+
+    code = cli.main()
+
+    assert code == 0
+    command = mock_run.call_args.args[0]
+    assert Path(command[5]).name == "governance-evolution.py"
+    assert command[6:] == ["packages", "--json"]

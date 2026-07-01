@@ -6,7 +6,7 @@ from cockpit import storage
 
 
 def test_restored_research_returns_to_list_and_search(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
 
     healthy_id = storage.save_research("healthy topic", "good summary", "useful content", source_count=2)
     bad_id = storage.save_research(

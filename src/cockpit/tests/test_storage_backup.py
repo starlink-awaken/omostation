@@ -13,7 +13,7 @@ from cockpit.storage import SQLiteDataAccess
 def da(tmp_path, monkeypatch):
     """使用 tmp_path 的 SQLiteDataAccess 实例。"""
     db_path = tmp_path / ".workspace" / "data.db"
-    monkeypatch.setattr("cockpit.storage.DB_PATH", db_path)
+    monkeypatch.setattr("cockpit.paths.DB_PATH", db_path)
     sda = SQLiteDataAccess()
     sda._ensure_db()
     yield sda
@@ -137,7 +137,8 @@ class TestImportBackup:
         import sqlite3
 
         db_path = tmp_path / ".workspace" / "data.db"
-        monkeypatch.setattr("cockpit.storage.DB_PATH", db_path)
+        monkeypatch.setattr("cockpit.paths.DB_PATH", db_path)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(str(db_path))
         conn.execute("UPDATE research SET created_at = ? WHERE topic = ?", (now, "已有研究"))
         conn.commit()

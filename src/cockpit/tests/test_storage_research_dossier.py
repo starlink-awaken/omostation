@@ -6,7 +6,7 @@ import cockpit.storage as storage
 
 
 def test_research_dossier_includes_relations_and_publications(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
 
     source_a = storage.save_research("source a", "summary a", "body a", source_count=1)
     source_b = storage.save_research("source b", "summary b", "body b", source_count=2)

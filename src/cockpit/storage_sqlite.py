@@ -17,10 +17,20 @@ import json
 import sqlite3
 import time
 from datetime import datetime
-from typing import Any
 
 # DB_PATH SSOT: cockpit.paths (治本循环依赖, 避免 storage↔storage_sqlite 重复定义)
-from .paths import DB_PATH
+# P3 work 治本: import 整个 module 而非直接 DB_PATH, 让 monkeypatch.setattr
+# 修改 paths.DB_PATH 时, runtime lookup 路径能 catch (from .paths import DB_PATH
+# 是 import-time binding, monkeypatch 改 paths.DB_PATH 不生效)。
+from pathlib import Path
+from typing import Any
+
+from . import paths as _paths
+
+
+def _get_db_path() -> Path:
+    """运行时从 paths 模块查 DB_PATH, 支持 monkeypatch.setattr("cockpit.paths.DB_PATH", ...)."""
+    return _paths.DB_PATH
 
 
 class SQLiteDataAccess:
@@ -30,14 +40,14 @@ class SQLiteDataAccess:
 
     def _connect(self) -> sqlite3.Connection:
         """获取 SQLite 连接 (WAL 模式, 多线程安全)。"""
-        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
+        conn = sqlite3.connect(str(_get_db_path()), check_same_thread=False)
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA busy_timeout=5000")
         return conn
 
     def _ensure_db(self) -> None:
         """Create database and tables if they don't exist."""
-        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _get_db_path().parent.mkdir(parents=True, exist_ok=True)
         conn = self._connect()
         conn.execute("""
             CREATE TABLE IF NOT EXISTS research (

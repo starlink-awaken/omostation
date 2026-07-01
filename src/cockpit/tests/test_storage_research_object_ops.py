@@ -6,7 +6,7 @@ import cockpit.storage as storage
 
 
 def test_tag_rename_archive_roundtrip(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(storage, "DB_PATH", tmp_path / "data.db")
+    monkeypatch.setattr("cockpit.paths.DB_PATH", tmp_path / "data.db")
 
     research_id = storage.save_research("original topic", "summary", "body", source_count=1)
 
