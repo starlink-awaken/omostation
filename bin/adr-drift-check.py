@@ -69,6 +69,14 @@ def extract_references(content: str) -> dict:
     return refs
 
 
+def _read_adr_status(content: str) -> str:
+    """读 ADR frontmatter status (active/archived/...)."""
+    for line in content.splitlines():
+        if line.startswith("status:"):
+            return line.split(":", 1)[1].strip().strip("\"'")
+    return ""
+
+
 def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set[str] | None = None) -> dict:
     """检查每条 ADR 的引用健康度."""
     if known_adr_numbers is None:
@@ -81,6 +89,8 @@ def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set
             content = f.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
+        # archived ADR 的 missing 不算 active drift (历史决策, 引用归档正常)
+        is_archived = _read_adr_status(content) == "archived"
         refs = extract_references(content)
 
         issues = []
@@ -110,8 +120,8 @@ def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set
                 continue
             if not full.exists():
                 # 兼容: 自动补 .md / .yaml / .yml 后缀
-                if not any(path.endswith(ext) for ext in (".md", ".yaml", ".yml", ".py")):
-                    for ext in (".md", ".yaml", ".yml"):
+                if not any(path.endswith(ext) for ext in (".md", ".yaml", ".yml", ".py", ".ts", ".tsx", ".js", ".jsx", ".mjs")):
+                    for ext in (".md", ".yaml", ".yml", ".py", ".ts", ".tsx", ".js", ".jsx", ".mjs"):
                         if (root / f"{path}{ext}").exists():
                             full = root / f"{path}{ext}"
                             break
@@ -126,8 +136,11 @@ def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set
                     # 排除 .omc 引用 (gitignored)
                     if path.startswith(".omc/"):
                         continue
+                    # 排除运行时产物 (gitignored, 工具跑时才生成, 非源码 drift)
+                    if path.startswith((".omo/_delivery/", ".omo/_log/")):
+                        continue
                     issues.append({
-                        "type": "missing_path",
+                        "type": "archived_missing" if is_archived else "missing_path",
                         "msg": f"路径不存在: {path}",
                     })
 

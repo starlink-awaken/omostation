@@ -12,7 +12,7 @@
 #   用法: from protocols.vault_paths import resolve_path; p = resolve_path('cockpit_root')
 
 version: 2
-last_updated: '2026-06-09T10:00:00'
+last_updated: '2026-06-30T00:00:00'
 
 # ── 路径定义 ──────────────────────────────────
 # 任何 iCloud/L4 域路径必须在这里声明,硬编码一律报错
@@ -25,6 +25,7 @@ paths:
   personal_root: ~/Documents/@个人                 # 个人域
   shared_root: ~/Documents/@公共                   # 公共域
   family_root: ~/Documents/@家庭生活               # 家庭生活域
+  work-docs_root: ~/Documents/@工作文档                  # @工作文档 聚合域（2026-06-24 新增域,补登）
   work-weijian_root: ~/Documents/@工作文档/卫健委         # @工作文档/卫健委
   work-guozhuan_root: ~/Documents/@工作文档/国转中心       # @工作文档/国转中心
   opc_root: ~/Documents/@OPC
@@ -44,6 +45,8 @@ paths:
   knowledge-engine_root: ~/knowledge
   l4-kernel_root: ~/Workspace/projects/l4-kernel
   ecos-workbench_root: ~/Workspace
+  omo-governance_root: ~/Workspace/.omo                  # OMO 治理域（2026-06-24 新增域,补登）
+  spaces_root: ~/Workspace/spaces                        # Spaces 域（2026-06-24 新增域,补登）
   runtime_root: ~/runtime
   
   cockpit_old: null                                # 老路径 (驾驶舱/ 无 @) — 显式 null 表示禁止使用

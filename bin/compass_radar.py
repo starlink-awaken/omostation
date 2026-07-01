@@ -365,6 +365,19 @@ def sync_system_yaml(
         )
         data["health_score_source"] = "compass_radar_composite"
         data["health_score_generated_at"] = generated_at
+        # ISC-2 治本: 兜底刷新 runtime_health_summary,避免 scheduler 未运行时 system.yaml 陈旧
+        health_yaml = ws_root / ".omo" / "state" / "system_health.yaml"
+        if health_yaml.is_file():
+            try:
+                omo_src = ws_root / "projects" / "omo" / "src"
+                if str(omo_src) not in sys.path:
+                    sys.path.insert(0, str(omo_src))
+                from omo.omo_state_schema import summarize_system_health_snapshot  # noqa: PLC0415
+
+                health_data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
+                data["runtime_health_summary"] = summarize_system_health_snapshot(health_data)
+            except Exception as inner:  # noqa: BLE001
+                print(f"⚠️  兜底同步 runtime_health_summary 失败: {inner}")
         # 原子写
         tmp = system_yaml.with_suffix(".yaml.tmp")
         tmp.write_text(
