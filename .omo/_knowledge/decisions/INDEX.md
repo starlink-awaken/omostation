@@ -94,6 +94,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0116 | Tier 1 渐进式修复 vs Tier 2 真治本 (Meta-Reflection) | ACCEPTED | 2026-06-30 | governance-team | 0116-p52-meta-tier1-vs-tier2.md |
 | 0117 | 撤销 P60 GOVERNANCE_MAINTENANCE 阶段 (P52 真治本) | ACCEPTED | 2026-06-30 | governance-team | 0117-p52-undo-p60-stage-8.md |
 | 0118 | 根仓 dev-deps 统一 — 部分真治本 + P3 follow-up | PARTIAL | 2026-06-30 | governance-team | 0118-p52-partial-root-dev-deps.md |
+| 0119 | Workspace 系统性优化 Roadmap (2026 H2) — 3 阶段 S0/S1/S2/S3 | ACCEPTED | 2026-07-01 | governance-team | 0119-systemic-optimization-roadmap-2026h2.md |
 
 ---
 
@@ -165,4 +166,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-06-30 · Owner: governance-team · 0094-0114 补录 (P100-P111 omo_lint/governance-surfaces 拆分 + BOS linter + GaC + L4 豁免)*
+*最近更新: 2026-07-01 · Owner: governance-team · 0119 系统性优化 Roadmap (8 维度审计 + 3 阶段计划)*
