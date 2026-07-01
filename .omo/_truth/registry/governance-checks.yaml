@@ -1794,6 +1794,20 @@ gac:
       created_at: "2026-06-29"
       adr: "ADR-0106"
 
+    # ── L4 自我层: 域注册表新鲜度 (治审计 D5 L4 治理盲区, ISC-25, ADR-0114 评估) ──
+    - id: CR-L4-DOMAIN-REGISTRY-FRESHNESS
+      dimension: X2
+      layer: L4
+      name: "L4 域注册表新鲜度"
+      description: "L4 DomainRegistry 新鲜度, 防 stale 域配置 (治审计 D5: L4 整层 0 GaC 规则盲区, 打破完全无约束)"
+      check_type: freshness
+      target: "projects/l4-kernel/src/l4_kernel/registry.py (DomainRegistry)"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-01"
+      adr: "ADR-0114"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)

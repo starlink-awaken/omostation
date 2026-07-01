@@ -5,17 +5,23 @@
 (strategy_audit/_check_anomalies/_collect_metrics),
 捕获 print 输出 + 解析异常数量,算 health_score,落 .omo/state/health.yaml.
 
-health_score 映射:
-  0 异常 → 100
-  1 异常 → 85
-  2 异常 → 70
-  3 异常 → 55
-  4 异常 → 40
-  ≥5 异常 → 25 (熔断: 治理停滞, 需人工介入)
+health_score (复合, ISC-1 治本):
+  复合分 = 0.5 * governance_anomaly_score + 0.3 * runtime_health_score + 0.2 * freshness_score
+
+  governance_anomaly_score (原 health_score, ISC-3 语义重命名保留):
+    0 异常 → 100, 1 → 85, 2 → 70, 3 → 55, 4 → 40, ≥5 → 25 (熔断)
+  runtime_health_score:
+    service_online_ratio = online_services / total_services (来自 system.yaml runtime_health_summary)
+  freshness_score:
+    health.yaml generated_at 距今 ≤1h → 100, ≤24h → 80, ≤7d → 50, 否则 0
+
+  治本动机: 原 health_score 只由 anomaly_count 决定, 服务全死也报 100 (指标名不副实).
+  复合化后 service_online_ratio 直接拉低 health_score, 触发 X1 critical 告警 (ISC-4 dispatcher).
 
 用法:
-  python scripts/compass_radar.py
-  python scripts/compass_radar.py --output .omo/state/health.yaml
+  python bin/compass_radar.py
+  python bin/compass_radar.py --output .omo/state/health.yaml
+  python bin/compass_radar.py --dry-run
 """
 from __future__ import annotations
 
@@ -30,7 +36,10 @@ def _utc_now() -> str:
 
 
 def _health_score_from_anomalies(anomaly_count: int) -> int:
-    """根据异常数量映射 health_score (0-100, 越高越健康)."""
+    """根据异常数量映射 governance_anomaly_score (0-100, 越高越健康).
+
+    ISC-3 治本: 原 health_score 语义保留为 governance_anomaly_score (名副其实).
+    """
     if anomaly_count == 0:
         return 100
     if anomaly_count == 1:
@@ -42,6 +51,90 @@ def _health_score_from_anomalies(anomaly_count: int) -> int:
     if anomaly_count == 4:
         return 40
     return 25  # 熔断线
+
+
+def _collect_runtime_health(ws_root: Path) -> tuple[float | None, dict]:
+    """从 system.yaml runtime_health_summary 采集运行时健康 (ISC-1 复合分输入).
+
+    返回 (service_online_ratio 0.0-1.0 或 None, summary_dict).
+    缺失时返回 (None, {}) — 调用方据此把 runtime 维度降权.
+    """
+    import yaml  # noqa: PLC0415
+
+    system_yaml = ws_root / ".omo" / "state" / "system.yaml"
+    if not system_yaml.is_file():
+        return (None, {})
+    try:
+        data = yaml.safe_load(system_yaml.read_text(encoding="utf-8")) or {}
+    except Exception:  # noqa: BLE001
+        return (None, {})
+    summary = data.get("runtime_health_summary") or {}
+    total = summary.get("total_services")
+    online = summary.get("online_services")
+    if not isinstance(total, (int, float)) or total <= 0:
+        return (None, summary)
+    if not isinstance(online, (int, float)):
+        return (None, summary)
+    return (online / total, summary)
+
+
+def _freshness_score(health_yaml: Path, now_iso: str) -> tuple[int, str]:
+    """health.yaml generated_at 新鲜度评分 (ISC-1 复合分输入).
+
+    返回 (score 0-100, age_human_readable).
+    """
+    if not health_yaml.is_file():
+        return (0, "never-generated")
+    try:
+        import yaml  # noqa: PLC0415
+        data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
+        gen = data.get("generated_at")
+        if not gen:
+            return (0, "no-timestamp")
+        gen_dt = datetime.fromisoformat(gen.replace("Z", "+00:00"))
+        now_dt = datetime.fromisoformat(now_iso.replace("Z", "+00:00"))
+        age_s = (now_dt - gen_dt).total_seconds()
+    except Exception:  # noqa: BLE001
+        return (0, "parse-error")
+
+    if age_s < 0:
+        return (100, "future")  # 时钟偏移, 宽容
+    if age_s <= 3600:
+        return (100, f"{age_s/60:.0f}m")
+    if age_s <= 86400:
+        return (80, f"{age_s/3600:.1f}h")
+    if age_s <= 7 * 86400:
+        return (50, f"{age_s/86400:.1f}d")
+    return (0, f"{age_s/86400:.1f}d-stale")
+
+
+def _composite_health_score(
+    governance_anomaly_score: int,
+    service_online_ratio: float | None,
+    freshness_score: int,
+) -> tuple[int, dict]:
+    """复合健康分 (ISC-1 治本).
+
+    权重: governance 0.5 + runtime 0.3 + freshness 0.2.
+    runtime 维度缺失时, 权重重分配到 governance (不因数据缺失惩罚分).
+    """
+    weights = {"governance": 0.5, "freshness": 0.2}
+    contributions = {
+        "governance": governance_anomaly_score * 0.5,
+        "freshness": freshness_score * 0.2,
+    }
+    if service_online_ratio is not None:
+        runtime_score = round(service_online_ratio * 100)
+        weights["runtime"] = 0.3
+        contributions["runtime"] = runtime_score * 0.3
+    else:
+        # runtime 缺失: 把 0.3 权重还回 governance (0.5 → 0.8)
+        weights["governance"] = 0.8
+        contributions["governance"] = governance_anomaly_score * 0.8
+
+    total_weight = sum(weights.values())
+    raw = sum(contributions.values()) / total_weight if total_weight else 0
+    return (round(raw), {"weights": weights, "contributions": contributions, "raw": round(raw, 2)})
 
 
 def run_radar(omo_dir: Path) -> dict:
@@ -100,14 +193,28 @@ def render_yaml(report: dict) -> str:
     lines.append(f"# generated_at: {report['generated_at']}")
     lines.append("# source: c2g.strategy (real audit, no mock)")
     lines.append("# range: 0-100, higher = healthier")
+    lines.append(f"# health_score: composite (ISC-1) = {report['health_composite_breakdown']['weights']}")
     lines.append("")
     lines.append("generated_at: " + _yaml_str(report["generated_at"]))
     lines.append("source: " + _yaml_str(report["source"]))
     lines.append("health_score: " + str(report["health_score"]))
+    lines.append("governance_anomaly_score: " + str(report["governance_anomaly_score"]))
     lines.append("anomaly_count: " + str(report["anomaly_count"]))
+    lines.append("service_online_ratio: " + _format_ratio(report.get("service_online_ratio")))
+    lines.append("freshness_score: " + str(report["freshness_score"]))
     lines.append("total_tasks: " + str(report["total_tasks"]))
     lines.append("done: " + str(report["done"]))
     lines.append("planned: " + str(report["planned"]))
+    lines.append("")
+    lines.append("health_composite_breakdown:")
+    bd = report["health_composite_breakdown"]
+    lines.append("  weights:")
+    for k, v in bd["weights"].items():
+        lines.append(f"    {k}: {v}")
+    lines.append("  contributions:")
+    for k, v in bd["contributions"].items():
+        lines.append(f"    {k}: {v}")
+    lines.append(f"  raw: {bd['raw']}")
     lines.append("")
     lines.append("anomalies:")
     if report["anomalies"]:
@@ -123,6 +230,12 @@ def render_yaml(report: dict) -> str:
             lines.append(f"    {k}: {v}")
     lines.append("")
     return "\n".join(lines)
+
+
+def _format_ratio(ratio: float | None) -> str:
+    if ratio is None:
+        return '"unavailable"'
+    return f"{ratio:.3f}"
 
 
 def _yaml_str(s: str) -> str:
@@ -159,6 +272,7 @@ def main() -> int:
         print(f"❌ OMO 目录不存在: {omo_dir}", file=sys.stderr)
         return 1
 
+    ws_root = omo_dir.parent
     output = args.output or (omo_dir / "state" / "health.yaml")
     output = output.resolve()
 
@@ -166,21 +280,40 @@ def main() -> int:
     print(f"   output: {output}")
 
     report = run_radar(omo_dir)
-    report["generated_at"] = _utc_now()
+    now_iso = _utc_now()
+    report["generated_at"] = now_iso
     report["source"] = "c2g.strategy (real audit, no mock)"
-    report["health_score"] = _health_score_from_anomalies(report["anomaly_count"])
+
+    # ISC-1 复合分: governance_anomaly + runtime + freshness
+    governance_anomaly_score = _health_score_from_anomalies(report["anomaly_count"])
+    report["governance_anomaly_score"] = governance_anomaly_score
+
+    service_online_ratio, runtime_summary = _collect_runtime_health(ws_root)
+    report["service_online_ratio"] = service_online_ratio
+
+    fresh_score, age_desc = _freshness_score(output, now_iso)
+    report["freshness_score"] = fresh_score
+
+    composite, breakdown = _composite_health_score(
+        governance_anomaly_score, service_online_ratio, fresh_score
+    )
+    report["health_score"] = composite
+    report["health_composite_breakdown"] = breakdown
 
     print()
-    print("📊 治理健康分:")
-    print(f"   health_score: {report['health_score']}/100")
-    print(f"   anomalies:    {report['anomaly_count']}")
-    print(f"   total:        {report['total_tasks']} ({report['done']} done + {report['planned']} planned)")
+    print("📊 治理健康分 (ISC-1 复合):")
+    print(f"   health_score (composite): {report['health_score']}/100")
+    print(f"   governance_anomaly_score: {governance_anomaly_score}/100 (anomalies={report['anomaly_count']})")
+    ratio_str = f"{service_online_ratio:.2%}" if service_online_ratio is not None else "unavailable"
+    print(f"   service_online_ratio:     {ratio_str}  (online={runtime_summary.get('online_services')}/{runtime_summary.get('total_services')})")
+    print(f"   freshness_score:          {fresh_score}/100 ({age_desc})")
+    print(f"   total:                    {report['total_tasks']} ({report['done']} done + {report['planned']} planned)")
     if report["anomalies"]:
         print("🚨 异常告警:")
         for w in report["anomalies"]:
             print(f"   - {w.replace('⚠️ ', '')}")
     else:
-        print("✅ 无异常")
+        print("✅ 无 governance 异常")
 
     if args.dry_run:
         print()
@@ -191,16 +324,29 @@ def main() -> int:
     output.write_text(render_yaml(report), encoding="utf-8")
 
     # 同步刷新 system.yaml 的健康分相关字段 (避免 SSOT 偏差告警)
-    sync_system_yaml(ws_root=omo_dir.parent, health_score=report["health_score"], generated_at=report["generated_at"])
+    sync_system_yaml(
+        ws_root=ws_root,
+        health_score=report["health_score"],
+        governance_anomaly_score=governance_anomaly_score,
+        service_online_ratio=service_online_ratio,
+        generated_at=now_iso,
+    )
 
     print()
     print(f"✅ 已写入 {output}")
     return 0
 
 
-def sync_system_yaml(ws_root: Path, health_score: int, generated_at: str) -> None:
-    """把 health_score + generated_at 同步写回 .omo/state/system.yaml.
+def sync_system_yaml(
+    ws_root: Path,
+    health_score: int,
+    governance_anomaly_score: int,
+    service_online_ratio: float | None,
+    generated_at: str,
+) -> None:
+    """把复合 health_score + governance_anomaly_score + service_online_ratio 写回 .omo/state/system.yaml.
 
+    ISC-2 治本: system.yaml 新增 governance_anomaly_score + service_online_ratio 字段.
     用 ruamel.yaml 失败时回退到 pyyaml (不保留注释但语义正确).
     """
     import yaml  # noqa: PLC0415
@@ -213,7 +359,11 @@ def sync_system_yaml(ws_root: Path, health_score: int, generated_at: str) -> Non
     try:
         data = yaml.safe_load(system_yaml.read_text(encoding="utf-8"))
         data["health_score"] = int(health_score)
-        data["health_score_source"] = "compass_radar"
+        data["governance_anomaly_score"] = int(governance_anomaly_score)
+        data["service_online_ratio"] = (
+            round(service_online_ratio, 4) if service_online_ratio is not None else None
+        )
+        data["health_score_source"] = "compass_radar_composite"
         data["health_score_generated_at"] = generated_at
         # 原子写
         tmp = system_yaml.with_suffix(".yaml.tmp")
@@ -222,7 +372,7 @@ def sync_system_yaml(ws_root: Path, health_score: int, generated_at: str) -> Non
             encoding="utf-8",
         )
         tmp.replace(system_yaml)
-        print(f"✅ system.yaml 同步: health_score={health_score} @ {generated_at}")
+        print(f"✅ system.yaml 同步: health_score(composite)={health_score} governance_anomaly={governance_anomaly_score} ratio={service_online_ratio}")
     except Exception as e:  # noqa: BLE001
         print(f"⚠️  system.yaml 同步失败: {e}")
 

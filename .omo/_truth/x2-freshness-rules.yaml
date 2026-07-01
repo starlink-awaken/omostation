@@ -227,3 +227,20 @@ rules:
       非内容机器 check. 若内嵌版本号漂移反复 ≥3 次, 升级为 doc-ssot-lint
       STALE_PATTERNS content check (遵 YAGNI, 当前不建).
 
+  - rule_id: X2-FRESH-DEBT-DASHBOARD
+    title: "debt dashboard generated_at 新鲜度 (ISC-11, 防 ISC-10 post-hook 失效后看板停更)"
+    type: governance_loop_freshness
+    status: active
+    created: '2026-07-01'
+    target: .omo/debt/dashboard/current.yaml
+    freshness:
+      mechanism: generated_at-staleness
+      threshold_days: 7
+      action: warn
+    owner: governance-team
+    notes: >
+      ISC-11 治本: omo refresh_outputs 写的活看板 (随 task 变更刷新, ISC-10 cli.py
+      post-hook). 7 天 stale 说明 task pipeline 停滞或 post-hook 失效. 配合 ISC-50
+      (两套看板 SSOT 统一 ADR) — _control/debt-dashboard/ 废弃后本 rule 成为唯一
+      dashboard freshness 守护. 验证: grep generated_at + 距今 > 7 天 → warn.
+

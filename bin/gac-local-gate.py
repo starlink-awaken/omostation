@@ -34,6 +34,8 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("doc-ssot-snapshots", ["scripts/check-doc-ssot-snapshots.py"]),
     ("doc-link-check", ["bin/doc-link-check.py"]),
     ("change-lane-check", ["bin/change-lane-check.py", "--staged"]),
+    # ISC-16: dependency-baseline drift 持续检测 (CI_ONLY: 本地 skip 避免 8 项真实 drift block 开发, CI strict 跑可见)
+    ("dependency-baseline-drift", ["bin/gen-dependency-baseline.py", "--check"]),
 )
 
 
@@ -155,7 +157,7 @@ AGENT_WORKFLOW_GATE_CHECKS = {"agent-workflow-verify-plan", "agent-workflow-comp
 # project-layer-index 是全局 layer digest, pre-commit 环境 (hook stash unstaged + 并发 dirty)
 # 让 digest stale 不稳定. pre-commit 跳过 (打破死结), strict (CI) 跑全套兜底.
 # (doctor 那套 has_unstaged_dirty 检测对它无效 — gate 跑在 stash 后环境, 读不到原 dirty)
-CI_ONLY_CHECKS = {"project-layer-index"}
+CI_ONLY_CHECKS = {"project-layer-index", "dependency-baseline-drift"}
 
 
 def staged_files_git() -> list[str]:

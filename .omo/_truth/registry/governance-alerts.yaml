@@ -7,7 +7,7 @@ last-reviewed: 2026-06-28
 
 # 治理告警规则配置
 #
-> 定义 X1-X4 检查失败时的告警规则
+# 定义 X1-X4 检查失败时的告警规则
 
 version: 1.0
 description: X1-X4 治理告警规则
@@ -85,6 +85,14 @@ rules:
     dimension: X3
     name: "SLA 超时"
     condition: "sla_violated"
+    severity: high
+    channels: [log, webhook]
+    enabled: true
+
+  - id: x3-overdue-approval
+    dimension: X3
+    name: "P1 任务审批超时 (ISC-31)"
+    condition: "overdue_approval_count > 0"
     severity: high
     channels: [log, webhook]
     enabled: true
