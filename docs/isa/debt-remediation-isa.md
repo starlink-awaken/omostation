@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 30/51
+progress: 32/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -96,7 +96,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-26: ADR-0114 补 `next-review-date: '2026-10-29'`（frontmatter，配合 Revisit triggers 3 个月评估 L4 是否补规则）。Verified。
 - [x] ISC-27: TASK-F7114ABA title + deliverables 行数硬编码（354L/1945L/3841L）→ 指针化（"见源码实测, 不硬编码"）。Verified: `rg '\d{2,4}L\b' TASK-F7114ABA.yaml` 返回空。
 - [x] ISC-28 (anti): 随 ISC-18 实现。doc-claim-lint 检测导航文档版本号/健康分声称（PANORAMA/ARCH-DETAILED/FUNC-CAP）。注: 接入 `make gac-local-gate` 是 ISC-16 同类 follow-up（gac CHECKS 注册 doc-claim-lint）。
-- [ ] ISC-29: Anti: `dependency-baseline.yaml` 重新出现 `baseline: (none)`（probe: lint 拒绝空 baseline）。
+- [x] ISC-29: Anti: `dependency-baseline.yaml` 重新出现 `baseline: (none)`（probe: lint 拒绝空 baseline）。
 
 ### Wave 3 — 积压消化 + 代码债
 
@@ -110,7 +110,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [ ] ISC-37: gbrain TODOS.md 的 planned 项 ingress 进 `debt.yaml`（probe: registry 含 `source_ref: gbrain/TODOS.md` 条目）。
 - [ ] ISC-38: aetherforge gateway `compat` 模块加 `deprecated_at` + `removed_in` 版本号（probe: `rg 'deprecated_at|removed_in' projects/aetherforge/packages/gateway/src/llm_gateway/compat.py` 命中）。
 - [ ] ISC-39: aetherforge `compat` deprecation warning 计数进观测（probe: cockpit health 含 compat_warning 计数）。
-- [ ] ISC-40: Anti: TASK 描述重新硬编码源文件行数（probe: `doc-claim-lint` 扩展覆盖 task yaml）。
+- [x] ISC-40: Anti: TASK 描述重新硬编码源文件行数（probe: `doc-claim-lint` 扩展覆盖 task yaml）。
 - [ ] ISC-41: Anti: omo God Module 单文件重回 >1000 行（probe: `omo lint god-module` 阈值 ≤1000）。
 
 ### Wave 4 — 依赖 + 运行时 + 架构债
