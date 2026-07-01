@@ -93,6 +93,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0115 | P52 model-driven LifecycleStage 7→8 阶段 (P60 GOVERNANCE_MAINTENANCE) | SUPERSEDED | 2026-06-30 | governance-team | 0115-p52-model-driven-8-stages.md |
 | 0116 | Tier 1 渐进式修复 vs Tier 2 真治本 (Meta-Reflection) | ACCEPTED | 2026-06-30 | governance-team | 0116-p52-meta-tier1-vs-tier2.md |
 | 0117 | 撤销 P60 GOVERNANCE_MAINTENANCE 阶段 (P52 真治本) | ACCEPTED | 2026-06-30 | governance-team | 0117-p52-undo-p60-stage-8.md |
+| 0118 | 根仓 dev-deps 统一 — 部分真治本 + P3 follow-up | PARTIAL | 2026-06-30 | governance-team | 0118-p52-partial-root-dev-deps.md |
 
 ---
 
