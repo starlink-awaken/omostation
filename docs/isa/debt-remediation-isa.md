@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 32/51
+progress: 33/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -106,7 +106,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [ ] ISC-33: `omo_ingress` 系列 God Module 用 `omo-srp-refactor` skill 拆分，单文件 ≤600 行（probe: `wc -l projects/omo/src/omo/omo_ingress_*.py` max ≤600）。
 - [ ] ISC-34: `agora/mcp/resolver/services.py` 拆分至 ≤800 行（probe: `wc -l` 验证；BOS 路由测试全绿）。
 - [ ] ISC-35: `cockpit/commands/research.py` 拆分至 ≤800 行（probe: `wc -l` 验证；cockpit research 子命令契约不变）。
-- [ ] ISC-36: `gbrain todo-ingress` 命令新建，解析 `TODOS.md` 为 omo debt item（probe: `--dry-run` 对 T8 输出 debt item 结构）。
+- [x] ISC-36: `gbrain todo-ingress` 命令新建，解析 `TODOS.md` 为 omo debt item（probe: `--dry-run` 对 T8 输出 debt item 结构）。
 - [ ] ISC-37: gbrain TODOS.md 的 planned 项 ingress 进 `debt.yaml`（probe: registry 含 `source_ref: gbrain/TODOS.md` 条目）。
 - [ ] ISC-38: aetherforge gateway `compat` 模块加 `deprecated_at` + `removed_in` 版本号（probe: `rg 'deprecated_at|removed_in' projects/aetherforge/packages/gateway/src/llm_gateway/compat.py` 命中）。
 - [ ] ISC-39: aetherforge `compat` deprecation warning 计数进观测（probe: cockpit health 含 compat_warning 计数）。
