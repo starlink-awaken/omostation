@@ -1,19 +1,14 @@
 name: cockpit-ui-ci
-# P47 E 续: hermes-console (TS + bun + Vite) 已合并入 projects/cockpit-ui/ (P30 重组).
-# 测试入口: npm test → bash tests/baseline-check.sh
-on: [push, pull_request]
+# cockpit-ui is an embedded repo (not a git submodule), tracked in .gitignore.
+# CI cannot checkout it from the root repo. This workflow runs in the
+# cockpit-ui repo itself (omostation-hermes-console) via its own .github/workflows/.
+# This root workflow is disabled to avoid false failures.
+on:
+  workflow_dispatch: {}
 
 jobs:
   test:
-    name: cockpit-ui baseline check
+    name: cockpit-ui baseline check (disabled — runs in cockpit-ui repo)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
-      - uses: oven-sh/setup-bun@v2
-      - name: bun install
-        run: cd projects/cockpit-ui && bun install --frozen-lockfile
-      - name: baseline check
-        run: cd projects/cockpit-ui && bash tests/baseline-check.sh
+      - run: echo "cockpit-ui CI runs in its own repo (omostation-hermes-console)"
