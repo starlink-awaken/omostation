@@ -1,0 +1,52 @@
+name: AI PR Review
+
+# F1 (auto-PR ISA): AI 语义 review, advisory 起步.
+# ISA 决策 (2026-07-01): 先 advisory (只 comment 不阻断) 跑两周验质量, 第4步转 blocking.
+# 详见 docs/AUTO-PR-REVIEW-ISA.md ISC-1..8.
+# 分工: GaC gate (规则兜底) + AI (语义补充). AI 不懂的规则 gate 懂.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    # 不设 paths — 所有 PR 都过语义 review (GaC gate 管 paths 过滤的规则层)
+
+permissions:
+  contents: read
+  pull-requests: write   # post review comment (ISC-4)
+
+concurrency:
+  group: ai-pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true   # 新 commit 取消旧 review (省 token, 防并发浪费)
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    # ISC-7 Anti: bot/dependabot 自身 PR skip review (防自审 → 防自合链)
+    if: github.actor != 'github-actions[bot]' && github.actor != 'dependabot[bot]'
+    timeout-minutes: 10   # ISC-8: 超时兜底
+    # advisory: review 失败/超时不卡 PR (continue-on-error). blocking 模式 (第4步) 才参与 merge gate.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 完整历史, 供 diff 分析
+
+      # ⚠️ claude-code-action inputs 需对照官方文档校准 (版本演进快):
+      #    https://github.com/anthropics/claude-code-action
+      # 当前用核心确定 input (anthropic_api_key + prompt). 若该版本 prompt 字段名不同,
+      # 校准后调 (可能 direct_prompt / trigger_prompt). 骨架不变.
+      - name: Claude AI Review (advisory)
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}   # ISC-6: secret, 不硬编码
+          # advisory prompt: 输出 review comment. 第4步转 blocking 加 "set review REQUEST_CHANGES for [BLOCKING]".
+          prompt: |
+            Review this PR diff against base. GaC gate (gac-validate/drift/ssot/mof/reachability)
+            已验规则层, 你补语义层. 输出 (中文, 简洁, 直接 post 为 review comment):
+            1. **变更摘要** (1-2 句: 改了啥, 为啥)
+            2. **[BLOCKING]**: 仅列 bug / 安全 / 破坏性 / 治理绕过 (如 .omo 直写非 broker).
+               无则整节省略 (别硬凑).
+            3. **[NIT]**: 可读性/边界, 最多 3 条.
+            不评论 linter (ruff/actionlint/yaml) 已覆盖的风格. 不改代码 (review only).
+            若 diff 纯 docs/submodule-pointer/低风险, 直接回 "✅ 低风险, 无 blocking".
+          max_turns: 2   # 限制轮次省 token (review 不需要多轮工具调用)
