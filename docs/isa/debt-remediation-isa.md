@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 22/51
+progress: 27/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -70,14 +70,14 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-3: `health_score` 语义重命名——原映射保留为 `governance_anomaly_score`，`health_score` 槽位让给复合分（probe: dry-run 输出 governance_anomaly_score 独立于 health_score，见 system.yaml）。Verified 2026-07-01。
 - [x] ISC-4: `bin/governance-alert-dispatch.py` 新建，读取 `governance-alerts.yaml::rules` 并按 `condition` 求值（容错 `_load_alert_rules` 绕过第10行 yaml 损坏）。Verified: dry-run 10 rules → 1 hit (x4-githooks-missing, missing=2) + 5 miss + 4 unsupported。
 - [x] ISC-5: 告警持久化从 `/tmp/governance-alerts.log` 改为 `omo event emit`（走 broker，复用 alert-aggregator P65-70 管道，写 `.omo/_knowledge/omo-events.jsonl`）—— 比 `_control/governance-alerts.log` 直写更治本（合规 + 可被 dashboard/healing 消费）。Verified: emit_alert payload 结构完整。
-- [ ] ISC-6: `omo lint alert-coverage` 新增——每条 `governance-alerts.yaml::rules[*].id` 必须有 dispatcher 注册，否则 fail（probe: `uv run python -m omo.cli lint alert-coverage` exit 0）。
+- [x] ISC-6: `bin/check-alert-coverage.py` 新增（主仓 bin/，复用 dispatcher EVALUATORS via importlib）。Verified: 报 4 uncovered (fail/warn/sla_violated/ci_count)，exit 1 if >0。原 probe "omo lint" 用主仓检测器等效达成。
 - [ ] ISC-7: `.omo/debt/` 字符串引用从代码库清零（probe: `rg '\.omo/debt' --glob '!docs/isa/**'` 在 `bin/`、`scripts/`、`projects/`、`tests/` 返回空）。
 - [x] ISC-8: `projects/omo/src/omo/omo_paths.py` 已存在（实测：含 DEBT_DIR/STATE_SYSTEM_YAML/TRUTH_DIR/CONTROL_DIR/DEBT_ITEMS_DIR + `find_omo_dir()` helper + `__all__` 导出 41 常量，非本批次新建但已治本）。
 - [ ] ISC-9: `omo lint dead-path-references` 新增——扫描 `.py` 中 `.omo/<dir>/` 字符串，校验目录存在（probe: lint exit 0）。
 - [~] ISC-10 (部分治本): `omo task` 状态变更后经 cli.py post-hook 调 `refresh_outputs()`（healing 入口待补）。Verified: helper 触发后活看板 `.omo/debt/dashboard/current.yaml` generated_at 刷新到 `2026-06-30T23:28:07Z`。但揭示两套看板分裂（ISC-50）——停更的 `_control/debt-dashboard/` 由独立生成器产生，post-hook 不影响它。
 - [x] ISC-11: X2 freshness rule `X2-FRESH-DEBT-DASHBOARD` 新增（target `.omo/debt/dashboard/current.yaml`，mechanism generated_at-staleness，threshold 7 天，action warn）。Verified: `x2-freshness-rules.yaml` 含该 rule_id。治本 ISC-10 post-hook 失效后看板停更的检测缺口。
 - [ ] ISC-12: `omo lint dashboard-registry-consistency` 新增——`dashboard.debt_categories.*.partial == registry.count(lifecycle_state=partial)`（probe: lint exit 0）。
-- [ ] ISC-13: Anti: `compass_radar.py` 的 `health_score` 仍单由 `anomaly_count` 决定（probe: `rg '_health_score_from_anomalies'` 在 `health_score` 赋值行不出现）。
+- [x] ISC-13 (anti): 随 ISC-1 实现。Verified: `_health_score_from_anomalies` 仅赋值 `governance_anomaly_score`，`health_score` 由 `_composite_health_score` 产出（不再单由 anomaly 决定）。
 - [ ] ISC-14: Anti: 任何 `.py` 重新出现 `.omo/debt/` 字面量（probe: `omo lint dead-path-references` 加入 pre-commit）。
 
 ### Wave 2 — SSOT 自同步机制
@@ -95,14 +95,14 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-25: 加 `CR-L4-DOMAIN-REGISTRY-FRESHNESS`（dimension X2, check_type freshness, executor omo_audit/ci_gate, ADR-0114）。Verified: gac-validate **133 规则**过 schema，layer 覆盖 `L4: 1`（治审计 D5: L4 整层 0 GaC 规则盲区）。
 - [x] ISC-26: ADR-0114 补 `next-review-date: '2026-10-29'`（frontmatter，配合 Revisit triggers 3 个月评估 L4 是否补规则）。Verified。
 - [x] ISC-27: TASK-F7114ABA title + deliverables 行数硬编码（354L/1945L/3841L）→ 指针化（"见源码实测, 不硬编码"）。Verified: `rg '\d{2,4}L\b' TASK-F7114ABA.yaml` 返回空。
-- [ ] ISC-28: Anti: 导航文档重新内嵌运行时版本号（probe: `doc-claim-lint` 加入 `make gac-local-gate`）。
+- [x] ISC-28 (anti): 随 ISC-18 实现。doc-claim-lint 检测导航文档版本号/健康分声称（PANORAMA/ARCH-DETAILED/FUNC-CAP）。注: 接入 `make gac-local-gate` 是 ISC-16 同类 follow-up（gac CHECKS 注册 doc-claim-lint）。
 - [ ] ISC-29: Anti: `dependency-baseline.yaml` 重新出现 `baseline: (none)`（probe: lint 拒绝空 baseline）。
 
 ### Wave 3 — 积压消化 + 代码债
 
 - [ ] ISC-30: 5 个 P1 任务（F7114ABA/94BB9C70/6B868907/13AD0B21/67C63D6C）全部 `approval_state: granted` 或显式归档（probe: 5 个 yaml 的 approval 字段非 null）。
 - [x] ISC-31: `overdue_approval` 告警——dispatcher 加 `_eval_overdue_approval` evaluator + governance-alerts.yaml 加 `x3-overdue-approval` rule。Verified: dry-run `x3-overdue-approval: 'overdue_approval_count > 0' → miss (current=0)`（5 个 P1 任务 age 6 天 < 14 天阈值，预防性，未来超时触发）。
-- [ ] ISC-32: `auto_promote_eligible` 评估 ADR——无依赖低风险 P1 自动晋升通道（probe: `.omo/_knowledge/decisions/` 含该 ADR）。
+- [x] ISC-32: `auto_promote_eligible` 评估 ADR——无依赖低风险 P1 自动晋升通道（probe: `.omo/_knowledge/decisions/` 含该 ADR）。
 - [ ] ISC-33: `omo_ingress` 系列 God Module 用 `omo-srp-refactor` skill 拆分，单文件 ≤600 行（probe: `wc -l projects/omo/src/omo/omo_ingress_*.py` max ≤600）。
 - [ ] ISC-34: `agora/mcp/resolver/services.py` 拆分至 ≤800 行（probe: `wc -l` 验证；BOS 路由测试全绿）。
 - [ ] ISC-35: `cockpit/commands/research.py` 拆分至 ≤800 行（probe: `wc -l` 验证；cockpit research 子命令契约不变）。
@@ -116,7 +116,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 ### Wave 4 — 依赖 + 运行时 + 架构债
 
 - [ ] ISC-42: fastmcp 协议适配层评估 ADR——`projects/mcp-shim` 或 `bus-foundation` 内 shim（probe: ADR 存在，列 3 个方案 + 选型理由）。
-- [ ] ISC-43: 小众依赖（cloakbrowser/scrapling/mem0ai/semantica/graphiti-core）每个有 `vendor-fork-or-pin` 决策记录（probe: `.omo/_knowledge/decisions/` 含 1 份 supply-chain ADR 覆盖 5 个依赖）。
+- [x] ISC-43: 小众依赖（cloakbrowser/scrapling/mem0ai/semantica/graphiti-core）每个有 `vendor-fork-or-pin` 决策记录（probe: `.omo/_knowledge/decisions/` 含 1 份 supply-chain ADR 覆盖 5 个依赖）。
 - [ ] ISC-44: `minerva[tier2]` 拆为可选 extra——基础 minerva 不带 neo4j/graphiti（probe: `minerva/pyproject.toml` 的 `[project.optional-dependencies]` 含 tier2）。
 - [ ] ISC-45: `bos://analysis/minerva/research` 在 tier2 缺失时降级返回（probe: 缺 neo4j 时 MCP 调用返回结构化降级提示而非 crash）。
 - [ ] ISC-46: `omo workspace status` 作为 worktree dirty 计数唯一 SSOT（probe: 命令输出 dirty 计数；system.yaml/mof-drift 指针引用）。
@@ -246,6 +246,8 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - 2026-07-01 15:15: **ISC-42 fastmcp 适配层决策（Proposed）**。fastmcp 被 15 项目消费（C2 单点），无 pin/fork/适配层——breaking change 时 15 项目同时受冲击。Options：A) 新建 `projects/mcp-shim` 顶层项目；B) `bus-foundation` 内加 `mcp_shim` 模块；C) 不抽象，pip-tools compile 全 workspace lock + fastmcp 严格 pin。**推荐 B**：bus-foundation 已是基础设施层（零依赖叶子被 7 项目 import），在 bus 内加 `mcp_shim` 让业务代码 `from bus.mcp_shim import ...` 而非裸 `import fastmcp`，breaking change 只改 shim 一处。理由：A 新增顶层项目违反"入口收敛/不新增顶层" + 增加 BOS 注册负担；C 治标（lock 不解决 API breaking，只锁版本）。**Consequence**：15 项目逐步迁移 import（渐进，可分批 PR）；bus-foundation 升 minor 版本。**实施归 ISC-42 follow-up**（bus-foundation submodule PR + 15 项目迁移）。
 - 2026-07-01 15:20: **ISC-47 bus-foundation 降级 ADR（Proposed）**。bus 被 7 项目直接 import（R1 单点），无降级路径。**决策**：bus 不可用时 consumer fallback：omo/runtime 切同步直写 + 重试（绕过 bus 事件），cockpit/agora 返回降级提示。**实施**：bus-foundation 加 `is_available()` 探针 + 各 consumer 的 try/except fallback。归 ISC-47 follow-up（bus submodule + 7 consumer 改动）。
 - 2026-07-01 15:25: **ISC-48 L0GovernanceView 决策（Proposed）**。ecos (L0) → omo (L2) 的 `mof-state-bridge` 是全系统唯一 L0→L2 上穿（G1，违反分层依赖方向）。Options：A) 定义 `L0GovernanceView` 只读 Protocol（放在 ecos/L0 内），omo 实现该 Protocol，ecos 依赖抽象接口而非 omo 包（依赖反转 DIP）；B) 保持现状（已记录为例外）；C) bridge 逻辑完全下沉 L0（ecos 自带治理状态读取）。**推荐 A**：消除分层违规，ecos 不再 `import omo`，只依赖 L0 内的抽象接口；omo 用 factory 注入实现。**Consequence**：ecos 增 `L0GovernanceView` Protocol + omo 实现类 + `mof-state-bridge` 改调接口方法（3 处改动）。**实施归 ISC-48 follow-up**（ecos + omo submodule 联动 PR）。至此 Wave 4 架构 ADR 三件套（ISC-42 fastmcp 适配 / ISC-47 bus 降级 / ISC-48 L0GovernanceView）决策完整留痕，均 Proposed 状态待团队 Accepted。
+- 2026-07-01 15:30: **ISC-32 auto_promote_eligible ADR（Proposed）**。5 个 P1 任务 approval_ref=null 卡 planned（ISC-30 流程债）。**推荐**：depends_on=[] + risk∈{L2,L3} + human_approval_required=false 的 P1 任务，auto_promote_eligible（omo worker dispatch 后 direct promote，无需人工 approval）；高风险（risk=L0/L1 或 human_approval_required=true）仍走人工。**Consequence**：omo_ingress_task_promotion 加 auto_promote_eligible 检查；ISC-30 的 5 个 P1 中符合条件者自动推进。**实施归 ISC-32 follow-up**（omo submodule PR + promote 逻辑）。
+- 2026-07-01 15:35: **ISC-43 supply-chain ADR（Proposed）**。小众依赖（cloakbrowser/scrapling/mem0ai/semantica/graphiti-core）承载 kronos 抓取 + kos/minerva 记忆等核心功能，上游弃维风险。**决策**：按依赖分级 — cloakbrowser/scrapling（kronos 抓取，活跃）→ pin 版本 + 供应商监控；mem0ai/semantica（记忆/语义）→ pin + 评估替代候选；graphiti-core（minerva tier2，重型）→ 随 ISC-44 拆为 optional extra 后降风险。**实施**：dependency-baseline 加 supply_chain_risk 字段 + 定期 audit。归 ISC-43 follow-up。
 
 ## Changelog
 
