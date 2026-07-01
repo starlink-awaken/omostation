@@ -8,12 +8,13 @@
 # 此钩子: 主仓 push(触发 CI)前, 把本地领先远程的子模块 push 上去, 让 gitlink 可达.
 # 子模块 push 失败会阻断主仓 push,避免把不可达 gitlink 推到远端.
 #
-# Phase 2a (2026-06-30): direct-push-to-main advisory 守卫.
-# Phase 2c (2026-07-01): 升级 blocking — push 目标含 refs/heads/main 且当前分支
-#   非 work/* → exit 1 拒绝. 逼走 PR 流程 (worktree 隔离). 紧急绕过:
-#     DIRECT_PUSH_MAIN_OK=1 git push ...   (跳 blocking, sync/reachability 仍跑)
-#     git push --no-verify                  (git 原生, 绕整个 hook, 自担 gitlink 悬空风险)
-#   详见 docs/AGENT-ISOLATION-ROLLOUT.md §4 Phase 2 (ISC-3b).
+# direct-push-to-main 守卫历程:
+#   2a (2026-06-30): advisory (警告不阻断)
+#   2c (2026-07-01, commit 893f2332): 升级 blocking (exit 1)
+#   路径A第1步 (2026-07-01): 回退 advisory — 2c 意外生效但 auto-PR 通道未建,
+#     escape hatch 滥用废 blocking (半吊子). 第4步 (auto-PR通+并发agent切PR) 恢复 blocking.
+# 当前: advisory (push 目标含 refs/heads/main 且非 work/* → 警告, 不阻断).
+# 详见 docs/AGENT-ISOLATION-ROLLOUT.md §4 Phase 2 (ISC-3b) + docs/AUTO-PR-REVIEW-ISA.md.
 #
 # 安装: make install-hooks  (从本文件复制到 .git/hooks/pre-push)
 # 新 clone 必跑: make install-hooks
@@ -30,32 +31,21 @@ while read -r _lref _lsha _rref _rsha; do
 "
 done
 
-# ── Phase 2c: direct-push-to-main blocking 守卫 ─────────────────
-# push 目标含 refs/heads/main 且当前分支非 work/* → exit 1 拒绝.
-# 逼走 PR 流程. 紧急绕过: DIRECT_PUSH_MAIN_OK=1 (跳 blocking, sync/reachability 仍跑).
-# { ... } || true 兜底: 守卫内部非 exit 的命令出错不阻断 (只让显式 exit 1 生效).
+# ── direct-push-to-main 守卫 (路径 A 第 1 步: advisory, 2026-07-01) ─────────
+# push 目标含 refs/heads/main 且当前分支非 work/* → stderr 警告 (不阻断).
+# 回退原因: 2c blocking 意外生效但 auto-PR 通道未建 → escape hatch 滥用 (半吊子).
+# 第 4 步 (auto-PR 通 + 并发 agent 切 PR 后) 恢复 exit 1 (commit 893f2332 的 blocking 逻辑).
+# { ... } || true 兜底: 守卫内部命令出错不阻断 push.
 {
   CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
   if printf '%s\n' "$PUSH_REFS" | grep -qE 'refs/heads/main'; then
     if [ -z "$CURRENT_BRANCH" ] || ! printf '%s' "$CURRENT_BRANCH" | grep -qE '^work/'; then
-      if [ "${DIRECT_PUSH_MAIN_OK:-}" = "1" ]; then
-        cat >&2 <<EOF
-[2c-block] ⚠️ DIRECT_PUSH_MAIN_OK=1 放行 direct push to main (分支: ${CURRENT_BRANCH:-detached})
-   仅紧急热补丁用. 日常变更走 PR:
-     bash bin/gac-worktree.sh claim <session> && ... && bash bin/gac-worktree.sh submit <session>
+      cat >&2 <<EOF
+[advisory] ⚠️ direct push to main (分支: ${CURRENT_BRANCH:-detached})
+   路径 A 第 1 步: advisory 回退 (auto-PR EXECUTE 期间). 第 4 步恢复 blocking.
+   建议走 PR: bash bin/gac-worktree.sh claim <session> && ... && submit <session>
+   (advisory 不阻断, 继续本次 push)
 EOF
-      else
-        cat >&2 <<EOF
-[2c-block] ❌ 拒绝 direct push to main (分支: ${CURRENT_BRANCH:-detached})
-   Phase 2c: main 变更必须走 PR 流程 (worktree 隔离). 改用:
-     bash bin/gac-worktree.sh claim <session>   # 起隔离 worktree
-     # ... 改文件, commit ...
-     bash bin/gac-worktree.sh submit <session>   # push 分支 + 开 PR
-     bash bin/gac-worktree.sh merge <session>    # squash 合并 + release
-   紧急热补丁: DIRECT_PUSH_MAIN_OK=1 git push ...
-EOF
-        exit 1
-      fi
     fi
   fi
 } || true
