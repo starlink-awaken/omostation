@@ -9,7 +9,6 @@ E3 病根: worktree dirty 计数三处不一致 (system.yaml / mof-drift / 实�
 from __future__ import annotations
 
 import subprocess
-from pathlib import Path
 
 from omo.omo_paths import STATE_SYSTEM_YAML, WORKSPACE_ROOT
 

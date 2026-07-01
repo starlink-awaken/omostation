@@ -21,6 +21,10 @@ def main(argv: list[str] | None = None) -> int:
         from omo.omo_capability import main as capability_main
 
         return capability_main(args)
+    if args and args[0] == "baseline":
+        from omo.omo_baseline_write import main as baseline_main
+
+        return baseline_main(args[1:])
     if args and args[0] == "metacognition":
         from omo.omo_metacognition import main as metacognition_main
 

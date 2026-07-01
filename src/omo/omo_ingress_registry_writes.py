@@ -559,3 +559,61 @@ def update_governance_overlay_state(
             extra={"control_written": control is not None},
         )
         return artifact
+
+
+def apply_baseline_patches(
+    omo_dir: Path,
+    *,
+    patches: dict[str, str],
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    """Broker: patch dependency-baseline.yaml 的 mismatched baseline 值 (C2 方案 C).
+
+    gen-dependency-baseline 算 drift (业务), 本函数合规应用 patch
+    (write_text_atomic + audit + trail). 文本 patch (保留 yaml 格式/注释),
+    只改 patches 里 name 的 baseline 值. 路径 src/omo/ 豁免 direct_omo_io.
+    """
+    import re
+
+    timestamp = now or _utc_now()
+    baseline_path = omo_dir / "_truth" / "registry" / "dependency-baseline.yaml"
+    if not baseline_path.is_file():
+        raise FileNotFoundError(f"dependency-baseline.yaml not found: {baseline_path}")
+    with fcntl_lock(_lock_path(omo_dir)):
+        text = baseline_path.read_text(encoding="utf-8")
+        lines = text.split("\n")
+        applied: list[dict[str, str]] = []
+        i = 0
+        while i < len(lines):
+            m = re.match(r"(\s*)-\s*name:\s*(\S+)", lines[i])
+            if m and m.group(2).lower() in patches:
+                new_b = patches[m.group(2).lower()]
+                for j in range(i + 1, min(i + 6, len(lines))):
+                    bm = re.match(r"(\s*baseline:\s*)(.*)", lines[j])
+                    if bm:
+                        old = bm.group(2).strip().strip("'\"")
+                        lines[j] = f"{bm.group(1)}'{new_b}'"
+                        applied.append({"name": m.group(2), "old": old, "new": new_b})
+                        i = j
+                        break
+            i += 1
+        if not applied:
+            return {"applied": 0, "patches": [], "note": "no patch targets matched in baseline yaml"}
+        write_text_atomic(baseline_path, "\n".join(lines))
+        record_audit(
+            action="apply_dependency_baseline_patches",
+            debt_id="",
+            actor=actor,
+            details={"applied": applied, "source_ref": source_ref, "timestamp": timestamp},
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="apply_dependency_baseline_patches",
+            target=".omo/_truth/registry/dependency-baseline.yaml",
+            parent_step_id=None,
+        )
+    return {"applied": len(applied), "patches": applied, "source_ref": source_ref}
