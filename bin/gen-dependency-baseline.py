@@ -184,9 +184,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="gen-dependency-baseline: dependency drift 检测 (ISC-15)")
     parser.add_argument("--check", action="store_true", help="对比 baseline 报 drift (exit 1 有 drift)")
     parser.add_argument("--dry-run", action="store_true", help="打印从 pyproject 推导的 baseline")
+    parser.add_argument("--write", action="store_true", help="patch mismatched/unconstrained baseline → derived, 走 omo broker (C2 方案 C: subprocess 调 omo, 不直写)")
     args = parser.parse_args()
 
-    if not args.check and not args.dry_run:
+    if not args.check and not args.dry_run and not args.write:
         parser.print_help()
         return 1
 
@@ -195,13 +196,51 @@ def main() -> int:
 
     if args.dry_run:
         print(f"# 治本 ISC-15: 从 {len(deps)} 个外部依赖推导的 baseline (源: projects/**/pyproject.toml)")
-        print(f"# 注: --write 走 omo broker (.omo/ 禁直写), 本工具仅生成/检测")
+        print(f"# 注: --write 走 omo broker (C2 方案 C: subprocess 调 omo baseline write, 不直写)")
         print()
         for name, info in derived.items():
             consumers = ", ".join(info["consumers"][:5])
             more = f" (+{info['consumer_count']-5})" if info["consumer_count"] > 5 else ""
             print(f"  {name:<28} baseline={info['baseline']:<12} consumers=[{consumers}{more}]")
         print(f"\n📊 共 {len(derived)} 个外部依赖")
+        return 0
+
+    if args.write:
+        # C2 方案 C (2026-07-01): subprocess 调 omo broker 写 baseline (不直写, 避 direct_omo_io 红线).
+        # omo src/omo/ 路径豁免 contract_gatekeeper. 跟 omo_readiness (P63) 先例同构 (gen 算 → omo broker 写).
+        import json
+        import os
+        import subprocess
+
+        current = _load_current_baseline()
+        drift = check_drift(derived, current)
+        targets = {
+            d["name"]: (d.get("derived") or d.get("pyproject_lower"))
+            for d in (drift["mismatched"] + drift["unconstrained"])
+        }
+        targets = {k: v for k, v in targets.items() if v and v != "(none)"}
+        if not targets:
+            print(f"✅ 无 mismatched/unconstrained drift, 无需写入 ({len(derived)} deps)")
+            return 0
+        patches_json = json.dumps(targets, ensure_ascii=False)
+        omo_python = WORKSPACE / "projects" / "omo" / ".venv" / "bin" / "python"
+        omo_src = WORKSPACE / "projects" / "omo" / "src"
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(omo_src)
+        cmd = [
+            str(omo_python), "-m", "omo.cli", "baseline", "write",
+            "--patches", patches_json,
+            "--actor", "gen-dependency-baseline",
+        ]
+        print(f"📡 gen --write: 调 omo broker patch {len(targets)} 项 baseline (不直写, 走 broker 合规)")
+        for name, new_b in targets.items():
+            print(f"   ⬆ {name}: → {new_b}")
+        result = subprocess.run(cmd, cwd=str(WORKSPACE / "projects" / "omo"), env=env, capture_output=True, text=True)
+        if result.stdout:
+            print(result.stdout, end="")
+        if result.returncode != 0:
+            print(f"❌ omo baseline write 失败 (rc={result.returncode}):\n{result.stderr}", file=sys.stderr)
+            return result.returncode
         return 0
 
     if args.check:
