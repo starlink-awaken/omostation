@@ -29,7 +29,7 @@ import unittest
 from pathlib import Path
 
 
-REPO_ROOT = Path("/Users/xiamingxing/Workspace").resolve()
+REPO_ROOT = Path(__file__).resolve().parents[3].resolve()
 
 
 def _run_wrapper(wrapper: str, env: dict[str, str]) -> dict:

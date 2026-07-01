@@ -254,7 +254,7 @@ def test_cli_list_subcommand_runs(tmp_path: Path) -> None:
             "--path",
             str(reg_path),
         ],
-        cwd="/Users/xiamingxing/Workspace/projects/omo",
+        cwd=str(Path(__file__).resolve().parents[1]),
         capture_output=True,
         text=True,
         timeout=30,
@@ -270,7 +270,7 @@ def test_cli_validate_subcommand() -> None:
     # 有效
     p1 = subprocess.run(
         [sys.executable, "-m", "omo.cli", "bos", "validate", "bos://memory/kos/search"],
-        cwd="/Users/xiamingxing/Workspace/projects/omo",
+        cwd=str(Path(__file__).resolve().parents[1]),
         capture_output=True,
         text=True,
         timeout=30,
@@ -280,7 +280,7 @@ def test_cli_validate_subcommand() -> None:
     # 无效
     p2 = subprocess.run(
         [sys.executable, "-m", "omo.cli", "bos", "validate", "bos://invalid/foo/bar"],
-        cwd="/Users/xiamingxing/Workspace/projects/omo",
+        cwd=str(Path(__file__).resolve().parents[1]),
         capture_output=True,
         text=True,
         timeout=30,
@@ -422,7 +422,7 @@ def test_save_to_kos_direct_call_fallback() -> None:
         try:
             sys.path.insert(
                 0,
-                "/Users/xiamingxing/Workspace/projects/kairon/packages/kos/src",
+                str(Path(__file__).resolve().parents[3] / "projects/kairon/packages/kos/src"),
             )
             from kos.ontology.store import delete_entity  # type: ignore
 

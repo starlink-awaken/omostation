@@ -15,8 +15,8 @@ import json
 from pathlib import Path
 
 
-BOS_REGISTRY = Path("/Users/xiamingxing/Workspace/.omo/_knowledge/bos-registry.json")
-OMOSTATION_ROOT = Path("/Users/xiamingxing/Workspace")
+BOS_REGISTRY = Path(str(Path(__file__).resolve().parents[3]) + "/.omo/_knowledge/bos-registry.json")
+OMOSTATION_ROOT = Path(__file__).resolve().parents[3]
 
 
 # ── Registry 元数据 ─────────────────────────────────

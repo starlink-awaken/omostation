@@ -26,7 +26,7 @@ import pytest
 
 from omo.omo_llm_bos_bridge import invoke_bos_uri_tool
 
-OMOSTATION_ROOT = Path("/Users/xiamingxing/Workspace")
+OMOSTATION_ROOT = Path(__file__).resolve().parents[3]
 BOS_REGISTRY = OMOSTATION_ROOT / ".omo" / "_knowledge" / "bos-registry.json"
 
 

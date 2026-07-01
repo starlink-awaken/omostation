@@ -31,7 +31,7 @@ import unittest
 from pathlib import Path
 
 
-WORKSPACE = Path("/Users/xiamingxing/Workspace")
+WORKSPACE = Path(__file__).resolve().parents[3]
 SCRIPTS = WORKSPACE / "scripts"
 
 

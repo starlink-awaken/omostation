@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-AGORA_ROOT = Path("/Users/xiamingxing/Workspace/projects/agora")
+AGORA_ROOT = Path(str(Path(__file__).resolve().parents[3]) + "/projects/agora")
 
 
 def _agora_services_available() -> bool:

@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-AGORA_ROOT = Path("/Users/xiamingxing/Workspace/projects/agora")
-KAIRON_ROOT = Path("/Users/xiamingxing/Workspace/projects/kairon")
+AGORA_ROOT = Path(str(Path(__file__).resolve().parents[3]) + "/projects/agora")
+KAIRON_ROOT = Path(str(Path(__file__).resolve().parents[3]) + "/projects/kairon")
 
 
 def _invoke_agora_stdio(
