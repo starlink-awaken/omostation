@@ -154,10 +154,20 @@ def scoped_doc_link_command(
 # 只在 staged 涉 agent-workflow 时跑 (隔离并发), strict 模式 (CI) 跑全套.
 AGENT_WORKFLOW_GATE_CHECKS = {"agent-workflow-verify-plan", "agent-workflow-compliance", "agent-workflow-doctor"}
 
-# project-layer-index 是全局 layer digest, pre-commit 环境 (hook stash unstaged + 并发 dirty)
-# 让 digest stale 不稳定. pre-commit 跳过 (打破死结), strict (CI) 跑全套兜底.
-# (doctor 那套 has_unstaged_dirty 检测对它无效 — gate 跑在 stash 后环境, 读不到原 dirty)
-CI_ONLY_CHECKS = {"project-layer-index", "dependency-baseline-drift"}
+# CI-only checks: 仓库级不变量, pre-commit (含 worktree) 跳过, strict (CI) 兜底.
+#  - project-layer-index / dependency-baseline-drift: 全局 digest, hook stash unstaged +
+#    并发 dirty 让 digest stale 不稳定 (doctor 那套 has_unstaged_dirty 检测对它们无效 —
+#    gate 跑在 stash 后环境, 读不到原 dirty).
+#  - governance-evolution: 仓库级 roadmap 不变量, 依赖 agora/cockpit 子模块 (worktree 按需
+#    init 未覆盖) + 脚本本体. ISC-3f: worktree checkout 拿不到 → pre-commit 跳, CI strict 兜底.
+#  - doc-ssot-lint: 仓库级 SSOT 契约, 依赖 docs/generated/* (gitignored, post-commit L0 萃取,
+#    worktree checkout 没有). scoped 版 (doc-link-check --files) 留 pre-commit, 全量版归 CI.
+CI_ONLY_CHECKS = {
+    "project-layer-index",
+    "dependency-baseline-drift",
+    "governance-evolution",
+    "doc-ssot-lint",
+}
 
 
 def staged_files_git() -> list[str]:
