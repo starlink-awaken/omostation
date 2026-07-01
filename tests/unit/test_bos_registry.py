@@ -260,14 +260,21 @@ class TestDefaultPath:
             "bos://governance/evolution/validate",
             "bos://governance/evolution/traces",
             "bos://governance/evolution/golden-paths",
+            "bos://governance/evolution/packages",
+            "bos://governance/evolution/loop",
         }
         assert expected <= set(services)
         for uri in expected:
             service = services[uri]
             assert service.domain == "governance"
-            assert service.package == "governance-evolution"
-            assert service.transport == "stdio"
-            assert "bin/governance-evolution.py" in service.command
+            if uri == "bos://governance/evolution/loop":
+                assert service.transport == "internal"
+                assert service.module_path == "omo.omo_evolution_loop"
+                assert service.func_name == "get_loop_status"
+            else:
+                assert service.package == "governance-evolution"
+                assert service.transport == "stdio"
+                assert "bin/governance-evolution.py" in service.command
 
 
 def test_unimplemented_services_are_tracked():

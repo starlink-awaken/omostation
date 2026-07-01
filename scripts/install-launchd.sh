@@ -20,17 +20,19 @@ cat > "$LAUNCH_DIR/com.agora.sse.plist" <<'PLIST'
     <string>com.agora.sse</string>
     <key>ProgramArguments</key>
     <array>
-        <string>__AGORA_PYTHON__</string>
-        <string>-m</string>
-        <string>agora.server.mcp</string>
+        <string>/opt/homebrew/bin/uv</string>
+        <string>run</string>
+        <string>--directory</string>
+        <string>__AGORA_DIR__</string>
+        <string>agora-mcp</string>
         <string>--sse</string>
     </array>
-    <key>WorkingDirectory</key>
-    <string>__AGORA_DIR__</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>__AGORA_DIR__/.venv/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <string>/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>WORKSPACE_HOME</key>
+        <string>/Users/xiamingxing/Workspace</string>
     </dict>
     <key>KeepAlive</key>
     <dict>
@@ -63,16 +65,20 @@ cat > "$LAUNCH_DIR/com.agora.gateway.plist" <<'PLIST'
     <string>com.agora.gateway</string>
     <key>ProgramArguments</key>
     <array>
-        <string>__AGORA_PYTHON__</string>
+        <string>/opt/homebrew/bin/uv</string>
+        <string>run</string>
+        <string>--directory</string>
+        <string>__AGORA_DIR__</string>
+        <string>python</string>
         <string>-m</string>
         <string>agora.auth.mcp_gateway</string>
     </array>
-    <key>WorkingDirectory</key>
-    <string>__AGORA_DIR__</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>__AGORA_DIR__/.venv/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <string>/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>WORKSPACE_HOME</key>
+        <string>/Users/xiamingxing/Workspace</string>
     </dict>
     <key>KeepAlive</key>
     <dict>
@@ -94,11 +100,9 @@ cat > "$LAUNCH_DIR/com.agora.gateway.plist" <<'PLIST'
 PLIST
 
 # Substitute placeholders
-sed -i '' "s|__AGORA_PYTHON__|$AGORA_DIR/.venv/bin/python|g" "$LAUNCH_DIR/com.agora.sse.plist"
 sed -i '' "s|__AGORA_DIR__|$AGORA_DIR|g" "$LAUNCH_DIR/com.agora.sse.plist"
 sed -i '' "s|__LOG_DIR__|$LOG_DIR|g" "$LAUNCH_DIR/com.agora.sse.plist"
 
-sed -i '' "s|__AGORA_PYTHON__|$AGORA_DIR/.venv/bin/python|g" "$LAUNCH_DIR/com.agora.gateway.plist"
 sed -i '' "s|__AGORA_DIR__|$AGORA_DIR|g" "$LAUNCH_DIR/com.agora.gateway.plist"
 sed -i '' "s|__LOG_DIR__|$LOG_DIR|g" "$LAUNCH_DIR/com.agora.gateway.plist"
 

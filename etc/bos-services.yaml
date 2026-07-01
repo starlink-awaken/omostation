@@ -157,6 +157,14 @@ services:
     command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "golden-paths", "--json"]
     description: "治理 Golden Path 端到端流程视图"
 
+  - uri: "bos://governance/evolution/packages"
+    domain: governance
+    action: "packages"
+    transport: stdio
+    package: "governance-evolution"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "packages", "--json"]
+    description: "治理演进发布包与工作树收口视图"
+
   - uri: "bos://governance/eidos/validate"
     domain: governance
     action: "validate"
@@ -953,4 +961,3 @@ services:
       upstream: "/Users/xiamingxing/ToolBox/bos-skill-cli/.git"
     i0_route: pending
     status: active
-
