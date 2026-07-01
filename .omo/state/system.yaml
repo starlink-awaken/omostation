@@ -1,12 +1,12 @@
 active_tasks: 0
-planned_tasks: 8
+planned_tasks: 22
 blocked_tasks: 0
 completed_tasks: 0
-total_tasks: 8
+total_tasks: 22
 health_score_raw: 0.0
 debt_weight: 0.3
 health_score: 0.0
-debt_registry_ref: .omo/debt/registry.yaml
+debt_registry_ref: .omo/_truth/registry/debt.yaml
 debt_dashboard_ref: .omo/debt/dashboard/latest.yaml
 debt_review_pack_ref: .omo/debt/review/latest.yaml
 debt_reporting_ref: .omo/debt/reporting/latest.yaml
@@ -15,8 +15,8 @@ debt_metrics:
   classification_entropy: 0.0
   state_entropy: 0.0
   pointer_entropy: 2.0
-  time_entropy: 1.0
-  backlog_pressure: 408.0
+  time_entropy: 0.5
+  backlog_pressure: 32.0
   coupling_load: 2.0
 debt_watchlist_count: 0
 debt_gate_count: 0
@@ -42,15 +42,13 @@ resolved_debt_items:
 - DEBT-OMO-019
 - DEBT-OMO-020
 - DEBT-OMO-021
-- DEBT-OMO-023
-- DEBT-OMO-024
-- DEBT-OMO-025
-- DEBT-OMO-026
-- DEBT-OMO-027
-- DEBT-OMO-028
-- DEBT-OMO-029
-- DEBT-OMO-030
-- DEBT-OMO-031
+- FAMILY-HUB-DEBT-001
+- FAMILY-HUB-DEBT-002
+- P1-CARDS_KAIRON_GAP
+- P2-CARDS_MISSING_FILTERS
+- P2-FAMILY_DEBT_DENSITY
+- P2-VAULT_CARDS_GAP
+- P3-CARDS_DAEMON_BG
 debt_weight_items:
   DEBT-OMO-001:
     resolved: true
@@ -136,450 +134,66 @@ debt_weight_items:
     resolved: true
     weight: 0.03
     desc: 'L0: BOS URI 零实现 — 列入架构矩阵但代码中不存在'
-  DEBT-OMO-023:
+  P1-CARDS_KAIRON_GAP:
     resolved: true
     weight: 0.05
-    desc: 'P0: Dashboard升级为eCOS驾驶舱 — 统一入口聚合'
-  DEBT-OMO-024:
+    desc: CARDS与Kairon/Minerva研究管线完全隔离
+  P2-VAULT_CARDS_GAP:
     resolved: true
     weight: 0.05
-    desc: 'P0: 智能通知管道 — 事件驱动+每日摘要简报'
-  DEBT-OMO-025:
-    resolved: true
-    weight: 0.03
-    desc: 'P1: TaskObject真正启用 — 从Hermes自动路由任务到服务'
-  DEBT-OMO-026:
+    desc: 学习进化Vault 8/10子模块无CARDS指针
+  P2-CARDS_MISSING_FILTERS:
     resolved: true
     weight: 0.05
-    desc: 'P1: 自动修复 — 服务挂了自动重启而非仅告警'
-  DEBT-OMO-027:
-    resolved: true
-    weight: 0.03
-    desc: 'P2: X2保鲜自动化 — 自动检查协议实现是否过期'
-  DEBT-OMO-028:
-    resolved: true
-    weight: 0.03
-    desc: 'P2: KEI沙箱做真实扩展 — 新服务注册自动触发审计链'
-  DEBT-OMO-029:
-    resolved: true
-    weight: 0.02
-    desc: 'P2: 元模型校验自动化为CI门禁 — git hook'
-  DEBT-OMO-030:
+    desc: cards CLI缺少priority筛选+research默认status错误
+  P3-CARDS_DAEMON_BG:
     resolved: true
     weight: 0.05
-    desc: 'P3: 红蓝对抗第二轮 — 集成层面安全审计'
-  DEBT-OMO-031:
+    desc: cards daemon无后台进程·依赖手动触发
+  P2-FAMILY_DEBT_DENSITY:
     resolved: true
     weight: 0.05
-    desc: 'P3: 敏感文件权限修复 — env.sh/matrix.yaml 644'
-  auto-test-1780786320:
+    desc: 家庭域债务密度43%·3/7卡片为debt
+  FAMILY-HUB-DEBT-001:
+    resolved: true
+    weight: 0.05
+    desc: In-memory database needs replacement with gbrain/pglite
+  FAMILY-HUB-DEBT-002:
+    resolved: true
+    weight: 0.05
+    desc: XSS Vulnerability with dangerouslySetInnerHTML in App.tsx
+  auto-test-1782094852:
     resolved: false
     weight: 4.0
     desc: '[自动] test: ERROR × 1'
-  auto-r1-1780786320:
+  auto-r1-1782094852:
     resolved: false
     weight: 4.0
     desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780786320:
+  auto-r2-1782094852:
     resolved: false
     weight: 4.0
     desc: '[自动] r2: ERROR × 1'
-  auto-test-1780786326:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780786326:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780786326:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780786329:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780786329:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780786329:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780786626:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780786626:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780786626:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780786655:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780786655:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780786655:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780786846:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780786846:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780786846:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780786936:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780786936:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780786936:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780786962:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780786962:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780786962:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780787066:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780787066:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780787066:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780788119:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780788119:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780788119:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780788173:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780788209:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780788236:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780788241:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780788241:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780788241:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780788260:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780788879:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780788879:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780788879:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780788903:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780789237:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780789237:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780789237:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780789263:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780789467:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780789467:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780789467:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780789505:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780792723:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780792723:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780792723:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780792758:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780792845:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780792845:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780792845:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780792871:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780873203:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780873203:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780873203:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780873231:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780873347:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780873347:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780873347:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780873373:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780873415:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 2'
-  auto-test-1780873416:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780873416:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780873416:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780873444:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780887207:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780887207:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780887207:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780903232:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 2'
-  auto-test-1780903233:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780903233:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780903233:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780903259:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780904868:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780904868:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780904868:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780904898:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780905476:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780905476:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780905476:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780905507:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780922957:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780922957:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780922957:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780922993:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1780969477:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1780969477:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780969477:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1780969513:
+  auto-test-1782094861:
     resolved: false
     weight: 4.0
     desc: '[自动] test: ANY × 1'
-  auto-test-1780977005:
+  auto-test-error:
     resolved: false
     weight: 4.0
     desc: '[自动] test: ERROR × 1'
-  auto-r1-1780977005:
+  auto-r1-error:
     resolved: false
     weight: 4.0
     desc: '[自动] r1: ERROR × 1'
-  auto-r2-1780977005:
+  auto-r2-error:
     resolved: false
     weight: 4.0
     desc: '[自动] r2: ERROR × 1'
-  auto-test-1780977041:
+  auto-test-any:
     resolved: false
     weight: 4.0
-    desc: '[自动] test: TEST × 2'
-  auto-test-1781043044:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: ERROR × 1'
-  auto-r1-1781043044:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r1: ERROR × 1'
-  auto-r2-1781043044:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] r2: ERROR × 1'
-  auto-test-1781043082:
-    resolved: false
-    weight: 4.0
-    desc: '[自动] test: TEST × 2'
+    desc: '[自动] test: ANY × 1'
 divergence_flags:
 - missing_debt_generated_ref:action_packet_ref
 - missing_debt_generated_ref:campaign_ref
@@ -631,18 +245,34 @@ divergence_triage_summary:
 next_active_tasks:
 - (No active tasks)
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (8 tasks)
+- Current planned queue from .omo/tasks/planned/ (22 tasks)
+- IMPORTED-018596
+- IMPORTED-06fb03
 - IMPORTED-1975c8
+- IMPORTED-3384bb
+- IMPORTED-8a2b53
+- IMPORTED-8bdcf3
 - IMPORTED-9aff51
+- IMPORTED-9d9252
+- IMPORTED-a03966
+- IMPORTED-a4cfe7
+- IMPORTED-a5a8ea
+- IMPORTED-baf924
 - IMPORTED-d4ff45
+- IMPORTED-d67ebd
+- IMPORTED-e04991
+- IMPORTED-e7d879
+- IMPORTED-f9b1e2
 - IMPORTED-fe172c
 - TASK-42AC4BA3
 - TASK-8F6D06F9
 - TASK-9D06D85C
 - TASK-ECEF475A
-updated_at: '2026-06-13T12:07:51Z'
+updated_at: '2026-06-30T14:05:52Z'
 current_phase: 28
 phase_status: active
 phase28_status: active
-xplane_score: 25.0
+xplane_score: 0.0
 xplane_coverage: 100.0
+xplane_factor: 0.7
+debt_adjusted_health_score: 0.0
