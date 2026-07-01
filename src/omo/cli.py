@@ -112,7 +112,13 @@ def main(argv: list[str] | None = None) -> int:
     if args and args[0] == "task":
         from omo.omo_task import main as task_main
 
-        return task_main(args[1:])
+        rc = task_main(args[1:])
+        # ISC-10: task 状态变更后刷新 debt dashboard (治本: 看板不再依赖手动 `omo debt refresh`).
+        # 根因: refresh_outputs 原本只在 `omo debt refresh` 触发, task create/close/promote/archive
+        # 改状态不刷看板 → debt-dashboard generated_at 停更. 本 post-hook 让状态变更自动触发刷新.
+        if rc == 0:
+            _refresh_dashboard_safely("task")
+        return rc
 
     if args and args[0] == "evidence":
         from omo.omo_evidence import main as ev_main
@@ -241,6 +247,29 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
         return 1
     return 0
+
+
+def _refresh_dashboard_safely(trigger: str = "") -> None:
+    """ISC-10: 状态变更命令后安全刷新 debt dashboard.
+
+    refresh_outputs 失败不阻塞主命令 (dashboard 是衍生视图, best-effort 容错).
+    由 cli 分发层 post-hook 调用 (task / healing 等状态变更入口).
+    """
+    try:  # noqa: PLC0415 — 局部 import 避免顶层副作用
+        import os
+        from datetime import UTC, datetime
+        from pathlib import Path
+
+        from omo.omo_debt import refresh_outputs
+
+        ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+        omo_dir = ws / ".omo"
+        if not omo_dir.is_dir():
+            return
+        now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        refresh_outputs(omo_dir, now)
+    except Exception as e:  # noqa: BLE001 — dashboard refresh 失败不阻塞 task 命令, 但记 stderr 日志方便 debug
+        print(f"⚠️  [dashboard refresh skipped via {trigger}]: {e}", file=sys.stderr)
 
 
 def _cmd_healing(args: list[str]) -> int:
