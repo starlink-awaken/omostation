@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 
 
-BOS_REGISTRY = Path(str(Path(__file__).resolve().parents[3]) + "/.omo/_knowledge/bos-registry.json")
-OMOSTATION_ROOT = Path(__file__).resolve().parents[3]
+BOS_REGISTRY = Path(str(Path(__file__).resolve().parents[4]) + "/.omo/_knowledge/bos-registry.json")
+OMOSTATION_ROOT = Path(__file__).resolve().parents[4]
 OMO_ROOT = OMOSTATION_ROOT / "projects" / "omo"
 AGORA_ROOT = OMOSTATION_ROOT / "projects" / "agora"
 

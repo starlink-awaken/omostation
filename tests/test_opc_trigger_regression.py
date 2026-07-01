@@ -36,12 +36,19 @@ def _run_wrapper(wrapper: str, env: dict[str, str]) -> dict:
     """跑 wrapper, 捕获 wrapper 注入的 OPC_TRIGGER 值.
 
     策略: 在 tmp 目录复制 wrapper, 在 exec 前注入 env 探针.
+    根因修复: wrapper 用 source "$(dirname "$0")/lib/shell/common.sh" 发现 REPO_ROOT,
+    复制到 tmp 后路径断裂. 修复: 替换为绝对路径 source.
     """
     tmp = Path(tempfile.mkdtemp(prefix="opc-regression-"))
     try:
         target = tmp / Path(wrapper).name
         shutil.copy(wrapper, target)
         content = target.read_text(encoding="utf-8")
+        # 修复: source common.sh 用绝对路径 (wrapper 被 copy 到 tmp, dirname 路径断裂)
+        content = content.replace(
+            'source "$(dirname "$0")/lib/shell/common.sh"',
+            f'source "{REPO_ROOT}/scripts/lib/shell/common.sh"',
+        )
         # 替换所有可能的 exec / python3 行, 注入 env 探针
         # 探针: 把当前 env 写 /tmp/opc-trigger-probe.txt, 然后 exec 原命令
         inject = (

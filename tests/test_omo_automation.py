@@ -157,6 +157,7 @@ def test_sync_state_bridges_runtime_health_as_summary_only(tmp_path: Path):
                     "runtime": {"freshness_seconds": 10},
                 },
                 "gbrain": {
+                    "type": "daemon",
                     "port_listening": False,
                     "health_check": "unreachable",
                     "runtime": {"freshness_seconds": 90001},

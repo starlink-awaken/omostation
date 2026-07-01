@@ -41,6 +41,7 @@ def test_summarize_system_health_snapshot_returns_runtime_summary_only():
                     "runtime": {"freshness_seconds": 5},
                 },
                 "gbrain": {
+                    "type": "daemon",
                     "port_listening": False,
                     "health_check": "unreachable",
                     "runtime": {"freshness_seconds": 90000},

@@ -54,6 +54,7 @@ class TrendTracker:
             {
                 "ts": t.timestamp,
                 "total_events": t.total_events,
+                "events": dict(t.events_by_type),
                 "events_by_type": dict(t.events_by_type),
                 "triggers": t.triggers,
                 "fixes": t.fixes,
@@ -61,6 +62,14 @@ class TrendTracker:
             }
             for t in self._snapshots
         ]
+
+    def is_escalating(self, event_type: str) -> bool:
+        """Check if a specific event type is trending upward (>=3 snapshots, strictly increasing)."""
+        snapshots = list(self._snapshots)
+        if len(snapshots) < 3:
+            return False
+        values = [s.events_by_type.get(event_type, 0) for s in snapshots[-3:]]
+        return values[0] < values[1] < values[2]
 
     def get_summary(self) -> dict:
         return {
