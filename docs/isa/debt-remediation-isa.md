@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 43/51
+progress: 44/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -119,7 +119,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-43: 小众依赖（cloakbrowser/scrapling/mem0ai/semantica/graphiti-core）每个有 `vendor-fork-or-pin` 决策记录（probe: `.omo/_knowledge/decisions/` 含 1 份 supply-chain ADR 覆盖 5 个依赖）。
 - [x] ISC-44: `minerva[tier2]` 拆为可选 extra——基础 minerva 不带 neo4j/graphiti（probe: `minerva/pyproject.toml` 的 `[project.optional-dependencies]` 含 tier2）。
 - [x] ISC-45: `bos://analysis/minerva/research` 在 tier2 缺失时降级返回（probe: 缺 neo4j 时 MCP 调用返回结构化降级提示而非 crash）。
-- [ ] ISC-46: `omo workspace status` 作为 worktree dirty 计数唯一 SSOT（probe: 命令输出 dirty 计数；system.yaml/mof-drift 指针引用）。
+- [x] ISC-46: `omo workspace status` 作为 worktree dirty 计数唯一 SSOT（probe: 命令输出 dirty 计数；system.yaml/mof-drift 指针引用）。
 - [x] ISC-47: bus-foundation 降级 ADR——bus 不可用时 omo/runtime fallback 路径（probe: ADR 存在，含同步直写+重试方案）。
 - [x] ISC-48: L0GovernanceView 接口评估 ADR——ecos 依赖接口而非 L2 omo 包（probe: ADR 存在，列 ecos→omo 上穿的接口化方案）。
 
