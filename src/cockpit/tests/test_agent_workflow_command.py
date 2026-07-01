@@ -132,3 +132,37 @@ def test_cli_routes_governance_evolution_packages(monkeypatch) -> None:
     command = mock_run.call_args.args[0]
     assert Path(command[5]).name == "governance-evolution.py"
     assert command[6:] == ["packages", "--json"]
+
+
+def test_cli_routes_governance_evolution_packages_require_ready(monkeypatch) -> None:
+    completed = subprocess.CompletedProcess(args=[], returncode=0)
+    mock_run = MagicMock(return_value=completed)
+    monkeypatch.setattr(subprocess, "run", mock_run)
+    monkeypatch.setattr(governance_cmd, "resolve_workspace_root", lambda: WORKSPACE)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "cockpit",
+            "governance",
+            "evolution",
+            "packages",
+            "--decisions",
+            "release-decisions.json",
+            "--require-ready",
+            "--json",
+        ],
+    )
+
+    code = cli.main()
+
+    assert code == 0
+    command = mock_run.call_args.args[0]
+    assert Path(command[5]).name == "governance-evolution.py"
+    assert command[6:] == [
+        "packages",
+        "--decisions",
+        "release-decisions.json",
+        "--require-ready",
+        "--json",
+    ]
