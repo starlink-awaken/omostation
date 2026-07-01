@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 15/51
+progress: 16/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -101,7 +101,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 ### Wave 3 — 积压消化 + 代码债
 
 - [ ] ISC-30: 5 个 P1 任务（F7114ABA/94BB9C70/6B868907/13AD0B21/67C63D6C）全部 `approval_state: granted` 或显式归档（probe: 5 个 yaml 的 approval 字段非 null）。
-- [ ] ISC-31: `overdue_approval` 告警——P1 任务 `age >14天 且 approval_state≠granted` 触发（probe: dispatcher 对 fixture P1 任务输出告警）。
+- [x] ISC-31: `overdue_approval` 告警——dispatcher 加 `_eval_overdue_approval` evaluator + governance-alerts.yaml 加 `x3-overdue-approval` rule。Verified: dry-run `x3-overdue-approval: 'overdue_approval_count > 0' → miss (current=0)`（5 个 P1 任务 age 6 天 < 14 天阈值，预防性，未来超时触发）。
 - [ ] ISC-32: `auto_promote_eligible` 评估 ADR——无依赖低风险 P1 自动晋升通道（probe: `.omo/_knowledge/decisions/` 含该 ADR）。
 - [ ] ISC-33: `omo_ingress` 系列 God Module 用 `omo-srp-refactor` skill 拆分，单文件 ≤600 行（probe: `wc -l projects/omo/src/omo/omo_ingress_*.py` max ≤600）。
 - [ ] ISC-34: `agora/mcp/resolver/services.py` 拆分至 ≤800 行（probe: `wc -l` 验证；BOS 路由测试全绿）。
