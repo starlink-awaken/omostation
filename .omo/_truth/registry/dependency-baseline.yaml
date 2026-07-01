@@ -29,7 +29,7 @@ rules:
         - agora
         - core-models
     - name: apscheduler
-      baseline: '>=3.10'
+      baseline: '>=3.11.2'
       reason: 'Consumed by 2 project(s)'
       consumers:
         - minerva
@@ -41,7 +41,7 @@ rules:
         - ecos
         - minerva
     - name: click
-      baseline: '>=8.0'
+      baseline: '>=8.1.0'
       reason: 'Consumed by 5 project(s)'
       consumers:
         - aetherforge-gateway[legacy]
@@ -55,7 +55,7 @@ rules:
       consumers:
         - kronos
     - name: croniter
-      baseline: '>=6.0'
+      baseline: '>=6.2.2'
       reason: 'Consumed by 2 project(s)'
       consumers:
         - minerva
@@ -338,7 +338,7 @@ rules:
         - agora[dev]
         - minerva[dev]
     - name: pytest
-      baseline: '>=7.0'
+      baseline: '>=9.0'
       reason: 'Consumed by 16 project(s)'
       consumers:
         - aetherforge-gateway[dev]
@@ -358,7 +358,7 @@ rules:
         - omo[dev]
         - ontoderive[dev]
     - name: pytest-asyncio
-      baseline: '>=0.23'
+      baseline: '>=1.0'
       reason: 'Consumed by 4 project(s)'
       consumers:
         - agora[dev]
@@ -366,7 +366,7 @@ rules:
         - metaos[dev]
         - minerva[dev]
     - name: pytest-cov
-      baseline: '>=4.0.0'
+      baseline: '>=5.0'
       reason: 'Consumed by 5 project(s)'
       consumers:
         - eidos[dev]
@@ -375,7 +375,7 @@ rules:
         - omo[dev]
         - ontoderive[dev]
     - name: ruff
-      baseline: '>=0.3.0'
+      baseline: '>=0.8.0'
       reason: 'Consumed by 12 project(s)'
       consumers:
         - agora[dev]
