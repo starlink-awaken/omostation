@@ -49,6 +49,7 @@ internal_integrations:
     owner: cockpit-team
     ssot_rule: Cockpit is the L3 human entrypoint and delegates governance behavior to registered lower-layer tools.
     compass: uv run --project projects/cockpit cockpit compass --help
+    agent: uv run --project projects/cockpit cockpit agent
     workflow: uv run --project projects/cockpit cockpit agent-workflow --help
     gate_binding: cockpit-agent-workflow-list
     health_command: [uv, run, --project, projects/cockpit, cockpit, agent-workflow, list]
@@ -72,6 +73,53 @@ runner:
   lock_state_dir: .omo/_delivery/agent-workflows/locks
   ledger_path: .omo/_delivery/agent-workflows/events.jsonl
   lock_ttl_hours: 24
+claim_policy:
+  mode: advisory
+  required_paths:
+    - AGENTS.md
+    - CLAUDE.md
+    - README.md
+    - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+    - projects/AGENTS.md
+  tiers:
+    - id: core-governance-required
+      mode: required
+      paths:
+        - .agents/skills/**
+        - .omo/_truth/registry/**
+        - .omo/standards/**
+        - bin/agent-workflow.py
+        - bin/change-lane-check.py
+        - bin/gac-local-gate.py
+        - bin/governance-evolution.py
+        - projects/agora/etc/bos-services.yaml
+        - projects/cockpit/src/cockpit/cli.py
+        - projects/cockpit/src/cockpit/commands/agent_workflow.py
+        - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+        - projects/ecos/src/ecos/ssot/mof/**
+        - tests/test_agent_workflow.py
+    - id: agent-entrypoint-advisory
+      mode: advisory
+      paths:
+        - AGENTS.md
+        - CLAUDE.md
+        - README.md
+        - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+        - projects/AGENTS.md
+evidence_schema:
+  version: 1
+  required_event_fields: [ts, event, run_id]
+  command_result_fields: [id, command, returncode, duration_s, ok]
+  closeout_required_events:
+    - agent_workflow_verify
+    - agent_workflow_closeout
+    - agent_workflow_close
+compliance_slo:
+  stale_locks: 0
+  closed_ok_without_evidence: 0
+  required_integration_health: 100%
+  doc_ssot_conflicts: 0
+  generated_digest_drift: 0
 agent_profiles:
   docs-agent:
     purpose: Maintain Markdown and project docs without duplicating SSOT facts.
@@ -237,6 +285,55 @@ commands:
     - python
     - bin/agent-workflow.py
     - bootstrap
+  status:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - status
+  claim:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - claim
+  verify_from_diff:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - verify
+    - --from-diff
+  closeout:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - closeout
+  compliance:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - compliance
+  governance_evolution:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/governance-evolution.py
+    - status
 doctor_checks:
   - id: root-agent-workflow-list
     description: Root runner can list workflows.
@@ -258,10 +355,34 @@ doctor_checks:
     description: Observer audit can inspect run, lock, and ledger consistency.
     required: true
     command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, observe]
+  - id: root-agent-workflow-verify-plan
+    description: Root runner can select diff-aware verification checks.
+    required: true
+    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, verify, --file, bin/agent-workflow.py]
+  - id: root-agent-workflow-compliance
+    description: Root runner can audit run, lock, ledger, and evidence compliance.
+    required: true
+    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, compliance]
+  - id: root-agent-workflow-status
+    description: Root runner can summarize AGCP run, lock, claim, compliance, and lane status.
+    required: true
+    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, status, --json]
+  - id: root-governance-evolution-status
+    description: Root runner can summarize systemic governance evolution roadmap status.
+    required: true
+    command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, status, --json]
   - id: cockpit-agent-workflow-list
     description: Cockpit L3 entry can delegate to the root runner.
     required: true
     command: [uv, run, --project, projects/cockpit, cockpit, agent-workflow, list]
+  - id: cockpit-agent-bootstrap
+    description: Cockpit L3 agent entry can show startup context.
+    required: true
+    command: [uv, run, --project, projects/cockpit, cockpit, agent, bootstrap, --skip-health]
+  - id: cockpit-agent-status
+    description: Cockpit L3 agent entry can show AGCP status.
+    required: true
+    command: [uv, run, --project, projects/cockpit, cockpit, agent, status, --json]
   - id: cockpit-agent-workflow-agents
     description: Cockpit L3 entry can expose registered agent profiles.
     required: true
@@ -294,6 +415,150 @@ doctor_checks:
     description: MOF architecture drift detector is runnable.
     required: true
     command: [bin/mof-drift]
+diff_checks:
+  - id: agent-workflow-lint
+    description: Workflow runner and registry contract validation.
+    required: true
+    paths:
+      - bin/agent-workflow.py
+      - .omo/_truth/registry/agent-workflows.yaml
+      - .agents/skills/project-governance/SKILL.md
+      - .omo/standards/agent-workflow-contract.md
+    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+  - id: agent-workflow-tests
+    description: Focused tests for executable agent workflow control plane.
+    required: true
+    paths:
+      - bin/agent-workflow.py
+      - bin/change-lane-check.py
+      - bin/gac-local-gate.py
+      - .omo/_truth/registry/agent-workflows.yaml
+      - tests/test_agent_workflow.py
+    command: [uv, run, pytest, tests/test_agent_workflow.py, -q]
+  - id: governance-evolution-validate
+    description: Governance evolution roadmap structure and traceability validation.
+    required: true
+    paths:
+      - .omo/_truth/registry/governance-evolution-roadmap.yaml
+      - bin/governance-evolution.py
+      - tests/test_governance_evolution.py
+      - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+      - README.md
+      - AGENTS.md
+    command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, validate, --json]
+  - id: governance-evolution-tests
+    description: Focused tests for governance evolution roadmap and CLI.
+    required: true
+    paths:
+      - .omo/_truth/registry/governance-evolution-roadmap.yaml
+      - bin/governance-evolution.py
+      - tests/test_governance_evolution.py
+    command: [uv, run, pytest, tests/test_governance_evolution.py, -q]
+  - id: cockpit-agent-entry-tests
+    description: Cockpit L3 entry tests for agent workflow delegation.
+    required: true
+    paths:
+      - projects/cockpit/src/cockpit/cli.py
+      - projects/cockpit/src/cockpit/commands/agent_workflow.py
+      - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+    command:
+      - uv
+      - run
+      - --project
+      - projects/cockpit
+      - pytest
+      - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+      - -q
+  - id: agora-bos-registry-tests
+    description: Agora BOS registry tests for agent workflow governance routes.
+    required: true
+    paths:
+      - projects/agora/etc/bos-services.yaml
+      - projects/agora/tests/unit/test_bos_registry.py
+    command:
+      - uv
+      - run
+      - --project
+      - projects/agora
+      - pytest
+      - projects/agora/tests/unit/test_bos_registry.py
+      - -q
+  - id: mof-schema-validate
+    description: MOF M1/M2 schema validation for model edits.
+    required: true
+    paths:
+      - .omo/_truth/registry/mof-capabilities.yaml
+      - .omo/_truth/mof-version.yaml
+      - projects/ecos/src/ecos/ssot/mof/**
+      - projects/ecos/src/ecos/ssot/tools/mof-*.py
+    command: [python3, projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py, --json]
+  - id: mof-state-bridge
+    description: MOF to OMO state bridge alignment report for model edits.
+    required: true
+    paths:
+      - .omo/_truth/registry/mof-capabilities.yaml
+      - .omo/_truth/mof-version.yaml
+      - projects/ecos/src/ecos/ssot/mof/**
+      - projects/ecos/src/ecos/ssot/tools/mof-*.py
+    command: [python3, projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py, --json]
+  - id: mof-drift
+    description: MOF architecture drift detector for model edits.
+    required: true
+    paths:
+      - .omo/_truth/registry/mof-capabilities.yaml
+      - .omo/_truth/mof-version.yaml
+      - projects/ecos/src/ecos/ssot/mof/**
+      - projects/ecos/src/ecos/ssot/tools/mof-*.py
+    command: [bin/mof-drift]
+  - id: doc-ssot-lint
+    description: Documentation SSOT semantic contract.
+    required: true
+    paths:
+      - "*.md"
+      - docs/**/*.md
+      - docs/generated/**
+      - .omo/standards/**/*.md
+      - projects/*/AGENTS.md
+      - projects/*/CLAUDE.md
+      - projects/*/README.md
+    command: [uv, run, --with, pyyaml, python, bin/doc-ssot-lint.py, --json]
+  - id: project-layer-index
+    description: Generated project layer digest freshness.
+    required: true
+    paths:
+      - docs/project-registry.yaml
+      - docs/generated/project-layer-index.md
+      - bin/project-layer-index.py
+    command: [uv, run, --with, pyyaml, python, bin/project-layer-index.py, --check]
+  - id: ssot-guardian
+    description: State-plane and generated artifact SSOT guard.
+    required: true
+    paths:
+      - .omo/**
+      - spaces/**
+      - AGENTS.md
+      - CLAUDE.md
+      - README.md
+      - ARCHITECTURE.md
+      - LAYER-INDEX.md
+      - docs/generated/**
+    command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+  - id: gac-local-gate
+    description: Full local governance gate for broad contract changes.
+    required: true
+    allowed_lanes: [code, docs, governance_code, governance_state, config]
+    paths:
+      - Makefile
+      - bin/**
+      - .omo/_truth/registry/**
+      - .omo/standards/**
+      - docs/**
+      - AGENTS.md
+      - CLAUDE.md
+      - README.md
+      - ARCHITECTURE.md
+      - LAYER-INDEX.md
+    command: [make, gac-local-gate]
 workflows:
   - id: project-doc-change
     title: Project documentation change

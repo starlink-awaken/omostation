@@ -169,6 +169,11 @@ def check_semantic_contracts(filepath: Path, content: str) -> list[tuple[int, st
 
     if rel in {"CLAUDE.md", "AGENTS.md", "projects/AGENTS.md"} and "agent-workflow.py\" bootstrap" not in content:
         findings.append((1, "missing bootstrap", "入口文档必须使用 bin/agent-workflow.py bootstrap 作为单入口"))
+    if rel in {"CLAUDE.md", "AGENTS.md", "projects/AGENTS.md"}:
+        if "agent-workflow.py\" closeout" not in content:
+            findings.append((1, "missing closeout", "入口文档必须暴露 bin/agent-workflow.py closeout 闭环收尾"))
+        if "agent-workflow.py\" compliance" not in content:
+            findings.append((1, "missing compliance", "入口文档必须暴露 bin/agent-workflow.py compliance 合规审计"))
 
     if rel == "AGENTS.md":
         start_marker = "<!-- GaC-RULES-START -->"

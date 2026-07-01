@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_MODULE_PATH = ROOT / "bin" / "agent-workflow.py"
 LANE_MODULE_PATH = ROOT / "bin" / "change-lane-check.py"
+GAC_GATE_MODULE_PATH = ROOT / "bin" / "gac-local-gate.py"
 LAYER_INDEX_SCRIPT = ROOT / "bin" / "project-layer-index.py"
 DOC_SSOT_SCRIPT = ROOT / "bin" / "doc-ssot-lint.py"
 
@@ -50,6 +51,65 @@ def _run_doc_ssot(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _write_control_plane_registry(tmp_path: Path) -> Path:
+    registry = tmp_path / "agent-workflows.yaml"
+    runs = tmp_path / "runs"
+    locks = tmp_path / "locks"
+    ledger = tmp_path / "events.jsonl"
+    registry.write_text(
+        f"""---
+status: active
+lifecycle: ssot
+owner: test
+last-reviewed: 2026-06-30
+---
+version: 1
+runner:
+  run_state_dir: {runs}
+  lock_state_dir: {locks}
+  ledger_path: {ledger}
+  lock_ttl_hours: 1
+claim_policy:
+  mode: advisory
+  required_paths: [README.md]
+diff_checks:
+  - id: readme-check
+    description: README check
+    required: true
+    paths: [README.md]
+    command: [python3, -c, pass]
+workflows:
+  - id: mini
+    title: Mini
+    purpose: Test workflow
+    allowed_lanes: [docs]
+    lock_scopes: [mini-lock]
+    surfaces:
+      read: [README.md]
+      write: [README.md]
+    phases:
+      preflight:
+        - id: true-preflight
+          mode: required
+          command: [python3, -c, pass]
+      execute:
+        - id: manual-edit
+          mode: manual
+          command: [agent, edit]
+      verification:
+        - id: true-verify
+          mode: required
+          command: [python3, -c, pass]
+      closeout:
+        - id: true-closeout
+          mode: required
+          command: [python3, -c, pass]
+""",
+        encoding="utf-8",
+    )
+    return registry
+
+
 def test_agent_workflow_registry_lints() -> None:
     result = _run_workflow("lint", "--json")
 
@@ -82,7 +142,13 @@ def test_agent_workflow_doctor_runs_required_checks() -> None:
     assert "root-agent-workflow-adapters" in check_ids
     assert "root-agent-workflow-integrations" in check_ids
     assert "root-agent-workflow-observe" in check_ids
+    assert "root-agent-workflow-verify-plan" in check_ids
+    assert "root-agent-workflow-compliance" in check_ids
+    assert "root-agent-workflow-status" in check_ids
+    assert "agcp-drift" in check_ids
     assert "cockpit-agent-workflow-list" in check_ids
+    assert "cockpit-agent-bootstrap" in check_ids
+    assert "cockpit-agent-status" in check_ids
     assert "cockpit-agent-workflow-agents" in check_ids
     assert "omo-bridge-help" in check_ids
     assert "mof-capabilities-registry" in check_ids
@@ -153,7 +219,13 @@ def test_agent_workflow_bootstrap_is_single_startup_entrypoint() -> None:
     assert {item["id"] for item in report["agent_profiles"]}
     assert {item["name"] for item in report["integrations"]}
     assert {item["name"] for item in report["adapters"]}
+    assert "status" in report["next_commands"]
     assert "start" in report["next_commands"]
+    assert "claim" in report["next_commands"]
+    assert "verify" in report["next_commands"]
+    assert "closeout" in report["next_commands"]
+    assert "compliance" in report["next_commands"]
+    assert "scoped_gate" in report["next_commands"]
 
 
 def test_project_layer_index_digest_is_fresh() -> None:
@@ -518,6 +590,277 @@ workflows:
     assert observed["findings"] == []
 
 
+def test_claim_adds_path_surface_locks_and_ledger_event(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "claim test",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+
+    claim = _run_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--actor",
+        "tester",
+        "--path",
+        "README.md",
+        "--surface",
+        "doc-ssot",
+        "--json",
+    )
+    assert claim.returncode == 0, claim.stderr
+    payload = json.loads(claim.stdout)
+    assert payload["paths"] == ["README.md"]
+    assert payload["surfaces"] == ["doc-ssot"]
+    assert "path:README.md" in payload["scopes"]
+    assert "surface:doc-ssot" in payload["scopes"]
+
+    run = _run_workflow("--registry", str(registry), "show-run", run_id, "--json")
+    record = json.loads(run.stdout)
+    assert record["claims"][0]["paths"] == ["README.md"]
+    assert len(record["locks"]) == 3
+    ledger = (tmp_path / "events.jsonl").read_text(encoding="utf-8")
+    assert "agent_workflow_claim" in ledger
+
+
+def test_concurrent_claims_preserve_run_record(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "concurrent claim test",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+
+    commands = [
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            str(WORKFLOW_MODULE_PATH),
+            "--registry",
+            str(registry),
+            "claim",
+            run_id,
+            "--actor",
+            "tester",
+            "--path",
+            path,
+            "--json",
+        ]
+        for path in ("README.md", "docs/README.md")
+    ]
+    processes = [
+        subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        for command in commands
+    ]
+    results = [process.communicate(timeout=60) for process in processes]
+
+    for process, (stdout, stderr) in zip(processes, results, strict=True):
+        assert process.returncode == 0, stderr or stdout
+
+    run = _run_workflow("--registry", str(registry), "show-run", run_id, "--json")
+    assert run.returncode == 0, run.stderr
+    record = json.loads(run.stdout)
+    claimed_paths = {tuple(claim["paths"]) for claim in record["claims"]}
+    assert claimed_paths == {("README.md",), ("docs/README.md",)}
+    assert len(record["locks"]) == 3
+
+
+def test_verify_selects_diff_checks_for_explicit_files(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+
+    verify = _run_workflow(
+        "--registry",
+        str(registry),
+        "verify",
+        "--file",
+        "README.md",
+        "--execute",
+        "--json",
+    )
+    assert verify.returncode == 0, verify.stderr
+    report = json.loads(verify.stdout)
+    assert report["ok"] is True
+    assert report["changed_files"] == ["README.md"]
+    assert [item["id"] for item in report["checks"]] == ["readme-check"]
+    assert report["checks"][0]["returncode"] == 0
+
+
+def test_verify_reports_advisory_claim_gap(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "claim advisory test",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+
+    verify = _run_workflow(
+        "--registry",
+        str(registry),
+        "verify",
+        run_id,
+        "--file",
+        "README.md",
+        "--json",
+    )
+
+    assert verify.returncode == 0, verify.stderr
+    report = json.loads(verify.stdout)
+    assert report["ok"] is True
+    assert report["claim_coverage"]["mode"] == "advisory"
+    assert report["claim_coverage"]["missing_files"] == ["README.md"]
+    assert report["claim_coverage"]["missing_required_files"] == []
+    assert report["claim_coverage"]["missing_advisory_files"] == ["README.md"]
+
+
+def test_verify_blocks_required_claim_tier(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    text = registry.read_text(encoding="utf-8")
+    registry.write_text(
+        text.replace(
+            "claim_policy:\n  mode: advisory\n  required_paths: [README.md]\n",
+            """claim_policy:
+  mode: advisory
+  required_paths: [README.md]
+  tiers:
+    - id: core-required
+      mode: required
+      paths: [bin/agent-workflow.py]
+""",
+        ),
+        encoding="utf-8",
+    )
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "claim required tier test",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+
+    blocked = _run_workflow(
+        "--registry",
+        str(registry),
+        "verify",
+        run_id,
+        "--file",
+        "bin/agent-workflow.py",
+        "--json",
+    )
+
+    assert blocked.returncode == 1
+    blocked_report = json.loads(blocked.stdout)
+    assert blocked_report["ok"] is False
+    assert blocked_report["claim_coverage"]["missing_required_files"] == ["bin/agent-workflow.py"]
+    assert blocked_report["claim_coverage"]["missing_advisory_files"] == []
+
+    claim = _run_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--path",
+        "bin/agent-workflow.py",
+        "--json",
+    )
+    assert claim.returncode == 0, claim.stderr
+
+    allowed = _run_workflow(
+        "--registry",
+        str(registry),
+        "verify",
+        run_id,
+        "--file",
+        "bin/agent-workflow.py",
+        "--json",
+    )
+
+    assert allowed.returncode == 0, allowed.stderr
+    allowed_report = json.loads(allowed.stdout)
+    assert allowed_report["ok"] is True
+    assert allowed_report["claim_coverage"]["missing_files"] == []
+
+
+def test_closeout_verifies_observes_closes_and_compliance_passes(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "closeout test",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+
+    closeout = _run_workflow(
+        "--registry",
+        str(registry),
+        "closeout",
+        run_id,
+        "--file",
+        "README.md",
+        "--evidence",
+        "unit closeout",
+        "--json",
+    )
+    assert closeout.returncode == 0, closeout.stderr
+    report = json.loads(closeout.stdout)
+    assert report["verify"]["ok"] is True
+    assert report["observe"]["decision"] == "continue"
+    assert report["run"]["status"] == "ok"
+    assert report["run"]["released_locks"]
+    assert not list((tmp_path / "locks").glob("*.lock.yaml"))
+
+    compliance = _run_workflow("--registry", str(registry), "compliance", run_id, "--json")
+    assert compliance.returncode == 0, compliance.stderr
+    compliance_report = json.loads(compliance.stdout)
+    assert compliance_report["decision"] == "continue"
+    assert compliance_report["findings"] == []
+    ledger = (tmp_path / "events.jsonl").read_text(encoding="utf-8")
+    assert "agent_workflow_verify" in ledger
+    assert "agent_workflow_closeout" in ledger
+
+
 def test_observe_flags_orphan_lock(tmp_path: Path) -> None:
     registry = tmp_path / "agent-workflows.yaml"
     locks = tmp_path / "locks"
@@ -580,7 +923,87 @@ def test_change_lane_knows_agent_workflow_files() -> None:
     module = _load_module_from_source(LANE_MODULE_PATH, "change_lane_check")
 
     assert module.classify("bin/agent-workflow.py", set()) == "governance_code"
+    assert module.classify("bin/doc-ssot-lint.py", set()) == "governance_code"
+    assert module.classify("bin/governance-evolution.py", set()) == "governance_code"
     assert module.classify("bin/project-layer-index.py", set()) == "governance_code"
     assert module.classify(".omo/_truth/registry/agent-workflows.yaml", set()) == "governance_code"
     assert module.classify(".agents/skills/project-governance/SKILL.md", set()) == "governance_code"
     assert module.classify("docs/generated/project-layer-index.md", set()) == "docs"
+
+
+def test_change_lane_can_check_explicit_files() -> None:
+    module = _load_module_from_source(LANE_MODULE_PATH, "change_lane_check")
+
+    report = module.check(
+        staged=True,
+        files=[
+            ".omo/_truth/registry/agent-workflows.yaml",
+            "bin/agent-workflow.py",
+        ],
+    )
+
+    assert report["ok"] is True
+    assert report["lanes"] == ["governance_code"]
+
+
+def test_change_lane_can_use_explicit_allowed_lanes_for_workflow_scopes() -> None:
+    module = _load_module_from_source(LANE_MODULE_PATH, "change_lane_check")
+    files = [
+        ".omo/_truth/registry/governance-evolution-roadmap.yaml",
+        "bin/governance-evolution.py",
+        "README.md",
+    ]
+
+    strict_report = module.check(staged=True, files=files)
+    scoped_report = module.check(
+        staged=True,
+        files=files,
+        allowed_lanes={"governance_state", "governance_code", "docs"},
+    )
+
+    assert strict_report["ok"] is False
+    assert strict_report["lanes"] == ["docs", "governance_code", "governance_state"]
+    assert scoped_report["ok"] is True
+    assert scoped_report["allowed_lanes"] == ["docs", "governance_code", "governance_state"]
+
+
+def test_gac_gate_can_scope_change_lane_to_files(monkeypatch) -> None:
+    module = _load_module_from_source(GAC_GATE_MODULE_PATH, "gac_local_gate")
+
+    command = module.scoped_change_lane_command(
+        "files",
+        ["bin/agent-workflow.py", ".omo/_truth/registry/agent-workflows.yaml"],
+        "",
+    )
+
+    assert command == [
+        "bin/change-lane-check.py",
+        "--file",
+        ".omo/_truth/registry/agent-workflows.yaml",
+        "--file",
+        "bin/agent-workflow.py",
+    ]
+
+    monkeypatch.setenv("AGENT_WORKFLOW_MATCHED_FILES", json.dumps(["bin/gac-local-gate.py"]))
+    assert module.scoped_change_lane_command() == [
+        "bin/change-lane-check.py",
+        "--file",
+        "bin/gac-local-gate.py",
+    ]
+
+
+def test_status_command_exposes_agcp_control_plane_fields() -> None:
+    result = _run_workflow("status", "--json")
+
+    assert result.returncode in {0, 1}, result.stderr
+    report = json.loads(result.stdout)
+    assert "active_runs" in report
+    assert "closed_runs" in report
+    assert "lock_count" in report
+    assert "stale_locks" in report
+    assert "last_verify" in report
+    assert "last_closeout" in report
+    assert "compliance" in report
+    assert "staged_lane" in report
+    assert "claim_coverage" in report
+    assert report["recommended_next"]

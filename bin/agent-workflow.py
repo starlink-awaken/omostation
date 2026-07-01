@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import os
 import re
@@ -10,7 +11,9 @@ import shlex
 import shutil
 import subprocess
 import sys
+import time
 import uuid
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -20,6 +23,25 @@ import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = WORKSPACE / ".omo/_truth/registry/agent-workflows.yaml"
+AGENT_CLIS_PATH = WORKSPACE / ".omo/_truth/registry/agent-clis.yaml"
+AGORA_BOS_REGISTRY_PATH = WORKSPACE / "projects/agora/etc/bos-services.yaml"
+AGCP_MOF_WORKFLOW_PATH = (
+    WORKSPACE / "projects/ecos/src/ecos/ssot/mof/m1/workflow/"
+    "WORKFLOW-AGENT-GOVERNANCE-CONTROL-PLANE.yaml"
+)
+AGCP_MOF_BOSROUTE_PATH = (
+    WORKSPACE / "projects/ecos/src/ecos/ssot/mof/m1/bosroute/"
+    "BOSROUTE-GOVERNANCE-AGENT-WORKFLOW.yaml"
+)
+AGCP_BOS_ROUTES = {
+    "bos://governance/agent-workflow/bootstrap",
+    "bos://governance/agent-workflow/verify-plan",
+    "bos://governance/agent-workflow/observe",
+    "bos://governance/agent-workflow/compliance",
+    "bos://governance/agent-workflow/doctor",
+}
+MOF_MODEL_PATH_PATTERN = "projects/ecos/src/ecos/ssot/mof/**"
+MOF_DIFF_CHECK_IDS = {"mof-schema-validate", "mof-state-bridge", "mof-drift"}
 ADAPTER_AUTHORITIES = {"discipline_layer", "input_adapter", "memory_adapter"}
 INTEGRATION_AUTHORITIES = {
     "entrypoint",
@@ -28,6 +50,8 @@ INTEGRATION_AUTHORITIES = {
     "state_broker",
     "strategy_ingress",
 }
+CLAIM_POLICY_MODES = {"off", "advisory", "required"}
+RUN_UPDATE_LOCK_TIMEOUT_SECONDS = 30.0
 
 
 class WorkflowError(RuntimeError):
@@ -51,6 +75,27 @@ def load_registry(path: Path = REGISTRY_PATH) -> dict[str, Any]:
         if isinstance(document, dict) and "workflows" in document:
             return document
     raise WorkflowError(f"workflow registry has no workflows document: {path}")
+
+
+def is_default_registry_path(path: Path) -> bool:
+    candidate = path if path.is_absolute() else WORKSPACE / path
+    try:
+        return candidate.resolve() == REGISTRY_PATH.resolve()
+    except OSError:
+        return False
+
+
+def load_yaml_document_with(path: Path, key: str) -> tuple[dict[str, Any] | None, str | None]:
+    if not path.exists():
+        return None, f"missing file: {display_path(path)}"
+    try:
+        documents = [doc for doc in yaml.safe_load_all(path.read_text(encoding="utf-8")) if doc]
+    except yaml.YAMLError as exc:
+        return None, f"invalid YAML: {display_path(path)} ({exc})"
+    for document in documents:
+        if isinstance(document, dict) and key in document:
+            return document, None
+    return None, f"{display_path(path)} has no YAML document with key '{key}'"
 
 
 def workflow_by_id(registry: dict[str, Any], workflow_id: str) -> dict[str, Any]:
@@ -116,6 +161,202 @@ def command_display(command: list[str]) -> str:
     return " ".join(shlex.quote(part) for part in command)
 
 
+def normalize_repo_path(raw_path: str) -> str:
+    if not raw_path:
+        raise WorkflowError("path cannot be empty")
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        try:
+            path = path.resolve().relative_to(WORKSPACE)
+        except ValueError as exc:
+            raise WorkflowError(f"path is outside workspace: {raw_path}") from exc
+    normalized = path.as_posix().strip("/")
+    if normalized in {"", "."}:
+        return "."
+    if normalized == ".." or normalized.startswith("../") or "/../" in normalized:
+        raise WorkflowError(f"path escapes workspace: {raw_path}")
+    return normalized
+
+
+def changed_files_from_git(include_untracked: bool) -> list[str]:
+    commands = [
+        ["git", "diff", "--name-only"],
+        ["git", "diff", "--cached", "--name-only"],
+    ]
+    if include_untracked:
+        commands.append(["git", "ls-files", "--others", "--exclude-standard"])
+    changed: set[str] = set()
+    for command in commands:
+        completed = subprocess.run(command, cwd=WORKSPACE, capture_output=True, text=True, check=False)
+        if completed.returncode != 0:
+            raise WorkflowError(f"failed to inspect changed files: {command_display(command)}")
+        for line in completed.stdout.splitlines():
+            if line.strip():
+                changed.add(normalize_repo_path(line.strip()))
+    return sorted(changed)
+
+
+def path_matches(patterns: list[str], path: str) -> bool:
+    return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
+
+
+def diff_check_rows(registry: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for check in registry.get("diff_checks") or []:
+        if not isinstance(check, dict):
+            continue
+        rows.append(
+            {
+                "id": str(check.get("id") or ""),
+                "description": str(check.get("description") or ""),
+                "required": bool(check.get("required", True)),
+                "always": bool(check.get("always", False)),
+                "paths": list(check.get("paths") or []),
+                "command": list(check.get("command") or []),
+                "cwd": str(check.get("cwd") or "."),
+                "allowed_lanes": [str(item) for item in check.get("allowed_lanes") or [] if isinstance(item, str)],
+            }
+        )
+    return rows
+
+
+def select_diff_checks(
+    registry: dict[str, Any],
+    files: list[str],
+    all_checks: bool,
+) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    for check in diff_check_rows(registry):
+        patterns = check["paths"]
+        matched_files = sorted(file for file in files if path_matches(patterns, file))
+        if all_checks or check["always"] or matched_files:
+            selected.append({**check, "matched_files": matched_files})
+    return selected
+
+
+def agcp_drift_findings(registry: dict[str, Any]) -> list[str]:
+    findings: list[str] = []
+
+    cockpit = (registry.get("internal_integrations") or {}).get("cockpit")
+    if not isinstance(cockpit, dict):
+        findings.append("internal_integrations.cockpit is missing")
+    else:
+        agent_command = str(cockpit.get("agent") or "")
+        if "cockpit agent" not in agent_command:
+            findings.append("internal_integrations.cockpit.agent must point to `cockpit agent`")
+
+    agent_clis, error = load_yaml_document_with(AGENT_CLIS_PATH, "clis")
+    if error:
+        findings.append(error)
+    else:
+        cli_entries = agent_clis.get("clis") if isinstance(agent_clis, dict) else []
+        clis = {
+            str(item.get("name") or ""): item
+            for item in cli_entries
+            if isinstance(item, dict) and item.get("name")
+        }
+        cockpit_agent = clis.get("cockpit-agent")
+        if not isinstance(cockpit_agent, dict):
+            findings.append("agent-clis registry is missing cockpit-agent")
+        elif "cockpit agent" not in str(cockpit_agent.get("entrypoint") or ""):
+            findings.append("agent-clis.cockpit-agent entrypoint must delegate to `cockpit agent`")
+
+    cli_path = WORKSPACE / "projects/cockpit/src/cockpit/cli.py"
+    command_path = WORKSPACE / "projects/cockpit/src/cockpit/commands/agent_workflow.py"
+    if not cli_path.exists():
+        findings.append(f"missing Cockpit CLI file: {display_path(cli_path)}")
+    else:
+        cli_text = cli_path.read_text(encoding="utf-8")
+        if not re.search(r"sub\.add_parser\(\s*[\"']agent[\"']", cli_text):
+            findings.append("Cockpit CLI must expose `cockpit agent`")
+    if not command_path.exists():
+        findings.append(f"missing Cockpit agent workflow command: {display_path(command_path)}")
+    else:
+        command_text = command_path.read_text(encoding="utf-8")
+        if "agent-workflow.py" not in command_text or "bootstrap" not in command_text:
+            findings.append("Cockpit agent workflow command must delegate to root runner and bootstrap default")
+
+    bos_registry, error = load_yaml_document_with(AGORA_BOS_REGISTRY_PATH, "services")
+    if error:
+        findings.append(error)
+    else:
+        services = bos_registry.get("services") if isinstance(bos_registry, dict) else []
+        uris = {
+            str(item.get("uri") or "")
+            for item in services
+            if isinstance(item, dict) and item.get("uri")
+        }
+        missing_routes = sorted(AGCP_BOS_ROUTES - uris)
+        if missing_routes:
+            findings.append(f"Agora BOS registry missing AGCP routes: {', '.join(missing_routes)}")
+
+    for path, expected_id in (
+        (AGCP_MOF_WORKFLOW_PATH, "WORKFLOW-AGENT-GOVERNANCE-CONTROL-PLANE"),
+        (AGCP_MOF_BOSROUTE_PATH, "BOSROUTE-GOVERNANCE-AGENT-WORKFLOW"),
+    ):
+        document, error = load_yaml_document_with(path, "id")
+        if error:
+            findings.append(error)
+            continue
+        if str(document.get("id") or "") != expected_id:
+            findings.append(f"{display_path(path)} id must be {expected_id}")
+
+    diff_checks = {row["id"]: row for row in diff_check_rows(registry)}
+    missing_mof_checks = sorted(MOF_DIFF_CHECK_IDS - set(diff_checks))
+    if missing_mof_checks:
+        findings.append(f"diff_checks missing MOF checks: {', '.join(missing_mof_checks)}")
+    for check_id in sorted(MOF_DIFF_CHECK_IDS & set(diff_checks)):
+        if MOF_MODEL_PATH_PATTERN not in diff_checks[check_id].get("paths", []):
+            findings.append(f"diff_checks.{check_id} must include {MOF_MODEL_PATH_PATTERN}")
+
+    return findings
+
+
+def agcp_drift_check(registry: dict[str, Any]) -> dict[str, Any]:
+    findings = agcp_drift_findings(registry)
+    return {
+        "id": "agcp-drift",
+        "description": "AGCP registry, Cockpit, Agora BOS, and MOF route invariants.",
+        "required": True,
+        "command": "agent-workflow lint agcp-drift",
+        "ok": not findings,
+        "findings": findings,
+        "stdout": "\n".join(findings),
+        "stderr": "",
+    }
+
+
+def run_check_command(check: dict[str, Any], context: dict[str, str]) -> dict[str, Any]:
+    command = substitute(check["command"], context)
+    cwd = WORKSPACE / substitute([check.get("cwd") or "."], context)[0]
+    env = os.environ.copy()
+    matched_files = check.get("matched_files", [])
+    if matched_files:
+        env["AGENT_WORKFLOW_MATCHED_FILES"] = json.dumps(matched_files, ensure_ascii=False)
+    allowed_lanes = check.get("allowed_lanes") or []
+    if matched_files and allowed_lanes:
+        env["AGENT_WORKFLOW_ALLOWED_LANES"] = ",".join(str(item) for item in allowed_lanes)
+    started = time.monotonic()
+    completed = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, check=False)
+    duration_s = round(time.monotonic() - started, 3)
+    stdout = completed.stdout[-4000:] if completed.stdout else ""
+    stderr = completed.stderr[-4000:] if completed.stderr else ""
+    return {
+        "id": check["id"],
+        "description": check.get("description", ""),
+        "required": bool(check.get("required", True)),
+        "command": command_display(command),
+        "cwd": str(cwd.relative_to(WORKSPACE)) if cwd.is_relative_to(WORKSPACE) else str(cwd),
+        "returncode": completed.returncode,
+        "duration_s": duration_s,
+        "ok": completed.returncode == 0 or not check.get("required", True),
+        "stdout_tail": stdout,
+        "stderr_tail": stderr,
+        "matched_files": matched_files,
+        "allowed_lanes": allowed_lanes,
+    }
+
+
 def validate_command(workflow_id: str, phase: str, index: int, item: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     prefix = f"{workflow_id}.{phase}[{index}]"
@@ -131,7 +372,7 @@ def validate_command(workflow_id: str, phase: str, index: int, item: dict[str, A
     return errors
 
 
-def lint_registry(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
+def lint_registry(registry: dict[str, Any], include_agcp_drift: bool = True) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
     agent_profiles = registry.get("agent_profiles") or {}
@@ -189,6 +430,32 @@ def lint_registry(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
                 continue
             for index, item in enumerate(entries):
                 errors.extend(validate_command(workflow_id, phase, index, item))
+
+    claim_policy_payload = registry.get("claim_policy")
+    if claim_policy_payload is not None:
+        if not isinstance(claim_policy_payload, dict):
+            errors.append("claim_policy must be a mapping")
+        else:
+            mode = str(claim_policy_payload.get("mode") or "advisory")
+            if mode not in CLAIM_POLICY_MODES:
+                errors.append("claim_policy.mode must be off/advisory/required")
+            required_paths = claim_policy_payload.get("required_paths", [])
+            if not isinstance(required_paths, list) or not all(isinstance(item, str) for item in required_paths):
+                errors.append("claim_policy.required_paths must be a list of strings")
+            tiers = claim_policy_payload.get("tiers", [])
+            if tiers and not isinstance(tiers, list):
+                errors.append("claim_policy.tiers must be a list")
+            for index, tier in enumerate(tiers if isinstance(tiers, list) else []):
+                prefix = f"claim_policy.tiers[{index}]"
+                if not isinstance(tier, dict):
+                    errors.append(f"{prefix}: tier must be a mapping")
+                    continue
+                tier_mode = str(tier.get("mode") or "advisory")
+                if tier_mode not in {"advisory", "required"}:
+                    errors.append(f"{prefix}.mode must be advisory/required")
+                paths = tier.get("paths", [])
+                if not isinstance(paths, list) or not paths or not all(isinstance(item, str) for item in paths):
+                    errors.append(f"{prefix}.paths must be a non-empty list of strings")
 
     if isinstance(agent_profiles, dict):
         for profile_id, profile in agent_profiles.items():
@@ -268,6 +535,33 @@ def lint_registry(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
             errors.append(f"{prefix}: missing id")
         if not isinstance(command, list) or not command or not all(isinstance(part, str) for part in command):
             errors.append(f"{prefix}: command must be a non-empty list of strings")
+    for index, check_item in enumerate(registry.get("diff_checks") or []):
+        prefix = f"diff_checks[{index}]"
+        if not isinstance(check_item, dict):
+            errors.append(f"{prefix}: entry must be a mapping")
+            continue
+        command = check_item.get("command")
+        paths = check_item.get("paths", [])
+        if not check_item.get("id"):
+            errors.append(f"{prefix}: missing id")
+        if not isinstance(command, list) or not command or not all(isinstance(part, str) for part in command):
+            errors.append(f"{prefix}: command must be a non-empty list of strings")
+        if not isinstance(paths, list) or not all(isinstance(part, str) for part in paths):
+            errors.append(f"{prefix}: paths must be a list of strings")
+        if not paths and not check_item.get("always"):
+            errors.append(f"{prefix}: paths must be non-empty unless always=true")
+        if "required" in check_item and not isinstance(check_item.get("required"), bool):
+            errors.append(f"{prefix}: required must be a boolean")
+        if "always" in check_item and not isinstance(check_item.get("always"), bool):
+            errors.append(f"{prefix}: always must be a boolean")
+        allowed_lanes = check_item.get("allowed_lanes", [])
+        if allowed_lanes and (
+            not isinstance(allowed_lanes, list)
+            or not all(isinstance(part, str) for part in allowed_lanes)
+        ):
+            errors.append(f"{prefix}: allowed_lanes must be a list of strings")
+    if include_agcp_drift:
+        errors.extend(f"agcp_drift: {finding}" for finding in agcp_drift_findings(registry))
     return errors, warnings
 
 
@@ -532,6 +826,36 @@ def sanitize_lock_name(scope: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", scope).strip("_") or "workspace"
 
 
+@contextmanager
+def run_update_lock(registry: dict[str, Any], run_id: str):
+    lock_dir = lock_state_dir(registry)
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = lock_dir / f"run_{sanitize_lock_name(run_id)}.update.lock"
+    deadline = time.monotonic() + RUN_UPDATE_LOCK_TIMEOUT_SECONDS
+    acquired = False
+    while not acquired:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(f"run_id: {run_id}\ncreated_at: {utc_now()}\n")
+            acquired = True
+        except FileExistsError:
+            try:
+                if time.time() - lock_path.stat().st_mtime > RUN_UPDATE_LOCK_TIMEOUT_SECONDS:
+                    lock_path.unlink(missing_ok=True)
+                    continue
+            except FileNotFoundError:
+                continue
+            if time.monotonic() >= deadline:
+                raise WorkflowError(f"timed out waiting for run update lock: {display_path(lock_path)}")
+            time.sleep(0.05)
+    try:
+        yield
+    finally:
+        if acquired:
+            lock_path.unlink(missing_ok=True)
+
+
 def append_ledger_event(registry: dict[str, Any], event: dict[str, Any]) -> None:
     path = ledger_path(registry)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -666,6 +990,288 @@ def read_run(registry: dict[str, Any], run_id: str) -> tuple[Path, dict[str, Any
     return path, payload
 
 
+def write_run(path: Path, payload: dict[str, Any]) -> None:
+    payload["updated_at"] = utc_now()
+    path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+
+def claim_run(
+    registry: dict[str, Any],
+    run_id: str,
+    actor: str,
+    paths: list[str],
+    surfaces: list[str],
+    force_lock: bool,
+) -> dict[str, Any]:
+    if not paths and not surfaces:
+        raise WorkflowError("claim requires at least one --path or --surface")
+    with run_update_lock(registry, run_id):
+        path, payload = read_run(registry, run_id)
+        if payload.get("status") != "active":
+            raise WorkflowError(f"cannot claim against non-active run: {run_id}")
+        normalized_paths = sorted({normalize_repo_path(item) for item in paths})
+        normalized_surfaces = sorted({item.strip() for item in surfaces if item.strip()})
+        scopes = [f"path:{item}" for item in normalized_paths] + [f"surface:{item}" for item in normalized_surfaces]
+        lock_paths = acquire_locks(registry, scopes, run_id, actor, force_lock)
+        try:
+            payload.setdefault("locks", [])
+            for lock_path in lock_paths:
+                if lock_path not in payload["locks"]:
+                    payload["locks"].append(lock_path)
+            claim = {
+                "claimed_at": utc_now(),
+                "actor": actor,
+                "paths": normalized_paths,
+                "surfaces": normalized_surfaces,
+                "scopes": scopes,
+                "locks": lock_paths,
+            }
+            payload.setdefault("claims", []).append(claim)
+            write_run(path, payload)
+        except Exception:
+            for lock_path in lock_paths:
+                lock_file = Path(lock_path)
+                if not lock_file.is_absolute():
+                    lock_file = WORKSPACE / lock_file
+                lock_file.unlink(missing_ok=True)
+            raise
+        append_ledger_event(
+            registry,
+            {
+                "event": "agent_workflow_claim",
+                "run_id": run_id,
+                "actor": actor,
+                "paths": normalized_paths,
+                "surfaces": normalized_surfaces,
+                "locks": lock_paths,
+            },
+        )
+        return {**claim, "run_id": run_id}
+
+
+def normalize_claim_mode(raw_mode: Any, default: str = "advisory") -> str:
+    mode = str(raw_mode or default)
+    return mode if mode in CLAIM_POLICY_MODES else default
+
+
+def claim_policy(registry: dict[str, Any]) -> dict[str, Any]:
+    policy = registry.get("claim_policy")
+    if not isinstance(policy, dict):
+        return {"mode": "advisory", "required_paths": [], "tiers": []}
+    mode = normalize_claim_mode(policy.get("mode"))
+    required_paths = policy.get("required_paths") or []
+    normalized_required_paths = [str(item) for item in required_paths if isinstance(item, str)]
+    tiers: list[dict[str, Any]] = []
+    if normalized_required_paths:
+        tiers.append(
+            {
+                "id": "legacy-required-paths",
+                "mode": mode,
+                "paths": normalized_required_paths,
+            }
+        )
+    for index, tier in enumerate(policy.get("tiers") or []):
+        if not isinstance(tier, dict):
+            continue
+        paths = [str(item) for item in tier.get("paths") or [] if isinstance(item, str)]
+        if not paths:
+            continue
+        tier_mode = normalize_claim_mode(tier.get("mode"), default="advisory")
+        if tier_mode == "off":
+            continue
+        tiers.append(
+            {
+                "id": str(tier.get("id") or f"tier-{index + 1}"),
+                "mode": tier_mode,
+                "paths": paths,
+            }
+        )
+    return {
+        "mode": mode,
+        "required_paths": normalized_required_paths,
+        "tiers": tiers,
+    }
+
+
+def claimed_paths(payload: dict[str, Any]) -> list[str]:
+    paths: set[str] = set()
+    for claim in payload.get("claims") or []:
+        if not isinstance(claim, dict):
+            continue
+        for item in claim.get("paths") or []:
+            if isinstance(item, str) and item.strip():
+                paths.add(normalize_repo_path(item))
+    return sorted(paths)
+
+
+def claim_covers_path(claimed_path: str, changed_path: str) -> bool:
+    normalized_claim = normalize_repo_path(claimed_path)
+    normalized_changed = normalize_repo_path(changed_path)
+    if normalized_claim == ".":
+        return True
+    if path_matches([normalized_claim], normalized_changed):
+        return True
+    return normalized_changed.startswith(normalized_claim.rstrip("/") + "/")
+
+
+def claim_coverage_report(
+    registry: dict[str, Any],
+    run_id: str | None,
+    changed_files: list[str],
+) -> dict[str, Any]:
+    policy = claim_policy(registry)
+    mode = str(policy["mode"])
+    if mode == "off" or not run_id:
+        return {
+            "ok": True,
+            "mode": mode,
+            "checked": False,
+            "run_id": run_id,
+            "required_paths": policy["required_paths"],
+            "tiers": policy["tiers"],
+            "claimed_paths": [],
+            "missing_files": [],
+            "missing_required_files": [],
+            "missing_advisory_files": [],
+            "warnings": [],
+        }
+    _, payload = read_run(registry, run_id)
+    claimed = claimed_paths(payload)
+    tiers = policy["tiers"] or [{"id": "default", "mode": mode, "paths": policy["required_paths"]}]
+    missing_required: list[str] = []
+    missing_advisory: list[str] = []
+    for item in changed_files:
+        matching_tiers = [
+            tier
+            for tier in tiers
+            if not tier.get("paths") or path_matches(tier.get("paths", []), item)
+        ]
+        if not matching_tiers:
+            continue
+        if any(claim_covers_path(claimed_path, item) for claimed_path in claimed):
+            continue
+        if any(tier.get("mode") == "required" for tier in matching_tiers):
+            missing_required.append(item)
+        else:
+            missing_advisory.append(item)
+    missing = sorted({*missing_required, *missing_advisory})
+    ok = not missing_required
+    warnings = [
+        f"unclaimed required file under claim_policy: {item}"
+        for item in missing_required
+    ] + [
+        f"unclaimed advisory file under claim_policy: {item}"
+        for item in missing_advisory
+    ]
+    return {
+        "ok": ok,
+        "mode": mode,
+        "checked": True,
+        "run_id": run_id,
+        "required_paths": policy["required_paths"],
+        "tiers": tiers,
+        "claimed_paths": claimed,
+        "missing_files": missing,
+        "missing_required_files": sorted(missing_required),
+        "missing_advisory_files": sorted(missing_advisory),
+        "warnings": warnings,
+    }
+
+
+def build_verify_report(
+    registry: dict[str, Any],
+    run_id: str | None,
+    files: list[str],
+    from_diff: bool,
+    include_untracked: bool,
+    all_checks: bool,
+    execute: bool,
+) -> dict[str, Any]:
+    if from_diff:
+        files = [*files, *changed_files_from_git(include_untracked)]
+    normalized_files = sorted({normalize_repo_path(item) for item in files})
+    if not from_diff and not normalized_files and not all_checks:
+        raise WorkflowError("verify requires --from-diff, --file, or --all")
+    context: dict[str, str] = {"run_id": run_id or ""}
+    if run_id:
+        _, run_payload = read_run(registry, run_id)
+        context.update({str(key): str(value) for key, value in (run_payload.get("context") or {}).items()})
+    checks = select_diff_checks(registry, normalized_files, all_checks)
+    results: list[dict[str, Any]] = []
+    for check in checks:
+        if execute:
+            result = run_check_command(check, context)
+        else:
+            result = {
+                "id": check["id"],
+                "description": check.get("description", ""),
+                "required": bool(check.get("required", True)),
+                "command": command_display(substitute(check["command"], context)),
+                "cwd": check.get("cwd", "."),
+                "matched_files": check.get("matched_files", []),
+                "skipped": True,
+                "ok": True,
+            }
+        results.append(result)
+    claim_coverage = claim_coverage_report(registry, run_id, normalized_files)
+    ok = all(result.get("ok", False) for result in results) and bool(claim_coverage["ok"])
+    report = {
+        "ok": ok,
+        "run_id": run_id,
+        "from_diff": from_diff,
+        "include_untracked": include_untracked,
+        "execute": execute,
+        "changed_files": normalized_files,
+        "claim_coverage": claim_coverage,
+        "check_count": len(results),
+        "checks": results,
+    }
+    if run_id:
+        append_ledger_event(
+            registry,
+            {
+                "event": "agent_workflow_verify",
+                "run_id": run_id,
+                "ok": ok,
+                "execute": execute,
+                "from_diff": from_diff,
+                "changed_files": normalized_files,
+                "claim_coverage": {
+                    "mode": claim_coverage.get("mode"),
+                    "ok": claim_coverage.get("ok"),
+                    "missing_files": claim_coverage.get("missing_files"),
+                },
+                "checks": [
+                    {
+                        "id": item.get("id"),
+                        "ok": item.get("ok"),
+                        "required": item.get("required"),
+                        "returncode": item.get("returncode"),
+                        "duration_s": item.get("duration_s"),
+                    }
+                    for item in results
+                ],
+            },
+        )
+    return report
+
+
+def print_verify_report(report: dict[str, Any], as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return
+    mode = "executed" if report["execute"] else "planned"
+    print(f"agent-workflow verify: {'ok' if report['ok'] else 'failed'} ({mode})")
+    print(f"files={len(report['changed_files'])} checks={report['check_count']}")
+    claim_coverage = report.get("claim_coverage")
+    if isinstance(claim_coverage, dict):
+        for warning in claim_coverage.get("warnings") or []:
+            print(f"[WARN] claim_policy: {warning}")
+    for result in report["checks"]:
+        status = "PASS" if result.get("ok") and not result.get("skipped") else "SKIP" if result.get("skipped") else "FAIL"
+        print(f"[{status}] {result['id']} :: {result['command']}")
+
+
 def parse_utc_timestamp(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -713,7 +1319,7 @@ def ledger_mentions_run(registry: dict[str, Any], run_id: str) -> bool:
     return needle in path.read_text(encoding="utf-8", errors="replace")
 
 
-def observe(registry: dict[str, Any], run_id: str | None, as_json: bool) -> int:
+def build_observe_report(registry: dict[str, Any], run_id: str | None) -> dict[str, Any]:
     runs = load_run_records(registry)
     locks = load_lock_records(registry)
     now = datetime.now(UTC)
@@ -822,14 +1428,19 @@ def observe(registry: dict[str, Any], run_id: str | None, as_json: bool) -> int:
         "ledger": display_path(ledger_path(registry)),
         "findings": findings,
     }
+    return report
+
+
+def observe(registry: dict[str, Any], run_id: str | None, as_json: bool) -> int:
+    report = build_observe_report(registry, run_id)
     if as_json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
-        print(f"agent-workflow observe: {decision}")
+        print(f"agent-workflow observe: {report['decision']}")
         print(f"runs={report['run_count']} locks={report['lock_count']} ledger={report['ledger']}")
-        for finding in findings:
+        for finding in report["findings"]:
             print(f"[{finding['severity'].upper()}] {finding['kind']}: {finding['message']}")
-    return 0 if decision == "continue" else 1
+    return 0 if report["decision"] == "continue" else 1
 
 
 def close_run(
@@ -861,6 +1472,297 @@ def close_run(
         },
     )
     return payload
+
+
+def closeout_run(
+    registry: dict[str, Any],
+    run_id: str,
+    status: str,
+    evidence: list[str],
+    files: list[str],
+    from_diff: bool,
+    include_untracked: bool,
+    all_checks: bool,
+    keep_locks: bool,
+) -> dict[str, Any]:
+    verify_report = build_verify_report(
+        registry,
+        run_id,
+        files,
+        from_diff,
+        include_untracked,
+        all_checks,
+        execute=True,
+    )
+    observe_report = build_observe_report(registry, run_id)
+    if status == "ok" and not verify_report["ok"]:
+        raise WorkflowError("closeout blocked: verify failed")
+    if status == "ok" and not observe_report["ok"]:
+        raise WorkflowError(f"closeout blocked: observe decision={observe_report['decision']}")
+    closeout_evidence = [
+        *evidence,
+        f"agent-workflow verify: {verify_report['check_count']} checks ok={verify_report['ok']}",
+        f"agent-workflow observe: {observe_report['decision']}",
+    ]
+    payload = close_run(registry, run_id, status, closeout_evidence, not keep_locks)
+    report = {
+        "ok": status == "ok",
+        "run": payload,
+        "verify": verify_report,
+        "observe": observe_report,
+    }
+    append_ledger_event(
+        registry,
+        {
+            "event": "agent_workflow_closeout",
+            "run_id": run_id,
+            "status": status,
+            "ok": report["ok"],
+            "verify_ok": verify_report["ok"],
+            "observe_decision": observe_report["decision"],
+        },
+    )
+    return report
+
+
+def ledger_events(registry: dict[str, Any]) -> list[dict[str, Any]]:
+    path = ledger_path(registry)
+    if not path.exists():
+        return []
+    events: list[dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            events.append({"parse_error": True, "raw": line})
+            continue
+        if isinstance(event, dict):
+            events.append(event)
+    return events
+
+
+def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str, Any]:
+    runs = load_run_records(registry)
+    events = ledger_events(registry)
+    observe_report = build_observe_report(registry, run_id)
+    findings: list[dict[str, Any]] = []
+    event_names_by_run: dict[str, set[str]] = {}
+    for event in events:
+        current_run_id = str(event.get("run_id") or "")
+        if current_run_id:
+            event_names_by_run.setdefault(current_run_id, set()).add(str(event.get("event") or ""))
+        if event.get("parse_error"):
+            findings.append(
+                {
+                    "severity": "halt",
+                    "kind": "ledger_parse_error",
+                    "message": "ledger contains a non-JSON line",
+                }
+            )
+    selected_runs = {run_id: runs[run_id]} if run_id and run_id in runs else runs
+    if run_id and run_id not in runs:
+        findings.append(
+            {
+                "severity": "halt",
+                "kind": "run_missing",
+                "message": f"run not found: {run_id}",
+                "run_id": run_id,
+            }
+        )
+    for current_run_id, (_, payload) in selected_runs.items():
+        status = payload.get("status")
+        evidence = payload.get("evidence") or []
+        if status == "active":
+            findings.append(
+                {
+                    "severity": "warn",
+                    "kind": "active_run",
+                    "message": f"run is still active: {current_run_id}",
+                    "run_id": current_run_id,
+                }
+            )
+        if status == "ok" and not evidence:
+            findings.append(
+                {
+                    "severity": "halt",
+                    "kind": "closed_run_missing_evidence",
+                    "message": f"closed run has no evidence: {current_run_id}",
+                    "run_id": current_run_id,
+                }
+            )
+        event_names = event_names_by_run.get(current_run_id, set())
+        if status == "ok" and "agent_workflow_verify" not in event_names:
+            findings.append(
+                {
+                    "severity": "warn",
+                    "kind": "closed_run_missing_verify_event",
+                    "message": f"closed run has no verify event: {current_run_id}",
+                    "run_id": current_run_id,
+                }
+            )
+        if status == "ok" and "agent_workflow_closeout" not in event_names:
+            findings.append(
+                {
+                    "severity": "warn",
+                    "kind": "closed_run_missing_closeout_event",
+                    "message": f"closed run did not use closeout: {current_run_id}",
+                    "run_id": current_run_id,
+                }
+            )
+    severities = {finding["severity"] for finding in [*findings, *observe_report["findings"]]}
+    decision = "halt" if "halt" in severities else "escalate" if "escalate" in severities else "continue"
+    return {
+        "ok": decision == "continue",
+        "decision": decision,
+        "run_count": len(selected_runs),
+        "event_count": len(events),
+        "observe": observe_report,
+        "findings": findings,
+        "slo": registry.get("compliance_slo") or {},
+    }
+
+
+def print_compliance_report(report: dict[str, Any], as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return
+    print(f"agent-workflow compliance: {report['decision']}")
+    print(f"runs={report['run_count']} events={report['event_count']}")
+    for finding in report["findings"]:
+        print(f"[{finding['severity'].upper()}] {finding['kind']}: {finding['message']}")
+    for finding in report["observe"]["findings"]:
+        print(f"[{finding['severity'].upper()}] {finding['kind']}: {finding['message']}")
+
+
+def last_ledger_event(
+    events: list[dict[str, Any]],
+    names: set[str],
+) -> dict[str, Any] | None:
+    for event in reversed(events):
+        if str(event.get("event") or "") in names:
+            return event
+    return None
+
+
+def staged_lane_report() -> dict[str, Any]:
+    completed = subprocess.run(
+        [sys.executable, "bin/change-lane-check.py", "--staged", "--json"],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    try:
+        payload = json.loads(completed.stdout or "{}")
+    except json.JSONDecodeError:
+        payload = {}
+    return {
+        "ok": completed.returncode == 0,
+        "returncode": completed.returncode,
+        "lanes": payload.get("lanes", []),
+        "files": payload.get("files", []),
+        "message": payload.get("message") or completed.stderr.strip(),
+    }
+
+
+def recommended_next(status: dict[str, Any]) -> str:
+    if status["stale_locks"] > 0:
+        return "Run `agent-workflow observe` and inspect stale locks before editing."
+    claim_coverage = status.get("claim_coverage")
+    if isinstance(claim_coverage, dict) and claim_coverage.get("missing_files"):
+        run_id = status.get("current_run_id") or "<run-id>"
+        return f"Claim missing files with `agent-workflow claim {run_id} --path <path>`."
+    if status["active_runs"]:
+        run_id = status["active_runs"][0]
+        return f"Continue with `agent-workflow verify {run_id} --from-diff --execute` or closeout."
+    if not status["staged_lane"]["ok"]:
+        return "Resolve the staged lane split or use a run-scoped/file-scoped gate for AGCP work."
+    return "Start a governed run with `agent-workflow start <workflow-id> --profile <agent-profile>`."
+
+
+def build_status_report(
+    registry: dict[str, Any],
+    include_health: bool,
+    include_agcp_drift: bool = True,
+) -> dict[str, Any]:
+    runs = load_run_records(registry)
+    active_runs = sorted(
+        run_id for run_id, (_, payload) in runs.items() if payload.get("status") == "active"
+    )
+    closed_runs = sorted(
+        run_id for run_id, (_, payload) in runs.items() if payload.get("status") in {"ok", "failed", "blocked"}
+    )
+    observe_report = build_observe_report(registry, None)
+    compliance = compliance_report(registry, None)
+    events = ledger_events(registry)
+    staged_lane = staged_lane_report()
+    stale_locks = len(
+        [finding for finding in observe_report["findings"] if finding.get("kind") == "expired_lock"]
+    )
+    current_run_id = active_runs[0] if len(active_runs) == 1 else None
+    changed_files = changed_files_from_git(include_untracked=False)
+    policy = claim_policy(registry)
+    claim_coverage = claim_coverage_report(registry, current_run_id, changed_files) if current_run_id else {
+        "ok": True,
+        "mode": policy["mode"],
+        "checked": False,
+        "run_id": current_run_id,
+        "required_paths": policy["required_paths"],
+        "tiers": policy["tiers"],
+        "claimed_paths": [],
+        "missing_files": [],
+        "missing_required_files": [],
+        "missing_advisory_files": [],
+        "warnings": ["multiple active runs; pass a run id to verify/closeout"] if len(active_runs) > 1 else [],
+    }
+    health = build_doctor_report(registry, include_agcp_drift) if include_health else None
+    report = {
+        "ok": observe_report["decision"] == "continue"
+        and compliance["decision"] == "continue"
+        and (health is None or bool(health["ok"])),
+        "active_runs": active_runs,
+        "closed_runs": closed_runs,
+        "run_count": len(runs),
+        "lock_count": observe_report["lock_count"],
+        "stale_locks": stale_locks,
+        "current_run_id": current_run_id,
+        "last_verify": last_ledger_event(events, {"agent_workflow_verify"}),
+        "last_closeout": last_ledger_event(events, {"agent_workflow_closeout", "agent_workflow_close"}),
+        "compliance": {
+            "ok": compliance["ok"],
+            "decision": compliance["decision"],
+            "slo": compliance["slo"],
+            "findings": compliance["findings"],
+            "observe_findings": compliance["observe"]["findings"],
+        },
+        "staged_lane": staged_lane,
+        "changed_files": changed_files,
+        "claim_coverage": claim_coverage,
+        "health": None if health is None else {"ok": health["ok"], "checks": check_summary(health["checks"])},
+    }
+    report["recommended_next"] = recommended_next(report)
+    return report
+
+
+def print_status_report(report: dict[str, Any], as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return
+    print(f"agent-workflow status: {'ok' if report['ok'] else 'attention'}")
+    print(
+        f"runs active={len(report['active_runs'])} closed={len(report['closed_runs'])} "
+        f"locks={report['lock_count']} stale={report['stale_locks']}"
+    )
+    staged_lane = report["staged_lane"]
+    print(f"staged_lane={'PASS' if staged_lane['ok'] else 'WARN'} lanes={','.join(staged_lane['lanes']) or '-'}")
+    claim_coverage = report.get("claim_coverage")
+    if isinstance(claim_coverage, dict):
+        for warning in claim_coverage.get("warnings") or []:
+            print(f"[WARN] claim_policy: {warning}")
+    print(f"compliance={report['compliance']['decision']}")
+    print(f"next: {report['recommended_next']}")
 
 
 def handoff_markdown(payload: dict[str, Any]) -> str:
@@ -948,7 +1850,7 @@ def run_doctor_check(check_item: dict[str, Any]) -> dict[str, Any]:
         }
 
 
-def build_doctor_report(registry: dict[str, Any]) -> dict[str, Any]:
+def build_doctor_report(registry: dict[str, Any], include_agcp_drift: bool = True) -> dict[str, Any]:
     integrations = integration_rows(registry)
     for integration in integrations:
         name = str(integration["name"])
@@ -983,6 +1885,8 @@ def build_doctor_report(registry: dict[str, Any]) -> dict[str, Any]:
             )
         adapter["health"] = health
     checks = [run_doctor_check(item) for item in registry.get("doctor_checks", [])]
+    if include_agcp_drift:
+        checks.insert(0, agcp_drift_check(registry))
     required_integration_health = [
         integration["health"]
         for integration in integrations
@@ -1036,8 +1940,8 @@ def print_doctor_report(report: dict[str, Any], as_json: bool) -> None:
             print(item["stderr"], file=sys.stderr)
 
 
-def doctor(registry: dict[str, Any], as_json: bool) -> int:
-    report = build_doctor_report(registry)
+def doctor(registry: dict[str, Any], as_json: bool, include_agcp_drift: bool = True) -> int:
+    report = build_doctor_report(registry, include_agcp_drift)
     print_doctor_report(report, as_json)
     return 0 if report["ok"] else 1
 
@@ -1072,9 +1976,13 @@ def check_summary(checks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
-def bootstrap_report(registry: dict[str, Any], include_health: bool) -> dict[str, Any]:
-    errors, warnings = lint_registry(registry)
-    doctor_report = build_doctor_report(registry) if include_health else None
+def bootstrap_report(
+    registry: dict[str, Any],
+    include_health: bool,
+    include_agcp_drift: bool = True,
+) -> dict[str, Any]:
+    errors, warnings = lint_registry(registry, include_agcp_drift)
+    doctor_report = build_doctor_report(registry, include_agcp_drift) if include_health else None
     integrations = (
         doctor_report["integrations"] if isinstance(doctor_report, dict) else integration_rows(registry)
     )
@@ -1106,9 +2014,15 @@ def bootstrap_report(registry: dict[str, Any], include_health: bool) -> dict[str
             "checks": check_summary(doctor_report["checks"]),
         },
         "next_commands": {
+            "status": "uv run --with pyyaml python bin/agent-workflow.py status --json",
             "start": "uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> --profile <agent-profile> --objective \"<summary>\"",
+            "claim": "uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>",
+            "verify": "uv run --with pyyaml python bin/agent-workflow.py verify <run-id> --from-diff --execute",
+            "closeout": "uv run --with pyyaml python bin/agent-workflow.py closeout <run-id>",
+            "compliance": "uv run --with pyyaml python bin/agent-workflow.py compliance",
             "doctor": "uv run --with pyyaml python bin/agent-workflow.py doctor",
             "gate": "make gac-local-gate",
+            "scoped_gate": "uv run --with pyyaml python bin/gac-local-gate.py --scope files --file <path> --json",
         },
     }
 
@@ -1157,6 +2071,31 @@ def build_parser() -> argparse.ArgumentParser:
     p_observe = sub.add_parser("observe", help="Read-only observer audit for workflow runs and locks")
     p_observe.add_argument("run_id", nargs="?")
     p_observe.add_argument("--json", action="store_true")
+
+    p_status = sub.add_parser("status", help="Show AGCP run, lock, claim, compliance, and lane status")
+    p_status.add_argument("--json", action="store_true")
+    p_status.add_argument("--health", action="store_true", help="Include doctor health checks")
+
+    p_claim = sub.add_parser("claim", help="Claim paths or governance surfaces for an active run")
+    p_claim.add_argument("run_id")
+    p_claim.add_argument("--path", action="append", default=[])
+    p_claim.add_argument("--surface", action="append", default=[])
+    p_claim.add_argument("--actor", default=os.environ.get("USER", "agent"))
+    p_claim.add_argument("--force-lock", action="store_true")
+    p_claim.add_argument("--json", action="store_true")
+
+    p_verify = sub.add_parser("verify", help="Select and optionally run checks for changed files")
+    p_verify.add_argument("run_id", nargs="?")
+    p_verify.add_argument("--from-diff", action="store_true")
+    p_verify.add_argument("--file", action="append", default=[])
+    p_verify.add_argument("--include-untracked", action="store_true")
+    p_verify.add_argument("--all", action="store_true", dest="all_checks")
+    p_verify.add_argument("--execute", action="store_true")
+    p_verify.add_argument("--json", action="store_true")
+
+    p_compliance = sub.add_parser("compliance", help="Audit run, lock, ledger, and evidence compliance")
+    p_compliance.add_argument("run_id", nargs="?")
+    p_compliance.add_argument("--json", action="store_true")
 
     p_list = sub.add_parser("list", help="List workflows")
     p_list.add_argument("--json", action="store_true")
@@ -1228,6 +2167,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_close.add_argument("--evidence", action="append", default=[])
     p_close.add_argument("--keep-locks", action="store_true")
     p_close.add_argument("--json", action="store_true")
+
+    p_closeout = sub.add_parser("closeout", help="Verify, observe, record evidence, and close a run")
+    p_closeout.add_argument("run_id")
+    p_closeout.add_argument("--status", choices=["ok", "failed", "blocked"], default="ok")
+    p_closeout.add_argument("--evidence", action="append", default=[])
+    p_closeout.add_argument("--from-diff", action="store_true")
+    p_closeout.add_argument("--file", action="append", default=[])
+    p_closeout.add_argument("--include-untracked", action="store_true")
+    p_closeout.add_argument("--all", action="store_true", dest="all_checks")
+    p_closeout.add_argument("--keep-locks", action="store_true")
+    p_closeout.add_argument("--json", action="store_true")
     return parser
 
 
@@ -1235,15 +2185,53 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        registry = load_registry(Path(args.registry))
+        registry_path = Path(args.registry)
+        registry = load_registry(registry_path)
+        include_agcp_drift = is_default_registry_path(registry_path)
         if args.command == "lint":
-            errors, warnings = lint_registry(registry)
+            errors, warnings = lint_registry(registry, include_agcp_drift)
             print_lint(errors, warnings, args.json)
             return 0 if not errors else 1
         if args.command == "doctor":
-            return doctor(registry, args.json)
+            return doctor(registry, args.json, include_agcp_drift)
         if args.command == "observe":
             return observe(registry, args.run_id, args.json)
+        if args.command == "status":
+            report = build_status_report(registry, args.health, include_agcp_drift)
+            print_status_report(report, args.json)
+            return 0 if report["ok"] else 1
+        if args.command == "claim":
+            claim = claim_run(
+                registry,
+                args.run_id,
+                args.actor,
+                args.path,
+                args.surface,
+                args.force_lock,
+            )
+            if args.json:
+                print(json.dumps(claim, ensure_ascii=False, indent=2))
+            else:
+                print(f"claimed {claim['run_id']}")
+                for scope in claim["scopes"]:
+                    print(f"- {scope}")
+            return 0
+        if args.command == "verify":
+            report = build_verify_report(
+                registry,
+                args.run_id,
+                args.file,
+                args.from_diff,
+                args.include_untracked,
+                args.all_checks,
+                args.execute,
+            )
+            print_verify_report(report, args.json)
+            return 0 if report["ok"] else 1
+        if args.command == "compliance":
+            report = compliance_report(registry, args.run_id)
+            print_compliance_report(report, args.json)
+            return 0 if report["ok"] else 1
         if args.command == "list":
             list_workflows(registry, args.json)
             return 0
@@ -1257,7 +2245,7 @@ def main(argv: list[str] | None = None) -> int:
             list_integrations(registry, args.json)
             return 0
         if args.command in {"bootstrap", "context"}:
-            report = bootstrap_report(registry, not args.skip_health)
+            report = bootstrap_report(registry, not args.skip_health, include_agcp_drift)
             print_bootstrap_report(report, args.json)
             return 0 if report["ok"] else 1
         if args.command == "show":
@@ -1309,6 +2297,25 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(f"closed {payload['run_id']} as {payload['status']}")
             return 0
+        if args.command == "closeout":
+            report = closeout_run(
+                registry,
+                args.run_id,
+                args.status,
+                args.evidence,
+                args.file,
+                args.from_diff or not args.file,
+                args.include_untracked,
+                args.all_checks,
+                args.keep_locks,
+            )
+            if args.json:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
+            else:
+                print(f"closeout {report['run']['run_id']} as {report['run']['status']}")
+                print(f"verify checks={report['verify']['check_count']} ok={report['verify']['ok']}")
+                print(f"observe={report['observe']['decision']}")
+            return 0 if report["ok"] else 1
     except WorkflowError as exc:
         print(f"agent-workflow: {exc}", file=sys.stderr)
         return 2

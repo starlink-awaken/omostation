@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -206,19 +207,19 @@ def _run_omo_lint(subcmd: str) -> subprocess.CompletedProcess[str]:
     """调用真正的 omo governance lint 子命令 (projects/omo/.venv).
 
     全局 PATH 里的 `omo` 已被 oh-my-opencode 占用, 不能直接 `omo lint ...`.
+    这里也避免 `uv --project projects/omo` 在嵌套 workspace 下误解析 root workspace。
     """
-    return _run(
-        [
-            "uv",
-            "run",
-            "--project",
-            str(OMO_PROJECT_DIR),
-            "python",
-            "-m",
-            "omo.omo_lint",
-            subcmd,
-        ],
+    venv_python = OMO_PROJECT_DIR / ".venv" / "bin" / "python"
+    python = venv_python if venv_python.exists() else Path(sys.executable)
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(OMO_PROJECT_DIR / "src")
+    return subprocess.run(
+        [str(python), "-m", "omo.omo_lint", subcmd],
+        cwd=WORKSPACE_ROOT,
+        capture_output=True,
+        text=True,
         check=False,
+        env=env,
     )
 
 

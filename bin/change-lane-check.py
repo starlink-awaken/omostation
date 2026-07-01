@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -29,7 +30,9 @@ def submodule_paths() -> set[str]:
     return {line.split(maxsplit=1)[1] for line in result.stdout.splitlines() if line.strip()}
 
 
-def changed_paths(staged: bool) -> list[str]:
+def changed_paths(staged: bool, files: list[str] | None = None) -> list[str]:
+    if files:
+        return files
     cmd = ["git", "diff", "--cached", "--name-only"] if staged else ["git", "diff", "--name-only"]
     result = run(cmd)
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
@@ -46,6 +49,7 @@ def classify(path: str, submodules: set[str]) -> str:
         ".omo/standards/agent-workflow-contract.md",
         ".agents/skills/project-governance/SKILL.md",
         "bin/agent-workflow.py",
+        "bin/governance-evolution.py",
         "bin/project-layer-index.py",
         "tests/test_agent_workflow.py",
     }:
@@ -65,6 +69,7 @@ def classify(path: str, submodules: set[str]) -> str:
         path.startswith("bin/gac")
         or path in {
             "bin/ssot-guardian.py",
+            "bin/doc-ssot-lint.py",
             "bin/sync-submodules-push.sh",
             "bin/submodule-reachability-gate.py",
             "bin/submodule-pointer-transaction.sh",
@@ -83,10 +88,16 @@ def classify(path: str, submodules: set[str]) -> str:
 
 
 def allowed(lanes: set[str]) -> bool:
+    return allowed_for(lanes, allowed_lanes=set())
+
+
+def allowed_for(lanes: set[str], allowed_lanes: set[str]) -> bool:
     if len(lanes) <= 1:
         return True
     if "runtime_snapshot" in lanes and len(lanes) > 1:
         return False
+    if allowed_lanes and lanes <= allowed_lanes:
+        return True
     if "submodule_pointer" in lanes and not any(lanes <= combo for combo in ALLOWED_COMBOS):
         return False
     if "governance_state" in lanes and len(lanes) > 1:
@@ -94,18 +105,34 @@ def allowed(lanes: set[str]) -> bool:
     return any(lanes <= combo for combo in ALLOWED_COMBOS)
 
 
-def check(staged: bool) -> dict[str, object]:
+def parse_allowed_lanes(values: list[str]) -> set[str]:
+    lanes: set[str] = set()
+    for value in values:
+        for lane in value.split(","):
+            normalized = lane.strip()
+            if normalized:
+                lanes.add(normalized)
+    return lanes
+
+
+def check(
+    staged: bool,
+    files: list[str] | None = None,
+    allowed_lanes: set[str] | None = None,
+) -> dict[str, object]:
     submodules = submodule_paths()
-    paths = changed_paths(staged)
+    paths = changed_paths(staged, files)
     by_lane: dict[str, list[str]] = {}
     for path in paths:
         lane = classify(path, submodules)
         by_lane.setdefault(lane, []).append(path)
     lanes = set(by_lane)
+    allowed_lane_set = allowed_lanes or set()
     return {
-        "ok": allowed(lanes),
+        "ok": allowed_for(lanes, allowed_lane_set),
         "staged": staged,
         "lanes": sorted(lanes),
+        "allowed_lanes": sorted(allowed_lane_set),
         "by_lane": by_lane,
         "files": len(paths),
     }
@@ -114,11 +141,14 @@ def check(staged: bool) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check staged or unstaged change lanes")
     parser.add_argument("--staged", action="store_true", help="Check staged changes")
+    parser.add_argument("--file", action="append", default=[], help="Check an explicit changed file path")
+    parser.add_argument("--allow-lane", action="append", default=[], help="Allow an explicit lane for this check")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--advisory", action="store_true", help="Always exit 0")
     args = parser.parse_args()
 
-    report = check(staged=args.staged)
+    allowed_lanes = parse_allowed_lanes([os.environ.get("AGENT_WORKFLOW_ALLOWED_LANES", ""), *args.allow_lane])
+    report = check(staged=args.staged, files=args.file, allowed_lanes=allowed_lanes)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     elif report["ok"]:

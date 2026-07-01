@@ -9,9 +9,18 @@ clis:
 - name: agent-workflow
   entrypoint: bin/agent-workflow.py
   description: Executable governance workflow runner for project-level AI agent work
+- name: governance-evolution
+  entrypoint: bin/governance-evolution.py
+  description: Executable governance evolution roadmap, traceability, and golden path status runner
 - name: cockpit-agent-workflow
   entrypoint: uv run --project projects/cockpit cockpit agent-workflow
   description: Cockpit L3 entrypoint delegating to the agent-workflow runner
+- name: cockpit-agent
+  entrypoint: uv run --project projects/cockpit cockpit agent
+  description: Cockpit L3 agent governance control entrypoint delegating to the agent-workflow runner
+- name: cockpit-governance-evolution
+  entrypoint: uv run --project projects/cockpit cockpit governance evolution
+  description: Cockpit L3 governance evolution entrypoint delegating to the governance-evolution runner
 - name: omo
   entrypoint: scripts/omo
   description: Workspace CLI entrypoint for omo

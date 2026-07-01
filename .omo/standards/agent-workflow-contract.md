@@ -28,12 +28,12 @@ The durable contract is:
 | SSOT | `.omo/_truth/registry/agent-workflows.yaml` | Workflow definitions, lanes, locks, stages, external adapters |
 | Agent Profiles | `.omo/_truth/registry/agent-workflows.yaml::agent_profiles` | Machine-readable agent roles, workflow allowlists, lane boundaries |
 | Internal Integrations | `.omo/_truth/registry/agent-workflows.yaml::internal_integrations` | Machine-readable contracts for GaC, OMO, C2G, Cockpit, and MOF |
-| Runner | `bin/agent-workflow.py` | Lint, plan, execute stages, start/resume/close runs |
+| Runner | `bin/agent-workflow.py` | Lint, status, plan, claim, verify, closeout, compliance, and run state |
 | Skill | `.agents/skills/project-governance/SKILL.md` | Thin bootloader for agent runtimes |
 | Gate | `make gac-local-gate` | Local enforcement through GAC, adapter, MOF, and SSOT checks |
 | Broker | `projects/omo` / `projects/c2g` | Governed state mutation and external spec ingress |
 | MOF | `.omo/_truth/registry/mof-capabilities.yaml` | M1/M2/M3 model tool registry and schema/state bridge checks |
-| L3 Entry | `projects/cockpit` | Human-facing compass/workflow entry for C2G and orchestration |
+| L3 Entry | `projects/cockpit` | Human-facing compass and `cockpit agent` entry for C2G and agent governance |
 
 ## 3. Required Behavior
 
@@ -41,9 +41,11 @@ Before a multi-step agent task:
 
 ```bash
 uv run --with pyyaml python bin/agent-workflow.py bootstrap
+uv run --with pyyaml python bin/agent-workflow.py status --json
 uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
   --profile <agent-profile> \
   --objective "<summary>"
+uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>
 ```
 
 Agent roles must be selected from `agent_profiles`. Workflow lint fails when a workflow references
@@ -53,6 +55,16 @@ all profiled workflows, and the run record persists that profile for compressed-
 `bootstrap` is the single startup entrypoint. It reports lint status, workflows, profiles, internal
 integrations, external adapters, health summaries, and next commands without requiring an agent to
 remember several separate discovery commands.
+
+`status` is the steady-state entrypoint. It reports active and closed runs, lock count, stale locks,
+last verify/closeout events, compliance SLO, staged lane status, claim coverage, and the recommended
+next action. `--health` adds doctor checks when a heavier health read is useful.
+
+`claim` is the path/surface-level concurrency step. It adds path or governance-surface locks to
+the active run and records an `agent_workflow_claim` ledger event. Broad workflow locks are still
+created by `start`; `claim` narrows the edit surface for multi-agent work. The registry-owned
+`claim_policy` starts in `advisory` mode: verify, closeout, and status warn on unclaimed governed
+paths without hard failing. If the policy is raised to `required`, the same check becomes blocking.
 
 After compression or handoff:
 
@@ -64,16 +76,16 @@ uv run --with pyyaml python bin/agent-workflow.py handoff <run-id>
 Before closeout:
 
 ```bash
-uv run --with pyyaml python bin/agent-workflow.py run <workflow-id> \
-  --profile <agent-profile> \
-  --stage verification \
-  --execute
-uv run --with pyyaml python bin/agent-workflow.py observe <run-id>
-uv run --with pyyaml python bin/agent-workflow.py handoff <run-id>
-uv run --with pyyaml python bin/agent-workflow.py close <run-id> --status ok --evidence "<checks>"
+uv run --with pyyaml python bin/agent-workflow.py verify <run-id> --from-diff --execute
+uv run --with pyyaml python bin/agent-workflow.py closeout <run-id> --evidence "<checks>"
+uv run --with pyyaml python bin/agent-workflow.py compliance <run-id>
 ```
 
 Manual stage entries are not optional checks. They represent work that cannot be safely generalized, such as project-local tests or a broker-specific mutation.
+
+`close` remains a low-level primitive. Normal agent closeout should use `closeout`, which runs
+diff-aware verification, observes locks/ledger consistency, records closeout evidence, and releases
+locks in one path.
 
 ## 4. Concurrency
 
@@ -95,14 +107,51 @@ Recommended lock scopes:
 - `spaces` for tenant-space manifests.
 - `root-gitlinks` for submodule pointer closeout.
 - `doc-ssot` for broad documentation rewrites.
+- `path:<repo-path>` for claimed edit paths.
+- `surface:<name>` for claimed governance surfaces.
 
-## 5. Internal Integrations
+## 5. Diff-Aware Verification And Evidence
+
+`diff_checks` in `.omo/_truth/registry/agent-workflows.yaml` maps file patterns to required
+verification commands. Agents can inspect the selected checks without side effects:
+
+```bash
+uv run --with pyyaml python bin/agent-workflow.py verify --file bin/agent-workflow.py
+```
+
+For real closeout, agents should run:
+
+```bash
+uv run --with pyyaml python bin/agent-workflow.py verify <run-id> --from-diff --execute
+```
+
+Verification writes `agent_workflow_verify` events to the ledger when a run id is provided. The
+evidence schema in the registry defines required ledger fields and command-result fields.
+
+When `agent-workflow verify --execute` runs a selected check, it passes the selected file set through
+`AGENT_WORKFLOW_MATCHED_FILES`. `gac-local-gate.py` uses that scoped file set for its change-lane
+subcheck while keeping direct `make gac-local-gate` behavior staged and global. This keeps run-scoped
+verification useful in multi-agent worktrees without weakening the full local gate.
+
+For direct CLI use, the same gate exposes explicit scope:
+
+```bash
+uv run --with pyyaml python bin/gac-local-gate.py --scope staged --json
+uv run --with pyyaml python bin/gac-local-gate.py --scope files --file bin/agent-workflow.py --json
+uv run --with pyyaml python bin/gac-local-gate.py --scope run --run-id <run-id> --json
+```
+
+`compliance` audits run records, locks, ledger parseability, closed-run evidence, verify events,
+and closeout usage. Warnings are allowed for historical runs, but halt findings indicate the
+control plane cannot prove the run is governed.
+
+## 6. Internal Integrations
 
 Internal integrations use the same contract pattern as external adapters. Each integration must
 declare `status`, `authority`, `owner`, `ssot_rule`, `health_command`, and `health_required`.
 `agent-workflow integrations` exposes this map, and `make gac-local-gate` verifies it.
 
-## 6. External Tool Adapters
+## 7. External Tool Adapters
 
 External systems are patterns, not new authorities:
 
@@ -129,7 +178,7 @@ Current ingress routing:
 - beads items should be imported into C2G/OMO rather than treated as a second task SSOT.
 - gstack memory should enrich `handoff-resume`; when gstack is absent, the agent workflow handoff is canonical.
 
-## 7. MOF Coverage
+## 8. MOF Coverage
 
 MOF is a first-class workflow surface:
 
@@ -137,21 +186,40 @@ MOF is a first-class workflow surface:
 - `mof-state-bridge-audit` is the read-only check path for OMO task alignment and MOF schema health.
 - `make gac-local-gate` includes MOF schema validation, MOF state bridge reporting, and MOF drift detection.
 
-## 8. Non-Goals
+## 9. Cockpit Entry
+
+Cockpit exposes the same runner instead of reimplementing governance logic:
+
+```bash
+uv run --project projects/cockpit cockpit agent
+uv run --project projects/cockpit cockpit agent bootstrap --skip-health
+uv run --project projects/cockpit cockpit agent status --json
+uv run --project projects/cockpit cockpit agent verify <run-id> --from-diff --execute
+uv run --project projects/cockpit cockpit agent closeout <run-id>
+```
+
+`cockpit agent-workflow` remains as a compatibility alias.
+
+## 10. Non-Goals
 
 - Do not copy all GAC rules into skills or docs.
 - Do not create a second task system beside OMO/C2G.
 - Do not bypass OMO/C2G brokers for task, debt, goal, or state-plane truth mutations.
 - Do not rely on agent personality or model type for enforcement.
 
-## 9. Drift Control
+## 11. Drift Control
 
 The workflow registry is validated by:
 
 ```bash
 uv run --with pyyaml python bin/agent-workflow.py lint
+uv run --with pyyaml python bin/agent-workflow.py doctor
 make gac-local-gate
 ```
+
+`lint` and `doctor` also check AGCP drift across the workflow registry, agent CLI registry,
+Cockpit entrypoint, Agora BOS route family, and MOF M1 Workflow/BOSRoute nodes. MOF model paths
+must continue to trigger MOF schema, state-bridge, and drift diff checks.
 
 Any new workflow must include:
 
@@ -162,3 +230,10 @@ Any new workflow must include:
 - Four phases: `preflight`, `execute`, `verification`, `closeout`.
 - Command entries with `id`, `mode`, and list-form `command`.
 - Referenced `agents.roles` must exist in `agent_profiles`.
+
+Any new diff-aware check must include:
+
+- `id`.
+- `paths` or `always: true`.
+- list-form `command`.
+- boolean `required` when it is explicitly set.
