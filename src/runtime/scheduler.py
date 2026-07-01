@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from runtime.matrix import list_services, health_check_url
 from runtime.state_schema import validate_runtime_health_snapshot
 from omo.omo_gc import archive_resolved_debt_items
+from omo.omo_state_schema import summarize_system_health_snapshot
 
 import yaml
 import hashlib
@@ -75,6 +76,31 @@ class MatrixScheduler:
                 return {"status": "failed", "exit_code": last_exit}
         except Exception as e:  # noqa: BLE001  # defensive fallback
             return {"status": "error", "error": str(e)}
+
+    def _repair_launchd_service(self, label: str, config_path: str) -> bool:
+        """Repair launchd LWCR desync by unloading/loading the plist (ISC-2).
+
+        Returns True if the service is running after repair.
+        """
+        if not config_path:
+            return False
+        cfg = Path(config_path).expanduser()
+        if not cfg.is_file():
+            return False
+        try:
+            print(f"🔧 [launchd repair] {label}: unloading/loading {cfg}")
+            subprocess.run(
+                ["launchctl", "unload", str(cfg)], capture_output=True, timeout=10
+            )
+            subprocess.run(
+                ["launchctl", "load", str(cfg)], capture_output=True, timeout=10
+            )
+            time.sleep(0.5)
+            status = self._check_launchd(label)
+            return status.get("status") == "running"
+        except Exception as e:  # noqa: BLE001
+            print(f"⚠️ [launchd repair] {label} failed: {e}")
+            return False
 
     def _check_docker(self, container: str) -> dict:
         if not container:
@@ -215,6 +241,18 @@ class MatrixScheduler:
             if svc.launchd_label:
                 rt_status = self._check_launchd(svc.launchd_label)
                 result["runtime"] = rt_status
+                # ISC-2 治本: launchd LWCR 失步时先 unload/load plist 修复
+                if (
+                    rt_status.get("status") in ("failed", "error")
+                    and svc.launchd_config
+                ):
+                    exit_code = rt_status.get("exit_code")
+                    if exit_code in ("78", "19968", 78, 19968):
+                        if self._repair_launchd_service(
+                            svc.launchd_label, svc.launchd_config
+                        ):
+                            rt_status = self._check_launchd(svc.launchd_label)
+                            result["runtime"] = rt_status
                 if rt_status.get("status") in ("failed", "error"):
                     # Exponential Backoff based on recent restart counts
                     backoff = 5 * (2 ** len(svc_history))
@@ -344,6 +382,8 @@ class MatrixScheduler:
                     f"({'state transition' if state_transitioned else 'force write'})"
                 )
                 self.last_state_hash = state_hash
+                # ISC-2 治本: 同步 runtime 健康汇总到 system.yaml
+                self._sync_system_yaml_runtime_summary(self.state)
             except Exception as e:  # noqa: BLE001  # defensive fallback
                 print(f"Failed to update OMO state: {e}")
 
@@ -443,6 +483,35 @@ class MatrixScheduler:
             print(f"⚠️ [P1-AUTO_HEAL] {svc_name}: autoheal timed out after 30s")
         except Exception as e:  # noqa: BLE001  # defensive fallback
             print(f"⚠️ [P1-AUTO_HEAL] {svc_name}: autoheal error: {e}")
+
+    def _sync_system_yaml_runtime_summary(self, snapshot: dict) -> None:
+        """同步 runtime_health_summary 到 .omo/state/system.yaml (ISC-2 治本).
+
+        scheduler 是 runtime 健康快照的权威生产者,因此也由它负责把汇总写回
+        governance SSOT,避免 sync_omo_state 未运行时 system.yaml 出现陈旧.
+        """
+        system_yaml = OMO_STATE_FILE.parent / "system.yaml"
+        if not system_yaml.is_file():
+            print(f"⚠️  system.yaml 不存在: {system_yaml}, 跳过 runtime summary 同步")
+            return
+        try:
+            summary = summarize_system_health_snapshot(snapshot)
+            data = yaml.safe_load(system_yaml.read_text(encoding="utf-8")) or {}
+            data["runtime_health_summary"] = summary
+            data["updated_at"] = datetime.now(timezone.utc).astimezone().isoformat()
+            tmp = system_yaml.with_suffix(".yaml.tmp")
+            tmp.write_text(
+                yaml.dump(
+                    data, allow_unicode=True, sort_keys=False, default_flow_style=False
+                ),
+                encoding="utf-8",
+            )
+            tmp.replace(system_yaml)
+            print(
+                f"✅ system.yaml runtime_health_summary 同步完成: online={summary.get('online_services')}/{summary.get('total_services')}"
+            )
+        except Exception as e:  # noqa: BLE001
+            print(f"⚠️  system.yaml runtime summary 同步失败: {e}")
 
     def _run_cycle(self):
         """Run one full scheduler cycle: scan, check staleness, and update."""

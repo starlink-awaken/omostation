@@ -19,6 +19,7 @@ class ServiceEntry:
     status: str
     port: Optional[int] = None
     launchd_label: Optional[str] = None
+    launchd_config: Optional[str] = None
     deploy_path: Optional[str] = None
     log_path: Optional[str] = None
     start_command: Optional[str] = None
@@ -156,6 +157,7 @@ def _parse_entry(raw: dict) -> ServiceEntry:
         status=raw.get("status", "unknown"),
         port=port,
         launchd_label=raw.get("launchd_label"),
+        launchd_config=raw.get("launchd_config"),
         deploy_path=raw.get("deploy_path"),
         log_path=raw.get("log_path"),
         start_command=raw.get("start_command"),
