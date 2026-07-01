@@ -54,11 +54,39 @@ case "$cmd" in
       git worktree add "$wt" -b "$branch" 2>&1
       echo "✅ worktree 创建: $wt"
       echo "   分支: $branch (base: $(git rev-parse --abbrev-ref HEAD))"
+      # Phase 2d ISC-3e 真治本: init 子模块 (GaC gate 依赖 projects/ecos + scripts 等).
+      # worktree 默认不 init → mof-*/doc-ssot-snapshots 等 check 跑不了.
+      # 默认只 init GaC gate 依赖 (快, ~5s); INIT_ALL_SUBMODULES=1 全部 (~60s); SKIP_SUBMODULE_INIT=1 跳过.
+      # 其他子模块 agent 碰时按需: git submodule update --init <submodule>.
+      GATE_SUBS="projects/ecos scripts"
+      if [ "${SKIP_SUBMODULE_INIT:-}" = "1" ]; then
+        echo "   ⏭ SKIP_SUBMODULE_INIT=1 — 子模块未 init (GaC gate 可能跑不了, 按需 init)"
+      elif [ "${INIT_ALL_SUBMODULES:-}" = "1" ]; then
+        echo "   init 全部子模块 (INIT_ALL_SUBMODULES=1, 完整环境, 慢 ~60s)..."
+        t0=$(date +%s)
+        init_out=$(cd "$wt" && git submodule update --init 2>&1)
+        init_rc=$?
+        t1=$(date +%s)
+        init_cnt=$(echo "$init_out" | grep -cE "checked out|initialized" || echo 0)
+        echo "   ✅ 全部 init (${init_cnt} 子模块, $((t1-t0))s)"
+      else
+        echo "   init GaC gate 依赖子模块 ($GATE_SUBS; 其他按需 / INIT_ALL_SUBMODULES=1)..."
+        t0=$(date +%s)
+        init_out=$(cd "$wt" && git submodule update --init $GATE_SUBS 2>&1)
+        init_rc=$?
+        t1=$(date +%s)
+        init_cnt=$(echo "$init_out" | grep -cE "checked out|initialized" || echo 0)
+        if [ $init_rc -eq 0 ]; then
+          echo "   ✅ gate 依赖 init 完成 (${init_cnt} 子模块, $((t1-t0))s)"
+        else
+          echo "   ⚠️  gate 依赖 init 失败 (rc=$init_rc, $((t1-t0))s):"
+          echo "$init_out" | tail -3
+        fi
+      fi
       echo ""
       echo "   下一步:"
       echo "     cd $wt"
       echo "     # ... 工作 (改文件, commit) ..."
-      echo "     # 改子模块先 init: git submodule update --init <submodule>"
       echo "     gac-worktree.sh submit $session"
     fi
     ;;
