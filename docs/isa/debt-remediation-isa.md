@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 35/51
+progress: 42/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -76,7 +76,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-9: `omo lint dead-path-references` 新增——扫描 `.py` 中 `.omo/<dir>/` 字符串，校验目录存在（probe: lint exit 0）。
 - [~] ISC-10 (部分治本): `omo task` 状态变更后经 cli.py post-hook 调 `refresh_outputs()`（healing 入口待补）。Verified: helper 触发后活看板 `.omo/debt/dashboard/current.yaml` generated_at 刷新到 `2026-06-30T23:28:07Z`。但揭示两套看板分裂（ISC-50）——停更的 `_control/debt-dashboard/` 由独立生成器产生，post-hook 不影响它。
 - [x] ISC-11: X2 freshness rule `X2-FRESH-DEBT-DASHBOARD` 新增（target `.omo/debt/dashboard/current.yaml`，mechanism generated_at-staleness，threshold 7 天，action warn）。Verified: `x2-freshness-rules.yaml` 含该 rule_id。治本 ISC-10 post-hook 失效后看板停更的检测缺口。
-- [ ] ISC-12: `omo lint dashboard-registry-consistency` 新增——`dashboard.debt_categories.*.partial == registry.count(lifecycle_state=partial)`（probe: lint exit 0）。
+- [x] ISC-12: `omo lint dashboard-registry-consistency` 新增——`dashboard.debt_categories.*.partial == registry.count(lifecycle_state=partial)`（probe: lint exit 0）。
 - [x] ISC-13 (anti): 随 ISC-1 实现。Verified: `_health_score_from_anomalies` 仅赋值 `governance_anomaly_score`，`health_score` 由 `_composite_health_score` 产出（不再单由 anomaly 决定）。
 - [x] ISC-14: Anti: 任何 `.py` 重新出现 `.omo/debt/` 字面量（probe: `omo lint dead-path-references` 加入 pre-commit）。
 
@@ -107,26 +107,26 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [ ] ISC-34: `agora/mcp/resolver/services.py` 拆分至 ≤800 行（probe: `wc -l` 验证；BOS 路由测试全绿）。
 - [ ] ISC-35: `cockpit/commands/research.py` 拆分至 ≤800 行（probe: `wc -l` 验证；cockpit research 子命令契约不变）。
 - [x] ISC-36: `gbrain todo-ingress` 命令新建，解析 `TODOS.md` 为 omo debt item（probe: `--dry-run` 对 T8 输出 debt item 结构）。
-- [ ] ISC-37: gbrain TODOS.md 的 planned 项 ingress 进 `debt.yaml`（probe: registry 含 `source_ref: gbrain/TODOS.md` 条目）。
-- [ ] ISC-38: aetherforge gateway `compat` 模块加 `deprecated_at` + `removed_in` 版本号（probe: `rg 'deprecated_at|removed_in' projects/aetherforge/packages/gateway/src/llm_gateway/compat.py` 命中）。
-- [ ] ISC-39: aetherforge `compat` deprecation warning 计数进观测（probe: cockpit health 含 compat_warning 计数）。
+- [x] ISC-37: gbrain TODOS.md 的 planned 项 ingress 进 `debt.yaml`（probe: registry 含 `source_ref: gbrain/TODOS.md` 条目）。
+- [x] ISC-38: aetherforge gateway `compat` 模块加 `deprecated_at` + `removed_in` 版本号（probe: `rg 'deprecated_at|removed_in' projects/aetherforge/packages/gateway/src/llm_gateway/compat.py` 命中）。
+- [x] ISC-39: aetherforge `compat` deprecation warning 计数进观测（probe: cockpit health 含 compat_warning 计数）。
 - [x] ISC-40: Anti: TASK 描述重新硬编码源文件行数（probe: `doc-claim-lint` 扩展覆盖 task yaml）。
 - [x] ISC-41: Anti: omo God Module 单文件重回 >1000 行（probe: `omo lint god-module` 阈值 ≤1000）。
 
 ### Wave 4 — 依赖 + 运行时 + 架构债
 
-- [ ] ISC-42: fastmcp 协议适配层评估 ADR——`projects/mcp-shim` 或 `bus-foundation` 内 shim（probe: ADR 存在，列 3 个方案 + 选型理由）。
+- [x] ISC-42: fastmcp 协议适配层评估 ADR——`projects/mcp-shim` 或 `bus-foundation` 内 shim（probe: ADR 存在，列 3 个方案 + 选型理由）。
 - [x] ISC-43: 小众依赖（cloakbrowser/scrapling/mem0ai/semantica/graphiti-core）每个有 `vendor-fork-or-pin` 决策记录（probe: `.omo/_knowledge/decisions/` 含 1 份 supply-chain ADR 覆盖 5 个依赖）。
 - [ ] ISC-44: `minerva[tier2]` 拆为可选 extra——基础 minerva 不带 neo4j/graphiti（probe: `minerva/pyproject.toml` 的 `[project.optional-dependencies]` 含 tier2）。
 - [ ] ISC-45: `bos://analysis/minerva/research` 在 tier2 缺失时降级返回（probe: 缺 neo4j 时 MCP 调用返回结构化降级提示而非 crash）。
 - [ ] ISC-46: `omo workspace status` 作为 worktree dirty 计数唯一 SSOT（probe: 命令输出 dirty 计数；system.yaml/mof-drift 指针引用）。
-- [ ] ISC-47: bus-foundation 降级 ADR——bus 不可用时 omo/runtime fallback 路径（probe: ADR 存在，含同步直写+重试方案）。
-- [ ] ISC-48: L0GovernanceView 接口评估 ADR——ecos 依赖接口而非 L2 omo 包（probe: ADR 存在，列 ecos→omo 上穿的接口化方案）。
+- [x] ISC-47: bus-foundation 降级 ADR——bus 不可用时 omo/runtime fallback 路径（probe: ADR 存在，含同步直写+重试方案）。
+- [x] ISC-48: L0GovernanceView 接口评估 ADR——ecos 依赖接口而非 L2 omo 包（probe: ADR 存在，列 ecos→omo 上穿的接口化方案）。
 
 ### Wave 1 执行中新发现的债务（实证驱动）
 
 - [x] ISC-49: `governance-alerts.yaml` 第 10 行 `>` → `#`（markdown blockquote 改 yaml 注释）。Verified: `safe_load_all` 成功，10 条 rules 首次被标准解析器读取（doc[1] 含 version/description/rules/channels）。注：此为 .omo/ 语法修复（文件全局损坏任何 broker 也读不了，修是治理前置），follow-up 建议走 governance-state-mutation 补审计 trail。dispatcher `_load_alert_rules` 容错保留（更鲁棒，兼容未来）。
-- [ ] ISC-50: 两套 dashboard 分裂——`.omo/debt/dashboard/current.yaml`（omo refresh 写，活，324B）vs `.omo/_control/debt-dashboard/current.yaml`（`scripts/generate-governance-dashboard.py` 写，停更 2026-06-11，1.1KB，被 cockpit/x2-staleness/spec 消费）。治本需 ADR 定 SSOT + 消费方统一 + 独立生成器触发器。这是 M1 看板停更的真正根因（非 ISC-10 的 refresh 触发问题）。
+- [~] ISC-50: 两套 dashboard 分裂——`.omo/debt/dashboard/current.yaml`（omo refresh 写，活，324B）vs `.omo/_control/debt-dashboard/current.yaml`（`scripts/generate-governance-dashboard.py` 写，停更 2026-06-11，1.1KB，被 cockpit/x2-staleness/spec 消费）。治本需 ADR 定 SSOT + 消费方统一 + 独立生成器触发器。这是 M1 看板停更的真正根因（非 ISC-10 的 refresh 触发问题）。
 
 ## Test Strategy
 
