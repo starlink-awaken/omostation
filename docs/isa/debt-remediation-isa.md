@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 34/51
+progress: 35/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -103,7 +103,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [ ] ISC-30: 5 个 P1 任务（F7114ABA/94BB9C70/6B868907/13AD0B21/67C63D6C）全部 `approval_state: granted` 或显式归档（probe: 5 个 yaml 的 approval 字段非 null）。
 - [x] ISC-31: `overdue_approval` 告警——dispatcher 加 `_eval_overdue_approval` evaluator + governance-alerts.yaml 加 `x3-overdue-approval` rule。Verified: dry-run `x3-overdue-approval: 'overdue_approval_count > 0' → miss (current=0)`（5 个 P1 任务 age 6 天 < 14 天阈值，预防性，未来超时触发）。
 - [x] ISC-32: `auto_promote_eligible` 评估 ADR——无依赖低风险 P1 自动晋升通道（probe: `.omo/_knowledge/decisions/` 含该 ADR）。
-- [ ] ISC-33: `omo_ingress` 系列 God Module 用 `omo-srp-refactor` skill 拆分，单文件 ≤600 行（probe: `wc -l projects/omo/src/omo/omo_ingress_*.py` max ≤600）。
+- [~] ISC-33: `omo_ingress` 系列 God Module 用 `omo-srp-refactor` skill 拆分，单文件 ≤600 行（probe: `wc -l projects/omo/src/omo/omo_ingress_*.py` max ≤600）。
 - [ ] ISC-34: `agora/mcp/resolver/services.py` 拆分至 ≤800 行（probe: `wc -l` 验证；BOS 路由测试全绿）。
 - [ ] ISC-35: `cockpit/commands/research.py` 拆分至 ≤800 行（probe: `wc -l` 验证；cockpit research 子命令契约不变）。
 - [x] ISC-36: `gbrain todo-ingress` 命令新建，解析 `TODOS.md` 为 omo debt item（probe: `--dry-run` 对 T8 输出 debt item 结构）。
@@ -111,7 +111,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [ ] ISC-38: aetherforge gateway `compat` 模块加 `deprecated_at` + `removed_in` 版本号（probe: `rg 'deprecated_at|removed_in' projects/aetherforge/packages/gateway/src/llm_gateway/compat.py` 命中）。
 - [ ] ISC-39: aetherforge `compat` deprecation warning 计数进观测（probe: cockpit health 含 compat_warning 计数）。
 - [x] ISC-40: Anti: TASK 描述重新硬编码源文件行数（probe: `doc-claim-lint` 扩展覆盖 task yaml）。
-- [ ] ISC-41: Anti: omo God Module 单文件重回 >1000 行（probe: `omo lint god-module` 阈值 ≤1000）。
+- [x] ISC-41: Anti: omo God Module 单文件重回 >1000 行（probe: `omo lint god-module` 阈值 ≤1000）。
 
 ### Wave 4 — 依赖 + 运行时 + 架构债
 
