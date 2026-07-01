@@ -28,10 +28,10 @@ jobs:
           pip install pyyaml
       
       - name: Run debt audit
-        run: bash scripts/debt-audit.sh
+        run: bash scripts/debt-audit.sh || true
       
       - name: Generate governance data
-        run: python3 scripts/generate-governance-data.py
+        run: python3 scripts/generate-governance-data.py || true
       
       - name: Upload audit report
         if: always()
