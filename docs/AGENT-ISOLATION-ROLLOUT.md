@@ -113,7 +113,8 @@
   - **ISC-3b**(2c): pre-push blocking 守卫拒绝 direct push to main(非 work/* 分支,exit 1)
   - **ISC-3c**(2d,修正): worktree commit 时 `post-commit` L0 萃取触发 (commit 级, worktree 共享 `.git/hooks`; `~/.ecos/commit-impact.log` 有记录). PR merge 是服务端 commit, **不触发本地 post-commit** — 萃取已在 worktree commit 时完成, 派生文件进 PR
   - **ISC-3d**(2d): ≥1 次完整 PR 流程跑通(claim→submit→merge→release),gitlink 不悬空
-  - **ISC-3e**(2d smoke 发现,⚠️ 前置阻塞): worktree claim 后**必须** `git submodule update --init` 才能跑 GaC gate —— `mof-schema-validate`/`mof-state-bridge`/`mof-drift`/`governance-evolution`/`doc-ssot-lint`/`doc-ssot-snapshots` 依赖子模块(`projects/ecos`/`scripts`)内脚本, 未 init 则 6+ check FAIL. **C+D(doc-link-check scope + sync-submodules 跳过)只局部治本, 真治本是 claim 自动 init 子模块**(待实现, 见 §10 followup)
+  - **ISC-3e**(2d smoke 发现,✅ 已治本 commit `2f78a9e9`): `gac-worktree.sh claim` 自动 init GaC gate 依赖子模块 (`projects/ecos` + `scripts`, ~7s) → `mof-schema-validate`/`mof-state-bridge`/`mof-drift`/`doc-ssot-snapshots` PASS. `INIT_ALL_SUBMODULES=1` 全部 (~60s), `SKIP_SUBMODULE_INIT=1` 跳过. 8x 加速 vs 全部 init
+  - **ISC-3f**(ISC-3e 后新发现,⚠️ 剩余阻塞): worktree 完整 PR 流程仍被拦 — `bin/governance-evolution.py` untracked (并发 agent 没 commit, worktree checkout 没有) + `doc-ssot-lint` 依赖 generated (`docs/generated/agent-gac-rules.md`, worktree 没). 真治本: GaC gate worktree 检测 → worktree-wide check skip, CI strict 兜底 (同 [[doc-link-check scope staged]] 模式)
 - **ISC-4**(Phase 3): `gh api repos/starlink-awaken/omostation/branches/main/protection` 返回 **200**(非 404)。
 - **ISC-5**(Phase 3): direct push main 被拒(实测 `git push origin main` 被 GitHub 拒,提示需 PR)。
 - **ISC-6**(全程): `gac-local-gate` 在 per-session worktree 下仍 PASS(临时治本兼容,第二道防线不破)。
