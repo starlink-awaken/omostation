@@ -25,9 +25,9 @@ jobs:
       # Audit execution_log.jsonl for schema drift
       - name: Audit executor execution_log.jsonl
         run: |
-          cd projects/runtime
           uv sync --quiet
 
           # R52 P0: audit 轻量脚本，验证 JSON + Z-suffix + 必填字段
+          # CI checks out the runtime repo directly (not as workspace subdir)
           uv run python scripts/audit_execution_log.py \
             --path ~/.runtime/execution_log.jsonl || true
