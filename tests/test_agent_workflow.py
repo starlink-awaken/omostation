@@ -925,6 +925,7 @@ def test_change_lane_knows_agent_workflow_files() -> None:
     assert module.classify("bin/agent-workflow.py", set()) == "governance_code"
     assert module.classify("bin/doc-ssot-lint.py", set()) == "governance_code"
     assert module.classify("bin/governance-evolution.py", set()) == "governance_code"
+    assert module.classify("tests/test_governance_evolution.py", set()) == "governance_code"
     assert module.classify("bin/project-layer-index.py", set()) == "governance_code"
     assert module.classify(".omo/_truth/registry/agent-workflows.yaml", set()) == "governance_code"
     assert module.classify(".agents/skills/project-governance/SKILL.md", set()) == "governance_code"
