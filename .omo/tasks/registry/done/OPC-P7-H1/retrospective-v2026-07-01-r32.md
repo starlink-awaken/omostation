@@ -1,17 +1,17 @@
-# OPC P7-H1 retrospective — v2026-06-09-r9
+# OPC P7-H1 retrospective — v2026-07-01-r32
 
-Generated: 2026-06-09T23:00:00Z
+Generated: 2026-07-01T07:20:02Z
 
 ## cycle state
 - stage: ship
-- version: v2026-06-09-r9
+- version: v2026-07-01-r32
 - notes: .omo/_delivery/release/CHANGELOG.md
 
 ## 3 字段 (summary/validation/debt)
 ```json
 {
   "summary": {
-    "commit_count": 485,
+    "commit_count": 486,
     "drift_count": 1
   },
   "validation": {
