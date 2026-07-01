@@ -1,5 +1,11 @@
 name: eCOS CI
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+    paths: ['projects/ecos/**', '.github/workflows/ecos-ci.yml']
+  pull_request:
+    branches: [main]
+    paths: ['projects/ecos/**', '.github/workflows/ecos-ci.yml']
 jobs:
   test:
     runs-on: ubuntu-latest

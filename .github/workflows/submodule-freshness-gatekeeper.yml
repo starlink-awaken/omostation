@@ -17,6 +17,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5

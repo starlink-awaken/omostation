@@ -33,6 +33,7 @@ jobs:
           cd projects/omo
           DATE=$(date -u +%Y-%m-%d)
           OUTPUT=".omo/_delivery/audit-rollout/${DATE}.json"
+          echo "DATE=$DATE" >> $GITHUB_ENV
           uv run --no-sync python -m omo.cli audit-rollout \
             --repos "omostation:." \
             --repos "gbrain:../gbrain" \
@@ -43,11 +44,13 @@ jobs:
               exit 0
             }
       - name: Upload audit-rollout-metrics artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: audit-rollout-metrics
-          path: ".omo/_delivery/audit-rollout/${DATE}.json"
+          path: "projects/omo/.omo/_delivery/audit-rollout/${{ env.DATE }}.json"
           retention-days: 90
+          if-no-files-found: ignore
       - name: Run omo logs audit --metrics (Round 41 P0 — §17 度量接 cron)
         # §17.8 实质化 (`--exclude-locked` 默认 True) 让 §17.6 健康度评分可执行
         # 退出码语义 (R39 P0):

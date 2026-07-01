@@ -1,7 +1,13 @@
 name: family-hub-ci
 # P47 E: family-hub 双栈 (TS 前端 App.tsx + Python family_hub 包). CI 跑 Python tests/.
 # TS 前端 vite build 留后续 (需前端构建链配置).
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+    paths: ['projects/family-hub/**', '.github/workflows/family-hub-ci.yml']
+  pull_request:
+    branches: [main]
+    paths: ['projects/family-hub/**', '.github/workflows/family-hub-ci.yml']
 
 jobs:
   test:

@@ -1,29 +1,8 @@
-name: Runtime CI
+name: Runtime CI (no-op — CI lives in runtime repo)
 on:
-  push:
-    paths:
-      - 'projects/runtime/**'
-  pull_request:
-    paths:
-      - 'projects/runtime/**'
+  workflow_dispatch: {}
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v3
-      - name: Install dependencies
-        # P41-W1 fix: projects/runtime is .gitignore'd. Runtime CI lives in the runtime repo.
-        run: |
-          echo "projects/runtime is .gitignore'd in this monorepo — its CI lives in the runtime repo."
-          echo "This is a deliberate no-op. See .omo/_delivery/phase41-w1-fix-ci.md for context."
-      - name: Run tests
-        run: |
-          echo "skipped (see above)"
+      - run: echo "projects/runtime is .gitignore'd — its CI lives in the runtime repo."

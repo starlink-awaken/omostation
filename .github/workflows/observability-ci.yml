@@ -1,7 +1,13 @@
 name: observability-ci
 # P47 E: observability 是 docker-compose (Langfuse + webhook-bridge → omo).
 # CI = compose config 语法校验 + webhook-bridge.py 语法检查.
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+    paths: ['projects/observability/**', '.github/workflows/observability-ci.yml']
+  pull_request:
+    branches: [main]
+    paths: ['projects/observability/**', '.github/workflows/observability-ci.yml']
 
 jobs:
   validate:

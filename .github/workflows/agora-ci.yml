@@ -1,5 +1,11 @@
 name: Agora CI
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+    paths: ['projects/agora/**', '.github/workflows/agora-ci.yml']
+  pull_request:
+    branches: [main]
+    paths: ['projects/agora/**', '.github/workflows/agora-ci.yml']
 jobs:
   test:
     runs-on: ubuntu-latest
