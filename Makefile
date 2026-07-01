@@ -1,4 +1,4 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -58,6 +58,10 @@ help:
 	@echo "=== 开发环境 ==="
 	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate)"
 	@echo ""
+	@echo "=== 本地 CI ==="
+	@echo "make ci-local            本地 CI 预检 (push 前跑, ~30s, 拦 90% CI 失败)"
+	@echo "make ci-local-fast       快速模式 (跳 pytest, ~5s, 仅 governance+lint+yaml)"
+	@echo ""
 	@echo "make help                显示本消息"
 
 install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate). 新 clone 必跑.
@@ -65,6 +69,54 @@ install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/S
 	install -m 755 .githooks/pre-commit .git/hooks/pre-commit
 	@echo "✅ 已装 .git/hooks/pre-push (push 时 sync 子模块 + Phase 2a direct-push-to-main advisory 守卫, 防 CI 悬空)"
 	@echo "✅ 已装 .git/hooks/pre-commit (commit 时 GaC/SSOT 本地硬门)"
+
+# ── 本地 CI 预检 ────────────────────────────────────────────────────────────────
+# 目的: push 前本地跑一遍 CI 等价检查, 拦 90% CI 失败, 省等 CI 的时间.
+# 分两档:
+#   ci-local-fast  (~5s)  — GaC gate + ruff + YAML 语法 (无 pytest)
+#   ci-local       (~30s) — 上述 + omo pytest + integration tests
+# 嵌入点: pre-push hook (见 .githooks/pre-push)
+
+ci-local: ci-local-fast
+	@echo ""; \
+	echo "── pytest (omo unit tests) ──────────────────────────"; \
+	(cd projects/omo && uv run pytest tests/ -q --tb=short 2>&1) | sed 's/^/[pytest] /'; \
+	pytest_rc=$${PIPESTATUS[0]}; \
+	echo ""; \
+	echo "── integration tests ────────────────────────────────"; \
+	bash tests/integration/run-all.sh 2>&1 | sed 's/^/[integration] /'; \
+	integration_rc=$${PIPESTATUS[0]}; \
+	echo ""; \
+	if [ "$$pytest_rc" != "0" ] || [ "$$integration_rc" != "0" ]; then \
+		echo "❌ ci-local: 有检查未通过 (pytest=$$pytest_rc, integration=$$integration_rc)"; \
+		exit 1; \
+	else \
+		echo "✅ ci-local: 全部通过"; \
+	fi
+
+ci-local-fast:
+	@echo "════════════════════════════════════════════════════"
+	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
+	@echo "════════════════════════════════════════════════════"
+	@CI_LOCAL_FAIL=0; \
+	echo "── GaC local gate ───────────────────────────────────"; \
+	uv run --with pyyaml python bin/gac-local-gate.py 2>&1 | sed 's/^/[gac] /' || CI_LOCAL_FAIL=1; \
+	echo ""; \
+	echo "── dir-hygiene ──────────────────────────────────────"; \
+	uv run --with pyyaml python bin/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
+	echo ""; \
+	echo "── ruff check (omo + scripts) ──────────────────────"; \
+	ruff check projects/omo/src scripts --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
+	echo ""; \
+	echo "── YAML 语法校验 (workflows + protocols) ───────────"; \
+	uv run --with pyyaml python3 bin/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
+	echo ""; \
+	if [ "$$CI_LOCAL_FAIL" = "1" ]; then \
+		echo "❌ ci-local-fast: 有检查未通过"; \
+		exit 1; \
+	else \
+		echo "✅ ci-local-fast: 全部通过 (~5s)"; \
+	fi
 
 agent-workflows:
 	uv run --with pyyaml python bin/agent-workflow.py list

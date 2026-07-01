@@ -64,4 +64,22 @@ EOF
 # sync 子模块, 结果显示到 stderr; 失败即阻断 push.
 "$ROOT/bin/sync-submodules-push.sh" 2>&1 | sed 's/^/[pre-push] /' >&2
 python3 "$ROOT/bin/submodule-reachability-gate.py" --source head --fetch 2>&1 | sed 's/^/[reachability] /' >&2
+
+# ── ci-local-fast: 本地 CI 预检 (~5s) ────────────────────────────
+# GaC gate + ruff + YAML 语法. 拦 90% CI 失败, 省等 CI 时间.
+# 绕过: git push --no-verify (跳整个 hook, 自担风险)
+#       CI_LOCAL_SKIP=1   (跳 ci-local-fast, 仍跑 sync + reachability)
+if [ "${CI_LOCAL_SKIP:-}" != "1" ]; then
+  if [ -f "$ROOT/Makefile" ]; then
+    make -C "$ROOT" ci-local-fast 2>&1 | sed 's/^/[ci-local] /' >&2 || {
+      cat >&2 <<EOF
+[ci-local] ❌ 本地 CI 预检未通过. 修复后重试, 或:
+  CI_LOCAL_SKIP=1 git push ...   (跳过预检, 自担 CI 失败风险)
+  git push --no-verify           (跳整个 hook, 不推荐)
+EOF
+      exit 1
+    }
+  fi
+fi
+
 exit 0
