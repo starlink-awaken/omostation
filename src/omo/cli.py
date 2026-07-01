@@ -234,6 +234,12 @@ def main(argv: list[str] | None = None) -> int:
 
         return worker_main(args[1:])
 
+    if args and args[0] == "workspace":
+        # ISC-46: workspace status 作为 worktree dirty 计数唯一 SSOT (治本 E3)
+        from omo.omo_workspace import main as workspace_main
+
+        return workspace_main(args[1:])
+
     if args and args[0] == "strategy":
         print(
             "⚠️ DEPRECATED: 'omo strategy' 已迁移，建议改用 'workspace compass radar' 或 'workspace compass gc'。"
