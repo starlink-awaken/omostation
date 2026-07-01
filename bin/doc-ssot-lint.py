@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -204,6 +205,10 @@ def check_semantic_contracts(filepath: Path, content: str) -> list[tuple[int, st
 
 
 def check_required_generated_artifacts() -> list[tuple[Path, int, str, str]]:
+    # CI 环境 (fresh checkout) 无 generated (gitignored, post-commit L0 萃取产物) → skip.
+    # 本地 (post-commit 后有 generated) 才验. 避免 CI false positive (F2: CI strict 不因 generated 红).
+    if os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true":
+        return []
     findings: list[tuple[Path, int, str, str]] = []
     for path, label in [
         (GENERATED_GAC_DIGEST, "agent-gac-rules.md"),
