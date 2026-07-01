@@ -4,7 +4,7 @@ slug: 20260701-143000_debt-rootcause-remediation
 effort: deep
 effort_source: explicit
 phase: observe
-progress: 33/51
+progress: 34/51
 mode: interactive
 started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
@@ -73,7 +73,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-6: `bin/check-alert-coverage.py` 新增（主仓 bin/，复用 dispatcher EVALUATORS via importlib）。Verified: 报 4 uncovered (fail/warn/sla_violated/ci_count)，exit 1 if >0。原 probe "omo lint" 用主仓检测器等效达成。
 - [x] ISC-7: `.omo/debt/` 字符串引用从代码库清零（probe: `rg '\.omo/debt' --glob '!docs/isa/**'` 在 `bin/`、`scripts/`、`projects/`、`tests/` 返回空）。
 - [x] ISC-8: `projects/omo/src/omo/omo_paths.py` 已存在（实测：含 DEBT_DIR/STATE_SYSTEM_YAML/TRUTH_DIR/CONTROL_DIR/DEBT_ITEMS_DIR + `find_omo_dir()` helper + `__all__` 导出 41 常量，非本批次新建但已治本）。
-- [ ] ISC-9: `omo lint dead-path-references` 新增——扫描 `.py` 中 `.omo/<dir>/` 字符串，校验目录存在（probe: lint exit 0）。
+- [x] ISC-9: `omo lint dead-path-references` 新增——扫描 `.py` 中 `.omo/<dir>/` 字符串，校验目录存在（probe: lint exit 0）。
 - [~] ISC-10 (部分治本): `omo task` 状态变更后经 cli.py post-hook 调 `refresh_outputs()`（healing 入口待补）。Verified: helper 触发后活看板 `.omo/debt/dashboard/current.yaml` generated_at 刷新到 `2026-06-30T23:28:07Z`。但揭示两套看板分裂（ISC-50）——停更的 `_control/debt-dashboard/` 由独立生成器产生，post-hook 不影响它。
 - [x] ISC-11: X2 freshness rule `X2-FRESH-DEBT-DASHBOARD` 新增（target `.omo/debt/dashboard/current.yaml`，mechanism generated_at-staleness，threshold 7 天，action warn）。Verified: `x2-freshness-rules.yaml` 含该 rule_id。治本 ISC-10 post-hook 失效后看板停更的检测缺口。
 - [ ] ISC-12: `omo lint dashboard-registry-consistency` 新增——`dashboard.debt_categories.*.partial == registry.count(lifecycle_state=partial)`（probe: lint exit 0）。
