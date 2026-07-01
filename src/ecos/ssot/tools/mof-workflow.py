@@ -323,6 +323,10 @@ def cmd_validate(args):
             "forge",
             "meta",
             "infra",
+            "governance",
+            "capability",
+            "system",
+            "swarm",
         ]
         if n.get("domain") not in valid_domains:
             errors.append(f"{nid}: 无效的 domain '{n.get('domain')}'")
