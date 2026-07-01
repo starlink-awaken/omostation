@@ -96,10 +96,13 @@ def ssot_extract(
 ECOS_SRC = Path(__file__).resolve().parent
 
 # 复用 domain-manager 逻辑
-from importlib.machinery import SourceFileLoader as _SFL  # noqa: E402
+# 用 importlib.util 正确加载为包内模块, 使 relative import (.domain_manager_cache) 可用
+import importlib.util as _ilu  # noqa: E402
 
 _DM_PATH = ECOS_SRC / "services" / "governance" / "domain_manager.py"
-dm = _SFL("dm", str(_DM_PATH)).load_module()
+_spec = _ilu.spec_from_file_location("ecos.services.governance.domain_manager", _DM_PATH)
+dm = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(dm)
 
 
 @mcp.tool()

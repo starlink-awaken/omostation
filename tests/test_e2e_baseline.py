@@ -225,12 +225,10 @@ class TestE2E_State:  # noqa: N801
         with open(os.path.join(ECOS, "AGENTS.md")) as f:
             agents = f.read()
 
-        # All these should be in AGENTS.md
+        # AGENTS.md 现已走 SSOT 指针 (不硬编码计数), 只验证关键结构存在
         checks = [
-            "Phase | **9",
-            "12 个在线",
-            "5,234",
-            "74 commits",
+            "ecos",
+            "project-registry.yaml",
         ]
         for c in checks:
             assert c in agents, f"AGENTS.md missing: {c}"
