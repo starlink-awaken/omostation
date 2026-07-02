@@ -44,7 +44,10 @@ def load_ssot_rules() -> list[dict]:
 
     if not REGISTRY.exists():
         return []
-    docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
+    try:
+        docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
+    except yaml.YAMLError:
+        return []  # registry 坏了不阻塞编辑 (advisory), gac-drift 事后兜底
     if not docs:
         return []
     rules = docs[-1].get("gac", {}).get("rules", [])
