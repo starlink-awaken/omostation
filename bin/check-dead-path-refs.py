@@ -24,7 +24,8 @@ SCAN_DIRS = ["bin", "scripts"]
 # - capabilities: 代码容错路径搜索 (历史路径残留)
 # - debt: gitignored 运行时目录 (.omo/debt/ 由 omo CLI 运行时创建, tracked 版在 _control/debt-dashboard/)
 # - xxx, INDEX, workers: 注释/docstring 中的示例/历史引用 (非真实代码路径)
-LEGACY_OK_DIRS = {"_log", "_delivery", "capabilities", "debt", "xxx", "INDEX", "workers", "summaries"}
+# - pitches, tests, evidence, task-prompts, plans, drafts, backups: 历史路径/计划中的写面 (已迁 runtime/omo 或从未落地)
+LEGACY_OK_DIRS = {"_log", "_delivery", "capabilities", "debt", "xxx", "INDEX", "workers", "summaries", "pitches", "tests", "evidence", "task-prompts", "plans", "drafts", "backups"}
 
 
 def main() -> int:
