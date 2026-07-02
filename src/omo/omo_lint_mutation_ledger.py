@@ -36,9 +36,10 @@ from omo.omo_ingress_paths import _mutation_log_path
 def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
     root = Path(workspace_root).resolve()
     ledger_path = _mutation_log_path(root / ".omo")
+    # CI fresh checkout 无 runtime/omo (gitignored) — 合法空状态, 不阻断
     if not ledger_path.exists():
-        print(f"❌ omo lint mutation-ledger fail: missing ledger file {ledger_path}")
-        return 1
+        print(f"⚠️ omo lint mutation-ledger: ledger file missing (runtime cache absent, CI fresh checkout), 视为 pass")
+        return 0
 
     entries = read_jsonl(ledger_path)
     if not entries:
