@@ -26,6 +26,7 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("agent-workflow-doctor", ["bin/agent-workflow.py", "doctor"]),
     ("agent-workflow-observe", ["bin/agent-workflow.py", "observe"]),
     ("governance-evolution", ["bin/governance-evolution.py", "validate", "--json"]),
+    ("governance-semantic-gate", ["bin/governance-semantic-gate.py", "--json"]),
     ("mof-schema-validate", ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]),
     ("mof-state-bridge", ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]),
     ("mof-drift", ["bin/mof-drift"]),
@@ -41,6 +42,18 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("matrix-consistency", ["bin/matrix-consistency-lint.py", "--skip-launchd"]),
     # ADR-0121 GCSI: governance convergence (rule registration + score + loop + SSOT)
     ("governance-convergence", ["bin/governance-convergence-lint.py"]),
+    # ADR-0122 S1 F-6: check-* 工具按 false-positive 风险分级接入.
+    # - dashboard-registry / toolbox-ssot: 静默 PASS, 接入 CHECKS 持续守.
+    # - domain-m1-alignment: 非 strict 默认 PASS, 接入 CHECKS 持续守 (drift 不 block).
+    # - check-boundary: 一次 CLI 工具 (check-boundary.py <pkg> [project]), 不接 auto-gate.
+    # - cross-refs / dead-path-refs / alert-coverage: 报 issue 多/设计性未实, 在 CHECKS
+    #   注册但仅 strict 跑 (见 CI_ONLY_CHECKS) — 默认模式不阻塞 pre-commit.
+    ("check-dashboard-registry-consistency", ["bin/check-dashboard-registry-consistency.py"]),
+    ("check-toolbox-ssot", ["bin/check-toolbox-ssot.py"]),
+    ("check-domain-m1-alignment", ["bin/check-domain-m1-alignment.py"]),
+    ("check-cross-refs", ["bin/check-cross-refs.py"]),
+    ("check-dead-path-refs", ["bin/check-dead-path-refs.py"]),
+    ("check-alert-coverage", ["bin/check-alert-coverage.py"]),
 )
 
 
@@ -167,11 +180,24 @@ AGENT_WORKFLOW_GATE_CHECKS = {"agent-workflow-verify-plan", "agent-workflow-comp
 #    init 未覆盖) + 脚本本体. ISC-3f: worktree checkout 拿不到 → pre-commit 跳, CI strict 兜底.
 #  - doc-ssot-lint: 仓库级 SSOT 契约, 依赖 docs/generated/* (gitignored, post-commit L0 萃取,
 #    worktree checkout 没有). scoped 版 (doc-link-check --files) 留 pre-commit, 全量版归 CI.
+#  ADR-0122 S1 F-6: 4 个 check-* 走 CI_ONLY (false-positive 风险高, 不应阻塞 pre-commit):
+#  - check-cross-refs: 报 3173 链接 issue, 大头是 .omo/standards/*.md 引已删 SSOT +
+#    .omo/_archive/ 历史快照 (P71 baseline recovery pattern 接受现状, 见 F-3 commit).
+#  - check-dead-path-refs: 报 36 处, 大头是 scripts/ 子模块 (submodule 非 HEAD),
+#    bin/check-* 工具对 submodule 内文件的引用本质上是 "跨子模块契约", 由子模块维护者管.
+#  - check-alert-coverage: 4/11 rule 无 evaluator (x1-audit-fail/warn, x3-sla-violated,
+#    x4-ci-missing), 属设计性 (X1 实时执行器/sla_violated/ci_count 数据源尚未实现).
+#  - check-domain-m1-alignment: --strict 下报 3 layer drift (model-driven/omo-debt/
+#    family-hub), 已知 ADR-0115 L4 治本路径, 本地+CI 走非 strict (报 drift 不 block),
+#    接 CHECKS 保持续可见. 待 M1 治理治本 (F-14 roadmap) 后改 --strict.
 CI_ONLY_CHECKS = {
     "project-layer-index",
     "dependency-baseline-drift",
     "governance-evolution",
     "doc-ssot-lint",
+    "check-cross-refs",
+    "check-dead-path-refs",
+    "check-alert-coverage",
 }
 
 # CI 环境跳过的 check (CI fresh checkout 无运行时 env / generated 派生物, 跑恒红无意义).
