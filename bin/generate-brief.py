@@ -64,15 +64,18 @@ def scan_x3_metrics() -> dict:
         "knowledge_reuse": 0
     }
     
-    # 1. 创意创作发布度量 (检测并扫描 ~/Documents/@驾驶舱/创意创作/ 或者是主仓相关目录)
+    # 1. 创意创作发布度量 (检测并递归扫描实际创意创作输出路径)
     creation_dirs = [
+        Path("/Users/xiamingxing/Documents/@创意创作/_outputs"),
+        Path("/Users/xiamingxing/Documents/@创意创作"),
         WORKSPACE / "创意创作" / "_outputs",
         Path("/Users/xiamingxing/Documents/@驾驶舱/_outputs"),
         WORKSPACE / "data" / "creations"
     ]
     for d in creation_dirs:
         if d.is_dir():
-            files = [f for f in d.iterdir() if f.is_file() and not f.name.startswith(".")]
+            # 递归统计所有文件 (排除隐藏文件)
+            files = [f for f in d.rglob("*") if f.is_file() and not f.name.startswith(".")]
             metrics["creations"] = len(files)
             break
             
@@ -89,11 +92,25 @@ def scan_x3_metrics() -> dict:
                 pass
         metrics["deliveries"] = delivery_cards
 
-    # 3. 知识复用度量 (扫描 KOS 索引数)
+    # 3. 知识复用度量 (真实查询 KOS SQLite 检索库)
     kos_dir = WORKSPACE / "kos"
-    if kos_dir.is_dir():
-        # 统计索引文件数量作为复用度量的代表
-        metrics["knowledge_reuse"] = len(list(kos_dir.rglob("*")))
+    sqlite_db = kos_dir / "kos-index.sqlite"
+    if sqlite_db.is_file():
+        import sqlite3  # noqa: PLC0415
+        try:
+            conn = sqlite3.connect(str(sqlite_db))
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM documents")
+            doc_count = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM kos_entities")
+            entity_count = cursor.fetchone()[0]
+            metrics["knowledge_reuse"] = doc_count + entity_count
+            conn.close()
+        except Exception:
+            # 降级降速扫描
+            metrics["knowledge_reuse"] = len([f for f in kos_dir.rglob("*") if f.is_file()])
+    else:
+        metrics["knowledge_reuse"] = len([f for f in kos_dir.rglob("*") if f.is_file()])
         
     return metrics
 
