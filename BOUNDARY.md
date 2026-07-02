@@ -43,3 +43,7 @@
 - MOF 元模型 SSOT：`projects/ecos/src/ecos/ssot/mof/` (M3/M2/M1 三层)
 - L0 约束 SSOT：`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`
 - 测试：`cd projects/ecos && uv run pytest tests/ -q`
+
+## 架构演进与项目边界索引
+
+参见工作区架构演进与项目边界：[`../../docs/ARCHITECTURE-EVOLUTION.md`](../../docs/ARCHITECTURE-EVOLUTION.md)
