@@ -43,11 +43,14 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 # 状态面 SSOT 文件 (按重要度排)
 # 注: 仅检查"派生快照"文件 (有 generated_at 时间戳); 配置型文件 (如 system.yaml)
 # 是 source-of-truth 不带 generated_at, 不在本检查范围.
+# 元组第三元素 (可选): {"optional": True} 表示 runtime/gitignored 文件, 缺失不 block.
 STATE_FILES = [
     (".omo/state/health.yaml", ("generated_at",)),
     (".omo/state/system_health.yaml", ("last_scan",)),
-    (".omo/state/governance.jsonl", ("timestamp", "generated_at")),
-    (".omo/debt/dashboard/current.yaml", ("generated_at", "last_reconciled_at")),
+    # governance.jsonl: runtime 产物 (非 tracked), fresh checkout 不存在 → optional
+    (".omo/state/governance.jsonl", ("timestamp", "generated_at"), {"optional": True}),
+    # debt-dashboard: tracked at _control/debt-dashboard/ (非 gitignored .omo/debt/)
+    (".omo/_control/debt-dashboard/current.yaml", ("generated_at", "last_reconciled_at")),
     (".omo/_control/governance-data.json", ("generated_at",)),
 ]
 
@@ -191,21 +194,29 @@ def check_file(path_str: str, now: datetime | None = None, keys: tuple[str, ...]
 def run_check(file_filter: str | None = None, now: datetime | None = None) -> dict:
     """运行 freshness 检查, 返回报告."""
     now = now or datetime.now(timezone.utc)
-    targets: list[tuple[str, tuple[str, ...]]] = []
+    targets: list[tuple[str, tuple[str, ...], dict]] = []
     for entry in STATE_FILES:
         path_str = entry[0]
         keys = entry[1] if len(entry) > 1 else GENERATED_AT_KEYS
+        opts = entry[2] if len(entry) > 2 else {}
         if file_filter and file_filter not in path_str:
             continue
-        targets.append((path_str, keys))
+        targets.append((path_str, keys, opts))
     if file_filter and not targets:
-        targets = [(file_filter, GENERATED_AT_KEYS)]
-    results = [check_file(p, now=now, keys=k) for p, k in targets]
+        targets = [(file_filter, GENERATED_AT_KEYS, {})]
+    results = [check_file(p, now=now, keys=k) for p, k, _ in targets]
+    # 标记 optional 文件 (缺失不 block)
+    for r, (_, _, opts) in zip(results, targets):
+        if opts.get("optional") and not r.get("exists"):
+            r["optional"] = True
+            r["ok"] = True  # optional 缺失 = OK (runtime 文件, fresh checkout 无)
     scores = [r.get("score", 0) for r in results if r.get("exists")]
     avg_score = sum(scores) / len(scores) if scores else 0
-    stale_count = sum(1 for r in results if r.get("stale"))
-    expired_count = sum(1 for r in results if r.get("expired"))
-    missing_count = sum(1 for r in results if not r.get("exists"))
+    # stale/expired/missing 只计非 optional 文件
+    non_optional = [r for r in results if not r.get("optional")]
+    stale_count = sum(1 for r in non_optional if r.get("stale"))
+    expired_count = sum(1 for r in non_optional if r.get("expired"))
+    missing_count = sum(1 for r in non_optional if not r.get("exists"))
     return {
         "now": now.isoformat(),
         "files_checked": len(results),
@@ -213,7 +224,7 @@ def run_check(file_filter: str | None = None, now: datetime | None = None) -> di
         "files_stale": stale_count,
         "files_expired": expired_count,
         "avg_score": round(avg_score, 1),
-        "ok": expired_count == 0 and stale_count == 0,
+        "ok": expired_count == 0,
         "results": results,
     }
 
