@@ -46,6 +46,8 @@ ALLOWED_PERSISTENCE_MODES = {
     "append_only",
     "archival",
     "compatibility_alias",
+    "derived",       # .omo/_generated/ — CI/generated artifacts (gitignored)
+    "ephemeral",     # .omo/autopilot/ — autopilot runtime state (session scoped)
 }
 
 ALLOWED_RETENTION_MODES = {
@@ -55,6 +57,7 @@ ALLOWED_RETENTION_MODES = {
     "append_forever",
     "manual_archive",
     "alias_only",
+    "session_only",  # .omo/autopilot/ — session scoped retention
 }
 
 EXPECTED_ASSET_LIFECYCLE_BY_TYPE: dict[str, tuple[str, str]] = {
