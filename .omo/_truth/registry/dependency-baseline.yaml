@@ -1,0 +1,392 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-28
+---
+
+# Workspace External Dependency Baseline
+# SSOT: .omo/_truth/registry/dependency-baseline.yaml
+# Generated: 2026-06-20
+# Purpose: unified minimum version constraints for external packages consumed by workspace projects
+# Maintainer: workspace governance
+# Update cadence: after any pyproject.toml dependency change
+
+version: '2026-06-20'
+description: 'Workspace-wide external dependency baseline. Production and dev/test rules are separated. When adding a new external dependency, align its minimum constraint with this baseline.'
+
+rules:
+  production:
+    - name: PyMuPDF
+      baseline: '>=1.23.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kos
+    - name: aiohttp
+      baseline: '>=3.9'
+      reason: 'Consumed by 2 project(s)'
+      consumers:
+        - agora
+        - core-models
+    - name: apscheduler
+      baseline: '>=3.11.2'
+      reason: 'Consumed by 2 project(s)'
+      consumers:
+        - minerva
+        - runtime
+    - name: beautifulsoup4
+      baseline: '>=4.12'
+      reason: 'Consumed by 2 project(s)'
+      consumers:
+        - ecos
+        - minerva
+    - name: click
+      baseline: '>=8.1.0'
+      reason: 'Consumed by 5 project(s)'
+      consumers:
+        - aetherforge-gateway[legacy]
+        - codeanalyze
+        - kairon-plugin-sdk[cli]
+        - kronos
+        - omo-debt
+    - name: cloakbrowser
+      baseline: '>=0.1'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kronos
+    - name: croniter
+      baseline: '>=6.2.2'
+      reason: 'Consumed by 2 project(s)'
+      consumers:
+        - minerva
+        - runtime
+    - name: cryptography
+      baseline: '>=41.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - agora
+    - name: ddgs
+      baseline: '>=8.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva
+    - name: deepeval
+      baseline: '>=4.0.6'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kairon-observability
+    - name: fastapi
+      baseline: '>=0.128.8'
+      reason: 'Consumed by 5 project(s)'
+      consumers:
+        - agora
+        - cockpit
+        - kos
+        - ontoderive[web]
+        - runtime
+    - name: fastmcp
+      baseline: '>=3.4.2'
+      reason: 'Consumed by 15 project(s)'
+      consumers:
+        - aetherforge
+        - aetherforge-gateway
+        - aetherforge-mesh
+        - agora
+        - c2g
+        - codeanalyze[mcp]
+        - ecos
+        - family-hub
+        - iris
+        - kronos
+        - metaos
+        - minerva
+        - model-driven
+        - ontoderive
+        - runtime
+    - name: gitpython
+      baseline: '>=3.1.0'
+      reason: 'Consumed by 2 project(s)'
+      consumers:
+        - aetherforge-gateway[legacy]
+        - omo-debt
+    - name: graphiti-core
+      baseline: '>=0.28'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva[tier2]
+    - name: grpcio
+      baseline: '>=1.60'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - agora[grpc]
+    - name: grpcio-tools
+      baseline: '>=1.60'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - agora[grpc]
+    - name: httpx
+      baseline: '>=0.28.1'
+      reason: 'Consumed by 10 project(s)'
+      consumers:
+        - aetherforge
+        - aetherforge-gateway
+        - aetherforge-mesh
+        - agora
+        - c2g
+        - iris
+        - kronos
+        - minerva
+        - omo
+        - runtime
+    - name: jieba
+      baseline: '>=0.42'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kos
+    - name: jinja2
+      baseline: '>=3.1'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - ecos
+    - name: lancedb
+      baseline: '>=0.21'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva
+    - name: mem0ai
+      baseline: '(none)'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kos
+    - name: neo4j
+      baseline: '>=5.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva[tier2]
+    - name: openai
+      baseline: '>=2.41.1'
+      reason: 'Consumed by 3 project(s)'
+      consumers:
+        - aetherforge
+        - omo
+        - ontoderive[llm]
+    - name: openpyxl
+      baseline: '>=3.1.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kos
+    - name: opentelemetry-api
+      baseline: '>=1.42.1'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kairon-observability
+    - name: opentelemetry-exporter-otlp
+      baseline: '>=1.42.1'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kairon-observability
+    - name: opentelemetry-sdk
+      baseline: '>=1.42.1'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kairon-observability
+    - name: prometheus-client
+      baseline: '>=0.20'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - agora
+    - name: protobuf
+      baseline: '>=4.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - agora[grpc]
+    - name: pydantic
+      baseline: '>=2.13.4'
+      reason: 'Consumed by 10 project(s)'
+      consumers:
+        - aetherforge-gateway
+        - aetherforge-mesh
+        - bus-foundation
+        - c2g
+        - family-hub
+        - health-profile
+        - iris
+        - minerva
+        - omo-debt
+        - runtime
+    - name: pyjwt
+      baseline: '>=2.13.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - runtime
+    - name: python-docx
+      baseline: '>=0.8.11'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kos
+    - name: pyyaml
+      baseline: '>=6.0.3'
+      reason: 'Consumed by 17 project(s)'
+      consumers:
+        - aetherforge-gateway
+        - aetherforge-mesh
+        - aetherforge-swarm
+        - c2g
+        - cockpit
+        - core-models
+        - ecos
+        - iris
+        - kairon-plugin-sdk[cli]
+        - l4-kernel
+        - metaos
+        - minerva
+        - model-driven
+        - omo
+        - omo-debt
+        - ontoderive
+        - runtime
+    - name: radon
+      baseline: '>=6.0.1'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - codeanalyze
+    - name: readability-lxml
+      baseline: '>=0.8'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva
+    - name: redis
+      baseline: '>=8.0.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - aetherforge-swarm
+    - name: requests
+      baseline: '>=2.34.2'
+      reason: 'Consumed by 4 project(s)'
+      consumers:
+        - ecos
+        - kairon-plugin-sdk[cli]
+        - metaos
+        - runtime
+    - name: rich
+      baseline: '>=13.0'
+      reason: 'Consumed by 5 project(s)'
+      consumers:
+        - aetherforge-gateway[legacy]
+        - agora
+        - cockpit
+        - codeanalyze
+        - omo-debt
+    - name: scrapling
+      baseline: '>=0.4'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - kronos
+    - name: semantica
+      baseline: '>=0.4.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva[tier2]
+    - name: sentence-transformers
+      baseline: '>=3.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva
+    - name: spacy
+      baseline: '>=3.8'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva
+    - name: structlog
+      baseline: '>=24.0'
+      reason: 'Consumed by 5 project(s)'
+      consumers:
+        - aetherforge-gateway
+        - aetherforge-mesh
+        - agora
+        - metaos
+        - minerva
+    - name: tabulate
+      baseline: '>=0.9.0'
+      reason: 'Consumed by 2 project(s)'
+      consumers:
+        - aetherforge-gateway[legacy]
+        - omo-debt
+    - name: ujson
+      baseline: '>=5.12.1'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva
+    - name: urllib3
+      baseline: '>=2.7.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - minerva
+    - name: uvicorn
+      baseline: '>=0.49.0'
+      reason: 'Consumed by 4 project(s)'
+      consumers:
+        - agora
+        - cockpit
+        - ontoderive[web]
+        - runtime
+  dev_test:
+    - name: mypy
+      baseline: '>=1.0'
+      reason: 'Consumed by 2 project(s)'
+      consumers:
+        - agora[dev]
+        - minerva[dev]
+    - name: pytest
+      baseline: '>=9.0'
+      reason: 'Consumed by 16 project(s)'
+      consumers:
+        - aetherforge-gateway[dev]
+        - aetherforge-mesh[dev]
+        - aetherforge[dev]
+        - agora[dev]
+        - bus-foundation[dev]
+        - codeanalyze[dev]
+        - eidos[dev]
+        - forge[dev]
+        - iris[dev]
+        - l4-kernel[dev]
+        - metaos[dev]
+        - minerva[dev]
+        - model-driven[dev]
+        - omo-debt[dev]
+        - omo[dev]
+        - ontoderive[dev]
+    - name: pytest-asyncio
+      baseline: '>=1.0'
+      reason: 'Consumed by 4 project(s)'
+      consumers:
+        - agora[dev]
+        - bus-foundation[dev]
+        - metaos[dev]
+        - minerva[dev]
+    - name: pytest-cov
+      baseline: '>=5.0'
+      reason: 'Consumed by 5 project(s)'
+      consumers:
+        - eidos[dev]
+        - minerva[dev]
+        - omo-debt[dev]
+        - omo[dev]
+        - ontoderive[dev]
+    - name: ruff
+      baseline: '>=0.8.0'
+      reason: 'Consumed by 12 project(s)'
+      consumers:
+        - agora[dev]
+        - bus-foundation[dev]
+        - codeanalyze[dev]
+        - forge[dev]
+        - iris[dev]
+        - l4-kernel[dev]
+        - metaos[dev]
+        - minerva[dev]
+        - model-driven[dev]
+        - omo-debt[dev]
+        - omo[dev]
+        - ontoderive[dev]
