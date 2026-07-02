@@ -13,7 +13,7 @@ from .omo_shared import load_yaml
 
 
 def release_index_path(workspace_root: Path) -> Path:
-    return workspace_root / ".omo" / "_delivery" / "release" / "index.json"
+    return workspace_root / "runtime" / "omo" / "_delivery" / "release" / "index.json"
 
 
 def load_release_index(workspace_root: Path) -> dict[str, Any]:
@@ -203,7 +203,7 @@ def gather_debt(workspace_root: Path) -> dict[str, Any]:
 def write_release_notes(
     workspace_root: Path, version: str, cycle: dict[str, Any]
 ) -> Path:
-    notes_path = workspace_root / ".omo" / "_delivery" / "release" / "CHANGELOG.md"
+    notes_path = workspace_root / "runtime" / "omo" / "_delivery" / "release" / "CHANGELOG.md"
     changes = cycle["changes"]
     validation = cycle["validation"]
     debt = cycle["debt"]
@@ -241,7 +241,7 @@ def write_release_notes(
 
 
 def write_cycle_json(workspace_root: Path, version: str, cycle: dict[str, Any]) -> Path:
-    out_dir = workspace_root / ".omo" / "_delivery" / "release"
+    out_dir = workspace_root / "runtime" / "omo" / "_delivery" / "release"
     out_path = out_dir / f"{version}.json"
     write_text_atomic(out_path, json.dumps(cycle, ensure_ascii=False, indent=2) + "\n")
     return out_path

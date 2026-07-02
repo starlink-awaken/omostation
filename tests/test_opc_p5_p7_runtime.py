@@ -87,12 +87,24 @@ def test_p6_weekly_loop_history_tracks_consecutive_weeks(tmp_path):
     module.write_evidence("2026-W24", payload2)
 
     history_path = (
-        tmp_path / "runtime" / "omo" / "_control" / "evolution" / "loop" / "history.json"
+        tmp_path
+        / "runtime"
+        / "omo"
+        / "_control"
+        / "evolution"
+        / "loop"
+        / "history.json"
     )
     history = json.loads(history_path.read_text(encoding="utf-8"))
     trace_index = json.loads(
         (
-            tmp_path / "runtime" / "omo" / "_control" / "evolution" / "loop" / "trace-index.json"
+            tmp_path
+            / "runtime"
+            / "omo"
+            / "_control"
+            / "evolution"
+            / "loop"
+            / "trace-index.json"
         ).read_text(encoding="utf-8")
     )
     assert history["summary"]["weeks_recorded"] == 2
@@ -153,7 +165,10 @@ def test_p6_self_evolve_nop_carries_loop_history_ref(tmp_path):
     assert tasks[0]["approval_required"] is True
     assert tasks[0]["human_approval_required"] is True
     assert tasks[0]["approval_state"] == "awaiting_human"
-    assert tasks[0]["loop_history_ref"] == "runtime/omo/_control/evolution/loop/history.json"
+    assert (
+        tasks[0]["loop_history_ref"]
+        == "runtime/omo/_control/evolution/loop/history.json"
+    )
 
 
 def test_p6_approval_board_writes_current_board(tmp_path):
@@ -209,7 +224,7 @@ def test_p7_release_cycle_uses_incrementing_index(tmp_path):
     assert cycle1["version"] == "v2026-06-12-r1"
     assert cycle2["version"] == "v2026-06-12-r2"
     index = json.loads(
-        (tmp_path / ".omo" / "_delivery" / "release" / "index.json").read_text(
+        (tmp_path / "runtime" / "omo" / "_delivery" / "release" / "index.json").read_text(
             encoding="utf-8"
         )
     )
@@ -229,7 +244,11 @@ def test_p7_audit_rollout_history_index_tracks_mode_and_trigger(tmp_path):
     module._now_iso = lambda: "2026-06-12T00:00:00Z"
     module._trigger_source = lambda: "cron"
     history_path = (
-        tmp_path / "runtime" / "omo" / "_control" / "evolution"
+        tmp_path
+        / "runtime"
+        / "omo"
+        / "_control"
+        / "evolution"
         / "drift-history"
         / "2026-06-12.json"
     )

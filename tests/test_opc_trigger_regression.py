@@ -220,7 +220,8 @@ class T05ApprovalBoardLatestWeek(unittest.TestCase):
         board = json.loads(
             (
                 REPO_ROOT
-                / ".omo"
+                / "runtime"
+                / "omo"
                 / "_control"
                 / "evolution"
                 / "approval-board"
@@ -229,7 +230,13 @@ class T05ApprovalBoardLatestWeek(unittest.TestCase):
         )
         loop_history = json.loads(
             (
-                REPO_ROOT / ".omo" / "_control" / "evolution" / "loop" / "history.json"
+                REPO_ROOT
+                / "runtime"
+                / "omo"
+                / "_control"
+                / "evolution"
+                / "loop"
+                / "history.json"
             ).read_text(encoding="utf-8")
         )
         loop_latest_week = loop_history.get("summary", {}).get("latest_week")
@@ -298,7 +305,11 @@ class T06AuditRolloutDaemonWriteback(unittest.TestCase):
             }
             # 真写 5repos.json 让 daemon 读
             fallback_path = (
-                REPO_ROOT / "runtime" / "omo" / "_delivery" / "audit-rollout"
+                REPO_ROOT
+                / "runtime"
+                / "omo"
+                / "_delivery"
+                / "audit-rollout"
                 / f"{daemon._today()}-5repos.json"
             )
             fallback_path.parent.mkdir(parents=True, exist_ok=True)
