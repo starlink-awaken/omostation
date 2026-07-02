@@ -70,7 +70,7 @@ last-reviewed: 2026-06-29
 
 ## Usage rules
 
-1. `tasks/README.md` 与 `plans/README.md` 只能引用 active standards。
+1. `tasks/README.md` 与 plans/ (已迁移) 只能引用 active standards。
 2. archived 文档可作为历史证据, 不再作为执行入口。
 3. 若新增 standard，必须同时更新本注册表与 `.omo/INDEX.md`。
 4. X1-X4 规则真相源位于 `../_truth/x1-*.yaml` ~ `x4-*.yaml`；`standards/` 只定义解释性标准，不再复制治理规则正文。

@@ -132,7 +132,7 @@ mode_specific_path = f"{date}-{mode}.json"
 
 **为什么**: 2026-06-13 OPC P7-H3 closeout 时, `_run_fallback_5repos()` 硬编码 `weekly.json`, 导致 monthly/pre-release cron 复用 weekly 副本, evidence 不可审计。
 
-**白名单**: 5repos.py (`scripts/opc_audit_rollout_5repos.py`) 是 `{date}-{mode}.json` 副本唯一 owner, 其他脚本不得再写该模式文件。
+**白名单**: 5repos.py (opc_audit_rollout_5repos.py (已迁移到 bin/)) 是 `{date}-{mode}.json` 副本唯一 owner, 其他脚本不得再写该模式文件。
 
 ## 规则 7: multi-mode 副本单一 owner (CR-MODE-COPY-01, 2026-06-13)
 

@@ -74,4 +74,4 @@ python3 -c "import yaml; d=yaml.safe_load(open('.omo/state/system.yaml')); print
 
 - `projects/omo/src/omo/omo_debt_review_queue.py:GATE_ORDER` — 合法 enum 定义
 - `projects/omo/src/omo/omo_debt_metrics.py:compute_debt_metrics` — 算法消费方
-- `.omo/_knowledge/management/2026-06-18-omo-drift-audit.md` §6 P1 — 触发本标准的 drift audit next-action
+- `.omo/_knowledge/management/workflows/2026-06-18-omo-drift-audit.md` §6 P1 — 触发本标准的 drift audit next-action
