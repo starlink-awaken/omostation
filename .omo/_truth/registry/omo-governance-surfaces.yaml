@@ -506,7 +506,7 @@ assets:
     consumed_by:
       - agents
       - humans
-    notes: P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册
+    notes: "P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册"
     status: active
   - id: OMO-AUTOPILOT
     ref: .omo/autopilot/
@@ -520,7 +520,7 @@ assets:
       - cron
     consumed_by:
       - agents
-    notes: P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册
+    notes: "P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册"
     status: active
 policies:
   top_level_asset_registration_required: true
