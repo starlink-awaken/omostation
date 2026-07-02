@@ -45,7 +45,7 @@ agora-mcp-gateway = "agora.mcp_gateway:main"
 agora-watchdog = "agora.agora_watchdog:main"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.24,<1.0", "ruff>=0.8", "mypy>=1.0"]
+dev = ["pytest>=8.4,<9", "pytest-asyncio>=0.24,<1.0", "ruff>=0.8", "mypy>=1.0"]
 grpc = ["grpcio>=1.60", "grpcio-tools>=1.60", "protobuf>=4.0"]
 kairon = []  # Decoupled via MCP in Phase 1
 admission = ["metaos"]  # Optional MetaOS admission gateway integration
@@ -70,7 +70,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "deepeval>=4.0.6",
-    "pytest>=8.4.2",
+    "pytest>=8.4,<9",
     "pytest-asyncio>=0.26.0",
 ]
 

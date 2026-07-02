@@ -75,7 +75,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0" },
     { name = "prometheus-client", specifier = ">=0.20" },
     { name = "protobuf", marker = "extra == 'grpc'", specifier = ">=4.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4,<9" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24,<1.0" },
     { name = "rich", specifier = ">=13.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8" },
@@ -87,7 +87,7 @@ provides-extras = ["dev", "grpc", "kairon", "admission", "all"]
 [package.metadata.requires-dev]
 dev = [
     { name = "deepeval", specifier = ">=4.0.6" },
-    { name = "pytest", specifier = ">=8.4.2" },
+    { name = "pytest", specifier = ">=8.4,<9" },
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
 ]
 
@@ -339,7 +339,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
 ]
@@ -1343,7 +1343,7 @@ requires-dist = [
     { name = "agora", editable = "." },
     { name = "bus-foundation", directory = "../bus-foundation" },
     { name = "fastmcp", specifier = ">=3.4.2" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "requests", specifier = ">=2.34.2" },
@@ -2236,8 +2236,8 @@ name = "secretstorage"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cryptography", marker = "python_full_version >= '3.15' or sys_platform != 'win32'" },
-    { name = "jeepney", marker = "python_full_version >= '3.15' or sys_platform != 'win32'" },
+    { name = "cryptography" },
+    { name = "jeepney" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1c/03/e834bcd866f2f8a49a85eaff47340affa3bfa391ee9912a952a1faa68c7b/secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be", size = 19884, upload-time = "2025-11-23T19:02:53.191Z" }
 wheels = [
