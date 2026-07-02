@@ -400,6 +400,20 @@ gac:
       created_at: "2026-07-02"
       adr: "ADR-0106"
 
+    # ── L0 协议: BOS URI 5 域边界 + kind 标签 (P2-2 2026-07-02) ──
+    - id: CR-L0-BOS-DOMAIN-NORM
+      dimension: X4
+      layer: L0
+      name: "BOS URI 5 域锁定 + kind 标签"
+      description: "防 BOS 域越界 + 协议漂移: eCOS v6 锁定 5 主域 (memory/governance/analysis/persona/capability), 扩展域 (meta/omo/swarm/system/toolbox) 走 kind:bridge|facet. 跨域越界需在 .omo/standards/bos-uri-domain-standard.md 登记, 不可直接 commit. 标准: docs/PANORAMA.md + .omo/standards/bos-uri-domain-standard.md (P2-2 2026-07-02)"
+      check_type: bos_resolve
+      target: "projects/agora/etc/bos-services.yaml + .omo/standards/bos-uri-domain-standard.md"
+      executor: [ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
     - id: X1-OMNI-BUS-ROUTING-20260617
