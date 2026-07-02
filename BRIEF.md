@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-02T10:19:10.572602Z` | **SSOT Source**: `.omo/state/system.yaml` | **ISC-1 复合分**: `100/100`
+> **Generated**: `2026-07-02T12:13:15.911616Z` | **SSOT Source**: `.omo/state/system.yaml` | **ISC-1 复合分**: `100/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 
