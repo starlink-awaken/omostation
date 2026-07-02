@@ -456,6 +456,20 @@ gac:
       created_at: "2026-07-02"
       adr: "ADR-0106"
 
+    # ── X4 一致性: 文档 SSOT 守门 — 不许 > 最后更新 时间戳行 (X-Plane 自动化副作用) ──
+    - id: CR-DOC-NO-LAST-UPDATED
+      dimension: X4
+      layer: meta
+      name: "文档 SSOT 守门: 不许 > 最后更新 时间戳行"
+      description: "防元治理盲区 3.0: X-Plane Audit Agent cron 周期自动加 '> 最后更新: YYYY-MM-DD' 时间戳行, 反复 discard 反复加, 违反 doc-ssot 契约 (AGENTS.md/CLAUDE.md 是 stable 操作指南, 不该有运行时时间戳). 治根: 加 audit hook 拦下此类行, 强制改 commit 时间 + git blame 跟踪. 已知违规: AGENTS.md:3, CLAUDE.md:3. 标准: .omo/standards/doc-ssot-contract.md (P0 audit 2026-07-02 / ADR-0122 S0 / F-9)"
+      check_type: doc_lifecycle
+      target: "AGENTS.md:3, CLAUDE.md:3 (rg '> 最后更新:' 返回 ERROR)"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0106"
+
     # ── GCSI 维度 1 (ADR-0121): ADR-0120 定义的 3 条规则注册 ──
     - id: CR-X1-FRESHNESS-SEMANTIC
       dimension: X1
