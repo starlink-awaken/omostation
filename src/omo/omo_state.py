@@ -10,6 +10,7 @@ from pathlib import Path
 import yaml
 
 from .omo_ingress import write_system_projection_fields
+from .omo_io import write_text_atomic
 from .omo_paths import find_omo_dir
 from .omo_shared import load_yaml, load_yaml_required
 
@@ -262,7 +263,9 @@ def _rebuild_tasks_registry_index(
     )
     if not (n1 and n3):
         return False  # INDEX 结构不符预期, 跳过 (n2/n4 可能为 0 若已是正确数, 不卡)
-    index_file.write_text(text, encoding="utf-8")
+    write_text_atomic(
+        index_file, text
+    )  # sensitive-governed-writes: atomic helper 豁免 (P1 CI 修复)
     return True
 
 

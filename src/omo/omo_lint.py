@@ -170,6 +170,7 @@ _SENSITIVE_WRITE_EXEMPT_FILES = {
     "omo_release_cycle.py",
     "omo_weekly_loop.py",
     "omo_worker_promotion.py",
+    "omo_state.py",  # P1 CI: INDEX/system.yaml 计数同步是派生维护 (cmd_state_sync_tasks), 非 sensitive 变更 (task lifecycle 归 omo_ingress_task_lifecycle)
 }
 
 
