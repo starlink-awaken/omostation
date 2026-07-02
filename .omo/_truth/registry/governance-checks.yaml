@@ -456,6 +456,73 @@ gac:
       created_at: "2026-07-02"
       adr: "ADR-0106"
 
+    # ── GCSI 维度 1 (ADR-0121): ADR-0120 定义的 3 条规则注册 ──
+    - id: CR-X1-FRESHNESS-SEMANTIC
+      dimension: X1
+      layer: meta
+      name: "freshness_seconds producer/consumer 语义一致性"
+      description: "防 P71 Class D (语义错配): scheduler.py 产出的 freshness_seconds 语义为 uptime, 但 omo_state_schema.py 消费时当 staleness. 声明和执行都正确, 但语义错配导致系统性误报. 实现: bin/governance-convergence-lint.py --rule freshness-semantic"
+      check_type: audit_chain
+      target: "projects/runtime/src/runtime/scheduler.py + projects/omo/src/omo/omo_state_schema.py"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0120"
+
+    - id: CR-L0-MATRIX-PORT-CONSISTENCY
+      dimension: X4
+      layer: meta
+      name: "matrix.yaml port 与 port-registry.yaml 一致性"
+      description: "防 SSOT 漂移: matrix.yaml 中配了 port 的服务, port 必须在 port-registry.yaml 注册; stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/matrix-consistency-lint.py R2/R3"
+      check_type: ssot_lint
+      target: "~/runtime/matrix.yaml + protocols/port-registry.yaml"
+      executor: [ci_gate, gac_local_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0120"
+
+    - id: CR-L0-MATRIX-LAUNCHD-COVERAGE
+      dimension: X4
+      layer: meta
+      name: "daemon 类型服务必须有 launchd_label 或 docker_container"
+      description: "防 unmanaged 盲区: daemon 类型服务若无 launchd_label/docker_container, scheduler 标记 unmanaged 不自愈. 实现: bin/matrix-consistency-lint.py R1"
+      check_type: ssot_lint
+      target: "~/runtime/matrix.yaml"
+      executor: [ci_gate, gac_local_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0120"
+
+    # ── GCSI 维度 1 (ADR-0121): P71 遗留 2 条规则注册 ──
+    - id: CR-L0-SSOT-PATH-NORM
+      dimension: X4
+      layer: meta
+      name: "SSOT 路径与 broker 写入路径一致"
+      description: "防 P71 Class A (路径错位): SSOT 声明路径必须与 broker 实际写入路径一致. 案例: dependency-baseline 从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 实现: bin/governance-convergence-lint.py --rule ssot-path-norm"
+      check_type: ssot_lint
+      target: ".omo/_truth/ + broker 写入路径"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0121"
+
+    - id: CR-META-CI-SKIP-MATRIX
+      dimension: X4
+      layer: meta
+      name: "CI_SKIP_CHECKS ∪ CI_ONLY_CHECKS 覆盖所有 CI 不适用项"
+      description: "防 P71 Class C (CI 永红): CI_SKIP_CHECKS 和 CI_ONLY_CHECKS 必须显式列出所有 CI 不适用的 check, 不能靠 ad-hoc skip. 实现: bin/governance-convergence-lint.py --rule ci-skip-matrix"
+      check_type: registry_integrity
+      target: "bin/gac-local-gate.py CI_SKIP_CHECKS + CI_ONLY_CHECKS"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0121"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
     - id: X1-OMNI-BUS-ROUTING-20260617
