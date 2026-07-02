@@ -22,8 +22,9 @@ SCAN_DIRS = ["bin", "scripts"]
 # 已知合法但 worktree 中不存在的子目录 (运行时产物/历史路径/文档示例):
 # - _log, _delivery: gitignored 运行时目录 (运行时创建)
 # - capabilities: 代码容错路径搜索 (历史路径残留)
+# - debt: gitignored 运行时目录 (.omo/debt/ 由 omo CLI 运行时创建, tracked 版在 _control/debt-dashboard/)
 # - xxx, INDEX, workers: 注释/docstring 中的示例/历史引用 (非真实代码路径)
-LEGACY_OK_DIRS = {"_log", "_delivery", "capabilities", "xxx", "INDEX", "workers", "summaries"}
+LEGACY_OK_DIRS = {"_log", "_delivery", "capabilities", "debt", "xxx", "INDEX", "workers", "summaries"}
 
 
 def main() -> int:

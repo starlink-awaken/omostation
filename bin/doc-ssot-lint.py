@@ -209,6 +209,11 @@ def check_required_generated_artifacts() -> list[tuple[Path, int, str, str]]:
     # 本地 (post-commit 后有 generated) 才验. 避免 CI false positive (F2: CI strict 不因 generated 红).
     if os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true":
         return []
+    # Fresh worktree (no post-commit 萃取) 也无 generated → skip.
+    # docs/generated/ 整个目录不存在 = 从未跑过 L0 萃取, 检查无意义.
+    generated_dir = WORKSPACE_ROOT / "docs" / "generated"
+    if not generated_dir.is_dir():
+        return []
     findings: list[tuple[Path, int, str, str]] = []
     for path, label in [
         (GENERATED_GAC_DIGEST, "agent-gac-rules.md"),
