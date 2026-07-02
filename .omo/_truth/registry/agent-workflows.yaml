@@ -729,7 +729,7 @@ workflows:
         - projects/omo/**
       write:
         - .omo/tasks/planned/**
-        - .omo/_delivery/ingress/**
+        - runtime/omo/_delivery/ingress/**
     phases:
       preflight:
         - id: adapter-doctor

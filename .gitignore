@@ -43,6 +43,19 @@ runtime/wechat-main.png
 
 runtime/sandbox/decayed/
 runtime/sandbox/pitches/
+runtime/omo/
+
+# OMO volatile self-healing/ingress/evolution runtime mirrors (now live under runtime/omo/)
+.omo/_delivery/ingress/
+.omo/_control/evolution/drift/
+.omo/_control/evolution/drift-history/
+.omo/_control/evolution/approval-board/
+.omo/_control/evolution/loop/
+.omo/_control/evolution/self-evolve/
+.omo/_control/evolution/radar-history.json
+.omo/change-log/mutations.jsonl
+.omo/tasks/registry/done/
+.omo/_truth/registry/dependency-baseline.yaml
 
 # ---------------------------------------------------------------------------
 # 3. Data 共享数据底座的运行时文件

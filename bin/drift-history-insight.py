@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P83 R2: drift history insight tool.
 
-读取 .omo/_control/evolution/drift/ 目录下所有时间戳 JSON, 输出:
+读取 runtime/omo/_control/evolution/drift/ 目录下所有时间戳 JSON, 输出:
 - 每天 drift_count 趋势
 - drift 类型分布 (entry_drift / doc_drift / etc)
 - 最新 5 个 drift 报告
@@ -98,8 +98,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="P83: drift history insight")
     parser.add_argument(
         "--drift-dir",
-        default=".omo/_control/evolution/drift",
-        help="drift JSON 目录",
+        default="runtime/omo/_control/evolution/drift",
+        help="drift JSON 目录 (默认 runtime/omo 镜像)",
     )
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()

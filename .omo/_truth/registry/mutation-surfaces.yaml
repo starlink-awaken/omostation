@@ -19,7 +19,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_governance.py:main (command=ingress-goal)
     mutation_target: .omo/goals/current.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_goal
-    delivery_artifact_root: .omo/_delivery/ingress/goals/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/goals/
     mode: brokered
     category: governance_ingress
   - name: omo-governance-ingress-task
@@ -27,7 +27,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_governance.py:main (command=ingress-task)
     mutation_target: .omo/tasks/planned/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: governance_ingress
   - name: omo-governance-ingress-debt
@@ -35,7 +35,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_governance.py:main (command=ingress-debt)
     mutation_target: .omo/debt/items/ + .omo/debt/registry.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:upsert_debt_item
-    delivery_artifact_root: .omo/_delivery/ingress/debts/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/debts/
     mode: brokered
     category: governance_ingress
   - name: omo-goal-create
@@ -43,7 +43,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_goal.py:cmd_goal_create
     mutation_target: .omo/goals/current.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_goal
-    delivery_artifact_root: .omo/_delivery/ingress/goals/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/goals/
     mode: brokered
     category: human_cli
   - name: omo-goal-progress
@@ -51,7 +51,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_goal.py:cmd_goal_progress
     mutation_target: .omo/goals/current.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:update_goal_progress
-    delivery_artifact_root: .omo/_delivery/ingress/goals/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/goals/
     mode: brokered
     category: human_cli
   - name: omo-task-create
@@ -59,7 +59,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_task.py:cmd_task_create
     mutation_target: .omo/tasks/planned/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: human_cli
   - name: omo-task-done
@@ -67,7 +67,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_task.py:cmd_task_done
     mutation_target: .omo/tasks/active/|planned/ -> .omo/tasks/done/
     broker_ref: projects/omo/src/omo/omo_ingress.py:complete_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: human_cli
   - name: omo-task-refresh-evidence
@@ -75,7 +75,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_task.py:cmd_task_refresh_evidence
     mutation_target: .omo/tasks/done/*.yaml (evidence_paths)
     broker_ref: projects/omo/src/omo/omo_ingress.py:update_done_task_evidence_paths
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: human_cli
   - name: omo-task-repair-approval
@@ -83,7 +83,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_task.py:cmd_task_repair_approval
     mutation_target: .omo/tasks/{planned,active,done,remediation}/*.yaml (approval_ref) + .omo/workers/runs/*-promotion-approval-*.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:repair_task_promotion_approval
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: human_cli
   - name: omo-worker-task-normalize-planned
@@ -91,7 +91,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_worker_cmd_task.py:execute_task_command (task_command=normalize-planned)
     mutation_target: .omo/tasks/planned/ + .omo/tasks/archived/legacy-normalized/
     broker_ref: projects/omo/src/omo/omo_ingress.py:normalize_legacy_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: governance_ingress
   - name: omo-worker-task-route-self-evolution-remediation
@@ -99,7 +99,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_worker_cmd_task.py:execute_task_command (task_command=route-self-evolution-remediation)
     mutation_target: .omo/tasks/planned/ -> .omo/tasks/remediation/ + .omo/tasks/remediation-notes/
     broker_ref: projects/omo/src/omo/omo_ingress.py:route_self_evolution_to_remediation
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: governance_ingress
   - name: opc-p6-self-evolve-task-emit
@@ -107,7 +107,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_self_evolve.py:write_planned_self_evolution_tasks
     mutation_target: .omo/tasks/planned/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: governance_ingress
   - name: omo-knowledge-add
@@ -115,7 +115,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_knowledge.py:cmd_knowledge_add
     mutation_target: .omo/_knowledge/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_knowledge_doc
-    delivery_artifact_root: .omo/_delivery/ingress/knowledge/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/knowledge/
     mode: brokered
     category: human_cli
   - name: omo-standard-add
@@ -123,7 +123,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_standard.py:cmd_standard_add
     mutation_target: .omo/standards/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_standard_doc
-    delivery_artifact_root: .omo/_delivery/ingress/standards/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/standards/
     mode: brokered
     category: human_cli
   - name: omo-capability-registry-scan
@@ -131,7 +131,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_capability.py:scan_command
     mutation_target: .omo/capabilities/INDEX.md + .omo/capabilities/projects-capabilities.yaml + .omo/capabilities/sharedwork-sample.yaml + .omo/capabilities/system-packages.yaml + .omo/capabilities/agent-clis.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:write_capability_registry_bundle
-    delivery_artifact_root: .omo/_delivery/ingress/capabilities/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/capabilities/
     mode: brokered
     category: human_cli
   - name: omo-capability-registry-register
@@ -139,7 +139,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_capability.py:register_command
     mutation_target: .omo/capabilities/manual-capabilities.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:write_manual_capabilities
-    delivery_artifact_root: .omo/_delivery/ingress/capabilities/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/capabilities/
     mode: brokered
     category: human_cli
   - name: omo-task-center-skill-manifest
@@ -147,7 +147,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_skill.py:register_skill_manifest
     mutation_target: .omo/_truth/task-center/skills/*.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_skill_manifest
-    delivery_artifact_root: .omo/_delivery/ingress/task-center/skills/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/task-center/skills/
     mode: brokered
     category: governance_ingress
   - name: omo-task-center-discovery-registry
@@ -155,7 +155,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_discovery.py:discover_task_blueprints
     mutation_target: .omo/_truth/task-center/discovery-registry.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:write_discovery_registry
-    delivery_artifact_root: .omo/_delivery/ingress/task-center/discovery/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/task-center/discovery/
     mode: brokered
     category: governance_ingress
   - name: omo-self-healing-debt
@@ -163,7 +163,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_self_healing.py:SelfHealingEngine._create_debt
     mutation_target: .omo/debt/items/*.yaml + .omo/_truth/registry/debt.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:upsert_debt_item
-    delivery_artifact_root: .omo/_delivery/ingress/debts/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/debts/
     mode: brokered
     category: governance_ingress
   - name: omo-bridge-bmad-openspec
@@ -171,7 +171,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_bridge.py:_import_bmad
     mutation_target: .omo/tasks/planned/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: bridge_import
   - name: omo-bridge-fast-track
@@ -179,7 +179,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_bridge.py:_import_fast_track
     mutation_target: .omo/tasks/planned/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: bridge_import
   - name: omo-bridge-pitch
@@ -187,7 +187,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_bridge.py:_import_pitch
     mutation_target: .omo/goals/current.yaml + .omo/tasks/planned/
     broker_ref: projects/omo/src/omo/omo_goal.py:cmd_goal_create + projects/omo/src/omo/omo_ingress.py:create_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/goals/ + .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/goals/ + runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: bridge_import
   - name: ecos-mof-state-bridge-m1-to-omo
@@ -195,7 +195,7 @@ surfaces:
     runtime_ref: projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py:main (flag=--m1-to-omo)
     mutation_target: .omo/tasks/planned/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: bridge_import
   - name: c2g-storage-save-bet
@@ -203,7 +203,7 @@ surfaces:
     runtime_ref: projects/c2g/src/c2g/adapters.py:EcosStorageProvider.save_bet
     mutation_target: .omo/goals/current.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_goal
-    delivery_artifact_root: .omo/_delivery/ingress/goals/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/goals/
     mode: brokered
     category: c2g_adapter
   - name: c2g-storage-save-task
@@ -211,7 +211,7 @@ surfaces:
     runtime_ref: projects/c2g/src/c2g/adapters.py:EcosStorageProvider.save_task
     mutation_target: .omo/tasks/planned/
     broker_ref: projects/omo/src/omo/omo_ingress.py:create_planned_task
-    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/tasks/
     mode: brokered
     category: c2g_adapter
   - name: omo-state-refresh
@@ -227,7 +227,7 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_state.py:cmd_state_sync_tasks
     mutation_target: .omo/state/system.yaml (task counters + next_* projection)
     broker_ref: projects/omo/src/omo/omo_ingress.py:write_system_projection_fields
-    delivery_artifact_root: .omo/_delivery/ingress/state/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/state/
     mode: brokered
     category: governance_ingress
   - name: omo-audit-sync-system-projection
@@ -235,6 +235,6 @@ surfaces:
     runtime_ref: projects/omo/src/omo/omo_audit_sync.py:apply_diff
     mutation_target: .omo/state/system.yaml (whitelisted audit projection fields)
     broker_ref: projects/omo/src/omo/omo_ingress.py:write_system_projection_fields
-    delivery_artifact_root: .omo/_delivery/ingress/state/
+    delivery_artifact_root: runtime/omo/_delivery/ingress/state/
     mode: brokered
     category: runtime_cache

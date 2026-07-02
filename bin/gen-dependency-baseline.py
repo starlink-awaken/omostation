@@ -10,7 +10,7 @@
   2. 收集 workspace project name (排除内部依赖, 如 agora/omo/aetherforge-gateway)
   3. 解析每个 pyproject 的 [project.dependencies] + [project.optional-dependencies]
   4. 聚合外部依赖: name → [(consumer, lower_bound, extras), ...]
-  5. --check: 对比 _truth/registry/dependency-baseline.yaml 报三类 drift
+  5. --check: 对比 runtime/omo/_truth/registry/dependency-baseline.yaml 报三类 drift
   6. --dry-run: 打印从 pyproject 推导出的 baseline
 
 drift 类型:
@@ -35,7 +35,7 @@ from collections import defaultdict
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
-BASELINE_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "dependency-baseline.yaml"
+BASELINE_YAML = WORKSPACE / "runtime" / "omo" / "_truth" / "registry" / "dependency-baseline.yaml"
 
 # PEP 508 简化解析: name[extras]op version, op version, ...
 # 例: "graphiti-core[neo4j]>=0.28", "mem0ai", "httpx[socks]>=0.28.1,<1.0"
@@ -270,7 +270,7 @@ def main() -> int:
             print(f"  ⚠️  MISMATCHED ({len(drift['mismatched'])}): baseline 与 pyproject 下限不一致")
             for d in drift["mismatched"][:10]:
                 print(f"     - {d['name']}: baseline={d['current']} vs derived={d['derived']}")
-        print(f"\n修复: python bin/gen-dependency-baseline.py --dry-run → 走 omo broker 写 _truth/registry/dependency-baseline.yaml")
+        print(f"\n修复: python bin/gen-dependency-baseline.py --dry-run → 走 omo broker 写 runtime/omo/_truth/registry/dependency-baseline.yaml")
         return 1
 
     return 0

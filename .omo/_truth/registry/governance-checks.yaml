@@ -210,7 +210,7 @@ gac:
       name: "agent 操作审计链"
       description: "agent 编辑经 MCP/omo CLI, 自动记 AppendOnlyLog (可追溯)"
       check_type: audit_chain
-      target: ".omo/_delivery/ingress/ingress-trail.jsonl"
+      target: "runtime/omo/_delivery/ingress/ingress-trail.jsonl"
       executor: [mcp_tool, omo_audit]
       lifecycle: active
       version: "1.0.0"
