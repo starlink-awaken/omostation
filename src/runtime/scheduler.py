@@ -514,6 +514,10 @@ class MatrixScheduler:
             data = yaml.safe_load(system_yaml.read_text(encoding="utf-8")) or {}
             data["runtime_health_summary"] = summary
             data["updated_at"] = datetime.now(timezone.utc).astimezone().isoformat()
+
+            # GCSI 维度 2 (ADR-0121): record feedback loop timestamp + evidence score
+            data["governance_feedback_last_run"] = data["updated_at"]
+
             tmp = system_yaml.with_suffix(".yaml.tmp")
             tmp.write_text(
                 yaml.dump(
