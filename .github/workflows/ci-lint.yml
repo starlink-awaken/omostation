@@ -191,4 +191,4 @@ jobs:
         # 退出码非 0 即 fail (有 schema 校验缺失, 真回归)
         run: |
           cd projects/omo
-          uv run --no-sync python -m omo.cli lint schemas
+          uv run python -m omo.cli lint schemas
