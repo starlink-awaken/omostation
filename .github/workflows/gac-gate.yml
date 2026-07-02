@@ -39,5 +39,5 @@ jobs:
           python-version: "3.13"
       - name: install pyyaml
         run: pip install pyyaml
-      - name: gac-local-gate (strict, A2: PR 全套验)
+      - name: gac-local-gate (strict)
         run: python3 bin/gac-local-gate.py --strict
