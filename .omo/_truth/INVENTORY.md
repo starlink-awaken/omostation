@@ -60,7 +60,7 @@ last-reviewed: 2026-06-29
 
 ### 1.3 使用原则
 
-1. 项目身份、状态、路径变更先改 [../../docs/project-registry.yaml](../../docs/project-registry.yaml)，不要先改派生文档。
+1. 项目身份、状态、路径变更先改 [../../docs/project-registry.yaml](../../docs/project-registry.yaml)，不要先改派生文档；[../PROJECTS.yaml](../PROJECTS.yaml) 注册各项目归档/活跃状态，供 SSOT 引用链校验。
 2. 项目级运行时计数、测试数、MCP/route 数不写入本文件。
 3. 具体架构、边界、调用链以项目内三件套文档为准。
 4. 历史快照可以保留，但必须显式标记为 legacy / archived，不能继续冒充 active 入口。
