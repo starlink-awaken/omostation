@@ -19,6 +19,7 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("gac-drift", ["bin/gac-drift.py"]),
     ("write-owner-audit", ["bin/write-owner-audit.py", "--staged"]),
     ("install-watch-agent", ["bin/install-watch-agent.py"]),
+    ("test-mcp-kos", ["bin/test-mcp-kos.py"]),
     ("agent-workflow-lint", ["bin/agent-workflow.py", "lint"]),
     ("agent-workflow-integrations", ["bin/agent-workflow.py", "integrations"]),
     ("agent-workflow-adapters", ["bin/agent-workflow.py", "adapters"]),
