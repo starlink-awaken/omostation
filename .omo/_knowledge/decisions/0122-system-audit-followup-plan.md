@@ -6,7 +6,7 @@ last-reviewed: 2026-07-02
 related:
   - ../audits/2026-07-02-system-comprehensive-audit.md
   - ../patterns/p71-baseline-recovery-pattern.md
-  - 0115-bin-governance-rationalize.md
+  - 0123-bin-governance-rationalize.md
   - 0119-systemic-optimization-roadmap-2026h2.md
   - 0120-runtime-health-semantics-fix.md
   - 0121-gcsi-governance-convergence-special-initiative.md

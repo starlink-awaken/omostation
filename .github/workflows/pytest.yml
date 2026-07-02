@@ -16,4 +16,6 @@ jobs:
       - name: Run omo unit tests
         # P41-W1 fix: projects/kairon is .gitignore'd (separate repo). Run omo tests instead — the
         # only python project fully tracked in this monorepo.
-        run: cd projects/omo && uv sync && uv run pytest tests/ -q
+        # P1 CI fix: omo bos seed 前置生成 index.json (gitignored runtime cache), 提供 test_omo_bos_w3
+        # discover fixture (CI fresh checkout 无 index.json -> discover 0 URI -> assert >=21 fail).
+        run: cd projects/omo && uv sync && uv run python -m omo.cli bos seed && uv run pytest tests/ -q

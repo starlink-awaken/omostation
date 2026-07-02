@@ -97,6 +97,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0119 | Workspace 系统性优化 Roadmap (2026 H2) — 3 阶段 S0/S1/S2/S3 | ACCEPTED | 2026-07-01 | governance-team | 0119-systemic-optimization-roadmap-2026h2.md |
 | 0120 | Runtime 健康监控语义修正与 SSOT 一致性加固 (freshness uptime/staleness 分离 + matrix lint) | PROPOSED | 2026-07-02 | governance-team | 0120-runtime-health-semantics-fix.md |
 | 0121 | Governance Convergence Special Initiative (GCSI) — 治理收敛专项 (规则/分数/回路/SSOT 4 维收敛) | PROPOSED | 2026-07-02 | governance-team | 0121-governance-convergence-initiative.md |
+| 0122 | 系统审计 follow-up 路线图 (18 项 S0 落地: GaC-RULE M1 sync + governance-checks 注册) | ACTIVE | 2026-07-02 | governance-team | 0122-system-audit-followup-plan.md |
+| 0123 | bin/ 治理工具集重整 (命名归一 + 孤立工具接入 gate) | PROPOSED | 2026-07-02 | governance-team | 0123-bin-governance-rationalize.md |
 
 ---
 

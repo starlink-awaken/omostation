@@ -21,4 +21,8 @@ jobs:
           python-version: "3.13"
       - uses: astral-sh/setup-uv@v4
       - name: pytest
-        run: cd projects/${{ matrix.pkg }} && uv run pytest -q
+        run: |
+          cd projects/${{ matrix.pkg }}
+          # omo bos seed: 生成 index.json fixture (test_omo_bos_w3 discover 依赖, CI fresh 无)
+          if [ "${{ matrix.pkg }}" = "omo" ]; then uv run python -m omo.cli bos seed; fi
+          uv run pytest -q
