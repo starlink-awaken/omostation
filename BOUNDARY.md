@@ -43,3 +43,7 @@
 - 项目源码：`projects/omo/`
 - 入口定义：`projects/omo/pyproject.toml`
 - 测试：`cd projects/omo && uv run pytest tests/ -q`
+
+## 架构演进与项目边界索引
+
+参见工作区架构演进与项目边界：[`../../docs/ARCHITECTURE-EVOLUTION.md`](../../docs/ARCHITECTURE-EVOLUTION.md)
