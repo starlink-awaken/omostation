@@ -5,7 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-02
 ---
 
-# ADR-0115: bin/ 治理工具集重整 (命名归一 + 孤立工具接入 gate)
+# ADR-0123: bin/ 治理工具集重整 (命名归一 + 孤立工具接入 gate)
 
 - **Status**: PROPOSED
 - **Date**: 2026-07-02
