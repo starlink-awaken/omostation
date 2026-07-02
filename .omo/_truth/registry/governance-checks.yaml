@@ -442,6 +442,20 @@ gac:
       created_at: "2026-07-02"
       adr: "ADR-0106"
 
+    # ── X1 审计: god-module 上限 (新代码不许 > 1500L, 防 god module 漂移) ──
+    - id: CR-X1-GOD-MODULE-LIMIT
+      dimension: X1
+      layer: L2
+      name: "god-module 文件行数上限 (新代码 > 1500L 阻塞)"
+      description: "防 god module 漂移: 当前已知 7 文件 > 1500L (gbrain 重灾区) + 51 文件 > 800L, 大多数是历史累积. 新代码不许引入 > 1500L 文件 (P0 audit 2026-07-02). 实现: bin/check-god-module.py 扩展 --strict 模式, 新加文件 > 1500L 返回 exit 1. 已有 god module 走 ADR-0115 渐进拆分 (单仓 / 跨仓分别由对应模块 owner 实施)"
+      check_type: god_module
+      target: "bin/check-god-module.py --strict (新文件 > 1500L 阻塞, 已有文件仅 warn)"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
     - id: X1-OMNI-BUS-ROUTING-20260617

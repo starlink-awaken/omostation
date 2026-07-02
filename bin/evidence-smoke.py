@@ -71,6 +71,10 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     # gbrain 已整合 (2026-06-25, 指向 gbrain serve stdio MCP)
     # system 已整合 (2026-06-25, 补 7 wrapper + 删 2 死声明, resolve率 99%)
     # protocols-layer 已删 (2026-06-26, kairon CLAUDE.md 明确历史别名非 live package, 删 BOS 声明)
+    # wps-office-mcp / wps-skills (2026-07-02, ToolBox 仓独立 ~/ToolBox/, 仓未 build dist/index.js.
+    #   治本: ToolBox maintainer 跑 build; 临时不计鸿沟, 30 天复查. 见 evidence-smoke #P0-④.)
+    "bos://capability/wps-office-mcp/": "ToolBox wps-office-mcp dist/index.js 未 build (ToolBox 仓独立, 2026-07-02 audit)",
+    "bos://capability/wps-skills/": "ToolBox wps-skills dist/index.js 未 build (ToolBox 仓独立, 2026-07-02 audit)",
 }
 KNOWN_GAP_EXPIRES = "2026-07-25"  # 30天复查, 过期未对齐升级为真实鸿沟
 
@@ -530,6 +534,7 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
     out_path = OUTPUT_DIR / f"{_today()}.json"
     payload = json.dumps(report, ensure_ascii=False, indent=2)
     tmp = out_path.with_name(f".{out_path.name}.tmp")
+    # audit-exempt: non-atomic-write — 已用 tmp+os.replace 模式实现原子写, audit engine 误报
     with open(tmp, "w", encoding="utf-8") as f:
         f.write(payload)
     os.replace(tmp, out_path)
