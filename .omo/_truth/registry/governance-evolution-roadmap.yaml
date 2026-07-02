@@ -41,6 +41,8 @@ initiatives:
     title: Release and worktree convergence
     recommendation: Separate completed governance evolution changes from unrelated dirty submodule or runtime state.
     status: active
+    progress: 10
+    last_evaluated: "2026-07-02"
     meadows_level: 6
     owner: governance-team
     layer: X4
@@ -72,6 +74,8 @@ initiatives:
     title: Cockpit governance status plane
     recommendation: Surface AGCP and governance evolution status through Cockpit instead of making users assemble state from low-level commands.
     status: active
+    progress: 20
+    last_evaluated: "2026-07-02"
     meadows_level: 6
     owner: cockpit-team
     layer: L3
@@ -96,6 +100,8 @@ initiatives:
     title: Claim policy tiering
     recommendation: Keep core governance paths on required claim tiers while broader docs and entrypoint paths stay advisory.
     status: active
+    progress: 30
+    last_evaluated: "2026-07-02"
     meadows_level: 5
     owner: governance-team
     layer: X1
@@ -118,6 +124,8 @@ initiatives:
     title: BOS governance evolution routes
     recommendation: Expose governance roadmap, validation, traces, golden paths, release packages, and loop status through BOS so MCP agents can discover them without prompt memory.
     status: active
+    progress: 40
+    last_evaluated: "2026-07-02"
     meadows_level: 6
     owner: agora-team
     layer: I0
@@ -144,6 +152,8 @@ initiatives:
     title: Capability to entrypoint to verifier traceability
     recommendation: Every strategic capability should map to owner, entrypoint, SSOT, and verification command.
     status: active
+    progress: 50
+    last_evaluated: "2026-07-02"
     meadows_level: 6
     owner: governance-team
     layer: X4
@@ -165,6 +175,8 @@ initiatives:
     title: OMO C2G MOF operating rhythm
     recommendation: Make state bridge, ingress, and drift checks part of a visible operating cadence instead of ad-hoc deep maintenance.
     status: active
+    progress: 60
+    last_evaluated: "2026-07-02"
     meadows_level: 9
     owner: governance-team
     layer: L2-L0
@@ -189,6 +201,8 @@ initiatives:
     title: Golden path end-to-end checks
     recommendation: "Keep three canonical flows visible and verifiable: agent change, strategy ingress, and BOS invocation."
     status: active
+    progress: 70
+    last_evaluated: "2026-07-02"
     meadows_level: 5
     owner: governance-team
     layer: X1-X4
@@ -209,6 +223,8 @@ initiatives:
     title: Entry point convergence
     recommendation: Keep human, agent, and gate entrypoints narrow while leaving lower-level commands as implementation details.
     status: active
+    progress: 80
+    last_evaluated: "2026-07-02"
     meadows_level: 5
     owner: architecture-team
     layer: L3-I0-X
