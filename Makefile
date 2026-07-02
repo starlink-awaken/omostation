@@ -74,12 +74,16 @@ install-hooks:  ## 装 git pre-push + pre-commit + post-commit 钩子. 新 clone
 	@# 遍历 projects/* 子模块，查找实际 hooks 路径并配置软链接实现统一治理
 	@for d in projects/*; do \
 		if [ -d "$$d" ] && [ -e "$$d/.git" ]; then \
-			hook_dir=$$(git -C "$$d" rev-parse --git-path hooks 2>/dev/null || echo ""); \
-			if [ -n "$$hook_dir" ]; then \
-				mkdir -p "$$hook_dir"; \
-				ln -sf "$(CURDIR)/.githooks/pre-commit" "$$hook_dir/pre-commit"; \
-				echo "🔗 已绑定子模块 $$d 治理 pre-commit 软链"; \
-			fi; \
+			( \
+				cd "$$d" && \
+				hook_dir=$$(git rev-parse --git-path hooks 2>/dev/null || echo ""); \
+				if [ -n "$$hook_dir" ]; then \
+					abs_hook_dir=$$(python3 -c "import os; print(os.path.abspath('$$hook_dir'))"); \
+					mkdir -p "$$abs_hook_dir"; \
+					ln -sf "$(CURDIR)/.githooks/pre-commit" "$$abs_hook_dir/pre-commit"; \
+					echo "🔗 已绑定子模块 $$d 治理 pre-commit 软链 -> $$abs_hook_dir/pre-commit"; \
+				fi \
+			) \
 		fi; \
 	done
 
