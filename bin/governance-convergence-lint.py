@@ -19,7 +19,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 import re
 import subprocess
 import sys
@@ -102,7 +101,6 @@ def check_score_convergence() -> tuple[list[str], list[str]]:
 
 def check_feedback_loop() -> tuple[list[str], list[str]]:
     """R-GOV-3: governance feedback loop alive (last run < 6h)."""
-    import time
     errors, warnings = [], []
     data = _read_system_yaml()
     last_run = data.get("governance_feedback_last_run")

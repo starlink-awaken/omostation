@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Generate BRIEF.md containing Decision Inbox and X3 Value Metrics."""
 import argparse
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -118,7 +117,7 @@ def generate_brief_content() -> str:
     health_score = 90
     gov_anomaly = 100
     online_ratio = 1.0
-    freshness = 100
+
     
     if SYSTEM_YAML.is_file():
         try:
