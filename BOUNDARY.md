@@ -41,3 +41,7 @@
 - 项目源码：`projects/agora/`
 - 入口定义：`projects/agora/pyproject.toml` 或 `package.json`
 - 测试：`cd projects/agora && uv run pytest tests/ --ignore=tests/e2e -q`
+
+## 架构演进与项目边界索引
+
+参见工作区架构演进与项目边界：[`../../docs/ARCHITECTURE-EVOLUTION.md`](../../docs/ARCHITECTURE-EVOLUTION.md)
