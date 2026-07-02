@@ -169,11 +169,13 @@ CI_ONLY_CHECKS = {
     "doc-ssot-lint",
 }
 
-# CI 环境跳过的 check (本地运维 check, CI fresh checkout 无运行时 env 跑恒红无意义).
-# P0-fix (2026-07-02): agent-workflow-doctor 查 omo/c2g/cockpit 集成健康, 依赖 .venv + CLI,
-# CI fresh checkout 没有 → doctor 永红. doctor 是本地开发环境 check, CI 跳 (本地 strict 照跑).
+# CI 环境跳过的 check (CI fresh checkout 无运行时 env / generated 派生物, 跑恒红无意义).
+# P0-fix (2026-07-02):
+#  - agent-workflow-doctor: 查 omo/c2g/cockpit 集成健康, 依赖 .venv+CLI, CI 无 -> 永红. 本地运维 check.
+#  - project-layer-index: docs/generated/ gitignored, CI 无 generated -> --check 必 stale. 本地 strict 照跑.
 CI_SKIP_CHECKS = {
     "agent-workflow-doctor",
+    "project-layer-index",
 }
 
 
