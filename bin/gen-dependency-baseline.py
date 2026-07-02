@@ -199,14 +199,14 @@ def main() -> int:
     derived = derive_baseline(deps)
 
     if args.dry_run:
-        print(f"# 治本 ISC-15: 从 {len(deps)} 个外部依赖推导的 baseline (源: projects/**/pyproject.toml)")
-        print(f"# 注: --write 走 omo broker (C2 方案 C: subprocess 调 omo baseline write, 不直写)")
+        print("# 治本 ISC-15: 从 {len(deps)} 个外部依赖推导的 baseline (源: projects/**/pyproject.toml)")
+        print("# 注: --write 走 omo broker (C2 方案 C: subprocess 调 omo baseline write, 不直写)")
         print()
         for name, info in derived.items():
             consumers = ", ".join(info["consumers"][:5])
             more = f" (+{info['consumer_count']-5})" if info["consumer_count"] > 5 else ""
-            print(f"  {name:<28} baseline={info['baseline']:<12} consumers=[{consumers}{more}]")
-        print(f"\n📊 共 {len(derived)} 个外部依赖")
+            print("  {name:<28} baseline={info['baseline']:<12} consumers=[{consumers}{more}]")
+        print("\n📊 共 {len(derived)} 个外部依赖")
         return 0
 
     if args.write:
@@ -224,7 +224,7 @@ def main() -> int:
         }
         targets = {k: v for k, v in targets.items() if v and v != "(none)"}
         if not targets:
-            print(f"✅ 无 mismatched/unconstrained drift, 无需写入 ({len(derived)} deps)")
+            print("✅ 无 mismatched/unconstrained drift, 无需写入 ({len(derived)} deps)")
             return 0
         patches_json = json.dumps(targets, ensure_ascii=False)
         omo_python = WORKSPACE / "projects" / "omo" / ".venv" / "bin" / "python"
@@ -236,14 +236,14 @@ def main() -> int:
             "--patches", patches_json,
             "--actor", "gen-dependency-baseline",
         ]
-        print(f"📡 gen --write: 调 omo broker patch {len(targets)} 项 baseline (不直写, 走 broker 合规)")
+        print("📡 gen --write: 调 omo broker patch {len(targets)} 项 baseline (不直写, 走 broker 合规)")
         for name, new_b in targets.items():
-            print(f"   ⬆ {name}: → {new_b}")
+            print("   ⬆ {name}: → {new_b}")
         result = subprocess.run(cmd, cwd=str(WORKSPACE / "projects" / "omo"), env=env, capture_output=True, text=True)
         if result.stdout:
             print(result.stdout, end="")
         if result.returncode != 0:
-            print(f"❌ omo baseline write 失败 (rc={result.returncode}):\n{result.stderr}", file=sys.stderr)
+            print("❌ omo baseline write 失败 (rc={result.returncode}):\n{result.stderr}", file=sys.stderr)
             return result.returncode
         return 0
 
@@ -252,29 +252,29 @@ def main() -> int:
         drift = check_drift(derived, current)
         total = sum(len(v) for v in drift.values())
         if total == 0:
-            print(f"✅ dependency-baseline 无 drift ({len(derived)} deps 全部对齐)")
+            print("✅ dependency-baseline 无 drift ({len(derived)} deps 全部对齐)")
             return 0
 
-        print(f"❌ 检测到 {total} 项 dependency-baseline drift:\n")
+        print("❌ 检测到 {total} 项 dependency-baseline drift:\n")
         if drift["unconstrained"]:
-            print(f"  ⚠️  UNCONSTRAINED ({len(drift['unconstrained'])}): baseline (none) 但 pyproject 有下限 (C1 实证)")
+            print("  ⚠️  UNCONSTRAINED ({len(drift['unconstrained'])}): baseline (none) 但 pyproject 有下限 (C1 实证)")
             for d in drift["unconstrained"]:
-                print(f"     - {d['name']}: baseline={d['current']} → pyproject={d['pyproject_lower']} ({d['consumers']} consumers)")
+                print("     - {d['name']}: baseline={d['current']} → pyproject={d['pyproject_lower']} ({d['consumers']} consumers)")
         if drift["missing"]:
-            print(f"  ⚠️  MISSING ({len(drift['missing'])}): pyproject 有但 baseline 未登记")
+            print("  ⚠️  MISSING ({len(drift['missing'])}): pyproject 有但 baseline 未登记")
             for d in drift["missing"][:10]:
-                print(f"     - {d['name']} (consumers={d['consumers']}, derived={d['derived_baseline']})")
+                print("     - {d['name']} (consumers={d['consumers']}, derived={d['derived_baseline']})")
             if len(drift["missing"]) > 10:
-                print(f"     ... 及其他 {len(drift['missing'])-10} 项")
+                print("     ... 及其他 {len(drift['missing'])-10} 项")
         if drift["stale"]:
-            print(f"  ⚠️  STALE ({len(drift['stale'])}): baseline 有但 pyproject 无 (依赖已移除)")
+            print("  ⚠️  STALE ({len(drift['stale'])}): baseline 有但 pyproject 无 (依赖已移除)")
             for d in drift["stale"][:10]:
-                print(f"     - {d['name']} (baseline={d['current']})")
+                print("     - {d['name']} (baseline={d['current']})")
         if drift["mismatched"]:
-            print(f"  ⚠️  MISMATCHED ({len(drift['mismatched'])}): baseline 与 pyproject 下限不一致")
+            print("  ⚠️  MISMATCHED ({len(drift['mismatched'])}): baseline 与 pyproject 下限不一致")
             for d in drift["mismatched"][:10]:
-                print(f"     - {d['name']}: baseline={d['current']} vs derived={d['derived']}")
-        print(f"\n修复: python bin/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml")
+                print("     - {d['name']}: baseline={d['current']} vs derived={d['derived']}")
+        print("\n修复: python bin/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml")
         return 1
 
     return 0

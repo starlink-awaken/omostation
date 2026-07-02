@@ -216,10 +216,8 @@ def suggest_modules(path: str, lines: int, analysis: dict | None) -> list[dict]:
         return []
 
     top_funcs = analysis["top_functions"][:5]
-    excess = lines - WARN_THRESHOLD
     path_basename = Path(path).stem  # e.g. "omo_governance_surfaces"
     # Convert to module name: omo_governance_surfaces -> omo.governance_surfaces
-    module_stem = path_basename.replace("_", ".").removeprefix("omo.")
 
     # Strategy: split top 2-3 functions into child modules
     # Each split: largest first, cumulative reduction
@@ -231,7 +229,6 @@ def suggest_modules(path: str, lines: int, analysis: dict | None) -> list[dict]:
         if func_lines < 50:
             break  # No more meaningful splits
         # Determine child module name
-        child_suffix = func_name.replace("_", ".").replace("check.", "").replace("cmd.", "")
         # Extract semantic: _check_X → X, _mutation_surface_registry_snapshot → mutation_surface.snapshot
         if func_name.startswith("_check_"):
             child_name = func_name[len("_check_"):]
