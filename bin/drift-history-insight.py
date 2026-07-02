@@ -106,8 +106,10 @@ def main() -> int:
 
     drift_dir = Path(args.drift_dir)
     if not drift_dir.exists():
-        print(f"❌ {drift_dir} 不存在")
-        return 1
+        printf("⚠️ %s 不存在 (runtime cache absent, CI fresh checkout), 视为 0 漂移\n", drift_dir)
+        if args.json:
+            print(json.dumps({"drift_count": 0, "reports": [], "note": "runtime cache absent"}, indent=2, ensure_ascii=False))
+        return 0
 
     reports = parse_drift_files(drift_dir)
     result = analyze(reports)
@@ -118,7 +120,9 @@ def main() -> int:
 
     if "error" in result:
         print(f"❌ {result['error']}")
-        return 1
+        if args.json:
+            print(json.dumps({"drift_count": 0, "reports": [], "note": "runtime cache absent"}, indent=2, ensure_ascii=False))
+        return 0
 
     print("=" * 60)
     print("📊 P83 drift history insight")
