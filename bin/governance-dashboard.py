@@ -40,12 +40,12 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     ("management-cross-ref", "P82+P83 management 跨文件引用", "bin/management-cross-ref-check.py", ["."]),
     ("god-module-roadmap", "P87 god-module refactor (示例文件)", "bin/god-module-roadmap.py",
      ["projects/omo/src/omo/omo_lint.py", "--top", "3"]),
-    ("gov-trend-report", "P88 governance 趋势 (weekly 窗口)", "bin/gov-trend-report.py",
+    ("governance-trend-report", "P88 governance 趋势 (weekly 窗口)", "bin/governance-trend-report.py",
      ["--window", "weekly"]),
     ("rule-history-insight", "P89 X2 rule 状态洞察", "bin/rule-history-insight.py", []),
     ("adr-drift-check", "P89 ADR 引用 drift (信息性, 全量扫描)", "bin/adr-drift-check.py", []),
     ("adr-drift-classify", "P90 ADR drift 归类 (历史 vs 新增)", "bin/adr-drift-classify.py", []),
-    ("gov-history-stats", "P91 gov history 深化 (30 天 + 类别趋势)", "bin/gov-history-stats.py",
+    ("governance-history-stats", "P91 gov history 深化 (30 天 + 类别趋势)", "bin/governance-history-stats.py",
      ["--days", "30"]),
     ("adr-trend-insight", "P92 ADR 趋势 (phase 分布 + 提交历史)", "bin/adr-trend-insight.py", []),
     ("adr-drift-auto-fix", "P93 ADR drift 自动归类 (TEMPLATE/SUBDIR/TYPO/REAL)", "bin/adr-drift-auto-fix.py", []),
@@ -87,18 +87,78 @@ def run_tool(workspace: Path, tool_id: str, bin_path: str, args: list[str]) -> d
         return {"id": tool_id, "ok": False, "error": str(e)}
 
 
+# ADR-0115 Phase 4 (partial): 合并 4 个 dashboard 工具
+#   - dashboard-readiness-summary  → --readiness-summary
+#   - dashboard-ui-render          → --ui-render
+#   - gac-dashboard                → 留独立 (GaC 健康, 跟 governance-dashboard 不同主题)
+# 留 follow-up ADR 触发 P81 R2 的 UI render 完全合并 (跨文件引用 50+ 行, 风险高).
+
+def _cmd_readiness_summary(workspace: Path) -> int:
+    """ADR-0115 Phase 4: 合并 bin/dashboard-readiness-summary.py."""
+    full = workspace / "bin" / "dashboard-readiness-summary.py"
+    if not full.exists():
+        print(f"❌ 工具不存在: {full}", file=sys.stderr)
+        return 1
+    result = subprocess.run(
+        ["python3", str(full), "--format", "json"],
+        cwd=str(workspace),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, file=sys.stderr, end="")
+    return result.returncode
+
+
+def _cmd_ui_render(workspace: Path, output_html: str) -> int:
+    """ADR-0115 Phase 4: 合并 bin/dashboard-ui-render.py."""
+    full = workspace / "bin" / "dashboard-ui-render.py"
+    if not full.exists():
+        print(f"❌ 工具不存在: {full}", file=sys.stderr)
+        return 1
+    # dashboard-ui-render 读 readiness summary 直接 (不需要中间文件)
+    result = subprocess.run(
+        ["python3", str(full), "--output", output_html],
+        cwd=str(workspace),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, file=sys.stderr, end="")
+    return result.returncode
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="P86: governance dashboard")
     parser.add_argument("--root", default=".", help="workspace root")
     parser.add_argument("--tools", default=None,
                         help="逗号分隔的 tool id 子集 (默认全部)")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
+    # ADR-0115 Phase 4 (partial): 2 合并的 dashboard 子命令
+    parser.add_argument("--readiness-summary", action="store_true",
+                        help="合并 dashboard-readiness-summary 功能 (--json only)")
+    parser.add_argument("--ui-render", metavar="HTML", default=None,
+                        help="合并 dashboard-ui-render 功能, 输出到 HTML 文件")
     args = parser.parse_args()
 
     workspace = Path(args.root).resolve()
     if not (workspace / ".omo").exists():
         print(f"❌ {workspace} 不存在 .omo")
         return 1
+
+    # ADR-0115 Phase 4: 合并 dashboard-readiness-summary 子命令
+    if args.readiness_summary:
+        return _cmd_readiness_summary(workspace)
+
+    # ADR-0115 Phase 4: 合并 dashboard-ui-render 子命令
+    if args.ui_render:
+        return _cmd_ui_render(workspace, args.ui_render)
+
+    # 默认: 原 P86 仪表盘 (调用 19 个治理工具)
 
     # 选择工具
     selected = set(args.tools.split(",")) if args.tools else None

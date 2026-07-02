@@ -96,6 +96,8 @@ initiatives:
       - governance-evolution validate checks the Cockpit delegation contract.
     done_when: Operators can inspect AGCP and governance evolution views from Cockpit without reading low-level files.
     blocked_by: []
+    next_step: |-
+      cockpit-ui 入口待 cockpit-team 落地; 当前 governance evolution status 通过 bin/governance-evolution.py status --json 暴露 (3 入口之一).
   - id: claim-policy-tiering
     title: Claim policy tiering
     recommendation: Keep core governance paths on required claim tiers while broader docs and entrypoint paths stay advisory.
@@ -120,6 +122,8 @@ initiatives:
       - Claim coverage reports required and advisory misses separately.
     done_when: Claim policy tiering blocks unclaimed core governance changes while keeping broad docs advisory.
     blocked_by: []
+    next_step: |-
+      P72 原则 4 (lane 单 commit) 在 S1 阶段实例化; S2 进一步收紧 governance_state + governance_code 混 commit 治理面, 收口后 8/8 initiative 都单 lane 可走.
   - id: bos-governance-evolution-routes
     title: BOS governance evolution routes
     recommendation: Expose governance roadmap, validation, traces, golden paths, release packages, and loop status through BOS so MCP agents can discover them without prompt memory.
@@ -148,6 +152,8 @@ initiatives:
       - BOS routes execute the same registry-backed runner commands as direct CLI usage.
     done_when: Agents can discover every governance evolution status view and loop monitor through BOS.
     blocked_by: []
+    next_step: |-
+      bin/governance-evolution.py status --json 已落地 (3 入口: human=cockpit / agent=cockpit agent / gate=make gac-local-gate); 6 BOS URI 路由已注册到 entrypoints. 下: release package 暴露 (S2/S3).
   - id: capability-traceability
     title: Capability to entrypoint to verifier traceability
     recommendation: Every strategic capability should map to owner, entrypoint, SSOT, and verification command.
@@ -171,6 +177,8 @@ initiatives:
       - Trace output stays machine-readable for agents and Cockpit.
     done_when: governance-evolution traces covers AGCP, roadmap, packages, C2G ingress, and MOF bridge.
     blocked_by: []
+    next_step: |-
+      S1 F-6 落地 6/7 check-* 工具 (按 FP 风险分级接入 gac-local-gate); F-2 落地 state-freshness-check.py 7/8 capability. S2 F-14 后 8/8 capability 闭环 (governance-convergence 全 PASS).
   - id: governance-operating-rhythm
     title: OMO C2G MOF operating rhythm
     recommendation: Make state bridge, ingress, and drift checks part of a visible operating cadence instead of ad-hoc deep maintenance.
@@ -197,6 +205,8 @@ initiatives:
       - Missing optional adapters degrade through AGCP doctor instead of bypassing governance.
     done_when: Governance maintenance has daily, weekly, and pre-release executable checks.
     blocked_by: []
+    next_step: |-
+      F-2 step 1+2 (本 S2 PR) 落地 bin/state-freshness-check.py + 接入 gac-local-gate (默认 mode 跑, 派生快照 generated_at 新鲜度守门). step 3 (本 commit) 进度填充. 下: cron 周期 + radar_cron 兜底.
   - id: golden-path-e2e
     title: Golden path end-to-end checks
     recommendation: "Keep three canonical flows visible and verifiable: agent change, strategy ingress, and BOS invocation."
@@ -219,6 +229,8 @@ initiatives:
       - The roadmap validator enforces golden path structure.
     done_when: Golden paths cover agent execution, strategy ingress, BOS discovery, and release package review.
     blocked_by: []
+    next_step: |-
+      PR #11/#15/#17/#19/#20 5 PR 闭合 S0+S1+S2 部分; S2 F-2 (本 PR) + F-8/F-13 路线图已开. 三金路径 (agent change / strategy ingress / BOS invocation) 在 gac-local-gate + governance-semantic-gate 已守.
   - id: entrypoint-convergence
     title: Entry point convergence
     recommendation: Keep human, agent, and gate entrypoints narrow while leaving lower-level commands as implementation details.
@@ -245,6 +257,8 @@ initiatives:
       - Lower-level bin commands remain implementation details unless surfaced by Cockpit, BOS, or GaC.
     done_when: Entrypoint documentation matches the registry-backed control plane and has no SSOT drift.
     blocked_by: []
+    next_step: |-
+      bin/gac-local-gate.py (human) + bin/agent-workflow.py (agent) + bin/governance-semantic-gate.py (gate) 3 入口收敛. ADR-0115 Phase 4 (4 dashboard 合并) 留 S2/S3.
 capability_traces:
   - id: trace.agent-governance-control-plane
     capability: Agent governance control plane
