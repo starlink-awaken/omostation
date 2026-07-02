@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P89 R1: X2 rule 历史与命中情况洞察工具.
 
-读取 .omo/_truth/x2-freshness-rules.yaml + .omo/_control/evolution/drift/*.json,
+读取 .omo/_truth/x2-freshness-rules.yaml + runtime/omo/_control/evolution/drift/*.json,
 输出每条 rule 的:
 - target 路径最新修改时间
 - 是否在 threshold_days 内 (fresh / stale)
@@ -140,7 +140,7 @@ def correlate(rules: list[dict], drift_reports: list[dict], root: Path, now: dat
 def main() -> int:
     parser = argparse.ArgumentParser(description="P89: X2 rule history insight")
     parser.add_argument("--rules", default=".omo/_truth/x2-freshness-rules.yaml")
-    parser.add_argument("--drift-dir", default=".omo/_control/evolution/drift")
+    parser.add_argument("--drift-dir", default="runtime/omo/_control/evolution/drift")
     parser.add_argument("--root", default=".")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()

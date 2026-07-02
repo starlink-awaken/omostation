@@ -390,11 +390,14 @@ def parse_status_line(line: str) -> tuple[str, str]:
 
 
 def classify_release_package(path: str) -> tuple[str, str]:
-    if path.startswith((".omo/_control/", ".omo/_delivery/agent-workflows/", ".omo/state/")):
+    if path.startswith((
+        ".omo/_control/", ".omo/_delivery/agent-workflows/", ".omo/state/",
+        "runtime/omo/_control/", "runtime/omo/_delivery/agent-workflows/", "runtime/omo/state/",
+    )):
         return "runtime-or-control-output", "review evidence/control output before including in a release package"
-    if path.startswith(".omo/_knowledge/") or path.startswith(".omo/change-log/"):
+    if path.startswith((".omo/_knowledge/", ".omo/change-log/", "runtime/omo/_knowledge/", "runtime/omo/change-log/")):
         return "governance-history-evidence", "review as governance evidence/history, not executable control logic"
-    if path.startswith(".omo/tasks/"):
+    if path.startswith((".omo/tasks/", "runtime/omo/tasks/")):
         return "governance-task-lifecycle", "review OMO task lifecycle state and registry effects"
     if path.endswith("-audit-report.md"):
         return "governance-audit-report", "review root audit report placement and release intent"
@@ -404,7 +407,7 @@ def classify_release_package(path: str) -> tuple[str, str]:
         return "archived-artifact", "review archive deletion or migration intent before release"
     if path.startswith("data/"):
         return "data-output", "keep user/runtime data out of governance release packages unless explicitly required"
-    if path.startswith(".omo/_truth/registry/") or path.startswith(".omo/standards/"):
+    if path.startswith((".omo/_truth/registry/", ".omo/standards/", "runtime/omo/_truth/registry/", "runtime/omo/standards/")):
         return "governance-truth-and-standards", "review with AGCP claim coverage and SSOT checks"
     if path.startswith("ecos/src/ecos/ssot/mof/") or path.startswith("projects/ecos/src/ecos/ssot/mof/"):
         return "mof-model-registry", "review MOF schema/state bridge and model drift checks"

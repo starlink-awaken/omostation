@@ -295,7 +295,7 @@ packages = {{
     "archived-artifact": {{"paths": ["_archived/example/README.md"]}},
     "workspace-config": {{"paths": [".github/workflows/governance-check.yml"]}},
     "submodule-pointer": {{"paths": ["projects/agora"]}},
-    "runtime-or-control-output": {{"paths": [".omo/_control/evolution/drift/example.json"]}},
+    "runtime-or-control-output": {{"paths": ["runtime/omo/_control/evolution/drift/example.json"]}},
     "data-output": {{"paths": ["data/cards/example.db"]}},
 }}
 findings = module.release_review_findings(packages)
@@ -384,7 +384,7 @@ def test_release_package_classifier_covers_convergence_edges() -> None:
         "projects/omo",
         ".omo/state/system_health.yaml",
         ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
-        ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r1.md",
+        "runtime/omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r1.md",
         "debt-audit-report.md",
         ".c2g_data/pitches/example.md",
         "_archived/agora-dashboard/README.md",
@@ -423,7 +423,7 @@ print(json.dumps({{path: module.classify_release_package(path)[0] for path in {p
         "projects/omo": "submodule-pointer",
         ".omo/state/system_health.yaml": "runtime-or-control-output",
         ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml": "governance-task-lifecycle",
-        ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r1.md": "governance-task-lifecycle",
+        "runtime/omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-07-01-r1.md": "governance-task-lifecycle",
         "debt-audit-report.md": "governance-audit-report",
         ".c2g_data/pitches/example.md": "strategy-ingress-artifact",
         "_archived/agora-dashboard/README.md": "archived-artifact",
