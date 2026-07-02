@@ -184,3 +184,8 @@ Historical closeout details are useful evidence but should not be pasted into th
 Do not paste the full rule inventory into `AGENTS.md`; keep this file as an operational pointer.
 
 <!-- GaC-RULES-END -->
+
+## 归档/收敛项目说明 (project-registry-ssot 契约)
+
+- agora-dashboard 独立入口已收敛 (历史快照, 能力并入 cockpit/agora)
+- hermes-console 与 dashboard_server 作为子应用挂载 (L3 入口能力收敛到 cockpit/agora)
