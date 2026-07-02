@@ -1,60 +1,16 @@
 #!/bin/bash
-# 织星 L0 — 提交后文档/知识异步更新 (Phase 34, 修正版)
-# 规则：
-#   - 只生成/更新派生文件，不自动创建新 commit
-#   - 生成的改动留在 working tree，由人类/Agent 审阅后手动提交
-#   - 设置 SKIP_POST_COMMIT=true 可跳过
+# post-commit — 异步写时更新 (Write-on-Commit)
+#
+# 每次本地提交成功后，异步执行治理数据生成，
+# 确保仪表板数据绝对新鲜，彻底消灭滞后。
 
 set -e
 
-if [ "${SKIP_POST_COMMIT:-}" = "true" ]; then
-    exit 0
+ROOT="$(git rev-parse --show-toplevel)"
+
+if [ -f "$ROOT/scripts/generate-governance-data.py" ]; then
+  # 异步非阻塞运行，不卡顿 Git Commit 交付体验
+  nohup python3 "$ROOT/scripts/generate-governance-data.py" >/dev/null 2>&1 &
 fi
 
-CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
-TOOLS_DIR="projects/ecos/src/ecos/ssot/tools"
-M1_DIR="projects/ecos/src/ecos/ssot/m1"
-IMPACT_LOG="$HOME/.ecos/commit-impact.log"
-
-L0_CHANGED=$(echo "$CHANGED_FILES" | grep -cE "$M1_DIR/" || true)
-L4_CHANGED=$(echo "$CHANGED_FILES" | grep -ciE '(\.omo/_knowledge/|AGENTS\.md|CLAUDE\.md)' || true)
-API_CHANGED=$(echo "$CHANGED_FILES" | grep -c "$M1_DIR/workflow/" || true)
-BOS_CHANGED=$(echo "$CHANGED_FILES" | grep -cE 'bos_(router|middleware|metrics|discovery|protocol)' || true)
-XPLANE_CHANGED=$(echo "$CHANGED_FILES" | grep -ciE '(protocols/(x-axis|port)-registry\.yaml|omo_xplane\.py|check-(port-registry|interfaces|cross-deps)\.py|sync_omo_state\.py)' || true)
-L0_CHANGED=$((L0_CHANGED + XPLANE_CHANGED))
-
-echo "[$(date)] Commit impact: L0=$L0_CHANGED L4=$L4_CHANGED Workflow=$API_CHANGED BOS=$BOS_CHANGED" >> "$IMPACT_LOG"
-
-if [ "$L0_CHANGED" = "0" ] && [ "$L4_CHANGED" = "0" ]; then
-    exit 0
-fi
-
-# 异步执行：生成派生文件，但不 commit
-(
-    cd "$TOOLS_DIR"
-
-    if [ "$L4_CHANGED" != "0" ]; then
-        echo "  📝 Phase 2: mof-extract (background, no auto-commit)..."
-        python3 mof-extract.py > /dev/null 2>&1 || true
-    fi
-
-    if [ "$L0_CHANGED" != "0" ]; then
-        echo "  🔍 Phase 3: L0 validation (background)..."
-        if python3 mof-validate.py > /dev/null 2>&1; then
-            if [ "$API_CHANGED" != "0" ]; then
-                echo "  📄 Phase 4: API reference update (background)..."
-                python3 mof-workflow.py stats --json > /dev/null 2>&1 || true
-            fi
-            echo "  📊 Phase 5: Schema report (background)..."
-            python3 mof-workflow.py schema-report --json > /dev/null 2>&1 || true
-            if [ "$BOS_CHANGED" != "0" ]; then
-                echo "  🔄 Phase 6: BOS declaration — see agora/AGENTS.md" >> "$IMPACT_LOG"
-            fi
-        else
-            echo "[$(date)] ⚠️ L0 validation failed — skipping auto-generated file cleanup" >> "$IMPACT_LOG"
-            find ../mof/m1/ -name '*.tmp' -o -name '*.auto.yaml' 2>/dev/null | xargs rm -f 2>/dev/null || true
-        fi
-    fi
-
-    echo "[$(date)] Post-commit background tasks done. Review generated files before committing." >> "$IMPACT_LOG"
-) &
+exit 0
