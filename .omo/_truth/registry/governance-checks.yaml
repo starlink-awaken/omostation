@@ -414,6 +414,34 @@ gac:
       created_at: "2026-07-02"
       adr: "ADR-0106"
 
+    # ── X4 一致性: bin 工具命名空间 (P3-1 ADR-0115 Phase 1 2026-07-02) ──
+    - id: CR-META-BIN-NAMING
+      dimension: X4
+      layer: meta
+      name: "bin 工具命名空间一致"
+      description: "防命名漂移: bin/*.py 工具按域归类共享单前缀 (gac-/governance-/adr-/doc-/x2-/auto-merge-/submodule- 等), 禁止短前缀 gov- 代替 governance-. 命名迁移计划见 ADR-0115 Phase 2 (gov-history-stats → governance-history-stats). 标准: .omo/standards/bin-tool-naming.md"
+      check_type: registry_integrity
+      target: ".omo/standards/bin-tool-naming.md + bin/*.py"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0106"
+
+    # ── X1 审计: bin 工具未接 caller drift (P3-1 ADR-0115 Phase 1 2026-07-02) ──
+    - id: CR-META-BIN-ORPHAN
+      dimension: X1
+      layer: meta
+      name: "bin 工具未接 caller drift (工具存在但 0 caller)"
+      description: "防元治理盲区 2.0: bin/*.py 工具应至少有一个 caller (Makefile / .github/workflows/ / pre-commit / gac-local-gate.py::CHECKS / docs 之一). 0 caller 工具落入'声明/执行鸿沟' (同 CR-X1-EVIDENCE-RUNNABLE 警示). 当前已知 8 个 check-* 工具 0 caller 待 ADR-0115 Phase 3 评估接入. 实现: bin/gac-executor.py 扩展检查 'caller 引用' 而非仅 '文件存在'"
+      check_type: drift_audit
+      target: "bin/gac-executor.py (扩展: 检查 bin/*.py 是否有 caller 引用)"
+      executor: [ci_gate, radar_cron]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
     - id: X1-OMNI-BUS-ROUTING-20260617

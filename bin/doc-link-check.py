@@ -89,6 +89,13 @@ def check_file(path: Path) -> list[dict[str, object]]:
         resolved = resolve_link(path, target)
         if resolved.exists():
             continue
+        # generated 派生物 (docs/generated/, gitignored): CI 无, 存在性由生成器保证
+        # (project-layer-index --write 等), doc-link-check 不管 -> 跳过 (P0-fix 2026-07-02)
+        try:
+            if resolved.relative_to(WORKSPACE).parts[:2] == ("docs", "generated"):
+                continue
+        except ValueError:
+            pass
         lineno = 1
         for idx, start in enumerate(line_starts, start=1):
             if start > match.start():
