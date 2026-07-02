@@ -38,13 +38,13 @@ def test_summarize_system_health_snapshot_returns_runtime_summary_only():
                 "agora": {
                     "port_listening": True,
                     "health_check": "healthy",
-                    "runtime": {"freshness_seconds": 5},
+                    "runtime": {"uptime_seconds": 5, "last_healthy_seconds": 0},
                 },
                 "gbrain": {
                     "type": "daemon",
                     "port_listening": False,
                     "health_check": "unreachable",
-                    "runtime": {"freshness_seconds": 90000},
+                    "runtime": {"uptime_seconds": 90000, "last_healthy_seconds": 7200},
                 },
             },
         }

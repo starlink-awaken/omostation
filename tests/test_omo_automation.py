@@ -154,13 +154,13 @@ def test_sync_state_bridges_runtime_health_as_summary_only(tmp_path: Path):
                 "agora": {
                     "port_listening": True,
                     "health_check": "healthy",
-                    "runtime": {"freshness_seconds": 10},
+                    "runtime": {"uptime_seconds": 10, "last_healthy_seconds": 0},
                 },
                 "gbrain": {
                     "type": "daemon",
                     "port_listening": False,
                     "health_check": "unreachable",
-                    "runtime": {"freshness_seconds": 90001},
+                    "runtime": {"uptime_seconds": 90001, "last_healthy_seconds": 7200},
                 },
             },
         },

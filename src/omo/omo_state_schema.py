@@ -86,13 +86,19 @@ def summarize_system_health_snapshot(payload: Any) -> dict[str, Any]:
             healthy += 1
         elif service.get("health_check") in _UNHEALTHY_STATES:
             unhealthy_services.append(str(name))
-        freshness_seconds = service.get("runtime", {}).get("freshness_seconds")
-        if isinstance(freshness_seconds, int) and freshness_seconds > 86400:
+        # Staleness: based on time since last confirmed healthy, not uptime
+        # (ADR-0120: freshness_seconds is uptime, not staleness — using it
+        #  as stale indicator caused all long-running services to be misflagged)
+        last_healthy_seconds = service.get("runtime", {}).get("last_healthy_seconds")
+        if isinstance(last_healthy_seconds, int) and last_healthy_seconds > 3600:
             stale_services.append(str(name))
-        # offline: 只算常驻服务没监听端口 (非常驻类型按需, 不计离线)
+        # offline: only count resident services where process is not running.
+        # A daemon without port (e.g. stdio MCP gateway, hermes-gateway) is NOT
+        # offline just because port_listening is None — check runtime.status.
         if (
             service.get("type") in _RESIDENT_TYPES
             and service.get("port_listening") is not True
+            and service.get("runtime", {}).get("status") not in ("running", "idle")
         ):
             resident_offline += 1
 
