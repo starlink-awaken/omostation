@@ -1,4 +1,6 @@
-generated_at: '2026-06-11T17:00:00Z'
+generated_at: '2026-07-02T03:55:00Z'
+last_reconciled_at: '2026-07-02T03:55:00Z'
+reconciliation_note: 'partial 计数对齐 debt.yaml (当前无 partial item). 前值 2 (2026-06-11) 是历史快照已无对应 registry 记录. 见 ISC-12/50.'
 debt_metrics:
   debt_health: 100.0
   classification_entropy: 0.0
@@ -31,7 +33,7 @@ health_trend:
 debt_categories:
   technical:
     resolved: 1
-    partial: 2
+    partial: 0
     unresolved: 0
   governance:
     resolved: 8
