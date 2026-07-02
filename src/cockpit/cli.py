@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time as _time_mod
-from urllib import request as urlrequest  # noqa: F401
+from urllib import request as urlrequest
 
 from rich import box
 from rich.console import Console
@@ -15,7 +15,7 @@ from rich.panel import Panel
 # ── Shared singletons (defined here so tests can monkeypatch cli.xxx) ──
 console = Console()
 err = Console(stderr=True)
-from .storage import get_data_access  # noqa: F401
+from .storage import get_data_access
 
 time = _time_mod
 
@@ -24,7 +24,7 @@ time = _time_mod
 from .commands.audit import cmd_audit
 from .commands.base import (
     _SCRIPT_DIR,
-    _find_cli,  # noqa: F401
+    _find_cli,
 )
 from .commands.brief import _cmd_brief
 from .commands.contracts import (
@@ -43,8 +43,8 @@ from .commands.mcp import cmd_mcp
 from .commands.profile import cmd_profile
 from .commands.research import (
     _cmd_research_batch,
-    _notify_research_complete,  # noqa: F401
-    _research_progress,  # noqa: F401
+    _notify_research_complete,
+    _research_progress,
     cmd_research,
     cmd_research_agent,
     cmd_research_archive,
@@ -73,7 +73,7 @@ from .commands.research import (
 )
 from .commands.search import _cmd_search
 from .commands.status import (
-    _render_workbench,  # noqa: F401
+    _render_workbench,
     cmd_daily,
     cmd_dashboard,
     cmd_demo,

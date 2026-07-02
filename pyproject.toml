@@ -49,7 +49,7 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "S", "PLE", "RUF100"]
-ignore = ["S101", "S603", "S607", "S108", "S110", "S314", "S608", "E402", "E501", "SIM115", "N813", "UP047"]
+ignore = ["S101", "S603", "S607", "S108", "S110", "S314", "S608", "E402", "E501", "SIM115", "N813", "UP047", "F401"]  # F401: cli.py re-export (tests monkeypatch via cli.xxx), 跟 CI workflow --ignore F401 一致
 
 [tool.ruff.format]
 quote-style = "double"

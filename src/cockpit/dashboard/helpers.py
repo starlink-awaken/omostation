@@ -20,10 +20,10 @@ from cockpit.dashboard.constants import (
 )
 from cockpit.web.auth import get_subservice_token
 
-from .helpers_arch_health import load_arch_health  # noqa: F401
+from .helpers_arch_health import load_arch_health
 
 # P110-E (TASK-F7114ABA 治本): load_compute / load_arch_health 拆分
-from .helpers_compute import load_compute  # noqa: F401
+from .helpers_compute import load_compute
 
 # ─── File I/O ──────────────────────────────────────────────────
 

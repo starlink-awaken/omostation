@@ -7,7 +7,7 @@ from typing import Any, Protocol, runtime_checkable
 
 # P110-F (TASK-F7114ABA 治本): DB_PATH SSOT 提 cockpit.paths (避免 storage↔storage_sqlite 循环重复)
 # P110-F (TASK-F7114ABA 治本): SQLiteDataAccess 拆分
-from .paths import DB_PATH  # noqa: F401 (re-export for tests)
+from .paths import DB_PATH
 from .storage_sqlite import SQLiteDataAccess
 
 # ──────────────────────────────────────────────────────────────────────
