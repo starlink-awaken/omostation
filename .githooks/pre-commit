@@ -38,6 +38,7 @@ if [ -f "$ROOT/bin/ssot-guardian.py" ]; then
 fi
 
 if [ -f "$ROOT/bin/gac-audit-engine.py" ]; then
+  # 调用中央 audit-engine 进行 atomic_write (debt) 的静态 AST 审计拦截
   python3 "$ROOT/bin/gac-audit-engine.py" --staged 2>&1 | sed 's/^/[audit] /' >&2
 fi
 
