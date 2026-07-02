@@ -504,6 +504,26 @@ def main() -> int:
         help="Arguments passed to bin/agent-workflow.py",
     )
 
+    # ── CLI 收敛: agent-runtime 并入 cockpit ─────────────────
+    agent_runtime_p = sub.add_parser(
+        "agent-runtime",
+        help="🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令)",
+        epilog=(
+            "示例:\n"
+            '  cockpit agent-runtime --prompt "Hello"\n'
+            "  cockpit agent-runtime --task my-task\n"
+            "  cockpit agent-runtime --server --port 8080\n"
+            '  cockpit agent-runtime --model gpt-4 --tools read write --prompt "Hi"'
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    agent_runtime_p.add_argument("--prompt", "-p", help="Task prompt")
+    agent_runtime_p.add_argument("--task", "-t", help="Task name (load from task_definitions/<name>.json)")
+    agent_runtime_p.add_argument("--model", help="Override model")
+    agent_runtime_p.add_argument("--tools", nargs="*", help="Enabled tool names")
+    agent_runtime_p.add_argument("--server", action="store_true", help="Start HTTP server")
+    agent_runtime_p.add_argument("--port", type=int, help="HTTP server port")
+
     # Gap #8: C2G 双擎编排流入口 (Phase 40)
     iterate_p = sub.add_parser("iterate", help="♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)")
     iterate_p.add_argument("topic", nargs="?", default="未命名探索主题", help="要发起探索的主题")
@@ -576,6 +596,7 @@ def main() -> int:
                 "  [cyan]cockpit discover[/]           — 发现可用功能\n"
                 "  [cyan]cockpit status[/]            — 工作台\n"
                 "  [cyan]cockpit agent-workflow[/]    — Agent 可执行治理流程\n"
+                "  [cyan]cockpit agent-runtime[/]     — Agent Runtime 任务 / Server\n"
                 "  [cyan]cockpit dashboard[/]         — Web 驾驶舱\n"
                 "  [cyan]cockpit mcp[/]               — MCP Server\n"
                 "  [cyan]cockpit demo[/]              — 5 分钟体验\n"
@@ -675,6 +696,24 @@ def main() -> int:
         from cockpit.commands.iterate import cmd_iterate
 
         return cmd_iterate(a)
+
+    def dispatch_agent_runtime(a):
+        from cockpit import agent_runtime_cli
+
+        argv: list[str] = []
+        if getattr(a, "prompt", None):
+            argv.extend(["--prompt", a.prompt])
+        if getattr(a, "task", None):
+            argv.extend(["--task", a.task])
+        if getattr(a, "model", None):
+            argv.extend(["--model", a.model])
+        if getattr(a, "tools", None):
+            argv.extend(["--tools", *a.tools])
+        if getattr(a, "server", None):
+            argv.append("--server")
+        if getattr(a, "port", None) is not None:
+            argv.extend(["--port", str(a.port)])
+        return agent_runtime_cli.run_agent_runtime(argv)
 
     def dispatch_compass(a):
         import os
@@ -804,6 +843,7 @@ def main() -> int:
         "workflow": dispatch_workflow,
         "agent-workflow": dispatch_agent_workflow,
         "agent": dispatch_agent_workflow,
+        "agent-runtime": dispatch_agent_runtime,
         "monitor": dispatch_monitor,
         "data": dispatch_data,
         "contracts": dispatch_contracts,

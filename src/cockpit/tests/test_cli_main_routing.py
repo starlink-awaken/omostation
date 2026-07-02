@@ -164,3 +164,19 @@ def test_data_routes_dispatch(monkeypatch, argv: list[str], target: str) -> None
 
     assert code == 0
     mock_fn.assert_called_once()
+
+
+def test_agent_runtime_route_dispatch(monkeypatch) -> None:
+    """cockpit agent-runtime 应解析参数并委派到 agent_runtime_cli.run_agent_runtime。"""
+    from cockpit import agent_runtime_cli
+
+    monkeypatch.setattr(
+        sys, "argv", ["workspace", "agent-runtime", "--prompt", "hello", "--model", "gpt-4", "--tools", "read", "write"]
+    )
+    mock_fn = MagicMock(return_value=0)
+    monkeypatch.setattr(agent_runtime_cli, "run_agent_runtime", mock_fn)
+
+    code = cli.main()
+
+    assert code == 0
+    mock_fn.assert_called_once_with(["--prompt", "hello", "--model", "gpt-4", "--tools", "read", "write"])
