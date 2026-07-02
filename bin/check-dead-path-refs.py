@@ -48,7 +48,8 @@ def main() -> int:
                 if subdir == "PROJECTS" or subdir.startswith("PROJECTS/"):
                     continue
                 # 跳过已知合法但 worktree 中不存在的子目录 (TASK-236A991C)
-                if subdir in LEGACY_OK_DIRS:
+                # 也匹配子目录 (如 debt/items, debt/dashboard — .omo/debt/* 是 omo 运行时写面, gitignored)
+                if subdir in LEGACY_OK_DIRS or (subdir and subdir.split("/")[0] in LEGACY_OK_DIRS):
                     continue
                 if not (OMO / subdir).is_dir():
                     rel = f.relative_to(WORKSPACE)
