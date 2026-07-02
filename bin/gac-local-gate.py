@@ -169,6 +169,18 @@ CI_ONLY_CHECKS = {
     "doc-ssot-lint",
 }
 
+# CI 环境跳过的 check (本地运维 check, CI fresh checkout 无运行时 env 跑恒红无意义).
+# P0-fix (2026-07-02): agent-workflow-doctor 查 omo/c2g/cockpit 集成健康, 依赖 .venv + CLI,
+# CI fresh checkout 没有 → doctor 永红. doctor 是本地开发环境 check, CI 跳 (本地 strict 照跑).
+CI_SKIP_CHECKS = {
+    "agent-workflow-doctor",
+}
+
+
+def _is_ci_env() -> bool:
+    """CI 环境 (GitHub Actions 等). 本地运维 check (doctor 等) 在此跳过."""
+    return os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
+
 
 def staged_files_git() -> list[str]:
     """git diff --cached 读 staged 文件."""
@@ -200,6 +212,8 @@ def gate_checks(
             continue  # staged 不涉 agent-workflow → skip, 隔离并发 dirty
         if name in CI_ONLY_CHECKS and not strict:
             continue  # 全局 digest pre-commit 不稳定 (hook stash 并发 dirty) → CI 兜底
+        if name in CI_SKIP_CHECKS and _is_ci_env():
+            continue  # 本地运维 check (doctor), CI fresh checkout 无 .venv/CLI → 跳 (P0-fix)
         if name == "change-lane-check":
             result.append((name, scoped_change_lane_command(scope, files, run_id)))
         elif name == "doc-link-check":
