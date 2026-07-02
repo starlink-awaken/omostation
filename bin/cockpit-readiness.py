@@ -5,7 +5,7 @@ P65 原本设计为 cockpit 子命令, 但 cockpit cli.py 有 pre-existing ruff 
 (P65 范围外), 改在根仓 bin/ 提供独立 wrapper.
 
 设计:
-- 委派到 bin/dashboard-readiness-summary.py (P64 工具)
+- 委派到 bin/governance-dashboard.py --readiness-summary (P64/ADR-0115 合并)
 - 支持 JSON / text 两种格式
 - 支持 --output 写文件
 - 60s timeout
@@ -37,7 +37,7 @@ def find_workspace_root() -> Path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="P65: cockpit readiness wrapper (委派 bin/dashboard-readiness-summary.py)"
+        description="P65: cockpit readiness wrapper (委派 bin/governance-dashboard.py --readiness-summary)"
     )
     parser.add_argument(
         "--format", choices=["json", "text"], default="json",
@@ -47,12 +47,12 @@ def main() -> int:
     args = parser.parse_args()
 
     workspace_root = find_workspace_root()
-    bin_tool = workspace_root / "bin" / "dashboard-readiness-summary.py"
+    bin_tool = workspace_root / "bin" / "governance-dashboard.py"
     if not bin_tool.exists():
         print(f"❌ {bin_tool} 不存在", file=sys.stderr)
         return 1
 
-    cmd = ["python3", str(bin_tool), str(workspace_root), "--format", args.format]
+    cmd = ["python3", str(bin_tool), "--root", str(workspace_root), "--readiness-summary", "--format", args.format]
     if args.output:
         cmd.extend(["--output", args.output])
 
