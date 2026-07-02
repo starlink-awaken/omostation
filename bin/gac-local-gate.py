@@ -36,6 +36,9 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("change-lane-check", ["bin/change-lane-check.py", "--staged"]),
     # ISC-16: dependency-baseline drift 持续检测 (CI_ONLY: 本地 skip 避免 8 项真实 drift block 开发, CI strict 跑可见)
     ("dependency-baseline-drift", ["bin/gen-dependency-baseline.py", "--check"]),
+    # ADR-0120: matrix SSOT consistency (port-registry + launchd)
+    # Uses sys.executable + pyyaml inline (no separate uv run needed, gac-local-gate already runs under uv)
+    ("matrix-consistency", ["bin/matrix-consistency-lint.py", "--skip-launchd"]),
 )
 
 
@@ -176,6 +179,9 @@ CI_ONLY_CHECKS = {
 CI_SKIP_CHECKS = {
     "agent-workflow-doctor",
     "project-layer-index",
+    # ADR-0120: R5 launchctl list CI 无 launchd job → 跳; matrix-consistency 用 --skip-launchd
+    # 本地 strict 模式可跑全量 (不带 --skip-launchd)
+    "matrix-consistency",
 }
 
 
