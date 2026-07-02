@@ -22,6 +22,8 @@
 | BOS 路由实现 | `projects/agora/src/agora/mcp/resolver/services.py` |
 | 项目边界与调用链 | 各项目 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` |
 
+> 治理 SSOT 完整链: [契约](/.omo/standards/omo-governance-surfaces.md) · [注册表](/.omo/_truth/registry/omo-governance-surfaces.yaml) · [X1 策略](/.omo/_truth/x1-governance-policies.yaml) · [L0 约束](/projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml)
+
 ---
 
 ## 一、架构总览 (5+4+1+1)
