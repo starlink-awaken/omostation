@@ -386,6 +386,20 @@ gac:
       created_at: "2026-06-27"
       adr: "ADR-0106"
 
+    # ── X1 审计: GaC 元规则 — 声明绿必须真跑 (补元治理递归盲区) ──
+    - id: CR-X1-EVIDENCE-RUNNABLE
+      dimension: X1
+      layer: meta
+      name: "GaC 声明可执行证据 (声明绿必须真跑过)"
+      description: "防元治理盲区: CR-X2-GAC-EXEC-DRIFT 验 'executor 文件存在' 不够, 需证据证明 'executor 真能跑出结果'. 元规则: 任何声明的 executor (尤其 evidence_smoke/mcp_tool/mof_validate 等低频/人工触发型) 必须在最近 N 天内有 evidence 落盘 (./omo/_delivery/evidence-smoke/<date>.json 等), 否则标 ghost executor. P2-1 (2026-07-02) — 实现见 radar_cron 周期检查 + ci_gate 兜底"
+      check_type: audit_chain
+      target: "executor_evidence_manifest: .omo/_delivery/evidence-smoke/<date>.json + .omo/_log/mof-validate.jsonl"
+      executor: [radar_cron, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-02"
+      adr: "ADR-0106"
+
   # drift 检测配置 (机制 4; 阶段 2 实现 radar, 阶段 4 实现自愈)
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
     - id: X1-OMNI-BUS-ROUTING-20260617
