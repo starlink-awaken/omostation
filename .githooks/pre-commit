@@ -242,6 +242,35 @@ else:
     fi
 }
 
+# ── Debt prevention: non-atomic write check ───────────────────────────────
+
+debt_prevention() {
+    section "Debt Prevention & Audit Check"
+    local staged_py
+    staged_py=$(git diff --cached --name-only --diff-filter=ACM -- '*.py' 2>/dev/null | grep -v "__pycache__" | grep -v ".venv" || true)
+    if [[ -z "$staged_py" ]]; then
+        pass "No staged Python files to audit for debt"
+        return
+    fi
+
+    local debt_warnings=0
+    for f in $staged_py; do
+        local full_path="$REPO_ROOT/$f"
+        if [[ ! -f "$full_path" ]] || echo "$f" | grep -q "test\|conftest"; then
+            continue
+        fi
+        if grep -qE "write_text|open\([^)]*['\"]w['\"]" "$full_path" 2>/dev/null; then
+            if ! grep -q "atomic_write" "$full_path" 2>/dev/null; then
+                warn "Potential non-atomic write: $f (requires atomic_write)"
+                debt_warnings=$((debt_warnings + 1))
+            fi
+        fi
+    done
+    if [[ $debt_warnings -eq 0 ]]; then
+        pass "Non-atomic write audit passed"
+    fi
+}
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 echo ""
@@ -253,6 +282,7 @@ ruff_checks
 validate_yaml_syntax
 validate_kei_yaml
 validate_protocol_refs
+debt_prevention
 
 # ── Result ────────────────────────────────────────────────────────────────────
 

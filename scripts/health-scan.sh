@@ -30,7 +30,10 @@ output_json="false"
 check_launchd() {
   local label="$1"
   local out
-  out=$(launchctl list "$label" 2>/dev/null) || return 2
+  out=$(launchctl list "$label" 2>/dev/null) || {
+    echo "failed:unregistered"
+    return 0
+  }
   local pid exit_code
   pid=$(echo "$out" | grep -o '"PID" = [0-9]*' | awk '{print $3}' || true)
   exit_code=$(echo "$out" | grep -o '"LastExitStatus" = [0-9]*' | awk '{print $3}' || true)
