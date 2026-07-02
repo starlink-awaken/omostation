@@ -4,12 +4,14 @@
 id: DOMAIN-family-shared
 type: Domain
 name: FamilyShared
-description: 家庭共享文档域
-status: active
+description: 家庭共享文档域（已废弃：2026-07-01 iCloud FamilyShared 物理并入 @家庭生活，本域收编移除，superseded by DOMAIN-family。见 Documents/CLAUDE.md v4.6）
+status: deprecated
+superseded_by: DOMAIN-family
 domain: family-shared
 layer: L4
 created: '2026-06-13'
-version: 1.0.0
+updated: '2026-07-02'
+version: 1.1.0
 properties:
   bos_uri_pattern: bos://family-shared/**
   domain_type: document
@@ -31,3 +33,6 @@ state_history:
   - state: active
     timestamp: '2026-06-19T00:00:00Z'
     reason: initial_modeling
+  - state: deprecated
+    timestamp: '2026-07-02T00:00:00Z'
+    reason: merged_into_family_domain_20260701

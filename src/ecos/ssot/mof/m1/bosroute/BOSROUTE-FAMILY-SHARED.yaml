@@ -2,11 +2,13 @@ id: BOSROUTE-FAMILY-SHARED
 type: Component
 subtype: BOSRoute
 name: bos://family-shared/**
-description: "家庭共享文档域路由"
-status: active
+description: "家庭共享文档域路由（已废弃：2026-07-01 family-shared 并入 family 域，路由改用 bos://family/**）"
+status: deprecated
+superseded_by: BOSROUTE-FAMILY
 domain: work
 created: '2026-06-13'
-version: 1.0.0
+updated: '2026-07-02'
+version: 1.1.0
 layer: I0
 properties:
   layer: I0
@@ -24,3 +26,6 @@ state_history:
   - state: active
     timestamp: '2026-06-19T00:00:00Z'
     reason: initial_modeling
+  - state: deprecated
+    timestamp: '2026-07-02T00:00:00Z'
+    reason: merged_into_family_domain_20260701
