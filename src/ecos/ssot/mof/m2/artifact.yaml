@@ -45,6 +45,9 @@ Artifact:
     layer:
       type: string
       description: 所属层
+    write_owner:
+      type: string
+      description: 声明的排他性写入所有者 (如 human:夏明星 或 script:bin/compass_radar.py)
   validationRules:
   - rule: path != null
     level: error
