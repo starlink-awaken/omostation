@@ -23,25 +23,8 @@ on:
       - 'projects/*/CLAUDE.md'
       - 'projects/*/README.md'
   pull_request:
-    paths:
-      - '.omo/_truth/registry/governance-checks.yaml'
-      - 'bin/gac-*.py'
-      - '.github/workflows/gac-gate.yml'
-      - 'bin/doc-ssot-lint.py'
-      - 'bin/doc-link-check.py'
-      - 'bin/change-lane-check.py'
-      - 'bin/submodule-reachability-gate.py'
-      - 'bin/submodule-pointer-transaction.sh'
-      - 'scripts/check-doc-ssot-snapshots.py'
-      - 'AGENTS.md'
-      - 'CLAUDE.md'
-      - 'README.md'
-      - 'ARCHITECTURE.md'
-      - 'LAYER-INDEX.md'
-      - 'projects/AGENTS.md'
-      - 'projects/*/AGENTS.md'
-      - 'projects/*/CLAUDE.md'
-      - 'projects/*/README.md'
+    # A2 (2026-07-02): 所有 PR 跑 strict gate (去 paths 过滤, PR 合并前彻底验).
+    # push trigger 保留 paths (push main 只 governance 文件触发, 避免每次 push 跑全套).
 
 jobs:
   gac-gate:
@@ -56,5 +39,5 @@ jobs:
           python-version: "3.13"
       - name: install pyyaml
         run: pip install pyyaml
-      - name: gac-local-gate
-        run: python3 bin/gac-local-gate.py
+      - name: gac-local-gate (strict, A2: PR 全套验)
+        run: python3 bin/gac-local-gate.py --strict
