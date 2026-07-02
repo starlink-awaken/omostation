@@ -270,32 +270,35 @@ def test_p7_gate_h_three_way_alignment_closed_2026_06_12():
     assert "P7: implementation complete; Gate H passed" in playbook
 
 
-def test_p7_release_cycle_runner_wrote_three_artifacts():
-    """P7-H1: release cycle runner must write notes (CHANGELOG), cycle json, retrospective."""
-    release_dir = ROOT / "runtime" / "omo" / "_delivery" / "release"
+def test_p7_release_cycle_runner_wrote_three_artifacts(tmp_path: Path) -> None:
+    """P7-H1: release cycle runner must write notes (CHANGELOG), cycle json, retrospective.
+
+    Runs in an isolated tmp_path so the workspace runtime/omo tree is not mutated.
+    """
+    release_dir = tmp_path / "runtime" / "omo" / "_delivery" / "release"
+    retro_dir = (
+        tmp_path / "runtime" / "omo" / "tasks" / "registry" / "done" / "OPC-P7-H1"
+    )
+
+    omo_release_cycle.run_release_cycle(
+        tmp_path,
+        version="v2026-07-01-test",
+        generated_at="2026-07-01T00:00:00Z",
+        trigger="manual",
+        gather_changes_fn=lambda: {
+            "cutoff": "7 days ago",
+            "commit_count": 0,
+            "commits": [],
+            "previous_release_version": None,
+        },
+        gather_validation_fn=lambda: {
+            "omo_tests": {"returncode": 0, "summary": "mocked"},
+            "drift": {"kinds": [], "drift_count": 0},
+        },
+        gather_debt_fn=lambda: {"total": 0, "open": 0, "resolved": 0},
+    )
+
     notes_path = release_dir / "CHANGELOG.md"
-    retro_dir = ROOT / "runtime" / "omo" / "tasks" / "registry" / "done" / "OPC-P7-H1"
-
-    if not notes_path.exists() or not list(release_dir.glob("v*.json")):
-        # Generate deterministic artifacts without invoking pytest/drift (avoids recursion).
-        omo_release_cycle.run_release_cycle(
-            ROOT,
-            version="v2026-07-01-test",
-            generated_at="2026-07-01T00:00:00Z",
-            trigger="manual",
-            gather_changes_fn=lambda: {
-                "cutoff": "7 days ago",
-                "commit_count": 0,
-                "commits": [],
-                "previous_release_version": None,
-            },
-            gather_validation_fn=lambda: {
-                "omo_tests": {"returncode": 0, "summary": "mocked"},
-                "drift": {"kinds": [], "drift_count": 0},
-            },
-            gather_debt_fn=lambda: {"total": 0, "open": 0, "resolved": 0},
-        )
-
     assert notes_path.exists(), "release notes CHANGELOG.md not written"
     notes_text = notes_path.read_text(encoding="utf-8")
     assert "### Summary" in notes_text
