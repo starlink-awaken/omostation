@@ -87,11 +87,12 @@ def run_tool(workspace: Path, tool_id: str, bin_path: str, args: list[str]) -> d
         return {"id": tool_id, "ok": False, "error": str(e)}
 
 
-# ADR-0115 Phase 4 (partial): 合并 4 个 dashboard 工具
-#   - dashboard-readiness-summary  → --readiness-summary
-#   - dashboard-ui-render          → --ui-render
-#   - gac-dashboard                → 留独立 (GaC 健康, 跟 governance-dashboard 不同主题)
-# 留 follow-up ADR 触发 P81 R2 的 UI render 完全合并 (跨文件引用 50+ 行, 风险高).
+# ADR-0115 Phase 4 (partial → 3/4): 合并 4 个 dashboard 工具
+#   - dashboard-readiness-summary  → --readiness-summary (合并, PR #25)
+#   - dashboard-ui-render          → --ui-render (合并, PR #25)
+#   - gac-dashboard                → --gac-html (合并, 本 commit Phase 4 续)
+# 完整 Phase 4 标志: 3/4 dashboard 工具入口统一, 1/4 (gac-dashboard P81 跨文件
+# 引用 50+ 行未完全 inline, 留 wrapper 模式) 留 follow-up.
 
 def _cmd_readiness_summary(workspace: Path) -> int:
     """ADR-0115 Phase 4: 合并 bin/dashboard-readiness-summary.py."""
@@ -118,7 +119,6 @@ def _cmd_ui_render(workspace: Path, output_html: str) -> int:
     if not full.exists():
         print(f"❌ 工具不存在: {full}", file=sys.stderr)
         return 1
-    # dashboard-ui-render 读 readiness summary 直接 (不需要中间文件)
     result = subprocess.run(
         ["python3", str(full), "--output", output_html],
         cwd=str(workspace),
@@ -129,6 +129,53 @@ def _cmd_ui_render(workspace: Path, output_html: str) -> int:
     print(result.stdout, end="")
     if result.stderr:
         print(result.stderr, file=sys.stderr, end="")
+    return result.returncode
+
+
+def _cmd_gac_html(workspace: Path, output_html: str | None, open_browser: bool) -> int:
+    """ADR-0115 Phase 4 续: 合并 bin/gac-dashboard.py.
+
+    注: gac-dashboard.py P81 跨文件引用 50+ 行 (HTML 模板 + 健康度数据).
+    完全 inline 需要 port 164 行. 走 wrapper 模式 (subprocess 调用), 跟
+    readiness-summary / ui-render 同模式, 留后续 PR 完全 inline.
+
+    gac-dashboard.py 硬编码输出到 .omo/_delivery/gac-dashboard.html.
+    若用户传 --gac-html <PATH>, 走 subprocess 调 gac-dashboard 默认输出,
+    然后 cp/mv 到指定 PATH. 若 --gac-open, subprocess 调 gac-dashboard --open
+    (gac-dashboard 自身负责 open 浏览器, wrapper 不传 PATH).
+    """
+    full = workspace / "bin" / "gac-dashboard.py"
+    if not full.exists():
+        print(f"❌ 工具不存在: {full}", file=sys.stderr)
+        return 1
+    args: list[str] = [str(full)]
+    if open_browser:
+        args.append("--open")
+    result = subprocess.run(
+        ["python3"] + args,
+        cwd=str(workspace),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, file=sys.stderr, end="")
+    # 若用户指定 --gac-html PATH, 把硬编码输出 mv 到 PATH
+    if output_html and not open_browser:
+        default_out = workspace / ".omo" / "_delivery" / "gac-dashboard.html"
+        target = Path(output_html)
+        if not target.is_absolute():
+            target = workspace / output_html
+        if default_out.exists() and default_out != target:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            # audit-exempt: non-atomic-write — wrapper cp, 目标已存在 overwrite 风险低
+            target.write_text(default_out.read_text(encoding="utf-8"), encoding="utf-8")
+            try:
+                rel = target.relative_to(workspace)
+            except ValueError:
+                rel = target
+            print(f"   → copied to {rel}")
     return result.returncode
 
 
@@ -143,6 +190,11 @@ def main() -> int:
                         help="合并 dashboard-readiness-summary 功能 (--json only)")
     parser.add_argument("--ui-render", metavar="HTML", default=None,
                         help="合并 dashboard-ui-render 功能, 输出到 HTML 文件")
+    # ADR-0115 Phase 4 续: 合并 gac-dashboard
+    parser.add_argument("--gac-html", metavar="HTML", default=None,
+                        help="合并 gac-dashboard 功能, 输出到 HTML 文件 (默认 .omo/_delivery/gac-dashboard.html)")
+    parser.add_argument("--gac-open", action="store_true",
+                        help="合并 gac-dashboard 功能, 生成 + 浏览器打开")
     args = parser.parse_args()
 
     workspace = Path(args.root).resolve()
@@ -157,6 +209,10 @@ def main() -> int:
     # ADR-0115 Phase 4: 合并 dashboard-ui-render 子命令
     if args.ui_render:
         return _cmd_ui_render(workspace, args.ui_render)
+
+    # ADR-0115 Phase 4 续: 合并 gac-dashboard 子命令
+    if args.gac_html or args.gac_open:
+        return _cmd_gac_html(workspace, args.gac_html, args.gac_open)
 
     # 默认: 原 P86 仪表盘 (调用 19 个治理工具)
 

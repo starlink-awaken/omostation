@@ -26,7 +26,9 @@
   python3 bin/state-freshness-check.py --json    # JSON 输出
   python3 bin/state-freshness-check.py --file X  # 单文件
 
-退出码: 0 = 全新鲜 (≥80), 1 = 有 stale (<80), 2 = 有 expired (≤0)
+退出码:
+  0 = 全新鲜 (≥80) 或 有 stale (50-79, 派生快照老化但仍可用, 不 block)
+  2 = 有 expired (≤0, >7d, 派生快照不可信, 应 block)
 """
 from __future__ import annotations
 
@@ -248,11 +250,17 @@ def main() -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print_human(report)
+    # 退出码语义 (P72 原则 1: 治本后 dry-run 验证本地 env):
+    #   0 = 全新鲜 (≥80 全部) 或 有 stale (50-79) — 派生快照老化但仍可用, 不 block
+    #   2 = 有 expired (≤0 score, >7d) — 派生快照不可信, 应 block commit
+    #
+    # 治本动机: 派生快照 (health.yaml / governance-data.json 等) 老化是常态
+    # (24h 周期 cron 触发生成). 老化的快照仍是"上次正确状态", 不应 block 日常
+    # commit. 仅"过期" (>7d, 信任失效) 才 block, 防未维护的 ghost 状态被消费.
+    # 警告在 stderr 显式输出, 让开发者意识到"该 regen 了", 但不阻断 commit.
     if report["files_expired"] > 0:
         return 2
-    if report["ok"]:
-        return 0
-    return 1
+    return 0
 
 
 if __name__ == "__main__":
