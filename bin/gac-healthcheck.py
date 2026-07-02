@@ -43,7 +43,7 @@ CORE_FILES = {
     "m2_type": "projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml",
     "stage1_design": ".omo/_knowledge/gac/stage1-hook-design.md",
     "hook": "bin/gac-hook-pre-edit.py",
-    "dashboard": "bin/gac-dashboard.py",
+    "dashboard": "bin/governance-dashboard.py",
     "mof_validate": "bin/gac-mof-validate.py",
     "doc_ssot_lint": "bin/doc-ssot-lint.py",
     "hygiene": "bin/gac-hygiene-check.py",
