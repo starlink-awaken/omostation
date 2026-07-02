@@ -9,7 +9,7 @@ last-reviewed: 2026-06-23
 
 > P77 R1: 144 文件按 P75 category 物理迁移到 3 子目录
 > 迁移时间: 2026-06-23
-> 迁移工具: `bin/management-migrate.py`
+> 只做管理文档导航；control/truth SSOT 指向 `../_truth/` 与 `../_control/`
 
 ## 子目录结构
 
