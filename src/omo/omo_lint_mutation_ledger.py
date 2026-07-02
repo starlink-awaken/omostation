@@ -43,7 +43,7 @@ def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
 
     entries = read_jsonl(ledger_path)
     if not entries:
-        print("❌ omo lint mutation-ledger fail: ledger is empty: {ledger_path}")
+        print(f"❌ omo lint mutation-ledger fail: ledger is empty: {ledger_path}")
         return 1
 
     issues: list[str] = []
@@ -82,9 +82,9 @@ def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
         issues.append("no committed mutations found in ledger")
 
     if issues:
-        print("❌ omo lint mutation-ledger fail: {len(issues)} issue(s)")
+        print(f"❌ omo lint mutation-ledger fail: {len(issues)} issue(s)")
         for issue in issues:
-            print("  - {issue}")
+            print(f"  - {issue}")
         return 1
 
     print(
