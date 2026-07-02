@@ -64,11 +64,28 @@ help:
 	@echo ""
 	@echo "make help                显示本消息"
 
-install-hooks:  ## 装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate). 新 clone 必跑.
+install-hooks:  ## 装 git pre-push + pre-commit + post-commit 钩子. 新 clone 必跑.
 	install -m 755 .githooks/pre-push .git/hooks/pre-push
 	install -m 755 .githooks/pre-commit .git/hooks/pre-commit
-	@echo "✅ 已装 .git/hooks/pre-push (push 时 sync 子模块 + Phase 2a direct-push-to-main advisory 守卫, 防 CI 悬空)"
-	@echo "✅ 已装 .git/hooks/pre-commit (commit 时 GaC/SSOT 本地硬门)"
+	install -m 755 .githooks/post-commit .git/hooks/post-commit
+	@echo "✅ 已装主仓 .git/hooks/pre-push"
+	@echo "✅ 已装主仓 .git/hooks/pre-commit"
+	@echo "✅ 已装主仓 .git/hooks/post-commit"
+	@# 遍历 projects/* 子模块，查找实际 hooks 路径并配置软链接实现统一治理
+	@for d in projects/*; do \
+		if [ -d "$$d" ] && [ -e "$$d/.git" ]; then \
+			( \
+				cd "$$d" && \
+				hook_dir=$$(git rev-parse --git-path hooks 2>/dev/null || echo ""); \
+				if [ -n "$$hook_dir" ]; then \
+					abs_hook_dir=$$(python3 -c "import os; print(os.path.abspath('$$hook_dir'))"); \
+					mkdir -p "$$abs_hook_dir"; \
+					ln -sf "$(CURDIR)/.githooks/pre-commit" "$$abs_hook_dir/pre-commit"; \
+					echo "🔗 已绑定子模块 $$d 治理 pre-commit 软链 -> $$abs_hook_dir/pre-commit"; \
+				fi \
+			) \
+		fi; \
+	done
 
 # ── 本地 CI 预检 ────────────────────────────────────────────────────────────────
 # 目的: push 前本地跑一遍 CI 等价检查, 拦 90% CI 失败, 省等 CI 的时间.
