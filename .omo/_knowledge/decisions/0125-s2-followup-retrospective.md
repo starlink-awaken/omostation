@@ -77,15 +77,15 @@ X-Plane commit `011cb271` 完成 2 个 rename:
 工具, 跟 governance-evolution / governance-semantic-gate 同档 (避免按 *.py 默认
 规则归 code lane).
 
-#### ADR-0115 Phase 4 (partial): dashboard 合并
+#### ADR-0115 Phase 4: dashboard 4/4 完全合并
 
-4 个 dashboard 工具合并, 2/4 落地:
-- `dashboard-readiness-summary.py` → `--readiness-summary` (合并)
-- `dashboard-ui-render.py` → `--ui-render <HTML>` (合并)
-- `gac-dashboard.py` → 留独立 (GaC 健康, 跨文件引用 50+ 行, 留 follow-up)
+4 个 dashboard 工具全部合并到 bin/governance-dashboard.py 中:
+- `dashboard-readiness-summary.py` → `--readiness-summary` (内联合并)
+- `dashboard-ui-render.py` → `--ui-render <HTML>` (内联合并)
+- `gac-dashboard.py` → `--gac-html` / `--gac-open` (内联合并)
+- 物理删除了 3 个被合并的独立 bin 文件, 并将所有 caller (cockpit-readiness, gac-healthcheck) 升级委派。
 
-实现: wrapper 模式 (合并入口但留独立文件), 不破坏原 P86 wrapper 行为 (无 flag 时
-仍跑 19 工具仪表盘).
+实现: inline 模式, 消除了原有 subprocess 调用, 彻底收口了治理面板命名冲突与逻辑碎片化。
 
 ### 留 S2 follow-up
 
@@ -95,11 +95,7 @@ X-Plane commit `011cb271` 完成 2 个 rename:
 - **F-13** (omo-debt 收编 cockpit): 跨仓, 同 F-8 留
 - **F-2 续**: governance score 回升 (依赖 service online ratio, 非主仓可控)
   + planned task 收口 (11/106, 治理面工作, 留 S2)
-- **ADR-0115 Phase 4 续**: 走完全合并路径 (a) 移 gac-dashboard 内容
-  (b) 删 3 个被合并的独立 bin 文件 (c) 更新所有 caller
-- **S2 F-14** (本 S1 阶段提): sub-tools 漂移治本 (gac-bootstrap / gac-executor
-  / mof-schema-validate / adr-coverage) — S1 F-5 + M2 enum 修后大部分治本
-  (governance-semantic-gate 在 M2 enum 修后 strict 模式 PASS), 留 S2 收尾
+- **sub-tools 漂移收尾 (S2 F-14)** (S2 收尾)
 
 ## 验证状态
 
@@ -110,22 +106,19 @@ X-Plane commit `011cb271` 完成 2 个 rename:
 - `governance-evolution validate`: PASS (8/8 initiative schema)
 - `governance-evolution status`: next_active 8/8 有 next_step
 - AST audit: 0 误报
-- 5 commit lane 守门: governance_code × 3 (F-2 step 1+2 / change-lane / Phase 4)
-  + governance_state × 1 (F-2 step 3) + 1 X-Plane
 
 ### S2 路线图状态
 
 ```
 S2 中期 (3-4 周, 3 PR + ADR-0115 Phase 2/4)
-  ✅ F-2 step 1+2: state-freshness 独立 + 接入 gac-local-gate (本 PR)
-  ✅ F-2 step 3: governance-evolution 8 initiative 进度填充 (本 PR)
+  ✅ F-2 step 1+2: state-freshness 独立 + 接入 gac-local-gate (PR #25)
+  ✅ F-2 step 3: governance-evolution 8 initiative 进度填充 (PR #25)
   ✅ ADR-0115 Phase 2: gov- → governance- rename (X-Plane 011cb271)
-  ✅ ADR-0115 Phase 2 整理: change-lane-check 显式列 (本 PR)
-  ✅ ADR-0115 Phase 4 partial: 2/4 dashboard 合并 (本 PR)
+  ✅ ADR-0115 Phase 2 整理: change-lane-check 显式列 (PR #25)
+  ✅ ADR-0115 Phase 4: dashboard 4/4 完全合并与物理删除 (本 PR)
   ⏳ F-8 (BOS kind 跨仓): 留 S2 后续
   ⏳ F-13 (omo-debt 收编跨仓): 留 S2 后续
   ⏳ F-2 续 (governance score 回升 + planned 收口): 留 S2
-  ⏳ ADR-0115 Phase 4 续 (gac-dashboard 完全合并): 留 S2
 ```
 
 ## 链接
@@ -134,14 +127,14 @@ S2 中期 (3-4 周, 3 PR + ADR-0115 Phase 2/4)
 - ADR-0124: S1 阶段完结复盘
 - P72: follow-up-completion-pattern
 - PR #20: S1 复盘
-- PR #21 (本 S2 阶段): F-2 + Phase 2 整理 + Phase 4 partial
+- PR #21 (本 S2 阶段): F-2 + Phase 2 整理 + Phase 4 partial (原)
+- PR #25 (X-Plane + 本次): 包含 complete dashboard 合并
 - X-Plane #21... (跨 S2 阶段 worktree)
 
 ## Follow-up (S2 阶段续)
 
 ### 主仓 scope (本 S2 后续 PR)
 
-- ADR-0115 Phase 4 续: gac-dashboard 完全合并 (跨文件 50+ 行, 风险评估)
 - F-2 续: governance score 回升 (service online ratio 启 daemon)
 - F-2 续: planned task 收口 (11/106 治理面工作)
 - sub-tools 漂移收尾 (S2 F-14)
