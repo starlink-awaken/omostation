@@ -58,6 +58,7 @@ def classify(path: str, submodules: set[str]) -> str:
         "bin/governance-history-stats.py",
         "bin/governance-semantic-gate.py",
         "bin/governance-trend-report.py",
+        "bin/install-watch-agent.py",
         "bin/project-layer-index.py",
         "bin/state-freshness-check.py",
         "bin/write-owner-audit.py",

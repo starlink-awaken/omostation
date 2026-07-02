@@ -18,6 +18,7 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("gac-validate", ["bin/gac-validate.py", "--gate"]),
     ("gac-drift", ["bin/gac-drift.py"]),
     ("write-owner-audit", ["bin/write-owner-audit.py", "--staged"]),
+    ("install-watch-agent", ["bin/install-watch-agent.py"]),
     ("agent-workflow-lint", ["bin/agent-workflow.py", "lint"]),
     ("agent-workflow-integrations", ["bin/agent-workflow.py", "integrations"]),
     ("agent-workflow-adapters", ["bin/agent-workflow.py", "adapters"]),
@@ -219,6 +220,7 @@ CI_SKIP_CHECKS = {
     # ADR-0120: R5 launchctl list CI 无 launchd job → 跳; matrix-consistency 用 --skip-launchd
     # 本地 strict 模式可跑全量 (不带 --skip-launchd)
     "matrix-consistency",
+    "install-watch-agent",
 }
 
 
