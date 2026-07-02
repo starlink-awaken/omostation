@@ -38,12 +38,12 @@ def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
     ledger_path = _mutation_log_path(root / ".omo")
     # CI fresh checkout 无 runtime/omo (gitignored) — 合法空状态, 不阻断
     if not ledger_path.exists():
-        print(f"⚠️ omo lint mutation-ledger: ledger file missing (runtime cache absent, CI fresh checkout), 视为 pass")
+        print("⚠️ omo lint mutation-ledger: ledger file missing (runtime cache absent, CI fresh checkout), 视为 pass")
         return 0
 
     entries = read_jsonl(ledger_path)
     if not entries:
-        print(f"❌ omo lint mutation-ledger fail: ledger is empty: {ledger_path}")
+        print("❌ omo lint mutation-ledger fail: ledger is empty: {ledger_path}")
         return 1
 
     issues: list[str] = []
@@ -82,9 +82,9 @@ def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
         issues.append("no committed mutations found in ledger")
 
     if issues:
-        print(f"❌ omo lint mutation-ledger fail: {len(issues)} issue(s)")
+        print("❌ omo lint mutation-ledger fail: {len(issues)} issue(s)")
         for issue in issues:
-            print(f"  - {issue}")
+            print("  - {issue}")
         return 1
 
     print(
