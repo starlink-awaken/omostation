@@ -25,13 +25,13 @@ while IFS= read -r sm; do
   if [ ! -d "$sm/.git" ] && [ ! -f "$sm/.git" ]; then
     # Phase 2a (2026-06-30): worktree 按需 init 子模块是合法的 (主仓文件改动不涉子模块).
     # 未 init 无"领先"可言, 跳过 (不计 failed). gitlink 可达性由 submodule-reachability-gate 单独管.
-    missing=$((missing+1))
+    missing=$(( missing + 1 )) || true
     echo "⏭ $sm: 子模块未初始化 (worktree 按需 init 合法), 跳过"
     continue
   fi
 
   branch=$(git -C "$sm" rev-parse --abbrev-ref HEAD 2>/dev/null) || {
-    failed=$((failed+1))
+    failed=$(( failed + 1 )) || true
     echo "❌ $sm: 无法读取当前分支"
     continue
   }
@@ -42,8 +42,9 @@ while IFS= read -r sm; do
       upstream="origin/$branch"
       echo "ℹ $sm: 无 upstream, 使用 $upstream 做未推检测"
     else
-      noupstream=$((noupstream+1))
-      failed=$((failed+1))
+      # 用 : $(( ... )) 避免 $((0+1))=1 触发 set -e (bash $((expr)) expr=0 返回 1 经典陷阱)
+      : $(( noupstream = noupstream + 1 ))
+      : $(( failed = failed + 1 ))
       echo "❌ $sm: 无 upstream, 且 origin/$branch 不存在; 请先配置上游或手动 push"
       continue
     fi
@@ -51,15 +52,15 @@ while IFS= read -r sm; do
   # 本地领先远程多少 (未推 commit)
   cnt=$(git -C "$sm" log --oneline "${upstream}..HEAD" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$cnt" -gt 0 ]; then
-    pending=$((pending+1))
+    pending=$(( pending + 1 )) || true
     echo "⬆ $sm: $cnt 个未推 → origin/$branch"
     if [ "$dry" = "0" ]; then
       # 跳过子模块 pre-push hook：子模块 gate 已在 commit 时跑过，
       # 本地 pre-push 再跑 e2e/integration 容易挂死，导致根仓库 push 阻塞。
       if git -C "$sm" push --no-verify origin "$branch" >/dev/null 2>&1; then
-        pushed=$((pushed+1)); echo "  ✅ pushed"
+        pushed=$(( pushed + 1 )) || true; echo "  ✅ pushed"
       else
-        failed=$((failed+1)); echo "  ❌ push 失败 (认证/冲突?)"
+        failed=$(( failed + 1 )) || true; echo "  ❌ push 失败 (认证/冲突?)"
       fi
     fi
   fi
