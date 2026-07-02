@@ -113,7 +113,12 @@ def _retrospective_dir(group: str, workspace_root: Path) -> Path:
 
 def _dependency_baseline_path(workspace_root: Path) -> Path:
     """Generated dependency baseline lives in runtime truth dir."""
-    return _runtime_omo_root(workspace_root) / "_truth" / "registry" / "dependency-baseline.yaml"
+    return (
+        _runtime_omo_root(workspace_root)
+        / "_truth"
+        / "registry"
+        / "dependency-baseline.yaml"
+    )
 
 
 # ── 路径显示辅助 ───────────────────────────────────────────────────

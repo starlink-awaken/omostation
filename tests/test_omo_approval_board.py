@@ -42,7 +42,13 @@ def test_approval_board_joins_queue_status_and_blockers(tmp_path: Path) -> None:
         },
     )
     _write_yaml(
-        tmp_path / "runtime" / "omo" / "_control" / "evolution" / "loop" / "history.json",
+        tmp_path
+        / "runtime"
+        / "omo"
+        / "_control"
+        / "evolution"
+        / "loop"
+        / "history.json",
         {"summary": {"latest_week": "2026-W29"}},
     )
     _write_yaml(

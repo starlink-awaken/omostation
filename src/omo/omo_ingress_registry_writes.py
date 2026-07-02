@@ -46,9 +46,7 @@ def write_capability_registry_bundle(
     registries = deepcopy(bundle.get("registries") or {})
     if not isinstance(registries, dict) or not registries:
         raise ValueError("capability registries missing")
-    artifact_ref = (
-        f"runtime/omo/_delivery/ingress/capabilities/bundle-{_timestamp_slug(timestamp)}.yaml"
-    )
+    artifact_ref = f"runtime/omo/_delivery/ingress/capabilities/bundle-{_timestamp_slug(timestamp)}.yaml"
     fingerprint = {
         "kind": "bundle",
         "registry_files": sorted(registries.keys()),

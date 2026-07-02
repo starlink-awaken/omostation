@@ -203,7 +203,9 @@ def gather_debt(workspace_root: Path) -> dict[str, Any]:
 def write_release_notes(
     workspace_root: Path, version: str, cycle: dict[str, Any]
 ) -> Path:
-    notes_path = workspace_root / "runtime" / "omo" / "_delivery" / "release" / "CHANGELOG.md"
+    notes_path = (
+        workspace_root / "runtime" / "omo" / "_delivery" / "release" / "CHANGELOG.md"
+    )
     changes = cycle["changes"]
     validation = cycle["validation"]
     debt = cycle["debt"]

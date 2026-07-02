@@ -224,9 +224,9 @@ def test_p7_release_cycle_uses_incrementing_index(tmp_path):
     assert cycle1["version"] == "v2026-06-12-r1"
     assert cycle2["version"] == "v2026-06-12-r2"
     index = json.loads(
-        (tmp_path / "runtime" / "omo" / "_delivery" / "release" / "index.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            tmp_path / "runtime" / "omo" / "_delivery" / "release" / "index.json"
+        ).read_text(encoding="utf-8")
     )
     assert index["summary"]["release_count"] == 2
     assert index["summary"]["latest_version"] == "v2026-06-12-r2"

@@ -10,7 +10,9 @@ from .omo_ingress_paths import _drift_history_dir, _runtime_omo_root
 
 
 def history_index_path(workspace_root: Path) -> Path:
-    return _runtime_omo_root(workspace_root) / "_delivery" / "audit-rollout" / "index.json"
+    return (
+        _runtime_omo_root(workspace_root) / "_delivery" / "audit-rollout" / "index.json"
+    )
 
 
 def _locked_write_json(path: Path, payload: dict[str, Any]) -> None:

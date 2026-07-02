@@ -952,7 +952,13 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "goals" / "BET-1.yaml",
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
+        / "goals"
+        / "BET-1.yaml",
         {
             "kind": "goal_created",
             "goal_id": "BET-1",
@@ -964,7 +970,13 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / "TASK-1.yaml",
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
+        / "tasks"
+        / "TASK-1.yaml",
         {
             "kind": "planned_task_created",
             "task_id": "TASK-1",
@@ -1005,7 +1017,13 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "debts" / "DEBT-1.yaml",
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
+        / "debts"
+        / "DEBT-1.yaml",
         {
             "kind": "debt_upserted",
             "debt_id": "DEBT-1",
@@ -1020,7 +1038,11 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo.parent / "runtime" / "omo" / "_delivery" / "ingress"
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
         / "capabilities"
         / "bundle-2026-06-18T00-03-00Z.yaml",
         {
@@ -1041,7 +1063,11 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo.parent / "runtime" / "omo" / "_delivery" / "ingress"
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
         / "capabilities"
         / "manual-capabilities-2026-06-18T00-04-00Z.yaml",
         {
@@ -1529,7 +1555,13 @@ def test_build_governance_surfaces_report_flags_ingress_artifact_created_at_drif
 ) -> None:
     _seed_workspace(tmp_path)
     _write_yaml(
-        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / "TASK-1.yaml",
+        tmp_path
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
+        / "tasks"
+        / "TASK-1.yaml",
         {
             "kind": "planned_task_created",
             "task_id": "TASK-1",

@@ -150,7 +150,10 @@ def _check_ingress_registry(
         if not isinstance(meta, dict):
             issues.append(f"ingress registry: goals.by_id.{item_id} not a mapping")
             continue
-        if meta.get("artifact_ref") != f"runtime/omo/_delivery/ingress/goals/{item_id}.yaml":
+        if (
+            meta.get("artifact_ref")
+            != f"runtime/omo/_delivery/ingress/goals/{item_id}.yaml"
+        ):
             issues.append(
                 f"ingress registry: goals.by_id.{item_id} artifact_ref mismatch"
             )
@@ -172,7 +175,10 @@ def _check_ingress_registry(
         if not isinstance(meta, dict):
             issues.append(f"ingress registry: tasks.by_id.{item_id} not a mapping")
             continue
-        if meta.get("artifact_ref") != f"runtime/omo/_delivery/ingress/tasks/{item_id}.yaml":
+        if (
+            meta.get("artifact_ref")
+            != f"runtime/omo/_delivery/ingress/tasks/{item_id}.yaml"
+        ):
             issues.append(
                 f"ingress registry: tasks.by_id.{item_id} artifact_ref mismatch"
             )
@@ -195,7 +201,10 @@ def _check_ingress_registry(
         if not isinstance(meta, dict):
             issues.append(f"ingress registry: debts.by_id.{item_id} not a mapping")
             continue
-        if meta.get("artifact_ref") != f"runtime/omo/_delivery/ingress/debts/{item_id}.yaml":
+        if (
+            meta.get("artifact_ref")
+            != f"runtime/omo/_delivery/ingress/debts/{item_id}.yaml"
+        ):
             issues.append(
                 f"ingress registry: debts.by_id.{item_id} artifact_ref mismatch"
             )

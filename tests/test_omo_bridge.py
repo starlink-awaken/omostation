@@ -106,7 +106,15 @@ def test_import_bmad_writes_task_with_phase_wave(tmp_path):
     assert data["phase"] == 42
     assert data["wave"] == "W0"
     assert data["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
-    artifact = omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / f"{a_id}.yaml"
+    artifact = (
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
+        / "tasks"
+        / f"{a_id}.yaml"
+    )
     assert artifact.exists()
 
 
@@ -247,7 +255,15 @@ def test_import_fast_track_generates_valid_yaml(tmp_path):
     assert data["context_uri"] == f"bos://memory/fast-track/{task_id}"
     assert data["human_approval_required"] is False
     assert data["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
-    assert (omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / f"{task_id}.yaml").exists()
+    assert (
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
+        / "tasks"
+        / f"{task_id}.yaml"
+    ).exists()
 
 
 def test_import_bmad_rejects_todo_lines(tmp_path, capfd):
@@ -332,10 +348,28 @@ def test_import_pitch_uses_governed_goal_and_task_ingress(tmp_path, capfd):
         (omo / "tasks" / "planned" / f"{task_id}.yaml").read_text(encoding="utf-8")
     )
     assert task_payload["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
-    assert (omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "goals" / f"{bet_id}.yaml").exists()
-    assert (omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / f"{task_id}.yaml").exists()
+    assert (
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
+        / "goals"
+        / f"{bet_id}.yaml"
+    ).exists()
+    assert (
+        omo.parent
+        / "runtime"
+        / "omo"
+        / "_delivery"
+        / "ingress"
+        / "tasks"
+        / f"{task_id}.yaml"
+    ).exists()
     registry = yaml.safe_load(
-        (omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml").read_text(encoding="utf-8")
+        (
+            omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml"
+        ).read_text(encoding="utf-8")
     )
     assert (
         registry["goals"]["by_source_ref"][

@@ -57,7 +57,10 @@ def _warn_if_volatile_omo_path(path: Path) -> None:
         rel = str(path.relative_to(path.anchor))
     except ValueError:
         rel = str(path)
-    if any(rel.startswith(prefix) or rel == prefix.rstrip("/") for prefix in _VOLATILE_OMO_PATHS):
+    if any(
+        rel.startswith(prefix) or rel == prefix.rstrip("/")
+        for prefix in _VOLATILE_OMO_PATHS
+    ):
         warnings.warn(
             f"Volatile OMO path written directly: {rel}. "
             "Use runtime/omo/ mirror helpers instead.",

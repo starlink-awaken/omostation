@@ -156,12 +156,25 @@ class TestOmoGoal:
         assert len(updated["goals"]) == 1
         assert updated["goals"][0]["id"] == "G31.3"
         assert updated["goals"][0]["source_ref"] == "reviewer:goal:create"
-        artifact = omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "goals" / "G31.3.yaml"
+        artifact = (
+            omo_dir.parent
+            / "runtime"
+            / "omo"
+            / "_delivery"
+            / "ingress"
+            / "goals"
+            / "G31.3.yaml"
+        )
         assert artifact.exists()
         registry = yaml.safe_load(
-            (omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml").read_text(
-                encoding="utf-8"
-            )
+            (
+                omo_dir.parent
+                / "runtime"
+                / "omo"
+                / "_delivery"
+                / "ingress"
+                / "registry.yaml"
+            ).read_text(encoding="utf-8")
         )
         assert registry["goals"]["by_source_ref"]["reviewer:goal:create"] == "G31.3"
 
@@ -346,9 +359,9 @@ class TestOmoState:
         assert any("TASK-planned0" in s for s in data["next_planned_tasks"])
         assert data["current_phase"] == 42  # 其他字段保真
         artifacts = sorted(
-            (omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "state").glob(
-                "system-projection-*.yaml"
-            )
+            (
+                omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "state"
+            ).glob("system-projection-*.yaml")
         )
         assert artifacts
         artifact = yaml.safe_load(artifacts[-1].read_text(encoding="utf-8"))
@@ -629,9 +642,14 @@ class TestOmoKnowledge:
         assert doc.exists()
         assert "Hello world" in doc.read_text()
         artifacts = list(
-            (omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "knowledge").glob(
-                "design-my-doc-*.yaml"
-            )
+            (
+                omo_dir.parent
+                / "runtime"
+                / "omo"
+                / "_delivery"
+                / "ingress"
+                / "knowledge"
+            ).glob("design-my-doc-*.yaml")
         )
         assert len(artifacts) == 1
 
@@ -753,9 +771,14 @@ class TestOmoStandard:
         assert doc.exists()
         assert "# New Standard" in doc.read_text()
         artifacts = list(
-            (omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "standards").glob(
-                "new-standard-*.yaml"
-            )
+            (
+                omo_dir.parent
+                / "runtime"
+                / "omo"
+                / "_delivery"
+                / "ingress"
+                / "standards"
+            ).glob("new-standard-*.yaml")
         )
         assert len(artifacts) == 1
 
@@ -883,12 +906,25 @@ class TestOmoTask:
         assert payload["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
         assert payload["metadata"]["source_ref"] == "reviewer:task:create-governed"
 
-        artifact = omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / f"{payload['id']}.yaml"
+        artifact = (
+            omo_dir.parent
+            / "runtime"
+            / "omo"
+            / "_delivery"
+            / "ingress"
+            / "tasks"
+            / f"{payload['id']}.yaml"
+        )
         assert artifact.exists()
         registry = yaml.safe_load(
-            (omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml").read_text(
-                encoding="utf-8"
-            )
+            (
+                omo_dir.parent
+                / "runtime"
+                / "omo"
+                / "_delivery"
+                / "ingress"
+                / "registry.yaml"
+            ).read_text(encoding="utf-8")
         )
         assert (
             registry["tasks"]["by_source_ref"]["reviewer:task:create-governed"]
@@ -945,7 +981,9 @@ class TestOmoTask:
         assert payload["completed_at"]
         assert payload["metadata"]["completed_at"]
         assert payload["metadata"]["completed_via"] == "omo task done"
-        artifact = omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks"
+        artifact = (
+            omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks"
+        )
         assert list(artifact.glob("IMPORTED-test1-done-*.yaml"))
         captured = capsys.readouterr()
         assert "归档完成" in captured.out
@@ -1013,9 +1051,9 @@ class TestOmoTask:
             == "tests:refresh-evidence"
         )
         artifacts = list(
-            (omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks").glob(
-                "TASK-DONE-1-evidence-refresh-*.yaml"
-            )
+            (
+                omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks"
+            ).glob("TASK-DONE-1-evidence-refresh-*.yaml")
         )
         assert len(artifacts) == 1
         captured = capsys.readouterr()
