@@ -1,5 +1,6 @@
 # CLAUDE.md — omostation AI Context Loader
 
+> 最后更新: 2026-07-02
 > Purpose: session startup protocol for AI agents.
 > Detailed engineering rules live in [`AGENTS.md`](AGENTS.md).
 > Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md).
