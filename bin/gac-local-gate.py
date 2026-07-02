@@ -41,11 +41,15 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("matrix-consistency", ["bin/matrix-consistency-lint.py", "--skip-launchd"]),
     # ADR-0121 GCSI: governance convergence (rule registration + score + loop + SSOT)
     ("governance-convergence", ["bin/governance-convergence-lint.py"]),
-    # governance-semantic-gate: 默认 mode 跳过 (sub-tools 自身有 known drift, 留 S2 F-14
-    # 治本). 仅 strict mode 跑 — 默认 mode 下不阻塞 pre-commit.
-    # F-6 修 (2026-07-02): 初版误接 CHECKS, PR #17 合后发现 default 也跑且 fail;
-    # 移 CI_ONLY_CHECKS 让默认 mode skip, strict mode 仍跑供 CI 可见.
+    # governance-semantic-gate: 默认本地软门禁. 默认模式只阻断结构性 drift;
+    # active runs / release package readiness 在 default 下是 warning, release hard gate 用
+    # bin/governance-semantic-gate.py --release --json 显式执行.
     ("governance-semantic-gate", ["bin/governance-semantic-gate.py", "--json"]),
+    # ADR-0122 S2 F-2 (ADR-0119 S2-5): state-freshness 纳入 gac-local-gate
+    # 检查 OMO 状态面 SSOT (health/system_health/governance.jsonl/debt-dashboard/
+    # governance-data) 的 generated_at 新鲜度, stale (>24h) 报 WARN, expired (>7d) 报 FAIL.
+    # 默认 mode 跑 (派生快照应有 generated_at, 不可缺).
+    ("state-freshness-check", ["bin/state-freshness-check.py", "--json"]),
     # ADR-0122 S1 F-6: check-* 工具按 false-positive 风险分级接入.
     # - dashboard-registry / toolbox-ssot: 静默 PASS, 接入 CHECKS 持续守.
     # - domain-m1-alignment: 非 strict 默认 PASS, 接入 CHECKS 持续守 (drift 不 block).
@@ -202,7 +206,6 @@ CI_ONLY_CHECKS = {
     "check-cross-refs",
     "check-dead-path-refs",
     "check-alert-coverage",
-    "governance-semantic-gate",
 }
 
 # CI 环境跳过的 check (CI fresh checkout 无运行时 env / generated 派生物, 跑恒红无意义).

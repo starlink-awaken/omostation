@@ -100,6 +100,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0122 | 系统审计 follow-up 路线图 (18 项 S0 落地: GaC-RULE M1 sync + governance-checks 注册) | ACTIVE | 2026-07-02 | governance-team | 0122-system-audit-followup-plan.md |
 | 0123 | bin/ 治理工具集重整 (命名归一 + 孤立工具接入 gate) | PROPOSED | 2026-07-02 | governance-team | 0123-bin-governance-rationalize.md |
 | 0124 | S1 阶段完结复盘 — 5 PR + 1 修 + 1 cleanup (P72 follow-up pattern) | ACTIVE | 2026-07-02 | governance-team | 0124-s1-followup-retrospective.md |
+| 0125 | S2 阶段 S1 部分复盘 — F-2 + ADR-0115 Phase 2/4 (5 commit, 1 PR) | ACTIVE | 2026-07-02 | governance-team | 0125-s2-followup-retrospective.md |
 
 ---
 
@@ -171,4 +172,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-02 · Owner: governance-team · 0121 GCSI 治理收敛专项 (规则/分数/回路/SSOT 4 维收敛)*
+*最近更新: 2026-07-02 · Owner: governance-team · 0125 S2 阶段 S1 部分复盘 (F-2 + ADR-0115 Phase 2/4)*

@@ -81,8 +81,8 @@ last-reviewed: 2026-06-29
 | `governance-readiness.py` | P60 治理就绪度 (5 维度) |
 | `governance-readiness-trend.py` | 就绪度趋势 |
 | `governance-history-insight.py` | history 洞察 |
-| `gov-history-stats.py` | P91 R1 history 趋势深化 |
-| `gov-trend-report.py` | 趋势报告 |
+| `governance-history-stats.py` | P91 R1 history 趋势深化 (ADR-0115 Phase 2 rename) |
+| `governance-trend-report.py` | 趋势报告 (ADR-0115 Phase 2 rename) |
 | `dashboard-readiness-summary.py` | 就绪度摘要 |
 | `dashboard-ui-render.py` | UI 渲染 |
 | `alert-aggregator.py` | 告警聚合 |
