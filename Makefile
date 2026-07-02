@@ -76,12 +76,18 @@ install-hooks:  ## 装 git pre-push + pre-commit + post-commit 钩子. 新 clone
 		if [ -d "$$d" ] && [ -e "$$d/.git" ]; then \
 			( \
 				cd "$$d" && \
+				sub_root=$$(pwd) && \
 				hook_dir=$$(git rev-parse --git-path hooks 2>/dev/null || echo ""); \
 				if [ -n "$$hook_dir" ]; then \
 					abs_hook_dir=$$(python3 -c "import os; print(os.path.abspath('$$hook_dir'))"); \
 					mkdir -p "$$abs_hook_dir"; \
 					ln -sf "$(CURDIR)/.githooks/pre-commit" "$$abs_hook_dir/pre-commit"; \
 					echo "🔗 已绑定子模块 $$d 治理 pre-commit 软链 -> $$abs_hook_dir/pre-commit"; \
+					hook_file=$$(python3 -c "import os,sys; print(os.path.relpath(os.path.join(sys.argv[1], 'pre-commit'), sys.argv[2]))" "$$abs_hook_dir" "$$sub_root") || hook_file=""; \
+					if [ -n "$$hook_file" ] && git ls-files --error-unmatch "$$hook_file" >/dev/null 2>&1; then \
+						git update-index --skip-worktree "$$hook_file" 2>/dev/null || true; \
+						echo "   ↪ skip-worktree $$hook_file (F-12 修, 防 type change T 残留)"; \
+					fi; \
 				fi \
 			) \
 		fi; \
