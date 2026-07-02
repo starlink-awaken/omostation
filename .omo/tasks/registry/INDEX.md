@@ -10,7 +10,7 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (11 个)
+## Planned Tasks (15 个)
 | ID | Title | Status |
 |----|-------|--------|
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
@@ -20,9 +20,13 @@
 | QUEST-7 | 测试每日打扫 | candidate |
 | QUEST-8 | 测试每日打扫 | candidate |
 | TASK-13AD0B21 | AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升 | candidate |
+| TASK-236A991C | gac-gate doc refs/alert 债: cross-refs + dead-pat | candidate |
+| TASK-2FB9244F | 项目 doc 契约: 17 项目三件套 + DIAGRAM/EVOLUTION | candidate |
+| TASK-4D8EDEAC | c2g/l4-kernel 子仓 test 环境绑定 (launchd macOS + ingr | candidate |
 | TASK-67C63D6C | AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾 | candidate |
 | TASK-6B868907 | P1 产品门户: c2g draft→bet路径 + 全场景门户 | candidate |
 | TASK-94BB9C70 | P1 并发Agent抢占: 共享文件advisory-lock | candidate |
+| TASK-A367B061 | GaC 声明/执行鸿沟: 129 rules 缺 executor | candidate |
 | TASK-F7114ABA | P1 GodModule: omo_ingress/agora/gbrain (行数见源码实测, | candidate |
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
@@ -66,5 +70,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-01 (依据 `omo state sync-tasks` 与真实目录重算: done=95, planned=11, active=0, archived=6 顶层)*
+*Updated: 2026-07-02 (依据 `omo state sync-tasks` 与真实目录重算: done=95, planned=15, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
