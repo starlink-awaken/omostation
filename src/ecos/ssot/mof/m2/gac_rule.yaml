@@ -35,12 +35,12 @@ GacRule:
       description: 架构层 (M0 模型 / L0 协议 / L1 运行时 / L2 引擎 / L3 入口 / L4 自我 / I0 路由 / X 框架 / meta 横切)
     check_type:
       type: enum
-      values: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index, schema_integrity, yaml_bypass, sensitive_write, mutation_surface, registry_integrity, internal_write_profile, state_plane_asset, ingress_boundary, ingress_artifact, mutation_ledger, doc_lifecycle, doc_archival, self_evolution_approval, task_policy, god_module, test_coverage]
-      description: 检查类型 (泛化执行器按此分发, 机制 3; 28 值与 governance-checks.yaml::check_type_enum 对齐)
+      values: [ssot_pointer, ssot_lint, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index, schema_integrity, yaml_bypass, sensitive_write, mutation_surface, registry_integrity, internal_write_profile, state_plane_asset, ingress_boundary, ingress_artifact, mutation_ledger, doc_lifecycle, doc_archival, self_evolution_approval, task_policy, god_module, test_coverage]
+      description: 检查类型 (泛化执行器按此分发, 机制 3; 与 governance-checks.yaml::check_type_enum 对齐)
     executor:
       type: list
       item_type: enum
-      item_values: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron]
+      item_values: [hook_pre_edit, hook_post, ci_gate, gac_local_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron]
       min_items: 1
       description: 执行通道列表 (至少一个, 防 rule 声明不执行, 机制 3 前提)
     lifecycle:
