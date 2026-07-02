@@ -33,4 +33,6 @@ jobs:
         with:
           python-version: "3.14"
       - uses: astral-sh/setup-uv@v4
+      - name: install ruff
+        run: pip install ruff
       - uses: pre-commit/action@v3.0.1

@@ -70,7 +70,7 @@ health_composite_breakdown:
     freshness: 0.2
     governance: 0.5
     runtime: 0.3
-health_score: 80
+health_score: 100
 planned: 11
 service_online_ratio: 0.333
 source: c2g.strategy (real audit, no mock)
