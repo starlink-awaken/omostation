@@ -228,7 +228,7 @@ bos:
     extended: ["meta", "omo", "swarm", "system", "toolbox"]
 
 gac:
-  rules_count: 90                # grep -c '    - id: CR-' .omo/_truth/registry/governance-checks.yaml (gac-validate 报 135 含 X1-X4 legacy_index)
+  rules_count: 91                # grep -c '    - id: CR-' .omo/_truth/registry/governance-checks.yaml (gac-validate 报 136 含 X1-X4 legacy_index)
 
 # ── Archived projects (historical reference) ──
 archived:
