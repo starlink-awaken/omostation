@@ -249,14 +249,14 @@ class T05ApprovalBoardLatestWeek(unittest.TestCase):
 class T06AuditRolloutDaemonWriteback(unittest.TestCase):
     """T4-T5: P7-H3 audit-rollout daemon 写回语义 (primary fail → fallback success/fail).
 
-    真实运行会污染 .omo/_delivery/audit-rollout/index.json, 所以用 mock 替换
+    真实运行会污染 runtime/omo/_delivery/audit-rollout/index.json, 所以用 mock 替换
     primary / fallback 子进程来隔离测试.
     """
 
     def setUp(self) -> None:
         # 保存原始 index, 跑完恢复
         self.index_path = (
-            REPO_ROOT / ".omo" / "_delivery" / "audit-rollout" / "index.json"
+            REPO_ROOT / "runtime" / "omo" / "_delivery" / "audit-rollout" / "index.json"
         )
         self.index_backup = (
             self.index_path.read_bytes() if self.index_path.exists() else None
@@ -298,10 +298,7 @@ class T06AuditRolloutDaemonWriteback(unittest.TestCase):
             }
             # 真写 5repos.json 让 daemon 读
             fallback_path = (
-                REPO_ROOT
-                / ".omo"
-                / "_delivery"
-                / "audit-rollout"
+                REPO_ROOT / "runtime" / "omo" / "_delivery" / "audit-rollout"
                 / f"{daemon._today()}-5repos.json"
             )
             fallback_path.parent.mkdir(parents=True, exist_ok=True)

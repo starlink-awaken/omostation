@@ -59,7 +59,7 @@ def _worker_init(worker_id: int, tmp_path_str: str, mode: str) -> dict:
 
     def fake_fallback() -> dict:
         out_path = (
-            tmp_path / ".omo" / "_delivery" / "audit-rollout" / "2026-06-12-5repos.json"
+            tmp_path / "runtime" / "omo" / "_delivery" / "audit-rollout" / "2026-06-12-5repos.json"
         )
         out_path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
@@ -104,7 +104,7 @@ class T01RaceConditionLock(unittest.TestCase):
                 [(i, str(tmp_path), "weekly") for i in range(6)],
             )
 
-        index_path = tmp_path / ".omo" / "_delivery" / "audit-rollout" / "index.json"
+        index_path = tmp_path / "runtime" / "omo" / "_delivery" / "audit-rollout" / "index.json"
         self.assertTrue(index_path.exists(), "index.json 必须存在")
         index = json.loads(index_path.read_text(encoding="utf-8"))
         self.assertEqual(
@@ -150,7 +150,8 @@ class T02ModePassthrough(unittest.TestCase):
         )
         weekly_file = (
             WORKSPACE
-            / ".omo"
+            / "runtime"
+            / "omo"
             / "_delivery"
             / "audit-rollout"
             / "2026-06-12-weekly.json"
@@ -167,7 +168,8 @@ class T02ModePassthrough(unittest.TestCase):
         )
         monthly_file = (
             WORKSPACE
-            / ".omo"
+            / "runtime"
+            / "omo"
             / "_delivery"
             / "audit-rollout"
             / "2026-06-12-monthly.json"
@@ -185,7 +187,8 @@ class T02ModePassthrough(unittest.TestCase):
         self.assertIn("mode=pre-release", result.stderr)
         pre_release_file = (
             WORKSPACE
-            / ".omo"
+            / "runtime"
+            / "omo"
             / "_delivery"
             / "audit-rollout"
             / "2026-06-12-pre-release.json"

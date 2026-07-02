@@ -4424,7 +4424,7 @@ def test_task_governance_overlay_run_next_records_contract_gap_for_dispatched_ta
                 "source_docs": [".omo/MASTER-BLUEPRINT.md"],
             },
             "execution": {
-                "launch_command": 'python3 -c "print(\\"launched\\")"',
+                "launch_command": 'python3 -c "print(\"launched\")"',
                 "log_ref": ".omo/workers/runs/task-a-mockworker-20260603-071500-stdout.log",
                 "checkpoint_refs": [
                     ".omo/workers/runs/task-a-mockworker-20260603-071500-checkpoint.md"
@@ -4574,7 +4574,7 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
                 "source_docs": [".omo/MASTER-BLUEPRINT.md"],
             },
             "execution": {
-                "launch_command": 'python3 -c "print(\\"launched\\")"',
+                "launch_command": 'python3 -c "print(\"launched\")"',
                 "log_ref": ".omo/workers/runs/task-a-mockworker-20260603-071500-stdout.log",
                 "checkpoint_refs": [
                     ".omo/workers/runs/task-a-mockworker-20260603-071500-checkpoint.md"
@@ -4605,7 +4605,7 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
                     "id": "mockworker",
                     "enabled": True,
                     "transports": {
-                        "cli_prompt": {"command": 'python3 -c "print(\\"launched\\")"'}
+                        "cli_prompt": {"command": 'python3 -c "print(\"launched\")"'}
                     },
                 }
             ]
@@ -5620,7 +5620,7 @@ def test_fast_track_compaction_archives_done_tasks_via_broker_and_writes_audit_r
     assert (
         len(
             list(
-                (omo / "_delivery" / "ingress" / "tasks").glob("FAST-*-archive-*.yaml")
+                (omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks").glob("FAST-*-archive-*.yaml")
             )
         )
         == 5
@@ -5628,7 +5628,7 @@ def test_fast_track_compaction_archives_done_tasks_via_broker_and_writes_audit_r
     assert (
         len(
             list(
-                (omo / "_delivery" / "ingress" / "audits").glob(
+                (omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "audits").glob(
                     "Fast-Track-Compaction-*.yaml"
                 )
             )

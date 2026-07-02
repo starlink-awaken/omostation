@@ -19,6 +19,7 @@ from omo.omo_ingress_paths import (
     _safe_doc_name,
     _timestamp_slug,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import _record_mutation
 from omo.omo_ingress_trail import _record_trail
@@ -60,7 +61,7 @@ def create_knowledge_doc(
         parent_step_id = f"ingress:knowledge:{plane}:{safe_name}:{timestamp}"
         details = (
             f"plane={plane} title={title} actor={actor} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_create_knowledge_doc",
@@ -81,7 +82,7 @@ def create_knowledge_doc(
             actor=actor,
             action="create_knowledge_doc",
             target=f".omo/_knowledge/{plane}/{safe_name}.md",
-            artifact_ref=f".omo/_delivery/ingress/knowledge/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/knowledge/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"plane": plane, "title": title},
@@ -123,7 +124,7 @@ def create_standard_doc(
         parent_step_id = f"ingress:standard:{safe_name}:{timestamp}"
         details = (
             f"title={title} actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_create_standard_doc",
@@ -144,7 +145,7 @@ def create_standard_doc(
             actor=actor,
             action="create_standard_doc",
             target=f".omo/standards/{safe_name}.md",
-            artifact_ref=f".omo/_delivery/ingress/standards/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/standards/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"title": title},
@@ -186,7 +187,7 @@ def create_audit_report(
         parent_step_id = f"ingress:audit:{filename}:{timestamp}"
         details = (
             f"filename={filename} actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_create_audit_report",
@@ -207,7 +208,7 @@ def create_audit_report(
             actor=actor,
             action="create_audit_report",
             target=f".omo/_knowledge/audits/{filename}.md",
-            artifact_ref=f".omo/_delivery/ingress/audits/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/audits/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"title": title},

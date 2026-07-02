@@ -54,6 +54,7 @@ from omo.omo_ingress_paths import (
     _lock_path,
     _timestamp_slug,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import (
     _record_mutation,
@@ -113,7 +114,7 @@ def promote_task_to_active(
         parent_step_id = f"ingress:task-promote:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} handoff_ref={handoff_ref or '-'} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_promote_task",
@@ -134,7 +135,7 @@ def promote_task_to_active(
             actor=actor,
             action="promote_task_to_active",
             target=f".omo/tasks/active/{task_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id, "handoff_ref": handoff_ref},
@@ -210,7 +211,7 @@ def repair_task_promotion_approval(
             "source_ref": source_ref,
             "repaired_at": timestamp,
             **_artifact_lifecycle_fields(
-                artifact_ref=f".omo/_delivery/ingress/tasks/{task_id}-approval-repair-{_timestamp_slug(timestamp)}.yaml"
+                artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{task_id}-approval-repair-{_timestamp_slug(timestamp)}.yaml"
             ),
         }
         artifact_path = (
@@ -223,7 +224,7 @@ def repair_task_promotion_approval(
         parent_step_id = f"ingress:task-approval-repair:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} group={group} actor={actor} approval_ref={approval_ref} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_repair_task_promotion_approval",
@@ -318,7 +319,7 @@ def request_task_promotion_approval(
         details = (
             f"task_id={task_id} actor={actor} approval_ref={approval_ref} "
             f"proposal_ref={proposal_ref or '-'} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_request_task_promotion_approval",
@@ -339,7 +340,7 @@ def request_task_promotion_approval(
             actor=actor,
             action="request_task_promotion_approval",
             target=f".omo/tasks/planned/{task_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={
@@ -404,7 +405,7 @@ def revert_task_to_planned(
         parent_step_id = f"ingress:task-revert:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_revert_task",
@@ -425,7 +426,7 @@ def revert_task_to_planned(
             actor=actor,
             action="revert_task_to_planned",
             target=f".omo/tasks/planned/{task_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id},

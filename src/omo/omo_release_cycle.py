@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .omo_io import write_text_atomic
+from .omo_ingress_paths import _retrospective_dir
 from .omo_shared import load_yaml
 
 
@@ -249,7 +250,7 @@ def write_cycle_json(workspace_root: Path, version: str, cycle: dict[str, Any]) 
 def write_retrospective(
     workspace_root: Path, version: str, cycle: dict[str, Any]
 ) -> Path:
-    retro_dir = workspace_root / ".omo" / "tasks" / "registry" / "done" / "OPC-P7-H1"
+    retro_dir = _retrospective_dir("OPC-P7-H1", workspace_root)
     retro_path = retro_dir / f"retrospective-{version}.md"
     lines: list[str] = []
     lines.append(f"# OPC P7-H1 retrospective — {version}")

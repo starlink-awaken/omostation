@@ -31,7 +31,7 @@ def test_release_cycle_persistence_helpers(tmp_path: Path) -> None:
         },
         "debt": {"total": 3, "open": 1, "resolved": 2},
         "cycle_json_path": ".omo/_delivery/release/v2026-06-20-r1.json",
-        "retro_path": ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-20-r1.md",
+        "retro_path": "runtime/omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-20-r1.md",
     }
     assert next_release_version(tmp_path, "2026-06-20") == "v2026-06-20-r1"
     notes_path = write_release_notes(tmp_path, cycle["version"], cycle)

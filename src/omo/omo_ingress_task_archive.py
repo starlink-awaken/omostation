@@ -31,6 +31,7 @@ from omo.omo_ingress_paths import (
     _lock_path,
     _timestamp_slug,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import (
     _record_mutation,
@@ -101,7 +102,7 @@ def yield_task_to_planned(
         parent_step_id = f"ingress:task-yield:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} reason={reason} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_yield_task",
@@ -122,7 +123,7 @@ def yield_task_to_planned(
             actor=actor,
             action="yield_task_to_planned",
             target=f".omo/tasks/planned/{task_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id, "reason": reason},
@@ -185,7 +186,7 @@ def archive_done_task(
         parent_step_id = f"ingress:task-archive:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} archived_ref={archived_ref} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_archive_done_task",
@@ -206,7 +207,7 @@ def archive_done_task(
             actor=actor,
             action="archive_done_task",
             target=archived_ref,
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id},
@@ -279,7 +280,7 @@ def normalize_legacy_planned_task(
                 actor=actor,
                 details=(
                     f"task_id={task_id} legacy_status={original_status} source_ref={source_ref or '-'} "
-                    f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+                    f"artifact={_workspace_relative(artifact_path)}"
                 ),
                 audit_file=_audit_log_path(omo_dir),
             )
@@ -295,7 +296,7 @@ def normalize_legacy_planned_task(
                 actor=actor,
                 action="normalize_legacy_planned_task",
                 target=f".omo/tasks/archived/legacy-normalized/{task_id}.yaml",
-                artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+                artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
                 source_ref=source_ref,
                 created_at=timestamp,
                 extra={
@@ -372,7 +373,7 @@ def normalize_legacy_planned_task(
             actor=actor,
             details=(
                 f"task_id={task_id} legacy_status={original_status} normalized_status={normalized['status']} "
-                f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+                f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
             ),
             audit_file=_audit_log_path(omo_dir),
         )
@@ -388,7 +389,7 @@ def normalize_legacy_planned_task(
             actor=actor,
             action="normalize_legacy_planned_task",
             target=f".omo/tasks/planned/{task_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={

@@ -23,6 +23,7 @@ from omo.omo_ingress_paths import (
     _lock_path,
     _timestamp_slug,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import (
     _load_registry,
@@ -87,7 +88,7 @@ def create_planned_task(
     payload = _task_payload_with_metadata(
         task_data, ingress_plane=ingress_plane, source_ref=source_ref
     )
-    artifact_ref = f".omo/_delivery/ingress/tasks/{task_id}.yaml"
+    artifact_ref = f"runtime/omo/_delivery/ingress/tasks/{task_id}.yaml"
 
     with fcntl_lock(_lock_path(omo_dir)):
         registry = _load_registry(omo_dir)
@@ -151,7 +152,7 @@ def create_planned_task(
         parent_step_id = f"ingress:task:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} ingress_plane={ingress_plane} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_create_planned_task",
@@ -226,7 +227,7 @@ def create_blocked_task(
         parent_step_id = f"ingress:task-blocked:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_create_blocked_task",
@@ -247,7 +248,7 @@ def create_blocked_task(
             actor=actor,
             action="create_blocked_task",
             target=f".omo/tasks/blocked/{task_filename}",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id},
@@ -317,7 +318,7 @@ def record_task_consensus(
         parent_step_id = f"ingress:task-consensus:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} evidence_ref={evidence_ref} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_record_task_consensus",
@@ -338,7 +339,7 @@ def record_task_consensus(
             actor=actor,
             action="record_task_consensus",
             target=evidence_ref,
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id, "task_group": group},
@@ -424,7 +425,7 @@ def complete_task(
         parent_step_id = f"ingress:task-done:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} from={src_group} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_complete_task",
@@ -445,7 +446,7 @@ def complete_task(
             actor=actor,
             action="complete_task",
             target=f".omo/tasks/done/{task_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id, "source_group": src_group},
@@ -497,7 +498,7 @@ def update_done_task_evidence_paths(
         parent_step_id = f"ingress:task-evidence-refresh:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_update_done_task_evidence_paths",
@@ -518,7 +519,7 @@ def update_done_task_evidence_paths(
             actor=actor,
             action="update_done_task_evidence_paths",
             target=f".omo/tasks/done/{task_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id},
@@ -579,7 +580,7 @@ def update_planned_task_evidence_paths(
         parent_step_id = f"ingress:task-evidence-add:{task_id}:{timestamp}"
         details = (
             f"task_id={task_id} actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_update_planned_task_evidence_paths",
@@ -600,7 +601,7 @@ def update_planned_task_evidence_paths(
             actor=actor,
             action="update_planned_task_evidence_paths",
             target=str(task_path.relative_to(omo_dir.parent)),
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"task_id": task_id},

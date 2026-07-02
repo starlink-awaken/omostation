@@ -80,21 +80,21 @@ def test_create_goal_writes_current_goal_and_delivery_artifact(tmp_path: Path) -
     assert created["id"] == "BET-1234"
     assert any(goal["id"] == "BET-1234" for goal in payload["goals"])
     artifact = _load_yaml(
-        tmp_path / ".omo" / "_delivery" / "ingress" / "goals" / "BET-1234.yaml"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "goals" / "BET-1234.yaml"
     )
     assert artifact["kind"] == "goal_created"
     assert artifact["ingress_plane"] == "projects/c2g"
-    assert artifact["artifact_ref"] == ".omo/_delivery/ingress/goals/BET-1234.yaml"
+    assert artifact["artifact_ref"] == "runtime/omo/_delivery/ingress/goals/BET-1234.yaml"
     assert artifact["broker_ref"] == "projects/omo/src/omo/omo_ingress.py"
     assert artifact["retention_mode"] == "manual_archive"
     assert artifact["lifecycle_state"] == "active"
-    audit_log = tmp_path / ".omo" / "_delivery" / "ingress" / "ingress-audit.jsonl"
+    audit_log = tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "ingress-audit.jsonl"
     assert audit_log.exists()
-    mutation_log = tmp_path / ".omo" / "change-log" / "mutations.jsonl"
+    mutation_log = tmp_path / "runtime" / "omo" / "change-log" / "mutations.jsonl"
     mutation = _load_jsonl(mutation_log)[0]
     assert mutation["action"] == "create_goal"
     assert mutation["target"] == ".omo/goals/current.yaml#BET-1234"
-    assert mutation["artifact_ref"] == ".omo/_delivery/ingress/goals/BET-1234.yaml"
+    assert mutation["artifact_ref"] == "runtime/omo/_delivery/ingress/goals/BET-1234.yaml"
 
 
 def test_create_planned_task_validates_and_writes_artifacts(tmp_path: Path) -> None:
@@ -139,22 +139,22 @@ def test_create_planned_task_validates_and_writes_artifacts(tmp_path: Path) -> N
     assert created["id"] == "IMPORTED-123456"
     assert payload["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
     artifact = _load_yaml(
-        tmp_path / ".omo" / "_delivery" / "ingress" / "tasks" / "IMPORTED-123456.yaml"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / "IMPORTED-123456.yaml"
     )
     assert artifact["kind"] == "planned_task_created"
     assert artifact["task_ref"] == ".omo/tasks/planned/IMPORTED-123456.yaml"
     assert (
-        artifact["artifact_ref"] == ".omo/_delivery/ingress/tasks/IMPORTED-123456.yaml"
+        artifact["artifact_ref"] == "runtime/omo/_delivery/ingress/tasks/IMPORTED-123456.yaml"
     )
     assert artifact["broker_ref"] == "projects/omo/src/omo/omo_ingress.py"
     assert artifact["retention_mode"] == "manual_archive"
     assert artifact["lifecycle_state"] == "active"
-    mutation_log = tmp_path / ".omo" / "change-log" / "mutations.jsonl"
+    mutation_log = tmp_path / "runtime" / "omo" / "change-log" / "mutations.jsonl"
     mutation = _load_jsonl(mutation_log)[0]
     assert mutation["action"] == "create_planned_task"
     assert mutation["target"] == ".omo/tasks/planned/IMPORTED-123456.yaml"
     assert (
-        mutation["artifact_ref"] == ".omo/_delivery/ingress/tasks/IMPORTED-123456.yaml"
+        mutation["artifact_ref"] == "runtime/omo/_delivery/ingress/tasks/IMPORTED-123456.yaml"
     )
 
 
@@ -189,10 +189,7 @@ def test_write_capability_registry_bundle_writes_bundle_and_artifact(
     assert artifact["kind"] == "capability_registry_bundle_written"
     assert ".omo/capabilities/INDEX.md" in artifact["registry_refs"]
     bundle_artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "capabilities"
         / "bundle-2026-06-22T03-00-00Z.yaml"
     )
@@ -232,10 +229,7 @@ def test_write_manual_capabilities_writes_registry_and_artifact(tmp_path: Path) 
     )
     assert registry["capabilities"][0]["id"] == "manual.demo"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "capabilities"
         / "manual-capabilities-2026-06-22T03-01-00Z.yaml"
     )
@@ -265,10 +259,7 @@ def test_write_system_projection_fields_updates_system_and_artifact(
     assert written["current_phase"] == 42
     assert written["completed_tasks"] == 3
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "state"
         / "system-projection-2026-06-22T08-00-00Z.yaml"
     )
@@ -306,10 +297,7 @@ def test_update_done_task_evidence_paths_writes_artifact(tmp_path: Path) -> None
     persisted = _load_yaml(done_path)
     assert persisted["metadata"]["evidence_paths_refreshed_by"] == "projects/omo/tests"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-DONE-2-evidence-refresh-2026-06-22T03-02-00Z.yaml"
     )
@@ -335,7 +323,7 @@ def test_repair_task_promotion_approval_rehydrates_missing_runtime_artifact(
                 "deliverables": ["doc"],
                 "assigned_to": "codex",
                 "dispatch_id": "dispatch-1",
-                "run_ref": ".omo/_delivery/ingress/tasks/TASK-R-route.yaml",
+                "run_ref": "runtime/omo/_delivery/ingress/tasks/TASK-R-route.yaml",
                 "approval_ref": ".omo/workers/runs/TASK-R-promotion-approval-2026-06-23T00-00-00Z.yaml",
                 "review_ref": ".omo/tasks/remediation-notes/TASK-R-review.md",
                 "knowledge_refs": [],
@@ -379,10 +367,7 @@ def test_repair_task_promotion_approval_rehydrates_missing_runtime_artifact(
     assert approval["approval_status"] == "granted"
     assert approval["refs"]["task_ref"] == ".omo/tasks/remediation/TASK-R.yaml"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-R-approval-repair-2026-06-23T01-00-00Z.yaml"
     )
@@ -445,10 +430,7 @@ def test_complete_task_moves_active_task_to_done_and_writes_artifact(
     payload = _load_yaml(done_path)
     assert payload["metadata"]["completed_via"] == "omo task done"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-DONE-1-done-2026-06-20T03-00-00Z.yaml"
     )
@@ -584,10 +566,7 @@ def test_promote_task_to_active_moves_planned_task_and_writes_artifact(
     assert active_path.exists()
     assert not task_path.exists()
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-PROMOTE-1-promote-2026-06-20T04-00-00Z.yaml"
     )
@@ -645,10 +624,7 @@ def test_revert_task_to_planned_moves_active_task_back_and_writes_artifact(
     assert planned_path.exists()
     assert not task_path.exists()
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-REVERT-1-revert-2026-06-20T04-01-00Z.yaml"
     )
@@ -686,10 +662,7 @@ def test_create_blocked_task_writes_packet_and_ingress_artifact(tmp_path: Path) 
 
     task_path = tmp_path / ".omo" / "tasks" / "blocked" / "task-blocked-1.yaml"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-BLOCKED-1-blocked-2026-06-21T08-00-00Z.yaml"
     )
@@ -850,10 +823,7 @@ def test_create_skill_manifest_writes_truth_and_ingress_artifact(
         / "skill.review.refresh.yaml"
     ).exists()
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "task-center"
         / "skills"
         / "skill.review.refresh.yaml"
@@ -880,10 +850,7 @@ def test_write_discovery_registry_writes_truth_and_ingress_artifact(
         tmp_path / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
     ).exists()
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "task-center"
         / "discovery"
         / "discovery-registry-2026-06-21T09-10-00Z.yaml"
@@ -958,10 +925,7 @@ def test_request_task_promotion_approval_updates_planned_task_and_writes_artifac
     )
     assert approval["approval_status"] == "requested"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-APPROVAL-1-promotion-approval-2026-06-21T06-00-00Z.yaml"
     )
@@ -1035,10 +999,7 @@ def test_record_task_contract_request_updates_active_task_and_writes_artifact(
     )
     assert request["task_id"] == "TASK-CONTRACT-1"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-CONTRACT-1-contract-request-2026-06-21T06-10-00Z.yaml"
     )
@@ -1107,10 +1068,7 @@ def test_route_self_evolution_to_remediation_moves_packet_and_writes_note(
         / "OPC-P6-SELF-EVOLUTION-demo-review.md"
     )
     artifact_path = (
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "OPC-P6-SELF-EVOLUTION-demo-route-self-evolution-2026-06-21T01-00-00Z.yaml"
     )
@@ -1190,10 +1148,7 @@ def test_yield_task_to_planned_moves_active_task_back_to_candidate_and_writes_ar
     assert payload["review_ref"] is None
     assert payload["metadata"]["yield_reason"] == "need ideation reset"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-YIELD-1-yield-2026-06-20T05-00-00Z.yaml"
     )
@@ -1255,10 +1210,7 @@ def test_archive_done_task_moves_done_task_to_archived_and_writes_artifact(
     assert payload["archived_at"] == "2026-06-20T05:10:00Z"
     assert payload["archived_by"] == "projects/omo/tests"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-ARCHIVE-1-archive-2026-06-20T05-10-00Z.yaml"
     )
@@ -1293,10 +1245,7 @@ def test_create_audit_report_writes_doc_and_artifact(tmp_path: Path) -> None:
         == ".omo/_knowledge/audits/Fast-Track-Compaction-2026-06-20T05-20-00Z.md"
     )
     delivery = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "audits"
         / "Fast-Track-Compaction-2026-06-20T05-20-00Z-2026-06-20T05-20-00Z.yaml"
     )
@@ -1343,10 +1292,7 @@ def test_normalize_legacy_planned_task_fills_missing_fields_and_writes_artifact(
     ]
     assert payload["metadata"]["legacy_status"] == "planned"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-LEGACY-NORMALIZE-legacy-normalize-2026-06-20T06-30-00Z.yaml"
     )
@@ -1396,10 +1342,7 @@ def test_normalize_legacy_planned_task_archives_terminal_packet_from_planned(
     assert archived["status"] == "archived"
     assert archived["archived_at"] == "2026-06-20T06:31:00Z"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "tasks"
         / "TASK-LEGACY-DONE-legacy-archive-2026-06-20T06-31-00Z.yaml"
     )
@@ -1437,7 +1380,7 @@ def test_create_goal_is_idempotent_for_same_payload_and_source_ref(
     payload = _load_yaml(goals_file)
     assert len(payload["goals"]) == 1
     assert first["id"] == second["id"] == "BET-2001"
-    registry = _load_yaml(tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml")
+    registry = _load_yaml(tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml")
     assert registry["goals"]["by_source_ref"]["c2g:bet:BET-2001"] == "BET-2001"
 
 
@@ -1507,10 +1450,7 @@ def test_update_goal_progress_writes_artifact_and_audit(tmp_path: Path) -> None:
     assert payload["goals"][0]["progress"] == 75.0
     assert payload["goals"][0]["status"] == "active"
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "goals"
         / "BET-3001-progress-2026-06-19T03-00-00Z.yaml"
     )
@@ -1518,7 +1458,7 @@ def test_update_goal_progress_writes_artifact_and_audit(tmp_path: Path) -> None:
     assert artifact["previous_progress"] == 0.0
     assert artifact["status"] == "active"
     assert (
-        tmp_path / ".omo" / "_delivery" / "ingress" / "ingress-audit.jsonl"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "ingress-audit.jsonl"
     ).exists()
 
 
@@ -1551,10 +1491,7 @@ def test_create_knowledge_doc_writes_doc_and_artifact(tmp_path: Path) -> None:
     assert "Hello world" in doc.read_text(encoding="utf-8")
     assert artifact["doc_ref"] == ".omo/_knowledge/design/my-doc.md"
     assert (
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "knowledge"
         / "design-my-doc-2026-06-19T04-00-00Z.yaml"
     ).exists()
@@ -1574,10 +1511,7 @@ def test_create_standard_doc_writes_doc_and_artifact(tmp_path: Path) -> None:
     assert "# New Standard" in doc.read_text(encoding="utf-8")
     assert artifact["doc_ref"] == ".omo/standards/new-standard.md"
     assert (
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "standards"
         / "new-standard-2026-06-19T04-01-00Z.yaml"
     ).exists()
@@ -1629,7 +1563,7 @@ def test_create_planned_task_is_idempotent_for_same_payload_and_source_ref(
     )
 
     assert first["id"] == second["id"] == "IMPORTED-2001"
-    registry = _load_yaml(tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml")
+    registry = _load_yaml(tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml")
     assert (
         registry["tasks"]["by_source_ref"]["c2g:bridge-import:IMPORTED-2001"]
         == "IMPORTED-2001"
@@ -1756,12 +1690,9 @@ def test_upsert_debt_item_writes_artifacts_and_reuses_same_file(tmp_path: Path) 
 
     debt_file = tmp_path / ".omo" / "debt" / "items" / "DEBT-OPC-P4-BUDGET-DEMO.yaml"
     payload = _load_yaml(debt_file)
-    registry = _load_yaml(tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml")
+    registry = _load_yaml(tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml")
     artifact = _load_yaml(
-        tmp_path
-        / ".omo"
-        / "_delivery"
-        / "ingress"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
         / "debts"
         / "DEBT-OPC-P4-BUDGET-DEMO.yaml"
     )
@@ -1777,7 +1708,7 @@ def test_upsert_debt_item_writes_artifacts_and_reuses_same_file(tmp_path: Path) 
     assert artifact["occurrence_count"] == 2
     assert (
         artifact["artifact_ref"]
-        == ".omo/_delivery/ingress/debts/DEBT-OPC-P4-BUDGET-DEMO.yaml"
+        == "runtime/omo/_delivery/ingress/debts/DEBT-OPC-P4-BUDGET-DEMO.yaml"
     )
     assert artifact["broker_ref"] == "projects/omo/src/omo/omo_ingress.py"
     assert artifact["retention_mode"] == "manual_archive"
@@ -1813,9 +1744,9 @@ def test_remove_debt_item_cleans_registry_and_artifacts(tmp_path: Path) -> None:
     assert removed is True
     assert not (tmp_path / ".omo" / "debt" / "items" / "DEBT-REMOVE-1.yaml").exists()
     assert not (
-        tmp_path / ".omo" / "_delivery" / "ingress" / "debts" / "DEBT-REMOVE-1.yaml"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "debts" / "DEBT-REMOVE-1.yaml"
     ).exists()
-    registry = _load_yaml(tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml")
+    registry = _load_yaml(tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml")
     assert "DEBT-REMOVE-1" not in registry["debts"]["by_id"]
     assert "tests:debt:remove-1" not in registry["debts"]["by_source_ref"]
     debt_registry = _load_yaml(tmp_path / ".omo" / "_truth" / "registry" / "debt.yaml")
@@ -1854,7 +1785,7 @@ create_goal(
     records = [
         json.loads(line)
         for line in (
-            tmp_path / ".omo" / "_delivery" / "ingress" / "ingress-audit.jsonl"
+            tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "ingress-audit.jsonl"
         )
         .read_text(encoding="utf-8")
         .splitlines()

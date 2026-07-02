@@ -7,6 +7,7 @@ from typing import Any
 
 
 from .omo_io import write_text_atomic
+from .omo_ingress_paths import _drift_dir
 from .opc_phase_paths import resolve_opc_phase_task_path
 from .omo_shared import load_yaml_docs
 
@@ -165,7 +166,7 @@ def build_drift_report(workspace_root: Path) -> dict[str, Any]:
 
 
 def write_drift_report(workspace_root: Path, report: dict[str, Any]) -> Path:
-    out_dir = workspace_root / ".omo" / "_control" / "evolution" / "drift"
+    out_dir = _drift_dir(workspace_root)
     out_path = out_dir / f"{datetime.now(UTC).strftime('%Y-%m-%dT%H%M%S')}.json"
     write_text_atomic(
         out_path,

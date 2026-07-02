@@ -32,6 +32,7 @@ from omo.omo_ingress_paths import (
     _lock_path,
     _timestamp_slug,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import (
     _record_mutation,
@@ -100,7 +101,7 @@ def record_task_contract_request(
         details = (
             f"task_id={task_id} actor={actor} request_ref={request_ref} "
             f"proposal_ref={proposal_ref or '-'} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_record_task_contract_request",
@@ -121,7 +122,7 @@ def record_task_contract_request(
             actor=actor,
             action="record_task_contract_request",
             target=f".omo/tasks/active/{task_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={
@@ -150,7 +151,8 @@ def route_self_evolution_to_remediation(
     )
     review_note_path = omo_dir.parent / review_note_rel
     artifact_rel = (
-        Path(".omo")
+        Path("runtime")
+        / "omo"
         / "_delivery"
         / "ingress"
         / "tasks"

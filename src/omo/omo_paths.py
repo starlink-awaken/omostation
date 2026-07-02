@@ -25,7 +25,10 @@ OMO_ROOT = WORKSPACE_ROOT / ".omo"
 KAIRON_DIR = PROJECTS_DIR / "kairon"
 KAIRON_PACKAGES = KAIRON_DIR / "packages"
 
-# 治理子路径
+# 运行时镜像根 (高 churn 的 self-healing/ingress/evolution 产物写这里, 不入仓)
+RUNTIME_OMO_ROOT = WORKSPACE_ROOT / "runtime" / "omo"
+
+# 治理子路径 (稳定 SSOT, 入仓)
 TRUTH_DIR = OMO_ROOT / "_truth"
 CONTROL_DIR = OMO_ROOT / "_control"
 DELIVERY_DIR = OMO_ROOT / "_delivery"
@@ -56,6 +59,30 @@ OMO_GOVERNANCE_SURFACES_STANDARD = STANDARDS_DIR / "omo-governance-surfaces.md"
 OMO_GOVERNANCE_SURFACES_REGISTRY = (
     TRUTH_DIR / "registry" / "omo-governance-surfaces.yaml"
 )
+
+# 运行时镜像子路径 (高 churn 产物)
+RUNTIME_DELIVERY_DIR = RUNTIME_OMO_ROOT / "_delivery"
+RUNTIME_CONTROL_DIR = RUNTIME_OMO_ROOT / "_control"
+RUNTIME_CHANGE_LOG_DIR = RUNTIME_OMO_ROOT / "change-log"
+RUNTIME_TASKS_DIR = RUNTIME_OMO_ROOT / "tasks"
+RUNTIME_TRUTH_DIR = RUNTIME_OMO_ROOT / "_truth"
+
+
+def runtime_omo_path(relative: str | Path) -> Path:
+    """Return a runtime mirror path under RUNTIME_OMO_ROOT.
+
+    Example:
+        runtime_omo_path("_delivery/ingress/registry.yaml")
+        -> /.../Workspace/runtime/omo/_delivery/ingress/registry.yaml
+    """
+    return RUNTIME_OMO_ROOT / Path(relative)
+
+
+def ensure_runtime_omo_dir(relative: str | Path) -> Path:
+    """Create the runtime mirror directory if missing and return it."""
+    path = RUNTIME_OMO_ROOT / Path(relative)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 # Agora 路由表 (P30 拆分后, agora 已迁出 kairon, 现位于 projects/agora)
 # P31-W0-AGORA-ACTUAL-FIX: 修正路径指向
@@ -100,6 +127,7 @@ __all__ = (
     "DELIVERY_DIR",
     "DECISIONS_DIR",
     "CONTROL_DIR",
+    "ensure_runtime_omo_dir",
     "EVIDENCE_ALIAS_DIR",
     "EVIDENCE_DIR",
     "EVIDENCE_LEGACY_DIR",
@@ -119,6 +147,13 @@ __all__ = (
     "PROJECTS_DIR",
     "PROJECTS_REGISTRY_YAML",
     "ROOT_INDEX_MD",
+    "RUNTIME_CHANGE_LOG_DIR",
+    "RUNTIME_CONTROL_DIR",
+    "RUNTIME_DELIVERY_DIR",
+    "RUNTIME_OMO_ROOT",
+    "RUNTIME_TASKS_DIR",
+    "RUNTIME_TRUTH_DIR",
+    "runtime_omo_path",
     "STATE_DIR",
     "STATE_SYSTEM_YAML",
     "STANDARDS_DIR",

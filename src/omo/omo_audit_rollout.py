@@ -6,10 +6,11 @@ from pathlib import Path
 from typing import Any
 
 from .omo_io import ensure_parent_dir, write_text_atomic
+from .omo_ingress_paths import _drift_history_dir, _runtime_omo_root
 
 
 def history_index_path(workspace_root: Path) -> Path:
-    return workspace_root / ".omo" / "_delivery" / "audit-rollout" / "index.json"
+    return _runtime_omo_root(workspace_root) / "_delivery" / "audit-rollout" / "index.json"
 
 
 def _locked_write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -46,7 +47,7 @@ def write_drift_history(
     generated_at: str,
     today: str,
 ) -> Path:
-    out_dir = workspace_root / ".omo" / "_control" / "evolution" / "drift-history"
+    out_dir = _drift_history_dir(workspace_root)
     out_path = out_dir / f"{today}.json"
     summary = {
         "generated_at": generated_at,
@@ -163,7 +164,7 @@ def write_daemon_summary(
     summary: dict[str, Any],
     today: str,
 ) -> Path:
-    out_dir = workspace_root / ".omo" / "_delivery" / "audit-rollout"
+    out_dir = _runtime_omo_root(workspace_root) / "_delivery" / "audit-rollout"
     summary_path = out_dir / f"{today}-{mode}-daemon-summary.json"
     _locked_write_json(summary_path, summary)
     return summary_path

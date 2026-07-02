@@ -19,6 +19,7 @@ from omo.omo_ingress_paths import (
     _load_yaml,
     _lock_path,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import (
     _load_registry,
@@ -48,7 +49,7 @@ def upsert_debt_item(
     debt_path = omo_dir / "debt" / "items" / f"{debt_id}.yaml"
     timestamp = now or _utc_now()
     effective_source_ref = source_ref or str(debt_data.get("source_ref") or "")
-    artifact_ref = f".omo/_delivery/ingress/debts/{debt_id}.yaml"
+    artifact_ref = f"runtime/omo/_delivery/ingress/debts/{debt_id}.yaml"
 
     with fcntl_lock(_lock_path(omo_dir)):
         registry = _load_registry(omo_dir)
@@ -174,7 +175,7 @@ def upsert_debt_item(
         parent_step_id = f"ingress:debt:{debt_id}:{timestamp}"
         details = (
             f"debt_id={debt_id} ingress_plane={ingress_plane} "
-            f"source_ref={effective_source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={effective_source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_upsert_debt",

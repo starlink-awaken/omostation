@@ -15,11 +15,11 @@ def test_write_self_evolve_outputs(tmp_path: Path) -> None:
             "id": "OPC-P6-SELF-EVOLUTION-nop-1",
             "title": "No-op",
             "source": "drift:none",
-            "drift_ref": ".omo/_control/evolution/drift/2026-06-20.json",
+            "drift_ref": "runtime/omo/_control/evolution/drift/2026-06-20.json",
             "approval_required": True,
             "human_approval_required": True,
             "approval_state": "awaiting_human",
-            "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+            "loop_history_ref": "runtime/omo/_control/evolution/loop/history.json",
             "latest_week": "2026-W25",
         }
     ]

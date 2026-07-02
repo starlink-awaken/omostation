@@ -26,7 +26,7 @@ def test_approval_board_joins_queue_status_and_blockers(tmp_path: Path) -> None:
             "approval_required": True,
             "approval_state": "awaiting_human",
             "latest_week": "2026-W25",
-            "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+            "loop_history_ref": "runtime/omo/_control/evolution/loop/history.json",
         },
     )
     _write_yaml(
@@ -38,11 +38,11 @@ def test_approval_board_joins_queue_status_and_blockers(tmp_path: Path) -> None:
             "approval_required": True,
             "approval_state": "awaiting_human",
             "latest_week": "2026-W25",
-            "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+            "loop_history_ref": "runtime/omo/_control/evolution/loop/history.json",
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "_control" / "evolution" / "loop" / "history.json",
+        tmp_path / "runtime" / "omo" / "_control" / "evolution" / "loop" / "history.json",
         {"summary": {"latest_week": "2026-W29"}},
     )
     _write_yaml(
@@ -96,7 +96,7 @@ def test_approval_board_accepts_multi_document_queue_yaml(tmp_path: Path) -> Non
             "approval_required": True,
             "approval_state": "awaiting_human",
             "latest_week": "2026-W25",
-            "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+            "loop_history_ref": "runtime/omo/_control/evolution/loop/history.json",
         },
     )
     queue_path = (

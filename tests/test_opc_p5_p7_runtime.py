@@ -87,12 +87,12 @@ def test_p6_weekly_loop_history_tracks_consecutive_weeks(tmp_path):
     module.write_evidence("2026-W24", payload2)
 
     history_path = (
-        tmp_path / ".omo" / "_control" / "evolution" / "loop" / "history.json"
+        tmp_path / "runtime" / "omo" / "_control" / "evolution" / "loop" / "history.json"
     )
     history = json.loads(history_path.read_text(encoding="utf-8"))
     trace_index = json.loads(
         (
-            tmp_path / ".omo" / "_control" / "evolution" / "loop" / "trace-index.json"
+            tmp_path / "runtime" / "omo" / "_control" / "evolution" / "loop" / "trace-index.json"
         ).read_text(encoding="utf-8")
     )
     assert history["summary"]["weeks_recorded"] == 2
@@ -135,13 +135,13 @@ def test_p6_self_evolve_nop_carries_loop_history_ref(tmp_path):
         "opc_p6_self_evolve_test", ROOT / "scripts" / "opc_p6_self_evolve.py"
     )
     module.ROOT = tmp_path
-    drift_dir = tmp_path / ".omo" / "_control" / "evolution" / "drift"
+    drift_dir = tmp_path / "runtime" / "omo" / "_control" / "evolution" / "drift"
     drift_dir.mkdir(parents=True, exist_ok=True)
     (drift_dir / "2026-06-12.json").write_text(
         json.dumps({"kinds": 4, "drift_count": 0, "results": []}),
         encoding="utf-8",
     )
-    loop_dir = tmp_path / ".omo" / "_control" / "evolution" / "loop"
+    loop_dir = tmp_path / "runtime" / "omo" / "_control" / "evolution" / "loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
     (loop_dir / "history.json").write_text(
         json.dumps({"runs": [], "summary": {"latest_week": "2026-W24"}}),
@@ -153,7 +153,7 @@ def test_p6_self_evolve_nop_carries_loop_history_ref(tmp_path):
     assert tasks[0]["approval_required"] is True
     assert tasks[0]["human_approval_required"] is True
     assert tasks[0]["approval_state"] == "awaiting_human"
-    assert tasks[0]["loop_history_ref"] == ".omo/_control/evolution/loop/history.json"
+    assert tasks[0]["loop_history_ref"] == "runtime/omo/_control/evolution/loop/history.json"
 
 
 def test_p6_approval_board_writes_current_board(tmp_path):
@@ -229,10 +229,7 @@ def test_p7_audit_rollout_history_index_tracks_mode_and_trigger(tmp_path):
     module._now_iso = lambda: "2026-06-12T00:00:00Z"
     module._trigger_source = lambda: "cron"
     history_path = (
-        tmp_path
-        / ".omo"
-        / "_control"
-        / "evolution"
+        tmp_path / "runtime" / "omo" / "_control" / "evolution"
         / "drift-history"
         / "2026-06-12.json"
     )
@@ -240,7 +237,7 @@ def test_p7_audit_rollout_history_index_tracks_mode_and_trigger(tmp_path):
     history_path.write_text("{}", encoding="utf-8")
     rollout = {
         "returncode": 0,
-        "output_path": ".omo/_delivery/audit-rollout/2026-06-12-weekly.json",
+        "output_path": "runtime/omo/_delivery/audit-rollout/2026-06-12-weekly.json",
         "payload": {"repos": {"workspace": {}, "omo": {}}},
     }
     index = module._update_history_index("weekly", rollout, history_path)
@@ -260,7 +257,7 @@ def test_p7_audit_rollout_fallback_writes_mode_output(tmp_path):
     )
     module.ROOT = tmp_path
     module._today = lambda: "2026-06-12"
-    out_dir = tmp_path / ".omo" / "_delivery" / "audit-rollout"
+    out_dir = tmp_path / "runtime" / "omo" / "_delivery" / "audit-rollout"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     def fake_run(cmd, cwd=None, capture_output=None, text=None, env=None, timeout=None):

@@ -16,9 +16,9 @@ def test_audit_rollout_helpers_persist_files(tmp_path: Path) -> None:
         "fallback_used": True,
         "primary_returncode": 1,
         "fallback_returncode": 0,
-        "output_path": ".omo/_delivery/audit-rollout/2026-06-20-5repos.json",
+        "output_path": "runtime/omo/_delivery/audit-rollout/2026-06-20-5repos.json",
         "primary_output_path": None,
-        "fallback_output_path": ".omo/_delivery/audit-rollout/2026-06-20-5repos.json",
+        "fallback_output_path": "runtime/omo/_delivery/audit-rollout/2026-06-20-5repos.json",
         "primary_error": "primary fail",
         "payload": {
             "repos": {

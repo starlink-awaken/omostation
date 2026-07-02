@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 
+from .omo_ingress_paths import _approval_board_dir, _loop_dir
 from .omo_shared import load_yaml
 from .omo_io import write_text_atomic
 
@@ -144,9 +145,7 @@ def build_approval_board(workspace_root: Path) -> dict[str, Any]:
         _board_task_entry(item, queue_index.get(str(item["task_id"])))
         for item in _load_tasks(workspace_root)
     ]
-    loop_history_path = (
-        workspace_root / ".omo" / "_control" / "evolution" / "loop" / "history.json"
-    )
+    loop_history_path = _loop_dir(workspace_root) / "history.json"
     latest_week_from_loop: str | None = None
     if loop_history_path.exists():
         try:
@@ -180,7 +179,7 @@ def build_approval_board(workspace_root: Path) -> dict[str, Any]:
                 else ("self_evolve_task" if latest_week_task else None)
             ),
             "loop_history_ref": str(loop_history_path.relative_to(workspace_root)),
-            "approval_queue_ref": ".omo/workers/promotion/approval-queue/current.yaml",
+            "approval_queue_ref": "runtime/omo/_control/evolution/loop/history.json",
         },
     }
 
@@ -188,7 +187,7 @@ def build_approval_board(workspace_root: Path) -> dict[str, Any]:
 def write_approval_board(
     workspace_root: Path, board: dict[str, Any]
 ) -> tuple[Path, Path]:
-    out_dir = workspace_root / ".omo" / "_control" / "evolution" / "approval-board"
+    out_dir = _approval_board_dir(workspace_root)
     json_path = out_dir / "current.json"
     md_path = out_dir / "current.md"
     write_text_atomic(json_path, json.dumps(board, ensure_ascii=False, indent=2) + "\n")

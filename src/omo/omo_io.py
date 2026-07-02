@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +41,32 @@ def _replace_atomic(path: Path, payload: str) -> None:
     os.replace(tmp_path, path)
 
 
+# 已迁移到 runtime/omo/ 的高 churn 路径; 写入这些路径会产生无法提交的脏树。
+_VOLATILE_OMO_PATHS = (
+    ".omo/_delivery/ingress/",
+    ".omo/_control/evolution/",
+    ".omo/change-log/mutations.jsonl",
+    ".omo/tasks/registry/done/",
+    ".omo/_truth/registry/dependency-baseline.yaml",
+    ".omo/_delivery/audit-rollout/",
+)
+
+
+def _warn_if_volatile_omo_path(path: Path) -> None:
+    try:
+        rel = str(path.relative_to(path.anchor))
+    except ValueError:
+        rel = str(path)
+    if any(rel.startswith(prefix) or rel == prefix.rstrip("/") for prefix in _VOLATILE_OMO_PATHS):
+        warnings.warn(
+            f"Volatile OMO path written directly: {rel}. "
+            "Use runtime/omo/ mirror helpers instead.",
+            stacklevel=3,
+        )
+
+
 def write_text_atomic(path: Path, payload: str) -> None:
+    _warn_if_volatile_omo_path(path)
     _replace_atomic(path, payload)
 
 
@@ -50,6 +76,7 @@ def ensure_parent_dir(path: Path) -> Path:
 
 
 def write_yaml_atomic(path: Path, data: dict[str, Any]) -> None:
+    _warn_if_volatile_omo_path(path)
     _replace_atomic(path, yaml.safe_dump(data, sort_keys=False, allow_unicode=True))
 
 

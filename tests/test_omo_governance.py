@@ -466,7 +466,7 @@ def test_governance_cli_ingress_goal_writes_goal_and_artifact(
     payload = _load_yaml(goals_file)
     assert any(goal["id"] == "BET-9001" for goal in payload["goals"])
     artifact = _load_yaml(
-        tmp_path / ".omo" / "_delivery" / "ingress" / "goals" / "BET-9001.yaml"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "goals" / "BET-9001.yaml"
     )
     assert artifact["ingress_plane"] == "projects/c2g"
 
@@ -534,7 +534,7 @@ def test_governance_cli_ingress_task_writes_planned_task_and_artifact(
     )
     assert payload["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
     artifact = _load_yaml(
-        tmp_path / ".omo" / "_delivery" / "ingress" / "tasks" / "IMPORTED-CLI-1.yaml"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / "IMPORTED-CLI-1.yaml"
     )
     assert artifact["task_ref"] == ".omo/tasks/planned/IMPORTED-CLI-1.yaml"
 
@@ -581,7 +581,7 @@ def test_governance_cli_ingress_debt_upserts_debt_and_artifact(
     assert payload["lifecycle_state"] == "identified"
     assert payload["occurrence_count"] == 1
     artifact = _load_yaml(
-        tmp_path / ".omo" / "_delivery" / "ingress" / "debts" / "DEBT-CLI-1.yaml"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "debts" / "DEBT-CLI-1.yaml"
     )
     assert artifact["debt_ref"] == ".omo/debt/items/DEBT-CLI-1.yaml"
 

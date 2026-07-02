@@ -21,7 +21,7 @@ def _read_phase_task(task_id: str) -> dict:
     for rel_path in [
         f".omo/tasks/planned/{task_id}.yaml",
         f".omo/tasks/done/{task_id}.yaml",
-        f".omo/tasks/registry/done/{task_id}.yaml",
+        f"runtime/omo/tasks/registry/done/{task_id}.yaml",
     ]:
         path = ROOT / rel_path
         if path.exists():
@@ -53,7 +53,7 @@ def test_master_playbook_baseline_reflects_p3_pass_and_p4_open():
 
 
 def test_p3_gate_d_registry_is_fully_closed():
-    payload = _read_yaml(".omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml")
+    payload = _read_yaml("runtime/omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml")
     statuses = {item["id"]: item["status"] for item in payload["sub_gates"]}
     assert payload["gate_status"] == "passed"
     assert statuses == {
@@ -296,7 +296,9 @@ def test_p7_doc_lint_zero_drift_at_closeout():
         # fall back: any .json in dir from last 7 days
         candidates = sorted((ROOT / ".omo" / "_delivery" / "doc-lint").glob("*.json"))
         if not candidates:
-            pytest.skip("doc-lint delivery artifacts not present locally (CI-only output)")
+            pytest.skip(
+                "doc-lint delivery artifacts not present locally (CI-only output)"
+            )
         lint_path = candidates[-1]
     payload = json.loads(lint_path.read_text(encoding="utf-8"))
     # doc-lint/index.json schema: {"runs": [...], "summary": {"latest_drift_total": N, ...}}
@@ -334,7 +336,9 @@ def test_p7_final_gate_sequence_is_monotonic():
 def test_phase_gate_snapshot_matches_reviewed_truth():
     snapshot_path = ROOT / ".omo" / "_delivery" / "phase-gate" / "2026-06-12.md"
     if not snapshot_path.exists():
-        pytest.skip("phase-gate delivery artifacts not present locally (CI-only output)")
+        pytest.skip(
+            "phase-gate delivery artifacts not present locally (CI-only output)"
+        )
     phase_gate_md = _read(".omo/_delivery/phase-gate/2026-06-12.md")
     phase_gate_json = _read_yaml(".omo/_delivery/phase-gate/2026-06-12.json")
 

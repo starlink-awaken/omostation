@@ -14,6 +14,7 @@ from omo.omo_ingress_paths import (
     _lock_path,
     _timestamp_slug,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import (
     _record_mutation,
@@ -111,7 +112,7 @@ def write_system_projection_fields(
         details = (
             f"actor={actor} source_ref={source_ref or '-'} "
             f"fields={','.join(sorted(updates.keys()))} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_write_system_projection_fields",
@@ -132,7 +133,7 @@ def write_system_projection_fields(
             actor=actor,
             action="write_system_projection_fields",
             target=".omo/state/system.yaml",
-            artifact_ref=f".omo/_delivery/ingress/state/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/state/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"updated_fields": sorted(updates.keys())},

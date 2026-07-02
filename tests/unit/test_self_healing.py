@@ -223,7 +223,7 @@ class TestSelfHealingEngine:
 
         artifact = yaml.safe_load(
             (
-                tmp_path / ".omo" / "_delivery" / "ingress" / "debts" / items[0].name
+                tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "debts" / items[0].name
             ).read_text(encoding="utf-8")
         )
         assert artifact["kind"] == "debt_upserted"

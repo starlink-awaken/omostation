@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from .omo_ingress import create_planned_task
+from .omo_ingress_paths import _self_evolve_dir
 from .omo_io import write_text_atomic
 
 
@@ -51,7 +52,7 @@ def write_planned_self_evolution_tasks(
             "source": task["source"],
             "drift_ref": task["drift_ref"],
             "loop_history_ref": task.get(
-                "loop_history_ref", ".omo/_control/evolution/loop/history.json"
+                "loop_history_ref", "runtime/omo/_control/evolution/loop/history.json"
             ),
             "review_lane": "opc-p6-self-evolution-board",
             "prerequisite_for": "OPC-P6",
@@ -82,7 +83,7 @@ def write_planned_self_evolution_tasks(
 def write_self_evolve_summary(
     workspace_root: Path, summary: dict[str, Any], generated_at: str
 ) -> Path:
-    out_dir = workspace_root / ".omo" / "_control" / "evolution" / "self-evolve"
+    out_dir = _self_evolve_dir(workspace_root)
     out_path = out_dir / f"{generated_at[:10]}.json"
     write_text_atomic(
         out_path,

@@ -1,0 +1,200 @@
+goals:
+  by_id: {}
+  by_source_ref: {}
+tasks:
+  by_id: {}
+  by_source_ref: {}
+debts:
+  by_id:
+    auto-test-error:
+      source_ref: self_healing:auto-test-error
+      artifact_ref: runtime/omo/_delivery/ingress/debts/auto-test-error.yaml
+      fingerprint:
+        id: auto-test-error
+        title: '[自动] test: ERROR × 1'
+        dimension: operational
+        subdimension: auto_healing
+        domain: ecos
+        scope: auto_detected
+        severity: warning
+        weight: 4.0
+        entropy_class: dynamic
+        lifecycle_state: open
+        owner: omo-self-healing
+        affected_roots:
+        - omo
+        - agora
+        evidence_refs:
+        - sse://event/ERROR
+        mitigation_refs: []
+        opened_at: '2026-06-22T02:23:14.924448+00:00'
+        last_reviewed_at: null
+        next_review_at: '2026-07-03T01:13:53.620099+00:00'
+        gate_level: L1
+        history:
+        - at: '2026-07-02T01:13:53.620091+00:00'
+          action: created
+          trigger: self_healing_rule:test
+          event_count: '1'
+        - at: '2026-07-02T01:13:53.620091+00:00'
+          action: seen_again
+          note: Observed debt auto-test-error again (occurrence_count=88).
+          actor: projects/omo:self_healing
+        x1_policy_ref: auto-healing-policy
+        x2_freshness: new
+        x3_tier: warning
+        source_ref: self_healing:auto-test-error
+        description: ''
+        source: projects/omo:self_healing
+        registered_at: '2026-06-22T02:23:14.924448+00:00'
+        first_seen_at: '2026-06-22T02:23:14.924448+00:00'
+        last_seen_at: '2026-07-02T01:13:53.620091+00:00'
+        occurrence_count: 88
+        status: open
+      created_at: '2026-06-22T02:23:14.924448+00:00'
+    auto-r1-error:
+      source_ref: self_healing:auto-r1-error
+      artifact_ref: runtime/omo/_delivery/ingress/debts/auto-r1-error.yaml
+      fingerprint:
+        id: auto-r1-error
+        title: '[自动] r1: ERROR × 1'
+        dimension: operational
+        subdimension: auto_healing
+        domain: ecos
+        scope: auto_detected
+        severity: warning
+        weight: 4.0
+        entropy_class: dynamic
+        lifecycle_state: open
+        owner: omo-self-healing
+        affected_roots:
+        - omo
+        - agora
+        evidence_refs:
+        - sse://event/ERROR
+        mitigation_refs: []
+        opened_at: '2026-06-22T02:23:15.051255+00:00'
+        last_reviewed_at: null
+        next_review_at: '2026-07-03T01:13:53.648944+00:00'
+        gate_level: L1
+        history:
+        - at: '2026-07-02T01:13:53.648932+00:00'
+          action: created
+          trigger: self_healing_rule:r1
+          event_count: '1'
+        - at: '2026-07-02T01:13:53.648932+00:00'
+          action: seen_again
+          note: Observed debt auto-r1-error again (occurrence_count=44).
+          actor: projects/omo:self_healing
+        x1_policy_ref: auto-healing-policy
+        x2_freshness: new
+        x3_tier: warning
+        source_ref: self_healing:auto-r1-error
+        description: ''
+        source: projects/omo:self_healing
+        registered_at: '2026-06-22T02:23:15.051255+00:00'
+        first_seen_at: '2026-06-22T02:23:15.051255+00:00'
+        last_seen_at: '2026-07-02T01:13:53.648932+00:00'
+        occurrence_count: 44
+        status: open
+      created_at: '2026-06-22T02:23:15.051255+00:00'
+    auto-r2-error:
+      source_ref: self_healing:auto-r2-error
+      artifact_ref: runtime/omo/_delivery/ingress/debts/auto-r2-error.yaml
+      fingerprint:
+        id: auto-r2-error
+        title: '[自动] r2: ERROR × 1'
+        dimension: operational
+        subdimension: auto_healing
+        domain: ecos
+        scope: auto_detected
+        severity: warning
+        weight: 4.0
+        entropy_class: dynamic
+        lifecycle_state: open
+        owner: omo-self-healing
+        affected_roots:
+        - omo
+        - agora
+        evidence_refs:
+        - sse://event/ERROR
+        mitigation_refs: []
+        opened_at: '2026-06-22T02:23:15.077950+00:00'
+        last_reviewed_at: null
+        next_review_at: '2026-07-03T01:13:53.674543+00:00'
+        gate_level: L1
+        history:
+        - at: '2026-07-02T01:13:53.674536+00:00'
+          action: created
+          trigger: self_healing_rule:r2
+          event_count: '1'
+        - at: '2026-07-02T01:13:53.674536+00:00'
+          action: seen_again
+          note: Observed debt auto-r2-error again (occurrence_count=44).
+          actor: projects/omo:self_healing
+        x1_policy_ref: auto-healing-policy
+        x2_freshness: new
+        x3_tier: warning
+        source_ref: self_healing:auto-r2-error
+        description: ''
+        source: projects/omo:self_healing
+        registered_at: '2026-06-22T02:23:15.077950+00:00'
+        first_seen_at: '2026-06-22T02:23:15.077950+00:00'
+        last_seen_at: '2026-07-02T01:13:53.674536+00:00'
+        occurrence_count: 44
+        status: open
+      created_at: '2026-06-22T02:23:15.077950+00:00'
+    auto-test-any:
+      source_ref: self_healing:auto-test-any
+      artifact_ref: runtime/omo/_delivery/ingress/debts/auto-test-any.yaml
+      fingerprint:
+        id: auto-test-any
+        title: '[自动] test: ANY × 1'
+        dimension: operational
+        subdimension: auto_healing
+        domain: ecos
+        scope: auto_detected
+        severity: warning
+        weight: 4.0
+        entropy_class: dynamic
+        lifecycle_state: open
+        owner: omo-self-healing
+        affected_roots:
+        - omo
+        - agora
+        evidence_refs:
+        - sse://event/ANY
+        mitigation_refs: []
+        opened_at: '2026-06-22T02:23:22.054749+00:00'
+        last_reviewed_at: null
+        next_review_at: '2026-07-03T01:14:02.011892+00:00'
+        gate_level: L1
+        history:
+        - at: '2026-07-02T01:14:02.011876+00:00'
+          action: created
+          trigger: self_healing_rule:test
+          event_count: '1'
+        - at: '2026-07-02T01:14:02.011876+00:00'
+          action: seen_again
+          note: Observed debt auto-test-any again (occurrence_count=44).
+          actor: projects/omo:self_healing
+        x1_policy_ref: auto-healing-policy
+        x2_freshness: new
+        x3_tier: warning
+        source_ref: self_healing:auto-test-any
+        description: ''
+        source: projects/omo:self_healing
+        registered_at: '2026-06-22T02:23:22.054749+00:00'
+        first_seen_at: '2026-06-22T02:23:22.054749+00:00'
+        last_seen_at: '2026-07-02T01:14:02.011876+00:00'
+        occurrence_count: 44
+        status: open
+      created_at: '2026-06-22T02:23:22.054749+00:00'
+  by_source_ref:
+    self_healing:auto-test-error: auto-test-error
+    self_healing:auto-r1-error: auto-r1-error
+    self_healing:auto-r2-error: auto-r2-error
+    self_healing:auto-test-any: auto-test-any
+capabilities:
+  by_id: {}
+  by_source_ref: {}

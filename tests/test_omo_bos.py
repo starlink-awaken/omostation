@@ -422,7 +422,10 @@ def test_save_to_kos_direct_call_fallback() -> None:
         try:
             sys.path.insert(
                 0,
-                str(Path(__file__).resolve().parents[3] / "projects/kairon/packages/kos/src"),
+                str(
+                    Path(__file__).resolve().parents[3]
+                    / "projects/kairon/packages/kos/src"
+                ),
             )
             from kos.ontology.store import delete_entity  # type: ignore
 

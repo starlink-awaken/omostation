@@ -21,6 +21,7 @@ from omo.omo_ingress_paths import (
     _lock_path,
     _timestamp_slug,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import (
     _load_registry,
@@ -46,7 +47,7 @@ def write_capability_registry_bundle(
     if not isinstance(registries, dict) or not registries:
         raise ValueError("capability registries missing")
     artifact_ref = (
-        f".omo/_delivery/ingress/capabilities/bundle-{_timestamp_slug(timestamp)}.yaml"
+        f"runtime/omo/_delivery/ingress/capabilities/bundle-{_timestamp_slug(timestamp)}.yaml"
     )
     fingerprint = {
         "kind": "bundle",
@@ -94,7 +95,7 @@ def write_capability_registry_bundle(
         details = (
             f"actor={actor} source_ref={source_ref or '-'} "
             f"registry_count={len(registry_refs)} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_write_capability_registry_bundle",
@@ -133,7 +134,7 @@ def write_manual_capabilities(
 ) -> dict[str, Any]:
     timestamp = now or _utc_now()
     registry_path = omo_dir / "capabilities" / "manual-capabilities.yaml"
-    artifact_ref = f".omo/_delivery/ingress/capabilities/manual-capabilities-{_timestamp_slug(timestamp)}.yaml"
+    artifact_ref = f"runtime/omo/_delivery/ingress/capabilities/manual-capabilities-{_timestamp_slug(timestamp)}.yaml"
     fingerprint = {
         "kind": "manual-capabilities",
         "capability_count": len(payload.get("capabilities", []))
@@ -174,7 +175,7 @@ def write_manual_capabilities(
         parent_step_id = f"ingress:manual-capabilities:{timestamp}"
         details = (
             f"actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_write_manual_capabilities",
@@ -236,7 +237,7 @@ def create_skill_manifest(
         parent_step_id = f"ingress:skill-manifest:{skill_id}:{timestamp}"
         details = (
             f"skill_id={skill_id} actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_create_skill_manifest",
@@ -257,7 +258,7 @@ def create_skill_manifest(
             actor=actor,
             action="create_skill_manifest",
             target=f".omo/_truth/task-center/skills/{skill_id}.yaml",
-            artifact_ref=f".omo/_delivery/ingress/task-center/skills/{skill_id}.yaml",
+            artifact_ref=f"runtime/omo/_delivery/ingress/task-center/skills/{skill_id}.yaml",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"skill_id": skill_id},
@@ -295,7 +296,7 @@ def write_discovery_registry(
         parent_step_id = f"ingress:discovery-registry:{timestamp}"
         details = (
             f"actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_write_discovery_registry",
@@ -316,7 +317,7 @@ def write_discovery_registry(
             actor=actor,
             action="write_discovery_registry",
             target=".omo/_truth/task-center/discovery-registry.yaml",
-            artifact_ref=f".omo/_delivery/ingress/task-center/discovery/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/task-center/discovery/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
         )
@@ -352,7 +353,7 @@ def write_usage_accounting(
         parent_step_id = f"ingress:usage-accounting:{timestamp}"
         details = (
             f"actor={actor} registry_ref=.omo/_truth/task-center/usage-accounting.yaml "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_write_usage_accounting",
@@ -373,7 +374,7 @@ def write_usage_accounting(
             actor=actor,
             action="write_usage_accounting",
             target=".omo/_truth/task-center/usage-accounting.yaml",
-            artifact_ref=f".omo/_delivery/ingress/task-center/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/task-center/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
         )
@@ -409,7 +410,7 @@ def write_task_center_freshness(
         parent_step_id = f"ingress:freshness:{timestamp}"
         details = (
             f"actor={actor} report_ref=.omo/_delivery/task-center/freshness/current.yaml "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_write_task_center_freshness",
@@ -430,7 +431,7 @@ def write_task_center_freshness(
             actor=actor,
             action="write_task_center_freshness",
             target=".omo/_delivery/task-center/freshness/current.yaml",
-            artifact_ref=f".omo/_delivery/ingress/task-center/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/task-center/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
         )
@@ -467,7 +468,7 @@ def write_task_center_control_decision(
         parent_step_id = f"ingress:control:{timestamp}"
         details = (
             f"actor={actor} decision={artifact.get('decision')} "
-            f"source_ref={source_ref or '-'} artifact={ingress_artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(ingress_artifact_path)}"
         )
         record_audit(
             action="ingress_write_task_center_control_decision",
@@ -488,7 +489,7 @@ def write_task_center_control_decision(
             actor=actor,
             action="write_task_center_control_decision",
             target=".omo/_delivery/task-center/control/current.yaml",
-            artifact_ref=f".omo/_delivery/ingress/task-center/{ingress_artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/task-center/{ingress_artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"decision": artifact.get("decision")},
@@ -532,7 +533,7 @@ def update_governance_overlay_state(
         parent_step_id = f"ingress:governance-overlay:{timestamp}"
         details = (
             f"actor={actor} source_ref={source_ref or '-'} "
-            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_update_governance_overlay_state",
@@ -553,7 +554,7 @@ def update_governance_overlay_state(
             actor=actor,
             action="update_governance_overlay_state",
             target=".omo/_truth/governance-overlay/roadmap.yaml",
-            artifact_ref=f".omo/_delivery/ingress/governance-overlay/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/governance-overlay/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"control_written": control is not None},
@@ -621,7 +622,7 @@ def apply_baseline_patches(
             omo_dir,
             actor=f"broker:{actor}",
             action="apply_dependency_baseline_patches",
-            target=".omo/_truth/registry/dependency-baseline.yaml",
+            target="runtime/omo/_truth/registry/dependency-baseline.yaml",
             parent_step_id="dependency-baseline",
         )
     return {"applied": len(applied), "patches": applied, "source_ref": source_ref}

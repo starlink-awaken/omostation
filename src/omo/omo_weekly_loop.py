@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .omo_io import write_text_atomic
+from .omo_ingress_paths import _done_task_group_dir, _loop_dir
 
 
 def _week_sort_key(week: str) -> tuple[int, int]:
@@ -27,13 +28,11 @@ def week_id(date: datetime | None = None) -> str:
 
 
 def loop_history_path(workspace_root: Path) -> Path:
-    return workspace_root / ".omo" / "_control" / "evolution" / "loop" / "history.json"
+    return _loop_dir(workspace_root) / "history.json"
 
 
 def trace_index_path(workspace_root: Path) -> Path:
-    return (
-        workspace_root / ".omo" / "_control" / "evolution" / "loop" / "trace-index.json"
-    )
+    return _loop_dir(workspace_root) / "trace-index.json"
 
 
 def load_loop_history(workspace_root: Path) -> dict[str, Any]:
@@ -219,12 +218,12 @@ def write_weekly_markdown(md_path: Path, payload: dict[str, Any]) -> None:
 def write_weekly_evidence(
     workspace_root: Path, week: str, payload: dict[str, Any]
 ) -> tuple[Path, Path]:
-    out_dir = workspace_root / ".omo" / "_control" / "evolution" / "loop"
+    out_dir = _loop_dir(workspace_root)
     json_path = out_dir / f"{week}.json"
     write_text_atomic(
         json_path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
     )
-    md_dir = workspace_root / ".omo" / "tasks" / "registry" / "done" / "OPC-P6-G1"
+    md_dir = _done_task_group_dir("OPC-P6-G1", workspace_root)
     md_path = md_dir / f"weekly-{week}.md"
     write_weekly_markdown(md_path, payload)
     update_trace_index(workspace_root, payload, md_path, json_path)

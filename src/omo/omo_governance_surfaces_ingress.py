@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from omo.omo_ingress_paths import _registry_path
 from omo.omo_shared import load_yaml_required
 
 
@@ -67,7 +68,7 @@ def _check_ingress_registry(
     workspace_root: Path,
 ) -> tuple[dict[str, object], list[str]]:
     omo_dir = workspace_root / ".omo"
-    registry_path = omo_dir / "_delivery" / "ingress" / "registry.yaml"
+    registry_path = _registry_path(omo_dir)
     if not registry_path.exists():
         return {
             "exists": False,
@@ -81,7 +82,7 @@ def _check_ingress_registry(
             "capability_ids": [],
             "capability_source_refs": [],
         }, [
-            "ingress registry: required file missing: .omo/_delivery/ingress/registry.yaml"
+            f"ingress registry: required file missing: {registry_path.relative_to(workspace_root)}"
         ]
 
     registry = _load_yaml(registry_path)
@@ -149,7 +150,7 @@ def _check_ingress_registry(
         if not isinstance(meta, dict):
             issues.append(f"ingress registry: goals.by_id.{item_id} not a mapping")
             continue
-        if meta.get("artifact_ref") != f".omo/_delivery/ingress/goals/{item_id}.yaml":
+        if meta.get("artifact_ref") != f"runtime/omo/_delivery/ingress/goals/{item_id}.yaml":
             issues.append(
                 f"ingress registry: goals.by_id.{item_id} artifact_ref mismatch"
             )
@@ -171,7 +172,7 @@ def _check_ingress_registry(
         if not isinstance(meta, dict):
             issues.append(f"ingress registry: tasks.by_id.{item_id} not a mapping")
             continue
-        if meta.get("artifact_ref") != f".omo/_delivery/ingress/tasks/{item_id}.yaml":
+        if meta.get("artifact_ref") != f"runtime/omo/_delivery/ingress/tasks/{item_id}.yaml":
             issues.append(
                 f"ingress registry: tasks.by_id.{item_id} artifact_ref mismatch"
             )
@@ -194,7 +195,7 @@ def _check_ingress_registry(
         if not isinstance(meta, dict):
             issues.append(f"ingress registry: debts.by_id.{item_id} not a mapping")
             continue
-        if meta.get("artifact_ref") != f".omo/_delivery/ingress/debts/{item_id}.yaml":
+        if meta.get("artifact_ref") != f"runtime/omo/_delivery/ingress/debts/{item_id}.yaml":
             issues.append(
                 f"ingress registry: debts.by_id.{item_id} artifact_ref mismatch"
             )
@@ -232,7 +233,7 @@ def _check_ingress_registry(
             continue
         artifact_ref = meta.get("artifact_ref")
         if not isinstance(artifact_ref, str) or not artifact_ref.startswith(
-            ".omo/_delivery/ingress/capabilities/"
+            "runtime/omo/_delivery/ingress/capabilities/"
         ):
             issues.append(
                 f"ingress registry: capabilities.by_id.{item_id} artifact_ref mismatch"

@@ -250,7 +250,9 @@ def main() -> int:
     close_parser.add_argument("--id", required=True)
     close_parser.add_argument("--actor", default="", help="Who performed this action")
     close_parser.add_argument(
-        "--dry-run", action="store_true", help="Print what would be done without writing"
+        "--dry-run",
+        action="store_true",
+        help="Print what would be done without writing",
     )
     close_parser.add_argument(
         "--no-confirm",
@@ -265,7 +267,9 @@ def main() -> int:
     desc_parser.add_argument("--id", required=True)
     desc_parser.add_argument("--description", required=True)
     desc_parser.add_argument(
-        "--dry-run", action="store_true", help="Print what would be done without writing"
+        "--dry-run",
+        action="store_true",
+        help="Print what would be done without writing",
     )
 
     reopen_parser = subparsers.add_parser("reopen")

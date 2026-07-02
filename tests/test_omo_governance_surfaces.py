@@ -341,7 +341,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_governance.py:main (command=ingress-goal)",
                     "mutation_target": ".omo/goals/current.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_goal",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/goals/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/goals/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -351,7 +351,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_governance.py:main (command=ingress-task)",
                     "mutation_target": ".omo/tasks/planned/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -361,7 +361,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_governance.py:main (command=ingress-debt)",
                     "mutation_target": ".omo/debt/items/ + .omo/debt/registry.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:upsert_debt_item",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/debts/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/debts/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -371,7 +371,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_goal.py:cmd_goal_create",
                     "mutation_target": ".omo/goals/current.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_goal",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/goals/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/goals/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -381,7 +381,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_goal.py:cmd_goal_progress",
                     "mutation_target": ".omo/goals/current.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:update_goal_progress",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/goals/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/goals/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -391,7 +391,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_task.py:cmd_task_create",
                     "mutation_target": ".omo/tasks/planned/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -401,7 +401,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_task.py:cmd_task_done",
                     "mutation_target": ".omo/tasks/active/|planned/ -> .omo/tasks/done/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:complete_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -411,7 +411,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_task.py:cmd_task_refresh_evidence",
                     "mutation_target": ".omo/tasks/done/*.yaml (evidence_paths)",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:update_done_task_evidence_paths",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -421,7 +421,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_task.py:cmd_task_repair_approval",
                     "mutation_target": ".omo/tasks/{planned,active,done,remediation}/*.yaml (approval_ref) + .omo/workers/runs/*-promotion-approval-*.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:repair_task_promotion_approval",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -431,7 +431,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_worker_cmd_task.py:execute_task_command (task_command=normalize-planned)",
                     "mutation_target": ".omo/tasks/planned/ + .omo/tasks/archived/legacy-normalized/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:normalize_legacy_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -441,7 +441,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_worker_cmd_task.py:execute_task_command (task_command=route-self-evolution-remediation)",
                     "mutation_target": ".omo/tasks/planned/ -> .omo/tasks/remediation/ + .omo/tasks/remediation-notes/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:route_self_evolution_to_remediation",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -451,7 +451,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_self_evolve.py:write_planned_self_evolution_tasks",
                     "mutation_target": ".omo/tasks/planned/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -461,7 +461,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_knowledge.py:cmd_knowledge_add",
                     "mutation_target": ".omo/_knowledge/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_knowledge_doc",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/knowledge/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/knowledge/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -471,7 +471,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_standard.py:cmd_standard_add",
                     "mutation_target": ".omo/standards/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_standard_doc",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/standards/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/standards/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -481,7 +481,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_capability.py:scan_command",
                     "mutation_target": ".omo/capabilities/INDEX.md + .omo/capabilities/projects-capabilities.yaml + .omo/capabilities/sharedwork-sample.yaml + .omo/capabilities/system-packages.yaml + .omo/capabilities/agent-clis.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:write_capability_registry_bundle",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/capabilities/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/capabilities/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -491,7 +491,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_capability.py:register_command",
                     "mutation_target": ".omo/capabilities/manual-capabilities.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:write_manual_capabilities",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/capabilities/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/capabilities/",
                     "mode": "brokered",
                     "category": "human_cli",
                 },
@@ -501,7 +501,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_skill.py:register_skill_manifest",
                     "mutation_target": ".omo/_truth/task-center/skills/*.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_skill_manifest",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/task-center/skills/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/task-center/skills/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -511,7 +511,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_discovery.py:discover_task_blueprints",
                     "mutation_target": ".omo/_truth/task-center/discovery-registry.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:write_discovery_registry",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/task-center/discovery/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/task-center/discovery/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -521,7 +521,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_self_healing.py:SelfHealingEngine._create_debt",
                     "mutation_target": ".omo/debt/items/*.yaml + .omo/_truth/registry/debt.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:upsert_debt_item",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/debts/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/debts/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -531,7 +531,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_bridge.py:_import_bmad",
                     "mutation_target": ".omo/tasks/planned/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "bridge_import",
                 },
@@ -541,7 +541,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_bridge.py:_import_fast_track",
                     "mutation_target": ".omo/tasks/planned/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "bridge_import",
                 },
@@ -551,7 +551,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_bridge.py:_import_pitch",
                     "mutation_target": ".omo/goals/current.yaml + .omo/tasks/planned/",
                     "broker_ref": "projects/omo/src/omo/omo_goal.py:cmd_goal_create + projects/omo/src/omo/omo_ingress.py:create_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/goals/ + .omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/goals/ + runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "bridge_import",
                 },
@@ -561,7 +561,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py:main (flag=--m1-to-omo)",
                     "mutation_target": ".omo/tasks/planned/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "bridge_import",
                 },
@@ -571,7 +571,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/c2g/src/c2g/adapters.py:EcosStorageProvider.save_bet",
                     "mutation_target": ".omo/goals/current.yaml",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_goal",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/goals/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/goals/",
                     "mode": "brokered",
                     "category": "c2g_adapter",
                 },
@@ -581,7 +581,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/c2g/src/c2g/adapters.py:EcosStorageProvider.save_task",
                     "mutation_target": ".omo/tasks/planned/",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:create_planned_task",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/tasks/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/tasks/",
                     "mode": "brokered",
                     "category": "c2g_adapter",
                 },
@@ -601,7 +601,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_state.py:cmd_state_sync_tasks",
                     "mutation_target": ".omo/state/system.yaml (task counters + next_* projection)",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:write_system_projection_fields",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/state/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/state/",
                     "mode": "brokered",
                     "category": "governance_ingress",
                 },
@@ -611,7 +611,7 @@ def _seed_workspace(root: Path) -> None:
                     "runtime_ref": "projects/omo/src/omo/omo_audit_sync.py:apply_diff",
                     "mutation_target": ".omo/state/system.yaml (whitelisted audit projection fields)",
                     "broker_ref": "projects/omo/src/omo/omo_ingress.py:write_system_projection_fields",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/state/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/state/",
                     "mode": "brokered",
                     "category": "runtime_cache",
                 },
@@ -650,9 +650,9 @@ def _seed_workspace(root: Path) -> None:
                         ".omo/tasks/planned/*.yaml",
                         ".omo/tasks/archived/*.yaml",
                         ".omo/_knowledge/audits/*.md",
-                        ".omo/_delivery/ingress/tasks/*-yield-*.yaml",
-                        ".omo/_delivery/ingress/tasks/*-archive-*.yaml",
-                        ".omo/_delivery/ingress/audits/*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-yield-*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-archive-*.yaml",
+                        "runtime/omo/_delivery/ingress/audits/*.yaml",
                     ],
                     "promotion_surface": False,
                     "note": "内部任务回退与 Fast-Track 归档链路；通过 broker 持久化",
@@ -666,7 +666,7 @@ def _seed_workspace(root: Path) -> None:
                         ".omo/tasks/planned/*.yaml",
                         ".omo/tasks/remediation/*.yaml",
                         ".omo/tasks/remediation-notes/*.md",
-                        ".omo/_delivery/ingress/tasks/*-route-self-evolution-*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-route-self-evolution-*.yaml",
                     ],
                     "promotion_surface": False,
                     "note": "self-evolution 专用 review lane；已批但不可入 active 的包转入 remediation",
@@ -678,8 +678,8 @@ def _seed_workspace(root: Path) -> None:
                     "subtype": "promotion_runtime",
                     "writes": [
                         ".omo/workers/runs/*-promotion-*.yaml",
-                        ".omo/_delivery/ingress/tasks/*-promote-*.yaml",
-                        ".omo/_delivery/ingress/tasks/*-revert-*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-promote-*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-revert-*.yaml",
                         ".omo/state/system.yaml (via sync_omo_state.py)",
                     ],
                     "promotion_surface": True,
@@ -706,8 +706,8 @@ def _seed_workspace(root: Path) -> None:
                         ".omo/workers/runs/*-promotion-approval-*.yaml",
                         ".omo/workers/runs/*-approval.yaml",
                         ".omo/_truth/task-center/proposals/*.yaml",
-                        ".omo/_delivery/ingress/tasks/*-promotion-approval-*.yaml",
-                        ".omo/_delivery/ingress/tasks/*-contract-request-*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-promotion-approval-*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-contract-request-*.yaml",
                     ],
                     "promotion_surface": True,
                     "note": "内部审批请求与 contract-request 链路；planned/active task 补丁已通过 ingress broker 落盘",
@@ -736,9 +736,9 @@ def _seed_workspace(root: Path) -> None:
                         ".omo/_delivery/task-center/freshness/current.yaml",
                         ".omo/_delivery/task-center/control/current.yaml",
                         ".omo/summaries/*.md",
-                        ".omo/_delivery/ingress/tasks/*-blocked-*.yaml",
-                        ".omo/_delivery/ingress/tasks/*-consensus-*.yaml",
-                        ".omo/_delivery/ingress/task-center/*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-blocked-*.yaml",
+                        "runtime/omo/_delivery/ingress/tasks/*-consensus-*.yaml",
+                        "runtime/omo/_delivery/ingress/task-center/*.yaml",
                     ],
                     "promotion_surface": False,
                     "note": "复杂请求桥接与 task-center truth/control 产物已通过 ingress broker 落盘；summary markdown 保留为运行时写出",
@@ -751,7 +751,7 @@ def _seed_workspace(root: Path) -> None:
                     "writes": [
                         ".omo/_truth/governance-overlay/roadmap.yaml",
                         ".omo/_control/governance-overlay/current.yaml",
-                        ".omo/_delivery/ingress/governance-overlay/*.yaml",
+                        "runtime/omo/_delivery/ingress/governance-overlay/*.yaml",
                         ".omo/workers/promotion/current.yaml",
                         ".omo/workers/promotion/current.md",
                         ".omo/workers/promotion/readiness.yaml",
@@ -891,7 +891,7 @@ def build_ecos_task(*args, **kwargs):
 """.strip()
         + "\n",
     )
-    ingress_dir = omo / "_delivery" / "ingress"
+    ingress_dir = omo.parent / "runtime" / "omo" / "_delivery" / "ingress"
     ingress_dir.mkdir(parents=True, exist_ok=True)
     _write_yaml(
         ingress_dir / "registry.yaml",
@@ -900,7 +900,7 @@ def build_ecos_task(*args, **kwargs):
                 "by_id": {
                     "BET-1": {
                         "source_ref": "c2g:bet:BET-1",
-                        "artifact_ref": ".omo/_delivery/ingress/goals/BET-1.yaml",
+                        "artifact_ref": "runtime/omo/_delivery/ingress/goals/BET-1.yaml",
                         "fingerprint": {"id": "BET-1"},
                         "created_at": "2026-06-18T00:00:00Z",
                     }
@@ -911,7 +911,7 @@ def build_ecos_task(*args, **kwargs):
                 "by_id": {
                     "TASK-1": {
                         "source_ref": "c2g:task:TASK-1",
-                        "artifact_ref": ".omo/_delivery/ingress/tasks/TASK-1.yaml",
+                        "artifact_ref": "runtime/omo/_delivery/ingress/tasks/TASK-1.yaml",
                         "fingerprint": {"id": "TASK-1"},
                         "created_at": "2026-06-18T00:01:00Z",
                     }
@@ -922,7 +922,7 @@ def build_ecos_task(*args, **kwargs):
                 "by_id": {
                     "DEBT-1": {
                         "source_ref": "omo:debt:DEBT-1",
-                        "artifact_ref": ".omo/_delivery/ingress/debts/DEBT-1.yaml",
+                        "artifact_ref": "runtime/omo/_delivery/ingress/debts/DEBT-1.yaml",
                         "fingerprint": {"id": "DEBT-1"},
                         "created_at": "2026-06-18T00:02:00Z",
                     }
@@ -933,13 +933,13 @@ def build_ecos_task(*args, **kwargs):
                 "by_id": {
                     "bundle": {
                         "source_ref": "omo-capability:scan",
-                        "artifact_ref": ".omo/_delivery/ingress/capabilities/bundle-2026-06-18T00-03-00Z.yaml",
+                        "artifact_ref": "runtime/omo/_delivery/ingress/capabilities/bundle-2026-06-18T00-03-00Z.yaml",
                         "fingerprint": {"kind": "bundle"},
                         "created_at": "2026-06-18T00:03:00Z",
                     },
                     "manual-capabilities": {
                         "source_ref": "omo-capability:register:manual.yaml",
-                        "artifact_ref": ".omo/_delivery/ingress/capabilities/manual-capabilities-2026-06-18T00-04-00Z.yaml",
+                        "artifact_ref": "runtime/omo/_delivery/ingress/capabilities/manual-capabilities-2026-06-18T00-04-00Z.yaml",
                         "fingerprint": {"kind": "manual-capabilities"},
                         "created_at": "2026-06-18T00:04:00Z",
                     },
@@ -952,7 +952,7 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo / "_delivery" / "ingress" / "goals" / "BET-1.yaml",
+        omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "goals" / "BET-1.yaml",
         {
             "kind": "goal_created",
             "goal_id": "BET-1",
@@ -964,7 +964,7 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo / "_delivery" / "ingress" / "tasks" / "TASK-1.yaml",
+        omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / "TASK-1.yaml",
         {
             "kind": "planned_task_created",
             "task_id": "TASK-1",
@@ -1005,7 +1005,7 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo / "_delivery" / "ingress" / "debts" / "DEBT-1.yaml",
+        omo.parent / "runtime" / "omo" / "_delivery" / "ingress" / "debts" / "DEBT-1.yaml",
         {
             "kind": "debt_upserted",
             "debt_id": "DEBT-1",
@@ -1020,9 +1020,7 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo
-        / "_delivery"
-        / "ingress"
+        omo.parent / "runtime" / "omo" / "_delivery" / "ingress"
         / "capabilities"
         / "bundle-2026-06-18T00-03-00Z.yaml",
         {
@@ -1043,9 +1041,7 @@ def build_ecos_task(*args, **kwargs):
         },
     )
     _write_yaml(
-        omo
-        / "_delivery"
-        / "ingress"
+        omo.parent / "runtime" / "omo" / "_delivery" / "ingress"
         / "capabilities"
         / "manual-capabilities-2026-06-18T00-04-00Z.yaml",
         {
@@ -1533,7 +1529,7 @@ def test_build_governance_surfaces_report_flags_ingress_artifact_created_at_drif
 ) -> None:
     _seed_workspace(tmp_path)
     _write_yaml(
-        tmp_path / ".omo" / "_delivery" / "ingress" / "tasks" / "TASK-1.yaml",
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / "TASK-1.yaml",
         {
             "kind": "planned_task_created",
             "task_id": "TASK-1",
@@ -1548,7 +1544,7 @@ def test_build_governance_surfaces_report_flags_ingress_artifact_created_at_drif
 
     assert report["status"] == "error"
     assert any(
-        "ingress artifacts: .omo/_delivery/ingress/tasks/TASK-1.yaml missing created_at"
+        "ingress artifacts: runtime/omo/_delivery/ingress/tasks/TASK-1.yaml missing created_at"
         in issue
         for issue in report["issues"]
     )
@@ -1558,18 +1554,18 @@ def test_build_governance_surfaces_report_requires_ingress_registry(
     tmp_path: Path,
 ) -> None:
     _seed_workspace(tmp_path)
-    (tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml").unlink()
+    (tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml").unlink()
 
     report = build_governance_surfaces_report(tmp_path)
 
     assert report["status"] == "error"
     assert any(
-        "ingress registry: required file missing: .omo/_delivery/ingress/registry.yaml"
+        "ingress registry: required file missing: runtime/omo/_delivery/ingress/registry.yaml"
         in issue
         for issue in report["issues"]
     )
     assert any(
-        "ingress artifacts: required registry missing: .omo/_delivery/ingress/registry.yaml"
+        "ingress artifacts: required registry missing: runtime/omo/_delivery/ingress/registry.yaml"
         in issue
         for issue in report["issues"]
     )
@@ -1671,7 +1667,7 @@ def test_build_governance_surfaces_report_flags_mutation_surface_registry_drift(
                     "runtime_ref": "projects/omo/src/omo/omo_goal.py:cmd_goal_create",
                     "mutation_target": ".omo/goals/current.yaml",
                     "broker_ref": "DRIFTED",
-                    "delivery_artifact_root": ".omo/_delivery/ingress/goals/",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/goals/",
                     "mode": "brokered",
                 }
             ]
@@ -1695,7 +1691,7 @@ def test_build_governance_surfaces_report_flags_ingress_registry_reverse_mapping
     tmp_path: Path,
 ) -> None:
     _seed_workspace(tmp_path)
-    ingress_dir = tmp_path / ".omo" / "_delivery" / "ingress"
+    ingress_dir = tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
     ingress_dir.mkdir(parents=True, exist_ok=True)
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "planned" / "IMPORTED-1.yaml",
@@ -1734,7 +1730,7 @@ def test_build_governance_surfaces_report_flags_ingress_registry_reverse_mapping
                 "by_id": {
                     "IMPORTED-1": {
                         "source_ref": "c2g:bridge-import:IMPORTED-1",
-                        "artifact_ref": ".omo/_delivery/ingress/tasks/IMPORTED-1.yaml",
+                        "artifact_ref": "runtime/omo/_delivery/ingress/tasks/IMPORTED-1.yaml",
                         "fingerprint": {"id": "IMPORTED-1"},
                         "created_at": "2026-06-18T00:00:00Z",
                     }
@@ -1753,7 +1749,7 @@ def test_build_governance_surfaces_report_flags_ingress_registry_reverse_mapping
 
 def test_build_governance_surfaces_report_tracks_debt_ingress(tmp_path: Path) -> None:
     _seed_workspace(tmp_path)
-    ingress_dir = tmp_path / ".omo" / "_delivery" / "ingress"
+    ingress_dir = tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
     ingress_dir.mkdir(parents=True, exist_ok=True)
     _write_yaml(
         tmp_path / ".omo" / "debt" / "items" / "DEBT-1.yaml",
@@ -1772,7 +1768,7 @@ def test_build_governance_surfaces_report_tracks_debt_ingress(tmp_path: Path) ->
                 "by_id": {
                     "DEBT-1": {
                         "source_ref": "aetherforge:budget:DEBT-1",
-                        "artifact_ref": ".omo/_delivery/ingress/debts/DEBT-1.yaml",
+                        "artifact_ref": "runtime/omo/_delivery/ingress/debts/DEBT-1.yaml",
                         "fingerprint": {"id": "DEBT-1"},
                         "created_at": "2026-06-18T00:00:00Z",
                     }
@@ -1811,7 +1807,7 @@ def test_build_governance_surfaces_report_accepts_archived_ingress_task_carrier(
     tmp_path: Path,
 ) -> None:
     _seed_workspace(tmp_path)
-    ingress_dir = tmp_path / ".omo" / "_delivery" / "ingress"
+    ingress_dir = tmp_path / "runtime" / "omo" / "_delivery" / "ingress"
     ingress_dir.mkdir(parents=True, exist_ok=True)
     _write_yaml(
         tmp_path / ".omo" / "tasks" / "archive" / "IMPORTED-1.yaml",
@@ -1828,7 +1824,7 @@ def test_build_governance_surfaces_report_accepts_archived_ingress_task_carrier(
                 "by_id": {
                     "IMPORTED-1": {
                         "source_ref": "c2g:bridge-import:IMPORTED-1",
-                        "artifact_ref": ".omo/_delivery/ingress/tasks/IMPORTED-1.yaml",
+                        "artifact_ref": "runtime/omo/_delivery/ingress/tasks/IMPORTED-1.yaml",
                         "fingerprint": {"id": "IMPORTED-1"},
                         "created_at": "2026-06-18T00:00:00Z",
                     }

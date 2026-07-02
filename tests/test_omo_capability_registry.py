@@ -71,7 +71,7 @@ def test_scan_command_writes_capability_registry_into_capabilities_dir(
     assert (tmp_path / ".omo" / "capabilities" / "agent-clis.yaml").exists()
     assert not (tmp_path / ".omo" / "registry" / "projects-capabilities.yaml").exists()
     bundle_artifacts = list(
-        (tmp_path / ".omo" / "_delivery" / "ingress" / "capabilities").glob(
+        (tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "capabilities").glob(
             "bundle-*.yaml"
         )
     )
@@ -81,7 +81,7 @@ def test_scan_command_writes_capability_registry_into_capabilities_dir(
     assert ".omo/capabilities/projects-capabilities.yaml" in payload["registry_refs"]
     assert payload["actor"] == "omo-capability capability scan"
     ingress_registry = yaml.safe_load(
-        (tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml").read_text(
+        (tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml").read_text(
             encoding="utf-8"
         )
     )
@@ -129,7 +129,7 @@ def test_register_command_writes_manual_capabilities_via_ingress_artifact(
     )
     assert manual_registry["capabilities"][0]["id"] == "manual.demo"
     artifacts = list(
-        (tmp_path / ".omo" / "_delivery" / "ingress" / "capabilities").glob(
+        (tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "capabilities").glob(
             "manual-capabilities-*.yaml"
         )
     )
@@ -140,7 +140,7 @@ def test_register_command_writes_manual_capabilities_via_ingress_artifact(
         artifact_payload["registry_ref"] == ".omo/capabilities/manual-capabilities.yaml"
     )
     ingress_registry = yaml.safe_load(
-        (tmp_path / ".omo" / "_delivery" / "ingress" / "registry.yaml").read_text(
+        (tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "registry.yaml").read_text(
             encoding="utf-8"
         )
     )

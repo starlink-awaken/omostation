@@ -197,14 +197,14 @@ def test_cmd_lint_mutation_ledger_passes_with_committed_entry(
     tmp_path: Path, capsys
 ) -> None:
     artifact_path = (
-        tmp_path / ".omo" / "_delivery" / "ingress" / "tasks" / "TASK-1.yaml"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "tasks" / "TASK-1.yaml"
     )
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
     artifact_path.write_text("kind: planned_task_created\n", encoding="utf-8")
-    ledger_path = tmp_path / ".omo" / "change-log" / "mutations.jsonl"
+    ledger_path = tmp_path / "runtime" / "omo" / "change-log" / "mutations.jsonl"
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
     ledger_path.write_text(
-        '{"created_at":"2026-06-23T10:00:00Z","actor":"projects/c2g","action":"create_planned_task","target":".omo/tasks/planned/TASK-1.yaml","artifact_ref":".omo/_delivery/ingress/tasks/TASK-1.yaml","source_ref":"c2g:task:TASK-1","broker_ref":"projects/omo/src/omo/omo_ingress.py","result":"committed"}\n',
+        '{"created_at":"2026-06-23T10:00:00Z","actor":"projects/c2g","action":"create_planned_task","target":".omo/tasks/planned/TASK-1.yaml","artifact_ref":"runtime/omo/_delivery/ingress/tasks/TASK-1.yaml","source_ref":"c2g:task:TASK-1","broker_ref":"projects/omo/src/omo/omo_ingress.py","result":"committed"}\n',
         encoding="utf-8",
     )
 
@@ -218,10 +218,10 @@ def test_cmd_lint_mutation_ledger_passes_with_committed_entry(
 def test_cmd_lint_mutation_ledger_fails_when_artifact_missing(
     tmp_path: Path, capsys
 ) -> None:
-    ledger_path = tmp_path / ".omo" / "change-log" / "mutations.jsonl"
+    ledger_path = tmp_path / "runtime" / "omo" / "change-log" / "mutations.jsonl"
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
     ledger_path.write_text(
-        '{"created_at":"2026-06-23T10:00:00Z","actor":"projects/c2g","action":"create_planned_task","target":".omo/tasks/planned/TASK-1.yaml","artifact_ref":".omo/_delivery/ingress/tasks/TASK-1.yaml","source_ref":"c2g:task:TASK-1","broker_ref":"projects/omo/src/omo/omo_ingress.py","result":"committed"}\n',
+        '{"created_at":"2026-06-23T10:00:00Z","actor":"projects/c2g","action":"create_planned_task","target":".omo/tasks/planned/TASK-1.yaml","artifact_ref":"runtime/omo/_delivery/ingress/tasks/TASK-1.yaml","source_ref":"c2g:task:TASK-1","broker_ref":"projects/omo/src/omo/omo_ingress.py","result":"committed"}\n',
         encoding="utf-8",
     )
 

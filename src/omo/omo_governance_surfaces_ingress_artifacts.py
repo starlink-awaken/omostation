@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from omo.omo_ingress_paths import _registry_path
 from omo.omo_shared import load_yaml_required
 
 
@@ -79,7 +80,7 @@ def _check_ingress_artifacts(
     workspace_root: Path,
 ) -> tuple[dict[str, object], list[str]]:
     omo_dir = workspace_root / ".omo"
-    registry_path = omo_dir / "_delivery" / "ingress" / "registry.yaml"
+    registry_path = _registry_path(omo_dir)
     if not registry_path.exists():
         return {
             "exists": False,
@@ -89,7 +90,7 @@ def _check_ingress_artifacts(
             "debt_artifacts": 0,
             "capability_artifacts": 0,
         }, [
-            "ingress artifacts: required registry missing: .omo/_delivery/ingress/registry.yaml"
+            f"ingress artifacts: required registry missing: {registry_path.relative_to(workspace_root)}"
         ]
 
     registry = _load_yaml(registry_path)

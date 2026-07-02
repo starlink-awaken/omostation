@@ -31,7 +31,7 @@ def test_apply_diff_uses_system_projection_broker(tmp_path: Path) -> None:
     data = yaml.safe_load(system_path.read_text(encoding="utf-8"))
     assert data["completed_tasks"] == 5
     assert "completed_tasks: 5" in rendered
-    artifact_dir = tmp_path / ".omo" / "_delivery" / "ingress" / "state"
+    artifact_dir = tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "state"
     assert any(
         path.name.startswith("system-projection-")
         for path in artifact_dir.glob("*.yaml")

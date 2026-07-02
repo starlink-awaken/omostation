@@ -438,7 +438,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     ingress_registry = sub.add_parser(
         "ingress-registry",
-        help="校验 .omo/_delivery/ingress/registry.yaml 的结构、反向映射与落盘一致性",
+        help="校验 runtime/omo/_delivery/ingress/registry.yaml 的结构、反向映射与落盘一致性",
     )
     ingress_registry.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"
@@ -480,7 +480,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     mutation_ledger = sub.add_parser(
         "mutation-ledger",
-        help="校验 .omo/change-log/mutations.jsonl 账本存在、字段齐全且 artifact_ref 可回落到真实文件",
+        help="校验 runtime/omo/change-log/mutations.jsonl 账本存在、字段齐全且 artifact_ref 可回落到真实文件",
     )
     mutation_ledger.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"

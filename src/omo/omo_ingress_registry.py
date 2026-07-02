@@ -1,7 +1,7 @@
 """omo_ingress registry 基础设施 (从 God Module 拆出, SRP · P60+ 第二步).
 
 _load_registry / _write_registry / _record_mutation / _register_ingress.
-操作 .omo/_delivery/ingress/registry.yaml + change-log/mutations.jsonl.
+操作 runtime/omo/_delivery/ingress/registry.yaml + change-log/mutations.jsonl.
 被 omo_ingress.py (治理 broker 入口) 复用.
 """
 

@@ -20,6 +20,7 @@ from omo.omo_ingress_paths import (
     _lock_path,
     _timestamp_slug,
     _utc_now,
+    _workspace_relative,
 )
 from omo.omo_ingress_registry import (
     _load_registry,
@@ -116,7 +117,7 @@ def create_goal(
         source_ref=source_ref,
         extra_fields=extra_fields,
     )
-    artifact_ref = f".omo/_delivery/ingress/goals/{goal_id}.yaml"
+    artifact_ref = f"runtime/omo/_delivery/ingress/goals/{goal_id}.yaml"
 
     with fcntl_lock(_lock_path(omo_dir)):
         registry = _load_registry(omo_dir)
@@ -191,7 +192,7 @@ def create_goal(
         parent_step_id = f"ingress:goal:{goal_id}:{timestamp}"
         details = (
             f"goal_id={goal_id} ingress_plane={ingress_plane} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_create_goal",
@@ -279,7 +280,7 @@ def update_goal_progress(
         parent_step_id = f"ingress:goal-progress:{goal_id}:{timestamp}"
         details = (
             f"goal_id={goal_id} actor={actor} progress={progress} "
-            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            f"source_ref={source_ref or '-'} artifact={_workspace_relative(artifact_path)}"
         )
         record_audit(
             action="ingress_update_goal_progress",
@@ -300,7 +301,7 @@ def update_goal_progress(
             actor=actor,
             action="update_goal_progress",
             target=f".omo/goals/current.yaml#{goal_id}",
-            artifact_ref=f".omo/_delivery/ingress/goals/{artifact_path.name}",
+            artifact_ref=f"runtime/omo/_delivery/ingress/goals/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
             extra={"goal_id": goal_id, "progress": progress},

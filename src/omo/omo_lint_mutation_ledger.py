@@ -7,7 +7,7 @@ ADR-0093 P100-P103 4 步收官 (P101/P102 校正顺序后):
   P103 mutation-ledger 拆 (57L) → 537L, <600L ideal 完整兑现
 
 1 个 mutation-ledger cmd (Round 14+ P0 累积):
-  - cmd_lint_mutation_ledger: 校验 .omo/change-log/mutations.jsonl 账本
+  - cmd_lint_mutation_ledger: 校验 runtime/omo/change-log/mutations.jsonl 账本
     - 账本存在且非空
     - 8 必填字段 (created_at/actor/action/target/artifact_ref/source_ref/broker_ref/result)
     - artifact_ref 必须 .omo/ 开头 + 真实文件存在
@@ -30,11 +30,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from omo.omo_io import read_jsonl
+from omo.omo_ingress_paths import _mutation_log_path
 
 
 def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
     root = Path(workspace_root).resolve()
-    ledger_path = root / ".omo" / "change-log" / "mutations.jsonl"
+    ledger_path = _mutation_log_path(root / ".omo")
     if not ledger_path.exists():
         print(f"❌ omo lint mutation-ledger fail: missing ledger file {ledger_path}")
         return 1
@@ -67,7 +68,9 @@ def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
         if entry.get("result") == "committed":
             committed += 1
         artifact_ref = entry.get("artifact_ref")
-        if not isinstance(artifact_ref, str) or not artifact_ref.startswith(".omo/"):
+        if not isinstance(artifact_ref, str) or not (
+            artifact_ref.startswith(".omo/") or artifact_ref.startswith("runtime/omo/")
+        ):
             issues.append(f"entry {idx}: invalid artifact_ref {artifact_ref!r}")
             continue
         artifact_path = root / artifact_ref

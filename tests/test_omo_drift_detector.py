@@ -19,7 +19,7 @@ def test_build_and_write_drift_report(tmp_path: Path) -> None:
     (tmp_path / ".omo" / "state").mkdir(parents=True, exist_ok=True)
     (tmp_path / ".omo" / "_truth" / "goals").mkdir(parents=True, exist_ok=True)
     (tmp_path / ".omo" / "tasks" / "planned").mkdir(parents=True, exist_ok=True)
-    (tmp_path / ".omo" / "_control" / "evolution" / "drift").mkdir(
+    (tmp_path / "runtime" / "omo" / "_control" / "evolution" / "drift").mkdir(
         parents=True, exist_ok=True
     )
 

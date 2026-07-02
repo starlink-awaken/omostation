@@ -47,7 +47,7 @@ omo:
     )
     assert registry_path.exists()
     artifact_path = (
-        tmp_path / ".omo" / "_delivery" / "ingress" / "task-center" / "discovery"
+        tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "task-center" / "discovery"
     )
     assert any(
         path.name.startswith("discovery-registry-")
@@ -149,7 +149,7 @@ omo:
     ]
     assert any(
         path.name.startswith("P6-G2-DISCOVERY-TEMPLATES-PACKET-blocked-")
-        for path in (tmp_path / ".omo" / "_delivery" / "ingress" / "tasks").glob(
+        for path in (tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "tasks").glob(
             "*.yaml"
         )
     )
