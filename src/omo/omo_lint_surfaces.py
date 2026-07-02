@@ -37,22 +37,24 @@ def cmd_lint_ingress_registry(workspace_root: str = ".") -> int:
 
     root = resolve_governance_workspace_root(Path(workspace_root))
     summary, issues = _check_ingress_registry(root)
+    # registry 未创建 (runtime cache 缺, 如 CI fresh checkout) — 合法状态, 不阻断.
+    # 结构/反向映射检查只在 registry 存在时才有意义.
+    if not summary.get("exists"):
+        print("✅ omo lint ingress-registry pass: registry not created yet (runtime cache absent)")
+        return 0
     if issues:
         print(f"❌ omo lint ingress-registry fail: {len(issues)} issue(s)")
         for issue in issues:
             print(f"  - {issue}")
         return 1
 
-    if summary.get("exists"):
-        print(
-            "✅ omo lint ingress-registry pass: "
-            f"goals={len(summary.get('goal_ids', []))} "
-            f"tasks={len(summary.get('task_ids', []))} "
-            f"debts={len(summary.get('debt_ids', []))} "
-            f"capabilities={len(summary.get('capability_ids', []))}"
-        )
-    else:
-        print("✅ omo lint ingress-registry pass: registry not created yet")
+    print(
+        "✅ omo lint ingress-registry pass: "
+        f"goals={len(summary.get('goal_ids', []))} "
+        f"tasks={len(summary.get('task_ids', []))} "
+        f"debts={len(summary.get('debt_ids', []))} "
+        f"capabilities={len(summary.get('capability_ids', []))}"
+    )
     return 0
 
 
