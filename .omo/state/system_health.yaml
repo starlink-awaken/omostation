@@ -1,59 +1,59 @@
-last_scan: 1782964720.837746
+last_scan: 1782987329.457738
 services:
   agora-gateway:
     name: agora-gateway
     runtime:
-      freshness_seconds: 794
+      freshness_seconds: 23402
       pid: '1254'
       status: running
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: daemon
   agora-sse:
     health_check: healthy
     name: agora-sse
     port_listening: true
     runtime:
-      freshness_seconds: 794
-      pid: '17470'
+      freshness_seconds: 23402
+      pid: '76524'
       status: running
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 794
+      freshness_seconds: 23402
       pid: '1251'
       status: running
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       status: unmanaged
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: scheduled
   hermes-gateway:
     name: hermes-gateway
     runtime:
-      freshness_seconds: 794
+      freshness_seconds: 23402
       pid: '1258'
       status: running
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: daemon
   kos:
     name: kos
     runtime:
       status: unmanaged
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: integrated
   ollama:
     health_check: healthy
@@ -61,11 +61,11 @@ services:
     port_listening: true
     runtime:
       status: idle
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       status: unmanaged
-    timestamp: 1782964720.837746
+    timestamp: 1782987329.457738
     type: mcp
