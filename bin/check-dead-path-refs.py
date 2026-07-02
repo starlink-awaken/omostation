@@ -37,6 +37,9 @@ def main() -> int:
                 subdir = m.group(1) or m.group(2)
                 if not subdir:
                     continue
+                # 跳过 .omo/PROJECTS/ 引用 — 文件已 deprecated 迁 docs/project-registry.yaml, 治根 F-4 ADR-0122 S1 2026-07-02
+                if subdir == "PROJECTS" or subdir.startswith("PROJECTS/"):
+                    continue
                 if not (OMO / subdir).is_dir():
                     rel = f.relative_to(WORKSPACE)
                     dead.append(f"{rel}: .omo/{subdir}/ (目录不存在)")

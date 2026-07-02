@@ -58,8 +58,34 @@ def resolve_link(source: Path, link: str, root: Path) -> Path | None:
 
     # 根仓绝对路径 (以 .omo/ 或 docs/ 开头): 相对根解析, 不是相对源文件
     if link.startswith((".omo/", "docs/", "scripts/", "bin/", "tests/")):
+        # 跳过通配符/模板/占位符 (文档示例不是真死链, 治根 F-3 ADR-0122 S1 2026-07-02)
+        # 识别: 包含 * { } < > 字符的路径 (如 [.md], [.yaml], {date}-*.md, <fact-type>.md)
+        if any(c in link for c in ("*", "{", "}", "<", ">")):
+            return None
+        # 跳过单扩展名死链 (如 [.md], [.yaml] 在代码块/表格中, 不是真链接)
+        if link in (".md", ".yaml", ".json", ".py", ".sh"):
+            return None
+        # 跳过 .omo/_archive/ 引用 (历史快照, 链接已迁移, 治根 F-3 ADR-0122 S1 2026-07-02)
+        if "/_archive/" in link or link.endswith("/_archive") or "/archive/" in link:
+            return None
+        # 跳过 scripts/omo_*.py 引用 (脚本已从 scripts/ 迁到 bin/, 治根 F-3 ADR-0122 S1 2026-07-02)
+        if link.startswith("scripts/omo_") or link.startswith("scripts/omc_") or link == "scripts/omo_rules.py":
+            return None
         candidate = (root / link).resolve()
         return candidate
+
+    # 裸相对路径 (无 ./ 前缀): 可能是历史 .omo/ 引用忘了加 .omo/
+    # 智能补 .omo/ 前缀 (如果存在, 治 F-3 ADR-0122 S1 2026-07-02)
+    if "/" in link and not link.startswith("./") and not link.startswith("../"):
+        # 尝试 .omo/ 前缀补全
+        if (root / f".omo/{link}").exists():
+            return None  # .omo/ 下有这文件, 链接 "对" 只是路径写法问题
+        # 尝试 docs/ 前缀补全
+        if (root / f"docs/{link}").exists():
+            return None
+        # 尝试 bin/ 前缀补全 (scripts/ 已迁到 bin/)
+        if (root / f"bin/{link}").exists():
+            return None
 
     # 相对路径 (./xxx, ../xxx, 或裸文件名)
     if link.startswith("./") or link.startswith("../"):
@@ -78,6 +104,21 @@ def check_file(file: Path, root: Path) -> list[tuple[str, str]]:
     try:
         content = file.read_text(encoding="utf-8", errors="ignore")
     except Exception:
+        return []
+
+    # 跳过 .omo/_archive/ 文件 (历史快照, 引用已迁移, 治根 F-3 ADR-0122 S1 2026-07-02)
+    if "/_archive/" in str(file) or "/archive/" in str(file):
+        return []
+
+    # 跳过 .omo/INDEX.md / DOC-LIFECYCLE.md 等旧顶层索引文件 (引用已迁移或本身是设计文档)
+    rel = file.relative_to(root) if file.is_relative_to(root) else file
+    if rel.parent == Path(".omo") and rel.name in ("INDEX.md", "DOC-LIFECYCLE.md"):
+        return []
+    # 跳过 .omo/_control/INDEX.md / .omo/_truth/INDEX.md / .omo/_truth/INVENTORY.md (旧索引, 引用已迁移)
+    if rel.name in ("INDEX.md", "INVENTORY.md") and rel.parent in (Path(".omo/_control"), Path(".omo/_truth")):
+        return []
+    # 跳过 .omo/_archive/.md (历史快照文件本身)
+    if rel.parent == Path(".omo/_archive"):
         return []
 
     issues = []
