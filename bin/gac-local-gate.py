@@ -39,6 +39,8 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     # ADR-0120: matrix SSOT consistency (port-registry + launchd)
     # Uses sys.executable + pyyaml inline (no separate uv run needed, gac-local-gate already runs under uv)
     ("matrix-consistency", ["bin/matrix-consistency-lint.py", "--skip-launchd"]),
+    # ADR-0121 GCSI: governance convergence (rule registration + score + loop + SSOT)
+    ("governance-convergence", ["bin/governance-convergence-lint.py"]),
 )
 
 

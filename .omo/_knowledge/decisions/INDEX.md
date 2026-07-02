@@ -96,6 +96,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0118 | 根仓 dev-deps 统一 — 部分真治本 + P3 follow-up | PARTIAL | 2026-06-30 | governance-team | 0118-p52-partial-root-dev-deps.md |
 | 0119 | Workspace 系统性优化 Roadmap (2026 H2) — 3 阶段 S0/S1/S2/S3 | ACCEPTED | 2026-07-01 | governance-team | 0119-systemic-optimization-roadmap-2026h2.md |
 | 0120 | Runtime 健康监控语义修正与 SSOT 一致性加固 (freshness uptime/staleness 分离 + matrix lint) | PROPOSED | 2026-07-02 | governance-team | 0120-runtime-health-semantics-fix.md |
+| 0121 | Governance Convergence Special Initiative (GCSI) — 治理收敛专项 (规则/分数/回路/SSOT 4 维收敛) | PROPOSED | 2026-07-02 | governance-team | 0121-governance-convergence-initiative.md |
 
 ---
 
@@ -167,4 +168,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-02 · Owner: governance-team · 0120 Runtime 健康监控语义修正 (freshness uptime/staleness 分离 + matrix SSOT lint)*
+*最近更新: 2026-07-02 · Owner: governance-team · 0121 GCSI 治理收敛专项 (规则/分数/回路/SSOT 4 维收敛)*
