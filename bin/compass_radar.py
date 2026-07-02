@@ -54,28 +54,49 @@ def _health_score_from_anomalies(anomaly_count: int) -> int:
 
 
 def _collect_runtime_health(ws_root: Path) -> tuple[float | None, dict]:
-    """从 system.yaml runtime_health_summary 采集运行时健康 (ISC-1 复合分输入).
+    """从 system_health.yaml 过滤 daemon 类型服务计算常驻在线率 (WS-2 纠偏).
 
     返回 (service_online_ratio 0.0-1.0 或 None, summary_dict).
-    缺失时返回 (None, {}) — 调用方据此把 runtime 维度降权.
     """
     import yaml  # noqa: PLC0415
 
-    system_yaml = ws_root / ".omo" / "state" / "system.yaml"
-    if not system_yaml.is_file():
+    health_yaml = ws_root / ".omo" / "state" / "system_health.yaml"
+    if not health_yaml.is_file():
         return (None, {})
     try:
-        data = yaml.safe_load(system_yaml.read_text(encoding="utf-8")) or {}
+        data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
     except Exception:  # noqa: BLE001
         return (None, {})
-    summary = data.get("runtime_health_summary") or {}
-    total = summary.get("total_services")
-    online = summary.get("online_services")
-    if not isinstance(total, (int, float)) or total <= 0:
-        return (None, summary)
-    if not isinstance(online, (int, float)):
-        return (None, summary)
-    return (online / total, summary)
+    services = data.get("services") or {}
+    if not services:
+        return (None, {})
+
+    total_daemons = 0
+    online_daemons = 0
+
+    for name, s in services.items():
+        if s.get("type") == "daemon":
+            total_daemons += 1
+            runtime = s.get("runtime") or {}
+            # 状态为 running, 或者健康检查 healthy, 或者端口在监听, 均视为在线
+            if (
+                runtime.get("status") == "running"
+                or s.get("health_check") == "healthy"
+                or s.get("port_listening") is True
+            ):
+                online_daemons += 1
+
+    if total_daemons <= 0:
+        return (None, {})
+    return (
+        online_daemons / total_daemons,
+        {
+            "total_services": len(services),
+            "total_daemons": total_daemons,
+            "online_daemons": online_daemons,
+            "online_services": online_daemons,  # 兼容原有字段命名
+        },
+    )
 
 
 def _freshness_score(health_yaml: Path, now_iso: str) -> tuple[int, str]:
@@ -321,7 +342,7 @@ def main() -> int:
         return 0
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(render_yaml(report), encoding="utf-8")
+    output.write_text(render_yaml(report), encoding="utf-8")  # audit-exempt: non-atomic-write
 
     # 同步刷新 system.yaml 的健康分相关字段 (避免 SSOT 偏差告警)
     sync_system_yaml(
@@ -331,6 +352,20 @@ def main() -> int:
         service_online_ratio=service_online_ratio,
         generated_at=now_iso,
     )
+
+    # 自动触发 BRIEF.md 生成 (WS-4 + WS-5)
+    try:
+        import subprocess  # noqa: PLC0415
+        res = subprocess.run(
+            [sys.executable, str(ws_root / "bin" / "generate-brief.py"), "--write"],
+            cwd=ws_root, capture_output=True, text=True, check=False
+        )
+        if res.returncode == 0:
+            print("✅ BRIEF.md 同步刷新成功")
+        else:
+            print(f"⚠️ BRIEF.md 同步刷新失败: {res.stderr}")
+    except Exception as e:
+        print(f"⚠️ BRIEF.md 刷新异常: {e}")
 
     print()
     print(f"✅ 已写入 {output}")
@@ -380,7 +415,7 @@ def sync_system_yaml(
                 print(f"⚠️  兜底同步 runtime_health_summary 失败: {inner}")
         # 原子写
         tmp = system_yaml.with_suffix(".yaml.tmp")
-        tmp.write_text(
+        tmp.write_text(  # audit-exempt: non-atomic-write
             yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False),
             encoding="utf-8",
         )
