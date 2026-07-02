@@ -10,15 +10,15 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 70
+health_score: 80
 health_score_source: compass_radar_composite
-health_score_generated_at: '2026-07-02T08:19:50Z'
+health_score_generated_at: '2026-07-02T09:02:21Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 95
-total_tasks: 110
+total_tasks: 106
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-02T08:31:48Z'
+updated_at: '2026-07-02T17:00:07.670606+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -68,8 +68,7 @@ phase30_completed_at: '2026-06-06T01:30:00Z'
 phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
 phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
-divergence_flags:
-- missing_goal_tasks:7
+divergence_flags: []
 task_gate_summary: {}
 promotion_blockers: {}
 phase12_status: completed
@@ -180,7 +179,7 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 15
+planned_tasks: 11
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - OPC-P6-SELF-EVOLUTION-doc-gate-e (Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml)
@@ -207,11 +206,11 @@ governance:
   code_freeze: false
   code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  last_scan: 1782980996.361901
+  last_scan: 1782982806.5161622
   total_services: 9
   online_services: 3
   healthy_services: 3
-  offline_services: 2
+  offline_services: 0
   unhealthy_services: []
   stale_services: []
 phase42_status: active
@@ -222,13 +221,6 @@ xplane_factor: 0.7
 debt_adjusted_health_score: 61.6
 governance_anomaly_score: 100
 service_online_ratio: 0.3333
-divergence_detail_refs:
-  missing_goal_tasks:
-    count: 7
-    ref: .omo/evidence/divergence/missing_goal_tasks.yaml
-divergence_triage_summary:
-  missing_goal_tasks:7:
-    severity: medium
-    owner: control
-    disposition: must_fix
+divergence_detail_refs: {}
+divergence_triage_summary: {}
 governance_feedback_last_run: '2026-07-02T16:21:32.387503+08:00'
