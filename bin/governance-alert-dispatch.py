@@ -138,7 +138,20 @@ def _eval_missing_githooks(op: str, rhs: float, ws: Path) -> tuple[object, str]:
     """missing_githooks > 0 → .git/hooks/ 非 sample 钩子缺口."""
     hooks_dir = ws / ".git" / "hooks"
     if not hooks_dir.is_dir():
-        return (None, "unsupported: .git/hooks not found (not a git repo?)")
+        # worktree 兼容: .git 可能是文件 (gitdir 指针), 用 git rev-parse 找真实 git common dir
+        import subprocess  # noqa: PLC0415
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--git-common-dir"],
+                capture_output=True, text=True, cwd=str(ws), timeout=5,
+            )
+            if result.returncode == 0:
+                common_dir = Path(result.stdout.strip())
+                hooks_dir = common_dir / "hooks"
+        except Exception:  # noqa: BLE001
+            pass
+    if not hooks_dir.is_dir():
+        return (0, "miss")  # 非 git 仓库 → miss (不报 unsupported, TASK-236A991C)
     present = [
         f for f in hooks_dir.iterdir()
         if f.is_file() and not f.name.endswith(".sample")
