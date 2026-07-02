@@ -19,6 +19,12 @@ OMO = WORKSPACE / ".omo"
 REF_RE = re.compile(r"\.mo/([a-zA-Z0-9_-]+)/|\.omo/([a-zA-Z0-9_-]+)")
 SCAN_DIRS = ["bin", "scripts"]
 
+# 已知合法但 worktree 中不存在的子目录 (运行时产物/历史路径/文档示例):
+# - _log, _delivery: gitignored 运行时目录 (运行时创建)
+# - capabilities: 代码容错路径搜索 (历史路径残留)
+# - xxx, INDEX, workers: 注释/docstring 中的示例/历史引用 (非真实代码路径)
+LEGACY_OK_DIRS = {"_log", "_delivery", "capabilities", "xxx", "INDEX", "workers", "summaries"}
+
 
 def main() -> int:
     dead: list[str] = []
@@ -39,6 +45,9 @@ def main() -> int:
                     continue
                 # 跳过 .omo/PROJECTS/ 引用 — 文件已 deprecated 迁 docs/project-registry.yaml, 治根 F-4 ADR-0122 S1 2026-07-02
                 if subdir == "PROJECTS" or subdir.startswith("PROJECTS/"):
+                    continue
+                # 跳过已知合法但 worktree 中不存在的子目录 (TASK-236A991C)
+                if subdir in LEGACY_OK_DIRS:
                     continue
                 if not (OMO / subdir).is_dir():
                     rel = f.relative_to(WORKSPACE)

@@ -28,8 +28,8 @@ last-reviewed: 2026-06-22
 
 | 层级 | 权威文件/目录 | 职责 | 更新者 |
 |------|---------------|------|--------|
-| Blueprint | `.omo/MASTER-BLUEPRINT.md` | 长期愿景、架构边界、阶段地图 | human + architect agent |
-| Plan Registry | `.omo/plans/README.md` | 规划文件状态与执行入口 | governance agent |
+| Blueprint | `.omo/_knowledge/design/MASTER-BLUEPRINT.md` | 长期愿景、架构边界、阶段地图 | human + architect agent |
+| Plan Registry | plans/ (已迁移) | 规划文件状态与执行入口 | governance agent |
 | Phase Specs | `.omo/plans/phase*-task-specs*.md` | 阶段任务候选、验收清单、agent prompt | phase owner |
 | Standards | `.omo/standards/*.md` | 跨阶段不可变规范、门禁、交付标准 | governance agent |
 | Goals | `.omo/goals/current.yaml` | 当前 Phase 目标、进入模式、Go/No-Go | human |
@@ -74,9 +74,9 @@ last-reviewed: 2026-06-22
 
 | 变更类型 | 必须同步 |
 |----------|----------|
-| Phase 状态变化 | `goals/current.yaml`, `state/system.yaml`, `plans/README.md`, `../_knowledge/design/MASTER-BLUEPRINT.md` |
+| Phase 状态变化 | `goals/current.yaml`, `state/system.yaml`, plans/ (已迁移), `../_knowledge/design/MASTER-BLUEPRINT.md` |
 | 新里程碑 | 对应 `phase*-task-specs*.md`, `.omo/tasks/active/*.yaml` |
-| 新架构边界 | `../_knowledge/design/MASTER-BLUEPRINT.md`, `standards/ARCHITECTURE_CONVERGENCE.md` 或新标准 |
+| 新架构边界 | `../_knowledge/design/MASTER-BLUEPRINT.md`, ARCHITECTURE_CONVERGENCE (已归档) 或新标准 |
 | 新安全约束 | Phase specs、验收清单、测试标准 |
 | 新连接器/外部数据源 | 数据分类、RBAC、审计、备份、隐私门禁 |
 | 审计发现 | 进入任务 YAML 或明确豁免，不得只停留在审计文档 |

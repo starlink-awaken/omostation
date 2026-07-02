@@ -10,7 +10,7 @@ last-reviewed: 2026-06-22
 > Status: active | Version: v1.0 | Scope: external agent CLI workers
 > Related: `.omo/tasks/README.md`, `.omo/standards/operation-levels.md`,
 > `.omo/standards/agent-registry-heartbeat.md`,
-> `.omo/summaries/agent-task-contract.md`
+> `.omo/_knowledge/summaries/agent-task-contract.md`
 
 ---
 

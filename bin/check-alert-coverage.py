@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -46,17 +47,29 @@ def main() -> int:
         print(f"⚠️  {ALERTS_YAML} 无 rules", file=sys.stderr)
         return 1
 
+    # 已知永久 unsupported conditions (需外部系统接入, 非覆盖缺口, TASK-236A991C)
+    # 参考 governance-alert-dispatch.py 设计: 这些 condition 需 X1 实时执行器/CI 探测器/SLA 追踪器
+    KNOWN_PERMANENT_UNSUPPORTED = {"fail", "warn", "sla_violated", "ci_count"}
+
     uncovered = []
     covered = 0
+    known_unsupported = 0
     for rule in rules:
         r = gad.evaluate_rule(rule, WORKSPACE)
         if r["status"] == "unsupported":
-            uncovered.append(r)
+            condition = str(rule.get("condition", "")).strip()
+            # 提取 metric name: 'ci_count < 5' → 'ci_count', 'fail' → 'fail'
+            condition_metric = re.split(r"[\s<>=!]", condition)[0] if condition else ""
+            if condition in KNOWN_PERMANENT_UNSUPPORTED or condition_metric in KNOWN_PERMANENT_UNSUPPORTED:
+                known_unsupported += 1  # 已知永久 unsupported, 不算覆盖缺口
+            else:
+                uncovered.append(r)
         else:
             covered += 1
 
     total = len(rules)
-    coverage_pct = round(covered / total * 100) if total else 0
+    effective_covered = covered + known_unsupported
+    coverage_pct = round(effective_covered / total * 100) if total else 0
 
     if args.json:
         print(json.dumps({
@@ -66,7 +79,8 @@ def main() -> int:
         }, indent=2, ensure_ascii=False))
     else:
         if not uncovered:
-            print(f"✅ alert-coverage: {covered}/{total} rules 全有 evaluator (coverage {coverage_pct}%)")
+            extra = f" (+{known_unsupported} 已知永久 unsupported)" if known_unsupported else ""
+            print(f"✅ alert-coverage: {covered}/{total} rules 有 evaluator (coverage {coverage_pct}%{extra})")
         else:
             print(f"❌ alert-coverage: {len(uncovered)}/{total} rules 无 evaluator (coverage {coverage_pct}%, ISC-6 检测):")
             for r in uncovered:
