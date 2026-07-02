@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated_at": "2026-07-02T02:54:37.575943+00:00",
+  "generated_at": "2026-07-02T09:23:39.712018+00:00",
   "governance": {
     "health_score": 80,
     "health_score_raw": 88.0,
@@ -16,7 +16,7 @@
   "categories": {
     "technical": {
       "resolved": 1,
-      "partial": 2,
+      "partial": 0,
       "unresolved": 0
     },
     "governance": {

@@ -1,0 +1,47 @@
+id: TASK-353E0980
+title: 'gac-gate doc/state/dead-path 债: doc-ssot-lint + state-freshness + dead-path-refs
+  21 处'
+description: 'gac-gate 剩 3 pre-existing check: doc-ssot-lint (doc SSOT 漂移, --fix 可修)
+  + state-freshness-check (2 files_missing + 1 stale) + check-dead-path-refs (21 处
+  .py 死引用).'
+status: candidate
+task_type: doc-debt
+risk_level: L2
+depends_on: []
+source_docs:
+- bin/doc-ssot-lint.py
+- bin/state-freshness-check.py
+- bin/check-dead-path-refs.py
+deliverables:
+- doc-ssot-lint --fix + state 文件补/刷 + 21 死引用清理
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-353E0980
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- 3 check PASS
+test_plan:
+- '3 check PASS: bin/{doc-ssot-lint,state-freshness-check,check-dead-path-refs}.py'
+allowed_operation_level: L2
+human_approval_required: false
+metadata:
+  priority: P2
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-07-02T09:23:41Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: omo:task:create:TASK-353E0980
