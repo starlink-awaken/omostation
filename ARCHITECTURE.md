@@ -59,3 +59,7 @@ graph TB
 ```bash
 cd projects/runtime && make test
 ```
+
+## 架构概览
+
+参见工作区架构概览图：[`../../docs/ARCHITECTURE-DIAGRAM.md`](../../docs/ARCHITECTURE-DIAGRAM.md)
