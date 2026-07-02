@@ -148,6 +148,7 @@ agent_profiles:
       - external-adapter-sync
       - submodule-pointer-close
       - observer-audit
+      - governance-audit
     can_write_lanes: [docs, governance_code, governance_state, config, submodule_pointer]
     closeout_required: [agent-workflow-lint, agent-workflow-observe, gac-local-gate]
   mof-agent:
@@ -1005,3 +1006,50 @@ workflows:
         - id: doctor
           mode: required
           command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
+
+  - id: governance-audit
+    title: Workspace Systemic Governance Audit
+    purpose: Execute systemic governance health scan, write-ownership check, brief generation, and SSOT alignment.
+    agents:
+      roles: [governance-agent]
+      observer_policy: optional
+    allowed_lanes: [docs, governance_code, governance_state]
+    lock_scopes: [governance-audit-run]
+    surfaces:
+      read:
+        - .omo/_truth/registry/**
+        - bin/**
+        - BRIEF.md
+      write:
+        - .omo/state/**
+        - BRIEF.md
+    phases:
+      preflight:
+        - id: status
+          mode: required
+          command: [git, status, --short]
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+      execute:
+        - id: audit-health
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/compass_radar.py]
+        - id: audit-brief
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/generate-brief.py, --write]
+      verification:
+        - id: write-owner-audit
+          mode: required
+          command: [python3, bin/write-owner-audit.py, --staged]
+        - id: ssot-guardian
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+        - id: gac-local-gate
+          mode: required
+          command: [make, gac-local-gate]
+      closeout:
+        - id: diff-stat
+          mode: required
+          command: [git, diff, --stat]
+

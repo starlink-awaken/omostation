@@ -17,6 +17,7 @@ REGISTRY_PATH = WORKSPACE / ".omo/_truth/registry/agent-workflows.yaml"
 CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("gac-validate", ["bin/gac-validate.py", "--gate"]),
     ("gac-drift", ["bin/gac-drift.py"]),
+    ("write-owner-audit", ["bin/write-owner-audit.py", "--staged"]),
     ("agent-workflow-lint", ["bin/agent-workflow.py", "lint"]),
     ("agent-workflow-integrations", ["bin/agent-workflow.py", "integrations"]),
     ("agent-workflow-adapters", ["bin/agent-workflow.py", "adapters"]),
