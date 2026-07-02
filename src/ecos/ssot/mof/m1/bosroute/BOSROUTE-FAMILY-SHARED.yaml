@@ -3,7 +3,7 @@ type: Component
 subtype: BOSRoute
 name: bos://family-shared/**
 description: "家庭共享文档域路由（已废弃：2026-07-01 family-shared 并入 family 域，路由改用 bos://family/**）"
-status: deprecated
+status: archived
 superseded_by: BOSROUTE-FAMILY
 domain: work
 created: '2026-06-13'
@@ -13,6 +13,7 @@ layer: I0
 properties:
   layer: I0
   runtime: active
+  lifecycle: deprecated
   protocol: BOS_URI
 cross_references:
   realized_by:

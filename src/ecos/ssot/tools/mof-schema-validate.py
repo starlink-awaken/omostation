@@ -14,7 +14,7 @@
     python3 src/ecos/ssot/tools/mof-schema-validate.py
     python3 src/ecos/ssot/tools/mof-schema-validate.py --strict  # 退出码非 0 if issues
     python3 src/ecos/ssot/tools/mof-schema-validate.py --focus omo_layer,governance  # 只看指定子目录
-    python3 src/ecos/ssot/tools/mof-schema-validate.py --json  # JSON 输出 (CI 集成)
+    python3 src/ecos/ssot/tools/mof-schema-validate.py --json  # 纯 JSON 输出; ok=false 时退出非 0
     python3 src/ecos/ssot/tools/mof-schema-validate.py --staged  # 只校验 git staged M1 文件
     python3 src/ecos/ssot/tools/mof-schema-validate.py --staged --strict  # pre-commit 模式
     python3 src/ecos/ssot/tools/mof-schema-validate.py --type-coverage  # M1 type 覆盖率统计
@@ -26,6 +26,10 @@
     2: 有 requiredProperties 缺失
     3: 有 state machine 非法
     4: 多种问题混合
+
+说明:
+    --json 是机器契约模式, 不输出人读前缀; 只要 JSON 中 ok=false, 退出码也非 0。
+    非 --json 默认保留人工审计输出; --strict 显式用于 shell gate。
 """
 
 import argparse
@@ -431,20 +435,21 @@ def main():
                         (nid, t, issue.strip(), str(f.relative_to(M1_DIR)))
                     )
 
-    print(f"=== M1 节点总数: {total} ===")
-    print(f"=== Type drift (type 不在 M2): {len(drift)} ===")
-    for d in drift:
-        print(f"  {d[0]:40} type={d[1]:25} ({d[2]})")
+    if not args.json_output:
+        print(f"=== M1 节点总数: {total} ===")
+        print(f"=== Type drift (type 不在 M2): {len(drift)} ===")
+        for d in drift:
+            print(f"  {d[0]:40} type={d[1]:25} ({d[2]})")
 
-    print(f"\n=== Required properties 缺失: {len(missing_req)} ===")
-    for r in missing_req[:30]:  # 截断显示
-        print(f"  {r[0]:40} type={r[1]:20} {r[2]}")
-    if len(missing_req) > 30:
-        print(f"  ... ({len(missing_req) - 30} more)")
+        print(f"\n=== Required properties 缺失: {len(missing_req)} ===")
+        for r in missing_req[:30]:  # 截断显示
+            print(f"  {r[0]:40} type={r[1]:20} {r[2]}")
+        if len(missing_req) > 30:
+            print(f"  ... ({len(missing_req) - 30} more)")
 
-    print(f"\n=== State machine invalid: {len(invalid_sm)} ===")
-    for s in invalid_sm:
-        print(f"  {s[0]:40} type={s[1]:20} {s[2]}")
+        print(f"\n=== State machine invalid: {len(invalid_sm)} ===")
+        for s in invalid_sm:
+            print(f"  {s[0]:40} type={s[1]:20} {s[2]}")
 
     # 重点关注 omo_layer + governance
     if not focus_dirs or "omo_layer" in focus_dirs or "governance" in focus_dirs:
@@ -496,13 +501,13 @@ def main():
         print(json.dumps(result, ensure_ascii=False, indent=2))
 
     # 退出码
-    if args.strict:
-        if drift or missing_req or invalid_sm:
-            code = 1
-            if missing_req:
-                code |= 2
-            if invalid_sm:
-                code |= 3
+    if drift or missing_req or invalid_sm:
+        code = 1
+        if missing_req:
+            code |= 2
+        if invalid_sm:
+            code |= 3
+        if args.strict or args.json_output:
             sys.exit(min(code, 4))
 
 
