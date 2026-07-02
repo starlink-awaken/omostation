@@ -24,6 +24,13 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
 M1_DIR = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance"
 
+# F-5 (ADR-0122 S1 2026-07-02): 治本 — M1 写操作默认 advisory, 需 GAC_M1_SYNC_WRITE=1 显式确认
+# 主仓不直接写 submodule 内文件 (违反"主仓不写 submodule" 架构边界).
+# 默认 dry-run 仅生成 actions 列表, 真正的 submodule commit 由维护者走 submodule 自己的 PR.
+# GAC_M1_SYNC_WRITE=1 显式声明 "我知道这是跨边界写, 我接受" 才执行实际写.
+import os
+M1_WRITE_ENABLED = os.environ.get("GAC_M1_SYNC_WRITE", "0") == "1"
+
 
 def load_rules() -> list[dict]:
     """读 gac.rules (SSOT)."""
@@ -160,19 +167,40 @@ def compute_diff(rules: list[dict], m1_nodes: dict[str, dict]) -> dict:
 
 
 def do_sync(rules: list[dict], m1_nodes: dict[str, dict], diff: dict) -> dict:
-    """执行同步: 生成缺失 + 更新过期 + 删除多余."""
+    """执行同步: 生成缺失 + 更新过期 + 删除多余.
+
+    F-5 (ADR-0122 S1 2026-07-02): 默认 dry-run (advisory), 不实际写 submodule 内文件.
+    需 GAC_M1_SYNC_WRITE=1 环境变量才执行实际写.
+    治根"主仓不写 submodule" 架构边界: 默认 advisory 防止误写, 真写需显式声明.
+    """
     actions = {"created": [], "updated": [], "deleted": []}
 
-    # 生成缺失
+    if not M1_WRITE_ENABLED:
+        # dry-run 模式: 模拟 actions 列表, 不写文件
+        for rule in rules:
+            rid = rule.get("id")
+            if rid in diff["missing_in_m1"]:
+                actions["created"].append(rid)
+        for rule in rules:
+            rid = rule.get("id")
+            if rid in m1_nodes and rid not in diff["missing_in_m1"]:
+                stale_fields = {s["field"] for s in diff["stale"] if s["id"] == rid}
+                if stale_fields:
+                    actions["updated"].append(rid)
+        for rid in diff["orphan_in_m1"]:
+            actions["deleted"].append(rid)
+        return actions
+
+    # 实际写模式 (GAC_M1_SYNC_WRITE=1)
     for rule in rules:
         rid = rule.get("id")
         if rid in diff["missing_in_m1"]:
             content = rule_to_m1_yaml(rule)
             fpath = M1_DIR / f"GAC-RULE-{rid}.yaml"
+            # audit-exempt: non-atomic-write — M1 同步走 advisory 默认, 真写需 GAC_M1_SYNC_WRITE=1 显式声明
             fpath.write_text(content, encoding="utf-8")
             actions["created"].append(rid)
 
-    # 更新过期 (重新生成)
     for rule in rules:
         rid = rule.get("id")
         if rid in m1_nodes and rid not in diff["missing_in_m1"]:
@@ -180,15 +208,15 @@ def do_sync(rules: list[dict], m1_nodes: dict[str, dict], diff: dict) -> dict:
             if stale_fields:
                 content = rule_to_m1_yaml(rule)
                 fpath = M1_DIR / f"GAC-RULE-{rid}.yaml"
+                # audit-exempt: non-atomic-write — M1 同步走 advisory 默认, 真写需 GAC_M1_SYNC_WRITE=1 显式声明
                 fpath.write_text(content, encoding="utf-8")
                 actions["updated"].append(rid)
 
-    # 删除多余
     for rid in diff["orphan_in_m1"]:
         fpath = M1_DIR / f"GAC-RULE-{rid}.yaml"
         if fpath.exists():
             fpath.unlink()
-            actions["deleted"].append(rid)
+        actions["deleted"].append(rid)
 
     return actions
 

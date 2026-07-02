@@ -50,6 +50,7 @@ def classify(path: str, submodules: set[str]) -> str:
         ".agents/skills/project-governance/SKILL.md",
         "bin/agent-workflow.py",
         "bin/governance-evolution.py",
+        "bin/governance-semantic-gate.py",
         "bin/project-layer-index.py",
         "projects/cockpit/src/cockpit/commands/agent_workflow.py",
         "projects/cockpit/src/cockpit/commands/governance.py",
