@@ -60,6 +60,7 @@ def classify(path: str, submodules: set[str]) -> str:
         "bin/governance-trend-report.py",
         "bin/project-layer-index.py",
         "bin/state-freshness-check.py",
+        "bin/write-owner-audit.py",
         "projects/cockpit/src/cockpit/commands/agent_workflow.py",
         "projects/cockpit/src/cockpit/commands/governance.py",
         "projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py",
@@ -72,7 +73,7 @@ def classify(path: str, submodules: set[str]) -> str:
     if path.startswith(".omo/"):
         return "governance_state"
     if path.endswith(".md") and (
-        path in {"AGENTS.md", "CLAUDE.md", "README.md", "ARCHITECTURE.md", "LAYER-INDEX.md"}
+        path in {"AGENTS.md", "CLAUDE.md", "README.md", "ARCHITECTURE.md", "LAYER-INDEX.md", "BRIEF.md"}
         or path.startswith("projects/")
         or path.startswith("spaces/")
         or path.startswith("docs/")
