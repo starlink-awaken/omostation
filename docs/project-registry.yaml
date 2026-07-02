@@ -35,7 +35,7 @@ projects:
     build_backend: "hatchling"
     version: "3.0.0"
     role: "MCP Hub · BOS URI 路由"
-    bos_services: 100             # grep -c 'uri: "bos://' etc/bos-services.yaml
+    bos_services: 114             # grep -c 'uri: "bos://' projects/agora/etc/bos-services.yaml
     src_dir: "src/agora/"
 
   kairon:
@@ -222,13 +222,13 @@ projects:
 
 # ── Cross-project facts ──
 bos:
-  service_count: 113            # grep -c 'uri: "bos://' bos-services.yaml (110 baseline + 3 ToolBox)
+  service_count: 114            # grep -c 'uri: "bos://' projects/agora/etc/bos-services.yaml
   domains:
     primary: ["memory", "governance", "analysis", "persona", "capability"]
     extended: ["meta", "omo", "swarm", "system", "toolbox"]
 
 gac:
-  rules_count: 89                # grep -c '    - id: CR-' .omo/_truth/registry/governance-checks.yaml
+  rules_count: 92                # grep -c '    - id: CR-' .omo/_truth/registry/governance-checks.yaml (gac-validate 报 137 含 X1-X4 legacy_index)
 
 # ── Archived projects (historical reference) ──
 archived:

@@ -45,6 +45,15 @@ AGORA_SRC = WORKSPACE / "projects" / "agora" / "src"
 if str(AGORA_SRC) not in sys.path:
     sys.path.insert(0, str(AGORA_SRC))
 
+# agora 间接依赖 pydantic (tool_contract 顶层 import) 未在 pyproject 声明, 根 venv 跑
+# 缺 pydantic 时从 projects/agora/.venv 借 site-packages, 单脚本可执行不依赖 uv
+# (治本应在 agora/pyproject 加 pydantic 显式依赖, 但 agora 是 submodule 不在本仓改)
+_AGORA_VENV_SITE = WORKSPACE / "projects" / "agora" / ".venv" / "lib"
+if _AGORA_VENV_SITE.exists():
+    for _site in _AGORA_VENV_SITE.glob("python*/site-packages"):
+        if str(_site) not in sys.path:
+            sys.path.append(str(_site))
+
 OUTPUT_DIR = WORKSPACE / ".omo" / "_delivery" / "evidence-smoke"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
 

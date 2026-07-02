@@ -35,7 +35,11 @@ from collections import defaultdict
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
-BASELINE_YAML = WORKSPACE / "runtime" / "omo" / "_truth" / "registry" / "dependency-baseline.yaml"
+# P0-fix (2026-07-02): baseline SSOT 回 .omo (tracked), 跟 omo broker 写入路径一致
+# (find_omo_dir → OMO_ROOT/.omo, apply_baseline_patches 写 omo_dir/_truth/registry/).
+# PR#4 半吊子迁移把 baseline 搬到 runtime/omo (gitignored) → CI 拿不到 → 52 drift.
+# runtime/omo 是 volatile mirror, 不是 SSOT; baseline 是 SSOT 该 tracked.
+BASELINE_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "dependency-baseline.yaml"
 
 # PEP 508 简化解析: name[extras]op version, op version, ...
 # 例: "graphiti-core[neo4j]>=0.28", "mem0ai", "httpx[socks]>=0.28.1,<1.0"
@@ -270,7 +274,7 @@ def main() -> int:
             print(f"  ⚠️  MISMATCHED ({len(drift['mismatched'])}): baseline 与 pyproject 下限不一致")
             for d in drift["mismatched"][:10]:
                 print(f"     - {d['name']}: baseline={d['current']} vs derived={d['derived']}")
-        print(f"\n修复: python bin/gen-dependency-baseline.py --dry-run → 走 omo broker 写 runtime/omo/_truth/registry/dependency-baseline.yaml")
+        print(f"\n修复: python bin/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml")
         return 1
 
     return 0
