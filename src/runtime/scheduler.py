@@ -331,16 +331,30 @@ class MatrixScheduler:
                     )
                     self._autoheal_service(svc.name)
 
-            # Freshness seconds for state reporting
+            # Uptime/staleness tracking (ADR-0120: semantic separation)
+            # uptime_seconds: how long the service has been running (stability indicator)
+            # last_healthy_seconds: time since last confirmed healthy (staleness indicator)
             running_since = state.setdefault("running_since", {})
+            last_healthy = state.setdefault("last_healthy", {})
             if rt == "running":
                 if svc.name not in running_since:
                     running_since[svc.name] = current_time
-                result["runtime"]["freshness_seconds"] = int(
+                result["runtime"]["uptime_seconds"] = int(
                     current_time - running_since[svc.name]
                 )
+                # Backward compat: freshness_seconds alias (deprecated, remove in P43+)
+                result["runtime"]["freshness_seconds"] = result["runtime"][
+                    "uptime_seconds"
+                ]
+                # Track last healthy time for staleness detection
+                last_healthy[svc.name] = current_time
+                result["runtime"]["last_healthy_seconds"] = 0
             else:
                 running_since.pop(svc.name, None)
+                # Report staleness: time since last seen healthy
+                result["runtime"]["last_healthy_seconds"] = int(
+                    current_time - last_healthy.get(svc.name, current_time)
+                )
 
             scan_results[svc.name] = result
 
@@ -358,6 +372,7 @@ class MatrixScheduler:
         # Save state back
         state["restart_history"] = restart_history
         state["running_since"] = state.get("running_since", {})
+        state["last_healthy"] = state.get("last_healthy", {})
         try:
             with open(state_file, "w") as f:
                 json.dump(state, f)
