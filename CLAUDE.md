@@ -7,6 +7,19 @@
 
 ## 0. Startup Protocol
 
+> [!IMPORTANT]
+> **KOS (Knowledge Operating System) Hardware Cold-Start Protocol**
+> You are equipped with `mcp-server-kos` as your external read-only hard drive. 
+> To align your mental model and avoid historical architectural regressions, you MUST run the following KOS query sequence during your first turn:
+> 1. **Query Current Decisions & Goals**:
+>    `mcp-server-kos::query_custom_sql(sql="SELECT id, title, path FROM documents WHERE path LIKE '%BRIEF.md%' LIMIT 1")`
+>    Read the resulting BRIEF.md file path. It contains the active technical debts (needs-human) and X3 metrics.
+> 2. **Traverse ADR Decisions**:
+>    `mcp-server-kos::search_kos(query="ADR-012")`
+>    Pay close attention to ADR-0124 (retrospective S1) and ADR-0125 (S2 retrospective).
+> 3. **Identify Domain Schemas**:
+>    `mcp-server-kos::list_entities(limit=50)`
+
 Before changing code or governed state, load the current context:
 
 ```bash
