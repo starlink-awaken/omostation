@@ -197,7 +197,7 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 
 ## 🧬 Onboarding Consensus (🧬 历史演进避坑基因)
 
-> **自动刷新时间**: 2026-07-03 22:31:44 (KOS 自动进化注入)
+> **自动刷新时间**: 2026-07-03 22:46:22 (KOS 自动进化注入)
 > 新进 Agent 必须通读并深度对齐以下前人沉淀的历史避坑基因，严禁在同一坑中二次栽倒：
 
 * **P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律** ([p73-truth-driven-engineering-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md))

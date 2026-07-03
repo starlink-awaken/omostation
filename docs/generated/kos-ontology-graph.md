@@ -1,6 +1,6 @@
 # eCOS v6 物理拓扑与架构依赖图谱
 
-> **自动刷新时间**: 2026-07-03 22:31:44
+> **自动刷新时间**: 2026-07-03 22:46:22
 > **数据源**: KOS SQLite 本体引擎 · `EicosParser` 自动提取
 
 ```mermaid
@@ -173,6 +173,7 @@ graph TD
     J_gbrain["J:Gbrain"]:::project -->|member_of| C_Layer_L2["C:Layer L2"]:::concept
     J_kairon["J:Kairon"]:::project -->|member_of| C_Layer_L2["C:Layer L2"]:::concept
     J_l4_kernel["J:L4 Kernel"]:::project -->|member_of| C_Layer_L4["C:Layer L4"]:::concept
+    J_mesh_router["J:Mesh Router"]:::project -->|member_of| C_Layer_L0["C:Layer L0"]:::concept
     J_metaos["J:Metaos"]:::project -->|member_of| C_Layer_L2["C:Layer L2"]:::concept
     J_model_driven["J:Model Driven"]:::project -->|member_of| C_Layer_M0["C:Layer M0"]:::concept
     J_observability["J:Observability"]:::project -->|member_of| C_Layer_X["C:Layer X"]:::concept
@@ -197,5 +198,5 @@ graph TD
 
 ---
 ## 📊 实体指标统计
-* **总实体数**: 213
-* **总关系数**: 182
+* **总实体数**: 214
+* **总关系数**: 183
