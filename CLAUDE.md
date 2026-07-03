@@ -13,7 +13,7 @@
 > To align your mental model and avoid historical architectural regressions, you MUST run the following KOS query sequence during your first turn:
 >
 > 1. **Query Current Decisions & Goals**:
->    `mcp-server-kos::query_custom_sql(sql="SELECT id, title, path FROM documents WHERE path LIKE '%BRIEF.md%' LIMIT 1")`
+>    `mcp-server-kos::query_custom_sql(sql="SELECT doc_id, title, canonical_path FROM documents WHERE canonical_path LIKE '%BRIEF.md%' LIMIT 1")`
 >    Read the resulting BRIEF.md file path. It contains the active technical debts (needs-human) and X3 metrics.
 > 2. **Traverse ADR Decisions**:
 >    `mcp-server-kos::search_kos(query="ADR-012")`
