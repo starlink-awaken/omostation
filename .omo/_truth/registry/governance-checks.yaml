@@ -128,7 +128,7 @@ gac:
     layer_enum: [M0, L0, L1, L2, L3, L4, I0, X, meta]
     check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index, schema_integrity, yaml_bypass, sensitive_write, mutation_surface, registry_integrity, internal_write_profile, state_plane_asset, ingress_boundary, ingress_artifact, mutation_ledger, doc_lifecycle, doc_archival, self_evolution_approval, task_policy, god_module, test_coverage]
     lifecycle_enum: [draft, active, deprecated, removed]
-    executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron]
+    executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron, gac_local_gate]
 
   # GaC 规则注册 (声明式; 阶段 0 登记代表规则, 阶段 2 补全)
   rules:
