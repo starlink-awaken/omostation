@@ -7,6 +7,7 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 MCP_SERVER = WORKSPACE / "bin" / "mcp-server-kos.py"
+KOS_DB = WORKSPACE / "kos" / "kos-index.sqlite"
 
 
 def run_mcp_query(request_payloads: list[dict]) -> list[dict]:
@@ -43,6 +44,10 @@ def main() -> int:
     if not MCP_SERVER.is_file():
         print(f"❌ Error: MCP Server target not found at: {MCP_SERVER}")
         return 1
+
+    if not KOS_DB.is_file():
+        print(f"⏭️  Skip: KOS database not found at {KOS_DB} (runtime artifact, not in git)")
+        return 0
 
     # 测试 Payload 1: initialize
     reqs = [
