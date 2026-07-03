@@ -470,4 +470,9 @@ history:
     22/22 OK 恢复)'
   timestamp: '2026-06-27T06:55:12.002003'
   version: 0.0.107
-version: 0.0.107
+- description: 'P74 review 阶段 2 MOF 规范化: M3 加 GacRule 子类型 (P74/ADR-0130 闭合
+    m3_parent 反向追溯), m3.yaml +29 行, 4 条 CR-P74-* M1 实例派生, gac-m1-sync.py
+    加 M3 fail-fast 校验'
+  timestamp: '2026-07-03T20:30:00.000000'
+  version: 0.0.108
+version: 0.0.108

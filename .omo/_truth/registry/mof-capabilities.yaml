@@ -267,3 +267,50 @@ omo_tools:
     description: OMO 目录管理工具
     commands: [status, health, tasks]
     usage: "bin/omo-manage status"
+
+# ═══════════════════════════════════════════════════════════
+# P74 / ADR-0130 治理工具 — 常态化工作流沉默检测
+# ═══════════════════════════════════════════════════════════
+p74_tools:
+  omo-state-projection-guard:
+    path: bin/omo-state-projection-guard.py
+    description: >
+      P74 §2 鸿沟回收: 治 P71 类 A 复发. 验证 runtime-projections.yaml
+      声明的 canonical 路径存在 + parse OK, pending projection 只允许
+      info 级别 finding. 实现 CR-P74-STATE-PROJECTION-GUARD (X4 一致性).
+    commands: [--json]
+    usage: "uv run --with pyyaml python bin/omo-state-projection-guard.py"
+    adr: ADR-0130
+    m3_parent: GovernanceElement.GacRule
+
+  omo-runtime-stamp-policy:
+    path: bin/omo-runtime-stamp-policy.py
+    description: >
+      P74 §2: 治 runtime 孤儿文件累积. runtime/ 下文件必须 gitignored 或
+      tracked 或在 ALLOW_PATHS 列表. 完整 gitignore ** 语义实现.
+      实现 CR-P74-RUNTIME-STAMP-POLICY (X1 审计链).
+    commands: [--json]
+    usage: "uv run --with pyyaml python bin/omo-runtime-stamp-policy.py"
+    adr: ADR-0130
+    m3_parent: GovernanceElement.GacRule
+
+  agent-workflow-suggest:
+    path: bin/agent-workflow.py::suggest
+    description: >
+      P74 §3 错位路由纠正: 给出 changes 期望走的 workflow 建议.
+      advisory only, 不强制. 实现 CR-P74-WORKFLOW-SUGGEST (X3 价值栈).
+    commands: [--from-diff, --include-untracked, --profile, --json, --file]
+    usage: "uv run --with pyyaml python bin/agent-workflow.py suggest --from-diff --profile governance-agent"
+    adr: ADR-0130
+    m3_parent: GovernanceElement.GacRule
+
+  agent-workflow-p74-solidification:
+    path: bin/agent-workflow.py::p74_solidification_report
+    description: >
+      P74 §5 自我演化: 评估每个 workflow 的 has_recent_run / has_check_coverage,
+      输出 silent_health 状态. 内嵌 compliance. 实现 CR-P74-WORKFLOW-SILENCE
+      (X1 审计链).
+    commands: [<embedded in compliance>]
+    usage: "uv run --with pyyaml python bin/agent-workflow.py compliance --json | jq .p74_solidification"
+    adr: ADR-0130
+    m3_parent: GovernanceElement.GacRule
