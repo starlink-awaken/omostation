@@ -966,8 +966,12 @@ def test_change_lane_knows_agent_workflow_files() -> None:
     module = _load_module_from_source(LANE_MODULE_PATH, "change_lane_check")
 
     assert module.classify("bin/agent-workflow.py", set()) == "governance_code"
+    assert module.classify("bin/compass_radar.py", set()) == "governance_code"
     assert module.classify("bin/doc-ssot-lint.py", set()) == "governance_code"
+    assert module.classify("bin/generate-brief.py", set()) == "governance_code"
     assert module.classify("bin/governance-evolution.py", set()) == "governance_code"
+    assert module.classify("bin/state-stale-emit.py", set()) == "governance_code"
+    assert module.classify("bin/README.md", set()) == "docs"
     assert module.classify("projects/cockpit/src/cockpit/commands/governance.py", set()) == "governance_code"
     assert (
         module.classify("projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py", set())

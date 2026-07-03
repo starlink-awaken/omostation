@@ -14,6 +14,25 @@ def get_now_str() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def normalize_brief_content(content: str) -> str:
+    lines = []
+    for line in content.splitlines():
+        if line.startswith("> **Generated**:"):
+            lines.append("> **Generated**: `<runtime>`")
+        else:
+            lines.append(line)
+    return "\n".join(lines).strip()
+
+
+def write_brief_if_changed(content: str) -> bool:
+    if BRIEF_MD.exists():
+        current = BRIEF_MD.read_text(encoding="utf-8")
+        if normalize_brief_content(current) == normalize_brief_content(content):
+            return False
+    BRIEF_MD.write_text(content, encoding="utf-8")  # audit-exempt: non-atomic-write
+    return True
+
+
 def scan_decision_inbox() -> list[dict]:
     """扫描所有的 needs-human 卡片或任务."""
     import yaml  # noqa: PLC0415
@@ -213,6 +232,11 @@ def generate_brief_content() -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate BRIEF.md dashboard")
     parser.add_argument("--write", action="store_true", help="Write content to BRIEF.md")
+    parser.add_argument(
+        "--if-changed",
+        action="store_true",
+        help="Skip writing BRIEF.md when only generated runtime metadata changed",
+    )
     args = parser.parse_args()
     
     # 必须从 bin/ 执行或通过 sys.path 把 bin 加进来以导入 write_owner_audit
@@ -223,8 +247,15 @@ def main() -> int:
     content = generate_brief_content()
     
     if args.write:
-        BRIEF_MD.write_text(content, encoding="utf-8")  # audit-exempt: non-atomic-write
-        print(f"✅ BRIEF.md 物理生成并刷新: {BRIEF_MD}")
+        if args.if_changed:
+            changed = write_brief_if_changed(content)
+            if changed:
+                print(f"✅ BRIEF.md 物理生成并刷新: {BRIEF_MD}")
+            else:
+                print(f"ℹ BRIEF.md 语义未变化, 跳过写入: {BRIEF_MD}")
+        else:
+            BRIEF_MD.write_text(content, encoding="utf-8")  # audit-exempt: non-atomic-write
+            print(f"✅ BRIEF.md 物理生成并刷新: {BRIEF_MD}")
     else:
         print(content)
         

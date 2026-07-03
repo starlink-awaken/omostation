@@ -78,6 +78,13 @@ bun run lint
 - [`omo/CLAUDE.md`](omo/CLAUDE.md)
 - [`c2g/CLAUDE.md`](c2g/CLAUDE.md)
 
+Runtime projections such as workspace health, governance-data, and `BRIEF.md` refresh through:
+
+```bash
+uv run --project "projects/omo" omo state sync --dry-run --json
+uv run --project "projects/omo" omo state sync --json
+```
+
 ## 7. Code Organization Patterns
 
 Most Python projects follow:
