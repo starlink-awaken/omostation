@@ -31,24 +31,27 @@ while read -r _lref _lsha _rref _rsha; do
 "
 done
 
-# ── direct-push-to-main 守卫 (路径 A 第 1 步: advisory, 2026-07-01) ─────────
-# push 目标含 refs/heads/main 且当前分支非 work/* → stderr 警告 (不阻断).
-# 回退原因: 2c blocking 意外生效但 auto-PR 通道未建 → escape hatch 滥用 (半吊子).
-# 第 4 步 (auto-PR 通 + 并发 agent 切 PR 后) 恢复 exit 1 (commit 893f2332 的 blocking 逻辑).
-# { ... } || true 兜底: 守卫内部命令出错不阻断 push.
+# ── direct-push-to-main 守卫 (Phase 2c: blocking) ───────────────────────────
+# push 目标含 refs/heads/main 且当前分支非 work/* 或 pr/* → 物理阻断 (exit 1)
+# 强制所有 Agent 并行开发必须走 per-session worktree + PR 合流。
+# 绕过拦截: 紧急情况下可使用 git push --no-verify 自担风险。
 {
   CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
   if printf '%s\n' "$PUSH_REFS" | grep -qE 'refs/heads/main'; then
-    if [ -z "$CURRENT_BRANCH" ] || ! printf '%s' "$CURRENT_BRANCH" | grep -qE '^work/'; then
+    if [ -z "$CURRENT_BRANCH" ] || ! printf '%s' "$CURRENT_BRANCH" | grep -qE '^work/|^pr/'; then
       cat >&2 <<EOF
-[advisory] ⚠️ direct push to main (分支: ${CURRENT_BRANCH:-detached})
-   路径 A 第 1 步: advisory 回退 (auto-PR EXECUTE 期间). 第 4 步恢复 blocking.
-   建议走 PR: bash bin/gac-worktree.sh claim <session> && ... && submit <session>
-   (advisory 不阻断, 继续本次 push)
+[blocking] ❌ 拒绝直接 Push 至 main 分支 (当前分支: ${CURRENT_BRANCH:-detached})
+   原因: 大仓已全面落地 SGF-v1 隔离工作区策略 (Phase 2c)。
+   建议: 请使用隔离分支或 pr 分支开发，并开 PR 合流。
+   步骤:
+     1. 起 worktree:  bash bin/gac-worktree.sh claim <session>
+     2. 提交分支:     bash bin/gac-worktree.sh submit <session>
+     3. 强制合流:     bash bin/gac-worktree.sh merge <session>
 EOF
+      exit 1
     fi
   fi
-} || true
+}
 
 # ── 治本 D: sync 子模块, 防 gitlink 悬空 ─────────────────────────
 # sync 子模块, 结果显示到 stderr; 失败即阻断 push.
