@@ -52,6 +52,7 @@ Common routes:
 | Root submodule pointer closeout | `submodule-pointer-close` |
 | Compressed or handed-off session | `handoff-resume` |
 | Read-only run/lock/ledger audit | `observer-audit` |
+| Runtime projection refresh | `state-sync` |
 
 The registered agent profiles are in `.omo/_truth/registry/agent-workflows.yaml::agent_profiles`.
 Use them as role boundaries. If a workflow references an unregistered role, `agent-workflow lint`
@@ -71,6 +72,8 @@ uv run --with pyyaml python bin/governance-evolution.py packages --json
 uv run --with pyyaml python bin/governance-evolution.py packages --write-decisions-template /tmp/release-decisions.yaml --json
 uv run --with pyyaml python bin/governance-evolution.py packages --decisions <file> --json
 uv run --with pyyaml python bin/governance-evolution.py packages --decisions <file> --require-ready --json
+uv run --project projects/omo omo state sync --dry-run --json
+uv run --project projects/omo omo state sync --json
 uv run --project projects/cockpit cockpit governance evolution status --json
 uv run --project projects/cockpit cockpit governance evolution packages --json
 uv run --project projects/cockpit cockpit governance evolution packages --write-decisions-template /tmp/release-decisions.yaml --json
@@ -94,6 +97,11 @@ decisions are valid and complete.
 Runtime/data outputs, submodule pointers, OMO task lifecycle artifacts, root governance audit
 reports, and workspace config/CI workflow changes should be reviewed or excluded before packaging
 through the reported workflow.
+
+Runtime projections (`.omo/state/health.yaml`, `.omo/state/system.yaml`, `BRIEF.md`,
+`.omo/_control/governance-data.json`) refresh through the `state-sync` workflow and
+`uv run --project projects/omo omo state sync`. Hooks and WatchPaths should emit `state_stale`
+events instead of running projection generator scripts directly.
 
 Do not copy initiative lists into AGENTS.md, CLAUDE.md, or this skill. The roadmap registry is
 the machine SSOT, and `docs/GOVERNANCE-EVOLUTION-ROADMAP.md` is only the human navigation page.

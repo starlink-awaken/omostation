@@ -1,16 +1,19 @@
 #!/bin/bash
-# post-commit — 异步写时更新 (Write-on-Commit)
+# post-commit — 状态失效事件 (State-Stale Event)
 #
-# 每次本地提交成功后，异步执行治理数据生成，
-# 确保仪表板数据绝对新鲜，彻底消灭滞后。
+# 每次本地提交成功后只 emit state_stale，真实投影刷新由
+# `omo state sync` 单写者负责，避免多 agent commit 触发写风暴。
 
 set -e
 
 ROOT="$(git rev-parse --show-toplevel)"
 
-if [ -f "$ROOT/scripts/generate-governance-data.py" ]; then
-  # 异步非阻塞运行，不卡顿 Git Commit 交付体验
-  nohup python3 "$ROOT/scripts/generate-governance-data.py" >/dev/null 2>&1 &
+if [ -f "$ROOT/bin/state-stale-emit.py" ]; then
+  python3 "$ROOT/bin/state-stale-emit.py" \
+    --source "git-post-commit" \
+    --trigger "post-commit" \
+    --surface ".omo/state" \
+    --quiet >/dev/null 2>&1 || true
 fi
 
 exit 0

@@ -12,19 +12,8 @@ LOGS_DIR = WORKSPACE / "runtime" / "logs"
 
 
 def generate_plist_content() -> str:
-    # 查找 uv 绝对路径
-    uv_path = "/opt/homebrew/bin/uv"
-    if not os.path.exists(uv_path):
-        # 兜底寻找
-        try:
-            res = subprocess.run(["which", "uv"], capture_output=True, text=True, check=False)
-            if res.returncode == 0:
-                uv_path = res.stdout.strip()
-        except Exception:
-            pass
-
     python_executable = sys.executable or "python3"
-    compass_radar_path = WORKSPACE / "bin" / "compass_radar.py"
+    state_stale_emit_path = WORKSPACE / "bin" / "state-stale-emit.py"
     watch_registry = WORKSPACE / ".omo" / "_truth" / "registry"
     watch_ecos = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot"
 
@@ -36,14 +25,16 @@ def generate_plist_content() -> str:
     <string>{PLIST_LABEL}</string>
     <key>ProgramArguments</key>
     <array>
-        <string>{uv_path}</string>
-        <string>run</string>
-        <string>--with</string>
-        <string>pyyaml</string>
-        <string>--directory</string>
-        <string>{WORKSPACE}</string>
         <string>{python_executable}</string>
-        <string>{compass_radar_path}</string>
+        <string>{state_stale_emit_path}</string>
+        <string>--source</string>
+        <string>launchd-watch</string>
+        <string>--trigger</string>
+        <string>watchpaths</string>
+        <string>--surface</string>
+        <string>{watch_registry}</string>
+        <string>--surface</string>
+        <string>{watch_ecos}</string>
     </array>
     <key>WatchPaths</key>
     <array>
@@ -94,10 +85,24 @@ def main() -> int:
     except Exception as e:
         print(f"⚠️ launchctl invocation error: {e}")
 
-    # 触发一次自愈运行
+    # 触发一次 state_stale 事件；真实刷新由 omo state sync 单写者负责。
     try:
-        subprocess.run([sys.executable, str(WORKSPACE / "bin" / "compass_radar.py")], check=False)
-        print("✅ Triggered initial sync run!")
+        subprocess.run(
+            [
+                sys.executable,
+                str(WORKSPACE / "bin" / "state-stale-emit.py"),
+                "--source",
+                "launchd-watch",
+                "--trigger",
+                "install-watch-agent",
+                "--surface",
+                str(WORKSPACE / ".omo" / "_truth" / "registry"),
+                "--surface",
+                str(WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot"),
+            ],
+            check=False,
+        )
+        print("✅ Emitted initial state_stale event!")
     except Exception:
         pass
 

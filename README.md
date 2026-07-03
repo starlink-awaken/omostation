@@ -33,6 +33,7 @@ For the complete architecture, read [`ARCHITECTURE.md`](ARCHITECTURE.md). Projec
 | Human CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI agent | `agora` MCP with `bos://` URIs | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
 | Agent workflow | `bin/agent-workflow.py status` / `cockpit agent status` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Runtime state sync | `uv run --project projects/omo omo state sync` | [`.omo/_truth/registry/mutation-surfaces.yaml`](.omo/_truth/registry/mutation-surfaces.yaml) |
 | Governance evolution | `cockpit governance evolution` | [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml) |
 | Governance | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | MOF model governance | `mof-*` tools via agent workflow | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
@@ -74,6 +75,7 @@ cd projects/gbrain && bun test
 - Governance kernel: [`projects/omo/`](projects/omo/)
 - Governance-as-Code registry: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
 - Executable agent workflows and AGCP status: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
+- Runtime projection sync: `uv run --project projects/omo omo state sync`
 - Governance evolution roadmap: [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml)
 - MOF capability registry: [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml)
 
@@ -104,6 +106,7 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 | 人类 CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI Agent | `agora` MCP + `bos://` URI | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
 | Agent 工作流 | `bin/agent-workflow.py status` / `cockpit agent status` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| 运行态状态同步 | `uv run --project projects/omo omo state sync` | [`.omo/_truth/registry/mutation-surfaces.yaml`](.omo/_truth/registry/mutation-surfaces.yaml) |
 | 治理演进 | `cockpit governance evolution` | [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml) |
 | 治理操作 | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | MOF 模型治理 | agent workflow 调用 `mof-*` 工具 | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
@@ -145,6 +148,7 @@ cd projects/gbrain && bun test
 - 治理内核: [`projects/omo/`](projects/omo/)
 - Governance-as-Code 注册表: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
 - 可执行 Agent 工作流与 AGCP 状态入口: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
+- 运行态投影同步: `uv run --project projects/omo omo state sync`
 - 治理演进路线图: [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml)
 - MOF 能力注册表: [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml)
 

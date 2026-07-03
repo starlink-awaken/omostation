@@ -26,9 +26,11 @@ health_score (复合, ISC-1 治本):
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 
 def _utc_now() -> str:
@@ -267,6 +269,95 @@ def _yaml_str(s: str) -> str:
     return '"' + safe.replace('"', '\\"') + '"'
 
 
+def _normalize_health_yaml(payload: str) -> str:
+    lines = []
+    for line in payload.splitlines():
+        if line.startswith("# generated_at:") or line.startswith("generated_at:"):
+            continue
+        lines.append(line)
+    return "\n".join(lines).strip()
+
+
+def _normalize_system_yaml(payload: str) -> str:
+    import yaml  # noqa: PLC0415
+
+    data = yaml.safe_load(payload) or {}
+    if isinstance(data, dict):
+        data = dict(data)
+        data.pop("health_score_generated_at", None)
+    return yaml.safe_dump(data, allow_unicode=True, sort_keys=True)
+
+
+def _write_text_if_changed(path: Path, payload: str, *, normalize=None) -> bool:
+    if path.exists():
+        current = path.read_text(encoding="utf-8")
+        comparable_current = normalize(current) if normalize else current
+        comparable_payload = normalize(payload) if normalize else payload
+        if comparable_current == comparable_payload:
+            return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f"{path.name}.tmp")
+    tmp.write_text(payload, encoding="utf-8")  # audit-exempt: non-atomic-write
+    os.replace(tmp, path)
+    return True
+
+
+def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any], dict[str, Any], str]:
+    """Build health.yaml content inputs without writing projection files."""
+    ws_root = omo_dir.parent
+    report = run_radar(omo_dir)
+    now_iso = _utc_now()
+    report["generated_at"] = now_iso
+    report["source"] = "c2g.strategy (real audit, no mock)"
+
+    governance_anomaly_score = _health_score_from_anomalies(report["anomaly_count"])
+    report["governance_anomaly_score"] = governance_anomaly_score
+
+    service_online_ratio, runtime_summary = _collect_runtime_health(ws_root)
+    report["service_online_ratio"] = service_online_ratio
+
+    fresh_score, age_desc = _freshness_score(output, now_iso)
+    report["freshness_score"] = fresh_score
+
+    composite, breakdown = _composite_health_score(
+        governance_anomaly_score, service_online_ratio, fresh_score
+    )
+    report["health_score"] = composite
+    report["health_composite_breakdown"] = breakdown
+    return report, runtime_summary, age_desc
+
+
+def build_system_projection_updates(workspace_root: Path, report: dict[str, Any]) -> dict[str, Any]:
+    """Build the whitelisted system.yaml projection fields for health sync."""
+    import yaml  # noqa: PLC0415
+
+    service_online_ratio = report.get("service_online_ratio")
+    updates: dict[str, Any] = {
+        "health_score": int(report["health_score"]),
+        "governance_anomaly_score": int(report["governance_anomaly_score"]),
+        "service_online_ratio": (
+            round(float(service_online_ratio), 4)
+            if service_online_ratio is not None
+            else None
+        ),
+        "health_score_source": "compass_radar_composite",
+        "health_score_generated_at": report["generated_at"],
+    }
+    health_yaml = workspace_root / ".omo" / "state" / "system_health.yaml"
+    if health_yaml.is_file():
+        try:
+            omo_src = workspace_root / "projects" / "omo" / "src"
+            if str(omo_src) not in sys.path:
+                sys.path.insert(0, str(omo_src))
+            from omo.omo_state_schema import summarize_system_health_snapshot  # noqa: PLC0415
+
+            health_data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
+            updates["runtime_health_summary"] = summarize_system_health_snapshot(health_data)
+        except Exception as inner:  # noqa: BLE001
+            print(f"⚠️  兜底同步 runtime_health_summary 失败: {inner}")
+    return updates
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="compass-radar: 调 c2g 真审计 + 写 health SSOT")
     parser.add_argument(
@@ -300,26 +391,10 @@ def main() -> int:
     print(f"🧭 compass-radar → {omo_dir}")
     print(f"   output: {output}")
 
-    report = run_radar(omo_dir)
-    now_iso = _utc_now()
-    report["generated_at"] = now_iso
-    report["source"] = "c2g.strategy (real audit, no mock)"
-
-    # ISC-1 复合分: governance_anomaly + runtime + freshness
-    governance_anomaly_score = _health_score_from_anomalies(report["anomaly_count"])
-    report["governance_anomaly_score"] = governance_anomaly_score
-
-    service_online_ratio, runtime_summary = _collect_runtime_health(ws_root)
-    report["service_online_ratio"] = service_online_ratio
-
-    fresh_score, age_desc = _freshness_score(output, now_iso)
-    report["freshness_score"] = fresh_score
-
-    composite, breakdown = _composite_health_score(
-        governance_anomaly_score, service_online_ratio, fresh_score
-    )
-    report["health_score"] = composite
-    report["health_composite_breakdown"] = breakdown
+    report, runtime_summary, age_desc = build_health_projection(omo_dir, output)
+    governance_anomaly_score = int(report["governance_anomaly_score"])
+    service_online_ratio = report.get("service_online_ratio")
+    fresh_score = int(report["freshness_score"])
 
     print()
     print("📊 治理健康分 (ISC-1 复合):")
@@ -341,8 +416,15 @@ def main() -> int:
         print("🔍 [dry-run] 不写文件, 仅打印")
         return 0
 
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(render_yaml(report), encoding="utf-8")  # audit-exempt: non-atomic-write
+    changed = _write_text_if_changed(
+        output,
+        render_yaml(report),
+        normalize=_normalize_health_yaml,
+    )
+    if changed:
+        print(f"✅ health.yaml 已刷新: {output}")
+    else:
+        print(f"ℹ health.yaml 语义未变化, 跳过写入: {output}")
 
     # 同步刷新 system.yaml 的健康分相关字段 (避免 SSOT 偏差告警)
     sync_system_yaml(
@@ -350,14 +432,14 @@ def main() -> int:
         health_score=report["health_score"],
         governance_anomaly_score=governance_anomaly_score,
         service_online_ratio=service_online_ratio,
-        generated_at=now_iso,
+        generated_at=report["generated_at"],
     )
 
     # 自动触发 BRIEF.md 生成 (WS-4 + WS-5)
     try:
         import subprocess  # noqa: PLC0415
         res = subprocess.run(
-            [sys.executable, str(ws_root / "bin" / "generate-brief.py"), "--write"],
+            [sys.executable, str(ws_root / "bin" / "generate-brief.py"), "--write", "--if-changed"],
             cwd=ws_root, capture_output=True, text=True, check=False
         )
         if res.returncode == 0:
@@ -393,34 +475,26 @@ def sync_system_yaml(
 
     try:
         data = yaml.safe_load(system_yaml.read_text(encoding="utf-8"))
-        data["health_score"] = int(health_score)
-        data["governance_anomaly_score"] = int(governance_anomaly_score)
-        data["service_online_ratio"] = (
-            round(service_online_ratio, 4) if service_online_ratio is not None else None
+        updates = build_system_projection_updates(
+            ws_root,
+            {
+                "health_score": health_score,
+                "governance_anomaly_score": governance_anomaly_score,
+                "service_online_ratio": service_online_ratio,
+                "generated_at": generated_at,
+            },
         )
-        data["health_score_source"] = "compass_radar_composite"
-        data["health_score_generated_at"] = generated_at
-        # ISC-2 治本: 兜底刷新 runtime_health_summary,避免 scheduler 未运行时 system.yaml 陈旧
-        health_yaml = ws_root / ".omo" / "state" / "system_health.yaml"
-        if health_yaml.is_file():
-            try:
-                omo_src = ws_root / "projects" / "omo" / "src"
-                if str(omo_src) not in sys.path:
-                    sys.path.insert(0, str(omo_src))
-                from omo.omo_state_schema import summarize_system_health_snapshot  # noqa: PLC0415
-
-                health_data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
-                data["runtime_health_summary"] = summarize_system_health_snapshot(health_data)
-            except Exception as inner:  # noqa: BLE001
-                print(f"⚠️  兜底同步 runtime_health_summary 失败: {inner}")
-        # 原子写
-        tmp = system_yaml.with_suffix(".yaml.tmp")
-        tmp.write_text(  # audit-exempt: non-atomic-write
-            yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False),
-            encoding="utf-8",
+        data.update(updates)
+        payload = yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False)
+        changed = _write_text_if_changed(
+            system_yaml,
+            payload,
+            normalize=_normalize_system_yaml,
         )
-        tmp.replace(system_yaml)
-        print(f"✅ system.yaml 同步: health_score(composite)={health_score} governance_anomaly={governance_anomaly_score} ratio={service_online_ratio}")
+        if changed:
+            print(f"✅ system.yaml 同步: health_score(composite)={health_score} governance_anomaly={governance_anomaly_score} ratio={service_online_ratio}")
+        else:
+            print("ℹ system.yaml 语义未变化, 跳过写入")
     except Exception as e:  # noqa: BLE001
         print(f"⚠️  system.yaml 同步失败: {e}")
 
