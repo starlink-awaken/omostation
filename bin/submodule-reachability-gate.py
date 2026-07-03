@@ -4,12 +4,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 
 WORKSPACE = Path(__file__).resolve().parents[1]
+
+# 治本 followup E (2026-07-04): pre-push hook 跑时 git 设 GIT_DIR/GIT_WORK_TREE 指向主仓,
+# 泄漏到 subprocess 的 `git -C <submodule>` → 读主仓而非子模块 → fetch/branch --contains 错乱 → 全误报 unreachable
+# (实测: 干净环境 17 gitlinks PASS / 模拟 hook 17 FAIL, 同 followup C sync GIT_DIR 病根).
+# pop 后 subprocess 继承干净环境, git -C <submodule> 读子模块自己的 .git.
+for _env in ("GIT_DIR", "GIT_WORK_TREE", "GIT_QUARANTINE_PATH"):
+    os.environ.pop(_env, None)
 
 
 def run(cmd: list[str], *, cwd: Path = WORKSPACE, check: bool = False) -> subprocess.CompletedProcess[str]:
