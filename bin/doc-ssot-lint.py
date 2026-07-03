@@ -230,7 +230,9 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
     as_json=True 时输出机器可读 JSON (供 CI 仪表盘/gac-healthcheck 消费).
     """
     registry = load_registry()
-    files = [Path(single_file)] if single_file else find_md_files()
+    # Resolve relative --file paths to absolute so check_semantic_contracts'
+    # Path.relative_to(WORKSPACE_ROOT) does not raise on "doc-ssot-lint --file CLAUDE.md".
+    files = [Path(single_file).resolve()] if single_file else find_md_files()
 
     all_findings = []
     all_fixes = [] if fix else None
@@ -273,7 +275,7 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
                 if old_line in content:
                     content = content.replace(old_line, new_line, 1)
                     applied += 1
-            filepath.write_text(content, encoding="utf-8")
+            filepath.write_text(content, encoding="utf-8")  # audit-exempt: non-atomic-write (--fix 自动修复 markdown, 非 .omo state plane)
         if not as_json:
             print(f"已自动修复 {applied} 处")
 
