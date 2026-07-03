@@ -56,6 +56,7 @@ if _AGORA_VENV_SITE.exists():
 
 OUTPUT_DIR = WORKSPACE / ".omo" / "_delivery" / "evidence-smoke"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
+EVENTS_LOG = WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"  # 轻事件流 (state-stale-emit 写); 重跑批断时作回路活信号 (多源 OR)
 
 # evidence_health_score 权重 (综合三维度, 满分 100)
 W_BOS = 60  # BOS resolve 率 (最重 — 这是核心鸿沟)
@@ -340,37 +341,54 @@ def check_working_tree() -> dict:
 
 
 def check_feedback_loop() -> dict:
-    """governance-history.jsonl 最后时间戳 — 反馈回路存活信号."""
-    if not GOV_LOG.exists():
-        return {"alive": False, "reason": "no governance log"}
-    try:
-        lines = [
-            line
-            for line in GOV_LOG.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
-        if not lines:
-            return {"alive": False, "reason": "empty log"}
-        last = json.loads(lines[-1])
-        ts = last.get("timestamp") or last.get("ts") or last.get("date") or ""
-        staleness_hours = None
-        alive = None
-        if ts:
-            try:
-                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                delta = datetime.now(timezone.utc) - dt
-                staleness_hours = round(delta.total_seconds() / 3600, 1)
-                alive = staleness_hours < 24  # 24h 内有记录 = 活着
-            except (ValueError, TypeError):
-                pass
-        return {
-            "last_ts": ts,
-            "staleness_hours": staleness_hours,
-            "alive": alive,
-            "entry_count": len(lines),
-        }
-    except Exception as e:
-        return {"alive": False, "error": str(e)[:120]}
+    """反馈回路存活 — 多源 OR (governance-history 重跑批 OR omo-events 轻事件).
+
+    任一源 24h 内有记录 = 活. 防 single-source 死源假死 (如重跑批 daemon 断
+    但事件流活 = 回路仍活). 多源 OR 是 evidence-driven 鲁棒改进."""
+    sources = {
+        "governance_history": GOV_LOG,
+        "omo_events": EVENTS_LOG,
+    }
+    per_source: dict = {}
+    any_alive = False
+    best_staleness = None
+    best_ts = ""
+    for name, path in sources.items():
+        entry: dict = {"exists": path.exists()}
+        if not path.exists():
+            per_source[name] = entry
+            continue
+        try:
+            lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+            entry["entry_count"] = len(lines)
+            if not lines:
+                per_source[name] = entry
+                continue
+            last = json.loads(lines[-1])
+            ts = last.get("timestamp") or last.get("ts") or last.get("date") or ""
+            entry["last_ts"] = ts
+            if ts:
+                try:
+                    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    hours = round((datetime.now(timezone.utc) - dt).total_seconds() / 3600, 1)
+                    entry["staleness_hours"] = hours
+                    entry["alive"] = hours < 24
+                    if hours < 24:
+                        any_alive = True
+                    if best_staleness is None or hours < best_staleness:
+                        best_staleness = hours
+                        best_ts = ts
+                except (ValueError, TypeError):
+                    pass
+        except Exception as e:
+            entry["error"] = str(e)[:120]
+        per_source[name] = entry
+    return {
+        "alive": any_alive,
+        "last_ts": best_ts,
+        "staleness_hours": best_staleness,
+        "sources": per_source,
+    }
 
 
 # ── evidence_health_score 综合 ──────────────────────────────────
@@ -591,7 +609,7 @@ def print_summary(report: dict, quiet: bool = False) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     parser.add_argument(
         "--spawn",
         type=int,
