@@ -7,8 +7,8 @@
 
 - **5+4+1+1 架构**: L0 协议 → L1 运行时 → L2 引擎 → L3 入口 → L4 自我, I0 织层, M0 横切
 - **17 个项目**: 见 `docs/project-registry.yaml`
-- **139 条 GaC 规则**: 见 `.omo/_truth/registry/governance-checks.yaml`
-- **89 个 ADR**: 见 `.omo/_knowledge/decisions/INDEX.md`
+- **147 条 GaC 规则**: 见 `.omo/_truth/registry/governance-checks.yaml`
+- **86 个 ADR**: 见 `.omo/_knowledge/decisions/INDEX.md`
 
 ## SSOT 导航
 
