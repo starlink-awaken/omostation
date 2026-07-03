@@ -62,7 +62,9 @@ def check_all():
     # L1: Runtime services
     print("\nL1 ── Runtime Matrix")
     services = []
-    for name, port in [("Agora Hub", 7422), ("Cron Service", 7450), ("Cockpit API", 8090)]:
+    # 2026-07-03 修(r2, 首次修复曾被回滚): Agora 主入口 7422→7431 —
+    # port-registry.yaml 标注 7422 为 env-only (默认不监听), SSE Main 7431 为常驻端口
+    for name, port in [("Agora Hub", 7431), ("Cron Service", 7450), ("Cockpit API", 8090)]:
         ok = _probe("127.0.0.1", port)
         services.append(_fmt(ok, f"{name} :{port}"))
     # runtime-mcp is stdio-based, no port probe needed
