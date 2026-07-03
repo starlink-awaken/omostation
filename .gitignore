@@ -144,6 +144,9 @@ bets.json
 tasks.json
 skills/
 !.agents/skills/
+.mimocode/
+!.mimocode/commands/
+!.mimocode/skills/
 
 # ---------------------------------------------------------------------------
 # 10. 系统文件
