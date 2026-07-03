@@ -53,6 +53,28 @@ def test_build_and_write_governance_data(tmp_path: Path) -> None:
     assert written["categories"] == {"governance": 2}
 
 
+def test_write_governance_data_skips_timestamp_only_changes(tmp_path: Path) -> None:
+    omo_dir = tmp_path / ".omo"
+    control_dir = omo_dir / "_control"
+    control_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "version": "1.0",
+        "generated_at": "2026-07-03T00:00:00Z",
+        "governance": {"health_score": 91.0},
+        "debt": {"total_count": 0},
+        "categories": {},
+        "trend": [],
+        "projects": {},
+    }
+
+    output_path = write_governance_data(tmp_path, payload)
+    first = output_path.read_text(encoding="utf-8")
+    payload["generated_at"] = "2026-07-03T00:01:00Z"
+    output_path = write_governance_data(tmp_path, payload)
+
+    assert output_path.read_text(encoding="utf-8") == first
+
+
 def test_build_governance_data_accepts_multi_document_yaml(tmp_path: Path) -> None:
     omo_dir = tmp_path / ".omo"
     state_dir = omo_dir / "state"

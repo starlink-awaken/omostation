@@ -10,6 +10,7 @@ from pathlib import Path
 import yaml
 
 from .omo_ingress import write_system_projection_fields
+from .omo_ingress_state import sync_state_projection
 from .omo_io import write_text_atomic
 from .omo_paths import find_omo_dir
 from .omo_shared import load_yaml, load_yaml_required
@@ -378,6 +379,28 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
     return 0
 
 
+def cmd_state_sync(omo_dir: Path, dry_run: bool, fmt: str) -> int:
+    """Sync high-churn runtime projections through the state broker."""
+    try:
+        report = sync_state_projection(omo_dir.parent, dry_run=dry_run)
+    except Exception as exc:  # noqa: BLE001
+        print(f"⚠️  state projection sync failed: {exc}")
+        return 1
+
+    if fmt == "json":
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0
+
+    mode = "dry-run" if dry_run else "apply"
+    print(f"state-sync ({mode}): changed={report['changed_count']}")
+    for item in report["writes"]:
+        marker = "changed" if item["changed"] else "same"
+        print(f"  - {marker}: {item['path']}")
+    if report.get("artifact_ref"):
+        print(f"  artifact: {report['artifact_ref']}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="omo state", description="OMO system state viewer"
@@ -399,6 +422,14 @@ def main(argv: list[str] | None = None) -> int:
     stp.add_argument(
         "--dry-run", action="store_true", help="Preview changes without writing"
     )
+    syncp = sub.add_parser(
+        "sync",
+        help="Sync runtime projections through the OMO state broker",
+    )
+    syncp.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without writing"
+    )
+    syncp.add_argument("--json", action="store_true", help="Print JSON report")
     args = parser.parse_args(argv)
     omo_dir = _find_omo_dir()
     if args.command == "show":
@@ -409,6 +440,12 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_state_refresh(omo_dir, dry_run=args.dry_run)
     elif args.command == "sync-tasks":
         return cmd_state_sync_tasks(omo_dir, dry_run=args.dry_run)
+    elif args.command == "sync":
+        return cmd_state_sync(
+            omo_dir,
+            dry_run=args.dry_run,
+            fmt="json" if args.json else "text",
+        )
     parser.print_help()
     return 1
 

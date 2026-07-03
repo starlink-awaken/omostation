@@ -298,6 +298,16 @@ def _mutation_surface_registry_snapshot() -> list[dict[str, object]]:
             "category": "governance_ingress",
         },
         {
+            "name": "omo-state-sync-projection",
+            "entrypoint": "omo state sync",
+            "runtime_ref": "projects/omo/src/omo/omo_state.py:cmd_state_sync",
+            "mutation_target": ".omo/state/health.yaml + .omo/state/system.yaml + BRIEF.md + .omo/_control/governance-data.json",
+            "broker_ref": "projects/omo/src/omo/omo_ingress_state.py:sync_state_projection",
+            "delivery_artifact_root": "runtime/omo/_delivery/ingress/state/",
+            "mode": "brokered",
+            "category": "governance_ingress",
+        },
+        {
             "name": "omo-audit-sync-system-projection",
             "entrypoint": "python -m omo.omo_audit_sync --apply",
             "runtime_ref": "projects/omo/src/omo/omo_audit_sync.py:apply_diff",

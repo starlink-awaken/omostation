@@ -606,6 +606,16 @@ def _seed_workspace(root: Path) -> None:
                     "category": "governance_ingress",
                 },
                 {
+                    "name": "omo-state-sync-projection",
+                    "entrypoint": "omo state sync",
+                    "runtime_ref": "projects/omo/src/omo/omo_state.py:cmd_state_sync",
+                    "mutation_target": ".omo/state/health.yaml + .omo/state/system.yaml + BRIEF.md + .omo/_control/governance-data.json",
+                    "broker_ref": "projects/omo/src/omo/omo_ingress_state.py:sync_state_projection",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/state/",
+                    "mode": "brokered",
+                    "category": "governance_ingress",
+                },
+                {
                     "name": "omo-audit-sync-system-projection",
                     "entrypoint": "python -m omo.omo_audit_sync --apply",
                     "runtime_ref": "projects/omo/src/omo/omo_audit_sync.py:apply_diff",
@@ -1190,6 +1200,7 @@ def test_build_governance_surfaces_report_ok(tmp_path: Path) -> None:
         "omo-self-healing-debt",
         "omo-standard-add",
         "omo-state-refresh",
+        "omo-state-sync-projection",
         "omo-state-sync-tasks",
         "omo-task-center-discovery-registry",
         "omo-task-center-skill-manifest",
@@ -1204,7 +1215,7 @@ def test_build_governance_surfaces_report_ok(tmp_path: Path) -> None:
     assert report["mutation_surface_registry"]["runtime_category_counts"] == {
         "bridge_import": 4,
         "c2g_adapter": 2,
-        "governance_ingress": 10,
+        "governance_ingress": 11,
         "human_cli": 10,
         "runtime_cache": 2,
     }

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .omo_io import write_text_atomic
+from .omo_io import write_text_atomic, write_text_if_changed
 from .omo_shared import load_yaml
 
 
@@ -67,12 +67,32 @@ def build_governance_data(workspace_root: Path) -> dict[str, Any]:
     return governance_data
 
 
+def serialize_governance_data(governance_data: dict[str, Any]) -> str:
+    return json.dumps(governance_data, indent=2, ensure_ascii=False) + "\n"
+
+
+def normalize_governance_data_json(payload: str) -> str:
+    data = json.loads(payload)
+    if isinstance(data, dict):
+        data = dict(data)
+        data.pop("generated_at", None)
+    return json.dumps(data, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+
+
 def write_governance_data(
-    workspace_root: Path, governance_data: dict[str, Any]
+    workspace_root: Path,
+    governance_data: dict[str, Any],
+    *,
+    if_changed: bool = True,
 ) -> Path:
     output_path = workspace_root / ".omo" / "_control" / "governance-data.json"
-    write_text_atomic(
-        output_path,
-        json.dumps(governance_data, indent=2, ensure_ascii=False) + "\n",
-    )
+    payload = serialize_governance_data(governance_data)
+    if if_changed:
+        write_text_if_changed(
+            output_path,
+            payload,
+            normalize=normalize_governance_data_json,
+        )
+    else:
+        write_text_atomic(output_path, payload)
     return output_path

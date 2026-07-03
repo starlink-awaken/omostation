@@ -21,6 +21,8 @@
     ```bash
     uv sync
 uv run pytest "tests/" -q
+uv run omo state sync --dry-run --json
+uv run omo state sync --json
 uv run python -m omo.cli governance audit
 uv run python -m omo.cli lint direct-omo-io
     ```

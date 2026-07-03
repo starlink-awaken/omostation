@@ -19,7 +19,7 @@ import json
 import os
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -73,6 +73,35 @@ def write_text_atomic(path: Path, payload: str) -> None:
     _replace_atomic(path, payload)
 
 
+def text_fingerprint(
+    payload: str,
+    *,
+    normalize: Callable[[str], str] | None = None,
+) -> str:
+    """Return a stable SHA-256 fingerprint for text payload comparison."""
+    import hashlib
+
+    comparable = normalize(payload) if normalize else payload
+    return hashlib.sha256(comparable.encode("utf-8")).hexdigest()
+
+
+def write_text_if_changed(
+    path: Path,
+    payload: str,
+    *,
+    normalize: Callable[[str], str] | None = None,
+) -> bool:
+    """Atomically write text only when the comparable payload changed."""
+    if path.exists():
+        current = path.read_text(encoding="utf-8")
+        if text_fingerprint(current, normalize=normalize) == text_fingerprint(
+            payload, normalize=normalize
+        ):
+            return False
+    write_text_atomic(path, payload)
+    return True
+
+
 def ensure_parent_dir(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
@@ -124,6 +153,8 @@ __all__ = (
     "fcntl_lock",
     "ensure_parent_dir",
     "read_jsonl",
+    "text_fingerprint",
     "write_text_atomic",
+    "write_text_if_changed",
     "write_yaml_atomic",
 )

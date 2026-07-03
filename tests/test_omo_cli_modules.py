@@ -30,7 +30,12 @@ from omo.omo_goal import (
     cmd_goal_progress,
     cmd_goal_status,
 )
-from omo.omo_state import cmd_state_health, cmd_state_show, cmd_state_sync_tasks
+from omo.omo_state import (
+    cmd_state_health,
+    cmd_state_show,
+    cmd_state_sync,
+    cmd_state_sync_tasks,
+)
 from omo.omo_debt_cli import cmd_debt_close, cmd_debt_desc, cmd_debt_list
 from omo.omo_knowledge import cmd_knowledge_add, cmd_knowledge_list
 from omo.omo_delivery import cmd_delivery_archive, cmd_delivery_list
@@ -413,6 +418,32 @@ class TestOmoState:
         assert len(planned) == 1
         assert "TASK-ALIVE" in planned[0]
         assert "ZOMBIE" not in str(planned)
+
+    def test_cmd_state_sync_delegates_to_state_broker_json(
+        self, capsys, tmp_path: Path, monkeypatch
+    ) -> None:
+        """state sync 统一代理到 omo_ingress_state broker."""
+        omo_dir = tmp_path / ".omo"
+        omo_dir.mkdir()
+
+        def fake_sync(workspace_root: Path, *, dry_run: bool):
+            assert workspace_root == tmp_path
+            assert dry_run is True
+            return {
+                "ok": True,
+                "dry_run": True,
+                "changed_count": 1,
+                "writes": [{"path": ".omo/state/health.yaml", "changed": True}],
+            }
+
+        monkeypatch.setattr("omo.omo_state.sync_state_projection", fake_sync)
+
+        ret = cmd_state_sync(omo_dir, dry_run=True, fmt="json")
+
+        assert ret == 0
+        report = json.loads(capsys.readouterr().out)
+        assert report["ok"] is True
+        assert report["changed_count"] == 1
 
 
 # -- omo_debt --
