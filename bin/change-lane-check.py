@@ -38,7 +38,28 @@ def changed_paths(staged: bool, files: list[str] | None = None) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def load_governance_lanes() -> dict[str, str]:
+    """读取 sgf-policy.yaml，构建文件路径 -> lane 的映射白名单"""
+    yaml_path = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
+    mapping = {}
+    if yaml_path.is_file():
+        try:
+            import yaml
+            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+            for gate in data.get("gates", []):
+                cmd_parts = gate.get("command", [])
+                if cmd_parts:
+                    script_path = cmd_parts[0]
+                    mapping[script_path] = gate.get("lane", "governance_code")
+        except Exception:
+            pass
+    return mapping
+
+
 def classify(path: str, submodules: set[str]) -> str:
+    gov_mappings = load_governance_lanes()
+    if path in gov_mappings:
+        return gov_mappings[path]
     if path in submodules:
         return "submodule_pointer"
     if path in {
