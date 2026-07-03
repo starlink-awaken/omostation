@@ -40,6 +40,7 @@ EXECUTOR_ENUM = {
     "evidence_smoke",
     "radar_cron",
     "gc_cron",
+    "gac_local_gate",
 }
 
 
