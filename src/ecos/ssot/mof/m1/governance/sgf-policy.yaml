@@ -1,0 +1,86 @@
+# SGF-v1: Starlit Self-Governance Framework Unified Policy (M1 Model Instance)
+# SSOT Source for all GAC checks configuration, replacing hardcoded checks in gac-local-gate.py.
+
+version: "1.0.0"
+
+settings:
+  attention:
+    folding_threshold: 90
+    drift_penetration: true
+  output:
+    terminal_mode: "slim"  # options: 'verbose', 'slim'
+
+# 全量注册大仓 31 个 Gate 门禁项 (规则数据化)
+gates:
+  - id: "gac-validate"
+    command: ["bin/gac-validate.py", "--gate"]
+  - id: "gac-drift"
+    command: ["bin/gac-drift.py"]
+  - id: "write-owner-audit"
+    command: ["bin/write-owner-audit.py", "--staged"]
+  - id: "install-watch-agent"
+    command: ["bin/install-watch-agent.py"]
+    ci_skip: true
+  - id: "test-mcp-kos"
+    command: ["bin/test-mcp-kos.py"]
+  - id: "check-cockpit-ui-dist"
+    command: ["bin/check-cockpit-ui-dist.py"]
+  - id: "agent-workflow-lint"
+    command: ["bin/agent-workflow.py", "lint"]
+  - id: "agent-workflow-integrations"
+    command: ["bin/agent-workflow.py", "integrations"]
+  - id: "agent-workflow-adapters"
+    command: ["bin/agent-workflow.py", "adapters"]
+  - id: "agent-workflow-bootstrap"
+    command: ["bin/agent-workflow.py", "bootstrap", "--skip-health"]
+  - id: "agent-workflow-verify-plan"
+    command: ["bin/agent-workflow.py", "verify", "--file", "bin/agent-workflow.py"]
+    agent_workflow_only: true  # 仅在 staged touch agent-workflow 时跑
+  - id: "agent-workflow-compliance"
+    command: ["bin/agent-workflow.py", "compliance"]
+    agent_workflow_only: true
+  - id: "agent-workflow-doctor"
+    command: ["bin/agent-workflow.py", "doctor"]
+    ci_skip: true
+    agent_workflow_only: true
+  - id: "agent-workflow-observe"
+    command: ["bin/agent-workflow.py", "observe"]
+  - id: "governance-evolution"
+    command: ["bin/governance-evolution.py", "validate", "--json"]
+  - id: "mof-schema-validate"
+    command: ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]
+  - id: "mof-state-bridge"
+    command: ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]
+  - id: "mof-drift"
+    command: ["bin/mof-drift"]
+  - id: "doc-ssot-lint"
+    command: ["bin/doc-ssot-lint.py"]
+  - id: "project-layer-index"
+    command: ["bin/project-layer-index.py", "--check"]
+    ci_only: true  # 默认 strict/CI 跑，本地 skip 防止冲突
+  - id: "doc-ssot-snapshots"
+    command: ["scripts/check-doc-ssot-snapshots.py"]
+  - id: "doc-link-check"
+    command: ["bin/doc-link-check.py"]
+  - id: "change-lane-check"
+    command: ["bin/change-lane-check.py", "--staged"]
+  - id: "dependency-baseline-drift"
+    command: ["bin/gen-dependency-baseline.py", "--check"]
+    ci_only: true
+  - id: "matrix-consistency"
+    command: ["bin/matrix-consistency-lint.py", "--skip-launchd"]
+    ci_skip: true  # CI 无 launchd 依赖，在 CI_SKIP 里注册
+  - id: "governance-convergence"
+    command: ["bin/governance-convergence-lint.py"]
+  - id: "governance-semantic-gate"
+    command: ["bin/governance-semantic-gate.py", "--json"]
+  - id: "state-freshness-check"
+    command: ["bin/state-freshness-check.py", "--json"]
+  - id: "check-dashboard-registry-consistency"
+    command: ["bin/check-dashboard-registry-consistency.py"]
+  - id: "check-toolbox-ssot"
+    command: ["bin/check-toolbox-ssot.py"]
+  - id: "check-domain-m1-alignment"
+    command: ["bin/check-domain-m1-alignment.py"]
+  - id: "test-gac-engine"
+    command: ["bin/test-gac-engine.py"]

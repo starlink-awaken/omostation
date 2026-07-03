@@ -100,7 +100,9 @@ ECOS_SRC = Path(__file__).resolve().parent
 import importlib.util as _ilu  # noqa: E402
 
 _DM_PATH = ECOS_SRC / "services" / "governance" / "domain_manager.py"
-_spec = _ilu.spec_from_file_location("ecos.services.governance.domain_manager", _DM_PATH)
+_spec = _ilu.spec_from_file_location(
+    "ecos.services.governance.domain_manager", _DM_PATH
+)
 dm = _ilu.module_from_spec(_spec)
 _spec.loader.exec_module(dm)
 
