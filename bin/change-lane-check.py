@@ -91,6 +91,7 @@ def classify(path: str, submodules: set[str]) -> str:
             "bin/submodule-reachability-gate.py",
             "bin/submodule-pointer-transaction.sh",
             "bin/change-lane-check.py",
+            "bin/check-cockpit-ui-dist.py",
             "bin/doc-link-check.py",
         }
         or path.startswith(".githooks/")
