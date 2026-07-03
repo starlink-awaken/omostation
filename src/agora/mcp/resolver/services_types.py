@@ -4,6 +4,7 @@
 services.py re-export 保下游兼容 (from agora.mcp.resolver.services import BosService 仍工作).
 完整 ≤800 需后续按域拆服务定义 (~500 行, sprint 级, omo-srp-refactor skill 模式).
 """
+
 from __future__ import annotations
 
 import re

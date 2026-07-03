@@ -13,6 +13,14 @@ services:
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "search"]
     description: "KOS 知识图谱检索入口 (P33-W1 战役 2 起步)"
 
+  - uri: "bos://memory/kos/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "kos-mcp"
+    command: ["python3", "bin/mcp-server-kos.py"]
+    description: "KOS 统一只读 MCP 服务器入口 (SGF-v1 硬件外挂)"
+
   - uri: "bos://memory/kos/ingest"
     domain: memory
     action: "ingest"
