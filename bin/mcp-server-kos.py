@@ -58,9 +58,9 @@ def handle_search_kos(arguments):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # 优先在 documents 表里模糊查询 title 和 path
+        # 优先在 documents 表里模糊查询 title 和 canonical_path
         cursor.execute(
-            "SELECT id, title, path, type FROM documents WHERE title LIKE ? OR path LIKE ? LIMIT ?",
+            "SELECT doc_id, title, canonical_path, kind FROM documents WHERE title LIKE ? OR canonical_path LIKE ? LIMIT ?",
             (f"%{query}%", f"%{query}%", limit)
         )
         rows = cursor.fetchall()
@@ -68,10 +68,10 @@ def handle_search_kos(arguments):
         results = []
         for r in rows:
             results.append({
-                "id": r["id"],
+                "id": r["doc_id"],
                 "title": r["title"],
-                "path": r["path"],
-                "type": r["type"]
+                "path": r["canonical_path"],
+                "type": r["kind"]
             })
             
         conn.close()
@@ -95,9 +95,9 @@ def handle_get_document(arguments):
         conn = get_db_connection()
         cursor = conn.cursor()
         if doc_id:
-            cursor.execute("SELECT id, title, path, type, content FROM documents WHERE id = ?", (doc_id,))
+            cursor.execute("SELECT doc_id, title, canonical_path, kind, body FROM documents WHERE doc_id = ?", (doc_id,))
         else:
-            cursor.execute("SELECT id, title, path, type, content FROM documents WHERE path LIKE ?", (f"%{doc_path}%",))
+            cursor.execute("SELECT doc_id, title, canonical_path, kind, body FROM documents WHERE canonical_path LIKE ?", (f"%{doc_path}%",))
             
         row = cursor.fetchone()
         conn.close()
@@ -106,11 +106,11 @@ def handle_get_document(arguments):
             return {"content": [{"type": "text", "text": "Document not found."}], "isError": True}
             
         doc_data = {
-            "id": row["id"],
+            "id": row["doc_id"],
             "title": row["title"],
-            "path": row["path"],
-            "type": row["type"],
-            "content_preview": row["content"][:2000] if row["content"] else ""
+            "path": row["canonical_path"],
+            "type": row["kind"],
+            "content_preview": row["body"][:2000] if row["body"] else ""
         }
         return {
             "content": [{
