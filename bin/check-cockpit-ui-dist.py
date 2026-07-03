@@ -46,8 +46,8 @@ def try_build() -> bool:
 
 def main() -> int:
     if not COCKPIT_UI_DIR.is_dir():
-        print(f"❌ Error: cockpit-ui project directory not found at: {COCKPIT_UI_DIR}")
-        return 1
+        print(f"⏭️  Skip: cockpit-ui directory not found at {COCKPIT_UI_DIR} (not a submodule, not in CI)")
+        return 0
 
     if DIST_INDEX.is_file():
         print("✅ cockpit-ui static assets are aligned and present in dist/.")

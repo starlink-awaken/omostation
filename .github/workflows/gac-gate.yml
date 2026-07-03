@@ -39,5 +39,9 @@ jobs:
           python-version: "3.13"
       - name: install pyyaml
         run: pip install pyyaml
+      - name: generate digests
+        run: |
+          python3 bin/project-layer-index.py --write
+          python3 bin/gac-export-agents.py
       - name: gac-local-gate (strict)
         run: python3 bin/gac-local-gate.py --strict
