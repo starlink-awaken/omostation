@@ -685,7 +685,7 @@ workflows:
     agents:
       roles: [governance-agent, c2g-agent]
       observer_policy: recommended
-    allowed_lanes: [governance_state]
+    allowed_lanes: [governance_state, docs, runtime_snapshot]
     lock_scopes: [.omo, spaces, omo-broker]
     surfaces:
       read:
@@ -1019,7 +1019,7 @@ workflows:
     agents:
       roles: [state-sync-agent, governance-agent]
       observer_policy: recommended_for_unattended_runs
-    allowed_lanes: [governance_state]
+    allowed_lanes: [governance_state, docs, runtime_snapshot]
     lock_scopes: [surface:omo-state-sync-projection, .omo/state]
     surfaces:
       read:
