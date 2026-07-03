@@ -101,7 +101,7 @@ def classify(path: str, submodules: set[str]) -> str:
     if path.startswith(".omo/"):
         return "governance_state"
     if path.endswith(".md") and (
-        path in {"AGENTS.md", "CLAUDE.md", "README.md", "ARCHITECTURE.md", "LAYER-INDEX.md", "BRIEF.md"}
+        path in {"AGENTS.md", "CLAUDE.md", "README.md", "ARCHITECTURE.md", "LAYER-INDEX.md", "SYSTEM-INDEX.md", "BRIEF.md"}
         or path == "bin/README.md"
         or path.startswith("projects/")
         or path.startswith("spaces/")
