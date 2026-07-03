@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """0-Dependency Python stdin/stdout MCP Server for KOS (Knowledge Operating System) SQLite index."""
-import os
 import sys
 import json
 import sqlite3
@@ -16,6 +15,36 @@ def get_db_connection():
     # 以只读模式且支持 URI 打开数据库以确保线程和进程安全
     conn = sqlite3.connect(f"file:{SQLITE_DB}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
+    # ADR-0127 Finding 3.1 (P1 安全): SQLite set_authorizer 拦截写/危险操作
+    # 仅 SELECT / PRAGMA (read-only 子集) / 函数调用, 拒 INSERT/UPDATE/DELETE/
+    # ATTACH/load_extension/写 PRAGMA 等. 配合关键词黑名单做双层防御.
+    def _authorizer(action, arg1, arg2, dbname, trigger):
+        # SQLite authorizer callback 协议要求 5 个参数 (action code, 2 args, dbname, trigger).
+        # 本实现只用 action + arg1 (PRAGMA / function 名检查). arg2 / dbname / trigger 不读
+        # 属正常回调接口预留.
+        # SQLite authorizer action codes: SQLITE_INSERT=18, UPDATE=23, DELETE=9, ATTACH=24, DETACH=25,
+        #                PRAGMA=19 (19=read, 20=write -- arg1 是 pragma name)
+        if action in (18, 23, 9, 24, 25):  # INSERT/UPDATE/DELETE/ATTACH/DETACH
+            return sqlite3.SQLITE_DENY
+        if action == 19:  # PRAGMA
+            # 仅允许 read-only PRAGMA (table_info / index_list / index_info / database_list)
+            pragma = (arg1 or "").lower() if arg1 else ""
+            allowed_pragmas = {"table_info", "index_list", "index_info", "database_list"}
+            if pragma not in allowed_pragmas:
+                return sqlite3.SQLITE_DENY
+            return sqlite3.SQLITE_OK
+        # SQLITE_FUNCTION 31: 拒 load_extension / readfile / writefile 等敏感函数,
+        # 但允许多数常用聚合/字符函数 (COUNT / SUM / GROUP_CONCAT / SUBSTR / LIKE 等).
+        if action == 31:  # SQLITE_FUNCTION
+            func = (arg1 or "").lower() if arg1 else ""
+            forbidden_funcs = {
+                "load_extension", "readfile", "writefile", "edit", "uuid",
+                "fts5", "json_each", "json_tree",  # 写 OS / 触发器相关
+            }
+            if any(f in func for f in forbidden_funcs):
+                return sqlite3.SQLITE_DENY
+        return sqlite3.SQLITE_OK  # SELECT 及其余读操作允许
+    conn.set_authorizer(_authorizer)
     return conn
 
 
