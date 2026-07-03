@@ -987,3 +987,60 @@ governance_closure_constraints:
       - ".omo/_knowledge/gac/NORTH-STAR.md (不变量 5)"
       - ".omo/_knowledge/gac/stage3-4-design.md (派生链 M1→M2→M3)"
     violation: "GaC 规则缺 M1 实例 (机制7 未完整); 或 registry↔M1 drift (字段不一致)"
+
+  - id: CR-OMLX-MESH-GATE-01
+    applies_to: [L0, L1, I0]
+    description: |
+      eCOS v6 omlx 算力网格约束: 所有跨节点 LLM completions 必须通过
+      gac-mesh-router.py (:7435) 路由。直连从机节点需在 port-registry.yaml
+      明确注册，不允许硬编码 IP 绑定。MBP 统一网关 (:4000) 是最终兜底。
+    dimension: X1
+    rule: "llm_request.route == 'gac-mesh-router:7435' or port_registered(request.target)"
+    type: required
+    severity: warn
+    enforcement: log-and-notify (advisory phase)
+    introduced: '2026-07-03'
+    value_tier: 2
+    references:
+      - protocols/port-registry.yaml
+      - bin/gac-mesh-router.py
+      - X1-OMLX-COMPUTE-MESH-ROUTING-20260703
+    violation: "LLM 请求绕过网格路由器直连未注册节点"
+
+  - id: CR-KOS-CONSENSUS-RAG-01
+    applies_to: [L0, meta]
+    description: |
+      eCOS v6 Epigenetic Memory 约束: CLAUDE.md 的 Consensus 注入必须
+      通过 gac-consensus-inject.py 的 RAG 机制（TF-IDF 或 embed-bge），
+      不允许全量追加全部 Consensus 实体。每次注入 Token 节省率应 ≥ 50%。
+    dimension: X4
+    rule: "consensus_inject.mode in ['RAG Top-2 按需激活'] and token_savings_pct >= 50"
+    type: required
+    severity: warn
+    enforcement: advisory
+    introduced: '2026-07-03'
+    value_tier: 2
+    references:
+      - bin/gac-consensus-inject.py
+      - kos/kos-index.sqlite (consensus_vectors)
+      - X1-RAG-EPIGENETIC-MEMORY-20260703
+    violation: "Consensus 全量注入 (未使用 RAG), Token 浪费超阈值"
+
+  - id: CR-C2G-INGRESS-PRECHECK-01
+    applies_to: [L0, L1]
+    description: |
+      eCOS v6 自愈式 Ingress 约束: 所有引入新端口或新服务名的 Pitch 在
+      落盘 (c2g 任务创建) 前必须通过 gac-ingress-check.py 预审。
+      存在 CRITICAL 阻断问题时，禁止落盘。
+    dimension: X1
+    rule: "pitch.new_port or pitch.new_service implies gac_ingress_check.pass == true"
+    type: required
+    severity: error
+    enforcement: advisory
+    introduced: '2026-07-03'
+    value_tier: 1
+    references:
+      - bin/gac-ingress-check.py
+      - protocols/port-registry.yaml
+      - X1-C2G-INGRESS-SELF-CORRECTION-20260703
+    violation: "新端口/服务 Pitch 绕过 C2G Ingress 预审直接落盘"
