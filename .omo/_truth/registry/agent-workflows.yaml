@@ -155,7 +155,7 @@ agent_profiles:
   state-sync-agent:
     purpose: Refresh high-churn runtime projections through the OMO state-sync broker.
     allowed_workflows: [state-sync]
-    can_write_lanes: [governance_state]
+    can_write_lanes: [governance_state, runtime_snapshot]
     closeout_required: [state-sync, state-sync-dry-run, agent-workflow-observe]
   mof-agent:
     purpose: Maintain MOF M1/M2/M3 model changes, schema validation, state bridge alignment, and MOF version evidence.
