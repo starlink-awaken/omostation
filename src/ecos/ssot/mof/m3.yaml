@@ -218,6 +218,35 @@ m3:
         compliance:  { type: enum,   required: true,  description: "合规状态", values: [full, partial, none] }
       applies_to: [M2, M1]
 
+    # ── 治理元素扩展 (P74 / ADR-0130): GaC 规则 ──
+    # 将 gac-m1-sync 派生的 GacRule M1 实例正式纳入 M3 元元模型,
+    # 闭合 "m3_parent: GovernanceElement.GacRule" 引用未规范化的鸿沟.
+    GacRule:
+      id: GacRule
+      name: "GaC 规则"
+      description: >
+        Governance-as-Code 规则实例 (由 bin/gac-m1-sync.py 从
+        .omo/_truth/registry/governance-checks.yaml::gac.rules 派生).
+        形式: SSOT (governance-checks.yaml) → M1 实例 (m1/governance/GAC-RULE-*.yaml) →
+        执行器 (bin/gac-local-gate.py::CHECKS). 4 维 (X1 审计链 / X2 抗熵 / X3 价值栈 /
+        X4 一致性) 显式声明, executor_enum 强校验.
+      parent: GovernanceElement
+      abstract: false
+      properties:
+        rule_id:      { type: string, required: true,  description: "全局唯一规则 ID (如 CR-P74-WORKFLOW-SILENCE)" }
+        dimension:    { type: enum,   required: true,  description: "治理维度", values: [X1, X2, X3, X4] }
+        layer:        { type: string, required: true,  description: "作用层 (L0/L1/L2/L3/L4/I0/meta/X)" }
+        check_type:   { type: string, required: true,  description: "检查类型 (audit_chain / staleness / value / consistency / drift_audit / registry_integrity / etc)" }
+        executor:     { type: list,   required: true,  description: "执行器 enum (hook_pre_edit / hook_post / ci_gate / omo_audit / mcp_tool / mof_validate / mof_audit / evidence_smoke / radar_cron / gc_cron / gac_local_gate)" }
+        target:       { type: string, required: false, description: "规则 target 路径 (相对 workspace)" }
+        enforcement:  { type: enum,   required: true,  description: "强制级别", values: [required, preferred, advisory] }
+        lifecycle:    { type: enum,   required: true,  description: "生命周期", values: [draft, active, deprecated, archived] }
+        version:      { type: semver, required: true,  description: "语义版本" }
+        adr:          { type: ref,    required: false, description: "锚定 ADR (→Decision)" }
+        source_type:  { type: enum,   required: true,  description: "来源类型", values: [native, indexed, derived] }
+        source_ref:   { type: string, required: false, description: "源 SSOT 路径 (e.g. projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::constraints)" }
+      applies_to: [M2, M1]
+
     # ── 描述元素: 描述"怎么理解" ──
     DescriptiveElement:
       id: DescriptiveElement
