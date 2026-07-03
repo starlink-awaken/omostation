@@ -617,6 +617,7 @@ def main() -> int:
         help="L3 抽样 spawn N 个 stdio service (慢, 默认 0 不跑)",
     )
     parser.add_argument("--quiet", action="store_true", help="只输出 score")
+    parser.add_argument("--json", action="store_true", help="JSON 输出 (含 feedback_loop, 供 compass_radar 真同源消费)")
     parser.add_argument(
         "--consumers",
         action="store_true",
@@ -639,6 +640,9 @@ def main() -> int:
     if "error" in report:
         return 1
 
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0
     print_summary(report, quiet=args.quiet)
 
     # gate 模式: 防声明/执行鸿沟复发 (Meadows 层7规则 + 层8回路固化)
