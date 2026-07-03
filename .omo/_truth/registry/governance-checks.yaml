@@ -2211,6 +2211,20 @@ gac:
       created_at: "2026-06-27"
       adr: "ADR-0106"
 
+    # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──
+    - id: CR-KOS-ONTOLOGY-DRIFT-01
+      source_type: indexed
+      source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::governance_closure_constraints"
+      dimension: X4
+      layer: L0
+      check_type: legacy_index
+      executor: ['omo_audit', 'ci_gate']
+      enforcement: "advisory (gac-kos-sync 检测)"
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-06-27"
+      adr: "ADR-0106"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
