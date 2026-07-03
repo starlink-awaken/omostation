@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Installer script for launchd WatchPaths governance watch agent."""
 import os
+import shutil
 import sys
 import subprocess
 from pathlib import Path
@@ -12,7 +13,9 @@ LOGS_DIR = WORKSPACE / "runtime" / "logs"
 
 
 def generate_plist_content() -> str:
-    python_executable = sys.executable or "python3"
+    # 稳定锚点 — 不用 sys.executable (uv run 时它是 .cache/uv/builds-v0/.tmpXXX 临时路径,
+    # uv GC 后失效, plist argv[0] 悬空 → governance.watch exit 1 回路断). 见 P73 纪律1.
+    python_executable = shutil.which("python3") or "/opt/homebrew/bin/python3"
     state_stale_emit_path = WORKSPACE / "bin" / "state-stale-emit.py"
     watch_registry = WORKSPACE / ".omo" / "_truth" / "registry"
     watch_ecos = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot"
@@ -41,6 +44,18 @@ def generate_plist_content() -> str:
         <string>{watch_registry}</string>
         <string>{watch_ecos}</string>
     </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>KeepAlive</key>
+    <dict>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
     <key>RunAtLoad</key>
     <true/>
     <key>StandardOutPath</key>
