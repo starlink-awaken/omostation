@@ -23,6 +23,7 @@ from pathlib import Path
 WORKSPACE = Path(__file__).resolve().parents[1]
 REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
 M1_DIR = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance"
+M3_PATH = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m3.yaml"
 
 # F-5 (ADR-0122 S1 2026-07-02): 治本 — M1 写操作默认 advisory, 需 GAC_M1_SYNC_WRITE=1 显式确认
 # 主仓不直接写 submodule 内文件 (违反"主仓不写 submodule" 架构边界).
@@ -42,6 +43,40 @@ def load_rules() -> list[dict]:
     if not docs:
         return []
     return docs[-1].get("gac", {}).get("rules", [])
+
+
+def validate_m3_gacrule() -> list[str]:
+    """验证 M3 元元模型定义 GacRule 子类型 (P74 / ADR-0130).
+
+    这是 P74 阶段 2 review 修复的 M3 规范化:
+    M1 派生 `m3_parent: GovernanceElement.GacRule` 必须是 M3 真实定义,
+    否则 M1 → M3 反向追溯断裂. 治理规则同步前应 fail-fast.
+    """
+    import yaml
+
+    findings: list[str] = []
+    if not M3_PATH.exists():
+        findings.append(f"M3 元元模型缺失: {M3_PATH}")
+        return findings
+    docs = [d for d in yaml.safe_load_all(M3_PATH.read_text(encoding="utf-8")) if d]
+    if not docs:
+        findings.append("M3 文档无内容")
+        return findings
+    elements = (docs[-1].get("m3") or {}).get("elements") or {}
+    gacrule = elements.get("GacRule")
+    if not gacrule:
+        findings.append("M3.GacRule 子类型缺失 (P74 规范化要求)")
+        return findings
+    if gacrule.get("parent") != "GovernanceElement":
+        findings.append(
+            f"M3.GacRule.parent 期望 'GovernanceElement', 实际 '{gacrule.get('parent')}'"
+        )
+    properties = gacrule.get("properties") or {}
+    required_fields = {"rule_id", "dimension", "layer", "check_type", "executor"}
+    missing = required_fields - set(properties.keys())
+    if missing:
+        findings.append(f"M3.GacRule.properties 缺字段: {sorted(missing)}")
+    return findings
 
 
 def load_m1_nodes() -> dict[str, dict]:
@@ -286,6 +321,17 @@ def main() -> int:
 
     if not REGISTRY.exists():
         print(f"❌ 注册表不存在: {REGISTRY}")
+        return 1
+
+    # P74 / ADR-0130 阶段 2 review: M3 规范化校验, fail-fast if M3.GacRule 缺
+    m3_findings = validate_m3_gacrule()
+    if m3_findings:
+        print(f"❌ M3 规范化校验失败 ({len(m3_findings)} 项):")
+        for finding in m3_findings:
+            print(f"    - {finding}")
+        print("\n💡 M3 是元元模型, 任何 M1 派生必须先在 M3 注册对应子类型.")
+        print("   修复: 编辑 projects/ecos/src/ecos/ssot/mof/m3.yaml 加 GacRule 子类型")
+        print("   参考: P74 / ADR-0130 阶段 2 review 修复")
         return 1
 
     rules = load_rules()
