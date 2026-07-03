@@ -32,6 +32,26 @@ If task-specific runtime facts are needed, read the SSOT files reported by `boot
 
 Do not copy values from those files into this document. They are runtime facts and drift quickly.
 
+## 0.5 P74 Workflow Solidification Check (ADR-0130)
+
+After bootstrap, every agent MUST verify P74 health. P74 is the常态化 mechanism
+(常态化机制) for agent-workflow silence detection — see `.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`.
+
+```bash
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance --json
+```
+
+Read `.p74_solidification.warn_count`:
+
+- `0`: continue
+- `> 0` (excluding `handoff-resume` / `observer-audit`): treat as governance signal.
+  Read `.omo/standards/p74-solidification-contract.md` §3 decision tree for actions.
+  If workflow has neither `has_recent_run` nor `has_check_coverage`, register it via
+  `agent-workflows.yaml::diff_checks` or `silent_workflow_policy.excluded_workflows`.
+
+The `silent_workflow_policy` field in `agent-workflows.yaml` is the SSOT for
+silent workflow classification. Do not invent categories — extend this list.
+
 ## 1. Session Role
 
 `CLAUDE.md` is the lightweight context loader. It should answer only:
