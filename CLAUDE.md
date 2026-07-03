@@ -1,38 +1,55 @@
 # CLAUDE.md — omostation AI Context Loader
 
-> 最后更新: 2026-07-02
+> 最后更新: 2026-07-03
 > Purpose: session startup protocol for AI agents.
 > Detailed engineering rules live in [`AGENTS.md`](AGENTS.md).
 > Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+> Document ownership is governed by [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md).
 
-## 0. Startup Protocol
+## 0. This Repo At A Glance
+
+`omostation` is the root workspace for **eCOS v6**: a multi-project workspace for knowledge engineering, agent governance, BOS service routing, runtime orchestration, and personal/work knowledge operations.
+
+- **Shape**: a polyglot monorepo. Sub-projects live under `projects/*` and are mostly independent git submodules — Python via `uv`, TypeScript via `bun`, plus Docker. Each sub-project has its own `AGENTS.md` / `CLAUDE.md` / `Makefile`; read it before editing that project.
+- **Architecture skeleton** (concepts only — full contracts in [`ARCHITECTURE.md`](ARCHITECTURE.md)): the `5+4+1+1` layering (L0 protocol → L1 runtime → L2 kernel → L3 entry → L4 docs), the `X1-X4` governance axes, and BOS URI domain routing. Layer/project placement → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md); BOS domains → ARCHITECTURE.md §4; entry surfaces → ARCHITECTURE.md §3.
+- **Document division of labor** (orthogonal SSOT — each doc owns one dimension):
+  - runtime facts → machine-readable SSOT (`.omo/state/system.yaml`, `docs/project-registry.yaml`, `protocols/*-registry.yaml`)
+  - stable architecture → [`ARCHITECTURE.md`](ARCHITECTURE.md) / [`LAYER-INDEX.md`](LAYER-INDEX.md)
+  - operating rules → [`AGENTS.md`](AGENTS.md) + this file
+  - front-door entry → [`README.md`](README.md)
+
+> **This file is a navigation layer only.** It does not duplicate project counts, ports, service inventories, test counts, phase, health scores, layer tables, or rule registries. Hard-coding those violates `doc-ssot-contract` and fails `bin/doc-ssot-lint.py`.
+
+## 1. Startup Protocol
+
+Load context before changing code or governed state. Two phases — run Step A when you need to align your mental model with historical decisions; run Step B before every editing session.
+
+### Step A · Situational load (KOS cold-start — first turn, or when realigning to architecture)
 
 > [!IMPORTANT]
 > **KOS (Knowledge Operating System) Hardware Cold-Start Protocol**
 > You are equipped with `mcp-server-kos` as your external read-only hard drive.
-> To align your mental model and avoid historical architectural regressions, you MUST run the following KOS query sequence during your first turn:
+> To align your mental model and avoid historical architectural regressions, run this KOS query sequence:
 >
 > 1. **Query Current Decisions & Goals**:
 >    `mcp-server-kos::query_custom_sql(sql="SELECT doc_id, title, canonical_path FROM documents WHERE canonical_path LIKE '%BRIEF.md%' LIMIT 1")`
->    Read the resulting BRIEF.md file path. It contains the active technical debts (needs-human) and X3 metrics.
+>    Read the resulting BRIEF.md path. It carries active technical debts (needs-human) and X3 metrics.
 > 2. **Traverse ADR Decisions**:
 >    `mcp-server-kos::search_kos(query="ADR-012")`
->    Pay close attention to ADR-0124 (retrospective S1) and ADR-0125 (S2 retrospective).
+>    Pay attention to ADR-0124 (S1 retrospective) and ADR-0125 (S2 retrospective).
 > 3. **Identify Domain Schemas**:
 >    `mcp-server-kos::list_entities(limit=50)`
 
-Before changing code or governed state, load the current context:
+### Step B · Workflow load (every editing session)
 
 ```bash
 uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
 uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
 ```
 
-If task-specific runtime facts are needed, read the SSOT files reported by `bootstrap` instead of copying values into this document. If MCP context is available, prefer the cockpit workspace-context tool.
+Read the SSOT files reported by `bootstrap` for task-specific runtime facts — **do not copy their values into this document** (they drift quickly). If MCP context is available, prefer the cockpit `workspace_context` tool.
 
-Do not copy values from those files into this document. They are runtime facts and drift quickly.
-
-## 0.5 P74 Workflow Solidification Check (ADR-0130)
+## 1.5 P74 Workflow Solidification Check (ADR-0130)
 
 After bootstrap, every agent MUST verify P74 health. P74 is the常态化 mechanism
 (常态化机制) for agent-workflow silence detection — see `.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`.
@@ -52,20 +69,20 @@ Read `.p74_solidification.warn_count`:
 The `silent_workflow_policy` field in `agent-workflows.yaml` is the SSOT for
 silent workflow classification. Do not invent categories — extend this list.
 
-## 1. Session Role
+## 2. Session Role
 
-`CLAUDE.md` is the lightweight context loader. It should answer only:
+`CLAUDE.md` is the lightweight context loader. It answers only:
 
 - What must be read first?
 - Which files are authoritative?
 - Which operations are unsafe without a broker or explicit user request?
-- Where should deeper guidance be found?
+- Where is deeper guidance found?
 
-It should not duplicate project tables, architecture diagrams, historical closeout reports, rule registries, test counts, port values, or generated snapshots.
+It must not duplicate project tables, architecture diagrams, historical closeout reports, rule registries, test counts, port values, or generated snapshots.
 
-## 2. Mandatory Boundaries
+## 3. Mandatory Boundaries
 
-The authoritative SSOT map (all fact types and their sources) lives in [`ARCHITECTURE.md` §1](ARCHITECTURE.md). The table below lists only the boundaries most relevant to session startup.
+The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.md` §1](ARCHITECTURE.md). The table below lists only the boundaries most relevant to session startup.
 
 | Topic | Rule | Read More |
 |------|------|-----------|
@@ -77,7 +94,7 @@ The authoritative SSOT map (all fact types and their sources) lives in [`ARCHITE
 | Project metadata | Read from `docs/project-registry.yaml` | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
 | Agent workflows | Use `bin/agent-workflow.py`; do not rely on prompt memory alone | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
 
-## 3. Working Discipline
+## 4. Working Discipline
 
 1. For work with more than a couple of steps, keep a visible todo list.
 2. Read the target project `AGENTS.md` / `CLAUDE.md` before editing that project.
@@ -86,33 +103,53 @@ The authoritative SSOT map (all fact types and their sources) lives in [`ARCHITE
 5. Do not delete, reset, move, commit, or push unless explicitly confirmed. See [`AGENTS.md` §6](AGENTS.md#6-git-and-submodules) for the full git and submodule policy.
 6. If a governance protocol demands a commit but the current user/session policy does not authorize one, finish the working-tree changes, report the exact files, and ask for explicit commit confirmation.
 
-## 4. Common Commands
+## 5. Common Commands
 
+**Gate & lint:**
 ```bash
 make gac-local-gate
+uv run --with "pyyaml" python "bin/gac-local-gate.py" --scope files --file <path> --json
+uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
+uv run --with "pyyaml" python "bin/ssot-guardian.py"
+```
+
+**Agent workflow lifecycle** (`bootstrap` → inspect → `start` → `claim` → `verify` → `closeout` → `compliance`):
+```bash
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
 uv run --with "pyyaml" python "bin/agent-workflow.py" list
 uv run --with "pyyaml" python "bin/agent-workflow.py" agents
 uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
 uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
-uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
-uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
-uv run --project "projects/omo" omo state sync --dry-run --json
-uv run --project "projects/omo" omo state sync --json
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
 uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
 uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
 uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
-uv run --with "pyyaml" python "bin/gac-local-gate.py" --scope files --file <path> --json
-uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
-uv run --with "pyyaml" python "bin/ssot-guardian.py"
-bash "tests/integration/run-all.sh"
-cd "projects/kairon" && make test-diff
-cd "projects/gbrain" && bun test
 ```
 
-## 5. Routing Hints
+**State sync:**
+```bash
+uv run --project "projects/omo" omo state sync --dry-run --json
+uv run --project "projects/omo" omo state sync --json
+```
+
+**Tests — project-level and single-test:**
+```bash
+bash "tests/integration/run-all.sh"          # root integration suite
+cd "projects/kairon" && make test-diff        # kairon (Python) — changed-surface tests
+cd "projects/gbrain" && bun test              # gbrain (TypeScript)
+```
+Run a single test with each framework's native filter (see the target project's `AGENTS.md` for project-specific targets):
+- Python (`uv run pytest`): `pytest -k "test_name"` or `pytest path/to/test.py::TestClass::test_method`
+- TypeScript (`bun test`): `bun test --filter "pattern"`
+- cockpit-ui: `npm run build` / `bun run build`
+- observability: `docker compose config -q`
+
+## 6. Routing Hints
+
+### 6a. By document
 
 | Need | Route |
 |------|-------|
@@ -132,9 +169,23 @@ cd "projects/gbrain" && bun test
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | External adapter contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" adapters` |
 | External adapter health | `uv run --with "pyyaml" python "bin/agent-workflow.py" doctor` |
-| L0/SSOT/M0/MOF 对齐审计 | [`.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md`](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) (D1-D6 drift + 四者关系图) |
+| L0/SSOT/M0/MOF alignment audit | [`.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md`](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) |
 
-## 6. Closeout
+### 6b. By task — "I want to change X, where do I look first?"
+
+| Task | First read |
+|------|-----------|
+| BOS service / route | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) · [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) |
+| Governance rule (X1-X4 / GaC) | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) · [`docs/generated/agent-gac-rules.md`](docs/generated/agent-gac-rules.md) |
+| Port assignment | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) (read-only for agents; register through it) |
+| Runtime state / health | [`.omo/state/system.yaml`](.omo/state/system.yaml) · refresh via `omo state sync` |
+| L0 / MOF constraint | [`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`](projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml) |
+| Add / change an agent workflow | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) · [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
+| Document SSOT contract | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) |
+| Write an ADR | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [`.omo/standards/adr-process.md`](.omo/standards/adr-process.md) |
+| Project layer placement | [`docs/project-registry.yaml`](docs/project-registry.yaml) → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) |
+
+## 7. Closeout
 
 ```bash
 git status --short
