@@ -51,9 +51,13 @@ case "$cmd" in
     if [ -d "$wt" ]; then
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
-      git worktree add "$wt" -b "$branch" 2>&1
+      # followup D 真根因治本 (2026-07-04): claim 基于 origin/main (fetch 后), 不依赖本地 HEAD.
+      # 本地 main 可能被并发 agent 直接 commit (未 push, 应走 worktree PR) → 分叉 → worktree 继承旧/分叉状态.
+      # 基于 origin/main 保证 worktree 总是最新 merged 状态 (含所有已 merge PR). 详见 docs/AGENT-ISOLATION-ROLLOUT.md
+      git fetch origin main 2>&1 | grep -v 'FETCH_HEAD' >&2 || true
+      git worktree add "$wt" -b "$branch" origin/main 2>&1
       echo "✅ worktree 创建: $wt"
-      echo "   分支: $branch (base: $(git rev-parse --abbrev-ref HEAD))"
+      echo "   分支: $branch (base: origin/main)"
       # Phase 2d ISC-3e 真治本: init 子模块 (GaC gate 依赖 projects/ecos + scripts 等).
       # worktree 默认不 init → mof-*/doc-ssot-snapshots 等 check 跑不了.
       # 默认只 init GaC gate 依赖 (快, ~5s); INIT_ALL_SUBMODULES=1 全部 (~60s); SKIP_SUBMODULE_INIT=1 跳过.
