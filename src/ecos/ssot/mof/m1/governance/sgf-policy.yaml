@@ -56,6 +56,7 @@ gates:
     command: ["bin/mof-drift"]
   - id: "doc-ssot-lint"
     command: ["bin/doc-ssot-lint.py"]
+    ci_only: true  # ISC-3f: check_required_generated_artifacts 依赖 docs/generated/* (gitignored post-commit 萃取), worktree 无; non-strict pre-commit 跳, CI strict 兜底
   - id: "project-layer-index"
     command: ["bin/project-layer-index.py", "--check"]
     ci_only: true  # 默认 strict/CI 跑，本地 skip 防止冲突
