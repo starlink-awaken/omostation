@@ -135,11 +135,14 @@ def _composite_health_score(
     governance_anomaly_score: int,
     service_online_ratio: float | None,
     freshness_score: int,
+    feedback_alive: bool = True,
 ) -> tuple[int, dict]:
-    """复合健康分 (ISC-1 治本).
+    """复合健康分 (ISC-1 治本) + feedback 回路硬门槛 (理想态 evidence-driven).
 
     权重: governance 0.5 + runtime 0.3 + freshness 0.2.
     runtime 维度缺失时, 权重重分配到 governance (不因数据缺失惩罚分).
+    feedback 回路断 (alive=False) → health 硬封顶 50 (防假绿: 回路断 governance 无活动
+    却报满分, 见 evidence-smoke 多源 OR + PR#77).
     """
     weights = {"governance": 0.5, "freshness": 0.2}
     contributions = {
@@ -157,7 +160,40 @@ def _composite_health_score(
 
     total_weight = sum(weights.values())
     raw = sum(contributions.values()) / total_weight if total_weight else 0
-    return (round(raw), {"weights": weights, "contributions": contributions, "raw": round(raw, 2)})
+    score = round(raw)
+    breakdown: dict = {"weights": weights, "contributions": contributions, "raw": round(raw, 2)}
+    # feedback 回路硬门槛 (理想态 evidence-driven): 断 → 封顶 50 (触发 X1 告警, 防假绿)
+    if not feedback_alive:
+        score = min(score, 50)
+        breakdown["feedback_capped"] = True
+        breakdown["feedback_note"] = "feedback loop dead → capped at 50 (evidence-driven)"
+    return (score, breakdown)
+
+
+def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
+    """反馈回路存活 (理想态 evidence-driven): omo-events.jsonl 24h 内有记录 = alive.
+
+    跟 evidence-smoke 多源 OR 同源 (omo-events 轻事件流, state-stale-emit 写).
+    回路断 = governance 无活动 → compass_radar _composite 硬封顶 health (防假绿)."""
+    import json  # noqa: PLC0415
+    from datetime import datetime, timezone  # noqa: PLC0415
+
+    events_log = ws_root / ".omo" / "_knowledge" / "omo-events.jsonl"
+    if not events_log.is_file():
+        return (False, {"reason": "no omo-events log"})
+    try:
+        lines = [l for l in events_log.read_text(encoding="utf-8").splitlines() if l.strip()]
+        if not lines:
+            return (False, {"reason": "empty log"})
+        last = json.loads(lines[-1])
+        ts = last.get("timestamp") or last.get("ts") or last.get("date") or ""
+        if not ts:
+            return (False, {"reason": "no timestamp", "last_ts": ts})
+        dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+        hours = round((datetime.now(timezone.utc) - dt).total_seconds() / 3600, 1)
+        return (hours < 24, {"last_ts": ts, "staleness_hours": hours, "alive": hours < 24})
+    except Exception as e:  # noqa: BLE001
+        return (False, {"reason": f"error: {str(e)[:80]}"})
 
 
 def run_radar(omo_dir: Path) -> dict:
@@ -225,6 +261,13 @@ def render_yaml(report: dict) -> str:
     lines.append("anomaly_count: " + str(report["anomaly_count"]))
     lines.append("service_online_ratio: " + _format_ratio(report.get("service_online_ratio")))
     lines.append("freshness_score: " + str(report["freshness_score"]))
+    # feedback 回路存活 (理想态 evidence-driven, 防假绿, 见 _composite_health_score 硬门槛)
+    fb = report.get("feedback_liveness") or {}
+    lines.append("feedback_alive: " + str(fb.get("alive", False)))
+    if fb.get("last_ts"):
+        lines.append("feedback_last_ts: " + _yaml_str(fb["last_ts"]))
+    if fb.get("staleness_hours") is not None:
+        lines.append("feedback_staleness_hours: " + str(fb["staleness_hours"]))
     lines.append("total_tasks: " + str(report["total_tasks"]))
     lines.append("done: " + str(report["done"]))
     lines.append("planned: " + str(report["planned"]))
@@ -319,8 +362,11 @@ def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any]
     fresh_score, age_desc = _freshness_score(output, now_iso)
     report["freshness_score"] = fresh_score
 
+    feedback_alive, feedback_summary = _collect_feedback_liveness(ws_root)
+    report["feedback_liveness"] = feedback_summary
+
     composite, breakdown = _composite_health_score(
-        governance_anomaly_score, service_online_ratio, fresh_score
+        governance_anomaly_score, service_online_ratio, fresh_score, feedback_alive
     )
     report["health_score"] = composite
     report["health_composite_breakdown"] = breakdown
