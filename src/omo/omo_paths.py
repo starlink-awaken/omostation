@@ -85,6 +85,59 @@ def ensure_runtime_omo_dir(relative: str | Path) -> Path:
     return path
 
 
+# Runtime projection registry (ADR-0129)
+RUNTIME_PROJECTIONS_REGISTRY = (
+    TRUTH_DIR / "registry" / "runtime-projections.yaml"
+)
+
+
+def projection_path(name: str, *, prefer_canonical: bool = True) -> Path:
+    """Resolve the path of a registered runtime projection.
+
+    Consumers should use this instead of hard-coding paths like
+    `.omo/state/health.yaml` or `BRIEF.md`.
+
+    By default returns the canonical path if it exists, otherwise falls back
+    to the legacy path. During ADR-0129 migration this lets readers find
+    projections regardless of which phase the workspace is in.
+    """
+    import yaml
+
+    canonical: Path | None = None
+    legacy: Path | None = None
+    if RUNTIME_PROJECTIONS_REGISTRY.is_file():
+        data = yaml.safe_load(RUNTIME_PROJECTIONS_REGISTRY.read_text(encoding="utf-8")) or {}
+        entry = (data.get("projections") or {}).get(name)
+        if entry:
+            canonical = WORKSPACE_ROOT / entry["canonical"]
+            legacy = WORKSPACE_ROOT / entry["legacy"]
+
+    # Fallbacks keep existing tests and consumers working if registry is missing
+    # or the entry has not been added yet.
+    if name == "health":
+        canonical = canonical or STATE_DIR / "runtime" / "health.yaml"
+        legacy = legacy or STATE_DIR / "health.yaml"
+    elif name == "system_health":
+        canonical = canonical or STATE_DIR / "runtime" / "system_health.yaml"
+        legacy = legacy or STATE_DIR / "system_health.yaml"
+    elif name == "governance_data":
+        canonical = canonical or STATE_DIR / "runtime" / "governance-data.json"
+        legacy = legacy or CONTROL_DIR / "governance-data.json"
+    elif name == "brief":
+        canonical = canonical or STATE_DIR / "runtime" / "brief.md"
+        legacy = legacy or WORKSPACE_ROOT / "BRIEF.md"
+    else:
+        raise KeyError(f"Unknown runtime projection: {name}")
+
+    if prefer_canonical:
+        if canonical.exists():
+            return canonical
+        if legacy.exists():
+            return legacy
+        return canonical  # return canonical for writers even if missing
+    return legacy if legacy.exists() else canonical
+
+
 # Agora 路由表 (P30 拆分后, agora 已迁出 kairon, 现位于 projects/agora)
 # P31-W0-AGORA-ACTUAL-FIX: 修正路径指向
 AGORA_ROUTES_PATH = PROJECTS_DIR / "agora" / "src" / "agora-routes.json"

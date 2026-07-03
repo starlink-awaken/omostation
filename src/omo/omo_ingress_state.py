@@ -238,10 +238,20 @@ def sync_state_projection(
         raise FileNotFoundError(f"missing .omo directory: {omo_dir}")
 
     timestamp = _utc_now()
-    health_path = omo_dir / "state" / "health.yaml"
+    runtime_state_dir = omo_dir / "state" / "runtime"
+    runtime_state_dir.mkdir(parents=True, exist_ok=True)
+
+    # Canonical paths under .omo/state/runtime/ (ADR-0129)
+    health_path = runtime_state_dir / "health.yaml"
+    brief_path = runtime_state_dir / "brief.md"
+    governance_data_path = runtime_state_dir / "governance-data.json"
+
+    # Legacy paths kept during ADR-0129 migration (ADR-0129 Phase 1 dual-write)
+    legacy_health_path = omo_dir / "state" / "health.yaml"
+    legacy_brief_path = workspace_root / "BRIEF.md"
+    legacy_governance_data_path = omo_dir / "_control" / "governance-data.json"
+
     system_path = omo_dir / "state" / "system.yaml"
-    brief_path = workspace_root / "BRIEF.md"
-    governance_data_path = omo_dir / "_control" / "governance-data.json"
 
     with fcntl_lock(_lock_path(omo_dir)):
         if health_content is None or system_updates is None:
@@ -281,6 +291,14 @@ def sync_state_projection(
                 ),
             ]
         )
+
+        # ADR-0129 Phase 1: dual-write legacy paths for backward compatibility.
+        # These are shallow copies and are not recorded as separate mutations;
+        # the canonical writes above hold the authoritative projection state.
+        if not dry_run:
+            _mirror_projection(legacy_health_path, health_content)
+            _mirror_projection(legacy_brief_path, brief_content)
+            _mirror_projection(legacy_governance_data_path, serialize_governance_data(governance_data))
         changed_count = sum(1 for item in writes if item.get("changed"))
         artifact_ref = ""
         if not dry_run and changed_count:
