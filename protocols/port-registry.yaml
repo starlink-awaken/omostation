@@ -3,6 +3,7 @@ ports:
   3101: mcp-stdio-alt
   7422: 'agora-mcp-http             # [Phase 9] Unified A2A/BOS Entry (HTTP)'
   7431: 'agora-mcp-sse              # Agora SSE Main'
+  7435: 'omlx-mesh-router           # omlx Multi-node Intelligent Proxy Router (HTTP)'
   7455: 'agora-swarm-udp            # [Phase 55] Swarm Discovery/Heartbeat'
   7456: l4-kernel-mcp-sse
   8090: cockpit-dashboard

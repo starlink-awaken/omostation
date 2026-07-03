@@ -5,6 +5,7 @@ import os
 import sys
 import sqlite3
 import re
+import datetime
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -57,7 +58,7 @@ def main() -> int:
         consensus_lines = [
             "## 🧬 Onboarding Consensus (🧬 历史演进避坑基因)",
             "",
-            "> **自动刷新时间**: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " (KOS 自动进化注入)",
+            "> **自动刷新时间**: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " (KOS 自动进化注入)",
             "> 新进 Agent 必须通读并深度对齐以下前人沉淀的历史避坑基因，严禁在同一坑中二次栽倒：",
             ""
         ]
@@ -99,5 +100,4 @@ def main() -> int:
         return 1
 
 if __name__ == "__main__":
-    from datetime import datetime
     sys.exit(main())

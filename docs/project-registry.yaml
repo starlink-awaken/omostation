@@ -27,6 +27,13 @@ layers:
   X:  "横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub)"
 
 projects:
+  mesh-router:
+    layer: "L0"
+    stack: "Python (http/urllib)"
+    role: "omlx 算力网格智能路由代理"
+    version: "1.0.0"
+    port: 7435
+
   # ── Python projects ──
   agora:
     layer: "I0"
