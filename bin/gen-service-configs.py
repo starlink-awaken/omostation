@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -80,6 +81,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--json", action="store_true", help="JSON 输出 (仅 --check)")
     args = parser.parse_args()
     if not REGISTRY.exists():
         print(f"❌ 注册不存在: {REGISTRY}", file=sys.stderr)
@@ -104,6 +106,10 @@ def main() -> int:
             print(f"--- {svc['label']} ---")
             print(plist)
     if args.check:
+        if args.json:
+            report = {"ok": not drifts, "drift_count": len(drifts), "drifts": drifts}
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report["ok"] else 1
         if drifts:
             print(f"❌ {len(drifts)} drift:")
             for d in drifts:
