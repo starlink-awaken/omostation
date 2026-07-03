@@ -24,7 +24,14 @@ REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "services.yaml"
 
 
 def _stable_python3() -> str:
-    return shutil.which("python3") or "/opt/homebrew/bin/python3"
+    import os
+    for path in os.environ.get("PATH", "").split(os.pathsep):
+        if ".cache/uv" in path or "/.tmp" in path:
+            continue
+        p = shutil.which("python3", path=path)
+        if p and not (".cache/uv" in p or "/.tmp" in p):
+            return p
+    return "/opt/homebrew/bin/python3"
 
 
 INTERPRETERS = {"stable-python3": _stable_python3}

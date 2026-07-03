@@ -1522,6 +1522,38 @@ def closeout_run(
             "observe_decision": observe_report["decision"],
         },
     )
+    if status == "ok":
+        try:
+            import subprocess
+            # 1. Loop Convergence: auto-run evidence-smoke.py (silently)
+            smoke_script = WORKSPACE / "bin/evidence-smoke.py"
+            subprocess.run(
+                [sys.executable, str(smoke_script), "--quiet"],
+                cwd=WORKSPACE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+            # 2. Sync state officially using omo CLI
+            omo_cmd = [
+                sys.executable,
+                "-m",
+                "omo.cli",
+                "state",
+                "sync",
+            ]
+            env = os.environ.copy()
+            env["PYTHONPATH"] = str(WORKSPACE / "projects/omo/src")
+            subprocess.run(
+                omo_cmd,
+                cwd=str(WORKSPACE / "projects/omo"),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                env=env,
+                check=False,
+            )
+        except Exception:
+            pass
     return report
 
 
