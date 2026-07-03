@@ -10,9 +10,9 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 100
+health_score: 96
 health_score_source: compass_radar_composite
-health_score_generated_at: '2026-07-03T02:07:31Z'
+health_score_generated_at: '2026-07-03T06:32:04Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -199,7 +199,7 @@ governance:
   code_freeze: false
   code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  last_scan: 1783044303.220204
+  last_scan: 1783035259.094611
   total_services: 9
   online_services: 3
   healthy_services: 3
