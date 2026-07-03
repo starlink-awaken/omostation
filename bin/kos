@@ -1,0 +1,15 @@
+#!/bin/bash
+# bin/kos — KOS (Knowledge Operating System) 主仓便捷入口
+# 自动注入环境变量与项目运行环境 (BOS-v6 治理标准)
+
+export KOS_HOME="/Users/xiamingxing/Workspace/kos"
+WORKSPACE="/Users/xiamingxing/Workspace"
+
+# 支持 --help
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ]; then
+    uv run --directory "$WORKSPACE/projects/kairon" python packages/kos/kos-cli.py --help
+    exit 0
+fi
+
+# 调用核心包
+uv run --directory "$WORKSPACE/projects/kairon" python packages/kos/kos-cli.py "$@"
