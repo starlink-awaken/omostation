@@ -166,6 +166,64 @@ def compute_diff(rules: list[dict], m1_nodes: dict[str, dict]) -> dict:
     }
 
 
+def check_cross_schema_drift(rules: list[dict]) -> dict:
+    """ADR-0127 Finding 5.1: 校验规则声明字段在 schema enum 内.
+
+    病根: 跨边界 enum drift (X-Plane 多次加规则漏同步 enum). 治本: gac-m1-sync
+    加 schema drift 检测, 任何 enum 漂移 (executor / check_type / dimension /
+    layer / lifecycle) 立即报告 (但不改 — 用户需手动同步 schema).
+
+    返回 {
+        "drifts": [{"id": rule_id, "field": str, "value": str, "valid_options": list}],
+        "checked": int (规则数),
+    }
+    """
+    import yaml
+
+    if not REGISTRY.exists():
+        return {"drifts": [], "checked": 0, "error": "registry not found"}
+    docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
+    schema = docs[-1].get("gac", {}).get("schema", {}) if docs else {}
+
+    enum_map = {
+        "dimension": set(schema.get("dimension_enum", [])),
+        "layer": set(schema.get("layer_enum", [])),
+        "check_type": set(schema.get("check_type_enum", [])),
+        "executor": set(schema.get("executor_enum", [])),
+        "lifecycle": set(schema.get("lifecycle_enum", [])),
+    }
+
+    drifts = []
+    for rule in rules:
+        rid = rule.get("id", "?")
+        for field, valid_set in enum_map.items():
+            if not valid_set:
+                continue  # enum missing, skip
+            value = rule.get(field)
+            if value is None:
+                continue
+            if isinstance(value, list):
+                # Multi-value field (executor), check each
+                for v in value:
+                    if v not in valid_set:
+                        drifts.append({
+                            "id": rid,
+                            "field": field,
+                            "value": v,
+                            "valid_options": sorted(valid_set),
+                        })
+            else:
+                if value not in valid_set:
+                    drifts.append({
+                        "id": rid,
+                        "field": field,
+                        "value": value,
+                        "valid_options": sorted(valid_set),
+                    })
+
+    return {"drifts": drifts, "checked": len(rules)}
+
+
 def do_sync(rules: list[dict], m1_nodes: dict[str, dict], diff: dict) -> dict:
     """执行同步: 生成缺失 + 更新过期 + 删除多余.
 
@@ -241,6 +299,7 @@ def main() -> int:
             "registry_rules": len(rules),
             "m1_instances": len(m1_nodes),
             "diff": diff,
+            "schema_drift": check_cross_schema_drift(rules),
         }
         if sync_mode:
             result["actions"] = do_sync(rules, m1_nodes, diff)
@@ -254,6 +313,17 @@ def main() -> int:
     total_drift = (
         len(diff["missing_in_m1"]) + len(diff["orphan_in_m1"]) + len(diff["stale"])
     )
+
+    schema_drift_report = check_cross_schema_drift(rules)
+    schema_drifts = schema_drift_report.get("drifts", [])
+
+    if schema_drifts:
+        print(f"\n  ⚠️  Schema enum drift (ADR-0127 Finding 5.1): {len(schema_drifts)} 处")
+        for d in schema_drifts[:10]:
+            opts = ", ".join(d.get("valid_options", [])[:5])
+            print(f"    - {d['id']}.{d['field']}={d['value']!r} 不在 enum [{opts}{'...' if len(d.get('valid_options', [])) > 5 else ''}]")
+        if len(schema_drifts) > 10:
+            print(f"    ... ({len(schema_drifts) - 10} more)")
 
     if diff["missing_in_m1"]:
         print(f"\n  缺失 (registry 有, M1 无): {len(diff['missing_in_m1'])}")
