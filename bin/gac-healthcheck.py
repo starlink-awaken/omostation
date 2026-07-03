@@ -38,7 +38,7 @@ CORE_FILES = {
     "validate": "bin/gac-validate.py",
     "drift": "bin/gac-drift.py",
     "ci_gate": ".github/workflows/gac-gate.yml",
-    "cron": ".omo/cron/gac-crontab",
+    "cron": ".omo/cron/opc-closeout-crontab",
     "agents_md": "AGENTS.md",
     "m2_type": "projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml",
     "stage1_design": ".omo/_knowledge/gac/stage1-hook-design.md",
