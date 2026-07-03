@@ -54,14 +54,24 @@ def match_path(file_path: str, pattern: str) -> bool:
     return fnmatch.fnmatch(file_path, pattern) or fnmatch.fnmatch(file_path, f"*/{pattern}")
 
 
+# 显式身份白名单 (2026-07-03 修订 r2: 原"用户名含 agent/crush/serena 即豁免"是子串匹配,
+# user.name="X-Plane Audit Agent" 含 Agent → 全部提交被豁免, 审计器空转;
+# 反之人类别名 starlink-awaken 不在名单会被误报。改为精确集合。
+# ⚠️ 本修复曾于 07-03 上午被未知进程回滚一次 (回滚异常第三案), 若再次消失请查 git log 恢复。)
+HUMAN_ALIASES = {"夏明星", "xiamingxing", "starlink-awaken", "owner"}
+AGENT_IDENTITIES = {"x-plane audit agent", "claude", "claude cowork", "serena", "crush"}
+
+
 def audit_staged(staged_files: list[str], owners: list[dict], current_user: str) -> list[str]:
     """审计暂存区文件，返回违规信息列表."""
     violations = []
     is_agent_run = bool(os.environ.get("AGENT_WORKFLOW_RUN_ID"))
     is_ci = os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true"
-    
-    # 判定是否属于合规的系统/自动化提交
-    is_system_committer = is_agent_run or is_ci or "agent" in current_user.lower() or "crush" in current_user.lower() or "serena" in current_user.lower()
+    user_lc = current_user.lower()
+
+    # 合规自动化提交 = 带 run-id 的 agent workflow / CI / 精确匹配的已知 agent 身份
+    is_system_committer = is_agent_run or is_ci or user_lc in AGENT_IDENTITIES
+    is_human = user_lc in HUMAN_ALIASES
 
     for f in staged_files:
         for rule in owners:
@@ -70,13 +80,12 @@ def audit_staged(staged_files: list[str], owners: list[dict], current_user: str)
             if pattern and match_path(f, pattern):
                 # 检查所有权
                 owner_type, owner_name = (owner_decl.split(":", 1) + [""])[:2]
-                
+
                 if owner_type == "human":
-                    # 允许匹配 human 拥有者别名 (大小写模糊)
-                    allowed_names = [owner_name.lower(), "夏明星", "xiamingxing", "owner"]
-                    if current_user.lower() not in allowed_names and not is_system_committer:
+                    # human 文件: 人类别名 或 可追溯的自动化 (run-id/CI/已知 agent) 均可
+                    if not is_human and not is_system_committer:
                         violations.append(
-                            f"File '{f}' is owned by human '{owner_name}', but committed by '{current_user}'"
+                            f"File '{f}' is owned by human '{owner_name}', but committed by unrecognized '{current_user}' (加身份进 HUMAN_ALIASES/AGENT_IDENTITIES)"
                         )
                 elif owner_type == "script" or owner_type == "daemon":
                     # script/daemon 拥有的文件，严禁人工在非 Agent-workflow 环境下手动 commit
