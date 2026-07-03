@@ -1696,6 +1696,16 @@ def closeout_run(
                         stderr=subprocess.DEVNULL,
                         check=False,
                     )
+                # 3.5 Auto Consensus Gene Injection (Active Agent Evolution)
+                gac_consensus_path = WORKSPACE / "bin" / "gac-consensus-inject.py"
+                if gac_consensus_path.is_file():
+                    subprocess.run(
+                        [sys.executable, str(gac_consensus_path)],
+                        cwd=WORKSPACE,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        check=False,
+                    )
         except Exception:
             pass
     return report
