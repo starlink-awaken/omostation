@@ -36,6 +36,16 @@ while IFS= read -r sm; do
     continue
   }
 
+  # Phase 2d ISC-3g (2026-07-03): detached HEAD (worktree --init 产生) 无 branch tracking.
+  # worktree 子模块 checkout 到主仓 gitlink commit (可达), 不在 branch 上开发 = 无本地领先 commit.
+  # 跳过 sync (不计 failed); gitlink 可达性由 submodule-reachability-gate 兜底 (pre-push 独立跑).
+  # 区分真未推 (agent 在子模块 branch 上 commit 未 push): 那种 branch != HEAD, 走下面正常逻辑.
+  if [ "$branch" = "HEAD" ]; then
+    missing=$(( missing + 1 )) || true
+    echo "⏭ $sm: detached HEAD (worktree --init, 无 branch tracking), 跳过 — reachability 由 submodule-reachability-gate 兜底"
+    continue
+  fi
+
   # 子模块有上游吗；没有 upstream 时回退到 origin/<当前分支>.
   upstream=$(git -C "$sm" rev-parse --abbrev-ref '@{u}' 2>/dev/null) || {
     if git -C "$sm" show-ref --verify --quiet "refs/remotes/origin/$branch"; then
