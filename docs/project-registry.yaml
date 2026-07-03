@@ -242,5 +242,26 @@ archived:
     merged_into: "cockpit HTTP :8090"
 
 # ── Metadata ──
-_last_updated: "2026-06-30"
+_last_updated: "2026-07-03"
 _update_method: "Manual version/python; drift 由 bin/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"
+
+# ── omlx Local Compute Mesh Nodes ──
+compute_nodes:
+  MBP-M5-Max:
+    ip: "100.96.126.35"
+    role: "coder, reasoner, vision"
+    vram: "64GB"
+    hardware: "Apple M5 Max"
+    models: ["coder", "reasoner", "vision", "vision-lite", "embed-bge"]
+  mac-mini-M4:
+    ip: "100.99.210.78"
+    role: "fast, embed, rerank"
+    vram: "16GB"
+    hardware: "Apple M4"
+    models: ["fast", "mini-chat", "embed", "rerank", "mini-9b"]
+  Y7000P-4070:
+    ip: "100.64.43.36"
+    role: "vision-lite, ocr, mid"
+    vram: "8GB"
+    hardware: "NVIDIA RTX 4070"
+    models: ["vision-lite", "ocr", "mid"]
