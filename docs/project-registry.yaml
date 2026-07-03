@@ -20,11 +20,11 @@ layers:
   L0: "协议层 (ecos)"
   L1: "运行时 (runtime)"
   L2: "引擎面 (kairon / gbrain / omo / metaos)"
-  L3: "入口层 (cockpit; cockpit-ui 挂载至 cockpit, layer=X)"
+  L3: "入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3)"
   L4: "自我层 (l4-kernel)"
   I0: "织层 (agora)"
   M0: "横切框架 (model-driven)"
-  X:  "横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub / cockpit-ui)"
+  X:  "横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub)"
 
 projects:
   # ── Python projects ──
@@ -181,10 +181,10 @@ projects:
     role: "家庭数字枢纽"
 
   cockpit-ui:
-    layer: "X"
+    layer: "L3"
     stack: "TypeScript (Vite, React)"
-    role: "Web 控制台 UI (挂载至 cockpit /hermes/*)"
-    note: "非 git 子模块，直接在 projects/ 下"
+    role: "Web 控制台 UI (作为 cockpit 前端表现层挂载至/)"
+    note: "非 git 子模块，直接在 projects/ 下，由 cockpit 托管"
 
   toolbox:
     layer: "L1-L3"
