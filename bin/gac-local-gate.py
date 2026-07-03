@@ -70,6 +70,15 @@ DEFAULT_POLICY = {
 POLICY = load_sgf_policy() or DEFAULT_POLICY
 GATES_LIST = POLICY.get("gates", DEFAULT_POLICY["gates"])
 
+# 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
+# ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
+# origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
+# 不依赖易被子模块主线覆盖的 ecos SSOT.
+_CI_ONLY_OVERRIDE_MAIN = {"governance-evolution", "doc-ssot-lint"}
+for _g in GATES_LIST:
+    if _g["id"] in _CI_ONLY_OVERRIDE_MAIN:
+        _g["ci_only"] = True
+
 CHECKS = tuple((g["id"], g["command"]) for g in GATES_LIST)
 CI_ONLY_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_only")}
 CI_SKIP_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_skip")}
