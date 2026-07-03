@@ -42,3 +42,41 @@ services:
       max_stale_hours: 24
     generated_by: bin/gen-service-configs.py
     note: "原 install-watch-agent.py 硬编码 plist (sys.executable 炸弹), 治本后从本注册生成"
+
+  # ── 引导扇区 (阶段4 元递归): GaC/health 工具自身调度注册 ──────────
+  # 这些工具是 evidence/health/gac 真源, 调度注册为元递归闭环 (GaC 治含自身).
+  # scheduler=gha/manual (非 launchd), gen-service-configs 跳过不生配置 —
+  # 引导扇区: 这些工具定义 gen/evidence/health 本身, 不能由自己生成自己 (避循环),
+  # 仅声明注册 (SSOT 完整: services.yaml 含所有调度含 GaC 自身).
+  - id: evidence-smoke
+    enabled: true
+    scheduler: gha
+    trigger: schedule
+    program:
+      interpreter: stable-python3
+      entrypoint: bin/evidence-smoke.py
+    schedule_ref: .github/workflows/evidence-smoke-gate.yml
+    liveness:
+      signal: .omo/_delivery/evidence-smoke/
+      max_stale_hours: 24
+    note: "实测 health (回路多源 OR/BOS/dirty). gha 调度. 引导扇区 (evidence 源, 不自生)."
+  - id: compass-radar
+    enabled: true
+    scheduler: gha
+    trigger: schedule
+    program:
+      interpreter: stable-python3
+      entrypoint: bin/compass_radar.py
+    schedule_ref: .github/workflows/c2g-radar-daily.yml
+    liveness:
+      signal: .omo/state/health.yaml::generated_at
+      max_stale_hours: 24
+    note: "合成 health_score (含 feedback 硬门槛 PR#81). gha daily. 引导扇区."
+  - id: gen-service-configs
+    enabled: true
+    scheduler: manual
+    trigger: on-registry-change
+    program:
+      interpreter: stable-python3
+      entrypoint: bin/gen-service-configs.py
+    note: "从本注册生 launchd plist (scheduler=launchd 项). manual/on-registry-change. 引导扇区 (生成本身, 不自生)."
