@@ -1,0 +1,44 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-03
+---
+
+# 调度服务注册 (Scheduling Contract) — 理想态注册→生成→drift 闭环
+#
+# 调度配置 (launchd plist / GHA schedule / daemon) 从本注册生成, 不手写.
+# 生成器 bin/gen-service-configs.py 读此 → 产 plist (稳定锚点, 杜绝 uv 临时路径炸弹).
+# GaC drift check: plist vs 本注册不一致 = drift.
+# 见 P73 pattern + governance-ssot-edit skill.
+#
+# interpreter 锚点: stable-python3 → shutil.which("python3"); 绝对路径 → 直接用 (须稳定).
+
+services:
+  - id: governance.watch
+    enabled: true
+    scheduler: launchd
+    trigger: watchpaths
+    label: com.l4.governance.watch
+    program:
+      interpreter: stable-python3
+      entrypoint: bin/state-stale-emit.py
+      args: [--source, launchd-watch, --trigger, watchpaths]
+    watch_paths:
+      - .omo/_truth/registry
+      - projects/ecos/src/ecos/ssot
+    environment:
+      PATH: /opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    resilience:
+      keepalive: crashed
+      throttle_interval: 10
+    run_at_load: true
+    outputs:
+      stdout: runtime/logs/watch_stdout.log
+      stderr: runtime/logs/watch_stderr.log
+    liveness:
+      signal: .omo/_knowledge/omo-events.jsonl
+      event_kind: state_stale
+      max_stale_hours: 24
+    generated_by: bin/gen-service-configs.py
+    note: "原 install-watch-agent.py 硬编码 plist (sys.executable 炸弹), 治本后从本注册生成"
