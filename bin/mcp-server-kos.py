@@ -81,8 +81,8 @@ def handle_search_kos(arguments):
                 "text": json.dumps({"query": query, "matches": results}, ensure_ascii=False, indent=2)
             }]
         }
-    except Exception as e:
-        return {"content": [{"type": "text", "text": f"Database error: {str(e)}"}], "isError": True}
+    except (sqlite3.Error, json.JSONDecodeError, OSError) as e:
+        return {"content": [{"type": "text", "text": f"Database error: {type(e).__name__}: {str(e)}"}], "isError": True}
 
 
 def handle_get_document(arguments):
@@ -118,8 +118,8 @@ def handle_get_document(arguments):
                 "text": json.dumps(doc_data, ensure_ascii=False, indent=2)
             }]
         }
-    except Exception as e:
-        return {"content": [{"type": "text", "text": f"Database error: {str(e)}"}], "isError": True}
+    except (sqlite3.Error, json.JSONDecodeError, OSError) as e:
+        return {"content": [{"type": "text", "text": f"Database error: {type(e).__name__}: {str(e)}"}], "isError": True}
 
 
 def handle_list_entities(arguments):
@@ -145,8 +145,8 @@ def handle_list_entities(arguments):
                 "text": json.dumps(entities, ensure_ascii=False, indent=2)
             }]
         }
-    except Exception as e:
-        return {"content": [{"type": "text", "text": f"Database error: {str(e)}"}], "isError": True}
+    except (sqlite3.Error, json.JSONDecodeError, OSError) as e:
+        return {"content": [{"type": "text", "text": f"Database error: {type(e).__name__}: {str(e)}"}], "isError": True}
 
 
 def handle_query_custom_sql(arguments):
@@ -175,8 +175,8 @@ def handle_query_custom_sql(arguments):
                 "text": json.dumps(results, ensure_ascii=False, indent=2)
             }]
         }
-    except Exception as e:
-        return {"content": [{"type": "text", "text": f"SQL execution error: {str(e)}"}], "isError": True}
+    except (sqlite3.Error, json.JSONDecodeError, OSError) as e:
+        return {"content": [{"type": "text", "text": f"SQL execution error: {type(e).__name__}: {str(e)}"}], "isError": True}
 
 
 # MCP Server 映射表
