@@ -103,6 +103,13 @@ def main() -> int:
             for f in ("id", "scheduler"):
                 if not svc.get(f):
                     violations.append(f"service 缺必填 {f}")
+            # GHA 调度验 schedule_ref 存在 (治 P4 元递归全覆盖 — 引导扇区 GHA 声明可证, CI 可验仓库内)
+            if svc.get("scheduler") == "gha":
+                sched_ref = svc.get("schedule_ref")
+                if not sched_ref:
+                    violations.append(f"{svc.get('id', '?')}: gha 调度缺 schedule_ref")
+                elif not (WORKSPACE / sched_ref).is_file():
+                    violations.append(f"{svc.get('id', '?')}: schedule_ref 不存在 {sched_ref}")
         report = {"ok": not violations, "violation_count": len(violations), "violations": violations}
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0 if report["ok"] else 1
