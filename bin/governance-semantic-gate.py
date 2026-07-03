@@ -202,14 +202,15 @@ def run_gate(*, release: bool = False) -> dict[str, Any]:
             "warn" if not release else "error",
             release,
         ),
-        # 阶段3: 调度配置 drift (plist vs services.yaml) — 理想态 GaC gate.
-        # gen-service-configs --check --json. 雏形 non-blocking (1 服务验证), 稳定后 blocking.
+        # 治本B: 调度注册自洽 gate (CI 可验, 不依赖本机 plist).
+        # gen --validate 验 services.yaml 自洽 (interpreter 锚点禁 .tmp + 必填字段). blocking.
+        # (原 --check 验本机 plist, CI 无本机 plist 总 drift=1 → 改 --validate 验注册自洽)
         (
             "service-config-drift",
-            _command("bin/gen-service-configs.py", "--check", "--json"),
+            _command("bin/gen-service-configs.py", "--validate", "--json"),
             _simple_ok,
             "error",
-            False,
+            True,
         ),
     ]
 
