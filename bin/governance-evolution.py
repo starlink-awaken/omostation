@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -390,6 +392,8 @@ def parse_status_line(line: str) -> tuple[str, str]:
 
 
 def classify_release_package(path: str) -> tuple[str, str]:
+    if path == "BRIEF.md":
+        return "runtime-or-control-output", "review evidence/control output before including in a release package"
     if path.startswith((
         ".omo/_control/", ".omo/_delivery/agent-workflows/", ".omo/state/",
         "runtime/omo/_control/", "runtime/omo/_delivery/agent-workflows/", "runtime/omo/state/",
@@ -407,6 +411,8 @@ def classify_release_package(path: str) -> tuple[str, str]:
         return "archived-artifact", "review archive deletion or migration intent before release"
     if path.startswith("data/"):
         return "data-output", "keep user/runtime data out of governance release packages unless explicitly required"
+    if path.startswith("runtime/"):
+        return "runtime-or-control-output", "review evidence/control output before including in a release package"
     if path.startswith((".omo/_truth/registry/", ".omo/standards/", "runtime/omo/_truth/registry/", "runtime/omo/standards/")):
         return "governance-truth-and-standards", "review with AGCP claim coverage and SSOT checks"
     if path.startswith("ecos/src/ecos/ssot/mof/") or path.startswith("projects/ecos/src/ecos/ssot/mof/"):
@@ -707,10 +713,16 @@ def write_release_decision_template(
     payload = {
         "decisions": release_decision_template_records(decision_template, default_decision),
     }
-    decision_path.write_text(
-        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+    rendered = yaml.safe_dump(payload, allow_unicode=True, sort_keys=False)
+    with tempfile.NamedTemporaryFile(
+        "w",
         encoding="utf-8",
-    )
+        dir=decision_path.parent,
+        delete=False,
+    ) as handle:  # audit-exempt: non-atomic-write — temp file + os.replace below.
+        handle.write(rendered)
+        temp_name = handle.name
+    os.replace(temp_name, decision_path)
     return display_path(decision_path)
 
 

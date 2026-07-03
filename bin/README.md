@@ -110,7 +110,8 @@ last-reviewed: 2026-06-29
 | 脚本 | 功能 | 调用方 |
 |:-----|:-----|:-------|
 | `agent-workflow.py` (1319L) | Agent Workflow Runner (framework 级) | CLAUDE/AGENTS §0 |
-| `compass_radar.py` | health radar 刷新 | cockpit/sync |
+| `compass_radar.py` | health radar 计算/兼容刷新 | `omo state sync` broker |
+| `state-stale-emit.py` | 发送 state_stale 事件 | post-commit / launchd WatchPaths |
 | `change-lane-check.py` | commit lane 校验 (pre-commit/gac-local-gate) | GaC gate |
 | `doc-ssot-lint.py` | 文档 SSOT 门禁 (CI) | gac-local-gate/CI |
 

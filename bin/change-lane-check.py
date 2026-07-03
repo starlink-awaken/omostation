@@ -70,9 +70,11 @@ def classify(path: str, submodules: set[str]) -> str:
         ".omo/standards/agent-workflow-contract.md",
         ".agents/skills/project-governance/SKILL.md",
         "bin/agent-workflow.py",
+        "bin/compass_radar.py",
         "bin/cockpit-readiness.py",
         "bin/dashboard-readiness-summary.py",
         "bin/dashboard-ui-render.py",
+        "bin/generate-brief.py",
         "bin/gac-dashboard.py",
         "bin/governance-dashboard.py",
         "bin/governance-evolution.py",
@@ -82,6 +84,7 @@ def classify(path: str, submodules: set[str]) -> str:
         "bin/install-watch-agent.py",
         "bin/mcp-server-kos.py",
         "bin/project-layer-index.py",
+        "bin/state-stale-emit.py",
         "bin/state-freshness-check.py",
         "bin/test-mcp-kos.py",
         "bin/write-owner-audit.py",
@@ -98,6 +101,7 @@ def classify(path: str, submodules: set[str]) -> str:
         return "governance_state"
     if path.endswith(".md") and (
         path in {"AGENTS.md", "CLAUDE.md", "README.md", "ARCHITECTURE.md", "LAYER-INDEX.md", "BRIEF.md"}
+        or path == "bin/README.md"
         or path.startswith("projects/")
         or path.startswith("spaces/")
         or path.startswith("docs/")

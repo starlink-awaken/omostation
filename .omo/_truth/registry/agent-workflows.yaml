@@ -149,8 +149,14 @@ agent_profiles:
       - submodule-pointer-close
       - observer-audit
       - governance-audit
+      - state-sync
     can_write_lanes: [docs, governance_code, governance_state, config, submodule_pointer]
     closeout_required: [agent-workflow-lint, agent-workflow-observe, gac-local-gate]
+  state-sync-agent:
+    purpose: Refresh high-churn runtime projections through the OMO state-sync broker.
+    allowed_workflows: [state-sync]
+    can_write_lanes: [governance_state]
+    closeout_required: [state-sync, state-sync-dry-run, agent-workflow-observe]
   mof-agent:
     purpose: Maintain MOF M1/M2/M3 model changes, schema validation, state bridge alignment, and MOF version evidence.
     allowed_workflows: [mof-model-change, mof-state-bridge-audit]
@@ -1007,6 +1013,56 @@ workflows:
           mode: required
           command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
 
+  - id: state-sync
+    title: Runtime state projection sync
+    purpose: Refresh high-churn runtime projections through the OMO state-sync broker instead of ad-hoc agent writes.
+    agents:
+      roles: [state-sync-agent, governance-agent]
+      observer_policy: recommended_for_unattended_runs
+    allowed_lanes: [governance_state]
+    lock_scopes: [surface:omo-state-sync-projection, .omo/state]
+    surfaces:
+      read:
+        - .omo/_truth/registry/**
+        - .omo/state/system_health.yaml
+        - .omo/state/system.yaml
+        - .omo/_control/debt-dashboard/current.yaml
+        - .omo/tasks/**
+        - spaces/**
+        - projects/c2g/**
+        - projects/omo/**
+        - bin/compass_radar.py
+        - bin/generate-brief.py
+      write:
+        - .omo/state/health.yaml
+        - .omo/state/system.yaml
+        - .omo/_control/governance-data.json
+        - BRIEF.md
+        - runtime/omo/_delivery/ingress/state/**
+    phases:
+      preflight:
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+        - id: state-sync-dry-run
+          mode: required
+          command: [uv, run, --project, projects/omo, omo, state, sync, --dry-run, --json]
+      execute:
+        - id: state-sync
+          mode: required
+          command: [uv, run, --project, projects/omo, omo, state, sync, --json]
+      verification:
+        - id: state-freshness
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/state-freshness-check.py, --json]
+        - id: ssot-guardian
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+      closeout:
+        - id: observe
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, observe]
+
   - id: governance-audit
     title: Workspace Systemic Governance Audit
     purpose: Execute systemic governance health scan, write-ownership check, brief generation, and SSOT alignment.
@@ -1052,4 +1108,3 @@ workflows:
         - id: diff-stat
           mode: required
           command: [git, diff, --stat]
-
