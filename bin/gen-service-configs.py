@@ -36,9 +36,11 @@ def load_services() -> list[dict]:
 
 
 def resolve_interpreter(spec: str) -> str:
-    if spec in INTERPRETERS:
-        return INTERPRETERS[spec]()
-    return spec
+    interp = INTERPRETERS[spec]() if spec in INTERPRETERS else spec
+    # 校验禁 uv 临时路径 (治 P2 + uv run 时 shutil.which 返回 .tmp 的坑 — PR#77 不彻底)
+    if ".cache/uv/builds" in interp or "/.tmp" in interp:
+        raise ValueError(f"interpreter 含 uv 临时路径 (禁, uv GC 后失效): {interp}")
+    return interp
 
 
 def gen_launchd_plist(svc: dict) -> str:
@@ -81,12 +83,29 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
-    parser.add_argument("--json", action="store_true", help="JSON 输出 (仅 --check)")
+    parser.add_argument("--json", action="store_true", help="JSON 输出 (--check/--validate)")
+    parser.add_argument("--validate", action="store_true", help="验注册自洽 (CI, 不依赖本机 plist)")
     args = parser.parse_args()
     if not REGISTRY.exists():
         print(f"❌ 注册不存在: {REGISTRY}", file=sys.stderr)
         return 1
     services = load_services()
+    if args.validate:
+        # 验注册自洽 (CI 可验, 不依赖本机 plist). 治 service-config-drift gate 在 CI 无本机 plist 的设计问题.
+        violations: list[str] = []
+        for svc in services:
+            if not svc.get("enabled", True):
+                continue
+            try:
+                resolve_interpreter(svc.get("program", {}).get("interpreter", ""))
+            except ValueError as e:
+                violations.append(f"{svc.get('id', '?')}: {e}")
+            for f in ("id", "scheduler"):
+                if not svc.get(f):
+                    violations.append(f"service 缺必填 {f}")
+        report = {"ok": not violations, "violation_count": len(violations), "violations": violations}
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if report["ok"] else 1
     launchd_dir = Path.home() / "Library" / "LaunchAgents"
     drifts: list[str] = []
     for svc in services:
