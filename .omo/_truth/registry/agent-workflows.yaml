@@ -73,6 +73,20 @@ runner:
   lock_state_dir: .omo/_delivery/agent-workflows/locks
   ledger_path: .omo/_delivery/agent-workflows/events.jsonl
   lock_ttl_hours: 24
+silent_workflow_policy:
+  description: >
+    Registry-level policy for workflows that have no recent agent_workflow_start
+    events (ADR-0130 / P74). P74 §4.4 distinguishes A1 (check-layer silent,
+    addressed via doctor_checks / diff_checks) from A2 (run-layer silent,
+    intentionally not force-triggered because gate coverage already exercises
+    them). A workflow is considered silently healthy when its path appears
+    in at least one diff_checks or doctor_checks rule, or when it is in the
+    excluded_workflows list. Workflows with neither coverage AND no recent
+    run events trigger a [warn] in agent-workflow compliance (p74_solidification).
+  warn_after_days: 30
+  excluded_workflows:
+    - handoff-resume
+    - observer-audit
 claim_policy:
   mode: advisory
   required_paths:
@@ -92,12 +106,25 @@ claim_policy:
         - bin/change-lane-check.py
         - bin/gac-local-gate.py
         - bin/governance-evolution.py
+        - bin/omo-state-projection-guard.py
+        - bin/omo-runtime-stamp-policy.py
         - projects/agora/etc/bos-services.yaml
         - projects/cockpit/src/cockpit/cli.py
         - projects/cockpit/src/cockpit/commands/agent_workflow.py
         - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
         - projects/ecos/src/ecos/ssot/mof/**
         - tests/test_agent_workflow.py
+    - id: runtime-projection-snapshot
+      mode: required
+      paths:
+        - .omo/_truth/registry/runtime-projections.yaml
+        - .omo/state/runtime/**
+        - .omo/_control/**
+        - BRIEF.md
+      note: >
+        Runtime projections refreshed by the omo state sync broker (ADR-0129,
+        P74 §3.2). Derived artifacts; required so that omo state sync
+        workflows must claim them, keeping broker regeneration auditable.
     - id: agent-entrypoint-advisory
       mode: advisory
       paths:
@@ -566,6 +593,42 @@ diff_checks:
       - ARCHITECTURE.md
       - LAYER-INDEX.md
     command: [make, gac-local-gate]
+  - id: gen-service-configs-validate
+    description: >
+      Validates gen-service-configs output is consistent with the services.yaml
+      registry and that all generated GitHub Actions workflows carry an
+      executable `schedule_ref` reference (P4 元递归全覆盖 复发拦截, P74 §3).
+    required: true
+    paths:
+      - bin/gen-service-configs.py
+      - projects/agora/etc/services.yaml
+      - .github/workflows/**
+    command: [uv, run, --with, pyyaml, python, bin/gen-service-configs.py, --validate]
+  - id: omo-state-projection-guard
+    description: >
+      Validates that .omo/state/runtime/* projections referenced from
+      runtime-projections.yaml are present, parse as YAML/JSON, and have a
+      canonical-path entry (CR-P74-STATE-PROJECTION-GUARD; prevents P71
+      class A "path drift" recurrence).
+    required: true
+    paths:
+      - .omo/_truth/registry/runtime-projections.yaml
+      - .omo/state/runtime/**
+      - .omo/_control/**
+      - BRIEF.md
+    command: [uv, run, --with, pyyaml, python, bin/omo-state-projection-guard.py]
+  - id: omo-runtime-stamp-policy
+    description: >
+      Confirms runtime stamp files (e.g. .watch-dispatch-stamps.json) are
+      either gitignored, tracked, or registered in the runtime surface
+      registry, so untracked runtime artifacts do not silently accumulate
+      (CR-P74-RUNTIME-STAMP-POLICY; prevents P71 class B recurrence).
+    required: true
+    paths:
+      - runtime/**
+      - .omo/_truth/registry/runtime-projections.yaml
+      - .gitignore
+    command: [uv, run, --with, pyyaml, python, bin/omo-runtime-stamp-policy.py]
 workflows:
   - id: project-doc-change
     title: Project documentation change

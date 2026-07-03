@@ -69,6 +69,7 @@ def classify(path: str, submodules: set[str]) -> str:
         ".omo/capabilities/agent-clis.yaml",
         ".omo/standards/agent-workflow-contract.md",
         ".agents/skills/project-governance/SKILL.md",
+        ".agents/skills/workflow-silence-detection/SKILL.md",
         "bin/agent-workflow.py",
         "bin/compass_radar.py",
         "bin/cockpit-readiness.py",
