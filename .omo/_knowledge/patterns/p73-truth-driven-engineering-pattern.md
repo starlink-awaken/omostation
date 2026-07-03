@@ -4,7 +4,7 @@ lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-07-03
 related:
-  - ../management/workflows/governance-ssot-edit-workflow.md
+  - ../../../.agents/skills/governance-ssot-edit/SKILL.md
   - ../../../docs/AGENT-ISOLATION-ROLLOUT.md
   - p72-follow-up-completion-pattern.md
   - p71-baseline-recovery-pattern.md
@@ -57,7 +57,7 @@ related:
 - 改完**立即** pathspec commit (`git commit <files>`) 只含目标文件, 不带并发 staged
 - 立即 push + 开 PR, 防工作树裸奔
 - 验证后**再跑 `git diff --stat`** 确认改动还在 (防静默还原骗你"已绿")
-- 详见 [[governance-ssot-edit-workflow]]
+- 详见 governance-ssot-edit skill (`.agents/skills/governance-ssot-edit/SKILL.md`, agent 可触发)
 
 ## 3. 何时用
 
@@ -84,7 +84,7 @@ GaC executor enum drift 修复全走通 4 纪律:
 
 ## 6. 关联
 
-- **操作流程**: [[governance-ssot-edit-workflow]] (本 pattern 的端到端步骤化)
+- **操作流程 (agent 可触发)**: `.agents/skills/governance-ssot-edit/SKILL.md` (端到端步骤, agent 可触发)
 - **并发根治**: `docs/AGENT-ISOLATION-ROLLOUT.md` (worktree+branch protection 终态, 本 pattern 纪律4 是临时防护)
 - **同系列**: p71 (baseline 恢复) / p72 (follow-up 完成)
 - **配套 memory**: `path-migration-lookup-protocol` / `concurrent-pr-flushes-worktree` / `existence-check-already-exists` / `debt-system-healthy` / `ci-red-multitrack-tasks`
