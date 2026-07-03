@@ -1044,3 +1044,22 @@ governance_closure_constraints:
       - protocols/port-registry.yaml
       - X1-C2G-INGRESS-SELF-CORRECTION-20260703
     violation: "新端口/服务 Pitch 绕过 C2G Ingress 预审直接落盘"
+
+  - id: CR-KOS-ONTOLOGY-DRIFT-01
+    applies_to: [L0, meta]
+    description: |
+      eCOS v6 物理算力资产自省约束: 所有在算力网格中活动的物理计算节点 (ComputeNode)，
+      必须登记在 docs/project-registry.yaml 中并由 gac-kos-sync.py 同步至 KOS SQLite。
+      任何未注册的黑户算力节点运行 completions 请求都属于严重违规。
+    dimension: X4
+    rule: "compute_node.is_registered == true"
+    type: required
+    severity: warn
+    enforcement: advisory (gac-kos-sync 检测)
+    introduced: '2026-07-04'
+    value_tier: 2
+    references:
+      - docs/project-registry.yaml
+      - bin/gac-kos-sync.py
+      - kos/kos-index.sqlite (compute_nodes)
+    violation: "未注册的计算节点活动在算力网格中"
