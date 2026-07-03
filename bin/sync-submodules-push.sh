@@ -13,6 +13,11 @@
 #   bin/sync-submodules-push.sh             # 真同步
 set -uo pipefail
 
+# 治本 followup C (2026-07-03): pre-push hook 跑时 git 设 GIT_DIR/GIT_WORK_TREE 指向主仓 worktree,
+# 泄漏到 `git -C "$sm"` → 读主仓分支(非子模块, 实测报 branch=work/<session>) → 子模块全判"无上游"拦 push.
+# unset 后 git -C "$sm" 读子模块自己的 .git (正确). cd 用 cwd 的 worktree .git (hook cwd=发起push的worktree).
+unset GIT_DIR GIT_WORK_TREE 2>/dev/null || true
+
 cd "$(git rev-parse --show-toplevel)" || { echo "❌ 不在 git 仓"; exit 1; }
 
 dry=0
