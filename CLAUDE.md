@@ -9,8 +9,9 @@
 
 > [!IMPORTANT]
 > **KOS (Knowledge Operating System) Hardware Cold-Start Protocol**
-> You are equipped with `mcp-server-kos` as your external read-only hard drive. 
+> You are equipped with `mcp-server-kos` as your external read-only hard drive.
 > To align your mental model and avoid historical architectural regressions, you MUST run the following KOS query sequence during your first turn:
+>
 > 1. **Query Current Decisions & Goals**:
 >    `mcp-server-kos::query_custom_sql(sql="SELECT id, title, path FROM documents WHERE path LIKE '%BRIEF.md%' LIMIT 1")`
 >    Read the resulting BRIEF.md file path. It contains the active technical debts (needs-human) and X3 metrics.
