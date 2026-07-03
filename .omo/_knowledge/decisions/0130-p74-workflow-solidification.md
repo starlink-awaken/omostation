@@ -9,6 +9,12 @@ related:
   - ../../standards/p74-solidification-contract.md
   - ../patterns/p74-workflow-solidification-pattern.md
   - ../../_truth/registry/agent-workflows.yaml
+  - ../../_truth/registry/mof-capabilities.yaml
+  - ../../../projects/ecos/src/ecos/ssot/mof/m3.yaml#GacRule
+  - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-STATE-PROJECTION-GUARD.yaml
+  - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-RUNTIME-STAMP-POLICY.yaml
+  - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-WORKFLOW-SILENCE.yaml
+  - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-WORKFLOW-SUGGEST.yaml
 ---
 
 # ADR-0130: P74 Workflow Solidification — 常态化工作流沉默治理
