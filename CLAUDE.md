@@ -197,11 +197,11 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 
 ## 🧬 Onboarding Consensus (🧬 历史演进避坑基因)
 
-> **自动刷新时间**: 2026-07-03 23:09:36 | 模式: RAG Top-2 按需激活
+> **自动刷新时间**: 2026-07-04 06:43:25 | 模式: RAG Top-2 按需激活
 > 新进 Agent 必须通读并深度对齐以下前人沉淀的历史避坑基因，严禁在同一坑中二次栽倒：
 
-* **P74 — Workflow Solidification Pattern (常态化工作流沉默治理)** ([p74-workflow-solidification-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md))
-  > 任一即触发 P74 评估: 1. **沉默 workflow**:registry 登记 ≥ 1 周,无 `agent_workflow_start` 事件。 2. **错位 workflow**:实际做的事 ≥ 3 次,却走通用 `project-code-change` 而非专属 workflow。
+* **P44 Closed-Loop Pattern — M3 Lifecycle Instance (Governance Catch-up + Drift 治本)** ([p44-closed-loop-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p44-closed-loop-pattern.md))
+  > P43 是"**债务驱动**"的闭环（5 debt evidence closure → governance 85→100）。 P44 是"**治理滞后**"的闭环：代码已收敛于 Phases 1-9，但治理状态未同步；状态数据漂移；新发债务预防。 | 维度 | P43 | P44 |
 
 * **P71 Baseline Recovery Pattern — 5 阶段声明/执行鸿沟修复** ([p71-baseline-recovery-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md))
   > ```text 类 A — 路径错位 (Git-ignored SSOT) 症状: declare 在 X (tracked), 实际写 Y (gitignored)

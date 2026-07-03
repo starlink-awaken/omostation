@@ -183,3 +183,38 @@ principles:
     subprojects_lint_cleaned: 6 (kairon/cockpit/runtime/omo/metaos/aetherforge/c2g/ecos)
     debt_closure_evidence: 4 closed + 1 deferred → 100% evidence coverage
     c2g_tests: 22 → 63 (+41, ratio 0.02 → 0.07)
+
+  OMLX_COMPUTE_MESH:
+    x1_audit:
+      mechanism: KOS SQLite compute_nodes 实体 + runs_model 关系 + port-registry.yaml
+      coverage: 三机物理节点 (MBP/mac-mini/Y7000P) 路由记录
+      implemented: true
+    x2_freshness:
+      mechanism: gac-mesh-router.py 1.5s 实时探活 + KOS 拓扑保鲜 (closeout 触发刷新)
+      coverage: 节点状态实时感知
+      implemented: true
+    x3_value:
+      mechanism: >
+        算力消耗归因: 请求通过 :7435 路由后，由 LiteLLM UI (:4001/ui) 记录
+        Token 用量 by model by node；gac-consensus-inject.py RAG 模式记录
+        注入基因数/总基因数比率 (Token saved%)
+      dimensions: [tokens_per_node, latency_ms, fallback_rate, rag_token_savings_pct]
+      implemented: true
+      tool_invariant_id: OMLX-MESH-X3-METRICS-v1
+
+  KOS_ONTOLOGY:
+    x1_audit:
+      mechanism: kos-ontology-graph.md 自动刷新 (gac-kos-sync.py closeout 触发)
+      coverage: 全域 114 个实体 + 算力节点 + Consensus 实体
+      implemented: true
+    x2_freshness:
+      mechanism: gac-kos-sync.py 每次 closeout 强制重建快照；漂移 > 5 实体告警
+      coverage: 100% 实体覆盖
+      implemented: true
+    x3_value:
+      mechanism: >
+        RAG Token 节省率: gac-consensus-inject.py 输出 injected/total 比率；
+        KOS 图谱查询次数由 gac-mesh-router.py 请求计数
+      dimensions: [consensus_hit_rate, rag_token_savings_pct, kos_query_latency_ms]
+      implemented: true
+      tool_invariant_id: KOS-ONTOLOGY-X3-METRICS-v1

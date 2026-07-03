@@ -192,3 +192,91 @@ policies:
     notes: >
       P43-P58 期间多次出现 mof-version bump 但 git commit 失同步, P59 一次修复 571 文件落地。
       此后强制闭环纪律是 L0 级别 error, 不可降级。
+
+  - policy_id: X1-OMLX-COMPUTE-MESH-ROUTING-20260703
+    title: omlx 算力网格智能路由策略 (eCOS v6)
+    type: governance_stack
+    status: active
+    created: '2026-07-03'
+    description: >
+      eCOS v6 Phase 3: 所有 LLM completions 请求必须通过 gac-mesh-router.py
+      (:7435) 进行智能多机路由。路由器读取 KOS 图谱中的 runs_model 约束，
+      对候选物理节点 (mac-mini-M4/Y7000P) 发起 1.5s 探活，超时自动 Fallback
+      至主控机 MBP 统一网关 (100.96.126.35:4000)，保障服务连续性。
+      任何直连从机节点的方式不受治理，需注册到 port-registry.yaml。
+    scope:
+      - bin/gac-mesh-router.py
+      - protocols/port-registry.yaml
+      - docs/project-registry.yaml
+      - kos/kos-index.sqlite (compute_nodes 实体)
+    audit_requirements:
+      - source: protocols/port-registry.yaml (port 7435 已注册)
+      - source: docs/project-registry.yaml (mesh-router L0 项目已注册)
+    evidence:
+      - 物理验证: 2026-07-03 真实请求通过 :7435 完整走通 Fallback 链路
+      - fp_ollama 指纹响应: mini-9b 本地推理成功
+    owner: architecture-team
+    review_frequency: monthly
+    next_review: '2026-08-03'
+    enforcement: log-and-notify
+
+  - policy_id: X1-KOS-ONTOLOGY-SELF-AWARENESS-20260703
+    title: KOS 动态本体自省策略 (eCOS v6)
+    type: governance_stack
+    status: active
+    created: '2026-07-03'
+    description: >
+      eCOS v6 Phase 2: 所有物理算力节点 (compute_nodes)、架构共识模式
+      (Consensus) 及算力模型约束 (runs_model) 必须登记在 KOS SQLite 图谱中。
+      KOS 图谱是系统本体自省的唯一真实来源 (SSOT)，任何新增算力节点必须
+      同步在 docs/project-registry.yaml::compute_nodes 中注册，并在下次
+      gac-kos-sync.py 运行时自动导入 KOS 图谱。
+    scope:
+      - kos/kos-index.sqlite
+      - docs/project-registry.yaml (compute_nodes)
+      - bin/gac-kos-sync.py
+      - projects/kairon/packages/kos/src/kos/ontology/engine.py
+    audit_requirements:
+      - source: docs/generated/kos-ontology-graph.md (自动刷新)
+    owner: architecture-team
+    review_frequency: weekly
+    next_review: '2026-07-10'
+    enforcement: advisory
+
+  - policy_id: X1-RAG-EPIGENETIC-MEMORY-20260703
+    title: RAG 基因按需注入策略 (eCOS v6 Phase A)
+    type: governance_loop
+    status: active
+    created: '2026-07-03'
+    description: >
+      eCOS v6 Phase A: CLAUDE.md 的 Onboarding Consensus 章节不允许全量追加。
+      必须通过 gac-consensus-inject.py 的 TF-IDF/embed-bge RAG 机制，
+      按任务上下文（staged 文件 + objective）动态筛选 Top-2 最相关的
+      Consensus 实体注入，Token 消耗节省不低于 60%。
+    scope:
+      - bin/gac-consensus-inject.py
+      - CLAUDE.md
+      - kos/kos-index.sqlite (Consensus 实体 + consensus_vectors 表)
+    owner: governance-team
+    review_frequency: monthly
+    next_review: '2026-08-03'
+    enforcement: advisory
+
+  - policy_id: X1-C2G-INGRESS-SELF-CORRECTION-20260703
+    title: C2G Ingress 自愈预审策略 (eCOS v6 Phase B)
+    type: write_gate
+    status: active
+    created: '2026-07-03'
+    description: >
+      eCOS v6 Phase B: 任何新建服务/端口的 Pitch 在落盘前必须通过
+      gac-ingress-check.py 进行预审，检测端口冲突 (port-registry.yaml)、
+      服务名重名 (project-registry.yaml) 及 LLM 语义依赖分析。
+      存在 CRITICAL 阻断问题时，任务禁止落盘直到冲突消解。
+    scope:
+      - bin/gac-ingress-check.py
+      - protocols/port-registry.yaml
+      - docs/project-registry.yaml
+    owner: governance-team
+    review_frequency: monthly
+    next_review: '2026-08-03'
+    enforcement: advisory

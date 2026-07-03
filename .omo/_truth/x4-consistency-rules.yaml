@@ -161,3 +161,54 @@ rules:
       偏离时报警, 可能存在统计口径不一致或工具 bug。
       P52 v5 终极后稳态: drift LOW=2, governance=100 A+, 持续健康。
       实现: bin/check-drift-governance-consistency.py (P60+ 实现)
+
+  - rule_id: X4-CONS-OMLX-PORT-REGISTRY-SYNC
+    title: omlx 算力网格端口注册一致性
+    status: active
+    created: '2026-07-03'
+    description: >
+      eCOS v6: gac-mesh-router.py 监听端口 7435 必须在 protocols/port-registry.yaml
+      中注册。任何新算力网格服务端口都必须在 port-registry.yaml 中唯一占位注册，
+      防止端口冲突。gac-ingress-check.py 负责在 Pitch 阶段前置校验。
+    check:
+      tool: bin/gac-ingress-check.py
+      assertion: all_service_ports in port-registry.yaml
+    scope:
+      - protocols/port-registry.yaml
+      - bin/gac-mesh-router.py
+      - bin/gac-ingress-check.py
+    owner: architecture-team
+    enforcement: advisory
+
+  - rule_id: X4-CONS-KOS-CONSENSUS-VECTOR-CACHE
+    title: KOS Consensus 向量缓存一致性
+    status: active
+    created: '2026-07-03'
+    description: >
+      eCOS v6 Phase A: KOS SQLite 中的 consensus_vectors 表缓存向量必须与
+      Consensus 实体 entity_id 对应一致。若 Consensus 实体被更新，对应
+      consensus_vectors 行必须清除（由 gac-consensus-inject.py 的
+      get_or_build_consensus_vector 通过 INSERT OR REPLACE 维护）。
+    check:
+      assertion: consensus_vectors.entity_id subset_of kos_entities.entity_id WHERE entity_type='Consensus'
+    scope:
+      - kos/kos-index.sqlite (consensus_vectors 表)
+      - bin/gac-consensus-inject.py
+    owner: governance-team
+    enforcement: advisory
+
+  - rule_id: X4-CONS-AGENT-WORKFLOW-TOOLS-INDEXED
+    title: GaC 工具注册与 bootstrap 索引一致性
+    status: active
+    created: '2026-07-03'
+    description: >
+      eCOS v6: 所有在 agent-workflows.yaml::tools 中注册的工具必须通过
+      bootstrap 健康检查（工具数 = 期望值）。当前期望: 19/19 工具。
+      新增工具必须同时在 agent-workflows.yaml 中注册并更新期望工具数。
+    check:
+      tool: bin/agent-workflow.py bootstrap --skip-health
+      assertion: tools_indexed == expected_tool_count
+    scope:
+      - .omo/_truth/registry/agent-workflows.yaml (tools section)
+    owner: governance-team
+    enforcement: advisory
