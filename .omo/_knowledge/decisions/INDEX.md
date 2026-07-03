@@ -104,6 +104,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0126 | S2 阶段深度分析 (2026-07-03) — 当前状态 + 后续建议 | ACTIVE | 2026-07-03 | governance-team | 0126-s2-final-analysis.md |
 | 0127 | Code Review: S2 阶段主仓 PR + 后续 (2026-07-03) | ACTIVE | 2026-07-03 | governance-team | 0127-code-review-s2.md |
 | 0128 | 多 Agent 并发下治理状态生成的架构收敛 | PROPOSED | 2026-07-03 | governance-team | 0128-state-generation-concurrency.md |
+| 0129 | 运行时投影面分离（ADR-0128 Phase 3 治本设计） | PROPOSED | 2026-07-03 | governance-team | 0129-state-projection-plane-phase3.md |
 
 ---
 
