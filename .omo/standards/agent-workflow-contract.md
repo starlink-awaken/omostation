@@ -200,14 +200,35 @@ uv run --project projects/cockpit cockpit agent closeout <run-id>
 
 `cockpit agent-workflow` remains as a compatibility alias.
 
-## 10. Non-Goals
+## 10. State Sync Workflow
+
+High-churn runtime projections use a single workflow and broker:
+
+```bash
+uv run --with pyyaml python bin/agent-workflow.py run state-sync --stage preflight --execute
+uv run --with pyyaml python bin/agent-workflow.py run state-sync --stage execute --execute
+uv run --project projects/omo omo state sync --dry-run --json
+uv run --project projects/omo omo state sync --json
+```
+
+`post-commit` hooks and WatchPaths emit `state_stale` events through `bin/state-stale-emit.py`.
+They must not directly run `compass_radar.py`, `generate-brief.py`, or governance-data generators.
+The registered mutation surface is `omo-state-sync-projection`, and its broker is
+`projects/omo/src/omo/omo_ingress_state.py:sync_state_projection`.
+
+The broker owns content fingerprinting, process locking, runtime delivery evidence, and mutation
+ledger records for `.omo/state/health.yaml`, `.omo/state/system.yaml`, `BRIEF.md`, and
+`.omo/_control/governance-data.json`. Agents should use the workflow or the `omo state sync`
+CLI instead of hand-editing those projections.
+
+## 11. Non-Goals
 
 - Do not copy all GAC rules into skills or docs.
 - Do not create a second task system beside OMO/C2G.
 - Do not bypass OMO/C2G brokers for task, debt, goal, or state-plane truth mutations.
 - Do not rely on agent personality or model type for enforcement.
 
-## 11. Drift Control
+## 12. Drift Control
 
 The workflow registry is validated by:
 

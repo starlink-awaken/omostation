@@ -44,6 +44,7 @@ Agent/BOS entries:
 | OMO/C2G/MOF operating rhythm | Feedback delays | `mof-state-bridge`, C2G/OMO help gates |
 | Golden Path E2E | Rules | `governance-evolution golden-paths --json` |
 | Entry point convergence | Rules | Cockpit/AGCP/GaC entry contracts |
+| Runtime projection convergence | Feedback delays | `uv run --project projects/omo omo state sync --dry-run --json` |
 
 ## Golden Paths
 
@@ -53,6 +54,7 @@ The canonical paths are registry-owned:
 2. Strategy ingress: `cockpit compass bet -> c2g bet -> OMO planned task -> AGCP run -> evidence`.
 3. BOS invocation: `bos://governance/evolution/status -> traces -> verifier`.
 4. Release package review: `packages -> unknown_count -> runtime/data exclusions -> AGCP closeout`.
+5. Runtime projection sync: `state_stale event -> state-sync workflow -> omo state sync -> mutation ledger`.
 
 Do not duplicate the full steps here. Update the registry, then run:
 

@@ -125,16 +125,33 @@ def gate_checks(
     return tuple(result)
 
 
-def scoped_change_lane_command(scope: str, files: list[str] | None, run_id: str) -> list[str]:
+def _matched_files_from_env() -> list[str]:
+    raw = os.environ.get("AGENT_WORKFLOW_MATCHED_FILES", "")
+    if not raw:
+        return []
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(payload, list):
+        return []
+    return [str(item) for item in payload if str(item)]
+
+
+def scoped_change_lane_command(
+    scope: str = "files",
+    files: list[str] | None = None,
+    run_id: str = "",
+) -> list[str]:
     cmd = ["bin/change-lane-check.py"]
     if scope == "staged":
         cmd.append("--staged")
     elif scope == "files":
-        cmd.append("--files")
-        if files:
-            cmd.extend(files)
+        for file in sorted(files or _matched_files_from_env()):
+            cmd.extend(["--file", file])
     elif scope == "run":
-        cmd.extend(["--run-id", run_id])
+        for file in sorted(change_lane_files_for_scope(scope, files, run_id)):
+            cmd.extend(["--file", file])
     return cmd
 
 

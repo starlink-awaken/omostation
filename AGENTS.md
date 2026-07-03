@@ -35,6 +35,7 @@ Project-specific instructions override this guide only within that project and o
 | [`.omo/_truth/x4-consistency-rules.yaml`](.omo/_truth/x4-consistency-rules.yaml) | X4 consistency rules | Consistency SSOT |
 | [`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`](projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml) | L0 protocol constraints | Constraint SSOT |
 | [`.omo/state/system.yaml`](.omo/state/system.yaml) | Runtime state | Runtime probes and OMO state sync |
+| [`.omo/_control/governance-data.json`](.omo/_control/governance-data.json) | Runtime governance projection | `omo state sync` broker |
 
 Do not hard-code current phase, health score, test counts, tool counts, service counts, source-file counts, port values, or generated rule inventories in Markdown. Use pointers.
 
@@ -74,6 +75,8 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
 uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
 uv run --with "pyyaml" python "bin/agent-workflow.py" lint
 uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
+uv run --project "projects/omo" omo state sync --dry-run --json
+uv run --project "projects/omo" omo state sync --json
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
 uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
@@ -160,6 +163,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 | Executable agent workflows | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
 | AGCP status/scoped gate/claim policy | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
 | Governance evolution roadmap | [`docs/GOVERNANCE-EVOLUTION-ROADMAP.md`](docs/GOVERNANCE-EVOLUTION-ROADMAP.md) |
+| State generation convergence | [`.omo/_knowledge/decisions/0128-state-generation-concurrency.md`](.omo/_knowledge/decisions/0128-state-generation-concurrency.md) |
 | **3 类声明/执行鸿沟 (P71 §1)** | 路径错位 (类 A, PR#4 baseline 漂移) / 工具未接 (类 B, 9 check-* 0 caller) / CI 永红 (类 C, doctor + project-layer-index). 修复见 P71 5 阶段流程. 防复发见 4 GaC 规则 (CR-X1-EVIDENCE-RUNNABLE / CR-L0-BOS-DOMAIN-NORM / CR-META-BIN-NAMING / CR-META-BIN-ORPHAN) |
 
 ## 9. Closeout Checklist

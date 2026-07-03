@@ -9,8 +9,9 @@
 
 > [!IMPORTANT]
 > **KOS (Knowledge Operating System) Hardware Cold-Start Protocol**
-> You are equipped with `mcp-server-kos` as your external read-only hard drive. 
+> You are equipped with `mcp-server-kos` as your external read-only hard drive.
 > To align your mental model and avoid historical architectural regressions, you MUST run the following KOS query sequence during your first turn:
+>
 > 1. **Query Current Decisions & Goals**:
 >    `mcp-server-kos::query_custom_sql(sql="SELECT id, title, path FROM documents WHERE path LIKE '%BRIEF.md%' LIMIT 1")`
 >    Read the resulting BRIEF.md file path. It contains the active technical debts (needs-human) and X3 metrics.
@@ -49,6 +50,7 @@ The authoritative SSOT map (all fact types and their sources) lives in [`ARCHITE
 | Topic | Rule | Read More |
 |------|------|-----------|
 | Runtime state | Read from `.omo/state/system.yaml`; do not hard-code | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
+| Runtime projection refresh | Use `uv run --project projects/omo omo state sync`; do not run ad-hoc generator scripts from hooks | [`.omo/_knowledge/decisions/0128-state-generation-concurrency.md`](.omo/_knowledge/decisions/0128-state-generation-concurrency.md) |
 | Governed `.omo/` writes | Use `omo` CLI/MCP or approved broker, not ad-hoc file I/O | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | Ports | Read and register through `protocols/port-registry.yaml` | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
 | Vault paths | Read from `protocols/vault-paths.yaml`; do not hard-code `~/Documents/` paths | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
@@ -74,6 +76,8 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
 uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
 uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
 uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
+uv run --project "projects/omo" omo state sync --dry-run --json
+uv run --project "projects/omo" omo state sync --json
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute

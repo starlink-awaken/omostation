@@ -60,6 +60,34 @@ def test_governance_evolution_registry_validates() -> None:
     assert "bos://governance/evolution/loop" in report["entrypoints"]["bos"]
 
 
+def test_governance_evolution_classifies_runtime_projection_outputs() -> None:
+    paths = ["BRIEF.md", "runtime/.watch-dispatch-stamps.json"]
+    code = f"""
+import importlib.util
+import json
+spec = importlib.util.spec_from_file_location("governance_evolution", {str(SCRIPT)!r})
+assert spec is not None
+assert spec.loader is not None
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+print(json.dumps({{path: module.classify_release_package(path)[0] for path in {paths!r}}}))
+"""
+    result = subprocess.run(
+        [PYTHON, "-c", code],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    packages = json.loads(result.stdout)
+    assert packages == {
+        "BRIEF.md": "runtime-or-control-output",
+        "runtime/.watch-dispatch-stamps.json": "runtime-or-control-output",
+    }
+
+
 def test_governance_evolution_exposes_required_initiatives() -> None:
     result = _run_evolution("status", "--json")
 
