@@ -47,6 +47,7 @@ gates:
     command: ["bin/agent-workflow.py", "observe"]
   - id: "governance-evolution"
     command: ["bin/governance-evolution.py", "validate", "--json"]
+    ci_only: true  # ISC-3f/3g: 依赖 agora/cockpit 子模块脚本, worktree 部分 init 假阳性; non-strict pre-commit 跳过, CI strict 兜底
   - id: "mof-schema-validate"
     command: ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]
   - id: "mof-state-bridge"
