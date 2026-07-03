@@ -200,6 +200,106 @@ def path_matches(patterns: list[str], path: str) -> bool:
     return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
 
 
+def suggest_workflows(
+    registry: dict[str, Any],
+    files: list[str],
+    profile: str = "",
+) -> list[dict[str, Any]]:
+    """Suggest workflows for a set of files (P74 stage 3 — advisory routing).
+
+    Walks every workflow's `surfaces.write` glob list and scores it by the
+    fraction of `files` that match. Returns suggestions sorted by score
+    descending. Empty list when nothing matches. Does not raise; suggestions
+    are advisory only and must be confirmed by `start --workflow-id`.
+    """
+    normalized = sorted({normalize_repo_path(item) for item in files})
+    if not normalized:
+        return []
+    suggestions: list[dict[str, Any]] = []
+    for workflow in registry.get("workflows") or []:
+        if not isinstance(workflow, dict):
+            continue
+        surfaces = workflow.get("surfaces") or {}
+        write_patterns = surfaces.get("write") if isinstance(surfaces, dict) else None
+        if not isinstance(write_patterns, list) or not write_patterns:
+            continue
+        matched = [file for file in normalized if path_matches([str(p) for p in write_patterns], file)]
+        if not matched:
+            continue
+        score = round(len(matched) / len(normalized), 3)
+        agents = workflow.get("agents") or {}
+        roles = agents.get("roles") if isinstance(agents, dict) else []
+        suggestions.append(
+            {
+                "workflow_id": str(workflow.get("id") or ""),
+                "title": str(workflow.get("title") or ""),
+                "score": score,
+                "matched_files": matched,
+                "total_files": len(normalized),
+                "agents": [str(r) for r in roles if isinstance(r, str)],
+                "allowed_lanes": [
+                    str(item) for item in (workflow.get("allowed_lanes") or []) if isinstance(item, str)
+                ],
+                "profile_hint": _profile_hint(profile, roles),
+            }
+        )
+    suggestions.sort(key=lambda item: (item["score"], item["workflow_id"]), reverse=True)
+    return suggestions
+
+
+def _profile_hint(profile: str, roles: list[object]) -> str:
+    if not profile:
+        return ""
+    if any(str(role) == profile for role in roles):
+        return "exact"
+    return "allowed_via_governance_agent"
+
+
+def suggest_command(registry: dict[str, Any], files: list[str], profile: str, as_json: bool) -> int:
+    suggestions = suggest_workflows(registry, files, profile)
+    matched_files = {
+        matched for suggestion in suggestions for matched in suggestion["matched_files"]
+    }
+    uncovered = [file for file in files if file not in matched_files]
+    if as_json:
+        json.dump(
+            {
+                "file_count": len(files),
+                "profile": profile,
+                "suggestion_count": len(suggestions),
+                "suggestions": suggestions,
+                "uncovered_files": uncovered,
+            },
+            sys.stdout,
+            indent=2,
+            ensure_ascii=False,
+            sort_keys=False,
+        )
+        sys.stdout.write("\n")
+        return 0
+    if not suggestions:
+        print(f"[INFO] no workflow matches {len(files)} file(s); use --workflow-id to override")
+        if uncovered:
+            print(f"[WARN] {len(uncovered)} file(s) uncovered by any workflow.surfaces.write:")
+            for file in uncovered:
+                print(f"  - {file}")
+            print("[HINT] consider extending an existing workflow's surfaces or registering a new one.")
+        return 0
+    print(f"[advisory] {len(suggestions)} workflow candidate(s) for {len(files)} file(s):")
+    for item in suggestions:
+        marker = " <-- profile matches" if item["profile_hint"] == "exact" else ""
+        print(
+            f"  - {item['workflow_id']} (score={item['score']}, agents={','.join(item['agents']) or '-'}){marker}"
+        )
+        for matched in item["matched_files"]:
+            print(f"      matched: {matched}")
+    if uncovered:
+        print(f"[WARN] {len(uncovered)} file(s) uncovered by any workflow.surfaces.write:")
+        for file in uncovered:
+            print(f"  - {file}")
+    return 0
+
+
 def diff_check_rows(registry: dict[str, Any]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for check in registry.get("diff_checks") or []:
@@ -964,7 +1064,7 @@ def start_run(
     run_dir = run_state_dir(registry)
     run_dir.mkdir(parents=True, exist_ok=True)
     run_path = run_dir / f"{run_id}.yaml"
-    run_path.write_text(yaml.safe_dump(record, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    run_path.write_text(yaml.safe_dump(record, allow_unicode=True, sort_keys=False), encoding="utf-8")  # audit-exempt: non-atomic-write — run state single-writer under run_update_lock
     record["path"] = display_path(run_path)
     append_ledger_event(
         registry,
@@ -992,7 +1092,7 @@ def read_run(registry: dict[str, Any], run_id: str) -> tuple[Path, dict[str, Any
 
 def write_run(path: Path, payload: dict[str, Any]) -> None:
     payload["updated_at"] = utc_now()
-    path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8")  # audit-exempt: non-atomic-write — under run_update_lock
 
 
 def claim_run(
@@ -1458,7 +1558,7 @@ def close_run(
     payload["evidence"].extend(evidence)
     if release:
         payload["released_locks"] = release_locks(registry, payload["run_id"])
-    path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8")  # audit-exempt: non-atomic-write — under run_update_lock
     payload["path"] = display_path(path)
     append_ledger_event(
         registry,
@@ -1575,6 +1675,102 @@ def ledger_events(registry: dict[str, Any]) -> list[dict[str, Any]]:
     return events
 
 
+def p74_solidification_report(
+    registry: dict[str, Any],
+    events: list[dict[str, Any]],
+    runs: dict[str, Any],
+) -> dict[str, Any]:
+    """P74 stage 5 self-evolution report (P74 §4.5).
+
+    Walks every workflow and computes its activation profile:
+
+    - has_recent_run: at least one agent_workflow_start within the window.
+    - has_check_coverage: workflow surfaces appear in any diff_checks.paths
+      or doctor_checks.paths.
+
+    A workflow is considered silently healthy (no warn) when:
+      (has_recent_run) OR (has_check_coverage)
+      OR (workflow id is in silent_workflow_policy.excluded_workflows).
+
+    Otherwise it produces a [warn] entry in the report.
+    """
+    silent_policy = registry.get("silent_workflow_policy") or {}
+    excluded = set(str(item) for item in (silent_policy.get("excluded_workflows") or []))
+
+    started_runs: dict[str, str] = {}
+    for event in events:
+        if str(event.get("event") or "") == "agent_workflow_start":
+            workflow_id = str(event.get("workflow_id") or "")
+            if workflow_id:
+                started_runs[workflow_id] = str(event.get("ts") or "")
+
+    covered_paths: set[str] = set()
+    for check in registry.get("diff_checks") or []:
+        if isinstance(check, dict):
+            for path in check.get("paths") or []:
+                if isinstance(path, str):
+                    covered_paths.add(path)
+    for check in registry.get("doctor_checks") or []:
+        if isinstance(check, dict):
+            for path in check.get("paths") or []:
+                if isinstance(path, str):
+                    covered_paths.add(path)
+
+    # Workflows whose id appears in any doctor_checks.command string are
+    # covered transitively (e.g. root-agent-workflow-observe runs observer-audit
+    # as a side effect of `make gac-local-gate`).
+    doctor_commands: list[str] = []
+    for check in registry.get("doctor_checks") or []:
+        if isinstance(check, dict):
+            command = check.get("command") or []
+            if isinstance(command, list):
+                doctor_commands.extend(str(item) for item in command if isinstance(item, str))
+
+    workflows_summary: list[dict[str, Any]] = []
+    for workflow in registry.get("workflows") or []:
+        if not isinstance(workflow, dict):
+            continue
+        workflow_id = str(workflow.get("id") or "")
+        surfaces = workflow.get("surfaces") or {}
+        write_patterns = surfaces.get("write") if isinstance(surfaces, dict) else None
+        read_patterns = surfaces.get("read") if isinstance(surfaces, dict) else None
+        workflow_paths = [str(p) for p in (write_patterns or []) if isinstance(p, str)]
+        if not workflow_paths:
+            workflow_paths = [str(p) for p in (read_patterns or []) if isinstance(p, str)]
+        has_check_coverage = any(
+            any(fnmatch.fnmatch(p, pattern) for p in covered_paths) for pattern in workflow_paths
+        ) if workflow_paths else False
+        if not has_check_coverage and workflow_id:
+            # Workflow id referenced in a doctor_checks.command string counts
+            # as transitive coverage (e.g. observer-audit via root-agent-workflow-observe).
+            has_check_coverage = any(workflow_id in command for command in doctor_commands)
+        last_start = started_runs.get(workflow_id, "")
+        has_recent_run = bool(last_start)
+        excluded_workflow = workflow_id in excluded
+        silent_health = "active" if has_recent_run or has_check_coverage else (
+            "excluded" if excluded_workflow else "warn"
+        )
+        workflows_summary.append(
+            {
+                "workflow_id": workflow_id,
+                "has_recent_run": has_recent_run,
+                "last_start_ts": last_start,
+                "has_check_coverage": has_check_coverage,
+                "silent_health": silent_health,
+                "agents": workflow.get("agents"),
+            }
+        )
+
+    warn_count = sum(1 for item in workflows_summary if item["silent_health"] == "warn")
+    return {
+        "ok": warn_count == 0,
+        "policy": silent_policy,
+        "summary_count": len(workflows_summary),
+        "warn_count": warn_count,
+        "workflows": workflows_summary,
+    }
+
+
 def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str, Any]:
     runs = load_run_records(registry)
     events = ledger_events(registry)
@@ -1646,6 +1842,7 @@ def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str,
             )
     severities = {finding["severity"] for finding in [*findings, *observe_report["findings"]]}
     decision = "halt" if "halt" in severities else "escalate" if "escalate" in severities else "continue"
+    p74_report = p74_solidification_report(registry, events, runs)
     return {
         "ok": decision == "continue",
         "decision": decision,
@@ -1654,6 +1851,7 @@ def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str,
         "observe": observe_report,
         "findings": findings,
         "slo": registry.get("compliance_slo") or {},
+        "p74_solidification": p74_report,
     }
 
 
@@ -1667,6 +1865,16 @@ def print_compliance_report(report: dict[str, Any], as_json: bool) -> None:
         print(f"[{finding['severity'].upper()}] {finding['kind']}: {finding['message']}")
     for finding in report["observe"]["findings"]:
         print(f"[{finding['severity'].upper()}] {finding['kind']}: {finding['message']}")
+    p74 = report.get("p74_solidification") or {}
+    if p74:
+        ok = "OK" if p74.get("ok") else "WARN"
+        print(f"P74 solidification: [{ok}] {p74.get('warn_count', 0)} silent workflow(s)")
+        for wf in p74.get("workflows", []):
+            if wf.get("silent_health") != "active":
+                print(
+                    f"  - {wf['workflow_id']}: {wf['silent_health']} "
+                    f"(run={wf['has_recent_run']}, check={wf['has_check_coverage']})"
+                )
 
 
 def last_ledger_event(
@@ -2211,6 +2419,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_closeout.add_argument("--all", action="store_true", dest="all_checks")
     p_closeout.add_argument("--keep-locks", action="store_true")
     p_closeout.add_argument("--json", action="store_true")
+
+    p_suggest = sub.add_parser(
+        "suggest",
+        help="Advisory workflow suggestion for a set of changed files (P74 stage 3).",
+    )
+    p_suggest.add_argument("--file", action="append", default=[])
+    p_suggest.add_argument("--from-diff", action="store_true")
+    p_suggest.add_argument("--include-untracked", action="store_true")
+    p_suggest.add_argument("--profile", default="")
+    p_suggest.add_argument("--json", action="store_true")
+
     return parser
 
 
@@ -2281,6 +2500,11 @@ def main(argv: list[str] | None = None) -> int:
             report = bootstrap_report(registry, not args.skip_health, include_agcp_drift)
             print_bootstrap_report(report, args.json)
             return 0 if report["ok"] else 1
+        if args.command == "suggest":
+            files = list(args.file or [])
+            if args.from_diff:
+                files.extend(changed_files_from_git(args.include_untracked))
+            return suggest_command(registry, files, args.profile, args.json)
         if args.command == "show":
             workflow = workflow_by_id(registry, args.workflow_id)
             context = context_from_args(args)
