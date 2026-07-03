@@ -164,6 +164,7 @@ def _composite_health_score(
     breakdown: dict = {"weights": weights, "contributions": contributions, "raw": round(raw, 2)}
     # feedback 回路硬门槛 (理想态 evidence-driven): 断 → 封顶 50 (触发 X1 告警, 防假绿)
     if not feedback_alive:
+        # 阈值 50: 半分线 — 高于 governance 熔断 25 (仍触发 X1 告警) 但不熔断 (留恢复窗口). 治 P5 magic number.
         score = min(score, 50)
         breakdown["feedback_capped"] = True
         breakdown["feedback_note"] = "feedback loop dead → capped at 50 (evidence-driven)"
@@ -171,27 +172,24 @@ def _composite_health_score(
 
 
 def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
-    """反馈回路存活 (理想态 evidence-driven): omo-events.jsonl 24h 内有记录 = alive.
+    """反馈回路存活 — 调 evidence-smoke (唯一判定源, DRY 真同源).
 
-    跟 evidence-smoke 多源 OR 同源 (omo-events 轻事件流, state-stale-emit 写).
+    evidence-smoke 多源 OR (governance-history | omo-events) 是 feedback 判定 SSOT.
+    compass_radar 不重新判定 (之前单源 omo-events 跟 evidence-smoke 不一致 — 治 P1).
     回路断 = governance 无活动 → compass_radar _composite 硬封顶 health (防假绿)."""
     import json  # noqa: PLC0415
-    from datetime import datetime, timezone  # noqa: PLC0415
+    import subprocess  # noqa: PLC0415
 
-    events_log = ws_root / ".omo" / "_knowledge" / "omo-events.jsonl"
-    if not events_log.is_file():
-        return (False, {"reason": "no omo-events log"})
     try:
-        lines = [l for l in events_log.read_text(encoding="utf-8").splitlines() if l.strip()]
-        if not lines:
-            return (False, {"reason": "empty log"})
-        last = json.loads(lines[-1])
-        ts = last.get("timestamp") or last.get("ts") or last.get("date") or ""
-        if not ts:
-            return (False, {"reason": "no timestamp", "last_ts": ts})
-        dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
-        hours = round((datetime.now(timezone.utc) - dt).total_seconds() / 3600, 1)
-        return (hours < 24, {"last_ts": ts, "staleness_hours": hours, "alive": hours < 24})
+        res = subprocess.run(
+            [sys.executable, str(ws_root / "bin" / "evidence-smoke.py"), "--json"],
+            cwd=ws_root, capture_output=True, text=True, timeout=120, check=False,
+        )
+        if res.returncode != 0 or not res.stdout.strip():
+            return (False, {"reason": f"evidence-smoke exit {res.returncode}"})
+        data = json.loads(res.stdout)
+        fb = data.get("feedback_loop") or {}
+        return (bool(fb.get("alive")), fb)
     except Exception as e:  # noqa: BLE001
         return (False, {"reason": f"error: {str(e)[:80]}"})
 
