@@ -17,6 +17,31 @@ Before editing:
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 
+## 1.5 P74 Solidification Quick Reference (ADR-0130)
+
+P74 is the常态化 mechanism (常态化机制) for detecting and preventing agent-workflow
+silence. See `.omo/_knowledge/decisions/0130-p74-workflow-solidification.md` for the
+architecture decision, `.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md`
+for the pattern, and `.omo/standards/p74-solidification-contract.md` for the
+operator-facing decision tree.
+
+SSOT:
+- `agent-workflows.yaml::silent_workflow_policy` (A1/A2 classification + excluded_workflows)
+- `governance-checks.yaml` (4 CR-P74-* rules: STATE-PROJECTION-GUARD, RUNTIME-STAMP-POLICY, WORKFLOW-SILENCE, WORKFLOW-SUGGEST)
+
+Tools (`bin/`):
+- `omo-state-projection-guard.py` — CR-P74-STATE-PROJECTION-GUARD
+- `omo-runtime-stamp-policy.py` — CR-P74-RUNTIME-STAMP-POLICY
+- `agent-workflow.py suggest --from-diff --profile <agent>` — CR-P74-WORKFLOW-SUGGEST
+- `agent-workflow.py compliance --json` → `.p74_solidification` — CR-P74-WORKFLOW-SILENCE
+
+Skill: `.agents/skills/workflow-silence-detection/SKILL.md` (triggers on P74, silent workflow, compliance warn).
+
+If `p74_solidification.warn_count > 0` (excluding `handoff-resume` / `observer-audit`),
+do NOT start the workflow speculatively. Read the contract standard §3 decision tree
+and either add a `diff_checks` rule covering the workflow's surfaces, or extend
+`silent_workflow_policy.excluded_workflows` with rationale.
+
 ## 2. Documentation SSOT Contract
 
 | Document | Owns | Must Reference |
@@ -29,6 +54,7 @@ Project-specific instructions override this guide only within that project and o
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | Project metadata facts | Actual project metadata |
 | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) | Agent workflow facts | Executable workflow runner |
 | [`.omo/_truth/registry/omo-governance-surfaces.yaml`](.omo/_truth/registry/omo-governance-surfaces.yaml) | OMO governance surfaces | Governance surface registry SSOT |
+| [`.omo/_truth/registry/runtime-projections.yaml`](.omo/_truth/registry/runtime-projections.yaml) | Runtime projection registry | `omo-state-projection-guard.py` (P74) |
 | [`.omo/_truth/x1-governance-policies.yaml`](.omo/_truth/x1-governance-policies.yaml) | X1 governance policies | Governance policy SSOT |
 | [`.omo/_truth/x2-freshness-rules.yaml`](.omo/_truth/x2-freshness-rules.yaml) | X2 freshness rules | Doc freshness SSOT |
 | [`.omo/_truth/x3-value-stack.yaml`](.omo/_truth/x3-value-stack.yaml) | X3 value stack | Value chain SSOT |

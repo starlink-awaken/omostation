@@ -6,9 +6,13 @@
 ## 30 秒理解
 
 - **5+4+1+1 架构**: L0 协议 → L1 运行时 → L2 引擎 → L3 入口 → L4 自我, I0 织层, M0 横切
-- **17 个项目**: 见 `docs/project-registry.yaml`
-- **147 条 GaC 规则**: 见 `.omo/_truth/registry/governance-checks.yaml`
-- **86 个 ADR**: 见 `.omo/_knowledge/decisions/INDEX.md`
+- **项目数量与分层**: 见 `docs/project-registry.yaml`
+- **GaC 规则与 ADR 总数**: 见 `docs/generated/agent-gac-rules.md` + `.omo/_knowledge/decisions/INDEX.md`(数字随演进变化, 不在此固化)
+- **治理 P 模式 (P43-P74)**: 见 `.omo/_knowledge/patterns/`
+  - P71 baseline-recovery(一次性鸿沟修复)
+  - P72 follow-up-completion(路线图执行守门)
+  - P73 truth-driven(SSOT 驱动)
+  - **P74 workflow-solidification**(常态化工作流沉默治理, ADR-0130)
 
 ## SSOT 导航
 
@@ -28,6 +32,10 @@
 | 治理标准 | [`.omo/standards/`](.omo/standards/) | 架构层 |
 | 注册表清单 | [`.omo/_truth/registry/INDEX.md`](.omo/_truth/registry/INDEX.md) | 事实层 |
 | 文档 SSOT 契约 | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | 架构层 |
+| 治理 P 模式 | [`.omo/_knowledge/patterns/`](.omo/_knowledge/patterns/) | 知识层 |
+| P74 标准化契约 | [`.omo/standards/p74-solidification-contract.md`](.omo/standards/p74-solidification-contract.md) | 架构层 |
+| Workflow silence 检测 | [`bin/agent-workflow.py compliance --json \| jq .p74_solidification`](bin/agent-workflow.py) | 操作层 |
+| P74 closeout 报告 | [`.omo/_knowledge/audits/2026-07-03-p74-workflow-solidification-closeout.md`](.omo/_knowledge/audits/2026-07-03-p74-workflow-solidification-closeout.md) | 知识层 |
 
 ## 操作入口
 

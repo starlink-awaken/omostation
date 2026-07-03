@@ -18,11 +18,16 @@
 | L0 constraints | [`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`](projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml) |
 | GaC rules (X1-X4) | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) |
 | Agent workflows | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Runtime projection registry | [`.omo/_truth/registry/runtime-projections.yaml`](.omo/_truth/registry/runtime-projections.yaml) |
 | Debt registry | [`.omo/_truth/registry/debt.yaml`](.omo/_truth/registry/debt.yaml) |
 | Task lifecycle | [`.omo/tasks/README.md`](.omo/tasks/README.md) |
 | ADR index & process | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [process standard](.omo/standards/adr-process.md) |
 | Registry index (all registries) | [`.omo/_truth/registry/INDEX.md`](.omo/_truth/registry/INDEX.md) |
 | Documentation ownership | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) |
+| MOF M3 元元模型 | [`projects/ecos/src/ecos/ssot/mof/m3.yaml`](projects/ecos/src/ecos/ssot/mof/m3.yaml) |
+| MOF M1 governance 实例 | [`projects/ecos/src/ecos/ssot/mof/m1/governance/`](projects/ecos/src/ecos/ssot/mof/m1/governance/) |
+| MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
+| P74 workflow solidification (ADR-0130) | [`.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) |
 
 ## 2. Layer Model
 

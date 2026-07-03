@@ -120,6 +120,16 @@ last-reviewed: 2026-06-29
 `ts-file-analyze.py` / `register-mcp.py` / `graphify-local-extract.py` / `fix-debts.py` /
 `classify_planned.py` / `p0-event-listener.py` / `management-{categorize,cross-ref-check,migrate}.py`
 
+### 13. P74 Solidification (3, ADR-0130) — workflow 沉默治理
+常态化机制: 检测 + 拦截 + 治理信号. 治 P71 三类声明/执行鸿沟复发.
+
+| 脚本 | 功能 | 对应 GaC 规则 |
+|:-----|:-----|:--------------|
+| `omo-state-projection-guard.py` | runtime projection 路径一致性 (P71 类 A) | CR-P74-STATE-PROJECTION-GUARD (X4) |
+| `omo-runtime-stamp-policy.py` | runtime 孤儿文件治理 (P71 类 B) | CR-P74-RUNTIME-STAMP-POLICY (X1) |
+| `agent-workflow.py suggest` (sub) | advisory 路由建议 (P74 §3) | CR-P74-WORKFLOW-SUGGEST (X3) |
+| `agent-workflow.py compliance` `p74_solidification` (sub) | workflow 沉默检测 (P71 类 C) | CR-P74-WORKFLOW-SILENCE (X1) |
+
 ---
 
 ## 命名规范 (新脚本强制)
