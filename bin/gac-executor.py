@@ -49,6 +49,7 @@ EXECUTOR_PRESENCE: dict[str, list[str]] = {
     "evidence_smoke": ["bin/evidence-smoke.py"],
     "radar_cron": ["bin/gac-drift.py"],
     "gc_cron": ["bin/gac-gc.py"],
+    "gac_local_gate": ["bin/gac-local-gate.py"],  # F-14 (2026-07-03): gac-local-gate 工具作为执行通道, 3 规则已声明 (CR-X2-GOVERNANCE-SEMANTIC-GATE / CR-L0-MATRIX-PORT-CONSISTENCY / CR-L0-MATRIX-LAUNCHD-COVERAGE)
     "hook_post": [],  # 声明占位, 无独立文件 (hook_post 是 PostToolUse 事件, 非文件)
 }
 
