@@ -1677,6 +1677,25 @@ def closeout_run(
                     env=env_kos,
                     check=False,
                 )
+                # 3.3 Ontology Infer (performs layer dependency reasoning)
+                subprocess.run(
+                    [sys.executable, str(kos_cli_path), "onto", "infer"],
+                    cwd=WORKSPACE,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    env=env_kos,
+                    check=False,
+                )
+                # 3.4 Sync KOS Reasoning Anomalies to OMO State (Active Feedback Loop via authorized broker)
+                gac_sync_path = WORKSPACE / "bin" / "gac-kos-sync.py"
+                if gac_sync_path.is_file():
+                    subprocess.run(
+                        [sys.executable, str(gac_sync_path)],
+                        cwd=WORKSPACE,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        check=False,
+                    )
         except Exception:
             pass
     return report
