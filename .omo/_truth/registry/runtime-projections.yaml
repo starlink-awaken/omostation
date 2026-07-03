@@ -1,0 +1,50 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-03
+related:
+  - ../decisions/0129-state-projection-plane-phase3.md
+---
+
+# Runtime Projection Registry
+# Canonical paths for recomputable runtime/state projections managed by the
+# OMO state-sync broker. Consumers should use omo.paths.projection_path(name)
+# instead of hard-coding any of these paths.
+
+projections:
+  health:
+    description: Governance health score projection from compass_radar / omo state sync
+    canonical: .omo/state/runtime/health.yaml
+    legacy: .omo/state/health.yaml
+    generator: omo state sync
+    lane: runtime_snapshot
+
+  system_health:
+    description: Runtime Matrix health scan snapshot
+    canonical: .omo/state/runtime/system_health.yaml
+    legacy: .omo/state/system_health.yaml
+    generator: omo state refresh
+    lane: runtime_snapshot
+
+  governance_data:
+    description: Aggregated governance data dashboard JSON
+    canonical: .omo/state/runtime/governance-data.json
+    legacy: .omo/_control/governance-data.json
+    generator: omo state sync
+    lane: runtime_snapshot
+
+  brief:
+    description: Human/AI attention brief rendered from system state
+    canonical: .omo/state/runtime/brief.md
+    legacy: BRIEF.md
+    generator: omo state sync
+    lane: runtime_snapshot
+
+  # Future: move system.yaml projection fields here.
+  # system_projection:
+  #   description: Recomputable fields extracted from system.yaml
+  #   canonical: .omo/state/runtime/system-projection.yaml
+  #   legacy: .omo/state/system.yaml
+  #   generator: omo state sync
+  #   lane: runtime_snapshot

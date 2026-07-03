@@ -1,100 +1,71 @@
-last_scan: 1783060431.480992
+last_scan: 1783076093.47617
 services:
   agora-gateway:
-    health_check: healthy
     name: agora-gateway
-    port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
+      freshness_seconds: 112166
+      pid: '1254'
       status: running
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+    timestamp: 1783076093.47617
     type: daemon
   agora-sse:
     health_check: healthy
     name: agora-sse
     port_listening: true
     runtime:
-      freshness_seconds: 0
-      port: 7431
+      freshness_seconds: 112166
+      pid: '76524'
       status: running
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+    timestamp: 1783076093.47617
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 0
-      port: 7450
+      freshness_seconds: 112166
+      pid: '1251'
       status: running
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+    timestamp: 1783076093.47617
     type: daemon
   gbrain:
-    health_check: healthy
     name: gbrain
-    port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: running
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+      status: unmanaged
+    timestamp: 1783076093.47617
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: configured
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+      status: scheduled
+    timestamp: 1783076093.47617
     type: scheduled
   hermes-gateway:
-    health_check: healthy
     name: hermes-gateway
-    port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
+      freshness_seconds: 112166
+      pid: '1258'
       status: running
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+    timestamp: 1783076093.47617
     type: daemon
   kos:
-    health_check: healthy
     name: kos
-    port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: active
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+      status: unmanaged
+    timestamp: 1783076093.47617
     type: integrated
   ollama:
     health_check: healthy
     name: ollama
     port_listening: true
     runtime:
-      freshness_seconds: 0
-      port: 11434
       status: idle
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+    timestamp: 1783076093.47617
     type: daemon
   runtime-mcp:
-    health_check: healthy
     name: runtime-mcp
-    port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: active
-      timestamp: 1783060431.480992
-    timestamp: 1783035259.094611
+      status: unmanaged
+    timestamp: 1783076093.47617
     type: mcp
