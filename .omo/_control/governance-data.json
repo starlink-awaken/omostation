@@ -1,8 +1,8 @@
 {
   "version": "1.0",
-  "generated_at": "2026-07-02T10:25:12.079694+00:00",
+  "generated_at": "2026-07-03T06:32:04.845466+00:00",
   "governance": {
-    "health_score": 100,
+    "health_score": 96,
     "health_score_raw": 88.0,
     "debt_weight": 1.0,
     "debt_health": 100.0
