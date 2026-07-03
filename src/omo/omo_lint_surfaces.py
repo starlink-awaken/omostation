@@ -40,7 +40,9 @@ def cmd_lint_ingress_registry(workspace_root: str = ".") -> int:
     # registry 未创建 (runtime cache 缺, 如 CI fresh checkout) — 合法状态, 不阻断.
     # 结构/反向映射检查只在 registry 存在时才有意义.
     if not summary.get("exists"):
-        print("✅ omo lint ingress-registry pass: registry not created yet (runtime cache absent)")
+        print(
+            "✅ omo lint ingress-registry pass: registry not created yet (runtime cache absent)"
+        )
         return 0
     if issues:
         print(f"❌ omo lint ingress-registry fail: {len(issues)} issue(s)")
@@ -162,7 +164,9 @@ def cmd_lint_ingress_artifacts(workspace_root: str = ".") -> int:
     summary, issues = _check_ingress_artifacts(root)
     # registry 未创建 (runtime cache 缺, 如 CI fresh checkout) — 合法状态, 不阻断.
     if not summary.get("exists"):
-        print("✅ omo lint ingress-artifacts pass: registry not created yet (runtime cache absent)")
+        print(
+            "✅ omo lint ingress-artifacts pass: registry not created yet (runtime cache absent)"
+        )
         return 0
     if issues:
         print(f"❌ omo lint ingress-artifacts fail: {len(issues)} issue(s)")

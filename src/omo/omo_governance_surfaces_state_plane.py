@@ -46,8 +46,8 @@ ALLOWED_PERSISTENCE_MODES = {
     "append_only",
     "archival",
     "compatibility_alias",
-    "derived",       # .omo/_generated/ — CI/generated artifacts (gitignored)
-    "ephemeral",     # .omo/autopilot/ — autopilot runtime state (session scoped)
+    "derived",  # .omo/_generated/ — CI/generated artifacts (gitignored)
+    "ephemeral",  # .omo/autopilot/ — autopilot runtime state (session scoped)
 }
 
 ALLOWED_RETENTION_MODES = {

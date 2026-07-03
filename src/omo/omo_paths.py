@@ -86,9 +86,7 @@ def ensure_runtime_omo_dir(relative: str | Path) -> Path:
 
 
 # Runtime projection registry (ADR-0129)
-RUNTIME_PROJECTIONS_REGISTRY = (
-    TRUTH_DIR / "registry" / "runtime-projections.yaml"
-)
+RUNTIME_PROJECTIONS_REGISTRY = TRUTH_DIR / "registry" / "runtime-projections.yaml"
 
 
 def projection_path(name: str, *, prefer_canonical: bool = True) -> Path:
@@ -106,7 +104,10 @@ def projection_path(name: str, *, prefer_canonical: bool = True) -> Path:
     canonical: Path | None = None
     legacy: Path | None = None
     if RUNTIME_PROJECTIONS_REGISTRY.is_file():
-        data = yaml.safe_load(RUNTIME_PROJECTIONS_REGISTRY.read_text(encoding="utf-8")) or {}
+        data = (
+            yaml.safe_load(RUNTIME_PROJECTIONS_REGISTRY.read_text(encoding="utf-8"))
+            or {}
+        )
         entry = (data.get("projections") or {}).get(name)
         if entry:
             canonical = WORKSPACE_ROOT / entry["canonical"]

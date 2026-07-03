@@ -192,7 +192,9 @@ def pytest_collection_modifyitems(
 
     # CI-only skip: 这些 test 本地全过 (纯 unit 逻辑), 但依赖 runtime/data log 或
     # time/mock 在 CI fresh 环境缺失/漂移. 仅 CI skip, 本地照跑保覆盖率.
-    _IS_CI = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
+    _IS_CI = (
+        os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
+    )
     _CI_SKIP_MODULES = frozenset(
         {
             "test_observability.py",

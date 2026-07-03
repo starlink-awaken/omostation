@@ -150,6 +150,11 @@ def _write_or_preview(
     return preview
 
 
+def _mirror_projection(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_text_if_changed(path, content, normalize=lambda x: x)
+
+
 def _record_state_sync(
     omo_dir: Path,
     *,
@@ -256,6 +261,9 @@ def sync_state_projection(
     with fcntl_lock(_lock_path(omo_dir)):
         if health_content is None or system_updates is None:
             health_content, system_updates = _build_health_projection(workspace_root)
+        system_updates = dict(system_updates)
+        system_updates["governance_feedback_last_run"] = timestamp
+        system_updates["updated_at"] = timestamp
         system_payload = _system_payload(system_path, system_updates)
         writes = [
             _write_or_preview(
@@ -298,7 +306,9 @@ def sync_state_projection(
         if not dry_run:
             _mirror_projection(legacy_health_path, health_content)
             _mirror_projection(legacy_brief_path, brief_content)
-            _mirror_projection(legacy_governance_data_path, serialize_governance_data(governance_data))
+            _mirror_projection(
+                legacy_governance_data_path, serialize_governance_data(governance_data)
+            )
         changed_count = sum(1 for item in writes if item.get("changed"))
         artifact_ref = ""
         if not dry_run and changed_count:
