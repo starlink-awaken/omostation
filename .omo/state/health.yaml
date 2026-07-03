@@ -1,10 +1,10 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-07-02T23:42:50Z
+# generated_at: 2026-07-03T02:07:31Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-1) = {'governance': 0.5, 'freshness': 0.2, 'runtime': 0.3}
 
-generated_at: "2026-07-02T23:42:50Z"
+generated_at: "2026-07-03T02:07:31Z"
 source: "c2g.strategy (real audit, no mock)"
 health_score: 100
 governance_anomaly_score: 100
