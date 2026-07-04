@@ -167,7 +167,7 @@ projects:
     role: "Omni-Bus (Data/Event/Control)"
 
   omo-debt:
-    layer: "X"
+    layer: "L2"
     stack: "Python (uv, pytest)"
     python: ">=3.13"
     build_backend: "hatchling"
@@ -180,7 +180,7 @@ projects:
     role: "Langfuse 可观测性"
 
   family-hub:
-    layer: "X"
+    layer: "L2"
     stack: "Python (FastMCP)"
     python: ">=3.13"
     build_backend: "uv_build"
@@ -262,12 +262,16 @@ compute_nodes:
     models: ["coder", "reasoner", "vision", "vision-lite", "embed-bge"]
   mac-mini-M4:
     ip: "100.99.210.78"
+    lan_ip: "192.168.31.210"
+    mac: "d0:11:e5:01:11:b2"
     role: "fast, embed, rerank"
     vram: "16GB"
     hardware: "Apple M4"
     models: ["fast", "mini-chat", "embed", "rerank", "mini-9b"]
   Y7000P-4070:
     ip: "100.64.43.36"
+    lan_ip: "192.168.31.128"
+    mac: "c0:35:32:e2:e3:f1"
     role: "vision-lite, ocr, mid"
     vram: "8GB"
     hardware: "NVIDIA RTX 4070"
