@@ -35,7 +35,14 @@ jobs:
       #    https://github.com/anthropics/claude-code-action
       # 当前用核心确定 input (anthropic_api_key + prompt). 若该版本 prompt 字段名不同,
       # 校准后调 (可能 direct_prompt / trigger_prompt). 骨架不变.
+      - name: Check ANTHROPIC_API_KEY
+        id: keycheck
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: '[[ -n "$KEY" ]] && echo "has=true" >> "$GITHUB_OUTPUT" || echo "has=false" >> "$GITHUB_OUTPUT"'
+
       - name: Claude AI Review (advisory)
+        if: steps.keycheck.outputs.has == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}   # ISC-6: secret, 不硬编码

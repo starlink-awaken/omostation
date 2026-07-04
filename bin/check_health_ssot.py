@@ -33,6 +33,26 @@ def _parse_ts(s: object) -> datetime | None:
     return None
 
 
+def _git_last_commit_age_hours(ws: Path) -> float | None:
+    """git 最近 commit 年龄 (CI fallback: tracked health.yaml stale 时验回路活性).
+
+    health.yaml generated_at 是 tracked 运行快照, CI checkout 拿到上次 commit 的 stale 值.
+    用 git 最近 commit 作为回路活性的第二源 (多源 OR), 避免 CI 误判过期.
+    """
+    import subprocess  # noqa: PLC0415
+    try:
+        r = subprocess.run(
+            ["git", "log", "-1", "--format=%ct"],
+            capture_output=True, text=True, timeout=10, cwd=ws,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            ts = int(r.stdout.strip())
+            return max(0.0, (datetime.now(UTC).timestamp() - ts) / 3600)
+    except Exception:
+        pass
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="check-health-ssot: 校验 health_score SSOT 引用")
     parser.add_argument(
@@ -105,13 +125,23 @@ def main() -> int:
         warnings.append(f"health.yaml generated_at 无法解析: {h_gen!r}")
     else:
         age = datetime.now(UTC) - h_gen_dt
+        stale_h = age.total_seconds() / 3600
         if age > timedelta(hours=args.max_age_hours):
-            errors.append(
-                f"health.yaml 已过期 {age.total_seconds() / 3600:.1f}h "
-                f"(阈值 {args.max_age_hours}h). 跑 python3 bin/compass_radar.py 刷新"
-            )
+            # CI fallback: health.yaml generated_at 是 tracked 快照 (可能 stale),
+            # git 最近 commit < 阈值说明回路活着, 降级 WARN (同 R-GOV-3 多源 OR 模式).
+            git_age = _git_last_commit_age_hours(ws)
+            if git_age is not None and git_age < args.max_age_hours:
+                warnings.append(
+                    f"health.yaml 已过期 {stale_h:.1f}h (tracked 快照), "
+                    f"but git active {git_age:.1f}h ago — 回路活着, 降级 WARN"
+                )
+            else:
+                errors.append(
+                    f"health.yaml 已过期 {stale_h:.1f}h (阈值 {args.max_age_hours}h). "
+                    f"跑 python3 bin/compass_radar.py 刷新"
+                )
         else:
-            print(f"✅ health.yaml 保鲜: {age.total_seconds() / 3600:.1f}h 前生成 (阈值 {args.max_age_hours}h)")
+            print(f"✅ health.yaml 保鲜: {stale_h:.1f}h 前生成 (阈值 {args.max_age_hours}h)")
 
     # 6. sys_gen 与 h_gen 一致 (允许 1 分钟时钟漂移)
     sys_gen_dt = _parse_ts(sys_gen)
