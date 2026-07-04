@@ -210,4 +210,4 @@ Run broader tests only when the edited surface warrants them. Documentation-only
   > 任一即触发 P74 评估: 1. **沉默 workflow**:registry 登记 ≥ 1 周,无 `agent_workflow_start` 事件。 2. **错位 workflow**:实际做的事 ≥ 3 次,却走通用 `project-code-change` 而非专属 workflow。
 
 - **P71 Baseline Recovery Pattern — 5 阶段声明/执行鸿沟修复** ([p71-baseline-recovery-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md))
-  > ```text 类 A — 路径错位 (Git-ignored SSOT) 症状: declare 在 X (tracked), 实际写 Y (gitignored)
+  > 类 A — 路径错位 (Git-ignored SSOT) 症状: declare 在 X (tracked), 实际写 Y (gitignored)

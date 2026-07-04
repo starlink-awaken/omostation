@@ -132,7 +132,7 @@ def extract_clean_description(md_path: Path) -> str:
             cleaned = line.strip()
             if not cleaned:
                 continue
-            if cleaned.startswith("#") or cleaned.startswith(">"):
+            if cleaned.startswith("#") or cleaned.startswith(">") or cleaned.startswith("```"):
                 continue
             desc_lines.append(cleaned)
             if len(desc_lines) >= 3:
