@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "httpx[socks]>=0.28.1",
     "aetherforge-gateway",
+    "aetherforge",
     "agora",
     "bus-foundation",
     "model-driven",
@@ -32,6 +33,9 @@ build-backend = "uv_build"
 # P0 #1 cleanup: aetherforge-gateway 改由 aetherforge 顶层包传递依赖安装 (避免
 #   omo / runtime 各自 path 同一 wheel 造成冲突). aetherforge 顶层包 path 引
 #   ../aetherforge (由 aetherforge 自身 pyproject 引用 aetherforge-gateway 子项目).
+# P0 #1: 必须显式声明 aetherforge 顶层包 + path source (editable), 因 aetherforge 自身是
+#        workspace ({workspace=true} 的传递依赖不直接暴露给外部包). 参照 runtime pyproject.
+aetherforge = { path = "../aetherforge", editable = true }
 agora = { path = "../agora", editable = true }
 bus-foundation = { path = "../bus-foundation" }
 model-driven = { path = "../model-driven", editable = true }
