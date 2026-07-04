@@ -14,7 +14,7 @@ venv/
 .venv.bak/
 
 # ── uv ──
-uv.lock
+# uv.lock tracked (锁依赖, CI 可重现, 含 pydantic 等传递依赖)
 
 # ── IDE ──
 .idea/
