@@ -629,6 +629,29 @@ diff_checks:
       - .omo/_truth/registry/runtime-projections.yaml
       - .gitignore
     command: [uv, run, --with, pyyaml, python, bin/omo-runtime-stamp-policy.py]
+  - id: gac-consensus-inject
+    description: >
+      KOS RAG Epigenetic Memory Injection (eCOS v6 Phase A).
+      Reads Consensus entities from KOS SQLite, uses TF-IDF cosine similarity
+      to select Top-2 most relevant genes for the current task context, and
+      injects them into CLAUDE.md. Saves ~66% Context Window Tokens vs full-dump.
+    required: false
+    paths:
+      - bin/gac-consensus-inject.py
+      - CLAUDE.md
+    command: [python3, bin/gac-consensus-inject.py]
+  - id: gac-ingress-check
+    description: >
+      C2G Self-Correcting Ingress Pre-Checker (eCOS v6 Phase B).
+      Detects port conflicts, service name collisions, and runs mini-9b LLM
+      semantic analysis on Pitch documents before task materialization.
+      Moves conflict detection from commit-time to planning-time.
+    required: false
+    paths:
+      - bin/gac-ingress-check.py
+      - protocols/port-registry.yaml
+      - docs/project-registry.yaml
+    command: [python3, bin/gac-ingress-check.py]
 workflows:
   - id: project-doc-change
     title: Project documentation change
