@@ -359,7 +359,7 @@ def check_feedback_loop() -> dict:
             per_source[name] = entry
             continue
         try:
-            lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+            lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
             entry["entry_count"] = len(lines)
             if not lines:
                 per_source[name] = entry
