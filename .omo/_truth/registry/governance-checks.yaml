@@ -2069,3 +2069,15 @@ gac:
   lifecycle:
     draft_to_active_days: 7       # draft 7 天后 radar 验证执行 → 转 active
     deprecated_to_removed_days: 28  # gc 28 天清理 deprecated 规则
+    - id: CR-AETHERFORGE-ONBOARD-INTEGRITY-01
+      dimension: X1
+      layer: L1
+      name: "AetherForge 算力大盘并网连通性"
+      description: "一键审计算力五大通道 (cc-switch, codexbar, models, litellm, omlxc) 连通与并网可用性"
+      check_type: ssot_lint
+      target: "bin/gac-compute-onboard.py"
+      executor: [omo_audit, ci_gate]
+      lifecycle: active
+      version: "1.0.0"
+      created_at: "2026-07-04"
+      adr: "ADR-0130"
