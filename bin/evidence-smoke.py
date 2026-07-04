@@ -201,6 +201,10 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
 
     dir_path = WORKSPACE / directory
     if not dir_path.exists():
+        # 绝对路径 (本地工具如 ~/ToolBox/bos-skill-cli) CI 环境无, 判 local-only (非 gap)
+        # 诚实区分: 本地工具 (不入 repo) vs 真鸿沟 (声明但 repo 内缺)
+        if directory.startswith("/") or directory.startswith("~"):
+            return True, f"local-only (--directory {directory}: CI 无本地工具, 非鸿沟)"
         return False, f"--directory not found: {directory}"
 
     if not module:
