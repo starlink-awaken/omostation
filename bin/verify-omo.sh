@@ -42,4 +42,8 @@ uv run pytest \
 popd >/dev/null
 
 echo "[5/5] Running legacy .omo regression tests"
-python3 -m pytest .omo/tests -q
+if [ -d .omo/tests ]; then
+  python3 -m pytest .omo/tests -q
+else
+  echo "⚠️ .omo/tests 不存在 (legacy tests 迁移到 projects/omo/tests), skip [5/5]"
+fi
