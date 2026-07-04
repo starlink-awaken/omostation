@@ -391,6 +391,24 @@ services:
     func_name: "run_swarm_workflow"
     description: "AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)"
 
+  - uri: "bos://capability/compute/generate"
+    domain: capability
+    action: "generate"
+    transport: internal
+    package: "aetherforge"
+    module_path: "aetherforge.gateway.rpc"
+    func_name: "run_generate"
+    description: "AetherForge 网关生成 — 经 SSOT registry 路由到 omlx/本地/云 (internal 直调)"
+
+  - uri: "bos://capability/compute/mesh-status"
+    domain: capability
+    action: "mesh-status"
+    transport: internal
+    package: "aetherforge"
+    module_path: "aetherforge.mesh.rpc"
+    func_name: "run_mesh_status"
+    description: "AetherForge 算力网格节点健康/在线摘要 (internal 直调)"
+
   - uri: "bos://memory/local/all-search"
     domain: memory
     action: "all-search"
