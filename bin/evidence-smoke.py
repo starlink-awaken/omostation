@@ -383,6 +383,31 @@ def check_feedback_loop() -> dict:
         except Exception as e:
             entry["error"] = str(e)[:120]
         per_source[name] = entry
+    # git 第三源: tracked 运行快照 (governance-history/omo-events) 在 CI 都 stale 时,
+    # 用 git 最近 commit 验回路活 (多源 OR, feedback-loop-recovery-generator-trap).
+    try:
+        import subprocess  # noqa: PLC0415
+        _r = subprocess.run(
+            ["git", "log", "-1", "--format=%ct"],
+            capture_output=True, text=True, timeout=10, cwd=WORKSPACE,
+        )
+        if _r.returncode == 0 and _r.stdout.strip():
+            git_ts = int(_r.stdout.strip())
+            git_hours = round((datetime.now(timezone.utc).timestamp() - git_ts) / 3600, 1)
+            git_alive = git_hours < 24
+            per_source["git_activity"] = {
+                "exists": True,
+                "last_ts": datetime.fromtimestamp(git_ts, tz=timezone.utc).isoformat(),
+                "staleness_hours": git_hours,
+                "alive": git_alive,
+            }
+            if git_alive:
+                any_alive = True
+            if best_staleness is None or git_hours < best_staleness:
+                best_staleness = git_hours
+                best_ts = per_source["git_activity"]["last_ts"]
+    except Exception:
+        pass
     return {
         "alive": any_alive,
         "last_ts": best_ts,
