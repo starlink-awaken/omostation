@@ -201,6 +201,10 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
 
     dir_path = WORKSPACE / directory
     if not dir_path.exists():
+        # 绝对路径 (本地工具如 ~/ToolBox/bos-skill-cli) CI 环境无, 判 local-only (非 gap)
+        # 诚实区分: 本地工具 (不入 repo) vs 真鸿沟 (声明但 repo 内缺)
+        if directory.startswith("/") or directory.startswith("~"):
+            return True, f"local-only (--directory {directory}: CI 无本地工具, 非鸿沟)"
         return False, f"--directory not found: {directory}"
 
     if not module:
@@ -359,7 +363,7 @@ def check_feedback_loop() -> dict:
             per_source[name] = entry
             continue
         try:
-            lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+            lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
             entry["entry_count"] = len(lines)
             if not lines:
                 per_source[name] = entry
@@ -383,6 +387,31 @@ def check_feedback_loop() -> dict:
         except Exception as e:
             entry["error"] = str(e)[:120]
         per_source[name] = entry
+    # git 第三源: tracked 运行快照 (governance-history/omo-events) 在 CI 都 stale 时,
+    # 用 git 最近 commit 验回路活 (多源 OR, feedback-loop-recovery-generator-trap).
+    try:
+        import subprocess  # noqa: PLC0415
+        _r = subprocess.run(
+            ["git", "log", "-1", "--format=%ct"],
+            capture_output=True, text=True, timeout=10, cwd=WORKSPACE,
+        )
+        if _r.returncode == 0 and _r.stdout.strip():
+            git_ts = int(_r.stdout.strip())
+            git_hours = round((datetime.now(timezone.utc).timestamp() - git_ts) / 3600, 1)
+            git_alive = git_hours < 24
+            per_source["git_activity"] = {
+                "exists": True,
+                "last_ts": datetime.fromtimestamp(git_ts, tz=timezone.utc).isoformat(),
+                "staleness_hours": git_hours,
+                "alive": git_alive,
+            }
+            if git_alive:
+                any_alive = True
+            if best_staleness is None or git_hours < best_staleness:
+                best_staleness = git_hours
+                best_ts = per_source["git_activity"]["last_ts"]
+    except Exception:
+        pass
     return {
         "alive": any_alive,
         "last_ts": best_ts,

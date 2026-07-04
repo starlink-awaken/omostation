@@ -9,6 +9,7 @@ python3 scripts/sync_omo_state.py --omo-dir .omo
 
 echo "[2/5] Running governance lint gates"
 pushd projects/omo >/dev/null
+uv sync --quiet   # 显式 sync (确保 pydantic 等依赖装好, 避免 CI uv 缓存致 import fail)
 uv run python -m omo.cli lint direct-omo-io
 uv run python -m omo.cli lint sensitive-governed-writes
 uv run python -m omo.cli lint ingress-registry --workspace-root ../..
@@ -41,4 +42,8 @@ uv run pytest \
 popd >/dev/null
 
 echo "[5/5] Running legacy .omo regression tests"
-python3 -m pytest .omo/tests -q
+if [ -d .omo/tests ]; then
+  python3 -m pytest .omo/tests -q
+else
+  echo "⚠️ .omo/tests 不存在 (legacy tests 迁移到 projects/omo/tests), skip [5/5]"
+fi
