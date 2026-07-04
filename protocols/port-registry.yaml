@@ -20,6 +20,7 @@ ports:
   18801: 'wps-office-mcp-stdio       # tool X-ext · 预留 HTTP 升级 (stdio 当前)'
   18802: 'wps-skills-stdio           # tool X-ext · 预留 HTTP 升级 (stdio 当前)'
   18803: 'bos-skill-cli-stdio        # tool X-ext · 预留 HTTP 升级 (stdio 当前)'
+  11434: 'ollama                     # Ollama Local LLM Engine'
 
 # 收敛后已释放端口 (2026-06-17)
 # 8080: agora-api-gateway 已移除 → 重用于 ontoderive-web/health-dashboard (代码现状注册)

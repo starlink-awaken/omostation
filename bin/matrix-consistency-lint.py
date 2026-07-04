@@ -113,7 +113,7 @@ def lint(skip_launchd: bool = False) -> tuple[list[str], list[str]]:
     """Run all checks. Returns (errors, warnings)."""
     services = _parse_matrix(MATRIX_PATH)
     port_registry = _load_port_registry()
-    registered_ports = set((port_registry.get("ports") or {}).keys())
+    registered_ports = set(str(k) for k in (port_registry.get("ports") or {}).keys())
 
     errors: list[str] = []
     warnings: list[str] = []
