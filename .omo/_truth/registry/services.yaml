@@ -23,7 +23,8 @@ services:
     program:
       interpreter: stable-python3
       entrypoint: bin/state-stale-emit.py
-      args: [--source, launchd-watch, --trigger, watchpaths]
+      # args 与 install-watch-agent.py 触发 + state-stale-emit --surface 需求一致 (SSOT 完整声明)
+      args: [--source, launchd-watch, --trigger, watchpaths, --surface, .omo/_truth/registry, --surface, projects/ecos/src/ecos/ssot]
     watch_paths:
       - .omo/_truth/registry
       - projects/ecos/src/ecos/ssot
