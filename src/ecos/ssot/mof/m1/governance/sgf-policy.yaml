@@ -86,3 +86,8 @@ gates:
     command: ["bin/check-domain-m1-alignment.py"]
   - id: "test-gac-engine"
     command: ["bin/test-gac-engine.py"]
+  - id: "service-config-validate"
+    command: ["bin/gen-service-configs.py", "--validate"]
+  - id: "service-config-drift"
+    command: ["bin/gen-service-configs.py", "--check"]
+    ci_skip: true  # P74 阶段3: 本机 plist drift gate, CI 无本机 plist → skip (双源与主仓 DEFAULT_POLICY L66-67 一致)
