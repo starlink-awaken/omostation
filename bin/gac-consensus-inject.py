@@ -63,7 +63,7 @@ def get_embedding(text: str) -> list[float] | None:
             },
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=30.0) as resp:
+        with urllib.request.urlopen(req, timeout=1.0) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             return data["data"][0]["embedding"]
     except Exception:
@@ -268,7 +268,7 @@ def main() -> int:
         new_claude_content = base_content + "\n\n" + "\n".join(consensus_lines)
 
         # 6. 合规重写 CLAUDE.md (gac- 特权脚本，允许直接写文件)
-        with open(claude_md_path, "w", encoding="utf-8") as f:
+        with open(claude_md_path, "w", encoding="utf-8") as f:  # audit-exempt: non-atomic-write
             f.write(new_claude_content)
 
         injected_count = len(selected_consensuses)
