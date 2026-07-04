@@ -37,19 +37,19 @@ related:
 | DEBT-RUNTIME-GOD-SCHEDULER | `scheduler.py` 583L, MatrixScheduler 1 class 533L | 状态机 + 愈合 + 报告 + L4 集成混合 | P110-A: 拆 `scheduler_core.py` / `healer.py` / `reporter.py` |
 | DEBT-RUNTIME-GOD-ENGINE | `executor/engine.py` 553L, AgentRuntime 核心 | LLM routing / 工具调用 / 错误处理混合 | P110-A 谨慎拆分, 留作长期 |
 | DEBT-RUNTIME-GOD-GOVERNANCE | `executor/governance.py` 519L | types + coordinator 混合 | P110-A: 拆 `governance_types.py` + `governance_coordinator.py` |
-| DEBT-RUNTIME-ORPHAN-INTERNAL | 50 个 executor 模块仅子目录 / tests 引用 (eg agent_skills, anomaly_detector, dsl, error_handler, governance, guardian, intervention, isc_*, memory) | 真实现分散, 难发现 | P110-A: 评估每个, 决定归档 / 重命名 / 合并 |
-| DEBT-RUNTIME-ORPHAN-EXECUTORS-SUBPACKAGE | `executor/executors/` 7 文件 (agent_call, conditional, loop, parallel, skill_call, tool_call, try_catch) 半成品子目录, 与根 `executor/` 多文件重复 | 重复实现 | P110-A: 整合到根 executor |
-| DEBT-RUNTIME-ORPHAN-WORKFLOWS-SUBPACKAGE | `executor/workflows/{reflection,scenario2,scenario3}/` 6+ 深度嵌套, 0 caller | 死代码 | 评估归档 |
+| DEBT-RUNTIME-ORPHAN-INTERNAL | 50 个 executor 模块仅子目录 / tests 引用 (eg agent_skills, anomaly_detector, dsl, error_handler, governance, guardian, intervention, isc_*, memory) | 真实现分散, 难发现 | ✅ P110-A #7 (本 PR 删 33 个 + 4 core/) — 5 god module (domain_manager/dsl_parser/engine_llm/engine_memory/governance) 保留待 P110-B 拆分. 净减 86 module, 153 → 67 |
+| DEBT-RUNTIME-ORPHAN-EXECUTORS-SUBPACKAGE | `executor/executors/` 7 文件 (全 0 caller) | 重复实现 | ✅ P110-A #3 (本 PR) — 全部 git rm |
+| DEBT-RUNTIME-ORPHAN-WORKFLOWS-SUBPACKAGE | `executor/workflows/{reflection,scenario2,scenario3}/` 6+ 深度嵌套, 0 caller | 死代码 | ✅ P110-A #4 (本 PR) — 全部 git rm |
 | DEBT-RUNTIME-TEST-COVERAGE | 测试覆盖率 ~12% (3,353 LOC / 29,925 LOC src) | 质量风险 | P87 系列: 跟 god module 拆分同步, 100% 单测伴随 |
-| DEBT-RUNTIME-KEI-SANDBOX-SOFT | KEI sandbox 用 `sys.addaudithook` (软约束), C extension 可绕过, 沙箱是进程内而非隔离 | 安全边界 | 长期: 改 seccomp / 进程隔离 |
-| DEBT-RUNTIME-ENGINE-LLANG-LEGACY | `llm_gateway._legacy.*` 引用 (engine.py 4 处) | legacy 路径 | 迁到 aetherforge 顶层 API |
-| DEBT-RUNTIME-MCP-TOOLS-OVERLOADED | `mcp_server.py` 30+ tool | 工具膨胀 | 审计裁剪, 整合相关 tool |
+| DEBT-RUNTIME-KEI-SANDBOX-SOFT | KEI sandbox 用 `sys.addaudithook` (软约束), C extension 可绕过, 沙箱是进程内而非隔离 | 安全边界 | 🔄 P110-A #6 (本 PR docstring 化) — kei_sandbox.py 加详细 docstring (限制 + 6 步 hardening roadmap + 操作指南). 实际 hardening 需 seccomp / 进程隔离, 留 P110-B 长期 |
+| DEBT-RUNTIME-ENGINE-LLANG-LEGACY | `llm_gateway._legacy.*` (3 处 engine.py import) 全部迁到 llm_gateway 顶层 | legacy 路径 | ✅ P110-A #5 (本 PR) — record_llm_audit 重命名为 record_llm_cost; route_role_request 删, 用 ssot_loader 兜底. 5 个 test 标 xfail 待下 PR 重写 |
+| DEBT-RUNTIME-MCP-TOOLS-OVERLOADED | mcp_server.py MCP tools 14 → 10 (P110-A #1 合并 agent_run_task/execute/chat → runtime_agent_run) | 工具膨胀 | ✅ P110-A #1 (本 PR) |
 
 ## 已确认可接受 (不修, 仅记录)
 
 | ID | 描述 | 接受理由 |
 |----|------|----------|
-| DEBT-RUNTIME-ENGINE-UTILS-RETAINED | `engine_utils/{cache,pool,stats}` 有 caller 但仅 1 个/各 | P110-A 评估后决定; 暂保留 |
+| DEBT-RUNTIME-ENGINE-UTILS-RETAINED | `engine_utils/{cache,pool,stats}` 各 1 caller (self __init__.py only) | P110-A 评估 | ✅ P110-A #5 (本 PR) — 全部 git rm (纯 dead code) |
 | DEBT-RUNTIME-AETHERFORGE-LEGACY-IMPORT | `llm_gateway._legacy.detection/registry_data_loader/audit/provider` 4 处 legacy | 等待 aetherforge 顶层 API 稳定 |
 
 ## 维护规则

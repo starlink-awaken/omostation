@@ -16,8 +16,12 @@ cli:
 
 mcp:
   server: runtime.cron_service.mcp_server
-  tools: 30
+  tools: 10
   transport: [stdio]
+  # P110-A #1: 14 → 10 tools (P74 review)
+  #   合并: runtime_agent_run_task / runtime_agent_execute / runtime_agent_chat
+  #   统一入口: runtime_agent_run (mode='task'|'chat'|'execute')
+  #   删除: runtime_agent_list_tools (executor 内部用, 不暴露 MCP)
 
 http:
   - port: dynamic
