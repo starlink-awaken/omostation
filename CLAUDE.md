@@ -106,6 +106,7 @@ The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.
 ## 5. Common Commands
 
 **Gate & lint:**
+
 ```bash
 make gac-local-gate
 uv run --with "pyyaml" python "bin/gac-local-gate.py" --scope files --file <path> --json
@@ -114,6 +115,7 @@ uv run --with "pyyaml" python "bin/ssot-guardian.py"
 ```
 
 **Agent workflow lifecycle** (`bootstrap` → inspect → `start` → `claim` → `verify` → `closeout` → `compliance`):
+
 ```bash
 uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
 uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
@@ -130,12 +132,14 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
 ```
 
 **State sync:**
+
 ```bash
 uv run --project "projects/omo" omo state sync --dry-run --json
 uv run --project "projects/omo" omo state sync --json
 ```
 
 **Tests — project-level and single-test:**
+
 ```bash
 bash "tests/integration/run-all.sh"          # root integration suite
 cd "projects/kairon" && make test-diff        # kairon (Python) — changed-surface tests
