@@ -141,7 +141,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
       - name: Install Python gate deps
-        run: pip install pyyaml
+        run: pip install pyyaml pydantic
       - name: Run full governance verification
         run: make governance-verify
       - name: GaC local gate
