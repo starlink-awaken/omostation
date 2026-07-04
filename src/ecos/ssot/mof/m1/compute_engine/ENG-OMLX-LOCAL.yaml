@@ -7,7 +7,7 @@ base_url: "http://100.96.126.35:4000/v1"
 supported_protocols: ["openai"]
 cost_multiplier: 0.0001
 status: active
-description: "omlx 统一网关(LiteLLM) · 三机集群统一入口 · 14+ 模型(coder/reasoner/vision/mythos/mini-9b…) · 仅 tailnet 可达"
+description: "omlx 统一网关(LiteLLM) · 三机集群统一入口 · 精选别名(coder/reasoner/vision/mythos/mythos-fast/embed/mini-9b/fast/mid…)+ 每节点通配透传(macmini/*, macmini-ollama/*, y7000p/*)· 仅 tailnet 可达"
 
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m1/
@@ -19,3 +19,6 @@ state_history:
   - state: active
     timestamp: '2026-07-04T00:00:00Z'
     reason: repoint_to_litellm_gateway_100.96.126.35:4000
+  - state: active
+    timestamp: '2026-07-05T00:00:00Z'
+    reason: converge_all_nodes_wildcard_passthrough_and_mythos_fast
