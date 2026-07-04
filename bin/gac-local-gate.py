@@ -62,7 +62,9 @@ DEFAULT_POLICY = {
         {"id": "check-dashboard-registry-consistency", "command": ["bin/check-dashboard-registry-consistency.py"]},
         {"id": "check-toolbox-ssot", "command": ["bin/check-toolbox-ssot.py"]},
         {"id": "check-domain-m1-alignment", "command": ["bin/check-domain-m1-alignment.py"]},
-        {"id": "test-gac-engine", "command": ["bin/test-gac-engine.py"]}
+        {"id": "test-gac-engine", "command": ["bin/test-gac-engine.py"]},
+        {"id": "service-config-validate", "command": ["bin/gen-service-configs.py", "--validate"]},
+        {"id": "service-config-drift", "command": ["bin/gen-service-configs.py", "--check"], "ci_skip": True}
     ]
 }
 
