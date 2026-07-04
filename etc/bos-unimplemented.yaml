@@ -7,7 +7,7 @@
 #   - 数量只减不增；增加需 review
 
 schema_version: "1.0"
-last_reviewed: "2026-06-28"
+last_reviewed: "2026-07-04"  # 复审2026-07-04: 条目全有效
 unimplemented:
   - uri: "bos://analysis/minerva/draft"
     reason: "Minerva draft CLI 尚未实现 serve 模式"
