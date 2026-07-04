@@ -1,0 +1,6 @@
+# 主仓 shellcheck 配置 (CI actionlint workflow-shell + scripts/*.sh 共用)
+# 聚焦 error/warning 真问题, 忽略 info/style 风格建议:
+#   SC2086 double-quote / SC2002 useless-cat / SC2012 ls-vs-find /
+#   SC2015 A&&B||C / SC2009 pgrep / SC1091 source-follow / SC2148 shebang
+disable=SC2148,SC2086,SC2002,SC2012,SC2015,SC2009,SC1091
+external-sources=true
