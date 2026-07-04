@@ -11,6 +11,7 @@ import json
 import re
 import urllib.request
 import urllib.error
+import select
 from pathlib import Path
 from typing import Any
 
@@ -137,7 +138,7 @@ def llm_dependency_analysis(pitch_text: str, kos_summary: str) -> str:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=30.0) as resp:
+        with urllib.request.urlopen(req, timeout=1.0) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             content = data["choices"][0]["message"]["content"]
             # 尝试提取 JSON
@@ -253,7 +254,7 @@ def main() -> int:
         pitch_text = Path(args.file).read_text(encoding="utf-8")
     elif args.pitch:
         pitch_text = args.pitch
-    elif not sys.stdin.isatty():
+    elif not sys.stdin.isatty() and select.select([sys.stdin], [], [], 0.0)[0]:
         pitch_text = sys.stdin.read()
     else:
         # 自检模式（无参数运行时做一次 smoke test）
