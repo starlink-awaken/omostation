@@ -21,6 +21,12 @@ ports:
   18802: 'wps-skills-stdio           # tool X-ext · 预留 HTTP 升级 (stdio 当前)'
   18803: 'bos-skill-cli-stdio        # tool X-ext · 预留 HTTP 升级 (stdio 当前)'
   11434: 'ollama                     # Ollama Local LLM Engine'
+  # ── omlx 本地 MLX 后端 (外置盘 /Volumes/Model) — VLM/embedding 段 ──
+  # 2026-07-04 从 809x 迁出至 818x, 避开 cockpit :8090 的自增竞态 (第二个 dashboard 实例会抢 8091)
+  8181: 'omlx-vision                # omlx local MLX VLM (Qwen3-VL-8B-4bit; moved from 8091)'
+  8182: 'omlx-vision-large          # omlx local MLX VLM large (moved from 8092)'
+  8183: 'omlx-embedding             # omlx local MLX embeddings (Qwen3-Embedding-8B; moved from 8093)'
+  8184: 'omlx-mythos                # omlx local MLX VLM mythos (moved from 8094)'
 
 # 收敛后已释放端口 (2026-06-17)
 # 8080: agora-api-gateway 已移除 → 重用于 ontoderive-web/health-dashboard (代码现状注册)
