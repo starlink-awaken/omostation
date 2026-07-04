@@ -250,7 +250,7 @@ def main() -> int:
             src_file = item["source_file"]
             relative_path = Path(src_file).relative_to(WORKSPACE)
             clean_desc = extract_clean_description(Path(src_file))
-            consensus_lines.append(f"* **{label}** ([{relative_path.name}](file://{src_file}))")
+            consensus_lines.append(f"- **{label}** ([{relative_path.name}](file://{src_file}))")
             consensus_lines.append(f"  > {clean_desc}")
             consensus_lines.append("")
 
