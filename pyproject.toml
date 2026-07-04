@@ -29,7 +29,9 @@ requires = ["uv_build>=0.11.19,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv.sources]
-aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
+# P0 #1 cleanup: aetherforge-gateway 改由 aetherforge 顶层包传递依赖安装 (避免
+#   omo / runtime 各自 path 同一 wheel 造成冲突). aetherforge 顶层包 path 引
+#   ../aetherforge (由 aetherforge 自身 pyproject 引用 aetherforge-gateway 子项目).
 agora = { path = "../agora", editable = true }
 bus-foundation = { path = "../bus-foundation" }
 model-driven = { path = "../model-driven", editable = true }
