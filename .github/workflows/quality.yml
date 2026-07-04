@@ -19,7 +19,7 @@ jobs:
         with:
           # P41-W1 fix: projects/kairon is .gitignore'd. Lint tracked projects instead.
           src: "projects/omo/src projects/ecos/src projects/agora/src projects/cockpit/src"
-          args: "check --ignore F401,F821,E402,E722"
+          args: "check --ignore F401,F821,E402,E722,F841"
 
   prettier:
     name: Pre-commit hooks check

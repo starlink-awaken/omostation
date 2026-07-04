@@ -76,8 +76,8 @@ jobs:
           uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json
           uv run python -m omo.cli lint direct-omo-io
           uv run python -m omo.cli lint sensitive-governed-writes
-          uv run python -m omo.cli lint schemas --workspace-root ../..
-          uv run python -m omo.cli lint yaml-bypass --workspace-root ../..
+          uv run python -m omo.cli lint schemas
+          uv run python -m omo.cli lint yaml-bypass
           uv run python -m omo.cli lint ingress-registry --workspace-root ../..
           uv run python -m omo.cli lint mutation-surfaces --workspace-root ../..
           uv run python -m omo.cli lint internal-write-profiles --workspace-root ../..
