@@ -41,6 +41,7 @@ jobs:
       - name: Check workflows
         env:
           ACTIONLINT: ${{ steps.get_actionlint.outputs.executable }}
+          SHELLCHECK_OPTS: "--severity=error"
         shell: bash
         run: |
           # shellcheck disable=SC2086  # ACTIONLINT 引用形式固定
@@ -109,7 +110,7 @@ jobs:
           fi
           echo "Linting ${#SH_FILES[@]} shell files:"
           printf '  %s\n' "${SH_FILES[@]}"
-          shellcheck "${SH_FILES[@]}"
+          shellcheck --severity=error "${SH_FILES[@]}"
 
   # ── 4. omo logs audit — JSONL 漂移检测 (Round 12 P0 接力) ────────
   omo-logs-audit:

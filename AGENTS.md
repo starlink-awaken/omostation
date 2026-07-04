@@ -26,10 +26,12 @@ for the pattern, and `.omo/standards/p74-solidification-contract.md` for the
 operator-facing decision tree.
 
 SSOT:
+
 - `agent-workflows.yaml::silent_workflow_policy` (A1/A2 classification + excluded_workflows)
 - `governance-checks.yaml` (4 CR-P74-* rules: STATE-PROJECTION-GUARD, RUNTIME-STAMP-POLICY, WORKFLOW-SILENCE, WORKFLOW-SUGGEST)
 
 Tools (`bin/`):
+
 - `omo-state-projection-guard.py` — CR-P74-STATE-PROJECTION-GUARD
 - `omo-runtime-stamp-policy.py` — CR-P74-RUNTIME-STAMP-POLICY
 - `agent-workflow.py suggest --from-diff --profile <agent>` — CR-P74-WORKFLOW-SUGGEST

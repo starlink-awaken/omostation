@@ -132,7 +132,7 @@ def extract_clean_description(md_path: Path) -> str:
             cleaned = line.strip()
             if not cleaned:
                 continue
-            if cleaned.startswith("#") or cleaned.startswith(">"):
+            if cleaned.startswith("#") or cleaned.startswith(">") or cleaned.startswith("```"):
                 continue
             desc_lines.append(cleaned)
             if len(desc_lines) >= 3:
@@ -250,7 +250,7 @@ def main() -> int:
             src_file = item["source_file"]
             relative_path = Path(src_file).relative_to(WORKSPACE)
             clean_desc = extract_clean_description(Path(src_file))
-            consensus_lines.append(f"* **{label}** ([{relative_path.name}](file://{src_file}))")
+            consensus_lines.append(f"- **{label}** ([{relative_path.name}](file://{src_file}))")
             consensus_lines.append(f"  > {clean_desc}")
             consensus_lines.append("")
 
