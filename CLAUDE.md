@@ -145,7 +145,9 @@ bash "tests/integration/run-all.sh"          # root integration suite
 cd "projects/kairon" && make test-diff        # kairon (Python) — changed-surface tests
 cd "projects/gbrain" && bun test              # gbrain (TypeScript)
 ```
+
 Run a single test with each framework's native filter (see the target project's `AGENTS.md` for project-specific targets):
+
 - Python (`uv run pytest`): `pytest -k "test_name"` or `pytest path/to/test.py::TestClass::test_method`
 - TypeScript (`bun test`): `bun test --filter "pattern"`
 - cockpit-ui: `npm run build` / `bun run build`
