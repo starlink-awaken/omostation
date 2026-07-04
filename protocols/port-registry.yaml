@@ -27,6 +27,7 @@ ports:
   8182: 'omlx-vision-large          # omlx local MLX VLM large (moved from 8092)'
   8183: 'omlx-embedding             # omlx local MLX embeddings (Qwen3-Embedding-8B; moved from 8093)'
   8184: 'omlx-mythos                # omlx local MLX VLM mythos (moved from 8094)'
+  8185: 'omlx-mythos-fast           # omlx local MLX text mythos (Qwythos-9B mxfp4, mlx_lm, 无视觉快速版)'
 
 # 收敛后已释放端口 (2026-06-17)
 # 8080: agora-api-gateway 已移除 → 重用于 ontoderive-web/health-dashboard (代码现状注册)
