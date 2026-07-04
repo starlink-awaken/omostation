@@ -13,7 +13,9 @@
 #   2c (2026-07-01, commit 893f2332): 升级 blocking (exit 1)
 #   路径A第1步 (2026-07-01): 回退 advisory — 2c 意外生效但 auto-PR 通道未建,
 #     escape hatch 滥用废 blocking (半吊子). 第4步 (auto-PR通+并发agent切PR) 恢复 blocking.
-# 当前: advisory (push 目标含 refs/heads/main 且非 work/* → 警告, 不阻断).
+# 当前: blocking (实测 2026-07-04: git push --dry-run origin main → [blocking] exit 1; work/* 放行).
+#   注: 此行曾滞后写成 advisory (路径A第1步回退叙事), 但实际代码 (第34-54行 Phase 2c blocking) 一直是 active,
+#   以 `git push --dry-run origin main` 实测为准, 勿信旧注释.
 # 详见 docs/AGENT-ISOLATION-ROLLOUT.md §4 Phase 2 (ISC-3b) + docs/AUTO-PR-REVIEW-ISA.md.
 #
 # 安装: make install-hooks  (从本文件复制到 .git/hooks/pre-push)
