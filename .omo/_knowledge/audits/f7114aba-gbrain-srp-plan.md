@@ -85,3 +85,21 @@ cycle.ts 已拆出 cycle/ 子目录 (14 模块: anomaly/auto-think/base-phase/bu
 ---
 
 *F7114ABA gbrain SRP 拆分计划 v1 · 2026-06-28 · engine.ts 范式已建立, 8 文件留 srp wave*
+
+---
+
+## 2026-07-05 更新: Wave 2 推进 3/7 + 剩 4 暂豁 debt
+
+**已达标 (3/7, PR#109/#110/#111 合并)**:
+- ✅ cycle.ts 1707→1456L (类型提取 → cycle/types.ts)
+- ✅ serve-http.ts 1756→1500L (health/probe/spend/bootstrap → serve-http/probes.ts)
+- ✅ migrate.ts 4333→385L (MIGRATIONS 85 对象拆 4 段 early/mid1/mid2/late + types.ts)
+
+**剩 4 暂豁 debt (高风险核心, check-god-module EXEMPT_ERRORS 暂豁 --strict)**:
+- 🟣 gateway.ts 2895L: 状态对象化 (71 处 _config/_embedTransport 引用) + 核心 embed/chat/rerank 1610L 提取, P3 ~3-4h
+- 🟣 doctor.ts 4825L: runDoctor 单函数 inline 2330L 重构 (调度+autofix+报告耦合), P4 极高 ~3-4h
+- 🟣 postgres-engine.ts 4514L + pglite-engine.ts 4509L: 双引擎 DRY 逐方法对比 SQL (unnest+JOIN vs $N), P4 ~4h+
+
+**豁免机制**: bin/check-god-module.py 加 EXEMPT_ERRORS 集合 (剩 4 文件), scan() 分类 error/exempt_debt, --strict 不因 exempt_debt exit 1 (只拦新 error). 印证「不盲目拆核心 + 充分测试」约束 (§约束).
+
+**多会话推进计划**: 每会话 1 个 GodModule 全力 + 清 context + 充分 typecheck/test. 达标后从 EXEMPT_ERRORS 移除.
