@@ -183,7 +183,7 @@ initiatives:
     title: OMO C2G MOF operating rhythm
     recommendation: Make state bridge, ingress, and drift checks part of a visible operating cadence instead of ad-hoc deep maintenance.
     status: active
-    progress: 70
+    progress: 80
     last_evaluated: "2026-07-05"
     meadows_level: 9
     owner: governance-team
@@ -206,7 +206,7 @@ initiatives:
     done_when: Governance maintenance has daily, weekly, and pre-release executable checks.
     blocked_by: []
     next_step: |-
-      P3 (2026-07-05) 落地 .omo/cron/operating-rhythm-crontab (daily 09:00 status + weekly 周一 10:00 mof-bridge/drift). progress 60→70. 下: cockpit rhythm 子命令 (子模块 PR, follow-up #35) + pre_release gate 接入 PR 模板 → 推 80/90/100.
+      P3+#35 (2026-07-05) 落地 cockpit governance rhythm 子命令 (cockpit f33c156) + .omo/cron/operating-rhythm-crontab (PR #115). progress 60→80. 下: pre_release gate 接入 PR 模板 (cockpit governance rhythm pre_release 跑在 PR 创建时) + weekly radar_cron 兜底 → 推 90/100.
   - id: golden-path-e2e
     title: Golden path end-to-end checks
     recommendation: "Keep three canonical flows visible and verifiable: agent change, strategy ingress, and BOS invocation."
