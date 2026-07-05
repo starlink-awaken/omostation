@@ -36,21 +36,23 @@ def cmd_debt_list(omo_dir: Path) -> int:
             system.update(doc)
 
     items = system.get("debt_weight_items", {})
-    resolved = set(system.get("resolved_debt_items", []))
-    resolved.update(
-        {
-            debt_id
-            for debt_id, info in items.items()
-            if isinstance(info, dict) and info.get("resolved")
-        }
-    )
+    # resolved 标记集 (显示用): resolved_debt_items 历史 + items 内 resolved=True
+    resolved_display = set(system.get("resolved_debt_items", []))
+    # 计数集: 仅基于 debt_weight_items, 避免 resolved_debt_items 含外部历史项
+    # 导致 open_count = total - resolved 出现负数 (P71 SSOT 口径不一致副作用)
+    resolved_in_items = {
+        debt_id
+        for debt_id, info in items.items()
+        if isinstance(info, dict) and info.get("resolved")
+    }
+    resolved_display.update(resolved_in_items)
     total = len(items)
-    resolved_count = len(resolved)
+    resolved_count = len(resolved_in_items)
     open_count = total - resolved_count
 
     print(f"{total} total: {open_count} open / {resolved_count} resolved")
     for debt_id, info in items.items():
-        status = "resolved" if debt_id in resolved else "open"
+        status = "resolved" if debt_id in resolved_display else "open"
         desc = info.get("desc", "") if isinstance(info, dict) else ""
         print(f"  {debt_id} [{status}] {desc}")
     return 0
@@ -133,7 +135,7 @@ def cmd_debt_desc(
     return 0
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     """CLI 入口. 业务函数从 omo_debt 惰性导入 (避免循环)."""
     # 业务函数 imports (移到这里避免 omo_debt 顶层 re-export 时的循环)
     from omo.omo_debt import (  # noqa: PLC0415  (intentional lazy)
@@ -277,7 +279,7 @@ def main() -> int:
     reopen_parser.add_argument("--id", required=True)
     reopen_parser.add_argument("--actor", default="", help="Who performed this action")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     omo_dir = Path(args.omo_dir)
 
     if args.command == "register":
