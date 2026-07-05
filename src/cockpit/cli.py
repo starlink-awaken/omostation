@@ -286,6 +286,27 @@ def main() -> int:
     readiness_p.add_argument("--output", help="输出文件路径 (默认 stdout)")
     readiness_p.set_defaults(func=_readiness_mod.cmd_readiness)
 
+    # omo / runtime 委派子命令 (后端 cockpit.commands.{omo,runtime}.py 已实现 cmd_omo/cmd_runtime,
+    # 补 argparse 注册. 修复声明/执行鸿沟: dispatch dict 有 lambda 但缺 add_parser → invalid choice)
+    omo_p = sub.add_parser(
+        "omo",
+        help="OMO CLI 委派 (debt/state/governance/lint/...)",
+    )
+    omo_p.add_argument(
+        "omo_args",
+        nargs=argparse.REMAINDER,
+        help="传给 omo CLI 的参数 (如 'debt list', 'state sync --dry-run')",
+    )
+    runtime_p = sub.add_parser(
+        "runtime",
+        help="runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)",
+    )
+    runtime_p.add_argument(
+        "runtime_args",
+        nargs=argparse.REMAINDER,
+        help="传给 runtime CLI 的参数",
+    )
+
     sub.add_parser("demo", help="快速演示")
     sub.add_parser("gac", help="GaC 治理健康检查 (ADR-0106, 7 机制 + 115 规则 + drift)")
     daily_p = sub.add_parser("daily", help="每日研究简报")

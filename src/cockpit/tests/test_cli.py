@@ -161,3 +161,30 @@ def test_no_command_shows_banner():
     with patch("sys.argv", ["workspace"]):
         rc = main()
     assert rc == 0
+
+
+def test_omo_subcommand_registered():
+    """cockpit omo 必须注册到 argparse (防声明/执行鸿沟 P110-COCKPIT 再犯).
+
+    前次 bug: dispatch dict 有 "omo": lambda cmd_omo 但缺 add_parser("omo") →
+    `cockpit omo debt list` 报 invalid choice 'omo'. 后端 cockpit.commands.omo.cmd_omo
+    齐全, 只缺前端 argparse 注册. 关联 omo CLI argv 签名修复 (PR#122) 同源问题.
+    """
+    import pytest
+
+    _setup_mock()
+    with patch("sys.argv", ["workspace", "omo", "--help"]):
+        with pytest.raises(SystemExit) as exc:
+            main()
+        assert exc.value.code == 0  # --help 正常退出 = 已注册 (invalid choice 会 code=2)
+
+
+def test_runtime_subcommand_registered():
+    """cockpit runtime 必须注册到 argparse (同 omo 鸿沟)."""
+    import pytest
+
+    _setup_mock()
+    with patch("sys.argv", ["workspace", "runtime", "--help"]):
+        with pytest.raises(SystemExit) as exc:
+            main()
+        assert exc.value.code == 0
