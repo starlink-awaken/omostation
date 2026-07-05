@@ -32,6 +32,10 @@ REPO="starlink-awaken/omostation"
 cmd="${1:---set}"
 [ $# -gt 0 ] && shift
 AUTO_YES=false
+# F-1 修: --yes/-y 作为首参数单独用 (无 subcommand 时走默认 --set, 见 line 20 文档)
+case "$cmd" in
+  --yes|-y) AUTO_YES=true; cmd="--set" ;;
+esac
 for arg in "$@"; do
   case "$arg" in
     --yes|-y) AUTO_YES=true ;;
