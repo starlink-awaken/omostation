@@ -154,10 +154,22 @@ bash bin/gac-worktree.sh submit <session>   # push 分支 + 开 PR (base main)
 bash bin/gac-worktree.sh merge <session>    # squash 合并 PR + release + 删分支
 ```
 
-- **当前状态(2026-06-30)**: advisory 阶段——pre-push 对 direct push to main 发警告但不阻断(Phase 2a-2)。Phase 2c 升级为 blocking(本地拒绝)。
+- **当前状态(2026-07-05)**: ✅ **blocking + branch protection 已启用** — `make install-hooks` 装 blocking pre-push + `bash bin/gac-branch-protection.sh` 启用 main 保护。direct push main 被本地 + 平台双重拒绝(ISC-3b/4/5 达成)。所有 main 变更必须走 worktree+PR。
 - **子模块**: 保持 direct push(子模块 main 不保护,复用 `sync-submodules-push.sh`);仅主仓 main 走 PR。详见 [`docs/SUBMODULE-PR-STRATEGY.md`](docs/SUBMODULE-PR-STRATEGY.md)。
 - **L0 萃取不破坏**: `post-commit` 是 commit 级触发(worktree 共享 `.git/hooks`),worktree 内 commit 照样萃取,派生文件进 PR。
-- **完整计划**: [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) §4 Phase 2。
+- **完整计划**: [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) §4 Phase 2-3 (已落地)。
+
+#### 6.1.1 Worktree 常见踩坑诊断(2026-07-05 多 PR 实战)
+
+| 症状 | 根因 | 解法 |
+|------|------|------|
+| `submodule-reachability FAIL (N failures)` | worktree partial init (claim 默认只 init ecos+scripts) | push 用 `--no-verify` (P72 原则2, CI fresh clone 兜底) 或 `INIT_ALL_SUBMODULES=1` claim |
+| `change-lane-check FAIL mixed lanes` | bin/ governance_code + tests/ code 跨 lane 一 commit | P72 原则4 拆 commit (每 commit 单 lane) |
+| `ssot-guardian: direct_omo_io_violation` | direct-io-baseline `entries:` 空 + write_if_changed 是前人实现但未入 baseline | `--no-verify` (P72 原则3, baseline gap pre-existing, CI 兜底) |
+| `gac-bootstrap: 非法 executor` (agcp_drift) | claim 未 init cockpit/agora 子模块 | `git submodule update --init projects/cockpit projects/agora` |
+| `gh pr create: No commits between main and work/X` | 改动文件大小写不符 (如 PULL_REQUEST_TEMPLATE.md) 或 commit fail | 核 git status + 大小写 + 用 `git add <正确大小写>` |
+
+- **redundant 分支检测**: `python3 bin/check-branch-redundant.py` (git cherry patch-level, 比 grep 准)
 
 ## 7. Testing Guidance
 
