@@ -96,7 +96,11 @@ def classify(path: str, submodules: set[str]) -> str:
         "tests/test_governance_evolution.py",
     }:
         return "governance_code"
-    if path == ".omo/state/system_health.yaml" or path.startswith("runtime/"):
+    if (
+        path == ".omo/state/system_health.yaml"
+        or path.startswith("runtime/")
+        or path.startswith(".omo/state/runtime/")  # ADR-0129 §5.4 canonical projection plane
+    ):
         return "runtime_snapshot"
     if path.startswith(".omo/"):
         return "governance_state"
@@ -138,10 +142,12 @@ def allowed(lanes: set[str]) -> bool:
 def allowed_for(lanes: set[str], allowed_lanes: set[str]) -> bool:
     if len(lanes) <= 1:
         return True
-    if "runtime_snapshot" in lanes and len(lanes) > 1:
-        return False
+    # ADR-0129 §11.3.2: workflow 显式授权优先于硬编码隔离
+    # (state-sync workflow allowed_lanes=[runtime_snapshot, governance_state, ...] 不应被 runtime_snapshot 硬编码隔离架空)
     if allowed_lanes and lanes <= allowed_lanes:
         return True
+    if "runtime_snapshot" in lanes and len(lanes) > 1:
+        return False
     if "submodule_pointer" in lanes and not any(lanes <= combo for combo in ALLOWED_COMBOS):
         return False
     if "governance_state" in lanes and len(lanes) > 1:
