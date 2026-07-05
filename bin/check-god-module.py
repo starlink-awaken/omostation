@@ -27,6 +27,17 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 WARN_THRESHOLD = 800  # warn: 单文件超此报黄
 ERROR_THRESHOLD = 1500  # error: 单文件超此报红 (--strict 时 exit 1)
 
+# 暂豁 debt: 剩余高风险核心 GodModule (F7114ABA Wave 2-3 多会话推进).
+# >1500L 但暂豁 --strict error (状态对象化/内联重构/双引擎 DRY, 高风险核心, 仓促拆破坏运行时).
+# 见 .omo/_knowledge/audits/f7114aba-gbrain-srp-plan.md + memory [[check-god-module-mechanism]].
+# 已达标 3/7 (cycle/serve-http/migrate, PR#109/#110/#111). 剩 4 暂豁, 多会话推进.
+EXEMPT_ERRORS = {
+    "projects/gbrain/src/core/ai/gateway.ts",       # 2895L: 状态对象化 (71 处引用) + 核心 1610L 提取, P3
+    "projects/gbrain/src/commands/doctor.ts",        # 4825L: runDoctor 单函数 2330L inline 重构, P4 极高
+    "projects/gbrain/src/core/postgres-engine.ts",   # 4514L: 双引擎 DRY 逐方法对比 SQL (unnest+JOIN), P4
+    "projects/gbrain/src/core/pglite-engine.ts",     # 4509L: 双引擎 DRY (同 postgres, 手动 $N), P4
+}
+
 # 扫描范围 + 排除 (避免噪音: 生成代码/测试快照/旧码)
 SCAN_GLOBS = ("projects/**/*.py", "projects/**/*.ts")
 EXCLUDE_MARKERS = (
@@ -55,10 +66,11 @@ def _is_excluded(path: Path) -> bool:
     return any(marker in s for marker in EXCLUDE_MARKERS)
 
 
-def scan() -> tuple[list[tuple[str, int]], list[tuple[str, int]]]:
-    """扫所有源文件, 返回 (warn_list, error_list), 按行数降序."""
+def scan() -> tuple[list[tuple[str, int]], list[tuple[str, int]], list[tuple[str, int]]]:
+    """扫所有源文件, 返回 (warn_list, error_list, exempt_debt_list), 按行数降序."""
     warn: list[tuple[str, int]] = []
     error: list[tuple[str, int]] = []
+    exempt_debt: list[tuple[str, int]] = []  # >1500L 但暂豁 (debt, 见 EXEMPT_ERRORS)
     seen: set[Path] = set()
     for pattern in SCAN_GLOBS:
         for f in WORKSPACE.glob(pattern):
@@ -69,14 +81,19 @@ def scan() -> tuple[list[tuple[str, int]], list[tuple[str, int]]]:
             if lines <= WARN_THRESHOLD:
                 continue
             rel = str(f.relative_to(WORKSPACE))
-            (error if lines > ERROR_THRESHOLD else warn).append((rel, lines))
+            if lines > ERROR_THRESHOLD:
+                (exempt_debt if rel in EXEMPT_ERRORS else error).append((rel, lines))
+            else:
+                warn.append((rel, lines))
     warn.sort(key=lambda x: -x[1])
     error.sort(key=lambda x: -x[1])
-    return warn, error
+    exempt_debt.sort(key=lambda x: -x[1])
+    return warn, error, exempt_debt
 
 
-def print_report(warn: list[tuple[str, int]], error: list[tuple[str, int]]) -> None:
-    total = len(warn) + len(error)
+def print_report(warn: list[tuple[str, int]], error: list[tuple[str, int]], exempt_debt: list[tuple[str, int]] | None = None) -> None:
+    exempt_debt = exempt_debt if exempt_debt is not None else []
+    total = len(warn) + len(error) + len(exempt_debt)
     print("=" * 60)
     print(f"📦 God Module 检测 (>{WARN_THRESHOLD}L warn, >{ERROR_THRESHOLD}L error)")
     print("=" * 60)
@@ -87,23 +104,28 @@ def print_report(warn: list[tuple[str, int]], error: list[tuple[str, int]]) -> N
         print(f"\n🔴 ERROR ({len(error)} 文件 > {ERROR_THRESHOLD}L, --strict 时阻塞):")
         for f, n in error:
             print(f"  {n:>5}L  {f}")
+    if exempt_debt:
+        print(f"\n🟣 EXEMPT DEBT ({len(exempt_debt)} 文件 > {ERROR_THRESHOLD}L, 暂豁 --strict, 多会话推进):")
+        for f, n in exempt_debt:
+            print(f"  {n:>5}L  {f}")
+        print("   (F7114ABA Wave 2-3 剩余: 状态对象化/runDoctor 重构/双引擎 DRY, 见 SRP plan)")
     if warn:
         print(f"\n🟡 WARN ({len(warn)} 文件 > {WARN_THRESHOLD}L):")
         for f, n in warn:
             print(f"  {n:>5}L  {f}")
-    print(f"\n总计: {total} 文件超阈值 (warn {len(warn)} + error {len(error)})")
+    print(f"\n总计: {total} 文件超阈值 (warn {len(warn)} + error {len(error)} + exempt_debt {len(exempt_debt)})")
     print("治法: 用 omo-srp-refactor skill 渐进拆 (纯函数先 → 核心后, 每步 import+test)")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     parser.add_argument(
         "--strict", action="store_true", help=f">{ERROR_THRESHOLD}L 报 error (exit 1)"
     )
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
 
-    warn, error = scan()
+    warn, error, exempt_debt = scan()
 
     if args.json:
         print(
@@ -113,7 +135,8 @@ def main() -> int:
                     "error_threshold": ERROR_THRESHOLD,
                     "warn": [{"file": f, "lines": n} for f, n in warn],
                     "error": [{"file": f, "lines": n} for f, n in error],
-                    "total": len(warn) + len(error),
+                    "exempt_debt": [{"file": f, "lines": n} for f, n in exempt_debt],
+                    "total": len(warn) + len(error) + len(exempt_debt),
                 },
                 ensure_ascii=False,
                 indent=2,
@@ -121,7 +144,7 @@ def main() -> int:
         )
         return 1 if (args.strict and error) else 0
 
-    print_report(warn, error)
+    print_report(warn, error, exempt_debt)
     return 1 if (args.strict and error) else 0
 
 
