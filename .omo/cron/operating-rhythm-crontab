@@ -1,0 +1,25 @@
+# Operating-rhythm crontab (ADR-0119/0121, governance-evolution-roadmap §operating_rhythm)
+#
+# 三档节奏 (Meadows 9 范式级杠杆, initiative governance-operating-rhythm):
+#   daily      - 每天 09:00 (status 检查: agent-workflow + governance-evolution)
+#   weekly     - 周一 10:00 (mof-state-bridge + mof-drift 桥接巡检)
+#   pre_release - 手动触发 (PR 合并前, 不进 cron; 跑 make gac-local-gate + compliance + validate)
+#
+# 治理源: .omo/_truth/registry/governance-evolution-roadmap.yaml::operating_rhythm
+# 安装: crontab .omo/cron/operating-rhythm-crontab
+# 卸载: crontab -r (或 crontab -l 后删本表条目)
+# 日志: runtime/cron/operating-rhythm-{daily,weekly}.log (.gitignored 运行时写面)
+#
+# 注: WORKSPACE 路径按需替换 (默认 $HOME/Workspace)
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin
+
+# ── daily 09:00 (status 节奏, ADR-0121 维度 3 Loop Convergence) ──
+0 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/agent-workflow.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+5 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/governance-evolution.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+10 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/governance-evolution.py packages --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+
+# ── weekly 周一 10:00 (MOF 桥接 + drift 巡检) ──
+0 10 * * 1 cd "$HOME/Workspace" && python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json >> runtime/cron/operating-rhythm-weekly.log 2>&1
+5 10 * * 1 cd "$HOME/Workspace" && bin/mof-drift >> runtime/cron/operating-rhythm-weekly.log 2>&1
