@@ -254,8 +254,13 @@ def main() -> int:
             else:
                 print(f"ℹ BRIEF.md 语义未变化, 跳过写入: {BRIEF_MD}")
         else:
-            BRIEF_MD.write_text(content, encoding="utf-8")  # audit-exempt: non-atomic-write
-            print(f"✅ BRIEF.md 物理生成并刷新: {BRIEF_MD}")
+            # ADR-0128 Phase 2: 默认走 write_brief_if_changed, 消除 BRIEF.md dirty 风暴
+            # (前人已实现该函数 + normalize_brief_content; 仅默认 else 分支仍裸写)
+            changed = write_brief_if_changed(content)
+            print(
+                f"✅ BRIEF.md 物理生成并刷新: {BRIEF_MD}" if changed
+                else f"ℹ BRIEF.md 语义未变化, 跳过写入: {BRIEF_MD}"
+            )
     else:
         print(content)
         
