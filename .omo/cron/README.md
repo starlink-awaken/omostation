@@ -12,6 +12,7 @@
 | governance-dashboard-crontab | governance-dashboard + gov-trend 报告 | daily/weekly | 独立 (仪表盘生成) |
 | x2-freshness-crontab | x2_freshness_audit (cross-lint/debt-evidence/mof-bump) | daily/weekly/monthly | 部分重叠 (GaC indexed X2-FRESH-*) |
 | opc-closeout-crontab | OPC P5-P7 (radar/weekly-loop/drift-detector/self-evolve/release-cycle/audit-rollout/doc-lint) | daily/weekly | 独立 (OPC 生命周期) |
+| **operating-rhythm-crontab** | operating-rhythm daily/weekly (agent-workflow status + governance-evolution + mof-state-bridge + mof-drift) | daily/weekly | 独立 (Meadows 9 范式级, ADR-0119/0121) |
 
 ## 安装 (按需)
 
@@ -27,6 +28,9 @@ crontab .omo/cron/x2-freshness-crontab
 
 # OPC 生命周期 (独立, P5-P7 闭环)
 crontab .omo/cron/opc-closeout-crontab
+
+# operating-rhythm 节奏 (Meadows 9 范式级, governance-evolution-roadmap §operating_rhythm)
+crontab .omo/cron/operating-rhythm-crontab
 
 # 查看: crontab -l | grep -E "gac|governance|x2|opc"
 ```
