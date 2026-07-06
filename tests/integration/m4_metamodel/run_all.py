@@ -764,6 +764,33 @@ def test_r5b_mcptool_adder_guide_exists(verbose: bool = False) -> tuple[bool, st
     return True, 'guide 4 关键章节齐全'
 
 
+
+def test_r5c_agents_round_playbook_exists(verbose: bool = False) -> tuple[bool, str]:
+    x54 = 'T54 R5c: AGENTS.md §10 Round Workflow Playbook 存在'
+    ag = WS / 'AGENTS.md'
+    if not ag.exists():
+        return False, 'AGENTS.md 不存在'
+    content2 = ag.read_text()
+    if '## 10. Round Workflow Playbook' not in content2:
+        return False, '缺 §10 标题'
+    sections = ['### 10.1 Round 类型参考', '### 10.2 P72', '### 10.3 历史']
+    missing = [s for s in sections if s not in content2]
+    if missing:
+        return False, f'缺子节: {missing}'
+    return True, 'AGENTS.md §10 三子节齐全'
+
+
+def test_r5c_round_playbook_adr_exists(verbose: bool = False) -> tuple[bool, str]:
+    x55 = 'T55 R5c: ADR-0148 已加入 INDEX'
+    idx = WS / '.omo/_knowledge/decisions/INDEX.md'
+    content3 = idx.read_text()
+    if '| 0148 |' not in content3:
+        return False, 'INDEX 缺 0148'
+    if 'ACCEPTED' not in content3.split('| 0148')[1].split('|')[2]:
+        return False, '0148 不是 ACCEPTED'
+    return True, 'ADR-0148 ACCEPTED 已入 INDEX'
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -821,6 +848,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T51 R4a Health Score 100", test_r4a_health_score_100),
     ("T52 R5a ADR-0146 stability declared", test_r5a_stability_declaration_exists),
     ("T53 R5b MCPTOOL adder guide", test_r5b_mcptool_adder_guide_exists),
+    ("T54 R5c AGENTS.md §10 playbook", test_r5c_agents_round_playbook_exists),
+    ("T55 R5c ADR-0148 in INDEX", test_r5c_round_playbook_adr_exists),
 ]
 
 
