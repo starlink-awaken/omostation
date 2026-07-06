@@ -220,8 +220,8 @@ def check_5(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
         # created ISO-8601
         if "created" not in data:
             errors.append(f"  {f.name}: 缺 created (M2BS-03)")
-        elif not re.match(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?(\.\d+)?", str(data["created"])):
-            errors.append(f"  {f.name}: created {data['created']!r} 不符 ISO-8601 (M2BS-03)")
+        elif not re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", str(data["created"])):
+            errors.append(f"  {f.name}: created {data['created']!r} 不符 ISO-8601 datetime (M2BS-03)")
         # 顶层 body (description 可在 top 或 body, 实际 schema 模式)
         body_key = m2t
         body = data.get(body_key)

@@ -656,6 +656,28 @@ def test_r4b_adr_0142_in_index(verbose: bool = False) -> tuple[bool, str]:
     return True, 'ADR-0142 ACCEPTED 已入 INDEX'
 
 
+
+def test_r4c_no_date_only_m2_schemas(verbose: bool = False) -> tuple[bool, str]:
+    x47 = 'T47 R4c: m2 schema 全部 datetime (无 date-only, ADR-0143 治本)'
+    import re as _re
+    m2_dir = WS / 'projects/ecos/src/ecos/ssot/mof/m2'
+    found = []
+    for f in sorted(m2_dir.glob('*.yaml')):
+        if f.name == 'm2_base_schema.yaml':
+            continue
+        content2 = f.read_text()
+        for line in content2.splitlines():
+            ls = line.strip()
+            if ls.startswith('created:'):
+                m = _re.search(r"created:\s*['\"]([^'\"]+)['\"]", ls)
+                if m and _re.match(r'^\d{4}-\d{2}-\d{2}$', m.group(1)):
+                    found.append(f.name)
+                break
+    if found:
+        return False, f'{len(found)} schema 仍用 date 格式: {found[:3]}'
+    return True, '所有 m2 schema 已 datetime (45 迁移完成)'
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -706,6 +728,7 @@ TESTS: list[tuple[str, Callable]] = [
     ("T44 R3a m2_base_schema.yaml exists", test_r3a_m2_base_schema_exists),
     ("T45 R4b M4 decisions quick ref", test_r4b_decisions_quick_ref_exists),
     ("T46 R4b ADR-0142 in INDEX", test_r4b_adr_0142_in_index),
+    ("T47 R4c m2 datetime 治本", test_r4c_no_date_only_m2_schemas),
 ]
 
 
