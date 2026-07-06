@@ -791,6 +791,30 @@ def test_r5c_round_playbook_adr_exists(verbose: bool = False) -> tuple[bool, str
     return True, 'ADR-0148 ACCEPTED 已入 INDEX'
 
 
+
+def test_r5d_p71_pattern_exists(verbose: bool = False) -> tuple[bool, str]:
+    x56 = 'T56 R5d: P71 baseline-recovery pattern 文件存在'
+    pat = WS / '.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md'
+    if not pat.exists():
+        return False, 'p71-baseline-recovery-pattern.md 不存在'
+    content2 = pat.read_text()
+    if 'baseline' not in content2.lower():
+        return False, 'pattern 不含 baseline 内容'
+    return True, f'P71 pattern {pat.stat().st_size} bytes 存在'
+
+
+def test_r5d_adr_0149_accepted(verbose: bool = False) -> tuple[bool, str]:
+    x57 = 'T57 R5d: ADR-0149 已加入 INDEX + ACCEPTED'
+    idx = WS / '.omo/_knowledge/decisions/INDEX.md'
+    content3 = idx.read_text()
+    if '| 0149 |' not in content3:
+        return False, 'INDEX 缺 0149'
+    lines = [l for l in content3.splitlines() if l.startswith('| 0149 ')]
+    if not lines or 'ACCEPTED' not in lines[0]:
+        return False, '0149 不是 ACCEPTED'
+    return True, 'ADR-0149 ACCEPTED 已入 INDEX'
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -850,6 +874,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T53 R5b MCPTOOL adder guide", test_r5b_mcptool_adder_guide_exists),
     ("T54 R5c AGENTS.md §10 playbook", test_r5c_agents_round_playbook_exists),
     ("T55 R5c ADR-0148 in INDEX", test_r5c_round_playbook_adr_exists),
+    ("T56 R5d P71 pattern exists", test_r5d_p71_pattern_exists),
+    ("T57 R5d ADR-0149 in INDEX", test_r5d_adr_0149_accepted),
 ]
 
 
