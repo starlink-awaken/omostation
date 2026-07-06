@@ -1,6 +1,6 @@
 # eCOS v6 物理拓扑与架构依赖图谱
 
-> **自动刷新时间**: 2026-07-03 22:46:22
+> **自动刷新时间**: 2026-07-06 10:29:40
 > **数据源**: KOS SQLite 本体引擎 · `EicosParser` 自动提取
 
 ```mermaid
@@ -169,7 +169,7 @@ graph TD
     J_cockpit["J:Cockpit"]:::project -->|member_of| C_Layer_L3["C:Layer L3"]:::concept
     J_cockpit_ui["J:Cockpit Ui"]:::project -->|member_of| C_Layer_L3["C:Layer L3"]:::concept
     J_ecos["J:Ecos"]:::project -->|member_of| C_Layer_L0["C:Layer L0"]:::concept
-    J_family_hub["J:Family Hub"]:::project -->|member_of| C_Layer_X["C:Layer X"]:::concept
+    J_family_hub["J:Family Hub"]:::project -->|member_of| C_Layer_L2["C:Layer L2"]:::concept
     J_gbrain["J:Gbrain"]:::project -->|member_of| C_Layer_L2["C:Layer L2"]:::concept
     J_kairon["J:Kairon"]:::project -->|member_of| C_Layer_L2["C:Layer L2"]:::concept
     J_l4_kernel["J:L4 Kernel"]:::project -->|member_of| C_Layer_L4["C:Layer L4"]:::concept
@@ -178,7 +178,7 @@ graph TD
     J_model_driven["J:Model Driven"]:::project -->|member_of| C_Layer_M0["C:Layer M0"]:::concept
     J_observability["J:Observability"]:::project -->|member_of| C_Layer_X["C:Layer X"]:::concept
     J_omo["J:Omo"]:::project -->|member_of| C_Layer_L2["C:Layer L2"]:::concept
-    J_omo_debt["J:Omo Debt"]:::project -->|member_of| C_Layer_X["C:Layer X"]:::concept
+    J_omo_debt["J:Omo Debt"]:::project -->|member_of| C_Layer_L2["C:Layer L2"]:::concept
     J_runtime["J:Runtime"]:::project -->|member_of| C_Layer_L1["C:Layer L1"]:::concept
     J_toolbox["J:Toolbox"]:::project -->|member_of| C_Layer_L1_L3["C:Layer L1-L3"]:::concept
     N_MBP_M5_Max["N:MBP M5 Max"]:::node -->|runs_model| C_Model_coder["C:Model coder"]:::concept
@@ -198,5 +198,5 @@ graph TD
 
 ---
 ## 📊 实体指标统计
-* **总实体数**: 214
+* **总实体数**: 215
 * **总关系数**: 183
