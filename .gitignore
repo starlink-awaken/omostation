@@ -170,3 +170,11 @@ data/cards/
 # README.md 保留 tracked (导航说明), 其余 generated
 .omo/state/runtime/*
 !.omo/state/runtime/README.md
+
+# ADR-0137 (M4 派生面范式强化): 派生面应跟随 SSOT 源所在子模块,
+# 不再在主仓根 .omo/_derived/ 写派生. example:
+# projects/ecos/.omo/_derived/ (gitignored in projects/ecos/.gitignore)
+
+# ADR-0144 (M4 cron hook 例外): m4-cron-log.json SSOT 在主仓 .omo/cron/
+# 所以派生面也写到主仓根, 这是 ADR-0137 的唯一例外
+.omo/_derived/m4-cron-log.json

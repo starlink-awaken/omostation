@@ -106,6 +106,25 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0128 | 多 Agent 并发下治理状态生成的架构收敛 | PROPOSED | 2026-07-03 | governance-team | 0128-state-generation-concurrency.md |
 | 0129 | 运行时投影面分离（ADR-0128 Phase 3 治本设计） | PROPOSED | 2026-07-03 | governance-team | 0129-state-projection-plane-phase3.md |
 | 0130 | P74 工作流常态化治理 (Workflow Solidification) | ACTIVE | 2026-07-03 | governance-team | 0130-p74-workflow-solidification.md |
+| 0131 | (保留) | — | — | — | — |
+| 0132 | L0 / M0 / MOF 统一元模型 (M4 升级) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0132-l0-mof-m4-metamodel.md |
+| 0133 | L0-constraints v2 派生面 — 双轨切单轨 | ACCEPTED | 2026-07-06 | governance + eCOS team | 0133-l0-constraints-v2-cutover.md |
+| 0134 | meta_model ↔ m3.yaml 双轨桥接受 (M3-meta ACCEPTED) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0134-m3-meta-cutover.md |
+| 0135 | 派生面统一收口 (ADR-0129 范式 enforcement) | ACCEPTED | 2026-07-06 | governance-team | 0135-derived-plane-unification.md |
+| 0136 | P5 phase — m3.yaml 扩展 4 gap 治本 | ACCEPTED | 2026-07-06 | governance + eCOS team | 0136-m3-yaml-extension-p5.md |
+| 0137 | 派生面落点纠偏 — 跟随 SSOT 源所在子模块 | ACCEPTED | 2026-07-06 | governance + eCOS team | 0137-derived-plane-relocation.md |
+| 0138 | 元元模型类目提升至 m3.yaml 主流 (Round 2b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0138-meta-element-promotion.md |
+| 0139 | model-driven 8 阶段复活评估 — 拒回 (Round 2c) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0139-model-driven-8stage-revival-rejected.md |
+| 0140 | M4 Health Score 量化与派生面落地 (Round 3b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0140-m4-health-score.md |
+| 0141 | M2BaseSchema 抽象基类 + check_5 (Round 3a) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0141-m2-base-schema.md |
+| 0142 | M4 决策速查表 (Round 4b) | ACCEPTED | 2026-07-06 | governance-team | 0142-decisions-quick-ref.md |
+| 0143 | 45 m2 schema date → datetime 迁移 (Round 4c) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0143-m2-date-migration.md |
+| 0144 | M4 Cron Hook (Round 4d) | ACCEPTED | 2026-07-06 | governance-team | 0144-m4-cron-hook.md |
+| 0145 | MCPTOOL 集合占位识别 (Round 4a) — 100/100 Health Score | ACCEPTED | 2026-07-06 | governance + eCOS team | 0145-mcptool-collection-skip.md |
+| 0146 | 8 阶段反向 ADR 稳定性声明 (Round 5a) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0146-8stage-stability-declaration.md |
+| 0147 | MCPTOOL M1 Adder Guide (Round 5b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0147-mcptool-adder-guide.md |
+| 0148 | Round-Trip 流程文档化 (Round 5c) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0148-round-trip-playbook.md |
+| 0149 | P71 Baseline 防重做 (Round 5d) | ACCEPTED | 2026-07-06 | governance-team | 0149-p71-baseline-no-replay.md |
 
 ---
 
@@ -177,4 +196,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-03 · Owner: governance-team · 0126 S2 阶段深度分析 + 当前状态 (health_score 100/100, F-2 6/6, ADR-0115 4/4)*
+*最近更新: 2026-07-06 · Owner: governance + eCOS team · M4 元模型方案 ADR-0132 PROPOSED (L0/M0/MOF 统一,14 周 5 阶段 38 里程碑)*
