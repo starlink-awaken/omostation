@@ -50,7 +50,11 @@ R4 (4 决策 + 1 follow-up)
 
 R5 (战略收口)
 ├── R5a [8 阶段反向 ADR 稳定性]   ADR-0146  ←  永久稳定承诺
-└── R5b [MCPTOOL adder guide]   ADR-0147  ←  docs/MCPTOOL-ADDER-GUIDE.md
+├── R5b [MCPTOOL adder guide]   ADR-0147  ←  docs/MCPTOOL-ADDER-GUIDE.md
+├── R5c [Round-Trip playbook]    ADR-0148  ←  AGENTS.md §10
+├── R5d [P71 防重做]             ADR-0149
+├── R5e [Submodule PR review]    ADR-0150  ←  docs/SUBMODULE-PR-REVIEW-GUIDE.md ⭐
+├── R5f [子模块 gitignore 守门]  ADR-0151  ←  bin/check-submodule-hygiene.py
 ```
 
 ---
