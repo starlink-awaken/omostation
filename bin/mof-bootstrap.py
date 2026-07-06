@@ -98,11 +98,8 @@ def check_2(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
 def check_3(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
     """M2 → M3 m3_parent 锚闭合 (strict).
 
-    严格校验 m3_parent 路径首段在 m3.yaml Element 集. 失败项 (中间类缺失)
-    由 check_3_lint 报告 ADR 决策需要, 这里只输出 strict 错.
-    决策 (ADR-0132 P2-S4): 当前 4 个中间类 (ConstraintMgmt / InfrastructureElement /
-    ArchitectureElement / ConcurrencyControl) 在 m3.yaml 缺失, 不在 P2-S4 单次治本,
-    标记为 ADR 决策. check_3 strict 返回 ok=False, 但不阻塞 P5 phase 治理演进.
+    ADR-0136 P5 阶段已治本 4 个 gap (constraint_l0 / federation / plugin /
+    concurrency_control). 当前返回 strict PASS, 不再有 P5 中间类缺失.
     """
     m3 = ws / "projects/ecos/src/ecos/ssot/mof/m3.yaml"
     m2_dir = ws / "projects/ecos/src/ecos/ssot/mof/m2"
@@ -136,12 +133,10 @@ def check_3(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
         if first in m3_elements:
             n_ok += 1
         else:
-            errors.append(f"  {f.name}: m3_parent {parent!r} '{first}' 不在 m3.yaml Element 集 (P5 ADR)")
+            errors.append(f"  {f.name}: m3_parent {parent!r} '{first}' 不在 m3.yaml Element 集")
     if verbose:
-        print(f"  m2→m3 (strict): {n_ok} schemata 锚通, {len(errors)} 中间类缺失")
-    # P2-S4 ADR 决策: 4 个中间类缺失是已知的 schema gap, 不阻塞 P5 phase
-    # 返回 ok=True 但保留 error 列表作为 P5 phase 待办
-    return True, errors  # noqa: E741 - ADR decision, see P2-S4 documentation
+        print(f"  m2→m3 (strict): {n_ok} schemata 锚通, {len(errors)} err")
+    return (len(errors) == 0), errors
 
 
 def check_4(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:

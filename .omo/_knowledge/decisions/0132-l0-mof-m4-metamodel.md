@@ -1,5 +1,5 @@
 ---
-status: PROPOSED
+status: ACCEPTED
 lifecycle: decision
 owner: governance-team + eCOS team
 last-reviewed: 2026-07-06
