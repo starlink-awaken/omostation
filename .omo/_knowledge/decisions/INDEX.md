@@ -130,6 +130,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0152 | M4 5 GaC 规则追加 (Phase 1) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0152-m4-gac-rules.md |
 | 0153 | M4 4 工具入 agent-workflows (Phase 2b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0153-m4-agent-workflows-tools.md |
 | 0154 | M4 OMO cron 集成 (Phase 4) | ACCEPTED | 2026-07-06 | governance-team | 0154-m4-omo-cron-integration.md |
+| 0155 | god-module 阈值统一 (800→1500L) + api_system_map 临时豁免 | ACCEPTED | 2026-07-06 | governance-team | 0155-god-module-threshold-unification.md |
 
 ---
 
