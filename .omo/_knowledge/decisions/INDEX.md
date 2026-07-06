@@ -108,6 +108,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0130 | P74 工作流常态化治理 (Workflow Solidification) | ACTIVE | 2026-07-03 | governance-team | 0130-p74-workflow-solidification.md |
 | 0131 | (保留) | — | — | — | — |
 | 0132 | L0 / M0 / MOF 统一元模型 (M4 升级) | PROPOSED | 2026-07-06 | governance + eCOS team | 0132-l0-mof-m4-metamodel.md |
+| 0133 | L0-constraints v2 派生面 — 双轨切单轨 | ACCEPTED | 2026-07-06 | governance + eCOS team | 0133-l0-constraints-v2-cutover.md |
 
 ---
 
