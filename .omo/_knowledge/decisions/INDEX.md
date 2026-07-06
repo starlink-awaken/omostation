@@ -106,6 +106,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0128 | 多 Agent 并发下治理状态生成的架构收敛 | PROPOSED | 2026-07-03 | governance-team | 0128-state-generation-concurrency.md |
 | 0129 | 运行时投影面分离（ADR-0128 Phase 3 治本设计） | PROPOSED | 2026-07-03 | governance-team | 0129-state-projection-plane-phase3.md |
 | 0130 | P74 工作流常态化治理 (Workflow Solidification) | ACTIVE | 2026-07-03 | governance-team | 0130-p74-workflow-solidification.md |
+| 0131 | (保留) | — | — | — | — |
+| 0132 | L0 / M0 / MOF 统一元模型 (M4 升级) | PROPOSED | 2026-07-06 | governance + eCOS team | 0132-l0-mof-m4-metamodel.md |
 
 ---
 
@@ -177,4 +179,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-03 · Owner: governance-team · 0126 S2 阶段深度分析 + 当前状态 (health_score 100/100, F-2 6/6, ADR-0115 4/4)*
+*最近更新: 2026-07-06 · Owner: governance + eCOS team · M4 元模型方案 ADR-0132 PROPOSED (L0/M0/MOF 统一,14 周 5 阶段 38 里程碑)*
