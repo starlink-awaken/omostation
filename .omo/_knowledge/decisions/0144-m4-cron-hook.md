@@ -61,7 +61,7 @@ operating-rhythm cron 框架 (ADR-0121, governance-evolution-roadmap §operating
 ### 1.3 m4-cron-log.json schema
 
 每条 entry 6 字段:
-- `mark`: "M4-CR-HOOK" (恒定, OMO grep 用)
+- `mark`: "M4_HOOK_MARK" (恒定, OMO grep 用)
 - `ts`: ISO-8601 UTC timestamp
 - `trigger`: manual / cron / test
 - `branch` + `sha`: 当前 git 状态 (debt-trace 用)
@@ -129,7 +129,7 @@ CLI 接口:
 uv run python bin/m4-cron-hook.py --sync   # → 追加 entry 到 log
 
 # OMO P74 governance radar 读:
-jq '.[] | select(.mark=="M4-CR-HOOK")' .omo/_derived/m4-cron-log.json | tail
+jq '.[] | select(.mark=="M4_HOOK_MARK")' .omo/_derived/m4-cron-log.json | tail
 ```
 
 ---

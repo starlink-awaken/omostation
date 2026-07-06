@@ -39,7 +39,7 @@ DERIVED_HEALTH = WS / "projects/ecos/.omo/_derived/m4-health.json"
 DERIVED_LOG = WS / ".omo/_derived/m4-cron-log.json"
 GI_LOG = ".omo/_derived/"  # 已 gitignored in main tree (.gitignore 中 ADR-0137 后保留)
 
-OMOCRON_HOOK_MARK = "M4-CR-HOOK"
+OMOCRON_HOOK_MARK = "M4_HOOK_MARK"
 
 
 def _now() -> str:
