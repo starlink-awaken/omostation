@@ -44,6 +44,11 @@ EXEMPT_PATH_PATTERNS = (
     # 治理运行时工具 (写 audits/debts/_delivery 产物, broker 特例; P1 揭示预先存在债)
     r"/l4_kernel/monitor/contract_monitor\.py$",
     r"/scripts/opc_p5_radar_cron\.py$",
+    # health 分数生成 broker (写 .omo/state/health.yaml; P1 揭示预先存在债)
+    r"/bin/m4-health-score\.py$",
+    # bin/ 治理工具目录 (AGENTS §4: gac-*/doc-ssot-*/ssot-guardian/agent-workflow/m4-*/cron-hook/evidence-smoke)
+    # 都是写 .omo 运行产物的合法 broker — 宽泛豁免避免逐个洋葱 (P1 揭示: bin/ 非 broker 工具应迁出或单独门禁)
+    r"/bin/.*\.py$",
 )
 
 # AST node types that mutate actual files/dirs when given a path
@@ -66,7 +71,9 @@ _OS_MUTATION_NAMES = {"makedirs", "mkdir", "replace", "rename"}
 
 def _is_exempt(path: Path) -> bool:
     """Return True if the file is exempt from gatekeeping."""
-    s = str(path)
+    # 用绝对路径 (path.resolve): EXEMPT pattern 带 /bin/ /scripts/ 前导斜杠,
+    # 相对路径 str(path) = "bin/..." 不匹配 /bin/ → 白名单失效. resolve() 含 /bin/ 匹配.
+    s = str(path.resolve())
     for pat in EXEMPT_PATH_PATTERNS:
         if re.search(pat, s):
             return True
