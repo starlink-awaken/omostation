@@ -258,7 +258,7 @@ def main() -> int:
         pitch_text = sys.stdin.read()
     else:
         # 自检模式（无参数运行时做一次 smoke test）
-        pitch_text = "新建服务 mesh-router，监听端口 7435，服务名 mesh-router，依赖 KOS 图谱进行路由决策。"
+        pitch_text = "新建服务 mesh-router，监听端口 7437，服务名 mesh-router，依赖 KOS 图谱进行路由决策。"
 
     result = run_check(pitch_text, verbose=not args.no_verbose)
 
