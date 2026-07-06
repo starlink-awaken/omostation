@@ -272,30 +272,58 @@ class M3MetaLoader:
 
         优先选择 m3-implements 与 meta_model.MetaType.* 完全匹配的,
         因为 Confidence* 子类也用 Confidence.FACT 等做 m3_implements, 优先级低。
+
+        ADR-0138 Round 2b: 现在 m3.yaml 主根已含 MetaEntity/MetaRelationType/
+        MetaConstraintRule, 优先匹配这些 (m3.yaml 是 SSOT)。
+        m3-meta.yaml 继续作为派生映射索引 / 关系矩阵 / 8 层架构源.
         """
         # 第一轮: 收集所有候选
         candidates: dict[str, list[str]] = {}
-        for elem in self._m3_meta_elements.values():
+        # 优先看 m3.yaml (主根 SSOT)
+        for eid, elem in self._m3_elements.items():
+            # MetaEntity 等抽象类的子类型: 把 meta_type 属性值当锚
+            if elem.parent == "MetaEntity":
+                # 抽象类本身不直接当映射, 等子类
+                continue
+        # 第二轮: 同时扫 m3.yaml 和 m3-meta.yaml
+        for elem in list(self._m3_elements.values()) + list(self._m3_meta_elements.values()):
             if elem.m3_implements:
                 last = elem.m3_implements.split(".")[-1]
                 candidates.setdefault(last, []).append(elem.id)
-        # 第二轮: 优先选择与 MetaType/MetaRelationType/MetaConstraint/Confidence
-        # 完整 DOTTED path 匹配的
+        # 第三轮: 优先 m3.yaml (主根) 上的 Meta* 类
         priority_prefixes = ("MetaType", "MetaRelationType", "MetaConstraint", "Confidence")
+        # 也优先选 m3.yaml 主根 (ADR-0138)
         for name, ids in candidates.items():
             chosen = None
-            # 先找与 priority_prefix 关联的
+            # 先选 m3.yaml 主根匹配 Meta* 的子类
             for eid in ids:
-                elem = self._m3_meta_elements[eid]
-                if elem.m3_implements:
-                    middle = elem.m3_implements.split(".")[-2] if "." in elem.m3_implements else ""
-                    if middle in priority_prefixes:
-                        # 优先 MetaType* 前缀的, 其次 Confidence*
-                        if middle == f"MetaType" or (middle == "Confidence" and chosen is None):
-                            chosen = eid
+                elem = self._get_element_anywhere(eid)
+                if elem is None:
+                    continue
+                # ADR-0138: MetaEntity 子类 (MetaDomain/MetaFact/...) 来自 m3.yaml 主根
+                # m3_implements 字段在 m3-meta.yaml
+                if elem.parent in ("MetaEntity", "MetaRelationType", "MetaConstraintRule", "Confidence", "MetaType", "MetaRelation", "MetaStruct", "MetaDerive", "MetaBehavior", "MetaJustify", "MetaConstraint"):
+                    chosen = eid
+                    break
+            if chosen is None:
+                # fallback 到 m3-meta.yaml 派生
+                for eid in ids:
+                    elem = self._get_element_anywhere(eid)
+                    if elem and elem.m3_implements:
+                        middle = elem.m3_implements.split(".")[-2] if "." in elem.m3_implements else ""
+                        if middle in priority_prefixes:
+                            if middle == "MetaType" or (middle == "Confidence" and chosen is None):
+                                chosen = eid
             if chosen is None:
                 chosen = ids[0]
             self._meta_to_m3_map_cache[name] = chosen
+
+    def _get_element_anywhere(self, eid: str) -> "M3Element | None":
+        """从 m3.yaml 或 m3-meta.yaml 找 Element"""
+        elem = self._m3_elements.get(eid)
+        if elem is not None:
+            return elem
+        return self._m3_meta_elements.get(eid)
 
     def compute_meta_confidence(
         self, confidences: list[Enum | str]
