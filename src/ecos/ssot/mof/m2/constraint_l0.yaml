@@ -6,7 +6,7 @@ m2_type: ConstraintL0
 version: 1.0.0
 created: '2026-07-06T10:00:00'
 ConstraintL0:
-  m3_parent: ConstraintMgmt
+  m3_parent: Constraint  # 继承 Constraint (m3.yaml Constraint 类目)
   description: 织星 L0 协议约束 — 跨层协议契约。L0 registry/L0-constraints.yaml 的 M2 schema
   icon: 🔒
 

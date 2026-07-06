@@ -103,6 +103,23 @@ m3:
         mtime:      { type: datetime, required: false, description: "最后修改时间" }
       applies_to: [M2, M1, M0]
 
+    # ── M4 元模型闭环 (ADR-0136 P5 phase) ──
+    # 用于补全 m2/*.yaml schema 的 m3_parent 引用 (InfrastructureElement.Concurrency)
+    ConcurrencyElement:
+      id: ConcurrencyElement
+      name: "并发控制元素"
+      description: |
+        并发控制元素 - m2 schema concurrency_control.yaml 的 m3 锚。
+        描述系统的并发原语 - 锁、信号量、事务、actor 模型。
+        M4 ADR-0136 Phase 5 新增, 闭合 M2→M3 闭环。
+      parent: StructuralElement
+      abstract: false
+      properties:
+        kind:        { type: enum, required: true, description: "并发原语", values: [lock, semaphore, actor, transaction, compare_and_swap] }
+        granularity: { type: enum, required: true, description: "粒度", values: [process, thread, fiber, coroutine] }
+        fairness:    { type: enum, required: false, description: "公平性", values: [fifo, priority, none] }
+      applies_to: [M2, M1]
+
     # ── 行为元素: 描述"做什么" ──
     BehavioralElement:
       id: BehavioralElement

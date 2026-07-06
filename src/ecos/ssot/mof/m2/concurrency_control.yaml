@@ -3,7 +3,7 @@ version: 1.0.0
 created: '2026-06-13'
 updated: '2026-06-13'
 ConcurrencyControl:
-  m3_parent: InfrastructureElement.Concurrency
+  m3_parent: ConcurrencyElement.Concurrency
   description: 并发控制机制——文件锁、乐观锁、信号量等
   icon: 🔒
   stateMachine:
