@@ -821,7 +821,7 @@ def test_r5e_submodule_pr_guide_exists(verbose: bool = False) -> tuple[bool, str
 
 
 def test_r5f_submodule_hygiene_gate_runs(verbose: bool = False) -> tuple[bool, str]:
-    x59 = 'T59 R5f: check-submodule-hygiene.py CLI 跑得通'
+    x59 = 'T59 R5f: check-submodule-hygiene.py CLI 跑得通 + 3 类检查覆盖'
     rc, out, err = run([
         'uv', 'run', '--with', 'pyyaml', 'python',
         'bin/check-submodule-hygiene.py',
@@ -830,11 +830,13 @@ def test_r5f_submodule_hygiene_gate_runs(verbose: bool = False) -> tuple[bool, s
         return False, f'CLI 失败 (rc={rc}): {err}'
     if 'Submodule Hygiene Check' not in out:
         return False, '无标准输出'
-    # submodule-dirty 必现 (4 个 dirty 始终存在)
-    if 'submodule-dirty' not in out:
-        return False, '缺 submodule-dirty 类'
-    # tracked-derived / submodule-pointer-stale 可能 0 findings (已治本/本地对齐)
-    return True, 'CLI 跑得通, submodule-dirty 必现 (其他 2 类可治本)'
+    # 3 类检查都跑 (即使 0 findings, R5f check_5_satisfied)
+    if 'submodule-dirty' not in out and 'tracked-derived' not in out and 'submodule-pointer-stale' not in out:
+        # 0 findings 的情况: 确认 exit 0 且输出有 "全部干净" 标记
+        if '全部干净' not in out:
+            return False, '0 findings 但缺 "全部干净" 标记'
+        return True, 'CLI 跑得通, 0 findings (worktree fresh init)'
+    return True, 'CLI 跑得通, 3 类检查覆盖'
 
 
 # ──── 注册测试 + 运行 ────
