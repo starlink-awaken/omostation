@@ -56,8 +56,8 @@ def check_submodule_dirty() -> list[dict]:
         rc2, out2, _ = _run(["git", "-C", sub_path, "status", "--porcelain"])
         if rc2 == 0 and out2.strip():
             # 提取 untracked + modified 文件
-            files = [l.split(maxsplit=1)[1] if len(l.split(maxsplit=1)) > 1 else l
-                     for l in out2.strip().splitlines() if l.strip()]
+            files = [line.split(maxsplit=1)[1] if len(line.split(maxsplit=1)) > 1 else line
+                     for line in out2.strip().splitlines() if line.strip()]
             findings.append({
                 "type": "submodule-dirty",
                 "submodule": sub_path,
@@ -169,7 +169,7 @@ def main() -> int:
         print()
 
     if args.strict:
-        print(f"❌ --strict 模式, exit 1")
+        print("❌ --strict 模式, exit 1")
         return 1
     return 0
 

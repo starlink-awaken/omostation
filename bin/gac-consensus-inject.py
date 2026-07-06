@@ -3,7 +3,6 @@
 # Phase A (2026-07-03): 升级为 RAG Top-2 按需注入，替代全量追加模式
 # 降低 CLAUDE.md Token 膨胀，实现 Epigenetic Memory 按需激活
 
-import os
 import sys
 import sqlite3
 import re
@@ -142,8 +141,6 @@ def extract_clean_description(md_path: Path) -> str:
     except Exception:
         return "Consensus pattern guidelines."
 
-
-import sys
 
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--check":
