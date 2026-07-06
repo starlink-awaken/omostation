@@ -17,6 +17,11 @@ description: 'Workspace-wide external dependency baseline. Production and dev/te
 
 rules:
   production:
+    - name: langfuse
+      baseline: '>=2.0.0'
+      reason: 'Consumed by 1 project(s) (broker baseline write add-new-dep bug 绕过: omo broker 只 patch 已有, 不能 add missing, 手动登记)'
+      consumers:
+        - aetherforge
     - name: PyMuPDF
       baseline: '>=1.23.0'
       reason: 'Consumed by 1 project(s)'
