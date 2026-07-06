@@ -121,22 +121,39 @@ def test_p1s2_validate_only(verbose: bool = False) -> tuple[bool, str]:
 
 
 def test_p1s2_v2_yaml_exists(verbose: bool = False) -> tuple[bool, str]:
-    """T7: v2 派生面 yaml 存在 + gitignored"""
-    v2 = WS / ".omo/_derived/l0-constraints.v2.yaml"
+    """T7: v2 派生面 yaml 存在 + 在子模块内 gitignored (ADR-0137)"""
+    v2 = WS / "projects/ecos/.omo/_derived/l0-constraints.v2.yaml"
     if not v2.exists():
-        return False, "v2 文件不存在 (派生面)"
-    # gitignored check
-    rc, _, _ = run(["git", "check-ignore", "-q", ".omo/_derived/"])
-    return (rc == 0, f"v2 派生面 {v2.stat().st_size} bytes, gitignored=YES")
+        return False, f"v2 文件不存在: {v2}"
+    # 子模块内 gitignored check (主仓 check-ignore 不能 reach submodule 内容)
+    rc, _, _ = run(["git", "-C", "projects/ecos", "check-ignore", "-q", ".omo/_derived/l0-constraints.v2.yaml"])
+    return (rc == 0, f"v2 派生面 {v2.stat().st_size} bytes, submodule gitignored={rc == 0}")
 
 
 def test_p1s2_id_set_matches(verbose: bool = False) -> tuple[bool, str]:
-    """T8: v1 id 集 == v2 id 集"""
+    """T8: v1 id 集 == v2 id 集 (子模块内 v2; ADR-0137)"""
     rc, out, err = run([
         "uv", "run", "--with", "pyyaml", "python", "-c",
         "import yaml; from pathlib import Path; "
         "v1 = yaml.safe_load(Path('projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml').read_text()); "
-        "v2 = yaml.safe_load(Path('.omo/_derived/l0-constraints.v2.yaml').read_text()); "
+        "v2 = yaml.safe_load(Path('projects/ecos/.omo/_derived/l0-constraints.v2.yaml').read_text()); "
+        "v1_ids = set(); "
+        "[v1_ids.update([e['id'] for e in v if isinstance(e, dict) and 'id' in e]) "
+        "for k, v in v1.items() if isinstance(v, list)]; "
+        "v2_ids = {e['id'] for e in v2['constraints']}; "
+        "diff = v1_ids ^ v2_ids; "
+        "assert not diff, f'diff: {diff}'; print(f'v1={len(v1_ids)} v2={len(v2_ids)} match')",
+    ], timeout=30)
+    return (rc == 0, out.strip() if rc == 0 else err)
+
+
+def test_p1s2_id_set_matches(verbose: bool = False) -> tuple[bool, str]:
+    """T8: v1 id 集 == v2 id 集 (子模块内 v2; ADR-0137)"""
+    rc, out, err = run([
+        "uv", "run", "--with", "pyyaml", "python", "-c",
+        "import yaml; from pathlib import Path; "
+        "v1 = yaml.safe_load(Path('projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml').read_text()); "
+        "v2 = yaml.safe_load(Path('projects/ecos/.omo/_derived/l0-constraints.v2.yaml').read_text()); "
         "v1_ids = set(); "
         "[v1_ids.update([e['id'] for e in v if isinstance(e, dict) and 'id' in e]) "
         "for k, v in v1.items() if isinstance(v, list)]; "
@@ -314,9 +331,9 @@ def test_p3_cleanup_audit(verbose: bool = False) -> tuple[bool, str]:
 
 
 def test_p3_derived_path_gitignored(verbose: bool = False) -> tuple[bool, str]:
-    """T23: M4 新加 .omo/_derived/ gitignored"""
-    rc, _, _ = run(["git", "check-ignore", "-q", ".omo/_derived/"])
-    return (rc == 0, "gitignored=YES" if rc == 0 else "NOT gitignored")
+    """T23: M4 派生面在子模块内 gitignored (ADR-0137, 主仓不能 reach submodule 内)"""
+    rc, _, _ = run(["git", "-C", "projects/ecos", "check-ignore", "-q", ".omo/_derived/l0-constraints.v2.yaml"])
+    return (rc == 0, "gitignored in submodule=YES" if rc == 0 else "NOT gitignored")
 
 
 def test_p3_docs_generated_gitignored(verbose: bool = False) -> tuple[bool, str]:

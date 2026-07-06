@@ -50,8 +50,10 @@ V1_PATH_DEFAULT = (
     Path("projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml")
 )
 
+# ADR-0137 P1: 把派生面放到源所在的子模块内, 而非主仓根
+# 默认写到 projects/ecos/.omo/_derived/ (源在 ecos 子模块)
 V2_PATH_DEFAULT = (
-    Path(".omo/_derived/l0-constraints.v2.yaml")
+    Path("projects/ecos/.omo/_derived/l0-constraints.v2.yaml")
 )
 
 REPORT_PATH_DEFAULT = (
