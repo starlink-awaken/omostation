@@ -12,4 +12,5 @@ owner_routing_ref: .omo/debt/owner-routing/current.yaml
 dispatch_ref: .omo/debt/dispatch/current.yaml
 campaign_ref: .omo/debt/campaign/current.yaml
 reporting_ref: .omo/debt/reporting/current.yaml
-seed_items: []
+seed_items:
+- .omo/debt/items/DEBT-PROBE-VERIFY-001.yaml
