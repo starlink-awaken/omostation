@@ -20,11 +20,30 @@ def _aetherforge() -> list[str]:
 
 def _check_aetherforge() -> bool:
     """检查 aetherforge 是否可导入."""
+    import sys
+    from pathlib import Path
+
     try:
+        # 动态定位当前 workspace root 并在 sys.path 中注入 aetherforge 路径
+        cur = Path(__file__).resolve()
+        workspace_root = None
+        for parent in cur.parents:
+            if (parent / "docs" / "project-registry.yaml").is_file():
+                workspace_root = parent
+                break
+
+        if workspace_root:
+            aether_src = workspace_root / "projects" / "aetherforge" / "src"
+            mesh_src = workspace_root / "projects" / "aetherforge" / "packages" / "mesh" / "src"
+            if aether_src.is_dir() and str(aether_src) not in sys.path:
+                sys.path.insert(0, str(aether_src))
+            if mesh_src.is_dir() and str(mesh_src) not in sys.path:
+                sys.path.insert(0, str(mesh_src))
+
         import importlib.util
 
         return importlib.util.find_spec("aetherforge") is not None
-    except ImportError:
+    except Exception:
         return False
 
 
@@ -42,9 +61,38 @@ def cmd_compute(args) -> int:
         console.print("  mesh list                  — 列出算力节点")
         console.print("  mesh status                — 算力节点健康状态")
         console.print("  mesh cost                  — 算力成本报告")
+        console.print("  mesh wakeup <node_id>      — 网络唤醒物理从机节点 (WoL)")
         console.print("  swarm run --goal <g>       — 多 Agent 工作流")
         return 0
 
+    import os
+    from pathlib import Path
+
+    env = os.environ.copy()
+
+    # 动态定位并向 PYTHONPATH 注入 aetherforge 路径
+    cur = Path(__file__).resolve()
+    workspace_root = None
+    for parent in cur.parents:
+        if (parent / "docs" / "project-registry.yaml").is_file():
+            workspace_root = parent
+            break
+
+    if workspace_root:
+        aether_src = workspace_root / "projects" / "aetherforge" / "src"
+        mesh_src = workspace_root / "projects" / "aetherforge" / "packages" / "mesh" / "src"
+        paths = []
+        if aether_src.is_dir():
+            paths.append(str(aether_src))
+        if mesh_src.is_dir():
+            paths.append(str(mesh_src))
+        if paths:
+            existing = env.get("PYTHONPATH", "")
+            if existing:
+                env["PYTHONPATH"] = os.pathsep.join(paths) + os.pathsep + existing
+            else:
+                env["PYTHONPATH"] = os.pathsep.join(paths)
+
     cmd = _aetherforge() + [subcmd] + args.extra
-    result = subprocess.run(cmd, capture_output=False, text=True)
+    result = subprocess.run(cmd, env=env, capture_output=False, text=True)
     return result.returncode

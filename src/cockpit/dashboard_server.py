@@ -51,6 +51,9 @@ except ImportError:
 
 for _router_module in (
     "cockpit.web.governance.api",
+    "cockpit.web.api_compute",
+    "cockpit.web.api_domain_apps",
+    "cockpit.web.api_system_map",
     "cockpit.web.api_omos",
     "cockpit.web.api_ecos",
     "cockpit.web.api_knowledge",
