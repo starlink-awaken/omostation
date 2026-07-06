@@ -3,7 +3,7 @@
 
 m2_type: Decision
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Decision:
   m3_parent: GovernanceElement.Policy
   description: 架构决策记录 (ADR) — 记录关键设计决策及其理由。回答'为什么这样做'。

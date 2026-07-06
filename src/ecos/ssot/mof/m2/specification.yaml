@@ -3,7 +3,7 @@
 
 m2_type: Specification
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Specification:
   m3_parent: GovernanceElement.Specification
   description: 形式化的规则集合——定义'必须遵守什么'。

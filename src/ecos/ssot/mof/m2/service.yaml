@@ -2,7 +2,7 @@
 
 m2_type: Service
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Service:
   m3_parent: StructuralElement.Component
   description: 长期运行的后台服务——区别于静态 Component(定义)和 Mechanism(自动化)。回答"什么在跑"。

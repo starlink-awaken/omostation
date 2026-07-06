@@ -2,7 +2,7 @@
 
 m2_type: MCPTool
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 MCPTool:
   m3_parent: BehavioralElement.Protocol
   description: MCP 工具——通过 Model Context Protocol 暴露的可调用端点。如 cockpit tools·agora tools。回答"Agent

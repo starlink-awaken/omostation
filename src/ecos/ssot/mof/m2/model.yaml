@@ -3,7 +3,7 @@
 
 m2_type: Model
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Model:
   m3_parent: DescriptiveElement.Model
   description: 系统的抽象表示——定义元素之间的映射、投影和转换规则。

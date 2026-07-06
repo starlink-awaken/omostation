@@ -1,6 +1,6 @@
 m2_type: ConcurrencyControl
 version: 1.0.0
-created: '2026-06-13'
+created: '2026-06-13T08:00:00'
 updated: '2026-06-13'
 ConcurrencyControl:
   m3_parent: ConcurrencyElement.Concurrency

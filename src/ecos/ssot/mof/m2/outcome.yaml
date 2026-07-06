@@ -2,7 +2,7 @@
 
 m2_type: Outcome
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Outcome:
   m3_parent: StructuralElement.Artifact
   description: 成果——产出了什么。交付物·变更·产出。回答"产出了什么"。

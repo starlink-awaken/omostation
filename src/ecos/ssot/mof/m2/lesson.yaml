@@ -3,7 +3,7 @@
 
 m2_type: Lesson
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Lesson:
   m3_parent: GovernanceElement.Pattern
   description: 从实践中提炼的经验教训——记录'发生了什么、学到了什么'。

@@ -1,6 +1,6 @@
 m2_type: ComputeNode
 version: 1.0.0
-created: '2026-06-07'
+created: '2026-06-07T08:00:00'
 compute_node:
   m3_parent: StructuralElement.Component
   description: 物理或虚拟硬件算力节点 (Compute Node)

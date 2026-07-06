@@ -3,7 +3,7 @@
 
 m2_type: Component
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Component:
   m3_parent: StructuralElement.Component
   description: 可部署/可运行的功能单元——服务、库、项目。回答'系统由哪些部件组成'。

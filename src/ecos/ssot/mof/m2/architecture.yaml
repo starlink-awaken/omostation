@@ -3,7 +3,7 @@
 
 m2_type: Architecture
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Architecture:
   m3_parent: DescriptiveElement.Architecture
   description: 系统的组件-连接器-拓扑结构——定义'系统如何组织'。

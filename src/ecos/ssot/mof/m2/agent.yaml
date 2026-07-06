@@ -2,7 +2,7 @@
 
 m2_type: Agent
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Agent:
   m3_parent: StructuralElement.Component
   description: AI Agent——具有特定角色·能力·工具的智能体。如 orchestrator·debugger·test-engineer。回答"谁在执行"。
