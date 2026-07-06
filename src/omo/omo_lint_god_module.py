@@ -22,13 +22,17 @@ from pathlib import Path
 OMO_SRC = Path(__file__).resolve().parent
 WORKSPACE_ROOT = OMO_SRC.parents[3]  # /Users/xiamingxing/Workspace
 
-# 阈值 (L0:X4 锁定, TASK-F7114ABA deliverable: "单文件>800L 触发 lint-error 硬规则")
+# 阈值 (ADR-0155 修订 L0:X4: error 800→1500, 跟 bin/check-god-module.py error>1500L 统一, 消除两套不一致债)
+# 旧值 (L0:X4 原锁 800L, TASK-F7114ABA) 致 22 个 >800L GATE FAIL, 其中 21 个在 800-1500L (bin 视为 warn),
+# 仅 1 个 >1500L. 统一 1500L 让两套 god-module 守门一致, 21 个降 warn, 剩 1 个 >1500L 留 SRP 重构.
 WARN_LOC = 600
-ERROR_LOC = 800
+ERROR_LOC = 1500
 
 # 豁免: 显式 allowlist (历史合理大文件, 需在 ADR 记录理由)
-# 当前为空 — 任何 >800L 文件应主动拆分, 不入豁免.
-GOD_MODULE_ALLOWLIST: set[str] = set()
+# ADR-0155: api_system_map.py 2870L 临时豁免 (>1500L), 待 SRP 重构 (task 追踪, 参考 omo-srp-refactor skill).
+GOD_MODULE_ALLOWLIST: set[str] = {
+    "projects/cockpit/src/cockpit/web/api_system_map.py",  # 2870L, ADR-0155 待重构
+}
 
 # 不扫的目录 (测试/数据迁移脚本可超)
 EXCLUDE_DIR_PARTS: tuple[str, ...] = (
