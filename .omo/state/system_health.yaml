@@ -1,85 +1,85 @@
-last_scan: 1783307022.2759628
+last_scan: 1783324226.3767219
 services:
   agora-gateway:
     name: agora-gateway
     runtime:
-      freshness_seconds: 343095
+      freshness_seconds: 360299
       last_healthy_seconds: 0
       pid: '1897'
       status: running
-      uptime_seconds: 343095
-    timestamp: 1783307022.2759628
+      uptime_seconds: 360299
+    timestamp: 1783324226.3767219
     type: daemon
   agora-sse:
     health_check: healthy
     name: agora-sse
     port_listening: true
     runtime:
-      freshness_seconds: 343095
+      freshness_seconds: 360299
       last_healthy_seconds: 0
       pid: '3993'
       status: running
-      uptime_seconds: 343095
-    timestamp: 1783307022.2759628
+      uptime_seconds: 360299
+    timestamp: 1783324226.3767219
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 343095
+      freshness_seconds: 360299
       last_healthy_seconds: 0
       pid: '1893'
       status: running
-      uptime_seconds: 343095
-    timestamp: 1783307022.2759628
+      uptime_seconds: 360299
+    timestamp: 1783324226.3767219
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1783307022.2759628
+    timestamp: 1783324226.3767219
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1783307022.2759628
+    timestamp: 1783324226.3767219
     type: scheduled
   hermes-gateway:
     name: hermes-gateway
     runtime:
       exit_code: 113
-      last_healthy_seconds: 176037
+      last_healthy_seconds: 193241
       self_heal_attempted: true
       status: failed
-    timestamp: 1783307022.2759628
+    timestamp: 1783324226.3767219
     type: daemon
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1783307022.2759628
+    timestamp: 1783324226.3767219
     type: integrated
   ollama:
     health_check: healthy
     name: ollama
     port_listening: true
     runtime:
-      freshness_seconds: 62979
+      freshness_seconds: 80183
       last_healthy_seconds: 0
       pid: '1896'
       status: running
-      uptime_seconds: 62979
-    timestamp: 1783307022.2759628
+      uptime_seconds: 80183
+    timestamp: 1783324226.3767219
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1783307022.2759628
+    timestamp: 1783324226.3767219
     type: mcp
