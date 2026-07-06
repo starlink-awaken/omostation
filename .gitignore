@@ -170,3 +170,4 @@ data/cards/
 # README.md 保留 tracked (导航说明), 其余 generated
 .omo/state/runtime/*
 !.omo/state/runtime/README.md
+.omo/_derived/
