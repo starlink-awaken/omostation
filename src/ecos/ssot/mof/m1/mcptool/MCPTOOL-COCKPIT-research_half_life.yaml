@@ -1,0 +1,19 @@
+id: MCPTOOL-COCKPIT-research_half_life
+type: MCPTool
+subtype: CockpitTool
+name: research_half_life
+description: 'cockpit MCP 工具: research_half_life'
+status: active
+domain: meta
+created: '2026-07-06'
+version: 1.0.0
+layer: L3
+properties:
+  tool_name: research_half_life
+  server: cockpit
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: active
+  timestamp: '2026-07-06T00:00:00Z'
+  reason: sync from cockpit mcp --list-tools (MOF 注册 ↔ 实现 drift 治本, PR#125 探针 follow-up)
