@@ -127,6 +127,9 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0149 | P71 Baseline 防重做 (Round 5d) | ACCEPTED | 2026-07-06 | governance-team | 0149-p71-baseline-no-replay.md |
 | 0150 | Submodule PR 反向 Review (Round 5e) | ACCEPTED | 2026-07-06 | governance-team | 0150-submodule-pr-reverse-review.md |
 | 0151 | 子模块 gitignore 守门 (Round 5f) | ACCEPTED | 2026-07-06 | governance-team | 0151-submodule-hygiene-gate.md |
+| 0152 | M4 5 GaC 规则追加 (Phase 1) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0152-m4-gac-rules.md |
+| 0153 | M4 4 工具入 agent-workflows (Phase 2b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0153-m4-agent-workflows-tools.md |
+| 0154 | M4 OMO cron 集成 (Phase 4) | ACCEPTED | 2026-07-06 | governance-team | 0154-m4-omo-cron-integration.md |
 
 ---
 
@@ -198,4 +201,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-06 · Owner: governance + eCOS team · M4 元模型方案 ADR-0132 PROPOSED (L0/M0/MOF 统一,14 周 5 阶段 38 里程碑)*
+*最近更新: 2026-07-06 · Owner: governance-team · M4→GaC 全面接入 3 阶段 3 ADR (0152/0153/0154) 完成, GaC rules 152→157, agent-workflows tools 28→32*
