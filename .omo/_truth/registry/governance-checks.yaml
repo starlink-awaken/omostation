@@ -2072,6 +2072,86 @@ gac:
       created_at: "2026-07-06"
       adr: "ADR-0106"
 
+    # -- M4 自反校验门禁 (5-check) --
+    - id: M4-BOOTSTRAP-REFLEX
+      dimension: X1
+      layer: meta
+      name: "M4 自反校验门禁 (5-check)"
+      description: "M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema)"
+      check_type: audit_chain
+      target: projects/ecos/src/ecos/ssot/mof/
+      source_ref: bin/mof-bootstrap.py::all
+      executor: [hook_pre_edit, ci_gate, gac_local_gate]
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-06"
+      adr: "ADR-0152"
+
+    # -- M4 Health Score 量化 --
+    - id: M4-HEALTH-SCORE
+      dimension: X2
+      layer: meta
+      name: "M4 Health Score 量化"
+      description: "M4 健康分:mof-validate(60%)/5-check(30%)/meta(5%)/ADR(5%).退化告警."
+      check_type: freshness
+      target: projects/ecos/.omo/_derived/m4-health.json
+      source_ref: bin/m4-health-score.py::emit
+      executor: [radar_cron, omo_audit]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-06"
+      adr: "ADR-0152"
+
+    # -- 子模块卫生守门 --
+    - id: M4-SUBMODULE-HYGIENE
+      dimension: X1
+      layer: meta
+      name: "子模块卫生守门"
+      description: "检测3类:submodule-dirty/tracked-derived/pointer-stale.每周cron."
+      check_type: audit_chain
+      target: .gitignore
+      source_ref: bin/check-submodule-hygiene.py::strict
+      executor: [radar_cron, gac_local_gate]
+      enforcement: preferred
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-06"
+      adr: "ADR-0152"
+
+    # -- MCPTOOL 数据完整性守门 --
+    - id: M4-MCPTOOL-INTEGRITY
+      dimension: X4
+      layer: L0
+      name: "MCPTOOL 数据完整性守门"
+      description: "MCPTOOL单工具yaml校验tool_name+server非空.集合yaml跳过(ADR-0145)."
+      check_type: consistency_drift
+      target: projects/ecos/src/ecos/ssot/mof/m1/mcptool/
+      source_ref: bin/mcp-tool-data-complete.py
+      executor: [ci_gate, gac_local_gate]
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-06"
+      adr: "ADR-0152"
+
+    # -- 派生面范式审计 --
+    - id: M4-DERIVED-PLANE-AUDIT
+      dimension: X1
+      layer: meta
+      name: "派生面范式审计"
+      description: "派生面应gitignored不占用SSOT.验证DERIVED_PATHS列表."
+      check_type: ssot_pointer
+      target: .omo/_derived/
+      source_ref: bin/omo-state-cleanup.py::audit
+      executor: [omo_audit, radar_cron]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-06"
+      adr: "ADR-0152"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
