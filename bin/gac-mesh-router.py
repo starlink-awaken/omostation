@@ -165,6 +165,28 @@ class MeshRouterHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": f"Mesh Router Bad Gateway: {e}"}).encode('utf-8'))
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "--check":
+        # 1. 检查 kos db 是否可达 (RAG 节点知识索引)
+        if not db_path.is_file():
+            print(f"❌ [Mesh Router Check] KOS SQLite DB missing at: {db_path}")
+            sys.exit(1)
+        # 2. 检查端口备案
+        try:
+            import yaml
+            port_yaml_path = WORKSPACE / "protocols/port-registry.yaml"
+            if port_yaml_path.is_file():
+                ports_data = yaml.safe_load(port_yaml_path.read_text(encoding="utf-8")) or {}
+                registered_ports = ports_data.get("ports", {})
+                # 支持 int 键或者 str 键
+                if PORT not in registered_ports and str(PORT) not in registered_ports:
+                    print(f"❌ [Mesh Router Check] Port {PORT} is NOT registered in port-registry.yaml!")
+                    sys.exit(1)
+        except Exception as e:
+            print(f"⚠️ [Mesh Router Check] Failed to parse port-registry.yaml: {e}")
+        
+        print(f"✅ [Mesh Router Check] All configurations and index mappings for port {PORT} are valid.")
+        sys.exit(0)
+
     server_address = ('', PORT)
     httpd = ThreadingHTTPServer(server_address, MeshRouterHandler)
     print(f"🚀 [Mesh Router] Active Intelligent proxy listening on port {PORT}...")

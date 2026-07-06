@@ -64,7 +64,10 @@ DEFAULT_POLICY = {
         {"id": "check-domain-m1-alignment", "command": ["bin/check-domain-m1-alignment.py"]},
         {"id": "test-gac-engine", "command": ["bin/test-gac-engine.py"]},
         {"id": "service-config-validate", "command": ["bin/gen-service-configs.py", "--validate"]},
-        {"id": "service-config-drift", "command": ["bin/gen-service-configs.py", "--check"], "ci_skip": True}
+        {"id": "service-config-drift", "command": ["bin/gen-service-configs.py", "--check"], "ci_skip": True},
+        {"id": "gac-mesh-router-check", "command": ["bin/gac-mesh-router.py", "--check"]},
+        {"id": "gac-consensus-inject-check", "command": ["bin/gac-consensus-inject.py", "--check"]},
+        {"id": "gac-compute-onboard-check", "command": ["bin/gac-compute-onboard.py", "--check"]}
     ]
 }
 
