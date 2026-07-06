@@ -13,7 +13,7 @@
 
 分数规则 (100 = 完美):
   + mof-validate 通过率 (60%)
-  + 4-check strict 全 PASS (30%)
+  + 5-check strict 全 PASS (30%)
   + 8/4/4 映射完整 (5%)
   + 9 ADR 全 ACCEPTED (5%)
 
@@ -65,7 +65,7 @@ def score_mof_validate() -> tuple[int, int, float]:
 
 
 def score_4check_strict() -> tuple[bool, float]:
-    """4-check strict 全 PASS: 30 分"""
+    """5-check strict 全 PASS: 30 分 (check_5 是 Round 3a 新增)"""
     rc, out, _ = _run([
         "uv", "run", "--with", "pyyaml", "python",
         "bin/mof-bootstrap.py", "all",
@@ -173,7 +173,7 @@ def compute_health() -> dict:
                 "score": round(mof60, 2),
                 "weight": 60,
             },
-            "four_check_strict": {
+            "five_check_strict": {
                 "all_pass": check4,
                 "score": c430,
                 "weight": 30,
@@ -216,8 +216,8 @@ def print_human(h: dict) -> None:
     print()
     print(f"  mof-validate:  {m['mof_validate']['passed']}/{m['mof_validate']['total']}"
           f"  ({m['mof_validate']['rate']}%)  →  {m['mof_validate']['score']}/{m['mof_validate']['weight']}")
-    print(f"  4-check strict: {'PASS' if m['four_check_strict']['all_pass'] else 'FAIL'}"
-          f"  →  {m['four_check_strict']['score']}/{m['four_check_strict']['weight']}")
+    print(f"  5-check strict: {'PASS' if m['five_check_strict']['all_pass'] else 'FAIL'}"
+          f"  →  {m['five_check_strict']['score']}/{m['five_check_strict']['weight']}")
     print(f"  meta mapping:   {m['meta_mapping_8x4x4']['score']}/{m['meta_mapping_8x4x4']['weight']}")
     print(f"  ADR accepted:   {m['adr_accepted_9']['accepted']}/{m['adr_accepted_9']['total']}"
           f"  →  {m['adr_accepted_9']['score']}/{m['adr_accepted_9']['weight']}")

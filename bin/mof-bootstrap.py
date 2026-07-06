@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -182,10 +183,76 @@ def check_4(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
     return (len(errors) == 0), errors
 
 
+def check_5(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
+    """m2 BaseSchema 模式一致性 (Round 3a)
+
+    检查所有 m2/*.yaml 文件是否满足 M2BaseSchema 公共契约:
+      1. m2_type 字段 (PascalCase, M2BS-01)
+      2. version 字段 (semver, M2BS-02)
+      3. created 字段 (ISO-8601, M2BS-03)
+      4. 顶层 body 有 m3_parent + description (M2BS-04)
+
+    M2BaseSchema.yaml 是抽象基类不强制实例化 (本 check 自检)
+    """
+    m2_dir = ws / "projects/ecos/src/ecos/ssot/mof/m2"
+    if not m2_dir.exists():
+        return False, [f"missing: {m2_dir}"]
+    errors: list[str] = []
+    checked = 0
+    for f in sorted(m2_dir.glob("*.yaml")):
+        # M2BaseSchema.yaml 抽象类本 check 自检
+        if f.name == "m2_base_schema.yaml":
+            continue
+        data = _yaml(f)
+        if not isinstance(data, dict):
+            continue
+        m2t = data.get("m2_type")
+        if not isinstance(m2t, str):
+            errors.append(f"  {f.name}: 缺 m2_type (M2BS-01)")
+            continue
+        if not re.match(r"^[A-Z][A-Za-z0-9]+$", m2t):
+            errors.append(f"  {f.name}: m2_type {m2t!r} 不符 PascalCase (M2BS-01)")
+        # version semver
+        if "version" not in data:
+            errors.append(f"  {f.name}: 缺 version (M2BS-02)")
+        elif not re.match(r"^\d+\.\d+\.\d+$", str(data["version"])):
+            errors.append(f"  {f.name}: version {data['version']!r} 不符 semver (M2BS-02)")
+        # created ISO-8601
+        if "created" not in data:
+            errors.append(f"  {f.name}: 缺 created (M2BS-03)")
+        elif not re.match(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?(\.\d+)?", str(data["created"])):
+            errors.append(f"  {f.name}: created {data['created']!r} 不符 ISO-8601 (M2BS-03)")
+        # 顶层 body (description 可在 top 或 body, 实际 schema 模式)
+        body_key = m2t
+        body = data.get(body_key)
+        if body is None:
+            # fallback: snake_case body
+            for k, v in data.items():
+                if k in ("m2_type", "version", "created", "introduced_by", "description"):
+                    continue
+                if isinstance(v, dict) and "m3_parent" in v:
+                    body = v
+                    break
+        if body is None:
+            errors.append(f"  {f.name}: 顶层无 schema body (M2BS-04)")
+        else:
+            if "m3_parent" not in body:
+                errors.append(f"  {f.name}: schema body 缺 m3_parent (M2BS-04)")
+            # description 接受顶层或 body (历史 schema 两种风格都有)
+            top_desc = isinstance(data.get("description"), str)
+            body_desc = isinstance(body.get("description"), str)
+            if not (top_desc or body_desc):
+                errors.append(f"  {f.name}: 缺 description (top 或 body 必 1, M2BS-04)")
+        checked += 1
+    if verbose:
+        print(f"  m2 BaseSchema check: {checked} files, {len(errors)} err")
+    return (len(errors) == 0), errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("check", nargs="?", default="all",
-                        choices=["check_1", "check_2", "check_3", "check_4", "all"])
+                        choices=["check_1", "check_2", "check_3", "check_4", "check_5", "all"])
     parser.add_argument("--ws", type=Path, default=Path())
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--verbose", "-v", action="store_true")
@@ -197,6 +264,7 @@ def main() -> int:
         "check_2": lambda: check_2(ws, args.verbose),
         "check_3": lambda: check_3(ws, args.verbose),
         "check_4": lambda: check_4(ws, args.verbose),
+        "check_5": lambda: check_5(ws, args.verbose),
     }
 
     if args.check == "all":

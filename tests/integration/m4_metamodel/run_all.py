@@ -598,12 +598,37 @@ def test_r3b_m4_health_score_output(verbose: bool = False) -> tuple[bool, str]:
     import json as _json
     data = _json.loads(derived.read_text())
     metrics = data.get("metrics", {})
-    expected = ["mof_validate", "four_check_strict", "meta_mapping_8x4x4", "adr_accepted_9"]
+    expected = ["mof_validate", "five_check_strict", "meta_mapping_8x4x4", "adr_accepted_9"]
     for k in expected:
         if k not in metrics:
             return False, f"缺 metric: {k}"
     overall = data.get("overall_score", 0)
     return True, f"派生面 {derived.stat().st_size} bytes, 4 metrics, overall={overall}"
+
+
+def test_r3a_check_5_m2_baseschema(verbose: bool = False) -> tuple[bool, str]:
+    x43 = 'T43 R3a: mof-bootstrap check_5 m2 BaseSchema 一致性'
+    rc, out, _ = run([
+        'uv', 'run', '--with', 'pyyaml', 'python',
+        'bin/mof-bootstrap.py', 'check_5',
+    ], timeout=30)
+    if rc != 0:
+        return False, f'check_5 FAIL: {out[:120]}'
+    if 'PASS' not in out:
+        return False, f'无 PASS 输出: {out[:120]}'
+    return True, 'check_5 PASS (m2 schema 模式一致)'
+
+
+def test_r3a_m2_base_schema_exists(verbose: bool = False) -> tuple[bool, str]:
+    x44 = 'T44 R3a: m2_base_schema.yaml 作为抽象基类存在 + 51 m2 schema 全过 check_5'
+    p = WS / 'projects/ecos/src/ecos/ssot/mof/m2/m2_base_schema.yaml'
+    if not p.exists():
+        return False, 'm2_base_schema.yaml 不存在'
+    if 'm2_type: M2BaseSchema' not in p.read_text():
+        return False, 'm2_type 字段不是 M2BaseSchema'
+    m2_dir = WS / 'projects/ecos/src/ecos/ssot/mof/m2'
+    total = len(list(m2_dir.glob('*.yaml')))
+    return True, f'{total} m2 schema files (含 M2BaseSchema)'
 
 
 # ──── 注册测试 + 运行 ────
@@ -652,6 +677,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T40 R2c m3 Stage 7 enum", test_r2c_m3_stage_enum_7),
     ("T41 R3b m4-health-score CLI", test_r3b_m4_health_score_cli),
     ("T42 R3b m4-health-score output", test_r3b_m4_health_score_output),
+    ("T43 R3a check_5 m2 BaseSchema", test_r3a_check_5_m2_baseschema),
+    ("T44 R3a m2_base_schema.yaml exists", test_r3a_m2_base_schema_exists),
 ]
 
 
