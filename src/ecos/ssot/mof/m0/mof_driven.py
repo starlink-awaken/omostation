@@ -55,6 +55,7 @@ def _safe_import_model_driven():
             try:
                 from model_driven.mof.m3_extended import LifecycleStage  # type: ignore
                 from model_driven.lifecycle.transitions import STANDARD_TRANSITIONS  # type: ignore
+
                 return LifecycleStage, STANDARD_TRANSITIONS
             except Exception:
                 continue
@@ -68,26 +69,30 @@ def collect_stages() -> list[dict]:
     if LifecycleStage is None:
         # Fallback: 静态 7 阶段 (无论 model-driven 引擎是否在线)
         for value, m3_id in STAGE_TO_M3.items():
-            stages.append({
-                "id": f"STAGE-{value.upper()}",
-                "name": value.replace("_", " ").title(),
-                "type": "Stage",
-                "m3_parent": m3_id,
-                "order": list(STAGE_TO_M3.keys()).index(value),
-                "model_driven_value": value,
-                "engine_source": "fallback",
-            })
+            stages.append(
+                {
+                    "id": f"STAGE-{value.upper()}",
+                    "name": value.replace("_", " ").title(),
+                    "type": "Stage",
+                    "m3_parent": m3_id,
+                    "order": list(STAGE_TO_M3.keys()).index(value),
+                    "model_driven_value": value,
+                    "engine_source": "fallback",
+                }
+            )
         return stages
     for idx, stage in enumerate(LifecycleStage):
-        stages.append({
-            "id": f"STAGE-{stage.value.upper()}",
-            "name": stage.name.replace("_", " ").title(),
-            "type": "Stage",
-            "m3_parent": STAGE_TO_M3[stage.value],
-            "order": idx,
-            "model_driven_value": stage.value,
-            "engine_source": "model_driven_lifecycle",
-        })
+        stages.append(
+            {
+                "id": f"STAGE-{stage.value.upper()}",
+                "name": stage.name.replace("_", " ").title(),
+                "type": "Stage",
+                "m3_parent": STAGE_TO_M3[stage.value],
+                "order": idx,
+                "model_driven_value": stage.value,
+                "engine_source": "model_driven_lifecycle",
+            }
+        )
     return stages
 
 
@@ -98,13 +103,15 @@ def collect_transitions() -> list[dict]:
     if STANDARD_TRANSITIONS is None:
         return transitions
     for tr in STANDARD_TRANSITIONS:
-        transitions.append({
-            "from_stage": tr.from_stage.value,
-            "to_stage": tr.to_stage.value,
-            "from_m3": STAGE_TO_M3.get(tr.from_stage.value),
-            "to_m3": STAGE_TO_M3.get(tr.to_stage.value),
-            "condition": getattr(tr, "condition", ""),
-        })
+        transitions.append(
+            {
+                "from_stage": tr.from_stage.value,
+                "to_stage": tr.to_stage.value,
+                "from_m3": STAGE_TO_M3.get(tr.from_stage.value),
+                "to_m3": STAGE_TO_M3.get(tr.to_stage.value),
+                "condition": getattr(tr, "condition", ""),
+            }
+        )
     return transitions
 
 
@@ -124,7 +131,7 @@ def build_m0_snapshot() -> dict[str, Any]:
 def emit_yaml(data: dict[str, Any]) -> str:
     """输出 yaml 格式 (避免依赖 PyYAML, 手写最小序列化)."""
     lines = []
-    lines.append(f"version: \"{data['version']}\"")
+    lines.append(f'version: "{data["version"]}"')
     lines.append(f"m0_type: {data['m0_type']}")
     lines.append(f"engine_source: {data['engine_source']}")
     lines.append(f"stage_count: {data['stage_count']}")
@@ -132,7 +139,7 @@ def emit_yaml(data: dict[str, Any]) -> str:
     lines.append("stages:")
     for s in data["stages"]:
         lines.append(f"  - id: {s['id']}")
-        lines.append(f"    name: \"{s['name']}\"")
+        lines.append(f'    name: "{s["name"]}"')
         lines.append(f"    type: {s['type']}")
         lines.append(f"    m3_parent: {s['m3_parent']}")
         lines.append(f"    order: {s['order']}")
@@ -164,7 +171,9 @@ def validate(data: dict[str, Any]) -> tuple[bool, list[str]]:
     # transitions 完整性
     for tr in data["transitions"]:
         if not tr.get("from_m3") or not tr.get("to_m3"):
-            errors.append(f"transition {tr['from_stage']}→{tr['to_stage']} 缺 m3 anchor")
+            errors.append(
+                f"transition {tr['from_stage']}→{tr['to_stage']} 缺 m3 anchor"
+            )
     return (len(errors) == 0), errors
 
 
@@ -172,11 +181,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--emit", action="store_true", help="输出 yaml 到 stdout")
     parser.add_argument("--validate", action="store_true", help="校验 m3-meta 兼容")
-    parser.add_argument("--transition-graph", action="store_true", help="输出 transition 图 JSON")
+    parser.add_argument(
+        "--transition-graph", action="store_true", help="输出 transition 图 JSON"
+    )
     parser.add_argument(
         "--write",
         type=Path,
-        default=Path("../.omo/_derived/m0-driven.yaml"),  # ADR-0137: 写源端 (子模块内 .omo/_derived/)
+        default=Path(
+            "../.omo/_derived/m0-driven.yaml"
+        ),  # ADR-0137: 写源端 (子模块内 .omo/_derived/)
         help="写入文件 (默认 projects/ecos/.omo/_derived/m0-driven.yaml)",
     )
     args = parser.parse_args()
@@ -212,7 +225,9 @@ def main() -> int:
     args.write.parent.mkdir(parents=True, exist_ok=True)
     args.write.write_text(emit_yaml(data))
     print(f"✅ M0 snapshot 写入 {args.write}")
-    print(f"   stage_count: {data['stage_count']}, transitions: {len(data['transitions'])}")
+    print(
+        f"   stage_count: {data['stage_count']}, transitions: {len(data['transitions'])}"
+    )
     ok, errors = validate(data)
     if not ok:
         for e in errors:

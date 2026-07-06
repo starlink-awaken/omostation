@@ -63,7 +63,6 @@ def load_m2(m2_path: Path) -> dict:
     AvailabilityCheck/ComputeEngine 等 8 个 schema snake_case 顶层 key 不匹配 bug）。
     """
     m2: dict = {}
-    type_index: dict[str, dict] = {}  # PascalCase → schema body
     if m2_path.is_dir():
         # New structure: mof/m2/*.yaml (one per type)
         for f in sorted(m2_path.glob("*.yaml")):
@@ -78,8 +77,14 @@ def load_m2(m2_path: Path) -> dict:
             if isinstance(m2_type_value, str):
                 # m2_type 不在 top-level key 中，找 schema body
                 for k, v in data.items():
-                    if k not in ("m2_type", "version", "created") and isinstance(v, dict):
-                        if "m3_parent" in v or "requiredProperties" in v or "stateMachine" in v:
+                    if k not in ("m2_type", "version", "created") and isinstance(
+                        v, dict
+                    ):
+                        if (
+                            "m3_parent" in v
+                            or "requiredProperties" in v
+                            or "stateMachine" in v
+                        ):
                             schema_body = v
                             break
                 if schema_body is not None:
@@ -116,7 +121,7 @@ def load_all_m1_nodes(m1_dir: Path) -> list[dict]:
             if isinstance(data, dict) and "id" in data:
                 # Round 4a: 跳过 MCPTOOL 集合占位 yaml
                 ntype = data.get("type", "")
-                nid = data.get("id", "")
+                data.get("id", "")
                 if ntype == "MCPTool":
                     if "tool_count" in data:
                         continue

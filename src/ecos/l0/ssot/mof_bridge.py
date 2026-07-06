@@ -37,6 +37,7 @@ def _import_meta_model():
         if str(here) not in sys.path:
             sys.path.insert(0, str(here))
         import meta_model  # noqa: E402
+
         return {
             "MetaType": meta_model.MetaType,
             "MetaRelationType": meta_model.MetaRelationType,
@@ -45,7 +46,7 @@ def _import_meta_model():
             "LAYER_NAMES": meta_model.LAYER_NAMES,
             "_RELATION_MATRIX": meta_model._RELATION_MATRIX,
         }
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -56,6 +57,7 @@ import sys  # noqa: E402
 @dataclass
 class M3Element:
     """m3 Element 内存表示"""
+
     id: str
     name: str
     parent: str | None
@@ -67,6 +69,7 @@ class M3Element:
 @dataclass
 class MetaRelation:
     """元关系矩阵条目"""
+
     source: str
     target: str
     allowed: list[str]
@@ -112,8 +115,12 @@ class M3MetaLoader:
             self._relation_matrix: dict[str, list[str]] = {}
         else:
             self._meta_types = {m.name: m.value for m in self._meta["MetaType"]}
-            self._meta_relations = {m.name: m.value for m in self._meta["MetaRelationType"]}
-            self._meta_constraints = {m.name: m.value for m in self._meta["MetaConstraint"]}
+            self._meta_relations = {
+                m.name: m.value for m in self._meta["MetaRelationType"]
+            }
+            self._meta_constraints = {
+                m.name: m.value for m in self._meta["MetaConstraint"]
+            }
             self._confidences = {m.name: m.value for m in self._meta["Confidence"]}
             self._layer_names = dict(self._meta["LAYER_NAMES"])
             self._relation_matrix = {}
@@ -286,12 +293,19 @@ class M3MetaLoader:
                 # 抽象类本身不直接当映射, 等子类
                 continue
         # 第二轮: 同时扫 m3.yaml 和 m3-meta.yaml
-        for elem in list(self._m3_elements.values()) + list(self._m3_meta_elements.values()):
+        for elem in list(self._m3_elements.values()) + list(
+            self._m3_meta_elements.values()
+        ):
             if elem.m3_implements:
                 last = elem.m3_implements.split(".")[-1]
                 candidates.setdefault(last, []).append(elem.id)
         # 第三轮: 优先 m3.yaml (主根) 上的 Meta* 类
-        priority_prefixes = ("MetaType", "MetaRelationType", "MetaConstraint", "Confidence")
+        priority_prefixes = (
+            "MetaType",
+            "MetaRelationType",
+            "MetaConstraint",
+            "Confidence",
+        )
         # 也优先选 m3.yaml 主根 (ADR-0138)
         for name, ids in candidates.items():
             chosen = None
@@ -302,7 +316,19 @@ class M3MetaLoader:
                     continue
                 # ADR-0138: MetaEntity 子类 (MetaDomain/MetaFact/...) 来自 m3.yaml 主根
                 # m3_implements 字段在 m3-meta.yaml
-                if elem.parent in ("MetaEntity", "MetaRelationType", "MetaConstraintRule", "Confidence", "MetaType", "MetaRelation", "MetaStruct", "MetaDerive", "MetaBehavior", "MetaJustify", "MetaConstraint"):
+                if elem.parent in (
+                    "MetaEntity",
+                    "MetaRelationType",
+                    "MetaConstraintRule",
+                    "Confidence",
+                    "MetaType",
+                    "MetaRelation",
+                    "MetaStruct",
+                    "MetaDerive",
+                    "MetaBehavior",
+                    "MetaJustify",
+                    "MetaConstraint",
+                ):
                     chosen = eid
                     break
             if chosen is None:
@@ -310,9 +336,15 @@ class M3MetaLoader:
                 for eid in ids:
                     elem = self._get_element_anywhere(eid)
                     if elem and elem.m3_implements:
-                        middle = elem.m3_implements.split(".")[-2] if "." in elem.m3_implements else ""
+                        middle = (
+                            elem.m3_implements.split(".")[-2]
+                            if "." in elem.m3_implements
+                            else ""
+                        )
                         if middle in priority_prefixes:
-                            if middle == "MetaType" or (middle == "Confidence" and chosen is None):
+                            if middle == "MetaType" or (
+                                middle == "Confidence" and chosen is None
+                            ):
                                 chosen = eid
             if chosen is None:
                 chosen = ids[0]
@@ -325,9 +357,7 @@ class M3MetaLoader:
             return elem
         return self._m3_meta_elements.get(eid)
 
-    def compute_meta_confidence(
-        self, confidences: list[Enum | str]
-    ) -> float:
+    def compute_meta_confidence(self, confidences: list[Enum | str]) -> float:
         """聚合多个 MetaType.confidence.
 
         加权平均: fact=1.0, inference=0.7, hypothesis=0.4, estimated=0.5
