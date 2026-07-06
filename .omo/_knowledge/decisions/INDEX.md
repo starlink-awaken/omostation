@@ -121,6 +121,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0143 | 45 m2 schema date → datetime 迁移 (Round 4c) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0143-m2-date-migration.md |
 | 0144 | M4 Cron Hook (Round 4d) | ACCEPTED | 2026-07-06 | governance-team | 0144-m4-cron-hook.md |
 | 0145 | MCPTOOL 集合占位识别 (Round 4a) — 100/100 Health Score | ACCEPTED | 2026-07-06 | governance + eCOS team | 0145-mcptool-collection-skip.md |
+| 0146 | 8 阶段反向 ADR 稳定性声明 (Round 5a) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0146-8stage-stability-declaration.md |
+| 0147 | MCPTOOL M1 Adder Guide (Round 5b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0147-mcptool-adder-guide.md |
 
 ---
 

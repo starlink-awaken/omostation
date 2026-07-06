@@ -739,6 +739,31 @@ def test_r4a_health_score_100(verbose: bool = False) -> tuple[bool, str]:
     return True, f'overall_score={score}/100 baseline'
 
 
+
+def test_r5a_stability_declaration_exists(verbose: bool = False) -> tuple[bool, str]:
+    x52 = 'T52 R5a: 8 阶段稳定性 ADR-0146 ACCEPTED'
+    x = WS / '.omo/_knowledge/decisions/0146-8stage-stability-declaration.md'
+    if not x.exists():
+        return False, 'ADR-0146 不存在'
+    if 'ACCEPTED' not in x.read_text()[:300]:
+        return False, 'ADR-0146 不是 ACCEPTED'
+    return True, 'ADR-0146 ACCEPTED (8 阶段稳定性声明)'
+
+
+def test_r5b_mcptool_adder_guide_exists(verbose: bool = False) -> tuple[bool, str]:
+    x53 = 'T53 R5b: MCPTOOL adder guide docs/MCPTOOL-ADDER-GUIDE.md 存在'
+    x = WS / 'docs/MCPTOOL-ADDER-GUIDE.md'
+    if not x.exists():
+        return False, 'guide 不存在'
+    content2 = x.read_text()
+    # 关键章节
+    sections = ['## 0. TL;DR', '## 2. Single-tool MCPTOOL yaml 形状', '## 4. 自检步骤', '## 6. 常见错误']
+    missing = [s for s in sections if s not in content2]
+    if missing:
+        return False, f'缺章节: {missing}'
+    return True, 'guide 4 关键章节齐全'
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -794,6 +819,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T49 R4d cron log gitignored", test_r4d_m4_cron_log_gitignored),
     ("T50 R4a no MCPTOOL placeholders", test_r4a_no_mcptool_placeholders),
     ("T51 R4a Health Score 100", test_r4a_health_score_100),
+    ("T52 R5a ADR-0146 stability declared", test_r5a_stability_declaration_exists),
+    ("T53 R5b MCPTOOL adder guide", test_r5b_mcptool_adder_guide_exists),
 ]
 
 

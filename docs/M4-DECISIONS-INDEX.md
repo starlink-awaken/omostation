@@ -21,6 +21,8 @@
 | [0140](./../.omo/_knowledge/decisions/0140-m4-health-score.md) | M4 Health Score 量化与派生面落地 (R3b) | R3b | `bin/m4-health-score.py` + `.omo/_derived/m4-health.json` | T41, T42 |
 | [0141](./../.omo/_knowledge/decisions/0141-m2-base-schema.md) | M2BaseSchema 抽象基类 + check_5 (R3a) | R3a | m2_base_schema.yaml + check_5 | T43, T44 |
 | [**0142**](./../.omo/_knowledge/decisions/0142-this-doc.md) | (本文档) | R4b | docs/M4-DECISIONS-INDEX.md | — |
+| [0146](./../.omo/_knowledge/decisions/0146-8stage-stability-declaration.md) | 8 阶段反向 ADR 稳定性声明 (R5a) | R5a | (决策文件本身) | T52 |
+| [0147](./../.omo/_knowledge/decisions/0147-mcptool-adder-guide.md) | MCPTOOL M1 Adder Guide (R5b) | R5b | docs/MCPTOOL-ADDER-GUIDE.md | T53 |
 
 ---
 
@@ -40,8 +42,15 @@ R3 (2 决策)
 ├── R3b [Health Score 量化]     ADR-0140  ←  99.17/100 baseline
 └── R3a [M2BaseSchema + check_5] ADR-0141 ←  4-check → 5-check strict
 
-R4 (1 决策 + 3 follow-ups)
-└── R4b [本文档速查表]          ADR-0142  ←  你正在读
+R4 (4 决策 + 1 follow-up)
+├── R4b [本文档速查表]          ADR-0142  ←  你正在读
+├── R4c [45 m2 datetime 迁移]    ADR-0143
+├── R4d [OMO cron hook 桥接]      ADR-0144
+└── R4a [MCPTOOL 集合占位识别]   ADR-0145  ★ Health Score 99.17 → 100/100
+
+R5 (战略收口)
+├── R5a [8 阶段反向 ADR 稳定性]   ADR-0146  ←  永久稳定承诺
+└── R5b [MCPTOOL adder guide]   ADR-0147  ←  docs/MCPTOOL-ADDER-GUIDE.md
 ```
 
 ---
