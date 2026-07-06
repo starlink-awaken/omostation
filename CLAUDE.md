@@ -203,11 +203,11 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 
 ## 🧬 Onboarding Consensus (🧬 历史演进避坑基因)
 
-> **自动刷新时间**: 2026-07-06 10:29:40 | 模式: RAG Top-2 按需激活
+> **自动刷新时间**: 2026-07-06 15:44:53 | 模式: RAG Top-2 按需激活
 > 新进 Agent 必须通读并深度对齐以下前人沉淀的历史避坑基因，严禁在同一坑中二次栽倒：
 
 - **P74 — Workflow Solidification Pattern (常态化工作流沉默治理)** ([p74-workflow-solidification-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md))
   > 任一即触发 P74 评估: 1. **沉默 workflow**:registry 登记 ≥ 1 周,无 `agent_workflow_start` 事件。 2. **错位 workflow**:实际做的事 ≥ 3 次,却走通用 `project-code-change` 而非专属 workflow。
 
-- **P71 Baseline Recovery Pattern — 5 阶段声明/执行鸿沟修复** ([p71-baseline-recovery-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md))
-  > 类 A — 路径错位 (Git-ignored SSOT) 症状: declare 在 X (tracked), 实际写 Y (gitignored) 案例: PR#4 c5fb0c8e 把 dependency-baseline 从 .omo/ 迁到 runtime/omo/ + 加 .gitignore:58
+- **P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律** ([p73-truth-driven-engineering-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md))
+  > | 陷阱 | 症状 | 本轮案例 | |------|------|---------| | **D1** 凭路径直觉判存在性 | 报"X 零实现/不存在/悬空" 其实文件已迁移或运行时写面未创建 | 连续 3 轮把 debt(空=运行时写面正常) / task(卡 ingress delivery) / GaC(3 drift 非 129) 判错 |

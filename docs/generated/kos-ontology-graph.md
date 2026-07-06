@@ -1,6 +1,6 @@
 # eCOS v6 物理拓扑与架构依赖图谱
 
-> **自动刷新时间**: 2026-07-06 10:29:40
+> **自动刷新时间**: 2026-07-06 15:44:53
 > **数据源**: KOS SQLite 本体引擎 · `EicosParser` 自动提取
 
 ```mermaid
@@ -119,6 +119,7 @@ graph TD
     A_CR_X4_ADR_LINKS["A:ADR 链接完整性"]:::axiom -->|related_to| D_ADR_0106["ADR-0106"]
     A_CR_X4_DOC_SSOT["A:文档 SSOT (markdown 禁硬编码项目元数据, 引用 project-registry)"]:::axiom -->|related_to| D_ADR_0106["ADR-0106"]
     A_CR_X4_HEALTH_SSOT["A:健康分 SSOT"]:::axiom -->|related_to| D_ADR_0106["ADR-0106"]
+    A_CR_X4_MCPTOOL_IMPL_DRIFT["A:CR-X4-MCPTOOL-IMPL-DRIFT"]:::axiom -->|related_to| D_ADR_0106["ADR-0106"]
     A_CR_X4_TEST_COVERAGE["A:测试覆盖检查"]:::axiom -->|related_to| D_ADR_0106["ADR-0106"]
     A_CS_10["A:CS-10"]:::axiom -->|related_to| D_ADR_0106["ADR-0106"]
     A_L0_YAML["A:L0_YAML"]:::axiom -->|related_to| D_ADR_0106["ADR-0106"]
@@ -198,5 +199,5 @@ graph TD
 
 ---
 ## 📊 实体指标统计
-* **总实体数**: 215
-* **总关系数**: 183
+* **总实体数**: 216
+* **总关系数**: 184

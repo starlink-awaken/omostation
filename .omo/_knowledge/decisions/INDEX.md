@@ -106,7 +106,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0128 | 多 Agent 并发下治理状态生成的架构收敛 | PROPOSED | 2026-07-03 | governance-team | 0128-state-generation-concurrency.md |
 | 0129 | 运行时投影面分离（ADR-0128 Phase 3 治本设计） | PROPOSED | 2026-07-03 | governance-team | 0129-state-projection-plane-phase3.md |
 | 0130 | P74 工作流常态化治理 (Workflow Solidification) | ACTIVE | 2026-07-03 | governance-team | 0130-p74-workflow-solidification.md |
-| 0131 | (保留) | — | — | — | — |
+| 0131 | (保留) | — | — | — | 0131-reserved.md |
 | 0132 | L0 / M0 / MOF 统一元模型 (M4 升级) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0132-l0-mof-m4-metamodel.md |
 | 0133 | L0-constraints v2 派生面 — 双轨切单轨 | ACCEPTED | 2026-07-06 | governance + eCOS team | 0133-l0-constraints-v2-cutover.md |
 | 0134 | meta_model ↔ m3.yaml 双轨桥接受 (M3-meta ACCEPTED) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0134-m3-meta-cutover.md |
