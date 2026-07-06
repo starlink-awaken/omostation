@@ -678,6 +678,29 @@ def test_r4c_no_date_only_m2_schemas(verbose: bool = False) -> tuple[bool, str]:
     return True, '所有 m2 schema 已 datetime (45 迁移完成)'
 
 
+
+def test_r4d_m4_cron_hook_cli(verbose: bool = False) -> tuple[bool, str]:
+    x48 = 'T48 R4d: m4-cron-hook CLI 跑得通'
+    rc, out, err = run([
+        'uv', 'run', '--with', 'pyyaml', 'python',
+        'bin/m4-cron-hook.py', '--sync', '--trigger', 'test',
+    ], timeout=30)
+    if rc != 0:
+        return False, f'hook 失败 (rc={rc}): {err}'
+    if '[M4-Health]' not in out or 'score=' not in out:
+        return False, f'输出无 health 字段: {out!r}'
+    return True, 'CLI 输出 OK (含 [M4-Health] 行)'
+
+
+def test_r4d_m4_cron_log_gitignored(verbose: bool = False) -> tuple[bool, str]:
+    x49 = 'T49 R4d: m4-cron-log.json gitignored (ADR-0144 例外)'
+    log = WS / '.omo/_derived/m4-cron-log.json'
+    if not log.exists():
+        return False, 'log 不存在 (派生面还没生成)'
+    rc, _, _ = run(['git', 'check-ignore', '-q', '.omo/_derived/m4-cron-log.json'])
+    return (rc == 0, f'gitignored=YES' if rc == 0 else f'NOT gitignored (rc={rc})')
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -729,6 +752,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T45 R4b M4 decisions quick ref", test_r4b_decisions_quick_ref_exists),
     ("T46 R4b ADR-0142 in INDEX", test_r4b_adr_0142_in_index),
     ("T47 R4c m2 datetime 治本", test_r4c_no_date_only_m2_schemas),
+    ("T48 R4d m4-cron-hook CLI", test_r4d_m4_cron_hook_cli),
+    ("T49 R4d cron log gitignored", test_r4d_m4_cron_log_gitignored),
 ]
 
 
