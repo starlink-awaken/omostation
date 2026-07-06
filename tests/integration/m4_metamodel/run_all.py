@@ -531,6 +531,47 @@ def test_m4_roadmap_5phases(verbose: bool = False) -> tuple[bool, str]:
     return True, f"{len(phases)} phase titles 存在"
 
 
+def test_r2c_lifecycle_stage_7_only(verbose: bool = False) -> tuple[bool, str]:
+    """T39 R2c: model-driven LifecycleStage 仅 7, 不复活 GOVERNANCE_MAINTENANCE"""
+    p = WS / "projects/model-driven/src/model_driven/mof/m3_extended.py"
+    if not p.exists():
+        return False, "m3_extended.py 不存在"
+    content = p.read_text()
+    # 不应有活 enum GOVERNANCE_MAINTENANCE
+    active = re.search(r"GOVERNANCE_MAINTENANCE\s*=\s*[\"']", content)
+    if active:
+        return False, "GOVERNANCE_MAINTENANCE enum 已复活 (违反 ADR-0139)"
+    # 注释引用可以接受
+    if "GOVERNANCE_MAINTENANCE" in content:
+        return True, "LifecycleStage 仍 7 (GOVERNANCE_MAINTENANCE 仅在注释)"
+    return True, "LifecycleStage 7 enum value, 无 GOVERNANCE_MAINTENANCE"
+
+
+def test_r2c_m3_stage_enum_7(verbose: bool = False) -> tuple[bool, str]:
+    """T40 R2c: m3.yaml Stage enum values 仅 7 (governance_maintenance 未加)"""
+    import tempfile
+    code = '''
+import yaml
+from pathlib import Path
+d = yaml.safe_load(Path('projects/ecos/src/ecos/ssot/mof/m3.yaml').read_text())
+stage = d['m3']['elements']['LifecycleElement']['properties']['stage']['values']
+n = len(stage)
+assert n == 7, f'got {n} stage values'
+assert 'governance_maintenance' not in stage, 'gov maintenance 不应混入 Stage enum'
+assert 'business_ops' in stage and 'operations' in stage
+print(f'Stage enum values: {n} (no governance_maintenance)')
+'''
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, dir='/tmp') as f:
+        f.write(code)
+        tmp = f.name
+    try:
+        rc, out, err = run(["uv", "run", "--with", "pyyaml", "python", tmp], cwd=WS, timeout=30)
+    finally:
+        Path(tmp).unlink()
+    return (rc == 0, out.strip() if rc == 0 else err)
+
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -573,6 +614,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T36 4 m2 aligned", test_p5_3_m2_aligned_to_m3),
     ("T37 no mof-validate regression", test_no_regression_in_mof_validate),
     ("T38 M4-ROADMAP 5 phases", test_m4_roadmap_5phases),
+    ("T39 R2c 7 stage only", test_r2c_lifecycle_stage_7_only),
+    ("T40 R2c m3 Stage 7 enum", test_r2c_m3_stage_enum_7),
 ]
 
 
