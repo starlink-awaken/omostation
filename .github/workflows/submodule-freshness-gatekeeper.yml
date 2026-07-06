@@ -49,7 +49,7 @@ jobs:
         run: |
           # 假设这是全局 CI 验证宏入口
           # 如果子模块更新破坏了架构，这里会 fail
-          make governance-verify || true
+          make governance-verify
           # 暂时允许通过，后续由真实的单测取代
 
       - name: Auto-Commit and Push Submodule Bumps (只升不降, 防覆盖手动 bump)

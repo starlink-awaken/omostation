@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
           # .pre-commit-config.yaml 也过一遍 (有 hooks: 段, actionlint 报违例)
-          $ACTIONLINT -ignore 'shellcheck reported issue' .pre-commit-config.yaml || true
+          $ACTIONLINT -ignore 'shellcheck reported issue' .pre-commit-config.yaml
 
   # ── 2. check-yaml — YAML 语法/可解析性 ────────────────────────────
   check-yaml:
@@ -81,7 +81,7 @@ jobs:
       - name: Pre-commit (check-yaml hook)
         # 走标准 pre-commit-hooks 的 check-yaml, 双保险
         run: |
-          pre-commit run --all-files --hook-stage manual check-yaml || true
+          pre-commit run --all-files --hook-stage manual check-yaml
 
   # ── 3. shellcheck — scripts/*.sh 静态安全检查 ─────────────────────
   shellcheck:
