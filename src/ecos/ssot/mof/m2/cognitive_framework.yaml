@@ -1,7 +1,7 @@
 # M2: CognitiveFramework
 m2_type: CognitiveFramework
 version: 1.0.0
-created: '2026-06-07'
+created: '2026-06-07T08:00:00'
 CognitiveFramework:
   m3_parent: GovernanceElement.Pattern
   description: 认知与思维框架——定义 AI 或 Agent 思考、分析、决策的模式和视角组合。如 BDSK (Builder, Devil, Sage, Keeper) 虚拟董事会框架。回答"以什么视角思考"。

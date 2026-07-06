@@ -1,0 +1,122 @@
+# M2: M2BaseSchema
+# Round 3a — 抽象基类 (m2 元类的元类)
+#
+# 定义所有 m2/*.yaml schema 共享的 4 字段:
+#   m2_type: schema 唯一类型 ID
+#   version: 语义版本
+#   created: ISO-8601 timestamp
+#   <schema_body>: 顶层 dict 含 m3_parent + description + stateMachine + requiredProperties + ...
+#
+# 这是 m2 schema 的"模式"层 — 让 mof-bootstrap.py check_2 等工具能统一校验,
+# 让 mof-bootstrap.py check_2_synthesis (P3.5) 能做"同族 schema 一致性"审计.
+#
+# 不破坏现有 50 schema (它们隐式继承此模式; 显式 m2_parent field 为可选).
+
+m2_type: M2BaseSchema
+version: 1.0.0
+created: '2026-07-06T12:30:00'
+M2BaseSchema:
+  m3_parent: Specification  # M2 schema 本身就是 specification (formal model)
+  description: |
+    M2 schema 抽象基类 - 所有 m2/*.yaml 文件的元模式。
+
+    每个 m2 schema 文件必须满足 4 字段公共契约:
+      1. m2_type: schema 唯一类型 ID (PascalCase)
+      2. version: semver (1.0.0 起)
+      3. created: ISO-8601 timestamp
+      4. <SchemaName>: 顶层 dict (含 m3_parent / description / stateMachine / requiredProperties / ...)
+
+    本 M2BaseSchema 不要求 schema 文件显式声明 m2_parent: M2BaseSchema
+    (50 schema 隐式继承, 避免历史 schema 改动).
+  abstract: true
+  icon: 🧬
+
+  stateMachine:
+    draft:
+      description: 草案, 尚未签名注册
+      transitions: [registered, archived]
+    registered:
+      description: 已注册到 m2/ 目录
+      transitions: [deprecated, archived]
+    deprecated:
+      description: 标记弃用, 由新 m2 schema 替代
+      transitions: [archived]
+    archived:
+      description: 归档历史
+      transitions: []
+
+  # ── 公共字段 (4 必填) ──
+  requiredProperties:
+    m2_type:
+      type: string
+      pattern: '^[A-Z][A-Za-z0-9]+$'
+      description: schema 唯一类型 ID (PascalCase)
+      constraint_id: M2BS-01
+    version:
+      type: string
+      pattern: '^\d+\.\d+\.\d+$'
+      description: 语义版本号
+      constraint_id: M2BS-02
+    created:
+      type: string
+      format: date-time
+      pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'
+      description: ISO-8601 timestamp
+      constraint_id: M2BS-03
+
+    # 顶层 body 必含 m3_parent + description
+    "_schema_body":
+      type: map
+      required: [m3_parent, description]
+      constraint_id: M2BS-04
+      description: 顶层 body 必须有 m3_parent + description 字段 (M3 自反锚定)
+
+  # ── 可选字段 ──
+  optionalProperties:
+    icon:
+      type: string
+      constraint_id: M2BS-05-OPT
+      description: 单 emoji 标识符
+    m2_parent:
+      type: string
+      constraint_id: M2BS-06-OPT
+      description: 显式声明父类 (可选, 默认隐式继承 M2BaseSchema)
+    examples:
+      type: list
+      items: { type: map }
+      description: 示例场景 (示范 SchemaBody 用法)
+    relationConstraints:
+      type: map
+      description: 与其他 m2 schema 的关系约束 (can_be_source_of / target_of)
+
+  # ── 校验规则 ──
+  validationRules:
+    - rule: m2_type not in reserved_words
+      level: error
+      message: 'm2_type 不能是 SchemaSpecification / Specification (保留字)'
+      constraint_id: M2BS-VR01
+    - rule: m3_parent in [Element, StructuralElement, BehavioralElement, GovernanceElement, DescriptiveElement, LifecycleElement, ValueElement, ConcurrencyElement, MetaElement, MetaEntity, MetaRelationType, MetaConstraintRule, Constraint, Relation, Specification, Architecture, Stage, Component, Entity, Artifact, Process, Protocol, Policy, Pattern, Decision, Model, GacRule, ConstraintMgmt, ConstraintL0]
+      level: error
+      message: m3_parent 必须是 m3.yaml Element 集的 1 个
+      constraint_id: M2BS-VR02
+    - rule: stateMachine.state == 'deprecated' implies file_path 含 .deprecated. 或 /archived/
+      level: warning
+      message: 'deprecated 状态 schema 应在 .deprecated. 子目录'
+      constraint_id: M2BS-VR03
+
+  relationConstraints:
+    can_be_source_of:
+      - Validates  # 校验 m1 实例
+      - Specializes  # 派生子类
+      - Derives
+    can_be_target_of:
+      - Validates
+      - Specializes
+      - Supersedes
+      - ConflictsWith
+
+  # ── ADR 锚 ──
+  adr_refs:
+    - ADR-0141 (Round 3a, m2 抽象基类)
+    - ADR-0132 (M4 主决策)
+    - ADR-0136 (P5 4-gap closure)

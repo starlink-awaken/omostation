@@ -1,6 +1,6 @@
 m2_type: GovernanceCheck
 version: 1.0.0
-created: '2026-06-12'
+created: '2026-06-12T08:00:00'
 GovernanceCheck:
   m3_parent: GovernanceElement
   description: 治理检查器——定义 X1-X4 检查器的标准接口和数据结构

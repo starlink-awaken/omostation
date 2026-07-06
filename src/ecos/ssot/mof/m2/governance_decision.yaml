@@ -1,6 +1,6 @@
 m2_type: GovernanceDecision
 version: 1.0.0
-created: '2026-06-23'
+created: '2026-06-23T08:00:00'
 introduced_by: P60
 description: |
   治理决策节点——建模 P43-P59 沉淀方法论的机器可读契约。

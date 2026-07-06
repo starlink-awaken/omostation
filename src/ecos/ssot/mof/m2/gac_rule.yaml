@@ -1,6 +1,6 @@
 m2_type: GacRule
 version: 1.0.0
-created: '2026-06-26'
+created: '2026-06-26T08:00:00'
 
 # GaC 治理规则元模型 (M2 type, 机制 7, ADR-0106)
 #

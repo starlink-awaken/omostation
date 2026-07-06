@@ -103,6 +103,23 @@ m3:
         mtime:      { type: datetime, required: false, description: "最后修改时间" }
       applies_to: [M2, M1, M0]
 
+    # ── M4 元模型闭环 (ADR-0136 P5 phase) ──
+    # 用于补全 m2/*.yaml schema 的 m3_parent 引用 (InfrastructureElement.Concurrency)
+    ConcurrencyElement:
+      id: ConcurrencyElement
+      name: "并发控制元素"
+      description: |
+        并发控制元素 - m2 schema concurrency_control.yaml 的 m3 锚。
+        描述系统的并发原语 - 锁、信号量、事务、actor 模型。
+        M4 ADR-0136 Phase 5 新增, 闭合 M2→M3 闭环。
+      parent: StructuralElement
+      abstract: false
+      properties:
+        kind:        { type: enum, required: true, description: "并发原语", values: [lock, semaphore, actor, transaction, compare_and_swap] }
+        granularity: { type: enum, required: true, description: "粒度", values: [process, thread, fiber, coroutine] }
+        fairness:    { type: enum, required: false, description: "公平性", values: [fifo, priority, none] }
+      applies_to: [M2, M1]
+
     # ── 行为元素: 描述"做什么" ──
     BehavioralElement:
       id: BehavioralElement
@@ -422,6 +439,59 @@ m3:
         alternatives: { type: list, required: false, description: "替代方案" }
         superseded_by: { type: ref, required: false, description: "被哪个决策取代" }
       applies_to: [M2, M1]
+
+    # ── 第 7 大类 (ADR-0138): 元元模型元素 — MetaElement ──
+    # meta_model.py 的 8+4+4 元分类提升至 m3.yaml 第一类 Element,
+    # 让 mof_bridge 单入口可读. m3-meta.yaml 仍保留作为派生映射索引.
+    MetaEntity:
+      id: MetaEntity
+      name: "元实体类"
+      description: |
+        元实体类 - meta_model.MetaType 的 m3 锚 (8 类):
+        DOMAIN/FACT/INFERENCE/STATE/DOCUMENT/CONSTRAINT/PROCESSOR/RELATION
+        ADR-0138 (Round 2b): 把 meta_model.py 8 MET-Entity 提升到 m3.yaml 主流.
+      parent: MetaElement
+      abstract: true
+      properties:
+        meta_type: { type: enum, required: true, values: [DOMAIN, FACT, INFERENCE, STATE, DOCUMENT, CONSTRAINT, PROCESSOR, RELATION], description: "meta_model.MetaType 字串" }
+        nature:    { type: string, required: false, description: "本质 ('可指认/可验证/可推论')" }
+
+    MetaRelationType:
+      id: MetaRelationType
+      name: "元关系类"
+      description: |
+        元关系类 - meta_model.MetaRelationType 的 m3 锚 (4 类):
+        STRUCT/DERIVE/BEHAVIOR/JUSTIFY
+      parent: MetaElement
+      abstract: true
+      properties:
+        meta_type:    { type: enum, required: true, values: [STRUCT, DERIVE, BEHAVIOR, JUSTIFY], description: "meta_model.MetaRelationType 字串" }
+        directionality: { type: enum, required: true, values: [directed, undirected], description: "方向" }
+        cyclic:        { type: boolean, required: false, description: "是否允许循环" }
+
+    MetaConstraintRule:
+      id: MetaConstraintRule
+      name: "元约束类"
+      description: |
+        元约束类 - meta_model.MetaConstraint 的 m3 锚 (4 类):
+        TYPE_PURITY/REL_DIRECTION/PROC_INPUT/SELF_REF_BOUND
+      parent: MetaElement
+      abstract: true
+      properties:
+        meta_type:  { type: enum, required: true, values: [TYPE_PURITY, REL_DIRECTION, PROC_INPUT, SELF_REF_BOUND], description: "meta_model.MetaConstraint 字串" }
+        severity:   { type: enum, required: false, values: [blocker, error, warn], description: "严重度" }
+
+    MetaElement:
+      id: MetaElement
+      name: "元元素根"
+      description: |
+        第 7 大类根 - 包含 meta_model.py 全部 8+4+4 元分类的 m3 锚.
+        不直接由 M1 实例化,只在 M2 (m3-parent 反查) 使用.
+        ADR-0138 Round 2b: 从 m3-meta.yaml 提升至 m3.yaml 主流.
+      parent: Element
+      abstract: true
+      properties:
+        source: { type: enum, required: true, values: [meta_model_python, m3_meta_yaml, both], description: "源 (Python-only / YAML-only / 双轨)" }
 
   # =========================================================================
   # §2 关系本体 — Relation Ontology

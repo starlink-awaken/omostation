@@ -3,7 +3,7 @@
 
 m2_type: Artifact
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Artifact:
   m3_parent: StructuralElement.Artifact
   description: 可寻址的文件/数据产物——脚本、配置、文档、数据库。

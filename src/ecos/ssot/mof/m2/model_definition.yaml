@@ -2,7 +2,7 @@
 
 m2_type: ModelDefinition
 version: 1.0.0
-created: '2026-06-28'
+created: '2026-06-28T08:00:00'
 ModelDefinition:
   m3_parent: DescriptiveElement.Model
   description: LLM 模型定义——由 aetherforge brew 同步生成的模型清单, 含 cost/capabilities/context_window 等运行时属性。

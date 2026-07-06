@@ -2,7 +2,7 @@
 
 m2_type: Action
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Action:
   m3_parent: BehavioralElement.Process
   description: 行动——做什么。任务·专项·迭代。回答"做什么"。

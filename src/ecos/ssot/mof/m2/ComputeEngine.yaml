@@ -1,6 +1,6 @@
 m2_type: ComputeEngine
 version: 1.0.0
-created: '2026-06-07'
+created: '2026-06-07T08:00:00'
 compute_engine:
   m3_parent: StructuralElement.Component
   description: 大模型运行时引擎 (Compute Engine)

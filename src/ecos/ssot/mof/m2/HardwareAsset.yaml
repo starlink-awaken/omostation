@@ -1,6 +1,6 @@
 m2_type: HardwareAsset
 version: 1.0.0
-created: '2026-06-07'
+created: '2026-06-07T08:00:00'
 hardware_asset:
   m3_parent: StructuralElement.Component
   description: 具体硬件资产（如 CPU, GPU, 内存配置等）

@@ -3,7 +3,7 @@
 
 m2_type: Process
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Process:
   m3_parent: BehavioralElement.Process
   description: 有明确步骤序列和状态机的工作流——定义'事情怎么做'。

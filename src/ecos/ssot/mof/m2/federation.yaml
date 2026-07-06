@@ -1,9 +1,9 @@
 m2_type: Federation
 version: 1.0.0
-created: '2026-06-13'
+created: '2026-06-13T08:00:00'
 updated: '2026-06-13'
 Federation:
-  m3_parent: ArchitectureElement.Federation
+  m3_parent: Architecture.Federation
   description: 联邦模式——多节点协调
   icon: 🌐
   stateMachine:

@@ -3,7 +3,7 @@
 
 m2_type: Mechanism
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Mechanism:
   m3_parent: BehavioralElement.Mechanism
   description: 自动化或半自动化的运行机制——定义'系统如何自动运作'。

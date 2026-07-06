@@ -3,7 +3,7 @@
 
 m2_type: Convention
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Convention:
   m3_parent: GovernanceElement.Specification
   description: 命名约定·编码规范·文档结构标准。回答'怎么写才对'。

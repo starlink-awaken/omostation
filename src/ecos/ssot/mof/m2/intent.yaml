@@ -2,7 +2,7 @@
 
 m2_type: Intent
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Intent:
   m3_parent: GovernanceElement.Policy
   description: 意图——为什么要做。目标·决策·想法。回答"为什么"。

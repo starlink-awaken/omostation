@@ -1,6 +1,6 @@
 m2_type: NetworkZone
 version: 1.0.0
-created: '2026-06-07'
+created: '2026-06-07T08:00:00'
 network_zone:
   m3_parent: StructuralElement.Component
   description: 网络拓扑区域

@@ -3,7 +3,7 @@
 
 m2_type: Protocol
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Protocol:
   m3_parent: BehavioralElement.Protocol
   description: 层间或系统间通信协议——定义'系统组件如何对话'。

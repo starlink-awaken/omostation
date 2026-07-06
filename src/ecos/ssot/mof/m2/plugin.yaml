@@ -1,9 +1,9 @@
 m2_type: Plugin
 version: 1.0.0
-created: '2026-06-13'
+created: '2026-06-13T08:00:00'
 updated: '2026-06-13'
 Plugin:
-  m3_parent: ArchitectureElement.Plugin
+  m3_parent: Architecture.Plugin
   description: 插件——为系统提供可插拔的能力扩展
   icon: 🧩
   stateMachine:

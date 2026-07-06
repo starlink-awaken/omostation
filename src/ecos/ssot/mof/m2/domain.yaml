@@ -3,7 +3,7 @@
 
 m2_type: Domain
 version: 1.0.0
-created: '2026-06-07'
+created: '2026-06-07T08:00:00'
 Domain:
   m3_parent: StructuralElement.Component
   description: 织星生态的域——异构体系的基本组织单元，每个域封装一类资产（文档/配置/引擎/工具/工作空间/存储/模型）。

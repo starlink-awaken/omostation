@@ -1,0 +1,453 @@
+# ============================================================================
+# 织星 MOF — M3-meta: meta_model.py 的 m3 化 (M4 Phase 2.1)
+# ============================================================================
+# M3 Layer: meta-meta (补 m3.yaml 自反性)
+#
+# 目的:
+#   l0/ssot/meta_model.py 的 8 类 MET-Entity / 4 类 MET-Relation /
+#   4 类 MetaConstraint 在 m3.yaml 是"平行轨道"。本 schema 是它们的
+#   m3 子类映射,使桥接 (mof_bridge.py) 能用单一 M3 schema 加载两套
+#   分类,达成 ADR-0132 D3 "双轨桥接"决策。
+#
+# 设计:
+#   - m3-meta.yaml 是"扩展",不修改 m3.yaml (P1-S2 §5.1 红线)
+#   - 每个 m3-meta Element 都是 m3.yaml Element 的子类,
+#     桥接器通过 m3_implements 字段把两者绑定
+#   - applies_to: [M2] - 这是元元层 schema,不被实例化
+#     (M2 实例由 meta_model.py 在内存中表达)
+#
+# 版本: 1.0.0 | 日期: 2026-07-06
+# SSOT: 驾驶舱/元模型/M3-meta.yaml
+# 依赖: l0/ssot/meta_model.py (8+4+4 enum 锁定)
+# 关联: ADR-0132 D3 (双轨桥接)
+# ============================================================================
+
+m3_meta:
+  version: "1.0.0"
+  created: "2026-07-06"
+  description: >
+    meta_model.py 投影到 m3 的子类。M3-meta 提供 8 类 MET-Entity (DOMAIN/FACT/
+    INFERENCE/STATE/DOCUMENT/CONSTRAINT/PROCESSOR/RELATION) +
+    4 类 MET-Relation (STRUCT/DERIVE/BEHAVIOR/JUSTIFY) +
+    4 类 MetaConstraint (TYPE_PURITY/REL_DIRECTION/PROC_INPUT/SELF_REF_BOUND) +
+    4 等级 Confidence (fact/inference/hypothesis/estimated) +
+    1 个概念 MetaType (8 类抽象根)。
+
+    与 m3.yaml 的关系: 1:1 平行。M3-meta Element 的 m3_implements 字段
+    反向引用 meta_model.py enum 字串, 桥接器 (mof_bridge.py) 据此建立双轨映射。
+
+  # 桥接根
+  MetaType:
+    id: MetaType
+    name: "元实体类型 (meta_model.MetaType 根)"
+    description: meta_model.py 中 8 类 MET-Entity 的根。这是元元层抽象,不在 M2 实例化。
+    parent: Element
+    abstract: true
+    properties:
+      enum_value:
+        type: string
+        required: true
+        description: meta_model.py MetaType enum 字串
+      can_do:
+        type: list
+        required: false
+        description: 该元类型能做的事 (建模为 MET-Relation-STRUCT/DERIVE 子链)
+      cannot_do:
+        type: string
+        required: false
+        description: 该元类型不能做的事
+    applies_to: [M2]
+
+  # ── 8 类 MET-Entity 子类 ──
+  MetaDomain:
+    id: MetaDomain
+    name: "元领域实体"
+    description: 可指认的现实实体 (meta_model.MetaType.DOMAIN)
+    parent: MetaType
+    abstract: false
+    m3_implements: "meta_model.MetaType.DOMAIN"
+    properties:
+      identity_keys:
+        type: list
+        required: true
+        description: 跨域解析键
+      participations:
+        type: list
+        required: false
+        description: 参与的事件/状态机 (→M2 Stage)
+    applies_to: [M2]
+    example_id: ORG-国转中心
+
+  MetaFact:
+    id: MetaFact
+    name: "元事实"
+    description: 可验证的客观陈述 (meta_model.MetaType.FACT)
+    parent: MetaType
+    abstract: false
+    m3_implements: "meta_model.MetaType.FACT"
+    properties:
+      value:
+        type: string
+        required: false
+        description: 事实值 (任意类型)
+      unit:
+        type: string
+        required: false
+        description: 单位
+      source:
+        type: string
+        required: true
+        description: 来源 (URL/路径/系统)
+      date:
+        type: string
+        required: false
+        description: 事实日期 (ISO 8601)
+      confidence:
+        type: ref
+        required: false
+        description: 置信度 (→Confidence)
+    applies_to: [M2]
+    example_id: FACT-2026-01-01-001
+
+  MetaInference:
+    id: MetaInference
+    name: "元推论"
+    description: 基于事实的逻辑推导 (meta_model.MetaType.INFERENCE)
+    parent: MetaType
+    abstract: false
+    m3_implements: "meta_model.MetaType.INFERENCE"
+    properties:
+      derives_from:
+        type: list
+        required: true
+        items: { type: ref }
+        description: 依赖的事实或推论 (→MetaFact / →MetaInference)
+      logic:
+        type: string
+        required: true
+        description: 推导逻辑描述
+      conclusion:
+        type: string
+        required: true
+        description: 推论结论
+      theory:
+        type: string
+        required: false
+        description: 理论支撑
+    applies_to: [M2]
+    example_id: INF-2026-07-01-001
+
+  MetaState:
+    id: MetaState
+    name: "元状态"
+    description: 系统行为节点 (meta_model.MetaType.STATE)
+    parent: MetaType
+    abstract: false
+    m3_implements: "meta_model.MetaType.STATE"
+    properties:
+      chain:
+        type: enum
+        required: false
+        values: [innovation, funding, talent, operation, governance]
+        description: 所属链
+      transitions:
+        type: list
+        required: false
+        items: { type: ref }
+        description: 可达状态 (→MetaState)
+      interlocks:
+        type: list
+        required: false
+        items: { type: ref }
+        description: 咬合的目标状态
+    applies_to: [M2]
+    example_id: STATE-AGENT-RUNNING
+
+  MetaDocument:
+    id: MetaDocument
+    name: "元文档"
+    description: 知识呈现载体 (meta_model.MetaType.DOCUMENT)
+    parent: MetaType
+    abstract: false
+    m3_implements: "meta_model.MetaType.DOCUMENT"
+    properties:
+      contains:
+        type: list
+        required: false
+        description: 包含的子文档
+      has_derivation_chain:
+        type: list
+        required: false
+        description: 派生链 (→MetaInference)
+    applies_to: [M2]
+    example_id: DOC-ARCHITECTURE-MD
+
+  MetaConstraint:
+    id: MetaConstraint
+    name: "元约束"
+    description: 质量门禁 (meta_model.MetaType.CONSTRAINT)
+    parent: MetaType
+    abstract: false
+    m3_implements: "meta_model.MetaType.CONSTRAINT"
+    properties:
+      severity:
+        type: enum
+        required: true
+        values: [blocker, error, warn]
+        description: 严重度
+      check_type:
+        type: string
+        required: true
+        description: 检查类型
+    applies_to: [M2]
+    example_id: META-CON-01
+
+  MetaProcessor:
+    id: MetaProcessor
+    name: "元处理器"
+    description: 操作模型的模型 (meta_model.MetaType.PROCESSOR)
+    parent: MetaType
+    abstract: false
+    m3_implements: "meta_model.MetaType.PROCESSOR"
+    properties:
+      processes:
+        type: ref
+        required: true
+        description: 处理的模型 (→MetaType)
+      generates:
+        type: ref
+        required: false
+        description: 生成的产物 (→MetaDocument)
+      validates:
+        type: ref
+        required: false
+        description: 验证的目标 (→MetaType)
+    applies_to: [M2]
+    example_id: PROC-MOF-VALIDATE
+
+  MetaRelation:
+    id: MetaRelation
+    name: "元关系 (种类)"
+    description: 连接实体的边 (meta_model.MetaType.RELATION)
+    parent: MetaType
+    abstract: false
+    m3_implements: "meta_model.MetaType.RELATION"
+    properties:
+      source_id:
+        type: string
+        required: true
+      target_id:
+        type: string
+        required: true
+      relation_type:
+        type: string
+        required: true
+        description: 具体关系名
+      meta_relation:
+        type: ref
+        required: false
+        description: 所属元关系类型 (→MetaStruct/Derive/Behavior/Justify)
+    applies_to: [M2]
+
+  # ── 4 类 MET-Relation 子类 ──
+  MetaStruct:
+    id: MetaStruct
+    name: "元结构关系"
+    description: |
+      结构关系。由什么组成,树形、有向、不可成环。
+      对应 meta_model.MetaRelationType.STRUCT
+    parent: MetaRelation
+    abstract: false
+    m3_implements: "meta_model.MetaRelationType.STRUCT"
+    properties:
+      is_tree: { type: boolean, required: true, description: 是否树形 }
+      is_acyclic: { type: boolean, required: true, description: 是否无环 }
+    applies_to: [M2]
+
+  MetaDerive:
+    id: MetaDerive
+    name: "元推导关系"
+    description: |
+      推导关系。从什么产出,有向、可追溯。
+      对应 meta_model.MetaRelationType.DERIVE
+    parent: MetaRelation
+    abstract: false
+    m3_implements: "meta_model.MetaRelationType.DERIVE"
+    properties:
+      traceability_id: { type: string, required: true, description: 追溯 ID (可重放) }
+    applies_to: [M2]
+
+  MetaBehavior:
+    id: MetaBehavior
+    name: "元行为关系"
+    description: |
+      行为关系。什么触发什么,有向、可循环。
+      对应 meta_model.MetaRelationType.BEHAVIOR
+    parent: MetaRelation
+    abstract: false
+    m3_implements: "meta_model.MetaRelationType.BEHAVIOR"
+    properties:
+      trigger:
+        type: string
+        required: true
+        description: 触发器
+      is_cyclic: { type: boolean, required: false, description: 是否循环 }
+    applies_to: [M2]
+
+  MetaJustify:
+    id: MetaJustify
+    name: "元验证关系"
+    description: |
+      验证关系。什么支撑什么,有向、约束性。
+      对应 meta_model.MetaRelationType.JUSTIFY
+    parent: MetaRelation
+    abstract: false
+    m3_implements: "meta_model.MetaRelationType.JUSTIFY"
+    properties:
+      support_strength:
+        type: enum
+        required: true
+        values: [weak, medium, strong]
+        description: 支撑强度
+    applies_to: [M2]
+
+  # ── 4 类 MetaConstraint 子类 ──
+  MetaConTypePurity:
+    id: MetaConTypePurity
+    name: "元约束: 类型纯度"
+    description: 每个实体属于且只属于一个 MET-Type (meta_model.MetaConstraint.TYPE_PURITY)
+    parent: Constraint
+    abstract: false
+    m3_implements: "meta_model.MetaConstraint.TYPE_PURITY"
+    properties:
+      rule: "entity.meta_type ∈ 8_meta_types ∧ |entity.meta_type| == 1"
+    applies_to: [M2]
+
+  MetaConRelDirection:
+    id: MetaConRelDirection
+    name: "元约束: 关系方向"
+    description: 关系必须遵守 MET-Relation 矩阵 (meta_model.MetaConstraint.REL_DIRECTION)
+    parent: Constraint
+    abstract: false
+    m3_implements: "meta_model.MetaConstraint.REL_DIRECTION"
+    properties:
+      rule: "relation ∈ _RELATION_MATRIX[(source.meta_type, target.meta_type)]"
+    applies_to: [M2]
+
+  MetaConProcInput:
+    id: MetaConProcInput
+    name: "元约束: 处理器输入"
+    description: 处理器的输入必须是已实例化的实体 (meta_model.MetaConstraint.PROC_INPUT)
+    parent: Constraint
+    abstract: false
+    m3_implements: "meta_model.MetaConstraint.PROC_INPUT"
+    properties:
+      rule: "processor.processes.status == 'instantiated'"
+    applies_to: [M2]
+
+  MetaConSelfRefBound:
+    id: MetaConSelfRefBound
+    name: "元约束: 自我引用边界"
+    description: 处理器不可处理自身实现代码 (meta_model.MetaConstraint.SELF_REF_BOUND)
+    parent: Constraint
+    abstract: false
+    m3_implements: "meta_model.MetaConstraint.SELF_REF_BOUND"
+    properties:
+      rule: "processor.id ∉ processor.processes.id"
+    applies_to: [M2]
+
+  # ── 4 等级 Confidence ──
+  Confidence:
+    id: Confidence
+    name: "置信度等级"
+    description: meta_model.py Confidence 4 等级 (Fact/Inference/Hypothesis/Estimated)
+    parent: Element
+    abstract: true
+    properties:
+      level:
+        type: enum
+        required: true
+        values: [fact, inference, hypothesis, estimated]
+        description: 置信度等级
+    applies_to: [M2]
+
+  ConfidenceFact:
+    id: ConfidenceFact
+    name: "事实置信度"
+    description: 可独立验证 (meta_model.Confidence.FACT)
+    parent: Confidence
+    abstract: false
+    m3_implements: "meta_model.Confidence.FACT"
+    properties:
+      verify_by: { type: string, required: false, description: 验证方法 }
+    applies_to: [M2]
+
+  ConfidenceInference:
+    id: ConfidenceInference
+    name: "推论置信度"
+    description: 从事实推导 (meta_model.Confidence.INFERENCE)
+    parent: Confidence
+    abstract: false
+    m3_implements: "meta_model.Confidence.INFERENCE"
+    properties:
+      derivation_logic: { type: string, required: true }
+    applies_to: [M2]
+
+  ConfidenceHypothesis:
+    id: ConfidenceHypothesis
+    name: "假设置信度"
+    description: 有待验证 (meta_model.Confidence.HYPOTHESIS)
+    parent: Confidence
+    abstract: false
+    m3_implements: "meta_model.Confidence.HYPOTHESIS"
+    properties:
+      test_plan: { type: ref, required: false, description: 验证计划 (→Processor) }
+    applies_to: [M2]
+
+  ConfidenceEstimated:
+    id: ConfidenceEstimated
+    name: "估计置信度"
+    description: 有不确定性 (meta_model.Confidence.ESTIMATED)
+    parent: Confidence
+    abstract: false
+    m3_implements: "meta_model.Confidence.ESTIMATED"
+    properties:
+      uncertainty_pct: { type: number, required: false, description: 不确定性百分比 }
+    applies_to: [M2]
+
+  # ── 元关系矩阵 (meta_model.py::_RELATION_MATRIX 投影) ──
+  meta_relation_matrix:
+    description: >
+      源 MET-Type × 目标 MET-Type → 允许的 MET-Relation 列表。
+      这是 meta_model.py _RELATION_MATRIX 的 m3 形式, 桥接器 read-only 复用。
+    source: "ecos.l0.ssot.meta_model._RELATION_MATRIX"
+    entries:
+      DOMAIN_DOMAIN:    [STRUCT]
+      DOMAIN_FACT:      [DERIVE]
+      DOMAIN_INFERENCE: [DERIVE]
+      DOMAIN_DOCUMENT:  [STRUCT, JUSTIFY]
+      FACT_DOCUMENT:    [JUSTIFY]
+      INFERENCE_DOCUMENT: [DERIVE]
+      INFERENCE_FACT:   [DERIVE]
+      STATE_STATE:      [BEHAVIOR]
+      DOCUMENT_DOCUMENT: [STRUCT]
+      DOCUMENT_FACT:    [JUSTIFY]
+      DOCUMENT_INFERENCE: [DERIVE]
+      DOCUMENT_CONSTRAINT: [JUSTIFY]
+      PROCESSOR_INFERENCE: [DERIVE]
+      PROCESSOR_DOCUMENT: [DERIVE]
+      PROCESSOR_CONSTRAINT: [JUSTIFY]
+
+  # ── 8 层架构 (meta_model.py::LAYER_NAMES 投影) ──
+  layer_architecture:
+    source: "ecos.l0.ssot.meta_model.LAYER_NAMES"
+    description: meta_model.py LAYER_NAMES 0-7 投影, 名称映射与 LAYER-L0.yaml 一致
+    entries:
+      - [0, "元元层 (Meta-Meta)"]
+      - [1, "元层 (Meta)"]
+      - [2, "处理器层 (Processor)"]
+      - [3, "知识组织层 (Document)"]
+      - [4, "行为层 (Behavior)"]
+      - [5, "约束层 (Constraint)"]
+      - [6, "知识层 (Knowledge)"]
+      - [7, "领域层 (Domain Instance)"]

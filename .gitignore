@@ -66,3 +66,8 @@ src/ecos/ssot/mof/m0/snapshot.yaml
 LADS/
 .omc/
 *.tmp
+
+# M4 derived planes (ADR-0137) — written by bin/l0-constraints-migrate.py
+# and src/ecos/ssot/mof/m0/mof_driven.py. Re-built on every checkout
+# from tracked SSOT, so kept out of the tree.
+.omo/_derived/

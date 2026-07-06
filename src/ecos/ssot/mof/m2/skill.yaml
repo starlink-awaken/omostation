@@ -2,7 +2,7 @@
 
 m2_type: Skill
 version: 1.0.0
-created: '2026-06-06'
+created: '2026-06-06T08:00:00'
 Skill:
   m3_parent: BehavioralElement.Mechanism
   description: 技能——Agent 可调用的可复用能力单元。如 gbrain skill·Scheduled task·Forge plugin。回答"Agent

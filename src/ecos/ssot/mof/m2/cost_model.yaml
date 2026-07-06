@@ -1,6 +1,6 @@
 m2_type: CostModel
 version: 1.0.0
-created: '2026-06-13'
+created: '2026-06-13T08:00:00'
 updated: '2026-06-13'
 CostModel:
   m3_parent: ValueElement.CostModel
