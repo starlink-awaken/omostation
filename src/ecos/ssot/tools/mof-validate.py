@@ -97,7 +97,14 @@ def load_m2(m2_path: Path) -> dict:
 
 
 def load_all_m1_nodes(m1_dir: Path) -> list[dict]:
-    """加载所有 M1 节点 — 支持新结构(按类型分目录)和旧结构(平铺)"""
+    """加载所有 M1 节点 — 支持新结构(按类型分目录)和旧结构(平铺)
+
+    跳过逻辑 (Round 4a ADR-0145):
+      - MCPTOOL 集合占位 yaml (含 `tool_count` 或 `tools:` 字段) 跳过校验:
+        这些是 MCP 服务器聚合占位, 不代表单个 tool_name/tool, 工具端点名
+        集合 (3+ 个 tool) 应在源 projects/{server}/mcp_server.py 中定义,
+        单 MCPTOOL yaml 容器仅记录容器元数据 (project/transport).
+    """
     nodes = []
     if not m1_dir.exists():
         return nodes
@@ -107,6 +114,14 @@ def load_all_m1_nodes(m1_dir: Path) -> list[dict]:
         try:
             data = load_yaml(f)
             if isinstance(data, dict) and "id" in data:
+                # Round 4a: 跳过 MCPTOOL 集合占位 yaml
+                ntype = data.get("type", "")
+                nid = data.get("id", "")
+                if ntype == "MCPTool":
+                    if "tool_count" in data:
+                        continue
+                    if "tools" in data and isinstance(data["tools"], list):
+                        continue
                 nodes.append(data)
         except Exception:  # noqa: BLE001  # defensive fallback
             pass
