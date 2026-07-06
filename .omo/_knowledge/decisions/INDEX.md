@@ -113,6 +113,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0135 | 派生面统一收口 (ADR-0129 范式 enforcement) | ACCEPTED | 2026-07-06 | governance-team | 0135-derived-plane-unification.md |
 | 0136 | P5 phase — m3.yaml 扩展 4 gap 治本 | ACCEPTED | 2026-07-06 | governance + eCOS team | 0136-m3-yaml-extension-p5.md |
 | 0137 | 派生面落点纠偏 — 跟随 SSOT 源所在子模块 | ACCEPTED | 2026-07-06 | governance + eCOS team | 0137-derived-plane-relocation.md |
+| 0138 | 元元模型类目提升至 m3.yaml 主流 (Round 2b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0138-meta-element-promotion.md |
 
 ---
 
