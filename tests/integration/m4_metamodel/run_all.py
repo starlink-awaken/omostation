@@ -572,6 +572,40 @@ print(f'Stage enum values: {n} (no governance_maintenance)')
 
 
 
+def test_r3b_m4_health_score_cli(verbose: bool = False) -> tuple[bool, str]:
+    """T41 R3b: m4-health-score CLI 跑得通"""
+    rc, out, err = run([
+        "uv", "run", "--with", "pyyaml", "python",
+        "bin/m4-health-score.py",
+    ], timeout=90)  # mof-validate 自身 60s, 余 30s
+    if rc != 0:
+        return False, f"CLI 失败 (rc={rc}): {err}"
+    if "overall:" not in out:
+        return False, "无 overall 字段输出"
+    return True, "CLI 输出 OK"
+
+
+def test_r3b_m4_health_score_output(verbose: bool = False) -> tuple[bool, str]:
+    """T42 R3b: m4-health-score 派生面 JSON 存在 + 子模块 gitignored + 4 项 metric"""
+    derived = WS / "projects/ecos/.omo/_derived/m4-health.json"
+    if not derived.exists():
+        return False, f"派生面不存在: {derived}"
+    # gitignored in submodule
+    rc, _, _ = run(["git", "-C", "projects/ecos", "check-ignore", "-q", ".omo/_derived/m4-health.json"])
+    if rc != 0:
+        return False, "派生面未在 submodule gitignored"
+    # 4 项 metric 字段
+    import json as _json
+    data = _json.loads(derived.read_text())
+    metrics = data.get("metrics", {})
+    expected = ["mof_validate", "four_check_strict", "meta_mapping_8x4x4", "adr_accepted_9"]
+    for k in expected:
+        if k not in metrics:
+            return False, f"缺 metric: {k}"
+    overall = data.get("overall_score", 0)
+    return True, f"派生面 {derived.stat().st_size} bytes, 4 metrics, overall={overall}"
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -616,6 +650,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T38 M4-ROADMAP 5 phases", test_m4_roadmap_5phases),
     ("T39 R2c 7 stage only", test_r2c_lifecycle_stage_7_only),
     ("T40 R2c m3 Stage 7 enum", test_r2c_m3_stage_enum_7),
+    ("T41 R3b m4-health-score CLI", test_r3b_m4_health_score_cli),
+    ("T42 R3b m4-health-score output", test_r3b_m4_health_score_output),
 ]
 
 
