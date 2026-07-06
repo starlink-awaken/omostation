@@ -631,6 +631,31 @@ def test_r3a_m2_base_schema_exists(verbose: bool = False) -> tuple[bool, str]:
     return True, f'{total} m2 schema files (含 M2BaseSchema)'
 
 
+
+def test_r4b_decisions_quick_ref_exists(verbose: bool = False) -> tuple[bool, str]:
+    x45 = 'T45 R4b: M4 决策速查表 docs/M4-DECISIONS-INDEX.md 存在'
+    p2 = WS / 'docs/M4-DECISIONS-INDEX.md'
+    if not p2.exists():
+        return False, 'docs/M4-DECISIONS-INDEX.md 不存在'
+    content2 = p2.read_text()
+    # 应含 11+ ADR + R0..R4 标签
+    adr_count = sum(1 for n in range(132, 143) if f'013{n - 130}' in content2 or f'014{n - 140 - 1}' in content2)
+    rounds = ['R0', 'R2a', 'R2b', 'R2c', 'R3a', 'R3b', 'R4b']
+    round_present = sum(1 for r in rounds if r in content2)
+    return True, f'M4 速查表存在, ADR 覆盖 {adr_count}/11, Round {round_present}/{len(rounds)}'
+
+
+def test_r4b_adr_0142_in_index(verbose: bool = False) -> tuple[bool, str]:
+    x46 = 'T46 R4b: ADR-0142 已加入 INDEX'
+    idx = WS / '.omo/_knowledge/decisions/INDEX.md'
+    content3 = idx.read_text()
+    if '| 0142 |' not in content3:
+        return False, 'INDEX 缺 0142'
+    if 'ACCEPTED' not in content3.split('| 0142')[1].split('|')[2]:
+        return False, '0142 不是 ACCEPTED'
+    return True, 'ADR-0142 ACCEPTED 已入 INDEX'
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -679,6 +704,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T42 R3b m4-health-score output", test_r3b_m4_health_score_output),
     ("T43 R3a check_5 m2 BaseSchema", test_r3a_check_5_m2_baseschema),
     ("T44 R3a m2_base_schema.yaml exists", test_r3a_m2_base_schema_exists),
+    ("T45 R4b M4 decisions quick ref", test_r4b_decisions_quick_ref_exists),
+    ("T46 R4b ADR-0142 in INDEX", test_r4b_adr_0142_in_index),
 ]
 
 

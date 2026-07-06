@@ -117,6 +117,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0139 | model-driven 8 阶段复活评估 — 拒回 (Round 2c) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0139-model-driven-8stage-revival-rejected.md |
 | 0140 | M4 Health Score 量化与派生面落地 (Round 3b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0140-m4-health-score.md |
 | 0141 | M2BaseSchema 抽象基类 + check_5 (Round 3a) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0141-m2-base-schema.md |
+| 0142 | M4 决策速查表 (Round 4b) | ACCEPTED | 2026-07-06 | governance-team | 0142-decisions-quick-ref.md |
 
 ---
 
