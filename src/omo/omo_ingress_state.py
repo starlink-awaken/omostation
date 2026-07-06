@@ -304,8 +304,12 @@ def sync_state_projection(
         # These are shallow copies and are not recorded as separate mutations;
         # the canonical writes above hold the authoritative projection state.
         if not dry_run:
-            _mirror_projection(legacy_health_path, health_content, normalize=normalize_health_yaml)
-            _mirror_projection(legacy_brief_path, brief_content, normalize=normalize_brief_md)
+            _mirror_projection(
+                legacy_health_path, health_content, normalize=normalize_health_yaml
+            )
+            _mirror_projection(
+                legacy_brief_path, brief_content, normalize=normalize_brief_md
+            )
             _mirror_projection(
                 legacy_governance_data_path,
                 serialize_governance_data(governance_data),
