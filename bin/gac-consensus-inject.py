@@ -145,8 +145,10 @@ def extract_clean_description(md_path: Path) -> str:
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--check":
         if not db_path.is_file():
-            print(f"❌ [Consensus Inject Check] KOS SQLite DB missing at: {db_path}")
-            return 1
+            # KOS DB 是 runtime product (kos/ gitignored), CI fresh clone 无 — 优雅降级不 fail.
+            # 跟 scripts/debt-audit.sh check_debt_status 在 system.yaml 缺失时走兼容分支同模式.
+            print(f"⚠️  [Consensus Inject Check] KOS SQLite DB missing at: {db_path} — skip (runtime product, CI 环境)")
+            return 0
         if not claude_md_path.is_file():
             print(f"❌ [Consensus Inject Check] CLAUDE.md missing at: {claude_md_path}")
             return 1
