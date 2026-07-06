@@ -46,14 +46,9 @@ jobs:
         run: |
           # shellcheck disable=SC2086  # ACTIONLINT 引用形式固定
           $ACTIONLINT -color
-      - name: Check pre-commit config
-        env:
-          ACTIONLINT: ${{ steps.get_actionlint.outputs.executable }}
-        shell: bash
-        run: |
-          # .pre-commit-config.yaml 也过一遍 (有 hooks: 段, actionlint 报违例)
-          $ACTIONLINT -ignore 'shellcheck reported issue' .pre-commit-config.yaml
-
+      # "Check pre-commit config" step 已删: actionlint 是 GitHub Actions workflow linter,
+      # 不该检查 .pre-commit-config.yaml (它不是 workflow, actionlint 报 jobs/on/repos 违例 = 误用).
+      # pre-commit 配置由 pre-commit 自身 validate (pre-commit validate-config) + check-yaml job 覆盖.
   # ── 2. check-yaml — YAML 语法/可解析性 ────────────────────────────
   check-yaml:
     name: check-yaml (all YAML)
