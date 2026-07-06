@@ -13,7 +13,11 @@
 .omo/_knowledge/*.jsonl
 .omo/_control/evolution/drift-history/*.json.lock
 .omo/capabilities/
-.omo/debt/
+# debt/ 派生产物 (dashboard/dispatch/action-packet/review-queue/owner-routing/reviews/
+# campaign/reporting) 高 churn, write_dashboard 等从 items/ + metrics 派生, 生成器可重建.
+# items/ 例外: canonical SSOT (跟 .omo/tasks/ 同类 lifecycle 数据), 入仓 (修正 c82cbd23 误判).
+.omo/debt/*
+!.omo/debt/items/
 .omo/evidence
 .omo/plans/
 .omo/run-continuation/
