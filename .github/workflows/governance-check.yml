@@ -50,45 +50,46 @@ jobs:
         uses: astral-sh/setup-uv@v4
       - name: Run governance checks
         run: |
+          FAILED=0
           # Run each check independently — don't let one failure skip the rest
-          python3 scripts/check-interfaces.py || true
-          python3 scripts/check-cross-deps.py || true
-          python3 scripts/check-doc-ssot-snapshots.py || true
-          python3 scripts/check-panorama-arch-links.py || true
-          python3 scripts/check-ssot-reference-integrity.py || true
-          python3 scripts/check-truth-m1-governance-mapping.py || true
-          python3 scripts/check-governance-surface-paths.py || true
-          python3 scripts/check-project-arch-doc-contract.py || true
-          python3 scripts/check-project-arch-doc-ssot.py || true
-          python3 scripts/check-project-registry-ssot.py || true
-          python3 scripts/check-truth-inventory-routing.py || true
-          python3 scripts/check-knowledge-index-ssot.py || true
-          python3 scripts/check-design-history-ssot.py || true
-          python3 scripts/check-design-body-ssot.py || true
-          python3 scripts/check-design-risky-phrases.py || true
-          python3 scripts/check-plans-readme-ssot.py || true
-          python3 scripts/check-governance-doc-ssot.py || true
-          python3 scripts/check-governance-mechanism-ssot.py || true
-          python3 scripts/check-governance-guides-ssot.py || true
-          python3 scripts/check-knowledge-history-ssot.py || true
-          python3 scripts/check-phase-closeout-ssot.py || true
+          python3 scripts/check-interfaces.py || FAILED=1
+          python3 scripts/check-cross-deps.py || FAILED=1
+          python3 scripts/check-doc-ssot-snapshots.py || FAILED=1
+          python3 scripts/check-panorama-arch-links.py || FAILED=1
+          python3 scripts/check-ssot-reference-integrity.py || FAILED=1
+          python3 scripts/check-truth-m1-governance-mapping.py || FAILED=1
+          python3 scripts/check-governance-surface-paths.py || FAILED=1
+          python3 scripts/check-project-arch-doc-contract.py || FAILED=1
+          python3 scripts/check-project-arch-doc-ssot.py || FAILED=1
+          python3 scripts/check-project-registry-ssot.py || FAILED=1
+          python3 scripts/check-truth-inventory-routing.py || FAILED=1
+          python3 scripts/check-knowledge-index-ssot.py || FAILED=1
+          python3 scripts/check-design-history-ssot.py || FAILED=1
+          python3 scripts/check-design-body-ssot.py || FAILED=1
+          python3 scripts/check-design-risky-phrases.py || FAILED=1
+          python3 scripts/check-plans-readme-ssot.py || FAILED=1
+          python3 scripts/check-governance-doc-ssot.py || FAILED=1
+          python3 scripts/check-governance-mechanism-ssot.py || FAILED=1
+          python3 scripts/check-governance-guides-ssot.py || FAILED=1
+          python3 scripts/check-knowledge-history-ssot.py || FAILED=1
+          python3 scripts/check-phase-closeout-ssot.py || FAILED=1
           cd projects/omo
           uv sync --quiet   # 显式 sync (确保 pydantic 等依赖装好)
-          uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || true
-          uv run python -m omo.cli lint direct-omo-io || true
-          uv run python -m omo.cli lint sensitive-governed-writes || true
-          uv run python -m omo.cli lint schemas || true
-          uv run python -m omo.cli lint yaml-bypass || true
-          uv run python -m omo.cli lint ingress-registry --workspace-root ../.. || true
-          uv run python -m omo.cli lint mutation-surfaces --workspace-root ../.. || true
-          uv run python -m omo.cli lint internal-write-profiles --workspace-root ../.. || true
-          uv run python -m omo.cli lint state-plane-assets --workspace-root ../.. || true
-          uv run python -m omo.cli lint c2g-omo-boundary --workspace-root ../.. || true
-          uv run python -m omo.cli lint ingress-artifacts --workspace-root ../.. || true
-          uv run python -m omo.cli lint mutation-ledger --workspace-root ../.. || true
-          uv run python -m omo.cli lint doc-lifecycle --workspace-root ../.. || true
-          uv run python -m omo.cli lint self-evolution-approval --workspace-root ../.. || true
-          uv run python -m omo.cli lint task-policy --all --workspace-root ../.. || true
+          uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || FAILED=1
+          uv run python -m omo.cli lint direct-omo-io || FAILED=1
+          uv run python -m omo.cli lint sensitive-governed-writes || FAILED=1
+          uv run python -m omo.cli lint schemas || FAILED=1
+          uv run python -m omo.cli lint yaml-bypass || FAILED=1
+          uv run python -m omo.cli lint ingress-registry --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint mutation-surfaces --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint internal-write-profiles --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint state-plane-assets --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint c2g-omo-boundary --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint ingress-artifacts --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint mutation-ledger --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint doc-lifecycle --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint self-evolution-approval --workspace-root ../.. || FAILED=1
+          uv run python -m omo.cli lint task-policy --all --workspace-root ../.. || FAILED=1
           uv run python -m omo.cli lint god-module --workspace-root ../.. || echo "⚠️ god-module warnings (non-blocking)"
           uv run pytest \
             tests/test_omo_ingress.py \
@@ -100,7 +101,11 @@ jobs:
             tests/test_omo_task_policy.py \
             tests/test_opc_phase_governance_alignment.py \
             tests/test_opc_p5_p7_runtime.py \
-            -q
+            -q || FAILED=1
+          if [ $FAILED -ne 0 ]; then
+            echo "❌ One or more governance checks failed."
+            exit 1
+          fi
 
       - name: MOF security scan
         run: |

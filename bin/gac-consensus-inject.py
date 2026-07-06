@@ -143,7 +143,28 @@ def extract_clean_description(md_path: Path) -> str:
         return "Consensus pattern guidelines."
 
 
+import sys
+
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] == "--check":
+        if not db_path.is_file():
+            print(f"❌ [Consensus Inject Check] KOS SQLite DB missing at: {db_path}")
+            return 1
+        if not claude_md_path.is_file():
+            print(f"❌ [Consensus Inject Check] CLAUDE.md missing at: {claude_md_path}")
+            return 1
+        try:
+            db_conn = sqlite3.connect(str(db_path))
+            consensuses = db_conn.execute(
+                "SELECT entity_id FROM kos_entities WHERE entity_type='Consensus'"
+            ).fetchall()
+            db_conn.close()
+            print(f"✅ [Consensus Inject Check] KOS DB accessible, found {len(consensuses)} consensus entities.")
+            return 0
+        except Exception as e:
+            print(f"❌ [Consensus Inject Check] KOS DB query failed: {e}")
+            return 1
+
     if not db_path.is_file() or not claude_md_path.is_file():
         return 0
 

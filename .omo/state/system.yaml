@@ -10,9 +10,9 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 100
+health_score: 90
 health_score_source: compass_radar_composite
-health_score_generated_at: '2026-07-03T11:00:17Z'
+health_score_generated_at: '2026-07-05T06:01:27Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-03T21:10:41.301723+08:00'
+updated_at: '2026-07-06T11:03:42.953893+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -199,16 +199,13 @@ governance:
   code_freeze: false
   code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  last_scan: 1783084241.0994189
+  last_scan: 1783307022.2759628
   total_services: 9
   online_services: 3
   healthy_services: 3
-  offline_services: 2
+  offline_services: 1
   unhealthy_services: []
   stale_services:
-  - agora-gateway
-  - agora-sse
-  - cron-service
   - hermes-gateway
 phase42_status: active
 health_score_raw: 88.0
@@ -220,4 +217,4 @@ governance_anomaly_score: 100
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-03T11:00:17Z'
+governance_feedback_last_run: '2026-07-06T11:03:42.953893+08:00'
