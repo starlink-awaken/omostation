@@ -125,6 +125,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0147 | MCPTOOL M1 Adder Guide (Round 5b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0147-mcptool-adder-guide.md |
 | 0148 | Round-Trip 流程文档化 (Round 5c) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0148-round-trip-playbook.md |
 | 0149 | P71 Baseline 防重做 (Round 5d) | ACCEPTED | 2026-07-06 | governance-team | 0149-p71-baseline-no-replay.md |
+| 0150 | Submodule PR 反向 Review (Round 5e) | ACCEPTED | 2026-07-06 | governance-team | 0150-submodule-pr-reverse-review.md |
+| 0151 | 子模块 gitignore 守门 (Round 5f) | ACCEPTED | 2026-07-06 | governance-team | 0151-submodule-hygiene-gate.md |
 
 ---
 
