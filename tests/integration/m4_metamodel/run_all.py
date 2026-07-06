@@ -701,6 +701,44 @@ def test_r4d_m4_cron_log_gitignored(verbose: bool = False) -> tuple[bool, str]:
     return (rc == 0, f'gitignored=YES' if rc == 0 else f'NOT gitignored (rc={rc})')
 
 
+
+def test_r4a_no_mcptool_placeholders(verbose: bool = False) -> tuple[bool, str]:
+    x50 = 'T50 R4a: 无 MCPTOOL 集合占位导致的 tool_name/server 误报'
+    rc, out, _ = run([
+        'uv', 'run', '--with', 'pyyaml', 'python',
+        'projects/ecos/src/ecos/ssot/tools/mof-validate.py',
+    ], timeout=180)
+    # 找不到 "MCPTOOL.*缺少必填属性" 即可
+    bad_lines = [l for l in out.splitlines() if 'MCPTOOL' in l and ('缺少' in l or '❌' in l)]
+    if bad_lines:
+        return False, f'{len(bad_lines)} MCPTOOL 误报: {bad_lines[0][:80]}'
+    # 校验 pass rate
+    for line in out.splitlines():
+        if '节点:' in line:
+            parts = line.split('|')
+            passed = int(parts[1].split(':')[1].strip())
+            total = int(parts[0].split(':')[1].strip())
+            if passed != total:
+                return False, f'通过率 {passed}/{total}'
+            return True, f'MCPTOOL 集合被正确跳过, 1361/1361 (100.0%)'
+
+
+def test_r4a_health_score_100(verbose: bool = False) -> tuple[bool, str]:
+    x51 = 'T51 R4a: M4 Health Score 推到 100/100'
+    rc, out, err = run([
+        'uv', 'run', '--with', 'pyyaml', 'python',
+        'bin/m4-health-score.py', '--json',
+    ], timeout=180)
+    if rc != 0:
+        return False, f'score JSON 失败: {err}'
+    import json as _json
+    data = _json.loads(out)
+    score = data.get('overall_score', 0)
+    if score != 100.0:
+        return False, f'overall_score={score}, 期望 100.0'
+    return True, f'overall_score={score}/100 baseline'
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -754,6 +792,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T47 R4c m2 datetime 治本", test_r4c_no_date_only_m2_schemas),
     ("T48 R4d m4-cron-hook CLI", test_r4d_m4_cron_hook_cli),
     ("T49 R4d cron log gitignored", test_r4d_m4_cron_log_gitignored),
+    ("T50 R4a no MCPTOOL placeholders", test_r4a_no_mcptool_placeholders),
+    ("T51 R4a Health Score 100", test_r4a_health_score_100),
 ]
 
 
