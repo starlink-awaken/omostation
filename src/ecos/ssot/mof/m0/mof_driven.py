@@ -12,6 +12,8 @@
     uv run python3 -m ecos.ssot.mof.m0.mof_driven --emit > .omo/_derived/m0-driven.yaml
     uv run python3 -m ecos.ssot.mof.m0.mof_driven --validate
     uv run python3 -m ecos.ssot.mof.m0.mof_driven --transition-graph
+
+默认写到 projects/ecos/.omo/_derived/ (源端; ADR-0137 投影面范式).
 """
 
 from __future__ import annotations
@@ -174,8 +176,8 @@ def main() -> int:
     parser.add_argument(
         "--write",
         type=Path,
-        default=Path(".omo/_derived/m0-driven.yaml"),
-        help="写入文件 (默认 .omo/_derived/m0-driven.yaml)",
+        default=Path("../.omo/_derived/m0-driven.yaml"),  # ADR-0137: 写源端 (子模块内 .omo/_derived/)
+        help="写入文件 (默认 projects/ecos/.omo/_derived/m0-driven.yaml)",
     )
     args = parser.parse_args()
 
