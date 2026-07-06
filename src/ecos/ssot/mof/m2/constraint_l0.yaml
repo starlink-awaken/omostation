@@ -54,9 +54,9 @@ ConstraintL0:
       type: list
       items:
         type: enum
-        values: [M3, M2, M1, M0, L0, L1, L2, L3, L4, I0]
+        values: [M3, M2, M1, M0, L0, L1, L2, L3, L4, I0, meta]
         minItems: 1
-      description: 适用层 / 元层 (L0/M0/M2/M3 是元层语义,L1-L4 是物理层)
+      description: 适用层 / 元层 (L0/M0/M2/M3 是元层语义,L1-L4 是物理层,meta 是治理元层)
     dimension:
       type: enum
       values: [X1, X2, X3, X4, M1, M2, X-meta]
