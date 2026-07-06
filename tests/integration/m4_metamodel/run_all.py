@@ -147,22 +147,6 @@ def test_p1s2_id_set_matches(verbose: bool = False) -> tuple[bool, str]:
     return (rc == 0, out.strip() if rc == 0 else err)
 
 
-def test_p1s2_id_set_matches(verbose: bool = False) -> tuple[bool, str]:
-    """T8: v1 id 集 == v2 id 集 (子模块内 v2; ADR-0137)"""
-    rc, out, err = run([
-        "uv", "run", "--with", "pyyaml", "python", "-c",
-        "import yaml; from pathlib import Path; "
-        "v1 = yaml.safe_load(Path('projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml').read_text()); "
-        "v2 = yaml.safe_load(Path('projects/ecos/.omo/_derived/l0-constraints.v2.yaml').read_text()); "
-        "v1_ids = set(); "
-        "[v1_ids.update([e['id'] for e in v if isinstance(e, dict) and 'id' in e]) "
-        "for k, v in v1.items() if isinstance(v, list)]; "
-        "v2_ids = {e['id'] for e in v2['constraints']}; "
-        "diff = v1_ids ^ v2_ids; "
-        "assert not diff, f'diff: {diff}'; print(f'v1={len(v1_ids)} v2={len(v2_ids)} match')",
-    ], timeout=30)
-    return (rc == 0, out.strip() if rc == 0 else err)
-
 
 def test_p2s1_m3_meta_shape(verbose: bool = False) -> tuple[bool, str]:
     """T9: m3-meta.yaml 含 22 Element (1 MetaType 根 + 8 + 4 + 4 + 4 + 1 MetaCon 子类根)"""
@@ -713,6 +697,7 @@ def test_r4a_no_mcptool_placeholders(verbose: bool = False) -> tuple[bool, str]:
     if bad_lines:
         return False, f'{len(bad_lines)} MCPTOOL 误报: {bad_lines[0][:80]}'
     # 校验 pass rate
+    found = False
     for line in out.splitlines():
         if '节点:' in line:
             parts = line.split('|')
@@ -720,7 +705,11 @@ def test_r4a_no_mcptool_placeholders(verbose: bool = False) -> tuple[bool, str]:
             total = int(parts[0].split(':')[1].strip())
             if passed != total:
                 return False, f'通过率 {passed}/{total}'
-            return True, f'MCPTOOL 集合被正确跳过, 1361/1361 (100.0%)'
+            found = True
+            return True, f'MCPTOOL 集合被正确跳过, {passed}/{total} (100.0%)'
+    if not found:
+        return False, '无节点 汇总行'
+    return False, 'unreachable'
 
 
 def test_r4a_health_score_100(verbose: bool = False) -> tuple[bool, str]:
@@ -815,6 +804,39 @@ def test_r5d_adr_0149_accepted(verbose: bool = False) -> tuple[bool, str]:
     return True, 'ADR-0149 ACCEPTED 已入 INDEX'
 
 
+
+def test_r5e_submodule_pr_guide_exists(verbose: bool = False) -> tuple[bool, str]:
+    x58 = 'T58 R5e: docs/SUBMODULE-PR-REVIEW-GUIDE.md 存在且有 9 章节'
+    x = WS / 'docs/SUBMODULE-PR-REVIEW-GUIDE.md'
+    if not x.exists():
+        return False, 'guide 不存在'
+    content2 = x.read_text()
+    sections = ['## 0. TL;DR', '## 1. submodule PR 3 种模式', '## 2. 提交者 5 步自检',
+                '## 3. Reviewer 6 步守门', '## 4. 决策矩阵', '## 5. close 模板',
+                '## 6. merge 评论模板', '## 7. 历史实证', '## 8. 与 AGENTS.md §10']
+    missing = [s for s in sections if s not in content2]
+    if missing:
+        return False, f'缺章节: {missing[:3]}'
+    return True, 'guide 9 关键章节齐全 (双角度 checklist)'
+
+
+def test_r5f_submodule_hygiene_gate_runs(verbose: bool = False) -> tuple[bool, str]:
+    x59 = 'T59 R5f: check-submodule-hygiene.py CLI 跑得通'
+    rc, out, err = run([
+        'uv', 'run', '--with', 'pyyaml', 'python',
+        'bin/check-submodule-hygiene.py',
+    ], timeout=60)
+    if rc != 0:
+        return False, f'CLI 失败 (rc={rc}): {err}'
+    if 'Submodule Hygiene Check' not in out:
+        return False, '无标准输出'
+    # submodule-dirty 必现 (4 个 dirty 始终存在)
+    if 'submodule-dirty' not in out:
+        return False, '缺 submodule-dirty 类'
+    # tracked-derived / submodule-pointer-stale 可能 0 findings (已治本/本地对齐)
+    return True, 'CLI 跑得通, submodule-dirty 必现 (其他 2 类可治本)'
+
+
 # ──── 注册测试 + 运行 ────
 import re  # noqa: E402
 
@@ -876,6 +898,8 @@ TESTS: list[tuple[str, Callable]] = [
     ("T55 R5c ADR-0148 in INDEX", test_r5c_round_playbook_adr_exists),
     ("T56 R5d P71 pattern exists", test_r5d_p71_pattern_exists),
     ("T57 R5d ADR-0149 in INDEX", test_r5d_adr_0149_accepted),
+    ("T58 R5e submodule PR guide", test_r5e_submodule_pr_guide_exists),
+    ("T59 R5f submodule hygiene gate", test_r5f_submodule_hygiene_gate_runs),
 ]
 
 
