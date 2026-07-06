@@ -57,14 +57,35 @@ def load_yaml(path: Path) -> dict:
 
 
 def load_m2(m2_path: Path) -> dict:
-    """加载 M2 — 支持新结构(目录)和旧结构(单文件)"""
-    m2 = {}
+    """加载 M2 — 支持新结构(目录)和旧结构(单文件)
+
+    修复 P1-S0: m2_type 字段作主 key，顶层 key 作 fallback（解决
+    AvailabilityCheck/ComputeEngine 等 8 个 schema snake_case 顶层 key 不匹配 bug）。
+    """
+    m2: dict = {}
+    type_index: dict[str, dict] = {}  # PascalCase → schema body
     if m2_path.is_dir():
         # New structure: mof/m2/*.yaml (one per type)
         for f in sorted(m2_path.glob("*.yaml")):
             if f.name.startswith("."):
                 continue
             data = load_yaml(f)
+            if not isinstance(data, dict):
+                continue
+            schema_body: dict | None = None
+            m2_type_value = data.get("m2_type")
+            # 1) Try m2_type field (canonical)
+            if isinstance(m2_type_value, str):
+                # m2_type 不在 top-level key 中，找 schema body
+                for k, v in data.items():
+                    if k not in ("m2_type", "version", "created") and isinstance(v, dict):
+                        if "m3_parent" in v or "requiredProperties" in v or "stateMachine" in v:
+                            schema_body = v
+                            break
+                if schema_body is not None:
+                    m2[m2_type_value] = schema_body
+                    continue
+            # 2) Fallback to top-level PascalCase key (original behavior)
             for key in data:
                 if key not in ("m2_type", "version", "created"):
                     m2[key] = data[key]
