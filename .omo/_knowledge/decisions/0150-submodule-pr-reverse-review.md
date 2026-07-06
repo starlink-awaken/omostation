@@ -80,7 +80,7 @@ close 评论必须含:
 ## 3. 不在本 ADR 范围
 
 - ❌ 自动 reject 工具(`bin/reject-stale-pr.py` 之类) — 增加入侵, 不在本 round 范围
-- ❌ 改 OMO cron 自动 sync (CR-P74-* 已有守门)
+- ❌ 改 OMO cron 自动 sync (P74 四条规则已有守门)
 - ❌ PR template 全面变更 — 单独 ADR
 
 ---
