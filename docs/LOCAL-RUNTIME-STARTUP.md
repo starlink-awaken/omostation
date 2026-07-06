@@ -14,7 +14,7 @@
 | `agora-mcp-sse` | I0 | `7431` | `uv run agora-mcp --sse` | Agent MCP SSE 入口 |
 | `l4-kernel-mcp-sse` | L4 | `7456` | `uv run python -m l4_kernel.mcp_server --sse` | 自我层域管理 |
 | `runtime-cron-http` | L1 | `7450` | `uv run python -m runtime.cron_service.server --http` | 调度与健康扫描 |
-| `observability` | X | `3000` | `docker compose up -d` | Langfuse 可观测性 |
+| `observability` | X | `3050` | `docker compose up -d` | Langfuse 可观测性 |
 
 ---
 
@@ -63,7 +63,7 @@ python scripts/ecos-start.py --dry-run
 
 - **Web Dashboard**: http://127.0.0.1:8090
 - **Agora MCP SSE**: http://127.0.0.1:7431
-- **Langfuse**: http://127.0.0.1:3000
+- **Langfuse**: http://127.0.0.1:3050
 
 ---
 

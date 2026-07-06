@@ -241,7 +241,7 @@ SSOT          → governance-checks.yaml::gac.rules (规则 (见 project-registr
 | CARDS 管理 | cockpit + l4-kernel | L3/L4 | `cockpit cards` | `cards_status` / `cards_check` / `cards_create` / `cards_update` | 卡片状态/检查/创建/更新 |
 | Vault 搜索 | cockpit | L3 | `cockpit vault` | `vault_search` | L4 Vault 知识库搜索 |
 | Web 控制台 | cockpit-ui | X | (Vite) | — | 多视图组件 (Dashboard/C2G/Compute/Assets/Mesh/Engines/L4Health/Task/Alert/Quest/Debt/...) |
-| 可观测性 | observability | X | (Docker) | — | Langfuse trace (HTTP :3000, OTLP) |
+| 可观测性 | observability | X | (Docker) | — | Langfuse trace (HTTP :3050, OTLP) |
 | 家庭枢纽 | family-hub | X | `mcp_server.py` | `get_health` / `get_profiles` / `get_active_quests` / `create_quest` / `complete_quest` / `generate_smart_quests` | 任务游戏化 + LLM 生成, OMO 治理接入 (G2) |
 | 每日简报 | cockpit | L3 | `cockpit daily` | `daily_summary` | 研究简报 |
 | 治理健康 | cockpit | L3 | `cockpit gac` | `governance_check` / `governance_status` / `governance_sla` / `governance_leaderboard` / `governance_dashboard` / `governance_history` | GaC 治理健康检查 |
