@@ -32,7 +32,7 @@ projects:
     stack: "Python (http/urllib)"
     role: "omlx 算力网格智能路由代理"
     version: "1.0.0"
-    port: 7435
+    port: 7437
 
   # ── Python projects ──
   agora:
