@@ -2059,6 +2059,18 @@ gac:
       version: 1.0.0
       created_at: "2026-06-27"
       adr: "ADR-0106"
+    - id: CR-X4-MCPTOOL-IMPL-DRIFT
+      source_type: indexed
+      source_ref: "bin/check-mcptool-impl-drift.py"
+      dimension: X4
+      layer: meta
+      check_type: consistency_drift
+      executor: ['ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-06"
+      adr: "ADR-0106"
 
   drift:
     schedule: "daily"  # radar 频率
