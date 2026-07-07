@@ -1,4 +1,4 @@
-# omostation 演化护栏 (P76 + P77 沉淀 25 原则)
+# omostation 演化护栏 (P76 + P77 沉淀 30 原则)
 
 > **For agents**: 这是 omostation 治理演化的"宪法" — 每一原则都从一次具体的 debt 类收敛而来。
 > 当你做出架构决策时, 先看这里. 当你治理一个 follow-up 时, 能从中找到对应原则。
@@ -19,6 +19,11 @@
 | P77-2-3 | **rule-per-principle** | 每个原则对应一条 GaC rule (enforcement path) |
 | P77-2-4 | **anti-rollback-baseline** | 阶段尾必重放 baseline (governance ≥ 起点), 防回退 |
 | P77-2-5 | **multi-agent-coordination-via-ssot** | 跨 agent 协作走 catalog, 不靠"应该都知道" |
+| P77-3-1 | **strict-regex-by-boundary** | detector regex 必须有 boundary 断言, 避免 substring 误判 |
+| P77-3-2 | **prefix-pattern-allowed** | URI 末尾 `/` 表 routing prefix, 不需具体服务注册 |
+| P77-3-3 | **remediation-over-suppression** | unregistered 治本 = 补登 SSOT, 而非放宽 threshold |
+| P77-3-4 | **hard-only-after-zero** | enforcement: hard 仅在治本完成 (unregistered=0) 后启用, 避免 CI 永红 |
+| P77-3-5 | **tool-evolution-via-tests** | detector 升级必须先有测试断言新行为 |
 | P76-7-1 | **llm-advisory-not-autonomous** | LLM 只 generate suggestion, 永不 auto-apply |
 | P76-7-2 | **tier-graceful-fallback** | LLM provider 3-tier — aetherforge → ollama → heuristic |
 | P76-7-3 | **cron-real-deployment** | "投产" 不止写 plist, 必须 launchctl load |
@@ -45,9 +50,10 @@
 | Phase 7.x | ADR-0163 | 5 | commit-assist hook |
 | P77 Phase 1 | ADR-0164 | 1 | 跨仓一致性 |
 | **P77 Phase 2** | **ADR-0165** | **5** | **演化护栏 catalog 自身** |
-| **合计** | — | **25 (20 ADR-internal + 5 hook)** | — |
+| **P77 Phase 3** | **ADR-0166** | **5** | **跨仓 unregistered 治本 (threshold 0 + hard)** |
+| **合计** | — | **30 (25 ADR-internal + 5 hook)** | — |
 
-> 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **25 原则** (4-5 per phase × 5 phases). 数字更准.
+> 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **30 原则** (4-5 per phase × 6 phases). 数字更准.
 
 ## 1. Phase 6 (Knowledge Foundry runtime) — ADR-0160
 
@@ -98,6 +104,33 @@
 **含义**: 跨 agent 协作走 catalog (single source), 不靠"应该都知道"
 **反例**: agent 2 假设 agent 1 已读某 ADR, 结果没读
 **实践**: catalog 是必读 frontmatter, AGENTS.md 引用 catalog 路径
+
+## 2.5. P77 Phase 3 (跨仓 unregistered 治本) — ADR-0166
+
+### P77-3-1: strict-regex-by-boundary
+**含义**: detector regex 必须有 boundary 断言, 避免 substring 误判
+**反例**: `bos://memory/kos` 错误匹配 `bos://memory/kos/search` 的子串, 误判 unregistered
+**实践**: regex 加 `(?![a-z0-9_/-])` 边界断言; 严格后 56 → 17 unregistered (减 39 false positive)
+
+### P77-3-2: prefix-pattern-allowed
+**含义**: URI 末尾 `/` 表 routing prefix, 不需具体服务注册
+**反例**: 把 `bos://analysis/code/` (用作 startswith 前缀) 强制注册为真服务, 跑不起来
+**实践**: detector 排除 trailing `/` URI; SSOT 仍可有真服务 (e.g. `bos://analysis/codeanalyze/scan`)
+
+### P77-3-3: remediation-over-suppression
+**含义**: unregistered 治本 = 补登 SSOT, 而非放宽 threshold
+**反例**: 治本 = 把 threshold 调到 100 → 假装绿
+**实践**: Phase 3 17 unregistered 全补登 SSOT (134 total), threshold 默认 0
+
+### P77-3-4: hard-only-after-zero
+**含义**: enforcement: hard 仅在治本完成 (unregistered=0) 后启用, 避免 CI 永红
+**反例**: 改 enforcement: error 但 unregistered=56 → CI 永红
+**实践**: Phase 1 advisory (threshold 20) → Phase 3 治本完成 → enforcement: error
+
+### P77-3-5: tool-evolution-via-tests
+**含义**: detector 升级必须先有测试断言新行为 (P77-2-3 rule-per-principle)
+**反例**: 改 regex 边界断言, 旧测试 (--threshold 0 应 fail) 失效
+**实践**: Phase 3 加 8 测试, 旧测试 1 个调整 (threshold 0 永远 pass, 改用 -1 测 fail 路径)
 
 ## 3. Phase 7 (LLM + foundry cron 真集成) — ADR-0161
 

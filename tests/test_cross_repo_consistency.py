@@ -48,8 +48,8 @@ def test_registered_uri_count_matches_agora_yaml():
 
 
 def test_threshold_low_fail():
-    """--threshold 0 should fail (有 unregistered)."""
-    r = run(["--threshold", "0"])
+    """--threshold -1 (强制) 应该 fail (unregistered >= 0 永远不满足 -1)."""
+    r = run(["--threshold", "-1"])
     assert r.returncode == 1, f"expected fail rc=1, got {r.returncode}"
 
 

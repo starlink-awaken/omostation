@@ -2264,19 +2264,19 @@ gac:
     - id: CR-CROSS-REPO-CONSISTENT
       dimension: X3
       layer: meta
-      name: "跨仓 BOS URI / port-registry 一致性 (advisory)"
+      name: "跨仓 BOS URI / port-registry 一致性 (hard, P77 Phase 3 治本后)"
       description: |
         对比 projects/agora/etc/bos-services.yaml (BOS URI SSOT) 与 projects/*/src/ 中
-        bos:// 引用. unregistered (referenced but not in SSOT) 应 ≤ threshold (默认 20,
-        Phase 3 治本逐步降至 0). 同步检查 ecos port-registry 与各仓 port 声明.
+        bos:// 引用. unregistered (referenced but not in SSOT) 应 = 0 (Phase 3 治本, hard).
+        同步检查 ecos port-registry 与各仓 port 声明.
         实施: bin/check-cross-repo-consistency.py
       check_type: consistency_drift
       target: "bin/check-cross-repo-consistency.py"
       source_ref: bin/check-cross-repo-consistency.py::main
       executor: [radar_cron, omo_audit, ci_gate, gac_local_gate]
-      enforcement: advisory
+      enforcement: error
       lifecycle: active
-      version: 0.1.0
+      version: 0.2.0
       created_at: "2026-07-07"
       adr: "ADR-0164"
 
@@ -2335,24 +2335,25 @@ gac:
     - id: CR-CROSS-REPO-CHECK
       dimension: X3
       layer: meta
-      name: "跨仓 unregistered 阈值守门"
+      name: "跨仓 unregistered 阈值守门 (hard, P77 Phase 3 治本后 threshold=0)"
       description: |
-        bin/check-cross-repo-consistency.py unregistered ≤ threshold (默认 20).
-        Phase 3 (W5-6) 治本降至 0, 同步升 hard enforcement.
+        bin/check-cross-repo-consistency.py unregistered ≤ threshold (默认 0, Phase 3 治本后).
+        Phase 3 (W5-6) 治本完成: 17 unregistered 全部补登 SSOT, threshold 0 升 hard enforcement.
         注: 这是更晚粒度的守门 — 与 CR-CROSS-REPO-CONSISTENT (P77 Phase 1 detector) 协同.
         CONSISTENT 是 detector 本身存在性, CHECK 是 detector output 的阈值.
       check_type: consistency_drift
       target: "bin/check-cross-repo-consistency.py"
       source_ref: bin/check-cross-repo-consistency.py::main
       executor: [radar_cron, ci_gate, gac_local_gate]
-      enforcement: advisory
+      enforcement: error
       lifecycle: active
-      version: 0.1.0
+      version: 0.2.0
       created_at: "2026-07-07"
       adr: "ADR-0164"
       relates_to:
         - CR-CROSS-REPO-CONSISTENT
         - .omo/_knowledge/decisions/0165-p77-phase2-evolution-guardrails.md
+        - .omo/_knowledge/decisions/0166-p77-phase3-cross-repo-remediation.md
 
     - id: CR-BASELINE-REPLAYED
       dimension: X2

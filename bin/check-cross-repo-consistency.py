@@ -38,6 +38,7 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 LEGACY_OK_URI_FRAGMENTS = {
     "bos://custom/path",  # c2g test fixture
     "bos://example/",  # docstring examples
+    "bos://bad/foo/bar",  # omo BOS schema validation test (故意 invalid domain, P77-3 验收)
 }
 
 
@@ -52,8 +53,10 @@ def load_yaml(p: Path) -> dict | list | None:
         return None
 
 
-# BOS URI regex — 完整 form: bos://domain/action[/action...]
-BOS_URI_RE = re.compile(r"bos://[a-z][a-z0-9_-]+(?:/[a-z0-9_-]+){1,3}")
+# BOS URI regex — 严格 form: bos://domain/action[/action...] 后面不能跟 [a-z0-9_/-]
+# 防止 bos://memory/kos 匹配 bos://memory/kos/search 的子串
+# 允许可选 trailing / 表示 prefix pattern (e.g. "bos://memory/kos/" = "all under memory/kos")
+BOS_URI_RE = re.compile(r'bos://[a-z][a-z0-9_-]+(?:/[a-z0-9_-]+){1,3}/?(?![a-z0-9_/-])')
 
 
 def load_agora_registered_uris() -> dict[str, dict]:
@@ -88,12 +91,8 @@ def collect_referenced_uris() -> set[str]:
                 # 跳过 fixture / example / 模板类
                 if any(frag in uri for frag in LEGACY_OK_URI_FRAGMENTS):
                     continue
-                # 跳过 docstring URIs (粗略: 行尾 `"""` 闭合 + 含"示例"+"路径")
-                if "/bos/" in text and uri in text:
-                    # 真代码引用 (RHS, 不是 docstring)
-                    found.add(uri)
-                else:
-                    found.add(uri)
+                # 真代码引用 (URI 出现即计)
+                found.add(uri)
     return found
 
 
@@ -104,16 +103,32 @@ def load_ecos_ports() -> dict[int, str]:
     return {int(k): str(v) for k, v in data.items() if str(k).isdigit()}
 
 
+def is_covered_by_prefix(uri: str, registered: dict[str, dict]) -> bool:
+    """检查 uri 是否被某个 prefix-pattern 覆盖 (e.g. 'bos://memory/kos/search' 被 'bos://memory/kos/' 覆盖)."""
+    for reg_uri in registered:
+        if reg_uri.endswith("/") and uri.startswith(reg_uri):
+            return True
+    return False
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--json", action="store_true", help="JSON output")
-    p.add_argument("--threshold", type=int, default=20,
-                   help="unregistered URI 阈值 (默认 20, 治本后可降至 0)")
+    p.add_argument("--threshold", type=int, default=0,
+                   help="unregistered URI 阈值 (默认 0, 治本后 strict-mode; 调大可放行)")
     args = p.parse_args()
 
     registered = load_agora_registered_uris()
     referenced = collect_referenced_uris()
-    unregistered = sorted(referenced - set(registered.keys()))
+    # unregistered = 真缺注册
+    # 1. 排除 prefix-pattern 形式 (URI 末尾以 / 结尾, 表示 routing 前缀, 不是真服务)
+    #    e.g. "bos://analysis/code/" 用作 startswith() 前缀匹配, 不需具体服务
+    # 2. 排除被某个注册 prefix pattern 覆盖的 (reverse direction)
+    strict_unregistered = sorted(
+        u for u in (referenced - set(registered.keys()))
+        if not u.endswith("/") and not is_covered_by_prefix(u, registered)
+    )
+    unregistered = strict_unregistered
     orphan = sorted(set(registered.keys()) - referenced)
 
     ports = load_ecos_ports()
