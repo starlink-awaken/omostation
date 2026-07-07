@@ -2,7 +2,7 @@ id: TASK-13AD0B21
 title: 'AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升)'
 description: 'AUDIT: M1 命名空间37个, aetherforge只消费4个(11%), 33未接入(agent/entity/protocol/workflow/skill/...).
   同 BOS 鸿沟病根 (定义层丰富/执行层薄弱).'
-status: candidate
+status: done
 task_type: feature
 risk_level: L2
 depends_on: []
@@ -15,7 +15,7 @@ context_uri: bos://governance/tasks/planned/TASK-13AD0B21
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: "auto_promote_eligible:ISC-32-ADR (risk L2, depends_on=[], human_approval_required=false)"
+approval_ref: auto_promote_eligible:ISC-32-ADR (risk L2, depends_on=[], human_approval_required=false)
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
@@ -41,3 +41,14 @@ metadata:
   created_at: '2026-06-26T06:44:34Z'
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: aetherforge-l0-consumption
+  evidence_paths_refreshed_at: '2026-07-07T07:13:08Z'
+  evidence_paths_refreshed_by: projects/omo
+  evidence_paths_refresh_source_ref: Phase 8 closed (第二次, 因 omo submodule 状态回滚到 Phase
+    7 前). Phase 8.1/8.2/8.3 实际产物在 projects/aetherforge + projects/c2g 跨仓 PR.
+  completed_at: '2026-07-07T07:13:08Z'
+  completed_via: omo task done
+  completion_actor: projects/omo
+  completion_source_ref: omo:task:done:TASK-13AD0B21
+evidence_paths:
+- projects/aetherforge/src/aetherforge/l0_consumer.py
+completed_at: '2026-07-07T07:13:08Z'
