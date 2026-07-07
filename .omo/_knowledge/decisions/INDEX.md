@@ -130,6 +130,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0152 | M4 5 GaC 规则追加 (Phase 1) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0152-m4-gac-rules.md |
 | 0153 | M4 4 工具入 agent-workflows (Phase 2b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0153-m4-agent-workflows-tools.md |
 | 0154 | M4 OMO cron 集成 (Phase 4) | ACCEPTED | 2026-07-06 | governance-team | 0154-m4-omo-cron-integration.md |
+| 0155 | P76 Phase 1 收口 (积压清理) | ACCEPTED | 2026-07-07 | governance-team | 0155-p76-phase1-cleanup.md |
 
 ---
 
@@ -201,4 +202,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-06 · Owner: governance-team · M4→GaC 全面接入 3 阶段 3 ADR (0152/0153/0154) 完成, GaC rules 152→157, agent-workflows tools 28→32*
+*最近更新: 2026-07-07 · Owner: governance-team · P76 Phase 1 完成 (入口解锁 + M1 drift 0/0/0 + god module SOP + ADR-0155); GaC rules 157; M1=157↔registry 157*
