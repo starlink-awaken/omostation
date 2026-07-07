@@ -25,6 +25,8 @@ This directory collects project-level documentation for **Agora**.
 - [`DEVELOPMENT.md`](DEVELOPMENT.md) — Development guide
 - [`RELEASE.md`](../RELEASE.md) — Release process
 - [`EXAMPLES.md`](EXAMPLES.md) or [`../examples/`](../examples/) — Examples
+- [`BEST_PRACTICES.md`](BEST_PRACTICES.md) — Best practices
+- [`MIGRATION.md`](MIGRATION.md) — Migration guide
 - [`../CONTRIBUTORS.md`](../CONTRIBUTORS.md) — Contributors and maintainers
 
 ## Workspace Context

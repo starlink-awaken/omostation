@@ -55,6 +55,9 @@ uv run ruff check "src/"
     Runtime facts, counts, ports, health, and generated inventories are intentionally not maintained here. Use the workspace registries and project source as the truth.
 ## Project Governance
 
+- [Maintainers](MAINTAINERS.md)
+- [Acknowledgments](ACKNOWLEDGMENTS.md)
+
 - [Development](docs/DEVELOPMENT.md)
 - [Release Process](RELEASE.md)
 
