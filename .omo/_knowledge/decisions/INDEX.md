@@ -134,6 +134,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0156 | P76 Phase 2 分层调用方向契约硬化 | ACCEPTED | 2026-07-07 | governance-team | 0156-p76-phase2-call-direction.md |
 | 0157 | P76 Phase 3 元治全自 + debt-closed-per-feature | ACCEPTED | 2026-07-07 | governance-team | 0157-p76-phase3-self-meta.md |
 | 0158 | P76 Phase 4 X 扩展晋升 + submodule 对称 | ACCEPTED | 2026-07-07 | governance-team | 0158-p76-phase4-promotion.md |
+| 0159 | P76 Phase 5 收敛面+演化平台 + 全路线收口 | ACCEPTED | 2026-07-07 | governance-team | 0159-p76-phase5-foundry.md |
+| STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 
 ---
 
