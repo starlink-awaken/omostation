@@ -13,7 +13,20 @@
 
     治理内核：Phase/Task/Debt/Audit 生命周期.
 
-    ## Quick Start
+    ## Installation
+
+```bash
+# Clone the workspace recursively
+git clone --recursive https://github.com/starlink-awaken/omostation.git
+cd omostation/projects/omo
+
+# Install dependencies with uv
+uv sync
+```
+
+Requires Python 3.13+ (see `pyproject.toml`).
+
+## Quick Start
 
     ```bash
     uv sync
@@ -66,6 +79,7 @@ uv run python -m omo.cli lint direct-omo-io
 - [Changelog](CHANGELOG.md)
 - [License](LICENSE)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Contributors](CONTRIBUTORS.md)
 ## Getting Help
 
 - [FAQ](docs/FAQ.md)
