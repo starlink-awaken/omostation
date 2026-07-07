@@ -76,8 +76,8 @@ uv run --with pyyaml python bin/agent-workflow.py bootstrap
 **修复**:
 ```bash
 GAC_M1_SYNC_WRITE=1 uv run --with pyyaml python bin/gac-m1-sync.py --sync
-# 创建: 6 (CR-X4-MCPTOOL-IMPL-DRIFT, M4-BOOTSTRAP-REFLEX, M4-DERIVED-PLANE-AUDIT, ...)
-# 删除: 14 (CR-AETHERFORGE-ONBOARD-INTEGRITY-01, CR-C2G-INGRESS-PRECHECK-01, ...)
+# 创建: 6 (M4-* 系列 + CR-X4-MCPTOOL-IMPL-DRIFT 等, 详见 gac-m1-sync 输出)
+# 删除: 14 (orphan 历史 ADRs 引用, 详见同步日志)
 # M1 实例数: 157 ↔ registry=157 → 0/0/0
 ```
 
@@ -123,7 +123,7 @@ worktree claim
 | # | 项 | 阻塞原因 | 提议 Phase 归属 |
 |---|----|---------|----------|
 | F-1.3a | 8 个 planned tasks 收口 | 全要 human approval (证据 + 批准) | 用户 Phase 1.3 sign-off 后, 走 `omo task done` |
-| F-1.4a | 6 单点 BOS kind 标签 | 跨仓改动 + 可能动 M2 schema | Phase 2.1 (与 CR-LAYER-CALL-DIRECTION 同步做) |
+| F-1.4a | 6 单点 BOS kind 标签 | 跨仓改动 + 可能动 M2 schema | Phase 2.1 (与"分层调用方向契约"规则同步做) |
 | F-1.5a | god module Phase 1 抽取 (至少 2 文件) | 实操需要 gbrain 仓 PR | Phase 1.5a 启动后由 gbrain 仓发起 |
 | F-1.6a | submodule-pointer-bump 自动钩子 | 架构变更 | Phase 4.2 |
 
