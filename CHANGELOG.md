@@ -10,9 +10,36 @@
 ## [未发布]
 
 ### Added
+- **omo CLI 统一入口迁移 (Tier 1-4)**:
+  - `omo health dashboard`: Keeper Dashboard (从 bin/omo-health.py 迁移)
+  - `omo lint projection-guard`: P74 runtime projection guard (从 bin/omo-state-projection-guard.py 迁移)
+  - `omo lint stamp-policy`: P74 runtime stamp policy (从 bin/omo-runtime-stamp-policy.py 迁移)
+  - `omo manage`: .omo 目录管理工具集 (从 bin/omo-manage 迁移)
+  - `omo validate`: .omo 目录验证工具集 (从 bin/omo-validate 迁移)
+  - `omo audit cards`: CARDS X3 value metrics (从 scripts/omo/cards_x3_metrics.py 迁移)
+  - `omo audit vault`: Vault X1 audit (从 scripts/omo/vault_x1_audit.py 迁移)
+  - `omo audit freshness`: X2 freshness audit (从 scripts/omo/x2_freshness_audit.py 迁移)
+- **omo CLI 统一入口 (方向 A)**:
+  - `omo doctor`: 统一健康检查入口 (state freshness + key files + agora health + debt evidence)
+  - `omo inspect`: 统一检查入口 (completeness + references + schemas + god-module)
+- **omo CLI 文档自动生成 (方向 C)**:
+  - `omo docs`: 从 docstring 提取帮助文本生成 Markdown 参考文档
+  - `docs/CLI-REFERENCE.md`: 自动生成的 CLI 参考文档 (218 行)
+- **测试覆盖**:
+  - `tests/test_omo_audit_cli.py`: 16 个单元测试覆盖 omo audit 子命令
 - **C2G v3 (Cybernetic Solutions)**:
   - 引入了 Fast-Track 碎片聚变机制 (`omo worker gc`)，支持自动打包微观任务为聚变报告。
   - 引入 Agent 战术退让机制 (`omo_yield_task`)，防止执行长尾死锁卡点。
+
+### Changed
+- **scripts/omo/ 退役 (方向 B)**:
+  - 为 8 个脚本添加 deprecation 注释，指向 omo CLI 替代命令
+  - 保留所有脚本作为 backward-compat wrapper
+- **文档同步**:
+  - 更新 mof-capabilities.yaml: 添加 omo audit 命令引用
+  - 更新 x3-value-stack.yaml: 更新审计工具引用
+  - 更新 AGENT.md: 更新所有 scripts/ 引用为 omo CLI 格式
+  - 更新 mutation-surfaces.yaml: 更新 entrypoint 为 omo CLI 格式
 
 ### 新增
 - 初始化项目

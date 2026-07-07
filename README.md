@@ -30,6 +30,7 @@ uv run python -m omo.cli lint direct-omo-io
     |------|------|
     | `omo doctor` | 统一健康检查入口 (state + key files + agora + debt) |
     | `omo inspect` | 统一检查入口 (completeness + references + schemas + god-module) |
+    | `omo docs` | CLI 文档自动生成 |
     | `omo health check` | 探活 agora-routes.json 注册的服务端点 |
     | `omo health dashboard` | Keeper Dashboard — 读取 .omo/ 状态文件渲染运维看板 |
     | `omo lint projection-guard` | P74: 验证 runtime-projections.yaml 声明的路径存在且可解析 |
