@@ -449,6 +449,34 @@ doctor_checks:
     description: MOF architecture drift detector is runnable.
     required: true
     command: [bin/mof-drift]
+  - id: mof-bootstrap
+    type: local_tool
+    description: "M4 5-check 自反校验器"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof-bootstrap.py", "all"]
+    health_check: true
+    required: true
+    timeout: 60
+  - id: m4-health-score
+    type: local_tool
+    description: "M4 Health Score 量化(派生面引擎)"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/m4-health-score.py", "--emit"]
+    health_check: true
+    required: false
+    timeout: 120
+  - id: check-submodule-hygiene
+    type: local_tool
+    description: "子模块卫生守门(3类检查)"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/check-submodule-hygiene.py", "--strict"]
+    health_check: true
+    required: false
+    timeout: 60
+  - id: mcp-tool-data-complete
+    type: local_tool
+    description: "MCPTOOL 数据完整性守门"
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/mcp-tool-data-complete.py"]
+    health_check: true
+    required: false
+    timeout: 30
 diff_checks:
   - id: agent-workflow-lint
     description: Workflow runner and registry contract validation.
@@ -616,7 +644,8 @@ diff_checks:
       - .omo/state/runtime/**
       - .omo/_control/**
       - BRIEF.md
-    command: [uv, run, --with, pyyaml, python, bin/omo-state-projection-guard.py]
+    command: [uv, run, python, -m, omo.cli, lint, projection-guard]
+    workdir: projects/omo
   - id: omo-runtime-stamp-policy
     description: >
       Confirms runtime stamp files (e.g. .watch-dispatch-stamps.json) are
@@ -628,7 +657,8 @@ diff_checks:
       - runtime/**
       - .omo/_truth/registry/runtime-projections.yaml
       - .gitignore
-    command: [uv, run, --with, pyyaml, python, bin/omo-runtime-stamp-policy.py]
+    command: [uv, run, python, -m, omo.cli, lint, stamp-policy]
+    workdir: projects/omo
   - id: gac-consensus-inject
     description: >
       KOS RAG Epigenetic Memory Injection (eCOS v6 Phase A).
@@ -1194,35 +1224,4 @@ workflows:
         - id: diff-stat
           mode: required
           command: [git, diff, --stat]
-    - id: mof-bootstrap
-      type: local_tool
-      description: "M4 5-check 自反校验器"
-      command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof-bootstrap.py", "all"]
-      health_check: true
-      required: true
-      timeout: 60
-
-    - id: m4-health-score
-      type: local_tool
-      description: "M4 Health Score 量化(派生面引擎)"
-      command: ["uv", "run", "--with", "pyyaml", "python", "bin/m4-health-score.py", "--emit"]
-      health_check: true
-      required: false
-      timeout: 120
-
-    - id: check-submodule-hygiene
-      type: local_tool
-      description: "子模块卫生守门(3类检查)"
-      command: ["uv", "run", "--with", "pyyaml", "python", "bin/check-submodule-hygiene.py", "--strict"]
-      health_check: true
-      required: false
-      timeout: 60
-
-    - id: mcp-tool-data-complete
-      type: local_tool
-      description: "MCPTOOL 数据完整性守门"
-      command: ["uv", "run", "--with", "pyyaml", "python", "bin/mcp-tool-data-complete.py"]
-      health_check: true
-      required: false
-      timeout: 30
 

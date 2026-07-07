@@ -30,10 +30,10 @@ SSOT:
 - `agent-workflows.yaml::silent_workflow_policy` (A1/A2 classification + excluded_workflows)
 - `governance-checks.yaml` (4 CR-P74-* rules: STATE-PROJECTION-GUARD, RUNTIME-STAMP-POLICY, WORKFLOW-SILENCE, WORKFLOW-SUGGEST)
 
-Tools (`bin/`):
+Tools (`bin/` + `projects/omo`):
 
-- `omo-state-projection-guard.py` — CR-P74-STATE-PROJECTION-GUARD
-- `omo-runtime-stamp-policy.py` — CR-P74-RUNTIME-STAMP-POLICY
+- `omo lint projection-guard` — CR-P74-STATE-PROJECTION-GUARD (from `bin/omo-state-projection-guard.py`)
+- `omo lint stamp-policy` — CR-P74-RUNTIME-STAMP-POLICY (from `bin/omo-runtime-stamp-policy.py`)
 - `agent-workflow.py suggest --from-diff --profile <agent>` — CR-P74-WORKFLOW-SUGGEST
 - `agent-workflow.py compliance --json` → `.p74_solidification` — CR-P74-WORKFLOW-SILENCE
 

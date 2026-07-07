@@ -99,7 +99,7 @@ make gac-local-gate
 ### 3.4 state-projection-guard FAIL 处置
 
 ```bash
-uv run --with pyyaml python bin/omo-state-projection-guard.py --json
+cd projects/omo && uv run python -m omo.cli lint projection-guard --json
 ```
 
 `findings[]`:
@@ -112,7 +112,7 @@ uv run --with pyyaml python bin/omo-state-projection-guard.py --json
 ### 3.5 runtime-stamp-policy FAIL 处置
 
 ```bash
-uv run --with pyyaml python bin/omo-runtime-stamp-policy.py --json
+cd projects/omo && uv run python -m omo.cli lint stamp-policy --json
 ```
 
 `orphan_paths[]`:
@@ -157,8 +157,8 @@ P74 报告通过 omo state sync 派生进 `.omo/state/runtime/health.yaml`(obser
 
 | P74 工具/输出 | 对应 GaC 规则 |
 |--------------|--------------|
-| `bin/omo-state-projection-guard.py` | CR-P74-STATE-PROJECTION-GUARD(X4 一致性) |
-| `bin/omo-runtime-stamp-policy.py` | CR-P74-RUNTIME-STAMP-POLICY(X1 审计链) |
+| `omo lint projection-guard` | CR-P74-STATE-PROJECTION-GUARD(X4 一致性) |
+| `omo lint stamp-policy` | CR-P74-RUNTIME-STAMP-POLICY(X1 审计链) |
 | `agent-workflow compliance` `p74_solidification` | CR-P74-WORKFLOW-SILENCE(X1 审计链) |
 | `agent-workflow suggest` | CR-P74-WORKFLOW-SUGGEST(X3 价值栈) |
 

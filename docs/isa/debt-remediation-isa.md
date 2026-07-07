@@ -17,7 +17,7 @@ governance_binding: "omostation AGENTS.md/CLAUDE.md; .omo/ mutations via agent-w
 omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿"（health_score / debt / GaC-drift 当时均报满分，真值见 .omo/state/system.yaml），但实证调查揭示这套"满分"建立在**测量工具自身失真**之上。三类结构性病灶贯穿全部债务：
 
 1. **声明式 SSOT 无"真相漂移检测器"** — `dependency-baseline.yaml` 无生成器（手工维护）、debt-dashboard 与 debt.yaml 各说各话、health.yaml 由单一变量算出。声明与实际的缝隙无人监督。
-2. **重构只改写入侧、漏改消费侧** — 债务存储从 `.omo/debt/` 迁走后，20+ 处消费代码（`bin/omo-health.py`、5 个 `check-*-ssot.py`、`model-driven/omo_bridge.py`）仍指向已废止目录。
+2. **重构只改写入侧、漏改消费侧** — 债务存储从 `.omo/debt/` 迁走后，20+ 处消费代码（`omo health dashboard`、5 个 `check-*-ssot.py`、`model-driven/omo_bridge.py`）仍指向已废止目录。
 3. **指标定义错位 + 形式合规** — `health_score` 实际是 `no-anomaly-score`（只看 anomaly_count）；`governance-alerts.yaml` 定义了 X1-X4 critical 规则但无 dispatcher 消费，`/tmp/governance-alerts.log` 从未生成；5 个 P1 任务 `approval_ref: null` 卡 planned 无人审批。
 
 后果：在测量工具修好之前，其他所有债务（代码层 gbrain 81 TODO、God Module、aetherforge legacy；依赖层 fastmcp 15 项目单点、3 个 `(none)` baseline；运行时层 2/9 服务在线；架构层 ecos→omo 上穿、L4 整层 0 GaC 规则）的**可见性与优先级都无法准确判断**。

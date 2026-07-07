@@ -89,6 +89,12 @@ P74 报告通过 `omo state sync` 派生,产物进 `.omo/state/runtime/health.ya
 
 归类:OMO 治理域(`omo-` 前缀),符合 `.omo/standards/bin-tool-naming.md` 的命名空间约束。在 ADR-0115 Phase X 引用本 ADR。
 
+**2026-07-07 更新**: 这两个工具已内化到 omo CLI:
+- `bin/omo-state-projection-guard.py` → `omo lint projection-guard`
+- `bin/omo-runtime-stamp-policy.py` → `omo lint stamp-policy`
+
+原 bin/ 脚本保留作为 backward-compat wrapper。
+
 ## 3. 实施细节
 
 ### 3.1 文件清单
@@ -102,8 +108,8 @@ P74 报告通过 `omo state sync` 派生,产物进 `.omo/state/runtime/health.ya
 | SSOT | `.omo/_truth/registry/agent-workflows.yaml` (diff_checks + silent_workflow_policy) | 路由声明 |
 | SSOT | `.omo/_truth/registry/runtime-projections.yaml` (state field) | 投影面状态 |
 | Rule | `.omo/_truth/registry/governance-checks.yaml` (+4 P74 CR) | GaC 维度覆盖 |
-| Tool | `bin/omo-state-projection-guard.py` (新) | CR-P74-STATE-PROJECTION-GUARD 实现 |
-| Tool | `bin/omo-runtime-stamp-policy.py` (新) | CR-P74-RUNTIME-STAMP-POLICY 实现 |
+| Tool | `projects/omo/src/omo/omo_lint_projection.py` | CR-P74-STATE-PROJECTION-GUARD 实现 |
+| Tool | `projects/omo/src/omo/omo_lint_stamp.py` | CR-P74-RUNTIME-STAMP-POLICY 实现 |
 | Tool | `bin/agent-workflow.py` (+ suggest + p74_solidification_report) | CR-P74-WORKFLOW-SILENCE 实现 |
 
 ### 3.2 关键约束
