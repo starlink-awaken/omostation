@@ -23,3 +23,17 @@ make install-hooks
 从 `.githooks/pre-push` / `.githooks/pre-commit` 复制到 `.git/hooks/`。
 
 同步逻辑见 [`bin/sync-submodules-push.sh`](../bin/sync-submodules-push.sh)。
+
+## prepare-commit-msg-commit-assist — LLM advisory (P76 Phase 9A)
+
+`git commit` (无 -m, 无 -F) 触发:
+- 调 `bin/commit-assist.py --no-llm` (heuristic tier, 立即返回)
+- 写侧车 `.commit-suggestion` (gitignored)
+- 在 commit msg 末尾追加 hint (developer 可手动 `git commit -F .commit-suggestion`)
+
+**硬门 (P76-7-1)**: LLM 不能 auto-apply. developer 必须显式接受.
+
+**跳过模式** (developer 已明确意图):
+- `git commit -m "..."` → 跳过 (COMMIT_SOURCE=message)
+- `git commit -F <file>` → 跳过 (developer 自选 source)
+- amend / merge / squash → 跳过 (template mode)
