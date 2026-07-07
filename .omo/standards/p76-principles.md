@@ -39,6 +39,11 @@
 | P77-6-3 | **gateway-status-documentation** | 外部 LLM gateway 不可达时, 必须文档化不可达状态 |
 | P77-6-4 | **tool-logic-test-before-e2e** | 测试先覆盖纯逻辑函数, 再 E2E |
 | P77-6-5 | **catalog-update-per-phase** | 每 phase 收口必更新 catalog 原则表 (P77-2-2 强化) |
+| P77-7-1 | **env-var-SSOT** | port→env_var 映射 SSOT 在 port-registry.yaml env_vars 段 |
+| P77-7-2 | **literal-fallback** | env var 读取必须有 literal fallback, 防空 env 时崩溃 |
+| P77-7-3 | **env-only-enforcement** | `env-only` 类型端口必须通过 env var 引用 |
+| P77-7-4 | **root-first-submodule-later** | 治理工具根仓先行, submodule 代码后续迁移 |
+| P77-7-5 | **cross-repo-env-contract** | 跨仓间 env var 命名必须一致 |
 | P76-7-1 | **llm-advisory-not-autonomous** | LLM 只 generate suggestion, 永不 auto-apply |
 | P76-7-2 | **tier-graceful-fallback** | LLM provider 3-tier — aetherforge → ollama → heuristic |
 | P76-7-3 | **cron-real-deployment** | "投产" 不止写 plist, 必须 launchctl load |
@@ -69,7 +74,8 @@
 | **P77 Phase 4** | **ADR-0167** | **5** | **跨仓 port-registry 一致性 (6 端口对齐)** |
 | **P77 Phase 5** | **ADR-0168** | **5** | **跨仓端口硬编码扫描 (4 端口补登 + hard)** |
 | **P77 Phase 6** | **ADR-0169** | **5** | **commit-assist E2E 验收 (19 测试 + heuristic bug 修)** |
-| **合计** | — | **45 (40 ADR-internal + 5 hook)** | — |
+| **P77 Phase 7** | **ADR-0170** | **5** | **端口 env var 重构 (25 env var 映射 + root repo 迁移)** |
+| **合计** | — | **50 (45 ADR-internal + 5 hook)** | — |
 
 > 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **30 原则** (4-5 per phase × 6 phases). 数字更准.
 
@@ -253,6 +259,33 @@
 **反例**: P77 Phase 2-5 没更新 INDEX.md → INDEX 停更在 ADR-0052
 **实践**: 本 phase 新增 P77 § 到 INDEX.md
 
+## 3.8. P77 Phase 7 (端口 env var 重构) — ADR-0170
+
+### P77-7-1: env-var-SSOT
+**含义**: port→env_var 映射 SSOT 在 port-registry.yaml env_vars 段, 不分散代码里
+**反例**: 各仓各自定义 AGORA_INTERNAL_PORT = 7430 → 跨仓不一致
+**实践**: protocols/port-registry.yaml env_vars: 段, 25 端口映射, 各仓引用
+
+### P77-7-2: literal-fallback
+**含义**: env var 读取必须有 literal fallback (= SSOT 端口值), 防空 env 时崩溃
+**反例**: `port = int(os.environ["LLM_GATEWAY_PORT"])` 无 fallback → env 未设置时 KeyError
+**实践**: `port = int(os.environ.get("LLM_GATEWAY_PORT", "9290"))`
+
+### P77-7-3: env-only-enforcement
+**含义**: `env-only` 类型端口必须通过 env var 引用, detector 检测字面量 → warning
+**反例**: 7422 是 env-only 但代码仍 `port=7422` → detector 未检测
+**实践**: types: 段标记 env-only, CR-ENV-VAR-PORT 规则守护
+
+### P77-7-4: root-first-submodule-later
+**含义**: 治理工具根仓先行 (SSOT/migration helper), submodule 代码后续逐步迁移
+**反例**: 想一次性全仓 refactor → 工程量巨大, 数月不动
+**实践**: Phase 7a root repo, 7b+ 逐个 submodule PR
+
+### P77-7-5: cross-repo-env-contract
+**含义**: 跨仓间 env var 命名必须一致
+**反例**: agora 用 AGORA_MCP_HTTP, omo 用 AGORA_HTTP_PORT → 运维混淆
+**实践**: protocols/port-registry.yaml SSOT 命名, 各仓引用
+
 ## 4. Phase 8 (真工程 follow-up 治本) — ADR-0162
 
 ### P76-8-1: submodule-PR-not-coupling
@@ -327,12 +360,12 @@
 
 ## 8. 现状快照 (Status Snapshot, 2026-07-07)
 
-- **catalog**: 9 ADR 来源 (Phase 6/7/8/9A + P77-1/2/3/4/5/6), 共 45 条 (1-5 per phase)
-- **GaC 规则**: 171 (前 169 + CR-COMMIT-ASSIST-E2E)
+- **catalog**: 10 ADR 来源 (Phase 6/7/8/9A + P77-1/2/3/4/5/6/7), 共 50 条 (1-5 per phase)
+- **GaC 规则**: 172 (前 171 + CR-ENV-VAR-PORT)
 - **planned tasks**: 0
 - **governance**: 100 A+ (复位)
-- **Phase 15 (this)**: P77 Phase 6 — commit-assist E2E 验收 (19 测试 + heuristic bug 修 + catalog 45 原则 + GaC 171)**
+- **Phase 16 (this)**: P77 Phase 7 — 端口 env var 重构 (25 env var 映射 + root repo 迁移 + catalog 50 原则 + GaC 172)**
 
 ---
 
-*最后更新: 2026-07-07 · 45 原则沉淀 · P77 Phase 6 收口 · ACTIVE*
+*最后更新: 2026-07-07 · 50 原则沉淀 · P77 Phase 7 收口 · ACTIVE*

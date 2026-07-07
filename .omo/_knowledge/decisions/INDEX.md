@@ -144,6 +144,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0166 | P77 Phase 3 跨仓 unregistered 治本 (threshold 0 + 26 unregistered 补登 + 升 hard) | ACCEPTED | 2026-07-07 | governance-team | 0166-p77-phase3-cross-repo-remediation.md |
 | 0167 | P77 Phase 4 跨仓 port-registry 一致性 (load bug 修 + yaml comment strip + 6 端口对齐) | ACCEPTED | 2026-07-07 | governance-team | 0167-p77-phase4-port-registry-consistency.md |
 | 0168 | P77 Phase 5 跨仓端口硬编码扫描 (5 port 补登 + 7 port-context pattern + 5 LEGACY_OK_PORTS) | ACCEPTED | 2026-07-07 | governance-team | 0168-p77-phase5-hardcoded-ports.md |
+| 0169 | P77 Phase 6 commit-assist E2E 验收 (19 测试 + heuristic bug 修) | ACCEPTED | 2026-07-07 | governance-team | 0169-p77-phase6-commit-assist-e2e.md |
+| 0170 | P77 Phase 7 端口 env var 重构 (25 env var 映射 + root repo 迁移) | ACCEPTED | 2026-07-07 | governance-team | 0170-p77-phase7-env-var-port-migration.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 
 ---
@@ -209,7 +211,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0162: P76 Phase 8 (真工程) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0162-p76-phase8-real-engineering.md
 - ADR-0163: P76 Phase 9A (commit-assist hook) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0163-p76-phase9a-commit-assist-hook.md
 
-### P77 — 跨仓一致性战略路线图 (ADR-0164..0169)
+### P77 — 跨仓一致性战略路线图 (ADR-0164..0170)
 
 - ADR-0164: P77 Phase 1 (跨仓一致 detector) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0164-p77-phase1-cross-repo-consistency.md
 - ADR-0165: P77 Phase 2 (演化护栏 catalog) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0165-p77-phase2-evolution-guardrails.md
@@ -217,6 +219,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0167: P77 Phase 4 (port-registry 一致性) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0167-p77-phase4-port-registry-consistency.md
 - ADR-0168: P77 Phase 5 (端口硬编码扫描) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0168-p77-phase5-hardcoded-ports.md
 - ADR-0169: P77 Phase 6 (commit-assist E2E) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0169-p77-phase6-commit-assist-e2e.md
+- ADR-0170: P77 Phase 7 (端口 env var 重构) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0170-p77-phase7-env-var-port-migration.md
 
 ---
 
@@ -237,4 +240,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-07 · Owner: governance-team · P77 Phase 6 收口 (commit-assist E2E); GaC rules 171; catalog 45 原则*
+*最近更新: 2026-07-07 · Owner: governance-team · P77 Phase 7 收口 (端口 env var 重构); GaC rules 172; catalog 50 原则*
