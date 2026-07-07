@@ -2280,6 +2280,97 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0164"
 
+    # ── X1/X2/X3/X4 演化护栏 (P77 Phase 2 / STRAT-P77 § 4 / ADR-0165) ──
+    - id: CR-PRINCIPLE-FOLLOWED
+      dimension: X1
+      layer: meta
+      name: "P76 沉淀原则 catalog 引用"
+      description: |
+        任意 phase 主交付的 ADR 必须含 § 2 沉淀原则段并引用 .omo/standards/p76-principles.md.
+        这是原则形式化硬门 — 防 ADR 缺失原则说明 (修真修真反模式).
+        实施: docs/SPEC # 6.
+      check_type: ssot_pointer
+      target: ".omo/standards/p76-principles.md"
+      source_ref: .omo/standards/p76-principles.md::§ 1-5
+      executor: [omo_audit, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0165"
+
+    - id: CR-EVIDENCE-DECLARED
+      dimension: X4
+      layer: meta
+      name: "ADR closeout 引用 ≥1 evidence path"
+      description: |
+        ADR closeout 必须有真 evidence path. 防 ophist 反模式 (修真修真原则 P76-7-4).
+        含 evidence_required 字段的 task close 必须引 evidence file path.
+      check_type: drift_audit
+      target: "omo task done --evidence-path"
+      source_ref: .omo/standards/p76-principles.md::P76-7-4
+      executor: [omo_audit, ci_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0165"
+
+    - id: CR-PR-CHECKLIST-COMPLETE
+      dimension: X1
+      layer: meta
+      name: "PR body 必含 WHY/WHAT"
+      description: |
+        gh pr create 的 --body 必 ≥1 行非空 + 含 '## Summary' 或 '## WHY' 段.
+        防 PR description 空推送 (修真修真反模式 修真修真).
+      check_type: drift_audit
+      target: "gh pr create --body"
+      executor: [ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0165"
+
+    - id: CR-CROSS-REPO-CHECK
+      dimension: X3
+      layer: meta
+      name: "跨仓 unregistered 阈值守门"
+      description: |
+        bin/check-cross-repo-consistency.py unregistered ≤ threshold (默认 20).
+        Phase 3 (W5-6) 治本降至 0, 同步升 hard enforcement.
+        注: 这是更晚粒度的守门 — 与 CR-CROSS-REPO-CONSISTENT (P77 Phase 1 detector) 协同.
+        CONSISTENT 是 detector 本身存在性, CHECK 是 detector output 的阈值.
+      check_type: consistency_drift
+      target: "bin/check-cross-repo-consistency.py"
+      source_ref: bin/check-cross-repo-consistency.py::main
+      executor: [radar_cron, ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 0.1.0
+      created_at: "2026-07-07"
+      adr: "ADR-0164"
+      relates_to:
+        - CR-CROSS-REPO-CONSISTENT
+        - .omo/_knowledge/decisions/0165-p77-phase2-evolution-guardrails.md
+
+    - id: CR-BASELINE-REPLAYED
+      dimension: X2
+      layer: meta
+      name: "阶段尾 governance score 重放"
+      description: |
+        阶段尾必须跑 omo governance --json 验证 score ≥ 起点 (99-100 baseline).
+        防治理回退 (修真修真原则 P77-2-4).
+      check_type: drift_audit
+      target: "omo governance"
+      source_ref: .omo/standards/p76-principles.md::P77-2-4
+      executor: [radar_cron, omo_audit, ci_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0165"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)

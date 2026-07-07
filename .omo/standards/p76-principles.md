@@ -1,0 +1,206 @@
+# omostation 演化护栏 (P76 + P77 沉淀 25 原则)
+
+> **For agents**: 这是 omostation 治理演化的"宪法" — 每一原则都从一次具体的 debt 类收敛而来。
+> 当你做出架构决策时, 先看这里. 当你治理一个 follow-up 时, 能从中找到对应原则。
+> **Source-of-truth**: STRAT-P76 / STRAT-P77 路线图 + ADR-0155..0165.
+> **Catalog location**: `.omo/standards/p76-principles.md` (Phase 11 落地, P77 STRAT § 2 Phase 2)
+
+## 0. 原则汇总表 (Summary Table, P77-2-2 catalog-SSOT 形式化)
+
+| code | name | 含义 |
+|------|------|------|
+| P76-6-1 | **envelope-durability** | 守门必须有持久化输出 |
+| P76-6-2 | **6h-by-9-deck** | 单人监控压缩到 6h 周期, 9 个 manual 节奏 |
+| P76-6-3 | **monitor-by-rule** | 自监控也用 GaC 规则写 |
+| P76-6-4 | **observability-first** | cockpit 面板 = 出口守门 = 用户感知 |
+| P76-6-5 | **vit-via-LLM-deferral** | LLM-assisted commit 推到 Phase 7+ |
+| P77-2-1 | **principle-formalization-with-context** | 原则形式化保留"上下文", 不变成死的 checkbox |
+| P77-2-2 | **catalog-SSOT** | 原则 catalog 是 SSOT, ADR § 2 是 mirror |
+| P77-2-3 | **rule-per-principle** | 每个原则对应一条 GaC rule (enforcement path) |
+| P77-2-4 | **anti-rollback-baseline** | 阶段尾必重放 baseline (governance ≥ 起点), 防回退 |
+| P77-2-5 | **multi-agent-coordination-via-ssot** | 跨 agent 协作走 catalog, 不靠"应该都知道" |
+| P76-7-1 | **llm-advisory-not-autonomous** | LLM 只 generate suggestion, 永不 auto-apply |
+| P76-7-2 | **tier-graceful-fallback** | LLM provider 3-tier — aetherforge → ollama → heuristic |
+| P76-7-3 | **cron-real-deployment** | "投产" 不止写 plist, 必须 launchctl load |
+| P76-7-4 | **evidence-honest-closure** | task close 必须有真 evidence |
+| P76-7-5 | **resolve-not-stub** | 物理未实现的 placeholder, 必须决议 |
+| P76-8-1 | **submodule-PR-not-coupling** | 跨仓 PR 独立提交, 不在主仓 commit submodule 内容 |
+| P76-8-2 | **l0-honest-read** | 不 mock L0 数据; 真读 .yaml |
+| P76-8-3 | **dead-path-tool-fallback** | 工具检查应该 first-level + projects/*/first-level 双路 fallback |
+| P76-8-4 | **incremental-commit-anti-clean** | 每 sub-task 完成立即 commit, 防 X-Plane clean worktree 丢失工作 |
+| P76-9A-1 | **git-native-trigger** | 不用 polling / daemon, 用 git 已有 hooks 机制 |
+| P76-9A-2 | **sidecar-not-injection** | suggestion 写侧车 `.commit-suggestion`, 不直接修改 commit msg |
+| P76-9A-3 | **fail-silent-not-fail-block** | hook 失败 → 不阻 commit |
+| P76-9A-4 | **heuristic-default** | 本地调 `--no-llm` 不依赖外部服务可用 |
+| P76-9A-5 | **respect-developer-intent** | `-m` / `-F` / amend / merge / squash 全部跳过 |
+| P77-1 | **consistency-by-tool** | 跨仓一致性靠自动 verifier 守护 |
+
+## 分类索引 (按 ADR 来源)
+
+| 阶段 | ADR | 原则数 | 主线 |
+|------|-----|------|------|
+| Phase 6 | ADR-0160 | 5 | foundry runtime |
+| Phase 7 | ADR-0161 | 5 | LLM + foundry cron 真集成 |
+| Phase 8 | ADR-0162 | 4 | 真工程 follow-up 治本 |
+| Phase 7.x | ADR-0163 | 5 | commit-assist hook |
+| P77 Phase 1 | ADR-0164 | 1 | 跨仓一致性 |
+| **P77 Phase 2** | **ADR-0165** | **5** | **演化护栏 catalog 自身** |
+| **合计** | — | **25 (20 ADR-internal + 5 hook)** | — |
+
+> 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **25 原则** (4-5 per phase × 5 phases). 数字更准.
+
+## 1. Phase 6 (Knowledge Foundry runtime) — ADR-0160
+
+### P76-6-1: envelope-durability
+**含义**: 守门必须有持久化输出, 无 envelope = 不收门
+**反例**: 写个"自监控"但只 print 到 stdout (发现漏执行, 但状态机下次启动没记忆)
+**含义代码**: foundry run ledger 必须写到 `runtime/omo/_delivery/foundry/<id>.yaml` 而不是只在 stdout
+
+### P76-6-2: 6h-by-9-deck
+**含义**: 单人监控压缩到 6h 周期, 等价于 9 个 manual 节奏
+**设计**: Knowledge Foundry 9-deck (omo-sync/compliance/p74-silent/mof-drift/m4-health/bootloader/debt-closed/submodule-bump/brief-gen) 在单次 cron 触发内全部跑完
+
+### P76-6-3: monitor-by-rule
+**含义**: 自监控也用 GaC 规则写, 不靠临时输出
+**实施**: `CR-FOUNDRY-MONITOR` 规则 (governance-checks.yaml), 不是 foundry 自身的 doc
+
+### P76-6-4: observability-first
+**含义**: cockpit 面板 = 出口守门 = 用户感知
+**实施**: `docs/operations/knowledge-foundry-monitor.md`, 不是每用户独立查 9 个 stdout
+
+### P76-6-5: vit-via-LLM-deferral
+**含义**: LLM-assisted commit 推到 Phase 7+, 不在本期 (避免 LLM 调度状态机)
+**注**: Phase 6 显式不引入 LLM; 默认走 heuristic (l0_consumer 模式)
+
+## 2. P77 Phase 2 (演化护栏 catalog 自身) — ADR-0165
+
+### P77-2-1: principle-formalization-with-context
+**含义**: 原则形式化保留"上下文", 不变成死的 checkbox
+**反例**: 把 40 原则简化成 "P76-X-Y 满足/未满足" 二元表 → 失掉"为什么"和"反例"
+**实践**: catalog 每条原则有 code + name + 含义 + 反例 + 实践, 不只是 ✓/✗
+
+### P77-2-2: catalog-SSOT
+**含义**: 原则 catalog 是 SSOT, ADR § 2 是 mirror — 防 source split
+**反例**: 原则散落 5 个 ADR 各自不同版本
+**实践**: 本 catalog 是真源, ADR § 2 引 "see .omo/standards/p76-principles.md § x"
+
+### P77-2-3: rule-per-principle
+**含义**: 每个原则对应一条 GaC rule (enforcement path)
+**反例**: 原则只在 docstring, 无 check
+**实践**: 5 新 GaC rules (PRINCIPLE-FOLLOWED / EVIDENCE-DECLARED / PR-CHECKLIST-COMPLETE / CROSS-REPO-CHECK / BASELINE-REPLAYED) 守护 5 治理护栏原则
+
+### P77-2-4: anti-rollback-baseline
+**含义**: 阶段尾必重放 baseline (governance ≥ 起点), 防回退
+**反例**: phase 收口但 doc 漂回旧值
+**实践**: `CR-BASELINE-REPLAYED` 规则, 每次 phase 收尾跑 governance score 验证
+
+### P77-2-5: multi-agent-coordination-via-ssot
+**含义**: 跨 agent 协作走 catalog (single source), 不靠"应该都知道"
+**反例**: agent 2 假设 agent 1 已读某 ADR, 结果没读
+**实践**: catalog 是必读 frontmatter, AGENTS.md 引用 catalog 路径
+
+## 3. Phase 7 (LLM + foundry cron 真集成) — ADR-0161
+
+### P76-7-1: llm-advisory-not-autonomous
+**含义**: LLM 只 generate suggestion, 永不 auto-apply
+**硬门**: 即使 LLM 100% confidence 也不能 git commit. developer 必须 `git commit -F .commit-suggestion` 显式接受
+
+### P76-7-2: tier-graceful-fallback
+**含义**: LLM provider 3-tier — aetherforge → ollama → heuristic
+**实用**: 网慢 / 网不可达 / 网关宕 → fallback 第二层 → fallback 第三层 (永远不阻塞)
+
+### P76-7-3: cron-real-deployment
+**含义**: "投产" 不止写 plist, 必须 launchctl load + 验证 launchd 触发
+**反例**: 写了 plist 但没 `launchctl load` → 实际没跑
+
+### P76-7-4: evidence-honest-closure
+**含义**: task close 必须有真 evidence; "drift detector 0" 仍需 radar_cron 输出
+**反例**: 直接 `omo task done ID` 不带 evidence → 假装关闭 (ophist 反模式)
+
+### P76-7-5: resolve-not-stub
+**含义**: 物理未实现的 placeholder, 必须决议 (要么实现要么标 status), 不留隐含承诺
+**应用**: `mesh-router` 不再在 doc 标 "需要 git submodule init", 而是 doc 标 `status: implemented-in-bin`
+
+## 4. Phase 8 (真工程 follow-up 治本) — ADR-0162
+
+### P76-8-1: submodule-PR-not-coupling
+**含义**: 跨仓 PR 独立提交 — 不在主仓 root commit submodule 内容
+**实践**: aetherforge 仓 PR 跟主仓 PR 各自走自己的 repo. `git submodule update --init` 即可跟进
+
+### P76-8-2: l0-honest-read
+**含义**: 不 mock L0 数据; 真读 .yaml, 接受路径硬编码脆弱性
+**反例**: aetherforge l0_consumer.py 真读 M1 *.yaml; 没用 fake dict 假装消费 8 个 namespace
+
+### P76-8-3: dead-path-tool-fallback
+**含义**: 跨仓路径不在根, 工具检查应该 first-level + projects/*/first-level 双路 fallback
+**实施**: `bin/check-dead-path-refs.py` 接受 `.omo/{path}` OR `projects/ecos/.omo/{path}`
+
+### P76-8-4: incremental-commit-anti-clean
+**含义**: 每 sub-task 完成立即 commit, 防 X-Plane 反复 clean worktree 丢失工作
+**应用**: P77 阶段我学到 — X-Plane 每 5-10 分钟 clean 一次 inactive worktree, 没 commit 的 WIP 全部消失
+
+## 5. Phase 9A (commit-assist pre-commit-msg hook) — ADR-0163
+
+### P76-9A-1: git-native-trigger
+**含义**: 不用 polling / daemon, 用 git 已有 hooks 机制
+**实施**: `prepare-commit-msg-commit-assist` 自动 trigger on `git commit`
+
+### P76-9A-2: sidecar-not-injection
+**含义**: suggestion 写侧车 `.commit-suggestion`, 不直接修改 commit msg (P76-7-1 advisory)
+**反例**: 把 LLM output 直接 cat >> commit msg → 违反 advisory 硬门
+
+### P76-9A-3: fail-silent-not-fail-block
+**含义**: hook 失败 → 不阻 commit (P76-7-3 implicit)
+**实施**: `exit 0` 永远, 即使 LLM 不可达 / 网慢
+
+### P76-9A-4: heuristic-default
+**含义**: 本地调 `--no-llm` 不依赖外部服务可用
+**实施**: heuristic tier P76-7-2, 写 commit-assist 优先调 heuristic (offline-first)
+
+### P76-9A-5: respect-developer-intent
+**含义**: `-m` / `-F` / amend / merge / squash 全部跳过 (developer 显式意图)
+**触发条件**: 仅 `git commit` (无 source arg) 才触发 hook
+
+## 6. P77 Phase 1 (跨仓一致性) — ADR-0164
+
+### P77-1: consistency-by-tool
+**含义**: 跨仓一致性靠自动 verifier 守护, 不靠 review memory
+**实施**: `bin/check-cross-repo-consistency.py` + `CR-CROSS-REPO-CONSISTENT` GaC 规则
+
+## 7. 沉淀原则 — 治理护栏 (新增 5 个 GaC rules 计划)
+
+| 新 GaC rule | 守护哪个原则 |
+|-------------|--------------|
+| `CR-PRINCIPLE-FOLLOWED` (X1) | 任意 phase 主交付前, ADR § 2 沉淀原则 列全 (P77-2-1) |
+| `CR-EVIDENCE-DECLARED` (X4) | ADR closeout 引用 ≥1 evidence path (P76-7-4) |
+| `CR-PR-CHECKLIST-COMPLETE` (X1) | 每个 PR 的 `--title` 不空 + body 含 why/what/next |
+| `CR-CROSS-REPO-CHECK` (X3) | 5+ unregistered BOS URI 不允许 (P77-1, relates_to CR-CROSS-REPO-CONSISTENT) |
+| `CR-BASELINE-REPLAYED` (X2) | 每次阶段尾 governance score 必 ≥ 起点 (P77-2-4 anti-rollback-baseline) |
+
+> 治本路径: Phase 2 (W3-4) 实施这 5 个 GaC 规则. Phase 3 (W5-6) 升级 `CR-CROSS-REPO-CHECK` 为 hard.
+
+## 7. 演进指南 (Evolution Guide)
+
+新原则如何加入:
+1. 在某个 phase 收口的 ADR 里, § 2 列原则 (≥3 原则)
+2. 在本文档 (catalog) 加对应 §x 段
+3. 在 INDEX.md 标 §2 段 (ADR 的 doc link)
+4. 引入 GaC rule 守护 (如有 enforcement 路径, P77-2-3 rule-per-principle)
+
+新 phase 命名规则:
+- `P<major>-<digit>-<digit>` 顺序
+- `P77-2-3` = P77 路线图 Phase 2 第 3 原则 (已用, see § 2)
+- `P77-3-1` = P77 路线图 Phase 3 第 1 原则 (TBD)
+- `P77-4-N` = P77 路线图 Phase 4 (TBD)
+
+## 8. 现状快照 (Status Snapshot, 2026-07-07)
+
+- **catalog**: 6 ADR 来源 (Phase 6/7/8/9A + P77-1/2), 共 25 条 (4-5 per phase), 全列于 §1-6
+- **GaC 规则**: 169 (前 164 + 5 新: PRINCIPLE-FOLLOWED / EVIDENCE-DECLARED / PR-CHECKLIST-COMPLETE / CROSS-REPO-CHECK / BASELINE-REPLAYED)
+- **planned tasks**: 0
+- **governance**: 100 A+ (复位)
+- **Phase 11 (this)**: catalog 落地, 25 原则沉淀, 5 新 GaC rules 落地
+
+---
+
+*最后更新: 2026-07-07 · 25 原则沉淀 · 由 P76 / P77 Phase 11 治本 + 演化护栏准备 · ACTIVE*
