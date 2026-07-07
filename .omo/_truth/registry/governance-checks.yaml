@@ -2168,6 +2168,22 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0156"
 
+    # ── X3 value-stack: debt-closed-per-feature 指标 (P76 Phase 3 / ADR-0157) ──
+    - id: CR-META-METRIC-DEBT-FEATURE
+      dimension: X3
+      layer: meta
+      name: "debt-closed-per-feature 指标"
+      description: "每交付 1 feature 必须关闭 ≥ 0.5 debt (issued). 治理 score 才能真与开发节奏挂钩. 公式: resolved_count_30d / feat_count_30d. threshold=0.5."
+      check_type: drift_audit
+      target: "bin/debt-closed-per-feature.py"
+      source_ref: bin/debt-closed-per-feature.py::main
+      executor: [radar_cron, omo_audit]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0157"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
