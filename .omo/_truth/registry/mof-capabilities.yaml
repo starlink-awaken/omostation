@@ -263,34 +263,37 @@ model_stats:
 # ═══════════════════════════════════════════════════════════
 omo_tools:
   omo-manage:
-    path: bin/omo-manage
+    path: projects/omo/src/omo/omo_manage.py
+    cli: "omo manage"
     description: OMO 目录管理工具
     commands: [status, health, tasks]
-    usage: "bin/omo-manage status"
+    usage: "uv run python -m omo.cli manage status"
 
 # ═══════════════════════════════════════════════════════════
 # P74 / ADR-0130 治理工具 — 常态化工作流沉默检测
 # ═══════════════════════════════════════════════════════════
 p74_tools:
   omo-state-projection-guard:
-    path: bin/omo-state-projection-guard.py
+    path: projects/omo/src/omo/omo_lint_projection.py
+    cli: "omo lint projection-guard"
     description: >
       P74 §2 鸿沟回收: 治 P71 类 A 复发. 验证 runtime-projections.yaml
       声明的 canonical 路径存在 + parse OK, pending projection 只允许
       info 级别 finding. 实现 CR-P74-STATE-PROJECTION-GUARD (X4 一致性).
     commands: [--json]
-    usage: "uv run --with pyyaml python bin/omo-state-projection-guard.py"
+    usage: "uv run python -m omo.cli lint projection-guard"
     adr: ADR-0130
     m3_parent: GovernanceElement.GacRule
 
   omo-runtime-stamp-policy:
-    path: bin/omo-runtime-stamp-policy.py
+    path: projects/omo/src/omo/omo_lint_stamp.py
+    cli: "omo lint stamp-policy"
     description: >
       P74 §2: 治 runtime 孤儿文件累积. runtime/ 下文件必须 gitignored 或
       tracked 或在 ALLOW_PATHS 列表. 完整 gitignore ** 语义实现.
       实现 CR-P74-RUNTIME-STAMP-POLICY (X1 审计链).
     commands: [--json]
-    usage: "uv run --with pyyaml python bin/omo-runtime-stamp-policy.py"
+    usage: "uv run python -m omo.cli lint stamp-policy"
     adr: ADR-0130
     m3_parent: GovernanceElement.GacRule
 

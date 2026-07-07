@@ -466,12 +466,12 @@ gac:
       dimension: X4
       layer: meta
       name: "Runtime projection path consistency guard (P74, ADR-0130)"
-      description: "P74 §2 鸿沟回收: 治 P71 类 A 复发. 验证 runtime-projections.yaml 声明的 canonical 路径存在且 parse OK, pending projection 只允许 info 级别 finding. 实现: bin/omo-state-projection-guard.py (ci_gate)"
+      description: "P74 §2 鸿沟回收: 治 P71 类 A 复发. 验证 runtime-projections.yaml 声明的 canonical 路径存在且 parse OK, pending projection 只允许 info 级别 finding. 实现: omo lint projection-guard (ci_gate)"
       check_type: registry_integrity
-      target: ".omo/_truth/registry/runtime-projections.yaml + .omo/state/runtime/** + bin/omo-state-projection-guard.py"
+      target: ".omo/_truth/registry/runtime-projections.yaml + .omo/state/runtime/** + projects/omo/src/omo/omo_lint_projection.py"
       executor: [ci_gate]
       lifecycle: active
-      version: "1.0.0"
+      version: "1.1.0"
       created_at: "2026-07-03"
       adr: "ADR-0130"
 
@@ -480,12 +480,12 @@ gac:
       dimension: X1
       layer: meta
       name: "Runtime stamp policy guard (P74, ADR-0130)"
-      description: "P74 §2: 治 runtime 孤儿文件累积. runtime/ 下文件必须 gitignored 或 tracked 或在 ALLOW_PATHS 列表. 实现: bin/omo-runtime-stamp-policy.py (ci_gate)"
+      description: "P74 §2: 治 runtime 孤儿文件累积. runtime/ 下文件必须 gitignored 或 tracked 或在 ALLOW_PATHS 列表. 实现: omo lint stamp-policy (ci_gate)"
       check_type: drift_audit
-      target: "runtime/** + .gitignore + .omo/_truth/registry/runtime-projections.yaml + bin/omo-runtime-stamp-policy.py"
+      target: "runtime/** + .gitignore + .omo/_truth/registry/runtime-projections.yaml + projects/omo/src/omo/omo_lint_stamp.py"
       executor: [ci_gate, radar_cron]
       lifecycle: active
-      version: "1.0.0"
+      version: "1.1.0"
       created_at: "2026-07-03"
       adr: "ADR-0130"
 

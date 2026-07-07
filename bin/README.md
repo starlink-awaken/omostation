@@ -116,9 +116,11 @@ last-reviewed: 2026-06-29
 | `doc-ssot-lint.py` | 文档 SSOT 门禁 (CI) | gac-local-gate/CI |
 
 ### 12. 杂项单例 (13) — 待归域或留根
-`omo-health.py` / `cockpit-readiness.py` / `verify-spaces.py` / `venv-yaml-check.py` /
+`cockpit-readiness.py` / `verify-spaces.py` / `venv-yaml-check.py` /
 `ts-file-analyze.py` / `register-mcp.py` / `graphify-local-extract.py` / `fix-debts.py` /
 `classify_planned.py` / `p0-event-listener.py` / `management-{categorize,cross-ref-check,migrate}.py`
+
+> **已迁移** (2026-07-07): `omo-health.py` → `omo health dashboard`, `omo-manage` → `omo manage`, `omo-validate` → `omo validate`
 
 ### 13. P74 Solidification (3, ADR-0130) — workflow 沉默治理
 常态化机制: 检测 + 拦截 + 治理信号. 治 P71 三类声明/执行鸿沟复发.
@@ -129,6 +131,9 @@ last-reviewed: 2026-06-29
 | `omo-runtime-stamp-policy.py` | runtime 孤儿文件治理 (P71 类 B) | CR-P74-RUNTIME-STAMP-POLICY (X1) |
 | `agent-workflow.py suggest` (sub) | advisory 路由建议 (P74 §3) | CR-P74-WORKFLOW-SUGGEST (X3) |
 | `agent-workflow.py compliance` `p74_solidification` (sub) | workflow 沉默检测 (P71 类 C) | CR-P74-WORKFLOW-SILENCE (X1) |
+
+> **已迁移** (2026-07-07): `omo-state-projection-guard.py` → `omo lint projection-guard`, `omo-runtime-stamp-policy.py` → `omo lint stamp-policy`
+> 原脚本保留作为 backward-compat wrapper, 新功能请使用 omo CLI.
 
 ---
 
