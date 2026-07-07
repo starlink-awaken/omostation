@@ -19,6 +19,9 @@ This directory collects project-level documentation for **runtime**.
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — Contribution guide
 - [`../SECURITY.md`](../SECURITY.md) — Security policy
 - [`../LICENSE`](../LICENSE) — MIT License
+- [`../README.zh.md`](../README.zh.md) — 简体中文项目介绍
+- [`../GOVERNANCE.md`](../GOVERNANCE.md) — 项目治理
+- [`../SUPPORT.md`](../SUPPORT.md) — 支持与帮助
 - [`../CONTRIBUTORS.md`](../CONTRIBUTORS.md) — Contributors and maintainers
 
 ## Workspace Context
