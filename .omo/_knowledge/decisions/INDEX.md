@@ -133,6 +133,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0155 | P76 Phase 1 收口 (积压清理) | ACCEPTED | 2026-07-07 | governance-team | 0155-p76-phase1-cleanup.md |
 | 0156 | P76 Phase 2 分层调用方向契约硬化 | ACCEPTED | 2026-07-07 | governance-team | 0156-p76-phase2-call-direction.md |
 | 0157 | P76 Phase 3 元治全自 + debt-closed-per-feature | ACCEPTED | 2026-07-07 | governance-team | 0157-p76-phase3-self-meta.md |
+| 0158 | P76 Phase 4 X 扩展晋升 + submodule 对称 | ACCEPTED | 2026-07-07 | governance-team | 0158-p76-phase4-promotion.md |
 
 ---
 

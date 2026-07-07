@@ -2184,6 +2184,43 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0157"
 
+    # ── X1 审计: 主仓-子仓对称修复 (P76 Phase 4 / ADR-0158) ──
+    - id: CR-SUBMODULE-BUMP-AUTO
+      dimension: X1
+      layer: meta
+      name: "Submodule pointer 落后检测 (主仓-子仓对称修复)"
+      description: |
+        当主仓主分支 .gitmodules 路径下 submodule 实际 HEAD ≠ 主仓 pin SHA,
+        radar_cron 报 [advisory]; 24h 未修正 升 [hard]. 治 P76 矛盾 3.
+        实施: bin/submodule-bump-check.py.
+      check_type: drift_audit
+      target: "bin/submodule-bump-check.py"
+      source_ref: bin/submodule-bump-check.py::main
+      executor: [radar_cron, ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0158"
+
+    # ── X3 value-stack: X 扩展晋升守门 (P76 Phase 4 / ADR-0158) ──
+    - id: CR-X-PROMOTION-LIFECYCLE
+      dimension: X3
+      layer: X
+      name: "X 扩展晋升 4 阶段守门"
+      description: |
+        X 扩展必经 4 阶段 (idea / 0.1.x / 1.0.x / 2.0.x). 跳级 = 治本变更.
+        Stage 0: docs/<pitch>.md; Stage 1: kind=experiment; Stage 2: kind=stable + .gitmodules; Stage 3: layer != X + ADR 引用.
+        治 P76 矛盾 5 (kind 缺失) + 提供 X 扩展唯一出口.
+      check_type: drift_audit
+      target: "docs/project-registry.yaml (X 段) + projects/<x-name>/.promotion-state"
+      executor: [omo_audit, radar_cron]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0158"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
