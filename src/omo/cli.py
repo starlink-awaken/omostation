@@ -292,6 +292,18 @@ def main(argv: list[str] | None = None) -> int:
 
         return cmd_inspect(json_output=parsed.json)
 
+    if args and args[0] == "docs":
+        import argparse
+
+        parser = argparse.ArgumentParser(
+            prog="omo docs", description="CLI 文档自动生成"
+        )
+        parser.add_argument("--output", "-o", type=str, help="输出文件路径")
+        parsed = parser.parse_args(args[1:])
+        from omo.omo_docs import cmd_docs
+
+        return cmd_docs(output=parsed.output)
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
