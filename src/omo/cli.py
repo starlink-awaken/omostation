@@ -262,6 +262,9 @@ def main(argv: list[str] | None = None) -> int:
 
         return validate_main(args[1:])
 
+    if args and args[0] == "audit":
+        return _cmd_audit(args[1:])
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
@@ -292,6 +295,73 @@ def _refresh_dashboard_safely(trigger: str = "") -> None:
         refresh_outputs(omo_dir, now)
     except Exception as e:  # noqa: BLE001 — dashboard refresh 失败不阻塞 task 命令, 但记 stderr 日志方便 debug
         print(f"⚠️  [dashboard refresh skipped via {trigger}]: {e}", file=sys.stderr)
+
+
+def _cmd_audit(args: list[str]) -> int:
+    """omo audit <subcommand> — X 审计工具集.
+
+    Subcommands:
+        cards      — CARDS X3 value metrics (SQLite 聚合)
+        vault      — Vault X1 audit (Markdown content hash + author tracking)
+        freshness  — X2 freshness audit (3 条 P43 巡检规则)
+    """
+    if not args:
+        print("Usage: omo audit <cards|vault|freshness>")
+        return 1
+
+    sub = args[0]
+    rest = args[1:]
+
+    if sub == "cards":
+        import argparse
+
+        parser = argparse.ArgumentParser(prog="omo audit cards")
+        parser.add_argument("--db", type=str, help="explicit db path")
+        parser.add_argument("--json", action="store_true", help="JSON output")
+        parser.add_argument("--output", type=str, help="write to file")
+        parsed = parser.parse_args(rest)
+        from omo.omo_audit_cards import cmd_cards
+
+        return cmd_cards(
+            db_path=parsed.db, json_output=parsed.json, output=parsed.output
+        )
+
+    if sub == "vault":
+        import argparse
+
+        parser = argparse.ArgumentParser(prog="omo audit vault")
+        parser.add_argument("--days", type=int, default=90, help="staleness threshold")
+        parser.add_argument("--root", type=str, help="root to scan")
+        parser.add_argument("--json", action="store_true", help="JSON output")
+        parser.add_argument("--output", type=str, help="write to file")
+        parsed = parser.parse_args(rest)
+        from omo.omo_audit_vault import cmd_vault
+
+        return cmd_vault(
+            days=parsed.days,
+            root=parsed.root,
+            json_output=parsed.json,
+            output=parsed.output,
+        )
+
+    if sub == "freshness":
+        import argparse
+
+        parser = argparse.ArgumentParser(prog="omo audit freshness")
+        parser.add_argument(
+            "--dry-run", action="store_true", help="don't write audit log"
+        )
+        parser.add_argument("--only", type=str, help="only run specified rule")
+        parser.add_argument("--json", action="store_true", help="JSON output")
+        parsed = parser.parse_args(rest)
+        from omo.omo_audit_freshness import cmd_freshness
+
+        return cmd_freshness(
+            dry_run=parsed.dry_run, only=parsed.only, json_output=parsed.json
+        )
+
+    print(f"Unknown audit subcommand: {sub}")
+    return 1
 
 
 def _cmd_healing(args: list[str]) -> int:
