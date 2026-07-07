@@ -1,14 +1,15 @@
 # Cockpit Documentation
 
-> 统一人类 CLI/Web 入口与 HITL 操作面
-> Unified human CLI/Web entry and HITL operation surface.
+> L3 · 统一 CLI/Web 入口
+> Stack: Python
 
-This directory is the documentation home for **Cockpit**. Detailed design documents live in the project root; use the index below to navigate.
+This directory collects project-level documentation for **Cockpit**.
 
 ## Document Map
 
 - [`../README.md`](../README.md) — Project overview and quick start
-- [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — Architecture and design
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — Architecture overview
+- [`API.md`](API.md) — API / command-line / usage reference
 - [`../BOUNDARY.md`](../BOUNDARY.md) — Boundaries and interfaces
 - [`../CALLCHAIN.md`](../CALLCHAIN.md) — Call chains and interaction flows
 - [`../CAPABILITY-MAP.md`](../CAPABILITY-MAP.md) — Capability map
@@ -17,6 +18,7 @@ This directory is the documentation home for **Cockpit**. Detailed design docume
 - [`../CHANGELOG.md`](../CHANGELOG.md) — Change log
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — Contribution guide
 - [`../SECURITY.md`](../SECURITY.md) — Security policy
+- [`../LICENSE`](../LICENSE) — MIT License
 
 ## Workspace Context
 

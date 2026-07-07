@@ -1,5 +1,11 @@
 # Cockpit
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Contributing](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Security](https://img.shields.io/badge/security-policy-blue.svg)](SECURITY.md)
+[![Python](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
+[![uv](https://img.shields.io/badge/uv-package%20manager-purple.svg)](https://docs.astral.sh/uv/)
+
     > L3 · 统一人类 CLI/Web 入口与 HITL 操作面
     > Metadata SSOT: [`../../docs/project-registry.yaml`](../../docs/project-registry.yaml)
 
