@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-07T03:28:16.440164Z` | **SSOT Source**: `.omo/state/system.yaml` | **ISC-1 复合分**: `94/100`
+> **Generated**: `2026-07-07T09:40:15.927482Z` | **SSOT Source**: `.omo/state/system.yaml` | **ISC-1 复合分**: `90/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 
@@ -15,7 +15,7 @@
 | **知识复用** | KOS 索引篇: `0` | 正常 | `kos/` 篇目 |
 
 <details>
-<summary>⚙️ <b>治理健康分详情 (复合 94/100, 已自动收纳)</b></summary>
+<summary>⚙️ <b>治理健康分详情 (复合 90/100, 已自动收纳)</b></summary>
 
 - **GAC 异常扣分**: `100/100` (无 anomalies)
 - **常驻 daemon 在线率**: `80.00%`
