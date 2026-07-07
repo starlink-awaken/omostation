@@ -1,32 +1,39 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
 # DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
-id: GAC-RULE-CR-P74-STATE-PROJECTION-GUARD
+id: GAC-RULE-CR-FOUNDRY-MONITOR
 type: GacRule
-name: Runtime projection path consistency guard (P74, ADR-0130)
-description: 'P74 §2 鸿沟回收: 治 P71 类 A 复发. 验证 runtime-projections.yaml 声明的 canonical
-  路径存在且 parse OK, pending projection 只允许 info 级别 finding. 实现: omo lint projection-guard
-  (ci_gate)'
+name: Knowledge Foundry cron 监控
+description: 'Knowledge Foundry 9-cron deck 每 6h 跑一次, run ledger 持久化 (runtime/omo/_delivery/foundry/).
+
+  threshold: 9 deck 中 ≥ 7/9 (80%) ok. 跨 deck fail 必须写 FAIL-<run-id>.yaml.
+
+  实施: bin/knowledge-foundry-cron.py
+
+  '
 status: active
 domain: meta
 layer: meta
-created: '2026-07-03'
-version: 1.1.0
+created: '2026-07-07'
+version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
-  id: CR-P74-STATE-PROJECTION-GUARD
-  dimension: X4
+  id: CR-FOUNDRY-MONITOR
+  dimension: X1
   layer: meta
-  check_type: registry_integrity
+  check_type: drift_audit
   executor:
-  - ci_gate
+  - radar_cron
+  - omo_audit
+  - gac_local_gate
   lifecycle: active
-  version: 1.1.0
-  created_at: '2026-07-03'
-  target: .omo/_truth/registry/runtime-projections.yaml + .omo/state/runtime/** +
-    projects/omo/src/omo/omo_lint_projection.py
-  adr: ADR-0130
+  version: 1.0.0
+  created_at: '2026-07-07'
+  target: bin/knowledge-foundry-cron.py
+  adr: ADR-0160
   source_type: native
+  source_ref: bin/knowledge-foundry-cron.py::main
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
@@ -35,5 +42,5 @@ model_driven_refs:
   derived_by: bin/gac-m1-sync.py
 state_history:
 - state: active
-  timestamp: '2026-07-03T00:00:00Z'
+  timestamp: '2026-07-07T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生
