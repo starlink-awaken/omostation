@@ -2260,6 +2260,26 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0161"
 
+    # ── X3 value-stack: 跨仓一致性 detector (P77 Phase 1 / STRAT-P77 / ADR-0164) ──
+    - id: CR-CROSS-REPO-CONSISTENT
+      dimension: X3
+      layer: meta
+      name: "跨仓 BOS URI / port-registry 一致性 (advisory)"
+      description: |
+        对比 projects/agora/etc/bos-services.yaml (BOS URI SSOT) 与 projects/*/src/ 中
+        bos:// 引用. unregistered (referenced but not in SSOT) 应 ≤ threshold (默认 20,
+        Phase 3 治本逐步降至 0). 同步检查 ecos port-registry 与各仓 port 声明.
+        实施: bin/check-cross-repo-consistency.py
+      check_type: consistency_drift
+      target: "bin/check-cross-repo-consistency.py"
+      source_ref: bin/check-cross-repo-consistency.py::main
+      executor: [radar_cron, omo_audit, ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 0.1.0
+      created_at: "2026-07-07"
+      adr: "ADR-0164"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
