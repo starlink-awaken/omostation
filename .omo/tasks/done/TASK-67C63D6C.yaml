@@ -1,7 +1,7 @@
 id: TASK-67C63D6C
 title: 'AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾)'
 description: 'AUDIT: QuotaEngine 已加载但数据未完全利用 (376行21class, 半实现). Phase 1 收尾.'
-status: candidate
+status: done
 task_type: feature
 risk_level: L2
 depends_on: []
@@ -14,7 +14,7 @@ context_uri: bos://governance/tasks/planned/TASK-67C63D6C
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: "auto_promote_eligible:ISC-32-ADR (risk L2, depends_on=[], human_approval_required=false)"
+approval_ref: auto_promote_eligible:ISC-32-ADR (risk L2, depends_on=[], human_approval_required=false)
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
@@ -40,3 +40,14 @@ metadata:
   created_at: '2026-06-26T06:44:33Z'
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: aetherforge-quota-engine
+  evidence_paths_refreshed_at: '2026-07-07T07:13:08Z'
+  evidence_paths_refreshed_by: projects/omo
+  evidence_paths_refresh_source_ref: Phase 8 closed (第二次, 因 omo submodule 状态回滚到 Phase
+    7 前). Phase 8.1/8.2/8.3 实际产物在 projects/aetherforge + projects/c2g 跨仓 PR.
+  completed_at: '2026-07-07T07:13:09Z'
+  completed_via: omo task done
+  completion_actor: projects/omo
+  completion_source_ref: omo:task:done:TASK-67C63D6C
+evidence_paths:
+- projects/aetherforge/src/aetherforge/l0_consumer.py
+completed_at: '2026-07-07T07:13:09Z'
