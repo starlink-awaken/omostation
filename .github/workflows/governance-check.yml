@@ -50,6 +50,9 @@ jobs:
         uses: astral-sh/setup-uv@v4
       - name: Run governance checks
         run: |
+          # P77 debug: set -x 打印每个 check 命令 + 退出码, 定位 interface-check silent fail
+          # (本地 check-*.py 全 pass, CI 某 check 静默 return 1; set -x 让 CI log 可见每个 check 执行)
+          set -x
           FAILED=0
           # Run each check independently — don't let one failure skip the rest
           python3 scripts/check-interfaces.py || FAILED=1
