@@ -349,6 +349,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="SSOT 漂移守门员")
     parser.add_argument("--auto-fix", action="store_true", help="自动修复白名单字段")
     parser.add_argument("--emit", action="store_true", help="无论是否漂移都发事件")
+    parser.add_argument(
+        "--warn-only",
+        action="store_true",
+        help="drift 只 warn 不 fail (用于 CI 不阻塞已知预存 drift, 如 task_count/main 预存债)",
+    )
     args = parser.parse_args(argv)
 
     if not SYSTEM_YAML.exists():
@@ -508,6 +513,12 @@ def main(argv: list[str] | None = None) -> int:
             },
         )
 
+    if unresolved and args.warn_only:
+        print(
+            f"⚠️ --warn-only: {len(unresolved)} 项 drift 不阻塞 "
+            f"(main 预存债 / 动态 drift, 见 memory decl-exec-gap-meta-pattern)"
+        )
+        return 0
     return 1 if unresolved else 0
 
 

@@ -36,7 +36,7 @@ def find_top_finding() -> dict | None:
     if result.returncode != 0 or not result.stdout:
         return None
     # 简化解析, 不依赖 json
-    last_lines = [l for l in result.stdout.splitlines() if "总分" in l or "total_score" in l]
+    last_lines = [line for line in result.stdout.splitlines() if "总分" in line or "total_score" in line]
     if not last_lines:
         return None
     score_line = last_lines[-1]
