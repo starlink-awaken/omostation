@@ -304,6 +304,32 @@ def main(argv: list[str] | None = None) -> int:
 
         return cmd_docs(output=parsed.output)
 
+    if args and args[0] == "report":
+        import argparse
+
+        parser = argparse.ArgumentParser(prog="omo report", description="综合报告生成")
+        parser.add_argument("--output", "-o", type=str, help="输出文件路径")
+        parser.add_argument("--json", action="store_true", help="JSON 输出")
+        parsed = parser.parse_args(args[1:])
+        from omo.omo_report import cmd_report
+
+        return cmd_report(output=parsed.output, json_output=parsed.json)
+
+    if args and args[0] == "watch":
+        import argparse
+
+        parser = argparse.ArgumentParser(prog="omo watch", description="实时监控模式")
+        parser.add_argument(
+            "--interval", "-i", type=int, default=60, help="检查间隔 (秒)"
+        )
+        parser.add_argument(
+            "--count", "-n", type=int, default=None, help="最大检查次数"
+        )
+        parsed = parser.parse_args(args[1:])
+        from omo.omo_watch import cmd_watch
+
+        return cmd_watch(interval=parsed.interval, max_iterations=parsed.count)
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
