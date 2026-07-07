@@ -1,6 +1,4 @@
-# OMO
-
-🌐 [简体中文](README.zh.md)
+# Omo
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Contributing](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -8,14 +6,11 @@
 [![Python](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
 [![uv](https://img.shields.io/badge/uv-package%20manager-purple.svg)](https://docs.astral.sh/uv/)
 
-    > L2 · 治理内核：Phase/Task/Debt/Audit 生命周期
-    > Metadata SSOT: [`../../docs/project-registry.yaml`](../../docs/project-registry.yaml)
+## 项目定位
 
-    ## What It Owns
+治理中枢 · Agent OS 内核（所属层级：L2；技术栈：Python (uv, pytest)）。
 
-    治理内核：Phase/Task/Debt/Audit 生命周期.
-
-    ## Installation
+## 安装
 
 ```bash
 # Clone the workspace recursively
@@ -28,9 +23,9 @@ uv sync
 
 Requires Python 3.13+ (see `pyproject.toml`).
 
-## Quick Start
+## 快速开始
 
-    ```bash
+```bash
     uv sync
 uv run pytest "tests/" -q
 uv run python -m omo.cli governance audit
@@ -74,20 +69,28 @@ uv run python -m omo.cli lint direct-omo-io
     ## SSOT Rules
 
     Runtime facts, counts, ports, health, and generated inventories are intentionally not maintained here. Use the workspace registries and project source as the truth.
-## Project Governance
 
-- [Governance](GOVERNANCE.md)
-- [Support](SUPPORT.md)
+## 文档
 
-- [Contributing](CONTRIBUTING.md)
-- [Security Policy](SECURITY.md)
-- [Changelog](CHANGELOG.md)
-- [License](LICENSE)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Contributors](CONTRIBUTORS.md)
-## Getting Help
+- 英文 README: [`README.md`](README.md)
+- 贡献指南: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- 安全策略: [`SECURITY.md`](SECURITY.md)
+- 更新日志: [`CHANGELOG.md`](CHANGELOG.md)
+- 行为准则: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
+- 贡献者名单: [`CONTRIBUTORS.md`](CONTRIBUTORS.md)
+
+## 获取帮助
 
 - [FAQ](docs/FAQ.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [API / Usage Reference](docs/API.md)
-- [Architecture Overview](docs/ARCHITECTURE.md)
+- [故障排查](docs/TROUBLESHOOTING.md)
+- [API / 使用参考](docs/API.md)
+- [架构概览](docs/ARCHITECTURE.md)
+
+
+---
+
+## 🌐 语言
+
+- [English](README.md)
+- [简体中文](README.zh.md)
+
