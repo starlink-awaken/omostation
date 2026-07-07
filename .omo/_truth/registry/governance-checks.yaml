@@ -2152,6 +2152,75 @@ gac:
       created_at: "2026-07-06"
       adr: "ADR-0152"
 
+    # ── X3 value-stack: 分层调用方向契约 (P76 Phase 2 / ADR-0156) ──
+    - id: CR-LAYER-CALL-DIRECTION
+      dimension: X3
+      layer: meta
+      name: "分层调用方向契约"
+      description: "防止 L2 引擎小环形成.允许方向: L3->{I0,L1,L2,M0,L4}; I0->{L0,M0}; L4->{L0}; L2->{L0,I0,L2}; L1->{L0}; X->{ANY}.禁止: L0/M0->project; L1->L2; L2->L3/L4; I0->L2; X->X。"
+      check_type: consistency_drift
+      target: "projects/*/src/**"
+      source_ref: bin/check-layer-call-direction.py
+      enforcement: advisory
+      executor: [omo_audit, radar_cron, gac_local_gate]
+      lifecycle: active
+      version: 0.1.0
+      created_at: "2026-07-07"
+      adr: "ADR-0156"
+
+    # ── X3 value-stack: debt-closed-per-feature 指标 (P76 Phase 3 / ADR-0157) ──
+    - id: CR-META-METRIC-DEBT-FEATURE
+      dimension: X3
+      layer: meta
+      name: "debt-closed-per-feature 指标"
+      description: "每交付 1 feature 必须关闭 ≥ 0.5 debt (issued). 治理 score 才能真与开发节奏挂钩. 公式: resolved_count_30d / feat_count_30d. threshold=0.5."
+      check_type: drift_audit
+      target: "bin/debt-closed-per-feature.py"
+      source_ref: bin/debt-closed-per-feature.py::main
+      executor: [radar_cron, omo_audit]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0157"
+
+    # ── X1 审计: 主仓-子仓对称修复 (P76 Phase 4 / ADR-0158) ──
+    - id: CR-SUBMODULE-BUMP-AUTO
+      dimension: X1
+      layer: meta
+      name: "Submodule pointer 落后检测 (主仓-子仓对称修复)"
+      description: |
+        当主仓主分支 .gitmodules 路径下 submodule 实际 HEAD ≠ 主仓 pin SHA,
+        radar_cron 报 [advisory]; 24h 未修正 升 [hard]. 治 P76 矛盾 3.
+        实施: bin/submodule-bump-check.py.
+      check_type: drift_audit
+      target: "bin/submodule-bump-check.py"
+      source_ref: bin/submodule-bump-check.py::main
+      executor: [radar_cron, ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0158"
+
+    # ── X3 value-stack: X 扩展晋升守门 (P76 Phase 4 / ADR-0158) ──
+    - id: CR-X-PROMOTION-LIFECYCLE
+      dimension: X3
+      layer: X
+      name: "X 扩展晋升 4 阶段守门"
+      description: |
+        X 扩展必经 4 阶段 (idea / 0.1.x / 1.0.x / 2.0.x). 跳级 = 治本变更.
+        Stage 0: docs/<pitch>.md; Stage 1: kind=experiment; Stage 2: kind=stable + .gitmodules; Stage 3: layer != X + ADR 引用.
+        治 P76 矛盾 5 (kind 缺失) + 提供 X 扩展唯一出口.
+      check_type: drift_audit
+      target: "docs/project-registry.yaml (X 段) + projects/<x-name>/.promotion-state"
+      executor: [omo_audit, radar_cron]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0158"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
