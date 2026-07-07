@@ -10,23 +10,16 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (8 个)
+## Planned Tasks (0 个)
 | ID | Title | Status |
 |----|-------|--------|
-| OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
-| OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z | No-op: drift detector reported 0 drift; loop con | candidate |
-| TASK-13AD0B21 | AETHERFORGE P1: L0 33 命名空间消费接入 (AUDIT 11%→提升 | candidate |
-| TASK-353E0980 | gac-gate doc/state/dead-path 债: doc-ssot-lint + | candidate |
-| TASK-67C63D6C | AETHERFORGE P1: QuotaEngine 数据全用 (v2 Phase 1 收尾 | candidate |
-| TASK-6B868907 | P1 产品门户: c2g draft→bet路径 + 全场景门户 | candidate |
-| TASK-94BB9C70 | P1 并发Agent抢占: 共享文件advisory-lock | candidate |
-| TASK-F7114ABA | P1 GodModule: omo_ingress/agora/gbrain (行数见源码实测, | candidate |
+
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
-## Completed Tasks (95 个)
+## Completed Tasks (103 个)
 
-> `tasks/done/` — 95 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
+> `tasks/done/` — 103 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
 
 近期关键完成里程碑（done/ 顶层）:
 - P42-W0-W1-COMBO / P42-W2-COMBO — P42 治理面 SSOT 同步
@@ -63,5 +56,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-02 (依据 `omo state sync-tasks` 与真实目录重算: done=95, planned=8, active=0, archived=6 顶层)*
+*Updated: 2026-07-07 (依据 `omo state sync-tasks` 与真实目录重算: done=103, planned=0, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
