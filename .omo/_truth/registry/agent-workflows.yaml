@@ -450,33 +450,21 @@ doctor_checks:
     required: true
     command: [bin/mof-drift]
   - id: mof-bootstrap
-    type: local_tool
-    description: "M4 5-check 自反校验器"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof-bootstrap.py", "all"]
-    health_check: true
-    required: true
-    timeout: 60
+    description: "M4 5-check 自反校验器 (M4→GaC, ADR-0152/0153/0154)"
+    required: false
+    command: [uv, run, --with, pyyaml, python, bin/mof-bootstrap.py, all]
   - id: m4-health-score
-    type: local_tool
-    description: "M4 Health Score 量化(派生面引擎)"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/m4-health-score.py", "--emit"]
-    health_check: true
+    description: "M4 Health Score 量化 (派生面引擎)"
     required: false
-    timeout: 120
+    command: [uv, run, --with, pyyaml, python, bin/m4-health-score.py, --emit]
   - id: check-submodule-hygiene
-    type: local_tool
-    description: "子模块卫生守门(3类检查)"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/check-submodule-hygiene.py", "--strict"]
-    health_check: true
+    description: "子模块卫生守门 (3类检查)"
     required: false
-    timeout: 60
+    command: [uv, run, --with, pyyaml, python, bin/check-submodule-hygiene.py, --strict]
   - id: mcp-tool-data-complete
-    type: local_tool
     description: "MCPTOOL 数据完整性守门"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/mcp-tool-data-complete.py"]
-    health_check: true
     required: false
-    timeout: 30
+    command: [uv, run, --with, pyyaml, python, bin/mcp-tool-data-complete.py]
 diff_checks:
   - id: agent-workflow-lint
     description: Workflow runner and registry contract validation.

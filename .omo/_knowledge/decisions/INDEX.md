@@ -130,6 +130,12 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0152 | M4 5 GaC 规则追加 (Phase 1) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0152-m4-gac-rules.md |
 | 0153 | M4 4 工具入 agent-workflows (Phase 2b) | ACCEPTED | 2026-07-06 | governance + eCOS team | 0153-m4-agent-workflows-tools.md |
 | 0154 | M4 OMO cron 集成 (Phase 4) | ACCEPTED | 2026-07-06 | governance-team | 0154-m4-omo-cron-integration.md |
+| 0155 | P76 Phase 1 收口 (积压清理) | ACCEPTED | 2026-07-07 | governance-team | 0155-p76-phase1-cleanup.md |
+| 0156 | P76 Phase 2 分层调用方向契约硬化 | ACCEPTED | 2026-07-07 | governance-team | 0156-p76-phase2-call-direction.md |
+| 0157 | P76 Phase 3 元治全自 + debt-closed-per-feature | ACCEPTED | 2026-07-07 | governance-team | 0157-p76-phase3-self-meta.md |
+| 0158 | P76 Phase 4 X 扩展晋升 + submodule 对称 | ACCEPTED | 2026-07-07 | governance-team | 0158-p76-phase4-promotion.md |
+| 0159 | P76 Phase 5 收敛面+演化平台 + 全路线收口 | ACCEPTED | 2026-07-07 | governance-team | 0159-p76-phase5-foundry.md |
+| STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 
 ---
 
@@ -201,4 +207,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-06 · Owner: governance-team · M4→GaC 全面接入 3 阶段 3 ADR (0152/0153/0154) 完成, GaC rules 152→157, agent-workflows tools 28→32*
+*最近更新: 2026-07-07 · Owner: governance-team · P76 Phase 1 完成 (入口解锁 + M1 drift 0/0/0 + god module SOP + ADR-0155); GaC rules 157; M1=157↔registry 157*
