@@ -2152,6 +2152,22 @@ gac:
       created_at: "2026-07-06"
       adr: "ADR-0152"
 
+    # ── X3 value-stack: 分层调用方向契约 (P76 Phase 2 / ADR-0156) ──
+    - id: CR-LAYER-CALL-DIRECTION
+      dimension: X3
+      layer: meta
+      name: "分层调用方向契约"
+      description: "防止 L2 引擎小环形成.允许方向: L3->{I0,L1,L2,M0,L4}; I0->{L0,M0}; L4->{L0}; L2->{L0,I0,L2}; L1->{L0}; X->{ANY}.禁止: L0/M0->project; L1->L2; L2->L3/L4; I0->L2; X->X。"
+      check_type: consistency_drift
+      target: "projects/*/src/**"
+      source_ref: bin/check-layer-call-direction.py
+      enforcement: advisory
+      executor: [omo_audit, radar_cron, gac_local_gate]
+      lifecycle: active
+      version: 0.1.0
+      created_at: "2026-07-07"
+      adr: "ADR-0156"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
