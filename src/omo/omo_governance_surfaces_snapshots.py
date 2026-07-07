@@ -119,7 +119,8 @@ def _mutation_surface_registry_snapshot() -> list[dict[str, object]]:
         },
         {
             "name": "omo-worker-task-normalize-planned",
-            "entrypoint": "python3 scripts/omo_worker.py task normalize-planned",
+            "entrypoint": "uv run python -m omo.cli worker task normalize-planned",
+            "workdir": "projects/omo",
             "runtime_ref": "projects/omo/src/omo/omo_worker_cmd_task.py:execute_task_command (task_command=normalize-planned)",
             "mutation_target": ".omo/tasks/planned/ + .omo/tasks/archived/legacy-normalized/",
             "broker_ref": "projects/omo/src/omo/omo_ingress.py:normalize_legacy_planned_task",
@@ -129,7 +130,8 @@ def _mutation_surface_registry_snapshot() -> list[dict[str, object]]:
         },
         {
             "name": "omo-worker-task-route-self-evolution-remediation",
-            "entrypoint": "python3 scripts/omo/omo_worker.py task route-self-evolution-remediation",
+            "entrypoint": "uv run python -m omo.cli worker task route-self-evolution-remediation",
+            "workdir": "projects/omo",
             "runtime_ref": "projects/omo/src/omo/omo_worker_cmd_task.py:execute_task_command (task_command=route-self-evolution-remediation)",
             "mutation_target": ".omo/tasks/planned/ -> .omo/tasks/remediation/ + .omo/tasks/remediation-notes/",
             "broker_ref": "projects/omo/src/omo/omo_ingress.py:route_self_evolution_to_remediation",
