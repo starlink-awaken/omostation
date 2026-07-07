@@ -76,7 +76,7 @@ jobs:
       - name: Pre-commit (check-yaml hook)
         # 走标准 pre-commit-hooks 的 check-yaml, 双保险
         run: |
-          pre-commit run --all-files --hook-stage manual check-yaml
+          pre-commit run --all-files check-yaml
 
   # ── 3. shellcheck — scripts/*.sh 静态安全检查 ─────────────────────
   shellcheck:

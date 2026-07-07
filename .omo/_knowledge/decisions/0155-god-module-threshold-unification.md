@@ -1,8 +1,11 @@
 ---
-id: ADR-0155
-title: god-module lint 阈值统一 (800→1500L) + api_system_map.py 临时豁免
-status: active
-decided: 2026-07-06
+status: ACCEPTED
+lifecycle: decision
+owner: governance-team
+last-reviewed: 2026-07-07
+related:
+  - projects/omo/src/omo/omo_lint_god_module.py
+  - bin/check-god-module.py
 ---
 
 # ADR-0155 — god-module lint 阈值统一 + api_system_map.py 临时豁免
