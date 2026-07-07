@@ -121,6 +121,7 @@ last-reviewed: 2026-06-29
 `classify_planned.py` / `p0-event-listener.py` / `management-{categorize,cross-ref-check,migrate}.py`
 
 > **已迁移** (2026-07-07): `omo-health.py` → `omo health dashboard`, `omo-manage` → `omo manage`, `omo-validate` → `omo validate`
+> **已迁移** (2026-07-07): `scripts/omo/cards_x3_metrics.py` → `omo audit cards`, `scripts/omo/vault_x1_audit.py` → `omo audit vault`, `scripts/omo/x2_freshness_audit.py` → `omo audit freshness`
 
 ### 13. P74 Solidification (3, ADR-0130) — workflow 沉默治理
 常态化机制: 检测 + 拦截 + 治理信号. 治 P71 三类声明/执行鸿沟复发.
