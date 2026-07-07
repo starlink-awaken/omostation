@@ -305,9 +305,15 @@ def _cmd_audit(args: list[str]) -> int:
         vault      — Vault X1 audit (Markdown content hash + author tracking)
         freshness  — X2 freshness audit (3 条 P43 巡检规则)
     """
-    if not args:
-        print("Usage: omo audit <cards|vault|freshness>")
-        return 1
+    if not args or args[0] in ("-h", "--help"):
+        print("omo audit — X 审计工具集\n")
+        print("Usage: omo audit <subcommand> [options]\n")
+        print("Subcommands:")
+        print("  cards      CARDS X3 value metrics (SQLite 聚合)")
+        print("  vault      Vault X1 audit (Markdown content hash + author tracking)")
+        print("  freshness  X2 freshness audit (3 条 P43 巡检规则)")
+        print("\nUse 'omo audit <subcommand> --help' for subcommand help.")
+        return 0
 
     sub = args[0]
     rest = args[1:]
@@ -315,10 +321,13 @@ def _cmd_audit(args: list[str]) -> int:
     if sub == "cards":
         import argparse
 
-        parser = argparse.ArgumentParser(prog="omo audit cards")
-        parser.add_argument("--db", type=str, help="explicit db path")
-        parser.add_argument("--json", action="store_true", help="JSON output")
-        parser.add_argument("--output", type=str, help="write to file")
+        parser = argparse.ArgumentParser(
+            prog="omo audit cards",
+            description="CARDS X3 value metrics — 从 SQLite 聚合 card 指标",
+        )
+        parser.add_argument("--db", type=str, help="显式指定 db 路径")
+        parser.add_argument("--json", action="store_true", help="JSON 输出")
+        parser.add_argument("--output", type=str, help="写入文件 (相对于 workspace)")
         parsed = parser.parse_args(rest)
         from omo.omo_audit_cards import cmd_cards
 
@@ -329,11 +338,14 @@ def _cmd_audit(args: list[str]) -> int:
     if sub == "vault":
         import argparse
 
-        parser = argparse.ArgumentParser(prog="omo audit vault")
-        parser.add_argument("--days", type=int, default=90, help="staleness threshold")
-        parser.add_argument("--root", type=str, help="root to scan")
-        parser.add_argument("--json", action="store_true", help="JSON output")
-        parser.add_argument("--output", type=str, help="write to file")
+        parser = argparse.ArgumentParser(
+            prog="omo audit vault",
+            description="Vault X1 audit — Markdown content hash + author tracking",
+        )
+        parser.add_argument("--days", type=int, default=90, help="staleness 阈值 (天)")
+        parser.add_argument("--root", type=str, help="扫描根目录 (默认 workspace root)")
+        parser.add_argument("--json", action="store_true", help="JSON 输出")
+        parser.add_argument("--output", type=str, help="写入文件 (相对于 workspace)")
         parsed = parser.parse_args(rest)
         from omo.omo_audit_vault import cmd_vault
 
@@ -347,12 +359,15 @@ def _cmd_audit(args: list[str]) -> int:
     if sub == "freshness":
         import argparse
 
-        parser = argparse.ArgumentParser(prog="omo audit freshness")
-        parser.add_argument(
-            "--dry-run", action="store_true", help="don't write audit log"
+        parser = argparse.ArgumentParser(
+            prog="omo audit freshness",
+            description="X2 freshness audit — 执行 3 条 P43 巡检规则",
         )
-        parser.add_argument("--only", type=str, help="only run specified rule")
-        parser.add_argument("--json", action="store_true", help="JSON output")
+        parser.add_argument(
+            "--dry-run", action="store_true", help="仅输出，不写审计日志"
+        )
+        parser.add_argument("--only", type=str, help="仅运行指定规则")
+        parser.add_argument("--json", action="store_true", help="JSON 输出")
         parsed = parser.parse_args(rest)
         from omo.omo_audit_freshness import cmd_freshness
 
