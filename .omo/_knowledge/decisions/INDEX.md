@@ -137,6 +137,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0159 | P76 Phase 5 收敛面+演化平台 + 全路线收口 | ACCEPTED | 2026-07-07 | governance-team | 0159-p76-phase5-foundry.md |
 | 0160 | P76 Phase 6 Knowledge Foundry 真正集成 (radar_cron) | ACCEPTED | 2026-07-07 | governance-team | 0160-p76-phase6-foundry-runtime.md |
 | 0161 | P76 Phase 7 follow-up 治本 (LLM+cron+tasks+mesh-router) | ACCEPTED | 2026-07-07 | governance-team | 0161-p76-phase7-llm-cron-tasks-mesh.md |
+| 0162 | P76 Phase 8 4 项真工程 follow-up 治本 | ACCEPTED | 2026-07-07 | governance-team | 0162-p76-phase8-real-engineering.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 
 ---
