@@ -1,14 +1,15 @@
 # runtime Documentation
 
-> 服务生命周期、调度、健康监控与 KEI 沙箱
-> Service lifecycle, scheduling, health monitoring and KEI sandbox.
+> L1 · 运行时/调度/KEI 沙箱
+> Stack: Python
 
-This directory is the documentation home for **runtime**. Detailed design documents live in the project root; use the index below to navigate.
+This directory collects project-level documentation for **runtime**.
 
 ## Document Map
 
 - [`../README.md`](../README.md) — Project overview and quick start
-- [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — Architecture and design
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — Architecture overview
+- [`API.md`](API.md) — API / command-line / usage reference
 - [`../BOUNDARY.md`](../BOUNDARY.md) — Boundaries and interfaces
 - [`../CALLCHAIN.md`](../CALLCHAIN.md) — Call chains and interaction flows
 - [`../CAPABILITY-MAP.md`](../CAPABILITY-MAP.md) — Capability map
@@ -17,6 +18,7 @@ This directory is the documentation home for **runtime**. Detailed design docume
 - [`../CHANGELOG.md`](../CHANGELOG.md) — Change log
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — Contribution guide
 - [`../SECURITY.md`](../SECURITY.md) — Security policy
+- [`../LICENSE`](../LICENSE) — MIT License
 
 ## Workspace Context
 
