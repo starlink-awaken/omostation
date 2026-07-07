@@ -27,7 +27,7 @@ P43 阶段（2026-06-19/20）完成 c2g → omo → mof 三层联动闭环，5 R
 
 - 28→32 files commit, 含 BET-WF-CONVERGENCE-REAL + 5 REMEDIATE 任务登记
 - 新增 bin/mof-act / mof-autonomous / mof-fix-cross-project 自主治理引擎
-- 新增 bin/omo-manage / omo-validate 治理脚本
+- 新增 omo manage / omo validate (从 bin/omo-manage / omo-validate 迁移, 2026-07-07)
 - health.yaml 刷新 85/100，drift 修复
 
 ## 3. R2 - c2g 立项 (commit 不在 R2 单独, 在 R3 中)
