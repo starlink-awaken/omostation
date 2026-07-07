@@ -1,30 +1,32 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
 # DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
-id: GAC-RULE-CR-OMLX-MESH-ROUTING-01
+id: GAC-RULE-M4-DERIVED-PLANE-AUDIT
 type: GacRule
-name: omlx 算力网格智能路由
-description: 所有跨节点 LLM 请求必须通过 gac-mesh-router.py (:7435) 路由，探活超时降级至主控 MBP 网关 (:4000)
+name: 派生面范式审计
+description: 派生面应gitignored不占用SSOT.验证DERIVED_PATHS列表.
 status: active
 domain: meta
-layer: L1
-created: '2026-07-03'
+layer: meta
+created: '2026-07-06'
 version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
-  id: CR-OMLX-MESH-ROUTING-01
+  id: M4-DERIVED-PLANE-AUDIT
   dimension: X1
-  layer: L1
-  check_type: mesh_routing
+  layer: meta
+  check_type: ssot_pointer
   executor:
   - omo_audit
-  - ci_gate
+  - radar_cron
   lifecycle: active
   version: 1.0.0
-  created_at: '2026-07-03'
-  target: bin/gac-mesh-router.py
-  adr: ADR-0130
+  created_at: '2026-07-06'
+  target: .omo/_derived/
+  adr: ADR-0152
   source_type: native
+  source_ref: bin/omo-state-cleanup.py::audit
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
@@ -33,5 +35,5 @@ model_driven_refs:
   derived_by: bin/gac-m1-sync.py
 state_history:
 - state: active
-  timestamp: '2026-07-03T00:00:00Z'
+  timestamp: '2026-07-06T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生
