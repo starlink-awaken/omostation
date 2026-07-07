@@ -2240,6 +2240,26 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0160"
 
+    # ── X3 value-stack: LLM-assisted commit (P76 Phase 7.1 / ADR-0161) ──
+    - id: CR-COMMIT-LLM-ASSIST
+      dimension: X3
+      layer: meta
+      name: "LLM-assisted commit (advisory 硬门)"
+      description: |
+        LLM 永远不能 auto-commit. 必须通过 bin/commit-assist.py, 必须 write .commit-suggestion (侧车)
+        然后用户显式 git commit -F .commit-suggestion 接受.
+        LLM 3-tier: aetherforge → ollama → heuristic (任一可用即可).
+        网关失败 fallback: --no-llm 硬门 (永不阻塞 PR).
+      check_type: drift_audit
+      target: "bin/commit-assist.py"
+      source_ref: bin/commit-assist.py::query_llm
+      executor: [omo_audit, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0161"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)

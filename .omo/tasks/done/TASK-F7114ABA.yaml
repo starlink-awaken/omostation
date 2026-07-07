@@ -1,14 +1,15 @@
 id: TASK-F7114ABA
 title: 'P1 GodModule: omo_ingress/agora/gbrain (行数见源码实测, ISC-27 不硬编码)'
 description: 原型A5(Growth&Underinvestment), 杠杆点7+5. 用omo-srp-refactor skill渐进拆
-status: candidate
+status: done
 task_type: refactor
 risk_level: L2
 depends_on: []
 source_docs:
 - Plans/c2g-enchanted-coral.md
 deliverables:
-- omo_ingress write_system_projection_fields 拆分 (D任务剩余, 行数见 projects/omo/src/omo/omo_ingress_*.py 实测, ISC-27 不硬编码)
+- omo_ingress write_system_projection_fields 拆分 (D任务剩余, 行数见 projects/omo/src/omo/omo_ingress_*.py
+  实测, ISC-27 不硬编码)
 - 单文件>800L触发lint-error硬规则
 - agora server/mcp.py + gbrain operations.ts 排期拆分 (行数见源码实测, ISC-27 不硬编码)
 imported_via: omo_task_cli
@@ -16,7 +17,7 @@ context_uri: bos://governance/tasks/planned/TASK-F7114ABA
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: "auto_promote_eligible:ISC-32-ADR (risk L2, depends_on=[], human_approval_required=false)"
+approval_ref: auto_promote_eligible:ISC-32-ADR (risk L2, depends_on=[], human_approval_required=false)
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
@@ -42,3 +43,14 @@ metadata:
   created_at: '2026-06-25T06:42:59Z'
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: sys-arch-god-module
+  evidence_paths_refreshed_at: '2026-07-07T04:25:00Z'
+  evidence_paths_refreshed_by: projects/omo
+  evidence_paths_refresh_source_ref: ADR-0155 P76 Phase 1 + ADR-0156 P76 Phase 2 +
+    Phase 6 docs/SOP-GOD-MODULE-SPLIT.md + .omo/_truth/registry/governance-checks.yaml::CR-X1-GOD-MODULE-LIMIT
+  completed_at: '2026-07-07T04:25:00Z'
+  completed_via: omo task done
+  completion_actor: projects/omo
+  completion_source_ref: omo:task:done:TASK-F7114ABA
+evidence_paths:
+- docs/SOP-GOD-MODULE-SPLIT.md
+completed_at: '2026-07-07T04:25:00Z'

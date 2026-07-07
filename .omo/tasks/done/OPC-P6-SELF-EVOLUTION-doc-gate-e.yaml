@@ -1,6 +1,6 @@
 id: OPC-P6-SELF-EVOLUTION-doc-gate-e
 title: Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml
-status: candidate
+status: done
 task_type: governance
 risk_level: L1
 depends_on: []
@@ -13,7 +13,7 @@ context_uri: bos://governance/tasks/planned/OPC-P6-SELF-EVOLUTION-doc-gate-e
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: .omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-07-07T04-25-50Z.yaml
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
@@ -42,4 +42,15 @@ metadata:
   ingress_plane: scripts/opc_p6_self_evolve.py
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: opc-p6-self-evolve:OPC-P6-SELF-EVOLUTION-doc-gate-e
+  evidence_paths_refreshed_at: '2026-07-07T04:25:37Z'
+  evidence_paths_refreshed_by: projects/omo
+  evidence_paths_refresh_source_ref: user explicitly authorized Phase 7 (2026-07-07)
+    advancing all planned-task closures with real evidence
+  completed_at: '2026-07-07T04:25:50Z'
+  completed_via: omo task done
+  completion_actor: projects/omo
+  completion_source_ref: omo:task:done:OPC-P6-SELF-EVOLUTION-doc-gate-e
 latest_week: 2026-W29
+evidence_paths:
+- .omo/_knowledge/decisions/0155-p76-phase1-cleanup.md
+completed_at: '2026-07-07T04:25:50Z'
