@@ -78,9 +78,9 @@ def get_staged_diff(short: bool = True, limit: int = 500) -> tuple[str, str]:
 
 def heuristic_subject(stat: str) -> tuple[str, str]:
     """无 LLM 时 fallback."""
-    files = [line.split()[-1] for line in stat.splitlines() if "|" in line]
+    files = [line.split()[0] for line in stat.splitlines() if "|" in line]
     if not files:
-        return "chore", "workspace update"
+        return "chore", "misc"
     paths = [f.lower() for f in files]
     if any(".omo/_truth/registry/" in p for p in paths):
         ctype, scope = "feat", "gac"
