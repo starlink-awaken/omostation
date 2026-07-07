@@ -13,7 +13,20 @@
 
     服务生命周期、调度、健康监控与 KEI 沙箱.
 
-    ## Quick Start
+    ## Installation
+
+```bash
+# Clone the workspace recursively
+git clone --recursive https://github.com/starlink-awaken/omostation.git
+cd omostation/projects/runtime
+
+# Install dependencies with uv
+uv sync
+```
+
+Requires Python 3.13+ (see `pyproject.toml`).
+
+## Quick Start
 
     ```bash
     uv sync
@@ -47,6 +60,7 @@ make sync-state
 - [Changelog](CHANGELOG.md)
 - [License](LICENSE)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Contributors](CONTRIBUTORS.md)
 ## Getting Help
 
 - [FAQ](docs/FAQ.md)
