@@ -11,11 +11,8 @@
 from __future__ import annotations
 
 import argparse
-import sys
 import time
-from pathlib import Path
 
-import yaml
 
 from omo.omo_paths import OMO_ROOT, TASKS_DIR
 from omo.omo_shared import load_yaml

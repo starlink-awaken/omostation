@@ -12,11 +12,8 @@
 from __future__ import annotations
 
 import argparse
-import sys
 import time
-from pathlib import Path
 
-import yaml
 
 from omo.omo_paths import OMO_ROOT, PROJECTS_DIR
 from omo.omo_shared import load_yaml
@@ -130,7 +127,7 @@ def cmd_completeness() -> int:
     print(f"已覆盖: {result['covered']}")
     print(f"覆盖率: {result['coverage_pct']:.1f}%")
     if result["missing"]:
-        print(f"\n未覆盖:")
+        print("\n未覆盖:")
         for m in result["missing"]:
             print(f"  [MISSING] {m}")
     return 0

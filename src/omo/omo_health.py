@@ -24,7 +24,7 @@ from pathlib import Path
 
 import httpx
 
-from omo.omo_paths import AGORA_ROUTES_PATH, OMO_ROOT, WORKSPACE_ROOT
+from omo.omo_paths import AGORA_ROUTES_PATH, OMO_ROOT
 from omo.omo_shared import load_yaml
 
 # ── omostation 服务端口约定 (fallback, 实际以 agora-routes.json _meta.routing_table 为准) ──────
