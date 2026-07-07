@@ -192,9 +192,14 @@ def main(argv: list[str] | None = None) -> int:
         return xplane_main(args[1:])
 
     if args and args[0] == "inspect":
-        from omo.omo_inspect import main as inspect_main
+        import argparse
 
-        return inspect_main()
+        parser = argparse.ArgumentParser(prog="omo inspect", description="统一检查入口")
+        parser.add_argument("--json", action="store_true", help="JSON 输出")
+        parsed = parser.parse_args(args[1:])
+        from omo.omo_inspect import cmd_inspect
+
+        return cmd_inspect(json_output=parsed.json)
 
     if args and args[0] == "healing":
         return _cmd_healing(args[1:])
@@ -264,6 +269,28 @@ def main(argv: list[str] | None = None) -> int:
 
     if args and args[0] == "audit":
         return _cmd_audit(args[1:])
+
+    if args and args[0] == "doctor":
+        import argparse
+
+        parser = argparse.ArgumentParser(
+            prog="omo doctor", description="统一健康检查入口"
+        )
+        parser.add_argument("--json", action="store_true", help="JSON 输出")
+        parsed = parser.parse_args(args[1:])
+        from omo.omo_doctor import cmd_doctor
+
+        return cmd_doctor(json_output=parsed.json)
+
+    if args and args[0] == "inspect":
+        import argparse
+
+        parser = argparse.ArgumentParser(prog="omo inspect", description="统一检查入口")
+        parser.add_argument("--json", action="store_true", help="JSON 输出")
+        parsed = parser.parse_args(args[1:])
+        from omo.omo_inspect import cmd_inspect
+
+        return cmd_inspect(json_output=parsed.json)
 
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
