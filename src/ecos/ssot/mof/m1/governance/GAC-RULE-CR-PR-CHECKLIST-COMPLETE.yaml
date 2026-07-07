@@ -1,0 +1,42 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+id: GAC-RULE-CR-PR-CHECKLIST-COMPLETE
+type: GacRule
+name: PR body 必含 WHY/WHAT
+description: 'gh pr create 的 --body 必 ≥1 行非空 + 含 ''## Summary'' 或 ''## WHY'' 段.
+
+  防 PR description 空推送 (修真修真反模式 修真修真).
+
+  '
+status: active
+domain: meta
+layer: meta
+created: '2026-07-07'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-PR-CHECKLIST-COMPLETE
+  dimension: X1
+  layer: meta
+  check_type: drift_audit
+  executor:
+  - ci_gate
+  - gac_local_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-07-07'
+  target: gh pr create --body
+  adr: ADR-0165
+  source_type: native
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-07-07T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生
