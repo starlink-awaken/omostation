@@ -197,6 +197,27 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0051: gbrain TODOs v5 终极收敛（unknown 19→0, any TODO = planned, extends ADR-0050; 2 LOW 信息维度保留）— **ACCEPTED** | 2026-06-23 | omostation P52 | 0051-gbrain-todos-v5-unknown-zero.md
 - ADR-0052: P54-P55 知识面深度收敛（design/specs/ 契约区建立 + plans-archive/dbo-archive 迁移 + memtheta 真迁移 + frontmatter 100% 全覆盖 + 断链 SSOT 修复）— **ACCEPTED** | 2026-06-23 | omostation P56 | 0052-p54-p55-knowledge-convergence.md
 
+### P76 — 策略路线图 (ADR-0155..0163)
+
+- ADR-0155: P76 Phase 1 (积压清理) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0155-p76-phase1-cleanup.md
+- ADR-0156: P76 Phase 2 (分层调用契约) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0156-p76-phase2-call-direction.md
+- ADR-0157: P76 Phase 3 (元治全自) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0157-p76-phase3-self-meta.md
+- ADR-0158: P76 Phase 4 (X扩展晋升) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0158-p76-phase4-promotion.md
+- ADR-0159: P76 Phase 5 (收敛面+foundry) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0159-p76-phase5-foundry.md
+- ADR-0160: P76 Phase 6 (foundry runtime) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0160-p76-phase6-foundry-runtime.md
+- ADR-0161: P76 Phase 7 (LLM/cron) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0161-p76-phase7-llm-cron-tasks-mesh.md
+- ADR-0162: P76 Phase 8 (真工程) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0162-p76-phase8-real-engineering.md
+- ADR-0163: P76 Phase 9A (commit-assist hook) — **ACCEPTED** | 2026-07-07 | omostation P76 | 0163-p76-phase9a-commit-assist-hook.md
+
+### P77 — 跨仓一致性战略路线图 (ADR-0164..0169)
+
+- ADR-0164: P77 Phase 1 (跨仓一致 detector) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0164-p77-phase1-cross-repo-consistency.md
+- ADR-0165: P77 Phase 2 (演化护栏 catalog) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0165-p77-phase2-evolution-guardrails.md
+- ADR-0166: P77 Phase 3 (跨仓治本) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0166-p77-phase3-cross-repo-remediation.md
+- ADR-0167: P77 Phase 4 (port-registry 一致性) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0167-p77-phase4-port-registry-consistency.md
+- ADR-0168: P77 Phase 5 (端口硬编码扫描) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0168-p77-phase5-hardcoded-ports.md
+- ADR-0169: P77 Phase 6 (commit-assist E2E) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0169-p77-phase6-commit-assist-e2e.md
+
 ---
 
 ## 维护责任
@@ -216,4 +237,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-07 · Owner: governance-team · P76 Phase 1 完成 (入口解锁 + M1 drift 0/0/0 + god module SOP + ADR-0155); GaC rules 157; M1=157↔registry 157*
+*最近更新: 2026-07-07 · Owner: governance-team · P77 Phase 6 收口 (commit-assist E2E); GaC rules 171; catalog 45 原则*

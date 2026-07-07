@@ -34,6 +34,11 @@
 | P77-5-3 | **environment-variable-preferred** | 优先用 env var, 而不是字面量 (修真修真, Phase 6 入口) |
 | P77-5-4 | **port-context-pattern** | detector 必须用 7+ port-context 模式覆盖 (PORT=/port=/--port/host:port/...) |
 | P77-5-5 | **detector-evolution-via-catalog** | detector 升级必须先有测试断言新行为 (沿用 P77-2-3 + P77-3-5) |
+| P77-6-1 | **e2e-test-for-advisory-tool** | advisory 工具必须有 E2E 测试验证不动手时无害 |
+| P77-6-2 | **tier-test-for-fallback** | 每级 fallback 都必须有测试证明不崩溃 |
+| P77-6-3 | **gateway-status-documentation** | 外部 LLM gateway 不可达时, 必须文档化不可达状态 |
+| P77-6-4 | **tool-logic-test-before-e2e** | 测试先覆盖纯逻辑函数, 再 E2E |
+| P77-6-5 | **catalog-update-per-phase** | 每 phase 收口必更新 catalog 原则表 (P77-2-2 强化) |
 | P76-7-1 | **llm-advisory-not-autonomous** | LLM 只 generate suggestion, 永不 auto-apply |
 | P76-7-2 | **tier-graceful-fallback** | LLM provider 3-tier — aetherforge → ollama → heuristic |
 | P76-7-3 | **cron-real-deployment** | "投产" 不止写 plist, 必须 launchctl load |
@@ -63,7 +68,8 @@
 | **P77 Phase 3** | **ADR-0166** | **5** | **跨仓 unregistered 治本 (threshold 0 + hard)** |
 | **P77 Phase 4** | **ADR-0167** | **5** | **跨仓 port-registry 一致性 (6 端口对齐)** |
 | **P77 Phase 5** | **ADR-0168** | **5** | **跨仓端口硬编码扫描 (4 端口补登 + hard)** |
-| **合计** | — | **40 (35 ADR-internal + 5 hook)** | — |
+| **P77 Phase 6** | **ADR-0169** | **5** | **commit-assist E2E 验收 (19 测试 + heuristic bug 修)** |
+| **合计** | — | **45 (40 ADR-internal + 5 hook)** | — |
 
 > 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **30 原则** (4-5 per phase × 6 phases). 数字更准.
 
@@ -220,6 +226,33 @@
 **反例**: 加新 pattern 但不更新 test → 修真修真
 **实践**: 10 phase-5 测试 + 1 catalog 引用 (5 原则 P77-5-1..5)
 
+## 3.7. P77 Phase 6 (commit-assist E2E 验收) — ADR-0169
+
+### P77-6-1: e2e-test-for-advisory-tool
+**含义**: advisory 工具必须有 E2E 测试验证不动手时无害 (P76-7-1 fail-safe 特化)
+**反例**: commit-assist 是 advisory（不阻断 commit），但无测试 → 沉默失效半年
+**实践**: 19 测试覆盖 heuristic/fallback/integration/tier; CR-COMMIT-ASSIST-E2E 规则
+
+### P77-6-2: tier-test-for-fallback
+**含义**: 每级 fallback 都必须有测试证明不崩溃 (P76-7-2 特化)
+**反例**: aetherforge 不可达 → 抛 Exception → 整个 commit-assist 不工作
+**实践**: `test_aetherforge_unreachable_graceful()` + `test_ollama_unreachable_graceful()` 断言返回 None
+
+### P77-6-3: gateway-status-documentation
+**含义**: 外部 LLM gateway 不可达时, 必须文档化不可达状态 + 时间戳, 不留"应该可用"假设
+**反例**: aetherforge 挂了 2 周, 没人知道, 一直 fallback 到 heuristic
+**实践**: ADR-0169 § 1.4 写明 "aetherforge: 不可达 (2026-07-07)"
+
+### P77-6-4: tool-logic-test-before-e2e
+**含义**: 测试先覆盖纯逻辑函数 (heuristic/parser), 再 E2E — 修真修真反模式
+**反例**: 先花 30 分钟搭 temp git repo 做集成测试, 但 heuristic_subject bug ([-1] vs [0]) 几秒就暴露
+**实践**: 19 测试中 14 个是纯逻辑/单元测试, 只有 3 个是集成
+
+### P77-6-5: catalog-update-per-phase
+**含义**: 每 phase 收口必更新 catalog 原则表 (P77-2-2 强化)
+**反例**: P77 Phase 2-5 没更新 INDEX.md → INDEX 停更在 ADR-0052
+**实践**: 本 phase 新增 P77 § 到 INDEX.md
+
 ## 4. Phase 8 (真工程 follow-up 治本) — ADR-0162
 
 ### P76-8-1: submodule-PR-not-coupling
@@ -294,12 +327,12 @@
 
 ## 8. 现状快照 (Status Snapshot, 2026-07-07)
 
-- **catalog**: 6 ADR 来源 (Phase 6/7/8/9A + P77-1/2), 共 25 条 (4-5 per phase), 全列于 §1-6
-- **GaC 规则**: 169 (前 164 + 5 新: PRINCIPLE-FOLLOWED / EVIDENCE-DECLARED / PR-CHECKLIST-COMPLETE / CROSS-REPO-CHECK / BASELINE-REPLAYED)
+- **catalog**: 9 ADR 来源 (Phase 6/7/8/9A + P77-1/2/3/4/5/6), 共 45 条 (1-5 per phase)
+- **GaC 规则**: 171 (前 169 + CR-COMMIT-ASSIST-E2E)
 - **planned tasks**: 0
 - **governance**: 100 A+ (复位)
-- **Phase 11 (this)**: catalog 落地, 25 原则沉淀, 5 新 GaC rules 落地
+- **Phase 15 (this)**: P77 Phase 6 — commit-assist E2E 验收 (19 测试 + heuristic bug 修 + catalog 45 原则 + GaC 171)**
 
 ---
 
-*最后更新: 2026-07-07 · 25 原则沉淀 · 由 P76 / P77 Phase 11 治本 + 演化护栏准备 · ACTIVE*
+*最后更新: 2026-07-07 · 45 原则沉淀 · P77 Phase 6 收口 · ACTIVE*

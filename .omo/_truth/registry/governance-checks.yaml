@@ -2399,6 +2399,28 @@ gac:
         - .omo/_knowledge/decisions/0167-p77-phase4-port-registry-consistency.md
         - .omo/_knowledge/decisions/0166-p77-phase3-cross-repo-remediation.md
 
+    # ── X4 consistency: commit-assist E2E 验收 (P77 Phase 6 / STRAT-P77 / ADR-0169) ──
+    - id: CR-COMMIT-ASSIST-E2E
+      dimension: X4
+      layer: meta
+      name: "commit-assist E2E 测试 (19/19, P77-6-1 e2e-test-for-advisory-tool)"
+      description: |
+        bin/commit-assist.py 的 19 E2E 测试必须全通过 (P77-6-1).
+        测试覆盖: heuristic_subject (8), clean_suggestion (3),
+        72-char truncation (2), tier fallback (2), integration (2),
+        CONVENTIONAL_TYPES (1), ctype format (1).
+        修真修真反模式: advisory tool 也必须测试, 防沉默失效.
+        实施: tests/test_commit_assist_e2e.py
+      check_type: consistency_drift
+      target: "tests/test_commit_assist_e2e.py"
+      source_ref: tests/test_commit_assist_e2e.py::main
+      executor: [ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 0.1.0
+      created_at: "2026-07-07"
+      adr: "ADR-0169"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
