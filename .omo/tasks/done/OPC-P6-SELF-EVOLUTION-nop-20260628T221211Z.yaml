@@ -1,6 +1,6 @@
 id: OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z
 title: 'No-op: drift detector reported 0 drift; loop continues'
-status: candidate
+status: done
 task_type: governance
 risk_level: L1
 depends_on: []
@@ -13,7 +13,7 @@ context_uri: bos://governance/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260628T2
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: .omo/workers/runs/OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z-promotion-approval-2026-07-07T04-26-01Z.yaml
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
@@ -42,5 +42,17 @@ metadata:
   ingress_plane: scripts/opc_p6_self_evolve.py
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: opc-p6-self-evolve:OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z
+  evidence_paths_refreshed_at: '2026-07-07T04:26:01Z'
+  evidence_paths_refreshed_by: projects/omo
+  evidence_paths_refresh_source_ref: drift detector reports 0 critical drift (governance
+    100 A+, M1 0/0/0, 17 submodules aligned) — no-op confirmed by radar_cron sweep
+    2026-07-07
+  completed_at: '2026-07-07T04:26:01Z'
+  completed_via: omo task done
+  completion_actor: projects/omo
+  completion_source_ref: omo:task:done:OPC-P6-SELF-EVOLUTION-nop-20260628T221211Z
 last_run_at: '2026-06-28T22:12:11Z'
 latest_week: 2026-W29
+evidence_paths:
+- .omo/_control/evolution/drift/2026-07-07.json
+completed_at: '2026-07-07T04:26:01Z'
