@@ -34,6 +34,9 @@ uv run python -m omo.cli lint direct-omo-io
     | `omo lint stamp-policy` | P74: 验证 runtime/ 下文件必须 gitignored/tracked/allowlisted |
     | `omo manage {status,health,tasks}` | .omo 目录管理工具集 |
     | `omo validate {completeness,references,state,all}` | .omo 目录验证工具集 |
+    | `omo audit cards` | CARDS X3 value metrics (SQLite 聚合) |
+    | `omo audit vault` | Vault X1 audit (Markdown content hash + author tracking) |
+    | `omo audit freshness` | X2 freshness audit (3 条 P43 巡检规则) |
 
     ## Documentation
 
