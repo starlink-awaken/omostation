@@ -14,7 +14,8 @@ db_path = WORKSPACE / "kos/kos-index.sqlite"
 
 # 默认网关配置
 LOCAL_GATEWAY = "http://100.96.126.35:4000"
-PORT = 7437
+import os
+PORT = int(os.environ.get("OMLX_MESH_ROUTER_PORT", "7437"))
 
 def get_compute_nodes_for_model(model_name: str) -> list[dict]:
     """从 KOS SQLite 知识库查询注册了能运行 model_name 模型的物理节点列表"""

@@ -39,10 +39,46 @@ ports:
 # 9090: ecos-dashboard — 功能收敛至 cockpit :8090 /api/ecos/*
 # swarm-engine 无独立端口，已并入 aetherforge/packages/swarm (UDP: 7455)
 
+# ── 端口类型 (P77 Phase 4 / Phase 7) ──
+# env-only: 端口仅通过 env var 引用, 代码中不得出现字面量 (P77-5-3 / P77-7-3)
 types:
   7422: env-only
   7456: env-only
   8090: env-only
+
+# ── Env Var 映射 (P77 Phase 7: environment-variable-preferred) ──
+# Convention: {SERVICE}_PORT. 所有端口优先通过 env var 引用, 而非字面量.
+env_vars:
+  7420: BOS_API_PORT
+  7422: AGORA_MCP_HTTP_PORT
+  7430: AGORA_INTERNAL_PORT
+  7431: AGORA_MCP_SSE_PORT
+  7432: ECOS_EVENT_LISTENER_PORT
+  7437: OMLX_MESH_ROUTER_PORT
+  7450: RUNTIME_CRON_HTTP_PORT
+  7455: AGORA_SWARM_UDP_PORT
+  7456: L4_KERNEL_MCP_SSE_PORT
+  8000: AETHERFORGE_WEB_HELM_PORT
+  8080: ONTODERIVE_WEB_PORT
+  8081: KAIRON_INTERNAL_PORT
+  8090: COCKPIT_DASHBOARD_PORT
+  8888: MCP_STDIO_DEBUG_PORT
+  9100: OMO_WEBHOOK_PORT
+  9190: OMO_DASHBOARD_PORT
+  9290: LLM_GATEWAY_PORT
+  9876: RUNTIME_L1_PORT
+  11434: OLLAMA_PORT
+  18801: WPS_OFFICE_MCP_STDIO_PORT
+  18802: WPS_SKILLS_STDIO_PORT
+  18803: BOS_SKILL_CLI_STDIO_PORT
+  8181: OMLX_VISION_PORT
+  8182: OMLX_VISION_LARGE_PORT
+  8183: OMLX_EMBEDDING_PORT
+  8184: OMLX_MYTHOS_PORT
+  8185: OMLX_MYTHOS_FAST_PORT
+  # stdio-only ports (no env var needed, no HTTP listener)
+  # 3100: mcp-stdio
+  # 3101: mcp-stdio-alt
 
 # MCP 默认传输方式 (2026-06-16 收敛)
 # 29/29 MCP 服务默认 stdio，HTTP/SSE 需显式标志
