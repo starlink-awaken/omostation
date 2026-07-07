@@ -34,3 +34,10 @@ make sync-state
     ## SSOT Rules
 
     Runtime facts, counts, ports, health, and generated inventories are intentionally not maintained here. Use the workspace registries and project source as the truth.
+## Project Governance
+
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+- [License](LICENSE)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
