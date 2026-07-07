@@ -1,4 +1,4 @@
-# omostation 演化护栏 (P76 + P77 沉淀 30 原则)
+# omostation 演化护栏 (P76 + P77 沉淀 35 原则)
 
 > **For agents**: 这是 omostation 治理演化的"宪法" — 每一原则都从一次具体的 debt 类收敛而来。
 > 当你做出架构决策时, 先看这里. 当你治理一个 follow-up 时, 能从中找到对应原则。
@@ -24,6 +24,11 @@
 | P77-3-3 | **remediation-over-suppression** | unregistered 治本 = 补登 SSOT, 而非放宽 threshold |
 | P77-3-4 | **hard-only-after-zero** | enforcement: hard 仅在治本完成 (unregistered=0) 后启用, 避免 CI 永红 |
 | P77-3-5 | **tool-evolution-via-tests** | detector 升级必须先有测试断言新行为 |
+| P77-4-1 | **yaml-comment-strip** | YAML parser 不 strip inline comment, detector 必须手动 strip (`  #` 分割) |
+| P77-4-2 | **registry-uniq-by-name** | duplicate (同号同名) 是信息, conflict (同号不同名) 是错误 — 区分 severity |
+| P77-4-3 | **ssot-by-canonical-name** | 跨仓 registry 冲突时, 取 protocols/port-registry.yaml 为 SSOT (I0 > L0) |
+| P77-4-4 | **aligned-comment-padding** | 端口名对齐后, 注释对齐 (`name  # comment` 保持 2-space 分隔) |
+| P77-4-5 | **multi-ssot-warning** | 多 SSOT 同一数据是技术债 — 治本 = 砍掉一个 (或显式 deprecation) |
 | P76-7-1 | **llm-advisory-not-autonomous** | LLM 只 generate suggestion, 永不 auto-apply |
 | P76-7-2 | **tier-graceful-fallback** | LLM provider 3-tier — aetherforge → ollama → heuristic |
 | P76-7-3 | **cron-real-deployment** | "投产" 不止写 plist, 必须 launchctl load |
@@ -51,7 +56,8 @@
 | P77 Phase 1 | ADR-0164 | 1 | 跨仓一致性 |
 | **P77 Phase 2** | **ADR-0165** | **5** | **演化护栏 catalog 自身** |
 | **P77 Phase 3** | **ADR-0166** | **5** | **跨仓 unregistered 治本 (threshold 0 + hard)** |
-| **合计** | — | **30 (25 ADR-internal + 5 hook)** | — |
+| **P77 Phase 4** | **ADR-0167** | **5** | **跨仓 port-registry 一致性 (6 端口对齐)** |
+| **合计** | — | **35 (30 ADR-internal + 5 hook)** | — |
 
 > 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **30 原则** (4-5 per phase × 6 phases). 数字更准.
 
@@ -153,6 +159,33 @@
 ### P76-7-5: resolve-not-stub
 **含义**: 物理未实现的 placeholder, 必须决议 (要么实现要么标 status), 不留隐含承诺
 **应用**: `mesh-router` 不再在 doc 标 "需要 git submodule init", 而是 doc 标 `status: implemented-in-bin`
+
+## 3.5. P77 Phase 4 (跨仓 port-registry 一致性) — ADR-0167
+
+### P77-4-1: yaml-comment-strip
+**含义**: YAML parser 不 strip inline comment, detector 必须手动 strip (`  #` 分割)
+**反例**: `'agora-mcp-http             # [Phase 9] comment'` 被整串当 service name → 误判 conflict
+**实践**: `_strip_yaml_comment()` helper 在 detector 中调用, 6 false positive → 0
+
+### P77-4-2: registry-uniq-by-name
+**含义**: duplicate (同号同名) 是信息, conflict (同号不同名) 是错误 — 区分 severity
+**反例**: 把 6 duplicate 算 conflict → 修真修真, 永远 fail
+**实践**: `find_port_conflicts()` 区分 `type=duplicate` vs `type=conflict`, summary 分两个 count
+
+### P77-4-3: ssot-by-canonical-name
+**含义**: 跨仓 registry 冲突时, 取 `protocols/port-registry.yaml` 为 SSOT (I0 > L0)
+**反例**: 当冲突时, 留两个 — 修真修真
+**实践**: 8080 + 9290 对齐到 protocols 名称 (`ontoderive-web` + `llm-gateway`)
+
+### P77-4-4: aligned-comment-padding
+**含义**: 端口名对齐后, 注释对齐 (`name  # comment` 保持 2-space 分隔)
+**反例**: `name#comment` (无空格) 或 `name # comment` (1-space) → _strip_yaml_comment 解析不到
+**实践**: 对齐后所有端口用 `name  # comment` 格式 (2-space)
+
+### P77-4-5: multi-ssot-warning
+**含义**: 多 SSOT 同一数据是技术债 — 治本 = 砍掉一个 (或显式 deprecation)
+**反例**: 6 duplicate 永远留着 — "反正 detector 知道是 info, 修真修真"
+**实践**: 留作 P78 large refactor, 当前只做 0 真 conflict 治本
 
 ## 4. Phase 8 (真工程 follow-up 治本) — ADR-0162
 

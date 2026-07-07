@@ -100,7 +100,42 @@ def load_ecos_ports() -> dict[int, str]:
     """ecos port-registry."""
     f = WORKSPACE / "projects" / "ecos" / "port-registry.yaml"
     data = load_yaml(f) or {}
-    return {int(k): str(v) for k, v in data.items() if str(k).isdigit()}
+    ports = data.get("ports", {}) if isinstance(data, dict) else {}
+    return {int(k): _strip_yaml_comment(str(v)) for k, v in ports.items() if str(k).isdigit()}
+
+
+def load_protocols_ports() -> dict[int, str]:
+    """protocols port-registry (SSOT 协议层)."""
+    f = WORKSPACE / "protocols" / "port-registry.yaml"
+    data = load_yaml(f) or {}
+    ports = data.get("ports", {}) if isinstance(data, dict) else {}
+    return {int(k): _strip_yaml_comment(str(v)) for k, v in ports.items() if str(k).isdigit()}
+
+
+def _strip_yaml_comment(value: str) -> str:
+    """YAML parser 不会 strip inline comment ('value # comment'), detector 必须手动处理."""
+    if "  #" in value:  # 2 spaces before # = comment separator
+        return value.split("  #", 1)[0].strip()
+    if "\t#" in value:
+        return value.split("\t#", 1)[0].strip()
+    return value.strip()
+
+
+def find_port_conflicts() -> list[dict]:
+    """跨仓端口冲突扫描: 1) duplicate (两个 registry 都注册, 同号同名) 2) conflict (同号不同名)."""
+    ecos = load_ecos_ports()
+    proto = load_protocols_ports()
+    conflicts = []
+    all_ports = set(ecos.keys()) | set(proto.keys())
+    for p in sorted(all_ports):
+        e = ecos.get(p)
+        pr = proto.get(p)
+        if e and pr:
+            if e == pr:
+                conflicts.append({"port": p, "type": "duplicate", "ecos": e, "protocols": pr})
+            else:
+                conflicts.append({"port": p, "type": "conflict", "ecos": e, "protocols": pr})
+    return conflicts
 
 
 def is_covered_by_prefix(uri: str, registered: dict[str, dict]) -> bool:
@@ -132,9 +167,12 @@ def main() -> int:
     orphan = sorted(set(registered.keys()) - referenced)
 
     ports = load_ecos_ports()
-    port_conflicts: list[tuple[int, str, str]] = []  # (port, claimer1, claimer2)
-    # 简化: 不扫跨仓端口冲突 (需更深的 mapping), 只 report 总数
-    port_count = len(ports)
+    protocols_ports = load_protocols_ports()
+    port_conflicts = find_port_conflicts()
+    real_port_conflicts = [c for c in port_conflicts if c["type"] == "conflict"]
+    # 端口总计数 = ecos unique + protocols unique (去重)
+    all_unique_ports = set(ports.keys()) | set(protocols_ports.keys())
+    port_count = len(all_unique_ports)
 
     summary = {
         "registered": len(registered),
@@ -142,8 +180,14 @@ def main() -> int:
         "unregistered": len(unregistered),
         "orphan": len(orphan),
         "ports": port_count,
+        "port_count_ecos": len(ports),
+        "port_count_protocols": len(protocols_ports),
+        "port_conflicts": len(real_port_conflicts),  # 只算真冲突 (同号不同名)
+        "port_duplicates": len([c for c in port_conflicts if c["type"] == "duplicate"]),
+        "port_conflicts_list": port_conflicts,
         "threshold": args.threshold,
-        "ok": len(unregistered) <= args.threshold,
+        # ok = unregistered=0 AND 真 port conflicts=0
+        "ok": len(unregistered) <= args.threshold and len(real_port_conflicts) == 0,
         "unregistered_list": unregistered[:50],  # truncate for output
         "orphan_list": orphan[:50],
     }
@@ -151,12 +195,17 @@ def main() -> int:
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
-        print(f"=== cross-repo-consistency (P77 Phase 1) ===")
+        print(f"=== cross-repo-consistency (P77 Phase 4) ===")
         print(f"  registered (agora BOS SSOT): {summary['registered']}")
         print(f"  referenced (project code): {summary['referenced']}")
         print(f"  unregistered (referenced but not in SSOT): {summary['unregistered']}")
         print(f"  orphan (in SSOT but not referenced): {summary['orphan']}")
-        print(f"  ports (ecos registry): {summary['ports']}")
+        print(f"  ports (union ecos+protocols): {summary['ports']} "
+              f"(ecos={summary['port_count_ecos']}, protocols={summary['port_count_protocols']})")
+        if summary["port_conflicts"] > 0:
+            print(f"  port conflicts (duplicate+conflict): {summary['port_conflicts']}")
+            for c in summary["port_conflicts_list"][:5]:
+                print(f"    port={c['port']} type={c['type']} ecos={c['ecos']!r} protocols={c['protocols']!r}")
         print()
         if summary["unregistered"] > args.threshold:
             print(f"❌ {summary['unregistered']} unregistered URIs 超过 threshold ({args.threshold})")
@@ -166,6 +215,13 @@ def main() -> int:
                 print(f"  ... and {len(unregistered) - 10} more")
         else:
             print(f"✅ unregistered URIs {summary['unregistered']} ≤ threshold {args.threshold}")
+        if summary["port_conflicts"] > 0:
+            real_conflicts = [c for c in summary["port_conflicts_list"] if c["type"] == "conflict"]
+            if real_conflicts:
+                print()
+                print(f"❌ {len(real_conflicts)} port conflicts (同号不同名, 修真修真):")
+                for c in real_conflicts[:5]:
+                    print(f"  - port={c['port']}: ecos='{c['ecos']}' vs protocols='{c['protocols']}'")
         if summary["orphan"] > 0:
             print()
             print(f"⚠️ orphan URIs (在 SSOT 但无引用, 可能僵尸):")
