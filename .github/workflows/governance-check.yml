@@ -78,7 +78,7 @@ jobs:
           python3 scripts/check-phase-closeout-ssot.py || FAILED=1
           cd projects/omo
           uv sync --quiet   # 显式 sync (确保 pydantic 等依赖装好)
-          uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || FAILED=1
+          uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || { echo "=== governance surfaces FAIL, output: ==="; cat /tmp/omo-governance-surfaces.json 2>/dev/null; FAILED=1; }
           uv run python -m omo.cli lint direct-omo-io || FAILED=1
           uv run python -m omo.cli lint sensitive-governed-writes || FAILED=1
           uv run python -m omo.cli lint schemas || FAILED=1
