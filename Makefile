@@ -64,13 +64,15 @@ help:
 	@echo ""
 	@echo "make help                显示本消息"
 
-install-hooks:  ## 装 git pre-push + pre-commit + post-commit 钩子. 新 clone 必跑.
+install-hooks:  ## 装 git pre-push + pre-commit + post-commit + prepare-commit-msg 钩子. 新 clone 必跑.
 	install -m 755 .githooks/pre-push .git/hooks/pre-push
 	install -m 755 .githooks/pre-commit .git/hooks/pre-commit
 	install -m 755 .githooks/post-commit .git/hooks/post-commit
+	install -m 755 .githooks/prepare-commit-msg-commit-assist .git/hooks/prepare-commit-msg-commit-assist
 	@echo "✅ 已装主仓 .git/hooks/pre-push"
 	@echo "✅ 已装主仓 .git/hooks/pre-commit"
 	@echo "✅ 已装主仓 .git/hooks/post-commit"
+	@echo "✅ 已装主仓 .git/hooks/prepare-commit-msg-commit-assist (LLM advisory 写 .commit-suggestion, P76 Phase 9A)"
 	@# 遍历 projects/* 子模块，查找实际 hooks 路径并配置软链接实现统一治理
 	@for d in projects/*; do \
 		if [ -d "$$d" ] && [ -e "$$d/.git" ]; then \
