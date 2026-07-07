@@ -304,7 +304,7 @@ SYSTEM_YAML = OMO_ROOT / "state" / "system.yaml"
 
 
 def _print_header(title: str) -> None:
-    print(f"\n{'='*50}\n{title}\n{'='*50}")
+    print(f"\n{'=' * 50}\n{title}\n{'=' * 50}")
 
 
 def cmd_dashboard() -> int:
@@ -316,7 +316,9 @@ def cmd_dashboard() -> int:
         if SYSTEM_YAML.exists():
             sys_data = load_yaml(SYSTEM_YAML)
             freeze = sys_data.get("governance", {}).get("code_freeze", False)
-            print(f"System State: {'CODE FREEZE ACTIVE' if freeze else 'DEVELOPMENT ACTIVE'}")
+            print(
+                f"System State: {'CODE FREEZE ACTIVE' if freeze else 'DEVELOPMENT ACTIVE'}"
+            )
         else:
             print("System State: Unknown (system.yaml missing)")
     except Exception:
@@ -353,7 +355,9 @@ def cmd_dashboard() -> int:
     except Exception as e:
         print(f"Error reading debt ledger: {e}")
 
-    print("\nUse this dashboard to monitor physical reality rather than theoretical design.\n")
+    print(
+        "\nUse this dashboard to monitor physical reality rather than theoretical design.\n"
+    )
     return 0
 
 
@@ -456,8 +460,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.command is None:
         args.command = "check"
         check_parser.set_defaults(
-            output=None, json=False, routes_path=None,
-            timeout=DEFAULT_TIMEOUT_SECONDS, concurrency=DEFAULT_CONCURRENCY,
+            output=None,
+            json=False,
+            routes_path=None,
+            timeout=DEFAULT_TIMEOUT_SECONDS,
+            concurrency=DEFAULT_CONCURRENCY,
         )
         args = parser.parse_args(["check"] + (argv or []))
 

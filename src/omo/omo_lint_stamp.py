@@ -57,7 +57,9 @@ def load_gitignore_patterns() -> list[str]:
 def load_projection_paths() -> set[str]:
     if not REGISTRY.exists():
         return set()
-    documents = [doc for doc in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if doc]
+    documents = [
+        doc for doc in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if doc
+    ]
     paths: set[str] = set()
     for document in documents:
         if isinstance(document, dict) and "projections" in document:
@@ -132,7 +134,12 @@ def _match_segments(pat: list[str], path: list[str]) -> bool:
     return _match_segments(tail, path[1:])
 
 
-def is_allowed(rel_path: str, ignore_patterns: list[str], projection_paths: set[str], tracked: set[str]) -> bool:
+def is_allowed(
+    rel_path: str,
+    ignore_patterns: list[str],
+    projection_paths: set[str],
+    tracked: set[str],
+) -> bool:
     for allowed in ALLOW_PATHS:
         if _match(allowed, rel_path):
             return True
@@ -184,9 +191,7 @@ def cmd_stamp_policy(json_output: bool = False) -> int:
         sys.stdout.write("\n")
     else:
         status = "OK" if report["ok"] else "FAIL"
-        print(
-            f"[{status}] stamp-policy: {len(orphans)} orphan file(s) under runtime/"
-        )
+        print(f"[{status}] stamp-policy: {len(orphans)} orphan file(s) under runtime/")
         for orphan in orphans:
             print(f"  - {orphan['path']} ({orphan['size']} bytes)")
 

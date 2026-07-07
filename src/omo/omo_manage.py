@@ -34,7 +34,7 @@ def cmd_status() -> int:
     # Count files by directory
     print("目录统计:")
     for subdir in sorted(OMO_ROOT.iterdir()):
-        if subdir.is_dir() and not subdir.name.startswith('.'):
+        if subdir.is_dir() and not subdir.name.startswith("."):
             count = sum(1 for f in subdir.rglob("*") if f.is_file())
             if count > 0:
                 print(f"  {subdir.name}: {count} files")
@@ -85,7 +85,9 @@ def cmd_health() -> int:
                 elif goal.get("status") == "done" and goal.get("progress", 0) == 100:
                     pass  # OK
                 else:
-                    issues.append(f"Goal {goal.get('id', '')} has inconsistent status/progress")
+                    issues.append(
+                        f"Goal {goal.get('id', '')} has inconsistent status/progress"
+                    )
 
     if not issues:
         print("No issues found.")

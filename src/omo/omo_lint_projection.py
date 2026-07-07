@@ -25,7 +25,9 @@ REGISTRY = OMO_ROOT / "_truth" / "registry" / "runtime-projections.yaml"
 def load_projection_registry() -> dict[str, dict[str, str]]:
     if not REGISTRY.exists():
         raise SystemExit(f"runtime-projections registry missing: {REGISTRY}")
-    documents = [doc for doc in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if doc]
+    documents = [
+        doc for doc in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if doc
+    ]
     for document in documents:
         if isinstance(document, dict) and "projections" in document:
             raw = document.get("projections") or {}
@@ -45,7 +47,9 @@ def load_projection_registry() -> dict[str, dict[str, str]]:
                         "state": state,
                     }
             return normalized
-    raise SystemExit(f"runtime-projections registry has no projections document: {REGISTRY}")
+    raise SystemExit(
+        f"runtime-projections registry has no projections document: {REGISTRY}"
+    )
 
 
 def probe(path_str: str) -> dict[str, object]:
@@ -103,7 +107,9 @@ def cmd_projection_guard(json_output: bool = False) -> int:
                 }
             )
             continue
-        if isinstance(canonical["kind"], str) and canonical["kind"].startswith(("yaml-error", "json-error")):
+        if isinstance(canonical["kind"], str) and canonical["kind"].startswith(
+            ("yaml-error", "json-error")
+        ):
             ok = False
             findings.append(
                 {
@@ -140,7 +146,9 @@ def cmd_projection_guard(json_output: bool = False) -> int:
         sys.stdout.write("\n")
     else:
         status = "OK" if ok else "FAIL"
-        print(f"[{status}] projection-guard: {len(registry)} projections, {len(findings)} findings")
+        print(
+            f"[{status}] projection-guard: {len(registry)} projections, {len(findings)} findings"
+        )
         for finding in findings:
             print(f"  [{finding['severity']}] {finding['kind']}: {finding}")
 

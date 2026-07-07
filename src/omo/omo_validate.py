@@ -92,11 +92,13 @@ def validate_references() -> list[dict]:
     for f in KEY_FILES:
         path = OMO_ROOT / f
         if not path.exists():
-            issues.append({
-                "type": "missing_file",
-                "severity": "high",
-                "message": f"Key file missing: {f}",
-            })
+            issues.append(
+                {
+                    "type": "missing_file",
+                    "severity": "high",
+                    "message": f"Key file missing: {f}",
+                }
+            )
 
     return issues
 
@@ -110,11 +112,13 @@ def validate_state() -> list[dict]:
         mtime = system_yaml.stat().st_mtime
         age_hours = (time.time() - mtime) / 3600
         if age_hours > 24:
-            issues.append({
-                "type": "stale_state",
-                "severity": "medium",
-                "message": f"system.yaml is {age_hours:.1f}h old (>24h)",
-            })
+            issues.append(
+                {
+                    "type": "stale_state",
+                    "severity": "medium",
+                    "message": f"system.yaml is {age_hours:.1f}h old (>24h)",
+                }
+            )
 
     return issues
 
@@ -162,7 +166,9 @@ def cmd_all() -> int:
     print("OMO 全面验证\n")
 
     result = validate_completeness()
-    print(f"完整性: {result['covered']}/{result['total_dirs']} ({result['coverage_pct']:.1f}%)")
+    print(
+        f"完整性: {result['covered']}/{result['total_dirs']} ({result['coverage_pct']:.1f}%)"
+    )
     if result["missing"]:
         print(f"  未覆盖: {', '.join(result['missing'])}")
 
