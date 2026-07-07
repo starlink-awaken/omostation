@@ -987,3 +987,198 @@ services:
       upstream: "/Users/xiamingxing/ToolBox/bos-skill-cli/.git"
     i0_route: pending
     status: active
+
+  # ── P77 Phase 3 治本: 补登 17 unregistered (跨仓真引用) ──
+  - uri: "bos://agora/metrics"
+    domain: agora
+    action: "metrics"
+    transport: inline
+    description: "agora 内部指标源 self-identifier (metrics collector source_uri)"
+    i0_route: pending
+    status: active
+  - uri: "bos://agora/registry"
+    domain: agora
+    action: "registry"
+    transport: inline
+    description: "agora @mcp.resource — 列出所有已注册 tools/resources 的 introspection 入口"
+    i0_route: pending
+    status: active
+  - uri: "bos://agora/status"
+    domain: agora
+    action: "status"
+    transport: inline
+    description: "agora @mcp.resource — BOS 系统内省统一大盘 (router/middleware/调用量)"
+    i0_route: pending
+    status: active
+  - uri: "bos://capability/evaluator"
+    domain: capability
+    action: "evaluator"
+    transport: inline
+    description: "evaluator 域 (CR-RBAC-01 强制权限, role='evaluator' or 'admin')"
+    i0_route: pending
+    status: active
+  - uri: "bos://cockpit/tools/cards_status"
+    domain: cockpit
+    action: "tools/cards_status"
+    transport: stdio
+    package: "cockpit"
+    description: "cockpit cards_status 工具 — mof_agora_hook 路由表入口"
+    i0_route: pending
+    status: active
+  - uri: "bos://cockpit/tools/test"
+    domain: cockpit
+    action: "tools/test"
+    transport: stdio
+    package: "cockpit"
+    description: "cockpit test 工具 — mof_agora_hook 路由表入口"
+    i0_route: pending
+    status: active
+  - uri: "bos://domain/package"
+    domain: domain
+    action: "package"
+    transport: inline
+    description: "domain package 通用入口 (mcp/bos_discovery discovery 路径)"
+    i0_route: pending
+    status: active
+  - uri: "bos://domain/package/action"
+    domain: domain
+    action: "package/action"
+    transport: inline
+    description: "domain package action 子入口 (mcp/bos_discovery dynamic discovery)"
+    i0_route: pending
+    status: active
+  - uri: "bos://ecos/events"
+    domain: ecos
+    action: "events"
+    transport: stdio
+    package: "ecos"
+    command: ["uv", "run", "--directory", "projects/ecos", "python", "-m", "ecos.services.events_sse"]
+    description: "ecos SSE events 入口 (events_sse.py 服务)"
+    i0_route: pending
+    status: active
+  - uri: "bos://ecos/workflow"
+    domain: ecos
+    action: "workflow"
+    transport: stdio
+    package: "ecos"
+    command: ["uv", "run", "--directory", "projects/ecos", "python", "-m", "ecos.cli.workflow"]
+    description: "ecos workflow CLI 入口 (ecos/cli/workflow.py)"
+    i0_route: pending
+    status: active
+  - uri: "bos://execution/workers/status"
+    domain: execution
+    action: "workers/status"
+    transport: inline
+    description: "execution workers status 端点 (mcp_protocol registry 端点)"
+    i0_route: pending
+    status: active
+  - uri: "bos://forge/market/list"
+    domain: forge
+    action: "market/list"
+    transport: stdio
+    package: "agora-market"
+    description: "agora forge market list — plugin market 查询入口"
+    i0_route: pending
+    status: active
+  - uri: "bos://governance/protocols-layer/trigger"
+    domain: governance
+    action: "protocols-layer/trigger"
+    transport: inline
+    description: "governance protocols-layer 触发器入口 (mcp resolver service)"
+    i0_route: pending
+    status: active
+  - uri: "bos://governance/roles/list"
+    domain: governance
+    action: "roles/list"
+    transport: inline
+    description: "governance roles list 端点 (mcp_protocol registry 端点)"
+    i0_route: pending
+    status: active
+  - uri: "bos://kairon/minerva"
+    domain: kairon
+    action: "minerva"
+    transport: stdio
+    package: "kairon"
+    description: "kairon minerva 集成入口 (agora l0_registry_loader 引用)"
+    i0_route: pending
+    status: active
+  - uri: "bos://memory/docs/readme"
+    domain: memory
+    action: "docs/readme"
+    transport: inline
+    description: "memory docs readme 端点 (mcp_protocol registry 端点)"
+    i0_route: pending
+    status: active
+  - uri: "bos://vault/_state"
+    domain: vault
+    action: "_state"
+    transport: inline
+    description: "vault _state 端点 (ecos services integration gateway 引用)"
+    i0_route: pending
+    status: active
+
+  # ── P77 Phase 3 治本第二批: omo + cockpit + c2g 引用 (init submodule 后浮现) ──
+  - uri: "bos://gov/tasks"
+    domain: gov
+    action: "tasks"
+    transport: inline
+    description: "gov tasks 端点 (cockpit dashboard helpers_compute 引用)"
+    i0_route: pending
+    status: active
+  - uri: "bos://governance/cockpit/circuit_breaker"
+    domain: governance
+    action: "cockpit/circuit_breaker"
+    transport: inline
+    description: "governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)"
+    i0_route: pending
+    status: active
+  - uri: "bos://governance/cockpit/daily_budget"
+    domain: governance
+    action: "cockpit/daily_budget"
+    transport: inline
+    description: "governance cockpit daily_budget 端点 (cockpit api_omos metrics source)"
+    i0_route: pending
+    status: active
+  - uri: "bos://governance/cockpit/quests"
+    domain: governance
+    action: "cockpit/quests"
+    transport: inline
+    description: "governance cockpit quests 端点 (cockpit api_omos metrics source)"
+    i0_route: pending
+    status: active
+  - uri: "bos://governance/omo_worker_dispatch"
+    domain: governance
+    action: "omo_worker_dispatch"
+    transport: inline
+    description: "governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics source)"
+    i0_route: pending
+    status: active
+  - uri: "bos://memory/fast-track/virtual-doc"
+    domain: memory
+    action: "fast-track/virtual-doc"
+    transport: inline
+    description: "memory fast-track virtual-doc 端点 (omo bridge source_docs)"
+    i0_route: pending
+    status: active
+  - uri: "bos://omo/audit"
+    domain: omo
+    action: "audit"
+    transport: inline
+    description: "omo audit 端点 (omo BOS schema LEGACY_DOMAIN_MAP 升级示例)"
+    i0_route: pending
+    status: active
+  - uri: "bos://omo/debt"
+    domain: omo
+    action: "debt"
+    transport: stdio
+    package: "omo"
+    description: "omo debt 端点 (omo @mcp.resource 引用)"
+    i0_route: pending
+    status: active
+  - uri: "bos://omo/tasks/active"
+    domain: omo
+    action: "tasks/active"
+    transport: inline
+    description: "omo tasks/active 端点 (omo @mcp.resource 引用)"
+    i0_route: pending
+    status: active
