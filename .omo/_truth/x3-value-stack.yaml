@@ -35,7 +35,7 @@ domains:
       coverage: 选题池溢出·overdue·review提醒
       implemented: true
     x3_value:
-      mechanism: '`scripts/omo/cards_x3_metrics.py` — card_history SQLite 聚合 (count by status, 平均 age by type, 月活跃度)'
+      mechanism: '`omo audit cards` — card_history SQLite 聚合 (count by status, 平均 age by type, 月活跃度)'
       implemented: true
       coverage: 实施于 2026-06-22 (P44 R0), 量化卡牌数量·状态分布·平均存活时间
       tool_invariant_id: CARDS-X3-METRICS-v1
@@ -134,7 +134,7 @@ domains:
 
   Vault:
     x1_audit:
-      mechanism: '`scripts/omo/vault_x1_audit.py` — git content hash + author + age 跟踪 (实施于 2026-06-22, P44 R0)'
+      mechanism: '`omo audit vault` — git content hash + author + age 跟踪 (实施于 2026-06-22, P44 R0)'
       implemented: true
       coverage: 1789 .md 文件 (排除 .venv/node_modules/_archive/dist/build), 0 stale (90 天阈值)
       tool_invariant_id: VAULT-X1-AUDIT-v1
