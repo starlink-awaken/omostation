@@ -252,6 +252,16 @@ def main(argv: list[str] | None = None) -> int:
 
         return strategy_main(args[1:])
 
+    if args and args[0] == "manage":
+        from omo.omo_manage import main as manage_main
+
+        return manage_main(args[1:])
+
+    if args and args[0] == "validate":
+        from omo.omo_validate import main as validate_main
+
+        return validate_main(args[1:])
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)

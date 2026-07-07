@@ -24,7 +24,8 @@ from pathlib import Path
 
 import httpx
 
-from omo.omo_paths import AGORA_ROUTES_PATH
+from omo.omo_paths import AGORA_ROUTES_PATH, OMO_ROOT, WORKSPACE_ROOT
+from omo.omo_shared import load_yaml
 
 # ── omostation 服务端口约定 (fallback, 实际以 agora-routes.json _meta.routing_table 为准) ──────
 # P31-W0-AGORA-ACTUAL-FIX: 修正错配端口 + 删除 stdio-only 服务
@@ -295,32 +296,72 @@ def render_report(results: list[HealthCheckResult]) -> str:
     return "\n".join(lines)
 
 
+# ── Keeper Dashboard (from bin/omo-health.py) ────────────────
+
+HEALTH_YAML = OMO_ROOT / "state" / "system_health.yaml"
+DEBT_ITEMS_DIR = OMO_ROOT / "debt" / "items"
+SYSTEM_YAML = OMO_ROOT / "state" / "system.yaml"
+
+
+def _print_header(title: str) -> None:
+    print(f"\n{'='*50}\n{title}\n{'='*50}")
+
+
+def cmd_dashboard() -> int:
+    """Keeper Dashboard — 读取 .omo/ 状态文件渲染运维看板 (从 bin/omo-health.py 迁移)."""
+    _print_header("KEEPER DASHBOARD (eCOS v6.0)")
+
+    # 1. System Phase & Freeze Status
+    try:
+        if SYSTEM_YAML.exists():
+            sys_data = load_yaml(SYSTEM_YAML)
+            freeze = sys_data.get("governance", {}).get("code_freeze", False)
+            print(f"System State: {'CODE FREEZE ACTIVE' if freeze else 'DEVELOPMENT ACTIVE'}")
+        else:
+            print("System State: Unknown (system.yaml missing)")
+    except Exception:
+        print("System State: Unknown")
+
+    # 2. Health Pulse
+    _print_header("L1: Runtime Health Matrix")
+    try:
+        if HEALTH_YAML.exists():
+            health = load_yaml(HEALTH_YAML)
+            score = health.get("score", 0)
+            status = health.get("status", "unknown")
+            print(f"Global Score: {score}/100 [{status.upper()}]")
+            print(f"Last Updated: {health.get('last_updated', 'never')}")
+        else:
+            print("system_health.yaml missing. Is scheduler.py running?")
+    except Exception as e:
+        print(f"Error reading health: {e}")
+
+    # 3. X2/X3 Debt Status (Active vs Resolved)
+    _print_header("Debt Ledger (X2 Anti-Entropy)")
+    active = 0
+    resolved = 0
+    try:
+        if DEBT_ITEMS_DIR.exists():
+            for debt_file in DEBT_ITEMS_DIR.glob("*.yaml"):
+                debt = load_yaml(debt_file)
+                if debt.get("resolved", False):
+                    resolved += 1
+                else:
+                    active += 1
+        print(f"Active Debts:   {active}")
+        print(f"Resolved Debts: {resolved} (Swept by X2 Pan-Entropy GC)")
+    except Exception as e:
+        print(f"Error reading debt ledger: {e}")
+
+    print("\nUse this dashboard to monitor physical reality rather than theoretical design.\n")
+    return 0
+
+
 # ── CLI 入口 ────────────────────────────────────────────
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="omo health",
-        description="OMO agora 服务健康检查 — 探活 agora-routes.json 注册的端点",
-    )
-    parser.add_argument(
-        "--output", "-o", default=None, help="Markdown 报告输出路径(默认 stdout)"
-    )
-    parser.add_argument("--json", action="store_true", help="同时输出 JSON 摘要")
-    parser.add_argument(
-        "--routes-path",
-        type=Path,
-        default=None,
-        help="agora-routes.json 路径(测试或自定义场景)",
-    )
-    parser.add_argument(
-        "--timeout", type=float, default=DEFAULT_TIMEOUT_SECONDS, help="单服务超时秒数"
-    )
-    parser.add_argument(
-        "--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="并发请求数"
-    )
-    args = parser.parse_args(argv)
-
+def _cmd_check(args: argparse.Namespace) -> int:
+    """agora 服务探活 (原有功能)."""
     routes = load_agora_routes(args.routes_path)
     endpoints = derive_endpoints(routes)
 
@@ -372,6 +413,57 @@ def main(argv: list[str] | None = None) -> int:
         f"({summary['healthy']}/{summary['total']})"
     )
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="omo health",
+        description="OMO 健康检查工具集",
+    )
+    sub = parser.add_subparsers(dest="command")
+
+    # check: agora 服务探活 (默认行为, 向后兼容)
+    check_parser = sub.add_parser(
+        "check",
+        help="探活 agora-routes.json 注册的服务端点",
+    )
+    check_parser.add_argument(
+        "--output", "-o", default=None, help="Markdown 报告输出路径(默认 stdout)"
+    )
+    check_parser.add_argument("--json", action="store_true", help="同时输出 JSON 摘要")
+    check_parser.add_argument(
+        "--routes-path",
+        type=Path,
+        default=None,
+        help="agora-routes.json 路径(测试或自定义场景)",
+    )
+    check_parser.add_argument(
+        "--timeout", type=float, default=DEFAULT_TIMEOUT_SECONDS, help="单服务超时秒数"
+    )
+    check_parser.add_argument(
+        "--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="并发请求数"
+    )
+
+    # dashboard: keeper dashboard
+    sub.add_parser(
+        "dashboard",
+        help="Keeper Dashboard — 读取 .omo/ 状态文件渲染运维看板",
+    )
+
+    args = parser.parse_args(argv)
+
+    # 向后兼容: 无子命令时执行 check (原默认行为)
+    if args.command is None:
+        args.command = "check"
+        check_parser.set_defaults(
+            output=None, json=False, routes_path=None,
+            timeout=DEFAULT_TIMEOUT_SECONDS, concurrency=DEFAULT_CONCURRENCY,
+        )
+        args = parser.parse_args(["check"] + (argv or []))
+
+    if args.command == "dashboard":
+        return cmd_dashboard()
+    return _cmd_check(args)
 
 
 __all__ = (

@@ -529,6 +529,22 @@ def main(argv: list[str] | None = None) -> int:
     god_module.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"
     )
+    # P74: projection-guard (from bin/omo-state-projection-guard.py)
+    projection_guard = sub.add_parser(
+        "projection-guard",
+        help="P74: 验证 runtime-projections.yaml 声明的路径存在且可解析 (CR-P74-STATE-PROJECTION-GUARD)",
+    )
+    projection_guard.add_argument(
+        "--json", action="store_true", help="JSON 输出"
+    )
+    # P74: stamp-policy (from bin/omo-runtime-stamp-policy.py)
+    stamp_policy = sub.add_parser(
+        "stamp-policy",
+        help="P74: 验证 runtime/ 下文件必须 gitignored/tracked/allowlisted (CR-P74-RUNTIME-STAMP-POLICY)",
+    )
+    stamp_policy.add_argument(
+        "--json", action="store_true", help="JSON 输出"
+    )
 
     args = parser.parse_args(argv)
     if args.command == "schemas":
@@ -567,6 +583,12 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_lint_doc_archival_suggestions(args.workspace_root)
     if args.command == "god-module":
         return cmd_lint_god_module(args.workspace_root)
+    if args.command == "projection-guard":
+        from omo.omo_lint_projection import cmd_projection_guard
+        return cmd_projection_guard(json_output=args.json)
+    if args.command == "stamp-policy":
+        from omo.omo_lint_stamp import cmd_stamp_policy
+        return cmd_stamp_policy(json_output=args.json)
     parser.print_help()
     return 1
 
