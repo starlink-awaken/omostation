@@ -19,6 +19,7 @@ This directory collects project-level documentation for **ecos**.
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — Contribution guide
 - [`../SECURITY.md`](../SECURITY.md) — Security policy
 - [`../LICENSE`](../LICENSE) — MIT License
+- [`../CONTRIBUTORS.md`](../CONTRIBUTORS.md) — Contributors and maintainers
 
 ## Workspace Context
 
