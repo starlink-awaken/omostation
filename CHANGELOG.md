@@ -24,7 +24,10 @@
   - `omo inspect`: 统一检查入口 (completeness + references + schemas + god-module)
 - **omo CLI 文档自动生成 (方向 C)**:
   - `omo docs`: 从 docstring 提取帮助文本生成 Markdown 参考文档
-  - `docs/CLI-REFERENCE.md`: 自动生成的 CLI 参考文档 (218 行)
+  - `docs/CLI-REFERENCE.md`: 自动生成的 CLI 参考文档
+- **omo CLI 扩展 (方向 G)**:
+  - `omo report`: 综合报告生成 (doctor + inspect + audit freshness)
+  - `omo watch`: 实时监控模式 (定期运行 doctor，检测状态变化)
 - **测试覆盖**:
   - `tests/test_omo_audit_cli.py`: 16 个单元测试覆盖 omo audit 子命令
 - **C2G v3 (Cybernetic Solutions)**:

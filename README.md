@@ -30,6 +30,8 @@ uv run python -m omo.cli lint direct-omo-io
     |------|------|
     | `omo doctor` | 统一健康检查入口 (state + key files + agora + debt) |
     | `omo inspect` | 统一检查入口 (completeness + references + schemas + god-module) |
+    | `omo report` | 综合报告生成 (doctor + inspect + audit) |
+    | `omo watch` | 实时监控模式 (定期运行 doctor，检测状态变化) |
     | `omo docs` | CLI 文档自动生成 |
     | `omo health check` | 探活 agora-routes.json 注册的服务端点 |
     | `omo health dashboard` | Keeper Dashboard — 读取 .omo/ 状态文件渲染运维看板 |

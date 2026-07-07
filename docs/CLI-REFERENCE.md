@@ -1,6 +1,6 @@
 # omo CLI Reference
 
-> Auto-generated on 2026-07-07 05:39:08 UTC
+> Auto-generated on 2026-07-07 05:56:45 UTC
 
 ## Overview
 
