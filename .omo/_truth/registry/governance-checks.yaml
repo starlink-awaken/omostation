@@ -2221,6 +2221,25 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0158"
 
+    # ── X1 审计: Knowledge Foundry cron 监控 (P76 Phase 6 / ADR-0160) ──
+    - id: CR-FOUNDRY-MONITOR
+      dimension: X1
+      layer: meta
+      name: "Knowledge Foundry cron 监控"
+      description: |
+        Knowledge Foundry 9-cron deck 每 6h 跑一次, run ledger 持久化 (runtime/omo/_delivery/foundry/).
+        threshold: 9 deck 中 ≥ 7/9 (80%) ok. 跨 deck fail 必须写 FAIL-<run-id>.yaml.
+        实施: bin/knowledge-foundry-cron.py
+      check_type: drift_audit
+      target: "bin/knowledge-foundry-cron.py"
+      source_ref: bin/knowledge-foundry-cron.py::main
+      executor: [radar_cron, omo_audit, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-07"
+      adr: "ADR-0160"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
