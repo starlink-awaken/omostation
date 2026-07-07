@@ -1,0 +1,40 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+id: GAC-RULE-CR-META-METRIC-DEBT-FEATURE
+type: GacRule
+name: debt-closed-per-feature 指标
+description: '每交付 1 feature 必须关闭 ≥ 0.5 debt (issued). 治理 score 才能真与开发节奏挂钩. 公式: resolved_count_30d
+  / feat_count_30d. threshold=0.5.'
+status: active
+domain: meta
+layer: meta
+created: '2026-07-07'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-META-METRIC-DEBT-FEATURE
+  dimension: X3
+  layer: meta
+  check_type: drift_audit
+  executor:
+  - radar_cron
+  - omo_audit
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-07-07'
+  target: bin/debt-closed-per-feature.py
+  adr: ADR-0157
+  source_type: native
+  source_ref: bin/debt-closed-per-feature.py::main
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-07-07T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生
