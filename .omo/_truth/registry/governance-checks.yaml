@@ -2421,6 +2421,26 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0169"
 
+    # ── X3 value-stack: 端口 env var 引用 (P77 Phase 7 / STRAT-P77 / ADR-0170) ──
+    - id: CR-ENV-VAR-PORT
+      dimension: X3
+      layer: meta
+      name: "端口 env var 引用守护 (P77-7 env-var-SSOT)"
+      description: |
+        扫 bin/ .githooks/ 和 projects/*/src/ 中 env-only 类型端口
+        (types: env-only, 当前: 7422/7456/8090) 是否仍作为字面量硬编码.
+        P77-7-3 env-only-enforcement: env-only 端口必须通过 env var 引用.
+        实施: bin/migrate-port-env-var.py --json (scan mode)
+      check_type: consistency_drift
+      target: "bin/migrate-port-env-var.py"
+      source_ref: bin/migrate-port-env-var.py::main
+      executor: [ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 0.1.0
+      created_at: "2026-07-07"
+      adr: "ADR-0170"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
