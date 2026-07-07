@@ -27,12 +27,18 @@ layers:
   X:  "横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub)"
 
 projects:
+  # mesh-router 不是独立 git 仓 — 实现 = bin/gac-mesh-router.py (HTTP server on port 7437)
+  # P76 Phase 7.4 决议: 标 implemented-in-bin, 移除 submodule init 期望
   mesh-router:
     layer: "L0"
     stack: "Python (http/urllib)"
     role: "omlx 算力网格智能路由代理"
     version: "1.0.0"
     port: 7437
+    status: "implemented-in-bin"
+    physical_location: "bin/gac-mesh-router.py"
+    port_registry_ref: "protocols/port-registry.yaml::7437"
+    note: "无独立仓. 历史 .gitmodules 期望已废弃 (Phase 7.4 决议). 见 ADR-0162 P76 Phase 7."
 
   # ── Python projects ──
   agora:

@@ -1,0 +1,16 @@
+[Unit]
+# Timer for omostation Knowledge Foundry service
+Description=Run omostation Knowledge Foundry every 6h
+
+[Timer]
+# Calendar 替代: OnCalendar 严格按本机时钟调度
+# 0/6/12/18 local time = 北京时间 4 次/天
+OnCalendar=*-*-* 00,06,12,18:00:00
+# Persistent=true 补偿机器睡眠 — 错过时间后开机立刻跑
+Persistent=true
+# AccuracySec=5s 默认足够 (radar 不需要秒级精度)
+AccuracySec=10s
+Unit=omostation-knowledge-foundry.service
+
+[Install]
+WantedBy=timers.target

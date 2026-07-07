@@ -184,3 +184,4 @@ data/cards/
 # metadata (system.yaml, system_health.yaml, health.yaml 等), stamps 本身可重建.
 # 治本: 不在主仓 SSOT 中保留. P74 governance boundary 守护.
 runtime/.watch-dispatch-stamps.json
+.commit-suggestion

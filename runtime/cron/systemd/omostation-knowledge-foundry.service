@@ -1,0 +1,21 @@
+[Unit]
+# omostation Knowledge Foundry cron
+# P76 Phase 7.2 — every 6h foundry cycle
+Description=omostation Knowledge Foundry cron (radar 9-deck)
+Documentation=https://github.com/starlink-awaken/omostation/blob/main/runtime/cron/systemd/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/Users/xiamingxing/Workspace
+Environment="PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/bin/env uv run python bin/knowledge-foundry-cron.py
+StandardOutput=file:/var/log/omostation/foundry.out.log
+StandardError=file:/var/log/omostation/foundry.err.log
+# Resource limits: 9-deck 通常 <60s, 给 5 分钟 (300s)
+TimeoutStartSec=300
+# 不要在退出时重启 — 是周期性 one-shot, Persistent=true (timer) 处理
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.knowledge-foundry.plist
+  macOS LaunchAgent — runs `bin/knowledge-foundry-cron.py` every 6 hours.
+
+  安装:
+    cp runtime/cron/com.omostation.knowledge-foundry.plist \
+       ~/Library/LaunchAgents/com.omostation.knowledge-foundry.plist
+    launchctl load ~/Library/LaunchAgents/com.omostation.knowledge-foundry.plist
+
+  状态:
+    launchctl list | grep omostation.knowledge-foundry
+    # 输出: <pid> com.omostation.knowledge-foundry
+
+  卸载:
+    launchctl unload ~/Library/LaunchAgents/com.omostation.knowledge-foundry.plist
+    rm ~/Library/LaunchAgents/com.omostation.knowledge-foundry.plist
+
+  Run ID / Logs:
+    - stdout/stderr: ~/.local/state/omostation/foundry.log
+    - 派生面 ledger:  $WORKSPACE/runtime/omo/_delivery/foundry/<run-id>.yaml
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.omostation.knowledge-foundry</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <!-- env 变量: OMO 仓库路径覆盖 (LaunchAgents 默认 cwd=/) -->
+      <string>/bin/bash</string>
+      <string>-c</string>
+      <string>cd $WORKSPACE &amp;&amp; uv run python bin/knowledge-foundry-cron.py &gt;&gt; $HOME/.local/state/omostation/foundry.log 2&gt;&amp;1</string>
+    </array>
+
+    <!-- EnvironmentVariables: launchd 不会自动加载 ~/.zshenv 等 -->
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+      <key>WORKSPACE</key>
+      <string>/Users/xiamingxing/Workspace</string>
+    </dict>
+
+    <!--
+      StartCalendarInterval: 每 6 小时起点 (00:00, 06:00, 12:00, 18:00 local time).
+      替代方案 1 (RunAtLoad + StartInterval): 启动后跑一次, 然后每 6h.
+      替代方案 2 (StartCalendarInterval): 严格按本机时钟调度.
+      我们选 StartCalendarInterval — 更可控.
+    -->
+    <key>StartCalendarInterval</key>
+    <array>
+      <dict>
+        <key>Hour</key>
+        <integer>0</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+      </dict>
+      <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+      </dict>
+      <dict>
+        <key>Hour</key>
+        <integer>12</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+      </dict>
+      <dict>
+        <key>Hour</key>
+        <integer>18</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+      </dict>
+    </array>
+
+    <!--
+      标准 LaunchAgent 守门:
+      - RunAtLoad: false (启动时不要立刻跑 — 让 00:00 整点统一)
+      - KeepAlive: false (避免双重跑)
+      - ProcessType: Background
+    -->
+    <key>RunAtLoad</key>
+    <false/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <!-- StandardOutPath / StandardErrorPath: 直接捕获 (替代 shell redirect).
+         若用 shell redirect (如我们写的 > $LOG), 可不设. -->
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/.local/state/omostation/foundry.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/.local/state/omostation/foundry.err.log</string>
+  </dict>
+</plist>
