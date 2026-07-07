@@ -1,4 +1,4 @@
-# omostation 演化护栏 (P76 + P77 沉淀 35 原则)
+# omostation 演化护栏 (P76 + P77 沉淀 40 原则)
 
 > **For agents**: 这是 omostation 治理演化的"宪法" — 每一原则都从一次具体的 debt 类收敛而来。
 > 当你做出架构决策时, 先看这里. 当你治理一个 follow-up 时, 能从中找到对应原则。
@@ -29,6 +29,11 @@
 | P77-4-3 | **ssot-by-canonical-name** | 跨仓 registry 冲突时, 取 protocols/port-registry.yaml 为 SSOT (I0 > L0) |
 | P77-4-4 | **aligned-comment-padding** | 端口名对齐后, 注释对齐 (`name  # comment` 保持 2-space 分隔) |
 | P77-4-5 | **multi-ssot-warning** | 多 SSOT 同一数据是技术债 — 治本 = 砍掉一个 (或显式 deprecation) |
+| P77-5-1 | **port-registration-mandatory** | 任何 service 端口必须先在 SSOT 注册, 否则 hard fail |
+| P77-5-2 | **legacy-external-allowlist** | 外部服务允许硬编码 + 显式 LEGACY_OK_PORTS (otel/vite/lm-studio/family-hub) |
+| P77-5-3 | **environment-variable-preferred** | 优先用 env var, 而不是字面量 (修真修真, Phase 6 入口) |
+| P77-5-4 | **port-context-pattern** | detector 必须用 7+ port-context 模式覆盖 (PORT=/port=/--port/host:port/...) |
+| P77-5-5 | **detector-evolution-via-catalog** | detector 升级必须先有测试断言新行为 (沿用 P77-2-3 + P77-3-5) |
 | P76-7-1 | **llm-advisory-not-autonomous** | LLM 只 generate suggestion, 永不 auto-apply |
 | P76-7-2 | **tier-graceful-fallback** | LLM provider 3-tier — aetherforge → ollama → heuristic |
 | P76-7-3 | **cron-real-deployment** | "投产" 不止写 plist, 必须 launchctl load |
@@ -57,7 +62,8 @@
 | **P77 Phase 2** | **ADR-0165** | **5** | **演化护栏 catalog 自身** |
 | **P77 Phase 3** | **ADR-0166** | **5** | **跨仓 unregistered 治本 (threshold 0 + hard)** |
 | **P77 Phase 4** | **ADR-0167** | **5** | **跨仓 port-registry 一致性 (6 端口对齐)** |
-| **合计** | — | **35 (30 ADR-internal + 5 hook)** | — |
+| **P77 Phase 5** | **ADR-0168** | **5** | **跨仓端口硬编码扫描 (4 端口补登 + hard)** |
+| **合计** | — | **40 (35 ADR-internal + 5 hook)** | — |
 
 > 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **30 原则** (4-5 per phase × 6 phases). 数字更准.
 
@@ -186,6 +192,33 @@
 **含义**: 多 SSOT 同一数据是技术债 — 治本 = 砍掉一个 (或显式 deprecation)
 **反例**: 6 duplicate 永远留着 — "反正 detector 知道是 info, 修真修真"
 **实践**: 留作 P78 large refactor, 当前只做 0 真 conflict 治本
+
+## 3.6. P77 Phase 5 (跨仓端口硬编码扫描) — ADR-0168
+
+### P77-5-1: port-registration-mandatory
+**含义**: 任何 service 端口必须先在 SSOT 注册, 否则 hard fail
+**反例**: 7430 (agora internal) 16 处硬编码, 不在 SSOT → 跨仓 port 冲突盲区
+**实践**: `bin/check-hardcoded-ports.py` detector, unregistered=0 修真修真
+
+### P77-5-2: legacy-external-allowlist
+**含义**: 外部服务 (otel/vite/lm-studio/family-hub) 允许硬编码 + 显式 LEGACY_OK_PORTS
+**反例**: 把 4318 (otel) 当 unregistered → 修真修真, 永远 fail
+**实践**: 5 LEGACY_OK_PORTS (1234/3000/3001/4318/5173) 显式豁免 + 注释
+
+### P77-5-3: environment-variable-preferred
+**含义**: 优先用 env var, 而不是字面量 (修真修真, Phase 6 入口)
+**反例**: `port=7422` 字面量 → 部署漂移 / 修真修真
+**实践**: 治本方向: 把已注册 port 改成 env var 引用, detector 保留豁免 (Phase 6 留作)
+
+### P77-5-4: port-context-pattern
+**含义**: detector 必须用 7+ port-context 模式覆盖 (PORT=/port=/--port/host:port/...)
+**反例**: 只检测 `port=NNNN` → 漏掉 16/19 hardcoded sites
+**实践**: 7 patterns (PORT = / port= / --port / host:port / localhost / 127.0.0.1 / 0.0.0.0)
+
+### P77-5-5: detector-evolution-via-catalog
+**含义**: detector 升级必须先有测试断言新行为 (沿用 P77-2-3 + P77-3-5)
+**反例**: 加新 pattern 但不更新 test → 修真修真
+**实践**: 10 phase-5 测试 + 1 catalog 引用 (5 原则 P77-5-1..5)
 
 ## 4. Phase 8 (真工程 follow-up 治本) — ADR-0162
 

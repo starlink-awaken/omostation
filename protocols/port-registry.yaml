@@ -1,8 +1,11 @@
 ports:
   3100: mcp-stdio
   3101: mcp-stdio-alt
+  7420: 'bos-api                   # BOS API service (agora tools_proxy, ecos watchdog)'
   7422: 'agora-mcp-http             # [Phase 9] Unified A2A/BOS Entry (HTTP)'
+  7430: 'agora-internal            # agora internal dashboard / instance / worker_dispatch'
   7431: 'agora-mcp-sse              # Agora SSE Main'
+  7432: 'ecos-event-listener       # ecos workflow event_listener SSE endpoint'
   7437: 'omlx-mesh-router           # omlx Multi-node Intelligent Proxy Router (HTTP)'
   7455: 'agora-swarm-udp            # [Phase 55] Swarm Discovery/Heartbeat'
   7456: l4-kernel-mcp-sse
@@ -13,6 +16,7 @@ ports:
   9190: 'omo-dashboard              # omo dashboard (converged to cockpit)'
   9100: 'omo-webhook                # observability webhook-bridge target'
   9290: 'llm-gateway                # LLM Gateway HTTP (legacy)'
+  9876: 'runtime-l1                 # runtime L1 service (cockpit dashboard constants.py 引用)'
   7450: 'runtime-cron-http          # runtime-cron service (http via --http flag)'
   8080: 'ontoderive-web          # web serve default (agora-api-gateway 已移除, 重用)'
   # ── ToolBox (X-extension) L3 instances — stdio transport, ports reserved for future HTTP 升级 ──

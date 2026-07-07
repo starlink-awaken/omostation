@@ -143,6 +143,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0165 | P77 Phase 2 演化护栏 catalog (15 原则形式化 + 5 新 GaC rules) | ACCEPTED | 2026-07-07 | governance-team | 0165-p77-phase2-evolution-guardrails.md |
 | 0166 | P77 Phase 3 跨仓 unregistered 治本 (threshold 0 + 26 unregistered 补登 + 升 hard) | ACCEPTED | 2026-07-07 | governance-team | 0166-p77-phase3-cross-repo-remediation.md |
 | 0167 | P77 Phase 4 跨仓 port-registry 一致性 (load bug 修 + yaml comment strip + 6 端口对齐) | ACCEPTED | 2026-07-07 | governance-team | 0167-p77-phase4-port-registry-consistency.md |
+| 0168 | P77 Phase 5 跨仓端口硬编码扫描 (5 port 补登 + 7 port-context pattern + 5 LEGACY_OK_PORTS) | ACCEPTED | 2026-07-07 | governance-team | 0168-p77-phase5-hardcoded-ports.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 
 ---

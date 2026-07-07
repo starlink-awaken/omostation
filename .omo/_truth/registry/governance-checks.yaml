@@ -2372,6 +2372,33 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0165"
 
+    # ── X3 value-stack: 跨仓端口硬编码扫描 (P77 Phase 5 / STRAT-P77 / ADR-0168) ──
+    - id: CR-HARDCODED-PORT
+      dimension: X3
+      layer: meta
+      name: "跨仓端口硬编码扫描 (P77-5 port-registration-mandatory)"
+      description: |
+        扫 projects/*/src/ 真**代码** (非 test, 非 docstring) 中 port-context 硬编码.
+        修真修真: 7 port-context pattern (PORT= / port= / --port / host:port /
+        localhost / 127.0.0.1 / 0.0.0.0). 任何硬编码 port 必须先在
+        projects/ecos/port-registry.yaml 或 protocols/port-registry.yaml 注册.
+        5 LEGACY_OK_PORTS 豁免 (1234 LM Studio / 3000+3001 family-hub /
+        4318 otel / 5173 vite).
+        实施: bin/check-hardcoded-ports.py
+      check_type: consistency_drift
+      target: "bin/check-hardcoded-ports.py"
+      source_ref: bin/check-hardcoded-ports.py::main
+      executor: [radar_cron, ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 0.1.0
+      created_at: "2026-07-07"
+      adr: "ADR-0168"
+      relates_to:
+        - CR-CROSS-REPO-CONSISTENT
+        - .omo/_knowledge/decisions/0167-p77-phase4-port-registry-consistency.md
+        - .omo/_knowledge/decisions/0166-p77-phase3-cross-repo-remediation.md
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
