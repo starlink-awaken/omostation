@@ -50,6 +50,9 @@ jobs:
         uses: astral-sh/setup-uv@v4
       - name: Run governance checks
         run: |
+          # P77 debug: set -x 打印每个 check 命令 + 退出码, 定位 interface-check silent fail
+          # (本地 check-*.py 全 pass, CI 某 check 静默 return 1; set -x 让 CI log 可见每个 check 执行)
+          set -x
           FAILED=0
           # Run each check independently — don't let one failure skip the rest
           python3 scripts/check-interfaces.py || FAILED=1
@@ -75,7 +78,7 @@ jobs:
           python3 scripts/check-phase-closeout-ssot.py || FAILED=1
           cd projects/omo
           uv sync --quiet   # 显式 sync (确保 pydantic 等依赖装好)
-          uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || FAILED=1
+          uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || { echo "=== governance surfaces FAIL, output: ==="; cat /tmp/omo-governance-surfaces.json 2>/dev/null; FAILED=1; }
           uv run python -m omo.cli lint direct-omo-io || FAILED=1
           uv run python -m omo.cli lint sensitive-governed-writes || FAILED=1
           uv run python -m omo.cli lint schemas || FAILED=1
