@@ -151,6 +151,9 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0173 | P78 Phase 2 基线重放 + Foundry v2 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0173-p78-phase2-baseline-foundry-v2.md |
 | STRAT-P79 | P79 2026H2 治理巩固 + Foundry 运营化路线图 (5 phase) | PROPOSED | 2026-07-08 | governance-team | STRAT-P79-strategic-roadmap.md |
 | 0174 | P79 Phase 1 Foundry v2 cron 集成 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0174-p79-phase1-foundry-v2-cron.md |
+| 0176 | P79 Phase 3 跨仓零残留 (ecos 结构化对齐) | ACCEPTED | 2026-07-08 | governance-team | 0176-p79-phase3-cross-repo-zero-residual.md |
+| 0177 | P79 Phase 4 文档刷新 (ARCHITECTURE.md port-registry) | ACCEPTED | 2026-07-08 | governance-team | 0177-p79-phase4-docs-refresh.md |
+
 | 0178 | P79 Phase 5 收官 (SOP + GaC 173 冻结 + 结项) | ACCEPTED | 2026-07-08 | governance-team | 0178-p79-phase5-closeout.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
@@ -236,6 +239,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 ### P79 — 2026H2 治理巩固 + Foundry 运营化 (STRAT-P79)
 
 - STRAT-P79: P79 战略路线图 (5 phase) — **PROPOSED** | 2026-07-08 | omostation P79 | STRAT-P79-strategic-roadmap.md
+- ADR-0176: P79 Phase 3 (跨仓零残留) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0176-p79-phase3-cross-repo-zero-residual.md
+- ADR-0177: P79 Phase 4 (文档刷新) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0177-p79-phase4-docs-refresh.md
 - ADR-0174: P79 Phase 1 (Foundry v2 cron 集成) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0174-p79-phase1-foundry-v2-cron.md
 - ADR-0178: P79 Phase 5 (收官: SOP + GaC 冻结) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0178-p79-phase5-closeout.md
 
