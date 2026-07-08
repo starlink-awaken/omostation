@@ -43,6 +43,15 @@ EXECUTOR_ENUM = {
     "gac_local_gate",
 }
 
+# severity 推导 (宪法 Wave 2, ADR-0171): red rule drift 优先修
+RED_EXECUTORS = {"hook_pre_edit", "ci_gate"}
+
+
+def derive_severity(rule: dict) -> str:
+    """推导 rule severity (ADR-0171): executor ∈ {hook_pre_edit, ci_gate} → red; 否则 gray."""
+    execs = set(rule.get("executor") or [])
+    return "red" if (execs & RED_EXECUTORS) else "gray"
+
 
 def load_gac_rules(path: Path) -> list[dict]:
     """加载 governance-checks.yaml::gac.rules (多文档 strip frontmatter)."""
@@ -217,11 +226,19 @@ def main() -> int:
     rules = load_gac_rules(REGISTRY)
 
     all_drifts: list[str] = []
+    red_drifts: list[str] = []  # 宪法 Wave 2 (ADR-0171): red rule drift 优先修
+    gray_drifts: list[str] = []
     for rule in rules:
-        all_drifts.extend(check_target_exists(rule))
-        all_drifts.extend(check_executor_valid(rule))
-        all_drifts.extend(check_ssot_drift(rule))
-        all_drifts.extend(check_indexed_drift(rule))
+        sev = derive_severity(rule)
+        rule_drifts = []
+        rule_drifts.extend(check_target_exists(rule))
+        rule_drifts.extend(check_executor_valid(rule))
+        rule_drifts.extend(check_ssot_drift(rule))
+        rule_drifts.extend(check_indexed_drift(rule))
+        for d in rule_drifts:
+            tagged = f"[{sev.upper()}] {d}"
+            all_drifts.append(tagged)
+            (red_drifts if sev == "red" else gray_drifts).append(tagged)
 
     # JSON 模式 (阶段 4 仪表盘/cron 数据源): 输出 JSON, 跳过人读 print
     if json_mode:
@@ -233,6 +250,8 @@ def main() -> int:
                     "rules": len(rules),
                     "drifts": all_drifts,
                     "drift_count": len(all_drifts),
+                    "red_drifts": red_drifts,
+                    "gray_drifts": gray_drifts,
                 },
                 ensure_ascii=False,
                 indent=2,
@@ -245,9 +264,15 @@ def main() -> int:
     print(f"规则数: {len(rules)}")
 
     if all_drifts:
-        print(f"\n⚠️  发现 {len(all_drifts)} 处 drift:")
-        for d in all_drifts:
-            print(f"  - {d}")
+        print(f"\n⚠️  发现 {len(all_drifts)} 处 drift (🔴 red: {len(red_drifts)}, 🟡 gray: {len(gray_drifts)}):")
+        if red_drifts:
+            print(f"  🔴 red rule drift (优先修, 阻塞规则声明失效):")
+            for d in red_drifts:
+                print(f"    - {d}")
+        if gray_drifts:
+            print(f"  🟡 gray rule drift (审计规则声明失效):")
+            for d in gray_drifts:
+                print(f"    - {d}")
     else:
         print("✅ GaC drift 检测通过 (0 drift)")
 
