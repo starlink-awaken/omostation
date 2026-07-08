@@ -183,7 +183,7 @@ def _check_yaml_bypass(rel, content):
     memory frontmatter-safe-load-all: P45 frontmatter 化后 safe_load_all 必备, yaml.load 崩.
     """
     warnings = []
-    pattern = re.compile(r'\byaml\.load\s*\(')
+    pattern = re.compile(r'\byaml\.load(?:_all)?\s*\(')  # code-review #2: 覆盖 load_all
     for m in pattern.finditer(content):
         ctx = content[max(0, m.start()-30):m.end()+40]
         if any(kw in ctx for kw in ['SafeLoader', 'FullLoader', 'type: ignore', '# yaml.load']):
@@ -217,7 +217,7 @@ def _check_god_module_edit(rel, content):
         existing = len(fp.read_text(encoding="utf-8", errors="ignore").splitlines())
     except Exception:
         return warnings
-    total = existing + len(content.splitlines())
+    total = existing + len(content.splitlines())  # code-review #5: Edit 模式保守估算 (没减被替换部分, 偏高 warn)
     warn_th = int(os.environ.get("GAC_GOD_MODULE_WARN", "800"))
     error_th = int(os.environ.get("GAC_GOD_MODULE_ERROR", "1500"))
     if total > error_th:
@@ -230,7 +230,7 @@ def _check_god_module_edit(rel, content):
 def _check_eval_exec(rel, content):
     """eval_exec 检查 (Wave 3 横向扩展, 内置): 禁止 eval()/exec() (不安全)."""
     warnings = []
-    pattern = re.compile(r'\b(eval|exec)\s*\(')
+    pattern = re.compile(r'(?<!\.)\b(eval|exec)\s*\(')  # code-review #3: 排除 self.eval/obj.exec 方法
     for m in pattern.finditer(content):
         ctx = content[max(0, m.start()-30):m.end()+30].lower()
         if any(kw in ctx for kw in ['ast', 'literal_eval', 'compile', '# eval', '# exec', 'example', 'test_', 'docstring']):
@@ -242,7 +242,7 @@ def _check_eval_exec(rel, content):
 def _check_mutable_default(rel, content):
     """mutable_default 检查 (Wave 3 横向扩展, 内置): 函数默认参数用 mutable — Python 高频坑."""
     warnings = []
-    pattern = re.compile(r'def\s+\w+\s*\([^)]*=\s*(\[\]|\{\}|set\(\)|dict\(\)|list\(\))', re.MULTILINE)
+    pattern = re.compile(r'def\s+\w+\s*\([^)]*=\s*(\[\]|\{\}|set\(\)|dict\(\)|list\(\)|dict\([^)]*\)|list\([^)]*\))', re.MULTILINE)  # code-review #6: 覆盖嵌套
     for m in pattern.finditer(content):
         warnings.append(f"GaC PY-MUTABLE-DEFAULT: {rel} 函数默认参数用 mutable {m.group(1)} (用 None + 内部创建)")
     return warnings
