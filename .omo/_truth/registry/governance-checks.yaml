@@ -2445,6 +2445,25 @@ gac:
       created_at: "2026-07-07"
       adr: "ADR-0170"
 
+    # ── X3 value-stack: deprecated 端口检测 (P78 / STRAT-P78 / ADR-0172) ──
+    - id: CR-DEPRECATED-PORT
+      dimension: X3
+      layer: meta
+      name: "deprecated 端口使用检测 (P78-1 dead-port-cleanup)"
+      description: |
+        扫 projects/*/src/ 中 status: deprecated 端口 (8765, 9090) 的代码引用.
+        deprecated 端口不应在新代码中使用；已有引用应迁移到对应活跃端口.
+        实施: bin/check-hardcoded-ports.py (detects all ports)
+      check_type: consistency_drift
+      target: "protocols/port-registry.yaml::ports.*.status=deprecated"
+      source_ref: protocols/port-registry.yaml::deprecated
+      executor: [ci_gate, gac_local_gate]
+      enforcement: advisory
+      lifecycle: active
+      version: 0.1.0
+      created_at: "2026-07-08"
+      adr: "ADR-0172"
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
