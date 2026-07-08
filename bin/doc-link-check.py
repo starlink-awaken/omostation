@@ -26,7 +26,7 @@ LOCAL_DOC_GLOBS = (
     "projects/AGENTS.md",
     "projects/*/AGENTS.md",
     "projects/*/CLAUDE.md",
-    "projects/*/README.md",
+    # "projects/*/README.md" — skip 子模块 README (子模块债, 如 gbrain/kairon CODE_OF_CONDUCT 相对路径, 不该拦主仓 gate)
 )
 IGNORED_SCHEMES = {
     "http",
