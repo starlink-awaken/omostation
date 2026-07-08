@@ -23,13 +23,14 @@ Claude Code PreToolUse hook: 拦截 Edit/Write/MultiEdit, 检查 GaC SSOT 规则
 输出:
   exit 0 + stderr 警告 (advisory) 或 exit 0 静默 (合规)
 
-注: advisory (不阻塞) 是有意设计 — 先观察, 稳定后可改 exit 2 阻塞.
+注: 默认 advisory (不阻塞). 宪法 Wave 3 (ADR-0171): GAC_PRE_EDIT_BLOCK=1 启用 blocking (exit 2 事前拦).
 """
 
 from __future__ import annotations
 
 import fnmatch
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -195,12 +196,16 @@ def main() -> int:
         all_warnings.extend(check_content(file_path, c))
 
     if all_warnings:
-        # advisory: stderr 警告 (Claude 看到), exit 0 (不阻塞)
-        print("⚠️  GaC SSOT 检查警告 (advisory, 不阻塞):", file=sys.stderr)
+        # 宪法 Wave 3 (ADR-0171): GAC_PRE_EDIT_BLOCK=1 启用 blocking (事前拦, exit 2)
+        block_mode = os.environ.get("GAC_PRE_EDIT_BLOCK") == "1"
+        prefix = "🚫 GaC SSOT 违规 (blocking, 事前拦 — Wave 3)" if block_mode else "⚠️  GaC SSOT 检查警告 (advisory, 不阻塞)"
+        print(f"{prefix}:", file=sys.stderr)
         for w in all_warnings:
             print(f"  - {w}", file=sys.stderr)
+        if block_mode:
+            return 2  # PreToolUse exit 2 = 阻塞工具 (事前拦, 不让违规 edit 落地)
 
-    return 0  # advisory, 永不阻塞 (稳定后可改 return 2 阻塞)
+    return 0  # 默认 advisory; GAC_PRE_EDIT_BLOCK=1 启用 blocking
 
 
 if __name__ == "__main__":
