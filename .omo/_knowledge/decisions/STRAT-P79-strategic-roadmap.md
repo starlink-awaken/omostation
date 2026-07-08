@@ -1,6 +1,6 @@
 ---
-status: PROPOSED
-lifecycle: strategy
+status: ACCEPTED
+lifecycle: historical-strategy
 owner: governance-team
 last-reviewed: 2026-07-08
 related:
