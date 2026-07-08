@@ -12,6 +12,7 @@
 # 策略 (过渡):
 #   - Require PR (核心隔离) ✅
 #   - 禁 direct push ✅
+#   - Enforce admins ✅ (堵 admin 绕过, 治本 concurrent-agent-contention)
 #   - 不强制 Required CI (过渡, 避免 omo 测试红卡 merge; 稳定后加)
 #   - 0 required reviews (单人可 merge, 不阻塞)
 #
@@ -112,7 +113,7 @@ print("  Allow deletions:       " + yn(ad.get("enabled")))
     "dismiss_stale_reviews": false,
     "require_code_owner_reviews": false
   },
-  "enforce_admins": false,
+  "enforce_admins": true,
   "required_status_checks": null,
   "restrictions": null,
   "required_linear_history": false,
