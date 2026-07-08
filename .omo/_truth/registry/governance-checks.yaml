@@ -1407,6 +1407,8 @@ gac:
     - id: CR-MOF-VALIDATE-01
       source_type: indexed
       source_ref: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::mof_schema_validate_constraints"
+      name: "MOF schema 校验 (L0 constraints + M4 schema 集)"
+      description: "校验 MOF schema 完整性,覆盖 M4 4 个 schema 文件:constraint_l0.yaml/m2_base_schema.yaml/m3-meta.yaml/mof_driven.py"
       dimension: X4
       layer: L0
       check_type: legacy_index
@@ -2077,7 +2079,7 @@ gac:
       dimension: X1
       layer: meta
       name: "M4 自反校验门禁 (5-check)"
-      description: "M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema)"
+      description: "M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema).覆盖schema:constraint_l0.yaml/m2_base_schema.yaml/m3-meta.yaml/mof_driven.py"
       check_type: audit_chain
       target: projects/ecos/src/ecos/ssot/mof/
       source_ref: bin/mof-bootstrap.py::all
