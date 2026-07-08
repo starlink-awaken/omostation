@@ -10,15 +10,15 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 95
-health_score_source: P78 baseline replay
-health_score_generated_at: '2026-07-08T10:30:00Z'
+health_score: 94
+health_score_source: compass_radar_composite
+health_score_generated_at: '2026-07-08T09:53:22Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 103
-total_tasks: 103
+total_tasks: 104
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-08T01:21:16Z'
+updated_at: '2026-07-08T09:53:34Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -179,9 +179,10 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 0
+planned_tasks: 1
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
-next_planned_tasks: []
+next_planned_tasks:
+- OPC-P6-SELF-EVOLUTION-doc-gate-e (Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml)
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
 phase28_status: completed
@@ -190,7 +191,7 @@ governance:
   code_freeze: false
   code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  last_scan: 1783324226.3767219
+  last_scan: 1783504096.216
   total_services: 9
   online_services: 3
   healthy_services: 3
@@ -198,6 +199,7 @@ runtime_health_summary:
   unhealthy_services: []
   stale_services:
   - hermes-gateway
+  - ollama
 phase42_status: active
 health_score_raw: 88.0
 xplane_score: 0.0
@@ -208,4 +210,4 @@ governance_anomaly_score: 100
 service_online_ratio: 0.8
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-08T01:17:14Z'
+governance_feedback_last_run: '2026-07-08T09:53:22Z'
