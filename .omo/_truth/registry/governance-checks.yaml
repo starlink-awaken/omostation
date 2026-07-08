@@ -2376,12 +2376,15 @@ gac:
     - id: CR-HARDCODED-PORT
       dimension: X3
       layer: meta
-      name: "跨仓端口硬编码扫描 (P77-5 port-registration-mandatory)"
+      name: "跨仓端口硬编码扫描 (P77-5 port-registration-mandatory + P77-7 env-var-SSOT)"
       description: |
         扫 projects/*/src/ 真**代码** (非 test, 非 docstring) 中 port-context 硬编码.
         修真修真: 7 port-context pattern (PORT= / port= / --port / host:port /
         localhost / 127.0.0.1 / 0.0.0.0). 任何硬编码 port 必须先在
         projects/ecos/port-registry.yaml 或 protocols/port-registry.yaml 注册.
+        P77 Phase 7 增强: 区分 env_fallback (os.environ.get 内有 fallback, OK)
+        与 bare_hardcoded (裸字面量, 应迁移).
+        --env-var-check 模式: env-only 类型端口 (7422/7456/8090) 裸硬编码 → warning.
         5 LEGACY_OK_PORTS 豁免 (1234 LM Studio / 3000+3001 family-hub /
         4318 otel / 5173 vite).
         实施: bin/check-hardcoded-ports.py
@@ -2391,13 +2394,14 @@ gac:
       executor: [radar_cron, ci_gate, gac_local_gate]
       enforcement: advisory
       lifecycle: active
-      version: 0.1.0
+      version: 0.2.0
       created_at: "2026-07-07"
       adr: "ADR-0168"
       relates_to:
         - CR-CROSS-REPO-CONSISTENT
         - .omo/_knowledge/decisions/0167-p77-phase4-port-registry-consistency.md
         - .omo/_knowledge/decisions/0166-p77-phase3-cross-repo-remediation.md
+        - CR-ENV-VAR-PORT
 
     # ── X4 consistency: commit-assist E2E 验收 (P77 Phase 6 / STRAT-P77 / ADR-0169) ──
     - id: CR-COMMIT-ASSIST-E2E
