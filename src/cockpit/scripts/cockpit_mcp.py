@@ -358,9 +358,7 @@ try:
             str(Path.home() / ".config" / "l4-kernel" / "domains.toml"),
         )
     )
-    _registry = DomainRegistry(
-        path_overrides=load_overrides_from_config(_L4_CONFIG_PATH)
-    )
+    _registry = DomainRegistry(path_overrides=load_overrides_from_config(_L4_CONFIG_PATH))
     _HAS_L4_KERNEL = True
 except (ImportError, FileNotFoundError, ValueError) as _e:
     _log.debug("L4-kernel 不可用: %s", _e)

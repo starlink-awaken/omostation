@@ -368,7 +368,9 @@ def main() -> int:
 
     mcp_p = sub.add_parser("mcp", help="启动 MCP server 或列出工具")
     mcp_p.add_argument("--transport", choices=["stdio", "sse"], default="stdio", help="传输协议（默认 stdio）")
-    mcp_p.add_argument("--port", type=int, default=int(os.environ.get("AGORA_MCP_SSE_PORT", "7431")), help="SSE 模式监听端口")
+    mcp_p.add_argument(
+        "--port", type=int, default=int(os.environ.get("AGORA_MCP_SSE_PORT", "7431")), help="SSE 模式监听端口"
+    )
     mcp_p.add_argument("--list-tools", action="store_true", help="列出已注册的工具，不启动 server")
 
     sub.add_parser("gongwen", help="📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域)")
@@ -425,7 +427,11 @@ def main() -> int:
     sub.add_parser("discover", help="发现可用功能和资源")
 
     events_p = sub.add_parser("events", help="实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)")
-    events_p.add_argument("--url", default=f"http://127.0.0.1:{os.environ.get("AGORA_MCP_SSE_PORT", "7431")}/v1/events", help="Agora SSE Endpoint")
+    events_p.add_argument(
+        "--url",
+        default=f"http://127.0.0.1:{os.environ.get('AGORA_MCP_SSE_PORT', '7431')}/v1/events",
+        help="Agora SSE Endpoint",
+    )
 
     sub.add_parser("version", help="版本信息")
 
