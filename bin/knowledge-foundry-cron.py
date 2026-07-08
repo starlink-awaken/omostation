@@ -20,6 +20,7 @@ schedule:
   5:00  debt-closed       --feature-delivery ratio
   5:30  submodule-bump    --detect stale pointers
   6:00  brief-gen         --emit BRIEF.md + INDEX sync
+  6:30  port-governance   --P78/P79: hardcoded + catalog health (Foundry v2)
 """
 from __future__ import annotations
 
@@ -99,7 +100,8 @@ def main(argv: list[str] | None = None) -> int:
     if "--dry-run" in argv:
         print("=== Knowledge Foundry (DRY RUN) ===")
         print("would execute: omo-sync, agent-compliance, p74-silent, mof-drift, m4-health-score,")
-        print("                bootloader, debt-closed, submodule-bump, brief-gen")
+        print("                bootloader, debt-closed, submodule-bump, brief-gen,")
+        print("                port-governance (v2)")
         return 0
 
     run_id = str(uuid.uuid4())[:8]
@@ -199,6 +201,15 @@ def main(argv: list[str] | None = None) -> int:
         "6:00-brief",
         ["uv", "run", "--with", "pyyaml", "python", "bin/generate-brief.py", "--write"],
         retries=0, timeout=60,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
+    # 6:30 — Port governance (Foundry v2, P78/P79)
+    print("[6:30] port-governance (hardcoded + catalog health)...")
+    results.append(run_tool(
+        "6:30-port-governance",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/decks/port-governance-deck.py"],
+        retries=0, timeout=120,
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 

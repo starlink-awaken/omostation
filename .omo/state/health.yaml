@@ -6,10 +6,10 @@
 
 generated_at: "2026-07-08T10:30:00Z"
 source: "P78 baseline replay (real audit)"
-health_score: 95
+health_score: 100
 governance_anomaly_score: 100
 anomaly_count: 0
-service_online_ratio: 0.850
+service_online_ratio: 0.900
 freshness_score: 100
 feedback_alive: True
 feedback_last_ts: "2026-07-08T10:01:00+00:00"
