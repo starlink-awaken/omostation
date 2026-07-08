@@ -32,7 +32,7 @@ from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
 from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[import-not-found]
 
 # L0 审计 hook
-from ecos.ssot.tools.mof_agora_hook import (  # type: ignore[import-not-found]
+from agora.adapters.ecos import (  # type: ignore[import-not-found]
     post_audit as _bos_post_audit,
     pre_check as _bos_pre_check,
 )
