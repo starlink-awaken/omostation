@@ -148,6 +148,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0170 | P77 Phase 7 端口 env var 重构 (25 env var 映射 + root repo 迁移) | ACCEPTED | 2026-07-07 | governance-team | 0170-p77-phase7-env-var-port-migration.md |
 | 0171 | 宪法 Wave 1 — 治理规则 severity 分层 (red/gray, executor 推导, 159 red + 12 gray) | ACCEPTED | 2026-07-08 | governance-team | 0171-constitution-wave1-severity-classification.md |
 | 0172 | P78 端口注册表收敛 (deprecated 清理 + transport 字段) | ACCEPTED | 2026-07-08 | governance-team | 0172-p78-port-registry-convergence.md |
+| 0173 | P78 Phase 2 基线重放 + Foundry v2 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0173-p78-phase2-baseline-foundry-v2.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 
 ---
@@ -223,9 +224,10 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0169: P77 Phase 6 (commit-assist E2E) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0169-p77-phase6-commit-assist-e2e.md
 - ADR-0170: P77 Phase 7 (端口 env var 重构) — **ACCEPTED** | 2026-07-07 | omostation P77 | 0170-p77-phase7-env-var-port-migration.md
 
-### P78 — 端口注册表收敛 (ADR-0172)
+### P78 — 端口注册表收敛 (ADR-0172..0173)
 
 - ADR-0172: P78 (端口注册表收敛) — **ACCEPTED** | 2026-07-08 | omostation P78 | 0172-p78-port-registry-convergence.md
+- ADR-0173: P78 Phase 2 (基线重放 + Foundry v2) — **ACCEPTED** | 2026-07-08 | omostation P78 | 0173-p78-phase2-baseline-foundry-v2.md
 
 ---
 

@@ -37,6 +37,7 @@ related:
 │   5:00 debt-closed       █░░░░░░░░░░░░░░░░░  0.4s / 60s                │
 │   5:30 submodule-bump    ██░░░░░░░░░░░░░░░░  1.6s / 30s                │
 │   6:00 brief-gen         █░░░░░░░░░░░░░░░░░  0.2s / 60s                │
+│   +v2  port-governance   P78: hardcoded + catalog health              │
 │                                                                      │
 │  Trigger conditions (last 7 days):                                   │
 │   ⬆ gac_local_gate FAIL: 2 → 0 (P76 phase 1+2 修复)                │

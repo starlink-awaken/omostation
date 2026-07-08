@@ -49,6 +49,11 @@
 | P78-3 | **conflict-lifecycle** | conflicts_pending 不再 pending 时必须转 resolved 或清理 |
 | P78-4 | **ssot-status-machine** | 注册表每个条目标 status: active|deprecated|reserved |
 | P78-5 | **registry-as-source** | port-registry 是传输方式和状态的 SSOT |
+| P79-1 | **baseline-replay-after-phase** | 每 phase 收口后重放 governance baseline |
+| P79-2 | **bin-config-ssot-alignment** | bin/ 和 config/ 的端口引用必须与 port-registry 一致 |
+| P79-3 | **foundry-deck-per-governance-axis** | 每治理轴对应一个 foundry deck |
+| P79-4 | **catalog-health-metric** | 原则数和 GaC 规则数作为可观测指标写入 foundry |
+| P79-5 | **zero-planned-tasks** | 治理收口目标: planned tasks 清零 |
 | P76-7-1 | **llm-advisory-not-autonomous** | LLM 只 generate suggestion, 永不 auto-apply |
 | P76-7-2 | **tier-graceful-fallback** | LLM provider 3-tier — aetherforge → ollama → heuristic |
 | P76-7-3 | **cron-real-deployment** | "投产" 不止写 plist, 必须 launchctl load |
@@ -81,7 +86,8 @@
 | **P77 Phase 6** | **ADR-0169** | **5** | **commit-assist E2E 验收 (19 测试 + heuristic bug 修)** |
 | **P77 Phase 7** | **ADR-0170** | **5** | **端口 env var 重构 (25 env var 映射 + root repo 迁移)** |
 | **P78** | **ADR-0172** | **5** | **端口注册表收敛 (deprecated 清理 + transport 字段)** |
-| **合计** | — | **55 (50 ADR-internal + 5 hook)** | — |
+| **P78 Phase 2** | **ADR-0173** | **5** | **基线重放 + Foundry v2 (bin/config 对齐 + health 95 + 10-deck)** |
+| **合计** | — | **60 (55 ADR-internal + 5 hook)** | — |
 
 > 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **30 原则** (4-5 per phase × 6 phases). 数字更准.
 
@@ -393,15 +399,12 @@
 
 ## 8. 现状快照 (Status Snapshot, 2026-07-07)
 
-- **catalog**: 11 ADR 来源 (Phase 6/7/8/9A + P77-1/2/3/4/5/6/7 + P78), 共 55 条 (1-5 per phase)
-- **GaC 规则**: 173 (前 172 + CR-DEPRECATED-PORT)
+- **catalog**: 12 ADR 来源, 共 60 原则
+- **GaC 规则**: 173
 - **planned tasks**: 0
-- **governance**: 100 A+ (复位)
-- **Phase 17 (this)**: P78 — 端口注册表收敛 (deprecated 8765/9090 清理 + transport 字段 + catalog 55 原则 + GaC 173)**
-- **planned tasks**: 0
-- **governance**: 100 A+ (复位)
-- **Phase 16 (this)**: P77 Phase 7 — 端口 env var 重构 (25 env var 映射 + root repo 迁移 + catalog 50 原则 + GaC 172)**
+- **governance**: 95 A+ (P78 baseline replay)
+- **foundry**: v2 — 10-deck (新增 port-governance deck)
 
 ---
 
-*最后更新: 2026-07-08 · 55 原则沉淀 · P78 端口注册表收敛 · ACTIVE*
+*最后更新: 2026-07-08 · 60 原则沉淀 · P78 Phase 2 (基线重放 + Foundry v2) · ACTIVE*
