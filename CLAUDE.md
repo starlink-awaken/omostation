@@ -176,6 +176,7 @@ Run a single test with each framework's native filter (see the target project's 
 | External adapter contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" adapters` |
 | External adapter health | `uv run --with "pyyaml" python "bin/agent-workflow.py" doctor` |
 | L0/SSOT/M0/MOF alignment audit | [`.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md`](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) |
+| Agent 红线/灰线 (severity) | `docs/generated/agent-redlines.md` (`bin/gen-agent-redlines.py` 生成, gitignored; executor ∈ {hook_pre_edit, ci_gate} → red, 否则 gray; ADR-0171) |
 
 ### 6b. By task — "I want to change X, where do I look first?"
 
