@@ -2537,6 +2537,88 @@ gac:
       created_at: 2026-07-08
       source_type: native
 
+    # ── P77 Phase 2 演化护栏 catalog (STRAT-P77) ──
+    - id: CR-CROSS-REPO
+      dimension: X3
+      layer: meta
+      name: 跨仓一致性规则族
+      description: 跨项目/子模块一致性规则族总称; 具体执行由 CR-CROSS-REPO-CONSISTENT 与 CR-CROSS-REPO-CHECK 承担.
+      check_type: registry_integrity
+      executor:
+        - omo_audit
+      lifecycle: draft
+      version: 0.1.0
+      created_at: 2026-07-08
+      source_type: native
+
+    - id: CR-CROSS-REPO-REGISTRY-CONSISTENT
+      dimension: X3
+      layer: meta
+      name: 跨仓注册表一致性
+      description: 保证跨仓库的注册表/元数据一致性 (与 Phase 1 detector 配对).
+      check_type: registry_integrity
+      executor:
+        - omo_audit
+        - ci_gate
+      lifecycle: draft
+      version: 0.1.0
+      created_at: 2026-07-08
+      source_type: native
+
+    - id: CR-PR-DESCRIPTION-NON-EMPTY
+      dimension: X1
+      layer: meta
+      name: PR 描述非空
+      description: 防止空 PR body, 要求 PR 描述包含变更动机与验证.
+      check_type: audit_chain
+      executor:
+        - hook_pre_edit
+        - ci_gate
+      lifecycle: draft
+      version: 0.1.0
+      created_at: 2026-07-08
+      source_type: native
+
+    - id: CR-PRINCIPLE-ENFORCEMENT
+      dimension: X1
+      layer: meta
+      name: 原则执行化
+      description: governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行.
+      check_type: audit_chain
+      executor:
+        - omo_audit
+      lifecycle: draft
+      version: 0.1.0
+      created_at: 2026-07-08
+      source_type: native
+
+    - id: CR-RUFF-SCOPE-STABLE
+      dimension: X4
+      layer: X
+      name: Ruff Scope 稳定
+      description: 防止 X-Plane 项目改变 ruff scope 导致 lint 面漂移.
+      check_type: schema_integrity
+      executor:
+        - ci_gate
+      lifecycle: draft
+      version: 0.1.0
+      created_at: 2026-07-08
+      source_type: native
+
+    - id: CR-WORKTREE-CLEAN-BEFORE-PR
+      dimension: X4
+      layer: meta
+      name: Worktree 清理
+      description: 防 worktree reset 残留; PR 提交前验证 worktree 干净.
+      check_type: hygiene_case
+      executor:
+        - hook_pre_edit
+        - ci_gate
+      lifecycle: draft
+      version: 0.1.0
+      created_at: 2026-07-08
+      source_type: native
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
