@@ -1,6 +1,6 @@
 # Agent 并发隔离落地计划 — Worktree + Branch Protection
 
-> **状态**: 📋 待推进(就绪未启用) · **创建**: 2026-06-30 · **关联**: ADR-0106 P2 · `docs/GOVERNANCE-EVOLUTION-ROLLOUT.md:36`
+> **状态**: ✅ Phase 3 已落地 (branch protection + enforce_admins 启用 2026-07-08) · **创建**: 2026-06-30 · **关联**: ADR-0106 P2 · `docs/GOVERNANCE-EVOLUTION-ROLLOUT.md:36`
 > **临时治本**: `bin/gac-local-gate.py` scope staged(commit `896e60ba`,已验证 PASS)
 
 ---
@@ -9,7 +9,7 @@
 
 多 agent(老王 + 并发 governance agent)共享同一 worktree,导致 commit 死循环——GaC 的 doctor/compliance/verify 是 worktree-wide 检查,被并发 dirty 污染后 FAIL,拦住所有 commit。
 
-**临时治本**(`gac-local-gate` scope staged)已生效并验证 PASS。**终态方案**(per-session worktree + main branch protection)脚本就绪、执行层待推进。
+**临时治本**(`gac-local-gate` scope staged)已生效并验证 PASS。**终态方案**(per-session worktree + main branch protection)**已落地** (2026-07-08): branch protection 启用 (Require PR=YES + Enforce admins=YES via gh API); 脚本治本 (PR#178 line 115 false→true, 防并发冲回滚). ISC-4/5 达成.
 
 > **⚠️ Phase 0 OBSERVE 真相纠正(2026-06-30)**: 早期记忆 `ecos-auto-commit-behavior` 称"eCOS X-Plane Audit Agent 程序化 auto push main"——**经代码实证为误**。`X-Plane Audit Agent` 实为主仓 `git user.name`(所有 commit 署名,含手动);`.githooks/post-commit` 注释明写"不自动创建 commit"只做 L0 萃取;无 watcher/daemon 程序化 push。**direct push main 是 agent/人的工作习惯,非程序机制**。Phase 2 据此重新定义为「direct-push→PR 范式转变」(非改某个 agent 程序)。详见 §4 Phase 2。
 
@@ -166,3 +166,4 @@
 | 2026-07-01 | **ISC-3f 治本**(commit `af2444e3`): `governance-evolution` + `doc-ssot-lint` 归 `CI_ONLY_CHECKS` (仓库级不变量, 同 project-layer-index 模式). KISS 选 reclassify 而非 worktree 检测. 解锁 worktree 完整 PR 流程 (gate 不再被这俩拦). 三路验证: 主仓 non-strict ok=True 俩跳过 / strict 仍含俩 (CI 兜底) / pilot worktree 直接跑俩均 FAIL (证死是 blocker). ⚠️ 残留债: governance-evolution.py + roadmap.yaml untracked (并发 agent WIP), CI strict fresh checkout 跑不了 → 单独 followup |
 | 2026-07-01 | **Phase 2c blocking 守卫**(源 done, 未 install): `.githooks/pre-push` advisory→blocking, direct push main (非 work/*) → exit 1 + `DIRECT_PUSH_MAIN_OK=1` escape hatch. 验证: 测试1 direct push exit 1 / 测试2 env 放行 rc=0 (sync+reachability 仍跑). 未 `make install-hooks` → `.git/hooks/pre-push` 副本仍 advisory, 真实 push 行为未变 (不扰并发 agent). install 即影响所有 direct push main, 待拍板 (建议 + Phase 3 一起) |
 | 2026-07-03 | **ISC-3g 治本** (worktree `sync-detached-fix`): `bin/sync-submodules-push.sh` 治 detached HEAD 子模块跳过 (failed 17→0), 解锁 worktree `submit` 免 `--no-verify`. 由 PR#91 (CLAUDE.md+doc-ssot-lint) 实战踩出: worktree `--init` 的 detached 子模块被 sync 判"无上游"拦 push. reachability 由 `submodule-reachability-gate` 兜底. ⚠️ followup B (待办): sgf-policy.yaml 仅 `project-layer-index`+`dependency-baseline-drift` 有 ci_only, ISC-3f 的 `governance-evolution`/`doc-ssot-lint` ci_only 未真落地 → 需 ecos 子模块 PR 补 |
+| 2026-07-08 | **Phase 3 落地 + enforce_admins 治本**: branch protection 已上线 (Require PR=YES + Enforce admins=YES via gh API); 脚本 `gac-branch-protection.sh:115` 治本 (PR#178, false→true 防并发冲回滚). ISC-4/5 达成. 配套宪法 Wave 1 severity 分层 (ADR-0171, PR#182). |
