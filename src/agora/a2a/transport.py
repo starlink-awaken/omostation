@@ -187,7 +187,7 @@ class A2ANetworkTransport(A2ATransport):
         else:
             payload_bytes = json.dumps(payload).encode("utf-8")
 
-        mcp_port = getattr(node, "mcp_port", 7422)
+        mcp_port = getattr(node, "mcp_port", int(os.environ.get("AGORA_MCP_HTTP_PORT", "7422")))
         url = f"http://{node.host}:{mcp_port}/api/v1/a2a/send"
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
