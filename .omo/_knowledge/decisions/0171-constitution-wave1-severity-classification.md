@@ -23,6 +23,7 @@ related: [ADR-0106, 宪法-Wave-1, PR-178]
 **用 executor 推导 severity** (不手动给 171 条加字段, 避免易错):
 
 ```python
+# 抽取到 bin/gac_severity.py (code-review #1 DRY, gac-drift + gen-agent-redlines 共享)
 RED_EXECUTORS = {"hook_pre_edit", "ci_gate"}  # 事前拦 / CI 拦
 def derive_severity(rule):
     execs = set(rule.get("executor") or [])
@@ -58,7 +59,7 @@ def derive_severity(rule):
 
 | Wave | 内容 | 状态 |
 |------|------|------|
-| 1 | severity 推导 + digest | ✅ 本 ADR + PR#178 |
+| 1 | severity 推导 + digest + gac_severity 抽取 (code-review #1) | ✅ 本 ADR + PR#178 + PR#200 |
 | 2 | `gac-local-gate` 读 severity (red=blocking, gray=warn; `--strict` 全 blocking) | ⏳ 集成点已定位 (`gate_checks` line 115 / `run_gate` line 219) |
 | 3 | `hook_pre_edit` 扩展 (更多 red check 事前拦, 非 CI 事后拦) | ⏳ |
 | 4 | 本 ADR 固化 severity 分类 (不可变) | ✅ 本 ADR |
@@ -71,6 +72,7 @@ def derive_severity(rule):
 
 ## 关联
 
-- 脚本: `bin/gen-agent-redlines.py` (PR#178, 2026-07-08)
+- 脚本: `bin/gen-agent-redlines.py` (PR#178) + `bin/gac_severity.py` 抽取共享 (PR#200)
+- code-review 7 findings 全修: PR#200 (regex gap + DRY + 声明面 + GAC_DRIFT_STRICT)
 - 配套平台兜底: `AGENT-ISOLATION-ROLLOUT` Phase 3 enforce_admins (PR#178, 堵 admin 绕过)
 - 病根: `decl-exec-gap-meta-pattern` (治理规则声明面 vs 执行面鸿沟)
