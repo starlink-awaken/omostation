@@ -250,6 +250,8 @@ def main() -> int:
                     "rules": len(rules),
                     "drifts": all_drifts,
                     "drift_count": len(all_drifts),
+                    "red_drifts": red_drifts,
+                    "gray_drifts": gray_drifts,
                 },
                 ensure_ascii=False,
                 indent=2,
