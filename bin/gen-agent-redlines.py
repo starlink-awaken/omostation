@@ -15,7 +15,8 @@ from collections import defaultdict
 
 REGISTRY = ".omo/_truth/registry/governance-checks.yaml"
 OUTPUT = sys.argv[1] if len(sys.argv) > 1 else "docs/generated/agent-redlines.md"
-RED_EXECUTORS = {"hook_pre_edit", "ci_gate"}
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
+from gac_severity import derive_severity, RED_EXECUTORS  # 抽取共享 (code-review #1)
 
 
 def main():
@@ -24,7 +25,7 @@ def main():
     rules = body.get("gac", {}).get("rules", [])
     red, gray = [], []
     for r in rules:
-        (red if (set(r.get("executor") or []) & RED_EXECUTORS) else gray).append(r)
+        (red if derive_severity(r) == "red" else gray).append(r)
 
     L = [
         "# Agent 红线/灰线清单 (宪法 Wave 1)",

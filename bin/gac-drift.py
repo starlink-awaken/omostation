@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -43,14 +44,10 @@ EXECUTOR_ENUM = {
     "gac_local_gate",
 }
 
-# severity 推导 (宪法 Wave 2, ADR-0171): red rule drift 优先修
-RED_EXECUTORS = {"hook_pre_edit", "ci_gate"}
-
-
-def derive_severity(rule: dict) -> str:
-    """推导 rule severity (ADR-0171): executor ∈ {hook_pre_edit, ci_gate} → red; 否则 gray."""
-    execs = set(rule.get("executor") or [])
-    return "red" if (execs & RED_EXECUTORS) else "gray"
+# severity 推导 (宪法 Wave 2, ADR-0171): 抽取共享 bin/gac_severity.py (code-review #1 DRY)
+import sys as _sys
+_sys.path.insert(0, str(WORKSPACE / "bin"))
+from gac_severity import derive_severity, RED_EXECUTORS  # noqa: E402
 
 
 def load_gac_rules(path: Path) -> list[dict]:
@@ -257,7 +254,9 @@ def main() -> int:
                 indent=2,
             )
         )
-        return 1 if (gate_mode and red_drifts) else 0  # 宪法 Wave 2: gray drift warn-only
+        _strict_js = os.environ.get("GAC_DRIFT_STRICT") == "1"
+        _blk_js = red_drifts if not _strict_js else (red_drifts + gray_drifts)
+        return 1 if (gate_mode and _blk_js) else 0  # GAC_DRIFT_STRICT=1 gray 也 blocking
 
     rel = REGISTRY.relative_to(WORKSPACE)
     print(f"=== GaC drift 检测 ({rel}) ===")
@@ -282,8 +281,10 @@ def main() -> int:
             tgt = r.get("target", "")[:60]
             print(f"  - {r['id']}: target={tgt} executor={r.get('executor')}")
 
-    if gate_mode and red_drifts:
-        return 1  # 宪法 Wave 2 执行面 (ADR-0171): 仅 red rule drift blocking, gray warn-only
+    _strict = os.environ.get("GAC_DRIFT_STRICT") == "1"  # code-review #4: gray 也 blocking (CI 可选)
+    _blocking = red_drifts if not _strict else (red_drifts + gray_drifts)
+    if gate_mode and _blocking:
+        return 1  # 默认仅 red blocking; GAC_DRIFT_STRICT=1 gray 也 blocking
     return 0
 
 
