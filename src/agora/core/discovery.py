@@ -94,7 +94,7 @@ class DiscoveryEngine:
 
     # Default port ranges to probe
     PORT_RANGES = [
-        (7420, 7430),  # Agora convention
+        (7420, 7430),  # Agora convention (AGORA_INTERNAL_PORT)
         (8765, 8766),  # Minerva
         (9000, 9005),  # Common MCP services
         (3000, 3002),  # AgentMesh / web apps

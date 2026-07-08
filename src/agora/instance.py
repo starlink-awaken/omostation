@@ -19,8 +19,8 @@ class AgoraInstance:
     instance_id: str  # "agora:starlink-core"
     instance_type: str  # "personal" | "team" | "org" | "ecosystem"
     display_name: str
-    endpoint: str  # "http://localhost:7430"
-    a2a_endpoint: str  # "http://localhost:7430/a2a"
+    endpoint: str  # "http://localhost:{AGORA_INTERNAL_PORT}"
+    a2a_endpoint: str  # f"http://localhost:{AGORA_INTERNAL_PORT}/a2a"
     owner: str  # "org:starlink"
     capabilities: list[str]  # ["identity", "capability", "event", "knowledge", "task"]
     services: list[str]  # 本实例注册的服务名列表
@@ -70,9 +70,9 @@ class InstanceManager:
             instance_id=instance_id,
             instance_type="personal",
             display_name="Default",
-            endpoint=os.environ.get("AGORA_ENDPOINT", "http://localhost:7430"),
+            endpoint=os.environ.get("AGORA_ENDPOINT", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}"),
             a2a_endpoint=os.environ.get(
-                "AGORA_A2A_ENDPOINT", "http://localhost:7430/a2a"
+                "AGORA_A2A_ENDPOINT", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}/a2a"
             ),
             owner="org:starlink",
             capabilities=["identity", "capability", "event", "knowledge", "task"],
