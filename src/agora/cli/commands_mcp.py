@@ -16,7 +16,7 @@ def cmd_web(_args):
 
     import os
 
-    dashboard_url = os.environ.get("AGORA_DASHBOARD_URL", "http://localhost:7430")
+    dashboard_url = os.environ.get("AGORA_DASHBOARD_URL", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}")
     print(f"Agora Dashboard -> {dashboard_url}")
     return web_main()
 

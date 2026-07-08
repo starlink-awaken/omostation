@@ -59,7 +59,7 @@ def run_wizard() -> int:
      agora list          List all services
      agora stats         Show statistics
      agora search <kw>   Search services
-     agora web           Start dashboard (localhost:7430)
+     agora web           Start dashboard (localhost:AGORA_INTERNAL_PORT)
      agora mcp           Start MCP server
 
    Next steps:
