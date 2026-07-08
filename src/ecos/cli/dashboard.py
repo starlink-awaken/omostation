@@ -168,7 +168,7 @@ def main():
         print("eCOS Dashboard data provider — converged to cockpit :8090")
         print("  --json  Output all dashboard data as JSON")
         print()
-        print("Web dashboard: http://localhost:8090/api/ecos/status")
+        print("Web dashboard: http://localhost:{COCKPIT_DASHBOARD_PORT}/api/ecos/status")
         return
 
     data = get_all_data()
