@@ -10,9 +10,9 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 94
-health_score_source: compass_radar_composite
-health_score_generated_at: '2026-07-08T01:17:14Z'
+health_score: 95
+health_score_source: P78 baseline replay
+health_score_generated_at: '2026-07-08T10:30:00Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
