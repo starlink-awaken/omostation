@@ -23,7 +23,15 @@ Claude Code PreToolUse hook: 拦截 Edit/Write/MultiEdit, 检查 GaC SSOT 规则
 输出:
   exit 0 + stderr 警告 (advisory) 或 exit 0 静默 (合规)
 
+检查 (10, Wave 1/3 累积):
+  rule-driven (HOOKABLE_CHECK_TYPES, 遍历 gac.rules, 5): ssot_pointer / port_hardcode /
+    import_nucleus / direct_omo_io / broad_except
+  内置 (Wave 3 横向扩展, 非 rule-driven, 5): yaml_bypass (PR#190, 含 load_all #code-review-2) /
+    sensitive_write (PR#190) / god_module_edit (PR#193) / eval_exec (PR#196, 排除方法 #code-review-3) /
+    mutable_default (PR#196, 含嵌套 #code-review-6)
+
 注: 默认 advisory (不阻塞). 宪法 Wave 3 (ADR-0171): GAC_PRE_EDIT_BLOCK=1 启用 blocking (exit 2 事前拦).
+共享: bin/gac_severity.py (derive_severity, code-review #1 DRY).
 """
 
 from __future__ import annotations
