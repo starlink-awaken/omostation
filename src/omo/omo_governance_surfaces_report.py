@@ -104,6 +104,17 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
         raise FileNotFoundError(f"registry missing: {registry_path}")
 
     registry = _load_yaml(registry_path)
+
+    # Runtime-generated top-level assets may be gitignored and absent on fresh clones.
+    # They are still registered for schema/documentation purposes but are not enforced
+    # by the top-level presence check.
+    runtime_top_levels = {
+        top
+        for item in registry.get("assets", [])
+        if item.get("runtime")
+        and (top := _asset_ref_to_top_level(item.get("ref", "")))
+    }
+
     registered_top_levels = sorted(
         {
             top
@@ -111,10 +122,14 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
                 _asset_ref_to_top_level(item.get("ref", ""))
                 for item in registry.get("assets", [])
             )
-            if top
+            if top and top not in runtime_top_levels
         }
     )
-    observed_top_levels = _top_level_entries(omo_dir)
+    observed_top_levels = sorted(
+        top
+        for top in _top_level_entries(omo_dir)
+        if top not in runtime_top_levels
+    )
 
     missing_registered_roots = sorted(
         top for top in registered_top_levels if not (omo_dir / top).exists()
