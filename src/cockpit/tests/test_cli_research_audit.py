@@ -97,9 +97,10 @@ def test_cmd_research_audit_flags_traceback_records(monkeypatch):
     out_lower = output.lower()
     assert "traceback" in out_lower
     assert "import error" in out_lower
-    # Suggestion line may be wrapped by Rich.
+    # Suggestion line may be wrapped by Rich; assert constituent tokens.
     assert "cockpit" in output or "workspace" in output
-    assert "research --open" in output
+    assert "research" in output
+    assert "--open" in output
     assert "10" in output
 
 
