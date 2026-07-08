@@ -8,7 +8,9 @@
 用法: python3 gen-agent-redlines.py [output_path]
 默认输出: docs/generated/agent-redlines.md
 """
-import yaml, sys, os
+import yaml
+import sys
+import os
 from collections import defaultdict
 
 REGISTRY = ".omo/_truth/registry/governance-checks.yaml"
@@ -61,7 +63,7 @@ def main():
         L.append("")
 
     os.makedirs(os.path.dirname(OUTPUT) or ".", exist_ok=True)
-    open(OUTPUT, "w").write("\n".join(L))
+    open(OUTPUT, "w").write("\n".join(L))  # audit-exempt: non-atomic-write (generated docs)
     print(f"✅ {OUTPUT}: {len(red)} red + {len(gray)} gray = {len(rules)} total")
 
 
