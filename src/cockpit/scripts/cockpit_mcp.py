@@ -346,11 +346,21 @@ def daily_summary(days: int = 1) -> str:
 
 try:
     from l4_kernel import DomainRegistry
+    from l4_kernel.config_loader import load_overrides_from_config
     from l4_kernel.kems import CardsPlane, KemsPlane
 
-    _registry = DomainRegistry()
+    _L4_CONFIG_PATH = Path(
+        os.environ.get(
+            "L4_DOMAIN_CONFIG",
+            str(Path.home() / ".config" / "l4-kernel" / "domains.toml"),
+        )
+    )
+    _registry = DomainRegistry(
+        path_overrides=load_overrides_from_config(_L4_CONFIG_PATH)
+    )
     _HAS_L4_KERNEL = True
-except ImportError:
+except (ImportError, FileNotFoundError, ValueError) as _e:
+    _log.debug("L4-kernel 不可用: %s", _e)
     _registry = None
     _HAS_L4_KERNEL = False
 

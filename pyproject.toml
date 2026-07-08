@@ -20,6 +20,13 @@ dependencies = [
     "uvicorn[standard]>=0.49.0",
     "agora>=3.0.0",
     "omo",
+    "l4-kernel",
+    "model-driven",
+    "metaos",
+    "ecos",
+    "bus-foundation",
+    "kairon-observability",
+    "psutil",
 ]
 
 [project.optional-dependencies]
@@ -55,10 +62,16 @@ ignore = ["S101", "S603", "S607", "S108", "S110", "S314", "S608", "E402", "E501"
 quote-style = "double"
 
 [tool.uv.sources]
+# 仅声明未被直接依赖项目默认依赖树覆盖的 workspace 包：
+# - model-driven 通过 omo/l4-kernel 解析
+# - ecos / bus-foundation 通过 agora 解析
+# - metaos 仅在 agora[admission] 中，需本项目的 source 覆盖
 runtime = { path = "../runtime", editable = true }
 agora = { path = "../agora", editable = true }
 omo = { path = "../omo", editable = true }
 l4-kernel = { path = "../l4-kernel", editable = true }
+metaos = { path = "../metaos", editable = true }
+kairon-observability = { path = "../kairon/packages/kairon-observability", editable = true }
 
 [dependency-groups]
 dev = [
