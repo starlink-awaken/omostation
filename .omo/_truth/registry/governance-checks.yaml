@@ -2620,9 +2620,17 @@ gac:
       source_type: native
 
   drift:
-    schedule: "daily"  # radar 频率
-    auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
+    schedule: "daily"
+    auto_heal: false
     alert_on: [missing_executor, ghost_rule, version_mismatch]
+
+  # P79 Phase 5: GaC 173 冻结声明
+  freeze:
+    active: true
+    since: "2026-07-08"
+    max_rules: 173
+    exemption_process: "ADR + governance-team approval"
+    reason: "P79 治理巩固 — 封顶防规则膨胀"
 
   # lifecycle 配置 (机制 6; 阶段 2 实现状态机, gc 原语清理)
   lifecycle:
