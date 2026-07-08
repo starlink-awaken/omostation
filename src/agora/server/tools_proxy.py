@@ -400,7 +400,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
 
         Args:
             name: Service name (e.g. 'kos', 'minerva')
-            mcp_endpoint: HTTP endpoint URL (e.g. 'http://localhost:7420/mcp')
+            mcp_endpoint: HTTP endpoint URL (e.g. 'http://localhost:{os.environ.get('BOS_API_PORT', '7420')}/mcp')
                           Leave empty for stdio services
             command: Command for stdio services (e.g. 'python3')
             args: Space-separated arguments for stdio command

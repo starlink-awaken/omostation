@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from typing import Any
 
-COCKPIT_DASHBOARD_URL = "http://localhost:8090"
+import os
+
+COCKPIT_DASHBOARD_URL = os.environ.get("COCKPIT_DASHBOARD_URL", f"http://localhost:{os.environ.get('COCKPIT_DASHBOARD_PORT', '8090')}")
 
 _DASHBOARD_HTML = f"""<!DOCTYPE html>
 <html lang="zh-CN">
