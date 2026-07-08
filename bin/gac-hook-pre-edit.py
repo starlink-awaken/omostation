@@ -99,6 +99,12 @@ def check_content(file_path: str, new_content: str) -> list[str]:
         elif check_type == "broad_except" and is_py:
             warnings.extend(_check_broad_except(rule, rid, rel, new_content))
 
+    # 宪法 Wave 3 横向扩展 (内置检查, 非 rule-driven; 声明面 rule followup):
+    # yaml_bypass + sensitive_write — 执行面立即生效, 不依赖 gac.rules rule
+    if is_py:
+        warnings.extend(_check_yaml_bypass(rel, new_content))
+        warnings.extend(_check_sensitive_write(rel, new_content))
+
     return warnings
 
 
@@ -165,6 +171,33 @@ def _check_broad_except(rule, rid, rel, content):
     count = len(pattern.findall(content))
     if count > 3:
         warnings.append(f"GaC {rid}: {rel} 有 {count} 处 broad except (建议细化异常类型)")
+    return warnings
+
+
+def _check_yaml_bypass(rel, content):
+    """yaml_bypass 检查 (Wave 3 横向扩展, 内置): 禁止 yaml.load (不安全), 必 safe_load/safe_load_all.
+
+    memory frontmatter-safe-load-all: P45 frontmatter 化后 safe_load_all 必备, yaml.load 崩.
+    """
+    warnings = []
+    pattern = re.compile(r'\byaml\.load\s*\(')
+    for m in pattern.finditer(content):
+        ctx = content[max(0, m.start()-30):m.end()+40]
+        if any(kw in ctx for kw in ['SafeLoader', 'FullLoader', 'type: ignore', '# yaml.load']):
+            continue
+        warnings.append(f"GaC SEC-YAML-BYPASS: {rel} yaml.load() 不安全 (用 safe_load/safe_load_all, memory frontmatter-safe-load-all)")
+    return warnings
+
+
+def _check_sensitive_write(rel, content):
+    """sensitive_write 检查 (Wave 3 横向扩展, 内置): 禁止硬编码 password/token/secret/api_key."""
+    warnings = []
+    pattern = re.compile(r'\b(password|passwd|token|secret|api_key|apikey|access_key|private_key)\b\s*[:=]\s*["\'][^"\']{4,}["\']', re.IGNORECASE)
+    for m in pattern.finditer(content):
+        ctx = content[max(0, m.start()-40):m.end()+40].lower()
+        if any(kw in ctx for kw in ['env', 'getenv', 'os.environ', 'example', 'dummy', 'placeholder', 'your_', 'xxx', '***', 'test_', 'fake_', 'mock_', '_from_env', 'config']):
+            continue
+        warnings.append(f"GaC SEC-SENSITIVE-WRITE: {rel} 疑似硬编码敏感信息 (用 env var / vault, 非 source)")
     return warnings
 
 
