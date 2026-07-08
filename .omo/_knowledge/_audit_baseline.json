@@ -3,9 +3,9 @@
   "drift_by_consumer": {
     "omo_bos_metrics": 0,
     "omo_event": 0,
-    "omo_history": 1826
+    "omo_history": 1835
   },
-  "generated_at": "2026-06-30T02:40:32Z",
-  "total_drift": 1826,
-  "total_records": 2209
+  "generated_at": "2026-07-08T01:28:16Z",
+  "total_drift": 1835,
+  "total_records": 3007
 }

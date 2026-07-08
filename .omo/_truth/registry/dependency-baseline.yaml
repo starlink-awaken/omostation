@@ -205,6 +205,11 @@ rules:
       reason: 'Consumed by 1 project(s)'
       consumers:
         - agora[grpc]
+    - name: psutil
+      baseline: '(none)'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - cockpit
     - name: pydantic
       baseline: '>=2.13.4'
       reason: 'Consumed by 10 project(s)'

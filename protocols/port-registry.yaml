@@ -95,6 +95,9 @@ mcp_transport_defaults:
   aetherforge: stdio
 
 conflicts_resolved:
+  7430:
+  - agora
+  - omo
   7431:
   - agora
   - cockpit
