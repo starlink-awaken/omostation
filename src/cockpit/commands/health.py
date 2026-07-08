@@ -53,7 +53,7 @@ def _cmd_health(args: Namespace) -> int:
         try:
             # Try l4-kernel for domain health first
             try:
-                from l4_kernel import DomainRegistry
+                from cockpit.adapters.l4_kernel import DomainRegistry
 
                 reg = DomainRegistry()
                 h = reg.aggregate_health()
@@ -83,8 +83,7 @@ def _cmd_health(args: Namespace) -> int:
         # ── L4 Domain Health ──────────────────────────────────────
         console.print("\n[bold cyan]═══ L4 域健康 ═══[/]\n")
         try:
-            from l4_kernel import DomainRegistry
-            from l4_kernel.health import DomainHealth
+            from cockpit.adapters.l4_kernel import DomainHealth, DomainRegistry
 
             reg = DomainRegistry()
             dh = DomainHealth(reg)

@@ -158,7 +158,7 @@ def l0_entity_resolve(query: str) -> str:
 def md_lifecycle_status(entity_id: str = "ecos") -> str:
     """model-driven 生命周期状态 — 查询实体的全生命周期阶段进度"""
     try:
-        from model_driven.lifecycle.tracking import LifecycleManager
+        from cockpit.adapters.model_driven import LifecycleManager
 
         mgr = LifecycleManager()
         summary = mgr.get_stage_summary(entity_id)
@@ -175,7 +175,8 @@ def md_validate() -> str:
         from pathlib import Path
 
         import yaml
-        from model_driven.toolchain.tools import tool_validate
+
+        from cockpit.adapters.model_driven import tool_validate
 
         m1_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
         nodes = []

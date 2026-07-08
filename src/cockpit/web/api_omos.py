@@ -44,7 +44,8 @@ import time
 from datetime import UTC, datetime
 
 import bus_foundation.facade.event as bus_event
-import omo.omo_ingress as omo_ingress
+
+from cockpit.adapters.omo import omo_ingress
 
 _VIOLATIONS_CACHE = None
 _VIOLATIONS_CACHE_TIME = 0.0
@@ -449,7 +450,7 @@ if router:
 
                 try:
                     omo_dir = _REPO_ROOT / ".omo"
-                    from omo.omo_ingress import complete_task
+                    from cockpit.adapters.omo import complete_task
 
                     complete_task(
                         omo_dir,
@@ -646,7 +647,7 @@ if router:
         """更新熔断器状态 (处理 broken: bool)"""
         broken = payload.get("broken", False)
         try:
-            from omo.omo_cockpit_bridge import update_provider_plane_settings
+            from cockpit.adapters.omo import update_provider_plane_settings
 
             omo_dir = _REPO_ROOT / ".omo"
             success = update_provider_plane_settings(omo_dir, circuit_broken=broken)
@@ -670,7 +671,7 @@ if router:
         """更新单日预算安全线 (处理 budget: float)"""
         budget = payload.get("budget", 100.0)
         try:
-            from omo.omo_cockpit_bridge import update_provider_plane_settings
+            from cockpit.adapters.omo import update_provider_plane_settings
 
             omo_dir = _REPO_ROOT / ".omo"
             success = update_provider_plane_settings(omo_dir, daily_budget=budget)

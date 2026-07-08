@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -108,13 +107,7 @@ async def api_run_pipeline(request: Request):
 async def api_register_instance(service: str = Form(...), mcp_endpoint: str = Form(...)):
     """分布式新实例 MCP 注册"""
     try:
-        # Load agora package dynamically
-        agora_src = _REPO_ROOT / "projects" / "agora" / "src"
-        if str(agora_src) not in sys.path:
-            sys.path.insert(0, str(agora_src))
-
-        from agora.core.service_base import Service
-        from agora.core.state import get_registry
+        from cockpit.adapters.agora import Service, get_registry
 
         registry = get_registry()
         # Unregister existing to overwrite safely
@@ -135,12 +128,7 @@ async def api_register_instance(service: str = Form(...), mcp_endpoint: str = Fo
 async def api_metrics_history():
     """系统运行状态指标历史"""
     try:
-        # Load agora package to get registry stats
-        agora_src = _REPO_ROOT / "projects" / "agora" / "src"
-        if str(agora_src) not in sys.path:
-            sys.path.insert(0, str(agora_src))
-
-        from agora.core.state import get_registry
+        from cockpit.adapters.agora import get_registry
 
         registry = get_registry()
         services = registry.list_all()

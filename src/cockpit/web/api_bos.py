@@ -10,7 +10,7 @@ router = APIRouter()
 async def api_bos_services(domain: str = ""):
     """列出所有 BOS URI 服务，可按 domain 过滤。"""
     try:
-        from agora.mcp.resolver.services import POC_SERVICES
+        from cockpit.adapters.agora import POC_SERVICES
 
         services = []
         for s in POC_SERVICES:
@@ -38,8 +38,7 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
         return JSONResponse(content={"error": "URI 必须是 bos:// 格式"}, status_code=400)
 
     try:
-        from agora.mcp.resolver.api import parse_bos_uri
-        from agora.mcp.resolver.services import POC_SERVICES
+        from cockpit.adapters.agora import POC_SERVICES, parse_bos_uri
 
         # 1. 解析 URI
         parsed = parse_bos_uri(uri)
@@ -81,8 +80,7 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
 async def api_bos_health():
     """BOS 系统健康检查。"""
     try:
-        from agora.mcp.bos_metrics import bos_metrics
-        from agora.mcp.resolver.services import POC_SERVICES
+        from cockpit.adapters.agora import POC_SERVICES, bos_metrics
 
         m = bos_metrics.health()
         by_domain: dict[str, int] = {}
@@ -106,7 +104,7 @@ async def api_bos_metrics(prefix: str = ""):
     """BOS 调用指标。"""
     try:
         if prefix:
-            from agora.mcp.bos_metrics import bos_metrics
+            from cockpit.adapters.agora import bos_metrics
 
             data = bos_metrics.status(prefix)
             return JSONResponse(content=data)

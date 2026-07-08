@@ -270,9 +270,11 @@ def cmd_model_driven(args: Namespace) -> int:
 
 
 def _md_lifecycle(args: Namespace, console) -> int:
-    from model_driven.lifecycle.tracking import LifecycleManager
-    from model_driven.lifecycle.transitions import TransitionEngine
-    from model_driven.mof.m3_extended import LifecycleStage
+    from cockpit.adapters.model_driven import (
+        LifecycleManager,
+        LifecycleStage,
+        TransitionEngine,
+    )
 
     mgr = LifecycleManager()
     engine = TransitionEngine()
@@ -302,7 +304,7 @@ def _md_lifecycle(args: Namespace, console) -> int:
 
 
 def _md_spec(args: Namespace, console) -> int:
-    from model_driven.management.spec import SpecManager
+    from cockpit.adapters.model_driven import SpecManager
 
     mgr = SpecManager()
     action = getattr(args, "md_action", "list")
@@ -320,7 +322,7 @@ def _md_spec(args: Namespace, console) -> int:
 
 
 def _md_okr(args: Namespace, console) -> int:
-    from model_driven.management.okr import OKRManager
+    from cockpit.adapters.model_driven import OKRManager
 
     mgr = OKRManager()
     action = getattr(args, "md_action", "list")
@@ -338,8 +340,7 @@ def _md_okr(args: Namespace, console) -> int:
 
 
 def _md_derive(args: Namespace, console) -> int:
-    from model_driven.toolchain.derivation_engine import DerivationEngine
-    from model_driven.toolchain.mof_scan import load_m1_nodes
+    from cockpit.adapters.model_driven import DerivationEngine, load_m1_nodes
 
     nodes = load_m1_nodes()
     engine = DerivationEngine()
@@ -353,7 +354,7 @@ def _md_derive(args: Namespace, console) -> int:
 
 
 def _md_pipeline(args: Namespace, console) -> int:
-    from model_driven.lifecycle.pipeline import PipelinePhase, PipelineTracker
+    from cockpit.adapters.model_driven import PipelinePhase, PipelineTracker
 
     entity_id = getattr(args, "md_entity", "ecos")
     action = getattr(args, "md_action", "status")

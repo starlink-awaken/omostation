@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time as _time_mod
 from urllib import request as urlrequest

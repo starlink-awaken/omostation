@@ -345,9 +345,12 @@ def daily_summary(days: int = 1) -> str:
 # ══════════════════════════════════════════════════════════════
 
 try:
-    from l4_kernel import DomainRegistry
-    from l4_kernel.config_loader import load_overrides_from_config
-    from l4_kernel.kems import CardsPlane, KemsPlane
+    from cockpit.adapters.l4_kernel import (
+        CardsPlane,
+        DomainRegistry,
+        KemsPlane,
+        load_overrides_from_config,
+    )
 
     _L4_CONFIG_PATH = Path(
         os.environ.get(
@@ -666,7 +669,7 @@ def governance_check(dimension: str = "all") -> str:
         检查结果 JSON
     """
     try:
-        from ecos.l0.governance import GovernanceRegistry
+        from cockpit.adapters.ecos import GovernanceRegistry
 
         registry_path = _REPO_ROOT / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
         registry = GovernanceRegistry(registry_path)

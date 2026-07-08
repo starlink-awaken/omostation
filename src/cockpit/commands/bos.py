@@ -14,8 +14,7 @@ def cmd_bos_status(args):
 
     # BOS metrics from core modules
     try:
-        from agora.mcp.bos_metrics import bos_metrics
-        from agora.mcp.bos_middleware import bos_cache
+        from cockpit.adapters.agora import bos_cache, bos_metrics
 
         summary = bos_metrics.summary()
         cache = bos_cache.status()
@@ -30,7 +29,7 @@ def cmd_bos_status(args):
 
     # Swarm status
     try:
-        from agora.mcp.swarm import get_swarm
+        from cockpit.adapters.agora import get_swarm
 
         swarm = get_swarm()
         status = swarm.status()
@@ -65,7 +64,7 @@ def cmd_bos_workflow(args):
 def cmd_bos_list(args):
     """列出所有 BOS URI 路由。"""
     try:
-        from agora.mcp.resolver.services import POC_SERVICES
+        from cockpit.adapters.agora import POC_SERVICES
 
         by_domain: dict[str, list[str]] = {}
         for s in POC_SERVICES:

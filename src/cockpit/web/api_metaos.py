@@ -12,14 +12,7 @@ router = APIRouter(prefix="/api/metaos", tags=["metaos"])
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
-# Ensure metaos src is in sys.path
-_METAOS_SRC = _REPO_ROOT / "projects" / "metaos" / "src"
-if str(_METAOS_SRC) not in sys.path:
-    sys.path.insert(0, str(_METAOS_SRC))
-
-from metaos.core.engine import SEngine
-from metaos.core.workflow_planner import WorkflowPlanner
-from metaos.core.workflow_store import WorkflowStore
+from cockpit.adapters.metaos import SEngine, WorkflowPlanner, WorkflowStore
 
 
 def _get_engine():

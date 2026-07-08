@@ -20,7 +20,7 @@ async def api_knowledge_search(request: Request):
         if not query:
             return JSONResponse({"status": "error", "error": "query is required"}, status_code=400)
 
-        from agora.mcp.bos_resolver import resolve_bos_uri
+        from cockpit.adapters.agora import resolve_bos_uri
 
         # 传递 proxy_manager 是 Phase 3 蜂群感知的关键，但在 cockpit 层面我们直接调用 local resolve 即可，
         # 真正的 proxy_manager 会由 agora_mcp 守护进程持有。Cockpit 这里作为客户端发起调用。

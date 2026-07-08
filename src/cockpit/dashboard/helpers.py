@@ -127,7 +127,7 @@ def fetch_layer_status(source: dict) -> dict:
     # L2 omo — try direct import
     if source["layer"] == "L2":
         try:
-            from omo.omo_dashboard import _load_json as _omo_load
+            from cockpit.adapters.omo import load_json as _omo_load
 
             omo_dir = Path(os.environ.get("OMO_DIR", str(Path.home() / "Workspace" / ".omo")))
             system = _omo_load(omo_dir / "state" / "system.yaml")
@@ -143,7 +143,7 @@ def fetch_layer_status(source: dict) -> dict:
     # L1 runtime — try direct import
     if source["layer"] == "L1":
         try:
-            from runtime.i0 import i0_status
+            from cockpit.adapters.runtime import i0_status
 
             status = i0_status() if i0_status else {}
             return {
@@ -212,7 +212,7 @@ def infer_node(model: str, provider_name: str | None) -> dict[str, str]:
 def load_debt() -> dict:
     """Load OMO debt ledger from the filesystem and return a JSON-safe dict."""
     try:
-        from omo.omo_debt_registry import load_debt_ledger
+        from cockpit.adapters.omo import load_debt_ledger
 
         omo_dir = OMO_ROOT / ".omo"
         if not omo_dir.exists():

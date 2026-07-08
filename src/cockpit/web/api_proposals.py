@@ -9,7 +9,7 @@ from cockpit.compat import WORKSPACE_ROOT
 
 router = APIRouter()
 
-from omo.omo_cockpit_bridge import (
+from cockpit.adapters.omo import (
     append_hitl_override,
     approve_hitl_proposal_async,
     list_hitl_proposals,
@@ -68,7 +68,7 @@ async def _execute_mutation(proposal: dict) -> bool:
 
     # Plugin Mechanism (BOS URI Hook)
     try:
-        from agora.mcp.resolver.api import resolve_bos_uri
+        from cockpit.adapters.agora import resolve_bos_uri
 
         res = await resolve_bos_uri(f"bos://governance/hitl/execute/{p_type}", proposal)
         if res and res.get("status") == "ok":
