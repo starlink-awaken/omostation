@@ -44,6 +44,11 @@
 | P77-7-3 | **env-only-enforcement** | `env-only` 类型端口必须通过 env var 引用 |
 | P77-7-4 | **root-first-submodule-later** | 治理工具根仓先行, submodule 代码后续迁移 |
 | P77-7-5 | **cross-repo-env-contract** | 跨仓间 env var 命名必须一致 |
+| P78-1 | **dead-port-cleanup** | 端口功能收敛后必须从 SSOT 显式标记 status: deprecated |
+| P78-2 | **transport-declaration** | 每个注册端口必须声明 transport 类型 (stdio/http/sse/udp) |
+| P78-3 | **conflict-lifecycle** | conflicts_pending 不再 pending 时必须转 resolved 或清理 |
+| P78-4 | **ssot-status-machine** | 注册表每个条目标 status: active|deprecated|reserved |
+| P78-5 | **registry-as-source** | port-registry 是传输方式和状态的 SSOT |
 | P76-7-1 | **llm-advisory-not-autonomous** | LLM 只 generate suggestion, 永不 auto-apply |
 | P76-7-2 | **tier-graceful-fallback** | LLM provider 3-tier — aetherforge → ollama → heuristic |
 | P76-7-3 | **cron-real-deployment** | "投产" 不止写 plist, 必须 launchctl load |
@@ -75,7 +80,8 @@
 | **P77 Phase 5** | **ADR-0168** | **5** | **跨仓端口硬编码扫描 (4 端口补登 + hard)** |
 | **P77 Phase 6** | **ADR-0169** | **5** | **commit-assist E2E 验收 (19 测试 + heuristic bug 修)** |
 | **P77 Phase 7** | **ADR-0170** | **5** | **端口 env var 重构 (25 env var 映射 + root repo 迁移)** |
-| **合计** | — | **50 (45 ADR-internal + 5 hook)** | — |
+| **P78** | **ADR-0172** | **5** | **端口注册表收敛 (deprecated 清理 + transport 字段)** |
+| **合计** | — | **55 (50 ADR-internal + 5 hook)** | — |
 
 > 注: P76 STRAT 原 claim "40 原则" 是早期估计. 实际沉淀 (按 ADR 表格) = **30 原则** (4-5 per phase × 6 phases). 数字更准.
 
@@ -286,6 +292,33 @@
 **反例**: agora 用 AGORA_MCP_HTTP, omo 用 AGORA_HTTP_PORT → 运维混淆
 **实践**: protocols/port-registry.yaml SSOT 命名, 各仓引用
 
+## 3.9. P78 (端口注册表收敛) — ADR-0172
+
+### P78-1: dead-port-cleanup
+**含义**: 端口功能收敛后必须从 SSOT 显式标记 `status: deprecated`
+**反例**: 8765/9090 收敛到 cockpit 后仍在 `ports:` 段无标注 → 新人误用
+**实践**: `status: deprecated` + `transport: deprecated` 标记
+
+### P78-2: transport-declaration
+**含义**: 每个注册端口必须声明 transport 类型 (stdio/http/sse/udp)
+**反例**: 新 reader 看到 3100 不知道是 stdio 还是 HTTP
+**实践**: port-registry 结构化: 每个端口有 `name`, `transport`, `status`, `note`
+
+### P78-3: conflict-lifecycle
+**含义**: conflicts_pending 不再 pending 时必须转 resolved 或清理
+**反例**: 8765/9090 收敛 2 周后仍在 conflicts_pending → 误导
+**实践**: 已从 conflicts_pending 删除, 保留在 conflicts_resolved 供追溯
+
+### P78-4: ssot-status-machine
+**含义**: 注册表每个条目标 `status: active|deprecated|reserved`, 无隐含状态
+**反例**: `# 收敛后已释放端口` 注释 vs 真代码 — 注释不执行
+**实践**: `status: deprecated` 硬字段
+
+### P78-5: registry-as-source
+**含义**: port-registry 是传输方式和状态的 SSOT, 不从代码推断
+**反例**: `mcp_transport_defaults` 注释又写一遍 transport → 双源
+**实践**: transport 字段已入 ports 段, mcp_transport_defaults 保留供参考
+
 ## 4. Phase 8 (真工程 follow-up 治本) — ADR-0162
 
 ### P76-8-1: submodule-PR-not-coupling
@@ -360,12 +393,15 @@
 
 ## 8. 现状快照 (Status Snapshot, 2026-07-07)
 
-- **catalog**: 10 ADR 来源 (Phase 6/7/8/9A + P77-1/2/3/4/5/6/7), 共 50 条 (1-5 per phase)
-- **GaC 规则**: 172 (前 171 + CR-ENV-VAR-PORT)
+- **catalog**: 11 ADR 来源 (Phase 6/7/8/9A + P77-1/2/3/4/5/6/7 + P78), 共 55 条 (1-5 per phase)
+- **GaC 规则**: 173 (前 172 + CR-DEPRECATED-PORT)
+- **planned tasks**: 0
+- **governance**: 100 A+ (复位)
+- **Phase 17 (this)**: P78 — 端口注册表收敛 (deprecated 8765/9090 清理 + transport 字段 + catalog 55 原则 + GaC 173)**
 - **planned tasks**: 0
 - **governance**: 100 A+ (复位)
 - **Phase 16 (this)**: P77 Phase 7 — 端口 env var 重构 (25 env var 映射 + root repo 迁移 + catalog 50 原则 + GaC 172)**
 
 ---
 
-*最后更新: 2026-07-07 · 50 原则沉淀 · P77 Phase 7 收口 · ACTIVE*
+*最后更新: 2026-07-08 · 55 原则沉淀 · P78 端口注册表收敛 · ACTIVE*
