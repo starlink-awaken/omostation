@@ -49,6 +49,8 @@ DEFAULT_POLICY = {
         {"id": "mof-schema-validate", "command": ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]},
         {"id": "mof-state-bridge", "command": ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]},
         {"id": "mof-drift", "command": ["bin/mof-drift"]},
+        {"id": "m4-bootstrap-reflex", "command": ["bin/mof-bootstrap.py", "all"]},
+        {"id": "m4-mcp-tool-integrity", "command": ["bin/mcp-tool-data-complete.py"]},
         {"id": "doc-ssot-lint", "command": ["bin/doc-ssot-lint.py"]},
         {"id": "project-layer-index", "command": ["bin/project-layer-index.py", "--check"], "ci_only": True},
         {"id": "doc-ssot-snapshots", "command": ["scripts/check-doc-ssot-snapshots.py"]},
