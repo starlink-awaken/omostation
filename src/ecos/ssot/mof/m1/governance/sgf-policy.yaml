@@ -54,6 +54,10 @@ gates:
     command: ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]
   - id: "mof-drift"
     command: ["bin/mof-drift"]
+  - id: "m4-bootstrap-reflex"
+    command: ["bin/mof-bootstrap.py", "all"]
+  - id: "m4-mcp-tool-integrity"
+    command: ["bin/mcp-tool-data-complete.py"]
   - id: "doc-ssot-lint"
     command: ["bin/doc-ssot-lint.py"]
     ci_only: true  # ISC-3f: check_required_generated_artifacts 依赖 docs/generated/* (gitignored post-commit 萃取), worktree 无; non-strict pre-commit 跳, CI strict 兜底
