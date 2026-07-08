@@ -146,6 +146,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0168 | P77 Phase 5 跨仓端口硬编码扫描 (5 port 补登 + 7 port-context pattern + 5 LEGACY_OK_PORTS) | ACCEPTED | 2026-07-07 | governance-team | 0168-p77-phase5-hardcoded-ports.md |
 | 0169 | P77 Phase 6 commit-assist E2E 验收 (19 测试 + heuristic bug 修) | ACCEPTED | 2026-07-07 | governance-team | 0169-p77-phase6-commit-assist-e2e.md |
 | 0170 | P77 Phase 7 端口 env var 重构 (25 env var 映射 + root repo 迁移) | ACCEPTED | 2026-07-07 | governance-team | 0170-p77-phase7-env-var-port-migration.md |
+| 0171 | 宪法 Wave 1 — 治理规则 severity 分层 (red/gray, executor 推导, 159 red + 12 gray) | ACCEPTED | 2026-07-08 | governance-team | 0171-constitution-wave1-severity-classification.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 
 ---
@@ -240,4 +241,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-07 · Owner: governance-team · P77 Phase 7 收口 (端口 env var 重构); GaC rules 172; catalog 50 原则*
+*最近更新: 2026-07-08 · Owner: governance-team · 宪法 Wave 1 (severity 分层 red/gray, ADR-0171); P77 Phase 7 收口; GaC rules 172; catalog 50 原则*
