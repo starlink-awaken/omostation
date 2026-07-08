@@ -298,6 +298,7 @@ assets:
       - workers
       - reviewers
     status: active
+    runtime: true
   - id: OMO-STANDARDS
     ref: .omo/standards/
     plane: state_plane
@@ -341,6 +342,7 @@ assets:
       - auditors
       - operators
     status: active
+    runtime: true
   - id: OMO-GOALS
     ref: .omo/goals/
     plane: state_plane
@@ -370,6 +372,7 @@ assets:
       - projects/c2g
       - reviewers
     status: active
+    runtime: true
   - id: OMO-TESTS
     ref: .omo/tests/
     plane: state_plane
@@ -384,6 +387,7 @@ assets:
       - projects/omo
       - CI
     status: active
+    runtime: true
   - id: OMO-CAPABILITIES
     ref: .omo/capabilities/
     plane: state_plane
@@ -399,6 +403,7 @@ assets:
       - cockpit
     notes: canonical capability registry lives under .omo/capabilities/*.yaml; legacy .omo/registry/*.yaml is read-only compatibility
     status: active
+    runtime: true
   - id: OMO-CHANGE-LOG
     ref: .omo/change-log/
     plane: state_plane
@@ -465,6 +470,7 @@ assets:
     consumed_by:
       - agents
     status: active
+    runtime: true
   - id: OMO-TASKS-INDEX-JSON
     ref: .omo/tasks.json
     plane: state_plane
@@ -477,6 +483,7 @@ assets:
     consumed_by:
       - agents
     status: active
+    runtime: true
   - id: OMO-EVIDENCE-LEGACY
     ref: .omo/evidence/
     plane: state_plane
@@ -493,6 +500,7 @@ assets:
     status: active
     alias_target: .omo/_delivery/evidence-legacy/
     note: compatibility alias only; real storage must live under .omo/_delivery/
+    runtime: true
   - id: OMO-GENERATED
     ref: .omo/_generated/
     plane: state_plane
@@ -508,6 +516,7 @@ assets:
       - humans
     notes: "P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册"
     status: active
+    runtime: true
   - id: OMO-AUTOPILOT
     ref: .omo/autopilot/
     plane: state_plane
