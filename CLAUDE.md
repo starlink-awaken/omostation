@@ -108,6 +108,7 @@ The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.
 **Gate & lint:**
 
 ```bash
+make ci-local                               # 本地一键跑全部门 (ci-local-fast 超集, Makefile:105)
 make gac-local-gate
 uv run --with "pyyaml" python "bin/gac-local-gate.py" --scope files --file <path> --json
 uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
@@ -161,7 +162,8 @@ Run a single test with each framework's native filter (see the target project's 
 |------|-------|
 | Workspace architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | Layer/project placement | [`LAYER-INDEX.md`](LAYER-INDEX.md) |
-| Agent development rules | [`AGENTS.md`](AGENTS.md) |
+| Current debts & goals | [`BRIEF.md`](BRIEF.md) · [`.omo/goals/current.yaml`](.omo/goals/current.yaml) |
+| Agent development rules | [`AGENTS.md`](AGENTS.md) — esp. §6 git/submodules, §9 closeout, §10 Round Workflow (ADR-0148) |
 | Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
 | System panorama & BOS routing | [`docs/PANORAMA.md`](docs/PANORAMA.md) |
 | Architecture deep-dive | [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) |
