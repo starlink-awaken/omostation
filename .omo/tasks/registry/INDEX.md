@@ -10,10 +10,10 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (0 个)
+## Planned Tasks (1 个)
 | ID | Title | Status |
 |----|-------|--------|
-
+| OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
@@ -56,5 +56,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-08 (依据 `omo state sync-tasks` 与真实目录重算: done=103, planned=0, active=0, archived=6 顶层)*
+*Updated: 2026-07-08 (依据 `omo state sync-tasks` 与真实目录重算: done=103, planned=1, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
