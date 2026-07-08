@@ -2464,6 +2464,35 @@ gac:
       created_at: "2026-07-08"
       adr: "ADR-0172"
 
+    - id: CR-SEC-YAML-BYPASS
+      dimension: X4
+      layer: L2
+      name: yaml safe_load 强制 (禁止 yaml.load)
+      description: 禁止 yaml.load (不安全), 必 safe_load/safe_load_all. memory frontmatter-safe-load-all.
+      check_type: yaml_bypass
+      target: Python yaml.load 调用 (声明面; 执行面 hook 内置 PR#190)
+      executor:
+        - hook_pre_edit
+        - ci_gate
+      lifecycle: active
+      version: 1.0.0
+      created_at: 2026-07-08
+      source_type: native
+    - id: CR-SEC-SENSITIVE-WRITE
+      dimension: X4
+      layer: L2
+      name: 敏感信息硬编码禁止
+      description: 禁止硬编码 password/token/secret/api_key (用 env var/vault).
+      check_type: sensitive_write
+      target: Python 源码硬编码密钥 (声明面; 执行面 hook 内置 PR#190)
+      executor:
+        - hook_pre_edit
+        - ci_gate
+      lifecycle: active
+      version: 1.0.0
+      created_at: 2026-07-08
+      source_type: native
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)
