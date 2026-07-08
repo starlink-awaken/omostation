@@ -3,8 +3,8 @@ version: '3.8'
 services:
   ecos:
     build: .
-    ports:
-      - "8080:8080"
+    # ecos dashboard HTTP server 已收敛至 cockpit :8090；本服务无常驻 HTTP 端口。
+    # 如需暴露能力，请使用 ecos-mcp (stdio) 或通过 cockpit /api/ecos/status 访问。
     environment:
       - ECOS_CONFIG=/app/ecos.json
     volumes:

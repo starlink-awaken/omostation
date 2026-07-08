@@ -39,7 +39,7 @@ graph TB
 |:--|:--|:--|
 | CLI | `ecos-ssb, ecos-dashboard, ecos-scheduler` |  |
 | MCP stdio | `src/ecos/mcp_server.py` | MOF + L0 tools |
-| HTTP | `ecos-dashboard` | :9090 |
+| HTTP | `ecos-dashboard` | 已收敛至 cockpit :8090 (`/api/ecos/status`) |
 | Tools | `mof-validate, mof-derive, mof-bridge-sync, ...` |  |
 
 ## 3. 核心模块
