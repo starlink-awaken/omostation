@@ -115,6 +115,7 @@ assets:
       - cockpit
       - projects/ecos
     status: active
+    runtime: true
   - id: OMO-ARCHIVE
     ref: .omo/_archive/
     plane: state_plane
