@@ -18,9 +18,9 @@ BOS_METRICS_PATH = WORKSPACE_ROOT / ".omo" / "_knowledge" / "bos-metrics.jsonl"
 
 # ─── Layer sources (I0, L2, L1, L0) ────────────────────────
 LAYER_SOURCES: list[dict] = [
-    {"layer": "I0", "name": "agora", "url": "http://localhost:7431/v1/health", "port": 7431},
-    {"layer": "L2", "name": "omo", "url": "http://localhost:9190/api/v1/status", "port": 9190},
-    {"layer": "L1", "name": "runtime", "url": "http://localhost:9876/api/v1/status", "port": 9876},
+    {"layer": "I0", "name": "agora", "url": f"http://localhost:{os.environ.get('AGORA_MCP_SSE_PORT', '7431')}/v1/health", "port": int(os.environ.get("AGORA_MCP_SSE_PORT", "7431"))},
+    {"layer": "L2", "name": "omo", "url": f"http://localhost:{os.environ.get('OMO_DASHBOARD_PORT', '9190')}/api/v1/status", "port": int(os.environ.get("OMO_DASHBOARD_PORT", "9190"))},
+    {"layer": "L1", "name": "runtime", "url": f"http://localhost:{os.environ.get('RUNTIME_L1_PORT', '9876')}/api/v1/status", "port": int(os.environ.get("RUNTIME_L1_PORT", "9876"))},
     {"layer": "L0", "name": "ecos", "url": "file://m0_snapshot", "port": None, "source": "m0_snapshot"},
 ]
 
@@ -75,9 +75,9 @@ a{color:#58a6ff;text-decoration:none}a:hover{text-decoration:underline}
   <a href="/">&#x2728; Hermes Console</a>
   <a href="/api/v1/status">&#x1F4CB; API JSON</a>
   <a href="/api/v1/m0">&#x1F4CA; M0 快照</a>
-  <a href="http://localhost:7430">&#x2197; Agora (I0)</a>
+  <a href="http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}">&#x2197; Agora (I0)</a>
   <a href="http://localhost:9090">&#x2197; OMO (L2)</a>
-  <a href="http://localhost:9876">&#x2197; Runtime (L1)</a>
+  <a href="http://localhost:{os.environ.get('RUNTIME_L1_PORT', '9876')}">&#x2197; Runtime (L1)</a>
 </div>
 <div class="grid" id="layer-grid">
   <div style="color:#8b949e;grid-column:1/-1;text-align:center;padding:40px">Loading...</div>
