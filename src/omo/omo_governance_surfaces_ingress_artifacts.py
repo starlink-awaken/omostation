@@ -82,6 +82,17 @@ def _check_ingress_artifacts(
     omo_dir = workspace_root / ".omo"
     registry_path = _registry_path(omo_dir)
     if not registry_path.exists():
+        # Runtime cache absent on fresh clones is ok; missing registry under an
+        # initialized ingress directory is a real issue.
+        if not registry_path.parent.exists():
+            return {
+                "exists": False,
+                "path": str(registry_path),
+                "goal_artifacts": 0,
+                "task_artifacts": 0,
+                "debt_artifacts": 0,
+                "capability_artifacts": 0,
+            }, []
         return {
             "exists": False,
             "path": str(registry_path),
