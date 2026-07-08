@@ -8,10 +8,12 @@ import os
 import sys
 from datetime import datetime, timezone
 
+from runtime.adapters.omo import (
+    archive_resolved_debt_items,
+    summarize_system_health_snapshot,
+)
 from runtime.matrix import list_services, health_check_url
 from runtime.state_schema import validate_runtime_health_snapshot
-from omo.omo_gc import archive_resolved_debt_items
-from omo.omo_state_schema import summarize_system_health_snapshot
 
 import yaml
 import hashlib
