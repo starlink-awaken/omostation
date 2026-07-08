@@ -106,7 +106,7 @@ def build_parser():
         description="Agora -- Service Convergence Hub",
         epilog="""Examples:
   # 注册服务
-  agora register my-api --protocol mcp --mcp http://localhost:8000
+  agora register my-api --protocol mcp --mcp http://localhost:{ONTODERIVE_WEB_PORT}
 
   # 发现 workspace 中的所有服务
   agora discover --register
