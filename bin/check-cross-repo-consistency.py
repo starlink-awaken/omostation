@@ -131,12 +131,23 @@ def find_port_conflicts() -> list[dict]:
         e = ecos.get(p)
         pr = proto.get(p)
         if e and pr:
-            if e == pr:
-                conflicts.append({"port": p, "type": "duplicate", "ecos": e, "protocols": pr})
+            e_name = _port_name(e)
+            pr_name = _port_name(pr)
+            e_transport = e.get("transport", "") if isinstance(e, dict) else ""
+            pr_transport = pr.get("transport", "") if isinstance(pr, dict) else ""
+            if e_name == pr_name and (not e_transport or e_transport == pr_transport):
+                # P79: 实际是 duplicate (note/description 可不同) — 不算真冲突
+                pass
             else:
                 conflicts.append({"port": p, "type": "conflict", "ecos": e, "protocols": pr})
     return conflicts
 
+
+def _port_name(entry) -> str:
+    """P78 结构化后格式为 dict; 平面格式为 string. 提取 name 比较."""
+    if isinstance(entry, dict):
+        return entry.get("name", "")
+    return _strip_yaml_comment(str(entry))
 
 def is_covered_by_prefix(uri: str, registered: dict[str, dict]) -> bool:
     """检查 uri 是否被某个 prefix-pattern 覆盖 (e.g. 'bos://memory/kos/search' 被 'bos://memory/kos/' 覆盖)."""
@@ -169,6 +180,7 @@ def main() -> int:
     ports = load_ecos_ports()
     protocols_ports = load_protocols_ports()
     port_conflicts = find_port_conflicts()
+    # P79: 既然 find_port_conflicts 已按 name+transport 一致性区分, type=conflict 必为真冲突
     real_port_conflicts = [c for c in port_conflicts if c["type"] == "conflict"]
     # 端口总计数 = ecos unique + protocols unique (去重)
     all_unique_ports = set(ports.keys()) | set(protocols_ports.keys())
