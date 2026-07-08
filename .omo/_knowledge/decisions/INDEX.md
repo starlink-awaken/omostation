@@ -149,6 +149,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0171 | 宪法 Wave 1 — 治理规则 severity 分层 (red/gray, executor 推导, 159 red + 12 gray) | ACCEPTED | 2026-07-08 | governance-team | 0171-constitution-wave1-severity-classification.md |
 | 0172 | P78 端口注册表收敛 (deprecated 清理 + transport 字段) | ACCEPTED | 2026-07-08 | governance-team | 0172-p78-port-registry-convergence.md |
 | 0173 | P78 Phase 2 基线重放 + Foundry v2 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0173-p78-phase2-baseline-foundry-v2.md |
+| STRAT-P79 | P79 2026H2 治理巩固 + Foundry 运营化路线图 (5 phase) | PROPOSED | 2026-07-08 | governance-team | STRAT-P79-strategic-roadmap.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
 
@@ -230,6 +231,10 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0172: P78 (端口注册表收敛) — **ACCEPTED** | 2026-07-08 | omostation P78 | 0172-p78-port-registry-convergence.md
 - ADR-0173: P78 Phase 2 (基线重放 + Foundry v2) — **ACCEPTED** | 2026-07-08 | omostation P78 | 0173-p78-phase2-baseline-foundry-v2.md
 
+### P79 — 2026H2 治理巩固 + Foundry 运营化 (STRAT-P79)
+
+- STRAT-P79: P79 战略路线图 (5 phase) — **PROPOSED** | 2026-07-08 | omostation P79 | STRAT-P79-strategic-roadmap.md
+
 ---
 
 ## 维护责任
@@ -249,4 +254,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-08 · Owner: governance-team · 宪法 Wave 1 (severity 分层 red/gray, ADR-0171); P78 端口注册表收敛; GaC rules 173; catalog 55 原则*
+*最近更新: 2026-07-08 · Owner: governance-team · P79 STRAT PROPOSED (2026H2 治理巩固路线图); GaC rules 173; catalog 60 原则*
