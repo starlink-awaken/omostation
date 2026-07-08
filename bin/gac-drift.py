@@ -257,14 +257,14 @@ def main() -> int:
                 indent=2,
             )
         )
-        return 1 if (gate_mode and all_drifts) else 0
+        return 1 if (gate_mode and red_drifts) else 0  # 宪法 Wave 2: gray drift warn-only
 
     rel = REGISTRY.relative_to(WORKSPACE)
     print(f"=== GaC drift 检测 ({rel}) ===")
     print(f"规则数: {len(rules)}")
 
     if all_drifts:
-        print(f"\n⚠️  发现 {len(all_drifts)} 处 drift (🔴 red: {len(red_drifts)}, 🟡 gray: {len(gray_drifts)}):")
+        print(f"\n⚠️  发现 {len(all_drifts)} 处 drift (🔴 red: {len(red_drifts)} blocking, 🟡 gray: {len(gray_drifts)} warn-only):")
         if red_drifts:
             print(f"  🔴 red rule drift (优先修, 阻塞规则声明失效):")
             for d in red_drifts:
@@ -282,8 +282,8 @@ def main() -> int:
             tgt = r.get("target", "")[:60]
             print(f"  - {r['id']}: target={tgt} executor={r.get('executor')}")
 
-    if gate_mode and all_drifts:
-        return 1
+    if gate_mode and red_drifts:
+        return 1  # 宪法 Wave 2 执行面 (ADR-0171): 仅 red rule drift blocking, gray warn-only
     return 0
 
 
