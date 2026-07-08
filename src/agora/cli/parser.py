@@ -469,7 +469,12 @@ For more: https://github.com/starlink-awaken/agora#readme""",
         choices=list(EIDOS_PIPELINE_SERVICE["commands"].keys()),
         default="knowledge-base",
     )
-    start_parser.add_argument("--port", type=int, default=int(os.environ.get("AGORA_MCP_HTTP_PORT", "7422")), help="Port number (default: AGORA_MCP_HTTP_PORT)")
+    start_parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("AGORA_MCP_HTTP_PORT", "7422")),
+        help="Port number (default: AGORA_MCP_HTTP_PORT)",
+    )
     start_parser.set_defaults(func=start_pipeline_command)
 
     unified_parser = sub.add_parser(
