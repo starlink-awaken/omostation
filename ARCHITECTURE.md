@@ -78,7 +78,19 @@ Rules:
 - New governance surfaces require runtime behavior, registry entries, and validation gates. Documentation alone is not implementation.
 - Direct `.omo/` or `spaces/` writes are violations unless routed through an approved audited path.
 
-## 6. Core Flows
+## 6. Port Registry & Transport (P77/P78)
+
+```
+protocols/port-registry.yaml  — I0 SSOT (name, transport, status, env_var)
+projects/ecos/port-registry.yaml  — L0 mirror (aligned to I0)
+```
+
+- Every service port **must** be registered in `protocols/port-registry.yaml` with `name`, `transport` (stdio/http/sse/udp), and `status` (active/deprecated/reserved).
+- Ports should be referenced via `{SERVICE}_PORT` env var, not literals (P77-7 env-var-SSOT).
+- Deprecated ports (8765/9090) retain entry for historical resolution but `status: deprecated`.
+- Foundry v2: port-governance deck validates hardcoded ports on every 6h cron cycle.
+
+## 7. Core Flows
 
 ```
 user or agent -> cockpit or agora -> bos:// route -> target service -> audited response or state transition
@@ -87,7 +99,7 @@ intent or pitch -> c2g or OMO broker -> task/debt/audit registry -> validation -
 service definition -> runtime scheduler/matrix/sandbox -> health observation -> governance alert or recovery
 ```
 
-## 7. Related Documents
+## 9. Related Documents
 
 | Document | Role |
 |----------|------|
