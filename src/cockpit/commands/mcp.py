@@ -22,7 +22,7 @@ def cmd_mcp(args: argparse.Namespace) -> int:
     transport = args.transport or "stdio"
 
     if transport == "sse":
-        port = args.port or 7431
+        port = args.port or int(os.environ.get("AGORA_MCP_SSE_PORT", "7431"))
         _get_console().print(
             _panel(
                 f"[bold green]🚀 Workspace MCP Server (SSE)[/bold green]\n"

@@ -428,7 +428,7 @@ def _status_services() -> list[tuple[str, str, str | None, str, str]]:
     agora_url = os.environ.get("AGORA_ENDPOINT", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}")
     minerva_url = os.environ.get("MINERVA_ENDPOINT", "http://localhost:8765")
     return [
-        ("Agora Hub", ":7430", "agora", f"{agora_url}/health", "MCP 服务治理中枢"),
+        ("Agora Hub", f":{os.environ.get("AGORA_INTERNAL_PORT", "7430")}", "agora", f"{agora_url}/health", "MCP 服务治理中枢"),
         ("Minerva", ":8765", "minerva", f"{minerva_url}/health", "深度研究系统"),
     ]
 
