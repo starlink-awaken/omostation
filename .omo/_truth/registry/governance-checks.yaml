@@ -2493,6 +2493,21 @@ gac:
       created_at: 2026-07-08
       source_type: native
 
+    - id: CR-X2-GOD-MODULE-EDIT
+      dimension: X1
+      layer: L2
+      name: God Module 编辑门禁 (>800L)
+      description: 编辑 god module (文件超 800L) 时警告, 拆分. memory check-god-module-mechanism.
+      check_type: god_module
+      target: Python 文件行数 (声明面; 执行面 hook 内置 PR#193)
+      executor:
+        - hook_pre_edit
+        - ci_gate
+      lifecycle: active
+      version: 1.0.0
+      created_at: 2026-07-08
+      source_type: native
+
   drift:
     schedule: "daily"  # radar 频率
     auto_heal: false   # 阶段 4 改 true (漏执行规则自动绑定 executor)

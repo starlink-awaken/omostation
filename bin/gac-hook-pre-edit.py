@@ -105,6 +105,8 @@ def check_content(file_path: str, new_content: str) -> list[str]:
         warnings.extend(_check_yaml_bypass(rel, new_content))
         warnings.extend(_check_sensitive_write(rel, new_content))
         warnings.extend(_check_god_module_edit(rel, new_content))
+        warnings.extend(_check_eval_exec(rel, new_content))
+        warnings.extend(_check_mutable_default(rel, new_content))
 
     return warnings
 
@@ -222,6 +224,27 @@ def _check_god_module_edit(rel, content):
         warnings.append(f"GaC GOD-MODULE-EDIT: {rel} 编辑后约 {total} 行 (>{error_th} error, 拆分, memory check-god-module-mechanism)")
     elif total > warn_th:
         warnings.append(f"GaC GOD-MODULE-EDIT: {rel} 编辑后约 {total} 行 (>{warn_th} warn, memory check-god-module-mechanism)")
+    return warnings
+
+
+def _check_eval_exec(rel, content):
+    """eval_exec 检查 (Wave 3 横向扩展, 内置): 禁止 eval()/exec() (不安全)."""
+    warnings = []
+    pattern = re.compile(r'\b(eval|exec)\s*\(')
+    for m in pattern.finditer(content):
+        ctx = content[max(0, m.start()-30):m.end()+30].lower()
+        if any(kw in ctx for kw in ['ast', 'literal_eval', 'compile', '# eval', '# exec', 'example', 'test_', 'docstring']):
+            continue
+        warnings.append(f"GaC SEC-EVAL-EXEC: {rel} 疑似 {m.group(1)}() 不安全 (用 ast.literal_eval 或专门解析)")
+    return warnings
+
+
+def _check_mutable_default(rel, content):
+    """mutable_default 检查 (Wave 3 横向扩展, 内置): 函数默认参数用 mutable — Python 高频坑."""
+    warnings = []
+    pattern = re.compile(r'def\s+\w+\s*\([^)]*=\s*(\[\]|\{\}|set\(\)|dict\(\)|list\(\))', re.MULTILINE)
+    for m in pattern.finditer(content):
+        warnings.append(f"GaC PY-MUTABLE-DEFAULT: {rel} 函数默认参数用 mutable {m.group(1)} (用 None + 内部创建)")
     return warnings
 
 
