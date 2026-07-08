@@ -631,7 +631,7 @@ def main():
         "--sse", action="store_true", help="Start in SSE mode (port 7431)"
     )
     parser.add_argument(
-        "--http", action="store_true", help="Start in HTTP mode (port 7422)"
+        "--http", action="store_true", help="Start in HTTP mode (port AGORA_MCP_HTTP_PORT)"
     )
     args = parser.parse_args()
 
