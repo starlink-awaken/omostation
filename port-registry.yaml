@@ -1,27 +1,49 @@
 # L0 协议: 服务端口注册表 (Service Port Registry)
-
-# 所有 HTTP/MCP 端口的 SSOT。新端口必须先在此注册，CI 自动验证。
-
-# 消费方:
-#   - CI: scripts/check-interfaces.py (push 时自动验证冲突)
-#   - Agora: core/registry.py → 可选消费, Service.port 从注册表注入
-#   - Forge: asset_cli.py → 可选消费, 替代硬编码的 9 个端口
-#   - OMO: omo_health.py → 可选消费, 替代 DEFAULT_SERVICE_PORTS
+# P78 重构: 结构化格式 (name/transport/status), 对齐 protocols/port-registry.yaml
 
 ports:
-  7422: agora-mcp-http       # agora · FastMCP · MCP HTTP 入口
-  7431: agora-mcp-sse        # agora · FastMCP · MCP SSE 入口
-  8080: ontoderive-web       # ontoderive · web serve default (agora-api-gateway 已移除, 重用)
-  8090: cockpit-dashboard    # cockpit · http.server · Cockpit Web Dashboard
-  8765: minerva-web          # kairon/minerva · FastAPI · 深度研究 Web 面板
-  8766: forge-api            # kairon/forge · HTTP · Forge API Server
-  9090: ecos-dashboard       # [已收敛] ecos dashboard 已并入 cockpit :8090 /api/ecos/status；保留端口注册避免历史冲突
-  9190: omo-dashboard        # omo · http.server · Debt Dashboard [从 9090 迁移]
-  9290: llm-gateway          # kairon/llm-gateway · http.server · LLM Gateway [从 9090 迁移]
-
-# 注册规则:
-#   1. 端口冲突按优先级: I0 > L3 > L2 > L1 > L0 (高优先得)
-#   2. 所有端口引用使用环境变量: {SERVICE}_PORT
-#   3. CI 在 push 时自动验证端口冲突
-
-# 最后更新: 2026-06-06
+  7422:
+    name: agora-mcp-http
+    transport: http
+    status: active
+    note: "agora · FastMCP · MCP HTTP 入口"
+  7431:
+    name: agora-mcp-sse
+    transport: sse
+    status: active
+    note: "agora · FastMCP · MCP SSE 入口"
+  8080:
+    name: ontoderive-web
+    transport: http
+    status: active
+    note: "ontoderive · web serve default"
+  8090:
+    name: cockpit-dashboard
+    transport: http
+    status: active
+    note: "cockpit · http.server · Cockpit Web Dashboard"
+  8765:
+    name: minerva-kos-ontoderive
+    transport: deprecated
+    status: deprecated
+    note: "已收敛到 cockpit /dev/*"
+  8766:
+    name: forge-api
+    transport: http
+    status: active
+    note: "kairon/forge · HTTP · Forge API Server"
+  9090:
+    name: ecos-dashboard
+    transport: deprecated
+    status: deprecated
+    note: "已收敛到 cockpit :8090 /api/ecos/status"
+  9190:
+    name: omo-dashboard
+    transport: http
+    status: active
+    note: "omo · http.server · Debt Dashboard"
+  9290:
+    name: llm-gateway
+    transport: http
+    status: active
+    note: "kairon/llm-gateway · http.server · LLM Gateway"
