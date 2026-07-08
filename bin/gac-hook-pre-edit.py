@@ -104,6 +104,7 @@ def check_content(file_path: str, new_content: str) -> list[str]:
     if is_py:
         warnings.extend(_check_yaml_bypass(rel, new_content))
         warnings.extend(_check_sensitive_write(rel, new_content))
+        warnings.extend(_check_god_module_edit(rel, new_content))
 
     return warnings
 
@@ -198,6 +199,29 @@ def _check_sensitive_write(rel, content):
         if any(kw in ctx for kw in ['env', 'getenv', 'os.environ', 'example', 'dummy', 'placeholder', 'your_', 'xxx', '***', 'test_', 'fake_', 'mock_', '_from_env', 'config']):
             continue
         warnings.append(f"GaC SEC-SENSITIVE-WRITE: {rel} 疑似硬编码敏感信息 (用 env var / vault, 非 source)")
+    return warnings
+
+
+def _check_god_module_edit(rel, content):
+    """god_module_edit 检查 (Wave 3 横向扩展): 编辑 god module (文件超阈值) 时警告.
+
+    memory check-god-module-mechanism: >800 warn / >1500 error. 阈值可 env 配置 (测试/调参).
+    """
+    warnings = []
+    fp = WORKSPACE / rel
+    if not fp.exists() or not fp.is_file():
+        return warnings  # 新文件或 /tmp, 跳过
+    try:
+        existing = len(fp.read_text(encoding="utf-8", errors="ignore").splitlines())
+    except Exception:
+        return warnings
+    total = existing + len(content.splitlines())
+    warn_th = int(os.environ.get("GAC_GOD_MODULE_WARN", "800"))
+    error_th = int(os.environ.get("GAC_GOD_MODULE_ERROR", "1500"))
+    if total > error_th:
+        warnings.append(f"GaC GOD-MODULE-EDIT: {rel} 编辑后约 {total} 行 (>{error_th} error, 拆分, memory check-god-module-mechanism)")
+    elif total > warn_th:
+        warnings.append(f"GaC GOD-MODULE-EDIT: {rel} 编辑后约 {total} 行 (>{warn_th} warn, memory check-god-module-mechanism)")
     return warnings
 
 
