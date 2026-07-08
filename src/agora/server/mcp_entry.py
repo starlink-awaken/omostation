@@ -149,4 +149,4 @@ def sse_main() -> None:
         Route("/api/v1/a2a/send", endpoint=a2a_send_endpoint, methods=["POST"])
     )
     sys.stderr.write("Agora MCP Server (SSE) starting on port 7431...\n")
-    asyncio.run(mcp.run_http_async(transport="sse", host="0.0.0.0", port=7431))  # noqa: S104 — MCP SSE server intentionally binds all interfaces
+    asyncio.run(mcp.run_http_async(transport="sse", host="0.0.0.0", port=int(os.environ.get("AGORA_MCP_SSE_PORT", "7431"))))  # noqa: S104 — MCP SSE server intentionally binds all interfaces
