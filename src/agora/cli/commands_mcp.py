@@ -11,14 +11,12 @@ def cmd_mcp(_args):
 
 
 def cmd_web(_args):
-    """Start Web Dashboard."""
-    from agora.web.app import main as web_main  # type: ignore[import-not-found]
-
+    """Start Web Dashboard (redirects to cockpit)."""
     import os
-
-    dashboard_url = os.environ.get("AGORA_DASHBOARD_URL", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}")
-    print(f"Agora Dashboard -> {dashboard_url}")
-    return web_main()
+    dashboard_url = os.environ.get("COCKPIT_DASHBOARD_URL", "http://localhost:8090")
+    print(f"Agora Dashboard consolidated into cockpit: {dashboard_url}")
+    print(f"Direct access: {dashboard_url}")
+    return 0
 
 
 def cmd_init(_args):
