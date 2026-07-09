@@ -79,6 +79,15 @@ for _router_module in (
         print(f"Error loading router {_router_module}: {e}", file=sys.stderr)
         traceback.print_exc()
 
+# ─── KOS Knowledge Integration (REST API proxy) ────────────────
+
+try:
+    from cockpit.kos_proxy import init_kos_routes
+    init_kos_routes(app)
+    print("Successfully loaded KOS proxy routes")
+except Exception as e:
+    print(f"Warning: KOS proxy not available: {e}", file=sys.stderr)
+
 # ─── GBrain Proxy ─────────────────────────────────────────────
 
 

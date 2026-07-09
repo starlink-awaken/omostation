@@ -28,7 +28,7 @@ import urllib.error
 from typing import Any
 
 # KOS API URL (configurable via environment)
-KOS_API_URL = os.environ.get("KOS_API_URL", "http://localhost:8765")
+KOS_API_URL = os.environ.get("KOS_API_URL", "http://localhost:8766")
 KOS_MCP_URL = os.environ.get("KOS_MCP_URL", "http://localhost:8765")
 
 
@@ -51,6 +51,12 @@ def _kos_rest_call(method: str, path: str, data: dict | None = None) -> dict:
         return {"error": str(e)}
 
 
+def _url_encode_params(params: dict) -> str:
+    """URL encode parameters."""
+    import urllib.parse
+    return urllib.parse.urlencode(params, encoding="utf-8", quote_via=urllib.parse.quote)
+
+
 # ── FastAPI 代理路由 ─────────────────────────────────────
 
 def init_kos_routes(app):
@@ -64,7 +70,8 @@ def init_kos_routes(app):
     @app.get("/api/kos/search")
     async def kos_search(q: str, mode: str = "hybrid", limit: int = 10):
         """搜索知识库。"""
-        result = _kos_rest_call("GET", f"/api/v1/search?q={q}&mode={mode}&limit={limit}")
+        params = {"q": q, "mode": mode, "limit": limit}
+        result = _kos_rest_call("GET", f"/api/v1/search?{_url_encode_params(params)}")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -72,7 +79,8 @@ def init_kos_routes(app):
     @app.get("/api/kos/suggest")
     async def kos_suggest(prefix: str, limit: int = 8):
         """搜索建议。"""
-        result = _kos_rest_call("GET", f"/api/v1/suggest?prefix={prefix}&limit={limit}")
+        params = {"prefix": prefix, "limit": limit}
+        result = _kos_rest_call("GET", f"/api/v1/suggest?{_url_encode_params(params)}")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -80,7 +88,8 @@ def init_kos_routes(app):
     @app.get("/api/kos/context")
     async def kos_context(q: str, mode: str = "balanced"):
         """构建 LLM 上下文。"""
-        result = _kos_rest_call("GET", f"/api/v1/context?q={q}&mode={mode}")
+        params = {"q": q, "mode": mode}
+        result = _kos_rest_call("GET", f"/api/v1/context?{_url_encode_params(params)}")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -112,7 +121,8 @@ def init_kos_routes(app):
     @app.get("/api/kos/clusters")
     async def kos_clusters(q: str, limit: int = 10):
         """搜索 + 聚类。"""
-        result = _kos_rest_call("GET", f"/api/v1/clusters?q={q}&limit={limit}")
+        params = {"q": q, "limit": limit}
+        result = _kos_rest_call("GET", f"/api/v1/clusters?{_url_encode_params(params)}")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
