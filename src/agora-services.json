@@ -551,6 +551,20 @@
       "provider_info": null,
       "healthy": true,
       "last_health_check": 0.0
+    },
+    {
+      "name": "l4-kernel",
+      "description": "L4 Domain Kernel — 自我层管理面：27域统一注册 + KEMS六面操作 + 健康聚合",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
     }
   ]
 }
