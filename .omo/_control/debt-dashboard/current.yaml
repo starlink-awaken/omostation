@@ -1,6 +1,7 @@
-generated_at: '2026-07-02T03:55:00Z'
-last_reconciled_at: '2026-07-02T03:55:00Z'
-reconciliation_note: 'partial 计数对齐 debt.yaml (当前无 partial item). 前值 2 (2026-06-11) 是历史快照已无对应 registry 记录. 见 ISC-12/50.'
+generated_at: '2026-07-09T05:44:00Z'
+last_reconciled_at: '2026-07-09T05:44:00Z'
+reconciliation_note: partial 计数对齐 debt.yaml (当前无 partial item). 前值 2 (2026-06-11)
+  是历史快照已无对应 registry 记录. 见 ISC-12/50.
 debt_metrics:
   debt_health: 100.0
   classification_entropy: 0.0
@@ -9,27 +10,23 @@ debt_metrics:
   time_entropy: 0.0
   backlog_pressure: 0.0
   coupling_load: 0.0
-
-# 健康度趋势
 health_trend:
-  - date: '2026-06-11'
-    debt_weight: 0.30
-    debt_health: 62.5
-    note: '初始状态：9项债务未解决'
-  - date: '2026-06-11'
-    debt_weight: 0.82
-    debt_health: 79.5
-    note: '7项 SharedBrain 债务已解决'
-  - date: '2026-06-11'
-    debt_weight: 0.97
-    debt_health: 97.0
-    note: 'D2_CI_E2E 容器化已解决'
-  - date: '2026-06-11'
-    debt_weight: 1.00
-    debt_health: 100.0
-    note: 'D3_EU_PRICING 已解决（包已删除）'
-
-# 债务分类
+- date: '2026-06-11'
+  debt_weight: 0.3
+  debt_health: 62.5
+  note: 初始状态：9项债务未解决
+- date: '2026-06-11'
+  debt_weight: 0.82
+  debt_health: 79.5
+  note: 7项 SharedBrain 债务已解决
+- date: '2026-06-11'
+  debt_weight: 0.97
+  debt_health: 97.0
+  note: D2_CI_E2E 容器化已解决
+- date: '2026-06-11'
+  debt_weight: 1.0
+  debt_health: 100.0
+  note: D3_EU_PRICING 已解决（包已删除）
 debt_categories:
   technical:
     resolved: 1
@@ -43,13 +40,9 @@ debt_categories:
     resolved: 0
     partial: 0
     unresolved: 0
-
-# 监控配置
 watchlist_item_ids: []
 gate_item_ids: []
 overdue_review_count: 0
 overdue_review_item_ids: []
 next_review_queue: []
-
-# 趋势报告引用
 trend_report_ref: .omo/_control/debt-dashboard/health-trend.md
