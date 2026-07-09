@@ -742,11 +742,20 @@ class AuditSubscriber:
             logger.error("audit_write_failed", event_id=event_id, error=str(e))
 
     def query(self, actor: str = "", resource: str = "", event_type: str = "", since: str = "", limit: int = 50) -> list[dict]:
-        conditions, params = [], []
-        if actor: conditions.append("actor = ?"); params.append(actor)
-        if resource: conditions.append("resource = ?"); params.append(resource)
-        if event_type: conditions.append("event_type LIKE ?"); params.append(event_type.replace("*", "%"))
-        if since: conditions.append("timestamp >= ?"); params.append(since)
+        conditions: list[str] = []
+        params: list = []
+        if actor:
+            conditions.append("actor = ?")
+            params.append(actor)
+        if resource:
+            conditions.append("resource = ?")
+            params.append(resource)
+        if event_type:
+            conditions.append("event_type LIKE ?")
+            params.append(event_type.replace("*", "%"))
+        if since:
+            conditions.append("timestamp >= ?")
+            params.append(since)
         where = " AND ".join(conditions) if conditions else "1=1"
         try:
             conn = sqlite3.connect(str(self._db_path))
