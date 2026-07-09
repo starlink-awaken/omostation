@@ -206,6 +206,9 @@ env_vars:
 
 # ── Conflicts ──
 conflicts_resolved:
+  7422:
+  - agora
+  - kairon
   7430:
   - agora
   - omo
@@ -216,6 +219,10 @@ conflicts_resolved:
   8765:
   - minerva
   - omo
+  - bus-foundation
+  - cockpit
+  - ecos
+  - kairon
   - runtime
   - ecos
   - l4-kernel
