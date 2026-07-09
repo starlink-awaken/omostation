@@ -1,19 +1,19 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-07-08T09:53:22Z
+# generated_at: 2026-07-09T03:59:10Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-1) = {'governance': 0.5, 'freshness': 0.2, 'runtime': 0.3}
 
-generated_at: "2026-07-08T09:53:22Z"
+generated_at: "2026-07-09T03:59:10Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 94
+health_score: 84
 governance_anomaly_score: 100
 anomaly_count: 0
-service_online_ratio: 0.800
-freshness_score: 100
+service_online_ratio: 0.600
+freshness_score: 80
 feedback_alive: True
-feedback_last_ts: "2026-07-08T09:32:51+00:00"
-feedback_staleness_hours: 0.3
+feedback_last_ts: "2026-07-09T03:54:43Z"
+feedback_staleness_hours: 0.1
 total_tasks: 104
 done: 103
 planned: 1
@@ -25,9 +25,9 @@ health_composite_breakdown:
     runtime: 0.3
   contributions:
     governance: 50.0
-    freshness: 20.0
-    runtime: 24.0
-  raw: 94.0
+    freshness: 16.0
+    runtime: 18.0
+  raw: 84.0
 
 anomalies:
   []
