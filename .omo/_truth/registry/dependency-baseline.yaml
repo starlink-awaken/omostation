@@ -340,6 +340,11 @@ rules:
         - cockpit
         - ontoderive[web]
         - runtime
+    - name: websockets
+      baseline: '>=13.0'
+      reason: 'Consumed by 1 project(s) (opt-in ws extra for browser pub/sub)'
+      consumers:
+        - 'bus-foundation[ws]'
   dev_test:
     - name: mypy
       baseline: '>=1.0'
