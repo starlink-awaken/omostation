@@ -70,9 +70,13 @@ class InstanceManager:
             instance_id=instance_id,
             instance_type="personal",
             display_name="Default",
-            endpoint=os.environ.get("AGORA_ENDPOINT", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}"),
+            endpoint=os.environ.get(
+                "AGORA_ENDPOINT",
+                f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}",
+            ),
             a2a_endpoint=os.environ.get(
-                "AGORA_A2A_ENDPOINT", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}/a2a"
+                "AGORA_A2A_ENDPOINT",
+                f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}/a2a",
             ),
             owner="org:starlink",
             capabilities=["identity", "capability", "event", "knowledge", "task"],

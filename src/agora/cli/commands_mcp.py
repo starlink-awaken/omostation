@@ -13,6 +13,7 @@ def cmd_mcp(_args):
 def cmd_web(_args):
     """Start Web Dashboard (redirects to cockpit)."""
     import os
+
     dashboard_url = os.environ.get("COCKPIT_DASHBOARD_URL", "http://localhost:8090")
     print(f"Agora Dashboard consolidated into cockpit: {dashboard_url}")
     print(f"Direct access: {dashboard_url}")

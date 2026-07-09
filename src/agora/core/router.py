@@ -57,16 +57,37 @@ class _CompressedResult:
 
 
 _DEFAULT_JSON_KEY_MAP = {
-    "description": "desc", "identifier": "id", "metadata": "meta",
-    "configuration": "config", "properties": "props", "attributes": "attrs",
-    "parameters": "params", "arguments": "args", "message": "msg",
-    "content": "val", "value": "val", "status": "st", "context": "ctx",
-    "response": "resp", "request": "req", "handler": "hnd",
-    "service": "svc", "definition": "defn", "reference": "ref",
-    "category": "cat", "priority": "pri", "severity": "sev",
-    "timestamp": "ts", "duration": "dur", "endpoint": "ep",
-    "protocol": "proto", "version": "ver", "pattern": "ptn",
-    "template": "tpl", "resource": "rsrc", "component": "comp",
+    "description": "desc",
+    "identifier": "id",
+    "metadata": "meta",
+    "configuration": "config",
+    "properties": "props",
+    "attributes": "attrs",
+    "parameters": "params",
+    "arguments": "args",
+    "message": "msg",
+    "content": "val",
+    "value": "val",
+    "status": "st",
+    "context": "ctx",
+    "response": "resp",
+    "request": "req",
+    "handler": "hnd",
+    "service": "svc",
+    "definition": "defn",
+    "reference": "ref",
+    "category": "cat",
+    "priority": "pri",
+    "severity": "sev",
+    "timestamp": "ts",
+    "duration": "dur",
+    "endpoint": "ep",
+    "protocol": "proto",
+    "version": "ver",
+    "pattern": "ptn",
+    "template": "tpl",
+    "resource": "rsrc",
+    "component": "comp",
     "extension": "ext",
 }
 
@@ -100,8 +121,13 @@ class _Compressor:
         compressed_len = len(compressed)
         ratio = 1.0 - (compressed_len / original_len) if original_len else 0.0
         self._record_stats(ctype, original_len, compressed_len)
-        return _CompressedResult(content=compressed, original_len=original_len,
-                                 compressed_len=compressed_len, ratio=ratio, stats=stats)
+        return _CompressedResult(
+            content=compressed,
+            original_len=original_len,
+            compressed_len=compressed_len,
+            ratio=ratio,
+            stats=stats,
+        )
 
     def detect_type(self, content: str) -> str:
         if not content or not content.strip():
@@ -113,9 +139,15 @@ class _Compressor:
                 return "json"
             except (json.JSONDecodeError, ValueError):
                 pass
-        if re.search(r"<\s*(html|div|span|p|body|head|table|article|section)", stripped[:500], re.IGNORECASE):
+        if re.search(
+            r"<\s*(html|div|span|p|body|head|table|article|section)",
+            stripped[:500],
+            re.IGNORECASE,
+        ):
             return "html"
-        if re.search(r"Traceback\s*\(|Error|Exception|at\s+\S+\.\w+\(.*\)", stripped[:600]):
+        if re.search(
+            r"Traceback\s*\(|Error|Exception|at\s+\S+\.\w+\(.*\)", stripped[:600]
+        ):
             return "error"
         code_patterns = [
             r"(?:^|\n)\s*(?:def|class|function|import|from|var|let|const|fn|pub|impl)\s",
@@ -123,7 +155,9 @@ class _Compressor:
             r"(?:^|\n)\s*{",
             r"(?:^|\n)\s*(?:if|for|while|switch|match)\s+",
         ]
-        score = sum(1 for pat in code_patterns if re.search(pat, stripped, re.MULTILINE))
+        score = sum(
+            1 for pat in code_patterns if re.search(pat, stripped, re.MULTILINE)
+        )
         return "code" if score >= 2 else "plaintext"
 
     def _compress_json(self, content: str, stats: dict) -> str:
@@ -150,7 +184,12 @@ class _Compressor:
     def _compress_html(self, content: str, stats: dict) -> str:
         original = content
         content = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
-        content = re.sub(r"</?(?:br|p|div|li|tr|h[1-6]|section|article|blockquote)[^>]*>", "\n", content, flags=re.IGNORECASE)
+        content = re.sub(
+            r"</?(?:br|p|div|li|tr|h[1-6]|section|article|blockquote)[^>]*>",
+            "\n",
+            content,
+            flags=re.IGNORECASE,
+        )
         content = re.sub(r"<[^>]+>", "", content)
         content = html.unescape(content)
         content = re.sub(r"\n{3,}", "\n\n", content)
@@ -163,11 +202,13 @@ class _Compressor:
         self._url_refs.clear()
         self._url_counter = 0
         url_pattern = re.compile(r"https?://\S+")
+
         def _replace_url(m: re.Match) -> str:
             self._url_counter += 1
             ref = f"{{ref_{self._url_counter}}}"
             self._url_refs[ref] = m.group(0)
             return ref
+
         result = url_pattern.sub(_replace_url, content)
         stats["urls_replaced"] = self._url_counter
         stats["url_map"] = dict(self._url_refs)
@@ -221,7 +262,10 @@ class _Compressor:
                 block = tuple(lines[i : i + block_len])
                 repeat = 1
                 j = i + block_len
-                while j + block_len <= len(lines) and tuple(lines[j : j + block_len]) == block:
+                while (
+                    j + block_len <= len(lines)
+                    and tuple(lines[j : j + block_len]) == block
+                ):
                     repeat += 1
                     j += block_len
                 if repeat > best_repeat:
@@ -248,14 +292,18 @@ class _Compressor:
         head = paragraphs[0]
         tail_text = "\n\n".join(paragraphs[-2:])
         middle_count = len(paragraphs) - 3
-        summary_line = f"\n\n[... 省略 {middle_count} 段落，共约 {len(content)} 字符 ...]\n\n"
+        summary_line = (
+            f"\n\n[... 省略 {middle_count} 段落，共约 {len(content)} 字符 ...]\n\n"
+        )
         result = head + summary_line + tail_text
         stats["truncated"] = True
         stats["original_paragraphs"] = len(paragraphs)
         stats["kept_paragraphs"] = 3
         return result
 
-    def _record_stats(self, content_type: str, original_len: int, compressed_len: int) -> None:
+    def _record_stats(
+        self, content_type: str, original_len: int, compressed_len: int
+    ) -> None:
         try:
             ratio = 1.0 - (compressed_len / max(original_len, 1))
             conn = _persist._get_db(str(Path.home() / ".kos" / "usage.db"))

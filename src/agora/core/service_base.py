@@ -22,10 +22,16 @@ _PRIVATE_NETWORKS = [
     ipaddress.ip_network("240.0.0.0/4"),
 ]
 
-_BLOCKED_HOSTS = frozenset({
-    "localhost", "127.0.0.1", "::1", "0.0.0.0",
-    "metadata.google.internal", "169.254.169.254",
-})
+_BLOCKED_HOSTS = frozenset(
+    {
+        "localhost",
+        "127.0.0.1",
+        "::1",
+        "0.0.0.0",
+        "metadata.google.internal",
+        "169.254.169.254",
+    }
+)
 
 KNOWN_PROTOCOLS = frozenset({"mcp", "rest", "grpc", "stdio", "websocket"})
 
