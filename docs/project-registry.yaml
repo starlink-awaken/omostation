@@ -131,10 +131,10 @@ projects:
     build_backend: "hatchling"
     version: "0.8.0"
     role: "SSB 签名链 + MOF 元模型 + L0 约束"
-    mof_tools: 34                # find ssot/tools -name "*.py" ! -name "__init__" ! -name "_*" | wc -l
-    m1_yaml: 1196                # find mof/m1 -name "*.yaml" | wc -l
-    m2_yaml: 48                  # find mof/m2 -name "*.yaml" | wc -l
-    m1_domains: 28               # find mof/m1/domain -name "*.yaml" | wc -l
+    mof_tools: 35                # find ssot/tools -name "*.py" ! -name "__init__" ! -name "_*" | wc -l
+    m1_yaml: 1395                # find mof/m1 -name "*.yaml" | wc -l
+    m2_yaml: 51                  # find mof/m2 -name "*.yaml" | wc -l
+    m1_domains: 31               # find mof/m1/domain -name "*.yaml" | wc -l
     governance_modules: 15       # find l0/governance -name "*.py" ! -name "__init__" | wc -l
 
   cockpit:
