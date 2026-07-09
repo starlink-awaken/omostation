@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Literal
 
-Transport = Literal["stdio", "internal", "http", "mcp_stdio", "mcp_proxy"]
+Transport = Literal["stdio", "internal", "http", "mcp_stdio", "mcp_proxy", "inline"]
 
 # ── BOS URI 模式 ─────────────────────────────────────
 BOS_URI_DOMAINS = (
@@ -36,7 +36,13 @@ BOS_URI_DOMAIN_PATTERN = "|".join(BOS_URI_DOMAINS)
 
 BOS_URI_PATTERN = re.compile(
     rf"^bos://(?P<domain>{BOS_URI_DOMAIN_PATTERN})"
-    r"/(?P<package>[a-z][a-z0-9-]+)(?:/(?P<action>[a-z][a-z0-9-]+))?$"
+    # package is required; action is optional and may itself contain
+    # slashes (sub-actions like `tools/cards_status` or `minerva` under
+    # `kairon/minerva`). 3+ segments is the contract. Both package and
+    # action accept underscores so names like `circuit_breaker`,
+    # `omo_worker_dispatch`, `audit_evaluator` are first-class.
+    r"/(?P<package>[a-z_][a-z0-9_-]+)"
+    r"(?:/(?P<action>[a-z_][a-z0-9_/-]+))?$"
 )
 
 

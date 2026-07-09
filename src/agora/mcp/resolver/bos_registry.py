@@ -60,7 +60,13 @@ def _get_valid_transports() -> set[str]:
             return set(Transport.__args__)
     except Exception:  # noqa: BLE001  # defensive fallback
         pass
-    return {"stdio", "internal", "http", "mcp_stdio", "mcp_proxy"}
+    # `inline` is reserved for self-identifier / i0_route:pending placeholder
+    # entries (e.g. bos://agora/metrics, bos://agora/registry). They are
+    # not real invokable services — callers should treat them as
+    # documentation anchors. The validator admits them so the registry
+    # can carry route metadata for services that haven't been wired into
+    # a real transport yet.
+    return {"stdio", "internal", "http", "mcp_stdio", "mcp_proxy", "inline"}
 
 
 # ── 数据转换 ──
@@ -186,6 +192,9 @@ def validate_registry(path: str | pathlib.Path | None = None) -> list[str]:
         # http 必须有 http_url
         if s.transport == "http" and not s.http_url:
             errors.append(f"[{i}] http 传输缺少 http_url: {s.uri}")
+
+        # inline transport 是 self-identifier / i0_route:pending 占位,
+        # 不需要 command / http_url; 它们只是 I0 文档锚点。
 
     if not errors:
         errors.append("✅ 注册表校验通过 — 0 错误")
