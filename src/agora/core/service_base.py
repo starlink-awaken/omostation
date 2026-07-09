@@ -4,73 +4,71 @@ from __future__ import annotations
 
 import ipaddress
 import json
-import socket
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
-BLOCKED_HOSTS = frozenset(
-    {
-        "localhost",
-        "127.0.0.1",
-        "::1",
-        "0.0.0.0",  # noqa: S104
-        "metadata.google.internal",
-    }
-)
-BLOCKED_NETWORKS = [
+_PRIVATE_NETWORKS = [
     ipaddress.ip_network("10.0.0.0/8"),
     ipaddress.ip_network("172.16.0.0/12"),
     ipaddress.ip_network("192.168.0.0/16"),
     ipaddress.ip_network("169.254.0.0/16"),
-    ipaddress.ip_network("100.64.0.0/10"),
-    ipaddress.ip_network("fc00::/7"),
     ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+    ipaddress.ip_network("0.0.0.0/8"),
+    ipaddress.ip_network("100.64.0.0/10"),
+    ipaddress.ip_network("192.0.0.0/24"),
+    ipaddress.ip_network("224.0.0.0/4"),
+    ipaddress.ip_network("240.0.0.0/4"),
 ]
+
+_BLOCKED_HOSTS = frozenset({
+    "localhost", "127.0.0.1", "::1", "0.0.0.0",
+    "metadata.google.internal", "169.254.169.254",
+})
+
 KNOWN_PROTOCOLS = frozenset({"mcp", "rest", "grpc", "stdio", "websocket"})
 
 
-def parse_tags(tags_str: str) -> list[str]:
-    """Parse comma-separated tags string into a deduplicated list."""
-    return [t.strip() for t in tags_str.split(",") if t.strip()]
-
-
-def parse_protocol_config(raw: str | dict) -> tuple[dict, str | None]:
-    """Parse protocol_config JSON string into dict. Returns (config, error_message)."""
-    if isinstance(raw, dict):
-        return raw, None
+def _is_private_ip(host: str) -> bool:
     try:
-        return json.loads(raw), None
-    except json.JSONDecodeError as e:
-        return {}, str(e)
+        addr = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return any(addr in net for net in _PRIVATE_NETWORKS)
+
+
+def validate_external_url(url: str) -> None:
+    """Validate URL points to external address. Raises ValueError if not."""
+    if not url:
+        raise ValueError("URL不能为空")
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"不支持的协议: {parsed.scheme}")
+    host = parsed.hostname
+    if not host:
+        raise ValueError(f"无法解析主机: {url}")
+    if host.lower() in _BLOCKED_HOSTS:
+        raise ValueError(f"禁止访问保留主机: {host}")
+    if host.lower().endswith((".local", ".internal")):
+        raise ValueError(f"禁止访问内部主机: {host}")
+    if _is_private_ip(host):
+        raise ValueError(f"禁止访问内网地址: {host}")
 
 
 def is_safe_url(url: str) -> bool:
-    """Validate URL does not target internal/private network resources.
-
-    Delegates to ssrf_guard.validate_external_url for strict checking,
-    but allows loopback for local development mode.
-    """
-
+    """Validate URL does not target internal/private network resources."""
     parsed = urlparse(url)
     hostname = parsed.hostname
     if not hostname:
         return False
-    # Loopback is always safe for local development
     if hostname.lower() in ("localhost", "127.0.0.1", "::1"):
         return True
-    # Delegate to strict SSRF guard for all other URLs
     try:
-        from agora.ssrf_guard import validate_external_url
-
         validate_external_url(url)
         return True
     except ValueError:
-        return False
-    try:
-        resolved = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(resolved)
-        return not any(ip in net for net in BLOCKED_NETWORKS)
-    except Exception:  # noqa: BLE001  # defensive fallback
         return False
 
 
