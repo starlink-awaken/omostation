@@ -1,0 +1,55 @@
+# M1 Node: DOMAIN-kos
+# Type: Domain | Subtype: EngineDomain
+# Generated: 2026-07-09
+
+id: DOMAIN-kos
+type: Domain
+name: KOS 知识检索系统
+description: 混合检索引擎 (FTS5 + LanceDB + 知识图谱) + GraphRAG 推理
+status: active
+domain: meta
+created: '2026-07-09'
+version: 1.0.0
+layer: L2
+properties:
+  bos_uri_pattern: bos://memory/kos/**
+  domain_type: engine
+  layer: L2
+  governance_tier: 0
+  storage: /Users/xiamingxing/Workspace/data/kos
+  capabilities:
+  - knowledge.search
+  - knowledge.graph_search
+  - knowledge.entity_explore
+  - knowledge.subscribe
+  - knowledge.verify_claim
+  - knowledge.build_context
+  entry_points:
+    cli: kos
+    rest_api: http://localhost:8766/api/v1
+    mcp: kos-mcp-server
+  rest_endpoints:
+    search: /api/v1/search
+    suggest: /api/v1/suggest
+    context: /api/v1/context
+    verify: /api/v1/verify
+    stats: /api/v1/stats
+    health: /api/v1/health
+    clusters: /api/v1/clusters
+  embedding_model: BAAI/bge-small-zh-v1.5
+  vector_dimension: 512
+  modules:
+    graphrag_engine: LLM 驱动的图谱推理 (BFS + 证据 + 推理)
+    auto_builder: LLM 辅助本体自动构建
+    ranker: 学习型排序 (用户反馈 + 权重统计)
+    monitoring: 生产级可观测性 (告警 + 自动修复)
+    agent_sdk: Agent-Native 客户端 SDK
+    rest_api: REST API v1 (FastAPI, 9 endpoints)
+subtype: EngineDomain
+
+model_driven_refs:
+  source_file: projects/kairon/packages/kos/src/kos/
+
+state_history:
+  - state: active
+    timestamp: '2026-07-09T00:00:00Z'

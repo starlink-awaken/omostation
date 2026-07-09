@@ -21,10 +21,10 @@ properties:
   - research.run
   - search.query
   - health.check
-  entry_points:
-    cli: minerva
-    mcp: minerva-mcp
-    web: http://localhost:8765
+   entry_points:
+     cli: minerva
+     mcp: minerva-mcp
+     web: http://localhost:8090/dev/minerva  # 2026-07 收敛到 cockpit 代理 (原 :8765 deprecated)
 subtype: EngineDomain
 
 model_driven_refs:
