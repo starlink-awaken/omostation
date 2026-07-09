@@ -28,9 +28,26 @@ from collections.abc import Callable  # noqa: E402
 from dataclasses import dataclass, field  # noqa: E402
 from typing import Any  # noqa: E402
 
-from agora.unified_protocol_adapter import ProtocolVersion  # type: ignore[import-not-found]  # noqa: E402
-
 logger = logging.getLogger(__name__)
+
+
+class ProtocolVersion:
+    """Protocol version with semver support."""
+
+    def __init__(self, major: int, minor: int, patch: int = 0) -> None:
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}"
+
+    def __ge__(self, other: ProtocolVersion) -> bool:
+        if self.major != other.major:
+            return self.major > other.major
+        if self.minor != other.minor:
+            return self.minor > other.minor
+        return self.patch >= other.patch
 
 
 @dataclass
