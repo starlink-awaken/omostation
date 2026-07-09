@@ -1020,7 +1020,7 @@ services:
   - uri: "bos://cockpit/tools/cards_status"
     domain: cockpit
     action: "tools/cards_status"
-    transport: stdio
+    transport: inline
     package: "cockpit"
     description: "cockpit cards_status 工具 — mof_agora_hook 路由表入口"
     i0_route: pending
@@ -1028,21 +1028,21 @@ services:
   - uri: "bos://cockpit/tools/test"
     domain: cockpit
     action: "tools/test"
-    transport: stdio
+    transport: inline
     package: "cockpit"
     description: "cockpit test 工具 — mof_agora_hook 路由表入口"
     i0_route: pending
     status: active
-  - uri: "bos://domain/package"
-    domain: domain
-    action: "package"
+  - uri: "bos://system/discovery/package"
+    domain: system
+    action: "discovery/package"
     transport: inline
     description: "domain package 通用入口 (mcp/bos_discovery discovery 路径)"
     i0_route: pending
     status: active
-  - uri: "bos://domain/package/action"
-    domain: domain
-    action: "package/action"
+  - uri: "bos://system/discovery/package/action"
+    domain: system
+    action: "discovery/package/action"
     transport: inline
     description: "domain package action 子入口 (mcp/bos_discovery dynamic discovery)"
     i0_route: pending
@@ -1065,9 +1065,9 @@ services:
     description: "ecos workflow CLI 入口 (ecos/cli/workflow.py)"
     i0_route: pending
     status: active
-  - uri: "bos://execution/workers/status"
-    domain: execution
-    action: "workers/status"
+  - uri: "bos://system/runtime/workers/status"
+    domain: system
+    action: "runtime/workers/status"
     transport: inline
     description: "execution workers status 端点 (mcp_protocol registry 端点)"
     i0_route: pending
@@ -1075,7 +1075,7 @@ services:
   - uri: "bos://forge/market/list"
     domain: forge
     action: "market/list"
-    transport: stdio
+    transport: inline
     package: "agora-market"
     description: "agora forge market list — plugin market 查询入口"
     i0_route: pending
@@ -1094,10 +1094,10 @@ services:
     description: "governance roles list 端点 (mcp_protocol registry 端点)"
     i0_route: pending
     status: active
-  - uri: "bos://kairon/minerva"
-    domain: kairon
+  - uri: "bos://analysis/minerva"
+    domain: analysis
     action: "minerva"
-    transport: stdio
+    transport: inline
     package: "kairon"
     description: "kairon minerva 集成入口 (agora l0_registry_loader 引用)"
     i0_route: pending
@@ -1109,46 +1109,46 @@ services:
     description: "memory docs readme 端点 (mcp_protocol registry 端点)"
     i0_route: pending
     status: active
-  - uri: "bos://vault/_state"
-    domain: vault
-    action: "_state"
+  - uri: "bos://system/vault/state"
+    domain: system
+    action: "vault/state"
     transport: inline
     description: "vault _state 端点 (ecos services integration gateway 引用)"
     i0_route: pending
     status: active
 
   # ── P77 Phase 3 治本第二批: omo + cockpit + c2g 引用 (init submodule 后浮现) ──
-  - uri: "bos://gov/tasks"
-    domain: gov
-    action: "tasks"
+  - uri: "bos://governance/governance/tasks"
+    domain: governance
+    action: "governance/tasks"
     transport: inline
     description: "gov tasks 端点 (cockpit dashboard helpers_compute 引用)"
     i0_route: pending
     status: active
-  - uri: "bos://governance/cockpit/circuit_breaker"
+  - uri: "bos://governance/governance/circuit_breaker"
     domain: governance
-    action: "cockpit/circuit_breaker"
+    action: "governance/circuit_breaker"
     transport: inline
     description: "governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)"
     i0_route: pending
     status: active
-  - uri: "bos://governance/cockpit/daily_budget"
+  - uri: "bos://governance/governance/daily_budget"
     domain: governance
-    action: "cockpit/daily_budget"
+    action: "governance/daily_budget"
     transport: inline
     description: "governance cockpit daily_budget 端点 (cockpit api_omos metrics source)"
     i0_route: pending
     status: active
-  - uri: "bos://governance/cockpit/quests"
+  - uri: "bos://governance/governance/quests"
     domain: governance
-    action: "cockpit/quests"
+    action: "governance/quests"
     transport: inline
     description: "governance cockpit quests 端点 (cockpit api_omos metrics source)"
     i0_route: pending
     status: active
-  - uri: "bos://governance/omo_worker_dispatch"
+  - uri: "bos://governance/governance/omo_worker_dispatch"
     domain: governance
-    action: "omo_worker_dispatch"
+    action: "governance/omo_worker_dispatch"
     transport: inline
     description: "governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics source)"
     i0_route: pending
@@ -1170,7 +1170,7 @@ services:
   - uri: "bos://omo/debt"
     domain: omo
     action: "debt"
-    transport: stdio
+    transport: inline
     package: "omo"
     description: "omo debt 端点 (omo @mcp.resource 引用)"
     i0_route: pending
