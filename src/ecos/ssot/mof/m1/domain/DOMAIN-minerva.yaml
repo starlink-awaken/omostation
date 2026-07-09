@@ -18,13 +18,13 @@ properties:
   governance_tier: 0
   storage: /Users/xiamingxing/minerva
   capabilities:
-  - research.run
-  - search.query
-  - health.check
-   entry_points:
-     cli: minerva
-     mcp: minerva-mcp
-     web: http://localhost:8090/dev/minerva  # 2026-07 收敛到 cockpit 代理 (原 :8765 deprecated)
+    - research.run
+    - search.query
+    - health.check
+  entry_points:
+    cli: minerva
+    mcp: minerva-mcp
+    web: http://localhost:8090/dev/minerva
 subtype: EngineDomain
 
 model_driven_refs:
@@ -33,4 +33,3 @@ model_driven_refs:
 state_history:
   - state: active
     timestamp: '2026-06-19T00:00:00Z'
-    reason: initial_modeling

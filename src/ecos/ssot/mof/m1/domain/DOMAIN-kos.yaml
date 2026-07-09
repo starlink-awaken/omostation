@@ -18,12 +18,12 @@ properties:
   governance_tier: 0
   storage: /Users/xiamingxing/Workspace/data/kos
   capabilities:
-  - knowledge.search
-  - knowledge.graph_search
-  - knowledge.entity_explore
-  - knowledge.subscribe
-  - knowledge.verify_claim
-  - knowledge.build_context
+    - knowledge.search
+    - knowledge.graph_search
+    - knowledge.entity_explore
+    - knowledge.subscribe
+    - knowledge.verify_claim
+    - knowledge.build_context
   entry_points:
     cli: kos
     rest_api: http://localhost:8766/api/v1
@@ -39,12 +39,12 @@ properties:
   embedding_model: BAAI/bge-small-zh-v1.5
   vector_dimension: 512
   modules:
-    graphrag_engine: LLM 驱动的图谱推理 (BFS + 证据 + 推理)
-    auto_builder: LLM 辅助本体自动构建
-    ranker: 学习型排序 (用户反馈 + 权重统计)
-    monitoring: 生产级可观测性 (告警 + 自动修复)
-    agent_sdk: Agent-Native 客户端 SDK
-    rest_api: REST API v1 (FastAPI, 9 endpoints)
+    graphrag_engine: LLM 推理
+    auto_builder: 本体构建
+    ranker: 排序学习
+    monitoring: 可观测性
+    agent_sdk: Agent SDK
+    rest_api: REST API v1
 subtype: EngineDomain
 
 model_driven_refs:
