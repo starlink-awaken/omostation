@@ -223,6 +223,9 @@ conflicts_resolved:
   - cockpit
   - ecos
   - kairon
+  8766:
+  - kairon
+  - cockpit
   - runtime
   - ecos
   - l4-kernel
