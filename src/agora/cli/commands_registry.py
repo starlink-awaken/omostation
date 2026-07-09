@@ -227,8 +227,14 @@ def cmd_config(_args):
         "Healthy": len(registry.list_healthy()),
         "Events file": data_dir / "agora-events.json",
         "Trace file": data_dir / "trace_log.jsonl",
-        "Dashboard": os.environ.get("AGORA_DASHBOARD_URL", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}"),
-        "Metrics": os.environ.get("AGORA_METRICS_URL", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}/metrics"),
+        "Dashboard": os.environ.get(
+            "AGORA_DASHBOARD_URL",
+            f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}",
+        ),
+        "Metrics": os.environ.get(
+            "AGORA_METRICS_URL",
+            f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}/metrics",
+        ),
     }
     out.print_key_value(config_data, "配置状态")
 

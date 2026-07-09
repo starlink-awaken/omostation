@@ -61,7 +61,9 @@ class SwarmNode:
     node_id: str
     host: str
     port: int = SWARM_DEFAULT_PORT
-    mcp_port: int = int(os.environ.get("AGORA_MCP_HTTP_PORT", "7422"))  # [Phase 9] HTTP MCP/A2A port
+    mcp_port: int = int(
+        os.environ.get("AGORA_MCP_HTTP_PORT", "7422")
+    )  # [Phase 9] HTTP MCP/A2A port
     role: str = "worker"
     bos_uris: list[str] = field(default_factory=list)
     capabilities: dict[str, Any] = field(default_factory=dict)
@@ -125,7 +127,11 @@ class SwarmOrchestrator:
     def __init__(self, role: str = "worker", port: int = SWARM_DEFAULT_PORT):
         self.role = role
         self.port = port
-        self.mcp_port = int(os.environ.get("AGORA_MCP_HTTP_PORT", int(os.environ.get("AGORA_HTTP_PORT", "7422"))))
+        self.mcp_port = int(
+            os.environ.get(
+                "AGORA_MCP_HTTP_PORT", int(os.environ.get("AGORA_HTTP_PORT", "7422"))
+            )
+        )
         self.node_id = f"{socket.gethostname()}:{port}:{role}"
         self._nodes: dict[str, SwarmNode] = {}
         self._running = False
@@ -423,7 +429,10 @@ class SwarmOrchestrator:
                                 node_id=info.get("node_id", f"{addr[0]}:unknown"),
                                 host=addr[0],
                                 port=info.get("port", self.port),
-                                mcp_port=info.get("mcp_port", int(os.environ.get("AGORA_MCP_HTTP_PORT", "7422"))),
+                                mcp_port=info.get(
+                                    "mcp_port",
+                                    int(os.environ.get("AGORA_MCP_HTTP_PORT", "7422")),
+                                ),
                                 role=info.get("role", "worker"),
                                 bos_uris=info.get("bos_uris", []),
                                 last_heartbeat=time.time(),
