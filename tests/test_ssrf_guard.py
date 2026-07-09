@@ -1,7 +1,7 @@
 """SSRF防护单元测试。"""
 
 import pytest
-from agora.ssrf_guard import validate_external_url
+from agora.core.service_base import validate_external_url
 
 
 class TestValidateExternalUrl:

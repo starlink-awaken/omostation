@@ -6,7 +6,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from agora.audit_subscriber import AuditSubscriber
+from agora.server.mcp import AuditSubscriber
 from agora.core.event_bus import EventBus
 from agora.core.registry import ServiceRegistry
 
