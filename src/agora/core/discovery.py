@@ -51,8 +51,18 @@ class DiscoveryEngine:
         "minerva": {
             "description": "Local-first deep research system — 5 Super Tools (Dropbox Dash pattern)",
             "mcp_endpoint": "stdio://minerva",
-            "health_port": 8765,
+            "health_port": 0,
+            "health_url": "http://localhost:8090/dev/minerva/health",
             "tags": ["research", "knowledge", "llm"],
+            "note": "2026-07: :8765 deprecated, access via cockpit proxy",
+        },
+        "kos": {
+            "description": "Hybrid retrieval engine — FTS5 + LanceDB + knowledge graph + GraphRAG",
+            "mcp_endpoint": "http://localhost:8765/mcp",
+            "health_port": 8766,
+            "health_url": "http://localhost:8766/api/v1/health",
+            "tags": ["retrieval", "knowledge", "graphrag", "search"],
+            "rest_api": "http://localhost:8766/api/v1",
         },
         "ontoderive": {
             "description": "Fact-driven knowledge engineering — ToolForge + derive + check",
@@ -95,7 +105,7 @@ class DiscoveryEngine:
     # Default port ranges to probe
     PORT_RANGES = [
         (7420, 7430),  # Agora convention (AGORA_INTERNAL_PORT)
-        (8765, 8766),  # Minerva
+        (8766, 8766),  # KOS REST API (port 8765 deprecated, see domain registry)
         (9000, 9005),  # Common MCP services
         (3000, 3002),  # AgentMesh / web apps
     ]

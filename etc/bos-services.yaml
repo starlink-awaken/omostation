@@ -13,13 +13,42 @@ services:
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "search"]
     description: "KOS 知识图谱检索入口 (P33-W1 战役 2 起步)"
 
-  - uri: "bos://memory/kos/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "kos-mcp"
-    command: ["python3", "bin/mcp-server-kos.py"]
-    description: "KOS 统一只读 MCP 服务器入口 (SGF-v1 硬件外挂)"
+   - uri: "bos://memory/kos/mcp-server"
+     domain: memory
+     action: "mcp-server"
+     transport: stdio
+     package: "kos-mcp"
+     command: ["python3", "bin/mcp-server-kos.py"]
+     description: "KOS 统一只读 MCP 服务器入口 (SGF-v1 硬件外挂)"
+
+   # KOS REST API v1 (HTTP, port 8766) — 跨项目松耦合集成
+   - uri: "bos://memory/kos/rest-api"
+     domain: memory
+     action: "rest-api"
+     transport: http
+     endpoint: "http://localhost:8766/api/v1"
+     description: "KOS REST API v1 (9 endpoints: search/suggest/context/verify/stats/health/clusters)"
+     status: active
+
+   # KOS GraphRAG 深度推理
+   - uri: "bos://memory/kos/graphrag"
+     domain: memory
+     action: "graphrag"
+     transport: mcp
+     mcp_tool: "knowledge_ask"
+     description: "KOS GraphRAG: 实体识别 + BFS路径 + 证据收集 + LLM推理"
+     status: active
+
+   # KOS Agent-Native MCP v2.0
+   - uri: "bos://memory/kos/mcp-v2"
+     domain: memory
+     action: "mcp-v2"
+     transport: mcp
+     tools: [graph_search, entity_explore, knowledge_ask, subscribe_topic, build_context, verify_claim]
+     description: "KOS Agent-Native MCP v2.0 (25 tools total)"
+     status: active
+
+   # ── Minerva接入点（由 kairon 子模块 packages/minerva/ 提供）──
 
   - uri: "bos://memory/kos/ingest"
     domain: memory
