@@ -2,10 +2,21 @@
 # Agora 自动发现所有 workspace 内的 MCP 服务
 
 services:
+  - name: kos-retrieval-engine
+    description: KOS 混合检索引擎 — GraphRAG + FTS5 + LanceDB + 知识图谱
+    mcp_url: "http://localhost:8766/api/v1"
+    health_url: "http://localhost:8766/api/v1/health"
+    tags: [retrieval, knowledge, graphrag, search]
+    tools:
+      search: {description: "混合检索 (FTS5 + 向量 + 图谱)", args: {query: string, mode: string, limit: int}}
+      context: {description: "构建 LLM 上下文片段", args: {query: string, mode: string, max_tokens: int}}
+      graph_search: {description: "多跳图谱搜索", args: {query: string, max_hops: int}}
+      entity_explore: {description: "实体交互式探索", args: {entity_id: string}}
+
   - name: minerva-deep-research
     description: 深度研究引擎 — 5 Super Tools (Dropbox Dash pattern)
     mcp_url: "http://minerva:7421/sse"
-    health_url: "http://minerva:8765/health"
+    health_url: "http://localhost:8090/dev/minerva/health"
     tags: [research, knowledge, llm]
     tools:
       - research_now: {description: "立即执行研究", args: {query: string, level: string}}
