@@ -145,13 +145,19 @@ ports:
     transport: http
     status: active
     note: "omlx local MLX text mythos (Qwythos-9B mxfp4, mlx_lm)"
-  # ── deprecated / converged (功能已收敛到 cockpit, 保留仅用于历史追溯) ──
-  8765:
-    name: minerva-kos-ontoderive
-    transport: deprecated
-    status: deprecated
-    note: "2026-06 收敛到 cockpit /dev/*. P78 标记 deprecated."
-  9090:
+   # ── deprecated / converged (功能已收敛到 cockpit, 保留仅用于历史追溯) ──
+   8765:
+     name: minerva-kos-ontoderive
+     transport: deprecated
+     status: deprecated
+     note: "2026-06 收敛到 cockpit /dev/*. P78 标记 deprecated."
+   8766:
+     name: kos-rest-api
+     transport: http
+     status: active
+     note: "KOS REST API v1 (9 endpoints: search/suggest/context/verify/stats/health/clusters). FastAPI uvicorn."
+     owner: kairon/kos
+   9090:
     name: ecos-dashboard
     transport: deprecated
     status: deprecated
@@ -178,8 +184,9 @@ env_vars:
   8000: AETHERFORGE_WEB_HELM_PORT
   8080: ONTODERIVE_WEB_PORT
   8081: KAIRON_INTERNAL_PORT
-  8090: COCKPIT_DASHBOARD_PORT
-  8888: MCP_STDIO_DEBUG_PORT
+   8090: COCKPIT_DASHBOARD_PORT
+   8766: KOS_REST_API_PORT
+   8888: MCP_STDIO_DEBUG_PORT
   9100: OMO_WEBHOOK_PORT
   9190: OMO_DASHBOARD_PORT
   9290: LLM_GATEWAY_PORT

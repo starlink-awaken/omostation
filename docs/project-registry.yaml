@@ -76,6 +76,20 @@ projects:
       - minerva
       - ontoderive
       - sophia
+    kos_details:
+      role: "知识检索系统 (KOS)"
+      rest_api: "http://localhost:8766"
+      endpoints: 9
+      modules:
+        - graphrag_engine (LLM推理)
+        - ontology/auto_builder (自动本体)
+        - search/ranker (排序学习)
+        - monitoring (可观测性)
+        - agent/client (Agent SDK)
+        - web/app (REST API)
+      mcp_tools: 25
+      embedding_model: "BAAI/bge-small-zh-v1.5"
+      vector_dim: 512
 
   gbrain:
     layer: "L2"
