@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -204,8 +205,8 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     c.print()
     c.print(
         Panel.fit(
-            "[bold cyan]🧭 欢迎使用 Workspace！[/bold cyan]\n\n"
-            "研究对象管理系统 — 让你的每一个研究和想法都有记忆、可追溯。\n\n"
+            "[bold cyan]🧭 欢迎使用 Workspace！[/bold cyan]\\n\\n"
+            "研究对象管理系统 — 让你的每一个研究和想法都有记忆、可追溯。\\n\\n"
             "[dim]输入 → 研究 → 追问 → 发布 → 复盘[/dim]",
             border_style="cyan",
             box=box.ROUNDED,
@@ -213,8 +214,61 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     )
     c.print()
 
+    # ── Step 0: Environment Health Check ──
+    c.print(_panel("[bold]Step 0/5 — 环境健康检查[/bold]", "cyan", title="🏥"))
+    health_issues: list[str] = []
+    try:
+        import json as _json
+        from urllib import request as urlrequest
+
+        # Check BOS services
+        for svc_name, svc_url in [
+            ("Agora Hub", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}/health"),
+            ("Ollama", "http://localhost:11434/api/tags"),
+        ]:
+            try:
+                req = urlrequest.Request(svc_url, method="GET")  # noqa: S310
+                with urlrequest.urlopen(req, timeout=3) as resp:  # noqa: S310
+                    if resp.status == 200:
+                        c.print(f"  [green]✅ {svc_name}[/green] — 可达")
+            except Exception:  # defensive fallback
+                c.print(f"  [yellow]⚠️  {svc_name}[/yellow] — 不可达 (可选)")
+        # Check workspace paths
+        workspace_root = Path.home() / "Workspace"
+        control_dir = workspace_root / ".omo" / "_control"
+        if control_dir.exists():
+            gov_file = control_dir / "governance-data.json"
+            if gov_file.exists():
+                c.print("  [green]✅ 治理数据[/green] — governance-data.json 就绪")
+            else:
+                c.print("  [yellow]⚠️  治理数据[/yellow] — governance-data.json 未生成 (运行 omo state sync)")
+        else:
+            c.print("  [yellow]⚠️  .omo[/yellow] — 治理目录未找到")
+
+        # Check BOS
+        bos_metrics = workspace_root / ".omo" / "_knowledge" / "bos-metrics.jsonl"
+        if bos_metrics.exists():
+            line_count = len(bos_metrics.read_text(encoding="utf-8").splitlines())
+            c.print(f"  [green]✅ BOS metrics[/green] — {line_count} 条记录")
+        else:
+            c.print("  [yellow]⚠️  BOS metrics[/yellow] — 尚未记录")
+
+        # Check cron output
+        cron_output = Path.home() / ".hermes" / "cron" / "output"
+        if cron_output.exists():
+            task_count = len([d for d in cron_output.iterdir() if d.is_dir()])
+            c.print(f"  [green]✅ Cron 任务[/green] — {task_count} 个活跃任务")
+        else:
+            c.print("  [yellow]⭕ Cron 输出[/yellow] — 尚未运行")
+    except Exception as e:  # defensive fallback
+        health_issues.append(str(e))
+    if health_issues:
+        for issue in health_issues:
+            c.print(f"  [red]❌ {issue}[/red]")
+    c.print()
+
     # ── 第 1 步：环境核验 ──
-    c.print(_panel("[bold]Step 1/4 — 环境核验[/bold]", "cyan", title="🔍"))
+    c.print(_panel("[bold]Step 1/5 — 环境核验[/bold]", "cyan", title="🔍"))
     issues: list[str] = []
     py_issue = _check_python()
     if py_issue:
@@ -243,7 +297,7 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     c.print()
 
     # ── 第 2 步：推荐配置 ──
-    c.print(_panel("[bold]Step 2/4 — 推荐配置[/bold]", "cyan", title="⚙️"))
+    c.print(_panel("[bold]Step 2/5 — 推荐配置[/bold]", "cyan", title="⚙️"))
     recs: list[str] = []
     if not tools.get("minerva"):
         recs.append("[yellow]🔸 建议安装 minerva 以获得真实深度研究能力[/yellow]")
@@ -262,53 +316,69 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     c.print()
 
     # ── 第 3 步：快速上手指南 ──
-    c.print(_panel("[bold]Step 3/4 — 快速上手指南[/bold]", "cyan", title="🚀"))
+    c.print(_panel("[bold]Step 3/5 — 快速上手指南[/bold]", "cyan", title="🚀"))
     guide = Table(box=box.ROUNDED, header_style="bold cyan")
     guide.add_column("步骤", style="bold", width=8)
     guide.add_column("命令", width=40)
     guide.add_column("说明", width=40)
-    guide.add_row(
-        "1",
-        "[cyan]cockpit demo[/]",
-        "体验研究闭环（5 分钟）",
-    )
-    guide.add_row(
-        "2",
-        '[cyan]cockpit research "主题"[/]',
-        "发起你的第一个研究",
-    )
-    guide.add_row(
-        "3",
-        "[cyan]cockpit research --list[/]",
-        "浏览所有研究记录",
-    )
-    guide.add_row(
-        "4",
-        "[cyan]cockpit status[/]",
-        "查看工作台仪表板",
-    )
-    guide.add_row(
-        "5",
-        "[cyan]cockpit daily[/]",
-        "每日研究简报",
-    )
+    guide.add_row("1", "[cyan]cockpit demo[/]", "体验研究闭环（5 分钟）")
+    guide.add_row("2", '[cyan]cockpit research "主题"[/]', "发起你的第一个研究")
+    guide.add_row("3", "[cyan]cockpit research --list[/]", "浏览所有研究记录")
+    guide.add_row("4", "[cyan]cockpit status[/]", "查看工作台仪表板")
+    guide.add_row("5", "[cyan]cockpit daily[/]", "每日研究简报")
+    guide.add_row("6", "[cyan]cockpit dashboard[/]", "打开 Web 控制台")
     c.print(guide)
     c.print()
 
-    # ── 第 4 步：下一步 ──
-    c.print(_panel("[bold]Step 4/4 — 下一步[/bold]", "cyan", title="🎯"))
+    # ── 第 4 步：BOS 服务验证 ──
+    c.print(_panel("[bold]Step 4/5 — BOS 服务验证[/bold]", "cyan", title="🔌"))
+    try:
+        import json as _json
+        from urllib import request as urlrequest
+
+        # Try resolving a simple BOS URI
+        agora_port = os.environ.get("AGORA_INTERNAL_PORT", "7430")
+        resolve_url = f"http://localhost:{agora_port}/api/bos/resolve"
+        req = urlrequest.Request(  # noqa: S310
+            resolve_url,
+            data=_json.dumps({"uri": "bos://test/health/ping"}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urlrequest.urlopen(req, timeout=5) as resp:  # noqa: S310
+                result = _json.loads(resp.read().decode())
+                c.print(f"  [green]✅ BOS 解析器[/green] — 测试 URI 返回 {result.get('status', 'ok')}")
+        except Exception:  # defensive fallback
+            c.print("  [dim]⭕ BOS 解析器[/dim] — 不可达 (可选, 需要 Agora)")
+
+        # Check BOS metrics API
+        dashboard_port = os.environ.get("COCKPIT_DASHBOARD_PORT", "8090")
+        try:
+            req = urlrequest.Request(f"http://localhost:{dashboard_port}/api/bos/metrics", method="GET")
+            with urlrequest.urlopen(req, timeout=3) as resp:  # noqa: S310
+                data = _json.loads(resp.read().decode())
+                total = data.get("summary", {}).get("total_calls", 0)
+                c.print(f"  [green]✅ BOS metrics API[/green] — {total} 条历史调用")
+        except Exception:  # defensive fallback
+            c.print("  [dim]⭕ BOS metrics API[/dim] — 不可达")
+    except Exception:  # defensive fallback
+        c.print("  [dim]⭕ BOS 验证[/dim] — 跳过")
+    c.print()
+
+    # ── 第 5 步：下一步 ──
+    c.print(_panel("[bold]Step 5/5 — 下一步[/bold]", "cyan", title="🎯"))
     c.print(r"  [bold]核心旅程:[/bold]")
     c.print(r"    import → research → open → ask → publish → dossier → timeline")
     c.print()
     c.print(r"  [bold]学习资源:[/bold]")
     c.print(r"    [cyan]cockpit help[/]     — 产品地图与完整命令列表")
     c.print(r"    [cyan]cockpit demo[/]     — 交互式演示")
+    c.print(r"    [cyan]cockpit dashboard[/] — Web 控制台 (http://localhost:8090)")
     c.print()
-    c.print(
-        _panel(
-            "[bold green]🎉 配置完成！现在就开始使用 workspace[/bold green]\n\n"
-            '[cyan]cockpit research "你的第一个研究主题"[/]',
-            "green",
-        )
-    )
+    c.print(_panel(
+        "[bold green]🎉 配置完成！现在就开始使用 workspace[/bold green]\\n\\n"
+        '[cyan]cockpit research "你的第一个研究主题"[/]',
+        "green",
+    ))
     return 0

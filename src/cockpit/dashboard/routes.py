@@ -22,8 +22,12 @@ from cockpit.dashboard.helpers import (
     fetch_layer_status,
     load_arch_health,
     load_bos_metrics,
+    load_bos_trends,
     load_compute,
+    load_convergence_status,
+    load_cron_summary,
     load_debt,
+    load_governance_summary,
     omo_report,
     run_e2e,
 )
@@ -232,6 +236,33 @@ async def api_bos_metrics():
 async def api_arch_health():
     """Architecture health aggregation."""
     return JSONResponse(content=load_arch_health())
+
+
+# ─── Wave 3: Observability APIs ──────────────────────────────
+
+
+@router.get("/api/cron/summary", dependencies=_AUTH_DEPS)
+async def api_cron_summary():
+    """Cron pipeline output summary from ~/.hermes/cron/output/."""
+    return JSONResponse(content=load_cron_summary())
+
+
+@router.get("/api/governance/summary", dependencies=_AUTH_DEPS)
+async def api_governance_summary():
+    """Governance audit visualization from .omo/_control/governance-data.json."""
+    return JSONResponse(content=load_governance_summary())
+
+
+@router.get("/api/bos/trends", dependencies=_AUTH_DEPS)
+async def api_bos_trends():
+    """BOS trends — 24h/7d call volume, success rate, latency percentiles."""
+    return JSONResponse(content=load_bos_trends())
+
+
+@router.get("/api/convergence/status", dependencies=_AUTH_DEPS)
+async def api_convergence_status():
+    """Entry convergence status — which CLIs are still active vs. cockpit."""
+    return JSONResponse(content=load_convergence_status())
 
 
 # ─── Pages ─────────────────────────────────────────────────

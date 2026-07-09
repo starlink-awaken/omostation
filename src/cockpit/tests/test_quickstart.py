@@ -160,10 +160,10 @@ class TestCmdQuickstart:
 
         output = capture.export_text()
         assert code == 0
-        assert "Step 1/4" in output
-        assert "Step 2/4" in output
-        assert "Step 3/4" in output
-        assert "Step 4/4" in output
+        assert "Step 1/5" in output
+        assert "Step 2/5" in output
+        assert "Step 3/5" in output
+        assert "Step 4/5" in output
         assert "Python" in output
         assert "minerva" in output
         assert "cockpit research" in output
@@ -186,7 +186,7 @@ class TestCmdQuickstart:
 
         output = capture.export_text()
         assert code == 0
-        assert "Step 1/4" in output
+        assert "Step 1/5" in output
         assert "未安装" in output or "⭕" in output
 
     def test_fix_dispatch_via_flag(self, monkeypatch):
@@ -214,7 +214,7 @@ class TestCmdQuickstart:
         output = capture.export_text()
         assert code == 0
         assert "自动修复模式" in output
-        assert "Step 1/4" not in output  # 不应显示普通向导
+        assert "Step 1/5" not in output  # 不应显示普通向导
 
     def test_init_with_fix_dispatch(self, monkeypatch):
         """init 命令也支持 --fix → 转发到 _auto_fix"""
@@ -261,7 +261,7 @@ class TestCmdQuickstart:
 
         output = capture.export_text()
         assert code == 0
-        assert "Step 1/4" in output
+        assert "Step 1/5" in output
         # line 74: Python 太旧 → 不会显示绿色 Python 版本号，issues 被收集
         assert "3.9" not in output  # Python 太旧时绿色版本行不显示
         # line 86: Ollama 已安装但未运行
