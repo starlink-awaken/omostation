@@ -313,6 +313,21 @@ class MatrixScheduler:
             if svc.health_url:
                 result["health_check"] = health_check_url(svc.health_url)
 
+            # 治本 (launcher-zombie 假阳性): launchd/docker 报 PID 在 ≠ 服务真在提供服务.
+            # uv/python launcher 被 KeepAlive 保活时, 子服务可能已崩溃但 launchctl 仍报 running,
+            # 导致 status/uptime/health_score 全线假阳性 (2026-07-10 agora 事件根因).
+            # 交叉校验端口监听 / HTTP 健康, 命中即降级 degraded, 让假绿灯无所遁形.
+            _pre_status = result.get("runtime", {}).get("status")
+            if _pre_status in ("running", "idle"):
+                _degrade_reasons = []
+                if svc.port and result.get("port_listening") is False:
+                    _degrade_reasons.append(f"port {svc.port} not listening")
+                if svc.health_url and result.get("health_check") not in ("healthy", None):
+                    _degrade_reasons.append(f"health_check={result.get('health_check')}")
+                if _degrade_reasons:
+                    result["runtime"]["status"] = "degraded"
+                    result["runtime"]["degraded_reason"] = "; ".join(_degrade_reasons)
+
             # X2-NO_FRESHNESS: update freshness on healthy
             rt = result.get("runtime", {}).get("status")
             hc = result.get("health_check")
