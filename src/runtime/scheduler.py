@@ -139,6 +139,28 @@ class MatrixScheduler:
         except Exception:  # noqa: BLE001  # defensive fallback
             return False
 
+    def _check_log_freshness(self, log_path: str, max_age: int = 90) -> bool:
+        """检查日志新鲜度 — stdio-only daemon 真活探测.
+
+        launchd 只验 PID 抓不住 "uv launcher 保活但子服务已死" 的假阳性 (launcher 僵尸).
+        对无 port/health_url 的 stdio daemon (如 agora-gateway mcp_gateway), 用日志 mtime
+        交叉校验: heartbeat 类服务日志持续更新, 进程卡死/退出后日志停止更新.
+
+        Returns:
+            True = 日志新鲜 (服务真活) 或无 log_path (不作为降级依据);
+            False = 日志陈旧/不存在 (服务疑似死).
+        """
+        if not log_path:
+            return True
+        try:
+            expanded = os.path.expandvars(os.path.expanduser(log_path))
+            if not os.path.isfile(expanded):
+                return False
+            age = time.time() - os.path.getmtime(expanded)
+            return age <= max_age
+        except Exception:  # noqa: BLE001  # 探测出错保守不降级
+            return True
+
     def scan_once(self):
         from graphlib import TopologicalSorter
 
@@ -324,6 +346,11 @@ class MatrixScheduler:
                     _degrade_reasons.append(f"port {svc.port} not listening")
                 if svc.health_url and result.get("health_check") not in ("healthy", None):
                     _degrade_reasons.append(f"health_check={result.get('health_check')}")
+                # stdio-only daemon (无 port 无 health_url): 日志新鲜度交叉校验真活,
+                # 揭穿 launcher 僵尸 (uv 保活但子服务死, 无 heartbeat). 仅当配了 log_path 才生效.
+                if not svc.port and not svc.health_url and svc.log_path:
+                    if not self._check_log_freshness(svc.log_path):
+                        _degrade_reasons.append(f"log {svc.log_path} stale (no heartbeat)")
                 if _degrade_reasons:
                     result["runtime"]["status"] = "degraded"
                     result["runtime"]["degraded_reason"] = "; ".join(_degrade_reasons)
