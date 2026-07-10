@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ipaddress
+import json
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
@@ -34,6 +35,21 @@ _BLOCKED_HOSTS = frozenset(
 )
 
 KNOWN_PROTOCOLS = frozenset({"mcp", "rest", "grpc", "stdio", "websocket"})
+
+
+def parse_tags(tags_str: str) -> list[str]:
+    """Parse comma-separated tags string into a deduplicated list."""
+    return [t.strip() for t in tags_str.split(",") if t.strip()]
+
+
+def parse_protocol_config(raw: str | dict) -> tuple[dict, str | None]:
+    """Parse protocol_config JSON string into dict. Returns (config, error_message)."""
+    if isinstance(raw, dict):
+        return raw, None
+    try:
+        return json.loads(raw), None
+    except json.JSONDecodeError as e:
+        return {}, str(e)
 
 
 def _is_private_ip(host: str) -> bool:
