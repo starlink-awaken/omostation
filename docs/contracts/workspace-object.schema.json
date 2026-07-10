@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WorkspaceObject",
+  "description": "Workspace 统一对象封装契约：将 cockpit 研究对象、事件、身份等导出为跨域可识别的 envelope",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "version",
+    "title",
+    "owner",
+    "source",
+    "created_at",
+    "updated_at",
+    "trace_id",
+    "schema_ref",
+    "capabilities_required",
+    "audit_events"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "对象唯一标识，形如 domain:local-id"
+    },
+    "type": {
+      "type": "string",
+      "description": "对象类型，如 research_object, identity_envelope, event_envelope"
+    },
+    "version": {
+      "type": "string",
+      "description": "Envelope 版本"
+    },
+    "title": {
+      "type": "string",
+      "description": "对象标题"
+    },
+    "summary": {
+      "type": "string",
+      "description": "对象摘要"
+    },
+    "owner": {
+      "type": "object",
+      "required": ["subject_id", "subject_type"],
+      "properties": {
+        "subject_id": { "type": "string" },
+        "subject_type": { "type": "string" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["project", "surface", "native_ref"],
+      "properties": {
+        "project": { "type": "string" },
+        "surface": { "type": "string" },
+        "native_ref": { "type": "string" }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "schema_ref": {
+      "type": "string",
+      "description": "本 envelope 对应的 schema 文件路径"
+    },
+    "capabilities_required": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "audit_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "time", "source", "type", "trace_id"],
+        "properties": {
+          "id": { "type": "string" },
+          "time": { "type": "string" },
+          "source": { "type": "string" },
+          "type": { "type": "string" },
+          "trace_id": { "type": "string" }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "target_id", "target_type"],
+        "properties": {
+          "type": { "type": "string" },
+          "target_id": { "type": "string" },
+          "target_type": { "type": "string" }
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "类型相关的原始载荷"
+    }
+  }
+}
