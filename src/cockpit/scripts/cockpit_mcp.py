@@ -13,6 +13,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 _log = logging.getLogger(__name__)
 
@@ -375,7 +376,7 @@ _CREATIVE_DIR = Path.home() / "Documents" / "@创意创作"
 _FAMILY_DIR = Path.home() / "Documents" / "@家庭生活"
 _WORKDOCS_DIR = Path.home() / "Documents" / "@工作文档"
 _OPC_DIR = Path.home() / "Documents" / "@OPC"
-_WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
+_WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[5])))
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
 
 # L4 全域注册 (产品走查 v2 #10, 深度核对 2026-06-19: 真实 8 个 @域, 之前只 cards/vault 2 域)
@@ -389,6 +390,56 @@ _L4_DOMAINS: dict[str, Path] = {
     "workdocs": _WORKDOCS_DIR,
     "opc": _OPC_DIR,
 }
+
+
+def _parse_card_frontmatter(fm: str) -> dict:
+    """解析卡片 frontmatter，兼容 title 含冒号、未加引号等不严格 YAML 格式。
+
+    先尝试标准 YAML 解析；失败时退回到按行解析，把第一个冒号作为 key/value
+    分隔符，从而避免 `title: 变更门禁: xxx` 这类值内部冒号导致 YAML 解析错误。
+    """
+    try:
+        meta = yaml.safe_load(fm)
+        if isinstance(meta, dict):
+            return meta
+    except yaml.YAMLError:
+        pass
+
+    meta: dict[str, Any] = {}
+    for raw_line in fm.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key = key.strip()
+        value = value.strip()
+        # 去除首尾成对引号
+        if len(value) >= 2 and (
+            (value[0] == '"' and value[-1] == '"') or (value[0] == "'" and value[-1] == "'")
+        ):
+            value = value[1:-1]
+        # 简单类型推断
+        lower = value.lower()
+        if value == "[]":
+            value = []
+        elif lower == "true":
+            value = True
+        elif lower == "false":
+            value = False
+        elif lower in ("null", "none", "~"):
+            value = None
+        else:
+            try:
+                value = int(value)
+            except ValueError:
+                try:
+                    value = float(value)
+                except ValueError:
+                    pass
+        meta[key] = value
+    return meta
 
 
 def _scan_cards() -> list[dict[str, str]]:
@@ -406,8 +457,8 @@ def _scan_cards() -> list[dict[str, str]]:
             text = md_file.read_text(encoding="utf-8")
             if text.startswith("---"):
                 _, fm, __ = text.split("---", 2)
-                meta = yaml.safe_load(fm) or {}
-                if isinstance(meta, dict) and meta.get("id") and meta.get("type"):
+                meta = _parse_card_frontmatter(fm)
+                if meta.get("id") and meta.get("type"):
                     cards.append(
                         {
                             "id": str(meta.get("id", "")),
@@ -420,7 +471,7 @@ def _scan_cards() -> list[dict[str, str]]:
                             "tags": str(meta.get("tags", "[]")),
                         }
                     )
-        except (OSError, ValueError, yaml.YAMLError) as _fm_exc:
+        except (OSError, ValueError) as _fm_exc:
             _log.warning("无法解析卡片 frontmatter: %s (%s)", md_file, _fm_exc)
             continue
     cards.sort(key=lambda c: ({"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(c["priority"], 9), c["created"]), reverse=True)
@@ -428,9 +479,17 @@ def _scan_cards() -> list[dict[str, str]]:
 
 
 def _read_omo_goals() -> dict:
-    """读取 OMO 当前目标。"""
+    """读取 OMO 当前目标。
+
+    `.omo/_truth/goals/current.yaml` 是多文档 YAML（metadata + 正文），
+    必须使用 safe_load_all 合并全部非空文档，否则 phase/theme 等字段会丢失。
+    """
     try:
-        return yaml.safe_load(_OMO_GOALS.read_text(encoding="utf-8"))
+        merged: dict[str, Any] = {}
+        for doc in yaml.safe_load_all(_OMO_GOALS.read_text(encoding="utf-8")):
+            if isinstance(doc, dict):
+                merged.update(doc)
+        return merged
     except Exception:  # defensive fallback
         return {}
 

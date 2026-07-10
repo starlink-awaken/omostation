@@ -67,12 +67,14 @@ def cmd_audit(args: argparse.Namespace) -> int:
     if args.since:
         cmd.extend(["--since", args.since])
 
-    banner_stream = sys.stderr if args.format == "json" else sys.stdout
-    print(
-        f"🔍 Omostation 6 维度全方位审计 · 调 {WORKSPACE_AUDIT.name} · adapter cockpit (L3 入口)",
-        file=banner_stream,
-    )
-    print("─" * 60, file=banner_stream)
+    is_json = getattr(args, "format", "") == "json"
+
+    if not is_json:
+        print(
+            f"🔍 Omostation 6 维度全方位审计 · 调 {WORKSPACE_AUDIT.name} · adapter cockpit (L3 入口)",
+            file=sys.stdout,
+        )
+        print("─" * 60, file=sys.stdout)
 
     try:
         result = subprocess.run(
@@ -82,11 +84,14 @@ def cmd_audit(args: argparse.Namespace) -> int:
             timeout=60,
             cwd=str(WORKSPACE_ROOT),
         )
-        # stdout 透传 (主报告)
+        # stdout 透传 (主报告 / JSON)
         if result.stdout:
             print(result.stdout)
-        # stderr 透传 (内部工具的进度信息)
-        if result.stderr:
+        # JSON 模式下抑制 stderr，避免污染管道；人类可读模式透传进度信息。
+        if result.stderr and not is_json:
+            print(result.stderr, file=sys.stderr)
+        # JSON 模式下若子进程失败，把错误简要写入 stderr 但保持 stdout 优先。
+        if result.returncode != 0 and is_json and result.stderr:
             print(result.stderr, file=sys.stderr)
         return result.returncode
     except subprocess.TimeoutExpired:

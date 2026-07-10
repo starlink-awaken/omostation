@@ -481,6 +481,49 @@ class TestResearchRename:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# frontmatter 解析 (title 含冒号等不严格 YAML)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+class TestParseCardFrontmatter:
+    def test_colon_in_title(self):
+        """title 值内部含冒号且未加引号时仍能解析。"""
+        from scripts.cockpit_mcp import _parse_card_frontmatter
+
+        fm = (
+            "id: TASK-001\n"
+            "type: task\n"
+            "status: planned\n"
+            "title: Phase 8: MADF 8视图企业架构 → Wave 1-2完成\n"
+            "domain: meta\n"
+            "priority: P1\n"
+            "created: 2026-06-05\n"
+            "tags: []\n"
+        )
+        meta = _parse_card_frontmatter(fm)
+        assert meta["id"] == "TASK-001"
+        assert meta["type"] == "task"
+        assert meta["title"] == "Phase 8: MADF 8视图企业架构 → Wave 1-2完成"
+        assert meta["priority"] == "P1"
+        assert meta["tags"] == []
+
+    def test_valid_yaml_still_works(self):
+        """标准 YAML 解析路径保持有效。"""
+        from scripts.cockpit_mcp import _parse_card_frontmatter
+
+        fm = (
+            "id: DEBT-001\n"
+            "type: debt\n"
+            'title: "正常标题"\n'
+            "priority: P2\n"
+            "tags: []\n"
+        )
+        meta = _parse_card_frontmatter(fm)
+        assert meta["id"] == "DEBT-001"
+        assert meta["title"] == "正常标题"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # 模块级防护 (ImportError guard + mcp.run entry point)
 # ═══════════════════════════════════════════════════════════════════════════════
 # ImportError guard (行 12-14) 通过子进程 + fake mcp 包触发；

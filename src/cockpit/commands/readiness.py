@@ -17,8 +17,8 @@ from .base import _get_console
 
 
 def _run_readiness_summary(args: list[str], workspace_root: Path) -> int:
-    """委派到根仓 bin/dashboard-readiness-summary.py."""
-    bin_tool = workspace_root / "bin" / "dashboard-readiness-summary.py"
+    """委派到根仓 bin/cockpit-readiness.py (P65 wrapper)."""
+    bin_tool = workspace_root / "bin" / "cockpit-readiness.py"
     if not bin_tool.exists():
         console = _get_console()
         console.print(f"[red]❌ {bin_tool} 不存在[/red]")
@@ -41,9 +41,10 @@ def _run_readiness_summary(args: list[str], workspace_root: Path) -> int:
 def cmd_readiness(args: argparse.Namespace) -> int:
     """readiness dashboard 子命令."""
     workspace_root = resolve_workspace_root()
-    arg_list = [str(workspace_root)]
-    if args.format:
+    # bin/cockpit-readiness.py 自己解析 workspace root, 这里只传格式/输出选项.
+    arg_list: list[str] = []
+    if getattr(args, "format", None):
         arg_list.extend(["--format", args.format])
-    if args.output:
+    if getattr(args, "output", None):
         arg_list.extend(["--output", args.output])
     return _run_readiness_summary(arg_list, workspace_root)

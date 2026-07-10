@@ -11,6 +11,7 @@ from typing import Any
 from rich import box
 from rich.table import Table
 
+from ..data_index import resolve_workspace_root
 from .base import (
     _get_console,
     _get_data_access,
@@ -19,7 +20,6 @@ from .base import (
     _load_json_file,
     _load_profile,
     _panel,
-    _workspace_root,
 )
 
 
@@ -176,7 +176,7 @@ def _validate_eidos_schemas(schemas_dir: Path) -> int:
 
 def cmd_contracts_validate(args: argparse.Namespace) -> int:
     c, e = _get_console(), _get_err()
-    root = _workspace_root()
+    root = resolve_workspace_root()
     errors = 0
     schema_path = root / "docs" / "contracts" / "workspace-object.schema.json"
     schema, schema_error = _load_json_file(schema_path)
@@ -225,7 +225,7 @@ def cmd_contracts_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_contracts_list(_args: argparse.Namespace) -> int:
-    root = _workspace_root()
+    root = resolve_workspace_root()
     table = Table(title="Workspace Contracts Registry", box=box.ROUNDED, border_style="cyan")
     table.add_column("Schema", style="cyan", no_wrap=True)
     table.add_column("版本", style="green", no_wrap=True)

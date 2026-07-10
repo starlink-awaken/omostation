@@ -116,7 +116,7 @@ def cmd_skill(args: Namespace) -> int:
     console.print(f"[cyan]⏳ 执行技能: {skill_name}...[/]")
 
     skill_file = (
-        Path(__file__).resolve().parents[4]
+        Path(__file__).resolve().parents[5]
         / "projects"
         / "ecos"
         / "src"

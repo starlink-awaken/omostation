@@ -123,16 +123,22 @@ def cmd_governance(args: argparse.Namespace) -> int:
         # 产品走查 v3 #18: 无参数显示治理概览(surfaces), 而非裸命令列表 — 用户敲了期待看状态
         workspace_root = resolve_workspace_root()
         _get_console().print("[cyan]📋 治理概览:[/]")
-        rc = _run_omo_governance(["surfaces"], workspace_root)
+        _run_omo_governance(["surfaces"], workspace_root)
         _get_console().print(
             "\n[yellow]更多子命令:[/] cockpit governance "
             "{report|verify|calibrate|drift-check|surfaces --json|rechain|...}"
         )
-        return rc
+        # 概览仅用于展示状态，不因为治理发现 issues 而返回错误码；
+        # 严格检查请使用 cockpit governance verify / surfaces --json。
+        return 0
     subcmd = args.subcommand
     if subcmd in _OMO_GOVERNANCE_SUBCOMMANDS:
         workspace_root = resolve_workspace_root()
         return _run_omo_governance([subcmd, *(args.extra_args or [])], workspace_root)
+    if subcmd == "report":
+        # omo governance 默认即 audit/report 报告，不接收 "report" 子命令
+        workspace_root = resolve_workspace_root()
+        return _run_omo_governance([], workspace_root)
     if subcmd == "evolution":
         workspace_root = resolve_workspace_root()
         return _run_governance_evolution(args.extra_args or [], workspace_root)

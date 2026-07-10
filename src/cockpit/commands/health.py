@@ -10,9 +10,35 @@ from rich.console import Console
 console = Console()
 
 
+def _get_l4_registry():
+    """获取 l4-kernel DomainRegistry；配置缺失时返回 None 而不是崩溃。"""
+    try:
+        from cockpit.adapters.l4_kernel import DomainRegistry, load_overrides_from_config
+
+        l4_config_path = Path(
+            os.environ.get("L4_DOMAIN_CONFIG", str(Path.home() / ".config" / "l4-kernel" / "domains.toml"))
+        )
+        return DomainRegistry(path_overrides=load_overrides_from_config(l4_config_path))
+    except Exception:
+        return None
+
+
 def _cmd_health(args: Namespace) -> int:
     """一键系统健康检查 — 聚合 Context + Status + 可选全栈检查。"""
     return_code = 0
+
+    # JSON 模式：直接输出 workspace_context() 并退出，不混入人类可读面板。
+    if bool(getattr(args, "json", False)):
+        try:
+            from cockpit.scripts.cockpit_mcp import workspace_context
+
+            print(workspace_context())
+            return 0
+        except Exception as e:  # defensive fallback
+            import json as _json
+
+            print(_json.dumps({"error": str(e)}, ensure_ascii=False))
+            return 1
 
     # ── L4 Context ──────────────────────────────────────────────
     console.print("\n[bold cyan]═══ L4 上下文 ═══[/]\n")
@@ -27,22 +53,17 @@ def _cmd_health(args: Namespace) -> int:
     # ── L3 Cockpit Status ───────────────────────────────────────
     console.print("\n[bold cyan]═══ L3 Cockpit ═══[/]\n")
     try:
-        if args.json:
-            from cockpit.scripts.cockpit_mcp import workspace_context
+        # 产品走查 v5 #V5-02: health 不重复完整 status 工作台 (避免与 cockpit status
+        # 输出冗余); 聚焦健康摘要, 完整工作台引导用户用 cockpit status
+        import json as _json
 
-            print(workspace_context())
-        else:
-            # 产品走查 v5 #V5-02: health 不重复完整 status 工作台 (避免与 cockpit status
-            # 输出冗余); 聚焦健康摘要, 完整工作台引导用户用 cockpit status
-            import json as _json
+        from cockpit.scripts.cockpit_mcp import workspace_context
 
-            from cockpit.scripts.cockpit_mcp import workspace_context
-
-            ctx = _json.loads(workspace_context())
-            console.print(f"  Phase {ctx.get('phase', '?')} · {str(ctx.get('theme', ''))[:40]}")
-            cs = ctx.get("cards_summary", {}) or {}
-            console.print(f"  活跃卡片: {cs.get('active', 0)} (P0: {cs.get('p0_open', 0)})")
-            console.print("  [dim]完整工作台 → [cyan]cockpit status[/][/]")
+        ctx = _json.loads(workspace_context())
+        console.print(f"  Phase {ctx.get('phase', '?')} · {str(ctx.get('theme', ''))[:40]}")
+        cs = ctx.get("cards_summary", {}) or {}
+        console.print(f"  活跃卡片: {cs.get('active', 0)} (P0: {cs.get('p0_open', 0)})")
+        console.print("  [dim]完整工作台 → [cyan]cockpit status[/][/]")
     except Exception as e:  # defensive fallback
         console.print(f"[red]Cockpit status error: {e}[/]")
         return_code = 1
@@ -52,22 +73,20 @@ def _cmd_health(args: Namespace) -> int:
         console.print("\n[bold cyan]═══ I0 服务网格 ═══[/]\n")
         try:
             # Try l4-kernel for domain health first
-            try:
-                from cockpit.adapters.l4_kernel import DomainRegistry
-
-                reg = DomainRegistry()
+            reg = _get_l4_registry()
+            if reg is not None:
                 h = reg.aggregate_health()
                 if not args.json:
                     console.print(
                         f"  [dim]域总数: {h['total']}  |  存在: {h['existing']}  |  健康率: {h['health_rate']}[/]"
                     )
-            except ImportError:
-                pass
+            else:
+                console.print("[yellow]⚠ l4-kernel 域配置未找到，跳过域健康聚合[/]")
 
             # Agora stats via subprocess as fallback
             import subprocess as _sp
 
-            ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
+            ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[5])))
             agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
             if agora_bin.exists():
                 result = _sp.run([str(agora_bin), "stats"], capture_output=True, text=True, timeout=15)
@@ -83,15 +102,18 @@ def _cmd_health(args: Namespace) -> int:
         # ── L4 Domain Health ──────────────────────────────────────
         console.print("\n[bold cyan]═══ L4 域健康 ═══[/]\n")
         try:
-            from cockpit.adapters.l4_kernel import DomainHealth, DomainRegistry
+            from cockpit.adapters.l4_kernel import DomainHealth
 
-            reg = DomainRegistry()
-            dh = DomainHealth(reg)
-            dashboard = dh.generate_dashboard()
-            if not args.json:
-                for line in dashboard.split("\n"):
-                    if line.startswith("- **"):
-                        console.print(f"  [dim]{line.strip()}[/]")
+            reg = _get_l4_registry()
+            if reg is not None:
+                dh = DomainHealth(reg)
+                dashboard = dh.generate_dashboard()
+                if not args.json:
+                    for line in dashboard.split("\n"):
+                        if line.startswith("- **"):
+                            console.print(f"  [dim]{line.strip()}[/]")
+            else:
+                console.print("[yellow]⚠ l4-kernel 域配置未找到，跳过 L4 域健康[/]")
         except ImportError:
             console.print("[yellow]⚠ l4-kernel 未安装[/]")
 
@@ -114,7 +136,7 @@ def _cmd_health(args: Namespace) -> int:
 
         # ── Full: OMO Debt ───────────────────────────────────────
         console.print("\n[bold cyan]═══ L2 治理 ═══[/]\n")
-        ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
+        ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[5])))
         debt_path = ws / ".omo" / "state" / "system.yaml"
         if debt_path.exists():
             try:

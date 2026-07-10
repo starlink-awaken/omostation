@@ -301,7 +301,7 @@ class TestCmdContractsValidate:
         monkeypatch.setattr(cli, "err", err)
 
         # Mock _workspace_root 指向 tmp_path（无 schema 文件）
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         from cockpit.commands.contracts import cmd_contracts_validate
 
@@ -358,7 +358,7 @@ class TestCmdContractsValidate:
         }
         (contracts_dir / "workspace-object.schema.json").write_text(json.dumps(schema))
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         from cockpit.commands.contracts import cmd_contracts_validate
 
@@ -414,7 +414,7 @@ class TestCmdContractsValidate:
         }
         (contracts_dir / "workspace-object.schema.json").write_text(json.dumps(schema))
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         # 创建一个缺失字段的对象文件
         bad_obj = tmp_path / "bad_object.json"
@@ -466,7 +466,7 @@ class TestCmdContractsList:
             )
         )
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         from cockpit.commands.contracts import cmd_contracts_list
 
@@ -505,7 +505,7 @@ class TestCmdContractsList:
             )
         )
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         from cockpit.commands.contracts import cmd_contracts_list
 
@@ -986,7 +986,7 @@ class TestValidateEidosSchemas:
             )
         )
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         from cockpit.commands.contracts import cmd_contracts_validate
 
@@ -1030,7 +1030,7 @@ class TestCmdContractsValidateResidual:
             )
         )
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         from cockpit.commands.contracts import cmd_contracts_validate
 
@@ -1089,7 +1089,7 @@ class TestCmdContractsValidateResidual:
             )
         )
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         invalid_file = tmp_path / "invalid.json"
         invalid_file.write_text("{bad json")  # triggers data_error
@@ -1150,7 +1150,7 @@ class TestCmdContractsValidateResidual:
                 }
             )
         )
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         valid_file = tmp_path / "valid_object.json"
         valid_file.write_text(
@@ -1230,7 +1230,7 @@ class TestCmdContractsValidateResidual:
             )
         )
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         valid_file = tmp_path / "valid.json"
         valid_file.write_text(
@@ -1298,7 +1298,7 @@ class TestCmdContractsListResidual:
             )
         )
 
-        monkeypatch.setattr("cockpit.commands.contracts._workspace_root", lambda: tmp_path)
+        monkeypatch.setattr("cockpit.commands.contracts.resolve_workspace_root", lambda: tmp_path)
 
         from cockpit.commands.contracts import cmd_contracts_list
 

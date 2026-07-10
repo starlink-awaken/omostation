@@ -27,4 +27,5 @@ def test_cmd_audit_json_keeps_banner_off_stdout(monkeypatch, capsys) -> None:
     assert rc == 0
     captured = capsys.readouterr()
     assert captured.out.strip() == _Result.stdout
-    assert "Omostation 6 维度全方位审计" in captured.err
+    # JSON 模式下 banner 和子进程 stderr 都被抑制，保持 stdout 纯 JSON。
+    assert captured.err.strip() == ""
