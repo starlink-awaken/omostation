@@ -65,10 +65,10 @@ from agora.mcp_tools import (  # type: ignore[import-not-found]
     tool_ping,
     tool_post_result,
     tool_swarm_dispatch,
-    validate_local_endpoint,
 )
 from agora.tools.base import _ParamError  # type: ignore[import-not-found]
 from agora.tools.dt import tool_tasks_list  # type: ignore[import-not-found]
+from agora.tools.synapse import tool_synapse_hello, tool_synapse_ping  # type: ignore[import-not-found]
 
 _log = logging.getLogger(__name__)
 

@@ -167,6 +167,12 @@ class TaskManager:
 
         results: dict[str, Any] = {}
         request = task.request
+        if request is None:
+            await self.fail_task(
+                task.id,
+                Error(code="NO_REQUEST", message="Task has no request payload"),
+            )
+            return
 
         if strategy == "direct" and agent_ids:
             agent_id = agent_ids[0]

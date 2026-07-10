@@ -346,6 +346,8 @@ class Market:
 
         market_path = self.INSTALL_DIR / "published.json"
         existing = json_load(market_path, default={})
+        if not isinstance(existing, dict):
+            existing = {}
         existing[name] = entry_data
         if not json_save(market_path, existing):
             logger.warning("market_publish_failed", name=name)
@@ -356,7 +358,8 @@ class Market:
         """Load all published services from local registry."""
         from agora.persistence import json_load
 
-        return json_load(self.INSTALL_DIR / "published.json", default={})
+        result = json_load(self.INSTALL_DIR / "published.json", default={})
+        return result if isinstance(result, dict) else {}
 
     @staticmethod
     def _run_cmd(cmd: list[str], cwd: str | None = None):

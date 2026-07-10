@@ -144,7 +144,7 @@ def _analyze_sentiment(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _decode_payload(msg: EmailMessage) -> str:
+def _decode_payload(msg: Message) -> str:
     """Extract decoded body text from an email message."""
     if msg.is_multipart():
         for part in msg.walk():
