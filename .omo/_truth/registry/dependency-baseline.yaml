@@ -395,7 +395,7 @@ rules:
       consumers:
         - bus-foundation[dev]
     - name: hypothesis
-      baseline: '>=6.0'
+      baseline: '>=6.156.4'
       reason: 'Consumed by 1 project(s) (R97 property-based testing — single consumer for now)'
       consumers:
         - bus-foundation[dev]
