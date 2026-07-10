@@ -278,28 +278,38 @@ class MatrixScheduler:
                             rt_status = self._check_launchd(svc.launchd_label)
                             result["runtime"] = rt_status
                 if rt_status.get("status") in ("failed", "error"):
-                    # Exponential Backoff based on recent restart counts
-                    backoff = 5 * (2 ** len(svc_history))
-                    last_restart = svc_history[-1] if svc_history else 0
-                    if current_time - last_restart >= backoff:
-                        print(
-                            f"⚠️ Service {svc.name} is {rt_status.get('status')}. Backoff={backoff}s. Self-healing..."
+                    # B 治本 (self-heal 死循环防护): 确定性故障 (ImportError/配置错) 重启不可能
+                    # 修复, launchctl stop/start 会无限重试. 服务持续未 healthy 超 30 分钟 →
+                    # 标 unrecoverable, 停止死循环, 让健康分如实反映 (区别于 FROZEN_CRASH_LOOP 的 5 分钟窗口).
+                    _lh_ts = state.get("last_healthy", {}).get(svc.name)
+                    if _lh_ts and current_time - _lh_ts > 1800:
+                        result["runtime"]["status"] = "unrecoverable"
+                        result["runtime"]["unrecoverable_reason"] = (
+                            "persistent failure >1800s despite self-heal (deterministic fault)"
                         )
-                        subprocess.run(
-                            ["launchctl", "stop", svc.launchd_label],
-                            capture_output=True,
-                        )
-                        subprocess.run(
-                            ["launchctl", "start", svc.launchd_label],
-                            capture_output=True,
-                        )
-                        svc_history.append(current_time)
-                        result["runtime"]["self_heal_attempted"] = True
                     else:
-                        print(
-                            f"⏳ Service {svc.name} is in backoff ({backoff}s). Waiting..."
-                        )
-                        result["runtime"]["status"] = "BACKOFF"
+                        # Exponential Backoff based on recent restart counts
+                        backoff = 5 * (2 ** len(svc_history))
+                        last_restart = svc_history[-1] if svc_history else 0
+                        if current_time - last_restart >= backoff:
+                            print(
+                                f"⚠️ Service {svc.name} is {rt_status.get('status')}. Backoff={backoff}s. Self-healing..."
+                            )
+                            subprocess.run(
+                                ["launchctl", "stop", svc.launchd_label],
+                                capture_output=True,
+                            )
+                            subprocess.run(
+                                ["launchctl", "start", svc.launchd_label],
+                                capture_output=True,
+                            )
+                            svc_history.append(current_time)
+                            result["runtime"]["self_heal_attempted"] = True
+                        else:
+                            print(
+                                f"⏳ Service {svc.name} is in backoff ({backoff}s). Waiting..."
+                            )
+                            result["runtime"]["status"] = "BACKOFF"
 
             elif svc.docker_container:
                 rt_status = self._check_docker(svc.docker_container)
