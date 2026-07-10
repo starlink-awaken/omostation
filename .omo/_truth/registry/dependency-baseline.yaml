@@ -389,6 +389,11 @@ rules:
         - omo-debt[dev]
         - omo[dev]
         - ontoderive[dev]
+    - name: pytest-benchmark
+      baseline: '>=5.0'
+      reason: 'Consumed by 1 project(s) (R87 benchmark suite baseline — single consumer for now)'
+      consumers:
+        - bus-foundation[dev]
     - name: ruff
       baseline: '>=0.8.0'
       reason: 'Consumed by 12 project(s)'
