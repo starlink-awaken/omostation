@@ -185,6 +185,26 @@ ports:
     transport: http
     status: active
     note: "omlx 本地新接入 (bge-m3 embedding)"
+  8189:
+    name: omlx-bge-reranker
+    transport: http
+    status: active
+    note: "omlx link 自动接入 (bge-reranker-v2-m3)"
+  8190:
+    name: omlx-gemma-4-26b
+    transport: http
+    status: active
+    note: "omlx link 自动接入 (gemma-4-26B VLM)"
+  8191:
+    name: omlx-gemma-4-31b
+    transport: http
+    status: active
+    note: "omlx link 自动接入 (gemma-4-31B VLM)"
+  8192:
+    name: omlx-gemma-4-e2b
+    transport: http
+    status: active
+    note: "omlx link 自动接入 (gemma-4-E2B VLM)"
   # ── deprecated / converged (功能已收敛到 cockpit, 保留仅用于历史追溯) ──
   8765:
     name: minerva-kos-ontoderive
