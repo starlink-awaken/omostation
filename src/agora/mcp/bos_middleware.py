@@ -285,7 +285,7 @@ class RetryPolicy:
                 key = self._key(uri)
                 self._attempts.pop(key, None)
                 return (result, True)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 last_error = e
                 key = self._key(uri)
                 self._attempts[key] = attempt + 1
@@ -372,7 +372,7 @@ class ConfigWatcher:
                     )
                     if self._on_change:
                         self._on_change()
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 _log.warning("config_watcher: poll error: %s", e)
 
 

@@ -12,7 +12,7 @@ Authority: organs/D-Gateway/AGENTS.md
 ---
 """
 
-import base64 as _base64  # noqa: E402
+import base64 as _base64
 
 # =============================================================================
 # 0. 形式化摘要 ≝
@@ -22,15 +22,15 @@ import base64 as _base64  # noqa: E402
 # 外延 ≝ {e | e ∈ D-Gateway ∧ implements(e, Oauth2Server)}
 # 功能 ⊢ {Oauth2_Server, Init_Oauth2, Validate_Server}
 # =============================================================================
-import hashlib  # noqa: E402
-import hmac  # noqa: E402
-import json as _json  # noqa: E402
-import logging  # noqa: E402
-import secrets  # noqa: E402
-import threading  # noqa: E402
-import time  # noqa: E402
-from datetime import UTC, datetime, timedelta  # noqa: E402
-from typing import Any  # noqa: E402
+import hashlib
+import hmac
+import json as _json
+import logging
+import secrets
+import threading
+import time
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 
 class _JWTShimInvalidTokenError(ValueError):
@@ -149,7 +149,7 @@ except ImportError:  # pragma: no cover — optional dependency
     base64 = None  # type: ignore[assignment, unused-ignores]
     _FERNET_AVAILABLE = False
 
-from agora.auth.auth_models import (  # type: ignore[import-not-found]  # noqa: E402
+from agora.auth.auth_models import (  # type: ignore[import-not-found]
     AuthenticatedUser,
     AuthenticationError,
     AuthorizationError,

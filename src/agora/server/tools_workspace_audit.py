@@ -27,9 +27,9 @@ from fastmcp import FastMCP
 
 # 修真 v2: 用 server._response 真实模块 (跟 tools_governance.py 一致)
 try:
-    from agora.server._response import FORMAT_VERSION, _error, _ok  # noqa: F401
+    from agora.server._response import FORMAT_VERSION, _error, _ok
 except ImportError:  # pragma: no cover  - 容错
-    from agora.server.response import FORMAT_VERSION, _error, _ok  # type: ignore  # noqa: F401
+    from agora.server.response import FORMAT_VERSION, _error, _ok  # type: ignore
 
 logger = structlog.get_logger(__name__)
 

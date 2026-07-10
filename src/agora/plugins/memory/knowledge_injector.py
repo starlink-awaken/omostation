@@ -37,10 +37,10 @@ Wraps NKSMCPBridge to extract role-relevant knowledge without requiring full NKS
 # 外延 ≝ {e | e ∈ D-Gateway ∧ injects(e, Knowledge)}
 # 功能 ⊢ {StaticKnowledge, NKSKnowledge, Inject, Serialize}
 # =============================================================================
-import json  # noqa: E402
-import logging  # noqa: E402
-from dataclasses import asdict, dataclass, field  # noqa: E402
-from typing import Any  # noqa: E402
+import json
+import logging
+from dataclasses import asdict, dataclass, field
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +251,7 @@ class KnowledgeInjector:
                             source="nks",
                         )
                     )
-            except (OSError, ValueError, RuntimeError, Exception) as exc:  # noqa: BLE001
+            except (OSError, ValueError, RuntimeError, Exception) as exc:
                 logger.warning(
                     "[KnowledgeInjector] NKS query for '%s' failed (non-fatal): %s",
                     concept,

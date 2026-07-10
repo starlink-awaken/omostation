@@ -63,7 +63,7 @@ _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 # Module-level component cache extracted to agora.server.dependencies
 
 
-from agora.server.tools_auth import (  # noqa: E402
+from agora.server.tools_auth import (
     get_access_token as get_access_token,
     require_agora_api_key as _require_agora_api_key,
 )
@@ -138,7 +138,7 @@ async def _proxy_lifespan(server: FastMCP):
             _swarm.set_proxy_manager(get_proxy_manager())
             _swarm.start()
             logger.info("swarm_started", role=swarm_role, port=swarm_port)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         logger.exception("proxy_init_in_lifespan")
 
     yield {}
@@ -156,7 +156,7 @@ async def _proxy_lifespan(server: FastMCP):
         logger.info("swarm_stopped")
 
 
-from agora.middleware.middleware import FastMCPAuditMiddleware  # noqa: E402
+from agora.middleware.middleware import FastMCPAuditMiddleware
 
 mcp = FastMCP(
     "Agora — Service Convergence Hub",
@@ -369,7 +369,7 @@ router = get_router(registry, _bus)
 
 register_bos_tools(mcp, _bus)
 
-from agora.server.tools_swarm import register_swarm_tools  # type: ignore[import-not-found]  # noqa: E402
+from agora.server.tools_swarm import register_swarm_tools  # type: ignore[import-not-found]
 
 register_swarm_tools(mcp)
 
@@ -377,22 +377,21 @@ register_swarm_tools(mcp)
 # Phase 1: extracted from God Module (server/mcp.py) into focused modules.
 # NOTE: imports are at module top level; registration calls are deferred
 # until after _PROXY_CONFIG_PATH / _FORGE_REGISTRY_PATH are defined.
-# ruff: noqa: E402
 from agora.server.tools_proxy import (
     register_proxy_tools,
     _set_constants as _set_proxy_constants,
-)  # noqa: E402, F811
-from agora.server.tools_registry import register_registry_tools  # noqa: E402
-from agora.server.tools_diagnostics import register_diagnostics_tools  # noqa: E402
-from agora.server.tools_governance import register_governance_tools  # noqa: E402
-from agora.server.tools_workspace_audit import register_workspace_audit_tools  # noqa: E402
+)
+from agora.server.tools_registry import register_registry_tools
+from agora.server.tools_diagnostics import register_diagnostics_tools
+from agora.server.tools_governance import register_governance_tools
+from agora.server.tools_workspace_audit import register_workspace_audit_tools
 
 # ── A2A Task Manager ──────────────────────────────────────────────────
 
-_task_manager: TaskManager | None = None  # noqa: F821
+_task_manager: TaskManager | None = None
 
 
-def _get_task_manager() -> TaskManager:  # noqa: F821
+def _get_task_manager() -> TaskManager:
     """Lazy-init and return the global TaskManager instance."""
     global _task_manager
     if _task_manager is None:
@@ -458,7 +457,7 @@ async def _init_proxy():
 
     if not bootstrap_results:
         # No bootstrap available — load from proxy config file
-        from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]  # noqa: F811
+        from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
 
         services = _load_proxy_services()
         if services:
@@ -546,7 +545,7 @@ async def _init_proxy():
                     "config_watcher: rates reloaded (%d routes)",
                     len(rates.get("routes", [])),
                 )
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 logger.error("config_watcher: reload failed: %s", e)
 
         config_watcher.file_path = str(rates_path)
@@ -586,7 +585,7 @@ async def _bos_only_cleanup(mcp_server: FastMCP) -> None:
         if provider is None:
             return
         tools = await provider.list_tools()
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return
 
     removed = 0
@@ -599,7 +598,7 @@ async def _bos_only_cleanup(mcp_server: FastMCP) -> None:
         try:
             provider.remove_tool(name)
             removed += 1
-        except (KeyError, Exception):  # noqa: BLE001  # defensive fallback
+        except (KeyError, Exception):  # defensive fallback
             pass
 
     if removed:
@@ -626,7 +625,7 @@ def _install_signal_handler() -> None:
                     "signal_handler: rate limits reloaded (%d routes)",
                     len(rates.get("routes", [])),
                 )
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 logger.error("signal_handler: failed to reload rates: %s", e)
         # Reload BOSRouter from POC_SERVICES
         for uri, svc in _POC_SERVICES.items():
@@ -705,7 +704,7 @@ async def bos_agora_status() -> str:
             },
             "cache": bos_cache.status(),
         },
-        "metrics": bos_metrics.summary(),  # noqa: F821
+        "metrics": bos_metrics.summary(),
         "resources_total": _bos_router.count() + len(_POC_SERVICES),
     }
     return json.dumps(status, ensure_ascii=False, indent=2)
@@ -736,7 +735,7 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
                         "format_version": FORMAT_VERSION,
                     }
                 )
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 return json.dumps(
                     {
                         "status": "error",
@@ -760,7 +759,7 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
                         "format_version": FORMAT_VERSION,
                     }
                 )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     # Step 3: Not found
     return json.dumps(
@@ -779,7 +778,7 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
 # ═══════════════════════════════════════════════════════════════
 # Section 6: API Key Tools (extracted → server/tools_api_keys.py)
 # ═══════════════════════════════════════════════════════════════
-from agora.server.tools_api_keys import register_tools as _register_api_keys  # noqa: E402
+from agora.server.tools_api_keys import register_tools as _register_api_keys
 
 _register_api_keys(mcp, _ok, FORMAT_VERSION)
 
@@ -808,7 +807,7 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
         router_instance = get_cached_router()
         result = await router_instance.route(query, mode=mode)
         return _ok({"format_version": FORMAT_VERSION, **result})
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.exception("agora_execute_failed", query=query, mode=mode)
         return _error(f"Execution failed: {e}")
 
@@ -838,14 +837,14 @@ def main():
 
 
 # HTTP / SSE 入口 (P110 拆分, mcp_entry.py). TASK-F7114ABA 治本.
-from agora.server.mcp_entry import http_main, sse_main  # noqa: E402, F401
+from agora.server.mcp_entry import http_main, sse_main
 
 
 if __name__ == "__main__":
     main()
 
 # Re-exports for test imports
-from agora.server.tools_registry import route_call as route_call  # noqa: E402
-from agora.server.tools_proxy import proxy_status as proxy_status  # noqa: E402
-from agora.server.tools_proxy import proxy_call as proxy_call  # noqa: E402
-from agora.server.tools_proxy import proxy_remove_service as proxy_remove_service  # noqa: E402
+from agora.server.tools_registry import route_call as route_call
+from agora.server.tools_proxy import proxy_status as proxy_status
+from agora.server.tools_proxy import proxy_call as proxy_call
+from agora.server.tools_proxy import proxy_remove_service as proxy_remove_service

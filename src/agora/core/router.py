@@ -684,7 +684,7 @@ class Router:
                         billed_to=caller.billing_subject,
                     )
                     ResourceAccountDB().record_call(record)
-                except Exception as acct_err:  # noqa: BLE001
+                except Exception as acct_err:
                     logger.warning("accounting_record_failed", error=str(acct_err))
 
             # ── EU cost tracking middleware ────────────────────────────────
@@ -704,7 +704,7 @@ class Router:
                             operation=eu_operation,
                             error=tx.error,
                         )
-                except Exception as eu_err:  # noqa: BLE001
+                except Exception as eu_err:
                     logger.warning("eu_cost_tracking_failed", error=str(eu_err))
             # ── End EU cost tracking middleware ────────────────────────────
 
@@ -743,7 +743,7 @@ class Router:
                         "error",
                         result.get("error", "")[:100],
                     )
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     pass
             else:
                 self.registry.mark_success(service_name)
@@ -762,7 +762,7 @@ class Router:
                     from agora.audit import AuditLogger
 
                     AuditLogger().log("route.call", caller.actor, service_name)
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     pass
 
             # Compression middleware: compress large responses
@@ -778,7 +778,7 @@ class Router:
                     "stats": compressed.stats,
                 }
             return result
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             self._trace(tool_name, service_name, _start, "error", str(e)[:100])
             logger.warning(
                 "route_failed", tool=tool_name, service=service_name, error=str(e)
@@ -840,7 +840,7 @@ class Router:
             with open(self._trace_path, "a") as f:
                 f.write("\n".join(self._trace_buffer) + "\n")
             self._trace_buffer.clear()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     def get_percentiles(self) -> dict:

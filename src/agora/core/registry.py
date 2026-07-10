@@ -11,7 +11,7 @@ from agora.core.circuit_breaker import CircuitBreaker  # type: ignore[import-not
 from agora.core.service_base import (  # type: ignore[import-not-found]
     KNOWN_PROTOCOLS,
     Service,
-    ServiceConfig,  # noqa: F401 — re-exported for mcp.py
+    ServiceConfig,
     is_safe_url,
 )
 from agora.core.transition_log import TransitionLog  # type: ignore[import-not-found]
@@ -138,7 +138,7 @@ class ServiceRegistry:
             from agora.audit import AuditLogger  # type: ignore[import-not-found]
 
             AuditLogger().log("service.register", "system", service.name)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     def unregister(self, name: str):
@@ -319,7 +319,7 @@ class ServiceRegistry:
                                 self.mark_success(svc.name)
                             else:
                                 self.mark_failure(svc.name)
-                    except Exception:  # noqa: BLE001  # defensive fallback
+                    except Exception:  # defensive fallback
                         self.mark_failure(svc.name)
                     return
 
@@ -382,14 +382,14 @@ class ServiceRegistry:
                             self.mark_success(svc.name)
                         else:
                             self.mark_failure(svc.name)
-                    except Exception:  # noqa: BLE001  # defensive fallback
+                    except Exception:  # defensive fallback
                         self.mark_failure(svc.name)
                     finally:
                         if proc is not None:
                             try:
                                 proc.terminate()
                                 await asyncio.wait_for(proc.wait(), timeout=1.0)
-                            except Exception:  # noqa: BLE001  # defensive fallback
+                            except Exception:  # defensive fallback
                                 proc.kill()
                                 await proc.wait()
                     return
@@ -440,5 +440,5 @@ class ServiceRegistry:
 
             with socket.create_connection((host, port), timeout=5):
                 return True
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return svc.healthy

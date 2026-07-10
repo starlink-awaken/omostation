@@ -1282,7 +1282,7 @@ def _load_services() -> list[BosService]:
         from agora.mcp.resolver.bos_registry import DEFAULT_REGISTRY_PATH
 
         default_yaml = str(DEFAULT_REGISTRY_PATH)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         default_yaml = os.path.join(
             here, "..", "..", "..", "..", "etc", "bos-services.yaml"
         )
@@ -1294,7 +1294,7 @@ def _load_services() -> list[BosService]:
                 from agora.mcp.resolver.bos_registry import load_from_yaml
 
                 return load_from_yaml(path)
-            except Exception as exc:  # noqa: BLE001  # defensive fallback
+            except Exception as exc:  # defensive fallback
                 import logging
 
                 logging.getLogger(__name__).warning(

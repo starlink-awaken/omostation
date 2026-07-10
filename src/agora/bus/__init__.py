@@ -40,8 +40,8 @@ from bus_foundation import DLQ, Router
 
 # Premium agora-specific backends (NOT in bus-foundation; live in agora.bus.backends).
 # We import them under their original names so existing code keeps working.
-from agora.bus.backends.croniter import CroniterBackend  # noqa: F401
-from agora.bus.backends.eventbus import EventBusBackend  # noqa: F401
+from agora.bus.backends.croniter import CroniterBackend
+from agora.bus.backends.eventbus import EventBusBackend
 
 # Lazy import for SSE backend (cold-start perf).
 _sse_registered = False
@@ -54,7 +54,7 @@ def _ensure_sse_registered() -> None:
     try:
         # We don't need to load SSE or memory since it's lazy anyway.
         _sse_registered = True
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.warning(f"Failed to register SSE backend: {e}")  # pragma: no cover
 
 

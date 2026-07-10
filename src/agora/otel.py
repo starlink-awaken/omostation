@@ -47,7 +47,7 @@ def init_otel() -> bool:
     except ImportError:
         logger.info("[OTel] Packages not installed — skipping")
         return False
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         logger.warning("[OTel] Init failed: %s", exc)
         return False
 

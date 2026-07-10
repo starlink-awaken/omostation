@@ -211,10 +211,10 @@ class DiscoveryEngine:
                     continue
                 try:
                     data = tomllib.loads(pyproject.read_text())
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     try:
                         content = pyproject.read_text()
-                    except Exception:  # noqa: BLE001, S112  # defensive fallback
+                    except Exception:  # defensive fallback
                         continue
                     if (
                         "mcp" not in content.lower()
@@ -312,7 +312,7 @@ class DiscoveryEngine:
                             confidence=0.70,
                         )
                     )
-            except Exception:  # noqa: BLE001, S112  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
         return found
 
@@ -326,7 +326,7 @@ class DiscoveryEngine:
                 sock.settimeout(timeout)
                 result = sock.connect_ex(sockaddr)
                 return result == 0
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return False
 
     async def _probe_mcp_endpoint(
@@ -347,7 +347,7 @@ class DiscoveryEngine:
                     r = await client.get(url)
                     if r.status_code < 500:
                         return url
-            except Exception:  # noqa: BLE001, S112  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
         return ""
 
@@ -360,7 +360,7 @@ class DiscoveryEngine:
         for common MCP endpoints on open ports.
         """
         if hosts is None:
-            hosts = ["localhost", "127.0.0.1", "0.0.0.0"]  # noqa: S104
+            hosts = ["localhost", "127.0.0.1", "0.0.0.0"]
 
         found: list[DiscoveredService] = []
 

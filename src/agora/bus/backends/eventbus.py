@@ -27,7 +27,7 @@ class EventBusBackend:
     def is_available(self) -> bool:
         try:
             return self._bus._storage_path.parent.exists()
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.warning("eventbus_unavailable", e)
             return False
 

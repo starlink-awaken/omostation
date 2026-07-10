@@ -127,7 +127,7 @@ async def _resolve_with_router(
                 result = await proxy_manager.read_resource(uri)
                 if isinstance(result, dict) and "contents" in result:
                     return result["contents"], "bos_router_proxy"
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
         elif adapter in ("http", "internal"):
             result = await _resolve_bos_uri(uri, proxy_manager=proxy_manager, **kwargs)
@@ -239,7 +239,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     "result": result,
                 }
             )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             _duration_ms = int((_time.time() - _t0) * 1000)
             _bos_post_audit(uri, 500, _duration_ms)
             _publish_bos_event(_bus_ref, uri, "mutate", "error", _duration_ms)
@@ -307,7 +307,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             )
         except json.JSONDecodeError:
             return _error(f"Invalid JSON arguments: {arguments}")
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             bos_circuit_breaker.record_failure(uri)
             _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
             _publish_bos_event(
@@ -374,7 +374,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                         "result": result,
                     }
                 )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
         # Step 2: ProxyManager (MCP 下游代理)
@@ -399,7 +399,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                             "contents": result["contents"],
                         }
                     )
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
 
         # Step 3: bos_resolver (POC 子进程)
@@ -417,7 +417,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     "result": result,
                 }
             )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             bos_circuit_breaker.record_failure(uri)
             _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
             _publish_bos_event(
@@ -519,7 +519,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     if len(parts) >= 3:
                         pkg_action = f"{parts[1]}.{parts[2]}"
                         r["schema_available"] = pkg_action in known_actions
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
         return _ok(
@@ -608,7 +608,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                             "domain": node.get("domain", ""),
                             "layer": node.get("layer", ""),
                         }
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     pass
 
             if uri:
@@ -647,7 +647,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     "hint": "Use get_bos_schema('minerva.research') for specific",
                 }
             )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return _error(f"Schema lookup failed: {e}")
 
     # ── bos_middleware_status ────────────────────────────

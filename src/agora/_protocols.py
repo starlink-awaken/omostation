@@ -156,7 +156,7 @@ async def _call_rest(tool_name: str, arguments: dict, instance: dict) -> dict:
                 )
             try:
                 body = resp.json()
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 body = {"_body": resp.text[:2000]}
             if not isinstance(body, dict):
                 body = {"result": body}
@@ -174,7 +174,7 @@ async def _call_rest(tool_name: str, arguments: dict, instance: dict) -> dict:
                 "http_status": status,
                 "error": f"REST call failed: {str(e)[:200]}",
             }
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             if attempt < max_retries:
                 last_error = e
                 continue
@@ -241,7 +241,7 @@ async def _call_grpc(tool_name: str, arguments: dict, instance: dict) -> dict:
             return {"status": "ok", "result": str(resp)[:2000]}
     except grpc.aio.AioRpcError as e:
         return {"status": "error", "error": f"gRPC: {e.code()} - {e.details()}"}
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"status": "error", "error": f"gRPC call failed: {str(e)[:200]}"}
 
 
@@ -284,11 +284,11 @@ async def _call_ws(tool_name: str, arguments: dict, instance: dict) -> dict:
             resp = await asyncio.wait_for(ws.recv(), timeout=timeout)
             try:
                 return _json.loads(resp)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 return {"status": "ok", "result": resp}
     except TimeoutError:
         return {"status": "error", "error": f"WebSocket timeout after {timeout}s"}
     except websockets.exceptions.InvalidURI as e:
         return {"status": "error", "error": f"Invalid WebSocket URI: {str(e)}"}
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"status": "error", "error": f"WebSocket call failed: {str(e)[:200]}"}

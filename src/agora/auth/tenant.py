@@ -55,7 +55,7 @@ class TenantManager:
     Falls back to a single 'default' tenant if no config exists.
     """
 
-    DEFAULT_TOKEN_ENV = "AGORA_TOKEN"  # noqa: S105
+    DEFAULT_TOKEN_ENV = "AGORA_TOKEN"
 
     def __init__(self, config_path: str | None = None):
         self._path = Path(
@@ -134,7 +134,7 @@ class TenantManager:
 
             if needs_save:
                 self._save()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     def _create_default(self):

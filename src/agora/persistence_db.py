@@ -47,7 +47,7 @@ def json_load(file_path: str | Path, default=None) -> dict | list:
         ).fetchone()
         if row:
             return json.loads(row[0])
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.warning("persistence_db_load_failed", key=key, error=str(e))
 
     # Auto-migrate from JSON file (copy, don't rename — preserve original)
@@ -58,7 +58,7 @@ def json_load(file_path: str | Path, default=None) -> dict | list:
             json_save(file_path, data)
             # Keep original JSON intact; do NOT rename to .bak
             return data
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return default if default is not None else {}
 
@@ -74,6 +74,6 @@ def json_save(file_path: str | Path, data: dict | list) -> bool:
         )
         conn.commit()
         return True
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.warning("persistence_db_save_failed", key=key, error=str(e))
         return False

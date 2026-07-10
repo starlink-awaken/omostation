@@ -17,14 +17,14 @@ class TestSchedule:
             pass
 
         # Job should be registered in bus-foundation's croniter backend
-        # (the new public surface — bus-foundation owns _jobs internally)
+        # _jobs values are 4-tuples: (timestamp, callback, interval_seconds, last_run)
         import bus_foundation
 
         croniter = bus_foundation._backends["croniter"]
         assert len(croniter._jobs) >= 1
-        # Find our job
+        # Find our job by interval (every 1h = 3600 seconds)
         found = any(
-            cron_expr == "every 1h" for cron_expr, _, _ in croniter._jobs.values()
+            interval == 3600 for _, _, interval, _ in croniter._jobs.values()
         )
         assert found
 

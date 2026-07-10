@@ -25,11 +25,11 @@ Authority: nucleus/Z-Core/L2-Law/plugin-spec.md
 # 外延 ≝ {e | e ∈ Organs ∧ uses(e, PluginMarketAPI)}
 # 功能 ⊢ {List_Plugins, Get_Plugin, Install_Plugin, Search_Plugins}
 # =============================================================================
-import time  # noqa: E402
-from dataclasses import dataclass, field  # noqa: E402
-from pathlib import Path  # noqa: E402
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
 
-import yaml  # type: ignore[import-untyped]  # noqa: E402
+import yaml  # type: ignore[import-untyped]
 
 PLUGIN_REGISTRY_PATH = Path("config/plugin_registry.yaml")
 

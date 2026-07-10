@@ -25,9 +25,9 @@ def _normalize_utc(value: datetime) -> datetime:
 class TokenType(Enum):
     """令牌类型"""
 
-    ACCESS_TOKEN = "access_token"  # noqa: S105
-    REFRESH_TOKEN = "refresh_token"  # noqa: S105
-    ID_TOKEN = "id_token"  # noqa: S105
+    ACCESS_TOKEN = "access_token"
+    REFRESH_TOKEN = "refresh_token"
+    ID_TOKEN = "id_token"
 
 
 class GrantType(Enum):
@@ -35,7 +35,7 @@ class GrantType(Enum):
 
     AUTHORIZATION_CODE = "authorization_code"
     CLIENT_CREDENTIALS = "client_credentials"
-    REFRESH_TOKEN = "refresh_token"  # noqa: S105
+    REFRESH_TOKEN = "refresh_token"
 
 
 @dataclass
@@ -120,7 +120,7 @@ class OAuth2Token:
     """
 
     access_token: str
-    token_type: str = "Bearer"  # noqa: S105
+    token_type: str = "Bearer"
     expires_in: int = 3600  # 默认 1 小时
     refresh_token: str | None = None
     scope: str = ""

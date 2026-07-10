@@ -76,7 +76,7 @@ class MetricsStore:
             """)
             conn.commit()
             self._enabled = True
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             self._enabled = False
 
     def insert(self, prefix: str, uri: str, success: bool, latency_ms: int) -> None:
@@ -104,7 +104,7 @@ class MetricsStore:
                 ),
             )
             conn.commit()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass  # 静默 fallback，不影响主流程
 
     def load_history(self) -> dict[str, dict[str, int]]:
@@ -127,7 +127,7 @@ class MetricsStore:
                 else:
                     s["failure"] += 1
                 s["total_latency_ms"] += latency_ms
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
         return dict(stats)
 
@@ -195,7 +195,7 @@ class BOSMetrics:
                     ms = int((time.time() - start) * 1000)
                     self.record(uri, success=True, latency_ms=ms)
                     return result
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     ms = int((time.time() - start) * 1000)
                     self.record(uri, success=False, latency_ms=ms)
                     raise
@@ -209,7 +209,7 @@ class BOSMetrics:
                     ms = int((time.time() - start) * 1000)
                     self.record(uri, success=True, latency_ms=ms)
                     return result
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     ms = int((time.time() - start) * 1000)
                     self.record(uri, success=False, latency_ms=ms)
                     raise

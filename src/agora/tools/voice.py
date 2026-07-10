@@ -59,7 +59,7 @@ def tool_voice_speak(params: JSONDict, ctx: ToolContext) -> JSONDict:
             "text_length": len(text),
             **_surface_payload(surface),
         }
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         _log.error("[MCPToolRegistry] voice/speak error: %s", exc)
         return {"error": str(exc), "success": False, **_surface_payload(surface)}
 
@@ -102,7 +102,7 @@ def tool_voice_session_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
             **session.get_session_info(),
             **_surface_payload(surface),
         }
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         return {"error": str(exc), "success": False, **_surface_payload(surface)}
 
 
@@ -142,6 +142,6 @@ def tool_voice_intent_digest(params: JSONDict, ctx: ToolContext) -> JSONDict:
             **intent_data,
             "surface": intent_data.get("surface", surface.to_dict()),
         }
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         _log.error("[MCPToolRegistry] voice/intent_digest error: %s", exc)
         return {"error": str(exc), "success": False, **_surface_payload(surface)}

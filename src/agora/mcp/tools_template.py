@@ -67,7 +67,7 @@ def sample_send_message(source: str, target: str, content: str) -> dict:
                 "target": target,
             }
         )
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return _error(str(e))
 
 
@@ -82,7 +82,7 @@ def sample_query_status() -> dict:
                 "recently_completed": [],
             }
         )
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return _error(str(e))
 
 
@@ -99,7 +99,7 @@ def sample_threat_assessment(source_id: str) -> dict:
                 "details": {},
             }
         )
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return _error(str(e))
 
 

@@ -30,10 +30,10 @@ Implements the ``resources/*``, ``prompts/*``, and ``tools/*`` endpoints,
 plus the required MCP ``initialize`` handshake (2024-11-05).
 """
 
-import asyncio  # noqa: E402
-import logging  # noqa: E402
+import asyncio
+import logging
 
-from agora.mcp_tools import ToolContext, _ParamError  # type: ignore[import-not-found]  # noqa: E402
+from agora.mcp_tools import ToolContext, _ParamError  # type: ignore[import-not-found]
 
 _log = logging.getLogger(__name__)
 _SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
@@ -104,7 +104,7 @@ def handle_resources_list(params: dict, ctx: ToolContext) -> dict:
             proxy_resources = loop.run_until_complete(pm.list_resources())
             if proxy_resources:
                 base_resources.extend(proxy_resources)
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.warning("[MCPServer] resources/list proxy fetch failed: %s", exc)
 
     return {"resources": base_resources}
@@ -127,7 +127,7 @@ def handle_resources_read(params: dict, ctx: ToolContext) -> dict:
                 _log.warning(
                     "[MCPServer] resources/read error from proxy: %s", res["error"]
                 )
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.warning("[MCPServer] resources/read proxy fetch failed: %s", exc)
 
     # Fallbacks for builtin endpoints

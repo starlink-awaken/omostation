@@ -45,7 +45,7 @@ def bos_resolve(uri: str) -> dict:
         )
     except ValueError as ve:
         return _error(f"invalid_bos_uri: {ve}")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error(f"bos_resolve_failed: {exc}")
 
 
@@ -62,7 +62,7 @@ def bos_list() -> dict:
                 "self_check": protocol_self_check(),
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error(f"bos_list_failed: {exc}")
 
 
