@@ -354,13 +354,20 @@ class MatrixScheduler:
                 _degrade_reasons = []
                 if svc.port and result.get("port_listening") is False:
                     _degrade_reasons.append(f"port {svc.port} not listening")
-                if svc.health_url and result.get("health_check") not in ("healthy", None):
-                    _degrade_reasons.append(f"health_check={result.get('health_check')}")
+                if svc.health_url and result.get("health_check") not in (
+                    "healthy",
+                    None,
+                ):
+                    _degrade_reasons.append(
+                        f"health_check={result.get('health_check')}"
+                    )
                 # stdio-only daemon (无 port 无 health_url): 日志新鲜度交叉校验真活,
                 # 揭穿 launcher 僵尸 (uv 保活但子服务死, 无 heartbeat). 仅当配了 log_path 才生效.
                 if not svc.port and not svc.health_url and svc.log_path:
                     if not self._check_log_freshness(svc.log_path):
-                        _degrade_reasons.append(f"log {svc.log_path} stale (no heartbeat)")
+                        _degrade_reasons.append(
+                            f"log {svc.log_path} stale (no heartbeat)"
+                        )
                 if _degrade_reasons:
                     result["runtime"]["status"] = "degraded"
                     result["runtime"]["degraded_reason"] = "; ".join(_degrade_reasons)
