@@ -528,7 +528,7 @@ class ProxyManager:
                     "has_config": name in self._configs,
                 }
 
-            result: dict = {
+            status: dict = {
                 "status": "running",
                 "connected_services": list(self.registry._clients.keys()),
                 "tools": len(self.registry.entries),
@@ -540,7 +540,7 @@ class ProxyManager:
         if self._idle_timeout_enabled:
             result["idle_timeout"] = self.get_idle_timeout_status()
 
-        return result
+        return status
 
     async def shutdown(self):
         """Disconnect all downstream services and stop idle timeout."""

@@ -92,6 +92,7 @@ class MCPAuthMiddleware:
             self._sovereign_key = os.environ.get("SHAREDBRAIN_SOVEREIGN_KEY")
             if not self._sovereign_key:
                 raise MCPAuthError(
+                    401,
                     "SHAREDBRAIN_SOVEREIGN_KEY not set. "
                     "Configure this environment variable before starting agora."
                 )

@@ -49,6 +49,8 @@ _SynapseLink: Any | None = None
 _synapse_hello_handler: Any | None = None
 _synapse_ping_handler: Any | None = None
 
+_psutil: Any | None = None
+
 try:
     import psutil as _psutil
 
