@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EventEnvelope",
+  "description": "Workspace 事件对象封装契约",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "version",
+    "target",
+    "created_at",
+    "schema_ref",
+    "events"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "type": { "type": "string" },
+    "version": { "type": "string" },
+    "target": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "type": "string" },
+        "id": { "type": "string" }
+      }
+    },
+    "created_at": { "type": "string" },
+    "schema_ref": { "type": "string" },
+    "events": { "type": "array" }
+  }
+}
