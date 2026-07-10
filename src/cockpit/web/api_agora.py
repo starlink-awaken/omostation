@@ -61,7 +61,12 @@ def _runtime_status(service: dict) -> str:
         return "offline"
     if service.get("health") in {"degraded", "warning"}:
         return "degraded"
-    return "online" if service.get("port_listening") is True or service.get("status") in {"running", "active", "idle", "configured"} else "degraded"
+    return (
+        "online"
+        if service.get("port_listening") is True or service.get("status") in {"running", "active", "idle", "configured"}
+        else "degraded"
+    )
+
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
@@ -213,7 +218,11 @@ async def api_metrics_system(range_name: str = Query("1h", alias="range")):
         _collect_system_snapshot()
     except Exception as e:  # defensive fallback
         return JSONResponse(
-            {"error": f"system metrics unavailable: {e}", "data_quality": "unavailable", "degraded_reasons": ["psutil snapshot failed"]},
+            {
+                "error": f"system metrics unavailable: {e}",
+                "data_quality": "unavailable",
+                "degraded_reasons": ["psutil snapshot failed"],
+            },
             status_code=503,
         )
 

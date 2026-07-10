@@ -87,8 +87,7 @@ async def get_compute_status():
         else:
             # 即使脚本出错，我们也返回错误信息做防线
             raise HTTPException(
-                status_code=500,
-                detail=f"Onboard script failed with code {result.returncode}: {result.stderr.strip()}"
+                status_code=500, detail=f"Onboard script failed with code {result.returncode}: {result.stderr.strip()}"
             )
     except subprocess.TimeoutExpired:
         raise HTTPException(status_code=504, detail="Compute status check timed out.")
@@ -123,14 +122,14 @@ async def wakeup_compute_node(req: WakeupRequest):
             return {
                 "success": True,
                 "message": f"Wakeup packet successfully sent to node '{req.node_id}'.",
-                "stdout": result.stdout.strip()
+                "stdout": result.stdout.strip(),
             }
         else:
             return {
                 "success": False,
                 "message": f"Wakeup script failed for node '{req.node_id}'.",
                 "stderr": result.stderr.strip(),
-                "stdout": result.stdout.strip()
+                "stdout": result.stdout.strip(),
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to execute wakeup: {str(e)}")
@@ -160,8 +159,15 @@ async def compute_generate(req: ComputeGenerateRequest):
         "print(json.dumps(run_generate(sys.argv[1], model=sys.argv[2]), ensure_ascii=False))"
     )
     cmd = [
-        "uv", "run", "--directory", str(root / "projects" / "aetherforge"),
-        "python", "-c", code, req.prompt, req.model,
+        "uv",
+        "run",
+        "--directory",
+        str(root / "projects" / "aetherforge"),
+        "python",
+        "-c",
+        code,
+        req.prompt,
+        req.model,
     ]
 
     try:

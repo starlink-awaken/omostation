@@ -13,10 +13,34 @@ def _seed_workflow_events(workspace_root: Path) -> Path:
     events_dir.mkdir(parents=True, exist_ok=True)
     events_path = events_dir / "events.jsonl"
     events = [
-        {"event": "agent_workflow_start", "run_id": "cockpit-run-1", "workflow_id": "cockpit-docs", "objective": "test", "ts": "2024-01-01T00:00:00Z"},
-        {"event": "agent_workflow_claim", "run_id": "cockpit-run-1", "paths": ["projects/cockpit"], "ts": "2024-01-01T00:00:01Z"},
-        {"event": "agent_workflow_verify", "run_id": "cockpit-run-1", "changed_files": ["projects/cockpit/README.md"], "ok": True, "checks": ["check-1"], "ts": "2024-01-01T00:00:02Z"},
-        {"event": "agent_workflow_closeout", "run_id": "cockpit-run-1", "ok": True, "status": "closed", "ts": "2024-01-01T00:00:03Z"},
+        {
+            "event": "agent_workflow_start",
+            "run_id": "cockpit-run-1",
+            "workflow_id": "cockpit-docs",
+            "objective": "test",
+            "ts": "2024-01-01T00:00:00Z",
+        },
+        {
+            "event": "agent_workflow_claim",
+            "run_id": "cockpit-run-1",
+            "paths": ["projects/cockpit"],
+            "ts": "2024-01-01T00:00:01Z",
+        },
+        {
+            "event": "agent_workflow_verify",
+            "run_id": "cockpit-run-1",
+            "changed_files": ["projects/cockpit/README.md"],
+            "ok": True,
+            "checks": ["check-1"],
+            "ts": "2024-01-01T00:00:02Z",
+        },
+        {
+            "event": "agent_workflow_closeout",
+            "run_id": "cockpit-run-1",
+            "ok": True,
+            "status": "closed",
+            "ts": "2024-01-01T00:00:03Z",
+        },
     ]
     events_path.write_text("\n".join(json.dumps(e, ensure_ascii=False) for e in events) + "\n", encoding="utf-8")
     return events_path

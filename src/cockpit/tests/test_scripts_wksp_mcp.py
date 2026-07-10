@@ -511,13 +511,7 @@ class TestParseCardFrontmatter:
         """标准 YAML 解析路径保持有效。"""
         from scripts.cockpit_mcp import _parse_card_frontmatter
 
-        fm = (
-            "id: DEBT-001\n"
-            "type: debt\n"
-            'title: "正常标题"\n'
-            "priority: P2\n"
-            "tags: []\n"
-        )
+        fm = 'id: DEBT-001\ntype: debt\ntitle: "正常标题"\npriority: P2\ntags: []\n'
         meta = _parse_card_frontmatter(fm)
         assert meta["id"] == "DEBT-001"
         assert meta["title"] == "正常标题"

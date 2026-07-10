@@ -84,6 +84,7 @@ for _router_module in (
 
 try:
     from cockpit.kos_proxy import init_kos_routes
+
     init_kos_routes(app)
     print("Successfully loaded KOS proxy routes")
 except Exception as e:

@@ -34,8 +34,10 @@ class TestMetaosPlan:
         mock_engine = MagicMock()
         mock_engine.register_h.return_value = "token-123"
 
-        with patch("cockpit.web.api_metaos._get_engine", return_value=mock_engine), \
-             patch("cockpit.web.api_metaos.WorkflowPlanner") as mock_planner:
+        with (
+            patch("cockpit.web.api_metaos._get_engine", return_value=mock_engine),
+            patch("cockpit.web.api_metaos.WorkflowPlanner") as mock_planner,
+        ):
             mock_planner.return_value.plan.return_value = mock_wf
             resp = client.post("/api/metaos/plan", json={"task": "analyze codebase"})
 

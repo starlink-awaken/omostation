@@ -18,9 +18,24 @@ BOS_METRICS_PATH = WORKSPACE_ROOT / ".omo" / "_knowledge" / "bos-metrics.jsonl"
 
 # ─── Layer sources (I0, L2, L1, L0) ────────────────────────
 LAYER_SOURCES: list[dict] = [
-    {"layer": "I0", "name": "agora", "url": f"http://localhost:{os.environ.get('AGORA_MCP_SSE_PORT', '7431')}/v1/health", "port": int(os.environ.get("AGORA_MCP_SSE_PORT", "7431"))},
-    {"layer": "L2", "name": "omo", "url": f"http://localhost:{os.environ.get('OMO_DASHBOARD_PORT', '9190')}/api/v1/status", "port": int(os.environ.get("OMO_DASHBOARD_PORT", "9190"))},
-    {"layer": "L1", "name": "runtime", "url": f"http://localhost:{os.environ.get('RUNTIME_L1_PORT', '9876')}/api/v1/status", "port": int(os.environ.get("RUNTIME_L1_PORT", "9876"))},
+    {
+        "layer": "I0",
+        "name": "agora",
+        "url": f"http://localhost:{os.environ.get('AGORA_MCP_SSE_PORT', '7431')}/v1/health",
+        "port": int(os.environ.get("AGORA_MCP_SSE_PORT", "7431")),
+    },
+    {
+        "layer": "L2",
+        "name": "omo",
+        "url": f"http://localhost:{os.environ.get('OMO_DASHBOARD_PORT', '9190')}/api/v1/status",
+        "port": int(os.environ.get("OMO_DASHBOARD_PORT", "9190")),
+    },
+    {
+        "layer": "L1",
+        "name": "runtime",
+        "url": f"http://localhost:{os.environ.get('RUNTIME_L1_PORT', '9876')}/api/v1/status",
+        "port": int(os.environ.get("RUNTIME_L1_PORT", "9876")),
+    },
     {"layer": "L0", "name": "ecos", "url": "file://m0_snapshot", "port": None, "source": "m0_snapshot"},
 ]
 

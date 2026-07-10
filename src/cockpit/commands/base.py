@@ -428,7 +428,13 @@ def _status_services() -> list[tuple[str, str, str | None, str, str]]:
     agora_url = os.environ.get("AGORA_ENDPOINT", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}")
     minerva_url = os.environ.get("MINERVA_ENDPOINT", "http://localhost:8765")
     return [
-        ("Agora Hub", f":{os.environ.get("AGORA_INTERNAL_PORT", "7430")}", "agora", f"{agora_url}/health", "MCP 服务治理中枢"),
+        (
+            "Agora Hub",
+            f":{os.environ.get('AGORA_INTERNAL_PORT', '7430')}",
+            "agora",
+            f"{agora_url}/health",
+            "MCP 服务治理中枢",
+        ),
         ("Minerva", ":8765", "minerva", f"{minerva_url}/health", "深度研究系统"),
     ]
 
@@ -441,7 +447,9 @@ def get_cockpit_jwt() -> str:
 def _discover_services() -> list[tuple[str, str, str | None, str, str]]:
     """通过 Agora /api/services 动态发现服务，失败则回退到硬编码列表。"""
     try:
-        agora_url = os.environ.get("AGORA_ENDPOINT", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}")
+        agora_url = os.environ.get(
+            "AGORA_ENDPOINT", f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}"
+        )
         headers = {"Accept": "application/json"}
         token = get_cockpit_jwt()
         if token:

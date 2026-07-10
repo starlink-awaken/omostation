@@ -402,6 +402,13 @@ def main() -> int:
     cards_p = sub.add_parser("cards", help="显示 CARDS 卡片状态")
     cards_p.add_argument("--check", action="store_true", help="检查当前操作合规性")
     cards_p.add_argument("--card-id", type=str, help="检查指定卡片")
+    cards_sub = cards_p.add_subparsers(dest="cards_command")
+    cards_sub.add_parser("list", help="列所有 CARDS")
+    cards_get_p = cards_sub.add_parser("get", help="查 1 个 card")
+    cards_get_p.add_argument("id", nargs="?", help="卡片 ID 或 path")
+    cards_search_p = cards_sub.add_parser("search", help="全文搜 CARDS")
+    cards_search_p.add_argument("query", nargs="?", help="关键词")
+    cards_sub.add_parser("serve", help="stdio JSON-RPC serve mode")
     vault_p = sub.add_parser("vault", help="搜索 L4 Vault 知识库")
     vault_p.add_argument("keyword", nargs="?", help="搜索关键词")
 
@@ -439,7 +446,7 @@ def main() -> int:
     ssb_p = sub.add_parser(
         "ssb",
         help="SSB 签名链操作 (委派 ecos-ssb)",
-        epilog="子命令 (源自 ecos-ssb): verify / append / chain / integrity\n示例: cockpit ssb integrity",
+        epilog="子命令 (源自 ecos-ssb): publish / query / state / recover / events / stats\n示例: cockpit ssb stats",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     ssb_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 ecos-ssb 的参数")
@@ -704,6 +711,15 @@ def main() -> int:
         code_p.print_help()
         return 1
 
+    def dispatch_cards(a):
+        if getattr(a, "cards_command", None):
+            from cockpit.commands.cards import cmd_cards as _cmd
+
+            return _cmd(a)
+        from cockpit.commands.l4bridge import cmd_cards as _cmd
+
+        return _cmd(a)
+
     def dispatch_bos(a):
         from cockpit.commands.bos import cmd_bos_discover, cmd_bos_list, cmd_bos_status
 
@@ -856,7 +872,7 @@ def main() -> int:
         "brief": _cmd_brief,
         "discover": _cmd_discover,
         "profile": cmd_profile,
-        "cards": _c_cards,
+        "cards": dispatch_cards,
         "audit": cmd_audit,
         "demo": cmd_demo,
         "search": _cmd_search,

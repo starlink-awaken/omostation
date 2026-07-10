@@ -63,7 +63,7 @@ def cmd_compute(args) -> int:
         console.print("  mesh cost                  — 算力成本报告")
         console.print("  mesh wakeup <node_id>      — 网络唤醒物理从机节点 (WoL)")
         console.print("  swarm run --goal <g>       — 多 Agent 工作流")
-        return 0
+        return 1
 
     import os
     from pathlib import Path

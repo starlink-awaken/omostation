@@ -490,71 +490,71 @@ def cmd_help(_: argparse.Namespace) -> int:
     c = _get_console()
     c.print(
         _panel(
-            "[bold cyan]🧭 Workspace 产品地图[/bold cyan]\\n\\n"
-            "[bold]📖 核心概念[/bold]\\n"
+            "[bold cyan]🧭 Workspace 产品地图[/bold cyan]\n\n"
+            "[bold]📖 核心概念[/bold]\n"
             "  workspace 是一个研究对象管理系统。你输入内容 → 形成研究对象 → "
-            "持续追问 → 发布为产物 → 复盘回顾。一切都有记忆，一切都可追溯。\\n\\n"
-            "[bold]🚀 快速开始[/bold]\\n"
-            "  [cyan]cockpit demo[/]           — 5 分钟体验完整闭环\\n"
-            "  [cyan]cockpit status[/]          — 打开工作台\\n"
-            '  [cyan]cockpit research "主题"[/] — 发起你的第一个研究\\n'
-            "  [cyan]cockpit quickstart[/]      — 环境检查与上手向导\\n\\n"
-            "[bold]🔍 按场景查找命令[/bold]\\n\\n"
-            "[bold green]📚 研究 (Research)[/]\\n"
-            "  [cyan]research[/]     深度研究一个主题，产生可追溯的知识\\n"
-            "  [cyan]ask <ID>[/]     对已有研究追问，深化理解\\n"
-            "  [cyan]search[/]       跨源搜索（本地知识库 + BOS 知识引擎）\\n"
-            "  [cyan]vault[/]        搜索本地知识库（笔记/精读，最快）\\n"
-            "  [cyan]import[/]       导入网页/文档作为研究素材\\n"
-            "  [cyan]publish[/]      将研究发布为文档（brief/memo/exec）\\n"
-            "  [cyan]dossier[/]      查看研究关系网络\\n"
-            "  [cyan]timeline[/]     查看研究时间线\\n\\n"
-            "[bold green]🛠️ 系统 (System)[/]\\n"
-            "  [cyan]status[/]       工作台仪表板——所有活动研究的快照\\n"
-            "  [cyan]health[/]       系统健康检查——端口、服务、资源\\n"
-            "  [cyan]dashboard[/]    Web 控制台 (http://localhost:8090/bos)\\n"
-            "  [cyan]daily[/]        每日研究简报与站会\\n"
-            "  [cyan]demo[/]         5 分钟交互式产品演示\\n"
-            "  [cyan]discover[/]     发现已安装的功能\\n\\n"
-            "[bold green]⚖️ 治理 (Governance)[/]\\n"
-            "  [cyan]omo[/]          OMO 状态操作（sync/lint/schema）\\n"
-            "  [cyan]governance[/]   治理操作（calibrate/audit/policy）\\n"
-            "  [cyan]workflow[/]     工作流管理\\n"
-            "  [cyan]audit[/]        审计追踪\\n"
-            "  [cyan]bos[/]          BOS URI 路由管理\\n"
-            "  [cyan]cards[/]        卡片系统状态\\n"
-            "  [cyan]monitor[/]      系统监控\\n\\n"
-            "[bold green]⚙️ 配置 (Config)[/]\\n"
-            "  [cyan]profile[/]      身份档案与配置\\n"
-            "  [cyan]data[/]         数据管理（索引/GC/类型）\\n"
-            "  [cyan]contracts[/]    合约管理（export/validate/list）\\n"
-            "  [cyan]mcp[/]          MCP 服务器管理\\n"
-            "  [cyan]code[/]         代码分析\\n"
-            "  [cyan]events[/]       事件流控制台\\n\\n"
-            "[bold green]🧠 战略 & Agent (Strategy)[/]\\n"
-            "  [cyan]compass[/]      战略罗盘\\n"
-            "  [cyan]iterate[/]      C2G 迭代\\n"
-            "  [cyan]agent-workflow[/] Agent 工作流管理\\n"
-            "  [cyan]brief[/]        会话简报\\n"
-            "  [cyan]context[/]      上下文信息\\n\\n"
-            "[bold green]🌿 场景 (Life Scenarios)[/]\\n"
-            "  [cyan]gongwen[/]      公文管理\\n"
-            "  [cyan]scenario[/]     家庭/工作场景\\n"
-            "  [cyan]health[/]       健康管理\\n"
-            "  [cyan]finance[/]      财务管理\\n\\n"
-            "[bold]🔄 完整用户旅程[/bold]\\n"
-            "  import → research → open → ask → publish → dossier → timeline → daily\\n\\n"
-            "[bold]💡 典型场景推荐[/bold]\\n"
-            "  · [cyan]新用户首次使用[/]：cockpit quickstart → cockpit demo\\n"
-            "  · [cyan]日常研究[/]：cockpit research \"主题\" → cockpit daily\\n"
-            "  · [cyan]知识回顾[/]：cockpit status → cockpit research --open <ID>\\n"
-            "  · [cyan]知识发布[/]：cockpit research --publish <ID> --style brief\\n"
-            "  · [cyan]系统健康[/]：cockpit dashboard → 查看 BOS/Cron/治理面板\\n"
-            "  · [cyan]治理审计[/]：cockpit governance calibrate → cockpit audit\\n"
-            "  · [cyan]Web 控制台[/]：http://localhost:8090/bos 或 http://localhost:8090/overview\\n\\n"
-            "[bold]🔍 搜索怎么选? (v5 #V5-12)[/]\\n"
-            '  [cyan]vault "关键词"[/] — 搜本地知识库 (笔记/精读, 最快)\\n'
-            '  [cyan]search "关键词" --all[/] — 跨源搜 (本地+BOS 知识引擎)\\n'
+            "持续追问 → 发布为产物 → 复盘回顾。一切都有记忆，一切都可追溯。\n\n"
+            "[bold]🚀 快速开始[/bold]\n"
+            "  [cyan]cockpit demo[/]           — 5 分钟体验完整闭环\n"
+            "  [cyan]cockpit status[/]          — 打开工作台\n"
+            '  [cyan]cockpit research "主题"[/] — 发起你的第一个研究\n'
+            "  [cyan]cockpit quickstart[/]      — 环境检查与上手向导\n\n"
+            "[bold]🔍 按场景查找命令[/bold]\n\n"
+            "[bold green]📚 研究 (Research)[/]\n"
+            "  [cyan]research[/]     深度研究一个主题，产生可追溯的知识\n"
+            "  [cyan]ask <ID>[/]     对已有研究追问，深化理解\n"
+            "  [cyan]search[/]       跨源搜索（本地知识库 + BOS 知识引擎）\n"
+            "  [cyan]vault[/]        搜索本地知识库（笔记/精读，最快）\n"
+            "  [cyan]import[/]       导入网页/文档作为研究素材\n"
+            "  [cyan]publish[/]      将研究发布为文档（brief/memo/exec）\n"
+            "  [cyan]dossier[/]      查看研究关系网络\n"
+            "  [cyan]timeline[/]     查看研究时间线\n\n"
+            "[bold green]🛠️ 系统 (System)[/]\n"
+            "  [cyan]status[/]       工作台仪表板——所有活动研究的快照\n"
+            "  [cyan]health[/]       系统健康检查——端口、服务、资源\n"
+            "  [cyan]dashboard[/]    Web 控制台 (http://localhost:8090/bos)\n"
+            "  [cyan]daily[/]        每日研究简报与站会\n"
+            "  [cyan]demo[/]         5 分钟交互式产品演示\n"
+            "  [cyan]discover[/]     发现已安装的功能\n\n"
+            "[bold green]⚖️ 治理 (Governance)[/]\n"
+            "  [cyan]omo[/]          OMO 状态操作（sync/lint/schema）\n"
+            "  [cyan]governance[/]   治理操作（calibrate/audit/policy）\n"
+            "  [cyan]workflow[/]     工作流管理\n"
+            "  [cyan]audit[/]        审计追踪\n"
+            "  [cyan]bos[/]          BOS URI 路由管理\n"
+            "  [cyan]cards[/]        卡片系统状态\n"
+            "  [cyan]monitor[/]      系统监控\n\n"
+            "[bold green]⚙️ 配置 (Config)[/]\n"
+            "  [cyan]profile[/]      身份档案与配置\n"
+            "  [cyan]data[/]         数据管理（索引/GC/类型）\n"
+            "  [cyan]contracts[/]    合约管理（export/validate/list）\n"
+            "  [cyan]mcp[/]          MCP 服务器管理\n"
+            "  [cyan]code[/]         代码分析\n"
+            "  [cyan]events[/]       事件流控制台\n\n"
+            "[bold green]🧠 战略 & Agent (Strategy)[/]\n"
+            "  [cyan]compass[/]      战略罗盘\n"
+            "  [cyan]iterate[/]      C2G 迭代\n"
+            "  [cyan]agent-workflow[/] Agent 工作流管理\n"
+            "  [cyan]brief[/]        会话简报\n"
+            "  [cyan]context[/]      上下文信息\n\n"
+            "[bold green]🌿 场景 (Life Scenarios)[/]\n"
+            "  [cyan]gongwen[/]      公文管理\n"
+            "  [cyan]scenario[/]     家庭/工作场景\n"
+            "  [cyan]health[/]       健康管理\n"
+            "  [cyan]finance[/]      财务管理\n\n"
+            "[bold]🔄 完整用户旅程[/bold]\n"
+            "  import → research → open → ask → publish → dossier → timeline → daily\n\n"
+            "[bold]💡 典型场景推荐[/bold]\n"
+            "  · [cyan]新用户首次使用[/]：cockpit quickstart → cockpit demo\n"
+            '  · [cyan]日常研究[/]：cockpit research "主题" → cockpit daily\n'
+            "  · [cyan]知识回顾[/]：cockpit status → cockpit research --open <ID>\n"
+            "  · [cyan]知识发布[/]：cockpit research --publish <ID> --style brief\n"
+            "  · [cyan]系统健康[/]：cockpit dashboard → 查看 BOS/Cron/治理面板\n"
+            "  · [cyan]治理审计[/]：cockpit governance calibrate → cockpit audit\n"
+            "  · [cyan]Web 控制台[/]：http://localhost:8090/bos 或 http://localhost:8090/overview\n\n"
+            "[bold]🔍 搜索怎么选? (v5 #V5-12)[/]\n"
+            '  [cyan]vault "关键词"[/] — 搜本地知识库 (笔记/精读, 最快)\n'
+            '  [cyan]search "关键词" --all[/] — 跨源搜 (本地+BOS 知识引擎)\n'
             '  [cyan]research "主题"[/] — 发起新深度研究 (产生新知识)',
             "cyan",
         )
@@ -730,63 +730,61 @@ def cmd_daily(args: argparse.Namespace) -> int:
 
 
 def cmd_dashboard(args: argparse.Namespace) -> int:
+    import os
+    import sys
     import webbrowser
+    from urllib import request as urlrequest
 
     c = _get_console()
-    port = "8765"
-    _cockpit_root = Path(__file__).resolve().parent.parent
-    agora_dir = str(_cockpit_root / "agora")
-    venv_python = _cockpit_root / "agora/.venv/bin/python"
-    uvicorn_cli = _find_cli("uvicorn")
+    port = os.environ.get("COCKPIT_DASHBOARD_PORT", "8090")
+    url = f"http://localhost:{port}/bos"
+    workspace_root = Path(__file__).resolve().parents[5]
 
     def _print_dashboard_fixes() -> None:
         c.print("[yellow]试试:[/]")
-        c.print("  [cyan]cockpit status[/]  — 检查服务状态")
-        c.print("  [cyan]cockpit demo[/]    — 在 CLI 中体验")
-        c.print(
-            "  [cyan]cd agora && .venv/bin/python -m uvicorn agora.web.app:app --host 127.0.0.1 --port 8765[/]  — 手动启动"
-        )
+        c.print("  [cyan]uv run cockpit-dashboard[/]  — 手动启动")
+        c.print("  [cyan]cockpit status[/]            — 检查服务状态")
+        c.print("  [cyan]cockpit demo[/]              — 在 CLI 中体验")
 
-    if not uvicorn_cli and not venv_python.exists():
-        c.print("[yellow]uvicorn 未安装。试试:[/]")
-        c.print("  [cyan]cd agora && pip install uvicorn fastapi[/]")
+    # 若 Dashboard 已在运行，直接打开
+    try:
+        r = urlrequest.urlopen(url, timeout=2)  # noqa: S310
+        if getattr(r, "status", 200) == 200:
+            webbrowser.open(url)
+            c.print(f"[green]✅ Dashboard 已运行: [cyan]{url}[/][/]")
+            return 0
+    except Exception:
+        pass
+
+    c.print(f"[dim]正在启动 Cockpit Dashboard (port {port})...[/]")
+    cmd = [sys.executable, "-m", "cockpit.dashboard_server"]
+    try:
+        proc = subprocess.Popen(cmd, cwd=str(workspace_root), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        c.print("[red]❌ 无法启动 Dashboard[/]")
         _print_dashboard_fixes()
         return 1
-    if venv_python.exists():
-        cmd = [str(venv_python), "-m", "uvicorn", "agora.web.app:app", "--host", "127.0.0.1", "--port", port]
-    else:
-        assert uvicorn_cli is not None
-        cmd = [uvicorn_cli, "agora.web.app:app", "--host", "127.0.0.1", "--port", port]
-    try:
-        proc = subprocess.Popen(cmd, cwd=agora_dir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(2)
-        url = f"http://localhost:{port}"
-        try:
-            from urllib import request as urlrequest
 
-            r = urlrequest.urlopen(url, timeout=3)  # noqa: S310
-            if getattr(r, "status", 200) != 200:
-                c.print(f"[red]Dashboard returned HTTP {r.status}[/]")
-                _print_dashboard_fixes()
-                proc.terminate()
-                return 1
-        except Exception:  # defensive fallback
-            c.print(f"[red]无法连接到 Dashboard :{port}[/]")
+    time.sleep(2)
+    try:
+        r = urlrequest.urlopen(url, timeout=3)  # noqa: S310
+        if getattr(r, "status", 200) != 200:
+            c.print(f"[red]Dashboard returned HTTP {r.status}[/]")
             _print_dashboard_fixes()
             proc.terminate()
             return 1
-        webbrowser.open(url)
-        c.print(f"[green]✅ Dashboard 已启动: [cyan]{url}[/][/]")
-        c.print("[dim]按 Ctrl+C 停止服务[/]")
-        try:
-            proc.wait()
-        except KeyboardInterrupt:
-            proc.terminate()
-            c.print("\n[yellow]Dashboard 已停止[/]")
-    except FileNotFoundError:
-        c.print("[red]❌ 无法启动 Dashboard — uvicorn 未安装[/]")
-        c.print("[yellow]试试:[/]")
-        c.print("  [cyan]cd agora && pip install uvicorn fastapi[/]")
+    except Exception:
+        c.print(f"[red]无法连接到 Dashboard :{port}[/]")
         _print_dashboard_fixes()
+        proc.terminate()
         return 1
+
+    webbrowser.open(url)
+    c.print(f"[green]✅ Dashboard 已启动: [cyan]{url}[/][/]")
+    c.print("[dim]按 Ctrl+C 停止服务[/]")
+    try:
+        proc.wait()
+    except KeyboardInterrupt:
+        proc.terminate()
+        c.print("\n[yellow]Dashboard 已停止[/]")
     return 0

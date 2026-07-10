@@ -416,9 +416,7 @@ def _parse_card_frontmatter(fm: str) -> dict:
         key = key.strip()
         value = value.strip()
         # 去除首尾成对引号
-        if len(value) >= 2 and (
-            (value[0] == '"' and value[-1] == '"') or (value[0] == "'" and value[-1] == "'")
-        ):
+        if len(value) >= 2 and ((value[0] == '"' and value[-1] == '"') or (value[0] == "'" and value[-1] == "'")):
             value = value[1:-1]
         # 简单类型推断
         lower = value.lower()

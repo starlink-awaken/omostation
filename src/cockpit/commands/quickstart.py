@@ -205,8 +205,8 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     c.print()
     c.print(
         Panel.fit(
-            "[bold cyan]🧭 欢迎使用 Workspace！[/bold cyan]\\n\\n"
-            "研究对象管理系统 — 让你的每一个研究和想法都有记忆、可追溯。\\n\\n"
+            "[bold cyan]🧭 欢迎使用 Workspace！[/bold cyan]\n\n"
+            "研究对象管理系统 — 让你的每一个研究和想法都有记忆、可追溯。\n\n"
             "[dim]输入 → 研究 → 追问 → 发布 → 复盘[/dim]",
             border_style="cyan",
             box=box.ROUNDED,
@@ -376,9 +376,11 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     c.print(r"    [cyan]cockpit demo[/]     — 交互式演示")
     c.print(r"    [cyan]cockpit dashboard[/] — Web 控制台 (http://localhost:8090)")
     c.print()
-    c.print(_panel(
-        "[bold green]🎉 配置完成！现在就开始使用 workspace[/bold green]\\n\\n"
-        '[cyan]cockpit research "你的第一个研究主题"[/]',
-        "green",
-    ))
+    c.print(
+        _panel(
+            "[bold green]🎉 配置完成！现在就开始使用 workspace[/bold green]\n\n"
+            '[cyan]cockpit research "你的第一个研究主题"[/]',
+            "green",
+        )
+    )
     return 0

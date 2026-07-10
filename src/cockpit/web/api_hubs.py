@@ -55,7 +55,9 @@ def build_research_hub() -> dict[str, Any]:
         if not isinstance(record, dict):
             continue
         research_id = record.get("id")
-        full_record = _safe_call(lambda: access.get_research(int(research_id)), record) if research_id is not None else record
+        full_record = (
+            _safe_call(lambda: access.get_research(int(research_id)), record) if research_id is not None else record
+        )
         full_record = full_record if isinstance(full_record, dict) else record
         follow_ups = full_record.get("follow_ups") or []
         follow_up_count += len(follow_ups) if isinstance(follow_ups, list) else 0
@@ -63,19 +65,27 @@ def build_research_hub() -> dict[str, Any]:
         if agent:
             agents.add(agent)
 
-        dossier = _safe_call(
-            lambda: access.get_research_dossier(int(research_id)),
-            {},
-        ) if research_id is not None else {}
+        dossier = (
+            _safe_call(
+                lambda: access.get_research_dossier(int(research_id)),
+                {},
+            )
+            if research_id is not None
+            else {}
+        )
         dossier = dossier if isinstance(dossier, dict) else {}
         publications = dossier.get("publications") or []
         if publications:
             published_count += 1
 
-        timeline = _safe_call(
-            lambda: access.get_research_timeline(int(research_id)),
-            [],
-        ) if research_id is not None else []
+        timeline = (
+            _safe_call(
+                lambda: access.get_research_timeline(int(research_id)),
+                [],
+            )
+            if research_id is not None
+            else []
+        )
         timeline = timeline if isinstance(timeline, list) else []
         last_event = max(
             (event for event in timeline if isinstance(event, dict)),
@@ -104,7 +114,9 @@ def build_research_hub() -> dict[str, Any]:
                     "label": last_event.get("event_type"),
                     "created_at": _iso_timestamp(last_event.get("created_at")),
                     "description": last_event.get("description"),
-                } if last_event else None,
+                }
+                if last_event
+                else None,
                 "next_action": next_action,
             }
         )
@@ -136,7 +148,9 @@ def build_research_hub() -> dict[str, Any]:
             {
                 "id": "research-publish",
                 "label": "发布最近研究",
-                "value": f"cockpit research --publish {latest_id} --style brief" if latest_id else 'cockpit research --publish <ID> --style brief',
+                "value": f"cockpit research --publish {latest_id} --style brief"
+                if latest_id
+                else "cockpit research --publish <ID> --style brief",
                 "detail": "把研究对象转成可追踪的报告输出。",
             },
             {

@@ -54,14 +54,16 @@ def _kos_rest_call(method: str, path: str, data: dict | None = None) -> dict:
 def _url_encode_params(params: dict) -> str:
     """URL encode parameters."""
     import urllib.parse
+
     return urllib.parse.urlencode(params, encoding="utf-8", quote_via=urllib.parse.quote)
 
 
 # ── FastAPI 代理路由 ─────────────────────────────────────
 
+
 def init_kos_routes(app):
     """在 FastAPI app 上注册 KOS 代理路由。
-    
+
     Args:
         app: FastAPI 应用实例。
     """
@@ -130,6 +132,7 @@ def init_kos_routes(app):
 
 # ── 独立运行模式 ─────────────────────────────────────────
 
+
 def create_kos_app():
     """创建独立的 KOS API 服务 (用于测试)。"""
     from fastapi import FastAPI
@@ -141,5 +144,6 @@ def create_kos_app():
 
 if __name__ == "__main__":
     import uvicorn
+
     app = create_kos_app()
     uvicorn.run(app, host="0.0.0.0", port=8766)

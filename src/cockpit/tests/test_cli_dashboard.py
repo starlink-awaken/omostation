@@ -6,6 +6,7 @@ import argparse
 import importlib
 import sys
 import types
+import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -43,7 +44,20 @@ class _HTTPResponse:
         return b""
 
     def geturl(self):
-        return "http://localhost:8765"
+        return "http://localhost:8090/bos"
+
+
+class _CtrlCProc:
+    """proc.wait() 引发 KeyboardInterrupt"""
+
+    def wait(self):
+        raise KeyboardInterrupt()
+
+    def terminate(self):
+        pass
+
+    def poll(self):
+        return None
 
 
 def _patch_status_subprocess(monkeypatch):
@@ -56,13 +70,50 @@ def _patch_status_subprocess(monkeypatch):
     monkeypatch.setattr(_status_mod, "subprocess", _fake_sp)
 
 
-def _patch_find_cli(monkeypatch, fn):
-    """Monkeypatch _find_cli in ALL modules that import it."""
-    from cockpit.commands import base as _base_mod
+def test_cmd_dashboard_already_running(monkeypatch):
+    """Dashboard 已在运行时直接打开浏览器。"""
+    capture = Console(record=True, force_terminal=True, width=120)
+    monkeypatch.setattr(cli, "console", capture)
+    fake_webbrowser = types.SimpleNamespace(open=lambda url: True)
+    monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
+
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *args, **kwargs: _HTTPResponse(200))
+
+    code = cli.cmd_dashboard(argparse.Namespace())
+
+    output = capture.export_text()
+    assert code == 0
+    assert "Dashboard 已运行" in output
+
+
+def test_cmd_dashboard_starts_and_handles_ctrl_c(monkeypatch):
+    """Dashboard 未运行时启动服务，并在 Ctrl+C 后停止。"""
     from cockpit.commands import status as _status_mod
 
-    monkeypatch.setattr(_base_mod, "_find_cli", fn)
-    monkeypatch.setattr(_status_mod, "_find_cli", fn)
+    capture = Console(record=True, force_terminal=True, width=120)
+    monkeypatch.setattr(cli, "console", capture)
+    fake_webbrowser = types.SimpleNamespace(open=lambda url: True)
+    monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
+    monkeypatch.setattr(cli.time, "sleep", lambda _: None)
+
+    calls = []
+
+    def _fake_urlopen(*args, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            raise ConnectionError("not running")
+        return _HTTPResponse(200)
+
+    monkeypatch.setattr(urllib.request, "urlopen", _fake_urlopen)
+    monkeypatch.setattr(_status_mod.subprocess, "Popen", lambda *args, **kwargs: _CtrlCProc())
+    monkeypatch.setattr(_status_mod.subprocess, "DEVNULL", -3)
+
+    code = cli.cmd_dashboard(argparse.Namespace())
+
+    output = capture.export_text()
+    assert code == 0
+    assert "Dashboard 已启动" in output
+    assert "Dashboard 已停止" in output
 
 
 def test_cmd_dashboard_shows_fix_suggestions_when_http_is_non_200(monkeypatch):
@@ -71,42 +122,71 @@ def test_cmd_dashboard_shows_fix_suggestions_when_http_is_non_200(monkeypatch):
     fake_webbrowser = types.SimpleNamespace(open=lambda url: True)
     monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
     monkeypatch.setattr(cli.time, "sleep", lambda _: None)
-    _patch_find_cli(monkeypatch, lambda name: "/usr/bin/uvicorn")
     _patch_status_subprocess(monkeypatch)
-    monkeypatch.setattr(cli.urlrequest, "urlopen", lambda *args, **kwargs: _HTTPResponse(502))
+
+    calls = []
+
+    def _fake_urlopen(*args, **kwargs):
+        calls.append(1)
+        # 第一次探测未运行；第二次启动后返回非 200
+        if len(calls) == 1:
+            raise ConnectionError("not running")
+        return _HTTPResponse(502)
+
+    monkeypatch.setattr(urllib.request, "urlopen", _fake_urlopen)
 
     code = cli.cmd_dashboard(argparse.Namespace())
 
     output = capture.export_text()
     assert code == 1
     assert "Dashboard returned HTTP 502" in output
-    assert "cockpit status" in output
-    # Rich may wrap the long suggestion line; assert the command tokens are present.
-    assert "cd agora" in output
-    assert "uvicorn agora.web.app:app" in output
-    assert "--host 127.0.0.1" in output
-    assert "--port 8765" in output
+    assert "无法启动" not in output
 
 
-def test_cmd_dashboard_suggests_uvicorn_install_when_missing(monkeypatch):
+def test_cmd_dashboard_urlopen_exception(monkeypatch):
+    """启动后 urlopen 抛出异常→无法连接。"""
     capture = Console(record=True, force_terminal=True, width=120)
     monkeypatch.setattr(cli, "console", capture)
     fake_webbrowser = types.SimpleNamespace(open=lambda url: True)
     monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
     monkeypatch.setattr(cli.time, "sleep", lambda _: None)
-    _patch_find_cli(monkeypatch, lambda name: None if name == "uvicorn" else "/usr/bin/python3")
-    from cockpit.commands import status as _status_mod
-
-    monkeypatch.setattr(_status_mod.Path, "exists", lambda self: False)
     _patch_status_subprocess(monkeypatch)
-    monkeypatch.setattr(cli.urlrequest, "urlopen", lambda *args, **kwargs: _HTTPResponse(200))
+
+    monkeypatch.setattr(
+        urllib.request, "urlopen", lambda *args, **kwargs: (_ for _ in ()).throw(ConnectionError("Connection refused"))
+    )
 
     code = cli.cmd_dashboard(argparse.Namespace())
 
     output = capture.export_text()
     assert code == 1
-    assert "uvicorn 未安装" in output
-    assert "cd agora && pip install uvicorn fastapi" in output
+    assert "无法连接到 Dashboard" in output
+
+
+def test_cmd_dashboard_file_not_found(monkeypatch):
+    """subprocess.Popen 抛出 FileNotFoundError。"""
+    from cockpit.commands import status as _status_mod
+
+    capture = Console(record=True, force_terminal=True, width=120)
+    monkeypatch.setattr(cli, "console", capture)
+    fake_webbrowser = types.SimpleNamespace(open=lambda url: True)
+    monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
+    monkeypatch.setattr(cli.time, "sleep", lambda _: None)
+
+    def _popen_raise(*a, **kw):
+        raise FileNotFoundError("python not found")
+
+    monkeypatch.setattr(_status_mod.subprocess, "Popen", _popen_raise)
+    monkeypatch.setattr(_status_mod.subprocess, "DEVNULL", -3)
+    monkeypatch.setattr(
+        urllib.request, "urlopen", lambda *args, **kwargs: (_ for _ in ()).throw(ConnectionError("not running"))
+    )
+
+    code = cli.cmd_dashboard(argparse.Namespace())
+
+    output = capture.export_text()
+    assert code == 1
+    assert "无法启动 Dashboard" in output
 
 
 class _StopAfterFirstFrame:
@@ -153,76 +233,8 @@ def test_cmd_status_rejects_non_positive_interval(monkeypatch):
     assert "刷新间隔必须大于 0 秒" in output
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# cmd_dashboard 补充 — 4 条残余分支 (496, 513-517, 518-525, 526-531)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-
-class _CtrlCProc:
-    """proc.wait() 引发 KeyboardInterrupt"""
-
-    def wait(self):
-        raise KeyboardInterrupt()
-
-    def terminate(self):
-        pass
-
-    def poll(self):
-        return None
-
-
-def test_cmd_dashboard_venv_python_exists(monkeypatch):
-    """venv_python.exists()→走 venv 路径 (line 496)"""
-    from cockpit.commands import status as _status_mod
-
-    capture = Console(record=True, force_terminal=True, width=120)
-    monkeypatch.setattr(cli, "console", capture)
-    fake_webbrowser = types.SimpleNamespace(open=lambda url: True)
-    monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
-    monkeypatch.setattr(cli.time, "sleep", lambda _: None)
-    # uvicorn not on PATH → check venv_python.exists
-    _patch_find_cli(monkeypatch, lambda name: None)
-    # Let Popen work normally, but venv_python.exists returns True
-    _real_exists = _status_mod.Path.exists
-    monkeypatch.setattr(_status_mod.Path, "exists", lambda self: True if ".venv" in str(self) else _real_exists(self))
-    # Popen returns dummy proc that responds to Ctrl-C
-    monkeypatch.setattr(_status_mod.subprocess, "Popen", lambda *args, **kwargs: _CtrlCProc())
-    monkeypatch.setattr(_status_mod.subprocess, "DEVNULL", -3)
-    monkeypatch.setattr(cli.urlrequest, "urlopen", lambda *args, **kwargs: _HTTPResponse(200))
-
-    code = cli.cmd_dashboard(argparse.Namespace())
-
-    output = capture.export_text()
-    assert code == 0
-    assert "Dashboard 已启动" in output
-    assert "Dashboard 已停止" in output
-
-
-def test_cmd_dashboard_urlopen_exception(monkeypatch):
-    """urlopen 抛出异常→无法连接 (lines 513-517)"""
-    capture = Console(record=True, force_terminal=True, width=120)
-    monkeypatch.setattr(cli, "console", capture)
-    fake_webbrowser = types.SimpleNamespace(open=lambda url: True)
-    monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
-    monkeypatch.setattr(cli.time, "sleep", lambda _: None)
-    _patch_find_cli(monkeypatch, lambda name: "/usr/bin/uvicorn")
-    _patch_status_subprocess(monkeypatch)
-
-    # urlopen raises URLError-like exception
-    def _raise_urlopen(*a, **kw):
-        raise ConnectionError("Connection refused")
-
-    monkeypatch.setattr(cli.urlrequest, "urlopen", _raise_urlopen)
-
-    code = cli.cmd_dashboard(argparse.Namespace())
-
-    output = capture.export_text()
-    assert code == 1
-    assert "无法连接到 Dashboard" in output
-
-
 def test_cmd_status_non_watch_calls_render_workbench(monkeypatch):
-    """cmd_status 非 watch 模式→调用 _render_workbench 并返回 0 (lines 173-174)."""
+    """cmd_status 非 watch 模式→调用 _render_workbench 并返回 0。"""
     from cockpit.commands import status as _status_mod
 
     capture = Console(record=True, force_terminal=True, width=120)
@@ -242,28 +254,3 @@ def test_cmd_status_non_watch_calls_render_workbench(monkeypatch):
     assert code == 0
     assert called[0] is True
     assert "workbench rendered" in output
-
-
-def test_cmd_dashboard_file_not_found(monkeypatch):
-    """subprocess.Popen 抛出 FileNotFoundError (lines 526-531)"""
-    from cockpit.commands import status as _status_mod
-
-    capture = Console(record=True, force_terminal=True, width=120)
-    monkeypatch.setattr(cli, "console", capture)
-    fake_webbrowser = types.SimpleNamespace(open=lambda url: True)
-    monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
-    monkeypatch.setattr(cli.time, "sleep", lambda _: None)
-    _patch_find_cli(monkeypatch, lambda name: "/usr/bin/uvicorn")
-
-    # Popen raises FileNotFoundError
-    def _popen_raise(*a, **kw):
-        raise FileNotFoundError("uvicorn not found")
-
-    monkeypatch.setattr(_status_mod.subprocess, "Popen", _popen_raise)
-    monkeypatch.setattr(_status_mod.subprocess, "DEVNULL", -3)
-
-    code = cli.cmd_dashboard(argparse.Namespace())
-
-    output = capture.export_text()
-    assert code == 1
-    assert "无法启动 Dashboard" in output
