@@ -59,6 +59,12 @@ class OutputFormatter:
         else:
             self.console = None
 
+    def _console(self) -> Console:
+        """Get the console, raising if not available."""
+        if self.console is None:
+            raise RuntimeError("Console not available (rich not installed)")
+        return self.console
+
     def supports_color(self) -> bool:
         """终端是否支持颜色"""
         if self.console is None:
@@ -86,7 +92,7 @@ class OutputFormatter:
         if self.json_mode:
             self.print_json({"status": "success", "message": msg})
         elif self.supports_color():
-            self.console.print(f"[success]{self._icon('success')} {msg}[/success]")
+            self._console().print(f"[success]{self._icon('success')} {msg}[/success]")
         else:
             print(f"{self._icon('success')} {msg}")
 
@@ -94,9 +100,9 @@ class OutputFormatter:
         if self.json_mode:
             self.print_json({"status": "error", "message": msg, "hint": suggestion})
         elif self.supports_color():
-            self.console.print(f"[error]{self._icon('error')} Error: {msg}[/error]")
+            self._console().print(f"[error]{self._icon('error')} Error: {msg}[/error]")
             if suggestion:
-                self.console.print(f"  [dim]Hint: {suggestion}[/dim]")
+                self._console().print(f"  [dim]Hint: {suggestion}[/dim]")
         else:
             print(f"{self._icon('error')} Error: {msg}", file=sys.stderr)
             if suggestion:
@@ -106,21 +112,21 @@ class OutputFormatter:
         if self.json_mode:
             self.print_json({"status": "warning", "message": msg})
         elif self.supports_color():
-            self.console.print(f"[warning]{self._icon('warning')} {msg}[/warning]")
+            self._console().print(f"[warning]{self._icon('warning')} {msg}[/warning]")
         else:
             print(f"{self._icon('warning')} {msg}")
 
     def print_info(self, msg: str) -> None:
         if not self.json_mode:
             if self.supports_color():
-                self.console.print(f"[info]{msg}[/info]")
+                self._console().print(f"[info]{msg}[/info]")
             else:
                 print(f"{self._icon('info')} {msg}")
 
     def print_progress(self, msg: str) -> None:
         if not self.json_mode:
             if self.supports_color():
-                self.console.print(f"[highlight]⏳ {msg}...[/highlight]")
+                self._console().print(f"[highlight]⏳ {msg}...[/highlight]")
             else:
                 print(f"{self._icon('progress')} {msg}...")
 
@@ -162,7 +168,7 @@ class OutputFormatter:
                     else:
                         rich_row.append(s)
                 table.add_row(*rich_row)
-            self.console.print(table)
+            self._console().print(table)
         else:
             # 回退到 ASCII 表格
             if title:
@@ -203,18 +209,18 @@ class OutputFormatter:
 
         if self.supports_color():
             if title:
-                self.console.print(f"\n[bold]{title}[/bold]")
+                self._console().print(f"\n[bold]{title}[/bold]")
             for item in items:
                 key = str(item.get(key_field, ""))
                 desc = str(item.get(description_field, "")) if description_field else ""
                 if desc:
-                    self.console.print(
+                    self._console().print(
                         f"  [highlight]{key}[/highlight]  [dim]{desc}[/dim]"
                     )
                 else:
-                    self.console.print(f"  [highlight]{key}[/highlight]")
+                    self._console().print(f"  [highlight]{key}[/highlight]")
             if title:
-                self.console.print(f"  [dim]共 {len(items)} 项[/dim]\n")
+                self._console().print(f"  [dim]共 {len(items)} 项[/dim]\n")
         else:
             if title:
                 print(f"\n{title}")
@@ -234,12 +240,12 @@ class OutputFormatter:
 
         if self.supports_color():
             if title:
-                self.console.print(f"\n[bold]{title}[/bold]")
+                self._console().print(f"\n[bold]{title}[/bold]")
             max_k = max(len(k) for k in data) if data else 10
             for k, v in data.items():
-                self.console.print(f"  [dim]{k.ljust(max_k)}[/dim]  {v}")
+                self._console().print(f"  [dim]{k.ljust(max_k)}[/dim]  {v}")
             if title:
-                self.console.print()
+                self._console().print()
         else:
             if title:
                 print(f"\n{title}")
@@ -255,7 +261,7 @@ class OutputFormatter:
         if self.json_mode:
             return
         if self.supports_color():
-            self.console.print(f"\n[header]═══ {title} ═══[/header]\n")
+            self._console().print(f"\n[header]═══ {title} ═══[/header]\n")
         else:
             print(f"\n═══ {title} ═══\n")
 
@@ -269,7 +275,7 @@ class OutputFormatter:
         if self.json_mode:
             return
         if self.supports_color():
-            self.console.print(f"\n[bold]── {title} ──[/bold]")
+            self._console().print(f"\n[bold]── {title} ──[/bold]")
         else:
             print(f"\n── {title} ──")
 
@@ -283,11 +289,11 @@ class OutputFormatter:
             try:
                 from rich.markdown import Markdown
 
-                self.console.print(
+                self._console().print(
                     Panel(Markdown(content), title=title, border_style=style)
                 )
             except ImportError:
-                self.console.print(Panel(content, title=title, border_style=style))
+                self._console().print(Panel(content, title=title, border_style=style))
         else:
             if title:
                 print(f"\n── {title} ──")

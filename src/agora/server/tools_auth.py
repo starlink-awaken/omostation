@@ -45,6 +45,8 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
                 req = _current_http_request.get()
             except LookupError:
                 req = get_http_request()
+            if req is None:
+                raise MCPAuthError(401, "No HTTP request context")
             logger.info("auth check all headers", headers=dict(req.headers))
             auth_header = req.headers.get("Authorization", "")
             if auth_header.startswith("Bearer "):
