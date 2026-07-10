@@ -173,6 +173,14 @@ class ProxyManager:
         mcp_endpoint = svc.get("mcp_endpoint", "")
         command = svc.get("command", "")
         args = svc.get("args", [])
+        # 治本 (backend dead=20 根因, 自 2026-07-01 起 15522 次): backend 是 path 依赖
+        # (非 uv workspace member), "--package X" 报 "workspace does not have a member X".
+        # backend 已 editable 装进 agora venv, 直接 "python -m MOD" 即可.
+        # 原地 sanitize svc["args"], 让所有后续读取 (日志拼接 line219 / subprocess 启动) 都生效.
+        if "--package" in args:
+            _pi = args.index("--package")
+            args = args[:_pi] + args[_pi + 2 :]
+            svc["args"] = args
         cwd = svc.get("cwd")
         env = svc.get("env")
         init_timeout = svc.get("init_timeout", 10)
