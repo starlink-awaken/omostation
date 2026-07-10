@@ -394,6 +394,11 @@ rules:
       reason: 'Consumed by 1 project(s) (R87 benchmark suite baseline — single consumer for now)'
       consumers:
         - bus-foundation[dev]
+    - name: hypothesis
+      baseline: '>=6.0'
+      reason: 'Consumed by 1 project(s) (R97 property-based testing — single consumer for now)'
+      consumers:
+        - bus-foundation[dev]
     - name: ruff
       baseline: '>=0.8.0'
       reason: 'Consumed by 12 project(s)'
