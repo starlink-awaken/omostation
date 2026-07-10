@@ -245,9 +245,9 @@ class CalendarTool(BaseTool):
             start = parse_dt(start_str)
             end = parse_dt(end_str)
             if start.tzinfo is None:
-                start = start.replace(tzinfo=datetime.UTC)
+                start = start.replace(tzinfo=datetime.timezone.utc)
             if end.tzinfo is None:
-                end = end.replace(tzinfo=datetime.UTC)
+                end = end.replace(tzinfo=datetime.timezone.utc)
         except (ValueError, TypeError) as exc:
             return ToolResult(
                 success=False,

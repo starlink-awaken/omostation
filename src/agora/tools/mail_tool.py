@@ -154,7 +154,7 @@ def _decode_payload(msg: EmailMessage) -> str:
                 try:
                     charset = part.get_content_charset() or "utf-8"
                     payload = part.get_payload(decode=True)
-                    if payload is None:
+                    if not isinstance(payload, bytes):
                         continue
                     return payload.decode(charset, errors="replace")
                 except (ValueError, TypeError):
@@ -163,7 +163,7 @@ def _decode_payload(msg: EmailMessage) -> str:
         try:
             charset = msg.get_content_charset() or "utf-8"
             payload = msg.get_payload(decode=True)
-            if payload is None:
+            if not isinstance(payload, bytes):
                 return ""
             return payload.decode(charset, errors="replace")
         except (ValueError, TypeError):

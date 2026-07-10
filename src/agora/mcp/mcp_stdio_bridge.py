@@ -116,6 +116,9 @@ class MCPStdioBridge:
             }
         )
 
+        assert self._proc is not None
+        assert self._proc.stdin is not None
+        assert self._proc.stdout is not None
         try:
             self._proc.stdin.write(poc_request + "\n")
             self._proc.stdin.flush()
