@@ -2621,6 +2621,39 @@ gac:
       created_at: 2026-07-08
       source_type: native
 
+    # -- ADR-0179 声明/执行一致性 + 运行时探测真值 --
+    - id: CR-DECL-EXEC-CONSISTENCY
+      dimension: X4
+      layer: L1
+      name: 声明/执行一致性
+      description: "system_health.yaml 声明的 port_listening/status 必须与实时 lsof/launchctl 交叉一致, 不一致 = drift."
+      check_type: consistency_drift
+      source_ref: .omo/_knowledge/decisions/0179-runtime-probe-false-positive-treatment.md
+      executor:
+        - ci_gate
+        - gac_local_gate
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-10"
+      adr: "ADR-0179"
+
+    - id: CR-RUNTIME-PROBE-TRUTH
+      dimension: X4
+      layer: L1
+      name: 运行时探测真值
+      description: "runtime 健康探测禁止仅凭 launcher (launchd/docker) PID 判定 running; 必须交叉校验端口监听 / HTTP health / 日志新鲜度 (对 stdio 服务), 命中不符降级 degraded."
+      check_type: consistency_drift
+      source_ref: .omo/_knowledge/decisions/0179-runtime-probe-false-positive-treatment.md
+      executor:
+        - ci_gate
+        - gac_local_gate
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-10"
+      adr: "ADR-0179"
+
   drift:
     schedule: "daily"
     auto_heal: false

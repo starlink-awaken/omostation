@@ -156,6 +156,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0177 | P79 Phase 4 文档刷新 (ARCHITECTURE.md port-registry) | ACCEPTED | 2026-07-08 | governance-team | 0177-p79-phase4-docs-refresh.md |
 
 | 0178 | P79 Phase 5 收官 (SOP + GaC 173 冻结 + 结项) | ACCEPTED | 2026-07-08 | governance-team | 0178-p79-phase5-closeout.md |
+| 0179 | Runtime 探测假阳性治理 (声明/执行一致性 + 交叉校验) | ACCEPTED | 2026-07-10 | governance-team | 0179-runtime-probe-false-positive-treatment.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
 
@@ -245,6 +246,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0177: P79 Phase 4 (文档刷新) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0177-p79-phase4-docs-refresh.md
 - ADR-0174: P79 Phase 1 (Foundry v2 cron 集成) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0174-p79-phase1-foundry-v2-cron.md
 - ADR-0178: P79 Phase 5 (收官: SOP + GaC 冻结) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0178-p79-phase5-closeout.md
+- ADR-0179: Runtime 探测假阳性治理 (声明/执行一致性 + 交叉校验) — **ACCEPTED** | 2026-07-10 | omostation P79 | 0179-runtime-probe-false-positive-treatment.md
 
 ---
 
