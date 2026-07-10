@@ -111,8 +111,7 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
     runtime_top_levels = {
         top
         for item in registry.get("assets", [])
-        if item.get("runtime")
-        and (top := _asset_ref_to_top_level(item.get("ref", "")))
+        if item.get("runtime") and (top := _asset_ref_to_top_level(item.get("ref", "")))
     }
 
     registered_top_levels = sorted(
@@ -126,9 +125,7 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
         }
     )
     observed_top_levels = sorted(
-        top
-        for top in _top_level_entries(omo_dir)
-        if top not in runtime_top_levels
+        top for top in _top_level_entries(omo_dir) if top not in runtime_top_levels
     )
 
     missing_registered_roots = sorted(

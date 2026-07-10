@@ -548,7 +548,10 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
 
                 self.send_response(code)
                 self.send_header("Content-Type", "application/json")
-                self.send_header("Access-Control-Allow-Origin", f"http://localhost:{os.environ.get('COCKPIT_DASHBOARD_PORT', '8090')}")
+                self.send_header(
+                    "Access-Control-Allow-Origin",
+                    f"http://localhost:{os.environ.get('COCKPIT_DASHBOARD_PORT', '8090')}",
+                )
                 self.end_headers()
                 self.wfile.write(json.dumps(data, default=str).encode())
 
