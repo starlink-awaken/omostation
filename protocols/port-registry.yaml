@@ -100,6 +100,11 @@ ports:
     transport: http
     status: active
     note: "runtime L1 service (cockpit dashboard constants.py 引用)"
+  8745:
+    name: bus-foundation-metrics
+    transport: http
+    status: active
+    note: "bus-foundation R89 /metrics HTTP endpoint (default; set BUS_METRICS_PORT env to override)"
   11434:
     name: ollama
     transport: http
