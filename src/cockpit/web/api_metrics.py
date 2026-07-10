@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Query
@@ -50,59 +50,29 @@ def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | Non
         return None
 
 
-def generate_time_series_data(hours: int, base_value: float, variance: float) -> list[dict]:
-    """生成时间序列数据。"""
-    data = []
-    now = datetime.now(UTC)
-    interval = max(1, hours // 48)  # 最多 48 个数据点
-
-    for i in range(hours, 0, -interval):
-        timestamp = now - timedelta(hours=i)
-        value = base_value + (hash(str(timestamp)) % 100 - 50) * variance / 100
-        data.append(
-            {
-                "timestamp": timestamp.isoformat(),
-                "value": round(value, 2),
-            }
-        )
-
-    return data
-
-
 @router.get("/api/metrics/trend")
 async def get_metrics_trend(
     range: str = Query("24h", description="时间范围: 1h, 6h, 24h, 7d"),
 ):
     """获取指标趋势。"""
-    # 解析时间范围
-    range_hours = {
-        "1h": 1,
-        "6h": 6,
-        "24h": 24,
-        "7d": 168,
-    }.get(range, 24)
-
     # 获取 L4 健康数据
     l4_data = run_l4_script("health_monitor.py", ["--output", "json"])
+    if not l4_data:
+        return {
+            "health_score": [],
+            "requests": [],
+            "error_rate": [],
+            "data_quality": "unavailable",
+            "degraded_reasons": ["L4 health_monitor.py unavailable", "historical metric source unavailable"],
+        }
 
-    # 基础值
-    health_score_base = 95
-    requests_base = 500
-    error_rate_base = 2
-
-    if l4_data:
-        # 从 L4 数据计算健康分数
-        healthy_count = l4_data.get("healthy_count", 0)
-        total_domains = l4_data.get("total_domains", 1)
-        health_score_base = int(healthy_count / total_domains * 100) if total_domains > 0 else 100
-
-    # 生成趋势数据
-    health_score_data = generate_time_series_data(range_hours, health_score_base, 5)
-    requests_data = generate_time_series_data(range_hours, requests_base, 200)
-    error_rate_data = generate_time_series_data(range_hours, error_rate_base, 3)
-
+    healthy_count = l4_data.get("healthy_count", 0)
+    total_domains = l4_data.get("total_domains", 0)
+    health_score = round(healthy_count / total_domains * 100) if total_domains else 0
     return {
-        "health_score": health_score_data,
-        "requests": requests_data,
-        "error_rate": error_rate_data,
+        "health_score": [{"timestamp": datetime.now(UTC).isoformat(), "value": health_score}],
+        "requests": [],
+        "error_rate": [],
+        "data_quality": "partial",
+        "degraded_reasons": ["只有当前健康快照，暂无历史请求和错误率数据"],
     }

@@ -613,7 +613,7 @@ def main() -> int:
                 "  [cyan]cockpit context[/]          — 系统上下文 (Phase/P0/约束)\n"
                 "  [cyan]cockpit cards[/]            — CARDS 卡片列表\n"
                 "  [cyan]cockpit cards --check[/]    — 操作合规检查\n"
-                "  [cyan]cockpit vault search KEY[/] — 搜索知识库\n"
+                "  [cyan]cockpit vault KEY[/]        — 搜索知识库\n"
                 "  [cyan]cockpit health[/]           — 一键系统健康\n"
                 "  [cyan]cockpit brief[/]            — 会话简报\n\n"
                 "[bold]研究对象[/]\n"

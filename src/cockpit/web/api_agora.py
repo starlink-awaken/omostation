@@ -5,13 +5,63 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import time
+from collections import deque
 from datetime import datetime
 from pathlib import Path
+from threading import Lock
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Form, Query, Request
 from fastapi.responses import JSONResponse
 
 router = APIRouter()
+
+_SYSTEM_METRIC_HISTORY: deque[dict] = deque(maxlen=2016)
+_SYSTEM_METRIC_LOCK = Lock()
+
+
+def _collect_system_snapshot() -> dict:
+    """Collect one real host snapshot; callers decide how much history to return."""
+    import psutil
+
+    now = time.time()
+    net = psutil.net_io_counters()
+    network_total = (net.bytes_sent + net.bytes_recv) if net else 0
+    with _SYSTEM_METRIC_LOCK:
+        previous = _SYSTEM_METRIC_HISTORY[-1] if _SYSTEM_METRIC_HISTORY else None
+        elapsed = max(now - float(previous.get("_epoch", now)), 0.001) if previous else 1.0
+        previous_network = int(previous.get("_network_total", network_total)) if previous else network_total
+        snapshot = {
+            "_epoch": now,
+            "_network_total": network_total,
+            "timestamp": datetime.now().astimezone().isoformat(),
+            "cpu": round(float(psutil.cpu_percent(interval=0.05)), 1),
+            "memory": round(float(psutil.virtual_memory().percent), 1),
+            "disk": round(float(psutil.disk_usage("/").percent), 1),
+            "network": round(max(network_total - previous_network, 0) / elapsed, 1),
+        }
+        _SYSTEM_METRIC_HISTORY.append(snapshot)
+        return snapshot
+
+
+def _read_runtime_services() -> list[dict]:
+    try:
+        from cockpit.adapters.runtime import i0_services
+
+        raw = i0_services() if i0_services else []
+    except Exception:
+        return []
+    if isinstance(raw, dict):
+        raw = raw.get("items") or raw.get("services") or []
+    return [item for item in raw if isinstance(item, dict)] if isinstance(raw, list) else []
+
+
+def _runtime_status(service: dict) -> str:
+    if service.get("health") in {"unhealthy", "error", "unreachable"} or service.get("port_listening") is False:
+        return "offline"
+    if service.get("health") in {"degraded", "warning"}:
+        return "degraded"
+    return "online" if service.get("port_listening") is True or service.get("status") in {"running", "active", "idle", "configured"} else "degraded"
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
@@ -156,74 +206,51 @@ async def api_metrics_history():
 
 
 @router.get("/api/metrics/system")
-async def api_metrics_system(range: str = "1h"):
+async def api_metrics_system(range_name: str = Query("1h", alias="range")):
     """📈 系统硬件资源监控指标历史"""
-    import math
-    from datetime import datetime, timedelta
+    window_seconds = {"1h": 3600, "6h": 21600, "24h": 86400, "7d": 604800}.get(range_name, 3600)
+    try:
+        _collect_system_snapshot()
+    except Exception as e:  # defensive fallback
+        return JSONResponse(
+            {"error": f"system metrics unavailable: {e}", "data_quality": "unavailable", "degraded_reasons": ["psutil snapshot failed"]},
+            status_code=503,
+        )
 
-    points_count = 12
-    if range == "6h":
-        points_count = 36
-    elif range == "24h":
-        points_count = 72
-    elif range == "7d":
-        points_count = 168
+    cutoff = time.time() - window_seconds
+    with _SYSTEM_METRIC_LOCK:
+        history = [item.copy() for item in _SYSTEM_METRIC_HISTORY if float(item["_epoch"]) >= cutoff]
 
-    now = datetime.now()
-    cpu_data = []
-    mem_data = []
-    disk_data = []
-    net_data = []
+    def series(key: str) -> list[dict]:
+        return [{"timestamp": item["timestamp"], "value": item[key]} for item in history]
 
-    for i in range(points_count):
-        ts = (now - timedelta(minutes=(points_count - i) * 5)).strftime("%H:%M")
-
-        # Use math.sin and mod for deterministic fluctuations without random
-        cpu_val = round(45.0 + 15.0 * math.sin(i * 0.5) + (i % 4) * 1.5 - 2.0, 1)
-        mem_val = round(62.0 + 5.0 * math.cos(i * 0.3) + (i % 3) * 1.0 - 1.0, 1)
-        disk_val = round(48.2 + i * 0.05 + (i % 5) * 0.02 - 0.04, 1)
-        net_val = round(25.0 + 12.0 * math.sin(i * 0.7) + (i % 6) * 2.0 - 5.0, 1)
-
-        cpu_data.append({"timestamp": ts, "value": max(0.0, min(100.0, cpu_val))})
-        mem_data.append({"timestamp": ts, "value": max(0.0, min(100.0, mem_val))})
-        disk_data.append({"timestamp": ts, "value": max(0.0, min(100.0, disk_val))})
-        net_data.append({"timestamp": ts, "value": max(0.0, net_val)})
-
-    return JSONResponse({"cpu": cpu_data, "memory": mem_data, "disk": disk_data, "network": net_data})
+    return JSONResponse(
+        {
+            "cpu": series("cpu"),
+            "memory": series("memory"),
+            "disk": series("disk"),
+            "network": series("network"),
+            "source": "psutil",
+            "data_quality": "live",
+            "sample_count": len(history),
+        }
+    )
 
 
 @router.get("/api/services/status")
 async def api_services_status():
-    """🔌 格式化返回各个服务节点的 CPU/内存 负载状态"""
-    core_services = [
-        {"name": "Agora Mesh", "status": "online", "uptime": "99.9%", "base_cpu": 8.5, "base_mem": 12.0},
-        {"name": "Minerva Research", "status": "online", "uptime": "99.5%", "base_cpu": 45.2, "base_mem": 35.5},
-        {"name": "SharedBrain Bridge", "status": "offline", "uptime": "0%", "base_cpu": 0.0, "base_mem": 0.0},
-        {"name": "LLM Gateway", "status": "degraded", "uptime": "98.2%", "base_cpu": 15.0, "base_mem": 45.0},
-        {"name": "KOS Substrate", "status": "online", "uptime": "100%", "base_cpu": 2.1, "base_mem": 8.0},
-        {"name": "gbrain-index", "status": "online", "uptime": "99.9%", "base_cpu": 12.4, "base_mem": 24.5},
+    """Return runtime service status without inventing CPU or memory values."""
+    services = _read_runtime_services()
+    formatted = [
+        {
+            "name": service.get("name") or service.get("id") or "unnamed-service",
+            "status": _runtime_status(service),
+            "cpu": service.get("cpu"),
+            "memory": service.get("memory"),
+            "uptime": service.get("uptime") or service.get("uptime_seconds"),
+            "layer": service.get("layer"),
+            "health": service.get("health"),
+        }
+        for service in services
     ]
-
-    formatted = []
-    for idx, svc in enumerate(core_services):
-        if svc["status"] == "online":
-            cpu = round(svc["base_cpu"] + (idx % 3) * 1.2 - 0.6, 1)
-            mem = round(svc["base_mem"] + (idx % 2) * 0.8 - 0.4, 1)
-        elif svc["status"] == "degraded":
-            cpu = round(svc["base_cpu"] + (idx % 4) * 2.5 - 3.0, 1)
-            mem = round(svc["base_mem"] + (idx % 3) * 1.5 - 1.5, 1)
-        else:
-            cpu = 0.0
-            mem = 0.0
-
-        formatted.append(
-            {
-                "name": svc["name"],
-                "status": svc["status"],
-                "cpu": cpu,
-                "memory": mem,
-                "uptime": svc["uptime"],
-            }
-        )
-
-    return JSONResponse({"status": "ok", "items": formatted})
+    return JSONResponse({"status": "ok", "items": formatted, "source": "runtime-probe", "data_quality": "live"})
