@@ -173,13 +173,46 @@ class ProxyManager:
         mcp_endpoint = svc.get("mcp_endpoint", "")
         command = svc.get("command", "")
         args = svc.get("args", [])
-        # 治本 (backend dead=20 根因, 自 2026-07-01 起 15522 次): backend 是 path 依赖
-        # (非 uv workspace member), "--package X" 报 "workspace does not have a member X".
-        # backend 已 editable 装进 agora venv, 直接 "python -m MOD" 即可.
-        # 原地 sanitize svc["args"], 让所有后续读取 (日志拼接 line219 / subprocess 启动) 都生效.
-        if "--package" in args:
+        # 治本 (backend dead=20 真根因): --package X 无 --directory 时在 agora 目录跑报
+        # "workspace does not have a member X" (X 非 agora workspace member) + agora venv
+        # 缺大部分 backend 包. 加 --directory 让 backend 回各自 workspace:
+        #   kairon 包 → projects/kairon (保 --package, kairon workspace member)
+        #   独立项目 (omo/ecos/cockpit) → projects/<X> (去 --package, root package -m)
+        if "--package" in args and "--directory" not in args:
+            from pathlib import Path
+
+            _ws_root = (
+                Path(__file__).resolve().parents[5]
+            )  # agora/src/agora/mcp_proxy → workspace root
+            _kairon = frozenset(
+                {
+                    "eidos",
+                    "iris",
+                    "kronos",
+                    "minerva",
+                    "sophia",
+                    "codeanalyze",
+                    "forge",
+                    "sot-bridge",
+                }
+            )
             _pi = args.index("--package")
-            args = args[:_pi] + args[_pi + 2 :]
+            _pkg = args[_pi + 1] if _pi + 1 < len(args) else ""
+            if _pkg in _kairon:
+                _ri = args.index("run") + 1
+                args = (
+                    args[:_ri]
+                    + ["--directory", str(_ws_root / "projects" / "kairon")]
+                    + args[_ri:]
+                )
+            else:
+                args = args[:_pi] + args[_pi + 2 :]  # 去 --package X
+                _ri = args.index("run") + 1
+                args = (
+                    args[:_ri]
+                    + ["--directory", str(_ws_root / "projects" / _pkg)]
+                    + args[_ri:]
+                )
             svc["args"] = args
         cwd = svc.get("cwd")
         env = svc.get("env")
