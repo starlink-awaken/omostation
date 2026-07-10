@@ -65,7 +65,6 @@ from agora.mcp_tools import (  # type: ignore[import-not-found]
     tool_ping,
     tool_post_result,
     tool_swarm_dispatch,
-    tool_unregister_service,
     validate_local_endpoint,
 )
 from agora.tools.base import _ParamError  # type: ignore[import-not-found]
