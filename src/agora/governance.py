@@ -125,11 +125,14 @@ class KeyManager:
                 # Legacy format: plain sha256
                 if hashlib.sha256(secret.encode()).hexdigest() != stored:
                     continue
+            raw_scopes = _json_loads(d["scopes"])
+            if not isinstance(raw_scopes, list):
+                raw_scopes = []
             key = ApiKey(
                 key_id=d["key_id"],
                 name=d["name"],
                 secret_hash=d["secret_hash"],
-                scopes=_json_loads(d["scopes"]),
+                scopes=raw_scopes,
                 tenant=d["tenant"],
                 created_at=d["created_at"],
                 expires_at=d["expires_at"],
@@ -171,9 +174,12 @@ class KeyManager:
                 "revoked",
             ],
         )
+        raw_scopes = _json_loads(d["scopes"])
+        if not isinstance(raw_scopes, list):
+            raw_scopes = []
         self.revoke(key_id)
         return self.create_key(
-            d["name"], _json_loads(d["scopes"]), d["tenant"], expires_days
+            d["name"], raw_scopes, d["tenant"], expires_days
         )
 
     def revoke(self, key_id: str) -> bool:

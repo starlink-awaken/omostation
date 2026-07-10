@@ -30,10 +30,14 @@ from pathlib import Path
 import structlog
 from fastmcp import FastMCP
 from fastmcp.server.middleware import AuthMiddleware
+from typing import TYPE_CHECKING
 
 from agora.core.state import get_event_bus, get_registry, get_router  # type: ignore[import-not-found]
 from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 from agora.mcp_proxy.manager import ProxyManager  # type: ignore[import-not-found]
+
+if TYPE_CHECKING:
+    from agora.task_manager import TaskManager
 
 # BOS URI 解析器 (P45 W1) — 统一 POC_SERVICES 路由
 from agora.mcp.bos_resolver import resolve_bos_uri as _resolve_bos_uri  # type: ignore[import-not-found]
@@ -45,6 +49,7 @@ from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[impor
 # BOS 中间件 (P46 W0) — 限流/熔断/缓存
 from agora.mcp.bos_middleware import bos_rate_limiter, bos_circuit_breaker, bos_cache  # type: ignore[import-not-found]
 from agora.mcp.bos_middleware import config_watcher  # type: ignore[import-not-found]
+from agora.mcp.bos_metrics import bos_metrics  # type: ignore[import-not-found]
 
 # 响应工具 (God Module 拆分)
 from agora.server._response import (
