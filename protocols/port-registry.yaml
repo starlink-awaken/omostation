@@ -150,6 +150,41 @@ ports:
     transport: http
     status: active
     note: "omlx local MLX text mythos (Qwythos-9B mxfp4, mlx_lm)"
+  8086:
+    name: omlx-deepseek-v4-flash
+    transport: http
+    status: active
+    note: "omlx 本地新接入 (DeepSeek-V4 Flash MoE, mlx_lm)"
+  8087:
+    name: omlx-deepseek-v4-pro
+    transport: http
+    status: active
+    note: "omlx 本地新接入 (DeepSeek-V4 Pro MoE)"
+  8088:
+    name: omlx-mistral-medium-128b
+    transport: http
+    status: active
+    note: "omlx 本地新接入 (Mistral-Medium 128B, 重, 按需)"
+  8089:
+    name: omlx-nemotron-omni
+    transport: http
+    status: active
+    note: "omlx 本地新接入 (Nemotron Omni 30B 推理)"
+  8186:
+    name: omlx-ornith-9b
+    transport: http
+    status: active
+    note: "omlx 本地新接入 (Ornith 1.0 9B VLM)"
+  8187:
+    name: omlx-ornith-35b
+    transport: http
+    status: active
+    note: "omlx 本地新接入 (Ornith 1.0 35B VLM)"
+  8188:
+    name: omlx-embed-bge-m3
+    transport: http
+    status: active
+    note: "omlx 本地新接入 (bge-m3 embedding)"
   # ── deprecated / converged (功能已收敛到 cockpit, 保留仅用于历史追溯) ──
   8765:
     name: minerva-kos-ontoderive
