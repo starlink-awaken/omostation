@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 from datetime import datetime
+from typing import Any
 
 from agora.cli.output import OutputFormatter
 from agora.core.state import get_registry  # type: ignore[import-not-found]
@@ -307,7 +308,7 @@ def _check_proxy_services() -> dict:
 
 def _get_system_metrics() -> dict:
     """Collect system health metrics (CPU, memory, disk)."""
-    metrics = {}
+    metrics: dict[str, Any] = {}
     try:
         import psutil
 
@@ -322,7 +323,7 @@ def _get_system_metrics() -> dict:
             "free_gb": round(psutil.disk_usage("/").free / (1024**3), 1),
             "total_gb": round(psutil.disk_usage("/").total / (1024**3), 1),
         }
-        metrics["load_avg"] = [round(l, 2) for l in psutil.getloadavg()]
+        metrics["load_avg"] = [round(load, 2) for load in psutil.getloadavg()]
     except ImportError:
         metrics["error"] = "psutil not installed — system metrics unavailable"
     except Exception as e:  # defensive fallback

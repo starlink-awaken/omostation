@@ -268,7 +268,9 @@ class ProxyRegistry:
 
                     loop = asyncio.get_running_loop()
                     for cb in self._unload_callbacks:
-                        loop.create_task(cb(service_name))
+                        task = cb(service_name)
+                        if task is not None:
+                            asyncio.ensure_future(task)
                 except RuntimeError:
                     pass  # No running event loop — skip callback
                 except Exception as e:  # defensive fallback
@@ -363,7 +365,9 @@ class ProxyRegistry:
         config_map: dict[str, dict] = {}
         if proxy_configs:
             for cfg in proxy_configs:
-                config_map[cfg.get("name")] = cfg
+                name = cfg.get("name")
+                if isinstance(name, str):
+                    config_map[name] = cfg
 
         services = service_registry.list_all()
         for svc in services:
@@ -393,11 +397,11 @@ class ProxyRegistry:
                 continue
 
             # stdio services: use command/args from proxy configs
-            cfg = config_map.get(svc.name)
-            if cfg:
-                command = cfg.get("command", "")
-                args = cfg.get("args", [])
-                endpoint = cfg.get("mcp_endpoint", "")
+            svc_cfg = config_map.get(svc.name)
+            if svc_cfg:
+                command = svc_cfg.get("command", "")
+                args = svc_cfg.get("args", [])
+                endpoint = svc_cfg.get("mcp_endpoint", "")
                 if command or endpoint:
                     if lazy:
                         self.save_config(svc.name, cfg)

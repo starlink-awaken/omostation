@@ -45,7 +45,7 @@ def _load_overrides() -> dict:
 
 def _scan_bosroute_nodes() -> list[dict]:
     """Scan BOSRoute M1 nodes and yield route entries."""
-    routes = []
+    routes: list[dict] = []
     bos_dir = L0_M1 / "bosroute"
     if not bos_dir.exists():
         return routes
@@ -78,7 +78,7 @@ def _scan_bosroute_nodes() -> list[dict]:
 
 def _scan_component_nodes() -> list[dict]:
     """Scan Component M1 nodes with BOS_URI protocol for service definitions."""
-    comps = []
+    comps: list[dict] = []
     comp_dir = L0_M1 / "component"
     if not comp_dir.exists():
         return comps
@@ -146,6 +146,7 @@ def load_routes() -> dict[str, str]:
 
     # Build from BOSRoute nodes
     routes = {}
+    assert _Cache._routes is not None
     for r in _Cache._routes:
         svc = r["service"]
         r["uri"]
@@ -171,6 +172,7 @@ def load_services() -> list[dict]:
     svc_defs = {}
 
     # Build from Component M1 nodes
+    assert _Cache._services is not None
     for c in _Cache._services:
         name = c["name"]
         svc_defs[name] = {
@@ -209,6 +211,7 @@ def load_known_services() -> dict[str, dict]:
 
     # Build from Component M1
     known = {}
+    assert _Cache._services is not None
     for c in _Cache._services:
         name = c["name"]
         known[name] = {

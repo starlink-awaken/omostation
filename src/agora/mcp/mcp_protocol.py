@@ -33,7 +33,8 @@ plus the required MCP ``initialize`` handshake (2024-11-05).
 import asyncio
 import logging
 
-from agora.mcp_tools import ToolContext, _ParamError  # type: ignore[import-not-found]
+from agora.mcp_tools import ToolContext
+from agora.tools.base import _ParamError  # type: ignore[import-not-found]
 
 _log = logging.getLogger(__name__)
 _SUPPORTED_PROTOCOL_VERSION = "2024-11-05"

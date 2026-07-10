@@ -52,7 +52,6 @@ from agora.mcp.mcp_protocol import (  # type: ignore[import-not-found]
 from agora.mcp_tools import (  # type: ignore[import-not-found]
     MCPToolRegistry,
     ToolContext,
-    _ParamError,
     build_default_registry,
     tool_broadcast_event,
     tool_evolution_status,
@@ -66,10 +65,11 @@ from agora.mcp_tools import (  # type: ignore[import-not-found]
     tool_ping,
     tool_post_result,
     tool_swarm_dispatch,
-    tool_synapse_hello,
-    tool_synapse_ping,
-    tool_tasks_list,
+    tool_unregister_service,
+    validate_local_endpoint,
 )
+from agora.tools.base import _ParamError  # type: ignore[import-not-found]
+from agora.tools.dt import tool_tasks_list  # type: ignore[import-not-found]
 
 _log = logging.getLogger(__name__)
 
