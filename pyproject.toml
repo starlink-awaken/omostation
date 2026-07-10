@@ -41,7 +41,7 @@ Issues = "https://github.com/starlink-awaken/agora/issues"
 [project.scripts]
 agora = "agora.cli:main"
 agora-mcp = "agora.server.mcp:main"
-agora-mcp-gateway = "agora.mcp_gateway:main"
+agora-mcp-gateway = "agora.auth.mcp_gateway:main"
 agora-watchdog = "agora.agora_watchdog:main"
 
 [project.optional-dependencies]
