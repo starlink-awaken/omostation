@@ -18,6 +18,17 @@ import sys
 import json
 from pathlib import Path
 
+# 让脚本能导入 projects/omo/src/omo 包, 从而复用 OMO 内核的 write_readiness_snapshot.
+_OMO_SRC = Path(__file__).resolve().parents[1] / "projects" / "omo" / "src"
+if str(_OMO_SRC) not in sys.path:
+    sys.path.insert(0, str(_OMO_SRC))
+
+try:
+    from omo.omo_readiness import write_readiness_snapshot as _omo_write_readiness_snapshot
+
+    _HAS_OMO_READINESS = True
+except Exception:  # defensive fallback
+    _HAS_OMO_READINESS = False
 
 
 def run(cmd: str, cwd: Path | None = None) -> tuple[int, str]:
@@ -208,6 +219,23 @@ def write_readiness_snapshot(
             "C_L1_starting": 60,
         },
     }
+    if _HAS_OMO_READINESS:
+        try:
+            _omo_write_readiness_snapshot(
+                root / ".omo",
+                score=total,
+                grade=grade,
+                dimensions=snapshot["dimensions"],
+                thresholds=snapshot["thresholds"],
+                actor="governance-readiness",
+                source_ref="bin/governance-readiness.py",
+            )
+            return
+        except Exception as exc:  # defensive fallback
+            print(f"⚠️  快照写入失败: {exc}")
+            return
+
+    # Fallback: 当 omo 包不可用时, 通过 OMO CLI 路由 (若存在).
     payload = _json.dumps(snapshot, ensure_ascii=False)
     cmd = f"omo readiness snapshot '{payload}'"
     rc, out = run(cmd, cwd=root)
