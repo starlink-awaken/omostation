@@ -26,13 +26,13 @@ Layer: L3
 """Tool implementations and typed registry for the BOS MCP server."""
 
 
-import dataclasses  # noqa: E402
-import json  # noqa: E402
-import logging  # noqa: E402
-import threading  # noqa: E402
-from collections.abc import Callable  # noqa: E402
-from pathlib import Path  # noqa: E402
-from typing import Any  # noqa: E402
+import dataclasses
+import json
+import logging
+import threading
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
 # TODO-migrate: from nucleus.Z_Spore.interfaces.surface_contract import SurfaceContract, SurfaceContractError, SurfaceIngressKind
 SurfaceContract: Any = None

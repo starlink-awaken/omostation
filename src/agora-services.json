@@ -565,6 +565,25 @@
       "provider_info": null,
       "healthy": true,
       "last_health_check": 0.0
+    },
+    {
+      "name": "kos",
+      "description": "Hybrid retrieval engine — FTS5 + LanceDB + knowledge graph + GraphRAG",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "http://localhost:8765/mcp",
+      "health_endpoint": "http://localhost:8766/health",
+      "port": 8766,
+      "tags": [
+        "retrieval",
+        "knowledge",
+        "graphrag",
+        "search"
+      ],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
     }
   ]
 }

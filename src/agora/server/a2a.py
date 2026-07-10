@@ -81,5 +81,5 @@ async def a2a_send_endpoint(request):
         res = transport.send_message(target_agent_id, message)
         return JSONResponse(res)
 
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)

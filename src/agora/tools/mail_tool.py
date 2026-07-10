@@ -35,20 +35,20 @@ Extracted metadata is injected into FactGraph as subject-predicate-object triple
 """
 
 
-import email  # noqa: E402
-import imaplib  # noqa: E402
-import logging  # noqa: E402
-import os  # noqa: E402
-import smtplib  # noqa: E402
-import ssl  # noqa: E402
-from datetime import datetime  # noqa: E402
-from email.errors import MessageError  # noqa: E402
-from email.header import decode_header  # noqa: E402
-from email.message import EmailMessage  # noqa: E402
-from typing import Any  # noqa: E402
+import email
+import imaplib
+import logging
+import os
+import smtplib
+import ssl
+from datetime import datetime
+from email.errors import MessageError
+from email.header import decode_header
+from email.message import EmailMessage
+from typing import Any
 
-from agora.mcp.interfaces.base_tool import BaseTool  # type: ignore[import-not-found]  # noqa: E402
-from agora.mcp.interfaces.tool_interface_contract import (  # type: ignore[import-not-found]  # noqa: E402
+from agora.mcp.interfaces.base_tool import BaseTool  # type: ignore[import-not-found]
+from agora.mcp.interfaces.tool_interface_contract import (  # type: ignore[import-not-found]
     ToolConfig,
     ToolRequest,
     ToolResult,
@@ -87,7 +87,7 @@ except ImportError:
 def _inject_factgraph(triples: list[dict[str, Any]]) -> None:
     """Inject email metadata triples into FactGraph. Fail silently."""
     try:
-        FactGraph = __import__(  # noqa: N806
+        FactGraph = __import__(
             "nucleus.D_Memory.fact_graph",
             fromlist=["FactGraph"],
         ).FactGraph
@@ -256,7 +256,7 @@ class MailTool(BaseTool):
             try:
                 self._imap_conn.select()
                 return self._imap_conn
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 self._imap_conn = None
 
         if self._provider == "gmail":
@@ -265,7 +265,7 @@ class MailTool(BaseTool):
             conn = imaplib.IMAP4(self._imap_host)
             try:
                 conn.starttls()
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
 
         self._authenticate_imap(conn)
@@ -293,7 +293,7 @@ class MailTool(BaseTool):
             try:
                 self._smtp_conn.noop()
                 return self._smtp_conn
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 self._smtp_conn = None
 
         context = ssl.create_default_context()
@@ -305,7 +305,7 @@ class MailTool(BaseTool):
             conn = smtplib.SMTP(self._smtp_host, 587)
             try:
                 conn.starttls(context=context)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
 
         self._authenticate_smtp(conn)
@@ -346,7 +346,7 @@ class MailTool(BaseTool):
                 account=None,
             )
             return result.get("access_token") if result else None
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return None
 
     def _refresh_oauth2_token(self) -> bool:
@@ -366,7 +366,7 @@ class MailTool(BaseTool):
                 return True
             self._oauth2_access_token = creds.token if creds else None
             return bool(self._oauth2_access_token)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return False
 
     # -------------------------------------------------------------------------
@@ -430,7 +430,7 @@ class MailTool(BaseTool):
                 )
                 result.append(decoded)
             return result
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.error("[MailTool] list_mailboxes failed: %s", exc)
             return []
 
@@ -499,12 +499,12 @@ class MailTool(BaseTool):
                             "sentiment": _analyze_sentiment(subject + " " + snippet),
                         }
                     )
-                except Exception as exc:  # noqa: BLE001  # defensive fallback
+                except Exception as exc:  # defensive fallback
                     _log.debug("[MailTool] Failed to parse email %s: %s", mid_b, exc)
                     continue
 
             return emails
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.error("[MailTool] fetch_emails failed: %s", exc)
             return []
 
@@ -601,7 +601,7 @@ class MailTool(BaseTool):
             )
 
             return {"success": True, "message_id": msg.get("Message-ID", "")}
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.error("[MailTool] send_email failed: %s", exc)
             return {"success": False, "error": str(exc)}
 
@@ -636,7 +636,7 @@ class MailTool(BaseTool):
             conn.select(folder)
             conn.store(email_id, "+FLAGS", "\\Seen")
             return True
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.error("[MailTool] mark_read failed: %s", exc)
             return False
 
@@ -695,11 +695,11 @@ class MailTool(BaseTool):
                             "date": msg.get("Date", ""),
                         }
                     )
-                except Exception:  # noqa: BLE001, S112  # defensive fallback
+                except Exception:  # defensive fallback
                     continue
 
             return emails
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.error("[MailTool] search_emails failed: %s", exc)
             return []
 
@@ -736,12 +736,12 @@ class MailTool(BaseTool):
         try:
             if self._imap_conn:
                 self._imap_conn.logout()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
         try:
             if self._smtp_conn:
                 self._smtp_conn.quit()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
         self._imap_conn = None
         self._smtp_conn = None

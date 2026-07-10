@@ -102,7 +102,7 @@ class PipelineMetricsCollector:
                 with open(filepath) as f:
                     data = json.load(f)
                     return PipelineMetrics(**data)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 logger.warning("metrics_load_failed path=%s error=%s", filepath, e)
                 return PipelineMetrics()
         return PipelineMetrics()
@@ -116,7 +116,7 @@ class PipelineMetricsCollector:
                 json.dump(data, f, indent=2, default=str)
 
             logger.debug(msg="metrics_saved", extra={"path": str(filepath)})
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("metrics_save_failed path=%s error=%s", filepath, e)
 
     def record_pipeline_execution(
@@ -195,7 +195,7 @@ class PipelineMetricsCollector:
                 },
                 source_uri="bos://agora/metrics",
             )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.warning(
                 "metrics_bus_emit_failed pipeline=%s err=%s", pipeline_name, e
             )

@@ -270,8 +270,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nInterrupted.")
         sys.exit(130)
-    except Exception as e:  # noqa: BLE001  # defensive fallback
-        from agora.cli.errors import CLIError  # noqa: F401
+    except Exception as e:  # defensive fallback
+        from agora.cli.errors import CLIError
         import traceback
 
         print(f"\nError: {e}", file=sys.stderr)

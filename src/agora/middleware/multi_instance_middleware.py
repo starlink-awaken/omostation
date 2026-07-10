@@ -36,7 +36,7 @@ class InstanceRouter:
         from urllib import request
 
         payload = json.dumps({"tool": tool, "arguments": args}).encode()
-        req = request.Request(  # noqa: S310
+        req = request.Request(
             f"{peer.a2a_endpoint}/api/call",
             data=payload,
             headers={
@@ -44,5 +44,5 @@ class InstanceRouter:
                 "X-Instance-Id": peer.instance_id,
             },
         )
-        resp = request.urlopen(req, timeout=30)  # noqa: S310
+        resp = request.urlopen(req, timeout=30)
         return json.loads(resp.read().decode())

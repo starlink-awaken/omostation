@@ -20,7 +20,7 @@ def cmd_route(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -58,7 +58,7 @@ def cmd_routes(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -76,6 +76,6 @@ def cmd_instance(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1

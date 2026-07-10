@@ -154,7 +154,7 @@ class ProxyForwardTool(Tool):
             return self.convert_result(result)
         except ValueError as e:
             return self.convert_result({"status": "error", "error": str(e)})
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return self.convert_result(
                 {"status": "error", "error": f"Proxy call failed: {str(e)[:200]}"}
             )
@@ -170,7 +170,7 @@ def _register_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
         if entry.tool_name in _registered_proxy_tools:
             try:
                 mcp_server.remove_tool(entry.tool_name)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
         mcp_server.add_tool(
             ProxyForwardTool(
@@ -188,7 +188,7 @@ def _unregister_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
         if entry.tool_name in _registered_proxy_tools:
             try:
                 mcp_server.remove_tool(entry.tool_name)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
             _registered_proxy_tools.discard(entry.tool_name)
 
@@ -208,7 +208,7 @@ async def proxy_sync_loop(registry_ref):
             proxy_configs = _load_proxy_services()
             await pm.registry.register_from_registry(registry_ref, proxy_configs)
             backoff = 10  # reset on success
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             logger.exception("proxy_sync_loop_error")
             backoff = min(backoff * 2, 120)
 
@@ -257,7 +257,7 @@ async def proxy_call(tool_name: str, arguments: str = "{}") -> dict:
     except ValueError as e:
         _bos_post_audit(_bos_uri, 400, int((__import__("time").time() - _t0) * 1000))
         return _error(str(e))
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         _bos_post_audit(_bos_uri, 500, int((__import__("time").time() - _t0) * 1000))
         return _error(f"Proxy call failed: {str(e)[:200]}")
 
@@ -481,7 +481,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         path = yaml_path or str(DEFAULT_REGISTRY_PATH)
         try:
             new_services = load_from_yaml(path)
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return _error(f"Failed to load routes from {path}: {e}")
 
         if not new_services:
@@ -547,7 +547,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
             )
         except subprocess.TimeoutExpired:
             return _error("OMO CLI timed out after 15s")
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return _error(f"OMO debt query failed: {e}")
 
     # ── proxy_governance_status ──────────────────────────────────────
@@ -603,7 +603,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
                 )
 
             return _ok({"format_version": FORMAT_VERSION, "status": "empty_log"})
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return _error(f"Failed to read governance log: {e}")
 
     # ── proxy_arch_health ────────────────────────────────────────────
@@ -647,5 +647,5 @@ def register_proxy_tools(mcp: FastMCP) -> None:
             )
         except ImportError as e:
             return _error(f"Cockpit helpers unavailable: {e}")
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return _error(f"Arch health query failed: {e}")

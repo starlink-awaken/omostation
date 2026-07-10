@@ -11,7 +11,7 @@ _log = logging.getLogger(__name__)
 def tool_memory_query(params: JSONDict, ctx: ToolContext) -> JSONDict:
     query, limit = params.get("query", ""), min(int(params.get("limit", 10)), 50)
     try:
-        KnowledgeDistiller = __import__(  # noqa: N806
+        KnowledgeDistiller = __import__(
             "organs.D_Memory.organs.knowledge_distiller",
             fromlist=["KnowledgeDistiller"],
         ).KnowledgeDistiller
@@ -113,7 +113,7 @@ def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDi
     if not requester_id:
         requester_id = "mcp-client"
     try:
-        ApprovalRouter = __import__(  # noqa: N806
+        ApprovalRouter = __import__(
             "organs.D_Governance.organs.approval_router", fromlist=["ApprovalRouter"]
         ).ApprovalRouter
         req = ApprovalRouter().submit_request(
@@ -135,7 +135,7 @@ def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDi
             "type": classified_request_type,
             "note": str(exc),
         }
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         return {
             "status": "failed",
             "type": classified_request_type,
@@ -145,7 +145,7 @@ def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDi
 
 def tool_evolution_status(params: JSONDict, ctx: ToolContext) -> JSONDict:
     try:
-        EvolutionScheduler = __import__(  # noqa: N806
+        EvolutionScheduler = __import__(
             "organs.D_Genesis.organs.evolution_scheduler",
             fromlist=["EvolutionScheduler"],
         ).EvolutionScheduler

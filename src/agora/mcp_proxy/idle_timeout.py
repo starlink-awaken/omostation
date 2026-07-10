@@ -186,7 +186,7 @@ class IdleTimeoutManager:
             self._last_used.pop(svc_name, None)
             try:
                 await self._on_idle(svc_name)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 logger.error(
                     "idle_timeout_callback_failed",
                     service=svc_name,

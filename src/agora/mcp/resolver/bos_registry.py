@@ -58,7 +58,7 @@ def _get_valid_transports() -> set[str]:
         # Transport = Literal["stdio", "internal", "http", "mcp_stdio"]
         if hasattr(Transport, "__args__"):
             return set(Transport.__args__)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     # `inline` is reserved for self-identifier / i0_route:pending placeholder
     # entries (e.g. bos://agora/metrics, bos://agora/registry). They are

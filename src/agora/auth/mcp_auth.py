@@ -30,15 +30,15 @@ Provides JWT-like token validation with TTL expiration checking
 for SharedBrain SOVEREIGN_KEY based authentication.
 """
 
-import base64  # noqa: E402
-import hashlib  # noqa: E402
-import hmac  # noqa: E402
-import json  # noqa: E402
-import logging  # noqa: E402
-import os  # noqa: E402
-import secrets  # noqa: E402
-import time  # noqa: E402
-from typing import Any  # noqa: E402
+import base64
+import hashlib
+import hmac
+import json
+import logging
+import os
+import secrets
+import time
+from typing import Any
 
 _log = logging.getLogger(__name__)
 

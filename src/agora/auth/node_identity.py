@@ -20,15 +20,15 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {e | e ∈ D-Gateway ∧ implements(e, NodeIdentity)}
 # 功能 ⊢ {Load_Or_Create, Generate_Identity, Persist_Identity}
 # =============================================================================
-import base64  # noqa: E402
-import json  # noqa: E402
-import logging  # noqa: E402
-import os  # noqa: E402
-import socket  # noqa: E402
-import uuid  # noqa: E402
-from dataclasses import asdict, dataclass  # noqa: E402
-from datetime import UTC, datetime  # noqa: E402
-from pathlib import Path  # noqa: E402
+import base64
+import json
+import logging
+import os
+import socket
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from pathlib import Path
 
 _log = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ class NodeIdentity:
             pk = Ed25519PublicKey.from_public_bytes(pk_bytes)
             pk.verify(sig_bytes, message)
             return True
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return False
 
     @classmethod
@@ -192,7 +192,7 @@ class NodeIdentityManager:
         try:
             raw = json.loads(self._path.read_text(encoding="utf-8"))
             return raw.get("_private_key")
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return None
 
     # ------------------------------------------------------------------

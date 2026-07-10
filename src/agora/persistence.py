@@ -16,7 +16,7 @@ def json_load(path: Path, default=None) -> dict | list:
         return json.loads(path.read_text())
     except FileNotFoundError:
         return default if default is not None else {}
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.warning("persistence_load_failed", path=str(path), error=str(e))
     return default if default is not None else {}
 
@@ -27,6 +27,6 @@ def json_save(path: Path, data: dict | list) -> bool:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False, default=str))
         return True
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.warning("persistence_save_failed", path=str(path), error=str(e))
         return False

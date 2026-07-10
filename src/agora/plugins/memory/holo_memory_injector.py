@@ -36,12 +36,12 @@ Works with both the local HoloMemory store and the session-level memory system.
 # 外延 ≝ {e | e ∈ D-Gateway ∧ injects(e, Memory)}
 # 功能 ⊢ {Store, Retrieve, Inject, Serialize}
 # =============================================================================
-import json  # noqa: E402
-import logging  # noqa: E402
-import time  # noqa: E402
-from dataclasses import asdict, dataclass, field  # noqa: E402
-from pathlib import Path  # noqa: E402
-from typing import Any  # noqa: E402
+import json
+import logging
+import time
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

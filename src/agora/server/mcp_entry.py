@@ -17,7 +17,7 @@ import os
 import sys
 
 
-from agora.server.mcp import logger, mcp  # noqa: F401  (re-use FastMCP + logger)
+from agora.server.mcp import logger, mcp
 
 __all__ = ["http_main", "sse_main"]
 
@@ -72,7 +72,7 @@ def http_main() -> None:
             except (json.JSONDecodeError, TypeError):
                 parsed_res = res_content
             return JSONResponse({"status": "ok", "result": parsed_res})
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             logger.exception("REST tool call failed")
             return JSONResponse({"error": "internal"}, status_code=500)
         finally:
@@ -85,7 +85,7 @@ def http_main() -> None:
 
         try:
             payload = await request.json()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
         name = payload.get("name", "")
         if not name:
@@ -105,7 +105,7 @@ def http_main() -> None:
             result = await pm.add_service(svc)
             logger.info("backend_registered_via_api", name=name, result=result)
             return JSONResponse({"status": "ok", "name": name, "result": result})
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             logger.exception("backend_register_failed", name=name)
             return JSONResponse({"error": "internal"}, status_code=500)
 
@@ -125,7 +125,7 @@ def http_main() -> None:
         mcp.run_http_async(
             host="0.0.0.0", port=int(os.environ.get("AGORA_MCP_HTTP_PORT", "7422"))
         )
-    )  # noqa: S104 — MCP server intentionally binds all interfaces
+    )
 
 
 def sse_main() -> None:
@@ -160,4 +160,4 @@ def sse_main() -> None:
             host="0.0.0.0",
             port=int(os.environ.get("AGORA_MCP_SSE_PORT", "7431")),
         )
-    )  # noqa: S104 — MCP SSE server intentionally binds all interfaces
+    )

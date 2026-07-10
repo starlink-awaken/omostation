@@ -98,7 +98,7 @@ def discover_from_workspace(workspace_root: str = "") -> int:
                     },
                 )
                 registered += 1
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             _log.warning("Failed to parse %s: %s", agents_md, e)
 
     _log.info("bos_discovery: registered %d URIs from AGENTS.md", registered)

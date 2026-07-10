@@ -231,7 +231,7 @@ loader = ForgeLoader()
 
 
 # ── 兼容: market 工具函数 (供 MCP tools 复用) ─────
-def install_local_tool(  # noqa: F811 — 兼容 forge.market 命名
+def install_local_tool(
     name: str,
     source_path: str,
     bos_uri: str = "",
@@ -243,7 +243,7 @@ def install_local_tool(  # noqa: F811 — 兼容 forge.market 命名
     return _impl(name, source_path, bos_uri, description)
 
 
-def remove_tool(name: str) -> bool:  # noqa: F811
+def remove_tool(name: str) -> bool:
     """包装: agora 进程内 import forge.market.remove_tool."""
     from forge.market import remove_tool as _impl
 

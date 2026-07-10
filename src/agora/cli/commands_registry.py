@@ -264,7 +264,7 @@ def _check_proxy_services() -> dict:
             import json
 
             services = json.load(f).get("services", [])
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"error": str(e), "services": [], "count": 0}
 
     results = []
@@ -322,10 +322,10 @@ def _get_system_metrics() -> dict:
             "free_gb": round(psutil.disk_usage("/").free / (1024**3), 1),
             "total_gb": round(psutil.disk_usage("/").total / (1024**3), 1),
         }
-        metrics["load_avg"] = [round(l, 2) for l in psutil.getloadavg()]  # noqa: E741
+        metrics["load_avg"] = [round(l, 2) for l in psutil.getloadavg()]
     except ImportError:
         metrics["error"] = "psutil not installed — system metrics unavailable"
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         metrics["error"] = str(e)
     return metrics
 

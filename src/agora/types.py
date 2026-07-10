@@ -119,7 +119,7 @@ class RoutingConfig:
 class GatewayConfig:
     port: int = 3100
     ws_port: int = 3101
-    host: str = "0.0.0.0"  # noqa: S104
+    host: str = "0.0.0.0"
     data_dir: str = "./data"
     log_dir: str = "./logs"
     log_level: LogLevel = "info"

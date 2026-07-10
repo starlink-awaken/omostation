@@ -51,7 +51,7 @@ class _McpStdioSession:
             try:
                 line = self.proc.stdout.readline()
                 q.put(("line", line))
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 q.put(("exc", exc))
 
         t = threading.Thread(target=_read, daemon=True)
@@ -185,7 +185,7 @@ class StdioAdapter:
                 "pid": proc.pid if proc else None,
                 "alive_at_spawn": True,
             }
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             return {
                 "status": "error",
                 "error": str(e),
@@ -253,7 +253,7 @@ class StdioAdapter:
                 "pid": proc.pid if proc else None,
                 "alive_at_spawn": True,
             }
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             if proc and proc.poll() is None:
                 proc.kill()
                 proc.wait(timeout=2.0)

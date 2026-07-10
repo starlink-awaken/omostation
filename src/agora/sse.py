@@ -51,7 +51,7 @@ class SSEManager:
             try:
                 await client.queue.put(f"data: {message}\n\n")
                 sent += 1
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
         return sent
 
@@ -66,7 +66,7 @@ class SSEManager:
         try:
             await client.queue.put(f"data: {message}\n\n")
             return True
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return False
 
     def get_info(self) -> dict:

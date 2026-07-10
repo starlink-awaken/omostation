@@ -16,7 +16,7 @@ def register_swarm_tools(mcp: FastMCP) -> None:
 
             swarm = get_swarm()
             return swarm.status()
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @mcp.tool()
@@ -35,7 +35,7 @@ def register_swarm_tools(mcp: FastMCP) -> None:
                 "total": len(nodes),
                 "nodes": [n.to_dict() for n in nodes],
             }
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}
 
     @mcp.tool()
@@ -57,5 +57,5 @@ def register_swarm_tools(mcp: FastMCP) -> None:
                 "uri": uri,
                 "hint": "No online node can handle this URI",
             }
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return {"status": "error", "error": str(e)}

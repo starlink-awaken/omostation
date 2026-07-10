@@ -409,7 +409,7 @@ async def repo_search(query: str = "", source: str = "local", limit: int = 20) -
             )
         finally:
             catalog.close()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.exception("repo_search_error")
         return _error(f"Search failed: {e}")
 
@@ -436,7 +436,7 @@ async def repo_discover(query: str = "mcp-server") -> dict:
             )
         finally:
             catalog.close()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.exception("repo_discover_error")
         return _error(f"Discovery failed: {e}")
 
@@ -460,7 +460,7 @@ async def repo_status() -> dict:
             )
         finally:
             catalog.close()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.exception("repo_status_error")
         return _error(f"Status check failed: {e}")
 
@@ -492,7 +492,7 @@ async def repo_install(name: str) -> dict:
             return _error(msg or f"Install failed for '{name}'")
         finally:
             catalog.close()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.exception("repo_install_error")
         return _error(f"Install failed: {e}")
 
@@ -525,7 +525,7 @@ async def repo_load(name: str) -> dict:
             return _error(msg or f"Failed to load tool '{name}'")
         finally:
             catalog.close()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.exception("repo_load_error")
         return _error(f"Load failed: {e}")
 
@@ -558,7 +558,7 @@ async def repo_unload(name: str) -> dict:
             return _error(msg or f"Failed to unload tool '{name}'")
         finally:
             catalog.close()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.exception("repo_unload_error")
         return _error(f"Unload failed: {e}")
 
@@ -594,7 +594,7 @@ async def repo_pipeline(query: str = "mcp-server", auto_load: bool = True) -> di
             )
         finally:
             catalog.close()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.exception("repo_pipeline_error")
         return _error(f"Pipeline failed: {e}")
 

@@ -174,7 +174,7 @@ class EventBus:
                         r = await client.post(callback, json=event)
                         if r.status_code < 500:
                             break
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     if attempt < 2:
                         await asyncio.sleep(2**attempt)
                     else:

@@ -30,17 +30,17 @@ Handles HTTP request/response, JSON-RPC 2.0 envelope parsing,
 and dispatches method calls through the typed :class:`MCPToolRegistry`.
 """
 
-import json  # noqa: E402
-import logging  # noqa: E402
-import threading  # noqa: E402
-import time  # noqa: E402
-from http.server import BaseHTTPRequestHandler, HTTPServer  # noqa: E402
-from pathlib import Path  # noqa: E402
-from socketserver import ThreadingMixIn  # noqa: E402
-from typing import Any  # noqa: E402
+import json
+import logging
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
+from socketserver import ThreadingMixIn
+from typing import Any
 
-from agora.auth.mcp_auth import MCPAuthError, get_auth_middleware  # type: ignore[import-not-found]  # noqa: E402
-from agora.mcp.mcp_protocol import (  # type: ignore[import-not-found]  # noqa: E402
+from agora.auth.mcp_auth import MCPAuthError, get_auth_middleware  # type: ignore[import-not-found]
+from agora.mcp.mcp_protocol import (  # type: ignore[import-not-found]
     handle_initialize,
     handle_prompts_get,
     handle_prompts_list,
@@ -49,7 +49,7 @@ from agora.mcp.mcp_protocol import (  # type: ignore[import-not-found]  # noqa: 
     handle_tools_call,
     handle_tools_list,
 )
-from agora.mcp_tools import (  # type: ignore[import-not-found]  # noqa: E402
+from agora.mcp_tools import (  # type: ignore[import-not-found]
     MCPToolRegistry,
     ToolContext,
     _ParamError,
@@ -191,7 +191,7 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
         except MCPAuthError as auth_exc:
             self._send_rpc_error(None, auth_exc.code, auth_exc.message)
             return
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.warning("[MCPServer] Authentication error: %s", exc)
             self._send_rpc_error(None, _INTERNAL_ERROR, "Authentication failed")
             return
@@ -229,7 +229,7 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
             self._send_rpc_result(rpc_id, result)
         except _ParamError as exc:
             self._send_rpc_error(rpc_id, _INVALID_PARAMS, str(exc))
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.exception("[MCPServer] Internal error in method '%s': %s", method, exc)
             self._send_rpc_error(rpc_id, _INTERNAL_ERROR, str(exc))
 

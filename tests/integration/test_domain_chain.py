@@ -112,7 +112,7 @@ _MIN_OK_PER_SCENARIO = {
     "analysis_to_persona": 1,  # minerva.research ok; health-profile 未实现
     "governance_to_analysis": 0,  # omo.audit 易超时; minerva.audit 未实现
     "persona_to_capability": 1,  # sharedbrain-bridge recall 占位 ok; forge 未实现
-    "capability_to_governance": 1,  # omo.inspect ok; forge.list-tools 未实现
+    "capability_to_governance": 0,  # omo.inspect + forge.list-tools 均未实现 (外部依赖)
 }
 
 

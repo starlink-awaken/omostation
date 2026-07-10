@@ -184,7 +184,7 @@ class TaskManager:
                 if self.is_cancelled(task.id):
                     return
                 await self.complete_task(task.id, result)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 if self.is_cancelled(task.id):
                     return
                 await self.fail_task(
@@ -199,7 +199,7 @@ class TaskManager:
                     return
                 try:
                     results[aid] = await invoker(request)
-                except Exception as e:  # noqa: BLE001  # defensive fallback
+                except Exception as e:  # defensive fallback
                     results[aid] = {"error": str(e)}
 
             await asyncio.gather(*[_invoke_one(aid) for aid in agent_ids])

@@ -24,7 +24,7 @@ from typing import Any
 try:
     from rich.console import Console
     from rich.panel import Panel
-    from rich.text import Text  # noqa: F401
+    from rich.text import Text
     from rich.theme import Theme
     from rich.progress import Progress, SpinnerColumn, TextColumn
 

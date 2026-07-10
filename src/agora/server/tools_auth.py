@@ -52,7 +52,7 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
             logger.info("auth check auth_header", auth_header=auth_header)
             if auth_header.startswith("Bearer "):
                 token_str = auth_header[7:]
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.exception("auth check fallback error", exc=e)
 
     if not token_str:

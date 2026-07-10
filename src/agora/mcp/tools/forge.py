@@ -67,7 +67,7 @@ def forge_load(name: str | None = None) -> dict:
                 "results": results,
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error(f"forge_load_failed: {exc}")
 
 
@@ -83,7 +83,7 @@ def forge_list() -> dict:
                 "loaded": loaded,
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error(f"forge_list_failed: {exc}")
 
 
@@ -104,7 +104,7 @@ def forge_unload(name: str) -> dict:
                 "unloaded": name,
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error(f"forge_unload_failed: {exc}")
 
 
@@ -136,7 +136,7 @@ def forge_install(
                 "result": result,
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error(f"forge_install_failed: {exc}")
 
 
@@ -159,7 +159,7 @@ def forge_remove(name: str) -> dict:
                 "removed": name,
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error(f"forge_remove_failed: {exc}")
 
 
@@ -176,7 +176,7 @@ def forge_market() -> dict:
                 "tools": market,
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error(f"forge_market_failed: {exc}")
 
 

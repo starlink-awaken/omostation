@@ -33,7 +33,7 @@ def tool_mail_handler(params: JSONDict, ctx: ToolContext) -> JSONDict:
             "error": result.error,
             "status": result.status.value,
         }
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         _log.error("[MCPToolRegistry] mail handler error: %s", exc)
         return {"error": str(exc), "success": False}
 

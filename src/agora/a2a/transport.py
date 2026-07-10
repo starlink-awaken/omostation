@@ -27,11 +27,11 @@ Layer: L3
 # status: active
 # ---
 
-import logging  # noqa: E402
-import queue  # noqa: E402
-import threading  # noqa: E402
-import uuid  # noqa: E402
-from typing import Any  # noqa: E402
+import logging
+import queue
+import threading
+import uuid
+from typing import Any
 
 _log = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class A2ATransport:
 
         try:
             bus.publish(make_event(event_type, "a2a_transport", payload))
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             _log.debug("[A2ATransport] Failed to emit %s: %s", event_type, exc)
             return False
         return True
@@ -197,7 +197,7 @@ class A2ANetworkTransport(A2ATransport):
                 resp = await client.post(url, content=payload_bytes, headers=headers)
                 resp.raise_for_status()
                 return resp.json()
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             _log.error("[A2ANetworkTransport] forward_failed to %s: %s", url, e)
             return {
                 "status": "error",

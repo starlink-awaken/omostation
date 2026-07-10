@@ -148,7 +148,7 @@ class ProxyManager:
             try:
                 result = await self.add_service(svc, lazy=lazy)
                 return name, result
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 logger.error("proxy_start_failed", service=name, error=str(e))
                 return name, f"error: {str(e)[:100]}"
 

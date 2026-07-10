@@ -23,8 +23,8 @@ class AgentSkill:
     description: str = ""
     tags: list[str] = field(default_factory=list)
     examples: list[str] = field(default_factory=list)
-    inputModes: list[str] | None = None  # noqa: N815
-    outputModes: list[str] | None = None  # noqa: N815
+    inputModes: list[str] | None = None
+    outputModes: list[str] | None = None
 
     def to_dict(self) -> dict:
         d: dict[str, Any] = {
@@ -57,7 +57,7 @@ class AgentCard:
 
     # Optional metadata
     provider: dict | None = None  # {"organization": str, "url": str}
-    documentationUrl: str | None = None  # noqa: N815
+    documentationUrl: str | None = None
 
     # Capabilities
     capabilities: dict = field(
@@ -76,8 +76,8 @@ class AgentCard:
     )
 
     # Default interaction modes across all skills
-    defaultInputModes: list[str] = field(default_factory=lambda: ["text"])  # noqa: N815
-    defaultOutputModes: list[str] = field(default_factory=lambda: ["text"])  # noqa: N815
+    defaultInputModes: list[str] = field(default_factory=lambda: ["text"])
+    defaultOutputModes: list[str] = field(default_factory=lambda: ["text"])
 
     # Specific capability units
     skills: list[AgentSkill] = field(default_factory=list)

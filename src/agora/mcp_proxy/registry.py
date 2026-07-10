@@ -271,7 +271,7 @@ class ProxyRegistry:
                         loop.create_task(cb(service_name))
                 except RuntimeError:
                     pass  # No running event loop — skip callback
-                except Exception as e:  # noqa: BLE001  # defensive fallback
+                except Exception as e:  # defensive fallback
                     logger.warning(
                         "proxy_unload_callback_failed",
                         service=service_name,
@@ -482,11 +482,11 @@ class ProxyRegistry:
                     result="success",
                     detail=str(arguments)[:1000],
                 )
-            except Exception as audit_e:  # noqa: BLE001
+            except Exception as audit_e:
                 logger.warning(
                     "proxy_audit_log_failed", tool=tool_name, error=str(audit_e)
                 )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error(
                 "proxy_dispatch_failed", tool=tool_name, service=svc_name, error=str(e)
             )
@@ -500,7 +500,7 @@ class ProxyRegistry:
                     result="error",
                     detail=str(e)[:1000],
                 )
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
             return {"status": "error", "error": str(e)}
 
@@ -509,7 +509,7 @@ class ProxyRegistry:
             for cb in self._usage_callbacks:
                 try:
                     await cb(svc_name, entry.original_name, arguments)
-                except Exception as e:  # noqa: BLE001  # defensive fallback
+                except Exception as e:  # defensive fallback
                     logger.warning(
                         "proxy_usage_callback_failed",
                         tool=tool_name,

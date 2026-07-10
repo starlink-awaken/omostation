@@ -76,7 +76,7 @@ def _find_cli(cmd: str, pkg: str) -> str | None:
         fallback = workspace / cmd / ".venv" / "bin" / cmd
         if fallback.exists():
             return str(fallback)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     print(f"  {cmd} CLI not found -> pip install ontoderive")
     return None
@@ -99,7 +99,7 @@ def pcmd_match(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -121,7 +121,7 @@ def pcmd_derive(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -137,7 +137,7 @@ def pcmd_check(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -188,7 +188,7 @@ def pcmd_pipeline(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -204,7 +204,7 @@ def pcmd_init(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -219,7 +219,7 @@ def pcmd_serve(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -248,7 +248,7 @@ def _forge_mcp_call(tool_name: str, arguments: dict | None = None) -> dict | Non
             print(f"  Forge error: {cp.stderr.strip()[:200]}", file=sys.stderr)
             return None
         return json.loads(cp.stdout)
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"  Forge call failed: {e}", file=sys.stderr)
         return None
 
@@ -293,7 +293,7 @@ def pcmd_toolbox(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1
 
@@ -375,6 +375,6 @@ def dispatch_pallas(args):
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
         return e.exit_code
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         out.print_error(str(e), "使用 'agora --help' 获取帮助")
         return 1

@@ -82,7 +82,7 @@ def auto_register_from_m1(bos_router=None) -> int:
             )
             registered += 1
 
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     _log.info("auto_register_from_m1: registered %d workflows", registered)

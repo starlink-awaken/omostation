@@ -49,7 +49,7 @@ class SmartRouter:
         except ImportError:
             logger.info("smart_router_llm_unavailable", reason="minerva not available")
             self._llm = False
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.warning("smart_router_llm_init_failed", error=str(e))
             self._llm = False
         return self._llm if self._llm is not False else None
@@ -191,7 +191,7 @@ class SmartRouter:
                 "action": "no_match",
                 "message": f"Discovered {result.get('discovered', 0)} tool(s) but none could be loaded",
             }
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.exception("auto_discover_failed")
             return {
                 "status": "error",
@@ -230,7 +230,7 @@ class SmartRouter:
         try:
             response = await self._llm.generate("", prompt, max_tokens=100)
             selected_name = response.strip().lower()
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.warning("llm_select_failed", error=str(e))
             top = candidates[:5]
             return {

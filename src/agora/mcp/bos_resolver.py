@@ -19,15 +19,15 @@ from agora.mcp.resolver.api import (
     list_domains,
     invoke_stdio,
     protocol_self_check,
-    resolve_bos_uri,  # noqa: F401 — re-exported in __all__
+    resolve_bos_uri,
 )
-from agora.mcp.resolver.pool import ProcessPool, get_pool as _get_pool  # noqa: F401
+from agora.mcp.resolver.pool import ProcessPool, get_pool as _get_pool
 from agora.mcp.resolver.services import (
     BosService,
     POC_SERVICES,
     _with_uv_package,
     BOS_URI_PATTERN,
-)  # noqa: F401
+)
 
 _pool = _get_pool()
 
@@ -116,7 +116,7 @@ async def _memory_all_search(
                 timeout=5.0,
             )
             return {"uri": uri, "data": res}
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return {"uri": uri, "error": str(e)}
 
     # 并行并发调用
@@ -184,7 +184,7 @@ async def _memory_all_search(
 
                 res["_audit_score"] = confidence
                 return res
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 _log.debug("[MemorySpine] Audit failed for hit: %s", e)
                 return res
 
@@ -272,9 +272,9 @@ async def _memory_vault_search(args: dict | None = None) -> list[dict]:
                     }
                 )
                 count += 1
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         _log.error("[VaultSearch] ripgrep failed: %s", e)
         return []
 

@@ -33,6 +33,6 @@ def cmd_enforce(args):
         elif args.enforce_cmd == "clear":
             set_enforce_tools([])
             print("Enforce cleared (all pass-through)")
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
