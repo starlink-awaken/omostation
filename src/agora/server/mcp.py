@@ -111,11 +111,14 @@ def _resolve_caller_identity(caller_identity: str | dict | None) -> str | dict:
             except json.JSONDecodeError:
                 return caller_identity
             return parsed if isinstance(parsed, dict) else caller_identity
-        return caller_identity
+        # caller_identity is dict (not None/"" because of the check above)
+        return caller_identity  # type: ignore[return-value]
 
+    # caller_identity is None or empty - try to derive from auth token
     derived = identity_from_auth_token()
     if derived is not None:
         return derived
+    return "anonymous"
     return "anonymous"
 
 
@@ -673,14 +676,15 @@ def agora_registry() -> str:
 
     pm = get_proxy_manager()
     if pm:
-        tools = pm.list_tools()
-        resources = pm.list_resources()
+        tools = pm.registry.entries
+        resources = pm.registry.resources if hasattr(pm.registry, 'resources') else {}
         return json.dumps(
             {
                 "tools": [
-                    {"name": t.name, "description": t.description} for t in tools
+                    {"name": name, "description": entry.description if hasattr(entry, 'description') else str(entry)}
+                    for name, entry in tools.items()
                 ],
-                "resources": [{"uri": r.uri, "name": r.name} for r in resources],
+                "resources": [{"uri": uri, "name": res.name if hasattr(res, 'name') else str(res)} for uri, res in resources.items()],
             },
             indent=2,
         )

@@ -9,6 +9,8 @@ import jwt
 from fastmcp.server.auth.authorization import AuthContext
 from fastmcp.server.dependencies import get_access_token
 
+from agora.auth.mcp_auth import MCPAuthError  # type: ignore[import-not-found]
+
 _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
 # Phase 3: Capability-based RBAC Context

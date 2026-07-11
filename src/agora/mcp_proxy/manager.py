@@ -503,44 +503,45 @@ class ProxyManager:
         - ref_counts: current reference counts per service
         """
         if not self.registry._clients and not self.registry.known_services:
-            result: dict = {
+            result = {
                 "status": "idle",
                 "connected_services": [],
                 "tools": 0,
                 "services": {},
                 "ref_counts": self.registry.ref_counts,
             }
-        else:
-            services_info = {}
-            for name in self.registry.known_services:
-                client = self.registry._clients.get(name)
-                tool_count = len(
-                    [
-                        e
-                        for e in self.registry.entries.values()
-                        if e.service_name == name
-                    ]
-                )
-                services_info[name] = {
-                    "connected": client.connected if client else False,
-                    "tools": tool_count,
-                    "ref_count": self.registry._ref_counts.get(name, 0),
-                    "has_config": name in self._configs,
+            if self._idle_timeout_enabled and self._idle_config:
+                result["idle_timeout"] = {
+                    "default_timeout": self._idle_config.default_timeout,
+                    "sweep_interval": self._idle_config.sweep_interval,
                 }
+            return result
 
-            status: dict = {
-                "status": "running",
-                "connected_services": list(self.registry._clients.keys()),
-                "tools": len(self.registry.entries),
-                "services": services_info,
-                "known_services": self.registry.known_services,
-                "ref_counts": self.registry.ref_counts,
+        services_info = {}
+        for name in self.registry.known_services:
+            client = self.registry._clients.get(name)
+            tool_count = len(
+                [
+                    e
+                    for e in self.registry.entries.values()
+                    if e.service_name == name
+                ]
+            )
+            services_info[name] = {
+                "connected": client.connected if client else False,
+                "tools": tool_count,
+                "ref_count": self.registry._ref_counts.get(name, 0),
+                "has_config": name in self._configs,
             }
 
-        if self._idle_timeout_enabled:
-            result["idle_timeout"] = self.get_idle_timeout_status()
-
-        return status
+        return {
+            "status": "running",
+            "connected_services": list(self.registry._clients.keys()),
+            "tools": len(self.registry.entries),
+            "services": services_info,
+            "known_services": self.registry.known_services,
+            "ref_counts": self.registry.ref_counts,
+        }
 
     async def shutdown(self):
         """Disconnect all downstream services and stop idle timeout."""

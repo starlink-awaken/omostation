@@ -227,6 +227,8 @@ class SmartRouter:
     async def _llm_select_tool(self, query: str, candidates: list[dict]) -> dict:
         """Use LLM to select the best tool from candidates."""
         prompt = self._build_selection_prompt(query, candidates)
+        if self._llm is None:
+            return {}
         try:
             response = await self._llm.generate("", prompt, max_tokens=100)
             selected_name = response.strip().lower()

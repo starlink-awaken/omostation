@@ -145,9 +145,17 @@ try:
 
     _FERNET_AVAILABLE = True
 except ImportError:  # pragma: no cover — optional dependency
-    Fernet = None  # type: ignore[assignment, unused-ignores]
-    base64 = None  # type: ignore[assignment, unused-ignores]
     _FERNET_AVAILABLE = False
+
+    class Fernet:  # type: ignore[no-redef]
+        """Dummy Fernet stub when cryptography is not available."""
+
+        def __init__(self, key: bytes) -> None:
+            raise ImportError("cryptography package required for Fernet encryption")
+
+        @staticmethod
+        def generate_key() -> bytes:
+            raise ImportError("cryptography package required for Fernet encryption")
 
 from agora.auth.auth_models import (  # type: ignore[import-not-found]
     AuthenticatedUser,
@@ -214,10 +222,12 @@ class OAuth2Server:
         self._auth_failures: dict[str, list[float]] = {}
         # Fernet token encryption
         self._fernet: Any | None = None
-        if token_encryption_key is not None and _FERNET_AVAILABLE:
-            self._fernet = Fernet(token_encryption_key.encode())
-        elif _FERNET_AVAILABLE:
-            self._fernet = Fernet(Fernet.generate_key())
+        if _FERNET_AVAILABLE:
+            FernetCls = Fernet
+            if token_encryption_key is not None:
+                self._fernet = FernetCls(token_encryption_key.encode())
+            else:
+                self._fernet = FernetCls(FernetCls.generate_key())
         else:
             _log.warning(
                 "Fernet not available — refresh tokens stored in plaintext (NOT for production)"

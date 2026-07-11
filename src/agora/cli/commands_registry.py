@@ -294,15 +294,15 @@ def _check_proxy_services() -> dict:
             }
         )
 
-    available = [s for s in results if s["available"]]
-    unavailable = [s for s in results if not s["available"]]
+    available_services = [s for s in results if bool(s.get("available"))]
+    unavailable_services = [s for s in results if not bool(s.get("available"))]
     return {
         "services": results,
         "count": len(results),
-        "available_count": len(available),
-        "unavailable_count": len(unavailable),
-        "available": available,
-        "unavailable": unavailable,
+        "available_count": len(available_services),
+        "unavailable_count": len(unavailable_services),
+        "available": available_services,
+        "unavailable": unavailable_services,
     }
 
 

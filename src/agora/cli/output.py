@@ -43,6 +43,7 @@ class OutputFormatter:
 
     def __init__(self, json_mode: bool = False):
         self.json_mode = json_mode
+        self.console: Console | None = None
         if _RICH:
             theme = Theme(
                 {

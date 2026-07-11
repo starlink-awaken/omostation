@@ -85,7 +85,7 @@ class Marketplace:
             params.append(type_filter)
         if min_rating > 0:
             sql += " AND rating>=?"
-            params.append(min_rating)
+            params.append(str(min_rating))
         sql += " ORDER BY rating DESC, usage_count DESC"
 
         rows = conn.execute(sql, params).fetchall()

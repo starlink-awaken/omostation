@@ -130,7 +130,8 @@ def _save_proxy_service(svc: dict) -> None:
     # Replace if exists, else append
     existing = [s for s in existing if s.get("name") != svc.get("name")]
     existing.append(svc)
-    json_save(_PROXY_CONFIG_PATH, existing)
+    if _PROXY_CONFIG_PATH is not None:
+        json_save(_PROXY_CONFIG_PATH, existing)
 
 
 class ProxyForwardTool(Tool):
@@ -332,11 +333,6 @@ def register_proxy_tools(mcp: FastMCP) -> None:
             )
 
         results = await pm.start(services)
-
-        # Register downstream proxy tools as native FastMCP tools
-        from agora.server.mcp import _register_proxy_tools as _rpt
-
-        _rpt(mcp, pm)
 
         return _ok(
             {

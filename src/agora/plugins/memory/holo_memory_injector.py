@@ -95,6 +95,7 @@ class HoloMemoryInjector:
         self.status = "active"
         self._in_memory: dict[str, dict[str, Any]] = {}
         self._file_backed = False
+        self._store_path: Path | None = None
 
         resolved = memory_path if memory_path is not None else self._DEFAULT_PATH
 

@@ -44,7 +44,7 @@ import ssl
 from datetime import datetime
 from email.errors import MessageError
 from email.header import decode_header
-from email.message import EmailMessage
+from email.message import EmailMessage, Message
 from typing import Any
 
 from agora.mcp.interfaces.base_tool import BaseTool  # type: ignore[import-not-found]

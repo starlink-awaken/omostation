@@ -6,6 +6,7 @@ import asyncio
 import json
 import time
 from pathlib import Path
+from typing import Any
 
 from agora.core.circuit_breaker import CircuitBreaker  # type: ignore[import-not-found]
 from agora.core.service_base import (  # type: ignore[import-not-found]
@@ -216,7 +217,7 @@ class ServiceRegistry:
 
     def save_cache_snapshot(self, cache_path: str) -> dict:
         """Persist a last-known-good service snapshot for registry outage fallback."""
-        payload = {"timestamp": time.time(), "services": self.to_dict()}
+        payload: dict[str, Any] = {"timestamp": time.time(), "services": self.to_dict()}
         path = Path(cache_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")

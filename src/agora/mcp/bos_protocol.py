@@ -123,6 +123,8 @@ class MCPStdioAdapter:
             raise RuntimeError("process not started")
         self._proc.stdin.write(request + "\n")
         self._proc.stdin.flush()
+        if self._proc is None or self._proc.stdout is None:
+            raise RuntimeError("Process not running")
         try:
             # Non-blocking fallback: read line with asyncio timeout
             loop = asyncio.get_event_loop()
