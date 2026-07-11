@@ -321,9 +321,11 @@ def _family_hub_security_checks(contract: DomainAppContract) -> list[dict[str, A
     server_path = app_root / "api" / "server.ts"
     server_text = _read_text(server_path)
 
-    write_auth_ok = _contains_all(
-        server_text,
-        ("FAMILY_HUB_API_TOKEN", "requireWriteAuth", "authorization", "status(401)"),
+    write_auth_ok = (
+        "FAMILY_HUB_API_TOKEN" in server_text
+        and ("requireWriteAuth" in server_text or "requireApiAuth" in server_text)
+        and "authorization" in server_text
+        and "status(401)" in server_text
     )
     audit_ok = _contains_all(server_text, ("appendAuditLog", "api-writes.jsonl", "quest.complete", "quest.create"))
     validation_ok = _contains_all(
@@ -340,7 +342,7 @@ def _family_hub_security_checks(contract: DomainAppContract) -> list[dict[str, A
             level="medium",
             title="写接口 Bearer token",
             detail="family-hub 的 quest 创建/完成接口需要受控写 token，避免外部页面直接写 SQLite。",
-            evidence="api/server.ts 包含 FAMILY_HUB_API_TOKEN、requireWriteAuth、Authorization 校验和 401 响应。"
+            evidence="api/server.ts 包含 FAMILY_HUB_API_TOKEN、requireApiAuth、Authorization 校验和 401 响应。"
             if write_auth_ok
             else "未检测到 family-hub 写 token 校验。",
             next_action="生产环境配置 FAMILY_HUB_API_TOKEN，前端用 VITE_FAMILY_HUB_API_TOKEN 发送 Bearer token。",
@@ -570,7 +572,7 @@ def _contracts() -> list[DomainAppContract]:
             ssot_root=None,
             app_root=family_hub_root,
             launch_url=os.environ.get("FAMILY_HUB_URL"),
-            api_url=os.environ.get("FAMILY_HUB_API_URL", "http://localhost:3001/api"),
+            api_url=os.environ.get("FAMILY_HUB_API_URL", "http://localhost:3001/api/health"),
             start_command=f'cd "{family_hub_root}" && bun run api',
             verify_commands=("bun run build", "uv run python -m unittest discover -s tests -q"),
             read_capabilities=("profiles.read", "quests.read", "rewards.read"),

@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from cockpit.dashboard_server import app
+from cockpit.web import api_system_map
 from cockpit.web.api_system_map import build_source_ref_preview, build_system_map
 
 
@@ -98,7 +99,8 @@ def test_system_map_builds_workspace_dimensions():
     assert domain_apps["next_action"]
     assert payload["summary"]["page_maturity_ready"] >= 1
     assert "page_maturity_score" in payload["summary"]
-    assert payload["summary"]["page_maturity_gap"] >= 1
+    assert payload["summary"]["page_maturity_gap"] >= 0
+    assert payload["summary"]["page_maturity_watch"] >= 1
     page_maturity = payload["page_maturity"]
     assert page_maturity["summary"]["total"] == payload["summary"]["cockpit_pages"]
     assert page_maturity["summary"]["score"] == payload["summary"]["page_maturity_score"]
@@ -210,7 +212,12 @@ def test_system_map_builds_workspace_dimensions():
     cockpit_port = next(port for port in cockpit_project["runtime"]["ports"] if port["port"] == 8090)
     assert cockpit_port["source_ref"]["source_key"] == "port_registry"
     assert cockpit_port["source_ref"]["line"]
-    assert cockpit_project["runtime"]["latest_verification"]["status"] in {"verified", "failed", "unknown"}
+    assert cockpit_project["runtime"]["profile"] in {"service", "library", "cli", "static", "unknown"}
+    assert isinstance(cockpit_project["runtime"]["needs_runtime"], bool)
+    assert cockpit_project["runtime"]["probe_reason"]
+    assert cockpit_project["runtime"]["latest_verification"]["status"] in {"verified", "failed", "documented", "unknown"}
+    assert "not_applicable_projects" in payload["summary"]
+    assert "verification_ready" in payload["project_focus"]["summary"]
     governance_domain = next(domain for domain in payload["feature_domains"] if domain["title"] == "治理与合规")
     assert governance_domain["source_refs"][0]["source_key"] == "functional_capability_map"
     assert governance_domain["source_refs"][0]["line"]
@@ -257,3 +264,116 @@ def test_source_ref_preview_route_is_mounted():
     body = resp.json()
     assert body["target"] == ref["target"]
     assert any(line["highlight"] for line in body["lines"])
+
+
+def test_runtime_status_marks_static_frontend_as_not_applicable(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "projects" / "cockpit-ui"
+    (project_path / "src").mkdir(parents=True, exist_ok=True)
+    (project_path / "AGENTS.md").write_text("## Commands\n```bash\nbun run dev\nbun run build\n```\n", encoding="utf-8")
+    (project_path / "README.md").write_text("# cockpit-ui\n", encoding="utf-8")
+    (project_path / "CLAUDE.md").write_text("# cockpit-ui\n", encoding="utf-8")
+    (project_path / "package.json").write_text(
+        json.dumps({"scripts": {"dev": "vite", "build": "vite build"}}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    (project_path / "vite.config.ts").write_text("export default {}\n", encoding="utf-8")
+    (project_path / "src" / "main.tsx").write_text("console.log('cockpit-ui')\n", encoding="utf-8")
+    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(
+        api_system_map,
+        "_latest_project_verification",
+        lambda _project_id, _project_path, _operational: {
+            "status": "unknown",
+            "run_id": None,
+            "ts": None,
+            "checks": 0,
+            "command": None,
+            "source": "missing",
+        },
+    )
+
+    operational = api_system_map._project_operational_status("cockpit-ui")
+    runtime = api_system_map._project_runtime_status(
+        "cockpit-ui",
+        {"role": "Web 控制台 UI", "stack": "TypeScript (Vite, React)"},
+        operational,
+        {"ports": {}, "types": {}},
+        workspace_root / "protocols" / "port-registry.yaml",
+    )
+
+    assert runtime["status"] == "not_applicable"
+    assert runtime["profile"] == "static"
+    assert runtime["needs_runtime"] is False
+    assert "静态前端" in runtime["probe_reason"]
+
+    checks = api_system_map._project_coverage_checks(
+        {
+            "id": "cockpit-ui",
+            "coverage": "native",
+            "cockpit_page": "SystemMap",
+            "operational": operational,
+            "runtime": runtime,
+            "source_refs": [{"exists": True}],
+            "actions": [{"id": "copy-project-path"}],
+        }
+    )
+    runtime_check = next(check for check in checks if check["id"] == "runtime_probe")
+    assert runtime_check["status"] == "ready"
+    assert "形态：static" in runtime_check["detail"]
+
+
+def test_runtime_status_keeps_service_projects_unobserved_without_port_registry(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "projects" / "family-hub"
+    (project_path / "api").mkdir(parents=True, exist_ok=True)
+    (project_path / "AGENTS.md").write_text("## Commands\n```bash\nbun run dev\nbun run lint\n```\n", encoding="utf-8")
+    (project_path / "README.md").write_text("# family-hub\n", encoding="utf-8")
+    (project_path / "package.json").write_text(
+        json.dumps({"scripts": {"dev": "bun --watch api/server.ts", "build": "vite build"}}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    (project_path / "api" / "server.ts").write_text("export const app = {}\n", encoding="utf-8")
+    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(
+        api_system_map,
+        "_latest_project_verification",
+        lambda _project_id, _project_path, _operational: {
+            "status": "unknown",
+            "run_id": None,
+            "ts": None,
+            "checks": 0,
+            "command": None,
+            "source": "missing",
+        },
+    )
+
+    operational = api_system_map._project_operational_status("family-hub")
+    runtime = api_system_map._project_runtime_status(
+        "family-hub",
+        {"role": "家庭数字枢纽服务", "stack": "TypeScript (Vite, API server)"},
+        operational,
+        {"ports": {}, "types": {}},
+        workspace_root / "protocols" / "port-registry.yaml",
+    )
+
+    assert runtime["status"] == "unobserved"
+    assert runtime["profile"] == "service"
+    assert runtime["needs_runtime"] is True
+    assert "服务入口" in runtime["probe_reason"]
+
+
+def test_latest_project_verification_falls_back_to_documented_command(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "projects" / "runtime"
+    project_path.mkdir(parents=True, exist_ok=True)
+    (project_path / "AGENTS.md").write_text("## Commands\n```bash\nuv run pytest -q\n```\n", encoding="utf-8")
+    (project_path / "pyproject.toml").write_text("[project]\nname='runtime'\n", encoding="utf-8")
+    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+
+    operational = api_system_map._project_operational_status("runtime")
+    verification = api_system_map._latest_project_verification("runtime", project_path, operational)
+
+    assert verification["status"] == "documented"
+    assert verification["source"] == "project_commands"
+    assert "uv run pytest -q" in (verification["command"] or "")

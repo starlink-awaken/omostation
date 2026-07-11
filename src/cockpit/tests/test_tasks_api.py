@@ -7,6 +7,7 @@ from cockpit.web.api_tasks import (
     get_page_maturity_task_drafts,
     get_playbook_task_drafts,
     get_project_portfolio_task_drafts,
+    get_verification_ready_task_drafts,
 )
 
 
@@ -42,6 +43,19 @@ def test_project_portfolio_task_drafts_are_read_only():
     assert all(draft["draft"]["kind"] == "project_portfolio_task" for draft in drafts)
     assert all(draft["draft"]["copy_text"] for draft in drafts)
     assert all("正式写入需走 C2G/OMO" in draft["draft"]["guard"] for draft in drafts)
+    assert all(draft["draft"]["evidence_fields"] for draft in drafts)
+
+
+def test_verification_ready_task_drafts_are_read_only():
+    drafts = get_verification_ready_task_drafts()
+
+    assert drafts
+    assert all(draft["read_only"] is True for draft in drafts)
+    assert all(draft["id"].startswith("verification-ready-") for draft in drafts)
+    assert all(draft["source"]["type"] == "system_map_verification_ready" for draft in drafts)
+    assert all(draft["draft"]["kind"] == "verification_ready_task" for draft in drafts)
+    assert all(draft["draft"]["copy_text"] for draft in drafts)
+    assert all("agent-workflow / C2G / OMO" in draft["draft"]["guard"] for draft in drafts)
     assert all(draft["draft"]["evidence_fields"] for draft in drafts)
 
 
@@ -100,6 +114,26 @@ def test_tasks_route_can_include_project_portfolio_drafts():
     combined_items = combined_resp.json()["items"]
     assert any(item["id"].startswith("playbook-") for item in combined_items)
     assert any(item["id"].startswith("portfolio-") for item in combined_items)
+
+
+def test_tasks_route_can_include_verification_ready_drafts():
+    client = TestClient(app)
+
+    default_resp = client.get("/api/tasks")
+    assert default_resp.status_code == 200
+    assert all(not item["id"].startswith("verification-ready-") for item in default_resp.json()["items"])
+
+    draft_resp = client.get("/api/tasks?include_verification_ready_drafts=true")
+    assert draft_resp.status_code == 200
+    assert any(item["id"].startswith("verification-ready-") for item in draft_resp.json()["items"])
+
+    combined_resp = client.get(
+        "/api/tasks?include_project_portfolio_drafts=true&include_verification_ready_drafts=true"
+    )
+    assert combined_resp.status_code == 200
+    combined_items = combined_resp.json()["items"]
+    assert any(item["id"].startswith("portfolio-") for item in combined_items)
+    assert any(item["id"].startswith("verification-ready-") for item in combined_items)
 
 
 def test_tasks_route_can_include_domain_app_drafts():

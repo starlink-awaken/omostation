@@ -22,6 +22,7 @@ router = APIRouter()
 # L4-kernel 项目路径 (硬编码，因为 cockpit 和 l4-kernel 是兄弟目录)
 WORKSPACE_DIR = Path("/Users/xiamingxing/Workspace")
 L4_KERNEL_DIR = WORKSPACE_DIR / "projects" / "l4-kernel"
+L4_CONFIG_PATH = L4_KERNEL_DIR / "l4_domain_paths.toml"
 
 
 def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | None:
@@ -51,14 +52,35 @@ def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | Non
         return None
 
 
+def _unavailable_payload(script_name: str, shape: dict) -> dict:
+    return {
+        **shape,
+        "data_quality": "unavailable",
+        "source": "l4-kernel-script",
+        "degraded_reasons": [
+            f"L4 {script_name} unavailable",
+            f"缺少或未加载 L4 路径配置：{L4_CONFIG_PATH}",
+        ],
+        "configuration": {
+            "path": str(L4_CONFIG_PATH),
+            "exists": L4_CONFIG_PATH.exists(),
+            "next_action": "按 l4-kernel 的 [domain_paths] 契约补齐本机路径，再重试。",
+        },
+    }
+
+
+def _live_payload(data: dict) -> dict:
+    return {**data, "data_quality": data.get("data_quality", "live"), "source": "l4-kernel-script"}
+
+
 @router.get("/api/l4/health")
 async def get_l4_health():
     """获取 L4 域健康状态。"""
     data = run_l4_script("health_monitor.py", ["--output", "json"])
     if data:
-        return data
+        return _live_payload(data)
     else:
-        return {
+        return _unavailable_payload("health_monitor.py", {
             "timestamp": "",
             "total_domains": 0,
             "document_domains": 0,
@@ -66,7 +88,7 @@ async def get_l4_health():
             "healthy_count": 0,
             "unhealthy_count": 0,
             "health_rate": "N/A",
-        }
+        })
 
 
 @router.get("/api/l4/trend")
@@ -74,14 +96,14 @@ async def get_l4_trend():
     """获取 L4 域历史趋势分析。"""
     data = run_l4_script("health_trend.py", ["--days", "7", "--output", "json"])
     if data:
-        return data
+        return _live_payload(data)
     else:
-        return {
+        return _unavailable_payload("health_trend.py", {
             "total_records": 0,
             "date_range": {"start": None, "end": None},
             "trends": {},
             "anomalies": [],
-        }
+        })
 
 
 @router.get("/api/l4/signals")
@@ -89,12 +111,12 @@ async def get_l4_signals():
     """获取 L4 域跨域信号分析。"""
     data = run_l4_script("signal_analysis.py", ["--hours", "72", "--output", "json"])
     if data:
-        return data
+        return _live_payload(data)
     else:
-        return {
+        return _unavailable_payload("signal_analysis.py", {
             "total_signals": 0,
             "by_domain": {},
             "by_type": {},
             "patterns": [],
             "risks": [],
-        }
+        })

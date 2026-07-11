@@ -85,6 +85,20 @@ COCKPIT_PAGES: tuple[dict[str, Any], ...] = (
         "dimensions": ("compute", "runtime", "cost"),
     },
     {
+        "id": "Research",
+        "title": "研究中枢",
+        "group": "智能与知识",
+        "purpose": "管理研究对象、来源、追问、时间线和发布承接。",
+        "dimensions": ("research", "knowledge", "publishing"),
+    },
+    {
+        "id": "Protocol",
+        "title": "协议工作台",
+        "group": "智能与知识",
+        "purpose": "巡检工作流定义、动作、后端和协议层运行证据。",
+        "dimensions": ("protocol", "workflow", "lifecycle"),
+    },
+    {
         "id": "Knowledge",
         "title": "知识中枢",
         "group": "智能与知识",
@@ -191,15 +205,44 @@ COCKPIT_PAGES: tuple[dict[str, Any], ...] = (
     },
 )
 
+# 页面自身的低风险操作。项目动作另由项目矩阵提供，成熟度计算需要把两类证据合并。
+PAGE_OPERATOR_ACTIONS: dict[str, tuple[str, ...]] = {
+    "Home": ("refresh-home", "open-system-map", "open-task-center"),
+    "DomainApps": ("open-app", "open-api", "copy-start", "copy-verify"),
+    "Overview": ("refresh-runtime", "open-system-map"),
+    "McpMesh": ("refresh-mesh", "copy-bos-uri", "open-service"),
+    "Topology": ("refresh-topology", "inspect-node"),
+    "Compute": ("refresh-compute", "copy-route", "open-cost-board"),
+    "Research": ("copy-research-command", "open-research-detail", "open-task-center"),
+    "Knowledge": ("search-knowledge", "write-knowledge", "open-source"),
+    "Engines": ("refresh-engines", "open-engine"),
+    "Assets": ("search-assets", "open-asset", "copy-command"),
+    "Protocol": ("refresh-protocol", "open-workflow", "copy-validation"),
+    "Workflows": ("refresh-workflows", "approve-workflow", "open-run"),
+    "C2G": ("approve-proposal", "reject-proposal", "fix-drift"),
+    "AlertCenter": ("acknowledge-alert", "silence-alert", "resolve-alert", "manage-rules"),
+    "L4Health": ("refresh-l4-health", "open-domain"),
+    "Debt": ("refresh-debt", "open-debt-source"),
+    "Observability": ("refresh-observability", "open-log-context"),
+    "LogViewer": ("refresh-logs", "filter-logs", "open-log-source"),
+    "TaskCenter": ("pause-task", "resume-task", "cancel-task", "open-task-source"),
+    "Performance": ("refresh-performance", "select-time-range"),
+    "Sandbox": ("execute-sandbox", "copy-sandbox-code", "open-execution-log"),
+    "QuestBoard": ("create-quest", "complete-quest", "refresh-quests"),
+    "Settings": ("register-instance", "copy-endpoint", "open-mesh"),
+}
+
 
 CAPABILITY_TO_PAGE = {
+    "深度研究": "Research",
+    "研究管线": "Research",
     "知识摄取与持久化": "Knowledge",
     "知识检索与推理": "Knowledge",
     "治理与合规": "C2G",
     "编排与执行": "Workflows",
     "算力与基础设施": "Compute",
     "通信与路由": "McpMesh",
-    "协议与元模型": "Assets",
+    "协议与元模型": "Protocol",
     "自我与入口": "SystemMap",
 }
 
@@ -234,6 +277,21 @@ PROJECT_DOC_FILES: tuple[str, ...] = (
     "ARCHITECTURE.md",
     "BOUNDARY.md",
     "CALLCHAIN.md",
+)
+
+PACKAGE_MANIFESTS: tuple[str, ...] = ("pyproject.toml", "package.json", "docker-compose.yml")
+VITE_CONFIGS: tuple[str, ...] = ("vite.config.ts", "vite.config.js", "vite.config.mts", "vite.config.mjs")
+NEXT_CONFIGS: tuple[str, ...] = ("next.config.ts", "next.config.js", "next.config.mjs")
+STATIC_FRONTEND_MARKERS: tuple[str, ...] = ("index.html", "src/main.tsx", "src/main.jsx", "src/App.tsx")
+CLI_ENTRYPOINTS: tuple[str, ...] = ("src/cli.py", "src/cli.ts", "cli.py", "cli.ts")
+SERVICE_ENTRYPOINTS: tuple[str, ...] = (
+    "dashboard_server.py",
+    "src/server.py",
+    "src/server.ts",
+    "server.py",
+    "server.ts",
+    "api/server.ts",
+    "api/app.py",
 )
 
 PROJECT_COVERAGE_DIMENSIONS: tuple[dict[str, str], ...] = (
@@ -325,6 +383,18 @@ USAGE_PATHS: tuple[dict[str, Any], ...] = (
         "title": "知识工作",
         "intent": "从知识检索、引擎状态到技能资产逐步定位。",
         "steps": ("Knowledge", "Engines", "Assets", "McpMesh"),
+    },
+    {
+        "id": "research-publication",
+        "title": "研究到发布",
+        "intent": "从研究对象、知识上下文到发布和任务承接。",
+        "steps": ("Research", "Knowledge", "TaskCenter", "C2G"),
+    },
+    {
+        "id": "protocol-integrity",
+        "title": "协议完整性",
+        "intent": "确认协议定义、动作、后端和治理承接都具备证据。",
+        "steps": ("Protocol", "Workflows", "Assets", "C2G"),
     },
     {
         "id": "domain-ops",
@@ -534,6 +604,120 @@ OPERATING_PLAYBOOKS: tuple[dict[str, Any], ...] = (
                 "action": "如果能力不可达，回到 MCP 网格检查路由和 BOS URI。",
                 "evidence": "MCP 实例、BOS URI 和路由解析状态。",
                 "done_when": "能力不可达有路由层证据，能进入修复流程。",
+            },
+        ),
+    },
+    {
+        "id": "research-publication-loop",
+        "title": "研究到发布闭环",
+        "goal": "把研究对象从问题、证据和追问推进到发布与任务承接。",
+        "frequency": "weekly",
+        "owner": "knowledge",
+        "risk": "medium",
+        "steps": (
+            {
+                "id": "research-object-review",
+                "page_id": "Research",
+                "action": "确认研究对象、来源、追问和最近事件。",
+                "evidence": "研究对象详情、时间线和 dossier。",
+                "done_when": "研究结论和下一步问题清楚。",
+            },
+            {
+                "id": "research-knowledge-context",
+                "page_id": "Knowledge",
+                "action": "补充知识来源和长期上下文。",
+                "evidence": "检索结果、来源定位和记忆记录。",
+                "done_when": "发布内容有可引用上下文。",
+            },
+            {
+                "id": "research-task-handoff",
+                "page_id": "TaskCenter",
+                "action": "把研究后的动作沉到任务或草稿。",
+                "evidence": "任务来源、负责人和状态。",
+                "done_when": "发布后的动作有追踪入口。",
+            },
+            {
+                "id": "research-governance-sync",
+                "page_id": "C2G",
+                "action": "将高影响研究结论带回战略和治理语境。",
+                "evidence": "C2G 卡片、决策或周回顾记录。",
+                "done_when": "研究影响进入治理闭环。",
+            },
+        ),
+    },
+    {
+        "id": "protocol-integrity-loop",
+        "title": "协议层完整性检查",
+        "goal": "巡检工作流定义、动作、后端、运行证据和治理承接。",
+        "frequency": "weekly",
+        "owner": "protocol",
+        "risk": "medium",
+        "steps": (
+            {
+                "id": "protocol-registry-review",
+                "page_id": "Protocol",
+                "action": "查看协议工作台中的工作流、动作和后端注册数量。",
+                "evidence": "协议层汇总和最近运行记录。",
+                "done_when": "定义层、动作层和后端层的状态可解释。",
+            },
+            {
+                "id": "protocol-workflow-proof",
+                "page_id": "Workflows",
+                "action": "确认工作流运行、审批和失败记录。",
+                "evidence": "MetaOS 工作流运行证据。",
+                "done_when": "关键协议动作有最近运行或验证证据。",
+            },
+            {
+                "id": "protocol-asset-link",
+                "page_id": "Assets",
+                "action": "回到技术资产确认定义和实现来源。",
+                "evidence": "技能、管线和工作流资产。",
+                "done_when": "协议问题能回跳到具体资产。",
+            },
+            {
+                "id": "protocol-governance-handoff",
+                "page_id": "C2G",
+                "action": "把协议缺口沉到治理任务或路线图。",
+                "evidence": "C2G 任务、路线图和验收条件。",
+                "done_when": "协议缺口有 owner、优先级和验收口径。",
+            },
+        ),
+    },
+    {
+        "id": "control-plane-onboarding-loop",
+        "title": "控制面接入闭环",
+        "goal": "注册新实例后，依次确认路由、领域挂载和运行探针，避免只写入配置不验证链路。",
+        "frequency": "on-demand",
+        "owner": "operator",
+        "risk": "medium",
+        "steps": (
+            {
+                "id": "control-plane-register",
+                "page_id": "Settings",
+                "action": "登记实例服务名和 MCP 接入点。",
+                "evidence": "注册响应、实例地址和控制面状态。",
+                "done_when": "实例注册结果明确且没有把 token 写入页面或日志。",
+            },
+            {
+                "id": "control-plane-route-check",
+                "page_id": "McpMesh",
+                "action": "确认实例进入网格并能解析路由。",
+                "evidence": "MCP 实例、BOS URI 和路由探针。",
+                "done_when": "新实例有可验证的路由证据。",
+            },
+            {
+                "id": "control-plane-domain-check",
+                "page_id": "DomainApps",
+                "action": "涉及领域应用时，检查 contract、SSOT 和安全门。",
+                "evidence": "应用中心的 contract、健康和安全检查。",
+                "done_when": "领域边界和写入风险明确。",
+            },
+            {
+                "id": "control-plane-runtime-check",
+                "page_id": "Overview",
+                "action": "用真实运行探针确认实例状态。",
+                "evidence": "服务状态、端口监听和健康结果。",
+                "done_when": "配置、路由和运行三层状态一致。",
             },
         ),
     },
@@ -833,7 +1017,46 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     try:
         return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError):
+        if path.name == "port-registry.yaml":
+            return _recover_port_registry(path)
         return {}
+
+
+def _recover_port_registry(path: Path) -> dict[str, Any]:
+    """Recover simple port records while preserving a malformed-registry signal.
+
+    The registry is an external SSOT and remains read-only here. This parser only
+    recovers the stable ``port -> name/transport/status`` records needed for the
+    project runtime view; it never invents a port or a listening result.
+    """
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return {}
+
+    ports: dict[int, dict[str, str]] = {}
+    current_port: int | None = None
+    current: dict[str, str] = {}
+
+    def flush() -> None:
+        if current_port is not None and current.get("name"):
+            ports[current_port] = dict(current)
+
+    for line in lines:
+        port_match = re.match(r"^\s{2}(\d+):\s*$", line)
+        if port_match:
+            flush()
+            current_port = int(port_match.group(1))
+            current = {}
+            continue
+        if current_port is None:
+            continue
+        field_match = re.match(r'^\s{4}(name|transport|status):\s*["\']?([^"\']+?)["\']?\s*$', line)
+        if field_match:
+            current[field_match.group(1)] = field_match.group(2).strip()
+    flush()
+
+    return {"ports": ports, "types": {}, "_parse_warning": "port-registry.yaml recovered after YAML parse failure"}
 
 
 def _read_text(path: Path) -> str:
@@ -859,6 +1082,10 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 def _path_state(path: Path) -> dict[str, Any]:
     return {"path": str(path), "exists": path.exists()}
+
+
+def _exists_any(base: Path, candidates: tuple[str, ...]) -> bool:
+    return any((base / candidate).exists() for candidate in candidates)
 
 
 def _line_number(path: Path, pattern: str) -> int | None:
@@ -1260,7 +1487,12 @@ def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry
             port = int(raw_port)
         except (TypeError, ValueError):
             continue
-        label = str(service)
+        if isinstance(service, dict):
+            label = str(service.get("name") or service.get("service") or "")
+            transport = service.get("transport")
+        else:
+            label = str(service)
+            transport = None
         service_name = label.split("#", 1)[0].strip()
         searchable = service_name.lower()
         if any(alias.lower() in searchable for alias in aliases):
@@ -1269,7 +1501,7 @@ def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry
                     "port": port,
                     "service": service_name or label,
                     "raw_label": label,
-                    "type": port_types.get(port) or port_types.get(str(port)) or "registered",
+                    "type": transport or port_types.get(port) or port_types.get(str(port)) or "registered",
                     "listening": _is_port_listening(port),
                     "source_ref": _source_ref(
                         port_registry_path,
@@ -1283,7 +1515,7 @@ def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry
     return sorted(ports, key=lambda item: item["port"])
 
 
-def _latest_project_verification(project_id: str) -> dict[str, Any]:
+def _latest_project_verification(project_id: str, project_path: Path, operational: dict[str, Any]) -> dict[str, Any]:
     events_path = WORKSPACE_ROOT / ".omo" / "_delivery" / "agent-workflows" / "events.jsonl"
     project_prefix = f"projects/{project_id}"
     claims_by_run: dict[str, set[str]] = defaultdict(set)
@@ -1292,7 +1524,7 @@ def _latest_project_verification(project_id: str) -> dict[str, Any]:
     try:
         lines = events_path.read_text(encoding="utf-8").splitlines()
     except OSError:
-        return {"status": "unknown", "run_id": None, "ts": None, "checks": 0}
+        lines = []
 
     for line in lines:
         try:
@@ -1318,9 +1550,33 @@ def _latest_project_verification(project_id: str) -> dict[str, Any]:
                 "run_id": run_id,
                 "ts": event.get("ts"),
                 "checks": len(event.get("checks") or []),
+                "command": None,
+                "source": "agent_workflow",
             }
 
-    return {"status": "unknown", "run_id": None, "ts": None, "checks": 0}
+    verify_command = _project_verify_command(
+        project_path,
+        list(operational.get("commands") or []),
+        list(operational.get("manifests") or []),
+    )
+    if verify_command:
+        return {
+            "status": "documented",
+            "run_id": None,
+            "ts": None,
+            "checks": 0,
+            "command": verify_command,
+            "source": "project_commands",
+        }
+
+    return {
+        "status": "unknown",
+        "run_id": None,
+        "ts": None,
+        "checks": 0,
+        "command": None,
+        "source": "missing",
+    }
 
 
 def _project_workflow_lifecycle(project_id: str) -> dict[str, Any]:
@@ -1457,27 +1713,6 @@ def _project_workflow_lifecycle(project_id: str) -> dict[str, Any]:
         },
     }
 
-
-def _project_runtime_status(project_id: str, port_registry: dict[str, Any], port_registry_path: Path) -> dict[str, Any]:
-    ports = _project_ports(project_id, port_registry, port_registry_path)
-    latest_verification = _latest_project_verification(project_id)
-    listening_count = sum(1 for port in ports if port["listening"])
-
-    if listening_count:
-        status = "running"
-    elif ports:
-        status = "stopped"
-    else:
-        status = "unobserved"
-
-    return {
-        "status": status,
-        "ports": ports,
-        "listening_count": listening_count,
-        "latest_verification": latest_verification,
-    }
-
-
 def _commands_from_agents(path: Path, limit: int = 4) -> list[str]:
     text = _read_text(path / "AGENTS.md")
     if not text:
@@ -1497,6 +1732,137 @@ def _commands_from_agents(path: Path, limit: int = 4) -> list[str]:
     return commands
 
 
+def _read_package_manifest(project_path: Path) -> dict[str, Any]:
+    manifest = _read_json(project_path / "package.json")
+    return manifest if isinstance(manifest, dict) else {}
+
+
+def _runtime_profile(
+    project_id: str,
+    project_data: dict[str, Any],
+    project_path: Path,
+    operational: dict[str, Any],
+    ports: list[dict[str, Any]],
+) -> dict[str, Any]:
+    role_text = str(project_data.get("role") or "").lower()
+    stack_text = str(project_data.get("stack") or "").lower()
+    commands = operational.get("commands") or []
+    commands_text = " ".join(commands).lower()
+    package_manifest = _read_package_manifest(project_path)
+    scripts = package_manifest.get("scripts") if isinstance(package_manifest.get("scripts"), dict) else {}
+    script_text = " ".join(f"{key} {value}" for key, value in scripts.items() if isinstance(value, str)).lower()
+    manifests = {item.get("name") for item in (operational.get("manifests") or [])}
+
+    if ports:
+        return {
+            "profile": "service",
+            "needs_runtime": True,
+            "probe_reason": "已登记可观测端口，可直接用监听结果判断运行状态。",
+        }
+
+    if "docker-compose.yml" in manifests:
+        return {
+            "profile": "service",
+            "needs_runtime": True,
+            "probe_reason": "存在 compose 运行清单，但当前缺少端口登记。",
+        }
+
+    if _exists_any(project_path, VITE_CONFIGS) or _exists_any(project_path, STATIC_FRONTEND_MARKERS):
+        return {
+            "profile": "static",
+            "needs_runtime": False,
+            "probe_reason": "检测到 Vite/静态前端入口，按需启动开发服务器，不作为常驻运行探针。",
+        }
+
+    if _exists_any(project_path, NEXT_CONFIGS):
+        return {
+            "profile": "service",
+            "needs_runtime": True,
+            "probe_reason": "检测到 Next.js 应用配置，通常需要显式启动并登记访问端口。",
+        }
+
+    if _exists_any(project_path, SERVICE_ENTRYPOINTS) or any(
+        token in f"{commands_text} {script_text}"
+        for token in ("uvicorn", "gunicorn", "fastapi", "server.ts", "server.py", "api/server", "dashboard_server")
+    ):
+        return {
+            "profile": "service",
+            "needs_runtime": True,
+            "probe_reason": "检测到服务入口或启动脚本，但尚未登记运行端口。",
+        }
+
+    if _exists_any(project_path, CLI_ENTRYPOINTS) or "cli" in role_text or "cli" in commands_text:
+        return {
+            "profile": "cli",
+            "needs_runtime": False,
+            "probe_reason": "检测到 CLI 入口，命令按需执行即可，不需要常驻探针。",
+        }
+
+    if "pyproject.toml" in manifests:
+        return {
+            "profile": "library",
+            "needs_runtime": False,
+            "probe_reason": "当前更像库/框架型 Python 项目，主要靠构建与测试验证，而不是常驻服务端口。",
+        }
+
+    if "package.json" in manifests and any(token in f"{role_text} {stack_text}" for token in ("ui", "frontend", "前端")):
+        return {
+            "profile": "static",
+            "needs_runtime": False,
+            "probe_reason": "项目角色更接近前端表现层，端口只在本地调试时按需出现。",
+        }
+
+    if any(token in f"{role_text} {stack_text}" for token in ("sdk", "framework", "monorepo", "库", "框架")):
+        return {
+            "profile": "library",
+            "needs_runtime": False,
+            "probe_reason": "项目描述偏向框架/SDK/monorepo 形态，不以常驻运行探针为主。",
+        }
+
+    return {
+        "profile": "unknown",
+        "needs_runtime": True,
+        "probe_reason": "尚未识别运行形态；如果该项目需要服务进程，请补端口注册，否则补充无需常驻的依据。",
+    }
+
+
+def _project_runtime_status(
+    project_id: str,
+    project_data: dict[str, Any],
+    operational: dict[str, Any],
+    port_registry: dict[str, Any],
+    port_registry_path: Path,
+) -> dict[str, Any]:
+    project_path = WORKSPACE_ROOT / "projects" / project_id
+    ports = _project_ports(project_id, port_registry, port_registry_path)
+    latest_verification = _latest_project_verification(project_id, project_path, operational)
+    listening_count = sum(1 for port in ports if port["listening"])
+    profile = _runtime_profile(project_id, project_data, project_path, operational, ports)
+
+    if listening_count:
+        status = "running"
+        probe_reason = "已探测到登记端口正在监听。"
+    elif ports:
+        status = "stopped"
+        probe_reason = "已登记端口但当前未监听，需要人工确认是否应启动。"
+    elif not profile["needs_runtime"]:
+        status = "not_applicable"
+        probe_reason = profile["probe_reason"]
+    else:
+        status = "unobserved"
+        probe_reason = profile["probe_reason"]
+
+    return {
+        "status": status,
+        "profile": profile["profile"],
+        "needs_runtime": profile["needs_runtime"],
+        "probe_reason": probe_reason,
+        "ports": ports,
+        "listening_count": listening_count,
+        "latest_verification": latest_verification,
+    }
+
+
 def _project_operational_status(project_id: str) -> dict[str, Any]:
     path = WORKSPACE_ROOT / "projects" / project_id
     doc_files = [
@@ -1504,15 +1870,7 @@ def _project_operational_status(project_id: str) -> dict[str, Any]:
     ]
     present_docs = [item for item in doc_files if item["exists"]]
     commands = _commands_from_agents(path)
-    manifests = [
-        {"name": "pyproject.toml", "path": str(path / "pyproject.toml"), "exists": (path / "pyproject.toml").exists()},
-        {"name": "package.json", "path": str(path / "package.json"), "exists": (path / "package.json").exists()},
-        {
-            "name": "docker-compose.yml",
-            "path": str(path / "docker-compose.yml"),
-            "exists": (path / "docker-compose.yml").exists(),
-        },
-    ]
+    manifests = [{"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PACKAGE_MANIFESTS]
     existing_manifests = [item for item in manifests if item["exists"]]
 
     risks: list[str] = []
@@ -1721,12 +2079,23 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         ),
         _coverage_check(
             "runtime_probe",
-            "ready" if runtime_status == "running" else "warning" if runtime_status == "stopped" else "failed",
-            f"运行状态：{runtime_status}，监听端口 {runtime.get('listening_count', 0)} / {len(runtime.get('ports') or [])}。",
+            (
+                "ready"
+                if runtime_status in {"running", "not_applicable"}
+                else "warning"
+                if runtime_status == "stopped"
+                else "failed"
+            ),
+            (
+                f"运行状态：{runtime_status}，形态：{runtime.get('profile', 'unknown')}，"
+                f"监听端口 {runtime.get('listening_count', 0)} / {len(runtime.get('ports') or [])}。"
+            ),
             "启动服务或修正端口注册。"
             if runtime_status == "stopped"
-            else "补端口注册或标注为无需常驻服务。"
+            else "补端口注册，或明确标注项目为何需要常驻服务。"
             if runtime_status == "unobserved"
+            else "保持运行形态说明和验证证据同步。"
+            if runtime_status == "not_applicable"
             else "保持端口注册和运行状态同步。",
         ),
         _coverage_check(
@@ -1734,13 +2103,18 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
             "ready"
             if verification_status == "verified"
             else "failed"
-            if verification_status == "failed"
+            if verification_status in {"failed", "unknown"}
             else "warning",
-            f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。",
+            (
+                f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。"
+                + (f" 已登记命令：{verification.get('command')}。" if verification.get("command") else "")
+            ),
             "复现失败验证并补 closeout 证据。"
             if verification_status == "failed"
-            else "运行验证并通过 agent-workflow 留证。"
+            else "先补验证命令或构建清单，再建立可复制的验证入口。"
             if verification_status == "unknown"
+            else "运行已登记验证命令，并通过 agent-workflow 留证。"
+            if verification_status == "documented"
             else "保持验证证据新鲜。",
         ),
         _coverage_check(
@@ -1795,8 +2169,8 @@ def _project_diagnostics(project: dict[str, Any]) -> list[dict[str, str]]:
                 "id": "runtime-unobserved",
                 "severity": "medium",
                 "title": "缺少运行探针",
-                "detail": "项目未登记可观测端口，Cockpit 只能判断目录状态。",
-                "next_action": "如该项目有常驻服务，补端口注册；否则标注为无需运行。",
+                "detail": runtime.get("probe_reason") or "项目未登记可观测端口，Cockpit 只能判断目录状态。",
+                "next_action": "如该项目有常驻服务，补端口注册；否则补充无需常驻的依据。",
             }
         )
     if verification.get("status") == "failed":
@@ -1813,10 +2187,20 @@ def _project_diagnostics(project: dict[str, Any]) -> list[dict[str, str]]:
         diagnostics.append(
             {
                 "id": "verification-unknown",
-                "severity": "medium",
-                "title": "缺少验证证据",
-                "detail": "未找到最近 agent-workflow 验证事件。",
-                "next_action": "运行项目验证命令，并通过受控 workflow closeout 留证。",
+                "severity": "high",
+                "title": "缺少验证方案",
+                "detail": "未找到最近 agent-workflow 验证事件，且当前没有可复制的验证命令。",
+                "next_action": "先补验证命令或最小构建清单，再通过受控 workflow 留证。",
+            }
+        )
+    elif verification.get("status") == "documented":
+        diagnostics.append(
+            {
+                "id": "verification-documented",
+                "severity": "low",
+                "title": "可验证未留证",
+                "detail": "项目已经登记验证命令，但最近还没有 workflow 验证证据。",
+                "next_action": "择机运行已登记命令，并把结果补进 agent-workflow 证据。",
             }
         )
     if not diagnostics:
@@ -1891,8 +2275,8 @@ def _build_projects(
             continue
         page_id = PROJECT_TO_PAGE.get(project_id, "SystemMap")
         project_path = WORKSPACE_ROOT / "projects" / project_id
-        runtime = _project_runtime_status(project_id, port_registry, port_registry_path)
         operational = _project_operational_status(project_id)
+        runtime = _project_runtime_status(project_id, project_data, operational, port_registry, port_registry_path)
         project = {
             "id": project_id,
             "layer": project_data.get("layer", "unknown"),
@@ -2095,7 +2479,7 @@ def _build_project_focus(projects: list[dict[str, Any]]) -> dict[str, Any]:
             "needs-action",
             "需要动作",
             "high",
-            "项目不是 ready、运行未监听、验证失败或暂无验证。",
+            "项目不是 ready、需要常驻但未监听/未登记，或验证失败/暂无验证。",
             lambda project: (
                 project.get("operational", {}).get("status") != "ready"
                 or project.get("runtime", {}).get("status") in {"stopped", "unobserved"}
@@ -2115,7 +2499,7 @@ def _build_project_focus(projects: list[dict[str, Any]]) -> dict[str, Any]:
             "runtime-gap",
             "运行未就绪",
             "medium",
-            "项目有端口登记但未监听，或尚未登记可观测端口。",
+            "项目需要常驻服务，但端口未监听或尚未登记可观测端口。",
             lambda project: project.get("runtime", {}).get("status") in {"stopped", "unobserved"},
         ),
         _project_focus_queue(
@@ -2123,20 +2507,27 @@ def _build_project_focus(projects: list[dict[str, Any]]) -> dict[str, Any]:
             "verification-gap",
             "验证待补证",
             "medium",
-            "最近验证失败或缺少验证事件。",
-            lambda project: (
-                project.get("runtime", {}).get("latest_verification", {}).get("status") in {"failed", "unknown"}
-            ),
+            "最近验证失败，或当前连可复制验证方案都还没有。",
+            lambda project: project.get("runtime", {}).get("latest_verification", {}).get("status") in {"failed", "unknown"},
+        ),
+        _project_focus_queue(
+            projects,
+            "verification-ready",
+            "可验证未留证",
+            "low",
+            "项目已经登记验证命令，但还缺最近一次 workflow 证据。",
+            lambda project: project.get("runtime", {}).get("latest_verification", {}).get("status") == "documented",
         ),
         _project_focus_queue(
             projects,
             "ready-and-running",
             "可日用项目",
             "low",
-            "目录状态 ready 且运行探针为 running。",
+            "目录状态 ready，且运行中或已明确无需常驻服务。",
             lambda project: (
                 project.get("operational", {}).get("status") == "ready"
-                and project.get("runtime", {}).get("status") == "running"
+                and project.get("runtime", {}).get("status") in {"running", "not_applicable"}
+                and project.get("runtime", {}).get("latest_verification", {}).get("status") in {"verified", "documented"}
             ),
         ),
     ]
@@ -2148,6 +2539,7 @@ def _build_project_focus(projects: list[dict[str, Any]]) -> dict[str, Any]:
             "operational_gap": queue_lookup["operational-gap"]["count"],
             "runtime_gap": queue_lookup["runtime-gap"]["count"],
             "verification_gap": queue_lookup["verification-gap"]["count"],
+            "verification_ready": queue_lookup["verification-ready"]["count"],
             "ready_and_running": queue_lookup["ready-and-running"]["count"],
         },
     }
@@ -2193,7 +2585,7 @@ def _build_project_triage(projects: list[dict[str, Any]]) -> dict[str, Any]:
             "verification",
             "验证排查",
             "high",
-            "最近验证失败或缺少验证证据的项目。",
+            "最近验证失败，或当前缺少可复制验证方案的项目。",
             "verification",
         ),
         _project_triage_queue(
@@ -2543,9 +2935,11 @@ def _build_page_maturity(
             if step.get("page_id") == page_id or (step.get("page") or {}).get("id") == page_id
         ]
         page_roadmap_items = [item for item in roadmap_items if item.get("cockpit_page") == page_id]
-        action_count = sum(
+        project_action_count = sum(
             len(project.get("actions") or []) + len(project.get("triage_commands") or []) for project in page_projects
         )
+        page_action_ids = list(PAGE_OPERATOR_ACTIONS.get(page_id, ()))
+        action_count = project_action_count + len(page_action_ids)
         score = (
             (25 if page_projects else 0)
             + (20 if page_domains else 0)
@@ -2567,6 +2961,7 @@ def _build_page_maturity(
                 "playbook_steps": [step.get("id") for step in page_playbook_steps],
                 "roadmap_items": [item.get("id") for item in page_roadmap_items],
                 "actions": action_count,
+                "operator_actions": page_action_ids,
                 "next_action": _page_maturity_next_action(
                     page_projects,
                     page_domains,
@@ -2672,6 +3067,9 @@ def build_system_map() -> dict[str, Any]:
             "running_projects": sum(1 for project in projects if project["runtime"]["status"] == "running"),
             "stopped_projects": sum(1 for project in projects if project["runtime"]["status"] == "stopped"),
             "unobserved_projects": sum(1 for project in projects if project["runtime"]["status"] == "unobserved"),
+            "not_applicable_projects": sum(
+                1 for project in projects if project["runtime"]["status"] == "not_applicable"
+            ),
             "gaps": len(gaps),
             "roadmap_items": roadmap["summary"]["total"],
             "playbooks": len(playbooks),

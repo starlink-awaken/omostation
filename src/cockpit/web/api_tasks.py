@@ -214,6 +214,51 @@ def _project_portfolio_copy_text(project: dict) -> str:
     return "\n".join(lines)
 
 
+def _priority_from_verification_ready(project: dict) -> str:
+    runtime_status = str(project.get("runtime_status", "unknown"))
+    if runtime_status in {"stopped", "unobserved"}:
+        return "high"
+    if runtime_status == "running":
+        return "medium"
+    return "low"
+
+
+def _verification_ready_copy_text(project: dict) -> str:
+    verification = project.get("latest_verification") or {}
+    source_refs = project.get("source_refs") or []
+    lines = [
+        f"# 验证补证草稿：{project.get('id', 'unknown')}",
+        "",
+        f"项目：{project.get('id', 'unknown')}",
+        f"层级：{project.get('layer', 'unknown')} · 入口：{project.get('cockpit_page', 'SystemMap')}",
+        f"运行：{project.get('runtime_status', 'unknown')} · 验证：{verification.get('status', 'unknown')}",
+        f"下一步：{project.get('next_action', '')}",
+        "",
+        "建议动作：",
+        f"1. 复制并执行验证命令：{verification.get('command') or '未登记'}",
+        "2. 确认输出结果是否能作为当前项目的最小可用验证。",
+        "3. 通过 agent-workflow verify / closeout 留下正式证据。",
+    ]
+    if source_refs:
+        lines.extend(
+            [
+                "",
+                "来源定位：",
+                *[
+                    f"- {ref.get('label', ref.get('source_key', 'source'))}: {ref.get('target', ref.get('path', ''))}"
+                    for ref in source_refs[:4]
+                ],
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "安全门：只读验证补证草稿；复制后由人确认，正式写入需走 agent-workflow / C2G / OMO 受控入口。",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def _priority_from_domain_app(app: dict) -> str:
     if app.get("security_posture") == "blocked" or app.get("security_failed", 0):
         return "critical"
@@ -569,6 +614,74 @@ def get_project_portfolio_task_drafts(limit: int = 8) -> list[dict]:
     return drafts
 
 
+def get_verification_ready_task_drafts(limit: int = 12) -> list[dict]:
+    """Build read-only TaskCenter drafts for projects with commands but no workflow evidence yet."""
+    system_map = build_system_map()
+    generated_at = system_map.get("generated_at") or datetime.now(UTC).isoformat()
+    projects_by_id = {project.get("id"): project for project in system_map.get("projects") or []}
+    queues = system_map.get("project_focus", {}).get("queues") or []
+    verification_queue = next((queue for queue in queues if queue.get("id") == "verification-ready"), {})
+    drafts: list[dict] = []
+
+    for project_id in (verification_queue.get("project_ids") or [])[:limit]:
+        project = projects_by_id.get(project_id) or {}
+        verification = (project.get("runtime") or {}).get("latest_verification") or {}
+        drafts.append(
+            {
+                "id": f"verification-ready-{project_id}",
+                "title": f"验证补证：{project_id}",
+                "description": "项目已登记验证命令，但最近还没有 workflow 验证证据。",
+                "status": "pending",
+                "progress": 0,
+                "created_at": generated_at,
+                "updated_at": generated_at,
+                "assignee": "engineering",
+                "priority": _priority_from_verification_ready(
+                    {
+                        "runtime_status": (project.get("runtime") or {}).get("status", "unknown"),
+                    }
+                ),
+                "tags": [
+                    "verification-ready",
+                    "draft",
+                    str(project.get("layer", "unknown")),
+                    str((project.get("runtime") or {}).get("status", "unknown")),
+                ],
+                "read_only": True,
+                "source": {
+                    "type": "system_map_verification_ready",
+                    "id": project_id,
+                    "title": f"{project_id} 验证补证",
+                    "source_refs": project.get("source_refs") or [],
+                },
+                "draft": {
+                    "kind": "verification_ready_task",
+                    "copy_text": _verification_ready_copy_text(
+                        {
+                            "id": project_id,
+                            "layer": project.get("layer", "unknown"),
+                            "cockpit_page": project.get("cockpit_page", "SystemMap"),
+                            "runtime_status": (project.get("runtime") or {}).get("status", "unknown"),
+                            "latest_verification": verification,
+                            "next_action": "复制验证命令执行后，通过 agent-workflow 留证。",
+                            "source_refs": project.get("source_refs") or [],
+                        }
+                    ),
+                    "step_count": 3,
+                    "evidence_fields": [
+                        {"label": "运行状态", "value": str((project.get("runtime") or {}).get("status", "unknown"))},
+                        {"label": "验证状态", "value": str(verification.get("status", "unknown"))},
+                        {"label": "验证命令", "value": str(verification.get("command") or "未登记")},
+                        {"label": "入口页面", "value": str(project.get("cockpit_page", "SystemMap"))},
+                    ],
+                    "guard": "只读验证补证草稿；正式写入需走 agent-workflow / C2G / OMO 受控入口。",
+                },
+            }
+        )
+
+    return drafts
+
+
 @router.get("/api/tasks")
 async def get_tasks(
     status: str | None = Query(None, description="任务状态过滤"),
@@ -576,6 +689,7 @@ async def get_tasks(
     sort: str = Query("updated", description="排序方式"),
     include_playbook_drafts: bool = Query(False, description="包含 SystemMap 操作清单任务草稿"),
     include_project_portfolio_drafts: bool = Query(False, description="包含 SystemMap 项目组合任务草稿"),
+    include_verification_ready_drafts: bool = Query(False, description="包含 SystemMap 验证补证草稿"),
     include_domain_app_drafts: bool = Query(False, description="包含 SystemMap 领域应用任务草稿"),
     include_capability_gap_drafts: bool = Query(False, description="包含 SystemMap 能力缺口任务草稿"),
     include_page_maturity_drafts: bool = Query(False, description="包含 Cockpit 页面能力补齐任务草稿"),
@@ -586,6 +700,8 @@ async def get_tasks(
         tasks.extend(get_playbook_task_drafts())
     if include_project_portfolio_drafts:
         tasks.extend(get_project_portfolio_task_drafts())
+    if include_verification_ready_drafts:
+        tasks.extend(get_verification_ready_task_drafts())
     if include_domain_app_drafts:
         tasks.extend(get_domain_app_task_drafts())
     if include_capability_gap_drafts:
