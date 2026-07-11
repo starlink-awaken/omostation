@@ -184,22 +184,15 @@ class ProxyManager:
             _ws_root = (
                 Path(__file__).resolve().parents[5]
             )  # agora/src/agora/mcp_proxy → workspace root
-            _kairon = frozenset(
-                {
-                    "eidos",
-                    "iris",
-                    "kronos",
-                    "minerva",
-                    "sophia",
-                    "codeanalyze",
-                    "forge",
-                    "kos",
-                    "ontoderive",
-                }
-            )
             _pi = args.index("--package")
             _pkg = args[_pi + 1] if _pi + 1 < len(args) else ""
-            if _pkg in _kairon:
+            # 动态检测 kairon workspace member (治本硬编码漏列, e.g. kos 事故 PR#277):
+            # kairon 包都在 projects/kairon/packages/<pkg>, 独立项目在 projects/<pkg>.
+            # 替代旧 frozenset 硬编码 (漏 kos 致 os error 2), 新包加入 kairon 自动识别.
+            _kairon_member = (
+                _ws_root / "projects" / "kairon" / "packages" / _pkg
+            ).is_dir()
+            if _kairon_member:
                 _ri = args.index("run") + 1
                 args = (
                     args[:_ri]
