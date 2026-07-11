@@ -193,7 +193,8 @@ class ProxyManager:
                     "sophia",
                     "codeanalyze",
                     "forge",
-                    "sot-bridge",
+                    "kos",
+                    "ontoderive",
                 }
             )
             _pi = args.index("--package")
