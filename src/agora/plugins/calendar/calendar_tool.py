@@ -9,7 +9,7 @@ Supported platforms: Apple iCloud, Google Calendar, Microsoft Outlook.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import timezone
 from typing import Any
 
 from agora.calendar_adapters import BaseCalendarAdapter, create_adapter  # type: ignore[import-not-found]

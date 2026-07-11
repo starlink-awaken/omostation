@@ -12,7 +12,6 @@ from agora.core.circuit_breaker import CircuitBreaker  # type: ignore[import-not
 from agora.core.service_base import (  # type: ignore[import-not-found]
     KNOWN_PROTOCOLS,
     Service,
-    ServiceConfig,
     is_safe_url,
 )
 from agora.core.transition_log import TransitionLog  # type: ignore[import-not-found]

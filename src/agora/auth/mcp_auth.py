@@ -94,7 +94,7 @@ class MCPAuthMiddleware:
                 raise MCPAuthError(
                     401,
                     "SHAREDBRAIN_SOVEREIGN_KEY not set. "
-                    "Configure this environment variable before starting agora."
+                    "Configure this environment variable before starting agora.",
                 )
         return self._sovereign_key
 

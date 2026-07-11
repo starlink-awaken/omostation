@@ -156,7 +156,10 @@ async def register_service(
     elif isinstance(protocol_config, dict):
         config = protocol_config
     else:
-        return {"status": "error", "error": f"protocol_config must be str or dict, got {type(protocol_config).__name__}"}
+        return {
+            "status": "error",
+            "error": f"protocol_config must be str or dict, got {type(protocol_config).__name__}",
+        }
 
     cfg = ServiceConfig(
         name=name,
