@@ -172,7 +172,7 @@ class Pipeline:
                 if step.get("critical", False):
                     break
 
-        completed_payload = {"pipeline": name}
+        completed_payload: dict[str, Any] = {"pipeline": name}
         if identity_payload:
             completed_payload["identity"] = identity_payload
         self._publish("pipeline:completed", completed_payload)

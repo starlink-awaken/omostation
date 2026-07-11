@@ -49,6 +49,9 @@ class _McpStdioSession:
 
         def _read() -> None:
             try:
+                if self.proc is None or self.proc.stdout is None:
+                    q.put(("exc", RuntimeError("Process not running")))
+                    return
                 line = self.proc.stdout.readline()
                 q.put(("line", line))
             except Exception as exc:

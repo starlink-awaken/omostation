@@ -218,8 +218,10 @@ async def search_all(
     seen: set[str] = set()
     merged: list[dict[str, Any]] = []
     for result in gathered:
-        if isinstance(result, Exception):
+        if isinstance(result, BaseException):
             logger.error("search_all_source_error", error=str(result))
+            continue
+        if not isinstance(result, list):
             continue
         for item in result:
             name = item.get("name", "")

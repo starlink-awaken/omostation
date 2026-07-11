@@ -141,14 +141,28 @@ async def register_service(
         documentation_url: Documentation URL for the service
     """
     from agora.core.registry import Service, ServiceConfig  # type: ignore[import-not-found]
+    import json as _json
 
     registry = _get_registry()
+
+    # Parse protocol_config from JSON string to dict
+    if isinstance(protocol_config, str):
+        try:
+            config = _json.loads(protocol_config)
+        except _json.JSONDecodeError as e:
+            return {"status": "error", "error": f"Invalid protocol_config JSON: {e}"}
+        if not isinstance(config, dict):
+            return {"status": "error", "error": "protocol_config must be a JSON object"}
+    elif isinstance(protocol_config, dict):
+        config = protocol_config
+    else:
+        return {"status": "error", "error": f"protocol_config must be str or dict, got {type(protocol_config).__name__}"}
 
     cfg = ServiceConfig(
         name=name,
         description=description,
         protocol=protocol,
-        protocol_config=protocol_config,
+        protocol_config=config,
         mcp_endpoint=mcp_endpoint,
         health_endpoint=health_endpoint,
         port=port,

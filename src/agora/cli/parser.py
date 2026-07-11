@@ -14,13 +14,14 @@ from agora.persistence import json_load  # type: ignore[import-not-found]
 def _load_command_map() -> dict:
     """Load command-prefix -> CLI module mapping from external config."""
     config_path = Path(__file__).with_suffix("").parent / "commands.json"
-    return json_load(
+    result = json_load(
         config_path,
         default={
             "prefixes": {},
             "fallback": {"module": "eidos.cli", "pass_args": True},
         },
     )
+    return result if isinstance(result, dict) else {}
 
 
 def run_command(args):
