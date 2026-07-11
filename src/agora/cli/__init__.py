@@ -271,7 +271,6 @@ if __name__ == "__main__":
         print("\nInterrupted.")
         sys.exit(130)
     except Exception as e:  # defensive fallback
-        from agora.cli.errors import CLIError
         import traceback
 
         print(f"\nError: {e}", file=sys.stderr)

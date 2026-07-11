@@ -139,8 +139,6 @@ except ImportError:  # pragma: no cover — optional dependency
     _JWT_AVAILABLE = True
 
 try:
-    import base64
-
     from cryptography.fernet import Fernet
 
     _FERNET_AVAILABLE = True
@@ -156,6 +154,7 @@ except ImportError:  # pragma: no cover — optional dependency
         @staticmethod
         def generate_key() -> bytes:
             raise ImportError("cryptography package required for Fernet encryption")
+
 
 from agora.auth.auth_models import (  # type: ignore[import-not-found]
     AuthenticatedUser,

@@ -677,14 +677,22 @@ def agora_registry() -> str:
     pm = get_proxy_manager()
     if pm:
         tools = pm.registry.entries
-        resources = pm.registry.resources if hasattr(pm.registry, 'resources') else {}
+        resources = pm.registry.resources if hasattr(pm.registry, "resources") else {}
         return json.dumps(
             {
                 "tools": [
-                    {"name": name, "description": entry.description if hasattr(entry, 'description') else str(entry)}
+                    {
+                        "name": name,
+                        "description": entry.description
+                        if hasattr(entry, "description")
+                        else str(entry),
+                    }
                     for name, entry in tools.items()
                 ],
-                "resources": [{"uri": uri, "name": res.name if hasattr(res, 'name') else str(res)} for uri, res in resources.items()],
+                "resources": [
+                    {"uri": uri, "name": res.name if hasattr(res, "name") else str(res)}
+                    for uri, res in resources.items()
+                ],
             },
             indent=2,
         )

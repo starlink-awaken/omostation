@@ -178,9 +178,7 @@ class KeyManager:
         if not isinstance(raw_scopes, list):
             raw_scopes = []
         self.revoke(key_id)
-        return self.create_key(
-            d["name"], raw_scopes, d["tenant"], expires_days
-        )
+        return self.create_key(d["name"], raw_scopes, d["tenant"], expires_days)
 
     def revoke(self, key_id: str) -> bool:
         conn = _get_db(self._db_path)

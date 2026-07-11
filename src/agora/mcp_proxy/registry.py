@@ -266,7 +266,7 @@ class ProxyRegistry:
                 try:
                     import asyncio
 
-                    loop = asyncio.get_running_loop()
+                    asyncio.get_running_loop()
                     for cb in self._unload_callbacks:
                         task = cb(service_name)
                         if task is not None:

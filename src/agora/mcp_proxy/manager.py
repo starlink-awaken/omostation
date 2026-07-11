@@ -522,11 +522,7 @@ class ProxyManager:
         for name in self.registry.known_services:
             client = self.registry._clients.get(name)
             tool_count = len(
-                [
-                    e
-                    for e in self.registry.entries.values()
-                    if e.service_name == name
-                ]
+                [e for e in self.registry.entries.values() if e.service_name == name]
             )
             services_info[name] = {
                 "connected": client.connected if client else False,
