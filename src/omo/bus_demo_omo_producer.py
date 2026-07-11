@@ -12,16 +12,20 @@ import uuid
 from bus_foundation.facade import event as bus_event  # X1 规范迁移
 
 
+def _get_trace_id() -> str | None:
+    try:
+        from bus_foundation.observability import get_current_trace_id
+        return get_current_trace_id()
+    except ImportError:
+        return None
+
+
 def emit_demo_event(task_id: str, dispatch_id: str | None = None) -> str:
-    """Emit a single omo:dispatched event via bus facade."""
-    trace_id = f"omo-trace-{uuid.uuid4().hex[:6]}"
+    trace_id = _get_trace_id() or f"omo-trace-{uuid.uuid4().hex[:6]}"
     payload = {
         "task_id": task_id,
         "dispatch_id": dispatch_id or f"dispatch-{uuid.uuid4().hex[:8]}",
     }
-
-    # Facade returns None, so we return a dummy ID or trace_id
-    # to keep the return type as str for this demo
     bus_event.publish(
         topic="omo:dispatched",
         payload=payload,
