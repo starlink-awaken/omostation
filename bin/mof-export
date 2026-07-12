@@ -30,12 +30,17 @@ def export_project_readme(project_name: str) -> str:
     """从模型生成项目 README"""
     nodes = load_all_m1()
     
-    # Find project node
+    # Find project node - prioritize COMP-WS-{name} exact match
     project_node = None
     for n in nodes:
-        if n.get("id") == f"COMP-WS-{project_name}" or n.get("project") == project_name:
+        if n.get("id") == f"COMP-WS-{project_name}":
             project_node = n
             break
+    if project_node is None:
+        for n in nodes:
+            if n.get("project") == project_name:
+                project_node = n
+                break
     
     if not project_node:
         return f"# {project_name}\n\nProject node not found in MOF model."
