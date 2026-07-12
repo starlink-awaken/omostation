@@ -623,7 +623,7 @@ def test_r4b_decisions_quick_ref_exists(verbose: bool = False) -> tuple[bool, st
         return False, 'docs/M4-DECISIONS-INDEX.md 不存在'
     content2 = p2.read_text()
     # 应含 11+ ADR + R0..R4 标签
-    adr_count = sum(1 for n in range(132, 143) if f'013{n - 130}' in content2 or f'014{n - 140 - 1}' in content2)
+    adr_count = sum(1 for n in range(132, 143) if f'013{n - 130}' in content2 or f'014{n - 140}' in content2)
     rounds = ['R0', 'R2a', 'R2b', 'R2c', 'R3a', 'R3b', 'R4b']
     round_present = sum(1 for r in rounds if r in content2)
     return True, f'M4 速查表存在, ADR 覆盖 {adr_count}/11, Round {round_present}/{len(rounds)}'
