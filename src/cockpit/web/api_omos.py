@@ -55,18 +55,18 @@ _VIOLATIONS_TTL = 15.0  # 15秒缓存
 async def _git_commit_fix_drift():
     try:
         import asyncio
+
         add_proc = await asyncio.create_subprocess_exec(
-            "git", "add", ".omo/state/system.yaml", ".omo/change-log/mutations.jsonl",
-            cwd=str(_REPO_ROOT)
+            "git", "add", ".omo/state/system.yaml", ".omo/change-log/mutations.jsonl", cwd=str(_REPO_ROOT)
         )
         await add_proc.wait()
         commit_proc = await asyncio.create_subprocess_exec(
-            "git", "commit", "-m", "chore: auto-fix ssot task_count_drift via cockpit-ui",
-            cwd=str(_REPO_ROOT)
+            "git", "commit", "-m", "chore: auto-fix ssot task_count_drift via cockpit-ui", cwd=str(_REPO_ROOT)
         )
         await commit_proc.wait()
     except Exception:
         pass
+
 
 if router:
 
@@ -571,9 +571,7 @@ if router:
 
             guardian_path = str(_REPO_ROOT / "bin" / "ssot-guardian.py")
             proc = await asyncio.to_thread(
-                subprocess.run,
-                ["python3", guardian_path, "--auto-fix"],
-                capture_output=True, text=True
+                subprocess.run, ["python3", guardian_path, "--auto-fix"], capture_output=True, text=True
             )
 
             asyncio.create_task(_git_commit_fix_drift())
@@ -632,10 +630,7 @@ if router:
         cmd.extend(existing_paths)
 
         try:
-            proc = await asyncio.to_thread(
-                subprocess.run,
-                cmd, cwd=str(_REPO_ROOT), capture_output=True, text=True
-            )
+            proc = await asyncio.to_thread(subprocess.run, cmd, cwd=str(_REPO_ROOT), capture_output=True, text=True)
             output = proc.stdout
             violations = []
 

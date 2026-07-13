@@ -34,9 +34,11 @@ _REPO_ROOT = Path(__file__).resolve().parents[5]
 def _ttl_cache(seconds: float):
     def decorator(func):
         _cache = {}
+
         @wraps(func)
         async def wrapper(*args, **kwargs):
             from cockpit.web.api_ecos import _REPO_ROOT
+
             key = (func.__name__, str(_REPO_ROOT), args, tuple(sorted(kwargs.items())))
             now = time.time()
             if key in _cache:
@@ -47,7 +49,9 @@ def _ttl_cache(seconds: float):
             if isinstance(result, dict) and result.get("status") != "degraded" and "error" not in result:
                 _cache[key] = (result, now + seconds)
             return result
+
         return wrapper
+
     return decorator
 
 

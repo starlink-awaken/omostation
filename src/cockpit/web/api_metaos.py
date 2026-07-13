@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/metaos", tags=["metaos"])
 def _ttl_cache(seconds: float):
     def decorator(func):
         _cache = {}
+
         @wraps(func)
         async def wrapper(*args, **kwargs):
             key = (func.__name__, args, tuple(sorted(kwargs.items())))
@@ -27,8 +28,11 @@ def _ttl_cache(seconds: float):
             result = await func(*args, **kwargs)
             _cache[key] = (result, now + seconds)
             return result
+
         return wrapper
+
     return decorator
+
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 

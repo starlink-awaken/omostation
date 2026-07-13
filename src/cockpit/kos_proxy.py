@@ -165,4 +165,6 @@ if __name__ == "__main__":
     import uvicorn
 
     app = create_kos_app()
-    uvicorn.run(app, host="0.0.0.0", port=0)  # let uvicorn pick a free port; the hardcoded fallback is only for production
+    uvicorn.run(
+        app, host="0.0.0.0", port=0
+    )  # let uvicorn pick a free port; the hardcoded fallback is only for production
