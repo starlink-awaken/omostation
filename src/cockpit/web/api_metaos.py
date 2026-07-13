@@ -3,12 +3,32 @@
 from __future__ import annotations
 
 import sys
+import time
+from functools import wraps
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/api/metaos", tags=["metaos"])
+
+
+def _ttl_cache(seconds: float):
+    def decorator(func):
+        _cache = {}
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            key = (func.__name__, args, tuple(sorted(kwargs.items())))
+            now = time.time()
+            if key in _cache:
+                result, expiry = _cache[key]
+                if now < expiry:
+                    return result
+            result = await func(*args, **kwargs)
+            _cache[key] = (result, now + seconds)
+            return result
+        return wrapper
+    return decorator
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
@@ -81,6 +101,7 @@ async def api_metaos_execute(request: Request, background_tasks: BackgroundTasks
 
 
 @router.get("/workflows")
+@_ttl_cache(15.0)
 async def api_metaos_workflows():
     """获取所有历史工作流"""
     try:
