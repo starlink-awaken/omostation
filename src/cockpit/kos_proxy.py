@@ -7,7 +7,7 @@ Cockpit-KOS Proxy — cockpit 代理 KOS 搜索 API
 将搜索请求转发到 KOS REST API 或 MCP Server。
 
 架构: cockpit -(HTTP)-> KOS REST API / MCP Server
-      loose coupling, 无直接 Python import
+       loose coupling, 无直接 Python import
 
 Usage:
     # 在 cockpit dashboard_server.py 中集成:
@@ -23,39 +23,51 @@ from __future__ import annotations
 
 import json
 import os
-import urllib.request
-import urllib.error
 from typing import Any
 
+import httpx
+
 # KOS API URL (configurable via environment)
-KOS_API_URL = os.environ.get("KOS_API_URL", "http://localhost:KOS_REST_API_PORT")  # KOS_RESERVED
+KOS_API_URL = os.environ.get("KOS_API_URL", "http://localhost:8766")
 KOS_MCP_URL = os.environ.get("KOS_MCP_URL", "http://localhost:8765")
 
+_client: httpx.AsyncClient | None = None
 
-def _kos_rest_call(method: str, path: str, data: dict | None = None) -> dict:
+
+def _get_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None:
+        _client = httpx.AsyncClient(
+            base_url=KOS_API_URL,
+            timeout=30.0,
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+        )
+    return _client
+
+
+async def _kos_rest_call(method: str, path: str, data: dict | None = None) -> dict:
     """Make a REST call to KOS API."""
-    url = f"{KOS_API_URL}{path}"
-    payload = json.dumps(data).encode("utf-8") if data else None
-    req = urllib.request.Request(
-        url,
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method=method,
-    )
+    client = _get_client()
     try:
-        with urllib.request.urlopen(req, timeout=30.0) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.URLError as e:
-        return {"error": str(e), "url": url}
+        if method == "GET":
+            resp = await client.get(path)
+        elif method == "POST":
+            resp = await client.post(path, json=data)
+        else:
+            resp = await client.request(method, path, json=data)
+        resp.raise_for_status()
+        return resp.json()
+    except httpx.HTTPError as e:
+        return {"error": str(e), "url": f"{KOS_API_URL}{path}"}
     except Exception as e:
         return {"error": str(e)}
 
 
 def _url_encode_params(params: dict) -> str:
     """URL encode parameters."""
-    import urllib.parse
+    from urllib.parse import urlencode, quote
 
-    return urllib.parse.urlencode(params, encoding="utf-8", quote_via=urllib.parse.quote)
+    return urlencode(params, encoding="utf-8", quote_via=quote)
 
 
 # ── FastAPI 代理路由 ─────────────────────────────────────
@@ -73,7 +85,7 @@ def init_kos_routes(app):
     async def kos_search(q: str, mode: str = "hybrid", limit: int = 10):
         """搜索知识库。"""
         params = {"q": q, "mode": mode, "limit": limit}
-        result = _kos_rest_call("GET", f"/api/v1/search?{_url_encode_params(params)}")
+        result = await _kos_rest_call("GET", f"/api/v1/search?{_url_encode_params(params)}")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -82,7 +94,7 @@ def init_kos_routes(app):
     async def kos_suggest(prefix: str, limit: int = 8):
         """搜索建议。"""
         params = {"prefix": prefix, "limit": limit}
-        result = _kos_rest_call("GET", f"/api/v1/suggest?{_url_encode_params(params)}")
+        result = await _kos_rest_call("GET", f"/api/v1/suggest?{_url_encode_params(params)}")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -91,7 +103,7 @@ def init_kos_routes(app):
     async def kos_context(q: str, mode: str = "balanced"):
         """构建 LLM 上下文。"""
         params = {"q": q, "mode": mode}
-        result = _kos_rest_call("GET", f"/api/v1/context?{_url_encode_params(params)}")
+        result = await _kos_rest_call("GET", f"/api/v1/context?{_url_encode_params(params)}")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -99,7 +111,7 @@ def init_kos_routes(app):
     @app.post("/api/kos/verify")
     async def kos_verify(data: dict):
         """验证声明。"""
-        result = _kos_rest_call("POST", "/api/v1/verify", data)
+        result = await _kos_rest_call("POST", "/api/v1/verify", data)
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -107,7 +119,7 @@ def init_kos_routes(app):
     @app.get("/api/kos/stats")
     async def kos_stats():
         """知识库统计。"""
-        result = _kos_rest_call("GET", "/api/v1/stats")
+        result = await _kos_rest_call("GET", "/api/v1/stats")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -115,7 +127,7 @@ def init_kos_routes(app):
     @app.get("/api/kos/health")
     async def kos_health():
         """健康检查。"""
-        result = _kos_rest_call("GET", "/api/v1/health")
+        result = await _kos_rest_call("GET", "/api/v1/health")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
@@ -124,10 +136,17 @@ def init_kos_routes(app):
     async def kos_clusters(q: str, limit: int = 10):
         """搜索 + 聚类。"""
         params = {"q": q, "limit": limit}
-        result = _kos_rest_call("GET", f"/api/v1/clusters?{_url_encode_params(params)}")
+        result = await _kos_rest_call("GET", f"/api/v1/clusters?{_url_encode_params(params)}")
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])
         return result
+
+    @app.on_event("shutdown")
+    async def _close_kos_client():
+        global _client
+        if _client:
+            await _client.aclose()
+            _client = None
 
 
 # ── 独立运行模式 ─────────────────────────────────────────
