@@ -192,7 +192,8 @@ projects:
     python: ">=3.13"
     build_backend: "hatchling"
     version: "1.0.0"
-    role: "技术债务评分 CLI"
+    role: "技术债务评分引擎 (已收编到 cockpit debt)"
+    note: "评分算法通过 cockpit debt score 直接调用 (ADR-0122 F-13)。独立 CLI 废弃。"
 
   observability:
     layer: "X"
