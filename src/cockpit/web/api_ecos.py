@@ -14,6 +14,8 @@ P45 W3 发现: port-registry 注释 9090 (ecos-dashboard) "核心功能已收敛
 
 from __future__ import annotations
 
+import time
+from functools import wraps
 from pathlib import Path
 
 import yaml
@@ -29,9 +31,30 @@ except ImportError:
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
 
+def _ttl_cache(seconds: float):
+    def decorator(func):
+        _cache = {}
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            from cockpit.web.api_ecos import _REPO_ROOT
+            key = (func.__name__, str(_REPO_ROOT), args, tuple(sorted(kwargs.items())))
+            now = time.time()
+            if key in _cache:
+                result, expiry = _cache[key]
+                if now < expiry:
+                    return result
+            result = await func(*args, **kwargs)
+            if isinstance(result, dict) and result.get("status") != "degraded" and "error" not in result:
+                _cache[key] = (result, now + seconds)
+            return result
+        return wrapper
+    return decorator
+
+
 if router:
 
     @router.get("/status")
+    @_ttl_cache(30.0)
     async def get_ecos_status():
         """获取 eCOS dashboard 状态.
 
@@ -74,6 +97,7 @@ if router:
             }
 
     @router.get("/health")
+    @_ttl_cache(60.0)
     async def get_ecos_health():
         """eCOS health check."""
         return {"status": "ok", "service": "ecos-dashboard-converged", "endpoint": "/api/ecos/status"}
