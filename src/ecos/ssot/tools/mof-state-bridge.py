@@ -25,6 +25,12 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+# 确保可以从workspace根目录直接运行
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_PROJECT_SRC = _SCRIPT_DIR.parent.parent.parent  # projects/ecos/src
+if str(_PROJECT_SRC) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_SRC))
 from typing import Any
 
 import yaml
@@ -37,41 +43,9 @@ REPO_ROOT = (
 WORKSPACE_ROOT = (
     TOOL_PATH.parent.parent.parent.parent.parent.parent.parent
 )  # 7 层 = ~/Workspace
-OMO_SRC = WORKSPACE_ROOT / "projects" / "omo" / "src"
 
-if str(OMO_SRC) not in sys.path:
-    sys.path.insert(0, str(OMO_SRC))
-
-# 懒加载 — 仅在 --omo-to-m1 方向需要 omo 模块
-_omo_ingress_mod = None
-_omo_io_mod = None
-
-
-def _get_omo_ingress_mod():
-    global _omo_ingress_mod
-    if _omo_ingress_mod is None:
-        from omo import omo_ingress as om  # noqa: E402
-
-        _omo_ingress_mod = om
-    return _omo_ingress_mod
-
-
-def _get_omo_io_mod():
-    global _omo_io_mod
-    if _omo_io_mod is None:
-        from omo import omo_io as oi  # noqa: E402
-
-        _omo_io_mod = oi
-    return _omo_io_mod
-
-
-# 模块级函数包装（保持测试可 monkeypatch，同时避免import时实际加载omo模块）
-def create_planned_task(*args, **kwargs):
-    return _get_omo_ingress_mod().create_planned_task(*args, **kwargs)
-
-
-def write_yaml_atomic(*args, **kwargs):
-    return _get_omo_io_mod().write_yaml_atomic(*args, **kwargs)
+# 通过桥接接口加载 omo (L0→L2 依赖, 仅在 --omo-to-m1 方向需要)
+from ecos.ssot.tools.omo_bridge_interface import create_planned_task, write_yaml_atomic  # noqa: E402
 
 
 M1_OMO_LAYER = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m1" / "omo_layer"
