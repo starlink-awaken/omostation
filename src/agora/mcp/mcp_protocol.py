@@ -309,8 +309,8 @@ def handle_tools_call(params: dict, ctx: ToolContext) -> dict:
                         "isError": True,
                     }
                 return {"content": [{"type": "text", "text": str(res)}]}
-        finally:
-            loop.close()
+            finally:
+                loop.close()
     except Exception as exc:  # defensive fallback
         _log.warning("[MCPServer] tool dispatch error: %s", exc)
         return {

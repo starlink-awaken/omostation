@@ -77,7 +77,6 @@ def build_default_registry() -> MCPToolRegistry:
             "[MCPToolRegistry] Calendar tool could not be loaded (missing dependencies)"
         )
 
-
     for name, handler, cat in _dt_tool_registry + [
         ("ping", tool_ping, "core"),
         ("post_result", tool_post_result, "core"),
