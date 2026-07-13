@@ -229,6 +229,11 @@ rules:
       reason: 'Consumed by 1 project(s)'
       consumers:
         - runtime
+    - name: pyzmq
+      baseline: '>=27.1.0'
+      reason: 'Consumed by 1 project(s)'
+      consumers:
+        - bus-foundation
     - name: python-docx
       baseline: '>=0.8.11'
       reason: 'Consumed by 1 project(s)'
