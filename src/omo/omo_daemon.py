@@ -207,7 +207,7 @@ def run_once(
     except Exception as exc:  # noqa: BLE001  # defensive fallback
         error = (error + "; " if error else "") + f"sync_failed: {exc}"
 
-    return TickResult(
+    result = TickResult(
         timestamp=timestamp,
         audit_score=audit_score,
         audit_grade=audit_grade,
@@ -215,6 +215,45 @@ def run_once(
         history_appended=history_appended,
         error=error,
     )
+    # Round 1: emit lifecycle event on bus-foundation. Best-effort, never raises.
+    _publish_tick_event(result)
+    return result
+
+
+def _publish_tick_event(result: "TickResult") -> None:
+    """R3 / Round 1: emit omo:audit:completed (or :failed) on bus-foundation.
+
+    Best-effort: failures are logged but never propagate, so a missing
+    bus-foundation or transient publish error cannot break a tick.
+    Other omostation consumers (cockpit, kairon, aetherforge) can
+    subscribe via ``bus_foundation.facade.event.subscribe("omo:*")``
+    to observe omo audit lifecycle.
+    """
+    try:
+        from bus_foundation.facade import event as bus_event
+    except ImportError:
+        return
+    try:
+        topic = "omo:audit:completed" if result.error is None else "omo:audit:failed"
+        bus_event.publish(
+            topic=topic,
+            payload={
+                "timestamp": result.timestamp,
+                "audit_score": result.audit_score,
+                "audit_grade": result.audit_grade,
+                "sync_diff_count": result.sync_diff_count,
+                "history_appended": result.history_appended,
+                "error": result.error,
+            },
+            source_uri="bos://capability/omo/governance",
+        )
+    except Exception as exc:  # noqa: BLE001  # defensive
+        # Never let bus publish break the daemon.
+        import logging as _logging
+
+        _logging.getLogger("omo.daemon").debug(
+            "omo_audit_publish_skipped: %s", exc
+        )
 
 
 # ── 主循环 ─────────────────────────────────────────────

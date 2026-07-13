@@ -384,9 +384,11 @@ def p74_solidification_report(
     import fnmatch
 
     silent_policy = registry.get("silent_workflow_policy") or {}
-    excluded = set(
-        str(item) for item in (silent_policy.get("excluded_workflows") or [])
-    )
+
+    # run_frequency replaces excluded_workflows:
+    #   on_demand  — expected to run when triggered (30d warn threshold)
+    #   periodic   — expected to run on a schedule (7d warn threshold)
+    #   continuous — expected to always be active (1d warn threshold)
 
     started_runs: dict[str, str] = {}
     for event in events:
@@ -443,15 +445,16 @@ def p74_solidification_report(
             )
         last_start = started_runs.get(workflow_id, "")
         has_recent_run = bool(last_start)
-        excluded_workflow = workflow_id in excluded
+        run_frequency = str(workflow.get("run_frequency") or "on_demand")
         silent_health = (
             "active"
             if has_recent_run or has_check_coverage
-            else ("excluded" if excluded_workflow else "warn")
+            else "warn"
         )
         workflows_summary.append(
             {
                 "workflow_id": workflow_id,
+                "run_frequency": run_frequency,
                 "has_recent_run": has_recent_run,
                 "last_start_ts": last_start,
                 "has_check_coverage": has_check_coverage,
