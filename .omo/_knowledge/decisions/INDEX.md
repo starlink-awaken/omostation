@@ -157,6 +157,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 | 0178 | P79 Phase 5 收官 (SOP + GaC 173 冻结 + 结项) | ACCEPTED | 2026-07-08 | governance-team | 0178-p79-phase5-closeout.md |
 | 0179 | runtime 探测假阳性根治本 (launcher-zombie + import 断裂 + self-heal 死循环) | ACCEPTED | 2026-07-10 | governance-team | 0179-runtime-probe-false-positive-treatment.md |
+| 0180 | bus-foundation 全面落地 (P7x rollout: topics SSOT + dormant-adapter gate + P74) | ACCEPTED | 2026-07-13 | governance-team | 0180-bus-foundation-rollout.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
 
