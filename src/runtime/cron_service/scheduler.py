@@ -243,6 +243,42 @@ async def _run_job(job_id: str, executor: ThreadPoolExecutor):
             logger.error("Delivery failed for job %s: %s", job_id, err_msg)
             db.record_run(job_id, "ok", output, f"[Delivery failed] {err_msg}")
 
+    # Round 4 / P7x: announce the cron fire to bus-foundation so other
+    # omostation consumers (cockpit, omo, metaos) can observe the run.
+    # Best-effort: a missing bus-foundation must not break the cron loop.
+    _bus_emit_cron_fired(job_id=job_id, name=job.name, status=status,
+                         error=error, output=output)
+
+
+def _bus_emit_cron_fired(
+    *,
+    job_id: str,
+    name: str,
+    status: str,
+    error: str | None,
+    output: str,
+) -> None:
+    """Best-effort bus-foundation emit for cron job completion."""
+    try:
+        from bus_foundation.facade import event as bus_event
+    except ImportError:
+        return
+    try:
+        topic = "runtime:cron:failed" if status != "ok" else "runtime:cron:fired"
+        bus_event.publish(
+            topic=topic,
+            payload={
+                "job_id": job_id,
+                "name": name,
+                "status": status,
+                "error": error,
+                "output": output[:500] if output else "",
+            },
+            source_uri="bos://capability/runtime/cron",
+        )
+    except Exception as exc:  # noqa: BLE001  # defensive
+        logger.debug("runtime_cron_bus_publish_skipped: %s", exc)
+
 
 # ── Scheduler loop ─────────────────────────────────────────────────
 
