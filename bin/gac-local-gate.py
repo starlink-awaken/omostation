@@ -69,7 +69,14 @@ DEFAULT_POLICY = {
         {"id": "service-config-drift", "command": ["bin/gen-service-configs.py", "--check"], "ci_skip": True},
         {"id": "gac-mesh-router-check", "command": ["bin/gac-mesh-router.py", "--check"]},
         {"id": "gac-consensus-inject-check", "command": ["bin/gac-consensus-inject.py", "--check"]},
-        {"id": "gac-compute-onboard-check", "command": ["bin/gac-compute-onboard.py", "--check"]}
+        {"id": "gac-compute-onboard-check", "command": ["bin/gac-compute-onboard.py", "--check"]},
+        # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
+        # Catches the P71 class-A "declaration without execution" trap.
+        {"id": "bus-usage-report", "command": ["bin/bus-usage-report.py"]},
+        # P7x-bus-foundation-rollout follow-up: real cross-process ZMQ e2e.
+        # Spawns 2 subprocesses + uses TCP sockets (~2-5s). ci_only=True so
+        # pre-commit skips the cost; CI strict runs it.
+        {"id": "bus-e2e-harness", "command": ["bin/bus-e2e-harness.py", "--count", "30", "--json"], "ci_only": True}
     ]
 }
 
