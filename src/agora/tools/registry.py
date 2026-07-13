@@ -13,19 +13,11 @@ from agora.tools.monitoring import (
     tool_get_metrics_snapshot,
 )
 from agora.tools.synapse import tool_synapse_hello, tool_synapse_ping
-from agora.tools.domain import (
-    tool_memory_query,
-    tool_execution_submit_task,
-    tool_governance_submit_request,
-    tool_evolution_status,
-    tool_swarm_dispatch,
-)
 from agora.tools.voice import (
     tool_voice_speak,
     tool_voice_session_info,
     tool_voice_intent_digest,
 )
-from agora.tools.dt import tool_mail_handler, tool_tasks_list
 
 _log = logging.getLogger(__name__)
 
@@ -85,40 +77,6 @@ def build_default_registry() -> MCPToolRegistry:
             "[MCPToolRegistry] Calendar tool could not be loaded (missing dependencies)"
         )
 
-    # --- Mail Tool registration ---
-    _dt_tool_registry.extend(
-        [
-            ("mail/list_mailboxes", tool_mail_handler, "mail_inbox"),
-            ("mail/fetch_emails", tool_mail_handler, "mail_inbox"),
-            ("mail/send_email", tool_mail_handler, "mail_inbox"),
-            ("mail/mark_read", tool_mail_handler, "mail_inbox"),
-            ("mail/search_emails", tool_mail_handler, "mail_inbox"),
-        ]
-    )
-
-    # --- Mail Tool registration ---
-    _dt_tool_registry.extend(
-        [
-            ("mail/list_mailboxes", tool_mail_handler, "mail_inbox"),
-            ("mail/fetch_emails", tool_mail_handler, "mail_inbox"),
-            ("mail/send_email", tool_mail_handler, "mail_inbox"),
-            ("mail/mark_read", tool_mail_handler, "mail_inbox"),
-            ("mail/search_emails", tool_mail_handler, "mail_inbox"),
-        ]
-    )
-
-    # --- Tasks Tool registration ---
-    _dt_tool_registry.extend(
-        [
-            ("tasks/list", tool_tasks_list, "tasks_list"),
-            ("tasks/get", tool_tasks_list, "tasks_list"),
-            ("tasks/create", tool_tasks_list, "tasks_list"),
-            ("tasks/update", tool_tasks_list, "tasks_list"),
-            ("tasks/complete", tool_tasks_list, "tasks_list"),
-            ("tasks/delete", tool_tasks_list, "tasks_list"),
-            ("tasks/sources", tool_tasks_list, "tasks_list"),
-        ]
-    )
 
     for name, handler, cat in _dt_tool_registry + [
         ("ping", tool_ping, "core"),
@@ -130,11 +88,6 @@ def build_default_registry() -> MCPToolRegistry:
         ("get_metrics_snapshot", tool_get_metrics_snapshot, "monitoring"),
         ("synapse/hello", tool_synapse_hello, "synapse"),
         ("synapse/ping", tool_synapse_ping, "synapse"),
-        ("memory/query", tool_memory_query, "domain"),
-        ("execution/submit_task", tool_execution_submit_task, "domain"),
-        ("governance/submit_request", tool_governance_submit_request, "domain"),
-        ("evolution/status", tool_evolution_status, "domain"),
-        ("swarm/dispatch", tool_swarm_dispatch, "domain"),
         # --- Voice Tool registration ---
         ("voice/speak", tool_voice_speak, "voice"),
         ("voice/session_info", tool_voice_session_info, "voice"),

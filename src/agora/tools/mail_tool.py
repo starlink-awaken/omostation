@@ -84,22 +84,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 
-def _inject_factgraph(triples: list[dict[str, Any]]) -> None:
-    """Inject email metadata triples into FactGraph. Fail silently."""
-    try:
-        FactGraph = __import__(
-            "nucleus.D_Memory.fact_graph",
-            fromlist=["FactGraph"],
-        ).FactGraph
-        fg = FactGraph()
-        for triple in triples:
-            fg.add_fact(
-                subject=str(triple.get("subject", "")),
-                predicate=str(triple.get("predicate", "")),
-                object_=str(triple.get("object", "")),
-            )
-    except (ImportError, AttributeError, TypeError):
-        _log.debug("[MailTool] FactGraph not available — skipping injection")
+
 
 
 # ---------------------------------------------------------------------------
@@ -516,31 +501,6 @@ class MailTool(BaseTool):
     ) -> ToolResult:
         emails = self.fetch_emails(folder=folder, limit=limit, unread_only=unread_only)
 
-        if emails:
-            triples = []
-            for e in emails:
-                msg_id = e.get("message_id") or e.get("email_id", "")
-                triples.extend(
-                    [
-                        {
-                            "subject": f"email:{msg_id}",
-                            "predicate": "from",
-                            "object": e.get("from", ""),
-                        },
-                        {
-                            "subject": f"email:{msg_id}",
-                            "predicate": "has_subject",
-                            "object": e.get("subject", ""),
-                        },
-                        {
-                            "subject": f"email:{msg_id}",
-                            "predicate": "sentiment",
-                            "object": e.get("sentiment", "neutral"),
-                        },
-                    ]
-                )
-            _inject_factgraph(triples)
-
         return ToolResult(
             success=True,
             data={"emails": emails, "count": len(emails), "folder": folder},
@@ -589,16 +549,6 @@ class MailTool(BaseTool):
                 recipients += [r.strip() for r in cc.split(",") if r.strip()]
 
             conn.send_message(msg, to_addrs=recipients if recipients else None)
-
-            _inject_factgraph(
-                [
-                    {
-                        "subject": f"person:{self._email_address}",
-                        "predicate": "sent_email",
-                        "object": f"email:{subject}",
-                    }
-                ]
-            )
 
             return {"success": True, "message_id": msg.get("Message-ID", "")}
         except Exception as exc:  # defensive fallback

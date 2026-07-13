@@ -58,36 +58,14 @@ try:
 except ImportError:
     _psutil = None
     _HAS_PSUTIL = False
-try:
-    _TaskResult = __import__(
-        "nucleus.Z_Spore.interfaces.swarm", fromlist=["TaskResult"]
-    ).TaskResult
-    _ResultBus = __import__(
-        "organs.D_Execution.organs.engine.result_bus", fromlist=["ResultBus"]
-    ).ResultBus
-    _HAS_RESULT_BUS = True
-except ImportError:
-    _HAS_RESULT_BUS = False
-    _ResultBus = None
-    _TaskResult = None
-try:
-    _NodeIdentityManager = __import__(
-        "organs.D_Gateway.organs.node_identity", fromlist=["NodeIdentityManager"]
-    ).NodeIdentityManager
-    _synapse_module = __import__(
-        "organs.D_Gateway.organs.synapse_link",
-        fromlist=["SynapseLink", "synapse_hello_handler", "synapse_ping_handler"],
-    )
-    _SynapseLink = _synapse_module.SynapseLink
-    _synapse_hello_handler = _synapse_module.synapse_hello_handler
-    _synapse_ping_handler = _synapse_module.synapse_ping_handler
-    _HAS_SYNAPSE = True
-except ImportError:
-    _HAS_SYNAPSE = False
-    _SynapseLink = None
-    _NodeIdentityManager = None
-    _synapse_hello_handler = None
-    _synapse_ping_handler = None
+_HAS_RESULT_BUS = False
+_ResultBus = None
+_TaskResult = None
+_HAS_SYNAPSE = False
+_SynapseLink = None
+_NodeIdentityManager = None
+_synapse_hello_handler = None
+_synapse_ping_handler = None
 
 _synapse_link: Any | None = None
 
