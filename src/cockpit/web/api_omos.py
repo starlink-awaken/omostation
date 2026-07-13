@@ -51,6 +51,23 @@ _VIOLATIONS_CACHE = None
 _VIOLATIONS_CACHE_TIME = 0.0
 _VIOLATIONS_TTL = 15.0  # 15秒缓存
 
+
+async def _git_commit_fix_drift():
+    try:
+        import asyncio
+        add_proc = await asyncio.create_subprocess_exec(
+            "git", "add", ".omo/state/system.yaml", ".omo/change-log/mutations.jsonl",
+            cwd=str(_REPO_ROOT)
+        )
+        await add_proc.wait()
+        commit_proc = await asyncio.create_subprocess_exec(
+            "git", "commit", "-m", "chore: auto-fix ssot task_count_drift via cockpit-ui",
+            cwd=str(_REPO_ROOT)
+        )
+        await commit_proc.wait()
+    except Exception:
+        pass
+
 if router:
 
     @router.get("/status")
@@ -549,19 +566,17 @@ if router:
     async def api_fix_drift():
         """执行 SSOT 自动修复 (ssot-guardian.py --auto-fix)"""
         try:
+            import asyncio
             import subprocess
 
-            # 执行 ssot-guardian 自动修复
-            proc = subprocess.run(
-                ["python3", str(_REPO_ROOT / "bin" / "ssot-guardian.py"), "--auto-fix"], capture_output=True, text=True
+            guardian_path = str(_REPO_ROOT / "bin" / "ssot-guardian.py")
+            proc = await asyncio.to_thread(
+                subprocess.run,
+                ["python3", guardian_path, "--auto-fix"],
+                capture_output=True, text=True
             )
-            # 同样我们再顺便运行 git add && commit 保证自愈闭环
-            subprocess.run(
-                ["git", "add", ".omo/state/system.yaml", ".omo/change-log/mutations.jsonl"], cwd=str(_REPO_ROOT)
-            )
-            subprocess.run(
-                ["git", "commit", "-m", "chore: auto-fix ssot task_count_drift via cockpit-ui"], cwd=str(_REPO_ROOT)
-            )
+
+            asyncio.create_task(_git_commit_fix_drift())
 
             return {
                 "status": "ok",
@@ -578,6 +593,8 @@ if router:
     @router.get("/violations")
     async def get_omos_violations():
         """扫描并定位直接写入 .omo/ 或 spaces/ 的违规代码行 (direct_omo_io_violation)"""
+        import asyncio
+
         global _VIOLATIONS_CACHE, _VIOLATIONS_CACHE_TIME
         now = time.time()
         if _VIOLATIONS_CACHE is not None and (now - _VIOLATIONS_CACHE_TIME) < _VIOLATIONS_TTL:
@@ -615,7 +632,10 @@ if router:
         cmd.extend(existing_paths)
 
         try:
-            proc = subprocess.run(cmd, cwd=str(_REPO_ROOT), capture_output=True, text=True)
+            proc = await asyncio.to_thread(
+                subprocess.run,
+                cmd, cwd=str(_REPO_ROOT), capture_output=True, text=True
+            )
             output = proc.stdout
             violations = []
 
