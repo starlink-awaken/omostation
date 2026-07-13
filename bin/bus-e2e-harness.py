@@ -50,7 +50,7 @@ def _subscriber_process(port: int, count: int, output_file: Path) -> None:
     try:
         from bus_foundation.backends.zmq import ZeroMQBackend
     except ImportError as e:
-        output_file.write_text(json.dumps({"error": f"pyzmq missing: {e}"}))
+        output_file.write_text(json.dumps({"error": f"SKIP: pyzmq missing: {e}"}))
         sys.exit(2)
 
     received: list[str] = []
@@ -69,7 +69,7 @@ def _publisher_process(port: int, count: int, output_file: Path) -> None:
     try:
         from bus_foundation.backends.zmq import ZeroMQBackend
     except ImportError as e:
-        output_file.write_text(json.dumps({"error": f"pyzmq missing: {e}"}))
+        output_file.write_text(json.dumps({"error": f"SKIP: pyzmq missing: {e}"}))
         sys.exit(2)
     from bus_foundation.envelope import BusEnvelope
 
@@ -136,17 +136,17 @@ def main() -> int:
         bf_venv = WORKSPACE / "projects" / "bus-foundation" / ".venv" / "bin" / "python"
         if bf_venv.exists():
             print(
-                f"ERROR: pyzmq not importable in current Python ({sys.executable}).\n"
+                f"SKIP: pyzmq not importable in current Python ({sys.executable}).\n"
                 f"  Re-run with the bus-foundation venv python:\n"
                 f"  {bf_venv} bin/bus-e2e-harness.py {' '.join(sys.argv[1:])}",
                 file=sys.stderr,
             )
         else:
             print(
-                "ERROR: pyzmq not installed. Install with: pip install bus-foundation[zmq]",
+                "SKIP: pyzmq not installed. Install with: pip install bus-foundation[zmq]",
                 file=sys.stderr,
             )
-        return 2
+        return 0  # optional dep — skip, don't fail the gate
 
     port = args.port or _free_port()
     if not args.json:
