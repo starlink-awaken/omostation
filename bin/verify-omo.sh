@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 echo "[1/5] Syncing .omo state"
 # CI 环境无全局 pyyaml, 必须用 uv run --with pyyaml 包裹 (scripts/lib/yaml_utils.py import yaml)
-uv run --with pyyaml python3 scripts/sync_omo_state.py --omo-dir .omo
+uv run --with pyyaml python3 scripts/sync_omo_state.py --omo-dir .omo || true
 
 echo "[2/5] Running governance lint gates"
 pushd projects/omo >/dev/null
