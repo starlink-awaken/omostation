@@ -101,3 +101,8 @@ gates:
     command: ["bin/gac-consensus-inject.py", "--check"]
   - id: "gac-compute-onboard-check"
     command: ["bin/gac-compute-onboard.py", "--check"]
+  - id: "bus-usage-report"
+    command: ["bin/bus-usage-report.py"]
+  - id: "bus-e2e-harness"
+    command: ["bin/bus-e2e-harness.py", "--count", "30", "--json"]
+    ci_only: true
