@@ -298,6 +298,22 @@ def main() -> int:
         nargs=argparse.REMAINDER,
         help="传给 omo CLI 的参数 (如 'debt list', 'state sync --dry-run')",
     )
+
+    # debt — omo-debt 收编入口 (直接调用 omo-debt 评分算法, ADR-0122 F-13)
+    from cockpit.commands import debt_scoring as _debt_mod
+
+    debt_p = sub.add_parser(
+        "debt",
+        help="债务评分 (omo-debt Pattern 09 v2.1)",
+    )
+    debt_sub = debt_p.add_subparsers(dest="debt_subcommand")
+    debt_score_p = debt_sub.add_parser("score", help="评分债务项")
+    debt_score_p.add_argument("impact", type=int, nargs="?", default=5, help="影响 (1-10)")
+    debt_score_p.add_argument("frequency", type=int, nargs="?", default=5, help="频率 (1-10)")
+    debt_score_p.add_argument("cost", type=int, nargs="?", default=5, help="修复成本 (1-10)")
+    debt_score_p.add_argument("--stage", default="stable_growth", help="项目阶段")
+    debt_score_p.add_argument("--list-stages", action="store_true", help="列出可用阶段")
+    debt_score_p.set_defaults(func=_debt_mod.cmd_debt_score)
     runtime_p = sub.add_parser(
         "runtime",
         help="runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)",
@@ -911,6 +927,7 @@ def main() -> int:
         "init": lambda a: __import__("cockpit.commands.quickstart", fromlist=["cmd_quickstart"]).cmd_quickstart(a),
         # P66 增: readiness dashboard 子命令 (升级自 P65 wrapper)
         "readiness": lambda a: __import__("cockpit.commands.readiness", fromlist=["cmd_readiness"]).cmd_readiness(a),
+        "debt": lambda a: __import__("cockpit.commands.debt_scoring", fromlist=["cmd_debt_score"]).cmd_debt_score(a),
     }
 
     handler = handlers.get(args.command)

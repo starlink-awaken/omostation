@@ -9,7 +9,7 @@ try:
 except ImportError:
     # NOTE: do not use 8766 — reserved for KOS REST API (port-registry.yaml).
     # Runtime's agent-runtime uses 8770 by default.
-    AGENT_RUNTIME_PORT = 8770  # fallback default when registry port is removed
+    AGENT_RUNTIME_PORT = 0  # fallback: uvicorn picks free port
 
 from runtime.arch_health import load_arch_health
 from runtime.executor.config import AUTH_TOKEN, DEFAULT_MODEL, EXEC_LOG_FILE, log, setup_logging
