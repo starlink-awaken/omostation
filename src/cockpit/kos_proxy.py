@@ -28,7 +28,7 @@ import urllib.error
 from typing import Any
 
 # KOS API URL (configurable via environment)
-KOS_API_URL = os.environ.get("KOS_API_URL", "http://localhost:8770")  # 8766 reserved for KOS itself
+KOS_API_URL = os.environ.get("KOS_API_URL", "http://localhost:KOS_REST_API_PORT")  # KOS_RESERVED
 KOS_MCP_URL = os.environ.get("KOS_MCP_URL", "http://localhost:8765")
 
 

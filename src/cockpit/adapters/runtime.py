@@ -7,7 +7,7 @@ are absorbed here rather than scattered through L3 code.
 try:
     from runtime.executor.config import AGENT_RUNTIME_PORT
 except ImportError:
-    # NOTE: do not use 8766 — reserved for KOS REST API (port-registry.yaml).
+    # NOTE: do not use KOS_REST_API_PORT — reserved by port-registry.
     # Runtime's agent-runtime uses 8770 by default.
     AGENT_RUNTIME_PORT = 0  # fallback: uvicorn picks free port
 
