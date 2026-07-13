@@ -28,7 +28,7 @@ import urllib.error
 from typing import Any
 
 # KOS API URL (configurable via environment)
-KOS_API_URL = os.environ.get("KOS_API_URL", "http://localhost:8766")
+KOS_API_URL = os.environ.get("KOS_API_URL", "http://localhost:8770")  # 8766 reserved for KOS itself
 KOS_MCP_URL = os.environ.get("KOS_MCP_URL", "http://localhost:8765")
 
 
@@ -146,4 +146,4 @@ if __name__ == "__main__":
     import uvicorn
 
     app = create_kos_app()
-    uvicorn.run(app, host="0.0.0.0", port=8766)
+    uvicorn.run(app, host="0.0.0.0", port=8770)  # 8766 reserved for upstream KOS

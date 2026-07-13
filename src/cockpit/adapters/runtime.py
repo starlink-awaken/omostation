@@ -7,7 +7,9 @@ are absorbed here rather than scattered through L3 code.
 try:
     from runtime.executor.config import AGENT_RUNTIME_PORT
 except ImportError:
-    AGENT_RUNTIME_PORT = 8766  # fallback default when registry port is removed
+    # NOTE: do not use 8766 — reserved for KOS REST API (port-registry.yaml).
+    # Runtime's agent-runtime uses 8770 by default.
+    AGENT_RUNTIME_PORT = 8770  # fallback default when registry port is removed
 
 from runtime.arch_health import load_arch_health
 from runtime.executor.config import AUTH_TOKEN, DEFAULT_MODEL, EXEC_LOG_FILE, log, setup_logging

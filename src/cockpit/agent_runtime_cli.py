@@ -8,7 +8,7 @@ from pathlib import Path
 try:
     from runtime.executor.config import AGENT_RUNTIME_PORT
 except ImportError:
-    AGENT_RUNTIME_PORT = 8766  # fallback default when registry port is removed
+    AGENT_RUNTIME_PORT = 8770  # fallback default when registry port is removed (8766 reserved for KOS REST API)
 
 from runtime.executor.config import DEFAULT_MODEL, log, setup_logging
 from runtime.executor.engine import AgentRuntime
