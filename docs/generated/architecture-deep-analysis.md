@@ -453,3 +453,350 @@ gbrain         — 独立 TS runtime，零 Python import
 ---
 
 *本报告由架构探索子代理基于全量源码扫描生成，可作为架构决策基线。*
+
+---
+
+## 13. 测试覆盖矩阵
+
+### 13.1 各项目测试统计
+
+| 项目 | 测试数 | 覆盖率 | 测试框架 | 备注 |
+|------|:------:|:------:|---------|------|
+| **agora** | 1331+ | — | pytest | 清除死代码后全量通过 |
+| **ecos** | 890 | — | pytest | 性能测试治本修复后 0 failed |
+| **cockpit** | 68 文件 / 722 tests | ~78% | pytest+cov | api_health 70%, api_knowledge 89%, api_sandbox 94%, api_osmos ~60% |
+| **family-hub** | 44 | — | pytest | 29 单元 + 15 集成 |
+| **kairon/kos** | 493+ | — | pytest | hybrid_search + context_engine + ontology |
+| **kairon** | 3,071 | — | pytest | 16 包全量 |
+| **omo** | — | — | pytest | 39 CLI 集成测试 |
+| **runtime** | — | — | pytest | executor + scheduler + KEI |
+| **l4-kernel** | — | — | pytest | 28 域健康检查 |
+
+### 13.2 Cockpit HTTP 覆盖率详情
+
+| 模块 | 覆盖率 | 关键缺口 |
+|------|:------:|---------|
+| api_health.py | 70% | — |
+| api_knowledge.py | 89% | — |
+| api_sandbox.py | 94% | — |
+| api_omos.py | ~60% | violations/fix-drift 部分覆盖 |
+| api_system_map.py | ~25% | 76 行未覆盖 |
+| api_logs.py | ~80% | 新增 5 tests |
+| api_tasks.py | ~85% | 新增 5 tests |
+
+---
+
+## 14. 计算节点
+
+| 节点 | IP | 硬件 | VRAM | 角色 | 运行模型 |
+|------|----|------|:----:|------|---------|
+| **MBP-M5-Max** | 100.96.126.35 | Apple M5 Max | 64GB | coder, reasoner, vision | coder, reasoner, vision, vision-lite, embed-bge |
+| **mac-mini-M4** | 100.99.210.78 | Apple M4 | 16GB | fast, embed, rerank | fast, mini-chat, embed, rerank, mini-9b |
+| **Y7000P-4070** | — | NVIDIA GTX 4070 | — | mid, ocr, vision-lite | mid, ocr, vision-lite |
+
+**分布式架构**: aetherforge mesh-router 智能路由 LLM 请求到最优节点
+
+---
+
+## 15. 外部依赖
+
+### 15.1 推理服务
+
+| 服务 | 端口/URL | 用途 |
+|------|---------|------|
+| **omlx gateway** | http://100.96.126.35:4000 | LLM 推理网关 |
+| **ollama** | http://localhost:11434 | 本地 LLM 推理 |
+| **MLX Serve** | :8181-8192, :8086-8089 | Apple Silicon 原生推理 (12+ 端口) |
+
+### 15.2 知识源与 API
+
+| 服务 | 用途 | 引用方 |
+|------|------|--------|
+| **DuckDuckGo** | 网页搜索 | kairon/minerva |
+| **Semantic Scholar** | 学术论文 | kairon/minerva |
+| **Jina Reader** | 网页转 Markdown | kairon/kronos |
+| **OpenAlex** | 学术图谱 | kairon/minerva, paper-researcher |
+
+### 15.3 系统工具
+
+| 工具 | 用途 | 引用方 |
+|------|------|--------|
+| **tesseract** | OCR 文字识别 | kos/multimodal |
+| **whisper** | 语音转写 | kos/multimodal |
+| **ffmpeg** | 音视频处理 | kos/multimodal |
+
+### 15.4 存储
+
+| 存储 | 用途 | 引用方 |
+|------|------|--------|
+| **PostgreSQL** (pglite/postgres) | 知识数据库 | gbrain |
+| **SQLite** | 索引/缓存/日志 | cockpit, runtime, family-hub |
+| **LanceDB** | 向量索引 | kairon/kos |
+| **Obsidian Vault** | 知识文档存储 | vault 域 |
+
+---
+
+## 16. 安全审计
+
+> 最近审计: 2026-07-11
+
+| 级别 | 数量 | 详情 |
+|------|:----:|------|
+| **CRITICAL** | 0 | — |
+| **HIGH** | 0 | — |
+| **MEDIUM** | 2 | GBrain admin proxy 无 auth, dashboard router 无 `_AUTH_DEPS` |
+
+### 16.1 认证体系
+
+| 层 | 机制 | 引用方 |
+|----|------|--------|
+| OAuth2 + PKCE | agora auth 模块 | MCP 工具调用 |
+| HMAC-SHA256 | agora auth 模块 | API 签名 |
+| Ed25519 | identity_ca.py | 节点身份 |
+| Tenant 隔离 | agora tenant 模块 | 多租户数据隔离 |
+
+### 16.2 防护机制
+
+| 机制 | 实现 |
+|------|------|
+| SSRF 防护 | `validate_external_url` 三级检查 (blocked_hosts → internal → private_ip) |
+| 限流 | 20 QPS/域令牌桶 (agora bos_middleware) |
+| 熔断 | 失败计数 + 冷却 (CircuitBreaker) |
+| KEI 沙箱 | sys.addaudithook C-level FS 审计 |
+
+---
+
+## 17. CI/CD 管线
+
+### 17.1 本地门禁
+
+| 命令 | 用途 |
+|------|------|
+| `make gac-local-gate` | 默认 (非严格) GaC _gate (GaC validate/drift + agent-workflow lint + MOF schema + doc-ssot) |
+| `make gac-local-gate --strict` | CI 模式 (额外 project-layer-index + 全量检查) |
+| `bin/gac-local-gate.py --scope files --file <path>` | 文件级 AGCP 验证 |
+| `bin/gac-healthcheck.py` | GaC 13 点健康检查 |
+| `bin/ssot-guardian.py` | SSOT 一致性守卫 |
+| pre-push hook | ruff lint + 快速测试子集 (可 SKIP_GATE=true 跳过) |
+
+### 17.2 分支保护
+
+| 机制 | 状态 |
+|------|:----:|
+| blocking pre-push hook | ✅ 已启用 |
+| main 分支保护 | ✅ 已启用 (direct push 双重拒绝) |
+| PR worktree 隔离 | ✅ per-session worktree + PR |
+| squash merge | ✅ 所有 main 变更 |
+
+### 17.3 CI Workflow
+
+| Workflow | 触发 | 内容 |
+|----------|------|------|
+| **GaC Gate** | push + PR | validate/drift/lint/integrations |
+| **MOF Schema** | push + PR | m1/m2/schema 一致性 |
+| **Doc SSOT** | push + PR | 文档注册表一致性 |
+| **Module Interface** | push + PR | 模块接口契约 |
+| **Submodule Reachability** | push + PR | 子模块可达性 |
+
+---
+
+## 18. L4 管理域清单 (28 域)
+
+### 18.1 按类型分布
+
+| 类型 | 数量 | 说明 |
+|------|:----:|------|
+| **document** | 8 | 文档域 (cockpit/vault/creative/personal/shared/family/work-*) |
+| **config** | 3 | 配置域 (ai-config/agents-config/icloud-sharedconf) |
+| **tool** | 2 | 工具域 (bin/toolbox-tools) |
+| **workspace** | 2 | 工作域 (sharedwork/shareddisk) |
+| **model** | 2 | 模型域 (model-volume/sharedmodel) |
+| **engine** | 3 | 引擎域 (minerva/knowledge-engine/obsidian-vault) |
+| **storage** | 1 | 存储域 (vault) |
+
+### 18.2 完整域列表
+
+| # | ID | 名称 | 类型 | KEMS 面 | 治理能力 |
+|---|------|------|------|---------|:--------:|
+| 1 | cockpit | @驾驶舱 | document | 6 面 | Tier 1 |
+| 2 | vault | @学习进化 | document | 5 面 | Tier 1 |
+| 3 | creative | @创意创作 | document | 5 面 | Tier 1 |
+| 4 | personal | @个人 | document | 5 面 | Tier 1 |
+| 5 | shared | @公共 | document | 5 面 | Tier 1 |
+| 6 | family | @家庭生活 | document | 5 面 | Tier 1 |
+| 7 | work-weijian | @工作文档-卫健 | document | 5 面 | Tier 1 |
+| 8 | work-guozhuan | @工作文档-国转 | document | 5 面 | Tier 1 |
+| 9 | work-docs | @工作文档 | document | 5 面 | Tier 1 |
+| 10 | ai-config | AI 配置 | config | 4 面 | Tier 2 |
+| 11 | agents-config | Agent 配置 | config | 4 面 | Tier 2 |
+| 12 | icloud-sharedconf | iCloud 共享配置 | config | — | Tier 2 |
+| 13 | bin | 脚本工具 | tool | — | Tier 2 |
+| 14 | toolbox-tools | 工具箱 | tool | — | Tier 2 |
+| 15 | sharedwork | 共享工作区 | workspace | — | Tier 2 |
+| 16 | shareddisk | 共享磁盘 | workspace | — | Tier 2 |
+| 17 | model-volume | 模型存储 | model | — | Tier 3 |
+| 18 | sharedmodel | 共享模型 | model | — | Tier 3 |
+| 19 | minerva | Minerva 研究 | engine | — | Tier 2 |
+| 20 | knowledge-engine | 知识引擎 | engine | — | Tier 2 |
+| 21 | obsidian-vault | Obsidian 库 | engine | — | Tier 2 |
+| 22 | opc | OPC 域 | storage | — | Tier 2 |
+| 23 | l4-kernel | L4 内核 | config | — | Tier 1 |
+| 24 | ecos-workbench | eCOS 工作台 | tool | — | Tier 2 |
+| 25 | omo-governance | OMO 治理 | config | — | Tier 1 |
+| 26 | spaces | 空间配置 | config | — | Tier 2 |
+| 27 | runtime | 运行时 | engine | — | Tier 2 |
+
+### 18.3 KEMS 六面
+
+| 面 | 说明 | 引用方 |
+|----|------|--------|
+| **state** | 当前状态快照 | health_monitor |
+| **memory** | 历史记忆 | memory_tier L3 |
+| **signals** | 信号总线 | l4_signal_emit/list |
+| **timeline** | 时间线 | timeline_list |
+| **status** | 健康状态 | status_read |
+| **rules** | 规则引擎 | rules_read |
+
+---
+
+## 19. Kairon God Module 拆分进度
+
+> 从单 god module (1945 行) 拆分为 16 个独立包
+
+| Wave | 内容 | 状态 |
+|------|------|:----:|
+| Wave 0 | ontology schema 抽出 + 基础设施搭建 | ✅ |
+| Wave 1 | extract 组抽到 extract.py | ✅ |
+| Wave 2-5 | 持续拆分 + observability 测试补全 | ✅ |
+
+### 19.1 16 包架构
+
+| 层级 | 包 | 职责 |
+|------|---|------|
+| **基础层** | core-models | 共享数据模型 |
+| | codeanalyze | AST/CRG 代码分析 |
+| | kairon-utils | 通用工具 |
+| | kairon-pipeline | 事件驱动管线 |
+| | kairon-lib-events | 事件库 |
+| | kairon-observability | 可观测性 |
+| | kairon-plugin-sdk | 插件 SDK |
+| | health-profile | 健康档案 |
+| **引擎层** | kos | KOS 知识检索 |
+| | eidos | Schema 统一记忆 API |
+| | iris | 平台连接器 |
+| | ontoderive | 渊衍推导框架 |
+| **应用层** | minerva | 深度研究 |
+| | kronos | 知识摄取 |
+| | forge | 工具市场 |
+| | sophia | 范式编译 |
+
+**测试**: 3,071 tests, mypy strict 16/16 全绿
+
+---
+
+## 20. 用户场景视角
+
+### 场景 1: 知识搜索 (Memory)
+```
+用户 → cockpit Web :8090 → /api/knowledge/search
+     → cockpit → agora resolve_bos_uri("bos://memory/kos/search")
+     → KOS (FTS5 + 向量 + 图谱)
+     → 返回排序结果
+```
+
+**入口**: cockpit 搜索栏 / Claude Code MCP 工具
+
+### 场景 2: 深度研究 (Analysis)
+```
+用户 → cockpit → /api/research
+     → minerva (DuckDuckGo + Semantic Scholar)
+     → sophia (范式编译)
+     → 生成研究报告 → WPS Note 存储
+```
+
+**入口**: cockpit 研究命令 / minerva MCP tools
+
+### 场景 3: 代码分析 (Analysis)
+```
+用户 → cockpit → /api/ecos/status
+     → codeanalyze (AST/CRG)
+     → 返回代码结构 / 依赖图 / 质量报告
+```
+
+**入口**: cockpit 代码分析 / codeanalyze MCP (31 tools)
+
+### 场景 4: 治理审计 (Governance)
+```
+用户 → cockpit → /api/omos/violations
+     → ecos contract_gatekeeper
+     → 返回违规列表 + 自愈建议
+```
+
+**入口**: cockpit GaC 命令 / omo MCP (19 tools)
+
+### 场景 5: 家庭任务游戏化 (Persona)
+```
+用户 → family-hub → create_quest("读一本书", wisdom, 100, parent)
+     → OMO ingress-task (治理可见性)
+     → 完成任务 → 积分 + 等级提升
+```
+
+**入口**: family-hub MCP (6 tools) / cockpit 任务面板
+
+### 场景 6: 战略到执行 (Capability)
+```
+用户 → c2g brainstorm → Pitch markdown
+     → c2g bet → bridge_import → OMO 任务
+     → metaos gate → runtime KEI 沙箱执行
+```
+
+**入口**: c2g MCP (3 tools) / cockpit 迭代命令
+
+---
+
+## 21. 债务与 BET 状态
+
+> SSOT: `.omo/_truth/registry/debt.yaml`
+
+### 21.1 概况
+
+| 维度 | 数量 |
+|------|:----:|
+| 总债务数 | 28 |
+| 已关闭 | 24 |
+| 开放中 | 4 |
+| BET (架构演进) | 全部 done/archived |
+
+### 21.2 已解决的关键 BET
+
+| BET | 成果 |
+|-----|------|
+| DEBT-AGORA-MODULE-BLOAT | 51→34 模块 (-17) |
+| DEBT-OMO-MODULE-BLOAT | 181→174 模块 (-7) |
+| DEBT-GBRAIN-OPERATIONS-TS | 21 文件拆分完成 |
+| DEBT-RUNTIME-BUILD-SYSTEM | hatchling + KEI FS |
+
+### 21.3 开放债务
+
+| 债务 | 优先级 | 说明 |
+|------|:------:|------|
+| KAIRON-TYPE-SAFETY | 中 | 类型安全改进 (mostly done) |
+| OMO-MODULE-BLOAT | 低 | 173→<100 (可选) |
+| 其他 | 低 | 小改进项 |
+
+---
+
+## 22. 本次会话工作摘要 (2026-07-12~13)
+
+| 维度 | 成果 |
+|------|------|
+| **Quest 模块** | 44 tests (29 单元 + 15 集成) — SQLite + LLM + gbrain + MCP |
+| **ecos 性能** | 治本修复: 3 failed → 0 failed, 新增 benchmark_l0.py |
+| **agora 清理** | 清除 organs/nucleus 死代码 (406 行删除, 8 文件) |
+| **分支清理** | ~85 远程 + ~30 本地分支删除, 4 个 PR 关闭 |
+| **架构报告** | 全量深度剖析 (22 维度, 455+ 行) |
+
+---
+
+*本报告由架构探索子代理基于全量源码扫描生成，可作为架构决策基线。*
+*最近更新: 2026-07-13*
