@@ -21,8 +21,6 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import _record_mutation
-from omo.omo_ingress_trail import _record_trail
 
 
 def create_knowledge_doc(
@@ -30,11 +28,13 @@ def create_knowledge_doc(
     *,
     plane: str,
     title: str,
+    source_ref: str = "",
     content: str,
     actor: str,
-    source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     safe_name = _safe_doc_name(title)
     doc_path = omo_dir / "_knowledge" / plane / f"{safe_name}.md"
@@ -99,6 +99,8 @@ def create_standard_doc(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     safe_name = _safe_doc_name(title)
     doc_path = omo_dir / "standards" / f"{safe_name}.md"
@@ -163,6 +165,8 @@ def create_audit_report(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     report_path = omo_dir / "_knowledge" / "audits" / f"{filename}.md"
 

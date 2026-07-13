@@ -24,8 +24,7 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import _record_mutation
-from omo.omo_ingress_trail import _record_trail
+
 from omo.omo_io import fcntl_lock, write_text_if_changed, write_yaml_atomic
 from omo.omo_shared import load_yaml
 
@@ -163,6 +162,8 @@ def _record_state_sync(
     timestamp: str,
     writes: list[dict[str, Any]],
 ) -> str:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     changed_paths = [
         _workspace_relative(Path(item["path"]), workspace_root=omo_dir.parent)
         for item in writes

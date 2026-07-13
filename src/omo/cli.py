@@ -473,7 +473,7 @@ def _cmd_healing(args: list[str]) -> int:
         if len(args) < 2:
             print("Usage: omo healing fix-run <name>")
             return 1
-        from omo.omo_self_healing_fixes import run_fix
+        from omo.omo_self_healing import run_fix
 
         result = run_fix(args[1])
         status_icon = "✅" if result["success"] else "❌"
@@ -481,7 +481,7 @@ def _cmd_healing(args: list[str]) -> int:
         return 0 if result["success"] else 1
 
     elif sub == "fix-list":
-        from omo.omo_self_healing_fixes import list_fixes
+        from omo.omo_self_healing import list_fixes
 
         for fix in list_fixes():
             print(f"  - {fix}")

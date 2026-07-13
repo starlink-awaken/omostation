@@ -251,9 +251,7 @@ def _publish_tick_event(result: "TickResult") -> None:
         # Never let bus publish break the daemon.
         import logging as _logging
 
-        _logging.getLogger("omo.daemon").debug(
-            "omo_audit_publish_skipped: %s", exc
-        )
+        _logging.getLogger("omo.daemon").debug("omo_audit_publish_skipped: %s", exc)
 
 
 # ── 主循环 ─────────────────────────────────────────────

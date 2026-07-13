@@ -23,13 +23,17 @@ from __future__ import annotations
 
 import argparse
 import ast
+import fnmatch
+import json
 import subprocess
 import sys
 from pathlib import Path
 import yaml
 
-from .omo_paths import PROJECTS_DIR, WORKSPACE_ROOT
+from .omo_paths import OMO_ROOT, PROJECTS_DIR, WORKSPACE_ROOT
 from .omo_shared import load_yaml
+from omo.omo_io import read_jsonl
+from omo.omo_ingress_paths import _mutation_log_path
 from .omo_task_policy import (
     OPC_P6_SELF_EVOLUTION_POLICY,
     TASK_POLICIES,
@@ -69,15 +73,6 @@ from .omo_lint_schemas import (  # noqa: E402, F401
 
 # P101 R1: yaml-bypass 子模块 (extracted 102L from omo_lint.py)
 # Re-export 保持向后兼容 (cli.py / scripts/ 可能直接 import)
-from .omo_lint_yaml_bypass import (  # noqa: E402, F401
-    _check_yaml_bypass,
-    cmd_lint_yaml_bypass,
-)
-from .omo_lint_god_module import (  # noqa: E402, F401
-    cmd_lint_god_module,
-    ERROR_LOC as _GOD_MODULE_ERROR_LOC,
-    WARN_LOC as _GOD_MODULE_WARN_LOC,
-)
 
 
 def cmd_lint_direct_omo_io(
@@ -387,21 +382,755 @@ def cmd_lint_self_evolution_approval(workspace_root: str = ".") -> int:
 
 # P102 R1: surfaces 子模块 (extracted 179L from omo_lint.py)
 # Re-export 保持向后兼容 (cli.py / scripts/ 可能直接 import)
-from .omo_lint_surfaces import (  # noqa: E402, F401
-    cmd_lint_c2g_omo_boundary,
-    cmd_lint_ingress_artifacts,
-    cmd_lint_ingress_registry,
-    cmd_lint_internal_write_profiles,
-    cmd_lint_mutation_surfaces,
-    cmd_lint_state_plane_assets,
-)
 
 
 # P103 R1: mutation-ledger 子模块 (extracted 92L from omo_lint.py)
 # Re-export 保持向后兼容 (cli.py / scripts/ 可能直接 import)
-from .omo_lint_mutation_ledger import (  # noqa: E402, F401
-    cmd_lint_mutation_ledger,
+
+
+def _check_yaml_bypass(omo_dir: Path = Path(".omo")) -> list[tuple[str, str]]:
+    """扫 .omo/debt/items/*.yaml 检测非 OMO CLI 写入的越权字段 (Round 43 P0).
+
+    OMO 用 lifecycle_state 字段管理债务状态. fix_debts.py 这种越权
+    脚本错改 status 字段 (OMO 不读 status 字段). 此 lint 拦截未来再发生.
+
+    检测规则:
+      R1: yaml 有 status 字段但没有 lifecycle_state 字段 → 越权 (非 OMO 写)
+      R2: yaml 有 status 字段值是 closed/resolved 但 lifecycle_state 不一致 → 越权
+      R4: yaml 解析失败 → 警告
+
+    注: 不检查 history 字段 (R3 删了, 防误报 — fresh yaml seed 时无 history 是合法初始态).
+
+    Returns:
+        list of (yaml_filename, violation_message) tuples. 空 list = 合规.
+    """
+    items_dir = omo_dir / "debt" / "items"
+    if not items_dir.is_dir():
+        return []
+
+    import yaml as _yaml
+
+    issues: list[tuple[str, str]] = []
+    for path in sorted(items_dir.glob("*.yaml")):
+        try:
+            data = _yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, _yaml.YAMLError) as exc:
+            issues.append((path.name, f"R4: parse error: {exc}"))
+            continue
+        if not isinstance(data, dict):
+            issues.append((path.name, "R4: yaml 不是 dict 结构"))
+            continue
+
+        has_status = "status" in data
+        has_lifecycle = "lifecycle_state" in data
+        status = data.get("status", "")
+        lifecycle = data.get("lifecycle_state", "")
+
+        if has_status and not has_lifecycle:
+            issues.append(
+                (
+                    path.name,
+                    f"R1: yaml 有 status={status!r} 字段但无 lifecycle_state (OMO 用 "
+                    f"lifecycle_state, 改 status 是越权写入, OMO 不认)",
+                )
+            )
+        elif has_status and status in ("closed", "resolved") and lifecycle != status:
+            issues.append(
+                (
+                    path.name,
+                    f"R2: status={status!r} 但 lifecycle_state={lifecycle!r} 不一致 "
+                    f"(越权写入, OMO 以 lifecycle_state 为准)",
+                )
+            )
+
+    return issues
+
+
+def cmd_lint_yaml_bypass(omo_dir: Path = Path(".omo")) -> int:
+    """omo lint yaml-bypass — Round 43 P0 拦截 .omo/debt/items/ 越权写入."""
+    issues = _check_yaml_bypass(omo_dir)
+    if issues:
+        print(f"❌ omo lint yaml-bypass fail: {len(issues)} 处越权 (X1 审计风险)")
+        for name, msg in issues:
+            print(f"   - {name}: {msg}")
+        print()
+        print(
+            "修复方法: 走 omo-debt close/reopen CLI 正路, 不要直接 yaml.safe_load + yaml.dump 改字段."
+        )
+        return 1
+    print(
+        "✅ omo lint yaml-bypass pass: 0 处越权 (所有 .omo/debt/items/*.yaml 走 OMO CLI 正路)"
+    )
+    return 0
+
+
+# 阈值 (ADR-0155 修订 L0:X4: error 800→1500, 跟 bin/check-god-module.py error>1500L 统一, 消除两套不一致债)
+# 旧值 (L0:X4 原锁 800L, TASK-F7114ABA) 致 22 个 >800L GATE FAIL, 其中 21 个在 800-1500L (bin 视为 warn),
+# 仅 1 个 >1500L. 统一 1500L 让两套 god-module 守门一致, 21 个降 warn, 剩 1 个 >1500L 留 SRP 重构.
+WARN_LOC = 600
+ERROR_LOC = 1500
+
+# 豁免: 显式 allowlist (历史合理大文件, 需在 ADR 记录理由)
+# ADR-0155: api_system_map.py 2870L 临时豁免 (>1500L), 待 SRP 重构 (task 追踪, 参考 omo-srp-refactor skill).
+GOD_MODULE_ALLOWLIST: set[str] = {
+    "projects/cockpit/src/cockpit/web/api_system_map.py",  # 2870L, ADR-0155 待重构
+}
+
+# 不扫的目录 (测试/数据迁移脚本可超)
+EXCLUDE_DIR_PARTS: tuple[str, ...] = (
+    "tests",
+    "test_",
+    "__pycache__",
+    ".venv",
+    "node_modules",
+    "_archive",
+    "demo",
+    "fixtures",
 )
+
+
+def _collect_python_files(workspace_root: Path) -> list[Path]:
+    """扫所有 projects/*/src/**/*.py + bin/*.py."""
+    files: list[Path] = []
+    for src_root in workspace_root.glob("projects/*/src"):
+        if not src_root.is_dir():
+            continue
+        files.extend(src_root.rglob("*.py"))
+    # bin/ 是 workspace-level tools (例 ssot-guardian)
+    bin_dir = workspace_root / "bin"
+    if bin_dir.is_dir():
+        files.extend(p for p in bin_dir.glob("*.py"))
+    return files
+
+
+def _is_excluded(path: Path) -> bool:
+    parts = path.parts
+    return any(part in EXCLUDE_DIR_PARTS for part in parts)
+
+
+def _line_count(path: Path) -> int:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return 0
+    # 物理行数 (与 wc -l 一致); blank-only 文件不算 0 而是其真实行数 (罕见)
+    return sum(1 for _ in text.splitlines())
+
+
+def check_god_module(workspace_root: str = ".") -> dict:
+    """扫所有 python 文件, 报告 warn (>600L) + error (>800L).
+
+    Returns:
+        dict with keys: warn_files, error_files, total_scanned, by_module.
+    """
+    root = Path(workspace_root).resolve()
+    files = _collect_python_files(root)
+    files = [f for f in files if not _is_excluded(f)]
+
+    warn_files: list[tuple[Path, int]] = []
+    error_files: list[tuple[Path, int]] = []
+    by_module: dict[str, int] = {}  # module_name → max LOC
+
+    for path in files:
+        rel = path.relative_to(root) if path.is_relative_to(root) else path
+        # 转 module name 形式 (workspace.brain.kairon.path)
+        rel_str = str(rel).replace("/", ".").replace(".py", "")
+        if path.name == "__init__.py":
+            continue
+        loc = _line_count(path)
+        if loc == 0:
+            continue
+
+        module_key = rel_str
+        by_module[module_key] = max(by_module.get(module_key, 0), loc)
+
+        if str(rel) in GOD_MODULE_ALLOWLIST:
+            continue
+        if loc > ERROR_LOC:
+            error_files.append((path, loc))
+        elif loc > WARN_LOC:
+            warn_files.append((path, loc))
+
+    return {
+        "total_scanned": len(files),
+        "warn_files": sorted(warn_files, key=lambda x: -x[1]),
+        "error_files": sorted(error_files, key=lambda x: -x[1]),
+        "by_module": by_module,
+        "warn_threshold": WARN_LOC,
+        "error_threshold": ERROR_LOC,
+    }
+
+
+def cmd_lint_god_module(workspace_root: str = ".") -> int:
+    """omo lint god-module — 单文件 LOC 硬规则 (TASK-F7114ABA 锁定)."""
+    if workspace_root == ".":
+        # 默认从 find_omo_dir 找 workspace 根 (cd projects/omo 调用也能解析到 /Users/...)
+        root = WORKSPACE_ROOT
+    else:
+        root = Path(workspace_root).resolve()
+    report = check_god_module(str(root))
+    warn_n = len(report["warn_files"])
+    error_n = len(report["error_files"])
+    total = report["total_scanned"]
+
+    print(
+        f"=== god-module lint (warn>{report['warn_threshold']}L, "
+        f"error>{report['error_threshold']}L) ==="
+    )
+    print(f"  扫文件: {total}")
+    print(f"  warn (>600L): {warn_n}")
+    print(f"  error (>800L): {error_n}")
+
+    if error_n:
+        print("\n--- error (硬规则, 必须拆解) ---")
+        for path, loc in report["error_files"]:
+            print(f"  🔴 {path}: {loc}L (>{report['error_threshold']})")
+        print(
+            f"\n❌ GATE FAIL: {error_n} 个文件 >{report['error_threshold']}L. "
+            f"治本: 用 omo-srp-refactor skill 渐进拆解."
+        )
+        return 1
+
+    if warn_n:
+        print("\n--- warn (软引导) ---")
+        for path, loc in report["warn_files"][:10]:  # 限制 10 行输出
+            print(f"  🟡 {path}: {loc}L (>{report['warn_threshold']})")
+        if warn_n > 10:
+            print(f"  ... ({warn_n - 10} more)")
+
+    print(
+        f"✅ GATE PASS: 0 文件 >{report['error_threshold']}L, "
+        f"{warn_n} 文件在 {report['warn_threshold']}-{report['error_threshold']}L 区间."
+    )
+    return 0
+
+
+def cmd_lint_ingress_registry(workspace_root: str = ".") -> int:
+    from .omo_governance_surfaces import (
+        _check_ingress_registry,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_ingress_registry(root)
+    # registry 未创建 (runtime cache 缺, 如 CI fresh checkout) — 合法状态, 不阻断.
+    # 结构/反向映射检查只在 registry 存在时才有意义.
+    if not summary.get("exists"):
+        print(
+            "✅ omo lint ingress-registry pass: registry not created yet (runtime cache absent)"
+        )
+        return 0
+    if issues:
+        print(f"❌ omo lint ingress-registry fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    print(
+        "✅ omo lint ingress-registry pass: "
+        f"goals={len(summary.get('goal_ids', []))} "
+        f"tasks={len(summary.get('task_ids', []))} "
+        f"debts={len(summary.get('debt_ids', []))} "
+        f"capabilities={len(summary.get('capability_ids', []))}"
+    )
+    return 0
+
+
+def cmd_lint_mutation_surfaces(workspace_root: str = ".") -> int:
+    from .omo_governance_surfaces import (
+        _check_mutation_surface_registry,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_mutation_surface_registry(root)
+    if issues:
+        print(f"❌ omo lint mutation-surfaces fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    if summary.get("exists"):
+        print(
+            "✅ omo lint mutation-surfaces pass: "
+            f"surfaces={len(summary.get('runtime_surface_names', []))}"
+        )
+    else:
+        print("✅ omo lint mutation-surfaces pass: registry not created yet")
+    return 0
+
+
+def cmd_lint_internal_write_profiles(workspace_root: str = ".") -> int:
+    from .omo_governance_surfaces import (
+        _check_internal_write_profile_registry,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_internal_write_profile_registry(root)
+    if issues:
+        print(f"❌ omo lint internal-write-profiles fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    if summary.get("exists"):
+        print(
+            "✅ omo lint internal-write-profiles pass: "
+            f"profiles={len(summary.get('runtime_profile_names', []))}"
+        )
+    else:
+        print("✅ omo lint internal-write-profiles pass: registry not created yet")
+    return 0
+
+
+def cmd_lint_state_plane_assets(workspace_root: str = ".") -> int:
+    from .omo_governance_surfaces import (
+        _check_state_plane_asset_registry,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_state_plane_asset_registry(root)
+    if issues:
+        print(f"❌ omo lint state-plane-assets fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    if summary.get("exists"):
+        print(
+            "✅ omo lint state-plane-assets pass: "
+            f"top_level_assets={summary.get('top_level_asset_count', 0)} "
+            f"persistence_modes={len(summary.get('persistence_mode_counts', {}))}"
+        )
+    else:
+        print("✅ omo lint state-plane-assets pass: registry not created yet")
+    return 0
+
+
+def cmd_lint_c2g_omo_boundary(workspace_root: str = ".") -> int:
+    from .omo_governance_surfaces import (
+        _check_c2g_omo_boundary,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_c2g_omo_boundary(root)
+    if issues:
+        print(f"❌ omo lint c2g-omo-boundary fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    print(
+        "✅ omo lint c2g-omo-boundary pass: "
+        f"facade={summary.get('facade_path')} violations={len(summary.get('violations', []))}"
+    )
+    return 0
+
+
+def cmd_lint_ingress_artifacts(workspace_root: str = ".") -> int:
+    from .omo_governance_surfaces import (
+        _check_ingress_artifacts,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_ingress_artifacts(root)
+    # registry 未创建 (runtime cache 缺, 如 CI fresh checkout) — 合法状态, 不阻断.
+    if not summary.get("exists"):
+        print(
+            "✅ omo lint ingress-artifacts pass: registry not created yet (runtime cache absent)"
+        )
+        return 0
+    if issues:
+        print(f"❌ omo lint ingress-artifacts fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    print(
+        "✅ omo lint ingress-artifacts pass: "
+        f"goals={summary.get('goal_artifacts', 0)} "
+        f"tasks={summary.get('task_artifacts', 0)} "
+        f"debts={summary.get('debt_artifacts', 0)} "
+        f"capabilities={summary.get('capability_artifacts', 0)}"
+    )
+    return 0
+
+
+def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
+    root = Path(workspace_root).resolve()
+    ledger_path = _mutation_log_path(root / ".omo")
+    # CI fresh checkout 无 runtime/omo (gitignored) — 合法空状态, 不阻断
+    if not ledger_path.exists():
+        print(
+            "⚠️ omo lint mutation-ledger: ledger file missing (runtime cache absent, CI fresh checkout), 视为 pass"
+        )
+        return 0
+
+    entries = read_jsonl(ledger_path)
+    if not entries:
+        print(f"❌ omo lint mutation-ledger fail: ledger is empty: {ledger_path}")
+        return 1
+
+    issues: list[str] = []
+    required_fields = (
+        "created_at",
+        "actor",
+        "action",
+        "target",
+        "artifact_ref",
+        "source_ref",
+        "broker_ref",
+        "result",
+    )
+    committed = 0
+    for idx, entry in enumerate(entries, start=1):
+        if not isinstance(entry, dict):
+            issues.append(f"entry {idx}: not a JSON object")
+            continue
+        missing = [field for field in required_fields if field not in entry]
+        if missing:
+            issues.append(f"entry {idx}: missing fields {missing}")
+            continue
+        if entry.get("result") == "committed":
+            committed += 1
+        artifact_ref = entry.get("artifact_ref")
+        if not isinstance(artifact_ref, str) or not (
+            artifact_ref.startswith(".omo/") or artifact_ref.startswith("runtime/omo/")
+        ):
+            issues.append(f"entry {idx}: invalid artifact_ref {artifact_ref!r}")
+            continue
+        artifact_path = root / artifact_ref
+        if not artifact_path.exists():
+            issues.append(f"entry {idx}: artifact_ref missing on disk {artifact_ref}")
+
+    if committed == 0:
+        issues.append("no committed mutations found in ledger")
+
+    if issues:
+        print(f"❌ omo lint mutation-ledger fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    print(
+        "✅ omo lint mutation-ledger pass: "
+        f"entries={len(entries)} committed={committed}"
+    )
+    return 0
+
+
+RUNTIME_DIR = WORKSPACE_ROOT / "runtime"
+REGISTRY = OMO_ROOT / "_truth" / "registry" / "runtime-projections.yaml"
+GITIGNORE = WORKSPACE_ROOT / ".gitignore"
+
+ALLOW_PATHS: tuple[str, ...] = (
+    "runtime/README.md",
+    "runtime/runtime-space-boundary.yaml",
+    "runtime/system-runtime-boundary.yaml",
+    "runtime/sandbox/**",
+    "runtime/logs/**",
+    "runtime/data/**",
+    "runtime/omo/**",
+    "runtime/run-continuation/**",
+)
+
+_TRACKED_OVERRIDE: tuple[str, ...] = ()
+
+
+def load_gitignore_patterns() -> list[str]:
+    if not GITIGNORE.exists():
+        return []
+    patterns: list[str] = []
+    for raw in GITIGNORE.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or line.startswith("!"):
+            continue
+        patterns.append(line.rstrip("/"))
+    return patterns
+
+
+def load_projection_paths() -> set[str]:
+    if not REGISTRY.exists():
+        return set()
+    documents = [
+        doc for doc in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if doc
+    ]
+    paths: set[str] = set()
+    for document in documents:
+        if isinstance(document, dict) and "projections" in document:
+            raw = document.get("projections") or {}
+            if isinstance(raw, dict):
+                for payload in raw.values():
+                    if isinstance(payload, dict):
+                        for key in ("canonical", "legacy"):
+                            value = str(payload.get(key) or "")
+                            if value:
+                                paths.add(value)
+    return paths
+
+
+def load_tracked_runtime_files() -> tuple[str, ...]:
+    global _TRACKED_OVERRIDE
+    if _TRACKED_OVERRIDE:
+        return _TRACKED_OVERRIDE
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "runtime/"],
+            cwd=WORKSPACE_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        return ()
+    if result.returncode != 0:
+        return ()
+    paths = tuple(line.strip() for line in result.stdout.splitlines() if line.strip())
+    _TRACKED_OVERRIDE = paths
+    return paths
+
+
+def _match(pattern: str, rel_path: str) -> bool:
+    if pattern == rel_path:
+        return True
+    if pattern.endswith("/**"):
+        prefix = pattern[:-3]
+        if rel_path.startswith(prefix + "/") or rel_path == prefix:
+            return True
+    if pattern.endswith("/*"):
+        prefix = pattern[:-2]
+        if rel_path.startswith(prefix + "/"):
+            return True
+    if "**" in pattern:
+        return _gitignore_match(pattern, rel_path)
+    return fnmatch.fnmatch(rel_path, pattern)
+
+
+def _gitignore_match(pattern: str, rel_path: str) -> bool:
+    pat_parts = pattern.split("/")
+    path_parts = rel_path.split("/")
+    return _match_segments(pat_parts, path_parts)
+
+
+def _match_segments(pat: list[str], path: list[str]) -> bool:
+    if not pat:
+        return not path
+    head, *tail = pat
+    if head == "**":
+        if _match_segments(tail, path):
+            return True
+        if path:
+            return _match_segments(pat, path[1:])
+        return False
+    if not path:
+        return False
+    if not fnmatch.fnmatch(path[0], head):
+        return False
+    return _match_segments(tail, path[1:])
+
+
+def is_allowed(
+    rel_path: str,
+    ignore_patterns: list[str],
+    projection_paths: set[str],
+    tracked: set[str],
+) -> bool:
+    for allowed in ALLOW_PATHS:
+        if _match(allowed, rel_path):
+            return True
+    if rel_path in projection_paths:
+        return True
+    if rel_path in tracked:
+        return True
+    for pattern in ignore_patterns:
+        if _match(pattern, rel_path):
+            return True
+    return False
+
+
+def cmd_stamp_policy(json_output: bool = False) -> int:
+    """P74: 验证 runtime/ 下文件必须 gitignored/tracked/allowlisted."""
+    if not RUNTIME_DIR.exists():
+        report = {"ok": True, "runtime_dir_exists": False, "orphan_paths": []}
+        if json_output:
+            json.dump(report, sys.stdout, indent=2, sort_keys=True)
+            sys.stdout.write("\n")
+        else:
+            print("[OK] stamp-policy: runtime/ directory absent")
+        return 0
+
+    ignore_patterns = load_gitignore_patterns()
+    projection_paths = load_projection_paths()
+    tracked = set(load_tracked_runtime_files())
+
+    orphans: list[dict[str, object]] = []
+    for path in sorted(RUNTIME_DIR.rglob("*")):
+        if path.is_dir():
+            continue
+        rel_path = path.relative_to(WORKSPACE_ROOT).as_posix()
+        if is_allowed(rel_path, ignore_patterns, projection_paths, tracked):
+            continue
+        orphans.append({"path": rel_path, "size": path.stat().st_size})
+
+    report = {
+        "ok": not orphans,
+        "runtime_dir_exists": True,
+        "ignore_pattern_count": len(ignore_patterns),
+        "projection_path_count": len(projection_paths),
+        "tracked_runtime_count": len(tracked),
+        "orphan_paths": orphans,
+    }
+
+    if json_output:
+        json.dump(report, sys.stdout, indent=2, sort_keys=True)
+        sys.stdout.write("\n")
+    else:
+        status = "OK" if report["ok"] else "FAIL"
+        print(f"[{status}] stamp-policy: {len(orphans)} orphan file(s) under runtime/")
+        for orphan in orphans:
+            print(f"  - {orphan['path']} ({orphan['size']} bytes)")
+
+    return 0 if report["ok"] else 1
+
+
+REGISTRY = OMO_ROOT / "_truth" / "registry" / "runtime-projections.yaml"
+
+
+def load_projection_registry() -> dict[str, dict[str, str]]:
+    if not REGISTRY.exists():
+        raise SystemExit(f"runtime-projections registry missing: {REGISTRY}")
+    documents = [
+        doc for doc in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if doc
+    ]
+    for document in documents:
+        if isinstance(document, dict) and "projections" in document:
+            raw = document.get("projections") or {}
+            if not isinstance(raw, dict):
+                return {}
+            normalized: dict[str, dict[str, str]] = {}
+            for name, payload in raw.items():
+                if isinstance(payload, dict):
+                    state = str(payload.get("state") or "active").strip().lower()
+                    if state not in {"active", "pending", "deprecated"}:
+                        state = "active"
+                    normalized[str(name)] = {
+                        "canonical": str(payload.get("canonical") or ""),
+                        "legacy": str(payload.get("legacy") or ""),
+                        "lane": str(payload.get("lane") or ""),
+                        "generator": str(payload.get("generator") or ""),
+                        "state": state,
+                    }
+            return normalized
+    raise SystemExit(
+        f"runtime-projections registry has no projections document: {REGISTRY}"
+    )
+
+
+def probe(path_str: str) -> dict[str, object]:
+    if not path_str:
+        return {"path": "", "exists": False, "kind": "missing", "size": 0}
+    path = WORKSPACE_ROOT / path_str
+    if not path.exists():
+        return {"path": path_str, "exists": False, "kind": "missing", "size": 0}
+    size = path.stat().st_size
+    kind = "unknown"
+    if path.suffix in {".yaml", ".yml"}:
+        try:
+            list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
+            kind = "yaml-ok"
+        except Exception as exc:
+            kind = f"yaml-error:{exc}"
+    elif path.suffix == ".json":
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+            kind = "json-ok"
+        except json.JSONDecodeError as exc:
+            kind = f"json-error:{exc}"
+    elif path.suffix == ".md":
+        kind = "markdown"
+    return {"path": path_str, "exists": True, "kind": kind, "size": size}
+
+
+def cmd_projection_guard(json_output: bool = False) -> int:
+    """P74: 验证 runtime-projections.yaml 声明的路径存在且可解析."""
+    registry = load_projection_registry()
+    findings: list[dict[str, object]] = []
+    ok = True
+
+    for name, payload in registry.items():
+        state = payload.get("state", "active")
+        canonical = probe(payload["canonical"])
+        if not canonical["exists"]:
+            if state == "pending":
+                findings.append(
+                    {
+                        "severity": "info",
+                        "projection": name,
+                        "kind": "canonical_pending",
+                        "path": payload["canonical"],
+                    }
+                )
+                continue
+            ok = False
+            findings.append(
+                {
+                    "severity": "halt",
+                    "projection": name,
+                    "kind": "canonical_missing",
+                    "path": payload["canonical"],
+                }
+            )
+            continue
+        if isinstance(canonical["kind"], str) and canonical["kind"].startswith(
+            ("yaml-error", "json-error")
+        ):
+            ok = False
+            findings.append(
+                {
+                    "severity": "halt",
+                    "projection": name,
+                    "kind": "canonical_parse_error",
+                    "path": payload["canonical"],
+                    "detail": canonical["kind"],
+                }
+            )
+        if payload["legacy"]:
+            legacy = probe(payload["legacy"])
+            if legacy["exists"] and legacy["size"] != canonical["size"]:
+                findings.append(
+                    {
+                        "severity": "warn",
+                        "projection": name,
+                        "kind": "legacy_size_drift",
+                        "canonical_path": payload["canonical"],
+                        "legacy_path": payload["legacy"],
+                        "canonical_size": canonical["size"],
+                        "legacy_size": legacy["size"],
+                    }
+                )
+
+    report = {
+        "ok": ok,
+        "projection_count": len(registry),
+        "findings": findings,
+    }
+
+    if json_output:
+        json.dump(report, sys.stdout, indent=2, sort_keys=True)
+        sys.stdout.write("\n")
+    else:
+        status = "OK" if ok else "FAIL"
+        print(
+            f"[{status}] projection-guard: {len(registry)} projections, {len(findings)} findings"
+        )
+        for finding in findings:
+            print(f"  [{finding['severity']}] {finding['kind']}: {finding}")
+
+    return 0 if ok else 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -580,12 +1309,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "god-module":
         return cmd_lint_god_module(args.workspace_root)
     if args.command == "projection-guard":
-        from omo.omo_lint_projection import cmd_projection_guard
-
         return cmd_projection_guard(json_output=args.json)
     if args.command == "stamp-policy":
-        from omo.omo_lint_stamp import cmd_stamp_policy
-
         return cmd_stamp_policy(json_output=args.json)
     parser.print_help()
     return 1

@@ -11,19 +11,11 @@ from .omo_contract_request import (
 from .omo_governance import propose_truth_mutation
 from .omo_governance_overlay import build_governance_overlay_status
 from .omo_governance_overlay_approval_prep import (
+    build_governance_overlay_approval_prep_aging,
+    build_governance_overlay_approval_prep_analytics,
+    build_governance_overlay_approval_prep_diff,
     build_governance_overlay_approval_prep_history,
     build_governance_overlay_approval_prep_status,
-)
-from .omo_governance_overlay_approval_prep_aging import (
-    build_governance_overlay_approval_prep_aging,
-)
-from .omo_governance_overlay_approval_prep_analytics import (
-    build_governance_overlay_approval_prep_analytics,
-)
-from .omo_governance_overlay_approval_prep_diff import (
-    build_governance_overlay_approval_prep_diff,
-)
-from .omo_governance_overlay_approval_prep_trend import (
     build_governance_overlay_approval_prep_trend,
 )
 from .omo_governance_overlay_loop import plan_governance_overlay_cycle
@@ -34,11 +26,11 @@ from .omo_approval_queue import (
 )
 from .omo_ingress import route_self_evolution_to_remediation
 from .omo_io import write_text_atomic
-from .omo_promotion_approval import evaluate_promotion_approval
-from .omo_promotion_approval_analytics import build_promotion_approval_analytics_packet
-from .omo_promotion_approval_history import build_promotion_approval_history
-from .omo_promotion_approval_status import (
+from .omo_promotion_approval import (
+    build_promotion_approval_analytics_packet,
+    build_promotion_approval_history,
     build_promotion_approval_status_packet,
+    evaluate_promotion_approval,
     render_promotion_approval_status_markdown,
 )
 from .omo_promotion_history import build_promotion_history

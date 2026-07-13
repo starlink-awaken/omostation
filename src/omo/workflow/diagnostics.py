@@ -446,11 +446,7 @@ def p74_solidification_report(
         last_start = started_runs.get(workflow_id, "")
         has_recent_run = bool(last_start)
         run_frequency = str(workflow.get("run_frequency") or "on_demand")
-        silent_health = (
-            "active"
-            if has_recent_run or has_check_coverage
-            else "warn"
-        )
+        silent_health = "active" if has_recent_run or has_check_coverage else "warn"
         workflows_summary.append(
             {
                 "workflow_id": workflow_id,

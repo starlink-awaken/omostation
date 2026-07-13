@@ -23,13 +23,6 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import (
-    _load_registry,
-    _record_mutation,
-    _register_ingress,
-    _write_registry,
-)
-from omo.omo_ingress_trail import _record_trail
 
 
 def write_capability_registry_bundle(
@@ -40,6 +33,14 @@ def write_capability_registry_bundle(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import (
+        _load_registry,
+        _record_mutation,
+        _record_trail,
+        _register_ingress,
+        _write_registry,
+    )
+
     timestamp = now or _utc_now()
     capabilities_dir = omo_dir / "capabilities"
     index_content = str(bundle["index_content"])
@@ -130,6 +131,14 @@ def write_manual_capabilities(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import (
+        _load_registry,
+        _record_mutation,
+        _record_trail,
+        _register_ingress,
+        _write_registry,
+    )
+
     timestamp = now or _utc_now()
     registry_path = omo_dir / "capabilities" / "manual-capabilities.yaml"
     artifact_ref = f"runtime/omo/_delivery/ingress/capabilities/manual-capabilities-{_timestamp_slug(timestamp)}.yaml"
@@ -214,6 +223,8 @@ def create_skill_manifest(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     skill_id = str(manifest["id"])
     timestamp = now or _utc_now()
     manifest_path = omo_dir / "_truth" / "task-center" / "skills" / f"{skill_id}.yaml"
@@ -272,6 +283,8 @@ def write_discovery_registry(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     registry_path = omo_dir / "_truth" / "task-center" / "discovery-registry.yaml"
 
@@ -330,6 +343,8 @@ def write_usage_accounting(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     registry_path = omo_dir / "_truth" / "task-center" / "usage-accounting.yaml"
 
@@ -387,6 +402,8 @@ def write_task_center_freshness(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     report_path = omo_dir / "_delivery" / "task-center" / "freshness" / "current.yaml"
 
@@ -444,6 +461,8 @@ def write_task_center_control_decision(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     artifact_path = omo_dir / "_delivery" / "task-center" / "control" / "current.yaml"
 
@@ -504,6 +523,8 @@ def update_governance_overlay_state(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     roadmap_path = omo_dir / "_truth" / "governance-overlay" / "roadmap.yaml"
     control_path = omo_dir / "_control" / "governance-overlay" / "current.yaml"
@@ -568,6 +589,8 @@ def apply_baseline_patches(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_trail
+
     """Broker: patch dependency-baseline.yaml 的 mismatched baseline 值 (C2 方案 C).
 
     gen-dependency-baseline 算 drift (业务), 本函数合规应用 patch

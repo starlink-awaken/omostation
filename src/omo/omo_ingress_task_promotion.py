@@ -56,10 +56,6 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import (
-    _record_mutation,
-)
-from omo.omo_ingress_trail import _record_trail
 
 
 def promote_task_to_active(
@@ -71,6 +67,8 @@ def promote_task_to_active(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
     active_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
@@ -151,6 +149,8 @@ def repair_task_promotion_approval(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     located = _find_task_path(
         omo_dir, task_id, groups=("planned", "active", "done", "remediation")
@@ -268,6 +268,8 @@ def request_task_promotion_approval(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     task_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
     approval_path = omo_dir.parent / approval_ref
@@ -361,6 +363,8 @@ def revert_task_to_planned(
     handoff_refs_override: list[str] | None = None,
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     active_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
     planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"

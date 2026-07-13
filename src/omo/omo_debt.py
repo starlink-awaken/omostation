@@ -22,17 +22,14 @@ from .omo_debt_dispatch import build_dispatch_packet
 from .omo_debt_execution import execution_record_path, run_slug_from_ref
 from .omo_debt_metrics import compute_debt_metrics
 from .omo_debt_owner_routing import build_owner_routing_packet
-from .omo_debt_reporting import build_reporting_packet, render_reporting_markdown
-from .omo_debt_reporting_diff import (
+from .omo_debt_reporting import (
     build_reporting_diff_packet,
-    render_reporting_diff_markdown,
-)
-from .omo_debt_reporting_history import (
     build_reporting_history_packet,
-    render_reporting_history_markdown,
-)
-from .omo_debt_reporting_trend import (
+    build_reporting_packet,
     build_reporting_trend_packet,
+    render_reporting_diff_markdown,
+    render_reporting_history_markdown,
+    render_reporting_markdown,
     render_reporting_trend_markdown,
 )
 from .omo_debt_registry import DebtItem, load_debt_ledger

@@ -33,10 +33,6 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import (
-    _record_mutation,
-)
-from omo.omo_ingress_trail import _record_trail
 
 
 def yield_task_to_planned(
@@ -48,6 +44,8 @@ def yield_task_to_planned(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     active_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
     planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
@@ -140,6 +138,8 @@ def archive_done_task(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     done_path = omo_dir / "tasks" / "done" / f"{task_id}.yaml"
     archive_root = omo_dir / "tasks" / "archived"
@@ -223,6 +223,8 @@ def normalize_legacy_planned_task(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
     archived_dir = omo_dir / "tasks" / "archived" / "legacy-normalized"

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from omo.omo_debt_reporting_trend import (
+from omo.omo_debt_reporting import (
     build_reporting_trend_packet,
     render_reporting_trend_markdown,
 )

@@ -5,7 +5,7 @@ Phase 38-39: 从被动监听升级为主动自愈。
 - 监听 Agora SSE 事件流
 - 滑动窗口统计错误事件
 - 阈值触发 MetaOS 工作流 → 生成 Debt 报告 → 尝试自动修复
-- 支持自定义修复脚本 (omo_self_healing_fixes.py)
+- 支持自定义修复脚本
 - HTTP 状态端点 + Agora 事件发布
 
 架构:
@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import subprocess
 import time
 from collections import deque
@@ -28,9 +29,6 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import yaml
-
-# P110-D (TASK-F7114ABA 治本): EventTrend + TrendTracker 拆分 → omo_self_healing_trend.py
-from .omo_self_healing_trend import EventTrend, TrendTracker  # noqa: E402, F401
 
 from .omo_ingress import upsert_debt_item
 
@@ -416,8 +414,6 @@ class SelfHealingEngine:
 
     async def _run_fixes(self, rule: HealingRule) -> list[dict]:
         """执行规则关联的修复脚本 (失败自动重试)。"""
-        from omo.omo_self_healing_fixes import run_fix
-
         results = []
         for fix_name in rule.fix_names:
             result = run_fix(fix_name, {"rule": rule.name, "severity": rule.severity})
@@ -483,6 +479,161 @@ class SelfHealingEngine:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Auto-Fix Scripts
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def fix_clear_pytest_cache(context: dict | None = None) -> tuple[bool, str]:
+    """清理 .pytest_cache 和 .ruff_cache 目录。"""
+    roots = [
+        Path.home() / "Workspace" / "projects" / p
+        for p in os.listdir(Path.home() / "Workspace" / "projects")
+        if not p.startswith("_")
+    ]
+    cleaned = 0
+    for root in roots:
+        for cache_dir in [".pytest_cache", ".ruff_cache", "__pycache__"]:
+            for path in root.rglob(cache_dir):
+                try:
+                    if path.is_dir():
+                        shutil.rmtree(path)
+                        cleaned += 1
+                except Exception:  # noqa: BLE001  # defensive fallback
+                    pass
+    return True, f"Cleaned {cleaned} cache directories"
+
+
+def fix_restart_agora(context: dict | None = None) -> tuple[bool, str]:
+    """重启 Agora MCP 服务 (通过 launchctl 或直接进程)。"""
+    try:
+        subprocess.run(["pkill", "-f", "agora-mcp"], capture_output=True, timeout=5)
+        return True, "Agora MCP process terminated; launchctl will restart"
+    except Exception as e:  # noqa: BLE001  # defensive fallback
+        return False, f"Failed to restart Agora: {e}"
+
+
+def fix_git_gc(context: dict | None = None) -> tuple[bool, str]:
+    """对 Workspace 目录运行 git gc。"""
+    ws = Path.home() / "Workspace"
+    try:
+        result = subprocess.run(
+            ["git", "gc", "--auto"],
+            cwd=str(ws),
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        return result.returncode == 0, result.stdout[:500] or "git gc completed"
+    except Exception as e:  # noqa: BLE001  # defensive fallback
+        return False, f"git gc failed: {e}"
+
+
+def fix_clean_temp_files(context: dict | None = None) -> tuple[bool, str]:
+    """清理临时文件和空日志。"""
+    patterns = ["*.pyc", "*.log.1", "*.log.2"]
+    cleaned = 0
+    ws = Path.home() / "Workspace"
+    for pattern in patterns:
+        for path in ws.rglob(pattern):
+            try:
+                path.unlink()
+                cleaned += 1
+            except Exception:  # noqa: BLE001  # defensive fallback
+                pass
+    return True, f"Cleaned {cleaned} temp files"
+
+
+def fix_disk_check(context: dict | None = None) -> tuple[bool, str]:
+    """检查磁盘使用率，超过 80% 告警。"""
+    try:
+        usage = shutil.disk_usage(Path.home())
+        pct = usage.used / usage.total * 100
+        if pct > 80:
+            return (
+                False,
+                f"Disk usage critical: {pct:.1f}% ({_fmt_bytes(usage.free)} free)",
+            )
+        return True, f"Disk OK: {pct:.1f}% used"
+    except Exception as e:  # noqa: BLE001  # defensive fallback
+        return False, f"Disk check failed: {e}"
+
+
+def fix_process_health_check(context: dict | None = None) -> tuple[bool, str]:
+    """检查关键进程是否存活 (agora, minerva, gbrain)。"""
+    key_processes = {
+        "agora": r"agora[-_]?(mcp|web|server)",
+        "minerva": r"minerva",
+        "cockpit": r"cockpit.*dashboard",
+    }
+    results = {}
+    for name, pattern in key_processes.items():
+        try:
+            result = subprocess.run(
+                ["pgrep", "-f", pattern],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            results[name] = "alive" if result.returncode == 0 else "dead"
+        except Exception:  # noqa: BLE001  # defensive fallback
+            results[name] = "unknown"
+
+    dead = [k for k, v in results.items() if v == "dead"]
+    if dead:
+        return False, f"Dead processes: {', '.join(dead)}. Status: {results}"
+    return True, f"All processes alive: {results}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Fix Registry
+# ═══════════════════════════════════════════════════════════════════════════
+
+FIX_REGISTRY: dict[str, callable] = {
+    "clear_pytest_cache": fix_clear_pytest_cache,
+    "restart_agora": fix_restart_agora,
+    "git_gc": fix_git_gc,
+    "clean_temp_files": fix_clean_temp_files,
+    "disk_check": fix_disk_check,
+    "process_health_check": fix_process_health_check,
+}
+
+
+def run_fix(fix_name: str, context: dict | None = None) -> dict:
+    """按名称运行修复脚本，返回 {success, output, fix_name}。"""
+    if fix_name not in FIX_REGISTRY:
+        return {
+            "success": False,
+            "output": f"Unknown fix: {fix_name}",
+            "fix_name": fix_name,
+        }
+
+    try:
+        success, output = FIX_REGISTRY[fix_name](context)
+        logger.info(
+            "fix_executed fix=%s success=%s output=%s",
+            fix_name,
+            success,
+            output[:200],
+        )
+        return {"success": success, "output": output, "fix_name": fix_name}
+    except Exception as exc:  # noqa: BLE001  # defensive fallback
+        logger.error("fix_failed fix=%s error=%s", fix_name, exc)
+        return {"success": False, "output": str(exc), "fix_name": fix_name}
+
+
+def list_fixes() -> list[str]:
+    return list(FIX_REGISTRY.keys())
+
+
+def _fmt_bytes(b: int) -> str:
+    for unit in ("B", "KB", "MB", "GB"):
+        if b < 1024:
+            return f"{b:.1f}{unit}"
+        b /= 1024
+    return f"{b:.1f}TB"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Utilities
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -498,6 +649,71 @@ def _severity_weight(severity: str) -> float:
 # ═══════════════════════════════════════════════════════════════════════════
 
 _HEALING_HTTP_PORT = int(os.environ.get("OMO_HEALING_HTTP_PORT", "9091"))
+
+
+@dataclass
+class EventTrend:
+    """事件趋势快照。"""
+
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    total_events: int = 0
+    events_by_type: dict[str, int] = field(default_factory=dict)
+    triggers: int = 0
+    fixes: int = 0
+    debts: int = 0
+
+
+class TrendTracker:
+    """追踪事件趋势 (10 个快照点)。"""
+
+    def __init__(self, max_snapshots: int = 10):
+        self._snapshots: deque[EventTrend] = deque(maxlen=max_snapshots)
+        self._total_triggers: int = 0
+        self._total_fixes: int = 0
+        self._total_debts: int = 0
+
+    def record(self, trend: EventTrend) -> None:
+        self._snapshots.append(trend)
+        self._total_triggers += trend.triggers
+        self._total_fixes += trend.fixes
+        self._total_debts += trend.debts
+
+    def get_trends(self) -> list[dict]:
+        return [
+            {
+                "ts": t.timestamp,
+                "total_events": t.total_events,
+                "events": dict(t.events_by_type),
+                "events_by_type": dict(t.events_by_type),
+                "triggers": t.triggers,
+                "fixes": t.fixes,
+                "debts": t.debts,
+            }
+            for t in self._snapshots
+        ]
+
+    def is_escalating(self, event_type: str) -> bool:
+        """Check if a specific event type is trending upward (>=3 snapshots, strictly increasing)."""
+        snapshots = list(self._snapshots)
+        if len(snapshots) < 3:
+            return False
+        values = [s.events_by_type.get(event_type, 0) for s in snapshots[-3:]]
+        return values[0] < values[1] < values[2]
+
+    def get_summary(self) -> dict:
+        return {
+            "total_triggers": self._total_triggers,
+            "total_fixes": self._total_fixes,
+            "total_debts": self._total_debts,
+            "snapshot_count": len(self._snapshots),
+        }
+
+    def reset(self) -> None:
+        """清空所有累计计数 (用于测试隔离)。"""
+        self._snapshots.clear()
+        self._total_triggers = 0
+        self._total_fixes = 0
+        self._total_debts = 0
 
 
 def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
@@ -525,8 +741,6 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
                 elif self.path == "/status":
                     self._json(200, _engine_ref.get_status())
                 elif self.path == "/fixes":
-                    from omo.omo_self_healing_fixes import list_fixes
-
                     self._json(200, {"fixes": list_fixes()})
                 elif self.path == "/trends":
                     self._json(200, {"trends": _engine_ref._trends.get_trends()})
@@ -536,8 +750,6 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
             def do_POST(self):
                 if self.path.startswith("/fix/run/"):
                     fix_name = self.path.split("/fix/run/")[1]
-                    from omo.omo_self_healing_fixes import run_fix
-
                     result = run_fix(fix_name)
                     self._json(200, result)
                 else:

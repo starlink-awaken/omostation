@@ -60,31 +60,6 @@ from omo.omo_governance_surfaces_ingress import (
     _check_ingress_registry,
 )
 from omo.omo_governance_surfaces_ingress_artifacts import _check_ingress_artifacts
-from omo.omo_governance_surfaces_mutation_surface import (
-    _check_mutation_surface_registry,
-)
-from omo.omo_governance_surfaces_internal_write_profiles import (
-    _check_internal_write_profile_registry,
-)
-from omo.omo_governance_surfaces_state_plane import _check_state_plane_asset_registry
-from omo.omo_governance_surfaces_c2g_boundary import _check_c2g_omo_boundary
-
-# P110-G (F7114ABA 治本): gates sibling 破 child→parent circular (parent re-export 在前)
-from omo.omo_governance_surfaces_gates import (
-    _asset_ref_to_top_level,
-    _check_goals_runtime_entry,
-    _has_c2g_omo_boundary_gate,
-    _has_direct_io_gate,
-    _has_ingress_artifact_gate,
-    _has_internal_write_profile_gate,
-    _has_mutation_ledger_gate,
-    _has_mutation_surface_gate,
-    _has_state_plane_asset_gate,
-    _has_task_policy_gate,
-    _read_c2g_governance_refs,
-    _top_level_entries,
-)
-from omo.omo_governance_surfaces_task_policy import _check_task_policy_registry
 
 
 # P105 范式: inline _load_yaml 避免 child → parent circular import
@@ -94,6 +69,26 @@ def _load_yaml(path):
 
 
 def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
+    from omo.omo_governance_surfaces import (
+        _asset_ref_to_top_level,
+        _check_c2g_omo_boundary,
+        _check_goals_runtime_entry,
+        _check_internal_write_profile_registry,
+        _check_mutation_surface_registry,
+        _check_state_plane_asset_registry,
+        _check_task_policy_registry,
+        _has_c2g_omo_boundary_gate,
+        _has_direct_io_gate,
+        _has_ingress_artifact_gate,
+        _has_internal_write_profile_gate,
+        _has_mutation_ledger_gate,
+        _has_mutation_surface_gate,
+        _has_state_plane_asset_gate,
+        _has_task_policy_gate,
+        _read_c2g_governance_refs,
+        _top_level_entries,
+    )
+
     omo_dir = workspace_root / ".omo"
     registry_path = omo_dir / "_truth" / "registry" / "omo-governance-surfaces.yaml"
     standard_path = omo_dir / "standards" / "omo-governance-surfaces.md"

@@ -21,13 +21,6 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import (
-    _load_registry,
-    _record_mutation,
-    _register_ingress,
-    _write_registry,
-)
-from omo.omo_ingress_trail import _record_trail
 
 
 def upsert_debt_item(
@@ -38,6 +31,14 @@ def upsert_debt_item(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import (
+        _load_registry,
+        _record_mutation,
+        _record_trail,
+        _register_ingress,
+        _write_registry,
+    )
+
     if not isinstance(debt_data, dict):
         raise ValueError("debt_data must be a dict")
     if not debt_data.get("id"):
@@ -212,6 +213,8 @@ def remove_debt_item(
     source_ref: str = "",
     now: str | None = None,
 ) -> bool:
+    from omo.omo_ingress import _load_registry, _record_trail, _write_registry
+
     debt_path = omo_dir / "debt" / "items" / f"{debt_id}.yaml"
     artifact_path = _delivery_root(omo_dir) / "debts" / f"{debt_id}.yaml"
     debt_registry_path = omo_dir / "_truth" / "registry" / "debt.yaml"

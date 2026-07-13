@@ -303,7 +303,7 @@ class TestDefaultRules:
 
 class TestFixScripts:
     def test_fix_registry_has_all(self):
-        from omo.omo_self_healing_fixes import list_fixes
+        from omo.omo_self_healing import list_fixes
 
         fixes = list_fixes()
         assert len(fixes) == 6
@@ -313,7 +313,7 @@ class TestFixScripts:
         assert "process_health_check" in fixes
 
     def test_run_fix_disk_check(self):
-        from omo.omo_self_healing_fixes import run_fix
+        from omo.omo_self_healing import run_fix
 
         result = run_fix("disk_check")
         assert result["fix_name"] == "disk_check"
@@ -321,20 +321,20 @@ class TestFixScripts:
         assert "output" in result
 
     def test_run_fix_unknown(self):
-        from omo.omo_self_healing_fixes import run_fix
+        from omo.omo_self_healing import run_fix
 
         result = run_fix("nonexistent_fix")
         assert result["success"] is False
         assert "Unknown fix" in result["output"]
 
     def test_run_fix_git_gc(self):
-        from omo.omo_self_healing_fixes import run_fix
+        from omo.omo_self_healing import run_fix
 
         result = run_fix("git_gc")
         assert result["fix_name"] == "git_gc"
 
     def test_run_fix_clean_temp(self):
-        from omo.omo_self_healing_fixes import run_fix
+        from omo.omo_self_healing import run_fix
 
         result = run_fix("clean_temp_files")
         assert result["fix_name"] == "clean_temp_files"

@@ -58,7 +58,7 @@ def _check_references() -> dict:
 
 def _check_god_module() -> dict:
     """检查 god module (文件过大)."""
-    from omo.omo_lint_god_module import cmd_lint_god_module
+    from omo.omo_lint import cmd_lint_god_module
 
     try:
         rc = cmd_lint_god_module()

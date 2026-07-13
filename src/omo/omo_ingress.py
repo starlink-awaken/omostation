@@ -4,62 +4,112 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-
 from omo.omo_audit import record as record_audit
-from omo.omo_io import fcntl_lock, write_yaml_atomic
+from omo.omo_io import AppendOnlyLog, fcntl_lock, write_yaml_atomic
+from omo.omo_io_schemas import OmoTrailRecord
 from omo.omo_ingress_paths import (
     _audit_log_path,
     _delivery_root,
     _load_yaml,
     _lock_path,
+    _mutation_log_path,
+    _registry_path,
     _timestamp_slug,
+    _trail_log_path,
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import (
-    _record_mutation,
-)
-from omo.omo_ingress_trail import _record_trail
-from omo.omo_ingress_doc import (  # noqa: F401  (public re-export, 调用方 `from omo.omo_ingress import` 不变)
-    create_audit_report,
-    create_knowledge_doc,
-    create_standard_doc,
-)
-from omo.omo_ingress_goal import (  # noqa: F401  (public re-export, 调用方 `from omo.omo_ingress import` 不变)
-    create_goal,
-    update_goal_progress,
-)
-from omo.omo_ingress_registry_writes import (  # noqa: F401  (public re-export, 调用方 `from omo.omo_ingress import` 不变)
-    create_skill_manifest,
-    update_governance_overlay_state,
-    write_capability_registry_bundle,
-    write_discovery_registry,
-    write_manual_capabilities,
-    write_task_center_control_decision,
-    write_task_center_freshness,
-    write_usage_accounting,
-)
-from omo.omo_ingress_task_lifecycle import (  # noqa: F401  (public re-export, 调用方 `from omo.omo_ingress import` 不变)
-    archive_done_task,
-    complete_task,
-    create_blocked_task,
-    create_planned_task,
-    normalize_legacy_planned_task,
-    promote_task_to_active,
-    record_task_consensus,
-    record_task_contract_request,
-    repair_task_promotion_approval,
-    request_task_promotion_approval,
-    revert_task_to_planned,
-    route_self_evolution_to_remediation,
-    update_done_task_evidence_paths,
-    update_planned_task_evidence_paths,
-    yield_task_to_planned,
-)
-from omo.omo_ingress_debt import (  # noqa: F401  (public re-export, 调用方 `from omo.omo_ingress import` 不变)
-    remove_debt_item,
-    upsert_debt_item,
-)
+
+
+def _record_trail(
+    omo_dir: Path,
+    *,
+    actor: str,
+    action: str,
+    target: str,
+    parent_step_id: str,
+) -> None:
+    trail_record = OmoTrailRecord(
+        ts=_utc_now(),
+        actor=actor,
+        action=action,
+        target=target,
+        status="ok",
+        duration_ms=0,
+        parent_step_id=parent_step_id,
+    )
+    AppendOnlyLog(_trail_log_path(omo_dir)).append(
+        trail_record.model_dump(), schema=OmoTrailRecord, sort_keys=True
+    )
+
+
+def _load_registry(omo_dir: Path) -> dict[str, Any]:
+    path = _registry_path(omo_dir)
+    if not path.exists():
+        return {
+            "goals": {"by_id": {}, "by_source_ref": {}},
+            "tasks": {"by_id": {}, "by_source_ref": {}},
+            "debts": {"by_id": {}, "by_source_ref": {}},
+            "capabilities": {"by_id": {}, "by_source_ref": {}},
+        }
+    data = _load_yaml(path)
+    for key in ("goals", "tasks", "debts", "capabilities"):
+        data.setdefault(key, {})
+        data[key].setdefault("by_id", {})
+        data[key].setdefault("by_source_ref", {})
+    return data
+
+
+def _write_registry(omo_dir: Path, registry: dict[str, Any]) -> None:
+    write_yaml_atomic(_registry_path(omo_dir), registry)
+
+
+def _record_mutation(
+    omo_dir: Path,
+    *,
+    actor: str,
+    action: str,
+    target: str,
+    artifact_ref: str,
+    source_ref: str,
+    broker_ref: str = "projects/omo/src/omo/omo_ingress.py",
+    created_at: str | None = None,
+    extra: dict[str, Any] | None = None,
+) -> None:
+    record: dict[str, Any] = {
+        "created_at": created_at or _utc_now(),
+        "actor": actor,
+        "action": action,
+        "target": target,
+        "artifact_ref": artifact_ref,
+        "source_ref": source_ref,
+        "broker_ref": broker_ref,
+        "result": "committed",
+    }
+    if extra:
+        record.update(deepcopy(extra))
+    AppendOnlyLog(_mutation_log_path(omo_dir)).append(record, sort_keys=False)
+
+
+def _register_ingress(
+    registry: dict[str, Any],
+    *,
+    kind: str,
+    item_id: str,
+    source_ref: str,
+    artifact_ref: str,
+    fingerprint: dict[str, Any],
+    created_at: str,
+) -> None:
+    bucket = registry[kind]
+    bucket["by_id"][item_id] = {
+        "source_ref": source_ref,
+        "artifact_ref": artifact_ref,
+        "fingerprint": deepcopy(fingerprint),
+        "created_at": created_at,
+    }
+    if source_ref:
+        bucket["by_source_ref"][source_ref] = item_id
 
 
 def write_system_projection_fields(
@@ -139,3 +189,45 @@ def write_system_projection_fields(
             extra={"updated_fields": sorted(updates.keys())},
         )
         return deepcopy(payload)
+
+
+from omo.omo_ingress_doc import (  # noqa: E402, F401
+    create_audit_report,
+    create_knowledge_doc,
+    create_standard_doc,
+)
+from omo.omo_ingress_goal import (  # noqa: E402, F401
+    create_goal,
+    update_goal_progress,
+)
+from omo.omo_ingress_registry_writes import (  # noqa: E402, F401
+    create_skill_manifest,
+    update_governance_overlay_state,
+    write_capability_registry_bundle,
+    write_discovery_registry,
+    write_manual_capabilities,
+    write_task_center_control_decision,
+    write_task_center_freshness,
+    write_usage_accounting,
+)
+from omo.omo_ingress_task_lifecycle import (  # noqa: E402, F401
+    archive_done_task,
+    complete_task,
+    create_blocked_task,
+    create_planned_task,
+    normalize_legacy_planned_task,
+    promote_task_to_active,
+    record_task_consensus,
+    record_task_contract_request,
+    repair_task_promotion_approval,
+    request_task_promotion_approval,
+    revert_task_to_planned,
+    route_self_evolution_to_remediation,
+    update_done_task_evidence_paths,
+    update_planned_task_evidence_paths,
+    yield_task_to_planned,
+)
+from omo.omo_ingress_debt import (  # noqa: E402, F401
+    remove_debt_item,
+    upsert_debt_item,
+)

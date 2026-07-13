@@ -25,13 +25,7 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import (
-    _load_registry,
-    _record_mutation,
-    _register_ingress,
-    _write_registry,
-)
-from omo.omo_ingress_trail import _record_trail
+
 
 # P110 R1: 3 子模块 (promotion + contract + archive) extracted 936L from omo_ingress_task_lifecycle.py
 # Re-export 保持向后兼容 (cli.py / worker / 外部 import 调用点不破)
@@ -78,6 +72,14 @@ def create_planned_task(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import (
+        _load_registry,
+        _record_mutation,
+        _record_trail,
+        _register_ingress,
+        _write_registry,
+    )
+
     errors = validate_task_data(task_data, group="planned")
     if errors:
         raise ValueError("invalid planned task: " + "; ".join(errors))
@@ -189,6 +191,8 @@ def create_blocked_task(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     errors = validate_task_data(task_data, group="blocked")
     if errors:
         raise ValueError("invalid blocked task: " + "; ".join(errors))
@@ -266,6 +270,8 @@ def record_task_consensus(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     resolved = _find_task_path(omo_dir, task_id, groups=("active", "blocked", "done"))
     if resolved is None:
@@ -356,6 +362,8 @@ def complete_task(
     now: str | None = None,
     evidence_paths: list[str] | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     task_roots = {
         "active": omo_dir / "tasks" / "active" / f"{task_id}.yaml",
@@ -463,6 +471,8 @@ def update_done_task_evidence_paths(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     task_path = omo_dir / "tasks" / "done" / f"{task_id}.yaml"
     if not task_path.exists():
@@ -536,6 +546,8 @@ def update_planned_task_evidence_paths(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     """Add evidence_paths to a planned/active task (未归档, done 前补 evidence).
 
     解决归档 gap: done 需 evidence, refresh-evidence 只查 done/, planned 无加 evidence 命令.

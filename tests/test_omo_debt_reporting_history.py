@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from omo.omo_debt_reporting_history import (
+from omo.omo_debt_reporting import (
     build_reporting_history_packet,
     render_reporting_history_markdown,
 )

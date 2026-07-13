@@ -2,10 +2,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from .omo_debt_campaign import render_campaign_markdown
-from .omo_debt_reporting import render_reporting_markdown
-from .omo_debt_reporting_diff import render_reporting_diff_markdown
-from .omo_debt_reporting_history import render_reporting_history_markdown
-from .omo_debt_reporting_trend import render_reporting_trend_markdown
+from .omo_debt_reporting import (
+    render_reporting_diff_markdown,
+    render_reporting_history_markdown,
+    render_reporting_markdown,
+    render_reporting_trend_markdown,
+)
 
 
 def _render_section(title: str, item_ids: list[str]) -> str:

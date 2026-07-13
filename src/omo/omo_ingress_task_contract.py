@@ -34,10 +34,6 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import (
-    _record_mutation,
-)
-from omo.omo_ingress_trail import _record_trail
 
 
 def record_task_contract_request(
@@ -51,6 +47,8 @@ def record_task_contract_request(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     task_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
     request_path = omo_dir.parent / request_ref
@@ -143,6 +141,8 @@ def route_self_evolution_to_remediation(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     timestamp = now or _utc_now()
     planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
     remediation_path = omo_dir / "tasks" / "remediation" / f"{task_id}.yaml"

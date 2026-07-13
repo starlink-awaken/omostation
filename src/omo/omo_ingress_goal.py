@@ -22,13 +22,6 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-from omo.omo_ingress_registry import (
-    _load_registry,
-    _record_mutation,
-    _register_ingress,
-    _write_registry,
-)
-from omo.omo_ingress_trail import _record_trail
 
 
 def _goal_fingerprint(
@@ -103,6 +96,14 @@ def create_goal(
     extra_fields: dict[str, Any] | None = None,
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import (
+        _load_registry,
+        _record_mutation,
+        _record_trail,
+        _register_ingress,
+        _write_registry,
+    )
+
     """在 goals/current.yaml 中创建新 goal, 并写 ingress artifact."""
     goal_file = omo_dir / "goals" / "current.yaml"
     if not goal_file.exists():
@@ -230,6 +231,8 @@ def update_goal_progress(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
+    from omo.omo_ingress import _record_mutation, _record_trail
+
     """更新 goals/current.yaml 中指定 goal 的 progress."""
     goal_file = omo_dir / "goals" / "current.yaml"
     if not goal_file.exists():

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from omo.omo_debt_reporting_diff import (
+from omo.omo_debt_reporting import (
     build_reporting_diff_packet,
     render_reporting_diff_markdown,
 )
