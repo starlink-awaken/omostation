@@ -4,6 +4,25 @@
 > 9 项目 (agora / kairon / gbrain / omo / metaos / cockpit / runtime / ecos / aetherforge) 共享版本号.
 > 详见 ADR-0007.
 
+## [Unreleased] - 2026-07-09
+
+### Added (P7x bus-foundation rollout — ADR-0180)
+- **bus-foundation 真接入** 8 consumer projects: agora / omo / metaos / kairon-pipeline / aetherforge / runtime / cockpit / l4-kernel. All 8 ACTIVE on bus-facade.
+- **3-plane facade** as canonical entry: `bus_foundation.facade.event / control / data`. Top-level `publish / subscribe / schedule` marked deprecated.
+- **`bus_foundation.topics` SSOT**: 30+ topic constants + 6 wildcard patterns, with 7 invariant tests in `test_topics.py`.
+- **Lazy optional-dep imports**: `zmq`, `redis`, `websockets` now lazy via PEP 562 module `__getattr__`; `import bus_foundation` works without any extra.
+- **`bin/bus-usage-report.py`** P74 dormant-adapter detector: scans every consumer's `src/` for production call sites; exit 1 if any consumer declares `bus-foundation` but has no real call. Wired into `gac-local-gate` as the `bus-usage-report` gate (non-strict, ~2.5s on real workspace).
+- **`bin/bus-e2e-harness.py`** real cross-process ZMQ e2e: spawns publisher + subscriber as separate processes, sends N messages, asserts 0 loss. ci_only=True in gac-local-gate.
+- **Cross-project e2e**: `tests/test_e2e_cross_project.py` (7 tests) — omo→cockpit, kairon→omo, metaos→cockpit, aetherforge→omo, runtime→cockpit flows.
+- **27 new tests** in bus-foundation: 7 topics + 8 harness + 7 cross-project e2e + 2 ws_v2 regression + 3 ws_v2 stop_server edge cases.
+- **6 new e2e tests** across consumers: 3 omo, 5 metaos, 4 aetherforge hatcher, 4 runtime cron, 6 kairon-pipeline bus_adapter.
+
+### Fixed
+- **ws_v2.py** 7 latent bugs: `importlib.util` spell-error, `PerMessageDeflate` API drift (websockets 16), `hb_task` UnboundLocalError, `srv.loop` type-unsafe, `_drain` never awaited, `stop_server` not idempotent.
+- **zmq.py** cross-process bug: `_stop_event` not initialized early enough in `__init__`; `__del__` could AttributeError on partial init. Now: init `_stop_event` first, wrap init body in try/except, idempotent `close()`.
+- **aetherforge `_compat.py`**: pre-existing `EventType.INFO` AttributeError (StrEnum had no `INFO` member) — replaced with fallback to `PIPELINE_COMPLETED`.
+- **bus-foundation 0.3.0 → 0.3.1** (semantically): new `topics.py`, lazy optional extras, fixed `_croniter.start()` type-ignore false positive, deprecated top-level API documented.
+
 ## [Unreleased] - 2026-06-30
 
 ### Fixed (文档 SSOT 深度收敛 + 子项目全覆盖)
