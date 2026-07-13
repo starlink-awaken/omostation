@@ -241,17 +241,6 @@ def handle_prompts_get(params: dict, ctx: ToolContext) -> dict:
 def handle_tools_list(params: dict, ctx: ToolContext) -> dict:
     """MCP tools/list — enumerate all tools registered in the ToolRegistry."""
     tools: list[dict] = []
-    try:
-        get_default_registry = __import__(
-            "organs.D_Execution.organs.tool_registry",
-            fromlist=["get_default_registry"],
-        ).get_default_registry
-        registry = get_default_registry()
-        tools = registry.to_anthropic_tools()
-    except (ImportError, KeyError, AttributeError) as exc:
-        _log.warning(
-            "[MCPServer] tools/list: D-Execution registry unavailable — %s", exc
-        )
 
     pm = _get_proxy_manager()
     if pm:
@@ -307,16 +296,10 @@ def handle_tools_call(params: dict, ctx: ToolContext) -> dict:
         return builtin_result
 
     try:
-        get_default_registry = __import__(
-            "organs.D_Execution.organs.tool_registry",
-            fromlist=["get_default_registry"],
-        ).get_default_registry
-        registry = get_default_registry()
-
         pm = _get_proxy_manager()
-        loop = asyncio.new_event_loop()
-        try:
-            if pm and pm.registry.get_entry(tool_name):
+        if pm and pm.registry.get_entry(tool_name):
+            loop = asyncio.new_event_loop()
+            try:
                 res = loop.run_until_complete(pm.dispatch(tool_name, arguments))
                 if res.get("status") == "error":
                     return {
@@ -326,33 +309,14 @@ def handle_tools_call(params: dict, ctx: ToolContext) -> dict:
                         "isError": True,
                     }
                 return {"content": [{"type": "text", "text": str(res)}]}
-            else:
-                tool_result = loop.run_until_complete(
-                    registry.invoke_async(tool_name, arguments)
-                )
-
-                if tool_result.is_error:
-                    error_msg = getattr(
-                        tool_result, "error_message", str(tool_result.content)
-                    )
-                    return {
-                        "content": [
-                            {"type": "text", "text": f"[tool error] {error_msg}"}
-                        ],
-                        "isError": True,
-                    }
-                return {
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": str(tool_result.content)
-                            if tool_result.content is not None
-                            else "",
-                        }
-                    ]
-                }
         finally:
             loop.close()
+    except Exception as exc:  # defensive fallback
+        _log.warning("[MCPServer] tool dispatch error: %s", exc)
+        return {
+            "content": [{"type": "text", "text": f"[tool error]: {exc}"}],
+            "isError": True,
+        }
 
     except _ParamError:
         raise
