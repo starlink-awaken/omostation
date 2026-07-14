@@ -10,7 +10,7 @@ Wants=network-online.target
 Type=oneshot
 WorkingDirectory=/Users/xiamingxing/Workspace
 Environment="PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=/usr/bin/env uv run python bin/knowledge-foundry-cron.py
+ExecStart=/usr/bin/env uv run python bin/gac/knowledge-foundry-cron.py
 StandardOutput=file:/var/log/omostation/foundry.out.log
 StandardError=file:/var/log/omostation/foundry.err.log
 # Resource limits: 9-deck 通常 <60s, 给 5 分钟 (300s)

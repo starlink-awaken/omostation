@@ -182,7 +182,7 @@ def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
 
     try:
         res = subprocess.run(
-            [sys.executable, str(ws_root / "bin" / "evidence-smoke.py"), "--json"],
+            [sys.executable, str(ws_root / "bin" / "gac" / "evidence-smoke.py"), "--json"],
             cwd=ws_root, capture_output=True, text=True, timeout=120, check=False,
         )
         if res.returncode != 0 or not res.stdout.strip():
@@ -483,7 +483,7 @@ def main() -> int:
     try:
         import subprocess  # noqa: PLC0415
         res = subprocess.run(
-            [sys.executable, str(ws_root / "bin" / "generate-brief.py"), "--write", "--if-changed"],
+            [sys.executable, str(ws_root / "bin" / "mof" / "generate-brief.py"), "--write", "--if-changed"],
             cwd=ws_root, capture_output=True, text=True, check=False
         )
         if res.returncode == 0:

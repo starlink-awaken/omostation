@@ -33,12 +33,12 @@ runtime/omo/_delivery/foundry/
 
 ## 3. 排查
 
-- **deck fail**: 查看对应 stdout/stderr; 重试用 `uv run python bin/knowledge-foundry-cron.py`
+- **deck fail**: 查看对应 stdout/stderr; 重试用 `uv run python bin/gac/knowledge-foundry-cron.py`
 - **port-governance fail**: 运行 `uv run --with pyyaml python bin/decks/port-governance-deck.py` 查看详情
 - **cc-switch fail**: 环境凭证问题, 不影响 code health
 
 ## 4. 相关
 
-- `bin/knowledge-foundry-cron.py` — 主 cron 脚本
+- `bin/gac/knowledge-foundry-cron.py` — 主 cron 脚本
 - `bin/decks/port-governance-deck.py` — v2 新增 deck
 - `docs/operations/knowledge-foundry-monitor.md` — cockpit 面板文档

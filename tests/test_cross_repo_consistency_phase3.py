@@ -14,14 +14,14 @@ sys.path.insert(0, str(WORKSPACE / 'bin'))
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "check-cross-repo-consistency.py"), *args],
+         str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"), *args],
         cwd=WORKSPACE, capture_output=True, text=True,
     )
 
 
 def test_strict_regex_bos_uri_boundary():
     """detector 严格模式: 'bos://memory/kos' 不应匹配 'bos://memory/kos/search' 子串"""
-    text = (WORKSPACE / "bin" / "check-cross-repo-consistency.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py").read_text()
     m = re.search(r"BOS_URI_RE = re\.compile\(r['\"]([^'\"]+)['\"]\)", text)
     assert m, "BOS_URI_RE not found"
     pattern = m.group(1)
@@ -39,7 +39,7 @@ def test_strict_regex_bos_uri_boundary():
 
 def test_threshold_default_zero():
     """detector 默认 threshold 应该是 0 (Phase 3 治本后)"""
-    text = (WORKSPACE / "bin" / "check-cross-repo-consistency.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py").read_text()
     assert "default=0" in text, "threshold default should be 0 (Phase 3 治本后)"
     assert "default=20" not in text, "threshold default should NOT be 20 anymore"
 
@@ -57,7 +57,7 @@ def test_unregistered_is_zero():
 
 def test_legacy_ok_uri_fragments_includes_bad_foo():
     """LEGACY_OK_URI_FRAGMENTS 应包含 bos://bad/foo/bar (omo schema validation test)"""
-    text = (WORKSPACE / "bin" / "check-cross-repo-consistency.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py").read_text()
     assert "bos://bad/foo/bar" in text, "bos://bad/foo/bar must be in LEGACY_OK"
 
 

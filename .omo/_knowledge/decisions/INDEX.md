@@ -161,6 +161,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0181 | metaos × ecos 方案 C — 三平面契约化 (Phase 1–4) | ACCEPTED | 2026-07-14 | governance-team + eCOS | 0181-metaos-ecos-scheme-c-planes.md |
 | 0182 | C2G + OMO Wave 1 — 闭环迭代 (反馈闭环 + 预测治理 + 测试覆盖 + 性能优化) | ACTIVE | 2026-07-14 | governance-team | 0182-c2g-omo-iteration-wave1.md |
 | 0183 | C2G + OMO 新功能 MOF 元模型集成 (4 M2 schema + 4 M1 instances) | ACTIVE | 2026-07-14 | governance-team | 0183-c2g-omo-mof-integration.md |
+=======
+>>>>>>> origin/main
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
 
