@@ -87,6 +87,8 @@ def _dict_to_bos_service(data: dict[str, Any]) -> object:
         func_name=data.get("func_name", ""),
         http_url=data.get("http_url", ""),
         description=data.get("description", ""),
+        mcp_tool=data.get("mcp_tool", "") or "",
+        tools=list(data.get("tools") or []),
     )
 
 

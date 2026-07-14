@@ -60,3 +60,5 @@ class BosService:
     func_name: str = ""
     http_url: str = ""
     description: str = ""
+    mcp_tool: str = ""
+    tools: list[str] = field(default_factory=list)
