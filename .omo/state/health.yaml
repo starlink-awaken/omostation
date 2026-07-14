@@ -1,18 +1,24 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-07-09T03:59:10Z
-# source: c2g.strategy (real audit, no mock)
+# generated_at: 2026-07-14T20:59:00Z
+# source: c2g.strategy (real audit, no mock) + P43 治理修正
 # range: 0-100, higher = healthier
-# health_score: composite (ISC-1) = {'governance': 0.5, 'freshness': 0.2, 'runtime': 0.3}
+# health_score: composite (ISC-2) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5}
+# 修正 2026-07-14: ISC-1→ISC-2 降低声明面权重(0.5→0.3), 提高执行面权重(0.3→0.5)
+#
+# ISC-2 新分:
+#   governance: 100 × 0.3 = 30.0 (原 50.0)
+#   freshness: 80 × 0.2 = 16.0 (不变)
+#   runtime: 44 × 0.5 = 22.0 (原 18.0, daemon 4/9=44%)
 
-generated_at: "2026-07-09T03:59:10Z"
-source: "c2g.strategy (real audit, no mock)"
-health_score: 84
+generated_at: "2026-07-14T20:59:00Z"
+source: "c2g.strategy (real audit, no mock) + P43 治理修正"
+health_score: 68
 governance_anomaly_score: 100
 anomaly_count: 0
-service_online_ratio: 0.600
+service_online_ratio: 0.444
 freshness_score: 80
 feedback_alive: True
-feedback_last_ts: "2026-07-09T03:54:43Z"
+feedback_last_ts: "2026-07-14T20:54:43Z"
 feedback_staleness_hours: 0.1
 total_tasks: 104
 done: 103
@@ -20,14 +26,14 @@ planned: 1
 
 health_composite_breakdown:
   weights:
-    governance: 0.5
+    governance: 0.3
     freshness: 0.2
-    runtime: 0.3
+    runtime: 0.5
   contributions:
-    governance: 50.0
+    governance: 30.0
     freshness: 16.0
-    runtime: 18.0
-  raw: 84.0
+    runtime: 22.0
+  raw: 68.0
 
 anomalies:
   []
@@ -49,7 +55,7 @@ distributions:
     agent-runtime: 2
     architecture-team: 3
     claude-code: 1
-    cockpit-team: 41
+    cockpit-team: 55
     codebuddy: 1
     docs-team: 1
     governance-team: 2
@@ -57,10 +63,10 @@ distributions:
     kos: 1
     metaos: 1
     omo: 2
-    omo-team: 7
+    omo-team: 12
     ssot: 1
     team-lead: 1
-    unassigned: 35
+    unassigned: 15
     workspace: 2
   phase_dist:
     17: 3
