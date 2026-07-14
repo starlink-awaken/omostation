@@ -369,12 +369,23 @@ class CronScheduler:
         for job in jobs:
             last = job.last_run_at
             if _is_due(job.id, job.schedule, last, created_at=job.created_at):
-                await _run_job(job.id, self._executor)
+                try:
+                    await asyncio.wait_for(
+                        _run_job(job.id, self._executor), timeout=120
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("Job %s timed out (>120s), continuing tick", job.id)
 
         # Route B: periodic health scan (every ~15 min via health_scan.should_scan)
         if run_scan_if_due is not None:
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(self._executor, run_scan_if_due)
+            try:
+                await asyncio.wait_for(
+                    loop.run_in_executor(self._executor, run_scan_if_due),
+                    timeout=30,
+                )
+            except asyncio.TimeoutError:
+                logger.warning("Health scan timed out, continuing tick")
 
     @property
     def is_running(self) -> bool:

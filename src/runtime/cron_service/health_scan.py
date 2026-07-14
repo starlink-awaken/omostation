@@ -13,6 +13,7 @@ Usage (via cron_service.server lifespan):
 from __future__ import annotations
 
 import logging
+import subprocess
 import time
 from pathlib import Path
 
@@ -51,11 +52,35 @@ def health_scan_once(force_write: bool = True) -> dict | None:
             len(sched.state.get("services", {})),
             sched.state.get("last_scan", 0),
         )
+                # Probe non-HTTP daemons
+        _probe_daemons(sched.state)
         return sched.state
     except Exception:  # noqa: BLE001  # defensive fallback
         logger.exception("Health scan failed")
         return None
 
+
+def _probe_daemons(state: dict) -> None:
+    """Fill health_check for daemons without HTTP endpoint via process probe."""
+    services = state.get("services", {})
+    probe_script = Path(__file__).parent.parent / "health" / "agora_gateway_probe.py"
+    if not probe_script.exists():
+        return
+    for name, svc in services.items():
+        if svc.get("type") != "daemon" or svc.get("health_check"):
+            continue
+        try:
+            result = subprocess.run(
+                ["python3", str(probe_script)],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode == 0:
+                svc["health_check"] = "healthy (probe)"
+            else:
+                svc["health_check"] = "unhealthy (probe)"
+                svc.setdefault("runtime", {})["degraded_reason"] =                     result.stdout.strip() or "probe failed"
+        except subprocess.TimeoutExpired:
+            svc["health_check"] = "stale (probe timeout)"
 
 def should_scan(now: float | None = None) -> bool:
     """Check if enough time has passed since the last scan.
