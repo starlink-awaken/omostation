@@ -14,3 +14,4 @@ campaign_ref: .omo/debt/campaign/current.yaml
 reporting_ref: .omo/debt/reporting/current.yaml
 seed_items:
 - .omo/debt/items/DEBT-PROBE-VERIFY-001.yaml
+- .omo/debt/items/real-debt-p43.yaml
