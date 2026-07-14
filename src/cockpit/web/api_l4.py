@@ -17,10 +17,12 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
+from cockpit.compat import WORKSPACE_ROOT
+
 router = APIRouter()
 
-# L4-kernel 项目路径 (硬编码，因为 cockpit 和 l4-kernel 是兄弟目录)
-WORKSPACE_DIR = Path("/Users/xiamingxing/Workspace")
+# L4-kernel 项目路径由兼容层解析，支持非默认 Workspace 根目录。
+WORKSPACE_DIR = WORKSPACE_ROOT
 L4_KERNEL_DIR = WORKSPACE_DIR / "projects" / "l4-kernel"
 L4_CONFIG_PATH = L4_KERNEL_DIR / "l4_domain_paths.toml"
 

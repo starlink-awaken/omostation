@@ -3,6 +3,8 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from cockpit.compat import WORKSPACE_ROOT
+
 router = APIRouter()
 
 
@@ -113,7 +115,7 @@ async def api_bos_metrics(prefix: str = ""):
         import json
         from pathlib import Path
 
-        metrics_file = Path.home() / "Workspace" / ".omo" / "_knowledge" / "bos-metrics.jsonl"
+        metrics_file = WORKSPACE_ROOT / ".omo" / "_knowledge" / "bos-metrics.jsonl"
 
         domain_stats = {}
         total_calls = 0

@@ -19,17 +19,9 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException
 
+from cockpit.compat import WORKSPACE_ROOT
+
 router = APIRouter()
-
-
-def _find_workspace_root() -> Path:
-    for parent in Path(__file__).resolve().parents:
-        if (parent / "docs" / "project-registry.yaml").is_file():
-            return parent
-    return Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))).expanduser()
-
-
-WORKSPACE_ROOT = _find_workspace_root()
 
 
 def _env_path(name: str, default: Path) -> Path:

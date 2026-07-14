@@ -62,6 +62,7 @@ def test_system_map_builds_workspace_dimensions():
     assert payload["summary"]["feature_domains"] >= 1
     assert payload["source_paths"]["project_registry"]["exists"] is True
     assert any(page["id"] == "SystemMap" for page in payload["cockpit_pages"])
+    assert any(page["id"] == "Guide" for page in payload["cockpit_pages"])
     # domain-app-write-gates is a legitimate dynamic gap when domain-apps are
     # unavailable or have security issues; assert gap shape instead of absence.
     assert all(gap.get("id") and gap.get("severity") for gap in payload["gaps"])
@@ -107,6 +108,7 @@ def test_system_map_builds_workspace_dimensions():
     assert page_maturity["attention_items"]
     assert all(item["status"] in {"gap", "watch"} for item in page_maturity["attention_items"])
     assert all(item["next_action"] for item in page_maturity["items"])
+    assert all(item["domains"] for item in page_maturity["items"])
     assert any(item["page_id"] == "SystemMap" for item in page_maturity["items"])
     assert payload["project_focus"]["summary"]["needs_action"] >= 1
     needs_action_queue = next(queue for queue in payload["project_focus"]["queues"] if queue["id"] == "needs-action")
@@ -172,6 +174,13 @@ def test_system_map_builds_workspace_dimensions():
     cockpit_project = next(project for project in payload["projects"] if project["id"] == "cockpit")
     assert cockpit_project["operational"]["docs"]["present"] >= 1
     assert cockpit_project["operational"]["commands"]
+    mesh_router = next(project for project in payload["projects"] if project["id"] == "mesh-router")
+    assert mesh_router["operational"]["surface_type"] == "implemented-in-bin"
+    assert mesh_router["operational"]["status"] == "ready"
+    metaos_project = next(project for project in payload["projects"] if project["id"] == "metaos")
+    assert any("pytest" in command for command in metaos_project["operational"]["commands"])
+    toolbox_project = next(project for project in payload["projects"] if project["id"] == "toolbox")
+    assert toolbox_project["operational"]["surface_type"] == "external-storage"
     assert cockpit_project["operational"]["next_action"]
     assert cockpit_project["source_refs"]
     assert cockpit_project["source_refs"][0]["source_key"] == "project_registry"

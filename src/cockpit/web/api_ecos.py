@@ -109,6 +109,7 @@ if router:
     # ── Workflow endpoints ──
 
     @router.get("/workflow/list")
+    @router.get("/workflows")
     async def list_workflows():
         """列出所有 ecos L0 工作流"""
         try:

@@ -1,15 +1,15 @@
 """Knowledge API routes."""
 
-import os
 from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from cockpit.compat import WORKSPACE_ROOT
+
 router = APIRouter()
 
-_WS = os.environ.get("WORKSPACE_ROOT") or str(Path.home() / "Workspace")
-_CARDS_DIR = Path(_WS) / "data" / "cards"
+_CARDS_DIR = WORKSPACE_ROOT / "data" / "cards"
 
 
 @router.post("/api/knowledge/search")

@@ -69,6 +69,13 @@ class TestWorkflowEndpoints:
         data = resp.json()
         assert data["workflows"] == []
 
+    def test_list_workflows_alias_matches_asset_surface(self, client):
+        with patch("cockpit.adapters.ecos.list_workflows", return_value=[{"id": "wf1"}]):
+            legacy = client.get("/api/ecos/workflow/list")
+            alias = client.get("/api/ecos/workflows")
+        assert alias.status_code == 200
+        assert alias.json() == legacy.json()
+
     def test_list_workflows_with_data(self, client):
         mock_workflows = [{"id": "wf1", "name": "Test Workflow"}]
         with patch("cockpit.adapters.ecos.list_workflows", return_value=mock_workflows):
