@@ -676,8 +676,8 @@ services:
     transport: mcp_stdio
     package: "minerva"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva", "serve", "--action", "draft"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Minerva 草稿生成 (POC stdio)"
+    status: active
+    description: "[POC] Minerva 草稿生成 (POC stdio)"
 
   - uri: "bos://analysis/minerva/audit"
     domain: analysis
@@ -685,8 +685,8 @@ services:
     transport: mcp_stdio
     package: "minerva"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva", "serve", "--action", "audit"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Minerva 审计 (POC stdio)"
+    status: active
+    description: "[POC] Minerva 审计 (POC stdio)"
 
   - uri: "bos://analysis/ontoderive/audit"
     domain: analysis
@@ -694,8 +694,8 @@ services:
     transport: mcp_stdio
     package: "ontoderive"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "audit"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Ontoderive 审计 (POC stdio)"
+    status: active
+    description: "[POC] Ontoderive 审计 (POC stdio)"
 
   - uri: "bos://analysis/ontoderive/fact-check"
     domain: analysis
@@ -703,8 +703,8 @@ services:
     transport: mcp_stdio
     package: "ontoderive"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "fact-check"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Ontoderive 事实校验 (POC stdio)"
+    status: active
+    description: "[POC] Ontoderive 事实校验 (POC stdio)"
 
   - uri: "bos://analysis/codeanalyze/report"
     domain: analysis
@@ -712,8 +712,8 @@ services:
     transport: mcp_stdio
     package: "codeanalyze"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze", "serve", "--action", "report"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] CodeAnalyze 分析报告 (POC stdio)"
+    status: active
+    description: "[POC] CodeAnalyze 分析报告 (POC stdio)"
 
   - uri: "bos://analysis/codeanalyze/lint"
     domain: analysis
@@ -721,8 +721,8 @@ services:
     transport: mcp_stdio
     package: "codeanalyze"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze", "serve", "--action", "lint"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] CodeAnalyze Lint (POC stdio)"
+    status: active
+    description: "[POC] CodeAnalyze Lint (POC stdio)"
 
   - uri: "bos://analysis/iris/connect"
     domain: analysis
@@ -757,8 +757,8 @@ services:
     transport: mcp_stdio
     package: "health-profile"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile", "serve", "--action", "summary"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Health-Profile 健康摘要 (POC stdio)"
+    status: active
+    description: "[POC] Health-Profile 健康摘要 (POC stdio)"
 
   - uri: "bos://persona/health-profile/alert"
     domain: persona
@@ -766,8 +766,8 @@ services:
     transport: mcp_stdio
     package: "health-profile"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile", "serve", "--action", "alert"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Health-Profile 健康告警 (POC stdio)"
+    status: active
+    description: "[POC] Health-Profile 健康告警 (POC stdio)"
 
   - uri: "bos://capability/forge/discover"
     domain: capability
@@ -775,8 +775,8 @@ services:
     transport: mcp_stdio
     package: "forge"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "discover"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Forge 工具发现 (POC stdio)"
+    status: active
+    description: "[POC] Forge 工具发现 (POC stdio)"
 
   - uri: "bos://capability/forge/exec-tool"
     domain: capability
@@ -784,8 +784,8 @@ services:
     transport: mcp_stdio
     package: "forge"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "exec-tool"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Forge 工具执行 (POC stdio)"
+    status: active
+    description: "[POC] Forge 工具执行 (POC stdio)"
 
   - uri: "bos://capability/forge/list-tools"
     domain: capability
@@ -793,8 +793,8 @@ services:
     transport: mcp_stdio
     package: "forge"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "list-tools"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Forge 工具列表 (POC stdio)"
+    status: active
+    description: "[POC] Forge 工具列表 (POC stdio)"
 
   - uri: "bos://capability/forge/register-tool"
     domain: capability
@@ -802,8 +802,8 @@ services:
     transport: mcp_stdio
     package: "forge"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "register-tool"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Forge 工具注册 (POC stdio)"
+    status: active
+    description: "[POC] Forge 工具注册 (POC stdio)"
 
   - uri: "bos://memory/kronos/query"
     domain: memory
@@ -811,8 +811,8 @@ services:
     transport: mcp_stdio
     package: "kronos"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos", "serve", "--action", "query"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] KRONOS 时间序列查询 (POC stdio)"
+    status: active
+    description: "[POC] KRONOS 时间序列查询 (POC stdio)"
 
   - uri: "bos://memory/kronos/schedule"
     domain: memory
@@ -820,8 +820,8 @@ services:
     transport: mcp_stdio
     package: "kronos"
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos", "serve", "--action", "schedule"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] KRONOS 调度任务 (POC stdio)"
+    status: active
+    description: "[POC] KRONOS 调度任务 (POC stdio)"
 
   - uri: "bos://governance/metaos/gate"
     domain: governance
