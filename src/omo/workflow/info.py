@@ -176,7 +176,7 @@ def bootstrap_report(
             "compliance": "uv run --with pyyaml python bin/agent-workflow.py compliance",
             "doctor": "uv run --with pyyaml python bin/agent-workflow.py doctor",
             "gate": "make gac-local-gate",
-            "scoped_gate": "uv run --with pyyaml python bin/gac-local-gate.py --scope files --file <path> --json",
+            "scoped_gate": "uv run --with pyyaml python bin/gac/gac-local-gate.py --scope files --file <path> --json",
         },
     }
 

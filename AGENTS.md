@@ -43,7 +43,7 @@ uv run python -m omo.cli lint direct-omo-io
 
     ## Verification
 
-    - Documentation-only changes: run `uv run --with "pyyaml" python "../../bin/doc-ssot-lint.py" --json` from this project or from the workspace root.
+    - Documentation-only changes: run `uv run --with "pyyaml" python "../../bin/ssot/doc-ssot-lint.py" --json` from this project or from the workspace root.
     - Code changes: run the narrowest relevant project test first, then broaden if shared contracts changed.
     - Cross-layer behavior: verify the caller and the callee, not just the touched module.
 

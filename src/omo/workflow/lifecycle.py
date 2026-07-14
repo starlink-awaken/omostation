@@ -454,7 +454,7 @@ def closeout_run(
             import subprocess
 
             # 1. Loop Convergence: auto-run evidence-smoke.py (silently)
-            smoke_script = WORKSPACE / "bin/evidence-smoke.py"
+            smoke_script = WORKSPACE / "bin/gac/evidence-smoke.py"
             subprocess.run(
                 [sys.executable, str(smoke_script), "--quiet"],
                 cwd=WORKSPACE,

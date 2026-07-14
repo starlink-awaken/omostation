@@ -1258,7 +1258,7 @@ def main(argv: list[str] | None = None) -> int:
     god_module.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"
     )
-    # P74: projection-guard (from bin/omo-state-projection-guard.py)
+    # P74: projection-guard (from bin/gac/omo-state-projection-guard.py)
     projection_guard = sub.add_parser(
         "projection-guard",
         help="P74: 验证 runtime-projections.yaml 声明的路径存在且可解析 (CR-P74-STATE-PROJECTION-GUARD)",
