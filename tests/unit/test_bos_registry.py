@@ -274,7 +274,7 @@ class TestDefaultPath:
             else:
                 assert service.package == "governance-evolution"
                 assert service.transport == "stdio"
-                assert "bin/governance-evolution.py" in service.command
+                assert "bin/gac/governance-evolution.py" in service.command
 
 
 def test_unimplemented_services_are_tracked():
