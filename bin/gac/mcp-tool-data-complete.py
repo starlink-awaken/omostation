@@ -225,7 +225,7 @@ def main() -> int:
 
     print(f"\n{'已应用' if args.apply else 'DRY-RUN, 待 --apply'}: {changed}/{len(items)}")
     if not args.apply:
-        print("\n推荐: uv run --with pyyaml python bin/mcp-tool-data-complete.py --apply")
+        print("\n推荐: uv run --with pyyaml python bin/gac/mcp-tool-data-complete.py --apply")
     return 0
 
 
