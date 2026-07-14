@@ -23,4 +23,4 @@ jobs:
           pip install pyyaml pygithub
 
       - name: Run arcnode constraint validation
-        run: python3 bin/arcnode-validate --all || echo "⚠️ arcnode-validate skipped (validation scripts may not be available in CI)"
+        run: python3 bin/ssot/arcnode-validate --all || echo "⚠️ arcnode-validate skipped (validation scripts may not be available in CI)"

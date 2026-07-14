@@ -110,7 +110,7 @@ jobs:
 
       - name: MOF security scan
         run: |
-          bin/mof-scan || echo "⚠️ Security scan found issues (non-blocking)"
+          bin/mof/mof-scan || echo "⚠️ Security scan found issues (non-blocking)"
 
       - name: Agent 准入检查 (metaos admit)
         run: |
