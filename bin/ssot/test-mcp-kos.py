@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-MCP_SERVER = WORKSPACE / "bin" / "mcp-server-kos.py"
+MCP_SERVER = WORKSPACE / "bin" / "gac" / "mcp-server-kos.py"
 KOS_DB = WORKSPACE / "kos" / "kos-index.sqlite"
 
 
