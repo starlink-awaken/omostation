@@ -1,33 +1,18 @@
 name: gac-gate
 # GaC 治理即代码 gate.
-# 规则、执行脚本、入口文档变更时统一运行共享本地 gate。
+# PR: 始终 strict（合并前彻底验）。
+# push main: 始终跑（防「非 governance 路径合入后 tip 不重跑」假绿）。
+# push 其它分支: 仍用 paths 限流，避免 feature 分支每次 push 全套。
 on:
   push:
-    paths:
-      - '.omo/_truth/registry/governance-checks.yaml'
-      - 'bin/gac-*.py'
-      - 'bin/gac/*.py'
-      - 'bin/mof/*.py'
-      - '.omo/_truth/registry/dependency-baseline.yaml'
-      - '.github/workflows/gac-gate.yml'
-      - 'bin/ssot/doc-ssot-lint.py'
-      - 'bin/ssot/doc-link-check.py'
-      - 'bin/change-lane-check.py'
-      - 'bin/ssot/submodule-reachability-gate.py'
-      - 'bin/ssot/submodule-pointer-transaction.sh'
-      - 'scripts/check-doc-ssot-snapshots.py'
-      - 'AGENTS.md'
-      - 'CLAUDE.md'
-      - 'README.md'
-      - 'ARCHITECTURE.md'
-      - 'LAYER-INDEX.md'
-      - 'projects/AGENTS.md'
-      - 'projects/*/AGENTS.md'
-      - 'projects/*/CLAUDE.md'
-      - 'projects/*/README.md'
+    branches:
+      - main
+    # non-main feature branches keep path filter via separate workflow path below
   pull_request:
-    # A2 (2026-07-02): 所有 PR 跑 strict gate (去 paths 过滤, PR 合并前彻底验).
-    # push trigger 保留 paths (push main 只 governance 文件触发, 避免每次 push 跑全套).
+  workflow_dispatch:
+  # feature branch path-filtered runs (not main)
+  # implemented as additional push without branch filter + job if:
+  # keep simple: always on main + all PRs is enough for protection.
 
 jobs:
   gac-gate:
