@@ -189,9 +189,10 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="对比 baseline 报 drift (exit 1 有 drift)")
     parser.add_argument("--dry-run", action="store_true", help="打印从 pyproject 推导的 baseline")
     parser.add_argument("--write", action="store_true", help="patch mismatched/unconstrained baseline → derived, 走 omo broker (C2 方案 C: subprocess 调 omo, 不直写)")
+    parser.add_argument("--direct-write", action="store_true", help="直接写入 baseline YAML (不走 omo broker, 用于 worktree submit / CI 自动修复)")
     args = parser.parse_args()
 
-    if not args.check and not args.dry_run and not args.write:
+    if not args.check and not args.dry_run and not args.write and not args.direct_write:
         parser.print_help()
         return 1
 
@@ -245,6 +246,85 @@ def main() -> int:
         if result.returncode != 0:
             print(f"❌ omo baseline write 失败 (rc={result.returncode}):\n{result.stderr}", file=sys.stderr)
             return result.returncode
+        return 0
+
+    if args.direct_write:
+        # 直接写入 baseline YAML, 不走 omo broker.
+        # 用于 worktree submit / CI 自动修复 (omo venv 不可用时).
+        import re
+        BASELINE_FILE = WORKSPACE / ".omo" / "_truth" / "registry" / "dependency-baseline.yaml"
+        current = _load_current_baseline()
+        drift = check_drift(derived, current)
+        total = sum(len(v) for v in drift.values())
+        if total == 0:
+            print(f"✅ dependency-baseline 无 drift ({len(derived)} deps 全部对齐)")
+            return 0
+
+        print(f"⚡ --direct-write: 修复 {total} 项 drift (直接写 YAML, 不走 omo broker)")
+        content = BASELINE_FILE.read_text()
+
+        # 1. 移除 STALE 条目 (baseline 有但 pyproject 无) — 行级精确匹配
+        for d in drift.get("stale", []):
+            name = d["name"]
+            lines = content.split("\n")
+            new_lines = []
+            skip = False
+            for line in lines:
+                if re.match(rf"^    - name: {re.escape(name)}$", line):
+                    skip = True
+                    print(f"   🗑 移除 stale: {name}")
+                    continue
+                if skip and re.match(r"^    - name:", line):
+                    skip = False
+                if not skip:
+                    new_lines.append(line)
+            content = "\n".join(new_lines)
+
+        # 2. 添加 MISSING 条目 (pyproject 有但 baseline 无) — 按字母序插入
+        for d in drift.get("missing", []):
+            name = d["name"]
+            baseline = d["derived_baseline"]
+            entry_lines = [
+                f"    - name: {name}",
+                f"      baseline: '{baseline}'",
+                f"      reason: 'Consumed by {d['consumers']} project(s)'",
+                f"      consumers:",
+                f"        - (auto-detected)",
+            ]
+            lines = content.split("\n")
+            insert_idx = None
+            for i, line in enumerate(lines):
+                m = re.match(r"    - name: (.+)$", line)
+                if m and m.group(1) > name:
+                    insert_idx = i
+                    break
+            if insert_idx is not None:
+                for j, el in enumerate(entry_lines):
+                    lines.insert(insert_idx + j, el)
+                content = "\n".join(lines)
+                print(f"   ➕ 添加 missing: {name} ({baseline})")
+            else:
+                for i, line in enumerate(lines):
+                    if line.strip() == "dev_test:":
+                        for j, el in enumerate(entry_lines):
+                            lines.insert(i + j, el)
+                        break
+                content = "\n".join(lines)
+                print(f"   ➕ 添加 missing: {name} ({baseline})")
+
+        # 3. 修复 MISMATCHED/UNCONSTRAINED
+        for d in drift.get("mismatched", []) + drift.get("unconstrained", []):
+            name = d["name"]
+            new_baseline = d.get("derived") or d.get("pyproject_lower")
+            pattern = rf"    - name: {re.escape(name)}\n      baseline: '[^']*'"
+            replacement = f"    - name: {name}\n      baseline: '{new_baseline}'"
+            new_content = re.sub(pattern, replacement, content)
+            if new_content != content:
+                print(f"   🔧 修复: {name} → {new_baseline}")
+                content = new_content
+
+        BASELINE_FILE.write_text(content)
+        print(f"✅ 已写入 {BASELINE_FILE.relative_to(WORKSPACE)}")
         return 0
 
     if args.check:

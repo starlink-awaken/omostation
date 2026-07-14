@@ -6,6 +6,9 @@ on:
     paths:
       - '.omo/_truth/registry/governance-checks.yaml'
       - 'bin/gac-*.py'
+      - 'bin/gac/*.py'
+      - 'bin/mof/*.py'
+      - '.omo/_truth/registry/dependency-baseline.yaml'
       - '.github/workflows/gac-gate.yml'
       - 'bin/doc-ssot-lint.py'
       - 'bin/doc-link-check.py'
