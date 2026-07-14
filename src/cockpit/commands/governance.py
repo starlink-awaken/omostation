@@ -116,6 +116,43 @@ def _run_governance_evolution(args: list[str], workspace_root: Path) -> int:
     return subprocess.run(cmd, cwd=str(workspace_root)).returncode
 
 
+def _run_operating_rhythm(args: list[str], workspace_root: Path) -> int:
+    """Run operating-rhythm commands (ADR-0119/0121, Meadows 9 范式级).
+
+    Slots 来自 governance-evolution-roadmap.yaml::operating_rhythm:
+      daily        - status 检查 (agent-workflow + governance-evolution)
+      pre_release  - PR 合并前 gate (gac-local-gate + compliance)
+      weekly       - MOF 桥接巡检 (mof-state-bridge)
+    """
+    slots: dict[str, list[list[str]]] = {
+        "daily": [
+            ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "status", "--json"],
+            ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "status", "--json"],
+        ],
+        "pre_release": [
+            ["make", "gac-local-gate"],
+            ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "compliance", "--json"],
+        ],
+        "weekly": [
+            ["python3", "projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"],
+        ],
+    }
+    slot = args[0] if args else "daily"
+    if slot not in slots:
+        _get_console().print(f"[red]❌ 未知 rhythm slot: {slot}. 可用: {list(slots.keys())}[/]")
+        return 1
+    console = _get_console()
+    console.print(f"[cyan]📋 operating-rhythm {slot}:[/]")
+    overall_rc = 0
+    for cmd in slots[slot]:
+        result = subprocess.run(cmd, cwd=str(workspace_root))
+        status = "[green]✅[/]" if result.returncode == 0 else "[red]❌[/]"
+        console.print(f"  {status} {' '.join(cmd)} → rc={result.returncode}")
+        if result.returncode != 0:
+            overall_rc = result.returncode
+    return overall_rc
+
+
 def cmd_governance(args: argparse.Namespace) -> int:
     import shutil
 
@@ -126,7 +163,7 @@ def cmd_governance(args: argparse.Namespace) -> int:
         _run_omo_governance(["surfaces"], workspace_root)
         _get_console().print(
             "\n[yellow]更多子命令:[/] cockpit governance "
-            "{report|verify|calibrate|drift-check|surfaces --json|rechain|...}"
+            "{report|verify|calibrate|drift-check|surfaces --json|rechain|rhythm <daily|pre_release|weekly>|...}"
         )
         # 概览仅用于展示状态，不因为治理发现 issues 而返回错误码；
         # 严格检查请使用 cockpit governance verify / surfaces --json。
@@ -145,6 +182,9 @@ def cmd_governance(args: argparse.Namespace) -> int:
     if subcmd == "verify":
         workspace_root = resolve_workspace_root()
         return _run_omo_verify(workspace_root)
+    if subcmd == "rhythm":
+        workspace_root = resolve_workspace_root()
+        return _run_operating_rhythm(args.extra_args or [], workspace_root)
     script_name = f"arcnode-{subcmd}"
     script = shutil.which(script_name)
     if not script:

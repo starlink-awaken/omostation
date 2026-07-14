@@ -8,7 +8,6 @@ the underlying registries keep owning the facts.
 from __future__ import annotations
 
 import json
-import os
 import re
 import socket
 from collections import defaultdict
@@ -19,17 +18,11 @@ from typing import Any
 import yaml
 from fastapi import APIRouter, HTTPException, Query
 
+from cockpit.compat import WORKSPACE_ROOT
+
 router = APIRouter()
 
 
-def _find_workspace_root() -> Path:
-    for parent in Path(__file__).resolve().parents:
-        if (parent / "docs" / "project-registry.yaml").is_file():
-            return parent
-    return Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))).expanduser()
-
-
-WORKSPACE_ROOT = _find_workspace_root()
 SYSTEM_MAP_SOURCE = Path(__file__).resolve()
 MAX_SOURCE_PREVIEW_BYTES = 1_000_000
 
@@ -41,6 +34,13 @@ COCKPIT_PAGES: tuple[dict[str, Any], ...] = (
         "group": "入口",
         "purpose": "健康、告警、任务、指标趋势的日常总览。",
         "dimensions": ("entry", "governance", "runtime"),
+    },
+    {
+        "id": "Guide",
+        "title": "站内导览",
+        "group": "入口",
+        "purpose": "把页面、工作带和推荐入口梳成上手总览。",
+        "dimensions": ("entry", "orientation", "coverage"),
     },
     {
         "id": "SystemMap",
@@ -208,6 +208,7 @@ COCKPIT_PAGES: tuple[dict[str, Any], ...] = (
 # 页面自身的低风险操作。项目动作另由项目矩阵提供，成熟度计算需要把两类证据合并。
 PAGE_OPERATOR_ACTIONS: dict[str, tuple[str, ...]] = {
     "Home": ("refresh-home", "open-system-map", "open-task-center"),
+    "Guide": ("open-guide-group", "open-system-map", "open-task-center"),
     "DomainApps": ("open-app", "open-api", "copy-start", "copy-verify"),
     "Overview": ("refresh-runtime", "open-system-map"),
     "McpMesh": ("refresh-mesh", "copy-bos-uri", "open-service"),
@@ -244,6 +245,34 @@ CAPABILITY_TO_PAGE = {
     "通信与路由": "McpMesh",
     "协议与元模型": "Protocol",
     "自我与入口": "SystemMap",
+}
+
+# A capability domain can be surfaced by several pages.  The primary page
+# above remains the canonical owner; these links describe legitimate secondary
+# operator surfaces so cross-cutting pages are not reported as unmapped.
+PAGE_CAPABILITY_LINKS: dict[str, tuple[str, ...]] = {
+    "Home": ("capability-3", "capability-5", "capability-8"),
+    "Guide": ("capability-8",),
+    "DomainApps": ("capability-8",),
+    "Overview": ("capability-5",),
+    "Topology": ("capability-6",),
+    "Research": ("capability-2",),
+    "Knowledge": ("capability-1", "capability-2"),
+    "Engines": ("capability-2", "capability-5"),
+    "Assets": ("capability-4", "capability-7"),
+    "Protocol": ("capability-4", "capability-7"),
+    "Workflows": ("capability-4", "capability-7"),
+    "C2G": ("capability-3",),
+    "AlertCenter": ("capability-3",),
+    "Debt": ("capability-3",),
+    "L4Health": ("capability-8",),
+    "Observability": ("capability-6", "capability-8"),
+    "LogViewer": ("capability-8",),
+    "TaskCenter": ("capability-3", "capability-4"),
+    "Performance": ("capability-5",),
+    "Sandbox": ("capability-4",),
+    "QuestBoard": ("capability-8",),
+    "Settings": ("capability-3", "capability-6"),
 }
 
 
@@ -370,7 +399,7 @@ USAGE_PATHS: tuple[dict[str, Any], ...] = (
         "id": "architecture-orientation",
         "title": "架构定位",
         "intent": "不知道某个项目归哪一层、该从哪进时使用。",
-        "steps": ("SystemMap", "McpMesh", "Assets", "Settings"),
+        "steps": ("Guide", "SystemMap", "McpMesh", "Assets", "Settings"),
     },
     {
         "id": "governance-loop",
@@ -508,6 +537,13 @@ OPERATING_PLAYBOOKS: tuple[dict[str, Any], ...] = (
         "owner": "engineering",
         "risk": "medium",
         "steps": (
+            {
+                "id": "project-orientation-guide",
+                "page_id": "Guide",
+                "action": "先用站内导览确认当前问题属于哪条工作带和哪个入口。",
+                "evidence": "导览页的页面分组、工作模式和推荐使用路径。",
+                "done_when": "目标项目和问题已落到明确的 Cockpit 工作面。",
+            },
             {
                 "id": "project-map-filter",
                 "page_id": "SystemMap",
@@ -1715,11 +1751,15 @@ def _project_workflow_lifecycle(project_id: str) -> dict[str, Any]:
 
 
 def _commands_from_agents(path: Path, limit: int = 4) -> list[str]:
-    text = _read_text(path / "AGENTS.md")
+    text = ""
+    for filename in ("AGENTS.md", "CLAUDE.md", "README.md"):
+        text = _read_text(path / filename)
+        if text:
+            break
     if not text:
         return []
 
-    match = re.search(r"## Commands\s*```(?:\w+)?\s*(.*?)```", text, re.DOTALL)
+    match = re.search(r"^\s*##\s+.*?(?:Commands|命令).*?```(?:\w+)?\s*(.*?)```", text, re.DOTALL | re.MULTILINE)
     if not match:
         return []
 
@@ -1731,6 +1771,41 @@ def _commands_from_agents(path: Path, limit: int = 4) -> list[str]:
         if len(commands) >= limit:
             break
     return commands
+
+
+def _project_path(project_id: str, project_data: dict[str, Any] | None = None) -> Path:
+    data = project_data or {}
+    storage = data.get("storage")
+    if isinstance(storage, str) and storage.strip():
+        return Path(storage).expanduser()
+
+    physical_location = data.get("physical_location")
+    if isinstance(physical_location, str) and physical_location.strip():
+        source_path = _resolved_physical_location(physical_location)
+        return source_path.parent if source_path.is_file() else source_path
+
+    return WORKSPACE_ROOT / "projects" / project_id
+
+
+def _project_source_location(project_data: dict[str, Any] | None = None) -> Path | None:
+    data = project_data or {}
+    physical_location = data.get("physical_location")
+    if isinstance(physical_location, str) and physical_location.strip():
+        return _resolved_physical_location(physical_location)
+    storage = data.get("storage")
+    if isinstance(storage, str) and storage.strip():
+        return Path(storage).expanduser()
+    return None
+
+
+def _resolved_physical_location(location: str) -> Path:
+    declared = (WORKSPACE_ROOT / location).expanduser()
+    if declared.exists():
+        return declared
+    # P76 moved bin implementations under bin/gac; preserve the registry's
+    # declared path while resolving the known relocation for runtime evidence.
+    relocated = WORKSPACE_ROOT / "bin" / "gac" / Path(location).name
+    return relocated if relocated.exists() else declared
 
 
 def _read_package_manifest(project_path: Path) -> dict[str, Any]:
@@ -1836,7 +1911,7 @@ def _project_runtime_status(
     port_registry: dict[str, Any],
     port_registry_path: Path,
 ) -> dict[str, Any]:
-    project_path = WORKSPACE_ROOT / "projects" / project_id
+    project_path = _project_path(project_id, project_data)
     ports = _project_ports(project_id, port_registry, port_registry_path)
     latest_verification = _latest_project_verification(project_id, project_path, operational)
     listening_count = sum(1 for port in ports if port["listening"])
@@ -1866,8 +1941,46 @@ def _project_runtime_status(
     }
 
 
-def _project_operational_status(project_id: str) -> dict[str, Any]:
-    path = WORKSPACE_ROOT / "projects" / project_id
+def _project_operational_status(
+    project_id: str,
+    project_data: dict[str, Any] | None = None,
+    project_path: Path | None = None,
+) -> dict[str, Any]:
+    data = project_data or {}
+    path = project_path or _project_path(project_id, data)
+    source_location = _project_source_location(data)
+
+    if isinstance(data.get("physical_location"), str):
+        exists = bool(source_location and source_location.exists())
+        declared_location = (WORKSPACE_ROOT / str(data["physical_location"])).expanduser()
+        relative_location = str(source_location.relative_to(WORKSPACE_ROOT)) if source_location else ""
+        location_drift = declared_location != source_location
+        return {
+            "status": "ready" if exists else "missing",
+            "surface_type": "implemented-in-bin",
+            "declared_location": str(declared_location),
+            "resolved_location": str(source_location) if source_location else None,
+            "docs": {
+                "present": 1 if exists else 0,
+                "expected": 1,
+                "items": [{"name": relative_location, "path": str(source_location), "exists": exists}],
+            },
+            "commands": [f'python3 "{relative_location}"'] if exists else [],
+            "manifests": (
+                [{"name": "implemented-in-bin", "path": str(source_location), "exists": True}] if exists else []
+            ),
+            "risks": (["physical_location_drift"] if location_drift else [])
+            if exists
+            else ["physical_location_missing"],
+            "next_action": (
+                "更新注册表 physical_location，使其与实际实现路径一致。"
+                if location_drift
+                else "保持注册表 physical_location、端口和验证证据同步。"
+            )
+            if exists
+            else "修复注册表 physical_location 或恢复实现文件。",
+        }
+
     doc_files = [
         {"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PROJECT_DOC_FILES
     ]
@@ -1877,6 +1990,15 @@ def _project_operational_status(project_id: str) -> dict[str, Any]:
         {"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PACKAGE_MANIFESTS
     ]
     existing_manifests = [item for item in manifests if item["exists"]]
+    if isinstance(data.get("storage"), str) and path.exists():
+        for child in sorted(path.iterdir()):
+            if not child.is_dir():
+                continue
+            for name in PACKAGE_MANIFESTS:
+                candidate = child / name
+                if candidate.exists():
+                    existing_manifests.append({"name": f"{child.name}/{name}", "path": str(candidate), "exists": True})
+        existing_manifests = existing_manifests[:8]
 
     risks: list[str] = []
     if not path.exists():
@@ -1903,6 +2025,7 @@ def _project_operational_status(project_id: str) -> dict[str, Any]:
 
     return {
         "status": status,
+        "surface_type": "external-storage" if data.get("storage") else "native",
         "docs": {
             "present": len(present_docs),
             "expected": len(PROJECT_DOC_FILES),
@@ -2279,8 +2402,8 @@ def _build_projects(
         if not isinstance(project_data, dict):
             continue
         page_id = PROJECT_TO_PAGE.get(project_id, "SystemMap")
-        project_path = WORKSPACE_ROOT / "projects" / project_id
-        operational = _project_operational_status(project_id)
+        project_path = _project_path(project_id, project_data)
+        operational = _project_operational_status(project_id, project_data, project_path)
         runtime = _project_runtime_status(project_id, project_data, operational, port_registry, port_registry_path)
         project = {
             "id": project_id,
@@ -2290,6 +2413,7 @@ def _build_projects(
             "cockpit_page": page_id,
             "coverage": "native" if page_id != "SystemMap" or project_id.startswith("cockpit") else "orientation",
             "path": str(project_path),
+            "source_location": str(_project_source_location(project_data) or project_path),
             "exists": project_path.exists(),
             "operational": operational,
             "runtime": runtime,
@@ -2804,6 +2928,7 @@ def _build_gap_list(
     projects: list[dict[str, Any]],
     feature_domains: list[dict[str, Any]],
     domain_apps: dict[str, Any],
+    project_capability_coverage: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     orientation_only = [project["id"] for project in projects if project["coverage"] == "orientation"]
     operational_gaps = [
@@ -2831,6 +2956,24 @@ def _build_gap_list(
                 "title": "能力地图不可读",
                 "evidence": "docs/FUNCTIONAL-CAPABILITY-MAP.md 未能解析出能力域。",
                 "next": "修复能力地图格式或提供机器可读 registry。",
+            }
+        )
+
+    for dimension in (project_capability_coverage or {}).get("weakest_dimensions") or []:
+        if dimension.get("status") not in {"failed", "warning"}:
+            continue
+        attention_projects = dimension.get("attention_projects") or []
+        evidence = ", ".join(item.get("id", "unknown") for item in attention_projects[:8]) or "项目矩阵"
+        gap_id = f"project-{dimension.get('id', 'coverage')}-evidence"
+        if any(gap.get("id") == gap_id for gap in gaps):
+            continue
+        gaps.append(
+            {
+                "id": gap_id,
+                "severity": "high" if dimension.get("status") == "failed" else "medium",
+                "title": f"项目{dimension.get('title', '覆盖')}不足",
+                "evidence": evidence,
+                "next": dimension.get("description") or dimension.get("next_action") or "补齐该项目维度的可验证证据。",
             }
         )
     return gaps
@@ -2932,7 +3075,12 @@ def _build_page_maturity(
     for page in COCKPIT_PAGES:
         page_id = page["id"]
         page_projects = [project for project in projects if project.get("cockpit_page") == page_id]
-        page_domains = [domain for domain in feature_domains if domain.get("cockpit_page") == page_id]
+        linked_domain_ids = set(PAGE_CAPABILITY_LINKS.get(page_id, ()))
+        page_domains = [
+            domain
+            for domain in feature_domains
+            if domain.get("cockpit_page") == page_id or domain.get("id") in linked_domain_ids
+        ]
         page_usage_paths = [
             path for path in usage_paths if any(path_page.get("id") == page_id for path_page in path.get("pages") or [])
         ]
@@ -3026,7 +3174,7 @@ def build_system_map() -> dict[str, Any]:
     feature_domains = _parse_capability_domains(capability_map_path)
     layers = _build_layers(registry, projects, registry_path)
     page_lookup = {page["id"]: page for page in COCKPIT_PAGES}
-    gaps = _build_gap_list(projects, feature_domains, domain_apps)
+    gaps = _build_gap_list(projects, feature_domains, domain_apps, project_capability_coverage)
     roadmap = _build_roadmap()
     playbooks = _build_playbooks(page_lookup)
     usage_paths = _build_usage_paths(page_lookup)
