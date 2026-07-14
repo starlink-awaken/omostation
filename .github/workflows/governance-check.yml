@@ -12,7 +12,7 @@ on:
       - "projects/ecos/scripts/contract_gatekeeper.py"
       - "scripts/check-*.py"
       - "scripts/opc_*.py"
-      - "bin/workspace-audit"
+      - "bin/ssot/workspace-audit"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
   pull_request:
@@ -27,7 +27,7 @@ on:
       - "projects/ecos/scripts/contract_gatekeeper.py"
       - "scripts/check-*.py"
       - "scripts/opc_*.py"
-      - "bin/workspace-audit"
+      - "bin/ssot/workspace-audit"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
   schedule:
@@ -151,7 +151,7 @@ jobs:
       - name: Run full governance verification
         run: make governance-verify
       - name: GaC local gate
-        run: python3 bin/gac-local-gate.py
+        run: python3 bin/gac/gac-local-gate.py
       - name: Emit failure signal on break
         if: failure()
         run: |
