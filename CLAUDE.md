@@ -9,6 +9,7 @@
     2. [`README.md`](README.md) when present
     3. The source files and tests directly related to the task
     4. Workspace context in [`../../CLAUDE.md`](../../CLAUDE.md) when the task crosses project boundaries
+    5. System index in [`../../docs/SYSTEM-INDEX.md`](../../docs/SYSTEM-INDEX.md) for workspace navigation
 
     ## Project Role
 
