@@ -403,7 +403,7 @@ def _get_task_manager() -> TaskManager:
     """Lazy-init and return the global TaskManager instance."""
     global _task_manager
     if _task_manager is None:
-        from agora.a2a.task_manager import TaskManager  # type: ignore[import-not-found]
+        from metaos.a2a.task_manager import TaskManager
 
         _task_manager = TaskManager(router)
     return _task_manager

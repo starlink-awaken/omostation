@@ -174,7 +174,8 @@ class TestCircuitBreaker:
         self.cb.record_failure("bos://test/svc")
         status = self.cb.status()
         key = self.cb._match_key("bos://test/svc")
-        assert key in status
+        # BOS usage metrics 改动: 无 URI 时 per-uri 状态在 "states" 键下
+        assert key in status["states"]
 
     def test_status_with_uri(self):
         """status() 传入 URI 返回该 URI 的状态。"""

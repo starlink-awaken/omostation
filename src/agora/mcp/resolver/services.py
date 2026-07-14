@@ -262,7 +262,7 @@ _FALLBACK_SERVICES: list[BosService] = [
             "protocols_layer.cli",
             "trigger",
         ],
-        description="Protocols Layer 触发器规则 (P33-W1 战役 2 起步)",
+        description="[UNIMPLEMENTED] Protocols Layer 触发器 — kairon 无 protocols_layer 包, 声明悬空 (A2/2026-07-13 deprecate); 能力实现另立项",
     ),
     # ════════════════════════════════════════════════════════════════
     # Domain: analysis (12)
