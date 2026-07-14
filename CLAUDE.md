@@ -38,7 +38,7 @@ make sync-state
 
     ```bash
     git status --short
-    uv run --with "pyyaml" python "../../bin/doc-ssot-lint.py" --json
+    uv run --with "pyyaml" python "../../bin/ssot/doc-ssot-lint.py" --json
     ```
 
     Report the checks you actually ran and any pre-existing dirty state that remains.
