@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "critical"
 weight: 0.20
 entropy_class: "high"
-lifecycle_state: "active"
+lifecycle_state: "resolved"
 owner: "architecture-team"
 affected_roots:
   - ".omo/state/health.yaml"
