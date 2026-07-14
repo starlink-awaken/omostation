@@ -133,7 +133,7 @@ projects:
     role: "SSB 签名链 + MOF 元模型 + L0 约束"
     mof_tools: 34                # find ssot/tools -name "*.py" ! -name "__init__" ! -name "_*" | wc -l
     m1_yaml: 1196                # find mof/m1 -name "*.yaml" | wc -l
-    m2_yaml: 48                  # find mof/m2 -name "*.yaml" | wc -l
+    m2_yaml: 55                  # find mof/m2 -name "*.yaml" | wc -l
     m1_domains: 28               # find mof/m1/domain -name "*.yaml" | wc -l
     governance_modules: 15       # find l0/governance -name "*.py" ! -name "__init__" | wc -l
 
@@ -269,8 +269,8 @@ archived:
     merged_into: "cockpit HTTP :8090"
 
 # ── Metadata ──
-_last_updated: "2026-07-03"
-_update_method: "Manual version/python; drift 由 bin/mof/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"
+_last_updated: "2026-07-14"
+_update_method: "Manual version/python; drift 由 bin/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"
 
 # ── omlx Local Compute Mesh Nodes ──
 compute_nodes:
