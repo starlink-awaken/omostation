@@ -110,7 +110,7 @@ def _run_governance_evolution(args: list[str], workspace_root: Path) -> int:
         "--with",
         "pyyaml",
         "python",
-        str(workspace_root / "bin" / "governance-evolution.py"),
+        str(workspace_root / "bin" / "gac" / "governance-evolution.py"),
         *forwarded,
     ]
     return subprocess.run(cmd, cwd=str(workspace_root)).returncode
@@ -127,7 +127,7 @@ def _run_operating_rhythm(args: list[str], workspace_root: Path) -> int:
     slots: dict[str, list[list[str]]] = {
         "daily": [
             ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "status", "--json"],
-            ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "status", "--json"],
+            ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "status", "--json"],
         ],
         "pre_release": [
             ["make", "gac-local-gate"],
