@@ -1,0 +1,107 @@
+
+m2_type: Pitch
+version: 1.0.0
+created: '2026-07-14T10:00:00'
+Pitch:
+  m3_parent: BehavioralElement
+  description: 战略点子——从概念到 Pitch 到任务。回答"我们应该做什么"。
+  icon: 💡
+  stateMachine:
+    brainstormed:
+      description: 头脑风暴阶段
+      transitions:
+      - drafted
+    drafted:
+      description: 已起草
+      transitions:
+      - refined
+      - betted
+    refined:
+      description: 已完善
+      transitions:
+      - betted
+    betted:
+      description: 已下注（转化为任务）
+      transitions:
+      - executing
+      - abandoned
+    executing:
+      description: 执行中
+      transitions:
+      - completed
+      - failed
+    completed:
+      description: 已完成
+      transitions:
+      - archived
+    failed:
+      description: 已失败
+      transitions:
+      - archived
+    abandoned:
+      description: 已放弃
+      transitions:
+      - archived
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    core_idea:
+      type: string
+      description: 核心理念（一句话）
+    upstream:
+      type: string
+      description: 上游战略对齐
+    appetite:
+      type: string
+      description: 时间/资源胃口（如 1 day, 2 hours）
+  optionalProperties:
+    scenario:
+      type: string
+      description: 场景类型 (gongwen/vault/research/family/health/finance)
+    nogos:
+      type: list
+      description: 不做什么 (No-Gos)
+    context:
+      type: string
+      description: 背景和上下文
+    pitch_content_path:
+      type: path
+      description: Pitch 文件路径
+    expected_outcomes:
+      type: list
+      description: 期望成果
+    risk_assessment:
+      type: string
+      description: 风险评估
+    lessons_learned:
+      type: list
+      description: 经验教训
+    success_score:
+      type: float
+      description: 成功得分 (0.0-1.0)
+    related_tasks:
+      type: list
+      description: 关联任务 ID
+    pitch_id:
+      type: string
+      description: 唯一标识
+  validationRules:
+  - rule: core_idea != null and core_idea.length &gt; 0
+    level: error
+    message: Pitch 必须有核心理念
+  - rule: upstream != null and upstream.length &gt; 0
+    level: warning
+    message: 建议有上游战略对齐
+  - rule: appetite != null and appetite.length &gt; 0
+    level: warning
+    message: 建议明确资源胃口
+  examples:
+  - id: PITCH-2026-07-14-001
+    name: M4 元模型集成
+    core_idea: 将新功能与 MOF 元模型深度集成
+    upstream: M4 metamodel strategic initiative
+    appetite: 1 week
+    scenario: research
+    nogos:
+    - 不改变现有 M3 结构

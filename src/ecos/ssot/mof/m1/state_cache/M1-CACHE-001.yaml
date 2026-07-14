@@ -1,0 +1,28 @@
+
+id: M1-CACHE-001
+name: 治理状态缓存
+StateCache:
+  cache_id: governance_state_cache
+  ttl_seconds: 3600
+  cache_path: .omo/_derived/state_cache.sqlite
+  last_updated: '2026-07-14T10:00:00'
+  last_accessed: '2026-07-14T10:30:00'
+  cache_size_bytes: 409600
+  hit_count: 1245
+  miss_count: 324
+  hit_ratio: 0.793
+  stateMachine: valid
+  invalidation_rules:
+  - 当 .omo/_truth/registry/*.yaml 修改时失效
+  - 当 git commit 时失效相关缓存
+  - 当配置变更时失效相关缓存
+  backing_store: sqlite
+  compression_enabled: false
+  encryption_enabled: false
+  version: 1.0.0
+  created: '2026-07-14T10:00:00'
+  tags:
+  - cache
+  - governance
+  - performance
+  status: active

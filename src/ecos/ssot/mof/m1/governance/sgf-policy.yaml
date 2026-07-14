@@ -106,3 +106,5 @@ gates:
   - id: "bus-e2e-harness"
     command: ["bin/ssot/bus-e2e-harness.py", "--count", "30", "--json"]
     ci_only: true
+  - id: "zones-check"
+    command: ["python3", ".omo/_knowledge/zones-check.py", "--check", "--json"]

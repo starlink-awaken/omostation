@@ -1,0 +1,98 @@
+
+m2_type: PredictiveGovernance
+version: 1.0.0
+created: '2026-07-14T10:00:00'
+PredictiveGovernance:
+  m3_parent: GovernanceElement
+  description: 预测性治理——基于历史数据预测风险并推荐预防性措施。回答"将会发生什么"。
+  icon: 🔮
+  stateMachine:
+    observing:
+      description: 观察中
+      transitions:
+      - predicting
+    predicting:
+      description: 预测中
+      transitions:
+      - alerting
+      - recommending
+    alerting:
+      description: 告警中
+      transitions:
+      - acting
+    recommending:
+      description: 推荐中
+      transitions:
+      - acting
+    acting:
+      description: 行动中
+      transitions:
+      - resolved
+      - archived
+    resolved:
+      description: 已解决
+      transitions:
+      - archived
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    prediction_type:
+      type: enum
+      values:
+      - debt_risk
+      - governance_risk
+      - trend_anomaly
+      - performance_degradation
+      description: 预测类型
+    confidence:
+      type: float
+      description: 置信度 (0.0-1.0)
+  optionalProperties:
+    predicted_risk_level:
+      type: enum
+      values:
+      - critical
+      - high
+      - medium
+      - low
+      description: 预测风险级别
+    predicted_time_window_days:
+      type: integer
+      description: 预测时间窗口（天）
+    recommendations:
+      type: list
+      description: 推荐措施列表
+    alert_thresholds:
+      type: map
+      description: 告警阈值配置
+    prediction_id:
+      type: string
+      description: 唯一标识
+    risk_factors:
+      type: list
+      description: 风险因素列表
+    mitigation_effectiveness:
+      type: float
+      description: 缓解有效性评估 (0.0-1.0)
+    historical_accuracy:
+      type: float
+      description: 历史预测准确率 (0.0-1.0)
+    model_version:
+      type: string
+      description: 预测模型版本
+  validationRules:
+  - rule: confidence &gt;= 0.0 and confidence &lt;= 1.0
+    level: error
+    message: 置信度必须在 0.0-1.0 范围内
+  - rule: prediction_type in enum
+    level: error
+    message: 预测类型必须是预定义的枚举值
+  examples:
+  - id: PRED-2026-07-14-001
+    prediction_type: debt_risk
+    confidence: 0.85
+    predicted_risk_level: high
+    recommendations:
+    - 优先处理高风险债务
+    - 增加日常监控频率

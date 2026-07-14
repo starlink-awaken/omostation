@@ -1,0 +1,31 @@
+
+id: M1-PRED-001
+name: 债务风险预测
+PredictiveGovernance:
+  prediction_id: PRED-DEBT-RISK-2026-07-14
+  prediction_type: debt_risk
+  confidence: 0.82
+  predicted_risk_level: high
+  predicted_time_window_days: 14
+  stateMachine: predicting
+  risk_factors:
+  - 3 个高优先级债务超过 90 天未处理
+  - 相关代码区域最近活跃修改频繁
+  - 历史上类似情况导致债务恶化
+  recommendations:
+  - 立即处理高优先级债务 (DEBT-2026-06-001)
+  - 增加日常监控频率 (从每日一次)
+  - 增加债务治理团队资源投入
+  alert_thresholds:
+    high: 0.8
+    medium: 0.6
+    low: 0.4
+  historical_accuracy: 0.75
+  model_version: m4-pred-v1.0
+  version: 1.0.0
+  created: '2026-07-14T10:00:00'
+  tags:
+  - debt
+  - prediction
+  - governance
+  status: active

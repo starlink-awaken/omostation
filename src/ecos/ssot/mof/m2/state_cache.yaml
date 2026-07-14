@@ -1,0 +1,92 @@
+
+m2_type: StateCache
+version: 1.0.0
+created: '2026-07-14T10:00:00'
+StateCache:
+  m3_parent: StructuralElement
+  description: 状态缓存——临时存储派生数据以提高性能。回答"如何优化读取"。
+  icon: 💾
+  stateMachine:
+    empty:
+      description: 空缓存
+      transitions:
+      - populating
+    populating:
+      description: 填充中
+      transitions:
+      - valid
+      - invalid
+    valid:
+      description: 有效缓存
+      transitions:
+      - invalid
+      - invalidated
+    invalid:
+      description: 无效缓存
+      transitions:
+      - populating
+    invalidated:
+      description: 已失效
+      transitions:
+      - populating
+  requiredProperties:
+    cache_id:
+      type: string
+      description: 缓存标识
+    ttl_seconds:
+      type: integer
+      description: Time-To-Live (秒)
+  optionalProperties:
+    cache_path:
+      type: path
+      description: 缓存文件路径
+    last_updated:
+      type: datetime
+      description: 最后更新时间
+    last_accessed:
+      type: datetime
+      description: 最后访问时间
+    cache_size_bytes:
+      type: integer
+      description: 缓存大小（字节）
+    hit_count:
+      type: integer
+      description: 缓存命中次数
+    miss_count:
+      type: integer
+      description: 缓存未命中次数
+    hit_ratio:
+      type: float
+      description: 命中率 (0.0-1.0)
+    invalidation_rules:
+      type: list
+      description: 失效规则列表
+    backing_store:
+      type: enum
+      values:
+      - file
+      - memory
+      - sqlite
+      description: 后端存储类型
+    encryption_enabled:
+      type: boolean
+      description: 是否启用加密
+    compression_enabled:
+      type: boolean
+      description: 是否启用压缩
+  validationRules:
+  - rule: cache_id != null and cache_id.length &gt; 0
+    level: error
+    message: 缓存标识不能为空
+  - rule: ttl_seconds &gt; 0
+    level: error
+    message: TTL 必须大于 0
+  - rule: hit_ratio &gt;= 0.0 and hit_ratio &lt;= 1.0
+    level: warning
+    message: 命中率必须在 0.0-1.0 范围内（如果设置）
+  examples:
+  - id: CACHE-2026-07-14-001
+    cache_id: governance_state
+    ttl_seconds: 3600
+    backing_store: sqlite
+    hit_ratio: 0.85

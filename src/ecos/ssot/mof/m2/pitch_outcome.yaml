@@ -1,0 +1,85 @@
+
+m2_type: PitchOutcome
+version: 1.0.0
+created: '2026-07-14T10:00:00'
+PitchOutcome:
+  m3_parent: BehavioralElement
+  description: Pitch 结果追踪——记录从 Pitch 到成果的完整生命周期。回答"结果如何"。
+  icon: 📊
+  stateMachine:
+    initiated:
+      description: 已初始化
+      transitions:
+      - tracking
+    tracking:
+      description: 追踪中
+      transitions:
+      - completed
+      - failed
+    completed:
+      description: 已完成
+      transitions:
+      - analyzed
+    failed:
+      description: 已失败
+      transitions:
+      - analyzed
+    analyzed:
+      description: 已分析
+      transitions:
+      - archived
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    pitch_id:
+      type: string
+      description: 关联 Pitch ID
+    created_at:
+      type: datetime
+      description: 创建时间
+  optionalProperties:
+    generated_tasks:
+      type: list
+      description: 生成的任务列表
+    completed_tasks:
+      type: list
+      description: 完成的任务列表
+    failed_tasks:
+      type: list
+      description: 失败的任务列表
+    success_score:
+      type: float
+      description: 成功得分 (0.0-1.0)
+    lessons_learned:
+      type: list
+      description: 经验教训
+    total_iterations:
+      type: integer
+      description: 迭代次数
+    outcome_id:
+      type: string
+      description: 唯一标识
+    trend_analysis:
+      type: string
+      description: 趋势分析
+    recommendations:
+      type: list
+      description: 改进建议
+    impact_assessment:
+      type: string
+      description: 影响评估
+  validationRules:
+  - rule: pitch_id != null and pitch_id.length &gt; 0
+    level: error
+    message: 必须关联 Pitch
+  - rule: success_score &gt;= 0.0 and success_score &lt;= 1.0
+    level: error
+    message: 成功得分必须在 0.0-1.0 范围内
+  examples:
+  - id: OUTCOME-2026-07-14-001
+    pitch_id: PITCH-2026-07-14-001
+    success_score: 0.85
+    lessons_learned:
+    - 明确范围很重要
+    - 早期验证避免返工
