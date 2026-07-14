@@ -93,9 +93,7 @@ def test_cron_emit_survives_missing_bus_foundation() -> None:
         from runtime.cron_service.scheduler import _bus_emit_cron_fired
 
         # Must not raise
-        _bus_emit_cron_fired(
-            job_id="x", name="x", status="ok", error=None, output=""
-        )
+        _bus_emit_cron_fired(job_id="x", name="x", status="ok", error=None, output="")
     finally:
         if saved is not None:
             sys.modules["bus_foundation.facade"] = saved
@@ -114,8 +112,6 @@ def test_cron_emit_survives_publish_exception() -> None:
         from runtime.cron_service.scheduler import _bus_emit_cron_fired
 
         # Must not raise
-        _bus_emit_cron_fired(
-            job_id="x", name="x", status="ok", error=None, output=""
-        )
+        _bus_emit_cron_fired(job_id="x", name="x", status="ok", error=None, output="")
     finally:
         bus_event.publish = original  # type: ignore[assignment]

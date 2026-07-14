@@ -32,6 +32,7 @@ def register_cron_job(expr: str, callback: Callable) -> Callable:
     def _traced() -> None:
         try:
             from bus_foundation.observability import trace
+
             with trace(f"cron:{expr}", backend="croniter"):
                 callback()
         except ImportError:

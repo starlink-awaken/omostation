@@ -246,8 +246,9 @@ async def _run_job(job_id: str, executor: ThreadPoolExecutor):
     # Round 4 / P7x: announce the cron fire to bus-foundation so other
     # omostation consumers (cockpit, omo, metaos) can observe the run.
     # Best-effort: a missing bus-foundation must not break the cron loop.
-    _bus_emit_cron_fired(job_id=job_id, name=job.name, status=status,
-                         error=error, output=output)
+    _bus_emit_cron_fired(
+        job_id=job_id, name=job.name, status=status, error=error, output=output
+    )
 
 
 def _bus_emit_cron_fired(
