@@ -139,4 +139,79 @@ omo governance
 
 ---
 
-*维护: 2026-06-19 · 此页只保留导航与指针，不再复制运行时事实*
+## 标准规范全索引 (standards/)
+
+### 流程与协议
+
+- [standards/adr-process.md](standards/adr-process.md) — ADR 生命周期流程
+- [standards/agent-cli-worker-collaboration.md](standards/agent-cli-worker-collaboration.md) — Agent/CLI/Worker 协作协议
+- [standards/agent-mutation-protocol.md](standards/agent-mutation-protocol.md) — Agent 变异协议
+- [standards/agent-registry-heartbeat.md](standards/agent-registry-heartbeat.md) — Agent 注册心跳
+- [standards/agent-workflow-contract.md](standards/agent-workflow-contract.md) — Agent 工作流契约
+- [standards/article-ingestion-policy.md](standards/article-ingestion-policy.md) — 文章摄入策略
+- [standards/auto-generated-artifacts.md](standards/auto-generated-artifacts.md) — 自动产物规范
+- [standards/bin-tool-naming.md](standards/bin-tool-naming.md) — bin 工具命名规范
+- [standards/bos-uri-domain-standard.md](standards/bos-uri-domain-standard.md) — BOS URI 域标准
+- [standards/debt-gate-level-enum.md](standards/debt-gate-level-enum.md) — 债务门禁级别枚举
+- [standards/doc-presentation-pattern.md](standards/doc-presentation-pattern.md) — 文档呈现模式
+
+### 能力与约束
+
+- [standards/capabilities.schema.yaml](standards/capabilities.schema.yaml) — 能力 schema
+- [standards/capability-binding-policy.md](standards/capability-binding-policy.md) — 能力绑定策略
+- [standards/capability-metamodel.md](standards/capability-metamodel.md) — 能力元模型
+- [standards/divergence-triage.yaml](standards/divergence-triage.yaml) — 分歧分诊规则
+- [standards/doc-ssot-contract.md](standards/doc-ssot-contract.md) — 文档 SSOT 契约
+- [standards/health-metrics-semantics.md](standards/health-metrics-semantics.md) — 健康指标语义
+- [standards/interface_contract.md](standards/interface_contract.md) — 接口契约
+- [standards/kos-baseline-drift-monitor.md](standards/kos-baseline-drift-monitor.md) — KOS 基线漂移监控
+
+### MCP / MOF / OPC
+
+- [standards/mcp-tool-and-transport-standard.md](standards/mcp-tool-and-transport-standard.md) — MCP 工具与传输标准
+- [standards/mof-agent-constraints.yaml](standards/mof-agent-constraints.yaml) — MOF Agent 约束
+- [standards/mutation-proposal-envelope.md](standards/mutation-proposal-envelope.md) — 变异提案信封
+- [standards/opc-review-template.md](standards/opc-review-template.md) — OPC 评审模板
+- [standards/omo-submodule-split-validation.md](standards/omo-submodule-split-validation.md) — 子模块拆分验证规范
+- [standards/operation-levels.md](standards/operation-levels.md) — 操作级别定义
+
+### P74 / P76 / 阶段
+
+- [standards/p74-solidification-contract.md](standards/p74-solidification-contract.md) — P74 常态化契约
+- [standards/p76-principles.md](standards/p76-principles.md) — P76 原则
+- [standards/phase2-full-execution-go-no-go.md](standards/phase2-full-execution-go-no-go.md) — Phase2 执行 Go/No-Go
+- [standards/planning-blueprint-delivery-test-standard.md](standards/planning-blueprint-delivery-test-standard.md) — 规划-交付-测试标准
+
+### Schema / SSOT / 模板
+
+- [standards/scenario.schema.yaml](standards/scenario.schema.yaml) — 场景 schema
+- [standards/ssot-7-domain-schema.md](standards/ssot-7-domain-schema.md) — SSOT 7 域 schema
+- [standards/ssot-guardian.md](standards/ssot-guardian.md) — SSOT 守护者
+- [standards/submodule-inclusion-policy.md](standards/submodule-inclusion-policy.md) — 子模块纳入策略
+
+### 任务 / X1-X4
+
+- [standards/task-gate-model.md](standards/task-gate-model.md) — 任务门禁模型
+- [standards/task-yaml-rules.md](standards/task-yaml-rules.md) — 任务 YAML 规则
+- [standards/x1-swarm-trust-protocol.md](standards/x1-swarm-trust-protocol.md) — X1 Swarm 信任协议
+- [standards/x2-budget-integrity-standard.md](standards/x2-budget-integrity-standard.md) — X2 预算完整性标准
+- [standards/x2-rule-template-standard.md](standards/x2-rule-template-standard.md) — X2 规则模板标准
+- [standards/x3-value-stack-standard.md](standards/x3-value-stack-standard.md) — X3 价值栈标准
+- [standards/x4-hitl-mutation-standard.md](standards/x4-hitl-mutation-standard.md) — X4 HITL 变异标准
+- [standards/PITCH-TEMPLATE-C2G.md](standards/PITCH-TEMPLATE-C2G.md) — C2G 提案模板
+- [standards/README.md](standards/README.md) — 规范索引
+
+---
+
+## goals / state / tasks
+
+- [goals/README.md](goals/README.md) — 目标索引
+- [state/README.md](state/README.md) — 状态索引
+- [state/health.yaml](state/health.yaml) — 健康度指标
+- [state/provider-plane.yaml](state/provider-plane.yaml) — 供应面状态
+- [state/system_health.yaml](state/system_health.yaml) — 系统健康快照
+- [tasks/README.md](tasks/README.md) — 任务索引
+
+---
+
+*维护: 2026-07-14 · 此页只保留导航与指针，不再复制运行时事实*

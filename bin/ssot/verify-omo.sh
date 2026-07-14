@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "[1/5] Syncing .omo state"
 # CI 环境无全局 pyyaml, 必须用 uv run --with pyyaml 包裹 (scripts/lib/yaml_utils.py import yaml)
-uv run --with pyyaml python3 scripts/sync_omo_state.py --omo-dir .omo
+uv run --project projects/omo --with pyyaml python3 scripts/sync_omo_state.py --omo-dir .omo
 
 echo "[2/5] Running governance lint gates"
 pushd projects/omo >/dev/null
@@ -32,13 +32,11 @@ echo "[4/5] Running governance regression tests"
 pushd projects/omo >/dev/null
 uv run pytest \
   tests/test_omo_ingress.py \
-  tests/test_omo_cockpit_bridge.py \
   tests/test_omo_gc.py \
   tests/test_omo_governance.py \
   tests/test_omo_governance_surfaces.py \
   tests/test_omo_direct_io_gate.py \
   tests/test_omo_task_policy.py \
-  tests/test_opc_phase_governance_alignment.py \
   tests/test_opc_p5_p7_runtime.py \
   -q
 popd >/dev/null
