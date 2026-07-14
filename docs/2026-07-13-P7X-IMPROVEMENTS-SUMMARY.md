@@ -62,7 +62,7 @@
 - **状态**: ✅ 完成
 - **说明**: 扩展了生成器，新增运行健康/任务/BOS用量等多个区块
 - **相关文件**:
-  - `bin/generate-brief.py`
+  - `bin/mof/generate-brief.py`
   - `BRIEF.md`
 
 ### 8. 多车道提交标注

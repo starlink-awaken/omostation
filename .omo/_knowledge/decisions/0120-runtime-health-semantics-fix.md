@@ -322,9 +322,9 @@ PID 1248 监听 `localhost:4001` (可能是 hermes 的 HTTP 端口)。补充 hea
 
 ### Layer 3: 防御性 SSOT 一致性校验 (P2, ~3h, 低风险)
 
-#### 3.1 新建 bin/matrix-consistency-lint.py
+#### 3.1 新建 bin/ssot/matrix-consistency-lint.py
 
-**文件**: `bin/matrix-consistency-lint.py` (新建)
+**文件**: `bin/ssot/matrix-consistency-lint.py` (新建)
 
 **校验规则**:
 
@@ -413,7 +413,7 @@ if __name__ == "__main__":
 
 #### 3.2 纳入 GaC gate
 
-**文件**: `bin/gac-local-gate.py`
+**文件**: `bin/gac/gac-local-gate.py`
 
 在 `CHECKS` 列表中新增:
 
@@ -422,7 +422,7 @@ if __name__ == "__main__":
      ...
 +    Check(
 +        name="matrix-consistency",
-+        command="uv run --with pyyaml python bin/matrix-consistency-lint.py",
++        command="uv run --with pyyaml python bin/ssot/matrix-consistency-lint.py",
 +        scope="always",
 +        description="Matrix SSOT consistency (port-registry + launchd)",
 +    ),
@@ -454,7 +454,7 @@ Layer 2 (P1, 架构修正)
        ▼ 单元测试 (projects/runtime + projects/omo)
        │
 Layer 3 (P2, 防御)
-  ├─ 3.1 bin/matrix-consistency-lint.py 新建
+  ├─ 3.1 bin/ssot/matrix-consistency-lint.py 新建
   └─ 3.2 gac-local-gate.py 纳入
        │
        ▼ make gac-local-gate 全量验证
@@ -471,7 +471,7 @@ Layer 3 (P2, 防御)
 | V5 | uptime 不触发 stale | 服务运行 >24h 后检查 | stale_services 仍为 [] |
 | V6 | runtime 单测 | `cd projects/runtime && uv run pytest tests/ -q` | 全绿 |
 | V7 | omo 单测 | `cd projects/omo && uv run pytest tests/ -q` | 全绿 |
-| V8 | matrix-consistency-lint | `python3 bin/matrix-consistency-lint.py` | exit 0 (无 ERROR) |
+| V8 | matrix-consistency-lint | `python3 bin/ssot/matrix-consistency-lint.py` | exit 0 (无 ERROR) |
 | V9 | GaC gate | `make gac-local-gate` | 含 matrix-consistency 且通过 |
 
 ### 风险与回滚

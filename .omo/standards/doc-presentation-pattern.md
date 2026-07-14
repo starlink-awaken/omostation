@@ -32,7 +32,7 @@ related-contract: doc-ssot-contract.md
 - 明确声明 "Do not paste the full inventory"
 
 ### 3. lint 强制 (机器防 embedded)
-`bin/doc-ssot-lint.py` 扫入口文档的 marker 段 (`<!-- X-START -->` / `<!-- X-END -->`),
+`bin/ssot/doc-ssot-lint.py` 扫入口文档的 marker 段 (`<!-- X-START -->` / `<!-- X-END -->`),
 检测 embedded table:
 - 段内含完整表 → findings (报错)
 - 段内只 pointer → 通过
@@ -42,9 +42,9 @@ related-contract: doc-ssot-contract.md
 | 件套 | 位置 |
 |:-----|:-----|
 | SSOT | `.omo/_truth/registry/governance-checks.yaml::gac.rules` |
-| digest | `docs/generated/agent-gac-rules.md` (`bin/gac-export-agents.py` 生成) |
+| digest | `docs/generated/agent-gac-rules.md` (`bin/gac/gac-export-agents.py` 生成) |
 | 入口 pointer | `AGENTS.md` `GaC-RULES-START/END` 段 |
-| lint 强制 | `bin/doc-ssot-lint.py` (扫 `GaC-RULES` 段, embedded table → findings) |
+| lint 强制 | `bin/ssot/doc-ssot-lint.py` (扫 `GaC-RULES` 段, embedded table → findings) |
 | 契约声明 | `doc-ssot-contract.md` SSOT 映射表 ("AGENTS.md pointer only") |
 
 工具链: `gac-export-agents.py` (生成 digest + AGENTS pointer) → `doc-ssot-lint` (强制
@@ -59,7 +59,7 @@ pointer only) → `make gac-local-gate` (CI 门禁).
 1. **SSOT 确认**: 事实有唯一 yaml registry (如 `_truth/registry/<fact>.yaml`)
 2. **digest 生成器**: 写 / 扩 `bin/<fact>-export.py`, 从 SSOT 生成 `docs/generated/<fact>.md`
 3. **入口 pointer**: 入口文档加 marker 段 (`<!-- <FACT>-START -->` + pointer + 命令 + `<!-- <FACT>-END -->`)
-4. **lint 强制**: `bin/doc-ssot-lint.py` 加该 marker 段的 embedded 检测
+4. **lint 强制**: `bin/ssot/doc-ssot-lint.py` 加该 marker 段的 embedded 检测
 5. **契约行**: `doc-ssot-contract.md` SSOT 映射表加该事实的呈现策略行
 
 ## Anti-patterns (避免)
@@ -81,6 +81,6 @@ pointer only) → `make gac-local-gate` (CI 门禁).
 ## 关联
 
 - 契约: [`doc-ssot-contract.md`](doc-ssot-contract.md) (SSOT 正交契约)
-- 实例: GaC 规则 (`bin/gac-export-agents.py` + `docs/generated/agent-gac-rules.md`)
-- 执行器: `bin/doc-ssot-lint.py` (强制), `bin/gac-export-agents.py` (生成)
+- 实例: GaC 规则 (`bin/gac/gac-export-agents.py` + `docs/generated/agent-gac-rules.md`)
+- 执行器: `bin/ssot/doc-ssot-lint.py` (强制), `bin/gac/gac-export-agents.py` (生成)
 - ISA 来源: 架构层面 ISA 分析 (ISC-3 模式文档化, 2026-06-29)

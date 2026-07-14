@@ -69,13 +69,13 @@ PROPOSED → ACCEPTED → DEPRECATED
 
 ```bash
 # ADR frontmatter 完整性检查
-uv run --with "pyyaml" python bin/adr-coverage.py
+uv run --with "pyyaml" python bin/adr/adr-coverage.py
 
 # ADR drift 检查 (检测 ADR 中引用的文件/路径是否漂移)
-uv run --with "pyyaml" python bin/adr-drift-check.py
+uv run --with "pyyaml" python bin/adr/adr-drift-check.py
 
 # ADR 趋势分析
-uv run --with "pyyaml" python bin/adr-trend-insight.py
+uv run --with "pyyaml" python bin/adr/adr-trend-insight.py
 ```
 
 ## 6. 关联文件
@@ -84,6 +84,6 @@ uv run --with "pyyaml" python bin/adr-trend-insight.py
 |------|------|
 | `.omo/_knowledge/decisions/README.md` | ADR 模板和完整维护规则 (MADR 风格) |
 | `.omo/_knowledge/decisions/INDEX.md` | ADR 索引表 |
-| `bin/adr-coverage.py` | Frontmatter 完整性检查 |
-| `bin/adr-drift-check.py` | ADR 内容漂移检测 |
-| `bin/adr-trend-insight.py` | ADR 趋势分析 |
+| `bin/adr/adr-coverage.py` | Frontmatter 完整性检查 |
+| `bin/adr/adr-drift-check.py` | ADR 内容漂移检测 |
+| `bin/adr/adr-trend-insight.py` | ADR 趋势分析 |

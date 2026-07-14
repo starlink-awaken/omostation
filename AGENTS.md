@@ -32,8 +32,8 @@ SSOT:
 
 Tools (`bin/` + `projects/omo`):
 
-- `omo lint projection-guard` — CR-P74-STATE-PROJECTION-GUARD (from `bin/omo-state-projection-guard.py`)
-- `omo lint stamp-policy` — CR-P74-RUNTIME-STAMP-POLICY (from `bin/omo-runtime-stamp-policy.py`)
+- `omo lint projection-guard` — CR-P74-STATE-PROJECTION-GUARD (from `bin/gac/omo-state-projection-guard.py`)
+- `omo lint stamp-policy` — CR-P74-RUNTIME-STAMP-POLICY (from `bin/gac/omo-runtime-stamp-policy.py`)
 - `agent-workflow.py suggest --from-diff --profile <agent>` — CR-P74-WORKFLOW-SUGGEST
 - `agent-workflow.py compliance --json` → `.p74_solidification` — CR-P74-WORKFLOW-SILENCE
 

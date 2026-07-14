@@ -95,7 +95,7 @@ P98 收口后, P99 调研 2 项治理深化, 实施 2 项 (P99-A 推迟):
 
 ```bash
 # P99 R1: ADR self-ref
-python3 bin/adr-drift-classify.py
+python3 bin/adr/adr-drift-classify.py
 # 期望: P50+ 6→3 (-50%)
 
 # P99 R2: omo_lint 推迟
@@ -103,7 +103,7 @@ cat projects/omo/src/omo/omo_lint.py | wc -l
 # 期望: 1269L (1 god-module error)
 
 # P99 R3: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 工具全部通过
 
 # P99 R4: governance

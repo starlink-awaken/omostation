@@ -35,17 +35,17 @@ supersedes: []
 Round X 的 7 步:
 
 0. baseline: 跑 m4-health-score, 留当前分数快照
-   uv run --with pyyaml python bin/m4-health-score.py --emit
-1. single-worktree: bash bin/gac-worktree.sh claim round-{X}
+   uv run --with pyyaml python bin/mof/m4-health-score.py --emit
+1. single-worktree: bash bin/gac/gac-worktree.sh claim round-{X}
 2. deliver: 实施 N 个 deliverable (每 PR 1 deliverable)
    - 每次 commit: git log --oneline e2f8f4d7..HEAD
 3. tests: 加 T-X 系列测试, 跑 regression
    uv run --with pyyaml python tests/integration/m4_metamodel/run_all.py
 4. self-reflex: 5-check strict all PASS
-   uv run --with pyyaml python bin/mof-bootstrap.py all
+   uv run --with pyyaml python bin/mof/mof-bootstrap.py all
 5. ADR: 写新 ADR (X-NNN-decision-title.md), INDEX append
 6. health-check: 跑 m4-health-score.py, delta 对比
-   uv run --with pyyaml python bin/m4-health-score.py --compare
+   uv run --with pyyaml python bin/mof/m4-health-score.py --compare
 7. close: 写 docs/{round}/SUMMARY.md (从 baseline → closeout diff),
    准备 PR, 显式 commit PR | round-X-final
 
@@ -61,8 +61,8 @@ end-of-round: commit 数 ≤ previous_round × 1.5
 | Gate | 工具 | 期望 |
 |------|------|------|
 | **G-Tests** | `tests/integration/m4_metamodel/run_all.py` | N+1/N+1 PASS (N+1 ≥ 上一轮 +1) |
-| **G-Reflex** | `bin/mof-bootstrap.py all` | 5-check strict 0 err |
-| **G-Health** | `bin/m4-health-score.py --compare` | 不回退 (delta ≥ 0) |
+| **G-Reflex** | `bin/mof/mof-bootstrap.py all` | 5-check strict 0 err |
+| **G-Health** | `bin/mof/m4-health-score.py --compare` | 不回退 (delta ≥ 0) |
 
 如果任一 gate 不达, Round 不 closed。
 

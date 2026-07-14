@@ -73,9 +73,9 @@ diff /tmp/pr-body-sha.txt /tmp/pr-gitlink-sha.txt
 ### Step 4: 本地 5-check strict + 57 测试
 
 ```bash
-uv run --with "pyyaml" python bin/mof-bootstrap.py all
+uv run --with "pyyaml" python bin/mof/mof-bootstrap.py all
 uv run --with "pyyaml" python tests/integration/m4_metamodel/run_all.py
-uv run --with "pyyaml" python bin/m4-health-score.py
+uv run --with "pyyaml" python bin/mof/m4-health-score.py
 ```
 
 **期望**: 5-check strict all 0 err, 57/57 PASS, Health Score 100/100。
@@ -143,7 +143,7 @@ diff /tmp/pr-body-sha.txt /tmp/pr-gitlink-sha.txt
 ```bash
 # 模拟 main + PR 合并后 score (本地)
 git merge origin/$gh_pr_branch --no-commit --no-ff
-uv run --with "pyyaml" python bin/m4-health-score.py
+uv run --with "pyyaml" python bin/mof/m4-health-score.py
 git merge --abort
 ```
 
@@ -156,7 +156,7 @@ git merge --abort
 ```bash
 git merge origin/$gh_pr_branch --no-commit --no-ff
 git submodule update --init --recursive
-uv run --with "pyyaml" python bin/mof-bootstrap.py all
+uv run --with "pyyaml" python bin/mof/mof-bootstrap.py all
 uv run --with "pyyaml" python tests/integration/m4_metamodel/run_all.py
 git merge --abort
 ```

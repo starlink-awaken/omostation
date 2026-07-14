@@ -35,7 +35,7 @@ P72 收口后, P73 调研 4 项候选, 实施 3 项:
 # 检测最近 alert-notifications.jsonl 是否有 P0 且 1h 内未通知
 LAST_P0=$(python3 -c "...json 解析 + 1h cutoff...")
 if [ -n "$LAST_P0" ]; then
-    python3 bin/alert-mock-p0-notify.py --message "$LAST_P0" --all-channels
+    python3 bin/gac/alert-mock-p0-notify.py --message "$LAST_P0" --all-channels
 fi
 ```
 

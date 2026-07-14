@@ -39,16 +39,16 @@ related:
 
 ### 纪律 2: 真实 vs 声明健康双量 (治 D2)
 - 声明源: `.omo/state/system.yaml::health_score` (compass_radar 合成)
-- 真实源: `bin/evidence-smoke.py` (量化 BOS 鸿沟 + dirty + 反馈回路三维度)
+- 真实源: `bin/gac/evidence-smoke.py` (量化 BOS 鸿沟 + dirty + 反馈回路三维度)
 - **gap > 10 即有盲区**。review 健康/架构必跑 evidence-smoke, 不信单方 health=100。
 
 ### 纪律 3: 多源对齐逐核 (治 D3)
 改 enum/registry/规则类字段, 逐个核全部源。GaC executor **5 源**:
 1. `governance-checks.yaml::gac.rules` (规则 SSOT)
 2. `governance-checks.yaml::gac.schema.executor_enum` (schema enum)
-3. `bin/gac-drift.py::EXECUTOR_ENUM` (drift 检测器)
+3. `bin/gac/gac-drift.py::EXECUTOR_ENUM` (drift 检测器)
 4. MOF M1 `GAC-RULE-CR-*.yaml` (`gac-m1-sync.py --sync` 派生)
-5. `bin/gac-executor.py::EXECUTOR_PRESENCE` (存在性映射)
+5. `bin/gac/gac-executor.py::EXECUTOR_PRESENCE` (存在性映射)
 
 **别信"已修"** — 并发方也会漏源 (F-14 补一半证明)。改完跑 `gac-drift` + `gac-bootstrap` + `gac-executor` 三验证全绿才算闭环。
 

@@ -14,11 +14,11 @@ Foundry = omostation 治理 cron 系统，每 6h 自动执行 10 个 deck，输�
 | 0:30 | agent-compliance | `agent-workflow.py compliance --json` | 60s |
 | 1:00 | p74-silent | `agent-workflow.py compliance --json` (P74 drill) | 60s |
 | 2:00 | mof-drift | `bin/mof-drift` | 120s |
-| 3:00 | m4-health | `bin/m4-health-score.py --emit` | 60s |
-| 4:00 | bootloader | `bin/omostation-bootloader.py audit` | 60s |
-| 5:00 | debt-closed | `bin/debt-closed-per-feature.py` | 60s |
-| 5:30 | submodule-bump | `bin/submodule-bump-check.py` | 30s |
-| 6:00 | brief-gen | `bin/generate-brief.py --write` | 60s |
+| 3:00 | m4-health | `bin/mof/m4-health-score.py --emit` | 60s |
+| 4:00 | bootloader | `bin/gac/omostation-bootloader.py audit` | 60s |
+| 5:00 | debt-closed | `bin/gac/debt-closed-per-feature.py` | 60s |
+| 5:30 | submodule-bump | `bin/ssot/submodule-bump-check.py` | 30s |
+| 6:00 | brief-gen | `bin/mof/generate-brief.py --write` | 60s |
 | 6:30 | port-governance | `bin/decks/port-governance-deck.py` | 120s |
 
 ## 2. 输出

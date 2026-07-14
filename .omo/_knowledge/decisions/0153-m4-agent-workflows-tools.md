@@ -44,7 +44,7 @@ supersedes: []
 - id: mof-bootstrap
   type: local_tool
   description: "M4 5-check 自反校验器"
-  command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof-bootstrap.py", "all"]
+  command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof/mof-bootstrap.py", "all"]
   health_check: true
   required: true
   timeout: 60
@@ -52,7 +52,7 @@ supersedes: []
 - id: m4-health-score
   type: local_tool
   description: "M4 Health Score 量化(派生面引擎)"
-  command: ["uv", "run", "--with", "pyyaml", "python", "bin/m4-health-score.py", "--emit"]
+  command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof/m4-health-score.py", "--emit"]
   health_check: true
   required: false
   timeout: 120
@@ -60,7 +60,7 @@ supersedes: []
 - id: check-submodule-hygiene
   type: local_tool
   description: "子模块卫生守门(3类检查)"
-  command: ["uv", "run", "--with", "pyyaml", "python", "bin/check-submodule-hygiene.py", "--strict"]
+  command: ["uv", "run", "--with", "pyyaml", "python", "bin/ssot/check-submodule-hygiene.py", "--strict"]
   health_check: true
   required: false
   timeout: 60
@@ -68,7 +68,7 @@ supersedes: []
 - id: mcp-tool-data-complete
   type: local_tool
   description: "MCPTOOL 数据完整性守门"
-  command: ["uv", "run", "--with", "pyyaml", "python", "bin/mcp-tool-data-complete.py"]
+  command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/mcp-tool-data-complete.py"]
   health_check: true
   required: false
   timeout: 30
@@ -79,10 +79,10 @@ supersedes: []
 在 `governance-state-mutation` workflow 的 `paths` 中追加:
 
 ```yaml
-- bin/mof-bootstrap.py
-- bin/m4-health-score.py
-- bin/check-submodule-hygiene.py
-- bin/mcp-tool-data-complete.py
+- bin/mof/mof-bootstrap.py
+- bin/mof/m4-health-score.py
+- bin/ssot/check-submodule-hygiene.py
+- bin/gac/mcp-tool-data-complete.py
 ```
 
 ---

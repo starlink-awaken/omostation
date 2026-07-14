@@ -22,7 +22,7 @@ supersedes: []
 |------|:---:|---------|
 | **detector 严格模式** | ✅ | BOS URI regex 升级 (边界匹配, 排除 substring 误判) |
 | **17 unregistered 全治本** | ✅ | agora/etc/bos-services.yaml: 117 → **134** services |
-| **threshold 默认 0** | ✅ | `bin/check-cross-repo-consistency.py --threshold` 默认 0 |
+| **threshold 默认 0** | ✅ | `bin/ssot/check-cross-repo-consistency.py --threshold` 默认 0 |
 | **CR-CROSS-REPO-CONSISTENT 升 hard** | ✅ | enforcement: advisory → **error** |
 | **CR-CROSS-REPO-CHECK 升 hard** | ✅ | enforcement: advisory → **error** |
 | **8 phase-3 单元测试** | ✅ | `tests/test_cross_repo_consistency_phase3.py` 全 PASSED |

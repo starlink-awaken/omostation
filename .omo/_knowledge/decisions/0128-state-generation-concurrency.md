@@ -34,8 +34,8 @@ related:
 | 触发源 | 机制 | 问题 |
 |---|---|---|
 | `.githooks/post-commit` | 每次 commit 后 `nohup` 异步执行 `scripts/generate-governance-data.py` | 每 agent 每 commit 触发一次异步写；nohup 无法串行 |
-| `bin/install-watch-agent.py` | launchd `WatchPaths` 监听 `.omo/_truth/registry` 和 `projects/ecos/src/ecos/ssot` | 文件系统事件风暴，registry 变化即触发 `compass_radar.py` |
-| 各 agent/脚本 | 直接调用 `bin/compass_radar.py`、`bin/generate-brief.py`、`scripts/sync_omo_state.py` | 无统一入口、无锁、无事件去重 |
+| `bin/gac/install-watch-agent.py` | launchd `WatchPaths` 监听 `.omo/_truth/registry` 和 `projects/ecos/src/ecos/ssot` | 文件系统事件风暴，registry 变化即触发 `compass_radar.py` |
+| 各 agent/脚本 | 直接调用 `bin/compass_radar.py`、`bin/mof/generate-brief.py`、`scripts/sync_omo_state.py` | 无统一入口、无锁、无事件去重 |
 
 ### 2.2 结构性问题
 
@@ -198,7 +198,7 @@ if command -v omo >/dev/null 2>&1; then
 fi
 ```
 
-同理，移除/改造 `bin/install-watch-agent.py` 的 `WatchPaths` 直接调用 `compass_radar.py`，改为 emit `state_stale`。
+同理，移除/改造 `bin/gac/install-watch-agent.py` 的 `WatchPaths` 直接调用 `compass_radar.py`，改为 emit `state_stale`。
 
 #### 5.2.6 子模块 Clean Exit 协议
 

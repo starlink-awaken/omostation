@@ -28,10 +28,10 @@ P85 收口后, P86 调研 2 项治理闭环补全, 全部实施:
 
 | Hook ID | 工具 | 触发场景 | 阻塞行为 |
 |---------|------|----------|----------|
-| `x2-rule-lint` | bin/x2-rule-lint.py | 修改 x2-freshness-rules.yaml 时 | 字段错配阻塞 |
-| `mof-m2-coverage` | bin/mof-m2-coverage.py | 修改 m1/m2 yaml 时 | 真正孤儿增加阻塞 |
-| `adr-coverage` | bin/adr-coverage.py | 修改 decisions/ 时 | 编号/INDEX 错乱阻塞 |
-| `governance-dashboard` | bin/governance-dashboard.py | 每次 commit | 任一治理工具失败阻塞 |
+| `x2-rule-lint` | bin/gac/x2-rule-lint.py | 修改 x2-freshness-rules.yaml 时 | 字段错配阻塞 |
+| `mof-m2-coverage` | bin/mof/mof-m2-coverage.py | 修改 m1/m2 yaml 时 | 真正孤儿增加阻塞 |
+| `adr-coverage` | bin/adr/adr-coverage.py | 修改 decisions/ 时 | 编号/INDEX 错乱阻塞 |
+| `governance-dashboard` | bin/gac/governance-dashboard.py | 每次 commit | 任一治理工具失败阻塞 |
 
 **总 hooks 数**: 22 → **26** (P86 +4)
 
@@ -40,9 +40,9 @@ P85 收口后, P86 调研 2 项治理闭环补全, 全部实施:
 - 失败阻塞, 不只是 warn (因为治理质量是 P0 红线)
 - 不需要修改 `files:` 模式 (默认全部 .py/.yaml 触发)
 
-### D2: bin/governance-dashboard.py (P86 R4)
+### D2: bin/gac/governance-dashboard.py (P86 R4)
 
-**新工具** (`bin/governance-dashboard.py`):
+**新工具** (`bin/gac/governance-dashboard.py`):
 - 统一调用 7 个治理工具 (P83-P86):
   - governance-history-insight (P83)
   - drift-history-insight (P83)
@@ -63,7 +63,7 @@ P85 收口后, P86 调研 2 项治理闭环补全, 全部实施:
 ### D3: 收口统计
 
 **P86 工具数**: 28 → **29** 独立 bin 工具 (+1)
-- `bin/governance-dashboard.py` (新, 统一仪表盘)
+- `bin/gac/governance-dashboard.py` (新, 统一仪表盘)
 
 **pre-commit hooks 数**: 22 → **26** (P86 +4)
 - 4 个新治理 hook 全部集成
@@ -100,7 +100,7 @@ P85 收口后, P86 调研 2 项治理闭环补全, 全部实施:
 
 ```bash
 # P86 R4: governance dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 7/7 工具全部通过, "🎉 所有治理工具通过!"
 
 # pre-commit hook 验证
@@ -111,12 +111,12 @@ grep -A4 "governance-dashboard:" .pre-commit-config.yaml
 # 期望: 4 个新 hook 全部注册
 
 # 单工具验证
-python3 bin/x2-rule-lint.py       # 9 rules, 0 issues
-python3 bin/adr-coverage.py       # 38 ADRs, 100% 健康
-python3 bin/mof-m2-coverage.py    # 47 M2 / 1196 M1, 95.7% coverage
+python3 bin/gac/x2-rule-lint.py       # 9 rules, 0 issues
+python3 bin/adr/adr-coverage.py       # 38 ADRs, 100% 健康
+python3 bin/mof/mof-m2-coverage.py    # 47 M2 / 1196 M1, 95.7% coverage
 
 # ruff 验证
-ruff check bin/governance-dashboard.py
+ruff check bin/gac/governance-dashboard.py
 # 期望: All checks passed!
 
 # pre-commit yaml 验证

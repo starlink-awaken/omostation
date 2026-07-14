@@ -25,7 +25,7 @@ P109 末 11 god-module 列表中, **10 个是 TS 文件 (gbrain)**, 全部标 "b
 - ✅ bun / node.js 26.3.1 可用
 - ✅ 不需 ts-morph 库 (避免 100MB 依赖)
 
-**P110-D 决策**: 写 `bin/ts-analyze.mjs` (Node.js) 直接用 TypeScript Compiler API, Python wrapper 升级 `bin/ts-file-analyze.py` 调用真实 AST.
+**P110-D 决策**: 写 `bin/ts-analyze.mjs` (Node.js) 直接用 TypeScript Compiler API, Python wrapper 升级 `bin/ssot/ts-file-analyze.py` 调用真实 AST.
 
 ## Decision
 
@@ -34,7 +34,7 @@ P109 末 11 god-module 列表中, **10 个是 TS 文件 (gbrain)**, 全部标 "b
 | # | 工具 | 类型 | 行数 | 状态 |
 |:-:|:-----|:----|:----:|:----:|
 | 1 | `bin/ts-analyze.mjs` | Node.js (TypeScript Compiler API) | ~110L | ✅ |
-| 2 | `bin/ts-file-analyze.py` | Python wrapper (subprocess ts-analyze.mjs) | ~180L | ✅ |
+| 2 | `bin/ssot/ts-file-analyze.py` | Python wrapper (subprocess ts-analyze.mjs) | ~180L | ✅ |
 
 ### D2: ts-analyze.mjs 详细 (D1#1)
 
@@ -68,7 +68,7 @@ P109 末 11 god-module 列表中, **10 个是 TS 文件 (gbrain)**, 全部标 "b
 
 | 指标 | P109-C 末 (P110-D 起点) | P110-D 末 | 变化 |
 |:-----|:------------------------|:----------|:-----:|
-| `bin/ts-file-analyze.py` | 179L (~80% 精度) | **~180L** (~100% 精度) | +1L (logic 增强) |
+| `bin/ssot/ts-file-analyze.py` | 179L (~80% 精度) | **~180L** (~100% 精度) | +1L (logic 增强) |
 | `bin/ts-analyze.mjs` (新) | (无) | ~110L | +110L |
 | 工具数 | 47 | **48** | +1 |
 | 11 god-module 列表分析精度 | 80% | **100%** | 全解锁 |
@@ -78,8 +78,8 @@ P109 末 11 god-module 列表中, **10 个是 TS 文件 (gbrain)**, 全部标 "b
 | # | 测试 | 结果 |
 |:-:|:-----|:-----|
 | 1 | `node bin/ts-analyze.mjs engine.ts` | ✅ 真实 AST: `BrainEngine` interface 1018L |
-| 2 | `python3 bin/ts-file-analyze.py doctor.ts` | ✅ `ast_source: typescript_compiler_api`, runDoctor 2322L exact |
-| 3 | `python3 bin/god-module-13-error-list.py` | ✅ **Total excess 23290L → 21446L** (修正 ~1844L, AST 比 regex 准) |
+| 2 | `python3 bin/ssot/ts-file-analyze.py doctor.ts` | ✅ `ast_source: typescript_compiler_api`, runDoctor 2322L exact |
+| 3 | `python3 bin/ssot/god-module-13-error-list.py` | ✅ **Total excess 23290L → 21446L** (修正 ~1844L, AST 比 regex 准) |
 
 ### D6: 11 god-module 列表更新 (P110-D 后, 真实 AST)
 
@@ -101,7 +101,7 @@ P109 末 11 god-module 列表中, **10 个是 TS 文件 (gbrain)**, 全部标 "b
 
 | 阶段 | 工具 | 变化 |
 |:-----|:-----|:-----|
-| P109 (regex) | bin/ts-file-analyze.py | 80% 精度, class 完全漏判 |
+| P109 (regex) | bin/ssot/ts-file-analyze.py | 80% 精度, class 完全漏判 |
 | **P110-D (AST)** | **bin/ts-analyze.mjs + ts-file-analyze.py** | **100% 精度, 2 文件拆解策略重大发现** |
 
 **P110-D 关键贡献**:
@@ -151,26 +151,26 @@ node bin/ts-analyze.mjs projects/gbrain/src/core/engine.ts
 # 期望: BrainEngine interface 1018L (不是 regex 估的 5L fn)
 
 # P110-D 验证 2: ts-file-analyze.py (Python wrapper)
-python3 bin/ts-file-analyze.py projects/gbrain/src/commands/doctor.ts --top 3
+python3 bin/ssot/ts-file-analyze.py projects/gbrain/src/commands/doctor.ts --top 3
 # 期望: ast_source: typescript_compiler_api, runDoctor 2322L exact
 
 # P110-D 验证 3: god-module-13-error-list (集成)
-python3 bin/god-module-13-error-list.py 2>&1 | head -10
+python3 bin/ssot/god-module-13-error-list.py 2>&1 | head -10
 # 期望: Top 函数/类 真实 AST, Total excess 21446L (修正)
 
 # P110-D 验证 4: 2 个 class-dominant 文件
-python3 bin/ts-file-analyze.py projects/gbrain/src/core/postgres-engine.ts --top 3
+python3 bin/ssot/ts-file-analyze.py projects/gbrain/src/core/postgres-engine.ts --top 3
 # 期望: PostgresEngine class 4341L (95%), 之前 regex 估 4458L (97%)
 
 # P110-D 验证 5: dashboard 22/22 OK
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 ```
 
 ## References
 
 - **ADR-0103**: P109 治理赋能三件套 (验证模板 + 智能化 + ts-file-analyze.py regex 估算)
 - **ADR-0111**: P110-D TS AST 工具升级 (本 ADR, 真实 AST + 10 TS god-module 解锁)
-- **生态**: `bin/ts-analyze.mjs` (新, Node.js), `bin/ts-file-analyze.py` (升级, Python wrapper), `bin/god-module-13-error-list.py` (自动集成, 100% 精度)
+- **生态**: `bin/ts-analyze.mjs` (新, Node.js), `bin/ssot/ts-file-analyze.py` (升级, Python wrapper), `bin/ssot/god-module-13-error-list.py` (自动集成, 100% 精度)
 
 ---
 

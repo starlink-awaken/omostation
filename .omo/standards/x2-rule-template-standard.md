@@ -8,7 +8,7 @@ last-reviewed: 2026-06-25
 # X2 Standard: Freshness Rule Definition & Lifecycle
 
 > Status: MANDATORY | Applied: P84+
-> Authority: `.omo/_truth/x2-freshness-rules.yaml` + `bin/x2-rule-lint.py`
+> Authority: `.omo/_truth/x2-freshness-rules.yaml` + `bin/gac/x2-rule-lint.py`
 
 ## 1. 核心目的
 
@@ -36,7 +36,7 @@ X2 Freshness Rules 是 eCOS 抗熵机制的核心, 每条 rule 监控某个目�
 ### 3.1 交互式 (推荐)
 
 ```bash
-python3 bin/x2-rule-add.py
+python3 bin/gac/x2-rule-add.py
 # 按提示输入: title / type / target / mechanism / threshold_days / action / owner
 # 自动分配 rule_id, 追加 YAML, 跑 x2-rule-lint 验证
 ```
@@ -45,13 +45,13 @@ python3 bin/x2-rule-add.py
 
 ```bash
 printf "X2-FRESH-NEW-001\nMy new rule\n.omo/_truth/*.yaml\n14\nwarn\n" \
-  | python3 bin/x2-rule-add.py --non-interactive
+  | python3 bin/gac/x2-rule-add.py --non-interactive
 ```
 
 ### 3.3 模板导出
 
 ```bash
-python3 bin/x2-rule-add.py --template
+python3 bin/gac/x2-rule-add.py --template
 # 输出 YAML 模板, 可手动编辑后追加
 ```
 
@@ -59,10 +59,10 @@ python3 bin/x2-rule-add.py --template
 
 | 工具 | 用途 |
 |------|------|
-| `bin/x2-rule-lint.py` | schema 静态检查 (9 rules 全部健康) |
-| `bin/x2-freshness-check.py` | 运行时检查 (target age vs threshold) |
-| `bin/x2-rule-add.py` | 交互式添加 (P87 R2) |
-| `bin/governance-dashboard.py` | 统一仪表盘 (含 9 工具) |
+| `bin/gac/x2-rule-lint.py` | schema 静态检查 (9 rules 全部健康) |
+| `bin/gac/x2-freshness-check.py` | 运行时检查 (target age vs threshold) |
+| `bin/gac/x2-rule-add.py` | 交互式添加 (P87 R2) |
+| `bin/gac/governance-dashboard.py` | 统一仪表盘 (含 9 工具) |
 
 ## 5. 编号规则 (X2-FRESH-NNN)
 
@@ -98,5 +98,5 @@ python3 bin/x2-rule-add.py --template
 - ADR-0080 (P86 pre-commit 集成)
 - ADR-0081 (P87 X2 rule add 工具)
 - ADR-0082 (P88 X2 rule template 标准化)
-- `bin/x2-rule-add.py --template`
-- `bin/x2-rule-lint.py`
+- `bin/gac/x2-rule-add.py --template`
+- `bin/gac/x2-rule-lint.py`

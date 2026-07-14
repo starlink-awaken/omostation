@@ -25,7 +25,7 @@ P82 收口后, P83 调研 3 项历史数据洞察候选, 全部实施:
 
 ### D1: governance-history-insight 工具 (P83 R1)
 
-**功能** (`bin/governance-history-insight.py`):
+**功能** (`bin/gac/governance-history-insight.py`):
 - 解析 `governance-history.jsonl` 兼容单行 + 多行 JSON (用 `json.JSONDecoder().raw_decode()` 流式扫描)
 - 过滤 `total_score` 字段的 governance 条目 (排除 dashboard 探活)
 - 输出: 总数 / 首末对比 / A+ 率 / 等级分布 / 非 100 分数异常点 (含 failing_checks) / Watchlist 统计 / 每日等级分布
@@ -38,7 +38,7 @@ P82 收口后, P83 调研 3 项历史数据洞察候选, 全部实施:
 
 ### D2: drift-history-insight 工具 (P83 R2)
 
-**功能** (`bin/drift-history-insight.py`):
+**功能** (`bin/gac/drift-history-insight.py`):
 - 读取 `.omo/_control/evolution/drift/*.json` 全部 212 份
 - 输出: 总数 / 时间范围 / 类别分布 (entry_drift / doc_drift / duplicate_facts / agora_bypass) / 漂移按类别 / 持续漂移 top 10 / 每日 trend (含 ASCII bar) / 最近 5 个报告
 
@@ -50,7 +50,7 @@ P82 收口后, P83 调研 3 项历史数据洞察候选, 全部实施:
 
 ### D3: cross-ref gitignore 感知 (P83 R3)
 
-**升级** (`bin/management-cross-ref-check.py`):
+**升级** (`bin/ssot/management-cross-ref-check.py`):
 - 新增 `is_gitignored()` 工具: 简化 .gitignore 模式匹配 (fnmatch + 目录前缀 + basename + 段匹配)
 - 解析链接时, 预检测路径段含 `.omc/`, `data/` 等已知 gitignore 目录 → 标记为 `gitignored_links`
 - 解析失败时, 若路径段命中 gitignore → 也标记为 gitignored
@@ -64,9 +64,9 @@ P82 收口后, P83 调研 3 项历史数据洞察候选, 全部实施:
 ### D4: 收口统计
 
 **P83 工具数**: 21 → **24** 独立 bin 工具 (+3)
-- `bin/governance-history-insight.py` (新)
-- `bin/drift-history-insight.py` (新)
-- `bin/management-cross-ref-check.py` (升级, P82 scope/status + P83 gitignore)
+- `bin/gac/governance-history-insight.py` (新)
+- `bin/gac/drift-history-insight.py` (新)
+- `bin/ssot/management-cross-ref-check.py` (升级, P82 scope/status + P83 gitignore)
 
 **ADR 数**: 36 → **37** (P83 +1)
 
@@ -91,14 +91,14 @@ P82 收口后, P83 调研 3 项历史数据洞察候选, 全部实施:
 
 ```bash
 # 3 个 P83 工具
-python3 bin/governance-history-insight.py       # 623 entries, A+ 69.8%
-python3 bin/drift-history-insight.py            # 212 reports, 1 persistent drift
-python3 bin/management-cross-ref-check.py .     # 23 dead + 20 gitignored (vs P82 43 dead)
+python3 bin/gac/governance-history-insight.py       # 623 entries, A+ 69.8%
+python3 bin/gac/drift-history-insight.py            # 212 reports, 1 persistent drift
+python3 bin/ssot/management-cross-ref-check.py .     # 23 dead + 20 gitignored (vs P82 43 dead)
 
 # ruff 验证
-ruff check bin/governance-history-insight.py
-ruff check bin/drift-history-insight.py
-ruff check bin/management-cross-ref-check.py
+ruff check bin/gac/governance-history-insight.py
+ruff check bin/gac/drift-history-insight.py
+ruff check bin/ssot/management-cross-ref-check.py
 # 期望: All checks passed!
 ```
 

@@ -10,7 +10,7 @@ clis:
   entrypoint: bin/agent-workflow.py
   description: Executable governance workflow runner for project-level AI agent work
 - name: governance-evolution
-  entrypoint: bin/governance-evolution.py
+  entrypoint: bin/gac/governance-evolution.py
   description: Executable governance evolution roadmap, traceability, and golden path status runner
 - name: cockpit-agent-workflow
   entrypoint: uv run --project projects/cockpit cockpit agent-workflow

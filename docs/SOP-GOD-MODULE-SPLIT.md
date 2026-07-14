@@ -12,7 +12,7 @@ related:
 
 # SOP: God-Module 渐进拆分
 
-> **触发**: `bin/check-god-module.py --strict` 报告 > 1500L 文件失败。
+> **触发**: `bin/ssot/check-god-module.py --strict` 报告 > 1500L 文件失败。
 > **范围**: P76 Phase 1 Step 1.5 交付物。
 > **目标**: 把 7 个 > 1500L god module (gbrain 重灾区) 通过 5 阶段渐进拆解,**不冻结 gbrain 开发**。
 
@@ -50,7 +50,7 @@ related:
   - 抽取后立即跑 `bun test`, 不许引入新测试失败
   - 新文件命名: `<god-module>/<concern>.ts`
 工具:
-  - `bin/check-god-module.py --relaxed` (允许短暂 >1500L 但 ≤2000L)
+  - `bin/ssot/check-god-module.py --relaxed` (允许短暂 >1500L 但 ≤2000L)
 ```
 
 ### Phase 2 · 接口抽象 (5-7 天/文件)
@@ -80,7 +80,7 @@ related:
 
 ```
 最终验收:
-  - `bin/check-god-module.py --strict` 全绿
+  - `bin/ssot/check-god-module.py --strict` 全绿
   - CI 强制 (不能让 god module 重新膨胀)
   - 写 ADR-0156 god-module-split-record.md
 ```
@@ -110,7 +110,7 @@ related:
 |------|------|
 | `CR-X1-GOD-MODULE-LIMIT` | 拦新 > 1500L 文件 (已立, 2026-07-02 audit 加) |
 | `TASK-F7114ABA` | 旧 planned task, 内容已整合到此 SOP |
-| `bin/check-god-module.py --strict` | 自动检测工具, CI 集成入口 |
+| `bin/ssot/check-god-module.py --strict` | 自动检测工具, CI 集成入口 |
 
 ## 6. 验证清单
 

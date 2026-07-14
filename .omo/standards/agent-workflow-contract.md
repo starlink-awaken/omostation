@@ -136,9 +136,9 @@ verification useful in multi-agent worktrees without weakening the full local ga
 For direct CLI use, the same gate exposes explicit scope:
 
 ```bash
-uv run --with pyyaml python bin/gac-local-gate.py --scope staged --json
-uv run --with pyyaml python bin/gac-local-gate.py --scope files --file bin/agent-workflow.py --json
-uv run --with pyyaml python bin/gac-local-gate.py --scope run --run-id <run-id> --json
+uv run --with pyyaml python bin/gac/gac-local-gate.py --scope staged --json
+uv run --with pyyaml python bin/gac/gac-local-gate.py --scope files --file bin/agent-workflow.py --json
+uv run --with pyyaml python bin/gac/gac-local-gate.py --scope run --run-id <run-id> --json
 ```
 
 `compliance` audits run records, locks, ledger parseability, closed-run evidence, verify events,
@@ -211,7 +211,7 @@ uv run --project projects/omo omo state sync --dry-run --json
 uv run --project projects/omo omo state sync --json
 ```
 
-`post-commit` hooks and WatchPaths emit `state_stale` events through `bin/state-stale-emit.py`.
+`post-commit` hooks and WatchPaths emit `state_stale` events through `bin/gac/state-stale-emit.py`.
 They must not directly run `compass_radar.py`, `generate-brief.py`, or governance-data generators.
 The registered mutation surface is `omo-state-sync-projection`, and its broker is
 `projects/omo/src/omo/omo_ingress_state.py:sync_state_projection`.

@@ -13,7 +13,7 @@ related:
 # P71 Baseline Recovery Pattern — 5 阶段声明/执行鸿沟修复
 
 > **Generated**: 2026-07-02 (post-PR#6/#7/#8)
-> **SSOT**: `.omo/_truth/registry/governance-checks.yaml` (P71-CR 全集) + `bin/gac-local-gate.py` (CI skip 矩阵)
+> **SSOT**: `.omo/_truth/registry/governance-checks.yaml` (P71-CR 全集) + `bin/gac/gac-local-gate.py` (CI skip 矩阵)
 > **Purpose**: 抽象"声明绿/执行红"漂移的标准恢复流程, 防"修了一处漏了 N 处"
 
 ## 1. 模式识别 (3 类 declaration-execution gap)
@@ -44,7 +44,7 @@ related:
 
 ```bash
 # 1a. 跑 evidence-smoke 量化鸿沟
-python3 bin/evidence-smoke.py --quiet
+python3 bin/gac/evidence-smoke.py --quiet
 # 期望: 78.9 / 100 (BOS 60% + tree 20% + feedback 20%)
 
 # 1b. 跑 mof-drift 看架构层 drift
@@ -52,7 +52,7 @@ uv run --with "pyyaml" python bin/mof-drift
 # 期望: 🟡 MEDIUM < 3, 🔵 LOW < 5
 
 # 1c. 跑 gac-drift 看 GaC 自洽
-uv run --with "pyyaml" python bin/gac-drift.py
+uv run --with "pyyaml" python bin/gac/gac-drift.py
 # 期望: 0 drift
 ```
 
@@ -62,9 +62,9 @@ uv run --with "pyyaml" python bin/gac-drift.py
 
 | 类 | 治本方向 | 工具 |
 |---|---|---|
-| A 路径错位 | SSOT 路径与 broker 写入路径一致 (`.omo/_truth/` ↔ omo broker `find_omo_dir`) | `bin/gen-dependency-baseline.py` 改 `BASELINE_YAML` + `.gitignore` 修 |
-| B 工具未接 | 接入 `gac-local-gate.py::CHECKS` 或标 `bin/_archive/` + GaC `deprecated` | `bin/gac-local-gate.py` + `governance-checks.yaml` |
-| C CI 永远红 | `CI_SKIP_CHECKS` / `CI_ONLY_CHECKS` 矩阵, 本地 strict 照跑 | `bin/gac-local-gate.py` 顶部 `os.environ.get("GITHUB_ACTIONS")` 探针 |
+| A 路径错位 | SSOT 路径与 broker 写入路径一致 (`.omo/_truth/` ↔ omo broker `find_omo_dir`) | `bin/mof/gen-dependency-baseline.py` 改 `BASELINE_YAML` + `.gitignore` 修 |
+| B 工具未接 | 接入 `gac-local-gate.py::CHECKS` 或标 `bin/_archive/` + GaC `deprecated` | `bin/gac/gac-local-gate.py` + `governance-checks.yaml` |
+| C CI 永远红 | `CI_SKIP_CHECKS` / `CI_ONLY_CHECKS` 矩阵, 本地 strict 照跑 | `bin/gac/gac-local-gate.py` 顶部 `os.environ.get("GITHUB_ACTIONS")` 探针 |
 
 **关键原则**:
 - ❌ 不在 CI 上"加 sleep" / "skip check" 来治标
@@ -129,7 +129,7 @@ uv run --with "pyyaml" python bin/gac-drift.py
 - [ ] Phase 3: 每个 commit 单 lane, pre-commit hook 守门
 - [ ] Phase 4: 每根因 → 1 条 GaC 规则
 - [ ] Phase 5: gac-validate + gac-drift + gac-executor 三件套
-- [ ] 验证: make gac-local-gate + bin/evidence-smoke.py (PASS + score ↑)
+- [ ] 验证: make gac-local-gate + bin/gac/evidence-smoke.py (PASS + score ↑)
 - [ ] PR: squash merge, body 含 commit-by-commit 解释
 - [ ] 持久化: 写 pattern (本文件) + audit (closeout) + AGENTS.md pointer
 ```

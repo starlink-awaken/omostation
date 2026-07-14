@@ -46,7 +46,7 @@ P95 收口后, P96 调研 3 项治理深化, 实施 3 项 (P96-A 推迟):
 - 4 TYPO suggestions 全是误报 (P95 Jaccard 噪声)
 - 8 TYPO suggestions 6 个 ratio 1.0 (P96 Levenshtein 精确)
 
-### D2: bin/venv-yaml-check.py (P96 R2) - 依赖一致性
+### D2: bin/ssot/venv-yaml-check.py (P96 R2) - 依赖一致性
 
 **新工具** (修复 P95 R3 fragile):
 - 3 模式: check / list / 默认 (check + auto install)
@@ -77,7 +77,7 @@ P95 收口后, P96 调研 3 项治理深化, 实施 3 项 (P96-A 推迟):
 
 **P96 工具数**: 41 → **43** 独立 bin 工具 (+2)
 - `bin/adr-typo-real-fix.py` (新)
-- `bin/venv-yaml-check.py` (新)
+- `bin/ssot/venv-yaml-check.py` (新)
 
 **ADR 数**: 49 → **50** (P96 +1)
 
@@ -113,22 +113,22 @@ python3 bin/adr-typo-real-fix.py
 # 期望: 8 TYPO, 6 个 ratio 1.0, 2 个 ratio 0.893
 
 # P96 R2: venv 检查
-python3 bin/venv-yaml-check.py
+python3 bin/ssot/venv-yaml-check.py
 # 期望: ✅ 所有关键依赖完整
-python3 bin/venv-yaml-check.py --list
+python3 bin/ssot/venv-yaml-check.py --list
 # 期望: pyyaml ✅
 
 # P96 R3: X2 rule
-python3 bin/x2-rule-lint.py
+python3 bin/gac/x2-rule-lint.py
 # 期望: 12 rules, 0 issues
 
 # P96 R4: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 21/21 工具全部通过
 
 # ruff 验证
 ruff check bin/adr-typo-real-fix.py
-ruff check bin/venv-yaml-check.py
+ruff check bin/ssot/venv-yaml-check.py
 # 期望: All checks passed!
 ```
 

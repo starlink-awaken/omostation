@@ -180,7 +180,7 @@ python3 projects/l4-kernel/src/l4_kernel/monitor/contract_monitor.py
 # 期望: "[OK] No suspicious commits found"
 
 # 综合验证: dashboard
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 ```
 
 ## References

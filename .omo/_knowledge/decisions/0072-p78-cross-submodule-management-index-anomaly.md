@@ -29,7 +29,7 @@ P77 收口后, P78 调研 5 项候选, 实施 4 项:
 
 ### D1: 跨子仓联动检查 (P78 R1)
 
-**新工具**: `bin/cross-submodule-check.py` (140 行)
+**新工具**: `bin/ssot/cross-submodule-check.py` (140 行)
 
 **功能**:
 - 检查 6 个核心子仓 (ecos / agora / cockpit / omo / runtime / scripts)
@@ -58,7 +58,7 @@ runtime     🔴 未提交       0     0     42212b68 security
 
 ### D3: alert-history 自动洞察 (P78 R3)
 
-**修改**: `bin/alert-history.py` `analyze_history()`
+**修改**: `bin/gac/alert-history.py` `analyze_history()`
 
 **新增 `detect_anomalies()` 函数**:
 - 4 类异常检测:

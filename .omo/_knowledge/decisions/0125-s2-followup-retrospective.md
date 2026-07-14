@@ -35,7 +35,7 @@ governance score 回升留 S2 (依赖 service online ratio, 非主仓可控).
 
 | Commit | 项 | 内容 |
 |--------|---|------|
-| `fdcfdfe0` | F-2 step 1+2 | `bin/state-freshness-check.py` 新建 (ADR-0119 S2-5) + 接入 `gac-local-gate.py::CHECKS` (S2-6) + `change-lane-check.py` lane 显式列 |
+| `fdcfdfe0` | F-2 step 1+2 | `bin/gac/state-freshness-check.py` 新建 (ADR-0119 S2-5) + 接入 `gac-local-gate.py::CHECKS` (S2-6) + `change-lane-check.py` lane 显式列 |
 | `40ee939e` | F-2 step 3 | governance-evolution 8 initiative 进度填充 + 7/8 next_step 补全 (1/8 已有) |
 | `011cb271` | ADR-0115 Phase 2 | X-Plane: `gov-history-stats.py` → `governance-history-stats.py` + `gov-trend-report.py` → `governance-trend-report.py` (2 rename) |
 | `8b5e50b6` | ADR-0115 Phase 2 整理 | `change-lane-check.py` 显式列 3 个 governance-* 工具, 避免误归 code lane |
@@ -48,7 +48,7 @@ governance score 回升留 S2 (依赖 service online ratio, 非主仓可控).
 **问题**: `compass_radar.py` 内含 freshness_score 但耦合在复合 health_score 计算.
 gac-local-gate 默认 mode 不可见状态面 stale 状态.
 
-**治本**: 新建 `bin/state-freshness-check.py`:
+**治本**: 新建 `bin/gac/state-freshness-check.py`:
 - 独立检查 5 个状态面 SSOT (health / system_health / governance.jsonl / 
   debt-dashboard / governance-data) 的 generated_at 新鲜度
 - 阈值 (与 compass_radar 一致): ≤1h=100 / ≤24h=80 / ≤7d=50 / >7d=0
@@ -70,8 +70,8 @@ gac-local-gate 默认 mode 不可见状态面 stale 状态.
 #### ADR-0115 Phase 2: gov- → governance- rename
 
 X-Plane commit `011cb271` 完成 2 个 rename:
-- `bin/gov-history-stats.py` → `bin/governance-history-stats.py`
-- `bin/gov-trend-report.py` → `bin/governance-trend-report.py`
+- `bin/gov-history-stats.py` → `bin/gac/governance-history-stats.py`
+- `bin/gov-trend-report.py` → `bin/gac/governance-trend-report.py`
 
 本 PR 补 commit `8b5e50b6` 整理: `change-lane-check.py` 显式列 3 个 governance-*
 工具, 跟 governance-evolution / governance-semantic-gate 同档 (避免按 *.py 默认
@@ -79,7 +79,7 @@ X-Plane commit `011cb271` 完成 2 个 rename:
 
 #### ADR-0115 Phase 4: dashboard 4/4 完全合并
 
-4 个 dashboard 工具全部合并到 bin/governance-dashboard.py 中:
+4 个 dashboard 工具全部合并到 bin/gac/governance-dashboard.py 中:
 - `dashboard-readiness-summary.py` → `--readiness-summary` (内联合并)
 - `dashboard-ui-render.py` → `--ui-render <HTML>` (内联合并)
 - `gac-dashboard.py` → `--gac-html` / `--gac-open` (内联合并)

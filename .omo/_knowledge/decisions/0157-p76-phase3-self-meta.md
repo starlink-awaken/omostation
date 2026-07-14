@@ -21,7 +21,7 @@ P76 Phase 3 (W6-W8) 完成 3 项核心交付:
 
 | 交付 | 状态 | 关键产物 |
 |------|:---:|---------|
-| **bin/debt-closed-per-feature.py** | ✅ | 新指标工具 |
+| **bin/gac/debt-closed-per-feature.py** | ✅ | 新指标工具 |
 | **CR-META-METRIC-DEBT-FEATURE** | ✅ | 新 GaC 规则 |
 | **check-* auto-bind inventory** | ✅ | 9 个 0-caller 工具登记 |
 
@@ -69,8 +69,8 @@ verdict: ok if ratio >= 0.5 else fail
   layer: meta
   check_type: drift_audit
   description: "每交付 1 feature 必须关闭 0.5 debt. 治理 score 才能真与开发节奏挂钩."
-  target: "bin/debt-closed-per-feature.py"
-  source_ref: bin/debt-closed-per-feature.py::main
+  target: "bin/gac/debt-closed-per-feature.py"
+  source_ref: bin/gac/debt-closed-per-feature.py::main
   executor: [radar_cron, omo_audit]
   enforcement: advisory
   lifecycle: active
@@ -83,14 +83,14 @@ verdict: ok if ratio >= 0.5 else fail
 
 | 工具 | 状态 | Phase 3 归属 |
 |------|------|----------|
-| `bin/check-domain-m1-alignment.py` | 0 caller | 已加入 gac-local-gate |
-| `bin/check-mcptool-impl-drift.py` | 0 caller | radar_cron (Phase 3 内) |
-| `bin/check-toolbox-ssot.py` | 0 caller | 已加入 gac-local-gate |
-| `bin/check-submodule-hygiene.py` | 0 caller | doctor_checks (M4→GaC, 已生效) |
-| `bin/mcp-tool-data-complete.py` | 0 caller | doctor_checks (同上) |
-| `bin/mof-bootstrap.py` | 0 caller | doctor_checks (M4→GaC) |
-| `bin/m4-health-score.py` | 0 caller | doctor_checks (M4→GaC) |
-| `bin/check-god-module.py` | 0 caller | gac-local-gate (已加, 2026-07-02) |
+| `bin/ssot/check-domain-m1-alignment.py` | 0 caller | 已加入 gac-local-gate |
+| `bin/ssot/check-mcptool-impl-drift.py` | 0 caller | radar_cron (Phase 3 内) |
+| `bin/ssot/check-toolbox-ssot.py` | 0 caller | 已加入 gac-local-gate |
+| `bin/ssot/check-submodule-hygiene.py` | 0 caller | doctor_checks (M4→GaC, 已生效) |
+| `bin/gac/mcp-tool-data-complete.py` | 0 caller | doctor_checks (同上) |
+| `bin/mof/mof-bootstrap.py` | 0 caller | doctor_checks (M4→GaC) |
+| `bin/mof/m4-health-score.py` | 0 caller | doctor_checks (M4→GaC) |
+| `bin/ssot/check-god-module.py` | 0 caller | gac-local-gate (已加, 2026-07-02) |
 
 总数: 8 已接 → 0 0-caller.
 
@@ -121,7 +121,7 @@ verdict: ok if ratio >= 0.5 else fail
 
 ## 4. 验证清单
 
-- [x] `bin/debt-closed-per-feature.py` 创建并跑通 (ratio 0.688)
+- [x] `bin/gac/debt-closed-per-feature.py` 创建并跑通 (ratio 0.688)
 - [x] CR-META-METRIC-DEBT-FEATURE 规则注册
 - [x] 8 个 0-caller check-* 工具已接 (P3.2 完整覆盖)
 - [ ] 1 周观察 layer-call violations 变化 (待 Phase 4)

@@ -15,7 +15,7 @@ last-reviewed: 2026-06-23
 
 ## Context and Problem Statement
 
-P81 R4 引入 `bin/management-cross-ref-check.py` (扫描 .omo/_knowledge/management/ 跨文件引用),
+P81 R4 引入 `bin/ssot/management-cross-ref-check.py` (扫描 .omo/_knowledge/management/ 跨文件引用),
 首版报告 54 死链。P82 调研发现:
 
 1. **P81 工具缺陷**: 仅按"文件名 basename 匹配 files_by_cat"判定死链, 把"跨管理目录的外部引用"误判为死链
@@ -79,7 +79,7 @@ P81 R4 引入 `bin/management-cross-ref-check.py` (扫描 .omo/_knowledge/manage
 
 ```bash
 # 重跑确认 active:0
-python3 bin/management-cross-ref-check.py .
+python3 bin/ssot/management-cross-ref-check.py .
 
 # 期望输出:
 # 🔗 内部引用 (已解析): 45
@@ -87,7 +87,7 @@ python3 bin/management-cross-ref-check.py .
 # ❌ 死链 (目标不存在): 43 = active:0 + archived:43
 
 # ruff 验证
-ruff check bin/management-cross-ref-check.py
+ruff check bin/ssot/management-cross-ref-check.py
 # 期望: All checks passed!
 ```
 

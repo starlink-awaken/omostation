@@ -15,7 +15,7 @@ ssot:
   mof_capabilities: .omo/_truth/registry/mof-capabilities.yaml
 entrypoints:
   human: cockpit governance evolution
-  agent: uv run --with pyyaml python bin/governance-evolution.py status --json
+  agent: uv run --with pyyaml python bin/gac/governance-evolution.py status --json
   bos:
     - bos://governance/evolution/status
     - bos://governance/evolution/validate
@@ -50,16 +50,16 @@ initiatives:
     entrypoints:
       - git status --short
       - uv run --with pyyaml python bin/agent-workflow.py status --json
-      - uv run --with pyyaml python bin/governance-evolution.py packages --json
-      - uv run --with pyyaml python bin/governance-evolution.py packages --write-decisions-template /tmp/release-decisions.yaml --json
+      - uv run --with pyyaml python bin/gac/governance-evolution.py packages --json
+      - uv run --with pyyaml python bin/gac/governance-evolution.py packages --write-decisions-template /tmp/release-decisions.yaml --json
       - make gac-local-gate
     deliverables:
       - .omo/_delivery/agent-workflows/runs/**
-      - bin/governance-evolution.py
+      - bin/gac/governance-evolution.py
       - tests/test_governance_evolution.py
     verification:
       - command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, compliance, --json]
-      - command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, packages, --json]
+      - command: [uv, run, --with, pyyaml, python, bin/gac/governance-evolution.py, packages, --json]
       - command: [make, gac-local-gate]
     acceptance:
       - governance-evolution packages reports unknown_count=0 or documents intentional runtime/data exclusions.
@@ -97,7 +97,7 @@ initiatives:
     done_when: Operators can inspect AGCP and governance evolution views from Cockpit without reading low-level files.
     blocked_by: []
     next_step: |-
-      cockpit-ui 入口待 cockpit-team 落地; 当前 governance evolution status 通过 bin/governance-evolution.py status --json 暴露 (3 入口之一).
+      cockpit-ui 入口待 cockpit-team 落地; 当前 governance evolution status 通过 bin/gac/governance-evolution.py status --json 暴露 (3 入口之一).
   - id: claim-policy-tiering
     title: Claim policy tiering
     recommendation: Keep core governance paths on required claim tiers while broader docs and entrypoint paths stay advisory.
@@ -153,7 +153,7 @@ initiatives:
     done_when: Agents can discover every governance evolution status view and loop monitor through BOS.
     blocked_by: []
     next_step: |-
-      bin/governance-evolution.py status --json 已落地 (3 入口: human=cockpit / agent=cockpit agent / gate=make gac-local-gate); 6 BOS URI 路由已注册到 entrypoints. 下: release package 暴露 (S2/S3).
+      bin/gac/governance-evolution.py status --json 已落地 (3 入口: human=cockpit / agent=cockpit agent / gate=make gac-local-gate); 6 BOS URI 路由已注册到 entrypoints. 下: release package 暴露 (S2/S3).
   - id: capability-traceability
     title: Capability to entrypoint to verifier traceability
     recommendation: Every strategic capability should map to owner, entrypoint, SSOT, and verification command.
@@ -165,12 +165,12 @@ initiatives:
     layer: X4
     ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
     entrypoints:
-      - uv run --with pyyaml python bin/governance-evolution.py traces --json
+      - uv run --with pyyaml python bin/gac/governance-evolution.py traces --json
     deliverables:
       - .omo/_truth/registry/governance-evolution-roadmap.yaml
-      - bin/governance-evolution.py
+      - bin/gac/governance-evolution.py
     verification:
-      - command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, validate, --json]
+      - command: [uv, run, --with, pyyaml, python, bin/gac/governance-evolution.py, validate, --json]
     acceptance:
       - Each strategic capability maps to owner, entrypoint, SSOT, and verifier.
       - Release package convergence is represented as a capability trace.
@@ -218,11 +218,11 @@ initiatives:
     layer: X1-X4
     ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
     entrypoints:
-      - uv run --with pyyaml python bin/governance-evolution.py golden-paths --json
+      - uv run --with pyyaml python bin/gac/governance-evolution.py golden-paths --json
     deliverables:
       - .omo/_truth/registry/governance-evolution-roadmap.yaml
     verification:
-      - command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, validate, --json]
+      - command: [uv, run, --with, pyyaml, python, bin/gac/governance-evolution.py, validate, --json]
     acceptance:
       - Agent change, strategy ingress, BOS invocation, and release packaging are visible as golden paths.
       - Each golden path has an executable verifier.
@@ -250,7 +250,7 @@ initiatives:
       - AGENTS.md
       - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
     verification:
-      - command: [uv, run, --with, pyyaml, python, bin/doc-ssot-lint.py, --json]
+      - command: [uv, run, --with, pyyaml, python, bin/ssot/doc-ssot-lint.py, --json]
     acceptance:
       - Human, agent, BOS, and gate entrypoints are explicitly narrow.
       - Markdown files point to registry-backed commands instead of copying dynamic state.
@@ -258,7 +258,7 @@ initiatives:
     done_when: Entrypoint documentation matches the registry-backed control plane and has no SSOT drift.
     blocked_by: []
     next_step: |-
-      bin/gac-local-gate.py (human) + bin/agent-workflow.py (agent) + bin/governance-semantic-gate.py (gate) 3 入口收敛. ADR-0115 Phase 4 (4 dashboard 合并) 留 S2/S3.
+      bin/gac/gac-local-gate.py (human) + bin/agent-workflow.py (agent) + bin/gac/governance-semantic-gate.py (gate) 3 入口收敛. ADR-0115 Phase 4 (4 dashboard 合并) 留 S2/S3.
 capability_traces:
   - id: trace.agent-governance-control-plane
     capability: Agent governance control plane
@@ -271,13 +271,13 @@ capability_traces:
     owner: governance-team
     entry: cockpit governance evolution status --json
     ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
-    verifier: uv run --with pyyaml python bin/governance-evolution.py validate --json
+    verifier: uv run --with pyyaml python bin/gac/governance-evolution.py validate --json
   - id: trace.release-package-convergence
     capability: Release package convergence
     owner: governance-team
     entry: cockpit governance evolution packages --json
     ssot: .omo/_truth/registry/governance-evolution-roadmap.yaml
-    verifier: uv run --with pyyaml python bin/governance-evolution.py packages --json
+    verifier: uv run --with pyyaml python bin/gac/governance-evolution.py packages --json
   - id: trace.omo-evolution-loop
     capability: OMO evolution loop monitoring
     owner: omo-team
@@ -338,16 +338,16 @@ golden_paths:
       - review runtime/data exclusions
       - review submodule-pointer package
       - ship through AGCP closeout
-    verifier: uv run --with pyyaml python bin/governance-evolution.py packages --json
+    verifier: uv run --with pyyaml python bin/gac/governance-evolution.py packages --json
 operating_rhythm:
   daily:
     - uv run --with pyyaml python bin/agent-workflow.py status --json
-    - uv run --with pyyaml python bin/governance-evolution.py status --json
-    - uv run --with pyyaml python bin/governance-evolution.py packages --json
+    - uv run --with pyyaml python bin/gac/governance-evolution.py status --json
+    - uv run --with pyyaml python bin/gac/governance-evolution.py packages --json
   pre_release:
     - make gac-local-gate
     - uv run --with pyyaml python bin/agent-workflow.py compliance --json
-    - uv run --with pyyaml python bin/governance-evolution.py validate --json
+    - uv run --with pyyaml python bin/gac/governance-evolution.py validate --json
   weekly:
     - python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json
     - bin/mof-drift
