@@ -1,6 +1,8 @@
 # Wave 2: C2G + OMO 迭代路线图 (草案)
 
-> Draft — 待评审后转为正式 ADR
+> **Phase A accepted**: [ADR-0183](../0183-wave2-c2g-omo-phase-a.md)
+>
+> Remaining phases (B/C) still draft until separate ADRs.
 
 ## 目标
 
