@@ -649,8 +649,8 @@ def _cmd_cache(args: list[str]) -> int:
     )
     subparsers = parser.add_subparsers(dest="cache_sub", required=True)
     
-    parser_stats = subparsers.add_parser("stats", help="显示缓存统计")
-    parser_clear = subparsers.add_parser("clear", help="清空所有缓存")
+    subparsers.add_parser("stats", help="显示缓存统计")
+    subparsers.add_parser("clear", help="清空所有缓存")
     parser_invalidate = subparsers.add_parser("invalidate", help="失效特定缓存")
     parser_invalidate.add_argument("pattern", type=str, help="缓存键匹配模式")
     
