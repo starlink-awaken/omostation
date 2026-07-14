@@ -84,7 +84,7 @@
 |------|--------|------|
 | compute-mesh | aetherforge/packages/mesh |  |
 | swarm-engine | aetherforge/packages/swarm |  |
-| hermes-console | cockpit-ui |  |
+| cockpit-ui | cockpit-ui |  |
 | agora-dashboard | cockpit HTTP :8090 |  |
 
 ---
