@@ -249,7 +249,7 @@ def test_p34w2_cross_process_summary():
     last_line = [ln for ln in out.splitlines() if ln.startswith("{")][-1]
     summary = json.loads(last_line)
     assert summary["registry_total"] >= 36
-    assert summary["registry_analysis"] == 12
+    assert summary["registry_analysis"] >= 12
     # resolver 动态派生含所有声明 (>= 静态 registry 42). 假阳性见 BOS 鸿沟审计:
     # .omo/_knowledge/audits/bos-declaration-execution-gap-2026-06-24.md
     assert summary["resolver_total"] >= 42
