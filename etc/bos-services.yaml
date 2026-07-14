@@ -18,7 +18,7 @@ services:
     action: "mcp-server"
     transport: stdio
     package: "kos-mcp"
-    command: ["python3", "bin/mcp-server-kos.py"]
+    command: ["python3", "bin/gac/mcp-server-kos.py"]
     description: "KOS 统一只读 MCP 服务器入口 (SGF-v1 硬件外挂)"
 
   # kairon MCP Gateway backend 注册 (P0, agora mcp_proxy 声明式聚合, 2026-07-14)
@@ -290,7 +290,7 @@ services:
     action: "status"
     transport: stdio
     package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "status", "--json"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "status", "--json"]
     description: "治理演进路线图状态入口"
 
   - uri: "bos://governance/evolution/validate"
@@ -298,7 +298,7 @@ services:
     action: "validate"
     transport: stdio
     package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "validate", "--json"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "validate", "--json"]
     description: "治理演进路线图结构与追踪校验"
 
   - uri: "bos://governance/evolution/traces"
@@ -306,7 +306,7 @@ services:
     action: "traces"
     transport: stdio
     package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "traces", "--json"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "traces", "--json"]
     description: "治理能力到入口/SSOT/验证器的追踪视图"
 
   - uri: "bos://governance/evolution/golden-paths"
@@ -314,7 +314,7 @@ services:
     action: "golden-paths"
     transport: stdio
     package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "golden-paths", "--json"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "golden-paths", "--json"]
     description: "治理 Golden Path 端到端流程视图"
 
   - uri: "bos://governance/evolution/packages"
@@ -322,7 +322,7 @@ services:
     action: "packages"
     transport: stdio
     package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/governance-evolution.py", "packages", "--json"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "packages", "--json"]
     description: "治理演进发布包与工作树收口视图"
 
   - uri: "bos://governance/eidos/validate"
