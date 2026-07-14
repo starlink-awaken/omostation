@@ -8,12 +8,12 @@
   check_4: m3-meta 自反 (P2-S4 新增, m3_implements 反向锚定 meta_model)
 
 用法:
-    python3 bin/mof-bootstrap.py check_1
-    python3 bin/mof-bootstrap.py check_2
-    python3 bin/mof-bootstrap.py check_3
-    python3 bin/mof-bootstrap.py check_4
-    python3 bin/mof-bootstrap.py all
-    python3 bin/mof-bootstrap.py --json
+    python3 bin/mof/mof-bootstrap.py check_1
+    python3 bin/mof/mof-bootstrap.py check_2
+    python3 bin/mof/mof-bootstrap.py check_3
+    python3 bin/mof/mof-bootstrap.py check_4
+    python3 bin/mof/mof-bootstrap.py all
+    python3 bin/mof/mof-bootstrap.py --json
 """
 
 from __future__ import annotations

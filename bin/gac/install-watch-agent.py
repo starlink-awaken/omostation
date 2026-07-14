@@ -26,7 +26,7 @@ def main() -> int:
 
     # 1. 委托 gen-service-configs 从 services.yaml 生 plist (SSOT 单源, 治活火山)
     python3 = shutil.which("python3") or "/opt/homebrew/bin/python3"
-    gen = WORKSPACE / "bin" / "gen-service-configs.py"
+    gen = WORKSPACE / "bin" / "mof" / "gen-service-configs.py"
     r = subprocess.run(
         [python3, str(gen), "--write"],
         cwd=WORKSPACE, capture_output=True, text=True, check=False,
@@ -60,7 +60,7 @@ def main() -> int:
         subprocess.run(
             [
                 python3,
-                str(WORKSPACE / "bin" / "state-stale-emit.py"),
+                str(WORKSPACE / "bin" / "gac" / "state-stale-emit.py"),
                 "--source", "launchd-watch",
                 "--trigger", "install-watch-agent",
                 "--surface", str(registry),

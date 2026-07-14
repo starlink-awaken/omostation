@@ -195,7 +195,7 @@ def validate_cockpit_entrypoint_alignment(registry: dict[str, Any]) -> list[str]
         required_snippets = [
             "def _run_governance_evolution",
             'forwarded = args or ["status"]',
-            '"bin" / "governance-evolution.py"',
+            '"bin" / "gac" / "governance-evolution.py"',
             'if subcmd == "evolution"',
             "return _run_governance_evolution",
         ]

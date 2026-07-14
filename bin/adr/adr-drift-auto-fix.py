@@ -138,7 +138,7 @@ def main() -> int:
         return 1
 
     # 调用 adr-drift-classify 拿 JSON
-    drift_bin = root / "bin" / "adr-drift-classify.py"
+    drift_bin = root / "bin" / "adr" / "adr-drift-classify.py"
     if not drift_bin.exists():
         print(f"❌ {drift_bin} 不存在")
         return 1

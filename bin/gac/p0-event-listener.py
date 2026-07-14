@@ -83,7 +83,7 @@ def process_events(root: Path, since_ts: str = "") -> list[dict]:
                 # 触发 P0 mock 通知
                 message = payload.get("level_reason", "P0 触发")
                 subprocess.run([
-                    "python3", str(root / "bin" / "alert-mock-p0-notify.py"),
+                    "python3", str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
                     "--message", message, "--all-channels"
                 ], capture_output=True, timeout=10, cwd=str(root))
                 processed.append(rec)
@@ -170,7 +170,7 @@ def main() -> int:
                                 if payload.get("level") == "P0":
                                     message = payload.get("level_reason", "P0 触发")
                                     subprocess.run(
-                                        ["python3", str(root / "bin" / "alert-mock-p0-notify.py"),
+                                        ["python3", str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
                                          "--message", message, "--all-channels"],
                                         capture_output=True, timeout=10, cwd=str(root),
                                     )
@@ -244,7 +244,7 @@ def main() -> int:
                                 if payload.get("level") == "P0":
                                     message = payload.get("level_reason", "P0 触发")
                                     subprocess.run(
-                                        ["python3", str(root / "bin" / "alert-mock-p0-notify.py"),
+                                        ["python3", str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
                                          "--message", message, "--all-channels"],
                                         capture_output=True, timeout=10, cwd=str(root),
                                     )

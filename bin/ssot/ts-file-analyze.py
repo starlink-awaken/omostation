@@ -5,7 +5,7 @@ ts-file-analyze.py — P110-D: TS god-module 真实结构分析器 (TypeScript C
 
 原 P109-C 工具用 regex 估算 (~80% 精度), P110-D 升级为真实 TypeScript AST 解析 (~100% 精度).
 
-内部调用 bin/ts-analyze.mjs (Node.js) 使用 TypeScript Compiler API.
+内部调用 bin/ssot/ts-analyze.mjs (Node.js) 使用 TypeScript Compiler API.
 失败时 fallback 到 P109-C 的 regex 估算 (graceful degradation).
 
 用法:

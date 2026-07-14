@@ -152,7 +152,7 @@ def main() -> int:
 
     # 先跑 adr-drift-check
     import subprocess
-    drift_bin = root / "bin" / "adr-drift-check.py"
+    drift_bin = root / "bin" / "adr" / "adr-drift-check.py"
     if not drift_bin.exists():
         print(f"❌ {drift_bin} 不存在")
         return 1

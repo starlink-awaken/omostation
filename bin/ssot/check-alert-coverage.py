@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-DISPATCHER = WORKSPACE / "bin" / "governance-alert-dispatch.py"
+DISPATCHER = WORKSPACE / "bin" / "gac" / "governance-alert-dispatch.py"
 ALERTS_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-alerts.yaml"
 
 

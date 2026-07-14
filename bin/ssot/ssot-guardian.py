@@ -331,7 +331,7 @@ def _check_bos_unimplemented() -> dict:
 def _check_hygiene() -> dict:
     """CR-HYG-01/02: 工作区卫生 (0字节文件 + 大小写 inode). 复用 gac-hygiene-check (DRY)."""
     result = _run(
-        ["python3", str(WORKSPACE_ROOT / "bin" / "gac-hygiene-check.py"), "--json"],
+        ["python3", str(WORKSPACE_ROOT / "bin" / "gac" / "gac-hygiene-check.py"), "--json"],
         check=False,
     )
     try:

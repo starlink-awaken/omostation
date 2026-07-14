@@ -159,7 +159,7 @@ def main() -> int:
     from subprocess import run as _run
     drift_output = _run(
         ["bin/mof/mof-drift"], capture_output=True, text=True, timeout=30,
-        cwd=str(root) if (root / "bin" / "mof-drift").exists() else None,
+        cwd=str(root) if (root / "bin" / "mof" / "mof-drift").exists() else None,
     )
     if drift_output.returncode == 0:
         # 解析 drift LOW 数

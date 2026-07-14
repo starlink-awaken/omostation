@@ -18,10 +18,10 @@
   + 9 ADR 全 ACCEPTED (5%)
 
 用法:
-    uv run --with "pyyaml" python bin/m4-health-score.py
-    uv run --with "pyyaml" python bin/m4-health-score.py --json
-    uv run --with "pyyaml" python bin/m4-health-score.py --emit   # 写派生面
-    uv run --with "pyyaml" python bin/m4-health-score.py --compare  # 与上次对比
+    uv run --with "pyyaml" python bin/mof/m4-health-score.py
+    uv run --with "pyyaml" python bin/mof/m4-health-score.py --json
+    uv run --with "pyyaml" python bin/mof/m4-health-score.py --emit   # 写派生面
+    uv run --with "pyyaml" python bin/mof/m4-health-score.py --compare  # 与上次对比
 """
 
 from __future__ import annotations
@@ -120,7 +120,7 @@ def score_adr_accepted() -> tuple[int, int, float]:
 def score_40_tests() -> tuple[int, int, float]:
     """40 回归测试 — 回放最近 m4-health.json 派生面 (避免循环依赖)
 
-    注意: 跑 `python bin/m4-health-score.py` 时不应递归子进程跑
+    注意: 跑 `python bin/mof/m4-health-score.py` 时不应递归子进程跑
     `tests/integration/m4_metamodel/run_all.py`, 否则形成无限递归。
     实际执行顺序: 开发者先跑 tests 写 m4-health.json, 再跑 score 读它。
     bonus 字段表示测试套件质量, 不参与 overall_score 计算。

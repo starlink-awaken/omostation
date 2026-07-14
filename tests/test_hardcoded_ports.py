@@ -14,7 +14,7 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "check-hardcoded-ports.py"), *args],
+         str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py"), *args],
         cwd=WORKSPACE, capture_output=True, text=True,
     )
 
@@ -39,14 +39,14 @@ def test_unregistered_is_zero():
 
 def test_threshold_default_zero():
     """detector 默认 threshold 应该 0 (P77-5 治本后)."""
-    text = (WORKSPACE / "bin" / "check-hardcoded-ports.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py").read_text()
     assert "default=0" in text, "threshold default should be 0"
     assert "default=20" not in text, "threshold default should NOT be 20"
 
 
 def test_legacy_ok_ports_includes_external():
     """LEGACY_OK_PORTS 应包含外部标准 / 工具端口 (otel/vite/lm-studio/family-hub)."""
-    text = (WORKSPACE / "bin" / "check-hardcoded-ports.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py").read_text()
     for port, name in [
         (1234, "LM Studio"),
         (3000, "family-hub dashboard"),
@@ -59,7 +59,7 @@ def test_legacy_ok_ports_includes_external():
 
 def test_port_patterns_comprehensive():
     """7 种 port-context pattern 都应被检测."""
-    text = (WORKSPACE / "bin" / "check-hardcoded-ports.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py").read_text()
     for pattern_name in [
         "PORT = NNNN",
         "port=NNNN",
@@ -101,7 +101,7 @@ def test_principle_p77_5_hardcoded_port():
 
 def test_principle_legacy_external_allowlist():
     """P77-5 沉淀: 外部服务允许硬编码, 但要在 LEGACY_OK_PORTS 列名."""
-    text = (WORKSPACE / "bin" / "check-hardcoded-ports.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py").read_text()
     assert "LEGACY_OK_PORTS" in text, "LEGACY_OK_PORTS dict must exist"
     # 每行应有注释说明豁免理由
     assert "LM Studio" in text or "otel" in text.lower(), (
