@@ -99,7 +99,7 @@ def _build_health_projection(workspace_root: Path) -> tuple[str, dict[str, Any]]
 
 def _build_brief_content(workspace_root: Path) -> str:
     generate_brief = _load_root_module(
-        workspace_root, "generate-brief", "bin/generate-brief.py"
+        workspace_root, "generate-brief", "bin/mof/generate-brief.py"
     )
     return generate_brief.generate_brief_content()
 
