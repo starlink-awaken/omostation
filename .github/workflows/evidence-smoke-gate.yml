@@ -6,12 +6,12 @@ on:
     paths:
       - 'projects/agora/etc/bos-services.yaml'
       - 'projects/agora/src/agora/mcp/resolver/services.py'
-      - 'bin/evidence-smoke.py'
+      - 'bin/gac/evidence-smoke.py'
   pull_request:
     paths:
       - 'projects/agora/etc/bos-services.yaml'
       - 'projects/agora/src/agora/mcp/resolver/services.py'
-      - 'bin/evidence-smoke.py'
+      - 'bin/gac/evidence-smoke.py'
 
 jobs:
   evidence-gate:
@@ -27,5 +27,5 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       # evidence-smoke 依赖 agora venv (pydantic + resolver.services)
       - name: evidence-smoke gate (score>=95, real_gap=0)
-        run: uv run --directory projects/agora python ${{ github.workspace }}/bin/evidence-smoke.py --gate 95
+        run: uv run --directory projects/agora python ${{ github.workspace }}/bin/gac/evidence-smoke.py --gate 95
         working-directory: ${{ github.workspace }}
