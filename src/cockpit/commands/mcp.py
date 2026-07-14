@@ -39,9 +39,12 @@ def cmd_mcp(args: argparse.Namespace) -> int:
     else:
         _get_console().print(
             _panel(
-                "[bold green]🚀 Workspace MCP Server (stdio)[/bold green]\n"
-                "[dim]通过标准输入/输出与 MCP 客户端通信[/dim]",
-                "green",
+                "[bold yellow]⚠️  DEPRECATED: stdio MCP 入口已废弃[/bold yellow]\n\n"
+                "[red]推荐方式: 通过 Agora MCP (:7431) 访问[/red]\n"
+                "  agora-mcp → resolve_bos_uri(\"bos://cockpit/context\")\n\n"
+                "[dim]保留此入口仅作向后兼容, Phase 4 后移除[/dim]\n"
+                "[dim]按 Ctrl+C 停止[/dim]",
+                "yellow",
             )
         )
         mcp.run(transport="stdio")
@@ -111,5 +114,6 @@ def _list_tools(mcp: Any) -> int:
         table.add_row(name, desc[:120])
     console.print(table)
 
-    console.print("\n[dim]使用 `cockpit mcp` 启动 server 后，客户端可通过上述工具交互[/dim]")
+    console.print("\n[yellow]⚠️  cockpit stdio MCP 已 deprecated, 推荐:[/yellow]")
+    console.print('[dim]  agora-mcp → resolve_bos_uri("bos://cockpit/context")[/dim]')
     return 0

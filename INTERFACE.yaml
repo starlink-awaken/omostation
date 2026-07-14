@@ -15,15 +15,14 @@ cli:
     description: Agent Runtime 执行器
   - name: cockpit-mcp
     module: cockpit.scripts.cockpit_mcp:main
-    description: MCP stdio server (20 tools)
-  - name: cockpit-dashboard
-    module: cockpit.dashboard_server:main
-    description: Web Dashboard (8090)
+    description: "[DEPRECATED] MCP stdio server (23 tools) — 改用 agora-mcp + resolve_bos_uri(\"bos://cockpit/context\")"
 
 mcp:
   server: cockpit.scripts.cockpit_mcp
-  tools: 20
+  tools: 23
   transport: [stdio]
+  status: deprecated
+  canonical_path: "agora-mcp → resolve_bos_uri(\"bos://cockpit/context\")"
 
 http:
   - port: 8090

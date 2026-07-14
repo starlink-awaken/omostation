@@ -751,8 +751,11 @@ def governance_check(dimension: str = "all") -> str:
 def governance_status() -> str:
     """查看治理状态。
 
+    ⚠️ 数据直读 .omo/state/system.yaml, 绕过 Agora 审计/缓存层。
+    推荐路径: Agora :7431 → resolve_bos_uri("bos://governance/omo/state")
+
     Returns:
-        治理状态 JSON (健康度、债务权重等)
+        治理状态 JSON (health_score, debt 等)
     """
     try:
         import yaml
@@ -766,6 +769,7 @@ def governance_status() -> str:
 
         return json.dumps(
             {
+                "source": "direct_read_not_audited",
                 "health_score": data.get("health_score", 0),
                 "debt_weight": data.get("debt_weight", 0),
                 "debt_health": data.get("debt_metrics", {}).get("debt_health", 0),
@@ -856,6 +860,9 @@ def governance_leaderboard() -> str:
 def governance_dashboard() -> str:
     """获取治理仪表板数据。
 
+    ⚠️ 数据直读 .omo/state/system.yaml + debt-dashboard/, 绕过 Agora 审计/缓存层。
+    推荐路径: Agora :7431 → resolve_bos_uri("bos://governance/omo/state")
+
     Returns:
         仪表板数据 JSON (健康度、债务、趋势、项目状态)
     """
@@ -907,6 +914,7 @@ def governance_dashboard() -> str:
 
         return json.dumps(
             {
+                "source": "direct_read_not_audited",
                 "health_score": data.get("health_score", 0),
                 "debt_weight": data.get("debt_weight", 0),
                 "debt_health": data.get("debt_metrics", {}).get("debt_health", 0),
@@ -924,6 +932,8 @@ def governance_dashboard() -> str:
 @_tool()
 def governance_history(days: int = 30) -> str:
     """获取治理历史数据。
+
+    ⚠️ 数据直读 debt-dashboard/, 绕过 Agora 审计层。
 
     Args:
         days: 查询天数 (默认 30)
@@ -955,6 +965,7 @@ def governance_history(days: int = 30) -> str:
 
         return json.dumps(
             {
+                "source": "direct_read_not_audited",
                 "days": days,
                 "total": len(trend_data),
                 "data": trend_data,
@@ -977,6 +988,13 @@ def main() -> None:
     新方式: Agent 通过 agora MCP (:7431) 的 resolve_bos_uri("bos://cockpit/context") 访问。
     向后兼容期: 保留此 stdio 入口至 Phase 4 完成。
     """
+    import warnings
+    warnings.warn(
+        "cockpit stdio MCP 已 deprecated, 请改用 Agora MCP (:7431) 的 "
+        'resolve_bos_uri("bos://cockpit/context"), Phase 4 后移除',
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if not HAS_FASTMCP or mcp is None:
         print("错误: 需安装 fastmcp 才能运行 MCP server", file=sys.stderr)
         sys.exit(1)
@@ -989,9 +1007,16 @@ if __name__ == "__main__":
 
 @_tool()
 def github_pr_review(pr_url: str = "") -> str:
-    """直接打通 GitHub PR Review（模拟）。
+    """GitHub PR Review（MOCK — 非真实 API 调用）。
 
-    分析指定的 PR URL 并返回代码审查报告。
+    ⚠️ 此工具返回硬编码 mock 数据, 仅供占位/测试。
+    如需真实 PR review, 请直接调用 GitHub API。
+
+    Args:
+        pr_url: PR URL (mock 模式下仅用于回显)
+
+    Returns:
+        硬编码的审查报告 JSON, 标记 _mock=true
     """
     import json
 
@@ -1000,6 +1025,8 @@ def github_pr_review(pr_url: str = "") -> str:
 
     return json.dumps(
         {
+            "_mock": True,
+            "_warning": "硬编码 mock 数据, 非真实 GitHub API 调用",
             "pr_url": pr_url,
             "status": "reviewed",
             "score": 85,
