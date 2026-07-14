@@ -453,10 +453,10 @@ def _ensure_backends_registered() -> None:
             "Runtime project lifecycle orchestrator (INIT→DELIVERY)",
         ),
         (
-            "metaos.core.workflow",
-            "run",
+            "ecos.workflow.backends.metaos",
+            "execute",
             "metaos",
-            "MetaOS DAG workflow engine (asyncio)",
+            "MetaOS DAG backend via fabric adapter (preflight-gated, ADR-0181)",
         ),
         # Dynamic (LLM-driven) — ecos 内置
         (

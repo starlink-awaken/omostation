@@ -50,6 +50,9 @@ mof-contract-lint = "ecos.ssot.tools.mof_contract_lint:main"
 # Real subprocess --json output (NOT mock, Phase 3 C2 adjustment)
 mof-contract-agent = "ecos.ssot.agents.mof_contract_agent:main"
 
+# ADR-0181 Phase 3 — logical partition import gate
+ecos-partition-lint = "ecos.ssot.tools.partition_import_lint:main"
+
 # Phase 3 agent entry-points (Phase 3 C1: use ecos.agents NOT qoder.agents)
 # Standard setuptools entry-points for AI agent discovery
 [project.entry-points."ecos.agents"]

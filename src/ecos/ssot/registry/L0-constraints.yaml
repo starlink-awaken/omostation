@@ -68,12 +68,15 @@ constraints:
 - applies_to:
   - I0
   - L2
-  description: agora.ProxyManager 注册新路由前，必须通过 metaos 颁发的五大部件准入控制
+  description: >
+    Agora 注册新路由前必须通过 AdmissionPort 准入控制（五大部件义务）。
+    实现由 I0 SPI / BOS 绑定（realized_by），L0 不点名具体实现类。
   dimension: X1
   id: CR-ADMISSION-01
-  rule: bos_route.registration implies metaos.evaluate_admission(bos_route.metadata).status == 'admitted'
+  rule: bos_route.registration implies admission.evaluate(bos_route.metadata).status == 'admitted'
+  realized_by: "agora.admission.AdmissionPort"
   type: required
-  violation: 'E-L0-016: 未经 MetaOS 准入的黑户服务尝试接入 Agora'
+  violation: 'E-L0-016: 未经 AdmissionPort 准入的黑户服务尝试接入 Agora'
 - applies_to:
   - I0
   description: Agora register 是唯一写操作入口
