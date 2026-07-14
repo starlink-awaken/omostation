@@ -270,8 +270,10 @@ conflicts_resolved:
   - agora
   - kairon
   7430:
+  # agora owns the listener; omo/cockpit are clients (AGORA_*_PORT / health probes)
   - agora
   - omo
+  - cockpit
   7431:
   - agora
   - cockpit
