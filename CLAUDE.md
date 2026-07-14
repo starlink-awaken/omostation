@@ -25,7 +25,7 @@
 > - [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) — find ADRs, audits, patterns
 > - [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) — find skills and agent setup
 
-> **This file is a navigation layer only.** It does not duplicate project counts, ports, service inventories, test counts, phase, health scores, layer tables, or rule registries. Hard-coding those violates `doc-ssot-contract` and fails `bin/doc-ssot-lint.py`.
+> **This file is a navigation layer only.** It does not duplicate project counts, ports, service inventories, test counts, phase, health scores, layer tables, or rule registries. Hard-coding those violates `doc-ssot-contract` and fails `bin/ssot/doc-ssot-lint.py`.
 
 ## 1. Startup Protocol
 
