@@ -4,7 +4,7 @@
 cron 入口 .omo/cron/gac-crontab 已落 0 7 * * * feedback-loop-guard +
 15 7 * * * mypy-baseline-gate. 本测试锁两条:
   - .omo/cron/gac-crontab 含 mypy-baseline-gate 调度行
-  - bin/mypy-baseline-gate 在干净 workspace 上 exit 0
+  - bin/ssot/mypy-baseline-gate 在干净 workspace 上 exit 0
   - 当 mypy baseline 越界时, gate 正确 exit 1
 """
 
@@ -18,7 +18,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 CRONTAB = ROOT / ".omo" / "cron" / "gac-crontab"
-MYPY_GATE = ROOT / "bin" / "mypy-baseline-gate"
+MYPY_GATE = ROOT / "bin" / "ssot" / "mypy-baseline-gate"
 
 
 class TestCrontabWiring:
@@ -98,7 +98,7 @@ class TestCronExecutionSimulation:
 
     def test_feedback_loop_guard_runs_in_workspace(self):
         result = subprocess.run(
-            [sys.executable, str(ROOT / "bin" / "feedback-loop-guard.py"), "--check"],
+            [sys.executable, str(ROOT / "bin" / "gac" / "feedback-loop-guard.py"), "--check"],
             cwd=ROOT, capture_output=True, text=True, timeout=30, check=False,
         )
         # 不管 exit (可能 0 或 1 取决于当前 working tree),

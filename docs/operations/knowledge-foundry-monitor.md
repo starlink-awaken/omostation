@@ -12,7 +12,7 @@ related:
 # Knowledge Foundry Monitor (cockpit L3 出口) — P76 Phase 6
 
 > **For agentic workers**: 本文档是 DRAFT, 是 P76 Phase 6 真正集成的 cockpit 面板文档。
-> 数据由 `bin/knowledge-foundry-cron.py` 写入 `runtime/omo/_delivery/foundry/` 派生面 (gitignored)。
+> 数据由 `bin/gac/knowledge-foundry-cron.py` 写入 `runtime/omo/_delivery/foundry/` 派生面 (gitignored)。
 > 来源命令: `cockpit governance evolution foundry --json` (Phase 7 实施)
 
 ## 0. 总览 — 单页 dashboard
@@ -99,7 +99,7 @@ cockpit governance evolution foundry status --json
 
 - ADR-0160 (本 phase 主 ADR)
 - docs/architecture/knowledge-foundry-cron.md (Phase 5 雏形)
-- bin/knowledge-foundry-cron.py (实施)
+- bin/gac/knowledge-foundry-cron.py (实施)
 - CR-FOUNDRY-MONITOR 规则 (162 rules)
 
 ---

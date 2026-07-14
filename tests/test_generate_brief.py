@@ -9,7 +9,7 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location(
-    "generate_brief", str(WORKSPACE / "bin" / "generate-brief.py")
+    "generate_brief", str(WORKSPACE / "bin" / "mof" / "generate-brief.py")
 )
 generate_brief = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(generate_brief)

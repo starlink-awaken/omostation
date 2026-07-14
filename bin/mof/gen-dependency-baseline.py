@@ -22,8 +22,8 @@ drift 类型:
     本工具做"生成 + drift 检测", 写入由 broker 流程消费 --dry-run 输出.
 
 用法:
-  python bin/gen-dependency-baseline.py --check       # 报 drift, 有 drift exit 1 (CI 友好)
-  python bin/gen-dependency-baseline.py --dry-run     # 打印推导 baseline
+  python bin/mof/gen-dependency-baseline.py --check       # 报 drift, 有 drift exit 1 (CI 友好)
+  python bin/mof/gen-dependency-baseline.py --dry-run     # 打印推导 baseline
 """
 from __future__ import annotations
 
@@ -354,7 +354,7 @@ def main() -> int:
             print(f"  ⚠️  MISMATCHED ({len(drift['mismatched'])}): baseline 与 pyproject 下限不一致")
             for d in drift["mismatched"][:10]:
                 print(f"     - {d['name']}: baseline={d['current']} vs derived={d['derived']}")
-        print("\n修复: python bin/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml")
+        print("\n修复: python bin/mof/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml")
         return 1
 
     return 0

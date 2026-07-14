@@ -17,6 +17,13 @@
   - stable architecture → [`ARCHITECTURE.md`](ARCHITECTURE.md) / [`LAYER-INDEX.md`](LAYER-INDEX.md)
   - operating rules → [`AGENTS.md`](AGENTS.md) + this file
   - front-door entry → [`README.md`](README.md)
+  - **system navigation** → [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) (NEW: unified navigation hub)
+
+> **First Stop**: Read [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) to understand the workspace structure, then use the specialized indexes:
+> - [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) — find projects by layer/stack
+> - [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) — find tools and scripts
+> - [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) — find ADRs, audits, patterns
+> - [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) — find skills and agent setup
 
 > **This file is a navigation layer only.** It does not duplicate project counts, ports, service inventories, test counts, phase, health scores, layer tables, or rule registries. Hard-coding those violates `doc-ssot-contract` and fails `bin/doc-ssot-lint.py`.
 

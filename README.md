@@ -56,6 +56,11 @@ cd projects/gbrain && bun test
 
 | Document | Purpose |
 |----------|---------|
+| **[`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md)** | **NEW: Unified navigation hub - START HERE** |
+| [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) | Project index by layer/stack |
+| [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) | Tools and scripts index |
+| [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) | ADRs, audits, patterns index |
+| [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) | Agent skills and setup index |
 | [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
 | [`CLAUDE.md`](CLAUDE.md) | AI session context loader |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stable architecture contracts |
@@ -129,6 +134,11 @@ cd projects/gbrain && bun test
 
 | 文档 | 用途 |
 |------|------|
+| **[`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md)** | **全新: 统一导航中心 - 从这里开始** |
+| [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) | 按层/栈的项目索引 |
+| [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) | 工具和脚本索引 |
+| [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) | ADR、审计、模式索引 |
+| [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) | Agent 技能和设置索引 |
 | [`AGENTS.md`](AGENTS.md) | Agent / 开发者操作指南 |
 | [`CLAUDE.md`](CLAUDE.md) | AI 会话上下文加载器 |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | 稳定架构契约 |

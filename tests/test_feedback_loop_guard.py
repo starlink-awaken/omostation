@@ -1,4 +1,4 @@
-"""Tests for bin/feedback-loop-guard.py — P0 自反馈闭环监控.
+"""Tests for bin/gac/feedback-loop-guard.py — P0 自反馈闭环监控.
 
 任务: TASK-26348641
 覆盖:
@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = ROOT / "bin" / "feedback-loop-guard.py"
+MODULE_PATH = ROOT / "bin" / "gac" / "feedback-loop-guard.py"
 
 
 def _load_module():
