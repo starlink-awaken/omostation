@@ -1,20 +1,19 @@
 """Agora MCP Server — unified entry point for all services.
 
 工具分组 (35 tools → BOS/extracted to tools_bos.py, API Keys extracted to tools_api_keys.py):
-  ┌─ Proxy Tools      :  proxy_connect/call/status/list/add/remove
-  ├─ Registry Tools   :  register_service
-  ├─ Routing Tools    :  list_services, check_health, add_route, route_call
-  ├─ Event Tools      :  publish/subscribe/get_event_log
-  ├─ Audit Tools      :  audit_query, audit_stats
-  ├─ API Key Tools    :  extracted → server/tools_api_keys.py  ✅
+  ┌─ Proxy Tools      :  extracted → server/tools_proxy.py  ✅
+  ├─ Registry Tools   :  extracted → server/tools_registry.py  ✅
   ├─ BOS Tools        :  extracted → server/tools_bos.py  ✅
+  ├─ API Key Tools    :  extracted → server/tools_api_keys.py  ✅
   ├─ A2A Task Tools   :  a2a_send/get/cancel/list_tasks/push_notification
   ├─ State Tools      :  get_state_transitions
   ├─ Agent Cards      :  list/get_agent_card
   ├─ Repo Tools       :  repo_search/discover/status/install/load/unload/pipeline
-  ├─ Lifecycle Tools  :  lifecycle_status/start_watch/stop_watch/load_all/unload_all
-  └─ Execution        :  agora_execute
+  ├─ Resources        :  agora_registry / agora_status / {domain}/{package}/{action}
+  ├─ Execution        :  agora_execute (行 808)
+  └─ AuditSubscriber  :  审计事件订阅 (内部组件, 非 MCP tool)
 
+待拆分: AuditSubscriber / A2A / Repo → 独立 tools_*.py
 拆分计划: docs/god-module-split-plan.md
 """
 
