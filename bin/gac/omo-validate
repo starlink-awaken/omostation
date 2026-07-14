@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""OMO 验证工具 — 验证 .omo 目录完整性和一致性"""
+
+import sys
+from pathlib import Path
+
+import yaml
+
+OMO_DIR = Path(__file__).parent.parent / ".omo"
+M1_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
+
+
+def load_m1_governance() -> list[dict]:
+    """加载所有 M1 治理节点"""
+    nodes = []
+    gov_dir = M1_DIR / "governance"
+    if not gov_dir.exists():
+        return nodes
+    for yaml_file in gov_dir.glob("GOV-OMO-*.yaml"):
+        try:
+            data = yaml.safe_load(yaml_file.read_text())
+            if isinstance(data, dict) and "id" in data:
+                nodes.append(data)
+        except Exception:
+            pass
+    return nodes
+
+
+def validate_completeness() -> dict:
+    """验证 .omo 目录完整性"""
+    gov_nodes = load_m1_governance()
+    
+    # Expected .omo directories
+    expected_dirs = {
+        "_archive": "归档",
+        "_control": "控制面",
+        "_delivery": "交付面",
+        "_knowledge": "知识面",
+        "_truth": "事实面",
+        "change-log": "变更日志",
+        "cron": "定时任务",
+        "debt": "技术债务",
+        "evidence": "证据",
+        "goals": "目标",
+        "standards": "标准",
+        "state": "状态",
+        "tasks": "任务",
+        "tests": "测试",
+        "workers": "工作者",
+    }
+    
+    # Check coverage
+    covered = set()
+    for node in gov_nodes:
+        path = node.get("path", "")
+        if path.startswith(".omo/"):
+            dir_name = path.replace(".omo/", "").rstrip("/")
+            covered.add(dir_name)
+    
+    missing = set(expected_dirs.keys()) - covered
+    
+    return {
+        "total_dirs": len(expected_dirs),
+        "covered": len(covered),
+        "missing": list(missing),
+        "coverage_pct": len(covered) / len(expected_dirs) * 100 if expected_dirs else 0,
+    }
+
+
+def validate_references() -> list[dict]:
+    """验证引用完整性"""
+    issues = []
+    
+    # Check if key files exist
+    key_files = [
+        "state/system.yaml",
+        "state/health.yaml",
+        "goals/current.yaml",
+        "_truth/INDEX.md",
+        "_truth/registry/mof-capabilities.yaml",
+        "standards/omo-governance-surfaces.md",
+    ]
+    
+    for f in key_files:
+        path = OMO_DIR / f
+        if not path.exists():
+            issues.append({
+                "type": "missing_file",
+                "severity": "high",
+                "message": f"Key file missing: {f}",
+            })
+    
+    return issues
+
+
+def validate_state() -> list[dict]:
+    """验证状态一致性"""
+    issues = []
+    
+    system_yaml = OMO_DIR / "state" / "system.yaml"
+    if system_yaml.exists():
+        import time
+        mtime = system_yaml.stat().st_mtime
+        age_hours = (time.time() - mtime) / 3600
+        if age_hours > 24:
+            issues.append({
+                "type": "stale_state",
+                "severity": "medium",
+                "message": f"system.yaml is {age_hours:.1f}h old (>24h)",
+            })
+    
+    return issues
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: omo-validate <command>")
+        print("Commands: completeness, references, state, all")
+        sys.exit(1)
+    
+    command = sys.argv[1]
+    
+    if command == "completeness":
+        result = validate_completeness()
+        print("=== .omo 完整性验证 ===\n")
+        print(f"总目录: {result['total_dirs']}")
+        print(f"已覆盖: {result['covered']}")
+        print(f"覆盖率: {result['coverage_pct']:.1f}%")
+        if result["missing"]:
+            print(f"\n未覆盖:")
+            for m in result["missing"]:
+                print(f"  ❌ {m}")
+    
+    elif command == "references":
+        issues = validate_references()
+        print("=== .omo 引用验证 ===\n")
+        if not issues:
+            print("✅ All key files exist.")
+        else:
+            for issue in issues:
+                print(f"[{issue['severity'].upper()}] {issue['message']}")
+    
+    elif command == "state":
+        issues = validate_state()
+        print("=== .omo 状态验证 ===\n")
+        if not issues:
+            print("✅ State is fresh.")
+        else:
+            for issue in issues:
+                print(f"[{issue['severity'].upper()}] {issue['message']}")
+    
+    elif command == "all":
+        print("=== .omo 全面验证 ===\n")
+        
+        result = validate_completeness()
+        print(f"完整性: {result['covered']}/{result['total_dirs']} ({result['coverage_pct']:.1f}%)")
+        if result["missing"]:
+            print(f"  未覆盖: {', '.join(result['missing'])}")
+        
+        issues = validate_references()
+        print(f"\n引用: {len(issues)} issues")
+        
+        state_issues = validate_state()
+        print(f"状态: {len(state_issues)} issues")
+        
+        total_issues = len(issues) + len(state_issues)
+        if total_issues == 0:
+            print("\n✅ All checks passed.")
+        else:
+            print(f"\n🔴 {total_issues} issues found.")
+    
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

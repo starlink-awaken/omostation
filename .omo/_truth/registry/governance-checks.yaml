@@ -1813,7 +1813,7 @@ gac:
       layer: meta
       check_type: drift_audit
       executor: ['ci_gate', 'radar_cron']
-      enforcement: "bin/gac-m1-sync.py (drift 检测) + gac-healthcheck.py 第13项"
+      enforcement: "bin/gac/gac-m1-sync.py (drift 检测) + bin/gac/gac-healthcheck.py 第13项"
       lifecycle: active
       version: 1.0.0
       created_at: "2026-06-28"
@@ -2063,7 +2063,7 @@ gac:
       adr: "ADR-0106"
     - id: CR-X4-MCPTOOL-IMPL-DRIFT
       source_type: indexed
-      source_ref: "bin/check-mcptool-impl-drift.py"
+      source_ref: "bin/ssot/check-mcptool-impl-drift.py"
       dimension: X4
       layer: meta
       check_type: consistency_drift
@@ -2082,7 +2082,7 @@ gac:
       description: "M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema).覆盖schema:constraint_l0.yaml/m2_base_schema.yaml/m3-meta.yaml/mof_driven.py"
       check_type: audit_chain
       target: projects/ecos/src/ecos/ssot/mof/
-      source_ref: bin/mof-bootstrap.py::all
+      source_ref: bin/mof/mof-bootstrap.py::all
       executor: [hook_pre_edit, ci_gate, gac_local_gate]
       enforcement: required
       lifecycle: active
@@ -2098,7 +2098,7 @@ gac:
       description: "M4 健康分:mof-validate(60%)/5-check(30%)/meta(5%)/ADR(5%).退化告警."
       check_type: freshness
       target: projects/ecos/.omo/_derived/m4-health.json
-      source_ref: bin/m4-health-score.py::emit
+      source_ref: bin/mof/m4-health-score.py::emit
       executor: [radar_cron, omo_audit]
       enforcement: advisory
       lifecycle: active
@@ -2114,7 +2114,7 @@ gac:
       description: "检测3类:submodule-dirty/tracked-derived/pointer-stale.每周cron."
       check_type: audit_chain
       target: .gitignore
-      source_ref: bin/check-submodule-hygiene.py::strict
+      source_ref: bin/ssot/check-submodule-hygiene.py::strict
       executor: [radar_cron, gac_local_gate]
       enforcement: preferred
       lifecycle: active
@@ -2130,7 +2130,7 @@ gac:
       description: "MCPTOOL单工具yaml校验tool_name+server非空.集合yaml跳过(ADR-0145)."
       check_type: consistency_drift
       target: projects/ecos/src/ecos/ssot/mof/m1/mcptool/
-      source_ref: bin/mcp-tool-data-complete.py
+      source_ref: bin/gac/mcp-tool-data-complete.py
       executor: [ci_gate, gac_local_gate]
       enforcement: required
       lifecycle: active
@@ -2146,7 +2146,7 @@ gac:
       description: "派生面应gitignored不占用SSOT.验证DERIVED_PATHS列表."
       check_type: ssot_pointer
       target: .omo/_derived/
-      source_ref: bin/omo-state-cleanup.py::audit
+      source_ref: bin/gac/omo-state-cleanup.py::audit
       executor: [omo_audit, radar_cron]
       enforcement: advisory
       lifecycle: active
@@ -2162,7 +2162,7 @@ gac:
       description: "防止 L2 引擎小环形成.允许方向: L3->{I0,L1,L2,M0,L4}; I0->{L0,M0}; L4->{L0}; L2->{L0,I0,L2}; L1->{L0}; X->{ANY}.禁止: L0/M0->project; L1->L2; L2->L3/L4; I0->L2; X->X。"
       check_type: consistency_drift
       target: "projects/*/src/**"
-      source_ref: bin/check-layer-call-direction.py
+      source_ref: bin/ssot/check-layer-call-direction.py
       enforcement: advisory
       executor: [omo_audit, radar_cron, gac_local_gate]
       lifecycle: active
@@ -2177,8 +2177,8 @@ gac:
       name: "debt-closed-per-feature 指标"
       description: "每交付 1 feature 必须关闭 ≥ 0.5 debt (issued). 治理 score 才能真与开发节奏挂钩. 公式: resolved_count_30d / feat_count_30d. threshold=0.5."
       check_type: drift_audit
-      target: "bin/debt-closed-per-feature.py"
-      source_ref: bin/debt-closed-per-feature.py::main
+      target: "bin/gac/debt-closed-per-feature.py"
+      source_ref: bin/gac/debt-closed-per-feature.py::main
       executor: [radar_cron, omo_audit]
       enforcement: advisory
       lifecycle: active
@@ -2196,8 +2196,8 @@ gac:
         radar_cron 报 [advisory]; 24h 未修正 升 [hard]. 治 P76 矛盾 3.
         实施: bin/submodule-bump-check.py.
       check_type: drift_audit
-      target: "bin/submodule-bump-check.py"
-      source_ref: bin/submodule-bump-check.py::main
+      target: "bin/ssot/submodule-bump-check.py"
+      source_ref: bin/ssot/submodule-bump-check.py::main
       executor: [radar_cron, ci_gate, gac_local_gate]
       enforcement: advisory
       lifecycle: active
@@ -2233,8 +2233,8 @@ gac:
         threshold: 9 deck 中 ≥ 7/9 (80%) ok. 跨 deck fail 必须写 FAIL-<run-id>.yaml.
         实施: bin/knowledge-foundry-cron.py
       check_type: drift_audit
-      target: "bin/knowledge-foundry-cron.py"
-      source_ref: bin/knowledge-foundry-cron.py::main
+      target: "bin/gac/knowledge-foundry-cron.py"
+      source_ref: bin/gac/knowledge-foundry-cron.py::main
       executor: [radar_cron, omo_audit, gac_local_gate]
       enforcement: advisory
       lifecycle: active
@@ -2248,13 +2248,13 @@ gac:
       layer: meta
       name: "LLM-assisted commit (advisory 硬门)"
       description: |
-        LLM 永远不能 auto-commit. 必须通过 bin/commit-assist.py, 必须 write .commit-suggestion (侧车)
+        LLM 永远不能 auto-commit. 必须通过 bin/gac/commit-assist.py, 必须 write .commit-suggestion (侧车)
         然后用户显式 git commit -F .commit-suggestion 接受.
         LLM 3-tier: aetherforge → ollama → heuristic (任一可用即可).
         网关失败 fallback: --no-llm 硬门 (永不阻塞 PR).
       check_type: drift_audit
-      target: "bin/commit-assist.py"
-      source_ref: bin/commit-assist.py::query_llm
+      target: "bin/gac/commit-assist.py"
+      source_ref: bin/gac/commit-assist.py::query_llm
       executor: [omo_audit, gac_local_gate]
       enforcement: advisory
       lifecycle: active
@@ -2271,10 +2271,10 @@ gac:
         对比 projects/agora/etc/bos-services.yaml (BOS URI SSOT) 与 projects/*/src/ 中
         bos:// 引用. unregistered (referenced but not in SSOT) 应 = 0 (Phase 3 治本, hard).
         同步检查 ecos port-registry 与各仓 port 声明.
-        实施: bin/check-cross-repo-consistency.py
+        实施: bin/ssot/check-cross-repo-consistency.py
       check_type: consistency_drift
-      target: "bin/check-cross-repo-consistency.py"
-      source_ref: bin/check-cross-repo-consistency.py::main
+      target: "bin/ssot/check-cross-repo-consistency.py"
+      source_ref: bin/ssot/check-cross-repo-consistency.py::main
       executor: [radar_cron, omo_audit, ci_gate, gac_local_gate]
       enforcement: error
       lifecycle: active
@@ -2339,13 +2339,13 @@ gac:
       layer: meta
       name: "跨仓 unregistered 阈值守门 (hard, P77 Phase 3 治本后 threshold=0)"
       description: |
-        bin/check-cross-repo-consistency.py unregistered ≤ threshold (默认 0, Phase 3 治本后).
+        bin/ssot/check-cross-repo-consistency.py unregistered ≤ threshold (默认 0, Phase 3 治本后).
         Phase 3 (W5-6) 治本完成: 17 unregistered 全部补登 SSOT, threshold 0 升 hard enforcement.
         注: 这是更晚粒度的守门 — 与 CR-CROSS-REPO-CONSISTENT (P77 Phase 1 detector) 协同.
         CONSISTENT 是 detector 本身存在性, CHECK 是 detector output 的阈值.
       check_type: consistency_drift
-      target: "bin/check-cross-repo-consistency.py"
-      source_ref: bin/check-cross-repo-consistency.py::main
+      target: "bin/ssot/check-cross-repo-consistency.py"
+      source_ref: bin/ssot/check-cross-repo-consistency.py::main
       executor: [radar_cron, ci_gate, gac_local_gate]
       enforcement: error
       lifecycle: active
@@ -2389,10 +2389,10 @@ gac:
         --env-var-check 模式: env-only 类型端口 (7422/7456/8090) 裸硬编码 → warning.
         5 LEGACY_OK_PORTS 豁免 (1234 LM Studio / 3000+3001 family-hub /
         4318 otel / 5173 vite).
-        实施: bin/check-hardcoded-ports.py
+        实施: bin/ssot/check-hardcoded-ports.py
       check_type: consistency_drift
-      target: "bin/check-hardcoded-ports.py"
-      source_ref: bin/check-hardcoded-ports.py::main
+      target: "bin/ssot/check-hardcoded-ports.py"
+      source_ref: bin/ssot/check-hardcoded-ports.py::main
       executor: [radar_cron, ci_gate, gac_local_gate]
       enforcement: advisory
       lifecycle: active
@@ -2436,10 +2436,10 @@ gac:
         扫 bin/ .githooks/ 和 projects/*/src/ 中 env-only 类型端口
         (types: env-only, 当前: 7422/7456/8090) 是否仍作为字面量硬编码.
         P77-7-3 env-only-enforcement: env-only 端口必须通过 env var 引用.
-        实施: bin/migrate-port-env-var.py --json (scan mode)
+        实施: bin/gac/migrate-port-env-var.py --json (scan mode)
       check_type: consistency_drift
-      target: "bin/migrate-port-env-var.py"
-      source_ref: bin/migrate-port-env-var.py::main
+      target: "bin/gac/migrate-port-env-var.py"
+      source_ref: bin/gac/migrate-port-env-var.py::main
       executor: [ci_gate, gac_local_gate]
       enforcement: advisory
       lifecycle: active
@@ -2455,7 +2455,7 @@ gac:
       description: |
         扫 projects/*/src/ 中 status: deprecated 端口 (8765, 9090) 的代码引用.
         deprecated 端口不应在新代码中使用；已有引用应迁移到对应活跃端口.
-        实施: bin/check-hardcoded-ports.py (detects all ports)
+        实施: bin/ssot/check-hardcoded-ports.py (detects all ports)
       check_type: consistency_drift
       target: "protocols/port-registry.yaml::ports.*.status=deprecated"
       source_ref: protocols/port-registry.yaml::deprecated

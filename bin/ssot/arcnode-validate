@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+"""arcnode-validate — arcnode 约束验证统一入口
+
+用法:
+  arcnode validate --all       # 运行所有验证
+  arcnode validate --changed   # 仅验证 git 变更文件
+
+退出码: 0 = 全部通过, 1 = 存在失败
+"""
+
+from __future__ import annotations
+
+import glob
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+# ── 配置 ───────────────────────────────────────────────────────────────────
+
+SCRIPTS_DIR = Path(
+    os.environ.get("ARCNODE_SCRIPTS_DIR") or
+    Path.home() / ".hermes" / "scripts"
+)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+# ── 脚本分类 ───────────────────────────────────────────────────────────────
+
+def categorize_script(name: str) -> str:
+    """根据文件名判断脚本类型。"""
+    if name.startswith("validate-A"):
+        return "agent"      # 需要 agent YAML 文件路径
+    if name.startswith("validate-EG"):
+        return "engineering"  # 需要项目根目录
+    if name.startswith("validate-R"):
+        return "pricing"    # 无参数（硬编码路径）
+    return "unknown"
+
+
+def find_agent_yamls(root: Path) -> list[Path]:
+    """在项目中查找所有 agent YAML 声明文件。"""
+    patterns = [
+        "**/agent_identity.yaml",
+        "**/agent-identity.yaml",
+        "**/identity.yaml",
+        "**/*agent*.yml",
+        "**/*agent*.yaml",
+    ]
+    found: list[Path] = []
+    for pat in patterns:
+        found.extend(root.glob(pat))
+    # 去重
+    seen = set()
+    unique = []
+    for p in found:
+        resolved = str(p.resolve())
+        if resolved not in seen:
+            seen.add(resolved)
+            unique.append(p)
+    return unique
+
+
+# ── 运行器 ─────────────────────────────────────────────────────────────────
+
+def run_all() -> int:
+    """运行全部验证脚本。"""
+    scripts = sorted(SCRIPTS_DIR.glob("validate-*"))
+    if not scripts:
+        print(f"⚠ 未在 {SCRIPTS_DIR} 找到验证脚本", file=sys.stderr)
+        return 0
+
+    # 预查找 agent YAML 文件
+    agent_yamls = find_agent_yamls(PROJECT_ROOT)
+
+    results: list[tuple[str, bool]] = []
+    total = 0
+    passed = 0
+    failed = 0
+
+    for script_path in scripts:
+        name = script_path.name
+        category = categorize_script(name)
+
+        print(f"\n── [{name}] ──")
+
+        if category == "engineering":
+            # EG 系列: 传入项目根目录
+            cmd = [sys.executable, str(script_path), str(PROJECT_ROOT)]
+        elif category == "agent":
+            # A 系列: 需要 YAML 文件
+            if not agent_yamls:
+                print(f"  ⚠ 未找到 agent YAML 文件，跳过")
+                results.append((name, True))
+                continue
+            # 对每个 YAML 文件运行验证
+            yaml_ok = True
+            for yaml_path in agent_yamls:
+                rel = yaml_path.relative_to(PROJECT_ROOT)
+                cmd = [sys.executable, str(script_path), str(yaml_path)]
+                r = subprocess.run(cmd, capture_output=True, text=True)
+                out = (r.stdout + r.stderr).strip()
+                if out:
+                    for line in out.split("\n"):
+                        print(f"  [{rel}] {line}")
+                if r.returncode != 0:
+                    yaml_ok = False
+                    if r.returncode != 2:  # 非参数错误
+                        failed += 1
+            results.append((name, yaml_ok))
+            total += 1
+            if yaml_ok:
+                passed += 1
+            continue
+        elif category == "pricing":
+            # R 系列: 无需参数
+            cmd = [sys.executable, str(script_path)]
+        else:
+            print(f"  ⚠ 未知分类，跳过")
+            results.append((name, True))
+            continue
+
+        # 执行命令
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        out = (r.stdout + r.stderr).strip()
+        if out:
+            for line in out.split("\n"):
+                print(f"  {line}")
+
+        ok = r.returncode == 0
+        results.append((name, ok))
+        total += 1
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+
+    # ── 汇总 ──────────────────────────────────────────────────────────
+    print(f"\n{'=' * 40}")
+    print(f"结果: {passed}/{total} 通过, {failed} 失败")
+    if failed > 0:
+        for name, ok in results:
+            if not ok:
+                print(f"  ❌ {name}")
+        return 1
+    print("  ✅ 全部通过")
+    return 0
+
+
+def run_changed() -> int:
+    """仅对 Git 变更文件运行验证。"""
+    scripts = sorted(SCRIPTS_DIR.glob("validate-*"))
+    if not scripts:
+        print(f"⚠ 未在 {SCRIPTS_DIR} 找到验证脚本", file=sys.stderr)
+        return 0
+
+    # 获取 git 暂存区变更
+    r = subprocess.run(
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
+        capture_output=True, text=True, cwd=PROJECT_ROOT,
+    )
+    changed_files = [f for f in r.stdout.strip().split("\n") if f]
+
+    if not changed_files:
+        print("✓ 无待验证的变更文件")
+        return 0
+
+    changed_py = [f for f in changed_files if f.endswith((".py", ".yaml", ".yml", ".json", ".toml"))]
+    if not changed_py:
+        print("✓ 变更文件不在验证范围内")
+        return 0
+
+    print(f"变更文件 ({len(changed_py)}):")
+    for f in changed_py:
+        print(f"  • {f}")
+
+    # 对变更项目根运行全量 EG 验证
+    eg_scripts = [s for s in scripts if s.name.startswith("validate-EG")]
+    if eg_scripts:
+        print(f"\n── Engineering Gate 验证 ──")
+
+    total = 0
+    passed = 0
+    failed = 0
+
+    for script_path in eg_scripts:
+        name = script_path.name
+        cmd = [sys.executable, str(script_path), str(PROJECT_ROOT)]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        out = (r.stdout + r.stderr).strip()
+        if out:
+            for line in out.split("\n"):
+                print(f"  [{name}] {line}")
+        total += 1
+        if r.returncode == 0:
+            passed += 1
+        else:
+            failed += 1
+
+    print(f"\n结果: {passed}/{total} 通过, {failed} 失败")
+    return 1 if failed > 0 else 0
+
+
+# ── CLI ────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    args = [a for a in sys.argv[1:] if not a.startswith("--constraint")]
+
+    if (
+        not args
+        or "-h" in args
+        or "--help" in args
+    ):
+        print(__doc__.strip())
+        sys.exit(0)
+
+    if "--all" in args:
+        sys.exit(run_all())
+    elif "--changed" in args:
+        sys.exit(run_changed())
+    else:
+        print(f"未知选项: {args}", file=sys.stderr)
+        print(f"用法: arcnode validate --all | --changed")
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()

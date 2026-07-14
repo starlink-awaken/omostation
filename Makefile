@@ -125,16 +125,16 @@ ci-local-fast:
 	@echo "════════════════════════════════════════════════════"
 	@CI_LOCAL_FAIL=0; \
 	echo "── GaC local gate ───────────────────────────────────"; \
-	uv run --with pyyaml python bin/gac-local-gate.py 2>&1 | sed 's/^/[gac] /' || CI_LOCAL_FAIL=1; \
+	uv run --with pyyaml python bin/gac/gac-local-gate.py 2>&1 | sed 's/^/[gac] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
 	echo "── dir-hygiene ──────────────────────────────────────"; \
-	uv run --with pyyaml python bin/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
+	uv run --with pyyaml python bin/ssot/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
 	echo "── ruff check (omo + scripts) ──────────────────────"; \
 	ruff check projects/omo/src scripts --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
 	echo "── YAML 语法校验 (workflows + protocols) ───────────"; \
-	uv run --with pyyaml python3 bin/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
+	uv run --with pyyaml python3 bin/ssot/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
 	if [ "$$CI_LOCAL_FAIL" = "1" ]; then \
 		echo "❌ ci-local-fast: 有检查未通过"; \
@@ -178,24 +178,24 @@ agent-workflow-adapters:
 	uv run --with pyyaml python bin/agent-workflow.py adapters
 
 project-layer-index:
-	uv run --with pyyaml python bin/project-layer-index.py --write
+	uv run --with pyyaml python bin/mof/project-layer-index.py --write
 
 domain-m1-alignment:  ## 校验 project-registry.yaml ↔ eCOS M1 domain 节点对齐 (drift 检测)
-	uv run --with pyyaml python bin/check-domain-m1-alignment.py
+	uv run --with pyyaml python bin/ssot/check-domain-m1-alignment.py
 
 toolbox-ssot-check:  ## 校验 ToolBox docs SSOT 契约 (硬编码值检测)
-	uv run --with pyyaml python bin/check-toolbox-ssot.py
+	uv run --with pyyaml python bin/ssot/check-toolbox-ssot.py
 
 gac-local-gate:
-	uv run --with pyyaml python bin/gac-local-gate.py
+	uv run --with pyyaml python bin/gac/gac-local-gate.py
 dir-hygiene:  ## 检查根目录卫生 (未追踪未忽略的目录)
-	uv run --with pyyaml python bin/dir-hygiene-check.py
+	uv run --with pyyaml python bin/ssot/dir-hygiene-check.py
 
 governance-release-gate:
-	uv run --with pyyaml python bin/submodule-reachability-gate.py --source head --fetch
+	uv run --with pyyaml python bin/ssot/submodule-reachability-gate.py --source head --fetch
 
 submodule-pointer-transaction:
-	bash bin/submodule-pointer-transaction.sh --dry-run
+	bash bin/ssot/submodule-pointer-transaction.sh --dry-run
 
 kairon-test:
 	cd projects/kairon && make test
@@ -216,7 +216,7 @@ kairon-build:
 	cd projects/kairon && uv sync
 
 governance-verify:
-	bash bin/verify-omo.sh
+	bash bin/ssot/verify-omo.sh
 
 governance-check: governance-verify governance-index-check
 	@echo "Governance checks complete."
