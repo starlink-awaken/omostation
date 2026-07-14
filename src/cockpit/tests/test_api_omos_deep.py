@@ -87,7 +87,9 @@ Remendiation: scan end"""
         gatekeeper = scripts_dir / "contract_gatekeeper.py"
         gatekeeper.write_text("#!/usr/bin/env python3\nprint('mock')")
 
-        mock_proc = MagicMock(returncode=0, stdout="Gatekeeper: scan start\nNo issues\nRemediation: scan end", stderr="")
+        mock_proc = MagicMock(
+            returncode=0, stdout="Gatekeeper: scan start\nNo issues\nRemediation: scan end", stderr=""
+        )
         with patch("subprocess.run", return_value=mock_proc):
             resp = client.get("/api/omos/violations")
 
@@ -106,18 +108,23 @@ class TestOmosQuestsSQLite:
         db_path.mkdir(parents=True)
         db = db_path / "family_hub.db"
         conn = sqlite3.connect(str(db))
-        conn.execute("CREATE TABLE quests (id INTEGER PRIMARY KEY, title TEXT, type TEXT, reward INTEGER, completed INTEGER, assignee TEXT)")
+        conn.execute(
+            "CREATE TABLE quests (id INTEGER PRIMARY KEY, title TEXT, type TEXT, reward INTEGER, completed INTEGER, assignee TEXT)"
+        )
         conn.commit()
         conn.close()
 
         monkeypatch.setattr("cockpit.web.api_omos._REPO_ROOT", tmp_path)
 
-        resp = client.post("/api/omos/quests", params={
-            "title": "Integration Test Quest",
-            "q_type": "wisdom",
-            "reward": 100,
-            "assignee": "parent",
-        })
+        resp = client.post(
+            "/api/omos/quests",
+            params={
+                "title": "Integration Test Quest",
+                "q_type": "wisdom",
+                "reward": 100,
+                "assignee": "parent",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "ok" or "task_id" in data or "id" in data

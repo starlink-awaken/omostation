@@ -52,22 +52,6 @@ _VIOLATIONS_CACHE_TIME = 0.0
 _VIOLATIONS_TTL = 15.0  # 15秒缓存
 
 
-async def _git_commit_fix_drift():
-    try:
-        import asyncio
-
-        add_proc = await asyncio.create_subprocess_exec(
-            "git", "add", ".omo/state/system.yaml", ".omo/change-log/mutations.jsonl", cwd=str(_REPO_ROOT)
-        )
-        await add_proc.wait()
-        commit_proc = await asyncio.create_subprocess_exec(
-            "git", "commit", "-m", "chore: auto-fix ssot task_count_drift via cockpit-ui", cwd=str(_REPO_ROOT)
-        )
-        await commit_proc.wait()
-    except Exception:
-        pass
-
-
 if router:
 
     @router.get("/status")
@@ -573,15 +557,13 @@ if router:
             proc = await asyncio.to_thread(
                 subprocess.run, ["python3", guardian_path, "--auto-fix"], capture_output=True, text=True
             )
-
-            asyncio.create_task(_git_commit_fix_drift())
-
             return {
                 "status": "ok",
                 "returncode": proc.returncode,
                 "stdout": proc.stdout,
                 "stderr": proc.stderr,
-                "msg": "SSOT 自动修复及状态固化提交完成！"
+                "commit_performed": False,
+                "msg": "SSOT 自动修复完成，变更待人工核对和固化。"
                 if proc.returncode == 0 or "自动修复" in proc.stdout
                 else "修复完成，部分漂移仍需人工核对。",
             }

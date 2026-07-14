@@ -33,11 +33,17 @@ class TestHealthSummary:
         l4_data = {"healthy_count": 8, "total_domains": 10, "domains": [{"signal_count": 5}]}
         services_data = {"today_requests": 42}
 
-        with patch.object(api_health, "run_l4_script", side_effect=[l4_data, services_data]), \
-             patch.object(api_health, "read_runtime_services", return_value=[
-                 {"port_listening": True, "status": "running"},
-                 {"status": "active", "health": "healthy"},
-             ]):
+        with (
+            patch.object(api_health, "run_l4_script", side_effect=[l4_data, services_data]),
+            patch.object(
+                api_health,
+                "read_runtime_services",
+                return_value=[
+                    {"port_listening": True, "status": "running"},
+                    {"status": "active", "health": "healthy"},
+                ],
+            ),
+        ):
             resp = client.get("/api/health/summary")
 
         assert resp.status_code == 200
@@ -50,8 +56,10 @@ class TestHealthSummary:
         assert len(data["degraded_reasons"]) == 0
 
     def test_health_summary_degraded(self, client):
-        with patch.object(api_health, "run_l4_script", side_effect=[None, None]), \
-             patch.object(api_health, "read_runtime_services", return_value=[]):
+        with (
+            patch.object(api_health, "run_l4_script", side_effect=[None, None]),
+            patch.object(api_health, "read_runtime_services", return_value=[]),
+        ):
             resp = client.get("/api/health/summary")
 
         assert resp.status_code == 200
@@ -62,8 +70,10 @@ class TestHealthSummary:
     def test_health_summary_partial(self, client):
         l4_data = {"healthy_count": 5, "total_domains": 10, "domains": []}
 
-        with patch.object(api_health, "run_l4_script", side_effect=[l4_data, None]), \
-             patch.object(api_health, "read_runtime_services", return_value=[]):
+        with (
+            patch.object(api_health, "run_l4_script", side_effect=[l4_data, None]),
+            patch.object(api_health, "read_runtime_services", return_value=[]),
+        ):
             resp = client.get("/api/health/summary")
 
         assert resp.status_code == 200
@@ -85,10 +95,12 @@ class TestHealthSummary:
         assert result == []
 
     def test_read_runtime_services_with_data(self):
-        mock_i0 = MagicMock(return_value=[
-            {"name": "svc1", "status": "running"},
-            {"name": "svc2", "status": "stopped"},
-        ])
+        mock_i0 = MagicMock(
+            return_value=[
+                {"name": "svc1", "status": "running"},
+                {"name": "svc2", "status": "stopped"},
+            ]
+        )
         with patch("cockpit.adapters.runtime.i0_services", mock_i0, create=True):
             result = api_health.read_runtime_services()
         assert len(result) == 2
@@ -110,12 +122,15 @@ class TestKnowledgeAPI:
 
     def test_put(self, client, tmp_path, monkeypatch):
         monkeypatch.setenv("WORKSPACE_ROOT", str(tmp_path))
-        resp = client.post("/api/knowledge/put", json={
-            "slug": "test-card",
-            "title": "Test",
-            "content": "Test content",
-            "tags": ["test"],
-        })
+        resp = client.post(
+            "/api/knowledge/put",
+            json={
+                "slug": "test-card",
+                "title": "Test",
+                "content": "Test content",
+                "tags": ["test"],
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "success"
@@ -135,6 +150,7 @@ class TestSandboxAPI:
 
         import sys
         import types
+
         mock_module = types.ModuleType("runtime.executor.sandbox")
         mock_module.Sandbox = mock_sandbox
         sys.modules["runtime.executor.sandbox"] = mock_module
@@ -149,6 +165,7 @@ class TestSandboxAPI:
             del sys.modules["runtime.executor.sandbox"]
 
     def test_execute_missing_code(self, client):
-        # Without runtime.executor.sandbox module, returns 500 (defensive fallback)
+        # Without runtime.executor.sandbox module, report a clear capability gap.
         resp = client.post("/api/sandbox/execute", json={})
-        assert resp.status_code in (400, 500)
+        assert resp.status_code == 503
+        assert resp.json()["status"] == "unavailable"

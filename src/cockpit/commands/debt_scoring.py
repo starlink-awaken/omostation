@@ -44,7 +44,9 @@ def cmd_debt_score(args: argparse.Namespace) -> int:
     data = result.to_dict()
 
     print("📊 债务评分结果:")
-    print(f"  影响: {data['debt_item']['impact']} | 频率: {data['debt_item']['frequency']} | 成本: {data['debt_item']['cost']}")
+    print(
+        f"  影响: {data['debt_item']['impact']} | 频率: {data['debt_item']['frequency']} | 成本: {data['debt_item']['cost']}"
+    )
     print(f"  项目阶段: {data['project_stage']}")
     print(f"  基础分: {data['calculation']['base_score']}")
     print(f"  归一化分: {data['calculation']['normalized_score']}")

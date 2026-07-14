@@ -215,7 +215,12 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["runtime"]["profile"] in {"service", "library", "cli", "static", "unknown"}
     assert isinstance(cockpit_project["runtime"]["needs_runtime"], bool)
     assert cockpit_project["runtime"]["probe_reason"]
-    assert cockpit_project["runtime"]["latest_verification"]["status"] in {"verified", "failed", "documented", "unknown"}
+    assert cockpit_project["runtime"]["latest_verification"]["status"] in {
+        "verified",
+        "failed",
+        "documented",
+        "unknown",
+    }
     assert "not_applicable_projects" in payload["summary"]
     assert "verification_ready" in payload["project_focus"]["summary"]
     governance_domain = next(domain for domain in payload["feature_domains"] if domain["title"] == "治理与合规")

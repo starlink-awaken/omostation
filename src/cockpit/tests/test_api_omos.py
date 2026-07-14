@@ -20,9 +20,7 @@ class TestOmosStatusHealth:
         """Status endpoint reads system.yaml and health.yaml."""
         omo_dir = tmp_path / ".omo" / "state"
         omo_dir.mkdir(parents=True)
-        (omo_dir / "system.yaml").write_text(
-            "current_phase: P42\nhealth_score: 95\ncompleted_tasks: 100\n"
-        )
+        (omo_dir / "system.yaml").write_text("current_phase: P42\nhealth_score: 95\ncompleted_tasks: 100\n")
         (omo_dir / "health.yaml").write_text(
             "health_score: 90\nanomaly_count: 2\ntotal_tasks: 50\ndone: 40\nplanned: 5\n"
         )

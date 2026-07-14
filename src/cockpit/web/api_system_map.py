@@ -1713,6 +1713,7 @@ def _project_workflow_lifecycle(project_id: str) -> dict[str, Any]:
         },
     }
 
+
 def _commands_from_agents(path: Path, limit: int = 4) -> list[str]:
     text = _read_text(path / "AGENTS.md")
     if not text:
@@ -1805,7 +1806,9 @@ def _runtime_profile(
             "probe_reason": "当前更像库/框架型 Python 项目，主要靠构建与测试验证，而不是常驻服务端口。",
         }
 
-    if "package.json" in manifests and any(token in f"{role_text} {stack_text}" for token in ("ui", "frontend", "前端")):
+    if "package.json" in manifests and any(
+        token in f"{role_text} {stack_text}" for token in ("ui", "frontend", "前端")
+    ):
         return {
             "profile": "static",
             "needs_runtime": False,
@@ -1870,7 +1873,9 @@ def _project_operational_status(project_id: str) -> dict[str, Any]:
     ]
     present_docs = [item for item in doc_files if item["exists"]]
     commands = _commands_from_agents(path)
-    manifests = [{"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PACKAGE_MANIFESTS]
+    manifests = [
+        {"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PACKAGE_MANIFESTS
+    ]
     existing_manifests = [item for item in manifests if item["exists"]]
 
     risks: list[str] = []
@@ -2508,7 +2513,9 @@ def _build_project_focus(projects: list[dict[str, Any]]) -> dict[str, Any]:
             "验证待补证",
             "medium",
             "最近验证失败，或当前连可复制验证方案都还没有。",
-            lambda project: project.get("runtime", {}).get("latest_verification", {}).get("status") in {"failed", "unknown"},
+            lambda project: (
+                project.get("runtime", {}).get("latest_verification", {}).get("status") in {"failed", "unknown"}
+            ),
         ),
         _project_focus_queue(
             projects,
@@ -2527,7 +2534,8 @@ def _build_project_focus(projects: list[dict[str, Any]]) -> dict[str, Any]:
             lambda project: (
                 project.get("operational", {}).get("status") == "ready"
                 and project.get("runtime", {}).get("status") in {"running", "not_applicable"}
-                and project.get("runtime", {}).get("latest_verification", {}).get("status") in {"verified", "documented"}
+                and project.get("runtime", {}).get("latest_verification", {}).get("status")
+                in {"verified", "documented"}
             ),
         ),
     ]

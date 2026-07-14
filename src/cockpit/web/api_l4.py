@@ -80,15 +80,18 @@ async def get_l4_health():
     if data:
         return _live_payload(data)
     else:
-        return _unavailable_payload("health_monitor.py", {
-            "timestamp": "",
-            "total_domains": 0,
-            "document_domains": 0,
-            "domains": [],
-            "healthy_count": 0,
-            "unhealthy_count": 0,
-            "health_rate": "N/A",
-        })
+        return _unavailable_payload(
+            "health_monitor.py",
+            {
+                "timestamp": "",
+                "total_domains": 0,
+                "document_domains": 0,
+                "domains": [],
+                "healthy_count": 0,
+                "unhealthy_count": 0,
+                "health_rate": "N/A",
+            },
+        )
 
 
 @router.get("/api/l4/trend")
@@ -98,12 +101,15 @@ async def get_l4_trend():
     if data:
         return _live_payload(data)
     else:
-        return _unavailable_payload("health_trend.py", {
-            "total_records": 0,
-            "date_range": {"start": None, "end": None},
-            "trends": {},
-            "anomalies": [],
-        })
+        return _unavailable_payload(
+            "health_trend.py",
+            {
+                "total_records": 0,
+                "date_range": {"start": None, "end": None},
+                "trends": {},
+                "anomalies": [],
+            },
+        )
 
 
 @router.get("/api/l4/signals")
@@ -113,10 +119,13 @@ async def get_l4_signals():
     if data:
         return _live_payload(data)
     else:
-        return _unavailable_payload("signal_analysis.py", {
-            "total_signals": 0,
-            "by_domain": {},
-            "by_type": {},
-            "patterns": [],
-            "risks": [],
-        })
+        return _unavailable_payload(
+            "signal_analysis.py",
+            {
+                "total_signals": 0,
+                "by_domain": {},
+                "by_type": {},
+                "patterns": [],
+                "risks": [],
+            },
+        )

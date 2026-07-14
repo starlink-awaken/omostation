@@ -24,12 +24,25 @@ async def api_sandbox_execute(request: Request):
 
         return JSONResponse(
             {
+                "status": "ok",
                 "success": res.success,
                 "duration_ms": res.duration_ms,
                 "stdout": res.stdout,
                 "output": res.output,
                 "error": res.error,
             }
+        )
+    except ModuleNotFoundError as exc:
+        if exc.name != "runtime.executor.sandbox":
+            raise
+        return JSONResponse(
+            {
+                "status": "unavailable",
+                "capability": "sandbox-execution",
+                "error": "KEI sandbox executor is not mounted in the current runtime.",
+                "next_action": "挂载 runtime.executor.sandbox 后再执行实验。",
+            },
+            status_code=503,
         )
     except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
