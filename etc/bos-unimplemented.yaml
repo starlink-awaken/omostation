@@ -23,3 +23,8 @@ unimplemented:
     reason: "IRIS validate 适配层未实现"
     dependency: "kairon/packages/iris"
     target_phase: "P45+"
+
+  - uri: "bos://governance/protocols-layer/trigger"
+    reason: "kairon 无 protocols_layer 包, 声明悬空"
+    dependency: "kairon/packages/protocols_layer"
+    target_phase: "P50+"
