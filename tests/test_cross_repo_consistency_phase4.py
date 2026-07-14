@@ -14,7 +14,7 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "check-cross-repo-consistency.py"), *args],
+         str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"), *args],
         cwd=WORKSPACE, capture_output=True, text=True,
     )
 
@@ -40,7 +40,7 @@ def test_load_protocols_ports():
 
 def test_yaml_comment_stripping():
     """'name  # comment' 解析后应只剩 'name' (修真修真)"""
-    text = (WORKSPACE / "bin" / "check-cross-repo-consistency.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py").read_text()
     assert "_strip_yaml_comment" in text, "helper _strip_yaml_comment must exist"
     # 6 个原本是 conflicts 的应该都变 duplicate (探测)
     r = run(["--json"])
@@ -90,7 +90,7 @@ def test_principle_p77_4_port_consistency():
 
 def test_principle_yaml_comment_strip():
     """P77-4 沉淀: YAML inline comment 解析器必须 strip (# P77-3-1 boundary 思路延伸)."""
-    text = (WORKSPACE / "bin" / "check-cross-repo-consistency.py").read_text()
+    text = (WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py").read_text()
     # _strip_yaml_comment 函数必须存在
     assert "def _strip_yaml_comment" in text, "_strip_yaml_comment function not found"
     # 必须有 '  #' 或 '\t#' 解析

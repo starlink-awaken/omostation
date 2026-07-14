@@ -39,7 +39,7 @@ GOLDEN_THRESHOLD = 500
 def list_god_modules(root: Path) -> list[dict]:
     """读取 check-god-module.py 输出."""
     r = subprocess.run(
-        ["python3", str(root / "bin" / "check-god-module.py"), "--strict"],
+        ["python3", str(root / "bin" / "ssot" / "check-god-module.py"), "--strict"],
         cwd=str(root), capture_output=True, text=True, timeout=30,
     )
     modules: list[dict] = []

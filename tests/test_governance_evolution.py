@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "bin" / "governance-evolution.py"
+SCRIPT = ROOT / "bin" / "gac" / "governance-evolution.py"
 
 
 def _python_with_yaml() -> str:
@@ -406,7 +406,7 @@ def test_release_package_classifier_covers_convergence_edges() -> None:
         ".github/workflows/cockpit-ui-ci.yml",
         "pyproject.toml",
         "bin/README.md",
-        "bin/gac-worktree.sh",
+        "bin/gac/gac-worktree.sh",
         "tests/README.md",
         "scripts",
         "projects/omo",
@@ -445,7 +445,7 @@ print(json.dumps({{path: module.classify_release_package(path)[0] for path in {p
         ".github/workflows/cockpit-ui-ci.yml": "workspace-config",
         "pyproject.toml": "workspace-config",
         "bin/README.md": "governance-control-plane",
-        "bin/gac-worktree.sh": "governance-control-plane",
+        "bin/gac/gac-worktree.sh": "governance-control-plane",
         "tests/README.md": "governance-control-plane",
         "scripts": "submodule-pointer",
         "projects/omo": "submodule-pointer",

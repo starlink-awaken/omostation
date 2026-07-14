@@ -102,7 +102,7 @@ def test_p1s2_migrate_77all(verbose: bool = False) -> tuple[bool, str]:
     """T5: l0-constraints-migrate 77 条 全绿"""
     rc, out, err = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/l0-constraints-migrate.py", "--dry-run",
+        "bin/_archive/l0-constraints-migrate.py", "--dry-run",
     ], timeout=30)
     if rc != 0:
         return False, f"migrate dry-run 失败 (rc={rc}): {err}"
@@ -115,7 +115,7 @@ def test_p1s2_validate_only(verbose: bool = False) -> tuple[bool, str]:
     """T6: --validate 不应写文件"""
     rc, out, _ = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/l0-constraints-migrate.py", "--validate",
+        "bin/_archive/l0-constraints-migrate.py", "--validate",
     ], timeout=30)
     return (rc == 0 and "全绿" in out, out.strip())
 
@@ -270,7 +270,7 @@ def test_p2s4_check_1_m3(verbose: bool = False) -> tuple[bool, str]:
     """T18: mof-bootstrap check_1 (m3.yaml Element.parent 全闭合)"""
     rc, out, _ = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/mof-bootstrap.py", "check_1",
+        "bin/mof/mof-bootstrap.py", "check_1",
     ], cwd=WS, timeout=30)
     return (rc == 0, out.strip()[:80])
 
@@ -279,7 +279,7 @@ def test_p2s4_check_2_m2(verbose: bool = False) -> tuple[bool, str]:
     """T19: mof-bootstrap check_2 (m2/*.yaml 自反)"""
     rc, out, _ = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/mof-bootstrap.py", "check_2",
+        "bin/mof/mof-bootstrap.py", "check_2",
     ], cwd=WS, timeout=30)
     return (rc == 0, out.strip()[:80])
 
@@ -288,7 +288,7 @@ def test_p2s4_check_3_m2_to_m3(verbose: bool = False) -> tuple[bool, str]:
     """T20: mof-bootstrap check_3 (m2.m3_parent → m3.yaml 锚 strict, P5 治本后 0 err)"""
     rc, out, _ = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/mof-bootstrap.py", "check_3",
+        "bin/mof/mof-bootstrap.py", "check_3",
     ], cwd=WS, timeout=30)
     return (rc == 0, out.strip()[:80])
 
@@ -297,7 +297,7 @@ def test_p2s4_check_4_m3_meta(verbose: bool = False) -> tuple[bool, str]:
     """T21: mof-bootstrap check_4 (m3-meta self-reflex)"""
     rc, out, _ = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/mof-bootstrap.py", "check_4",
+        "bin/mof/mof-bootstrap.py", "check_4",
     ], cwd=WS, timeout=30)
     return (rc == 0, out.strip()[:80])
 
@@ -306,7 +306,7 @@ def test_p3_cleanup_audit(verbose: bool = False) -> tuple[bool, str]:
     """T22: omo-state-cleanup audit 通过 (≥27/33 派生面 gitignored)"""
     rc, out, _ = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/omo-state-cleanup.py", "audit",
+        "bin/gac/omo-state-cleanup.py", "audit",
     ], cwd=WS, timeout=60)
     # ok = 全合规, 但允许 leak 误报 (我们排查时排除 SSOT)
     if "✅ " in out and "⚠️" not in out.split("派生面泄漏")[0]:
@@ -368,7 +368,7 @@ def test_4_check_strict_all_pass(verbose: bool = False) -> tuple[bool, str]:
     """T28: 4-check strict 全 PASS (0 err 跨所有 4 check)"""
     rc, out, _ = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/mof-bootstrap.py", "all", "--verbose",
+        "bin/mof/mof-bootstrap.py", "all", "--verbose",
     ], cwd=WS, timeout=60)
     lines = [l for l in out.splitlines() if "check_" in l and ("err" in l)]
     if rc != 0:
@@ -560,7 +560,7 @@ def test_r3b_m4_health_score_cli(verbose: bool = False) -> tuple[bool, str]:
     """T41 R3b: m4-health-score CLI 跑得通"""
     rc, out, err = run([
         "uv", "run", "--with", "pyyaml", "python",
-        "bin/m4-health-score.py",
+        "bin/mof/m4-health-score.py",
     ], timeout=90)  # mof-validate 自身 60s, 余 30s
     if rc != 0:
         return False, f"CLI 失败 (rc={rc}): {err}"
@@ -594,7 +594,7 @@ def test_r3a_check_5_m2_baseschema(verbose: bool = False) -> tuple[bool, str]:
     x43 = 'T43 R3a: mof-bootstrap check_5 m2 BaseSchema 一致性'
     rc, out, _ = run([
         'uv', 'run', '--with', 'pyyaml', 'python',
-        'bin/mof-bootstrap.py', 'check_5',
+        'bin/mof/mof-bootstrap.py', 'check_5',
     ], timeout=30)
     if rc != 0:
         return False, f'check_5 FAIL: {out[:120]}'
@@ -667,7 +667,7 @@ def test_r4d_m4_cron_hook_cli(verbose: bool = False) -> tuple[bool, str]:
     x48 = 'T48 R4d: m4-cron-hook CLI 跑得通'
     rc, out, err = run([
         'uv', 'run', '--with', 'pyyaml', 'python',
-        'bin/m4-cron-hook.py', '--sync', '--trigger', 'test',
+        'bin/mof/m4-cron-hook.py', '--sync', '--trigger', 'test',
     ], timeout=30)
     if rc != 0:
         return False, f'hook 失败 (rc={rc}): {err}'
@@ -716,7 +716,7 @@ def test_r4a_health_score_100(verbose: bool = False) -> tuple[bool, str]:
     x51 = 'T51 R4a: M4 Health Score 推到 100/100'
     rc, out, err = run([
         'uv', 'run', '--with', 'pyyaml', 'python',
-        'bin/m4-health-score.py', '--json',
+        'bin/mof/m4-health-score.py', '--json',
     ], timeout=180)
     if rc != 0:
         return False, f'score JSON 失败: {err}'
@@ -824,7 +824,7 @@ def test_r5f_submodule_hygiene_gate_runs(verbose: bool = False) -> tuple[bool, s
     x59 = 'T59 R5f: check-submodule-hygiene.py CLI 跑得通 + 3 类检查覆盖'
     rc, out, err = run([
         'uv', 'run', '--with', 'pyyaml', 'python',
-        'bin/check-submodule-hygiene.py',
+        'bin/ssot/check-submodule-hygiene.py',
     ], timeout=60)
     if rc != 0:
         return False, f'CLI 失败 (rc={rc}): {err}'

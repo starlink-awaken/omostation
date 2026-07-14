@@ -9,9 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_MODULE_PATH = ROOT / "bin" / "agent-workflow.py"
 LANE_MODULE_PATH = ROOT / "bin" / "change-lane-check.py"
-GAC_GATE_MODULE_PATH = ROOT / "bin" / "gac-local-gate.py"
-LAYER_INDEX_SCRIPT = ROOT / "bin" / "project-layer-index.py"
-DOC_SSOT_SCRIPT = ROOT / "bin" / "doc-ssot-lint.py"
+GAC_GATE_MODULE_PATH = ROOT / "bin" / "gac" / "gac-local-gate.py"
+LAYER_INDEX_SCRIPT = ROOT / "bin" / "mof" / "project-layer-index.py"
+DOC_SSOT_SCRIPT = ROOT / "bin" / "ssot" / "doc-ssot-lint.py"
 
 
 def _load_module_from_source(path: Path, name: str):
@@ -967,10 +967,10 @@ def test_change_lane_knows_agent_workflow_files() -> None:
 
     assert module.classify("bin/agent-workflow.py", set()) == "governance_code"
     assert module.classify("bin/compass_radar.py", set()) == "governance_code"
-    assert module.classify("bin/doc-ssot-lint.py", set()) == "governance_code"
-    assert module.classify("bin/generate-brief.py", set()) == "governance_code"
-    assert module.classify("bin/governance-evolution.py", set()) == "governance_code"
-    assert module.classify("bin/state-stale-emit.py", set()) == "governance_code"
+    assert module.classify("bin/ssot/doc-ssot-lint.py", set()) == "governance_code"
+    assert module.classify("bin/mof/generate-brief.py", set()) == "governance_code"
+    assert module.classify("bin/gac/governance-evolution.py", set()) == "governance_code"
+    assert module.classify("bin/gac/state-stale-emit.py", set()) == "governance_code"
     assert module.classify("bin/README.md", set()) == "docs"
     assert module.classify("projects/cockpit/src/cockpit/commands/governance.py", set()) == "governance_code"
     assert (
@@ -978,7 +978,7 @@ def test_change_lane_knows_agent_workflow_files() -> None:
         == "governance_code"
     )
     assert module.classify("tests/test_governance_evolution.py", set()) == "governance_code"
-    assert module.classify("bin/project-layer-index.py", set()) == "governance_code"
+    assert module.classify("bin/mof/project-layer-index.py", set()) == "governance_code"
     assert module.classify(".omo/_truth/registry/agent-workflows.yaml", set()) == "governance_code"
     assert module.classify(".agents/skills/project-governance/SKILL.md", set()) == "governance_code"
     assert module.classify("docs/generated/project-layer-index.md", set()) == "docs"
@@ -1003,7 +1003,7 @@ def test_change_lane_can_use_explicit_allowed_lanes_for_workflow_scopes() -> Non
     module = _load_module_from_source(LANE_MODULE_PATH, "change_lane_check")
     files = [
         ".omo/_truth/registry/governance-evolution-roadmap.yaml",
-        "bin/governance-evolution.py",
+        "bin/gac/governance-evolution.py",
         "README.md",
     ]
 
@@ -1037,11 +1037,11 @@ def test_gac_gate_can_scope_change_lane_to_files(monkeypatch) -> None:
         "bin/agent-workflow.py",
     ]
 
-    monkeypatch.setenv("AGENT_WORKFLOW_MATCHED_FILES", json.dumps(["bin/gac-local-gate.py"]))
+    monkeypatch.setenv("AGENT_WORKFLOW_MATCHED_FILES", json.dumps(["bin/gac/gac-local-gate.py"]))
     assert module.scoped_change_lane_command() == [
         "bin/change-lane-check.py",
         "--file",
-        "bin/gac-local-gate.py",
+        "bin/gac/gac-local-gate.py",
     ]
 
 

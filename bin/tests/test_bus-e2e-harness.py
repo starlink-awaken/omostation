@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = REPO_ROOT / "bin" / "bus-e2e-harness.py"
+SCRIPT = REPO_ROOT / "bin" / "ssot" / "bus-e2e-harness.py"
 
 
 def test_help_prints_usage() -> None:

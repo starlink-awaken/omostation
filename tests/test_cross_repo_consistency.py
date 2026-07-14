@@ -13,7 +13,7 @@ sys.path.insert(0, str(WORKSPACE / 'bin'))
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "check-cross-repo-consistency.py"), *args],
+         str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"), *args],
         cwd=WORKSPACE, capture_output=True, text=True,
     )
 
@@ -79,7 +79,7 @@ def test_excludes_test_directories():
     data = __import__("json").loads(r.stdout)
     full_unreg = __import__("subprocess").run(
         ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "check-cross-repo-consistency.py"),
+         str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"),
          "--json", "--threshold", "100"],
         cwd=WORKSPACE, capture_output=True, text=True,
     )

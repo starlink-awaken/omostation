@@ -8,7 +8,7 @@
 - bos.gap == 0 (无真实鸿沟, 残留 deprecated 不计分)
 - bos.resolve_rate == 1.0 (100% 声明可 resolve)
 
-实现来源: bin/evidence-smoke.py 的 KNOWN_GAP_PREFIXES 应保持为空
+实现来源: bin/gac/evidence-smoke.py 的 KNOWN_GAP_PREFIXES 应保持为空
 (prefixes 重新出现意味着对齐回退).
 """
 
@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-EVIDENCE_SMOKE = ROOT / "bin" / "evidence-smoke.py"
+EVIDENCE_SMOKE = ROOT / "bin" / "gac" / "evidence-smoke.py"
 
 
 def _run_evidence_smoke() -> dict:

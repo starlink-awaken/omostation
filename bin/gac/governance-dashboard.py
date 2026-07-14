@@ -427,7 +427,7 @@ def _cmd_ui_render(workspace: Path, output_html: str | None = None, open_browser
 def run_healthcheck(workspace: Path) -> dict:
     """跑 gac-healthcheck --json, 返回报告."""
     r = subprocess.run(
-        [sys.executable, str(workspace / "bin" / "gac-healthcheck.py"), "--json"],
+        [sys.executable, str(workspace / "bin" / "gac" / "gac-healthcheck.py"), "--json"],
         capture_output=True,
         text=True,
         cwd=str(workspace),

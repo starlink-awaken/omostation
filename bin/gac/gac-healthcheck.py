@@ -56,7 +56,7 @@ CORE_FILES = {
     "doc_snapshot_check": "scripts/check-doc-ssot-snapshots.py",
     "change_lane_check": "bin/change-lane-check.py",
     "submodule_reachability": "bin/ssot/submodule-reachability-gate.py",
-    "submodule_transaction": "bin/submodule-pointer-transaction.sh",
+    "submodule_transaction": "bin/ssot/submodule-pointer-transaction.sh",
 }
 
 
