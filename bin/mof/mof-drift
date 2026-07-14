@@ -344,6 +344,17 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "count": todos,
                 "message": f"{todos} TODOs found in {proj}",
             })
+        # Check test coverage
+        tests = count_test_files(proj)
+        if tests == 0:
+            drifts.append({
+                "project": proj,
+                "type": "no_tests",
+                "severity": "high",
+                "count": 0,
+                "message": f"No test files found in {proj}",
+            })
+
 
     # Check bin/mof-* tools with stale "Status: planned" (P47 增)
     # 只在 detect_drift() 不带 project_name 时跑一次
@@ -469,16 +480,6 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "message": f"治理健康: done={sg['done_tasks']}, planned={sg['planned_tasks']}, drafts={sg['drafts']}, drift_history={sg['drift_history']}, registry={sg['registry_size']}",
             })
 
-        # Check test coverage
-        tests = count_test_files(proj)
-        if tests == 0:
-            drifts.append({
-                "project": proj,
-                "type": "no_tests",
-                "severity": "high",
-                "count": 0,
-                "message": f"No test files found in {proj}",
-            })
     
     return drifts
 
