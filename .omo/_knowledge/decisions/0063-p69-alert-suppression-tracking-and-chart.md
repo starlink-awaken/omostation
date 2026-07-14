@@ -24,7 +24,7 @@ P68 实施后, P69 调研发现 2 项可深化:
 
 ### D1: 抑制标记精确统计 (P69 R1)
 
-**修改**: `bin/alert-aggregator.py` `emit_notification()` 抑制分支
+**修改**: `bin/gac/alert-aggregator.py` `emit_notification()` 抑制分支
 
 **逻辑**:
 ```python
@@ -48,7 +48,7 @@ if suppressed:
 
 ### D2: alert-history ASCII 趋势图 + 抑制率 (P69 R2)
 
-**修改**: `bin/alert-history.py`
+**修改**: `bin/gac/alert-history.py`
 
 **新增**:
 - `load_suppressions()` 函数

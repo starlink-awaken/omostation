@@ -151,7 +151,7 @@ cd projects/omo && PYTHONPATH=src uv run --with pyyaml python3 -c "from omo.omo_
 # 期望: ✅ re-export OK
 
 # P102 R5: dashboard
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 工具全部通过
 
 # P102 R5: governance

@@ -30,9 +30,9 @@
 
 | 任务 | 状态 | 交付 |
 |------|:---:|------|
-| T2.1 schema 校验 (机制 2) | ✅ done | `bin/gac-validate.py` |
+| T2.1 schema 校验 (机制 2) | ✅ done | `bin/gac/gac-validate.py` |
 | T2.3 矛盾检测 (机制 5) | ✅ done | 合 `gac-validate.py` |
-| T2.2 drift 检测 (机制 4, radar) | ⏳ | `bin/gac-drift.py` (静态版先, 动态版阶段 1 后) |
+| T2.2 drift 检测 (机制 4, radar) | ⏳ | `bin/gac/gac-drift.py` (静态版先, 动态版阶段 1 后) |
 | T2.4 lifecycle 状态机 (机制 6) | ⏳ | draft→active→deprecated→removed |
 | T2.5 补全规则覆盖 | ⏳ | X3 价值 / L1/L3 层 (当前 X4×3/X1×2/X2×1, 缺 X3) |
 
@@ -75,7 +75,7 @@ draft       →  规则 Pitch 结构化
    ↓
 bet         →  governance-checks.yaml::gac.rules 条目 + OMO Task
    ↓
-radar       →  bin/gac-drift.py (机制 4, drift 检测)
+radar       →  bin/gac/gac-drift.py (机制 4, drift 检测)
    ↓
 gc          →  lifecycle deprecated → removed (机制 6, 28 天清理)
 ```
@@ -91,7 +91,7 @@ gc          →  lifecycle deprecated → removed (机制 6, 28 天清理)
 | **阶段 1 hook 绑定** | 机制 3 (泛化执行器) | 需 .claude/hooks/ 改动, 评估影响 |
 
 **安全可立即推** (根仓, 不碰并发):
-- T2.2 `bin/gac-drift.py` (静态 drift)
+- T2.2 `bin/gac/gac-drift.py` (静态 drift)
 - T1.1 AGENTS.md GaC 段 (手动导出)
 - T1.4 CI gate (gac-validate --gate)
 - T5.1/T5.2 cron 配置

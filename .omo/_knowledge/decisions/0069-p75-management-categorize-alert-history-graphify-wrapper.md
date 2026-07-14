@@ -28,7 +28,7 @@ P74 收口后, P75 调研 4 项候选, 实施 3 项:
 
 ### D1: management 142 frontmatter 分类 (P75 R1)
 
-**新工具**: `bin/management-categorize.py` (90 行)
+**新工具**: `bin/ssot/management-categorize.py` (90 行)
 
 **策略**:
 - 不物理迁移 144 文件 (P53 双指针)
@@ -60,7 +60,7 @@ P74 收口后, P75 调研 4 项候选, 实施 3 项:
 
 ### D3: graphify 重生 wrapper (P75 R3)
 
-**新工具**: `bin/graphify-local-extract.py` (90 行)
+**新工具**: `bin/ssot/graphify-local-extract.py` (90 行)
 
 **策略**:
 - 检测 OPENAI_API_KEY 配置

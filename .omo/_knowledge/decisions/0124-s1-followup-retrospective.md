@@ -44,7 +44,7 @@ F-11 (sync-submodules-push 修 bash 陷阱), F-12 (install-hooks T 残留).
 | #17 | F-6 (check-* 工具接入) | `a63383b2` | 6/7 工具按 FP 风险分级 (3 CHECKS + 3 CI_ONLY + 1 ad-hoc) |
 | #17 | X2 M1 sync (governance-semantic-gate) | `ecos 52cfdc1` | 1 GAC-RULE M1 实例派生 |
 | #17 | M2 enum 扩 (`ssot_lint` + `gac_local_gate`) | `ecos ce42b7c` | 28→29 + 10→11, 新规则 prerequisite |
-| #17 | governance-semantic-gate 落地 | `bin/governance-semantic-gate.py` | 治本 "exit 0 但 JSON ok=false" 漂移 |
+| #17 | governance-semantic-gate 落地 | `bin/gac/governance-semantic-gate.py` | 治本 "exit 0 但 JSON ok=false" 漂移 |
 | #18 | 修 PR #17 regression | `21a26adf` | governance-semantic-gate 移 CI_ONLY (默认 mode 跳过, 修 pre-commit 阻塞) |
 | #19 | F-12 (install-hooks T 残留) | `a4122344` | `git update-index --skip-worktree` 解 14 子模块 T |
 
@@ -52,7 +52,7 @@ F-11 (sync-submodules-push 修 bash 陷阱), F-12 (install-hooks T 残留).
 
 #### F-5 治本: gac-m1-sync 越界写风险闭环
 
-**问题**: `bin/gac-m1-sync.py` 默认会写 `projects/ecos/src/...` (submodule 内),
+**问题**: `bin/gac/gac-m1-sync.py` 默认会写 `projects/ecos/src/...` (submodule 内),
 违反 "主仓不写 submodule" 架构边界 (ARCH-AGENTS.md §4).
 
 **治本**: 默认走 dry-run (仅模拟 actions 列表), 实际写需显式

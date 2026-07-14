@@ -27,7 +27,7 @@ P69 收口后, P70 调研发现 5 项可深化（用户列举 9 项候选, 选 5
 
 ### D1: 跨级别抑制 (P70 R1)
 
-**修改**: `bin/alert-aggregator.py` `is_suppressed()` + `LEVEL_RANK`
+**修改**: `bin/gac/alert-aggregator.py` `is_suppressed()` + `LEVEL_RANK`
 
 **抑制规则 (P70 升级)**:
 ```python
@@ -45,7 +45,7 @@ if rec_rank > current_rank:
 
 ### D2: rich 库颜色 (P70 R2)
 
-**修改**: `bin/alert-history.py`
+**修改**: `bin/gac/alert-history.py`
 
 **新增**: rich Console/Table/Panel + 级别颜色
 ```python
@@ -70,7 +70,7 @@ level_color = {"P0": "bold red", "P1": "red", "P2": "yellow", "P3": "green"}
 
 ### D4: 快照持久化 (P70 R3)
 
-**修改**: `bin/governance-readiness.py` `write_readiness_snapshot()`
+**修改**: `bin/gac/governance-readiness.py` `write_readiness_snapshot()`
 
 **新增**: `readiness-snapshots.jsonl` 累加
 - 不受 30 快照 rotation 限制
@@ -80,7 +80,7 @@ level_color = {"P0": "bold red", "P1": "red", "P2": "yellow", "P3": "green"}
 
 ### D5: mof-drift v8 趋势集成 (P70 R4)
 
-**修改**: `bin/governance-readiness-trend.py`
+**修改**: `bin/gac/governance-readiness-trend.py`
 
 **新增**: 跑 mof-drift 并显示维度数
 ```python

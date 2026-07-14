@@ -143,11 +143,11 @@ print('✅ re-export OK')
 # 期望: ✅ re-export OK
 
 # P104 R5: god-module list 减少
-PYTHONPATH=projects/omo/src python3 bin/god-module-13-error-list.py 2>&1 | grep -E "Error|excess"
+PYTHONPATH=projects/omo/src python3 bin/ssot/god-module-13-error-list.py 2>&1 | grep -E "Error|excess"
 # 期望: Error: 12, Total excess: 23290L
 
 # P104 R5: dashboard
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 工具全部通过
 
 # P104 R6: mof-version

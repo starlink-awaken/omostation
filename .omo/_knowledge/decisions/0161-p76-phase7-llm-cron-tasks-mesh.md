@@ -121,11 +121,11 @@ Linux systemd-timer 同样提供 (`runtime/cron/systemd/omostation-knowledge-fou
 
 调查发现: `mesh-router` 在 SSOT (`docs/project-registry.yaml`) 登记, 但:
 - ❌ 不在 `.gitmodules` (从未注册为 submodule)
-- ✅ 实际实现 = `bin/gac-mesh-router.py` (HTTP server, port 7437)
+- ✅ 实际实现 = `bin/gac/gac-mesh-router.py` (HTTP server, port 7437)
 - ✅ port 在 `protocols/port-registry.yaml::7437` (`omlx-mesh-router`)
 
 **决议**: 
-- 修改 `docs/project-registry.yaml` 加 `status: implemented-in-bin` + `physical_location: bin/gac-mesh-router.py`
+- 修改 `docs/project-registry.yaml` 加 `status: implemented-in-bin` + `physical_location: bin/gac/gac-mesh-router.py`
 - 移除 "期望 init submodule" 的隐含承诺 (历史 doc 漂移)
 - 不创建空的 `projects/mesh-router/` 仓 (避免 false positive)
 

@@ -129,9 +129,9 @@ bash scripts/omo/install-dashboard-cron.sh --status   # 状态
 bash scripts/omo/install-dashboard-cron.sh           # 实际安装 (未跑)
 
 # P91 R2: X2 rule
-python3 bin/x2-rule-lint.py  # 11 rules, 0 issues
-python3 bin/x2-freshness-check.py  # 11 rules, 10 fresh, 1 missing (archived)
-python3 bin/rule-history-insight.py  # 11 rules, 9 fresh, 1 missing, 1 新加
+python3 bin/gac/x2-rule-lint.py  # 11 rules, 0 issues
+python3 bin/gac/x2-freshness-check.py  # 11 rules, 10 fresh, 1 missing (archived)
+python3 bin/gac/rule-history-insight.py  # 11 rules, 9 fresh, 1 missing, 1 新加
 
 # P91 R3: gov-history-stats
 python3 bin/gov-history-stats.py  # 30 天, 632 entries, 类别趋势
@@ -139,14 +139,14 @@ python3 bin/gov-history-stats.py --days 60  # 60 天窗口
 python3 bin/gov-history-stats.py --json  # JSON 输出
 
 # P91 R4: adr-drift 修 .yaml
-python3 bin/adr-drift-classify.py  # 50 historical + 31 P50+ (P90 38→31, 减 7)
+python3 bin/adr/adr-drift-classify.py  # 50 historical + 31 P50+ (P90 38→31, 减 7)
 
 # P91 R5: dashboard
-python3 bin/governance-dashboard.py  # 14/14 工具全部通过
+python3 bin/gac/governance-dashboard.py  # 14/14 工具全部通过
 
 # ruff 验证
 ruff check bin/gov-history-stats.py
-ruff check bin/adr-drift-check.py
+ruff check bin/adr/adr-drift-check.py
 # 期望: All checks passed!
 ```
 

@@ -19,7 +19,7 @@ supersedes: []
 
 ## 0. TL;DR
 
-把 `bin/mof-bootstrap.py all` 升级为**量化分数** + 派生面 JSON + 与 OMO `health_score` 平行。
+把 `bin/mof/mof-bootstrap.py all` 升级为**量化分数** + 派生面 JSON + 与 OMO `health_score` 平行。
 当前基线: 99.17 / 100 (mof-validate 98.62% × 60% 权重 + 4-check 30/30 + meta mapping 5/5 + ADR accepted 5/5)。
 
 **关键设计**:
@@ -65,7 +65,7 @@ bonus (单独展示, 不计入 overall):
 
 ## 3. 实施产物
 
-### 3.1 bin/m4-health-score.py (主仓根脚本)
+### 3.1 bin/mof/m4-health-score.py (主仓根脚本)
 
 5 命令:
 - 默认: 人类可读分数 + 详情
@@ -99,7 +99,7 @@ bonus (单独展示, 不计入 overall):
 
 ### 3.3 OMO 集成 (后续, 本 ADR 不实施)
 
-`bin/omo-state-cleanup.py` 可读 `.omo/_derived/m4-health.json` 嵌入 governance-evolution-roadmap report。
+`bin/gac/omo-state-cleanup.py` 可读 `.omo/_derived/m4-health.json` 嵌入 governance-evolution-roadmap report。
 本 ADR 仅产出派生面, 后续治理整合是 Round 3+ 工作。
 
 ---
@@ -111,7 +111,7 @@ bonus (单独展示, 不计入 overall):
 **解决**:
 - `score_40_tests()` 默认**回放**派生面中的 bonus 字段(无 recursion)
 - `score_40_tests_live()` 单独命令行调用(开发者主动跑)
-- 操作顺序: 先 `python tests/integration/m4_metamodel/run_all.py` 写 m4-health.json → 再 `python bin/m4-health-score.py` 回放
+- 操作顺序: 先 `python tests/integration/m4_metamodel/run_all.py` 写 m4-health.json → 再 `python bin/mof/m4-health-score.py` 回放
 
 ---
 
@@ -119,10 +119,10 @@ bonus (单独展示, 不计入 overall):
 
 | 检查 | 工具 | 结果 |
 |------|------|------|
-| 健康分计算 | `bin/m4-health-score.py` | 99.17/100 |
+| 健康分计算 | `bin/mof/m4-health-score.py` | 99.17/100 |
 | 派生面 gitignored | `git -C projects/ecos check-ignore -q .omo/_derived/m4-health.json` | rc=0 ✓ |
 | 42 测试全过 | `tests/integration/m4_metamodel/run_all.py` | 42/42 PASS |
-| 4-check strict 不破 | `bin/mof-bootstrap.py all` | 0/0/0/0 |
+| 4-check strict 不破 | `bin/mof/mof-bootstrap.py all` | 0/0/0/0 |
 
 ### 当前 99.17/100 与目标 100/100 差距分析
 

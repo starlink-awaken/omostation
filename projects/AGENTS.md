@@ -110,7 +110,7 @@ Monorepos such as `kairon` and `aetherforge` have package-specific layouts. Read
 
 ```bash
 cd ".."
-uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
+uv run --with "pyyaml" python "bin/ssot/doc-ssot-lint.py" --json
 ```
 
 ## 9. Gotchas
@@ -131,7 +131,7 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
 uv run --with "pyyaml" python "bin/agent-workflow.py" lint
 uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
 uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
-uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
+uv run --with "pyyaml" python "bin/ssot/doc-ssot-lint.py" --json
 ```
 
 Then report touched projects, verification run, and any unresolved dirty state that predated your work.

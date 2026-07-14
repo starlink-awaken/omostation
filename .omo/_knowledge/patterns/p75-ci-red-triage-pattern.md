@@ -54,8 +54,8 @@ gh run list --branch main --repo <repo>                     # 预存判定
 # 本地复现:
 uv run --project projects/<sub> python -c "import <pkg>"    # resolve 验证
 uv run --project projects/<sub> pytest tests/<test> -q      # test 复现
-uv run --directory projects/agora python bin/evidence-smoke.py --gate 95  # evidence
-uv run --with pyyaml python bin/gac-local-gate.py --scope staged --json   # 本地 gate
+uv run --directory projects/agora python bin/gac/evidence-smoke.py --gate 95  # evidence
+uv run --with pyyaml python bin/gac/gac-local-gate.py --scope staged --json   # 本地 gate
 ```
 
 ## 5. 陷阱表 (PR#107+#108 实战, 7 类高发)

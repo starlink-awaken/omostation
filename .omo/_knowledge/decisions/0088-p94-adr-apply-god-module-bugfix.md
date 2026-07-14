@@ -24,7 +24,7 @@ P93 收口后, P94 调研 4 项治理兑现, 实施 3 项 (P94-A 推迟):
 
 ## Decision
 
-### D1: bin/adr-drift-apply.py (P94 R1)
+### D1: bin/adr/adr-drift-apply.py (P94 R1)
 
 **新工具**: 应用 P93 归类的 SUBDIR_MISSING 修复
 - 4 模式: dry-run / apply / rollback / json
@@ -35,7 +35,7 @@ P93 收口后, P94 调研 4 项治理兑现, 实施 3 项 (P94-A 推迟):
 
 **dry-run 状态**: 19 SUBDIR_MISSING 待 touch (含 eCOS-v5-Architecture-SSOT.md, graphify-out/README.md, l4_kernel/registry, model-driven/m3_extended, .omo-events 等)
 
-### D2: bin/god-module-13-error-list.py (P94 R2)
+### D2: bin/ssot/god-module-13-error-list.py (P94 R2)
 
 **新工具**: 13 god-module error 文件清单 + 拆解建议
 - 调用 `check-god-module.py --strict` 输出
@@ -71,8 +71,8 @@ P93 收口后, P94 调研 4 项治理兑现, 实施 3 项 (P94-A 推迟):
 ### D5: 收口统计
 
 **P94 工具数**: 38 → **40** 独立 bin 工具 (+2)
-- `bin/adr-drift-apply.py` (新)
-- `bin/god-module-13-error-list.py` (新)
+- `bin/adr/adr-drift-apply.py` (新)
+- `bin/ssot/god-module-13-error-list.py` (新)
 
 **ADR 数**: 47 → **48** (P94 +1)
 
@@ -107,24 +107,24 @@ P93 收口后, P94 调研 4 项治理兑现, 实施 3 项 (P94-A 推迟):
 
 ```bash
 # P94 R1: adr-drift-apply dry-run
-python3 bin/adr-drift-apply.py
+python3 bin/adr/adr-drift-apply.py
 # 期望: 19 SUBDIR_MISSING 待 touch (dry-run 模式)
 
 # P94 R2: god-module 13 list
-python3 bin/god-module-13-error-list.py
+python3 bin/ssot/god-module-13-error-list.py
 # 期望: 13 error + 55 warn, 24,252L excess
 
 # P94 R3: REAL_BUG 验证
-python3 bin/adr-drift-auto-fix.py
+python3 bin/adr/adr-drift-auto-fix.py
 # 期望: 31 P50+ issues (从 32 减 1, REAL_BUG 0)
 
 # P94 R4: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 18/18 工具全部通过
 
 # ruff 验证
-ruff check bin/adr-drift-apply.py
-ruff check bin/god-module-13-error-list.py
+ruff check bin/adr/adr-drift-apply.py
+ruff check bin/ssot/god-module-13-error-list.py
 # 期望: All checks passed!
 ```
 

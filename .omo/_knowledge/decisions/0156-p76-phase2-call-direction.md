@@ -22,7 +22,7 @@ P76 Phase 2 (W3-W5) 完成 4 项核心交付:
 |------|:---:|---------|
 | **CR-LAYER-CALL-DIRECTION 规则** | ✅ | governance-checks.yaml + 1 (informational enforcement) |
 | **gbrain 三栈拆分设计图** | ✅ | `docs/architecture/gbrain-three-stack-split.md` |
-| **`bin/check-layer-call-direction.py`** | ✅ | 新工具, scan call-direction violation, enforcement=advisory |
+| **`bin/ssot/check-layer-call-direction.py`** | ✅ | 新工具, scan call-direction violation, enforcement=advisory |
 | **`P76-2 沉淀原则** | ✅ | 5 条 |
 
 ## 1. 决策 (WHY/WHAT/NEXT)
@@ -153,7 +153,7 @@ gbrain-v2 (3 个独立仓):
 ## 5. 验证清单
 
 - [x] CR-LAYER-CALL-DIRECTION 加到 governance-checks.yaml (advisory)
-- [x] `bin/check-layer-call-direction.py` 创建并跑通
+- [x] `bin/ssot/check-layer-call-direction.py` 创建并跑通
 - [x] gbrain 三栈拆分重构图写入 `docs/architecture/gbrain-three-stack-split.md`
 - [x] 1 周内 informational 收集 violations (待后续 phase)
 - [ ] Phase 3 升级 enforcement=hard (待后续)

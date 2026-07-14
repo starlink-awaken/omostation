@@ -30,7 +30,7 @@ P73 收口后, P74 调研 6 项候选, 实施 3 项:
 
 ### D1: p0-event-listener 事件驱动 (P74 R1)
 
-**新工具**: `bin/p0-event-listener.py` (95 行)
+**新工具**: `bin/gac/p0-event-listener.py` (95 行)
 
 **功能**:
 - 监听 `.omo/_knowledge/omo-events.jsonl` 新事件
@@ -47,7 +47,7 @@ P73 收口后, P74 调研 6 项候选, 实施 3 项:
 
 ### D2: dim-weight percentile 调优 (P74 R2)
 
-**修改**: `bin/dim-weight.py` `compute_weights()`
+**修改**: `bin/gac/dim-weight.py` `compute_weights()`
 
 **算法变更**:
 - 旧: IQR (interquartile range) — 13 快照 IQR=0 异常
@@ -63,7 +63,7 @@ P73 收口后, P74 调研 6 项候选, 实施 3 项:
 
 ### D3: alert-history 多维扩展 (P74 R3)
 
-**修改**: `bin/alert-history.py` `analyze_history()`
+**修改**: `bin/gac/alert-history.py` `analyze_history()`
 
 **新增 3 维度**:
 - `by_level_sup_state`: 按级别拆分 fired/suppressed

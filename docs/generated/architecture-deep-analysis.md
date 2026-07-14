@@ -574,9 +574,9 @@ gbrain         — 独立 TS runtime，零 Python import
 |------|------|
 | `make gac-local-gate` | 默认 (非严格) GaC _gate (GaC validate/drift + agent-workflow lint + MOF schema + doc-ssot) |
 | `make gac-local-gate --strict` | CI 模式 (额外 project-layer-index + 全量检查) |
-| `bin/gac-local-gate.py --scope files --file <path>` | 文件级 AGCP 验证 |
-| `bin/gac-healthcheck.py` | GaC 13 点健康检查 |
-| `bin/ssot-guardian.py` | SSOT 一致性守卫 |
+| `bin/gac/gac-local-gate.py --scope files --file <path>` | 文件级 AGCP 验证 |
+| `bin/gac/gac-healthcheck.py` | GaC 13 点健康检查 |
+| `bin/ssot/ssot-guardian.py` | SSOT 一致性守卫 |
 | pre-push hook | ruff lint + 快速测试子集 (可 SKIP_GATE=true 跳过) |
 
 ### 17.2 分支保护

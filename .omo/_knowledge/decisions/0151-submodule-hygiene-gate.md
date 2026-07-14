@@ -21,7 +21,7 @@ supersedes: []
 
 ## 0. TL;DR
 
-新增 `bin/check-submodule-hygiene.py` 工具,持续验证 3 类子模块卫生问题:
+新增 `bin/ssot/check-submodule-hygiene.py` 工具,持续验证 3 类子模块卫生问题:
 1. **submodule-dirty**: 任意子模块内部有 uncommitted changes (本地子模块脏)
 2. **tracked-derived**: 派生面路径被 tracked (应是 gitignored, ADR-0129 派生面范式)
 3. **submodule-pointer-stale**: 任意子模块 SHA 与 origin/main 不一致 (PR 推动会 reset)
@@ -60,7 +60,7 @@ CLI 模式:
 
 ```
 # ADR-0151 (Round 5f): runtime/.watch-dispatch-stamps.json 是 OMO runtime-stamp-policy
-# 守门自动写入的派生面 (每次 bin/omo-state-cleanup.py sync 触发). 主仓 SSOT 跟踪
+# 守门自动写入的派生面 (每次 bin/gac/omo-state-cleanup.py sync 触发). 主仓 SSOT 跟踪
 # metadata (system.yaml, system_health.yaml, health.yaml 等), stamps 本身可重建.
 # 治本: 不在主仓 SSOT 中保留. P74 governance boundary 守护.
 runtime/.watch-dispatch-stamps.json
@@ -89,7 +89,7 @@ runtime/.watch-dispatch-stamps.json
 - [ADR-0129](../projects/ecos/src/ecos/ssot/../../../../../.omo/_knowledge/decisions/0129-state-projection-plane-phase3.md) (派生面范式)
 - [ADR-0141](./0141-m2-base-schema.md) (m2 模式一致性)
 - [ADR-0148](./0148-round-trip-playbook.md) (round workflow §10)
-- [bin/check-submodule-hygiene.py](./../../../../bin/check-submodule-hygiene.py)
+- [bin/ssot/check-submodule-hygiene.py](./../../../../bin/check-submodule-hygiene.py)
 - [.gitignore](./../../../../.gitignore)
 
 ---

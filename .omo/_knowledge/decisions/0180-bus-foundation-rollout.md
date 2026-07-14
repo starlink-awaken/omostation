@@ -64,4 +64,4 @@ real call site. Wired into gac-local-gate as non-strict (commit-time check).
 ## References
 - `.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md`
 - `projects/bus-foundation/src/bus_foundation/topics.py`
-- `bin/bus-usage-report.py`
+- `bin/ssot/bus-usage-report.py`

@@ -222,7 +222,7 @@
 ### P77-5-1: port-registration-mandatory
 **含义**: 任何 service 端口必须先在 SSOT 注册, 否则 hard fail
 **反例**: 7430 (agora internal) 16 处硬编码, 不在 SSOT → 跨仓 port 冲突盲区
-**实践**: `bin/check-hardcoded-ports.py` detector, unregistered=0 修真修真
+**实践**: `bin/ssot/check-hardcoded-ports.py` detector, unregistered=0 修真修真
 
 ### P77-5-2: legacy-external-allowlist
 **含义**: 外部服务 (otel/vite/lm-studio/family-hub) 允许硬编码 + 显式 LEGACY_OK_PORTS
@@ -337,7 +337,7 @@
 
 ### P76-8-3: dead-path-tool-fallback
 **含义**: 跨仓路径不在根, 工具检查应该 first-level + projects/*/first-level 双路 fallback
-**实施**: `bin/check-dead-path-refs.py` 接受 `.omo/{path}` OR `projects/ecos/.omo/{path}`
+**实施**: `bin/ssot/check-dead-path-refs.py` 接受 `.omo/{path}` OR `projects/ecos/.omo/{path}`
 
 ### P76-8-4: incremental-commit-anti-clean
 **含义**: 每 sub-task 完成立即 commit, 防 X-Plane 反复 clean worktree 丢失工作
@@ -369,7 +369,7 @@
 
 ### P77-1: consistency-by-tool
 **含义**: 跨仓一致性靠自动 verifier 守护, 不靠 review memory
-**实施**: `bin/check-cross-repo-consistency.py` + `CR-CROSS-REPO-CONSISTENT` GaC 规则
+**实施**: `bin/ssot/check-cross-repo-consistency.py` + `CR-CROSS-REPO-CONSISTENT` GaC 规则
 
 ## 7. 沉淀原则 — 治理护栏 (新增 5 个 GaC rules 计划)
 

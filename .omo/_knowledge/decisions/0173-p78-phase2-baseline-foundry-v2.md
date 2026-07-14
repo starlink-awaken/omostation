@@ -29,8 +29,8 @@ supersedes: []
 ## 1. Tem 1: bin/config 端口 SSOT 对齐
 
 所有 `bin/` 和 `config/` 端口引用已验证与 port-registry 一致:
-- `bin/start-gateway.sh`: 1234 (LM Studio LEGACY, 豁免) + 9290 (已迁移 → `LLM_GATEWAY_PORT`)
-- `bin/gac-mesh-router.py`: 7437 (已迁移 → `OMLX_MESH_ROUTER_PORT`)
+- `bin/gac/start-gateway.sh`: 1234 (LM Studio LEGACY, 豁免) + 9290 (已迁移 → `LLM_GATEWAY_PORT`)
+- `bin/gac/gac-mesh-router.py`: 7437 (已迁移 → `OMLX_MESH_ROUTER_PORT`)
 - 其他 bin/ 文件无未注册端口
 - config/ 目录不存在 (未使用)
 

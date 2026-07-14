@@ -7,9 +7,9 @@
 
 | Tier | 工具 | 新命令 | PR |
 |------|------|--------|-----|
-| 1 | bin/omo-health.py | `omo health dashboard` | #144 |
-| 2 | bin/omo-state-projection-guard.py | `omo lint projection-guard` | #144 |
-| 2 | bin/omo-runtime-stamp-policy.py | `omo lint stamp-policy` | #144 |
+| 1 | bin/gac/omo-health.py | `omo health dashboard` | #144 |
+| 2 | bin/gac/omo-state-projection-guard.py | `omo lint projection-guard` | #144 |
+| 2 | bin/gac/omo-runtime-stamp-policy.py | `omo lint stamp-policy` | #144 |
 | 3 | bin/omo-manage | `omo manage` | #144 |
 | 3 | bin/omo-validate | `omo validate` | #144 |
 | 4 | scripts/omo/cards_x3_metrics.py | `omo audit cards` | #152 |

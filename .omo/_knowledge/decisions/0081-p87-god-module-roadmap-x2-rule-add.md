@@ -23,9 +23,9 @@ P86 收口后, P87 调研 2 项治理 UX 工具 + 1 项 god-module 重构支持,
 
 ## Decision
 
-### D1: bin/god-module-roadmap.py (P87 R1)
+### D1: bin/ssot/god-module-roadmap.py (P87 R1)
 
-**新工具** (`bin/god-module-roadmap.py`):
+**新工具** (`bin/ssot/god-module-roadmap.py`):
 - 解析 Python 文件 (AST) 和 TypeScript 文件 (正则启发式)
 - 输出 top-level 函数/类列表 (按行数排序)
 - 给出 candidates 优先级 (短函数 + 有 docstring + 少参数 → 高优先级)
@@ -37,9 +37,9 @@ P86 收口后, P87 调研 2 项治理 UX 工具 + 1 项 god-module 重构支持,
 - Python 实测: 1560L → 列出 top 5 函数, 27 小函数可拆
 - TS 实测: TS 函数 lines 算不准 (0), 仅可看声明顺序
 
-### D2: bin/x2-rule-add.py (P87 R2)
+### D2: bin/gac/x2-rule-add.py (P87 R2)
 
-**新工具** (`bin/x2-rule-add.py`):
+**新工具** (`bin/gac/x2-rule-add.py`):
 - 交互式 prompt 5 字段: rule_id / title / target / threshold_days / action
 - 也支持 `--non-interactive` 模式 (stdin 5 行)
 - 也支持 `--template` 打印 YAML 模板
@@ -66,8 +66,8 @@ P86 收口后, P87 调研 2 项治理 UX 工具 + 1 项 god-module 重构支持,
 ### D4: 收口统计
 
 **P87 工具数**: 29 → **31** 独立 bin 工具 (+2)
-- `bin/god-module-roadmap.py` (新)
-- `bin/x2-rule-add.py` (新)
+- `bin/ssot/god-module-roadmap.py` (新)
+- `bin/gac/x2-rule-add.py` (新)
 
 **ADR 数**: 40 → **41** (P87 +1)
 
@@ -96,24 +96,24 @@ P86 收口后, P87 调研 2 项治理 UX 工具 + 1 项 god-module 重构支持,
 
 ```bash
 # P87 R1: god-module roadmap
-python3 bin/god-module-roadmap.py projects/omo/src/omo/omo_lint.py --top 5
+python3 bin/ssot/god-module-roadmap.py projects/omo/src/omo/omo_lint.py --top 5
 # 期望: 1560L, 31 functions, 27 candidates
 
 # P87 R2: X2 rule add (template)
-python3 bin/x2-rule-add.py --template
+python3 bin/gac/x2-rule-add.py --template
 # 期望: 打印 YAML 模板
 
 # P87 R2: X2 rule add (check)
-python3 bin/x2-rule-add.py --check
+python3 bin/gac/x2-rule-add.py --check
 # 期望: 9 rules 全部健康
 
 # P87 R3: governance dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 9/9 工具全部通过
 
 # ruff 验证
-ruff check bin/god-module-roadmap.py
-ruff check bin/x2-rule-add.py
+ruff check bin/ssot/god-module-roadmap.py
+ruff check bin/gac/x2-rule-add.py
 # 期望: All checks passed!
 ```
 

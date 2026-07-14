@@ -23,9 +23,9 @@ P83 收口后, P84 调研 3 项治理盲区填补, 全部实施:
 
 ## Decision
 
-### D1: bin/mof-m2-coverage.py 修正版 (P84 R1)
+### D1: bin/mof/mof-m2-coverage.py 修正版 (P84 R1)
 
-**新工具** (`bin/mof-m2-coverage.py`):
+**新工具** (`bin/mof/mof-m2-coverage.py`):
 - 加载 M2 schema 的 `m2_type` 字段 (PascalCase) - 不含文件名前缀
 - 加载 M1 node 的 `type` 字段使用统计
 - 真正孤儿 = M2 m2_type 在 M1 中无任何节点使用 (精确比较)
@@ -40,9 +40,9 @@ P83 收口后, P84 调研 3 项治理盲区填补, 全部实施:
 
 **根因**: 旧工具的 alias 计算把 `Action` 同时也变成了 `action` (lowercase), 然后用 `m2_types_set - used` 计算孤儿, 把 `action` 也算孤儿, 但 M1 只用 `Action`. 修正: 只比较 M2 m2_type 字段 vs M1 type 字段, 中间不加 alias 噪音.
 
-### D2: bin/x2-freshness-check.py (P84 R2)
+### D2: bin/gac/x2-freshness-check.py (P84 R2)
 
-**新工具** (`bin/x2-freshness-check.py`):
+**新工具** (`bin/gac/x2-freshness-check.py`):
 - 加载 X2 rules (兼容多文档 YAML, 9 条规则)
 - 检查每条 rule 的 target 路径最后修改时间
 - 支持 glob 模式 (`DEBT-*.yaml`, `projects/*/src/**/*.py`)
@@ -65,8 +65,8 @@ P83 收口后, P84 调研 3 项治理盲区填补, 全部实施:
 ### D4: 收口统计
 
 **P84 工具数**: 24 → **26** 独立 bin 工具 (+2)
-- `bin/mof-m2-coverage.py` (新)
-- `bin/x2-freshness-check.py` (新)
+- `bin/mof/mof-m2-coverage.py` (新)
+- `bin/gac/x2-freshness-check.py` (新)
 
 **ADR 数**: 37 → **38** (P84 +1)
 
@@ -94,16 +94,16 @@ P83 收口后, P84 调研 3 项治理盲区填补, 全部实施:
 
 ```bash
 # P84 R1: M2 coverage
-python3 bin/mof-m2-coverage.py
+python3 bin/mof/mof-m2-coverage.py
 # 期望: 47 M2 schemas, 1195 M1 nodes, 95.7% coverage, 2 真正孤儿, 1 drift
 
 # P84 R2: X2 freshness
-python3 bin/x2-freshness-check.py
+python3 bin/gac/x2-freshness-check.py
 # 期望: 9 rules, 9 ok, 0 触发
 
 # ruff 验证
-ruff check bin/mof-m2-coverage.py
-ruff check bin/x2-freshness-check.py
+ruff check bin/mof/mof-m2-coverage.py
+ruff check bin/gac/x2-freshness-check.py
 # 期望: All checks passed!
 ```
 

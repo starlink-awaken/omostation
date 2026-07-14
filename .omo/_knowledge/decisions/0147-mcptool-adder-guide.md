@@ -29,7 +29,7 @@ supersedes: []
 - 必须遵循 M3/M2/M1 三层 schema (m3.yaml MCPTool / m2 type MCPTool / m1 yaml 13 字段)
 - 必须符合 M2BaseSchema (ADR-0141) 公共契约
 - 与 collection MCPTOOL (ADR-0145) 严格区分
-- 走 bin/mcp-tool-data-complete.py 守护, 不允许空 tool_name / 空 server
+- 走 bin/gac/mcp-tool-data-complete.py 守护, 不允许空 tool_name / 空 server
 
 ---
 
@@ -58,9 +58,9 @@ YAML
 ### 1.3 自检 4 步
 
 ```
-1. bin/mof-bootstrap.py all  → 5-check strict 全 0 err
-2. bin/mcp-tool-data-complete.py → "✅ all complete" 或报需补字段
-3. bin/m4-health-score.py --emit → 100.0/100 baseline 不退化
+1. bin/mof/mof-bootstrap.py all  → 5-check strict 全 0 err
+2. bin/gac/mcp-tool-data-complete.py → "✅ all complete" 或报需补字段
+3. bin/mof/m4-health-score.py --emit → 100.0/100 baseline 不退化
 4. tests/integration/m4_metamodel/run_all.py → 51/51 PASS
 ```
 

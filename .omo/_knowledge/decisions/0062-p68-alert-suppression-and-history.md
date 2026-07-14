@@ -24,7 +24,7 @@ P67 告警级别 P0/P1/P2/P3 实施后, P68 调研发现 2 项可深化:
 
 ### D1: 告警抑制时间窗 (P68 R1)
 
-**修改**: `bin/alert-aggregator.py` 加 `is_suppressed()` + `--suppression-minutes N`
+**修改**: `bin/gac/alert-aggregator.py` 加 `is_suppressed()` + `--suppression-minutes N`
 
 **逻辑**:
 ```python
@@ -54,7 +54,7 @@ def emit_notification():
 
 ### D2: 告警历史趋势报告 (P68 R2)
 
-**新工具**: `bin/alert-history.py` (130 行)
+**新工具**: `bin/gac/alert-history.py` (130 行)
 
 **功能**:
 - 读 alert-notifications.jsonl 最近 N 天

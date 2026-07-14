@@ -27,7 +27,7 @@ P94 收口后, P95 调研 3 项治理兑现, 实施 2 项 (P95-A 推迟):
 
 **执行**:
 ```bash
-python3 bin/adr-drift-apply.py --apply
+python3 bin/adr/adr-drift-apply.py --apply
 ```
 
 **实测**:
@@ -125,7 +125,7 @@ python3 bin/adr-drift-apply.py --apply
 
 ```bash
 # P95 R1: adr-drift-apply --apply (实际)
-python3 bin/adr-drift-apply.py --apply
+python3 bin/adr/adr-drift-apply.py --apply
 # 期望: 20 files touched, history 写入
 
 # P95 R2: adr-typo-fix dry-run
@@ -133,13 +133,13 @@ python3 bin/adr-typo-fix.py
 # 期望: 4 TYPO 列出, Jaccard 噪声大 (已知限制)
 
 # P95 R3: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 19/19 工具全部通过
 
 # P95 R4: ADR drift 验证
-python3 bin/adr-drift-classify.py
+python3 bin/adr/adr-drift-classify.py
 # 期望: 15 P50+ (从 32 减 17, 53% 减)
-python3 bin/adr-drift-auto-fix.py
+python3 bin/adr/adr-drift-auto-fix.py
 # 期望: SUBDIR_MISSING 0 (P94 19 → P95 0)
 
 # ruff 验证

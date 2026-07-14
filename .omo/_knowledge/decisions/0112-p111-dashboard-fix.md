@@ -92,9 +92,9 @@ return 1 if (missing_numbers or duplicate_numbers or index_refs_not_in_files) el
 
 | # | 测试 | 结果 |
 |:-:|:-----|:-----|
-| 1 | `bin/x2-freshness-check.py` exit 0 (was 1) | ✅ exit 0 |
-| 2 | `bin/adr-coverage.py` exit 0 (was 1) | ✅ exit 0 (无 DUP) |
-| 3 | `bin/governance-dashboard.py` 22/22 OK | ✅ **22/22 OK** |
+| 1 | `bin/gac/x2-freshness-check.py` exit 0 (was 1) | ✅ exit 0 |
+| 2 | `bin/adr/adr-coverage.py` exit 0 (was 1) | ✅ exit 0 (无 DUP) |
+| 3 | `bin/gac/governance-dashboard.py` 22/22 OK | ✅ **22/22 OK** |
 
 ### D5: P111+ 候选排序 (god-module 治理 + dashboard 监控)
 
@@ -115,7 +115,7 @@ return 1 if (missing_numbers or duplicate_numbers or index_refs_not_in_files) el
 - **dashboard 22/22 OK 恢复**: 防止 cron 误报, governance 持续运行
 - **ADR 0108 冲突修复**: 编号清晰, 避免后续 P111+ commit 混淆
 - **P111 教训沉淀**: 工具设计阶段需明确 "warnings = advisory" vs "errors = blocking" 语义
-- **后续 P 阶段 commit 前**: 必须跑 `bin/adr-coverage.py` 确认无 DUP, 否则同 P110 一样需 renumber
+- **后续 P 阶段 commit 前**: 必须跑 `bin/adr/adr-coverage.py` 确认无 DUP, 否则同 P110 一样需 renumber
 
 **负面**:
 - **x2-freshness 改 exit 0**: 真实 X2 违规 (如 30 天未更新) 不再触发 dashboard 红灯
@@ -133,15 +133,15 @@ return 1 if (missing_numbers or duplicate_numbers or index_refs_not_in_files) el
 
 ```bash
 # P111 验证 1: x2-freshness exit 0
-PYTHONPATH=projects/omo/src python3 bin/x2-freshness-check.py > /dev/null 2>&1; echo "exit: $?"
+PYTHONPATH=projects/omo/src python3 bin/gac/x2-freshness-check.py > /dev/null 2>&1; echo "exit: $?"
 # 期望: exit: 0 (was 1)
 
 # P111 验证 2: adr-coverage no DUP
-PYTHONPATH=projects/omo/src python3 bin/adr-coverage.py 2>&1 | head -8
+PYTHONPATH=projects/omo/src python3 bin/adr/adr-coverage.py 2>&1 | head -8
 # 期望: 无 "❌ 重复编号: [108]"
 
 # P111 验证 3: dashboard 22/22 OK
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py 2>&1 | tail -3
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py 2>&1 | tail -3
 # 期望: ✅ OK: 22 / 22, ❌ FAIL: 0
 ```
 
@@ -151,7 +151,7 @@ PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py 2>&1 | tail -3
 - **ADR-0108**: P110-A ecos domain_manager 2 子模块化 (0108 占用 #1)
 - **ADR-0111**: P110-D TS AST 工具升级 (P110 收官, 但引发 dashboard 退化)
 - **ADR-0112**: P111 dashboard 修复 (本 ADR, 紧急修复 + 教训沉淀)
-- **生态**: `bin/x2-freshness-check.py` (修复), `.omo/_knowledge/decisions/0113-phase2-bos-contract-linter.md` (renumbered)
+- **生态**: `bin/gac/x2-freshness-check.py` (修复), `.omo/_knowledge/decisions/0113-phase2-bos-contract-linter.md` (renumbered)
 
 ---
 

@@ -23,7 +23,7 @@ P88 收口后, P89 调研 2 项治理深化 + 1 项 P89-A 计划, 实施情况:
 
 ## Decision
 
-### D1: bin/rule-history-insight.py (P89 R1)
+### D1: bin/gac/rule-history-insight.py (P89 R1)
 
 **新工具**: X2 rule 状态 + drift 报告关联分析
 
@@ -38,7 +38,7 @@ P88 收口后, P89 调研 2 项治理深化 + 1 项 P89-A 计划, 实施情况:
 - ❌ 1 missing: X2-FRESH-ARCHIVED-LLMGATEWAY (target llm-gateway/ 已删, archived 状态)
 - Top drift 关键词: `projects/` 636 次, `omo/` 53 次
 
-### D2: bin/adr-drift-check.py (P89 R2)
+### D2: bin/adr/adr-drift-check.py (P89 R2)
 
 **新工具**: ADR 内容引用健康度检查
 
@@ -73,8 +73,8 @@ P88 收口后, P89 调研 2 项治理深化 + 1 项 P89-A 计划, 实施情况:
 ### D5: 收口统计
 
 **P89 工具数**: 32 → **34** 独立 bin 工具 (+2)
-- `bin/rule-history-insight.py` (新)
-- `bin/adr-drift-check.py` (新)
+- `bin/gac/rule-history-insight.py` (新)
+- `bin/adr/adr-drift-check.py` (新)
 
 **ADR 数**: 42 → **43** (P89 +1)
 
@@ -107,22 +107,22 @@ P88 收口后, P89 调研 2 项治理深化 + 1 项 P89-A 计划, 实施情况:
 
 ```bash
 # P89 R1: rule-history
-python3 bin/rule-history-insight.py
+python3 bin/gac/rule-history-insight.py
 # 期望: 8 fresh, 1 missing (archived)
 
 # P89 R2: adr-drift
-python3 bin/adr-drift-check.py
+python3 bin/adr/adr-drift-check.py
 # 期望: 109 issues (历史 archived 引用, 预期)
-python3 bin/adr-drift-check.py --adr ADR-0082
+python3 bin/adr/adr-drift-check.py --adr ADR-0082
 # 期望: 2 issues (submodule working tree, 预期)
 
 # P89 R3: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 12/12 工具全部通过
 
 # ruff 验证
-ruff check bin/rule-history-insight.py
-ruff check bin/adr-drift-check.py
+ruff check bin/gac/rule-history-insight.py
+ruff check bin/adr/adr-drift-check.py
 # 期望: All checks passed!
 ```
 

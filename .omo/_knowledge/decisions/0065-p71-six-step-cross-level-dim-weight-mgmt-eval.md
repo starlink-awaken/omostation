@@ -46,7 +46,7 @@ P70 收口后, P71 调研 7 项候选, 选 4 项轻量实施:
 
 ### D2: alert-history 跨级别聚合 (P71 R2)
 
-**修改**: `bin/alert-history.py` `analyze_history()`
+**修改**: `bin/gac/alert-history.py` `analyze_history()`
 
 **新增**:
 - `by_cross_level` 字段: 按 (level, sup_state) 聚合
@@ -57,7 +57,7 @@ P70 收口后, P71 调研 7 项候选, 选 4 项轻量实施:
 
 ### D3: 维度权重动态调整 (P71 R3)
 
-**新工具**: `bin/dim-weight.py` (190 行)
+**新工具**: `bin/gac/dim-weight.py` (190 行)
 
 **功能**:
 - 读持久化快照 (`readiness-snapshots.jsonl`)

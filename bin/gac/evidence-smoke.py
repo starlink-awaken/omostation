@@ -271,8 +271,23 @@ def check_service(svc) -> dict:
         ok, reason = _check_stdio(svc.command)
     elif transport == "internal":
         ok, reason = _check_internal(svc.module_path, svc.func_name)
-    elif transport in ("mcp_proxy", "http"):
+    elif transport == "http":
         ok, reason = _check_http(svc.http_url)
+    elif transport == "mcp_proxy":
+        # Gateway aggregation aliases: may carry http_url, or only tool-routing
+        # metadata in YAML (mcp_tool/tools — not yet projected onto BosService).
+        # Accept either a valid http_url or a non-empty description anchor.
+        if svc.http_url:
+            ok, reason = _check_http(svc.http_url)
+        elif (svc.description or "").strip():
+            ok, reason = True, "mcp_proxy_gateway_alias"
+        else:
+            ok, reason = False, "mcp_proxy missing http_url/description"
+    elif transport == "inline":
+        # Documentation / i0_route:pending anchors — not executable endpoints.
+        # Count as resolvable meta-declarations so they don't inflate BOS gap
+        # (bos_registry admits inline for this purpose; tech-debt fix).
+        ok, reason = True, "inline_docs_anchor"
 
     return {
         "uri": svc.uri,

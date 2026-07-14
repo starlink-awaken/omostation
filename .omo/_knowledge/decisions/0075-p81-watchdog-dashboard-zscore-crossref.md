@@ -28,7 +28,7 @@ P80 收口后, P81 调研 4 项候选, 全部实施:
 
 **步骤**:
 - `uv pip install watchdog` (P79 评估后安装)
-- `bin/p0-event-listener.py` 加 `--use-watchdog` 选项
+- `bin/gac/p0-event-listener.py` 加 `--use-watchdog` 选项
 - watchdog 真实时 (vs P76 --watch 0.5s polling)
 - 跨平台 (Linux/macOS/Windows)
 
@@ -60,7 +60,7 @@ P80 收口后, P81 调研 4 项候选, 全部实施:
 
 ### D3: alert-history z-score 洞察 (P81 R3)
 
-**修改**: `bin/alert-history.py` `detect_anomalies()`
+**修改**: `bin/gac/alert-history.py` `detect_anomalies()`
 
 **新增 5 类异常**: (原 4 类 + z-score)
 1. sudden_spike (1h 内同类型 > 5)
@@ -84,7 +84,7 @@ for day, c in day_counts.items():
 
 ### D4: management 跨子目录引用检查 (P81 R4)
 
-**新工具**: `bin/management-cross-ref-check.py` (135 行)
+**新工具**: `bin/ssot/management-cross-ref-check.py` (135 行)
 
 **功能**:
 - 扫描 .omo/_knowledge/management/{workflows,playbooks,guides}/

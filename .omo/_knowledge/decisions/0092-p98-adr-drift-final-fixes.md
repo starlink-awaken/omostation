@@ -88,22 +88,22 @@ refs["path_refs"].add(val)
 
 ```bash
 # P98 R1: ASPIRATIONAL
-python3 bin/adr-drift-classify.py  # P50+ 19→2 (-89%)
+python3 bin/adr/adr-drift-classify.py  # P50+ 19→2 (-89%)
 
 # P98 R2: REAL_BUG
-python3 bin/adr-drift-check.py --adr ADR-0088
+python3 bin/adr/adr-drift-check.py --adr ADR-0088
 # 期望: 0 issues (REAL_BUG 修)
 
 # P98 R3: regex bug
-python3 bin/adr-drift-check.py
+python3 bin/adr/adr-drift-check.py
 # 期望: 不再 IndexError
 
 # P98 R4: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 工具全部通过
 
 # ruff 验证
-ruff check bin/adr-drift-check.py
+ruff check bin/adr/adr-drift-check.py
 # 期望: All checks passed!
 ```
 

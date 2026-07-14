@@ -173,7 +173,7 @@ wc -l projects/omo/src/omo/omo_governance_surfaces.py
 # 期望: 763L, 较 P105 末 -259L
 
 # P106 R5: dashboard
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 工具全部通过
 
 # P106 R6: mof-version

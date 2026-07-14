@@ -67,11 +67,11 @@ S0 (立即, ~1h)     S1 (1-2 周)         S2 (3-4 周)         S3 (渐进, 持�
 
 | # | 任务 | 影响 | 工时 | 验收 |
 |---|------|------|------|------|
-| S2-1 | bin/gac-local-gate.py 测试 | B+D | 4h | tests/test_gac_local_gate.py |
-| S2-2 | bin/yaml-validate.py + dir-hygiene-check.py 测试 | B | 2h | tests/test_bin_tools.py |
-| S2-3 | bin/ssot-guardian.py + doc-ssot-lint.py 测试 | B+D | 4h | 覆盖核心路径 |
+| S2-1 | bin/gac/gac-local-gate.py 测试 | B+D | 4h | tests/test_gac_local_gate.py |
+| S2-2 | bin/ssot/yaml-validate.py + dir-hygiene-check.py 测试 | B | 2h | tests/test_bin_tools.py |
+| S2-3 | bin/ssot/ssot-guardian.py + doc-ssot-lint.py 测试 | B+D | 4h | 覆盖核心路径 |
 | S2-4 | cockpit-ui Vitest 冒烟测试 | B | 4h | tests/ 存在 + npm test 通过 |
-| S2-5 | bin/state-freshness-check.py (新建) | D | 3h | stale 服务 exit 1 |
+| S2-5 | bin/gac/state-freshness-check.py (新建) | D | 3h | stale 服务 exit 1 |
 | S2-6 | state-freshness 纳入 GaC gate | D | 1h | make gac-local-gate 含 freshness |
 | S2-7 | governance-evolution initiative 进度填充 | D | 2h | status --json 返回 % |
 | S2-8 | check-god-module.py 纳入 CI (覆盖 TS) | A+C | 1h | ci-lint.yml 新 job |

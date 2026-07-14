@@ -62,7 +62,7 @@ supersedes:
 **目标**: 自动检测 aetherforge / omo / c2g / cockpit 仓内的 M1 yaml 与 BOS URI registry 是否一致
 
 **产物**:
-- `bin/check-cross-repo-consistency.py` (新)
+- `bin/ssot/check-cross-repo-consistency.py` (新)
   - 读 projects/*/src/*/ssot/registry/*.yaml (各仓 SSOT)
   - 读 projects/agora/etc/bos-services.yaml
   - diff: URI 引用 / M1 实例 vs 各仓声明

@@ -41,13 +41,13 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
 
 | 接口类型 | 资产 | 期望的 GaC 角色 |
 |----------|------|----------------|
-| **CLI 工具** | bin/mof-bootstrap.py | `ci_gate` executor, 每次 PR 跑 `all` |
-| **CLI 工具** | bin/m4-health-score.py | `omo_audit` executor, 每日 cron 派生面 |
-| **CLI 工具** | bin/check-submodule-hygiene.py | `ci_gate` executor, weekly cron |
+| **CLI 工具** | bin/mof/mof-bootstrap.py | `ci_gate` executor, 每次 PR 跑 `all` |
+| **CLI 工具** | bin/mof/m4-health-score.py | `omo_audit` executor, 每日 cron 派生面 |
+| **CLI 工具** | bin/ssot/check-submodule-hygiene.py | `ci_gate` executor, weekly cron |
 | **CLI 工具** | bin/l0-constraints-migrate.py | `omo_audit` executor, 派生面重建 |
-| **CLI 工具** | bin/mcp-tool-data-complete.py | `ci_gate` executor, 单工具 MCPTOOL adder |
-| **CLI 工具** | bin/m4-cron-hook.py | `radar_cron` executor, OMO 桥接 |
-| **CLI 工具** | bin/omo-state-cleanup.py | `gac_local_gate` executor |
+| **CLI 工具** | bin/gac/mcp-tool-data-complete.py | `ci_gate` executor, 单工具 MCPTOOL adder |
+| **CLI 工具** | bin/mof/m4-cron-hook.py | `radar_cron` executor, OMO 桥接 |
+| **CLI 工具** | bin/gac/omo-state-cleanup.py | `gac_local_gate` executor |
 | **CLI 工具** | bin/m2-date-migrate.py | `omo_audit` executor |
 | **Schema** | m2/constraint_l0.yaml | `source_ref` 锚 |
 | **Schema** | m2/m2_base_schema.yaml | `source_ref` 锚 |
@@ -74,12 +74,12 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
   layer: meta
   name: "M4 自反校验门禁 (5-check)"
   description: >
-    M4 元模型的 5-check 自反校验。每次 PR/pre_release 跑 bin/mof-bootstrap.py all.
+    M4 元模型的 5-check 自反校验。每次 PR/pre_release 跑 bin/mof/mof-bootstrap.py all.
     check_1 (m3 自反) / check_2 (m2 公共契约) / check_3 (m2→m3 锚) /
     check_4 (m3-meta 自反) / check_5 (M2BaseSchema 模式一致).
   check_type: audit_chain
   target: projects/ecos/src/ecos/ssot/mof/
-  source_ref: bin/mof-bootstrap.py
+  source_ref: bin/mof/mof-bootstrap.py
   executor: [hook_pre_edit, ci_gate, gac_local_gate]
   lifecycle: active
   version: 1.0.0
@@ -100,7 +100,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
     mof-validate (60%) + 5-check (30%) + meta mapping (5%) + ADR accepted (5%).
   check_type: freshness
   target: projects/ecos/.omo/_derived/m4-health.json
-  source_ref: bin/m4-health-score.py
+  source_ref: bin/mof/m4-health-score.py
   executor: [radar_cron, omo_audit]
   forbid_copy_in: [CLAUDE.md, docs/**
   lifecycle: active
@@ -121,7 +121,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
     submodule-dirty / tracked-derived / submodule-pointer-stale.
   check_type: audit_chain
   target: .gitignore
-  source_ref: bin/check-submodule-hygiene.py
+  source_ref: bin/ssot/check-submodule-hygiene.py
   executor: [radar_cron, gac_local_gate]
   lifecycle: active
   version: 1.0.0
@@ -141,7 +141,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
     集合 yaml 自动跳过 (ADR-0145 §2.1).
   check_type: consistency_drift
   target: projects/ecos/src/ecos/ssot/mof/m1/mcptool/
-  source_ref: bin/mcp-tool-data-complete.py
+  source_ref: bin/gac/mcp-tool-data-complete.py
   executor: [ci_gate, gac_local_gate]
   lifecycle: active
   version: 1.0.0
@@ -161,7 +161,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
     验证 DERIVED_PATHS 列表。
   check_type: ssot_pointer
   target: .omo/_derived/
-  source_ref: bin/omo-state-cleanup.py
+  source_ref: bin/gac/omo-state-cleanup.py
   executor: [omo_audit, radar_cron]
   lifecycle: active
   version: 1.0.0
@@ -193,7 +193,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
     constraint_l0.yaml / m2_base_schema.yaml / m3-meta.yaml / mof_driven.py
   check_type: schema_integrity
   target: projects/ecos/src/ecos/ssot/mof/m2/|mof/m3-meta.yaml|mof/m0/mof_driven.py
-  source_ref: bin/mof-bootstrap.py
+  source_ref: bin/mof/mof-bootstrap.py
   executor: [ci_gate, gac_local_gate]
   lifecycle: active
   version: 1.0.0
@@ -208,7 +208,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
   - id: mof-bootstrap
     type: local_tool
     description: "M4 5-check 自反校验器"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof-bootstrap.py", "all"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof/mof-bootstrap.py", "all"]
     health_check: true
     required: true
     timeout: 60
@@ -216,7 +216,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
   - id: m4-health-score
     type: local_tool
     description: "M4 Health Score 量化 (派生面引擎)"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/m4-health-score.py", "--emit"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/mof/m4-health-score.py", "--emit"]
     health_check: true
     required: false
     timeout: 120
@@ -224,7 +224,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
   - id: check-submodule-hygiene
     type: local_tool
     description: "子模块卫生守门 (3 类检查)"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/check-submodule-hygiene.py", "--strict"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/ssot/check-submodule-hygiene.py", "--strict"]
     health_check: true
     required: false
     timeout: 60
@@ -232,7 +232,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
   - id: mcp-tool-data-complete
     type: local_tool
     description: "MCPTOOL 数据完整性守门"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/mcp-tool-data-complete.py"]
+    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/mcp-tool-data-complete.py"]
     health_check: false
     required: false
     timeout: 30
@@ -246,10 +246,10 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
       - .omo/_truth/x1-governance-policies.yaml
       - bin/gac-*.py
       # M4 GaC 接入 (Phase 2):
-      - bin/mof-bootstrap.py
-      - bin/m4-health-score.py
-      - bin/check-submodule-hygiene.py
-      - bin/mcp-tool-data-complete.py
+      - bin/mof/mof-bootstrap.py
+      - bin/mof/m4-health-score.py
+      - bin/ssot/check-submodule-hygiene.py
+      - bin/gac/mcp-tool-data-complete.py
 ```
 
 ### Phase 3: check_type_enum 扩展 (低风险, 与 Phase 1 一并完成)
@@ -274,10 +274,10 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
 
 ```
 # 在 .omo/cron/operating-rhythm-crontab 追加 (daily 09:15):
-15 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/m4-health-score.py --emit >> runtime/cron/operating-rhythm-daily.log 2>&1
+15 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/mof/m4-health-score.py --emit >> runtime/cron/operating-rhythm-daily.log 2>&1
 
 # weekly 周一 10:15 (接在 mof-state-bridge 后):
-15 10 * * 1 cd "$HOME/Workspace" && uv run --with pyyaml python bin/check-submodule-hygiene.py --strict >> runtime/cron/operating-rhythm-weekly.log 2>&1
+15 10 * * 1 cd "$HOME/Workspace" && uv run --with pyyaml python bin/ssot/check-submodule-hygiene.py --strict >> runtime/cron/operating-rhythm-weekly.log 2>&1
 ```
 
 ---
@@ -331,10 +331,10 @@ Phase 1 完成后验证:
 
 ```bash
 # 1. GaC validate 通过
-uv run --with pyyaml python bin/gac-validate.py --gate
+uv run --with pyyaml python bin/gac/gac-validate.py --gate
 
 # 2. M4 Health Score 不退化
-uv run --with pyyaml python bin/m4-health-score.py  # 保持 100/100
+uv run --with pyyaml python bin/mof/m4-health-score.py  # 保持 100/100
 
 # 3. 新规则可被 agent-workflow 识别
 uv run --with pyyaml python bin/agent-workflow.py tools | grep -E "M4-|mof-bootstrap|m4-health"
@@ -347,7 +347,7 @@ Phase 4 完成后验证:
 
 ```bash
 # 5. OMO cron 可调用
-M4_HOOK_JSON=1 uv run --with pyyaml python bin/m4-cron-hook.py --sync
+M4_HOOK_JSON=1 uv run --with pyyaml python bin/mof/m4-cron-hook.py --sync
 
 # 6. health score 派生面写 cron log
 cat .omo/_derived/m4-cron-log.json | python3 -c "import json,sys; d=json.load(sys.stdin); assert d[-1]['mark']=='M4_HOOK_MARK'; print('cron log OK')"

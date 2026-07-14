@@ -168,8 +168,8 @@ history:
     + 评估 linter 增量维度 (3 候选全部已被现有实现覆盖, 无新增)'
   timestamp: '2026-06-23T17:27:04.424182'
   version: 0.0.45
-- description: 'P58 R1-R3: 跨面引用一致性检查工具 (bin/check-cross-refs.py, 报告 448 文件 4430 历史漂移断链,
-    archive 集中) + status 分布趋势报告 (bin/status-distribution.py, 690 文件 97% 历史归档 2% active
+- description: 'P58 R1-R3: 跨面引用一致性检查工具 (bin/ssot/check-cross-refs.py, 报告 448 文件 4430 历史漂移断链,
+    archive 集中) + status 分布趋势报告 (bin/gac/status-distribution.py, 690 文件 97% 历史归档 2% active
     健康成熟态) + 6 个 phase5/reviews 文档补 lifecycle + governance 100 持续'
   timestamp: '2026-06-23T17:48:06.420254'
   version: 0.0.46
@@ -266,7 +266,7 @@ history:
   timestamp: '2026-06-25T09:21:48.634249'
   version: 0.0.65
 - description: 'P77 R1: management 144 物理迁移 (workflows 127 / playbooks 5 / guides
-    12, 简化版双指针, P75 category 已加字段, git 历史可查) + bin/management-migrate.py (新, 16 独立
+    12, 简化版双指针, P75 category 已加字段, git 历史可查) + bin/ssot/management-migrate.py (新, 16 独立
     bin) + ADR-0071 + 31 个 ADR (1/3 候选实施, 跨子仓联动 + graphify 留 P78+)'
   timestamp: '2026-06-25T09:41:25.424640'
   version: 0.0.66

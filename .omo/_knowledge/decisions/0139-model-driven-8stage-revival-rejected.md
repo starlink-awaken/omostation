@@ -77,7 +77,7 @@ model-driven `LifecycleStage` 仍 7 阶段 (已撤销 8)。
 ADR-0117 撤销决定生效, governance 维护归:
 - 治理 Agent (governance-agent profile in `agent-workflows.yaml`)
 - projects/omo governance kernel
-- GaC rules engine (`bin/gac-local-gate.py`)
+- GaC rules engine (`bin/gac/gac-local-gate.py`)
 - X 轴 governance framework (aetherforge/c2g/bus-foundation)
 
 ---
@@ -156,7 +156,7 @@ GOVERNANCE_MAINTENANCE 仍然是已撤销状态, 由 X 轴 framework 履行。
 
 | 检查 | 工具 | 结果 |
 |------|------|------|
-| m3.yaml Stage enum 7 个 | `bin/mof-bootstrap.py check_1` | 0 err |
+| m3.yaml Stage enum 7 个 | `bin/mof/mof-bootstrap.py check_1` | 0 err |
 | model-driven 7 阶段 | `mof_driven --validate` | stage_count=7 |
 | 38 测试不回归 | `tests/integration/m4_metamodel/run_all.py` | 38/38 PASS |
 | ADR-0117 still in effect | grep "GOVERNANCE_MAINTENANCE" model-driven | 仅注释, 无活跃代码 |

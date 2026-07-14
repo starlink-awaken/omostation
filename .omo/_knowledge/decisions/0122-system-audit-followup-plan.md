@@ -93,7 +93,7 @@ PR #11 (`23702782`) 系统全面审计 (架构/功能/文档/债务/配置 5 维
 | **F-4** 修 `check-dead-path-refs` 50+ `.omo/PROJECTS/` 死引用 | 主仓 | 1h | 跟 F-3 同步 |
 | **F-5** 修 `gac-m1-sync` 写 submodule 内架构问题: 改 omo broker 写 (路径 `projects/ecos/.git/worktrees/<wt>/modules/projects/ecos` 替换) | omo 仓 + bin/ 工具 | 2h | - |
 | **F-6** ADR-0115 Phase 3: 7 个 check-* 工具接入 `gac-local-gate.py::CHECKS` (按 false-positive 风险分级: 立即接 / scoped / CI-only / 归档) | 主仓 | 3h | ADR-0115 已接受 |
-| **F-11** 修 `bin/sync-submodules-push.sh` 的 `noupstream=$((noupstream+1))` 在 `set -euo pipefail` 下被 stdin parsing 误触发; 改用更稳的检测 (e.g. 不用 pipefail 或加 guard) | 主仓 | 1h | - |
+| **F-11** 修 `bin/ssot/sync-submodules-push.sh` 的 `noupstream=$((noupstream+1))` 在 `set -euo pipefail` 下被 stdin parsing 误触发; 改用更稳的检测 (e.g. 不用 pipefail 或加 guard) | 主仓 | 1h | - |
 | **F-12** 修 auto-PR ISO 配置漂移: `make install-hooks` 后 `T .githooks/pre-commit` 残留, 改 Makefile 或加 install-hooks fix-up | 主仓 | 1h | - |
 | **ecos submodule M1 5 commit (bump pointer)** | omo 仓 + 主仓 | 1h | F-5 完成 |
 | **ADR-0121** 跟踪: X-Plane branch `work/gcsi-adr-0121` GCSI 推进 | governance-team | 0 | 跟踪即可 |
@@ -102,14 +102,14 @@ PR #11 (`23702782`) 系统全面审计 (架构/功能/文档/债务/配置 5 维
 
 | 项 | 责任项目 | 工作量 | 依赖 |
 |---|---|---|---|
-| **F-2** ADR-0119 S2-5: 新建 `bin/state-freshness-check.py` (基于 ADR-0120 freshness fix) | 主仓 | 3h | S0 完成 |
+| **F-2** ADR-0119 S2-5: 新建 `bin/gac/state-freshness-check.py` (基于 ADR-0120 freshness fix) | 主仓 | 3h | S0 完成 |
 | **F-2 cont.** ADR-0119 S2-6: state-freshness 纳入 gac-local-gate | 主仓 | 1h | F-2 step 1 |
 | **F-2 cont.** governance-evolution initiative 进度填充 (8 个全 active, 0 done) | 主仓 | 2h | - |
 | **governance score 回升 97.8 → 100** (配合 F-2 完成) | 主仓 | 2h | F-2 完成 |
 | **F-8** 6 个单点 BOS 域加 `kind: bridge` 或 `kind: facet` 标签 (`bos://cockpit/` / `bos://l4-kernel/` / `bos://runtime/` / `bos://meta/` / `bos://swarm/` / `bos://omo/`) | agora 仓 + 各 owner 仓 | 3h | 跟 F-7 同步 |
 | **F-13** 删 `projects/omo-debt/` 独立仓, 收编到 cockpit 入口 | 主仓 + cockpit | 1h | - |
 | **ADR-0115 Phase 2** `gov-` → `governance-` 短前缀 rename (2 文件: `gov-history-stats.py` + `gov-trend-report.py`) | 主仓 | 1h | F-6 完成 |
-| **ADR-0115 Phase 4** 4 个 dashboard 工具合并为单 `bin/governance-dashboard.py <subcommand>` | 主仓 | 3h | F-6 完成 |
+| **ADR-0115 Phase 4** 4 个 dashboard 工具合并为单 `bin/gac/governance-dashboard.py <subcommand>` | 主仓 | 3h | F-6 完成 |
 
 ### P2 长期 (渐进, 跨仓协调)
 

@@ -105,7 +105,7 @@ if ntype == "MCPTool":
 nodes.append(data)
 ```
 
-### 3.2 bin/mcp-tool-data-complete.py (守门工具)
+### 3.2 bin/gac/mcp-tool-data-complete.py (守门工具)
 
 未来新增单工具 MCPTOOL 时, 这工具会:
 - 跳过集合 yaml (tool_count / tools:)
@@ -128,8 +128,8 @@ nodes.append(data)
 |------|------|------|
 | mof-validate 通过率 | `python3 src/ecos/ssot/tools/mof-validate.py` | **1361/1361 (100%)** |
 | 51 回归测试 | `tests/integration/m4_metamodel/run_all.py` | 51/51 PASS |
-| 5-check strict | `bin/mof-bootstrap.py all` | check_1..5 全 0 err |
-| M4 Health Score | `bin/m4-health-score.py` | **100.0/100** |
+| 5-check strict | `bin/mof/mof-bootstrap.py all` | check_1..5 全 0 err |
+| M4 Health Score | `bin/mof/m4-health-score.py` | **100.0/100** |
 
 ---
 
@@ -137,7 +137,7 @@ nodes.append(data)
 
 - ❌ 改 MCPTOOL yaml 文件 (它们语义对)
 - ❌ 改 m2 schema MCPTool (它是 schema 层定义, 不是数据)
-- ❌ 单工具 MCPTOOL 的 tool_name/server 数据补全 (用 bin/mcp-tool-data-complete.py 作为未来守门)
+- ❌ 单工具 MCPTOOL 的 tool_name/server 数据补全 (用 bin/gac/mcp-tool-data-complete.py 作为未来守门)
 
 ---
 

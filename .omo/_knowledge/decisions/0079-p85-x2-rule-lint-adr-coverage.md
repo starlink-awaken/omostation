@@ -23,9 +23,9 @@ P84 收口后, P85 调研 2 项治理闭环工具 + 1 项 X2 rule 修正, 全部
 
 ## Decision
 
-### D1: bin/x2-rule-lint.py (P85 R1)
+### D1: bin/gac/x2-rule-lint.py (P85 R1)
 
-**新工具** (`bin/x2-rule-lint.py`):
+**新工具** (`bin/gac/x2-rule-lint.py`):
 - 必填字段检查: rule_id, target, freshness.threshold_days, freshness.action
 - 类型检查: threshold_days 是正整数, action ∈ {warn, escalate, error}
 - target glob 至少匹配一个真实文件/目录 (archived 豁免)
@@ -44,9 +44,9 @@ P84 收口后, P85 调研 2 项治理闭环工具 + 1 项 X2 rule 修正, 全部
 
 **重测**: 9 rules, 9 ok, 0 issues ✓
 
-### D3: bin/adr-coverage.py (P85 R3)
+### D3: bin/adr/adr-coverage.py (P85 R3)
 
-**新工具** (`bin/adr-coverage.py`):
+**新工具** (`bin/adr/adr-coverage.py`):
 - 编号连续性检查 (排除 P28-P49 历史 gap 命名约定 0009-0049)
 - frontmatter 完整性 (status, lifecycle, owner, last-reviewed)
 - INDEX 引用 vs 实际文件双向一致 (markdown 链接 + 表格纯文本)
@@ -61,8 +61,8 @@ P84 收口后, P85 调研 2 项治理闭环工具 + 1 项 X2 rule 修正, 全部
 ### D4: 收口统计
 
 **P85 工具数**: 26 → **28** 独立 bin 工具 (+2)
-- `bin/x2-rule-lint.py` (新)
-- `bin/adr-coverage.py` (新)
+- `bin/gac/x2-rule-lint.py` (新)
+- `bin/adr/adr-coverage.py` (新)
 
 **ADR 数**: 38 → **39** (P85 +1)
 
@@ -90,20 +90,20 @@ P84 收口后, P85 调研 2 项治理闭环工具 + 1 项 X2 rule 修正, 全部
 
 ```bash
 # P85 R1: X2 rule lint
-python3 bin/x2-rule-lint.py
+python3 bin/gac/x2-rule-lint.py
 # 期望: 9 rules, 0 issues, "🎉 所有 X2 rules 健康!"
 
 # P85 R2: COMMIT-FATIGUE rule 修正后
-python3 bin/x2-freshness-check.py
+python3 bin/gac/x2-freshness-check.py
 # 期望: 9 rules, 9 ok, 0 触发
 
 # P85 R3: ADR coverage
-python3 bin/adr-coverage.py
+python3 bin/adr/adr-coverage.py
 # 期望: 37 ADRs, 编号连续, frontmatter 完整, INDEX 100% 一致
 
 # ruff 验证
-ruff check bin/x2-rule-lint.py
-ruff check bin/adr-coverage.py
+ruff check bin/gac/x2-rule-lint.py
+ruff check bin/adr/adr-coverage.py
 # 期望: All checks passed!
 ```
 

@@ -24,9 +24,9 @@ last-reviewed: 2026-07-02
 | `gov-` | `governance-` | 2 vs 6 |
 | `dashboard-` | (混合) | 2 (4 个 dashboard 工具混在 gac- / governance-) |
 
-`bin/gov-history-stats.py` 和 `bin/governance-history-insight.py` 是同类工具两个名字,
+`bin/gov-history-stats.py` 和 `bin/gac/governance-history-insight.py` 是同类工具两个名字,
 新人 grep `gov-` 找不到 `governance-` 系列。`bin/dashboard-readiness-summary.py` 和
-`bin/dashboard-ui-render.py` 与 `bin/governance-dashboard.py` 职责重叠但命名分裂。
+`bin/dashboard-ui-render.py` 与 `bin/gac/governance-dashboard.py` 职责重叠但命名分裂。
 
 ### 问题 2: 8 个 check-* 工具游离于 gate 之外
 
@@ -49,7 +49,7 @@ last-reviewed: 2026-07-02
 
 - `bin/dashboard-readiness-summary.py`
 - `bin/dashboard-ui-render.py`
-- `bin/governance-dashboard.py`
+- `bin/gac/governance-dashboard.py`
 - `bin/gac-dashboard.py`
 
 4 个 dashboard 工具输入/输出/数据源 高度重叠 (governance readiness 视角), 但分散在 4 个
@@ -127,7 +127,7 @@ false-positive 风险, 4 类: 立即接 / scoped 接 / CI-only / 归档).
 
 #### Phase 4: dashboard 合并 (后续 PR)
 
-`bin/governance-dashboard.py <subcommand>` 统一入口, 4 个原工具标 deprecated, 后续删.
+`bin/gac/governance-dashboard.py <subcommand>` 统一入口, 4 个原工具标 deprecated, 后续删.
 
 ## Alternatives Not Chosen
 

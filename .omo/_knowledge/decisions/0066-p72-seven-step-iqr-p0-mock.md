@@ -50,7 +50,7 @@ P71 收口后, P72 调研 7 项候选, 实施 4 项:
 
 ### D2: alert-history sup_state 维度 (P72 R2)
 
-**修改**: `bin/alert-history.py` `analyze_history()`
+**修改**: `bin/gac/alert-history.py` `analyze_history()`
 
 **新增**:
 - `by_sup_state` 字段: 按 fired/suppressed 分桶
@@ -61,7 +61,7 @@ P71 收口后, P72 调研 7 项候选, 实施 4 项:
 
 ### D3: dim-weight IQR 调优 (P72 R3)
 
-**修改**: `bin/dim-weight.py` `compute_weights()`
+**修改**: `bin/gac/dim-weight.py` `compute_weights()`
 
 **算法变更**:
 - 旧: stdev * (1 + correlation) — 13 快照 stdev=0 异常
@@ -73,7 +73,7 @@ P71 收口后, P72 调研 7 项候选, 实施 4 项:
 
 ### D4: P0 mock 通知 (P72 R4)
 
-**新工具**: `bin/alert-mock-p0-notify.py` (95 行)
+**新工具**: `bin/gac/alert-mock-p0-notify.py` (95 行)
 
 **功能**:
 - 模拟 3 通道: email / sms / slack

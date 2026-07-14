@@ -25,7 +25,7 @@ P62 收口后, P63 调研发现 3 项可深化:
 
 ### D1: readiness 历史快照 (P63 R1)
 
-**修改**: `bin/governance-readiness.py` 末尾加 `write_readiness_snapshot()` 函数
+**修改**: `bin/gac/governance-readiness.py` 末尾加 `write_readiness_snapshot()` 函数
 
 **快照格式** (`.omo/_log/readiness-YYYYMMDD-HHMM.json`):
 ```json
@@ -51,7 +51,7 @@ P62 收口后, P63 调研发现 3 项可深化:
 
 ### D2: governance-readiness-trend 报告 (P63 R2)
 
-**新工具**: `bin/governance-readiness-trend.py`
+**新工具**: `bin/gac/governance-readiness-trend.py`
 
 **功能**:
 - 加载最近 30 个快照

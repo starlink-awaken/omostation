@@ -147,7 +147,7 @@ cd projects/omo && python3 -c "from omo.omo_lint import cmd_lint_schemas, CONSUM
 # 期望: ✅ re-export OK
 
 # P100 R5: dashboard
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 工具全部通过
 
 # P100 R5: governance

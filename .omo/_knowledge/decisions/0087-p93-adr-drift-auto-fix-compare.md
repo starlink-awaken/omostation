@@ -23,7 +23,7 @@ P92 收口后, P93 调研 3 项治理深化, 实施 2 项 (P93-A 推迟):
 
 ## Decision
 
-### D1: bin/adr-drift-auto-fix.py (P93 R1)
+### D1: bin/adr/adr-drift-auto-fix.py (P93 R1)
 
 **新工具**: 调用 adr-drift-classify, 自动分类每个 P50+ issue 为:
 - **TEMPLATE**: 路径含 YYYYMMDD/HHMM/TBD/XXX 等占位符 (7 issues)
@@ -77,7 +77,7 @@ P92 收口后, P93 调研 3 项治理深化, 实施 2 项 (P93-A 推迟):
 ### D4: 收口统计
 
 **P93 工具数**: 37 → **38** 独立 bin 工具 (+1)
-- `bin/adr-drift-auto-fix.py` (新)
+- `bin/adr/adr-drift-auto-fix.py` (新)
 
 **ADR 数**: 46 → **47** (P93 +1)
 
@@ -112,9 +112,9 @@ P92 收口后, P93 调研 3 项治理深化, 实施 2 项 (P93-A 推迟):
 
 ```bash
 # P93 R1: ADR drift auto-fix
-python3 bin/adr-drift-auto-fix.py
+python3 bin/adr/adr-drift-auto-fix.py
 # 期望: 32 P50+ issues, 30 auto-fixable, 5 类 (TEMPLATE/SUBDIR_MISSING/TYPO/REAL_BUG/ASPIRATIONAL)
-python3 bin/adr-drift-auto-fix.py --json  # JSON 输出
+python3 bin/adr/adr-drift-auto-fix.py --json  # JSON 输出
 
 # P93 R2: gov-history compare
 python3 bin/gov-history-stats.py --compare
@@ -122,11 +122,11 @@ python3 bin/gov-history-stats.py --compare
 python3 bin/gov-history-stats.py --compare --days 60  # 60 天窗口
 
 # P93 R3: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 16/16 工具全部通过
 
 # ruff 验证
-ruff check bin/adr-drift-auto-fix.py
+ruff check bin/adr/adr-drift-auto-fix.py
 ruff check bin/gov-history-stats.py
 # 期望: All checks passed!
 ```

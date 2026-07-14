@@ -21,14 +21,14 @@ last-reviewed: 2026-06-24
 
 ## 2. 工具
 
-**脚本**: `bin/ssot-guardian.py`
+**脚本**: `bin/ssot/ssot-guardian.py`
 
 ```bash
 # 检测模式 — 有漂移返回 1
-python3 bin/ssot-guardian.py
+python3 bin/ssot/ssot-guardian.py
 
 # 自动修复模式 — 修复白名单字段并发事件
-python3 bin/ssot-guardian.py --auto-fix --emit
+python3 bin/ssot/ssot-guardian.py --auto-fix --emit
 ```
 
 **自动修复范围**:
@@ -49,14 +49,14 @@ python3 bin/ssot-guardian.py --auto-fix --emit
 ```yaml
 - id: ssot-guardian
   name: SSOT guardian (task count + current_wave drift detection)
-  entry: python3 bin/ssot-guardian.py
+  entry: python3 bin/ssot/ssot-guardian.py
   language: system
   pass_filenames: false
   stages: [pre-commit]
 ```
 
 - 检测模式运行,**不自动修复**.
-- 若检测到漂移,阻塞提交,并提示运行 `python3 bin/ssot-guardian.py --auto-fix`.
+- 若检测到漂移,阻塞提交,并提示运行 `python3 bin/ssot/ssot-guardian.py --auto-fix`.
 
 ### 3.2 每日 Cron Auto-fix
 
@@ -64,7 +64,7 @@ Cron ID: `e78ec298`
 Schedule: `17 7 * * *` (每天 07:17)
 
 每日任务:
-1. `python3 bin/ssot-guardian.py --auto-fix --emit`
+1. `python3 bin/ssot/ssot-guardian.py --auto-fix --emit`
 2. `omo governance audit`
 3. 若只修改了 `.omo/state/`、`.omo/tasks/registry/INDEX.md`、`.omo/goals/current.yaml`,自动提交 `chore(ssot): daily guardian auto-sync`.
 4. 若出现意外文件改动,停止并发出 `ssot_guardian_auto_commit_blocked` 事件.
@@ -83,10 +83,10 @@ Guardian 运行时发出以下事件到 `.omo/_knowledge/omo-events.jsonl`:
 
 ```bash
 # 1. 查看漂移详情
-python3 bin/ssot-guardian.py
+python3 bin/ssot/ssot-guardian.py
 
 # 2. 自动修复(仅限白名单字段)
-python3 bin/ssot-guardian.py --auto-fix
+python3 bin/ssot/ssot-guardian.py --auto-fix
 
 # 3. 检查修复结果
 omo goal status
@@ -99,7 +99,7 @@ omo governance audit
 
 ## 6. 例外与红线
 
-- **不得** 在 `bin/ssot-guardian.py` 之外新增直接写 `system.yaml` / `goals/current.yaml` 的脚本.
+- **不得** 在 `bin/ssot/ssot-guardian.py` 之外新增直接写 `system.yaml` / `goals/current.yaml` 的脚本.
 - **不得** 让 guardian 自动修改 `divergence_flags` 的语义内容(只能人类或 OMO governance 流程判定).
 - **不得** 自动 bump 子模块指针; cron auto-commit 只提交 `.omo/` 内 SSOT 文件.
 

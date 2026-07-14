@@ -28,8 +28,8 @@ supersedes: []
 
 | cron 时间 | 命令 | 结果 |
 |-----------|------|------|
-| daily 09:15 (每日) | `bin/m4-health-score.py --emit` | 派生面 m4-health.json 每日写入 |
-| weekly 周一 10:15 | `bin/check-submodule-hygiene.py --strict` | 子模块卫生周报 |
+| daily 09:15 (每日) | `bin/mof/m4-health-score.py --emit` | 派生面 m4-health.json 每日写入 |
+| weekly 周一 10:15 | `bin/ssot/check-submodule-hygiene.py --strict` | 子模块卫生周报 |
 
 接在 ADR-0144 `m4-cron-hook.py` 已落地的 OMO 桥接之后。
 
@@ -40,7 +40,7 @@ supersedes: []
 ### 1.1 Daily 节奏 (09:15)
 
 ```cron
-15 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/m4-health-score.py --emit >> runtime/cron/operating-rhythm-daily.log 2>&1
+15 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/mof/m4-health-score.py --emit >> runtime/cron/operating-rhythm-daily.log 2>&1
 ```
 
 - 接人现有 daily status 节奏(09:00 agent-workflow status, 09:05 governance-evolution, 09:10 governance-evolution packages)
@@ -49,7 +49,7 @@ supersedes: []
 ### 1.2 Weekly 节奏 (周一 10:15)
 
 ```cron
-15 10 * * 1 cd "$HOME/Workspace" && uv run --with pyyaml python bin/check-submodule-hygiene.py --strict >> runtime/cron/operating-rhythm-weekly.log 2>&1
+15 10 * * 1 cd "$HOME/Workspace" && uv run --with pyyaml python bin/ssot/check-submodule-hygiene.py --strict >> runtime/cron/operating-rhythm-weekly.log 2>&1
 ```
 
 - 接入现有 Monday 10:00 MOF 节奏(mof-state-bridge + mof-drift)
@@ -59,8 +59,8 @@ supersedes: []
 
 ## 2. 依赖
 
-- 需要 `bin/m4-health-score.py` 在 PATH 中(已在 workspace)
-- 需要 `bin/check-submodule-hygiene.py` 在 PATH 中(已在 workspace)
+- 需要 `bin/mof/m4-health-score.py` 在 PATH 中(已在 workspace)
+- 需要 `bin/ssot/check-submodule-hygiene.py` 在 PATH 中(已在 workspace)
 - 不需要安装 cron(已在主仓 `.omo/cron/` 目录)
 
 ---

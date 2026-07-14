@@ -138,12 +138,12 @@ print('✅ all N re-exports OK')
   - P100-P103 (omo_lint): 目标 <600L ideal, <400L 黄金值
   - P104-P108 (omo_governance_surfaces): 目标 <600L ideal, <500L 黄金值
   - **绝对阈值**: 永远 <800L (warn), 终极目标 <600L (ideal), <500L (黄金)
-- [ ] **god-module 列表更新**: `bin/god-module-13-error-list.py` 中本文件消失或行数下降
+- [ ] **god-module 列表更新**: `bin/ssot/god-module-13-error-list.py` 中本文件消失或行数下降
 - [ ] **ADR 编写**: `.omo/_knowledge/decisions/NNNN-p<phase>-<topic>.md`
   - 必含 7 段: Context / Decision / Consequences / Validation / References / D1-D7 (拆分细节) / 教训
   - **教训段** 必须显式登记前阶段失败模式 (e.g. P106 教训 P104 re-export 漏写)
 - [ ] **mof-version 记录**: `bin/mof-version record "<description>"` → 版本号 +1
-- [ ] **dashboard 验证**: `bin/governance-dashboard.py` → 22/22 OK
+- [ ] **dashboard 验证**: `bin/gac/governance-dashboard.py` → 22/22 OK
 - [ ] **git commit**: 元数据 (ADR + mof-version) → 不 commit omo submodule (待人类审批)
 
 ---

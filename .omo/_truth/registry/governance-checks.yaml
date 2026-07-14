@@ -305,9 +305,9 @@ gac:
       dimension: X4
       layer: meta
       name: "文档 SSOT (markdown 禁硬编码项目元数据, 引用 project-registry)"
-      description: "markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/doc-ssot-lint.py 扫描)"
+      description: "markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/ssot/doc-ssot-lint.py 扫描)"
       check_type: ssot_pointer
-      target: "docs/project-registry.yaml + bin/doc-ssot-lint.py 扫描范围"
+      target: "docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围"
       forbid_copy_in: ["AGENTS.md", "CLAUDE.md", "**/README.md", "LAYER-INDEX.md"]
       executor: [ci_gate]
       lifecycle: active
@@ -363,9 +363,9 @@ gac:
       dimension: X2
       layer: meta
       name: "GaC 自举递归 (工具活/indexed 完整/exec 有效/schema 自洽)"
-      description: "GaC 治一切, GaC 自己也要被治 (NORTH-STAR 元治理递归); bin/gac-bootstrap.py 检测 4 层: 工具活/死 + indexed source_ref 完整 + executor 执行有效 + schema 自洽"
+      description: "GaC 治一切, GaC 自己也要被治 (NORTH-STAR 元治理递归); bin/gac/gac-bootstrap.py 检测 4 层: 工具活/死 + indexed source_ref 完整 + executor 执行有效 + schema 自洽"
       check_type: drift_audit
-      target: "bin/gac-bootstrap.py (GaC 自身完整性自检)"
+      target: "bin/gac/gac-bootstrap.py (GaC 自身完整性自检)"
       executor: [ci_gate, radar_cron]
       lifecycle: active
       version: "1.0.0"
@@ -377,9 +377,9 @@ gac:
       dimension: X2
       layer: meta
       name: "GaC executor 注册 drift (声明 vs 实际存在)"
-      description: "GaC 规则声明 executor (ci_gate/omo_audit/evidence_smoke 等), 验证实际存在 (文件/命令/CI workflow); bin/gac-executor.py 检测 missing executor = 规则声明不存在的执行器"
+      description: "GaC 规则声明 executor (ci_gate/omo_audit/evidence_smoke 等), 验证实际存在 (文件/命令/CI workflow); bin/gac/gac-executor.py 检测 missing executor = 规则声明不存在的执行器"
       check_type: drift_audit
-      target: "bin/gac-executor.py (executor 声明 vs 实际存在性)"
+      target: "bin/gac/gac-executor.py (executor 声明 vs 实际存在性)"
       executor: [ci_gate, radar_cron]
       lifecycle: active
       version: "1.0.0"
@@ -387,7 +387,7 @@ gac:
       adr: "ADR-0106"
 
     # ADR-0124 F-补 (2026-07-02): X2 governance-semantic-gate 规则补登记.
-    # 病根: PR #17 S1 follow-up 时, bin/governance-semantic-gate.py 落地 + M1 实例
+    # 病根: PR #17 S1 follow-up 时, bin/gac/governance-semantic-gate.py 落地 + M1 实例
     # (projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-X2-GOVERNANCE-SEMANTIC-GATE.yaml)
     # 派生, 但本 registry SSOT 未登记 (X-Plane 跨边界工作残留).
     # 治本: 补登记, 满足 gac-convergence 守门 (P71 类 B: 工具未接 caller 反向).
@@ -396,9 +396,9 @@ gac:
       dimension: X2
       layer: meta
       name: "治理语义门禁统一契约"
-      description: "防声明/执行语义错位: 本地 gate 不只看 exit code, 还消费 gac-bootstrap/gac-executor/gac-mof-validate/mof-schema/adr-coverage/AGCP/package 的 JSON ok 字段; release 模式硬挡 active runs 和 release package 未决. PR #17 落地工具 (bin/governance-semantic-gate.py), M1 实例同步派生, 但 registry SSOT 漏登记 — 本 commit 补."
+      description: "防声明/执行语义错位: 本地 gate 不只看 exit code, 还消费 gac-bootstrap/gac-executor/gac-mof-validate/mof-schema/adr-coverage/AGCP/package 的 JSON ok 字段; release 模式硬挡 active runs 和 release package 未决. PR #17 落地工具 (bin/gac/governance-semantic-gate.py), M1 实例同步派生, 但 registry SSOT 漏登记 — 本 commit 补."
       check_type: schema_integrity
-      target: "bin/governance-semantic-gate.py (统一消费治理工具 JSON 语义)"
+      target: "bin/gac/governance-semantic-gate.py (统一消费治理工具 JSON 语义)"
       executor: [ci_gate, gac_local_gate]
       lifecycle: active
       version: "1.0.0"
@@ -452,9 +452,9 @@ gac:
       dimension: X1
       layer: meta
       name: "bin 工具未接 caller drift (工具存在但 0 caller)"
-      description: "防元治理盲区 2.0: bin/*.py 工具应至少有一个 caller (Makefile / .github/workflows/ / pre-commit / gac-local-gate.py::CHECKS / docs 之一). 0 caller 工具落入'声明/执行鸿沟' (同 CR-X1-EVIDENCE-RUNNABLE 警示). 当前已知 8 个 check-* 工具 0 caller 待 ADR-0115 Phase 3 评估接入. 实现: bin/gac-executor.py 扩展检查 'caller 引用' 而非仅 '文件存在'"
+      description: "防元治理盲区 2.0: bin/*.py 工具应至少有一个 caller (Makefile / .github/workflows/ / pre-commit / gac-local-gate.py::CHECKS / docs 之一). 0 caller 工具落入'声明/执行鸿沟' (同 CR-X1-EVIDENCE-RUNNABLE 警示). 当前已知 8 个 check-* 工具 0 caller 待 ADR-0115 Phase 3 评估接入. 实现: bin/gac/gac-executor.py 扩展检查 'caller 引用' 而非仅 '文件存在'"
       check_type: drift_audit
-      target: "bin/gac-executor.py (扩展: 检查 bin/*.py 是否有 caller 引用)"
+      target: "bin/gac/gac-executor.py (扩展: 检查 bin/*.py 是否有 caller 引用)"
       executor: [ci_gate, radar_cron]
       lifecycle: active
       version: "1.0.0"
@@ -522,9 +522,9 @@ gac:
       dimension: X1
       layer: L2
       name: "god-module 文件行数上限 (新代码 > 1500L 阻塞)"
-      description: "防 god module 漂移: 当前已知 7 文件 > 1500L (gbrain 重灾区) + 51 文件 > 800L, 大多数是历史累积. 新代码不许引入 > 1500L 文件 (P0 audit 2026-07-02). 实现: bin/check-god-module.py 扩展 --strict 模式, 新加文件 > 1500L 返回 exit 1. 已有 god module 走 ADR-0115 渐进拆分 (单仓 / 跨仓分别由对应模块 owner 实施)"
+      description: "防 god module 漂移: 当前已知 7 文件 > 1500L (gbrain 重灾区) + 51 文件 > 800L, 大多数是历史累积. 新代码不许引入 > 1500L 文件 (P0 audit 2026-07-02). 实现: bin/ssot/check-god-module.py 扩展 --strict 模式, 新加文件 > 1500L 返回 exit 1. 已有 god module 走 ADR-0115 渐进拆分 (单仓 / 跨仓分别由对应模块 owner 实施)"
       check_type: god_module
-      target: "bin/check-god-module.py --strict (新文件 > 1500L 阻塞, 已有文件仅 warn)"
+      target: "bin/ssot/check-god-module.py --strict (新文件 > 1500L 阻塞, 已有文件仅 warn)"
       executor: [ci_gate, radar_cron]
       lifecycle: active
       version: "1.0.0"
@@ -550,7 +550,7 @@ gac:
       dimension: X1
       layer: meta
       name: "freshness_seconds producer/consumer 语义一致性"
-      description: "防 P71 Class D (语义错配): scheduler.py 产出的 freshness_seconds 语义为 uptime, 但 omo_state_schema.py 消费时当 staleness. 声明和执行都正确, 但语义错配导致系统性误报. 实现: bin/governance-convergence-lint.py --rule freshness-semantic"
+      description: "防 P71 Class D (语义错配): scheduler.py 产出的 freshness_seconds 语义为 uptime, 但 omo_state_schema.py 消费时当 staleness. 声明和执行都正确, 但语义错配导致系统性误报. 实现: bin/gac/governance-convergence-lint.py --rule freshness-semantic"
       check_type: audit_chain
       target: "projects/runtime/src/runtime/scheduler.py + projects/omo/src/omo/omo_state_schema.py"
       executor: [ci_gate, radar_cron]
@@ -563,7 +563,7 @@ gac:
       dimension: X4
       layer: meta
       name: "matrix.yaml port 与 port-registry.yaml 一致性"
-      description: "防 SSOT 漂移: matrix.yaml 中配了 port 的服务, port 必须在 port-registry.yaml 注册; stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/matrix-consistency-lint.py R2/R3"
+      description: "防 SSOT 漂移: matrix.yaml 中配了 port 的服务, port 必须在 port-registry.yaml 注册; stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/ssot/matrix-consistency-lint.py R2/R3"
       check_type: ssot_lint
       target: "~/runtime/matrix.yaml + protocols/port-registry.yaml"
       executor: [ci_gate, gac_local_gate]
@@ -576,7 +576,7 @@ gac:
       dimension: X4
       layer: meta
       name: "daemon 类型服务必须有 launchd_label 或 docker_container"
-      description: "防 unmanaged 盲区: daemon 类型服务若无 launchd_label/docker_container, scheduler 标记 unmanaged 不自愈. 实现: bin/matrix-consistency-lint.py R1"
+      description: "防 unmanaged 盲区: daemon 类型服务若无 launchd_label/docker_container, scheduler 标记 unmanaged 不自愈. 实现: bin/ssot/matrix-consistency-lint.py R1"
       check_type: ssot_lint
       target: "~/runtime/matrix.yaml"
       executor: [ci_gate, gac_local_gate]
@@ -590,7 +590,7 @@ gac:
       dimension: X4
       layer: meta
       name: "SSOT 路径与 broker 写入路径一致"
-      description: "防 P71 Class A (路径错位): SSOT 声明路径必须与 broker 实际写入路径一致. 案例: dependency-baseline 从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 实现: bin/governance-convergence-lint.py --rule ssot-path-norm"
+      description: "防 P71 Class A (路径错位): SSOT 声明路径必须与 broker 实际写入路径一致. 案例: dependency-baseline 从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 实现: bin/gac/governance-convergence-lint.py --rule ssot-path-norm"
       check_type: ssot_lint
       target: ".omo/_truth/ + broker 写入路径"
       executor: [ci_gate, radar_cron]
@@ -603,9 +603,9 @@ gac:
       dimension: X4
       layer: meta
       name: "CI_SKIP_CHECKS ∪ CI_ONLY_CHECKS 覆盖所有 CI 不适用项"
-      description: "防 P71 Class C (CI 永红): CI_SKIP_CHECKS 和 CI_ONLY_CHECKS 必须显式列出所有 CI 不适用的 check, 不能靠 ad-hoc skip. 实现: bin/governance-convergence-lint.py --rule ci-skip-matrix"
+      description: "防 P71 Class C (CI 永红): CI_SKIP_CHECKS 和 CI_ONLY_CHECKS 必须显式列出所有 CI 不适用的 check, 不能靠 ad-hoc skip. 实现: bin/gac/governance-convergence-lint.py --rule ci-skip-matrix"
       check_type: registry_integrity
-      target: "bin/gac-local-gate.py CI_SKIP_CHECKS + CI_ONLY_CHECKS"
+      target: "bin/gac/gac-local-gate.py CI_SKIP_CHECKS + CI_ONLY_CHECKS"
       executor: [ci_gate, radar_cron]
       lifecycle: active
       version: "1.0.0"
@@ -2194,7 +2194,7 @@ gac:
       description: |
         当主仓主分支 .gitmodules 路径下 submodule 实际 HEAD ≠ 主仓 pin SHA,
         radar_cron 报 [advisory]; 24h 未修正 升 [hard]. 治 P76 矛盾 3.
-        实施: bin/submodule-bump-check.py.
+        实施: bin/ssot/submodule-bump-check.py.
       check_type: drift_audit
       target: "bin/ssot/submodule-bump-check.py"
       source_ref: bin/ssot/submodule-bump-check.py::main
@@ -2231,7 +2231,7 @@ gac:
       description: |
         Knowledge Foundry 9-cron deck 每 6h 跑一次, run ledger 持久化 (runtime/omo/_delivery/foundry/).
         threshold: 9 deck 中 ≥ 7/9 (80%) ok. 跨 deck fail 必须写 FAIL-<run-id>.yaml.
-        实施: bin/knowledge-foundry-cron.py
+        实施: bin/gac/knowledge-foundry-cron.py
       check_type: drift_audit
       target: "bin/gac/knowledge-foundry-cron.py"
       source_ref: bin/gac/knowledge-foundry-cron.py::main

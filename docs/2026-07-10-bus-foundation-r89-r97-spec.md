@@ -81,7 +81,7 @@ X 横切框架 (model-driven, bus-foundation, c2g, omo-debt, observability, aeth
 1. **零破坏性**: 所有 R 都向后兼容,9 个 backend 的 public API 不变
 2. **增量启用**: R89 metrics 默认 OFF, 通过 `BUS_METRICS=1` env var 或 `enable_metrics()` 调用启用
 3. **SSOT 一致**: 新增 metric names / event types 必须登记到 `protocols/*.yaml`, 不允许 hardcode 在代码注释
-4. **Broker 优先**: DLQ admin CLI 跟 `bin/gen-dependency-baseline.py` 一样, 走 omo broker 写 (不直写)
+4. **Broker 优先**: DLQ admin CLI 跟 `bin/mof/gen-dependency-baseline.py` 一样, 走 omo broker 写 (不直写)
 5. **小步快跑**: 9 个 R 独立 PR, 每个 PR 自带 bench + 集成测试, merge 后立即可灰度
 6. **测试先行**: R97 在 R89 之前先建 hypothesis 框架, 后续 R 复用
 7. **观测先行**: R89 落地前, R90 retry 必须先在 metrics 暴露 "retry_attempted" counter 才能量化效果
@@ -497,7 +497,7 @@ Phase C (week 13):
   - 跟 omostation/omostation 0.2.x → 0.3.0 release tag 准备
 ```
 
-每个 R 用 `bin/gac-worktree.sh claim <r89|...>` 起独立 worktree + PR.
+每个 R 用 `bin/gac/gac-worktree.sh claim <r89|...>` 起独立 worktree + PR.
 
 ---
 

@@ -105,7 +105,7 @@ m3-meta.yaml 仍保留作为派生投影。
 | 检查 | 工具 | 结果 |
 |------|------|------|
 | m3.yaml 加载 | `yaml.safe_load` | 34 elements |
-| 4-check strict | `bin/mof-bootstrap.py all` | 0 err (10 sections of §1-§7) |
+| 4-check strict | `bin/mof/mof-bootstrap.py all` | 0 err (10 sections of §1-§7) |
 | mof_bridge 8 MET | Python 调用 | 全部映射仍 OK |
 | mof_bridge 关系矩阵 | Python 调用 | DOMAIN→DOMAIN/STRUCT 通过 |
 | mof_bridge Confidence | Python 调用 | fact=2 → 1.00 |

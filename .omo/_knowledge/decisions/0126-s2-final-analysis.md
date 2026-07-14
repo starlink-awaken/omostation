@@ -51,14 +51,14 @@ related:
 
 | 项 | 状态 | 落地位置 |
 |---|------|---------|
-| F-2 step 1 (state-freshness 独立) | ✅ PR #25 | `bin/state-freshness-check.py` |
-| F-2 step 2 (接入 gac-local-gate) | ✅ PR #25 | `bin/gac-local-gate.py::CHECKS` |
+| F-2 step 1 (state-freshness 独立) | ✅ PR #25 | `bin/gac/state-freshness-check.py` |
+| F-2 step 2 (接入 gac-local-gate) | ✅ PR #25 | `bin/gac/gac-local-gate.py::CHECKS` |
 | F-2 step 3 (8 initiative 进度) | ✅ PR #25 | `.omo/_truth/registry/governance-evolution-roadmap.yaml` |
 | F-2 step 4 (state-freshness R1 stale 非阻塞) | ✅ DD3F190A | (S2 续) |
 | F-2 step 5 (planned task 收口 11→8) | ✅ 05EC76F9 | (S2 续, 删 4 QUEST 测试残) |
 | F-2 step 6 (governance score 100) | ✅ X-Plane 修复 (cron 启 daemon + state sync) | `.omo/state/health.yaml` |
 | **ADR-0115 Phase 2** (gov- rename) | ✅ X-Plane 011cb271 | 2 rename |
-| **ADR-0115 Phase 4** (4 dashboard 合并) | ✅ X-Plane 完全 inline + 物理删 3 文件 | `bin/governance-dashboard.py` |
+| **ADR-0115 Phase 4** (4 dashboard 合并) | ✅ X-Plane 完全 inline + 物理删 3 文件 | `bin/gac/governance-dashboard.py` |
 | **F-8** (BOS kind 标签) | ⏳ 跨仓, 留 follow-up | (不在主仓 scope) |
 | **F-13** (omo-debt 收编) | ⏳ 跨仓, 留 follow-up | (不在主仓 scope) |
 | **F-14** (sub-tools 漂移收尾) | ⏳ 实际已治本 (M2 enum + governance-semantic-gate), 但 gac-bootstrap 层 5 仍报 gac_local_gate 非法 (见 §3) | 留 local fix |
@@ -70,7 +70,7 @@ related:
 
 ### 问题 1: gac-bootstrap 仍报 gac_local_gate 非法 (P1 阻塞)
 
-**症状**: `bin/gac-bootstrap.py` 自举层 5 fail:
+**症状**: `bin/gac/gac-bootstrap.py` 自举层 5 fail:
 ```
 ❌ CR-X2-GOVERNANCE-SEMANTIC-GATE: 非法 executor: ['gac_local_gate']
 ❌ CR-L0-MATRIX-PORT-CONSISTENCY: 非法 executor: ['gac_local_gate']
@@ -83,7 +83,7 @@ related:
 
 ### 问题 2: gac-executor 自检 exit code 与 ok 字段不一致 (P2)
 
-`bin/gac-executor.py` 返回 `ok: True` 但 exit code 1. 影响 gac-local-gate 实际判定.
+`bin/gac/gac-executor.py` 返回 `ok: True` 但 exit code 1. 影响 gac-local-gate 实际判定.
 
 ### 问题 3: SYSTEM-INDEX.md 数字 stale
 
@@ -140,10 +140,10 @@ related:
 
 ```bash
 # 1. 复现
-uv run --with pyyaml python bin/gac-bootstrap.py | grep "gac_local_gate"
+uv run --with pyyaml python bin/gac/gac-bootstrap.py | grep "gac_local_gate"
 # 2. 修 (待查 valid_executors 加载逻辑)
 # 3. 验证
-uv run --with pyyaml python bin/gac-bootstrap.py  # 应 PASS
+uv run --with pyyaml python bin/gac/gac-bootstrap.py  # 应 PASS
 make gac-local-gate  # 仍 PASS
 ```
 

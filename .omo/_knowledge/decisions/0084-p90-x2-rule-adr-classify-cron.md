@@ -44,9 +44,9 @@ P89 收口后, P90 调研 4 项治理深化, 实施 3 项 (P90-A 推迟):
 
 **实测**: 10 rules, 0 issues, healthy ✓ (加新 rule 后 9→10)
 
-**修复 bug**: `bin/x2-rule-add.py` 的 title 字段原本是裸 YAML 字符串, 含 `:` 时会 break YAML 解析. 改为双引号包裹 + 转义, 保证任何 title 安全.
+**修复 bug**: `bin/gac/x2-rule-add.py` 的 title 字段原本是裸 YAML 字符串, 含 `:` 时会 break YAML 解析. 改为双引号包裹 + 转义, 保证任何 title 安全.
 
-### D2: bin/adr-drift-classify.py (P90 R2)
+### D2: bin/adr/adr-drift-classify.py (P90 R2)
 
 **新工具**: 调用 adr-drift-check, 自动归类 issues
 - **历史预期 (P28-P49/archived)**: 51 issues (符合预期, 不需修)
@@ -87,7 +87,7 @@ P89 收口后, P90 调研 4 项治理深化, 实施 3 项 (P90-A 推迟):
 ### D6: 收口统计
 
 **P90 工具数**: 34 → **35** 独立 bin 工具 (+1)
-- `bin/adr-drift-classify.py` (新)
+- `bin/adr/adr-drift-classify.py` (新)
 
 **ADR 数**: 43 → **44** (P90 +1)
 
@@ -119,25 +119,25 @@ P89 收口后, P90 调研 4 项治理深化, 实施 3 项 (P90-A 推迟):
 
 ```bash
 # P90 R1: X2 rule
-python3 bin/x2-rule-lint.py  # 10 rules, 0 issues
-python3 bin/x2-freshness-check.py  # 10 rules, 9 fresh, 1 missing (archived)
-python3 bin/rule-history-insight.py  # 10 rules, 9 fresh, 1 missing (archived)
+python3 bin/gac/x2-rule-lint.py  # 10 rules, 0 issues
+python3 bin/gac/x2-freshness-check.py  # 10 rules, 9 fresh, 1 missing (archived)
+python3 bin/gac/rule-history-insight.py  # 10 rules, 9 fresh, 1 missing (archived)
 
 # P90 R2: ADR drift classify
-python3 bin/adr-drift-classify.py  # 51 historical + 38 P50+ new
-python3 bin/adr-drift-classify.py --report  # markdown 报告
-python3 bin/adr-drift-classify.py --json  # JSON 详细
+python3 bin/adr/adr-drift-classify.py  # 51 historical + 38 P50+ new
+python3 bin/adr/adr-drift-classify.py --report  # markdown 报告
+python3 bin/adr/adr-drift-classify.py --json  # JSON 详细
 
 # P90 R3: cron (P91+ 编写 install 脚本)
 ls .omo/cron/governance-dashboard-crontab  # 新 crontab 文件
 
 # P90 R4: dashboard
-python3 bin/governance-dashboard.py  # 13/13 工具全部通过
+python3 bin/gac/governance-dashboard.py  # 13/13 工具全部通过
 
 # ruff 验证
-ruff check bin/adr-drift-classify.py
-ruff check bin/adr-drift-check.py
-ruff check bin/x2-rule-add.py
+ruff check bin/adr/adr-drift-classify.py
+ruff check bin/adr/adr-drift-check.py
+ruff check bin/gac/x2-rule-add.py
 # 期望: All checks passed!
 ```
 

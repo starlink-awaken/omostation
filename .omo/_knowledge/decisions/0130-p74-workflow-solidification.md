@@ -84,14 +84,14 @@ P74 报告通过 `omo state sync` 派生,产物进 `.omo/state/runtime/health.ya
 
 ### 2.4 决策 4:命名收敛(omo- 前缀)
 
-`bin/state-projection-guard.py` → `bin/omo-state-projection-guard.py`
-`bin/runtime-stamp-policy.py` → `bin/omo-runtime-stamp-policy.py`
+`bin/state-projection-guard.py` → `bin/gac/omo-state-projection-guard.py`
+`bin/runtime-stamp-policy.py` → `bin/gac/omo-runtime-stamp-policy.py`
 
 归类:OMO 治理域(`omo-` 前缀),符合 `.omo/standards/bin-tool-naming.md` 的命名空间约束。在 ADR-0115 Phase X 引用本 ADR。
 
 **2026-07-07 更新**: 这两个工具已内化到 omo CLI:
-- `bin/omo-state-projection-guard.py` → `omo lint projection-guard`
-- `bin/omo-runtime-stamp-policy.py` → `omo lint stamp-policy`
+- `bin/gac/omo-state-projection-guard.py` → `omo lint projection-guard`
+- `bin/gac/omo-runtime-stamp-policy.py` → `omo lint stamp-policy`
 
 原 bin/ 脚本保留作为 backward-compat wrapper。
 
@@ -157,8 +157,8 @@ PR 合并前必须满足:
 3. `make gac-local-gate` PASS (≥ 26 checks)
 4. `pytest tests/test_agent_workflow.py` 31/31 PASS
 5. `agent-workflow compliance --json` 输出 `p74_solidification` 段
-6. `bin/omo-state-projection-guard.py` 4 projections OK
-7. `bin/omo-runtime-stamp-policy.py` 0 orphan
+6. `bin/gac/omo-state-projection-guard.py` 4 projections OK
+7. `bin/gac/omo-runtime-stamp-policy.py` 0 orphan
 
 ## 6. 后续(可选,observability 阶段再考虑)
 

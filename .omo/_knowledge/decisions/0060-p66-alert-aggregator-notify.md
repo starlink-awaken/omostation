@@ -24,7 +24,7 @@ P65 alert-aggregator 实施后, P66 调研发现 1 项可深化 + 1 项需调整
 
 ### D1: alert-aggregator --notify 主动通知 (P66 R2)
 
-**修改**: `bin/alert-aggregator.py` 加 `--notify` 选项 + `emit_notification()` 函数
+**修改**: `bin/gac/alert-aggregator.py` 加 `--notify` 选项 + `emit_notification()` 函数
 
 **触发逻辑**:
 ```python

@@ -165,7 +165,7 @@ gbrain-bos/
 - ADR-0156 (P76 Phase 2 收口) — 本设计的承载 ADR
 - SOP-GOD-MODULE-SPLIT — Phase 2 拆分执行方法
 - 项目-registry `projects:` 段 — gbrain 元数据
-- `bin/check-layer-call-direction.py` — 守门工具
+- `bin/ssot/check-layer-call-direction.py` — 守门工具
 
 ---
 

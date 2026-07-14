@@ -22,7 +22,7 @@ P76 Phase 4 (W9-W11) 完成 3 项核心交付:
 | 交付 | 状态 | 关键产物 |
 |------|:---:|---------|
 | **X 扩展晋升机制** | ✅ | 4 阶段 lifecycle (idea → 0.1.x → 1.0.x → 2.0.x) |
-| **bin/submodule-bump-check.py** | ✅ | 17 submodules 全对齐 (0/0/0) |
+| **bin/ssot/submodule-bump-check.py** | ✅ | 17 submodules 全对齐 (0/0/0) |
 | **CR-SUBMODULE-BUMP-AUTO** | ✅ | 新 GaC 规则 |
 
 ## 1. 决策 (WHY/WHAT/NEXT)
@@ -81,9 +81,9 @@ Phase 1 修了入口, Phase 2 立了守门, Phase 3 立了指标。
   description: |
     当主仓主分支 .gitmodules 路径下 submodule 实际 HEAD ≠ 主仓 pin SHA,
     radar_cron 报 [advisory]; 24h 未修正 升 [hard].
-    实施: bin/submodule-bump-check.py (已交付, 17 submodules 全对齐)
-  target: "bin/submodule-bump-check.py"
-  source_ref: bin/submodule-bump-check.py::main
+    实施: bin/ssot/submodule-bump-check.py (已交付, 17 submodules 全对齐)
+  target: "bin/ssot/submodule-bump-check.py"
+  source_ref: bin/ssot/submodule-bump-check.py::main
   executor: [radar_cron, ci_gate, gac_local_gate]
   enforcement: advisory
 ```
@@ -114,7 +114,7 @@ Phase 1 修了入口, Phase 2 立了守门, Phase 3 立了指标。
 ## 4. 验证清单
 
 - [x] X 扩展晋升 4 阶段 lifecycle 文档
-- [x] `bin/submodule-bump-check.py` 创建并跑通 (17/17 aligned)
+- [x] `bin/ssot/submodule-bump-check.py` 创建并跑通 (17/17 aligned)
 - [x] CR-SUBMODULE-BUMP-AUTO 规则注册 (160 rules total)
 - [ ] radar_cron 集成 (后续 PR)
 - [ ] Stage 1→Stage 2 真实晋升案例 (待 Phase 5 / Foundry)

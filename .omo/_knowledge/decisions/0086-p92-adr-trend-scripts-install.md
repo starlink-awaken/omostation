@@ -23,7 +23,7 @@ P91 收口后, P92 调研 3 项治理深化, 实施 2 项 (P92-A 推迟):
 
 ## Decision
 
-### D1: bin/adr-trend-insight.py (P92 R1)
+### D1: bin/adr/adr-trend-insight.py (P92 R1)
 
 **新工具**: ADR 时间维度洞察
 - 加载所有 ADR (含 frontmatter) + git log (首次/最后 commit 时间)
@@ -71,7 +71,7 @@ P91 收口后, P92 调研 3 项治理深化, 实施 2 项 (P92-A 推迟):
 ### D4: 收口统计
 
 **P92 工具数**: 36 → **37** 独立 bin 工具 (+1)
-- `bin/adr-trend-insight.py` (新)
+- `bin/adr/adr-trend-insight.py` (新)
 
 **P92 Scripts**: install-dashboard-cron.sh 推入 scripts/ working tree (commit 待)
 
@@ -106,7 +106,7 @@ P91 收口后, P92 调研 3 项治理深化, 实施 2 项 (P92-A 推迟):
 
 ```bash
 # P92 R1: ADR trend
-python3 bin/adr-trend-insight.py
+python3 bin/adr/adr-trend-insight.py
 # 期望: 44 ADRs, 100% frontmatter, 36 active + 8 archived
 
 # P92 R2: install-dashboard-cron dry-run
@@ -118,11 +118,11 @@ python3 bin/gov-history-stats.py
 # 期望: 6 类别 (lint/tests/debt/knowledge/tasks/agora) 全部有 trend
 
 # P92 R4: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 15/15 工具全部通过
 
 # ruff 验证
-ruff check bin/adr-trend-insight.py
+ruff check bin/adr/adr-trend-insight.py
 # 期望: All checks passed!
 ```
 

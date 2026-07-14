@@ -122,7 +122,7 @@ python3 bin/gov-trend-report.py --markdown  # markdown 报告
 python3 bin/gov-trend-report.py --window monthly  # 月度窗口
 
 # governance dashboard
-python3 bin/governance-dashboard.py  # 10/10 工具全部通过
+python3 bin/gac/governance-dashboard.py  # 10/10 工具全部通过
 
 # ruff 验证
 ruff check bin/gov-trend-report.py

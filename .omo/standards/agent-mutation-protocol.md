@@ -45,7 +45,7 @@ omo event emit \
 
 ## 4. 检测与门禁
 
-- `python3 bin/ssot-guardian.py` 检测子模块漂移和 direct-omo-io 违规。
+- `python3 bin/ssot/ssot-guardian.py` 检测子模块漂移和 direct-omo-io 违规。
 - pre-commit hook 运行 `ssot-guardian`。
 - CI 运行 `omo lint direct-omo-io`。
 

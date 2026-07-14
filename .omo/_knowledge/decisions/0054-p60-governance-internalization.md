@@ -91,7 +91,7 @@ projects/l4-kernel/src/l4_kernel/registry.py (OPC 域)
 ### D6: 治理就绪度评估工具
 
 ```
-bin/governance-readiness.py (新)
+bin/gac/governance-readiness.py (新)
 5 维度评分 (满分 100):
 1. 元数据覆盖 (25 分) — frontmatter ≥ 95%
 2. 漂移检测 (20 分) — mof-drift LOW ≤ 5

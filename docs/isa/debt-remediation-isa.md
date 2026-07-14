@@ -52,7 +52,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - **路径常量集中。** 新增/修改的路径引用走 `projects/omo/src/omo/omo_paths.py`（Wave 1 建立），消灭跨脚本字符串字面量。
 - **Python `>=3.13` + uv + pytest；TS 用 bun。** 永不 npm/npx（PAI 全局规则同时生效）。
 - **不硬编码 `~/` 路径。** 用 `${PAI_DIR}`/`${HOME}`/相对路径。
-- **GaC gate 必过。** 每个 Wave closeout 跑 `make gac-local-gate` + `bin/ssot-guardian.py`。
+- **GaC gate 必过。** 每个 Wave closeout 跑 `make gac-local-gate` + `bin/ssot/ssot-guardian.py`。
 - **不主动 commit/push/reset。** 工作树变更报告文件清单，等用户显式确认（AGENTS.md §6）。
 - **Tier floor 软约束。** E4 floor 128 ISC；本 ISA 48 ISC，under-decomposition 在 Decisions show-your-math（canonical-isa 先例）。
 - **God Module 拆分用项目 skill。** `projects/omo/.claude/skills/omo-srp-refactor` 是 omo God Module 拆分的 canonical 路径，Wave 3 ISC-28/29/30 必须走它。
@@ -68,9 +68,9 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - [x] ISC-1: `bin/compass_radar.py` 的 `health_score` 计算从 `_health_score_from_anomalies(anomaly_count)` 改为复合公式 `_composite_health_score()`（probe: `compass_radar.py` 含 `runtime_health`/`freshness` 加权项）。Verified: composite 见 `.omo/state/system.yaml::health_score`（governance/runtime/freshness 加权，跑 `compass_radar --dry-run`）。
 - [x] ISC-2: `system.yaml` 新增 `governance_anomaly_score`、`service_online_ratio` 字段，`compass_radar.sync_system_yaml()` 同步写入复合分（probe: dry-run 输出 service_online_ratio，见 system.yaml）。Verified 2026-07-01。
 - [x] ISC-3: `health_score` 语义重命名——原映射保留为 `governance_anomaly_score`，`health_score` 槽位让给复合分（probe: dry-run 输出 governance_anomaly_score 独立于 health_score，见 system.yaml）。Verified 2026-07-01。
-- [x] ISC-4: `bin/governance-alert-dispatch.py` 新建，读取 `governance-alerts.yaml::rules` 并按 `condition` 求值（容错 `_load_alert_rules` 绕过第10行 yaml 损坏）。Verified: dry-run 10 rules → 1 hit (x4-githooks-missing, missing=2) + 5 miss + 4 unsupported。
+- [x] ISC-4: `bin/gac/governance-alert-dispatch.py` 新建，读取 `governance-alerts.yaml::rules` 并按 `condition` 求值（容错 `_load_alert_rules` 绕过第10行 yaml 损坏）。Verified: dry-run 10 rules → 1 hit (x4-githooks-missing, missing=2) + 5 miss + 4 unsupported。
 - [x] ISC-5: 告警持久化从 `/tmp/governance-alerts.log` 改为 `omo event emit`（走 broker，复用 alert-aggregator P65-70 管道，写 `.omo/_knowledge/omo-events.jsonl`）—— 比 `_control/governance-alerts.log` 直写更治本（合规 + 可被 dashboard/healing 消费）。Verified: emit_alert payload 结构完整。
-- [x] ISC-6: `bin/check-alert-coverage.py` 新增（主仓 bin/，复用 dispatcher EVALUATORS via importlib）。Verified: 报 4 uncovered (fail/warn/sla_violated/ci_count)，exit 1 if >0。原 probe "omo lint" 用主仓检测器等效达成。
+- [x] ISC-6: `bin/ssot/check-alert-coverage.py` 新增（主仓 bin/，复用 dispatcher EVALUATORS via importlib）。Verified: 报 4 uncovered (fail/warn/sla_violated/ci_count)，exit 1 if >0。原 probe "omo lint" 用主仓检测器等效达成。
 - [x] ISC-7: `.omo/debt/` 字符串引用从代码库清零（probe: `rg '\.omo/debt' --glob '!docs/isa/**'` 在 `bin/`、`scripts/`、`projects/`、`tests/` 返回空）。
 - [x] ISC-8: `projects/omo/src/omo/omo_paths.py` 已存在（实测：含 DEBT_DIR/STATE_SYSTEM_YAML/TRUTH_DIR/CONTROL_DIR/DEBT_ITEMS_DIR + `find_omo_dir()` helper + `__all__` 导出 41 常量，非本批次新建但已治本）。
 - [x] ISC-9: `omo lint dead-path-references` 新增——扫描 `.py` 中 `.omo/<dir>/` 字符串，校验目录存在（probe: lint exit 0）。
@@ -82,10 +82,10 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 
 ### Wave 2 — SSOT 自同步机制
 
-- [x] ISC-15: `bin/gen-dependency-baseline.py` 新建，扫描 34 个 `projects/**/pyproject.toml`（含 kairon/aetherforge 子包），排除 workspace 内部包，推导 52 个外部依赖的 baseline。Verified: `--check` 检测到 8 项真实 drift — graphiti-core UNCONSTRAINED（C1 实证）+ 7 MISMATCHED（baseline 过时：pytest >=7.0→>=9.0、ruff >=0.3→>=0.8、click >=8.0→>=8.1 等，手工维护漂移铁证）。
+- [x] ISC-15: `bin/mof/gen-dependency-baseline.py` 新建，扫描 34 个 `projects/**/pyproject.toml`（含 kairon/aetherforge 子包），排除 workspace 内部包，推导 52 个外部依赖的 baseline。Verified: `--check` 检测到 8 项真实 drift — graphiti-core UNCONSTRAINED（C1 实证）+ 7 MISMATCHED（baseline 过时：pytest >=7.0→>=9.0、ruff >=0.3→>=0.8、click >=8.0→>=8.1 等，手工维护漂移铁证）。
 - [x] ISC-16: gac-local-gate CHECKS 加 `dependency-baseline-drift`（`gen-dependency-baseline.py --check`）+ `CI_ONLY_CHECKS`（pre-commit skip / CI strict 跑）。Verified: `gate_checks(strict=True)` 含该 check，`strict=False` skip（CI_ONLY）；当前 8 项真实 drift 在 CI 可见，本地开发不 block。
 - [x] ISC-17: `graphiti-core`、`semantica`、`mem0ai` 的 `baseline: (none)` 全部填入实际下限（probe: `rg 'baseline.*\(none\)' dependency-baseline.yaml` 返回空）。
-- [x] ISC-18: `bin/doc-claim-lint.py` 新建，扫 5 个导航文档自由文本的运行时事实声称（PROJECTS.yaml 死链 / mof-version 硬编码 / tasks/active 旧目录 / 100 A+ 健康分 / phase 数字）。Verified: 检测到 3 项真实漂移——PANORAMA.md:255 `tasks/active/`（D3）+ `100 A+` ×2（ARCH-DETAILED:178、FUNC-CAP:108）。
+- [x] ISC-18: `bin/ssot/doc-claim-lint.py` 新建，扫 5 个导航文档自由文本的运行时事实声称（PROJECTS.yaml 死链 / mof-version 硬编码 / tasks/active 旧目录 / 100 A+ 健康分 / phase 数字）。Verified: 检测到 3 项真实漂移——PANORAMA.md:255 `tasks/active/`（D3）+ `100 A+` ×2（ARCH-DETAILED:178、FUNC-CAP:108）。
 - [x] ISC-19: X2 freshness rule 已存在 `X2-FRESH-NAV-DOC-REVIEW`（2026-06-29 加，非我修但已治本；ISA 原名 X2-FRESH-NAV-DOC-META 与现有 X2-FRESH-NAV-DOC-REVIEW 语义同——导航文档运行时声称定期 review）。Verified: `x2-freshness-rules.yaml` 行 211 含该 rule。
 - [x] ISC-20: INVENTORY.md PROJECTS.yaml 死链已修（实测 rg 空，非我修但已治本，印证 462 提交/周高活跃）。
 - [x] ISC-21: INVENTORY mof-version 硬编码已修（实测 rg 空，非我修但已治本）。
@@ -141,7 +141,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
   type: behavior-probe
   check: alert dispatcher 消费 rules
   threshold: --dry-run 对 debt_weight<0.6 输出 dispatch
-  tool: uv run python bin/governance-alert-dispatch.py --dry-run
+  tool: uv run python bin/gac/governance-alert-dispatch.py --dry-run
 
 - isc: ISC-6
   type: lint-probe
@@ -165,13 +165,13 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
   type: generator-probe
   check: dependency-baseline 生成器
   threshold: --dry-run diff 可解释
-  tool: uv run python bin/gen-dependency-baseline.py --dry-run
+  tool: uv run python bin/mof/gen-dependency-baseline.py --dry-run
 
 - isc: ISC-18
   type: lint-probe
   check: 导航文档自由文本声称
   threshold: D1/D2/D3 样本命中
-  tool: uv run python bin/doc-claim-lint.py --json
+  tool: uv run python bin/ssot/doc-claim-lint.py --json
 
 - isc: ISC-30
   type: state-probe
@@ -277,7 +277,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - ISC-2: 同上命令输出 `service_online_ratio`（见 system.yaml）+ `health_composite_breakdown` 含 weights/contributions。Verified 2026-07-01，exit 0。
 - ISC-3: 同上输出 `governance_anomaly_score` 独立于 `health_score (composite)`（两字段见 system.yaml）— 原字段语义保留为 governance_anomaly_score，health_score 槽位让给复合分。Verified 2026-07-01。
 - ISC-13 (anti): `rg '_health_score_from_anomalies' bin/compass_radar.py` — 该函数仍存在但仅赋值给 `governance_anomaly_score`，不再直接赋给 `health_score`；`health_score` 由 `_composite_health_score` 产出。Verified 2026-07-01。
-- ISC-4: `uv run --with pyyaml python bin/governance-alert-dispatch.py --dry-run` — 输出 `🚨 governance-alert-dispatch → 10 rules` + `x4-githooks-missing: 'missing_githooks > 0' → hit (current=2)` + `4 条 rule 无 evaluator`。Verified 2026-07-01。
+- ISC-4: `uv run --with pyyaml python bin/gac/governance-alert-dispatch.py --dry-run` — 输出 `🚨 governance-alert-dispatch → 10 rules` + `x4-githooks-missing: 'missing_githooks > 0' → hit (current=2)` + `4 条 rule 无 evaluator`。Verified 2026-07-01。
 - ISC-5: dispatcher `emit_alert()` 调 `omo event emit --type governance_alert_dispatched`（走 broker），dry-run 打印 `would emit: governance_alert_dispatched {rule_id, dimension, severity, condition, current, dispatched_at, source}`。Verified 2026-07-01。
-- ISC-15: `uv run python bin/gen-dependency-baseline.py --check` — `❌ 检测到 8 项 dependency-baseline drift: UNCONSTRAINED(1) graphiti-core (none)→>=0.28; MISMATCHED(7) apscheduler/click/croniter/pytest/pytest-asyncio/pytest-cov/ruff baseline 过时`。Verified 2026-07-01。
-- ISC-18: `uv run python bin/doc-claim-lint.py` — `❌ 检测到 3 项导航文档运行时事实声称: STALE-DIR-TASKS-ACTIVE PANORAMA.md:255; HARDCODED-HEALTH-SCORE ARCH-DETAILED:178 + FUNC-CAP:108 ('100 A+')`。Verified 2026-07-01。
+- ISC-15: `uv run python bin/mof/gen-dependency-baseline.py --check` — `❌ 检测到 8 项 dependency-baseline drift: UNCONSTRAINED(1) graphiti-core (none)→>=0.28; MISMATCHED(7) apscheduler/click/croniter/pytest/pytest-asyncio/pytest-cov/ruff baseline 过时`。Verified 2026-07-01。
+- ISC-18: `uv run python bin/ssot/doc-claim-lint.py` — `❌ 检测到 3 项导航文档运行时事实声称: STALE-DIR-TASKS-ACTIVE PANORAMA.md:255; HARDCODED-HEALTH-SCORE ARCH-DETAILED:178 + FUNC-CAP:108 ('100 A+')`。Verified 2026-07-01。

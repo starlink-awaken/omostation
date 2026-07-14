@@ -14,7 +14,7 @@ graph TD
     end
     
     subgraph KOS MCP Server (Hardware)
-        B <--> C[bin/mcp-server-kos.py]
+        B <--> C[bin/gac/mcp-server-kos.py]
         C <-->|Read-Only SQL| D[(kos-index.sqlite)]
         C -.->|Security Guard| E[SQL Write-Interception Regex]
     end
@@ -71,5 +71,5 @@ claude mcp add mcp-server-kos uv -- run --with pyyaml --directory /Users/xiaming
 ## 🚨 长效自律治理机制 (Continuous Enforcement)
 
 为了保障 KOS 硬件服务代码的物理合规，系统建立了双层防线：
-1. **TDD 测试自动化**: 创建了 `bin/test-mcp-kos.py` 脚本，自动化模拟 JSON-RPC 握手、只读查询和写操作拦截。
-2. **CI 门禁守门**: `test-mcp-kos` 已经被注册在主仓 Gac Gate 门禁（`bin/gac-local-gate.py`）中。每一次 commit 和 CI 运行都会拉起并执行这套协议测试，一旦发生破坏或写漏洞，门禁会立即变红阻断提交，确保自律网长久闭环。
+1. **TDD 测试自动化**: 创建了 `bin/ssot/test-mcp-kos.py` 脚本，自动化模拟 JSON-RPC 握手、只读查询和写操作拦截。
+2. **CI 门禁守门**: `test-mcp-kos` 已经被注册在主仓 Gac Gate 门禁（`bin/gac/gac-local-gate.py`）中。每一次 commit 和 CI 运行都会拉起并执行这套协议测试，一旦发生破坏或写漏洞，门禁会立即变红阻断提交，确保自律网长久闭环。

@@ -75,7 +75,7 @@ graph TD
    - `docs/generated/*` -> `script:doc-ssot-generator`
    - `.github/workflows/ci.yml` -> `human:owner`
 3. **blame 静态审计器**:
-   新建 `bin/write-owner-audit.py` 静态检查工具，比对 staged 变更的提交者或文件的 mtime 修改进程是否属于声明的白名单，异常发现写入 `BRIEF.md`。
+   新建 `bin/ssot/write-owner-audit.py` 静态检查工具，比对 staged 变更的提交者或文件的 mtime 修改进程是否属于声明的白名单，异常发现写入 `BRIEF.md`。
 
 ---
 
@@ -132,7 +132,7 @@ graph TD
    - 工作交付：`spaces/` 下有无新的 delivery 卡片 (工作量交付)
    - 知识复用：KOS 检索命中次数与知识链长度。
 2. **DASHBOARD 呈现逻辑**:
-   在 [bin/governance-dashboard.py](file:///Users/xiamingxing/Workspace/bin/governance-dashboard.py) 中重构，当治理健康度分数 $\ge 95$ 时，折叠技术债等防御指标，置顶显示 X3 本周价值指标（创作、交付、复用数据），实现“无感治理，突出产出”。
+   在 [bin/gac/governance-dashboard.py](file:///Users/xiamingxing/Workspace/bin/governance-dashboard.py) 中重构，当治理健康度分数 $\ge 95$ 时，折叠技术债等防御指标，置顶显示 X3 本周价值指标（创作、交付、复用数据），实现“无感治理，突出产出”。
 
 ---
 
@@ -146,11 +146,11 @@ graph TD
      title: Workspace Systemic Governance Audit
      steps:
        - name: scan-baseline
-         executor: bin/gac-healthcheck.py --json
+         executor: bin/gac/gac-healthcheck.py --json
        - name: verify-ssot
-         executor: bin/ssot-guardian.py
+         executor: bin/ssot/ssot-guardian.py
        - name: check-freshness
-         executor: bin/state-freshness-check.py
+         executor: bin/gac/state-freshness-check.py
    ```
 2. **冷启动挂接**:
    新会话冷启动时，Agent 检索此 workflow，直接运行 `agent-workflow start governance-audit`，即可一键复现 80% 的系统性审计覆盖面，不再依赖 prompt 隐性记忆。

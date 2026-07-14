@@ -56,8 +56,8 @@ ROOT CAUSE: 原则散在各 ADR 文档, 没有 catalog. 后续 phase 找不到 /
   source: gh pr view --json body
 
 - CR-CROSS-REPO-CHECK (X3, meta, advisory → hard by Phase 3)
-  bin/check-cross-repo-consistency.py unregistered ≤ threshold (default 20, Phase 3 治本降至 0)
-  source: bin/check-cross-repo-consistency.py
+  bin/ssot/check-cross-repo-consistency.py unregistered ≤ threshold (default 20, Phase 3 治本降至 0)
+  source: bin/ssot/check-cross-repo-consistency.py
 
 - CR-BASELINE-REPLAYED (X2, meta, advisory)
   每次阶段尾 governance score 必 ≥ 起点

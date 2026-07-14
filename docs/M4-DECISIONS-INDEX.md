@@ -13,12 +13,12 @@
 | [0132](./../.omo/_knowledge/decisions/0132-l0-mof-m4-metamodel.md) | L0/M0/MOF 统一元模型 (M4 升级) | R0 | 5 决策 + 14 周路线图 | — |
 | [0133](./../.omo/_knowledge/decisions/0133-l0-constraints-v2-cutover.md) | L0-constraints v2 派生面 双轨切单轨 | R0 | 77 条 v2 schema | T5..T8 |
 | [0134](./../.omo/_knowledge/decisions/0134-m3-meta-cutover.md) | meta_model ↔ m3.yaml 双轨桥接受 | R0 | m3-meta.yaml 22 element | T9..T14 |
-| [0135](./../.omo/_knowledge/decisions/0135-derived-plane-unification.md) | 派生面统一收口 (ADR-0129 enforcement) | R0 | `bin/omo-state-cleanup.py` | T22..T24 |
+| [0135](./../.omo/_knowledge/decisions/0135-derived-plane-unification.md) | 派生面统一收口 (ADR-0129 enforcement) | R0 | `bin/gac/omo-state-cleanup.py` | T22..T24 |
 | [0136](./../.omo/_knowledge/decisions/0136-m3-yaml-extension-p5.md) | P5 m3.yaml 扩展 4 gap 治本 | R0 | m3.yaml ConcurrencyElement + 3 m2 名称对齐 | T25..T27 |
 | [0137](./../.omo/_knowledge/decisions/0137-derived-plane-relocation.md) | 派生面落点纠偏 (Round 2a) | R2a | `bin/l0-constraints-migrate.py` 默认路径迁移 + 主仓根 `.omo/_derived/` 退役 | T7, T8, T23 |
 | [0138](./../.omo/_knowledge/decisions/0138-meta-element-promotion.md) | 元元模型类目提升至 m3.yaml 主流 (R2b) | R2b | m3.yaml MetaElement/MetaEntity/MetaRelationType/MetaConstraintRule | T1..T21 (跨测) |
 | [0139](./../.omo/_knowledge/decisions/0139-model-driven-8stage-revival-rejected.md) | model-driven 8 阶段复活评估 — 拒回 (R2c) | R2c | (决策保留, 0 实施) | T39, T40 |
-| [0140](./../.omo/_knowledge/decisions/0140-m4-health-score.md) | M4 Health Score 量化与派生面落地 (R3b) | R3b | `bin/m4-health-score.py` + `.omo/_derived/m4-health.json` | T41, T42 |
+| [0140](./../.omo/_knowledge/decisions/0140-m4-health-score.md) | M4 Health Score 量化与派生面落地 (R3b) | R3b | `bin/mof/m4-health-score.py` + `.omo/_derived/m4-health.json` | T41, T42 |
 | [0141](./../.omo/_knowledge/decisions/0141-m2-base-schema.md) | M2BaseSchema 抽象基类 + check_5 (R3a) | R3a | m2_base_schema.yaml + check_5 | T43, T44 |
 | [**0142**](./../.omo/_knowledge/decisions/0142-this-doc.md) | (本文档) | R4b | docs/M4-DECISIONS-INDEX.md | — |
 | [0146](./../.omo/_knowledge/decisions/0146-8stage-stability-declaration.md) | 8 阶段反向 ADR 稳定性声明 (R5a) | R5a | (决策文件本身) | T52 |
@@ -54,7 +54,7 @@ R5 (战略收口)
 ├── R5c [Round-Trip playbook]    ADR-0148  ←  AGENTS.md §10
 ├── R5d [P71 防重做]             ADR-0149
 ├── R5e [Submodule PR review]    ADR-0150  ←  docs/SUBMODULE-PR-REVIEW-GUIDE.md ⭐
-├── R5f [子模块 gitignore 守门]  ADR-0151  ←  bin/check-submodule-hygiene.py
+├── R5f [子模块 gitignore 守门]  ADR-0151  ←  bin/ssot/check-submodule-hygiene.py
 ```
 
 ---
@@ -86,9 +86,9 @@ R5 (战略收口)
 
 ### 主仓新增
 - `bin/l0-constraints-migrate.py` (325 行, ADR-0133)
-- `bin/mof-bootstrap.py` (260+ 行, ADR-0134/0136/0141)
-- `bin/omo-state-cleanup.py` (226 行, ADR-0135)
-- `bin/m4-health-score.py` (270 行, ADR-0140)
+- `bin/mof/mof-bootstrap.py` (260+ 行, ADR-0134/0136/0141)
+- `bin/gac/omo-state-cleanup.py` (226 行, ADR-0135)
+- `bin/mof/m4-health-score.py` (270 行, ADR-0140)
 - `tests/integration/m4_metamodel/run_all.py` (650+ 行, 44 tests)
 - `docs/M4-ROADMAP.md` (358 行)
 - `docs/M4-DECISIONS-INDEX.md` (本文档, ADR-0142)
