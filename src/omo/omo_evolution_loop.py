@@ -83,7 +83,9 @@ def get_loop_status(
         "status": "present",
         "alive": True,
         "checked_at": now,
-        "loop_dir": str(loop_dir.relative_to(root)) if loop_dir.is_relative_to(root) else str(loop_dir),
+        "loop_dir": str(loop_dir.relative_to(root))
+        if loop_dir.is_relative_to(root)
+        else str(loop_dir),
         "history": history,
         "weeks": weeks,
         "has_trace_index": has_trace,

@@ -526,59 +526,47 @@ def _cmd_predict(args: list[str]) -> int:
     import argparse
 
     parser = argparse.ArgumentParser(
-        prog="omo predict",
-        description="预测性治理 - 事前预警"
+        prog="omo predict", description="预测性治理 - 事前预警"
     )
     subparsers = parser.add_subparsers(dest="predict_sub", required=True)
-    
-    parser_risks = subparsers.add_parser(
-        "risks", help="预测未来治理风险"
-    )
+
+    parser_risks = subparsers.add_parser("risks", help="预测未来治理风险")
     parser_risks.add_argument(
         "--days", type=int, default=7, help="预测未来天数 (默认: 7)"
     )
-    parser_risks.add_argument(
-        "--json", action="store_true", help="JSON 输出"
-    )
-    
-    parser_debt = subparsers.add_parser(
-        "debt", help="预测债务恶化风险"
-    )
+    parser_risks.add_argument("--json", action="store_true", help="JSON 输出")
+
+    parser_debt = subparsers.add_parser("debt", help="预测债务恶化风险")
     parser_debt.add_argument(
         "--days", type=int, default=30, help="预测未来天数 (默认: 30)"
     )
-    parser_debt.add_argument(
-        "--json", action="store_true", help="JSON 输出"
-    )
-    
-    subparsers.add_parser(
-        "actions", help="推荐预防性治理动作"
-    )
-    
-    subparsers.add_parser(
-        "alerts", help="生成早期预警"
-    )
-    
+    parser_debt.add_argument("--json", action="store_true", help="JSON 输出")
+
+    subparsers.add_parser("actions", help="推荐预防性治理动作")
+
+    subparsers.add_parser("alerts", help="生成早期预警")
+
     parsed = parser.parse_args(args)
-    
+
     from pathlib import Path
     from omo.predictive_governance import PredictiveGovernanceEngine
     from omo.bridge_utils import get_omo_dir
-    
+
     omo_dir = get_omo_dir(Path.cwd())
     engine = PredictiveGovernanceEngine(omo_dir)
-    
+
     if parsed.predict_sub == "risks":
         forecast = engine.forecast_governance_risks(parsed.days)
         if parsed.json:
             import json
+
             data = {
                 "time_horizon_days": forecast.time_horizon_days,
                 "overall_risk_level": forecast.overall_risk_level,
                 "high_risks_count": len(forecast.high_risks),
                 "medium_risks_count": len(forecast.medium_risks),
                 "low_risks_count": len(forecast.low_risks),
-                "key_trends": forecast.key_trends
+                "key_trends": forecast.key_trends,
             }
             print(json.dumps(data, indent=2, ensure_ascii=False))
         else:
@@ -591,18 +579,22 @@ def _cmd_predict(args: list[str]) -> int:
                 print("  关键趋势:")
                 for trend in forecast.key_trends:
                     print(f"    • {trend}")
-    
+
     elif parsed.predict_sub == "debt":
         risks = engine.predict_debt_deterioration(parsed.days)
         if parsed.json:
             import json
-            data = [{
-                "debt_id": r.debt_id,
-                "risk_score": r.risk_score,
-                "predicted_deterioration_days": r.predicted_deterioration_days,
-                "recommended_action": r.recommended_action,
-                "contributing_factors": r.contributing_factors
-            } for r in risks]
+
+            data = [
+                {
+                    "debt_id": r.debt_id,
+                    "risk_score": r.risk_score,
+                    "predicted_deterioration_days": r.predicted_deterioration_days,
+                    "recommended_action": r.recommended_action,
+                    "contributing_factors": r.contributing_factors,
+                }
+                for r in risks
+            ]
             print(json.dumps(data, indent=2, ensure_ascii=False))
         else:
             print(f"📊 [Predictive Governance] 债务恶化预测 (未来 {parsed.days} 天):")
@@ -611,10 +603,12 @@ def _cmd_predict(args: list[str]) -> int:
             else:
                 for risk in risks:
                     icon = "🔴" if risk.risk_score > 0.8 else "🟡"
-                    print(f"  {icon} {risk.debt_id}: 风险分数 {risk.risk_score:.0%}, "
-                          f"预计恶化: {risk.predicted_deterioration_days} 天, "
-                          f"建议: {risk.recommended_action}")
-    
+                    print(
+                        f"  {icon} {risk.debt_id}: 风险分数 {risk.risk_score:.0%}, "
+                        f"预计恶化: {risk.predicted_deterioration_days} 天, "
+                        f"建议: {risk.recommended_action}"
+                    )
+
     elif parsed.predict_sub == "actions":
         actions = engine.recommend_proactive_actions()
         print("💡 [Predictive Governance] 推荐预防性治理动作:")
@@ -624,8 +618,10 @@ def _cmd_predict(args: list[str]) -> int:
             for action in actions:
                 print(f"  优先级 {action.priority}: {action.action}")
                 print(f"    理由: {action.rationale}")
-                print(f"    工作量: {action.effort_estimate}, 影响: {action.estimated_impact}")
-    
+                print(
+                    f"    工作量: {action.effort_estimate}, 影响: {action.estimated_impact}"
+                )
+
     elif parsed.predict_sub == "alerts":
         alerts = engine.generate_early_warning_alerts()
         print("⚠️ [Predictive Governance] 早期预警:")
@@ -635,7 +631,7 @@ def _cmd_predict(args: list[str]) -> int:
             for alert in alerts:
                 icon = "🔴" if alert.get("severity") == "critical" else "🟡"
                 print(f"  {icon} {alert.get('message')}")
-    
+
     return 0
 
 
@@ -643,41 +639,38 @@ def _cmd_cache(args: list[str]) -> int:
     """状态缓存管理"""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        prog="omo cache",
-        description="状态缓存管理"
-    )
+    parser = argparse.ArgumentParser(prog="omo cache", description="状态缓存管理")
     subparsers = parser.add_subparsers(dest="cache_sub", required=True)
-    
+
     subparsers.add_parser("stats", help="显示缓存统计")
     subparsers.add_parser("clear", help="清空所有缓存")
     parser_invalidate = subparsers.add_parser("invalidate", help="失效特定缓存")
     parser_invalidate.add_argument("pattern", type=str, help="缓存键匹配模式")
-    
+
     parsed = parser.parse_args(args)
-    
+
     from pathlib import Path
     from omo.state_cache import GovernanceStateCache
     from omo.bridge_utils import get_omo_dir
-    
+
     omo_dir = get_omo_dir(Path.cwd())
     cache = GovernanceStateCache(omo_dir / "_cache")
-    
+
     if parsed.cache_sub == "stats":
         stats = cache.get_cache_stats()
         print("📊 [State Cache] 缓存统计:")
         print(f"  总条目数: {stats['total_entries']}")
         print(f"  有效条目: {stats['valid_entries']}")
         print(f"  无效条目: {stats['invalid_entries']}")
-    
+
     elif parsed.cache_sub == "clear":
         cache.invalidate_all()
         print("✅ [State Cache] 已清空所有缓存")
-    
+
     elif parsed.cache_sub == "invalidate":
         cache.invalidate_on_change(parsed.pattern)
         print(f"✅ [State Cache] 已失效匹配 '{parsed.pattern}' 的缓存")
-    
+
     return 0
 
 

@@ -1,4 +1,3 @@
-
 """OMO 预测性治理模块"""
 
 from __future__ import annotations
@@ -60,7 +59,7 @@ class PredictiveGovernanceEngine:
                     risk_score=risk_score,
                     predicted_deterioration_days=7 if risk_score > 0.8 else 14,
                     recommended_action="立即处理" if risk_score > 0.8 else "近期计划",
-                    contributing_factors=[]
+                    contributing_factors=[],
                 )
                 risks.append(risk)
         return sorted(risks, key=lambda r: r.risk_score, reverse=True)
@@ -79,34 +78,36 @@ class PredictiveGovernanceEngine:
         high_risks = [r for r in debt_risks if r.risk_score > 0.8]
         medium_risks = [r for r in debt_risks if 0.6 < r.risk_score <= 0.8]
         low_risks = [r for r in debt_risks if r.risk_score <= 0.6]
-        
+
         if high_risks:
             overall = "high"
         elif medium_risks:
             overall = "medium"
         else:
             overall = "low"
-        
+
         trends = []
         if high_risks:
             trends.append("有高风险债务")
         else:
             trends.append("风险趋势平稳")
-        
+
         return RiskForecast(
             time_horizon_days=time_horizon_days,
             high_risks=high_risks,
             medium_risks=medium_risks,
             low_risks=low_risks,
             overall_risk_level=overall,
-            key_trends=trends
+            key_trends=trends,
         )
 
     def recommend_proactive_actions(self):
         forecast = self.forecast_governance_risks()
         actions = []
         if forecast.overall_risk_level == "high":
-            actions.append(ProactiveAction(1, "处理高风险债务", "检测到高风险", "1-2天", "高"))
+            actions.append(
+                ProactiveAction(1, "处理高风险债务", "检测到高风险", "1-2天", "高")
+            )
         actions.append(ProactiveAction(2, "健康检查", "定期检查", "1小时", "中"))
         return actions
 
@@ -114,5 +115,11 @@ class PredictiveGovernanceEngine:
         forecast = self.forecast_governance_risks()
         alerts = []
         if forecast.overall_risk_level == "high":
-            alerts.append({"severity": "warning", "message": "检测到高风险", "triggered_at": datetime.now(UTC).isoformat()})
+            alerts.append(
+                {
+                    "severity": "warning",
+                    "message": "检测到高风险",
+                    "triggered_at": datetime.now(UTC).isoformat(),
+                }
+            )
         return alerts

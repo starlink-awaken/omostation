@@ -1,4 +1,3 @@
-
 """OMO 状态缓存模块"""
 
 from __future__ import annotations
@@ -30,18 +29,33 @@ class GovernanceStateCache:
         if self._cache_file.exists():
             with open(self._cache_file, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
-                return {k: CacheEntry(k, v.get("value"), v.get("timestamp"), v.get("ttl_seconds", 3600)) for k, v in data.items()}
+                return {
+                    k: CacheEntry(
+                        k,
+                        v.get("value"),
+                        v.get("timestamp"),
+                        v.get("ttl_seconds", 3600),
+                    )
+                    for k, v in data.items()
+                }
         return {}
 
     def _save_cache(self):
-        data = {k: {"value": v.value, "timestamp": v.timestamp, "ttl_seconds": v.ttl_seconds} for k, v in self._cache.items()}
+        data = {
+            k: {
+                "value": v.value,
+                "timestamp": v.timestamp,
+                "ttl_seconds": v.ttl_seconds,
+            }
+            for k, v in self._cache.items()
+        }
         with open(self._cache_file, "w", encoding="utf-8") as f:
             yaml.dump(data, f, allow_unicode=True, sort_keys=False)
 
     def get_cached_state(self, key):
         if key not in self._cache:
             return None
-        
+
         entry = self._cache[key]
         try:
             cached_time = datetime.fromisoformat(entry.timestamp)
@@ -49,11 +63,13 @@ class GovernanceStateCache:
                 return None
         except Exception:
             return None
-        
+
         return entry.value
 
     def cache_state(self, key, value, ttl_seconds=3600):
-        self._cache[key] = CacheEntry(key, value, datetime.now(UTC).isoformat(), ttl_seconds)
+        self._cache[key] = CacheEntry(
+            key, value, datetime.now(UTC).isoformat(), ttl_seconds
+        )
         self._save_cache()
 
     def invalidate_all(self):
@@ -65,7 +81,9 @@ class GovernanceStateCache:
         for entry in self._cache.values():
             try:
                 cached_time = datetime.fromisoformat(entry.timestamp)
-                if (datetime.now(UTC) - cached_time).total_seconds() <= entry.ttl_seconds:
+                if (
+                    datetime.now(UTC) - cached_time
+                ).total_seconds() <= entry.ttl_seconds:
                     valid += 1
             except Exception:
                 pass

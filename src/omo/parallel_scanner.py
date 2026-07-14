@@ -1,4 +1,3 @@
-
 """OMO 并行扫描模块"""
 
 from __future__ import annotations
@@ -24,16 +23,24 @@ class ParallelScanner:
     def scan_with_workers(self, paths, scan_func, show_progress=False):
         results = []
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            future_to_path = {executor.submit(self._scan_single, path, scan_func): path for path in paths}
+            future_to_path = {
+                executor.submit(self._scan_single, path, scan_func): path
+                for path in paths
+            }
             for future in as_completed(future_to_path):
                 try:
                     results.append(future.result())
                 except Exception as e:
-                    results.append(ScanResult(str(future_to_path[future]), False, [], [str(e)], 0.0))
+                    results.append(
+                        ScanResult(
+                            str(future_to_path[future]), False, [], [str(e)], 0.0
+                        )
+                    )
         return results
 
     def _scan_single(self, path, scan_func):
         import time
+
         start_time = time.time()
         try:
             findings = scan_func(path)
@@ -61,7 +68,12 @@ class ParallelScanner:
             else:
                 failure_count += 1
         return {
-            "total_scanned": len(results), "success_count": success_count, "failure_count": failure_count,
-            "total_findings": len(all_findings), "total_errors": len(all_errors),
-            "total_duration_seconds": total_duration, "findings": all_findings, "errors": all_errors
+            "total_scanned": len(results),
+            "success_count": success_count,
+            "failure_count": failure_count,
+            "total_findings": len(all_findings),
+            "total_errors": len(all_errors),
+            "total_duration_seconds": total_duration,
+            "findings": all_findings,
+            "errors": all_errors,
         }
