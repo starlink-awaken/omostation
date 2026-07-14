@@ -45,7 +45,7 @@ class GovernanceStateCache:
         entry = self._cache[key]
         try:
             cached_time = datetime.fromisoformat(entry.timestamp)
-            if (datetime.now(UTC) - cached_time).total_seconds() &gt; entry.ttl_seconds:
+            if (datetime.now(UTC) - cached_time).total_seconds() > entry.ttl_seconds:
                 return None
         except Exception:
             return None
@@ -65,7 +65,7 @@ class GovernanceStateCache:
         for entry in self._cache.values():
             try:
                 cached_time = datetime.fromisoformat(entry.timestamp)
-                if (datetime.now(UTC) - cached_time).total_seconds() &lt;= entry.ttl_seconds:
+                if (datetime.now(UTC) - cached_time).total_seconds() <= entry.ttl_seconds:
                     valid += 1
             except Exception:
                 pass

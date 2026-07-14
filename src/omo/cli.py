@@ -551,11 +551,11 @@ def _cmd_predict(args: list[str]) -> int:
         "--json", action="store_true", help="JSON 输出"
     )
     
-    parser_actions = subparsers.add_parser(
+    subparsers.add_parser(
         "actions", help="推荐预防性治理动作"
     )
     
-    parser_alerts = subparsers.add_parser(
+    subparsers.add_parser(
         "alerts", help="生成早期预警"
     )
     
