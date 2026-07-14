@@ -1234,9 +1234,9 @@ services:
     domain: governance
     action: "protocols-layer/trigger"
     transport: inline
-    description: "governance protocols-layer 触发器入口 (mcp resolver service)"
+    description: "[UNIMPLEMENTED] governance protocols-layer 触发器入口 — kairon 无 protocols_layer 包, 声明悬空 (A2/2026-07-13 止血 deprecate); 能力实现另立项"
     i0_route: pending
-    status: active
+    status: deprecated
   - uri: "bos://governance/roles/list"
     domain: governance
     action: "roles/list"

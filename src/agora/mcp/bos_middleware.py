@@ -45,6 +45,7 @@ class RateLimiter:
         self._windows: dict[str, tuple[float, int]] = {}  # uri → (window_start, count)
         self._default_qps = default_qps
         self._window_s = window_s
+        self._rejected: dict[str, int] = {}  # uri → rejected count
 
     def configure(self, uri_pattern: str, qps: int) -> None:
         """为 URI 模式配置 QPS 上限。"""
@@ -65,6 +66,7 @@ class RateLimiter:
             wstart = now
             count = 0
         if count >= qps:
+            self._rejected[uri] = self._rejected.get(uri, 0) + 1
             return False
         self._windows[window_key] = (wstart, count + 1)
         return True
@@ -73,8 +75,17 @@ class RateLimiter:
         """查询限流状态。"""
         if uri:
             wstart, count = self._windows.get(self._match_key(uri), (0, 0))
-            return {"uri": uri, "window_start": wstart, "count": count}
-        return {"configured_qps": dict(self._qps), "active_windows": len(self._windows)}
+            return {
+                "uri": uri,
+                "window_start": wstart,
+                "count": count,
+                "rejected": self._rejected.get(uri, 0),
+            }
+        return {
+            "configured_qps": dict(self._qps),
+            "active_windows": len(self._windows),
+            "total_rejected": sum(self._rejected.values()),
+        }
 
     @staticmethod
     def _match_key(uri: str) -> str:
@@ -98,6 +109,8 @@ class CircuitBreaker:
         self._states: dict[str, dict] = {}  # uri → {state, failures, last_failure_time}
         self._failure_threshold = failure_threshold
         self._recovery_timeout = recovery_timeout
+        self._open_count: int = 0
+        self._close_count: int = 0
         self._stop_event = threading.Event()
         self._recovery_thread = threading.Thread(
             target=self._recovery_loop, daemon=True
@@ -136,11 +149,14 @@ class CircuitBreaker:
     def record_success(self, uri: str) -> None:
         """记录成功 — 恢复/维持 CLOSED。"""
         key = self._match_key(uri)
+        prev_state = self._states.get(key, {}).get("state")
         self._states[key] = {
             "state": self.CLOSED,
             "failures": 0,
             "last_failure_time": 0,
         }
+        if prev_state == self.OPEN:
+            self._close_count += 1
 
     def record_failure(self, uri: str) -> None:
         """记录失败 — 可能触发 OPEN。"""
@@ -157,6 +173,7 @@ class CircuitBreaker:
             s["last_failure_time"] = time.time()
             if s["failures"] >= self._failure_threshold:
                 s["state"] = self.OPEN
+                self._open_count += 1
                 _log.warning(
                     "circuit_breaker_open for %s (failures=%d)", key, s["failures"]
                 )
@@ -165,8 +182,16 @@ class CircuitBreaker:
         """查询熔断状态。"""
         if uri:
             key = self._match_key(uri)
-            return {key: self._states.get(key, {"state": self.CLOSED, "failures": 0})}
-        return {k: v for k, v in self._states.items()}
+            return {
+                key: self._states.get(key, {"state": self.CLOSED, "failures": 0}),
+                "_open_count": self._open_count,
+                "_close_count": self._close_count,
+            }
+        return {
+            "states": {k: v for k, v in self._states.items()},
+            "open_count": self._open_count,
+            "close_count": self._close_count,
+        }
 
     @staticmethod
     def _match_key(uri: str) -> str:
@@ -184,6 +209,8 @@ class Cache:
 
     def __init__(self):
         self._store: dict[str, tuple[float, Any]] = {}  # key → (expires_at, value)
+        self._hits: int = 0
+        self._misses: int = 0
 
     def _key(self, uri: str, params: dict | None = None) -> str | None:
         """生成缓存键: uri_hash[:16] + full_hash(uri + sorted params).
@@ -207,14 +234,18 @@ class Cache:
         """查询缓存。返回 None 表示未命中。"""
         key = self._key(uri, params)
         if key is None:
+            self._misses += 1
             return None
         entry = self._store.get(key)
         if entry is None:
+            self._misses += 1
             return None
         expires, value = entry
         if time.time() > expires:
             del self._store[key]
+            self._misses += 1
             return None
+        self._hits += 1
         _log.debug("cache_hit for %s", key[:8])
         return value
 
@@ -238,10 +269,16 @@ class Cache:
         now = time.time()
         active = sum(1 for exp, _ in self._store.values() if exp > now)
         expired = len(self._store) - active
+        total_requests = self._hits + self._misses
         return {
             "active_entries": active,
             "expired_entries": expired,
             "total": len(self._store),
+            "hits": self._hits,
+            "misses": self._misses,
+            "hit_rate": round(self._hits / total_requests, 4)
+            if total_requests > 0
+            else 0,
         }
 
 
