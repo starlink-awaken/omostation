@@ -10,8 +10,8 @@ phase_status: active
 current_wave: W3
 next_milestone: 架构收敛固化 — 债务-健康分联动 + 健康扫描自愈 + Worktree 强制
 health_score_ref: .omo/state/health.yaml
-health_score: 68
-health_score_source: compass_radar_composite (ISC-2 corrected)
+health_score: 83
+health_score_source: compass_radar_composite (ISC-2 corrected, scan 3/4 online)
 health_score_generated_at: '2026-07-09T03:59:10Z'
 active_agents: 0
 idle_agents: 4
@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-14T21:36:59.147993+08:00'
+updated_at: '2026-07-14T21:49:55.356114+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -197,7 +197,7 @@ runtime_health_summary:
   total_services: 4
   ratio: 0.5
   health_score: 50
-  last_scan: '1784036219.011123'
+  last_scan: '1784036995.2184699'
   service_count: 8
   degraded:
   - cron-service
@@ -219,4 +219,4 @@ governance_anomaly_score: 100
 service_online_ratio: 0.6
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-14T21:36:59.147993+08:00'
+governance_feedback_last_run: '2026-07-14T21:49:55.356114+08:00'

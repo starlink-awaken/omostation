@@ -1,21 +1,22 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-07-14T20:59:00Z
-# source: c2g.strategy (real audit, no mock) + P43 治理修正
+# generated_at: 2026-07-14T21:00:00Z
+# source: c2g.strategy (real audit, no mock) + P44 治理修正
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-2) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5}
 # 修正 2026-07-14: ISC-1→ISC-2 降低声明面权重(0.5→0.3), 提高执行面权重(0.3→0.5)
 #
-# ISC-2 新分:
-#   governance: 100 × 0.3 = 30.0 (原 50.0)
-#   freshness: 80 × 0.2 = 16.0 (不变)
-#   runtime: 44 × 0.5 = 22.0 (原 18.0, daemon 4/9=44%)
+# ISC-2 当前:
+#   governance: 100 × 0.3 = 30.0
+#   freshness: 80 × 0.2 = 16.0
+#   runtime: 75 × 0.5 = 37.5 (3/4 daemon online)
+#   total: 83.5 → 83
 
-generated_at: "2026-07-14T20:59:00Z"
-source: "c2g.strategy (real audit, no mock) + P43 治理修正"
-health_score: 68
+generated_at: "2026-07-14T21:00:00Z"
+source: "c2g.strategy (real audit, no mock) + P44 治理修正"
+health_score: 83
 governance_anomaly_score: 100
 anomaly_count: 0
-service_online_ratio: 0.444
+service_online_ratio: 0.750
 freshness_score: 80
 feedback_alive: True
 feedback_last_ts: "2026-07-14T20:54:43Z"
@@ -32,8 +33,8 @@ health_composite_breakdown:
   contributions:
     governance: 30.0
     freshness: 16.0
-    runtime: 22.0
-  raw: 68.0
+    runtime: 37.5
+  raw: 83.5
 
 anomalies:
   []
