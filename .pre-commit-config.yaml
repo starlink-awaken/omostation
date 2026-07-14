@@ -55,16 +55,16 @@ repos:
         # 刷新: python3 bin/compass_radar.py
       - id: ssot-guardian
         name: SSOT guardian (task count + current_wave drift detection)
-        entry: python3 bin/ssot-guardian.py --warn-only  # main 预存 task_count drift 不阻塞 CI (动态治理债)
+        entry: python3 bin/ssot/ssot-guardian.py --warn-only  # main 预存 task_count drift 不阻塞 CI (动态治理债)
         language: system
         pass_filenames: false
         stages: [pre-commit]
         # P62+: 防止 system.yaml task 计数、goals/current.yaml current_wave 与真实目录漂移.
-        # 检测模式: 有漂移则阻塞提交,提示跑 `python3 bin/ssot-guardian.py --auto-fix`.
+        # 检测模式: 有漂移则阻塞提交,提示跑 `python3 bin/ssot/ssot-guardian.py --auto-fix`.
         # 自动修复由每日 cron 负责,避免 pre-commit 隐式写治理文件.
       - id: gac-local-gate
         name: GaC local gate (validate + drift + doc contract)
-        entry: uv run --with pyyaml python bin/gac-local-gate.py
+        entry: uv run --with pyyaml python bin/gac/gac-local-gate.py
         language: system
         pass_filenames: false
         stages: [pre-commit]
@@ -130,7 +130,7 @@ repos:
         name: omo sensitive governed write gate (broker-only)
         entry: uv run --directory projects/omo python -m omo.cli lint sensitive-governed-writes
         language: system
-        files: ^(projects/omo/src/omo/.*\.py|projects/omo/tests/test_omo_direct_io_gate\.py|bin/verify-omo\.sh|\.pre-commit-config\.yaml|\.github/workflows/governance-check\.yml|projects/omo/README\.md|\.omo/standards/omo-governance-surfaces\.md).*
+        files: ^(projects/omo/src/omo/.*\.py|projects/omo/tests/test_omo_direct_io_gate\.py|bin/ssot/verify-omo\.sh|\.pre-commit-config\.yaml|\.github/workflows/governance-check\.yml|projects/omo/README\.md|\.omo/standards/omo-governance-surfaces\.md).*
         pass_filenames: false
         stages: [pre-commit]
         # system/goals/tasks/capabilities 是高风险治理面.
@@ -204,7 +204,7 @@ repos:
 
       - id: mof-drift-check
         name: MOF drift detection (架构漂移检测)
-        entry: bin/mof-drift
+        entry: bin/mof/mof-drift
         language: system
         pass_filenames: false
         stages: [pre-commit]
@@ -237,7 +237,7 @@ repos:
 
       - id: verify-spaces
         name: Verify Spaces YAML Schema
-        entry: uv run --with jsonschema --with pyyaml python3 bin/verify-spaces.py
+        entry: uv run --with jsonschema --with pyyaml python3 bin/ssot/verify-spaces.py
         language: system
         files: ^spaces/.*\.yaml$
         pass_filenames: false
@@ -255,7 +255,7 @@ repos:
 
       - id: x2-rule-lint
         name: X2 freshness rule lint (schema 静态检查)
-        entry: python3 bin/x2-rule-lint.py
+        entry: python3 bin/gac/x2-rule-lint.py
         language: system
         pass_filenames: false
         stages: [pre-commit]
@@ -265,7 +265,7 @@ repos:
 
       - id: mof-m2-coverage
         name: M2 schema coverage (修正版)
-        entry: python3 bin/mof-m2-coverage.py
+        entry: python3 bin/mof/mof-m2-coverage.py
         language: system
         pass_filenames: false
         stages: [pre-commit]
@@ -275,7 +275,7 @@ repos:
 
       - id: adr-coverage
         name: ADR coverage (编号连续 + frontmatter + INDEX 一致)
-        entry: python3 bin/adr-coverage.py
+        entry: python3 bin/adr/adr-coverage.py
         language: system
         pass_filenames: false
         stages: [pre-commit]
@@ -284,7 +284,7 @@ repos:
 
       - id: governance-dashboard
         name: governance dashboard (P83-P86 治理工具统一汇总)
-        entry: python3 bin/governance-dashboard.py --tools governance-history,drift-history,x2-freshness,x2-rule-lint,adr-coverage,mof-m2-coverage,management-cross-ref,venv-yaml-check
+        entry: python3 bin/gac/governance-dashboard.py --tools governance-history,drift-history,x2-freshness,x2-rule-lint,adr-coverage,mof-m2-coverage,management-cross-ref,venv-yaml-check
         language: system
         pass_filenames: false
         stages: [pre-commit]
