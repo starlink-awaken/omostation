@@ -588,7 +588,7 @@ def _cmd_predict(args: list[str]) -> int:
             print(f"  中风险: {len(forecast.medium_risks)} 项")
             print(f"  低风险: {len(forecast.low_risks)} 项")
             if forecast.key_trends:
-                print(f"  关键趋势:")
+                print("  关键趋势:")
                 for trend in forecast.key_trends:
                     print(f"    • {trend}")
     
@@ -617,7 +617,7 @@ def _cmd_predict(args: list[str]) -> int:
     
     elif parsed.predict_sub == "actions":
         actions = engine.recommend_proactive_actions()
-        print(f"💡 [Predictive Governance] 推荐预防性治理动作:")
+        print("💡 [Predictive Governance] 推荐预防性治理动作:")
         if not actions:
             print("  (无推荐动作)")
         else:
@@ -628,7 +628,7 @@ def _cmd_predict(args: list[str]) -> int:
     
     elif parsed.predict_sub == "alerts":
         alerts = engine.generate_early_warning_alerts()
-        print(f"⚠️ [Predictive Governance] 早期预警:")
+        print("⚠️ [Predictive Governance] 早期预警:")
         if not alerts:
             print("  (无预警)")
         else:

@@ -54,11 +54,11 @@ class PredictiveGovernanceEngine:
         risks = []
         for debt in self.debt_registry.get("debts", []):
             risk_score = self._calculate_risk_score(debt)
-            if risk_score &gt; 0.6:
+            if risk_score > 0.6:
                 risk = DebtRisk(
                     debt_id=debt.get("id", "unknown"),
                     risk_score=risk_score,
-                    predicted_deterioration_days=7 if risk_score &gt; 0.8 else 14,
+                    predicted_deterioration_days=7 if risk_score > 0.8 else 14,
                     recommended_action="立即处理" if risk_score &gt; 0.8 else "近期计划",
                     contributing_factors=[]
                 )
@@ -76,9 +76,9 @@ class PredictiveGovernanceEngine:
 
     def forecast_governance_risks(self, time_horizon_days=7):
         debt_risks = self.predict_debt_deterioration(time_horizon_days)
-        high_risks = [r for r in debt_risks if r.risk_score &gt; 0.8]
-        medium_risks = [r for r in debt_risks if 0.6 &lt; r.risk_score &lt;= 0.8]
-        low_risks = [r for r in debt_risks if r.risk_score &lt;= 0.6]
+        high_risks = [r for r in debt_risks if r.risk_score > 0.8]
+        medium_risks = [r for r in debt_risks if 0.6 < r.risk_score <= 0.8]
+        low_risks = [r for r in debt_risks if r.risk_score <= 0.6]
         
         if high_risks:
             overall = "high"
