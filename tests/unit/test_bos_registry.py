@@ -305,3 +305,18 @@ def test_unimplemented_services_are_tracked():
     assert not unknown, (
         f"以下服务已登记为 unimplemented 但 bos-services.yaml 中未标记 [UNIMPLEMENTED]: {unknown}"
     )
+
+
+def test_mcp_proxy_metadata_projected():
+    """mcp_tool/tools from YAML are projected onto BosService (scheme C hardening)."""
+    from agora.mcp.resolver.bos_registry import load_from_yaml
+
+    services = load_from_yaml()
+    by_uri = {s.uri: s for s in services}
+    g = by_uri.get("bos://memory/kos/graphrag")
+    assert g is not None
+    assert g.transport == "mcp_proxy"
+    assert g.mcp_tool == "knowledge_ask"
+    v2 = by_uri.get("bos://memory/kos/mcp-v2")
+    assert v2 is not None
+    assert "knowledge_ask" in (v2.tools or [])
