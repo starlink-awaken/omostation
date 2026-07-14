@@ -1,11 +1,15 @@
 ---
-status: accepted
-date: 2026-07-14
-id: 0183
-title: Wave 2 C2G+OMO — Phase A (data closed loop) scope
+status: ACCEPTED
+lifecycle: decision
+owner: governance-team
+last-reviewed: 2026-07-14
 ---
 
 # ADR-0183 — Wave 2 Phase A 范围锁定
+
+- **Status**: ACCEPTED
+- **Date**: 2026-07-14
+- **Owner**: governance-team
 
 ## Context
 
@@ -18,9 +22,8 @@ scope; other directions stay backlog.
 **Wave 2 Phase A (P0)**: **数据闭环**
 
 1. C2G `OutcomeTracker` records real outcomes with schema validation.
-2. A read-only **backtest report** command (or script) reads tracker store and
-   emits JSON under `runtime/omo/_delivery/` via broker-safe paths when writing
-   governed state; otherwise stdout-only is acceptable for Phase A.
+2. A read-only **backtest report** command emits JSON to stdout:
+   `uv run --directory projects/c2g python -m c2g.outcome_backtest`
 3. No automatic strategy mutation in Phase A (that is Phase C 自动联动).
 
 **Out of Phase A** (explicit non-goals):
@@ -35,9 +38,9 @@ scope; other directions stay backlog.
 
 | Check | Command / evidence |
 |-------|-------------------|
-| Outcome schema exists | `projects/c2g` outcome module importable |
-| Backtest CLI/script | `python -m c2g...` or `scripts/` entry documented |
-| No direct-omo-io | contract_gatekeeper clean on new code |
+| Outcome schema exists | `OutcomeTracker` importable |
+| Backtest CLI | `python -m c2g.outcome_backtest` |
+| Unit tests | `pytest tests/test_outcome_backtest.py` |
 | Docs | this ADR + draft roadmap links here |
 
 ## Follow-ups

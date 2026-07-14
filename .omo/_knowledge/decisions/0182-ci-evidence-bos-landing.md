@@ -1,11 +1,15 @@
 ---
-status: accepted
-date: 2026-07-14
-id: 0182
-title: CI / evidence / BOS registry landing after tech-debt stack
+status: ACCEPTED
+lifecycle: decision
+owner: governance-team
+last-reviewed: 2026-07-14
 ---
 
 # ADR-0182 — CI · evidence · BOS registry 常态化落地
+
+- **Status**: ACCEPTED
+- **Date**: 2026-07-14
+- **Owner**: governance-team
 
 ## Context
 
@@ -24,7 +28,8 @@ opc_p6 direct-io), main tip was green but **mechanically fragile**:
 2. **evidence-smoke-gate**: always on `push` to `main` + all PRs; add
    `bin/ssot/sync-bos-registry.py --check` before score gate.
 3. **bos-registry.json**: SSOT-derived mirror of classic 5-domain services from
-   `bos-services.yaml` (active + unimplemented) via `bin/ssot/sync-bos-registry.py`.
+   `bos-services.yaml` (active + unimplemented) via `bin/ssot/sync-bos-registry.py`,
+   filtered to omo-valid 4-segment URIs.
 4. **BosService**: project `mcp_tool` and `tools` fields; evidence-smoke prefers them.
 5. **KNOWN_GAP wps-***: re-audit 2026-07-14, extend expiry to **2026-08-25**
    (external ToolBox still unbuilt; not in-repo fix).
@@ -37,5 +42,5 @@ opc_p6 direct-io), main tip was green but **mechanically fragile**:
 
 ## Non-goals (deferred)
 
-- Container executor hard isolation (Phase 5 roadmap, not this PR).
-- OS ACL on `.omo` write plane (design only in Scheme C Phase 5).
+- Container executor hard isolation (Phase 5b roadmap, not this PR).
+- OS ACL on `.omo` write plane (design only in Scheme C Phase 5c).

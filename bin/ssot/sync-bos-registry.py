@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -27,6 +28,12 @@ CLASSIC_DOMAINS = frozenset(
     {"memory", "governance", "analysis", "persona", "capability"}
 )
 KEEP_STATUS = frozenset({"active", "unimplemented"})
+# omo smoke / BOS CLI validate 4-segment kebab (package) + optional underscore action
+_OMO_URI = re.compile(
+    r"^bos://(memory|governance|analysis|persona|capability)/"
+    r"[a-z][a-z0-9-]*"
+    r"/[a-z][a-z0-9_-]*$"
+)
 
 _TRANSPORT_TO_PROTOCOL = {
     "stdio": "stdio",
@@ -62,6 +69,8 @@ def build_registry(services: list[dict]) -> list[dict]:
         domain = svc.get("domain") or ""
         status = svc.get("status", "active")
         if domain not in CLASSIC_DOMAINS or status not in KEEP_STATUS:
+            continue
+        if not _OMO_URI.match(uri):
             continue
         action = svc.get("action") or ""
         package = svc.get("package") or uri.replace("bos://", "").split("/")[1:2]
