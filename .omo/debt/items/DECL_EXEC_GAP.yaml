@@ -1,0 +1,24 @@
+id: "DECL_EXEC_GAP"
+title: "声明/执行鸿沟 — maturity 100 但 health 68/debt_adjusted 61.6"
+dimension: "governance"
+subdimension: "maturity"
+domain: "meta"
+scope: "workspace"
+severity: "critical"
+weight: 0.20
+entropy_class: "high"
+lifecycle_state: "active"
+owner: "architecture-team"
+affected_roots:
+  - ".omo/state/health.yaml"
+  - ".omo/state/system.yaml"
+evidence_refs:
+  - "#353 ARCHITECTURE-ANALYSIS-2026-07-14"
+  - "ADR-0200"
+mitigation_refs:
+  - ".omo/_knowledge/decisions/0200-architecture-convergence-isc2.md"
+opened_at: "2026-07-14"
+last_reviewed_at: "2026-07-14"
+gate_level: "P0"
+x1_policy_ref: "P43-ARCH-ANALYSIS-001"
+x3_tier: "Principle"
