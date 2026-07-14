@@ -3,7 +3,7 @@ status: active
 engine_ref: ENG-OPENROUTER-CLOUD
 model_driven_refs:
   source: brew+cc-switch
-  synced_at: '2026-06-28T22:09:42Z'
+  synced_at: '2026-07-14T08:42:25Z'
 governance:
   owner: aetherforge-gateway
   steward: m1-sync
@@ -351,6 +351,46 @@ models:
   - vision
   - tools
   - reasoning
+- model_id: gpt-5.6
+  display_name: GPT-5.6
+  cost_per_1k_input: 0.005
+  cost_per_1k_output: 0.03
+  context_window: 1100000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gpt-5.6-luna
+  display_name: GPT-5.6 Luna
+  cost_per_1k_input: 0.001
+  cost_per_1k_output: 0.006
+  context_window: 1100000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gpt-5.6-sol
+  display_name: GPT-5.6 Sol
+  cost_per_1k_input: 0.005
+  cost_per_1k_output: 0.03
+  context_window: 1100000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: gpt-5.6-terra
+  display_name: GPT-5.6 Terra
+  cost_per_1k_input: 0.0025
+  cost_per_1k_output: 0.015
+  context_window: 1100000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
 - model_id: gpt-image-1
   display_name: gpt-image-1
   cost_per_1k_input: 0
@@ -383,6 +423,16 @@ models:
   capabilities:
   - chat
   - vision
+- model_id: gpt-realtime-2.1
+  display_name: GPT-Realtime-2.1
+  cost_per_1k_input: 0.004
+  cost_per_1k_output: 0.024
+  context_window: 128000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
 - model_id: o1
   display_name: o1
   cost_per_1k_input: 0.015

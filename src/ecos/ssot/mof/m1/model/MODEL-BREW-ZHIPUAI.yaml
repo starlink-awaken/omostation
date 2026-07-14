@@ -3,7 +3,7 @@ status: active
 engine_ref: ENG-CC-SWITCH
 model_driven_refs:
   source: brew+cc-switch
-  synced_at: '2026-06-28T22:09:50Z'
+  synced_at: '2026-07-14T08:42:35Z'
 governance:
   owner: aetherforge-gateway
   steward: m1-sync
@@ -103,8 +103,8 @@ models:
   - reasoning
 - model_id: glm-5.1
   display_name: GLM-5.1
-  cost_per_1k_input: 0.006
-  cost_per_1k_output: 0.024
+  cost_per_1k_input: 0.0014
+  cost_per_1k_output: 0.0044
   context_window: 200000
   capabilities:
   - chat

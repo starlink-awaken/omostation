@@ -3,67 +3,12 @@ status: active
 engine_ref: ENG-ANTHROPIC-CLOUD
 model_driven_refs:
   source: brew+cc-switch
-  synced_at: '2026-06-28T22:09:40Z'
+  synced_at: '2026-07-14T08:42:22Z'
 governance:
   owner: aetherforge-gateway
   steward: m1-sync
   freshness_policy: weekly
 models:
-- model_id: claude-3-5-sonnet-20240620
-  display_name: Claude Sonnet 3.5
-  cost_per_1k_input: 0.003
-  cost_per_1k_output: 0.015
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-- model_id: claude-3-5-sonnet-20241022
-  display_name: Claude Sonnet 3.5 v2
-  cost_per_1k_input: 0.003
-  cost_per_1k_output: 0.015
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-- model_id: claude-3-7-sonnet-20250219
-  display_name: Claude Sonnet 3.7
-  cost_per_1k_input: 0.003
-  cost_per_1k_output: 0.015
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-  - reasoning
-- model_id: claude-3-haiku-20240307
-  display_name: Claude Haiku 3
-  cost_per_1k_input: 0.00025
-  cost_per_1k_output: 0.00125
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-- model_id: claude-3-opus-20240229
-  display_name: Claude Opus 3
-  cost_per_1k_input: 0.015
-  cost_per_1k_output: 0.075
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-- model_id: claude-3-sonnet-20240229
-  display_name: Claude Sonnet 3
-  cost_per_1k_input: 0.003
-  cost_per_1k_output: 0.015
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
 - model_id: claude-fable-5
   display_name: Claude Fable 5
   cost_per_1k_input: 0.01
@@ -94,16 +39,6 @@ models:
   - vision
   - tools
   - reasoning
-- model_id: claude-opus-4-0
-  display_name: Claude Opus 4 (latest)
-  cost_per_1k_input: 0.015
-  cost_per_1k_output: 0.075
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-  - reasoning
 - model_id: claude-opus-4-1
   display_name: Claude Opus 4.1 (latest)
   cost_per_1k_input: 0.015
@@ -116,16 +51,6 @@ models:
   - reasoning
 - model_id: claude-opus-4-1-20250805
   display_name: Claude Opus 4.1
-  cost_per_1k_input: 0.015
-  cost_per_1k_output: 0.075
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-  - reasoning
-- model_id: claude-opus-4-20250514
-  display_name: Claude Opus 4
   cost_per_1k_input: 0.015
   cost_per_1k_output: 0.075
   context_window: 200000
@@ -184,31 +109,11 @@ models:
   - vision
   - tools
   - reasoning
-- model_id: claude-sonnet-4-0
-  display_name: Claude Sonnet 4 (latest)
-  cost_per_1k_input: 0.003
-  cost_per_1k_output: 0.015
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-  - reasoning
-- model_id: claude-sonnet-4-20250514
-  display_name: Claude Sonnet 4
-  cost_per_1k_input: 0.003
-  cost_per_1k_output: 0.015
-  context_window: 200000
-  capabilities:
-  - chat
-  - vision
-  - tools
-  - reasoning
 - model_id: claude-sonnet-4-5
   display_name: Claude Sonnet 4.5 (latest)
   cost_per_1k_input: 0.003
   cost_per_1k_output: 0.015
-  context_window: 200000
+  context_window: 1000000
   capabilities:
   - chat
   - vision
@@ -218,7 +123,7 @@ models:
   display_name: Claude Sonnet 4.5
   cost_per_1k_input: 0.003
   cost_per_1k_output: 0.015
-  context_window: 200000
+  context_window: 1000000
   capabilities:
   - chat
   - vision
@@ -228,6 +133,16 @@ models:
   display_name: Claude Sonnet 4.6
   cost_per_1k_input: 0.003
   cost_per_1k_output: 0.015
+  context_window: 1000000
+  capabilities:
+  - chat
+  - vision
+  - tools
+  - reasoning
+- model_id: claude-sonnet-5
+  display_name: Claude Sonnet 5
+  cost_per_1k_input: 0.002
+  cost_per_1k_output: 0.01
   context_window: 1000000
   capabilities:
   - chat

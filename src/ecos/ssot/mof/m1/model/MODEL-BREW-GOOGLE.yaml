@@ -3,7 +3,7 @@ status: active
 engine_ref: ENG-CC-SWITCH
 model_driven_refs:
   source: brew+cc-switch
-  synced_at: '2026-06-28T22:09:47Z'
+  synced_at: '2026-07-14T08:42:32Z'
 governance:
   owner: aetherforge-gateway
   steward: m1-sync
@@ -194,6 +194,15 @@ models:
   - chat
   - vision
   - tools
+  - reasoning
+- model_id: gemini-omni-flash-preview
+  display_name: Gemini Omni Flash Preview
+  cost_per_1k_input: 0.0015
+  cost_per_1k_output: 0.0175
+  context_window: 131100
+  capabilities:
+  - chat
+  - vision
   - reasoning
 - model_id: gemma-4-26b-a4b-it
   display_name: Gemma 4 26B A4B IT
