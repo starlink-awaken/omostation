@@ -125,7 +125,8 @@ def load_from_yaml(path: str | pathlib.Path | None = None) -> list:
     )
     if not include_deprecated:
         data["services"] = [
-            s for s in data["services"]
+            s
+            for s in data["services"]
             if s.get("status", "active") not in ("deprecated", "unimplemented")
         ]
 
