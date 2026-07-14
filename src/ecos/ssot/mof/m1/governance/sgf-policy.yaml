@@ -106,5 +106,6 @@ gates:
   - id: "bus-e2e-harness"
     command: ["bin/ssot/bus-e2e-harness.py", "--count", "30", "--json"]
     ci_only: true
+  # ADR-0181: ecos core/fabric/ops import zones (was dead .omo/_knowledge/zones-check.py)
   - id: "zones-check"
-    command: ["python3", ".omo/_knowledge/zones-check.py", "--check", "--json"]
+    command: ["projects/ecos/src/ecos/ssot/tools/partition_import_lint.py", "--json"]
