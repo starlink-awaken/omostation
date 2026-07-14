@@ -1,3 +1,10 @@
+---
+status: ACCEPTED
+lifecycle: decision
+owner: governance-team
+last-reviewed: 2026-07-14
+---
+
 # ADR-0181: metaos × ecos 方案 C — 三平面契约化
 
 - **Status**: ACCEPTED
