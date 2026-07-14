@@ -13,5 +13,10 @@ dispatch_ref: .omo/debt/dispatch/current.yaml
 campaign_ref: .omo/debt/campaign/current.yaml
 reporting_ref: .omo/debt/reporting/current.yaml
 seed_items:
-- .omo/debt/items/DEBT-PROBE-VERIFY-001.yaml
-- .omo/debt/items/real-debt-p43.yaml
+- .omo/debt/items/DECL_EXEC_GAP.yaml
+- .omo/debt/items/UNASSIGNED_ENTROPY.yaml
+- .omo/debt/items/L1_HEALTH_PROBES.yaml
+- .omo/debt/items/SUBMODULE_DRIFT.yaml
+- .omo/debt/items/AGENT_COORDINATION.yaml
+- .omo/debt/items/HEALTH_SCORE_FORMULA.yaml
+- .omo/debt/items/TEST_COVERAGE.yaml
