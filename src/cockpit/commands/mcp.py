@@ -41,7 +41,7 @@ def cmd_mcp(args: argparse.Namespace) -> int:
             _panel(
                 "[bold yellow]⚠️  DEPRECATED: stdio MCP 入口已废弃[/bold yellow]\n\n"
                 "[red]推荐方式: 通过 Agora MCP (:7431) 访问[/red]\n"
-                "  agora-mcp → resolve_bos_uri(\"bos://cockpit/context\")\n\n"
+                '  agora-mcp → resolve_bos_uri("bos://cockpit/context")\n\n'
                 "[dim]保留此入口仅作向后兼容, Phase 4 后移除[/dim]\n"
                 "[dim]按 Ctrl+C 停止[/dim]",
                 "yellow",

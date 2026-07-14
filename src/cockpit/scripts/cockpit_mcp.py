@@ -989,6 +989,7 @@ def main() -> None:
     向后兼容期: 保留此 stdio 入口至 Phase 4 完成。
     """
     import warnings
+
     warnings.warn(
         "cockpit stdio MCP 已 deprecated, 请改用 Agora MCP (:7431) 的 "
         'resolve_bos_uri("bos://cockpit/context"), Phase 4 后移除',
