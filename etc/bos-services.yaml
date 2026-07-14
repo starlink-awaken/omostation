@@ -21,6 +21,71 @@ services:
     command: ["python3", "bin/mcp-server-kos.py"]
     description: "KOS 统一只读 MCP 服务器入口 (SGF-v1 硬件外挂)"
 
+  # kairon MCP Gateway backend 注册 (P0, agora mcp_proxy 声明式聚合, 2026-07-14)
+  # kairon 9 MCP 全 FastMCP (协议统一完成), agora 作 I0 hub subprocess 代理 (复用, 不重造)
+  - uri: "bos://memory/eidos/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "eidos-mcp"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.mcp_server"]
+    description: "eidos MCP (schema modeling: list/validate/meta/define/export/migrate)"
+    status: active
+
+  - uri: "bos://memory/ontoderive/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "ontoderive-mcp"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.mcp_server"]
+    description: "ontoderive MCP (本体推导 derive)"
+    status: active
+
+  - uri: "bos://memory/minerva/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "minerva-mcp"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.mcp_server.server"]
+    description: "minerva MCP (深度研究 build_cross_domain_report)"
+    status: active
+
+  - uri: "bos://memory/kronos/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "kronos-mcp"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos.mcp_server"]
+    description: "kronos MCP (摄取 fetch_layers/methods)"
+    status: active
+
+  - uri: "bos://memory/iris/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "iris-mcp"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.mcp_server"]
+    description: "iris MCP (发现与召回 connectors)"
+    status: active
+
+  - uri: "bos://memory/sophia/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "sophia-mcp"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sophia.server.mcp_server"]
+    description: "sophia MCP (KEMS 运行时 list_operations/states)"
+    status: active
+
+  - uri: "bos://memory/forge/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "forge-mcp"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.mcp_server"]
+    description: "forge MCP (工具集市 market_install/list)"
+    status: active
+
   # KOS REST API v1 (HTTP, port 8766) — 跨项目松耦合集成
   - uri: "bos://memory/kos/rest-api"
     domain: memory
