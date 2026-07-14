@@ -13,18 +13,18 @@ settings:
 # 全量注册大仓 31 个 Gate 门禁项 (规则数据化)
 gates:
   - id: "gac-validate"
-    command: ["bin/gac-validate.py", "--gate"]
+    command: ["bin/gac/gac-validate.py", "--gate"]
   - id: "gac-drift"
-    command: ["bin/gac-drift.py"]
+    command: ["bin/gac/gac-drift.py"]
   - id: "write-owner-audit"
-    command: ["bin/write-owner-audit.py", "--staged"]
+    command: ["bin/ssot/write-owner-audit.py", "--staged"]
   - id: "install-watch-agent"
-    command: ["bin/install-watch-agent.py"]
+    command: ["bin/gac/install-watch-agent.py"]
     ci_skip: true
   - id: "test-mcp-kos"
-    command: ["bin/test-mcp-kos.py"]
+    command: ["bin/ssot/test-mcp-kos.py"]
   - id: "check-cockpit-ui-dist"
-    command: ["bin/check-cockpit-ui-dist.py"]
+    command: ["bin/ssot/check-cockpit-ui-dist.py"]
   - id: "agent-workflow-lint"
     command: ["bin/agent-workflow.py", "lint"]
   - id: "agent-workflow-integrations"
@@ -46,63 +46,63 @@ gates:
   - id: "agent-workflow-observe"
     command: ["bin/agent-workflow.py", "observe"]
   - id: "governance-evolution"
-    command: ["bin/governance-evolution.py", "validate", "--json"]
+    command: ["bin/gac/governance-evolution.py", "validate", "--json"]
     ci_only: true  # ISC-3f/3g: 依赖 agora/cockpit 子模块脚本, worktree 部分 init 假阳性; non-strict pre-commit 跳过, CI strict 兜底
   - id: "mof-schema-validate"
     command: ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]
   - id: "mof-state-bridge"
     command: ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]
   - id: "mof-drift"
-    command: ["bin/mof-drift"]
+    command: ["bin/mof/mof-drift"]
   - id: "m4-bootstrap-reflex"
-    command: ["bin/mof-bootstrap.py", "all"]
+    command: ["bin/mof/mof-bootstrap.py", "all"]
   - id: "m4-mcp-tool-integrity"
-    command: ["bin/mcp-tool-data-complete.py"]
+    command: ["bin/gac/mcp-tool-data-complete.py"]
   - id: "doc-ssot-lint"
-    command: ["bin/doc-ssot-lint.py"]
+    command: ["bin/ssot/doc-ssot-lint.py"]
     ci_only: true  # ISC-3f: check_required_generated_artifacts 依赖 docs/generated/* (gitignored post-commit 萃取), worktree 无; non-strict pre-commit 跳, CI strict 兜底
   - id: "project-layer-index"
-    command: ["bin/project-layer-index.py", "--check"]
+    command: ["bin/mof/project-layer-index.py", "--check"]
     ci_only: true  # 默认 strict/CI 跑，本地 skip 防止冲突
   - id: "doc-ssot-snapshots"
     command: ["scripts/check-doc-ssot-snapshots.py"]
   - id: "doc-link-check"
-    command: ["bin/doc-link-check.py"]
+    command: ["bin/ssot/doc-link-check.py"]
   - id: "change-lane-check"
     command: ["bin/change-lane-check.py", "--staged"]
   - id: "dependency-baseline-drift"
-    command: ["bin/gen-dependency-baseline.py", "--check"]
+    command: ["bin/mof/gen-dependency-baseline.py", "--check"]
     ci_only: true
   - id: "matrix-consistency"
-    command: ["bin/matrix-consistency-lint.py", "--skip-launchd"]
+    command: ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"]
     ci_skip: true  # CI 无 launchd 依赖，在 CI_SKIP 里注册
   - id: "governance-convergence"
-    command: ["bin/governance-convergence-lint.py"]
+    command: ["bin/gac/governance-convergence-lint.py"]
   - id: "governance-semantic-gate"
-    command: ["bin/governance-semantic-gate.py", "--json"]
+    command: ["bin/gac/governance-semantic-gate.py", "--json"]
   - id: "state-freshness-check"
-    command: ["bin/state-freshness-check.py", "--json"]
+    command: ["bin/gac/state-freshness-check.py", "--json"]
   - id: "check-dashboard-registry-consistency"
-    command: ["bin/check-dashboard-registry-consistency.py"]
+    command: ["bin/ssot/check-dashboard-registry-consistency.py"]
   - id: "check-toolbox-ssot"
-    command: ["bin/check-toolbox-ssot.py"]
+    command: ["bin/ssot/check-toolbox-ssot.py"]
   - id: "check-domain-m1-alignment"
-    command: ["bin/check-domain-m1-alignment.py"]
+    command: ["bin/ssot/check-domain-m1-alignment.py"]
   - id: "test-gac-engine"
-    command: ["bin/test-gac-engine.py"]
+    command: ["bin/ssot/test-gac-engine.py"]
   - id: "service-config-validate"
-    command: ["bin/gen-service-configs.py", "--validate"]
+    command: ["bin/mof/gen-service-configs.py", "--validate"]
   - id: "service-config-drift"
-    command: ["bin/gen-service-configs.py", "--check"]
+    command: ["bin/mof/gen-service-configs.py", "--check"]
     ci_skip: true  # P74 阶段3: 本机 plist drift gate, CI 无本机 plist → skip (双源与主仓 DEFAULT_POLICY L66-67 一致)
   - id: "gac-mesh-router-check"
-    command: ["bin/gac-mesh-router.py", "--check"]
+    command: ["bin/gac/gac-mesh-router.py", "--check"]
   - id: "gac-consensus-inject-check"
-    command: ["bin/gac-consensus-inject.py", "--check"]
+    command: ["bin/gac/gac-consensus-inject.py", "--check"]
   - id: "gac-compute-onboard-check"
-    command: ["bin/gac-compute-onboard.py", "--check"]
+    command: ["bin/gac/gac-compute-onboard.py", "--check"]
   - id: "bus-usage-report"
-    command: ["bin/bus-usage-report.py"]
+    command: ["bin/ssot/bus-usage-report.py"]
   - id: "bus-e2e-harness"
-    command: ["bin/bus-e2e-harness.py", "--count", "30", "--json"]
+    command: ["bin/ssot/bus-e2e-harness.py", "--count", "30", "--json"]
     ci_only: true
