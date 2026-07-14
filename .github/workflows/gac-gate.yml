@@ -10,11 +10,11 @@ on:
       - 'bin/mof/*.py'
       - '.omo/_truth/registry/dependency-baseline.yaml'
       - '.github/workflows/gac-gate.yml'
-      - 'bin/doc-ssot-lint.py'
-      - 'bin/doc-link-check.py'
+      - 'bin/ssot/doc-ssot-lint.py'
+      - 'bin/ssot/doc-link-check.py'
       - 'bin/change-lane-check.py'
-      - 'bin/submodule-reachability-gate.py'
-      - 'bin/submodule-pointer-transaction.sh'
+      - 'bin/ssot/submodule-reachability-gate.py'
+      - 'bin/ssot/submodule-pointer-transaction.sh'
       - 'scripts/check-doc-ssot-snapshots.py'
       - 'AGENTS.md'
       - 'CLAUDE.md'
@@ -44,7 +44,7 @@ jobs:
         run: pip install pyyaml
       - name: generate digests
         run: |
-          python3 bin/project-layer-index.py --write
-          python3 bin/gac-export-agents.py
+          python3 bin/mof/project-layer-index.py --write
+          python3 bin/gac/gac-export-agents.py
       - name: gac-local-gate (strict)
-        run: python3 bin/gac-local-gate.py --strict
+        run: python3 bin/gac/gac-local-gate.py --strict

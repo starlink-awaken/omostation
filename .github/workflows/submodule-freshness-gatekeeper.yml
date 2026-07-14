@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Verify gitlink reachability
-        run: python3 bin/submodule-reachability-gate.py --source worktree --fetch
+        run: python3 bin/ssot/submodule-reachability-gate.py --source worktree --fetch
 
       - name: Run Workspace Tests (kairon, agora, omo, bus-foundation)
         if: env.CHANGED == 'true'
