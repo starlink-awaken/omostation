@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+# Status: implemented (P47 R1: MOF 多格式导出 (JSON/Markdown/DOT))
+"""MOF 文档导出工具 — 从模型自动生成 README/API 文档/架构图"""
+
+import sys
+from pathlib import Path
+
+import yaml
+
+M1_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
+M2_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m2"
+
+
+def load_all_m1() -> list[dict]:
+    """加载所有 M1 节点"""
+    nodes = []
+    for yaml_file in M1_DIR.rglob("*.yaml"):
+        if yaml_file.name.startswith("_"):
+            continue
+        try:
+            data = yaml.safe_load(yaml_file.read_text())
+            if isinstance(data, dict) and "id" in data:
+                nodes.append(data)
+        except Exception:
+            pass
+    return nodes
+
+
+def export_project_readme(project_name: str) -> str:
+    """从模型生成项目 README"""
+    nodes = load_all_m1()
+    
+    # Find project node - prioritize COMP-WS-{name} exact match
+    project_node = None
+    for n in nodes:
+        if n.get("id") == f"COMP-WS-{project_name}":
+            project_node = n
+            break
+    if project_node is None:
+        for n in nodes:
+            if n.get("project") == project_name:
+                project_node = n
+                break
+    
+    if not project_node:
+        return f"# {project_name}\n\nProject node not found in MOF model."
+    
+    # Find subcomponents
+    subcomponents = []
+    for n in nodes:
+        if n.get("type") == "Component" and n.get("parent") == project_node.get("id"):
+            subcomponents.append(n)
+    
+    # Find services
+    services = []
+    for n in nodes:
+        if n.get("type") == "Service" and n.get("project") == project_name:
+            services.append(n)
+    
+    # Find MCP tools
+    mcptools = []
+    for n in nodes:
+        if n.get("type") == "MCPTool" and n.get("project") == project_name:
+            mcptools.append(n)
+    
+    # Find dependencies
+    relations = project_node.get("relations", {})
+    depends_on = relations.get("depends_on", [])
+    
+    # Generate README
+    readme = f"# {project_node.get('name', project_name)}\n\n"
+    readme += f"{project_node.get('description', '')}\n\n"
+    readme += f"**Layer**: {project_node.get('layer', 'N/A')}\n"
+    readme += f"**Status**: {project_node.get('status', 'N/A')}\n"
+    readme += f"**Version**: {project_node.get('version', 'N/A')}\n\n"
+    
+    if subcomponents:
+        readme += "## Subcomponents\n\n"
+        for sc in subcomponents:
+            readme += f"- **{sc.get('name', sc.get('id', ''))}**: {sc.get('description', '')}\n"
+        readme += "\n"
+    
+    if services:
+        readme += "## Services\n\n"
+        for svc in services:
+            readme += f"- **{svc.get('name', svc.get('id', ''))}**: port={svc.get('port', 'N/A')}, status={svc.get('runtime_status', 'N/A')}\n"
+        readme += "\n"
+    
+    if mcptools:
+        readme += "## MCP Tools\n\n"
+        for tool in mcptools:
+            tools = tool.get("tools", [])
+            readme += f"- **{tool.get('name', tool.get('id', ''))}**: {len(tools)} tools\n"
+        readme += "\n"
+    
+    if depends_on:
+        readme += "## Dependencies\n\n"
+        for dep in depends_on:
+            readme += f"- {dep}\n"
+        readme += "\n"
+    
+    # Value metrics
+    value = project_node.get("value_metrics", {})
+    if value:
+        readme += "## Value Metrics\n\n"
+        for k, v in value.items():
+            readme += f"- **{k}**: {v}\n"
+        readme += "\n"
+    
+    readme += "---\n*Auto-generated from MOF model*\n"
+    
+    return readme
+
+
+def export_api_docs(project_name: str) -> str:
+    """从模型生成 API 文档"""
+    nodes = load_all_m1()
+    
+    # Find MCP tools for project
+    mcptools = []
+    for n in nodes:
+        if n.get("type") == "MCPTool" and n.get("project") == project_name:
+            mcptools.append(n)
+    
+    if not mcptools:
+        return f"# {project_name} API\n\nNo MCP tools found in MOF model."
+    
+    docs = f"# {project_name} API Documentation\n\n"
+    
+    for tool_group in mcptools:
+        docs += f"## {tool_group.get('name', tool_group.get('id', ''))}\n\n"
+        docs += f"{tool_group.get('description', '')}\n\n"
+        
+        tools = tool_group.get("tools", [])
+        if tools:
+            docs += "### Tools\n\n"
+            for tool in tools:
+                docs += f"- `{tool}`\n"
+            docs += "\n"
+        
+        docs += f"**Transport**: {tool_group.get('transport', 'N/A')}\n"
+        docs += f"**Status**: {tool_group.get('status', 'N/A')}\n\n"
+    
+    docs += "---\n*Auto-generated from MOF model*\n"
+    
+    return docs
+
+
+def export_architecture_mermaid(project_name: str = None) -> str:
+    """从模型生成 Mermaid 架构图"""
+    nodes = load_all_m1()
+    
+    mermaid = "```mermaid\ngraph TD\n"
+    
+    # Filter by project if specified
+    if project_name:
+        components = [n for n in nodes if n.get("type") == "Component" and n.get("project") == project_name]
+    else:
+        components = [n for n in nodes if n.get("type") == "Component" and n.get("id", "").startswith("COMP-WS-")]
+    
+    # Add component nodes
+    for comp in components:
+        comp_id = comp.get("id", "")
+        comp_name = comp.get("name", comp_id)
+        layer = comp.get("layer", "")
+        mermaid += f"    {comp_id}[\"{comp_name}<br/>{layer}\"]\n"
+    
+    # Add dependency edges
+    for comp in components:
+        comp_id = comp.get("id", "")
+        relations = comp.get("relations", {})
+        for dep in relations.get("depends_on", []):
+            dep_id = f"COMP-WS-{dep}" if not dep.startswith("COMP-") else dep
+            mermaid += f"    {comp_id} --> {dep_id}\n"
+    
+    mermaid += "```\n"
+    
+    return mermaid
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: mof-export <command> [project]")
+        print("Commands: readme <project>, api <project>, arch [project]")
+        sys.exit(1)
+    
+    command = sys.argv[1]
+    project = sys.argv[2] if len(sys.argv) > 2 else None
+    
+    if command == "readme":
+        if not project:
+            print("Usage: mof-export readme <project>")
+            sys.exit(1)
+        print(export_project_readme(project))
+    
+    elif command == "api":
+        if not project:
+            print("Usage: mof-export api <project>")
+            sys.exit(1)
+        print(export_api_docs(project))
+    
+    elif command == "arch":
+        print(export_architecture_mermaid(project))
+    
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
