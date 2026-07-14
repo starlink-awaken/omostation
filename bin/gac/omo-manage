@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""OMO 管理工具 — 查看/验证/维护 .omo 目录"""
+
+import subprocess
+import sys
+from pathlib import Path
+
+OMO_DIR = Path(__file__).parent.parent / ".omo"
+
+
+def show_status():
+    """显示 .omo 目录状态"""
+    print("╔════════════════════════════════════════════════════════════╗")
+    print("║  OMO 目录状态                                              ║")
+    print("╚════════════════════════════════════════════════════════════╝\n")
+    
+    # Count files by directory
+    print("目录统计:")
+    for subdir in sorted(OMO_DIR.iterdir()):
+        if subdir.is_dir() and not subdir.name.startswith('.'):
+            count = sum(1 for f in subdir.rglob("*") if f.is_file())
+            if count > 0:
+                print(f"  {subdir.name}: {count} files")
+    print()
+    
+    # Count by file type
+    print("文件类型:")
+    for ext in [".yaml", ".md", ".json", ".py", ".sh"]:
+        count = sum(1 for f in OMO_DIR.rglob(f"*{ext}") if f.is_file())
+        if count > 0:
+            print(f"  {ext}: {count}")
+    print()
+    
+    # Key files
+    print("关键文件:")
+    key_files = [
+        "state/system.yaml",
+        "state/health.yaml",
+        "goals/current.yaml",
+        "_truth/INDEX.md",
+        "_truth/registry/mof-capabilities.yaml",
+        "standards/omo-governance-surfaces.md",
+    ]
+    for f in key_files:
+        path = OMO_DIR / f
+        if path.exists():
+            print(f"  ✅ {f}")
+        else:
+            print(f"  ❌ {f} (missing)")
+
+
+def check_health():
+    """检查 .omo 目录健康度"""
+    print("=== OMO 健康检查 ===\n")
+    
+    issues = []
+    
+    # Check for stale files
+    system_yaml = OMO_DIR / "state" / "system.yaml"
+    if system_yaml.exists():
+        mtime = system_yaml.stat().st_mtime
+        import time
+        age_hours = (time.time() - mtime) / 3600
+        if age_hours > 24:
+            issues.append(f"system.yaml is {age_hours:.1f}h old (>24h)")
+    
+    # Check for broken references
+    goals = OMO_DIR / "goals" / "current.yaml"
+    if goals.exists():
+        import yaml
+        data = yaml.safe_load(goals.read_text())
+        if data and "goals" in data:
+            for goal in data["goals"]:
+                if goal.get("status") == "active" and goal.get("progress", 0) < 100:
+                    pass  # OK
+                elif goal.get("status") == "done" and goal.get("progress", 0) == 100:
+                    pass  # OK
+                else:
+                    issues.append(f"Goal {goal.get('id', '')} has inconsistent status/progress")
+    
+    if not issues:
+        print("✅ No issues found.")
+    else:
+        print(f"🔴 {len(issues)} issues found:")
+        for issue in issues:
+            print(f"  • {issue}")
+
+
+def list_tasks():
+    """列出任务状态"""
+    print("=== 任务状态 ===\n")
+    
+    tasks_dir = OMO_DIR / "tasks"
+    for subdir in ["active", "planned", "done", "blocked"]:
+        task_dir = tasks_dir / subdir
+        if task_dir.exists():
+            count = sum(1 for f in task_dir.glob("*.yaml") if f.is_file())
+            print(f"  {subdir}: {count}")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: omo-manage <command>")
+        print("Commands: status, health, tasks")
+        sys.exit(1)
+    
+    command = sys.argv[1]
+    
+    if command == "status":
+        show_status()
+    elif command == "health":
+        check_health()
+    elif command == "tasks":
+        list_tasks()
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

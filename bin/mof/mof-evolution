@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+# Status: implemented (P47 R1: MOF 系统演化追踪 — 跨 phase 变更分析)
+"""MOF 系统演化追踪 — 追踪系统演化路径"""
+
+import subprocess
+import sys
+from pathlib import Path
+
+import yaml
+
+M1_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
+PROJECTS_DIR = Path(__file__).parent.parent / "projects"
+
+
+def load_all_m1() -> list[dict]:
+    """加载所有 M1 节点"""
+    nodes = []
+    for yaml_file in M1_DIR.rglob("*.yaml"):
+        if yaml_file.name.startswith("_"):
+            continue
+        try:
+            data = yaml.safe_load(yaml_file.read_text())
+            if isinstance(data, dict) and "id" in data:
+                nodes.append(data)
+        except Exception:
+            pass
+    return nodes
+
+
+def get_git_history(project_name: str, count: int = 10) -> list[dict]:
+    """获取 git 提交历史"""
+    project_dir = PROJECTS_DIR / project_name
+    if not project_dir.exists():
+        return []
+    
+    try:
+        result = subprocess.run(
+            ["git", "log", f"--oneline", f"-{count}"],
+            capture_output=True, text=True, timeout=30,
+            cwd=str(project_dir)
+        )
+        commits = []
+        for line in result.stdout.strip().split("\n"):
+            if line:
+                parts = line.split(" ", 1)
+                if len(parts) == 2:
+                    commits.append({"hash": parts[0], "message": parts[1]})
+        return commits
+    except Exception:
+        return []
+
+
+def track_evolution(project_name: str) -> dict:
+    """追踪项目演化"""
+    nodes = load_all_m1()
+    
+    # Find project node
+    project_node = None
+    for n in nodes:
+        if n.get("id") == f"COMP-WS-{project_name}" or n.get("project") == project_name:
+            project_node = n
+            break
+    
+    if not project_node:
+        return {"error": f"Project {project_name} not found"}
+    
+    # Get git history
+    history = get_git_history(project_name, 20)
+    
+    # Get state history
+    state_history = project_node.get("state_history", [])
+    
+    # Get subcomponents
+    subcomponents = []
+    for n in nodes:
+        if n.get("type") == "Component" and n.get("project") == project_name:
+            subcomponents.append(n.get("name", n.get("id", "")))
+    
+    return {
+        "project": project_name,
+        "created": project_node.get("created", "unknown"),
+        "version": project_node.get("version", "unknown"),
+        "status": project_node.get("status", "unknown"),
+        "layer": project_node.get("layer", "unknown"),
+        "subcomponents": subcomponents,
+        "state_history": state_history,
+        "git_history": history,
+    }
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: mof-evolution <project>")
+        print("Example: mof-evolution kairon")
+        sys.exit(1)
+    
+    project = sys.argv[1]
+    
+    print(f"=== MOF Evolution Tracking: {project} ===\n")
+    
+    result = track_evolution(project)
+    
+    if "error" in result:
+        print(f"Error: {result['error']}")
+        sys.exit(1)
+    
+    print(f"Project: {result['project']}")
+    print(f"Created: {result['created']}")
+    print(f"Version: {result['version']}")
+    print(f"Status: {result['status']}")
+    print(f"Layer: {result['layer']}")
+    print()
+    
+    if result["subcomponents"]:
+        print(f"Subcomponents ({len(result['subcomponents'])}):")
+        for sc in result["subcomponents"]:
+            print(f"  → {sc}")
+        print()
+    
+    if result["state_history"]:
+        print("State History:")
+        for sh in result["state_history"]:
+            print(f"  [{sh.get('timestamp', 'N/A')}] {sh.get('state', 'N/A')} - {sh.get('reason', '')}")
+        print()
+    
+    if result["git_history"]:
+        print("Recent Git History:")
+        for gh in result["git_history"][:10]:
+            print(f"  {gh['hash']}: {gh['message']}")
+        print()
+
+
+if __name__ == "__main__":
+    main()

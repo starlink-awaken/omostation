@@ -110,9 +110,9 @@ The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.
 ```bash
 make ci-local                               # 本地一键跑全部门 (ci-local-fast 超集, Makefile:105)
 make gac-local-gate
-uv run --with "pyyaml" python "bin/gac-local-gate.py" --scope files --file <path> --json
-uv run --with "pyyaml" python "bin/doc-ssot-lint.py" --json
-uv run --with "pyyaml" python "bin/ssot-guardian.py"
+uv run --with "pyyaml" python "bin/gac/gac-local-gate.py" --scope files --file <path> --json
+uv run --with "pyyaml" python "bin/ssot/doc-ssot-lint.py" --json
+uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
 ```
 
 **Agent workflow lifecycle** (`bootstrap` → inspect → `start` → `claim` → `verify` → `closeout` → `compliance`):
@@ -178,7 +178,7 @@ Run a single test with each framework's native filter (see the target project's 
 | External adapter contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" adapters` |
 | External adapter health | `uv run --with "pyyaml" python "bin/agent-workflow.py" doctor` |
 | L0/SSOT/M0/MOF alignment audit | [`.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md`](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) |
-| Agent 红线/灰线 (severity) | `docs/generated/agent-redlines.md` (`bin/gen-agent-redlines.py` 生成, gitignored; executor ∈ {hook_pre_edit, ci_gate} → red, 否则 gray; ADR-0171) |
+| Agent 红线/灰线 (severity) | `docs/generated/agent-redlines.md` (`bin/mof/gen-agent-redlines.py` 生成, gitignored; executor ∈ {hook_pre_edit, ci_gate} → red, 否则 gray; ADR-0171) |
 
 ### 6b. By task — "I want to change X, where do I look first?"
 
@@ -193,14 +193,14 @@ Run a single test with each framework's native filter (see the target project's 
 | Document SSOT contract | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) |
 | Write an ADR | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [`.omo/standards/adr-process.md`](.omo/standards/adr-process.md) |
 | Project layer placement | [`docs/project-registry.yaml`](docs/project-registry.yaml) → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) |
-| Land changes to root `main` | [`bin/gac-worktree.sh`](bin/gac-worktree.sh) (claim/submit/merge) · [`AGENTS.md` §6.1](AGENTS.md) · [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) |
+| Land changes to root `main` | [`bin/gac/gac-worktree.sh`](bin/gac/gac-worktree.sh) (claim/submit/merge) · [`AGENTS.md` §6.1](AGENTS.md) · [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) |
 
 ## 7. Closeout
 
 ```bash
 git status --short
 make gac-local-gate
-uv run --with "pyyaml" python "bin/ssot-guardian.py"
+uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
 ```
 
 Run broader tests only when the edited surface warrants them. Documentation-only changes usually need the documentation SSOT check plus a clear diff review. For the full closeout checklist (including reporting files changed and checks skipped), see [`AGENTS.md` §9](AGENTS.md#9-closeout-checklist).
