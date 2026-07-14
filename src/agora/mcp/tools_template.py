@@ -21,19 +21,11 @@ FORMAT_VERSION = "agora-v1"
 
 
 # ── 辅助函数 ─────────────────────────────────────────
-# _ok() / _error() 集中管理返回格式。
+# _ok()/_error() 集中管理返回格式 — 从 server._response 统一导入
 # 注意：_ok() 的 data 参数中不内建 format_version，
 # 要求每个工具函数显式传递（以便 SOP 的 AST 静态检测能在工具函数体中找到字面量）。
 
-
-def _error(msg: str) -> dict:
-    """返回标准错误响应（内建 format_version，工具函数无需额外传入）。"""
-    return {"status": "error", "error": msg, "format_version": FORMAT_VERSION}
-
-
-def _ok(data: dict) -> dict:
-    """返回标准成功响应。data 中应包含 format_version 字段。"""
-    return {"status": "ok", **data}
+from agora.server._response import _ok, _error, FORMAT_VERSION  # noqa: F401
 
 
 # ── 工具函数示例 ─────────────────────────────────────

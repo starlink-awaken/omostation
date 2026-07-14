@@ -3,17 +3,32 @@
 > 当前状态: `server/mcp.py` 1,757 行，混合 接入/路由/代理/治理/审计 5 层逻辑
 > 目标: 拆分为 4 个焦点模块，每个 <500 行，单一职责
 
+## 当前进展 (2026-07-14)
+
+- ✅ `server/tools_proxy.py` (647 行) — Proxy/路由/注册/事件工具
+- ✅ `server/tools_registry.py` (640 行) — 仓库/生命周期/A2A/Agent Card
+- ✅ `server/tools_bos.py` (889 行) — BOS URI resolve/list/schema/mutate/resources
+- ✅ `server/tools_api_keys.py` — API Key 管理工具
+- ✅ `server/_response.py` (61 行) — `_ok/_error/FORMAT_VERSION` 统一
+- ✅ `mcp/tools_template.py` — 改为 re-export `_response.py`
+- ✅ `server/mcp.py` 头部注释更新
+
+**待推进**:
+- `server/tools_bos.py` 889 行仍超大, 需二次拆分 (resolve 与 execute 分离)
+- `server/mcp.py` 剩余 867 行 (AuditSubscriber + resources + main + re-exports)
+- `server/tools_registry.py` 640 行, 需拆分 (repo/lifecycle/a2a/agent card)
+- `server/tools_proxy.py` 647 行, 需二次拆分
+
 ## 当前结构分析
 
 ```
-server/mcp.py (1,757 行)
+server/mcp.py (867 行)
 ├── 接入层: FastMCP Server 配置 + 全局 mcp 实例 (行 1-100)
-├── 工具层: 42+ @mcp.tool() 定义 (行 100-800)
-├── 代理层: ProxyManager 集成 + 动态工具注册 (行 800-1100)
-├── 路由层: SmartRouter 集成 + 工具转发逻辑 (行 1100-1400)
-├── 审计层: 审计日志 + 治理检查 (行 1400-1600)
-├── 帮助层: _ok/_error helpers (行 276-281)
-└── 其他: A2A 任务 / 仓库管理 / 生命周期 (分散在各处)
+├── 内部组件: AuditSubscriber + _get_task_manager (行 194-400)
+├── Resource: 3 个 @mcp.resource 定义 (行 671-800)
+├── 执行引擎: agora_execute (行 808-829)
+├── 入口: main() (行 832-861)
+└── Re-exports: 行 864-867
 ```
 
 ## 拆分方案
