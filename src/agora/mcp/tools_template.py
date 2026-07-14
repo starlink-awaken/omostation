@@ -16,16 +16,13 @@ from fastmcp import FastMCP
 mcp = FastMCP("agora-agent-router-template")
 
 
-# ── 常量 ─────────────────────────────────────────────
-FORMAT_VERSION = "agora-v1"
-
-
 # ── 辅助函数 ─────────────────────────────────────────
 # _ok()/_error() 集中管理返回格式 — 从 server._response 统一导入
+# FORMAT_VERSION 同样从 _response 导入, 保持全局唯一 SSOT
 # 注意：_ok() 的 data 参数中不内建 format_version，
 # 要求每个工具函数显式传递（以便 SOP 的 AST 静态检测能在工具函数体中找到字面量）。
 
-from agora.server._response import _ok, _error, FORMAT_VERSION  # noqa: F401
+from agora.server._response import _ok, _error, FORMAT_VERSION
 
 
 # ── 工具函数示例 ─────────────────────────────────────
