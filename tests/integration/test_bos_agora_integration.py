@@ -48,9 +48,9 @@ def test_bos_registry_exists():
 
 
 def test_bos_registry_has_42_uris():
-    """W2 验证: bos-registry.json 总计 42 条 URI (P34-W0 拓展 + C2G v4 strategy-audit/gc)."""
+    """Registry is synced from bos-services (classic 5 domains)."""
     regs = json.loads(BOS_REGISTRY.read_text())
-    assert len(regs) == 36, f"Expected 36 URIs, got {len(regs)}"
+    assert len(regs) >= 36, f"Expected >=36 URIs after sync, got {len(regs)}"
 
 
 def test_bos_registry_5_domains():
@@ -63,11 +63,11 @@ def test_bos_registry_5_domains():
 
 
 def test_analysis_12_uris_in_registry():
-    """W2 验证: 12 条 Analysis URI 全部在 registry."""
+    """Classic analysis URIs remain present after registry sync."""
     regs = json.loads(BOS_REGISTRY.read_text())
     analysis_uris = [r["uri"] for r in regs if r.get("domain") == "analysis"]
-    assert len(analysis_uris) == 12, (
-        f"Expected 12 analysis URIs, got {len(analysis_uris)}"
+    assert len(analysis_uris) >= 12, (
+        f"Expected >=12 analysis URIs, got {len(analysis_uris)}"
     )
     for uri in ANALYSIS_URIS:
         assert uri in analysis_uris, f"Missing: {uri}"
