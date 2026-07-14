@@ -33,7 +33,6 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
     try:
         from metaos.core.engine import SEngine
-        from metaos.core.types import Task
         from metaos.core.workflow import Workflow, WorkflowNode
     except ImportError as e:
         return {
@@ -100,6 +99,8 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
 def _execute_sync_layers(workflow: Any, engine: Any) -> dict[str, Any]:
     """拓扑分层同步执行，避免测试/CLI 中 asyncio 复杂性。"""
+    from metaos.core.types import Task
+
     results: dict[str, Any] = {
         "steps": [],
         "passed": 0,

@@ -22,7 +22,9 @@ from typing import Any
 
 # ── OMO 源码路径 ──────────────────────────────────────────
 # ecos project root is 5 levels up from this file
-_ECOS_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent  # projects/ecos
+_ECOS_ROOT = (
+    Path(__file__).resolve().parent.parent.parent.parent.parent
+)  # projects/ecos
 _WORKSPACE_ROOT = _ECOS_ROOT.parent.parent  # ~/Workspace
 _OMO_SRC = _WORKSPACE_ROOT / "projects" / "omo" / "src"
 
