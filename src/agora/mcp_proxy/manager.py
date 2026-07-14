@@ -212,11 +212,11 @@ class ProxyManager:
         env = svc.get("env")
         init_timeout = svc.get("init_timeout", 10)
 
-        # Phase 3: MetaOS Admission Gateway (CR-ADMISSION-01)
+        # CR-ADMISSION-01 via AdmissionPort SPI (ADR-0181) — no direct metaos import
         try:
-            from metaos.layers.admission_gateway import AdmissionGateway
+            from agora.admission import evaluate_admission
 
-            admission_meta = svc.get("metaos_admission")
+            admission_meta = svc.get("admission") or svc.get("metaos_admission")
             if not admission_meta:
                 core_services = {
                     # Workspace projects
@@ -261,7 +261,9 @@ class ProxyManager:
                     and not name.startswith("sys-")
                     and not _is_local_workspace
                 ):
-                    raise ValueError("Missing 'metaos_admission' metadata block.")
+                    raise ValueError(
+                        "Missing 'admission' (or legacy 'metaos_admission') metadata block."
+                    )
                 admission_meta = {
                     "role": "evaluator" if name == "kairon" else "generator",
                     "supports_otlp": True,
@@ -270,14 +272,18 @@ class ProxyManager:
                 }
 
             req = {"domain": name, **admission_meta}
-            decision = AdmissionGateway().evaluate_admission(req)
-            if decision["status"] != "admitted":
-                raise ValueError(f"Reasons: {decision['reasons']}")
-        except ImportError as e:
-            logger.warning("proxy_admission_skipped", reason=f"metaos not found: {e}")
+            decision = evaluate_admission(req)
+            if decision.get("status") != "admitted":
+                raise ValueError(f"Reasons: {decision.get('reasons')}")
+            if decision.get("degraded"):
+                logger.warning(
+                    "proxy_admission_degraded",
+                    service=name,
+                    reasons=decision.get("reasons"),
+                )
         except ValueError as e:
             logger.error("proxy_admission_rejected", service=name, error=str(e))
-            return f"error: MetaOS Admission Rejected - {e}"
+            return f"error: Admission Rejected - {e}"
 
         # Save config for lazy reconnection (even if connection fails)
         self._configs[name] = dict(svc)

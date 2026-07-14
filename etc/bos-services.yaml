@@ -88,14 +88,16 @@ services:
 
   # omostation MCP Gateway backend 注册 (P1, agora mcp_proxy 全局收敛, 2026-07-14)
   # omostation 6 子项目 MCP (独立 projects/<pkg>, 非 kairon 包) — 全局 15+ MCP 收敛
+  # ADR-0181 Phase 2: standalone metaos MCP 入口封顶
+  # 恢复遗留: AGORA_BOS_INCLUDE_DEPRECATED=1 + METAOS_MCP_ALLOW_STANDALONE=1
   - uri: "bos://memory/metaos/mcp-server"
     domain: memory
     action: "mcp-server"
     transport: stdio
     package: "metaos-mcp"
     command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.mcp_server"]
-    description: "metaos MCP (元操作系统)"
-    status: active
+    description: "[DEPRECATED ADR-0181] metaos standalone MCP — use bos://ecos/workflow + bos://governance/metaos/*"
+    status: deprecated
 
   - uri: "bos://memory/ecos/mcp-server"
     domain: memory

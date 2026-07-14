@@ -118,6 +118,13 @@ def load_from_yaml(path: str | pathlib.Path | None = None) -> list:
     if not data or "services" not in data:
         raise ValueError(f"YAML 注册表缺少 'services' 根键: {path}")
 
+    # ADR-0181 Phase 2: status=deprecated 默认不进入可路由表
+    include_deprecated = os.environ.get("AGORA_BOS_INCLUDE_DEPRECATED", "0").strip() == "1"
+    if not include_deprecated:
+        data["services"] = [
+            s for s in data["services"] if s.get("status", "active") != "deprecated"
+        ]
+
     services = []
     for entry in data["services"]:
         svc = _dict_to_bos_service(entry)
