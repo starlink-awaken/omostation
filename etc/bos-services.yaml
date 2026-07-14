@@ -86,6 +86,62 @@ services:
     description: "forge MCP (工具集市 market_install/list)"
     status: active
 
+  # omostation MCP Gateway backend 注册 (P1, agora mcp_proxy 全局收敛, 2026-07-14)
+  # omostation 6 子项目 MCP (独立 projects/<pkg>, 非 kairon 包) — 全局 15+ MCP 收敛
+  - uri: "bos://memory/metaos/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "metaos-mcp"
+    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.mcp_server"]
+    description: "metaos MCP (元操作系统)"
+    status: active
+
+  - uri: "bos://memory/ecos/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "ecos-mcp"
+    command: ["uv", "run", "--directory", "projects/ecos", "python", "-m", "ecos.mcp_server"]
+    description: "ecos MCP (MOF 治理主 server; 子 services/integration + l0/ssot 留评估)"
+    status: active
+
+  - uri: "bos://memory/omo/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "omo-mcp"
+    command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.mcp_server"]
+    description: "omo MCP (治理内核)"
+    status: active
+
+  - uri: "bos://memory/aetherforge/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "aetherforge-mcp"
+    command: ["uv", "run", "--directory", "projects/aetherforge", "python", "-m", "aetherforge.mcp_server"]
+    description: "aetherforge MCP (生成引擎)"
+    status: active
+
+  - uri: "bos://memory/c2g/mcp-server"
+    domain: memory
+    action: "mcp-server"
+    transport: stdio
+    package: "c2g-mcp"
+    command: ["uv", "run", "--directory", "projects/c2g", "python", "-m", "c2g.mcp_server"]
+    description: "c2g MCP (c2g 引擎)"
+    status: active
+
+  - uri: "bos://capability/cockpit/mcp-server"
+    domain: capability
+    action: "mcp-server"
+    transport: stdio
+    package: "cockpit-mcp"
+    command: ["uv", "run", "--directory", "projects/cockpit", "python", "-m", "cockpit.agent_runtime_mcp_server"]
+    description: "cockpit MCP (agent runtime)"
+    status: active
+
   # KOS REST API v1 (HTTP, port 8766) — 跨项目松耦合集成
   - uri: "bos://memory/kos/rest-api"
     domain: memory
