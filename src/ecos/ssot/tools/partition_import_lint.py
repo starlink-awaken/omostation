@@ -64,7 +64,11 @@ def resolve_zone(rel_posix: str, zones: dict[str, Any]) -> str | None:
     for name, zdef in zones.items():
         for pref in zdef.get("path_prefixes", []):
             pref = pref.rstrip("/")
-            if rel_posix == pref or rel_posix.startswith(pref + "/") or rel_posix.startswith(pref):
+            if (
+                rel_posix == pref
+                or rel_posix.startswith(pref + "/")
+                or rel_posix.startswith(pref)
+            ):
                 score = len(pref)
                 if best is None or score > best[0]:
                     best = (score, name)
@@ -167,7 +171,9 @@ def lint_file(
             if top in forbid_ext:
                 viols.append(
                     Violation(
-                        rule="CORE-NO-EXTERNAL" if zone == "core" else "ZONE-FORBID-EXTERNAL",
+                        rule="CORE-NO-EXTERNAL"
+                        if zone == "core"
+                        else "ZONE-FORBID-EXTERNAL",
                         path=rel,
                         line=getattr(node, "lineno", 0),
                         message=f"{zone} must not import external package '{top}'",
@@ -252,7 +258,11 @@ def lint_tree(src: Path | None = None, map_path: Path | None = None) -> list[Vio
         if "__pycache__" in path.parts:
             continue
         # skip huge generated under mof if any .py besides small ones
-        if "ssot" in path.parts and "mof" in path.parts and path.stat().st_size > 100_000:
+        if (
+            "ssot" in path.parts
+            and "mof" in path.parts
+            and path.stat().st_size > 100_000
+        ):
             continue
         viols.extend(lint_file(path, src, zones))
     return viols
@@ -260,7 +270,9 @@ def lint_tree(src: Path | None = None, map_path: Path | None = None) -> list[Vio
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="ecos partition import lint (ADR-0181)")
-    ap.add_argument("--path", type=Path, default=None, help="src root (default: package src)")
+    ap.add_argument(
+        "--path", type=Path, default=None, help="src root (default: package src)"
+    )
     ap.add_argument("--map", type=Path, default=None, help="partition-map.yaml path")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
@@ -272,7 +284,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if args.json:
-        print(json.dumps({"violations": [asdict(v) for v in viols], "count": len(viols)}, indent=2))
+        print(
+            json.dumps(
+                {"violations": [asdict(v) for v in viols], "count": len(viols)},
+                indent=2,
+            )
+        )
     else:
         if not viols:
             print("partition-import-lint: OK (0 violations)")

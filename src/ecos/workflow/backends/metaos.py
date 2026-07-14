@@ -46,7 +46,13 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
     steps = m1_node.get("steps") or []
     if not steps:
-        return {"steps": [], "passed": 0, "failed": 0, "warning": "no_steps", "preflight_ok": True}
+        return {
+            "steps": [],
+            "passed": 0,
+            "failed": 0,
+            "warning": "no_steps",
+            "preflight_ok": True,
+        }
 
     engine = SEngine()
     # Ensure an H session so gate/engine can run
@@ -94,7 +100,12 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
 def _execute_sync_layers(workflow: Any, engine: Any) -> dict[str, Any]:
     """拓扑分层同步执行，避免测试/CLI 中 asyncio 复杂性。"""
-    results: dict[str, Any] = {"steps": [], "passed": 0, "failed": 0, "preflight_ok": True}
+    results: dict[str, Any] = {
+        "steps": [],
+        "passed": 0,
+        "failed": 0,
+        "preflight_ok": True,
+    }
     # simple multi-pass until no progress
     safety = 0
     while safety < 100:
@@ -116,7 +127,9 @@ def _execute_sync_layers(workflow: Any, engine: Any) -> dict[str, Any]:
             try:
                 task = Task(input=node.input_prompt, task_type=node.task_type)
                 out = engine.process(task)
-                node.output = str(out.get("output", out)) if isinstance(out, dict) else str(out)
+                node.output = (
+                    str(out.get("output", out)) if isinstance(out, dict) else str(out)
+                )
                 node.status = "completed"
                 results["steps"].append(
                     {"name": node.node_id, "status": "ok", "result": out}
@@ -134,7 +147,12 @@ def _execute_sync_layers(workflow: Any, engine: Any) -> dict[str, Any]:
 
 
 def _collect_from_workflow(workflow: Any) -> dict[str, Any]:
-    results: dict[str, Any] = {"steps": [], "passed": 0, "failed": 0, "preflight_ok": True}
+    results: dict[str, Any] = {
+        "steps": [],
+        "passed": 0,
+        "failed": 0,
+        "preflight_ok": True,
+    }
     for node in workflow.nodes.values():
         ok = node.status == "completed"
         results["steps"].append(
