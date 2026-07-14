@@ -13,6 +13,7 @@
 - **Shape**: a polyglot monorepo. Sub-projects live under `projects/*` and are mostly independent git submodules — Python via `uv`, TypeScript via `bun`, plus Docker. Each sub-project has its own `AGENTS.md` / `CLAUDE.md` / `Makefile`; read it before editing that project.
 - **Architecture skeleton** (concepts only — full contracts in [`ARCHITECTURE.md`](ARCHITECTURE.md)): the `5+4+1+1` layering (L0 protocol → L1 runtime → L2 kernel → L3 entry → L4 docs), the `X1-X4` governance axes, and BOS URI domain routing. Layer/project placement → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md); BOS domains → ARCHITECTURE.md §4; entry surfaces → ARCHITECTURE.md §3.
 - **Document division of labor** (orthogonal SSOT — each doc owns one dimension):
+
   - runtime facts → machine-readable SSOT (`.omo/state/system.yaml`, `docs/project-registry.yaml`, `protocols/*-registry.yaml`)
   - stable architecture → [`ARCHITECTURE.md`](ARCHITECTURE.md) / [`LAYER-INDEX.md`](LAYER-INDEX.md)
   - operating rules → [`AGENTS.md`](AGENTS.md) + this file
@@ -20,11 +21,12 @@
   - **system navigation** → [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) (NEW: unified navigation hub)
 
 > **First Stop**: Read [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) to understand the workspace structure, then use the specialized indexes:
+>
 > - [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) — find projects by layer/stack
 > - [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) — find tools and scripts
 > - [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) — find ADRs, audits, patterns
 > - [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) — find skills and agent setup
-
+>
 > **This file is a navigation layer only.** It does not duplicate project counts, ports, service inventories, test counts, phase, health scores, layer tables, or rule registries. Hard-coding those violates `doc-ssot-contract` and fails `bin/ssot/doc-ssot-lint.py`.
 
 ## 1. Startup Protocol
