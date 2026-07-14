@@ -665,14 +665,14 @@ def _cmd_cache(args: list[str]) -> int:
     
     if parsed.cache_sub == "stats":
         stats = cache.get_cache_stats()
-        print(f"📊 [State Cache] 缓存统计:")
+        print("📊 [State Cache] 缓存统计:")
         print(f"  总条目数: {stats['total_entries']}")
         print(f"  有效条目: {stats['valid_entries']}")
         print(f"  无效条目: {stats['invalid_entries']}")
     
     elif parsed.cache_sub == "clear":
         cache.invalidate_all()
-        print(f"✅ [State Cache] 已清空所有缓存")
+        print("✅ [State Cache] 已清空所有缓存")
     
     elif parsed.cache_sub == "invalidate":
         cache.invalidate_on_change(parsed.pattern)

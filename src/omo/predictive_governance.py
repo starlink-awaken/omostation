@@ -59,7 +59,7 @@ class PredictiveGovernanceEngine:
                     debt_id=debt.get("id", "unknown"),
                     risk_score=risk_score,
                     predicted_deterioration_days=7 if risk_score > 0.8 else 14,
-                    recommended_action="立即处理" if risk_score &gt; 0.8 else "近期计划",
+                    recommended_action="立即处理" if risk_score > 0.8 else "近期计划",
                     contributing_factors=[]
                 )
                 risks.append(risk)
