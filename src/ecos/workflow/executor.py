@@ -9,17 +9,13 @@
 from __future__ import annotations
 
 import logging
-import sys
 from datetime import datetime
-from pathlib import Path
 
-
-sys.path.insert(0, str(Path(__file__).parent.parent / "services"))
-
-from ecos.workflow.backend_registry import resolve  # noqa: E402
-from ecos.workflow.cache import get as cache_get, set as cache_set  # noqa: E402
-from ecos.workflow.loader import load_workflow  # noqa: E402
-from ecos.workflow.validator import (  # noqa: E402
+from ecos.workflow.backend_registry import resolve
+from ecos.workflow.cache import get as cache_get, set as cache_set
+from ecos.workflow.loader import load_workflow
+from ecos.workflow.preflight import inject_preflight
+from ecos.workflow.validator import (
     X2BudgetDeducer,
     X3CostRecorder,
     check_execution_result,
@@ -30,9 +26,9 @@ from ecos.workflow.validator import (  # noqa: E402
 logger = logging.getLogger("ecos.workflow.executor")
 
 
-# L0 audit (可选导入)
+# L0 audit (可选；不通过 sys.path 注入 ops — ADR-0181 Phase 3)
 try:
-    from l0_audit import validate_operation, log_operation  # type: ignore[import-not-found]  # noqa: E402
+    from l0_audit import validate_operation, log_operation  # type: ignore[import-not-found]
 except ImportError:
     validate_operation = lambda *a, **kw: None  # noqa: E731
     log_operation = lambda *a, **kw: None  # noqa: E731
@@ -144,9 +140,15 @@ def execute_m1_workflow(
                 logger.info("X2 circuit break triggered for workflow: %s", name)
                 return results
 
-        # ── 执行 ──
+        # ── 执行（注入 preflight：backend 可验证治理管线已通过）──
         backend_fn = resolve(wf)
-        backend_result = backend_fn(wf, params)
+        params_with_pf = inject_preflight(
+            params,
+            name,
+            backend=m1_node.get("execution", {}).get("backend", "default"),
+            source=m1_node.get("source", "definition"),
+        )
+        backend_result = backend_fn(wf, params_with_pf)
 
         if "steps" in backend_result:
             results["steps"] = backend_result["steps"]

@@ -1,0 +1,79 @@
+# ecos 逻辑分区 SSOT (方案 C / ADR-0181 Phase 3)
+# 物理仍同一 package；此文件声明 zone 归属与 import 规则。
+#
+# Zones:
+#   core   — 协议/模型/签名/约束 (不得依赖 L1/L2 实现包)
+#   fabric — 编排控制面 + MOF 工具链 (可 lazy 依赖 backend)
+#   ops    — 服务/CLI/MCP 入口/守护 (可依赖 core+fabric)
+
+version: 1
+adr: ADR-0181
+
+zones:
+  core:
+    description: "协议与世界模型"
+    path_prefixes:
+      - ecos/__init__.py
+      - ecos/common/
+      - ecos/l0/
+      - ecos/protocol/
+      - ecos/ssot/mof/
+      - ecos/ssot/registry/
+      - ecos/ssot/validator.py
+      - ecos/ssot/LAYER-L0.yaml
+      - ecos/ssot/README.md
+      - ecos/ssot/__init__.py
+      - ecos/ssb_auth.py
+    may_import_zones: [core]
+    forbid_external_packages:
+      - metaos
+      - runtime
+      - aetherforge
+      - kairon
+      - gbrain
+      - agora
+      - omo
+
+  fabric:
+    description: "编排 fabric + MOF 工具链"
+    path_prefixes:
+      - ecos/workflow/
+      - ecos/ssot/tools/
+      - ecos/ssot/agents/
+    may_import_zones: [core, fabric]
+    # 外部包仅允许函数体内 lazy import（AST: 不在 module top-level）
+    lazy_only_external_packages:
+      - metaos
+      - runtime
+      - aetherforge
+      - kairon
+      - gbrain
+      - agora
+      - omo
+
+  ops:
+    description: "运维入口与服务面"
+    path_prefixes:
+      - ecos/services/
+      - ecos/cli/
+      - ecos/mcp_server.py
+      - ecos/l1/
+      - ecos/l2/
+      - ecos/l3/
+      - ecos/LADS/
+      - ecos/realtime_guard.py
+    may_import_zones: [core, fabric, ops]
+    # ops 不强制 forbid；仍禁止从 core 被反向依赖
+
+# scripts/ 目录（仓根）视为 ops 外围，不参与 package AST 扫描
+scripts_zone: ops
+
+rules:
+  - id: ZONE-IMPORT-DIR
+    description: "源 zone 只能 import may_import_zones 内的 ecos 模块"
+  - id: CORE-NO-EXTERNAL
+    description: "core 禁止 import forbid_external_packages（含函数内）"
+  - id: FABRIC-LAZY-EXTERNAL
+    description: "fabric 对 lazy_only_external_packages 禁止模块顶层 import"
+  - id: NO-PATH-HACK-TO-OPS
+    description: "fabric 禁止 sys.path 注入指向 services/ops"
