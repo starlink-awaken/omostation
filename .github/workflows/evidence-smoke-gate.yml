@@ -3,15 +3,14 @@ name: evidence-smoke-gate
 # 防"声明驱动开发"复发: 新 BOS 声明必须 resolve, score<95 或 real_gap>0 则 fail
 on:
   push:
-    paths:
-      - 'projects/agora/etc/bos-services.yaml'
-      - 'projects/agora/src/agora/mcp/resolver/services.py'
-      - 'bin/gac/evidence-smoke.py'
+    branches:
+      - main
   pull_request:
-    paths:
-      - 'projects/agora/etc/bos-services.yaml'
-      - 'projects/agora/src/agora/mcp/resolver/services.py'
-      - 'bin/gac/evidence-smoke.py'
+  workflow_dispatch:
+  # Also path-filtered on any branch for fast feedback (union with above)
+  # GitHub ORs events — main already covered; keep paths for non-main pushes:
+  # Use second workflow trigger only via paths on push without branch limit would
+  # double-run on main. So: main always + PR always is enough.
 
 jobs:
   evidence-gate:
@@ -25,6 +24,9 @@ jobs:
         with:
           python-version: "3.13"
       - uses: astral-sh/setup-uv@v4
+      - name: bos-registry drift (mirror vs bos-services)
+        run: uv run --with pyyaml python bin/ssot/sync-bos-registry.py --check
+        working-directory: ${{ github.workspace }}
       # evidence-smoke 依赖 agora venv (pydantic + resolver.services)
       - name: evidence-smoke gate (score>=95, real_gap=0)
         run: uv run --directory projects/agora python ${{ github.workspace }}/bin/gac/evidence-smoke.py --gate 95

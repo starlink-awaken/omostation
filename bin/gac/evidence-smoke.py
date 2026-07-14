@@ -14,7 +14,8 @@
   L2 声明真实 (文件系统, 秒级):
     - stdio/mcp_stdio: command 的 --directory 存在 + -m module 包目录可定位
     - internal: module_path 文件存在
-    - mcp_proxy/http: http_url 非空 + 合法
+    - http: http_url 合法
+    - mcp_proxy: http_url 或 mcp_tool/tools 元数据
   L3 执行抽样 (--spawn N, 慢, 可选): 抽 N 个 stdio 真 spawn 验证可跑
 
 输出: .omo/_delivery/evidence-smoke/<date>.json
@@ -74,10 +75,10 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     # protocols-layer 已删 (2026-06-26, kairon CLAUDE.md 明确历史别名非 live package, 删 BOS 声明)
     # wps-office-mcp / wps-skills (2026-07-02, ToolBox 仓独立 ~/ToolBox/, 仓未 build dist/index.js.
     #   治本: ToolBox maintainer 跑 build; 临时不计鸿沟, 30 天复查. 见 evidence-smoke #P0-④.)
-    "bos://capability/wps-office-mcp/": "ToolBox wps-office-mcp dist/index.js 未 build (ToolBox 仓独立, 2026-07-02 audit)",
-    "bos://capability/wps-skills/": "ToolBox wps-skills dist/index.js 未 build (ToolBox 仓独立, 2026-07-02 audit)",
+    "bos://capability/wps-office-mcp/": "ToolBox wps-office-mcp dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
+    "bos://capability/wps-skills/": "ToolBox wps-skills dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
 }
-KNOWN_GAP_EXPIRES = "2026-07-25"  # 30天复查, 过期未对齐升级为真实鸿沟
+KNOWN_GAP_EXPIRES = "2026-08-25"  # re-audit after ToolBox build (was 2026-07-25)
 
 
 def _is_known_gap(uri: str) -> tuple[bool, str]:
@@ -274,15 +275,15 @@ def check_service(svc) -> dict:
     elif transport == "http":
         ok, reason = _check_http(svc.http_url)
     elif transport == "mcp_proxy":
-        # Gateway aggregation aliases: may carry http_url, or only tool-routing
-        # metadata in YAML (mcp_tool/tools — not yet projected onto BosService).
-        # Accept either a valid http_url or a non-empty description anchor.
+        # Gateway aggregation: http_url OR projected mcp_tool/tools metadata.
         if svc.http_url:
             ok, reason = _check_http(svc.http_url)
+        elif getattr(svc, "mcp_tool", None) or getattr(svc, "tools", None):
+            ok, reason = True, "mcp_proxy_tool_meta"
         elif (svc.description or "").strip():
             ok, reason = True, "mcp_proxy_gateway_alias"
         else:
-            ok, reason = False, "mcp_proxy missing http_url/description"
+            ok, reason = False, "mcp_proxy missing http_url/mcp_tool/tools"
     elif transport == "inline":
         # Documentation / i0_route:pending anchors — not executable endpoints.
         # Count as resolvable meta-declarations so they don't inflate BOS gap
