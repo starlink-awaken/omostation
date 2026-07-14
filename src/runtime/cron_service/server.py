@@ -20,7 +20,7 @@ from fastmcp import FastMCP
 
 from . import config as svc_config
 from . import db, mcp_server, scheduler
-from .health_scan import run_scan_if_due, should_scan
+from .health_scan import health_scan_once, run_scan_if_due, should_scan, HEALTH_SCAN_INTERVAL
 from .models import JobCreate
 
 # ── Logging ────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ async def health():
         "health_scan": {
             "latest_mtime": health_scan_mtime,
             "scan_overdue": health_scan_due,
-            "interval_seconds": 900,
+            "interval_seconds": HEALTH_SCAN_INTERVAL,
         },
     }
 

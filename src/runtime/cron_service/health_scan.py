@@ -19,7 +19,7 @@ from pathlib import Path
 logger = logging.getLogger("cron-service.health-scan")
 
 # How often to run a full health scan (in seconds)
-HEALTH_SCAN_INTERVAL = 900  # 15 minutes
+HEALTH_SCAN_INTERVAL = 60  # 1 minute — reduced from 900s (15min) for faster convergence
 
 # Track last scan time for periodic scheduling within CronScheduler ticks
 _last_scan_ts: float = 0.0
