@@ -1,8 +1,11 @@
-# ADR-0182: C2G + OMO Wave 1 — 闭环迭代
+---
+status: ACTIVE
+lifecycle: decision
+owner: governance-team
+last-reviewed: 2026-07-14
+---
 
-- **Status**: ACTIVE
-- **Date**: 2026-07-14
-- **Owner**: governance-team + eCOS team
+# ADR-0182: C2G + OMO Wave 1 — 闭环迭代
 
 ## Context
 

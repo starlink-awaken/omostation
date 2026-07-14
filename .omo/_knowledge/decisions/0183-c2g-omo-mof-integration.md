@@ -1,8 +1,11 @@
-# ADR-0183: C2G + OMO 新功能 MOF 元模型集成
+---
+status: ACTIVE
+lifecycle: decision
+owner: governance-team
+last-reviewed: 2026-07-14
+---
 
-- **Status**: ACTIVE
-- **Date**: 2026-07-14
-- **Owner**: governance-team + eCOS team
+# ADR-0183: C2G + OMO 新功能 MOF 元模型集成
 
 ## Context
 
