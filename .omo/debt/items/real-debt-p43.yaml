@@ -1,0 +1,76 @@
+# 真实债务 — 登记注册表
+# 登记 2026-07-14, 基于 P43 深度架构分析
+# 这些债务声明面(debt.yaml)为空但执行面(debt_adjusted 61.6)暴露
+
+items:
+  - id: DECL_EXEC_GAP
+    weight: 0.20
+    title: "声明/执行鸿沟 — maturity 100 但 health 68/debt_adjusted 61.6"
+    x3_tier: "Principle"
+    severity: "critical"
+    lifecycle_state: "active"
+    x1_policy_ref: "P43-ARCH-ANALYSIS-001"
+    desc: "ecosystem_maturity/metacognition_safety/governance_loop_safety 全 100 但实际执行面 68 分, daemon 44%, agent 协调失控, submodule 漂移。修 ISC-1→ISC-2"
+
+  - id: UNASSIGNED_ENTROPY
+    weight: 0.15
+    title: "任务所有权熵 — 35/104 无 owner, 38/104 无 phase"
+    x3_tier: "Framework"
+    severity: "high"
+    lifecycle_state: "active"
+    x1_policy_ref: "P43-ARCH-ANALYSIS-002"
+    desc: "卫生分布显示 cockpit-team 承担 39%, unassigned 33.7%"
+
+  - id: L1_HEALTH_PROBES
+    weight: 0.15
+    title: "L1 运行时可观测性不足 — 67.5% BOS 走 stdio, 无 HTTP 探针"
+    x3_tier: "Framework"
+    severity: "high"
+    lifecycle_state: "active"
+    x1_policy_ref: "P43-ARCH-ANALYSIS-003"
+    desc: "agora-gateway 无 /health, cron 健康扫描 900s 间隔, 3 个 unmanaged 服务拉低在线率"
+
+  - id: SUBMODULE_DRIFT
+    weight: 0.10
+    title: "Submodule gitlink 漂移 — 3/17 曾漂移, 巡检已落地但未消除"
+    x3_tier: "Tool"
+    severity: "medium"
+    lifecycle_state: "resolved"
+    x1_policy_ref: "PR#351 + P43-drift-fix"
+    desc: "c2g/omo/scripts 已同步, 巡检脚本 bin/ssot/bos-tracking-gate.py 已落地"
+
+  - id: BOS_TRACKING_DRIFT
+    weight: 0.10
+    title: "BOS 追踪文件漂移 — 14 已实现服务在 unimplemented 中"
+    x3_tier: "Tool"
+    severity: "medium"
+    lifecycle_state: "resolved"
+    x1_policy_ref: "P43-fix-bos-tracking"
+    desc: "bos-unimplemented.yaml 已修复 + bos-tracking-gate GaC 门禁防止重复"
+
+  - id: AGENT_COORDINATION
+    weight: 0.10
+    title: "多 Agent 协调无强制执行 — BP 在但 worktree 非强制"
+    x3_tier: "Principle"
+    severity: "high"
+    lifecycle_state: "active"
+    x1_policy_ref: "P43-ARCH-ANALYSIS-004"
+    desc: "Branch protection + pre-push blocking 已装, 但 worktree 使用未强制"
+
+  - id: HEALTH_SCORE_FORMULA
+    weight: 0.10
+    title: "健康分公式声明面偏重 — ISC-1 导致 84 虚高"
+    x3_tier: "Principle"
+    severity: "high"
+    lifecycle_state: "resolved"
+    x1_policy_ref: "ISC-2 已修复"
+    desc: "ISC-1→ISC-2: governance 0.5→0.3, runtime 0.3→0.5"
+
+  - id: TEST_COVERAGE
+    weight: 0.10
+    title: "测试覆盖 — 部分层无测试框架, 472 task 文件熵"
+    x3_tier: "Framework"
+    severity: "medium"
+    lifecycle_state: "active"
+    x1_policy_ref: "P43-ARCH-ANALYSIS-005"
+    desc: "17 projects 中部分无 pytest, 472 个 .omo/tasks 文件需清理"
