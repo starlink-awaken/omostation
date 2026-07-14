@@ -73,6 +73,8 @@ DEFAULT_POLICY = {
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
+        # P43 BOS 追踪门禁: bos-unimplemented.yaml 不准包含已实现服务
+        {"id": "bos-tracking-gate", "command": ["bin/ssot/bos-tracking-gate.py"]},
         # P7x-bus-foundation-rollout follow-up: real cross-process ZMQ e2e.
         # Spawns 2 subprocesses + uses TCP sockets (~2-5s). ci_only=True so
         # pre-commit skips the cost; CI strict runs it.
