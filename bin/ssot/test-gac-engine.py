@@ -7,7 +7,8 @@ import subprocess
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-GAC_GATE_PY = WORKSPACE / "bin" / "gac-local-gate.py"
+# bin rationalize: gate lives under bin/gac/ (ADR-0181 era layout)
+GAC_GATE_PY = WORKSPACE / "bin" / "gac" / "gac-local-gate.py"
 SGF_POLICY_YAML = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
 
 
