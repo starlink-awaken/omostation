@@ -22,9 +22,7 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 # Known soft provider paths — optional, never imported at module load.
-_SOFT_PROVIDERS: tuple[str, ...] = (
-    "metaos.integrations.admission_provider:PROVIDER",
-)
+_SOFT_PROVIDERS: tuple[str, ...] = ("metaos.integrations.admission_provider:PROVIDER",)
 
 _UNSET: object = object()
 _provider_cache: AdmissionPort | None | object = _UNSET
