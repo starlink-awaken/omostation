@@ -49,6 +49,11 @@ uv run ruff check "src/"
     - AI context loader: [`CLAUDE.md`](CLAUDE.md) when present
     - Workspace architecture: [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md)
     - Layer placement: [`../../LAYER-INDEX.md`](../../LAYER-INDEX.md)
+    - System index: [`../../docs/SYSTEM-INDEX.md`](../../docs/SYSTEM-INDEX.md) — 统一导航入口
+    - Projects index: [`../../docs/INDEX-PROJECTS.md`](../../docs/INDEX-PROJECTS.md) — 项目索引
+    - Tools index: [`../../docs/INDEX-TOOLS.md`](../../docs/INDEX-TOOLS.md) — 工具索引
+    - Knowledge index: [`../../docs/INDEX-KNOWLEDGE.md`](../../docs/INDEX-KNOWLEDGE.md) — 知识索引
+    - Agents index: [`../../docs/INDEX-AGENTS.md`](../../docs/INDEX-AGENTS.md) — Agent索引
 
     ## SSOT Rules
 
