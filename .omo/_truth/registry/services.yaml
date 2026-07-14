@@ -8,7 +8,7 @@ last-reviewed: 2026-07-03
 # 调度服务注册 (Scheduling Contract) — 理想态注册→生成→drift 闭环
 #
 # 调度配置 (launchd plist / GHA schedule / daemon) 从本注册生成, 不手写.
-# 生成器 bin/gen-service-configs.py 读此 → 产 plist (稳定锚点, 杜绝 uv 临时路径炸弹).
+# 生成器 bin/mof/gen-service-configs.py 读此 → 产 plist (稳定锚点, 杜绝 uv 临时路径炸弹).
 # GaC drift check: plist vs 本注册不一致 = drift.
 # 见 P73 pattern + governance-ssot-edit skill.
 #
@@ -22,7 +22,7 @@ services:
     label: com.l4.governance.watch
     program:
       interpreter: stable-python3
-      entrypoint: bin/state-stale-emit.py
+      entrypoint: bin/gac/state-stale-emit.py
       # args 与 install-watch-agent.py 触发 + state-stale-emit --surface 需求一致 (SSOT 完整声明)
       args: [--source, launchd-watch, --trigger, watchpaths, --surface, .omo/_truth/registry, --surface, projects/ecos/src/ecos/ssot]
     watch_paths:
@@ -41,7 +41,7 @@ services:
       signal: .omo/_knowledge/omo-events.jsonl
       event_kind: state_stale
       max_stale_hours: 24
-    generated_by: bin/gen-service-configs.py
+    generated_by: bin/mof/gen-service-configs.py
     note: "原 install-watch-agent.py 硬编码 plist (sys.executable 炸弹), 治本后从本注册生成"
 
   # ── 引导扇区 (阶段4 元递归): GaC/health 工具自身调度注册 ──────────
@@ -55,7 +55,7 @@ services:
     trigger: schedule
     program:
       interpreter: stable-python3
-      entrypoint: bin/evidence-smoke.py
+      entrypoint: bin/gac/evidence-smoke.py
     schedule_ref: .github/workflows/evidence-smoke-gate.yml
     liveness:
       signal: .omo/_delivery/evidence-smoke/
@@ -79,5 +79,5 @@ services:
     trigger: on-registry-change
     program:
       interpreter: stable-python3
-      entrypoint: bin/gen-service-configs.py
+      entrypoint: bin/mof/gen-service-configs.py
     note: "从本注册生 launchd plist (scheduler=launchd 项). manual/on-registry-change. 引导扇区 (生成本身, 不自生)."

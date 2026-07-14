@@ -156,11 +156,11 @@ done
 # 期望: 6 行 ✅ omo lint <cmd> pass
 
 # P110 R3 验证: god-module 列表
-PYTHONPATH=projects/omo/src python3 bin/god-module-13-error-list.py 2>&1 | head -5
+PYTHONPATH=projects/omo/src python3 bin/ssot/god-module-13-error-list.py 2>&1 | head -5
 # 期望: 🔴 Error: 11 (>1500L)
 
 # P110 R5: dashboard
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 工具全部通过
 
 # P110 R6: mof-version

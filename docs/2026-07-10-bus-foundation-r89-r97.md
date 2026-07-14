@@ -11,7 +11,7 @@
 ```bash
 # 1. 在父仓 omostation 起 worktree
 cd /Users/xiamingxing/Workspace
-bash bin/gac-worktree.sh claim bus-foundation-r89
+bash bin/gac/gac-worktree.sh claim bus-foundation-r89
 cd /Users/xiamingxing/ws-bus-foundation-r89
 git submodule update --init projects/bus-foundation
 
@@ -479,7 +479,7 @@ def test_required_fields(registry):
 ### 任务 REL.3: OMO 治理审计
 
 - [ ] **Step 1: 跑 `make ci-local`**
-- [ ] **Step 2: 跑 `uv run --with "pyyaml" python "bin/governance-evolution.py" status --json`**
+- [ ] **Step 2: 跑 `uv run --with "pyyaml" python "bin/gac/governance-evolution.py" status --json`**
 - [ ] **Step 3: 提交 evidence → `.omo/_delivery/r89-r97-closeout.md`**
 
 ---

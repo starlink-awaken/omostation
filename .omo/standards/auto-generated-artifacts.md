@@ -22,7 +22,7 @@ last-reviewed: 2026-06-29
 | 文件 | 生成工具 | 用途 | 是否跟踪 |
 |:-----|:---------|:-----|:---------|
 | `.omo/_knowledge/decisions/0066-p72-seven-step-iqr-p0-mock.md` | post-commit knowledge extraction | P72 决策 ADR | 是 (已标记) |
-| `bin/alert-mock-p0-notify.py` | post-commit knowledge extraction | P0 mock 通知工具 | 是 (已标记) |
+| `bin/gac/alert-mock-p0-notify.py` | post-commit knowledge extraction | P0 mock 通知工具 | 是 (已标记) |
 | `projects/ecos/src/ecos/ssot/mof/m1/**` | `mof-extract.py` | L0 M1 节点 | 是 (待人工审核) |
 | `.omo/_log/*.jsonl` | runtime / audit | 运行时日志 | 否 (已 gitignore) |
 

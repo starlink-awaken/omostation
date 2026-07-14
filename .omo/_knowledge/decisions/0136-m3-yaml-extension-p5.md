@@ -61,7 +61,7 @@ ConcurrencyElement:
   applies_to: [M2, M1]
 ```
 
-### 1.3 bin/mof-bootstrap.py check_3 改回 strict
+### 1.3 bin/mof/mof-bootstrap.py check_3 改回 strict
 
 原 P2-S4 走的是 lenient (P5 ADR 待办标记);现在 4 gap 已治本,改回 strict:
 
@@ -89,7 +89,7 @@ P52 / P72 教训元模型修改连环雷。本 ADR 采用**最小变更**原则:
 
 | 检查 | 工具 | 结果 |
 |------|------|------|
-| 4-check strict | `bin/mof-bootstrap.py all` | check_1/2/3/4 全 0 err |
+| 4-check strict | `bin/mof/mof-bootstrap.py all` | check_1/2/3/4 全 0 err |
 | mof-validate | `python3 src/ecos/ssot/tools/mof-validate.py` | 1361 / 1380 (98.61%, 不变) |
 | mof_bridge 兼容 | 直接调用 | 全绿 |
 | mof_driven 兼容 | `--validate` | 7 阶段 + 6 transitions |

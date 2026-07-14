@@ -182,7 +182,7 @@ mof-contract-lint --quiet --bos-yaml projects/agora/etc/bos-services.yaml
 # 期望: 100 checks, 19 errors, 42 warnings (与 Phase 0 末完全一致)
 
 # Dashboard 22/22 OK
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 # 期望: 22/22
 ```
 

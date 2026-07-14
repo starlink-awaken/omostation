@@ -120,11 +120,11 @@ python3 bin/adr-rollback-test.py
 # 期望: 🎉 所有 apply/rollback cycle 通过
 
 # P97 R3: X2 rule
-python3 bin/x2-rule-lint.py
+python3 bin/gac/x2-rule-lint.py
 # 期望: 13 rules, 0 issues
 
 # P97 R4: dashboard
-python3 bin/governance-dashboard.py
+python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 工具全部通过
 
 # ruff 验证

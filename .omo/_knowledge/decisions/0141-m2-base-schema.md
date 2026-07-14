@@ -23,7 +23,7 @@ supersedes: []
 
 新增 M2 schema 抽象基类 `M2BaseSchema`,定义 50 个 m2/*.yaml 文件共享的 4 字段
 公共契约 (m2_type / version / created / body 含 m3_parent + description)。
-新增 `bin/mof-bootstrap.py check_5` 校验 50 schema 全合规,让"schema 异
+新增 `bin/mof/mof-bootstrap.py check_5` 校验 50 schema 全合规,让"schema 异
 常"可被持续监控。
 
 **关键变化**:
@@ -81,7 +81,7 @@ M2BaseSchema:
 
 ### 2.2 check_5 m2 BaseSchema 一致性
 
-`bin/mof-bootstrap.py` 加 check_5: 50 个 m2/*.yaml 文件逐个检查:
+`bin/mof/mof-bootstrap.py` 加 check_5: 50 个 m2/*.yaml 文件逐个检查:
 - m2_type PascalCase (M2BS-01)
 - version semver (M2BS-02)
 - created ISO-8601 (M2BS-03)
@@ -109,7 +109,7 @@ check_5 接受 date 格式 (扩展 regex), 但**建议**未来统一为 datetime
 
 `projects/ecos/src/ecos/ssot/mof/m2/m2_base_schema.yaml` (新增 119 行)
 
-### 3.2 bin/mof-bootstrap.py 新增 check_5
+### 3.2 bin/mof/mof-bootstrap.py 新增 check_5
 
 `def check_5(ws, verbose)` 返回 (ok, errors) tuple.
 
@@ -121,7 +121,7 @@ check_5 接受 date 格式 (扩展 regex), 但**建议**未来统一为 datetime
 
 ### 3.3 Round 3b 同步升级
 
-- `bin/m4-health-score.py::score_4check_strict` 改名为 `score_5check_strict`
+- `bin/mof/m4-health-score.py::score_4check_strict` 改名为 `score_5check_strict`
 - 派生面 metrics key 从 `four_check_strict` 改 `five_check_strict`
 - 测试 T42 期望更新
 
@@ -131,9 +131,9 @@ check_5 接受 date 格式 (扩展 regex), 但**建议**未来统一为 datetime
 
 | 检查 | 工具 | 结果 |
 |------|------|------|
-| 5-check strict | `bin/mof-bootstrap.py all` | check_1/2/3/4/5 全 0 err |
+| 5-check strict | `bin/mof/mof-bootstrap.py all` | check_1/2/3/4/5 全 0 err |
 | 44 回归测试 | `tests/integration/m4_metamodel/run_all.py` | 44/44 PASS |
-| ADR 不破 99.17 | `bin/m4-health-score.py --emit` | overall 99.17, 5-check 30/30 |
+| ADR 不破 99.17 | `bin/mof/m4-health-score.py --emit` | overall 99.17, 5-check 30/30 |
 | m2 schema 数 | `ls m2/*.yaml \| wc -l` | 51 (50 + M2BaseSchema) |
 | M3 闭合 | check_3 strict | m2_base_schema m3_parent=Specification 锚通 |
 

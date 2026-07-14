@@ -53,7 +53,7 @@ M2BaseSchema M2BS-03 兼容 date 格式(原始):
 
 ### 决策 1: 治本迁移, 不继续兼容
 
-`bin/mof-bootstrap.py check_5` M2BS-03 验证**只接受 datetime** (移除 date 兼容)。
+`bin/mof/mof-bootstrap.py check_5` M2BS-03 验证**只接受 datetime** (移除 date 兼容)。
 **例外**: 1 天内 (2026-07-06) 过渡期, 由 `bin/m2-date-migrate.py --apply` 完成迁移。
 
 ### 决策 2: 时刻标准化 08:00:00
@@ -82,7 +82,7 @@ CLI 工具, 默认 dry-run, --apply 才改:
 
 ### 3.2 check_5 加强
 
-`bin/mof-bootstrap.py check_5`:
+`bin/mof/mof-bootstrap.py check_5`:
 ```python
 - if not re.match(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?(\.\d+)?", ...):
 + # Round 4c: 严格要求 datetime, 不再兼容纯 date
@@ -107,9 +107,9 @@ ComputeNode.yaml: ...
 | 检查 | 工具 | 结果 |
 |------|------|------|
 | 45 schema 全部迁 | `bin/m2-date-migrate.py --apply` | 45/45 ✓ |
-| 5-check strict | `bin/mof-bootstrap.py all` | check_1..5 全 0 err (无回退) |
+| 5-check strict | `bin/mof/mof-bootstrap.py all` | check_1..5 全 0 err (无回退) |
 | 46 回归测试 | `tests/integration/m4_metamodel/run_all.py` | 46/46 PASS |
-| Health Score | `bin/m4-health-score.py --emit` | 99.17/100 (无回退) |
+| Health Score | `bin/mof/m4-health-score.py --emit` | 99.17/100 (无回退) |
 
 ### 治本后 L0-constraint 数据完整性
 

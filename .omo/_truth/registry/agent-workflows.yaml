@@ -20,8 +20,8 @@ internal_integrations:
     ssot_rule: Governance rules are canonical in .omo/_truth/registry/governance-checks.yaml; Markdown may only point to generated summaries.
     gate: make gac-local-gate
     gate_binding: make gac-local-gate
-    runner_lint_binding: bin/gac-local-gate.py::agent-workflow-lint
-    health_command: [bin/gac-validate.py, --gate]
+    runner_lint_binding: bin/gac/gac-local-gate.py::agent-workflow-lint
+    health_command: [bin/gac/gac-validate.py, --gate]
     health_required: true
   omo:
     status: integrated
@@ -104,10 +104,10 @@ claim_policy:
         - .omo/standards/**
         - bin/agent-workflow.py
         - bin/change-lane-check.py
-        - bin/gac-local-gate.py
-        - bin/governance-evolution.py
-        - bin/omo-state-projection-guard.py
-        - bin/omo-runtime-stamp-policy.py
+        - bin/gac/gac-local-gate.py
+        - bin/gac/governance-evolution.py
+        - bin/gac/omo-state-projection-guard.py
+        - bin/gac/omo-runtime-stamp-policy.py
         - projects/agora/etc/bos-services.yaml
         - projects/cockpit/src/cockpit/cli.py
         - projects/cockpit/src/cockpit/commands/agent_workflow.py
@@ -366,7 +366,7 @@ commands:
     - --with
     - pyyaml
     - python
-    - bin/governance-evolution.py
+    - bin/gac/governance-evolution.py
     - status
 doctor_checks:
   - id: root-agent-workflow-list
@@ -404,7 +404,7 @@ doctor_checks:
   - id: root-governance-evolution-status
     description: Root runner can summarize systemic governance evolution roadmap status.
     required: true
-    command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, status, --json]
+    command: [uv, run, --with, pyyaml, python, bin/gac/governance-evolution.py, status, --json]
   - id: cockpit-agent-workflow-list
     description: Cockpit L3 entry can delegate to the root runner.
     required: true
@@ -452,19 +452,19 @@ doctor_checks:
   - id: mof-bootstrap
     description: "M4 5-check 自反校验器 (M4→GaC, ADR-0152/0153/0154)"
     required: false
-    command: [uv, run, --with, pyyaml, python, bin/mof-bootstrap.py, all]
+    command: [uv, run, --with, pyyaml, python, bin/mof/mof-bootstrap.py, all]
   - id: m4-health-score
     description: "M4 Health Score 量化 (派生面引擎)"
     required: false
-    command: [uv, run, --with, pyyaml, python, bin/m4-health-score.py, --emit]
+    command: [uv, run, --with, pyyaml, python, bin/mof/m4-health-score.py, --emit]
   - id: check-submodule-hygiene
     description: "子模块卫生守门 (3类检查)"
     required: false
-    command: [uv, run, --with, pyyaml, python, bin/check-submodule-hygiene.py, --strict]
+    command: [uv, run, --with, pyyaml, python, bin/ssot/check-submodule-hygiene.py, --strict]
   - id: mcp-tool-data-complete
     description: "MCPTOOL 数据完整性守门"
     required: false
-    command: [uv, run, --with, pyyaml, python, bin/mcp-tool-data-complete.py]
+    command: [uv, run, --with, pyyaml, python, bin/gac/mcp-tool-data-complete.py]
 diff_checks:
   - id: agent-workflow-lint
     description: Workflow runner and registry contract validation.
@@ -481,7 +481,7 @@ diff_checks:
     paths:
       - bin/agent-workflow.py
       - bin/change-lane-check.py
-      - bin/gac-local-gate.py
+      - bin/gac/gac-local-gate.py
       - .omo/_truth/registry/agent-workflows.yaml
       - tests/test_agent_workflow.py
     command: [uv, run, pytest, tests/test_agent_workflow.py, -q]
@@ -490,18 +490,18 @@ diff_checks:
     required: true
     paths:
       - .omo/_truth/registry/governance-evolution-roadmap.yaml
-      - bin/governance-evolution.py
+      - bin/gac/governance-evolution.py
       - tests/test_governance_evolution.py
       - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
       - README.md
       - AGENTS.md
-    command: [uv, run, --with, pyyaml, python, bin/governance-evolution.py, validate, --json]
+    command: [uv, run, --with, pyyaml, python, bin/gac/governance-evolution.py, validate, --json]
   - id: governance-evolution-tests
     description: Focused tests for governance evolution roadmap and CLI.
     required: true
     paths:
       - .omo/_truth/registry/governance-evolution-roadmap.yaml
-      - bin/governance-evolution.py
+      - bin/gac/governance-evolution.py
       - tests/test_governance_evolution.py
     command: [uv, run, pytest, tests/test_governance_evolution.py, -q]
   - id: cockpit-agent-entry-tests
@@ -571,15 +571,15 @@ diff_checks:
       - projects/*/AGENTS.md
       - projects/*/CLAUDE.md
       - projects/*/README.md
-    command: [uv, run, --with, pyyaml, python, bin/doc-ssot-lint.py, --json]
+    command: [uv, run, --with, pyyaml, python, bin/ssot/doc-ssot-lint.py, --json]
   - id: project-layer-index
     description: Generated project layer digest freshness.
     required: true
     paths:
       - docs/project-registry.yaml
       - docs/generated/project-layer-index.md
-      - bin/project-layer-index.py
-    command: [uv, run, --with, pyyaml, python, bin/project-layer-index.py, --check]
+      - bin/mof/project-layer-index.py
+    command: [uv, run, --with, pyyaml, python, bin/mof/project-layer-index.py, --check]
   - id: ssot-guardian
     description: State-plane and generated artifact SSOT guard.
     required: true
@@ -592,7 +592,7 @@ diff_checks:
       - ARCHITECTURE.md
       - LAYER-INDEX.md
       - docs/generated/**
-    command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+    command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
   - id: gac-local-gate
     description: Full local governance gate for broad contract changes.
     required: true
@@ -616,10 +616,10 @@ diff_checks:
       executable `schedule_ref` reference (P4 元递归全覆盖 复发拦截, P74 §3).
     required: true
     paths:
-      - bin/gen-service-configs.py
+      - bin/mof/gen-service-configs.py
       - projects/agora/etc/services.yaml
       - .github/workflows/**
-    command: [uv, run, --with, pyyaml, python, bin/gen-service-configs.py, --validate]
+    command: [uv, run, --with, pyyaml, python, bin/mof/gen-service-configs.py, --validate]
   - id: omo-state-projection-guard
     description: >
       Validates that .omo/state/runtime/* projections referenced from
@@ -655,9 +655,9 @@ diff_checks:
       injects them into CLAUDE.md. Saves ~66% Context Window Tokens vs full-dump.
     required: false
     paths:
-      - bin/gac-consensus-inject.py
+      - bin/gac/gac-consensus-inject.py
       - CLAUDE.md
-    command: [python3, bin/gac-consensus-inject.py]
+    command: [python3, bin/gac/gac-consensus-inject.py]
   - id: gac-ingress-check
     description: >
       C2G Self-Correcting Ingress Pre-Checker (eCOS v6 Phase B).
@@ -666,10 +666,10 @@ diff_checks:
       Moves conflict detection from commit-time to planning-time.
     required: false
     paths:
-      - bin/gac-ingress-check.py
+      - bin/gac/gac-ingress-check.py
       - protocols/port-registry.yaml
       - docs/project-registry.yaml
-    command: [python3, bin/gac-ingress-check.py]
+    command: [python3, bin/gac/gac-ingress-check.py]
 workflows:
   - id: project-doc-change
     title: Project documentation change
@@ -688,9 +688,9 @@ workflows:
         - README.md
         - .omo/standards/**
         - .agents/skills/project-governance/SKILL.md
-        - bin/doc-ssot-lint.py
-        - bin/gac-export-agents.py
-        - bin/project-layer-index.py
+        - bin/ssot/doc-ssot-lint.py
+        - bin/gac/gac-export-agents.py
+        - bin/mof/project-layer-index.py
         - docs/**
         - docs/generated/**
         - projects/*/AGENTS.md
@@ -704,9 +704,9 @@ workflows:
         - README.md
         - .omo/standards/**
         - .agents/skills/project-governance/SKILL.md
-        - bin/doc-ssot-lint.py
-        - bin/gac-export-agents.py
-        - bin/project-layer-index.py
+        - bin/ssot/doc-ssot-lint.py
+        - bin/gac/gac-export-agents.py
+        - bin/mof/project-layer-index.py
         - docs/**
         - docs/generated/**
         - projects/*/AGENTS.md
@@ -727,10 +727,10 @@ workflows:
       verification:
         - id: doc-ssot-lint
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/doc-ssot-lint.py, --json]
+          command: [uv, run, --with, pyyaml, python, bin/ssot/doc-ssot-lint.py, --json]
         - id: ssot-guardian
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
         - id: gac-local-gate
           mode: required
           command: [make, gac-local-gate]
@@ -815,7 +815,7 @@ workflows:
       verification:
         - id: ssot-guardian
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
         - id: gac-local-gate
           mode: required
           command: [make, gac-local-gate]
@@ -859,7 +859,7 @@ workflows:
       verification:
         - id: ssot-guardian
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
         - id: gac-local-gate
           mode: required
           command: [make, gac-local-gate]
@@ -1006,7 +1006,7 @@ workflows:
           command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
         - id: ssot-guardian
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
         - id: gac-local-gate
           mode: required
           command: [make, gac-local-gate]
@@ -1040,7 +1040,7 @@ workflows:
       execute:
         - id: pointer-transaction
           mode: required
-          command: [bash, bin/submodule-pointer-transaction.sh, --dry-run]
+          command: [bash, bin/ssot/submodule-pointer-transaction.sh, --dry-run]
       verification:
         - id: reachability
           mode: required
@@ -1136,7 +1136,7 @@ workflows:
         - projects/c2g/**
         - projects/omo/**
         - bin/compass_radar.py
-        - bin/generate-brief.py
+        - bin/mof/generate-brief.py
       write:
         - .omo/state/health.yaml
         - .omo/state/system.yaml
@@ -1158,10 +1158,10 @@ workflows:
       verification:
         - id: state-freshness
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/state-freshness-check.py, --json]
+          command: [uv, run, --with, pyyaml, python, bin/gac/state-freshness-check.py, --json]
         - id: ssot-guardian
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
       closeout:
         - id: observe
           mode: required
@@ -1197,14 +1197,14 @@ workflows:
           command: [uv, run, --with, pyyaml, python, bin/compass_radar.py]
         - id: audit-brief
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/generate-brief.py, --write]
+          command: [uv, run, --with, pyyaml, python, bin/mof/generate-brief.py, --write]
       verification:
         - id: write-owner-audit
           mode: required
-          command: [python3, bin/write-owner-audit.py, --staged]
+          command: [python3, bin/ssot/write-owner-audit.py, --staged]
         - id: ssot-guardian
           mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot-guardian.py]
+          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
         - id: gac-local-gate
           mode: required
           command: [make, gac-local-gate]

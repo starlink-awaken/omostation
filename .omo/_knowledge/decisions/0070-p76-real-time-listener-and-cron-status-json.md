@@ -28,7 +28,7 @@ P75 收口后, P76 调研 4 项候选, 实施 2 项:
 
 ### D1: p0-event-listener --watch 实时模式 (P76 R1)
 
-**修改**: `bin/p0-event-listener.py` 加 `--watch` 选项
+**修改**: `bin/gac/p0-event-listener.py` 加 `--watch` 选项
 
 **实现**:
 ```python

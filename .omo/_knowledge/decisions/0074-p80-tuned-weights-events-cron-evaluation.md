@@ -29,12 +29,12 @@ P79 收口后, P80 调研 5 项候选, 实施 3 项:
 
 ### D1: dim-weight 集成到 readiness (P80 R1)
 
-**修改**: `bin/governance-readiness.py` 加 `USE_TUNED_WEIGHTS=1` 环境变量支持
+**修改**: `bin/gac/governance-readiness.py` 加 `USE_TUNED_WEIGHTS=1` 环境变量支持
 
 **逻辑**:
 ```python
 if os.environ.get("USE_TUNED_WEIGHTS") == "1":
-    # 调 bin/dim-weight.py --format json 拿调优权重
+    # 调 bin/gac/dim-weight.py --format json 拿调优权重
     # 加权总分 = sum(score * weight/100)
     # 输出 "⚖️  P80 调优权重" + "📊 加权总分"
     # 用加权总分替代原始总分
@@ -52,7 +52,7 @@ if os.environ.get("USE_TUNED_WEIGHTS") == "1":
 
 ### D2: 跨子仓 omo event 联动订阅器 (P80 R2)
 
-**新工具**: `bin/cross-submodule-events.py` (165 行)
+**新工具**: `bin/ssot/cross-submodule-events.py` (165 行)
 
 **功能**:
 - 读 .omo/_knowledge/omo-events.jsonl

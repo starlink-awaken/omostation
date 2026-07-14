@@ -57,7 +57,7 @@ doctor_checks:
   + - id: mof-bootstrap
   +   description: "M4 5-check 自反校验器 (M4→GaC, ADR-0152/0153/0154)"
   +   required: false
-  +   command: [uv, run, --with, pyyaml, python, bin/mof-bootstrap.py, all]
+  +   command: [uv, run, --with, pyyaml, python, bin/mof/mof-bootstrap.py, all]
   # ...其余 3 条
 ```
 
@@ -75,7 +75,7 @@ uv run --with pyyaml python bin/agent-workflow.py bootstrap
 
 **修复**:
 ```bash
-GAC_M1_SYNC_WRITE=1 uv run --with pyyaml python bin/gac-m1-sync.py --sync
+GAC_M1_SYNC_WRITE=1 uv run --with pyyaml python bin/gac/gac-m1-sync.py --sync
 # 创建: 6 (M4-* 系列 + CR-X4-MCPTOOL-IMPL-DRIFT 等, 详见 gac-m1-sync 输出)
 # 删除: 14 (orphan 历史 ADRs 引用, 详见同步日志)
 # M1 实例数: 157 ↔ registry=157 → 0/0/0

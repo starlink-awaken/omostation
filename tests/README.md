@@ -12,9 +12,9 @@ Run all: `uv run pytest tests/ -q`
 | `test_bos_deprecated_count.py` | BOS service declaration vs execution alignment (deprecated count drift) |
 | `test_classify_planned.py` | Task classification logic (planned vs active vs done) |
 | `test_cron_mypy_gate.py` | Cron entry correctness — verifies mypy-baseline-gate is scheduled |
-| `test_feedback_loop_guard.py` | `bin/feedback-loop-guard.py` — P0 self-feedback loop monitoring |
+| `test_feedback_loop_guard.py` | `bin/gac/feedback-loop-guard.py` — P0 self-feedback loop monitoring |
 | `test_god_module_lint.py` | `omo_lint_god_module` — single-file LOC hard rule enforcement |
-| `test_governance_evolution.py` | `bin/governance-evolution.py` — governance evolution roadmap validation |
+| `test_governance_evolution.py` | `bin/gac/governance-evolution.py` — governance evolution roadmap validation |
 | `test_yaml_bypass_invariant.py` | YAML bypass invariant — no unauthorized `status` field in `.omo/debt/items/*.yaml` |
 
 ## Integration Tests

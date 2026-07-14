@@ -78,8 +78,8 @@ P71 治本后 4 个 GaC 规则永久在线:
 
 | 防动作 | 谁负责 | 何时触发 |
 |--------|--------|----------|
-| 4 GaC 规则在线 | bin/gac-local-gate.py | 每次 commit + push |
-| CR-META-BIN-ORPHAN | bin/check-toolbox-ssot.py | CI per commit |
+| 4 GaC 规则在线 | bin/gac/gac-local-gate.py | 每次 commit + push |
+| CR-META-BIN-ORPHAN | bin/ssot/check-toolbox-ssot.py | CI per commit |
 | CR-X1-EVIDENCE-RUNNABLE | governance-evolution validate | 每次 pre_release |
 | AGENTS.md §8.1 已引 P71 pattern | (持续) | (持续) |
 

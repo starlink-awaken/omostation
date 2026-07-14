@@ -11,10 +11,10 @@ traceable, and executable across Cockpit, BOS, AGCP, OMO, C2G, and MOF.
 Use the registry and CLI for current state:
 
 ```bash
-uv run --with pyyaml python bin/governance-evolution.py status --json
-uv run --with pyyaml python bin/governance-evolution.py traces --json
-uv run --with pyyaml python bin/governance-evolution.py golden-paths --json
-uv run --with pyyaml python bin/governance-evolution.py packages --json
+uv run --with pyyaml python bin/gac/governance-evolution.py status --json
+uv run --with pyyaml python bin/gac/governance-evolution.py traces --json
+uv run --with pyyaml python bin/gac/governance-evolution.py golden-paths --json
+uv run --with pyyaml python bin/gac/governance-evolution.py packages --json
 ```
 
 Human entry:
@@ -59,7 +59,7 @@ The canonical paths are registry-owned:
 Do not duplicate the full steps here. Update the registry, then run:
 
 ```bash
-uv run --with pyyaml python bin/governance-evolution.py validate --json
+uv run --with pyyaml python bin/gac/governance-evolution.py validate --json
 ```
 
 ## Closeout Rule

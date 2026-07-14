@@ -19,7 +19,7 @@ supersedes: []
 
 | 交付 | 状态 | 关键产物 |
 |------|:---:|---------|
-| **跨仓一致性 detector** | ✅ | `bin/check-cross-repo-consistency.py` (165 行) |
+| **跨仓一致性 detector** | ✅ | `bin/ssot/check-cross-repo-consistency.py` (165 行) |
 | **8 单元测试** | ✅ | `tests/test_cross_repo_consistency.py` 全 PASSED |
 | **GaC 规则** | ✅ | CR-CROSS-REPO-CONSISTENT (X3, advisory) |
 
@@ -36,7 +36,7 @@ STRAT-P77 §1.2: 系统债扫描出**跨仓一致性**为最高优先级 (RICE 1
 
 ### 1.2 WHAT — detector 设计
 
-`bin/check-cross-repo-consistency.py`:
+`bin/ssot/check-cross-repo-consistency.py`:
 
 ```python
 # 数据流:
@@ -85,7 +85,7 @@ STRAT-P77 §1.2: 系统债扫描出**跨仓一致性**为最高优先级 (RICE 1
 
 ## 4. 验证清单
 
-- [x] `bin/check-cross-repo-consistency.py` 创建 (165 行)
+- [x] `bin/ssot/check-cross-repo-consistency.py` 创建 (165 行)
 - [x] 8 单元测试 PASSED (test_cross_repo_consistency.py)
 - [x] CR-CROSS-REPO-CONSISTENT 规则注册 (164 rules total)
 - [x] M1 instance 同步 (164 ↔ 164, 0/0/0)
@@ -96,7 +96,7 @@ STRAT-P77 §1.2: 系统债扫描出**跨仓一致性**为最高优先级 (RICE 1
 - STRAT-P77-strategic-roadmap.md (Phase 1 启动依据)
 - ADR-0162 (P76 Phase 8 跨仓代码改动源头)
 - ADR-0163 (Phase 9A commit-assist — 同一 epoch)
-- bin/knowledge-foundry-cron.py (radar_cron 可调本 detector)
+- bin/gac/knowledge-foundry-cron.py (radar_cron 可调本 detector)
 
 ---
 

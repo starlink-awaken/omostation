@@ -25,7 +25,7 @@ P66 alert-aggregator --notify 实施后, P67 调研发现 2 项可深化:
 
 ### D1: alert-aggregator 阈值参数化 + 级别判定 (P67 R1)
 
-**修改**: `bin/alert-aggregator.py`
+**修改**: `bin/gac/alert-aggregator.py`
 
 **新参数**:
 - `--storm-threshold N` (默认 3, 同 1h 内同类型触发告警)
@@ -53,7 +53,7 @@ P3 (low):      其余 (默认 0 告警)
 ```bash
 if [ "$INCLUDE_TREND" = true ] && [ -f .omo/_log/readiness-alerts.jsonl ]; then
     # 跑 alert-aggregator
-    python3 bin/alert-aggregator.py
+    python3 bin/gac/alert-aggregator.py
 fi
 ```
 

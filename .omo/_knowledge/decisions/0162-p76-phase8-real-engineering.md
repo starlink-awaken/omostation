@@ -81,13 +81,13 @@ LLM-Gateway 在测试环境 ConnectionRefused → fallback mock (设计内: KISS
 
 ### 1.5 WHAT — 8.4 .omo/_derived/ dead paths
 
-`bin/check-dead-path-refs.py` 之前误判 `projects/ecos/.omo/_derived/` (存在的子模块路径) 为死引用.
+`bin/ssot/check-dead-path-refs.py` 之前误判 `projects/ecos/.omo/_derived/` (存在的子模块路径) 为死引用.
 
 修复:
 1. 工具增加 fallback 解析: 检查 OMO/{path} 然后 projects/ecos/.omo/{path}, 任一存在即 OK
 2. 实测: 0 dead-path-refs (从 6 残留降至 0)
 
-注: `bin/m4-cron-hook.py` DERIVED_LOG 路径已 redirect 到 projects/ecos/.omo/_derived/ (沿用 P76 ADR-0137 重定向原则).
+注: `bin/mof/m4-cron-hook.py` DERIVED_LOG 路径已 redirect 到 projects/ecos/.omo/_derived/ (沿用 P76 ADR-0137 重定向原则).
 
 ## 2. 沉淀原则 (P76-8)
 

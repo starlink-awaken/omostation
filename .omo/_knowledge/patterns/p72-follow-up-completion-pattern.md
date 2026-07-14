@@ -68,7 +68,7 @@ submodule_pointer 不可合并). **拆 commit**:
 ```bash
 # 错: 1 commit 含 governance_code + submodule_pointer
 # 对: 拆 2 commit
-git add bin/gac-local-gate.py
+git add bin/gac/gac-local-gate.py
 git commit -m "feat(governance_code): ..."
 git add projects/ecos
 git commit -m "chore(submodule): bump ..."
@@ -92,10 +92,10 @@ F-5 治本后 `gac-m1-sync` 默认 dry-run, 实际写需 `GAC_M1_SYNC_WRITE=1`:
 
 ```bash
 # 默认 dry-run: 仅模拟 actions 列表, 不写
-python3 bin/gac-m1-sync.py --sync
+python3 bin/gac/gac-m1-sync.py --sync
 
 # 真写: 显式 opt-in (主仓越界写边界守门)
-GAC_M1_SYNC_WRITE=1 python3 bin/gac-m1-sync.py --sync
+GAC_M1_SYNC_WRITE=1 python3 bin/gac/gac-m1-sync.py --sync
 ```
 
 **理由**: 主仓工具不能越界写 submodule 内文件 (违反"主仓不写 submodule"
@@ -127,9 +127,9 @@ git branch -r | grep work/  # 应只剩 in-flight
 ```
 1. READ 路线图: ADR-0122 §"S1 短期"
 2. EXTRACT 5 项: 列出本阶段所有 commit 计划 + 责任 + 依赖
-3. FORK worktree: bash bin/gac-worktree.sh claim <session>
+3. FORK worktree: bash bin/gac/gac-worktree.sh claim <session>
 4. WORK + COMMIT: 每 commit 单 lane, 必要时 --no-verify
-5. PUSH + PR: bash bin/gac-worktree.sh submit <session>  # 或 gh pr create
+5. PUSH + PR: bash bin/gac/gac-worktree.sh submit <session>  # 或 gh pr create
 6. MERGE + CLEANUP: gh pr merge --squash + worktree 退场清残
 ```
 
@@ -140,7 +140,7 @@ git branch -r | grep work/  # 应只剩 in-flight
 □ --strict 包含 CI_ONLY check (governance-semantic-gate + 3 check-*)
    失败 = 设计性, CI 可见本地不阻塞
 □ bin/change-lane-check.py --staged PASS
-□ bin/ssot-guardian.py PASS
+□ bin/ssot/ssot-guardian.py PASS
 □ AST audit: 0 误报 (必要时加 # audit-exempt: ... 注释)
 □ git worktree list 干净 (主 worktree + in-flight)
 □ git branch -r | grep work/ 干净 (in-flight 留)

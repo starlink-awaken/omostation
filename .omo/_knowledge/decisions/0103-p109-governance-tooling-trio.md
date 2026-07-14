@@ -94,7 +94,7 @@ P104-P108 五阶段 omo_governance_surfaces 拆解累计 -75% 行数, 但暴露 
 
 **问题**: 10 个 TS god-module 因无 ts-morph 工具被标记 "暂用 line count"
 
-**解决**: 写 `bin/ts-file-analyze.py`, 用 Python 实现 TS 基础结构分析 (无外部依赖):
+**解决**: 写 `bin/ssot/ts-file-analyze.py`, 用 Python 实现 TS 基础结构分析 (无外部依赖):
 - regex 匹配 `function` / `class` / `interface` / `type` / `const`
 - brace counting 找 block end (含 string/comment 跳过)
 - 输出 top N functions/classes/interfaces
@@ -172,24 +172,24 @@ bin/omo-submodule-split-validate.sh omo_governance_surfaces omo_governance_surfa
 # 期望: 🎉 all 7 steps pass
 
 # P109-B 验证
-python3 bin/god-module-13-error-list.py --auto-classify
+python3 bin/ssot/god-module-13-error-list.py --auto-classify
 # 期望: HIGH/MEDIUM/LOW 分级, 12 文件
 
-python3 bin/god-module-13-error-list.py --suggest-modules
+python3 bin/ssot/god-module-13-error-list.py --suggest-modules
 # 期望: 每个 error 文件输出子模块拆分建议
 
-python3 bin/god-module-13-error-list.py --roadmap
+python3 bin/ssot/god-module-13-error-list.py --roadmap
 # 期望: 8 步 roadmap, 按 ROI 排序 (omo_ingress_task_lifecycle 第 1)
 
 # P109-C 验证
-python3 bin/ts-file-analyze.py projects/gbrain/src/commands/doctor.ts --top 3
+python3 bin/ssot/ts-file-analyze.py projects/gbrain/src/commands/doctor.ts --top 3
 # 期望: runDoctor(2322L) + runRemediate(289L) + doctorReportRemote(255L)
 
-python3 bin/god-module-13-error-list.py 2>&1 | grep doctor
+python3 bin/ssot/god-module-13-error-list.py 2>&1 | grep doctor
 # 期望: Top 函数: runDoctor(2322L), runRemediate(289L), doctorReportRemote(255L) (不再是 line count)
 
 # P109 R5: dashboard
-PYTHONPATH=projects/omo/src python3 bin/governance-dashboard.py
+PYTHONPATH=projects/omo/src python3 bin/gac/governance-dashboard.py
 # 期望: 22/22 OK
 
 # P109 R6: mof-version

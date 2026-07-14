@@ -13,11 +13,11 @@ MCPTOOL 区分,见 ADR-0145)。Adder pipeline:
 
 1. 写 yaml
 2. 复核对齐 3 个 schema (m3.yaml MCPTool / m2 type MCPTool / m1 yaml)
-3. 跑 `bin/mcp-tool-data-complete.py` 守护
-4. 跑 `bin/mof-bootstrap.py all` + `bin/m4-health-score.py` 验证
+3. 跑 `bin/gac/mcp-tool-data-complete.py` 守护
+4. 跑 `bin/mof/mof-bootstrap.py all` + `bin/mof/m4-health-score.py` 验证
 5. commit + push
 
-**no-op 守门**: `bin/mcp-tool-data-complete.py` 自动跳过 collection yaml,
+**no-op 守门**: `bin/gac/mcp-tool-data-complete.py` 自动跳过 collection yaml,
 不误报 single-tool 不合规情况。
 
 ---
@@ -120,11 +120,11 @@ YAML
 
 ```bash
 # 1. 验证 yaml 符合 M3/M2/M1 三层 schema
-uv run --with pyyaml python bin/mof-bootstrap.py all
+uv run --with pyyaml python bin/mof/mof-bootstrap.py all
 # 期望: 5-check strict 全 0 err
 
 # 2. 验证 tool_name + server 字段完整性
-uv run --with pyyaml python bin/mcp-tool-data-complete.py
+uv run --with pyyaml python bin/gac/mcp-tool-data-complete.py
 # 期望: "✅ 所有 MCPTOOL 节点 tool_name 和 server 均有值"
 #       或 "{new-tool}: tool_name: ..., server: ..."
 ```
@@ -156,7 +156,7 @@ git commit -m "chore(m4): bump projects/ecos — add MCPTOOL-{server}::{tool}"
 
 # 4. 跑全套验证
 uv run --with pyyaml python tests/integration/m4_metamodel/run_all.py
-uv run --with pyyaml python bin/m4-health-score.py --emit
+uv run --with pyyaml python bin/mof/m4-health-score.py --emit
 
 # 5. push (经过 PR review)
 git push origin work/{branch}
@@ -170,7 +170,7 @@ git push origin work/{branch}
 
 ### 6.1 误把 single-tool 写成 collection
 
-**症状**: `bin/mof-bootstrap.py check_2` 报 `tool_name 缺` 报错,
+**症状**: `bin/mof/mof-bootstrap.py check_2` 报 `tool_name 缺` 报错,
 但 yaml 看起来有 `tool_name: xxx`。
 
 **根因**: yaml 含 `tool_count: 1` 或 `tools: [xxx]` 误带,触发 ADR-0145
@@ -191,7 +191,7 @@ skip 逻辑,**所有校验都跳过**, yaml 看似"valid" 但实际是 collectio
 
 ### 6.3 m3_parent 写成 ComponentClassName
 
-**症状**: `bin/mof-bootstrap.py check_3` 报
+**症状**: `bin/mof/mof-bootstrap.py check_3` 报
 `m3_parent 'Component.XYZ' 中 'Component' 不在 m3.yaml Element 集`。
 
 **根因**: 误以为 m3_parent 完整路径。

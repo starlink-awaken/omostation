@@ -22,7 +22,7 @@ supersedes: []
 
 ## 0. TL;DR
 
-新增 `bin/m4-cron-hook.py`, 把 M4 Health Score (ADR-0140) 接入 OMO
+新增 `bin/mof/m4-cron-hook.py`, 把 M4 Health Score (ADR-0140) 接入 OMO
 operating-rhythm cron 框架 (ADR-0121, governance-evolution-roadmap §operating_rhythm)。
 对 OMO 是**单向可观察性桥梁**: OMO 可读 `.omo/_derived/m4-cron-log.json` 派生面,
 但 M4 不直接调用 OMO state bus (硬不违反 P74 governance boundary)。
@@ -89,7 +89,7 @@ operating-rhythm cron 框架 (ADR-0121, governance-evolution-roadmap §operating
 
 ## 3. 实施
 
-### 3.1 bin/m4-cron-hook.py (主仓工具)
+### 3.1 bin/mof/m4-cron-hook.py (主仓工具)
 
 CLI 接口:
 - 默认: 输出 `[M4-Health] branch=... score=...` 单行格式
@@ -117,8 +117,8 @@ CLI 接口:
 | 检查 | 工具 | 结果 |
 |------|------|------|
 | 49 回归测试 | `tests/integration/m4_metamodel/run_all.py` | 49/49 PASS |
-| 5-check strict | `bin/mof-bootstrap.py all` | 0/0/0/0/0 |
-| Cron hook CLI | `uv run python bin/m4-cron-hook.py --sync --trigger test` | [M4-Health] 输出 |
+| 5-check strict | `bin/mof/mof-bootstrap.py all` | 0/0/0/0/0 |
+| Cron hook CLI | `uv run python bin/mof/m4-cron-hook.py --sync --trigger test` | [M4-Health] 输出 |
 | Hook log gitignored | `git check-ignore .omo/_derived/m4-cron-log.json` | rc=0 |
 | 3 trigger 识别 | 手动 / cron (env) / --trigger test | 3 entry 入列 |
 
@@ -126,7 +126,7 @@ CLI 接口:
 
 ```
 # OMO operating-rhythm-daily cron 加入:
-uv run python bin/m4-cron-hook.py --sync   # → 追加 entry 到 log
+uv run python bin/mof/m4-cron-hook.py --sync   # → 追加 entry 到 log
 
 # OMO P74 governance radar 读:
 jq '.[] | select(.mark=="M4_HOOK_MARK")' .omo/_derived/m4-cron-log.json | tail

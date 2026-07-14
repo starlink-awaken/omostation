@@ -73,7 +73,7 @@ W1   W2   W3   W4   W5   W6   W7   W8   W9   W10  W11  W12  W13  W14
 | P1-S1-4 | PR2 + review + merge | — | PR2 merge |
 
 **验收**:
-- [ ] `bin/mof-bootstrap.py check_3` 全绿
+- [ ] `bin/mof/mof-bootstrap.py check_3` 全绿
 - [ ] `bin/mof-schema-validate.py` 接受 constraint_l0 类型
 - [ ] 132 GaC 规则未触(grep 验证)
 
@@ -157,7 +157,7 @@ W1   W2   W3   W4   W5   W6   W7   W8   W9   W10  W11  W12  W13  W14
 
 **验收**:
 - [ ] 8+4+4 = 16 映射 100%
-- [ ] `bin/mof-bootstrap.py check_4` 全绿
+- [ ] `bin/mof/mof-bootstrap.py check_4` 全绿
 - [ ] m3.yaml **未触**(git diff 验证)
 
 ### P2-S2: mof_bridge.py 桥接器 (W8-W9)
@@ -234,7 +234,7 @@ score = loader.compute_meta_confidence(
 
 | ID | 任务 | 工时 | 产物 |
 |----|------|------|------|
-| P2-S4-1 | 增强 `bin/mof-bootstrap.py` 加 check_3 + check_4 | 8h | ~200 行 |
+| P2-S4-1 | 增强 `bin/mof/mof-bootstrap.py` 加 check_3 + check_4 | 8h | ~200 行 |
 | P2-S4-2 | 写 check_3 自反 (49 M2 schema × m3 锚点) | 8h | check_3 |
 | P2-S4-3 | 写 check_4 自反 (m3-meta 自反) | 8h | check_4 |
 | P2-S4-4 | PR8 + review + merge | — | PR8 merge |
@@ -253,7 +253,7 @@ score = loader.compute_meta_confidence(
 | ID | 任务 | 工时 | 产物 |
 |----|------|------|------|
 | P3-1 | 审计所有 `.omo/_derived/` 现有产物 | 4h | audit log |
-| P3-2 | 写 `bin/omo-state-cleanup.py` | 8h | ~200 行 |
+| P3-2 | 写 `bin/gac/omo-state-cleanup.py` | 8h | ~200 行 |
 | P3-3 | 更新 `.gitignore` | 1h | `.gitignore` +1 行 |
 | P3-4 | 36 仓 24 个 .omo/_derived/ 路径收口 | 8h | 24 path |
 

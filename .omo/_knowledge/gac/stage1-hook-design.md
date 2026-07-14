@@ -27,7 +27,7 @@
 
 ---
 
-## 通道 1: hook 原型 ✅ done (bin/gac-hook-pre-edit.py)
+## 通道 1: hook 原型 ✅ done (bin/gac/gac-hook-pre-edit.py)
 
 - **Claude Code PreToolUse**, 拦截 `Edit`/`Write`/`MultiEdit`
 - 读 `gac ssot_pointer` 规则, 编辑时即时检查 SSOT 硬编码
@@ -43,7 +43,7 @@
     "PreToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
-        "command": "python3 bin/gac-hook-pre-edit.py"
+        "command": "python3 bin/gac/gac-hook-pre-edit.py"
       }
     ]
   }
@@ -101,7 +101,7 @@ omo MCP 加 GaC 检查工具 (如 `workspace_edit` 内置 SSOT 检查). **跨工
 
 ## 当前状态 (P1 T1.2)
 
-- ✅ hook 原型 `bin/gac-hook-pre-edit.py` (advisory, Claude Code 通道)
+- ✅ hook 原型 `bin/gac/gac-hook-pre-edit.py` (advisory, Claude Code 通道)
 - ⏳ MCP (T1.3, omo 阻塞, 跨工具主力)
 - ✅ CI gate (兜底)
 

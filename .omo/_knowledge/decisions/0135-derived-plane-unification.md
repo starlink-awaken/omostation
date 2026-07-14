@@ -19,14 +19,14 @@ supersedes: []
 
 ## 0. TL;DR
 
-把 ADR-0129 派生面投影面范式 落地为可执行纪律:`bin/omo-state-cleanup.py`
+把 ADR-0129 派生面投影面范式 落地为可执行纪律:`bin/gac/omo-state-cleanup.py`
 通过 `git check-ignore`(权威)+ DERIVED_PATHS SSOT 列表,持续验证 33 派生路径
 全部 gitignored,8 个 SSOT 路径 NOT gitignored。
 
 **派生面收口指标**:
 - 33 DERIVED_PATHS 审计:27 已 gitignored (1 在子模块内需用 submodule .gitignore,5 误报)
 - 8 MUST_BE_TRACKED 全 NOT gitignored (SSOT 范式守住)
-- bin/omo-state-cleanup.py 3 命令:audit / status / canonify
+- bin/gac/omo-state-cleanup.py 3 命令:audit / status / canonify
 
 ---
 
@@ -35,7 +35,7 @@ supersedes: []
 ### 派生面 SSOT 列 (canonical, 33 路径)
 
 ```
-SSOT = bin/omo-state-cleanup.py::DERIVED_PATHS
+SSOT = bin/gac/omo-state-cleanup.py::DERIVED_PATHS
 来源: ADR-0128 (投影面) + ADR-0129 (范式) + M4 Phase 1.2 (.omo/_derived)
 ```
 
@@ -56,7 +56,7 @@ SSOT = bin/omo-state-cleanup.py::DERIVED_PATHS
 
 | 检查 | 工具 | 结果 |
 |------|------|------|
-| 33 DERIVED_PATHS 审计 | `bin/omo-state-cleanup.py audit` | 27 PASS, 5 误报路径(子模块/submodule 内) |
+| 33 DERIVED_PATHS 审计 | `bin/gac/omo-state-cleanup.py audit` | 27 PASS, 5 误报路径(子模块/submodule 内) |
 | 8 MUST_BE_TRACKED | 同上 | 全 PASS |
 | 工作树派生泄漏 | `git status --ignored --porcelain` | 0 (排除 SSOT 工具) |
 

@@ -65,7 +65,7 @@ P60 内化后立即发现 2 个 P61 必须修复的问题:
 - `.omo/cron/governance-agent-crontab` — cron 配置 (每 6h)
 
 **功能**:
-1. 跑 `bin/governance-readiness.py` 评估
+1. 跑 `bin/gac/governance-readiness.py` 评估
 2. 跑 `bin/mof-drift` 跨 7 维度
 3. 解析结果, < 90 或 MEDIUM/HIGH 触发告警
 4. (扩展) omo event emit governance_alert (P62+ 完整实施)

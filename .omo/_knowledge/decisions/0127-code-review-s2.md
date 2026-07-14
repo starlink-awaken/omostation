@@ -24,10 +24,10 @@ related:
 
 **新增文件 / 大改**:
 - `bin/agent-workflow.py` (2327 行, X-Plane 大改)
-- `bin/governance-evolution.py` (892 行, X-Plane 大改)
-- `bin/mcp-server-kos.py` (294 行, X-Plane 新增)
-- `bin/test-mcp-kos.py` (123 行, X-Plane 新增)
-- `bin/state-freshness-check.py` (本会话新增)
+- `bin/gac/governance-evolution.py` (892 行, X-Plane 大改)
+- `bin/gac/mcp-server-kos.py` (294 行, X-Plane 新增)
+- `bin/ssot/test-mcp-kos.py` (123 行, X-Plane 新增)
+- `bin/gac/state-freshness-check.py` (本会话新增)
 - 6 个 SKILL.md (X-Plane 新增)
 - 12 个 ADR (X-Plane + 本会话)
 
@@ -47,7 +47,7 @@ related:
 
 ### Finding 3.1: `mcp-server-kos` 的 `query_custom_sql` 端点是安全风险
 
-**位置**: `bin/mcp-server-kos.py:79-101` (handle_query_custom_sql)
+**位置**: `bin/gac/mcp-server-kos.py:79-101` (handle_query_custom_sql)
 
 **问题**:
 ```python
@@ -76,7 +76,7 @@ cursor.execute(sql)
    - 读 OS 文件 (`readfile`)
    - 加载扩展 (`load_extension`)
    - 通过 ATTACH 切换到写
-3. **MCP 端点暴露**: 这个工具注册到 MCP server (`bin/mcp-server-kos.py:280+`), 任何 MCP client (Cockpit, Kiro, Claude) 都可以调用
+3. **MCP 端点暴露**: 这个工具注册到 MCP server (`bin/gac/mcp-server-kos.py:280+`), 任何 MCP client (Cockpit, Kiro, Claude) 都可以调用
 
 **影响**: High. 任何 MCP agent 拿到这个端点, 就能通过构造 SQL 读 OS 任意文件 / 加载恶意扩展.
 
@@ -98,18 +98,18 @@ cursor.execute(sql)
 **问题**:
 - 3 个规则 (CR-X2-GOVERNANCE-SEMANTIC-GATE / CR-L0-MATRIX-PORT-CONSISTENCY / CR-L0-MATRIX-LAUNCHD-COVERAGE) 声明 `executor: [ci_gate, gac_local_gate]`
 - 但 `executor_enum` 是 10 项 (缺 `gac_local_gate`)
-- `bin/gac-bootstrap.py` 自举层 5 报 ❌ (我用 `gac-bootstrap.py` 跑实测, 3 个 false positive 仍存在)
-- `bin/gac-executor.py` 走 `EXECUTOR_PRESENCE` (我自己映射表, 已 PASS)
+- `bin/gac/gac-bootstrap.py` 自举层 5 报 ❌ (我用 `gac-bootstrap.py` 跑实测, 3 个 false positive 仍存在)
+- `bin/gac/gac-executor.py` 走 `EXECUTOR_PRESENCE` (我自己映射表, 已 PASS)
 
 **根因**: PR #17 S1 follow-up 落地时, X-Plane 跨边界加 `gac_local_gate` 到 schema enum 漏了 (PR #20 #8344ccd3 治本 CR-X2-GOVERNANCE-SEMANTIC-GATE 规则补 SSOT 登记, 但 enum 未同步). 后续 PR #59 (`09c00321`) 我修了 `EXECUTOR_PRESENCE` 映射表, 但 **enum 本身没补** — 所以 gac-bootstrap 仍 fail.
 
 **真实状态**:
-- `bin/gac-executor.py` (PR #59 治本): ✅ PASS (走 EXECUTOR_PRESENCE)
-- `bin/gac-bootstrap.py` (PR #59 治本 不彻底): ❌ FAIL (走 schema.executor_enum)
+- `bin/gac/gac-executor.py` (PR #59 治本): ✅ PASS (走 EXECUTOR_PRESENCE)
+- `bin/gac/gac-bootstrap.py` (PR #59 治本 不彻底): ❌ FAIL (走 schema.executor_enum)
 
 **验证**:
 ```bash
-$ uv run --with pyyaml python bin/gac-bootstrap.py
+$ uv run --with pyyaml python bin/gac/gac-bootstrap.py
 ▶ 层5 执行有效: ❌ 非法/无 executor=3
     ❌ CR-X2-GOVERNANCE-SEMANTIC-GATE: 非法 executor: ['gac_local_gate']
 ```
@@ -146,9 +146,9 @@ executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_vali
 
 **触发优先级**: P2 (技术债, 不阻塞)
 
-### Finding 4.2: `bin/mcp-server-kos.py` 用 `except Exception as e` 宽捕获 (4 处)
+### Finding 4.2: `bin/gac/mcp-server-kos.py` 用 `except Exception as e` 宽捕获 (4 处)
 
-**位置**: `bin/mcp-server-kos.py:55, 80, 100, 130` (大致行数)
+**位置**: `bin/gac/mcp-server-kos.py:55, 80, 100, 130` (大致行数)
 
 **问题**: 4 处 `except Exception as e` 宽捕获, 隐藏真实错误. 例如 `except Exception as e: return {"content": [{"type": "text", "text": f"Database error: {str(e)}"}]}` 暴露 raw error 给 MCP client, 可能是内部 schema leak.
 
@@ -184,7 +184,7 @@ executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_vali
 
 **症状**: 跨仓协调多次发现 "声明了 X, 但 Y 没同步" (gac_local_gate, ssot_lint, M2 enum 扩). X-Plane 加规则时漏同步 enum.
 
-**建议**: 在 `bin/gac-m1-sync.py` 加 cross-schema validation: 加规则时自动 diff enum, 若声明的 executor/check_type 不在 enum 报错.
+**建议**: 在 `bin/gac/gac-m1-sync.py` 加 cross-schema validation: 加规则时自动 diff enum, 若声明的 executor/check_type 不在 enum 报错.
 
 **触发优先级**: P3 (流程改进)
 

@@ -4,11 +4,11 @@
 # 所有 markdown 文档 (CLAUDE.md / AGENTS.md / README.md / LAYER-INDEX.md 等)
 # 必须引用本文件，不得硬编码以下任何值。
 #
-# 更新方式: 修改实际代码后，同步更新本文件。CI 门禁 (bin/doc-ssot-lint.py) 会检测
+# 更新方式: 修改实际代码后，同步更新本文件。CI 门禁 (bin/ssot/doc-ssot-lint.py) 会检测
 # markdown 中的硬编码数字是否与本注册表冲突。
 #
-# drift 检测: python3 bin/gen-project-registry.py (registry version/python vs pyproject.toml)
-# 自动修复: python3 bin/gen-project-registry.py --write (修复 version/python drift)
+# drift 检测: python3 bin/mof/gen-project-registry.py (registry version/python vs pyproject.toml)
+# 自动修复: python3 bin/mof/gen-project-registry.py --write (修复 version/python drift)
 
 workspace:
   architecture: "5+4+1+1"
@@ -27,7 +27,7 @@ layers:
   X:  "横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub)"
 
 projects:
-  # mesh-router 不是独立 git 仓 — 实现 = bin/gac-mesh-router.py (HTTP server on port 7437)
+  # mesh-router 不是独立 git 仓 — 实现 = bin/gac/gac-mesh-router.py (HTTP server on port 7437)
   # P76 Phase 7.4 决议: 标 implemented-in-bin, 移除 submodule init 期望
   mesh-router:
     layer: "L0"
@@ -36,7 +36,7 @@ projects:
     version: "1.0.0"
     port: 7437
     status: "implemented-in-bin"
-    physical_location: "bin/gac-mesh-router.py"
+    physical_location: "bin/gac/gac-mesh-router.py"
     port_registry_ref: "protocols/port-registry.yaml::7437"
     note: "无独立仓. 历史 .gitmodules 期望已废弃 (Phase 7.4 决议). 见 ADR-0162 P76 Phase 7."
 

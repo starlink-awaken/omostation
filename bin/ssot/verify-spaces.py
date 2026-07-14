@@ -35,7 +35,9 @@ def validate_files(schema_path, file_pattern):
     return errors
 
 def main():
-    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # bin/ssot/verify-spaces.py → workspace root is parents[2]
+    # (was parents[1] when this lived at bin/verify-spaces.py)
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
     
     total_errors = 0

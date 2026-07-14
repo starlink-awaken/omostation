@@ -174,7 +174,7 @@ L0 + M0 引擎
 
 ### Phase 0: 基线快照 (本会话已落)
 
-- ✅ `bin/gac-worktree.sh claim m4-metamodel-v1` 创建隔离 worktree (branch `work/m4-metamodel-v1` 从 `e2f8f4d7`)
+- ✅ `bin/gac/gac-worktree.sh claim m4-metamodel-v1` 创建隔离 worktree (branch `work/m4-metamodel-v1` 从 `e2f8f4d7`)
 - ✅ mof-validate.py 基线: 1366 节点 / 1315 通过 / 70 错误 (5.13%)
 - ✅ mof-m2-coverage 基线: 49 M2 schema
 - ✅ P74 compliance: continue (run_count=56, ok=true)
@@ -228,13 +228,13 @@ L0 + M0 引擎
 
 #### P2-S4: 自反校验 (W11)
 
-**A. 文件**: `bin/mof-bootstrap.py` (增强,加 check_3 + check_4)
+**A. 文件**: `bin/mof/mof-bootstrap.py` (增强,加 check_3 + check_4)
 **B. 验收**: 全部 schema 自反 100%
 
 ### Phase 3 (P3): 派生面统一 (W12)
 
 **A. 文件**: 
-  - `bin/omo-state-cleanup.py` (新增) — 把 `.omo/_derived/` 路径收口
+  - `bin/gac/omo-state-cleanup.py` (新增) — 把 `.omo/_derived/` 路径收口
   - `.gitignore` 加 `.omo/_derived/` + `**/L0-constraints.v2.yaml`
 **B. 验收**: `git status` 不再 .omo/_derived/ 噪声
 
@@ -270,13 +270,13 @@ L0 + M0 引擎
 
 | 验证 | 工具 | 期望 |
 |------|------|------|
-| M3/M2 自反 | `bin/mof-bootstrap.py check_3 check_4` | 全绿 |
+| M3/M2 自反 | `bin/mof/mof-bootstrap.py check_3 check_4` | 全绿 |
 | M2→M1 | `mof-validate.py` | 99%+ |
 | L0-constraints v2 | `l0-constraints-migrate.py --validate` | 1065/1065 |
 | GaC gate | `make gac-local-gate` | 全绿(非 subspace init FAIL) |
 | P74 | `agent-workflow.py compliance` | continue |
-| evidence | `bin/evidence-smoke.py` | 1.0 |
-| M2 coverage | `bin/mof-m2-coverage.py` | ≥49 |
+| evidence | `bin/gac/evidence-smoke.py` | 1.0 |
+| M2 coverage | `bin/mof/mof-m2-coverage.py` | ≥49 |
 | Meta-bridge | `pytest tests/l0/test_mof_bridge.py` | 100% |
 
 ---

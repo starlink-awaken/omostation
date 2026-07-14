@@ -71,7 +71,7 @@ uv run --with pyyaml python bin/mof-drift
 
 ### 1.5 3:00 — M4 Health Score
 ```bash
-uv run --with pyyaml python bin/m4-health-score.py --emit
+uv run --with pyyaml python bin/mof/m4-health-score.py --emit
 # 触发: 每 6 小时一次
 # 产出: .omo/state/m4-health.yaml (派生面)
 # 守门: < 90 → 警示
@@ -79,7 +79,7 @@ uv run --with pyyaml python bin/m4-health-score.py --emit
 
 ### 1.6 4:00 — omostation-bootloader
 ```bash
-uv run python bin/omostation-bootloader.py audit
+uv run python bin/gac/omostation-bootloader.py audit
 # 触发: 每 6 小时一次
 # 产出: .omo/_knowledge/decisions/draft/*.md (空时 no-op)
 # 守门: ADR 草稿 > 5 → 召集 closeout
@@ -87,7 +87,7 @@ uv run python bin/omostation-bootloader.py audit
 
 ### 1.7 5:00 — debt-closed-per-feature
 ```bash
-uv run --with pyyaml python bin/debt-closed-per-feature.py
+uv run --with pyyaml python bin/gac/debt-closed-per-feature.py
 # 触发: 每 6 小时一次
 # 产出: .omo/_knowledge/audits/debt-ratio-<timestamp>.yaml
 # 守门: ratio < 0.5 警告
@@ -95,7 +95,7 @@ uv run --with pyyaml python bin/debt-closed-per-feature.py
 
 ### 1.8 5:30 — submodule-bump-check
 ```bash
-uv run python bin/submodule-bump-check.py
+uv run python bin/ssot/submodule-bump-check.py
 # 触发: 每 6 小时一次
 # 产出: stale-list
 # 守门: stale > 0 → advisory; 24h → hard
@@ -103,7 +103,7 @@ uv run python bin/submodule-bump-check.py
 
 ### 1.9 6:00 — BRIEF 生成 + INDEX 同步
 ```bash
-uv run --with pyyaml python bin/generate-brief.py --write
+uv run --with pyyaml python bin/mof/generate-brief.py --write
 # 触发: 每 6 小时一次
 # 产出: BRIEF.md, .omo/_knowledge/decisions/INDEX.md
 # 守门: INDEX drift > 0 → 警示

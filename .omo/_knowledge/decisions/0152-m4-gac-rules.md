@@ -38,18 +38,18 @@ M4 元模型工程产出的 8 个治理工具 + 4 个 schema 文件 + 5-check �
 
 | id | dimension | layer | check_type | enforcement | 对应 M4 资产 |
 |----|-----------|-------|------------|-------------|-------------|
-| M4-BOOTSTRAP-REFLEX | X1 | meta | audit_chain | required | bin/mof-bootstrap.py + 5-check |
-| M4-HEALTH-SCORE | X2 | meta | freshness | advisory | bin/m4-health-score.py + 派生面 |
-| M4-SUBMODULE-HYGIENE | X1 | meta | audit_chain | preferred | bin/check-submodule-hygiene.py |
-| M4-MCPTOOL-INTEGRITY | X4 | L0 | consistency_drift | required | bin/mcp-tool-data-complete.py |
-| M4-DERIVED-PLANE-AUDIT | X1 | meta | ssot_pointer | advisory | bin/omo-state-cleanup.py + 派生面范式 |
+| M4-BOOTSTRAP-REFLEX | X1 | meta | audit_chain | required | bin/mof/mof-bootstrap.py + 5-check |
+| M4-HEALTH-SCORE | X2 | meta | freshness | advisory | bin/mof/m4-health-score.py + 派生面 |
+| M4-SUBMODULE-HYGIENE | X1 | meta | audit_chain | preferred | bin/ssot/check-submodule-hygiene.py |
+| M4-MCPTOOL-INTEGRITY | X4 | L0 | consistency_drift | required | bin/gac/mcp-tool-data-complete.py |
+| M4-DERIVED-PLANE-AUDIT | X1 | meta | ssot_pointer | advisory | bin/gac/omo-state-cleanup.py + 派生面范式 |
 
 ### 1.1 规则详情
 
 **M4-BOOTSTRAP-REFLEX** (required):
 - 执行器: hook_pre_edit + ci_gate + gac_local_gate
 - 每次 PR 必须通过 5-check strict (check_1 到 check_5 全 0 err)
-- 覆盖 bin/mof-bootstrap.py + ecs/ssot/mof/ 全部 schema
+- 覆盖 bin/mof/mof-bootstrap.py + ecs/ssot/mof/ 全部 schema
 
 **M4-HEALTH-SCORE** (advisory):
 - 4 维度加权:mof-validate 60%/5-check 30%/meta 5%/ADR 5%
