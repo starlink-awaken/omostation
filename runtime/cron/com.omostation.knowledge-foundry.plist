@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   com.omostation.knowledge-foundry.plist
-  macOS LaunchAgent — runs `bin/knowledge-foundry-cron.py` every 6 hours.
+  macOS LaunchAgent — runs `bin/gac/knowledge-foundry-cron.py` every 6 hours.
 
   安装:
     cp runtime/cron/com.omostation.knowledge-foundry.plist \
@@ -31,7 +31,7 @@
       <!-- env 变量: OMO 仓库路径覆盖 (LaunchAgents 默认 cwd=/) -->
       <string>/bin/bash</string>
       <string>-c</string>
-      <string>cd $WORKSPACE &amp;&amp; uv run python bin/knowledge-foundry-cron.py &gt;&gt; $HOME/.local/state/omostation/foundry.log 2&gt;&amp;1</string>
+      <string>cd $WORKSPACE &amp;&amp; uv run python bin/gac/knowledge-foundry-cron.py &gt;&gt; $HOME/.local/state/omostation/foundry.log 2&gt;&amp;1</string>
     </array>
 
     <!-- EnvironmentVariables: launchd 不会自动加载 ~/.zshenv 等 -->

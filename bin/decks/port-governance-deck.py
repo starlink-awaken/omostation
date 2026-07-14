@@ -47,19 +47,19 @@ def main() -> int:
     # Deck 1: hardcoded ports
     checks.append(run_check(
         "hardcoded-ports",
-        [sys.executable, str(WORKSPACE / "bin" / "check-hardcoded-ports.py")],
+        [sys.executable, str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py")],
     ))
 
     # Deck 2: env-var check (env-only ports)
     checks.append(run_check(
         "env-var-check",
-        [sys.executable, str(WORKSPACE / "bin" / "check-hardcoded-ports.py"), "--env-var-check"],
+        [sys.executable, str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py"), "--env-var-check"],
     ))
 
     # Deck 3: cross-repo consistency (P79: now ok=0 unregistered + 0 real conflicts)
     checks.append(run_check(
         "cross-repo-consistency",
-        [sys.executable, str(WORKSPACE / "bin" / "check-cross-repo-consistency.py")],
+        [sys.executable, str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py")],
     ))
     # 容忍 cross-repo 的 port conflicts (note/description 差异) — 仅 unregistered 是真 fail
     for c in checks:
