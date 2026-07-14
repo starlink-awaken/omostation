@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "medium"
 weight: 0.10
 entropy_class: "high"
-lifecycle_state: "active"
+lifecycle_state: "resolved"
 owner: "omo-team"
 affected_roots: []
 evidence_refs: []

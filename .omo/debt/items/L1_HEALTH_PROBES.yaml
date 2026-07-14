@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "high"
 weight: 0.15
 entropy_class: "high"
-lifecycle_state: "active"
+lifecycle_state: "resolved"
 owner: "agent-runtime"
 affected_roots: []
 evidence_refs: []

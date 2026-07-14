@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "high"
 weight: 0.10
 entropy_class: "medium"
-lifecycle_state: "active"
+lifecycle_state: "resolved"
 owner: "architecture-team"
 affected_roots: []
 evidence_refs: []
