@@ -76,7 +76,10 @@ def test_40_uri_registry_loads():
 
 @pytest.mark.bos_40
 def test_smoke_25_resolved_15_gap_single_loop():
-    """P43-W1 验证: 40 URI 全部能 invoke, 25 真 resolved + 15 GAP (unknown_bos_uri).
+    """P43-W1 验证: registry URI 全部能 invoke; resolved + gap 覆盖全集.
+
+    ADR-0181: unimplemented/deprecated BOS entries are filtered from the
+    routable table → invoke returns unknown_bos_uri (counted as gap).
 
     P43-W0 长驻池是 module-level singleton, 必须单 asyncio.run() 内调用.
     跑完显式关 pool.
@@ -108,12 +111,22 @@ def test_smoke_25_resolved_15_gap_single_loop():
         asyncio.run(_MANAGER.close_all())
 
     by_status = Counter(s for _, s in results)
-    assert by_status.get("resolved", 0) == 34, (
-        f"Expected 34 resolved, got {by_status.get('resolved', 0)}: "
+    # ADR-0181: agora filters status=unimplemented|deprecated from the routable
+    # table, so many registry URIs now surface as unknown_bos_uri (gap). Counts
+    # track the current bos-registry.json (36) + live bos-services.yaml.
+    total = len(results)
+    resolved = by_status.get("resolved", 0)
+    gap = by_status.get("gap", 0)
+    assert resolved + gap == total, (
+        f"Expected all URIs classified resolved|gap, got {dict(by_status)}: "
+        f"{[(u, s) for u, s in results if s not in ('resolved', 'gap')]}"
+    )
+    assert resolved >= 15, (
+        f"Expected >=15 resolved after ADR-0181 filter, got {resolved}: "
         f"{[(u, s) for u, s in results if s != 'resolved']}"
     )
-    assert by_status.get("gap", 0) == 2, (
-        f"Expected 2 gap, got {by_status.get('gap', 0)}: "
+    assert gap >= 15, (
+        f"Expected >=15 gap (unimplemented/missing), got {gap}: "
         f"{[(u, s) for u, s in results if s == 'gap']}"
     )
 

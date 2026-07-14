@@ -36,4 +36,4 @@ def test_recommendations():
         
         engine = PredictiveGovernanceEngine(omo_dir)
         actions = engine.recommend_proactive_actions()
-        assert len(actions) &gt; 0
+        assert len(actions) > 0
