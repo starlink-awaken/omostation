@@ -586,3 +586,71 @@ def test_dispatch_rejects_unapproved_active_task(monkeypatch):
 
     assert response.status_code == 409
     assert "approval must be granted" in response.json()["detail"]
+
+
+def test_execution_endpoint_reports_worker_artifacts(monkeypatch, tmp_path):
+    run_dir = tmp_path / ".omo" / "workers" / "runs"
+    run_dir.mkdir(parents=True)
+    dispatch_ref = ".omo/workers/runs/dispatch-task.yaml"
+    (tmp_path / dispatch_ref).write_text(
+        """dispatch_id: dispatch-task
+dispatch_state: checkpointed
+worker_id: coder
+inputs:
+  envelope_file: .omo/workers/runs/dispatch-task-envelope.yaml
+  prompt_file: .omo/workers/runs/dispatch-task-prompt.md
+execution:
+  checkpoint_refs:
+    - .omo/workers/runs/dispatch-task-checkpoint.md
+  log_ref: .omo/workers/runs/dispatch-task-stdout.log
+handoff:
+  output_summary_ref: .omo/workers/runs/dispatch-task-review.md
+reclaim:
+  note_ref: .omo/workers/runs/dispatch-task-reclaim.md
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / ".omo/workers/runs/dispatch-task-checkpoint.md").write_text("checkpoint", encoding="utf-8")
+    payload = {"id": "dispatch-task", "status": "in_progress", "run_ref": dispatch_ref, "dispatch_id": "dispatch-task"}
+    monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+
+    response = TestClient(app).get("/api/tasks/dispatch-task/execution")
+
+    assert response.status_code == 200
+    execution = response.json()["execution"]
+    assert execution["status"] == "checkpointed"
+    assert execution["artifacts"]["checkpoint"]["exists"] is True
+    assert execution["artifacts"]["review"]["exists"] is False
+
+
+def test_complete_passes_existing_evidence_to_omo(monkeypatch, tmp_path):
+    evidence = tmp_path / "evidence.md"
+    evidence.write_text("verified", encoding="utf-8")
+    payload = {"id": "evidence-task", "status": "in_progress"}
+    calls = []
+    monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.complete_task",
+        lambda *args, **kwargs: calls.append(kwargs) or {"completed_at": "now"},
+    )
+
+    response = TestClient(app).post(
+        "/api/tasks/evidence-task/complete",
+        json={"evidence_paths": ["evidence.md"]},
+    )
+
+    assert response.status_code == 200
+    assert calls[0]["evidence_paths"] == ["evidence.md"]
+
+
+def test_complete_rejects_missing_evidence_file(monkeypatch, tmp_path):
+    monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    response = TestClient(app).post(
+        "/api/tasks/evidence-task/complete",
+        json={"evidence_paths": ["missing.md"]},
+    )
+    assert response.status_code == 422

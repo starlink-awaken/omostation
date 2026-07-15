@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from cockpit.compat import WORKSPACE_ROOT
 from cockpit.web.api_domain_apps import build_domain_apps
@@ -128,6 +128,70 @@ def _load_persisted_task(task_id: str, group: str) -> dict[str, Any]:
         return yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError) as exc:
         raise HTTPException(status_code=404, detail="Task payload not readable") from exc
+
+
+def _workspace_file_ref(ref: object) -> dict[str, object]:
+    """Describe a workspace-relative artifact without exposing arbitrary paths."""
+    if not isinstance(ref, str) or not ref or Path(ref).is_absolute():
+        return {"ref": ref, "exists": False, "valid": False}
+    path = (WORKSPACE_DIR / ref).resolve()
+    try:
+        path.relative_to(WORKSPACE_DIR.resolve())
+    except ValueError:
+        return {"ref": ref, "exists": False, "valid": False}
+    return {"ref": ref, "exists": path.is_file(), "valid": True}
+
+
+def _execution_snapshot(task_data: dict[str, Any]) -> dict[str, object]:
+    """Read worker artifacts referenced by OMO; Cockpit owns no execution state."""
+    refs: dict[str, object] = {
+        "dispatch": task_data.get("run_ref"),
+        "envelope": None,
+        "prompt": None,
+        "checkpoint": None,
+        "review": task_data.get("review_ref"),
+        "reclaim": None,
+        "log": None,
+    }
+    dispatch: dict[str, Any] = {}
+    run_ref = task_data.get("run_ref")
+    if isinstance(run_ref, str):
+        dispatch_path = WORKSPACE_DIR / run_ref
+        try:
+            import yaml
+
+            dispatch = yaml.safe_load(dispatch_path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            dispatch = {}
+    inputs = dispatch.get("inputs") or {}
+    execution = dispatch.get("execution") or {}
+    reclaim = dispatch.get("reclaim") or {}
+    handoff = dispatch.get("handoff") or {}
+    refs.update(
+        {
+            "envelope": inputs.get("envelope_file"),
+            "prompt": inputs.get("prompt_file"),
+            "checkpoint": (execution.get("checkpoint_refs") or [None])[-1],
+            "review": handoff.get("output_summary_ref") or refs["review"],
+            "reclaim": reclaim.get("note_ref"),
+            "log": execution.get("log_ref"),
+        }
+    )
+    artifacts = {name: _workspace_file_ref(ref) for name, ref in refs.items()}
+    existing = [item["ref"] for item in artifacts.values() if item.get("exists")]
+    required = task_data.get("evidence_required") or []
+    return {
+        "status": dispatch.get("dispatch_state", "not_dispatched"),
+        "dispatch_id": task_data.get("dispatch_id") or dispatch.get("dispatch_id"),
+        "worker_id": dispatch.get("worker_id"),
+        "run_ref": run_ref,
+        "artifacts": artifacts,
+        "evidence_paths": task_data.get("evidence_paths") or handoff.get("evidence_paths") or [],
+        "evidence_required": required,
+        "evidence_ready": bool(task_data.get("evidence_paths")),
+        "existing_artifacts": existing,
+        "next_action": "提交已存在的证据路径后完成" if required and not task_data.get("evidence_paths") else _execution_next_action(task_data),
+    }
 
 
 def get_tasks_from_omo() -> list[dict]:
@@ -1075,7 +1139,24 @@ async def dispatch_task_endpoint(task_id: str):
     }
 
 
-def _transition_task(task_id: str, action: str) -> dict:
+def _validate_evidence_paths(evidence_paths: object) -> list[str]:
+    if not isinstance(evidence_paths, list) or not evidence_paths:
+        return []
+    if not all(isinstance(item, str) and item.strip() for item in evidence_paths):
+        raise HTTPException(status_code=422, detail="evidence_paths must be a non-empty list[str]")
+    validated: list[str] = []
+    for item in evidence_paths:
+        ref = item.strip()
+        artifact = _workspace_file_ref(ref)
+        if not artifact["valid"] or not artifact["exists"]:
+            raise HTTPException(status_code=422, detail=f"Evidence path is not an existing workspace file: {ref}")
+        validated.append(ref)
+    return validated
+
+
+def _transition_task(
+    task_id: str, action: str, evidence_paths: list[str] | None = None
+) -> dict:
     """Apply task transitions through the OMO ingress broker."""
     group = _task_group(task_id)
     if group is None:
@@ -1125,6 +1206,7 @@ def _transition_task(task_id: str, action: str) -> dict:
                 task_id=task_id,
                 actor="cockpit-task-center",
                 source_ref=source_ref,
+                evidence_paths=evidence_paths,
             )
             return {
                 "id": task_id,
@@ -1390,6 +1472,20 @@ async def queue_domain_app_action(app_id: str, action_id: str):
     }
 
 
+@router.get("/api/tasks/{task_id}/execution")
+async def get_task_execution(task_id: str):
+    """Return the worker artifact posture for a persisted OMO task."""
+    group = _task_group(task_id)
+    if group is None:
+        raise HTTPException(status_code=404, detail="Task not found in OMO queues")
+    payload = _load_persisted_task(task_id, group)
+    return {
+        "task_id": task_id,
+        "execution": _execution_snapshot(payload),
+        "source": "omo-worker-artifacts",
+    }
+
+
 @router.get("/api/tasks/{task_id}")
 async def get_task(task_id: str):
     """获取任务详情。"""
@@ -1426,9 +1522,14 @@ async def resume_task(task_id: str):
 
 
 @router.post("/api/tasks/{task_id}/complete")
-async def complete_task_endpoint(task_id: str):
+async def complete_task_endpoint(task_id: str, request: Request):
     """通过 OMO ingress 将 active/planned 任务归档到 done。"""
-    return _transition_task(task_id, "complete")
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    evidence_paths = _validate_evidence_paths((body or {}).get("evidence_paths")) if isinstance(body, dict) else []
+    return _transition_task(task_id, "complete", evidence_paths=evidence_paths or None)
 
 
 @router.post("/api/tasks/{task_id}/cancel")
