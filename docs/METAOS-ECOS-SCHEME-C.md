@@ -24,7 +24,8 @@
 | 5c OS 写面 ACL | 设计 0186；L1 doctor 0187；L2 plan/apply 0189（opt-in） | L1 ✅ / L2 ✅ |
 | Wave2 UI | cockpit `/api/wave2/dashboard` + UI 面板 ADR-0191 | ✅ |
 | Wave2 demo seed | `python -m c2g.demo_seed` ADR-0193 | ✅ |
-| 5c setfacl | 细粒度 ACE 设计 ADR-0194；实现另 PR | 📐 设计 ✅ |
+| 5c setfacl / named ACE | 设计 0194；plan 0196；apply 0198；macOS host 验证 ADR-0205 | ✅ |
+| 5b image digest pin | `python:3.13-slim@sha256:…` SSOT + builtin default ADR-0205 | ✅ |
 
 ## 运行时旋钮
 
@@ -44,6 +45,7 @@
 | `AGORA_SPAWN_BACKEND` | stdio spawn: `local` / `docker` / `auto`（5b） |
 | `AGORA_SPAWN_PROFILE` | isolation profile 名（5b） |
 | `AGORA_SPAWN_STRICT` | docker 不可用时是否失败（5b） |
+| `AGORA_SPAWN_DOCKER_IMAGE` | 覆盖默认镜像（默认已 pin digest，见 ADR-0205） |
 
 ## Phase 4 命令
 
