@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cockpit.dashboard_server import app
+from cockpit.web.api_logs import _infer_log_level, _read_log_entries
 
 
 @pytest.fixture
@@ -16,6 +17,33 @@ def client():
 
 
 class TestLogs:
+    @pytest.mark.parametrize(
+        ("line", "level"),
+        [
+            ("2026-07-15T10:00:00Z ERROR database timeout", "error"),
+            ("WARNING retrying request", "warning"),
+            ("DEBUG request payload", "debug"),
+            ("FATAL process panic", "fatal"),
+            ("request completed", "info"),
+        ],
+    )
+    def test_infers_log_levels(self, line, level):
+        assert _infer_log_level(line) == level
+
+    def test_reads_bounded_entries_with_level_and_timestamp(self, tmp_path):
+        log_file = tmp_path / "runtime.log"
+        log_file.write_text(
+            "2026-07-15T10:00:00Z ERROR database timeout\n"
+            "2026-07-15T10:01:00Z INFO recovered\n",
+            encoding="utf-8",
+        )
+
+        entries = _read_log_entries(log_file, "runtime", 1)
+
+        assert len(entries) == 1
+        assert entries[0]["level"] == "error"
+        assert entries[0]["timestamp"] == "2026-07-15T10:00:00Z"
+
     def test_get_logs(self, client):
         with patch("cockpit.web.api_logs.run_l4_script", return_value={"logs": []}):
             resp = client.get("/api/logs")

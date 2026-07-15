@@ -9,6 +9,7 @@ Routes:
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -23,6 +24,53 @@ router = APIRouter()
 # L4-kernel 项目路径
 WORKSPACE_DIR = WORKSPACE_ROOT
 L4_KERNEL_DIR = WORKSPACE_DIR / "projects" / "l4-kernel"
+_LOG_LEVEL_PATTERNS = (
+    ("fatal", re.compile(r"\b(?:fatal|critical|panic)\b", re.IGNORECASE)),
+    ("error", re.compile(r"\b(?:error|exception|traceback|failed|failure)\b", re.IGNORECASE)),
+    ("warning", re.compile(r"\b(?:warn|warning)\b", re.IGNORECASE)),
+    ("debug", re.compile(r"\bdebug\b", re.IGNORECASE)),
+)
+
+
+def _infer_log_level(line: str) -> str:
+    """Infer a useful level from common plain-text log markers."""
+    for level, pattern in _LOG_LEVEL_PATTERNS:
+        if pattern.search(line):
+            return level
+    return "info"
+
+
+def _log_timestamp(log_file: Path, line: str) -> str:
+    """Preserve an embedded ISO timestamp and fall back to file mtime."""
+    match = re.search(r"\b(20\d{2}-\d{2}-\d{2}T[^\s\]]+)", line)
+    if match:
+        return match.group(1)
+    try:
+        return datetime.fromtimestamp(log_file.stat().st_mtime, UTC).isoformat()
+    except OSError:
+        return datetime.now(UTC).isoformat()
+
+
+def _read_log_entries(log_file: Path, source: str, max_lines: int) -> list[dict]:
+    """Read bounded plain-text entries while preserving their severity."""
+    entries: list[dict] = []
+    try:
+        with log_file.open(encoding="utf-8", errors="replace") as handle:
+            for raw_line in handle.readlines()[:max_lines]:
+                line = raw_line.strip()
+                if not line:
+                    continue
+                entries.append(
+                    {
+                        "timestamp": _log_timestamp(log_file, line),
+                        "level": _infer_log_level(line),
+                        "source": source,
+                        "message": line,
+                    }
+                )
+    except OSError:
+        return []
+    return entries
 
 
 def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | None:
@@ -60,41 +108,13 @@ def get_logs_from_files() -> list[dict]:
     logs_dir = L4_KERNEL_DIR / "logs"
     if logs_dir.exists():
         for log_file in sorted(logs_dir.glob("*.log"), reverse=True)[:5]:
-            try:
-                with open(log_file) as f:
-                    for line in f.readlines()[:100]:  # 每个文件最多 100 行
-                        line = line.strip()
-                        if line:
-                            logs.append(
-                                {
-                                    "timestamp": datetime.now(UTC).isoformat(),
-                                    "level": "info",
-                                    "source": "l4-kernel",
-                                    "message": line,
-                                }
-                            )
-            except Exception:  # noqa: S112  # defensive fallback
-                continue
+            logs.extend(_read_log_entries(log_file, "l4-kernel", 100))
 
     # 从 runtime 日志获取
     runtime_logs_dir = WORKSPACE_DIR / "runtime" / "logs"
     if runtime_logs_dir.exists():
         for log_file in sorted(runtime_logs_dir.glob("*.log"), reverse=True)[:3]:
-            try:
-                with open(log_file) as f:
-                    for line in f.readlines()[:50]:  # 每个文件最多 50 行
-                        line = line.strip()
-                        if line:
-                            logs.append(
-                                {
-                                    "timestamp": datetime.now(UTC).isoformat(),
-                                    "level": "info",
-                                    "source": "runtime",
-                                    "message": line,
-                                }
-                            )
-            except Exception:  # noqa: S112  # defensive fallback
-                continue
+            logs.extend(_read_log_entries(log_file, "runtime", 50))
 
     return logs
 
