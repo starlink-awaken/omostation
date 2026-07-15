@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
+from hashlib import sha256
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
@@ -42,6 +43,16 @@ from cockpit.web.api_tasks_data import (
 )
 
 router = APIRouter()
+
+
+_COVERAGE_DRAFT_GETTERS = {
+    "project_portfolio": get_project_portfolio_task_drafts,
+    "verification_ready": get_verification_ready_task_drafts,
+    "domain_apps": get_domain_app_task_drafts,
+    "capability_gaps": get_capability_gap_task_drafts,
+    "page_maturity": get_page_maturity_task_drafts,
+    "playbooks": get_playbook_task_drafts,
+}
 
 
 @router.post("/api/tasks/{task_id}/request-approval")
@@ -343,6 +354,570 @@ async def promote_task_draft(draft_id: str):
     }
 
 
+@router.post("/api/cockpit/coverage/queue")
+async def queue_coverage_drafts(request: Request):
+    """Batch-promote read-only coverage drafts into OMO planned tasks."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Coverage queue request must be an object")
+
+    category = str(body.get("category") or "all")
+    if category != "all" and category not in _COVERAGE_DRAFT_GETTERS:
+        raise HTTPException(status_code=400, detail=f"Unsupported coverage category: {category}")
+
+    raw_limit = body.get("limit", 40)
+    if isinstance(raw_limit, bool) or not isinstance(raw_limit, int) or not 1 <= raw_limit <= 100:
+        raise HTTPException(status_code=422, detail="limit must be an integer between 1 and 100")
+
+    categories = list(_COVERAGE_DRAFT_GETTERS) if category == "all" else [category]
+    drafts: list[dict] = []
+    for name in categories:
+        drafts.extend(_COVERAGE_DRAFT_GETTERS[name](limit=raw_limit))
+
+    queued: list[dict] = []
+    skipped: list[dict] = []
+    errors: list[dict] = []
+    # `limit` is applied per coverage dimension so an early category cannot
+    # starve later dimensions when the caller asks for `all`.
+    for draft in drafts:
+        draft_id = str(draft.get("id") or "")
+        if not draft_id:
+            errors.append({"id": None, "detail": "Draft has no id"})
+            continue
+        try:
+            result = await promote_task_draft(draft_id)
+        except HTTPException as exc:
+            if exc.status_code == 409:
+                skipped.append({"id": draft_id, "detail": exc.detail})
+            else:
+                errors.append({"id": draft_id, "detail": exc.detail})
+        except (OSError, ValueError) as exc:
+            errors.append({"id": draft_id, "detail": str(exc)})
+        else:
+            if result.get("created"):
+                queued.append(result)
+            else:
+                skipped.append({"id": draft_id, "detail": "Task already exists in planned queue"})
+
+    return {
+        "category": category,
+        "queued": queued,
+        "skipped": skipped,
+        "errors": errors,
+        "summary": {
+            "queued": len(queued),
+            "skipped": len(skipped),
+            "errors": len(errors),
+            "considered": len(drafts),
+        },
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/cockpit/engine/queue")
+async def queue_engine_execution(request: Request):
+    """Register an engine or pipeline request as an OMO planned task."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Engine queue request must be an object")
+
+    engine = str(body.get("engine") or "metaos").strip().lower()
+    task = str(body.get("task") or body.get("goal") or "").strip()
+    pipeline = str(body.get("pipeline") or "").strip()
+    if engine not in {"metaos", "pipeline"}:
+        raise HTTPException(status_code=400, detail="engine must be metaos or pipeline")
+    if not task:
+        raise HTTPException(status_code=422, detail="task is required")
+    if engine == "pipeline" and not pipeline:
+        raise HTTPException(status_code=422, detail="pipeline is required for pipeline execution")
+
+    fingerprint = sha256(f"{engine}:{pipeline}:{task}".encode()).hexdigest()[:16]
+    task_id = f"cockpit-engine-{fingerprint}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Engine task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {
+            "id": task_id,
+            "status": "pending",
+            "created": False,
+            "engine": engine,
+            "pipeline": pipeline or None,
+            "executes": False,
+            "source": "omo_ingress",
+        }
+
+    title = f"引擎任务：{pipeline}" if engine == "pipeline" else "MetaOS 任务规划"
+    description = f"{pipeline} · {task}" if pipeline else task
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": description,
+        "status": "pending",
+        "task_type": "orchestration",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L2",
+        "allowed_operation_level": "L2",
+        "human_approval_required": True,
+        "source_docs": ["cockpit:EnginesView"],
+        "entry_gate": ["确认引擎、管线和目标"],
+        "evidence_required": ["规划结果", "执行日志", "工作流 closeout"],
+        "deliverables": [description],
+        "test_plan": ["审批后由 OMO worker 派发，并回写节点状态和执行证据。"],
+        "tags": ["cockpit-engine", engine, pipeline or "metaos"],
+        "priority": "high",
+        "metadata": {
+            "engine": engine,
+            "pipeline": pipeline or None,
+            "task": task,
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-engine",
+            source_ref=f"cockpit:engine:{engine}:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", title),
+        "engine": engine,
+        "pipeline": pipeline or None,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/cockpit/governance/queue")
+async def queue_governance_action(request: Request):
+    """Register a high-risk governance mutation for human-approved execution."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Governance queue request must be an object")
+    action = str(body.get("action") or "").strip().lower()
+    if action != "fix-drift":
+        raise HTTPException(status_code=400, detail="Unsupported governance action")
+
+    task_id = "cockpit-governance-fix-drift"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Governance task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {
+            "id": task_id,
+            "status": "pending",
+            "created": False,
+            "action": action,
+            "executes": False,
+            "source": "omo_ingress",
+        }
+
+    task_data = {
+        "id": task_id,
+        "title": "治理修复：校正 SSOT 漂移",
+        "description": "人工确认后运行 SSOT Guardian 自动修复，并审阅全部变更再固化。",
+        "status": "pending",
+        "task_type": "governance",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L3",
+        "allowed_operation_level": "L3",
+        "human_approval_required": True,
+        "source_docs": ["bin/ssot/ssot-guardian.py", ".omo/standards/agent-mutation-protocol.md"],
+        "entry_gate": ["确认漂移范围", "确认自动修复不会覆盖并发改动"],
+        "evidence_required": ["修复前后 diff", "guardian 输出", "人工复核记录", "closeout"],
+        "deliverables": ["SSOT 漂移修复结果和复核证据"],
+        "test_plan": ["审批后执行 guardian，逐项审阅变更，再回写治理 closeout。"],
+        "tags": ["cockpit-governance", "fix-drift", "high-risk"],
+        "priority": "high",
+        "metadata": {
+            "governance_action": action,
+            "command": "python3 bin/ssot/ssot-guardian.py --auto-fix",
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-governance",
+            source_ref=f"cockpit:governance:{action}:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", task_data["title"]),
+        "action": action,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/cockpit/compute/queue")
+async def queue_compute_action(request: Request):
+    """Register a physical compute-node action for human-approved execution."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Compute queue request must be an object")
+    operation = str(body.get("operation") or "").strip().lower()
+    node_id = str(body.get("node_id") or "").strip()
+    if operation != "wakeup":
+        raise HTTPException(status_code=400, detail="Unsupported compute operation")
+    if not node_id or not re.fullmatch(r"[A-Za-z0-9_.:-]+", node_id):
+        raise HTTPException(status_code=422, detail="node_id is required and must be safe")
+
+    task_id = f"cockpit-compute-wakeup-{sha256(node_id.encode()).hexdigest()[:16]}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Compute task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": f"算力节点唤醒：{node_id}",
+        "description": f"人工确认后向算力节点 {node_id} 发送 Wake-on-LAN Magic Packet。",
+        "status": "pending",
+        "task_type": "operations",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L3",
+        "allowed_operation_level": "L3",
+        "human_approval_required": True,
+        "source_docs": ["projects/aetherforge", "projects/cockpit/src/cockpit/web/api_compute.py"],
+        "entry_gate": ["确认节点身份和离线状态", "确认网络唤醒风险"],
+        "evidence_required": ["节点状态快照", "唤醒命令输出", "唤醒后端口/健康检查", "closeout"],
+        "deliverables": [f"节点 {node_id} 恢复可观测状态"],
+        "test_plan": ["审批后发送唤醒包，并回写节点运行和健康探针结果。"],
+        "tags": ["cockpit-compute", "wakeup", "high-risk", node_id],
+        "priority": "high",
+        "metadata": {
+            "compute_operation": operation,
+            "node_id": node_id,
+            "command": f"python3 -m aetherforge.cli mesh wakeup {node_id}",
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-compute",
+            source_ref=f"cockpit:compute:{operation}:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", task_data["title"]),
+        "node_id": node_id,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/cockpit/compute/control/queue")
+async def queue_compute_control(request: Request):
+    """Register budget or circuit-breaker changes for human-approved execution."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Compute control request must be an object")
+    operation = str(body.get("operation") or "").strip().lower()
+    if operation not in {"circuit_break", "budget"}:
+        raise HTTPException(status_code=400, detail="Unsupported compute control operation")
+
+    if operation == "circuit_break":
+        broken = body.get("broken")
+        if not isinstance(broken, bool):
+            raise HTTPException(status_code=422, detail="broken must be a boolean")
+        target = "enabled" if broken else "disabled"
+        title = f"算力熔断：{target}"
+        description = f"人工确认后将混合云算力熔断器切换为 {target}。"
+        command = f"POST /api/omos/circuit-break broken={str(broken).lower()}"
+        tags = ["cockpit-compute", "circuit-break", target]
+        metadata = {"broken": broken}
+    else:
+        budget = body.get("budget")
+        if isinstance(budget, bool) or not isinstance(budget, (int, float)) or not 50 <= budget <= 1000:
+            raise HTTPException(status_code=422, detail="budget must be a number between 50 and 1000")
+        target = f"${budget:g}"
+        title = f"算力日预算：{target}"
+        description = f"人工确认后将混合云算力单日预算安全线更新为 {target}。"
+        command = f"POST /api/omos/budget budget={budget:g}"
+        tags = ["cockpit-compute", "budget"]
+        metadata = {"budget": budget}
+
+    task_id = f"cockpit-compute-control-{operation}-{sha256(str(metadata).encode()).hexdigest()[:16]}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(
+            status_code=409, detail=f"Compute control task already exists in {existing_group}: {task_id}"
+        )
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": description,
+        "status": "pending",
+        "task_type": "governance",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L3",
+        "allowed_operation_level": "L3",
+        "human_approval_required": True,
+        "source_docs": ["projects/cockpit/src/cockpit/web/api_omos.py"],
+        "entry_gate": ["确认当前算力状态和变更目标", "确认对业务路由或成本的影响"],
+        "evidence_required": ["变更前状态快照", "配置写入结果", "变更后状态探针", "closeout"],
+        "deliverables": [description],
+        "test_plan": ["审批后执行控制变更，并回读算力状态确认结果。"],
+        "tags": tags,
+        "priority": "high",
+        "metadata": {
+            "compute_operation": operation,
+            **metadata,
+            "command": command,
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-compute",
+            source_ref=f"cockpit:compute-control:{operation}:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", task_data["title"]),
+        "operation": operation,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/cockpit/sandbox/queue")
+async def queue_sandbox_result(request: Request):
+    """Persist a sandbox result as a planned follow-up task without executing it."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Sandbox queue request must be an object")
+    code = str(body.get("code") or "").strip()
+    output = str(body.get("output") or "").strip()
+    if not code:
+        raise HTTPException(status_code=422, detail="code is required")
+    if not output:
+        raise HTTPException(status_code=422, detail="output is required")
+    if len(code) > 20000 or len(output) > 20000:
+        raise HTTPException(status_code=413, detail="Sandbox code and output must be no longer than 20000 characters")
+
+    result_digest = sha256(f"{code}\n---\n{output}".encode()).hexdigest()[:16]
+    task_id = f"cockpit-sandbox-result-{result_digest}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(
+            status_code=409, detail=f"Sandbox result task already exists in {existing_group}: {task_id}"
+        )
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    title = str(body.get("title") or "沙箱实验结果收口").strip()[:160]
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": "将隔离沙箱实验结果带回日志、引擎或正式任务，并补齐可复现和 closeout 证据。",
+        "status": "pending",
+        "task_type": "verification",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": ["projects/cockpit/src/cockpit/web/api_sandbox.py"],
+        "entry_gate": ["确认沙箱输出不包含敏感信息", "确认后续去向是日志、引擎或正式任务之一"],
+        "evidence_required": ["沙箱代码或可复现片段", "沙箱输出摘要", "后续承接记录", "closeout"],
+        "deliverables": ["完成沙箱实验结果的正式承接"],
+        "test_plan": ["复核结果摘要，补充后续页面或执行链路的验证证据。"],
+        "tags": ["cockpit-sandbox", "verification", result_digest],
+        "priority": "medium",
+        "metadata": {
+            "sandbox_result_digest": result_digest,
+            "code_excerpt": code[:2000],
+            "output_excerpt": output[:4000],
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-sandbox",
+            source_ref=f"cockpit:sandbox:result:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", title),
+        "result_digest": result_digest,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/cockpit/compute/generation/queue")
+async def queue_compute_generation_result(request: Request):
+    """Persist local generation output as a verifiable follow-up task."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Generation queue request must be an object")
+    prompt = str(body.get("prompt") or "").strip()
+    model = str(body.get("model") or "coder").strip()
+    content = str(body.get("content") or "").strip()
+    if not prompt or not content:
+        raise HTTPException(status_code=422, detail="prompt and content are required")
+    if len(prompt) > 20000 or len(content) > 20000:
+        raise HTTPException(status_code=413, detail="prompt and content must be no longer than 20000 characters")
+
+    result_digest = sha256(f"{model}\n{prompt}\n---\n{content}".encode()).hexdigest()[:16]
+    task_id = f"cockpit-compute-generation-{result_digest}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(
+            status_code=409, detail=f"Generation result task already exists in {existing_group}: {task_id}"
+        )
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": f"本地生成结果验收：{model}",
+        "description": "复核本地算力生成结果，将内容带回沙箱、研究或正式执行链，并补齐 closeout 证据。",
+        "status": "pending",
+        "task_type": "verification",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": ["projects/cockpit/src/cockpit/web/api_compute.py"],
+        "entry_gate": ["确认模型和提示词上下文", "确认生成内容不含敏感信息"],
+        "evidence_required": ["提示词和模型", "生成结果摘要", "沙箱或研究验收记录", "closeout"],
+        "deliverables": ["完成本地生成内容的复核与后续承接"],
+        "test_plan": ["在沙箱或研究面复核生成内容，并记录验收结论。"],
+        "tags": ["cockpit-compute", "generation", "verification", result_digest],
+        "priority": "medium",
+        "metadata": {
+            "compute_operation": "generation_result",
+            "model": model,
+            "prompt_excerpt": prompt[:4000],
+            "content_excerpt": content[:6000],
+            "result_digest": result_digest,
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-compute",
+            source_ref=f"cockpit:compute:generation-result:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", task_data["title"]),
+        "result_digest": result_digest,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")
 async def queue_project_action(project_id: str, action_id: str):
     """登记一个项目命令为 OMO planned task; never execute it in Cockpit."""
@@ -427,6 +1002,180 @@ async def queue_project_action(project_id: str, action_id: str):
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
         "executes": False,
+    }
+
+
+@router.post("/api/cockpit/projects/{project_id}/triage/{command_id}/queue")
+async def queue_project_triage_command(project_id: str, command_id: str):
+    """登记系统地图排查命令为 OMO planned task; never execute it in Cockpit."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", project_id) or not re.fullmatch(r"[A-Za-z0-9_.-]+", command_id):
+        raise HTTPException(status_code=400, detail="Invalid project or triage command id")
+
+    project = next((item for item in build_system_map().get("projects", []) if item.get("id") == project_id), None)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found in SystemMap")
+    command = next((item for item in project.get("triage_commands") or [] if item.get("id") == command_id), None)
+    if command is None:
+        raise HTTPException(status_code=404, detail="Project triage command not found")
+    if command.get("kind") != "copy_command" or not command.get("enabled"):
+        raise HTTPException(status_code=409, detail="Only enabled triage commands can be queued")
+
+    task_id = f"cockpit-triage-{project_id}-{command_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(
+            status_code=409, detail=f"Project triage task already exists in {existing_group}: {task_id}"
+        )
+
+    risk = str(command.get("risk") or "low")
+    probe_match = re.search(r"for port in ([^;]+);", str(command.get("value") or ""))
+    probe_ports = [int(value) for value in (probe_match.group(1).split() if probe_match else []) if value.isdigit()]
+    controlled_runtime_probe = command_id == "runtime-check-ports" and bool(probe_ports)
+    controlled_verification = command_id == "verification-rerun" and str(command.get("value") or "").startswith('cd "')
+    task_data = {
+        "id": task_id,
+        "title": f"项目排查：{project.get('name') or project_id} · {command.get('label') or command_id}",
+        "description": str(command.get("reason") or "登记系统地图排查命令，并由人工确认执行。"),
+        "status": "pending",
+        "task_type": "operations",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L2" if risk in {"medium", "high", "critical"} else "L1",
+        "allowed_operation_level": "L2" if risk in {"medium", "high", "critical"} else "L1",
+        "human_approval_required": risk in {"medium", "high", "critical"},
+        "source_docs": [f"cockpit:SystemMap:triage:{project_id}:{command_id}"],
+        "entry_gate": ["确认项目排查命令和风险"],
+        "evidence_required": ["command exit code", "execution log", "agent-workflow closeout"],
+        "deliverables": [str(command.get("value") or "")],
+        "test_plan": [str(command.get("guard") or "人工确认后执行登记命令，并回写退出码与日志。")],
+        "tags": ["cockpit-project-triage", project_id, command_id, risk],
+        "priority": "high" if risk in {"medium", "high", "critical"} else "medium",
+        "metadata": {
+            "project_id": project_id,
+            "command_id": command_id,
+            "action_id": (
+                "copy-verify-command"
+                if controlled_verification
+                else "runtime-check-ports"
+                if controlled_runtime_probe
+                else None
+            ),
+            "command": command.get("value"),
+            "probe_ports": probe_ports,
+            "risk": risk,
+            "cockpit_only": True,
+            "controlled_execution": controlled_verification or controlled_runtime_probe,
+        },
+    }
+
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-system-map",
+            source_ref=f"cockpit:project-triage:{project_id}:{command_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": existing_group != "planned",
+        "project_id": project_id,
+        "command_id": command_id,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+        "executes": False,
+    }
+
+
+@router.post("/api/cockpit/triage/queue")
+async def queue_verification_triage(request: Request):
+    """批量登记验证或运行排查命令为 planned tasks; never execute in Cockpit."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Triage queue request must be an object")
+
+    category = str(body.get("category") or "verification")
+    requested_command_id = body.get("command_id")
+    project_ids = body.get("project_ids")
+    if category not in {"verification", "runtime"}:
+        raise HTTPException(status_code=400, detail="Only verification or runtime triage can be queued in bulk")
+    if requested_command_id is not None and not isinstance(requested_command_id, str):
+        raise HTTPException(status_code=422, detail="command_id must be a string")
+    if requested_command_id is not None and not re.fullmatch(r"[A-Za-z0-9_.-]+", requested_command_id):
+        raise HTTPException(status_code=400, detail="Invalid triage command id")
+    if project_ids is not None and (
+        not isinstance(project_ids, list) or not all(isinstance(item, str) for item in project_ids)
+    ):
+        raise HTTPException(status_code=422, detail="project_ids must be a list[str]")
+
+    command_ids = (
+        [requested_command_id]
+        if requested_command_id
+        else ["verification-rerun"]
+        if category == "verification"
+        else ["runtime-check-ports", "runtime-find-registry"]
+    )
+    allowed_projects = set(project_ids or [])
+    candidates = []
+    for project in build_system_map().get("projects", []):
+        project_id = project.get("id")
+        if not isinstance(project_id, str) or (allowed_projects and project_id not in allowed_projects):
+            continue
+        command = next(
+            (
+                item
+                for candidate_command_id in command_ids
+                for item in project.get("triage_commands") or []
+                if item.get("category") == category and item.get("id") == candidate_command_id and item.get("enabled")
+            ),
+            None,
+        )
+        if command:
+            candidates.append((project_id, command["id"]))
+
+    queued = []
+    skipped = []
+    errors = []
+    for project_id, candidate_command_id in candidates:
+        try:
+            queued.append(await queue_project_triage_command(project_id, candidate_command_id))
+        except HTTPException as exc:
+            item = {"project_id": project_id, "command_id": candidate_command_id, "detail": str(exc.detail)}
+            if exc.status_code == 409:
+                skipped.append(item)
+            else:
+                errors.append(item)
+
+    return {
+        "category": category,
+        "command_id": requested_command_id,
+        "command_ids": command_ids,
+        "requested_projects": sorted(allowed_projects),
+        "candidates": len(candidates),
+        "queued": queued,
+        "skipped": skipped,
+        "errors": errors,
+        "executes": False,
+        "summary": {
+            "queued": len(queued),
+            "skipped": len(skipped),
+            "errors": len(errors),
+        },
     }
 
 

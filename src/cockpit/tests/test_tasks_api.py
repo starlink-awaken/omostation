@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from cockpit.dashboard_server import app
@@ -399,6 +400,345 @@ def test_queue_project_action_rejects_non_command_action(monkeypatch):
     response = client.post("/api/cockpit/projects/demo/actions/open/queue")
 
     assert response.status_code == 409
+
+
+def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
+    client = TestClient(app)
+    system_map = {
+        "projects": [
+            {
+                "id": "demo",
+                "name": "Demo",
+                "triage_commands": [
+                    {
+                        "id": "verification-rerun",
+                        "label": "复跑验证",
+                        "kind": "copy_command",
+                        "value": 'cd "/workspace/demo" && make verify',
+                        "enabled": True,
+                        "risk": "low",
+                        "guard": "受控验证只在任务中心显式执行，并回写日志与退出码。",
+                        "reason": "补最近一次验证证据。",
+                    }
+                ],
+            }
+        ]
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = client.post("/api/cockpit/projects/demo/triage/verification-rerun/queue")
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    assert calls[0]["task_data"]["human_approval_required"] is False
+    assert calls[0]["task_data"]["metadata"]["controlled_execution"] is True
+    assert calls[0]["task_data"]["metadata"]["action_id"] == "copy-verify-command"
+    assert calls[0]["source_ref"] == "cockpit:project-triage:demo:verification-rerun"
+
+
+def test_queue_runtime_port_probe_exposes_structured_controlled_execution(monkeypatch):
+    system_map = {
+        "projects": [
+            {
+                "id": "demo",
+                "name": "Demo",
+                "triage_commands": [
+                    {
+                        "id": "runtime-check-ports",
+                        "label": "检查端口",
+                        "kind": "copy_command",
+                        "value": "for port in 7437 7438; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done",
+                        "enabled": True,
+                        "risk": "low",
+                        "reason": "补运行探针证据",
+                    }
+                ],
+            }
+        ]
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post("/api/cockpit/projects/demo/triage/runtime-check-ports/queue")
+
+    assert response.status_code == 200
+    metadata = calls[0]["task_data"]["metadata"]
+    assert metadata["controlled_execution"] is True
+    assert metadata["action_id"] == "runtime-check-ports"
+    assert metadata["probe_ports"] == [7437, 7438]
+
+
+def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
+    system_map = {
+        "projects": [
+            {
+                "id": "demo-a",
+                "triage_commands": [{"id": "verification-rerun", "category": "verification", "enabled": True}],
+            },
+            {
+                "id": "demo-b",
+                "triage_commands": [{"id": "verification-find-evidence", "category": "verification", "enabled": True}],
+            },
+        ]
+    }
+    calls = []
+
+    async def fake_queue(project_id, command_id):
+        calls.append((project_id, command_id))
+        return {"id": f"cockpit-triage-{project_id}-{command_id}", "executes": False}
+
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "queue_project_triage_command", fake_queue)
+
+    response = TestClient(app).post("/api/cockpit/triage/queue", json={"project_ids": ["demo-a", "demo-b"]})
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {"queued": 1, "skipped": 0, "errors": 0}
+    assert calls == [("demo-a", "verification-rerun")]
+    assert response.json()["executes"] is False
+
+
+def test_queue_runtime_triage_uses_probe_fallback_per_project(monkeypatch):
+    system_map = {
+        "projects": [
+            {
+                "id": "service-a",
+                "triage_commands": [{"id": "runtime-check-ports", "category": "runtime", "enabled": True}],
+            },
+            {
+                "id": "service-b",
+                "triage_commands": [{"id": "runtime-find-registry", "category": "runtime", "enabled": True}],
+            },
+        ]
+    }
+    calls = []
+
+    async def fake_queue(project_id, command_id):
+        calls.append((project_id, command_id))
+        return {"id": f"cockpit-triage-{project_id}-{command_id}", "executes": False}
+
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "queue_project_triage_command", fake_queue)
+
+    response = TestClient(app).post("/api/cockpit/triage/queue", json={"category": "runtime"})
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {"queued": 2, "skipped": 0, "errors": 0}
+    assert calls == [
+        ("service-a", "runtime-check-ports"),
+        ("service-b", "runtime-find-registry"),
+    ]
+    assert response.json()["executes"] is False
+
+
+def test_queue_coverage_drafts_promotes_selected_dimension(monkeypatch):
+    drafts = [
+        {"id": "capability-gap-demo", "title": "能力缺口：demo"},
+        {"id": "capability-gap-other", "title": "能力缺口：other"},
+    ]
+    promoted = []
+
+    async def fake_promote(draft_id):
+        promoted.append(draft_id)
+        return {"id": draft_id, "created": draft_id.endswith("demo"), "status": "pending"}
+
+    monkeypatch.setitem(api_tasks._COVERAGE_DRAFT_GETTERS, "capability_gaps", lambda limit=8: drafts[:limit])
+    monkeypatch.setattr(api_tasks, "promote_task_draft", fake_promote)
+
+    response = TestClient(app).post(
+        "/api/cockpit/coverage/queue",
+        json={"category": "capability_gaps", "limit": 2},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {"queued": 1, "skipped": 1, "errors": 0, "considered": 2}
+    assert response.json()["executes"] is False
+    assert promoted == ["capability-gap-demo", "capability-gap-other"]
+
+
+def test_queue_coverage_drafts_rejects_unknown_category():
+    response = TestClient(app).post(
+        "/api/cockpit/coverage/queue",
+        json={"category": "unknown"},
+    )
+
+    assert response.status_code == 400
+
+
+def test_queue_all_coverage_dimensions_does_not_starve_later_categories(monkeypatch):
+    categories = list(api_tasks._COVERAGE_DRAFT_GETTERS)
+    promoted = []
+
+    for category in categories:
+        monkeypatch.setitem(
+            api_tasks._COVERAGE_DRAFT_GETTERS,
+            category,
+            lambda limit=8, category=category: [{"id": f"{category}-draft"}],
+        )
+
+    async def fake_promote(draft_id):
+        promoted.append(draft_id)
+        return {"id": draft_id, "created": True, "status": "pending"}
+
+    monkeypatch.setattr(api_tasks, "promote_task_draft", fake_promote)
+
+    response = TestClient(app).post(
+        "/api/cockpit/coverage/queue",
+        json={"category": "all", "limit": 1},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {
+        "queued": len(categories),
+        "skipped": 0,
+        "errors": 0,
+        "considered": len(categories),
+    }
+    assert set(promoted) == {f"{category}-draft" for category in categories}
+
+
+def test_queue_engine_execution_creates_omo_task_without_launching(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = TestClient(app).post(
+        "/api/cockpit/engine/queue",
+        json={"engine": "pipeline", "pipeline": "health-check", "task": "核对运行状态"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["created"] is True
+    assert payload["executes"] is False
+    assert payload["engine"] == "pipeline"
+    assert calls[0]["ingress_plane"] == "cockpit-engine"
+    assert calls[0]["task_data"]["human_approval_required"] is True
+    assert calls[0]["task_data"]["metadata"]["pipeline"] == "health-check"
+
+
+def test_queue_governance_drift_fix_requires_approval(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+    response = TestClient(app).post("/api/cockpit/governance/queue", json={"action": "fix-drift"})
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    assert calls[0]["task_data"]["risk_level"] == "L3"
+    assert calls[0]["task_data"]["human_approval_required"] is True
+    assert calls[0]["task_data"]["metadata"]["governance_action"] == "fix-drift"
+
+
+def test_queue_compute_wakeup_requires_approval(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+    response = TestClient(app).post(
+        "/api/cockpit/compute/queue",
+        json={"operation": "wakeup", "node_id": "ENG-OLLAMA-MACMINI"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    assert calls[0]["task_data"]["human_approval_required"] is True
+    assert calls[0]["task_data"]["metadata"]["node_id"] == "ENG-OLLAMA-MACMINI"
+
+
+@pytest.mark.parametrize(
+    ("payload", "metadata_key", "metadata_value"),
+    [
+        ({"operation": "circuit_break", "broken": True}, "broken", True),
+        ({"operation": "budget", "budget": 250}, "budget", 250),
+    ],
+)
+def test_queue_compute_control_requires_approval(monkeypatch, payload, metadata_key, metadata_value):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+    response = TestClient(app).post("/api/cockpit/compute/control/queue", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["human_approval_required"] is True
+    assert task_data["metadata"][metadata_key] == metadata_value
+    assert task_data["metadata"]["compute_operation"] == payload["operation"]
+
+
+def test_queue_sandbox_result_persists_follow_up_task(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+    response = TestClient(app).post(
+        "/api/cockpit/sandbox/queue",
+        json={"code": "print('ok')", "output": "[执行成功] ok", "title": "沙箱结果验收"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["human_approval_required"] is False
+    assert task_data["metadata"]["sandbox_result_digest"] == payload["result_digest"]
+    assert task_data["metadata"]["output_excerpt"] == "[执行成功] ok"
+    assert calls[0]["ingress_plane"] == "cockpit-sandbox"
+
+
+def test_queue_compute_generation_result_persists_follow_up_task(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+    response = TestClient(app).post(
+        "/api/cockpit/compute/generation/queue",
+        json={"prompt": "总结架构", "model": "coder", "content": "架构分为四层。"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["metadata"]["compute_operation"] == "generation_result"
+    assert task_data["metadata"]["model"] == "coder"
+    assert task_data["metadata"]["content_excerpt"] == "架构分为四层。"
+    assert calls[0]["ingress_plane"] == "cockpit-compute"
 
 
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):

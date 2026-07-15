@@ -37,3 +37,39 @@ def test_services_status_uses_runtime_probe_without_synthetic_load(monkeypatch):
     assert payload["items"][0]["name"] == "gateway"
     assert payload["items"][0]["cpu"] is None
     assert payload["items"][0]["memory"] is None
+
+
+def test_register_instance_rejects_invalid_service_contract():
+    response = TestClient(app).post(
+        "/api/instance",
+        data={"service": "bad service", "mcp_endpoint": "not-a-uri"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["status"] == "error"
+
+
+def test_register_instance_accepts_http_mcp_endpoint(monkeypatch):
+    registered = []
+
+    class FakeService:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    class FakeRegistry:
+        def unregister(self, _service):
+            return None
+
+        def register(self, service):
+            registered.append(service.kwargs)
+
+    monkeypatch.setattr("cockpit.adapters.agora.Service", FakeService)
+    monkeypatch.setattr("cockpit.adapters.agora.get_registry", lambda: FakeRegistry())
+    response = TestClient(app).post(
+        "/api/instance",
+        data={"service": "mesh-router", "mcp_endpoint": "http://127.0.0.1:7437/sse"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+    assert registered == [{"name": "mesh-router", "protocol": "mcp", "mcp_endpoint": "http://127.0.0.1:7437/sse"}]
