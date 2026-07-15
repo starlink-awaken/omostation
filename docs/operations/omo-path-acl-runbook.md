@@ -86,19 +86,27 @@ omo acl apply --yes [--acl]     # needs OMO_OS_ACL=1
 omo acl status                  # alias of lint path-acl
 ```
 
-## 6. macOS host 验证记录（ADR-0205 · 2026-07-15）
+## 6. macOS host 验证记录（ADR-0205 · apply 见 ADR-0207 · 2026-07-15）
 
 | 项 | 结果 |
 |----|------|
-| 主机 | Darwin arm64 · macOS 26.5.1 |
+| 主机 | Darwin arm64 · macOS 26.5.1 · target `~/Workspace` |
 | `setfacl` | 不存在（预期） |
-| `chmod +a` 探针 | OK（temp file + `ls -le` 可见 ACE） |
-| `lint path-acl` 工作树 | 5 surface 全 ok / 0 warn（mode 0o755） |
+| `chmod +a` 探针 | OK（temp file + `ls -le`） |
+| `lint path-acl` | ok / 0 warn（mode 0o755） |
 | `acl plan` | 0 chmod action |
-| `acl plan --acl` | 生成 broker user `chmod +a` + optional group `omo-writers` |
-| 本机 `apply --yes --acl` | **未执行**（保留 ops 窗口；需 `OMO_OS_ACL=1`） |
+| `acl plan --acl` | broker user ACE + optional group `omo-writers` |
+| **`apply --yes --acl`（ADR-0207）** | **已执行**：`applied_ok=6`，`applied_fail=1`（组 `omo-writers` 不存在） |
+| 用户 ACE 实证 | `ls -led .omo/{state,_control,_delivery}` → `user:xiamingxing allow list,add_file,search,delete,add_subdirectory,file_inherit,directory_inherit` |
 
-刷新 digest / 重验：见 ADR-0205。group ACE 前请确认 `omo-writers`（或 `OMO_ACL_GROUP`）已存在。
+```bash
+export OMO_OS_ACL=1
+bash bin/gac/omo-acl-ops-window.sh --workspace-root="$HOME/Workspace" --apply --yes --acl
+ls -led .omo/state .omo/_control .omo/_delivery
+```
+
+**残留**：创建组 `omo-writers`（或 `export OMO_ACL_GROUP=<existing>`）后再跑一次 group ACE。  
+**禁止** agent 自动 `dseditgroup` / 改系统组。
 
 ## 7. 钩子重装
 
