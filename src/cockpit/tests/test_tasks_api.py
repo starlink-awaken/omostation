@@ -472,6 +472,39 @@ def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
     assert response.json()["executes"] is False
 
 
+def test_queue_runtime_triage_uses_probe_fallback_per_project(monkeypatch):
+    system_map = {
+        "projects": [
+            {
+                "id": "service-a",
+                "triage_commands": [{"id": "runtime-check-ports", "category": "runtime", "enabled": True}],
+            },
+            {
+                "id": "service-b",
+                "triage_commands": [{"id": "runtime-find-registry", "category": "runtime", "enabled": True}],
+            },
+        ]
+    }
+    calls = []
+
+    async def fake_queue(project_id, command_id):
+        calls.append((project_id, command_id))
+        return {"id": f"cockpit-triage-{project_id}-{command_id}", "executes": False}
+
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "queue_project_triage_command", fake_queue)
+
+    response = TestClient(app).post("/api/cockpit/triage/queue", json={"category": "runtime"})
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {"queued": 2, "skipped": 0, "errors": 0}
+    assert calls == [
+        ("service-a", "runtime-check-ports"),
+        ("service-b", "runtime-find-registry"),
+    ]
+    assert response.json()["executes"] is False
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {

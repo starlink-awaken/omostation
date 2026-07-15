@@ -514,7 +514,7 @@ async def queue_project_triage_command(project_id: str, command_id: str):
 
 @router.post("/api/cockpit/triage/queue")
 async def queue_verification_triage(request: Request):
-    """批量登记验证缺口命令为 planned tasks; never execute commands in Cockpit."""
+    """批量登记验证或运行排查命令为 planned tasks; never execute in Cockpit."""
     try:
         body = await request.json()
     except Exception:
@@ -523,17 +523,26 @@ async def queue_verification_triage(request: Request):
         raise HTTPException(status_code=422, detail="Triage queue request must be an object")
 
     category = str(body.get("category") or "verification")
-    command_id = str(body.get("command_id") or "verification-rerun")
+    requested_command_id = body.get("command_id")
     project_ids = body.get("project_ids")
-    if category != "verification":
-        raise HTTPException(status_code=400, detail="Only verification triage can be queued in bulk")
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+", command_id):
+    if category not in {"verification", "runtime"}:
+        raise HTTPException(status_code=400, detail="Only verification or runtime triage can be queued in bulk")
+    if requested_command_id is not None and not isinstance(requested_command_id, str):
+        raise HTTPException(status_code=422, detail="command_id must be a string")
+    if requested_command_id is not None and not re.fullmatch(r"[A-Za-z0-9_.-]+", requested_command_id):
         raise HTTPException(status_code=400, detail="Invalid triage command id")
     if project_ids is not None and (
         not isinstance(project_ids, list) or not all(isinstance(item, str) for item in project_ids)
     ):
         raise HTTPException(status_code=422, detail="project_ids must be a list[str]")
 
+    command_ids = (
+        [requested_command_id]
+        if requested_command_id
+        else ["verification-rerun"]
+        if category == "verification"
+        else ["runtime-check-ports", "runtime-find-registry"]
+    )
     allowed_projects = set(project_ids or [])
     candidates = []
     for project in build_system_map().get("projects", []):
@@ -543,13 +552,14 @@ async def queue_verification_triage(request: Request):
         command = next(
             (
                 item
+                for candidate_command_id in command_ids
                 for item in project.get("triage_commands") or []
-                if item.get("category") == category and item.get("id") == command_id and item.get("enabled")
+                if item.get("category") == category and item.get("id") == candidate_command_id and item.get("enabled")
             ),
             None,
         )
         if command:
-            candidates.append((project_id, command_id))
+            candidates.append((project_id, command["id"]))
 
     queued = []
     skipped = []
@@ -566,7 +576,8 @@ async def queue_verification_triage(request: Request):
 
     return {
         "category": category,
-        "command_id": command_id,
+        "command_id": requested_command_id,
+        "command_ids": command_ids,
         "requested_projects": sorted(allowed_projects),
         "candidates": len(candidates),
         "queued": queued,
