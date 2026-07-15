@@ -345,3 +345,57 @@ def test_task_history_rejects_non_persisted_draft():
     response = client.get("/api/tasks/playbook-demo/history")
 
     assert response.status_code == 404
+
+
+def test_queue_project_action_creates_approval_gated_planned_task(monkeypatch):
+    client = TestClient(app)
+    system_map = {
+        "projects": [
+            {
+                "id": "demo",
+                "name": "Demo",
+                "source_refs": [],
+                "actions": [
+                    {
+                        "id": "copy-start-command",
+                        "label": "复制启动",
+                        "kind": "copy_command",
+                        "value": "cd demo && make start",
+                        "enabled": True,
+                        "risk": "medium",
+                        "guard": "人工确认后执行。",
+                    }
+                ],
+            }
+        ]
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = client.post("/api/cockpit/projects/demo/actions/copy-start-command/queue")
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    assert calls[0]["task_data"]["human_approval_required"] is True
+    assert calls[0]["task_data"]["allowed_operation_level"] == "L2"
+    assert calls[0]["source_ref"] == "cockpit:project-action:demo:copy-start-command"
+
+
+def test_queue_project_action_rejects_non_command_action(monkeypatch):
+    monkeypatch.setattr(
+        api_tasks,
+        "build_system_map",
+        lambda: {"projects": [{"id": "demo", "actions": [{"id": "open", "kind": "navigate", "enabled": True}]}]},
+    )
+    client = TestClient(app)
+
+    response = client.post("/api/cockpit/projects/demo/actions/open/queue")
+
+    assert response.status_code == 409

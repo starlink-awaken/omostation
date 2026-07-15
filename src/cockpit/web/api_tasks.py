@@ -963,6 +963,89 @@ async def promote_task_draft(draft_id: str):
     }
 
 
+@router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")
+async def queue_project_action(project_id: str, action_id: str):
+    """登记一个项目命令为 OMO planned task; never execute it in Cockpit."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", project_id) or not re.fullmatch(r"[A-Za-z0-9_.-]+", action_id):
+        raise HTTPException(status_code=400, detail="Invalid project or action id")
+
+    project = next((item for item in build_system_map().get("projects", []) if item.get("id") == project_id), None)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found in SystemMap")
+    action = next((item for item in project.get("actions") or [] if item.get("id") == action_id), None)
+    if action is None:
+        raise HTTPException(status_code=404, detail="Project action not found")
+    if action.get("kind") != "copy_command" or not action.get("enabled"):
+        raise HTTPException(status_code=409, detail="Only enabled project commands can be queued")
+
+    task_id = f"cockpit-action-{project_id}-{action_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Project action task already exists in {existing_group}: {task_id}")
+
+    risk = str(action.get("risk") or "low")
+    task_data = {
+        "id": task_id,
+        "title": f"项目动作：{project.get('name') or project_id} · {action.get('label') or action_id}",
+        "description": f"登记并由人工确认执行：{action.get('value', '')}",
+        "status": "pending",
+        "task_type": "operations",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L2" if risk in {"medium", "high", "critical"} else "L1",
+        "allowed_operation_level": "L2" if risk in {"medium", "high", "critical"} else "L1",
+        "human_approval_required": risk in {"medium", "high", "critical"},
+        "source_docs": [
+            str(ref.get("target") or ref.get("path") or ref.get("label"))
+            for ref in project.get("source_refs") or []
+            if isinstance(ref, dict) and (ref.get("target") or ref.get("path") or ref.get("label"))
+        ] or [f"cockpit:SystemMap:project:{project_id}"],
+        "entry_gate": ["确认项目动作和风险"],
+        "evidence_required": ["command exit code", "execution log", "agent-workflow closeout"],
+        "deliverables": [str(action.get("value", ""))],
+        "test_plan": [str(action.get("guard") or "人工确认后执行登记命令，并回写退出码与日志。")],
+        "tags": ["cockpit-project-action", project_id, action_id, risk],
+        "priority": "high" if risk in {"medium", "high", "critical"} else "medium",
+        "metadata": {
+            "project_id": project_id,
+            "action_id": action_id,
+            "command": action.get("value"),
+            "risk": risk,
+            "cockpit_only": True,
+        },
+    }
+
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-system-map",
+            source_ref=f"cockpit:project-action:{project_id}:{action_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": existing_group != "planned",
+        "project_id": project_id,
+        "action_id": action_id,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+        "executes": False,
+    }
+
+
 @router.get("/api/tasks/{task_id}")
 async def get_task(task_id: str):
     """获取任务详情。"""
