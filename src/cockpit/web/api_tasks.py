@@ -586,6 +586,81 @@ async def queue_governance_action(request: Request):
     }
 
 
+@router.post("/api/cockpit/compute/queue")
+async def queue_compute_action(request: Request):
+    """Register a physical compute-node action for human-approved execution."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Compute queue request must be an object")
+    operation = str(body.get("operation") or "").strip().lower()
+    node_id = str(body.get("node_id") or "").strip()
+    if operation != "wakeup":
+        raise HTTPException(status_code=400, detail="Unsupported compute operation")
+    if not node_id or not re.fullmatch(r"[A-Za-z0-9_.:-]+", node_id):
+        raise HTTPException(status_code=422, detail="node_id is required and must be safe")
+
+    task_id = f"cockpit-compute-wakeup-{sha256(node_id.encode()).hexdigest()[:16]}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Compute task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": f"算力节点唤醒：{node_id}",
+        "description": f"人工确认后向算力节点 {node_id} 发送 Wake-on-LAN Magic Packet。",
+        "status": "pending",
+        "task_type": "operations",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L3",
+        "allowed_operation_level": "L3",
+        "human_approval_required": True,
+        "source_docs": ["projects/aetherforge", "projects/cockpit/src/cockpit/web/api_compute.py"],
+        "entry_gate": ["确认节点身份和离线状态", "确认网络唤醒风险"],
+        "evidence_required": ["节点状态快照", "唤醒命令输出", "唤醒后端口/健康检查", "closeout"],
+        "deliverables": [f"节点 {node_id} 恢复可观测状态"],
+        "test_plan": ["审批后发送唤醒包，并回写节点运行和健康探针结果。"],
+        "tags": ["cockpit-compute", "wakeup", "high-risk", node_id],
+        "priority": "high",
+        "metadata": {
+            "compute_operation": operation,
+            "node_id": node_id,
+            "command": f"python3 -m aetherforge.cli mesh wakeup {node_id}",
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-compute",
+            source_ref=f"cockpit:compute:{operation}:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", task_data["title"]),
+        "node_id": node_id,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")
 async def queue_project_action(project_id: str, action_id: str):
     """登记一个项目命令为 OMO planned task; never execute it in Cockpit."""
