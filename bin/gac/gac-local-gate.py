@@ -82,7 +82,10 @@ DEFAULT_POLICY = {
         # P7x-bus-foundation-rollout follow-up: real cross-process ZMQ e2e.
         # Spawns 2 subprocesses + uses TCP sockets (~2-5s). ci_only=True so
         # pre-commit skips the cost; CI strict runs it.
-        {"id": "bus-e2e-harness", "command": ["bin/ssot/bus-e2e-harness.py", "--count", "30", "--json"], "ci_only": True}
+        {"id": "bus-e2e-harness", "command": ["bin/ssot/bus-e2e-harness.py", "--count", "30", "--json"], "ci_only": True},
+        # Short-term improvement: INDEX 自动更新检查 (CI strict 跑, pre-commit 跳过)
+        # 检测 docs/INDEX-*.md 是否与真实内容漂移
+        {"id": "check-index-drift", "command": ["bin/ssot/check-index-drift.py"], "ci_only": True}
     ]
 }
 
