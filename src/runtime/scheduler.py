@@ -396,10 +396,21 @@ class MatrixScheduler:
             # uptime_seconds: how long the service has been running (stability indicator)
             # last_healthy_seconds: time since last confirmed healthy (staleness indicator)
             running_since = state.setdefault("running_since", {})
+            running_pid = state.setdefault(
+                "running_pid", {}
+            )  # Bug A: 跟踪 pid 治 uptime 虚高
             last_healthy = state.setdefault("last_healthy", {})
             if rt == "running":
-                if svc.name not in running_since:
+                current_pid = result.get("runtime", {}).get("pid")
+                # Bug A 治本: PID 变化(进程重启) → 重置 running_since. 否则 uptime/freshness
+                # 沿用旧进程启动时间永久虚高 (agora-gateway uptime 13天 > 进程实际5天).
+                pid_changed = bool(current_pid) and str(
+                    running_pid.get(svc.name)
+                ) != str(current_pid)
+                if svc.name not in running_since or pid_changed:
                     running_since[svc.name] = current_time
+                    if current_pid:
+                        running_pid[svc.name] = current_pid
                 result["runtime"]["uptime_seconds"] = int(
                     current_time - running_since[svc.name]
                 )
@@ -408,13 +419,16 @@ class MatrixScheduler:
                 if last_healthy_ts:
                     freshness = int(current_time - last_healthy_ts)
                 else:
-                    freshness = int(current_time - running_since.get(svc.name, current_time))
+                    freshness = int(
+                        current_time - running_since.get(svc.name, current_time)
+                    )
                 result["runtime"]["freshness_seconds"] = freshness
                 # Track last healthy time for staleness detection
                 last_healthy[svc.name] = current_time
                 result["runtime"]["last_healthy_seconds"] = 0
             else:
                 running_since.pop(svc.name, None)
+                running_pid.pop(svc.name, None)  # Bug A: 连带清 pid tracking
                 # Report staleness: time since last seen healthy
                 result["runtime"]["last_healthy_seconds"] = int(
                     current_time - last_healthy.get(svc.name, current_time)
@@ -436,6 +450,9 @@ class MatrixScheduler:
         # Save state back
         state["restart_history"] = restart_history
         state["running_since"] = state.get("running_since", {})
+        state["running_pid"] = state.get(
+            "running_pid", {}
+        )  # Bug A: 持久化 pid tracking
         state["last_healthy"] = state.get("last_healthy", {})
         try:
             with open(state_file, "w") as f:

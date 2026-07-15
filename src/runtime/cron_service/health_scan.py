@@ -36,7 +36,7 @@ def health_scan_once(force_write: bool = True) -> dict | None:
     Returns:
         The scan result dict, or None if the scan failed.
     """
-    from runtime.scheduler import MatrixScheduler
+    from runtime.scheduler import MatrixScheduler, OMO_STATE_FILE
 
     sched = MatrixScheduler()
     sched._force_write = force_write  # noqa: SLF001 — Route B contract
@@ -54,6 +54,8 @@ def health_scan_once(force_write: bool = True) -> dict | None:
         )
         # Probe non-HTTP daemons
         _probe_daemons(sched.state)
+        # Bug B 治本: probe 填的 health_check 落盘 (scan_once 已写过无 health_check 快照)
+        _dump_probed_health(sched.state, OMO_STATE_FILE)
         return sched.state
     except Exception:  # noqa: BLE001  # defensive fallback
         logger.exception("Health scan failed")
@@ -91,6 +93,25 @@ def _probe_daemons(state: dict) -> None:
                 )
         except subprocess.TimeoutExpired:
             svc["health_check"] = "stale (probe timeout)"
+
+
+def _dump_probed_health(state: dict, omo_state_file: Path) -> None:
+    """Bug B 治本: 把 _probe_daemons 填的 health_check 落盘到 system_health.yaml.
+
+    scan_once() 在 _probe_daemons 之前已写盘(无 health_check), probe 填完内存后
+    若不重写, health_check 永不落盘 (agora-gateway health_check 缺失→假绿灯根因).
+    """
+    import yaml  # noqa: PLC0415
+
+    try:
+        from runtime.scheduler import validate_runtime_health_snapshot
+
+        validate_runtime_health_snapshot(state)
+        omo_state_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(omo_state_file, "w") as f:
+            yaml.safe_dump(state, f, default_flow_style=False)
+    except Exception:  # noqa: BLE001
+        logger.exception("dump probed health to %s failed", omo_state_file)
 
 
 def should_scan(now: float | None = None) -> bool:
