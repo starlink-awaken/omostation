@@ -5,9 +5,9 @@ phase_status: active
 current_wave: W3
 next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora-gateway /health + 熵清理
 health_score_ref: .omo/state/health.yaml
-health_score: 83
-health_score_source: compass_radar_composite (ISC-2 corrected, scan 3/4 online)
-health_score_generated_at: '2026-07-09T03:59:10Z'
+health_score: 100
+health_score_source: compass_radar_composite
+health_score_generated_at: '2026-07-15T09:23:22Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -209,7 +209,7 @@ debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
 governance_anomaly_score: 100
-service_online_ratio: 0.6
+service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
 governance_feedback_last_run: '2026-07-15T13:11:36.853848+08:00'
