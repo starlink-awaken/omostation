@@ -63,20 +63,31 @@ def find_python_imports(file_path: Path) -> List[str]:
 
 
 def get_project_from_import(import_name: str, project_dirs: Set[str]) -> Optional[str]:
-    """从导入名提取可能的项目名"""
+    """从导入名提取可能的项目名.
+
+    规则 (ADR-0217):
+    - 只匹配**导入前缀** (最长优先), 支持 underscore↔hyphen
+    - **禁止**把子模块名当成项目 (e.g. bus_foundation.observability ≠ observability 项目)
+    """
     parts = import_name.split(".")
-    
-    # 检查是否是项目名前缀
+    if not parts:
+        return None
+
+    def _candidates(token: str) -> List[str]:
+        return [token, token.replace("_", "-"), token.replace("-", "_")]
+
+    # 最长前缀优先: bus_foundation.foo → bus_foundation → bus-foundation
     for i in range(len(parts), 0, -1):
         prefix = ".".join(parts[:i])
-        if prefix in project_dirs:
-            return prefix
-    
-    # 检查是否有常见模式
-    for part in parts:
-        if part in project_dirs:
-            return part
-    
+        for cand in _candidates(prefix):
+            if cand in project_dirs:
+                return cand if cand in project_dirs else cand
+
+    # 仅首段 (包根), 不再扫中间段 — 避免 false positive
+    for cand in _candidates(parts[0]):
+        if cand in project_dirs:
+            return cand
+
     return None
 
 
@@ -164,12 +175,15 @@ class LayerDependencyChecker:
     
     def _is_dependency_allowed(self, from_layer: str, to_layer: str) -> bool:
         """检查依赖是否被允许"""
+        # 同层互调合法 (e.g. X→X bus-foundation 真依赖 observability 时)
+        if from_layer == to_layer:
+            return True
         allowed = self.contract["dependency_rules"]["allowed_directions"]
-        
+
         for rule in allowed:
             if from_layer in rule["from"] and to_layer in rule["to"]:
                 return True
-        
+
         return False
     
     def check_project(self, project_path: Path) -> List[DependencyViolation]:
