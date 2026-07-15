@@ -180,6 +180,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0201 | Doctor-cron 状态 API + path-acl 连续 warn 告警 | ACCEPTED | 2026-07-15 | governance-team | 0201-doctor-cron-status-api-alert.md |
 | 0202 | 假绿灯防线三件套 (非空守卫/迁移保内容/并发验证纪律) | ACCEPTED | 2026-07-15 | governance-team | 0202-fake-green-prevention.md |
 | 0203 | 需求迭代强制走 Agent Workflow | ACCEPTED | 2026-07-15 | governance-team | 0203-requirement-iteration-workflow-mandatory.md |
+| 0204 | ADR-0203 可执行闸门 + pre-push 路径 + worktree/ADR 占号 | ACCEPTED | 2026-07-15 | governance-team | 0204-requirement-iteration-enforcement.md |
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |

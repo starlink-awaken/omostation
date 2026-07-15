@@ -92,12 +92,16 @@ silent_workflow_policy:
 requirement_iteration_policy:
   mode: required
   adr: ADR-0203
+  enforcement: ADR-0204
   description: >
     All requirement iterations (feature, bugfix, ops landing, governance/SSOT/ADR
     changes, submodule pointer closeout tied to delivery) MUST execute via
     bin/agent-workflow.py: bootstrap → start → claim → verify → closeout.
     Prompt memory alone is non-compliant. claim_policy tiers still enforce path claims;
     this policy is the agent-facing mandatory rule for starting a run before edits.
+    Executable gate (ADR-0204): staged in-scope files without an active run → compliance halt.
+    Unstaged dirty in-scope files → warn only (multi-agent worktree safe).
+    Bypass: AGCP_REQUIREMENT_ITERATION_GATE=0
   required_lifecycle:
     - bootstrap
     - start
@@ -110,6 +114,26 @@ requirement_iteration_policy:
     - ops_landing_with_repo_diff
     - delivery_closeout_with_product_or_governance_change
     - submodule_pointer_closeout
+  in_scope_paths:
+    - "projects/**"
+    - ".omo/_truth/**"
+    - ".omo/standards/**"
+    - ".omo/_knowledge/decisions/**"
+    - ".omo/_knowledge/patterns/**"
+    - ".agents/**"
+    - "bin/**"
+    - "docs/**"
+    - "tests/**"
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "ARCHITECTURE.md"
+    - "README.md"
+  exclude_paths:
+    - ".omo/state/**"
+    - ".omo/_delivery/**"
+    - ".omo/_control/**"
+    - "runtime/**"
+    - "**/__pycache__/**"
   exempt_classes:
     - pure_readonly_qa_or_explore
     - observer_audit_readonly

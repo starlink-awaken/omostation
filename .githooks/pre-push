@@ -56,9 +56,23 @@ EOF
 }
 
 # ── 治本 D: sync 子模块, 防 gitlink 悬空 ─────────────────────────
+# SSOT paths live under bin/ssot/ (bin rationalization). Prefer ssot/,
+# fall back to bin/ wrappers for older checkouts.
 # sync 子模块, 结果显示到 stderr; 失败即阻断 push.
-"$ROOT/bin/sync-submodules-push.sh" 2>&1 | sed 's/^/[pre-push] /' >&2
-python3 "$ROOT/bin/submodule-reachability-gate.py" --source head --fetch 2>&1 | sed 's/^/[reachability] /' >&2
+SYNC_SCRIPT="$ROOT/bin/ssot/sync-submodules-push.sh"
+if [ ! -f "$SYNC_SCRIPT" ]; then
+  SYNC_SCRIPT="$ROOT/bin/sync-submodules-push.sh"
+fi
+REACH_SCRIPT="$ROOT/bin/ssot/submodule-reachability-gate.py"
+if [ ! -f "$REACH_SCRIPT" ]; then
+  REACH_SCRIPT="$ROOT/bin/submodule-reachability-gate.py"
+fi
+if [ ! -f "$SYNC_SCRIPT" ]; then
+  echo "[pre-push] ❌ missing sync-submodules-push.sh (expected bin/ssot/ or bin/)" >&2
+  exit 1
+fi
+"$SYNC_SCRIPT" 2>&1 | sed 's/^/[pre-push] /' >&2
+python3 "$REACH_SCRIPT" --source head --fetch 2>&1 | sed 's/^/[reachability] /' >&2
 
 # ── ci-local-fast: 本地 CI 预检 (~5s) ────────────────────────────
 # GaC gate + ruff + YAML 语法. 拦 90% CI 失败, 省等 CI 时间.
