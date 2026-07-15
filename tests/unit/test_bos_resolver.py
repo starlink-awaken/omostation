@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import types
 
 import pytest
 
@@ -97,6 +98,32 @@ class TestParseBosUri:
 
 # ── 2. internal transport (omo) ─────────────────────
 class TestInternalTransport:
+    def test_internal_async_handler_is_awaited(self, monkeypatch):
+        """internal resolver must unwrap an async handler returned by the thread wrapper."""
+        from agora.mcp.resolver import api
+
+        async def handler(*_args, **_kwargs):
+            return {"answer": "async-ok"}
+
+        module = types.ModuleType("test_async_bos_handler")
+        module.handler = handler
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+        service = BosService(
+            uri="bos://memory/test/async",
+            domain="memory",
+            package="agora",
+            action="async",
+            transport="internal",
+            module_path=module.__name__,
+            func_name="handler",
+        )
+        monkeypatch.setattr(api, "get_service", lambda _uri: service)
+
+        result = asyncio.run(api.resolve_bos_uri(service.uri))
+
+        assert result["status"] == "ok"
+        assert result["result"] == {"answer": "async-ok"}
+
     def test_resolve_omo_audit_via_internal(self):
         """bos://governance/omo/audit 走 internal (同进程 importlib)."""
         result = asyncio.run(resolve_bos_uri("bos://governance/omo/audit"))
