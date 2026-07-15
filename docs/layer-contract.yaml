@@ -1,0 +1,103 @@
+# docs/layer-contract.yaml — 分层依赖契约
+#
+# 本文件定义 eCOS v6 的分层依赖规则，用于 bin/layer-dependency-check.py
+# 验证代码是否遵守架构约束。
+#
+# 依赖方向：entry surfaces -> routing mesh -> engines/runtime/protocol -> governed state and evidence
+
+layers:
+  L0:
+    name: "协议层"
+    projects: ["ecos", "mesh-router"]
+    description: "SSB 签名链 + MOF 元模型 + L0 约束"
+
+  L1:
+    name: "运行时层"
+    projects: ["runtime"]
+    description: "Matrix/Scheduler/KEI 沙箱"
+
+  L2:
+    name: "引擎层"
+    projects: ["kairon", "gbrain", "omo", "metaos", "omo-debt", "family-hub"]
+    description: "知识引擎、治理中枢、知识数据库等"
+
+  L3:
+    name: "入口层"
+    projects: ["cockpit", "cockpit-ui"]
+    description: "统一人类 CLI/Web 入口"
+
+  L4:
+    name: "自我层"
+    projects: ["l4-kernel"]
+    description: "自我层管理面 · 域统一注册"
+
+  I0:
+    name: "织层"
+    projects: ["agora"]
+    description: "MCP Hub · BOS URI 路由"
+    special: true  # 可以调用任何层
+
+  M0:
+    name: "横切框架"
+    projects: ["model-driven"]
+    description: "生命周期横切框架"
+    special: true  # 可以调用 L0/L1
+
+  X:
+    name: "横切扩展"
+    projects: ["aetherforge", "c2g", "bus-foundation", "observability"]
+    description: "能力与算力框架、战略需求引擎、总线等"
+    special: true  # 可以调用任何层
+
+# 允许的依赖方向
+dependency_rules:
+  allowed_directions:
+    # L3 入口层：可调用引擎层、运行时层、协议层、织层和扩展层
+    - from: ["L3"]
+      to: ["L2", "L1", "L0", "I0", "X"]
+    # L2 引擎层：可调用运行时层、协议层
+    - from: ["L2"]
+      to: ["L1", "L0"]
+    # L1 运行时层：只能调用协议层
+    - from: ["L1"]
+      to: ["L0"]
+    # I0 织层：可调用所有层（路由枢纽）
+    - from: ["I0"]
+      to: ["L0", "L1", "L2", "L3", "L4", "M0", "X"]
+    # M0 横切框架：可调用协议层和运行时层
+    - from: ["M0"]
+      to: ["L0", "L1"]
+    # X 扩展层：可调用所有层
+    - from: ["X"]
+      to: ["L0", "L1", "L2", "L3", "L4", "I0", "M0"]
+    # L4 自我层：可调用引擎层、运行时层、协议层、织层和扩展层
+    - from: ["L4"]
+      to: ["L2", "L1", "L0", "I0", "X"]
+
+  # 禁止的依赖（用于明确禁止某些模式）
+  forbidden_patterns:
+    - from: ["L0"]
+      to: ["L1", "L2", "L3", "L4", "I0", "M0", "X"]
+    - from: ["L1"]
+      to: ["L2", "L3", "L4", "I0", "M0", "X"]
+    - from: ["L2"]
+      to: ["L3", "L4", "I0", "M0", "X"]
+    - from: ["L3"]
+      to: ["L4", "M0"]
+    - from: ["L4"]
+      to: ["M0"]
+
+# 特殊例外（需要同时有 ADR 记录）
+exceptions:
+  # L0 → L2 例外：ecos 桥接接口，有明确的架构原因
+  - project: "ecos"
+    depends_on: "omo"
+    reason: "ADR-0xxx: L0→L2 OMO 桥接契约，用于 MOF 工具需要调用 OMO 治理"
+    files:
+      - "projects/ecos/src/ecos/ssot/tools/mof_contract_lint.py"
+      - "projects/ecos/src/ecos/ssot/tools/omo_bridge_interface.py"
+  - project: "ecos"
+    depends_on: "metaos"
+    reason: "ADR-0181 Phase 2: MetaOS workflow backend adapter，用于执行 M1 workflow"
+    files:
+      - "projects/ecos/src/ecos/workflow/backends/metaos.py"
