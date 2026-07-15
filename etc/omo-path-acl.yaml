@@ -1,0 +1,53 @@
+# Scheme C Phase 5c L1 — path ACL doctor profile (ADR-0186 / ADR-0187)
+# Advisory only: omo lint path-acl never mutates host ACL.
+version: 1
+surfaces:
+  - id: omo-state
+    path: ".omo/state"
+    expect: broker-write
+    max_mode: "0o775"      # warn if group/other write beyond this when strict
+    forbid_world_write: true
+    must_exist: false      # empty worktrees / fresh clone OK
+  - id: omo-control
+    path: ".omo/_control"
+    expect: broker-write
+    forbid_world_write: true
+    must_exist: false
+  - id: omo-delivery
+    path: ".omo/_delivery"
+    expect: broker-or-workflow
+    forbid_world_write: true
+    must_exist: false
+  - id: omo-truth
+    path: ".omo/_truth"
+    expect: git-owned
+    forbid_world_write: true
+    must_exist: false
+  - id: spaces
+    path: "spaces"
+    expect: tenant-broker
+    forbid_world_write: true
+    must_exist: false
+
+# When true, world-writable findings exit 1; otherwise warn-only (CI default soft).
+strict: false
+
+# Named ACE plan (ADR-0194/0196) — used only by `omo acl plan --acl` (dry-run).
+# $BROKER_USER / $OMO_WRITERS expanded in generated script.
+acl:
+  enabled: false
+  group: omo-writers
+  broker_user: ""   # empty → $USER at plan time
+  entries:
+    - path: .omo/state
+      users: ["$BROKER_USER"]
+      groups: []
+      mask: rwx
+    - path: .omo/_control
+      users: ["$BROKER_USER"]
+      groups: []
+      mask: rwx
+    - path: .omo/_delivery
+      users: ["$BROKER_USER"]
+      groups: ["$OMO_WRITERS"]
+      mask: rwx
