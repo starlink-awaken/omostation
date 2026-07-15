@@ -13,7 +13,11 @@ version: 1
 default_backend: local
 default_profile: default
 strict: false
-docker_image: python:3.13-slim
+# Pinned multi-arch index digest (2026-07-15 host pull). Override:
+#   AGORA_SPAWN_DOCKER_IMAGE=python:3.13-slim  # floating (not for prod)
+#   AGORA_SPAWN_DOCKER_IMAGE=python:3.13-slim@sha256:...
+docker_image: python:3.13-slim@sha256:bffeb7bd6a85767587059c6ba23e1e9122078e3aa3fa836099171b9bb5a9bb00
+docker_image_note: "pinned 2026-07-15; refresh when upgrading Python base" 
 docker_bin: docker
 
 profiles:
