@@ -705,6 +705,87 @@ async def queue_metaos_workflow_followup(workflow_id: str, request: Request):
     }
 
 
+@router.post("/api/cockpit/proposals/{proposal_id}/queue")
+async def queue_hitl_proposal_task(proposal_id: str):
+    """将 C2G HITL 提案承接为任务，供审批、执行和复盘共用同一条证据链。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.:-]+", proposal_id):
+        raise HTTPException(status_code=400, detail="Invalid proposal id")
+
+    from cockpit.adapters.omo import list_hitl_proposals
+
+    proposal = next(
+        (item for item in list_hitl_proposals(WORKSPACE_DIR / ".omo") if item.get("id") == proposal_id),
+        None,
+    )
+    if not isinstance(proposal, dict):
+        raise HTTPException(status_code=404, detail="Proposal not found")
+
+    task_id = f"cockpit-proposal-{proposal_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Proposal task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    proposal_type = str(proposal.get("type") or "governance").strip()
+    debt_id = str(proposal.get("debt_id") or "unknown").strip()
+    task_data = {
+        "id": task_id,
+        "title": f"处理 C2G 提案：{proposal_type} · {debt_id}",
+        "description": str(proposal.get("description") or f"围绕技术债务 {debt_id} 评估并处理提案 {proposal_type}。"),
+        "status": "pending",
+        "task_type": "governance",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": proposal_id,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L3",
+        "allowed_operation_level": "L3",
+        "human_approval_required": True,
+        "source_docs": [f"cockpit:proposal:{proposal_id}"],
+        "entry_gate": ["确认提案目标、作用域和影响债务", "确认审批人与执行边界"],
+        "evidence_required": ["提案审批结果", "实际变更或拒绝原因", "验证结果", "proposal closeout"],
+        "deliverables": [f"完成提案 {proposal_id} 的审批决策、执行/拒绝记录和证据收口。"],
+        "test_plan": ["审批前复核影响面，审批后记录执行结果或拒绝原因，并回写 closeout。"],
+        "priority": "high",
+        "tags": ["cockpit-proposal", "hitl", proposal_type, debt_id],
+        "metadata": {
+            "created_via": "cockpit-c2g-proposal",
+            "proposal_id": proposal_id,
+            "proposal_type": proposal_type,
+            "debt_id": debt_id,
+            "target_model": proposal.get("target_model"),
+            "scope": proposal.get("scope"),
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-c2g-proposal",
+            source_ref=f"cockpit:proposal:{proposal_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "executes": False,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/engine/queue")
 async def queue_engine_execution(request: Request):
     """Register an engine or pipeline request as an OMO planned task."""

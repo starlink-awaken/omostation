@@ -581,6 +581,37 @@ def test_queue_metaos_workflow_followup_carries_runtime_status(monkeypatch):
     assert calls[0]["source_ref"] == "cockpit:metaos-workflow:wf-approval-42"
 
 
+def test_queue_hitl_proposal_requires_approval_and_preserves_proposal_context(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "cockpit.adapters.omo.list_hitl_proposals",
+        lambda _omo_root: [{
+            "id": "proposal-42",
+            "type": "model_swap",
+            "debt_id": "debt-auth",
+            "target_model": "safe-model",
+            "scope": "family-hub",
+            "description": "切换到受控模型",
+        }],
+    )
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post("/api/cockpit/proposals/proposal-42/queue")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "cockpit-proposal-proposal-42"
+    task_data = calls[0]["task_data"]
+    assert task_data["risk_level"] == "L3"
+    assert task_data["human_approval_required"] is True
+    assert task_data["approval_ref"] == "proposal-42"
+    assert task_data["metadata"]["target_model"] == "safe-model"
+    assert calls[0]["source_ref"] == "cockpit:proposal:proposal-42"
+
+
 def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
     system_map = {
         "projects": [
