@@ -1,8 +1,10 @@
 # Wave 2: C2G + OMO 迭代路线图 (草案)
 
 > **Phase A accepted**: [ADR-0183](../0183-wave2-c2g-omo-phase-a.md)
+> **Phase B accepted**: [ADR-0185](../0185-wave2-phase-b-predictive-viz.md)
+>   (stdlib EMA+linear forecast + risk heatmap JSON/MD; ARIMA/Cockpit UI deferred)
 >
-> Remaining phases (B/C) still draft until separate ADRs.
+> Phase C remains draft until a separate ADR.
 
 ## 目标
 
@@ -19,6 +21,17 @@
 
 ## 时间线
 
-- Phase A (数据闭环): 2 周
-- Phase B (预测增强 + 可视化): 2 周
-- Phase C (自动联动 + MOF 深化): 1 周
+- Phase A (数据闭环): ✅ ADR-0183
+- Phase B (预测增强 + 可视化导出): ✅ ADR-0185
+  - CLI: `python -m c2g.predictive_report`
+  - Heavy TS models / Cockpit UI: Phase B+ backlog
+- Phase C (自动联动 + MOF 深化): 1 周 (draft)
+
+## Phase B 命令
+
+```bash
+cd projects/c2g
+uv run pytest tests/test_predictive.py -q
+uv run python -m c2g.predictive_report --data-dir runtime/c2g/outcomes
+uv run python -m c2g.predictive_report --markdown
+```
