@@ -1028,6 +1028,9 @@ async def queue_project_triage_command(project_id: str, command_id: str):
         )
 
     risk = str(command.get("risk") or "low")
+    probe_match = re.search(r"for port in ([^;]+);", str(command.get("value") or ""))
+    probe_ports = [int(value) for value in (probe_match.group(1).split() if probe_match else []) if value.isdigit()]
+    controlled_runtime_probe = command_id == "runtime-check-ports" and bool(probe_ports)
     controlled_verification = command_id == "verification-rerun" and str(command.get("value") or "").startswith('cd "')
     task_data = {
         "id": task_id,
@@ -1055,11 +1058,18 @@ async def queue_project_triage_command(project_id: str, command_id: str):
         "metadata": {
             "project_id": project_id,
             "command_id": command_id,
-            "action_id": "copy-verify-command" if controlled_verification else None,
+            "action_id": (
+                "copy-verify-command"
+                if controlled_verification
+                else "runtime-check-ports"
+                if controlled_runtime_probe
+                else None
+            ),
             "command": command.get("value"),
+            "probe_ports": probe_ports,
             "risk": risk,
             "cockpit_only": True,
-            "controlled_execution": controlled_verification,
+            "controlled_execution": controlled_verification or controlled_runtime_probe,
         },
     }
 

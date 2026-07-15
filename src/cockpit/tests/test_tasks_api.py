@@ -444,6 +444,43 @@ def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
     assert calls[0]["source_ref"] == "cockpit:project-triage:demo:verification-rerun"
 
 
+def test_queue_runtime_port_probe_exposes_structured_controlled_execution(monkeypatch):
+    system_map = {
+        "projects": [
+            {
+                "id": "demo",
+                "name": "Demo",
+                "triage_commands": [
+                    {
+                        "id": "runtime-check-ports",
+                        "label": "检查端口",
+                        "kind": "copy_command",
+                        "value": "for port in 7437 7438; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done",
+                        "enabled": True,
+                        "risk": "low",
+                        "reason": "补运行探针证据",
+                    }
+                ],
+            }
+        ]
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post("/api/cockpit/projects/demo/triage/runtime-check-ports/queue")
+
+    assert response.status_code == 200
+    metadata = calls[0]["task_data"]["metadata"]
+    assert metadata["controlled_execution"] is True
+    assert metadata["action_id"] == "runtime-check-ports"
+    assert metadata["probe_ports"] == [7437, 7438]
+
+
 def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
     system_map = {
         "projects": [
