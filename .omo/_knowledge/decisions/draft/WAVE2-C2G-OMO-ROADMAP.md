@@ -56,4 +56,6 @@ uv run --directory projects/c2g python -m c2g.dashboard_export --pretty
 cockpit wave2 dashboard
 cockpit wave2 proposals
 cockpit wave2 predictive
+# UI (ADR-0191):
+# open Cockpit → 系统治理 → Wave2 预测面板
 ```
