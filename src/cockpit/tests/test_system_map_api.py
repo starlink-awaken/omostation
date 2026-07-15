@@ -441,3 +441,39 @@ def test_latest_project_verification_falls_back_to_documented_command(tmp_path, 
     assert verification["status"] == "documented"
     assert verification["source"] == "project_commands"
     assert "uv run pytest -q" in (verification["command"] or "")
+
+
+def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "projects" / "cockpit"
+    project_path.mkdir(parents=True, exist_ok=True)
+    runs_dir = workspace_root / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    (runs_dir / "run.yaml").write_text(
+        "\n".join(
+            [
+                "run_id: run-blocked",
+                "status: blocked",
+                "updated_at: '2026-07-15T02:01:27Z'",
+                "claims:",
+                "  - paths:",
+                "      - projects/cockpit",
+                "evidence:",
+                "  - 'agent-workflow verify: 1 checks ok=False'",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+
+    verification = api_system_map._latest_project_verification("cockpit", project_path, {})
+
+    assert verification == {
+        "status": "failed",
+        "run_id": "run-blocked",
+        "ts": "2026-07-15T02:01:27Z",
+        "checks": 1,
+        "command": None,
+        "source": "agent_workflow_run",
+    }

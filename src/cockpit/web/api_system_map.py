@@ -1629,6 +1629,44 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
                 "source": "agent_workflow",
             }
 
+    # Older or interrupted runs may have a durable YAML run record but no
+    # events.jsonl entry. Surface that evidence instead of silently downgrading
+    # the project to "documented".
+    runs_dir = WORKSPACE_ROOT / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    try:
+        run_paths = sorted(runs_dir.glob("*.yaml"), key=lambda path: path.stat().st_mtime, reverse=True)
+    except OSError:
+        run_paths = []
+    for run_path in run_paths:
+        try:
+            run = yaml.safe_load(run_path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        surfaces = {
+            str(path)
+            for claim in run.get("claims") or []
+            for path in claim.get("paths") or []
+        }
+        if not any(path == project_prefix or path.startswith(f"{project_prefix}/") for path in surfaces):
+            continue
+        run_status = str(run.get("status", "")).lower()
+        if run_status in {"completed", "complete", "closed", "succeeded", "success"}:
+            status = "verified"
+        elif run_status in {"blocked", "failed", "error"}:
+            status = "failed"
+        else:
+            continue
+        evidence = [str(item) for item in run.get("evidence") or []]
+        checks = sum(1 for item in evidence if "agent-workflow verify:" in item)
+        return {
+            "status": status,
+            "run_id": run.get("run_id") or run_path.stem,
+            "ts": run.get("updated_at") or run.get("closed_at") or run.get("created_at"),
+            "checks": checks,
+            "command": None,
+            "source": "agent_workflow_run",
+        }
+
     verify_command = _project_verify_command(
         project_path,
         list(operational.get("commands") or []),
