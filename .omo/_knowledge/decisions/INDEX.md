@@ -169,6 +169,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0190 | Wave2 dashboard JSON v1 + cockpit entry | ACCEPTED | 2026-07-15 | governance-team | 0190-wave2-dashboard-json-contract.md |
 | 0191 | Cockpit UI Wave2 dashboard 消费 | ACCEPTED | 2026-07-15 | governance-team | 0191-wave2-cockpit-ui-dashboard.md |
 | 0192 | Wave2 提案→TaskCenter 闭环 (dry-run plan) | ACCEPTED | 2026-07-15 | governance-team | 0192-wave2-proposal-taskcenter-handoff.md |
+| 0193 | Wave2 demo OutcomeTracker seed | ACCEPTED | 2026-07-15 | governance-team | 0193-wave2-demo-outcome-seed.md |
+| 0194 | Scheme C 5c setfacl 细粒度设计 (design-only) | ACCEPTED | 2026-07-15 | governance-team | 0194-scheme-c-5c-setfacl-design.md |
 | 0189 | Scheme C 5c L2 omo acl plan/apply | ACCEPTED | 2026-07-15 | governance-team | 0189-scheme-c-5c-l2-acl-plan-apply.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |

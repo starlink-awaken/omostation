@@ -59,3 +59,11 @@ cockpit wave2 predictive
 # UI (ADR-0191):
 # open Cockpit → 系统治理 → Wave2 预测面板
 ```
+
+
+## Demo seed (ADR-0193)
+
+```bash
+uv run --directory projects/c2g python -m c2g.demo_seed --data-dir runtime/c2g/outcomes --reset
+uv run --directory projects/c2g python -m c2g.dashboard_export --data-dir runtime/c2g/outcomes --pretty | head
+```
