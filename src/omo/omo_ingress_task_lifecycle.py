@@ -489,7 +489,7 @@ def execute_controlled_task(
     except ValueError as exc:
         raise ValueError("Controlled verification working directory must be inside Workspace") from exc
     command_body = match.group(2).strip()
-    if any(token in command_body for token in (";", "|", ">", "<", "$(", "`", "&&", "||")):
+    if any(token in command_body for token in (";", "|", ">", "<", "$(", "`", "&&", "||", "\n", "\r")):
         raise ValueError("Controlled verification command contains unsupported shell composition")
 
     timestamp = _utc_now()
