@@ -375,6 +375,8 @@ async def resolve_bos_uri(
             raw = await loop.run_in_executor(
                 None, lambda: _run_sync_with_timeout(_invoke, timeout=10.0)
             )
+            if inspect.isawaitable(raw):
+                raw = await raw
             result = {"status": "ok", "result": raw}
         except _asyncio.TimeoutError:
             result = {
