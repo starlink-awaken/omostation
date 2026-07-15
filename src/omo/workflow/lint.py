@@ -256,6 +256,33 @@ def lint_registry(
             for index, item in enumerate(entries):
                 errors.extend(validate_command(workflow_id, phase, index, item))
 
+    req_iter = registry.get("requirement_iteration_policy")
+    if req_iter is not None:
+        if not isinstance(req_iter, dict):
+            errors.append("requirement_iteration_policy must be a mapping")
+        else:
+            req_mode = str(req_iter.get("mode") or "off")
+            if req_mode not in {"off", "advisory", "required"}:
+                errors.append(
+                    "requirement_iteration_policy.mode must be off/advisory/required"
+                )
+            for list_field in (
+                "required_lifecycle",
+                "in_scope",
+                "exempt_classes",
+                "exempt_workflows",
+                "in_scope_paths",
+                "exclude_paths",
+            ):
+                value = req_iter.get(list_field)
+                if value is not None and (
+                    not isinstance(value, list)
+                    or not all(isinstance(item, str) for item in value)
+                ):
+                    errors.append(
+                        f"requirement_iteration_policy.{list_field} must be a list of strings"
+                    )
+
     claim_policy_payload = registry.get("claim_policy")
     if claim_policy_payload is not None:
         if not isinstance(claim_policy_payload, dict):
