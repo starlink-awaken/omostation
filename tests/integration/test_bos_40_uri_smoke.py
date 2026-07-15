@@ -126,8 +126,8 @@ def test_smoke_25_resolved_15_gap_single_loop():
         f"Expected >=15 resolved after ADR-0181 filter, got {resolved}: "
         f"{[(u, s) for u, s in results if s != 'resolved']}"
     )
-    assert gap >= 15, (
-        f"Expected >=15 gap (unimplemented/missing), got {gap}: "
+    assert gap >= 3, (
+        f"Expected >=3 gap (P43 14 服务 UNIMPLEMENTED→POC 后余 iris 3), got {gap}: "
         f"{[(u, s) for u, s in results if s == 'gap']}"
     )
 
