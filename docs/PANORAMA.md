@@ -221,6 +221,8 @@ script / wrapper / cron
 | runtime MCP | stdio | 入口收敛 Phase 2 | agora MCP `bos://runtime/health` |
 | agora HTTP | — | 从未独立存在 | cockpit HTTP |
 
+**CLI 收敛（Phase 3）**: `cockpit` 作为 L3 唯一人类入口，已通过委派/聚合/能力化三种模式收敛 `agora`、`model-driven`、`gbrain`、`kairon`、`bus`、`observe`、`family-hub`、`mesh` 以及 `bos capability`。
+
 ---
 
 ## 五、集成验证

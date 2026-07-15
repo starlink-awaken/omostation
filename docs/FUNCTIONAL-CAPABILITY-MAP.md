@@ -24,6 +24,8 @@
 | BOS 声明式服务 | 见 `project-registry.yaml: bos.service_count` |
 | L4 管理域 | 见 `project-registry.yaml: l4-kernel.domains` |
 
+> L3 统一入口：`cockpit` 已收敛 `agora`、`model-driven`、`gbrain`、`kairon`、`bus`、`observe`、`family-hub`、`mesh`、`bos capability` 等项目/能力入口，详情见 `docs/project-registry.yaml: cockpit.coverage`。
+
 ---
 
 ## 1. 知识摄取与持久化 (Knowledge Ingestion)

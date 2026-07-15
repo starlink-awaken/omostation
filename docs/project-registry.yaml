@@ -144,6 +144,17 @@ projects:
     build_backend: "hatchling"
     version: "0.4.0"
     role: "统一入口 (CLI + MCP + Web)"
+    cli_entry: "cockpit"
+    coverage:
+      - "agora (BOS 网关)"
+      - "model-driven (生命周期 / OKR)"
+      - "gbrain (Postgres 知识库)"
+      - "kairon (知识引擎 monorepo)"
+      - "bus (Omni-Bus 三平面)"
+      - "observe (Langfuse 可观测性)"
+      - "family-hub (家庭数字枢纽)"
+      - "mesh (算力网格路由)"
+      - "bos capability (toolbox 外部能力)"
 
   l4-kernel:
     layer: "L4"
