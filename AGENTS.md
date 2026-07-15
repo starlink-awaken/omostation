@@ -30,13 +30,15 @@ Project-specific instructions override this guide only within that project and o
 | `bootstrap → start --profile → claim → verify → closeout` | 「先改完再补 workflow」 |
 | 用 `list` 选对 workflow（勿默认错位 `project-code-change`） | 把 `observer-audit` / 只读探索当成可写豁免 |
 
-**窄豁免**：纯只读问答；`observer-audit`；用户书面明确 waiver（须写入 closeout 证据）。
+**窄豁免**：纯只读问答；`observer-audit`；用户书面明确 waiver（须写入 closeout 证据，模板见 [`docs/operations/workflow-waiver-template.md`](docs/operations/workflow-waiver-template.md)）。
 
-**可执行闸门（ADR-0204）**：`compliance` / `status` 对 **已 stage** 的需求面路径检查是否存在 active run；无 run → **halt**（exit 1）。仅 unstaged dirty → warn。旁路：`AGCP_REQUIREMENT_ITERATION_GATE=0`。
+**可执行闸门（ADR-0204）**：`compliance` / `status` 对 **已 stage** 的需求面路径检查是否存在 active run；无 run → **halt**（exit 1）。仅 unstaged dirty → warn。旁路：`AGCP_REQUIREMENT_ITERATION_GATE=0`（须用户授权并写入 waiver 证据）。
 
 ```bash
 uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
 uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
+# 有 diff 时先 suggest，避免错位 workflow（P74）
+uv run --with "pyyaml" python "bin/agent-workflow.py" suggest --from-diff --profile <agent-profile>
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
   --profile <agent-profile> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
@@ -45,7 +47,12 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-dif
 uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
 # ADR 占号（防撞车）:
 python3 bin/adr/next-adr-id.py --session <session> --claim
+# 栈落地后清 worktree:
+bash bin/gac/gac-worktree-prune.sh          # dry-run
+# bash bin/gac/gac-worktree-prune.sh --apply
 ```
+
+Worktree 卫生说明：[`docs/operations/worktree-hygiene.md`](docs/operations/worktree-hygiene.md)。
 
 ## 1.5 P74 Solidification Quick Reference (ADR-0130)
 

@@ -26,11 +26,14 @@ Skipping workflow and "fixing up later" is non-compliant for every agent runtime
 
 Run the bootstrap before making changes. It includes lint, workflow/profile summaries,
 integration contracts, adapter contracts, health summaries, and next commands.
-Then **start + claim** before the first write of a requirement iteration.
+Then **suggest → start + claim** before the first write of a requirement iteration.
 
 ```bash
 uv run --with pyyaml python bin/agent-workflow.py bootstrap
 uv run --with pyyaml python bin/agent-workflow.py status --json
+# Prefer the right workflow (avoid wrong project-code-change default):
+uv run --with pyyaml python bin/agent-workflow.py suggest --from-diff --profile <agent-profile>
+# If no diff yet, use list + the routing table below.
 uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
   --profile <agent-profile> --objective "<summary>"
 uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>
@@ -38,12 +41,17 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>
 uv run --project projects/cockpit cockpit agent
 ```
 
+**User waiver** (skip workflow): record evidence with
+[`docs/operations/workflow-waiver-template.md`](../../../docs/operations/workflow-waiver-template.md)
+— never invent a waiver.
+
 ## Choose A Workflow
 
 List the available workflows:
 
 ```bash
 uv run --with pyyaml python bin/agent-workflow.py list
+uv run --with pyyaml python bin/agent-workflow.py suggest --from-diff --profile governance-agent
 uv run --with pyyaml python bin/agent-workflow.py agents
 uv run --with pyyaml python bin/agent-workflow.py integrations
 uv run --with pyyaml python bin/agent-workflow.py adapters

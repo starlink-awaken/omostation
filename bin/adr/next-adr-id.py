@@ -18,8 +18,11 @@ import json
 import re
 import subprocess
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
+
+# Python 3.9 compatible (macOS system python); 3.11+ has datetime.UTC
+UTC = timezone.utc
 
 ROOT = Path(__file__).resolve().parents[2]
 DECISIONS = ROOT / ".omo" / "_knowledge" / "decisions"

@@ -65,12 +65,14 @@ SSOT: `agent-workflows.yaml::requirement_iteration_policy`（`mode: required`）
 细节: [`AGENTS.md` §1.6](AGENTS.md) · [`.omo/standards/agent-workflow-contract.md` §3.1](.omo/standards/agent-workflow-contract.md) · [ADR-0203](.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md)。
 
 ```bash
+# 有 diff 时先选对 workflow（防错位 project-code-change）
+uv run --with "pyyaml" python "bin/agent-workflow.py" suggest --from-diff --profile <agent-profile>
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
   --profile <agent-profile> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 ```
 
-豁免仅限：纯只读、`observer-audit`、用户书面 waiver。跳过 workflow 直接交付 = 违规。
+豁免仅限：纯只读、`observer-audit`、用户书面 waiver（模板 [`docs/operations/workflow-waiver-template.md`](docs/operations/workflow-waiver-template.md)）。跳过 workflow 直接交付 = 违规。
 
 ## 1.5 P74 Workflow Solidification Check (ADR-0130)
 
