@@ -836,6 +836,7 @@ def test_execute_controlled_task_runs_project_verification_and_records_log(
         task_id="TASK-VERIFY-1",
         actor="projects/omo/tests",
         timeout_seconds=1200,
+        command_override=f'cd "{project_path}" && printf override',
         source_ref="tests:execute:TASK-VERIFY-1",
     )
 
@@ -847,6 +848,7 @@ def test_execute_controlled_task_runs_project_verification_and_records_log(
     assert (tmp_path / artifact["log_ref"]).read_text(encoding="utf-8") == "hello"
     payload = _load_yaml(task_path)
     assert payload["metadata"]["execution_audit"]["exit_code"] == 0
+    assert payload["metadata"]["execution_audit"]["command"] == f'cd "{project_path}" && printf override'
     assert artifact["execution_ref"] in payload["handoff_refs"]
 
 

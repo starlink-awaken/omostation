@@ -365,6 +365,7 @@ def record_task_execution(
     log_ref: str,
     closeout_ref: str = "",
     source_ref: str = "",
+    allow_command_override: bool = False,
     now: str | None = None,
 ) -> dict[str, Any]:
     """Record a human/worker execution result without executing a command."""
@@ -394,8 +395,10 @@ def record_task_execution(
         if not isinstance(metadata, dict):
             raise ValueError("task metadata must be a mapping")
         expected_command = str(metadata.get("command") or command).strip()
-        if expected_command != command.strip():
+        if not allow_command_override and expected_command != command.strip():
             raise ValueError("execution command does not match the task contract")
+        if allow_command_override:
+            expected_command = command.strip()
         execution = {
             "command": expected_command,
             "exit_code": exit_code,
@@ -475,6 +478,7 @@ def execute_controlled_task(
     actor: str,
     timeout_seconds: int = 120,
     source_ref: str = "",
+    command_override: str | None = None,
 ) -> dict[str, Any]:
     """Run a low-risk project verification and record its result through ingress."""
     max_timeout_seconds = 900
@@ -489,7 +493,7 @@ def execute_controlled_task(
     metadata = payload.get("metadata") or {}
     if metadata.get("controlled_execution") is not True:
         raise ValueError("Task is not eligible for controlled execution")
-    command = str(metadata.get("command") or "").strip()
+    command = str(command_override or metadata.get("command") or "").strip()
     if not command:
         raise ValueError("Task has no execution command")
     action_id = str(metadata.get("action_id") or "")
@@ -588,6 +592,7 @@ def execute_controlled_task(
         exit_code=exit_code,
         log_ref=log_ref,
         source_ref=source_ref,
+        allow_command_override=command_override is not None,
         now=timestamp,
     )
     return {
