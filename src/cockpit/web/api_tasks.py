@@ -1151,7 +1151,7 @@ async def queue_project_action(project_id: str, action_id: str):
         "action_id": action_id,
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
-        "executes": False,
+        "executes": action_id == "copy-verify",
     }
 
 
@@ -1490,7 +1490,8 @@ async def queue_domain_app_action(app_id: str, action_id: str):
             "command": action.get("value"),
             "risk": risk,
             "cockpit_only": True,
-            "controlled_execution": False,
+            "controlled_execution": action_id == "copy-verify",
+            "timeout_seconds": 900 if action_id == "copy-verify" else None,
         },
     }
 
@@ -1516,7 +1517,25 @@ async def queue_domain_app_action(app_id: str, action_id: str):
         "action_id": action_id,
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
-        "executes": False,
+        "executes": action_id == "copy-verify",
+    }
+
+
+@router.post("/api/cockpit/domain-apps/{app_id}/verify")
+async def execute_domain_app_verification(app_id: str):
+    """Promote and run the explicitly allowlisted domain-app verification action."""
+    queued = await queue_domain_app_action(app_id, "copy-verify")
+    task_id = str(queued["id"])
+    try:
+        promoted = _transition_task(task_id, "resume")
+        executed = await execute_task_endpoint(task_id)
+    except HTTPException:
+        raise
+    return {
+        **queued,
+        **promoted,
+        **executed,
+        "source": "omo_domain_app_controlled_verification",
     }
 
 

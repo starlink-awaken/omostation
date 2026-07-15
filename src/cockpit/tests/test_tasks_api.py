@@ -885,6 +885,41 @@ def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     assert calls[0]["source_ref"] == "cockpit:domain-app-action:family-hub:copy-start"
 
 
+def test_queue_domain_app_verify_action_is_controlled_and_low_risk(monkeypatch):
+    domain_apps = {
+        "items": [{
+            "id": "family-hub",
+            "name": "家庭任务服务",
+            "paths": {"app_root": {"path": "/tmp/family-hub"}},
+            "actions": [{
+                "id": "copy-verify",
+                "label": "复制验证命令",
+                "kind": "copy_command",
+                "value": "uv run pytest",
+                "enabled": True,
+                "risk": "low",
+                "guard": "受控低风险验证。",
+            }],
+        }],
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_domain_apps", lambda: domain_apps)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post("/api/cockpit/domain-apps/family-hub/actions/copy-verify/queue")
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is True
+    metadata = calls[0]["task_data"]["metadata"]
+    assert metadata["controlled_execution"] is True
+    assert metadata["timeout_seconds"] == 900
+    assert calls[0]["task_data"]["human_approval_required"] is False
+
+
 def test_task_list_exposes_execution_contract(monkeypatch, tmp_path):
     planned = tmp_path / ".omo" / "tasks" / "planned"
     planned.mkdir(parents=True)
@@ -1188,6 +1223,35 @@ def test_create_manual_task_uses_omo_ingress_and_derives_approval(monkeypatch):
     assert response.json()["human_approval_required"] is True
     assert created[0]["source_docs"] == ["cockpit:operator:manual-task"]
     assert created[0]["allowed_operation_level"] == "L2"
+
+
+def test_domain_app_verification_promotes_and_executes_only_verify_action(monkeypatch):
+    queued = {
+        "id": "cockpit-domain-app-demo-copy-verify",
+        "status": "pending",
+        "title": "领域应用验证",
+        "executes": False,
+    }
+    transitions = []
+    executions = []
+
+    async def fake_queue(*_args):
+        return queued
+
+    async def fake_execute(task_id):
+        executions.append(task_id)
+        return {"exit_code": 0, "log_ref": "runtime/demo.log"}
+
+    monkeypatch.setattr(api_tasks, "queue_domain_app_action", fake_queue)
+    monkeypatch.setattr(api_tasks, "_transition_task", lambda task_id, action: transitions.append((task_id, action)) or {"status": "in_progress"})
+    monkeypatch.setattr(api_tasks, "execute_task_endpoint", fake_execute)
+
+    response = TestClient(app).post("/api/cockpit/domain-apps/demo/verify")
+
+    assert response.status_code == 200
+    assert transitions == [(queued["id"], "resume")]
+    assert executions == [queued["id"]]
+    assert response.json()["source"] == "omo_domain_app_controlled_verification"
 
 
 def test_execution_endpoint_reports_worker_artifacts(monkeypatch, tmp_path):
