@@ -430,6 +430,86 @@ async def queue_project_action(project_id: str, action_id: str):
     }
 
 
+@router.post("/api/cockpit/projects/{project_id}/triage/{command_id}/queue")
+async def queue_project_triage_command(project_id: str, command_id: str):
+    """登记系统地图排查命令为 OMO planned task; never execute it in Cockpit."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", project_id) or not re.fullmatch(r"[A-Za-z0-9_.-]+", command_id):
+        raise HTTPException(status_code=400, detail="Invalid project or triage command id")
+
+    project = next((item for item in build_system_map().get("projects", []) if item.get("id") == project_id), None)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found in SystemMap")
+    command = next((item for item in project.get("triage_commands") or [] if item.get("id") == command_id), None)
+    if command is None:
+        raise HTTPException(status_code=404, detail="Project triage command not found")
+    if command.get("kind") != "copy_command" or not command.get("enabled"):
+        raise HTTPException(status_code=409, detail="Only enabled triage commands can be queued")
+
+    task_id = f"cockpit-triage-{project_id}-{command_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Project triage task already exists in {existing_group}: {task_id}")
+
+    risk = str(command.get("risk") or "low")
+    task_data = {
+        "id": task_id,
+        "title": f"项目排查：{project.get('name') or project_id} · {command.get('label') or command_id}",
+        "description": str(command.get("reason") or "登记系统地图排查命令，并由人工确认执行。"),
+        "status": "pending",
+        "task_type": "operations",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L2" if risk in {"medium", "high", "critical"} else "L1",
+        "allowed_operation_level": "L2" if risk in {"medium", "high", "critical"} else "L1",
+        "human_approval_required": risk in {"medium", "high", "critical"},
+        "source_docs": [f"cockpit:SystemMap:triage:{project_id}:{command_id}"],
+        "entry_gate": ["确认项目排查命令和风险"],
+        "evidence_required": ["command exit code", "execution log", "agent-workflow closeout"],
+        "deliverables": [str(command.get("value") or "")],
+        "test_plan": [str(command.get("guard") or "人工确认后执行登记命令，并回写退出码与日志。")],
+        "tags": ["cockpit-project-triage", project_id, command_id, risk],
+        "priority": "high" if risk in {"medium", "high", "critical"} else "medium",
+        "metadata": {
+            "project_id": project_id,
+            "command_id": command_id,
+            "command": command.get("value"),
+            "risk": risk,
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-system-map",
+            source_ref=f"cockpit:project-triage:{project_id}:{command_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": existing_group != "planned",
+        "project_id": project_id,
+        "command_id": command_id,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+        "executes": False,
+    }
+
+
 @router.post("/api/cockpit/domain-apps/{app_id}/actions/{action_id}/queue")
 async def queue_domain_app_action(app_id: str, action_id: str):
     """登记领域应用命令为 OMO planned task; never execute it in Cockpit."""

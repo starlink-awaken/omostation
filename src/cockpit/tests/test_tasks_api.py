@@ -401,6 +401,47 @@ def test_queue_project_action_rejects_non_command_action(monkeypatch):
     assert response.status_code == 409
 
 
+def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
+    client = TestClient(app)
+    system_map = {
+        "projects": [
+            {
+                "id": "demo",
+                "name": "Demo",
+                "triage_commands": [
+                    {
+                        "id": "verification-rerun",
+                        "label": "复跑验证",
+                        "kind": "copy_command",
+                        "value": "cd demo && make verify",
+                        "enabled": True,
+                        "risk": "low",
+                        "guard": "复制排查命令；Cockpit 不直接执行终端命令。",
+                        "reason": "补最近一次验证证据。",
+                    }
+                ],
+            }
+        ]
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = client.post("/api/cockpit/projects/demo/triage/verification-rerun/queue")
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    assert calls[0]["task_data"]["human_approval_required"] is False
+    assert calls[0]["task_data"]["metadata"]["controlled_execution"] is False
+    assert calls[0]["source_ref"] == "cockpit:project-triage:demo:verification-rerun"
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {
