@@ -19,6 +19,7 @@ from omo.omo_ingress import (
     create_skill_manifest,
     create_standard_doc,
     execute_controlled_task,
+    get_controlled_process_status,
     normalize_legacy_planned_task,
     promote_task_to_active,
     record_task_contract_request,
@@ -28,6 +29,8 @@ from omo.omo_ingress import (
     revert_task_to_planned,
     request_task_promotion_approval,
     route_self_evolution_to_remediation,
+    start_controlled_task,
+    stop_controlled_task,
     update_done_task_evidence_paths,
     update_governance_overlay_state,
     update_goal_progress,
@@ -838,6 +841,68 @@ def test_execute_controlled_task_runs_project_verification_and_records_log(
     payload = _load_yaml(task_path)
     assert payload["metadata"]["execution_audit"]["exit_code"] == 0
     assert artifact["execution_ref"] in payload["handoff_refs"]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX-only")
+def test_controlled_process_start_status_and_stop_are_audited(tmp_path: Path) -> None:
+    project_path = tmp_path / "projects" / "demo"
+    project_path.mkdir(parents=True)
+    task_path = tmp_path / ".omo" / "tasks" / "active" / "TASK-START-1.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        yaml.safe_dump(
+            {
+                "id": "TASK-START-1",
+                "title": "controlled start",
+                "description": "start",
+                "status": "in_progress",
+                "task_type": "operations",
+                "risk_level": "L2",
+                "source_docs": ["projects/demo/README.md"],
+                "deliverables": ["service"],
+                "assigned_to": "operator",
+                "dispatch_id": None,
+                "run_ref": None,
+                "approval_ref": "approval.yaml",
+                "review_ref": None,
+                "knowledge_refs": [],
+                "handoff_refs": [],
+                "entry_gate": [],
+                "evidence_required": ["process log"],
+                "test_plan": ["sleep 30"],
+                "allowed_operation_level": "L2",
+                "human_approval_required": True,
+                "metadata": {
+                    "command": f'cd "{project_path}" && sleep 30',
+                    "action_id": "copy-start-command",
+                    "controlled_process": True,
+                    "cockpit_only": True,
+                },
+            },
+            allow_unicode=True,
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    started = start_controlled_task(
+        tmp_path / ".omo",
+        task_id="TASK-START-1",
+        actor="projects/omo/tests",
+        source_ref="tests:start:TASK-START-1",
+    )
+    try:
+        assert started["status"] == "started"
+        assert get_controlled_process_status(tmp_path / ".omo", task_id="TASK-START-1")["status"] == "running"
+    finally:
+        stopped = stop_controlled_task(
+            tmp_path / ".omo",
+            task_id="TASK-START-1",
+            actor="projects/omo/tests",
+            source_ref="tests:stop:TASK-START-1",
+        )
+    assert stopped["status"] == "stopped"
+    assert _load_yaml(task_path)["metadata"]["execution_process"]["stopped_by"] == "projects/omo/tests"
 
 
 def test_write_task_center_runtime_artifacts_go_through_ingress(tmp_path: Path) -> None:
