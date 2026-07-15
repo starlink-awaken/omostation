@@ -41,14 +41,33 @@ class ProcessPool:
                 return proc
             _log.warning("进程 %s 已退出 (code=%s), 重新 spawn", uri, proc.returncode)
         cmd = _with_uv_package(service)
+        if not cmd:
+            raise ValueError(f"service {uri} has empty command")
+        # Scheme C 5b: process-pool spawn via container executor facade
+        from agora.execution.container_executor import SpawnSpec, spawn_sync
+
+        command, *args = cmd
         _log.info("spawn %s: %s", uri, " ".join(cmd))
-        proc = subprocess.Popen(
-            cmd,
+        proc, handle = spawn_sync(
+            SpawnSpec(
+                command=command,
+                args=tuple(args),
+                cwd=str(_workspace_root()),
+                env=None,
+                service_name=getattr(service, "name", None) or uri,
+                text=True,
+            ),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            cwd=str(_workspace_root()),
+        )
+        _log.info(
+            "spawn backend=%s profile=%s docker_wrapped=%s uri=%s",
+            handle.backend,
+            handle.profile,
+            handle.docker_wrapped,
+            uri,
         )
         self._procs[uri] = proc
         return proc
