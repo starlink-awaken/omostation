@@ -26,9 +26,6 @@ from cockpit.dashboard.constants import (
 )
 from cockpit.dashboard.routes import _auth_dependency as _auth_dep
 from cockpit.dashboard.routes import router as dashboard_router
-
-# ─── API 版本管理 ─────────────────────────────────────────────
-
 from cockpit.web.versioning import version_manager, setup_version_middleware
 
 # ─── FastAPI App ───────────────────────────────────────────────

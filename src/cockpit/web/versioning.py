@@ -24,17 +24,18 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any
 
 from fastapi import FastAPI, Request, Response
 
 logger = logging.getLogger("cockpit.versioning")
 
 # ── 版本注册表 ─────────────────────────────────────────────────
-API_VERSIONS: Dict[str, Dict[str, Callable]] = {}
-DEPRECATED_VERSIONS: Set[str] = set()
+API_VERSIONS: dict[str, dict[str, Callable]] = {}
+DEPRECATED_VERSIONS: set[str] = set()
 VERSION_REGISTRY_PATH: str = ""
 
 
@@ -45,8 +46,8 @@ class VersionManager:
     """
 
     def __init__(self):
-        self.versions: Dict[str, Dict[str, Callable]] = {}
-        self.deprecated: Set[str] = set()
+        self.versions: dict[str, dict[str, Callable]] = {}
+        self.deprecated: set[str] = set()
         self._current_version: str = ""
 
     @property
@@ -69,7 +70,7 @@ class VersionManager:
         self.versions[path][version] = handler
         logger.info("Registered %s for %s", version, path)
 
-    def get_handler(self, path: str, version: str = "latest") -> Optional[Callable]:
+    def get_handler(self, path: str, version: str = "latest") -> Callable | None:
         """获取指定路径和版本的 handler"""
         if path not in self.versions:
             return None
@@ -98,7 +99,7 @@ class VersionManager:
         self.deprecated.add(version)
         logger.info("Deprecated API version %s", version)
 
-    def get_version_info(self) -> Dict[str, Any]:
+    def get_version_info(self) -> dict[str, Any]:
         """获取版本信息"""
         all_versions = set()
         for handlers in self.versions.values():
@@ -112,7 +113,7 @@ class VersionManager:
             "updated_at": datetime.now().isoformat(),
         }
 
-    def get_version_history(self) -> List[Dict[str, Any]]:
+    def get_version_history(self) -> list[dict[str, Any]]:
         """获取版本历史（用于追踪升级路径）"""
         history = []
         for v in sorted(
@@ -197,17 +198,17 @@ def setup_version_middleware(app: FastAPI) -> None:
         return response
 
     @app.get("/api/version")
-    async def version_endpoint() -> Dict[str, Any]:
+    async def version_endpoint() -> dict[str, Any]:
         """API 版本信息端点"""
         return version_manager.get_version_info()
 
     @app.get("/api/version/history")
-    async def version_history_endpoint() -> List[Dict[str, Any]]:
+    async def version_history_endpoint() -> list[dict[str, Any]]:
         """API 版本历史端点"""
         return version_manager.get_version_history()
 
 
-def generate_openapi_spec(app: FastAPI) -> Dict[str, Any]:
+def generate_openapi_spec(app: FastAPI) -> dict[str, Any]:
     """生成 OpenAPI 3.0 规范文档"""
     current = version_manager.current_version
     spec = {
