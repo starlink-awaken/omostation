@@ -78,6 +78,12 @@ def _probe_daemons(state: dict) -> None:
             )
             if result.returncode == 0:
                 svc["health_check"] = "healthy (probe)"
+            elif result.returncode == 2:
+                # degraded: PID 活但部分后端无心跳 (agora_gateway_probe 三态)
+                svc["health_check"] = "degraded (probe)"
+                svc.setdefault("runtime", {})["degraded_reason"] = (
+                    result.stdout.strip() or "probe degraded"
+                )
             else:
                 svc["health_check"] = "unhealthy (probe)"
                 svc.setdefault("runtime", {})["degraded_reason"] = (
