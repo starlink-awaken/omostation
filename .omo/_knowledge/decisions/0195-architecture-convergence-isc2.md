@@ -5,7 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-15
 ---
 
-# ADR-0193 — Architecture Convergence (ISC-2): 声明/执行鸿沟收敛
+# ADR-0195 — Architecture Convergence (ISC-2): 声明/执行鸿沟收敛
 
 > **Status**: ACTIVE · **Created**: 2026-07-14
 > **Phase**: 43 · **Priority**: P0
