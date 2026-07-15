@@ -132,6 +132,16 @@ class TestKnowledgeAPI:
         resp = client.post("/api/knowledge/search", json={})
         assert resp.status_code == 400
 
+    def test_search_rejects_invalid_limit(self, client):
+        resp = client.post("/api/knowledge/search", json={"query": "test", "limit": "many"})
+        assert resp.status_code == 400
+
+    def test_search_clamps_limit_and_strips_query(self, client):
+        with patch("cockpit.adapters.agora.resolve_bos_uri", return_value={"status": "ok", "results": []}) as resolve:
+            resp = client.post("/api/knowledge/search", json={"query": "  test  ", "limit": 1000})
+        assert resp.status_code == 200
+        assert resolve.call_args.args[1] == {"query": "test", "limit": 50}
+
     def test_put(self, client, tmp_path, monkeypatch):
         monkeypatch.setenv("WORKSPACE_ROOT", str(tmp_path))
         resp = client.post(
@@ -146,6 +156,21 @@ class TestKnowledgeAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "success"
+        assert data["knowledge_ref"] == "memory:test-card"
+
+    def test_put_rejects_path_traversal_slug(self, client):
+        resp = client.post(
+            "/api/knowledge/put",
+            json={"slug": "../escape", "title": "Test", "content": "Content", "tags": []},
+        )
+        assert resp.status_code == 400
+
+    def test_put_rejects_non_string_tags(self, client):
+        resp = client.post(
+            "/api/knowledge/put",
+            json={"slug": "test-card", "title": "Test", "content": "Content", "tags": [1]},
+        )
+        assert resp.status_code == 400
 
     def test_put_missing_fields(self, client):
         resp = client.post("/api/knowledge/put", json={"slug": "test"})
