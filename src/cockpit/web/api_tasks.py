@@ -22,6 +22,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query
 
 from cockpit.compat import WORKSPACE_ROOT
+from cockpit.web.api_domain_apps import build_domain_apps
 from cockpit.web.api_system_map import build_system_map
 
 router = APIRouter()
@@ -58,6 +59,26 @@ def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | Non
         return None
 
 
+def _execution_contract(task_data: dict) -> dict:
+    """Expose the OMO execution contract without inventing a Cockpit ledger."""
+    metadata = task_data.get("metadata") or {}
+    return {
+        "risk_level": task_data.get("risk_level"),
+        "allowed_operation_level": task_data.get("allowed_operation_level"),
+        "human_approval_required": bool(task_data.get("human_approval_required")),
+        "entry_gate": task_data.get("entry_gate") or [],
+        "evidence_required": task_data.get("evidence_required") or [],
+        "deliverables": task_data.get("deliverables") or [],
+        "test_plan": task_data.get("test_plan") or [],
+        "source_docs": task_data.get("source_docs") or [],
+        "command": metadata.get("command"),
+        "executes": metadata.get("cockpit_only") is not True,
+        "approval_ref": task_data.get("approval_ref"),
+        "run_ref": task_data.get("run_ref"),
+        "review_ref": task_data.get("review_ref"),
+    }
+
+
 def get_tasks_from_omo() -> list[dict]:
     """从 OMO 获取任务列表。"""
     tasks_dir = WORKSPACE_DIR / ".omo" / "tasks"
@@ -84,6 +105,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "assignee": task_data.get("assignee", None),
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
+                        "execution_contract": _execution_contract(task_data),
                     }
                 )
             except Exception:  # noqa: S112  # defensive fallback
@@ -110,6 +132,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "assignee": task_data.get("assignee", None),
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
+                        "execution_contract": _execution_contract(task_data),
                     }
                 )
             except Exception:  # noqa: S112  # defensive fallback
@@ -136,6 +159,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "assignee": task_data.get("assignee", None),
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
+                        "execution_contract": _execution_contract(task_data),
                     }
                 )
             except Exception:  # noqa: S112  # defensive fallback
@@ -1039,6 +1063,89 @@ async def queue_project_action(project_id: str, action_id: str):
         "status": "pending",
         "created": existing_group != "planned",
         "project_id": project_id,
+        "action_id": action_id,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+        "executes": False,
+    }
+
+
+@router.post("/api/cockpit/domain-apps/{app_id}/actions/{action_id}/queue")
+async def queue_domain_app_action(app_id: str, action_id: str):
+    """登记领域应用命令为 OMO planned task; never execute it in Cockpit."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", app_id) or not re.fullmatch(r"[A-Za-z0-9_.-]+", action_id):
+        raise HTTPException(status_code=400, detail="Invalid domain app or action id")
+
+    app = next((item for item in build_domain_apps().get("items", []) if item.get("id") == app_id), None)
+    if app is None:
+        raise HTTPException(status_code=404, detail="Domain app not found")
+    action = next((item for item in app.get("actions") or [] if item.get("id") == action_id), None)
+    if action is None:
+        raise HTTPException(status_code=404, detail="Domain app action not found")
+    if action.get("kind") != "copy_command" or not action.get("enabled"):
+        raise HTTPException(status_code=409, detail="Only enabled domain app commands can be queued")
+
+    task_id = f"cockpit-domain-app-{app_id}-{action_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Domain app action task already exists in {existing_group}: {task_id}")
+
+    risk = str(action.get("risk") or "low")
+    task_data = {
+        "id": task_id,
+        "title": f"领域应用动作：{app.get('name') or app_id} · {action.get('label') or action_id}",
+        "description": f"登记并由人工确认执行：{action.get('value', '')}",
+        "status": "pending",
+        "task_type": "operations",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L2" if risk in {"medium", "high", "critical"} else "L1",
+        "allowed_operation_level": "L2" if risk in {"medium", "high", "critical"} else "L1",
+        "human_approval_required": risk in {"medium", "high", "critical"},
+        "source_docs": [
+            str(path.get("path"))
+            for path in (app.get("paths") or {}).values()
+            if isinstance(path, dict) and path.get("path")
+        ] or [f"cockpit:DomainApps:app:{app_id}"],
+        "entry_gate": ["确认领域应用动作、边界和风险"],
+        "evidence_required": ["command exit code", "execution log", "domain app audit", "agent-workflow closeout"],
+        "deliverables": [str(action.get("value", ""))],
+        "test_plan": [str(action.get("guard") or "人工确认后执行登记命令，并回写退出码、领域审计和 closeout。")],
+        "tags": ["cockpit-domain-app-action", app_id, action_id, risk],
+        "priority": "high" if risk in {"medium", "high", "critical"} else "medium",
+        "metadata": {
+            "domain_app_id": app_id,
+            "action_id": action_id,
+            "command": action.get("value"),
+            "risk": risk,
+            "cockpit_only": True,
+        },
+    }
+
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-domain-apps",
+            source_ref=f"cockpit:domain-app-action:{app_id}:{action_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": existing_group != "planned",
+        "app_id": app_id,
         "action_id": action_id,
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",

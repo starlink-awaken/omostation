@@ -399,3 +399,82 @@ def test_queue_project_action_rejects_non_command_action(monkeypatch):
     response = client.post("/api/cockpit/projects/demo/actions/open/queue")
 
     assert response.status_code == 409
+
+
+def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
+    client = TestClient(app)
+    domain_apps = {
+        "items": [
+            {
+                "id": "family-hub",
+                "name": "家庭任务服务",
+                "paths": {"app_root": {"path": "/tmp/family-hub"}},
+                "actions": [
+                    {
+                        "id": "copy-start",
+                        "label": "复制启动命令",
+                        "kind": "copy_command",
+                        "value": "cd /tmp/family-hub && bun run api",
+                        "enabled": True,
+                        "risk": "medium",
+                        "guard": "人工确认后执行。",
+                    }
+                ],
+            }
+        ]
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_domain_apps", lambda: domain_apps)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = client.post("/api/cockpit/domain-apps/family-hub/actions/copy-start/queue")
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["human_approval_required"] is True
+    assert "domain app audit" in task_data["evidence_required"]
+    assert calls[0]["ingress_plane"] == "cockpit-domain-apps"
+    assert calls[0]["source_ref"] == "cockpit:domain-app-action:family-hub:copy-start"
+
+
+def test_task_list_exposes_execution_contract(monkeypatch, tmp_path):
+    planned = tmp_path / ".omo" / "tasks" / "planned"
+    planned.mkdir(parents=True)
+    (planned / "contract-task.yaml").write_text(
+        """id: contract-task
+title: Contract task
+status: pending
+priority: medium
+metadata:
+  command: echo verify
+  cockpit_only: true
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+entry_gate:
+  - confirm
+evidence_required:
+  - exit code
+deliverables:
+  - log
+test_plan:
+  - run safely
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+
+    response = TestClient(app).get("/api/tasks")
+
+    assert response.status_code == 200
+    task = next(item for item in response.json()["items"] if item["id"] == "contract-task")
+    assert task["execution_contract"]["human_approval_required"] is True
+    assert task["execution_contract"]["executes"] is False
+    assert task["execution_contract"]["command"] == "echo verify"
