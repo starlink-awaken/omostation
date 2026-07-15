@@ -21,7 +21,7 @@
 | 4 硬化 | MOF 数据包；bus 接线；会话 HMAC；capability YAML | ✅ |
 | 5 证据/执行硬化 | BOS registry 镜像同步；mcp_proxy 元数据投影；CI tip 必跑 | ✅ |
 | 5b 容器执行面 | container executor 门面 + profile SSOT；stdio spawn 统一入口；docker 可选 | ✅ (ADR-0184) |
-| 5c OS 写面 ACL | 主体/面/分层设计冻结（ADR-0186）；host ACL 实现另 PR | 📐 设计 ✅ / 实现 📋 |
+| 5c OS 写面 ACL | 设计 ADR-0186；L1 doctor `omo lint path-acl` ADR-0187；L2 apply 仍规划 | L1 ✅ / L2 📋 |
 
 ## 运行时旋钮
 
@@ -109,10 +109,19 @@ SSOT: `projects/agora/etc/container-executor-profiles.yaml`
 | 层 | 内容 | 状态 |
 |----|------|------|
 | L0 进程策略 | contract_gatekeeper + direct-omo-io | ✅ 已有 |
-| L1 doctor 只读巡检 | 世界可写 / 非预期 owner 报告 | 📋 实现 PR |
-| L2 可选 host ACL | `OMO_OS_ACL=1` + dry-run/apply | 📋 实现 PR（opt-in） |
+| L1 doctor 只读巡检 | `omo lint path-acl`（ADR-0187） | ✅ |
+| L2 可选 host ACL | `OMO_OS_ACL=1` + dry-run/apply | 📋（opt-in，另 PR） |
 | L3 容器 | 5b spawn 不 RW mount `.omo` | ✅ 5b |
 
-**主体（可写）**: omo broker · agent-workflow/GaC · 人工 break-glass  
-**禁止**: agent 语言运行时 ad-hoc 直写 `.omo/state`  
-**本轮不做**: 合并时不执行 chmod/setfacl（防多 agent 砖机）
+### Phase 5c L1 命令
+
+```bash
+cd projects/omo
+uv run pytest tests/test_omo_path_acl.py -q
+uv run python -m omo.cli lint path-acl --workspace-root ../.. 
+uv run python -m omo.cli lint path-acl --workspace-root ../.. --json
+uv run python -m omo.cli lint path-acl --workspace-root ../.. --strict  # CI optional hard fail
+```
+
+SSOT: `projects/omo/etc/omo-path-acl.yaml`  
+**永不** 在 lint 路径执行 chmod/setfacl。

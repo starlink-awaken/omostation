@@ -2,9 +2,8 @@
 
 > **Phase A accepted**: [ADR-0183](../0183-wave2-c2g-omo-phase-a.md)
 > **Phase B accepted**: [ADR-0185](../0185-wave2-phase-b-predictive-viz.md)
->   (stdlib EMA+linear forecast + risk heatmap JSON/MD; ARIMA/Cockpit UI deferred)
->
-> Phase C remains draft until a separate ADR.
+> **Phase C accepted**: [ADR-0188](../0188-wave2-phase-c-governance-feedback.md)
+>   (proposals + optional planned tasks via broker; **no** auto GaC rule mutation)
 
 ## 目标
 
@@ -25,7 +24,9 @@
 - Phase B (预测增强 + 可视化导出): ✅ ADR-0185
   - CLI: `python -m c2g.predictive_report`
   - Heavy TS models / Cockpit UI: Phase B+ backlog
-- Phase C (自动联动 + MOF 深化): 1 周 (draft)
+- Phase C (治理提案联动): ✅ ADR-0188
+  - CLI: `python -m c2g.governance_feedback`
+  - Auto GaC rule rewrite / MOF M0 expansion: still backlog
 
 ## Phase B 命令
 
@@ -34,4 +35,15 @@ cd projects/c2g
 uv run pytest tests/test_predictive.py -q
 uv run python -m c2g.predictive_report --data-dir runtime/c2g/outcomes
 uv run python -m c2g.predictive_report --markdown
+```
+
+## Phase C 命令
+
+```bash
+cd projects/c2g
+uv run pytest tests/test_governance_feedback.py -q
+uv run python -m c2g.governance_feedback --data-dir runtime/c2g/outcomes
+uv run python -m c2g.governance_feedback --show-apply-plan
+# optional (broker):
+# uv run python -m c2g.governance_feedback --apply-tasks --omo-dir ../../.omo
 ```
