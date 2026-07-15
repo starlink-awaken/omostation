@@ -270,7 +270,7 @@ async def api_wave2_proposals_plan():
 
 @router.post("/api/wave2/demo-seed", dependencies=_AUTH_DEPS)
 async def api_wave2_demo_seed(request: Request):
-    """Seed demo OutcomeTracker corpus for Wave2 UI demos (ADR-0193/0196).
+    """Seed demo OutcomeTracker corpus for Wave2 UI demos (ADR-0193/0197).
 
     Body JSON optional: ``{"reset": true}``. Writes runtime/c2g/outcomes only.
     """

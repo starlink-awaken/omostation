@@ -137,7 +137,7 @@ def run_wave2_demo_seed(
     *,
     reset: bool = False,
 ) -> dict[str, Any]:
-    """Seed demo OutcomeTracker data for empty workspaces (ADR-0193/0196).
+    """Seed demo OutcomeTracker data for empty workspaces (ADR-0193/0197).
 
     Writes only under data_dir (default runtime/c2g/outcomes) — never .omo/.
     """
@@ -148,7 +148,7 @@ def run_wave2_demo_seed(
             "status": "error",
             "error": "refuse data_dir under .omo/",
             "mutation": False,
-            "adr": "0196",
+            "adr": "0197",
         }
     try:
         from c2g.demo_seed import seed_demo_outcomes  # type: ignore
@@ -161,7 +161,7 @@ def run_wave2_demo_seed(
     except Exception as e:
         return {
             "schema": "c2g.wave2.demo_seed.v1",
-            "adr": "0196",
+            "adr": "0197",
             "status": "error",
             "mutation": False,
             "error": f"{type(e).__name__}: {e}"[:240],
