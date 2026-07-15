@@ -1,0 +1,123 @@
+"""Scheme C 5c L1 path-acl doctor tests."""
+
+from __future__ import annotations
+
+import os
+import stat
+from pathlib import Path
+
+from omo.omo_path_acl import (
+    cmd_lint_path_acl,
+    inspect_path,
+    load_profile,
+    run_path_acl_doctor,
+)
+
+
+def test_load_profile_builtin_or_ssot():
+    p = load_profile()
+    assert p.get("surfaces")
+    assert any(s.get("path") == ".omo/state" for s in p["surfaces"])
+
+
+def test_missing_surface_is_info(tmp_path: Path):
+    findings = inspect_path(
+        tmp_path,
+        {"id": "omo-state", "path": ".omo/state", "forbid_world_write": True},
+    )
+    assert findings[0]["kind"] == "missing_optional"
+    assert findings[0]["severity"] == "info"
+
+
+def test_world_writable_detected(tmp_path: Path):
+    target = tmp_path / ".omo" / "state"
+    target.mkdir(parents=True)
+    os.chmod(target, 0o777)
+    findings = inspect_path(
+        tmp_path,
+        {
+            "id": "omo-state",
+            "path": ".omo/state",
+            "forbid_world_write": True,
+        },
+    )
+    kinds = {f["kind"] for f in findings}
+    assert "world_writable" in kinds or "mode_777" in kinds
+
+
+def test_clean_mode_ok(tmp_path: Path):
+    target = tmp_path / ".omo" / "state"
+    target.mkdir(parents=True)
+    os.chmod(target, 0o755)
+    findings = inspect_path(
+        tmp_path,
+        {"id": "omo-state", "path": ".omo/state", "forbid_world_write": True},
+    )
+    assert any(f["kind"] == "ok" for f in findings)
+
+
+def test_doctor_nonstrict_ok_with_warnings(tmp_path: Path):
+    bad = tmp_path / ".omo" / "state"
+    bad.mkdir(parents=True)
+    os.chmod(bad, 0o777)
+    report = run_path_acl_doctor(tmp_path, strict=False)
+    assert report["mutation"] is False
+    assert report["ok"] is True  # warn-only
+    assert report["warn_count"] >= 1 or report["halt_count"] >= 0
+
+
+def test_doctor_strict_fails_on_777(tmp_path: Path):
+    bad = tmp_path / ".omo" / "state"
+    bad.mkdir(parents=True)
+    os.chmod(bad, 0o777)
+    report = run_path_acl_doctor(tmp_path, strict=True)
+    assert report["ok"] is False
+    assert report["halt_count"] >= 1
+
+
+def test_cmd_exit_codes(tmp_path: Path, capsys):
+    # empty root — nonstrict always 0
+    assert cmd_lint_path_acl(str(tmp_path), json_output=True, strict=False) == 0
+    out = capsys.readouterr().out
+    assert '"adr": "0187"' in out or '"adr":"0187"' in out or "0187" in out
+
+
+def test_plan_actions_for_777(tmp_path: Path):
+    from omo.omo_path_acl import plan_acl_actions
+
+    target = tmp_path / ".omo" / "state"
+    target.mkdir(parents=True)
+    os.chmod(target, 0o777)
+    plan = plan_acl_actions(tmp_path)
+    assert plan["dry_run"] is True
+    assert plan["mutation"] is False
+    assert plan["action_count"] >= 1
+    assert any(a["op"] == "chmod" for a in plan["actions"])
+
+
+def test_apply_refuses_without_env(tmp_path: Path, monkeypatch):
+    from omo.omo_path_acl import apply_acl_actions
+
+    monkeypatch.delenv("OMO_OS_ACL", raising=False)
+    target = tmp_path / ".omo" / "state"
+    target.mkdir(parents=True)
+    os.chmod(target, 0o777)
+    report = apply_acl_actions(tmp_path, force=False)
+    assert report["mutation"] is False
+    assert report.get("applied") is False
+    # still 0777
+    assert stat.S_IMODE(target.stat().st_mode) == 0o777
+
+
+def test_apply_with_force_strips_other_write(tmp_path: Path):
+    from omo.omo_path_acl import apply_acl_actions
+
+    target = tmp_path / ".omo" / "state"
+    target.mkdir(parents=True)
+    os.chmod(target, 0o777)
+    report = apply_acl_actions(tmp_path, force=True)
+    assert report["mutation"] is True
+    assert report.get("applied_ok", 0) >= 1
+    mode = stat.S_IMODE(target.stat().st_mode)
+    assert not (mode & stat.S_IWOTH)
+

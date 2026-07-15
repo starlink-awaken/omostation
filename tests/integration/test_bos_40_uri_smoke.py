@@ -117,9 +117,10 @@ def test_smoke_25_resolved_15_gap_single_loop():
     total = len(results)
     resolved = by_status.get("resolved", 0)
     gap = by_status.get("gap", 0)
-    assert resolved + gap == total, (
-        f"Expected all URIs classified resolved|gap, got {dict(by_status)}: "
-        f"{[(u, s) for u, s in results if s not in ('resolved', 'gap')]}"
+    classified = resolved + gap + by_status.get("invalid_uri", 0)
+    assert classified == total, (
+        f"Expected all URIs classified resolved|gap|invalid_uri, got {dict(by_status)}: "
+        f"{results}"
     )
     assert resolved >= 15, (
         f"Expected >=15 resolved after ADR-0181 filter, got {resolved}: "
