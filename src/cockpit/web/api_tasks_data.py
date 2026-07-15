@@ -71,6 +71,7 @@ def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | Non
 def _execution_contract(task_data: dict) -> dict:
     """Expose the OMO execution contract without inventing a Cockpit ledger."""
     metadata = task_data.get("metadata") or {}
+    default_timeout = 900 if metadata.get("action_id") == "copy-verify-command" else 120
     return {
         "risk_level": task_data.get("risk_level"),
         "allowed_operation_level": task_data.get("allowed_operation_level"),
@@ -83,6 +84,9 @@ def _execution_contract(task_data: dict) -> dict:
         "command": metadata.get("command"),
         "executes": metadata.get("cockpit_only") is not True or metadata.get("controlled_execution") is True,
         "controlled_execution": metadata.get("controlled_execution") is True,
+        "timeout_seconds": metadata.get("timeout_seconds", default_timeout)
+        if metadata.get("controlled_execution") is True
+        else None,
         "approval_ref": task_data.get("approval_ref"),
         "dispatch_id": task_data.get("dispatch_id"),
         "run_ref": task_data.get("run_ref"),
