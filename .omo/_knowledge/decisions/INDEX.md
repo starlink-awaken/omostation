@@ -188,6 +188,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0209 | ledger events.jsonl trim 元凶未定位 + SSOT 编号虚标反思 | PROPOSED | 2026-07-15 | governance-team | 0209-ledger-trim-and-adr-ssot-renumbering.md |
 | 0210 | 三年综合战略方向 — 从"扩图纸"转向"收敛执行面" | PROPOSED | 2026-07-15 | 夏明星 | 0210-three-year-strategy-execution-convergence.md |
 | 0211 | P74 run_frequency 字段落地 + excluded_workflows 字段移除 | PROPOSED | 2026-07-15 | governance-team | 0211-p74-run-frequency-field-and-excluded-workflows-removal.md |
+| 0212 | ledger trim 现象修正：history gap 而非物理 trim | PROPOSED | 2026-07-15 | governance-team | 0212-ledger-history-gap-not-physical-trim.md |
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
