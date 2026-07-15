@@ -564,6 +564,75 @@ async def queue_coverage_drafts(request: Request):
     }
 
 
+@router.post("/api/cockpit/ecos/workflows/{workflow_name}/queue")
+async def queue_ecos_workflow_verification(workflow_name: str, mode: str = Query("test")):
+    """将 eCOS 工作流验证或 dry-run 结果承接为 OMO planned 任务。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.:-]+", workflow_name):
+        raise HTTPException(status_code=400, detail="Invalid workflow name")
+    if mode not in {"test", "dry_run"}:
+        raise HTTPException(status_code=400, detail="mode must be test or dry_run")
+
+    task_id = f"cockpit-ecos-workflow-{workflow_name}-{mode}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Workflow verification task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": f"验收 eCOS 工作流：{workflow_name} ({mode})",
+        "description": f"完成 eCOS 工作流 {workflow_name} 的 {mode} 验证，核对定义、约束、节点输出和运行证据。",
+        "status": "pending",
+        "task_type": "verification",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": [f"cockpit:ecos-workflow:{workflow_name}"],
+        "entry_gate": ["确认工作流定义和验证模式"],
+        "evidence_required": ["约束校验结果", "节点或 dry-run 输出", "工作流 closeout 记录"],
+        "deliverables": [f"完成工作流 {workflow_name} 的 {mode} 验证并回写证据。"],
+        "test_plan": ["执行对应验证模式，核对结果与历史运行日志，并记录异常节点。"],
+        "priority": "medium",
+        "tags": ["cockpit-ecos", "workflow-verification", workflow_name, mode],
+        "metadata": {
+            "created_via": "cockpit-ecos-workflow",
+            "workflow_name": workflow_name,
+            "mode": mode,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-ecos-workflow",
+            source_ref=f"cockpit:ecos-workflow:{workflow_name}:{mode}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "executes": False,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/engine/queue")
 async def queue_engine_execution(request: Request):
     """Register an engine or pipeline request as an OMO planned task."""

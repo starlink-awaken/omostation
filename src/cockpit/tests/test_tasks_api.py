@@ -532,6 +532,32 @@ def test_queue_debt_task_is_idempotent_for_existing_planned_task(monkeypatch):
     }
 
 
+def test_queue_ecos_workflow_verification_creates_non_executing_task(monkeypatch):
+    calls = []
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post("/api/cockpit/ecos/workflows/health-check/queue?mode=dry_run")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "cockpit-ecos-workflow-health-check-dry_run"
+    assert response.json()["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["task_type"] == "verification"
+    assert task_data["metadata"]["mode"] == "dry_run"
+    assert task_data["metadata"]["controlled_execution"] is False
+    assert calls[0]["source_ref"] == "cockpit:ecos-workflow:health-check:dry_run"
+
+
+def test_queue_ecos_workflow_verification_rejects_invalid_mode():
+    response = TestClient(app).post("/api/cockpit/ecos/workflows/health-check/queue?mode=execute")
+
+    assert response.status_code == 400
+
+
 def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
     system_map = {
         "projects": [
