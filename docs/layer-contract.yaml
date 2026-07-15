@@ -56,9 +56,9 @@ dependency_rules:
     # L3 入口层：引擎/运行时/协议/织/扩展 + 适配器到 M0/L4
     - from: ["L3"]
       to: ["L2", "L1", "L0", "I0", "X", "M0", "L4"]
-    # L2 引擎层：运行时/协议 + bus-foundation(X) 观测适配
+    # L2 引擎层：运行时/协议 + bus(X) + l4-kernel 自省/vault sink
     - from: ["L2"]
-      to: ["L1", "L0", "X"]
+      to: ["L1", "L0", "X", "L4"]
     # L1 运行时层：协议层 + bus-foundation(X) 适配
     - from: ["L1"]
       to: ["L0", "X"]
@@ -74,9 +74,9 @@ dependency_rules:
     # X 扩展层：可调用所有层
     - from: ["X"]
       to: ["L0", "L1", "L2", "L3", "L4", "I0", "M0"]
-    # L4 自我层：可调用引擎层、运行时层、协议层、织层和扩展层
+    # L4 自我层：引擎/运行时/协议/织/扩展 + model-driven(M0)
     - from: ["L4"]
-      to: ["L2", "L1", "L0", "I0", "X"]
+      to: ["L2", "L1", "L0", "I0", "X", "M0"]
 
   # 禁止的依赖（用于明确禁止某些模式）
   forbidden_patterns:
@@ -85,9 +85,8 @@ dependency_rules:
     - from: ["L1"]
       to: ["L2", "L3", "L4", "I0", "M0"]
     - from: ["L2"]
-      to: ["L3", "L4", "I0", "M0"]
-    - from: ["L4"]
-      to: ["M0"]
+      to: ["L3", "I0", "M0"]
+    # L4→M0 allowed (lifecycle/signals model-driven)
 
 # 特殊例外（需要同时有 ADR 记录）
 exceptions:
