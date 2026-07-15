@@ -173,6 +173,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0194 | Scheme C 5c setfacl 细粒度设计 (design-only) | ACCEPTED | 2026-07-15 | governance-team | 0194-scheme-c-5c-setfacl-design.md |
 | 0189 | Scheme C 5c L2 omo acl plan/apply | ACCEPTED | 2026-07-15 | governance-team | 0189-scheme-c-5c-l2-acl-plan-apply.md |
 | 0195 | Architecture Convergence (ISC-2) 声明/执行鸿沟收敛 | ACCEPTED | 2026-07-14 | governance-team | 0195-architecture-convergence-isc2.md |
+| 0197 | Wave2 Cockpit 加载演示数据按钮 | ACCEPTED | 2026-07-15 | governance-team | 0197-wave2-demo-seed-ui-button.md |
+| 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
 

@@ -125,6 +125,7 @@ uv run pytest tests/test_omo_path_acl.py -q
 uv run python -m omo.cli lint path-acl --workspace-root ../.. --json
 # L2 dry-run plan (default safe)
 uv run python -m omo.cli acl plan --workspace-root ../.. --json
+uv run python -m omo.cli acl plan --workspace-root ../.. --acl --json  # named ACE dry-run ADR-0196
 # L2 apply (operator only)
 # export OMO_OS_ACL=1
 # uv run python -m omo.cli acl apply --yes --workspace-root ../..
@@ -132,3 +133,8 @@ uv run python -m omo.cli acl plan --workspace-root ../.. --json
 
 SSOT: `projects/omo/etc/omo-path-acl.yaml`  
 **lint 永不** chmod；**apply** 仅 chmod 去 other-write，禁 setfacl/chown。
+
+
+## Wave2 演示数据
+
+Cockpit Wave2 面板按钮「加载演示数据」→ `POST /api/wave2/demo-seed` (ADR-0197)。
