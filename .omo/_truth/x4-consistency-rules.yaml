@@ -161,3 +161,17 @@ rules:
       偏离时报警, 可能存在统计口径不一致或工具 bug。
       P52 v5 终极后稳态: drift LOW=2, governance=100 A+, 持续健康。
       实现: bin/check-drift-governance-consistency.py (P60+ 实现)
+
+  # 2026-07-15 清淤: 该规则 2026-07-06 (ADR-0153 M4 工具期) 直接入 GaC indexed
+  # 却未在本源 SSOT 声明, 造成 legacy-drift ghost。此处补声明使索引合法闭环。
+  - rule_id: CR-X4-MCPTOOL-IMPL-DRIFT
+    title: MCP tool 声明与实现一致性漂移检查
+    type: consistency_drift
+    status: active
+    created: '2026-07-06'
+    target: "bin/ssot/check-mcptool-impl-drift.py"
+    freshness:
+      mechanism: ci-gate
+      threshold_days: 7
+      action: warn
+    owner: governance-team
