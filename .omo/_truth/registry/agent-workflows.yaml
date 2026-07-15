@@ -687,8 +687,9 @@ diff_checks:
       - .omo/state/runtime/**
       - .omo/_control/**
       - BRIEF.md
-    command: [uv, run, python, -m, omo.cli, lint, projection-guard]
-    workdir: projects/omo
+    # Root-runnable bin wrapper (not `python -m omo.cli`): worktree partial
+    # init often lacks omo venv + aetherforge; bin path is the SSOT guard entry.
+    command: [uv, run, --with, pyyaml, python, bin/gac/omo-state-projection-guard.py]
   - id: omo-runtime-stamp-policy
     description: >
       Confirms runtime stamp files (e.g. .watch-dispatch-stamps.json) are
@@ -700,8 +701,8 @@ diff_checks:
       - runtime/**
       - .omo/_truth/registry/runtime-projections.yaml
       - .gitignore
-    command: [uv, run, python, -m, omo.cli, lint, stamp-policy]
-    workdir: projects/omo
+    # Same root-runnable pattern as omo-state-projection-guard (ADR-0209 A3)
+    command: [uv, run, --with, pyyaml, python, bin/gac/omo-runtime-stamp-policy.py]
   - id: gac-consensus-inject
     description: >
       KOS RAG Epigenetic Memory Injection (eCOS v6 Phase A).
