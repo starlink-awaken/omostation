@@ -191,7 +191,59 @@ async def api_register_instance(service: str = Form(...), mcp_endpoint: str = Fo
         svc = Service(name=service, protocol="mcp", mcp_endpoint=mcp_endpoint)
         registry.register(svc)
 
-        return JSONResponse({"status": "ok", "msg": f"实例 {service} 注册成功 (Endpoint: {mcp_endpoint})"})
+        task_id = f"cockpit-mcp-registration-{service}"
+        task_created = False
+        try:
+            from omo.omo_ingress_task_lifecycle import create_planned_task
+
+            from cockpit.web.api_tasks_data import WORKSPACE_DIR
+
+            task_data = {
+                "id": task_id,
+                "title": f"验收 MCP 实例注册：{service}",
+                "description": f"验证 {service} 的 MCP endpoint {mcp_endpoint} 可解析、可观测，并记录注册验收证据。",
+                "status": "pending",
+                "task_type": "verification",
+                "assigned_to": None,
+                "dispatch_id": None,
+                "run_ref": None,
+                "approval_ref": None,
+                "review_ref": None,
+                "knowledge_refs": [],
+                "handoff_refs": [],
+                "risk_level": "L1",
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "source_docs": [f"cockpit:mcp-registration:{service}"],
+                "entry_gate": ["确认注册服务标识与 endpoint"],
+                "evidence_required": ["URI 解析结果", "实例可观测结果", "注册验收 closeout"],
+                "deliverables": [f"完成 MCP 实例 {service} 的注册验收并回写证据。"],
+                "test_plan": ["执行 URI 解析和实例健康核验，记录结果。"],
+                "priority": "medium",
+                "tags": ["cockpit-mcp", "registration", service],
+                "metadata": {
+                    "created_via": "cockpit-mcp-registration",
+                    "service": service,
+                    "mcp_endpoint": mcp_endpoint,
+                },
+            }
+            create_planned_task(
+                WORKSPACE_DIR / ".omo",
+                task_data=task_data,
+                ingress_plane="cockpit-mcp-registration",
+                source_ref=f"cockpit:mcp-registration:{service}",
+            )
+            task_created = True
+        except (ImportError, OSError, ValueError):
+            # 注册本身已成功；任务承接失败时保留注册结果，前端可重试验收。
+            pass
+
+        return JSONResponse({
+            "status": "ok",
+            "msg": f"实例 {service} 注册成功 (Endpoint: {mcp_endpoint})",
+            "task_id": task_id,
+            "task_created": task_created,
+        })
     except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 

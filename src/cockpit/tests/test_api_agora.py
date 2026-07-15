@@ -51,6 +51,7 @@ def test_register_instance_rejects_invalid_service_contract():
 
 def test_register_instance_accepts_http_mcp_endpoint(monkeypatch):
     registered = []
+    task_calls = []
 
     class FakeService:
         def __init__(self, **kwargs):
@@ -65,6 +66,10 @@ def test_register_instance_accepts_http_mcp_endpoint(monkeypatch):
 
     monkeypatch.setattr("cockpit.adapters.agora.Service", FakeService)
     monkeypatch.setattr("cockpit.adapters.agora.get_registry", lambda: FakeRegistry())
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: task_calls.append(kwargs) or kwargs["task_data"],
+    )
     response = TestClient(app).post(
         "/api/instance",
         data={"service": "mesh-router", "mcp_endpoint": "http://127.0.0.1:7437/sse"},
@@ -72,4 +77,8 @@ def test_register_instance_accepts_http_mcp_endpoint(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+    assert response.json()["task_id"] == "cockpit-mcp-registration-mesh-router"
+    assert response.json()["task_created"] is True
     assert registered == [{"name": "mesh-router", "protocol": "mcp", "mcp_endpoint": "http://127.0.0.1:7437/sse"}]
+    assert task_calls[0]["source_ref"] == "cockpit:mcp-registration:mesh-router"
+    assert task_calls[0]["task_data"]["risk_level"] == "L1"
