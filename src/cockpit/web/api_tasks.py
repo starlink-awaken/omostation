@@ -837,6 +837,87 @@ async def queue_sandbox_result(request: Request):
     }
 
 
+@router.post("/api/cockpit/compute/generation/queue")
+async def queue_compute_generation_result(request: Request):
+    """Persist local generation output as a verifiable follow-up task."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Generation queue request must be an object")
+    prompt = str(body.get("prompt") or "").strip()
+    model = str(body.get("model") or "coder").strip()
+    content = str(body.get("content") or "").strip()
+    if not prompt or not content:
+        raise HTTPException(status_code=422, detail="prompt and content are required")
+    if len(prompt) > 20000 or len(content) > 20000:
+        raise HTTPException(status_code=413, detail="prompt and content must be no longer than 20000 characters")
+
+    result_digest = sha256(f"{model}\n{prompt}\n---\n{content}".encode()).hexdigest()[:16]
+    task_id = f"cockpit-compute-generation-{result_digest}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(
+            status_code=409, detail=f"Generation result task already exists in {existing_group}: {task_id}"
+        )
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": f"本地生成结果验收：{model}",
+        "description": "复核本地算力生成结果，将内容带回沙箱、研究或正式执行链，并补齐 closeout 证据。",
+        "status": "pending",
+        "task_type": "verification",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": ["projects/cockpit/src/cockpit/web/api_compute.py"],
+        "entry_gate": ["确认模型和提示词上下文", "确认生成内容不含敏感信息"],
+        "evidence_required": ["提示词和模型", "生成结果摘要", "沙箱或研究验收记录", "closeout"],
+        "deliverables": ["完成本地生成内容的复核与后续承接"],
+        "test_plan": ["在沙箱或研究面复核生成内容，并记录验收结论。"],
+        "tags": ["cockpit-compute", "generation", "verification", result_digest],
+        "priority": "medium",
+        "metadata": {
+            "compute_operation": "generation_result",
+            "model": model,
+            "prompt_excerpt": prompt[:4000],
+            "content_excerpt": content[:6000],
+            "result_digest": result_digest,
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-compute",
+            source_ref=f"cockpit:compute:generation-result:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", task_data["title"]),
+        "result_digest": result_digest,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")
 async def queue_project_action(project_id: str, action_id: str):
     """登记一个项目命令为 OMO planned task; never execute it in Cockpit."""

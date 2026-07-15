@@ -680,6 +680,29 @@ def test_queue_sandbox_result_persists_follow_up_task(monkeypatch):
     assert calls[0]["ingress_plane"] == "cockpit-sandbox"
 
 
+def test_queue_compute_generation_result_persists_follow_up_task(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+    response = TestClient(app).post(
+        "/api/cockpit/compute/generation/queue",
+        json={"prompt": "总结架构", "model": "coder", "content": "架构分为四层。"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["metadata"]["compute_operation"] == "generation_result"
+    assert task_data["metadata"]["model"] == "coder"
+    assert task_data["metadata"]["content_excerpt"] == "架构分为四层。"
+    assert calls[0]["ingress_plane"] == "cockpit-compute"
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {
