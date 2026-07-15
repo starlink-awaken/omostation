@@ -596,6 +596,33 @@ def main() -> int:
     )
     compass_p.add_argument("compass_args", nargs=argparse.REMAINDER, help="Arguments passed to c2g compass engine")
 
+    # Wave2 dashboard / proposals (ADR-0190) — JSON contract for agents + UI
+    wave2_p = sub.add_parser(
+        "wave2",
+        help="📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)",
+        epilog=(
+            "子命令:\n"
+            "  dashboard   cards+heatmap+proposals 统一 JSON (c2g.wave2.dashboard.v1)\n"
+            "  proposals   C2G→OMO 治理提案\n"
+            "  predictive  预测 + 热力 Markdown\n"
+            "示例: cockpit wave2 dashboard\n"
+            "      cockpit wave2 proposals -- --show-apply-plan"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    wave2_p.add_argument(
+        "wave2_command",
+        nargs="?",
+        default="dashboard",
+        help="dashboard|proposals|predictive (default: dashboard)",
+    )
+    wave2_p.add_argument("--pretty", action="store_true", help="Indent dashboard JSON")
+    wave2_p.add_argument(
+        "wave2_args",
+        nargs=argparse.REMAINDER,
+        help="Extra args passed through (after --)",
+    )
+
     sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)")
 
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
@@ -785,6 +812,11 @@ def main() -> int:
         env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
         return subprocess.call(cmd, env=env)
 
+    def dispatch_wave2(a):
+        from cockpit.commands.wave2 import cmd_wave2
+
+        return cmd_wave2(a)
+
     def dispatch_workflow(a):
         from cockpit.commands.workflow import handle_workflow
 
@@ -900,6 +932,7 @@ def main() -> int:
         "scenario": dispatch_scenario,
         "iterate": dispatch_iterate,
         "compass": dispatch_compass,
+        "wave2": dispatch_wave2,
         "workflow": dispatch_workflow,
         "agent-workflow": dispatch_agent_workflow,
         "agent": dispatch_agent_workflow,
