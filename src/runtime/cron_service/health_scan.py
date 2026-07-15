@@ -52,7 +52,7 @@ def health_scan_once(force_write: bool = True) -> dict | None:
             len(sched.state.get("services", {})),
             sched.state.get("last_scan", 0),
         )
-                # Probe non-HTTP daemons
+        # Probe non-HTTP daemons
         _probe_daemons(sched.state)
         return sched.state
     except Exception:  # noqa: BLE001  # defensive fallback
@@ -72,15 +72,20 @@ def _probe_daemons(state: dict) -> None:
         try:
             result = subprocess.run(
                 ["python3", str(probe_script)],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode == 0:
                 svc["health_check"] = "healthy (probe)"
             else:
                 svc["health_check"] = "unhealthy (probe)"
-                svc.setdefault("runtime", {})["degraded_reason"] =                     result.stdout.strip() or "probe failed"
+                svc.setdefault("runtime", {})["degraded_reason"] = (
+                    result.stdout.strip() or "probe failed"
+                )
         except subprocess.TimeoutExpired:
             svc["health_check"] = "stale (probe timeout)"
+
 
 def should_scan(now: float | None = None) -> bool:
     """Check if enough time has passed since the last scan.

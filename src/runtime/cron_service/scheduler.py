@@ -141,12 +141,16 @@ def _run_job_sync(job_id: str, executor: ThreadPoolExecutor) -> None:
         )
         status = "ok" if result.returncode == 0 else "error"
         output = (result.stdout or "") + "\n" + (result.stderr or "")
-        update_job(job_id, JobUpdate(last_status=status, last_output=output.strip()[:500]))
+        update_job(
+            job_id, JobUpdate(last_status=status, last_output=output.strip()[:500])
+        )
         if status == "error":
             logger.warning("Job %s failed: %s", job_id, output.strip()[:200])
     except subprocess.TimeoutExpired:
         logger.warning("Job %s timed out (>120s)", job_id)
-        update_job(job_id, JobUpdate(last_status="timeout", last_output="timed out (>120s)"))
+        update_job(
+            job_id, JobUpdate(last_status="timeout", last_output="timed out (>120s)")
+        )
     except Exception as e:
         logger.error("Job %s error: %s", job_id, e)
         update_job(job_id, JobUpdate(last_status="error", last_output=str(e)[:500]))

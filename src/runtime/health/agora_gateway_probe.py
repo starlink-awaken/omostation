@@ -8,6 +8,7 @@ Usage:
     python bin/health/agora-gateway-probe.py
     echo $?  # 0=healthy, 1=unhealthy
 """
+
 from __future__ import annotations
 
 import os
@@ -55,7 +56,9 @@ def _find_pid() -> int | None:
     try:
         result = subprocess.run(
             ["pgrep", "-f", "agora.auth.mcp_gateway"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
             return int(result.stdout.strip().split("\n")[0])
