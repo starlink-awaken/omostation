@@ -1,0 +1,19 @@
+id: "HEALTH_SCORE_FORMULA"
+title: "健康分公式声明面偏重 — ISC-1→ISC-2"
+dimension: "governance"
+subdimension: "maturity"
+domain: "meta"
+scope: "workspace"
+severity: "high"
+weight: 0.10
+entropy_class: "low"
+lifecycle_state: "resolved"
+owner: "architecture-team"
+affected_roots: []
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-07-14"
+last_reviewed_at: "2026-07-14"
+gate_level: "P0"
+x1_policy_ref: "ISC-2 已修复 (ADR-0195)"
+x3_tier: "Principle"

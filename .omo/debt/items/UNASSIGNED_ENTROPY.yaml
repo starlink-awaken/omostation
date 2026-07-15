@@ -1,0 +1,19 @@
+id: "UNASSIGNED_ENTROPY"
+title: "任务所有权熵 — 15/104 无 owner, 38/104 无 phase"
+dimension: "governance"
+subdimension: "entropy"
+domain: "meta"
+scope: "workspace"
+severity: "high"
+weight: 0.15
+entropy_class: "high"
+lifecycle_state: "resolved"
+owner: "governance-team"
+affected_roots: []
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-07-14"
+last_reviewed_at: "2026-07-14"
+gate_level: "P1"
+x1_policy_ref: "P43-ARCH-ANALYSIS-002"
+x3_tier: "Framework"

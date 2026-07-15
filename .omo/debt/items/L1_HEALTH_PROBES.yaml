@@ -1,0 +1,19 @@
+id: "L1_HEALTH_PROBES"
+title: "L1 运行时可观测性不足"
+dimension: "governance"
+subdimension: "runtime"
+domain: "system"
+scope: "workspace"
+severity: "high"
+weight: 0.15
+entropy_class: "high"
+lifecycle_state: "resolved"
+owner: "agent-runtime"
+affected_roots: []
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-07-14"
+last_reviewed_at: "2026-07-14"
+gate_level: "P1"
+x1_policy_ref: "P43-ARCH-ANALYSIS-003"
+x3_tier: "Framework"
