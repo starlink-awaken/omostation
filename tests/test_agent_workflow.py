@@ -590,6 +590,92 @@ workflows:
     assert observed["findings"] == []
 
 
+def test_close_status_ok_requires_evidence(tmp_path: Path) -> None:
+    """ADR-0209 A1: close --status ok without --evidence must fail."""
+    registry = tmp_path / "agent-workflows.yaml"
+    runs = tmp_path / "runs"
+    locks = tmp_path / "locks"
+    ledger = tmp_path / "events.jsonl"
+    registry.write_text(
+        f"""---
+status: active
+lifecycle: ssot
+owner: test
+last-reviewed: 2026-06-29
+---
+version: 1
+runner:
+  run_state_dir: {runs}
+  lock_state_dir: {locks}
+  ledger_path: {ledger}
+  lock_ttl_hours: 1
+workflows:
+  - id: mini
+    title: Mini
+    purpose: Test workflow
+    allowed_lanes: [docs]
+    lock_scopes: [mini-lock]
+    surfaces:
+      read: [README.md]
+      write: [README.md]
+    phases:
+      preflight:
+        - id: true-preflight
+          mode: required
+          command: [python, -c, pass]
+      execute:
+        - id: manual-edit
+          mode: manual
+          command: [agent, edit]
+      verification:
+        - id: true-verify
+          mode: required
+          command: [python, -c, pass]
+      closeout:
+        - id: true-closeout
+          mode: required
+          command: [python, -c, pass]
+""",
+        encoding="utf-8",
+    )
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "evidence gate",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+
+    missing = _run_workflow(
+        "--registry",
+        str(registry),
+        "close",
+        run_id,
+        "--status",
+        "ok",
+    )
+    assert missing.returncode != 0
+    assert "evidence" in (missing.stderr + missing.stdout).lower()
+
+    # failed status may close without evidence (honest failure path)
+    failed = _run_workflow(
+        "--registry",
+        str(registry),
+        "close",
+        run_id,
+        "--status",
+        "failed",
+        "--json",
+    )
+    assert failed.returncode == 0, failed.stderr
+
+
 def test_claim_adds_path_surface_locks_and_ledger_event(tmp_path: Path) -> None:
     registry = _write_control_plane_registry(tmp_path)
     start = _run_workflow(
