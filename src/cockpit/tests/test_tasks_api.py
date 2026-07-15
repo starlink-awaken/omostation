@@ -483,6 +483,55 @@ def test_queue_runtime_port_probe_exposes_structured_controlled_execution(monkey
     assert metadata["probe_ports"] == [7437, 7438]
 
 
+def test_queue_debt_task_promotes_high_severity_debt_to_omo(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "cockpit.dashboard.helpers.load_debt",
+        lambda: {"items": [{
+            "id": "debt-auth",
+            "title": "补鉴权证据",
+            "severity": "p0",
+            "dimension": "security",
+            "owner": "security",
+            "evidence_refs": ["audit:auth"],
+        }]},
+    )
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post("/api/cockpit/debt/debt-auth/queue")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "cockpit-debt-debt-auth"
+    assert response.json()["human_approval_required"] is True
+    task_data = calls[0]["task_data"]
+    assert task_data["risk_level"] == "L2"
+    assert task_data["priority"] == "critical"
+    assert task_data["source_docs"] == ["audit:auth"]
+    assert calls[0]["source_ref"] == "cockpit:debt:debt-auth"
+
+
+def test_queue_debt_task_is_idempotent_for_existing_planned_task(monkeypatch):
+    monkeypatch.setattr(
+        "cockpit.dashboard.helpers.load_debt",
+        lambda: {"items": [{"id": "debt-1", "title": "债务", "severity": "p2"}]},
+    )
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+
+    response = TestClient(app).post("/api/cockpit/debt/debt-1/queue")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": "cockpit-debt-debt-1",
+        "status": "pending",
+        "created": False,
+        "source": "omo_ingress",
+    }
+
+
 def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
     system_map = {
         "projects": [

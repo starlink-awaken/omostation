@@ -1433,6 +1433,90 @@ async def execute_verification_triage(request: Request):
     }
 
 
+@router.post("/api/cockpit/debt/{debt_id}/queue")
+async def queue_debt_task(debt_id: str):
+    """将技术债务账本中的一项正式承接为 OMO planned 任务。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.:-]+", debt_id):
+        raise HTTPException(status_code=400, detail="Invalid debt id")
+
+    from cockpit.dashboard.helpers import load_debt
+
+    item = next((candidate for candidate in load_debt().get("items", []) if candidate.get("id") == debt_id), None)
+    if not isinstance(item, dict):
+        raise HTTPException(status_code=404, detail="Debt item not found")
+
+    task_id = f"cockpit-debt-{debt_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Debt task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "source": "omo_ingress"}
+
+    severity = str(item.get("severity") or "P2").upper()
+    priority = {"P0": "critical", "P1": "high", "P2": "medium"}.get(severity, "low")
+    risk_level = "L2" if severity in {"P0", "P1"} else "L1"
+    title = str(item.get("title") or debt_id).strip()
+    dimension = str(item.get("dimension") or "unknown").strip()
+    owner = str(item.get("owner") or "unassigned").strip()
+    evidence_refs = item.get("evidence_refs") if isinstance(item.get("evidence_refs"), list) else []
+    source_docs = [str(ref) for ref in evidence_refs if str(ref).strip()] or [f"cockpit:debt:{debt_id}"]
+    task_data = {
+        "id": task_id,
+        "title": f"治理技术债务：{title}",
+        "description": f"处理 {dimension} 维度技术债务“{title}”，确认影响范围、责任人和关闭证据。当前 owner：{owner}。",
+        "status": "pending",
+        "task_type": "governance",
+        "assigned_to": owner if owner != "unassigned" else None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": risk_level,
+        "allowed_operation_level": risk_level,
+        "human_approval_required": risk_level in {"L2", "L3"},
+        "source_docs": source_docs,
+        "entry_gate": ["确认债务范围、影响面和责任人"],
+        "evidence_required": ["债务处理结果", "验证或治理证据", "closeout 记录"],
+        "deliverables": [f"完成技术债务 {debt_id} 的治理处理并回写结果。"],
+        "test_plan": ["按处理方案完成验证，并将结果与证据回写到任务 closeout。"],
+        "priority": priority,
+        "tags": ["cockpit-debt", debt_id, dimension, severity],
+        "metadata": {
+            "created_via": "cockpit-debt-ledger",
+            "debt_id": debt_id,
+            "dimension": dimension,
+            "owner": owner,
+            "severity": severity,
+            "source_ref": f"cockpit:debt:{debt_id}",
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-task-center",
+            source_ref=f"cockpit:debt:{debt_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "title": created.get("title", task_data["title"]),
+        "status": "pending",
+        "created": True,
+        "risk_level": risk_level,
+        "human_approval_required": task_data["human_approval_required"],
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/domain-apps/{app_id}/actions/{action_id}/queue")
 async def queue_domain_app_action(app_id: str, action_id: str):
     """登记领域应用命令为 OMO planned task; never execute it in Cockpit."""
