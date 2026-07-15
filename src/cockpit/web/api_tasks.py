@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
+from hashlib import sha256
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
@@ -409,6 +410,99 @@ async def queue_coverage_drafts(request: Request):
             "errors": len(errors),
             "considered": len(drafts),
         },
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/cockpit/engine/queue")
+async def queue_engine_execution(request: Request):
+    """Register an engine or pipeline request as an OMO planned task."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Engine queue request must be an object")
+
+    engine = str(body.get("engine") or "metaos").strip().lower()
+    task = str(body.get("task") or body.get("goal") or "").strip()
+    pipeline = str(body.get("pipeline") or "").strip()
+    if engine not in {"metaos", "pipeline"}:
+        raise HTTPException(status_code=400, detail="engine must be metaos or pipeline")
+    if not task:
+        raise HTTPException(status_code=422, detail="task is required")
+    if engine == "pipeline" and not pipeline:
+        raise HTTPException(status_code=422, detail="pipeline is required for pipeline execution")
+
+    fingerprint = sha256(f"{engine}:{pipeline}:{task}".encode()).hexdigest()[:16]
+    task_id = f"cockpit-engine-{fingerprint}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Engine task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {
+            "id": task_id,
+            "status": "pending",
+            "created": False,
+            "engine": engine,
+            "pipeline": pipeline or None,
+            "executes": False,
+            "source": "omo_ingress",
+        }
+
+    title = f"引擎任务：{pipeline}" if engine == "pipeline" else "MetaOS 任务规划"
+    description = f"{pipeline} · {task}" if pipeline else task
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": description,
+        "status": "pending",
+        "task_type": "orchestration",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L2",
+        "allowed_operation_level": "L2",
+        "human_approval_required": True,
+        "source_docs": ["cockpit:EnginesView"],
+        "entry_gate": ["确认引擎、管线和目标"],
+        "evidence_required": ["规划结果", "执行日志", "工作流 closeout"],
+        "deliverables": [description],
+        "test_plan": ["审批后由 OMO worker 派发，并回写节点状态和执行证据。"],
+        "tags": ["cockpit-engine", engine, pipeline or "metaos"],
+        "priority": "high",
+        "metadata": {
+            "engine": engine,
+            "pipeline": pipeline or None,
+            "task": task,
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-engine",
+            source_ref=f"cockpit:engine:{engine}:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", title),
+        "engine": engine,
+        "pipeline": pipeline or None,
         "executes": False,
         "source": "omo_ingress",
     }

@@ -571,6 +571,30 @@ def test_queue_all_coverage_dimensions_does_not_starve_later_categories(monkeypa
     assert set(promoted) == {f"{category}-draft" for category in categories}
 
 
+def test_queue_engine_execution_creates_omo_task_without_launching(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = TestClient(app).post(
+        "/api/cockpit/engine/queue",
+        json={"engine": "pipeline", "pipeline": "health-check", "task": "核对运行状态"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["created"] is True
+    assert payload["executes"] is False
+    assert payload["engine"] == "pipeline"
+    assert calls[0]["ingress_plane"] == "cockpit-engine"
+    assert calls[0]["task_data"]["human_approval_required"] is True
+    assert calls[0]["task_data"]["metadata"]["pipeline"] == "health-check"
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {
