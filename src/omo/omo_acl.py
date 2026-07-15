@@ -1,11 +1,11 @@
-"""omo acl — Scheme C 5c L2 host ACL plan/apply (ADR-0189 / ADR-0196).
+"""omo acl — Scheme C 5c L2 host ACL plan/apply (ADR-0189 / ADR-0196 / ADR-0198).
 
   omo acl plan   [--workspace-root PATH] [--json] [--acl]
-  omo acl apply  [--workspace-root PATH] [--json]   # requires OMO_OS_ACL=1
-  omo acl status [--workspace-root PATH] [--json]   # alias of lint path-acl doctor
+  omo acl apply  [--workspace-root PATH] [--json] [--yes] [--acl]
+  omo acl status [--workspace-root PATH] [--json]
 
-Default is always dry-run. Apply only strips other-write / 0777 via chmod.
-``plan --acl`` emits setfacl / chmod +a script (still dry-run; no execution).
+Default plan is dry-run. Apply requires OMO_OS_ACL=1 and --yes.
+``apply --acl`` runs named ACE (setfacl / chmod +a) + chmod o-w (ADR-0198).
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from pathlib import Path
 
 from .omo_path_acl import (
     apply_acl_actions,
+    apply_named_acl_actions,
     cmd_lint_path_acl,
     os_acl_enabled,
     plan_acl_actions,
@@ -55,6 +56,11 @@ def main(argv: list[str] | None = None) -> int:
                 "--yes",
                 action="store_true",
                 help="Confirm apply (still requires OMO_OS_ACL=1)",
+            )
+            p.add_argument(
+                "--acl",
+                action="store_true",
+                help="Also apply named ACE (setfacl/chmod+a) after chmod plan (ADR-0198)",
             )
 
     args = parser.parse_args(argv)
@@ -101,10 +107,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "apply":
+        want_acl = getattr(args, "acl", False)
         if not os_acl_enabled():
             msg = {
                 "error": "OMO_OS_ACL not set",
-                "hint": "export OMO_OS_ACL=1 && omo acl apply --yes",
+                "hint": "export OMO_OS_ACL=1 && omo acl apply --yes"
+                + (" --acl" if want_acl else ""),
                 "mutation": False,
             }
             if args.json:
@@ -112,10 +120,14 @@ def main(argv: list[str] | None = None) -> int:
                 sys.stdout.write("\n")
             else:
                 print("❌ apply refused: set OMO_OS_ACL=1 (opt-in host mutation)")
-                print("   preview: omo acl plan --json")
+                print("   preview: omo acl plan --json" + (" --acl" if want_acl else ""))
             return 2
         if not getattr(args, "yes", False):
             plan = plan_acl_actions(root, profile_path=profile_path)
+            if want_acl:
+                plan["named_acl"] = plan_named_acl_script(
+                    root, profile_path=profile_path
+                )
             if args.json:
                 json.dump(
                     {
@@ -130,10 +142,33 @@ def main(argv: list[str] | None = None) -> int:
                 sys.stdout.write("\n")
             else:
                 print("❌ apply requires --yes after reviewing plan")
-                print(f"   actions queued: {plan['action_count']}")
-                print("   omo acl plan --json")
+                print(f"   chmod actions queued: {plan['action_count']}")
+                if want_acl and plan.get("named_acl"):
+                    print(
+                        f"   named ACE commands: {plan['named_acl'].get('command_count')}"
+                    )
+                print(
+                    "   omo acl plan --json"
+                    + (" --acl" if want_acl else "")
+                )
             return 2
+
         report = apply_acl_actions(root, profile_path=profile_path, force=False)
+        if want_acl:
+            named = apply_named_acl_actions(
+                root, profile_path=profile_path, force=False
+            )
+            report["named_acl_apply"] = named
+            # roll up fail counts
+            report["applied_fail"] = int(report.get("applied_fail") or 0) + int(
+                named.get("applied_fail") or 0
+            )
+            report["applied_ok"] = int(report.get("applied_ok") or 0) + int(
+                named.get("applied_ok") or 0
+            )
+            if named.get("mutation"):
+                report["mutation"] = True
+
         if args.json:
             json.dump(report, sys.stdout, indent=2, ensure_ascii=False)
             sys.stdout.write("\n")
@@ -147,8 +182,26 @@ def main(argv: list[str] | None = None) -> int:
             )
             for r in report.get("results") or []:
                 mark = "✓" if r.get("ok") else "✗"
-                print(f"  {mark} {r.get('path')} → {r.get('applied_mode', r.get('error'))}")
-        return 0 if report.get("applied") and not report.get("applied_fail") else 1
+                print(
+                    f"  {mark} {r.get('path')} → "
+                    f"{r.get('applied_mode', r.get('error', r.get('op', '')))}"
+                )
+            if want_acl and report.get("named_acl_apply"):
+                na = report["named_acl_apply"]
+                print(
+                    f"[APPLY --acl] platform={na.get('platform')} "
+                    f"ok={na.get('applied_ok')} fail={na.get('applied_fail')}"
+                )
+                for r in na.get("results") or []:
+                    if r.get("skipped") and r.get("ok"):
+                        continue
+                    mark = "✓" if r.get("ok") else "✗"
+                    print(
+                        f"  {mark} {r.get('op')} {r.get('path')} "
+                        f"{r.get('subject', '')} {r.get('error') or r.get('reason') or ''}"
+                    )
+        fail = int(report.get("applied_fail") or 0)
+        return 0 if report.get("applied") and fail == 0 else 1
 
     parser.print_help()
     return 1

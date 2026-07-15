@@ -502,7 +502,288 @@ def plan_named_acl_script(
         "command_count": len(commands),
         "commands": commands,
         "script": script,
-        "note": "review script then future: OMO_OS_ACL=1 omo acl apply --yes --acl (not in this slice)",
+        "note": "review then: OMO_OS_ACL=1 omo acl apply --yes --acl (ADR-0198)",
+    }
+
+
+def _expand_acl_subject(raw: str, broker_user: str, group: str) -> str:
+    s = raw.strip()
+    s = s.replace("$BROKER_USER", broker_user)
+    s = s.replace("$OMO_WRITERS", group)
+    s = s.replace('"', "").replace("'", "")
+    return s
+
+
+def apply_named_acl_actions(
+    workspace_root: str | Path = ".",
+    *,
+    profile_path: Path | None = None,
+    platform: str | None = None,
+    force: bool = False,
+) -> dict[str, Any]:
+    """Execute named ACE + chmod o-w from plan (ADR-0198).
+
+    Requires OMO_OS_ACL=1 unless force=True (tests only).
+    Uses argv lists (no shell=True). Missing paths are skipped.
+    """
+    import platform as _platform
+    import shutil
+    import subprocess
+
+    plan = plan_named_acl_script(
+        workspace_root, profile_path=profile_path, platform=platform
+    )
+    root = Path(plan["workspace_root"])
+    enabled = os_acl_enabled() or force
+    if not enabled:
+        return {
+            **plan,
+            "applied": False,
+            "mutation": False,
+            "dry_run": True,
+            "error": "OMO_OS_ACL not set — refusing named ACE apply",
+            "results": [],
+            "adr": "0198",
+        }
+
+    broker_user = str(plan.get("broker_user") or "omo")
+    group = str(plan.get("group") or "omo-writers")
+    plat = str(plan.get("platform") or "unknown")
+    results: list[dict[str, Any]] = []
+
+    # Rebuild executable steps from profile (structured, not shell parse)
+    profile = load_profile(profile_path)
+    acl_cfg = profile.get("acl") if isinstance(profile.get("acl"), dict) else {}
+    entries = acl_cfg.get("entries")
+    if not isinstance(entries, list) or not entries:
+        entries = [
+            {"path": ".omo/state", "users": ["$BROKER_USER"], "groups": [], "mask": "rwx"},
+            {"path": ".omo/_control", "users": ["$BROKER_USER"], "groups": [], "mask": "rwx"},
+            {
+                "path": ".omo/_delivery",
+                "users": ["$BROKER_USER"],
+                "groups": ["$OMO_WRITERS"],
+                "mask": "rwx",
+            },
+        ]
+
+    setfacl_bin = shutil.which("setfacl")
+
+    for ent in entries:
+        if not isinstance(ent, dict):
+            continue
+        rel = str(ent.get("path") or "")
+        if not rel or rel.startswith(".omo/_truth"):
+            continue
+        target = root / rel
+        if not target.exists():
+            results.append(
+                {
+                    "path": rel,
+                    "ok": True,
+                    "skipped": True,
+                    "reason": "path missing",
+                }
+            )
+            continue
+
+        mask = str(ent.get("mask") or "rwx")
+        users = [
+            _expand_acl_subject(str(u), broker_user, group)
+            for u in (ent.get("users") or [])
+        ]
+        groups = [
+            _expand_acl_subject(str(g), broker_user, group)
+            for g in (ent.get("groups") or [])
+        ]
+
+        # 1) named ACE
+        if plat == "linux":
+            if not setfacl_bin:
+                results.append(
+                    {
+                        "path": rel,
+                        "op": "setfacl",
+                        "ok": False,
+                        "skipped": True,
+                        "reason": "setfacl binary missing",
+                    }
+                )
+            else:
+                for u in users:
+                    if not u:
+                        continue
+                    argv = [setfacl_bin, "-m", f"u:{u}:{mask}", str(target)]
+                    try:
+                        r = subprocess.run(
+                            argv, capture_output=True, text=True, timeout=10, check=False
+                        )
+                        results.append(
+                            {
+                                "path": rel,
+                                "op": "setfacl",
+                                "subject": u,
+                                "ok": r.returncode == 0,
+                                "argv": argv,
+                                "stderr": (r.stderr or "")[:200],
+                            }
+                        )
+                    except (OSError, subprocess.TimeoutExpired) as e:
+                        results.append(
+                            {
+                                "path": rel,
+                                "op": "setfacl",
+                                "subject": u,
+                                "ok": False,
+                                "error": str(e),
+                            }
+                        )
+                for g in groups:
+                    if not g:
+                        continue
+                    argv = [setfacl_bin, "-m", f"g:{g}:{mask}", str(target)]
+                    try:
+                        r = subprocess.run(
+                            argv, capture_output=True, text=True, timeout=10, check=False
+                        )
+                        results.append(
+                            {
+                                "path": rel,
+                                "op": "setfacl",
+                                "subject": g,
+                                "ok": r.returncode == 0,
+                                "argv": argv,
+                                "stderr": (r.stderr or "")[:200],
+                            }
+                        )
+                    except (OSError, subprocess.TimeoutExpired) as e:
+                        results.append(
+                            {
+                                "path": rel,
+                                "op": "setfacl",
+                                "subject": g,
+                                "ok": False,
+                                "error": str(e),
+                            }
+                        )
+        elif plat == "macos":
+            rights = (
+                "allow read,write,execute,delete,add_file,"
+                "add_subdirectory,file_inherit,directory_inherit"
+            )
+            for u in users:
+                if not u:
+                    continue
+                # chmod +a "user allow …" path
+                argv = ["chmod", "+a", f"{u} {rights}", str(target)]
+                try:
+                    r = subprocess.run(
+                        argv, capture_output=True, text=True, timeout=10, check=False
+                    )
+                    results.append(
+                        {
+                            "path": rel,
+                            "op": "chmod+a",
+                            "subject": u,
+                            "ok": r.returncode == 0,
+                            "argv": argv,
+                            "stderr": (r.stderr or "")[:200],
+                        }
+                    )
+                except (OSError, subprocess.TimeoutExpired) as e:
+                    results.append(
+                        {
+                            "path": rel,
+                            "op": "chmod+a",
+                            "subject": u,
+                            "ok": False,
+                            "error": str(e),
+                        }
+                    )
+            for g in groups:
+                if not g:
+                    continue
+                argv = ["chmod", "+a", f"group:{g} {rights}", str(target)]
+                try:
+                    r = subprocess.run(
+                        argv, capture_output=True, text=True, timeout=10, check=False
+                    )
+                    results.append(
+                        {
+                            "path": rel,
+                            "op": "chmod+a",
+                            "subject": g,
+                            "ok": r.returncode == 0,
+                            "argv": argv,
+                            "stderr": (r.stderr or "")[:200],
+                        }
+                    )
+                except (OSError, subprocess.TimeoutExpired) as e:
+                    results.append(
+                        {
+                            "path": rel,
+                            "op": "chmod+a",
+                            "subject": g,
+                            "ok": False,
+                            "error": str(e),
+                        }
+                    )
+        else:
+            results.append(
+                {
+                    "path": rel,
+                    "ok": False,
+                    "skipped": True,
+                    "reason": f"unsupported platform {plat}",
+                }
+            )
+
+        # 2) always strip other-write (Python, no shell)
+        try:
+            mode = stat.S_IMODE(target.stat().st_mode)
+            new_mode = mode & ~stat.S_IWOTH
+            if new_mode != mode:
+                os.chmod(target, new_mode)
+            results.append(
+                {
+                    "path": rel,
+                    "op": "chmod_o-w",
+                    "ok": True,
+                    "from_mode": oct(mode),
+                    "to_mode": oct(stat.S_IMODE(target.stat().st_mode)),
+                }
+            )
+        except OSError as e:
+            results.append(
+                {
+                    "path": rel,
+                    "op": "chmod_o-w",
+                    "ok": False,
+                    "error": str(e),
+                }
+            )
+
+    ok_n = sum(1 for r in results if r.get("ok") and not r.get("skipped"))
+    fail_n = sum(1 for r in results if r.get("ok") is False and not r.get("skipped"))
+    return {
+        "adr": "0198",
+        "layer": "L2-acl",
+        "dry_run": False,
+        "mutation": True,
+        "applied": True,
+        "omo_os_acl_enabled": True,
+        "platform": plat,
+        "workspace_root": str(root),
+        "broker_user": broker_user,
+        "group": group,
+        "result_count": len(results),
+        "applied_ok": ok_n,
+        "applied_fail": fail_n,
+        "results": results,
+        "plan_preview": {
+            "command_count": plan.get("command_count"),
+            "script_head": (plan.get("script") or "")[:400],
+        },
     }
 
 

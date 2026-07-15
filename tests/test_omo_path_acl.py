@@ -142,3 +142,48 @@ def test_plan_named_acl_script_macos(tmp_path: Path):
     assert plan["platform"] == "macos"
     assert "chmod +a" in plan["script"]
 
+
+def test_apply_named_acl_refuses_without_env(tmp_path: Path, monkeypatch):
+    from omo.omo_path_acl import apply_named_acl_actions
+
+    monkeypatch.delenv("OMO_OS_ACL", raising=False)
+    (tmp_path / ".omo" / "state").mkdir(parents=True)
+    os.chmod(tmp_path / ".omo" / "state", 0o777)
+    r = apply_named_acl_actions(tmp_path, force=False)
+    assert r["mutation"] is False
+    assert r.get("applied") is False
+    assert "OMO_OS_ACL" in (r.get("error") or "")
+
+
+def test_apply_named_acl_force_strips_other_write(tmp_path: Path):
+    from omo.omo_path_acl import apply_named_acl_actions
+
+    # create profile surfaces
+    for rel in (".omo/state", ".omo/_control", ".omo/_delivery"):
+        p = tmp_path / rel
+        p.mkdir(parents=True)
+        os.chmod(p, 0o777)
+
+    # Use linux path but chmod_o-w always runs; setfacl may fail/skip on mac
+    r = apply_named_acl_actions(tmp_path, platform="linux", force=True)
+    assert r["adr"] == "0198"
+    assert r["mutation"] is True
+    assert r.get("applied") is True
+    for rel in (".omo/state", ".omo/_control", ".omo/_delivery"):
+        mode = stat.S_IMODE((tmp_path / rel).stat().st_mode)
+        assert not (mode & stat.S_IWOTH), f"{rel} still world-writable: {oct(mode)}"
+    # chmod_o-w steps should succeed
+    chmod_steps = [x for x in r["results"] if x.get("op") == "chmod_o-w"]
+    assert chmod_steps
+    assert all(x.get("ok") for x in chmod_steps)
+
+
+def test_apply_named_acl_skips_missing_paths(tmp_path: Path):
+    from omo.omo_path_acl import apply_named_acl_actions
+
+    # no .omo dirs — all skipped
+    r = apply_named_acl_actions(tmp_path, force=True)
+    assert r["mutation"] is True
+    skipped = [x for x in r["results"] if x.get("skipped")]
+    assert skipped
+
