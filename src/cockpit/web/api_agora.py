@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import time
 from collections import deque
 from datetime import datetime
 from pathlib import Path
 from threading import Lock
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Form, Query, Request
 from fastapi.responses import JSONResponse
@@ -161,6 +163,21 @@ async def api_run_pipeline(request: Request):
 @router.post("/api/instance")
 async def api_register_instance(service: str = Form(...), mcp_endpoint: str = Form(...)):
     """分布式新实例 MCP 注册"""
+    service = service.strip()
+    mcp_endpoint = mcp_endpoint.strip()
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}", service):
+        return JSONResponse(
+            {"status": "error", "error": "service must be 1-64 characters: letters, digits, _, ., :, -"},
+            status_code=422,
+        )
+    parsed_endpoint = urlparse(mcp_endpoint)
+    if parsed_endpoint.scheme not in {"http", "https", "ws", "wss", "stdio"} or (
+        parsed_endpoint.scheme != "stdio" and not parsed_endpoint.netloc
+    ):
+        return JSONResponse(
+            {"status": "error", "error": "mcp_endpoint must be a valid http(s)/ws(s)/stdio URI"},
+            status_code=422,
+        )
     try:
         from cockpit.adapters.agora import Service, get_registry
 
