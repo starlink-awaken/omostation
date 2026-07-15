@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from types import SimpleNamespace
 import yaml
 from pathlib import Path
 
@@ -833,11 +834,72 @@ def test_execute_controlled_task_runs_project_verification_and_records_log(
     )
 
     assert artifact["exit_code"] == 0
-    assert artifact["log_ref"].startswith("runtime/omo/_delivery/ingress/task-execution/")
+    assert artifact["log_ref"].startswith(
+        "runtime/omo/_delivery/ingress/task-execution/"
+    )
     assert (tmp_path / artifact["log_ref"]).read_text(encoding="utf-8") == "hello"
     payload = _load_yaml(task_path)
     assert payload["metadata"]["execution_audit"]["exit_code"] == 0
     assert artifact["execution_ref"] in payload["handoff_refs"]
+
+
+def test_execute_controlled_task_runs_structured_runtime_port_probe(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    task_path = tmp_path / ".omo" / "tasks" / "active" / "TASK-RUNTIME-1.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        yaml.safe_dump(
+            {
+                "id": "TASK-RUNTIME-1",
+                "title": "runtime port probe",
+                "description": "probe",
+                "status": "in_progress",
+                "task_type": "operations",
+                "risk_level": "L1",
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "assigned_to": "operator",
+                "dispatch_id": "dispatch-runtime-1",
+                "run_ref": "runtime/dispatch-runtime-1.yaml",
+                "approval_ref": None,
+                "review_ref": "runtime/review-runtime-1.yaml",
+                "started_at": "2026-07-15T00:00:00Z",
+                "source_docs": ["projects/demo/README.md"],
+                "knowledge_refs": [],
+                "entry_gate": [],
+                "evidence_required": ["execution log"],
+                "test_plan": ["probe ports"],
+                "metadata": {
+                    "command": "for port in 7437 7438; do lsof ...; done",
+                    "action_id": "runtime-check-ports",
+                    "probe_ports": [7437, 7438],
+                    "controlled_execution": True,
+                    "cockpit_only": True,
+                },
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.subprocess.run",
+        lambda args, **kwargs: SimpleNamespace(
+            returncode=0, stdout=f"LISTEN {args[2]}", stderr=""
+        ),
+    )
+    artifact = execute_controlled_task(
+        tmp_path / ".omo",
+        task_id="TASK-RUNTIME-1",
+        actor="projects/omo/tests",
+        source_ref="tests:execute:TASK-RUNTIME-1",
+    )
+
+    assert artifact["exit_code"] == 0
+    log = (tmp_path / artifact["log_ref"]).read_text(encoding="utf-8")
+    assert "port=7437" in log
+    assert "port=7438" in log
 
 
 def test_write_task_center_runtime_artifacts_go_through_ingress(tmp_path: Path) -> None:
