@@ -2309,6 +2309,22 @@ def _coverage_check(check_id: str, status: str, detail: str, next_action: str) -
     }
 
 
+def _latest_controlled_verification(project_id: str) -> dict[str, Any]:
+    """Read the latest OMO-controlled verification audit for a project."""
+    task_id = f"cockpit-triage-{project_id}-verification-rerun"
+    for group in ("active", "done"):
+        task_path = WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
+        if not task_path.is_file():
+            continue
+        try:
+            task = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            return {}
+        audit = (task.get("metadata") or {}).get("execution_audit") or {}
+        return audit if isinstance(audit, dict) else {}
+    return {}
+
+
 def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
     operational = project.get("operational", {})
     runtime = project.get("runtime", {})
@@ -2323,7 +2339,27 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
 
     runtime_status = runtime.get("status")
     verification_status = verification.get("status")
+    controlled_audit = _latest_controlled_verification(str(project.get("id") or ""))
+    controlled_passed = controlled_audit.get("exit_code") == 0
     missing_sources = [ref for ref in source_refs if not ref.get("exists")]
+
+    verification_detail = (
+        f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。"
+        + (f" 已登记命令：{verification.get('command')}。" if verification.get("command") else "")
+    )
+    verification_next_action = (
+        "将受控重跑结果通过 agent-workflow 留证并完成 closeout。"
+        if controlled_passed
+        else "复现失败验证并补 closeout 证据。"
+        if verification_status == "failed"
+        else "先补验证命令或构建清单，再建立可复制的验证入口。"
+        if verification_status == "unknown"
+        else "运行已登记验证命令，并通过 agent-workflow 留证。"
+        if verification_status == "documented"
+        else "保持验证证据新鲜。"
+    )
+    if controlled_passed:
+        verification_detail += " 受控重跑已通过，但尚未形成 agent-workflow closeout。"
 
     return [
         _coverage_check(
@@ -2377,22 +2413,15 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         ),
         _coverage_check(
             "verification",
-            "ready"
+            "warning"
+            if controlled_passed
+            else "ready"
             if verification_status == "verified"
             else "failed"
             if verification_status in {"failed", "unknown"}
             else "warning",
-            (
-                f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。"
-                + (f" 已登记命令：{verification.get('command')}。" if verification.get("command") else "")
-            ),
-            "复现失败验证并补 closeout 证据。"
-            if verification_status == "failed"
-            else "先补验证命令或构建清单，再建立可复制的验证入口。"
-            if verification_status == "unknown"
-            else "运行已登记验证命令，并通过 agent-workflow 留证。"
-            if verification_status == "documented"
-            else "保持验证证据新鲜。",
+            verification_detail,
+            verification_next_action,
         ),
         _coverage_check(
             "source_refs",

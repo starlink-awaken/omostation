@@ -349,6 +349,37 @@ def test_runtime_status_marks_static_frontend_as_not_applicable(tmp_path, monkey
     assert "形态：static" in runtime_check["detail"]
 
 
+def test_controlled_verification_audit_downgrades_stale_failure_to_closeout_warning(monkeypatch):
+    monkeypatch.setattr(
+        api_system_map,
+        "_latest_controlled_verification",
+        lambda _project_id: {"exit_code": 0, "log_ref": "runtime/omo/verification.log"},
+    )
+    checks = api_system_map._project_coverage_checks(
+        {
+            "id": "cockpit",
+            "coverage": "native",
+            "cockpit_page": "SystemMap",
+            "operational": {
+                "docs": {"present": 2, "expected": 2},
+                "commands": ["verify"],
+                "manifests": ["pyproject.toml"],
+            },
+            "runtime": {
+                "status": "running",
+                "profile": "service",
+                "latest_verification": {"status": "failed", "checks": 1},
+            },
+            "source_refs": [{"exists": True}],
+            "actions": [{"id": "copy-verify-command"}],
+        }
+    )
+    verification = next(check for check in checks if check["id"] == "verification")
+    assert verification["status"] == "warning"
+    assert "受控重跑已通过" in verification["detail"]
+    assert "agent-workflow" in verification["next_action"]
+
+
 def test_runtime_status_does_not_probe_stdio_ports_as_tcp(tmp_path, monkeypatch):
     workspace_root = tmp_path
     project_path = workspace_root / "ToolBox"
