@@ -78,6 +78,7 @@ def _execution_contract(task_data: dict) -> dict:
         "dispatch_id": task_data.get("dispatch_id"),
         "run_ref": task_data.get("run_ref"),
         "review_ref": task_data.get("review_ref"),
+        "execution_audit": metadata.get("execution_audit"),
         "approval_state": _approval_state(task_data),
         "next_action": _execution_next_action(task_data),
     }
@@ -1483,6 +1484,62 @@ async def get_task_execution(task_id: str):
         "task_id": task_id,
         "execution": _execution_snapshot(payload),
         "source": "omo-worker-artifacts",
+    }
+
+
+@router.post("/api/tasks/{task_id}/execution-report")
+async def record_task_execution_report(task_id: str, request: Request):
+    """Persist a command execution result through the OMO ingress broker."""
+    group = _task_group(task_id)
+    if group is None:
+        raise HTTPException(status_code=404, detail="Task not found in OMO queues")
+    payload = _load_persisted_task(task_id, group)
+    metadata = payload.get("metadata") or {}
+    command = str(metadata.get("command") or "").strip()
+    if not command or metadata.get("cockpit_only") is not True:
+        raise HTTPException(status_code=409, detail="Only Cockpit project or domain action tasks accept execution reports")
+
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Execution report must be an object")
+    exit_code = body.get("exit_code")
+    if not isinstance(exit_code, int) or isinstance(exit_code, bool):
+        raise HTTPException(status_code=422, detail="exit_code must be an integer")
+    log_ref = str(body.get("log_ref") or "").strip()
+    log_file = _workspace_file_ref(log_ref)
+    if not log_file["valid"] or not log_file["exists"]:
+        raise HTTPException(status_code=422, detail="log_ref must point to an existing workspace file")
+    closeout_ref = str(body.get("closeout_ref") or "").strip()
+    if closeout_ref:
+        closeout_file = _workspace_file_ref(closeout_ref)
+        if not closeout_file["valid"] or not closeout_file["exists"]:
+            raise HTTPException(status_code=422, detail="closeout_ref must point to an existing workspace file")
+
+    try:
+        from omo.omo_ingress_task_lifecycle import record_task_execution
+
+        artifact = record_task_execution(
+            WORKSPACE_DIR / ".omo",
+            task_id=task_id,
+            actor="cockpit-task-center",
+            command=command,
+            exit_code=exit_code,
+            log_ref=log_ref,
+            closeout_ref=closeout_ref,
+            source_ref=f"cockpit:task:execution-report:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "recorded",
+        "exit_code": exit_code,
+        "execution_ref": artifact.get("execution_ref"),
+        "log_ref": log_ref,
+        "closeout_ref": closeout_ref or None,
+        "source": "omo_ingress",
     }
 
 
