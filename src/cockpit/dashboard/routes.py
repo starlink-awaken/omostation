@@ -286,6 +286,17 @@ async def api_wave2_demo_seed(request: Request):
     return JSONResponse(content=run_wave2_demo_seed(reset=reset))
 
 
+@router.get("/api/omo/doctor", dependencies=_AUTH_DEPS)
+async def api_omo_doctor_status():
+    """Latest omo-doctor-cron snapshot for status UI (ADR-0201).
+
+    Reads runtime/cron/omo-doctor-latest.json (+ history streak/alert).
+    """
+    from cockpit.dashboard.helpers_doctor_cron import load_doctor_cron_status
+
+    return JSONResponse(content=load_doctor_cron_status())
+
+
 @router.get("/api/bos/trends", dependencies=_AUTH_DEPS)
 async def api_bos_trends():
     """BOS trends — 24h/7d call volume, success rate, latency percentiles."""
