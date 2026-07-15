@@ -22,12 +22,20 @@ time = _time_mod
 
 # ── Command modules ──
 # ── Compatibility re-exports (tests monkeypatch these via cli.xxx) ──
+from .commands.agora import cmd_agora
 from .commands.audit import cmd_audit
 from .commands.base import (
     _SCRIPT_DIR,
     _find_cli,
 )
+from .commands.bos import (
+    cmd_bos_capability,
+    cmd_bos_discover,
+    cmd_bos_list,
+    cmd_bos_status,
+)
 from .commands.brief import _cmd_brief
+from .commands.bus import cmd_bus
 from .commands.contracts import (
     cmd_contracts_export_event,
     cmd_contracts_export_identity,
@@ -37,10 +45,16 @@ from .commands.contracts import (
 )
 from .commands.data import cmd_data_gc, cmd_data_index, cmd_data_types
 from .commands.discover import _cmd_discover
+from .commands.family_hub import cmd_family_hub
+from .commands.gbrain import cmd_gbrain
 from .commands.governance import cmd_governance
 from .commands.health import _cmd_health
 from .commands.importer import cmd_import
+from .commands.kairon import cmd_kairon
 from .commands.mcp import cmd_mcp
+from .commands.mesh import cmd_mesh
+from .commands.model_driven import cmd_model_driven
+from .commands.observe import cmd_observe
 from .commands.profile import cmd_profile
 from .commands.research import (
     _cmd_research_batch,
@@ -476,12 +490,95 @@ def main() -> int:
     )
     mof_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 mof 的参数")
 
+    # ── CLI 收敛: Agora BOS 网关 ─────────────────────────────
+    agora_p = sub.add_parser(
+        "agora",
+        help="Agora BOS 网关入口 (委派 agora CLI)",
+        epilog="子命令: register / unregister / list / discover / health / pipeline / repo / mcp\n示例: cockpit agora list",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    agora_p.add_argument("agora_args", nargs=argparse.REMAINDER, help="传递给 agora CLI 的参数")
+
+    # ── CLI 收敛: model-driven 生命周期 ───────────────────────
+    model_driven_p = sub.add_parser(
+        "model-driven",
+        help="模型驱动生命周期入口 (委派 model-driven CLI)",
+        epilog="子命令: lifecycle / spec / adr / okr / tool / mcp\n示例: cockpit model-driven lifecycle dashboard",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    model_driven_p.add_argument(
+        "model_driven_args", nargs=argparse.REMAINDER, help="传递给 model-driven CLI 的参数"
+    )
+
+    # ── CLI 收敛: gbrain 知识库 ──────────────────────────────
+    gbrain_p = sub.add_parser(
+        "gbrain",
+        help="Postgres-native 知识库入口 (委派 gbrain CLI)",
+        epilog="子命令: search / import / stats / admin\n示例: cockpit gbrain search 'attention'",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    gbrain_p.add_argument("gbrain_args", nargs=argparse.REMAINDER, help="传递给 gbrain CLI 的参数")
+
+    # ── CLI 收敛: kairon 知识引擎 monorepo ───────────────────
+    kairon_p = sub.add_parser(
+        "kairon",
+        help="kairon 知识引擎 monorepo 聚合入口",
+        epilog="package: kos / eidos / iris / code / ontoderive / minerva / sophia\n示例: cockpit kairon kos search 'attention'",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    kairon_p.add_argument("kairon_args", nargs=argparse.REMAINDER, help="package + 子命令参数")
+
+    # ── CLI 收敛: Omni-Bus ───────────────────────────────────
+    bus_p = sub.add_parser("bus", help="Omni-Bus 三平面入口")
+    bus_sub = bus_p.add_subparsers(dest="bus_command", parser_class=WorkspaceParser)
+    bus_sub.add_parser("status", help="Bus 状态")
+    bus_sub.add_parser("topics", help="列出已注册 topic")
+    bus_sub.add_parser("metrics", help="查看 bus metrics 快照")
+    bus_publish_p = bus_sub.add_parser("publish", help="发布事件")
+    bus_publish_p.add_argument("--topic", required=True, help="topic 名")
+    bus_publish_p.add_argument("--payload", default="{}", help="JSON payload")
+
+    # ── CLI 收敛: 可观测性栈 ─────────────────────────────────
+    observe_p = sub.add_parser("observe", help="可观测性栈（Langfuse）入口")
+    observe_sub = observe_p.add_subparsers(dest="observe_command", parser_class=WorkspaceParser)
+    observe_sub.add_parser("status", help="Docker compose 状态")
+    observe_sub.add_parser("up", help="启动观测栈")
+    observe_sub.add_parser("down", help="停止观测栈")
+    observe_logs_p = observe_sub.add_parser("logs", help="查看日志")
+    observe_logs_p.add_argument("--service", default="langfuse-server", help="服务名")
+    observe_sub.add_parser("url", help="打印 Langfuse Web URL")
+
+    # ── CLI 收敛: family-hub ─────────────────────────────────
+    family_hub_p = sub.add_parser("family-hub", help="家庭数字枢纽入口")
+    family_hub_sub = family_hub_p.add_subparsers(
+        dest="family_hub_command", parser_class=WorkspaceParser
+    )
+    family_hub_sub.add_parser("status", help="API/MCP server 状态")
+    family_hub_sub.add_parser("api", help="启动 API server")
+    family_hub_sub.add_parser("mcp", help="启动 MCP server")
+
+    # ── CLI 收敛: 算力网格 ───────────────────────────────────
+    mesh_p = sub.add_parser("mesh", help="omlx 算力网格路由入口")
+    mesh_sub = mesh_p.add_subparsers(dest="mesh_command", parser_class=WorkspaceParser)
+    mesh_sub.add_parser("nodes", help="列出 KOS 中注册的算力节点")
+    mesh_sub.add_parser("status", help="mesh router 健康状态")
+    mesh_route_p = mesh_sub.add_parser("route", help="为模型选择最优节点")
+    mesh_route_p.add_argument("--model", required=True, help="模型名")
+    mesh_sub.add_parser("serve", help="启动 mesh router HTTP server")
+
     # ── BOS URI 网关 ─────────────────────────────────────────
     bos_p = sub.add_parser("bos", help="BOS URI 查询与管理")
     bos_sub = bos_p.add_subparsers(dest="bos_cmd")
     bos_sub.add_parser("list", help="列出所有 BOS URI 路由")
     bos_sub.add_parser("discover", help="扫描 workspace 发现 MCP 服务")
     bos_sub.add_parser("status", help="BOS 系统状态与蜂群情况")
+
+    # BOS Capability / Toolbox
+    bos_capability_p = bos_sub.add_parser("capability", help="BOS capability 域 / toolbox 外部能力")
+    bos_capability_sub = bos_capability_p.add_subparsers(dest="capability_command")
+    bos_capability_sub.add_parser("list", help="列出 toolbox 中的 capability 服务")
+    bos_capability_invoke_p = bos_capability_sub.add_parser("invoke", help="调用 capability 服务")
+    bos_capability_invoke_p.add_argument("capability_service", help="服务 ID")
 
     # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
     scenario_p = sub.add_parser(
@@ -669,6 +766,16 @@ def main() -> int:
                 "[bold]研究对象[/]\n"
                 '  [cyan]cockpit research "主题"[/]   — 发起研究\n'
                 "  [cyan]cockpit research --list[/]   — 查看历史\n\n"
+                "[bold]项目入口[/]\n"
+                "  [cyan]cockpit agora[/]            — BOS 服务网关\n"
+                "  [cyan]cockpit kairon[/]            — 知识引擎 monorepo\n"
+                "  [cyan]cockpit gbrain[/]            — Postgres 知识库\n"
+                "  [cyan]cockpit model-driven[/]      — 生命周期 / OKR\n"
+                "  [cyan]cockpit bus[/]               — Omni-Bus 三平面\n"
+                "  [cyan]cockpit observe[/]           — Langfuse 可观测性\n"
+                "  [cyan]cockpit family-hub[/]        — 家庭数字枢纽\n"
+                "  [cyan]cockpit mesh[/]              — 算力网格路由\n"
+                "  [cyan]cockpit bos capability[/]    — Toolbox 外部能力\n\n"
                 "[bold]工具[/]\n"
                 "  [cyan]cockpit search --all KEY[/]  — 跨源搜索 (本地+BOS)\n"
                 "  [cyan]cockpit discover[/]           — 发现可用功能\n"
@@ -764,15 +871,27 @@ def main() -> int:
         return _cmd(a)
 
     def dispatch_bos(a):
-        from cockpit.commands.bos import cmd_bos_discover, cmd_bos_list, cmd_bos_status
-
         sub = getattr(a, "bos_cmd", "")
         if sub == "list":
             return cmd_bos_list(a)
         elif sub == "discover":
             return cmd_bos_discover(a)
+        elif sub == "capability":
+            return cmd_bos_capability(a)
         else:
             return cmd_bos_status(a)
+
+    def dispatch_bus(a):
+        return cmd_bus(a)
+
+    def dispatch_observe(a):
+        return cmd_observe(a)
+
+    def dispatch_family_hub(a):
+        return cmd_family_hub(a)
+
+    def dispatch_mesh(a):
+        return cmd_mesh(a)
 
     def dispatch_scenario(a):
         from cockpit.commands.scenario import cmd_scenario
@@ -957,6 +1076,14 @@ def main() -> int:
         "events": _c_events,
         "ssb": cmd_ssb,
         "mof": cmd_mof,
+        "agora": cmd_agora,
+        "model-driven": cmd_model_driven,
+        "gbrain": cmd_gbrain,
+        "kairon": cmd_kairon,
+        "bus": dispatch_bus,
+        "observe": dispatch_observe,
+        "family-hub": dispatch_family_hub,
+        "mesh": dispatch_mesh,
         "compute": cmd_compute,
         "gac": cmd_gac,
         "omo": lambda a: __import__("cockpit.commands.omo", fromlist=["cmd_omo"]).cmd_omo(a),

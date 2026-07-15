@@ -420,3 +420,39 @@ else:
     except Exception as e:  # defensive fallback
         console.print(f"[red]错误:[/] {e}")
         return 1
+
+
+def cmd_bos_capability(args) -> int:
+    """BOS capability / toolbox 外部能力入口。"""
+    subcmd = getattr(args, "capability_command", "list")
+
+    if subcmd == "list":
+        try:
+            from agora.mcp.resolver.services import POC_SERVICES
+
+            services = [
+                s
+                for s in POC_SERVICES
+                if getattr(s, "domain", "") == "capability"
+                or "capability" in getattr(s, "tags", [])
+            ]
+            if not services:
+                services = POC_SERVICES
+            print(f"\n  Capability 服务 ({len(services)} 条)")
+            print(f"  {'=' * 40}")
+            for s in services:
+                sid = getattr(s, "id", getattr(s, "uri", "?"))
+                desc = getattr(s, "description", "")
+                print(f"  {sid}: {desc}")
+            return 0
+        except Exception as e:  # defensive fallback
+            print(f"  Capability 服务不可用: {e}")
+            return 1
+
+    if subcmd == "invoke":
+        svc_id = getattr(args, "capability_service", None)
+        print(f"调用 capability 服务: {svc_id} (请使用对应项目 CLI 或 MCP 工具)")
+        return 0
+
+    print("用法: cockpit bos capability {list|invoke <service_id>}")
+    return 1

@@ -65,6 +65,16 @@ RouteCase = tuple[list[str], str | None, int | None, int | str]
         (["workspace", "help"], "cmd_help", 0, ""),
         (["workspace", "profile"], "cmd_profile", 0, ""),
         (["workspace", "governance"], "cmd_governance", 0, ""),
+        # ── CLI 收敛路由 (9) ──
+        (["workspace", "agora", "list"], "cmd_agora", 0, ""),
+        (["workspace", "model-driven", "lifecycle", "dashboard"], "cmd_model_driven", 0, ""),
+        (["workspace", "gbrain", "search", "attention"], "cmd_gbrain", 0, ""),
+        (["workspace", "kairon", "kos", "search", "attention"], "cmd_kairon", 0, ""),
+        (["workspace", "bus", "status"], "cmd_bus", 0, ""),
+        (["workspace", "observe", "status"], "cmd_observe", 0, ""),
+        (["workspace", "family-hub", "status"], "cmd_family_hub", 0, ""),
+        (["workspace", "mesh", "nodes"], "cmd_mesh", 0, ""),
+        (["workspace", "bos", "capability", "list"], "cmd_bos_capability", 0, ""),
         # ── 特殊路由 (2) ──
         (["workspace", "product-health"], None, 0, "product-health 直调 subprocess"),
         (["workspace"], _NO_DISPATCH, 0, "无命令 → 欢迎面板"),

@@ -15,6 +15,16 @@
 
     统一人类 CLI/Web 入口与 HITL 操作面.
 
+    ### CLI 收敛
+
+    `cockpit` 是 workspace 的 L3 唯一人类入口。新增命令对所有项目和核心能力做统一收敛：
+
+    - **委派**：`agora`、`model-driven`、`gbrain` —— 直接调用对应项目 CLI。
+    - **聚合**：`kairon` —— monorepo 内 kos / eidos / iris / code / ontoderive / minerva / sophia 的统一入口。
+    - **能力化**：`bus`、`observe`、`family-hub`、`mesh`、`bos capability` —— 把无独立 CLI 的项目场景封装为 cockpit 子命令。
+
+    详见 [`CAPABILITY-MAP.md`](CAPABILITY-MAP.md) 与 [`../../docs/project-registry.yaml`](../../docs/project-registry.yaml)。
+
     ## Installation
 
 ```bash
