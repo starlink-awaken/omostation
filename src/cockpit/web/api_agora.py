@@ -189,21 +189,26 @@ async def api_metrics_history():
         services = registry.list_all()
         healthy_count = sum(1 for s in services if s.is_available)
 
-        # Mock latency metrics distribution matching typical BOS responses
-        latency = {
-            "bos://memory/": "14.5ms",
-            "bos://governance/": "8.2ms",
-            "bos://analysis/": "22.1ms",
-            "bos://persona/": "5.6ms",
-            "bos://capability/": "12.8ms",
-        }
+        if not services:
+            return JSONResponse(
+                {
+                    "status": "unavailable",
+                    "data_quality": "unavailable",
+                    "error": "BOS 服务注册表没有可观测实例",
+                    "next_action": "先注册或挂载一个服务实例，再回控制面刷新。",
+                    "services": 0,
+                    "healthy": 0,
+                    "latency": {},
+                },
+                status_code=503,
+            )
 
         return JSONResponse(
             {
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "services": len(services) or 8,  # Default fallback if empty
-                "healthy": healthy_count or 8,
-                "latency": latency,
+                "services": len(services),
+                "healthy": healthy_count,
+                "latency": {},
             }
         )
     except Exception as e:  # defensive fallback

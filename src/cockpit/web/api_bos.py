@@ -190,18 +190,19 @@ async def api_bos_metrics(prefix: str = ""):
 
         avg_latency_overall = round(total_latency / latency_count, 1) if latency_count > 0 else 0.0
 
-        # Fallback if no records found at all
+        # No synthetic metrics: an empty evidence store must stay visibly unavailable.
         if not domains_list:
-            domains_list = [
-                {"domain": "memory", "total": 125, "success": 120, "error": 5, "avg_latency": 14.5},
-                {"domain": "governance", "total": 84, "success": 82, "error": 2, "avg_latency": 8.2},
-                {"domain": "analysis", "total": 42, "success": 38, "error": 4, "avg_latency": 22.1},
-                {"domain": "persona", "total": 18, "success": 18, "error": 0, "avg_latency": 5.6},
-                {"domain": "capability", "total": 52, "success": 50, "error": 2, "avg_latency": 12.8},
-            ]
-            total_calls = sum(d["total"] for d in domains_list)
-            success_count = sum(d["success"] for d in domains_list)
-            avg_latency_overall = 12.6
+            return JSONResponse(
+                content={
+                    "status": "unavailable",
+                    "data_quality": "unavailable",
+                    "error": "BOS 指标证据尚未产生",
+                    "next_action": "先执行一条 BOS 路由或挂载 metrics 采集，再回到观测页刷新。",
+                    "summary": {"total_calls": 0, "success_count": 0, "avg_latency": None},
+                    "domains": [],
+                },
+                status_code=503,
+            )
 
         return JSONResponse(
             content={

@@ -193,9 +193,7 @@ def load_compute() -> dict:
     try:
         import psutil
 
-        local_cpu = int(psutil.cpu_percent(interval=None) or 22)
-        if local_cpu < 5:
-            local_cpu = 18
+        local_cpu = int(psutil.cpu_percent(interval=0.05))
     except ImportError:
         try:
             import multiprocessing
@@ -204,10 +202,8 @@ def load_compute() -> dict:
             load = os.getloadavg()[0]
             cores = multiprocessing.cpu_count()
             local_cpu = int(min(100.0, (load / cores) * 100.0))
-            if local_cpu < 5:
-                local_cpu = 15
         except Exception:  # defensive fallback
-            local_cpu = 28
+            local_cpu = 0
 
     # Map to frontend expected nodes structure (ComputeView topology)
     frontend_nodes = []
@@ -219,20 +215,10 @@ def load_compute() -> dict:
             cpu_val = local_cpu
             gpu_val = 0
         else:
-            # 根据调用频次来计算真实的动态负载
-            node_traffic = traffic_by_node.get(node["id"]) or {}
-            calls = node_traffic.get("calls", 0)
             if is_online:
-                import time
-
-                # 使用确定性时间波动代替 random 避免 ruff S311 警告
-                seed = int(time.time() * 10) + calls
-                if calls > 0:
-                    cpu_val = int(min(88, 35 + calls * 5 + (seed % 9 - 4)))
-                    gpu_val = int(min(92, 45 + calls * 10 + ((seed + 2) % 13 - 6)))
-                else:
-                    cpu_val = int(5 + (seed % 5))
-                    gpu_val = int(2 + ((seed + 3) % 4))
+                # 远端节点只有路由活动证据，不能把调用量冒充硬件负载。
+                cpu_val = None
+                gpu_val = None
             else:
                 cpu_val = 0
                 gpu_val = 0
@@ -250,78 +236,25 @@ def load_compute() -> dict:
         )
 
     # Map to frontend expected quota structure (ComputeView LLM quota)
-    frontend_quotas = [
-        {
-            "provider": "openrouter",
-            "available": True,
-            "error": None,
-            "balance_usd": 26.72,
-            "used_percent": 46.56,
-            "usage": {"total_used": 23280, "total_granted": 50000},
-        },
-        {
-            "provider": "deepseek",
-            "available": True,
-            "error": None,
-            "balance_usd": 12.85,
-            "used_percent": 68.20,
-            "usage": {"total_used": 34100, "total_granted": 50000},
-        },
-        {
-            "provider": "openai",
-            "available": True,
-            "error": None,
-            "balance_usd": 85.40,
-            "used_percent": 15.60,
-            "usage": {"total_used": 7800, "total_granted": 50000},
-        },
-        {
-            "provider": "anthropic",
-            "available": True,
-            "error": None,
-            "balance_usd": 4.12,
-            "used_percent": 86.20,
-            "usage": {"total_used": 43100, "total_granted": 50000},
-        },
-        {
-            "provider": "volcengine",
-            "available": True,
-            "error": None,
-            "balance_usd": 98.24,
-            "used_percent": 31.50,
-            "usage": {"total_used": 15750, "total_granted": 50000},
-        },
-    ]
-
-    # Override with real values from quota_providers if configured
-    if quota_providers:
-        for q in quota_providers:
-            provider_id = q["provider_id"]
-            balance = q.get("balance") or 0.0
-            used_pct = q.get("used_percent") or 0.0
-            total_granted = 50000
-            total_used = int((used_pct / 100.0) * total_granted)
-
-            matched = False
-            for item in frontend_quotas:
-                if item["provider"] == provider_id:
-                    item["balance_usd"] = round(float(balance), 2) if balance else item["balance_usd"]
-                    item["used_percent"] = round(float(used_pct), 2)
-                    item["usage"] = {"total_used": total_used, "total_granted": total_granted}
-                    item["available"] = q["available"]
-                    matched = True
-                    break
-            if not matched:
-                frontend_quotas.append(
-                    {
-                        "provider": provider_id,
-                        "available": q["available"],
-                        "error": None if q["available"] else {"message": q.get("summary") or "API Key 校验未通过"},
-                        "balance_usd": round(float(balance), 2) if balance else 0.0,
-                        "used_percent": round(float(used_pct), 2),
-                        "usage": {"total_used": total_used, "total_granted": total_granted},
-                    }
-                )
+    frontend_quotas = []
+    for q in quota_providers:
+        provider_id = q["provider_id"]
+        details = (provider_plane.get("quota_summary", {}).get("providers", {}) or {}).get(provider_id, {})
+        usage = {}
+        total_used = details.get("total_used")
+        total_granted = details.get("total_granted")
+        if total_used is not None and total_granted is not None:
+            usage = {"total_used": total_used, "total_granted": total_granted}
+        frontend_quotas.append(
+            {
+                "provider": provider_id,
+                "available": q["available"],
+                "error": None if q["available"] else {"message": q.get("summary") or "API Key 校验未通过"},
+                "balance_usd": q.get("balance"),
+                "used_percent": q.get("used_percent"),
+                "usage": usage,
+            }
+        )
 
     # Available Models extraction (from litellm_health or fallbacks)
     litellm_health = provider_plane.get("litellm_health", {})
@@ -330,170 +263,32 @@ def load_compute() -> dict:
 
     available_models_list = []
     for m in healthy_models:
-        provider = m.split("/")[0] if "/" in m else "deepseek"
+        model_name = m.get("model_name") if isinstance(m, dict) else str(m)
+        provider = model_name.split("/")[0] if "/" in model_name else "unknown"
         available_models_list.append(
             {
-                "model_name": m,
+                "model_name": model_name,
                 "status": "healthy",
                 "provider": provider,
-                "latency_p50": 150 if "deepseek" in provider.lower() else 350,
-                "tokens_per_second": 55 if "deepseek" in provider.lower() else 40,
-                "calls_today": 1240,
+                "latency_p50": m.get("latency_p50") if isinstance(m, dict) else None,
+                "tokens_per_second": m.get("tokens_per_second") if isinstance(m, dict) else None,
+                "calls_today": m.get("calls_today") if isinstance(m, dict) else None,
             }
         )
     for m in unhealthy_models:
-        provider = m.split("/")[0] if "/" in m else "openai"
+        model_name = m.get("model_name") if isinstance(m, dict) else str(m)
+        provider = model_name.split("/")[0] if "/" in model_name else "unknown"
         available_models_list.append(
             {
-                "model_name": m,
+                "model_name": model_name,
                 "status": "unhealthy",
                 "provider": provider,
-                "latency_p50": None,
-                "tokens_per_second": None,
-                "calls_today": 12,
+                "latency_p50": m.get("latency_p50") if isinstance(m, dict) else None,
+                "tokens_per_second": m.get("tokens_per_second") if isinstance(m, dict) else None,
+                "calls_today": m.get("calls_today") if isinstance(m, dict) else None,
             }
         )
-
-    # 注入 Volcano/Doubao 模型
-    has_volc = any("volc" in m["model_name"] for m in available_models_list)
-    if not has_volc:
-        available_models_list.insert(
-            0,
-            {
-                "model_name": "volcengine/doubao-1.5-pro",
-                "status": "healthy",
-                "provider": "volcengine",
-                "latency_p50": 120,
-                "tokens_per_second": 65,
-                "calls_today": 8420,
-            },
-        )
-        available_models_list.insert(
-            1,
-            {
-                "model_name": "volcengine/doubao-1.5-lite",
-                "status": "healthy",
-                "provider": "volcengine",
-                "latency_p50": 80,
-                "tokens_per_second": 95,
-                "calls_today": 12400,
-            },
-        )
-
-    if not available_models_list:
-        available_models_list = [
-            {
-                "model_name": "volcengine/doubao-1.5-pro",
-                "status": "healthy",
-                "provider": "volcengine",
-                "latency_p50": 120,
-                "tokens_per_second": 65,
-                "calls_today": 8420,
-            },
-            {
-                "model_name": "volcengine/doubao-1.5-lite",
-                "status": "healthy",
-                "provider": "volcengine",
-                "latency_p50": 80,
-                "tokens_per_second": 95,
-                "calls_today": 12400,
-            },
-            {
-                "model_name": "anthropic/DeepSeek-V4-pro[1m]",
-                "status": "healthy",
-                "provider": "deepseek",
-                "latency_p50": 150,
-                "tokens_per_second": 55,
-                "calls_today": 4820,
-            },
-            {
-                "model_name": "openai/gpt-4o",
-                "status": "healthy",
-                "provider": "openai",
-                "latency_p50": 240,
-                "tokens_per_second": 42,
-                "calls_today": 2350,
-            },
-            {
-                "model_name": "claude-3-5-sonnet",
-                "status": "healthy",
-                "provider": "anthropic",
-                "latency_p50": 420,
-                "tokens_per_second": 38,
-                "calls_today": 1290,
-            },
-            {
-                "model_name": "meta-llama/llama-3.1-70b",
-                "status": "healthy",
-                "provider": "meta",
-                "latency_p50": 110,
-                "tokens_per_second": 65,
-                "calls_today": 950,
-            },
-            {
-                "model_name": "gemini/gemini-1.5-pro",
-                "status": "healthy",
-                "provider": "google",
-                "latency_p50": 320,
-                "tokens_per_second": 32,
-                "calls_today": 410,
-            },
-            {
-                "model_name": "qwen2.5-coder-32b",
-                "status": "healthy",
-                "provider": "qwen",
-                "latency_p50": 80,
-                "tokens_per_second": 70,
-                "calls_today": 3100,
-            },
-            {
-                "model_name": "mistral/mistral-large",
-                "status": "degraded",
-                "provider": "mistral",
-                "latency_p50": 890,
-                "tokens_per_second": 18,
-                "calls_today": 85,
-            },
-            {
-                "model_name": "cohere/command-r-plus",
-                "status": "unhealthy",
-                "provider": "cohere",
-                "latency_p50": None,
-                "tokens_per_second": None,
-                "calls_today": 0,
-            },
-        ]
-
-    # 实时的微服务网格正在被调度的任务调度列表
-    scheduled_tasks = [
-        {
-            "task_id": "QUEST-VIOLATION-FIX",
-            "task_name": "消除 direct-omo-io 直写违规",
-            "node_id": "local-mac",
-            "status": "running",
-            "progress": 85,
-            "engine": "Ruff Linter",
-            "assigned_at": "2026-06-25T17:50:00Z",
-        },
-        {
-            "task_id": "CARD-DEBT-007",
-            "task_name": "修复 cockpit MCP 架构收敛",
-            "node_id": "y7000p-lmstudio",
-            "status": "running",
-            "progress": 40,
-            "engine": "gbrain-Postgres",
-            "assigned_at": "2026-06-25T17:55:00Z",
-        },
-        {
-            "task_id": "BOS-URI-RESOLVE",
-            "task_name": "解析 bos://gov/tasks 声明服务",
-            "node_id": "cloud-cc-switch",
-            "status": "completed",
-            "progress": 100,
-            "engine": "agora-Mesh",
-            "assigned_at": "2026-06-25T18:00:00Z",
-        },
-    ]
+    scheduled_tasks = provider_plane.get("scheduled_tasks") or []
 
     return {
         "summary": {

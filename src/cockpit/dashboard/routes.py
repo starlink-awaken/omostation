@@ -21,7 +21,6 @@ from cockpit.dashboard.constants import (
 from cockpit.dashboard.helpers import (
     fetch_layer_status,
     load_arch_health,
-    load_bos_metrics,
     load_bos_trends,
     load_compute,
     load_convergence_status,
@@ -221,12 +220,6 @@ async def api_cards_check():
 
 
 # ─── BOS 可观测 ────────────────────────────────────────────────
-
-
-@router.get("/api/bos/metrics", dependencies=_AUTH_DEPS)
-async def api_bos_metrics():
-    """BOS 调用指标聚合 (JSONL → domain aggregation)."""
-    return JSONResponse(content=load_bos_metrics())
 
 
 # ─── Architecture Health ─────────────────────────────────
