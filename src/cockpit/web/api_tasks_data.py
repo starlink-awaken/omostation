@@ -203,7 +203,9 @@ def _execution_snapshot(task_data: dict[str, Any]) -> dict[str, object]:
         "evidence_required": required,
         "evidence_ready": bool(task_data.get("evidence_paths")),
         "existing_artifacts": existing,
-        "next_action": "提交已存在的证据路径后完成" if required and not task_data.get("evidence_paths") else _execution_next_action(task_data),
+        "next_action": "提交已存在的证据路径后完成"
+        if required and not task_data.get("evidence_paths")
+        else _execution_next_action(task_data),
     }
 
 
@@ -765,9 +767,7 @@ def _draft_to_planned_task(draft: dict) -> dict:
         "entry_gate": [],
         "evidence_required": ["Cockpit draft reviewed", "follow-up evidence recorded"],
         "deliverables": [description],
-        "test_plan": [
-            str((draft.get("draft") or {}).get("guard") or "按草稿步骤完成处理，并回写验证或运行证据。")
-        ],
+        "test_plan": [str((draft.get("draft") or {}).get("guard") or "按草稿步骤完成处理，并回写验证或运行证据。")],
         "tags": list(draft.get("tags") or []) + ["cockpit-promoted"],
         "priority": str(draft.get("priority") or "medium"),
         "metadata": {
@@ -952,8 +952,7 @@ def _task_history(task_id: str, group: str) -> list[dict]:
             except json.JSONDecodeError:
                 continue
             haystack = " ".join(
-                str(entry.get(key, ""))
-                for key in ("target", "artifact_ref", "source_ref", "task_id", "action")
+                str(entry.get(key, "")) for key in ("target", "artifact_ref", "source_ref", "task_id", "action")
             )
             if task_id not in haystack:
                 continue
@@ -976,9 +975,7 @@ def _approval_proposal_id(approval_ref: str) -> str:
     return f"{Path(approval_ref).stem}-proposal"
 
 
-def _transition_task(
-    task_id: str, action: str, evidence_paths: list[str] | None = None
-) -> dict:
+def _transition_task(task_id: str, action: str, evidence_paths: list[str] | None = None) -> dict:
     """Apply task transitions through the OMO ingress broker."""
     group = _task_group(task_id)
     if group is None:

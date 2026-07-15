@@ -43,6 +43,7 @@ from cockpit.web.api_tasks_data import (
 
 router = APIRouter()
 
+
 @router.post("/api/tasks/{task_id}/request-approval")
 async def request_task_approval(task_id: str):
     """Create the OMO task-specific promotion approval request."""
@@ -256,9 +257,6 @@ async def execute_task_endpoint(task_id: str):
     }
 
 
-
-
-
 @router.get("/api/tasks")
 async def get_tasks(
     status: str | None = Query(None, description="任务状态过滤"),
@@ -363,7 +361,9 @@ async def queue_project_action(project_id: str, action_id: str):
     task_id = f"cockpit-action-{project_id}-{action_id}"
     existing_group = _task_group(task_id)
     if existing_group in {"active", "done"}:
-        raise HTTPException(status_code=409, detail=f"Project action task already exists in {existing_group}: {task_id}")
+        raise HTTPException(
+            status_code=409, detail=f"Project action task already exists in {existing_group}: {task_id}"
+        )
 
     risk = str(action.get("risk") or "low")
     task_data = {
@@ -386,7 +386,8 @@ async def queue_project_action(project_id: str, action_id: str):
             str(ref.get("target") or ref.get("path") or ref.get("label"))
             for ref in project.get("source_refs") or []
             if isinstance(ref, dict) and (ref.get("target") or ref.get("path") or ref.get("label"))
-        ] or [f"cockpit:SystemMap:project:{project_id}"],
+        ]
+        or [f"cockpit:SystemMap:project:{project_id}"],
         "entry_gate": ["确认项目动作和风险"],
         "evidence_required": ["command exit code", "execution log", "agent-workflow closeout"],
         "deliverables": [str(action.get("value", ""))],
@@ -447,7 +448,9 @@ async def queue_domain_app_action(app_id: str, action_id: str):
     task_id = f"cockpit-domain-app-{app_id}-{action_id}"
     existing_group = _task_group(task_id)
     if existing_group in {"active", "done"}:
-        raise HTTPException(status_code=409, detail=f"Domain app action task already exists in {existing_group}: {task_id}")
+        raise HTTPException(
+            status_code=409, detail=f"Domain app action task already exists in {existing_group}: {task_id}"
+        )
 
     risk = str(action.get("risk") or "low")
     task_data = {
@@ -470,7 +473,8 @@ async def queue_domain_app_action(app_id: str, action_id: str):
             str(path.get("path"))
             for path in (app.get("paths") or {}).values()
             if isinstance(path, dict) and path.get("path")
-        ] or [f"cockpit:DomainApps:app:{app_id}"],
+        ]
+        or [f"cockpit:DomainApps:app:{app_id}"],
         "entry_gate": ["确认领域应用动作、边界和风险"],
         "evidence_required": ["command exit code", "execution log", "domain app audit", "agent-workflow closeout"],
         "deliverables": [str(action.get("value", ""))],
@@ -537,7 +541,9 @@ async def record_task_execution_report(task_id: str, request: Request):
     metadata = payload.get("metadata") or {}
     command = str(metadata.get("command") or "").strip()
     if not command or metadata.get("cockpit_only") is not True:
-        raise HTTPException(status_code=409, detail="Only Cockpit project or domain action tasks accept execution reports")
+        raise HTTPException(
+            status_code=409, detail="Only Cockpit project or domain action tasks accept execution reports"
+        )
 
     body = await request.json()
     if not isinstance(body, dict):
