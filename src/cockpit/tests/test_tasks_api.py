@@ -595,6 +595,23 @@ def test_queue_engine_execution_creates_omo_task_without_launching(monkeypatch):
     assert calls[0]["task_data"]["metadata"]["pipeline"] == "health-check"
 
 
+def test_queue_governance_drift_fix_requires_approval(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+    response = TestClient(app).post("/api/cockpit/governance/queue", json={"action": "fix-drift"})
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    assert calls[0]["task_data"]["risk_level"] == "L3"
+    assert calls[0]["task_data"]["human_approval_required"] is True
+    assert calls[0]["task_data"]["metadata"]["governance_action"] == "fix-drift"
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {

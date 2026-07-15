@@ -508,6 +508,84 @@ async def queue_engine_execution(request: Request):
     }
 
 
+@router.post("/api/cockpit/governance/queue")
+async def queue_governance_action(request: Request):
+    """Register a high-risk governance mutation for human-approved execution."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Governance queue request must be an object")
+    action = str(body.get("action") or "").strip().lower()
+    if action != "fix-drift":
+        raise HTTPException(status_code=400, detail="Unsupported governance action")
+
+    task_id = "cockpit-governance-fix-drift"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Governance task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {
+            "id": task_id,
+            "status": "pending",
+            "created": False,
+            "action": action,
+            "executes": False,
+            "source": "omo_ingress",
+        }
+
+    task_data = {
+        "id": task_id,
+        "title": "治理修复：校正 SSOT 漂移",
+        "description": "人工确认后运行 SSOT Guardian 自动修复，并审阅全部变更再固化。",
+        "status": "pending",
+        "task_type": "governance",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L3",
+        "allowed_operation_level": "L3",
+        "human_approval_required": True,
+        "source_docs": ["bin/ssot/ssot-guardian.py", ".omo/standards/agent-mutation-protocol.md"],
+        "entry_gate": ["确认漂移范围", "确认自动修复不会覆盖并发改动"],
+        "evidence_required": ["修复前后 diff", "guardian 输出", "人工复核记录", "closeout"],
+        "deliverables": ["SSOT 漂移修复结果和复核证据"],
+        "test_plan": ["审批后执行 guardian，逐项审阅变更，再回写治理 closeout。"],
+        "tags": ["cockpit-governance", "fix-drift", "high-risk"],
+        "priority": "high",
+        "metadata": {
+            "governance_action": action,
+            "command": "python3 bin/ssot/ssot-guardian.py --auto-fix",
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-governance",
+            source_ref=f"cockpit:governance:{action}:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", task_data["title"]),
+        "action": action,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")
 async def queue_project_action(project_id: str, action_id: str):
     """登记一个项目命令为 OMO planned task; never execute it in Cockpit."""
