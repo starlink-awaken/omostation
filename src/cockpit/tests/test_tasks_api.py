@@ -478,3 +478,70 @@ test_plan:
     assert task["execution_contract"]["human_approval_required"] is True
     assert task["execution_contract"]["executes"] is False
     assert task["execution_contract"]["command"] == "echo verify"
+
+
+def test_request_task_approval_uses_omo_brokers(monkeypatch):
+    client = TestClient(app)
+    payload = {
+        "id": "approval-task",
+        "status": "pending",
+        "human_approval_required": True,
+        "allowed_operation_level": "L2",
+        "risk_level": "L2",
+        "approval_ref": None,
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload.copy())
+    monkeypatch.setattr(
+        "omo.omo_governance.propose_truth_mutation",
+        lambda *args, **kwargs: {"id": "approval-proposal"},
+    )
+
+    def fake_request(*args, **kwargs):
+        calls.append(kwargs)
+        return {**payload, "approval_ref": kwargs["approval_ref"]}
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.request_task_promotion_approval", fake_request)
+
+    response = client.post("/api/tasks/approval-task/request-approval")
+
+    assert response.status_code == 200
+    assert response.json()["created"] is True
+    assert response.json()["proposal_id"].endswith("-proposal")
+    assert calls[0]["actor"] == "cockpit-task-center"
+
+
+def test_approve_task_applies_governed_approval(monkeypatch):
+    client = TestClient(app)
+    approval_ref = ".omo/workers/runs/approval-task-promotion-approval-2026-07-15T00-00-00Z.yaml"
+    payload = {"id": "approval-task", "status": "pending", "human_approval_required": True, "approval_ref": approval_ref}
+    calls = []
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(
+        "omo.omo_governance.approve_truth_mutation",
+        lambda *args, **kwargs: calls.append(("approve", args, kwargs)) or {"status": "approved"},
+    )
+    monkeypatch.setattr(
+        "omo.omo_governance.apply_truth_mutation",
+        lambda *args, **kwargs: calls.append(("apply", args, kwargs)) or {"status": "verified"},
+    )
+
+    response = client.post("/api/tasks/approval-task/approve")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "granted"
+    assert [call[0] for call in calls] == ["approve", "apply"]
+
+
+def test_resume_rejects_unapproved_human_gate(monkeypatch):
+    client = TestClient(app)
+    payload = {"id": "approval-task", "status": "pending", "human_approval_required": True, "approval_ref": None}
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+
+    response = client.post("/api/tasks/approval-task/resume")
+
+    assert response.status_code == 409
+    assert "request and grant approval" in response.json()["detail"]

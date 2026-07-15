@@ -18,6 +18,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -76,7 +77,46 @@ def _execution_contract(task_data: dict) -> dict:
         "approval_ref": task_data.get("approval_ref"),
         "run_ref": task_data.get("run_ref"),
         "review_ref": task_data.get("review_ref"),
+        "approval_state": _approval_state(task_data),
+        "next_action": _approval_next_action(task_data),
     }
+
+
+def _approval_state(task_data: dict) -> str:
+    if not task_data.get("human_approval_required"):
+        return "not_required"
+    approval_ref = task_data.get("approval_ref")
+    if not isinstance(approval_ref, str) or not approval_ref:
+        return "missing"
+    approval_path = WORKSPACE_DIR / approval_ref
+    try:
+        import yaml
+
+        approval = yaml.safe_load(approval_path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return "requested"
+    return str(approval.get("approval_status") or "requested")
+
+
+def _approval_next_action(task_data: dict) -> str:
+    state = _approval_state(task_data)
+    if state == "not_required":
+        return "可进入受控执行面"
+    if state == "missing":
+        return "先申请人工审批"
+    if state == "granted":
+        return "可恢复到 active"
+    return "等待人工审批"
+
+
+def _load_persisted_task(task_id: str, group: str) -> dict[str, Any]:
+    task_path = WORKSPACE_DIR / ".omo" / "tasks" / group / f"{task_id}.yaml"
+    try:
+        import yaml
+
+        return yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError) as exc:
+        raise HTTPException(status_code=404, detail="Task payload not readable") from exc
 
 
 def get_tasks_from_omo() -> list[dict]:
@@ -844,6 +884,127 @@ def _task_history(task_id: str, group: str) -> list[dict]:
     return sorted(history, key=lambda item: str(item.get("ts") or ""))
 
 
+def _approval_proposal_id(approval_ref: str) -> str:
+    return f"{Path(approval_ref).stem}-proposal"
+
+
+@router.post("/api/tasks/{task_id}/request-approval")
+async def request_task_approval(task_id: str):
+    """Create the OMO task-specific promotion approval request."""
+    group = _task_group(task_id)
+    if group != "planned":
+        raise HTTPException(status_code=409, detail="Only planned tasks can request promotion approval")
+
+    payload = _load_persisted_task(task_id, group)
+    if not payload.get("human_approval_required"):
+        raise HTTPException(status_code=409, detail="Task does not require human approval")
+
+    approval_ref = payload.get("approval_ref")
+    if isinstance(approval_ref, str) and approval_ref:
+        return {
+            "id": task_id,
+            "status": _approval_state(payload),
+            "approval_ref": approval_ref,
+            "proposal_id": _approval_proposal_id(approval_ref),
+            "created": False,
+            "source": "omo_ingress",
+        }
+
+    now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    from omo.omo_governance import propose_truth_mutation
+    from omo.omo_ingress_task_lifecycle import request_task_promotion_approval
+    from omo.omo_promotion_request import (
+        build_promotion_approval_proposal,
+        build_promotion_approval_request,
+        promotion_approval_ref,
+    )
+
+    approval_ref = promotion_approval_ref(task_id, now)
+    task_ref = f".omo/tasks/planned/{task_id}.yaml"
+    approval_record = build_promotion_approval_request(
+        task_id=task_id,
+        task_ref=task_ref,
+        requested_operation_level=str(payload.get("allowed_operation_level") or payload.get("risk_level") or "L0"),
+        requested_at=now,
+        approval_ref=approval_ref,
+    )
+    proposal = build_promotion_approval_proposal(
+        task_id=task_id,
+        requested_by="cockpit-task-center",
+        approval_ref=approval_ref,
+    )
+    try:
+        proposal_record = propose_truth_mutation(WORKSPACE_DIR, proposal, now=now)
+        updated = request_task_promotion_approval(
+            WORKSPACE_DIR / ".omo",
+            task_id=task_id,
+            actor="cockpit-task-center",
+            approval_ref=approval_ref,
+            approval_record=approval_record,
+            proposal_ref=f".omo/_truth/task-center/proposals/{proposal_record['id']}.yaml",
+            source_ref=f"cockpit:task:request-approval:{task_id}",
+            now=now,
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO approval broker is unavailable") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": _approval_state(updated),
+        "approval_ref": approval_ref,
+        "proposal_id": proposal_record["id"],
+        "created": True,
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/tasks/{task_id}/approve")
+async def approve_task(task_id: str):
+    """Grant and apply the OMO promotion approval for a planned task."""
+    group = _task_group(task_id)
+    if group != "planned":
+        raise HTTPException(status_code=409, detail="Only planned tasks can be approved")
+
+    payload = _load_persisted_task(task_id, group)
+    if not payload.get("human_approval_required"):
+        raise HTTPException(status_code=409, detail="Task does not require human approval")
+    approval_ref = payload.get("approval_ref")
+    if not isinstance(approval_ref, str) or not approval_ref:
+        raise HTTPException(status_code=409, detail="Approval request must be created first")
+    if _approval_state(payload) == "granted":
+        return {
+            "id": task_id,
+            "status": "granted",
+            "approval_ref": approval_ref,
+            "proposal_id": _approval_proposal_id(approval_ref),
+            "created": False,
+            "source": "omo_governance",
+        }
+
+    now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    from omo.omo_governance import apply_truth_mutation, approve_truth_mutation
+
+    proposal_id = _approval_proposal_id(approval_ref)
+    try:
+        approve_truth_mutation(WORKSPACE_DIR, proposal_id, approver="cockpit-task-center", now=now)
+        applied = apply_truth_mutation(WORKSPACE_DIR, proposal_id, now=now)
+    except (FileNotFoundError, OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    if applied.get("status") != "verified":
+        raise HTTPException(status_code=409, detail="OMO approval was not verified")
+    return {
+        "id": task_id,
+        "status": "granted",
+        "approval_ref": approval_ref,
+        "proposal_id": proposal_id,
+        "created": True,
+        "source": "omo_governance",
+    }
+
+
 def _transition_task(task_id: str, action: str) -> dict:
     """Apply task transitions through the OMO ingress broker."""
     group = _task_group(task_id)
@@ -875,6 +1036,12 @@ def _transition_task(task_id: str, action: str) -> dict:
             return {"id": task_id, "status": "pending", "updated_at": datetime.now(UTC).isoformat()}
         if action == "resume":
             if group == "planned":
+                payload = _load_persisted_task(task_id, group)
+                if payload.get("human_approval_required") and _approval_state(payload) != "granted":
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Task approval is {_approval_state(payload)}; request and grant approval before resume",
+                    )
                 promote_task_to_active(
                     omo_dir,
                     task_id=task_id,
