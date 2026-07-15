@@ -29,6 +29,7 @@ from .lifecycle import (
     load_run_records,
     load_lock_records,
     ledger_mentions_run,
+    heal_ledger_for_run,
     claim_policy,
     claim_coverage_report,
     staged_lane_report,
@@ -308,16 +309,32 @@ def build_observe_report(
                         "missing_locks": missing_locks,
                     }
                 )
+        # ADR-0209 A2: self-heal missing ledger rows from run yaml before warn
         if not ledger_mentions_run(registry, current_run_id):
-            findings.append(
-                {
-                    "severity": "warn",
-                    "kind": "ledger_missing_run",
-                    "message": f"ledger has no event for run: {current_run_id}",
-                    "run_id": current_run_id,
-                    "path": display_path(path),
-                }
-            )
+            healed = heal_ledger_for_run(registry, current_run_id, payload)
+            if healed and ledger_mentions_run(registry, current_run_id):
+                findings.append(
+                    {
+                        "severity": "info",
+                        "kind": "ledger_healed_from_run",
+                        "message": (
+                            f"ledger missing run event; replayed from run yaml: "
+                            f"{current_run_id}"
+                        ),
+                        "run_id": current_run_id,
+                        "path": display_path(path),
+                    }
+                )
+            else:
+                findings.append(
+                    {
+                        "severity": "warn",
+                        "kind": "ledger_missing_run",
+                        "message": f"ledger has no event for run: {current_run_id}",
+                        "run_id": current_run_id,
+                        "path": display_path(path),
+                    }
+                )
 
     severities = {finding["severity"] for finding in findings}
     decision = (
