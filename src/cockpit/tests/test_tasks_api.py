@@ -612,6 +612,36 @@ def test_queue_hitl_proposal_requires_approval_and_preserves_proposal_context(mo
     assert calls[0]["source_ref"] == "cockpit:proposal:proposal-42"
 
 
+def test_queue_critical_alert_promotes_high_risk_operations_task(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "cockpit.web.api_alerts.generate_alerts_from_l4_data",
+        lambda: [{
+            "id": "alert-1",
+            "level": "critical",
+            "source": "agora",
+            "message": "Mesh degradation",
+            "description": "Latency spike detected",
+        }],
+    )
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post("/api/cockpit/alerts/alert-1/queue")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "cockpit-alert-alert-1"
+    task_data = calls[0]["task_data"]
+    assert task_data["risk_level"] == "L2"
+    assert task_data["human_approval_required"] is True
+    assert task_data["priority"] == "critical"
+    assert task_data["metadata"]["alert_source"] == "agora"
+    assert calls[0]["source_ref"] == "cockpit:alert:alert-1"
+
+
 def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
     system_map = {
         "projects": [

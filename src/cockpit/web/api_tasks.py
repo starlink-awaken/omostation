@@ -786,6 +786,86 @@ async def queue_hitl_proposal_task(proposal_id: str):
     }
 
 
+@router.post("/api/cockpit/alerts/{alert_id}/queue")
+async def queue_alert_task(alert_id: str):
+    """将告警承接为带来源和验收证据的 OMO planned 任务。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.:-]+", alert_id):
+        raise HTTPException(status_code=400, detail="Invalid alert id")
+
+    from cockpit.web.api_alerts import generate_alerts_from_l4_data
+
+    alert = next((item for item in generate_alerts_from_l4_data() if item.get("id") == alert_id), None)
+    if not isinstance(alert, dict):
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    task_id = f"cockpit-alert-{alert_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Alert task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    level = str(alert.get("level") or "warning").lower()
+    risk_level = "L2" if level in {"critical", "error"} else "L1"
+    priority = "critical" if level == "critical" else "high" if level == "error" else "medium"
+    message = str(alert.get("message") or alert_id)
+    source = str(alert.get("source") or "unknown")
+    description = str(alert.get("description") or "补齐告警原因和恢复证据。")
+    task_data = {
+        "id": task_id,
+        "title": f"处理告警：{message}",
+        "description": f"处理来自 {source} 的 {level} 告警“{message}”，确认根因、影响范围和恢复状态。{description}",
+        "status": "pending",
+        "task_type": "operations",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": risk_level,
+        "allowed_operation_level": risk_level,
+        "human_approval_required": risk_level in {"L2", "L3"},
+        "source_docs": [f"cockpit:alert:{alert_id}"],
+        "entry_gate": ["确认告警来源、级别和影响范围"],
+        "evidence_required": ["日志或性能证据", "根因与处理结果", "告警恢复状态", "alert closeout"],
+        "deliverables": [f"完成告警 {alert_id} 的处理、验证和 closeout。"],
+        "test_plan": ["回看告警对应时间点的日志/性能数据，完成处理后确认告警状态恢复。"],
+        "priority": priority,
+        "tags": ["cockpit-alert", source, level, alert_id],
+        "metadata": {
+            "created_via": "cockpit-alert-center",
+            "alert_id": alert_id,
+            "alert_level": level,
+            "alert_source": source,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-alert-center",
+            source_ref=f"cockpit:alert:{alert_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "executes": False,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/engine/queue")
 async def queue_engine_execution(request: Request):
     """Register an engine or pipeline request as an OMO planned task."""
