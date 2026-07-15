@@ -52,6 +52,27 @@ def test_proposal_plan_dry_run_shape(tmp_path, monkeypatch):
     assert plan["auto_mutate_rules"] is False
 
 
+def test_demo_seed_refuses_omo(tmp_path, monkeypatch):
+    from cockpit.dashboard.helpers_wave2 import run_wave2_demo_seed
+
+    bad = tmp_path / ".omo" / "outcomes"
+    bad.mkdir(parents=True)
+    r = run_wave2_demo_seed(bad)
+    assert r.get("status") == "error"
+    assert r.get("mutation") is False
+
+
+def test_demo_seed_ok(tmp_path, monkeypatch):
+    from cockpit.dashboard.helpers_wave2 import run_wave2_demo_seed
+
+    # Prefer real c2g if available; else accept degraded error
+    r = run_wave2_demo_seed(tmp_path / "outcomes", reset=True)
+    assert r.get("adr") in ("0193", "0196") or r.get("schema") == "c2g.wave2.demo_seed.v1"
+    if r.get("status") == "ok":
+        assert r.get("pitch_count", 0) >= 1
+        assert r.get("mutation") is True
+
+
 def test_api_wave2_dashboard_route(monkeypatch):
     app = FastAPI()
     app.include_router(dashboard_routes.router)

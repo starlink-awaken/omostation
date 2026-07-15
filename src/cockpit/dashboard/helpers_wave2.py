@@ -132,6 +132,43 @@ def enrich_proposals_for_handoff(proposals: list[Any]) -> list[dict[str, Any]]:
     return out
 
 
+def run_wave2_demo_seed(
+    data_dir: Path | None = None,
+    *,
+    reset: bool = False,
+) -> dict[str, Any]:
+    """Seed demo OutcomeTracker data for empty workspaces (ADR-0193/0196).
+
+    Writes only under data_dir (default runtime/c2g/outcomes) — never .omo/.
+    """
+    root = _workspace_root()
+    ddir = data_dir or _default_data_dir(root)
+    if ".omo" in Path(ddir).parts:
+        return {
+            "status": "error",
+            "error": "refuse data_dir under .omo/",
+            "mutation": False,
+            "adr": "0196",
+        }
+    try:
+        from c2g.demo_seed import seed_demo_outcomes  # type: ignore
+
+        summary = seed_demo_outcomes(Path(ddir), reset=reset)
+        summary["mutation"] = True  # outcomes store only
+        summary["surface"] = "runtime/c2g/outcomes"
+        summary["source"] = "c2g.demo_seed"
+        return summary
+    except Exception as e:
+        return {
+            "schema": "c2g.wave2.demo_seed.v1",
+            "adr": "0196",
+            "status": "error",
+            "mutation": False,
+            "error": f"{type(e).__name__}: {e}"[:240],
+            "data_dir": str(ddir),
+        }
+
+
 def load_wave2_proposal_plan(
     data_dir: Path | None = None,
     *,
