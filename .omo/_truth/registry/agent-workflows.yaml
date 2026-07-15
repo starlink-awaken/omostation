@@ -84,9 +84,7 @@ silent_workflow_policy:
     excluded_workflows list. Workflows with neither coverage AND no recent
     run events trigger a [warn] in agent-workflow compliance (p74_solidification).
   warn_after_days: 30
-  excluded_workflows:
-    - handoff-resume
-    - observer-audit
+# ADR-0211: excluded_workflows field removed; rationale in 0211 §D1 (no double SSOT)
 # ADR-0203: every requirement iteration MUST run through agent-workflow lifecycle.
 # Complements P74 (silence of registered workflows) by forbidding bypass on delivery work.
 requirement_iteration_policy:
@@ -728,6 +726,7 @@ diff_checks:
     command: [python3, bin/gac/gac-ingress-check.py]
 workflows:
   - id: project-doc-change
+    run_frequency: on_demand
     title: Project documentation change
     purpose: Keep documentation changes executable, SSOT-safe, and verifiable.
     agents:
@@ -796,6 +795,7 @@ workflows:
           command: [git, diff, --stat]
 
   - id: project-code-change
+    run_frequency: on_demand
     title: Project code change
     purpose: Route code changes through project-local verification and workspace governance gates.
     agents:
@@ -840,6 +840,7 @@ workflows:
           command: [git, diff, --stat]
 
   - id: governance-state-mutation
+    run_frequency: on_demand
     title: Governed OMO or spaces mutation
     purpose: Force state-plane changes through OMO/C2G broker paths instead of ad-hoc file writes.
     agents:
@@ -881,6 +882,7 @@ workflows:
           command: [omo, event, emit, agent_mutation_complete]
 
   - id: c2g-spec-ingress
+    run_frequency: periodic
     title: C2G external spec ingress
     purpose: Convert BMAD/OpenSpec/Pitch inputs into governed OMO planned tasks.
     agents:
@@ -925,6 +927,7 @@ workflows:
           command: [agent, inspect, .omo/tasks/planned]
 
   - id: mof-model-change
+    run_frequency: on_demand
     title: MOF model change
     purpose: Route M1/M2/M3 model edits through schema validation, state bridge audit, drift checks, and MOF version evidence.
     agents:
@@ -979,6 +982,7 @@ workflows:
           command: [git, diff, --stat]
 
   - id: mof-state-bridge-audit
+    run_frequency: periodic
     title: MOF state bridge audit
     purpose: Read-only audit of MOF schema health, M1/M2 coverage, and OMO task bridge alignment.
     agents:
@@ -1018,6 +1022,7 @@ workflows:
           command: [agent, report, mof-state-bridge-findings]
 
   - id: external-adapter-sync
+    run_frequency: periodic
     title: External adapter integration sync
     purpose: Keep BMAD, OpenSpec, beads, gstack, and Superpowers wired as optional inputs or discipline layers without making them SSOT authorities.
     agents:
@@ -1072,6 +1077,7 @@ workflows:
           command: [agent, inspect, external-adapter-health]
 
   - id: submodule-pointer-close
+    run_frequency: on_demand
     title: Submodule pointer closeout
     purpose: Close project submodule work without dangling root pointers or unreachable SHAs.
     agents:
@@ -1110,6 +1116,7 @@ workflows:
           command: [git, diff, --stat]
 
   - id: handoff-resume
+    run_frequency: on_demand
     title: Compression-safe handoff and resume
     purpose: Persist enough workflow state that another agent or a compressed session can continue.
     agents:
@@ -1142,6 +1149,7 @@ workflows:
           command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, close, "{run_id}", --status, ok]
 
   - id: observer-audit
+    run_frequency: continuous
     title: Agent workflow observer audit
     purpose: Read-only oversight for workflow runs, locks, ledger events, and handoff evidence.
     agents:
@@ -1174,6 +1182,7 @@ workflows:
           command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
 
   - id: state-sync
+    run_frequency: continuous
     title: Runtime state projection sync
     purpose: Refresh high-churn runtime projections through the OMO state-sync broker instead of ad-hoc agent writes.
     agents:
@@ -1224,6 +1233,7 @@ workflows:
           command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, observe]
 
   - id: governance-audit
+    run_frequency: periodic
     title: Workspace Systemic Governance Audit
     purpose: Execute systemic governance health scan, write-ownership check, brief generation, and SSOT alignment.
     agents:
