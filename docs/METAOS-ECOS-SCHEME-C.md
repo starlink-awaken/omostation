@@ -23,6 +23,8 @@
 | 5b 容器执行面 | container executor 门面 + profile SSOT；stdio spawn 统一入口；docker 可选 | ✅ (ADR-0184) |
 | 5c OS 写面 ACL | 设计 0186；L1 doctor 0187；L2 plan/apply 0189（opt-in） | L1 ✅ / L2 ✅ |
 | Wave2 UI | cockpit `/api/wave2/dashboard` + UI 面板 ADR-0191 | ✅ |
+| Wave2 demo seed | `python -m c2g.demo_seed` ADR-0193 | ✅ |
+| 5c setfacl | 细粒度 ACE 设计 ADR-0194；实现另 PR | 📐 设计 ✅ |
 
 ## 运行时旋钮
 
