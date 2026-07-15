@@ -129,6 +129,7 @@ uv run python -m omo.cli acl plan --workspace-root ../.. --acl --json  # named A
 # L2 apply (operator only)
 # export OMO_OS_ACL=1
 # uv run python -m omo.cli acl apply --yes --workspace-root ../..
+# uv run python -m omo.cli acl apply --yes --acl --workspace-root ../..  # ACE (ADR-0198)
 ```
 
 SSOT: `projects/omo/etc/omo-path-acl.yaml`  
