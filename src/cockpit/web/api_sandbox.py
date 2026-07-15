@@ -12,12 +12,16 @@ router = APIRouter(prefix="/api/sandbox", tags=["sandbox"])
 async def api_sandbox_execute(request: Request):
     """在隔离沙箱 (KEI Isolation) 中安全执行 python 代码"""
     try:
-        from runtime.executor.sandbox import Sandbox
-
         body = await request.json()
+        if not isinstance(body, dict):
+            return JSONResponse({"status": "error", "error": "request body must be an object"}, status_code=422)
         code = body.get("code")
-        if not code:
+        if not isinstance(code, str) or not code.strip():
             return JSONResponse({"status": "error", "error": "code is required"}, status_code=400)
+        if len(code) > 20000:
+            return JSONResponse({"status": "error", "error": "code must be no longer than 20000 characters"}, status_code=413)
+
+        from runtime.executor.sandbox import Sandbox
 
         # Execute code in restricted KEI sandbox
         res = Sandbox.execute(code)

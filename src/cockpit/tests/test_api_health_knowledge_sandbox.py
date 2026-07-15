@@ -202,7 +202,15 @@ class TestSandboxAPI:
             del sys.modules["runtime.executor.sandbox"]
 
     def test_execute_missing_code(self, client):
-        # Without runtime.executor.sandbox module, report a clear capability gap.
+        # Validate the request before reporting runtime capability availability.
         resp = client.post("/api/sandbox/execute", json={})
-        assert resp.status_code == 503
-        assert resp.json()["status"] == "unavailable"
+        assert resp.status_code == 400
+        assert resp.json()["error"] == "code is required"
+
+    def test_execute_rejects_non_object_body(self, client):
+        resp = client.post("/api/sandbox/execute", json=["print('hello')"])
+        assert resp.status_code == 422
+
+    def test_execute_rejects_oversized_code(self, client):
+        resp = client.post("/api/sandbox/execute", json={"code": "x" * 20001})
+        assert resp.status_code == 413
