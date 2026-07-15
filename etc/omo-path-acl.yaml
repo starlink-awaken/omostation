@@ -31,3 +31,23 @@ surfaces:
 
 # When true, world-writable findings exit 1; otherwise warn-only (CI default soft).
 strict: false
+
+# Named ACE plan (ADR-0194/0195) — used only by `omo acl plan --acl` (dry-run).
+# $BROKER_USER / $OMO_WRITERS expanded in generated script.
+acl:
+  enabled: false
+  group: omo-writers
+  broker_user: ""   # empty → $USER at plan time
+  entries:
+    - path: .omo/state
+      users: ["$BROKER_USER"]
+      groups: []
+      mask: rwx
+    - path: .omo/_control
+      users: ["$BROKER_USER"]
+      groups: []
+      mask: rwx
+    - path: .omo/_delivery
+      users: ["$BROKER_USER"]
+      groups: ["$OMO_WRITERS"]
+      mask: rwx

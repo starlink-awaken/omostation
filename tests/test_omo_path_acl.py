@@ -121,3 +121,24 @@ def test_apply_with_force_strips_other_write(tmp_path: Path):
     mode = stat.S_IMODE(target.stat().st_mode)
     assert not (mode & stat.S_IWOTH)
 
+
+def test_plan_named_acl_script_linux_dry_run(tmp_path: Path):
+    from omo.omo_path_acl import plan_named_acl_script
+
+    (tmp_path / ".omo" / "state").mkdir(parents=True)
+    plan = plan_named_acl_script(tmp_path, platform="linux")
+    assert plan["dry_run"] is True
+    assert plan["mutation"] is False
+    assert plan["adr"] == "0195"
+    assert "script" in plan
+    assert "setfacl" in plan["script"] or "WARN" in plan["script"]
+    assert plan["command_count"] >= 1
+
+
+def test_plan_named_acl_script_macos(tmp_path: Path):
+    from omo.omo_path_acl import plan_named_acl_script
+
+    plan = plan_named_acl_script(tmp_path, platform="macos")
+    assert plan["platform"] == "macos"
+    assert "chmod +a" in plan["script"]
+

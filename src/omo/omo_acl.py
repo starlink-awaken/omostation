@@ -1,11 +1,11 @@
-"""omo acl — Scheme C 5c L2 host ACL plan/apply (ADR-0189).
+"""omo acl — Scheme C 5c L2 host ACL plan/apply (ADR-0189 / ADR-0195).
 
-  omo acl plan   [--workspace-root PATH] [--json]
+  omo acl plan   [--workspace-root PATH] [--json] [--acl]
   omo acl apply  [--workspace-root PATH] [--json]   # requires OMO_OS_ACL=1
   omo acl status [--workspace-root PATH] [--json]   # alias of lint path-acl doctor
 
 Default is always dry-run. Apply only strips other-write / 0777 via chmod.
-No setfacl, no chown, no launchd changes.
+``plan --acl`` emits setfacl / chmod +a script (still dry-run; no execution).
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from .omo_path_acl import (
     cmd_lint_path_acl,
     os_acl_enabled,
     plan_acl_actions,
-    run_path_acl_doctor,
+    plan_named_acl_script,
 )
 
 
@@ -44,6 +44,12 @@ def main(argv: list[str] | None = None) -> int:
             default=None,
             help="Override omo-path-acl.yaml (or OMO_PATH_ACL_PROFILE)",
         )
+        if name == "plan":
+            p.add_argument(
+                "--acl",
+                action="store_true",
+                help="Also emit named ACE script (setfacl/chmod+a) dry-run (ADR-0195)",
+            )
         if name == "apply":
             p.add_argument(
                 "--yes",
@@ -67,6 +73,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "plan":
         report = plan_acl_actions(root, profile_path=profile_path)
+        if getattr(args, "acl", False):
+            named = plan_named_acl_script(root, profile_path=profile_path)
+            report["named_acl"] = named
         if args.json:
             json.dump(report, sys.stdout, indent=2, ensure_ascii=False)
             sys.stdout.write("\n")
@@ -82,6 +91,13 @@ def main(argv: list[str] | None = None) -> int:
                 )
             if not report["actions"]:
                 print("  (no chmod actions needed)")
+            if report.get("named_acl"):
+                na = report["named_acl"]
+                print(
+                    f"\n[PLAN --acl] platform={na.get('platform')} "
+                    f"commands={na.get('command_count')} (script dry-run)"
+                )
+                print(na.get("script") or "")
         return 0
 
     if args.command == "apply":
