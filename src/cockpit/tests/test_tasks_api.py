@@ -588,6 +588,40 @@ def test_dispatch_rejects_unapproved_active_task(monkeypatch):
     assert "approval must be granted" in response.json()["detail"]
 
 
+def test_controlled_execute_routes_project_verification_through_omo(monkeypatch):
+    client = TestClient(app)
+    payload = {
+        "id": "verify-task",
+        "status": "in_progress",
+        "human_approval_required": False,
+        "metadata": {
+            "controlled_execution": True,
+            "command": 'cd "/workspace/projects/demo" && printf hello',
+        },
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+
+    def fake_execute(*args, **kwargs):
+        calls.append(kwargs)
+        return {
+            "execution_ref": ".omo/_delivery/task-center/execution/verify-task.yaml",
+            "exit_code": 0,
+            "log_ref": "runtime/omo/verify-task.log",
+            "timed_out": False,
+        }
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.execute_controlled_task", fake_execute)
+
+    response = client.post("/api/tasks/verify-task/execute")
+
+    assert response.status_code == 200
+    assert response.json()["exit_code"] == 0
+    assert calls[0]["task_id"] == "verify-task"
+    assert calls[0]["source_ref"] == "cockpit:task:execute:verify-task"
+
+
 def test_execution_endpoint_reports_worker_artifacts(monkeypatch, tmp_path):
     run_dir = tmp_path / ".omo" / "workers" / "runs"
     run_dir.mkdir(parents=True)

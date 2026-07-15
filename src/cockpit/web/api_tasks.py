@@ -73,7 +73,8 @@ def _execution_contract(task_data: dict) -> dict:
         "test_plan": task_data.get("test_plan") or [],
         "source_docs": task_data.get("source_docs") or [],
         "command": metadata.get("command"),
-        "executes": metadata.get("cockpit_only") is not True,
+        "executes": metadata.get("cockpit_only") is not True or metadata.get("controlled_execution") is True,
+        "controlled_execution": metadata.get("controlled_execution") is True,
         "approval_ref": task_data.get("approval_ref"),
         "dispatch_id": task_data.get("dispatch_id"),
         "run_ref": task_data.get("run_ref"),
@@ -115,6 +116,9 @@ def _execution_next_action(task_data: dict) -> str:
     if task_data.get("human_approval_required") and _approval_state(task_data) != "granted":
         return _approval_next_action(task_data)
     if task_data.get("status") == "in_progress" and not task_data.get("dispatch_id"):
+        metadata = task_data.get("metadata") or {}
+        if metadata.get("controlled_execution") is True:
+            return "执行受控验证命令"
         return "发起受控 worker dispatch"
     if task_data.get("run_ref"):
         return "等待 worker 留证并进入审查"
@@ -1140,6 +1144,43 @@ async def dispatch_task_endpoint(task_id: str):
     }
 
 
+@router.post("/api/tasks/{task_id}/execute")
+async def execute_task_endpoint(task_id: str):
+    """Run an explicitly allowlisted low-risk verification through OMO."""
+    group = _task_group(task_id)
+    if group != "active":
+        raise HTTPException(status_code=409, detail="Only active tasks can be controlled-executed")
+    payload = _load_persisted_task(task_id, group)
+    if payload.get("human_approval_required") and _approval_state(payload) != "granted":
+        raise HTTPException(status_code=409, detail="Task approval must be granted before execution")
+    metadata = payload.get("metadata") or {}
+    if metadata.get("controlled_execution") is not True:
+        raise HTTPException(status_code=409, detail="Task is not eligible for controlled execution")
+
+    try:
+        from omo.omo_ingress_task_lifecycle import execute_controlled_task
+
+        result = execute_controlled_task(
+            WORKSPACE_DIR / ".omo",
+            task_id=task_id,
+            actor="cockpit-task-center",
+            source_ref=f"cockpit:task:execute:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO controlled execution is unavailable") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "recorded",
+        "exit_code": result["exit_code"],
+        "log_ref": result["log_ref"],
+        "execution_ref": result.get("execution_ref"),
+        "timed_out": result.get("timed_out", False),
+        "source": "omo_controlled_execution",
+    }
+
+
 def _validate_evidence_paths(evidence_paths: object) -> list[str]:
     if not isinstance(evidence_paths, list) or not evidence_paths:
         return []
@@ -1361,6 +1402,7 @@ async def queue_project_action(project_id: str, action_id: str):
             "command": action.get("value"),
             "risk": risk,
             "cockpit_only": True,
+            "controlled_execution": action_id == "copy-verify-command",
         },
     }
 
@@ -1444,6 +1486,7 @@ async def queue_domain_app_action(app_id: str, action_id: str):
             "command": action.get("value"),
             "risk": risk,
             "cockpit_only": True,
+            "controlled_execution": False,
         },
     }
 

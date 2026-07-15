@@ -972,10 +972,10 @@ ROADMAP_ITEMS: tuple[dict[str, Any], ...] = (
         "title": "项目动作执行与审计",
         "domain": "project-coverage",
         "cockpit_page": "TaskCenter",
-        "problem": "项目动作现在只提供复制命令和导航，尚未接入带确认门的后台执行与审计。",
+        "problem": "低风险项目验证已接入受控执行与审计，但启动、重启等中高风险动作仍保留人工确认边界。",
         "actions": (
-            "把 start/verify/restart 收敛到受控任务队列。",
-            "为高风险动作增加确认门、超时、日志和失败回滚提示。",
+            "保持 verify 通过受控任务队列执行，并把退出码和日志回写 OMO。",
+            "继续为 start/restart 评估审批、超时、日志和失败回滚提示。",
         ),
         "acceptance": (
             "用户能在 TaskCenter 看到项目动作执行历史。",
@@ -1058,7 +1058,7 @@ ROADMAP_ITEMS: tuple[dict[str, Any], ...] = (
         "id": "playbook-omo-writeback",
         "priority": "P2",
         "stage": "later",
-        "status": "planned",
+        "status": "shipped",
         "title": "操作清单写入 OMO",
         "domain": "usage",
         "cockpit_page": "TaskCenter",
