@@ -21,7 +21,7 @@
 | 4 硬化 | MOF 数据包；bus 接线；会话 HMAC；capability YAML | ✅ |
 | 5 证据/执行硬化 | BOS registry 镜像同步；mcp_proxy 元数据投影；CI tip 必跑 | ✅ |
 | 5b 容器执行面 | container executor 门面 + profile SSOT；stdio spawn 统一入口；docker 可选 | ✅ (ADR-0184) |
-| 5c OS 写面 ACL | `.omo` / `spaces` 目录 ACL 与 broker 对齐 | 📋 规划 |
+| 5c OS 写面 ACL | 主体/面/分层设计冻结（ADR-0186）；host ACL 实现另 PR | 📐 设计 ✅ / 实现 📋 |
 
 ## 运行时旋钮
 
@@ -102,10 +102,17 @@ SSOT: `projects/agora/etc/container-executor-profiles.yaml`
 实现: `projects/agora/src/agora/execution/container_executor.py`  
 接线: `StdioMCPClient.connect` + `ProcessPool.get_or_spawn`
 
-## Phase 5c（规划，未实现）
+## Phase 5c（设计已冻结，实现未做）
 
-| 项 | 意图 | 不做的理由（本轮） |
-|----|------|-------------------|
-| **5c OS ACL** | 对 `.omo`/`spaces` 目录做 unix ACL，仅 broker 进程可写 | 与 launchd/多 agent 本机布局强耦合；先靠 contract_gatekeeper + direct-omo-io |
+> ADR: [0186](../.omo/_knowledge/decisions/0186-scheme-c-5c-os-acl-design.md)
 
-5c 落地时：先 ADR（ACL 主体列表 + launchd 模型），再实现。
+| 层 | 内容 | 状态 |
+|----|------|------|
+| L0 进程策略 | contract_gatekeeper + direct-omo-io | ✅ 已有 |
+| L1 doctor 只读巡检 | 世界可写 / 非预期 owner 报告 | 📋 实现 PR |
+| L2 可选 host ACL | `OMO_OS_ACL=1` + dry-run/apply | 📋 实现 PR（opt-in） |
+| L3 容器 | 5b spawn 不 RW mount `.omo` | ✅ 5b |
+
+**主体（可写）**: omo broker · agent-workflow/GaC · 人工 break-glass  
+**禁止**: agent 语言运行时 ad-hoc 直写 `.omo/state`  
+**本轮不做**: 合并时不执行 chmod/setfacl（防多 agent 砖机）

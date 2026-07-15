@@ -45,5 +45,6 @@ scope; other directions stay backlog.
 
 ## Follow-ups
 
-- Phase B/C remain draft until separate ADRs.
-- Do not expand Wave 2 scope without superseding this ADR.
+- Phase B accepted: [ADR-0185](0185-wave2-phase-b-predictive-viz.md).
+- Phase C remains draft until a separate ADR.
+- Do not expand Wave 2 scope without a new ADR.

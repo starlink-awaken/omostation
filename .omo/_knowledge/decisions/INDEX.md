@@ -162,6 +162,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0182 | CI / evidence / BOS registry 常态化落地 | ACCEPTED | 2026-07-14 | governance-team | 0182-ci-evidence-bos-landing.md |
 | 0183 | Wave 2 C2G+OMO Phase A 数据闭环范围 | ACCEPTED | 2026-07-14 | governance-team | 0183-wave2-c2g-omo-phase-a.md |
 | 0184 | Scheme C Phase 5b Container Executor 运行时模型 | ACCEPTED | 2026-07-15 | governance-team | 0184-scheme-c-5b-container-executor.md |
+| 0185 | Wave 2 Phase B 预测增强 + 可视化导出 | ACCEPTED | 2026-07-15 | governance-team | 0185-wave2-phase-b-predictive-viz.md |
+| 0186 | Scheme C Phase 5c OS 写面 ACL 设计 (design-only) | ACCEPTED | 2026-07-15 | governance-team | 0186-scheme-c-5c-os-acl-design.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
 
