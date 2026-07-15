@@ -544,6 +544,59 @@ def test_queue_runtime_triage_uses_probe_fallback_per_project(monkeypatch):
     assert response.json()["executes"] is False
 
 
+def test_execute_verification_triage_runs_only_failed_active_tasks(monkeypatch):
+    system_map = {
+        "projects": [
+            {
+                "id": "service-a",
+                "triage_commands": [
+                    {
+                        "id": "verification-rerun",
+                        "category": "verification",
+                        "enabled": True,
+                        "value": 'cd "/workspace" && printf a',
+                        "task": {"task_id": "task-a"},
+                    }
+                ],
+            },
+            {
+                "id": "service-b",
+                "triage_commands": [
+                    {
+                        "id": "verification-rerun",
+                        "category": "verification",
+                        "enabled": True,
+                        "value": 'cd "/workspace" && printf b',
+                        "task": {"task_id": "task-b"},
+                    }
+                ],
+            },
+        ]
+    }
+    payloads = {
+        "task-a": {"metadata": {"controlled_execution": True, "execution_audit": {"exit_code": 2}}},
+        "task-b": {"metadata": {"controlled_execution": True, "execution_audit": {"exit_code": 0}}},
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda task_id, _group: payloads[task_id])
+
+    def fake_execute(*args, **kwargs):
+        calls.append(kwargs)
+        return {"exit_code": 0, "log_ref": "runtime/task-a.log", "execution_ref": ".omo/_delivery/task-a.yaml"}
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.execute_controlled_task", fake_execute)
+
+    response = TestClient(app).post("/api/cockpit/triage/execute", json={"limit": 8})
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {"candidates": 1, "selected": 1, "succeeded": 1, "failed": 0}
+    assert response.json()["executed"][0]["project_id"] == "service-a"
+    assert calls[0]["command_override"] == 'cd "/workspace" && printf a'
+    assert calls[0]["timeout_seconds"] == 900
+
+
 def test_queue_coverage_drafts_promotes_selected_dimension(monkeypatch):
     drafts = [
         {"id": "capability-gap-demo", "title": "能力缺口：demo"},

@@ -1246,6 +1246,101 @@ async def queue_verification_triage(request: Request):
     }
 
 
+@router.post("/api/cockpit/triage/execute")
+async def execute_verification_triage(request: Request):
+    """Execute queued low-risk verification tasks and return per-project evidence."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Triage execution request must be an object")
+
+    raw_limit = body.get("limit", 8)
+    if isinstance(raw_limit, bool) or not isinstance(raw_limit, int) or not 1 <= raw_limit <= 8:
+        raise HTTPException(status_code=422, detail="limit must be an integer between 1 and 8")
+    project_ids = body.get("project_ids")
+    if project_ids is not None and (
+        not isinstance(project_ids, list) or not all(isinstance(item, str) for item in project_ids)
+    ):
+        raise HTTPException(status_code=422, detail="project_ids must be a list[str]")
+
+    allowed_projects = set(project_ids or [])
+    candidates: list[dict[str, str]] = []
+    for project in build_system_map().get("projects", []):
+        project_id = project.get("id")
+        if not isinstance(project_id, str) or (allowed_projects and project_id not in allowed_projects):
+            continue
+        command = next(
+            (
+                item
+                for item in project.get("triage_commands") or []
+                if item.get("id") == "verification-rerun"
+                and item.get("category") == "verification"
+                and item.get("enabled")
+            ),
+            None,
+        )
+        task_id = ((command or {}).get("task") or {}).get("task_id") if isinstance(command, dict) else None
+        command_value = command.get("value") if isinstance(command, dict) else None
+        if not isinstance(task_id, str) or not isinstance(command_value, str) or _task_group(task_id) != "active":
+            continue
+        try:
+            task_data = _load_persisted_task(task_id, "active")
+        except HTTPException:
+            continue
+        metadata = task_data.get("metadata") or {}
+        audit = metadata.get("execution_audit") or {}
+        if metadata.get("controlled_execution") is not True or audit.get("exit_code") == 0:
+            continue
+        candidates.append({"project_id": project_id, "task_id": task_id, "command": command_value})
+
+    selected = candidates[:raw_limit]
+    if not selected:
+        return {
+            "category": "verification",
+            "executed": [],
+            "skipped": [],
+            "errors": [],
+            "summary": {"candidates": len(candidates), "selected": 0, "succeeded": 0, "failed": 0},
+            "source": "omo_controlled_execution",
+        }
+
+    from omo.omo_ingress_task_lifecycle import execute_controlled_task
+
+    executed: list[dict] = []
+    errors: list[dict] = []
+    for candidate in selected:
+        try:
+            result = execute_controlled_task(
+                WORKSPACE_DIR / ".omo",
+                task_id=candidate["task_id"],
+                actor="cockpit-system-map-batch",
+                timeout_seconds=900,
+                source_ref=f"cockpit:triage:execute:{candidate['task_id']}",
+                command_override=candidate["command"],
+            )
+        except (OSError, ValueError, TimeoutError) as exc:
+            errors.append({"project_id": candidate["project_id"], "task_id": candidate["task_id"], "detail": str(exc)})
+        else:
+            executed.append({"project_id": candidate["project_id"], "task_id": candidate["task_id"], **result})
+
+    succeeded = sum(1 for item in executed if item.get("exit_code") == 0)
+    return {
+        "category": "verification",
+        "executed": executed,
+        "skipped": candidates[raw_limit:],
+        "errors": errors,
+        "summary": {
+            "candidates": len(candidates),
+            "selected": len(selected),
+            "succeeded": succeeded,
+            "failed": len(executed) - succeeded + len(errors),
+        },
+        "source": "omo_controlled_execution",
+    }
+
+
 @router.post("/api/cockpit/domain-apps/{app_id}/actions/{action_id}/queue")
 async def queue_domain_app_action(app_id: str, action_id: str):
     """登记领域应用命令为 OMO planned task; never execute it in Cockpit."""
