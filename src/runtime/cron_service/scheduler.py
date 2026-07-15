@@ -1,398 +1,79 @@
-"""Scheduler engine — tick-based loop that checks for due jobs and runs them.
+from __future__ import annotations
 
-Uses croniter for cron expression parsing and supports:
-  - Standard cron: "0 10 * * *"
-  - Every interval: "every 5m", "every 30m", "every 2h"
-  - Range + interval: "*/15 7-23 * * *"
-"""
-
-import asyncio
 import logging
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, datetime
-from pathlib import Path
-
-import croniter
-
-try:
-    from ecos.l0.triggers.yaml_loader import YAMLTriggerRegistry
-    from ecos.l0.triggers.registry import CronTrigger
-except ImportError:
-    YAMLTriggerRegistry = None
-    CronTrigger = None
 
 from . import config, db
-from . import delivery as delivery_module
-from . import executor as executor_module
+from .health_scan import run_scan_if_due
 
-try:
-    from .health_scan import run_scan_if_due
-except ImportError:
-    run_scan_if_due = None
-
-logger = logging.getLogger(__name__)
-
-
-# ── Schedule parsing ───────────────────────────────────────────────
-
-
-def _parse_cron_expr(expr: str) -> int | None:
-    """Try to parse as a cron expression, return next due timestamp (epoch) or None.
-
-    Returns the next match timestamp (in seconds since epoch) if the expression
-    is a valid cron expression, None if it can't be parsed.
-    """
-    try:
-        now = datetime.now()
-        cron = croniter.croniter(expr, now)
-        next_due = cron.get_next(float)
-        # Legacy compatibility: one older smoke test only checks that the
-        # wildcard expression returns a dict-like object.
-        if expr.strip() == "* * * * *":
-            return {"next_due": next_due}
-        return next_due
-    except (ValueError, KeyError):
-        return None
-
-
-def _parse_every_expr(expr: str) -> float | None:
-    """Try to parse as an 'every Xm' or 'every Xh' expression.
-
-    Returns the interval in seconds, or None if it can't be parsed.
-    """
-    expr = expr.strip().lower()
-
-    if expr.startswith("every "):
-        remainder = expr[6:].strip()
-        # "every 5m" or "every 5 minutes"
-        if remainder.endswith("m") or "minute" in remainder or "min" in remainder:
-            num_str = remainder.split()[0].rstrip("ms")
-            try:
-                return int(num_str) * 60
-            except ValueError:
-                return None
-        # "every 2h" or "every 2 hours"
-        if remainder.endswith("h") or "hour" in remainder:
-            num_str = remainder.split()[0].rstrip("hs")
-            try:
-                return int(num_str) * 3600
-            except ValueError:
-                return None
-
-    # Also handle "*/5 * * * *" style (handled by croniter)
-    return None
-
-
-def _parse_step_cron_interval(expr: str) -> float | None:
-    """Best-effort interval extraction for simple step cron expressions.
-
-    Legacy tests treat ``*/N * * * *`` more like ``every Nm`` than a strict
-    wall-clock cron boundary. We preserve that behavior only for the obvious
-    step forms that can be reduced to a fixed interval.
-    """
-    parts = expr.strip().split()
-    if len(parts) != 5:
-        return None
-
-    minute, hour, day, month, weekday = parts
-    if hour == day == month == weekday == "*" and minute.startswith("*/"):
-        try:
-            return int(minute[2:]) * 60
-        except ValueError:
-            return None
-
-    if day == month == weekday == "*" and hour.startswith("*/") and minute.isdigit():
-        try:
-            return int(hour[2:]) * 3600
-        except ValueError:
-            return None
-
-    return None
-
-
-def _is_due(
-    job_id: str | None,
-    schedule_expr: str | int | None,
-    last_run_at: datetime | None = None,
-    created_at: datetime | None = None,
-) -> bool:
-    """Check if a job is due to run based on its schedule and last run time.
-
-    A newly created job never runs immediately — it waits until the next
-    scheduled time after its creation.
-    """
-    # Legacy compatibility: old callers used ``_is_due(last_run_at, interval_seconds)``.
-    if isinstance(schedule_expr, int):
-        return last_run_at is None
-
-    if schedule_expr is None:
-        return True
-
-    # Never run a job that's never been run if it was just created
-    # (within the last minute). This prevents a flood when bulk-importing jobs.
-    if not last_run_at and created_at:
-        now = datetime.now(UTC)
-        age = (now - created_at).total_seconds()
-        if age < 60:
-            return False  # newly created, wait for next tick
-
-    if not last_run_at:
-        return True  # older job that's never run → due
-
-    # Normalize to UTC-naive for comparison
-    now = datetime.now(UTC)
-
-    # Try "every" syntax
-    interval = _parse_every_expr(schedule_expr)
-    if interval is not None:
-        elapsed = (now - last_run_at).total_seconds()
-        return elapsed >= interval
-
-    step_interval = _parse_step_cron_interval(schedule_expr)
-    if step_interval is not None:
-        elapsed = (now - last_run_at).total_seconds()
-        return elapsed >= step_interval
-
-    # Try cron expression
-    if "/" in schedule_expr or schedule_expr.count(" ") >= 4:
-        try:
-            cron = croniter.croniter(schedule_expr, last_run_at.replace(tzinfo=None))
-            next_time = cron.get_next(float)
-            return next_time <= now.timestamp()
-        except (ValueError, KeyError):
-            pass
-
-    # Fallback: always due (safety valve — better to over-run than skip)
-    return True
-
-
-# ── Job runner ─────────────────────────────────────────────────────
-
-
-async def _run_job(job_id: str, executor: ThreadPoolExecutor):
-    """Execute a single job and record the result (async, runs execution in thread pool)."""
-    job = db.get_job(job_id)
-    if not job:
-        logger.warning("Job %s not found, skipping", job_id)
-        return
-
-    if not job.enabled:
-        return
-
-    logger.info("Running job %s (%s)", job_id, job.name)
-
-    # Execute script in thread pool to avoid blocking the event loop
-    if job.script:
-        result = await asyncio.get_event_loop().run_in_executor(
-            executor,
-            lambda: executor_module.execute(
-                job.script,
-                timeout=job.timeout or config.DEFAULT_TIMEOUT,
-                workdir=job.workdir,
-            ),
-        )
-
-        if result.timed_out:
-            status = "timeout"
-            output = ""
-            error = f"Script timed out after {job.timeout}s: {job.name}"
-            logger.warning("Job %s timed out", job_id)
-        elif result.success:
-            status = "ok"
-            output = result.output.strip()
-            error = result.error.strip()
-        else:
-            status = "error"
-            output = result.output.strip()
-            error = result.error.strip()
-            logger.warning("Job %s failed: %s", job_id, error)
-    else:
-        # No script → agent-mode job (not supported in v1)
-        status = "error"
-        output = ""
-        error = "Agent-mode jobs not supported in cron-service v1 (no script defined)"
-
-    # Record run
-    db.record_run(job_id, status, output, error)
-
-    # Deliver
-    deliver_target = job.deliver or "local"
-    if status == "ok" and not output:
-        # Silent run — nothing to deliver
-        pass
-    elif status in ("error", "timeout"):
-        err_msg = delivery_module.deliver(
-            job.name,
-            content=f"⛔ Job '{job.name}': {error}",
-            target=deliver_target,
-            job_id=job_id,
-        )
-        if err_msg:
-            logger.error("Delivery failed for job %s: %s", job_id, err_msg)
-            db.record_run(
-                job_id, status, output, f"{error}\n[Delivery failed] {err_msg}"
-            )
-    else:
-        err_msg = delivery_module.deliver(
-            job.name,
-            content=output,
-            target=deliver_target,
-            job_id=job_id,
-        )
-        if err_msg:
-            logger.error("Delivery failed for job %s: %s", job_id, err_msg)
-            db.record_run(job_id, "ok", output, f"[Delivery failed] {err_msg}")
-
-    # Round 4 / P7x: announce the cron fire to bus-foundation so other
-    # omostation consumers (cockpit, omo, metaos) can observe the run.
-    # Best-effort: a missing bus-foundation must not break the cron loop.
-    _bus_emit_cron_fired(
-        job_id=job_id, name=job.name, status=status, error=error, output=output
-    )
-
-
-def _bus_emit_cron_fired(
-    *,
-    job_id: str,
-    name: str,
-    status: str,
-    error: str | None,
-    output: str,
-) -> None:
-    """Best-effort bus-foundation emit for cron job completion."""
-    try:
-        from bus_foundation.facade import event as bus_event
-    except ImportError:
-        return
-    try:
-        topic = "runtime:cron:failed" if status != "ok" else "runtime:cron:fired"
-        bus_event.publish(
-            topic=topic,
-            payload={
-                "job_id": job_id,
-                "name": name,
-                "status": status,
-                "error": error,
-                "output": output[:500] if output else "",
-            },
-            source_uri="bos://capability/runtime/cron",
-        )
-    except Exception as exc:  # noqa: BLE001  # defensive
-        logger.debug("runtime_cron_bus_publish_skipped: %s", exc)
-
-
-# ── Scheduler loop ─────────────────────────────────────────────────
+logger = logging.getLogger("cron-service.scheduler")
 
 
 class CronScheduler:
-    """Asynchronous cron scheduler.
+    """Thread-based cron scheduler.
 
-    Runs a tick loop that checks every TICK_INTERVAL seconds for due jobs.
-    Uses a thread pool for script execution so slow jobs don't block the event loop.
+    Uses a daemon thread to tick at TICK_INTERVAL. Avoids asyncio
+    task lifecycle bugs (CancelledError, task GC, sleep deadlock).
     """
 
     def __init__(self):
         self._running = False
-        self._tick_task: asyncio.Task | None = None
+        self._thread: threading.Thread | None = None
         self._executor = ThreadPoolExecutor(max_workers=4)
-        self.start_time: datetime | None = None
-        self.last_tick_time: datetime | None = None
+        self.start_time: float = 0.0
+        self.last_tick_time: float = 0.0
         self.tick_count: int = 0
 
-    async def start(self):
-        """Start the scheduler loop."""
+    def start(self) -> None:
+        """Start the scheduler thread (non-blocking)."""
+        if self._running:
+            return
         self._running = True
-        self.start_time = datetime.now(UTC)
-        self._tick_task = asyncio.create_task(self._loop())
-        logger.info("Cron scheduler started (tick=%ds)", config.TICK_INTERVAL)
+        self.start_time = time.time()
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+        logger.info("Cron scheduler started (thread, tick=%ds)", config.TICK_INTERVAL)
 
-        # Sync triggers from L0 registry
-        self._sync_l0_triggers()
-
-    def _sync_l0_triggers(self):
-        """Load triggers from the L0 BOS YAML registry and inject them."""
-        if YAMLTriggerRegistry is None:
-            return
-
-        registry = YAMLTriggerRegistry()
-        # Default OMO registry location
-        registry_path = Path(".omo/registry/triggers.yaml")
-        if not registry_path.exists():
-            return
-
-        try:
-            registry.load_from_yaml(registry_path)
-            triggers = registry.list_triggers()
-            for t in triggers:
-                if isinstance(t, CronTrigger):
-                    # We inject this into the DB so the scheduler picks it up
-                    # We use BOS URI as the script command directly if it's an invoke
-                    # Or we could wrap it. For now, just register the schedule.
-                    db.add_job(
-                        name=f"[L0] {t.name}",
-                        schedule=t.expression,
-                        script=f"agora invoke {t.target_bos_uri}",
-                        description=f"L0 Trigger: {t.name}",
-                    )
-            logger.info(
-                "Successfully synced %d triggers from L0 registry", len(triggers)
-            )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
-            logger.error("Failed to sync L0 triggers: %s", e)
-
-    async def stop(self):
-        """Stop the scheduler loop."""
+    def stop(self) -> None:
+        """Stop the scheduler thread."""
         self._running = False
-        if self._tick_task:
-            self._tick_task.cancel()
-            try:
-                await self._tick_task
-            except asyncio.CancelledError:
-                pass
+        if self._executor:
+            self._executor.shutdown(wait=False)
         logger.info("Cron scheduler stopped")
 
-    async def _loop(self):
-        """Main scheduler loop."""
+    def _loop(self) -> None:
+        """Main scheduler loop in a daemon thread."""
         while self._running:
             try:
-                await self._tick()
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+                self._tick()
+            except Exception as e:
                 logger.error("Scheduler tick error: %s", e, exc_info=True)
-            await asyncio.sleep(config.TICK_INTERVAL)
+            time.sleep(config.TICK_INTERVAL)
 
-    async def _tick(self):
+    def _tick(self) -> None:
         """Check for due jobs and run them. Also triggers periodic health scans."""
-        self.last_tick_time = datetime.now(UTC)
+        self.last_tick_time = time.time()
         self.tick_count += 1
         jobs = db.list_jobs(enabled_only=True)
 
         for job in jobs:
             last = job.last_run_at
             if _is_due(job.id, job.schedule, last, created_at=job.created_at):
-                try:
-                    await asyncio.wait_for(
-                        _run_job(job.id, self._executor), timeout=120
-                    )
-                except asyncio.TimeoutError:
-                    logger.warning("Job %s timed out (>120s), continuing tick", job.id)
+                _run_job_sync(job.id, self._executor)
 
-        # Route B: periodic health scan (every ~15 min via health_scan.should_scan)
         if run_scan_if_due is not None:
-            loop = asyncio.get_event_loop()
             try:
-                await asyncio.wait_for(
-                    loop.run_in_executor(self._executor, run_scan_if_due),
-                    timeout=30,
-                )
-            except asyncio.TimeoutError:
-                logger.warning("Health scan timed out, continuing tick")
+                run_scan_if_due()
+            except Exception as e:
+                logger.error("Health scan error: %s", e, exc_info=True)
 
     @property
     def is_running(self) -> bool:
-        return self._running
+        return self._running and self._thread is not None and self._thread.is_alive()
 
     def force_tick(self) -> int:
-        """Synchronously check and count due jobs (for manual triggers)."""
         jobs = db.list_jobs(enabled_only=True)
         due = 0
         for job in jobs:
@@ -402,4 +83,70 @@ class CronScheduler:
         return due
 
 
-Scheduler = CronScheduler
+# ── Standalone helpers ────────────────────────────────────────────
+
+
+def _is_due(job_id: str, schedule: str, last_run, *, created_at) -> bool:
+    if not schedule:
+        return False
+    if last_run is None:
+        return True
+    interval = _parse_interval(schedule)
+    if interval is None:
+        return False
+    if hasattr(last_run, "timestamp"):
+        last_ts = last_run.timestamp()
+    else:
+        last_ts = float(last_run)
+    return (time.time() - last_ts) >= interval
+
+
+def _parse_interval(schedule: str) -> float | None:
+    s = schedule.strip().lower()
+    if s.startswith("every "):
+        rest = s[6:].strip()
+        parts = rest.split()
+        if len(parts) == 2:
+            try:
+                n = float(parts[0])
+                unit = parts[1]
+                if "min" in unit:
+                    return n * 60
+                if "hour" in unit or "hr" in unit:
+                    return n * 3600
+                if "sec" in unit or "s" in unit:
+                    return n
+                return n * 60
+            except ValueError:
+                return None
+    return None
+
+
+def _run_job_sync(job_id: str, executor: ThreadPoolExecutor) -> None:
+    from .db import get_job, update_job, JobUpdate
+
+    job = get_job(job_id)
+    if not job or not job.script:
+        return
+    logger.info("Running job %s (script=%s)", job_id, job.script)
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            job.script,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        status = "ok" if result.returncode == 0 else "error"
+        output = (result.stdout or "") + "\n" + (result.stderr or "")
+        update_job(job_id, JobUpdate(last_status=status, last_output=output.strip()[:500]))
+        if status == "error":
+            logger.warning("Job %s failed: %s", job_id, output.strip()[:200])
+    except subprocess.TimeoutExpired:
+        logger.warning("Job %s timed out (>120s)", job_id)
+        update_job(job_id, JobUpdate(last_status="timeout", last_output="timed out (>120s)"))
+    except Exception as e:
+        logger.error("Job %s error: %s", job_id, e)
+        update_job(job_id, JobUpdate(last_status="error", last_output=str(e)[:500]))
