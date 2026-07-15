@@ -212,6 +212,23 @@ def change_lane_files_for_scope(scope: str, files: list[str] | None, run_id: str
     return []
 
 
+# ADR-0209 A6: three finding-topic checks — classify structured issues even on soft warn.
+FINDING_TOPIC_CHECKS: dict[str, dict[str, str]] = {
+    "governance-semantic-gate": {
+        "topic": "governance-semantic",
+        "label": "治理语义门 (semantic / evolution / service-config)",
+    },
+    "gac-compute-onboard-check": {
+        "topic": "compute-onboard",
+        "label": "算力并网自检 (AetherForge 五渠连通)",
+    },
+    "bus-usage-report": {
+        "topic": "bus-dormant-adapter",
+        "label": "总线休眠适配器 (declaration without execution)",
+    },
+}
+
+
 def run_check(name: str, command: list[str]) -> dict[str, object]:
     cmd = [sys.executable, *command]
     try:
@@ -242,6 +259,71 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
         }
 
 
+def extract_finding_topics(results: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Expand A6 checks into classified finding topics for agents/dashboards.
+
+    Hard FAIL (returncode != 0) → severity error.
+    Soft JSON findings with ok=false / non-empty findings → severity warn (does not
+    flip gate ok by itself; the check's returncode still owns gate pass/fail).
+    """
+    topics: list[dict[str, object]] = []
+    for item in results:
+        name = str(item.get("name") or "")
+        meta = FINDING_TOPIC_CHECKS.get(name)
+        if not meta:
+            continue
+        base = {
+            "check": name,
+            "topic": meta["topic"],
+            "label": meta["label"],
+            "command": item.get("command"),
+            "returncode": item.get("returncode"),
+        }
+        if not item.get("ok"):
+            topics.append(
+                {
+                    **base,
+                    "severity": "error",
+                    "blocking": True,
+                    "summary": (str(item.get("stderr") or item.get("stdout") or "")[:400] or "check failed"),
+                }
+            )
+            continue
+        # Soft findings from JSON-capable checks (e.g. governance-semantic-gate)
+        stdout = str(item.get("stdout") or "")
+        if not stdout.lstrip().startswith(("{", "[")):
+            continue
+        try:
+            payload = json.loads(stdout)
+        except json.JSONDecodeError:
+            continue
+        findings_raw: list[object] = []
+        if isinstance(payload, dict):
+            if payload.get("ok") is False:
+                findings_raw.append(payload.get("summary") or payload.get("message") or "ok=false")
+            nested = payload.get("findings") or payload.get("checks") or []
+            if isinstance(nested, list):
+                for row in nested:
+                    if not isinstance(row, dict):
+                        continue
+                    if row.get("ok") is False or row.get("findings"):
+                        findings_raw.append(
+                            f"{row.get('id') or row.get('name') or 'item'}: "
+                            f"{row.get('findings') or row.get('message') or 'not ok'}"
+                        )
+        if findings_raw:
+            topics.append(
+                {
+                    **base,
+                    "severity": "warn",
+                    "blocking": False,
+                    "summary": "; ".join(str(x) for x in findings_raw[:8]),
+                    "finding_count": len(findings_raw),
+                }
+            )
+    return topics
+
+
 def run_gate(
     scope: str = "staged",
     files: list[str] | None = None,
@@ -250,12 +332,14 @@ def run_gate(
 ) -> dict[str, object]:
     change_lane_files = change_lane_files_for_scope(scope, files, run_id)
     results = [run_check(name, command) for name, command in gate_checks(scope, files, run_id, strict)]
+    finding_topics = extract_finding_topics(results)
     return {
         "ok": all(item["ok"] for item in results),
         "scope": scope,
         "run_id": run_id or None,
         "change_lane_files": change_lane_files,
         "checks": results,
+        "finding_topics": finding_topics,
     }
 
 
@@ -282,6 +366,14 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
                 print(item["stdout"])
             if item["stderr"]:
                 print(item["stderr"], file=sys.stderr)
+    topics = report.get("finding_topics") or []
+    if topics:
+        print(f"finding_topics={len(topics)}")
+        for topic in topics:
+            print(
+                f"  [{str(topic.get('severity', 'info')).upper()}] "
+                f"{topic.get('topic')}: {topic.get('summary')}"
+            )
     print("GaC local gate: " + ("PASS" if is_ok else "FAIL"))
 
 

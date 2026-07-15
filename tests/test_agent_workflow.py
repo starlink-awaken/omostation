@@ -902,6 +902,140 @@ def test_verify_blocks_required_claim_tier(tmp_path: Path) -> None:
     assert allowed_report["claim_coverage"]["missing_files"] == []
 
 
+def test_read_only_workflow_skips_claim_policy(tmp_path: Path) -> None:
+    """ADR-0209 A4: empty write surfaces exempt claim_policy write enforcement."""
+    registry = tmp_path / "agent-workflows.yaml"
+    runs = tmp_path / "runs"
+    locks = tmp_path / "locks"
+    ledger = tmp_path / "events.jsonl"
+    registry.write_text(
+        f"""---
+status: active
+lifecycle: ssot
+owner: test
+last-reviewed: 2026-06-29
+---
+version: 1
+runner:
+  run_state_dir: {runs}
+  lock_state_dir: {locks}
+  ledger_path: {ledger}
+  lock_ttl_hours: 1
+claim_policy:
+  mode: advisory
+  required_paths: [README.md]
+  tiers:
+    - id: core-required
+      mode: required
+      paths: [bin/agent-workflow.py]
+workflows:
+  - id: observer-mini
+    title: Observer
+    purpose: Read-only
+    allowed_lanes: [docs]
+    lock_scopes: [observer-readonly]
+    surfaces:
+      read: [README.md]
+      write: []
+    agents:
+      roles: [observer-agent]
+    phases:
+      preflight:
+        - id: true-preflight
+          mode: required
+          command: [python, -c, pass]
+      execute:
+        - id: manual
+          mode: manual
+          command: [agent, read]
+      verification:
+        - id: true-verify
+          mode: required
+          command: [python, -c, pass]
+      closeout:
+        - id: true-closeout
+          mode: required
+          command: [python, -c, pass]
+agent_profiles:
+  observer-agent:
+    purpose: read only
+    allowed_workflows: [observer-mini]
+    can_write_lanes: []
+    closeout_required: []
+""",
+        encoding="utf-8",
+    )
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "observer-mini",
+        "--profile",
+        "observer-agent",
+        "--actor",
+        "tester",
+        "--objective",
+        "read only claim exempt",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+
+    verify = _run_workflow(
+        "--registry",
+        str(registry),
+        "verify",
+        run_id,
+        "--file",
+        "bin/agent-workflow.py",
+        "--json",
+    )
+    assert verify.returncode == 0, verify.stderr
+    report = json.loads(verify.stdout)
+    assert report["ok"] is True
+    assert report["claim_coverage"]["mode"] == "read_only_exempt"
+    assert report["claim_coverage"]["missing_required_files"] == []
+
+
+def test_observe_heals_missing_ledger_from_run_yaml(tmp_path: Path) -> None:
+    """ADR-0209 A2: observe replays start event when ledger was trimmed."""
+    registry = _write_control_plane_registry(tmp_path)
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "ledger heal",
+        "--json",
+    )
+    assert start.returncode == 0, start.stderr
+    run_id = json.loads(start.stdout)["run_id"]
+    ledger = tmp_path / "events.jsonl"
+    assert ledger.exists()
+    # simulate external trim
+    ledger.write_text("", encoding="utf-8")
+
+    observe = _run_workflow(
+        "--registry",
+        str(registry),
+        "observe",
+        run_id,
+        "--json",
+    )
+    assert observe.returncode == 0, observe.stderr
+    report = json.loads(observe.stdout)
+    kinds = [f.get("kind") for f in report.get("findings") or []]
+    assert "ledger_healed_from_run" in kinds
+    assert "ledger_missing_run" not in kinds
+    text = ledger.read_text(encoding="utf-8")
+    assert "agent_workflow_start" in text
+    assert run_id in text
+    assert "healed" in text
+
+
 def test_closeout_verifies_observes_closes_and_compliance_passes(tmp_path: Path) -> None:
     registry = _write_control_plane_registry(tmp_path)
     start = _run_workflow(
