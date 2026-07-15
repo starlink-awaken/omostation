@@ -234,6 +234,15 @@ def main(argv: list[str] | None = None) -> int:
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
+    # 7:00 — Git divergence check (ADR-0202 D3)
+    print("[7:00] git divergence...")
+    results.append(run_tool(
+        "7:00-git-divergence",
+        ["uv", "run", "python", "bin/gac/git-divergence-check.py"],
+        retries=0, timeout=120,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
     # Persist run
     record = foundry_run_record(run_id, results)
     print(f"\n=== Foundry run {run_id} complete. Record: {record.relative_to(WORKSPACE)} ===")
