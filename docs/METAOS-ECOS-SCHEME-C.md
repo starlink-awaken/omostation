@@ -116,7 +116,9 @@ SSOT: `projects/agora/etc/container-executor-profiles.yaml`
 | L2 可选 host ACL | `omo acl plan` / `apply`（ADR-0189，`OMO_OS_ACL=1`） | ✅ |
 | L3 容器 | 5b spawn 不 RW mount `.omo` | ✅ 5b |
 
-### Phase 5c L1/L2 命令
+#运维 Runbook: [`docs/operations/omo-path-acl-runbook.md`](operations/omo-path-acl-runbook.md) (doctor 日常节奏 ADR-0199)
+
+## Phase 5c L1/L2 命令
 
 ```bash
 cd projects/omo
