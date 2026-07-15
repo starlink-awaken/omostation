@@ -125,6 +125,7 @@ uv run pytest tests/test_omo_path_acl.py -q
 uv run python -m omo.cli lint path-acl --workspace-root ../.. --json
 # L2 dry-run plan (default safe)
 uv run python -m omo.cli acl plan --workspace-root ../.. --json
+uv run python -m omo.cli acl plan --workspace-root ../.. --acl --json  # named ACE dry-run (ADR-0195)
 # L2 apply (operator only)
 # export OMO_OS_ACL=1
 # uv run python -m omo.cli acl apply --yes --workspace-root ../..
