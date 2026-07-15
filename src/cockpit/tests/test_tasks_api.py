@@ -597,6 +597,52 @@ def test_execute_verification_triage_runs_only_failed_active_tasks(monkeypatch):
     assert calls[0]["timeout_seconds"] == 900
 
 
+def test_execute_runtime_triage_requires_granted_approval(monkeypatch):
+    system_map = {
+        "projects": [
+            {
+                "id": "service-a",
+                "triage_commands": [
+                    {
+                        "id": "runtime-check-ports",
+                        "category": "runtime",
+                        "enabled": True,
+                        "value": "for port in 7437; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done",
+                        "task": {"task_id": "runtime-task-a"},
+                    }
+                ],
+            }
+        ]
+    }
+    payload = {
+        "metadata": {
+            "controlled_execution": True,
+            "execution_audit": {"exit_code": 1},
+        }
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(api_tasks, "_approval_state", lambda _task_data: "granted")
+
+    def fake_execute(*args, **kwargs):
+        calls.append(kwargs)
+        return {"exit_code": 1, "log_ref": "runtime/runtime-task-a.log", "execution_ref": ".omo/_delivery/runtime-task-a.yaml"}
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.execute_controlled_task", fake_execute)
+
+    response = TestClient(app).post(
+        "/api/cockpit/triage/execute",
+        json={"category": "runtime", "limit": 8},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {"candidates": 1, "selected": 1, "succeeded": 0, "failed": 1}
+    assert calls[0]["command_override"].startswith("for port in 7437")
+    assert calls[0]["timeout_seconds"] == 120
+
+
 def test_queue_coverage_drafts_promotes_selected_dimension(monkeypatch):
     drafts = [
         {"id": "capability-gap-demo", "title": "能力缺口：demo"},

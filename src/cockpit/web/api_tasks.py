@@ -1248,7 +1248,7 @@ async def queue_verification_triage(request: Request):
 
 @router.post("/api/cockpit/triage/execute")
 async def execute_verification_triage(request: Request):
-    """Execute queued low-risk verification tasks and return per-project evidence."""
+    """Execute approved controlled triage tasks and return per-project evidence."""
     try:
         body = await request.json()
     except Exception:
@@ -1256,6 +1256,9 @@ async def execute_verification_triage(request: Request):
     if not isinstance(body, dict):
         raise HTTPException(status_code=422, detail="Triage execution request must be an object")
 
+    category = str(body.get("category") or "verification")
+    if category not in {"verification", "runtime"}:
+        raise HTTPException(status_code=400, detail="Only verification or runtime triage can be executed")
     raw_limit = body.get("limit", 8)
     if isinstance(raw_limit, bool) or not isinstance(raw_limit, int) or not 1 <= raw_limit <= 8:
         raise HTTPException(status_code=422, detail="limit must be an integer between 1 and 8")
@@ -1275,9 +1278,12 @@ async def execute_verification_triage(request: Request):
             (
                 item
                 for item in project.get("triage_commands") or []
-                if item.get("id") == "verification-rerun"
-                and item.get("category") == "verification"
-                and item.get("enabled")
+                if item.get("category") == category and item.get("enabled")
+                and (
+                    item.get("id") == "verification-rerun"
+                    if category == "verification"
+                    else item.get("id") == "runtime-check-ports"
+                )
             ),
             None,
         )
@@ -1293,12 +1299,14 @@ async def execute_verification_triage(request: Request):
         audit = metadata.get("execution_audit") or {}
         if metadata.get("controlled_execution") is not True or audit.get("exit_code") == 0:
             continue
+        if category == "runtime" and _approval_state(task_data) != "granted":
+            continue
         candidates.append({"project_id": project_id, "task_id": task_id, "command": command_value})
 
     selected = candidates[:raw_limit]
     if not selected:
         return {
-            "category": "verification",
+            "category": category,
             "executed": [],
             "skipped": [],
             "errors": [],
@@ -1316,7 +1324,7 @@ async def execute_verification_triage(request: Request):
                 WORKSPACE_DIR / ".omo",
                 task_id=candidate["task_id"],
                 actor="cockpit-system-map-batch",
-                timeout_seconds=900,
+                timeout_seconds=900 if category == "verification" else 120,
                 source_ref=f"cockpit:triage:execute:{candidate['task_id']}",
                 command_override=candidate["command"],
             )
@@ -1327,7 +1335,7 @@ async def execute_verification_triage(request: Request):
 
     succeeded = sum(1 for item in executed if item.get("exit_code") == 0)
     return {
-        "category": "verification",
+        "category": category,
         "executed": executed,
         "skipped": candidates[raw_limit:],
         "errors": errors,
