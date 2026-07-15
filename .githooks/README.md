@@ -22,7 +22,9 @@ make install-hooks
 
 从 `.githooks/pre-push` / `.githooks/pre-commit` 复制到 `.git/hooks/`。
 
-同步逻辑见 [`bin/sync-submodules-push.sh`](../bin/sync-submodules-push.sh)。
+同步逻辑 SSOT：[`bin/ssot/sync-submodules-push.sh`](../bin/ssot/sync-submodules-push.sh)  
+兼容入口：[`bin/sync-submodules-push.sh`](../bin/sync-submodules-push.sh)（薄 wrapper）。  
+改 `.githooks/` 后须在本机重跑 `make install-hooks`（已安装 hook 不会自动更新）。
 
 ## prepare-commit-msg-commit-assist — LLM advisory (P76 Phase 9A)
 
