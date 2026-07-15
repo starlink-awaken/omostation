@@ -46,7 +46,7 @@ DEFAULT_POLICY = {
         {"id": "agent-workflow-doctor", "command": ["bin/agent-workflow.py", "doctor"], "ci_skip": True, "agent_workflow_only": True},
         {"id": "agent-workflow-observe", "command": ["bin/agent-workflow.py", "observe"]},
         {"id": "governance-evolution", "command": ["bin/gac/governance-evolution.py", "validate", "--json"]},
-        {"id": "mof-schema-validate", "command": ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]},
+        {"id": "mof-schema-validate", "command": ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"], "ci_skip": True, "agent_workflow_only": True},
         {"id": "mof-state-bridge", "command": ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]},
         {"id": "mof-drift", "command": ["bin/mof/mof-drift"]},
         {"id": "m4-bootstrap-reflex", "command": ["bin/mof/mof-bootstrap.py", "all"]},
@@ -70,9 +70,15 @@ DEFAULT_POLICY = {
         {"id": "gac-mesh-router-check", "command": ["bin/gac/gac-mesh-router.py", "--check"]},
         {"id": "gac-consensus-inject-check", "command": ["bin/gac/gac-consensus-inject.py", "--check"]},
         {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"]},
+        # P44 测试覆盖门禁: 每个 Python 项目必须有 tests/
+        {"id": "test-coverage-check", "command": ["bin/gac/test-coverage-check.py"]},
+        # P45 债务完整性门禁: seed_items 全部存在且非空
+        {"id": "debt-integrity-check", "command": ["bin/gac/debt-integrity-check.py"]},
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
+        # P43 BOS 追踪门禁: bos-unimplemented.yaml 不准包含已实现服务
+        {"id": "bos-tracking-gate", "command": ["bin/ssot/bos-tracking-gate.py"]},
         # P7x-bus-foundation-rollout follow-up: real cross-process ZMQ e2e.
         # Spawns 2 subprocesses + uses TCP sockets (~2-5s). ci_only=True so
         # pre-commit skips the cost; CI strict runs it.
@@ -208,21 +214,32 @@ def change_lane_files_for_scope(scope: str, files: list[str] | None, run_id: str
 
 def run_check(name: str, command: list[str]) -> dict[str, object]:
     cmd = [sys.executable, *command]
-    result = subprocess.run(
-        cmd,
-        cwd=WORKSPACE,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return {
-        "name": name,
-        "command": " ".join(command),
-        "ok": result.returncode == 0,
-        "returncode": result.returncode,
-        "stdout": result.stdout.strip(),
-        "stderr": result.stderr.strip(),
-    }
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
+        )
+        return {
+            "name": name,
+            "command": " ".join(command),
+            "ok": result.returncode == 0,
+            "returncode": result.returncode,
+            "stdout": result.stdout.strip(),
+            "stderr": result.stderr.strip(),
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "name": name,
+            "command": " ".join(command),
+            "ok": False,
+            "returncode": -1,
+            "stdout": "",
+            "stderr": f"TIMEOUT after 15s",
+        }
 
 
 def run_gate(

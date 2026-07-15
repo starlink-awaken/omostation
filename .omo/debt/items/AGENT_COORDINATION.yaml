@@ -1,0 +1,19 @@
+id: "AGENT_COORDINATION"
+title: "多 Agent 协调无强制执行"
+dimension: "governance"
+subdimension: "agent"
+domain: "meta"
+scope: "workspace"
+severity: "high"
+weight: 0.10
+entropy_class: "medium"
+lifecycle_state: "resolved"
+owner: "architecture-team"
+affected_roots: []
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-07-14"
+last_reviewed_at: "2026-07-14"
+gate_level: "P1"
+x1_policy_ref: "P43-ARCH-ANALYSIS-004"
+x3_tier: "Principle"

@@ -1,0 +1,19 @@
+id: "SUBMODULE_DRIFT"
+title: "Submodule gitlink 漂移 — 3/17 曾漂移, 巡检已落地"
+dimension: "governance"
+subdimension: "consistency"
+domain: "system"
+scope: "workspace"
+severity: "medium"
+weight: 0.10
+entropy_class: "low"
+lifecycle_state: "resolved"
+owner: "governance-team"
+affected_roots: []
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-07-14"
+last_reviewed_at: "2026-07-14"
+gate_level: "P2"
+x1_policy_ref: "PR#351 + P43-drift-fix"
+x3_tier: "Tool"

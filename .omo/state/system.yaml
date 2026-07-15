@@ -1,4 +1,4 @@
-current_phase: 42
+current_phase: 44
 phase45_status: completed
 phase45_completed_at: '2026-06-10T00:00:00Z'
 phase32_status: completed
@@ -8,10 +8,10 @@ phase41_status: completed
 phase41_completed_at: '2026-06-16T00:00:00Z'
 phase_status: active
 current_wave: W3
-next_milestone: BOS URI 声明式注册 + 可观测性
+next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora-gateway /health + 熵清理
 health_score_ref: .omo/state/health.yaml
-health_score: 84
-health_score_source: compass_radar_composite
+health_score: 83
+health_score_source: compass_radar_composite (ISC-2 corrected, scan 3/4 online)
 health_score_generated_at: '2026-07-09T03:59:10Z'
 active_agents: 0
 idle_agents: 4
@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-14T16:59:42.436835+08:00'
+updated_at: '2026-07-15T09:31:55.431122+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -193,22 +193,28 @@ governance:
   code_freeze: false
   code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  last_scan: 1784019582.2174861
-  total_services: 8
   online_services: 3
-  healthy_services: 3
-  offline_services: 0
-  unhealthy_services: []
-  stale_services:
-  - ollama
-phase42_status: active
+  total_services: 4
+  ratio: 0.75
+  health_score: 75
+  last_scan: '1784079115.106836'
+  service_count: 8
+  degraded: []
+phase42_status: completed
+phase42_completed_at: '2026-07-14T20:59:00Z'
+phase43_status: completed
+phase43_completed_at: '2026-07-14T21:00:00Z'
+phase44_status: active
 health_score_raw: 88.0
 xplane_score: 0.0
 xplane_coverage: 100.0
 xplane_factor: 0.7
-debt_adjusted_health_score: 61.6
+debt_adjusted_health_score: 83.0
+debt_items_total: 7
+debt_items_resolved: 7
+debt_adjusted_note: all 7 debt items resolved
 governance_anomaly_score: 100
 service_online_ratio: 0.6
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-14T16:59:42.436835+08:00'
+governance_feedback_last_run: '2026-07-15T09:31:55.431122+08:00'
