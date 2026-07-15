@@ -2840,12 +2840,21 @@ def _project_triage_queue(
         for command in project.get("triage_commands", [])
         if command.get("category") == category
     ]
+    status_counts = {
+        status: sum(1 for command in commands if (command.get("task") or {}).get("status") == status)
+        for status in ("planned", "active", "succeeded", "failed", "completed")
+    }
+    queued = sum(status_counts.values())
     return {
         "id": queue_id,
         "title": title,
         "severity": severity,
         "reason": reason,
         "count": len(commands),
+        "queued": queued,
+        "active": status_counts["active"],
+        "succeeded": status_counts["succeeded"],
+        "failed": status_counts["failed"],
         "project_ids": sorted({command["project_id"] for command in commands}),
         "commands": commands[:8],
     }
@@ -2885,6 +2894,10 @@ def _build_project_triage(projects: list[dict[str, Any]]) -> dict[str, Any]:
             "runtime_commands": queues[0]["count"],
             "verification_commands": queues[1]["count"],
             "coverage_commands": queues[2]["count"],
+            "queued_commands": sum(queue["queued"] for queue in queues),
+            "active_commands": sum(queue["active"] for queue in queues),
+            "succeeded_commands": sum(queue["succeeded"] for queue in queues),
+            "failed_commands": sum(queue["failed"] for queue in queues),
         },
     }
 
