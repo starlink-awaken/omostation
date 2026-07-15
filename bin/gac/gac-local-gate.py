@@ -214,21 +214,32 @@ def change_lane_files_for_scope(scope: str, files: list[str] | None, run_id: str
 
 def run_check(name: str, command: list[str]) -> dict[str, object]:
     cmd = [sys.executable, *command]
-    result = subprocess.run(
-        cmd,
-        cwd=WORKSPACE,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return {
-        "name": name,
-        "command": " ".join(command),
-        "ok": result.returncode == 0,
-        "returncode": result.returncode,
-        "stdout": result.stdout.strip(),
-        "stderr": result.stderr.strip(),
-    }
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
+        )
+        return {
+            "name": name,
+            "command": " ".join(command),
+            "ok": result.returncode == 0,
+            "returncode": result.returncode,
+            "stdout": result.stdout.strip(),
+            "stderr": result.stderr.strip(),
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "name": name,
+            "command": " ".join(command),
+            "ok": False,
+            "returncode": -1,
+            "stdout": "",
+            "stderr": f"TIMEOUT after 15s",
+        }
 
 
 def run_gate(
