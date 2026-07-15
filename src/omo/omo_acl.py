@@ -1,4 +1,4 @@
-"""omo acl — Scheme C 5c L2 host ACL plan/apply (ADR-0189 / ADR-0195).
+"""omo acl — Scheme C 5c L2 host ACL plan/apply (ADR-0189 / ADR-0196).
 
   omo acl plan   [--workspace-root PATH] [--json] [--acl]
   omo acl apply  [--workspace-root PATH] [--json]   # requires OMO_OS_ACL=1
@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument(
                 "--acl",
                 action="store_true",
-                help="Also emit named ACE script (setfacl/chmod+a) dry-run (ADR-0195)",
+                help="Also emit named ACE script (setfacl/chmod+a) dry-run (ADR-0196)",
             )
         if name == "apply":
             p.add_argument(

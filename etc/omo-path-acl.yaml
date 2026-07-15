@@ -32,7 +32,7 @@ surfaces:
 # When true, world-writable findings exit 1; otherwise warn-only (CI default soft).
 strict: false
 
-# Named ACE plan (ADR-0194/0195) — used only by `omo acl plan --acl` (dry-run).
+# Named ACE plan (ADR-0194/0196) — used only by `omo acl plan --acl` (dry-run).
 # $BROKER_USER / $OMO_WRITERS expanded in generated script.
 acl:
   enabled: false

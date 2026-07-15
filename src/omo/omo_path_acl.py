@@ -375,7 +375,7 @@ def plan_named_acl_script(
     profile_path: Path | None = None,
     platform: str | None = None,
 ) -> dict[str, Any]:
-    """ADR-0194/0195: dry-run named ACE script (setfacl / chmod +a).
+    """ADR-0194/0196: dry-run named ACE script (setfacl / chmod +a).
 
     Never executes. Emits shell lines operators can review.
     """
@@ -490,7 +490,7 @@ def plan_named_acl_script(
 
     script = "\n".join(lines) + "\n"
     return {
-        "adr": "0195",
+        "adr": "0196",
         "layer": "L2-acl",
         "dry_run": True,
         "mutation": False,
