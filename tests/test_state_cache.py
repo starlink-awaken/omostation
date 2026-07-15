@@ -1,4 +1,3 @@
-
 """测试 StateCache"""
 
 from pathlib import Path

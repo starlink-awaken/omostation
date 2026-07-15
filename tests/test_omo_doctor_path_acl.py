@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import stat
 from pathlib import Path
 
 from omo.omo_doctor import _check_path_acl
@@ -36,5 +35,9 @@ def test_path_acl_warns_on_777(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(d, "OMO_ROOT", tmp_path / ".omo")
     r = _check_path_acl()
     assert r["status"] == "warn"
-    assert "world-writable" in r["detail"] or "0777" in r["detail"] or "mode_777" in r["detail"]
+    assert (
+        "world-writable" in r["detail"]
+        or "0777" in r["detail"]
+        or "mode_777" in r["detail"]
+    )
     assert "omo acl plan" in r["detail"]

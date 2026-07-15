@@ -308,7 +308,9 @@ def plan_acl_actions(
 
     Never executes. Actions are limited to mode bits; no chown/setfacl.
     """
-    doctor = run_path_acl_doctor(workspace_root, profile_path=profile_path, strict=False)
+    doctor = run_path_acl_doctor(
+        workspace_root, profile_path=profile_path, strict=False
+    )
     root = Path(doctor["workspace_root"])
     actions: list[dict[str, Any]] = []
 
@@ -386,9 +388,7 @@ def plan_named_acl_script(
     profile = load_profile(profile_path)
     acl_cfg = profile.get("acl") if isinstance(profile.get("acl"), dict) else {}
     group = str(
-        os.environ.get("OMO_ACL_GROUP")
-        or acl_cfg.get("group")
-        or "omo-writers"
+        os.environ.get("OMO_ACL_GROUP") or acl_cfg.get("group") or "omo-writers"
     )
     broker_user = str(
         os.environ.get("OMO_BROKER_USER")
@@ -408,8 +408,18 @@ def plan_named_acl_script(
     if not isinstance(entries, list) or not entries:
         # Default ACE map from ADR-0194
         entries = [
-            {"path": ".omo/state", "users": ["$BROKER_USER"], "groups": [], "mask": "rwx"},
-            {"path": ".omo/_control", "users": ["$BROKER_USER"], "groups": [], "mask": "rwx"},
+            {
+                "path": ".omo/state",
+                "users": ["$BROKER_USER"],
+                "groups": [],
+                "mask": "rwx",
+            },
+            {
+                "path": ".omo/_control",
+                "users": ["$BROKER_USER"],
+                "groups": [],
+                "mask": "rwx",
+            },
             {
                 "path": ".omo/_delivery",
                 "users": ["$BROKER_USER"],
@@ -457,12 +467,16 @@ def plan_named_acl_script(
                 u_exp = u.replace("$BROKER_USER", '"$BROKER_USER"')
                 cmd = f"setfacl -m u:{u_exp}:{mask} {target}"
                 lines.append(cmd)
-                commands.append({"path": rel, "op": "setfacl", "shell": cmd, "subject": u})
+                commands.append(
+                    {"path": rel, "op": "setfacl", "shell": cmd, "subject": u}
+                )
             for g in groups:
                 g_exp = g.replace("$OMO_WRITERS", '"$OMO_WRITERS"')
                 cmd = f"setfacl -m g:{g_exp}:{mask} {target}"
                 lines.append(cmd)
-                commands.append({"path": rel, "op": "setfacl", "shell": cmd, "subject": g})
+                commands.append(
+                    {"path": rel, "op": "setfacl", "shell": cmd, "subject": g}
+                )
             # default: remove other write via chmod (align L2)
             cmd = f"chmod o-w {target} 2>/dev/null || true"
             lines.append(cmd)
@@ -470,17 +484,17 @@ def plan_named_acl_script(
         elif plat == "macos":
             for u in users:
                 # macOS ACL allow write for broker user
-                cmd = (
-                    f'chmod +a "{u.replace("$BROKER_USER", "$BROKER_USER")} allow read,write,execute,delete,add_file,add_subdirectory,file_inherit,directory_inherit" {target}'
-                )
+                cmd = f'chmod +a "{u.replace("$BROKER_USER", "$BROKER_USER")} allow read,write,execute,delete,add_file,add_subdirectory,file_inherit,directory_inherit" {target}'
                 lines.append(cmd)
-                commands.append({"path": rel, "op": "chmod+a", "shell": cmd, "subject": u})
+                commands.append(
+                    {"path": rel, "op": "chmod+a", "shell": cmd, "subject": u}
+                )
             for g in groups:
-                cmd = (
-                    f'chmod +a "group:{g.replace("$OMO_WRITERS", "$OMO_WRITERS")} allow read,write,execute,delete,add_file,add_subdirectory,file_inherit,directory_inherit" {target}'
-                )
+                cmd = f'chmod +a "group:{g.replace("$OMO_WRITERS", "$OMO_WRITERS")} allow read,write,execute,delete,add_file,add_subdirectory,file_inherit,directory_inherit" {target}'
                 lines.append(cmd)
-                commands.append({"path": rel, "op": "chmod+a", "shell": cmd, "subject": g})
+                commands.append(
+                    {"path": rel, "op": "chmod+a", "shell": cmd, "subject": g}
+                )
             cmd = f"chmod o-w {target} 2>/dev/null || true"
             lines.append(cmd)
             commands.append({"path": rel, "op": "chmod", "shell": cmd})
@@ -526,7 +540,6 @@ def apply_named_acl_actions(
     Requires OMO_OS_ACL=1 unless force=True (tests only).
     Uses argv lists (no shell=True). Missing paths are skipped.
     """
-    import platform as _platform
     import shutil
     import subprocess
 
@@ -557,8 +570,18 @@ def apply_named_acl_actions(
     entries = acl_cfg.get("entries")
     if not isinstance(entries, list) or not entries:
         entries = [
-            {"path": ".omo/state", "users": ["$BROKER_USER"], "groups": [], "mask": "rwx"},
-            {"path": ".omo/_control", "users": ["$BROKER_USER"], "groups": [], "mask": "rwx"},
+            {
+                "path": ".omo/state",
+                "users": ["$BROKER_USER"],
+                "groups": [],
+                "mask": "rwx",
+            },
+            {
+                "path": ".omo/_control",
+                "users": ["$BROKER_USER"],
+                "groups": [],
+                "mask": "rwx",
+            },
             {
                 "path": ".omo/_delivery",
                 "users": ["$BROKER_USER"],
@@ -616,7 +639,11 @@ def apply_named_acl_actions(
                     argv = [setfacl_bin, "-m", f"u:{u}:{mask}", str(target)]
                     try:
                         r = subprocess.run(
-                            argv, capture_output=True, text=True, timeout=10, check=False
+                            argv,
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                            check=False,
                         )
                         results.append(
                             {
@@ -644,7 +671,11 @@ def apply_named_acl_actions(
                     argv = [setfacl_bin, "-m", f"g:{g}:{mask}", str(target)]
                     try:
                         r = subprocess.run(
-                            argv, capture_output=True, text=True, timeout=10, check=False
+                            argv,
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                            check=False,
                         )
                         results.append(
                             {

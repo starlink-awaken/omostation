@@ -120,7 +120,9 @@ def main(argv: list[str] | None = None) -> int:
                 sys.stdout.write("\n")
             else:
                 print("❌ apply refused: set OMO_OS_ACL=1 (opt-in host mutation)")
-                print("   preview: omo acl plan --json" + (" --acl" if want_acl else ""))
+                print(
+                    "   preview: omo acl plan --json" + (" --acl" if want_acl else "")
+                )
             return 2
         if not getattr(args, "yes", False):
             plan = plan_acl_actions(root, profile_path=profile_path)
@@ -147,10 +149,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(
                         f"   named ACE commands: {plan['named_acl'].get('command_count')}"
                     )
-                print(
-                    "   omo acl plan --json"
-                    + (" --acl" if want_acl else "")
-                )
+                print("   omo acl plan --json" + (" --acl" if want_acl else ""))
             return 2
 
         report = apply_acl_actions(root, profile_path=profile_path, force=False)

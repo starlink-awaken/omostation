@@ -131,9 +131,7 @@ def _check_path_acl() -> dict:
             },
         }
 
-    paths = ", ".join(
-        f"{f.get('path')}({f.get('kind')})" for f in actionable[:5]
-    )
+    paths = ", ".join(f"{f.get('path')}({f.get('kind')})" for f in actionable[:5])
     more = len(actionable) - 5
     detail = f"{len(actionable)} ACL red flag(s): {paths}"
     if more > 0:

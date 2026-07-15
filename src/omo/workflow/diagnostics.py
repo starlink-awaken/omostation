@@ -488,7 +488,6 @@ def p74_solidification_report(
     }
 
 
-
 def _git_name_only(args: list[str]) -> list[str]:
     """Return normalized paths from git name-only listing."""
     import subprocess

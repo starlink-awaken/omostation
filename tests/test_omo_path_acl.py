@@ -186,4 +186,3 @@ def test_apply_named_acl_skips_missing_paths(tmp_path: Path):
     assert r["mutation"] is True
     skipped = [x for x in r["results"] if x.get("skipped")]
     assert skipped
-
