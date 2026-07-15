@@ -22,6 +22,18 @@ uv run --project projects/omo python -m omo.cli lint path-acl --workspace-root .
 
 ## 2. 修复流程（显式 opt-in）
 
+**推荐入口（ADR-0206）** — 默认只 dry-run，不会代你 `export OMO_OS_ACL`：
+
+```bash
+bash bin/gac/omo-acl-ops-window.sh                 # lint + plan + plan --acl
+bash bin/gac/omo-acl-ops-window.sh --probe-macos   # temp chmod +a 探针
+export OMO_OS_ACL=1
+bash bin/gac/omo-acl-ops-window.sh --apply --yes          # chmod
+bash bin/gac/omo-acl-ops-window.sh --apply --yes --acl    # + named ACE
+```
+
+底层 CLI（等价）：
+
 ```bash
 # A. 审阅 chmod 计划
 omo acl plan --json
@@ -87,3 +99,15 @@ omo acl status                  # alias of lint path-acl
 | 本机 `apply --yes --acl` | **未执行**（保留 ops 窗口；需 `OMO_OS_ACL=1`） |
 
 刷新 digest / 重验：见 ADR-0205。group ACE 前请确认 `omo-writers`（或 `OMO_ACL_GROUP`）已存在。
+
+## 7. 钩子重装
+
+pre-push 已迁到 `bin/ssot/sync-submodules-push.sh`（ADR-0204）。**改 `.githooks/` 后本机必须**：
+
+```bash
+make install-hooks
+# 确认已安装 hook 指向 ssot：
+grep -n 'bin/ssot/sync-submodules-push' .git/hooks/pre-push
+```
+
+未重装时可能仍报 `bin/sync-submodules-push.sh: No such file`（兼容 wrapper 已补，但应重装）。
