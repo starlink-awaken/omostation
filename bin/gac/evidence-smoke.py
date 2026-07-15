@@ -571,6 +571,16 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
         "score_breakdown": score["breakdown"],
     }
 
+    # Scheme C 5b: container executor status (no spawn; cheap doctor probe)
+    try:
+        from agora.execution.container_executor import (  # type: ignore[import-not-found]
+            describe_executor_status,
+        )
+
+        report["container_executor"] = describe_executor_status()
+    except Exception as e:  # pragma: no cover - optional surface
+        report["container_executor"] = {"error": f"{type(e).__name__}: {e}"[:160]}
+
     # L3 抽样 spawn (可选, 慢)
     if spawn_n > 0:
         import random
@@ -642,6 +652,19 @@ def print_summary(report: dict, quiet: bool = False) -> None:
     print(f"  governance 最后: {fb.get('last_ts', '?')}")
     print(f"  停摆时长:       {fb.get('staleness_hours', '?')} h")
     print(f"  回路存活:       {fb.get('alive', '?')}")
+    if report.get("container_executor"):
+        ce = report["container_executor"]
+        print()
+        print("── Scheme C 5b container executor ──")
+        if ce.get("error"):
+            print(f"  status: error ({ce['error']})")
+        else:
+            print(
+                f"  backend={ce.get('effective_backend')} "
+                f"profile_default={ce.get('default_profile')} "
+                f"docker={ce.get('docker_available')} "
+                f"profiles={','.join(ce.get('profiles') or [])}"
+            )
     if report.get("spawn_summary"):
         ss = report["spawn_summary"]
         print()
