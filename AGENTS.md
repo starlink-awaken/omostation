@@ -50,9 +50,14 @@ python3 bin/adr/next-adr-id.py --session <session> --claim
 # 栈落地后清 worktree:
 bash bin/gac/gac-worktree-prune.sh          # dry-run
 # bash bin/gac/gac-worktree-prune.sh --apply
+# ACL ops 窗口（默认 dry-run，ADR-0206）:
+bash bin/gac/omo-acl-ops-window.sh
+# 钩子重装（.githooks 变更后）:
+# make install-hooks && grep bin/ssot/sync-submodules-push .git/hooks/pre-push
 ```
 
-Worktree 卫生说明：[`docs/operations/worktree-hygiene.md`](docs/operations/worktree-hygiene.md)。
+Worktree 卫生说明：[`docs/operations/worktree-hygiene.md`](docs/operations/worktree-hygiene.md)。  
+ACL ops 窗口：[`docs/operations/omo-path-acl-runbook.md`](docs/operations/omo-path-acl-runbook.md) §2 / ADR-0206。
 
 ## 1.5 P74 Solidification Quick Reference (ADR-0130)
 

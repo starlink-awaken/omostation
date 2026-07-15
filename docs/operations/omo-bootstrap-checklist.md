@@ -1,6 +1,6 @@
 # OMO / omostation 新机 Bootstrap 清单
 
-> 配套: [omo-path-acl-runbook.md](./omo-path-acl-runbook.md) · ADR-0199 · ADR-0200
+> 配套: [omo-path-acl-runbook.md](./omo-path-acl-runbook.md) · ADR-0199 · ADR-0200 · **ADR-0206**
 
 ## 0. 前置
 
@@ -16,28 +16,35 @@ git submodule update --init projects/omo projects/ecos projects/agora projects/c
 ## 1. 工具与钩子
 
 ```bash
-make install-hooks   # pre-push / GaC hooks（如仓库提供）
+make install-hooks   # pre-push / GaC hooks（ADR-0204: bin/ssot/ 路径）
+grep -n 'bin/ssot/sync-submodules-push' .git/hooks/pre-push
 uv run --project projects/omo python -m omo.cli --help
 ```
 
 - [ ] `omo doctor` 可跑
 - [ ] `omo lint path-acl --json` 可跑
 - [ ] `bin/gac/omo-doctor-cron.py --no-write` 可跑
+- [ ] 已安装 pre-push 含 `bin/ssot/sync-submodules-push`
 
 ## 2. 治理写面权限（5c）
 
 ```bash
+# 推荐一站式 dry-run（ADR-0206）
+bash bin/gac/omo-acl-ops-window.sh
+bash bin/gac/omo-acl-ops-window.sh --probe-macos   # Darwin
+
+# 底层 CLI
 omo doctor --json | jq '.checks[]|select(.id=="path-acl")'
 omo acl plan --json
-omo acl plan --acl --json    # 审阅 setfacl / chmod +a 脚本
+omo acl plan --acl --json
 ```
 
-仅在审阅通过后：
+仅在审阅通过后（脚本**不会**代你 export）：
 
 ```bash
 export OMO_OS_ACL=1
-omo acl apply --yes          # chmod only
-# omo acl apply --yes --acl  # + named ACE（组 omo-writers 需已存在）
+bash bin/gac/omo-acl-ops-window.sh --apply --yes          # chmod only
+# bash bin/gac/omo-acl-ops-window.sh --apply --yes --acl  # + named ACE
 ```
 
 - [ ] path-acl 无 world-writable / 0777（或已知可接受）
