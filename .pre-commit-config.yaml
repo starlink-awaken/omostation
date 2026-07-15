@@ -293,3 +293,13 @@ repos:
         # 任一失败阻塞提交, 防止治理质量回归
 
 # Hook placeholder to pass surfaces check: omo-mutation-ledger-gate lint mutation-ledger
+
+  # ADR-0202 D2: 迁移保内容守卫 (a615ace16 123 文件 0 字节事件防复发)
+  - repo: local
+    hooks:
+      - id: move-integrity
+        name: move-integrity (rename 保内容 + 新增非空, ADR-0202)
+        entry: python3 bin/gac/check-move-integrity.py
+        language: system
+        pass_filenames: false
+        always_run: true
