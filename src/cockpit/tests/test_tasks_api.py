@@ -642,6 +642,43 @@ def test_queue_critical_alert_promotes_high_risk_operations_task(monkeypatch):
     assert calls[0]["source_ref"] == "cockpit:alert:alert-1"
 
 
+def test_queue_research_followup_creates_non_executing_task(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "cockpit.storage.get_data_access",
+        lambda: type(
+            "ResearchAccess",
+            (),
+            {
+                "get_research": lambda _self, _research_id: {
+                    "id": 7,
+                    "topic": "家庭系统研究",
+                    "summary": "整理家庭系统的关键结论",
+                    "agent": "Alice",
+                    "follow_ups": [{"question": "下一步验证什么？"}],
+                }
+            },
+        )(),
+    )
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post("/api/cockpit/research/7/queue")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "cockpit-research-7"
+    assert response.json()["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["task_type"] == "research"
+    assert task_data["assigned_to"] == "Alice"
+    assert task_data["knowledge_refs"] == ["research:7"]
+    assert task_data["metadata"]["follow_up_questions"] == ["下一步验证什么？"]
+    assert calls[0]["source_ref"] == "cockpit:research:7"
+
+
 def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
     system_map = {
         "projects": [

@@ -866,6 +866,85 @@ async def queue_alert_task(alert_id: str):
     }
 
 
+@router.post("/api/cockpit/research/{research_id}/queue")
+async def queue_research_followup_task(research_id: int):
+    """将研究对象的追问和下一步动作承接为 OMO planned 任务。"""
+    if research_id < 1:
+        raise HTTPException(status_code=400, detail="Invalid research id")
+
+    from cockpit.storage import get_data_access
+
+    access = get_data_access()
+    research = access.get_research(research_id)
+    if not isinstance(research, dict):
+        raise HTTPException(status_code=404, detail="Research object not found")
+
+    task_id = f"cockpit-research-{research_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Research task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    topic = str(research.get("topic") or f"研究对象 #{research_id}").strip()
+    summary = str(research.get("summary") or "").strip()
+    follow_ups = research.get("follow_ups") if isinstance(research.get("follow_ups"), list) else []
+    questions = [str(item.get("question") or item) for item in follow_ups[:5] if isinstance(item, dict) or item]
+    task_data = {
+        "id": task_id,
+        "title": f"落地研究后续：{topic}",
+        "description": f"围绕研究对象“{topic}”推进下一步动作，复核研究结论、追问和证据，再形成可执行结论。{summary}",
+        "status": "pending",
+        "task_type": "research",
+        "assigned_to": research.get("agent") or None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [f"research:{research_id}"],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": [f"cockpit:research:{research_id}"],
+        "entry_gate": ["确认研究对象、结论范围和下一步问题"],
+        "evidence_required": ["研究正文或摘要", "追问处理结果", "验证/发布证据", "research closeout"],
+        "deliverables": [f"完成研究对象 {research_id} 的后续处理并回写结论和证据。"],
+        "test_plan": ["逐项处理研究追问，核对来源和结论，必要时补充研究或发布结果。"],
+        "priority": "high" if questions else "medium",
+        "tags": ["cockpit-research", "follow-up", str(research_id)],
+        "metadata": {
+            "created_via": "cockpit-research-hub",
+            "research_id": research_id,
+            "topic": topic,
+            "follow_up_questions": questions,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-research-hub",
+            source_ref=f"cockpit:research:{research_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "executes": False,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/engine/queue")
 async def queue_engine_execution(request: Request):
     """Register an engine or pipeline request as an OMO planned task."""
