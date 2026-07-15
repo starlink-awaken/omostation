@@ -44,6 +44,16 @@ from cockpit.web.api_tasks_data import (
 router = APIRouter()
 
 
+_COVERAGE_DRAFT_GETTERS = {
+    "project_portfolio": get_project_portfolio_task_drafts,
+    "verification_ready": get_verification_ready_task_drafts,
+    "domain_apps": get_domain_app_task_drafts,
+    "capability_gaps": get_capability_gap_task_drafts,
+    "page_maturity": get_page_maturity_task_drafts,
+    "playbooks": get_playbook_task_drafts,
+}
+
+
 @router.post("/api/tasks/{task_id}/request-approval")
 async def request_task_approval(task_id: str):
     """Create the OMO task-specific promotion approval request."""
@@ -339,6 +349,65 @@ async def promote_task_draft(draft_id: str):
         "created": existing_group != "planned",
         "draft_id": draft_id,
         "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+    }
+
+
+@router.post("/api/cockpit/coverage/queue")
+async def queue_coverage_drafts(request: Request):
+    """Batch-promote read-only coverage drafts into OMO planned tasks."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Coverage queue request must be an object")
+
+    category = str(body.get("category") or "all")
+    if category != "all" and category not in _COVERAGE_DRAFT_GETTERS:
+        raise HTTPException(status_code=400, detail=f"Unsupported coverage category: {category}")
+
+    raw_limit = body.get("limit", 40)
+    if isinstance(raw_limit, bool) or not isinstance(raw_limit, int) or not 1 <= raw_limit <= 100:
+        raise HTTPException(status_code=422, detail="limit must be an integer between 1 and 100")
+
+    categories = list(_COVERAGE_DRAFT_GETTERS) if category == "all" else [category]
+    drafts: list[dict] = []
+    for name in categories:
+        drafts.extend(_COVERAGE_DRAFT_GETTERS[name](limit=raw_limit))
+
+    queued: list[dict] = []
+    skipped: list[dict] = []
+    errors: list[dict] = []
+    for draft in drafts[:raw_limit]:
+        draft_id = str(draft.get("id") or "")
+        if not draft_id:
+            errors.append({"id": None, "detail": "Draft has no id"})
+            continue
+        try:
+            result = await promote_task_draft(draft_id)
+        except HTTPException as exc:
+            if exc.status_code == 409:
+                skipped.append({"id": draft_id, "detail": exc.detail})
+            else:
+                errors.append({"id": draft_id, "detail": exc.detail})
+        except (OSError, ValueError) as exc:
+            errors.append({"id": draft_id, "detail": str(exc)})
+        else:
+            if result.get("created"):
+                queued.append(result)
+            else:
+                skipped.append({"id": draft_id, "detail": "Task already exists in planned queue"})
+
+    return {
+        "category": category,
+        "queued": queued,
+        "skipped": skipped,
+        "errors": errors,
+        "summary": {
+            "queued": len(queued),
+            "skipped": len(skipped),
+            "errors": len(errors),
+            "considered": len(drafts[:raw_limit]),
+        },
+        "executes": False,
         "source": "omo_ingress",
     }
 

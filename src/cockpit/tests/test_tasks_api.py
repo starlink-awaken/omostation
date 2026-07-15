@@ -505,6 +505,40 @@ def test_queue_runtime_triage_uses_probe_fallback_per_project(monkeypatch):
     assert response.json()["executes"] is False
 
 
+def test_queue_coverage_drafts_promotes_selected_dimension(monkeypatch):
+    drafts = [
+        {"id": "capability-gap-demo", "title": "能力缺口：demo"},
+        {"id": "capability-gap-other", "title": "能力缺口：other"},
+    ]
+    promoted = []
+
+    async def fake_promote(draft_id):
+        promoted.append(draft_id)
+        return {"id": draft_id, "created": draft_id.endswith("demo"), "status": "pending"}
+
+    monkeypatch.setitem(api_tasks._COVERAGE_DRAFT_GETTERS, "capability_gaps", lambda limit=8: drafts[:limit])
+    monkeypatch.setattr(api_tasks, "promote_task_draft", fake_promote)
+
+    response = TestClient(app).post(
+        "/api/cockpit/coverage/queue",
+        json={"category": "capability_gaps", "limit": 2},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {"queued": 1, "skipped": 1, "errors": 0, "considered": 2}
+    assert response.json()["executes"] is False
+    assert promoted == ["capability-gap-demo", "capability-gap-other"]
+
+
+def test_queue_coverage_drafts_rejects_unknown_category():
+    response = TestClient(app).post(
+        "/api/cockpit/coverage/queue",
+        json={"category": "unknown"},
+    )
+
+    assert response.status_code == 400
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {
