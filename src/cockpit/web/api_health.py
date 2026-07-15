@@ -78,6 +78,17 @@ def is_active_service(service: dict) -> bool:
     }
 
 
+def read_active_task_count() -> int | None:
+    """Read the canonical OMO active queue; L4 signals are not task counts."""
+    active_dir = WORKSPACE_DIR / ".omo" / "tasks" / "active"
+    try:
+        if not active_dir.is_dir():
+            return None
+        return sum(1 for path in active_dir.glob("*.yaml") if path.is_file())
+    except OSError:
+        return None
+
+
 @router.get("/api/health/summary")
 async def get_health_summary():
     """获取系统健康概览。"""
@@ -92,7 +103,8 @@ async def get_health_summary():
     active_services = sum(1 for service in runtime_services if is_active_service(service))
     total_services = len(runtime_services)
     health_score = round(active_services / total_services * 100) if total_services else 0
-    active_tasks = 0
+    active_tasks = read_active_task_count()
+    active_tasks_source = "omo" if active_tasks is not None else "unavailable"
     today_requests = 0
     degraded_reasons: list[str] = []
 
@@ -102,9 +114,7 @@ async def get_health_summary():
         total_domains = l4_data.get("total_domains", 1)
         health_score = int(healthy_count / total_domains * 100) if total_domains > 0 else 100
 
-        # 统计活跃任务（从信号中推断）
-        domains = l4_data.get("domains", [])
-        active_tasks = sum(1 for d in domains if d.get("signal_count", 0) > 0)
+        # L4 domains and their signals remain diagnostic only; task count comes from OMO.
     else:
         degraded_reasons.append("L4 health_monitor.py unavailable")
 
@@ -116,6 +126,8 @@ async def get_health_summary():
 
     if not runtime_services:
         degraded_reasons.append("runtime service probe unavailable")
+    if active_tasks is None:
+        active_tasks = 0
 
     sources_available = sum(bool(source) for source in (l4_data, services_data, runtime_services))
     data_quality = "complete" if sources_available == 3 else "partial" if sources_available else "unavailable"
@@ -126,6 +138,7 @@ async def get_health_summary():
         "active_services": active_services,
         "total_services": total_services,
         "active_tasks": active_tasks,
+        "active_tasks_source": active_tasks_source,
         "today_requests": today_requests,
         "today_requests_change": 0,
         "data_quality": data_quality,
