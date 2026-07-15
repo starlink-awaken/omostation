@@ -187,6 +187,10 @@ def test_system_map_builds_workspace_dimensions():
     mesh_router = next(project for project in payload["projects"] if project["id"] == "mesh-router")
     assert mesh_router["operational"]["surface_type"] == "implemented-in-bin"
     assert mesh_router["operational"]["status"] == "ready"
+    mesh_verify = next(action for action in mesh_router["actions"] if action["id"] == "copy-verify-command")
+    assert mesh_verify["value"] == (
+        f'cd "{api_system_map.WORKSPACE_ROOT}" && uv run python "bin/gac/gac-mesh-router.py" --check'
+    )
     metaos_project = next(project for project in payload["projects"] if project["id"] == "metaos")
     assert any("pytest" in command for command in metaos_project["operational"]["commands"])
     toolbox_project = next(project for project in payload["projects"] if project["id"] == "toolbox")

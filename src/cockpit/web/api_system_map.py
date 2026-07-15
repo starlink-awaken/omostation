@@ -1279,6 +1279,13 @@ def _project_verify_command(path: Path, commands: list[str], manifests: list[dic
         ("dev", "serve", "start"),
     )
     if command:
+        # mesh-router is a daemon mounted from bin/gac. Its verification path
+        # must use the non-serving --check mode and the workspace uv runtime.
+        if path == WORKSPACE_ROOT / "bin" / "gac" and command.startswith('python3 "bin/gac/'):
+            return _command_with_cwd(
+                WORKSPACE_ROOT,
+                'uv run python "bin/gac/gac-mesh-router.py" --check',
+            )
         return _command_with_cwd(path, command)
 
     manifest_names = {item["name"] for item in manifests}
