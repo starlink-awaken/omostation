@@ -125,10 +125,28 @@ def _cmd_health(args: Namespace) -> int:
                 import json as _j
 
                 state = _j.loads(matrix_path.read_text())
-                console.print(f"  [dim]服务注册: {len(state.get('services', {}))} 项[/]")
-                h = sum(1 for s in state.get("services", {}).values() if s.get("healthy"))
-                t = max(len(state.get("services", {})), 1)
-                console.print(f"  [{'green' if h == t else 'yellow'}]健康: {h}/{t}[/]")
+                svcs = state.get("services", {})
+                console.print(f"  [dim]服务注册: {len(svcs)} 项[/]")
+
+                # matrix_state.json schema (runtime scheduler):
+                #   health_check: 'healthy'|'scheduled'|'unreachable'|...
+                #   runtime.status: 'running'|'idle'|'scheduled'|'failed'|'unmanaged'
+                # 旧代码读顶层 'healthy' 键 (不存在) → 恒 0/N 假红灯。
+                def _svc_healthy(s: dict) -> bool:
+                    if s.get("health_check") == "healthy":
+                        return True
+                    return (s.get("runtime") or {}).get("status") in ("running", "scheduled")
+
+                managed = {n: s for n, s in svcs.items()
+                           if (s.get("runtime") or {}).get("status") != "unmanaged"}
+                h = sum(1 for s in managed.values() if _svc_healthy(s))
+                t = max(len(managed), 1)
+                unmanaged = len(svcs) - len(managed)
+                suffix = f"  (unmanaged: {unmanaged})" if unmanaged else ""
+                console.print(f"  [{'green' if h == t else 'yellow'}]健康: {h}/{t}{suffix}[/]")
+                bad = [n for n, s in managed.items() if not _svc_healthy(s)]
+                if bad:
+                    console.print(f"  [yellow]异常: {', '.join(sorted(bad))}[/]")
             except Exception:  # defensive fallback
                 console.print("[yellow]⚠ Matrix state 解析失败[/]")
         elif not args.json:

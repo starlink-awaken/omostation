@@ -53,11 +53,14 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
     services = _discover_services()
     healthy_count = 0
     dots: list[str] = []
+    offline_names: list[str] = []
     for name, port, cli_name, url, desc in services:
         cli_ok = True if cli_name is None else bool(_find_cli(cli_name))
         http_ok = _http_health(url, timeout=3.0) if url else False
         if http_ok:
             healthy_count += 1
+        else:
+            offline_names.append(f"{name}{port}")
         color = "green" if http_ok else ("yellow" if cli_ok or not url else "red")
         dot = f"[{color}]●[/]"
         label = f"[dim]{name}[/]"
@@ -196,9 +199,10 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
         recs.append("[cyan]cockpit research --audit[/] — 治理审计")
     if healthy_count < total_services:
         offline = total_services - healthy_count
+        offline_list = ", ".join(offline_names[:5]) + ("…" if len(offline_names) > 5 else "")
         recs.append(
-            f"[yellow]⚠️ {offline} 个服务离线 — cockpit health --full 看详情; "
-            f"启动: LM Studio(:1234) / agora hub / Minerva[/yellow]"
+            f"[yellow]⚠️ {offline} 个服务离线 ({offline_list}) — "
+            f"cockpit health --full 看详情[/yellow]"
         )
     c.print(_panel("[bold]🎯 推荐操作[/bold]\n" + "\n".join(f"  {r}" for r in recs), "cyan"))
 
