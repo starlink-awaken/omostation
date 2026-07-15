@@ -448,7 +448,9 @@ async def queue_project_triage_command(project_id: str, command_id: str):
     task_id = f"cockpit-triage-{project_id}-{command_id}"
     existing_group = _task_group(task_id)
     if existing_group in {"active", "done"}:
-        raise HTTPException(status_code=409, detail=f"Project triage task already exists in {existing_group}: {task_id}")
+        raise HTTPException(
+            status_code=409, detail=f"Project triage task already exists in {existing_group}: {task_id}"
+        )
 
     risk = str(command.get("risk") or "low")
     task_data = {
@@ -507,6 +509,75 @@ async def queue_project_triage_command(project_id: str, command_id: str):
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
         "executes": False,
+    }
+
+
+@router.post("/api/cockpit/triage/queue")
+async def queue_verification_triage(request: Request):
+    """批量登记验证缺口命令为 planned tasks; never execute commands in Cockpit."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Triage queue request must be an object")
+
+    category = str(body.get("category") or "verification")
+    command_id = str(body.get("command_id") or "verification-rerun")
+    project_ids = body.get("project_ids")
+    if category != "verification":
+        raise HTTPException(status_code=400, detail="Only verification triage can be queued in bulk")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", command_id):
+        raise HTTPException(status_code=400, detail="Invalid triage command id")
+    if project_ids is not None and (
+        not isinstance(project_ids, list) or not all(isinstance(item, str) for item in project_ids)
+    ):
+        raise HTTPException(status_code=422, detail="project_ids must be a list[str]")
+
+    allowed_projects = set(project_ids or [])
+    candidates = []
+    for project in build_system_map().get("projects", []):
+        project_id = project.get("id")
+        if not isinstance(project_id, str) or (allowed_projects and project_id not in allowed_projects):
+            continue
+        command = next(
+            (
+                item
+                for item in project.get("triage_commands") or []
+                if item.get("category") == category and item.get("id") == command_id and item.get("enabled")
+            ),
+            None,
+        )
+        if command:
+            candidates.append((project_id, command_id))
+
+    queued = []
+    skipped = []
+    errors = []
+    for project_id, candidate_command_id in candidates:
+        try:
+            queued.append(await queue_project_triage_command(project_id, candidate_command_id))
+        except HTTPException as exc:
+            item = {"project_id": project_id, "command_id": candidate_command_id, "detail": str(exc.detail)}
+            if exc.status_code == 409:
+                skipped.append(item)
+            else:
+                errors.append(item)
+
+    return {
+        "category": category,
+        "command_id": command_id,
+        "requested_projects": sorted(allowed_projects),
+        "candidates": len(candidates),
+        "queued": queued,
+        "skipped": skipped,
+        "errors": errors,
+        "executes": False,
+        "summary": {
+            "queued": len(queued),
+            "skipped": len(skipped),
+            "errors": len(errors),
+        },
     }
 
 

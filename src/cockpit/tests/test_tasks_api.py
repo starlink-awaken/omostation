@@ -442,6 +442,36 @@ def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
     assert calls[0]["source_ref"] == "cockpit:project-triage:demo:verification-rerun"
 
 
+def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
+    system_map = {
+        "projects": [
+            {
+                "id": "demo-a",
+                "triage_commands": [{"id": "verification-rerun", "category": "verification", "enabled": True}],
+            },
+            {
+                "id": "demo-b",
+                "triage_commands": [{"id": "verification-find-evidence", "category": "verification", "enabled": True}],
+            },
+        ]
+    }
+    calls = []
+
+    async def fake_queue(project_id, command_id):
+        calls.append((project_id, command_id))
+        return {"id": f"cockpit-triage-{project_id}-{command_id}", "executes": False}
+
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks, "queue_project_triage_command", fake_queue)
+
+    response = TestClient(app).post("/api/cockpit/triage/queue", json={"project_ids": ["demo-a", "demo-b"]})
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {"queued": 1, "skipped": 0, "errors": 0}
+    assert calls == [("demo-a", "verification-rerun")]
+    assert response.json()["executes"] is False
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {
