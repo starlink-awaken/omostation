@@ -39,8 +39,7 @@ make gac-local-gate
   "p74_solidification": {
     "ok": false,
     "policy": {
-      "warn_after_days": 30,
-      "excluded_workflows": ["handoff-resume", "observer-audit"]
+      "warn_after_days": 30
     },
     "summary_count": 12,
     "warn_count": 1,
@@ -62,7 +61,7 @@ make gac-local-gate
 | `ok` | warn_count == 0 → ok,否则不 ok |
 | `summary_count` | 评估的 workflow 总数 |
 | `warn_count` | 处于 silent_health=warn 的 workflow 数 |
-| `workflows[].silent_health` | active / warn / excluded |
+| `workflows[].silent_health` | active / warn (excluded removed in ADR-0211 §D1) |
 | `silent_health == warn` | 该 workflow 既无 recent run 也无 check 覆盖 |
 
 ## 3. Decision Tree(操作员视角)
@@ -71,14 +70,12 @@ make gac-local-gate
 
 无需操作。workflow 健康。
 
-### 3.2 silent_health == excluded
+### 3.2 silent_health == excluded (已废弃, ADR-0211 §D1)
 
-预期行为。workflow 在 `silent_workflow_policy.excluded_workflows` 中。
-当前合法值:
-- `handoff-resume`(压缩会话才用)
-- `observer-audit`(在 `gac-local-gate` 触发)
-
-无需操作。
+字段 `silent_workflow_policy.excluded_workflows` 已在 ADR-0211 §D1 移除。
+如需豁免某 workflow,改用 `agent-workflows.yaml::diff_checks` 加覆盖 (治本) 或
+`agent-workflows.yaml::workflows.<id>.run_frequency: continuous` 让 1d 阈值易通过。
+详见 ADR-0214 §D1 diff_checks 覆盖提议。
 
 ### 3.3 silent_health == warn — 处置流程
 
@@ -88,12 +85,11 @@ make gac-local-gate
 
 2. **A1(检查层沉默) 处置**:
    - 在 `agent-workflows.yaml::diff_checks` 或 `doctor_checks` 加一条路径覆盖
-   - 或在 `agent-workflows.yaml::silent_workflow_policy.excluded_workflows` 加排除
    - **OR** 删除该 workflow 登记(如果已经废弃)
+   - 注: `silent_workflow_policy.excluded_workflows` 字段已移除 (ADR-0211 §D1),不再支持加排除
 
 3. **A2(运行层沉默) 处置**:
-   - 如果 workflow 设计就是只在特定场景触发(如 `handoff-resume`)→ 加 excluded
-   - 如果 workflow 应该被使用 → 通过 `agent-workflow suggest --from-diff` 引导
+   - 如果 workflow 设计就是只在特定场景触发 → 通过 `agent-workflow suggest --from-diff` 引导
    - **不要**手动 start(应让真实需求触发)
 
 ### 3.4 state-projection-guard FAIL 处置
