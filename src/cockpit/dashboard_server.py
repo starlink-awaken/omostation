@@ -27,9 +27,13 @@ from cockpit.dashboard.constants import (
 from cockpit.dashboard.routes import _auth_dependency as _auth_dep
 from cockpit.dashboard.routes import router as dashboard_router
 
+# ─── API 版本管理 ─────────────────────────────────────────────
+
+from cockpit.web.versioning import version_manager, setup_version_middleware
+
 # ─── FastAPI App ───────────────────────────────────────────────
 
-app = FastAPI(title="Cockpit Dashboard", version="2.0.0")
+app = FastAPI(title="Cockpit Dashboard", version=version_manager.current_version)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,6 +41,10 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Api-Key"],
 )
+
+# ─── API 版本管理设置 ─────────────────────────────────────────
+
+setup_version_middleware(app)
 
 # ─── Auth dep for external router imports ─────────────────────
 
