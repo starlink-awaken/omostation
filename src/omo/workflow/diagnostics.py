@@ -38,7 +38,9 @@ from .lifecycle import (
 
 def run_check_command(check: dict[str, Any], context: dict[str, str]) -> dict[str, Any]:
     command = substitute(check["command"], context)
-    cwd = WORKSPACE / substitute([check.get("cwd") or "."], context)[0]
+    # Honor both cwd and legacy workdir (ADR-0209 A3: workdir was ignored → omo.cli ModuleNotFound)
+    cwd_raw = check.get("cwd") or check.get("workdir") or "."
+    cwd = WORKSPACE / substitute([cwd_raw], context)[0]
     env = os.environ.copy()
     matched_files = check.get("matched_files", [])
     if matched_files:

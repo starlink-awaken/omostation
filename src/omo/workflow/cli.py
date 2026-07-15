@@ -178,7 +178,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_close = sub.add_parser("close", help="Close a workflow run")
     p_close.add_argument("run_id")
     p_close.add_argument("--status", choices=["ok", "failed", "blocked"], required=True)
-    p_close.add_argument("--evidence", action="append", default=[])
+    p_close.add_argument(
+        "--evidence",
+        action="append",
+        default=[],
+        help="Evidence note (required when --status ok; ADR-0209 A1)",
+    )
     p_close.add_argument("--keep-locks", action="store_true")
     p_close.add_argument("--json", action="store_true")
 
@@ -331,6 +336,12 @@ def main(argv: list[str] | None = None) -> int:
                 print(handoff_markdown(payload))
             return 0
         if args.command == "close":
+            # ADR-0209 A1: status=ok requires at least one --evidence (protocol honesty)
+            if args.status == "ok" and not args.evidence:
+                raise WorkflowError(
+                    "close --status ok requires --evidence (ADR-0209 A1; "
+                    "use closeout for auto evidence, or pass --evidence <note>)"
+                )
             payload = close_run(
                 registry, args.run_id, args.status, args.evidence, not args.keep_locks
             )
