@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -1109,6 +1111,57 @@ def test_complete_from_execution_uses_generated_artifacts(monkeypatch, tmp_path)
     assert response.status_code == 200
     assert response.json()["source"] == "omo_controlled_execution_closeout"
     assert calls == [("verify-task", "complete", [execution_ref, log_ref])]
+
+
+def test_workflow_closeout_runs_structured_command_and_records_ref(monkeypatch, tmp_path):
+    run_id = "20260715T120000Z-project-code-change-demo"
+    run_path = tmp_path / ".omo" / "_delivery" / "agent-workflows" / "runs" / f"{run_id}.yaml"
+    run_path.parent.mkdir(parents=True)
+    run_path.write_text("run_id: demo\nstatus: ok\n", encoding="utf-8")
+    payload = {
+        "metadata": {
+            "controlled_execution": True,
+            "command": 'cd "/workspace" && printf ok',
+            "execution_audit": {"exit_code": 0, "log_ref": "runtime/omo/demo.log"},
+        }
+    }
+    commands = []
+    recorded = []
+    monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(
+        api_tasks.subprocess,
+        "run",
+        lambda command, **kwargs: commands.append((command, kwargs))
+        or SimpleNamespace(returncode=0, stdout='{"status":"ok"}', stderr=""),
+    )
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.record_task_execution",
+        lambda *args, **kwargs: recorded.append(kwargs) or {"execution_ref": ".omo/_delivery/task.yaml"},
+    )
+
+    response = TestClient(app).post(
+        "/api/tasks/verify-task/workflow-closeout",
+        json={"run_id": run_id, "evidence": ["controlled verification passed"]},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "closed"
+    assert response.json()["closeout_ref"] == f".omo/_delivery/agent-workflows/runs/{run_id}.yaml"
+    assert commands[0][0][:7] == [
+        "uv",
+        "run",
+        "--with",
+        "pyyaml",
+        "python",
+        "bin/agent-workflow.py",
+        "closeout",
+    ]
+    assert commands[0][0][7] == run_id
+    assert commands[0][0][-3:] == ["--json", "--evidence", "controlled verification passed"]
+    assert recorded[0]["closeout_ref"] == response.json()["closeout_ref"]
 
 
 def test_execution_endpoint_reports_worker_artifacts(monkeypatch, tmp_path):

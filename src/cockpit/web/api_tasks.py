@@ -13,6 +13,7 @@ Routes:
 from __future__ import annotations
 
 import re
+import subprocess
 from datetime import UTC, datetime
 from hashlib import sha256
 
@@ -1582,6 +1583,76 @@ async def complete_task_from_execution(task_id: str):
     validated = _validate_evidence_paths(evidence_paths)
     result = _transition_task(task_id, "complete", evidence_paths=validated)
     return {**result, "evidence_paths": validated, "source": "omo_controlled_execution_closeout"}
+
+
+@router.post("/api/tasks/{task_id}/workflow-closeout")
+async def closeout_task_workflow(task_id: str, request: Request):
+    """Run the governed agent-workflow closeout and attach its run record to the task."""
+    group = _task_group(task_id)
+    if group not in {"active", "done"}:
+        raise HTTPException(status_code=409, detail="Task must have an active or done execution before closeout")
+    payload = _load_persisted_task(task_id, group)
+    metadata = payload.get("metadata") or {}
+    audit = metadata.get("execution_audit") or {}
+    if metadata.get("controlled_execution") is not True or audit.get("exit_code") != 0:
+        raise HTTPException(status_code=409, detail="A successful controlled execution is required before workflow closeout")
+
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Workflow closeout request must be an object")
+    run_id = str(body.get("run_id") or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", run_id):
+        raise HTTPException(status_code=422, detail="run_id must contain only letters, numbers, dots, underscores, or hyphens")
+    evidence = body.get("evidence") or []
+    if not isinstance(evidence, list) or not all(isinstance(item, str) and item.strip() for item in evidence):
+        raise HTTPException(status_code=422, detail="evidence must be a list[str]")
+
+    command = ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "closeout", run_id, "--json"]
+    for item in evidence:
+        command.extend(["--evidence", item.strip()])
+    try:
+        result = subprocess.run(
+            command,
+            cwd=WORKSPACE_DIR,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise HTTPException(status_code=504, detail=f"workflow closeout timed out: {exc}") from exc
+
+    closeout_path = WORKSPACE_DIR / ".omo" / "_delivery" / "agent-workflows" / "runs" / f"{run_id}.yaml"
+    closeout_ref = str(closeout_path.relative_to(WORKSPACE_DIR)) if closeout_path.is_file() else None
+    if result.returncode == 0 and not closeout_ref:
+        raise HTTPException(status_code=409, detail="workflow closeout succeeded but its run record was not found")
+    if result.returncode == 0 and closeout_ref:
+        try:
+            from omo.omo_ingress_task_lifecycle import record_task_execution
+
+            record_task_execution(
+                WORKSPACE_DIR / ".omo",
+                task_id=task_id,
+                actor="cockpit-task-center",
+                command=str(audit.get("command") or metadata.get("command") or "controlled execution"),
+                exit_code=0,
+                log_ref=str(audit.get("log_ref") or "runtime/omo/cockpit-workflow-closeout.log"),
+                closeout_ref=closeout_ref,
+                source_ref=f"cockpit:task:workflow-closeout:{task_id}:{run_id}",
+            )
+        except (ImportError, OSError, ValueError) as exc:
+            raise HTTPException(status_code=409, detail=f"workflow closed but task evidence was not recorded: {exc}") from exc
+
+    return {
+        "id": task_id,
+        "run_id": run_id,
+        "status": "closed" if result.returncode == 0 else "failed",
+        "exit_code": result.returncode,
+        "closeout_ref": closeout_ref,
+        "stdout": result.stdout[-12000:],
+        "stderr": result.stderr[-12000:],
+        "source": "agent_workflow_closeout",
+    }
 
 
 @router.post("/api/tasks/{task_id}/cancel")
