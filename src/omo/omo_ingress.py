@@ -221,6 +221,7 @@ from omo.omo_ingress_task_lifecycle import (  # noqa: E402, F401
     record_task_execution,
     execute_controlled_task,
     get_controlled_process_status,
+    restart_controlled_task,
     start_controlled_task,
     stop_controlled_task,
     record_task_contract_request,

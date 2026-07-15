@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 import signal
 import subprocess
+import time
 from typing import Any
 
 from omo.omo_audit import record as record_audit
@@ -670,12 +671,28 @@ def get_controlled_process_status(omo_dir: Path, *, task_id: str) -> dict[str, A
     if not isinstance(process_record, dict) or not process_record.get("pid"):
         return {"status": "not_started", "pid": None, "log_ref": None}
     pid = int(process_record["pid"])
+    status = "running" if _controlled_pid_is_running(pid) else "exited"
+    return {**process_record, "status": status, "pid": pid}
+
+
+def _controlled_pid_is_running(pid: int) -> bool:
+    """Treat a terminated shell child in zombie state as exited."""
     try:
         os.kill(pid, 0)
-        status = "running"
     except (OSError, ValueError):
-        status = "exited"
-    return {**process_record, "status": status, "pid": pid}
+        return False
+    try:
+        probe = subprocess.run(
+            ["ps", "-o", "stat=", "-p", str(pid)],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return True
+    state = probe.stdout.strip().split(None, 1)[0] if probe.stdout.strip() else ""
+    return not state.startswith("Z")
 
 
 def stop_controlled_task(
@@ -699,7 +716,10 @@ def stop_controlled_task(
         pid = int(process_record["pid"])
         stop_status = "stopped"
         try:
-            os.killpg(int(process_record.get("process_group_id") or pid), signal.SIGTERM)
+            if not _controlled_pid_is_running(pid):
+                stop_status = "not_running"
+            else:
+                os.killpg(int(process_record.get("process_group_id") or pid), signal.SIGTERM)
         except ProcessLookupError:
             stop_status = "not_running"
         except OSError as exc:
@@ -742,6 +762,41 @@ def stop_controlled_task(
             extra={"task_id": task_id, "pid": pid, "status": stop_status},
         )
     return process_record
+
+
+def restart_controlled_task(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    source_ref: str = "",
+    timeout_seconds: float = 5.0,
+) -> dict[str, Any]:
+    """Restart a controlled process only after the old process has exited."""
+    current = get_controlled_process_status(omo_dir, task_id=task_id)
+    if current.get("status") != "running":
+        raise ValueError("Task must have a running controlled process to restart")
+
+    stop_controlled_task(
+        omo_dir,
+        task_id=task_id,
+        actor=actor,
+        source_ref=f"{source_ref}:stop" if source_ref else "restart:stop",
+    )
+    deadline = time.monotonic() + max(0.1, timeout_seconds)
+    while time.monotonic() < deadline:
+        if get_controlled_process_status(omo_dir, task_id=task_id).get("status") != "running":
+            break
+        time.sleep(0.05)
+    else:
+        raise ValueError("Controlled process did not exit before restart timeout")
+
+    return start_controlled_task(
+        omo_dir,
+        task_id=task_id,
+        actor=actor,
+        source_ref=f"{source_ref}:start" if source_ref else "restart:start",
+    )
 
 
 def complete_task(

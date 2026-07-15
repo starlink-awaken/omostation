@@ -20,6 +20,7 @@ from omo.omo_ingress import (
     create_standard_doc,
     execute_controlled_task,
     get_controlled_process_status,
+    restart_controlled_task,
     normalize_legacy_planned_task,
     promote_task_to_active,
     record_task_contract_request,
@@ -895,6 +896,14 @@ def test_controlled_process_start_status_and_stop_are_audited(tmp_path: Path) ->
     try:
         assert started["status"] == "started"
         assert get_controlled_process_status(tmp_path / ".omo", task_id="TASK-START-1")["status"] == "running"
+        restarted = restart_controlled_task(
+            tmp_path / ".omo",
+            task_id="TASK-START-1",
+            actor="projects/omo/tests",
+            source_ref="tests:restart:TASK-START-1",
+        )
+        assert restarted["status"] == "started"
+        assert restarted["pid"] != started["pid"]
     finally:
         stopped = stop_controlled_task(
             tmp_path / ".omo",
