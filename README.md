@@ -1,12 +1,9 @@
 # omostation · eCOS v6
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![CI](https://github.com/starlink-awaken/omostation/actions/workflows/workspace.yml/badge.svg)](https://github.com/starlink-awaken/omostation/actions)
 
-> Multi-project knowledge engineering and AI operating-system workspace.
-> Runtime state lives in [`.omo/state/system.yaml`](.omo/state/system.yaml).
-> Project metadata lives in [`docs/project-registry.yaml`](docs/project-registry.yaml).
+> 知识工程与 AI 操作系统工作区 — 多项目、多语言、多层次。
 
 [English](#english) | [中文](#中文)
 
@@ -16,73 +13,81 @@
 
 ## English
 
-### What This Is
+### Overview
 
-`omostation` is the root workspace for eCOS v6: a layered system for knowledge engineering, agent governance, BOS service routing, runtime orchestration, and personal/work knowledge operations.
+**omostation** is the root workspace of **eCOS v6**, a polyglot monorepo that integrates knowledge engineering, agent governance, BOS service routing, runtime orchestration, and personal/work knowledge operations.
 
-This README is only the front door. It intentionally avoids hard-coded runtime numbers such as phase, health score, test counts, tool counts, service counts, and ports.
+It is organized as a **5+4+1+1 layered architecture**:
 
-### Architecture
+| Layer | Name | Projects | Role |
+|-------|------|----------|------|
+| **L0** | Protocol | `ecos` | SSB signature chain, MOF metamodel, L0 constraints |
+| **L1** | Runtime | `runtime` | Matrix/Scheduler/KEI sandbox |
+| **L2** | Engine | `kairon`, `gbrain`, `omo`, `metaos`, `omo-debt`, `family-hub` | Knowledge engine, governance kernel, knowledge store |
+| **L3** | Entry | `cockpit`, `cockpit-ui` | Unified CLI/Web dashboard |
+| **L4** | Self | `l4-kernel` | Self-management domain |
+| **I0** | Weave | `agora` | MCP Hub, BOS URI routing mesh |
+| **M0** | Crosscut | `model-driven` | Lifecycle meta-framework |
+| **X** | Extension | `aetherforge`, `c2g`, `bus-foundation`, `observability` | Compute, strategy, bus, observability |
 
-For the complete architecture, read [`ARCHITECTURE.md`](ARCHITECTURE.md). Project layer placement is generated from [`docs/project-registry.yaml`](docs/project-registry.yaml) into [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md).
+> Architecture contracts: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+> Project layer index: [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md)
+> Layer dependency rules: [`docs/layer-contract.yaml`](docs/layer-contract.yaml)
 
 ### Entry Points
 
-| Audience | Entry | Source Of Truth |
+| Audience | Entry | Source of Truth |
 |----------|-------|-----------------|
 | Human CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
-| AI agent | `agora` MCP with `bos://` URIs | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
-| Agent workflow | `bin/agent-workflow.py status` / `cockpit agent status` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
-| Runtime state sync | `uv run --project projects/omo omo state sync` | [`.omo/_truth/registry/mutation-surfaces.yaml`](.omo/_truth/registry/mutation-surfaces.yaml) |
-| Governance evolution | `cockpit governance evolution` | [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml) |
-| Governance | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
-| MOF model governance | `mof-*` tools via agent workflow | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
-| External adapter contracts | `bin/agent-workflow.py adapters` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| AI Agent | `agora` MCP with `bos://` URIs | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
+| Agent workflow | `bin/agent-workflow.py` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Runtime state | `omo state sync` | [`.omo/state/system.yaml`](.omo/state/system.yaml) |
+| Governance | `omo` CLI/MCP | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) |
 
 ### Quick Start
 
 ```bash
+# Clone with submodules
 git clone --recursive https://github.com/starlink-awaken/omostation.git
 cd omostation
 
-bash tests/integration/run-all.sh
+# Run the full local gate
+make ci-local-fast
 
+# Or run specific checks
+make check-layers        #  Layer dependency validation
+make ssot-status         #  SSOT file change tracking
+make gac-local-gate      #  Full governance-as-code gate
+
+# Run project tests
 cd projects/kairon && make test-diff
-cd projects/agora && uv run pytest tests/ -q
 cd projects/gbrain && bun test
 ```
 
-### Documentation Map
+### Governance Tools
+
+| Tool | Command | Purpose |
+|------|---------|---------|
+| Layer dependency check | `make check-layers` | Validates cross-layer imports against [`docs/layer-contract.yaml`](docs/layer-contract.yaml) |
+| SSOT watcher | `make ssot-{status,log,sync}` | SHA-256 change tracking for 12 SSOT files, audit log in `.omo/ssot-audit-log.jsonl` |
+| GaC local gate | `make gac-local-gate` | Full governance gate (validate, drift, lint, AGCP, MOF, SSOT) |
+| Agent workflow | `bin/agent-workflow.py` | Workflow lifecycle: bootstrap, start, claim, verify, closeout, compliance |
+| API versioning | `/api/version`, `/api/version/history` | Cockpit API version management with FastAPI middleware |
+
+### Navigation
 
 | Document | Purpose |
 |----------|---------|
-| **[`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md)** | **NEW: Unified navigation hub - START HERE** |
-| [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) | Project index by layer/stack |
-| [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) | Tools and scripts index |
-| [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) | ADRs, audits, patterns index |
-| [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) | Agent skills and setup index |
+| [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) | **Start here** — unified navigation hub |
+| [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) | Projects by layer and stack |
+| [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) | Tools and scripts |
+| [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) | ADRs, audits, patterns |
+| [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) | Agent skills and setup |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stable architecture contracts |
 | [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
 | [`CLAUDE.md`](CLAUDE.md) | AI session context loader |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stable architecture contracts |
-| [`LAYER-INDEX.md`](LAYER-INDEX.md) | Layer and project placement |
-| [`docs/PANORAMA.md`](docs/PANORAMA.md) | System panorama and BOS routing |
-| [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) | Architecture deep-dive |
-| [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) | Functional capability map |
-| [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) | Agora BOS URI callchain |
-| [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) | Vision and roadmap |
+| [`docs/PANORAMA.md`](docs/PANORAMA.md) | BOS routing and system panorama |
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | Project metadata SSOT |
-| [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | Documentation SSOT contract |
-
-### Governance
-
-- Runtime state: [`.omo/state/system.yaml`](.omo/state/system.yaml)
-- Current goals: [`.omo/goals/current.yaml`](.omo/goals/current.yaml)
-- Governance kernel: [`projects/omo/`](projects/omo/)
-- Governance-as-Code registry: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
-- Executable agent workflows and AGCP status: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
-- Runtime projection sync: `uv run --project projects/omo omo state sync`
-- Governance evolution roadmap: [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml)
-- MOF capability registry: [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml)
 
 ### License
 
@@ -94,15 +99,26 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 
 ## 中文
 
-### 这是什么
+### 概述
 
-`omostation` 是 eCOS v6 的根工作区，用来承载知识工程、Agent 治理、BOS 服务路由、运行时编排，以及个人/工作知识操作。
+**omostation** 是 **eCOS v6** 的根工作区，一个多语言、多项目的知识工程与 AI 操作系统工作区。
 
-本 README 只做入口导航，不维护 Phase、健康分、测试数、工具数、服务数、端口等易漂移事实。那些事实有各自的 SSOT。
+采用 **5+4+1+1 分层架构**：
 
-### 架构速览
+| 层 | 名称 | 项目 | 职责 |
+|----|------|------|------|
+| **L0** | 协议层 | `ecos` | SSB 签名链、MOF 元模型、L0 约束 |
+| **L1** | 运行时层 | `runtime` | Matrix/Scheduler/KEI 沙箱 |
+| **L2** | 引擎层 | `kairon`, `gbrain`, `omo`, `metaos`, `omo-debt`, `family-hub` | 知识引擎、治理中枢、知识库 |
+| **L3** | 入口层 | `cockpit`, `cockpit-ui` | 统一 CLI/Web 仪表盘 |
+| **L4** | 自我层 | `l4-kernel` | 自我管理面 |
+| **I0** | 织层 | `agora` | MCP Hub、BOS URI 路由网 |
+| **M0** | 横切框架 | `model-driven` | 生命周期元框架 |
+| **X** | 扩展层 | `aetherforge`, `c2g`, `bus-foundation`, `observability` | 算力、战略、总线、可观测性 |
 
-完整架构见 [`ARCHITECTURE.md`](ARCHITECTURE.md)。项目分层索引由 [`docs/project-registry.yaml`](docs/project-registry.yaml) 生成到 [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md)。
+> 架构契约: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+> 项目分层索引: [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md)
+> 分层依赖规则: [`docs/layer-contract.yaml`](docs/layer-contract.yaml)
 
 ### 入口
 
@@ -110,12 +126,9 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 |------|------|----------|
 | 人类 CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI Agent | `agora` MCP + `bos://` URI | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
-| Agent 工作流 | `bin/agent-workflow.py status` / `cockpit agent status` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
-| 运行态状态同步 | `uv run --project projects/omo omo state sync` | [`.omo/_truth/registry/mutation-surfaces.yaml`](.omo/_truth/registry/mutation-surfaces.yaml) |
-| 治理演进 | `cockpit governance evolution` | [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml) |
-| 治理操作 | `omo` CLI/MCP broker | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
-| MOF 模型治理 | agent workflow 调用 `mof-*` 工具 | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
-| 外部适配器契约 | `bin/agent-workflow.py adapters` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Agent 工作流 | `bin/agent-workflow.py` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| 运行态状态 | `omo state sync` | [`.omo/state/system.yaml`](.omo/state/system.yaml) |
+| 治理操作 | `omo` CLI/MCP | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) |
 
 ### 快速开始
 
@@ -123,44 +136,43 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 git clone --recursive https://github.com/starlink-awaken/omostation.git
 cd omostation
 
-bash tests/integration/run-all.sh
+# 本地全部门
+make ci-local-fast
 
+# 或运行特定检查
+make check-layers        #  分层依赖验证
+make ssot-status         #  SSOT 变更追踪
+make gac-local-gate      #  全量治理-as-Code 门禁
+
+# 项目测试
 cd projects/kairon && make test-diff
-cd projects/agora && uv run pytest tests/ -q
 cd projects/gbrain && bun test
 ```
 
-### 文档地图
+### 治理工具
+
+| 工具 | 命令 | 用途 |
+|------|------|------|
+| 分层依赖检查 | `make check-layers` | 验证跨层导入是否符合 [`docs/layer-contract.yaml`](docs/layer-contract.yaml) |
+| SSOT 追踪 | `make ssot-{status,log,sync}` | 12 个 SSOT 文件的 SHA-256 变更追踪，审计日志在 `.omo/ssot-audit-log.jsonl` |
+| GaC 本地门禁 | `make gac-local-gate` | 全量治理门禁 (validate, drift, lint, AGCP, MOF, SSOT) |
+| Agent 工作流 | `bin/agent-workflow.py` | 工作流生命周期: bootstrap, start, claim, verify, closeout, compliance |
+| API 版本管理 | `/api/version`, `/api/version/history` | Cockpit API 版本管理，FastAPI 中间件 |
+
+### 文档导航
 
 | 文档 | 用途 |
 |------|------|
-| **[`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md)** | **全新: 统一导航中心 - 从这里开始** |
+| [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) | **从这里开始** — 统一导航中心 |
 | [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) | 按层/栈的项目索引 |
 | [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) | 工具和脚本索引 |
 | [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) | ADR、审计、模式索引 |
 | [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) | Agent 技能和设置索引 |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | 稳定架构契约 |
 | [`AGENTS.md`](AGENTS.md) | Agent / 开发者操作指南 |
 | [`CLAUDE.md`](CLAUDE.md) | AI 会话上下文加载器 |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | 稳定架构契约 |
-| [`LAYER-INDEX.md`](LAYER-INDEX.md) | 分层与项目位置索引 |
-| [`docs/PANORAMA.md`](docs/PANORAMA.md) | 系统全景与 BOS 路由 |
-| [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) | 架构细化地图 |
-| [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) | 功能能力地图 |
-| [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) | Agora BOS URI 调用链 |
-| [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) | 愿景与路线图 |
+| [`docs/PANORAMA.md`](docs/PANORAMA.md) | BOS 路由与系统全景 |
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | 项目元数据 SSOT |
-| [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | 文档 SSOT 契约 |
-
-### 治理
-
-- 运行时状态: [`.omo/state/system.yaml`](.omo/state/system.yaml)
-- 当前目标: [`.omo/goals/current.yaml`](.omo/goals/current.yaml)
-- 治理内核: [`projects/omo/`](projects/omo/)
-- Governance-as-Code 注册表: [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml)
-- 可执行 Agent 工作流与 AGCP 状态入口: [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml)
-- 运行态投影同步: `uv run --project projects/omo omo state sync`
-- 治理演进路线图: [`.omo/_truth/registry/governance-evolution-roadmap.yaml`](.omo/_truth/registry/governance-evolution-roadmap.yaml)
-- MOF 能力注册表: [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml)
 
 ### 许可证
 

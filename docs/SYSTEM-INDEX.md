@@ -53,13 +53,21 @@
 
 ## 分类索引
 
-→ [项目索引](INDEX-PROJECTS.md) — 17 项目按层/栈/状态分类
+→ [项目索引](INDEX-PROJECTS.md) — 项目按层/栈/状态分类（见 `docs/project-registry.yaml`）
 
 → [工具索引](INDEX-TOOLS.md) — bin/ + scripts/ + .agents/skills 统一目录
 
 → [知识索引](INDEX-KNOWLEDGE.md) — ADR + 审计 + 模式 + 总结交叉索引
 
 → [Agent 能力索引](INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
+
+→ [Closeout 记录](closeout/) — 各轮关闭记录和复盘（详见 `docs/closeout/`）
+
+→ [操作 SOP](operations/) — 运维手册、清单、模板（详见 `docs/operations/`）
+
+→ [架构设计](architecture/) — 方案设计文档（详见 `docs/architecture/`）
+
+→ [ISA 分析](isa/) — 接口/服务/架构图（详见 `docs/isa/`）
 
 ---
 
@@ -135,12 +143,12 @@
 
 ## 知识资产分类
 
-| 类型 | 数量 | 位置 |
-|------|------|------|
-| ADR 决策 | ~150 | .omo/_knowledge/decisions/ |
-| 审计报告 | ~80 | .omo/_knowledge/audits/ |
-| 模式总结 | ~11 | .omo/_knowledge/patterns/ |
-| 管理文档 | ~50 | .omo/_knowledge/management/ |
+| 类型 | 位置 |
+|------|------|
+| ADR 决策 | `.omo/_knowledge/decisions/`（见 `INDEX.md` 索引） |
+| 审计报告 | `.omo/_knowledge/audits/` |
+| 模式总结 | `.omo/_knowledge/patterns/` |
+| 管理文档 | `.omo/_knowledge/management/` |
 
 详见 `INDEX-KNOWLEDGE.md` 获取完整知识索引。
 
@@ -153,3 +161,7 @@
 → [CLAUDE.md](../CLAUDE.md) — 会话上下文加载
 → [README.md](../README.md) — 项目快速开始
 → [doc-ssot-contract.md](../.omo/standards/doc-ssot-contract.md) — 文档正交契约
+→ [layer-contract.yaml](layer-contract.yaml) — 分层依赖规则
+→ [生成的索引](generated/) — `project-layer-index.md`, `agent-gac-rules.md` 等自动生成的文档
+→ [近期报告](closeout/) — 2026-07-15 各轮 closeout 记录
+→ [操作 SOP](operations/) — 运维手册、模板、清单
