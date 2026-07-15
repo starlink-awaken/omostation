@@ -543,3 +543,31 @@ metadata:
     assert verification["source"] == "omo_task_execution"
     assert verification["log_ref"] == "runtime/omo/demo.log"
     assert verification["actor"] == "cockpit-task-center"
+
+
+def test_latest_project_verification_reads_triage_execution_and_closeout_state(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "projects" / "demo"
+    project_path.mkdir(parents=True, exist_ok=True)
+    task_path = workspace_root / ".omo" / "tasks" / "done" / "cockpit-triage-demo-verification-rerun.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        """id: cockpit-triage-demo-verification-rerun
+metadata:
+  execution_audit:
+    command: cd "/workspace/projects/demo" && printf hello
+    exit_code: 0
+    log_ref: runtime/omo/demo.log
+    closeout_ref: null
+    actor: cockpit-task-center
+    recorded_at: '2026-07-15T05:40:00Z'
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+
+    verification = api_system_map._latest_project_verification("demo", project_path, {})
+
+    assert verification["status"] == "verified"
+    assert verification["run_id"] == "cockpit-triage-demo-verification-rerun"
+    assert verification["closeout_status"] == "missing"

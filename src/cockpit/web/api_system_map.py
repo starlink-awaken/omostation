@@ -1637,6 +1637,7 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
     project_prefix = f"projects/{project_id}"
     claims_by_run: dict[str, set[str]] = defaultdict(set)
     verify_events: list[dict[str, Any]] = []
+    closeout_events: list[dict[str, Any]] = []
 
     try:
         lines = events_path.read_text(encoding="utf-8").splitlines()
@@ -1656,13 +1657,15 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
                 claims_by_run[run_id].add(str(path))
         if event.get("event") == "agent_workflow_verify":
             verify_events.append(event)
+        if event.get("event") in {"agent_workflow_closeout", "agent_workflow_close"}:
+            closeout_events.append(event)
 
     for event in reversed(verify_events):
         run_id = event.get("run_id", "")
         surfaces = set(str(path) for path in (event.get("changed_files") or []))
         surfaces.update(claims_by_run.get(run_id, set()))
         if any(path == project_prefix or path.startswith(f"{project_prefix}/") for path in surfaces):
-            return {
+            result = {
                 "status": "verified" if event.get("ok") else "failed",
                 "run_id": run_id,
                 "ts": event.get("ts"),
@@ -1670,6 +1673,11 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
                 "command": None,
                 "source": "agent_workflow",
             }
+            closeout = next((item for item in reversed(closeout_events) if item.get("run_id") == run_id), None)
+            if closeout:
+                result["closeout_status"] = "closed"
+                result["closeout_ref"] = closeout.get("artifact_ref") or closeout.get("source_ref")
+            return result
 
     # Older or interrupted runs may have a durable YAML run record but no
     # events.jsonl entry. Surface that evidence instead of silently downgrading
@@ -1696,7 +1704,7 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
             continue
         evidence = [str(item) for item in run.get("evidence") or []]
         checks = sum(1 for item in evidence if "agent-workflow verify:" in item)
-        return {
+        result = {
             "status": status,
             "run_id": run.get("run_id") or run_path.stem,
             "ts": run.get("updated_at") or run.get("closed_at") or run.get("created_at"),
@@ -1704,13 +1712,23 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
             "command": None,
             "source": "agent_workflow_run",
         }
+        if run.get("closed_at") or run_status in {"closed", "complete", "completed"}:
+            result["closeout_status"] = "closed"
+            result["closeout_ref"] = str(run_path.relative_to(WORKSPACE_ROOT))
+        return result
 
     # A Cockpit-controlled verification is also durable OMO evidence. Keep it
     # in the same project posture so TaskCenter and SystemMap do not disagree.
-    task_prefix = f"cockpit-action-{project_id}-copy-verify-command"
     task_paths: list[Path] = []
+    task_ids = (
+        f"cockpit-action-{project_id}-copy-verify-command",
+        f"cockpit-triage-{project_id}-verification-rerun",
+    )
     for group in ("active", "done"):
-        task_paths.extend((WORKSPACE_ROOT / ".omo" / "tasks" / group).glob(f"{task_prefix}.yaml"))
+        for task_id in task_ids:
+            task_path = WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
+            if task_path.is_file():
+                task_paths.append(task_path)
     for task_path in sorted(task_paths, key=lambda path: path.stat().st_mtime, reverse=True):
         try:
             task = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
@@ -1729,6 +1747,8 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
             "source": "omo_task_execution",
             "log_ref": audit.get("log_ref"),
             "actor": audit.get("actor"),
+            "closeout_status": "closed" if audit.get("closeout_ref") else "missing",
+            "closeout_ref": audit.get("closeout_ref"),
         }
 
     verify_command = _project_verify_command(
@@ -1753,6 +1773,8 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
         "checks": 0,
         "command": None,
         "source": "missing",
+        "closeout_status": "missing",
+        "closeout_ref": None,
     }
 
 
@@ -2354,8 +2376,11 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。"
         + (f" 已登记命令：{verification.get('command')}。" if verification.get("command") else "")
     )
+    closeout_status = verification.get("closeout_status") or ("closed" if verification.get("closeout_ref") else "missing")
     verification_next_action = (
-        "将受控重跑结果通过 agent-workflow 留证并完成 closeout。"
+        "保持验证与 closeout 证据同步。"
+        if controlled_passed and closeout_status == "closed"
+        else "将受控重跑结果通过 agent-workflow 留证并完成 closeout。"
         if controlled_passed
         else "复现失败验证并补 closeout 证据。"
         if verification_status == "failed"
@@ -2366,7 +2391,11 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         else "保持验证证据新鲜。"
     )
     if controlled_passed:
-        verification_detail += " 受控重跑已通过，但尚未形成 agent-workflow closeout。"
+        verification_detail += (
+            " 受控重跑已通过，agent-workflow closeout 已存在。"
+            if closeout_status == "closed"
+            else " 受控重跑已通过，但尚未形成 agent-workflow closeout。"
+        )
 
     return [
         _coverage_check(
@@ -2420,7 +2449,9 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         ),
         _coverage_check(
             "verification",
-            "warning"
+            "ready"
+            if controlled_passed and closeout_status == "closed"
+            else "warning"
             if controlled_passed
             else "ready"
             if verification_status == "verified"
