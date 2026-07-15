@@ -72,6 +72,8 @@ DEFAULT_POLICY = {
         {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"]},
         # P44 测试覆盖门禁: 每个 Python 项目必须有 tests/
         {"id": "test-coverage-check", "command": ["bin/gac/test-coverage-check.py"]},
+        # P45 债务完整性门禁: seed_items 全部存在且非空
+        {"id": "debt-integrity-check", "command": ["bin/gac/debt-integrity-check.py"]},
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
