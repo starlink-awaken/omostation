@@ -134,6 +134,10 @@ The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.
 
 ```bash
 make ci-local                               # 本地一键跑全部门 (ci-local-fast 超集, Makefile:105)
+make check-layers                           # 分层依赖检查 (docs/layer-contract.yaml)
+make ssot-status                            # SSOT 变更状态检查
+make ssot-log                               # SSOT 审计日志查看
+make ssot-sync                              # SSOT 变更记录到审计日志
 make gac-local-gate
 uv run --with "pyyaml" python "bin/gac/gac-local-gate.py" --scope files --file <path> --json
 uv run --with "pyyaml" python "bin/ssot/doc-ssot-lint.py" --json

@@ -138,6 +138,10 @@ For `.omo` or `spaces` mutations, use the registered broker/CLI path. If a task 
 
 ```bash
 make gac-local-gate
+make check-layers                           # 分层依赖检查 (docs/layer-contract.yaml)
+make ssot-status                            # SSOT 变更状态检查
+make ssot-log                               # SSOT 审计日志查看
+make ssot-sync                              # SSOT 变更记录到审计日志
 uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
 uv run --with "pyyaml" python "bin/agent-workflow.py" list
 uv run --with "pyyaml" python "bin/agent-workflow.py" agents

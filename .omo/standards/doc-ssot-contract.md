@@ -98,7 +98,7 @@ python3 bin/ssot/doc-ssot-lint.py --json       # 机器可读 JSON (gac-healthch
 | ARCHITECTURE.md | ref | **OWN** | — | — | — |
 | AGENTS.md | ref | ref | **OWN** | — | — |
 | CLAUDE.md | ref | ref | **OWN** | — | — |
-| BOUNDARY.md | ref | ref | — | **OWN** | — |
+| BOUNDARY.md (项目级) | ref | ref | — | **OWN** | — |
 | CALLCHAIN.md | ref | ref | — | ref | — |
 | README.md | ref | ref | ref | — | **OWN** |
 | LAYER-INDEX.md | ref | **OWN** | — | — | — |

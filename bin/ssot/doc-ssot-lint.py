@@ -41,7 +41,6 @@ STALE_PATTERNS = [
     (r"5\+3\+1", "5+3+1", "过期架构命名, 应为 5+4+1+1"),
     (r"7\s*层架构", "7 层架构", "过期架构命名, 应为 5+4+1+1"),
     (r"Python\s*3\.10\+", "Python 3.10+", "过期 Python 版本, 应为 3.13+ (见 pyproject.toml)"),
-    (r"hermes-console", "hermes-console", "已归档项目名, 应为 cockpit-ui"),
 ]
 
 # ── Files to scan ──
@@ -130,8 +129,6 @@ def check_stale_patterns(filepath: Path, content: str, fixes: list) -> list[tupl
                         new_line = new_line.replace("7 层架构", "5+4+1+1 架构").replace("7层架构", "5+4+1+1 架构")
                     if "3.10+" in label:
                         new_line = new_line.replace("Python 3.10+", "Python 3.13+").replace("Python >=3.10", "Python >=3.13")
-                    if "hermes-console" in label:
-                        new_line = new_line.replace("hermes-console", "cockpit-ui")
                     if new_line != line:
                         fixes.append((filepath, i, line, new_line))
     return findings
