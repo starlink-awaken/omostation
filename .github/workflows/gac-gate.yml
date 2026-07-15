@@ -33,6 +33,6 @@ jobs:
           python3 bin/mof/project-layer-index.py --write
           python3 bin/gac/gac-export-agents.py
       - name: check-layers (跨层依赖检查)
-        run: make check-layers
+        run: python3 bin/layer-dependency-check.py
       - name: gac-local-gate (strict)
         run: python3 bin/gac/gac-local-gate.py --strict
