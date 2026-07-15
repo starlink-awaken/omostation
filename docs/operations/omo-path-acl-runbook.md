@@ -73,3 +73,17 @@ omo acl plan [--acl] [--json]
 omo acl apply --yes [--acl]     # needs OMO_OS_ACL=1
 omo acl status                  # alias of lint path-acl
 ```
+
+## 6. macOS host 验证记录（ADR-0205 · 2026-07-15）
+
+| 项 | 结果 |
+|----|------|
+| 主机 | Darwin arm64 · macOS 26.5.1 |
+| `setfacl` | 不存在（预期） |
+| `chmod +a` 探针 | OK（temp file + `ls -le` 可见 ACE） |
+| `lint path-acl` 工作树 | 5 surface 全 ok / 0 warn（mode 0o755） |
+| `acl plan` | 0 chmod action |
+| `acl plan --acl` | 生成 broker user `chmod +a` + optional group `omo-writers` |
+| 本机 `apply --yes --acl` | **未执行**（保留 ops 窗口；需 `OMO_OS_ACL=1`） |
+
+刷新 digest / 重验：见 ADR-0205。group ACE 前请确认 `omo-writers`（或 `OMO_ACL_GROUP`）已存在。
