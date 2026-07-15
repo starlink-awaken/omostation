@@ -47,3 +47,13 @@ uv run python -m c2g.governance_feedback --show-apply-plan
 # optional (broker):
 # uv run python -m c2g.governance_feedback --apply-tasks --omo-dir ../../.omo
 ```
+
+## Dashboard 统一导出（ADR-0190）
+
+```bash
+uv run --directory projects/c2g python -m c2g.dashboard_export --pretty
+# L3:
+cockpit wave2 dashboard
+cockpit wave2 proposals
+cockpit wave2 predictive
+```

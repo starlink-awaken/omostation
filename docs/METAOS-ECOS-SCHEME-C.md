@@ -21,7 +21,7 @@
 | 4 硬化 | MOF 数据包；bus 接线；会话 HMAC；capability YAML | ✅ |
 | 5 证据/执行硬化 | BOS registry 镜像同步；mcp_proxy 元数据投影；CI tip 必跑 | ✅ |
 | 5b 容器执行面 | container executor 门面 + profile SSOT；stdio spawn 统一入口；docker 可选 | ✅ (ADR-0184) |
-| 5c OS 写面 ACL | 设计 ADR-0186；L1 doctor `omo lint path-acl` ADR-0187；L2 apply 仍规划 | L1 ✅ / L2 📋 |
+| 5c OS 写面 ACL | 设计 0186；L1 doctor 0187；L2 plan/apply 0189（opt-in） | L1 ✅ / L2 ✅ |
 
 ## 运行时旋钮
 
@@ -110,18 +110,22 @@ SSOT: `projects/agora/etc/container-executor-profiles.yaml`
 |----|------|------|
 | L0 进程策略 | contract_gatekeeper + direct-omo-io | ✅ 已有 |
 | L1 doctor 只读巡检 | `omo lint path-acl`（ADR-0187） | ✅ |
-| L2 可选 host ACL | `OMO_OS_ACL=1` + dry-run/apply | 📋（opt-in，另 PR） |
+| L2 可选 host ACL | `omo acl plan` / `apply`（ADR-0189，`OMO_OS_ACL=1`） | ✅ |
 | L3 容器 | 5b spawn 不 RW mount `.omo` | ✅ 5b |
 
-### Phase 5c L1 命令
+### Phase 5c L1/L2 命令
 
 ```bash
 cd projects/omo
 uv run pytest tests/test_omo_path_acl.py -q
-uv run python -m omo.cli lint path-acl --workspace-root ../.. 
+# L1
 uv run python -m omo.cli lint path-acl --workspace-root ../.. --json
-uv run python -m omo.cli lint path-acl --workspace-root ../.. --strict  # CI optional hard fail
+# L2 dry-run plan (default safe)
+uv run python -m omo.cli acl plan --workspace-root ../.. --json
+# L2 apply (operator only)
+# export OMO_OS_ACL=1
+# uv run python -m omo.cli acl apply --yes --workspace-root ../..
 ```
 
 SSOT: `projects/omo/etc/omo-path-acl.yaml`  
-**永不** 在 lint 路径执行 chmod/setfacl。
+**lint 永不** chmod；**apply** 仅 chmod 去 other-write，禁 setfacl/chown。
