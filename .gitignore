@@ -69,3 +69,4 @@ tests/archive/test_opc_p3_thin_binding_demo.py
 debt/
 *.tmp
 runtime/omo/
+omo_self_evolve.py
