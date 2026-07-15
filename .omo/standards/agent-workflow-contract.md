@@ -2,13 +2,14 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-29
+last-reviewed: 2026-07-15
 ---
 
 # Agent Workflow Contract
 
 > Scope: executable project-level workflows for human-operated and autonomous agents.
 > SSOT: `.omo/_truth/registry/agent-workflows.yaml`.
+> Mandatory delivery rule: **ADR-0203** / `requirement_iteration_policy` (mode: required).
 
 ## 1. Purpose
 
@@ -20,6 +21,7 @@ The durable contract is:
 2. Executable runner.
 3. Resumable run records.
 4. GAC/OMO/C2G/Cockpit gates and brokers.
+5. **Requirement iterations always start a workflow run** (ADR-0203) — not optional prompt etiquette.
 
 ## 2. Layering
 
@@ -37,7 +39,34 @@ The durable contract is:
 
 ## 3. Required Behavior
 
-Before a multi-step agent task:
+### 3.1 Requirement iteration is mandatory (ADR-0203)
+
+SSOT: `agent-workflows.yaml::requirement_iteration_policy` (`mode: required`).
+
+**Definition — requirement iteration** includes any delivery that changes the workspace for a
+feature, bugfix, ops landing, governance/SSOT/ADR/contract edit, or submodule pointer closeout
+tied to that delivery. **Not** pure read-only Q&A/explore.
+
+**Mandatory lifecycle** (skip = non-compliant for all agent runtimes):
+
+```text
+bootstrap → status → start → claim → edit/test → verify → closeout
+```
+
+| Allowed without a run | Forbidden without a run |
+|----------------------|-------------------------|
+| Pure read-only answers | Code/docs/governance edits that implement a需求 |
+| `observer-audit` (read-only) | "I'll just open a PR then start workflow later" |
+| Explicit user waiver (record in closeout) | Completing work with no `run-id` / no ledger events |
+
+`handoff-resume` recovers an **existing** run; it does not authorize untracked edits.
+
+P74 (`silent_workflow_policy`) is complementary: it catches registered workflows that go unused.
+ADR-0203 catches **delivery work that bypasses workflow entirely**.
+
+### 3.2 Start sequence
+
+Before a requirement iteration (or any multi-step agent task that writes):
 
 ```bash
 uv run --with pyyaml python bin/agent-workflow.py bootstrap

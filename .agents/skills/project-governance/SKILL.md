@@ -1,6 +1,6 @@
 ---
 name: project-governance
-description: Use when an agent changes this workspace or a child project and needs executable governance workflow routing instead of relying on AGENTS.md or CLAUDE.md memory.
+description: Use when an agent changes this workspace or a child project and needs executable governance workflow routing instead of relying on AGENTS.md or CLAUDE.md memory. ADR-0203 — all requirement iterations MUST start an agent-workflow run before edits.
 ---
 
 # Project Governance Workflow
@@ -9,16 +9,31 @@ This skill is a thin bootloader. The source of truth is:
 
 - Registry: `.omo/_truth/registry/agent-workflows.yaml`
 - Runner: `bin/agent-workflow.py`
-- Contract: `.omo/standards/agent-workflow-contract.md`
+- Contract: `.omo/standards/agent-workflow-contract.md` (§3.1 mandatory requirement iterations)
+- ADR-0203: `.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md`
+- Policy field: `requirement_iteration_policy` (`mode: required`)
 - Governance evolution roadmap: `.omo/_truth/registry/governance-evolution-roadmap.yaml`
+
+## RED LINE — Requirement Iterations (ADR-0203)
+
+**Do not edit for a feature/fix/ops/governance delivery until you have an active run-id.**
+
+Mandatory: `bootstrap` → `start --profile` → `claim` → work → `verify` → `closeout`.  
+Exempt only: pure read-only Q&A, `observer-audit`, explicit user waiver recorded in closeout.  
+Skipping workflow and "fixing up later" is non-compliant for every agent runtime.
 
 ## Required First Step
 
 Run the bootstrap before making changes. It includes lint, workflow/profile summaries,
 integration contracts, adapter contracts, health summaries, and next commands.
+Then **start + claim** before the first write of a requirement iteration.
 
 ```bash
 uv run --with pyyaml python bin/agent-workflow.py bootstrap
+uv run --with pyyaml python bin/agent-workflow.py status --json
+uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
+  --profile <agent-profile> --objective "<summary>"
+uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>
 # or through the L3 entry:
 uv run --project projects/cockpit cockpit agent
 ```

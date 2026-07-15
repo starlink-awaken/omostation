@@ -87,6 +87,37 @@ silent_workflow_policy:
   excluded_workflows:
     - handoff-resume
     - observer-audit
+# ADR-0203: every requirement iteration MUST run through agent-workflow lifecycle.
+# Complements P74 (silence of registered workflows) by forbidding bypass on delivery work.
+requirement_iteration_policy:
+  mode: required
+  adr: ADR-0203
+  description: >
+    All requirement iterations (feature, bugfix, ops landing, governance/SSOT/ADR
+    changes, submodule pointer closeout tied to delivery) MUST execute via
+    bin/agent-workflow.py: bootstrap → start → claim → verify → closeout.
+    Prompt memory alone is non-compliant. claim_policy tiers still enforce path claims;
+    this policy is the agent-facing mandatory rule for starting a run before edits.
+  required_lifecycle:
+    - bootstrap
+    - start
+    - claim
+    - verify
+    - closeout
+  in_scope:
+    - feature_or_bugfix_code_change
+    - governance_ssot_or_adr_change
+    - ops_landing_with_repo_diff
+    - delivery_closeout_with_product_or_governance_change
+    - submodule_pointer_closeout
+  exempt_classes:
+    - pure_readonly_qa_or_explore
+    - observer_audit_readonly
+    - explicit_user_waiver_recorded_in_closeout
+  exempt_workflows:
+    - observer-audit
+  non_exempt_note: >
+    handoff-resume is recovery of an existing run, not a license to edit without a run-id.
 claim_policy:
   mode: advisory
   required_paths:
