@@ -121,9 +121,13 @@ def get_logs_from_files() -> list[dict]:
 
 @router.get("/api/logs")
 async def get_logs(
-    level: str | None = Query(None, description="日志级别过滤"),
-    source: str | None = Query(None, description="日志来源过滤"),
-    limit: int = Query(100, description="返回数量限制"),
+    level: str | None = Query(
+        None,
+        pattern="^(fatal|error|warning|debug|info)$",
+        description="日志级别过滤",
+    ),
+    source: str | None = Query(None, min_length=1, max_length=100, description="日志来源过滤"),
+    limit: int = Query(100, ge=1, le=1000, description="返回数量限制"),
 ):
     """获取日志列表。"""
     logs = get_logs_from_files()
@@ -134,10 +138,12 @@ async def get_logs(
     if source:
         logs = [item for item in logs if item["source"] == source]
 
+    total = len(logs)
+
     # 限制数量
     logs = logs[:limit]
 
     return {
         "items": logs,
-        "total": len(logs),
+        "total": total,
     }

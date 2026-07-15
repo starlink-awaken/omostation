@@ -54,6 +54,23 @@ class TestLogs:
             resp = client.get("/api/logs?source=omo")
         assert resp.status_code == 200
 
+    def test_get_logs_rejects_invalid_query_bounds(self, client):
+        assert client.get("/api/logs?limit=0").status_code == 422
+        assert client.get("/api/logs?limit=1001").status_code == 422
+        assert client.get("/api/logs?level=notice").status_code == 422
+
+    def test_get_logs_total_is_not_truncated(self, client):
+        entries = [
+            {"timestamp": "2026-07-15T10:00:00Z", "level": "error", "source": "runtime", "message": "one"},
+            {"timestamp": "2026-07-15T10:01:00Z", "level": "error", "source": "runtime", "message": "two"},
+        ]
+        with patch("cockpit.web.api_logs.get_logs_from_files", return_value=entries):
+            resp = client.get("/api/logs?level=error&limit=1")
+
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 2
+        assert len(resp.json()["items"]) == 1
+
 
 class TestTasks:
     def test_list_tasks(self, client):
