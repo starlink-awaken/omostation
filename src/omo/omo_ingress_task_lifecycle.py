@@ -353,6 +353,104 @@ def record_task_consensus(
         return artifact
 
 
+def record_task_execution(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    command: str,
+    exit_code: int,
+    log_ref: str,
+    closeout_ref: str = "",
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    """Record a human/worker execution result without executing a command."""
+    from omo.omo_ingress import _record_mutation, _record_trail
+
+    if not command.strip():
+        raise ValueError("command must be a non-empty string")
+    if not isinstance(exit_code, int) or isinstance(exit_code, bool):
+        raise ValueError("exit_code must be an integer")
+    if not log_ref.strip():
+        raise ValueError("log_ref must be a non-empty workspace reference")
+
+    timestamp = now or _utc_now()
+    resolved = _find_task_path(omo_dir, task_id, groups=("planned", "active", "done"))
+    if resolved is None:
+        raise ValueError(f"task not found in planned/active/done: {task_id}")
+    group, task_path = resolved
+    execution_filename = f"{task_id.lower()}-{_timestamp_slug(timestamp)}.yaml"
+    execution_path = omo_dir / "_delivery" / "task-center" / "execution" / execution_filename
+    execution_ref = f".omo/_delivery/task-center/execution/{execution_filename}"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        payload = _load_yaml(task_path)
+        metadata = payload.setdefault("metadata", {})
+        if not isinstance(metadata, dict):
+            raise ValueError("task metadata must be a mapping")
+        expected_command = str(metadata.get("command") or command).strip()
+        if expected_command != command.strip():
+            raise ValueError("execution command does not match the task contract")
+        execution = {
+            "command": expected_command,
+            "exit_code": exit_code,
+            "log_ref": log_ref.strip(),
+            "closeout_ref": closeout_ref.strip() or None,
+            "actor": actor,
+            "recorded_at": timestamp,
+        }
+        metadata["execution_audit"] = execution
+        handoff_refs = payload.setdefault("handoff_refs", [])
+        if isinstance(handoff_refs, list) and execution_ref not in handoff_refs:
+            handoff_refs.append(execution_ref)
+        errors = validate_task_data(payload, group=group)
+        if errors:
+            raise ValueError("invalid task after execution record: " + "; ".join(errors))
+
+        write_yaml_atomic(execution_path, {"task_id": task_id, "task_ref": f".omo/tasks/{group}/{task_path.name}", **execution})
+        write_yaml_atomic(task_path, payload)
+        artifact = {
+            "kind": "task_execution_recorded",
+            "task_id": task_id,
+            "task_ref": f".omo/tasks/{group}/{task_path.name}",
+            "execution_ref": execution_ref,
+            **execution,
+            "source_ref": source_ref,
+        }
+        artifact_path = _delivery_root(omo_dir) / "tasks" / f"{task_id}-execution-{_timestamp_slug(timestamp)}.yaml"
+        write_yaml_atomic(artifact_path, artifact)
+        parent_step_id = f"ingress:task-execution:{task_id}:{timestamp}"
+        record_audit(
+            action="ingress_record_task_execution",
+            debt_id="",
+            actor=actor,
+            details=(
+                f"task_id={task_id} exit_code={exit_code} log_ref={log_ref.strip()} "
+                f"execution_ref={execution_ref}"
+            ),
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="record_task_execution",
+            target=execution_ref,
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="record_task_execution",
+            target=execution_ref,
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "task_group": group, "exit_code": exit_code},
+        )
+        return artifact
+
+
 def complete_task(
     omo_dir: Path,
     *,

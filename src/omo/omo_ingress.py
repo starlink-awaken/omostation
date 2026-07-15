@@ -218,6 +218,7 @@ from omo.omo_ingress_task_lifecycle import (  # noqa: E402, F401
     normalize_legacy_planned_task,
     promote_task_to_active,
     record_task_consensus,
+    record_task_execution,
     record_task_contract_request,
     repair_task_promotion_approval,
     request_task_promotion_approval,
