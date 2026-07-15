@@ -1,5 +1,5 @@
 ---
-status: PROPOSED
+status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
 last-reviewed: 2026-07-15
@@ -18,8 +18,7 @@ supersedes: []
 # ADR-0210: 三年综合战略方向 — 从"扩图纸"转向"收敛执行面"
 
 > **注**: 编号 0210 取自 INDEX 最大号 + 1（0209）。多 Agent 高频环境下编号为共享可变资源，
-> 若落地时发现撞号，按 ADR-0202 D4 处理（占号即推送 / 接受重号成本）。战略决策，`PROPOSED`
-> 待人工拍板后转 `ACCEPTED`。
+> 若落地时发现撞号，按 ADR-0202 D4 处理（占号即推送 / 接受重号成本）。战略决策已 `ACCEPTED`（2026-07-15 用户授权「继续推进」定档）。
 
 ## Context and Problem Statement
 
