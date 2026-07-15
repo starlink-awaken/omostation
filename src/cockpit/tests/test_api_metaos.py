@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -60,11 +61,30 @@ class TestMetaosPlan:
 
 
 class TestMetaosExecute:
+    def test_background_executor_awaits_workflow_run(self):
+        from cockpit.web.api_metaos import _async_execute_workflow
+
+        mock_engine = MagicMock()
+        mock_workflow = MagicMock()
+        mock_workflow.run = AsyncMock()
+        mock_planner = MagicMock()
+        mock_planner.return_value.plan.return_value = mock_workflow
+
+        with (
+            patch("cockpit.web.api_metaos._get_engine", return_value=mock_engine),
+            patch("cockpit.web.api_metaos.WorkflowPlanner", mock_planner),
+        ):
+            asyncio.run(_async_execute_workflow("run tests"))
+
+        mock_workflow.run.assert_awaited_once_with()
+
     def test_execute_ok(self, client):
-        resp = client.post("/api/metaos/execute", json={"task": "run tests"})
+        with patch("cockpit.web.api_metaos._async_execute_workflow") as execute:
+            resp = client.post("/api/metaos/execute", json={"task": "run tests"})
         assert resp.status_code == 200
         assert resp.json()["status"] == "ok"
         assert "background" in resp.json()["msg"]
+        execute.assert_called_once_with("run tests")
 
     def test_execute_missing_task(self, client):
         resp = client.post("/api/metaos/execute", json={})
@@ -119,6 +139,10 @@ class TestMetaosWorkflows:
             resp = client.post("/api/metaos/workflows/wf1/approve")
         assert resp.status_code == 200
         assert "approved" in resp.json()["msg"]
+        assert resp.json()["workflow_id"] == "wf1"
+        assert resp.json()["approved_nodes"] == ["n1"]
+        assert resp.json()["approved_at"]
+        assert resp.json()["next_action"] == "refresh_workflow_and_queue_followup"
 
     def test_workflow_approve_no_awaiting(self, client):
         mock_store = MagicMock()

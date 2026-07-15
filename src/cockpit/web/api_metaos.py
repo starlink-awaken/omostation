@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import time
+from datetime import UTC, datetime
 from functools import wraps
 from pathlib import Path
 
@@ -75,7 +76,7 @@ async def api_metaos_plan(request: Request):
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 
 
-def _async_execute_workflow(task_description: str):
+async def _async_execute_workflow(task_description: str):
     """Background task to plan and execute the workflow"""
     try:
         engine = _get_engine()
@@ -83,7 +84,7 @@ def _async_execute_workflow(task_description: str):
         engine.authenticate(token)
         planner = WorkflowPlanner(engine, use_llm=True)
         wf = planner.plan(task_description)
-        wf.run()
+        await wf.run()
     except Exception as e:  # defensive fallback
         print(f"Background execution failed: {e}")
 
@@ -156,6 +157,8 @@ async def api_metaos_workflow_approve(workflow_id: str):
         awaiting = [n for n in wf_detail.get("nodes", []) if n["status"] == "awaiting_approval"]
         if not awaiting:
             return JSONResponse({"status": "error", "error": "No nodes waiting for approval"}, status_code=400)
+        approved_nodes = [str(node.get("id")) for node in awaiting if node.get("id")]
+        approved_at = datetime.now(UTC).isoformat()
 
         # Update database status directly to unlock the block
         with store._conn() as conn:
@@ -164,6 +167,15 @@ async def api_metaos_workflow_approve(workflow_id: str):
                 (workflow_id,),
             )
 
-        return JSONResponse({"status": "ok", "msg": f"Workflow {workflow_id} has been approved."})
+        return JSONResponse(
+            {
+                "status": "ok",
+                "msg": f"Workflow {workflow_id} has been approved.",
+                "workflow_id": workflow_id,
+                "approved_nodes": approved_nodes,
+                "approved_at": approved_at,
+                "next_action": "refresh_workflow_and_queue_followup",
+            }
+        )
     except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
