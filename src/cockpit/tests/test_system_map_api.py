@@ -105,7 +105,10 @@ def test_system_map_builds_workspace_dimensions():
     page_maturity = payload["page_maturity"]
     assert page_maturity["summary"]["total"] == payload["summary"]["cockpit_pages"]
     assert page_maturity["summary"]["score"] == payload["summary"]["page_maturity_score"]
-    assert page_maturity["summary"]["ready"] + page_maturity["summary"]["watch"] + page_maturity["summary"]["gap"] == page_maturity["summary"]["total"]
+    assert (
+        page_maturity["summary"]["ready"] + page_maturity["summary"]["watch"] + page_maturity["summary"]["gap"]
+        == page_maturity["summary"]["total"]
+    )
     assert all(item["status"] in {"ready", "gap", "watch"} for item in page_maturity["items"])
     assert all(item["next_action"] for item in page_maturity["items"])
     assert all(item["domains"] for item in page_maturity["items"])

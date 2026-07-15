@@ -52,15 +52,17 @@ def test_alert_action_state_survives_refresh(monkeypatch):
     monkeypatch.setattr(
         api_alerts,
         "generate_alerts_from_l4_data",
-        lambda: [{
-            "id": "alert-test",
-            "level": "warning",
-            "source": "test",
-            "message": "test alert",
-            "status": "active",
-            "created_at": "now",
-            "updated_at": "now",
-        }],
+        lambda: [
+            {
+                "id": "alert-test",
+                "level": "warning",
+                "source": "test",
+                "message": "test alert",
+                "status": "active",
+                "created_at": "now",
+                "updated_at": "now",
+            }
+        ],
     )
     client = TestClient(app)
 

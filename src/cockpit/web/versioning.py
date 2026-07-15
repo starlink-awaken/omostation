@@ -116,14 +116,8 @@ class VersionManager:
     def get_version_history(self) -> list[dict[str, Any]]:
         """获取版本历史（用于追踪升级路径）"""
         history = []
-        for v in sorted(
-            set(v for handlers in self.versions.values() for v in handlers.keys())
-        ):
-            endpoints = [
-                {"path": p, "version": v}
-                for p, handlers in self.versions.items()
-                if v in handlers
-            ]
+        for v in sorted(set(v for handlers in self.versions.values() for v in handlers.keys())):
+            endpoints = [{"path": p, "version": v} for p, handlers in self.versions.items() if v in handlers]
             history.append(
                 {
                     "version": v,
@@ -191,9 +185,7 @@ def setup_version_middleware(app: FastAPI) -> None:
             req_version = request.headers.get("X-API-Version", "")
             if req_version in version_manager.deprecated:
                 response.headers["X-API-Deprecated"] = req_version
-                response.headers["X-API-Suggested-Version"] = version_info[
-                    "current_version"
-                ]
+                response.headers["X-API-Suggested-Version"] = version_info["current_version"]
 
         return response
 

@@ -95,9 +95,7 @@ def load_wave2_dashboard(
         payload["source"] = "c2g.dashboard_export"
         payload["data_dir"] = str(ddir)
         # Enrich proposals with TaskCenter handoff hints (ADR-0192)
-        payload["proposals"] = enrich_proposals_for_handoff(
-            payload.get("proposals") or []
-        )
+        payload["proposals"] = enrich_proposals_for_handoff(payload.get("proposals") or [])
         return payload
     except Exception as e:
         # Fallback empty with diagnostic — UI still renders
@@ -187,12 +185,8 @@ def load_wave2_proposal_plan(
 
         tracker = OutcomeTracker(ddir)
         proposals = build_proposals(tracker._outcomes, horizon=horizon)
-        proposals["proposals"] = enrich_proposals_for_handoff(
-            proposals.get("proposals") or []
-        )
-        actions = apply_proposals_as_tasks(
-            proposals, omo_dir, dry_run=True
-        )
+        proposals["proposals"] = enrich_proposals_for_handoff(proposals.get("proposals") or [])
+        actions = apply_proposals_as_tasks(proposals, omo_dir, dry_run=True)
         return {
             "schema": "c2g.wave2.proposal_plan.v1",
             "adr": "0192",

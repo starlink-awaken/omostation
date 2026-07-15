@@ -85,9 +85,7 @@ async def get_compute_status():
         if result.returncode == 0:
             return json.loads(result.stdout)
         else:
-            raise HTTPException(
-                status_code=503, detail=f"Compute onboarding is unavailable: {result.stderr.strip()}"
-            )
+            raise HTTPException(status_code=503, detail=f"Compute onboarding is unavailable: {result.stderr.strip()}")
     except subprocess.TimeoutExpired:
         raise HTTPException(status_code=504, detail="Compute status check timed out.")
     except HTTPException:

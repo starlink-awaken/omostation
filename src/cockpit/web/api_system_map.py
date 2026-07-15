@@ -1408,11 +1408,7 @@ def _triage_command(
 
 
 def _port_probe_command(ports: list[dict[str, Any]]) -> str | None:
-    port_values = [
-        str(port["port"])
-        for port in ports[:6]
-        if port.get("port") and port.get("probeable", True)
-    ]
+    port_values = [str(port["port"]) for port in ports[:6] if port.get("port") and port.get("probeable", True)]
     if not port_values:
         return None
     return f"for port in {' '.join(port_values)}; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done"
@@ -1642,11 +1638,7 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
             run = yaml.safe_load(run_path.read_text(encoding="utf-8")) or {}
         except (OSError, yaml.YAMLError):
             continue
-        surfaces = {
-            str(path)
-            for claim in run.get("claims") or []
-            for path in claim.get("paths") or []
-        }
+        surfaces = {str(path) for claim in run.get("claims") or [] for path in claim.get("paths") or []}
         if not any(path == project_prefix or path.startswith(f"{project_prefix}/") for path in surfaces):
             continue
         run_status = str(run.get("status", "")).lower()
@@ -2099,7 +2091,9 @@ def _project_operational_status(
         {"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PROJECT_DOC_FILES
     ]
     present_docs = [item for item in doc_files if item["exists"]]
-    expected_doc_count = 1 if isinstance(data.get("storage"), str) and data["storage"].strip() else len(PROJECT_DOC_FILES)
+    expected_doc_count = (
+        1 if isinstance(data.get("storage"), str) and data["storage"].strip() else len(PROJECT_DOC_FILES)
+    )
     commands = _commands_from_agents(path)
     manifests = [
         {"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PACKAGE_MANIFESTS

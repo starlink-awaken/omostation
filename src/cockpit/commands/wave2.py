@@ -31,16 +31,10 @@ def _run_c2g_module(module: str, extra: list[str] | None = None) -> int:
     ]
     if extra:
         cmd.extend(extra)
-    env = {
-        k: v
-        for k, v in os.environ.items()
-        if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"
-    }
+    env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
     # Prefer workspace runtime outcomes if present
     default_data = _WORKSPACE / "runtime" / "c2g" / "outcomes"
-    if default_data.exists() and not any(
-        a == "--data-dir" for a in (extra or [])
-    ):
+    if default_data.exists() and not any(a == "--data-dir" for a in (extra or [])):
         cmd.extend(["--data-dir", str(default_data)])
     return subprocess.call(cmd, cwd=str(_WORKSPACE), env=env)
 

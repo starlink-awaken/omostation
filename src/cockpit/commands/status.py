@@ -200,10 +200,7 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
     if healthy_count < total_services:
         offline = total_services - healthy_count
         offline_list = ", ".join(offline_names[:5]) + ("…" if len(offline_names) > 5 else "")
-        recs.append(
-            f"[yellow]⚠️ {offline} 个服务离线 ({offline_list}) — "
-            f"cockpit health --full 看详情[/yellow]"
-        )
+        recs.append(f"[yellow]⚠️ {offline} 个服务离线 ({offline_list}) — cockpit health --full 看详情[/yellow]")
     c.print(_panel("[bold]🎯 推荐操作[/bold]\n" + "\n".join(f"  {r}" for r in recs), "cyan"))
 
 

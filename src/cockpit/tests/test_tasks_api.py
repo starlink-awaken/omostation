@@ -515,7 +515,12 @@ def test_request_task_approval_uses_omo_brokers(monkeypatch):
 def test_approve_task_applies_governed_approval(monkeypatch):
     client = TestClient(app)
     approval_ref = ".omo/workers/runs/approval-task-promotion-approval-2026-07-15T00-00-00Z.yaml"
-    payload = {"id": "approval-task", "status": "pending", "human_approval_required": True, "approval_ref": approval_ref}
+    payload = {
+        "id": "approval-task",
+        "status": "pending",
+        "human_approval_required": True,
+        "approval_ref": approval_ref,
+    }
     calls = []
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
     monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)

@@ -137,8 +137,7 @@ def _cmd_health(args: Namespace) -> int:
                         return True
                     return (s.get("runtime") or {}).get("status") in ("running", "scheduled")
 
-                managed = {n: s for n, s in svcs.items()
-                           if (s.get("runtime") or {}).get("status") != "unmanaged"}
+                managed = {n: s for n, s in svcs.items() if (s.get("runtime") or {}).get("status") != "unmanaged"}
                 h = sum(1 for s in managed.values() if _svc_healthy(s))
                 t = max(len(managed), 1)
                 unmanaged = len(svcs) - len(managed)

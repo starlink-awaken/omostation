@@ -103,11 +103,7 @@ def load_doctor_cron_status(
     history_tail: list[dict[str, Any]] = []
     if history_path.is_file():
         try:
-            lines = [
-                ln
-                for ln in history_path.read_text(encoding="utf-8").splitlines()
-                if ln.strip()
-            ]
+            lines = [ln for ln in history_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
             for ln in lines[-history_limit:]:
                 try:
                     obj = json.loads(ln)
@@ -149,9 +145,5 @@ def load_doctor_cron_status(
         "highlights": highlights,
         "history_tail": history_tail,
         "doctor_summary": (snap.get("doctor") or {}).get("summary"),
-        "hint": (
-            "omo acl plan --json"
-            if highlights.get("path_acl_status") == "warn"
-            else "ok"
-        ),
+        "hint": ("omo acl plan --json" if highlights.get("path_acl_status") == "warn" else "ok"),
     }
