@@ -931,6 +931,23 @@ def test_queue_engine_execution_creates_omo_task_without_launching(monkeypatch):
     assert calls[0]["task_data"]["metadata"]["pipeline"] == "health-check"
 
 
+def test_queue_engine_execution_preserves_metaos_plan(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+    plan = {"steps": [{"id": "inspect", "action": "读取状态"}], "risk": "L2"}
+
+    response = TestClient(app).post(
+        "/api/cockpit/engine/queue",
+        json={"engine": "metaos", "task": "核对运行状态", "plan": plan},
+    )
+
+    assert response.status_code == 200
+    assert calls[0]["task_data"]["metadata"]["planning_result"] == plan
+
+
 def test_queue_governance_drift_fix_requires_approval(monkeypatch):
     calls = []
 

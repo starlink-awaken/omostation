@@ -955,12 +955,15 @@ async def queue_engine_execution(request: Request):
     engine = str(body.get("engine") or "metaos").strip().lower()
     task = str(body.get("task") or body.get("goal") or "").strip()
     pipeline = str(body.get("pipeline") or "").strip()
+    planning_result = body.get("plan")
     if engine not in {"metaos", "pipeline"}:
         raise HTTPException(status_code=400, detail="engine must be metaos or pipeline")
     if not task:
         raise HTTPException(status_code=422, detail="task is required")
     if engine == "pipeline" and not pipeline:
         raise HTTPException(status_code=422, detail="pipeline is required for pipeline execution")
+    if planning_result is not None and not isinstance(planning_result, (dict, list, str)):
+        raise HTTPException(status_code=422, detail="plan must be an object, list, or string")
 
     fingerprint = sha256(f"{engine}:{pipeline}:{task}".encode()).hexdigest()[:16]
     task_id = f"cockpit-engine-{fingerprint}"
@@ -1007,6 +1010,7 @@ async def queue_engine_execution(request: Request):
             "engine": engine,
             "pipeline": pipeline or None,
             "task": task,
+            "planning_result": planning_result,
             "cockpit_only": True,
             "controlled_execution": False,
         },
