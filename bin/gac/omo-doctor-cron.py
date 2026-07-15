@@ -123,9 +123,75 @@ def _extract_highlights(payload: dict) -> dict:
     }
 
 
+def _read_history_rows() -> list[dict]:
+    if not HISTORY.is_file():
+        return []
+    rows: list[dict] = []
+    try:
+        for line in HISTORY.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(obj, dict):
+                rows.append(obj)
+    except OSError:
+        return []
+    return rows
+
+
+def compute_path_acl_warn_streak(
+    history_rows: list[dict],
+    current_status: str,
+) -> dict:
+    """Count consecutive trailing days/runs with path-acl warn (ADR-0201).
+
+    Includes the current run if status==warn. History is oldest→newest.
+    """
+    statuses: list[str] = []
+    for row in history_rows:
+        h = row.get("highlights") if isinstance(row.get("highlights"), dict) else {}
+        st = h.get("path_acl_status") or "missing"
+        statuses.append(str(st))
+    # append current
+    statuses.append(str(current_status or "missing"))
+
+    streak = 0
+    for st in reversed(statuses):
+        if st == "warn":
+            streak += 1
+        else:
+            break
+
+    alert = streak >= 3  # default threshold: 3 consecutive warns
+    return {
+        "path_acl_warn_streak": streak,
+        "path_acl_alert": alert,
+        "path_acl_alert_threshold": 3,
+        "path_acl_alert_reason": (
+            f"path-acl warn for {streak} consecutive doctor runs (≥3)"
+            if alert
+            else ""
+        ),
+    }
+
+
 def _write_artifacts(payload: dict, highlights: dict) -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Streak uses prior history + current status (before appending current line)
+    prior = _read_history_rows()
+    streak = compute_path_acl_warn_streak(
+        prior, str(highlights.get("path_acl_status") or "missing")
+    )
+    highlights = {**highlights, **streak}
+
     snapshot = {
+        "schema": "omo.doctor.cron.v1",
+        "adr": "0201",
         "written_at": _now(),
         "highlights": highlights,
         "doctor": payload,
@@ -171,11 +237,31 @@ def main(argv: list[str] | None = None) -> int:
         except OSError as e:
             print(f"[omo-doctor-cron] write failed: {e}", file=sys.stderr)
 
+    # Ensure streak fields present even with --no-write
+    if "path_acl_warn_streak" not in highlights:
+        streak = compute_path_acl_warn_streak(
+            _read_history_rows() if not args.no_write else [],
+            str(highlights.get("path_acl_status") or "missing"),
+        )
+        # when writing, streak already merged inside _write_artifacts; re-read if needed
+        if not args.no_write and LATEST.is_file():
+            try:
+                snap = json.loads(LATEST.read_text(encoding="utf-8"))
+                if isinstance(snap.get("highlights"), dict):
+                    highlights = snap["highlights"]
+            except (OSError, json.JSONDecodeError):
+                highlights = {**highlights, **streak}
+        else:
+            highlights = {**highlights, **streak}
+
     one_line = (
         f"[omo-doctor-cron] ok={highlights['ok']} warn={highlights['warn']} "
         f"fail={highlights['fail']} error={highlights['error']} "
-        f"path-acl={highlights['path_acl_status']}"
+        f"path-acl={highlights['path_acl_status']} "
+        f"streak={highlights.get('path_acl_warn_streak', 0)}"
     )
+    if highlights.get("path_acl_alert"):
+        one_line += " ALERT"
     if highlights["path_acl_status"] == "warn":
         one_line += f" detail={highlights['path_acl_detail'][:120]}"
     print(one_line)

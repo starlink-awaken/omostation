@@ -53,3 +53,25 @@ def test_highlights_extract_logic(tmp_path, monkeypatch):
     h2 = mod._extract_highlights(err)
     assert h2["path_acl_status"] == "error"
     assert "not initialized" in h2["path_acl_detail"]
+
+
+def test_path_acl_warn_streak_and_alert():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("omo_doctor_cron", SCRIPT)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    prior = [
+        {"highlights": {"path_acl_status": "ok"}},
+        {"highlights": {"path_acl_status": "warn"}},
+        {"highlights": {"path_acl_status": "warn"}},
+    ]
+    s = mod.compute_path_acl_warn_streak(prior, "warn")
+    assert s["path_acl_warn_streak"] == 3
+    assert s["path_acl_alert"] is True
+
+    s2 = mod.compute_path_acl_warn_streak(prior, "ok")
+    assert s2["path_acl_warn_streak"] == 0
+    assert s2["path_acl_alert"] is False

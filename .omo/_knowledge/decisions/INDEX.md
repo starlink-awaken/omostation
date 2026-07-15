@@ -177,6 +177,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0198 | omo acl apply --yes --acl 命名 ACE 执行 | ACCEPTED | 2026-07-15 | governance-team | 0198-omo-acl-apply-named-ace.md |
 | 0199 | omo doctor 纳入 path-acl 日常节奏 | ACCEPTED | 2026-07-15 | governance-team | 0199-omo-doctor-path-acl-rhythm.md |
 | 0200 | operating-rhythm 接入 omo-doctor-cron | ACCEPTED | 2026-07-15 | governance-team | 0200-omo-doctor-cron-operating-rhythm.md |
+| 0201 | Doctor-cron 状态 API + path-acl 连续 warn 告警 | ACCEPTED | 2026-07-15 | governance-team | 0201-doctor-cron-status-api-alert.md |
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
