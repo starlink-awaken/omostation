@@ -633,6 +633,78 @@ async def queue_ecos_workflow_verification(workflow_name: str, mode: str = Query
     }
 
 
+@router.post("/api/cockpit/metaos/workflows/{workflow_id}/queue")
+async def queue_metaos_workflow_followup(workflow_id: str, request: Request):
+    """将 MetaOS 运行记录承接为可追踪的 OMO follow-up 任务。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.:-]+", workflow_id):
+        raise HTTPException(status_code=400, detail="Invalid workflow id")
+
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Workflow handoff request must be an object")
+    workflow_status = str(body.get("status") or "unknown").strip()
+    task_description = str(body.get("task") or workflow_id).strip()
+    task_id = f"cockpit-metaos-workflow-{workflow_id}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Workflow follow-up already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": f"跟进 MetaOS 工作流：{workflow_id}",
+        "description": f"跟进 MetaOS 工作流 {workflow_id}（当前状态：{workflow_status}），核对节点输出、异常原因和最终 closeout。目标：{task_description}",
+        "status": "pending",
+        "task_type": "verification",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": [f"cockpit:metaos-workflow:{workflow_id}"],
+        "entry_gate": ["确认工作流详情和当前节点状态"],
+        "evidence_required": ["节点状态与输出", "异常或授权处理记录", "workflow closeout"],
+        "deliverables": [f"完成 MetaOS 工作流 {workflow_id} 的跟进和证据收口。"],
+        "test_plan": ["复核工作流详情、节点输出和授权状态，记录下一步及最终结论。"],
+        "priority": "high" if workflow_status in {"failed", "awaiting_approval", "blocked"} else "medium",
+        "tags": ["cockpit-metaos", "workflow-followup", workflow_id, workflow_status],
+        "metadata": {
+            "created_via": "cockpit-metaos-workflow",
+            "workflow_id": workflow_id,
+            "workflow_status": workflow_status,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-metaos-workflow",
+            source_ref=f"cockpit:metaos-workflow:{workflow_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "executes": False,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/engine/queue")
 async def queue_engine_execution(request: Request):
     """Register an engine or pipeline request as an OMO planned task."""

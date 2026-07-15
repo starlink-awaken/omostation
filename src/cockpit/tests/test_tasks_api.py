@@ -558,6 +558,29 @@ def test_queue_ecos_workflow_verification_rejects_invalid_mode():
     assert response.status_code == 400
 
 
+def test_queue_metaos_workflow_followup_carries_runtime_status(monkeypatch):
+    calls = []
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post(
+        "/api/cockpit/metaos/workflows/wf-approval-42/queue",
+        json={"status": "awaiting_approval", "task": "发布治理变更", "node_count": 1},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "cockpit-metaos-workflow-wf-approval-42"
+    assert response.json()["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["priority"] == "high"
+    assert task_data["metadata"]["workflow_status"] == "awaiting_approval"
+    assert task_data["evidence_required"][-1] == "workflow closeout"
+    assert calls[0]["source_ref"] == "cockpit:metaos-workflow:wf-approval-42"
+
+
 def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
     system_map = {
         "projects": [
