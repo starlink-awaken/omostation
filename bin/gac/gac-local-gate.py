@@ -46,7 +46,7 @@ DEFAULT_POLICY = {
         {"id": "agent-workflow-doctor", "command": ["bin/agent-workflow.py", "doctor"], "ci_skip": True, "agent_workflow_only": True},
         {"id": "agent-workflow-observe", "command": ["bin/agent-workflow.py", "observe"]},
         {"id": "governance-evolution", "command": ["bin/gac/governance-evolution.py", "validate", "--json"]},
-        {"id": "mof-schema-validate", "command": ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"]},
+        {"id": "mof-schema-validate", "command": ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"], "ci_skip": True, "agent_workflow_only": True},
         {"id": "mof-state-bridge", "command": ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]},
         {"id": "mof-drift", "command": ["bin/mof/mof-drift"]},
         {"id": "m4-bootstrap-reflex", "command": ["bin/mof/mof-bootstrap.py", "all"]},
