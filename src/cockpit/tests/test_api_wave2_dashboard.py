@@ -67,7 +67,7 @@ def test_demo_seed_ok(tmp_path, monkeypatch):
 
     # Prefer real c2g if available; else accept degraded error
     r = run_wave2_demo_seed(tmp_path / "outcomes", reset=True)
-    assert r.get("adr") in ("0193", "0196") or r.get("schema") == "c2g.wave2.demo_seed.v1"
+    assert r.get("adr") in ("0193", "0197") or r.get("schema") == "c2g.wave2.demo_seed.v1"
     if r.get("status") == "ok":
         assert r.get("pitch_count", 0) >= 1
         assert r.get("mutation") is True
