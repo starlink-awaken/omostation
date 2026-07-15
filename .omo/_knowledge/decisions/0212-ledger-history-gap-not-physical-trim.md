@@ -1,5 +1,5 @@
 ---
-status: PROPOSED
+status: ACCEPTED
 lifecycle: governance-audit
 owner: governance-team
 last-reviewed: 2026-07-15
@@ -13,7 +13,7 @@ related:
 
 # ADR-0212 — ledger trim 现象修正：history gap 而非物理 trim
 
-- **Status**: PROPOSED
+- **Status**: ACCEPTED
 - **Date**: 2026-07-15
 - **Owner**: governance-team
 - **关联 run**: 20260715T083144Z-governance-audit-7f6b088e (本 ADR 落盘)

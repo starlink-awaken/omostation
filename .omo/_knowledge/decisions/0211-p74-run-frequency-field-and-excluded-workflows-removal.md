@@ -1,5 +1,5 @@
 ---
-status: PROPOSED
+status: ACCEPTED
 lifecycle: governance-state-mutation
 owner: governance-team
 last-reviewed: 2026-07-15
@@ -13,7 +13,7 @@ related:
 
 # ADR-0211 — P74 `excluded_workflows` 字段废弃 → `run_frequency` 落地
 
-- **Status**: PROPOSED
+- **Status**: ACCEPTED
 - **Date**: 2026-07-15
 - **Owner**: governance-team
 - **关联**: ADR-0209 附录 A · A5 (P74 失衡议题)
