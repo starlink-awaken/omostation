@@ -9,7 +9,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "CodeAnalyze 深度分析",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -22,7 +22,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] CodeAnalyze Lint (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -35,7 +35,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "CodeAnalyze 代码度量",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -48,7 +48,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] CodeAnalyze 分析报告 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -61,7 +61,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "CodeAnalyze AST 扫描入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -74,7 +74,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Eidos 数据模型校验",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -87,7 +87,7 @@
     "transport": "mcp_stdio",
     "status": "unimplemented",
     "description": "[UNIMPLEMENTED] Iris 连接 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -100,7 +100,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Iris 发现入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -113,7 +113,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Iris 召回入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -126,7 +126,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Iris 扫描入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -139,7 +139,7 @@
     "transport": "mcp_stdio",
     "status": "unimplemented",
     "description": "[UNIMPLEMENTED] Iris 数据转换 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -152,7 +152,7 @@
     "transport": "mcp_stdio",
     "status": "unimplemented",
     "description": "[UNIMPLEMENTED] Iris 数据校验 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -165,7 +165,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Minerva 追问入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -178,7 +178,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Minerva 审计 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -191,7 +191,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Minerva 草稿生成 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -204,7 +204,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Minerva 深度研究入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -217,7 +217,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Minerva 摘要入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -230,7 +230,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 语义对齐",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -243,7 +243,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Ontoderive 审计 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -256,7 +256,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 本体推导入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -269,7 +269,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 推导解释",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -282,7 +282,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Ontoderive 事实校验 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -295,7 +295,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 推导验证",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -308,7 +308,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "列出所有可用 Agent 实例",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -321,7 +321,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent 交互式对话接口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -334,7 +334,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent Runtime 执行入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -347,7 +347,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent Runtime 工具列表",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -360,7 +360,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent 任务执行接口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -373,7 +373,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent Runtime 状态",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -386,7 +386,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent 任务状态查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -399,7 +399,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "BOS Skill 管理 CLI/TUI — 搜索/暂存/promote/回退 skill 包",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -412,7 +412,7 @@
     "transport": "internal",
     "status": "active",
     "description": "Omni-Bus 控制面路由 (异步/定时任务)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -425,7 +425,7 @@
     "transport": "internal",
     "status": "active",
     "description": "Omni-Bus 数据面路由 (日志/遥测)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -438,7 +438,7 @@
     "transport": "internal",
     "status": "active",
     "description": "Omni-Bus 事件面路由 (Pub/Sub)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -451,7 +451,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "cockpit MCP (agent runtime)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -464,7 +464,7 @@
     "transport": "internal",
     "status": "active",
     "description": "AetherForge 网关生成 — 经 SSOT registry 路由到 omlx/本地/云 (internal 直调)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -477,7 +477,7 @@
     "transport": "internal",
     "status": "active",
     "description": "AetherForge 算力网格节点健康/在线摘要 (internal 直调)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -490,7 +490,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Forge 集市 Agent 安装",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -503,7 +503,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Forge 集市 Agent 列表",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -516,7 +516,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Forge 工具发现 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -529,7 +529,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Forge 工具执行 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -542,7 +542,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Forge Lint 检查",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -555,7 +555,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Forge 工具列表 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -568,7 +568,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Forge 发布入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -581,7 +581,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Forge 工具注册 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -594,7 +594,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Forge 注册表查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -607,7 +607,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Runtime MCP — 服务注册表/健康/协议/KEI",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -620,7 +620,7 @@
     "transport": "internal",
     "status": "active",
     "description": "AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -633,7 +633,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -646,7 +646,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -659,7 +659,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane 启动上下文",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -672,7 +672,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane 合规审计",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -685,7 +685,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane 内外部集成健康检查",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -698,7 +698,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane run/lock/ledger 观察",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -711,7 +711,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane diff-aware 验证规划",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -724,7 +724,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Cockpit MCP Server — 20 工具",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -737,7 +737,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Eidos Schema 约束校验",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -750,20 +750,20 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理 Golden Path 端到端流程视图",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://governance/evolution/loop",
     "domain": "governance",
-    "package": "evolution",
+    "package": "governance-evolution",
     "action": "loop",
     "endpoint": "omo.omo_evolution_loop:get_loop_status",
     "protocol": "internal",
     "transport": "internal",
     "status": "active",
     "description": "OMO 自动进化循环监控",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -776,7 +776,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理演进发布包与工作树收口视图",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -789,7 +789,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理演进路线图状态入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -802,7 +802,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理能力到入口/SSOT/验证器的追踪视图",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -815,72 +815,72 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理演进路线图结构与追踪校验",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://governance/governance/circuit_breaker",
     "domain": "governance",
-    "package": "governance",
+    "package": "cockpit",
     "action": "governance/circuit_breaker",
     "endpoint": "inline",
     "protocol": "internal",
     "transport": "inline",
     "status": "active",
     "description": "governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://governance/governance/daily_budget",
     "domain": "governance",
-    "package": "governance",
+    "package": "cockpit",
     "action": "governance/daily_budget",
     "endpoint": "inline",
     "protocol": "internal",
     "transport": "inline",
     "status": "active",
     "description": "governance cockpit daily_budget 端点 (cockpit api_omos metrics source)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://governance/governance/omo_worker_dispatch",
     "domain": "governance",
-    "package": "governance",
+    "package": "omo",
     "action": "governance/omo_worker_dispatch",
     "endpoint": "inline",
     "protocol": "internal",
     "transport": "inline",
     "status": "active",
     "description": "governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics source)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://governance/governance/quests",
     "domain": "governance",
-    "package": "governance",
+    "package": "cockpit",
     "action": "governance/quests",
     "endpoint": "inline",
     "protocol": "internal",
     "transport": "inline",
     "status": "active",
     "description": "governance cockpit quests 端点 (cockpit api_omos metrics source)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://governance/governance/tasks",
     "domain": "governance",
-    "package": "governance",
+    "package": "cockpit",
     "action": "governance/tasks",
     "endpoint": "inline",
     "protocol": "internal",
     "transport": "inline",
     "status": "active",
     "description": "gov tasks 端点 (cockpit dashboard helpers_compute 引用)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -893,7 +893,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "L4 Domain Kernel MCP — 24域管理",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -906,7 +906,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "MetaOS 决策门控",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -919,7 +919,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "MetaOS 门控检查 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -932,7 +932,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "MetaOS 免疫响应",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -945,7 +945,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "MetaOS 包注册 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -958,7 +958,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "MetaOS 路由决策",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -971,7 +971,7 @@
     "transport": "internal",
     "status": "active",
     "description": "OMO 治理审计 (internal — 同进程 importlib)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -984,7 +984,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OMO 债务查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -997,7 +997,7 @@
     "transport": "internal",
     "status": "active",
     "description": "OMO 系统检查 (internal 同进程)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1010,7 +1010,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OMO 状态查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1023,33 +1023,33 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "OMO 状态同步 (mcp_stdio transport 跨进程)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://governance/quality/audit",
     "domain": "governance",
-    "package": "quality",
+    "package": "governance-evolution",
     "action": "audit",
     "endpoint": "agora.mcp.knowledge_quality:audit_knowledge_quality",
     "protocol": "internal",
     "transport": "internal",
     "status": "active",
     "description": "记忆脊知识质量审计与评分",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://governance/roles/list",
     "domain": "governance",
-    "package": "roles",
+    "package": "agora",
     "action": "roles/list",
     "endpoint": "inline",
     "protocol": "internal",
     "transport": "inline",
     "status": "active",
     "description": "governance roles list 端点 (mcp_protocol registry 端点)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1062,7 +1062,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "aetherforge MCP (生成引擎)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1075,20 +1075,20 @@
     "transport": "stdio",
     "status": "active",
     "description": "c2g MCP (c2g 引擎)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://memory/docs/readme",
     "domain": "memory",
-    "package": "docs",
+    "package": "kairon",
     "action": "docs/readme",
     "endpoint": "inline",
     "protocol": "internal",
     "transport": "inline",
     "status": "active",
     "description": "memory docs readme 端点 (mcp_protocol registry 端点)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1101,7 +1101,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "ecos MCP (MOF 治理主 server; 子 services/integration + l0/ssot 留评估)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1114,20 +1114,20 @@
     "transport": "stdio",
     "status": "active",
     "description": "eidos MCP (schema modeling: list/validate/meta/define/export/migrate)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
     "uri": "bos://memory/fast-track/virtual-doc",
     "domain": "memory",
-    "package": "fast-track",
+    "package": "omo",
     "action": "fast-track/virtual-doc",
     "endpoint": "inline",
     "protocol": "internal",
     "transport": "inline",
     "status": "active",
     "description": "memory fast-track virtual-doc 端点 (omo bridge source_docs)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1140,7 +1140,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "forge MCP (工具集市 market_install/list)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1153,7 +1153,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "gbrain 知识库结构化查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1166,7 +1166,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "gbrain 知识库全文搜索 (高性能 Postgres)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1179,7 +1179,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "gbrain 知识库增量同步",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1192,7 +1192,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "iris MCP (发现与召回 connectors)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1205,7 +1205,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "KOS GraphRAG: 实体+BFS+证据+LLM",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py",
     "mcp_tool": "knowledge_ask"
   },
@@ -1219,7 +1219,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS 知识摄取入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1232,7 +1232,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS 统一只读 MCP 服务器入口 (SGF-v1 硬件外挂)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1245,7 +1245,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "KOS MCP v2.0 (25 tools)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py",
     "tools": [
       "graph_search",
@@ -1266,7 +1266,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS 知识查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1279,7 +1279,7 @@
     "transport": "http",
     "status": "active",
     "description": "KOS REST API v1 (9 endpoints)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1292,7 +1292,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS Schema 查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1305,7 +1305,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS 知识图谱检索入口 (P33-W1 战役 2 起步)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1318,7 +1318,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Kronos 知识摄取管线入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1331,7 +1331,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "kronos MCP (摄取 fetch_layers/methods)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1344,7 +1344,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] KRONOS 时间序列查询 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1357,7 +1357,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Kronos 扫描入口",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1370,7 +1370,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] KRONOS 调度任务 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1383,7 +1383,7 @@
     "transport": "internal",
     "status": "active",
     "description": "P2 多区聚合搜索 — cockpit local + KOS + vault",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1396,7 +1396,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "minerva MCP (深度研究 build_cross_domain_report)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1409,7 +1409,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "omo MCP (治理内核)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1422,7 +1422,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "ontoderive MCP (本体推导 derive)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1435,7 +1435,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "sophia MCP (KEMS 运行时 list_operations/states)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1448,7 +1448,7 @@
     "transport": "internal",
     "status": "active",
     "description": "L4 Vault 知识库搜索",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1461,7 +1461,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Core Models Schema 查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1474,7 +1474,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Core Models 校验",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1487,7 +1487,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Family Hub local MCP Server",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1500,7 +1500,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Health-Profile 健康告警 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1513,7 +1513,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Health Profile 查询",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1526,7 +1526,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Health-Profile 健康摘要 (POC stdio)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1539,7 +1539,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Health Profile 更新",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1552,7 +1552,7 @@
     "transport": "internal",
     "status": "active",
     "description": "SharedBrain Bridge 实体召回 (P36-W1 GAP 补全, canonical URI)",
-    "registered_at": "2026-07-15T02:08:32.382636+00:00",
+    "registered_at": "2026-07-15T10:13:44.530651+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   }
 ]
