@@ -257,6 +257,17 @@ async def api_wave2_dashboard():
     return JSONResponse(content=load_wave2_dashboard())
 
 
+@router.get("/api/wave2/proposals/plan", dependencies=_AUTH_DEPS)
+async def api_wave2_proposals_plan():
+    """Dry-run plan of OMO planned tasks for Wave2 proposals (ADR-0192).
+
+    Never mutates GaC rules or creates tasks — preview only.
+    """
+    from cockpit.dashboard.helpers_wave2 import load_wave2_proposal_plan
+
+    return JSONResponse(content=load_wave2_proposal_plan())
+
+
 @router.get("/api/bos/trends", dependencies=_AUTH_DEPS)
 async def api_bos_trends():
     """BOS trends — 24h/7d call volume, success rate, latency percentiles."""
