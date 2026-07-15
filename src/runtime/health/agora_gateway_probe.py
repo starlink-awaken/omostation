@@ -28,6 +28,9 @@ PID_FILE = Path.home() / "runtime" / "agora-gateway.pid"
 LOG_FILE = Path.home() / ".agora" / "logs" / "gateway-stdout.log"
 # heartbeat_report alive=6 dead=14 total=20
 _HEARTBEAT_RE = re.compile(r"heartbeat_report.*alive=(\d+).*dead=(\d+).*total=(\d+)")
+# 日志 tail 字节数 (seek 读取, 不读全文件到内存 — gateway-stdout.log 可达 MB 级)
+_FATAL_TAIL_BYTES = 5000
+_HEARTBEAT_TAIL_BYTES = 20000
 
 
 def main() -> int:
@@ -41,11 +44,10 @@ def main() -> int:
         return 1
 
     # 2. 最近 fatal 错误
-    if LOG_FILE.exists():
-        recent = LOG_FILE.read_text(errors="replace")[-5000:]
-        if "FATAL" in recent or "Traceback" in recent:
-            print(f"[PROBE] agora-gateway: PID {pid} running but recent fatal in log")
-            return 1
+    recent = _read_log_tail(_FATAL_TAIL_BYTES)
+    if "FATAL" in recent or "Traceback" in recent:
+        print(f"[PROBE] agora-gateway: PID {pid} running but recent fatal in log")
+        return 1
 
     # 3. 后端心跳健康度 (agora hub 代理的子服务响应率)
     hb = _check_heartbeat()
@@ -65,6 +67,20 @@ def main() -> int:
 
     print(f"[PROBE] agora-gateway: PID {pid} healthy")
     return 0
+
+
+def _read_log_tail(max_bytes: int) -> str:
+    """读 LOG_FILE 末尾 max_bytes 字节 (seek, 不读全文件到内存).
+
+    文件不存在/读错返回 "" — 调用方按空串处理 (FATAL 不在 / heartbeat 无匹配).
+    """
+    try:
+        size = LOG_FILE.stat().st_size
+        with LOG_FILE.open("rb") as f:
+            f.seek(max(0, size - max_bytes))
+            return f.read().decode("utf-8", errors="replace")
+    except OSError:
+        return ""
 
 
 def _find_pid() -> int | None:
@@ -116,13 +132,7 @@ def _check_heartbeat() -> tuple[int, int, int] | None:
     日志格式: [warning] heartbeat_report alive=6 dead=14 total=20
     找不到则 None (日志无此信息, 不据此判病)。
     """
-    if not LOG_FILE.exists():
-        return None
-    try:
-        tail = LOG_FILE.read_text(errors="replace")[-20000:]
-    except OSError:
-        return None
-    for line in reversed(tail.splitlines()):
+    for line in reversed(_read_log_tail(_HEARTBEAT_TAIL_BYTES).splitlines()):
         m = _HEARTBEAT_RE.search(line)
         if m:
             return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
