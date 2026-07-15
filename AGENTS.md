@@ -1,6 +1,6 @@
 # AGENTS.md — Workspace Development Guide
 
-> 最后更新: 2026-07-02
+> 最后更新: 2026-07-15
 > Root operating guide for AI coding agents and developers working in this workspace.
 > Keep this file operational. Put runtime facts in SSOT files, not here.
 
@@ -11,11 +11,37 @@ Before editing:
 1. Read [`CLAUDE.md`](CLAUDE.md) for session startup context.
 2. Read the target project `AGENTS.md` / `CLAUDE.md`.
 3. Check the current working tree with `git status --short`.
-4. For multi-step work, run `uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap`, check `status`, create a run with `start`, then claim the edit surface with `claim <run-id> --path <path>`.
+4. **需求迭代强制 Workflow（ADR-0203）** — see §1.6. Run `bootstrap` → `status` → `start` → `claim` **before** any requirement delivery edit. Prompt-only execution is non-compliant.
 5. For governed state, use OMO/C2G brokers instead of direct `.omo` writes.
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
+
+## 1.6 RED LINE — Requirement iterations MUST use Agent Workflow (ADR-0203)
+
+> **适用全部 agent 运行时**（Claude Code / Cursor / OMC / 自建 / 脚本化 agent）。  
+> SSOT: `.omo/_truth/registry/agent-workflows.yaml::requirement_iteration_policy`  
+> 契约: `.omo/standards/agent-workflow-contract.md` §3.1  
+> ADR: `.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md`
+
+| 必须 | 禁止 |
+|------|------|
+| 任何功能/缺陷/运维落地、治理/SSOT/ADR、交付 closeout | 无 `start` 的 run-id 就改需求相关文件并宣称完成 |
+| `bootstrap → start --profile → claim → verify → closeout` | 「先改完再补 workflow」 |
+| 用 `list` 选对 workflow（勿默认错位 `project-code-change`） | 把 `observer-audit` / 只读探索当成可写豁免 |
+
+**窄豁免**：纯只读问答；`observer-audit`；用户书面明确 waiver（须写入 closeout 证据）。
+
+```bash
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
+uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
+  --profile <agent-profile> --objective "<summary>"
+uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
+# ... edit / test ...
+uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
+uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
+```
 
 ## 1.5 P74 Solidification Quick Reference (ADR-0130)
 
