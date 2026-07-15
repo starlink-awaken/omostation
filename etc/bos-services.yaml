@@ -149,6 +149,7 @@ services:
     domain: memory
     action: "rest-api"
     transport: http
+    package: "kos"
     http_url: "http://localhost:8766/api/v1"
     description: "KOS REST API v1 (9 endpoints)"
     status: active
@@ -158,6 +159,7 @@ services:
     domain: memory
     action: "graphrag"
     transport: mcp_proxy
+    package: "kos"
     mcp_tool: "knowledge_ask"
     description: "KOS GraphRAG: 实体+BFS+证据+LLM"
     status: active
@@ -167,6 +169,7 @@ services:
     domain: memory
     action: "mcp-v2"
     transport: mcp_proxy
+    package: "kos"
     tools: [graph_search, entity_explore, knowledge_ask, subscribe_topic, build_context, verify_claim]
     description: "KOS MCP v2.0 (25 tools)"
     status: active
@@ -894,6 +897,7 @@ services:
     domain: swarm
     action: "status"
     transport: internal
+    package: "agent-runtime"
     module_path: "agora.mcp.swarm"
     func_name: "get_swarm_status"
     description: "获取分布式蜂群实时拓扑与负载状态"
@@ -902,6 +906,7 @@ services:
     domain: governance
     action: "loop"
     transport: internal
+    package: "governance-evolution"
     module_path: "omo.omo_evolution_loop"
     func_name: "get_loop_status"
     description: "OMO 自动进化循环监控"
@@ -910,6 +915,7 @@ services:
     domain: governance
     action: "audit"
     transport: internal
+    package: "governance-evolution"
     module_path: "agora.mcp.knowledge_quality"
     func_name: "audit_knowledge_quality"
     description: "记忆脊知识质量审计与评分"
@@ -1162,6 +1168,7 @@ services:
     domain: agora
     action: "metrics"
     transport: inline
+    package: "agora"
     description: "agora 内部指标源 self-identifier (metrics collector source_uri)"
     i0_route: pending
     status: active
@@ -1169,6 +1176,7 @@ services:
     domain: agora
     action: "registry"
     transport: inline
+    package: "agora"
     description: "agora @mcp.resource — 列出所有已注册 tools/resources 的 introspection 入口"
     i0_route: pending
     status: active
@@ -1176,6 +1184,7 @@ services:
     domain: agora
     action: "status"
     transport: inline
+    package: "agora"
     description: "agora @mcp.resource — BOS 系统内省统一大盘 (router/middleware/调用量)"
     i0_route: pending
     status: active
@@ -1183,6 +1192,7 @@ services:
     domain: capability
     action: "evaluator"
     transport: inline
+    package: "governance-evolution"
     description: "evaluator 域 (CR-RBAC-01 强制权限, role='evaluator' or 'admin')"
     i0_route: pending
     status: active
@@ -1206,6 +1216,7 @@ services:
     domain: system
     action: "discovery/package"
     transport: inline
+    package: "agora"
     description: "domain package 通用入口 (mcp/bos_discovery discovery 路径)"
     i0_route: pending
     status: active
@@ -1213,6 +1224,7 @@ services:
     domain: system
     action: "discovery/package/action"
     transport: inline
+    package: "agora"
     description: "domain package action 子入口 (mcp/bos_discovery dynamic discovery)"
     i0_route: pending
     status: active
@@ -1238,6 +1250,7 @@ services:
     domain: system
     action: "runtime/workers/status"
     transport: inline
+    package: "agent-runtime"
     description: "execution workers status 端点 (mcp_protocol registry 端点)"
     i0_route: pending
     status: active
@@ -1253,6 +1266,7 @@ services:
     domain: governance
     action: "protocols-layer/trigger"
     transport: inline
+    package: "metaos"
     description: "[UNIMPLEMENTED] governance protocols-layer 触发器入口 — kairon 无 protocols_layer 包, 声明悬空 (A2/2026-07-13 止血 deprecate); 能力实现另立项"
     i0_route: pending
     status: deprecated
@@ -1260,6 +1274,7 @@ services:
     domain: governance
     action: "roles/list"
     transport: inline
+    package: "agora"
     description: "governance roles list 端点 (mcp_protocol registry 端点)"
     i0_route: pending
     status: active
@@ -1275,6 +1290,7 @@ services:
     domain: memory
     action: "docs/readme"
     transport: inline
+    package: "kairon"
     description: "memory docs readme 端点 (mcp_protocol registry 端点)"
     i0_route: pending
     status: active
@@ -1282,6 +1298,7 @@ services:
     domain: system
     action: "vault/state"
     transport: inline
+    package: "ecos"
     description: "vault _state 端点 (ecos services integration gateway 引用)"
     i0_route: pending
     status: active
@@ -1291,6 +1308,7 @@ services:
     domain: governance
     action: "governance/tasks"
     transport: inline
+    package: "cockpit"
     description: "gov tasks 端点 (cockpit dashboard helpers_compute 引用)"
     i0_route: pending
     status: active
@@ -1298,6 +1316,7 @@ services:
     domain: governance
     action: "governance/circuit_breaker"
     transport: inline
+    package: "cockpit"
     description: "governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)"
     i0_route: pending
     status: active
@@ -1305,6 +1324,7 @@ services:
     domain: governance
     action: "governance/daily_budget"
     transport: inline
+    package: "cockpit"
     description: "governance cockpit daily_budget 端点 (cockpit api_omos metrics source)"
     i0_route: pending
     status: active
@@ -1312,6 +1332,7 @@ services:
     domain: governance
     action: "governance/quests"
     transport: inline
+    package: "cockpit"
     description: "governance cockpit quests 端点 (cockpit api_omos metrics source)"
     i0_route: pending
     status: active
@@ -1319,6 +1340,7 @@ services:
     domain: governance
     action: "governance/omo_worker_dispatch"
     transport: inline
+    package: "omo"
     description: "governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics source)"
     i0_route: pending
     status: active
@@ -1326,6 +1348,7 @@ services:
     domain: memory
     action: "fast-track/virtual-doc"
     transport: inline
+    package: "omo"
     description: "memory fast-track virtual-doc 端点 (omo bridge source_docs)"
     i0_route: pending
     status: active
@@ -1333,6 +1356,7 @@ services:
     domain: omo
     action: "audit"
     transport: inline
+    package: "omo"
     description: "omo audit 端点 (omo BOS schema LEGACY_DOMAIN_MAP 升级示例)"
     i0_route: pending
     status: active
@@ -1348,6 +1372,7 @@ services:
     domain: omo
     action: "tasks/active"
     transport: inline
+    package: "omo"
     description: "omo tasks/active 端点 (omo @mcp.resource 引用)"
     i0_route: pending
     status: active
