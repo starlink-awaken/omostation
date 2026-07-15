@@ -1,0 +1,51 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
+id: GAC-RULE-CR-COMMIT-ASSIST-E2E
+type: GacRule
+name: commit-assist E2E 测试 (19/19, P77-6-1 e2e-test-for-advisory-tool)
+description: 'bin/commit-assist.py 的 19 E2E 测试必须全通过 (P77-6-1).
+
+  测试覆盖: heuristic_subject (8), clean_suggestion (3),
+
+  72-char truncation (2), tier fallback (2), integration (2),
+
+  CONVENTIONAL_TYPES (1), ctype format (1).
+
+  修真修真反模式: advisory tool 也必须测试, 防沉默失效.
+
+  实施: tests/test_commit_assist_e2e.py
+
+  '
+status: active
+domain: meta
+layer: meta
+created: '2026-07-07'
+version: 0.1.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-COMMIT-ASSIST-E2E
+  dimension: X4
+  layer: meta
+  check_type: consistency_drift
+  executor:
+  - ci_gate
+  - gac_local_gate
+  lifecycle: active
+  version: 0.1.0
+  created_at: '2026-07-07'
+  target: tests/test_commit_assist_e2e.py
+  adr: ADR-0169
+  source_type: native
+  source_ref: tests/test_commit_assist_e2e.py::main
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-07-07T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生

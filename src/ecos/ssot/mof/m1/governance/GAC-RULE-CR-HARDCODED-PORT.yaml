@@ -1,9 +1,9 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-CR-HARDCODED-PORT
 type: GacRule
-name: 跨仓端口硬编码扫描 (P77-5 port-registration-mandatory)
+name: 跨仓端口硬编码扫描 (P77-5 port-registration-mandatory + P77-7 env-var-SSOT)
 description: '扫 projects/*/src/ 真**代码** (非 test, 非 docstring) 中 port-context 硬编码.
 
   修真修真: 7 port-context pattern (PORT= / port= / --port / host:port /
@@ -12,18 +12,24 @@ description: '扫 projects/*/src/ 真**代码** (非 test, 非 docstring) 中 po
 
   projects/ecos/port-registry.yaml 或 protocols/port-registry.yaml 注册.
 
+  P77 Phase 7 增强: 区分 env_fallback (os.environ.get 内有 fallback, OK)
+
+  与 bare_hardcoded (裸字面量, 应迁移).
+
+  --env-var-check 模式: env-only 类型端口 (7422/7456/8090) 裸硬编码 → warning.
+
   5 LEGACY_OK_PORTS 豁免 (1234 LM Studio / 3000+3001 family-hub /
 
   4318 otel / 5173 vite).
 
-  实施: bin/check-hardcoded-ports.py
+  实施: bin/ssot/check-hardcoded-ports.py
 
   '
 status: active
 domain: meta
 layer: meta
 created: '2026-07-07'
-version: 0.1.0
+version: 0.2.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-HARDCODED-PORT
@@ -35,23 +41,24 @@ properties:
   - ci_gate
   - gac_local_gate
   lifecycle: active
-  version: 0.1.0
+  version: 0.2.0
   created_at: '2026-07-07'
-  target: bin/check-hardcoded-ports.py
+  target: bin/ssot/check-hardcoded-ports.py
   adr: ADR-0168
   source_type: native
-  source_ref: bin/check-hardcoded-ports.py::main
+  source_ref: bin/ssot/check-hardcoded-ports.py::main
   enforcement: advisory
   relates_to:
   - CR-CROSS-REPO-CONSISTENT
   - .omo/_knowledge/decisions/0167-p77-phase4-port-registry-consistency.md
   - .omo/_knowledge/decisions/0166-p77-phase3-cross-repo-remediation.md
+  - CR-ENV-VAR-PORT
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-07-07T00:00:00Z'
