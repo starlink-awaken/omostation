@@ -1,5 +1,5 @@
 ---
-status: PROPOSED
+status: ACCEPTED
 lifecycle: governance-state-mutation
 owner: governance-team
 last-reviewed: 2026-07-15
@@ -14,7 +14,7 @@ related:
 
 # ADR-0213 — P74 silent 治本 D6：diff_checks 覆盖 4 silent workflow
 
-- **Status**: PROPOSED
+- **Status**: ACCEPTED
 - **Date**: 2026-07-15
 - **Owner**: governance-team
 - **关联 run**: 20260715T084136Z-governance-state-mutation-25182a6a (0211 D1+D2 实施 run)

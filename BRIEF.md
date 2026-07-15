@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-15T04:00:28.555899Z` | **SSOT Source**: `.omo/state/system.yaml` | **ISC-1 复合分**: `83/100`
+> **Generated**: `2026-07-15T09:01:14.667347Z` | **SSOT Source**: `.omo/state/system.yaml` | **ISC-1 复合分**: `83/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 
@@ -18,4 +18,4 @@
 
 - **复合健康分**: `83/100` (警戒, 请看下方分项)
 - **GAC 异常扣分**: `100/100`
-- **常驻 daemon 在线率**: `60.00%`
+- **常驻 daemon 在线率**: `100.00%`
