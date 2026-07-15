@@ -545,3 +545,44 @@ def test_resume_rejects_unapproved_human_gate(monkeypatch):
 
     assert response.status_code == 409
     assert "request and grant approval" in response.json()["detail"]
+
+
+def test_dispatch_creates_worker_run_without_launching(monkeypatch):
+    client = TestClient(app)
+    payload = {
+        "id": "dispatch-task",
+        "status": "pending",
+        "human_approval_required": False,
+        "deliverables": ["projects/demo/"],
+        "evidence_required": ["worker log"],
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr("omo.omo_worker_core._default_enabled_worker_id", lambda _registry: "coder")
+    monkeypatch.setattr("omo.omo_worker_core._dispatch_allowed_write_paths", lambda _task: ["projects/demo/"])
+
+    def fake_dispatch(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"dispatch_id": "dispatch-task-coder-now", "dispatch_path": ".omo/workers/runs/dispatch-task.yaml"}
+
+    monkeypatch.setattr("omo.omo_worker_dispatch.dispatch_task", fake_dispatch)
+
+    response = client.post("/api/tasks/dispatch-task/dispatch")
+
+    assert response.status_code == 200
+    assert response.json()["launched"] is False
+    assert calls[0][1]["launch"] is False
+    assert calls[0][1]["transport"] == "cli_prompt"
+
+
+def test_dispatch_rejects_unapproved_active_task(monkeypatch):
+    client = TestClient(app)
+    payload = {"id": "dispatch-task", "status": "pending", "human_approval_required": True, "approval_ref": None}
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+
+    response = client.post("/api/tasks/dispatch-task/dispatch")
+
+    assert response.status_code == 409
+    assert "approval must be granted" in response.json()["detail"]

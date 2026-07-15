@@ -75,10 +75,11 @@ def _execution_contract(task_data: dict) -> dict:
         "command": metadata.get("command"),
         "executes": metadata.get("cockpit_only") is not True,
         "approval_ref": task_data.get("approval_ref"),
+        "dispatch_id": task_data.get("dispatch_id"),
         "run_ref": task_data.get("run_ref"),
         "review_ref": task_data.get("review_ref"),
         "approval_state": _approval_state(task_data),
-        "next_action": _approval_next_action(task_data),
+        "next_action": _execution_next_action(task_data),
     }
 
 
@@ -107,6 +108,16 @@ def _approval_next_action(task_data: dict) -> str:
     if state == "granted":
         return "可恢复到 active"
     return "等待人工审批"
+
+
+def _execution_next_action(task_data: dict) -> str:
+    if task_data.get("human_approval_required") and _approval_state(task_data) != "granted":
+        return _approval_next_action(task_data)
+    if task_data.get("status") == "in_progress" and not task_data.get("dispatch_id"):
+        return "发起受控 worker dispatch"
+    if task_data.get("run_ref"):
+        return "等待 worker 留证并进入审查"
+    return _approval_next_action(task_data)
 
 
 def _load_persisted_task(task_id: str, group: str) -> dict[str, Any]:
@@ -1002,6 +1013,65 @@ async def approve_task(task_id: str):
         "proposal_id": proposal_id,
         "created": True,
         "source": "omo_governance",
+    }
+
+
+@router.post("/api/tasks/{task_id}/dispatch")
+async def dispatch_task_endpoint(task_id: str):
+    """Create an OMO worker dispatch without launching an external process."""
+    group = _task_group(task_id)
+    if group != "active":
+        raise HTTPException(status_code=409, detail="Only active tasks can be dispatched")
+
+    payload = _load_persisted_task(task_id, group)
+    if payload.get("human_approval_required") and _approval_state(payload) != "granted":
+        raise HTTPException(status_code=409, detail="Task approval must be granted before dispatch")
+    if payload.get("dispatch_id") and payload.get("run_ref"):
+        return {
+            "id": task_id,
+            "status": payload.get("status", "in_progress"),
+            "dispatch_id": payload["dispatch_id"],
+            "run_ref": payload["run_ref"],
+            "created": False,
+            "launched": False,
+            "source": "omo_worker_dispatch",
+        }
+
+    try:
+        import yaml
+        from omo.omo_worker_core import _default_enabled_worker_id, _dispatch_allowed_write_paths
+        from omo.omo_worker_dispatch import dispatch_task
+
+        registry_path = WORKSPACE_DIR / ".omo" / "_truth" / "registry" / "workers.yaml"
+        documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
+        registry = next(
+            (document for document in documents if isinstance(document, dict) and document.get("workers")),
+            {},
+        )
+        worker_id = _default_enabled_worker_id(registry)
+        result = dispatch_task(
+            WORKSPACE_DIR,
+            task_id,
+            worker_id,
+            _dispatch_allowed_write_paths(payload),
+            launch=False,
+            transport="cli_prompt",
+            prior_evidence=list(payload.get("evidence_required") or []),
+            prompt_addendum=["Cockpit created this dispatch; launch remains an explicit worker-side action."],
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO worker dispatch is unavailable") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "in_progress",
+        "dispatch_id": result["dispatch_id"],
+        "run_ref": result["dispatch_path"],
+        "created": True,
+        "launched": False,
+        "source": "omo_worker_dispatch",
     }
 
 
