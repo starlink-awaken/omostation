@@ -11,6 +11,12 @@ help:
 	@echo "make kairon-lint       ruff 检查所有包"
 	@echo "make kairon-build      安装 kairon 依赖 (uv sync)"
 	@echo ""
+	@echo "=== 架构检查 ==="
+	@echo "make check-layers      分层依赖检查 (docs/layer-contract.yaml)"
+	@echo "make ssot-status       SSOT 变更状态检查"
+	@echo "make ssot-log          SSOT 审计日志查看"
+	@echo "make ssot-sync         SSOT 变更记录到审计日志"
+	@echo ""
 	@echo "=== 治理 ==="
 	@echo "make agent-workflow-bootstrap 一次性输出 agent 启动上下文"
 	@echo "make agent-workflows    列出 agent 可执行治理流程"
@@ -119,7 +125,7 @@ ci-local: ci-local-fast
 		echo "✅ ci-local: 全部通过"; \
 	fi
 
-ci-local-fast:
+ci-local-fast: check-layers
 	@echo "════════════════════════════════════════════════════"
 	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
 	@echo "════════════════════════════════════════════════════"
@@ -150,6 +156,24 @@ ci-local-fast:
 	else \
 		echo "✅ ci-local-fast: 全部通过 (~5s)"; \
 	fi
+
+check-layers:
+	@echo "── 分层依赖检查 ─────────────────────────────────────"
+	uv run --with pyyaml python bin/layer-dependency-check.py
+
+ssot-status:  ## SSOT 变更状态检查
+	@echo "── SSOT 状态 ────────────────────────────────────────"
+	uv run --with pyyaml python bin/ssot-watcher.py status
+
+ssot-log:  ## SSOT 审计日志查看
+	@echo "── SSOT 审计日志 ────────────────────────────────────"
+	uv run --with pyyaml python bin/ssot-watcher.py log --limit 20
+
+ssot-sync:  ## SSOT 变更记录到审计日志
+	@echo "── SSOT 同步 ────────────────────────────────────────"
+	@read -p "Author: " author; \
+	read -p "Reason: " reason; \
+	uv run --with pyyaml python bin/ssot-watcher.py sync --author "$$author" --reason "$$reason"
 
 agent-workflows:
 	uv run --with pyyaml python bin/agent-workflow.py list
