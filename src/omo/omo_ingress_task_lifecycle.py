@@ -541,6 +541,7 @@ def execute_controlled_task(
             ):
                 raise ValueError("Runtime port probe must declare valid probe_ports")
             outputs = []
+            exit_code = 0
             for port in ports:
                 result = subprocess.run(
                     ["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"],
@@ -550,10 +551,11 @@ def execute_controlled_task(
                     timeout=timeout_seconds,
                     check=False,
                 )
+                if result.returncode != 0:
+                    exit_code = 1
                 outputs.append(
                     f"port={port}\n{result.stdout or ''}{result.stderr or ''}"
                 )
-            exit_code = 0
             output = "\n".join(outputs)
         else:
             result = subprocess.run(

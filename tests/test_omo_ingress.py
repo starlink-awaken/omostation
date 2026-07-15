@@ -893,7 +893,9 @@ def test_execute_controlled_task_runs_structured_runtime_port_probe(
     monkeypatch.setattr(
         "omo.omo_ingress_task_lifecycle.subprocess.run",
         lambda args, **kwargs: SimpleNamespace(
-            returncode=0, stdout=f"LISTEN {args[2]}", stderr=""
+            returncode=0 if args[2] == "7437" else 1,
+            stdout=f"LISTEN {args[2]}" if args[2] == "7437" else "",
+            stderr="" if args[2] == "7437" else "not listening",
         ),
     )
     artifact = execute_controlled_task(
@@ -903,7 +905,7 @@ def test_execute_controlled_task_runs_structured_runtime_port_probe(
         source_ref="tests:execute:TASK-RUNTIME-1",
     )
 
-    assert artifact["exit_code"] == 0
+    assert artifact["exit_code"] == 1
     log = (tmp_path / artifact["log_ref"]).read_text(encoding="utf-8")
     assert "port=7437" in log
     assert "port=7438" in log
