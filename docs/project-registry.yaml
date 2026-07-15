@@ -279,8 +279,35 @@ archived:
   - name: "agora-dashboard"
     merged_into: "cockpit HTTP :8090"
 
+# ── Submodule Branch Policy (GaC #39) ──
+# stable:  子模块在 main 上, 跟踪上游发布
+# feature: 子模块在功能分支上, 允许偏离 main
+# tolerance_days: 超出此天数无更新 → warning (尚未强制)
+submodule_policy:
+  stable:
+    - projects/bus-foundation
+    - projects/kairon
+    - projects/l4-kernel
+    - projects/omo-debt
+  feature:
+    - projects/cockpit       # codex/cockpit-instance-contract
+    - projects/metaos        # work/adr-0181-scheme-c
+    - projects/aetherforge   # r94-otel-linkage
+    - projects/agora         # work/add-pydantic-dep
+  tracking:                   # detached HEAD — 由 CI/bot 保持
+    - projects/ecos
+    - projects/runtime
+    - scripts
+    - projects/omo
+  dormant:                    # 低活跃, 不频繁更新
+    - projects/family-hub
+    - projects/model-driven
+    - projects/observability
+    - projects/gbrain
+  tolerance_days: 30
+
 # ── Metadata ──
-_last_updated: "2026-07-14"
+_last_updated: "2026-07-15"
 _update_method: "Manual version/python; drift 由 bin/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"
 
 # ── omlx Local Compute Mesh Nodes ──
