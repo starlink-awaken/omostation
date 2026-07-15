@@ -58,6 +58,20 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
 
 Read the SSOT files reported by `bootstrap` for task-specific runtime facts — **do not copy their values into this document** (they drift quickly). If MCP context is available, prefer the cockpit `workspace_context` tool.
 
+### Step B.1 · RED LINE — 需求迭代强制 Workflow（ADR-0203）
+
+**所有需求迭代（功能/缺陷/运维落地、治理/SSOT/ADR、交付 closeout）必须先 `start` 再改文件。**  
+SSOT: `agent-workflows.yaml::requirement_iteration_policy`（`mode: required`）。  
+细节: [`AGENTS.md` §1.6](AGENTS.md) · [`.omo/standards/agent-workflow-contract.md` §3.1](.omo/standards/agent-workflow-contract.md) · [ADR-0203](.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md)。
+
+```bash
+uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
+  --profile <agent-profile> --objective "<summary>"
+uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
+```
+
+豁免仅限：纯只读、`observer-audit`、用户书面 waiver。跳过 workflow 直接交付 = 违规。
+
 ## 1.5 P74 Workflow Solidification Check (ADR-0130)
 
 After bootstrap, every agent MUST verify P74 health. P74 is the常态化 mechanism

@@ -16,6 +16,7 @@ last-reviewed: 2026-06-29
 2. **USE BROKER**: 持久化写入必须优先走 `omo CLI` / `projects/omo` 内核 / `projects/c2g` 入口。
 3. **COMMIT AFTER MUTATION**: 任何产生文件变更的自治运行，结束后必须立即 `git commit`。
 4. **EMIT INTENT**: 批量/定时写入前必须 emit `agent_mutation_intent` 事件到 OMO event log。
+5. **REQUIREMENT ITERATION VIA WORKFLOW (ADR-0203)**: 需求迭代（功能/缺陷/运维/治理交付）必须先 `agent-workflow start` 再写；见 `agent-workflows.yaml::requirement_iteration_policy` 与 `agent-workflow-contract.md` §3.1。
 
 ## 2. 事件契约
 
