@@ -87,7 +87,6 @@ silent_workflow_policy:
   excluded_workflows:
     - handoff-resume
     - observer-audit
-    - c2g-spec-ingress
 # ADR-0203: every requirement iteration MUST run through agent-workflow lifecycle.
 # Complements P74 (silence of registered workflows) by forbidding bypass on delivery work.
 requirement_iteration_policy:
