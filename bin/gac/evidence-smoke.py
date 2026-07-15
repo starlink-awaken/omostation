@@ -46,14 +46,59 @@ AGORA_SRC = WORKSPACE / "projects" / "agora" / "src"
 if str(AGORA_SRC) not in sys.path:
     sys.path.insert(0, str(AGORA_SRC))
 
-# agora 间接依赖 pydantic (tool_contract 顶层 import) 未在 pyproject 声明, 根 venv 跑
-# 缺 pydantic 时从 projects/agora/.venv 借 site-packages, 单脚本可执行不依赖 uv
-# (治本应在 agora/pyproject 加 pydantic 显式依赖, 但 agora 是 submodule 不在本仓改)
-_AGORA_VENV_SITE = WORKSPACE / "projects" / "agora" / ".venv" / "lib"
-if _AGORA_VENV_SITE.exists():
+# ADR-0217: agora 已声明 pydantic; ADR-0219: 优先注入 projects/agora/.venv site-packages
+# 使根 python3 也能跑全量 BOS (无需手动 PYTHONPATH)
+_AGORA_VENV = WORKSPACE / "projects" / "agora" / ".venv"
+_AGORA_VENV_SITE = _AGORA_VENV / "lib"
+
+
+def _inject_agora_venv_site() -> bool:
+    """Append agora .venv site-packages if present. Returns True when injected."""
+    if not _AGORA_VENV_SITE.is_dir():
+        return False
+    injected = False
     for _site in _AGORA_VENV_SITE.glob("python*/site-packages"):
         if str(_site) not in sys.path:
             sys.path.append(str(_site))
+            injected = True
+    return injected
+
+
+def _bootstrap_agora_venv() -> bool:
+    """Best-effort `uv sync` in projects/agora when deps missing (ADR-0219)."""
+    agora_root = WORKSPACE / "projects" / "agora"
+    if not (agora_root / "pyproject.toml").is_file():
+        return False
+    try:
+        print(
+            "⚡ bootstrapping projects/agora .venv via uv sync (one-shot)...",
+            file=sys.stderr,
+        )
+        res = subprocess.run(
+            ["uv", "sync"],
+            cwd=agora_root,
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+        if res.returncode != 0:
+            print(
+                f"⚠️  uv sync failed (exit {res.returncode}): "
+                f"{(res.stderr or res.stdout or '')[:300]}",
+                file=sys.stderr,
+            )
+            return False
+        return _inject_agora_venv_site()
+    except FileNotFoundError:
+        print("⚠️  uv not found; cannot bootstrap agora venv", file=sys.stderr)
+        return False
+    except Exception as exc:  # noqa: BLE001
+        print(f"⚠️  agora bootstrap error: {exc}", file=sys.stderr)
+        return False
+
+
+_inject_agora_venv_site()
 
 OUTPUT_DIR = WORKSPACE / ".omo" / "_delivery" / "evidence-smoke"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
@@ -504,9 +549,22 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
     """
     # 动态 import (避免脚本加载时就崩 — agora 不在时给清晰报错)
     # ADR-0216: 即使 BOS 层 import 失败, 仍必须产出 feedback_loop (compass 真同源).
+    # ADR-0219: import 失败时先 uv sync bootstrap, 再试一次全量 BOS.
+    e: Exception | None = None
     try:
         from agora.mcp.resolver.services import POC_SERVICES  # type: ignore[import-not-found]
-    except ImportError as e:
+    except ImportError as first_err:
+        e = first_err
+        if _bootstrap_agora_venv():
+            try:
+                from agora.mcp.resolver.services import (  # type: ignore[import-not-found]
+                    POC_SERVICES,
+                )
+                e = None
+            except ImportError as second_err:
+                e = second_err
+
+    if e is not None:
         print(f"❌ 无法 import agora.mcp.resolver.services: {e}", file=sys.stderr)
         print(f"   脚本依赖 projects/agora (sys.path={AGORA_SRC})", file=sys.stderr)
         print(
