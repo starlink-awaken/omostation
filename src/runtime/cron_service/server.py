@@ -21,7 +21,7 @@ from fastmcp import FastMCP
 
 from . import config as svc_config
 from . import db, mcp_server, scheduler
-from .health_scan import health_scan_once, run_scan_if_due, should_scan, HEALTH_SCAN_INTERVAL
+from .health_scan import run_scan_if_due, should_scan, HEALTH_SCAN_INTERVAL
 from .models import JobCreate
 
 # ── Logging ────────────────────────────────────────────────────────
@@ -85,7 +85,6 @@ async def _check_api_key(request: Request, call_next):
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    now = datetime.now(UTC)
     uptime_secs = None
     if sched.start_time:
         uptime_secs = int(time.time() - sched.start_time)
