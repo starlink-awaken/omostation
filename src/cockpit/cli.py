@@ -102,7 +102,7 @@ def cmd_gac(a):
 
     workspace = Path(__file__).resolve().parents[4]  # cli.py→src/cockpit→src→cockpit(proj)→projects→workspace
     r = subprocess.run(
-        ["python3", str(workspace / "bin" / "gac-healthcheck.py")],
+        ["python3", str(workspace / "bin" / "gac" / "gac-healthcheck.py")],
         capture_output=True,
         text=True,
         cwd=str(workspace),
@@ -856,6 +856,14 @@ def main() -> int:
                 return cmd_contracts_export_identity(a)
             elif getattr(a, "contracts_export_type", "") == "event":
                 return cmd_contracts_export_event(a)
+        # 裸 `cockpit contracts` / 未知子命令: 给出用法而非静默 rc=1
+        print(
+            "用法: cockpit contracts {validate|list|export-research <ID>|export identity|export event}\n"
+            "  validate          验证 Workspace 契约\n"
+            "  list              列出所有已注册 Schema\n"
+            "  export-research   将研究对象导出为 WorkspaceObject JSON\n"
+            "  export identity/event  导出契约封套"
+        )
         return 1
 
     def cmd_product_health(a):
