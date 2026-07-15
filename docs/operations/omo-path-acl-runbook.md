@@ -2,6 +2,9 @@
 
 > ADR: 0186 · 0187 · 0189 · 0194 · 0196 · 0198 · **0199**（doctor 日常节奏）
 
+日检 cron（ADR-0200）: `bin/gac/omo-doctor-cron.py` → `runtime/cron/omo-doctor-latest.json`  
+新机清单: [omo-bootstrap-checklist.md](./omo-bootstrap-checklist.md)
+
 ## 1. 每日 / 巡检
 
 ```bash
