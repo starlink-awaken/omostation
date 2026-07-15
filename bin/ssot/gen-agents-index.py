@@ -9,6 +9,7 @@ Trigger: Agent CLI 升级 / 新增 skill / 配置变更
 import os
 from pathlib import Path
 import datetime
+from datetime import UTC
 
 SCRIPT_DIR = Path(__file__).parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
@@ -116,7 +117,7 @@ def generate_footer():
 """
 
 def main():
-    generated_at = datetime.datetime.utcnow().isoformat()
+    generated_at = datetime.datetime.now(UTC).isoformat()
     
     skills = scan_skills()
     

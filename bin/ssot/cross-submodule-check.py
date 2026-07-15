@@ -17,7 +17,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -103,7 +103,7 @@ def main() -> int:
 
     if args.json:
         out = {
-            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "generated_at": datetime.now(UTC).isoformat() + "Z",
             "workspace_root": str(root),
             "summary": summary,
             "submodules": results,
@@ -116,7 +116,7 @@ def main() -> int:
     print(f"🔗 P78 跨子仓联动检查 ({len(modules)} 个子仓)")
     print("=" * 70)
     print(f"📁 Workspace: {root}")
-    print(f"🕐 生成时间: {datetime.utcnow().isoformat()}Z")
+    print(f"🕐 生成时间: {datetime.now(UTC).isoformat()}Z")
     print()
     print(f"{'子仓':<12s}{'状态':<12s}{'落后':<6s}{'领先':<6s}{'当前 commit'}")
     print("-" * 70)

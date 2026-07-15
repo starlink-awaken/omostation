@@ -126,7 +126,8 @@ def generate_footer():
 
 def main():
     import datetime
-    generated_at = datetime.datetime.utcnow().isoformat()
+from datetime import UTC
+    generated_at = datetime.datetime.now(UTC).isoformat()
     
     registry = load_registry()
     

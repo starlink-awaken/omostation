@@ -134,6 +134,10 @@ case "$cmd" in
         fi
       fi
     fi
+    # 推送子模块 commit 到远程 (防 CI "not our ref" 错误)
+    echo "⚡ 检查子模块未推送的 commit..."
+    bash "$(dirname "$0")/../sync-submodules.sh" --dry-run 2>&1 | tail -5
+    bash "$(dirname "$0")/../sync-submodules.sh" 2>&1 | tail -5
     # push 分支
     git push -u origin "$branch" 2>&1 | tail -3
     # 开 PR

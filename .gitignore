@@ -48,6 +48,7 @@ runtime/wechat-main.png
 runtime/sandbox/decayed/
 runtime/sandbox/pitches/
 runtime/omo/
+runtime/agent-sessions/
 
 # OMO volatile self-healing/ingress/evolution runtime mirrors (now live under runtime/omo/)
 .omo/_delivery/ingress/

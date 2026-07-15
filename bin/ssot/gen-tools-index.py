@@ -9,6 +9,7 @@ Trigger: 新增 bin/ 工具 / 新增脚本 / 新增 skill
 import os
 from pathlib import Path
 import datetime
+from datetime import UTC
 
 SCRIPT_DIR = Path(__file__).parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
@@ -205,7 +206,7 @@ def generate_footer():
 """
 
 def main():
-    generated_at = datetime.datetime.utcnow().isoformat()
+    generated_at = datetime.datetime.now(UTC).isoformat()
     
     skills = scan_skills()
     
