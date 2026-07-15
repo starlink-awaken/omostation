@@ -1390,6 +1390,35 @@ def _first_action(actions: list[dict[str, Any]], action_id: str) -> dict[str, An
     return next((action for action in actions if action.get("id") == action_id), None)
 
 
+def _triage_task_posture(project_id: str, command_id: str) -> dict[str, Any]:
+    """Expose the OMO task state for a project triage command."""
+    task_id = f"cockpit-triage-{project_id}-{command_id}"
+    for group in ("active", "planned", "done"):
+        task_path = WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
+        if not task_path.is_file():
+            continue
+        try:
+            task = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            task = {}
+        audit = (task.get("metadata") or {}).get("execution_audit") or {}
+        raw_status = str(task.get("status") or "pending")
+        if isinstance(audit, dict) and "exit_code" in audit:
+            status = "succeeded" if audit.get("exit_code") == 0 else "failed"
+        elif group == "done" or raw_status in {"completed", "complete"}:
+            status = "completed"
+        elif group == "active" or raw_status in {"in_progress", "running"}:
+            status = "active"
+        else:
+            status = "planned"
+        return {
+            "task_id": task_id,
+            "status": status,
+            "execution_audit": audit if isinstance(audit, dict) else {},
+        }
+    return {"task_id": task_id, "status": "not_queued", "execution_audit": {}}
+
+
 def _triage_command(
     project_id: str,
     command_id: str,
@@ -1413,6 +1442,7 @@ def _triage_command(
         "category": category,
         "project_id": project_id,
         "reason": reason,
+        "task": _triage_task_posture(project_id, command_id),
     }
 
 
