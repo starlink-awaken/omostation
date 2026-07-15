@@ -403,10 +403,13 @@ class MatrixScheduler:
                 result["runtime"]["uptime_seconds"] = int(
                     current_time - running_since[svc.name]
                 )
-                # Backward compat: freshness_seconds alias (deprecated, remove in P43+)
-                result["runtime"]["freshness_seconds"] = result["runtime"][
-                    "uptime_seconds"
-                ]
+                # freshness_seconds: time since last confirmed healthy
+                last_healthy_ts = last_healthy.get(svc.name, 0)
+                if last_healthy_ts:
+                    freshness = int(current_time - last_healthy_ts)
+                else:
+                    freshness = int(current_time - running_since.get(svc.name, current_time))
+                result["runtime"]["freshness_seconds"] = freshness
                 # Track last healthy time for staleness detection
                 last_healthy[svc.name] = current_time
                 result["runtime"]["last_healthy_seconds"] = 0
