@@ -106,6 +106,7 @@ ls -led .omo/state .omo/_control .omo/_delivery
 ```
 
 **残留**：创建组 `omo-writers`（或 `export OMO_ACL_GROUP=<existing>`）后再跑一次 group ACE。  
+操作说明（人类 only）：[omo-writers-group-setup.md](./omo-writers-group-setup.md)。  
 **禁止** agent 自动 `dseditgroup` / 改系统组。
 
 ## 7. 钩子重装

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-15
+---
+
 # omostation 演化护栏 (P76 + P77 沉淀 40 原则)
 
 > **For agents**: 这是 omostation 治理演化的"宪法" — 每一原则都从一次具体的 debt 类收敛而来。
