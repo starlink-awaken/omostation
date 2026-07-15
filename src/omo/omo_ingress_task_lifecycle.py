@@ -477,9 +477,10 @@ def execute_controlled_task(
     source_ref: str = "",
 ) -> dict[str, Any]:
     """Run a low-risk project verification and record its result through ingress."""
+    max_timeout_seconds = 900
     if not isinstance(timeout_seconds, int) or isinstance(timeout_seconds, bool):
         raise ValueError("timeout_seconds must be an integer")
-    timeout_seconds = max(1, min(timeout_seconds, 300))
+    timeout_seconds = max(1, min(timeout_seconds, max_timeout_seconds))
     task_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
     if not task_path.exists():
         raise ValueError("Only active tasks can be controlled-executed")

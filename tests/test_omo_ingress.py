@@ -783,7 +783,7 @@ def test_record_task_consensus_updates_task_handoff_refs_and_artifacts(
 
 
 def test_execute_controlled_task_runs_project_verification_and_records_log(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     project_path = tmp_path / "projects" / "demo"
     project_path.mkdir(parents=True)
@@ -826,14 +826,21 @@ def test_execute_controlled_task_runs_project_verification_and_records_log(
         encoding="utf-8",
     )
 
+    calls = []
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.subprocess.run",
+        lambda *args, **kwargs: (calls.append(kwargs) or SimpleNamespace(returncode=0, stdout="hello", stderr="")),
+    )
     artifact = execute_controlled_task(
         tmp_path / ".omo",
         task_id="TASK-VERIFY-1",
         actor="projects/omo/tests",
+        timeout_seconds=1200,
         source_ref="tests:execute:TASK-VERIFY-1",
     )
 
     assert artifact["exit_code"] == 0
+    assert calls[0]["timeout"] == 900
     assert artifact["log_ref"].startswith(
         "runtime/omo/_delivery/ingress/task-execution/"
     )
