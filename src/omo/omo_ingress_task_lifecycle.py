@@ -9,10 +9,12 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
+import re
+import subprocess
 from typing import Any
 
 from omo.omo_audit import record as record_audit
-from omo.omo_io import fcntl_lock, write_yaml_atomic
+from omo.omo_io import fcntl_lock, write_text_atomic, write_yaml_atomic
 from omo.omo_task_schema import validate_task_data
 from omo.omo_ingress_paths import (
     _artifact_lifecycle_fields,
@@ -449,6 +451,82 @@ def record_task_execution(
             extra={"task_id": task_id, "task_group": group, "exit_code": exit_code},
         )
         return artifact
+
+
+def execute_controlled_task(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    timeout_seconds: int = 120,
+    source_ref: str = "",
+) -> dict[str, Any]:
+    """Run a low-risk project verification and record its result through ingress."""
+    if not isinstance(timeout_seconds, int) or isinstance(timeout_seconds, bool):
+        raise ValueError("timeout_seconds must be an integer")
+    timeout_seconds = max(1, min(timeout_seconds, 300))
+    task_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
+    if not task_path.exists():
+        raise ValueError("Only active tasks can be controlled-executed")
+
+    payload = _load_yaml(task_path)
+    metadata = payload.get("metadata") or {}
+    if metadata.get("controlled_execution") is not True:
+        raise ValueError("Task is not eligible for controlled execution")
+    command = str(metadata.get("command") or "").strip()
+    if not command:
+        raise ValueError("Task has no execution command")
+    if str(metadata.get("action_id") or "") != "copy-verify-command":
+        raise ValueError("Only project verification actions can be controlled-executed")
+
+    match = re.fullmatch(r'cd "([^"]+)" && (.+)', command, flags=re.DOTALL)
+    if not match:
+        raise ValueError("Controlled verification command must declare an explicit working directory")
+    cwd = Path(match.group(1)).expanduser().resolve()
+    workspace_root = omo_dir.parent.resolve()
+    try:
+        cwd.relative_to(workspace_root)
+    except ValueError as exc:
+        raise ValueError("Controlled verification working directory must be inside Workspace") from exc
+    command_body = match.group(2).strip()
+    if any(token in command_body for token in (";", "|", ">", "<", "$(", "`", "&&", "||")):
+        raise ValueError("Controlled verification command contains unsupported shell composition")
+
+    timestamp = _utc_now()
+    slug = _timestamp_slug(timestamp)
+    log_path = (
+        _delivery_root(omo_dir) / "task-execution" / f"{task_id}-{slug}.log"
+    )
+    try:
+        result = subprocess.run(
+            command_body,
+            cwd=cwd,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            check=False,
+        )
+        exit_code = result.returncode
+        output = (result.stdout or "") + (result.stderr or "")
+    except subprocess.TimeoutExpired as exc:
+        exit_code = 124
+        stdout = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        stderr = exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        output = stdout + stderr + f"\nTimed out after {timeout_seconds}s\n"
+    write_text_atomic(log_path, output)
+    log_ref = str(log_path.resolve().relative_to(workspace_root))
+    artifact = record_task_execution(
+        omo_dir,
+        task_id=task_id,
+        actor=actor,
+        command=command,
+        exit_code=exit_code,
+        log_ref=log_ref,
+        source_ref=source_ref,
+        now=timestamp,
+    )
+    return {**artifact, "exit_code": exit_code, "log_ref": log_ref, "timed_out": exit_code == 124}
 
 
 def complete_task(

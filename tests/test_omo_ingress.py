@@ -18,6 +18,7 @@ from omo.omo_ingress import (
     create_planned_task,
     create_skill_manifest,
     create_standard_doc,
+    execute_controlled_task,
     normalize_legacy_planned_task,
     promote_task_to_active,
     record_task_contract_request,
@@ -778,6 +779,65 @@ def test_record_task_consensus_updates_task_handoff_refs_and_artifacts(
     assert artifact["kind"] == "task_consensus_recorded"
     assert evidence["message"] == "继续推进"
     assert str(artifact["evidence_ref"]) in payload["handoff_refs"]
+
+
+def test_execute_controlled_task_runs_project_verification_and_records_log(
+    tmp_path: Path,
+) -> None:
+    project_path = tmp_path / "projects" / "demo"
+    project_path.mkdir(parents=True)
+    task_path = tmp_path / ".omo" / "tasks" / "active" / "TASK-VERIFY-1.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        yaml.safe_dump(
+            {
+                "id": "TASK-VERIFY-1",
+                "title": "controlled verification",
+                "description": "verify",
+                "status": "in_progress",
+                "task_type": "operations",
+                "risk_level": "L1",
+                "source_docs": ["projects/demo/README.md"],
+                "deliverables": ["verification result"],
+                "assigned_to": "operator",
+                "dispatch_id": "dispatch-1",
+                "run_ref": "runtime/dispatch-1.yaml",
+                "approval_ref": None,
+                "review_ref": "runtime/review-1.yaml",
+                "started_at": "2026-07-15T00:00:00Z",
+                "knowledge_refs": [],
+                "handoff_refs": [],
+                "entry_gate": [],
+                "evidence_required": ["execution log"],
+                "test_plan": ["printf hello"],
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "metadata": {
+                    "command": f'cd "{project_path}" && printf hello',
+                    "action_id": "copy-verify-command",
+                    "controlled_execution": True,
+                    "cockpit_only": True,
+                },
+            },
+            allow_unicode=True,
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    artifact = execute_controlled_task(
+        tmp_path / ".omo",
+        task_id="TASK-VERIFY-1",
+        actor="projects/omo/tests",
+        source_ref="tests:execute:TASK-VERIFY-1",
+    )
+
+    assert artifact["exit_code"] == 0
+    assert artifact["log_ref"].startswith("runtime/omo/_delivery/ingress/task-execution/")
+    assert (tmp_path / artifact["log_ref"]).read_text(encoding="utf-8") == "hello"
+    payload = _load_yaml(task_path)
+    assert payload["metadata"]["execution_audit"]["exit_code"] == 0
+    assert artifact["execution_ref"] in payload["handoff_refs"]
 
 
 def test_write_task_center_runtime_artifacts_go_through_ingress(tmp_path: Path) -> None:
