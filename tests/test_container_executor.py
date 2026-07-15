@@ -62,8 +62,10 @@ def test_build_docker_argv_contains_isolation_flags(profiles_path: Path):
     assert "ALL" in argv
     assert "--security-opt" in argv
     assert "no-new-privileges" in argv
-    assert "python:3.13-slim" in argv
-    assert argv[-3:] == ["python:3.13-slim", "python3", "-m"] or (
+    assert any("python:3.13-slim" in a for a in argv)
+    image_args = [a for a in argv if "python:3.13-slim" in a]
+    assert image_args, argv
+    assert argv[-3:] == [image_args[-1], "python3", "-m"] or (
         "python3" in argv and "-m" in argv and "demo" in argv
     )
     assert "demo" in argv

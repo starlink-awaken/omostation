@@ -44,6 +44,11 @@ BackendSetting = Literal["local", "docker", "auto"]
 
 # ── Models ────────────────────────────────────────────────────────
 
+# Default image pin (Scheme C 5b follow-up / ADR-0205). Override via env or YAML.
+DEFAULT_DOCKER_IMAGE = (
+    "python:3.13-slim@sha256:bffeb7bd6a85767587059c6ba23e1e9122078e3aa3fa836099171b9bb5a9bb00"
+)
+
 
 @dataclass(frozen=True)
 class MountSpec:
@@ -177,7 +182,7 @@ def _builtin_config() -> ExecutorConfig:
             MountSpec("${WORKSPACE_ROOT}", "/workspace", "ro"),
             MountSpec("${TMPDIR}", "/tmp", "rw"),
         ),
-        image="python:3.13-slim",
+        image=DEFAULT_DOCKER_IMAGE,
     )
     trusted = IsolationProfile(
         name="trusted-local",
@@ -193,7 +198,7 @@ def _builtin_config() -> ExecutorConfig:
         default_backend="local",
         default_profile="default",
         strict=False,
-        docker_image="python:3.13-slim",
+        docker_image=DEFAULT_DOCKER_IMAGE,
         docker_bin="docker",
         profiles={"default": default, "trusted-local": trusted},
         source="builtin",
@@ -214,7 +219,7 @@ def load_profiles(path: Path | None = None) -> ExecutorConfig:
     docker_image = str(
         os.environ.get("AGORA_SPAWN_DOCKER_IMAGE")
         or data.get("docker_image")
-        or "python:3.13-slim"
+        or DEFAULT_DOCKER_IMAGE
     )
     docker_bin = str(
         os.environ.get("AGORA_SPAWN_DOCKER_BIN") or data.get("docker_bin") or "docker"
