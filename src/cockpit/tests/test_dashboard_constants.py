@@ -34,6 +34,18 @@ class TestConstants:
         assert isinstance(constants.COCKPIT_UI_DIST, Path)
         assert constants.COCKPIT_UI_DIST.name == "dist"
 
+    def test_cockpit_ui_dist_can_be_overridden(self, monkeypatch, tmp_path):
+        import importlib
+
+        custom_dist = tmp_path / "custom-ui" / "dist"
+        monkeypatch.setenv("COCKPIT_UI_DIST", str(custom_dist))
+        importlib.reload(constants)
+        try:
+            assert constants.COCKPIT_UI_DIST == custom_dist
+        finally:
+            monkeypatch.delenv("COCKPIT_UI_DIST", raising=False)
+            importlib.reload(constants)
+
     def test_provider_plane_path(self):
         assert isinstance(constants.PROVIDER_PLANE_PATH, Path)
         assert constants.PROVIDER_PLANE_PATH.name == "provider-plane.yaml"

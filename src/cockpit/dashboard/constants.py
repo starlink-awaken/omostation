@@ -5,12 +5,16 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from cockpit.compat import WORKSPACE_ROOT as DISCOVERED_WORKSPACE_ROOT
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent  # cockpit/src/cockpit/
-WORKSPACE_ROOT = Path.home() / "Workspace"
-OMO_ROOT = Path.home() / "Workspace/projects/omo"
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(DISCOVERED_WORKSPACE_ROOT))).expanduser()
+OMO_ROOT = WORKSPACE_ROOT / "projects" / "omo"
 RUNTIME_HOME = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime")))
-M0_SNAPSHOT_PATH = Path.home() / "Workspace/projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml"
-COCKPIT_UI_DIST = Path.home() / "Workspace/projects/cockpit-ui/dist"
+M0_SNAPSHOT_PATH = WORKSPACE_ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
+COCKPIT_UI_DIST = Path(
+    os.environ.get("COCKPIT_UI_DIST", str(WORKSPACE_ROOT / "projects" / "cockpit-ui" / "dist"))
+).expanduser()
 PROVIDER_PLANE_PATH = WORKSPACE_ROOT / ".omo" / "state" / "provider-plane.yaml"
 LLM_QUOTA_SUMMARY_PATH = RUNTIME_HOME / "data" / "llm_quota_summary.json"
 LLM_COST_LOG_PATH = RUNTIME_HOME / "data" / "llm_cost.jsonl"
