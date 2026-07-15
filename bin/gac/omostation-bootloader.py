@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -50,13 +50,13 @@ def generate_adr_draft(finding: dict | None) -> Path | None:
         return None
     drafts_dir = WORKSPACE / ".omo" / "_knowledge" / "decisions" / "draft"
     drafts_dir.mkdir(parents=True, exist_ok=True)
-    ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     adr = drafts_dir / f"DRAFT-{ts}-boilerplate.md"
     content = f"""---
 status: DRAFT
 lifecycle: decision
 owner: bootloader
-last-reviewed: {datetime.utcnow().strftime("%Y-%m-%d")}
+last-reviewed: {datetime.now(UTC).strftime("%Y-%m-%d")}
 related: []
 ---
 

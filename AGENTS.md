@@ -136,41 +136,68 @@ For `.omo` or `spaces` mutations, use the registered broker/CLI path. If a task 
 
 ## 5. Essential Commands
 
+按场景分类，快速找到需要的命令：
+
+### 治理门禁 (Gate & lint)
+
 ```bash
-make gac-local-gate
-make check-layers                           # 分层依赖检查 (docs/layer-contract.yaml)
-make ssot-status                            # SSOT 变更状态检查
-make ssot-log                               # SSOT 审计日志查看
-make ssot-sync                              # SSOT 变更记录到审计日志
-uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
-uv run --with "pyyaml" python "bin/agent-workflow.py" list
-uv run --with "pyyaml" python "bin/agent-workflow.py" agents
-uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
-uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
-uv run --with "pyyaml" python "bin/agent-workflow.py" lint
-uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
-uv run --project "projects/omo" omo state sync --dry-run --json
-uv run --project "projects/omo" omo state sync --json
-uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
-uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
-uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
-uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
-uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
-uv run --with "pyyaml" python "bin/gac/governance-evolution.py" status --json
-uv run --with "pyyaml" python "bin/gac/governance-evolution.py" validate --json
+make gac-local-gate                          # 全量治理-as-Code 门禁
+make ci-local                                # 本地一键全部门 (Makefile:105)
+make check-layers                            # 分层依赖检查 (docs/layer-contract.yaml)
 uv run --with "pyyaml" python "bin/gac/gac-local-gate.py" --scope files --file <path> --json
 uv run --with "pyyaml" python "bin/ssot/doc-ssot-lint.py" --json
 uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
 uv run --with "pyyaml" python "bin/gac/gac-validate.py" --gate
 uv run --with "pyyaml" python "bin/gac/gac-drift.py"
-bash "tests/integration/run-all.sh"
-cd "projects/kairon" && make test-diff
-cd "projects/gbrain" && bun test
 ```
 
 `make gac-local-gate` runs the default (non-strict) GaC gate — GaC validate/drift, agent-workflow lint/integrations/adapters/bootstrap/observe, MOF schema/state-bridge/drift, documentation SSOT, doc link/snapshot, and staged change-lane checks. Two skip rules apply in default mode, both isolating concurrent-agent dirty in a shared worktree: `verify-plan`/`compliance`/`doctor` run only when staged touches agent-workflow (`896e60ba`); `project-layer-index` (generated layer digest) is CI-only — pre-commit/`make` skip it, `--strict`/CI runs it (`d33af25c`). For run/file-scoped AGCP verification use `bin/gac/gac-local-gate.py --scope ...`. Authoritative check list + skip rules live in `bin/gac/gac-local-gate.py` (`CHECKS`, `AGENT_WORKFLOW_GATE_CHECKS`, `CI_ONLY_CHECKS`) — do not duplicate here.
 
-Additional tools (not in gac-local-gate):
+### SSOT 变更追踪
+
+```bash
+make ssot-status                             # SSOT 变更状态检查
+make ssot-log                                # SSOT 审计日志查看
+make ssot-sync                               # SSOT 变更记录到审计日志
+make sync-submodules                         # 推送子模块未推送的 commit 到远程
+```
+
+### Agent 工作流生命周期
+
+```bash
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
+uv run --with "pyyaml" python "bin/agent-workflow.py" list
+uv run --with "pyyaml" python "bin/agent-workflow.py" agents
+uv run --with "pyyaml" python "bin/agent-workflow.py" lint
+uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
+uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
+uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
+uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
+uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
+uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
+uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
+```
+
+### 运行态与治理状态
+
+```bash
+uv run --project "projects/omo" omo state sync --dry-run --json
+uv run --project "projects/omo" omo state sync --json
+uv run --with "pyyaml" python "bin/gac/governance-evolution.py" status --json
+uv run --with "pyyaml" python "bin/gac/governance-evolution.py" validate --json
+```
+
+### 项目测试
+
+```bash
+bash "tests/integration/run-all.sh"          # root integration suite
+cd "projects/kairon" && make test-diff       # kairon (Python)
+cd "projects/gbrain" && bun test             # gbrain (TypeScript)
+```
+
+### 附加诊断工具
 
 ```bash
 uv run --with "pyyaml" python "bin/gac/gac-healthcheck.py"   # GaC 13-point health check

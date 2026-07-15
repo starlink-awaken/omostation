@@ -16,6 +16,7 @@ help:
 	@echo "make ssot-status       SSOT 变更状态检查"
 	@echo "make ssot-log          SSOT 审计日志查看"
 	@echo "make ssot-sync         SSOT 变更记录到审计日志"
+	@echo "make sync-submodules   推送子模块未推送的 commit 到远程"
 	@echo ""
 	@echo "=== 治理 ==="
 	@echo "make agent-workflow-bootstrap 一次性输出 agent 启动上下文"
@@ -174,6 +175,10 @@ ssot-sync:  ## SSOT 变更记录到审计日志
 	@read -p "Author: " author; \
 	read -p "Reason: " reason; \
 	uv run --with pyyaml python bin/ssot-watcher.py sync --author "$$author" --reason "$$reason"
+
+sync-submodules:  ## 推送子模块未推送的 commit 到远程
+	@echo "── 同步子模块 ────────────────────────────────────────"
+	bash bin/sync-submodules.sh
 
 agent-workflows:
 	uv run --with pyyaml python bin/agent-workflow.py list
