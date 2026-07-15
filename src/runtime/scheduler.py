@@ -423,7 +423,8 @@ class MatrixScheduler:
                         current_time - running_since.get(svc.name, current_time)
                     )
                 result["runtime"]["freshness_seconds"] = freshness
-                # Track last healthy time for staleness detection
+            # Track last healthy time — runs for both running and idle services
+            if rt in ("running", "idle") or hc == "healthy":
                 last_healthy[svc.name] = current_time
                 result["runtime"]["last_healthy_seconds"] = 0
             else:
