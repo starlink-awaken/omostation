@@ -661,6 +661,101 @@ async def queue_compute_action(request: Request):
     }
 
 
+@router.post("/api/cockpit/compute/control/queue")
+async def queue_compute_control(request: Request):
+    """Register budget or circuit-breaker changes for human-approved execution."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Compute control request must be an object")
+    operation = str(body.get("operation") or "").strip().lower()
+    if operation not in {"circuit_break", "budget"}:
+        raise HTTPException(status_code=400, detail="Unsupported compute control operation")
+
+    if operation == "circuit_break":
+        broken = body.get("broken")
+        if not isinstance(broken, bool):
+            raise HTTPException(status_code=422, detail="broken must be a boolean")
+        target = "enabled" if broken else "disabled"
+        title = f"算力熔断：{target}"
+        description = f"人工确认后将混合云算力熔断器切换为 {target}。"
+        command = f"POST /api/omos/circuit-break broken={str(broken).lower()}"
+        tags = ["cockpit-compute", "circuit-break", target]
+        metadata = {"broken": broken}
+    else:
+        budget = body.get("budget")
+        if isinstance(budget, bool) or not isinstance(budget, (int, float)) or not 50 <= budget <= 1000:
+            raise HTTPException(status_code=422, detail="budget must be a number between 50 and 1000")
+        target = f"${budget:g}"
+        title = f"算力日预算：{target}"
+        description = f"人工确认后将混合云算力单日预算安全线更新为 {target}。"
+        command = f"POST /api/omos/budget budget={budget:g}"
+        tags = ["cockpit-compute", "budget"]
+        metadata = {"budget": budget}
+
+    task_id = f"cockpit-compute-control-{operation}-{sha256(str(metadata).encode()).hexdigest()[:16]}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(
+            status_code=409, detail=f"Compute control task already exists in {existing_group}: {task_id}"
+        )
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": description,
+        "status": "pending",
+        "task_type": "governance",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L3",
+        "allowed_operation_level": "L3",
+        "human_approval_required": True,
+        "source_docs": ["projects/cockpit/src/cockpit/web/api_omos.py"],
+        "entry_gate": ["确认当前算力状态和变更目标", "确认对业务路由或成本的影响"],
+        "evidence_required": ["变更前状态快照", "配置写入结果", "变更后状态探针", "closeout"],
+        "deliverables": [description],
+        "test_plan": ["审批后执行控制变更，并回读算力状态确认结果。"],
+        "tags": tags,
+        "priority": "high",
+        "metadata": {
+            "compute_operation": operation,
+            **metadata,
+            "command": command,
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-compute",
+            source_ref=f"cockpit:compute-control:{operation}:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", task_data["title"]),
+        "operation": operation,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")
 async def queue_project_action(project_id: str, action_id: str):
     """登记一个项目命令为 OMO planned task; never execute it in Cockpit."""
