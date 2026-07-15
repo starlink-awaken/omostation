@@ -242,3 +242,72 @@ def test_task_cancel_does_not_fabricate_a_cancelled_state(monkeypatch):
 
     assert response.status_code == 409
     assert "no cancelled state" in response.json()["detail"]
+
+
+def test_task_draft_promotes_through_omo_ingress(monkeypatch):
+    client = TestClient(app)
+    draft = {
+        "id": "verification-ready-demo",
+        "title": "验证补证：demo",
+        "description": "把 demo 的验证命令沉成 workflow 证据。",
+        "status": "pending",
+        "priority": "high",
+        "tags": ["verification-ready", "draft"],
+        "read_only": True,
+        "source": {"type": "system_map_verification_ready", "id": "demo", "source_refs": []},
+        "draft": {"guard": "只读草稿；正式写入需走 OMO。"},
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "_get_task_draft", lambda _draft_id: draft)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append((args, kwargs))
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = client.post("/api/tasks/drafts/verification-ready-demo/promote")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "cockpit-verification-ready-demo"
+    assert response.json()["created"] is True
+    assert calls[0][1]["ingress_plane"] == "cockpit-task-center"
+    assert calls[0][1]["source_ref"] == "cockpit:draft:verification-ready-demo"
+    assert calls[0][1]["task_data"]["status"] == "pending"
+
+
+def test_task_draft_promotion_is_idempotent_for_planned_task(monkeypatch):
+    client = TestClient(app)
+    draft = {
+        "id": "playbook-demo",
+        "title": "操作清单：demo",
+        "description": "执行 demo 操作清单。",
+        "status": "pending",
+        "priority": "medium",
+        "tags": ["playbook", "draft"],
+        "read_only": True,
+        "source": {"type": "system_map_playbook", "id": "demo", "source_refs": []},
+        "draft": {"guard": "只读草稿。"},
+    }
+    monkeypatch.setattr(api_tasks, "_get_task_draft", lambda _draft_id: draft)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: kwargs["task_data"],
+    )
+
+    response = client.post("/api/tasks/drafts/playbook-demo/promote")
+
+    assert response.status_code == 200
+    assert response.json()["created"] is False
+    assert response.json()["status"] == "pending"
+
+
+def test_task_draft_promotion_rejects_unknown_draft(monkeypatch):
+    client = TestClient(app)
+    monkeypatch.setattr(api_tasks, "_get_task_draft", lambda _draft_id: None)
+
+    response = client.post("/api/tasks/drafts/missing/promote")
+
+    assert response.status_code == 404

@@ -562,6 +562,70 @@ def get_page_maturity_task_drafts(limit: int = 8) -> list[dict]:
     return drafts
 
 
+def _get_task_draft(draft_id: str) -> dict | None:
+    """Resolve only drafts emitted by the SystemMap-backed TaskCenter."""
+    draft_builders = (
+        get_playbook_task_drafts,
+        get_project_portfolio_task_drafts,
+        get_verification_ready_task_drafts,
+        get_domain_app_task_drafts,
+        get_capability_gap_task_drafts,
+        get_page_maturity_task_drafts,
+    )
+    for builder in draft_builders:
+        draft = next((item for item in builder() if item.get("id") == draft_id), None)
+        if draft:
+            return draft
+    return None
+
+
+def _draft_to_planned_task(draft: dict) -> dict:
+    """Convert a read-only cockpit draft into a valid OMO planned task packet."""
+    source = draft.get("source") or {}
+    source_refs = source.get("source_refs") or []
+    source_docs = [
+        str(ref.get("target") or ref.get("path") or ref.get("label"))
+        for ref in source_refs
+        if isinstance(ref, dict) and (ref.get("target") or ref.get("path") or ref.get("label"))
+    ]
+    if not source_docs:
+        source_docs = [f"cockpit:SystemMap:{source.get('type', 'draft')}:{source.get('id', draft.get('id'))}"]
+
+    description = str(draft.get("description") or draft.get("title") or "Cockpit system map follow-up")
+    task_id = f"cockpit-{draft.get('id', 'draft')}"
+    return {
+        "id": task_id,
+        "title": str(draft.get("title") or task_id),
+        "description": description,
+        "status": "pending",
+        "task_type": "governance",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": source_docs,
+        "entry_gate": [],
+        "evidence_required": ["Cockpit draft reviewed", "follow-up evidence recorded"],
+        "deliverables": [description],
+        "test_plan": [
+            str((draft.get("draft") or {}).get("guard") or "按草稿步骤完成处理，并回写验证或运行证据。")
+        ],
+        "tags": list(draft.get("tags") or []) + ["cockpit-promoted"],
+        "priority": str(draft.get("priority") or "medium"),
+        "metadata": {
+            "cockpit_draft_id": draft.get("id"),
+            "cockpit_source_type": source.get("type"),
+            "cockpit_source_id": source.get("id"),
+        },
+    }
+
+
 def get_project_portfolio_task_drafts(limit: int = 8) -> list[dict]:
     """Build read-only TaskCenter drafts from SystemMap project portfolio priorities."""
     system_map = build_system_map()
@@ -795,6 +859,46 @@ async def get_tasks(
     return {
         "items": tasks,
         "total": len(tasks),
+    }
+
+
+@router.post("/api/tasks/drafts/{draft_id}/promote")
+async def promote_task_draft(draft_id: str):
+    """将 SystemMap 只读草稿经 OMO ingress 转为 planned 任务。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", draft_id):
+        raise HTTPException(status_code=400, detail="Invalid draft id")
+
+    draft = _get_task_draft(draft_id)
+    if draft is None or draft.get("read_only") is not True:
+        raise HTTPException(status_code=404, detail="SystemMap task draft not found")
+
+    task_data = _draft_to_planned_task(draft)
+    task_id = task_data["id"]
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Promoted task already exists in {existing_group}: {task_id}")
+
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-task-center",
+            source_ref=f"cockpit:draft:{draft_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": existing_group != "planned",
+        "draft_id": draft_id,
+        "title": created.get("title", task_data["title"]),
+        "source": "omo_ingress",
     }
 
 
