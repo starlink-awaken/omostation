@@ -183,7 +183,7 @@ projects:
     stack: "Python (uv, pytest)"
     python: ">=3.13"
     build_backend: "hatchling"
-    version: "0.2.0"
+    version: "0.3.0"
     role: "Omni-Bus (Data/Event/Control)"
 
   omo-debt:

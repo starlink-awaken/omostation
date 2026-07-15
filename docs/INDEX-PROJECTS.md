@@ -7,7 +7,7 @@
 > - validation: 与 project-registry.yaml 项目数一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-14T07:22:23.729246
+> - generated_at: 2026-07-15T06:45:52.738094
 
 ---
 
@@ -84,7 +84,7 @@
 |------|--------|------|
 | compute-mesh | aetherforge/packages/mesh |  |
 | swarm-engine | aetherforge/packages/swarm |  |
-| cockpit-ui | cockpit-ui |  |
+| hermes-console | cockpit-ui |  |
 | agora-dashboard | cockpit HTTP :8090 |  |
 
 ---

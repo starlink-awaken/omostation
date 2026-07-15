@@ -7,7 +7,7 @@
 > - validation: ADR 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-14T07:22:23.817962
+> - generated_at: 2026-07-15T06:45:53.542317
 
 ---
 
@@ -102,6 +102,24 @@
 | ADR | 0179-runtime-probe-false-positive-treatment.md | 0179-runtime-probe-false-positive-treatment |
 | ADR | 0180-bus-foundation-rollout.md | 0180-bus-foundation-rollout |
 | ADR | 0181-metaos-ecos-scheme-c-planes.md | 0181-metaos-ecos-scheme-c-planes |
+| ADR | 0182-ci-evidence-bos-landing.md | 0182-ci-evidence-bos-landing |
+| ADR | 0183-wave2-c2g-omo-phase-a.md | 0183-wave2-c2g-omo-phase-a |
+| ADR | 0184-scheme-c-5b-container-executor.md | 0184-scheme-c-5b-container-executor |
+| ADR | 0185-wave2-phase-b-predictive-viz.md | 0185-wave2-phase-b-predictive-viz |
+| ADR | 0186-scheme-c-5c-os-acl-design.md | 0186-scheme-c-5c-os-acl-design |
+| ADR | 0187-scheme-c-5c-l1-path-acl-doctor.md | 0187-scheme-c-5c-l1-path-acl-doctor |
+| ADR | 0188-wave2-phase-c-governance-feedback.md | 0188-wave2-phase-c-governance-feedback |
+| ADR | 0189-scheme-c-5c-l2-acl-plan-apply.md | 0189-scheme-c-5c-l2-acl-plan-apply |
+| ADR | 0190-wave2-dashboard-json-contract.md | 0190-wave2-dashboard-json-contract |
+| ADR | 0191-wave2-cockpit-ui-dashboard.md | 0191-wave2-cockpit-ui-dashboard |
+| ADR | 0192-wave2-proposal-taskcenter-handoff.md | 0192-wave2-proposal-taskcenter-handoff |
+| ADR | 0193-wave2-demo-outcome-seed.md | 0193-wave2-demo-outcome-seed |
+| ADR | 0194-scheme-c-5c-setfacl-design.md | 0194-scheme-c-5c-setfacl-design |
+| ADR | 0195-architecture-convergence-isc2.md | 0195-architecture-convergence-isc2 |
+| ADR | 0196-omo-acl-plan-named-ace.md | 0196-omo-acl-plan-named-ace |
+| ADR | 0197-wave2-demo-seed-ui-button.md | 0197-wave2-demo-seed-ui-button |
+| ADR | 0198-omo-acl-apply-named-ace.md | 0198-omo-acl-apply-named-ace |
+| ADR | 0199-omo-doctor-path-acl-rhythm.md | 0199-omo-doctor-path-acl-rhythm |
 
 ### 战略路线图
 
@@ -127,7 +145,9 @@
 
 | 模式 | 文件 | 主题 |
 |------|------|------|
+| adr-concurrent-number-collision | adr-concurrent-number-collision.md | adr-concurrent-number-collision |
 | ci-silent-fail-debug-chain | ci-silent-fail-debug-chain.md | ci-silent-fail-debug-chain |
+| host-mutation-dual-gate | host-mutation-dual-gate.md | host-mutation-dual-gate |
 | p43-closed-loop-pattern | p43-closed-loop-pattern.md | p43-closed-loop-pattern |
 | p44-closed-loop-pattern | p44-closed-loop-pattern.md | p44-closed-loop-pattern |
 | p71-baseline-recovery-pattern | p71-baseline-recovery-pattern.md | p71-baseline-recovery-pattern |
@@ -136,6 +156,7 @@
 | p74-workflow-solidification-pattern | p74-workflow-solidification-pattern.md | p74-workflow-solidification-pattern |
 | p75-ci-red-triage-pattern | p75-ci-red-triage-pattern.md | p75-ci-red-triage-pattern |
 | p76-launcher-zombie-false-positive | p76-launcher-zombie-false-positive.md | p76-launcher-zombie-false-positive |
+| pre-push-ssot-path-drift | pre-push-ssot-path-drift.md | pre-push-ssot-path-drift |
 
 ---
 
