@@ -16,7 +16,9 @@ import re
 from datetime import UTC, datetime
 from hashlib import sha256
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+
+from cockpit.web import api_tasks_data as _task_data
 
 from cockpit.web.api_tasks_data import (
     WORKSPACE_DIR,
@@ -28,7 +30,7 @@ from cockpit.web.api_tasks_data import (
     _load_persisted_task,
     _task_group,
     _task_history,
-    _transition_task,
+    _transition_task as _data_transition_task,
     _validate_evidence_paths,
     _workspace_file_ref,
     build_domain_apps,
@@ -42,7 +44,26 @@ from cockpit.web.api_tasks_data import (
     get_verification_ready_task_drafts,
 )
 
-router = APIRouter()
+
+
+async def _sync_task_workspace() -> None:
+    """Keep the route module and data layer on one workspace root."""
+    _task_data.WORKSPACE_DIR = WORKSPACE_DIR
+
+
+router = APIRouter(dependencies=[Depends(_sync_task_workspace)])
+
+
+def _transition_task(task_id: str, action: str, evidence_paths: list[str] | None = None) -> dict:
+    """Pass route-layer resolvers into the shared OMO transition primitive."""
+    return _data_transition_task(
+        task_id,
+        action,
+        evidence_paths=evidence_paths,
+        task_group_fn=_task_group,
+        load_persisted_task_fn=_load_persisted_task,
+        approval_state_fn=_approval_state,
+    )
 
 
 _COVERAGE_DRAFT_GETTERS = {

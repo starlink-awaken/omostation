@@ -975,9 +975,20 @@ def _approval_proposal_id(approval_ref: str) -> str:
     return f"{Path(approval_ref).stem}-proposal"
 
 
-def _transition_task(task_id: str, action: str, evidence_paths: list[str] | None = None) -> dict:
+def _transition_task(
+    task_id: str,
+    action: str,
+    evidence_paths: list[str] | None = None,
+    *,
+    task_group_fn=None,
+    load_persisted_task_fn=None,
+    approval_state_fn=None,
+) -> dict:
     """Apply task transitions through the OMO ingress broker."""
-    group = _task_group(task_id)
+    resolve_group = task_group_fn or _task_group
+    load_task = load_persisted_task_fn or _load_persisted_task
+    approval_state = approval_state_fn or _approval_state
+    group = resolve_group(task_id)
     if group is None:
         raise HTTPException(status_code=404, detail="Task not found in OMO queues")
     if action == "cancel":
@@ -1006,11 +1017,11 @@ def _transition_task(task_id: str, action: str, evidence_paths: list[str] | None
             return {"id": task_id, "status": "pending", "updated_at": datetime.now(UTC).isoformat()}
         if action == "resume":
             if group == "planned":
-                payload = _load_persisted_task(task_id, group)
-                if payload.get("human_approval_required") and _approval_state(payload) != "granted":
+                payload = load_task(task_id, group)
+                if payload.get("human_approval_required") and approval_state(payload) != "granted":
                     raise HTTPException(
                         status_code=409,
-                        detail=f"Task approval is {_approval_state(payload)}; request and grant approval before resume",
+                        detail=f"Task approval is {approval_state(payload)}; request and grant approval before resume",
                     )
                 promote_task_to_active(
                     omo_dir,
