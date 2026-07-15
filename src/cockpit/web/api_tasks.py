@@ -376,7 +376,9 @@ async def queue_coverage_drafts(request: Request):
     queued: list[dict] = []
     skipped: list[dict] = []
     errors: list[dict] = []
-    for draft in drafts[:raw_limit]:
+    # `limit` is applied per coverage dimension so an early category cannot
+    # starve later dimensions when the caller asks for `all`.
+    for draft in drafts:
         draft_id = str(draft.get("id") or "")
         if not draft_id:
             errors.append({"id": None, "detail": "Draft has no id"})
@@ -405,7 +407,7 @@ async def queue_coverage_drafts(request: Request):
             "queued": len(queued),
             "skipped": len(skipped),
             "errors": len(errors),
-            "considered": len(drafts[:raw_limit]),
+            "considered": len(drafts),
         },
         "executes": False,
         "source": "omo_ingress",

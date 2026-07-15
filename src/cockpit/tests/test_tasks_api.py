@@ -539,6 +539,38 @@ def test_queue_coverage_drafts_rejects_unknown_category():
     assert response.status_code == 400
 
 
+def test_queue_all_coverage_dimensions_does_not_starve_later_categories(monkeypatch):
+    categories = list(api_tasks._COVERAGE_DRAFT_GETTERS)
+    promoted = []
+
+    for category in categories:
+        monkeypatch.setitem(
+            api_tasks._COVERAGE_DRAFT_GETTERS,
+            category,
+            lambda limit=8, category=category: [{"id": f"{category}-draft"}],
+        )
+
+    async def fake_promote(draft_id):
+        promoted.append(draft_id)
+        return {"id": draft_id, "created": True, "status": "pending"}
+
+    monkeypatch.setattr(api_tasks, "promote_task_draft", fake_promote)
+
+    response = TestClient(app).post(
+        "/api/cockpit/coverage/queue",
+        json={"category": "all", "limit": 1},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == {
+        "queued": len(categories),
+        "skipped": 0,
+        "errors": 0,
+        "considered": len(categories),
+    }
+    assert set(promoted) == {f"{category}-draft" for category in categories}
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {
