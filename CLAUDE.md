@@ -86,13 +86,16 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" compliance --json
 Read `.p74_solidification.warn_count`:
 
 - `0`: continue
-- `> 0` (excluding `handoff-resume` / `observer-audit`): treat as governance signal.
+- `> 0` (any silent workflow counts; `handoff-resume` and `observer-audit` no longer
+  excluded per ADR-0211 §D1): treat as governance signal.
   Read `.omo/standards/p74-solidification-contract.md` §3 decision tree for actions.
   If workflow has neither `has_recent_run` nor `has_check_coverage`, register it via
-  `agent-workflows.yaml::diff_checks` or `silent_workflow_policy.excluded_workflows`.
+  `agent-workflows.yaml::diff_checks`. Extending `silent_workflow_policy.excluded_workflows`
+  is no longer supported (field removed in ADR-0211 §D1).
 
 The `silent_workflow_policy` field in `agent-workflows.yaml` is the SSOT for
-silent workflow classification. Do not invent categories — extend this list.
+silent workflow classification. Per-workflow `run_frequency` field (on_demand /
+periodic / continuous) drives the warn_after threshold (30d / 7d / 1d).
 
 ## 2. Session Role
 

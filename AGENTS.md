@@ -69,7 +69,7 @@ operator-facing decision tree.
 
 SSOT:
 
-- `agent-workflows.yaml::silent_workflow_policy` (A1/A2 classification + excluded_workflows)
+- `agent-workflows.yaml::silent_workflow_policy` (A1/A2 classification + per-workflow `run_frequency` per ADR-0211; `excluded_workflows` field removed in ADR-0211 §D1)
 - `governance-checks.yaml` (4 CR-P74-* rules: STATE-PROJECTION-GUARD, RUNTIME-STAMP-POLICY, WORKFLOW-SILENCE, WORKFLOW-SUGGEST)
 
 Tools (`bin/` + `projects/omo`):
@@ -81,10 +81,12 @@ Tools (`bin/` + `projects/omo`):
 
 Skill: `.agents/skills/workflow-silence-detection/SKILL.md` (triggers on P74, silent workflow, compliance warn).
 
-If `p74_solidification.warn_count > 0` (excluding `handoff-resume` / `observer-audit`),
-do NOT start the workflow speculatively. Read the contract standard §3 decision tree
-and either add a `diff_checks` rule covering the workflow's surfaces, or extend
-`silent_workflow_policy.excluded_workflows` with rationale.
+If `p74_solidification.warn_count > 0` (any silent workflow counts; `handoff-resume` and
+`observer-audit` no longer excluded per ADR-0211 §D1), do NOT start the workflow
+speculatively. Read the contract standard §3 decision tree and **add a `diff_checks`
+rule covering the workflow's surfaces** (治本 per ADR-0214 §D1). Extending
+`silent_workflow_policy.excluded_workflows` is no longer supported (field removed in
+ADR-0211 §D1).
 
 ## 2. Documentation SSOT Contract
 
