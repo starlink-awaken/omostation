@@ -20,6 +20,8 @@ PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin
 5 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/governance-evolution.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
 10 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/governance-evolution.py packages --json >> runtime/cron/operating-rhythm-daily.log 2>&1
 15 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/m4-health-score.py --emit >> runtime/cron/operating-rhythm-daily.log 2>&1
+# doctor + path-acl 摘要 (ADR-0200) → runtime/cron/omo-doctor-latest.json
+20 9 * * * cd "$HOME/Workspace" && OPC_TRIGGER=cron uv run --with pyyaml python bin/gac/omo-doctor-cron.py >> runtime/cron/operating-rhythm-daily.log 2>&1
 
 # ── weekly 周一 10:00 (MOF 桥接 + drift 巡检) ──
 0 10 * * 1 cd "$HOME/Workspace" && python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json >> runtime/cron/operating-rhythm-weekly.log 2>&1

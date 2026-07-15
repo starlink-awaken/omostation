@@ -12,6 +12,10 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+      # ADR-0202 D1: 内联非空守卫 — 不依赖仓库自身工具 (自指盲区防御)
+      - name: inline zero-byte guard (ADR-0202)
+        run: |
+          z=$(find bin -name '*.py' -size 0 | head -20); if [ -n "$z" ]; then echo "❌ 0-byte py in bin/:"; echo "$z"; exit 1; fi
       - name: Setup Python
         uses: actions/setup-python@v5
         with: {python-version: '3.13'}

@@ -116,7 +116,9 @@ SSOT: `projects/agora/etc/container-executor-profiles.yaml`
 | L2 可选 host ACL | `omo acl plan` / `apply`（ADR-0189，`OMO_OS_ACL=1`） | ✅ |
 | L3 容器 | 5b spawn 不 RW mount `.omo` | ✅ 5b |
 
-### Phase 5c L1/L2 命令
+#运维 Runbook: [`docs/operations/omo-path-acl-runbook.md`](operations/omo-path-acl-runbook.md) (doctor 日常节奏 ADR-0199)
+
+## Phase 5c L1/L2 命令
 
 ```bash
 cd projects/omo
@@ -125,10 +127,17 @@ uv run pytest tests/test_omo_path_acl.py -q
 uv run python -m omo.cli lint path-acl --workspace-root ../.. --json
 # L2 dry-run plan (default safe)
 uv run python -m omo.cli acl plan --workspace-root ../.. --json
+uv run python -m omo.cli acl plan --workspace-root ../.. --acl --json  # named ACE dry-run ADR-0196
 # L2 apply (operator only)
 # export OMO_OS_ACL=1
 # uv run python -m omo.cli acl apply --yes --workspace-root ../..
+# uv run python -m omo.cli acl apply --yes --acl --workspace-root ../..  # ACE (ADR-0198)
 ```
 
 SSOT: `projects/omo/etc/omo-path-acl.yaml`  
 **lint 永不** chmod；**apply** 仅 chmod 去 other-write，禁 setfacl/chown。
+
+
+## Wave2 演示数据
+
+Cockpit Wave2 面板按钮「加载演示数据」→ `POST /api/wave2/demo-seed` (ADR-0197)。
