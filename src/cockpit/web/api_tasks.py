@@ -756,6 +756,87 @@ async def queue_compute_control(request: Request):
     }
 
 
+@router.post("/api/cockpit/sandbox/queue")
+async def queue_sandbox_result(request: Request):
+    """Persist a sandbox result as a planned follow-up task without executing it."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Sandbox queue request must be an object")
+    code = str(body.get("code") or "").strip()
+    output = str(body.get("output") or "").strip()
+    if not code:
+        raise HTTPException(status_code=422, detail="code is required")
+    if not output:
+        raise HTTPException(status_code=422, detail="output is required")
+    if len(code) > 20000 or len(output) > 20000:
+        raise HTTPException(status_code=413, detail="Sandbox code and output must be no longer than 20000 characters")
+
+    result_digest = sha256(f"{code}\n---\n{output}".encode()).hexdigest()[:16]
+    task_id = f"cockpit-sandbox-result-{result_digest}"
+    existing_group = _task_group(task_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(
+            status_code=409, detail=f"Sandbox result task already exists in {existing_group}: {task_id}"
+        )
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
+
+    title = str(body.get("title") or "沙箱实验结果收口").strip()[:160]
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": "将隔离沙箱实验结果带回日志、引擎或正式任务，并补齐可复现和 closeout 证据。",
+        "status": "pending",
+        "task_type": "verification",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": ["projects/cockpit/src/cockpit/web/api_sandbox.py"],
+        "entry_gate": ["确认沙箱输出不包含敏感信息", "确认后续去向是日志、引擎或正式任务之一"],
+        "evidence_required": ["沙箱代码或可复现片段", "沙箱输出摘要", "后续承接记录", "closeout"],
+        "deliverables": ["完成沙箱实验结果的正式承接"],
+        "test_plan": ["复核结果摘要，补充后续页面或执行链路的验证证据。"],
+        "tags": ["cockpit-sandbox", "verification", result_digest],
+        "priority": "medium",
+        "metadata": {
+            "sandbox_result_digest": result_digest,
+            "code_excerpt": code[:2000],
+            "output_excerpt": output[:4000],
+            "cockpit_only": True,
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-sandbox",
+            source_ref=f"cockpit:sandbox:result:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", title),
+        "result_digest": result_digest,
+        "executes": False,
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")
 async def queue_project_action(project_id: str, action_id: str):
     """登记一个项目命令为 OMO planned task; never execute it in Cockpit."""

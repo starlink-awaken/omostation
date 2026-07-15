@@ -657,6 +657,29 @@ def test_queue_compute_control_requires_approval(monkeypatch, payload, metadata_
     assert task_data["metadata"]["compute_operation"] == payload["operation"]
 
 
+def test_queue_sandbox_result_persists_follow_up_task(monkeypatch):
+    calls = []
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+    response = TestClient(app).post(
+        "/api/cockpit/sandbox/queue",
+        json={"code": "print('ok')", "output": "[执行成功] ok", "title": "沙箱结果验收"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["executes"] is False
+    task_data = calls[0]["task_data"]
+    assert task_data["human_approval_required"] is False
+    assert task_data["metadata"]["sandbox_result_digest"] == payload["result_digest"]
+    assert task_data["metadata"]["output_excerpt"] == "[执行成功] ok"
+    assert calls[0]["ingress_plane"] == "cockpit-sandbox"
+
+
 def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
     client = TestClient(app)
     domain_apps = {
