@@ -246,6 +246,17 @@ async def api_governance_summary():
     return JSONResponse(content=load_governance_summary())
 
 
+@router.get("/api/wave2/dashboard", dependencies=_AUTH_DEPS)
+async def api_wave2_dashboard():
+    """Wave2 predictive governance dashboard JSON (ADR-0190/0191).
+
+    Schema: c2g.wave2.dashboard.v1 — cards + heatmap + proposals.
+    """
+    from cockpit.dashboard.helpers_wave2 import load_wave2_dashboard
+
+    return JSONResponse(content=load_wave2_dashboard())
+
+
 @router.get("/api/bos/trends", dependencies=_AUTH_DEPS)
 async def api_bos_trends():
     """BOS trends — 24h/7d call volume, success rate, latency percentiles."""
