@@ -1667,6 +1667,32 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
             "source": "agent_workflow_run",
         }
 
+    # A Cockpit-controlled verification is also durable OMO evidence. Keep it
+    # in the same project posture so TaskCenter and SystemMap do not disagree.
+    task_prefix = f"cockpit-action-{project_id}-copy-verify-command"
+    task_paths: list[Path] = []
+    for group in ("active", "done"):
+        task_paths.extend((WORKSPACE_ROOT / ".omo" / "tasks" / group).glob(f"{task_prefix}.yaml"))
+    for task_path in sorted(task_paths, key=lambda path: path.stat().st_mtime, reverse=True):
+        try:
+            task = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        audit = (task.get("metadata") or {}).get("execution_audit") or {}
+        if not isinstance(audit, dict) or "exit_code" not in audit:
+            continue
+        exit_code = audit.get("exit_code")
+        return {
+            "status": "verified" if exit_code == 0 else "failed",
+            "run_id": task.get("id") or task_path.stem,
+            "ts": audit.get("recorded_at"),
+            "checks": 1,
+            "command": audit.get("command"),
+            "source": "omo_task_execution",
+            "log_ref": audit.get("log_ref"),
+            "actor": audit.get("actor"),
+        }
+
     verify_command = _project_verify_command(
         project_path,
         list(operational.get("commands") or []),

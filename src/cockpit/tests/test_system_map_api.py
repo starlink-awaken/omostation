@@ -477,3 +477,31 @@ def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatc
         "command": None,
         "source": "agent_workflow_run",
     }
+
+
+def test_latest_project_verification_reads_omo_controlled_execution(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "projects" / "demo"
+    project_path.mkdir(parents=True, exist_ok=True)
+    task_path = workspace_root / ".omo" / "tasks" / "active" / "cockpit-action-demo-copy-verify-command.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        """id: cockpit-action-demo-copy-verify-command
+metadata:
+  execution_audit:
+    command: cd "/workspace/projects/demo" && printf hello
+    exit_code: 0
+    log_ref: runtime/omo/demo.log
+    actor: cockpit-task-center
+    recorded_at: '2026-07-15T05:40:00Z'
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+
+    verification = api_system_map._latest_project_verification("demo", project_path, {})
+
+    assert verification["status"] == "verified"
+    assert verification["source"] == "omo_task_execution"
+    assert verification["log_ref"] == "runtime/omo/demo.log"
+    assert verification["actor"] == "cockpit-task-center"
