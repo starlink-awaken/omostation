@@ -35,6 +35,7 @@ L4_KERNEL_DIR = WORKSPACE_DIR / "projects" / "l4-kernel"
 alerts_store: list[dict] = []
 rules_store: list[dict] = []
 alert_state_store: dict[str, dict] = {}
+rule_override_store: dict[str, dict] = {}
 
 
 def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | None:
@@ -245,7 +246,10 @@ async def get_alert_rules():
         },
     ]
 
-    merged = default_rules + list(rules_store)
+    merged = []
+    for rule in default_rules:
+        merged.append({**rule, **rule_override_store.get(rule["id"], {})})
+    merged.extend(rules_store)
     return {"items": merged, "total": len(merged)}
 
 
@@ -284,10 +288,20 @@ class UpdateRuleRequest(BaseModel):
 
 @router.patch("/api/alerts/rules/{rule_id}")
 async def update_alert_rule(rule_id: str, request: UpdateRuleRequest):
-    """Update a custom rule; built-in rules expose an explicit unsupported response."""
+    """Update a custom rule or record a governed override for a built-in rule."""
     rule = next((item for item in rules_store if item["id"] == rule_id), None)
     if rule is None:
-        raise HTTPException(status_code=409, detail="Built-in or unknown alert rules cannot be edited")
+        current_rules = (await get_alert_rules())["items"]
+        rule = next((item for item in current_rules if item["id"] == rule_id), None)
+        if rule is None:
+            raise HTTPException(status_code=404, detail="Alert rule not found")
+        changes = request.model_dump(exclude_unset=True)
+        rule_override_store[rule_id] = {
+            **rule_override_store.get(rule_id, {}),
+            **{key: value for key, value in changes.items() if value is not None},
+            "updated_at": datetime.now(UTC).isoformat(),
+        }
+        return {**rule, **rule_override_store[rule_id]}
     changes = request.model_dump(exclude_unset=True)
     rule.update({key: value for key, value in changes.items() if value is not None})
     rule["updated_at"] = datetime.now(UTC).isoformat()

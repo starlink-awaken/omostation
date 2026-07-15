@@ -33,6 +33,20 @@ def test_custom_alert_rule_round_trips_and_can_be_toggled():
     api_alerts.rules_store.clear()
 
 
+def test_builtin_alert_rule_toggle_is_read_back_as_an_override():
+    api_alerts.rule_override_store.clear()
+    client = TestClient(app)
+
+    updated = client.patch("/api/alerts/rules/rule-1", json={"enabled": False})
+    assert updated.status_code == 200
+    assert updated.json()["enabled"] is False
+
+    listed = client.get("/api/alerts/rules")
+    builtin = next(item for item in listed.json()["items"] if item["id"] == "rule-1")
+    assert builtin["enabled"] is False
+    api_alerts.rule_override_store.clear()
+
+
 def test_alert_action_state_survives_refresh(monkeypatch):
     api_alerts.alert_state_store.clear()
     monkeypatch.setattr(
