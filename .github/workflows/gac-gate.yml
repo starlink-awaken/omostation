@@ -31,8 +31,7 @@ jobs:
         run: |
           python3 bin/mof/project-layer-index.py --write
           python3 bin/gac/gac-export-agents.py
-      - name: check-layers (跨层依赖检查, advisory until debt cleared)
-        continue-on-error: true
+      - name: check-layers (跨层依赖检查)
         run: python3 bin/layer-dependency-check.py
       - name: gac-local-gate (strict)
         run: python3 bin/gac/gac-local-gate.py --strict
