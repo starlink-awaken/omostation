@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 import yaml
 from pathlib import Path
 
@@ -913,6 +914,68 @@ def test_controlled_process_start_status_and_stop_are_audited(tmp_path: Path) ->
         )
     assert stopped["status"] == "stopped"
     assert _load_yaml(task_path)["metadata"]["execution_process"]["stopped_by"] == "projects/omo/tests"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX-only")
+def test_controlled_process_exit_code_is_archived(tmp_path: Path) -> None:
+    project_path = tmp_path / "projects" / "demo"
+    project_path.mkdir(parents=True)
+    task_path = tmp_path / ".omo" / "tasks" / "active" / "TASK-EXIT-1.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        yaml.safe_dump(
+            {
+                "id": "TASK-EXIT-1",
+                "title": "controlled exit",
+                "description": "exit",
+                "status": "in_progress",
+                "task_type": "operations",
+                "risk_level": "L1",
+                "source_docs": ["projects/demo/README.md"],
+                "deliverables": ["exit evidence"],
+                "assigned_to": "operator",
+                "dispatch_id": None,
+                "run_ref": None,
+                "approval_ref": None,
+                "review_ref": None,
+                "knowledge_refs": [],
+                "handoff_refs": [],
+                "entry_gate": [],
+                "evidence_required": ["exit code"],
+                "test_plan": ["exit 7"],
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "metadata": {
+                    "command": f'cd "{project_path}" && python -c "raise SystemExit(7)"',
+                    "action_id": "copy-start-command",
+                    "controlled_process": True,
+                    "cockpit_only": True,
+                },
+            },
+            allow_unicode=True,
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    started = start_controlled_task(
+        tmp_path / ".omo",
+        task_id="TASK-EXIT-1",
+        actor="projects/omo/tests",
+        source_ref="tests:start:TASK-EXIT-1",
+    )
+    deadline = time.monotonic() + 5
+    payload = _load_yaml(task_path)
+    while time.monotonic() < deadline:
+        payload = _load_yaml(task_path)
+        process_record = payload["metadata"].get("execution_process", {})
+        if process_record.get("exit_code") == 7:
+            break
+        time.sleep(0.05)
+
+    assert payload["metadata"]["execution_process"]["exit_code"] == 7
+    assert payload["metadata"]["execution_process"]["status"] == "exited"
+    assert started["execution_ref"] in payload["handoff_refs"]
 
 
 def test_write_task_center_runtime_artifacts_go_through_ingress(tmp_path: Path) -> None:

@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 import signal
 import subprocess
+import threading
 import time
 from typing import Any
 
@@ -657,7 +658,84 @@ def start_controlled_task(
             created_at=timestamp,
             extra={"task_id": task_id, "pid": process.pid},
         )
+    watcher = threading.Thread(
+        target=_watch_controlled_process,
+        args=(omo_dir, task_id, task_path, process, execution_ref, actor, source_ref),
+        name=f"omo-process-watch-{task_id}",
+        daemon=True,
+    )
+    watcher.start()
     return {**process_record, "execution_ref": execution_ref}
+
+
+def _watch_controlled_process(
+    omo_dir: Path,
+    task_id: str,
+    task_path: Path,
+    process: subprocess.Popen,
+    execution_ref: str,
+    actor: str,
+    source_ref: str,
+) -> None:
+    """Persist a child exit code without moving execution ownership to Cockpit."""
+    try:
+        exit_code = process.wait()
+    except OSError:
+        return
+
+    from omo.omo_ingress import _record_mutation, _record_trail
+
+    timestamp = _utc_now()
+    with fcntl_lock(_lock_path(omo_dir)):
+        if not task_path.exists():
+            return
+        payload = _load_yaml(task_path)
+        metadata = payload.setdefault("metadata", {})
+        current = metadata.get("execution_process") or {}
+        if not isinstance(current, dict) or int(current.get("pid") or -1) != process.pid:
+            return
+        status = current.get("status") if current.get("status") in {"stopped", "not_running"} else "exited"
+        process_record = {**current, "status": status, "exit_code": exit_code, "exited_at": timestamp}
+        metadata["execution_process"] = process_record
+        write_yaml_atomic(task_path, payload)
+        execution_path = omo_dir.parent / execution_ref
+        write_yaml_atomic(execution_path, {"task_id": task_id, **process_record})
+        artifact_path = _delivery_root(omo_dir) / "tasks" / f"{task_id}-process-exit-{_timestamp_slug(timestamp)}.yaml"
+        write_yaml_atomic(
+            artifact_path,
+            {
+                "kind": "task_process_exited",
+                "task_id": task_id,
+                "task_ref": f".omo/tasks/active/{task_path.name}",
+                **process_record,
+                "source_ref": source_ref,
+            },
+        )
+        parent_step_id = f"ingress:task-process-exit:{task_id}:{timestamp}"
+        record_audit(
+            action="ingress_record_task_process_exit",
+            debt_id="",
+            actor=actor,
+            details=f"task_id={task_id} pid={process.pid} status={status} exit_code={exit_code}",
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="record_task_process_exit",
+            target=execution_ref,
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="record_task_process_exit",
+            target=execution_ref,
+            artifact_ref=f"runtime/omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "pid": process.pid, "exit_code": exit_code},
+        )
 
 
 def get_controlled_process_status(omo_dir: Path, *, task_id: str) -> dict[str, Any]:
