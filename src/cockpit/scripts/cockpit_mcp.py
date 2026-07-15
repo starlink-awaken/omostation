@@ -366,7 +366,8 @@ except (ImportError, FileNotFoundError, ValueError) as _e:
     _registry = None
     _HAS_L4_KERNEL = False
 
-_CARDS_DIR = Path.home() / "Documents" / "@驾驶舱" / "CARDS"
+_DEFAULT_CARDS_DIR = Path.home() / "Documents" / "@驾驶舱" / "CARDS"
+_CARDS_DIR = _DEFAULT_CARDS_DIR
 if not _CARDS_DIR.exists():
     _log.warning("CARDS 目录不存在: %s. cockpit cards 功能不可用", _CARDS_DIR)
 _VAULT_DIR = Path.home() / "Documents" / "@学习进化"
@@ -442,7 +443,16 @@ def _parse_card_frontmatter(fm: str) -> dict:
 
 def _scan_cards() -> list[dict[str, str]]:
     """扫描 CARDS 目录下所有带 frontmatter 的 Markdown 文件。"""
-    if _HAS_L4_KERNEL and _registry:
+    # CLI 入口和测试可能以两个兼容模块名加载本文件；优先采用任一别名注入的目录。
+    cards_dir = _CARDS_DIR
+    for module_name in ("scripts.cockpit_mcp", "cockpit.scripts.cockpit_mcp"):
+        module = sys.modules.get(module_name)
+        candidate = getattr(module, "_CARDS_DIR", None) if module is not None else None
+        if isinstance(candidate, Path) and candidate != _DEFAULT_CARDS_DIR:
+            cards_dir = candidate
+            break
+
+    if cards_dir == _DEFAULT_CARDS_DIR and _HAS_L4_KERNEL and _registry:
         cockpit = _registry.get("cockpit")
         if cockpit:
             cards = CardsPlane(cockpit.path)
@@ -450,7 +460,7 @@ def _scan_cards() -> list[dict[str, str]]:
 
     # Fallback: 直接解析
     cards = []
-    for md_file in sorted(_CARDS_DIR.rglob("*.md")):
+    for md_file in sorted(cards_dir.rglob("*.md")):
         try:
             text = md_file.read_text(encoding="utf-8")
             if text.startswith("---"):

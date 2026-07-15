@@ -345,13 +345,13 @@ class TestStatusServices:
             assert health_url.startswith("http")
 
     def test_agora_first(self):
-        """Agora Hub 应排第一位"""
-        assert _status_services()[0][0] == "Agora Hub"
+        """真实的 Agora SSE HTTP 面应排第一位"""
+        assert _status_services()[0][0] == "Agora SSE"
 
     def test_minerva_present(self):
-        """Minerva 应在服务列表中"""
+        """状态列表应包含当前在册的 KOS HTTP 面"""
         names = [s[0] for s in _status_services()]
-        assert "Minerva" in names
+        assert "KOS" in names
 
     def test_agentmesh_removed(self):
         """AgentMesh 已从服务列表移除（已归档）"""
