@@ -503,12 +503,48 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
     consumers=True 时对 deprecated 项查消费者引用 (服务 D 调研"能不能删", 慢).
     """
     # 动态 import (避免脚本加载时就崩 — agora 不在时给清晰报错)
+    # ADR-0216: 即使 BOS 层 import 失败, 仍必须产出 feedback_loop (compass 真同源).
     try:
         from agora.mcp.resolver.services import POC_SERVICES  # type: ignore[import-not-found]
     except ImportError as e:
         print(f"❌ 无法 import agora.mcp.resolver.services: {e}", file=sys.stderr)
         print(f"   脚本依赖 projects/agora (sys.path={AGORA_SRC})", file=sys.stderr)
-        return {"error": "import_failed", "detail": str(e)}
+        print(
+            "   继续 partial 报告: feedback_loop + working_tree (BOS 维度 skipped)",
+            file=sys.stderr,
+        )
+        tree = check_working_tree()
+        feedback = check_feedback_loop()
+        # BOS 维不可用时 score 只由 tree+feedback 归一 (各占 50 分制再缩放到 100)
+        tree_score = 100 if tree.get("dirty_count", -1) == 0 else max(
+            0, 100 - 5 * max(0, int(tree.get("dirty_count") or 0))
+        )
+        fb_score = 100 if feedback.get("alive") else 0
+        partial_score = round(0.5 * tree_score + 0.5 * fb_score)
+        return {
+            "generated_at": _utc_now(),
+            "source": "bin/gac/evidence-smoke.py (partial: agora import failed)",
+            "error": "import_failed",
+            "detail": str(e),
+            "partial": True,
+            "bos": {
+                "declaration_count": 0,
+                "resolvable_count": 0,
+                "gap": -1,
+                "deprecated_count": 0,
+                "resolve_rate": None,
+                "skipped": True,
+                "skip_reason": "agora_import_failed",
+            },
+            "working_tree": tree,
+            "feedback_loop": feedback,
+            "evidence_health_score": partial_score,
+            "score_breakdown": {
+                "bos_skipped": True,
+                "tree": tree_score,
+                "feedback": fb_score,
+            },
+        }
 
     # L2 全量检查
     results = [check_service(svc) for svc in POC_SERVICES]
@@ -705,12 +741,32 @@ def main() -> int:
     args = parser.parse_args()
 
     report = run_smoke(spawn_n=args.spawn, consumers=args.consumers)
-    if "error" in report:
+    # ADR-0216: partial reports still emit JSON so compass_radar can read feedback_loop
+    if "error" in report and not report.get("partial"):
         return 1
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
+        # partial import failure → exit 0 for consumers; gate mode still fails below if --gate set
+        if report.get("partial") and args.gate is None:
+            return 0
+        if "error" in report and not report.get("partial"):
+            return 1
+        if report.get("partial") and args.gate is not None:
+            print(
+                "❌ GATE FAIL: evidence-smoke partial (agora import failed)",
+                file=sys.stderr,
+            )
+            return 1
         return 0
+    if report.get("partial"):
+        print(
+            f"⚠️  partial evidence-smoke (agora import failed): "
+            f"feedback_alive={report.get('feedback_loop', {}).get('alive')} "
+            f"score={report.get('evidence_health_score')}",
+            file=sys.stderr,
+        )
+        return 1
     print_summary(report, quiet=args.quiet)
 
     # gate 模式: 防声明/执行鸿沟复发 (Meadows 层7规则 + 层8回路固化)
