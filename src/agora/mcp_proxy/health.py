@@ -113,6 +113,23 @@ class BackendHealthChecker:
         s.last_fail = time.time()
         s.consecutive_failures += 1
 
+    def _is_transient(self, name: str) -> bool:
+        """stdio 按需服务 (有 command 无 mcp_endpoint) 调用时才 spawn 进程,
+        不该用常驻 heartbeat 验活 — 否则进程不存在必假 dead (ADR-0179 / p76).
+
+        只有 daemon/http/sse (有 mcp_endpoint 的常驻服务) 才参与 heartbeat.
+        """
+        registry = getattr(self._manager, "registry", None)
+        if registry is None:
+            return False
+        get_cfg = getattr(registry, "get_saved_config", None)
+        if get_cfg is None:
+            return False
+        cfg = get_cfg(name) or {}
+        has_command = bool(cfg.get("command"))
+        has_endpoint = bool(cfg.get("mcp_endpoint"))
+        return has_command and not has_endpoint
+
     # ── Internal loop ────────────────────────────────────────────
 
     async def _probe_one(self, name: str) -> None:
@@ -189,8 +206,21 @@ class BackendHealthChecker:
         if not all_backends:
             return
 
-        # Probe all in parallel
-        tasks = [self._probe_one(name) for name in all_backends]
+        # stdio 按需服务 (transient) 调用时才 spawn, 常驻 heartbeat 验活必假 dead;
+        # 跳过它们 + 清掉之前误判入 _status 的 transient, 不计入 alive/dead.
+        persistent = [n for n in all_backends if not self._is_transient(n)]
+        stale_transient = [n for n in list(self._status) if self._is_transient(n)]
+        for n in stale_transient:
+            del self._status[n]
+        if stale_transient:
+            logger.info(
+                "heartbeat_skip_transient",
+                skipped=len(stale_transient),
+                services=stale_transient,
+            )
+
+        # Probe persistent backends in parallel
+        tasks = [self._probe_one(name) for name in persistent]
         await asyncio.gather(*tasks)
 
         # Auto-remove chronically dead backends
