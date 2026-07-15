@@ -414,10 +414,10 @@ def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
                         "id": "verification-rerun",
                         "label": "复跑验证",
                         "kind": "copy_command",
-                        "value": "cd demo && make verify",
+                        "value": 'cd "/workspace/demo" && make verify',
                         "enabled": True,
                         "risk": "low",
-                        "guard": "复制排查命令；Cockpit 不直接执行终端命令。",
+                        "guard": "受控验证只在任务中心显式执行，并回写日志与退出码。",
                         "reason": "补最近一次验证证据。",
                     }
                 ],
@@ -439,7 +439,8 @@ def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
     assert response.status_code == 200
     assert response.json()["executes"] is False
     assert calls[0]["task_data"]["human_approval_required"] is False
-    assert calls[0]["task_data"]["metadata"]["controlled_execution"] is False
+    assert calls[0]["task_data"]["metadata"]["controlled_execution"] is True
+    assert calls[0]["task_data"]["metadata"]["action_id"] == "copy-verify-command"
     assert calls[0]["source_ref"] == "cockpit:project-triage:demo:verification-rerun"
 
 

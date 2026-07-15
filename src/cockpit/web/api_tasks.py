@@ -1028,6 +1028,7 @@ async def queue_project_triage_command(project_id: str, command_id: str):
         )
 
     risk = str(command.get("risk") or "low")
+    controlled_verification = command_id == "verification-rerun" and str(command.get("value") or "").startswith('cd "')
     task_data = {
         "id": task_id,
         "title": f"项目排查：{project.get('name') or project_id} · {command.get('label') or command_id}",
@@ -1054,10 +1055,11 @@ async def queue_project_triage_command(project_id: str, command_id: str):
         "metadata": {
             "project_id": project_id,
             "command_id": command_id,
+            "action_id": "copy-verify-command" if controlled_verification else None,
             "command": command.get("value"),
             "risk": risk,
             "cockpit_only": True,
-            "controlled_execution": False,
+            "controlled_execution": controlled_verification,
         },
     }
 
