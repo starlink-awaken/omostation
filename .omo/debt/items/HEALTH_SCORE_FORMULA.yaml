@@ -15,5 +15,5 @@ mitigation_refs: []
 opened_at: "2026-07-14"
 last_reviewed_at: "2026-07-14"
 gate_level: "P0"
-x1_policy_ref: "ISC-2 已修复 (ADR-0193)"
+x1_policy_ref: "ISC-2 已修复 (ADR-0195)"
 x3_tier: "Principle"

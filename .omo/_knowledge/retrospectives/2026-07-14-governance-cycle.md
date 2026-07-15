@@ -2,7 +2,7 @@
 
 > 复盘范围: ~51 commits, Phase P42→P44, 7 项债务全部解决
 > 参与: 人类用户 + Hermes Agent (deepseek-v4-flash)
-> 核心文件: [ADR-0193](decisions/0193-architecture-convergence-isc2.md), [架构分析](../../ARCHITECTURE.md)
+> 核心文件: [ADR-0195](decisions/0195-architecture-convergence-isc2.md), [架构分析](../../ARCHITECTURE.md)
 
 ---
 
@@ -26,7 +26,7 @@ P2 层 (cosmetic):   债务登记 → BOS 追踪门禁 → 子模块同步
 P1 层 (runtime):    OMO adapter 惰性 import → cron plist 修复 → 健康扫描 900→60s
 P0 层 (formula):    ISC-1→ISC-2 权重反转 → 健康分 84→68→83
 Phase 推进:         P42→P43→P44 (closeout + kickoff)
-ADR:                ADR-0193 架构收敛
+ADR:                ADR-0195 架构收敛
 债务落地:            7 项 debt items, 7 resolved
 GaC 扩展:           34→35 checks (+test-coverage + bos-tracking-gate)
 ```
