@@ -23,6 +23,7 @@ health_score (复合, ISC-1 治本):
   python bin/compass_radar.py --output .omo/state/health.yaml
   python bin/compass_radar.py --dry-run
 """
+
 from __future__ import annotations
 
 import argparse
@@ -55,10 +56,13 @@ def _health_score_from_anomalies(anomaly_count: int) -> int:
     return 25  # 熔断线
 
 
-def _collect_runtime_health(ws_root: Path) -> tuple[float | None, dict]:
+def collect_runtime_health(ws_root: Path) -> tuple[float | None, dict]:
     """从 system_health.yaml 过滤 daemon 类型服务计算常驻在线率 (WS-2 纠偏).
 
     返回 (service_online_ratio 0.0-1.0 或 None, summary_dict).
+
+    公共 API (无副作用, 纯读 system_health.yaml 现算): 被 generate-brief.py 复用,
+    避免 BRIEF daemon 在线率读 system.yaml 死字段造成快照幻影 (health-daemon-ratio-phantom).
     """
     import yaml  # noqa: PLC0415
 
@@ -110,6 +114,7 @@ def _freshness_score(health_yaml: Path, now_iso: str) -> tuple[int, str]:
         return (0, "never-generated")
     try:
         import yaml  # noqa: PLC0415
+
         data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
         gen = data.get("generated_at")
         if not gen:
@@ -123,12 +128,12 @@ def _freshness_score(health_yaml: Path, now_iso: str) -> tuple[int, str]:
     if age_s < 0:
         return (100, "future")  # 时钟偏移, 宽容
     if age_s <= 3600:
-        return (100, f"{age_s/60:.0f}m")
+        return (100, f"{age_s / 60:.0f}m")
     if age_s <= 86400:
-        return (80, f"{age_s/3600:.1f}h")
+        return (80, f"{age_s / 3600:.1f}h")
     if age_s <= 7 * 86400:
-        return (50, f"{age_s/86400:.1f}d")
-    return (0, f"{age_s/86400:.1f}d-stale")
+        return (50, f"{age_s / 86400:.1f}d")
+    return (0, f"{age_s / 86400:.1f}d-stale")
 
 
 def _composite_health_score(
@@ -161,13 +166,19 @@ def _composite_health_score(
     total_weight = sum(weights.values())
     raw = sum(contributions.values()) / total_weight if total_weight else 0
     score = round(raw)
-    breakdown: dict = {"weights": weights, "contributions": contributions, "raw": round(raw, 2)}
+    breakdown: dict = {
+        "weights": weights,
+        "contributions": contributions,
+        "raw": round(raw, 2),
+    }
     # feedback 回路硬门槛 (理想态 evidence-driven): 断 → 封顶 50 (触发 X1 告警, 防假绿)
     if not feedback_alive:
         # 阈值 50: 半分线 — 高于 governance 熔断 25 (仍触发 X1 告警) 但不熔断 (留恢复窗口). 治 P5 magic number.
         score = min(score, 50)
         breakdown["feedback_capped"] = True
-        breakdown["feedback_note"] = "feedback loop dead → capped at 50 (evidence-driven)"
+        breakdown["feedback_note"] = (
+            "feedback loop dead → capped at 50 (evidence-driven)"
+        )
     return (score, breakdown)
 
 
@@ -182,8 +193,16 @@ def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
 
     try:
         res = subprocess.run(
-            [sys.executable, str(ws_root / "bin" / "gac" / "evidence-smoke.py"), "--json"],
-            cwd=ws_root, capture_output=True, text=True, timeout=120, check=False,
+            [
+                sys.executable,
+                str(ws_root / "bin" / "gac" / "evidence-smoke.py"),
+                "--json",
+            ],
+            cwd=ws_root,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
         )
         if res.returncode != 0 or not res.stdout.strip():
             return (False, {"reason": f"evidence-smoke exit {res.returncode}"})
@@ -212,7 +231,9 @@ def run_radar(omo_dir: Path) -> dict:
     metrics = _collect_metrics(all_files)
     pending_metrics = _collect_metrics(planned_files)
     warnings = (
-        _check_anomalies(metrics, total, omo_dir=omo_dir, pending_metrics=pending_metrics)
+        _check_anomalies(
+            metrics, total, omo_dir=omo_dir, pending_metrics=pending_metrics
+        )
         if total
         else []
     )
@@ -250,14 +271,18 @@ def render_yaml(report: dict) -> str:
     lines.append(f"# generated_at: {report['generated_at']}")
     lines.append("# source: c2g.strategy (real audit, no mock)")
     lines.append("# range: 0-100, higher = healthier")
-    lines.append(f"# health_score: composite (ISC-1) = {report['health_composite_breakdown']['weights']}")
+    lines.append(
+        f"# health_score: composite (ISC-1) = {report['health_composite_breakdown']['weights']}"
+    )
     lines.append("")
     lines.append("generated_at: " + _yaml_str(report["generated_at"]))
     lines.append("source: " + _yaml_str(report["source"]))
     lines.append("health_score: " + str(report["health_score"]))
     lines.append("governance_anomaly_score: " + str(report["governance_anomaly_score"]))
     lines.append("anomaly_count: " + str(report["anomaly_count"]))
-    lines.append("service_online_ratio: " + _format_ratio(report.get("service_online_ratio")))
+    lines.append(
+        "service_online_ratio: " + _format_ratio(report.get("service_online_ratio"))
+    )
     lines.append("freshness_score: " + str(report["freshness_score"]))
     # feedback 回路存活 (理想态 evidence-driven, 防假绿, 见 _composite_health_score 硬门槛)
     fb = report.get("feedback_liveness") or {}
@@ -288,7 +313,13 @@ def render_yaml(report: dict) -> str:
         lines.append("  []")
     lines.append("")
     lines.append("distributions:")
-    for dim in ("priority_dist", "risk_dist", "owner_dist", "phase_dist", "status_dist"):
+    for dim in (
+        "priority_dist",
+        "risk_dist",
+        "owner_dist",
+        "phase_dist",
+        "status_dist",
+    ):
         lines.append(f"  {dim}:")
         for k, v in sorted(report[dim].items()):
             lines.append(f"    {k}: {v}")
@@ -343,7 +374,9 @@ def _write_text_if_changed(path: Path, payload: str, *, normalize=None) -> bool:
     return True
 
 
-def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any], dict[str, Any], str]:
+def build_health_projection(
+    omo_dir: Path, output: Path
+) -> tuple[dict[str, Any], dict[str, Any], str]:
     """Build health.yaml content inputs without writing projection files."""
     ws_root = omo_dir.parent
     report = run_radar(omo_dir)
@@ -354,7 +387,7 @@ def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any]
     governance_anomaly_score = _health_score_from_anomalies(report["anomaly_count"])
     report["governance_anomaly_score"] = governance_anomaly_score
 
-    service_online_ratio, runtime_summary = _collect_runtime_health(ws_root)
+    service_online_ratio, runtime_summary = collect_runtime_health(ws_root)
     report["service_online_ratio"] = service_online_ratio
 
     fresh_score, age_desc = _freshness_score(output, now_iso)
@@ -371,7 +404,9 @@ def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any]
     return report, runtime_summary, age_desc
 
 
-def build_system_projection_updates(workspace_root: Path, report: dict[str, Any]) -> dict[str, Any]:
+def build_system_projection_updates(
+    workspace_root: Path, report: dict[str, Any]
+) -> dict[str, Any]:
     """Build the whitelisted system.yaml projection fields for health sync."""
     import yaml  # noqa: PLC0415
 
@@ -396,14 +431,18 @@ def build_system_projection_updates(workspace_root: Path, report: dict[str, Any]
             from omo.omo_state_schema import summarize_system_health_snapshot  # noqa: PLC0415
 
             health_data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
-            updates["runtime_health_summary"] = summarize_system_health_snapshot(health_data)
+            updates["runtime_health_summary"] = summarize_system_health_snapshot(
+                health_data
+            )
         except Exception as inner:  # noqa: BLE001
             print(f"⚠️  兜底同步 runtime_health_summary 失败: {inner}")
     return updates
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="compass-radar: 调 c2g 真审计 + 写 health SSOT")
+    parser = argparse.ArgumentParser(
+        description="compass-radar: 调 c2g 真审计 + 写 health SSOT"
+    )
     parser.add_argument(
         "--omo-dir",
         type=Path,
@@ -443,11 +482,21 @@ def main() -> int:
     print()
     print("📊 治理健康分 (ISC-1 复合):")
     print(f"   health_score (composite): {report['health_score']}/100")
-    print(f"   governance_anomaly_score: {governance_anomaly_score}/100 (anomalies={report['anomaly_count']})")
-    ratio_str = f"{service_online_ratio:.2%}" if service_online_ratio is not None else "unavailable"
-    print(f"   service_online_ratio:     {ratio_str}  (online={runtime_summary.get('online_services')}/{runtime_summary.get('total_services')})")
+    print(
+        f"   governance_anomaly_score: {governance_anomaly_score}/100 (anomalies={report['anomaly_count']})"
+    )
+    ratio_str = (
+        f"{service_online_ratio:.2%}"
+        if service_online_ratio is not None
+        else "unavailable"
+    )
+    print(
+        f"   service_online_ratio:     {ratio_str}  (online={runtime_summary.get('online_services')}/{runtime_summary.get('total_services')})"
+    )
     print(f"   freshness_score:          {fresh_score}/100 ({age_desc})")
-    print(f"   total:                    {report['total_tasks']} ({report['done']} done + {report['planned']} planned)")
+    print(
+        f"   total:                    {report['total_tasks']} ({report['done']} done + {report['planned']} planned)"
+    )
     if report["anomalies"]:
         print("🚨 异常告警:")
         for w in report["anomalies"]:
@@ -482,9 +531,18 @@ def main() -> int:
     # 自动触发 BRIEF.md 生成 (WS-4 + WS-5)
     try:
         import subprocess  # noqa: PLC0415
+
         res = subprocess.run(
-            [sys.executable, str(ws_root / "bin" / "mof" / "generate-brief.py"), "--write", "--if-changed"],
-            cwd=ws_root, capture_output=True, text=True, check=False
+            [
+                sys.executable,
+                str(ws_root / "bin" / "mof" / "generate-brief.py"),
+                "--write",
+                "--if-changed",
+            ],
+            cwd=ws_root,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         if res.returncode == 0:
             print("✅ BRIEF.md 同步刷新成功")
@@ -529,14 +587,18 @@ def sync_system_yaml(
             },
         )
         data.update(updates)
-        payload = yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False)
+        payload = yaml.dump(
+            data, allow_unicode=True, sort_keys=False, default_flow_style=False
+        )
         changed = _write_text_if_changed(
             system_yaml,
             payload,
             normalize=_normalize_system_yaml,
         )
         if changed:
-            print(f"✅ system.yaml 同步: health_score(composite)={health_score} governance_anomaly={governance_anomaly_score} ratio={service_online_ratio}")
+            print(
+                f"✅ system.yaml 同步: health_score(composite)={health_score} governance_anomaly={governance_anomaly_score} ratio={service_online_ratio}"
+            )
         else:
             print("ℹ system.yaml 语义未变化, 跳过写入")
     except Exception as e:  # noqa: BLE001
