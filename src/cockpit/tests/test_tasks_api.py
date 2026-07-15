@@ -1,6 +1,8 @@
 from fastapi.testclient import TestClient
 
 from cockpit.dashboard_server import app
+from cockpit.web import api_tasks
+from cockpit.web.api_system_map import build_system_map
 from cockpit.web.api_tasks import (
     get_capability_gap_task_drafts,
     get_domain_app_task_drafts,
@@ -87,8 +89,9 @@ def test_capability_gap_task_drafts_are_read_only():
 
 def test_page_maturity_task_drafts_are_read_only():
     drafts = get_page_maturity_task_drafts()
+    attention_items = build_system_map()["page_maturity"]["attention_items"]
 
-    assert drafts
+    assert bool(drafts) is bool(attention_items)
     assert all(draft["read_only"] is True for draft in drafts)
     assert all(draft["id"].startswith("page-maturity-") for draft in drafts)
     assert all(draft["source"]["type"] == "system_map_page_maturity" for draft in drafts)
@@ -185,6 +188,7 @@ def test_tasks_route_can_include_capability_gap_drafts():
 
 def test_tasks_route_can_include_page_maturity_drafts():
     client = TestClient(app)
+    has_attention = bool(build_system_map()["page_maturity"]["attention_items"])
 
     default_resp = client.get("/api/tasks")
     assert default_resp.status_code == 200
@@ -192,7 +196,7 @@ def test_tasks_route_can_include_page_maturity_drafts():
 
     draft_resp = client.get("/api/tasks?include_page_maturity_drafts=true")
     assert draft_resp.status_code == 200
-    assert any(item["id"].startswith("page-maturity-") for item in draft_resp.json()["items"])
+    assert any(item["id"].startswith("page-maturity-") for item in draft_resp.json()["items"]) is has_attention
 
     combined_resp = client.get(
         "/api/tasks?"
@@ -208,4 +212,33 @@ def test_tasks_route_can_include_page_maturity_drafts():
     assert any(item["id"].startswith("portfolio-") for item in combined_items)
     assert any(item["id"].startswith("domain-app-") for item in combined_items)
     assert any(item["id"].startswith("capability-gap-") for item in combined_items)
-    assert any(item["id"].startswith("page-maturity-") for item in combined_items)
+    assert any(item["id"].startswith("page-maturity-") for item in combined_items) is has_attention
+
+
+def test_task_pause_uses_omo_ingress(monkeypatch):
+    client = TestClient(app)
+    calls = []
+
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+
+    def fake_revert(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"id": "task-1"}
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.revert_task_to_planned", fake_revert)
+
+    response = client.post("/api/tasks/task-1/pause")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "pending"
+    assert calls[0][1]["task_id"] == "task-1"
+
+
+def test_task_cancel_does_not_fabricate_a_cancelled_state(monkeypatch):
+    client = TestClient(app)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+
+    response = client.post("/api/tasks/task-1/cancel")
+
+    assert response.status_code == 409
+    assert "no cancelled state" in response.json()["detail"]

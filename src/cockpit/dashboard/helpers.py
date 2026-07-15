@@ -17,6 +17,7 @@ from cockpit.dashboard.constants import (
     M0_SNAPSHOT_PATH,
     OMO_ROOT,
     PROJECT_ROOT,
+    WORKSPACE_ROOT,
 )
 from cockpit.web.auth import get_subservice_token
 
@@ -270,19 +271,39 @@ def load_debt() -> dict:
 
 def run_e2e() -> dict:
     """Run the e2e check and return results."""
+    e2e_script = WORKSPACE_ROOT / "tests" / "integration" / "test_runtime_e2e.py"
+    if not e2e_script.exists():
+        return {
+            "status": "unavailable",
+            "result": "unavailable",
+            "error": f"E2E script not found: {e2e_script}",
+        }
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "runtime.e2e"],
+            [sys.executable, str(e2e_script)],
             capture_output=True,
             text=True,
             timeout=30,
-            cwd=str(PROJECT_ROOT),
+            cwd=str(WORKSPACE_ROOT),
         )
-        stdout = result.stdout
+        stdout = result.stdout or ""
+        stderr = result.stderr or ""
         m = re.search(r"Result:\s*(\d+)/(\d+)\s*checks\s*passed", stdout)
         if m:
-            return {"result": f"{m.group(1)}/{m.group(2)} passed", "output": stdout}
-        return {"result": "unparsed", "output": stdout}
+            return {
+                "status": "ok" if result.returncode == 0 else "degraded",
+                "result": f"{m.group(1)}/{m.group(2)} passed",
+                "output": stdout,
+                "error": stderr or None,
+                "exit_code": result.returncode,
+            }
+        return {
+            "status": "error",
+            "result": "unparsed",
+            "output": stdout,
+            "error": stderr or f"E2E exited with code {result.returncode} without a parseable result",
+            "exit_code": result.returncode,
+        }
     except subprocess.TimeoutExpired:
         return {"result": "timeout", "error": "E2E took >30s"}
     except Exception as e:  # defensive fallback

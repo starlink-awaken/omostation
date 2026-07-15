@@ -13,6 +13,7 @@ Routes:
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -683,6 +684,74 @@ def get_verification_ready_task_drafts(limit: int = 12) -> list[dict]:
     return drafts
 
 
+def _task_group(task_id: str) -> str | None:
+    """Find a persisted OMO task queue without treating read-only drafts as tasks."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", task_id):
+        raise HTTPException(status_code=400, detail="Invalid task id")
+    task_root = WORKSPACE_DIR / ".omo" / "tasks"
+    for group in ("active", "planned", "done"):
+        if (task_root / group / f"{task_id}.yaml").is_file():
+            return group
+    return None
+
+
+def _transition_task(task_id: str, action: str) -> dict:
+    """Apply task transitions through the OMO ingress broker."""
+    group = _task_group(task_id)
+    if group is None:
+        raise HTTPException(status_code=404, detail="Task not found in OMO queues")
+    if action == "cancel":
+        raise HTTPException(
+            status_code=409,
+            detail="OMO canonical lifecycle has no cancelled state; pause or complete the task instead.",
+        )
+
+    try:
+        from omo.omo_ingress_task_lifecycle import (
+            complete_task,
+            promote_task_to_active,
+            revert_task_to_planned,
+        )
+
+        omo_dir = WORKSPACE_DIR / ".omo"
+        source_ref = f"cockpit:task:{action}:{task_id}"
+        if action == "pause":
+            if group == "active":
+                revert_task_to_planned(
+                    omo_dir,
+                    task_id=task_id,
+                    actor="cockpit-task-center",
+                    source_ref=source_ref,
+                )
+            return {"id": task_id, "status": "pending", "updated_at": datetime.now(UTC).isoformat()}
+        if action == "resume":
+            if group == "planned":
+                promote_task_to_active(
+                    omo_dir,
+                    task_id=task_id,
+                    actor="cockpit-task-center",
+                    source_ref=source_ref,
+                )
+            return {"id": task_id, "status": "in_progress", "updated_at": datetime.now(UTC).isoformat()}
+        if action == "complete":
+            payload = complete_task(
+                omo_dir,
+                task_id=task_id,
+                actor="cockpit-task-center",
+                source_ref=source_ref,
+            )
+            return {
+                "id": task_id,
+                "status": "completed",
+                "updated_at": payload.get("completed_at", datetime.now(UTC).isoformat()),
+            }
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    raise HTTPException(status_code=400, detail=f"Unsupported task action: {action}")
+
+
 @router.get("/api/tasks")
 async def get_tasks(
     status: str | None = Query(None, description="任务状态过滤"),
@@ -741,29 +810,23 @@ async def get_task(task_id: str):
 
 @router.post("/api/tasks/{task_id}/pause")
 async def pause_task(task_id: str):
-    """暂停任务。"""
-    return {
-        "id": task_id,
-        "status": "pending",
-        "updated_at": datetime.now(UTC).isoformat(),
-    }
+    """通过 OMO ingress 将 active 任务退回 planned。"""
+    return _transition_task(task_id, "pause")
 
 
 @router.post("/api/tasks/{task_id}/resume")
 async def resume_task(task_id: str):
-    """恢复任务。"""
-    return {
-        "id": task_id,
-        "status": "in_progress",
-        "updated_at": datetime.now(UTC).isoformat(),
-    }
+    """通过 OMO ingress 将 planned 任务提升到 active。"""
+    return _transition_task(task_id, "resume")
+
+
+@router.post("/api/tasks/{task_id}/complete")
+async def complete_task_endpoint(task_id: str):
+    """通过 OMO ingress 将 active/planned 任务归档到 done。"""
+    return _transition_task(task_id, "complete")
 
 
 @router.post("/api/tasks/{task_id}/cancel")
 async def cancel_task(task_id: str):
-    """取消任务。"""
-    return {
-        "id": task_id,
-        "status": "cancelled",
-        "updated_at": datetime.now(UTC).isoformat(),
-    }
+    """拒绝不存在于 OMO canonical lifecycle 的伪取消状态。"""
+    return _transition_task(task_id, "cancel")

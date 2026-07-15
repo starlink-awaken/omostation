@@ -45,3 +45,16 @@ def test_compute_wakeup_route_returns_command_result(monkeypatch, tmp_path: Path
 
     assert response.status_code == 200
     assert response.json()["success"] is True
+
+
+def test_compute_status_reports_missing_capability_as_unavailable(monkeypatch, tmp_path: Path):
+    from cockpit.web import api_compute
+
+    monkeypatch.setattr(api_compute, "get_workspace_root", lambda: tmp_path)
+    app = FastAPI()
+    app.include_router(api_compute.router)
+
+    response = TestClient(app).get("/api/governance/compute/status")
+
+    assert response.status_code == 503
+    assert "not mounted" in response.json()["detail"]

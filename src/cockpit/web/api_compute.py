@@ -64,11 +64,11 @@ async def get_compute_status():
     """获取算力网格、LiteLLM 路由与凭据额度并网状态。"""
     root = get_workspace_root()
     if not root:
-        raise HTTPException(status_code=500, detail="Cannot locate workspace root.")
+        raise HTTPException(status_code=503, detail="Compute workspace is unavailable.")
 
     onboard_script = root / "bin" / "gac-compute-onboard.py"
     if not onboard_script.is_file():
-        raise HTTPException(status_code=500, detail="Compute onboarding script not found.")
+        raise HTTPException(status_code=503, detail="Compute onboarding capability is not mounted.")
 
     # 运行 bin/gac-compute-onboard.py --json
     cmd = [sys.executable, str(onboard_script), "--json"]
@@ -85,14 +85,17 @@ async def get_compute_status():
         if result.returncode == 0:
             return json.loads(result.stdout)
         else:
-            # 即使脚本出错，我们也返回错误信息做防线
             raise HTTPException(
-                status_code=500, detail=f"Onboard script failed with code {result.returncode}: {result.stderr.strip()}"
+                status_code=503, detail=f"Compute onboarding is unavailable: {result.stderr.strip()}"
             )
     except subprocess.TimeoutExpired:
         raise HTTPException(status_code=504, detail="Compute status check timed out.")
+    except HTTPException:
+        raise
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail=f"Compute onboarding returned invalid JSON: {exc}") from exc
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to check compute status: {str(e)}")
+        raise HTTPException(status_code=503, detail=f"Compute status is unavailable: {str(e)}") from e
 
 
 @router.post("/api/governance/compute/wakeup")

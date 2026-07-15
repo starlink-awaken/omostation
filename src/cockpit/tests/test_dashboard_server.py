@@ -1,6 +1,7 @@
 """Dashboard server 测试 — 端点路由/认证/CORS + loader 函数单元测试。"""
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -157,6 +158,22 @@ quota_summary:
         monkeypatch.setattr("subprocess.run", mock_run)
         result = _run_e2e()
         assert result["result"] == "error"
+
+    def test_run_e2e_returns_parseable_status_and_diagnostics(self, monkeypatch):
+        monkeypatch.setattr(
+            "subprocess.run",
+            lambda *args, **kwargs: SimpleNamespace(
+                returncode=0,
+                stdout="Result: 9/9 checks passed\n",
+                stderr="",
+            ),
+        )
+
+        result = _run_e2e()
+
+        assert result["status"] == "ok"
+        assert result["result"] == "9/9 passed"
+        assert result["exit_code"] == 0
 
     def test_omo_report_empty_dir(self, monkeypatch, tmp_path):
         monkeypatch.setattr("cockpit.dashboard.helpers.OMO_ROOT", tmp_path)

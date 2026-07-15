@@ -101,15 +101,21 @@ def test_system_map_builds_workspace_dimensions():
     assert payload["summary"]["page_maturity_ready"] >= 1
     assert "page_maturity_score" in payload["summary"]
     assert payload["summary"]["page_maturity_gap"] >= 0
-    assert payload["summary"]["page_maturity_watch"] >= 1
+    assert payload["summary"]["page_maturity_watch"] >= 0
     page_maturity = payload["page_maturity"]
     assert page_maturity["summary"]["total"] == payload["summary"]["cockpit_pages"]
     assert page_maturity["summary"]["score"] == payload["summary"]["page_maturity_score"]
-    assert page_maturity["attention_items"]
-    assert all(item["status"] in {"gap", "watch"} for item in page_maturity["attention_items"])
+    assert page_maturity["summary"]["ready"] + page_maturity["summary"]["watch"] + page_maturity["summary"]["gap"] == page_maturity["summary"]["total"]
+    assert all(item["status"] in {"ready", "gap", "watch"} for item in page_maturity["items"])
     assert all(item["next_action"] for item in page_maturity["items"])
     assert all(item["domains"] for item in page_maturity["items"])
     assert any(item["page_id"] == "SystemMap" for item in page_maturity["items"])
+    maturity_by_page = {item["page_id"]: item for item in page_maturity["items"]}
+    assert "runtime" in maturity_by_page["Home"]["projects"]
+    assert "ecos" in maturity_by_page["Protocol"]["projects"]
+    assert "observability" in maturity_by_page["Topology"]["projects"]
+    assert "family-hub" in maturity_by_page["QuestBoard"]["projects"]
+    assert "compute-routing" in maturity_by_page["Compute"]["usage_paths"]
     assert payload["project_focus"]["summary"]["needs_action"] >= 1
     needs_action_queue = next(queue for queue in payload["project_focus"]["queues"] if queue["id"] == "needs-action")
     assert needs_action_queue["top_projects"]
@@ -136,6 +142,7 @@ def test_system_map_builds_workspace_dimensions():
     assert any(queue["id"] == "verification-gap" for queue in payload["project_focus"]["queues"])
     triage = payload["project_triage"]
     assert triage["summary"]["total_commands"] >= 1
+    assert triage["summary"]["verification_commands"] >= 1
     assert {queue["id"] for queue in triage["queues"]} == {"runtime", "verification", "coverage"}
     assert any(queue["commands"] for queue in triage["queues"])
     assert all(command["executes"] is False for queue in triage["queues"] for command in queue["commands"])
@@ -181,6 +188,8 @@ def test_system_map_builds_workspace_dimensions():
     assert any("pytest" in command for command in metaos_project["operational"]["commands"])
     toolbox_project = next(project for project in payload["projects"] if project["id"] == "toolbox")
     assert toolbox_project["operational"]["surface_type"] == "external-storage"
+    toolbox_docs = next(check for check in toolbox_project["coverage_checks"] if check["id"] == "project_docs")
+    assert toolbox_docs["status"] == "ready"
     assert cockpit_project["operational"]["next_action"]
     assert cockpit_project["source_refs"]
     assert cockpit_project["source_refs"][0]["source_key"] == "project_registry"
@@ -335,6 +344,47 @@ def test_runtime_status_marks_static_frontend_as_not_applicable(tmp_path, monkey
     runtime_check = next(check for check in checks if check["id"] == "runtime_probe")
     assert runtime_check["status"] == "ready"
     assert "形态：static" in runtime_check["detail"]
+
+
+def test_runtime_status_does_not_probe_stdio_ports_as_tcp(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "ToolBox"
+    project_path.mkdir(parents=True, exist_ok=True)
+    (project_path / "CLAUDE.md").write_text("# toolbox\n", encoding="utf-8")
+    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(
+        api_system_map,
+        "_latest_project_verification",
+        lambda _project_id, _project_path, _operational: {
+            "status": "unknown",
+            "run_id": None,
+            "ts": None,
+            "checks": 0,
+            "command": None,
+            "source": "missing",
+        },
+    )
+
+    operational = api_system_map._project_operational_status("toolbox", {"storage": str(project_path)})
+    runtime = api_system_map._project_runtime_status(
+        "toolbox",
+        {"role": "本地工具集合", "stack": "MCP / Skill / CLI"},
+        operational,
+        {
+            "ports": {
+                18801: {"name": "wps-office-mcp-stdio", "transport": "stdio"},
+                18802: {"name": "wps-skills-stdio", "transport": "stdio"},
+            },
+            "types": {},
+        },
+        workspace_root / "protocols" / "port-registry.yaml",
+    )
+
+    assert runtime["status"] == "not_applicable"
+    assert runtime["profile"] == "stdio"
+    assert runtime["needs_runtime"] is False
+    assert all(port["probeable"] is False and port["listening"] is None for port in runtime["ports"])
+    assert "stdio" in runtime["probe_reason"]
 
 
 def test_runtime_status_keeps_service_projects_unobserved_without_port_registry(tmp_path, monkeypatch):

@@ -298,6 +298,26 @@ PROJECT_TO_PAGE = {
     "mesh-router": "Compute",
 }
 
+# Cross-cutting pages consume several project surfaces without owning a single
+# project. Keep these links explicit so page maturity describes the real
+# operating model instead of treating shared pages as unowned entry points.
+PAGE_PROJECT_LINKS: dict[str, tuple[str, ...]] = {
+    "Home": ("cockpit", "runtime", "omo", "observability"),
+    "Guide": ("cockpit", "cockpit-ui"),
+    "Topology": ("agora", "bus-foundation", "runtime", "observability"),
+    "Compute": ("mesh-router", "aetherforge", "kairon"),
+    "Research": ("gbrain", "kairon"),
+    "Protocol": ("ecos", "model-driven", "metaos"),
+    "Observability": ("observability", "runtime"),
+    "AlertCenter": ("omo", "observability", "cockpit"),
+    "LogViewer": ("runtime", "observability", "cockpit"),
+    "Performance": ("runtime", "observability"),
+    "Sandbox": ("ecos", "toolbox", "cockpit"),
+    "QuestBoard": ("family-hub",),
+    "Settings": ("agora", "cockpit", "cockpit-ui"),
+    "TaskCenter": ("omo", "omo-debt", "c2g"),
+}
+
 
 PROJECT_DOC_FILES: tuple[str, ...] = (
     "AGENTS.md",
@@ -412,6 +432,12 @@ USAGE_PATHS: tuple[dict[str, Any], ...] = (
         "title": "知识工作",
         "intent": "从知识检索、引擎状态到技能资产逐步定位。",
         "steps": ("Knowledge", "Engines", "Assets", "McpMesh"),
+    },
+    {
+        "id": "compute-routing",
+        "title": "算力路由",
+        "intent": "从算力节点和模型路由确认执行资源，再回到引擎或任务承接。",
+        "steps": ("Compute", "McpMesh", "Engines", "TaskCenter"),
     },
     {
         "id": "research-publication",
@@ -1382,7 +1408,11 @@ def _triage_command(
 
 
 def _port_probe_command(ports: list[dict[str, Any]]) -> str | None:
-    port_values = [str(port["port"]) for port in ports[:6] if port.get("port")]
+    port_values = [
+        str(port["port"])
+        for port in ports[:6]
+        if port.get("port") and port.get("probeable", True)
+    ]
     if not port_values:
         return None
     return f"for port in {' '.join(port_values)}; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done"
@@ -1460,17 +1490,23 @@ def _project_triage_commands(project: dict[str, Any]) -> list[dict[str, Any]]:
             )
         )
 
-    if verification.get("status") in {"failed", "unknown"}:
+    if verification.get("status") in {"documented", "failed", "unknown"}:
         verify_action = _first_action(actions, "copy-verify-command")
         if verify_action:
+            rerun_label = "复跑验证" if verification.get("status") in {"failed", "unknown"} else "运行验证"
+            rerun_reason = (
+                "最近验证失败或缺失，复制项目验证命令复现。"
+                if verification.get("status") in {"failed", "unknown"}
+                else "项目已有验证命令但还没有 agent-workflow 证据，复制命令运行后留证。"
+            )
             commands.append(
                 _triage_command(
                     project_id,
                     "verification-rerun",
-                    "复跑验证",
+                    rerun_label,
                     "verification",
                     verify_action["value"],
-                    "最近验证失败或缺失，复制项目验证命令复现。",
+                    rerun_reason,
                     enabled=bool(verify_action.get("enabled")),
                     risk="low",
                 )
@@ -1532,13 +1568,16 @@ def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry
         service_name = label.split("#", 1)[0].strip()
         searchable = service_name.lower()
         if any(alias.lower() in searchable for alias in aliases):
+            port_type = str(transport or port_types.get(port) or port_types.get(str(port)) or "registered").lower()
+            probeable = port_type in {"http", "https", "sse", "tcp", "udp"}
             ports.append(
                 {
                     "port": port,
                     "service": service_name or label,
                     "raw_label": label,
-                    "type": transport or port_types.get(port) or port_types.get(str(port)) or "registered",
-                    "listening": _is_port_listening(port),
+                    "type": port_type,
+                    "probeable": probeable,
+                    "listening": _is_port_listening(port) if probeable else None,
                     "source_ref": _source_ref(
                         port_registry_path,
                         f"端口 {port}",
@@ -1829,6 +1868,13 @@ def _runtime_profile(
     script_text = " ".join(f"{key} {value}" for key, value in scripts.items() if isinstance(value, str)).lower()
     manifests = {item.get("name") for item in (operational.get("manifests") or [])}
 
+    if ports and not any(port.get("probeable", True) for port in ports):
+        return {
+            "profile": "stdio",
+            "needs_runtime": False,
+            "probe_reason": "仅登记 stdio/deprecated 传输，不存在可用 TCP 监听探针。",
+        }
+
     if ports:
         return {
             "profile": "service",
@@ -1914,15 +1960,19 @@ def _project_runtime_status(
     project_path = _project_path(project_id, project_data)
     ports = _project_ports(project_id, port_registry, port_registry_path)
     latest_verification = _latest_project_verification(project_id, project_path, operational)
-    listening_count = sum(1 for port in ports if port["listening"])
+    probeable_ports = [port for port in ports if port.get("probeable", True)]
+    listening_count = sum(1 for port in probeable_ports if port.get("listening") is True)
     profile = _runtime_profile(project_id, project_data, project_path, operational, ports)
 
-    if listening_count:
+    if probeable_ports and listening_count:
         status = "running"
         probe_reason = "已探测到登记端口正在监听。"
-    elif ports:
+    elif probeable_ports:
         status = "stopped"
         probe_reason = "已登记端口但当前未监听，需要人工确认是否应启动。"
+    elif ports and not profile["needs_runtime"]:
+        status = "not_applicable"
+        probe_reason = profile["probe_reason"]
     elif not profile["needs_runtime"]:
         status = "not_applicable"
         probe_reason = profile["probe_reason"]
@@ -1985,6 +2035,7 @@ def _project_operational_status(
         {"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PROJECT_DOC_FILES
     ]
     present_docs = [item for item in doc_files if item["exists"]]
+    expected_doc_count = 1 if isinstance(data.get("storage"), str) and data["storage"].strip() else len(PROJECT_DOC_FILES)
     commands = _commands_from_agents(path)
     manifests = [
         {"name": name, "path": str(path / name), "exists": (path / name).exists()} for name in PACKAGE_MANIFESTS
@@ -2028,7 +2079,8 @@ def _project_operational_status(
         "surface_type": "external-storage" if data.get("storage") else "native",
         "docs": {
             "present": len(present_docs),
-            "expected": len(PROJECT_DOC_FILES),
+            "expected": expected_doc_count,
+            "policy": "external-guide-only" if expected_doc_count == 1 else "workspace-project-docs",
             "items": doc_files,
         },
         "commands": commands,
@@ -3074,7 +3126,12 @@ def _build_page_maturity(
     roadmap_items = roadmap.get("items") or []
     for page in COCKPIT_PAGES:
         page_id = page["id"]
-        page_projects = [project for project in projects if project.get("cockpit_page") == page_id]
+        linked_project_ids = set(PAGE_PROJECT_LINKS.get(page_id, ()))
+        page_projects = [
+            project
+            for project in projects
+            if project.get("cockpit_page") == page_id or project.get("id") in linked_project_ids
+        ]
         linked_domain_ids = set(PAGE_CAPABILITY_LINKS.get(page_id, ()))
         page_domains = [
             domain

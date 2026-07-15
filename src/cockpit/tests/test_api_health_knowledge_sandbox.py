@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -115,6 +115,18 @@ class TestKnowledgeAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "ok"
+
+    def test_search_async_resolver(self, client):
+        async def nested_result():
+            return {"status": "ok", "results": [{"title": "nested-async"}]}
+
+        with patch(
+            "cockpit.adapters.agora.resolve_bos_uri",
+            new=AsyncMock(return_value={"status": "ok", "result": nested_result()}),
+        ):
+            resp = client.post("/api/knowledge/search", json={"query": "test"})
+        assert resp.status_code == 200
+        assert resp.json()["result"]["result"]["results"][0]["title"] == "nested-async"
 
     def test_search_missing_query(self, client):
         resp = client.post("/api/knowledge/search", json={})
