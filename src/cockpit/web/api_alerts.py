@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from cockpit.compat import WORKSPACE_ROOT
 
@@ -34,6 +34,7 @@ L4_KERNEL_DIR = WORKSPACE_DIR / "projects" / "l4-kernel"
 # 内存存储（生产环境应使用数据库）
 alerts_store: list[dict] = []
 rules_store: list[dict] = []
+alert_state_store: dict[str, dict] = {}
 
 
 def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | None:
@@ -133,6 +134,10 @@ async def get_alerts(
     # 从 L4 数据生成告警
     alerts = generate_alerts_from_l4_data()
 
+    # Overlay operator state so the next refresh does not erase an acknowledgement.
+    for alert in alerts:
+        alert.update(alert_state_store.get(alert["id"], {}))
+
     # 过滤
     if status:
         alerts = [a for a in alerts if a["status"] == status]
@@ -148,16 +153,6 @@ async def get_alerts(
     }
 
 
-@router.get("/api/alerts/{alert_id}")
-async def get_alert(alert_id: str):
-    """获取告警详情。"""
-    alerts = generate_alerts_from_l4_data()
-    for alert in alerts:
-        if alert["id"] == alert_id:
-            return alert
-    raise HTTPException(status_code=404, detail="Alert not found")
-
-
 class AcknowledgeRequest(BaseModel):
     comment: str | None = None
 
@@ -165,13 +160,15 @@ class AcknowledgeRequest(BaseModel):
 @router.post("/api/alerts/{alert_id}/acknowledge")
 async def acknowledge_alert(alert_id: str, request: AcknowledgeRequest):
     """确认告警。"""
-    return {
+    payload = {
         "id": alert_id,
         "status": "acknowledged",
         "acknowledged_by": "admin",
         "acknowledged_at": datetime.now(UTC).isoformat(),
         "comment": request.comment,
     }
+    alert_state_store[alert_id] = payload
+    return payload
 
 
 class SilenceRequest(BaseModel):
@@ -182,13 +179,15 @@ class SilenceRequest(BaseModel):
 @router.post("/api/alerts/{alert_id}/silence")
 async def silence_alert(alert_id: str, request: SilenceRequest):
     """静默告警。"""
-    return {
+    payload = {
         "id": alert_id,
         "status": "silenced",
         "silenced_until": datetime.now(UTC).isoformat(),
         "duration": request.duration,
         "reason": request.reason,
     }
+    alert_state_store[alert_id] = payload
+    return payload
 
 
 class ResolveRequest(BaseModel):
@@ -198,13 +197,15 @@ class ResolveRequest(BaseModel):
 @router.post("/api/alerts/{alert_id}/resolve")
 async def resolve_alert(alert_id: str, request: ResolveRequest):
     """解决告警。"""
-    return {
+    payload = {
         "id": alert_id,
         "status": "resolved",
         "resolved_by": "admin",
         "resolved_at": datetime.now(UTC).isoformat(),
         "comment": request.comment,
     }
+    alert_state_store[alert_id] = payload
+    return payload
 
 
 @router.get("/api/alerts/rules")
@@ -244,17 +245,15 @@ async def get_alert_rules():
         },
     ]
 
-    return {
-        "items": default_rules,
-        "total": len(default_rules),
-    }
+    merged = default_rules + list(rules_store)
+    return {"items": merged, "total": len(merged)}
 
 
 class CreateRuleRequest(BaseModel):
     name: str
     condition: str
     level: str = "warning"
-    channels: list[str] = ["slack"]
+    channels: list[str] = Field(default_factory=lambda: ["slack"])
     enabled: bool = True
 
 
@@ -262,7 +261,7 @@ class CreateRuleRequest(BaseModel):
 async def create_alert_rule(request: CreateRuleRequest):
     """创建告警规则。"""
     rule = {
-        "id": f"rule-{len(rules_store) + 1}",
+        "id": f"custom-rule-{len(rules_store) + 1}",
         "name": request.name,
         "condition": request.condition,
         "level": request.level,
@@ -273,3 +272,34 @@ async def create_alert_rule(request: CreateRuleRequest):
     }
     rules_store.append(rule)
     return rule
+
+
+class UpdateRuleRequest(BaseModel):
+    enabled: bool | None = None
+    name: str | None = None
+    condition: str | None = None
+    level: str | None = None
+    channels: list[str] | None = None
+
+
+@router.patch("/api/alerts/rules/{rule_id}")
+async def update_alert_rule(rule_id: str, request: UpdateRuleRequest):
+    """Update a custom rule; built-in rules expose an explicit unsupported response."""
+    rule = next((item for item in rules_store if item["id"] == rule_id), None)
+    if rule is None:
+        raise HTTPException(status_code=409, detail="Built-in or unknown alert rules cannot be edited")
+    changes = request.model_dump(exclude_unset=True)
+    rule.update({key: value for key, value in changes.items() if value is not None})
+    rule["updated_at"] = datetime.now(UTC).isoformat()
+    return rule
+
+
+@router.get("/api/alerts/{alert_id}")
+async def get_alert(alert_id: str):
+    """获取告警详情。"""
+    alerts = generate_alerts_from_l4_data()
+    for alert in alerts:
+        alert.update(alert_state_store.get(alert["id"], {}))
+        if alert["id"] == alert_id:
+            return alert
+    raise HTTPException(status_code=404, detail="Alert not found")
