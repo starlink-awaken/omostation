@@ -311,3 +311,37 @@ def test_task_draft_promotion_rejects_unknown_draft(monkeypatch):
     response = client.post("/api/tasks/drafts/missing/promote")
 
     assert response.status_code == 404
+
+
+def test_task_history_reads_omo_trail_without_shadowing_it(tmp_path, monkeypatch):
+    task_root = tmp_path / ".omo" / "tasks" / "planned"
+    task_root.mkdir(parents=True)
+    (task_root / "task-history.yaml").write_text(
+        "id: task-history\nstatus: pending\nmetadata:\n  created_at: '2026-07-15T01:00:00Z'\n  ingress_plane: cockpit-task-center\n  source_ref: cockpit:draft:demo\n",
+        encoding="utf-8",
+    )
+    trail_path = tmp_path / "runtime" / "omo" / "_delivery" / "ingress" / "ingress-trail.jsonl"
+    trail_path.parent.mkdir(parents=True)
+    trail_path.write_text(
+        '{"action":"promote_task_to_active","actor":"cockpit-task-center","target":".omo/tasks/planned/task-history.yaml","status":"ok","ts":"2026-07-15T02:00:00Z"}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    client = TestClient(app)
+
+    response = client.get("/api/tasks/task-history/history")
+
+    assert response.status_code == 200
+    assert response.json()["source"] == "omo-ingress"
+    assert [item["action"] for item in response.json()["items"]] == [
+        "created",
+        "promote_task_to_active",
+    ]
+
+
+def test_task_history_rejects_non_persisted_draft():
+    client = TestClient(app)
+
+    response = client.get("/api/tasks/playbook-demo/history")
+
+    assert response.status_code == 404

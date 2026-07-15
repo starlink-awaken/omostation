@@ -759,6 +759,67 @@ def _task_group(task_id: str) -> str | None:
     return None
 
 
+def _task_history(task_id: str, group: str) -> list[dict]:
+    """Read the OMO-owned task trail without creating a cockpit shadow ledger."""
+    task_path = WORKSPACE_DIR / ".omo" / "tasks" / group / f"{task_id}.yaml"
+    history: list[dict] = []
+    try:
+        import yaml
+
+        payload = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        payload = {}
+
+    metadata = payload.get("metadata") or {}
+    created_at = metadata.get("created_at") or payload.get("created_at")
+    if created_at:
+        history.append(
+            {
+                "kind": "task",
+                "action": "created",
+                "actor": metadata.get("ingress_plane") or metadata.get("created_via") or "omo",
+                "status": "ok",
+                "target": f".omo/tasks/{group}/{task_id}.yaml",
+                "source_ref": metadata.get("source_ref"),
+                "ts": created_at,
+            }
+        )
+
+    log_paths = (
+        WORKSPACE_DIR / "runtime" / "omo" / "_delivery" / "ingress" / "ingress-trail.jsonl",
+        WORKSPACE_DIR / "runtime" / "omo" / "change-log" / "mutations.jsonl",
+    )
+    for log_path in log_paths:
+        try:
+            lines = log_path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            haystack = " ".join(
+                str(entry.get(key, ""))
+                for key in ("target", "artifact_ref", "source_ref", "task_id", "action")
+            )
+            if task_id not in haystack:
+                continue
+            history.append(
+                {
+                    "kind": "trail" if "trail" in log_path.name else "mutation",
+                    "action": entry.get("action", "unknown"),
+                    "actor": entry.get("actor", "unknown"),
+                    "status": entry.get("status") or entry.get("result") or "unknown",
+                    "target": entry.get("target") or entry.get("artifact_ref"),
+                    "source_ref": entry.get("source_ref"),
+                    "ts": entry.get("ts") or entry.get("created_at"),
+                }
+            )
+
+    return sorted(history, key=lambda item: str(item.get("ts") or ""))
+
+
 def _transition_task(task_id: str, action: str) -> dict:
     """Apply task transitions through the OMO ingress broker."""
     group = _task_group(task_id)
@@ -910,6 +971,19 @@ async def get_task(task_id: str):
         if task["id"] == task_id:
             return task
     raise HTTPException(status_code=404, detail="Task not found")
+
+
+@router.get("/api/tasks/{task_id}/history")
+async def get_task_history(task_id: str):
+    """Return OMO ingress history for a persisted task."""
+    group = _task_group(task_id)
+    if group is None:
+        raise HTTPException(status_code=404, detail="Task not found in OMO queues")
+    return {
+        "task_id": task_id,
+        "items": _task_history(task_id, group),
+        "source": "omo-ingress",
+    }
 
 
 @router.post("/api/tasks/{task_id}/pause")
