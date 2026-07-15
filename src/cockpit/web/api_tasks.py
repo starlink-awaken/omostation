@@ -19,7 +19,6 @@ from hashlib import sha256
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from cockpit.web import api_tasks_data as _task_data
-
 from cockpit.web.api_tasks_data import (
     WORKSPACE_DIR,
     _approval_proposal_id,
@@ -30,7 +29,6 @@ from cockpit.web.api_tasks_data import (
     _load_persisted_task,
     _task_group,
     _task_history,
-    _transition_task as _data_transition_task,
     _validate_evidence_paths,
     _workspace_file_ref,
     build_domain_apps,
@@ -43,7 +41,9 @@ from cockpit.web.api_tasks_data import (
     get_tasks_from_omo,
     get_verification_ready_task_drafts,
 )
-
+from cockpit.web.api_tasks_data import (
+    _transition_task as _data_transition_task,
+)
 
 
 async def _sync_task_workspace() -> None:
@@ -64,6 +64,39 @@ def _transition_task(task_id: str, action: str, evidence_paths: list[str] | None
         load_persisted_task_fn=_load_persisted_task,
         approval_state_fn=_approval_state,
     )
+
+
+def _current_controlled_command(metadata: dict) -> str | None:
+    """Resolve a current SystemMap command so retries do not run stale task text."""
+    if metadata.get("action_id") != "copy-verify-command":
+        return None
+    project_id = metadata.get("project_id")
+    if not isinstance(project_id, str) or not project_id:
+        return None
+    project = next(
+        (
+            item
+            for item in build_system_map().get("projects", [])
+            if item.get("id") == project_id
+        ),
+        None,
+    )
+    if not isinstance(project, dict):
+        return None
+    command_id = metadata.get("command_id")
+    if isinstance(command_id, str) and command_id:
+        current = next(
+            (
+                item
+                for item in project.get("triage_commands") or []
+                if item.get("id") == command_id
+            ),
+            None,
+        )
+    else:
+        current = next((item for item in project.get("actions") or [] if item.get("id") == "copy-verify-command"), None)
+    value = current.get("value") if isinstance(current, dict) else None
+    return value if isinstance(value, str) and value.strip() else None
 
 
 _COVERAGE_DRAFT_GETTERS = {
@@ -272,12 +305,18 @@ async def execute_task_endpoint(task_id: str):
     try:
         from omo.omo_ingress_task_lifecycle import execute_controlled_task
 
+        execute_kwargs: dict[str, object] = {
+            "task_id": task_id,
+            "actor": "cockpit-task-center",
+            "timeout_seconds": timeout_seconds,
+            "source_ref": f"cockpit:task:execute:{task_id}",
+        }
+        current_command = _current_controlled_command(metadata)
+        if current_command:
+            execute_kwargs["command_override"] = current_command
         result = execute_controlled_task(
             WORKSPACE_DIR / ".omo",
-            task_id=task_id,
-            actor="cockpit-task-center",
-            timeout_seconds=timeout_seconds,
-            source_ref=f"cockpit:task:execute:{task_id}",
+            **execute_kwargs,
         )
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="OMO controlled execution is unavailable") from exc

@@ -942,12 +942,19 @@ def test_controlled_execute_routes_project_verification_through_omo(monkeypatch)
         "metadata": {
             "controlled_execution": True,
             "action_id": "copy-verify-command",
+            "project_id": "mesh-router",
+            "command_id": "verification-rerun",
             "command": 'cd "/workspace/projects/demo" && printf hello',
         },
     }
     calls = []
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
     monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(
+        api_tasks,
+        "build_system_map",
+        lambda: {"projects": [{"id": "mesh-router", "triage_commands": [{"id": "verification-rerun", "value": 'cd "/workspace" && printf current'}]}]},
+    )
 
     def fake_execute(*args, **kwargs):
         calls.append(kwargs)
@@ -966,6 +973,7 @@ def test_controlled_execute_routes_project_verification_through_omo(monkeypatch)
     assert response.json()["exit_code"] == 0
     assert calls[0]["task_id"] == "verify-task"
     assert calls[0]["timeout_seconds"] == 900
+    assert calls[0]["command_override"] == 'cd "/workspace" && printf current'
     assert calls[0]["source_ref"] == "cockpit:task:execute:verify-task"
 
 
