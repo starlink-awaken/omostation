@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -14,6 +14,7 @@ help:
 	@echo "=== 架构检查 ==="
 	@echo "make check-layers      分层依赖检查 (docs/layer-contract.yaml)"
 	@echo "make ssot-status       SSOT 变更状态检查"
+@echo "make evidence-smoke    BOS 声明/执行 + feedback 全量 smoke (ADR-0219)"
 	@echo "make ssot-log          SSOT 审计日志查看"
 	@echo "make ssot-sync         SSOT 变更记录到审计日志"
 	@echo "make sync-submodules   推送子模块未推送的 commit 到远程"
@@ -179,6 +180,12 @@ ssot-sync:  ## SSOT 变更记录到审计日志
 sync-submodules:  ## 推送子模块未推送的 commit 到远程
 	@echo "── 同步子模块 ────────────────────────────────────────"
 	bash bin/sync-submodules.sh
+
+evidence-smoke:  ## BOS 全量 evidence smoke (agora .venv bootstrap + resolve rate)
+	@echo "── evidence-smoke (ADR-0219) ────────────────────────────"
+	@test -d projects/agora || (echo "init agora: git submodule update --init projects/agora" && git submodule update --init projects/agora)
+	python3 bin/gac/evidence-smoke.py --json | python3 -c "import sys,json;d=json.load(sys.stdin);b=d.get('bos') or {};print(f\"score={d.get('evidence_health_score')} partial={d.get('partial')} resolve={b.get('resolve_rate')} gap={b.get('gap')} feedback={ (d.get('feedback_loop') or {}).get('alive')}\")"
+
 
 agent-workflows:
 	uv run --with pyyaml python bin/agent-workflow.py list
