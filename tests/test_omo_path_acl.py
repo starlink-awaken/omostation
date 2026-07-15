@@ -129,7 +129,7 @@ def test_plan_named_acl_script_linux_dry_run(tmp_path: Path):
     plan = plan_named_acl_script(tmp_path, platform="linux")
     assert plan["dry_run"] is True
     assert plan["mutation"] is False
-    assert plan["adr"] == "0195"
+    assert plan["adr"] == "0196"
     assert "script" in plan
     assert "setfacl" in plan["script"] or "WARN" in plan["script"]
     assert plan["command_count"] >= 1
