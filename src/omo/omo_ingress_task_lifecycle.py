@@ -575,6 +575,13 @@ def start_controlled_task(
     from omo.omo_ingress import _record_mutation, _record_trail
 
     task_path, context = _controlled_process_context(omo_dir, task_id)
+    payload = context["payload"]
+    if payload.get("human_approval_required"):
+        approval_ref = payload.get("approval_ref")
+        approval_path = omo_dir.parent / str(approval_ref or "")
+        approval = _load_yaml(approval_path) if approval_ref else {}
+        if approval.get("approval_status") != "granted":
+            raise ValueError("Task approval must be granted before process start")
     prior = context["metadata"].get("execution_process")
     if isinstance(prior, dict) and prior.get("status") == "started":
         raise ValueError("Task already has a started process; stop it before starting again")

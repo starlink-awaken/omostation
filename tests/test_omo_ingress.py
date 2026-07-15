@@ -884,6 +884,7 @@ def test_controlled_process_start_status_and_stop_are_audited(tmp_path: Path) ->
         ),
         encoding="utf-8",
     )
+    (tmp_path / "approval.yaml").write_text("approval_status: granted\n", encoding="utf-8")
 
     started = start_controlled_task(
         tmp_path / ".omo",
