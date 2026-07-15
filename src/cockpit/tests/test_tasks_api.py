@@ -1164,6 +1164,32 @@ def test_workflow_closeout_runs_structured_command_and_records_ref(monkeypatch, 
     assert recorded[0]["closeout_ref"] == response.json()["closeout_ref"]
 
 
+def test_create_manual_task_uses_omo_ingress_and_derives_approval(monkeypatch):
+    created = []
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", api_tasks.WORKSPACE_DIR)
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: created.append(kwargs["task_data"]) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post(
+        "/api/tasks",
+        json={
+            "title": "补齐生产入口审计",
+            "description": "确认入口、审批和 closeout 证据全部存在。",
+            "priority": "high",
+            "risk_level": "L2",
+            "evidence_required": ["审计结果"],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["risk_level"] == "L2"
+    assert response.json()["human_approval_required"] is True
+    assert created[0]["source_docs"] == ["cockpit:operator:manual-task"]
+    assert created[0]["allowed_operation_level"] == "L2"
+
+
 def test_execution_endpoint_reports_worker_artifacts(monkeypatch, tmp_path):
     run_dir = tmp_path / ".omo" / "workers" / "runs"
     run_dir.mkdir(parents=True)

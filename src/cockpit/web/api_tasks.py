@@ -380,6 +380,89 @@ async def get_tasks(
     }
 
 
+@router.post("/api/tasks")
+async def create_manual_task(request: Request):
+    """Create a governed planned task from an operator's current finding."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Task request must be an object")
+
+    title = str(body.get("title") or "").strip()
+    description = str(body.get("description") or "").strip()
+    priority = str(body.get("priority") or "medium").strip().lower()
+    risk_level = str(body.get("risk_level") or "L1").strip().upper()
+    evidence_required = body.get("evidence_required") or []
+    if not title or len(title) > 200:
+        raise HTTPException(status_code=422, detail="title is required and must be at most 200 characters")
+    if not description or len(description) > 4000:
+        raise HTTPException(status_code=422, detail="description is required and must be at most 4000 characters")
+    if priority not in {"low", "medium", "high", "critical"}:
+        raise HTTPException(status_code=422, detail="priority must be low, medium, high, or critical")
+    if risk_level not in {"L0", "L1", "L2", "L3"}:
+        raise HTTPException(status_code=422, detail="risk_level must be L0, L1, L2, or L3")
+    if not isinstance(evidence_required, list) or not all(
+        isinstance(item, str) and item.strip() for item in evidence_required
+    ):
+        raise HTTPException(status_code=422, detail="evidence_required must be a list[str]")
+
+    now = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    fingerprint = sha256(f"{title}\n{description}".encode()).hexdigest()[:10]
+    task_id = f"cockpit-manual-{now}-{fingerprint}"
+    approval_required = risk_level in {"L2", "L3"}
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": description,
+        "status": "pending",
+        "task_type": "governance",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": risk_level,
+        "allowed_operation_level": risk_level,
+        "human_approval_required": approval_required,
+        "source_docs": ["cockpit:operator:manual-task"],
+        "entry_gate": ["确认任务范围与风险级别"],
+        "evidence_required": [item.strip() for item in evidence_required]
+        or ["任务处理结果", "相关验证或运行证据"],
+        "deliverables": [description],
+        "test_plan": ["按任务描述完成处理，并回写结果与证据。"],
+        "priority": priority,
+        "tags": ["cockpit-manual", "operator-created"],
+        "metadata": {
+            "created_via": "cockpit-task-center",
+            "created_at": datetime.now(UTC).isoformat(),
+            "operator_finding": True,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-task-center",
+            source_ref=f"cockpit:manual-task:{task_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "title": created.get("title", title),
+        "status": "pending",
+        "risk_level": risk_level,
+        "human_approval_required": approval_required,
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/tasks/drafts/{draft_id}/promote")
 async def promote_task_draft(draft_id: str):
     """将 SystemMap 只读草稿经 OMO ingress 转为 planned 任务。"""
