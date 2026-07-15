@@ -264,7 +264,7 @@ async def execute_task_endpoint(task_id: str):
     metadata = payload.get("metadata") or {}
     if metadata.get("controlled_execution") is not True:
         raise HTTPException(status_code=409, detail="Task is not eligible for controlled execution")
-    default_timeout = 300 if metadata.get("action_id") == "copy-verify-command" else 120
+    default_timeout = 900 if metadata.get("action_id") == "copy-verify-command" else 120
     timeout_seconds = metadata.get("timeout_seconds", default_timeout)
     if isinstance(timeout_seconds, bool) or not isinstance(timeout_seconds, int):
         timeout_seconds = default_timeout
@@ -1002,7 +1002,7 @@ async def queue_project_action(project_id: str, action_id: str):
             "risk": risk,
             "cockpit_only": True,
             "controlled_execution": action_id == "copy-verify-command",
-            "timeout_seconds": 300 if action_id == "copy-verify-command" else None,
+            "timeout_seconds": 900 if action_id == "copy-verify-command" else None,
         },
     }
 
@@ -1097,7 +1097,7 @@ async def queue_project_triage_command(project_id: str, command_id: str):
             "risk": risk,
             "cockpit_only": True,
             "controlled_execution": controlled_verification or controlled_runtime_probe,
-            "timeout_seconds": 300 if controlled_verification else 120 if controlled_runtime_probe else None,
+            "timeout_seconds": 900 if controlled_verification else 120 if controlled_runtime_probe else None,
         },
     }
 

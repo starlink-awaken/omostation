@@ -965,7 +965,7 @@ def test_controlled_execute_routes_project_verification_through_omo(monkeypatch)
     assert response.status_code == 200
     assert response.json()["exit_code"] == 0
     assert calls[0]["task_id"] == "verify-task"
-    assert calls[0]["timeout_seconds"] == 300
+    assert calls[0]["timeout_seconds"] == 900
     assert calls[0]["source_ref"] == "cockpit:task:execute:verify-task"
 
 
