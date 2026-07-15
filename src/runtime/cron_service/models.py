@@ -30,6 +30,9 @@ class JobUpdate(BaseModel):
     prompt: str | None = None
     no_agent: bool | None = None
     deliver: str | None = None
+    last_status: str | None = None
+    last_output: str | None = None
+    last_error: str | None = None
     workdir: str | None = None
     timeout: int | None = None
     enabled: bool | None = None

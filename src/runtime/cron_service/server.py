@@ -10,6 +10,7 @@ import argparse
 import asyncio
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
@@ -42,12 +43,14 @@ sched = scheduler.CronScheduler()
 async def lifespan(app: FastAPI):
     """Start/stop the scheduler with the FastAPI app."""
     db.init_db()
-    await sched.start()
+    sched.start()  # synchronous thread start
 
     # Route B: run initial health scan (force write to populate system_health.yaml)
     logger.info("Running initial health scan...")
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, lambda: run_scan_if_due(force=True))
+    try:
+        run_scan_if_due(force=True)
+    except Exception as e:  # noqa: BLE001
+        logger.error("Initial health scan failed (non-fatal): %s", e)
 
     logger.info(
         "cron-service started (HTTP:%d, DATA:%s)",
@@ -55,7 +58,7 @@ async def lifespan(app: FastAPI):
         svc_config.DATA_DIR,
     )
     yield
-    await sched.stop()
+    sched.stop()
     logger.info("cron-service stopped")
 
 
@@ -85,7 +88,7 @@ async def health():
     now = datetime.now(UTC)
     uptime_secs = None
     if sched.start_time:
-        uptime_secs = int((now - sched.start_time).total_seconds())
+        uptime_secs = int(time.time() - sched.start_time)
 
     # Count broken symlinks
     from pathlib import Path
@@ -124,7 +127,7 @@ async def health():
         "scheduler_running": sched.is_running,
         "uptime_seconds": uptime_secs,
         "ticks": sched.tick_count,
-        "last_tick_at": sched.last_tick_time.isoformat()
+        "last_tick_at": datetime.fromtimestamp(sched.last_tick_time, tz=UTC).isoformat()
         if sched.last_tick_time
         else None,
         "jobs": {
