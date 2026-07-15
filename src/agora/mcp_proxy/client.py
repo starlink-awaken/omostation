@@ -185,15 +185,31 @@ class StdioMCPClient(MCPClient):
             return True
 
         try:
-            self._process = await asyncio.create_subprocess_exec(
-                self._command,
-                *self._args,
+            # Scheme C 5b: all stdio spawns go through container executor facade
+            # (local backend = previous create_subprocess_exec behavior).
+            from agora.execution.container_executor import SpawnSpec, spawn_async
+
+            proc, handle = await spawn_async(
+                SpawnSpec(
+                    command=self._command,
+                    args=tuple(self._args),
+                    cwd=self._cwd,
+                    env=self._env,
+                    service_name=self.service_name,
+                ),
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=self._cwd,
-                env=_filter_subprocess_env(self._env),
                 limit=2**20,  # 1MB buffer for large MCP responses
+            )
+            self._process = proc
+            self._spawn_handle = handle
+            logger.info(
+                "proxy_spawn",
+                service=self.service_name,
+                backend=handle.backend,
+                profile=handle.profile,
+                docker_wrapped=handle.docker_wrapped,
             )
         except FileNotFoundError:
             logger.error(
@@ -220,8 +236,12 @@ class StdioMCPClient(MCPClient):
             result = await self._mcp_initialize()
             if result:
                 self._connected = True
+                _backend = getattr(getattr(self, "_spawn_handle", None), "backend", None)
                 logger.info(
-                    "proxy_connected", service=self.service_name, transport="stdio"
+                    "proxy_connected",
+                    service=self.service_name,
+                    transport="stdio",
+                    backend=_backend,
                 )
                 return True
         except Exception as e:  # defensive fallback
