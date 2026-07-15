@@ -1076,6 +1076,41 @@ def test_controlled_execute_routes_project_verification_through_omo(monkeypatch)
     assert calls[0]["source_ref"] == "cockpit:task:execute:verify-task"
 
 
+def test_complete_from_execution_uses_generated_artifacts(monkeypatch, tmp_path):
+    execution_ref = ".omo/_delivery/task-center/execution/verify-task.yaml"
+    log_ref = "runtime/omo/verify-task.log"
+    (tmp_path / execution_ref).parent.mkdir(parents=True)
+    (tmp_path / execution_ref).write_text("task_id: verify-task\n", encoding="utf-8")
+    (tmp_path / log_ref).parent.mkdir(parents=True)
+    (tmp_path / log_ref).write_text("ok\n", encoding="utf-8")
+    payload = {
+        "id": "verify-task",
+        "status": "in_progress",
+        "metadata": {
+            "controlled_execution": True,
+            "execution_audit": {"exit_code": 0, "log_ref": log_ref},
+        },
+        "handoff_refs": [execution_ref],
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(
+        api_tasks,
+        "_transition_task",
+        lambda task_id, action, evidence_paths=None: calls.append((task_id, action, evidence_paths))
+        or {"id": task_id, "status": "completed"},
+    )
+
+    response = TestClient(app).post("/api/tasks/verify-task/complete-from-execution")
+
+    assert response.status_code == 200
+    assert response.json()["source"] == "omo_controlled_execution_closeout"
+    assert calls == [("verify-task", "complete", [execution_ref, log_ref])]
+
+
 def test_execution_endpoint_reports_worker_artifacts(monkeypatch, tmp_path):
     run_dir = tmp_path / ".omo" / "workers" / "runs"
     run_dir.mkdir(parents=True)

@@ -1554,6 +1554,36 @@ async def complete_task_endpoint(task_id: str, request: Request):
     return _transition_task(task_id, "complete", evidence_paths=evidence_paths or None)
 
 
+@router.post("/api/tasks/{task_id}/complete-from-execution")
+async def complete_task_from_execution(task_id: str):
+    """Archive a successful controlled task with its generated execution artifacts."""
+    group = _task_group(task_id)
+    if group != "active":
+        raise HTTPException(status_code=409, detail="Only active tasks can be completed from execution evidence")
+    payload = _load_persisted_task(task_id, group)
+    metadata = payload.get("metadata") or {}
+    if metadata.get("controlled_execution") is not True:
+        raise HTTPException(status_code=409, detail="Task has no controlled execution evidence")
+    audit = metadata.get("execution_audit") or {}
+    if audit.get("exit_code") != 0:
+        raise HTTPException(status_code=409, detail="Task execution did not succeed")
+    execution_ref = next(
+        (
+            ref
+            for ref in payload.get("handoff_refs") or []
+            if isinstance(ref, str) and "/task-center/execution/" in ref
+        ),
+        None,
+    )
+    log_ref = audit.get("log_ref")
+    evidence_paths = [ref for ref in (execution_ref, log_ref) if isinstance(ref, str) and ref]
+    if len(evidence_paths) != 2:
+        raise HTTPException(status_code=409, detail="Successful execution is missing execution_ref or log_ref")
+    validated = _validate_evidence_paths(evidence_paths)
+    result = _transition_task(task_id, "complete", evidence_paths=validated)
+    return {**result, "evidence_paths": validated, "source": "omo_controlled_execution_closeout"}
+
+
 @router.post("/api/tasks/{task_id}/cancel")
 async def cancel_task(task_id: str):
     """拒绝不存在于 OMO canonical lifecycle 的伪取消状态。"""
