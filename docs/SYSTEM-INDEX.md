@@ -69,6 +69,10 @@
 
 → [ISA 分析](isa/) — 接口/服务/架构图（详见 `docs/isa/`）
 
+→ [设计方案](proposals/) — 设计提案和历史方案（详见 `docs/proposals/`）
+
+→ [本地计算集群](local-compute/) — omlx 集群架构（详见 `docs/local-compute/`）
+
 ---
 
 ## 文档维护生命周期

@@ -9,6 +9,7 @@ Trigger: 新增 ADR / 新增审计 / 新增模式
 import os
 from pathlib import Path
 import datetime
+from datetime import UTC
 import re
 
 SCRIPT_DIR = Path(__file__).parent
@@ -217,7 +218,7 @@ def generate_footer():
 """
 
 def main():
-    generated_at = datetime.datetime.utcnow().isoformat()
+    generated_at = datetime.datetime.now(UTC).isoformat()
     
     categories = scan_knowledge_dir()
     

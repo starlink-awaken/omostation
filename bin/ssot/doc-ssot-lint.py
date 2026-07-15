@@ -221,6 +221,44 @@ def check_required_generated_artifacts() -> list[tuple[Path, int, str, str]]:
     return findings
 
 
+def check_orphan_docs() -> list[tuple[Path, int, str, str]]:
+    """检查 docs/ 子目录的 .md 文件是否被 SYSTEM-INDEX.md 引用。
+
+    避免文档孤岛：新加的文档子目录或文件如果没被 SYSTEM-INDEX 覆盖，
+    Agent 或新开发者可能无法发现它们。
+    """
+    findings: list[tuple[Path, int, str, str]] = []
+    system_index = WORKSPACE_ROOT / "docs" / "SYSTEM-INDEX.md"
+    if not system_index.exists():
+        return findings
+
+    system_index_content = system_index.read_text(encoding="utf-8")
+
+    # 检查 docs/ 子目录（排除 generated/ 和自身）
+    for subdir in sorted((WORKSPACE_ROOT / "docs").iterdir()):
+        if not subdir.is_dir():
+            continue
+        dirname = subdir.name
+        if dirname.startswith(".") or dirname == "generated":
+            continue
+
+        # 检查目录名是否在 SYSTEM-INDEX 中被引用
+        dir_ref = f"docs/{dirname}/"
+        if dir_ref not in system_index_content and dirname not in system_index_content:
+            # 找到该目录下的 .md 文件数量
+            md_files = list(subdir.glob("*.md"))
+            if md_files:
+                # 报告第一个文件的位置
+                findings.append((
+                    md_files[0],
+                    1,
+                    f"docs/{dirname}/ 目录",
+                    f"目录 '{dirname}/' 下有 {len(md_files)} 个 .md 文件未被 SYSTEM-INDEX.md 引用"
+                ))
+
+    return findings
+
+
 def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = False) -> int:
     """Run the lint check. Returns 0 (pass) or 1 (fail).
 
@@ -255,6 +293,7 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
 
     if single_file is None:
         all_findings.extend(check_required_generated_artifacts())
+        all_findings.extend(check_orphan_docs())
 
     # Apply fixes
     if all_fixes:
