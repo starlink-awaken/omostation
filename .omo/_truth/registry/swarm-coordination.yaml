@@ -47,9 +47,13 @@ gates:
   d4_escape_hatch:
     id: d4
     name: escape-hatch allowlist
-    entry: .githooks/pre-push + swarm-discipline escape-check
-    check: bin/gac/swarm-discipline-cli.py escape-check
+    entry: >
+      .githooks/pre-push (CI_LOCAL_SKIP) + bin/gac/swarm-git (--no-verify fail-closed).
+      Bare git --no-verify still skips hooks by git design; agents must use swarm-git
+      (or PATH wrap) so D4 is fail-closed on the supported agent path.
+    check: bin/gac/swarm-discipline-cli.py escape-check | git-argv-check
     fail_closed: true
+    agent_wrapper: bin/gac/swarm-git
 
 # Paths that may be committed on the shared main worktree without isolation
 # (docs-only / generated / self-describing). Everything else needs claim or worktree.
