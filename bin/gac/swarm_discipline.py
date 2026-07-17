@@ -224,7 +224,9 @@ def check_adr_write_authorized(
             session=session or "",
         )
         return False, f"ADR-{number:04d} write requires prior claim (next-adr-id --claim)"
-    if session and holder.get("session") != session:
+    # D1 fail-closed: empty/missing session must NOT inherit a foreign claim
+    sess = (session or "").strip()
+    if not sess:
         emit_conflict_event(
             root,
             "adr_renumber_race",
@@ -232,13 +234,29 @@ def check_adr_write_authorized(
                 "number": number,
                 "path": rel_path,
                 "holder": holder.get("session"),
-                "writer": session,
+                "reason": "empty_session",
             },
-            session=session or "",
+            session="",
+        )
+        return False, (
+            f"ADR-{number:04d} write requires AGENT_WORKFLOW_SESSION / --session "
+            f"matching claim holder={holder.get('session')}"
+        )
+    if holder.get("session") != sess:
+        emit_conflict_event(
+            root,
+            "adr_renumber_race",
+            {
+                "number": number,
+                "path": rel_path,
+                "holder": holder.get("session"),
+                "writer": sess,
+            },
+            session=sess,
         )
         return False, (
             f"ADR-{number:04d} claimed by session={holder.get('session')}, "
-            f"not {session}"
+            f"not {sess}"
         )
     return True, "claim_ok"
 
@@ -518,6 +536,34 @@ def check_escape_hatch(
         {"flag": flag, "escape_id": escape_id, "reason": "unknown_id"},
     )
     return False, f"escape_id={escape_id} not in allowlist"
+
+
+def argv_has_no_verify(argv: list[str]) -> bool:
+    """True if argv requests git --no-verify (not -n: push -n is dry-run)."""
+    return "--no-verify" in argv
+
+
+def no_verify_flag_for_argv(argv: list[str]) -> str:
+    """Map git subcommand to escape flag name."""
+    # find first non-flag token after git
+    tokens = [a for a in argv if not a.startswith("-") or a in {"--no-verify"}]
+    # crude: look for commit/push keywords
+    joined = " ".join(argv)
+    if "commit" in argv or " commit " in f" {joined} ":
+        return "no_verify_commit"
+    return "no_verify_push"
+
+
+def check_git_argv_escape(
+    root: Path,
+    argv: list[str],
+    escape_id: str | None,
+) -> tuple[bool, str]:
+    """D4 fail-closed for agent git wrappers: --no-verify only with allowlist id."""
+    if not argv_has_no_verify(argv):
+        return True, "no_escape_needed"
+    flag = no_verify_flag_for_argv(argv)
+    return check_escape_hatch(root, flag=flag, escape_id=escape_id)
 
 
 # ── 72h observation window ───────────────────────────────────────────
