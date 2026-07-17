@@ -28,6 +28,23 @@ class TestDashboardEndpoints:
         resp = test_client.get("/api/status")
         assert resp.status_code == 200
 
+    def test_version_catalog_reflects_mounted_api_routes(self, test_client):
+        info = test_client.get("/api/version")
+        history = test_client.get("/api/version/history")
+
+        assert info.status_code == 200
+        assert history.status_code == 200
+        payload = info.json()
+        entries = history.json()
+        assert payload["current_version"] == "v1"
+        assert payload["endpoints"] > 10
+        assert "v1" in payload["supported_versions"]
+        assert any(item["version"] == "v1" and item["endpoints"] > 10 for item in entries)
+
+    def test_api_response_exposes_current_version(self, test_client):
+        resp = test_client.get("/api/status")
+        assert resp.headers["X-API-Version"] == "v1"
+
     def test_favicon_returns_404(self, test_client):
         resp = test_client.get("/favicon.ico")
         assert resp.status_code == 404

@@ -200,6 +200,26 @@ def setup_version_middleware(app: FastAPI) -> None:
         return version_manager.get_version_history()
 
 
+def register_app_routes(app: FastAPI, default_version: str = "v1") -> int:
+    """把已经挂载到 FastAPI 的 API 路由同步到版本目录。
+
+    大多数 Cockpit 路由是按模块批量挂载的，若只依赖手写 ``register`` 调用，
+    版本端点会悄悄退化成空目录。显式 ``@api_version`` 优先，否则纳入当前默认版本。
+    版本信息自身不计入业务端点，避免目录统计被元数据接口污染。
+    """
+    registered = 0
+    for route in app.routes:
+        path = getattr(route, "path", "")
+        if not path.startswith("/api/") or path in {"/api/version", "/api/version/history"}:
+            continue
+
+        endpoint = getattr(route, "endpoint", None)
+        version = getattr(endpoint, "_api_version", None) or default_version
+        version_manager.register(path, version, endpoint)
+        registered += 1
+    return registered
+
+
 def generate_openapi_spec(app: FastAPI) -> dict[str, Any]:
     """生成 OpenAPI 3.0 规范文档"""
     current = version_manager.current_version

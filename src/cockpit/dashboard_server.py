@@ -26,7 +26,7 @@ from cockpit.dashboard.constants import (
 )
 from cockpit.dashboard.routes import _auth_dependency as _auth_dep
 from cockpit.dashboard.routes import router as dashboard_router
-from cockpit.web.versioning import setup_version_middleware, version_manager
+from cockpit.web.versioning import register_app_routes, setup_version_middleware, version_manager
 
 # ─── FastAPI App ───────────────────────────────────────────────
 
@@ -166,6 +166,9 @@ if COCKPIT_UI_DIST.exists():
     from fastapi.staticfiles import StaticFiles
 
     app.mount("/", StaticFiles(directory=str(COCKPIT_UI_DIST), html=True), name="cockpit_ui")
+
+# 所有业务路由都挂载完成后，再同步版本目录，避免 /api/version/history 变成空壳。
+register_app_routes(app)
 
 
 # ═══════════════════════════════════════════════════════════════
