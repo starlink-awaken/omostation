@@ -70,6 +70,10 @@ def test_system_map_builds_workspace_dimensions():
     assert any(project["id"] == "cockpit" for project in payload["projects"])
     assert any(domain["title"] == "治理与合规" for domain in payload["feature_domains"])
     assert any(path["id"] == "governance-loop" for path in payload["usage_paths"])
+    runtime_path = next(path for path in payload["usage_paths"] if path["id"] == "runtime-diagnostics")
+    assert "AlertCenter" in runtime_path["steps"]
+    runtime_playbook = next(item for item in payload["playbooks"] if item["id"] == "runtime-diagnostic-loop")
+    assert any(step["page_id"] == "AlertCenter" for step in runtime_playbook["steps"])
     assert payload["summary"]["roadmap_items"] >= 1
     assert payload["summary"]["ready_projects"] >= 1
     assert "partial_projects" in payload["summary"]

@@ -470,7 +470,7 @@ USAGE_PATHS: tuple[dict[str, Any], ...] = (
         "id": "runtime-diagnostics",
         "title": "运行诊断",
         "intent": "从服务状态、资源采样和拓扑证据定位运行问题。",
-        "steps": ("Home", "Overview", "Performance", "Topology", "LogViewer"),
+        "steps": ("Home", "Overview", "AlertCenter", "Performance", "Topology", "LogViewer"),
     },
     {
         "id": "safe-execution",
@@ -806,6 +806,13 @@ OPERATING_PLAYBOOKS: tuple[dict[str, Any], ...] = (
                 "action": "确认服务节点和运行探针是否有异常。",
                 "evidence": "服务状态、端口监听和健康状态。",
                 "done_when": "问题范围缩小到具体服务或明确无运行异常。",
+            },
+            {
+                "id": "runtime-alert-triage",
+                "page_id": "AlertCenter",
+                "action": "确认严重告警、处置状态和是否需要承接任务。",
+                "evidence": "活动告警、规则状态、确认/静默/解决记录和任务入口。",
+                "done_when": "告警已明确处置，或已有可追踪的后续任务。",
             },
             {
                 "id": "runtime-performance",
