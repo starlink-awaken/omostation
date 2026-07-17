@@ -46,14 +46,59 @@ AGORA_SRC = WORKSPACE / "projects" / "agora" / "src"
 if str(AGORA_SRC) not in sys.path:
     sys.path.insert(0, str(AGORA_SRC))
 
-# agora 间接依赖 pydantic (tool_contract 顶层 import) 未在 pyproject 声明, 根 venv 跑
-# 缺 pydantic 时从 projects/agora/.venv 借 site-packages, 单脚本可执行不依赖 uv
-# (治本应在 agora/pyproject 加 pydantic 显式依赖, 但 agora 是 submodule 不在本仓改)
-_AGORA_VENV_SITE = WORKSPACE / "projects" / "agora" / ".venv" / "lib"
-if _AGORA_VENV_SITE.exists():
+# ADR-0217: agora 已声明 pydantic; ADR-0219: 优先注入 projects/agora/.venv site-packages
+# 使根 python3 也能跑全量 BOS (无需手动 PYTHONPATH)
+_AGORA_VENV = WORKSPACE / "projects" / "agora" / ".venv"
+_AGORA_VENV_SITE = _AGORA_VENV / "lib"
+
+
+def _inject_agora_venv_site() -> bool:
+    """Append agora .venv site-packages if present. Returns True when injected."""
+    if not _AGORA_VENV_SITE.is_dir():
+        return False
+    injected = False
     for _site in _AGORA_VENV_SITE.glob("python*/site-packages"):
         if str(_site) not in sys.path:
             sys.path.append(str(_site))
+            injected = True
+    return injected
+
+
+def _bootstrap_agora_venv() -> bool:
+    """Best-effort `uv sync` in projects/agora when deps missing (ADR-0219)."""
+    agora_root = WORKSPACE / "projects" / "agora"
+    if not (agora_root / "pyproject.toml").is_file():
+        return False
+    try:
+        print(
+            "⚡ bootstrapping projects/agora .venv via uv sync (one-shot)...",
+            file=sys.stderr,
+        )
+        res = subprocess.run(
+            ["uv", "sync"],
+            cwd=agora_root,
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+        if res.returncode != 0:
+            print(
+                f"⚠️  uv sync failed (exit {res.returncode}): "
+                f"{(res.stderr or res.stdout or '')[:300]}",
+                file=sys.stderr,
+            )
+            return False
+        return _inject_agora_venv_site()
+    except FileNotFoundError:
+        print("⚠️  uv not found; cannot bootstrap agora venv", file=sys.stderr)
+        return False
+    except Exception as exc:  # noqa: BLE001
+        print(f"⚠️  agora bootstrap error: {exc}", file=sys.stderr)
+        return False
+
+
+_inject_agora_venv_site()
 
 OUTPUT_DIR = WORKSPACE / ".omo" / "_delivery" / "evidence-smoke"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
@@ -503,12 +548,61 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
     consumers=True 时对 deprecated 项查消费者引用 (服务 D 调研"能不能删", 慢).
     """
     # 动态 import (避免脚本加载时就崩 — agora 不在时给清晰报错)
+    # ADR-0216: 即使 BOS 层 import 失败, 仍必须产出 feedback_loop (compass 真同源).
+    # ADR-0219: import 失败时先 uv sync bootstrap, 再试一次全量 BOS.
+    e: Exception | None = None
     try:
         from agora.mcp.resolver.services import POC_SERVICES  # type: ignore[import-not-found]
-    except ImportError as e:
+    except ImportError as first_err:
+        e = first_err
+        if _bootstrap_agora_venv():
+            try:
+                from agora.mcp.resolver.services import (  # type: ignore[import-not-found]
+                    POC_SERVICES,
+                )
+                e = None
+            except ImportError as second_err:
+                e = second_err
+
+    if e is not None:
         print(f"❌ 无法 import agora.mcp.resolver.services: {e}", file=sys.stderr)
         print(f"   脚本依赖 projects/agora (sys.path={AGORA_SRC})", file=sys.stderr)
-        return {"error": "import_failed", "detail": str(e)}
+        print(
+            "   继续 partial 报告: feedback_loop + working_tree (BOS 维度 skipped)",
+            file=sys.stderr,
+        )
+        tree = check_working_tree()
+        feedback = check_feedback_loop()
+        # BOS 维不可用时 score 只由 tree+feedback 归一 (各占 50 分制再缩放到 100)
+        tree_score = 100 if tree.get("dirty_count", -1) == 0 else max(
+            0, 100 - 5 * max(0, int(tree.get("dirty_count") or 0))
+        )
+        fb_score = 100 if feedback.get("alive") else 0
+        partial_score = round(0.5 * tree_score + 0.5 * fb_score)
+        return {
+            "generated_at": _utc_now(),
+            "source": "bin/gac/evidence-smoke.py (partial: agora import failed)",
+            "error": "import_failed",
+            "detail": str(e),
+            "partial": True,
+            "bos": {
+                "declaration_count": 0,
+                "resolvable_count": 0,
+                "gap": -1,
+                "deprecated_count": 0,
+                "resolve_rate": None,
+                "skipped": True,
+                "skip_reason": "agora_import_failed",
+            },
+            "working_tree": tree,
+            "feedback_loop": feedback,
+            "evidence_health_score": partial_score,
+            "score_breakdown": {
+                "bos_skipped": True,
+                "tree": tree_score,
+                "feedback": fb_score,
+            },
+        }
 
     # L2 全量检查
     results = [check_service(svc) for svc in POC_SERVICES]
@@ -705,12 +799,32 @@ def main() -> int:
     args = parser.parse_args()
 
     report = run_smoke(spawn_n=args.spawn, consumers=args.consumers)
-    if "error" in report:
+    # ADR-0216: partial reports still emit JSON so compass_radar can read feedback_loop
+    if "error" in report and not report.get("partial"):
         return 1
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
+        # partial import failure → exit 0 for consumers; gate mode still fails below if --gate set
+        if report.get("partial") and args.gate is None:
+            return 0
+        if "error" in report and not report.get("partial"):
+            return 1
+        if report.get("partial") and args.gate is not None:
+            print(
+                "❌ GATE FAIL: evidence-smoke partial (agora import failed)",
+                file=sys.stderr,
+            )
+            return 1
         return 0
+    if report.get("partial"):
+        print(
+            f"⚠️  partial evidence-smoke (agora import failed): "
+            f"feedback_alive={report.get('feedback_loop', {}).get('alive')} "
+            f"score={report.get('evidence_health_score')}",
+            file=sys.stderr,
+        )
+        return 1
     print_summary(report, quiet=args.quiet)
 
     # gate 模式: 防声明/执行鸿沟复发 (Meadows 层7规则 + 层8回路固化)

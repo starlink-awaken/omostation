@@ -191,6 +191,11 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0212 | ledger trim 现象修正：history gap 而非物理 trim | ACCEPTED | 2026-07-15 | governance-team | 0212-ledger-history-gap-not-physical-trim.md |
 | 0213 | ADR-0209 附录 A 收口（A2 ledger heal / A4 read-only claim / A6 finding topics） | ACCEPTED | 2026-07-15 | governance-team | 0213-adr-0209-appendix-a2-a4-a6-closeout.md |
 | 0214 | P74 silent 治本 D6：diff_checks 覆盖 4 silent workflow | ACCEPTED | 2026-07-15 | governance-team | 0214-p74-silent-diff-checks-coverage.md |
+| 0215 | agora-gateway 假绿灯治本（PID 重置 + health_check 落盘） | ACCEPTED | 2026-07-15 | governance-team | 0215-agora-gateway-false-green-pid-health-check.md |
+| 0216 | compass 健康刷新：feedback partial smoke + c2g 降级 | ACCEPTED | 2026-07-15 | governance-team | 0216-compass-feedback-partial-smoke.md |
+| 0217 | Workflow 卫生：layer-check 误报修复 + 契约对齐 + evidence 愈合 | ACCEPTED | 2026-07-15 | governance-team | 0217-workflow-hygiene-layer-check-and-evidence.md |
+| 0218 | Agent Isolation P0 核实生效态 + worktree 卫生固化 | ACCEPTED | 2026-07-15 | 夏明星 | 0218-agent-isolation-p0-verify-and-hygiene.md |
+| 0219 | BOS 全量 evidence-smoke 可复现路径 | ACCEPTED | 2026-07-15 | governance-team | 0219-bos-evidence-smoke-full-path.md |
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |

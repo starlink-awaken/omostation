@@ -182,12 +182,70 @@ def _composite_health_score(
     return (score, breakdown)
 
 
+def _local_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
+    """轻量 fallback: 直接读 governance-history / omo-events (与 evidence-smoke 同源规则).
+
+    仅在 evidence-smoke 不可用时使用 (ADR-0216), 避免 import/agora 依赖把复合分误封 50.
+    """
+    import json  # noqa: PLC0415
+
+    sources = {
+        "governance_history": ws_root / ".omo" / "_knowledge" / "governance-history.jsonl",
+        "omo_events": ws_root / ".omo" / "_knowledge" / "omo-events.jsonl",
+    }
+    per_source: dict[str, Any] = {}
+    any_alive = False
+    best_staleness = None
+    best_ts = ""
+    for name, path in sources.items():
+        entry: dict[str, Any] = {"exists": path.is_file()}
+        if not path.is_file():
+            per_source[name] = entry
+            continue
+        try:
+            lines = [
+                line
+                for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+            entry["entry_count"] = len(lines)
+            if not lines:
+                per_source[name] = entry
+                continue
+            last = json.loads(lines[-1])
+            ts = last.get("timestamp") or last.get("ts") or last.get("date") or ""
+            entry["last_ts"] = ts
+            if ts:
+                dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+                hours = round((datetime.now(UTC) - dt).total_seconds() / 3600, 1)
+                entry["staleness_hours"] = hours
+                entry["alive"] = hours < 24
+                if hours < 24:
+                    any_alive = True
+                if best_staleness is None or hours < best_staleness:
+                    best_staleness = hours
+                    best_ts = str(ts)
+        except Exception as exc:  # noqa: BLE001
+            entry["error"] = str(exc)[:120]
+        per_source[name] = entry
+    return (
+        any_alive,
+        {
+            "alive": any_alive,
+            "source": "compass_local_fallback",
+            "last_ts": best_ts,
+            "staleness_hours": best_staleness,
+            "per_source": per_source,
+        },
+    )
+
+
 def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
-    """反馈回路存活 — 调 evidence-smoke (唯一判定源, DRY 真同源).
+    """反馈回路存活 — 优先 evidence-smoke (DRY); 失败则本地 fallback (ADR-0216).
 
     evidence-smoke 多源 OR (governance-history | omo-events) 是 feedback 判定 SSOT.
-    compass_radar 不重新判定 (之前单源 omo-events 跟 evidence-smoke 不一致 — 治 P1).
-    回路断 = governance 无活动 → compass_radar _composite 硬封顶 health (防假绿)."""
+    回路断 = governance 无活动 → compass_radar _composite 硬封顶 health (防假绿).
+    """
     import json  # noqa: PLC0415
     import subprocess  # noqa: PLC0415
 
@@ -204,13 +262,24 @@ def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
             timeout=120,
             check=False,
         )
-        if res.returncode != 0 or not res.stdout.strip():
-            return (False, {"reason": f"evidence-smoke exit {res.returncode}"})
-        data = json.loads(res.stdout)
-        fb = data.get("feedback_loop") or {}
-        return (bool(fb.get("alive")), fb)
+        stdout = (res.stdout or "").strip()
+        if stdout.startswith("{"):
+            data = json.loads(stdout)
+            fb = data.get("feedback_loop") or {}
+            if fb:
+                # partial smoke (agora missing) still carries feedback_loop
+                return (bool(fb.get("alive")), {**fb, "via": "evidence-smoke"})
+        if res.returncode != 0:
+            alive, fb = _local_feedback_liveness(ws_root)
+            fb["fallback_reason"] = f"evidence-smoke exit {res.returncode}"
+            return (alive, fb)
+        alive, fb = _local_feedback_liveness(ws_root)
+        fb["fallback_reason"] = "evidence-smoke empty stdout"
+        return (alive, fb)
     except Exception as e:  # noqa: BLE001
-        return (False, {"reason": f"error: {str(e)[:80]}"})
+        alive, fb = _local_feedback_liveness(ws_root)
+        fb["fallback_reason"] = f"error: {str(e)[:80]}"
+        return (alive, fb)
 
 
 def run_radar(omo_dir: Path) -> dict:
@@ -220,7 +289,30 @@ def run_radar(omo_dir: Path) -> dict:
     if c2g_src.is_dir() and str(c2g_src) not in sys.path:
         sys.path.insert(0, str(c2g_src))
 
-    from c2g.strategy import _collect_metrics, _check_anomalies, _list_task_files  # type: ignore[reportMissingImports]  # noqa: PLC0415, E402
+    try:
+        from c2g.strategy import (  # type: ignore[reportMissingImports]  # noqa: PLC0415, E402
+            _collect_metrics,
+            _check_anomalies,
+            _list_task_files,
+        )
+    except ImportError as exc:
+        # ADR-0216: worktree 未 init c2g 时仍可算 runtime/freshness 复合分
+        print(
+            f"⚠️  c2g.strategy unavailable ({exc}); "
+            "using empty task audit (anomaly_count=0). "
+            "Init with: git submodule update --init projects/c2g",
+            file=sys.stderr,
+        )
+        return {
+            "total_tasks": 0,
+            "done": 0,
+            "planned": 0,
+            "anomaly_count": 0,
+            "anomalies": [],
+            "priority_dist": {},
+            "c2g_degraded": True,
+            "c2g_error": str(exc)[:160],
+        }
 
     done_files, planned_files = _list_task_files(omo_dir)
     all_files = done_files + planned_files
@@ -390,8 +482,13 @@ def build_health_projection(
     service_online_ratio, runtime_summary = collect_runtime_health(ws_root)
     report["service_online_ratio"] = service_online_ratio
 
-    fresh_score, age_desc = _freshness_score(output, now_iso)
+    prior_fresh_score, prior_age_desc = _freshness_score(output, now_iso)
+    # ADR-0216: this run writes generated_at=now → freshness for composite is 100.
+    # Still record prior_* for diagnostics (how stale the previous projection was).
+    fresh_score, age_desc = 100, "regenerated-now"
     report["freshness_score"] = fresh_score
+    report["prior_freshness_score"] = prior_fresh_score
+    report["prior_freshness_age"] = prior_age_desc
 
     feedback_alive, feedback_summary = _collect_feedback_liveness(ws_root)
     report["feedback_liveness"] = feedback_summary
