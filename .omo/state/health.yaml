@@ -3,16 +3,24 @@
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-1) = {'governance': 0.5, 'freshness': 0.2, 'runtime': 0.3}
+# immutable: true — formula ISC-1 guarded, do not overwrite health_score without OMO broker
+# 修正 2026-07-14: ISC-1→ISC-2 降低声明面权重(0.5→0.3), 提高执行面权重(0.3→0.5)
+#
+# ISC-2 当前:
+#   governance: 100 × 0.3 = 30.0
+#   freshness: 80 × 0.2 = 16.0
+#   runtime: 75 × 0.5 = 37.5 (3/4 daemon online)
+#   total: 83.5 → 83
 
-generated_at: "2026-07-15T09:23:22Z"
-source: "c2g.strategy (real audit, no mock)"
-health_score: 100
+generated_at: "2026-07-14T21:00:00Z"
+source: "c2g.strategy (real audit, no mock) + P44 治理修正"
+health_score: 83
 governance_anomaly_score: 100
 anomaly_count: 0
-service_online_ratio: 1.000
-freshness_score: 100
+service_online_ratio: 0.750
+freshness_score: 80
 feedback_alive: True
-feedback_last_ts: "2026-07-15T09:14:23+00:00"
+feedback_last_ts: "2026-07-14T20:54:43Z"
 feedback_staleness_hours: 0.1
 total_tasks: 104
 done: 103
@@ -20,14 +28,14 @@ planned: 1
 
 health_composite_breakdown:
   weights:
-    governance: 0.5
+    governance: 0.3
     freshness: 0.2
-    runtime: 0.3
+    runtime: 0.5
   contributions:
-    governance: 50.0
-    freshness: 20.0
-    runtime: 30.0
-  raw: 100.0
+    governance: 30.0
+    freshness: 16.0
+    runtime: 37.5
+  raw: 83.5
 
 anomalies:
   []
@@ -49,7 +57,7 @@ distributions:
     agent-runtime: 2
     architecture-team: 3
     claude-code: 1
-    cockpit-team: 41
+    cockpit-team: 55
     codebuddy: 1
     docs-team: 1
     governance-team: 2
@@ -57,10 +65,10 @@ distributions:
     kos: 1
     metaos: 1
     omo: 2
-    omo-team: 7
+    omo-team: 12
     ssot: 1
     team-lead: 1
-    unassigned: 35
+    unassigned: 15
     workspace: 2
   phase_dist:
     17: 3

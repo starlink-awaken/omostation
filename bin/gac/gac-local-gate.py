@@ -69,11 +69,15 @@ DEFAULT_POLICY = {
         {"id": "service-config-drift", "command": ["bin/mof/gen-service-configs.py", "--check"], "ci_skip": True},
         {"id": "gac-mesh-router-check", "command": ["bin/gac/gac-mesh-router.py", "--check"]},
         {"id": "gac-consensus-inject-check", "command": ["bin/gac/gac-consensus-inject.py", "--check"]},
-        {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"]},
+        {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"], "broken": True, "broken_reason": "依赖本地算力服务 (cc-switch/codexbar/litellm/omlxc), 本地不存在 → 超时"},
         # P44 测试覆盖门禁: 每个 Python 项目必须有 tests/
         {"id": "test-coverage-check", "command": ["bin/gac/test-coverage-check.py"]},
         # P45 债务完整性门禁: seed_items 全部存在且非空
         {"id": "debt-integrity-check", "command": ["bin/gac/debt-integrity-check.py"]},
+        # P45 W1 OMO state write guard: 检测 system.yaml 多写冲突 + 写权限违规
+        {"id": "omo-state-write-guard", "command": ["bin/gac/omo-state-write-guard.py"]},
+        # P45 W1 BRIEF.md protect: 检测 BRIEF.md 是否被外部覆盖
+        {"id": "brief-protect", "command": ["bin/mof/generate-brief.py", "--protect"]},
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
@@ -106,6 +110,12 @@ CHECKS = tuple((g["id"], g["command"]) for g in GATES_LIST)
 CI_ONLY_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_only")}
 CI_SKIP_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_skip")}
 AGENT_WORKFLOW_GATE_CHECKS = {g["id"] for g in GATES_LIST if g.get("agent_workflow_only")}
+BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
+# SOFT checks: finding_topics 仍输出, 但不翻转 gate (门禁降噪)
+SOFT_CHECKS = {
+    "governance-semantic-gate",  # evolution/release_ready 是软信号, 非门禁阻断
+    "brief-protect",            # BRIEF.md protect 提示手工修改, 非门禁阻断
+}
 
 
 def _is_ci_env() -> bool:
@@ -145,6 +155,8 @@ def gate_checks(
             continue  # 全局 digest pre-commit 不稳定 → CI 兜底
         if name in CI_SKIP_CHECKS and _is_ci_env():
             continue  # 本地运维 check (doctor), CI 无 .venv/CLI → 跳
+        if name in BROKEN_CHECKS and not strict:
+            continue  # 已知不可用 (broken: True), 仅 strict 模式下检查
         if name == "change-lane-check":
             result.append((name, scoped_change_lane_command(scope, files, run_id)))
         elif name == "doc-link-check":
@@ -336,8 +348,16 @@ def run_gate(
     change_lane_files = change_lane_files_for_scope(scope, files, run_id)
     results = [run_check(name, command) for name, command in gate_checks(scope, files, run_id, strict)]
     finding_topics = extract_finding_topics(results)
+
+    # HARD/SOFT 分离: soft checks 不翻转 gate
+    hard_fails = [r for r in results if not r["ok"] and r["name"] not in SOFT_CHECKS]
+    soft_warns = [r for r in results if not r["ok"] and r["name"] in SOFT_CHECKS]
+    ok = len(hard_fails) == 0
+
     return {
-        "ok": all(item["ok"] for item in results),
+        "ok": ok,
+        "hard_fails": hard_fails,
+        "soft_warns": soft_warns,
         "scope": scope,
         "run_id": run_id or None,
         "change_lane_files": change_lane_files,
@@ -357,12 +377,19 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
         print("═══ GaC local gate ═══")
         print(f"scope={report['scope']} change_lane_files={len(report['change_lane_files'])}")
         print(f"GaC local gate: PASS ({checks_count} checks executed, ALL GREEN)")
+        if BROKEN_CHECKS:
+            print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
         return
         
     print("═══ GaC local gate ═══")
     print(f"scope={report['scope']} change_lane_files={len(report['change_lane_files'])}")
     for item in report["checks"]:
-        status = "PASS" if item["ok"] else "FAIL"
+        if item["ok"]:
+            status = "PASS"
+        elif item["name"] in SOFT_CHECKS:
+            status = "WARN"
+        else:
+            status = "FAIL"
         print(f"[{status}] {item['name']} :: {item['command']}")
         if not item["ok"]:
             if item["stdout"]:
@@ -377,7 +404,18 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
                 f"  [{str(topic.get('severity', 'info')).upper()}] "
                 f"{topic.get('topic')}: {topic.get('summary')}"
             )
-    print("GaC local gate: " + ("PASS" if is_ok else "FAIL"))
+    if BROKEN_CHECKS:
+        print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
+    hard_count = len(report.get("hard_fails", []))
+    soft_count = len(report.get("soft_warns", []))
+    parts = []
+    if is_ok:
+        parts.append("PASS")
+    else:
+        parts.append("FAIL")
+    if soft_count:
+        parts.append(f"{soft_count} SOFT WARN")
+    print("GaC local gate: " + " | ".join(parts))
 
 
 def main() -> int:

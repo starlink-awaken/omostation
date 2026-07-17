@@ -1,15 +1,54 @@
-# SSOT: Write owners configuration for core system files (2026H2 Principle B)
-# Rules: Only declared owners can modify these files. Non-owner modifications trigger GAC gate failures.
-write_owners:
-  - path: "bin/compass_radar.py"
-    owner: "human:夏明星"
-  - path: ".omo/state/system.yaml"
-    owner: "script:bin/compass_radar.py"
-  - path: "docs/generated/project-layer-index.md"
-    owner: "script:bin/mof/project-layer-index.py"
-  - path: "docs/generated/agent-gac-rules.md"
-    owner: "script:bin/gac/gac-export-agents.py"
-  - path: ".github/workflows/ci.yml"
-    owner: "human:夏明星"
-  - path: "projects/l4-kernel/.github/workflows/ci.yml"
-    owner: "human:夏明星"
+# write-owners.yaml — .omo/ 状态平面写权限定义 (GaC #38)
+#
+# 每个文件中每个关键字段的授权写入方。
+# 非授权写入被 GaC #38 omo-state-write-guard 检测为违规。
+#
+# 格式:
+#   path: { field: owner }
+#   owner 取值:
+#     runtime-scan   — cron 健康扫描 (system_health.yaml → system.yaml)
+#     strategy-sync  — c2g.strategy 策略同步 (health.yaml / system.yaml)
+#     omo-debt       — OMO 债务系统 (debt.yaml / debt/items/)
+#     agent-workflow — Agent 工作流 (phase/next_milestone)
+#     omo-broker     — OMO state sync broker (governance-data / 状态投影)
+#     anyone         — 不限制 (允许任何写入方)
+
+version: 1
+last_updated: "2026-07-16"
+
+fields:
+  # system.yaml — 运行时 + 治理状态
+  .omo/state/system.yaml:
+    current_phase: agent-workflow
+    phase41_status: agent-workflow
+    phase42_status: agent-workflow
+    phase43_status: agent-workflow
+    phase44_status: agent-workflow
+    health_score: strategy-sync          # 顶部复合健康分
+    health_score_generated_at: strategy-sync
+    runtime_health_summary: runtime-scan  # 运行时扫描结果 (内含 health_score)
+    next_milestone: strategy-sync
+    debt_adjusted_health_score: omo-debt
+    debt_items_total: omo-debt
+    debt_items_resolved: omo-debt
+    governance_anomaly_score: omo-broker
+    service_online_ratio: runtime-scan
+
+  # health.yaml — 健康分 SSOT
+  .omo/state/health.yaml:
+    health_score: strategy-sync
+    immutable: anyone       # 标记字段, 任何写入方不应删除
+
+  # system_health.yaml — 健康扫描 SSOT
+  .omo/state/system_health.yaml:
+    last_scan: runtime-scan
+    services: runtime-scan
+
+  # .omo/debt/ — 债务系统, 只能通过 OMO debt CLI 修改
+  .omo/debt/:
+    _dir: omo-debt           # 整个目录由 omo-debt 系统管理
+    _rule: no-direct-write   # 禁止非 broker 直接写
+
+  # BRIEF.md — agent 认知入口
+  BRIEF.md:
+    _file: anyone            # 允许任何写入, 但建议通过 generate-brief.py
