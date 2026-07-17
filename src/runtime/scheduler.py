@@ -582,10 +582,11 @@ class MatrixScheduler:
             print(f"⚠️ [P1-AUTO_HEAL] {svc_name}: autoheal error: {e}")
 
     def _sync_system_yaml_runtime_summary(self, snapshot: dict) -> None:
-        """同步 runtime_health_summary 到 .omo/state/system.yaml (ISC-2 治本).
+        """同步 runtime_health_summary + service_online_ratio 到 system.yaml.
 
-        scheduler 是 runtime 健康快照的权威生产者,因此也由它负责把汇总写回
-        governance SSOT,避免 sync_omo_state 未运行时 system.yaml 出现陈旧.
+        ISC-3 / G-CONV.3 single-source: summary.ratio 与顶层 service_online_ratio
+        必须同源 (daemon 去假阳性)。只写 summary 会留下 1.0 vs 0.75 双写者分裂
+        (compass 写顶层 1.0, 旧 summarize 把 idle ollama 计离线写 summary 0.75).
         """
         system_yaml = OMO_STATE_FILE.parent / "system.yaml"
         if not system_yaml.is_file():
@@ -595,6 +596,9 @@ class MatrixScheduler:
             summary = summarize_system_health_snapshot(snapshot)
             data = yaml.safe_load(system_yaml.read_text(encoding="utf-8")) or {}
             data["runtime_health_summary"] = summary
+            # single-source: top-level ratio follows the same daemon de-false-positive summary
+            if summary.get("ratio") is not None:
+                data["service_online_ratio"] = summary["ratio"]
             data["updated_at"] = datetime.now(timezone.utc).astimezone().isoformat()
 
             # GCSI 维度 2 (ADR-0121): record feedback loop timestamp + evidence score
@@ -609,7 +613,7 @@ class MatrixScheduler:
             )
             tmp.replace(system_yaml)
             print(
-                f"✅ system.yaml runtime_health_summary 同步完成: online={summary.get('online_services')}/{summary.get('total_services')}"
+                f"✅ system.yaml runtime_health_summary 同步完成: online={summary.get('online_services')}/{summary.get('total_services')} ratio={summary.get('ratio')}"
             )
         except Exception as e:  # noqa: BLE001
             print(f"⚠️  system.yaml runtime summary 同步失败: {e}")
