@@ -19,6 +19,7 @@ schedule:
   4:00  bootloader        --emit ADR drafts
   5:00  debt-closed       --feature-delivery ratio
   5:30  submodule-bump    --detect stale pointers
+  5:45  gitlink-check     --G-CONV.4: submodule gitlink drift (exit 1 → deck fail)
   6:00  brief-gen         --emit BRIEF.md + INDEX sync
   6:30  port-governance   --P78/P79: hardcoded + catalog health (Foundry v2)
 """
@@ -213,6 +214,15 @@ def main(argv: list[str] | None = None) -> int:
         "5:30-submodule-bump",
         ["uv", "run", "python", "bin/ssot/submodule-bump-check.py"],
         retries=0, timeout=30,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
+    # 5:45 — G-CONV.4 gitlink drift (submodule-gitlink-check.py exit 1 on drift)
+    print("[5:45] submodule-gitlink-check...")
+    results.append(run_tool(
+        "5:45-gitlink-check",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/submodule-gitlink-check.py", "--json"],
+        retries=0, timeout=60,
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
