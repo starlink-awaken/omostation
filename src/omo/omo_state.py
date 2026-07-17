@@ -401,6 +401,49 @@ def cmd_state_sync(omo_dir: Path, dry_run: bool, fmt: str) -> int:
     return 0
 
 
+def cmd_state_set(omo_dir: Path, key: str, value: str, fmt: str) -> int:
+    """Set a state field via OMO broker — validates write-owners and writes atomically."""
+    state_file = omo_dir / "state" / "system.yaml"
+    if not state_file.exists():
+        print("❌ state/system.yaml not found")
+        return 1
+
+    # Validate key exists in write-owners registry
+    write_owners = omo_dir / "_truth" / "registry" / "write-owners.yaml"
+    state_owners: dict[str, str] = {}
+    if write_owners.exists():
+        wo_data = load_yaml_required(write_owners)
+        fields = wo_data.get("fields", {})
+        state_owners = fields.get(".omo/state/system.yaml", {})
+
+    if state_owners and key not in state_owners:
+        allowed = ", ".join(sorted(state_owners.keys()))
+        print(f"❌ '{key}' is not a registered write field")
+        print(f"   Allowed fields in system.yaml: {allowed}")
+        return 1
+
+    # Parse value (try int/float first, then keep string)
+    parsed: int | float | str = value
+    try:
+        parsed = int(value)
+    except ValueError:
+        try:
+            parsed = float(value)
+        except ValueError:
+            parsed = value
+
+    # Load, update, write atomically
+    data = load_yaml_required(state_file)
+    data[key] = parsed
+    raw = yaml.dump(data, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    write_text_atomic(state_file, raw)
+
+    print(f"✅ {key} = {parsed}")
+    if state_owners:
+        print(f"   (write owner: {state_owners.get(key, 'unregistered')})")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="omo state", description="OMO system state viewer"
@@ -409,6 +452,10 @@ def main(argv: list[str] | None = None) -> int:
     sp = sub.add_parser("show", help="Show system state")
     sp.add_argument("--format", "-f", choices=["text", "json"], default="text")
     sub.add_parser("health", help="Show service health")
+    setp = sub.add_parser("set", help="Set a state field via OMO broker")
+    setp.add_argument("key", help="Field name (e.g. current_phase)")
+    setp.add_argument("value", help="Field value (auto-parsed as int/float/str)")
+    setp.add_argument("--format", "-f", choices=["text", "json"], default="text")
     rp = sub.add_parser(
         "refresh", help="Scan runtime Matrix and refresh system_health.yaml"
     )
@@ -436,6 +483,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_state_show(omo_dir, args.format)
     elif args.command == "health":
         return cmd_state_health(omo_dir)
+    elif args.command == "set":
+        return cmd_state_set(omo_dir, args.key, args.value, args.format)
     elif args.command == "refresh":
         return cmd_state_refresh(omo_dir, dry_run=args.dry_run)
     elif args.command == "sync-tasks":
