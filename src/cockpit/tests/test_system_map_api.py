@@ -3,8 +3,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from cockpit import compat
 from cockpit.dashboard_server import app
-from cockpit.web import api_system_map
+from cockpit.web import api_system_map, api_system_map_status
 from cockpit.web.api_system_map import build_source_ref_preview, build_system_map
 
 
@@ -193,7 +194,7 @@ def test_system_map_builds_workspace_dimensions():
     assert mesh_router["operational"]["status"] == "ready"
     mesh_verify = next(action for action in mesh_router["actions"] if action["id"] == "copy-verify-command")
     assert mesh_verify["value"] == (
-        f'cd "{api_system_map.WORKSPACE_ROOT}" && uv run python "bin/gac/gac-mesh-router.py" --check'
+        f'cd "{compat.WORKSPACE_ROOT}" && uv run python "bin/gac/gac-mesh-router.py" --check'
     )
     metaos_project = next(project for project in payload["projects"] if project["id"] == "metaos")
     assert any("pytest" in command for command in metaos_project["operational"]["commands"])
@@ -313,7 +314,7 @@ def test_runtime_status_marks_static_frontend_as_not_applicable(tmp_path, monkey
     )
     (project_path / "vite.config.ts").write_text("export default {}\n", encoding="utf-8")
     (project_path / "src" / "main.tsx").write_text("console.log('cockpit-ui')\n", encoding="utf-8")
-    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
     monkeypatch.setattr(
         api_system_map,
         "_latest_project_verification",
@@ -359,7 +360,7 @@ def test_runtime_status_marks_static_frontend_as_not_applicable(tmp_path, monkey
 
 def test_controlled_verification_audit_downgrades_stale_failure_to_closeout_warning(monkeypatch):
     monkeypatch.setattr(
-        api_system_map,
+        api_system_map_status,
         "_latest_controlled_verification",
         lambda _project_id: {"exit_code": 0, "log_ref": "runtime/omo/verification.log"},
     )
@@ -393,7 +394,7 @@ def test_runtime_status_does_not_probe_stdio_ports_as_tcp(tmp_path, monkeypatch)
     project_path = workspace_root / "ToolBox"
     project_path.mkdir(parents=True, exist_ok=True)
     (project_path / "CLAUDE.md").write_text("# toolbox\n", encoding="utf-8")
-    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
     monkeypatch.setattr(
         api_system_map,
         "_latest_project_verification",
@@ -440,7 +441,7 @@ def test_runtime_status_keeps_service_projects_unobserved_without_port_registry(
         encoding="utf-8",
     )
     (project_path / "api" / "server.ts").write_text("export const app = {}\n", encoding="utf-8")
-    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
     monkeypatch.setattr(
         api_system_map,
         "_latest_project_verification",
@@ -475,7 +476,7 @@ def test_latest_project_verification_falls_back_to_documented_command(tmp_path, 
     project_path.mkdir(parents=True, exist_ok=True)
     (project_path / "AGENTS.md").write_text("## Commands\n```bash\nuv run pytest -q\n```\n", encoding="utf-8")
     (project_path / "pyproject.toml").write_text("[project]\nname='runtime'\n", encoding="utf-8")
-    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
 
     operational = api_system_map._project_operational_status("runtime")
     verification = api_system_map._latest_project_verification("runtime", project_path, operational)
@@ -507,7 +508,7 @@ def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatc
         + "\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
 
     verification = api_system_map._latest_project_verification("cockpit", project_path, {})
 
@@ -539,7 +540,7 @@ metadata:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
 
     verification = api_system_map._latest_project_verification("demo", project_path, {})
 
@@ -568,7 +569,7 @@ metadata:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(api_system_map, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
 
     verification = api_system_map._latest_project_verification("demo", project_path, {})
 
