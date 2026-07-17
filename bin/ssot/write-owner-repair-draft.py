@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""G-CONV.5 L2: on write-owner-audit failure, emit a local repair-draft commit message file.
+"""G-CONV.5 L2: on write-owner-audit failure, emit a local repair-draft commit.
 
-Does NOT auto-commit by default (human review). Creates:
-  runtime/omo/_delivery/repair-drafts/write-owner-<ts>.md
-and optionally stages a draft with --commit (still local, no push).
+Creates a tracked draft under:
+  .omo/_delivery/repair-drafts/write-owner-<ts>.md
+With --commit: force-add only that draft and create a local commit that
+contains solely the draft (never other staged files). No push.
 
 Usage:
   python3 bin/ssot/write-owner-repair-draft.py --from-audit-exit
+  python3 bin/ssot/write-owner-repair-draft.py --from-audit-exit --commit
   python3 bin/ssot/write-owner-repair-draft.py --message "..." --files a b
 """
 from __future__ import annotations
@@ -18,7 +20,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-DRAFT_DIR = WORKSPACE / "runtime" / "omo" / "_delivery" / "repair-drafts"
+# Prefer tracked delivery plane (not gitignored runtime/omo)
+DRAFT_DIR = WORKSPACE / ".omo" / "_delivery" / "repair-drafts"
 
 
 def _utc() -> str:
@@ -41,7 +44,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--from-audit-exit", action="store_true", help="use staged files as repair targets")
     p.add_argument("--message", default="", help="optional extra note")
     p.add_argument("--files", nargs="*", default=[], help="explicit files")
-    p.add_argument("--commit", action="store_true", help="create empty local commit with draft body (no push)")
+    p.add_argument(
+        "--commit",
+        action="store_true",
+        help="create local commit containing ONLY the draft file (no push)",
+    )
     args = p.parse_args(argv)
 
     files = list(args.files) or (_staged_files() if args.from_audit_exit else [])
@@ -73,17 +80,38 @@ def main(argv: list[str] | None = None) -> int:
     )
     text = "\n".join(body)
     path.write_text(text, encoding="utf-8")
-    print(f"repair-draft: {path.relative_to(WORKSPACE)}")
+    rel = path.relative_to(WORKSPACE)
+    print(f"repair-draft: {rel}")
 
     if args.commit:
-        subprocess.run(["git", "add", str(path.relative_to(WORKSPACE))], cwd=WORKSPACE, check=False)
-        msg = f"chore(repair-draft): write-owner audit failure {_utc()}\n\nSee {path.relative_to(WORKSPACE)}"
+        # -f: in case delivery dir is ignored; --only: never sweep unrelated staged files
         subprocess.run(
-            ["git", "commit", "--allow-empty", "-m", msg, "--no-verify"],
+            ["git", "add", "-f", str(rel)],
             cwd=WORKSPACE,
             check=False,
         )
-        print("local empty commit created (no push)")
+        msg = f"chore(repair-draft): write-owner audit failure {_utc()}\n\nSee {rel}"
+        res = subprocess.run(
+            ["git", "commit", "--no-verify", "--only", "-m", msg, "--", str(rel)],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if res.returncode != 0:
+            # fallback empty commit still records the attempt without touching staged work
+            res2 = subprocess.run(
+                ["git", "commit", "--allow-empty", "--no-verify", "-m", msg],
+                cwd=WORKSPACE,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            print(f"local commit fallback rc={res2.returncode} (no push)")
+            if res.stderr:
+                print(res.stderr.strip(), file=sys.stderr)
+        else:
+            print("local repair-draft commit created (draft only, no push)")
     return 0
 
 

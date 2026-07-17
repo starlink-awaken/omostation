@@ -26,12 +26,12 @@ def test_foundry_cron_registers_gitlink_slot():
 def test_write_owner_repair_draft_writes_file(tmp_path, monkeypatch):
     mod = _load(ROOT / "bin/ssot/write-owner-repair-draft.py", "repair_draft")
     monkeypatch.setattr(mod, "WORKSPACE", tmp_path)
-    monkeypatch.setattr(mod, "DRAFT_DIR", tmp_path / "runtime/omo/_delivery/repair-drafts")
+    monkeypatch.setattr(mod, "DRAFT_DIR", tmp_path / ".omo/_delivery/repair-drafts")
     # fake git staged empty
     monkeypatch.setattr(mod, "_staged_files", lambda: ["foo.yaml"])
     rc = mod.main(["--from-audit-exit"])
     assert rc == 0
-    drafts = list((tmp_path / "runtime/omo/_delivery/repair-drafts").glob("write-owner-*.md"))
+    drafts = list((tmp_path / ".omo/_delivery/repair-drafts").glob("write-owner-*.md"))
     assert len(drafts) == 1
     assert "foo.yaml" in drafts[0].read_text(encoding="utf-8")
 
@@ -64,3 +64,24 @@ def test_gitlink_check_clean_exits_zero():
     )
     # clean tree → 0; may fail if env dirty, but JSON should parse
     assert r.stdout.strip().startswith("{")
+
+
+def test_precommit_write_owner_uses_commit_flag():
+    text = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    assert "write-owner-audit" in text
+    assert "write-owner-repair-draft.py" in text
+    assert "--commit" in text
+
+
+def test_write_owner_audit_blocks_non_system_on_script_owned(monkeypatch, tmp_path):
+    mod = _load(ROOT / "bin/ssot/write-owner-audit.py", "write_owner_audit")
+    # force script-owned path rule + non-system user (not human alias, no run-id)
+    monkeypatch.delenv("AGENT_WORKFLOW_RUN_ID", raising=False)
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    owners = [{"path": ".omo/state/system.yaml", "owner": "script:runtime-scan"}]
+    violations = mod.audit_staged(
+        [".omo/state/system.yaml"], owners, current_user="random-outsider"
+    )
+    assert violations, "non-system committer must be blocked on script-owned path"
+    assert "system.yaml" in violations[0]
