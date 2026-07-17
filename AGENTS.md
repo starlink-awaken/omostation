@@ -282,6 +282,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 | Governance evolution roadmap | [`docs/GOVERNANCE-EVOLUTION-ROADMAP.md`](docs/GOVERNANCE-EVOLUTION-ROADMAP.md) |
 | State generation convergence | [`.omo/_knowledge/decisions/0128-state-generation-concurrency.md`](.omo/_knowledge/decisions/0128-state-generation-concurrency.md) |
 | **3 类声明/执行鸿沟 (P71 §1)** | 路径错位 (类 A, PR#4 baseline 漂移) / 工具未接 (类 B, 9 check-* 0 caller) / CI 永红 (类 C, doctor + project-layer-index). 修复见 P71 5 阶段流程. 防复发见 4 GaC 规则 (CR-X1-EVIDENCE-RUNNABLE / CR-L0-BOS-DOMAIN-NORM / CR-META-BIN-NAMING / CR-META-BIN-ORPHAN) |
+| **P78 triple-axis diagnostic pattern** (2026-07-17, 静态/运行时/决策三维查证, 深化 P73) | [P78](.omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md) + [audit](.omo/_knowledge/audits/2026-07-17-static-vs-runtime-diagnostic-audit.md) — 报系统问题前过 4 问: 反证 / 运行时实证 / ADR / 覆盖度 |
 
 ## 9. Closeout Checklist
 
@@ -294,6 +295,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 7. **大任务后复盘+固化** (P74 常态化精神 — 不靠自觉靠机制):
    - **复盘触发**: 系统性分析/方案任务 / 多轮返工 / Stop hook 反馈后 / 判断错误发现时
    - **判断错误复盘**: 识别"基于不完整信息下结论 / grep 假阴性 / 重复造轮 / 跳过冷启动"等模式 (实证: memory `verify-claim-three-layers`)
+   - **诊断前置 4 问 (P78, 2026-07-17)**: 报"系统问题/架构缺口"前过 4 问 — ①反证找了吗 ②查运行时实证了吗(不只 grep, 看 evidence-smoke gap/文件 mtime) ③读相关 ADR 了吗(status/superseded) ④扫了 `bin/ssot` + `.github/workflows` 确认"缺的"真缺. 实证: [P78](.omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md) + 9 轮翻案 [audit](.omo/_knowledge/audits/2026-07-17-static-vs-runtime-diagnostic-audit.md)
    - **三层固化**: 教训写 memory (feedback 类型) + AGENTS.md/CLAUDE.md (协议层, 通用 agent) + hook (harness 层, Claude Code 专属)
    - **目标**: "基于直觉→基于实证", "靠自觉→靠机制守门"
 
