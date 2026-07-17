@@ -42,4 +42,13 @@ if [ -f "$ROOT/bin/gac-audit-engine.py" ]; then
   python3 "$ROOT/bin/gac-audit-engine.py" --staged 2>&1 | sed 's/^/[audit] /' >&2
 fi
 
+# ── Debt directory deletion guard ──
+# 禁止 unstaged 删除 .omo/debt/ 下的文件
+if git status --short -- ".omo/debt/" | grep -q "^.D"; then
+  echo "[debt-guard] ❌ .omo/debt/ 下有关联删除文件:" >&2
+  git status --short -- ".omo/debt/" | grep "^.D" | sed 's/^/[debt-guard]   /' >&2
+  echo "[debt-guard] ⛔ 拒绝提交 — 债务文件只能通过 omo debt CLI 管理" >&2
+  exit 1
+fi
+
 exit 0
