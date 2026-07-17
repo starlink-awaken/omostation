@@ -5,17 +5,18 @@
 (strategy_audit/_check_anomalies/_collect_metrics),
 捕获 print 输出 + 解析异常数量,算 health_score,落 .omo/state/health.yaml.
 
-health_score (复合, ISC-1 治本):
-  复合分 = 0.5 * governance_anomaly_score + 0.3 * runtime_health_score + 0.2 * freshness_score
+health_score (复合, ISC-3 执行面主导 — G-CONV.3 / ADR-0210):
+  复合分 = 0.3 * governance_anomaly_score + 0.5 * runtime_health_score + 0.2 * freshness_score
 
   governance_anomaly_score (原 health_score, ISC-3 语义重命名保留):
     0 异常 → 100, 1 → 85, 2 → 70, 3 → 55, 4 → 40, ≥5 → 25 (熔断)
   runtime_health_score:
     service_online_ratio = online_services / total_services (来自 system.yaml runtime_health_summary)
+    依赖 G-CONV.2 去假阳性 (stdio transient 不计入 dead)
   freshness_score:
     health.yaml generated_at 距今 ≤1h → 100, ≤24h → 80, ≤7d → 50, 否则 0
 
-  治本动机: 原 health_score 只由 anomaly_count 决定, 服务全死也报 100 (指标名不副实).
+  治本动机: ISC-1 权重偏声明面 (gov 0.5); ISC-2/3 把 runtime 提到 0.5 执行面主导.
   复合化后 service_online_ratio 直接拉低 health_score, 触发 X1 critical 告警 (ISC-4 dispatcher).
 
 用法:
@@ -142,24 +143,24 @@ def _composite_health_score(
     freshness_score: int,
     feedback_alive: bool = True,
 ) -> tuple[int, dict]:
-    """复合健康分 (ISC-1 治本) + feedback 回路硬门槛 (理想态 evidence-driven).
+    """复合健康分 (ISC-3 执行面主导) + feedback 回路硬门槛 (理想态 evidence-driven).
 
-    权重: governance 0.5 + runtime 0.3 + freshness 0.2.
+    权重 (G-CONV.3): governance 0.3 + runtime 0.5 + freshness 0.2.
     runtime 维度缺失时, 权重重分配到 governance (不因数据缺失惩罚分).
     feedback 回路断 (alive=False) → health 硬封顶 50 (防假绿: 回路断 governance 无活动
     却报满分, 见 evidence-smoke 多源 OR + PR#77).
     """
-    weights = {"governance": 0.5, "freshness": 0.2}
+    weights = {"governance": 0.3, "freshness": 0.2}
     contributions = {
-        "governance": governance_anomaly_score * 0.5,
+        "governance": governance_anomaly_score * 0.3,
         "freshness": freshness_score * 0.2,
     }
     if service_online_ratio is not None:
         runtime_score = round(service_online_ratio * 100)
-        weights["runtime"] = 0.3
-        contributions["runtime"] = runtime_score * 0.3
+        weights["runtime"] = 0.5
+        contributions["runtime"] = runtime_score * 0.5
     else:
-        # runtime 缺失: 把 0.3 权重还回 governance (0.5 → 0.8)
+        # runtime 缺失: 把 0.5 权重还回 governance (0.3 → 0.8)
         weights["governance"] = 0.8
         contributions["governance"] = governance_anomaly_score * 0.8
 
@@ -364,7 +365,7 @@ def render_yaml(report: dict) -> str:
     lines.append("# source: c2g.strategy (real audit, no mock)")
     lines.append("# range: 0-100, higher = healthier")
     lines.append(
-        f"# health_score: composite (ISC-1) = {report['health_composite_breakdown']['weights']}"
+        f"# health_score: composite (ISC-3) = {report['health_composite_breakdown']['weights']}"
     )
     lines.append("")
     lines.append("generated_at: " + _yaml_str(report["generated_at"]))
