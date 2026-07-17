@@ -471,10 +471,8 @@ WARN_LOC = 600
 ERROR_LOC = 1500
 
 # 豁免: 显式 allowlist (历史合理大文件, 需在 ADR 记录理由)
-# ADR-0155: api_system_map.py 2870L 临时豁免 (>1500L), 待 SRP 重构 (task 追踪, 参考 omo-srp-refactor skill).
-GOD_MODULE_ALLOWLIST: set[str] = {
-    "projects/cockpit/src/cockpit/web/api_system_map.py",  # 2870L, ADR-0155 待重构
-}
+# ADR-0155: api_system_map.py 已 SRP 拆解 (3504L → 990L + catalog/io_commands/status 分层), 豁免移除, 门禁转硬性执行.
+GOD_MODULE_ALLOWLIST: set[str] = set()
 
 # 不扫的目录 (测试/数据迁移脚本可超)
 EXCLUDE_DIR_PARTS: tuple[str, ...] = (
