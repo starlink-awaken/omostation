@@ -43,6 +43,19 @@ case "$cmd" in
     validate_session "$session"
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
+    # ── G-CONV.7 / ADR-0220 D2: branch occupancy lock ─────────────────
+    # Register before creating worktree so concurrent claim of same slug fails closed.
+    if [ -f "$WS_ROOT/bin/gac/swarm-discipline-cli.py" ]; then
+      if ! python3 "$WS_ROOT/bin/gac/swarm-discipline-cli.py" branch-claim --session "$session" --branch "$branch" >/tmp/gconv7-branch-claim-$$.json 2>/tmp/gconv7-branch-claim-$$.err; then
+        echo "❌ D2 branch occupancy: 无法占用 $branch" >&2
+        cat /tmp/gconv7-branch-claim-$$.err >&2 || true
+        cat /tmp/gconv7-branch-claim-$$.json 2>/dev/null | head -20 >&2 || true
+        rm -f /tmp/gconv7-branch-claim-$$.json /tmp/gconv7-branch-claim-$$.err
+        exit 1
+      fi
+      rm -f /tmp/gconv7-branch-claim-$$.json /tmp/gconv7-branch-claim-$$.err
+      echo "   🔒 D2 branch lock: $branch (session=$session)"
+    fi
     # 分支已存在但 worktree 缺失 → 残留/重名, 提示清理 (防 claim 撞残留分支)
     if git show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null && [ ! -d "$wt" ]; then
       echo "⚠️  分支 $branch 已存在但 worktree 缺失 (残留? 清理: git branch -D $branch)" >&2
@@ -156,6 +169,10 @@ case "$cmd" in
     [ -z "$session" ] && echo "用法: release <session>" >&2 && exit 1
     validate_session "$session"
     wt="$WS_PARENT/ws-$session"
+    # G-CONV.7 D2: release branch occupancy lock (even if worktree already gone)
+    if [ -f "$WS_ROOT/bin/gac/swarm-discipline-cli.py" ]; then
+      python3 "$WS_ROOT/bin/gac/swarm-discipline-cli.py" branch-release --session "$session" >/dev/null 2>&1 || true
+    fi
     if [ ! -d "$wt" ]; then
       echo "⚠️  worktree 不存在: $wt (已释放?)"
       exit 0

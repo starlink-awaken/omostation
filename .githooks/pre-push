@@ -74,17 +74,37 @@ fi
 "$SYNC_SCRIPT" 2>&1 | sed 's/^/[pre-push] /' >&2
 python3 "$REACH_SCRIPT" --source head --fetch 2>&1 | sed 's/^/[reachability] /' >&2
 
+# ── G-CONV.7 / ADR-0220 D4: escape-hatch allowlist for CI_LOCAL_SKIP ─
+# CI_LOCAL_SKIP=1 requires SWARM_ESCAPE_ID matching registry allowlist.
+if [ "${CI_LOCAL_SKIP:-}" = "1" ]; then
+  if [ -f "$ROOT/bin/gac/swarm-discipline-cli.py" ]; then
+    _esc_out="$(python3 "$ROOT/bin/gac/swarm-discipline-cli.py" escape-check --flag ci_local_skip 2>&1)" || _esc_rc=$?
+    _esc_rc="${_esc_rc:-0}"
+    printf '%s\n' "$_esc_out" | sed 's/^/[swarm-d4] /' >&2
+    if [ "$_esc_rc" -ne 0 ]; then
+      cat >&2 <<EOF
+[swarm-d4] ❌ CI_LOCAL_SKIP=1 blocked (G-CONV.7 / ADR-0220 D4)
+   需要: SWARM_ESCAPE_ID=<id> 且 id 在 .omo/_truth/registry/swarm-coordination.yaml
+   例:   SWARM_ESCAPE_ID=submodule-reachability-partial-worktree CI_LOCAL_SKIP=1 git push ...
+   注: git push --no-verify 会跳过本 hook 整体; 滥用会被观测窗计为 escape_hatch_abuse
+       (用 bin/gac/swarm-discipline-cli.py escape-check --flag no_verify_push 自检/登记).
+EOF
+      exit 1
+    fi
+  fi
+fi
+
 # ── ci-local-fast: 本地 CI 预检 (~5s) ────────────────────────────
 # GaC gate + ruff + YAML 语法. 拦 90% CI 失败, 省等 CI 时间.
-# 绕过: git push --no-verify (跳整个 hook, 自担风险)
-#       CI_LOCAL_SKIP=1   (跳 ci-local-fast, 仍跑 sync + reachability)
+# 绕过: git push --no-verify (跳整个 hook, 自担风险 — D4 观测)
+#       CI_LOCAL_SKIP=1 + SWARM_ESCAPE_ID=...  (登记豁免后跳预检)
 if [ "${CI_LOCAL_SKIP:-}" != "1" ]; then
   if [ -f "$ROOT/Makefile" ]; then
     make -C "$ROOT" ci-local-fast 2>&1 | sed 's/^/[ci-local] /' >&2 || {
       cat >&2 <<EOF
 [ci-local] ❌ 本地 CI 预检未通过. 修复后重试, 或:
-  CI_LOCAL_SKIP=1 git push ...   (跳过预检, 自担 CI 失败风险)
-  git push --no-verify           (跳整个 hook, 不推荐)
+  SWARM_ESCAPE_ID=<allowlisted-id> CI_LOCAL_SKIP=1 git push ...
+  git push --no-verify           (跳整个 hook, 不推荐; 计入 G-CONV.7 观测)
 EOF
       exit 1
     }
