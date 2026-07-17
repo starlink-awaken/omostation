@@ -70,10 +70,10 @@ repos:
         stages: [pre-commit]
         # 共享硬门: 本地 hook / pre-commit / CI 使用同一脚本, 防止 GaC validate、
         # drift、doc-ssot、快照硬编码、入口文档链接和变更车道检查在不同入口走散.
-      # G-CONV.5: write-owners 单写者 + 失败时生成本地 repair-draft
+      # G-CONV.5: write-owners 单写者 + 失败时生成本地 repair-draft commit (L2)
       - id: write-owner-audit
         name: write-owner-audit (G-CONV.5 门禁即免疫)
-        entry: bash -c 'uv run --with pyyaml python bin/ssot/write-owner-audit.py --staged || { uv run --with pyyaml python bin/ssot/write-owner-repair-draft.py --from-audit-exit; exit 1; }'
+        entry: bash -c 'uv run --with pyyaml python bin/ssot/write-owner-audit.py --staged || { uv run --with pyyaml python bin/ssot/write-owner-repair-draft.py --from-audit-exit --commit; exit 1; }'
         language: system
         pass_filenames: false
         stages: [pre-commit]
