@@ -14,7 +14,7 @@ help:
 	@echo "=== 架构检查 ==="
 	@echo "make check-layers      分层依赖检查 (docs/layer-contract.yaml)"
 	@echo "make ssot-status       SSOT 变更状态检查"
-@echo "make evidence-smoke    BOS 声明/执行 + feedback 全量 smoke (ADR-0219)"
+	@echo "make evidence-smoke    BOS 声明/执行 + feedback 全量 smoke (ADR-0219)"
 	@echo "make ssot-log          SSOT 审计日志查看"
 	@echo "make ssot-sync         SSOT 变更记录到审计日志"
 	@echo "make sync-submodules   推送子模块未推送的 commit 到远程"
