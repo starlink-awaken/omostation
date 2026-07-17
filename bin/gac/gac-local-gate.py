@@ -111,6 +111,11 @@ CI_ONLY_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_only")}
 CI_SKIP_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_skip")}
 AGENT_WORKFLOW_GATE_CHECKS = {g["id"] for g in GATES_LIST if g.get("agent_workflow_only")}
 BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
+# SOFT checks: finding_topics 仍输出, 但不翻转 gate (门禁降噪)
+SOFT_CHECKS = {
+    "governance-semantic-gate",  # evolution/release_ready 是软信号, 非门禁阻断
+    "brief-protect",            # BRIEF.md protect 提示手工修改, 非门禁阻断
+}
 
 
 def _is_ci_env() -> bool:
@@ -343,8 +348,16 @@ def run_gate(
     change_lane_files = change_lane_files_for_scope(scope, files, run_id)
     results = [run_check(name, command) for name, command in gate_checks(scope, files, run_id, strict)]
     finding_topics = extract_finding_topics(results)
+
+    # HARD/SOFT 分离: soft checks 不翻转 gate
+    hard_fails = [r for r in results if not r["ok"] and r["name"] not in SOFT_CHECKS]
+    soft_warns = [r for r in results if not r["ok"] and r["name"] in SOFT_CHECKS]
+    ok = len(hard_fails) == 0
+
     return {
-        "ok": all(item["ok"] for item in results),
+        "ok": ok,
+        "hard_fails": hard_fails,
+        "soft_warns": soft_warns,
         "scope": scope,
         "run_id": run_id or None,
         "change_lane_files": change_lane_files,
@@ -371,7 +384,12 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
     print("═══ GaC local gate ═══")
     print(f"scope={report['scope']} change_lane_files={len(report['change_lane_files'])}")
     for item in report["checks"]:
-        status = "PASS" if item["ok"] else "FAIL"
+        if item["ok"]:
+            status = "PASS"
+        elif item["name"] in SOFT_CHECKS:
+            status = "WARN"
+        else:
+            status = "FAIL"
         print(f"[{status}] {item['name']} :: {item['command']}")
         if not item["ok"]:
             if item["stdout"]:
@@ -388,7 +406,16 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
             )
     if BROKEN_CHECKS:
         print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
-    print("GaC local gate: " + ("PASS" if is_ok else "FAIL"))
+    hard_count = len(report.get("hard_fails", []))
+    soft_count = len(report.get("soft_warns", []))
+    parts = []
+    if is_ok:
+        parts.append("PASS")
+    else:
+        parts.append("FAIL")
+    if soft_count:
+        parts.append(f"{soft_count} SOFT WARN")
+    print("GaC local gate: " + " | ".join(parts))
 
 
 def main() -> int:
