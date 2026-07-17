@@ -50,17 +50,21 @@ layers:
     special: true  # 可以调用任何层
 
 # 允许的依赖方向
+# ADR-0217: 对齐 eCOS 实装 — L3 适配器可触 M0/L4；L2 可触 X(bus)；L0 MOF 可触 M0
 dependency_rules:
   allowed_directions:
-    # L3 入口层：可调用引擎层、运行时层、协议层、织层和扩展层
+    # L3 入口层：引擎/运行时/协议/织/扩展 + 适配器到 M0/L4
     - from: ["L3"]
-      to: ["L2", "L1", "L0", "I0", "X"]
-    # L2 引擎层：可调用运行时层、协议层
+      to: ["L2", "L1", "L0", "I0", "X", "M0", "L4"]
+    # L2 引擎层：运行时/协议 + bus(X) + l4-kernel 自省/vault sink
     - from: ["L2"]
-      to: ["L1", "L0"]
-    # L1 运行时层：只能调用协议层
+      to: ["L1", "L0", "X", "L4"]
+    # L1 运行时层：协议层 + bus-foundation(X) 适配
     - from: ["L1"]
-      to: ["L0"]
+      to: ["L0", "X"]
+    # L0 协议层：仅 MOF 驱动框架 (model-driven)
+    - from: ["L0"]
+      to: ["M0"]
     # I0 织层：可调用所有层（路由枢纽）
     - from: ["I0"]
       to: ["L0", "L1", "L2", "L3", "L4", "M0", "X"]
@@ -70,22 +74,19 @@ dependency_rules:
     # X 扩展层：可调用所有层
     - from: ["X"]
       to: ["L0", "L1", "L2", "L3", "L4", "I0", "M0"]
-    # L4 自我层：可调用引擎层、运行时层、协议层、织层和扩展层
+    # L4 自我层：引擎/运行时/协议/织/扩展 + model-driven(M0)
     - from: ["L4"]
-      to: ["L2", "L1", "L0", "I0", "X"]
+      to: ["L2", "L1", "L0", "I0", "X", "M0"]
 
   # 禁止的依赖（用于明确禁止某些模式）
   forbidden_patterns:
     - from: ["L0"]
-      to: ["L1", "L2", "L3", "L4", "I0", "M0", "X"]
+      to: ["L1", "L2", "L3", "L4", "I0", "X"]
     - from: ["L1"]
-      to: ["L2", "L3", "L4", "I0", "M0", "X"]
+      to: ["L2", "L3", "L4", "I0", "M0"]
     - from: ["L2"]
-      to: ["L3", "L4", "I0", "M0", "X"]
-    - from: ["L3"]
-      to: ["L4", "M0"]
-    - from: ["L4"]
-      to: ["M0"]
+      to: ["L3", "I0", "M0"]
+    # L4→M0 allowed (lifecycle/signals model-driven)
 
 # 特殊例外（需要同时有 ADR 记录）
 exceptions:
@@ -101,3 +102,31 @@ exceptions:
     reason: "ADR-0181 Phase 2: MetaOS workflow backend adapter，用于执行 M1 workflow"
     files:
       - "projects/ecos/src/ecos/workflow/backends/metaos.py"
+  # ADR-0217: 真实跨层桥接 (非 false-positive); 登记后 check 可升 hard
+  - project: "omo"
+    depends_on: "c2g"
+    reason: "ADR-0217: OMO ingress 调用 C2G task_builder 策略入站"
+    files:
+      - "projects/omo/src/omo/omo_governance_surfaces.py"
+  - project: "omo"
+    depends_on: "kairon"
+    reason: "ADR-0217: omo release 单测引用 kairon (test-only)"
+    files:
+      - "projects/omo/tests/unit/test_release.py"
+  - project: "metaos"
+    depends_on: "agora"
+    reason: "ADR-0217: MetaOS agora MCP bootstrap 适配器"
+    files:
+      - "projects/metaos/src/metaos/adapters/agora.py"
+  - project: "runtime"
+    depends_on: "omo"
+    reason: "ADR-0217: L1 runtime adapters 调 OMO GC/debt (已知向上依赖, 登记债)"
+    files:
+      - "projects/runtime/scripts/check_stale_debts.py"
+      - "projects/runtime/src/runtime/adapters/omo.py"
+  - project: "kairon"
+    depends_on: "agora"
+    reason: "ADR-0217: kairon e2e/forge 调 agora (test + market)"
+    files:
+      - "projects/kairon/tests/test_e2e_agora.py"
+      - "projects/kairon/packages/forge/src/forge/market.py"
