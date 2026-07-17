@@ -307,3 +307,5 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 ---
 
 *最近更新: 2026-07-08 · Owner: governance-team · P79 STRAT PROPOSED (2026H2 治理巩固路线图); GaC rules 173; catalog 60 原则*
+
+| 0220 | Swarm 协调纪律 M1 收口前置 | ACCEPTED | G-CONV.7 / ADR-0220 |
