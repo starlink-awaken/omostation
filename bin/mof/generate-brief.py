@@ -280,6 +280,7 @@ def main() -> int:
         help="Protect mode: fail if BRIEF.md was modified outside of generate-brief.py"
     )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
+    parser.add_argument(
         "--if-changed",
         action="store_true",
         help="Skip writing BRIEF.md when only generated runtime metadata changed",
