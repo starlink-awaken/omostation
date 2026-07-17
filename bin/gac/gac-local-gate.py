@@ -74,8 +74,10 @@ DEFAULT_POLICY = {
         {"id": "test-coverage-check", "command": ["bin/gac/test-coverage-check.py"]},
         # P45 债务完整性门禁: seed_items 全部存在且非空
         {"id": "debt-integrity-check", "command": ["bin/gac/debt-integrity-check.py"]},
-        # P45 W1 OMO state write guard: 检测 system.yaml 多写冲突
+        # P45 W1 OMO state write guard: 检测 system.yaml 多写冲突 + 写权限违规
         {"id": "omo-state-write-guard", "command": ["bin/gac/omo-state-write-guard.py"]},
+        # P45 W1 BRIEF.md protect: 检测 BRIEF.md 是否被外部覆盖
+        {"id": "brief-protect", "command": ["bin/mof/generate-brief.py", "--protect"]},
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
