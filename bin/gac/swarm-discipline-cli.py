@@ -118,6 +118,28 @@ def cmd_escape_check(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_git_argv_check(args: argparse.Namespace) -> int:
+    """D4: validate git argv for --no-verify (used by bin/gac/swarm-git)."""
+    root = root_from_cwd()
+    escape_id = args.escape_id or __import__("os").environ.get("SWARM_ESCAPE_ID")
+    argv = list(args.argv or [])
+    ok, reason = sd.check_git_argv_escape(root, argv, escape_id)
+    print(
+        json.dumps(
+            {
+                "ok": ok,
+                "reason": reason,
+                "has_no_verify": sd.argv_has_no_verify(argv),
+                "flag": sd.no_verify_flag_for_argv(argv)
+                if sd.argv_has_no_verify(argv)
+                else None,
+            },
+            indent=2,
+        )
+    )
+    return 0 if ok else 1
+
+
 def cmd_window_start(_args: argparse.Namespace) -> int:
     root = root_from_cwd()
     payload = sd.start_conflict_window(root)
@@ -197,6 +219,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     s.add_argument("--escape-id", default=None)
     s.set_defaults(func=cmd_escape_check)
+
+    s = sub.add_parser("git-argv-check", help="D4: check git argv for --no-verify")
+    s.add_argument("--escape-id", default=None)
+    s.add_argument("argv", nargs=argparse.REMAINDER, help="git argv after --")
+    s.set_defaults(func=cmd_git_argv_check)
 
     s = sub.add_parser("window-start")
     s.set_defaults(func=cmd_window_start)

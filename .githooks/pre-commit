@@ -14,6 +14,25 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 
+# ── G-CONV.7 / ADR-0220 D3: shared worktree claim-before-commit ──────
+# install-hooks path SSOT (.githooks/pre-commit → .git/hooks/pre-commit).
+# Fail-closed on shared main/detached: unclaimed staged writes are rejected.
+# Isolated work/* | pr/* branches short-circuit inside claim-check.
+if [ -f "$ROOT/bin/gac/swarm-discipline-cli.py" ]; then
+  _d3_out="$(python3 "$ROOT/bin/gac/swarm-discipline-cli.py" claim-check --staged 2>&1)" || _d3_rc=$?
+  _d3_rc="${_d3_rc:-0}"
+  printf '%s\n' "$_d3_out" | sed 's/^/[swarm-d3] /' >&2
+  if [ "$_d3_rc" -ne 0 ]; then
+    cat >&2 <<EOF
+[swarm-d3] ❌ D3 shared-worktree claim check failed (ADR-0220 / G-CONV.7)
+   共享 main worktree 上的提交必须先:
+     bash bin/gac/gac-worktree.sh claim <session>   # 隔离 work/*
+     # 或: agent-workflow claim <run-id> --path <file>
+EOF
+    exit 1
+  fi
+fi
+
 if [ -x "$ROOT/bin/gac-hygiene-check.py" ]; then
   # advisory: 输出到 stderr, 不阻断 commit (|| true)
   python3 "$ROOT/bin/gac-hygiene-check.py" 2>&1 | sed 's/^/[hygiene] /' >&2 || true

@@ -65,6 +65,24 @@ def test_d1_adr_write_requires_claim(tmp_path):
     assert "claim" in reason.lower()
 
 
+def test_d1_empty_session_cannot_use_foreign_claim(tmp_path):
+    """Skeptic: empty session must not inherit holder claim."""
+    m = _load()
+    (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
+        "version: 1\n", encoding="utf-8"
+    )
+    (tmp_path / ".omo/_knowledge/decisions").mkdir(parents=True)
+    ok, r = m.acquire_adr_claim(tmp_path, "owner-sess")
+    assert ok
+    n = r["number"]
+    path = f".omo/_knowledge/decisions/{n:04d}-x.md"
+    ok_empty, reason = m.check_adr_write_authorized(tmp_path, path, "")
+    assert not ok_empty, reason
+    assert "session" in reason.lower()
+    ok_match, _ = m.check_adr_write_authorized(tmp_path, path, "owner-sess")
+    assert ok_match
+
 def test_d2_branch_occupancy_blocks_second_session(tmp_path):
     m = _load()
     (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
@@ -120,7 +138,7 @@ def test_d4_escape_requires_allowlisted_id(tmp_path):
 version: 1
 escape_hatch_exemptions:
   - id: submodule-reachability-partial-worktree
-    allow: [ci_local_skip, no_verify_push]
+    allow: [ci_local_skip, no_verify_push, no_verify_commit]
     active: true
     reason: test
 """,
@@ -139,6 +157,33 @@ escape_hatch_exemptions:
     )
     assert not ok3
 
+
+def test_d4_no_verify_argv_gate(tmp_path):
+    m = _load()
+    (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
+        """
+version: 1
+escape_hatch_exemptions:
+  - id: write-owner-repair-draft
+    allow: [no_verify_commit]
+    active: true
+    reason: test
+""",
+        encoding="utf-8",
+    )
+    ok, _ = m.check_git_argv_escape(tmp_path, ["commit", "-m", "x"], None)
+    assert ok  # no --no-verify
+    ok2, reason = m.check_git_argv_escape(
+        tmp_path, ["commit", "--no-verify", "-m", "x"], None
+    )
+    assert not ok2
+    ok3, _ = m.check_git_argv_escape(
+        tmp_path,
+        ["commit", "--no-verify", "-m", "x"],
+        "write-owner-repair-draft",
+    )
+    assert ok3
 
 def test_conflict_window_status_open_until_72h(tmp_path):
     m = _load()
@@ -165,7 +210,105 @@ def test_wired_entrypoints_reference_gates():
     assert "swarm-discipline-cli" in wt
     pre = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
     assert "swarm-claim-check" in pre
+    # install-hooks path must include D3 (skeptic: not only pre-commit framework)
+    githook_pre = (ROOT / ".githooks/pre-commit").read_text(encoding="utf-8")
+    assert "swarm-discipline-cli.py" in githook_pre
+    assert "claim-check" in githook_pre
     push = (ROOT / ".githooks/pre-push").read_text(encoding="utf-8")
     assert "escape-check" in push or "swarm-d4" in push
     adr = (ROOT / "bin/adr/next-adr-id.py").read_text(encoding="utf-8")
     assert "acquire_adr_claim" in adr or "swarm_discipline" in adr
+    assert (ROOT / "bin/gac/swarm-git").is_file()
+
+
+def test_d3_real_pre_commit_hook_blocks_unclaimed_main(tmp_path):
+    """Drive real git commit through installed .githooks/pre-commit (install-hooks path)."""
+    import os
+    import shutil
+    import subprocess
+    import textwrap
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "t@example.com"], cwd=repo, check=True
+    )
+    subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True)
+
+    # Minimal tree: hooks + swarm CLI + registry + core module
+    (repo / "bin/gac").mkdir(parents=True)
+    (repo / ".omo/_truth/registry").mkdir(parents=True)
+    (repo / ".githooks").mkdir()
+    shutil.copy(ROOT / "bin/gac/swarm_discipline.py", repo / "bin/gac/swarm_discipline.py")
+    shutil.copy(
+        ROOT / "bin/gac/swarm-discipline-cli.py", repo / "bin/gac/swarm-discipline-cli.py"
+    )
+    (repo / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
+        textwrap.dedent(
+            """
+            version: 1
+            shared_worktree_allow_path_globs: []
+            escape_hatch_exemptions: []
+            delivery: {}
+            """
+        ),
+        encoding="utf-8",
+    )
+    # Slim pre-commit: only D3 (full gate is slow / needs monorepo)
+    (repo / ".githooks/pre-commit").write_text(
+        textwrap.dedent(
+            """
+            #!/bin/bash
+            set -euo pipefail
+            ROOT="$(git rev-parse --show-toplevel)"
+            _d3_out="$(python3 "$ROOT/bin/gac/swarm-discipline-cli.py" claim-check --staged 2>&1)" || _d3_rc=$?
+            _d3_rc="${_d3_rc:-0}"
+            printf '%s\\n' "$_d3_out" >&2
+            if [ "$_d3_rc" -ne 0 ]; then
+              echo "[swarm-d3] blocked" >&2
+              exit 1
+            fi
+            exit 0
+            """
+        ).lstrip(),
+        encoding="utf-8",
+    )
+    # install-hooks path
+    hooks = repo / ".git/hooks"
+    hooks.mkdir(exist_ok=True)
+    shutil.copy(repo / ".githooks/pre-commit", hooks / "pre-commit")
+    os.chmod(hooks / "pre-commit", 0o755)
+
+    # Bootstrap first commit with hook temporarily disabled (unborn main has branch=HEAD)
+    (repo / "README.md").write_text("init\n", encoding="utf-8")
+    subprocess.run(["git", "add", "README.md"], cwd=repo, check=True)
+    os.chmod(hooks / "pre-commit", 0o644)  # disable
+    subprocess.run(
+        ["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True
+    )
+    os.chmod(hooks / "pre-commit", 0o755)  # re-enable install-hooks path
+
+    (repo / "docs").mkdir()
+    (repo / "docs/secret.md").write_text("x\n", encoding="utf-8")
+    subprocess.run(["git", "add", "docs/secret.md"], cwd=repo, check=True)
+    # On main, unclaimed → must fail
+    r = subprocess.run(
+        ["git", "commit", "-m", "unclaimed"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    )
+    assert r.returncode != 0, r.stdout + r.stderr
+    blob = (r.stdout + r.stderr).lower()
+    assert "swarm" in blob or "claim" in blob or "unclaimed" in blob
+
+    # Switch to isolated work branch → allow
+    subprocess.run(["git", "checkout", "-b", "work/probe"], cwd=repo, check=True)
+    r2 = subprocess.run(
+        ["git", "commit", "-m", "isolated ok"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    )
+    assert r2.returncode == 0, r2.stdout + r2.stderr

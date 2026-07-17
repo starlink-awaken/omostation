@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# swarm-git — agent-facing git wrapper (G-CONV.7 / ADR-0220 D4)
+#
+# Fail-closed for --no-verify: only allowlisted SWARM_ESCAPE_ID may pass.
+# Bare `git commit --no-verify` / `git push --no-verify` still skip hooks by
+# design of git; agents MUST use this wrapper (or set PATH) for fail-closed D4.
+#
+# Usage:
+#   bin/gac/swarm-git commit -m "..."
+#   bin/gac/swarm-git push origin HEAD
+#   SWARM_ESCAPE_ID=write-owner-repair-draft bin/gac/swarm-git commit --no-verify -m "..."
+#
+# Install (optional): alias git='bin/gac/swarm-git' in agent profiles.
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "${ROOT:-}" ]; then
+  exec git "$@"
+fi
+
+# Always evaluate --no-verify before delegating to real git
+if printf '%s\0' "$@" | grep -qz -- '--no-verify'; then
+  CLI="$ROOT/bin/gac/swarm-discipline-cli.py"
+  if [ ! -f "$CLI" ]; then
+    echo "[swarm-git] ❌ missing swarm-discipline-cli.py; refusing --no-verify" >&2
+    exit 1
+  fi
+  # Infer flag from argv
+  FLAG="no_verify_push"
+  for a in "$@"; do
+    if [ "$a" = "commit" ]; then FLAG="no_verify_commit"; break; fi
+  done
+  OUT="$(python3 "$CLI" escape-check --flag "$FLAG" 2>&1)" || RC=$?
+  RC="${RC:-0}"
+  printf '%s\n' "$OUT" | sed 's/^/[swarm-git] /' >&2
+  if [ "$RC" -ne 0 ]; then
+    cat >&2 <<EOF
+[swarm-git] ❌ --no-verify blocked (G-CONV.7 D4 / ADR-0220)
+   Set SWARM_ESCAPE_ID to an allowlisted id in
+   .omo/_truth/registry/swarm-coordination.yaml::escape_hatch_exemptions
+   Example:
+     SWARM_ESCAPE_ID=submodule-reachability-partial-worktree bin/gac/swarm-git push --no-verify ...
+EOF
+    exit 1
+  fi
+fi
+
+exec git "$@"
