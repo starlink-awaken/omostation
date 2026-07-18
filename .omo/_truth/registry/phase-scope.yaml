@@ -1,0 +1,50 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-18
+related:
+  - 0223-phase-gate-ci-enforcement.md
+  - 0210-three-year-strategy-execution-convergence.md
+  - 0222-m1-conflict-zero-evidence-standard-adversarial.md
+---
+# Phase scope registry — which paths require which stage unlock (ADR-0223)
+
+version: 1
+verdict_ssot: .omo/_truth/registry/phase-verdict.yaml
+escape_dir: .omo/_delivery/phase-escape
+
+phases:
+  phase2:
+    id: phase2
+    name: 兑现期 (Delivery)
+    description: >
+      Agent swarm registry/schedule/collab/sync/emergence implementation surfaces.
+      Unlock requires M1 phase2_recommend (passive 72h OR adversarial path B, ADR-0222).
+    unlock:
+      verdict_key: phases.phase2.unlocked
+      equals: true
+      source_hint: m1-closeout-report phase2_recommend
+    paths:
+      - "bin/delivery/**"
+      - "docs/G-DEL-EXECUTION-METRICS.md"
+      - "docs/G-DEL-2a-role-framework-contract.md"
+    # PR titles/bodies matching these do not auto-unlock; only verdict SSOT does
+
+  phase3:
+    id: phase3
+    name: 跃迁期 (Leap)
+    description: >
+      Personal brain / digital twin / external GaC productization (预留).
+      Unlock: M2 multi-machine collab ≥ 85% (future).
+    unlock:
+      verdict_key: phases.phase3.unlocked
+      equals: true
+      source_hint: m2_collab_rate >= 0.85
+    paths:
+      - "docs/LEAP/**"
+      - "projects/metaos/src/metaos/leap/**"
+
+notes:
+  - CI job phase-gate-enforce is required on main (ADR-0223).
+  - Escapes must land under escape_dir with PR rationale; silent bypass forbidden.

@@ -13,7 +13,7 @@
 #   - Require PR (核心隔离) ✅
 #   - 禁 direct push ✅
 #   - Enforce admins ✅ (堵 admin 绕过, 治本 concurrent-agent-contention)
-#   - 不强制 Required CI (过渡, 避免 omo 测试红卡 merge; 稳定后加)
+#   - Required status: phase-gate (ADR-0223 阶段门硬阻断)
 #   - 0 required reviews (单人可 merge, 不阻塞)
 #
 # 用法:
@@ -97,7 +97,7 @@ print("  Allow deletions:       " + yn(ad.get("enabled")))
     echo "⚠️  设置 main branch protection (破坏性, 改全局 push 流程):"
     echo "   - Require PR before merging (禁 direct push main)"
     echo "   - 0 required reviews (单人可 merge)"
-    echo "   - 不强制 Required CI (过渡, 避免测试红卡 merge)"
+    echo "   - Required CI: phase-gate (ADR-0223)"
     echo ""
     echo "影响: 所有 agent direct push main 被拒, 必须走 PR."
     echo "      配合 gac-worktree.sh = 多 agent 真并行 (各 worktree 各 PR)."
@@ -106,6 +106,7 @@ print("  Allow deletions:       " + yn(ad.get("enabled")))
     confirm_action "确认设置?"
 
     # GitHub branch protection API (v3)
+    # ADR-0223: require phase-gate job (workflow phase-gate-enforce.yml)
     gh api "repos/$REPO/branches/main/protection" -X PUT --input - <<'EOF'
 {
   "required_pull_request_reviews": {
@@ -114,7 +115,10 @@ print("  Allow deletions:       " + yn(ad.get("enabled")))
     "require_code_owner_reviews": false
   },
   "enforce_admins": true,
-  "required_status_checks": null,
+  "required_status_checks": {
+    "strict": false,
+    "contexts": ["phase-gate"]
+  },
   "restrictions": null,
   "required_linear_history": false,
   "allow_force_pushes": false,
@@ -122,7 +126,7 @@ print("  Allow deletions:       " + yn(ad.get("enabled")))
 }
 EOF
     echo ""
-    echo "✅ main branch protection 设置完成"
+    echo "✅ main branch protection 设置完成 (required: phase-gate)"
     echo "   验证: bash $0 --check"
     echo "   回退: bash $0 --remove"
     ;;

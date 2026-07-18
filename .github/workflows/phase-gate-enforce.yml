@@ -1,0 +1,35 @@
+name: phase-gate-enforce
+# ADR-0223: hard-block PRs that touch locked phase paths without unlock verdict.
+# Minimal deps (stdlib + PyYAML) — no m1-closeout-report import (anti self-blind, ADR-0202 D1).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+jobs:
+  phase-gate:
+    name: phase-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install PyYAML only
+        run: pip install --quiet pyyaml
+      - name: Phase gate check (ADR-0223)
+        env:
+          PHASE_ESCAPE_ID: ${{ vars.PHASE_ESCAPE_ID }}
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          if [ -z "${BASE}" ]; then
+            BASE="origin/${{ github.base_ref || 'main' }}"
+          fi
+          git fetch origin "${{ github.base_ref || 'main' }}" --depth=1 || true
+          python3 bin/gac/phase-gate-check.py \
+            --base "origin/${{ github.base_ref || 'main' }}" \
+            --json
