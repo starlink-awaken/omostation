@@ -288,6 +288,24 @@ goals:
   appetite: 9 天（6 Phase x 1.5d/Phase 均值）
   vector: V3
   bet_status: active
+- id: KOS-Q-GROWTH
+  title: KOS 季度扩量（跃迁期长交期前置）
+  desc: 'G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑'
+  progress: 20.0
+  status: active
+  kpi: '2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)'
+  tasks: []
+  quarterly_targets:
+    - quarter: 2026Q3
+      documents_min: 1500
+    - quarter: 2026Q4
+      documents_min: 3000
+    - quarter: 2027Q1
+      documents_min: 5000
+  source_ref: docs/KOS-QUARTERLY-GROWTH.md
+  vector: V-leap-prep
+  bet_status: active
+  created_at: '2026-07-18T08:00:00Z'
 health_targets:
   mcp_isolation_score: 100
   overall: 99

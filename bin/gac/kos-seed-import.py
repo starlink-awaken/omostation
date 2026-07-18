@@ -31,16 +31,34 @@ def _doc_id(path: Path) -> str:
 
 
 def _collect_md(roots: list[Path], limit: int) -> list[Path]:
+    """Collect markdown paths under roots.
+
+    Note: do NOT skip entire trees solely because a parent starts with '.'
+    (e.g. `.omo/_knowledge` is a primary SSOT surface). Only skip known junk
+    segments (.git, node_modules, .venv, __pycache__).
+    """
+    skip_parts = {".git", "node_modules", ".venv", "__pycache__", ".tox", "dist", "build"}
     out: list[Path] = []
+    seen: set[str] = set()
     for root in roots:
+        if root.is_file() and root.suffix == ".md":
+            key = str(root.resolve())
+            if key not in seen:
+                out.append(root)
+                seen.add(key)
+            if len(out) >= limit:
+                return out
+            continue
         if not root.is_dir():
             continue
         for p in sorted(root.rglob("*.md")):
-            if any(part.startswith(".") for part in p.parts):
+            if any(part in skip_parts for part in p.parts):
                 continue
-            if "node_modules" in p.parts or ".venv" in p.parts:
+            key = str(p.resolve())
+            if key in seen:
                 continue
             out.append(p)
+            seen.add(key)
             if len(out) >= limit:
                 return out
     return out
@@ -131,12 +149,30 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workspace-docs-only", action="store_true")
     args = ap.parse_args(argv)
 
-    roots = [
+    roots: list[Path] = [
         WORKSPACE / "docs",
-        WORKSPACE / ".omo" / "_knowledge" / "decisions",
+        WORKSPACE / ".omo" / "_knowledge",
+        WORKSPACE / ".omo" / "standards",
+        WORKSPACE / "protocols",
+        WORKSPACE / "spaces",
+        WORKSPACE / "AGENTS.md",
+        WORKSPACE / "ARCHITECTURE.md",
+        WORKSPACE / "README.md",
+        WORKSPACE / "CLAUDE.md",
+        WORKSPACE / "BRIEF.md",
+        WORKSPACE / "SYSTEM-INDEX.md",
+        WORKSPACE / "LAYER-INDEX.md",
     ]
     if not args.workspace_docs_only and args.creative_root.is_dir():
         roots.append(args.creative_root)
+    # Optional vaults for quarterly growth (local only)
+    if not args.workspace_docs_only:
+        for vault in (
+            Path(os.path.expanduser("~/Documents/@学习进化")),
+            Path(os.path.expanduser("~/Documents/@公共")),
+        ):
+            if vault.is_dir():
+                roots.append(vault)
 
     files = _collect_md(roots, args.limit)
     if not files:

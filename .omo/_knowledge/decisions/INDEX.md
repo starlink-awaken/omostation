@@ -196,6 +196,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0217 | Workflow 卫生：layer-check 误报修复 + 契约对齐 + evidence 愈合 | ACCEPTED | 2026-07-15 | governance-team | 0217-workflow-hygiene-layer-check-and-evidence.md |
 | 0218 | Agent Isolation P0 核实生效态 + worktree 卫生固化 | ACCEPTED | 2026-07-15 | 夏明星 | 0218-agent-isolation-p0-verify-and-hygiene.md |
 | 0219 | BOS 全量 evidence-smoke 可复现路径 | ACCEPTED | 2026-07-15 | governance-team | 0219-bos-evidence-smoke-full-path.md |
+| 0220 | Swarm 协调纪律 M1 收口前置 | ACCEPTED | 2026-07-17 | 夏明星 | 0220-swarm-coordination-discipline-m1-gate.md |
+| 0221 | G-DEL.5a 涌现/集体决策 L3 风险评审 | ACCEPTED | 2026-07-18 | 架构师 | 0221-g-del-5a-emergence-collective-decision-risk-review.md |
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
@@ -306,6 +308,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-08 · Owner: governance-team · P79 STRAT PROPOSED (2026H2 治理巩固路线图); GaC rules 173; catalog 60 原则*
-
-| 0220 | Swarm 协调纪律 M1 收口前置 | ACCEPTED | G-CONV.7 / ADR-0220 |
+*最近更新: 2026-07-18 · Owner: governance-team · ADR-0221 G-DEL.5a L3 risk review; GaC rules 见 registry*
