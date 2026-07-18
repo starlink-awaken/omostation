@@ -532,6 +532,23 @@ assets:
       - agents
     notes: "P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册"
     status: active
+  - id: OMO-SSOT-AUDIT-LOG
+    ref: .omo/ssot-audit-log.jsonl
+    plane: state_plane
+    asset_type: audit_log
+    persistence_mode: operational
+    retention_mode: rolling_window
+    truth_owner: governance
+    write_via:
+      - agents
+      - scripts
+      - bin/ssot
+    consumed_by:
+      - auditors
+      - agents
+    notes: "append-only SSOT audit trail; often gitignored runtime file"
+    status: active
+    runtime: true
 policies:
   top_level_asset_registration_required: true
   nested_omo_forbidden_for_new_writes: true
