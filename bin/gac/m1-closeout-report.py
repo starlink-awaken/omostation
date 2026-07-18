@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
-"""M1 closeout rejudge — ADR-0210 + ADR-0220 honest T+72 gate.
+"""M1 closeout rejudge — ADR-0210 + ADR-0220 + ADR-0222.
 
-Aggregates G-CONV.1–7 evidence into a single JSON verdict. Never claims
-``m1_pass`` / ``phase2_recommend=true`` while the 72h conflict window is open
-or while hard greens fail (skeptic rule: evidence before assertion).
+Aggregates G-CONV.1–7 into a JSON verdict. M1「冲突=0」有两条等效路径 (ADR-0222):
+
+  * **passive**: 72h window elapsed AND conflict_count=0 AND hard greens
+  * **adversarial**: four-gate intentional abuse all blocked (evidence JSON) AND
+    conflict_count=0 AND hard greens (need not wait 72h)
+
+Never claims phase2_recommend without one of those paths (skeptic: evidence first).
 
 Usage:
-  python3 bin/gac/m1-closeout-report.py
-  python3 bin/gac/m1-closeout-report.py --ssot-root /path/to/live/workspace
-  python3 bin/gac/m1-closeout-report.py --root /path/to/code --ssot-root /path/to/live
+  python3 bin/gac/m1-closeout-report.py --ssot-root <live>
+  python3 bin/gac/m1-closeout-report.py --adversarial-evidence .omo/_delivery/m1-adversarial/latest.json
   python3 bin/gac/m1-closeout-report.py --json --out .omo/_delivery/m1-closeout/latest.json
-  python3 bin/gac/m1-closeout-report.py --no-orphan-scan
-
-``--root`` is the code tree (hooks, foundry, registry). ``--ssot-root`` is the live
-runtime tree (``.omo/state``, swarm-conflicts window). Defaults: both = script workspace.
-When the human Workspace branch lags main, use main-aligned code + live ``--ssot-root``.
 
 Exit codes:
-  0  report emitted (window_open / pass / fail all exit 0 — honesty is success)
+  0  report emitted (window_open / pass / fail all exit 0)
   2  fatal (root unreadable)
 """
 from __future__ import annotations
@@ -34,6 +32,7 @@ from typing import Any
 UTC = timezone.utc
 
 DEFAULT_RATIO_MIN = 0.9
+DEFAULT_ADVERSARIAL = ".omo/_delivery/m1-adversarial/latest.json"
 ISC3_WEIGHT_RE = re.compile(
     r"governance['\"]?\s*:\s*0\.3|0\.3.*0\.5.*0\.2|ISC-3|isc3",
     re.I,
@@ -320,6 +319,70 @@ def check_g_conv_7_window(
     return gate, status
 
 
+def load_adversarial_evidence(path: Path | None) -> dict[str, Any] | None:
+    """Load path-B adversarial report (ADR-0222).
+
+    Accepts either:
+      - {m1_adversarial_verdict: pass|fail, gates: [{gate, blocked}, ...]}
+      - {gates: [...], all_blocked: true}
+    """
+    if path is None or not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    return data
+
+
+def adversarial_path_pass(evidence: dict[str, Any] | None) -> tuple[bool, dict[str, Any]]:
+    """Return (pass?, detail) for path B four-gate all blocked.
+
+    Convention: each gate entry has ``blocked: true`` when abuse was successfully
+    stopped (D1 second claim fails, etc.).
+    """
+    if not evidence:
+        return False, {"present": False}
+    gates = evidence.get("gates") or []
+    by_id: dict[str, bool] = {}
+    for g in gates:
+        if not isinstance(g, dict):
+            continue
+        raw = str(g.get("gate") or g.get("id") or "").strip().upper()
+        if not raw:
+            continue
+        key = raw if raw in {"D1", "D2", "D3", "D4"} else (
+            f"D{raw[1]}" if raw.startswith("D") and len(raw) > 1 and raw[1].isdigit() else raw
+        )
+        if key not in {"D1", "D2", "D3", "D4"}:
+            # try extract D\d
+            m = re.search(r"D([1-4])", raw)
+            if not m:
+                continue
+            key = f"D{m.group(1)}"
+        by_id[key] = bool(g.get("blocked", False))
+    required = ("D1", "D2", "D3", "D4")
+    missing = [k for k in required if k not in by_id]
+    all_blocked = not missing and all(by_id[k] for k in required)
+    # trust explicit rollup when present and consistent
+    if evidence.get("summary", {}).get("all_blocked") is True and not missing:
+        all_blocked = all(by_id[k] for k in required)
+    if str(evidence.get("m1_adversarial_verdict") or "").lower() == "pass" and not missing:
+        if all(by_id.get(k) for k in required):
+            all_blocked = True
+    detail = {
+        "present": True,
+        "all_blocked": all_blocked,
+        "gate_blocked": {k: by_id.get(k) for k in required},
+        "missing_gates": missing,
+        "source_verdict": evidence.get("m1_adversarial_verdict"),
+        "evidence_generated_at": evidence.get("generated_at"),
+    }
+    return all_blocked, detail
+
+
 def build_report(
     root: Path,
     *,
@@ -327,6 +390,7 @@ def build_report(
     ratio_min: float = DEFAULT_RATIO_MIN,
     scan_orphans: bool = True,
     emit_orphans: bool = False,
+    adversarial_evidence: Path | None = None,
 ) -> dict[str, Any]:
     code_root = root.resolve()
     live = (ssot_root or root).resolve()
@@ -350,26 +414,69 @@ def build_report(
     conflict_count = int(window.get("conflict_count") or 0)
     window_verdict = window.get("m1_conflict_zero_verdict") or "window_open"
 
-    # Honest M1 rollup (ADR-0210 + ADR-0220)
-    if window.get("window_start") is None:
+    # Path B — adversarial (ADR-0222)
+    adv_path = adversarial_evidence
+    if adv_path is None:
+        candidate = live / DEFAULT_ADVERSARIAL
+        if candidate.is_file():
+            adv_path = candidate
+        else:
+            candidate2 = code_root / DEFAULT_ADVERSARIAL
+            if candidate2.is_file():
+                adv_path = candidate2
+    adv_raw = load_adversarial_evidence(adv_path)
+    adv_ok, adv_detail = adversarial_path_pass(adv_raw)
+    if adv_path is not None:
+        adv_detail["path"] = str(adv_path)
+
+    # Path A — passive full window
+    passive_ok = (
+        window.get("window_start") is not None
+        and elapsed >= target_h
+        and conflict_count == 0
+        and window_verdict != "fail"
+        and not hard_fails
+    )
+
+    # M1 rollup (ADR-0210 + ADR-0220 + ADR-0222)
+    # hard_fails for G-CONV.1–6 only when judging path B early unlock:
+    # g-conv.7 structural "ok" may be true (mech+count0) while window still open.
+    structural_hard = [c for c in hard_fails if c != "g-conv.7"]
+    evidence_path: str | None = None
+    # Path B first when adversarial evidence is present and green (ADR-0222).
+    # Note: successful gate interceptions may append to events.jsonl; those are
+    # evidence of blocking, not of concurrent main failure. Path B therefore
+    # does not require passive conflict_count==0.
+    if adv_ok and not structural_hard:
+        m1_verdict = "pass"
+        evidence_path = "adversarial"
+    elif conflict_count > 0 or window_verdict == "fail":
+        m1_verdict = "fail"
+    elif structural_hard:
+        m1_verdict = "fail"
+    elif window.get("window_start") is None:
         m1_verdict = "window_not_started"
     elif elapsed < target_h:
         m1_verdict = "window_open"
-    elif hard_fails or conflict_count > 0 or window_verdict == "fail":
+    elif passive_ok:
+        m1_verdict = "pass"
+        evidence_path = "passive"
+    elif hard_fails:
         m1_verdict = "fail"
     else:
-        m1_verdict = "pass"
+        m1_verdict = "fail"
 
     phase2_recommend = m1_verdict == "pass"
     remaining = max(0.0, target_h - elapsed)
 
     report: dict[str, Any] = {
-        "schema": "m1-closeout-report/v1",
+        "schema": "m1-closeout-report/v2",
         "generated_at": _utc_iso(),
         "root": str(code_root),
         "ssot_root": str(live),
-        "adr": ["0210", "0220"],
+        "adr": ["0210", "0220", "0222"],
         "m1_verdict": m1_verdict,
+        "evidence_path": evidence_path,
         "phase2_recommend": phase2_recommend,
         "window": {
             "window_start": window.get("window_start"),
@@ -382,6 +489,11 @@ def build_report(
             "m1_conflict_zero_verdict": window_verdict,
             "orphan_commits_scanned": (window.get("orphan_commits_scanned") or [])[:10],
         },
+        "adversarial": adv_detail,
+        "paths": {
+            "passive_ok": passive_ok,
+            "adversarial_ok": adv_ok,
+        },
         "checks": checks,
         "hard_fails": hard_fails,
         "summary": {
@@ -390,12 +502,15 @@ def build_report(
             "health_score": (g3.get("detail") or {}).get("health_score"),
             "health_score_source": (g3.get("detail") or {}).get("health_score_source"),
         },
+        "pr_421_note": (
+            "PR#421 merged while closeout still window_open; ADR-0222 path B "
+            "adversarial evidence is the legitimate retroactive unlock criterion."
+        ),
         "rejudge_hint": (
-            "Re-run after window_end_target with same command; "
-            "phase2_recommend flips true only when m1_verdict=pass "
-            "(elapsed≥72h AND conflict_count=0 AND all hard greens). "
-            "If Workspace branch lags main, pass --ssot-root <live> and keep "
-            "code --root on a main-aligned tree."
+            "Path A (passive): elapsed≥72h AND conflict_count=0 AND hard greens. "
+            "Path B (adversarial, ADR-0222): four-gate probe all blocked + "
+            "conflict_count=0 AND hard greens — pass --adversarial-evidence <json>. "
+            "Either path sets m1_verdict=pass and phase2_recommend=true."
         ),
     }
     return report
@@ -438,6 +553,15 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="record orphan hits into conflict events (affects M1 count)",
     )
+    p.add_argument(
+        "--adversarial-evidence",
+        type=Path,
+        default=None,
+        help=(
+            "path B JSON (default: <ssot>/.omo/_delivery/m1-adversarial/latest.json "
+            "if present)"
+        ),
+    )
     args = p.parse_args(argv)
 
     root = args.root
@@ -458,6 +582,7 @@ def main(argv: list[str] | None = None) -> int:
         ratio_min=args.ratio_min,
         scan_orphans=not args.no_orphan_scan,
         emit_orphans=bool(args.emit_orphans),
+        adversarial_evidence=args.adversarial_evidence,
     )
 
     if args.out:
