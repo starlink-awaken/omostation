@@ -88,7 +88,6 @@ rule covering the workflow's surfaces** (治本 per ADR-0214 §D1). Extending
 `silent_workflow_policy.excluded_workflows` is no longer supported (field removed in
 ADR-0211 §D1).
 
-
 ## 1.6 Swarm coordination (G-CONV.7 / ADR-0220)
 
 M1 hard pre-gate for concurrent main conflict = 0:
@@ -100,9 +99,16 @@ M1 hard pre-gate for concurrent main conflict = 0:
 | D3 shared claim | `make install-hooks` → pre-commit `claim-check` |
 | D4 escape | `SWARM_ESCAPE_ID=...` for `CI_LOCAL_SKIP`; agents use `bin/gac/swarm-git` for `--no-verify` |
 
-72h window: `python3 bin/gac/swarm-discipline-cli.py window-status`  
-Registry: `.omo/_truth/registry/swarm-coordination.yaml`
+72h window: `python3 bin/gac/swarm-discipline-cli.py window-status`
 
+M1 rejudge (T+72, honest):
+`python3 bin/gac/m1-closeout-report.py --ssot-root <live-workspace>`
+
+- code tree defaults to script workspace (use main-aligned checkout if Workspace lags)
+- `m1_verdict=window_open` while elapsed < 72h — never claim M1 pass early
+- `phase2_recommend=true` only when elapsed≥72h AND conflict_count=0 AND all hard greens
+
+Registry: `.omo/_truth/registry/swarm-coordination.yaml`
 
 ## 2. Documentation SSOT Contract
 
