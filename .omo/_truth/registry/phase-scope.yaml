@@ -13,6 +13,9 @@ related:
 version: 1
 verdict_ssot: .omo/_truth/registry/phase-verdict.yaml
 escape_dir: .omo/_delivery/phase-escape
+# CI-visible committed escapes (delivery/ is often gitignored)
+escape_dirs:
+  - .omo/_truth/registry/phase-escapes
 
 phases:
   phase2:
