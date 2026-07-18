@@ -72,8 +72,10 @@ note: >
 | 72h 观测窗 | 🟡 **window_open**（`window-start` 2026-07-17T13:52:27Z → target +72h） |
 | 冲突计数 | 读 `python3 bin/gac/swarm-discipline-cli.py window-status` |
 | M1「冲突=0」 | **未宣布达标** — 仅当 elapsed≥72 且 conflict_count=0 |
+| M1 重判 CLI | `python3 bin/gac/m1-closeout-report.py --root <live>` → `m1_verdict` / `phase2_recommend` |
 
-Foundry 5:50 槽位持续落盘 window-status；orphan_commit 扫描纳入观测。
+Foundry 5:50 槽位持续落盘 window-status；orphan_commit 扫描纳入观测。  
+T+72 用 `m1-closeout-report.py` 一键重判（window_open 时禁止 phase2_recommend）。
 
 ## 六、剩余观察项（非阻塞）
 
