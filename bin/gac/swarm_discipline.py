@@ -621,7 +621,120 @@ def read_conflict_events(root: Path, since_iso: str | None = None) -> list[dict]
     return out
 
 
-def conflict_window_status(root: Path) -> dict[str, Any]:
+_PR_SUBJECT_RE = re.compile(r"\(#\d+\)\s*$")
+
+
+def scan_orphan_commits(
+    root: Path,
+    since_iso: str | None,
+    *,
+    emit: bool = False,
+) -> list[dict[str, Any]]:
+    """Detect likely orphan / direct-to-main commits since window start.
+
+    Heuristics (conservative):
+      1) Local main commits not on origin/main (unpushed direct work on shared main)
+      2) origin/main first-parent non-merge commits since window whose subject
+         does NOT end with (#NNN) GitHub PR trailer — possible direct push or
+         non-PR land (squash PR subjects usually include (#N)).
+
+    Returns list of {sha, subject, kind_detail} without necessarily emitting.
+    """
+    orphans: list[dict[str, Any]] = []
+    since_arg = []
+    if since_iso:
+        # git --since accepts ISO-ish
+        since_arg = [f"--since={since_iso.replace('T', ' ').replace('Z', '')}"]
+
+    def _git(args: list[str]) -> str:
+        try:
+            r = subprocess.run(
+                ["git", *args],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=30,
+            )
+            return r.stdout if r.returncode == 0 else ""
+        except (OSError, subprocess.TimeoutExpired):
+            return ""
+
+    # (1) unpushed on local main
+    unpushed = _git(
+        ["log", "origin/main..main", "--first-parent", "--no-merges", "--format=%H\t%s"]
+        + since_arg
+    )
+    for line in unpushed.splitlines():
+        if not line.strip() or "\t" not in line:
+            continue
+        sha, subj = line.split("\t", 1)
+        orphans.append(
+            {
+                "sha": sha[:12],
+                "subject": subj,
+                "detail": "unpushed_local_main",
+            }
+        )
+
+    # (2) origin/main first-parent without PR trailer
+    remote_log = _git(
+        [
+            "log",
+            "origin/main",
+            "--first-parent",
+            "--no-merges",
+            "--format=%H\t%s",
+            *since_arg,
+        ]
+    )
+    for line in remote_log.splitlines():
+        if not line.strip() or "\t" not in line:
+            continue
+        sha, subj = line.split("\t", 1)
+        if _PR_SUBJECT_RE.search(subj):
+            continue
+        # skip known automation chore merges without PR number only if empty
+        orphans.append(
+            {
+                "sha": sha[:12],
+                "subject": subj,
+                "detail": "main_no_pr_trailer",
+            }
+        )
+
+    # de-dupe by sha
+    seen: set[str] = set()
+    uniq: list[dict[str, Any]] = []
+    for o in orphans:
+        if o["sha"] in seen:
+            continue
+        seen.add(o["sha"])
+        uniq.append(o)
+
+    if emit:
+        existing = {
+            (e.get("detail") or {}).get("sha")
+            for e in read_conflict_events(root, since_iso=since_iso)
+            if e.get("kind") == "orphan_commit"
+        }
+        for o in uniq:
+            if o["sha"] in existing:
+                continue
+            emit_conflict_event(
+                root,
+                "orphan_commit",
+                {"sha": o["sha"], "subject": o["subject"], "detail": o["detail"]},
+            )
+    return uniq
+
+
+def conflict_window_status(
+    root: Path,
+    *,
+    scan_orphans: bool = True,
+    emit_orphans: bool = False,
+) -> dict[str, Any]:
     path = delivery_path(
         root, "conflict_window", ".omo/_delivery/swarm-conflicts/window.json"
     )
@@ -644,6 +757,11 @@ def conflict_window_status(root: Path) -> dict[str, Any]:
     now = _utc_now()
     elapsed = (now - start).total_seconds() / 3600.0
     hours = float(meta.get("window_hours") or 72)
+    # Advisory orphan scan by default (do NOT auto-emit into M1 counter —
+    # heuristics can false-positive). Use emit_orphans=True to record.
+    orphan_hits: list[dict[str, Any]] = []
+    if scan_orphans:
+        orphan_hits = scan_orphan_commits(root, start_s, emit=emit_orphans)
     events = read_conflict_events(root, since_iso=start_s)
     breakdown: dict[str, int] = {}
     for e in events:
@@ -664,6 +782,7 @@ def conflict_window_status(root: Path) -> dict[str, Any]:
         "conflict_count": count,
         "event_breakdown": breakdown,
         "m1_conflict_zero_verdict": verdict,
+        "orphan_commits_scanned": orphan_hits[:20],
         "events_sample": events[:20],
     }
 
