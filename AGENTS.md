@@ -88,6 +88,22 @@ rule covering the workflow's surfaces** (治本 per ADR-0214 §D1). Extending
 `silent_workflow_policy.excluded_workflows` is no longer supported (field removed in
 ADR-0211 §D1).
 
+
+## 1.6 Swarm coordination (G-CONV.7 / ADR-0220)
+
+M1 hard pre-gate for concurrent main conflict = 0:
+
+| Gate | Command |
+|------|---------|
+| D1 ADR claim | `python3 bin/adr/next-adr-id.py --session <s> --claim` |
+| D2 branch lock | `bash bin/gac/gac-worktree.sh claim <s>` |
+| D3 shared claim | `make install-hooks` → pre-commit `claim-check` |
+| D4 escape | `SWARM_ESCAPE_ID=...` for `CI_LOCAL_SKIP`; agents use `bin/gac/swarm-git` for `--no-verify` |
+
+72h window: `python3 bin/gac/swarm-discipline-cli.py window-status`  
+Registry: `.omo/_truth/registry/swarm-coordination.yaml`
+
+
 ## 2. Documentation SSOT Contract
 
 | Document | Owns | Must Reference |

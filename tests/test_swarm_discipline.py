@@ -194,14 +194,25 @@ def test_conflict_window_status_open_until_72h(tmp_path):
     )
     meta = m.start_conflict_window(tmp_path)
     assert "window_start" in meta
-    status = m.conflict_window_status(tmp_path)
+    # disable orphan git scan in tiny tmp (no real git history needed)
+    status = m.conflict_window_status(tmp_path, scan_orphans=False)
     assert status["m1_conflict_zero_verdict"] == "window_open"
     assert status["conflict_count"] == 0
     m.emit_conflict_event(tmp_path, "branch_hijack", {"branch": "work/x"})
-    status2 = m.conflict_window_status(tmp_path)
+    status2 = m.conflict_window_status(tmp_path, scan_orphans=False)
     assert status2["conflict_count"] == 1
     assert status2["m1_conflict_zero_verdict"] == "window_open"
 
+
+def test_scan_orphan_commits_dedupes_and_shapes(tmp_path):
+    m = _load()
+    (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
+        "version: 1\n", encoding="utf-8"
+    )
+    # no git repo → empty list, must not raise
+    hits = m.scan_orphan_commits(tmp_path, None, emit=False)
+    assert hits == []
 
 def test_wired_entrypoints_reference_gates():
     """Structural: real entrypoints call into swarm discipline (no orphan registry)."""
@@ -219,7 +230,9 @@ def test_wired_entrypoints_reference_gates():
     adr = (ROOT / "bin/adr/next-adr-id.py").read_text(encoding="utf-8")
     assert "acquire_adr_claim" in adr or "swarm_discipline" in adr
     assert (ROOT / "bin/gac/swarm-git").is_file()
-
+    foundry = (ROOT / "bin/gac/knowledge-foundry-cron.py").read_text(encoding="utf-8")
+    assert "5:50-swarm-window" in foundry
+    assert "window-status" in foundry
 
 def test_d3_real_pre_commit_hook_blocks_unclaimed_main(tmp_path):
     """Drive real git commit through installed .githooks/pre-commit (install-hooks path)."""

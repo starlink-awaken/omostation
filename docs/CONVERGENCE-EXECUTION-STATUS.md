@@ -64,12 +64,24 @@ note: >
   - `20260717T123831Z-project-code-change-127ac5fa`（#412）
   - `20260717T125342Z-project-code-change-a83e9a76`（#413）
 
-## 五、剩余观察项（非阻塞）
+## 五、G-CONV.7 Swarm 纪律（M1 硬前置 · ADR-0220）
 
-1. **Workspace 功能分支**若仍停在 `docs/*`，日更 foundry LaunchAgent 的 `WORKSPACE` 指向该树时，需 merge/rebase `origin/main` 才能自动吃到 5:45 gitlink 槽位（代码已在 main）。
+| 项 | 状态 |
+|----|------|
+| 四闸门 D1–D4 | ✅ PR #415 + skeptic #416 |
+| 72h 观测窗 | 🟡 **window_open**（`window-start` 2026-07-17T13:52:27Z → target +72h） |
+| 冲突计数 | 读 `python3 bin/gac/swarm-discipline-cli.py window-status` |
+| M1「冲突=0」 | **未宣布达标** — 仅当 elapsed≥72 且 conflict_count=0 |
+
+Foundry 5:50 槽位持续落盘 window-status；orphan_commit 扫描纳入观测。
+
+## 六、剩余观察项（非阻塞）
+
+1. **Workspace 功能分支**若仍停在 `docs/*`，日更 foundry LaunchAgent 的 `WORKSPACE` 指向该树时，需 merge/rebase `origin/main` 才能自动吃到 5:45/5:50 槽位（代码已在 main）。
 2. **governance 子分**在多 worktree / 多 lock 时会诚实下探（ISC-3 设计如此）；composite 可能低于 100 而 runtime 仍满——属执行面敏感，不是假红灯。
 3. **KOS 季度持续增长**：首批已 >0；后续靠季度入库节奏，非本轮一次性关门。
-4. **foundry 其它槽位**（port-governance 等）偶发 fail 与 G-CONV.4 无关；gitlink 槽位独立。
+4. **foundry 其它槽位**（port-governance 等）偶发 fail 与 G-CONV.4 无关；gitlink / swarm-window 槽位独立。
+5. **裸 `git --no-verify`** 仍可跳过 hook（git 设计）；agent 路径用 `bin/gac/swarm-git`。
 
 ## 六、历史盘点（2026-07-15，保留对照）
 
