@@ -171,6 +171,56 @@ def test_pass_only_after_72h_and_zero_conflicts(tmp_path: Path):
     assert report["m1_verdict"] == "pass"
     assert report["phase2_recommend"] is True
     assert report["window"]["elapsed_hours"] >= 72
+    assert report.get("evidence_path") == "passive"
+
+
+def test_adversarial_path_pass_before_72h(tmp_path: Path):
+    """ADR-0222 path B: four-gate all blocked unlocks phase2 while window_open."""
+    _seed_minimal_green(tmp_path, with_window=True)
+    mod = _load()
+    adv = {
+        "m1_adversarial_verdict": "pass",
+        "generated_at": "2026-07-18T10:00:00Z",
+        "summary": {"all_blocked": True, "passed": ["D1", "D2", "D3", "D4"], "failed": []},
+        "gates": [
+            {"gate": "D1", "blocked": True},
+            {"gate": "D2", "blocked": True},
+            {"gate": "D3", "blocked": True},
+            {"gate": "D4", "blocked": True},
+        ],
+    }
+    adv_path = tmp_path / ".omo/_delivery/m1-adversarial/latest.json"
+    adv_path.parent.mkdir(parents=True, exist_ok=True)
+    adv_path.write_text(json.dumps(adv) + "\n", encoding="utf-8")
+    report = mod.build_report(
+        tmp_path, scan_orphans=False, adversarial_evidence=adv_path
+    )
+    assert report["m1_verdict"] == "pass"
+    assert report["phase2_recommend"] is True
+    assert report["evidence_path"] == "adversarial"
+    assert report["adversarial"]["all_blocked"] is True
+    assert report["window"]["elapsed_hours"] < 72
+
+
+def test_adversarial_missing_gate_keeps_window_open(tmp_path: Path):
+    _seed_minimal_green(tmp_path, with_window=True)
+    mod = _load()
+    adv = {
+        "gates": [
+            {"gate": "D1", "blocked": True},
+            {"gate": "D2", "blocked": True},
+            {"gate": "D3", "blocked": False},
+            {"gate": "D4", "blocked": True},
+        ]
+    }
+    adv_path = tmp_path / "adv.json"
+    adv_path.write_text(json.dumps(adv), encoding="utf-8")
+    report = mod.build_report(
+        tmp_path, scan_orphans=False, adversarial_evidence=adv_path
+    )
+    assert report["m1_verdict"] == "window_open"
+    assert report["phase2_recommend"] is False
+    assert report.get("evidence_path") is None
 
 
 def test_fail_when_conflicts_after_window(tmp_path: Path):
@@ -249,7 +299,7 @@ def test_cli_json_on_real_workspace_root_shape():
     )
     assert r.returncode == 0, r.stderr
     data = json.loads(r.stdout)
-    assert data["schema"] == "m1-closeout-report/v1"
+    assert data["schema"] in {"m1-closeout-report/v1", "m1-closeout-report/v2"}
     assert data["m1_verdict"] in {
         "window_open",
         "window_not_started",
