@@ -1,4 +1,4 @@
-"""M1 closeout report — honest T+72 rejudge (ADR-0210 + ADR-0220)."""
+"""M1 closeout report — T+72 / adversarial / rootcause rejudge (ADR-0210/0220/0222/0224)."""
 from __future__ import annotations
 
 import importlib.util
@@ -299,7 +299,11 @@ def test_cli_json_on_real_workspace_root_shape():
     )
     assert r.returncode == 0, r.stderr
     data = json.loads(r.stdout)
-    assert data["schema"] in {"m1-closeout-report/v1", "m1-closeout-report/v2"}
+    assert data["schema"] in {
+        "m1-closeout-report/v1",
+        "m1-closeout-report/v2",
+        "m1-closeout-report/v3",
+    }
     assert data["m1_verdict"] in {
         "window_open",
         "window_not_started",
@@ -309,6 +313,111 @@ def test_cli_json_on_real_workspace_root_shape():
     assert "phase2_recommend" in data
     assert len(data["checks"]) == 7
     assert "ssot_root" in data
+    assert "conflict_rootcause" in data
+
+
+def _four_gate_adv() -> dict:
+    return {
+        "m1_adversarial_verdict": "pass",
+        "generated_at": "2026-07-18T10:00:00Z",
+        "summary": {"all_blocked": True, "passed": ["D1", "D2", "D3", "D4"], "failed": []},
+        "gates": [
+            {"gate": "D1", "blocked": True},
+            {"gate": "D2", "blocked": True},
+            {"gate": "D3", "blocked": True},
+            {"gate": "D4", "blocked": True},
+        ],
+    }
+
+
+def _inject_one_conflict(tmp_path: Path) -> None:
+    import importlib.util as iu
+
+    spec = iu.spec_from_file_location("sd", tmp_path / "bin/gac/swarm_discipline.py")
+    sd = iu.module_from_spec(spec)  # type: ignore[arg-type]
+    assert spec and spec.loader
+    spec.loader.exec_module(sd)
+    sd.emit_conflict_event(tmp_path, "branch_hijack", {"branch": "work/x"})
+
+
+def test_adversarial_with_conflicts_without_rootcause_fails(tmp_path: Path):
+    """ADR-0224: conflict_count>0 + path B alone must NOT pass."""
+    _seed_minimal_green(tmp_path, with_window=True)
+    mod = _load()
+    _inject_one_conflict(tmp_path)
+    adv_path = tmp_path / ".omo/_delivery/m1-adversarial/latest.json"
+    adv_path.parent.mkdir(parents=True, exist_ok=True)
+    adv_path.write_text(json.dumps(_four_gate_adv()) + "\n", encoding="utf-8")
+    report = mod.build_report(
+        tmp_path, scan_orphans=False, adversarial_evidence=adv_path
+    )
+    assert report["window"]["conflict_count"] >= 1
+    assert report["adversarial"]["all_blocked"] is True
+    assert report["m1_verdict"] == "fail"
+    assert report["phase2_recommend"] is False
+    assert report.get("evidence_path") is None
+    assert report["conflict_rootcause"]["required"] is True
+    assert report["conflict_rootcause"]["ok"] is False
+
+
+def test_adversarial_with_gate_interception_rootcause_passes(tmp_path: Path):
+    """ADR-0224: interception rootcause unlocks adversarial_with_rootcause."""
+    _seed_minimal_green(tmp_path, with_window=True)
+    mod = _load()
+    _inject_one_conflict(tmp_path)
+    adv_path = tmp_path / ".omo/_delivery/m1-adversarial/latest.json"
+    adv_path.parent.mkdir(parents=True, exist_ok=True)
+    adv_path.write_text(json.dumps(_four_gate_adv()) + "\n", encoding="utf-8")
+    rc = {
+        "schema": "m1-conflict-rootcause/v1",
+        "events": [
+            {
+                "ts": "2026-07-18T08:53:52Z",
+                "kind": "branch_hijack",
+                "class": "gate_interception",
+            }
+        ],
+        "disposition": {"m1_keep_pass": True, "freeze_g_del": False},
+    }
+    rc_path = tmp_path / "rootcause.json"
+    rc_path.write_text(json.dumps(rc) + "\n", encoding="utf-8")
+    report = mod.build_report(
+        tmp_path,
+        scan_orphans=False,
+        adversarial_evidence=adv_path,
+        conflict_rootcause=rc_path,
+    )
+    assert report["m1_verdict"] == "pass"
+    assert report["phase2_recommend"] is True
+    assert report["evidence_path"] == "adversarial_with_rootcause"
+    assert report["conflict_rootcause"]["ok"] is True
+    assert report["paths"]["rootcause_ok"] is True
+
+
+def test_adversarial_with_coverage_gap_rootcause_fails(tmp_path: Path):
+    """ADR-0224: coverage_gap_bypass blocks pass even if adversarial green."""
+    _seed_minimal_green(tmp_path, with_window=True)
+    mod = _load()
+    _inject_one_conflict(tmp_path)
+    adv_path = tmp_path / "adv.json"
+    adv_path.write_text(json.dumps(_four_gate_adv()), encoding="utf-8")
+    rc = {
+        "events": [
+            {"kind": "branch_hijack", "class": "coverage_gap_bypass"},
+        ]
+    }
+    rc_path = tmp_path / "rc-gap.json"
+    rc_path.write_text(json.dumps(rc), encoding="utf-8")
+    report = mod.build_report(
+        tmp_path,
+        scan_orphans=False,
+        adversarial_evidence=adv_path,
+        conflict_rootcause=rc_path,
+    )
+    assert report["m1_verdict"] == "fail"
+    assert report["phase2_recommend"] is False
+    assert report["conflict_rootcause"]["ok"] is False
+    assert "coverage_gap_bypass" in report["conflict_rootcause"]["blocking_classes"]
 
 
 def test_ssot_root_splits_live_window_from_code(tmp_path: Path):

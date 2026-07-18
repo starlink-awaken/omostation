@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-"""M1 closeout rejudge — ADR-0210 + ADR-0220 + ADR-0222.
+"""M1 closeout rejudge — ADR-0210 + ADR-0220 + ADR-0222 + ADR-0224.
 
-Aggregates G-CONV.1–7 into a JSON verdict. M1「冲突=0」有两条等效路径 (ADR-0222):
+Aggregates G-CONV.1–7 into a JSON verdict. M1「冲突=0」证据路径:
 
   * **passive**: 72h window elapsed AND conflict_count=0 AND hard greens
-  * **adversarial**: four-gate intentional abuse all blocked (evidence JSON) AND
-    conflict_count=0 AND hard greens (need not wait 72h)
+  * **adversarial**: four-gate intentional abuse all blocked (evidence JSON)
+    AND hard greens (need not wait 72h); when conflict_count==0 → evidence_path
+    ``adversarial`` (ADR-0222)
+  * **adversarial_with_rootcause** (ADR-0224): path B when conflict_count>0
+    only if conflict-rootcause classifies every event as gate_interception
+    or historical_pre_gate (no coverage_gap_bypass / unresolved)
 
-Never claims phase2_recommend without one of those paths (skeptic: evidence first).
+Never claims phase2_recommend without a completed path (skeptic: evidence first).
 
 Usage:
   python3 bin/gac/m1-closeout-report.py --ssot-root <live>
   python3 bin/gac/m1-closeout-report.py --adversarial-evidence .omo/_delivery/m1-adversarial/latest.json
+  python3 bin/gac/m1-closeout-report.py --conflict-rootcause .omo/_knowledge/audits/....json
   python3 bin/gac/m1-closeout-report.py --json --out .omo/_delivery/m1-closeout/latest.json
 
 Exit codes:
@@ -33,6 +38,9 @@ UTC = timezone.utc
 
 DEFAULT_RATIO_MIN = 0.9
 DEFAULT_ADVERSARIAL = ".omo/_delivery/m1-adversarial/latest.json"
+DEFAULT_ROOTCAUSE_GLOB = ".omo/_delivery/m1-closeout/conflict-rootcause-*.json"
+BAD_ROOTCAUSE = frozenset({"coverage_gap_bypass", "unresolved"})
+OK_ROOTCAUSE = frozenset({"gate_interception", "historical_pre_gate"})
 ISC3_WEIGHT_RE = re.compile(
     r"governance['\"]?\s*:\s*0\.3|0\.3.*0\.5.*0\.2|ISC-3|isc3",
     re.I,
@@ -383,6 +391,80 @@ def adversarial_path_pass(evidence: dict[str, Any] | None) -> tuple[bool, dict[s
     return all_blocked, detail
 
 
+def load_conflict_rootcause(
+    live: Path, code_root: Path, explicit: Path | None = None
+) -> tuple[dict[str, Any] | None, Path | None]:
+    """Load newest conflict-rootcause JSON (ADR-0224)."""
+    if explicit is not None and explicit.is_file():
+        try:
+            return json.loads(explicit.read_text(encoding="utf-8")), explicit
+        except (OSError, json.JSONDecodeError):
+            return None, explicit
+    candidates: list[Path] = []
+    for base in (live, code_root):
+        d = base / ".omo/_delivery/m1-closeout"
+        if d.is_dir():
+            candidates.extend(sorted(d.glob("conflict-rootcause-*.json")))
+        audits = base / ".omo/_knowledge/audits"
+        if audits.is_dir():
+            candidates.extend(sorted(audits.glob("*m1-conflict-rootcause*.json")))
+            candidates.extend(sorted(audits.glob("conflict-rootcause-*.json")))
+    if not candidates:
+        return None, None
+    # Prefer newest by mtime among unique paths
+    uniq = sorted({p.resolve() for p in candidates}, key=lambda p: p.stat().st_mtime)
+    path = uniq[-1]
+    try:
+        return json.loads(path.read_text(encoding="utf-8")), path
+    except (OSError, json.JSONDecodeError):
+        return None, path
+
+
+def evaluate_rootcause(
+    rootcause: dict[str, Any] | None, conflict_count: int
+) -> dict[str, Any]:
+    """ADR-0224: classify whether path B may still pass when count>0."""
+    if conflict_count <= 0:
+        return {
+            "required": False,
+            "present": False,
+            "ok": True,
+            "classes": [],
+            "blocking_classes": [],
+        }
+    if not rootcause:
+        return {
+            "required": True,
+            "present": False,
+            "ok": False,
+            "reason": "conflict_count>0 requires conflict-rootcause JSON (ADR-0224)",
+            "classes": [],
+            "blocking_classes": ["missing_rootcause"],
+        }
+    events = rootcause.get("events") or []
+    classes = [str(e.get("class") or "unresolved") for e in events if isinstance(e, dict)]
+    if not classes and conflict_count > 0:
+        classes = ["unresolved"]
+    blocking = [c for c in classes if c in BAD_ROOTCAUSE or c not in OK_ROOTCAUSE]
+    # unknown classes treated as blocking
+    blocking = [c for c in classes if c not in OK_ROOTCAUSE]
+    ok = len(blocking) == 0 and len(classes) >= conflict_count
+    # allow rootcause with exactly the known events even if count slightly differs
+    if len(blocking) == 0 and classes and all(c in OK_ROOTCAUSE for c in classes):
+        ok = True
+    return {
+        "required": True,
+        "present": True,
+        "ok": ok,
+        "classes": classes,
+        "blocking_classes": blocking,
+        "disposition": rootcause.get("disposition"),
+        "reason": None
+        if ok
+        else f"rootcause has blocking classes: {blocking or 'incomplete'}",
+    }
+
+
 def build_report(
     root: Path,
     *,
@@ -391,6 +473,7 @@ def build_report(
     scan_orphans: bool = True,
     emit_orphans: bool = False,
     adversarial_evidence: Path | None = None,
+    conflict_rootcause: Path | None = None,
 ) -> dict[str, Any]:
     code_root = root.resolve()
     live = (ssot_root or root).resolve()
@@ -414,7 +497,7 @@ def build_report(
     conflict_count = int(window.get("conflict_count") or 0)
     window_verdict = window.get("m1_conflict_zero_verdict") or "window_open"
 
-    # Path B — adversarial (ADR-0222)
+    # Path B — adversarial (ADR-0222 + 0224)
     adv_path = adversarial_evidence
     if adv_path is None:
         candidate = live / DEFAULT_ADVERSARIAL
@@ -429,6 +512,11 @@ def build_report(
     if adv_path is not None:
         adv_detail["path"] = str(adv_path)
 
+    rc_raw, rc_path = load_conflict_rootcause(live, code_root, conflict_rootcause)
+    rc_eval = evaluate_rootcause(rc_raw, conflict_count)
+    if rc_path is not None:
+        rc_eval["path"] = str(rc_path)
+
     # Path A — passive full window
     passive_ok = (
         window.get("window_start") is not None
@@ -438,19 +526,22 @@ def build_report(
         and not hard_fails
     )
 
-    # M1 rollup (ADR-0210 + ADR-0220 + ADR-0222)
-    # hard_fails for G-CONV.1–6 only when judging path B early unlock:
-    # g-conv.7 structural "ok" may be true (mech+count0) while window still open.
+    # M1 rollup (ADR-0210 + ADR-0220 + ADR-0222 + ADR-0224)
     structural_hard = [c for c in hard_fails if c != "g-conv.7"]
     evidence_path: str | None = None
-    # Path B first when adversarial evidence is present and green (ADR-0222).
-    # Note: successful gate interceptions may append to events.jsonl; those are
-    # evidence of blocking, not of concurrent main failure. Path B therefore
-    # does not require passive conflict_count==0.
+    # Path B with ADR-0224: if conflict_count>0 need clean rootcause
     if adv_ok and not structural_hard:
-        m1_verdict = "pass"
-        evidence_path = "adversarial"
+        if conflict_count > 0 and not rc_eval.get("ok"):
+            m1_verdict = "fail"
+            evidence_path = None
+        elif conflict_count > 0 and rc_eval.get("ok"):
+            m1_verdict = "pass"
+            evidence_path = "adversarial_with_rootcause"
+        else:
+            m1_verdict = "pass"
+            evidence_path = "adversarial"
     elif conflict_count > 0 or window_verdict == "fail":
+        # passive path fails on raw conflicts unless only historical (not auto)
         m1_verdict = "fail"
     elif structural_hard:
         m1_verdict = "fail"
@@ -470,11 +561,11 @@ def build_report(
     remaining = max(0.0, target_h - elapsed)
 
     report: dict[str, Any] = {
-        "schema": "m1-closeout-report/v2",
+        "schema": "m1-closeout-report/v3",
         "generated_at": _utc_iso(),
         "root": str(code_root),
         "ssot_root": str(live),
-        "adr": ["0210", "0220", "0222"],
+        "adr": ["0210", "0220", "0222", "0224"],
         "m1_verdict": m1_verdict,
         "evidence_path": evidence_path,
         "phase2_recommend": phase2_recommend,
@@ -490,9 +581,11 @@ def build_report(
             "orphan_commits_scanned": (window.get("orphan_commits_scanned") or [])[:10],
         },
         "adversarial": adv_detail,
+        "conflict_rootcause": rc_eval,
         "paths": {
             "passive_ok": passive_ok,
             "adversarial_ok": adv_ok,
+            "rootcause_ok": bool(rc_eval.get("ok")),
         },
         "checks": checks,
         "hard_fails": hard_fails,
@@ -504,13 +597,17 @@ def build_report(
         },
         "pr_421_note": (
             "PR#421 merged while closeout still window_open; ADR-0222 path B "
-            "adversarial evidence is the legitimate retroactive unlock criterion."
+            "adversarial evidence is the legitimate retroactive unlock criterion. "
+            "ADR-0224 requires rootcause when passive conflict_count>0."
         ),
         "rejudge_hint": (
             "Path A (passive): elapsed≥72h AND conflict_count=0 AND hard greens. "
-            "Path B (adversarial, ADR-0222): four-gate probe all blocked + "
-            "conflict_count=0 AND hard greens — pass --adversarial-evidence <json>. "
-            "Either path sets m1_verdict=pass and phase2_recommend=true."
+            "Path B (adversarial, ADR-0222): four-gate probe all blocked AND hard "
+            "greens — pass --adversarial-evidence <json>. "
+            "When conflict_count>0, ADR-0224 requires conflict-rootcause with only "
+            "gate_interception|historical_pre_gate → evidence_path="
+            "adversarial_with_rootcause; coverage_gap_bypass|unresolved|missing "
+            "blocks pass and freezes G-DEL expansion until gates are repaired."
         ),
     }
     return report
@@ -562,6 +659,16 @@ def main(argv: list[str] | None = None) -> int:
             "if present)"
         ),
     )
+    p.add_argument(
+        "--conflict-rootcause",
+        type=Path,
+        default=None,
+        help=(
+            "ADR-0224 rootcause JSON when conflict_count>0 "
+            "(default: newest .omo/_delivery/m1-closeout/conflict-rootcause-*.json "
+            "or audits copy under code root)"
+        ),
+    )
     args = p.parse_args(argv)
 
     root = args.root
@@ -583,6 +690,7 @@ def main(argv: list[str] | None = None) -> int:
         scan_orphans=not args.no_orphan_scan,
         emit_orphans=bool(args.emit_orphans),
         adversarial_evidence=args.adversarial_evidence,
+        conflict_rootcause=args.conflict_rootcause,
     )
 
     if args.out:
