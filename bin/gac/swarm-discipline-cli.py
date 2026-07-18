@@ -147,9 +147,14 @@ def cmd_window_start(_args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_window_status(_args: argparse.Namespace) -> int:
+def cmd_window_status(args: argparse.Namespace) -> int:
     root = root_from_cwd()
-    print(json.dumps(sd.conflict_window_status(root), indent=2, ensure_ascii=False))
+    status = sd.conflict_window_status(
+        root,
+        scan_orphans=not args.no_orphan_scan,
+        emit_orphans=bool(args.emit_orphans),
+    )
+    print(json.dumps(status, indent=2, ensure_ascii=False))
     return 0
 
 
@@ -229,6 +234,16 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(func=cmd_window_start)
 
     s = sub.add_parser("window-status")
+    s.add_argument(
+        "--no-orphan-scan",
+        action="store_true",
+        help="skip advisory orphan_commit git scan",
+    )
+    s.add_argument(
+        "--emit-orphans",
+        action="store_true",
+        help="record orphan hits into conflict events (affects M1 count)",
+    )
     s.set_defaults(func=cmd_window_status)
 
     s = sub.add_parser("inventory")
