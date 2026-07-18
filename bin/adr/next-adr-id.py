@@ -1,67 +1,26 @@
 #!/usr/bin/env python3
-"""Suggest (and optionally claim) the next free ADR number on origin/main.
+"""Suggest (and atomically claim) the next free ADR number.
 
-Prevents concurrent agents from colliding on the same ADR-NNNN (2026-07-15 0195 lesson).
+G-CONV.7 / ADR-0220 D1: claims use exclusive flock via swarm_discipline so
+concurrent agents cannot double-allocate the same ADR-NNNN.
 
 Usage:
   python3 bin/adr/next-adr-id.py
   python3 bin/adr/next-adr-id.py --session enforce-0203
   python3 bin/adr/next-adr-id.py --session enforce-0203 --claim
   python3 bin/adr/next-adr-id.py --json
-
-Claim files: .omo/_delivery/adr-claims/<session>.json (runtime; not for long-lived SSOT).
 """
 from __future__ import annotations
 
 import argparse
 import json
-import re
 import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
-# Python 3.9 compatible (macOS system python); 3.11+ has datetime.UTC
-UTC = timezone.utc
-
 ROOT = Path(__file__).resolve().parents[2]
-DECISIONS = ROOT / ".omo" / "_knowledge" / "decisions"
-CLAIMS_DIR = ROOT / ".omo" / "_delivery" / "adr-claims"
-ADR_RE = re.compile(r"^(\d{4})-.*\.md$")
-
-
-def listed_numbers() -> set[int]:
-    nums: set[int] = set()
-    if not DECISIONS.is_dir():
-        return nums
-    for path in DECISIONS.iterdir():
-        match = ADR_RE.match(path.name)
-        if match:
-            nums.add(int(match.group(1)))
-    return nums
-
-
-def claimed_numbers() -> dict[int, dict]:
-    claimed: dict[int, dict] = {}
-    if not CLAIMS_DIR.is_dir():
-        return claimed
-    for path in CLAIMS_DIR.glob("*.json"):
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        number = payload.get("number")
-        if isinstance(number, int):
-            claimed[number] = payload
-    return claimed
-
-
-def next_free(existing: set[int], claimed: dict[int, dict]) -> int:
-    taken = set(existing) | set(claimed)
-    candidate = (max(taken) + 1) if taken else 1
-    while candidate in taken:
-        candidate += 1
-    return candidate
+sys.path.insert(0, str(ROOT / "bin" / "gac"))
+import swarm_discipline as sd  # noqa: E402
 
 
 def main() -> int:
@@ -70,14 +29,17 @@ def main() -> int:
     parser.add_argument(
         "--claim",
         action="store_true",
-        help="write short-lived claim under .omo/_delivery/adr-claims/",
+        help="atomically claim next free number under .omo/_delivery/adr-claims/",
+    )
+    parser.add_argument(
+        "--number",
+        type=int,
+        default=None,
+        help="optional specific number to claim (must be free)",
     )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
-    existing = listed_numbers()
-    claimed = claimed_numbers()
-    number = next_free(existing, claimed)
     # Prefer origin/main tip if available (advisory only)
     try:
         subprocess.run(
@@ -90,6 +52,46 @@ def main() -> int:
     except (OSError, subprocess.TimeoutExpired):
         pass
 
+    existing = sd.list_existing_adr_numbers(ROOT / ".omo" / "_knowledge" / "decisions")
+    claimed = sd.load_adr_claims(
+        sd.delivery_path(ROOT, "adr_claims_dir", ".omo/_delivery/adr-claims")
+    )
+
+    if args.claim:
+        if not args.session:
+            print("error: --claim requires --session", file=sys.stderr)
+            return 2
+        ok, result = sd.acquire_adr_claim(ROOT, args.session, number=args.number)
+        if not ok:
+            if args.json:
+                print(json.dumps({"ok": False, **result}, ensure_ascii=False, indent=2))
+            else:
+                print(f"error: {result.get('error')}", file=sys.stderr)
+            return 1
+        result_out = {
+            "ok": True,
+            "next": result["number"],
+            "next_id": result["next_id"],
+            "existing_max": max(existing) if existing else 0,
+            "claimed_count": len(claimed) + (0 if result.get("reused") else 1),
+            "session": args.session,
+            "claim_path": result.get("claim_path"),
+            "claimed": True,
+            "reused": result.get("reused"),
+            "gate": "d1_adr_atomic_claim",
+        }
+        if args.json:
+            print(json.dumps(result_out, ensure_ascii=False, indent=2))
+        else:
+            line = f"ADR-{result_out['next_id']} (session={args.session})"
+            line += f" claimed → {result_out['claim_path']}"
+            if result.get("reused"):
+                line += " [reused]"
+            print(line)
+        return 0
+
+    # advisory suggest (no lock) — prefer claim for real work
+    number = args.number or sd.next_free_adr(existing, claimed)
     result = {
         "next": number,
         "next_id": f"{number:04d}",
@@ -97,33 +99,15 @@ def main() -> int:
         "claimed_count": len(claimed),
         "session": args.session or None,
         "claim_path": None,
+        "claimed": False,
+        "note": "advisory only; use --claim for D1 atomic occupation",
     }
-
-    if args.claim:
-        if not args.session:
-            print("error: --claim requires --session", file=sys.stderr)
-            return 2
-        CLAIMS_DIR.mkdir(parents=True, exist_ok=True)
-        claim_path = CLAIMS_DIR / f"{args.session}.json"
-        payload = {
-            "number": number,
-            "next_id": f"{number:04d}",
-            "session": args.session,
-            "claimed_at": datetime.now(UTC).isoformat(),
-            "note": "short-lived; release by deleting this file after ADR lands on main",
-        }
-        claim_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-        result["claim_path"] = str(claim_path.relative_to(ROOT))
-        result["claimed"] = True
-
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
         line = f"ADR-{result['next_id']}"
         if args.session:
             line += f" (session={args.session})"
-        if result.get("claim_path"):
-            line += f" claimed → {result['claim_path']}"
         print(line)
     return 0
 

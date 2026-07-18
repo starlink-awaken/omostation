@@ -14,7 +14,22 @@
 #     anyone         — 不限制 (允许任何写入方)
 
 version: 1
-last_updated: "2026-07-16"
+last_updated: "2026-07-17"
+
+# Path-level rules for bin/ssot/write-owner-audit.py (pre-commit G-CONV.5).
+# owner format: "script:<name>" | "daemon:<name>" | "human:<name>"
+# script/daemon owned paths forbid manual commit outside AGENT_WORKFLOW_RUN_ID / CI.
+write_owners:
+  - path: ".omo/state/system.yaml"
+    owner: "script:runtime-scan"
+  - path: ".omo/state/health.yaml"
+    owner: "script:strategy-sync"
+  - path: ".omo/state/system_health.yaml"
+    owner: "script:runtime-scan"
+  - path: ".omo/debt/*"
+    owner: "script:omo-debt"
+  - path: ".omo/debt/**"
+    owner: "script:omo-debt"
 
 fields:
   # system.yaml — 运行时 + 治理状态

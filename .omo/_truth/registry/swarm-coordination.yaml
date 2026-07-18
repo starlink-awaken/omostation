@@ -1,0 +1,92 @@
+# swarm-coordination.yaml — G-CONV.7 / ADR-0220 SSOT
+#
+# Four enforceable gates for concurrent multi-agent swarm discipline.
+# Runtime lock/claim files live under .omo/_delivery/ (gitignored delivery plane).
+# Policy (this file) is the long-lived registry; validators fail closed.
+#
+# Gates:
+#   D1 adr_atomic_claim      — ADR numbers claimed before write
+#   D2 branch_occupancy      — work/<slug> occupancy lock
+#   D3 shared_worktree_claim — shared main tree requires agent-workflow claim
+#   D4 escape_hatch          — --no-verify / CI_LOCAL_SKIP allowlist only
+
+version: 1
+last_updated: "2026-07-17"
+related:
+  - adr: "0220"
+  - goal: "G-CONV.7"
+  - m1_gate: concurrent_main_conflict_zero
+
+delivery:
+  adr_claims_dir: .omo/_delivery/adr-claims
+  branch_claims_dir: .omo/_delivery/branch-claims
+  escape_log_dir: .omo/_delivery/swarm-escape
+  conflict_events: .omo/_delivery/swarm-conflicts/events.jsonl
+  conflict_window: .omo/_delivery/swarm-conflicts/window.json
+  lock_ttl_hours: 24
+
+gates:
+  d1_adr_atomic_claim:
+    id: d1
+    name: ADR number atomic claim
+    entry: bin/adr/next-adr-id.py --claim
+    check: bin/gac/swarm-discipline-cli.py adr-check
+    fail_closed: true
+  d2_branch_occupancy:
+    id: d2
+    name: work-branch occupancy lock
+    entry: bin/gac/gac-worktree.sh claim
+    check: bin/gac/swarm-discipline-cli.py branch-check
+    fail_closed: true
+  d3_shared_worktree_claim:
+    id: d3
+    name: shared worktree claim-before-commit
+    entry: pre-commit swarm-claim-check
+    check: bin/gac/swarm-discipline-cli.py claim-check --staged
+    fail_closed: true
+  d4_escape_hatch:
+    id: d4
+    name: escape-hatch allowlist
+    entry: >
+      .githooks/pre-push (CI_LOCAL_SKIP) + bin/gac/swarm-git (--no-verify fail-closed).
+      Bare git --no-verify still skips hooks by git design; agents must use swarm-git
+      (or PATH wrap) so D4 is fail-closed on the supported agent path.
+    check: bin/gac/swarm-discipline-cli.py escape-check | git-argv-check
+    fail_closed: true
+    agent_wrapper: bin/gac/swarm-git
+
+# Paths that may be committed on the shared main worktree without isolation
+# (docs-only / generated / self-describing). Everything else needs claim or worktree.
+shared_worktree_allow_path_globs:
+  - "runtime/**"
+  - ".omo/_delivery/**"
+  - "kos/**"
+  - "*.log"
+
+# Escape hatch exemptions (D4). Using CI_LOCAL_SKIP or no-verify requires
+# SWARM_ESCAPE_ID matching one of these ids (or --escape-id for CLI).
+escape_hatch_exemptions:
+  - id: submodule-reachability-partial-worktree
+    allow: [no_verify_push, ci_local_skip]
+    reason: "P72: worktree partial submodule init; CI fresh clone is SSOT"
+    active: true
+  - id: write-owner-repair-draft
+    allow: [no_verify_commit]
+    reason: "G-CONV.5 L2 repair-draft local commit must not recurse pre-commit"
+    active: true
+  - id: emergency-human-hotfix
+    allow: [no_verify_push, no_verify_commit, ci_local_skip]
+    reason: "Human-declared emergency; must log conflict risk"
+    active: true
+    requires_human: true
+
+conflict_event_kinds:
+  - adr_renumber_race
+  - branch_hijack
+  - unclaimed_write
+  - orphan_commit
+  - escape_hatch_abuse
+
+observation:
+  window_hours: 72
+  m1_pass_requires: "elapsed_hours >= 72 AND conflict_count == 0"
