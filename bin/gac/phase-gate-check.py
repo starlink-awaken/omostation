@@ -150,7 +150,22 @@ def check_phases(
         }
 
     escape_rel = scope.get("escape_dir") or ".omo/_delivery/phase-escape"
-    escapes = list_escapes(root / escape_rel)
+    # committed escapes (CI-visible) + runtime delivery (local)
+    escape_dirs = [
+        root / escape_rel,
+        root / ".omo/_truth/registry/phase-escapes",
+    ]
+    for extra in scope.get("escape_dirs") or []:
+        escape_dirs.append(root / str(extra))
+    escapes: list[dict[str, Any]] = []
+    seen_files: set[str] = set()
+    for ed in escape_dirs:
+        for e in list_escapes(ed):
+            f = e.get("_file") or ""
+            if f in seen_files:
+                continue
+            seen_files.add(f)
+            escapes.append(e)
 
     blocks: list[dict[str, Any]] = []
     allowed: list[dict[str, Any]] = []
