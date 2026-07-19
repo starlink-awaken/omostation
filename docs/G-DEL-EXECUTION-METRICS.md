@@ -55,16 +55,22 @@ python3 bin/gac/phase-gate-check.py --files README.md --check-caliber --json
 默认 LAN 对：`local-mac`（本机）+ `macmini`（`192.168.31.210`）。
 
 ```bash
-# 两端需有 bin/delivery/physical_node.py；macmini 可用 rsync/git pull 对齐
+# 默认 n_ops=10000；p99 仅当 n≥1000 可信，否则 insufficient_samples
 python3 bin/delivery/measure_physical.py --auto-default-lan --start \
-  --remote-root ~/Workspace \
-  --out .omo/_delivery/m1-closeout/g-del-physical-latest.json
+  --remote-root ~/Workspace --n-ops 10000 \
+  --out .omo/_knowledge/audits/g-del-physical-latest.json
 ```
 
-字段：`env_class=physical_multi_host`，`physical_hosts` 按**不同机器**计数（同机多端口=1）。  
-官方 `meets_physical_gate` 仅在 `physical_hosts≥2` 且 KPI 过线时为 true。
+字段：`env_class=physical_multi_host`；分位见 `latency_summary`（p50/p90/p95/p99/p999/max + histogram）。
 
-### 真机快照
+### 真机快照（large-N n=10000）
 
-见最新 `.omo/_knowledge/audits/*g-del-physical*.json`。  
-G-DEL.1 在 2 机下 **gate_status=BLOCKED**（非 pass）。G-DEL.3 以 2 机 parallel fan-out 实测。
+| 跑次 | mode | n | p50 | p90 | p95 | p99 | p999 | max | 判定 |
+|------|------|---|-----|-----|-----|-----|------|-----|------|
+| fan-out | parallel_fanout_put | 10000 | 10.1 | 15.3 | 19.3 | **101.0** | 111.0 | 177.9 | fail（真实尾） |
+| protocol | cross_host_put | 10000 | 11.5 | 18.8 | 24.8 | **105.1** | 122.5 | 233.6 | fail |
+
+- n≈100 时 p99≈157ms≈max → **小样本假象**；large-N 证明主体健康但 **p99 仍 ≥100ms**（WiFi 尾）。
+- 有线：macmini en0 Ethernet **inactive**，无法隔离 WiFi。
+- G-DEL.1 在 2 机下 **BLOCKED**（min=4）。
+证据：`.omo/_knowledge/audits/2026-07-19-g-del3-*-large-n.json`。
