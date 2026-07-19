@@ -51,10 +51,10 @@ phases:
       - "docs/LEAP/**"
       - "projects/metaos/src/metaos/leap/**"
 
-# ADR-0225 — measurement caliber (scheme A: physical multi-host is official for G-DEL.1/3)
+# ADR-0225/0226 — measurement caliber (scheme A: physical multi-host official for G-DEL.1/3)
 metrics_caliber:
   scheme: A
-  adr: ["0210", "0225"]
+  adr: ["0210", "0225", "0226"]
   inventory_ref: .omo/_knowledge/audits/2026-07-19-physical-node-inventory.json
   env_classes:
     - id: in-process_simulation
@@ -77,12 +77,18 @@ metrics_caliber:
       gate: G-DEL.1
       metric_keys: [g_del_1]
       requires_env_class: physical_multi_host
-      min_physical_hosts: 2
+      # ADR-0210 四机门禁；2 机底座不得官方达标 (ADR-0226)
+      min_physical_hosts: 4
       ideal_physical_hosts: 4
       kpi: schedule_success_rate > 0.99
-      # Fields that may be true under simulation
+      status: BLOCKED
+      blocked_reason: >
+        reachable_physical_hosts=2 < min_physical_hosts=4
+        (ADR-0210 4-machine schedule gate; ADR-0226 fail-closed)
+      unblock_when: >
+        inventory reachable_physical_hosts ≥ 4 AND physical measure
+        meets_physical_gate=true with env_class=physical_multi_host
       sim_allowed_true_fields: [meets_sim_harness]
-      # Fields that must NOT be true when env is simulation
       physical_only_true_fields: [meets_physical_gate, meets_gate]
     - id: g_del_3
       gate: G-DEL.3
@@ -91,6 +97,7 @@ metrics_caliber:
       min_physical_hosts: 2
       ideal_physical_hosts: 4
       kpi: sync_latency_p99_ms < 100
+      status: OPEN
       sim_allowed_true_fields: [meets_sim_harness]
       physical_only_true_fields: [meets_physical_gate, meets_gate]
   # Non-physical goals (protocol / safety) may use process-local meets_gate
@@ -98,19 +105,36 @@ metrics_caliber:
     - id: g_del_2b
       gate: G-DEL.2b
       metric_keys: [g_del_2b]
+      caliber: process_local
+      status: OPEN
     - id: g_del_5b
       gate: G-DEL.5b
       metric_keys: [g_del_5b]
+      caliber: process_local
+      status: OPEN
+    - id: g_del_4
+      gate: G-DEL.4
+      metric_keys: [g_del_4]
+      caliber: single_repo_gbrain
+      status: OPEN
   rules:
     - id: no-sim-in-physical-fields
       description: >
         Simulation-labeled metrics must not set physical_only_true_fields to true.
         Official G-DEL.1/3 pass requires env_class=physical_multi_host and measured hosts.
+    - id: min-hosts-for-physical-pass
+      description: >
+        Physical-labeled metrics with meets_gate/meets_physical_gate=true must
+        report physical_hosts >= min_physical_hosts for that gate (G-DEL.1 → 4).
     - id: honest-env-label
       description: >
         measure_all default harness must stamp env_class=in-process_simulation.
+    - id: g-del-1-blocked-fail-closed
+      description: >
+        While g_del_1.status=BLOCKED, no report may claim G-DEL.1 official pass
+        (sim or under-provisioned physical). Unblock only per unblock_when.
 
 notes:
   - CI job phase-gate-enforce is required on main (ADR-0223).
   - Escapes must land under escape_dir with PR rationale; silent bypass forbidden.
-  - metrics_caliber enforced by phase-gate-check --metrics / --check-caliber (ADR-0225).
+  - metrics_caliber enforced by phase-gate-check --metrics / --check-caliber (ADR-0225/0226).
