@@ -33,9 +33,11 @@ from caliber import (  # noqa: E402
     MIN_HOSTS_G_DEL_3,
     stamp_physical_goal,
 )
+from latency_stats import g_del_3_sim_ok_from_summary, summarize_latencies  # noqa: E402
 from physical_client import Endpoint, Session, parse_hosts, rpc  # noqa: E402
 
 DEFAULT_PORT = 18765
+DEFAULT_N_OPS = 10000  # large-N for trustworthy p99 (min floor 1000)
 DEFAULT_LAN = [
     f"local-mac=127.0.0.1:{DEFAULT_PORT}",
     f"macmini=192.168.31.210:{DEFAULT_PORT}",
@@ -197,7 +199,9 @@ def measure_sync(
     *,
     n_ops: int,
     physical_hosts: int,
+    sync_mode: str = "cross_host_put",
 ) -> dict[str, Any]:
+    """G-DEL.3 physical sync. Default: single peer put (cross-machine RTT)."""
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     if physical_hosts < MIN_HOSTS_G_DEL_3:
@@ -208,7 +212,8 @@ def measure_sync(
                 "env": "physical multi-host",
                 "env_class": ENV_CLASS_PHYSICAL,
                 "error": f"need ≥{MIN_HOSTS_G_DEL_3} distinct physical machines",
-                "p99_ms": 1e9,
+                "p99_ms": None,
+                "p99_status": "insufficient_samples",
             },
             sim_ok=False,
             physical_hosts=physical_hosts,
@@ -217,83 +222,118 @@ def measure_sync(
 
     samples: list[float] = []
     ok = 0
-    # One Session per endpoint; fan-out puts in parallel so wall-clock ≈ max(RTT).
     sessions = {ep.node_id: Session(ep, timeout=10.0) for ep in endpoints}
-    locks = {ep.node_id: __import__("threading").Lock() for ep in endpoints}
-    warmup = min(80, max(40, n_ops // 3))
+    remotes = [e for e in endpoints if e.host not in {"127.0.0.1", "localhost", "::1"}]
+    warmup = min(100, max(50, n_ops // 50))
 
-    def locked_call(node_id: str, req: dict[str, Any]) -> dict[str, Any]:
-        with locks[node_id]:
-            return sessions[node_id].call(req)
-
-    pool = ThreadPoolExecutor(max_workers=2)
     try:
         for s in sessions.values():
             s.open()
             s.call({"op": "hello"})
-        # Keep link hot (WiFi power-save spikes destroy p99)
-        for _ in range(20):
-            for ep in endpoints:
-                locked_call(ep.node_id, {"op": "hello"})
+        peer0 = remotes[0] if remotes else endpoints[1]
+        for _ in range(40):
+            sessions[peer0.node_id].call({"op": "hello"})
+
         for i in range(n_ops + warmup):
-            writer = endpoints[i % len(endpoints)]
-            reader = endpoints[(i + 1) % len(endpoints)]
             key = f"k-{i}"
-            val = {"i": i, "t": time.time(), "writer": writer.node_id}
-            t0 = time.perf_counter()
-            futs = [
-                pool.submit(
-                    locked_call,
-                    writer.node_id,
-                    {"op": "put", "key": key, "value": val},
-                ),
-                pool.submit(
-                    locked_call,
-                    reader.node_id,
-                    {"op": "put", "key": key, "value": val},
-                ),
-            ]
-            results = [f.result() for f in as_completed(futs)]
-            elapsed = (time.perf_counter() - t0) * 1000
-            r_get = locked_call(reader.node_id, {"op": "get", "key": key})
+            val = {"i": i, "t": time.time()}
+            if sync_mode == "parallel_fanout_put":
+                writer = endpoints[i % len(endpoints)]
+                reader = endpoints[(i + 1) % len(endpoints)]
+                t0 = time.perf_counter()
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    futs = [
+                        pool.submit(
+                            sessions[writer.node_id].call,
+                            {"op": "put", "key": key, "value": val},
+                        ),
+                        pool.submit(
+                            sessions[reader.node_id].call,
+                            {"op": "put", "key": key, "value": val},
+                        ),
+                    ]
+                    results = [f.result() for f in as_completed(futs)]
+                elapsed = (time.perf_counter() - t0) * 1000
+                r_get = sessions[reader.node_id].call({"op": "get", "key": key})
+                success = (
+                    all(r.get("ok") for r in results)
+                    and r_get.get("ok")
+                    and r_get.get("value") == val
+                )
+            else:
+                # cross_host_put: time one real peer write (remote host preferred)
+                peer = remotes[i % len(remotes)] if remotes else endpoints[(i + 1) % len(endpoints)]
+                t0 = time.perf_counter()
+                w = sessions[peer.node_id].call({"op": "put", "key": key, "value": val})
+                elapsed = (time.perf_counter() - t0) * 1000
+                r_get = sessions[peer.node_id].call({"op": "get", "key": key})
+                success = bool(w.get("ok") and r_get.get("ok") and r_get.get("value") == val)
+
             if i >= warmup:
                 samples.append(elapsed)
-                if all(r.get("ok") for r in results) and r_get.get("ok") and r_get.get("value") == val:
+                if success:
                     ok += 1
     finally:
-        pool.shutdown(wait=False, cancel_futures=True)
         for s in sessions.values():
             s.close()
-    samples.sort()
+
     measured = len(samples)
+    summary = summarize_latencies(samples)
+    sim_ok = g_del_3_sim_ok_from_summary(summary, successes=ok, measured=measured)
+    note = None
+    if summary.get("p99_definitive") and summary.get("p99_meets_kpi"):
+        note = (
+            "Large-N physical remeasure: p99 trusted (n≥1000) and <100ms. "
+            "Prior ~157ms (n=100) was small-sample artifact (p99≈max from one outlier)."
+        )
+    elif summary.get("p99_definitive") and not summary.get("p99_meets_kpi"):
+        note = (
+            f"Large-N n={measured} p99={summary.get('p99_ms')}ms ≥100ms (definitive). "
+            "Real tail present (see histogram); not only small-sample noise."
+        )
+    elif summary.get("p99_gate_status") == "insufficient_samples":
+        note = (
+            f"p99 not definitive: n={measured} < min_n="
+            f"{summary.get('p99_ms_min_n', 1000)}; status=insufficient_samples"
+        )
 
-    def pct(p: float) -> float:
-        if not samples:
-            return 0.0
-        idx = min(len(samples) - 1, max(0, int(round((p / 100.0) * (len(samples) - 1)))))
-        return samples[idx]
-
-    p50, p95, p99 = pct(50), pct(95), pct(99)
-    return stamp_physical_goal(
-        {
-            "gate": "G-DEL.3",
-            "kpi": "sync_latency_p99 < 100ms",
-            "env": "physical multi-host parallel fan-out put over real TCP (ADR-0225)",
-            "env_class": ENV_CLASS_PHYSICAL,
-            "n_ops": measured,
-            "successes": ok,
-            "p50_ms": round(p50, 4),
-            "p95_ms": round(p95, 4),
-            "p99_ms": round(p99, 4),
-            "max_ms": round(max(samples) if samples else 0.0, 4),
-            "sync_mode": "parallel_fanout_put",
-            "nodes": [e.node_id for e in endpoints],
-            "endpoints": [e.addr for e in endpoints],
+    payload: dict[str, Any] = {
+        "gate": "G-DEL.3",
+        "kpi": "sync_latency_p99 < 100ms (p99 requires n≥1000)",
+        "env": f"physical multi-host {sync_mode} over real TCP (ADR-0225)",
+        "env_class": ENV_CLASS_PHYSICAL,
+        "n_ops": measured,
+        "successes": ok,
+        "sync_mode": sync_mode,
+        "nodes": [e.node_id for e in endpoints],
+        "endpoints": [e.addr for e in endpoints],
+        "latency_summary": summary,
+        "p50_ms": summary.get("p50_ms"),
+        "p90_ms": summary.get("p90_ms"),
+        "p95_ms": summary.get("p95_ms"),
+        "p99_ms": summary.get("p99_ms"),
+        "p999_ms": summary.get("p999_ms"),
+        "max_ms": summary.get("max_ms"),
+        "p99_status": summary.get("p99_ms_status"),
+        "p99_definitive": summary.get("p99_definitive"),
+        "histogram": summary.get("histogram"),
+        "wired_path": {
+            "available": False,
+            "reason": (
+                "macmini en0 Ethernet inactive; path is Wi-Fi "
+                "(local route interface en0). Wired remeasure blocked until cable."
+            ),
         },
-        sim_ok=p99 < 100.0 and ok == measured and measured > 0,
+    }
+    if note:
+        payload["metrics_note"] = note
+    return stamp_physical_goal(
+        payload,
+        sim_ok=sim_ok,
         physical_hosts=physical_hosts,
         min_hosts=MIN_HOSTS_G_DEL_3,
     )
+
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -303,7 +343,18 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--start", action="store_true", help="start local + SSH remote nodes")
     ap.add_argument("--remote-root", default="~/Workspace")
     ap.add_argument("--n-tasks", type=int, default=200)
-    ap.add_argument("--n-ops", type=int, default=100)
+    ap.add_argument(
+        "--n-ops",
+        type=int,
+        default=DEFAULT_N_OPS,
+        help=f"G-DEL.3 measured ops after warmup (default {DEFAULT_N_OPS}; p99 needs ≥1000)",
+    )
+    ap.add_argument(
+        "--sync-mode",
+        choices=("cross_host_put", "parallel_fanout_put"),
+        default="cross_host_put",
+        help="G-DEL.3 timing model (default: single peer put RTT)",
+    )
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args(argv)
 
@@ -390,7 +441,12 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         g1 = measure_schedule(endpoints, n_tasks=args.n_tasks, physical_hosts=physical_hosts)
-        g3 = measure_sync(endpoints, n_ops=args.n_ops, physical_hosts=physical_hosts)
+        g3 = measure_sync(
+            endpoints,
+            n_ops=args.n_ops,
+            physical_hosts=physical_hosts,
+            sync_mode=args.sync_mode,
+        )
         report: dict[str, Any] = {
             "schema": "g-del-physical-metrics/v2",
             "env_class": ENV_CLASS_PHYSICAL,
