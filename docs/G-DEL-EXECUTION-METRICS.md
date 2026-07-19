@@ -10,10 +10,10 @@ related: [BET-7e074, BET-664e3, BET-3e602, BET-8c7c, ADR-0221, ADR-0225]
 | Goal | KPI | 官方口径 | 状态 | Harness |
 |------|-----|----------|------|---------|
 | G-DEL.1 | schedule success > 99% | **physical multi-host ≥4** | **BLOCKED** (ADR-0226) | `measure_physical` (需 4 机) |
-| G-DEL.2b | collab complete > 95% | process-local | OPEN | `measure_all` → `g_del_2b` |
+| G-DEL.2b | collab complete > 95% | process-local | OPEN | `collab_cli` + `measure_all` |
 | G-DEL.3 | sync p99 < 100ms | **physical multi-host ≥2** | OPEN | `measure_physical` |
 | G-DEL.4 | 角色记忆共享 | single_repo gbrain | OPEN | `shared-context-cli` + `role_memory` + gbrain |
-| G-DEL.5b | accuracy > 80% + kill-switch | process-local | OPEN | `g_del_5b` |
+| G-DEL.5b | accuracy > 80% + kill-switch | process-local | OPEN | `emergence_cli` + `measure_all` |
 
 **G-DEL.1 解除条件**: `reachable_physical_hosts ≥ 4` 且物理测量 `meets_physical_gate=true`。  
 当前盘点 = 2 → 任何 sim / 2 机数据标 G-DEL.1 达标均被 phase-gate 拒绝。
@@ -77,3 +77,5 @@ python3 bin/delivery/measure_physical.py --auto-default-lan --start \
 
 有线复测清单：[`docs/G-DEL-3-WIRED-REMEASURE.md`](G-DEL-3-WIRED-REMEASURE.md)  
 链路探测：`python3 bin/delivery/network_path.py 192.168.31.210`（写入 measure_physical env_evidence）。
+
+看板：[`docs/G-DEL-PHASE2-BOARD.md`](G-DEL-PHASE2-BOARD.md) · 2b/5b 运维：[`docs/G-DEL-2b5b-OPS.md`](G-DEL-2b5b-OPS.md)

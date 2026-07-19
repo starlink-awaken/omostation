@@ -37,6 +37,8 @@ phases:
       - "docs/G-DEL-2a-role-framework-contract.md"
       - "docs/G-DEL-4-CALLCHAIN.md"
       - "docs/G-DEL-3-WIRED-REMEASURE.md"
+      - "docs/G-DEL-2b5b-OPS.md"
+      - "docs/G-DEL-PHASE2-BOARD.md"
     # PR titles/bodies matching these do not auto-unlock; only verdict SSOT does
 
   phase3:
@@ -125,11 +127,18 @@ metrics_caliber:
       metric_keys: [g_del_2b]
       caliber: process_local
       status: OPEN
+      entry: bin/delivery/collab_cli.py
+      ops: docs/G-DEL-2b5b-OPS.md
+      history: .omo/_delivery/collab/
     - id: g_del_5b
       gate: G-DEL.5b
       metric_keys: [g_del_5b]
       caliber: process_local
       status: OPEN
+      entry: bin/delivery/emergence_cli.py
+      ops: docs/G-DEL-2b5b-OPS.md
+      kill_flag: .omo/_delivery/emergence/session.kill
+      adr: ["0221"]
     - id: g_del_4
       gate: G-DEL.4
       metric_keys: [g_del_4]
