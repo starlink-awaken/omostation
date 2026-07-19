@@ -294,8 +294,8 @@ goals:
   progress: 65.4
   status: active
   kpi: '2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)'
-  measured_documents: 2424
-  measured_at: '2026-07-19T14:00:00Z'
+  measured_documents: 2426
+  measured_at: '2026-07-19T15:00:00Z'
   tasks: []
   quarterly_targets:
     - quarter: 2026Q3

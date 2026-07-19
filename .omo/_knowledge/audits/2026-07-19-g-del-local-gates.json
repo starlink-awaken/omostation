@@ -1,0 +1,17 @@
+{
+  "g_del_2b": {
+    "meets_gate": true,
+    "completion_rate": 1.0,
+    "accuracy": null
+  },
+  "g_del_4": {
+    "meets_gate": true,
+    "completion_rate": null,
+    "accuracy": null
+  },
+  "g_del_5b": {
+    "meets_gate": true,
+    "completion_rate": null,
+    "accuracy": 1.0
+  }
+}
