@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""Phase gate hard check (ADR-0223) — stdlib + optional PyYAML.
+"""Phase gate hard check (ADR-0223 + ADR-0225 caliber) — stdlib + optional PyYAML.
 
 CI-friendly: does NOT import m1-closeout-report or swarm_discipline.
 Reads:
-  - .omo/_truth/registry/phase-scope.yaml   (paths + unlock keys)
+  - .omo/_truth/registry/phase-scope.yaml   (paths + unlock keys + metrics_caliber)
   - .omo/_truth/registry/phase-verdict.yaml (committed unlock SSOT)
   - optional escape files under .omo/_delivery/phase-escape/
+  - optional G-DEL metrics JSON (--metrics) for sim-vs-physical consistency
 
 Usage:
   python3 bin/gac/phase-gate-check.py --base origin/main
   python3 bin/gac/phase-gate-check.py --files bin/delivery/x.py
+  python3 bin/gac/phase-gate-check.py --metrics path/to/measure.json --check-caliber
   python3 bin/gac/phase-gate-check.py --json
   PHASE_ESCAPE_ID=... python3 bin/gac/phase-gate-check.py ...
 
 Exit:
   0  allow
-  1  blocked (phase not unlocked)
+  1  blocked (phase not unlocked or caliber violation)
   2  config error
 """
 from __future__ import annotations
@@ -29,6 +31,16 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+
+# sim markers aligned with bin/delivery/caliber.py (stdlib-only copy for CI)
+_SIM_MARKERS = (
+    "in-process",
+    "simulation",
+    "not physical",
+    "process-local",
+    "logical node",
+    "in_process_simulation",
+)
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -123,6 +135,101 @@ def find_escape(
         if pr and str(e.get("pr_number") or "") == str(pr):
             return e
     return None
+
+
+def _metric_env_is_sim(metric: dict[str, Any]) -> bool:
+    ec = str(metric.get("env_class") or "").lower().replace("-", "_")
+    if "physical" in ec and "sim" not in ec:
+        return False
+    if "sim" in ec or "in_process" in ec or "inprocess" in ec:
+        return True
+    text = str(metric.get("env") or "").lower()
+    return any(m in text for m in _SIM_MARKERS) or not text
+
+
+def check_metrics_caliber(
+    report: dict[str, Any],
+    caliber: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """ADR-0225: sim-labeled metrics must not claim physical gate pass.
+
+    Pure function — inject labeled dicts in tests; no network.
+    """
+    if not caliber:
+        return {
+            "ok": True,
+            "skipped": True,
+            "reason": "no metrics_caliber in phase-scope",
+            "violations": [],
+        }
+    physical_gates = caliber.get("physical_gates") or []
+    violations: list[dict[str, Any]] = []
+
+    for pg in physical_gates:
+        if not isinstance(pg, dict):
+            continue
+        keys = list(pg.get("metric_keys") or [])
+        only_fields = list(pg.get("physical_only_true_fields") or ["meets_physical_gate", "meets_gate"])
+        for mk in keys:
+            metric = report.get(mk)
+            if not isinstance(metric, dict):
+                # also allow nested under report["metrics"][mk]
+                metrics_block = report.get("metrics")
+                if isinstance(metrics_block, dict):
+                    metric = metrics_block.get(mk)
+            if not isinstance(metric, dict):
+                continue
+            if not _metric_env_is_sim(metric):
+                # physical-labeled: ok if claims physical pass
+                continue
+            for field in only_fields:
+                if metric.get(field) is True:
+                    violations.append(
+                        {
+                            "rule": "no-sim-in-physical-fields",
+                            "metric_key": mk,
+                            "gate": pg.get("gate") or pg.get("id"),
+                            "field": field,
+                            "env": metric.get("env"),
+                            "env_class": metric.get("env_class"),
+                            "message": (
+                                f"{mk}.{field}=true under simulation env; "
+                                f"physical-only field (ADR-0225)"
+                            ),
+                        }
+                    )
+
+    # Rollup: all_physical_gates_pass / all_gates_pass true with sim env_class at top
+    top_class = str(report.get("env_class") or "").lower()
+    top_is_sim = (
+        "sim" in top_class
+        or "in_process" in top_class
+        or "inprocess" in top_class
+        or (not top_class and any(
+            isinstance(report.get(k), dict) and _metric_env_is_sim(report[k])
+            for k in ("g_del_1", "g_del_3")
+        ))
+    )
+    if top_is_sim:
+        for field in ("all_physical_gates_pass",):
+            if report.get(field) is True:
+                violations.append(
+                    {
+                        "rule": "no-sim-in-physical-fields",
+                        "metric_key": field,
+                        "field": field,
+                        "message": f"report.{field}=true under simulation (ADR-0225)",
+                    }
+                )
+
+    ok = len(violations) == 0
+    return {
+        "ok": ok,
+        "skipped": False,
+        "violations": violations,
+        "scheme": caliber.get("scheme"),
+        "adr": caliber.get("adr"),
+    }
 
 
 def check_phases(
@@ -240,6 +347,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--files", nargs="*", default=None, help="explicit file list")
     ap.add_argument("--json", action="store_true")
     ap.add_argument(
+        "--metrics",
+        type=Path,
+        default=None,
+        help="G-DEL measure JSON to validate against metrics_caliber (ADR-0225)",
+    )
+    ap.add_argument(
+        "--check-caliber",
+        action="store_true",
+        help="require metrics caliber check (loads --metrics or runs measure_all)",
+    )
+    ap.add_argument(
         "--escape-id",
         default=os.environ.get("PHASE_ESCAPE_ID") or os.environ.get("SWARM_ESCAPE_ID"),
     )
@@ -275,6 +393,59 @@ def main(argv: list[str] | None = None) -> int:
         escape_id=args.escape_id or None,
         pr=pr or None,
     )
+
+    # ADR-0225 caliber
+    scope = load_yaml(root / ".omo/_truth/registry/phase-scope.yaml")
+    caliber = scope.get("metrics_caliber") if isinstance(scope, dict) else None
+    caliber_result: dict[str, Any] | None = None
+    metrics_path = args.metrics
+    if args.check_caliber or metrics_path is not None:
+        report: dict[str, Any] | None = None
+        if metrics_path is not None and metrics_path.is_file():
+            try:
+                report = json.loads(metrics_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                result["ok"] = False
+                result["exit"] = 2
+                result["error"] = f"metrics unreadable: {exc}"
+                report = None
+        elif args.check_caliber:
+            # run measure_all as subprocess for real path
+            measure = root / "bin/delivery/measure_all.py"
+            if measure.is_file():
+                r = subprocess.run(
+                    [sys.executable, str(measure)],
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                try:
+                    report = json.loads(r.stdout)
+                except json.JSONDecodeError:
+                    result["ok"] = False
+                    result["exit"] = 2
+                    result["error"] = f"measure_all non-JSON: {r.stderr[:200]}"
+            else:
+                result["ok"] = False
+                result["exit"] = 2
+                result["error"] = "measure_all.py missing for --check-caliber"
+        if report is not None:
+            caliber_result = check_metrics_caliber(report, caliber if isinstance(caliber, dict) else None)
+            result["caliber"] = caliber_result
+            if not caliber_result.get("ok"):
+                result["ok"] = False
+                result["exit"] = 1
+                result.setdefault("blocks", []).append(
+                    {
+                        "phase": "metrics_caliber",
+                        "name": "ADR-0225 sim≠physical",
+                        "files": [str(metrics_path)] if metrics_path else ["measure_all"],
+                        "hint": "Simulation metrics cannot set physical gate fields true",
+                        "violations": caliber_result.get("violations"),
+                    }
+                )
+
     if args.json or True:
         # always print JSON for CI logs
         print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -283,7 +454,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[phase-gate] ❌ {result['error']}", file=sys.stderr)
         for b in result.get("blocks") or []:
             print(
-                f"[phase-gate] ❌ phase={b['phase']} blocked files={b['files']}",
+                f"[phase-gate] ❌ phase={b['phase']} blocked files={b.get('files')}",
                 file=sys.stderr,
             )
             print(f"[phase-gate]    {b.get('hint')}", file=sys.stderr)

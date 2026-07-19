@@ -169,13 +169,17 @@ def measure_collab_completion_rate(*, n_runs: int = 200, inject_fail_every: int 
         if r.completed:
             ok += 1
     rate = ok / n_runs if n_runs else 0.0
-    return {
-        "n_runs": n_runs,
-        "completed": ok,
-        "completion_rate": rate,
-        "completion_rate_pct": round(rate * 100, 4),
-        "meets_gate": rate > 0.95,
-        "gate": "G-DEL.2b",
-        "kpi": "role_collab_complete_rate > 95%",
-        "env": "process-local CollabBus (G-DEL.2a protocol)",
-    }
+    from caliber import stamp_non_physical_goal  # noqa: PLC0415
+
+    return stamp_non_physical_goal(
+        {
+            "n_runs": n_runs,
+            "completed": ok,
+            "completion_rate": rate,
+            "completion_rate_pct": round(rate * 100, 4),
+            "gate": "G-DEL.2b",
+            "kpi": "role_collab_complete_rate > 95%",
+            "env": "process-local CollabBus (G-DEL.2a protocol)",
+        },
+        ok=rate > 0.95,
+    )

@@ -67,15 +67,20 @@ def measure_sync_latency(
         idx = min(len(samples) - 1, max(0, int(round((p / 100.0) * (len(samples) - 1)))))
         return samples[idx]
     p50, p95, p99 = pct(50), pct(95), pct(99)
-    return {
-        "n_nodes": n_nodes,
-        "n_ops": n_ops,
-        "p50_ms": round(p50, 4),
-        "p95_ms": round(p95, 4),
-        "p99_ms": round(p99, 4),
-        "max_ms": round(max(samples) if samples else 0.0, 4),
-        "meets_gate": p99 < 100.0,
-        "gate": "G-DEL.3",
-        "kpi": "sync_latency_p99 < 100ms",
-        "env": "in-process multi-node sync (not physical multi-host network)",
-    }
+    from caliber import stamp_physical_goal  # noqa: PLC0415
+
+    return stamp_physical_goal(
+        {
+            "n_nodes": n_nodes,
+            "n_ops": n_ops,
+            "p50_ms": round(p50, 4),
+            "p95_ms": round(p95, 4),
+            "p99_ms": round(p99, 4),
+            "max_ms": round(max(samples) if samples else 0.0, 4),
+            "gate": "G-DEL.3",
+            "kpi": "sync_latency_p99 < 100ms",
+            "env": "in-process multi-node sync (not physical multi-host network)",
+        },
+        sim_ok=p99 < 100.0,
+        physical_hosts=0,
+    )

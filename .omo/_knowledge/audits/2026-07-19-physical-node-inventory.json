@@ -1,0 +1,92 @@
+{
+  "schema": "physical-node-inventory/v1",
+  "generated_at": "2026-07-19T02:34:19Z",
+  "probe_host": "Mac",
+  "registry": ".omo/_truth/registry/compute/nodes.yaml",
+  "registry_declared_hosts": 4,
+  "reachable_physical_hosts": 2,
+  "reachable_ids": [
+    "local-mac",
+    "macmini"
+  ],
+  "nodes": [
+    {
+      "id": "local-mac",
+      "registry_status": "active",
+      "type": "host",
+      "probe_targets": [
+        "localhost"
+      ],
+      "ping": {
+        "ok": true,
+        "rtt_ms": 0.0
+      },
+      "ssh": {
+        "ok": true,
+        "stdout": "Mac\narm64\nlocal"
+      },
+      "reachable_for_measurement": true,
+      "evidence": "current session host"
+    },
+    {
+      "id": "macmini",
+      "registry_status": "active",
+      "type": "host",
+      "probe_targets": [
+        "192.168.31.210",
+        "mac-mini.local"
+      ],
+      "ping": {
+        "ok": true,
+        "rtt_ms": 8.272
+      },
+      "ssh": {
+        "ok": true,
+        "stdout": "Mac-mini\narm64\nxiamingxing",
+        "stderr": ""
+      },
+      "reachable_for_measurement": true,
+      "evidence": "LAN ARP + SSH BatchMode"
+    },
+    {
+      "id": "y7000p",
+      "registry_status": "active",
+      "type": "host",
+      "probe_targets": [
+        "192.168.31.128",
+        "xia-y7000p.local"
+      ],
+      "ping": {
+        "ok": true,
+        "rtt_ms": 8.392
+      },
+      "ssh": {
+        "ok": false,
+        "stdout": "",
+        "stderr": "ssh: connect to host 192.168.31.128 port 22: Operation timed out"
+      },
+      "reachable_for_measurement": false,
+      "evidence": "LAN ARP ping only; SSH port 22 timeout"
+    },
+    {
+      "id": "cloud",
+      "registry_status": "active",
+      "type": "remote",
+      "probe_targets": [],
+      "ping": {
+        "ok": false
+      },
+      "ssh": {
+        "ok": false
+      },
+      "reachable_for_measurement": false,
+      "evidence": "no endpoint in registry; fail-closed"
+    }
+  ],
+  "threshold": {
+    "scheme_A_min_hosts": 2,
+    "ideal": 4
+  },
+  "chosen_scheme": "A",
+  "rationale": "≥2 SSH-reachable physical hosts (local-mac + macmini) → scheme A: keep ADR-0210 delivery gates as physical multi-host; sim harness cannot claim G-DEL.1/3 pass."
+}

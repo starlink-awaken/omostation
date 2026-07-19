@@ -2,13 +2,15 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-07-18
+last-reviewed: 2026-07-19
 related:
   - 0223-phase-gate-ci-enforcement.md
+  - 0225-g-del-physical-multihost-gate-caliber.md
   - 0210-three-year-strategy-execution-convergence.md
   - 0222-m1-conflict-zero-evidence-standard-adversarial.md
 ---
 # Phase scope registry — which paths require which stage unlock (ADR-0223)
+# Metrics caliber — sim vs physical multi-host (ADR-0225)
 
 version: 1
 verdict_ssot: .omo/_truth/registry/phase-verdict.yaml
@@ -23,7 +25,8 @@ phases:
     name: 兑现期 (Delivery)
     description: >
       Agent swarm registry/schedule/collab/sync/emergence implementation surfaces.
-      Unlock requires M1 phase2_recommend (passive 72h OR adversarial path B, ADR-0222).
+      Unlock requires M1 phase2_recommend (passive 72h OR adversarial path B, ADR-0222/0224).
+      G-DEL.1/3 official gates are physical multi-host (ADR-0225); in-process sim is harness only.
     unlock:
       verdict_key: phases.phase2.unlocked
       equals: true
@@ -39,15 +42,75 @@ phases:
     name: 跃迁期 (Leap)
     description: >
       Personal brain / digital twin / external GaC productization (预留).
-      Unlock: M2 multi-machine collab ≥ 85% (future).
+      Unlock: M2 multi-machine collab ≥ 85% measured on physical multi-host (future).
     unlock:
       verdict_key: phases.phase3.unlocked
       equals: true
-      source_hint: m2_collab_rate >= 0.85
+      source_hint: m2_collab_rate >= 0.85 physical_multi_host
     paths:
       - "docs/LEAP/**"
       - "projects/metaos/src/metaos/leap/**"
 
+# ADR-0225 — measurement caliber (scheme A: physical multi-host is official for G-DEL.1/3)
+metrics_caliber:
+  scheme: A
+  adr: ["0210", "0225"]
+  inventory_ref: .omo/_knowledge/audits/2026-07-19-physical-node-inventory.json
+  env_classes:
+    - id: in-process_simulation
+      aliases:
+        - in-process
+        - simulation
+        - sim
+        - not physical
+        - process-local multi-node
+      description: "Logical nodes in one process; not physical multi-host"
+    - id: physical_multi_host
+      aliases:
+        - physical
+        - multi-host
+        - multi_host
+      description: "Real hosts over network (SSH/agent mesh); official G-DEL.1/3 caliber"
+  # Goals whose official meets_gate requires physical_multi_host
+  physical_gates:
+    - id: g_del_1
+      gate: G-DEL.1
+      metric_keys: [g_del_1]
+      requires_env_class: physical_multi_host
+      min_physical_hosts: 2
+      ideal_physical_hosts: 4
+      kpi: schedule_success_rate > 0.99
+      # Fields that may be true under simulation
+      sim_allowed_true_fields: [meets_sim_harness]
+      # Fields that must NOT be true when env is simulation
+      physical_only_true_fields: [meets_physical_gate, meets_gate]
+    - id: g_del_3
+      gate: G-DEL.3
+      metric_keys: [g_del_3]
+      requires_env_class: physical_multi_host
+      min_physical_hosts: 2
+      ideal_physical_hosts: 4
+      kpi: sync_latency_p99_ms < 100
+      sim_allowed_true_fields: [meets_sim_harness]
+      physical_only_true_fields: [meets_physical_gate, meets_gate]
+  # Non-physical goals (protocol / safety) may use process-local meets_gate
+  non_physical_gates:
+    - id: g_del_2b
+      gate: G-DEL.2b
+      metric_keys: [g_del_2b]
+    - id: g_del_5b
+      gate: G-DEL.5b
+      metric_keys: [g_del_5b]
+  rules:
+    - id: no-sim-in-physical-fields
+      description: >
+        Simulation-labeled metrics must not set physical_only_true_fields to true.
+        Official G-DEL.1/3 pass requires env_class=physical_multi_host and measured hosts.
+    - id: honest-env-label
+      description: >
+        measure_all default harness must stamp env_class=in-process_simulation.
+
 notes:
   - CI job phase-gate-enforce is required on main (ADR-0223).
   - Escapes must land under escape_dir with PR rationale; silent bypass forbidden.
+  - metrics_caliber enforced by phase-gate-check --metrics / --check-caliber (ADR-0225).
