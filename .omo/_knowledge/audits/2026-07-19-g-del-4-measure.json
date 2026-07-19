@@ -1,0 +1,42 @@
+{
+  "gate": "G-DEL.4",
+  "kpi": "cross-agent shared context R/W + isolation; cross-process CLI handoff; KOS seed/retrieve",
+  "env": "file store .omo/_delivery/shared-context + optional gbrain TS",
+  "env_class": "in-process_simulation",
+  "caliber": "single_repo_gbrain",
+  "in_process": {
+    "share_ok": true,
+    "isolation_ok": true
+  },
+  "cross_process": {
+    "share_ok": true,
+    "isolation_ok": true,
+    "kos_export_ok": true,
+    "kos_retrieve_ok": true,
+    "export": {
+      "upserted": 2,
+      "total_documents": 2,
+      "db": "/var/folders/2s/pr52f6ys76v__sm_q1fkv_n40000gn/T/gdel4-dy86ah6b/kos-index.sqlite"
+    },
+    "hits_n": 1,
+    "ok": true
+  },
+  "gbrain_test": {
+    "ran": false,
+    "skipped": true,
+    "reason": "gbrain node_modules missing; source present",
+    "source": "projects/gbrain/src/core/agent-shared-context.ts"
+  },
+  "gbrain_source_present": true,
+  "cli": "bin/delivery/shared-context-cli.py",
+  "callchain": [
+    "agent-A → shared-context-cli write",
+    "file store .omo/_delivery/shared-context/{scope}/{key}.json",
+    "agent-B → shared-context-cli read",
+    "export-kos → kos/kos-index.sqlite documents",
+    "retrieve-kos LIKE query"
+  ],
+  "meets_sim_harness": true,
+  "meets_physical_gate": null,
+  "meets_gate": true
+}

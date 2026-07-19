@@ -35,6 +35,8 @@ phases:
       - "bin/delivery/**"
       - "docs/G-DEL-EXECUTION-METRICS.md"
       - "docs/G-DEL-2a-role-framework-contract.md"
+      - "docs/G-DEL-4-CALLCHAIN.md"
+      - "docs/G-DEL-3-WIRED-REMEASURE.md"
     # PR titles/bodies matching these do not auto-unlock; only verdict SSOT does
 
   phase3:
@@ -133,6 +135,12 @@ metrics_caliber:
       metric_keys: [g_del_4]
       caliber: single_repo_gbrain
       status: OPEN
+      callchain: docs/G-DEL-4-CALLCHAIN.md
+      entry: bin/delivery/shared-context-cli.py
+      store: .omo/_delivery/shared-context/
+      last_measure_note: >
+        Cross-process CLI handoff + KOS seed/retrieve measured by role_memory.py;
+        gbrain AgentSharedContextStore is the TypeScript twin.
   rules:
     - id: no-sim-in-physical-fields
       description: >

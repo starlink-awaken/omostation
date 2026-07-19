@@ -117,7 +117,8 @@ def test_measure_all_sim_does_not_claim_physical_pass():
 def test_role_memory_share_process_local():
     mem = _load("role_memory")
     m = mem.measure_role_memory_share()
-    assert m["share_ok"] is True
-    assert m["isolation_ok"] is True
+    assert m["in_process"]["share_ok"] is True
+    assert m["in_process"]["isolation_ok"] is True
+    assert m["cross_process"]["ok"] is True
     assert m["meets_gate"] is True
     assert m["caliber"] == "single_repo_gbrain"
