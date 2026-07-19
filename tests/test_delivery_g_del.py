@@ -105,6 +105,19 @@ def test_measure_all_sim_does_not_claim_physical_pass():
     assert report["g_del_1"]["meets_sim_harness"] is True
     assert report["g_del_1"]["meets_physical_gate"] is False
     assert report["g_del_1"]["meets_gate"] is False
+    assert report["g_del_1"].get("gate_status") == "BLOCKED"
     assert report["g_del_3"]["meets_physical_gate"] is False
+    assert report["g_del_2b"]["meets_gate"] is True
+    assert report["g_del_5b"]["meets_gate"] is True
+    assert report["g_del_4"]["meets_gate"] is True
     assert report["all_physical_gates_pass"] is False
     assert report["all_sim_harness_pass"] is True
+
+
+def test_role_memory_share_process_local():
+    mem = _load("role_memory")
+    m = mem.measure_role_memory_share()
+    assert m["share_ok"] is True
+    assert m["isolation_ok"] is True
+    assert m["meets_gate"] is True
+    assert m["caliber"] == "single_repo_gbrain"

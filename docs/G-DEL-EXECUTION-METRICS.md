@@ -7,12 +7,16 @@ related: [BET-7e074, BET-664e3, BET-3e602, BET-8c7c, ADR-0221, ADR-0225]
 
 # G-DEL 执行面门禁
 
-| Goal | KPI | 官方口径 (ADR-0225) | Harness |
-|------|-----|---------------------|---------|
-| G-DEL.1 | schedule success > 99% | **`physical_multi_host`** | `measure_all` → `g_del_1` |
-| G-DEL.2b | collab complete > 95% | process-local 协议可验收 | `g_del_2b` |
-| G-DEL.3 | sync p99 < 100ms | **`physical_multi_host`** | `g_del_3` |
-| G-DEL.5b | accuracy > 80% + kill-switch | 启发式+安全闸 | `g_del_5b` |
+| Goal | KPI | 官方口径 | 状态 | Harness |
+|------|-----|----------|------|---------|
+| G-DEL.1 | schedule success > 99% | **physical multi-host ≥4** | **BLOCKED** (ADR-0226) | `measure_physical` (需 4 机) |
+| G-DEL.2b | collab complete > 95% | process-local | OPEN | `measure_all` → `g_del_2b` |
+| G-DEL.3 | sync p99 < 100ms | **physical multi-host ≥2** | OPEN | `measure_physical` |
+| G-DEL.4 | 角色记忆共享 | single_repo gbrain | OPEN | `role_memory` + gbrain tests |
+| G-DEL.5b | accuracy > 80% + kill-switch | process-local | OPEN | `g_del_5b` |
+
+**G-DEL.1 解除条件**: `reachable_physical_hosts ≥ 4` 且物理测量 `meets_physical_gate=true`。  
+当前盘点 = 2 → 任何 sim / 2 机数据标 G-DEL.1 达标均被 phase-gate 拒绝。
 
 ## 环境声明（诚实）
 
@@ -60,12 +64,7 @@ python3 bin/delivery/measure_physical.py --auto-default-lan --start \
 字段：`env_class=physical_multi_host`，`physical_hosts` 按**不同机器**计数（同机多端口=1）。  
 官方 `meets_physical_gate` 仅在 `physical_hosts≥2` 且 KPI 过线时为 true。
 
-### 2026-07-19 真机快照（local-mac + macmini LAN）
+### 真机快照
 
-| Goal | 结果 | 证据 |
-|------|------|------|
-| G-DEL.1 | **pass** | schedule 200/200，`meets_physical_gate=true` |
-| G-DEL.3 | **fail**（诚实） | fan-out put p50≈10ms / p95≈17ms / **p99≈157ms**（WiFi 尾延迟），未达 <100ms |
-
-证据文件：`.omo/_knowledge/audits/2026-07-19-g-del-physical-measure.json`  
-G-DEL.3 下一步：有线网 / 减少休眠唤醒抖动后重测；**不得**用模拟 p99 宣称达标。
+见最新 `.omo/_knowledge/audits/*g-del-physical*.json`。  
+G-DEL.1 在 2 机下 **gate_status=BLOCKED**（非 pass）。G-DEL.3 以 2 机 parallel fan-out 实测。
