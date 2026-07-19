@@ -118,19 +118,24 @@ def measure_schedule_success_rate(
     results = sched.schedule_batch(tasks)
     ok = sum(1 for r in results if r.success)
     rate = ok / n_tasks if n_tasks else 0.0
-    return {
-        "n_nodes": n_nodes,
-        "agents": len(agents),
-        "n_tasks": n_tasks,
-        "successes": ok,
-        "failures": n_tasks - ok,
-        "success_rate": rate,
-        "success_rate_pct": round(rate * 100, 4),
-        "meets_gate": rate > 0.99,
-        "gate": "G-DEL.1",
-        "kpi": "schedule_success_rate > 99%",
-        "env": "in-process multi-node simulation (not physical multi-host)",
-    }
+    from caliber import stamp_physical_goal  # noqa: PLC0415
+
+    return stamp_physical_goal(
+        {
+            "n_nodes": n_nodes,
+            "agents": len(agents),
+            "n_tasks": n_tasks,
+            "successes": ok,
+            "failures": n_tasks - ok,
+            "success_rate": rate,
+            "success_rate_pct": round(rate * 100, 4),
+            "gate": "G-DEL.1",
+            "kpi": "schedule_success_rate > 99%",
+            "env": "in-process multi-node simulation (not physical multi-host)",
+        },
+        sim_ok=rate > 0.99,
+        physical_hosts=0,
+    )
 
 
 def new_task(role_id: str = "implementer", **payload: Any) -> Task:

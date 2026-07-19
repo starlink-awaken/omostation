@@ -201,6 +201,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0222 | M1 冲突=0 证据标准扩展（对抗验证等效被动窗） | ACCEPTED | 2026-07-18 | 架构师 | 0222-m1-conflict-zero-evidence-standard-adversarial.md |
 | 0223 | 阶段门禁 CI 硬阻断（phase gate enforcing） | ACCEPTED | 2026-07-18 | 架构师 | 0223-phase-gate-ci-enforcement.md |
 | 0224 | conflict_count>0 时对抗路径须先溯源 | ACCEPTED | 2026-07-18 | 架构师 | 0224-m1-conflict-count-rootcause-before-adversarial-pass.md |
+| 0225 | G-DEL 兑现期门禁维持物理多机口径（方案 A） | ACCEPTED | 2026-07-19 | 架构师 | 0225-g-del-physical-multihost-gate-caliber.md |
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
