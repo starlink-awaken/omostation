@@ -1,0 +1,406 @@
+{
+  "schema": "g-del-physical-metrics/v2",
+  "env_class": "physical_multi_host",
+  "caliber_adr": [
+    "0210",
+    "0225",
+    "0226"
+  ],
+  "physical_hosts": 2,
+  "endpoint_count": 2,
+  "hosts": [
+    {
+      "node_id": "local-mac",
+      "addr": "127.0.0.1:18765"
+    },
+    {
+      "node_id": "macmini",
+      "addr": "192.168.31.210:18765"
+    }
+  ],
+  "env_evidence": {
+    "controller_hostname": "xiamingxingdeMacBook-Pro.local",
+    "controller_time_utc": "2026-07-19T12:53:42Z",
+    "probed_hosts": [
+      {
+        "node_id": "local-mac",
+        "ip": "127.0.0.1",
+        "port": 18765,
+        "hello": {
+          "ok": true,
+          "node_id": "local-mac",
+          "agents": 0,
+          "wall_ms": 0.15220800014503766
+        }
+      },
+      {
+        "node_id": "macmini",
+        "ip": "192.168.31.210",
+        "port": 18765,
+        "hello": {
+          "ok": true,
+          "node_id": "macmini",
+          "agents": 0,
+          "wall_ms": 10.761582998384256
+        }
+      }
+    ]
+  },
+  "g_del_1": {
+    "gate": "G-DEL.1",
+    "kpi": "schedule_success_rate > 99%",
+    "env": "physical multi-host TCP agents over real hosts (ADR-0225)",
+    "env_class": "physical_multi_host",
+    "n_tasks": 100,
+    "successes": 100,
+    "failures": 0,
+    "success_rate": 1.0,
+    "success_rate_pct": 100.0,
+    "dispatch_p99_ms": 100.52,
+    "nodes": [
+      "local-mac",
+      "macmini"
+    ],
+    "endpoints": [
+      "127.0.0.1:18765",
+      "192.168.31.210:18765"
+    ],
+    "meets_sim_harness": true,
+    "physical_hosts": 2,
+    "min_physical_hosts": 4,
+    "gate_status": "BLOCKED",
+    "blocked_reason": "physical_hosts=2 < min_physical_hosts=4",
+    "meets_physical_gate": false,
+    "meets_gate": false
+  },
+  "g_del_3": {
+    "gate": "G-DEL.3",
+    "kpi": "sync_latency_p99 < 100ms (p99 requires n≥1000)",
+    "env": "physical multi-host parallel fan-out put over real TCP (ADR-0225)",
+    "env_class": "physical_multi_host",
+    "n_ops": 10000,
+    "successes": 10000,
+    "sync_mode": "parallel_fanout_put",
+    "nodes": [
+      "local-mac",
+      "macmini"
+    ],
+    "endpoints": [
+      "127.0.0.1:18765",
+      "192.168.31.210:18765"
+    ],
+    "latency_summary": {
+      "n": 10000,
+      "max_ms": 177.8932,
+      "min_ms": 5.7386,
+      "histogram": {
+        "unit": "ms",
+        "n": 10000,
+        "edges_ms": [
+          0.0,
+          1.0,
+          2.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0,
+          50.0,
+          75.0,
+          100.0,
+          150.0,
+          200.0,
+          500.0,
+          1000.0,
+          null
+        ],
+        "counts": [
+          0,
+          0,
+          0,
+          4803,
+          4119,
+          620,
+          166,
+          23,
+          14,
+          135,
+          118,
+          2,
+          0,
+          0,
+          0
+        ],
+        "bins": [
+          {
+            "lo_ms": 0.0,
+            "hi_ms": 1.0,
+            "label": "[0.0,1.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 1.0,
+            "hi_ms": 2.0,
+            "label": "[1.0,2.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 2.0,
+            "hi_ms": 5.0,
+            "label": "[2.0,5.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 5.0,
+            "hi_ms": 10.0,
+            "label": "[5.0,10.0)",
+            "count": 4803
+          },
+          {
+            "lo_ms": 10.0,
+            "hi_ms": 15.0,
+            "label": "[10.0,15.0)",
+            "count": 4119
+          },
+          {
+            "lo_ms": 15.0,
+            "hi_ms": 20.0,
+            "label": "[15.0,20.0)",
+            "count": 620
+          },
+          {
+            "lo_ms": 20.0,
+            "hi_ms": 30.0,
+            "label": "[20.0,30.0)",
+            "count": 166
+          },
+          {
+            "lo_ms": 30.0,
+            "hi_ms": 50.0,
+            "label": "[30.0,50.0)",
+            "count": 23
+          },
+          {
+            "lo_ms": 50.0,
+            "hi_ms": 75.0,
+            "label": "[50.0,75.0)",
+            "count": 14
+          },
+          {
+            "lo_ms": 75.0,
+            "hi_ms": 100.0,
+            "label": "[75.0,100.0)",
+            "count": 135
+          },
+          {
+            "lo_ms": 100.0,
+            "hi_ms": 150.0,
+            "label": "[100.0,150.0)",
+            "count": 118
+          },
+          {
+            "lo_ms": 150.0,
+            "hi_ms": 200.0,
+            "label": "[150.0,200.0)",
+            "count": 2
+          },
+          {
+            "lo_ms": 200.0,
+            "hi_ms": 500.0,
+            "label": "[200.0,500.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 500.0,
+            "hi_ms": 1000.0,
+            "label": "[500.0,1000.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 1000.0,
+            "hi_ms": null,
+            "label": "[1000.0,+inf)",
+            "count": 0
+          }
+        ]
+      },
+      "p50_ms": 10.1135,
+      "p50_ms_trusted": true,
+      "p50_ms_status": "ok",
+      "p50_ms_min_n": 20,
+      "p50_ms_raw": 10.1135,
+      "p90_ms": 15.2634,
+      "p90_ms_trusted": true,
+      "p90_ms_status": "ok",
+      "p90_ms_min_n": 100,
+      "p90_ms_raw": 15.2634,
+      "p95_ms": 19.269,
+      "p95_ms_trusted": true,
+      "p95_ms_status": "ok",
+      "p95_ms_min_n": 200,
+      "p95_ms_raw": 19.269,
+      "p99_ms": 101.0145,
+      "p99_ms_trusted": true,
+      "p99_ms_status": "ok",
+      "p99_ms_min_n": 1000,
+      "p99_ms_raw": 101.0145,
+      "p999_ms": 111.0364,
+      "p999_ms_trusted": true,
+      "p999_ms_status": "ok",
+      "p999_ms_min_n": 10000,
+      "p999_ms_raw": 111.0364,
+      "p99_definitive": true,
+      "p99_gate_status": "ok",
+      "p99_meets_kpi": false
+    },
+    "p50_ms": 10.1135,
+    "p90_ms": 15.2634,
+    "p95_ms": 19.269,
+    "p99_ms": 101.0145,
+    "p999_ms": 111.0364,
+    "max_ms": 177.8932,
+    "p99_status": "ok",
+    "p99_definitive": true,
+    "histogram": {
+      "unit": "ms",
+      "n": 10000,
+      "edges_ms": [
+        0.0,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        15.0,
+        20.0,
+        30.0,
+        50.0,
+        75.0,
+        100.0,
+        150.0,
+        200.0,
+        500.0,
+        1000.0,
+        null
+      ],
+      "counts": [
+        0,
+        0,
+        0,
+        4803,
+        4119,
+        620,
+        166,
+        23,
+        14,
+        135,
+        118,
+        2,
+        0,
+        0,
+        0
+      ],
+      "bins": [
+        {
+          "lo_ms": 0.0,
+          "hi_ms": 1.0,
+          "label": "[0.0,1.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 1.0,
+          "hi_ms": 2.0,
+          "label": "[1.0,2.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 2.0,
+          "hi_ms": 5.0,
+          "label": "[2.0,5.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 5.0,
+          "hi_ms": 10.0,
+          "label": "[5.0,10.0)",
+          "count": 4803
+        },
+        {
+          "lo_ms": 10.0,
+          "hi_ms": 15.0,
+          "label": "[10.0,15.0)",
+          "count": 4119
+        },
+        {
+          "lo_ms": 15.0,
+          "hi_ms": 20.0,
+          "label": "[15.0,20.0)",
+          "count": 620
+        },
+        {
+          "lo_ms": 20.0,
+          "hi_ms": 30.0,
+          "label": "[20.0,30.0)",
+          "count": 166
+        },
+        {
+          "lo_ms": 30.0,
+          "hi_ms": 50.0,
+          "label": "[30.0,50.0)",
+          "count": 23
+        },
+        {
+          "lo_ms": 50.0,
+          "hi_ms": 75.0,
+          "label": "[50.0,75.0)",
+          "count": 14
+        },
+        {
+          "lo_ms": 75.0,
+          "hi_ms": 100.0,
+          "label": "[75.0,100.0)",
+          "count": 135
+        },
+        {
+          "lo_ms": 100.0,
+          "hi_ms": 150.0,
+          "label": "[100.0,150.0)",
+          "count": 118
+        },
+        {
+          "lo_ms": 150.0,
+          "hi_ms": 200.0,
+          "label": "[150.0,200.0)",
+          "count": 2
+        },
+        {
+          "lo_ms": 200.0,
+          "hi_ms": 500.0,
+          "label": "[200.0,500.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 500.0,
+          "hi_ms": 1000.0,
+          "label": "[500.0,1000.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 1000.0,
+          "hi_ms": null,
+          "label": "[1000.0,+inf)",
+          "count": 0
+        }
+      ]
+    },
+    "meets_sim_harness": false,
+    "physical_hosts": 2,
+    "min_physical_hosts": 2,
+    "gate_status": "OPEN",
+    "meets_physical_gate": false,
+    "meets_gate": false
+  },
+  "g_del_1_blocked": true,
+  "g_del_3_physical_pass": false,
+  "all_physical_gates_pass": false,
+  "generated_at": "2026-07-19T12:57:05Z"
+}
