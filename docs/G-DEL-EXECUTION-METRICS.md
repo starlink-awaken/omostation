@@ -41,7 +41,31 @@ CI：`phase-gate-check --metrics <json>` 拒绝 sim 填真机门禁字段。
 方案 **A**：门禁维持物理多机；接入见 ADR-0225。当前 `all_physical_gates_pass=false`。
 
 ```bash
-python3 -m pytest tests/test_delivery_g_del.py tests/test_phase_gate_check.py -q
+python3 -m pytest tests/test_delivery_g_del.py tests/test_phase_gate_check.py tests/test_physical_mesh.py -q
 python3 bin/delivery/measure_all.py
 python3 bin/gac/phase-gate-check.py --files README.md --check-caliber --json
 ```
+
+## 物理多机实测（ADR-0225 接入）
+
+默认 LAN 对：`local-mac`（本机）+ `macmini`（`192.168.31.210`）。
+
+```bash
+# 两端需有 bin/delivery/physical_node.py；macmini 可用 rsync/git pull 对齐
+python3 bin/delivery/measure_physical.py --auto-default-lan --start \
+  --remote-root ~/Workspace \
+  --out .omo/_delivery/m1-closeout/g-del-physical-latest.json
+```
+
+字段：`env_class=physical_multi_host`，`physical_hosts` 按**不同机器**计数（同机多端口=1）。  
+官方 `meets_physical_gate` 仅在 `physical_hosts≥2` 且 KPI 过线时为 true。
+
+### 2026-07-19 真机快照（local-mac + macmini LAN）
+
+| Goal | 结果 | 证据 |
+|------|------|------|
+| G-DEL.1 | **pass** | schedule 200/200，`meets_physical_gate=true` |
+| G-DEL.3 | **fail**（诚实） | fan-out put p50≈10ms / p95≈17ms / **p99≈157ms**（WiFi 尾延迟），未达 <100ms |
+
+证据文件：`.omo/_knowledge/audits/2026-07-19-g-del-physical-measure.json`  
+G-DEL.3 下一步：有线网 / 减少休眠唤醒抖动后重测；**不得**用模拟 p99 宣称达标。
