@@ -12,7 +12,7 @@ related: [BET-7e074, BET-664e3, BET-3e602, BET-8c7c, ADR-0221, ADR-0225]
 | G-DEL.1 | schedule success > 99% | **physical multi-host ≥4** | **BLOCKED** (ADR-0226) | `measure_physical` (需 4 机) |
 | G-DEL.2b | collab complete > 95% | process-local | OPEN | `measure_all` → `g_del_2b` |
 | G-DEL.3 | sync p99 < 100ms | **physical multi-host ≥2** | OPEN | `measure_physical` |
-| G-DEL.4 | 角色记忆共享 | single_repo gbrain | OPEN | `role_memory` + gbrain tests |
+| G-DEL.4 | 角色记忆共享 | single_repo gbrain | OPEN | `shared-context-cli` + `role_memory` + gbrain |
 | G-DEL.5b | accuracy > 80% + kill-switch | process-local | OPEN | `g_del_5b` |
 
 **G-DEL.1 解除条件**: `reachable_physical_hosts ≥ 4` 且物理测量 `meets_physical_gate=true`。  
