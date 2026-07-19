@@ -42,8 +42,6 @@ def test_kos_seed_import_creates_documents(tmp_path):
     docs.mkdir()
     (docs / "a.md").write_text("# Hello\n\nbody\n", encoding="utf-8")
     db = tmp_path / "kos" / "kos-index.sqlite"
-    # point WORKSPACE helpers
-    monkeypatch_workspace = tmp_path
     # rewrite by calling import_docs directly
     count = mod.import_docs(db, [docs / "a.md"])
     assert count >= 1
@@ -52,6 +50,22 @@ def test_kos_seed_import_creates_documents(tmp_path):
     n = conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
     conn.close()
     assert n >= 1
+
+
+def test_kos_seed_prefer_new_skips_indexed(tmp_path):
+    """Q4 growth mode: --prefer-new must not re-consume already-indexed paths."""
+    mod = _load(ROOT / "bin/gac/kos-seed-import.py", "kos_seed")
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "a.md").write_text("# A\n", encoding="utf-8")
+    (docs / "b.md").write_text("# B\n", encoding="utf-8")
+    db = tmp_path / "kos" / "kos-index.sqlite"
+    assert mod.import_docs(db, [docs / "a.md"]) == 1
+    indexed = mod._load_indexed_paths(db)
+    files = mod._collect_md([docs], limit=10, indexed=indexed, prefer_new=True)
+    names = {p.name for p in files}
+    assert "a.md" not in names
+    assert "b.md" in names
 
 
 def test_gitlink_check_clean_exits_zero():
