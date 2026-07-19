@@ -19,7 +19,7 @@ jobs:
           python-version: "3.13"
       - name: Install PyYAML only
         run: pip install --quiet pyyaml
-      - name: Phase gate check (ADR-0223)
+      - name: Phase gate check (ADR-0223 + ADR-0225 caliber)
         env:
           PHASE_ESCAPE_ID: ${{ vars.PHASE_ESCAPE_ID }}
           GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -30,6 +30,10 @@ jobs:
             BASE="origin/${{ github.base_ref || 'main' }}"
           fi
           git fetch origin "${{ github.base_ref || 'main' }}" --depth=1 || true
+          # Path unlock (ADR-0223) + metrics caliber (ADR-0225):
+          # measure_all is in-process sim; must not claim physical G-DEL.1/3 pass.
+          python3 bin/delivery/measure_all.py > /tmp/g-del-measure.json
           python3 bin/gac/phase-gate-check.py \
             --base "origin/${{ github.base_ref || 'main' }}" \
+            --metrics /tmp/g-del-measure.json \
             --json

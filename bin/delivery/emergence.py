@@ -98,19 +98,24 @@ def measure_emergence_accuracy(fixtures: list[EmergenceEvent] | None = None) -> 
     det3.kill.kill()
     write_still_blocked = det3.try_write_side_effect("x2", "y") is False
 
-    return {
-        "n_fixtures": len(fixtures),
-        "correct": correct,
-        "accuracy": acc,
-        "accuracy_pct": round(acc * 100, 4),
-        "meets_accuracy_gate": acc > 0.80,
-        "kill_switch_blocks_detect": killed_blocks_detect,
-        "kill_switch_blocks_write": write_blocked and write_still_blocked,
-        "meets_gate": acc > 0.80 and killed_blocks_detect and write_blocked,
-        "gate": "G-DEL.5b",
-        "kpi": "emergence_accuracy > 80% AND kill_switch effective",
-        "env": "heuristic detector + ADR-0221 kill-switch (not production ML)",
-    }
+    from caliber import stamp_non_physical_goal  # noqa: PLC0415
+
+    ok = acc > 0.80 and killed_blocks_detect and write_blocked
+    return stamp_non_physical_goal(
+        {
+            "n_fixtures": len(fixtures),
+            "correct": correct,
+            "accuracy": acc,
+            "accuracy_pct": round(acc * 100, 4),
+            "meets_accuracy_gate": acc > 0.80,
+            "kill_switch_blocks_detect": killed_blocks_detect,
+            "kill_switch_blocks_write": write_blocked and write_still_blocked,
+            "gate": "G-DEL.5b",
+            "kpi": "emergence_accuracy > 80% AND kill_switch effective",
+            "env": "heuristic detector + ADR-0221 kill-switch (not production ML)",
+        },
+        ok=ok,
+    )
 
 
 def _default_fixtures() -> list[EmergenceEvent]:

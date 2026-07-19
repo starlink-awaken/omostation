@@ -2,17 +2,22 @@
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-07-15
+last-reviewed: 2026-07-19
 related:
   - 0202-fake-green-prevention.md
   - 0179-runtime-probe-false-positive-treatment.md
   - 0195-architecture-convergence-isc2.md
+  - 0225-g-del-physical-multihost-gate-caliber.md
   - ../patterns/p73-truth-driven-engineering-pattern.md
   - ../patterns/p74-workflow-solidification-pattern.md
   - ../../../docs/STRATEGY-3YEAR-PANORAMA.md
   - ../../../docs/VISION-ROADMAP.md
   - ../../../docs/ARCHITECTURE-ANALYSIS-2026-07-14.md
 supersedes: []
+amended_by: [0225]
+note: >
+  ADR-0225 明确兑现期 G-DEL.1/3 门禁为物理多机口径；
+  in-process 模拟仅可填 meets_sim_harness，不得宣称官方达标。
 ---
 
 # ADR-0210: 三年综合战略方向 — 从"扩图纸"转向"收敛执行面"
