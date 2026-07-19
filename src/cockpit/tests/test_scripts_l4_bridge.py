@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -156,3 +157,75 @@ class TestVaultSearch:
 
         result = json.loads(vault_search())
         assert result["total"] == 0
+
+
+class TestSharedContextMcp:
+    """G-DEL.4 shared-context MCP tools (file store under workspace .omo)."""
+
+    def test_write_read_list_roundtrip(self, tmp_path, monkeypatch):
+        # Point workspace root to tmp and place a real store module path
+        ws = tmp_path / "ws"
+        delivery = ws / "bin" / "delivery"
+        delivery.mkdir(parents=True)
+        # copy store implementation from real workspace
+        import shutil
+        src = Path("/Users/xiamingxing/ws-kos-q1-mcp/bin/delivery/shared_context_store.py")
+        shutil.copy(src, delivery / "shared_context_store.py")
+        (delivery / "__init__.py").write_text("", encoding="utf-8")
+        (ws / ".omo" / "_delivery").mkdir(parents=True)
+
+        monkeypatch.setenv("WORKSPACE_ROOT", str(ws))
+        monkeypatch.setattr("scripts.cockpit_mcp._WORKSPACE_ROOT", ws)
+
+        from scripts.cockpit_mcp import (
+            shared_context_write,
+            shared_context_read,
+            shared_context_list,
+        )
+
+        w = json.loads(
+            shared_context_write(
+                writer="agent-A",
+                key="collab.handoff",
+                value="ready",
+                scope="bet-b7da",
+                tags="handoff",
+            )
+        )
+        assert w["ok"] is True
+        assert w["key"] == "collab.handoff"
+
+        r = json.loads(
+            shared_context_read(reader="agent-B", key="collab.handoff", scope="bet-b7da")
+        )
+        assert r["ok"] is True
+        assert r["value"] == "ready"
+
+        lst = json.loads(shared_context_list(reader="agent-B", scope="bet-b7da"))
+        assert lst["ok"] is True
+        assert lst["count"] >= 1
+
+    def test_isolation_blocks_unlisted_reader(self, tmp_path, monkeypatch):
+        ws = tmp_path / "ws"
+        delivery = ws / "bin" / "delivery"
+        delivery.mkdir(parents=True)
+        import shutil
+        src = Path("/Users/xiamingxing/ws-kos-q1-mcp/bin/delivery/shared_context_store.py")
+        shutil.copy(src, delivery / "shared_context_store.py")
+        (delivery / "__init__.py").write_text("", encoding="utf-8")
+        (ws / ".omo" / "_delivery").mkdir(parents=True)
+        monkeypatch.setenv("WORKSPACE_ROOT", str(ws))
+        monkeypatch.setattr("scripts.cockpit_mcp._WORKSPACE_ROOT", ws)
+
+        from scripts.cockpit_mcp import shared_context_write, shared_context_read
+
+        shared_context_write(
+            writer="agent-A",
+            key="secret",
+            value="nope",
+            scope="iso",
+            readers="agent-B",
+        )
+        denied = json.loads(shared_context_read(reader="agent-C", key="secret", scope="iso"))
+        assert denied["ok"] is False
+        assert denied.get("found") is False

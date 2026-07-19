@@ -608,6 +608,142 @@ def workspace_context() -> str:
     )
 
 
+# ══════════════════════════════════════════════════════════════
+# G-DEL.4 shared-context (agent handoff) — file store under .omo/_delivery
+# ══════════════════════════════════════════════════════════════
+
+
+def _shared_context_store():
+    """Load FileSharedContextStore from workspace bin/delivery (G-DEL.4 SSOT)."""
+    delivery = _WORKSPACE_ROOT / "bin" / "delivery"
+    store_root = _WORKSPACE_ROOT / ".omo" / "_delivery" / "shared-context"
+    if not delivery.is_dir():
+        raise RuntimeError(f"workspace delivery plane missing: {delivery}")
+    if str(delivery) not in sys.path:
+        sys.path.insert(0, str(delivery))
+    from shared_context_store import FileSharedContextStore  # type: ignore[import-not-found]
+
+    return FileSharedContextStore(store_root)
+
+
+def _parse_csv_list(raw: str) -> list[str]:
+    if not raw or not str(raw).strip():
+        return []
+    return [p.strip() for p in str(raw).split(",") if p.strip()]
+
+
+@_tool()
+def shared_context_write(
+    writer: str,
+    key: str,
+    value: str,
+    scope: str = "default",
+    readers: str = "",
+    tags: str = "",
+) -> str:
+    """写入 G-DEL.4 跨 agent 共享上下文（文件店，非多机）。
+
+    写入 `.omo/_delivery/shared-context/{scope}/{key}.json`。
+    readers 为空=同 scope 全员可读；非空=白名单（writer 始终可读）。
+    tags / readers 用逗号分隔。
+
+    **Agent 协作交接应优先用此工具**（相对纯 CLI）。
+    """
+    try:
+        store = _shared_context_store()
+        rec = store.write(
+            writer,
+            key,
+            value,
+            scope=scope or "default",
+            readers=_parse_csv_list(readers),
+            tags=_parse_csv_list(tags),
+        )
+        return json.dumps(
+            {
+                "ok": True,
+                "gate": "G-DEL.4",
+                "scope": scope or "default",
+                "key": rec.key,
+                "writer": rec.writer,
+                "written_at": rec.written_at,
+                "readers": rec.readers,
+                "tags": rec.tags,
+                "cli": "bin/delivery/shared-context-cli.py",
+            },
+            ensure_ascii=False,
+        )
+    except Exception as exc:  # noqa: BLE001 — surface to agent
+        return json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False)
+
+
+@_tool()
+def shared_context_read(reader: str, key: str, scope: str = "default") -> str:
+    """读取 G-DEL.4 共享上下文（受 readers 可见性约束）。
+
+    不可见或缺失时返回 ok=false，不泄露 value。
+    """
+    try:
+        store = _shared_context_store()
+        rec = store.read(reader, key, scope=scope or "default")
+        if rec is None:
+            return json.dumps(
+                {
+                    "ok": False,
+                    "found": False,
+                    "scope": scope or "default",
+                    "key": key,
+                    "reader": reader,
+                },
+                ensure_ascii=False,
+            )
+        return json.dumps(
+            {
+                "ok": True,
+                "found": True,
+                "scope": scope or "default",
+                "key": rec.key,
+                "value": rec.value,
+                "writer": rec.writer,
+                "written_at": rec.written_at,
+                "readers": rec.readers,
+                "tags": rec.tags,
+            },
+            ensure_ascii=False,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False)
+
+
+@_tool()
+def shared_context_list(reader: str, scope: str = "default") -> str:
+    """列出 reader 在 scope 下可见的全部共享上下文 key。"""
+    try:
+        store = _shared_context_store()
+        recs = store.list_visible(reader, scope=scope or "default")
+        return json.dumps(
+            {
+                "ok": True,
+                "scope": scope or "default",
+                "reader": reader,
+                "count": len(recs),
+                "items": [
+                    {
+                        "key": r.key,
+                        "writer": r.writer,
+                        "written_at": r.written_at,
+                        "tags": r.tags,
+                        "value_preview": (r.value or "")[:120],
+                    }
+                    for r in recs
+                ],
+            },
+            ensure_ascii=False,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False)
+
+
 @_tool()
 def cards_status() -> str:
     """获取 CARDS 活跃卡片列表，按优先级排序。
