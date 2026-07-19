@@ -178,9 +178,9 @@ class TestSharedContextMcp:
         monkeypatch.setattr("scripts.cockpit_mcp._WORKSPACE_ROOT", ws)
 
         from scripts.cockpit_mcp import (
-            shared_context_write,
-            shared_context_read,
             shared_context_list,
+            shared_context_read,
+            shared_context_write,
         )
 
         w = json.loads(
@@ -217,7 +217,7 @@ class TestSharedContextMcp:
         monkeypatch.setenv("WORKSPACE_ROOT", str(ws))
         monkeypatch.setattr("scripts.cockpit_mcp._WORKSPACE_ROOT", ws)
 
-        from scripts.cockpit_mcp import shared_context_write, shared_context_read
+        from scripts.cockpit_mcp import shared_context_read, shared_context_write
 
         shared_context_write(
             writer="agent-A",
