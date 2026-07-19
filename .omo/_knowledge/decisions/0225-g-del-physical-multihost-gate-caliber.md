@@ -10,6 +10,7 @@ related:
   - 0224-m1-conflict-count-rootcause-before-adversarial-pass.md
 supersedes: []
 amends: [0210]
+amended_by: [0226]
 ---
 
 # ADR-0225: G-DEL 兑现期门禁维持物理多机口径（方案 A）

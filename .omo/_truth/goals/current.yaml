@@ -291,9 +291,11 @@ goals:
 - id: KOS-Q-GROWTH
   title: KOS 季度扩量（跃迁期长交期前置）
   desc: 'G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑'
-  progress: 20.0
+  progress: 65.3
   status: active
   kpi: '2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)'
+  measured_documents: 2417
+  measured_at: '2026-07-19T05:00:00Z'
   tasks: []
   quarterly_targets:
     - quarter: 2026Q3

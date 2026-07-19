@@ -110,10 +110,24 @@ def test_two_local_nodes_protocol_and_no_physical_pass():
                 p.kill()
 
 
-def test_stamp_physical_two_hosts_can_pass():
+def test_stamp_physical_two_hosts_pass_g_del_3_not_g_del_1():
+    """G-DEL.3 min=2 can pass; G-DEL.1 min=4 stays BLOCKED (ADR-0226)."""
     cal = _load("caliber")
-    m = cal.stamp_physical_goal(
+    g3 = cal.stamp_physical_goal(
         {
+            "gate": "G-DEL.3",
+            "env": "physical multi-host TCP",
+            "env_class": "physical_multi_host",
+        },
+        sim_ok=True,
+        physical_hosts=2,
+    )
+    assert g3["meets_physical_gate"] is True
+    assert g3["gate_status"] == "OPEN"
+
+    g1 = cal.stamp_physical_goal(
+        {
+            "gate": "G-DEL.1",
             "env": "physical multi-host TCP",
             "env_class": "physical_multi_host",
             "success_rate": 1.0,
@@ -121,5 +135,13 @@ def test_stamp_physical_two_hosts_can_pass():
         sim_ok=True,
         physical_hosts=2,
     )
-    assert m["meets_physical_gate"] is True
-    assert m["meets_gate"] is True
+    assert g1["meets_physical_gate"] is False
+    assert g1["gate_status"] == "BLOCKED"
+    assert "min_physical_hosts=4" in g1["blocked_reason"]
+
+    g1_ok = cal.stamp_physical_goal(
+        {"gate": "G-DEL.1", "env_class": "physical_multi_host"},
+        sim_ok=True,
+        physical_hosts=4,
+    )
+    assert g1_ok["meets_physical_gate"] is True

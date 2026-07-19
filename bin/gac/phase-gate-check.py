@@ -151,7 +151,7 @@ def check_metrics_caliber(
     report: dict[str, Any],
     caliber: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    """ADR-0225: sim-labeled metrics must not claim physical gate pass.
+    """ADR-0225/0226: sim must not claim physical pass; min hosts enforced.
 
     Pure function — inject labeled dicts in tests; no network.
     """
@@ -169,46 +169,91 @@ def check_metrics_caliber(
         if not isinstance(pg, dict):
             continue
         keys = list(pg.get("metric_keys") or [])
-        only_fields = list(pg.get("physical_only_true_fields") or ["meets_physical_gate", "meets_gate"])
+        only_fields = list(
+            pg.get("physical_only_true_fields") or ["meets_physical_gate", "meets_gate"]
+        )
+        min_hosts = int(pg.get("min_physical_hosts") or 2)
+        gate_status = str(pg.get("status") or "OPEN").upper()
         for mk in keys:
             metric = report.get(mk)
             if not isinstance(metric, dict):
-                # also allow nested under report["metrics"][mk]
                 metrics_block = report.get("metrics")
                 if isinstance(metrics_block, dict):
                     metric = metrics_block.get(mk)
             if not isinstance(metric, dict):
                 continue
-            if not _metric_env_is_sim(metric):
-                # physical-labeled: ok if claims physical pass
-                continue
-            for field in only_fields:
-                if metric.get(field) is True:
+
+            claims_pass = any(metric.get(f) is True for f in only_fields)
+
+            # Rule: sim cannot claim physical pass
+            if _metric_env_is_sim(metric) and claims_pass:
+                for field in only_fields:
+                    if metric.get(field) is True:
+                        violations.append(
+                            {
+                                "rule": "no-sim-in-physical-fields",
+                                "metric_key": mk,
+                                "gate": pg.get("gate") or pg.get("id"),
+                                "field": field,
+                                "env": metric.get("env"),
+                                "env_class": metric.get("env_class"),
+                                "message": (
+                                    f"{mk}.{field}=true under simulation env; "
+                                    f"physical-only field (ADR-0225)"
+                                ),
+                            }
+                        )
+
+            # Rule: physical pass requires hosts >= min (ADR-0226 for G-DEL.1=4)
+            if claims_pass and not _metric_env_is_sim(metric):
+                hosts = metric.get("physical_hosts")
+                try:
+                    hosts_n = int(hosts) if hosts is not None else -1
+                except (TypeError, ValueError):
+                    hosts_n = -1
+                if hosts_n < min_hosts:
                     violations.append(
                         {
-                            "rule": "no-sim-in-physical-fields",
+                            "rule": "min-hosts-for-physical-pass",
                             "metric_key": mk,
                             "gate": pg.get("gate") or pg.get("id"),
-                            "field": field,
-                            "env": metric.get("env"),
-                            "env_class": metric.get("env_class"),
+                            "field": "physical_hosts",
                             "message": (
-                                f"{mk}.{field}=true under simulation env; "
-                                f"physical-only field (ADR-0225)"
+                                f"{mk} claims physical pass with physical_hosts="
+                                f"{hosts_n} < min_physical_hosts={min_hosts}"
                             ),
                         }
                     )
 
-    # Rollup: all_physical_gates_pass / all_gates_pass true with sim env_class at top
+            # Rule: BLOCKED gate cannot claim official pass at all
+            if gate_status == "BLOCKED" and claims_pass:
+                violations.append(
+                    {
+                        "rule": "g-del-1-blocked-fail-closed",
+                        "metric_key": mk,
+                        "gate": pg.get("gate") or pg.get("id"),
+                        "field": "status",
+                        "message": (
+                            f"{mk} status=BLOCKED in phase-scope but report claims "
+                            f"official pass; blocked_reason="
+                            f"{pg.get('blocked_reason', '')!s}"[:200]
+                        ),
+                    }
+                )
+
+    # Rollup: all_physical_gates_pass true with sim env_class at top
     top_class = str(report.get("env_class") or "").lower()
     top_is_sim = (
         "sim" in top_class
         or "in_process" in top_class
         or "inprocess" in top_class
-        or (not top_class and any(
-            isinstance(report.get(k), dict) and _metric_env_is_sim(report[k])
-            for k in ("g_del_1", "g_del_3")
-        ))
+        or (
+            not top_class
+            and any(
+                isinstance(report.get(k), dict) and _metric_env_is_sim(report[k])
+                for k in ("g_del_1", "g_del_3")
+            )
+        )
     )
     if top_is_sim:
         for field in ("all_physical_gates_pass",):

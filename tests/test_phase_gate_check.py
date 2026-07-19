@@ -148,12 +148,17 @@ def _sample_caliber() -> dict:
                 "id": "g_del_1",
                 "gate": "G-DEL.1",
                 "metric_keys": ["g_del_1"],
+                "min_physical_hosts": 4,
+                "status": "BLOCKED",
+                "blocked_reason": "reachable_physical_hosts=2 < 4",
                 "physical_only_true_fields": ["meets_physical_gate", "meets_gate"],
             },
             {
                 "id": "g_del_3",
                 "gate": "G-DEL.3",
                 "metric_keys": ["g_del_3"],
+                "min_physical_hosts": 2,
+                "status": "OPEN",
                 "physical_only_true_fields": ["meets_physical_gate", "meets_gate"],
             },
         ],
@@ -216,18 +221,53 @@ def test_caliber_allows_physical_labeled_pass():
         "g_del_1": {
             "env": "physical multi-host mesh",
             "env_class": "physical_multi_host",
-            "meets_physical_gate": True,
-            "meets_gate": True,
+            "meets_physical_gate": False,
+            "meets_gate": False,
             "physical_hosts": 2,
+            "gate_status": "BLOCKED",
         },
         "g_del_3": {
             "env_class": "physical_multi_host",
             "meets_physical_gate": True,
             "meets_gate": True,
+            "physical_hosts": 2,
         },
     }
     r = mod.check_metrics_caliber(report, _sample_caliber())
     assert r["ok"] is True
+
+
+def test_caliber_rejects_g_del_1_pass_with_only_two_hosts():
+    """ADR-0226: 2-host physical pass on G-DEL.1 is a violation."""
+    mod = _load()
+    report = {
+        "env_class": "physical_multi_host",
+        "g_del_1": {
+            "env_class": "physical_multi_host",
+            "meets_physical_gate": True,
+            "meets_gate": True,
+            "physical_hosts": 2,
+        },
+    }
+    r = mod.check_metrics_caliber(report, _sample_caliber())
+    assert r["ok"] is False
+    rules = {v["rule"] for v in r["violations"]}
+    assert "min-hosts-for-physical-pass" in rules or "g-del-1-blocked-fail-closed" in rules
+
+
+def test_caliber_rejects_blocked_gate_claiming_pass():
+    mod = _load()
+    report = {
+        "g_del_1": {
+            "env_class": "physical_multi_host",
+            "physical_hosts": 4,
+            "meets_gate": True,
+            "meets_physical_gate": True,
+        }
+    }
+    r = mod.check_metrics_caliber(report, _sample_caliber())
+    assert r["ok"] is False
+    assert any(v["rule"] == "g-del-1-blocked-fail-closed" for v in r["violations"])
 
 
 def test_cli_check_caliber_with_honest_measure(tmp_path: Path):
