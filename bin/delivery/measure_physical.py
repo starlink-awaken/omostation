@@ -418,14 +418,25 @@ def main(argv: list[str] | None = None) -> int:
                     )
                     return 1
 
-        # Environment evidence (hostname/IP/timestamp) for audit
+        # Environment evidence (hostname/IP/timestamp + link class) for audit
         import socket as _socket
+
+        from network_path import probe_path  # noqa: PLC0415
 
         env_evidence = {
             "controller_hostname": _socket.gethostname(),
             "controller_time_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "probed_hosts": [],
+            "network_paths": [],
         }
+        for ep in endpoints:
+            if ep.host not in {"127.0.0.1", "localhost", "::1"}:
+                try:
+                    env_evidence["network_paths"].append(probe_path(ep.host))
+                except Exception as exc:  # noqa: BLE001
+                    env_evidence["network_paths"].append(
+                        {"peer_ip": ep.host, "error": str(exc)}
+                    )
         for ep in endpoints:
             try:
                 hello = rpc(ep, {"op": "hello"}, timeout=3.0)

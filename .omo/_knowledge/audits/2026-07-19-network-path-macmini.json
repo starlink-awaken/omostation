@@ -1,0 +1,23 @@
+{
+  "peer_ip": "192.168.31.210",
+  "local_hostname": "xiamingxingdeMacBook-Pro.local",
+  "local_route": {
+    "route_interface": "en0",
+    "route_rtt_msec_hint": 0,
+    "raw_has_route": true
+  },
+  "local_link_class": "wifi",
+  "remote": {
+    "ok": true,
+    "en0_status": "inactive",
+    "en0_inet": null,
+    "en0_media": "autoselect (none)",
+    "en1_status": "active",
+    "en1_inet": "192.168.31.210",
+    "ethernet_likely_active": false,
+    "wifi_likely_active": "192.168.31.210"
+  },
+  "link_class": "wifi",
+  "wired_available": false,
+  "recommendation": "path is Wi-Fi; plug Ethernet on macmini (en0) and local host for G-DEL.3 remeasure"
+}

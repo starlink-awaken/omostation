@@ -97,7 +97,23 @@ metrics_caliber:
       min_physical_hosts: 2
       ideal_physical_hosts: 4
       kpi: sync_latency_p99_ms < 100
+      # OPEN for measurement; not yet physical-pass (Wi-Fi tail)
       status: OPEN
+      last_physical_measure:
+        n_ops: 10000
+        p50_ms: 10.11
+        p95_ms: 19.27
+        p99_ms: 101.01
+        meets_physical_gate: false
+        link_class: wifi
+        evidence: .omo/_knowledge/audits/2026-07-19-g-del3-large-n.json
+        note: >
+          Large-N trusted p99≈101ms on Wi-Fi (body healthy). Prior n=100 p99≈157
+          was small-sample. Unblock: ethernet path or protocol that brings p99<100
+          with n≥1000.
+      next_action: >
+        Plug Ethernet on macmini (en0 currently inactive) + local host;
+        re-run measure_physical --n-ops 10000; see docs/G-DEL-3-WIRED-REMEASURE.md
       sim_allowed_true_fields: [meets_sim_harness]
       physical_only_true_fields: [meets_physical_gate, meets_gate]
   # Non-physical goals (protocol / safety) may use process-local meets_gate
