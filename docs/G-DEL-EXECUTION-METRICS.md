@@ -74,3 +74,6 @@ python3 bin/delivery/measure_physical.py --auto-default-lan --start \
 - 有线：macmini en0 Ethernet **inactive**，无法隔离 WiFi。
 - G-DEL.1 在 2 机下 **BLOCKED**（min=4）。
 证据：`.omo/_knowledge/audits/2026-07-19-g-del3-*-large-n.json`。
+
+有线复测清单：[`docs/G-DEL-3-WIRED-REMEASURE.md`](G-DEL-3-WIRED-REMEASURE.md)  
+链路探测：`python3 bin/delivery/network_path.py 192.168.31.210`（写入 measure_physical env_evidence）。
