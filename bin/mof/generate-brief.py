@@ -204,7 +204,7 @@ def generate_brief_content() -> str:
     lines.append("# BRIEF.md — 织星状态简报与决策收件箱")
     lines.append("")
     lines.append(
-        f"> **Generated**: `{now_str}` | **SSOT Source**: `.omo/state/system.yaml` | **ISC-1 复合分**: `{health_score}/100`"
+        f"> **Generated**: `{now_str}` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `{health_score}/100`"
     )
     lines.append("")
 
