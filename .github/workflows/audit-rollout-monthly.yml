@@ -37,7 +37,7 @@ jobs:
           DATE=$(date -u +%Y-%m-%d)
           OUTPUT=".omo/_delivery/audit-rollout/${DATE}.json"
           echo "DATE=$DATE" >> $GITHUB_ENV
-          uv run --no-sync python -m omo.cli audit-rollout \
+          uv run python -m omo.cli audit-rollout \
             --repos "omostation:." \
             --repos "gbrain:../gbrain" \
             --repos "metaos:../metaos" \
@@ -64,19 +64,13 @@ jobs:
           cd projects/omo
           DATE=$(date -u +%Y-%m-%d)
           METRICS_OUTPUT=".omo/_delivery/audit-rollout/${DATE}-metrics.json"
-          uv run --no-sync python -m omo.cli logs audit --metrics \
+          uv run python -m omo.cli logs audit --metrics \
             > "$METRICS_OUTPUT" 2>&1 || {
               echo "::warning::§17 metrics 跑出 R3+ (R39 P0 退出码 2), 标 warning 不阻塞"
               exit 0
             }
           # 终端输出当前健康度评分 (CI log 友好)
           cat "$METRICS_OUTPUT" | python3 -c "import sys, json; d=json.load(sys.stdin); print(f'§17 metrics: drift={d[\"drift_count\"]} locked={d[\"locked_drift\"]} new_debt={d[\"drift_count_excluding_locked\"]} density={d[\"debt_density\"]:.6f} grade={d[\"health_grade\"]}')"
-      - name: Commit rollout + metrics reports
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .omo/_delivery/audit-rollout/
-          git diff --staged --quiet || { echo "no rollout change, skip commit"; exit 0; }
-          DATE=$(date -u +%Y-%m-%d)
-          git commit -m "audit-rollout: monthly report $DATE (cron, 含 §17 metrics)"
-          git push
+      # E 推广 (原则1, 同 #440 c2g-radar / #443 c2g-gc): 去 Commit step.
+      # .omo/_delivery/ 是 gitignored (运行时写面 L1), git add 本就无效 (exit 128).
+      # bot push main 撞分支保护 (GH006). rollout+metrics 已走 artifact (retention 90天).
