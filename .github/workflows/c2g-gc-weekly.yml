@@ -63,12 +63,7 @@ jobs:
             runtime/sandbox/decayed/
           retention-days: 90
 
-      - name: Commit decayed pitches
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add runtime/sandbox/decayed/ runtime/sandbox/pitches/
-          git diff --staged --quiet && { echo "no gc change, skip commit"; exit 0; }
-          DECAYED_COUNT=$(ls runtime/sandbox/decayed/ 2>/dev/null | wc -l)
-          git commit -m "governance: P44 W1 weekly gc — ${DECAYED_COUNT} pitches archived"
-          git push
+      # E 推广 (健康治理理想态原则1, 同 #440 c2g-radar): 去 Commit step.
+      # decayed pitches 在 runtime/sandbox/ (运行时写面 L1), 不该 commit main.
+      # bot push main 撞分支保护 (GH006). 归档已走 Upload gc logs artifact
+      # (含 runtime/sandbox/decayed/, retention 90天), 历史可追溯.
