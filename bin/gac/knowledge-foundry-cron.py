@@ -246,6 +246,16 @@ def main(argv: list[str] | None = None) -> int:
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
+    # 5:52 — compass_radar 本地刷 health.yaml (E: c2g-radar GHA 去 Commit step 后, 本地产 health 给 BRIEF)
+    # 健康治理理想态原则1: health.yaml 是运行时快照 (L1), 走本地 foundry cron, 不 commit main.
+    print("[5:52] compass-radar (local health refresh)...")
+    results.append(run_tool(
+        "5:52-compass-radar",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/compass_radar.py"],
+        retries=0, timeout=120,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
     # 5:55 — G-CONV ghost executor check (ADR-0220 破自指: 独立于 radar_cron)
     # 扫 services.yaml scheduler:gha 服务的 liveness.signal 新鲜度, 检测连挂/静默 ghost.
     # foundry_cron (独立 launchd daily) 调, 非 radar_cron, 破自指死循环 (GHA 连挂零告警根因).
