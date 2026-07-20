@@ -128,7 +128,7 @@ gac:
     layer_enum: [M0, L0, L1, L2, L3, L4, I0, X, meta]
     check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index, schema_integrity, yaml_bypass, sensitive_write, mutation_surface, registry_integrity, internal_write_profile, state_plane_asset, ingress_boundary, ingress_artifact, mutation_ledger, doc_lifecycle, doc_archival, self_evolution_approval, task_policy, god_module, test_coverage, ssot_lint, mesh_routing, memory_rag, ingress_precheck, consistency_drift, eval_exec, mutable_default]
     lifecycle_enum: [draft, active, deprecated, removed]
-    executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron, gac_local_gate]
+    executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron, gac_local_gate, foundry_cron]
 
   # GaC 规则注册 (声明式; 阶段 0 登记代表规则, 阶段 2 补全)
   rules:
@@ -380,7 +380,7 @@ gac:
       description: "GaC 规则声明 executor (ci_gate/omo_audit/evidence_smoke 等), 验证实际存在 (文件/命令/CI workflow); bin/gac/gac-executor.py 检测 missing executor = 规则声明不存在的执行器"
       check_type: drift_audit
       target: "bin/gac/gac-executor.py (executor 声明 vs 实际存在性)"
-      executor: [ci_gate, radar_cron]
+      executor: [ci_gate, foundry_cron]  # 破自指 (ADR-0220): foundry_cron 独立 launchd daily, ghost 检测由它跑 (非 radar_cron 自指死循环)
       lifecycle: active
       version: "1.0.0"
       created_at: "2026-06-27"
@@ -413,7 +413,7 @@ gac:
       description: "防元治理盲区: CR-X2-GAC-EXEC-DRIFT 验 'executor 文件存在' 不够, 需证据证明 'executor 真能跑出结果'. 元规则: 任何声明的 executor (尤其 evidence_smoke/mcp_tool/mof_validate 等低频/人工触发型) 必须在最近 N 天内有 evidence 落盘 (./omo/_delivery/evidence-smoke/<date>.json 等), 否则标 ghost executor. P2-1 (2026-07-02) — 实现见 radar_cron 周期检查 + ci_gate 兜底"
       check_type: audit_chain
       target: "executor_evidence_manifest: .omo/_delivery/evidence-smoke/<date>.json + .omo/_log/mof-validate.jsonl"
-      executor: [radar_cron, ci_gate]
+      executor: [foundry_cron, ci_gate]  # 破自指 (ADR-0220): foundry_cron 独立, evidence 落盘新鲜度由它扫 (非 radar_cron)
       lifecycle: active
       version: "1.0.0"
       created_at: "2026-07-02"
