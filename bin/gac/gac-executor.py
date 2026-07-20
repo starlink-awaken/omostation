@@ -52,6 +52,7 @@ EXECUTOR_PRESENCE: dict[str, list[str]] = {
     "radar_cron": ["bin/gac/gac-drift.py"],
     "gc_cron": ["bin/gac/gac-gc.py"],
     "gac_local_gate": ["bin/gac/gac-local-gate.py"],  # F-14 (2026-07-03): gac-local-gate 工具作为执行通道, 3 规则已声明 (CR-X2-GOVERNANCE-SEMANTIC-GATE / CR-L0-MATRIX-PORT-CONSISTENCY / CR-L0-MATRIX-LAUNCHD-COVERAGE)
+    "foundry_cron": ["bin/gac/knowledge-foundry-cron.py"],  # 破自指 (ADR-0220): 独立 launchd daily, ghost executor 检测由它跑 (非 radar_cron=被检测对象自己)
     "hook_post": [],  # 声明占位, 无独立文件 (hook_post 是 PostToolUse 事件, 非文件)
 }
 
