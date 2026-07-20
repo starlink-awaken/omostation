@@ -36,7 +36,7 @@ jobs:
         #   0 = OK (0 异常 或 异常已知)
         #   1 = 脚本错误 (fail)
         run: |
-          python3 bin/compass_radar.py
+          uv run --with pyyaml python bin/compass_radar.py
       - name: Upload health.yaml artifact
         uses: actions/upload-artifact@v4
         with:

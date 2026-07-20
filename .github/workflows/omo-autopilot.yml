@@ -21,8 +21,8 @@ jobs:
           
       - name: Install OMO Tools
         run: |
-          uv tool install ./projects/omo
-          uv tool install ./projects/omo-debt
+          uv tool install --force ./projects/omo
+          uv tool install --force ./projects/omo-debt
           
       - name: 1. Perception (Sense Debt)
         run: |
