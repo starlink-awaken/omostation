@@ -50,7 +50,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .omo/state/health.yaml .omo/state/system.yaml
           git diff --staged --quiet && { echo "no health change, skip commit"; exit 0; }
-          HEALTH_SCORE=$(python3 -c "import yaml; d=yaml.safe_load(open('.omo/state/health.yaml')); print(d['health_score'])")
-          ANOM=$(python3 -c "import yaml; d=yaml.safe_load(open('.omo/state/health.yaml')); print(d['anomaly_count'])")
+          HEALTH_SCORE=$(uv run --with pyyaml python -c "import yaml; d=yaml.safe_load(open('.omo/state/health.yaml')); print(d['health_score'])")
+          ANOM=$(uv run --with pyyaml python -c "import yaml; d=yaml.safe_load(open('.omo/state/health.yaml')); print(d['anomaly_count'])")
           git commit -m "governance: P44 W1 daily radar — health=${HEALTH_SCORE} anomalies=${ANOM}"
           git push
