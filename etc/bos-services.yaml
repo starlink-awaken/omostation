@@ -1119,19 +1119,19 @@ services:
   # ── ToolBox 3 instances (L1-L3 local service entry) ──
   # 收敛到 bos://capability/ 域 (5 域锁定约定) — 不创建新域
   # CS-10 元数据: cross_references.realized_by 指向 omo broker
-  # 外部域: /Users/xiamingxing/ToolBox/{wps-office-mcp,wps-skills,bos-skill-cli}/
+  # 外部域: /Users/xiamingxing/ToolBox/{mcp,skills,cli,pipelines}/
   - uri: "bos://capability/wps-office-mcp/invoke"
     domain: capability
     action: "invoke"
     transport: stdio
     package: "toolbox/wps-office-mcp"
-    command: ["node", "/Users/xiamingxing/ToolBox/wps-office-mcp/dist/index.js"]
+    command: ["node", "/Users/xiamingxing/ToolBox/mcp/wps-office-mcp/dist/index.js"]
     tools_count: 243
     description: "WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写"
     cross_references:
       domain: capability
       realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/wps-office-mcp/.git"
+      upstream: "/Users/xiamingxing/ToolBox/mcp/wps-office-mcp/.git"
     i0_route: pending
     status: active
 
@@ -1140,12 +1140,12 @@ services:
     action: "load"
     transport: stdio
     package: "toolbox/wps-skills"
-    command: ["node", "/Users/xiamingxing/ToolBox/wps-skills/dist/index.js"]
+    command: ["node", "/Users/xiamingxing/ToolBox/skills/wps-skills/dist/index.js"]
     description: "WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发"
     cross_references:
       domain: capability
       realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/wps-skills/.git"
+      upstream: "/Users/xiamingxing/ToolBox/skills/wps-skills/.git"
     i0_route: pending
     status: active
 
@@ -1154,12 +1154,107 @@ services:
     action: "exec"
     transport: stdio
     package: "toolbox/bos-skill-cli"
-    command: ["uv", "run", "--directory", "/Users/xiamingxing/ToolBox/bos-skill-cli", "bos-skill-cli"]
+    command: ["uv", "run", "--directory", "/Users/xiamingxing/ToolBox/cli/bos-skill-cli", "bos-skill-cli"]
     description: "BOS Skill 管理 CLI/TUI — 搜索/暂存/promote/回退 skill 包"
     cross_references:
       domain: capability
       realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/bos-skill-cli/.git"
+      upstream: "/Users/xiamingxing/ToolBox/cli/bos-skill-cli/.git"
+    i0_route: pending
+    status: active
+
+  # ── v5 Phase 2: 7 新实例注册 (迁入 L2 分区) ──
+  - uri: "bos://capability/headroom/compress"
+    domain: capability
+    action: "compress"
+    transport: stdio
+    package: "toolbox/headroom"
+    command: ["python3", "-m", "headroom"]
+    description: "Agent 上下文压缩层 — 60-95% token 节省 + 模型压缩 + MCP 代理"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/mcp/headroom/.git"
+    i0_route: pending
+    status: active
+
+  - uri: "bos://capability/code-review-graph/analyze"
+    domain: capability
+    action: "analyze"
+    transport: stdio
+    package: "toolbox/code-review-graph"
+    command: ["python3", "-m", "code_review_graph"]
+    description: "Token 优化型代码评审图工具 — PyPI 发布，MCP 兼容"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/mcp/code-review-graph/.git"
+    i0_route: pending
+    status: active
+
+  - uri: "bos://capability/claude-skills/load"
+    domain: capability
+    action: "load"
+    transport: static
+    package: "toolbox/claude-skills"
+    description: "354 个 Claude Code Skill 最全库 — 593 CLI 脚本 + 711 模板"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/skills/claude-skills/.git"
+    i0_route: pending
+    status: active
+
+  - uri: "bos://capability/last30days-skill/fetch"
+    domain: capability
+    action: "fetch"
+    transport: stdio
+    package: "toolbox/last30days-skill"
+    description: "AI Agent 驱动的搜索/打分类信息流聚合 — GitHub Trending #1"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/skills/last30days-skill/.git"
+    i0_route: pending
+    status: active
+
+  - uri: "bos://capability/media-crawler/crawl"
+    domain: capability
+    action: "crawl"
+    transport: stdio
+    package: "toolbox/media-crawler"
+    command: ["python3", "-m", "media_crawler"]
+    description: "自媒体平台爬虫 — 抖音/小红书/快手/B站/微博等 12 平台，含反爬能力"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/pipelines/media-crawler/.git"
+    i0_route: pending
+    status: active
+
+  - uri: "bos://capability/open-montage/render"
+    domain: capability
+    action: "render"
+    transport: stdio
+    package: "toolbox/open-montage"
+    description: "开源 Agentic 视频制作系统 — 从剧本到成品的全流程 Pipeline"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/pipelines/open-montage/.git"
+    i0_route: pending
+    status: active
+
+  - uri: "bos://capability/skills-for-fabric/load"
+    domain: capability
+    action: "load"
+    transport: static
+    package: "toolbox/skills-for-fabric"
+    description: "微软 Fabric AI 技能集 — 作者/消费/运维三类 Skill"
+    cross_references:
+      domain: capability
+      realized_by: "agora.register"
+      upstream: "/Users/xiamingxing/ToolBox/skills/skills-for-fabric/.git"
     i0_route: pending
     status: active
 
