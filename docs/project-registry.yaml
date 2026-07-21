@@ -225,38 +225,79 @@ projects:
     note: "非 git 子模块，直接在 projects/ 下，由 cockpit 托管"
 
   toolbox:
-    layer: "L1-L3"
-    layer_aligned_with: "ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-toolbox-tools.yaml"
-    stack: "Multi (TypeScript MCP / JS Skills / Python CLI)"
-    role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP / Skill / CLI)"
-    storage: "/Users/xiamingxing/ToolBox/"
-    # 收敛到 bos://capability/ 域 (eCOS 5 域锁定), 不创建新域
-    bos_uri_root: "bos://capability"
-    bos_services:
-      - id: wps-office-mcp
-        bos_uri: "bos://capability/wps-office-mcp/invoke"
-        git: "/Users/xiamingxing/ToolBox/wps-office-mcp/.git"
-        tools_count: 243
-        status: active
-      - id: wps-skills
-        bos_uri: "bos://capability/wps-skills/load"
-        git: "/Users/xiamingxing/ToolBox/wps-skills/.git"
-        status: active
-      - id: bos-skill-cli
-        bos_uri: "bos://capability/bos-skill-cli/exec"
-        git: "/Users/xiamingxing/ToolBox/bos-skill-cli/.git"
-        status: active
-    note: "非 git 子模块 — 外部域, 通过 bos://capability/{package}/{action} 暴露 3 个 L3 实例"
-    crosscut:
-      consumes: [L4-A, L4-B, L4-C, L5, L∞]
-      produces: [I0-capability-services, L0-tools-registry]
-      governed_by: [X1-C02-I0/Agora, X1-C03-agora.register, CS-10-BOS-URI, CR-ADMISSION-01]
-    i0_connected: false
-    x1_audit: false
-    x2_freshness: false
-    x3_value: false
-    status: active
-    added: "2026-06-30"
+     layer: "L1-L3"
+     layer_aligned_with: "ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-toolbox-tools.yaml"
+     stack: "Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline)"
+     role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP×5 / Skill×5 / CLI×1 / Pipeline×2)"
+     storage: "/Users/xiamingxing/ToolBox/"
+     version: "v5 (2026-07-21)"
+     # 收敛到 bos://capability/ 域 (eCOS 5 域锁定), 不创建新域
+     bos_uri_root: "bos://capability"
+     bos_services:
+       - id: wps-office-mcp
+         bos_uri: "bos://capability/wps-office-mcp/invoke"
+         git: "/Users/xiamingxing/ToolBox/mcp/wps-office-mcp/.git"
+         tools_count: 243
+         status: active
+       - id: wps-skills
+         bos_uri: "bos://capability/wps-skills/load"
+         git: "/Users/xiamingxing/ToolBox/skills/wps-skills/.git"
+         status: active
+       - id: bos-skill-cli
+         bos_uri: "bos://capability/bos-skill-cli/exec"
+         git: "/Users/xiamingxing/ToolBox/cli/bos-skill-cli/.git"
+         status: active
+       - id: headroom
+         bos_uri: "bos://capability/headroom/compress"
+         git: "/Users/xiamingxing/ToolBox/mcp/headroom/.git"
+         status: active
+       - id: code-review-graph
+         bos_uri: "bos://capability/code-review-graph/analyze"
+         git: "/Users/xiamingxing/ToolBox/mcp/code-review-graph/.git"
+         status: active
+       - id: deer-flow
+         bos_uri: "bos://capability/deer-flow/run"
+         git: "/Users/xiamingxing/ToolBox/mcp/deer-flow/.git"
+         status: active
+       - id: datafoundry
+         bos_uri: "bos://capability/datafoundry/analyze"
+         git: "/Users/xiamingxing/ToolBox/mcp/datafoundry/.git"
+         status: active
+       - id: claude-skills
+         bos_uri: "bos://capability/claude-skills/load"
+         git: "/Users/xiamingxing/ToolBox/skills/claude-skills/.git"
+         status: active
+       - id: last30days-skill
+         bos_uri: "bos://capability/last30days-skill/fetch"
+         git: "/Users/xiamingxing/ToolBox/skills/last30days-skill/.git"
+         status: active
+       - id: skills-for-fabric
+         bos_uri: "bos://capability/skills-for-fabric/load"
+         git: "/Users/xiamingxing/ToolBox/skills/skills-for-fabric/.git"
+         status: active
+       - id: knowledge-work-plugins
+         bos_uri: "bos://capability/knowledge-work-plugins/load"
+         git: "/Users/xiamingxing/ToolBox/skills/knowledge-work-plugins/.git"
+         status: active
+       - id: media-crawler
+         bos_uri: "bos://capability/media-crawler/crawl"
+         git: "/Users/xiamingxing/ToolBox/pipelines/media-crawler/.git"
+         status: active
+       - id: open-montage
+         bos_uri: "bos://capability/open-montage/render"
+         git: "/Users/xiamingxing/ToolBox/pipelines/open-montage/.git"
+         status: active
+     note: "v5: 13 实例全部注册 BOS URI, 3 SSOT 一致, I0 Agora 9 服务注册"
+     crosscut:
+       consumes: [L4-A, L4-B, L4-C, L5, L∞]
+       produces: [I0-capability-services, L0-tools-registry]
+       governed_by: [X1-C02-I0/Agora, X1-C03-agora.register, CS-10-BOS-URI, CR-ADMISSION-01]
+     i0_connected: true
+     x1_audit: true
+     x2_freshness: true
+     x3_value: false
+     status: active
+     added: "2026-06-30"
 
 # ── Cross-project facts ──
 bos:
