@@ -267,6 +267,17 @@ def main(argv: list[str] | None = None) -> int:
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
+    # 5:57 — event-loop-check (原则4 闭环回路: emit 必有消费者)
+    # 扫 omo-events.jsonl 检测死回路 (emit 了零消费者, 如 state_stale 671 条死回路).
+    # omo-events.jsonl gitignored (.omo/_knowledge/*.jsonl), 只主仓/本地有, 故 foundry_cron 跑 (非 CI).
+    print("[5:57] event-loop-check...")
+    results.append(run_tool(
+        "5:57-event-loop",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/event-loop-lint.py", "--json"],
+        retries=0, timeout=60,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
     # 6:00 — BRIEF generate
     print("[6:00] BRIEF gen...")
     results.append(run_tool(
