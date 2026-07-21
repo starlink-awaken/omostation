@@ -278,6 +278,17 @@ def main(argv: list[str] | None = None) -> int:
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
+    # 5:58 — gac-coverage-lint (P3 声明即执行覆盖率, ADR-0227 原则2 衍生)
+    # 扫 governance-checks rule, 检查有静态 evidence 的 executor (omo_audit/evidence_smoke/foundry_cron) 新鲜度.
+    # 治声明面膨胀执行面休眠 (decl-exec-gap). evidence gitignored/本地, 故 foundry_cron 跑.
+    print("[5:58] gac-coverage-check...")
+    results.append(run_tool(
+        "5:58-gac-coverage",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/gac-coverage-lint.py", "--json"],
+        retries=0, timeout=60,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
     # 6:00 — BRIEF generate
     print("[6:00] BRIEF gen...")
     results.append(run_tool(
