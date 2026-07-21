@@ -273,7 +273,7 @@ def main(argv: list[str] | None = None) -> int:
     print("[5:57] event-loop-check...")
     results.append(run_tool(
         "5:57-event-loop",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/event-loop-lint.py", "--json"],
+        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/event-loop-lint.py", "--json", "--alert"],
         retries=0, timeout=60,
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")

@@ -22,6 +22,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+import yaml
+
 WORKSPACE = Path(__file__).resolve().parents[2]
 EVENTS = WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"
 
@@ -65,6 +67,7 @@ def find_consumers(kind: str) -> list[str]:
 
 def main() -> int:
     as_json = "--json" in sys.argv
+    alert = "--alert" in sys.argv
     kinds = extract_kinds()
     dead_loops: list[dict] = []
     alive: list[dict] = []
@@ -92,6 +95,22 @@ def main() -> int:
         "dead_loops": dead_loops,
         "ok": len(dead_loops) == 0,
     }
+
+    # --alert: 死回路写 needs-human 卡片 (generate-brief scan_decision_inbox 扫 .omo/tasks/
+    # 含 "needs-human" 的 yaml → 进 BRIEF Decision Inbox, 人能看到). 原则4 闭环: emit→检测→触达.
+    if alert and dead_loops:
+        card_path = WORKSPACE / ".omo" / "tasks" / "planned" / "event-loop-dead-loop.yaml"
+        card_path.parent.mkdir(parents=True, exist_ok=True)
+        card = {
+            "id": "event-loop-dead-loop",
+            "title": f"闭环回路死回路: {len(dead_loops)} 个 emit 零消费者",
+            "needs-human": True,  # generate-brief scan_decision_inbox 关键词
+            "description": "event-loop-lint 检测到 emit 零消费者 (死回路, emit 没人看). 需人工接消费者/触达.",
+            "dead_loops": [{"kind": d["kind"], "emit_count": d["emit_count"]} for d in dead_loops],
+        }
+        card_path.write_text(
+            yaml.safe_dump(card, allow_unicode=True, sort_keys=False), encoding="utf-8"
+        )
 
     if as_json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
