@@ -55,6 +55,7 @@
     "vault_default": "vault",
     "work-docs_default": "work-docs",
     "work-guozhuan_default": "work-guozhuan",
+    "work-liyongke_default": "work-liyongke",
     "work-weijian_default": "work-weijian",
     "analyze_project": "codeanalyze",
     "audit_project": "codeanalyze",
