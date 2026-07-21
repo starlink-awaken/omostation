@@ -15,8 +15,9 @@ from collections import defaultdict
 
 REGISTRY = ".omo/_truth/registry/governance-checks.yaml"
 OUTPUT = sys.argv[1] if len(sys.argv) > 1 else "docs/generated/agent-redlines.md"
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
-from gac_severity import derive_severity, RED_EXECUTORS  # 抽取共享 (code-review #1)
+# gac_severity.py 在 bin/gac/, 本脚本在 bin/mof/, 需把 bin/gac 加进 path (DRY with bin/gac/gac-drift.py)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "gac"))
+from gac_severity import derive_severity, RED_EXECUTORS  # noqa: E402  抽取共享 (code-review #1)
 
 
 def main():
