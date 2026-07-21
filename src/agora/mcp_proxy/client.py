@@ -236,7 +236,9 @@ class StdioMCPClient(MCPClient):
             result = await self._mcp_initialize()
             if result:
                 self._connected = True
-                _backend = getattr(getattr(self, "_spawn_handle", None), "backend", None)
+                _backend = getattr(
+                    getattr(self, "_spawn_handle", None), "backend", None
+                )
                 logger.info(
                     "proxy_connected",
                     service=self.service_name,
