@@ -116,6 +116,88 @@ services:
       - identity_list: {description: "identity_bridge 列出身份", args: {}}
       - excretion_cleanup: {description: "D-Excretion 代谢清理", args: {target: string, older_than_h: int}}
 
+  # ── ToolBox L2 分区服务 (v5 I0 接入) ──
+  - name: toolbox-wps-office-mcp
+    description: WPS Office MCP Server — Excel/Word/PPT 243 工具
+    mcp_url: "stdio://node /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/dist/index.js"
+    health_url: "cli://node /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/dist/index.js --health"
+    tags: [toolbox, mcp, wps, office]
+    tools:
+      - wps_excel: {description: "Excel 操控", args: {action: string, params: dict}}
+      - wps_word: {description: "Word 操控", args: {action: string, params: dict}}
+      - wps_ppt: {description: "PPT 操控", args: {action: string, params: dict}}
+
+  - name: toolbox-headroom
+    description: Agent 上下文压缩层 — 60-95% token 节省
+    mcp_url: "stdio://headroom"
+    health_url: "cli://headroom --health"
+    tags: [toolbox, mcp, context, compression]
+    tools:
+      - headroom_compress: {description: "压缩上下文", args: {content: string, ratio: float}}
+      - headroom_status: {description: "查看压缩状态", args: {}}
+
+  - name: toolbox-code-review-graph
+    description: Token 优化型代码评审图分析
+    mcp_url: "stdio://code-review-graph"
+    health_url: "cli://code-review-graph --health"
+    tags: [toolbox, mcp, code-review, analysis]
+    tools:
+      - crg_analyze: {description: "分析代码评审", args: {repo: string, pr: int}}
+      - crg_graph: {description: "生成评审图", args: {repo: string}}
+
+  - name: toolbox-deer-flow
+    description: 字节超 Agent 框架 v2 — LangGraph + 子 Agent/沙箱
+    mcp_url: "stdio://python -m deer_flow.server"
+    health_url: "cli://python -m deer_flow.server --health"
+    tags: [toolbox, mcp, agent, framework]
+    tools:
+      - deer_run: {description: "运行 Agent 任务", args: {task: string, config: dict}}
+      - deer_status: {description: "查看 Agent 状态", args: {task_id: string}}
+
+  - name: toolbox-media-crawler
+    description: 自媒体平台爬虫 — 抖音/小红书/快手等 12 平台
+    mcp_url: "stdio://python -m mediacrawler"
+    health_url: "cli://python -m mediacrawler --health"
+    tags: [toolbox, crawler, social-media]
+    tools:
+      - mc_crawl: {description: "爬取平台内容", args: {platform: string, keyword: string, limit: int}}
+      - mc_search: {description: "搜索平台内容", args: {platform: string, query: string}}
+
+  - name: toolbox-datafoundry
+    description: 企业 Data Agent 工作台 — 28 数据源 + 语义层
+    mcp_url: "http://localhost:3000/api/v1"
+    health_url: "http://localhost:3000/api/v1/health"
+    tags: [toolbox, data, analysis, agent]
+    tools:
+      - df_query: {description: "数据查询", args: {source: string, query: string}}
+      - df_analyze: {description: "数据分析", args: {dataset: string, goal: string}}
+
+  - name: toolbox-last30days
+    description: AI Agent 信息流聚合 — GitHub Trending
+    mcp_url: "stdio://python -m last30days"
+    health_url: "cli://python -m last30days --health"
+    tags: [toolbox, search, aggregation]
+    tools:
+      - l30_fetch: {description: "获取信息流", args: {topic: string, days: int}}
+      - l30_trending: {description: "获取 Trending", args: {language: string}}
+
+  - name: toolbox-skills
+    description: ToolBox Skill 集合 — claude-skills/last30days/fabric/knowledge-work
+    mcp_url: "stdio://echo toolbox-skills"
+    tags: [toolbox, skills, collection]
+    tools:
+      - skills_list: {description: "列出所有 Skill", args: {category: string}}
+      - skills_search: {description: "搜索 Skill", args: {query: string}}
+
+  - name: toolbox-open-montage
+    description: Agentic 视频制作系统 — 从剧本到成品
+    mcp_url: "stdio://python -m open_montage"
+    health_url: "cli://python -m open_montage --health"
+    tags: [toolbox, video, pipeline, agent]
+    tools:
+      - om_render: {description: "渲染视频", args: {script: string, format: string}}
+      - om_status: {description: "查看渲染状态", args: {job_id: string}}
+
 pipelines:
   match-derive:
     description: 工具匹配 → 事实推导
