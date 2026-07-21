@@ -57,7 +57,7 @@ L4 文档   BRIEF (指针引用 L1, 不复制值)
 
 ### 原则3 · 自审独立 (审计器 ≠ 被审对象)
 
-ghost/health 审计由**独立层** (foundry cron 本地 launchd + evidence-smoke GHA) 跑, 多源交叉, 不依赖被审对象. 破自指死循环. **落地**: #439 ghost 检测代码 + foundry 5:55 deck / #441 CR-X2/CR-X1 executor → `foundry_cron`.
+ghost/health 审计由**独立层** (foundry cron 本地 launchd + evidence-smoke GHA) 跑, 多源交叉, 不依赖被审对象. 破自指死循环. **落地**: #439 ghost 检测代码 + foundry 5:55 deck / #441 CR-X2-GAC-EXEC-DRIFT + CR-X1-EVIDENCE-RUNNABLE executor → `foundry_cron`.
 
 ### 原则4 · 闭环回路 (emit → 检测 → 触达 → 决策)
 
