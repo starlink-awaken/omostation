@@ -1,0 +1,43 @@
+# M1 Node: DOMAIN-work-liyongke
+# Type: Domain | Subtype: DocumentDomain
+# Generated: 2026-07-19
+
+id: DOMAIN-work-liyongke
+type: Domain
+name: 规自委利用科
+description: 规自委房山分局利用科 — 地价评审·低效用地·批而未供·督察整改·划拨审批·临时用地
+status: active
+domain: meta
+created: '2026-07-19'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://work-liyongke/**
+  domain_type: document
+  doc_subtype: Sub
+  layer: L4
+  governance_tier: 1
+  storage: /Users/xiamingxing/Documents/@工作文档/规自委
+  kems_planes:
+  - _control
+  - _entities
+  - _knowledge
+  - _storage
+  - _meta
+  capabilities:
+  - knowledge.read
+  - knowledge.search
+  - document.read
+  - document.write
+  - task.track
+  entry_points:
+    mcp: domain_read
+subtype: DocumentDomain
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-07-19T00:00:00Z'
+    reason: initial_modeling

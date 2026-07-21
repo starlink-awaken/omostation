@@ -1,0 +1,27 @@
+# M1 Node: BOSROUTE-WORK-LIYONGKE
+id: BOSROUTE-WORK-LIYONGKE
+type: Component
+subtype: BOSRoute
+name: bos://work-liyongke/**
+description: 规自委利用科域路由
+status: active
+domain: work
+created: '2026-07-19'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: l4-kernel
+    entrypoint: src/l4_kernel/
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-07-19T00:00:00Z'
+    reason: initial_modeling

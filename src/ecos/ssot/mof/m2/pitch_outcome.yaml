@@ -70,10 +70,10 @@ PitchOutcome:
       type: string
       description: 影响评估
   validationRules:
-  - rule: pitch_id != null and pitch_id.length &gt; 0
+  - rule: pitch_id != null and pitch_id.length > 0
     level: error
     message: 必须关联 Pitch
-  - rule: success_score &gt;= 0.0 and success_score &lt;= 1.0
+  - rule: success_score >= 0.0 and success_score <= 1.0
     level: error
     message: 成功得分必须在 0.0-1.0 范围内
   examples:

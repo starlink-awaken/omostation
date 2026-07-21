@@ -87,13 +87,13 @@ Pitch:
       type: string
       description: 唯一标识
   validationRules:
-  - rule: core_idea != null and core_idea.length &gt; 0
+  - rule: core_idea != null and core_idea.length > 0
     level: error
     message: Pitch 必须有核心理念
-  - rule: upstream != null and upstream.length &gt; 0
+  - rule: upstream != null and upstream.length > 0
     level: warning
     message: 建议有上游战略对齐
-  - rule: appetite != null and appetite.length &gt; 0
+  - rule: appetite != null and appetite.length > 0
     level: warning
     message: 建议明确资源胃口
   examples:

@@ -75,13 +75,13 @@ StateCache:
       type: boolean
       description: 是否启用压缩
   validationRules:
-  - rule: cache_id != null and cache_id.length &gt; 0
+  - rule: cache_id != null and cache_id.length > 0
     level: error
     message: 缓存标识不能为空
-  - rule: ttl_seconds &gt; 0
+  - rule: ttl_seconds > 0
     level: error
     message: TTL 必须大于 0
-  - rule: hit_ratio &gt;= 0.0 and hit_ratio &lt;= 1.0
+  - rule: hit_ratio >= 0.0 and hit_ratio <= 1.0
     level: warning
     message: 命中率必须在 0.0-1.0 范围内（如果设置）
   examples:

@@ -82,7 +82,7 @@ PredictiveGovernance:
       type: string
       description: 预测模型版本
   validationRules:
-  - rule: confidence &gt;= 0.0 and confidence &lt;= 1.0
+  - rule: confidence >= 0.0 and confidence <= 1.0
     level: error
     message: 置信度必须在 0.0-1.0 范围内
   - rule: prediction_type in enum
