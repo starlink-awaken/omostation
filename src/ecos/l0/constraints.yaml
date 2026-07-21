@@ -487,6 +487,9 @@ domain_registry:
       - "bos://capability/media-crawler/crawl"
       - "bos://capability/open-montage/render"
       - "bos://capability/skills-for-fabric/load"
+      - "bos://capability/deer-flow/run"
+      - "bos://capability/datafoundry/analyze"
+      - "bos://capability/knowledge-work-plugins/load"
     cross_references:
       domain: capability
       realized_by: "agora.register"
