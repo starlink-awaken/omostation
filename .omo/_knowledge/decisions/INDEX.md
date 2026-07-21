@@ -203,6 +203,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0224 | conflict_count>0 时对抗路径须先溯源 | ACCEPTED | 2026-07-18 | 架构师 | 0224-m1-conflict-count-rootcause-before-adversarial-pass.md |
 | 0225 | G-DEL 兑现期门禁维持物理多机口径（方案 A） | ACCEPTED | 2026-07-19 | 架构师 | 0225-g-del-physical-multihost-gate-caliber.md |
 | 0226 | G-DEL.1 BLOCKED 直至 4 物理节点 fail-closed | ACCEPTED | 2026-07-19 | 架构师 | 0226-g-del-1-blocked-until-four-hosts.md |
+| 0227 | 治理架构理想态 4 原则 (分层/单源/自审/闭环) | ACCEPTED | 2026-07-21 | 夏明星 | 0227-governance-ideal-architecture.md |
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
