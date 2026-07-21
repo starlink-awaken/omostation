@@ -576,7 +576,9 @@ def load_governance_summary() -> dict:
         return result
 
     gov = raw.get("governance", {})
-    result["health_score"] = gov.get("health_score", 0) or gov.get("health_score_raw", 0)
+    # health_score (compass_radar ISC-3 合成分) 与 health_score_raw (omo audit 审计分) 语义不同,
+    # 不 fallback 混用 (原 `or` 把审计分当合成分替代 = 误导). health_score 由 foundry cron 5:52 刷, 总有.
+    result["health_score"] = gov.get("health_score", 0)
     result["health_score_raw"] = gov.get("health_score_raw", 0)
 
     debt = raw.get("debt", {})
