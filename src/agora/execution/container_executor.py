@@ -45,9 +45,7 @@ BackendSetting = Literal["local", "docker", "auto"]
 # ── Models ────────────────────────────────────────────────────────
 
 # Default image pin (Scheme C 5b follow-up / ADR-0205). Override via env or YAML.
-DEFAULT_DOCKER_IMAGE = (
-    "python:3.13-slim@sha256:bffeb7bd6a85767587059c6ba23e1e9122078e3aa3fa836099171b9bb5a9bb00"
-)
+DEFAULT_DOCKER_IMAGE = "python:3.13-slim@sha256:bffeb7bd6a85767587059c6ba23e1e9122078e3aa3fa836099171b9bb5a9bb00"
 
 
 @dataclass(frozen=True)
@@ -143,7 +141,9 @@ def _expand_path(value: str, workspace: str, tmpdir: str) -> str:
     return expanded
 
 
-def _parse_profile(name: str, raw: dict[str, Any], default_image: str) -> IsolationProfile:
+def _parse_profile(
+    name: str, raw: dict[str, Any], default_image: str
+) -> IsolationProfile:
     mounts_raw = raw.get("mounts") or []
     mounts: list[MountSpec] = []
     for m in mounts_raw:
@@ -278,7 +278,9 @@ def resolve_backend(
 ) -> BackendName:
     """Resolve effective backend from env / SSOT / docker availability."""
     cfg = config or load_profiles()
-    raw = (setting or os.environ.get("AGORA_SPAWN_BACKEND") or cfg.default_backend).lower()
+    raw = (
+        setting or os.environ.get("AGORA_SPAWN_BACKEND") or cfg.default_backend
+    ).lower()
     if raw not in ("local", "docker", "auto"):
         raw = "local"
 
@@ -321,15 +323,13 @@ def _tmpdir() -> str:
     return os.environ.get("TMPDIR") or tempfile.gettempdir()
 
 
-def _resolve_profile(
-    name: str | None, config: ExecutorConfig
-) -> IsolationProfile:
+def _resolve_profile(name: str | None, config: ExecutorConfig) -> IsolationProfile:
     key = name or os.environ.get("AGORA_SPAWN_PROFILE") or config.default_profile
     if key not in config.profiles:
         # fall back gracefully
-        return config.profiles.get(
-            config.default_profile
-        ) or next(iter(config.profiles.values()))
+        return config.profiles.get(config.default_profile) or next(
+            iter(config.profiles.values())
+        )
     return config.profiles[key]
 
 
@@ -349,11 +349,7 @@ def build_docker_argv(
 
     ws = workspace or _workspace_root(spec.cwd)
     tmp = _tmpdir()
-    image = (
-        os.environ.get("AGORA_SPAWN_DOCKER_IMAGE")
-        or profile.image
-        or docker_image
-    )
+    image = os.environ.get("AGORA_SPAWN_DOCKER_IMAGE") or profile.image or docker_image
 
     argv: list[str] = [
         docker_bin,
@@ -467,7 +463,9 @@ def build_spawn_argv(
         backend="local",
         profile=profile.name,
         cwd=spec.cwd,
-        env=filter_spawn_env(spec.env) if spec.env is not None else filter_spawn_env(None),
+        env=filter_spawn_env(spec.env)
+        if spec.env is not None
+        else filter_spawn_env(None),
         docker_wrapped=False,
         service_name=spec.service_name,
         notes=notes,
