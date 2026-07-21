@@ -67,9 +67,6 @@ filterwarnings = [
 [tool.ruff]
 exclude = ["*.yaml", "*.yml"]
 
-[tool.ruff]
-exclude = ["*.yaml", "*.yml"]
-
 [tool.ruff.lint]
 # agora BOS hub 模式: 大量模块 import 前需 sys.path/path setup 注入
 # (src/agora/mcp_proxy/manager.py, l0_registry_loader.py 等), E402 不适用
