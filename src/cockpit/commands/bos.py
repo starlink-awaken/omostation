@@ -433,8 +433,7 @@ def cmd_bos_capability(args) -> int:
             services = [
                 s
                 for s in POC_SERVICES
-                if getattr(s, "domain", "") == "capability"
-                or "capability" in getattr(s, "tags", [])
+                if getattr(s, "domain", "") == "capability" or "capability" in getattr(s, "tags", [])
             ]
             if not services:
                 services = POC_SERVICES

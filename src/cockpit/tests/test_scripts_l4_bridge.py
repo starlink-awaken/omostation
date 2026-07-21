@@ -169,6 +169,7 @@ class TestSharedContextMcp:
         delivery.mkdir(parents=True)
         # copy store implementation from real workspace
         import shutil
+
         src = Path("/Users/xiamingxing/ws-kos-q1-mcp/bin/delivery/shared_context_store.py")
         shutil.copy(src, delivery / "shared_context_store.py")
         (delivery / "__init__.py").write_text("", encoding="utf-8")
@@ -195,9 +196,7 @@ class TestSharedContextMcp:
         assert w["ok"] is True
         assert w["key"] == "collab.handoff"
 
-        r = json.loads(
-            shared_context_read(reader="agent-B", key="collab.handoff", scope="bet-b7da")
-        )
+        r = json.loads(shared_context_read(reader="agent-B", key="collab.handoff", scope="bet-b7da"))
         assert r["ok"] is True
         assert r["value"] == "ready"
 
@@ -210,6 +209,7 @@ class TestSharedContextMcp:
         delivery = ws / "bin" / "delivery"
         delivery.mkdir(parents=True)
         import shutil
+
         src = Path("/Users/xiamingxing/ws-kos-q1-mcp/bin/delivery/shared_context_store.py")
         shutil.copy(src, delivery / "shared_context_store.py")
         (delivery / "__init__.py").write_text("", encoding="utf-8")

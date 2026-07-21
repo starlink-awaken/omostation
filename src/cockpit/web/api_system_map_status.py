@@ -1,4 +1,5 @@
 """cockpit system-map project status/coverage/verification helpers. Split from api_system_map.py."""
+
 from __future__ import annotations
 
 import json
@@ -806,11 +807,12 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
     controlled_passed = controlled_audit.get("exit_code") == 0
     missing_sources = [ref for ref in source_refs if not ref.get("exists")]
 
-    verification_detail = (
-        f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。"
-        + (f" 已登记命令：{verification.get('command')}。" if verification.get("command") else "")
+    verification_detail = f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。" + (
+        f" 已登记命令：{verification.get('command')}。" if verification.get("command") else ""
     )
-    closeout_status = verification.get("closeout_status") or ("closed" if verification.get("closeout_ref") else "missing")
+    closeout_status = verification.get("closeout_status") or (
+        "closed" if verification.get("closeout_ref") else "missing"
+    )
     verification_next_action = (
         "保持验证与 closeout 证据同步。"
         if controlled_passed and closeout_status == "closed"
@@ -1042,5 +1044,3 @@ def _project_portfolio_state(project: dict[str, Any]) -> dict[str, Any]:
         "next_action": next_action,
         "non_ready_dimensions": non_ready_dimensions[:5],
     }
-
-

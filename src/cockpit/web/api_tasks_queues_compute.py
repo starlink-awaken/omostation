@@ -1,4 +1,5 @@
 """Cockpit tasks API — compute/sandbox queue endpoints (compute, compute-control, sandbox, generation). Split from api_tasks.py."""
+
 from __future__ import annotations
 
 import re
@@ -117,6 +118,7 @@ async def queue_compute_action(request: Request):
         "source": "omo_ingress",
     }
 
+
 @router.post("/api/cockpit/compute/control/queue")
 async def queue_compute_control(request: Request):
     """Register budget or circuit-breaker changes for human-approved execution."""
@@ -211,6 +213,7 @@ async def queue_compute_control(request: Request):
         "source": "omo_ingress",
     }
 
+
 @router.post("/api/cockpit/sandbox/queue")
 async def queue_sandbox_result(request: Request):
     """Persist a sandbox result as a planned follow-up task without executing it."""
@@ -290,6 +293,7 @@ async def queue_sandbox_result(request: Request):
         "executes": False,
         "source": "omo_ingress",
     }
+
 
 @router.post("/api/cockpit/compute/generation/queue")
 async def queue_compute_generation_result(request: Request):

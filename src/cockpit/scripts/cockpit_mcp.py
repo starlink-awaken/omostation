@@ -673,7 +673,7 @@ def shared_context_write(
             },
             ensure_ascii=False,
         )
-    except Exception as exc:  # noqa: BLE001 — surface to agent
+    except Exception as exc:
         return json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False)
 
 
@@ -711,7 +711,7 @@ def shared_context_read(reader: str, key: str, scope: str = "default") -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False)
 
 
@@ -740,7 +740,7 @@ def shared_context_list(reader: str, scope: str = "default") -> str:
             },
             ensure_ascii=False,
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False)
 
 

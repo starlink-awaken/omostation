@@ -3,6 +3,7 @@
 Helper layers live in api_system_map_catalog / _io_commands / _status (god-module SRP split).
 Public API (build_system_map, build_source_ref_preview, _project_* status fns) re-exported here.
 """
+
 from __future__ import annotations
 
 import json
@@ -737,9 +738,7 @@ def _build_playbooks(page_lookup: dict[str, dict[str, Any]]) -> list[dict[str, A
             {
                 **playbook,
                 "steps": steps,
-                "source_refs": [
-                    _source_ref_for_id(CATALOG_SOURCE, playbook["id"], "操作清单定义", "system_map_api")
-                ],
+                "source_refs": [_source_ref_for_id(CATALOG_SOURCE, playbook["id"], "操作清单定义", "system_map_api")],
             }
         )
     return playbooks

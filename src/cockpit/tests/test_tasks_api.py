@@ -487,14 +487,18 @@ def test_queue_debt_task_promotes_high_severity_debt_to_omo(monkeypatch):
     calls = []
     monkeypatch.setattr(
         "cockpit.dashboard.helpers.load_debt",
-        lambda: {"items": [{
-            "id": "debt-auth",
-            "title": "补鉴权证据",
-            "severity": "p0",
-            "dimension": "security",
-            "owner": "security",
-            "evidence_refs": ["audit:auth"],
-        }]},
+        lambda: {
+            "items": [
+                {
+                    "id": "debt-auth",
+                    "title": "补鉴权证据",
+                    "severity": "p0",
+                    "dimension": "security",
+                    "owner": "security",
+                    "evidence_refs": ["audit:auth"],
+                }
+            ]
+        },
     )
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
     monkeypatch.setattr(
@@ -585,14 +589,16 @@ def test_queue_hitl_proposal_requires_approval_and_preserves_proposal_context(mo
     calls = []
     monkeypatch.setattr(
         "cockpit.adapters.omo.list_hitl_proposals",
-        lambda _omo_root: [{
-            "id": "proposal-42",
-            "type": "model_swap",
-            "debt_id": "debt-auth",
-            "target_model": "safe-model",
-            "scope": "family-hub",
-            "description": "切换到受控模型",
-        }],
+        lambda _omo_root: [
+            {
+                "id": "proposal-42",
+                "type": "model_swap",
+                "debt_id": "debt-auth",
+                "target_model": "safe-model",
+                "scope": "family-hub",
+                "description": "切换到受控模型",
+            }
+        ],
     )
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
     monkeypatch.setattr(
@@ -616,13 +622,15 @@ def test_queue_critical_alert_promotes_high_risk_operations_task(monkeypatch):
     calls = []
     monkeypatch.setattr(
         "cockpit.web.api_alerts.generate_alerts_from_l4_data",
-        lambda: [{
-            "id": "alert-1",
-            "level": "critical",
-            "source": "agora",
-            "message": "Mesh degradation",
-            "description": "Latency spike detected",
-        }],
+        lambda: [
+            {
+                "id": "alert-1",
+                "level": "critical",
+                "source": "agora",
+                "message": "Mesh degradation",
+                "description": "Latency spike detected",
+            }
+        ],
     )
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
     monkeypatch.setattr(
@@ -826,7 +834,11 @@ def test_execute_runtime_triage_requires_granted_approval(monkeypatch):
 
     def fake_execute(*args, **kwargs):
         calls.append(kwargs)
-        return {"exit_code": 1, "log_ref": "runtime/runtime-task-a.log", "execution_ref": ".omo/_delivery/runtime-task-a.yaml"}
+        return {
+            "exit_code": 1,
+            "log_ref": "runtime/runtime-task-a.log",
+            "execution_ref": ".omo/_delivery/runtime-task-a.yaml",
+        }
 
     monkeypatch.setattr("omo.omo_ingress_task_lifecycle.execute_controlled_task", fake_execute)
 
@@ -1100,20 +1112,24 @@ def test_queue_domain_app_action_creates_auditable_approval_task(monkeypatch):
 
 def test_queue_domain_app_verify_action_is_controlled_and_low_risk(monkeypatch):
     domain_apps = {
-        "items": [{
-            "id": "family-hub",
-            "name": "家庭任务服务",
-            "paths": {"app_root": {"path": "/tmp/family-hub"}},
-            "actions": [{
-                "id": "copy-verify",
-                "label": "复制验证命令",
-                "kind": "copy_command",
-                "value": "uv run pytest",
-                "enabled": True,
-                "risk": "low",
-                "guard": "受控低风险验证。",
-            }],
-        }],
+        "items": [
+            {
+                "id": "family-hub",
+                "name": "家庭任务服务",
+                "paths": {"app_root": {"path": "/tmp/family-hub"}},
+                "actions": [
+                    {
+                        "id": "copy-verify",
+                        "label": "复制验证命令",
+                        "kind": "copy_command",
+                        "value": "uv run pytest",
+                        "enabled": True,
+                        "risk": "low",
+                        "guard": "受控低风险验证。",
+                    }
+                ],
+            }
+        ],
     }
     calls = []
     monkeypatch.setattr(api_tasks, "build_domain_apps", lambda: domain_apps)
@@ -1302,7 +1318,14 @@ def test_controlled_execute_routes_project_verification_through_omo(monkeypatch)
     monkeypatch.setattr(
         api_tasks,
         "build_system_map",
-        lambda: {"projects": [{"id": "mesh-router", "triage_commands": [{"id": "verification-rerun", "value": 'cd "/workspace" && printf current'}]}]},
+        lambda: {
+            "projects": [
+                {
+                    "id": "mesh-router",
+                    "triage_commands": [{"id": "verification-rerun", "value": 'cd "/workspace" && printf current'}],
+                }
+            ]
+        },
     )
 
     def fake_execute(*args, **kwargs):
@@ -1350,8 +1373,9 @@ def test_complete_from_execution_uses_generated_artifacts(monkeypatch, tmp_path)
     monkeypatch.setattr(
         api_tasks,
         "_transition_task",
-        lambda task_id, action, evidence_paths=None: calls.append((task_id, action, evidence_paths))
-        or {"id": task_id, "status": "completed"},
+        lambda task_id, action, evidence_paths=None: (
+            calls.append((task_id, action, evidence_paths)) or {"id": task_id, "status": "completed"}
+        ),
     )
 
     response = TestClient(app).post("/api/tasks/verify-task/complete-from-execution")
@@ -1382,8 +1406,9 @@ def test_workflow_closeout_runs_structured_command_and_records_ref(monkeypatch, 
     monkeypatch.setattr(
         api_tasks.subprocess,
         "run",
-        lambda command, **kwargs: commands.append((command, kwargs))
-        or SimpleNamespace(returncode=0, stdout='{"status":"ok"}', stderr=""),
+        lambda command, **kwargs: (
+            commands.append((command, kwargs)) or SimpleNamespace(returncode=0, stdout='{"status":"ok"}', stderr="")
+        ),
     )
     monkeypatch.setattr(
         "omo.omo_ingress_task_lifecycle.record_task_execution",
@@ -1456,7 +1481,11 @@ def test_domain_app_verification_promotes_and_executes_only_verify_action(monkey
         return {"exit_code": 0, "log_ref": "runtime/demo.log"}
 
     monkeypatch.setattr(api_tasks, "queue_domain_app_action", fake_queue)
-    monkeypatch.setattr(api_tasks, "_transition_task", lambda task_id, action: transitions.append((task_id, action)) or {"status": "in_progress"})
+    monkeypatch.setattr(
+        api_tasks,
+        "_transition_task",
+        lambda task_id, action: transitions.append((task_id, action)) or {"status": "in_progress"},
+    )
     monkeypatch.setattr(api_tasks, "execute_task_endpoint", fake_execute)
 
     response = TestClient(app).post("/api/cockpit/domain-apps/demo/verify")

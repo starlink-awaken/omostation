@@ -1,4 +1,5 @@
 """cockpit system-map io/source-ref + command/port helpers. Split from api_system_map.py."""
+
 from __future__ import annotations
 
 import json
@@ -424,7 +425,9 @@ def _port_registry_search_command(project_id: str) -> str:
 
 
 def _workflow_evidence_search_command(project_id: str) -> str:
-    return _command_with_cwd(compat.WORKSPACE_ROOT, f'rg -n "{re.escape(project_id)}" ".omo/_delivery/agent-workflows/runs"')
+    return _command_with_cwd(
+        compat.WORKSPACE_ROOT, f'rg -n "{re.escape(project_id)}" ".omo/_delivery/agent-workflows/runs"'
+    )
 
 
 def _project_inventory_command(project_path: Path) -> str:
@@ -584,5 +587,3 @@ def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry
             )
 
     return sorted(ports, key=lambda item: item["port"])
-
-

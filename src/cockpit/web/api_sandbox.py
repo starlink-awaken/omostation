@@ -19,7 +19,9 @@ async def api_sandbox_execute(request: Request):
         if not isinstance(code, str) or not code.strip():
             return JSONResponse({"status": "error", "error": "code is required"}, status_code=400)
         if len(code) > 20000:
-            return JSONResponse({"status": "error", "error": "code must be no longer than 20000 characters"}, status_code=413)
+            return JSONResponse(
+                {"status": "error", "error": "code must be no longer than 20000 characters"}, status_code=413
+            )
 
         from runtime.executor.sandbox import Sandbox
 

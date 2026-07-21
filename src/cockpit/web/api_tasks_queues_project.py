@@ -1,4 +1,5 @@
 """Cockpit tasks API — project/triage/debt/domain-app queue endpoints. Split from api_tasks.py."""
+
 from __future__ import annotations
 
 import re
@@ -131,6 +132,7 @@ async def queue_project_action(project_id: str, action_id: str):
         "executes": action_id == "copy-verify",
     }
 
+
 @router.post("/api/cockpit/projects/{project_id}/triage/{command_id}/queue")
 async def queue_project_triage_command(project_id: str, command_id: str):
     """登记系统地图排查命令为 OMO planned task; never execute it in Cockpit."""
@@ -225,6 +227,7 @@ async def queue_project_triage_command(project_id: str, command_id: str):
         "executes": False,
     }
 
+
 @router.post("/api/cockpit/triage/queue")
 async def queue_verification_triage(request: Request):
     """批量登记验证或运行排查命令为 planned tasks; never execute in Cockpit."""
@@ -304,6 +307,7 @@ async def queue_verification_triage(request: Request):
         },
     }
 
+
 @router.post("/api/cockpit/triage/execute")
 async def execute_verification_triage(request: Request):
     """Execute approved controlled triage tasks and return per-project evidence."""
@@ -336,7 +340,8 @@ async def execute_verification_triage(request: Request):
             (
                 item
                 for item in project.get("triage_commands") or []
-                if item.get("category") == category and item.get("enabled")
+                if item.get("category") == category
+                and item.get("enabled")
                 and (
                     item.get("id") == "verification-rerun"
                     if category == "verification"
@@ -405,6 +410,7 @@ async def execute_verification_triage(request: Request):
         },
         "source": "omo_controlled_execution",
     }
+
 
 @router.post("/api/cockpit/debt/{debt_id}/queue")
 async def queue_debt_task(debt_id: str):
@@ -488,6 +494,7 @@ async def queue_debt_task(debt_id: str):
         "human_approval_required": task_data["human_approval_required"],
         "source": "omo_ingress",
     }
+
 
 @router.post("/api/cockpit/domain-apps/{app_id}/actions/{action_id}/queue")
 async def queue_domain_app_action(app_id: str, action_id: str):
@@ -575,6 +582,7 @@ async def queue_domain_app_action(app_id: str, action_id: str):
         "source": "omo_ingress",
         "executes": action_id == "copy-verify",
     }
+
 
 @router.post("/api/cockpit/domain-apps/{app_id}/verify")
 async def execute_domain_app_verification(app_id: str):

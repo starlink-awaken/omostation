@@ -1,4 +1,5 @@
 """Cockpit tasks API — integration/workflow queue endpoints (coverage, ecos, metaos, proposals, alerts, research, engine, governance). Split from api_tasks.py."""
+
 from __future__ import annotations
 
 import re
@@ -104,6 +105,7 @@ async def queue_coverage_drafts(request: Request):
         "source": "omo_ingress",
     }
 
+
 @router.post("/api/cockpit/ecos/workflows/{workflow_name}/queue")
 async def queue_ecos_workflow_verification(workflow_name: str, mode: str = Query("test")):
     """将 eCOS 工作流验证或 dry-run 结果承接为 OMO planned 任务。"""
@@ -115,7 +117,9 @@ async def queue_ecos_workflow_verification(workflow_name: str, mode: str = Query
     task_id = f"cockpit-ecos-workflow-{workflow_name}-{mode}"
     existing_group = _task_group(task_id)
     if existing_group in {"active", "done"}:
-        raise HTTPException(status_code=409, detail=f"Workflow verification task already exists in {existing_group}: {task_id}")
+        raise HTTPException(
+            status_code=409, detail=f"Workflow verification task already exists in {existing_group}: {task_id}"
+        )
     if existing_group == "planned":
         return {"id": task_id, "status": "pending", "created": False, "executes": False, "source": "omo_ingress"}
 
@@ -171,6 +175,7 @@ async def queue_ecos_workflow_verification(workflow_name: str, mode: str = Query
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
     }
+
 
 @router.post("/api/cockpit/metaos/workflows/{workflow_id}/queue")
 async def queue_metaos_workflow_followup(workflow_id: str, request: Request):
@@ -242,6 +247,7 @@ async def queue_metaos_workflow_followup(workflow_id: str, request: Request):
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
     }
+
 
 @router.post("/api/cockpit/proposals/{proposal_id}/queue")
 async def queue_hitl_proposal_task(proposal_id: str):
@@ -323,6 +329,7 @@ async def queue_hitl_proposal_task(proposal_id: str):
         "source": "omo_ingress",
     }
 
+
 @router.post("/api/cockpit/alerts/{alert_id}/queue")
 async def queue_alert_task(alert_id: str):
     """将告警承接为带来源和验收证据的 OMO planned 任务。"""
@@ -402,6 +409,7 @@ async def queue_alert_task(alert_id: str):
         "source": "omo_ingress",
     }
 
+
 @router.post("/api/cockpit/research/{research_id}/queue")
 async def queue_research_followup_task(research_id: int):
     """将研究对象的追问和下一步动作承接为 OMO planned 任务。"""
@@ -479,6 +487,7 @@ async def queue_research_followup_task(research_id: int):
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
     }
+
 
 @router.post("/api/cockpit/engine/queue")
 async def queue_engine_execution(request: Request):
@@ -575,6 +584,7 @@ async def queue_engine_execution(request: Request):
         "executes": False,
         "source": "omo_ingress",
     }
+
 
 @router.post("/api/cockpit/governance/queue")
 async def queue_governance_action(request: Request):

@@ -506,9 +506,7 @@ def main() -> int:
         epilog="子命令: lifecycle / spec / adr / okr / tool / mcp\n示例: cockpit model-driven lifecycle dashboard",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    model_driven_p.add_argument(
-        "model_driven_args", nargs=argparse.REMAINDER, help="传递给 model-driven CLI 的参数"
-    )
+    model_driven_p.add_argument("model_driven_args", nargs=argparse.REMAINDER, help="传递给 model-driven CLI 的参数")
 
     # ── CLI 收敛: gbrain 知识库 ──────────────────────────────
     gbrain_p = sub.add_parser(
@@ -550,9 +548,7 @@ def main() -> int:
 
     # ── CLI 收敛: family-hub ─────────────────────────────────
     family_hub_p = sub.add_parser("family-hub", help="家庭数字枢纽入口")
-    family_hub_sub = family_hub_p.add_subparsers(
-        dest="family_hub_command", parser_class=WorkspaceParser
-    )
+    family_hub_sub = family_hub_p.add_subparsers(dest="family_hub_command", parser_class=WorkspaceParser)
     family_hub_sub.add_parser("status", help="API/MCP server 状态")
     family_hub_sub.add_parser("api", help="启动 API server")
     family_hub_sub.add_parser("mcp", help="启动 MCP server")

@@ -33,8 +33,7 @@ class TestLogs:
     def test_reads_bounded_entries_with_level_and_timestamp(self, tmp_path):
         log_file = tmp_path / "runtime.log"
         log_file.write_text(
-            "2026-07-15T10:00:00Z ERROR database timeout\n"
-            "2026-07-15T10:01:00Z INFO recovered\n",
+            "2026-07-15T10:00:00Z ERROR database timeout\n2026-07-15T10:01:00Z INFO recovered\n",
             encoding="utf-8",
         )
 

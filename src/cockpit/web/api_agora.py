@@ -238,12 +238,14 @@ async def api_register_instance(service: str = Form(...), mcp_endpoint: str = Fo
             # 注册本身已成功；任务承接失败时保留注册结果，前端可重试验收。
             pass
 
-        return JSONResponse({
-            "status": "ok",
-            "msg": f"实例 {service} 注册成功 (Endpoint: {mcp_endpoint})",
-            "task_id": task_id,
-            "task_created": task_created,
-        })
+        return JSONResponse(
+            {
+                "status": "ok",
+                "msg": f"实例 {service} 注册成功 (Endpoint: {mcp_endpoint})",
+                "task_id": task_id,
+                "task_created": task_created,
+            }
+        )
     except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
 

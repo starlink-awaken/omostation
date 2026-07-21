@@ -2,6 +2,7 @@
 
 Split from api_system_map.py (god-module SRP). Pure data, no logic dependencies.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -1069,5 +1070,3 @@ ROADMAP_ITEMS: tuple[dict[str, Any], ...] = (
         ),
     },
 )
-
-

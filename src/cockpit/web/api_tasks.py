@@ -125,6 +125,7 @@ async def request_task_approval(task_id: str):
         "source": "omo_ingress",
     }
 
+
 @router.post("/api/tasks/{task_id}/approve")
 async def approve_task(task_id: str):
     """Grant and apply the OMO promotion approval for a planned task."""
@@ -168,6 +169,7 @@ async def approve_task(task_id: str):
         "created": True,
         "source": "omo_governance",
     }
+
 
 @router.post("/api/tasks/{task_id}/dispatch")
 async def dispatch_task_endpoint(task_id: str):
@@ -227,6 +229,7 @@ async def dispatch_task_endpoint(task_id: str):
         "source": "omo_worker_dispatch",
     }
 
+
 @router.get("/api/tasks")
 async def get_tasks(
     status: str | None = Query(None, description="任务状态过滤"),
@@ -271,6 +274,7 @@ async def get_tasks(
         "items": tasks,
         "total": len(tasks),
     }
+
 
 @router.post("/api/tasks")
 async def create_manual_task(request: Request):
@@ -319,8 +323,7 @@ async def create_manual_task(request: Request):
         "human_approval_required": approval_required,
         "source_docs": ["cockpit:operator:manual-task"],
         "entry_gate": ["确认任务范围与风险级别"],
-        "evidence_required": [item.strip() for item in evidence_required]
-        or ["任务处理结果", "相关验证或运行证据"],
+        "evidence_required": [item.strip() for item in evidence_required] or ["任务处理结果", "相关验证或运行证据"],
         "deliverables": [description],
         "test_plan": ["按任务描述完成处理，并回写结果与证据。"],
         "priority": priority,
@@ -354,6 +357,7 @@ async def create_manual_task(request: Request):
         "source": "omo_ingress",
     }
 
+
 @router.get("/api/tasks/{task_id}/execution")
 async def get_task_execution(task_id: str):
     """Return the worker artifact posture for a persisted OMO task."""
@@ -366,6 +370,7 @@ async def get_task_execution(task_id: str):
         "execution": _execution_snapshot(payload),
         "source": "omo-worker-artifacts",
     }
+
 
 @router.post("/api/tasks/{task_id}/execution-report")
 async def record_task_execution_report(task_id: str, request: Request):
@@ -424,6 +429,7 @@ async def record_task_execution_report(task_id: str, request: Request):
         "source": "omo_ingress",
     }
 
+
 @router.get("/api/tasks/{task_id}")
 async def get_task(task_id: str):
     """获取任务详情。"""
@@ -432,6 +438,7 @@ async def get_task(task_id: str):
         if task["id"] == task_id:
             return task
     raise HTTPException(status_code=404, detail="Task not found")
+
 
 @router.get("/api/tasks/{task_id}/history")
 async def get_task_history(task_id: str):
@@ -445,15 +452,18 @@ async def get_task_history(task_id: str):
         "source": "omo-ingress",
     }
 
+
 @router.post("/api/tasks/{task_id}/pause")
 async def pause_task(task_id: str):
     """通过 OMO ingress 将 active 任务退回 planned。"""
     return _transition_task(task_id, "pause")
 
+
 @router.post("/api/tasks/{task_id}/resume")
 async def resume_task(task_id: str):
     """通过 OMO ingress 将 planned 任务提升到 active。"""
     return _transition_task(task_id, "resume")
+
 
 @router.post("/api/tasks/{task_id}/complete")
 async def complete_task_endpoint(task_id: str, request: Request):
@@ -464,6 +474,7 @@ async def complete_task_endpoint(task_id: str, request: Request):
         body = {}
     evidence_paths = _validate_evidence_paths((body or {}).get("evidence_paths")) if isinstance(body, dict) else []
     return _transition_task(task_id, "complete", evidence_paths=evidence_paths or None)
+
 
 @router.post("/api/tasks/{task_id}/complete-from-execution")
 async def complete_task_from_execution(task_id: str):
@@ -479,11 +490,7 @@ async def complete_task_from_execution(task_id: str):
     if audit.get("exit_code") != 0:
         raise HTTPException(status_code=409, detail="Task execution did not succeed")
     execution_ref = next(
-        (
-            ref
-            for ref in payload.get("handoff_refs") or []
-            if isinstance(ref, str) and "/task-center/execution/" in ref
-        ),
+        (ref for ref in payload.get("handoff_refs") or [] if isinstance(ref, str) and "/task-center/execution/" in ref),
         None,
     )
     log_ref = audit.get("log_ref")
@@ -493,6 +500,7 @@ async def complete_task_from_execution(task_id: str):
     validated = _validate_evidence_paths(evidence_paths)
     result = _transition_task(task_id, "complete", evidence_paths=validated)
     return {**result, "evidence_paths": validated, "source": "omo_controlled_execution_closeout"}
+
 
 @router.post("/api/tasks/{task_id}/workflow-closeout")
 async def closeout_task_workflow(task_id: str, request: Request):
@@ -504,14 +512,18 @@ async def closeout_task_workflow(task_id: str, request: Request):
     metadata = payload.get("metadata") or {}
     audit = metadata.get("execution_audit") or {}
     if metadata.get("controlled_execution") is not True or audit.get("exit_code") != 0:
-        raise HTTPException(status_code=409, detail="A successful controlled execution is required before workflow closeout")
+        raise HTTPException(
+            status_code=409, detail="A successful controlled execution is required before workflow closeout"
+        )
 
     body = await request.json()
     if not isinstance(body, dict):
         raise HTTPException(status_code=422, detail="Workflow closeout request must be an object")
     run_id = str(body.get("run_id") or "").strip()
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", run_id):
-        raise HTTPException(status_code=422, detail="run_id must contain only letters, numbers, dots, underscores, or hyphens")
+        raise HTTPException(
+            status_code=422, detail="run_id must contain only letters, numbers, dots, underscores, or hyphens"
+        )
     evidence = body.get("evidence") or []
     if not isinstance(evidence, list) or not all(isinstance(item, str) and item.strip() for item in evidence):
         raise HTTPException(status_code=422, detail="evidence must be a list[str]")
@@ -550,7 +562,9 @@ async def closeout_task_workflow(task_id: str, request: Request):
                 source_ref=f"cockpit:task:workflow-closeout:{task_id}:{run_id}",
             )
         except (ImportError, OSError, ValueError) as exc:
-            raise HTTPException(status_code=409, detail=f"workflow closed but task evidence was not recorded: {exc}") from exc
+            raise HTTPException(
+                status_code=409, detail=f"workflow closed but task evidence was not recorded: {exc}"
+            ) from exc
 
     return {
         "id": task_id,
@@ -563,10 +577,12 @@ async def closeout_task_workflow(task_id: str, request: Request):
         "source": "agent_workflow_closeout",
     }
 
+
 @router.post("/api/tasks/{task_id}/cancel")
 async def cancel_task(task_id: str):
     """拒绝不存在于 OMO canonical lifecycle 的伪取消状态。"""
     return _transition_task(task_id, "cancel")
+
 
 # --- register split-out endpoint modules (side-effect: attach routes to shared router) ---
 from cockpit.web import (

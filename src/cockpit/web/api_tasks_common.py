@@ -2,6 +2,7 @@
 
 Split out of api_tasks.py so endpoint groups can live in sibling modules while sharing one APIRouter (god-module SRP split).
 """
+
 from __future__ import annotations
 
 import re
@@ -67,11 +68,7 @@ def _current_controlled_command(metadata: dict) -> str | None:
     if not isinstance(project_id, str) or not project_id:
         return None
     project = next(
-        (
-            item
-            for item in build_system_map().get("projects", [])
-            if item.get("id") == project_id
-        ),
+        (item for item in build_system_map().get("projects", []) if item.get("id") == project_id),
         None,
     )
     if not isinstance(project, dict):
@@ -79,11 +76,7 @@ def _current_controlled_command(metadata: dict) -> str | None:
     command_id = metadata.get("command_id")
     if isinstance(command_id, str) and command_id:
         current = next(
-            (
-                item
-                for item in project.get("triage_commands") or []
-                if item.get("id") == command_id
-            ),
+            (item for item in project.get("triage_commands") or [] if item.get("id") == command_id),
             None,
         )
     else:
@@ -140,6 +133,7 @@ async def promote_task_draft(draft_id: str):
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
     }
+
 
 @router.post("/api/tasks/{task_id}/execute")
 async def execute_task_endpoint(task_id: str):
