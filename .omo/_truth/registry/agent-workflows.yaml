@@ -501,7 +501,7 @@ doctor_checks:
   - id: mof-drift
     description: MOF architecture drift detector is runnable.
     required: true
-    command: [bin/mof-drift]
+    command: [uv, run, --with, pyyaml, python, bin/mof/mof-drift]
   - id: mof-bootstrap
     description: "M4 5-check 自反校验器 (M4→GaC, ADR-0152/0153/0154)"
     required: false
