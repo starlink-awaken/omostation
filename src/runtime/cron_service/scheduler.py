@@ -4,6 +4,7 @@ import logging
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 
 from . import config, db
 from .health_scan import run_scan_if_due
@@ -61,7 +62,7 @@ class CronScheduler:
         for job in jobs:
             last = job.last_run_at
             if _is_due(job.id, job.schedule, last, created_at=job.created_at):
-                _run_job_sync(job.id, self._executor)
+                self._executor.submit(_run_job_sync, job.id)
 
         if run_scan_if_due is not None:
             try:
@@ -91,17 +92,52 @@ def _is_due(job_id: str, schedule: str, last_run, *, created_at) -> bool:
         return False
     if last_run is None:
         return True
-    interval = _parse_interval(schedule)
-    if interval is None:
-        return False
-    if hasattr(last_run, "timestamp"):
-        last_ts = last_run.timestamp()
-    else:
-        last_ts = float(last_run)
-    return (time.time() - last_ts) >= interval
+
+    s = schedule.strip().lower()
+
+    # "every X" → interval 判断
+    if s.startswith("every "):
+        interval = _parse_interval(schedule)
+        if interval is None:
+            return False
+        if hasattr(last_run, "timestamp"):
+            last_ts = last_run.timestamp()
+        else:
+            last_ts = float(last_run)
+        return (time.time() - last_ts) >= interval
+
+    # cron 表达式 → croniter 精确计算下次触发时间
+    ts = _next_cron_ts(schedule, last_run)
+    return ts is not None and time.time() >= ts
+
+
+def _next_cron_ts(schedule: str, after: datetime | float) -> float | None:
+    """用 croniter 精确计算 cron 表达式在 after 之后的首次触发时间戳。"""
+    from croniter import croniter
+
+    try:
+        if isinstance(after, datetime):
+            if after.tzinfo is not None:
+                base = after.astimezone(timezone.utc).replace(tzinfo=None)
+            else:
+                base = after
+        else:
+            base = datetime.fromtimestamp(after, tz=timezone.utc).replace(tzinfo=None)
+        cron = croniter(schedule, base)
+        next_dt = cron.get_next(datetime)
+        return next_dt.replace(tzinfo=timezone.utc).timestamp()
+    except Exception:
+        logger.warning(
+            "croniter failed for schedule=%r, last_run=%r",
+            schedule,
+            after,
+            exc_info=True,
+        )
+        return None
 
 
 def _parse_interval(schedule: str) -> float | None:
+    """解析 'every Xm' / 'every Xh' / 'every Xs' 格式 → 秒数。"""
     s = schedule.strip().lower()
     if s.startswith("every "):
         rest = s[6:].strip()
@@ -122,35 +158,50 @@ def _parse_interval(schedule: str) -> float | None:
     return None
 
 
-def _run_job_sync(job_id: str, executor: ThreadPoolExecutor) -> None:
-    from .db import get_job, update_job, JobUpdate
+def _run_job_sync(job_id: str) -> None:
+    from pathlib import Path
+    from .config import SCRIPTS_DIR
+    from .db import get_job, record_run
 
     job = get_job(job_id)
     if not job or not job.script:
         return
-    logger.info("Running job %s (script=%s)", job_id, job.script)
+
+    # 裸文件名 → 从 SCRIPTS_DIR 补全
+    script = job.script
+    if "/" not in script:
+        candidate = Path(SCRIPTS_DIR).expanduser() / script
+        if candidate.exists():
+            script = str(candidate)
+            logger.debug("Resolved script %s → %s", job.script, script)
+        else:
+            logger.warning(
+                "Script %s not found in SCRIPTS_DIR=%s", job.script, SCRIPTS_DIR
+            )
+
+    logger.info("Running job %s (script=%s)", job_id, script)
     import subprocess
 
     try:
         result = subprocess.run(
-            job.script,
+            script,
             shell=True,
             capture_output=True,
             text=True,
             timeout=120,
         )
         status = "ok" if result.returncode == 0 else "error"
-        output = (result.stdout or "") + "\n" + (result.stderr or "")
-        update_job(
-            job_id, JobUpdate(last_status=status, last_output=output.strip()[:500])
-        )
+        record_run(job_id, status, result.stdout or "", result.stderr or "")
         if status == "error":
-            logger.warning("Job %s failed: %s", job_id, output.strip()[:200])
+            logger.warning(
+                "Job %s failed (exit=%d): %s",
+                job_id,
+                result.returncode,
+                (result.stderr or "")[:200],
+            )
     except subprocess.TimeoutExpired:
         logger.warning("Job %s timed out (>120s)", job_id)
-        update_job(
-            job_id, JobUpdate(last_status="timeout", last_output="timed out (>120s)")
-        )
+        record_run(job_id, "timeout", "", "Timed out after 120s")
     except Exception as e:
         logger.error("Job %s error: %s", job_id, e)
-        update_job(job_id, JobUpdate(last_status="error", last_output=str(e)[:500]))
+        record_run(job_id, "error", "", str(e)[:500])
