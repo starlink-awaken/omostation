@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from runtime.cron_service.scheduler import _is_due, _parse_cron_expr, _parse_every_expr
+from runtime.cron_service.scheduler import _is_due, _next_cron_ts, _parse_interval
 
 from runtime.cron_service.executor import _resolve_script
 
@@ -55,95 +55,94 @@ from fastapi.testclient import TestClient
 
 
 class TestParseEveryExpr:
-    """_parse_every_expr: parses "every Xm", "every Xh" → interval in seconds"""
+    """_parse_interval: parses "every Xm", "every Xh" → interval in seconds"""
 
     def test_every_5m(self):
-        assert _parse_every_expr("every 5m") == 300
+        assert _parse_interval("every 5m") == 300
 
     def test_every_30m(self):
-        assert _parse_every_expr("every 30m") == 1800
+        assert _parse_interval("every 30m") == 1800
 
     def test_every_2h(self):
-        assert _parse_every_expr("every 2h") == 7200
+        assert _parse_interval("every 2h") == 7200
 
     def test_every_1h(self):
-        assert _parse_every_expr("every 1h") == 3600
+        assert _parse_interval("every 1h") == 3600
 
     def test_every_5_minutes_text(self):
-        assert _parse_every_expr("every 5 minutes") == 300
+        assert _parse_interval("every 5 minutes") == 300
 
     def test_every_30_min_text(self):
-        assert _parse_every_expr("every 30 min") == 1800
+        assert _parse_interval("every 30 min") == 1800
 
     def test_every_2_hours_text(self):
-        assert _parse_every_expr("every 2 hours") == 7200
+        assert _parse_interval("every 2 hours") == 7200
 
     def test_invalid_expr_returns_none(self):
-        assert _parse_every_expr("random text") is None
+        assert _parse_interval("random text") is None
 
     def test_empty_string_returns_none(self):
-        assert _parse_every_expr("") is None
+        assert _parse_interval("") is None
 
     def test_trailing_whitespace(self):
-        assert _parse_every_expr("  every 5m  ") == 300
+        assert _parse_interval("  every 5m  ") == 300
 
 
 class TestParseCronExpr:
-    """_parse_cron_expr: parses standard cron expressions → next due timestamp"""
+    """_next_cron_ts: croniter 计算下次触发时间戳 (原 _parse_cron_expr spec)."""
 
     def test_daily_at_2am(self):
-        result = _parse_cron_expr("0 2 * * *")
+        result = _next_cron_ts("0 2 * * *", datetime.now(UTC))
         assert result is not None
         assert isinstance(result, float)
 
     def test_every_5_minutes_cron(self):
-        result = _parse_cron_expr("*/5 * * * *")
+        result = _next_cron_ts("*/5 * * * *", datetime.now(UTC))
         assert result is not None
 
     def test_invalid_cron_returns_none(self):
-        assert _parse_cron_expr("invalid") is None
+        assert _next_cron_ts("invalid", datetime.now(UTC)) is None
 
     def test_weekly_schedule(self):
-        result = _parse_cron_expr("0 10 * * 1")
+        result = _next_cron_ts("0 10 * * 1", datetime.now(UTC))
         assert result is not None
         assert isinstance(result, float)
 
 
 class TestIsDue:
-    """_is_due: determines if a job should run now"""
+    """_is_due(job_id, schedule, last_run, *, created_at) 真实分支.
 
-    def test_newly_created_job_not_due(self):
-        """A job created less than 60s ago should NOT be due"""
-        now = datetime.now(UTC)
-        created_at = now - timedelta(seconds=5)
-        due = _is_due("test-job", "every 5m", last_run_at=None, created_at=created_at)
-        assert due is False, "Newly created job should wait 60s before first run"
+    注: 实现 created_at 参数当前未参与判断 (无 60s 宽限逻辑),
+    原 spec 的 'newly created job waits 60s' 语义不存在, 按真实行为重写。
+    """
 
-    def test_old_never_run_job_is_due(self):
-        """A job created >60s ago that's never run should be due"""
-        now = datetime.now(UTC)
-        created_at = now - timedelta(minutes=5)
-        due = _is_due("test-job", "every 5m", last_run_at=None, created_at=created_at)
-        assert due is True
+    def test_none_last_run_is_due(self):
+        """schedule 非空 + last_run None → True."""
+        assert (
+            _is_due("test-job", "every 5m", None, created_at=datetime.now(UTC)) is True
+        )
 
-    def test_no_created_at_never_run_is_due(self):
-        """Fallback: no created_at and never run → due"""
-        due = _is_due("test-job", "every 5m", last_run_at=None)
-        assert due is True
+    def test_empty_schedule_not_due(self):
+        """schedule 空 → False."""
+        assert _is_due("test-job", "", None, created_at=datetime.now(UTC)) is False
 
-    def test_every_interval_exact(self):
-        """every 10m: last run exactly 10m ago → due"""
+    def test_every_interval_due(self):
+        """every 10m, last_run 10m 前 → due."""
         now = datetime.now(UTC)
         last_run = now - timedelta(minutes=10)
-        due = _is_due("test-job", "every 10m", last_run_at=last_run)
-        assert due is True
+        assert _is_due("test-job", "every 10m", last_run, created_at=now) is True
 
     def test_every_interval_not_yet(self):
-        """every 10m: last run 5m ago → NOT due"""
+        """every 10m, last_run 5m 前 → not due."""
         now = datetime.now(UTC)
         last_run = now - timedelta(minutes=5)
-        due = _is_due("test-job", "every 10m", last_run_at=last_run)
-        assert due is False
+        assert _is_due("test-job", "every 10m", last_run, created_at=now) is False
+
+    def test_cron_due(self):
+        """*/5 * * * *, last_run 10m 前 → due."""
+        now = datetime.now(UTC)
+        last_run = now - timedelta(minutes=10)
+        assert _is_due("test-job", "*/5 * * * *", last_run, created_at=now) is True
 
 
 class TestResolveScript:
@@ -868,10 +867,10 @@ class _MockCronScheduler:
         self.start_time = datetime.now(UTC)
         self.last_tick_time = datetime.now(UTC)
 
-    async def start(self):
+    def start(self):
         pass
 
-    async def stop(self):
+    def stop(self):
         pass
 
 

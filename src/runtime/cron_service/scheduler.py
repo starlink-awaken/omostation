@@ -137,24 +137,47 @@ def _next_cron_ts(schedule: str, after: datetime | float) -> float | None:
 
 
 def _parse_interval(schedule: str) -> float | None:
-    """解析 'every Xm' / 'every Xh' / 'every Xs' 格式 → 秒数。"""
+    """解析 'every Xm'/'every Xh'/'every Xs'(单段) 或 'every X unit'(两段) → 秒数。
+
+    单段格式 (ScheduleConfig.expression 默认 'every 5m') 此前未被支持,
+    导致默认 schedule 的 job 永不触发 (interval=None→_is_due False)。此处补齐。
+    """
     s = schedule.strip().lower()
-    if s.startswith("every "):
-        rest = s[6:].strip()
-        parts = rest.split()
-        if len(parts) == 2:
-            try:
-                n = float(parts[0])
-                unit = parts[1]
-                if "min" in unit:
-                    return n * 60
-                if "hour" in unit or "hr" in unit:
-                    return n * 3600
-                if "sec" in unit or "s" in unit:
-                    return n
-                return n * 60
-            except ValueError:
-                return None
+    if not s.startswith("every "):
+        return None
+    rest = s[6:].strip()
+    parts = rest.split()
+
+    def _seconds(n: float, unit: str) -> float | None:
+        if "min" in unit or unit == "m":
+            return n * 60
+        if "hour" in unit or "hr" in unit or unit == "h":
+            return n * 3600
+        if "sec" in unit or unit == "s":
+            return n
+        return None
+
+    # 两段格式: "5 min" / "2 hours" / "10 s"
+    if len(parts) == 2:
+        try:
+            n = float(parts[0])
+        except ValueError:
+            return None
+        return _seconds(n, parts[1])
+    # 单段格式: "5m" / "2h" / "30s" — 分离数字前缀与单位后缀
+    if len(parts) == 1:
+        token = parts[0]
+        i = 0
+        while i < len(token) and (token[i].isdigit() or token[i] == "."):
+            i += 1
+        if i == 0:
+            return None
+        try:
+            n = float(token[:i])
+        except ValueError:
+            return None
+        unit = token[i:]
+        return _seconds(n, unit) if unit else None
     return None
 
 
