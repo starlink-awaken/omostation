@@ -181,6 +181,40 @@ def _parse_interval(schedule: str) -> float | None:
     return None
 
 
+def _bus_emit_cron_fired(
+    *,
+    job_id: str,
+    name: str,
+    status: str,
+    error: str | None,
+    output: str,
+) -> None:
+    """Best-effort bus-foundation emit for cron job completion.
+
+    8db98c5 thread 重构时误删, 此处从 41c2c1a 恢复 (回归修复)。
+    bus_foundation 缺失或 publish 失败均 best-effort 跳过, 不影响 cron 主流程。
+    """
+    try:
+        from bus_foundation.facade import event as bus_event
+    except ImportError:
+        return
+    try:
+        topic = "runtime:cron:failed" if status != "ok" else "runtime:cron:fired"
+        bus_event.publish(
+            topic=topic,
+            payload={
+                "job_id": job_id,
+                "name": name,
+                "status": status,
+                "error": error,
+                "output": output[:500] if output else "",
+            },
+            source_uri="bos://capability/runtime/cron",
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("runtime_cron_bus_publish_skipped: %s", exc)
+
+
 def _run_job_sync(job_id: str) -> None:
     from pathlib import Path
     from .config import SCRIPTS_DIR
@@ -215,6 +249,13 @@ def _run_job_sync(job_id: str) -> None:
         )
         status = "ok" if result.returncode == 0 else "error"
         record_run(job_id, status, result.stdout or "", result.stderr or "")
+        _bus_emit_cron_fired(
+            job_id=job_id,
+            name=job.name,
+            status=status,
+            error=result.stderr or None,
+            output=result.stdout or "",
+        )
         if status == "error":
             logger.warning(
                 "Job %s failed (exit=%d): %s",
@@ -225,6 +266,20 @@ def _run_job_sync(job_id: str) -> None:
     except subprocess.TimeoutExpired:
         logger.warning("Job %s timed out (>120s)", job_id)
         record_run(job_id, "timeout", "", "Timed out after 120s")
+        _bus_emit_cron_fired(
+            job_id=job_id,
+            name=job.name,
+            status="timeout",
+            error="Timed out after 120s",
+            output="",
+        )
     except Exception as e:
         logger.error("Job %s error: %s", job_id, e)
         record_run(job_id, "error", "", str(e)[:500])
+        _bus_emit_cron_fired(
+            job_id=job_id,
+            name=job.name,
+            status="error",
+            error=str(e)[:500],
+            output="",
+        )

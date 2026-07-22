@@ -38,8 +38,14 @@ def register_cron_job(expr: str, callback: Callable) -> Callable:
         except ImportError:
             callback()
 
-    @bus_control.schedule_callback(expr)
     def _wrapper() -> None:
         _traced()
+
+    # 空/非法 expr: bus_foundation parse_schedule 可能抛 ValueError,
+    # register_cron_job 不应抛 (test_empty_expr: bus_foundation 决定是否拒绝)
+    try:
+        bus_control.schedule_callback(expr)(_wrapper)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("runtime_cron_register_skipped expr=%r: %s", expr, exc)
 
     return callback
