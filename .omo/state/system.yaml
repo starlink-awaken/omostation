@@ -5,15 +5,15 @@ phase_status: active
 current_wave: W3
 next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora-gateway /health + 熵清理
 health_score_ref: .omo/state/health.yaml
-health_score: 83
-health_score_source: compass_radar_composite (ISC-2 corrected, scan 3/4 online)
-health_score_generated_at: '2026-07-09T03:59:10Z'
+health_score: 93
+health_score_source: compass_radar_composite_isc3
+health_score_generated_at: '2026-07-23T14:08:45Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 103
-total_tasks: 104
+completed_tasks: 105
+total_tasks: 107
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -51,7 +51,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-17T11:42:04.724921+08:00'
+updated_at: '2026-07-23T14:08:46Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -174,12 +174,11 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 1
+planned_tasks: 2
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (1 task)
-- OPC-P6-SELF-EVOLUTION-doc-gate-e
 - OPC-P6-SELF-EVOLUTION-doc-gate-e (Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml)
+- cockpit-debt-debt-1 (治理技术债务：债务)
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
 phase28_status: completed
@@ -188,12 +187,12 @@ governance:
   code_freeze: false
   code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  online_services: 3
+  online_services: 4
   total_services: 4
-  ratio: 0.75
-  health_score: 75
-  last_scan: '1784259724.38256'
-  service_count: 8
+  ratio: 1.0
+  health_score: 93
+  last_scan: '2026-07-23T14:08:45Z'
+  source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
 phase42_completed_at: '2026-07-14T20:59:00Z'
@@ -208,8 +207,8 @@ debt_adjusted_health_score: 83.0
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 100
-service_online_ratio: 0.6
+governance_anomaly_score: 76
+service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-17T11:42:04.724921+08:00'
+governance_feedback_last_run: '2026-07-23T14:08:45Z'

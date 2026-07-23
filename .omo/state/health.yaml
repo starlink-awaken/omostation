@@ -1,30 +1,34 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-07-15T09:23:22Z
+# generated_at: 2026-07-23T14:08:45Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
-# health_score: composite (ISC-1) = {'governance': 0.5, 'freshness': 0.2, 'runtime': 0.3}
-# immutable: true — formula ISC-1 guarded, do not overwrite health_score without OMO broker
-# 修正 2026-07-14: ISC-1→ISC-2 降低声明面权重(0.5→0.3), 提高执行面权重(0.3→0.5)
-#
-# ISC-2 当前:
-#   governance: 100 × 0.3 = 30.0
-#   freshness: 80 × 0.2 = 16.0
-#   runtime: 75 × 0.5 = 37.5 (3/4 daemon online)
-#   total: 83.5 → 83
+# health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5}
 
-generated_at: "2026-07-14T21:00:00Z"
-source: "c2g.strategy (real audit, no mock) + P44 治理修正"
-health_score: 83
-governance_anomaly_score: 100
+generated_at: "2026-07-23T14:08:45Z"
+source: "c2g.strategy (real audit, no mock)"
+health_score: 93
+governance_anomaly_score: 76
 anomaly_count: 0
-service_online_ratio: 0.750
-freshness_score: 80
+service_online_ratio: 1.000
+freshness_score: 100
 feedback_alive: True
-feedback_last_ts: "2026-07-14T20:54:43Z"
-feedback_staleness_hours: 0.1
-total_tasks: 104
-done: 103
-planned: 1
+feedback_last_ts: "2026-07-23T13:58:26Z"
+feedback_staleness_hours: 0.2
+total_tasks: 107
+done: 105
+planned: 2
+
+governance_execution_surface:
+  base_anomaly_score: 100
+  execution_deduction: 24
+  orphan_worktrees: 0
+  adr_renumber_events: 0
+  concurrent_conflicts: 3
+  score: 76
+  weights:
+    orphan_worktrees: 4
+    adr_renumber_events: 5
+    concurrent_conflicts: 8
 
 health_composite_breakdown:
   weights:
@@ -32,10 +36,10 @@ health_composite_breakdown:
     freshness: 0.2
     runtime: 0.5
   contributions:
-    governance: 30.0
-    freshness: 16.0
-    runtime: 37.5
-  raw: 83.5
+    governance: 22.8
+    freshness: 20.0
+    runtime: 50.0
+  raw: 92.8
 
 anomalies:
   []
@@ -45,10 +49,11 @@ distributions:
     P1: 16
     P2: 65
     P3: 2
+    medium: 3
     unassigned: 21
   risk_dist:
     L0: 23
-    L1: 33
+    L1: 36
     L2: 23
     L3: 3
     unassigned: 22
@@ -57,7 +62,7 @@ distributions:
     agent-runtime: 2
     architecture-team: 3
     claude-code: 1
-    cockpit-team: 55
+    cockpit-team: 41
     codebuddy: 1
     docs-team: 1
     governance-team: 2
@@ -65,10 +70,10 @@ distributions:
     kos: 1
     metaos: 1
     omo: 2
-    omo-team: 12
+    omo-team: 7
     ssot: 1
     team-lead: 1
-    unassigned: 15
+    unassigned: 38
     workspace: 2
   phase_dist:
     17: 3
@@ -92,7 +97,8 @@ distributions:
     45: 1
     47: 1
     48: 4
-    unphased: 38
+    unphased: 41
   status_dist:
     candidate: 1
-    done: 103
+    done: 105
+    pending: 1
