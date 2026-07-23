@@ -42,6 +42,7 @@ EXECUTOR_ENUM = {
     "radar_cron",
     "gc_cron",
     "gac_local_gate",
+    "foundry_cron",  # ADR-0220: 独立 launchd daily, 破自指死循环
 }
 
 # severity 推导 (宪法 Wave 2, ADR-0171): 抽取共享 bin/gac/gac_severity.py (code-review #1 DRY)

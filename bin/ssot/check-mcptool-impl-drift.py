@@ -8,6 +8,8 @@
 不查 MOF 注册↔cockpit 实现. mof-drift 检项目代码 drift (sys.path/TODO/stale tasks), 架构错配.
 此探针补盲区.
 
+rule_id: CR-X4-MCPTOOL-IMPL-DRIFT
+
 用法:
     python3 bin/ssot/check-mcptool-impl-drift.py        # 全量扫
     python3 bin/ssot/check-mcptool-impl-drift.py --json  # JSON 输出
