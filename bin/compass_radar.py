@@ -164,27 +164,25 @@ def _count_orphan_worktrees(ws_root: Path) -> int:
 
 
 def _count_adr_renumber_signals(ws_root: Path) -> int:
-    """Count ADR renumber / collision signals in recent decision docs (ADR-0202 D4)."""
+    """Real ADR number collisions (duplicate ids) — not text mentions.
+
+    原 grep marker 词 (renumber/撞号/抢号/ADR-0202 D4) 会把'治理撞号的决策文档'
+    当成'撞号事件', 形成反指标 (治理撞号写越多 ADR, 分越低). 真实撞号 =
+    duplicate 编号, 与 bin/adr/adr-coverage.py::duplicate_numbers 同源.
+    实测 186 ADR 0 duplicate.
+    """
+    import re  # noqa: PLC0415
+    from collections import Counter
+
     decisions = ws_root / ".omo" / "_knowledge" / "decisions"
     if not decisions.is_dir():
         return 0
-    markers = ("renumber", "抢号", "撞号", "ADR-0202 D4", "renumbered", "撞 ADR")
-    n = 0
-    try:
-        files = sorted(decisions.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[
-            :40
-        ]
-    except OSError:
-        return 0
-    for path in files:
-        try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        low = text.lower()
-        if any(m.lower() in low or m in text for m in markers):
-            n += 1
-    return n
+    nums: list[str] = []
+    for p in decisions.glob("*.md"):
+        m = re.match(r"(\d{4})-", p.name)
+        if m:
+            nums.append(m.group(1))
+    return sum(1 for c in Counter(nums).values() if c > 1)
 
 
 def _count_concurrent_conflict_signals(ws_root: Path) -> int:
