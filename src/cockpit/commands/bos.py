@@ -422,27 +422,65 @@ else:
         return 1
 
 
+def _load_capability_services() -> list:
+    """Load capability-domain services from BOS YAML (preferred) or POC_SERVICES."""
+    services: list = []
+    try:
+        from cockpit.adapters.agora import load_from_yaml
+
+        services = list(load_from_yaml() or [])
+    except Exception:
+        try:
+            from agora.mcp.resolver.services import POC_SERVICES
+
+            services = list(POC_SERVICES)
+        except Exception:
+            services = []
+    return [
+        s
+        for s in services
+        if getattr(s, "domain", "") == "capability" or str(getattr(s, "uri", "")).startswith("bos://capability/")
+    ]
+
+
+def _match_capability_service(services: list, key: str):
+    """Match by full URI, package tail, or substring."""
+    key = (key or "").strip()
+    if not key:
+        return None
+    for s in services:
+        uri = str(getattr(s, "uri", "") or "")
+        package = str(getattr(s, "package", "") or "")
+        if key == uri or key == package:
+            return s
+        if key in uri or key in package:
+            return s
+        # allow media-crawler for bos://capability/media-crawler/crawl
+        tail = uri.rstrip("/").split("/")[-2:] if uri else []
+        if key in tail:
+            return s
+    return None
+
+
 def cmd_bos_capability(args) -> int:
     """BOS capability / toolbox 外部能力入口。"""
     subcmd = getattr(args, "capability_command", "list")
 
     if subcmd == "list":
         try:
-            from agora.mcp.resolver.services import POC_SERVICES
-
-            services = [
-                s
-                for s in POC_SERVICES
-                if getattr(s, "domain", "") == "capability" or "capability" in getattr(s, "tags", [])
-            ]
-            if not services:
-                services = POC_SERVICES
+            services = _load_capability_services()
             print(f"\n  Capability 服务 ({len(services)} 条)")
             print(f"  {'=' * 40}")
             for s in services:
-                sid = getattr(s, "id", getattr(s, "uri", "?"))
-                desc = getattr(s, "description", "")
-                print(f"  {sid}: {desc}")
+                uri = getattr(s, "uri", "?")
+                desc = getattr(s, "description", "") or ""
+                cmd = list(getattr(s, "command", None) or [])
+                cmd_hint = " ".join(cmd[:3]) + (" …" if len(cmd) > 3 else "") if cmd else "(no command)"
+                print(f"  {uri}")
+                print(f"      {desc}")
+                print(f"      invoke: {cmd_hint}")
+            if not services:
+                print("  (empty — check projects/agora/etc/bos-services.yaml)")
             return 0
         except Exception as e:  # defensive fallback
             print(f"  Capability 服务不可用: {e}")
@@ -450,8 +488,44 @@ def cmd_bos_capability(args) -> int:
 
     if subcmd == "invoke":
         svc_id = getattr(args, "capability_service", None)
-        print(f"调用 capability 服务: {svc_id} (请使用对应项目 CLI 或 MCP 工具)")
-        return 0
+        if not svc_id:
+            print("用法: cockpit bos capability invoke <uri|name>")
+            return 1
+        try:
+            services = _load_capability_services()
+        except Exception as e:
+            print(f"  加载 BOS 注册表失败: {e}")
+            return 1
+        svc = _match_capability_service(services, svc_id)
+        if svc is None:
+            print(f"  未找到 capability 服务: {svc_id}")
+            print("  用 `cockpit bos capability list` 查看可用 URI")
+            return 1
+        uri = getattr(svc, "uri", svc_id)
+        command = list(getattr(svc, "command", None) or [])
+        if not command:
+            print(f"  {uri}: 无 command 字段，无法进程内 invoke")
+            print("  该服务可能是 skill_host / static 类型，请用 Agent Skill 或上游 CLI")
+            return 2
+        extra = list(getattr(args, "capability_args", None) or [])
+        # If last command is bash -lc '...', append extra as shell suffix is unsafe;
+        # only append when command is a plain argv list without shell.
+        argv = command + extra if not (len(command) >= 2 and command[0] in {"bash", "sh"}) else command
+        print(f"  ▶ invoke {uri}")
+        print(f"    $ {' '.join(argv[:6])}{' …' if len(argv) > 6 else ''}")
+        try:
+            result = subprocess.run(argv, check=False)
+        except FileNotFoundError as e:
+            print(f"  ❌ 命令不可用: {e}")
+            return 127
+        except OSError as e:
+            print(f"  ❌ 执行失败: {e}")
+            return 1
+        if result.returncode == 0:
+            print(f"  ✅ exit 0 · {uri}")
+        else:
+            print(f"  ⚠ exit {result.returncode} · {uri}")
+        return int(result.returncode)
 
     print("用法: cockpit bos capability {list|invoke <service_id>}")
     return 1

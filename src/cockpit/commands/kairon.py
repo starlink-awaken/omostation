@@ -20,8 +20,11 @@ _KAIRON_PACKAGES = {
     "codeanalyze": ("packages/codeanalyze", "codeanalyze"),
     "ontoderive": ("packages/ontoderive", "ontoderive"),
     "minerva": ("packages/minerva", "minerva"),
+    "kronos": ("packages/kronos", "kronos"),
     "sophia": ("packages/sophia", "sophia"),
 }
+
+_PACKAGE_HELP = "kos, eidos, iris, code, ontoderive, minerva, kronos, sophia"
 
 
 def cmd_kairon(args: argparse.Namespace) -> int:
@@ -29,7 +32,7 @@ def cmd_kairon(args: argparse.Namespace) -> int:
     kairon_args = list(getattr(args, "kairon_args", []))
     if not kairon_args:
         print("用法: cockpit kairon <package> <args>...")
-        print("支持的 package: kos, eidos, iris, code, ontoderive, minerva, sophia")
+        print(f"支持的 package: {_PACKAGE_HELP}")
         return 1
 
     package = kairon_args[0]
@@ -37,7 +40,7 @@ def cmd_kairon(args: argparse.Namespace) -> int:
     mapping = _KAIRON_PACKAGES.get(package)
     if mapping is None:
         print(f"[red]未知 kairon package: {package}[/red]")
-        print("支持的 package: kos, eidos, iris, code, ontoderive, minerva, sophia")
+        print(f"支持的 package: {_PACKAGE_HELP}")
         return 1
 
     rel_path, script = mapping

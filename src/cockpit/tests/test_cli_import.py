@@ -88,8 +88,10 @@ def test_cmd_import_reads_url_and_saves_research(monkeypatch):
     capture = Console(record=True, force_terminal=True, width=140)
     monkeypatch.setattr(cli, "console", capture)
     monkeypatch.setattr(cli, "err", capture)
+    # Prefer deterministic urllib path in unit tests (skip real kronos subprocess).
+    monkeypatch.setattr(importer_mod, "_try_kronos_fetch", lambda url, timeout=30: None)
     monkeypatch.setattr(
-        cli.urlrequest,
+        importer_mod.urlrequest,
         "urlopen",
         lambda url, timeout=10: _FakeHTTPResponse(
             b"<html><head><title>Remote Article</title></head><body><h1>Remote Article</h1><p>Hello URL import.</p></body></html>",
@@ -120,7 +122,35 @@ def test_cmd_import_reads_url_and_saves_research(monkeypatch):
     assert code == 0
     assert saved["topic"] == "Remote Article"
     assert "Hello URL import." in str(saved["full_text"])
+    assert "Fetch: urllib" in str(saved["full_text"])
     assert "https://example.com/post" in output
+
+
+def test_cmd_import_prefers_kronos_fetch(monkeypatch):
+    capture = Console(record=True, force_terminal=True, width=140)
+    monkeypatch.setattr(cli, "console", capture)
+    monkeypatch.setattr(cli, "err", capture)
+    monkeypatch.setattr(
+        importer_mod,
+        "_try_kronos_fetch",
+        lambda url, timeout=30: ("# Kronos Title\n\nBody from kronos.", "kronos/native_http"),
+    )
+
+    saved: dict[str, object] = {}
+
+    def fake_save_research(topic: str, summary: str, full_text: str = "", source_count: int = 0) -> int:
+        saved.update({"topic": topic, "full_text": full_text})
+        return 9
+
+    mock = MockDataAccess()
+    mock.save_research = fake_save_research
+    monkeypatch.setattr(cli, "get_data_access", lambda: mock)
+
+    code = cli.cmd_import(argparse.Namespace(source="https://example.com/from-kronos"))
+    assert code == 0
+    assert "Body from kronos" in str(saved["full_text"])
+    assert "Fetch: kronos/native_http" in str(saved["full_text"])
+    assert "via kronos/native_http" in capture.export_text()
 
 
 def test_cmd_import_rejects_missing_file(monkeypatch):
@@ -156,8 +186,9 @@ def test_cmd_import_url_error(monkeypatch):
     capture = Console(record=True, force_terminal=True, width=140)
     monkeypatch.setattr(cli, "console", capture)
     monkeypatch.setattr(cli, "err", capture)
+    monkeypatch.setattr(importer_mod, "_try_kronos_fetch", lambda url, timeout=30: None)
     monkeypatch.setattr(
-        cli.urlrequest,
+        importer_mod.urlrequest,
         "urlopen",
         mock.Mock(side_effect=urlerror.URLError("connection refused")),
     )
@@ -190,8 +221,9 @@ def test_cmd_import_empty_body(monkeypatch):
     capture = Console(record=True, force_terminal=True, width=140)
     monkeypatch.setattr(cli, "console", capture)
     monkeypatch.setattr(cli, "err", capture)
+    monkeypatch.setattr(importer_mod, "_try_kronos_fetch", lambda url, timeout=30: None)
     monkeypatch.setattr(
-        cli.urlrequest,
+        importer_mod.urlrequest,
         "urlopen",
         lambda url, timeout=10: _FakeHTTPResponse(b"", url=url),
     )

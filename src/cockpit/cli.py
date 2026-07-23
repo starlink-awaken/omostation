@@ -521,7 +521,7 @@ def main() -> int:
     kairon_p = sub.add_parser(
         "kairon",
         help="kairon 知识引擎 monorepo 聚合入口",
-        epilog="package: kos / eidos / iris / code / ontoderive / minerva / sophia\n示例: cockpit kairon kos search 'attention'",
+        epilog="package: kos / eidos / iris / code / ontoderive / minerva / kronos / sophia\n示例: cockpit kairon kronos fetch https://example.com",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     kairon_p.add_argument("kairon_args", nargs=argparse.REMAINDER, help="package + 子命令参数")
@@ -573,8 +573,15 @@ def main() -> int:
     bos_capability_p = bos_sub.add_parser("capability", help="BOS capability 域 / toolbox 外部能力")
     bos_capability_sub = bos_capability_p.add_subparsers(dest="capability_command")
     bos_capability_sub.add_parser("list", help="列出 toolbox 中的 capability 服务")
-    bos_capability_invoke_p = bos_capability_sub.add_parser("invoke", help="调用 capability 服务")
-    bos_capability_invoke_p.add_argument("capability_service", help="服务 ID")
+    bos_capability_invoke_p = bos_capability_sub.add_parser(
+        "invoke", help="调用 capability 服务（执行 BOS YAML command）"
+    )
+    bos_capability_invoke_p.add_argument("capability_service", help="URI 或短名，如 media-crawler / last30days-skill")
+    bos_capability_invoke_p.add_argument(
+        "capability_args",
+        nargs=argparse.REMAINDER,
+        help="透传给目标 command 的额外参数（非 shell 命令时）",
+    )
 
     # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
     scenario_p = sub.add_parser(
