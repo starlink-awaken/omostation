@@ -156,8 +156,9 @@ services:
 
   - name: toolbox-media-crawler
     description: 自媒体平台爬虫 — 抖音/小红书/快手等 12 平台
-    mcp_url: "stdio://python -m mediacrawler"
-    health_url: "cli://python -m mediacrawler --health"
+    # 真入口: $TOOLBOX_ROOT/pipelines/media-crawler/main.py（需 playwright）
+    mcp_url: "stdio://bash -lc 'cd ${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler && python3 main.py'"
+    health_url: "cli://bash -lc 'cd ${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler && python3 main.py --help'"
     tags: [toolbox, crawler, social-media]
     tools:
       - mc_crawl: {description: "爬取平台内容", args: {platform: string, keyword: string, limit: int}}
@@ -174,9 +175,10 @@ services:
 
   - name: toolbox-last30days
     description: AI Agent 信息流聚合 — GitHub Trending
-    mcp_url: "stdio://python -m last30days"
-    health_url: "cli://python -m last30days --health"
-    tags: [toolbox, search, aggregation]
+    # Skill 宿主加载 skills/last30days/SKILL.md；非 installable Python 模块
+    mcp_url: "stdio://echo last30days-skill-host"
+    health_url: "cli://test -f ${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill/skills/last30days/SKILL.md"
+    tags: [toolbox, search, aggregation, skill_host]
     tools:
       - l30_fetch: {description: "获取信息流", args: {topic: string, days: int}}
       - l30_trending: {description: "获取 Trending", args: {language: string}}
