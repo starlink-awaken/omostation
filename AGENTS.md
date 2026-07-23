@@ -57,7 +57,8 @@ bash bin/gac/omo-acl-ops-window.sh
 ```
 
 Worktree 卫生说明：[`docs/operations/worktree-hygiene.md`](docs/operations/worktree-hygiene.md)。  
-ACL ops 窗口：[`docs/operations/omo-path-acl-runbook.md`](docs/operations/omo-path-acl-runbook.md) §2 / ADR-0206。
+ACL ops 窗口：[`docs/operations/omo-path-acl-runbook.md`](docs/operations/omo-path-acl-runbook.md) §2 / ADR-0206。  
+Codebase 结构图（调用链/影响面，MCP）：[`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) — skill `codebase-memory`；产物 `.codebase-memory/` 本机生成、已 gitignore。
 
 ## 1.5 P74 Solidification Quick Reference (ADR-0130)
 
@@ -282,6 +283,7 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 | cockpit-ui (TypeScript) | `npm run build` or `bun run build` from `projects/cockpit-ui` |
 | observability (Docker) | `docker compose config -q` from `projects/observability` |
 | Cross-project contract | Targeted tests on every touched consumer plus relevant integration smoke |
+| Code exploration (callers/impact) | Prefer codebase-memory MCP (`list_projects` → `search_graph` / `trace_path`); see [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) |
 
 If a test cannot run, report why and what risk remains.
 
