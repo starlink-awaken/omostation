@@ -387,6 +387,13 @@ def cmd_state_sync(omo_dir: Path, dry_run: bool, fmt: str) -> int:
         print(f"⚠️  state projection sync failed: {exc}")
         return 1
 
+    # ADR-0231 §D2: main sync 也应重算 task 计数, 否则 system.yaml 的
+    # completed_tasks/total_tasks/planned_tasks/active_tasks 与物理 SSOT 漂移
+    # (sync-tasks 子命令用户很少单独跑, 计数成为手维护隐性债).
+    sync_tasks_rc = cmd_state_sync_tasks(omo_dir, dry_run=dry_run)
+    if sync_tasks_rc != 0 and not dry_run:
+        print(f"⚠️  sync-tasks 重算失败 (rc={sync_tasks_rc}), 不阻塞主 sync")
+
     if fmt == "json":
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0
