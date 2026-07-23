@@ -1195,14 +1195,14 @@ services:
   - uri: "bos://capability/claude-skills/load"
     domain: capability
     action: "load"
-    transport: static
+    transport: inline
     package: "toolbox/claude-skills"
     description: "354 个 Claude Code Skill 最全库 — 593 CLI 脚本 + 711 模板"
     cross_references:
       domain: capability
       realized_by: "agora.register"
       upstream: "/Users/xiamingxing/ToolBox/skills/claude-skills/.git"
-    i0_route: pending
+    i0_route: skill_host
     status: active
 
   - uri: "bos://capability/last30days-skill/fetch"
@@ -1252,25 +1252,31 @@ services:
     action: "render"
     transport: stdio
     package: "toolbox/open-montage"
+    command:
+      [
+        "bash",
+        "-lc",
+        "cd \"${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/open-montage\" && test -d . && ls README.md >/dev/null && echo ok:open-montage",
+      ]
     description: "开源 Agentic 视频制作系统 — 从剧本到成品的全流程 Pipeline"
     cross_references:
       domain: capability
       realized_by: "agora.register"
       upstream: "/Users/xiamingxing/ToolBox/pipelines/open-montage/.git"
-    i0_route: pending
+    i0_route: host_cli
     status: active
 
   - uri: "bos://capability/skills-for-fabric/load"
     domain: capability
     action: "load"
-    transport: static
+    transport: inline
     package: "toolbox/skills-for-fabric"
     description: "微软 Fabric AI 技能集 — 作者/消费/运维三类 Skill"
     cross_references:
       domain: capability
       realized_by: "agora.register"
       upstream: "/Users/xiamingxing/ToolBox/skills/skills-for-fabric/.git"
-    i0_route: pending
+    i0_route: skill_host
     status: active
 
   # ── v5 续: 3 新实例注册 ──
@@ -1305,14 +1311,14 @@ services:
   - uri: "bos://capability/knowledge-work-plugins/load"
     domain: capability
     action: "load"
-    transport: static
+    transport: inline
     package: "toolbox/knowledge-work-plugins"
     description: "Claude Cowork 11 个生产力插件 — Claude Code 兼容"
     cross_references:
       domain: capability
       realized_by: "agora.register"
       upstream: "/Users/xiamingxing/ToolBox/skills/knowledge-work-plugins/.git"
-    i0_route: pending
+    i0_route: skill_host
     status: active
 
   # ── P77 Phase 3 治本: 补登 17 unregistered (跨仓真引用) ──
