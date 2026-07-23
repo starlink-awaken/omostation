@@ -1,0 +1,57 @@
+id: cockpit-triage-mesh-router-verification-rerun
+title: 项目排查：mesh-router · 运行验证
+description: 项目已有验证命令但还没有 agent-workflow 证据，复制命令运行后留证。
+status: pending
+task_type: operations
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs:
+- .omo/_delivery/task-center/execution/cockpit-triage-mesh-router-verification-rerun-2026-07-23T11-56-50Z.yaml
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+- cockpit:SystemMap:triage:mesh-router:verification-rerun
+entry_gate:
+- 确认项目排查命令和风险
+evidence_required:
+- command exit code
+- execution log
+- agent-workflow closeout
+deliverables:
+- cd "/Users/xiamingxing/ws-cockpit-capability-20260723" && uv run --with "pyyaml"
+  python "bin/gac/gac-mesh-router.py" --check
+test_plan:
+- 复制排查命令；Cockpit 不直接执行终端命令。
+tags:
+- cockpit-project-triage
+- mesh-router
+- verification-rerun
+- low
+priority: medium
+metadata:
+  project_id: mesh-router
+  command_id: verification-rerun
+  action_id: copy-verify-command
+  command: cd "/Users/xiamingxing/ws-cockpit-capability-20260723" && uv run --with
+    "pyyaml" python "bin/gac/gac-mesh-router.py" --check
+  probe_ports: []
+  risk: low
+  cockpit_only: true
+  controlled_execution: true
+  timeout_seconds: 900
+  ingress_plane: cockpit-system-map
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: cockpit:project-triage:mesh-router:verification-rerun
+  execution_audit:
+    command: cd "/Users/xiamingxing/ws-cockpit-capability-20260723" && uv run --with
+      "pyyaml" python "bin/gac/gac-mesh-router.py" --check
+    exit_code: 0
+    log_ref: runtime/omo/_delivery/ingress/task-execution/cockpit-triage-mesh-router-verification-rerun-2026-07-23T11-56-50Z.log
+    closeout_ref: null
+    actor: cockpit-task-center
+    recorded_at: '2026-07-23T11:56:50Z'
