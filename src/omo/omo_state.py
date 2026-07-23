@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import yaml
@@ -20,10 +21,22 @@ def _find_omo_dir() -> Path:
     return find_omo_dir()
 
 
+def _emit(msg: str, *, quiet: bool = False) -> None:
+    """Human diagnostics: stdout by default; stderr when quiet (JSON parent).
+
+    Keeps machine-readable JSON on stdout free of warning/progress noise.
+    """
+    print(msg, file=sys.stderr if quiet else sys.stdout)
+
+
 def cmd_state_show(omo_dir: Path, fmt: str) -> int:
     state_file = omo_dir / "state" / "system.yaml"
     if not state_file.exists():
-        print("⚠️  state/system.yaml not found")
+        # warnings never pollute JSON stdout
+        print(
+            "⚠️  state/system.yaml not found",
+            file=sys.stderr if fmt == "json" else sys.stdout,
+        )
         return 0
     data = load_yaml_required(state_file)
     if fmt == "json":
@@ -270,7 +283,7 @@ def _rebuild_tasks_registry_index(
     return True
 
 
-def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
+def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool, *, quiet: bool = False) -> int:
     """从 tasks/ 真实文件数重算 system.yaml 计数 (治本: 真源=目录, 计数是派生缓存).
 
     系统思维 OPT-7: system.yaml 的 completed/planned/active/total_tasks 和
@@ -281,16 +294,18 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
 
     SSOT 铁律不违背: task 目录是真源 (state plane), system.yaml 计数是派生缓存,
     sync 让两者对齐 (非凭空写数). drafts/ 不算正式 task (同 cmd_task_list 口径).
+
+    quiet=True: 诊断输出到 stderr (供 state sync --json 嵌套调用, 避免污染 stdout).
     """
     import datetime as _dt
 
     state_file = omo_dir / "state" / "system.yaml"
     if not state_file.exists():
-        print("⚠️  state/system.yaml not found")
+        _emit("⚠️  state/system.yaml not found", quiet=quiet)
         return 1
     data = load_yaml_required(state_file)
     if not isinstance(data, dict):
-        print("⚠️  state/system.yaml 顶层非 dict, 跳过")
+        _emit("⚠️  state/system.yaml 顶层非 dict, 跳过", quiet=quiet)
         return 1
 
     # 真源: tasks/{active,planned,done} 真实文件 (drafts 不算正式 task)
@@ -332,11 +347,17 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
     data.update(updates)
 
     if dry_run:
-        print("=== sync-tasks (dry-run) ===")
+        _emit("=== sync-tasks (dry-run) ===", quiet=quiet)
         for k in ("completed_tasks", "planned_tasks", "active_tasks", "total_tasks"):
-            print(f"  {k}: {old[k]} → {data[k]}")
-        print(f"  next_planned_tasks: {len(new_planned_list)} 项 (从 planned/ 重建)")
-        print(f"  next_active_tasks:  {len(new_active_list)} 项 (从 active/ 重建)")
+            _emit(f"  {k}: {old[k]} → {data[k]}", quiet=quiet)
+        _emit(
+            f"  next_planned_tasks: {len(new_planned_list)} 项 (从 planned/ 重建)",
+            quiet=quiet,
+        )
+        _emit(
+            f"  next_active_tasks:  {len(new_active_list)} 项 (从 active/ 重建)",
+            quiet=quiet,
+        )
         return 0
 
     write_system_projection_fields(
@@ -362,39 +383,55 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool) -> int:
         done_n=done_n,
         updated_at=updated_at,
     )
-    print("✅ system.yaml task 计数已同步 (真源=tasks/ 目录)")
+    _emit("✅ system.yaml task 计数已同步 (真源=tasks/ 目录)", quiet=quiet)
     for k in ("completed_tasks", "planned_tasks", "active_tasks", "total_tasks"):
-        print(f"  {k}: {old[k]} → {data[k]}")
-    print(
-        f"  next_planned_tasks: {len(new_planned_list)} 项 (从 planned/ 重建, 僵尸已清)"
+        _emit(f"  {k}: {old[k]} → {data[k]}", quiet=quiet)
+    _emit(
+        f"  next_planned_tasks: {len(new_planned_list)} 项 (从 planned/ 重建, 僵尸已清)",
+        quiet=quiet,
     )
-    print(f"  next_active_tasks:  {len(new_active_list)} 项 (从 active/ 重建)")
+    _emit(
+        f"  next_active_tasks:  {len(new_active_list)} 项 (从 active/ 重建)",
+        quiet=quiet,
+    )
     if index_ok:
-        print(
+        _emit(
             f"  tasks/registry/INDEX.md: Planned 表+计数+Updated 已重建 "
-            f"(planned={planned_n}, done={done_n})"
+            f"(planned={planned_n}, done={done_n})",
+            quiet=quiet,
         )
     else:
-        print("  ⚠️ tasks/registry/INDEX.md 未重建 (缺失或结构不符, 保留手维护)")
+        _emit(
+            "  ⚠️ tasks/registry/INDEX.md 未重建 (缺失或结构不符, 保留手维护)",
+            quiet=quiet,
+        )
     return 0
 
 
 def cmd_state_sync(omo_dir: Path, dry_run: bool, fmt: str) -> int:
     """Sync high-churn runtime projections through the state broker."""
+    quiet = fmt == "json"
     try:
         report = sync_state_projection(omo_dir.parent, dry_run=dry_run)
     except Exception as exc:  # noqa: BLE001
-        print(f"⚠️  state projection sync failed: {exc}")
+        print(
+            f"⚠️  state projection sync failed: {exc}",
+            file=sys.stderr if quiet else sys.stdout,
+        )
         return 1
 
     # ADR-0231 §D2: main sync 也应重算 task 计数, 否则 system.yaml 的
     # completed_tasks/total_tasks/planned_tasks/active_tasks 与物理 SSOT 漂移
     # (sync-tasks 子命令用户很少单独跑, 计数成为手维护隐性债).
-    sync_tasks_rc = cmd_state_sync_tasks(omo_dir, dry_run=dry_run)
+    sync_tasks_rc = cmd_state_sync_tasks(omo_dir, dry_run=dry_run, quiet=quiet)
     if sync_tasks_rc != 0 and not dry_run:
-        print(f"⚠️  sync-tasks 重算失败 (rc={sync_tasks_rc}), 不阻塞主 sync")
+        print(
+            f"⚠️  sync-tasks 重算失败 (rc={sync_tasks_rc}), 不阻塞主 sync",
+            file=sys.stderr if quiet else sys.stdout,
+        )
 
     if fmt == "json":
+        # Pure JSON on stdout only — nested diagnostics already redirected to stderr.
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0
 
