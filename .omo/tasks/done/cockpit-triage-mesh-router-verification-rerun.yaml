@@ -1,7 +1,7 @@
 id: cockpit-triage-mesh-router-verification-rerun
 title: 项目排查：mesh-router · 运行验证
 description: 项目已有验证命令但还没有 agent-workflow 证据，复制命令运行后留证。
-status: pending
+status: done
 task_type: operations
 assigned_to: null
 dispatch_id: null
@@ -55,3 +55,11 @@ metadata:
     closeout_ref: null
     actor: cockpit-task-center
     recorded_at: '2026-07-23T11:56:50Z'
+  completed_at: '2026-07-23T12:01:23Z'
+  completed_via: omo task done
+  completion_actor: cockpit-task-center
+  completion_source_ref: cockpit:task:complete:cockpit-triage-mesh-router-verification-rerun
+completed_at: '2026-07-23T12:01:23Z'
+evidence_paths:
+- .omo/_delivery/task-center/execution/cockpit-triage-mesh-router-verification-rerun-2026-07-23T11-56-50Z.yaml
+- runtime/omo/_delivery/ingress/task-execution/cockpit-triage-mesh-router-verification-rerun-2026-07-23T11-56-50Z.log
