@@ -186,3 +186,7 @@ data/cards/
 # 治本: 不在主仓 SSOT 中保留. P74 governance boundary 守护.
 runtime/.watch-dispatch-stamps.json
 .commit-suggestion
+
+# 生成 dashboard 制品 + 临时下载 (2026-07-23 清理)
+artifacts-*.html
+/archive-*/
