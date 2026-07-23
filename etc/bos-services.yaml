@@ -1210,12 +1210,20 @@ services:
     action: "fetch"
     transport: stdio
     package: "toolbox/last30days-skill"
+    # Skill 宿主执行面（非 Python -m 模块）；agent 侧加载 SKILL.md 后跑 CLI
+    command:
+      [
+        "bash",
+        "-lc",
+        "cd \"${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill\" && test -f skills/last30days/SKILL.md && echo ok:last30days-skill",
+      ]
     description: "AI Agent 驱动的搜索/打分类信息流聚合 — GitHub Trending #1"
     cross_references:
       domain: capability
       realized_by: "agora.register"
       upstream: "/Users/xiamingxing/ToolBox/skills/last30days-skill/.git"
-    i0_route: pending
+    # 声明已注册；真 invoke 仍依赖 Agent Skill 宿主（非常驻 stdio MCP）
+    i0_route: skill_host
     status: active
 
   - uri: "bos://capability/media-crawler/crawl"
@@ -1223,13 +1231,20 @@ services:
     action: "crawl"
     transport: stdio
     package: "toolbox/media-crawler"
-    command: ["python3", "-m", "media_crawler"]
+    # 真实入口是 pipelines/media-crawler/main.py（非 installable package media_crawler）
+    # 依赖: playwright 等；未装齐时 command 会失败 — 见 docs/operations/external-ingest-callchain.md
+    command:
+      [
+        "bash",
+        "-lc",
+        "cd \"${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler\" && if [ -x .venv/bin/python ]; then PY=.venv/bin/python; else PY=python3; fi && \"$PY\" main.py --help",
+      ]
     description: "自媒体平台爬虫 — 抖音/小红书/快手/B站/微博等 12 平台，含反爬能力"
     cross_references:
       domain: capability
       realized_by: "agora.register"
       upstream: "/Users/xiamingxing/ToolBox/pipelines/media-crawler/.git"
-    i0_route: pending
+    i0_route: host_cli
     status: active
 
   - uri: "bos://capability/open-montage/render"
