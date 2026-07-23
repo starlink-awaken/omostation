@@ -626,7 +626,14 @@ diff_checks:
       - .omo/_truth/mof-version.yaml
       - projects/ecos/src/ecos/ssot/mof/**
       - projects/ecos/src/ecos/ssot/tools/mof-*.py
-    command: [bin/mof-drift]
+    command: [uv, run, --with, pyyaml, python, bin/mof/mof-drift]
+  - id: state-stale-consume
+    description: state_stale 事件消费端 (ADR-0227 原则4 闭环; ADR-0128 Phase 2).
+    required: false
+    paths:
+      - .omo/_knowledge/omo-events.jsonl
+      - bin/gac/state-stale-consume.py
+    command: [uv, run, --with, pyyaml, python, bin/gac/state-stale-consume.py, --within, "300", --quiet]
   - id: doc-ssot-lint
     description: Documentation SSOT semantic contract.
     required: true

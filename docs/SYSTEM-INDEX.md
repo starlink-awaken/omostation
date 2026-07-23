@@ -73,6 +73,8 @@
 
 → [本地计算集群](local-compute/) — omlx 集群架构（详见 `docs/local-compute/`）
 
+→ [战略体检报告](reports/) — c2g.strategy 周期产出的战略/治理健康周报（详见 `docs/reports/`）
+
 ---
 
 ## 文档维护生命周期
