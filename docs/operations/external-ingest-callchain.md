@@ -104,7 +104,7 @@ test -f "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill/skills/last30day
 | G4 | iris 多连接器未配置 auth | 矩阵见 [iris-credentials-matrix.md](./iris-credentials-matrix.md) |
 | G5 | kos ingest parsers 迁移中 | 见 `packages/kos/src/kos/ingest/TODO.md` |
 | G6 | last30days 无 stdio MCP 模块 | 保持 skill_host；勿伪造成 `python -m last30days` |
-| G7 | media-crawler 真爬需登录态 | headless + 过期 profile 会失败（`float.encode` / 无二维码）；需交互扫码或 cookie |
+| G7 | media-crawler 真爬需登录态 | headless + 过期 profile 会失败（`float.encode` / 无二维码）；需交互扫码或 cookie — 见 [media-crawler-login.md](./media-crawler-login.md) |
 
 ---
 
@@ -149,3 +149,4 @@ cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler"
 | 2026-07-23 | 实证 smoke；cockpit 挂 kronos；import 优先 kronos；修正 media-crawler/last30days 伪 `python -m` 命令；本 callchain 文档 |
 | 2026-07-23 | 全面落地：SearXNG 起服、media-crawler venv、`bos capability invoke` 真执行、子模块/文档提交 |
 | 2026-07-23 | Neo4j healthcheck 修复 + volume 重建；iris 连接器/噪音；凭据矩阵；真爬 G7 |
+| 2026-07-23 | kairon #13 子模块指针；media-crawler 交互登录 runbook |
