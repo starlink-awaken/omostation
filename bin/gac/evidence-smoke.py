@@ -203,6 +203,20 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
 
     command 形如 ['uv','run','--directory','projects/kairon','python','-m','kos.cli','search']
     """
+    # 路径 0: host_cli / ToolBox 外挂 — bash -lc 调本机 TOOLBOX_ROOT
+    # (media-crawler / last30days / open-montage 等 capability host 入口).
+    # CI 无 ~/ToolBox 时属 local-only, 不计 BOS 鸿沟; 与绝对 --directory 同类.
+    if command and command[0] in ("bash", "sh") and any(
+        tok in " ".join(command)
+        for tok in (
+            "TOOLBOX_ROOT",
+            "$HOME/ToolBox",
+            "${HOME}/ToolBox",
+            "~/ToolBox",
+        )
+    ):
+        return True, "local-only (host_cli bash/ToolBox: CI 无本机工具, 非鸿沟)"
+
     # 一次遍历提取所有关键参数: --directory / --package / -m module / 直接 .py 脚本
     directory = package = module = script = None
     for i, arg in enumerate(command):
@@ -314,7 +328,11 @@ def check_service(svc) -> dict:
     ok, reason = False, "unknown transport"
 
     if transport in ("stdio", "mcp_stdio"):
-        ok, reason = _check_stdio(svc.command)
+        ok, reason = _check_stdio(list(svc.command or []))
+        # toolbox/* 外挂能力 (headroom/deer-flow/…) 声明在 monorepo, 执行在 ToolBox。
+        # L2 无 ToolBox 安装时不算真实鸿沟 (与 host_cli bash 同类).
+        if not ok and str(getattr(svc, "package", "") or "").startswith("toolbox/"):
+            ok, reason = True, "local-only (toolbox package host: CI 无 ToolBox 安装, 非鸿沟)"
     elif transport == "internal":
         ok, reason = _check_internal(svc.module_path, svc.func_name)
     elif transport == "http":
