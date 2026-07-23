@@ -98,12 +98,13 @@ test -f "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill/skills/last30day
 
 | ID | 缺口 | 处置建议 |
 |----|------|----------|
-| G1 | media-crawler 缺 playwright 依赖 | `pip install playwright && playwright install` 于 ToolBox venv |
-| G2 | SearXNG / Neo4j 未常驻 | `minerva` docker compose 起 searxng；深度档可选 neo4j |
+| G1 | media-crawler 缺 playwright 依赖 | ToolBox venv 已装；须 **在项目根目录** 跑 `main.py`（`libs/*.js` 相对路径） |
+| G2 | SearXNG / Neo4j 未常驻 | SearXNG+Neo4j 本机可起；见 [minerva-local.md](./minerva-local.md) |
 | G3 | cockpit `bos capability invoke` 仍是占位提示 | 接 agora `resolve_bos_uri` 真 invoke |
-| G4 | iris 多连接器未配置 auth | 按 connector 文档 export cookie/key |
+| G4 | iris 多连接器未配置 auth | 矩阵见 [iris-credentials-matrix.md](./iris-credentials-matrix.md) |
 | G5 | kos ingest parsers 迁移中 | 见 `packages/kos/src/kos/ingest/TODO.md` |
 | G6 | last30days 无 stdio MCP 模块 | 保持 skill_host；勿伪造成 `python -m last30days` |
+| G7 | media-crawler 真爬需登录态 | headless + 过期 profile 会失败（`float.encode` / 无二维码）；需交互扫码或 cookie |
 
 ---
 
@@ -124,9 +125,20 @@ test -f "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill/skills/last30day
 
 | 组件 | 命令 | 状态 |
 |------|------|------|
-| SearXNG | `cd projects/kairon/packages/minerva/docker && docker compose up -d searxng` | 容器 `minerva-searxng`；`/search?format=json` 可用（healthcheck 可能 unhealthy 但搜索可用） |
-| media-crawler venv | `cd $TOOLBOX_ROOT/pipelines/media-crawler && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/playwright install chromium` | BOS command 优先 `.venv/bin/python` |
+| SearXNG | `cd projects/kairon/packages/minerva/docker && docker compose up -d searxng` | `minerva-searxng` **healthy**（wget spider `/`） |
+| Neo4j | `docker compose --profile full up -d neo4j` | `minerva-neo4j` **healthy**；默认密码 `changeme`；`minerva check` 5/5 |
+| media-crawler venv | 项目根 `.venv` + playwright | 启动 OK；**真爬**需有效登录（见 G7） |
+| iris | `iris list` | local_files/obsidian/applenotes/github 绿；见 [iris-credentials-matrix.md](./iris-credentials-matrix.md) |
 | cockpit capability invoke | `cockpit bos capability invoke media-crawler` | 执行 BOS YAML `command`（`--help` smoke） |
+
+media-crawler 最小尝试（需登录；headless 无有效 cookie 会失败）：
+
+```bash
+cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler"
+.venv/bin/python main.py --platform xhs --type search --keywords "测试" \
+  --crawler_max_notes_count 1 --get_comment false --headless true --save_data_option jsonl
+# 交互扫码：去掉 --headless，刷新 browser_data 登录态
+```
 
 ---
 
@@ -136,3 +148,4 @@ test -f "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill/skills/last30day
 |------|------|
 | 2026-07-23 | 实证 smoke；cockpit 挂 kronos；import 优先 kronos；修正 media-crawler/last30days 伪 `python -m` 命令；本 callchain 文档 |
 | 2026-07-23 | 全面落地：SearXNG 起服、media-crawler venv、`bos capability invoke` 真执行、子模块/文档提交 |
+| 2026-07-23 | Neo4j healthcheck 修复 + volume 重建；iris 连接器/噪音；凭据矩阵；真爬 G7 |
