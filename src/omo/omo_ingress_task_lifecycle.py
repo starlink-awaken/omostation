@@ -607,7 +607,9 @@ def execute_controlled_task(
     }
 
 
-def _controlled_process_context(omo_dir: Path, task_id: str) -> tuple[Path, dict[str, Any]]:
+def _controlled_process_context(
+    omo_dir: Path, task_id: str
+) -> tuple[Path, dict[str, Any]]:
     task_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
     if not task_path.exists():
         raise ValueError("Only active tasks can control a service process")
@@ -620,16 +622,25 @@ def _controlled_process_context(omo_dir: Path, task_id: str) -> tuple[Path, dict
     command = str(metadata.get("command") or "").strip()
     match = re.fullmatch(r'cd "([^"]+)" && (.+)', command, flags=re.DOTALL)
     if not match:
-        raise ValueError("Controlled start command must declare an explicit working directory")
+        raise ValueError(
+            "Controlled start command must declare an explicit working directory"
+        )
     cwd = Path(match.group(1)).expanduser().resolve()
     workspace_root = omo_dir.parent.resolve()
     try:
         cwd.relative_to(workspace_root)
     except ValueError as exc:
-        raise ValueError("Controlled start working directory must be inside Workspace") from exc
+        raise ValueError(
+            "Controlled start working directory must be inside Workspace"
+        ) from exc
     command_body = match.group(2).strip()
-    if any(token in command_body for token in (";", "|", ">", "<", "$(", "`", "&&", "||", "&", "\n", "\r")):
-        raise ValueError("Controlled start command contains unsupported shell composition")
+    if any(
+        token in command_body
+        for token in (";", "|", ">", "<", "$(", "`", "&&", "||", "&", "\n", "\r")
+    ):
+        raise ValueError(
+            "Controlled start command contains unsupported shell composition"
+        )
     return task_path, {
         "payload": payload,
         "metadata": metadata,
@@ -660,11 +671,15 @@ def start_controlled_task(
             raise ValueError("Task approval must be granted before process start")
     prior = context["metadata"].get("execution_process")
     if isinstance(prior, dict) and prior.get("status") == "started":
-        raise ValueError("Task already has a started process; stop it before starting again")
+        raise ValueError(
+            "Task already has a started process; stop it before starting again"
+        )
 
     timestamp = _utc_now()
     slug = _timestamp_slug(timestamp)
-    log_path = _delivery_root(omo_dir) / "task-execution" / f"{task_id}-start-{slug}.log"
+    log_path = (
+        _delivery_root(omo_dir) / "task-execution" / f"{task_id}-start-{slug}.log"
+    )
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("ab") as log_file:
         process = subprocess.Popen(
@@ -687,7 +702,9 @@ def start_controlled_task(
         "started_at": timestamp,
     }
     execution_filename = f"{task_id.lower()}-process-{slug}.yaml"
-    execution_path = omo_dir / "_delivery" / "task-center" / "execution" / execution_filename
+    execution_path = (
+        omo_dir / "_delivery" / "task-center" / "execution" / execution_filename
+    )
     execution_ref = f".omo/_delivery/task-center/execution/{execution_filename}"
     with fcntl_lock(_lock_path(omo_dir)):
         payload = _load_yaml(task_path)
@@ -705,7 +722,9 @@ def start_controlled_task(
             **process_record,
             "source_ref": source_ref,
         }
-        artifact_path = _delivery_root(omo_dir) / "tasks" / f"{task_id}-process-start-{slug}.yaml"
+        artifact_path = (
+            _delivery_root(omo_dir) / "tasks" / f"{task_id}-process-start-{slug}.yaml"
+        )
         write_yaml_atomic(artifact_path, artifact)
         parent_step_id = f"ingress:task-process-start:{task_id}:{timestamp}"
         record_audit(
@@ -766,15 +785,31 @@ def _watch_controlled_process(
         payload = _load_yaml(task_path)
         metadata = payload.setdefault("metadata", {})
         current = metadata.get("execution_process") or {}
-        if not isinstance(current, dict) or int(current.get("pid") or -1) != process.pid:
+        if (
+            not isinstance(current, dict)
+            or int(current.get("pid") or -1) != process.pid
+        ):
             return
-        status = current.get("status") if current.get("status") in {"stopped", "not_running"} else "exited"
-        process_record = {**current, "status": status, "exit_code": exit_code, "exited_at": timestamp}
+        status = (
+            current.get("status")
+            if current.get("status") in {"stopped", "not_running"}
+            else "exited"
+        )
+        process_record = {
+            **current,
+            "status": status,
+            "exit_code": exit_code,
+            "exited_at": timestamp,
+        }
         metadata["execution_process"] = process_record
         write_yaml_atomic(task_path, payload)
         execution_path = omo_dir.parent / execution_ref
         write_yaml_atomic(execution_path, {"task_id": task_id, **process_record})
-        artifact_path = _delivery_root(omo_dir) / "tasks" / f"{task_id}-process-exit-{_timestamp_slug(timestamp)}.yaml"
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-process-exit-{_timestamp_slug(timestamp)}.yaml"
+        )
         write_yaml_atomic(
             artifact_path,
             {
@@ -871,12 +906,19 @@ def stop_controlled_task(
             if not _controlled_pid_is_running(pid):
                 stop_status = "not_running"
             else:
-                os.killpg(int(process_record.get("process_group_id") or pid), signal.SIGTERM)
+                os.killpg(
+                    int(process_record.get("process_group_id") or pid), signal.SIGTERM
+                )
         except ProcessLookupError:
             stop_status = "not_running"
         except OSError as exc:
             raise ValueError(f"Unable to stop controlled process: {exc}") from exc
-        process_record = {**process_record, "status": stop_status, "stopped_at": timestamp, "stopped_by": actor}
+        process_record = {
+            **process_record,
+            "status": stop_status,
+            "stopped_at": timestamp,
+            "stopped_by": actor,
+        }
         metadata["execution_process"] = process_record
         write_yaml_atomic(task_path, payload)
         artifact = {
@@ -886,7 +928,11 @@ def stop_controlled_task(
             **process_record,
             "source_ref": source_ref,
         }
-        artifact_path = _delivery_root(omo_dir) / "tasks" / f"{task_id}-process-stop-{_timestamp_slug(timestamp)}.yaml"
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-process-stop-{_timestamp_slug(timestamp)}.yaml"
+        )
         write_yaml_atomic(artifact_path, artifact)
         parent_step_id = f"ingress:task-process-stop:{task_id}:{timestamp}"
         record_audit(
@@ -937,7 +983,10 @@ def restart_controlled_task(
     )
     deadline = time.monotonic() + max(0.1, timeout_seconds)
     while time.monotonic() < deadline:
-        if get_controlled_process_status(omo_dir, task_id=task_id).get("status") != "running":
+        if (
+            get_controlled_process_status(omo_dir, task_id=task_id).get("status")
+            != "running"
+        ):
             break
         time.sleep(0.05)
     else:
