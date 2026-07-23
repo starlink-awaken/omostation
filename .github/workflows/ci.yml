@@ -16,6 +16,10 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
           python-version: "3.13"
+      # cockpit is developed as monorepo path-deps (../runtime, ../agora, …).
+      # Standalone checkout must stub sibling packages so `uv sync` resolves.
+      - name: Stub monorepo path dependencies
+        run: python3 scripts/ci_stub_path_deps.py
       - name: Install dependencies
         run: uv sync
       - name: Ruff check
@@ -34,7 +38,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
           python-version: "3.13"
+      - name: Stub monorepo path dependencies
+        run: python3 scripts/ci_stub_path_deps.py
       - name: Install dependencies
         run: uv sync
       - name: Run tests
-        run: uv run pytest tests/ -q --tb=short
+        run: uv run pytest src/cockpit/tests tests/ -q --tb=short
