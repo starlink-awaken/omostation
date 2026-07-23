@@ -36,6 +36,8 @@ from omo.omo_paths import (
     DELIVERY_DIR,
     KAIRON_PACKAGES,
     STATE_SYSTEM_YAML,
+    TASKS_ACTIVE_DIR,
+    TASKS_DONE_DIR,
     TASKS_PLANNED_DIR,
     WORKSPACE_ROOT,
 )
@@ -111,24 +113,42 @@ def _parse_task_yaml(path: Path) -> dict[str, str]:
 
 
 def _collect_task_state() -> dict[str, Any]:
-    """从 .omo/tasks/planned/ 收集真实任务统计."""
-    if not TASKS_PLANNED_DIR.exists():
+    """从 .omo/tasks/{planned,active,done}/ 收集真实任务统计.
+
+    历史上仅扫 planned/, 但 done/ 与 active/ 才是大部分任务的归宿
+    (planned/ 只是 staging 区). 漏算导致 system.yaml::completed_tasks 与
+    物理 SSOT 不一致, ssot-guardian::task_count_drift 误报.
+    """
+    planned_root = TASKS_PLANNED_DIR if TASKS_PLANNED_DIR.exists() else None
+    active_root = TASKS_ACTIVE_DIR if TASKS_ACTIVE_DIR.exists() else None
+    done_root = TASKS_DONE_DIR if TASKS_DONE_DIR.exists() else None
+
+    if not (planned_root or active_root or done_root):
         return {
             "total": 0,
             "completed": 0,
             "in_progress": 0,
             "pending": 0,
+            "planned": 0,
             "max_phase": 0,
             "current_wave": "W0",
             "tasks": [],
         }
+
     tasks: list[dict[str, str]] = []
-    for f in sorted(TASKS_PLANNED_DIR.glob("*.yaml")):
-        info = _parse_task_yaml(f)
-        if "id" in info:
-            tasks.append(info)
+    planned_count = 0
+    for root in (done_root, active_root, planned_root):
+        if root is None:
+            continue
+        for f in sorted(root.glob("*.yaml")):
+            info = _parse_task_yaml(f)
+            if "id" in info:
+                tasks.append(info)
+                if root is planned_root:
+                    planned_count += 1
     statuses = [t.get("status", "unknown") for t in tasks]
-    completed = sum(1 for s in statuses if s == "completed")
+    # done/ 用 status="done", planned/ 用 status="completed", 兼容两种字面
+    completed = sum(1 for s in statuses if s in {"completed", "done"})
     in_progress = sum(1 for s in statuses if s == "in_progress")
     pending = sum(1 for s in statuses if s in {"pending", "blocked"})
     phases = [int(t["phase"]) for t in tasks if t.get("phase", "").isdigit()]
@@ -153,6 +173,7 @@ def _collect_task_state() -> dict[str, Any]:
         "completed": completed,
         "in_progress": in_progress,
         "pending": pending,
+        "planned": planned_count,
         "max_phase": max_phase,
         "current_wave": current_wave,
         "tasks": tasks,
@@ -326,7 +347,7 @@ def collect_actual_state() -> dict[str, Any]:
         "blocked_tasks": sum(
             1 for t in tasks["tasks"] if t.get("status") in {"blocked", "pending"}
         ),
-        "planned_tasks": tasks["total"],
+        "planned_tasks": tasks["planned"],
         "debt_watchlist_count": audit["watchlist_count"],
         "debt_gate_count": audit["watchlist_count"],
         "updated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
