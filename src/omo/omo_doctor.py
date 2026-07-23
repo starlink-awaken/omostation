@@ -4,13 +4,15 @@
 1. health check — agora 服务探活
 2. validate state — .omo 状态一致性
 3. audit freshness — X2 freshness 巡检
+4. path-acl — Scheme C 5c L1 world-writable 巡检 (ADR-0199, warn-only)
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
-from omo.omo_paths import OMO_ROOT
+from omo.omo_paths import OMO_ROOT, WORKSPACE_ROOT
 
 
 def _check_state_freshness() -> dict:
@@ -90,6 +92,62 @@ def _check_debt_staleness() -> dict:
     }
 
 
+def _check_path_acl() -> dict:
+    """Scheme C 5c L1: world-writable / 0777 on governed write plane (warn-only).
+
+    Never mutates host. Daily doctor rhythm surface (ADR-0199).
+    """
+    from omo.omo_path_acl import run_path_acl_doctor
+
+    # Prefer workspace root that contains .omo (OMO_ROOT parent)
+    root = Path(WORKSPACE_ROOT)
+    if not (root / ".omo").exists() and OMO_ROOT.exists():
+        root = OMO_ROOT.parent
+
+    report = run_path_acl_doctor(root, strict=False)
+    warn_findings = [
+        f
+        for f in (report.get("findings") or [])
+        if f.get("kind") in ("world_writable", "mode_777")
+        or f.get("severity") in ("warn", "halt")
+    ]
+    # ignore pure info "ok" / missing_optional
+    actionable = [
+        f
+        for f in warn_findings
+        if f.get("kind") in ("world_writable", "mode_777", "stat_error")
+    ]
+    if not actionable:
+        return {
+            "id": "path-acl",
+            "status": "ok",
+            "detail": (
+                f"surfaces={report.get('surface_count', 0)} "
+                f"no world-writable/0777 (strict={report.get('strict')})"
+            ),
+            "meta": {
+                "warn_count": report.get("warn_count", 0),
+                "workspace_root": report.get("workspace_root"),
+            },
+        }
+
+    paths = ", ".join(f"{f.get('path')}({f.get('kind')})" for f in actionable[:5])
+    more = len(actionable) - 5
+    detail = f"{len(actionable)} ACL red flag(s): {paths}"
+    if more > 0:
+        detail += f" +{more} more"
+    detail += " · fix: omo acl plan --json"
+    return {
+        "id": "path-acl",
+        "status": "warn",
+        "detail": detail,
+        "meta": {
+            "actionable": actionable,
+            "workspace_root": report.get("workspace_root"),
+        },
+    }
+
+
 def cmd_doctor(json_output: bool = False) -> int:
     """运行统一健康检查."""
     checks = [
@@ -97,6 +155,7 @@ def cmd_doctor(json_output: bool = False) -> int:
         _check_key_files,
         _check_agora_health,
         _check_debt_staleness,
+        _check_path_acl,
     ]
 
     results = []

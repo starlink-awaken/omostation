@@ -222,6 +222,12 @@ def main(argv: list[str] | None = None) -> int:
 
         return lint_main(args[1:])
 
+    if args and args[0] == "acl":
+        # Scheme C 5c L2 (ADR-0189): path ACL plan/apply (opt-in OMO_OS_ACL=1)
+        from omo.omo_acl import main as acl_main
+
+        return acl_main(args[1:])
+
     if args and args[0] == "lint-metrics":
         # Round 42 P0: omo lint schemas + §17 metrics (单命令跑两者, CI 友好)
         from omo.omo_lint import cmd_lint_schemas

@@ -471,10 +471,8 @@ WARN_LOC = 600
 ERROR_LOC = 1500
 
 # 豁免: 显式 allowlist (历史合理大文件, 需在 ADR 记录理由)
-# ADR-0155: api_system_map.py 2870L 临时豁免 (>1500L), 待 SRP 重构 (task 追踪, 参考 omo-srp-refactor skill).
-GOD_MODULE_ALLOWLIST: set[str] = {
-    "projects/cockpit/src/cockpit/web/api_system_map.py",  # 2870L, ADR-0155 待重构
-}
+# ADR-0155: api_system_map.py 已 SRP 拆解 (3504L → 990L + catalog/io_commands/status 分层), 豁免移除, 门禁转硬性执行.
+GOD_MODULE_ALLOWLIST: set[str] = set()
 
 # 不扫的目录 (测试/数据迁移脚本可超)
 EXCLUDE_DIR_PARTS: tuple[str, ...] = (
@@ -1270,6 +1268,25 @@ def main(argv: list[str] | None = None) -> int:
         help="P74: 验证 runtime/ 下文件必须 gitignored/tracked/allowlisted (CR-P74-RUNTIME-STAMP-POLICY)",
     )
     stamp_policy.add_argument("--json", action="store_true", help="JSON 输出")
+    # Scheme C 5c L1: path ACL doctor (ADR-0187) — read-only, never mutates host
+    path_acl = sub.add_parser(
+        "path-acl",
+        help="Scheme C 5c L1: 巡检 .omo/spaces 写面 world-writable 等 (只读, 不 chmod)",
+    )
+    path_acl.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    path_acl.add_argument("--json", action="store_true", help="JSON 输出")
+    path_acl.add_argument(
+        "--strict",
+        action="store_true",
+        help="world-writable/0777 视为 FAIL (默认 warn-only)",
+    )
+    path_acl.add_argument(
+        "--profile",
+        default=None,
+        help="覆盖 omo-path-acl.yaml 路径 (或 OMO_PATH_ACL_PROFILE)",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "schemas":
@@ -1312,6 +1329,15 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_projection_guard(json_output=args.json)
     if args.command == "stamp-policy":
         return cmd_stamp_policy(json_output=args.json)
+    if args.command == "path-acl":
+        from .omo_path_acl import cmd_lint_path_acl
+
+        return cmd_lint_path_acl(
+            args.workspace_root,
+            json_output=args.json,
+            strict=args.strict,
+            profile=args.profile,
+        )
     parser.print_help()
     return 1
 

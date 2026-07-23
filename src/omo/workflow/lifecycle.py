@@ -29,6 +29,7 @@ from .core import (
     validate_agent_profile,
     command_display,
     path_matches,
+    workflow_by_id,
 )
 
 
@@ -163,6 +164,65 @@ def append_ledger_event(registry: dict[str, Any], event: dict[str, Any]) -> None
     payload = {"ts": utc_now(), **event}
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def ledger_mentions_run(registry: dict[str, Any], run_id: str) -> bool:
+    path = ledger_path(registry)
+    if not path.exists() or path.stat().st_size == 0:
+        return False
+    needle = f'"run_id": "{run_id}"'
+    # also match compact JSON without space after colon
+    needle_alt = f'"run_id":"{run_id}"'
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    return needle in text or needle_alt in text
+
+
+def heal_ledger_for_run(
+    registry: dict[str, Any],
+    run_id: str,
+    payload: dict[str, Any],
+) -> bool:
+    """ADR-0209 A2: if ledger has no event for a known run, replay from run yaml.
+
+    Reconstructs a minimal start (and close if terminal) event so observe/compliance
+    do not warn forever after events.jsonl was trimmed externally.
+    Returns True when a heal write happened.
+    """
+    if ledger_mentions_run(registry, run_id):
+        return False
+    append_ledger_event(
+        registry,
+        {
+            "event": "agent_workflow_start",
+            "run_id": run_id,
+            "workflow_id": payload.get("workflow_id"),
+            "actor": payload.get("actor"),
+            "agent_profile": payload.get("agent_profile"),
+            "objective": payload.get("objective"),
+            "path": payload.get("path"),
+            "locks": payload.get("locks") or [],
+            "healed": True,
+            "heal_reason": "ledger_missing_run_replay_from_run_yaml",
+        },
+    )
+    status = str(payload.get("status") or "")
+    if status in {"ok", "failed", "blocked"}:
+        append_ledger_event(
+            registry,
+            {
+                "event": "agent_workflow_close",
+                "run_id": run_id,
+                "workflow_id": payload.get("workflow_id"),
+                "status": status,
+                "evidence": payload.get("evidence") or [],
+                "healed": True,
+                "heal_reason": "ledger_missing_run_replay_from_run_yaml",
+            },
+        )
+    return True
 
 
 def acquire_locks(
@@ -580,14 +640,6 @@ def load_lock_records(registry: dict[str, Any]) -> list[tuple[Path, dict[str, An
     return records
 
 
-def ledger_mentions_run(registry: dict[str, Any], run_id: str) -> bool:
-    path = ledger_path(registry)
-    if not path.exists():
-        return False
-    needle = f'"run_id": "{run_id}"'
-    return needle in path.read_text(encoding="utf-8", errors="replace")
-
-
 def normalize_claim_mode(raw_mode: Any, default: str = "advisory") -> str:
     mode = str(raw_mode or default)
     return mode if mode in CLAIM_POLICY_MODES else default
@@ -655,6 +707,21 @@ def claim_covers_path(claimed_path: str, changed_path: str) -> bool:
     return normalized_changed.startswith(normalized_claim.rstrip("/") + "/")
 
 
+def is_read_only_workflow(registry: dict[str, Any], workflow_id: str) -> bool:
+    """True when workflow declares empty write surfaces (ADR-0209 A4)."""
+    if not workflow_id:
+        return False
+    try:
+        workflow = workflow_by_id(registry, workflow_id)
+    except WorkflowError:
+        return False
+    surfaces = workflow.get("surfaces") or {}
+    write = surfaces.get("write")
+    # Explicit empty write list => read-only. Missing write key is NOT exempt
+    # (legacy workflows may omit surfaces entirely).
+    return isinstance(write, list) and len(write) == 0
+
+
 def claim_coverage_report(
     registry: dict[str, Any],
     run_id: str | None,
@@ -677,6 +744,24 @@ def claim_coverage_report(
             "warnings": [],
         }
     _, payload = read_run(registry, run_id)
+    # ADR-0209 A4: read-only runs must not be treated as write claim subjects
+    if is_read_only_workflow(registry, str(payload.get("workflow_id") or "")):
+        return {
+            "ok": True,
+            "mode": "read_only_exempt",
+            "checked": False,
+            "read_only": True,
+            "run_id": run_id,
+            "required_paths": policy["required_paths"],
+            "tiers": policy["tiers"],
+            "claimed_paths": claimed_paths(payload),
+            "missing_files": [],
+            "missing_required_files": [],
+            "missing_advisory_files": [],
+            "warnings": [
+                "claim_policy skipped: workflow has empty write surfaces (read-only)"
+            ],
+        }
     claimed = claimed_paths(payload)
     tiers = policy["tiers"] or [
         {"id": "default", "mode": mode, "paths": policy["required_paths"]}

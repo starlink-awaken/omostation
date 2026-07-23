@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import time
+from types import SimpleNamespace
 import yaml
 from pathlib import Path
 
@@ -787,7 +788,7 @@ def test_record_task_consensus_updates_task_handoff_refs_and_artifacts(
 
 
 def test_execute_controlled_task_runs_project_verification_and_records_log(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     project_path = tmp_path / "projects" / "demo"
     project_path.mkdir(parents=True)
@@ -830,18 +831,35 @@ def test_execute_controlled_task_runs_project_verification_and_records_log(
         encoding="utf-8",
     )
 
+    calls = []
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.subprocess.run",
+        lambda *args, **kwargs: (
+            calls.append(kwargs)
+            or SimpleNamespace(returncode=0, stdout="hello", stderr="")
+        ),
+    )
     artifact = execute_controlled_task(
         tmp_path / ".omo",
         task_id="TASK-VERIFY-1",
         actor="projects/omo/tests",
+        timeout_seconds=1200,
+        command_override=f'cd "{project_path}" && printf override',
         source_ref="tests:execute:TASK-VERIFY-1",
     )
 
     assert artifact["exit_code"] == 0
-    assert artifact["log_ref"].startswith("runtime/omo/_delivery/ingress/task-execution/")
+    assert calls[0]["timeout"] == 900
+    assert artifact["log_ref"].startswith(
+        "runtime/omo/_delivery/ingress/task-execution/"
+    )
     assert (tmp_path / artifact["log_ref"]).read_text(encoding="utf-8") == "hello"
     payload = _load_yaml(task_path)
     assert payload["metadata"]["execution_audit"]["exit_code"] == 0
+    assert (
+        payload["metadata"]["execution_audit"]["command"]
+        == f'cd "{project_path}" && printf override'
+    )
     assert artifact["execution_ref"] in payload["handoff_refs"]
 
 
@@ -886,7 +904,9 @@ def test_controlled_process_start_status_and_stop_are_audited(tmp_path: Path) ->
         ),
         encoding="utf-8",
     )
-    (tmp_path / "approval.yaml").write_text("approval_status: granted\n", encoding="utf-8")
+    (tmp_path / "approval.yaml").write_text(
+        "approval_status: granted\n", encoding="utf-8"
+    )
 
     started = start_controlled_task(
         tmp_path / ".omo",
@@ -896,7 +916,12 @@ def test_controlled_process_start_status_and_stop_are_audited(tmp_path: Path) ->
     )
     try:
         assert started["status"] == "started"
-        assert get_controlled_process_status(tmp_path / ".omo", task_id="TASK-START-1")["status"] == "running"
+        assert (
+            get_controlled_process_status(tmp_path / ".omo", task_id="TASK-START-1")[
+                "status"
+            ]
+            == "running"
+        )
         restarted = restart_controlled_task(
             tmp_path / ".omo",
             task_id="TASK-START-1",
@@ -913,7 +938,10 @@ def test_controlled_process_start_status_and_stop_are_audited(tmp_path: Path) ->
             source_ref="tests:stop:TASK-START-1",
         )
     assert stopped["status"] == "stopped"
-    assert _load_yaml(task_path)["metadata"]["execution_process"]["stopped_by"] == "projects/omo/tests"
+    assert (
+        _load_yaml(task_path)["metadata"]["execution_process"]["stopped_by"]
+        == "projects/omo/tests"
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX-only")
@@ -976,6 +1004,67 @@ def test_controlled_process_exit_code_is_archived(tmp_path: Path) -> None:
     assert payload["metadata"]["execution_process"]["exit_code"] == 7
     assert payload["metadata"]["execution_process"]["status"] == "exited"
     assert started["execution_ref"] in payload["handoff_refs"]
+
+
+def test_execute_controlled_task_runs_structured_runtime_port_probe(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    task_path = tmp_path / ".omo" / "tasks" / "active" / "TASK-RUNTIME-1.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        yaml.safe_dump(
+            {
+                "id": "TASK-RUNTIME-1",
+                "title": "runtime port probe",
+                "description": "probe",
+                "status": "in_progress",
+                "task_type": "operations",
+                "risk_level": "L1",
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "assigned_to": "operator",
+                "dispatch_id": "dispatch-runtime-1",
+                "run_ref": "runtime/dispatch-runtime-1.yaml",
+                "approval_ref": None,
+                "review_ref": "runtime/review-runtime-1.yaml",
+                "started_at": "2026-07-15T00:00:00Z",
+                "source_docs": ["projects/demo/README.md"],
+                "knowledge_refs": [],
+                "entry_gate": [],
+                "evidence_required": ["execution log"],
+                "test_plan": ["probe ports"],
+                "metadata": {
+                    "command": "for port in 7437 7438; do lsof ...; done",
+                    "action_id": "runtime-check-ports",
+                    "probe_ports": [7437, 7438],
+                    "controlled_execution": True,
+                    "cockpit_only": True,
+                },
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.subprocess.run",
+        lambda args, **kwargs: SimpleNamespace(
+            returncode=0 if args[2] == "7437" else 1,
+            stdout=f"LISTEN {args[2]}" if args[2] == "7437" else "",
+            stderr="" if args[2] == "7437" else "not listening",
+        ),
+    )
+    artifact = execute_controlled_task(
+        tmp_path / ".omo",
+        task_id="TASK-RUNTIME-1",
+        actor="projects/omo/tests",
+        source_ref="tests:execute:TASK-RUNTIME-1",
+    )
+
+    assert artifact["exit_code"] == 1
+    log = (tmp_path / artifact["log_ref"]).read_text(encoding="utf-8")
+    assert "port=7437" in log
+    assert "port=7438" in log
 
 
 def test_write_task_center_runtime_artifacts_go_through_ingress(tmp_path: Path) -> None:

@@ -369,6 +369,7 @@ def record_task_execution(
     log_ref: str,
     closeout_ref: str = "",
     source_ref: str = "",
+    allow_command_override: bool = False,
     now: str | None = None,
 ) -> dict[str, Any]:
     """Record a human/worker execution result without executing a command."""
@@ -387,7 +388,9 @@ def record_task_execution(
         raise ValueError(f"task not found in planned/active/done: {task_id}")
     group, task_path = resolved
     execution_filename = f"{task_id.lower()}-{_timestamp_slug(timestamp)}.yaml"
-    execution_path = omo_dir / "_delivery" / "task-center" / "execution" / execution_filename
+    execution_path = (
+        omo_dir / "_delivery" / "task-center" / "execution" / execution_filename
+    )
     execution_ref = f".omo/_delivery/task-center/execution/{execution_filename}"
 
     with fcntl_lock(_lock_path(omo_dir)):
@@ -396,8 +399,10 @@ def record_task_execution(
         if not isinstance(metadata, dict):
             raise ValueError("task metadata must be a mapping")
         expected_command = str(metadata.get("command") or command).strip()
-        if expected_command != command.strip():
+        if not allow_command_override and expected_command != command.strip():
             raise ValueError("execution command does not match the task contract")
+        if allow_command_override:
+            expected_command = command.strip()
         execution = {
             "command": expected_command,
             "exit_code": exit_code,
@@ -412,9 +417,18 @@ def record_task_execution(
             handoff_refs.append(execution_ref)
         errors = validate_task_data(payload, group=group)
         if errors:
-            raise ValueError("invalid task after execution record: " + "; ".join(errors))
+            raise ValueError(
+                "invalid task after execution record: " + "; ".join(errors)
+            )
 
-        write_yaml_atomic(execution_path, {"task_id": task_id, "task_ref": f".omo/tasks/{group}/{task_path.name}", **execution})
+        write_yaml_atomic(
+            execution_path,
+            {
+                "task_id": task_id,
+                "task_ref": f".omo/tasks/{group}/{task_path.name}",
+                **execution,
+            },
+        )
         write_yaml_atomic(task_path, payload)
         artifact = {
             "kind": "task_execution_recorded",
@@ -424,7 +438,11 @@ def record_task_execution(
             **execution,
             "source_ref": source_ref,
         }
-        artifact_path = _delivery_root(omo_dir) / "tasks" / f"{task_id}-execution-{_timestamp_slug(timestamp)}.yaml"
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-execution-{_timestamp_slug(timestamp)}.yaml"
+        )
         write_yaml_atomic(artifact_path, artifact)
         parent_step_id = f"ingress:task-execution:{task_id}:{timestamp}"
         record_audit(
@@ -464,11 +482,13 @@ def execute_controlled_task(
     actor: str,
     timeout_seconds: int = 120,
     source_ref: str = "",
+    command_override: str | None = None,
 ) -> dict[str, Any]:
     """Run a low-risk project verification and record its result through ingress."""
+    max_timeout_seconds = 900
     if not isinstance(timeout_seconds, int) or isinstance(timeout_seconds, bool):
         raise ValueError("timeout_seconds must be an integer")
-    timeout_seconds = max(1, min(timeout_seconds, 300))
+    timeout_seconds = max(1, min(timeout_seconds, max_timeout_seconds))
     task_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
     if not task_path.exists():
         raise ValueError("Only active tasks can be controlled-executed")
@@ -477,46 +497,94 @@ def execute_controlled_task(
     metadata = payload.get("metadata") or {}
     if metadata.get("controlled_execution") is not True:
         raise ValueError("Task is not eligible for controlled execution")
-    command = str(metadata.get("command") or "").strip()
+    command = str(command_override or metadata.get("command") or "").strip()
     if not command:
         raise ValueError("Task has no execution command")
-    if str(metadata.get("action_id") or "") != "copy-verify-command":
-        raise ValueError("Only project verification actions can be controlled-executed")
+    action_id = str(metadata.get("action_id") or "")
+    if action_id not in {"copy-verify-command", "runtime-check-ports"}:
+        raise ValueError(
+            "Only project verification and runtime port probes can be controlled-executed"
+        )
 
-    match = re.fullmatch(r'cd "([^"]+)" && (.+)', command, flags=re.DOTALL)
-    if not match:
-        raise ValueError("Controlled verification command must declare an explicit working directory")
-    cwd = Path(match.group(1)).expanduser().resolve()
     workspace_root = omo_dir.parent.resolve()
-    try:
-        cwd.relative_to(workspace_root)
-    except ValueError as exc:
-        raise ValueError("Controlled verification working directory must be inside Workspace") from exc
-    command_body = match.group(2).strip()
-    if any(token in command_body for token in (";", "|", ">", "<", "$(", "`", "&&", "||", "\n", "\r")):
-        raise ValueError("Controlled verification command contains unsupported shell composition")
+    cwd = workspace_root
+    command_body = command
+    if action_id == "copy-verify-command":
+        match = re.fullmatch(r'cd "([^"]+)" && (.+)', command, flags=re.DOTALL)
+        if not match:
+            raise ValueError(
+                "Controlled verification command must declare an explicit working directory"
+            )
+        cwd = Path(match.group(1)).expanduser().resolve()
+        try:
+            cwd.relative_to(workspace_root)
+        except ValueError as exc:
+            raise ValueError(
+                "Controlled verification working directory must be inside Workspace"
+            ) from exc
+        command_body = match.group(2).strip()
+        if any(
+            token in command_body
+            for token in (";", "|", ">", "<", "$(", "`", "&&", "||", "\n", "\r")
+        ):
+            raise ValueError(
+                "Controlled verification command contains unsupported shell composition"
+            )
 
     timestamp = _utc_now()
     slug = _timestamp_slug(timestamp)
-    log_path = (
-        _delivery_root(omo_dir) / "task-execution" / f"{task_id}-{slug}.log"
-    )
+    log_path = _delivery_root(omo_dir) / "task-execution" / f"{task_id}-{slug}.log"
     try:
-        result = subprocess.run(
-            command_body,
-            cwd=cwd,
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds,
-            check=False,
-        )
-        exit_code = result.returncode
-        output = (result.stdout or "") + (result.stderr or "")
+        if action_id == "runtime-check-ports":
+            ports = metadata.get("probe_ports")
+            if (
+                not isinstance(ports, list)
+                or not ports
+                or any(
+                    isinstance(port, bool)
+                    or not isinstance(port, int)
+                    or not 1 <= port <= 65535
+                    for port in ports
+                )
+            ):
+                raise ValueError("Runtime port probe must declare valid probe_ports")
+            outputs = []
+            exit_code = 0
+            for port in ports:
+                result = subprocess.run(
+                    ["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"],
+                    cwd=cwd,
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_seconds,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    exit_code = 1
+                outputs.append(
+                    f"port={port}\n{result.stdout or ''}{result.stderr or ''}"
+                )
+            output = "\n".join(outputs)
+        else:
+            result = subprocess.run(
+                command_body,
+                cwd=cwd,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds,
+                check=False,
+            )
+            exit_code = result.returncode
+            output = (result.stdout or "") + (result.stderr or "")
     except subprocess.TimeoutExpired as exc:
         exit_code = 124
-        stdout = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or "")
-        stderr = exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        stdout = (
+            exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        )
+        stderr = (
+            exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        )
         output = stdout + stderr + f"\nTimed out after {timeout_seconds}s\n"
     write_text_atomic(log_path, output)
     log_ref = str(log_path.resolve().relative_to(workspace_root))
@@ -528,9 +596,15 @@ def execute_controlled_task(
         exit_code=exit_code,
         log_ref=log_ref,
         source_ref=source_ref,
+        allow_command_override=command_override is not None,
         now=timestamp,
     )
-    return {**artifact, "exit_code": exit_code, "log_ref": log_ref, "timed_out": exit_code == 124}
+    return {
+        **artifact,
+        "exit_code": exit_code,
+        "log_ref": log_ref,
+        "timed_out": exit_code == 124,
+    }
 
 
 def _controlled_process_context(omo_dir: Path, task_id: str) -> tuple[Path, dict[str, Any]]:

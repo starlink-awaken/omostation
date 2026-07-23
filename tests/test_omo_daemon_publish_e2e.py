@@ -11,7 +11,6 @@ the same env vars the daemon would set.
 
 from __future__ import annotations
 
-import os
 import time
 from collections.abc import Callable
 
@@ -73,9 +72,7 @@ def test_run_once_publishes_omo_audit_completed(
             f"run_once did not publish within 3s. result={result}"
         )
         env = received[0]
-        assert env.topic.startswith("omo:audit:"), (
-            f"unexpected topic: {env.topic!r}"
-        )
+        assert env.topic.startswith("omo:audit:"), f"unexpected topic: {env.topic!r}"
         assert env.topic in ("omo:audit:completed", "omo:audit:failed")
         # payload sanity
         assert "timestamp" in env.payload

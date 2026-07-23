@@ -29,6 +29,7 @@ from .lifecycle import (
     load_run_records,
     load_lock_records,
     ledger_mentions_run,
+    heal_ledger_for_run,
     claim_policy,
     claim_coverage_report,
     staged_lane_report,
@@ -38,7 +39,9 @@ from .lifecycle import (
 
 def run_check_command(check: dict[str, Any], context: dict[str, str]) -> dict[str, Any]:
     command = substitute(check["command"], context)
-    cwd = WORKSPACE / substitute([check.get("cwd") or "."], context)[0]
+    # Honor both cwd and legacy workdir (ADR-0209 A3: workdir was ignored → omo.cli ModuleNotFound)
+    cwd_raw = check.get("cwd") or check.get("workdir") or "."
+    cwd = WORKSPACE / substitute([cwd_raw], context)[0]
     env = os.environ.copy()
     matched_files = check.get("matched_files", [])
     if matched_files:
@@ -306,16 +309,32 @@ def build_observe_report(
                         "missing_locks": missing_locks,
                     }
                 )
+        # ADR-0209 A2: self-heal missing ledger rows from run yaml before warn
         if not ledger_mentions_run(registry, current_run_id):
-            findings.append(
-                {
-                    "severity": "warn",
-                    "kind": "ledger_missing_run",
-                    "message": f"ledger has no event for run: {current_run_id}",
-                    "run_id": current_run_id,
-                    "path": display_path(path),
-                }
-            )
+            healed = heal_ledger_for_run(registry, current_run_id, payload)
+            if healed and ledger_mentions_run(registry, current_run_id):
+                findings.append(
+                    {
+                        "severity": "info",
+                        "kind": "ledger_healed_from_run",
+                        "message": (
+                            f"ledger missing run event; replayed from run yaml: "
+                            f"{current_run_id}"
+                        ),
+                        "run_id": current_run_id,
+                        "path": display_path(path),
+                    }
+                )
+            else:
+                findings.append(
+                    {
+                        "severity": "warn",
+                        "kind": "ledger_missing_run",
+                        "message": f"ledger has no event for run: {current_run_id}",
+                        "run_id": current_run_id,
+                        "path": display_path(path),
+                    }
+                )
 
     severities = {finding["severity"] for finding in findings}
     decision = (
@@ -469,6 +488,175 @@ def p74_solidification_report(
     }
 
 
+def _git_name_only(args: list[str]) -> list[str]:
+    """Return normalized paths from git name-only listing."""
+    import subprocess
+
+    completed = subprocess.run(
+        args,
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return []
+    out: list[str] = []
+    for line in completed.stdout.splitlines():
+        item = line.strip()
+        if item:
+            out.append(normalize_repo_path(item))
+    return out
+
+
+def staged_files_from_git() -> list[str]:
+    return sorted(set(_git_name_only(["git", "diff", "--cached", "--name-only"])))
+
+
+def requirement_iteration_report(registry: dict[str, Any]) -> dict[str, Any]:
+    """ADR-0203 gate: staged requirement-scope files require an active workflow run.
+
+    Design notes (multi-agent worktrees):
+    - Hard fail uses **staged** files only (about to commit), not dirty unstaged noise.
+    - Working-tree (unstaged) in-scope files produce advisory warnings only.
+    - Bypass: AGCP_REQUIREMENT_ITERATION_GATE=0
+    """
+    import os
+
+    policy = registry.get("requirement_iteration_policy")
+    if not isinstance(policy, dict):
+        return {
+            "ok": True,
+            "checked": False,
+            "mode": "off",
+            "reason": "no requirement_iteration_policy",
+            "findings": [],
+            "staged_in_scope": [],
+            "unstaged_in_scope": [],
+            "active_runs": [],
+        }
+
+    mode = str(policy.get("mode") or "off")
+    if mode not in {"off", "advisory", "required"}:
+        mode = "off"
+
+    if os.environ.get("AGCP_REQUIREMENT_ITERATION_GATE", "1") in {"0", "false", "no"}:
+        return {
+            "ok": True,
+            "checked": False,
+            "mode": mode,
+            "bypassed": True,
+            "reason": "AGCP_REQUIREMENT_ITERATION_GATE disabled",
+            "findings": [],
+            "staged_in_scope": [],
+            "unstaged_in_scope": [],
+            "active_runs": [],
+        }
+
+    if mode == "off":
+        return {
+            "ok": True,
+            "checked": False,
+            "mode": mode,
+            "findings": [],
+            "staged_in_scope": [],
+            "unstaged_in_scope": [],
+            "active_runs": [],
+        }
+
+    default_include = [
+        "projects/**",
+        ".omo/_truth/**",
+        ".omo/standards/**",
+        ".omo/_knowledge/decisions/**",
+        ".omo/_knowledge/patterns/**",
+        ".agents/**",
+        "bin/**",
+        "docs/**",
+        "tests/**",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "ARCHITECTURE.md",
+        "README.md",
+    ]
+    default_exclude = [
+        ".omo/state/**",
+        ".omo/_delivery/**",
+        ".omo/_control/**",
+        "runtime/**",
+        "**/__pycache__/**",
+        "**/*.pyc",
+    ]
+    include = [
+        str(p)
+        for p in (policy.get("in_scope_paths") or default_include)
+        if isinstance(p, str)
+    ]
+    exclude = [
+        str(p)
+        for p in (policy.get("exclude_paths") or default_exclude)
+        if isinstance(p, str)
+    ]
+
+    def in_scope(path: str) -> bool:
+        if exclude and path_matches(exclude, path):
+            return False
+        return path_matches(include, path) if include else False
+
+    staged = [p for p in staged_files_from_git() if in_scope(p)]
+    working = changed_files_from_git(include_untracked=False)
+    staged_set = set(staged)
+    unstaged = [p for p in working if p not in staged_set and in_scope(p)]
+
+    runs = load_run_records(registry)
+    active_runs = sorted(
+        run_id
+        for run_id, (_, payload) in runs.items()
+        if payload.get("status") == "active"
+    )
+
+    findings: list[dict[str, Any]] = []
+    if staged and not active_runs:
+        severity = "halt" if mode == "required" else "warn"
+        findings.append(
+            {
+                "severity": severity,
+                "kind": "requirement_iteration_no_active_run",
+                "message": (
+                    f"staged requirement-scope files without active agent-workflow run "
+                    f"({len(staged)} file(s)); start+claim first (ADR-0203)"
+                ),
+                "files": staged[:20],
+            }
+        )
+    if unstaged and not active_runs:
+        findings.append(
+            {
+                "severity": "warn",
+                "kind": "requirement_iteration_dirty_without_run",
+                "message": (
+                    f"unstaged requirement-scope dirty files without active run "
+                    f"({len(unstaged)} file(s)); advisory only"
+                ),
+                "files": unstaged[:20],
+            }
+        )
+
+    severities = {f["severity"] for f in findings}
+    ok = "halt" not in severities
+    return {
+        "ok": ok,
+        "checked": True,
+        "mode": mode,
+        "bypassed": False,
+        "staged_in_scope": staged,
+        "unstaged_in_scope": unstaged,
+        "active_runs": active_runs,
+        "findings": findings,
+        "policy_adr": policy.get("adr"),
+    }
+
+
 def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str, Any]:
     runs = load_run_records(registry)
     events = ledger_events(registry)
@@ -551,6 +739,19 @@ def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str,
         else "continue"
     )
     p74_report = p74_solidification_report(registry, events, runs)
+    req_report = requirement_iteration_report(registry)
+    for finding in req_report.get("findings") or []:
+        findings.append(finding)
+    severities = {
+        finding["severity"] for finding in [*findings, *observe_report["findings"]]
+    }
+    decision = (
+        "halt"
+        if "halt" in severities
+        else "escalate"
+        if "escalate" in severities
+        else "continue"
+    )
     return {
         "ok": decision == "continue",
         "decision": decision,
@@ -560,6 +761,7 @@ def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str,
         "findings": findings,
         "slo": registry.get("compliance_slo") or {},
         "p74_solidification": p74_report,
+        "requirement_iteration": req_report,
     }
 
 
@@ -589,6 +791,16 @@ def print_compliance_report(report: dict[str, Any], as_json: bool) -> None:
                     f"  - {wf['workflow_id']}: {wf['silent_health']} "
                     f"(run={wf['has_recent_run']}, check={wf['has_check_coverage']})"
                 )
+    req = report.get("requirement_iteration") or {}
+    if req:
+        label = "OK" if req.get("ok") else "HALT" if not req.get("ok") else "WARN"
+        if req.get("bypassed"):
+            label = "BYPASS"
+        print(
+            f"requirement_iteration: [{label}] mode={req.get('mode')} "
+            f"staged={len(req.get('staged_in_scope') or [])} "
+            f"active_runs={len(req.get('active_runs') or [])}"
+        )
 
 
 def last_ledger_event(
@@ -674,6 +886,8 @@ def build_status_report(
             "findings": compliance["findings"],
             "observe_findings": compliance["observe"]["findings"],
         },
+        "requirement_iteration": compliance.get("requirement_iteration")
+        or requirement_iteration_report(registry),
         "staged_lane": staged_lane,
         "changed_files": changed_files,
         "claim_coverage": claim_coverage,
@@ -703,6 +917,14 @@ def print_status_report(report: dict[str, Any], as_json: bool) -> None:
         for warning in claim_coverage.get("warnings") or []:
             print(f"[WARN] claim_policy: {warning}")
     print(f"compliance={report['compliance']['decision']}")
+    req = report.get("requirement_iteration") or {}
+    if req:
+        flag = "ok" if req.get("ok") else "attention"
+        print(
+            f"requirement_iteration={flag} mode={req.get('mode')} "
+            f"staged={len(req.get('staged_in_scope') or [])} "
+            f"active={len(req.get('active_runs') or [])}"
+        )
     print(f"next: {report['recommended_next']}")
 
 
