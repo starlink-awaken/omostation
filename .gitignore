@@ -93,6 +93,9 @@ docs/generated/
 graphify-out/
 agent-runtime/
 _derivation_logs/
+# codebase-memory-mcp local knowledge graph (regenerate via MCP index_repository;
+# ~tens of MB compressed; do not commit — see docs/operations/codebase-memory.md)
+.codebase-memory/
 
 # ---------------------------------------------------------------------------
 # 6. 构建产物与语言缓存

@@ -63,7 +63,7 @@
 
 → [Closeout 记录](closeout/) — 各轮关闭记录和复盘（详见 `docs/closeout/`）
 
-→ [操作 SOP](operations/) — 运维手册、清单、模板（详见 `docs/operations/`）
+→ [操作 SOP](operations/) — 运维手册、清单、模板（详见 `docs/operations/`；含 [codebase-memory](operations/codebase-memory.md) 结构图用法）
 
 → [架构设计](architecture/) — 方案设计文档（详见 `docs/architecture/`）
 
