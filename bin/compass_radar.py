@@ -188,13 +188,29 @@ def _count_adr_renumber_signals(ws_root: Path) -> int:
 
 
 def _count_concurrent_conflict_signals(ws_root: Path) -> int:
-    """Active agent-workflow locks beyond 1 + multi-worktree pressure as concurrency signal."""
+    """Concurrent agent pressure = distinct active runs + worktree fan-out.
+
+    一个 agent run 持有多个 scope-lock (root-gate / project / path*),
+    故并发竞争按 distinct run_id 计, 不按 scope-lock 文件数计 —
+    否则单 run 多 scope 会把 concurrent_conflicts 虚高数倍
+    (实测 12 个 scope-lock 实为 3 个 run). 详见 collect_governance_execution_surface.
+    """
+    import yaml  # noqa: PLC0415
+
     locks_dir = ws_root / ".omo" / "_delivery" / "agent-workflows" / "locks"
-    active_locks = 0
+    run_ids: set[str] = set()
     if locks_dir.is_dir():
-        active_locks = sum(1 for p in locks_dir.glob("*.yaml") if p.is_file())
-    # extra locks beyond self imply concurrent agents contending
-    lock_pressure = max(0, active_locks - 1)
+        for p in locks_dir.glob("*.lock.yaml"):
+            if not p.is_file():
+                continue
+            try:
+                payload = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+            except (OSError, yaml.YAMLError):
+                continue
+            rid = payload.get("run_id") if isinstance(payload, dict) else None
+            if isinstance(rid, str) and rid:
+                run_ids.add(rid)
+    lock_pressure = max(0, len(run_ids) - 1)
     # worktree fan-out (excluding main) as soft concurrency signal
     try:
         res = subprocess.run(
