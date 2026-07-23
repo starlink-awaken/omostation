@@ -190,3 +190,6 @@ runtime/.watch-dispatch-stamps.json
 # 生成 dashboard 制品 + 临时下载 (2026-07-23 清理)
 artifacts-*.html
 /archive-*/
+
+# accidental root ecos scaffold (SSOT lives in projects/ecos)
+/ecos/
