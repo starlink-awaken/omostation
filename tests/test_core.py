@@ -864,8 +864,8 @@ class _MockCronScheduler:
     def __init__(self):
         self.is_running = True
         self.tick_count = 42
-        self.start_time = datetime.now(UTC)
-        self.last_tick_time = datetime.now(UTC)
+        self.start_time = datetime.now(UTC).timestamp()
+        self.last_tick_time = datetime.now(UTC).timestamp()
 
     def start(self):
         pass
