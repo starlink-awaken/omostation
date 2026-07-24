@@ -1,0 +1,16 @@
+---
+id: NEEDS-HUMAN-P80-PHASE45-BOS-STDIO
+title: "P80 T1.2 residual: bos_stdio_ratio < 65% (live ~69.2%)"
+status: candidate
+needs-human: true
+priority: P1
+owner: human
+created_at: "2026-07-24T02:42:00Z"
+endpoint: bos_stdio_ratio
+evidence:
+  - .omo/_knowledge/audits/2026-07-24-phase45-reverify.md
+  - projects/agora/etc/bos-services.yaml
+desc: >
+  Live inventory: 169 services; stdio-ish (stdio+mcp_stdio)=117; ratio=117/169≈0.692
+  fails phase45-plan target <0.65. Human/engineering: migrate more transports off
+  stdio/mcp_stdio (W3 BOS pilot) or supersede metric with ADR.

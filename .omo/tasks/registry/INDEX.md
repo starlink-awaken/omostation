@@ -10,12 +10,13 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (6 个)
+## Planned Tasks (7 个)
 | ID | Title | Status |
 |----|-------|--------|
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
 | cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
 | needs-human-p80-phase45-agora-health | P80 T1.2 residual: agora-gateway HTTP /health li | candidate |
+| needs-human-p80-phase45-bos-stdio | P80 T1.2 residual: bos_stdio_ratio < 65% (live ~ | candidate |
 | needs-human-p80-phase45-task-entropy | P80 T1.2 residual: task_files entropy cleanup to | candidate |
 | needs-human-p80-phase45-tick-timeout | P80 T1.2 residual: implement cron.tick_timeout_s | candidate |
 | needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 true | candidate |
@@ -61,5 +62,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-24 (依据 `omo state sync-tasks` 与真实目录重算: done=106, planned=6, active=0, archived=6 顶层)*
+*Updated: 2026-07-24 (依据 `omo state sync-tasks` 与真实目录重算: done=106, planned=7, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
