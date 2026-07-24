@@ -49,7 +49,7 @@ def parse_index(index_path: Path) -> dict:
     # 模式 1: markdown 链接 (NNNN-xxx.md)
     pattern_link = re.compile(r"\(([0-9]{4}-[^)]+\.md)\)")
     # 模式 2: 表格中的纯文本 NNNN-xxx.md
-    pattern_text = re.compile(r"(?<![\w/])([0-9]{4}-[a-z0-9-]+\.md)(?![\w/])")
+    pattern_text = re.compile(r"(?<![\w/-])([0-9]{4}-[a-z0-9-]+\.md)(?![\w/])")
     refs = set(pattern_link.findall(content)) | set(pattern_text.findall(content))
     return {"adrs": sorted(refs), "raw": content}
 
