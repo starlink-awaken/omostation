@@ -1,0 +1,8 @@
+# 根仓 ruff 配置 — 统一 CI ruff select 行为
+# 根因: 根仓无 pyproject 时, CI (ruff check 从根仓 cwd 跑) 用 ruff 宽默认 select
+# (含 I001/PLW1509/RUF022/UP045 等), 和子模块 pyproject (默认 E/F/W) 不一致,
+# 导致"本地绿 CI 红". 加此 [tool.ruff.lint] 让 CI 用默认规则集 (同子模块).
+# 注: 只配 ruff, 无 [project] (不影响 uv build — 子模块各自 pyproject).
+[tool.ruff.lint]
+# 默认规则集 E/F/W, 不收紧已有代码 (同 omo/agora/ecos/cockpit 子模块 pyproject)
+ignore = ["E501", "E402"]
