@@ -60,6 +60,10 @@ metrics_caliber:
   scheme: A
   adr: ["0210", "0225", "0226"]
   inventory_ref: .omo/_knowledge/audits/2026-07-19-physical-node-inventory.json
+  # P1 真机测量 2026-07-24 (STRAT-P81): macmini reachable (ping 7.4ms + SSH:22 key 自动),
+  # env_class=physical_multi_host (local-mac + macmini, reachable=2). G-DEL.3 p99=159.83ms
+  # WiFi (≥100ms 未达标, 待 macmini 以太网重测). Evidence:
+  # audits/2026-07-24-physical-g-del3-quick.json + 2026-07-24-physical-g-del3-measure.md
   env_classes:
     - id: in-process_simulation
       aliases:
