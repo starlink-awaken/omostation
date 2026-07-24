@@ -1,0 +1,13 @@
+---
+id: NEEDS-HUMAN-P81-M1-ACCEPTANCE
+title: "P81 S0.1: M1 提前验收申请 — CLOSED (ADR-0228)"
+status: closed
+closed_at: "2026-07-24T05:45:00Z"
+priority: P0
+stage: S0
+strat: STRAT-P81
+decision_type: m1_acceptance
+close_reason: >
+  Human accepted M1 on 2026-07-24. Close reason: ADR-0228
+  (0228-m1-acceptance-physical-deferred-reorder.md) D1 — 收敛期验收通过。
+closeout_adr: .omo/_knowledge/decisions/0228-m1-acceptance-physical-deferred-reorder.md

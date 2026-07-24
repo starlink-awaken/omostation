@@ -1,0 +1,31 @@
+---
+id: NEEDS-HUMAN-BATCH1-G-DEL-2B-APPLICATION
+title: "Batch1 B4: G-DEL.2b 达标申请（process-local · 待人类宣布）"
+status: candidate
+needs-human: true
+priority: P0
+owner: human
+created_at: "2026-07-24T05:50:00Z"
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+source_docs:
+  - .omo/_knowledge/audits/2026-07-24-batch1-g-del-2b-measure.md
+  - .omo/plans/strat-p81-batch1-workorder.md
+entry_gate: []
+evidence_required:
+  - process-local measure report
+  - human announce decision
+evidence:
+  - .omo/_knowledge/audits/2026-07-24-batch1-g-del-2b-measure.md
+test_plan:
+  - Human reviews n=30 process-local rate and decides official G-DEL.2b announce
+desc: >
+  Measure n=30 rate=1.0000 env_class=in-process_simulation. Do NOT self-announce official pass.

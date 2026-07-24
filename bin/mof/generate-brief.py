@@ -37,6 +37,78 @@ def write_brief_if_changed(content: str) -> bool:
     return True
 
 
+PHYSICAL_HOSTS_CARD_ID = "NEEDS-HUMAN-P80-PHYSICAL-HOSTS"
+PHYSICAL_HOSTS_CARD_STEM = "needs-human-p80-physical-hosts"
+
+
+def physical_hosts_suspend_day_count(
+    card_path: Path | None = None,
+    *,
+    now: datetime | None = None,
+) -> int | None:
+    """Days since physical-hosts needs-human card was created (ADR-0228 D3).
+
+    Returns None if the card is absent. Day-count is floor of elapsed UTC days
+    since created_at (minimum 0).
+    """
+    import yaml  # noqa: PLC0415
+
+    path = card_path or (
+        WORKSPACE / ".omo" / "tasks" / "planned" / f"{PHYSICAL_HOSTS_CARD_STEM}.yaml"
+    )
+    if not path.is_file():
+        return None
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return None
+    created = data.get("created_at") or data.get("created")
+    if not created:
+        return 0
+    try:
+        created_s = str(created).replace("Z", "+00:00")
+        created_dt = datetime.fromisoformat(created_s)
+        if created_dt.tzinfo is None:
+            created_dt = created_dt.replace(tzinfo=timezone.utc)
+        now_dt = now or datetime.now(timezone.utc)
+        delta = now_dt - created_dt.astimezone(timezone.utc)
+        return max(0, int(delta.total_seconds() // 86400))
+    except Exception:
+        return 0
+
+
+def physical_hosts_weekly_reaffirmation(
+    *,
+    now: datetime | None = None,
+    card_path: Path | None = None,
+) -> dict | None:
+    """Build BRIEF Inbox reaffirmation line while physical-hosts card exists.
+
+    Always emits when card present (session-brief regeneration = reaffirmation
+    surface; day-count is the suspend duration signal).
+    """
+    days = physical_hosts_suspend_day_count(card_path, now=now)
+    if days is None:
+        return None
+    path = card_path or (
+        WORKSPACE / ".omo" / "tasks" / "planned" / f"{PHYSICAL_HOSTS_CARD_STEM}.yaml"
+    )
+    try:
+        rel = str(path.resolve().relative_to(WORKSPACE.resolve()))
+    except ValueError:
+        rel = str(path)
+    return {
+        "id": f"{PHYSICAL_HOSTS_CARD_ID}-WEEKLY",
+        "title": (
+            f"物理底座挂起周重申（ADR-0228 D3）: needs-human-p80-physical-hosts 仍开放 · "
+            f"挂起第 {days} 天 · 勿宣称 G-DEL.1/3 物理达标"
+        ),
+        "path": rel,
+        "source": "physical-suspend-reminder",
+        "suspend_day_count": days,
+    }
+
+
 def scan_decision_inbox() -> list[dict]:
     """扫描所有的 needs-human 卡片或任务."""
     import yaml  # noqa: PLC0415
@@ -49,8 +121,15 @@ def scan_decision_inbox() -> list[dict]:
         for p in tasks_dir.rglob("*.yaml"):
             try:
                 content = p.read_text(encoding="utf-8")
+                # closed cards may still contain the substring — skip closed/
+                if "closed" in p.parts:
+                    continue
                 if "needs-human" in content:
                     data = yaml.safe_load(content) or {}
+                    if str(data.get("status", "")).lower() == "closed":
+                        continue
+                    if data.get("needs-human") is False:
+                        continue
                     tasks.append(
                         {
                             "id": data.get("id") or p.stem,
@@ -83,6 +162,11 @@ def scan_decision_inbox() -> list[dict]:
                     )
             except Exception:
                 pass
+
+    # ADR-0228 D3: weekly reaffirmation of physical suspend while card open
+    reaffirm = physical_hosts_weekly_reaffirmation()
+    if reaffirm:
+        tasks.insert(0, reaffirm)
 
     return tasks
 
@@ -401,6 +485,26 @@ def generate_brief_content() -> str:
     lines.append(
         f"| **知识复用** | KOS 索引篇: `{x3['knowledge_reuse']}` | 正常 | `kos/` 篇目 |"
     )
+    # B5: per-role completion/cost rows (pointerized X3)
+    role_metrics_path = (
+        WORKSPACE / ".omo" / "_truth" / "registry" / "x3-role-metrics.yaml"
+    )
+    if role_metrics_path.is_file():
+        try:
+            import yaml as _yaml  # noqa: PLC0415
+
+            rm = _yaml.safe_load(role_metrics_path.read_text(encoding="utf-8")) or {}
+            roles = rm.get("roles") or {}
+            for role_id, row in roles.items():
+                rate = row.get("completion_rate", "?")
+                cost = row.get("cost_units", "?")
+                rate_s = f"{rate:.2%}" if isinstance(rate, float) else str(rate)
+                lines.append(
+                    f"| **角色·{role_id}** | 完成率 `{rate_s}` · 成本单位 `{cost}` | "
+                    f"正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |"
+                )
+        except Exception:
+            pass
     lines.append("")
 
     # 3. 治理健康指标折叠逻辑 (Health Folding - WS-5)

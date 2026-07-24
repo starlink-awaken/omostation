@@ -1,0 +1,61 @@
+id: NEEDS-HUMAN-P81-M1-ACCEPTANCE
+title: 'P81 S0.1: M1 提前验收申请（ADR-0210 Confirmation · 人类拍板）'
+status: candidate
+needs-human: true
+priority: P0
+owner: human
+created_at: '2026-07-24T03:36:00Z'
+stage: S0
+strat: STRAT-P81
+decision_type: m1_acceptance
+self_claim_forbidden: true
+evidence_pointers:
+  daemon_online:
+    ssot: .omo/state/system.yaml::service_online_ratio + runtime_health_summary
+    threshold_adr0210: daemon 在线率 ≥ 90%（去假阳性后口径）
+    remeasure_cmd: 'python3 bin/gac/m1-closeout-report.py --json  # checks.g-conv.2'
+  claim_main_conflict:
+    ssot: bin/gac/m1-closeout-report.py + bin/gac/swarm-discipline-cli.py window-status
+    threshold_adr0210: 并发 agent 主仓冲突 = 0（gac-worktree claim 覆盖率 100%）
+    note: m1_verdict 可能仍为 window_not_started/window_open — 不构成自宣称通过
+  health_anomaly:
+    ssot: .omo/state/system.yaml::health_score + governance_anomaly_score
+    threshold_adr0210: health_score 新口径落地且与 daemon 实测强相关
+    note: governance_anomaly_score 口径 higher=better (0–100)
+adr0210_confirmation:
+  source: .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md##Confirmation
+  checklist:
+  - id: C1
+    text: daemon 在线率 ≥ 90%（去假阳性后口径）
+    pointer: .omo/state/system.yaml::service_online_ratio
+  - id: C2
+    text: 并发 agent 主仓冲突 = 0（gac-worktree claim 覆盖率 100%）
+    pointer: bin/gac/m1-closeout-report.py / swarm-discipline window
+  - id: C3
+    text: health_score 新口径落地且与 daemon 实测强相关（非声明面主导）
+    pointer: .omo/state/system.yaml::health_score + health_score_source
+human_actions:
+- 审阅三门禁 pointer 证据（勿依赖本卡内嵌快照数字）
+- 若通过：补「M1 验收通过」ADR，并把 strat-p81-agent-execution-brief.md §1 表 S1 翻 OPEN
+- 若不通过：在本卡 status 写拒绝原因 + 缺口清单
+desc: 'STRAT-P81 Stage0 S0.1 首推：向人类申请 M1（收敛期）提前验收。 证据全部指针化引用 SSOT / CLI，对照 ADR-0210
+  §Confirmation 三条。 Agent 不得在拍板前宣称已进入兑现期；S1 保持 LOCKED。
+
+  '
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+source_docs:
+- .omo/tasks/planned/needs-human-p81-m1-acceptance.yaml
+evidence_required:
+- human decision recorded
+test_plan:
+- Human reviews card and updates status

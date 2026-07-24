@@ -1,16 +1,37 @@
----
 id: NEEDS-HUMAN-P80-PHASE45-BOS-STDIO
-title: "P80 T1.2 residual: bos_stdio_ratio < 65% (live ~69.2%)"
+title: 'P80 T1.2 residual: bos_stdio_ratio < 65% (live ~69.2%) — REAL migration pending'
 status: candidate
 needs-human: true
 priority: P1
 owner: human
-created_at: "2026-07-24T02:42:00Z"
+created_at: '2026-07-24T02:42:00Z'
+reopened_at: '2026-07-24T04:01:00Z'
 endpoint: bos_stdio_ratio
 evidence:
-  - .omo/_knowledge/audits/2026-07-24-phase45-reverify.md
-  - projects/agora/etc/bos-services.yaml
-desc: >
-  Live inventory: 169 services; stdio-ish (stdio+mcp_stdio)=117; ratio=117/169≈0.692
-  fails phase45-plan target <0.65. Human/engineering: migrate more transports off
-  stdio/mcp_stdio (W3 BOS pilot) or supersede metric with ADR.
+- .omo/_knowledge/audits/2026-07-24-p81-s0-phase45-residuals.md
+- projects/agora/etc/bos-services.yaml
+desc: 'Live inventory: 169 services; stdio-ish (stdio+mcp_stdio)=117; ratio=117/169≈0.692
+  fails phase45-plan target <0.65. STRAT-P81 S0 attempted label-only mcp_proxy flip
+  was REJECTED (resolver still invoke_stdio for non-internal; no mcp_tool). Reverted.
+  Human/engineering: real migration requires internal module_path/func_name or mcp_proxy
+  with mcp_tool + ProxyManager dispatch proof — not transport label edits.
+
+  '
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+source_docs:
+- .omo/_knowledge/audits/2026-07-24-p81-s0-phase45-residuals.md
+- projects/agora/etc/bos-services.yaml
+evidence_required:
+- human decision recorded
+test_plan:
+- Human reviews card and updates status

@@ -69,7 +69,25 @@ class AgentRegistry:
     def mark_unhealthy(self, agent_id: str) -> None:
         self.heartbeat(agent_id, healthy=False)
 
-    def list_agents(self, *, role_id: str | None = None, healthy_only: bool = False) -> list[AgentRecord]:
+    def detect_false_death(
+        self, *, now: float | None = None, stale_after_s: float = 30.0
+    ) -> list[str]:
+        """Mark agents with stale heartbeats as unhealthy; return agent_ids found dead.
+
+        Sim false-death detector for Batch1 C1 (multi-process nodes not required —
+        logical nodes in one process are enough for meets_sim_harness tests).
+        """
+        now = time.time() if now is None else now
+        dead: list[str] = []
+        for aid, rec in self._agents.items():
+            if rec.healthy and (now - rec.last_heartbeat) > stale_after_s:
+                rec.healthy = False
+                dead.append(aid)
+        return dead
+
+    def list_agents(
+        self, *, role_id: str | None = None, healthy_only: bool = False
+    ) -> list[AgentRecord]:
         out = list(self._agents.values())
         if role_id is not None:
             out = [a for a in out if a.role_id == role_id]

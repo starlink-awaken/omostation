@@ -1,14 +1,33 @@
----
 id: NEEDS-HUMAN-P80-PHYSICAL-HOSTS
-title: "P80 T2: expand physical hosts ≥4 + G-DEL.3 true two-host measure"
+title: 'P80 T2: expand physical hosts ≥4 + G-DEL.3 true two-host measure'
 status: candidate
 needs-human: true
 priority: P0
 owner: human
-created_at: "2026-07-24T02:29:04.787388+00:00"
+created_at: '2026-07-24T02:29:04.787388+00:00'
 evidence:
-  - .omo/_knowledge/audits/2026-07-24-physical-hosts-failclosed.md
-desc: >
-  Probe 2026-07-24: only local host reachable; macmini 192.168.31.210 SSH timeout;
-  y7000p not found. Cannot claim G-DEL.1/3 physical pass. Human: restore LAN nodes
-  or approve cloud node plan.
+- .omo/_knowledge/audits/2026-07-24-physical-hosts-failclosed.md
+- .omo/_knowledge/audits/2026-07-24-p81-s0-physical-probe-failclosed.md
+desc: 'Probe 2026-07-24 (P80+P81 S0.3 re-probe): only local host reachable; still
+  fail-closed; macmini 192.168.31.210 SSH timeout; y7000p not found. Cannot claim
+  G-DEL.1/3 physical pass. Human: restore LAN nodes or approve cloud node plan.
+
+  '
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+source_docs:
+- .omo/_knowledge/audits/2026-07-24-physical-hosts-failclosed.md
+- .omo/_knowledge/audits/2026-07-24-p81-s0-physical-probe-failclosed.md
+evidence_required:
+- human decision recorded
+test_plan:
+- Human reviews card and updates status

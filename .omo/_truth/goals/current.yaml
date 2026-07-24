@@ -295,7 +295,7 @@ goals:
   progress: 100.0
   status: active
   kpi: '2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)'
-  measured_documents: 5152
+  measured_documents: 5193
   measured_at: '2026-07-24T02:29:04.787388+00:00'
   q4_floor_met: true
   q1_2027_floor_met: true
@@ -312,7 +312,7 @@ goals:
   vector: V-leap-prep
   bet_status: active
   created_at: '2026-07-18T08:00:00Z'
-  remeasure_audit: .omo/_knowledge/audits/2026-07-24-kos-remeasure.md
+  remeasure_audit: .omo/_knowledge/audits/2026-07-24-batch1-kos-remeasure.md
 health_targets:
   mcp_isolation_score: 100
   overall: 99
