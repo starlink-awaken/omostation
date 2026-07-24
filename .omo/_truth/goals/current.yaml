@@ -296,7 +296,7 @@ goals:
   status: active
   kpi: '2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)'
   measured_documents: 5152
-  measured_at: '2026-07-19T23:04:00Z'
+  measured_at: '2026-07-24T02:29:04.787388+00:00'
   q4_floor_met: true
   q1_2027_floor_met: true
   evidence: .omo/_knowledge/audits/2026-07-20-kos-q1-floor-mcp.md
@@ -332,3 +332,5 @@ source_plan_refs:
 start_date: '2026-06-04'
 status: active
 theme: P42 治理面 SSOT 同步纪元 — 14 phase 复盘合并 (Governance SSOT Catch-up)
+  remeasure_audit: .omo/_knowledge/audits/2026-07-24-kos-remeasure.md
+

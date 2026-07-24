@@ -1,0 +1,30 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-24
+related:
+  - ../x3-value-stack.yaml
+  - ../../../plans/strat-p80-agent-execution-brief.md
+---
+# X3 工作交付月度软门禁（T4.1）
+#
+# 仅 warning 进 Decision Inbox，不阻断 workflow / CI。
+# 阈值配置化：修改 monthly_min_deliveries，勿改 generate-brief 硬编码。
+
+x3_delivery_soft_gate:
+  enabled: true
+  # 建议默认 8/月（STRAT-P80 brief）；人类可改此字段
+  monthly_min_deliveries: 8
+  # 环比窗口：本自然月 vs 上一自然月
+  compare_previous_month: true
+  warning_class: soft
+  inbox_tag: needs-human
+  source_scan:
+    - spaces/**/*.yaml
+  match_keywords:
+    - delivery
+    - deliverable
+  notes: >
+    Soft gate only. Under-threshold emits Decision Inbox warning card text
+    in BRIEF.md; does not fail generate-brief exit code.

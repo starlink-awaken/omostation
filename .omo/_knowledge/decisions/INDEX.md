@@ -149,7 +149,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0171 | 宪法 Wave 1 — 治理规则 severity 分层 (red/gray, executor 推导, 159 red + 12 gray) | ACCEPTED | 2026-07-08 | governance-team | 0171-constitution-wave1-severity-classification.md |
 | 0172 | P78 端口注册表收敛 (deprecated 清理 + transport 字段) | ACCEPTED | 2026-07-08 | governance-team | 0172-p78-port-registry-convergence.md |
 | 0173 | P78 Phase 2 基线重放 + Foundry v2 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0173-p78-phase2-baseline-foundry-v2.md |
-| STRAT-P79 | P79 2026H2 治理巩固 + Foundry 运营化路线图 (5 phase) | PROPOSED | 2026-07-08 | governance-team | STRAT-P79-strategic-roadmap.md |
+| STRAT-P79 | P79 2026H2 治理巩固 + Foundry 运营化路线图 (5 phase) | ACCEPTED | 2026-07-08 | governance-team | STRAT-P79-strategic-roadmap.md |
+| STRAT-P80 | P80 收敛期收尾 — M1 提前打绿 + 兑现期底座前置 (4 战线) | PROPOSED | 2026-07-24 | 夏明星 | STRAT-P80-strategic-roadmap.md |
 | 0174 | P79 Phase 1 Foundry v2 cron 集成 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0174-p79-phase1-foundry-v2-cron.md |
 | 0175 | P79 Phase 2 Health 100 (bare ports 分类 + env var 迁移) | ACCEPTED | 2026-07-08 | governance-team | 0175-p79-phase2-health-100.md |
 | 0176 | P79 Phase 3 跨仓零残留 (ecos 结构化对齐) | ACCEPTED | 2026-07-08 | governance-team | 0176-p79-phase3-cross-repo-zero-residual.md |
@@ -288,7 +289,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ### P79 — 2026H2 治理巩固 + Foundry 运营化 (STRAT-P79)
 
-- STRAT-P79: P79 战略路线图 (5 phase) — **PROPOSED** | 2026-07-08 | omostation P79 | STRAT-P79-strategic-roadmap.md
+- STRAT-P79: P79 战略路线图 (5 phase) — **ACCEPTED** (archived via ADR-0178) | 2026-07-08 | omostation P79 | STRAT-P79-strategic-roadmap.md
 - ADR-0175: P79 Phase 2 (Health 100) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0175-p79-phase2-health-100.md
 - ADR-0176: P79 Phase 3 (跨仓零残留) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0176-p79-phase3-cross-repo-zero-residual.md
 - ADR-0177: P79 Phase 4 (文档刷新) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0177-p79-phase4-docs-refresh.md
