@@ -164,25 +164,22 @@ def _count_orphan_worktrees(ws_root: Path) -> int:
 
 
 def _count_adr_renumber_signals(ws_root: Path) -> int:
-    """Real ADR number collisions (duplicate ids) — not text mentions.
+    """Real ADR number collisions (duplicate ids) — via bin/adr/_lib 单一真相源.
 
-    原 grep marker 词 (renumber/撞号/抢号/ADR-0202 D4) 会把'治理撞号的决策文档'
-    当成'撞号事件', 形成反指标 (治理撞号写越多 ADR, 分越低). 真实撞号 =
-    duplicate 编号, 与 bin/adr/adr-coverage.py::duplicate_numbers 同源.
-    实测 186 ADR 0 duplicate.
+    复用 bin/adr/_lib.py::duplicate_adr_numbers (与 adr-coverage.check_coverage
+    同源), 消除两处重复的编号解析 + duplicate 检测 (/simplify finding a DRY).
     """
-    import re  # noqa: PLC0415
-    from collections import Counter
-
-    decisions = ws_root / ".omo" / "_knowledge" / "decisions"
-    if not decisions.is_dir():
+    adr_lib = Path(__file__).resolve().parent / "adr"
+    if str(adr_lib) not in sys.path:
+        sys.path.insert(0, str(adr_lib))
+    try:
+        from _lib import (
+            duplicate_adr_numbers,  # type: ignore[reportMissingImports]  # noqa: PLC0415
+        )
+    except ImportError:
         return 0
-    nums: list[str] = []
-    for p in decisions.glob("*.md"):
-        m = re.match(r"(\d{4})-", p.name)
-        if m:
-            nums.append(m.group(1))
-    return sum(1 for c in Counter(nums).values() if c > 1)
+    decisions = ws_root / ".omo" / "_knowledge" / "decisions"
+    return len(duplicate_adr_numbers(decisions))
 
 
 def _count_concurrent_conflict_signals(ws_root: Path) -> int:
@@ -466,8 +463,8 @@ def run_radar(omo_dir: Path) -> dict:
 
     try:
         from c2g.strategy import (  # type: ignore[reportMissingImports]  # noqa: PLC0415, E402
-            _collect_metrics,
             _check_anomalies,
+            _collect_metrics,
             _list_task_files,
         )
     except ImportError as exc:
