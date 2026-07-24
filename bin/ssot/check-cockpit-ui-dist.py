@@ -6,7 +6,12 @@ import subprocess
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-COCKPIT_UI_DIR = WORKSPACE / "projects" / "cockpit-ui"
+configured_dist = os.environ.get("COCKPIT_UI_DIST", "").strip()
+if configured_dist:
+    configured_path = Path(configured_dist).expanduser()
+    COCKPIT_UI_DIR = configured_path.parent if configured_path.name == "dist" else configured_path
+else:
+    COCKPIT_UI_DIR = WORKSPACE / "projects" / "cockpit-ui"
 DIST_INDEX = COCKPIT_UI_DIR / "dist" / "index.html"
 
 
