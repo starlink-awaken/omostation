@@ -4,8 +4,12 @@ import argparse
 import asyncio
 
 from agora.cli.output import OutputFormatter
-from agora.mcp_registry.lifecycle import LifecycleManager  # type: ignore[import-not-found]
-from agora.mcp_registry.orchestrator import Orchestrator  # type: ignore[import-not-found]
+from agora.mcp_registry.lifecycle import (
+    LifecycleManager,  # type: ignore[import-not-found]
+)
+from agora.mcp_registry.orchestrator import (
+    Orchestrator,  # type: ignore[import-not-found]
+)
 from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
 
 
@@ -243,7 +247,9 @@ def _cmd_repo_remove(catalog: ToolCatalog, args: argparse.Namespace) -> int:
 
 def _cmd_repo_run(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Run a natural language query through the Smart Router."""
-    from agora.mcp_registry.embeddings import EmbeddingStore  # type: ignore[import-not-found]
+    from agora.mcp_registry.embeddings import (
+        EmbeddingStore,  # type: ignore[import-not-found]
+    )
     from agora.mcp_registry.router import SmartRouter  # type: ignore[import-not-found]
 
     out = OutputFormatter()

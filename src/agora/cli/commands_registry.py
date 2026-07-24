@@ -16,7 +16,11 @@ from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 
 def cmd_register(args):
     """Register a service."""
-    from agora.core.service_base import Service, parse_protocol_config, parse_tags  # type: ignore[import-not-found]
+    from agora.core.service_base import (  # type: ignore[import-not-found]
+        Service,
+        parse_protocol_config,
+        parse_tags,
+    )
 
     registry = get_registry()
 
@@ -39,7 +43,9 @@ def cmd_register(args):
         return 1
 
     if args.name == "eidos" and args.mcp is None:
-        from agora.pipelines.eidos_pipeline import EIDOS_PIPELINE_SERVICE  # type: ignore[import-not-found]
+        from agora.pipelines.eidos_pipeline import (
+            EIDOS_PIPELINE_SERVICE,  # type: ignore[import-not-found]
+        )
 
         print(f"Registering {EIDOS_PIPELINE_SERVICE['name']}...")
         print(f"Capabilities: {EIDOS_PIPELINE_SERVICE['capabilities']}")

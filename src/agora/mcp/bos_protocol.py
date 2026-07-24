@@ -131,7 +131,7 @@ class MCPStdioAdapter:
             future = loop.run_in_executor(None, self._proc.stdout.readline)
             line = await asyncio.wait_for(future, timeout=self.timeout)
             return json.loads(line.strip())
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return {"error": "mcp_request_timeout"}
         except (json.JSONDecodeError, BrokenPipeError) as e:
             return {"error": str(e)}

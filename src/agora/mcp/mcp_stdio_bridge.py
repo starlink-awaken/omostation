@@ -14,9 +14,9 @@
 此桥接器使现有 POC 服务无需修改即可通过标准 MCP 协议访问。
 """
 
-import sys
 import json
 import subprocess
+import sys
 from typing import Any
 
 

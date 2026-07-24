@@ -15,11 +15,11 @@
 
 from __future__ import annotations
 
+import functools
 import os
 import sqlite3
-import time
-import functools
 import threading
+import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -270,7 +270,7 @@ class BOSMetrics:
         s = self.summary()
         services_ok = 0
         services_degraded = 0
-        for prefix, data in self.status().items():
+        for data in self.status().values():
             if data["success_rate"] >= 0.95:
                 services_ok += 1
             elif data["calls"] > 0:

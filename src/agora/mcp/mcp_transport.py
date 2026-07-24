@@ -39,7 +39,10 @@ from pathlib import Path
 from socketserver import ThreadingMixIn
 from typing import Any
 
-from agora.auth.mcp_auth import MCPAuthError, get_auth_middleware  # type: ignore[import-not-found]
+from agora.auth.mcp_auth import (  # type: ignore[import-not-found]
+    MCPAuthError,
+    get_auth_middleware,
+)
 from agora.mcp.mcp_protocol import (  # type: ignore[import-not-found]
     handle_initialize,
     handle_prompts_get,
@@ -68,7 +71,10 @@ from agora.mcp_tools import (  # type: ignore[import-not-found]
 )
 from agora.tools.base import _ParamError  # type: ignore[import-not-found]
 from agora.tools.dt import tool_tasks_list  # type: ignore[import-not-found]
-from agora.tools.synapse import tool_synapse_hello, tool_synapse_ping  # type: ignore[import-not-found]
+from agora.tools.synapse import (  # type: ignore[import-not-found]
+    tool_synapse_hello,
+    tool_synapse_ping,
+)
 
 _log = logging.getLogger(__name__)
 

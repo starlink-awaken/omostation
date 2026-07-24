@@ -63,4 +63,4 @@ class IFederationRouter(Protocol):
         ...
 
 
-__all__ = ["IOAuth2Server", "IRateLimiter", "IFederationRouter"]
+__all__ = ["IFederationRouter", "IOAuth2Server", "IRateLimiter"]

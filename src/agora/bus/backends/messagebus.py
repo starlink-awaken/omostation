@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
 from agora.bus.envelope import BusEnvelope
 
@@ -36,7 +36,7 @@ class MessageBusBackend:
         return True
 
     def publish(self, envelope: BusEnvelope) -> str:
-        for sub_id, (pattern, callback) in self._subscribers.items():
+        for (pattern, callback) in self._subscribers.values():
             if self._match(pattern, envelope.type):
                 try:
                     callback(envelope)

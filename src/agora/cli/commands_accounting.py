@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from agora.accounting import DEFAULT_DAILY_QUOTA, ResourceAccountDB  # type: ignore[import-not-found]
+from agora.accounting import (  # type: ignore[import-not-found]
+    DEFAULT_DAILY_QUOTA,
+    ResourceAccountDB,
+)
 from agora.cli.output import OutputFormatter
 
 

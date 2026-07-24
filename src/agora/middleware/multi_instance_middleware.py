@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from agora.instance import AgoraInstance, InstanceManager  # type: ignore[import-not-found]
+from agora.instance import (  # type: ignore[import-not-found]
+    AgoraInstance,
+    InstanceManager,
+)
 
 # 路由隔离规则:
 # 1. service.register → 只注册到当前实例

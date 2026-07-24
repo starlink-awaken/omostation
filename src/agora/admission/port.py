@@ -65,7 +65,7 @@ def _load_from_spec(spec: str) -> AdmissionPort | None:
         if hasattr(obj, "evaluate_admission"):
             # Adapt legacy gateway-style objects
             return _LegacyGatewayAdapter(obj)
-    except Exception as e:  # noqa: BLE001 — provider discovery must not crash mesh
+    except Exception as e:
         logger.debug("admission_provider_load_failed", spec=spec, error=str(e))
     return None
 
@@ -122,13 +122,13 @@ def get_admission_provider() -> AdmissionPort | None:
                     if hasattr(obj, "evaluate_admission"):
                         provider = _LegacyGatewayAdapter(obj)
                         break
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.debug(
                         "admission_entry_point_failed",
                         name=ep.name,
                         error=str(e),
                     )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug("admission_entry_points_unavailable", error=str(e))
 
     # 3. Soft import known providers
@@ -170,8 +170,8 @@ def evaluate_admission(request: dict[str, Any]) -> dict[str, Any]:
         return {
             "status": "admitted",
             "reasons": [
-                "[SPI] Admission provider unavailable; degraded admit "
-                "(set AGORA_ADMISSION_MODE=strict to fail closed)."
+                ("[SPI] Admission provider unavailable; degraded admit "
+                "(set AGORA_ADMISSION_MODE=strict to fail closed).")
             ],
             "provider": None,
             "degraded": True,

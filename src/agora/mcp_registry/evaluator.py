@@ -36,7 +36,7 @@ class QualityScorer:
         if not updated_at:
             return 0.5
         try:
-            dt = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+            dt = datetime.fromisoformat(updated_at)
             days = (datetime.now(UTC) - dt).days
         except (ValueError, TypeError):
             return 0.5
@@ -54,8 +54,7 @@ class QualityScorer:
     def normalize_version(version: str | None) -> float:
         if not version:
             return 0.3
-        if version.startswith("v"):
-            version = version[1:]
+        version = version.removeprefix("v")
         parts = version.split(".")
         if len(parts) >= 3:
             return 1.0
@@ -107,7 +106,7 @@ class QualityScorer:
         last_used = tool_info.get("last_used")
         if last_used:
             try:
-                lt = datetime.fromisoformat(last_used.replace("Z", "+00:00"))
+                lt = datetime.fromisoformat(last_used)
                 days_idle = (datetime.now(UTC) - lt).days
                 if days_idle > 30:
                     raw *= 0.8

@@ -186,7 +186,7 @@ class MCPProtocolHandler:
                 f"Method not found: {request.method}",
             )
 
-        handler, version = self._methods[request.method]
+        handler, _version = self._methods[request.method]
 
         # Execute handler
         try:

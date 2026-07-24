@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+
 from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
@@ -48,8 +49,10 @@ async def a2a_send_endpoint(request):
                     {"status": "error", "error": "replay_detected"}, status_code=401
                 )
 
+            from agora.auth.node_identity import (
+                NodeIdentity,  # type: ignore[import-not-found]
+            )
             from agora.mcp.swarm import get_swarm  # type: ignore[import-not-found]
-            from agora.auth.node_identity import NodeIdentity  # type: ignore[import-not-found]
 
             swarm = get_swarm()
             sender_node = swarm._nodes.get(sender_node_id)

@@ -1,5 +1,5 @@
-from typing import Dict, Optional, Any
 import logging
+from typing import Any, Dict, Optional
 
 _log = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ class MountRegistry:
 
     def __init__(self):
         # Maps prefix (e.g. "bos://memory/") to downstream provider connection info or local handler
-        self._mounts: Dict[str, Any] = {}
+        self._mounts: dict[str, Any] = {}
 
     def register_mount(self, prefix: str, provider: Any):
         """
@@ -32,7 +32,7 @@ class MountRegistry:
             del self._mounts[prefix]
             _log.info("Unregistered BOS mount point: %s", prefix)
 
-    def resolve_provider(self, uri: str) -> Optional[Any]:
+    def resolve_provider(self, uri: str) -> Any | None:
         """
         Find the longest matching prefix for the URI.
         """
@@ -46,7 +46,7 @@ class MountRegistry:
 
         return best_match
 
-    def get_all_mounts(self) -> Dict[str, Any]:
+    def get_all_mounts(self) -> dict[str, Any]:
         return dict(self._mounts)
 
 

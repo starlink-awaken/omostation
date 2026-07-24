@@ -24,7 +24,9 @@ def _get_registry():
 
 def _get_lifecycle_manager():
     """Lazy-import LifecycleManager from mcp.py."""
-    from agora.server.mcp import _get_lifecycle_manager as _glm  # type: ignore[import-not-found]
+    from agora.server.mcp import (
+        _get_lifecycle_manager as _glm,  # type: ignore[import-not-found]
+    )
 
     return _glm()
 

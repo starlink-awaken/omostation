@@ -12,21 +12,22 @@ from typing import Any
 
 from agora.mcp.resolver.adapter import StdioAdapter, get_stdio_adapter
 from agora.mcp.resolver.api import (
+    get_service,
+    invoke_stdio,
+    list_domains,
+    list_services,
     normalize_bos_uri,
     parse_bos_uri,
-    list_services,
-    get_service,
-    list_domains,
-    invoke_stdio,
     protocol_self_check,
     resolve_bos_uri,
 )
-from agora.mcp.resolver.pool import ProcessPool, get_pool as _get_pool
+from agora.mcp.resolver.pool import ProcessPool
+from agora.mcp.resolver.pool import get_pool as _get_pool
 from agora.mcp.resolver.services import (
-    BosService,
-    POC_SERVICES,
-    _with_uv_package,
     BOS_URI_PATTERN,
+    POC_SERVICES,
+    BosService,
+    _with_uv_package,
 )
 
 _pool = _get_pool()
@@ -38,27 +39,27 @@ _log = logging.getLogger(__name__)
 
 # ── 兼容导出 ──────────────────────────────────────────
 __all__ = [
-    "BosService",
+    "BOS_URI_PATTERN",
     "POC_SERVICES",
+    "BosService",
     "ProcessPool",
     "StdioAdapter",
-    "normalize_bos_uri",
-    "parse_bos_uri",
-    "list_services",
-    "get_service",
-    "list_domains",
-    "invoke_stdio",
-    "protocol_self_check",
-    "get_pool",
-    "get_stdio_adapter",
-    "_with_uv_package",
-    "resolve_bos_uri",
-    "BOS_URI_PATTERN",
-    "_pool",
     "_memory_all_search",
     "_memory_vault_search",
     "_meta_discover",
+    "_pool",
     "_sharedbrain_bridge_recall_entity",
+    "_with_uv_package",
+    "get_pool",
+    "get_service",
+    "get_stdio_adapter",
+    "invoke_stdio",
+    "list_domains",
+    "list_services",
+    "normalize_bos_uri",
+    "parse_bos_uri",
+    "protocol_self_check",
+    "resolve_bos_uri",
 ]
 
 # ── 路径常量 (保持向后兼容) ────────────────────────────

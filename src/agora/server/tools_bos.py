@@ -15,8 +15,14 @@ from typing import Any
 import structlog
 from fastmcp import FastMCP
 
-# 响应工具
-from agora.server._response import FORMAT_VERSION, _error, _get_cache_ttl, _ok
+# L0 审计 hook
+from agora.adapters.ecos import (  # type: ignore[import-not-found]
+    post_audit as _bos_post_audit,
+)
+from agora.adapters.ecos import (
+    pre_check as _bos_pre_check,
+)
+from agora.mcp.bos_metrics import bos_metrics  # type: ignore[import-not-found]
 
 # BOS 状态对象 (import once at module init)
 from agora.mcp.bos_middleware import (  # type: ignore[import-not-found]
@@ -24,18 +30,18 @@ from agora.mcp.bos_middleware import (  # type: ignore[import-not-found]
     bos_circuit_breaker,
     bos_rate_limiter,
 )
-from agora.mcp.bos_metrics import bos_metrics  # type: ignore[import-not-found]
 from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
     list_services as _list_poc_services,
+)
+from agora.mcp.bos_resolver import (
     resolve_bos_uri as _resolve_bos_uri,
 )
-from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[import-not-found]
-
-# L0 审计 hook
-from agora.adapters.ecos import (  # type: ignore[import-not-found]
-    post_audit as _bos_post_audit,
-    pre_check as _bos_pre_check,
+from agora.mcp.bos_router import (
+    bos_router as _bos_router,  # type: ignore[import-not-found]
 )
+
+# 响应工具
+from agora.server._response import FORMAT_VERSION, _error, _get_cache_ttl, _ok
 
 # 根仓 projects/ 目录: .../projects/agora/src/agora/server/tools_bos.py → ../../../../..
 _PROJECTS_DIR = Path(__file__).resolve().parents[4]

@@ -16,7 +16,6 @@ import json
 import os
 import sys
 
-
 from agora.server.mcp import logger, mcp
 
 __all__ = ["http_main", "sse_main"]

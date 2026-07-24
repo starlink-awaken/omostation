@@ -9,13 +9,23 @@ Supported platforms: Apple iCloud, Google Calendar, Microsoft Outlook.
 from __future__ import annotations
 
 import logging
-from datetime import timezone
+from datetime import UTC, timezone
 from typing import Any
 
-from agora.calendar_adapters import BaseCalendarAdapter, create_adapter  # type: ignore[import-not-found]
-from agora.plugins.calendar.calendar_models import CalendarEvent  # type: ignore[import-not-found]
+from agora.calendar_adapters import (  # type: ignore[import-not-found]
+    BaseCalendarAdapter,
+    create_adapter,
+)
 from agora.mcp.base_tool import BaseTool  # type: ignore[import-not-found]
-from agora.mcp.tool_contract import ToolConfig, ToolRequest, ToolResult, ToolStatus  # type: ignore[import-not-found]
+from agora.mcp.tool_contract import (  # type: ignore[import-not-found]
+    ToolConfig,
+    ToolRequest,
+    ToolResult,
+    ToolStatus,
+)
+from agora.plugins.calendar.calendar_models import (
+    CalendarEvent,  # type: ignore[import-not-found]
+)
 
 _log = logging.getLogger(__name__)
 
@@ -245,9 +255,9 @@ class CalendarTool(BaseTool):
             start = parse_dt(start_str)
             end = parse_dt(end_str)
             if start.tzinfo is None:
-                start = start.replace(tzinfo=timezone.utc)
+                start = start.replace(tzinfo=UTC)
             if end.tzinfo is None:
-                end = end.replace(tzinfo=timezone.utc)
+                end = end.replace(tzinfo=UTC)
         except (ValueError, TypeError) as exc:
             return ToolResult(
                 success=False,

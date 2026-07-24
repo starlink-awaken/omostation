@@ -12,8 +12,14 @@ from __future__ import annotations
 import structlog
 
 from agora.mcp_proxy.client import create_client  # type: ignore[import-not-found]
-from agora.mcp_proxy.idle_timeout import IdleTimeoutConfig, IdleTimeoutManager  # type: ignore[import-not-found]
-from agora.mcp_proxy.registry import ProxyRegistry, UsageCallback  # type: ignore[import-not-found]
+from agora.mcp_proxy.idle_timeout import (  # type: ignore[import-not-found]
+    IdleTimeoutConfig,
+    IdleTimeoutManager,
+)
+from agora.mcp_proxy.registry import (  # type: ignore[import-not-found]
+    ProxyRegistry,
+    UsageCallback,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -421,7 +427,7 @@ class ProxyManager:
         tasks = []
         # Connect lazy services if needed, but for list we only query currently connected ones to be fast
         # Alternatively, we can query all known.
-        for name, client in self.registry._clients.items():
+        for client in self.registry._clients.values():
             if client.connected:
                 tasks.append(client.list_resources())
         if tasks:

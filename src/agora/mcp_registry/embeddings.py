@@ -199,9 +199,8 @@ class EmbeddingStore:
         query_np = np.array(query_vec, dtype=np.float32)
 
         # Auto-refresh cache if dirty or empty
-        if self._dirty or not self._cache.loaded:
-            if self._auto_refresh:
-                self.refresh_cache()
+        if (self._dirty or not self._cache.loaded) and self._auto_refresh:
+            self.refresh_cache()
 
         return self._cache.search(query_np, top_k=top_k)
 

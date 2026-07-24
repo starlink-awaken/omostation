@@ -1,6 +1,7 @@
 """Knowledge Quality Audit — Phase 9 implementation of the Memory Scorer."""
 
 from __future__ import annotations
+
 import logging
 from typing import Any
 

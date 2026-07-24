@@ -187,7 +187,7 @@ class BackendHealthChecker:
                     timeout=self._interval,
                 )
                 break  # stopped signal received
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue  # next tick
 
     async def _tick(self) -> None:

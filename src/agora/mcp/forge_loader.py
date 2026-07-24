@@ -259,9 +259,9 @@ def list_market_tools() -> list[dict]:
 
 __all__ = (
     "CAPS_ROOT",
+    "MARKET_REGISTRY",
     "ForgeLoader",
     "LoadedTool",
-    "MARKET_REGISTRY",
     "install_local_tool",
     "list_market_tools",
     "loader",

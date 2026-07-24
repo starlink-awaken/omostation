@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 from agora.mcp_proxy.manager import ProxyManager  # type: ignore[import-not-found]
-from agora.mcp_registry.embeddings import EmbeddingStore  # type: ignore[import-not-found]
-from agora.mcp_registry.lifecycle import LifecycleManager  # type: ignore[import-not-found]
-from agora.mcp_registry.orchestrator import Orchestrator  # type: ignore[import-not-found]
+from agora.mcp_registry.embeddings import (
+    EmbeddingStore,  # type: ignore[import-not-found]
+)
+from agora.mcp_registry.lifecycle import (
+    LifecycleManager,  # type: ignore[import-not-found]
+)
+from agora.mcp_registry.orchestrator import (
+    Orchestrator,  # type: ignore[import-not-found]
+)
 from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
 from agora.mcp_registry.router import SmartRouter  # type: ignore[import-not-found]
 

@@ -39,8 +39,8 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
         # Fallback to checking HTTP headers directly (for our REST backdoor)
         try:
             from fastmcp.server.dependencies import (
-                get_http_request,
                 _current_http_request,
+                get_http_request,
             )
 
             try:

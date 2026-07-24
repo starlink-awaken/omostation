@@ -10,7 +10,12 @@ import os
 from pathlib import Path
 from typing import Any
 
-from agora.types import AgentConfig, GatewayConfig, RoutingConfig, RoutingRule  # type: ignore[import-not-found]
+from agora.types import (  # type: ignore[import-not-found]
+    AgentConfig,
+    GatewayConfig,
+    RoutingConfig,
+    RoutingRule,
+)
 
 DEFAULT_CONFIG = GatewayConfig()
 

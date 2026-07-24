@@ -22,7 +22,9 @@ def cmd_web(_args):
 
 def cmd_init(_args):
     """Guided setup wizard."""
-    from agora.plugins.identity.wizard import run_wizard  # type: ignore[import-not-found]
+    from agora.plugins.identity.wizard import (
+        run_wizard,  # type: ignore[import-not-found]
+    )
 
     return run_wizard()
 

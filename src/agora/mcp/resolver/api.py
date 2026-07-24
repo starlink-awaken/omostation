@@ -8,8 +8,8 @@ from concurrent.futures import Future
 from pathlib import Path
 from typing import Any
 
-from .services import BOS_URI_DOMAIN_PATTERN, POC_SERVICES, BosService
 from .adapter import get_stdio_adapter
+from .services import BOS_URI_DOMAIN_PATTERN, POC_SERVICES, BosService
 
 _log = logging.getLogger(__name__)
 
@@ -378,7 +378,7 @@ async def resolve_bos_uri(
             if inspect.isawaitable(raw):
                 raw = await raw
             result = {"status": "ok", "result": raw}
-        except _asyncio.TimeoutError:
+        except TimeoutError:
             result = {
                 "status": "error",
                 "error": f"internal_bos_service_timeout: {uri}",

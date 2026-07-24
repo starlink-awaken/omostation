@@ -25,13 +25,17 @@ import os
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import structlog
 from fastmcp import FastMCP
 from fastmcp.server.middleware import AuthMiddleware
-from typing import TYPE_CHECKING
 
-from agora.core.state import get_event_bus, get_registry, get_router  # type: ignore[import-not-found]
+from agora.core.state import (  # type: ignore[import-not-found]
+    get_event_bus,
+    get_registry,
+    get_router,
+)
 from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 from agora.mcp_proxy.manager import ProxyManager  # type: ignore[import-not-found]
 
@@ -39,16 +43,26 @@ if TYPE_CHECKING:
     from agora.task_manager import TaskManager
 
 # BOS URI 解析器 (P45 W1) — 统一 POC_SERVICES 路由
-from agora.mcp.bos_resolver import resolve_bos_uri as _resolve_bos_uri  # type: ignore[import-not-found]
-from agora.mcp.bos_resolver import POC_SERVICES as _POC_SERVICES  # type: ignore[import-not-found]
-
-# BOSRouter (P45 W2) — 统一路由注册表
-from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[import-not-found]
+from agora.mcp.bos_metrics import bos_metrics  # type: ignore[import-not-found]
 
 # BOS 中间件 (P46 W0) — 限流/熔断/缓存
-from agora.mcp.bos_middleware import bos_rate_limiter, bos_circuit_breaker, bos_cache  # type: ignore[import-not-found]
-from agora.mcp.bos_middleware import config_watcher  # type: ignore[import-not-found]
-from agora.mcp.bos_metrics import bos_metrics  # type: ignore[import-not-found]
+from agora.mcp.bos_middleware import (  # type: ignore[import-not-found]
+    bos_cache,
+    bos_circuit_breaker,
+    bos_rate_limiter,
+    config_watcher,  # type: ignore[import-not-found]
+)
+from agora.mcp.bos_resolver import (
+    POC_SERVICES as _POC_SERVICES,  # type: ignore[import-not-found]
+)
+from agora.mcp.bos_resolver import (
+    resolve_bos_uri as _resolve_bos_uri,  # type: ignore[import-not-found]
+)
+
+# BOSRouter (P45 W2) — 统一路由注册表
+from agora.mcp.bos_router import (
+    bos_router as _bos_router,  # type: ignore[import-not-found]
+)
 
 # 响应工具 (God Module 拆分)
 from agora.server._response import (
@@ -68,7 +82,9 @@ _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
 
 from agora.server.tools_auth import (
-    get_access_token as get_access_token,
+    get_access_token,
+)
+from agora.server.tools_auth import (
     require_agora_api_key as _require_agora_api_key,
 )
 
@@ -124,7 +140,7 @@ def _resolve_caller_identity(caller_identity: str | dict | None) -> str | dict:
 @asynccontextmanager
 async def _proxy_lifespan(server: FastMCP):
     """Initialize proxy connections within mcp.run()'s event loop."""
-    from agora.server.dependencies import get_proxy_manager, clear_caches
+    from agora.server.dependencies import clear_caches, get_proxy_manager
     from agora.server.tools_proxy import proxy_sync_loop
 
     _sync_task = None
@@ -136,7 +152,7 @@ async def _proxy_lifespan(server: FastMCP):
         # ── Swarm 启动 (P55) ──
         swarm_role = os.environ.get("AGORA_SWARM_ROLE", "")
         if swarm_role:
-            from agora.mcp.swarm import get_swarm, SWARM_DEFAULT_PORT
+            from agora.mcp.swarm import SWARM_DEFAULT_PORT, get_swarm
 
             swarm_port = int(
                 os.environ.get("AGORA_SWARM_PORT", str(SWARM_DEFAULT_PORT))
@@ -178,12 +194,16 @@ _bus = get_event_bus(registry)
 
 import contextlib as _contextlib
 import sqlite3 as _sqlite3
-import uuid as _uuid
 import time as _time
+import uuid as _uuid
 from pathlib import Path as _Path
 
-from agora.mcp.mcp_bootstrap import get_data_dir as _get_data_dir  # type: ignore[import-not-found]
-from agora.auth.identity import normalize_identity as _normalize_identity  # type: ignore[import-not-found]
+from agora.auth.identity import (
+    normalize_identity as _normalize_identity,  # type: ignore[import-not-found]
+)
+from agora.mcp.mcp_bootstrap import (
+    get_data_dir as _get_data_dir,  # type: ignore[import-not-found]
+)
 
 _AUDIT_DB = _Path(
     os.environ.get("AGORA_AUDIT_DB", str(_get_data_dir() / "agora-audit.db"))
@@ -376,7 +396,9 @@ router = get_router(registry, _bus)
 
 register_bos_tools(mcp, _bus)
 
-from agora.server.tools_swarm import register_swarm_tools  # type: ignore[import-not-found]
+from agora.server.tools_swarm import (
+    register_swarm_tools,  # type: ignore[import-not-found]
+)
 
 register_swarm_tools(mcp)
 
@@ -384,13 +406,15 @@ register_swarm_tools(mcp)
 # Phase 1: extracted from God Module (server/mcp.py) into focused modules.
 # NOTE: imports are at module top level; registration calls are deferred
 # until after _PROXY_CONFIG_PATH / _FORGE_REGISTRY_PATH are defined.
-from agora.server.tools_proxy import (
-    register_proxy_tools,
-    _set_constants as _set_proxy_constants,
-)
-from agora.server.tools_registry import register_registry_tools
 from agora.server.tools_diagnostics import register_diagnostics_tools
 from agora.server.tools_governance import register_governance_tools
+from agora.server.tools_proxy import (
+    _set_constants as _set_proxy_constants,
+)
+from agora.server.tools_proxy import (
+    register_proxy_tools,
+)
+from agora.server.tools_registry import register_registry_tools
 from agora.server.tools_workspace_audit import register_workspace_audit_tools
 
 # ── A2A Task Manager ──────────────────────────────────────────────────
@@ -440,10 +464,10 @@ async def _init_proxy():
     Phase 3 — registers all proxy downstream tools as native FastMCP tools.
     """
     from agora.server.dependencies import (
-        get_proxy_manager,
-        set_proxy_manager,
         get_lifecycle_manager,
+        get_proxy_manager,
         set_lifecycle_manager,
+        set_proxy_manager,
     )
 
     pm = get_proxy_manager()
@@ -464,7 +488,9 @@ async def _init_proxy():
 
     if not bootstrap_results:
         # No bootstrap available — load from proxy config file
-        from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
+        from agora.server.tools_proxy import (
+            _load_proxy_services,  # type: ignore[import-not-found]
+        )
 
         services = _load_proxy_services()
         if services:
@@ -472,7 +498,9 @@ async def _init_proxy():
     # else: scan_and_launch already connected services via _build_enabled_services + proxy_manager.start
 
     # ── Phase 2: Register HTTP services from ServiceRegistry ──
-    from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
+    from agora.server.tools_proxy import (
+        _load_proxy_services,  # type: ignore[import-not-found]
+    )
 
     proxy_configs = _load_proxy_services()
     await pm.registry.register_from_registry(registry, proxy_configs, lazy=True)
@@ -525,13 +553,17 @@ async def _init_proxy():
     logger.info("bos_middleware_configured")
 
     # ── Phase 6 (P46 W1): 从 M1 Workflow 节点自动注册 BOS 路由 ──
-    from agora.mcp.bos_auto_register import auto_register_from_m1  # type: ignore[import-not-found]
+    from agora.mcp.bos_auto_register import (
+        auto_register_from_m1,  # type: ignore[import-not-found]
+    )
 
     count = auto_register_from_m1()
     logger.info("auto_register_from_m1: %d workflow routes seeded", count)
 
     # ── Phase 7 (P47): 从 AGENTS.md 自动发现 + 信号热加载 ──
-    from agora.mcp.bos_discovery import discover_from_workspace  # type: ignore[import-not-found]
+    from agora.mcp.bos_discovery import (
+        discover_from_workspace,  # type: ignore[import-not-found]
+    )
 
     discovered = discover_from_workspace()
     logger.info("bos_discovery: %d URIs discovered from AGENTS.md", discovered)
@@ -618,6 +650,7 @@ async def _bos_only_cleanup(mcp_server: FastMCP) -> None:
 def _install_signal_handler() -> None:
     """安装 SIGUSR1 信号处理器 — 热加载 BOS 配置。"""
     import signal
+
     import yaml
 
     def _reload_handler(signum, frame):
@@ -671,6 +704,7 @@ def _install_signal_handler() -> None:
 def agora_registry() -> str:
     """Introspection: returns a JSON dump of all registered tools and resources."""
     import json
+
     from agora.server.dependencies import get_proxy_manager
 
     pm = get_proxy_manager()
@@ -733,33 +767,33 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
     路由优先级: BOSRouter (POC) → ProxyManager (MCP 代理) → 404
     """
     import json
+
     from agora.server.dependencies import get_proxy_manager
 
     uri = f"bos://{domain}/{package}/{action}"
     # Step 1: BOSRouter
     route = _bos_router.resolve(uri)
-    if route:
-        if route["adapter"] == "poc":
-            try:
-                result = await _resolve_bos_uri(uri)
-                return json.dumps(
-                    {
-                        "status": "ok",
-                        "uri": uri,
-                        "source": "bos_router",
-                        "result": result,
-                        "format_version": FORMAT_VERSION,
-                    }
-                )
-            except Exception as e:  # defensive fallback
-                return json.dumps(
-                    {
-                        "status": "error",
-                        "uri": uri,
-                        "error": str(e),
-                        "format_version": FORMAT_VERSION,
-                    }
-                )
+    if route and route["adapter"] == "poc":
+        try:
+            result = await _resolve_bos_uri(uri)
+            return json.dumps(
+                {
+                    "status": "ok",
+                    "uri": uri,
+                    "source": "bos_router",
+                    "result": result,
+                    "format_version": FORMAT_VERSION,
+                }
+            )
+        except Exception as e:  # defensive fallback
+            return json.dumps(
+                {
+                    "status": "error",
+                    "uri": uri,
+                    "error": str(e),
+                    "format_version": FORMAT_VERSION,
+                }
+            )
     # Step 2: ProxyManager
     pm = get_proxy_manager()
     if pm:
@@ -855,12 +889,9 @@ def main():
 # HTTP / SSE 入口 (P110 拆分, mcp_entry.py). TASK-F7114ABA 治本.
 from agora.server.mcp_entry import http_main, sse_main
 
-
 if __name__ == "__main__":
     main()
 
 # Re-exports for test imports
-from agora.server.tools_registry import route_call as route_call
-from agora.server.tools_proxy import proxy_status as proxy_status
-from agora.server.tools_proxy import proxy_call as proxy_call
-from agora.server.tools_proxy import proxy_remove_service as proxy_remove_service
+from agora.server.tools_proxy import proxy_call, proxy_remove_service, proxy_status
+from agora.server.tools_registry import route_call
