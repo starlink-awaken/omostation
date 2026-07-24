@@ -40,7 +40,7 @@ def load_owners() -> list[dict]:
     """读取 write-owners.yaml."""
     if not OWNERS_YAML.is_file():
         return []
-    import yaml  # noqa: PLC0415
+    import yaml
     try:
         data = yaml.safe_load(OWNERS_YAML.read_text(encoding="utf-8")) or {}
         return data.get("write_owners") or []
