@@ -155,6 +155,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | STRAT-P81-DI | P81 入场决策单（7 卡 · 人类拍板汇总） | CANDIDATE | 2026-07-24 | governance-team | STRAT-P81-MASTER-DECISION-INBOX-2026-07-24.md |
 | BOS-MIG-MAP | bos_stdio 真实迁移候选服务图谱（P81 S0.4 evidence, 89/19/2 分组） | CANDIDATE | 2026-07-24 | governance-team | BOS-MIGRATION-CANDIDATE-MAP-2026-07-24.md |
 | BET-C87A-PREP | BET-c87a http-mcp-convergence 收尾准备（KOS REST API 9 测覆 + cockpit-ui 现代化） | CANDIDATE | 2026-07-24 | governance-team | BET-C87A-CLOSEOUT-PREP-2026-07-24.md |
+| 0234 | BET-c87a http-mcp-convergence 收尾正式立项 | ACCEPTED | 2026-07-24 | governance-team | 0234-bet-c87a-closeout.md |
 | 0228 | M1 收敛期验收通过 + 物理挂起下的兑现期推进顺序 (S2 提前解锁) | ACCEPTED | 2026-07-24 | 夏明星 | 0228-m1-acceptance-physical-deferred-reorder.md |
 | 0229 | Role framework three roles (engineering/governance/audit) | ACCEPTED | 2026-07-24 | Batch1 B1 | 0229-role-framework-three-roles.md |
 | 0230 | Agent registry node/role/capability sim-first | ACCEPTED | 2026-07-24 | Batch1 C1 | 0230-agent-registry-node-role-capability.md |
