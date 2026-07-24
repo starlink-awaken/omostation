@@ -20,25 +20,12 @@ import argparse
 import json
 import re
 import sys
-from collections import Counter
 from pathlib import Path
 
 import yaml
+from _lib import duplicate_adr_numbers, list_adrs
 
 REQUIRED_FRONTMATTER = ["status", "lifecycle", "owner", "last-reviewed"]
-
-
-def list_adrs(decisions_dir: Path) -> list[tuple[int, Path]]:
-    """列出所有 ADR 文件, 返回 (编号, 路径)."""
-    adrs: list[tuple[int, Path]] = []
-    if not decisions_dir.exists():
-        return adrs
-    for f in sorted(decisions_dir.glob("*.md")):
-        # 解析文件名首部 4 位编号
-        m = re.match(r"^(\d{4})-", f.name)
-        if m:
-            adrs.append((int(m.group(1)), f))
-    return adrs
 
 
 def parse_frontmatter(path: Path) -> dict:
@@ -90,7 +77,7 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
         if 9 <= n <= 49:
             continue
         missing_nums.append(n)
-    duplicates = [n for n, c in Counter(numbers).items() if c > 1]
+    duplicates = duplicate_adr_numbers(decisions_dir)
 
     # frontmatter 健康度
     fm_issues = []
