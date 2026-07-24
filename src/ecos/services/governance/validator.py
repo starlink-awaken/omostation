@@ -5,8 +5,8 @@ eCOS v6 L0 — 协议约束校验器 (ecos-constraint-validator)
 委托到真实实现: @学习进化/_knowledge/10-systems/基建架构/ecos-constraint-validator.py
 """
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 REAL = (

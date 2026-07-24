@@ -1,7 +1,7 @@
 """ECOS 统一日志系统"""
 
-import logging
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 

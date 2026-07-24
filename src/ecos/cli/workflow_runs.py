@@ -31,7 +31,7 @@ def _load_all_runs() -> list[dict[str, Any]]:
                 data = yaml.safe_load(fh)
             if data and data.get("schema") == "M0-v1":
                 runs.append(data)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
     return runs
 

@@ -19,10 +19,11 @@
     python3 mof-generate.py --dry-run          # 预览不执行
 """
 
-import yaml
 import argparse
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 L0_M1 = Path(__file__).resolve().parent.parent / "mof" / "m1"
@@ -40,7 +41,7 @@ def load_nodes(m2type: str) -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict):
                 nodes.append(data)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return nodes
 
@@ -158,7 +159,7 @@ def generate_all(dry_run: bool = True):
                     fp.write_text(content, encoding="utf-8")
                 print(f"  {'📝' if dry_run else '✅'} {filename}")
                 generated += 1
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 print(f"  ❌ {node.get('id', '?')}: {e}")
 
     print(f"\n{'═' * 40}")

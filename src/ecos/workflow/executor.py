@@ -12,7 +12,8 @@ import logging
 from datetime import datetime
 
 from ecos.workflow.backend_registry import resolve
-from ecos.workflow.cache import get as cache_get, set as cache_set
+from ecos.workflow.cache import get as cache_get
+from ecos.workflow.cache import set as cache_set
 from ecos.workflow.loader import load_workflow
 from ecos.workflow.preflight import inject_preflight
 from ecos.workflow.validator import (
@@ -28,10 +29,13 @@ logger = logging.getLogger("ecos.workflow.executor")
 
 # L0 audit (可选；不通过 sys.path 注入 ops — ADR-0181 Phase 3)
 try:
-    from l0_audit import validate_operation, log_operation  # type: ignore[import-not-found]
+    from l0_audit import (  # type: ignore[import-not-found]
+        log_operation,
+        validate_operation,
+    )
 except ImportError:
-    validate_operation = lambda *a, **kw: None  # noqa: E731
-    log_operation = lambda *a, **kw: None  # noqa: E731
+    validate_operation = lambda *a, **kw: None
+    log_operation = lambda *a, **kw: None
 
 
 # =========================================================================
@@ -168,7 +172,7 @@ def execute_m1_workflow(
                 results["passed"] += 1
             else:
                 results["failed"] += 1
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.error("Workflow execution failed: %s", e)
         results["failed"] += 1
         results["steps"].append(
@@ -329,7 +333,7 @@ def _execute_command(step: dict) -> dict:
         return {"passed": False, "summary": f"命令超时 ({timeout}s)"}
     except FileNotFoundError:
         return {"passed": False, "summary": f"命令未找到: {cmd[0] if cmd else ''}"}
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.error("Custom command failed: %s", e)
         return {"passed": False, "summary": str(e)}
 
@@ -354,9 +358,9 @@ def test_workflow(name: str) -> dict:
       - X1-X4 治理管线完整
       - 全部 mock 通过（0 failed = 编排正确）
     """
+    from ecos.workflow.backend_registry import resolve as resolve_backend
     from ecos.workflow.loader import load_workflow
     from ecos.workflow.validator import validate_workflow
-    from ecos.workflow.backend_registry import resolve as resolve_backend
 
     wf = load_workflow(name)
     if not wf:
@@ -415,7 +419,7 @@ def test_workflow(name: str) -> dict:
         backend_fn = resolve_backend(m1_node)
         assert callable(backend_fn), "后端不可调用"
         print(f"  ✅  backend 解析: {backend_name}")
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"  ❌  backend 解析失败 ({backend_name}): {e}")
         results["failed"] += 1
         results["finished"] = datetime.now().isoformat()

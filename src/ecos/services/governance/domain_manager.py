@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """Domain Manager v2 — L4域生命周期管理 | ecos domain <cmd>"""
 
-import sys
-import os
 import json
-import yaml
-from pathlib import Path
+import os
+import sys
 from datetime import datetime
+from pathlib import Path
+
+import yaml
 
 # L0 audit integration
 try:
-    from l0_audit import validate_operation, get_audit_log
+    from l0_audit import get_audit_log, validate_operation
 
     L0_AUDIT = True
 except ImportError:
@@ -25,7 +26,7 @@ except ImportError:
 
 # Unified audit integration
 try:
-    from audit_unified import query_events, print_audit_report, log_event
+    from audit_unified import log_event, print_audit_report, query_events
 
     HAS_AUDIT_UNIFIED = True
 except ImportError:
@@ -55,53 +56,51 @@ except ImportError:
 
 # P110-A (ecos domain_manager 拆解, ADR-0108): 2 子模块
 # Re-export 保持向后兼容 (ecos CLI / cockpit workflow 等)
-from .domain_manager_cache import (  # noqa: E402, F401
-    _l1_get,
-    _l1_set,
-    _l1_invalidate,
-    _l2_get,
-    _l2_set,
+# P110-B (TASK-F7114ABA 治本): cmd_bos_validate + lifecycle helpers 拆解
+from .domain_manager_bos import (
+    _evaluate_bos_constraints,
+    _load_bos_constraints,
+    cmd_bos_validate,
+)
+from .domain_manager_cache import (
     _cache_get,
     _cache_set,
     _cache_warm,
-    load_registry,
+    _l1_get,
+    _l1_invalidate,
+    _l1_set,
+    _l2_get,
+    _l2_set,
     invalidate_registry_cache,
+    load_registry,
 )
-
-from .domain_manager_domain_cmd import (  # noqa: E402, F401
-    cmd_list,
-    cmd_status,
-    cmd_validate,
-    cmd_tree,
+from .domain_manager_domain_cmd import (
+    cmd_all_validate,
     cmd_audit,
+    cmd_check_refs,
+    cmd_create,
+    cmd_fix,
+    cmd_list,
+    cmd_register,  # P110-C (TASK-F7114ABA 治本)
     cmd_relations,
     cmd_stats,
-    cmd_create,
-    cmd_all_validate,
-    cmd_register,  # P110-C (TASK-F7114ABA 治本)
-    cmd_fix,
+    cmd_status,
     cmd_sync,
-    cmd_check_refs,
+    cmd_tree,
+    cmd_validate,
 )
-from .domain_manager_search import cmd_search  # P110-C 治本续: 拆 cmd_search
-
-# P110-B (TASK-F7114ABA 治本): cmd_bos_validate + lifecycle helpers 拆解
-from .domain_manager_bos import (  # noqa: E402, F401
-    cmd_bos_validate,
-    _load_bos_constraints,
-    _evaluate_bos_constraints,
-)
-from .domain_manager_lifecycle import (  # noqa: E402, F401
+from .domain_manager_lifecycle import (
     URI_LIFECYCLE_STATES,
+    _enrich_with_lifecycle,
+    _get_uri_state,
     _load_lifecycle,
     _save_lifecycle,
-    _transition_valid,
-    _get_uri_state,
     _set_uri_state,
-    _enrich_with_lifecycle,
+    _transition_valid,
     parse_bos_uri,
     resolve_semantic,
 )
+from .domain_manager_search import cmd_search  # P110-C 治本续: 拆 cmd_search
 
 H = Path.home()
 DOCS = H / "Documents"
@@ -507,7 +506,7 @@ def cmd_cache_status(args):
                 l2_age = int(
                     (datetime.now() - datetime.fromisoformat(updated)).total_seconds()
                 )
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
 
     mtime = 0
@@ -516,7 +515,7 @@ def cmd_cache_status(args):
             m = p.stat().st_mtime if p.exists() else 0
             if m > mtime:
                 mtime = m
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     ssot_age = int(__import__("time").time() - mtime) if mtime else 0
 
@@ -552,7 +551,7 @@ def cmd_cache_clear(args):
     try:
         if BOS_CACHE_FILE.exists():
             BOS_CACHE_FILE.unlink()
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     print("  ✅ 所有缓存已清空 (L1 + L2)")
 
@@ -608,7 +607,7 @@ def cmd_info(args):
 def cmd_workflow(args):
     """BOS工作流编排执行"""
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from workflow import list_workflows, execute_workflow
+    from workflow import execute_workflow, list_workflows
 
     if not args or args[0] == "list":
         wfs = list_workflows()

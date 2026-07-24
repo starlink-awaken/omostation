@@ -17,12 +17,13 @@ L0 协议编织层的统一入口校验工具。
     python3 ecos-validator.py --mof-only
 """
 
-import os
-import sys
-import yaml
 import argparse
+import os
 import subprocess
+import sys
 from pathlib import Path
+
+import yaml
 
 
 def load_yaml(filepath: str) -> dict:

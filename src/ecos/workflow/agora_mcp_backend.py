@@ -41,6 +41,8 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
     from ecos.workflow.circuit_breaker import (
         is_available as _cb_available,
+    )
+    from ecos.workflow.circuit_breaker import (
         trip as _cb_trip,
     )
 
@@ -57,7 +59,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                     )
                     _cb_trip("agora", "mcp-gateway")
                     return _fallback_default(m1_node, params)
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.warning("Agora MCP uncontactable: %s, falling back to default", e)
             _cb_trip("agora", "mcp-gateway")
             return _fallback_default(m1_node, params)
@@ -135,7 +137,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                     logger.warning("Step %s failed, aborting workflow", step_name)
                     break
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             results["steps"].append(
                 {
                     "name": step_name,

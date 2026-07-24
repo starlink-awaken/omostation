@@ -13,8 +13,9 @@
 """
 
 import sys
-import yaml
 from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 L0_M1 = Path(__file__).resolve().parent.parent / "mof" / "m1"
@@ -34,7 +35,7 @@ def load_capabilities(m2type: str = None) -> list[dict]:
                 if isinstance(data, dict):
                     data["_m2type"] = t
                     caps.append(data)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return caps
 

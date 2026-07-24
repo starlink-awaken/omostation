@@ -21,13 +21,14 @@ ADR-0108 P110-A 拆解: 9 纯 cache/registry 函数 (~128L) 拆出.
 from __future__ import annotations
 
 import json
-import yaml
 from datetime import datetime
 from pathlib import Path
 
+import yaml
+
 # L0 audit integration
 try:
-    from l0_audit import validate_operation, get_audit_log
+    from l0_audit import get_audit_log, validate_operation
 
     L0_AUDIT = True
 except ImportError:
@@ -42,7 +43,7 @@ except ImportError:
 
 # Unified audit integration
 try:
-    from audit_unified import query_events, print_audit_report, log_event
+    from audit_unified import log_event, print_audit_report, query_events
 
     HAS_AUDIT_UNIFIED = True
 except ImportError:
@@ -102,7 +103,7 @@ def _l2_get(key: str) -> any:
             entry = data.get(key)
             if entry and (__import__("time").time() - entry.get("ts", 0)) < L2_TTL:
                 return entry["data"]
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     return None
 
@@ -123,7 +124,7 @@ def _l2_set(key: str, data: any) -> None:
         tmp = BOS_CACHE_FILE.with_suffix(".json.tmp")
         tmp.write_text(json.dumps(cache_data, indent=2, ensure_ascii=False))
         tmp.replace(BOS_CACHE_FILE)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
 
 
@@ -161,7 +162,7 @@ def _cache_warm() -> dict:
                         _L1_CACHE[key] = {"data": entry["data"], "ts": entry["ts"]}
                         stats["warmed"] += 1
                     stats["l2_items"] += 1
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     stats["l1_after"] = len(_L1_CACHE)
     return stats

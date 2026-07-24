@@ -298,7 +298,7 @@ class TemplateExtractor(Extractor):
                 else:
                     extracted = self._apply_pattern(source.raw_text, pattern)
                 candidates.extend(extracted)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 import sys
 
                 print(f"  ⚠️ 模板[{pattern.name}]异常: {e}", file=sys.stderr)

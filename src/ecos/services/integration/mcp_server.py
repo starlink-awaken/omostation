@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """ecos MCP Server — 织星生态统一对外入口 | v1.0"""
 
-import sys
-import os
 import json
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 ECOS_SRC = Path(__file__).resolve().parent.parent
@@ -15,7 +15,7 @@ SCRIPTS = ECOS_SRC / "scripts"
 H = Path.home()
 
 # 复用 domain-manager 逻辑
-from importlib.machinery import SourceFileLoader  # noqa: E402
+from importlib.machinery import SourceFileLoader
 
 DM_PATH = ECOS_SRC / "services" / "governance" / "domain_manager.py"
 dm = SourceFileLoader("dm", str(DM_PATH)).load_module()
@@ -288,7 +288,7 @@ def handle_bos_routes(args):
 
 
 # ── Workflow handlers (Phase 33) ──
-import yaml  # noqa: E402
+import yaml
 
 W = Path(__file__).resolve().parent.parent / "ssot"
 M1_WF_DIR = W / "mof" / "m1" / "workflow"
@@ -303,7 +303,7 @@ def _load_workflow_nodes():
                 node = yaml.safe_load(open(f))
                 if node and node.get("type") == "Workflow":
                     nodes.append(node)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return nodes
 
@@ -357,7 +357,7 @@ def handle_workflow_relations(args):
     if WF_CATALOG.exists():
         try:
             catalog = yaml.safe_load(open(WF_CATALOG))
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     global_rels = catalog.get("global_relations", {})
     if name:
@@ -473,7 +473,7 @@ def handle_search(args):
                         results.append(
                             {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
                         )
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return {"results": results, "total": len(results)}
 
@@ -574,7 +574,7 @@ def handle_search(args):
                         results.append(
                             {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
                         )
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return {"results": results, "total": len(results)}
 

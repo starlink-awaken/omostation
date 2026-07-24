@@ -133,7 +133,7 @@ class GovernanceRegistry:
         try:
             checker = self.instantiate_checker(registration, repo_root)
             return checker.execute()
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return CheckResult(
                 check_id=checker_id,
                 dimension=registration.dimension,

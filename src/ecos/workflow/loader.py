@@ -55,7 +55,7 @@ def _load_from_m1(name: str) -> dict | None:
                 or name_lower in kebab
             ):
                 return node
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
     return None
 
@@ -87,7 +87,7 @@ def list_workflows() -> list[dict]:
                     }
                     workflows.append(entry)
                     seen_names.add(kebab)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
 
     # definitions/ 目录（去重）
@@ -106,7 +106,7 @@ def list_workflows() -> list[dict]:
                         }
                     )
                     seen_names.add(name)
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     continue
 
     return workflows
@@ -134,6 +134,6 @@ def list_from_m1() -> list[dict]:
                         "steps_count": len(node.get("steps", [])),
                     }
                 )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
     return result

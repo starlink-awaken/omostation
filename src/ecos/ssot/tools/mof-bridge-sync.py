@@ -72,7 +72,9 @@ def load_standard_stages() -> list[dict]:
         print(f"FATAL: model-driven M3 源不存在: {MODEL_DRIVEN_M3}", file=sys.stderr)
         sys.exit(2)
     sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent.parent))
-    from model_driven.mof.m3_extended import STANDARD_STAGES  # type: ignore[import-not-found]
+    from model_driven.mof.m3_extended import (
+        STANDARD_STAGES,  # type: ignore[import-not-found]
+    )
 
     return [
         {
@@ -96,7 +98,9 @@ def load_standard_gates() -> list[dict]:
     if not MODEL_DRIVEN_M3.exists():
         sys.exit(2)
     sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent.parent))
-    from model_driven.mof.m3_extended import STANDARD_GATES  # type: ignore[import-not-found]
+    from model_driven.mof.m3_extended import (
+        STANDARD_GATES,  # type: ignore[import-not-found]
+    )
 
     return [
         {

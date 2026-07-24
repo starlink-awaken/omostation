@@ -15,30 +15,42 @@ Phase 1 模块化拆分:
 
 from __future__ import annotations
 
-from ecos.workflow.backend_registry import (
-    get_backend,
-    list_backends,
-    register,
-    resolve,
-)
-from ecos.workflow.executor import (
-    _execute_step,
-    execute_m1_workflow,
-    execute_workflow,
-    test_workflow,
-)
 from ecos.workflow.actions import (
     get_action,
     list_actions,
     register_action,
     resolve_action,
 )
+from ecos.workflow.backend_registry import (
+    get_backend,
+    list_backends,
+    register,
+    resolve,
+)
 from ecos.workflow.cache import (
     get as cache_get,
-    set as cache_set,
+)
+from ecos.workflow.cache import (
     invalidate,
     invalidate_all,
+)
+from ecos.workflow.cache import (
+    set as cache_set,
+)
+from ecos.workflow.cache import (
     status as cache_status,
+)
+from ecos.workflow.event_listener import (
+    build_trigger_registry,
+    execute_matched,
+    listen_forever,
+    match_event,
+)
+from ecos.workflow.executor import (
+    _execute_step,
+    execute_m1_workflow,
+    execute_workflow,
+    test_workflow,
 )
 from ecos.workflow.loader import (
     _load_from_m1,
@@ -49,12 +61,6 @@ from ecos.workflow.loader import (
 from ecos.workflow.validator import (
     validate_step,
     validate_workflow,
-)
-from ecos.workflow.event_listener import (
-    build_trigger_registry,
-    execute_matched,
-    listen_forever,
-    match_event,
 )
 
 __all__ = [

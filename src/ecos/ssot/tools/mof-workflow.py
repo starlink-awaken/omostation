@@ -20,9 +20,10 @@ Examples:
 """
 
 import sys
-import yaml
-from pathlib import Path
 from collections import Counter
+from pathlib import Path
+
+import yaml
 
 # ── 路径 ──
 HOME = Path.home()
@@ -35,7 +36,7 @@ REGISTRY_FILE = SSOT_DIR / "registry" / "workflow-catalog.yaml"
 # 引入统一输出
 TOOLS_DIR = Path(__file__).parent
 sys.path.insert(0, str(TOOLS_DIR))
-from _output import OutputFormatter, print_error  # noqa: E402
+from _output import OutputFormatter, print_error
 
 
 def _load_nodes():
@@ -46,7 +47,7 @@ def _load_nodes():
                 n = yaml.safe_load(open(f))
                 if n and n.get("type") == "Workflow":
                     nodes.append(n)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return nodes
 
@@ -71,7 +72,7 @@ def _load_catalog():
     if REGISTRY_FILE.exists():
         try:
             return yaml.safe_load(open(REGISTRY_FILE))
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return {}
 
@@ -909,7 +910,7 @@ def main():
     if handler:
         try:
             return handler(args)
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print_error(f"执行失败: {e}", "使用 --help 获取帮助")
             return 1
 

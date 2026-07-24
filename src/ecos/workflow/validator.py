@@ -446,6 +446,6 @@ def generate_m0_snapshot(workflow_id: str, m1_node: dict, result: dict) -> str |
         write_yaml_file(filepath, snapshot)
         logger.info("M0 snapshot written: %s", filepath)
         return str(filepath)
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         logger.warning("Failed to write M0 snapshot: %s", e)
         return None

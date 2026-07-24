@@ -88,7 +88,7 @@ def load_omo_tasks() -> dict:
         for f in d.glob("*.yaml"):
             try:
                 data = _YAML.load(f.read_text(encoding="utf-8"))
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
             if isinstance(data, dict) and "id" in data:
                 out[data["id"]] = data

@@ -14,8 +14,9 @@
 """
 
 import json
-import yaml
 from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 L0_M1 = Path(__file__).resolve().parent.parent / "mof" / "m1" / "entity"
@@ -31,7 +32,7 @@ def load_entities() -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict) and data.get("type") == "Entity":
                 entities.append(data)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return entities
 

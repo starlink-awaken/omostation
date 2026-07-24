@@ -16,8 +16,8 @@
 
 import json
 import sqlite3
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
 
 HOME = Path.home()
 CARDS_DB = HOME / "Workspace" / "data" / "cards" / "cards.db"
@@ -60,7 +60,7 @@ def trail_cards(since: datetime | None = None) -> list[dict]:
                         "timestamp": str(row[-1]) if row[-1] else "",
                     }
                 )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     # Also check cards table for recent changes
@@ -125,7 +125,7 @@ def trail_daemon(since: datetime | None = None) -> list[dict]:
                     "timestamp": row[3],
                 }
             )
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
 
     conn.close()

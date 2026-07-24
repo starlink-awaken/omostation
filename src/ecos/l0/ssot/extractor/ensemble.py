@@ -159,7 +159,7 @@ class EnsembleExtractor(Extractor):
                 prompt,
                 temperature=0.05,
             )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"  ⚠️ LLM 验证失败: {e}（回退到纯模板结果）", file=sys.stderr)
             return {"verified": [], "rejected": [], "missed": []}
 
@@ -183,7 +183,7 @@ class EnsembleExtractor(Extractor):
                     "rejected": data.get("rejected", []),
                     "missed": data.get("missed", []),
                 }
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
         return {"verified": [], "rejected": [], "missed": []}

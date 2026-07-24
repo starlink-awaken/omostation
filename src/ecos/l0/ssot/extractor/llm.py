@@ -60,8 +60,8 @@ class OllamaBackend(LLMBackend):
         import urllib.request
 
         try:
-            req = urllib.request.Request(f"{self.base_url}/api/tags")  # noqa: S310
-            urllib.request.urlopen(req, timeout=2)  # noqa: S310
+            req = urllib.request.Request(f"{self.base_url}/api/tags")
+            urllib.request.urlopen(req, timeout=2)
             return ""
         except urllib.error.URLError as e:
             if isinstance(e.reason, ConnectionRefusedError):
@@ -69,7 +69,7 @@ class OllamaBackend(LLMBackend):
             return f"Ollama 不可达: {e.reason}"
         except TimeoutError:
             return f"Ollama ({self.base_url}) 2 秒无响应"
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return f"Ollama 检测异常: {e}"
 
     @property
@@ -110,13 +110,13 @@ class OllamaBackend(LLMBackend):
 
         timeout = int(os.environ.get("OLLAMA_TIMEOUT", "120"))
 
-        req = urllib.request.Request(  # noqa: S310
+        req = urllib.request.Request(
             f"{self.base_url}/api/chat",
             data=payload,
             headers={"Content-Type": "application/json"},
         )
         try:
-            resp = urllib.request.urlopen(req, timeout=timeout)  # noqa: S310
+            resp = urllib.request.urlopen(req, timeout=timeout)
         except urllib.error.URLError as e:
             raise ConnectionError(
                 f"Ollama 请求失败 ({self.base_url}): {e.reason}\n  请确认 Ollama 正在运行 (ollama ps)"
@@ -164,7 +164,7 @@ class OpenAIBackend(LLMBackend):
             }
         ).encode()
 
-        req = urllib.request.Request(  # noqa: S310
+        req = urllib.request.Request(
             f"{self.base_url}/chat/completions",
             data=payload,
             headers={
@@ -173,7 +173,7 @@ class OpenAIBackend(LLMBackend):
             },
         )
         try:
-            resp = urllib.request.urlopen(req, timeout=30)  # noqa: S310
+            resp = urllib.request.urlopen(req, timeout=30)
         except urllib.error.URLError as e:
             raise ConnectionError(
                 f"无法连接到 OpenAI API ({self.base_url}): {e.reason}\n  请检查 API 地址和网络连接"
@@ -313,7 +313,7 @@ class LLMExtractor(Extractor):
         for backend in self.backends:
             try:
                 response = backend.complete(SYSTEM_PROMPT, user_prompt, temperature=0.1)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 errors.append(f"[{backend.name}] {e}")
                 continue
 
@@ -379,7 +379,7 @@ class LLMExtractor(Extractor):
                 response = backend.complete(
                     SYSTEM_PROMPT, context_prompt, temperature=0.1
                 )
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 print(f"    ❌ 块{i + 1} {backend.name} 调用失败: {e}", file=sys.stderr)
                 import traceback
 
@@ -490,7 +490,7 @@ class LLMExtractor(Extractor):
             import yaml
 
             data = yaml.safe_load(cleaned)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
         if not data or not isinstance(data, dict):
@@ -501,7 +501,7 @@ class LLMExtractor(Extractor):
                     import yaml
 
                     data = yaml.safe_load(fallback.group(1))
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     pass
 
         if not data or not isinstance(data, dict):
@@ -581,7 +581,7 @@ class LLMExtractor(Extractor):
             import urllib.request
 
             req = urllib.request.Request("http://localhost:11434/api/tags")
-            resp = urllib.request.urlopen(req, timeout=2)  # noqa: S310
+            resp = urllib.request.urlopen(req, timeout=2)
             data = json.loads(resp.read().decode())
             models = data.get("models", [])
             if models:
@@ -611,7 +611,7 @@ class LLMExtractor(Extractor):
                 print(
                     f"  🔌 [{len(backends)}] Ollama (模型: {chosen})", file=sys.stderr
                 )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
         # ── 2. 硅基流动（国内用户友好，价格便宜） ──────

@@ -20,10 +20,11 @@
 """
 
 import json
-import yaml
 import sqlite3
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 WS = HOME / "Workspace"
@@ -103,7 +104,7 @@ def load_registered_m1_ids() -> set:
                 sources = props.get("sources", [])
                 for s in sources:
                     ids.add(f"SOURCE-{s}")
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return ids
 
@@ -187,7 +188,7 @@ def create_gate_card(violation: dict):
         conn.commit()
         conn.close()
         return True
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return False
 
 

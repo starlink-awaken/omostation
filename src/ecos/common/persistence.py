@@ -30,7 +30,7 @@ class StatePersistence:
                     (key, json.dumps(value)),
                 )
             return True
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return False
 
     def load(self, key: str) -> Optional[Any]:
@@ -40,7 +40,7 @@ class StatePersistence:
                 row = cursor.fetchone()
                 if row:
                     return json.loads(row[0])
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
         return None
 
@@ -49,7 +49,7 @@ class StatePersistence:
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute("DELETE FROM state WHERE key = ?", (key,))
             return True
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return False
 
     def list_keys(self) -> list[str]:
@@ -57,5 +57,5 @@ class StatePersistence:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.execute("SELECT key FROM state")
                 return [row[0] for row in cursor.fetchall()]
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return []

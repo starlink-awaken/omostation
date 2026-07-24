@@ -43,7 +43,7 @@ SEMANTIC_MAP = {
 def _load_lifecycle() -> dict:
     """读取 URI 生命周期文件"""
     # 惰性 import (避免 lifecycle 模块顶层 import 触发循环)
-    from .domain_manager import URI_LIFECYCLE_FILE  # noqa: PLC0415
+    from .domain_manager import URI_LIFECYCLE_FILE
 
     try:
         if URI_LIFECYCLE_FILE.exists():
@@ -55,7 +55,7 @@ def _load_lifecycle() -> dict:
 
 def _save_lifecycle(data: dict) -> None:
     """写入 URI 生命周期文件"""
-    from .domain_manager import URI_LIFECYCLE_FILE  # noqa: PLC0415
+    from .domain_manager import URI_LIFECYCLE_FILE
 
     URI_LIFECYCLE_FILE.parent.mkdir(parents=True, exist_ok=True)
     data["_updated"] = datetime.now().isoformat()
@@ -125,7 +125,7 @@ def _enrich_with_lifecycle(uri: str, result: dict) -> dict:
 def resolve_semantic(domain: dict, shortcut: str) -> str:
     """将 _state/_memory 等语义快捷方式解析为实际文件路径"""
     # 惰性 import (避免 lifecycle 模块 import 时触发循环)
-    from .domain_manager import resolve_path  # noqa: PLC0415
+    from .domain_manager import resolve_path
 
     if shortcut not in SEMANTIC_MAP:
         return None
@@ -143,7 +143,7 @@ def resolve_semantic(domain: dict, shortcut: str) -> str:
 def parse_bos_uri(uri: str, registry: list):
     """bos://{domain}[/{path}] → (domain, subpath)  v2格式"""
     # 惰性 import (避免 domain_manager 顶层 re-export 时的循环)
-    from .domain_manager import SEMANTIC_MAP, resolve_path  # noqa: PLC0415
+    from .domain_manager import SEMANTIC_MAP, resolve_path
 
     if not uri.startswith("bos://"):
         return None, None

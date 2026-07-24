@@ -34,7 +34,7 @@ def load_state() -> dict:
     """读取 STATE.yaml"""
     try:
         return yaml.safe_load(STATE_FILE.read_text()) or {}
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return {}
 
 
@@ -62,7 +62,7 @@ def get_ssb_stats() -> dict:
             "coverage_pct": round(signed / total * 100, 1) if total > 0 else 0,
             "max_seq": max_seq,
         }
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"error": str(e), "total": 0}
 
 
@@ -108,7 +108,7 @@ def get_watchdog_status() -> dict:
     """读取 watchdog failures.json"""
     try:
         return json.loads(WATCHDOG_FILE.read_text())
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"error": str(e)}
 
 
@@ -116,7 +116,7 @@ def get_agora_services() -> list:
     """读取 Agora 服务注册表"""
     try:
         return json.loads(AGORA_SERVICES_FILE.read_text()).get("services", [])
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return [{"_error": str(e)}]
 
 
@@ -138,10 +138,10 @@ def get_swarm_health() -> dict:
 def get_agentmesh_health() -> dict:
     """从 agentmesh health endpoint 获取代理在线状态"""
     try:
-        req = urllib.request.Request(AGENTMESH_HEALTH_URL, method="GET")  # noqa: S310
-        with urllib.request.urlopen(req, timeout=5) as resp:  # noqa: S310
+        req = urllib.request.Request(AGENTMESH_HEALTH_URL, method="GET")
+        with urllib.request.urlopen(req, timeout=5) as resp:
             return json.loads(resp.read().decode("utf-8"))
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"error": str(e), "status": "unreachable"}
 
 

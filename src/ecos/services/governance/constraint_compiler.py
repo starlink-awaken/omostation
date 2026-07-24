@@ -18,15 +18,14 @@ Phase 8.2 / v5 能力补全
     python3 ecos-constraint-compiler.py --output /path    # 指定输出路径
 """
 
-import sys
-import json
 import argparse
 import hashlib
 import importlib.util
+import json
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-
 
 # ── 路径 ──
 DOCS = Path.home() / "Documents"
@@ -217,7 +216,7 @@ def run_compiled(output_path: Path) -> dict:
     try:
         result = module.run()
         return result
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"error": f"执行失败: {e}"}
 
 
@@ -285,7 +284,7 @@ def watch_and_compile(output_path: Path, interval: int = 60):
                     print(format_report(result))
 
                 last_mtime = current_mtime
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"  ⚠️ 错误: {e}")
 
         time.sleep(interval)

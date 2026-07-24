@@ -1,9 +1,10 @@
 """L0 Audit — 共享审计层 | 约束校验·操作日志·BOS验证 (集成 unified logger)"""
 
-import yaml
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import yaml
 
 H = Path.home()
 DOCS = H / "Documents"
@@ -12,7 +13,7 @@ AUDIT_LOG = H / ".ecos" / "audit" / "operations.jsonl"
 
 # 集成统一审计记录器
 try:
-    from audit_unified import log_event, create_audit_debt
+    from audit_unified import create_audit_debt, log_event
 
     HAS_UNIFIED = True
 except ImportError:
@@ -109,6 +110,6 @@ def get_audit_log(domain: str = None, since: str = None, limit: int = 50) -> lis
                 if domain and e.get("domain") != domain:
                     continue
                 entries.append(e)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return entries[-limit:]

@@ -56,7 +56,7 @@ class RecoveryCondition:
         """评估条件是否满足"""
         try:
             return self.condition(context)
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  条件评估失败: {self.name}: {e}")
             return False
 
@@ -78,7 +78,7 @@ class RecoveryAction:
         try:
             success = self.apply_function(context)
             return success
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"❌ 恢复动作执行失败: {self.name}: {e}")
             return False
 

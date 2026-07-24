@@ -12,7 +12,7 @@ import subprocess
 from pathlib import Path
 
 
-def cmd_search(args):  # noqa: C901
+def cmd_search(args):
     """跨域搜索."""
     if not args:
         print("用法: ecos domain search <关键词> [--domains d1,d2] [--max 20]")
@@ -28,7 +28,7 @@ def cmd_search(args):  # noqa: C901
             max_results = int(args[i + 1])
 
     # 惰性 import (避免 domain_manager_domain_cmd 顶层 import 的循环)
-    from .domain_manager import load_registry, resolve_path  # noqa: PLC0415
+    from .domain_manager import load_registry, resolve_path
 
     registry = load_registry()
     results = []
@@ -75,7 +75,7 @@ def cmd_search(args):  # noqa: C901
                             else line
                         )
                         results.append((did, str(rel)))
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
 
     if results:

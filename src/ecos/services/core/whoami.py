@@ -13,9 +13,9 @@ eCOS v6 — 系统自述 (ecos-whoami)
     python3 ecos-whoami.py --topology       # 只输出拓扑结构
 """
 
+import argparse
 import json
 import subprocess
-import argparse
 from datetime import datetime
 from pathlib import Path
 
@@ -37,7 +37,7 @@ def run(cmd: list, timeout=30, silent=True) -> str:
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         return r.stdout.strip()[:200] if silent else r.stdout.strip()
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return ""
 
 

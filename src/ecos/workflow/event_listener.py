@@ -263,7 +263,7 @@ def _poll_jsonl(
                         )
                         if not dry_run:
                             execute_matched(event)
-                except (json.JSONDecodeError, Exception) as e:  # noqa: BLE001  # defensive fallback
+                except (json.JSONDecodeError, Exception) as e:  # defensive fallback
                     logger.warning("Failed to process event: %s", e)
 
         last_position = current_size
@@ -296,6 +296,6 @@ def _listen_agora_sse(
                                     execute_matched(event)
                         except json.JSONDecodeError:
                             continue
-        except (httpx.ConnectError, httpx.TimeoutException) as e:  # noqa: BLE001
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
             logger.warning("SSE disconnected: %s, reconnecting in 10s...", e)
             time.sleep(10)

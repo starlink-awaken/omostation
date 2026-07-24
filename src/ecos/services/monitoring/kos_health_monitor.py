@@ -116,7 +116,7 @@ def check_known_docs(search_fn) -> dict:
                 found += 1
             else:
                 failed.append(doc_id)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             failed.append(doc_id)
     return {
         "found": found,

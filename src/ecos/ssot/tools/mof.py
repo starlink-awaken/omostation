@@ -14,11 +14,12 @@ L0 工具链的统一入口。支持主动触发所有检查。
     mof adr list            # 列出所有 ADR
 """
 
-import sys
 import subprocess
-import yaml
-from pathlib import Path
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 SSOT_TOOLS = (
@@ -151,7 +152,7 @@ def cmd_adr(args):
                         "superseded": "🔄",
                     }.get(status, "❓")
                     print(f"  {icon} [{status:10s}] {name}")
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     print(f"  ❓ {f.stem}")
         else:
             print("  (无 ADR)")

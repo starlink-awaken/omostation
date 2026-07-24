@@ -58,7 +58,7 @@ def load_bos_services_yaml(path: Path) -> dict[str, Any] | None:
     try:
         with open(path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         console.print(f"[red]ERROR:[/red] Failed to parse {path}: {e}")
         return None
 
@@ -106,7 +106,7 @@ def validate_internal_transport(services: list[dict[str, Any]]) -> list[dict[str
                 }
             )
             continue
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             errors.append(
                 {
                     "uri": uri,

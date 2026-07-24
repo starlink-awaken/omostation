@@ -9,8 +9,6 @@
 
 from __future__ import annotations
 
-from ecos.common.logger import get_logger
-
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -18,6 +16,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
+from ecos.common.logger import get_logger
 
 logger = get_logger("role")
 
@@ -168,7 +167,7 @@ class RoleManager(RolePrimitive):
                 "定义角色: %s, type=%s", definition.role_id, definition.role_type.value
             )
             return True
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("定义角色失败: %s - %s", definition.role_id, str(e))
             return False
 
@@ -187,7 +186,7 @@ class RoleManager(RolePrimitive):
             )
             logger.info("分配角色: agent=%s, role=%s", agent_id, role_id)
             return True
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error(
                 "分配角色失败: agent=%s, role=%s - %s", agent_id, role_id, str(e)
             )
@@ -208,7 +207,7 @@ class RoleManager(RolePrimitive):
             self.agent_roles[agent_id].status = RoleStatus.ACTIVE
             logger.info("切换角色: agent=%s, %s -> %s", agent_id, old_role, new_role_id)
             return True
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("切换角色失败: agent=%s - %s", agent_id, str(e))
             return False
 
@@ -236,7 +235,7 @@ class RoleManager(RolePrimitive):
             saved = self._persistence.load("role_manager")
             if saved:
                 logger.info("从持久化加载状态: role_manager")
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("加载状态失败: %s", str(e))
 
     def _save_state(self):
@@ -246,7 +245,7 @@ class RoleManager(RolePrimitive):
         try:
             self._persistence.save("role_manager", {"placeholder": True})
             logger.debug("保存状态: role_manager")
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("保存状态失败: %s", str(e))
 
 

@@ -24,7 +24,6 @@ from typing import Any
 
 from ecos.common.governed_fs import append_jsonl_record
 
-
 logger = logging.getLogger("ecos.workflow.backends.symphony")
 
 __all__ = ["execute"]
@@ -51,7 +50,9 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
     """
     # ── 延迟导入：SymphonyStateMachine 是可选依赖 ──
     try:
-        from ecos.l0.symphony.state_machine import SymphonyStateMachine  # type: ignore[import-untyped]
+        from ecos.l0.symphony.state_machine import (
+            SymphonyStateMachine,  # type: ignore[import-untyped]
+        )
     except ImportError:
         raise ImportError("ecos.l0.symphony.state_machine is not available")
 
@@ -109,7 +110,9 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
         # 通过 to_stage_name 查找 SymphonyStage 枚举
         try:
-            from ecos.l0.symphony.models import SymphonyStage  # type: ignore[import-untyped]
+            from ecos.l0.symphony.models import (
+                SymphonyStage,  # type: ignore[import-untyped]
+            )
 
             target_stage = getattr(SymphonyStage, stage_name)
         except (ImportError, AttributeError) as e:

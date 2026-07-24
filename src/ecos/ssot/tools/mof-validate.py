@@ -16,12 +16,13 @@
     python3 mof-validate.py --type Protocol     # 仅校验指定类型
 """
 
-import sys
-import json
-import yaml
 import argparse
-from pathlib import Path
+import json
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 
 def detect_paths() -> tuple[Path, Path]:
@@ -128,7 +129,7 @@ def load_all_m1_nodes(m1_dir: Path) -> list[dict]:
                     if "tools" in data and isinstance(data["tools"], list):
                         continue
                 nodes.append(data)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return nodes
 
@@ -257,7 +258,7 @@ def main():
 
     try:
         m2 = load_m2(m2_file)
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"⚠️ M2 加载失败 ({m2_file}): {e}", file=sys.stderr)
         if not args.json:
             sys.exit(2)

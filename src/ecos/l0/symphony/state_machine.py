@@ -241,7 +241,7 @@ class SymphonyStateMachine:
                 },
                 timeout=0.5,
             )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass  # Do not block state machine on logging failure
 
         return result

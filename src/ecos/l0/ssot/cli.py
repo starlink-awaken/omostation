@@ -30,14 +30,19 @@ from .reporter import Reporter
 
 # 导入监控系统模块（可选）
 try:
-    from .monitoring.alerting import IntelligentAlertingSystem  # noqa: F401
-    from .monitoring.architecture import MonitoringArchitecture  # noqa: F401
-    from .monitoring.architecture import get_monitoring_architecture  # noqa: F401
-    from .monitoring.cli import MonitoringCLI  # noqa: F401
-    from .monitoring.collectors import EnhancedMetricsCollector  # noqa: F401
-    from .monitoring.dashboard import MonitoringDashboard  # noqa: F401
-    from .monitoring.environment import EnvironmentAwareMonitor, get_environment_manager  # noqa: F401
-    from .monitoring.storage import InMemoryStorage, JSONStorage  # noqa: F401
+    from .monitoring.alerting import IntelligentAlertingSystem
+    from .monitoring.architecture import (
+        MonitoringArchitecture,
+        get_monitoring_architecture,
+    )
+    from .monitoring.cli import MonitoringCLI
+    from .monitoring.collectors import EnhancedMetricsCollector
+    from .monitoring.dashboard import MonitoringDashboard
+    from .monitoring.environment import (
+        EnvironmentAwareMonitor,
+        get_environment_manager,
+    )
+    from .monitoring.storage import InMemoryStorage, JSONStorage
 
     MONITORING_AVAILABLE = True
 except ImportError:
@@ -266,7 +271,7 @@ def _derive_watch(args):
                 print(
                     f"  ✅ 推导完成: {elapsed:.2f}s | {Reporter.summary_line(report)}"
                 )
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 print(f"  ❌ {e}")
 
     event_handler = DeriveHandler()
@@ -708,13 +713,11 @@ def cmd_stats(args):
 
 
 # P110 拆分: main() + _dispatch() → cli_main.py. 此处重导出保调用方不变.
-from .cli_main import main  # noqa: E402, F401  (backward compat)
-
 # P110 拆分: cmd_export / cmd_graph 提取 → cli_export.py / cli_graph.py
 # 此处 re-export 保 `from .cli import cmd_export, cmd_graph` 仍可用
-from .cli_export import cmd_export  # noqa: E402, F401  (backward compat)
-from .cli_graph import cmd_graph  # noqa: E402, F401  (backward compat)
-
+from .cli_export import cmd_export
+from .cli_graph import cmd_graph
+from .cli_main import main
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -18,12 +18,12 @@ import warnings
 
 # Lazy import: 在 _dispatch 之前 import 所有 cmd_* (依名字查找)
 # 这样 _dispatch 内的 `return cmd_init(args)` 等能正确找到函数
-from .cli import (  # noqa: E402, F401  (cli_main 重导出供调用方)
-    _dispatch,
-    _derive_watch,
-    _emit,
+from .cli import (
     _TEMPLATES,
     MONITORING_AVAILABLE,
+    _derive_watch,
+    _dispatch,
+    _emit,
     cmd_check,
     cmd_compile,
     cmd_completion,
@@ -38,7 +38,7 @@ from .cli import (  # noqa: E402, F401  (cli_main 重导出供调用方)
     cmd_sync,
     cmd_verify,
 )
-from .reporter import Reporter  # noqa: F401  (依 _derive_watch 调用)
+from .reporter import Reporter
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -243,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         return _dispatch(args, parser)
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         if debug:
             import traceback
 
@@ -254,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
-def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:  # noqa: F811
+def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
     if args.command == "init":
         return cmd_init(args)
     elif args.command == "compile":

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .primitives import CheckResult, CheckStatus, CheckSeverity, GovernanceCheck
+from .primitives import CheckResult, CheckSeverity, CheckStatus, GovernanceCheck
 
 
 class X1AuditChainChecker(GovernanceCheck):

@@ -73,8 +73,9 @@ def main() -> None:
 
 def _cmd_list(args: list[str]) -> None:
     """ecos workflow list [--with-status|-s] — 列出所有可用工作流"""
-    from ecos.workflow import list_workflows
     from pathlib import Path
+
+    from ecos.workflow import list_workflows
 
     with_status = "--with-status" in args or "-s" in args
 
@@ -97,7 +98,7 @@ def _cmd_list(args: list[str]) -> None:
                     wf_id = data.get("workflow_id", "")
                     if wf_id and wf_id not in latest_status:
                         latest_status[wf_id] = data.get("status", "?")
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     pass
 
     print(f"📋 可用工作流 ({len(wfs)} 个)")
@@ -277,10 +278,11 @@ def _cmd_actions(_args: list[str]) -> None:
 
 def _cmd_status(_args: list[str]) -> None:
     """ecos workflow status — 工作流引擎全局状态"""
+    from pathlib import Path
+
     from ecos.workflow import list_backends
     from ecos.workflow.actions import list_actions
     from ecos.workflow.loader import list_workflows
-    from pathlib import Path
 
     backends = list_backends()
     actions = list_actions()
@@ -306,7 +308,7 @@ def _cmd_status(_args: list[str]) -> None:
         fn = resolve({"execution": {}})
         assert callable(fn)
         print("  ✅  默认后端: 可用")
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"  ❌  默认后端: {e}")
 
     try:
@@ -315,7 +317,7 @@ def _cmd_status(_args: list[str]) -> None:
         handler = resolve_action("health_check")
         if handler:
             print("  ✅  action 解析: 功能正常")
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"  ❌  action 解析: {e}")
 
     m1_dir = Path(__file__).parent.parent / "ssot" / "mof" / "m1" / "workflow"
@@ -335,6 +337,7 @@ def _cmd_logs(args: list[str]) -> None:
 def _cmd_create(args: list[str]) -> None:
     """ecos workflow create <name> — 创建工作流模板"""
     from pathlib import Path
+
     import yaml
 
     m1 = "--m1" in args
@@ -574,6 +577,7 @@ def _cmd_edit(args: list[str]) -> None:
 def _cmd_export(args: list[str]) -> None:
     """ecos workflow export <name> --path <file> — 导出工作流"""
     import shutil
+
     from ecos.workflow import load_workflow
     from ecos.workflow.loader import M1_WF_DIR, WF_DIR
 
@@ -645,7 +649,7 @@ def _cmd_import(args: list[str]) -> None:
     try:
         with open(src) as f:
             wf = yaml.safe_load(f)
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"❌ YAML 解析失败: {e}")
         sys.exit(1)
 
@@ -777,8 +781,9 @@ def _cmd_fork(args: list[str]) -> None:
 
 def _cmd_stats(_args: list[str]) -> None:
     """ecos workflow stats — 运行统计"""
-    from ecos.cli.workflow_runs import SNAPSHOT_DIR, _load_all_runs
     from collections import Counter
+
+    from ecos.cli.workflow_runs import SNAPSHOT_DIR, _load_all_runs
 
     runs = _load_all_runs()
     if not runs:

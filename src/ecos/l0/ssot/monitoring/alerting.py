@@ -519,7 +519,7 @@ class IntelligentAlertingSystem:
         for callback in self.alert_callbacks:
             try:
                 callback(alert)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 print(f"⚠️  告警回调执行失败: {e}")
 
     def auto_resolve_stale_alerts(self, max_age_hours: int = 24):

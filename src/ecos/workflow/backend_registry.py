@@ -6,8 +6,8 @@
 
 from __future__ import annotations
 
-import logging
 import importlib
+import logging
 from typing import Any, Callable
 
 logger = logging.getLogger("ecos.workflow.backend_registry")
@@ -201,8 +201,9 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
     向后兼容，保留现有 execute_workflow() 行为。
     新 workflow 通过 execution.backend 字段指定其他后端。
     """
-    from ecos.workflow.executor import _execute_step
     import time
+
+    from ecos.workflow.executor import _execute_step
 
     results = {"steps": [], "passed": 0, "failed": 0}
     steps = m1_node.get("steps", [])
@@ -262,7 +263,7 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
                     delay,
                 )
                 time.sleep(delay)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 last_error = str(e)
                 if attempt >= max_attempts or not _should_retry(policy, {}, e):
                     break
@@ -468,6 +469,6 @@ def _ensure_backends_registered() -> None:
     ]:
         try:
             register(name, mod_path, entry, description=desc)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             # 可选依赖缺失不报错
             pass

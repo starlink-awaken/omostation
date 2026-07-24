@@ -68,7 +68,7 @@ class ConfigLoader:
             return False
         try:
             cached = json.loads(cp.read_text("utf-8"))
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return False
         for name in self.YAML_FILES:
             for ext in [".yaml", ".yml", ".json"]:
@@ -142,7 +142,7 @@ class ConfigLoader:
                 state_machines=state_machines,
                 constraints=[Constraint(**c) for c in data.get("constraints", [])],
             )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"  ⚠️ 缓存恢复失败: {e}")
             return None
 
@@ -289,7 +289,7 @@ class ConfigLoader:
                         data = yaml.safe_load(content)
                     self._cache[name] = data
                     return data
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     return None
         return None
 

@@ -36,7 +36,7 @@ def _import_meta_model():
         here = Path(__file__).resolve().parent
         if str(here) not in sys.path:
             sys.path.insert(0, str(here))
-        import meta_model  # noqa: E402
+        import meta_model
 
         return {
             "MetaType": meta_model.MetaType,
@@ -51,7 +51,7 @@ def _import_meta_model():
 
 
 # Python 3.13: _import_meta_model 里 sys.path 必须在 import 前
-import sys  # noqa: E402
+import sys
 
 
 @dataclass
@@ -131,7 +131,7 @@ class M3MetaLoader:
                 t_norm = t_key.replace("MET-", "")
                 key = f"{s_norm}_{t_norm}"
                 self._relation_matrix[key] = [r.name for r in rels]
-                self._relation_matrix[f"{s_key}_{t_key}"] = [r.name for r in rels]  # noqa
+                self._relation_matrix[f"{s_key}_{t_key}"] = [r.name for r in rels]
 
         # 加载 m3 elements
         self._m3_elements: dict[str, M3Element] = {}

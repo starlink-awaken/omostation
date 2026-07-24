@@ -30,7 +30,7 @@ class TokenManager:
             ).hexdigest()
             if signature == expected:
                 return user_id
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
         return None
 

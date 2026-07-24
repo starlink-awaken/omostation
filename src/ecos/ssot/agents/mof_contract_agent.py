@@ -81,7 +81,7 @@ def analyze_service(uri: str, bos_yaml: Path | None = None) -> dict[str, Any]:
         )
     except subprocess.TimeoutExpired:
         return {"error": "subprocess timeout (>30s)", "uri": uri}
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"error": f"subprocess exception: {e}", "uri": uri}
 
     # v0.2 --impact returns exit 0 (match) or 1 (no-mapping), both with JSON output

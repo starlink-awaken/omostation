@@ -17,13 +17,13 @@ Phase7 / ADT-04 / v5 设计能力 PoC
     1 = 存在 required 违反（仅 enforce 模式）
 """
 
-import sys
-import json
 import argparse
-import yaml
+import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
+import yaml
 
 CONSTRAINTS_FILE = Path(__file__).parent / "L0-constraints.yaml"
 # L0 协议层: 约束文件与校验器同目录

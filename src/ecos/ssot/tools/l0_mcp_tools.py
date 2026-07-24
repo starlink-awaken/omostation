@@ -20,8 +20,8 @@ MCP Tools:
         return l0_status()
 """
 
-import subprocess
 import json
+import subprocess
 from pathlib import Path
 
 HOME = Path.home()
@@ -40,7 +40,7 @@ def _run_tool(tool_path: Path, args: list = None) -> dict:
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     return {"error": "tool execution failed"}
 
@@ -139,7 +139,7 @@ def l0_adr_list() -> str:
                 status, "❓"
             )
             lines.append(f"  {icon} {name}")
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return "\n".join(lines)
 

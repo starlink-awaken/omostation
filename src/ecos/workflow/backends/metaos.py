@@ -58,7 +58,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
     try:
         token = engine.register_h("ecos-fabric", "ecos workflow fabric")
         engine.authenticate(token)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.debug("metaos session bootstrap: %s", e)
 
     wf_id = str(m1_node.get("id") or wf_name)
@@ -136,7 +136,7 @@ def _execute_sync_layers(workflow: Any, engine: Any) -> dict[str, Any]:
                     {"name": node.node_id, "status": "ok", "result": out}
                 )
                 results["passed"] += 1
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 node.status = "failed"
                 node.output = str(e)
                 results["steps"].append(

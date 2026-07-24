@@ -20,14 +20,15 @@
     python3 mof-enforce.py --watch             # 持续监听模式 (daemon)
 """
 
-import sys
-import json
-import yaml
-import sqlite3
 import argparse
+import json
 import re
-from pathlib import Path
+import sqlite3
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 DOCS = HOME / "Documents"
@@ -244,7 +245,7 @@ def create_debt_card(violation: dict) -> bool:
         conn.commit()
         conn.close()
         return True
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return False
 
 

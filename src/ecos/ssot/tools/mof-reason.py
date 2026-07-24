@@ -19,7 +19,7 @@ def load_m1(node_id: str) -> dict | None:
             data = yaml.safe_load(yaml_file.read_text())
             if isinstance(data, dict) and data.get("id") == node_id:
                 return data
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return None
 
@@ -34,7 +34,7 @@ def load_m2(schema_type: str) -> dict | None:
                 for key in data:
                     if isinstance(data[key], dict) and "stateMachine" in data[key]:
                         return data[key]
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return None
 
@@ -66,7 +66,7 @@ def find_dependents(node_id: str, project_name: str = None) -> list[dict]:
                 if term in subcomponents:
                     dependents.append(data)
                     break
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return dependents
 

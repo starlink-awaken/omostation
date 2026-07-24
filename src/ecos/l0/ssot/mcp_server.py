@@ -22,13 +22,13 @@ _SRC_DIR = _SCRIPT_DIR / "src"
 _PROJECT_ROOT = _SCRIPT_DIR.parent.parent  # SSOT 项目根
 sys.path.insert(0, str(_SRC_DIR))
 
-from .config_loader import load_domain  # noqa: E402
-from .engine import RuleEngine  # noqa: E402
-from .evolution.evolver import Evolver  # noqa: E402
-from .extractor import TextSource  # noqa: E402
-from .extractor.pipeline import ExtractionPipeline  # noqa: E402
-from .reporter import Reporter  # noqa: E402
-from .sync import sync_yaml_to_markdown  # noqa: E402
+from .config_loader import load_domain
+from .engine import RuleEngine
+from .evolution.evolver import Evolver
+from .extractor import TextSource
+from .extractor.pipeline import ExtractionPipeline
+from .reporter import Reporter
+from .sync import sync_yaml_to_markdown
 
 # ── 工具定义 ─────────────────────────────────────────
 
@@ -376,7 +376,7 @@ def handle_message(msg: dict) -> dict | None:
                 "id": msg_id,
                 "result": {"content": content, "meta": result},
             }
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return {
                 "jsonrpc": "2.0",
                 "id": msg_id,

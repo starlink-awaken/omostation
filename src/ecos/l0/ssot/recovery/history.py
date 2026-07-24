@@ -76,7 +76,7 @@ class RecoveryHistoryManager:
                 records = [RecoveryRecord(**item) for item in data.get("records", [])]
                 self.records = records[-self.max_records :]
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  加载历史记录失败: {e}")
             self.records = []
 
@@ -103,7 +103,7 @@ class RecoveryHistoryManager:
 
             print(f"📄 历史记录已保存 ({len(self.records)} 条)")
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️️ 保存历史记录失败: {e}")
 
     def add_record(self, record: RecoveryRecord):

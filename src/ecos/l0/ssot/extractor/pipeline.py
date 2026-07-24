@@ -52,7 +52,7 @@ class ExtractionPipeline:
                 print("  🔄 LLM 兜底已就绪", file=sys.stderr)
             else:
                 self._llm_failed = True
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             self._llm_failed = True
         return self._llm_extractor
 
@@ -90,7 +90,7 @@ class ExtractionPipeline:
                 all_candidates.extend(result.candidates)
                 for err in result.errors:
                     errors.append(f"[{extractor.extractor_name}] {err}")
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 errors.append(f"[{extractor.extractor_name}] 执行异常: {e}")
 
         if not all_candidates:
@@ -105,7 +105,7 @@ class ExtractionPipeline:
                     all_candidates.extend(llm_result.candidates)
                     for err in llm_result.errors:
                         errors.append(f"[llm] {err}")
-                except Exception as e:  # noqa: BLE001  # defensive fallback
+                except Exception as e:  # defensive fallback
                     errors.append(f"[llm] {e}")
 
         if not all_candidates:
@@ -138,7 +138,7 @@ class ExtractionPipeline:
             try:
                 writer = YamlWriter(self.domain_dir)
                 applied_files = writer.apply(merged, auto_confirm=auto_confirm)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 errors.append(f"写入失败: {e}")
 
         return {

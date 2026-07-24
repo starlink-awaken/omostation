@@ -17,7 +17,7 @@ import yaml
 def cmd_bos_validate(args):
     """全量BOS URI健康检查 + X4-C10~C13 约束评估"""
     # 业务函数 import (惰性, 避免 domain_manager 顶层 re-export 时的循环)
-    from ecos.services.governance.domain_manager import (  # noqa: PLC0415
+    from ecos.services.governance.domain_manager import (
         _evaluate_bos_constraints,
         _load_bos_constraints,
         _load_lifecycle,
@@ -136,7 +136,7 @@ def _load_bos_constraints() -> list[dict]:
                     constraints.append(c)
             if constraints:
                 break
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
     return constraints
 
@@ -145,8 +145,11 @@ def _evaluate_bos_constraints(
     uri: str, registry: list, lifecycle: dict = None
 ) -> list[dict]:
     # 惰性 import (避免 domain_manager 顶层 import 的循环)
-    from .domain_manager import resolve_path  # noqa: PLC0415
-    from .domain_manager_lifecycle import parse_bos_uri, _load_lifecycle  # noqa: PLC0415
+    from .domain_manager import resolve_path
+    from .domain_manager_lifecycle import (
+        _load_lifecycle,
+        parse_bos_uri,
+    )
 
     """评估 X4-C10~C13 约束，返回 violations 列表"""
     violations = []

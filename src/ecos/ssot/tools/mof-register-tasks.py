@@ -20,9 +20,10 @@
     python3 mof-register-tasks.py --summary # 仅统计
 """
 
-import yaml
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 DOCS = HOME / "Documents"

@@ -9,14 +9,13 @@
 
 from __future__ import annotations
 
-from ecos.common.logger import get_logger
-
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Optional
 
+from ecos.common.logger import get_logger
 
 logger = get_logger("runtime")
 
@@ -253,7 +252,7 @@ class CommunicationProtocol:
             )
             self._log("send_failed", message_id=message.message_id, target=target)
             return False
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("消息发送异常: %s - %s", message.message_id, str(e))
             return False
 
@@ -362,7 +361,8 @@ class StateSyncService:
     """
 
     def __init__(self, node_id: str):
-        from ecos.l0.governance import StateSyncService as L0StateSync, SyncStrategy
+        from ecos.l0.governance import StateSyncService as L0StateSync
+        from ecos.l0.governance import SyncStrategy
 
         self.node_id = node_id
         self._l0 = L0StateSync(node_id, SyncStrategy.EVENTUAL)
@@ -500,7 +500,7 @@ class FailoverExecutor:
                         }
                     )
                 return success
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 return False
         return False
 

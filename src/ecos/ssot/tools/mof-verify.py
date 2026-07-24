@@ -21,9 +21,10 @@
 """
 
 import json
-import yaml
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 SSOT = Path(__file__).resolve().parent.parent
@@ -81,7 +82,7 @@ def verify_m2() -> dict:
                 "required": len(typedef.get("requiredProperties", {})),
                 "m3_parent": typedef.get("m3_parent", ""),
             }
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             issues.append(f"{f.name}: {e}")
 
     # Check for missing m3_parent
@@ -164,7 +165,7 @@ def verify_m0() -> dict:
                 else (now() - gen_time).total_seconds() / 3600
             )
             fresh = age_hours < 6
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             age_hours = -1
             fresh = False
     else:
@@ -246,7 +247,7 @@ def verify_self_ref() -> dict:
             name = data.get("name", "")
             if any(t in name for t in tool_names):
                 registered_tools.append(name)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     return {

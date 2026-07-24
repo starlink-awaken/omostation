@@ -218,7 +218,7 @@ def write_ssb_alert(metric_name, metric_label, baseline, current, deviation, sev
             )
 
         db.commit()
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         if db:
             db.rollback()
         raise

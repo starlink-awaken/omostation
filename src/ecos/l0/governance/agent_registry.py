@@ -8,13 +8,12 @@
 
 from __future__ import annotations
 
-from ecos.common.logger import get_logger
-
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
+from ecos.common.logger import get_logger
 
 logger = get_logger("agent_registry")
 
@@ -90,7 +89,7 @@ class AgentRegistry:
                 "注册 Agent: %s, name=%s, capabilities=%s", agent_id, name, capabilities
             )
             return agent
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("注册 Agent 失败: %s - %s", agent_id, str(e))
             raise
 
@@ -102,7 +101,7 @@ class AgentRegistry:
                 logger.info("注销 Agent: %s", agent_id)
                 return True
             return False
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("注销 Agent 失败: %s - %s", agent_id, str(e))
             return False
 
@@ -164,7 +163,7 @@ class AgentRegistry:
             saved = self._persistence.load("agent_registry")
             if saved:
                 logger.info("从持久化加载状态: agent_registry")
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("加载状态失败: %s", str(e))
 
     def _save_state(self):
@@ -174,5 +173,5 @@ class AgentRegistry:
         try:
             self._persistence.save("agent_registry", {"placeholder": True})
             logger.debug("保存状态: agent_registry")
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("保存状态失败: %s", str(e))

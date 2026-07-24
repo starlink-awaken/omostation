@@ -9,13 +9,13 @@
 
 from __future__ import annotations
 
+import threading
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
-import threading
 
 from ecos.common.logger import get_logger
 
@@ -724,7 +724,7 @@ class CollectiveDecision:
                 )
 
             return result
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("决策异常: %s - %s", proposal_id, str(e))
             return None
 

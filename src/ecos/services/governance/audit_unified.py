@@ -134,7 +134,7 @@ def _ssb_publish(event: dict) -> str | None:
         conn.commit()
         conn.close()
         return event_id
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return None
 
 
@@ -148,7 +148,7 @@ def _append_jsonl(path: Path, event: dict) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "a") as f:
             f.write(json.dumps(event, ensure_ascii=False, default=str) + "\n")
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
 
 
@@ -257,7 +257,7 @@ def create_audit_debt(uri: str, anomaly_type: str, detail: str) -> str | None:
         conn.commit()
         conn.close()
         return cards_id
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return None
 
 
@@ -343,7 +343,7 @@ def _query_ssb(hours: int = 24, event_type: str = None) -> list[dict]:
                     "domain": row[8],
                 }
             )
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     return events
 
@@ -381,7 +381,7 @@ def _query_daemon_db(hours: int = 24) -> list[dict]:
                     "passed": row[2] == 0,
                 }
             )
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     return events
 
@@ -419,7 +419,7 @@ def _query_healer_db(hours: int = 24) -> list[dict]:
                     "passed": "success" in (row[4] or "").lower(),
                 }
             )
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
     return events
 

@@ -35,7 +35,7 @@ import yaml
 
 # L0 audit integration
 try:
-    from l0_audit import validate_operation, get_audit_log
+    from l0_audit import get_audit_log, validate_operation
 
     L0_AUDIT = True
 except ImportError:
@@ -50,7 +50,7 @@ except ImportError:
 
 # Unified audit integration
 try:
-    from audit_unified import query_events, print_audit_report, log_event
+    from audit_unified import log_event, print_audit_report, query_events
 
     HAS_AUDIT_UNIFIED = True
 except ImportError:
@@ -543,13 +543,13 @@ def cmd_register(args):
     tier = 1 if (path / "_control" / "STATE.md").exists() else 3
 
     # 惰性 import (避免 domain_manager_domain_cmd 顶层 import 的循环)
-    from .domain_manager import L0_CONSTRAINTS  # noqa: PLC0415
+    from .domain_manager import L0_CONSTRAINTS
 
     # Read existing registry as YAML
     try:
         with open(L0_CONSTRAINTS) as f:
             data = yaml.safe_load(f) or {}
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"❌ 无法读取 L0-constraints.yaml: {e}")
         return
 
@@ -586,7 +586,7 @@ def cmd_register(args):
     data["domain_registry"] = registry
 
     # Write back via yaml.dump (auto-escapes special chars, replaces old string concatenation)
-    from .domain_manager import L0_CONSTRAINTS  # noqa: PLC0415
+    from .domain_manager import L0_CONSTRAINTS
 
     with open(L0_CONSTRAINTS, "w") as f:
         yaml.dump(
@@ -631,7 +631,7 @@ def cmd_sync(args):
         lines.append("\n")
 
     lines.append(f"---\n*auto: {datetime.now().isoformat()}*\n")
-    from .domain_manager import DOMAIN_INDEX  # noqa: PLC0415
+    from .domain_manager import DOMAIN_INDEX
 
     with open(DOMAIN_INDEX, "w") as f:
         f.writelines(lines)

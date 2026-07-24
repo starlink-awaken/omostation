@@ -29,11 +29,12 @@
     python3 mof-model.py --summary           # 仅统计
 """
 
-import yaml
 import argparse
 import re
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 DOCS = HOME / "Documents"
@@ -62,7 +63,7 @@ def scan_claude_md(root: Path) -> list[dict]:
         try:
             with open(md, encoding="utf-8") as f:
                 head = f.read(1000)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
 
         # Extract version, title, domain
@@ -139,7 +140,7 @@ def scan_state_md(root: Path) -> list[dict]:
             continue
         try:
             md.stat()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
 
         rel = str(md.relative_to(root)) if str(md).startswith(str(root)) else str(md)
@@ -397,7 +398,7 @@ def scan_protocols(ws_root: Path) -> list[dict]:
         try:
             with open(f) as fh:
                 data = yaml.safe_load(fh)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
 
         if not isinstance(data, dict):

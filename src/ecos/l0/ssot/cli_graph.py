@@ -15,11 +15,13 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-from .cli import cmd_graph as _cmd_graph_compat  # noqa: F401  (backward compat re-export)
+from .cli import (
+    cmd_graph as _cmd_graph_compat,
+)
 from .config_loader import load_domain
 
 
-def cmd_graph(args):  # noqa: F811  (override re-export with local impl)
+def cmd_graph(args):
     """生成可视化（支持 --html 输出）"""
     config = load_domain(args.dir)
 

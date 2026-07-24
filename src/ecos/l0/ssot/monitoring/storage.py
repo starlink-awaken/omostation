@@ -138,7 +138,7 @@ class JSONStorage(MetricsStorage):
                 return json.load(f)
         except FileNotFoundError:
             return {}
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  读取存储文件失败: {e}")
             return {}
 
@@ -251,7 +251,7 @@ class JSONStorage(MetricsStorage):
 
 
 # 导入必要的依赖
-from datetime import timedelta  # noqa: E402
+from datetime import timedelta
 
 
 class SQLiteStorage(MetricsStorage):

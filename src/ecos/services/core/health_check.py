@@ -24,13 +24,12 @@ eCOS v6 — 健康检查集成测试 (ecos-health-check)
     2 = 脚本缺失
 """
 
-import sys
+import argparse
 import json
 import subprocess
-import argparse
+import sys
 from datetime import datetime
 from pathlib import Path
-
 
 RUNTIME_DIR = Path(__file__).parent.parent  # @驾驶舱/_runtime/
 L1_DIR = RUNTIME_DIR / "_l1"  # L1运行时脚本
@@ -203,7 +202,7 @@ def run_check(check: dict) -> dict:
             "reason": "30s 超时",
             "duration_ms": 30000,
         }
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {
             "id": check["id"],
             "name": check["name"],

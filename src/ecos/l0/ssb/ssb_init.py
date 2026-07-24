@@ -25,7 +25,11 @@ from pathlib import Path
 
 # Add parent to path so ssb_client is importable
 sys.path.insert(0, str(Path(__file__).parent))
-from ecos.protocol.ssb.ssb_client import SSB_DB_PATH, SSBClient, _now  # type: ignore[import-not-found]
+from ecos.protocol.ssb.ssb_client import (  # type: ignore[import-not-found]
+    SSB_DB_PATH,
+    SSBClient,
+    _now,
+)
 
 
 def do_init():

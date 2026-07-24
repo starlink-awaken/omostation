@@ -76,7 +76,7 @@ def serve(port: int = _DEFAULT_PORT, interval: float = 5.0) -> None:
     每 interval 秒生成一个心跳事件。事件通过写入 events.jsonl 注入。
     """
     try:
-        from http.server import HTTPServer, BaseHTTPRequestHandler
+        from http.server import BaseHTTPRequestHandler, HTTPServer
     except ImportError:
         logger.error("SSE server requires Python stdlib http.server")
         return

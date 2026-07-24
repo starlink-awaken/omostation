@@ -571,7 +571,7 @@ def validate_yaml_schema(yaml_name: str, data: dict) -> list[str]:
 
 # ── 跨文件引用校验 ────────────────────────────────────
 
-import re as _re  # noqa: E402
+import re as _re
 
 
 def validate_cross_references(config: DomainConfig) -> list[str]:

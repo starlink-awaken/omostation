@@ -19,7 +19,7 @@ def timeout(seconds: int):
             def runner():
                 try:
                     result["value"] = func(*args, **kwargs)
-                except Exception as exc:  # pragma: no cover  # noqa: BLE001
+                except Exception as exc:  # pragma: no cover
                     error["value"] = exc
 
             thread = threading.Thread(target=runner, daemon=True)
@@ -44,7 +44,7 @@ def retry(max_attempts: int = 3, delay: float = 1.0):
             for attempt in range(1, max_attempts + 1):
                 try:
                     return func(*args, **kwargs)
-                except Exception as exc:  # pragma: no cover  # noqa: BLE001
+                except Exception as exc:  # pragma: no cover
                     last_error = exc
                     if attempt == max_attempts:
                         raise

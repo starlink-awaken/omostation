@@ -67,7 +67,7 @@ class AgentMatcher:
                 node["node_id"]: node["reputation"] for node in all_nodes
             }
             self._reputation_cache_time = now
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             self._reputation_cache = {}
 
     def apply_task_degradation(self, task: TaskRequirement) -> TaskRequirement:
@@ -251,7 +251,7 @@ class AgentMatcher:
             if agent.agent_id in self._reputation_cache:
                 return self._reputation_cache[agent.agent_id]
             return self._reputation_ledger.get_reputation(agent.agent_id)  # type: ignore[union-attr]
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return 0.5
 
     def get_agent_ranking(

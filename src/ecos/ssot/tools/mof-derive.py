@@ -165,7 +165,9 @@ def load_standard_stages() -> list[dict]:
         return fallback
     try:
         sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent.parent))
-        from model_driven.mof.m3_extended import STANDARD_STAGES  # type: ignore[import-not-found]
+        from model_driven.mof.m3_extended import (
+            STANDARD_STAGES,  # type: ignore[import-not-found]
+        )
 
         return [
             {
@@ -182,7 +184,7 @@ def load_standard_stages() -> list[dict]:
             }
             for s in STANDARD_STAGES.values()
         ]
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"⚠️  M3 import 失败, 使用 fallback: {e}", file=sys.stderr)
         return fallback
 
@@ -219,7 +221,9 @@ def load_standard_gates() -> list[dict]:
         return fallback
     try:
         sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent.parent))
-        from model_driven.mof.m3_extended import STANDARD_GATES  # type: ignore[import-not-found]
+        from model_driven.mof.m3_extended import (
+            STANDARD_GATES,  # type: ignore[import-not-found]
+        )
 
         return [
             {
@@ -233,7 +237,7 @@ def load_standard_gates() -> list[dict]:
             }
             for g in STANDARD_GATES
         ]
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"⚠️  M3 import 失败, 使用 fallback: {e}", file=sys.stderr)
         return fallback
 
@@ -264,7 +268,9 @@ def load_pipeline_phases() -> list[dict]:
         return fallback
     try:
         sys.path.insert(0, str(MODEL_DRIVEN_PIPELINE.parent.parent.parent))
-        from model_driven.lifecycle.pipeline import PipelinePhase  # type: ignore[import-not-found]
+        from model_driven.lifecycle.pipeline import (
+            PipelinePhase,  # type: ignore[import-not-found]
+        )
 
         return [
             {
@@ -279,7 +285,7 @@ def load_pipeline_phases() -> list[dict]:
             }
             for p in PipelinePhase
         ]
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"⚠️  Pipeline import 失败, 使用 fallback: {e}", file=sys.stderr)
         return fallback
 

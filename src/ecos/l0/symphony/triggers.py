@@ -145,7 +145,7 @@ class TriggerEngine:
                 results.append(result)
                 self._history.append(result)
 
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 logger.error(f"触发器 {trigger.name} 执行失败：{e}")
                 results.append(
                     TriggerResult(

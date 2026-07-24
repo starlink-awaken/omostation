@@ -16,10 +16,10 @@ Agent 每次会话启动时运行，聚合当前系统状态到一页简报。
     - ecos-constraint-validator.py
 """
 
-import json
 import argparse
-import subprocess
+import json
 import sqlite3
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -89,7 +89,7 @@ def get_top_cards(n: int = 3) -> list[dict]:
         ]
         conn.close()
         return cards
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return [{"id": "error", "title": str(e)[:50]}]
 
 
@@ -313,7 +313,7 @@ def format_brief(
                 lines.append(f"- ⚠️ 老化协议: {', '.join(aging)}")
             else:
                 lines.append("- ✅ 协议全健康")
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             lines.append("- ⏳ M0 快照不可读")
     else:
         lines.append("- ⏳ M0 快照未生成")

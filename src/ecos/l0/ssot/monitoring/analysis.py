@@ -115,7 +115,7 @@ class AnomalyDetector:
                         }
                     )
 
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
         return anomalies
@@ -163,7 +163,7 @@ class AnomalyDetector:
                         }
                     )
 
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
         return anomalies
@@ -269,7 +269,7 @@ class PerformanceTrendAnalyzer:
 
             return trend_direction, slope, correlation
 
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return TrendDirection.UNKNOWN, 0.0, 0.0
 
     def _forecast_next_value(self, values: list[float], slope: float) -> float | None:

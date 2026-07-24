@@ -159,7 +159,7 @@ class ResourceMonitor:
                 io_read_bytes=io_counters.read_bytes if io_counters else 0,
                 io_write_bytes=io_counters.write_bytes if io_counters else 0,
             )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             # 如果进程信息获取失败，返回零值快照
             return ResourceSnapshot(
                 timestamp=datetime.now().isoformat(),
@@ -258,7 +258,7 @@ class MetricsCollector:
         """收集引擎指标"""
         try:
             pattern_count = len(engine.registry.list_patterns())
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pattern_count = 0
 
         return {
@@ -327,14 +327,14 @@ class MetricsCollector:
         """获取模式类型"""
         try:
             return engine.registry.list_patterns()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return []
 
     def _get_registry_size(self, engine: RuleEngine) -> int:
         """获取注册表大小"""
         try:
             return len(engine.registry.list_patterns())
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return 0
 
     def _estimate_domain_size(self, domain: DomainConfig) -> float:
@@ -465,7 +465,7 @@ class PerformanceMonitor:
         for callback in self.callbacks:
             try:
                 callback(execution_metrics)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 print(f"⚠️  回调执行失败: {e}")
 
     def get_performance_summary(self) -> dict[str, Any]:

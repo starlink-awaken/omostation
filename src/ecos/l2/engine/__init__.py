@@ -8,14 +8,13 @@
 
 from __future__ import annotations
 
-from ecos.common.logger import get_logger
-from ecos.common.exceptions import ECOSException
-
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Optional
 
+from ecos.common.exceptions import ECOSException
+from ecos.common.logger import get_logger
 
 logger = get_logger("engine")
 
@@ -76,7 +75,7 @@ class CollaborationEngine:
     """
 
     def __init__(self, config: EngineConfig):
-        from ecos.l0.governance import TaskScheduler, RoleManager, AgentRegistry
+        from ecos.l0.governance import AgentRegistry, RoleManager, TaskScheduler
 
         self.config = config
         self.status = EngineStatus.IDLE
@@ -96,7 +95,7 @@ class CollaborationEngine:
             logger.info("协作引擎启动: %s", self.config.engine_id)
             self._log_event("engine_started")
             return True
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("协作引擎启动失败: %s", str(e))
             self.status = EngineStatus.ERROR
             return False
@@ -107,7 +106,7 @@ class CollaborationEngine:
             logger.info("协作引擎停止: %s", self.config.engine_id)
             self._log_event("engine_stopped")
             return True
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("协作引擎停止失败: %s", str(e))
             return False
 
@@ -127,7 +126,7 @@ class CollaborationEngine:
                 )
             )
             logger.info("注册 Agent: %s, capabilities=%s", agent_id, capabilities)
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("注册 Agent 失败: %s - %s", agent_id, str(e))
             raise ECOSException(f"注册 Agent 失败: {e}")
 
@@ -155,7 +154,7 @@ class CollaborationEngine:
             logger.info("提交任务: %s, name=%s", task_id, name)
             self._log_event("task_submitted", task_id=task_id, name=name)
             return task
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("提交任务失败: %s - %s", task_id, str(e))
             raise ECOSException(f"提交任务失败: {e}")
 
@@ -283,9 +282,9 @@ class SwarmEngine:
 
     def __init__(self, config: EngineConfig):
         from ecos.l0.governance import (
-            SwarmManager,
             CollectiveDecision,
             EmergenceDetector,
+            SwarmManager,
         )
 
         self.config = config
@@ -394,10 +393,10 @@ class PersonalEngine:
 
     def __init__(self, config: EngineConfig):
         from ecos.l0.governance import (
+            KnowledgeGraphBuilder,
             PersonalKnowledgeManager,
             PreferenceEngine,
             RecommendationEngine,
-            KnowledgeGraphBuilder,
         )
 
         self.config = config
@@ -469,7 +468,7 @@ class PersonalEngine:
         self._graph.add_edge(source, target, relation)
 
     def learn_preference(self, user_id: str, key: str, score: float = 1.0) -> None:
-        from ecos.l0.governance import UserPreference, PreferenceType
+        from ecos.l0.governance import PreferenceType, UserPreference
 
         pref = UserPreference(
             user_id=user_id,

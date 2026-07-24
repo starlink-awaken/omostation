@@ -245,7 +245,7 @@ def _action_workflow_run(params: dict) -> dict:
                 "failed": result.get("failed", 0),
             },
         }
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"passed": False, "summary": f"子工作流执行失败: {e}"}
 
 
@@ -263,7 +263,7 @@ def _action_health_check(params: dict) -> dict:
         data = json.loads(r.stdout)
         ok = all(c.get("pass", True) for c in data.get("results", []))
         return {"passed": ok, "summary": f"健康检查: {'✅' if ok else '❌'}"}
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return _fail(
             summary="健康检查解析失败",
             details=r.stderr.strip()[:300] or r.stdout.strip()[:300],
@@ -401,7 +401,7 @@ def _action_complete_quest(params: dict) -> dict:
             "passed": True,
             "summary": f"complete_quest: 成功结算 Quest {quest_id} ({title})，为 {assignee} 奖励 {reward} 积分",
         }
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return {"passed": False, "summary": f"complete_quest 失败: {str(e)}"}
 
 

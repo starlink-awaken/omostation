@@ -7,13 +7,12 @@
 
 from __future__ import annotations
 
-from ecos.common.logger import get_logger
-from ecos.common.security import InputValidator
-from ecos.common.exceptions import ECOSException
-
 from dataclasses import dataclass
 from typing import Any
 
+from ecos.common.exceptions import ECOSException
+from ecos.common.logger import get_logger
+from ecos.common.security import InputValidator
 
 logger = get_logger("entry")
 
@@ -44,8 +43,8 @@ class GovernanceCLI:
         if self._node_manager is None:
             from ecos.l0.governance import (
                 NodeManager,
-                SwarmManager,
                 PersonalKnowledgeManager,
+                SwarmManager,
             )
 
             self._node_manager = NodeManager()
@@ -341,8 +340,8 @@ class GovernanceMCP:
         if self._node_manager is None:
             from ecos.l0.governance import (
                 NodeManager,
-                SwarmManager,
                 PersonalKnowledgeManager,
+                SwarmManager,
             )
 
             self._node_manager = NodeManager()
@@ -558,7 +557,7 @@ class GovernanceMCP:
             except ECOSException as e:
                 logger.error("工具调用失败: %s - %s", tool_name, str(e))
                 return {"error": str(e), "tool": tool_name}
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 logger.error("工具调用异常: %s - %s", tool_name, str(e))
                 return {"error": f"内部错误: {e}", "tool": tool_name}
         return {"error": f"未实现的工具: {tool_name}"}

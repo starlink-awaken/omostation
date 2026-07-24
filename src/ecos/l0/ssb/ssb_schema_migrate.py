@@ -40,9 +40,9 @@ def migrate():
         except json.JSONDecodeError:
             events.append({"raw": line, "_corrupt": True})
 
-    T0 = datetime(2026, 5, 8, 0, 0, 0)  # noqa: N806
-    INTERVAL = timedelta(minutes=2)  # noqa: N806
-    BASE_SEQ = 1000  # noqa: N806
+    T0 = datetime(2026, 5, 8, 0, 0, 0)
+    INTERVAL = timedelta(minutes=2)
+    BASE_SEQ = 1000
 
     stats = {
         "total": len(events),
@@ -94,7 +94,7 @@ def migrate():
 if __name__ == "__main__":
     try:
         migrate()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"❌ 迁移失败: {e}")
         if os.path.exists(BACKUP):
             shutil.copy2(BACKUP, SSB_PATH)

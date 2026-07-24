@@ -19,7 +19,7 @@ from sot_bridge.ssot_kernel.meta_model import (
 
 YAML_AVAILABLE = False
 try:
-    import yaml  # noqa: F401
+    import yaml
 
     YAML_AVAILABLE = True
 except ImportError:

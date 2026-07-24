@@ -234,7 +234,7 @@ class IntelligentRecoverySystem:
 
             return result.success
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"❌ 恢复执行失败: {e}")
             self._record_failure(error, context, "execution_exception")
             return False

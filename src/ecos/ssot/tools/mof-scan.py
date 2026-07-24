@@ -20,11 +20,11 @@
     python3 mof-scan.py --type=Protocol    # 仅扫描指定类型
 """
 
+import argparse
 import json
 import sqlite3
-import argparse
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 # ── 路径 ──
 DOCS = Path.home() / "Documents"

@@ -379,7 +379,7 @@ class MonitoringArchitecture:
 
     def should_collect(self) -> bool:
         """是否应该收集指标"""
-        return random.random() < self.environment_config.sample_rate  # noqa: S311
+        return random.random() < self.environment_config.sample_rate
 
     def should_alert(self) -> bool:
         """是否应该发送告警"""
@@ -452,7 +452,7 @@ class MonitoringArchitecture:
                     component, "get_health", lambda: {"status": "healthy"}
                 )()
                 health["components"][name] = component_health
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 health["components"][name] = {"status": "error", "error": str(e)}
 
         # 检查配置问题

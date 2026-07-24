@@ -36,9 +36,10 @@ import argparse
 import json
 import subprocess
 import sys
-import yaml
-from pathlib import Path
 from collections import Counter, defaultdict
+from pathlib import Path
+
+import yaml
 
 ROOT = Path(__file__).parent.parent / "mof"
 M2_DIR = ROOT / "m2"

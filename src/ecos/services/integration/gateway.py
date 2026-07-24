@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """ecos Gateway — HTTP REST + MCP 统一服务 | Agora 后端 | v1.0"""
 
-import sys
-import os
 import json
+import os
 import subprocess
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 H = Path.home()
 SCRIPTS = H / ".ecos" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-from importlib.machinery import SourceFileLoader  # noqa: E402
+from importlib.machinery import SourceFileLoader
 
 dm = SourceFileLoader("dm", str(SCRIPTS / "domain-manager.py")).load_module()
 
@@ -78,7 +78,7 @@ def bos_health():
     )
     try:
         return json.loads(r.stdout)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return {"output": r.stdout[:500]}
 
 
@@ -131,12 +131,12 @@ def bos_search(query, domains=None, max_r=10):
                     if line and len(results) < max_r:
                         try:
                             rel = str(Path(line).relative_to(p))
-                        except Exception:  # noqa: BLE001  # defensive fallback
+                        except Exception:  # defensive fallback
                             rel = line
                         results.append(
                             {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
                         )
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return {"results": results, "total": len(results)}
 

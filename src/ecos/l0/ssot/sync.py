@@ -208,7 +208,7 @@ def sync_yaml_to_markdown(
     # 1. 加载 YAML 数据
     try:
         config = load_domain(yaml_dir, use_cache=True)
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         report.errors.append(f"YAML 加载失败: {e}")
         return report
 

@@ -137,7 +137,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                 {"step": step_name, "ok": ok, "summary": step_result.get("summary", "")}
             )
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.error("Dynamic step %d failed: %s", step_count, e)
             results["steps"].append(
                 {
@@ -259,7 +259,7 @@ class DynamicPlanner:
         """调用 LLM 决策下一步"""
         try:
             return self._call_llm(context)
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.warning("LLM decision failed, fallback: %s", e)
             return self._decide_fallback(context)
 

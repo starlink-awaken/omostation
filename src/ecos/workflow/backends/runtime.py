@@ -135,6 +135,8 @@ def _execute_step_runtime(
     # ── 熔断检查：如果 runtime CLI 最近全部不可达，跳过直接降级 ──
     from ecos.workflow.circuit_breaker import (
         is_available as _cb_available,
+    )
+    from ecos.workflow.circuit_breaker import (
         trip as _cb_trip,
     )
 

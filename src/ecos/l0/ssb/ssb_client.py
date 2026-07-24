@@ -38,11 +38,18 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from ecos.common.common import ECOS_HOME, TZ, get_conn, now_iso  # type: ignore[import-not-found]
+from ecos.common.common import (  # type: ignore[import-not-found]
+    ECOS_HOME,
+    TZ,
+    get_conn,
+    now_iso,
+)
 from ecos.common.common import SSB_DB_PATH as _SSB_DB_PATH
 
 # SSB Auth for event signing
-from ecos.protocol.ssb.ssb_auth import compute_signature  # type: ignore[import-not-found]
+from ecos.protocol.ssb.ssb_auth import (
+    compute_signature,  # type: ignore[import-not-found]
+)
 
 # ─── Paths ────────────────────────────────────────────────────────────
 
@@ -294,8 +301,8 @@ class SSBClient:
         if not hasattr(self, "_rate_limit_cache"):
             self._rate_limit_cache = {}
 
-        import time
         import hashlib
+        import time
         import uuid
 
         # We define uniqueness by type, agent, and the exact summary text

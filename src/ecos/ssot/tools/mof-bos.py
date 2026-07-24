@@ -21,12 +21,13 @@
     python3 mof-bos.py --json                                        # JSON 输出
 """
 
-import sys
 import json
-import yaml
 import sqlite3
-from pathlib import Path
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 L0_M1 = Path(__file__).resolve().parent.parent / "mof" / "m1"
@@ -49,7 +50,7 @@ def load_routes() -> dict:
             data = yaml.safe_load(open(f))
             uri = data.get("name", "")
             routes[uri] = data
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     # Also include components registered with BOS_URI protocol
     comp_dir = L0_M1 / "component"
@@ -59,7 +60,7 @@ def load_routes() -> dict:
             props = data.get("properties", {}) or {}
             if props.get("protocol") == "BOS_URI":
                 routes[f"bos://{data.get('name', '?')}/*"] = data
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
     return routes
 
@@ -152,7 +153,7 @@ def audit_bos_call(bos_uri: str, status_code: int = 200, duration_ms: int = 0):
             )
             conn.commit()
             conn.close()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     return audit_entry

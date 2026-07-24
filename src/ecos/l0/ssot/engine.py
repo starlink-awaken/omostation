@@ -60,7 +60,7 @@ class CheckerRegistry:
                     ):
                         instance = obj()
                         self._patterns[instance.pattern_name] = instance
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 # 静默跳过加载失败的模块
                 pass
 
@@ -94,7 +94,7 @@ class CheckerRegistry:
                             instance = obj()
                             if instance.pattern_name not in self._patterns:
                                 self._patterns[instance.pattern_name] = instance
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     pass
 
     def register(self, name: str, pattern: BasePattern):
@@ -176,7 +176,7 @@ class RuleEngine:
                 else:
                     try:
                         result = pattern.evaluate(rule, domain, round_context)
-                    except Exception as e:  # noqa: BLE001  # defensive fallback
+                    except Exception as e:  # defensive fallback
                         result = CheckResult(
                             protocol_id=rule.id,
                             name=rule.name or rule.id,

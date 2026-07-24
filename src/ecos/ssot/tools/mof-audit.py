@@ -19,12 +19,13 @@
     python3 mof-audit.py --json              # JSON 输出
 """
 
-import json
-import yaml
-import sqlite3
 import argparse
-from pathlib import Path
+import json
+import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 DOCS = Path.home() / "Documents"
 NODES_DIR = DOCS / "驾驶舱" / "元模型" / "nodes"
@@ -188,7 +189,7 @@ def create_debt_card(drift: dict) -> bool:
         conn.commit()
         conn.close()
         return True
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return False
 
 

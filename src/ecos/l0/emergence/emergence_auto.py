@@ -61,7 +61,11 @@ def get_deviations():
 
     try:
         sys.path.insert(0, str(SCRIPTS))
-        from snapshot_emergence import collect_metrics, compare, load_latest_snapshot  # type: ignore[import-not-found]
+        from snapshot_emergence import (  # type: ignore[import-not-found]
+            collect_metrics,
+            compare,
+            load_latest_snapshot,
+        )
 
         current = collect_metrics()
         previous = load_latest_snapshot()
@@ -75,7 +79,7 @@ def get_deviations():
             "differences": diffs,
             "timestamp": _now(),
         }, None
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return None, str(e)
 
 
@@ -168,7 +172,7 @@ def write_ssb_event(event_type, summary, detail, risk="LOW", action="NONE"):
         )
         db.commit()
         return eid
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         if db:
             db.rollback()
         print(f"  ⚠️ SSB写入失败: {e}")
@@ -215,7 +219,7 @@ def run_critic_analysis(deviations: list) -> dict:
             }
         else:
             raise Exception(f"退出码: {r.returncode}")
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         # 降级：内置 CRITIC 分析
         print(f"  ⚠️ 委员会调用失败, 使用内置CRITIC: {e}")
         analysis = []
@@ -293,7 +297,7 @@ def analyze():
         save_snapshot(current)
         load_latest_snapshot()
         # 重新加载（LATEST.json已被更新）
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"  ❌ 快照失败: {e}")
         return 1
 

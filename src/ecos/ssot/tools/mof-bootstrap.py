@@ -19,11 +19,12 @@ L0 对自己的 M1 节点做自反性校验——L0 管全系统，谁管 L0？L
 """
 
 import json
-import yaml
-import subprocess
 import sqlite3
-from pathlib import Path
+import subprocess
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 WS = HOME / "Workspace"
@@ -57,7 +58,7 @@ def check_1_self_validate() -> dict:
             results = data.get("results", [])
             errors = sum(1 for r in results if r.get("level") == "error")
             passed = errors == 0
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     return {
@@ -175,7 +176,7 @@ def check_4_m1_coverage() -> dict:
             data = yaml.safe_load(open(f))
             t = data.get("type", "?")
             coverage[t] = coverage.get(t, 0) + 1
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     gaps = [t for t in m2_types if coverage.get(t, 0) < 2]
@@ -269,7 +270,7 @@ def create_bootstrap_debt(issue: dict):
         )
         conn.commit()
         conn.close()
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
 
 

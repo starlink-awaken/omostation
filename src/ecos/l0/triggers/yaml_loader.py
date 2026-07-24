@@ -1,8 +1,9 @@
 """YAML loader implementation for ECOS Trigger Registry."""
 
-import yaml
 from pathlib import Path
 from typing import List
+
+import yaml
 
 from .registry import (
     BaseTrigger,
@@ -47,5 +48,5 @@ class YAMLTriggerRegistry(TriggerRegistryFacade):
                 else:
                     # Generic or unknown
                     self.register_trigger(BaseTrigger(**t_dict))
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass  # skip invalid trigger

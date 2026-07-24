@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """BOS MCP Server — 暴露 domain_read/resolve/search 给 cockpit MCP"""
 
-import sys
-import os
 import json
-import yaml
+import os
+import sys
 from pathlib import Path
+
+import yaml
 
 H = Path.home()
 ECOS_SRC = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ECOS_SRC))
 
-from importlib.machinery import SourceFileLoader  # noqa: E402
+from importlib.machinery import SourceFileLoader
 
 DM_PATH = ECOS_SRC / "services" / "governance" / "domain_manager.py"
 dm = SourceFileLoader("dm", str(DM_PATH)).load_module()
@@ -200,7 +201,7 @@ def handle_search(query, domains=None, max_results=10):
                                 "file": str(Path(line).relative_to(p)),
                             }
                         )
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
 
     return {"results": results, "total": len(results)}
@@ -224,7 +225,7 @@ def handle_workflow_run(name, params=None, dry_run=False):
                 if name_lower == nid or name_lower in nid or name_lower == kebab:
                     node = n
                     break
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     if not node:
@@ -267,7 +268,7 @@ def main():
     for line in sys.stdin:
         try:
             req = json.loads(line)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
 
         method = req.get("method", "")

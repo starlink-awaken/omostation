@@ -24,7 +24,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 # 7 阶段映射表 (model-driven LifecycleStage → m3-meta Stage.* 前缀)
 # 基于 e2f8f4d7 实证 m3_extended.py line 21-37
 STAGE_TO_M3 = {
@@ -53,8 +52,10 @@ def _safe_import_model_driven():
         if cand.exists():
             sys.path.insert(0, str(cand))
             try:
+                from model_driven.lifecycle.transitions import (
+                    STANDARD_TRANSITIONS,  # type: ignore
+                )
                 from model_driven.mof.m3_extended import LifecycleStage  # type: ignore
-                from model_driven.lifecycle.transitions import STANDARD_TRANSITIONS  # type: ignore
 
                 return LifecycleStage, STANDARD_TRANSITIONS
             except Exception:

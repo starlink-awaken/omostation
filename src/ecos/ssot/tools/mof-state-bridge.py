@@ -45,8 +45,10 @@ WORKSPACE_ROOT = (
 )  # 7 层 = ~/Workspace
 
 # 通过桥接接口加载 omo (L0→L2 依赖, 仅在 --omo-to-m1 方向需要)
-from ecos.ssot.tools.omo_bridge_interface import create_planned_task, write_yaml_atomic  # noqa: E402
-
+from ecos.ssot.tools.omo_bridge_interface import (
+    create_planned_task,
+    write_yaml_atomic,
+)
 
 M1_OMO_LAYER = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m1" / "omo_layer"
 OMOTASK_SCHEMA = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m2" / "omo_task.yaml"

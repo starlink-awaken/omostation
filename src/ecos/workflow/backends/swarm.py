@@ -120,8 +120,9 @@ def _execute_step_swarm(
             "Swarm backend: Attempting RPC call via Agora MCP for goal: %s", goal
         )
         try:
-            import httpx
             import os
+
+            import httpx
 
             _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
             headers = {}
@@ -171,7 +172,7 @@ def _execute_step_swarm(
                         "Agora MCP Gateway returned HTTP %d. Falling back to subprocess.",
                         resp.status_code,
                     )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             logger.warning(
                 "Agora MCP RPC call failed or unavailable: %s. Falling back to subprocess.",
                 e,

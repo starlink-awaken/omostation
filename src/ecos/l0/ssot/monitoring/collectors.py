@@ -108,7 +108,7 @@ class SystemMetricsCollector:
             # 网络指标
             metrics.extend(self._collect_network_metrics())
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  系统指标收集失败: {e}")
 
         return metrics
@@ -149,7 +149,7 @@ class SystemMetricsCollector:
                 )
             )
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  CPU指标收集失败: {e}")
 
         return metrics
@@ -192,7 +192,7 @@ class SystemMetricsCollector:
                 )
             )
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  内存指标收集失败: {e}")
 
         return metrics
@@ -248,7 +248,7 @@ class SystemMetricsCollector:
                 # 如果不支持io_counters，跳过IO指标
                 pass
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  IO指标收集失败: {e}")
 
         return metrics
@@ -293,7 +293,7 @@ class SystemMetricsCollector:
                     )
                 )
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  进程指标收集失败: {e}")
 
         return metrics
@@ -342,7 +342,7 @@ class SystemMetricsCollector:
                 )
             )
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"⚠️  网络指标收集失败: {e}")
 
         return metrics

@@ -279,7 +279,7 @@ class PerformanceBenchmark:
 
             return result
 
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             return BenchmarkResult(
                 config=config, metrics=PerformanceMetrics(), success=False, error=str(e)
             )

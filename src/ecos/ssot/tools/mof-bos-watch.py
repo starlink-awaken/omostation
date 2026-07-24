@@ -17,9 +17,9 @@
 """
 
 import json
-from pathlib import Path
-from datetime import datetime, timezone, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 HOME = Path.home()
 AUDIT_LOG = HOME / ".ecos" / "bos-audit.jsonl"
@@ -38,7 +38,7 @@ def load_audit_log(hours: int = 24) -> list[dict]:
                 ts = datetime.fromisoformat(e.get("timestamp", ""))
                 if ts > cutoff:
                     entries.append(e)
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return entries
 

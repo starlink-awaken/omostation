@@ -20,6 +20,61 @@ M2 Schema: ecos/ssot/mof/m2/governance_*.yaml
 L1/L2/L3 层全部委托本模块原语。
 """
 
+from .agent_registry import AgentInfo, AgentRegistry, AgentStatus
+from .alert_engine import AlertEngine, LogHandler, WebhookHandler
+from .checkers import (
+    SwarmBrainStructureChecker,
+    X1AuditChainChecker,
+    X2StalenessChecker,
+    X3ValueChecker,
+    X4ConsistencyChecker,
+)
+from .distributed import (
+    CommunicationProtocol,
+    CRDTSync,
+    DistributedPrimitive,
+    Message,
+    MessageType,
+    NodeInfo,
+    NodeManager,
+    NodeStatus,
+    ProtocolType,
+    StateSnapshot,
+    StateSyncService,
+    SyncResult,
+    SyncStrategy,
+)
+from .event_bus import GovernanceEventBus
+from .failover import FailoverManager, FailoverRule, FailoverStrategy
+from .history_store import SQLiteHistoryStore
+from .load_balancer import LoadBalancer, LoadBalancingStrategy, NodeLoad
+from .optimization import (
+    AlertChannel,
+    AlertHandler,
+    AlertRule,
+    AlertSeverity,
+    DashboardData,
+    DashboardMetric,
+    DashboardProvider,
+    GovernanceAlert,
+    HealthSnapshot,
+    HistoryAnalyzer,
+    Prediction,
+    TrendAnalysis,
+)
+from .personal import (
+    GraphEdge,
+    KnowledgeGraphBuilder,
+    KnowledgeNode,
+    KnowledgeType,
+    PersonalKnowledgeManager,
+    PersonalKnowledgePrimitive,
+    PreferenceEngine,
+    PreferenceType,
+    Recommendation,
+    RecommendationEngine,
+    UserPreference,
+)
 from .primitives import (
     CheckResult,
     CheckSeverity,
@@ -27,91 +82,36 @@ from .primitives import (
     GovernanceCheck,
     GovernanceEvent,
 )
-from .checkers import (
-    X1AuditChainChecker,
-    X2StalenessChecker,
-    X3ValueChecker,
-    X4ConsistencyChecker,
-    SwarmBrainStructureChecker,
-)
-from .event_bus import GovernanceEventBus
-from .registry import GovernanceRegistry, CheckerRegistration
-from .optimization import (
-    AlertSeverity,
-    AlertChannel,
-    GovernanceAlert,
-    AlertRule,
-    AlertHandler,
-    DashboardMetric,
-    DashboardData,
-    DashboardProvider,
-    HealthSnapshot,
-    TrendAnalysis,
-    Prediction,
-    HistoryAnalyzer,
-)
-from .alert_engine import AlertEngine, LogHandler, WebhookHandler
-from .history_store import SQLiteHistoryStore
-from .distributed import (
-    SyncStrategy,
-    NodeStatus,
-    ProtocolType,
-    MessageType,
-    Message,
-    StateSnapshot,
-    SyncResult,
-    DistributedPrimitive,
-    CRDTSync,
-    NodeManager,
-    NodeInfo,
-    StateSyncService,
-    CommunicationProtocol,
-)
-from .agent_registry import AgentRegistry, AgentInfo, AgentStatus
-from .task_scheduler import TaskScheduler, TaskInfo, TaskStatus, DAGScheduler
-from .failover import FailoverManager, FailoverRule, FailoverStrategy
-from .load_balancer import LoadBalancer, LoadBalancingStrategy, NodeLoad
+from .registry import CheckerRegistration, GovernanceRegistry
 from .role import (
-    RoleType,
-    RoleStatus,
-    CollaborationMode,
-    RoleDefinition,
     AgentRole,
+    CollaborationMode,
     CollaborationTask,
-    RoleEvaluation,
-    RolePrimitive,
-    RoleManager,
     RoleCollaboration,
+    RoleDefinition,
+    RoleEvaluation,
     RoleEvaluator,
+    RoleManager,
+    RolePrimitive,
+    RoleStatus,
     RoleSwitcher,
+    RoleType,
 )
 from .swarm import (
-    EmergencePattern,
-    EmergenceLevel,
-    DecisionMethod,
-    EmergentBehavior,
-    SwarmState,
-    DecisionProposal,
-    SwarmVisualization,
-    SwarmPrimitive,
-    SwarmManager,
-    EmergenceDetector,
     CollectiveDecision,
+    DecisionMethod,
+    DecisionProposal,
+    EmergenceDetector,
+    EmergenceLevel,
+    EmergencePattern,
+    EmergentBehavior,
+    SwarmManager,
+    SwarmPrimitive,
+    SwarmState,
+    SwarmVisualization,
     SwarmVisualizer,
 )
-from .personal import (
-    KnowledgeType,
-    PreferenceType,
-    KnowledgeNode,
-    UserPreference,
-    GraphEdge,
-    Recommendation,
-    PersonalKnowledgePrimitive,
-    PersonalKnowledgeManager,
-    KnowledgeGraphBuilder,
-    PreferenceEngine,
-    RecommendationEngine,
-)
+from .task_scheduler import DAGScheduler, TaskInfo, TaskScheduler, TaskStatus
 
 __all__ = [
     # X1-X4 治理原语
