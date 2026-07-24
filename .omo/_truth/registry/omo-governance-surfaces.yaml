@@ -47,6 +47,7 @@ governance_stack:
       - .omo/tasks/
       - .omo/workers/
       - .omo/debt/
+      - .omo/plans/
     notes: executes task schema, governance overlay, truth mutation, sync, audit
   - id: ingress_plane
     ref: projects/c2g/
