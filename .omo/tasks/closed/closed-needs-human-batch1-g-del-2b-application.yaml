@@ -1,0 +1,14 @@
+---
+id: NEEDS-HUMAN-BATCH1-G-DEL-2B-APPLICATION
+title: "Batch1 B4: G-DEL.2b 达标申请 — CLOSED (ADR-0232)"
+status: closed
+closed_at: "2026-07-24T06:55:00Z"
+priority: P0
+needs-human: false
+close_reason: >
+  Human announced official G-DEL.2b process-local pass on 2026-07-24.
+  Close reason: ADR-0232 D1 (0232-g-del-2b-official-pass.md).
+closeout_adr: .omo/_knowledge/decisions/0232-g-del-2b-official-pass.md
+evidence:
+  - .omo/_knowledge/audits/2026-07-24-batch1-g-del-2b-measure.md
+  - .omo/_knowledge/decisions/0232-g-del-2b-official-pass.md
