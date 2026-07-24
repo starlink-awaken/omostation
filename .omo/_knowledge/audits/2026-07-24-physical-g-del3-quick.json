@@ -1,0 +1,436 @@
+{
+  "schema": "g-del-physical-metrics/v2",
+  "env_class": "physical_multi_host",
+  "caliber_adr": [
+    "0210",
+    "0225",
+    "0226"
+  ],
+  "physical_hosts": 2,
+  "endpoint_count": 2,
+  "hosts": [
+    {
+      "node_id": "local-mac",
+      "addr": "127.0.0.1:18765"
+    },
+    {
+      "node_id": "macmini",
+      "addr": "192.168.31.210:18765"
+    }
+  ],
+  "env_evidence": {
+    "controller_hostname": "xiamingxingdeMacBook-Pro.local",
+    "controller_time_utc": "2026-07-24T13:07:03Z",
+    "probed_hosts": [
+      {
+        "node_id": "local-mac",
+        "ip": "127.0.0.1",
+        "port": 18765,
+        "hello": {
+          "ok": true,
+          "node_id": "local-mac",
+          "agents": 0,
+          "wall_ms": 0.14154199743643403
+        }
+      },
+      {
+        "node_id": "macmini",
+        "ip": "192.168.31.210",
+        "port": 18765,
+        "hello": {
+          "ok": true,
+          "node_id": "macmini",
+          "agents": 0,
+          "wall_ms": 9.81837505241856
+        }
+      }
+    ],
+    "network_paths": [
+      {
+        "peer_ip": "192.168.31.210",
+        "local_hostname": "xiamingxingdeMacBook-Pro.local",
+        "local_route": {
+          "route_interface": "en0",
+          "route_rtt_msec_hint": 0,
+          "raw_has_route": true
+        },
+        "local_link_class": "wifi",
+        "remote": {
+          "ok": true,
+          "en0_status": "inactive",
+          "en0_inet": null,
+          "en0_media": "autoselect (none)",
+          "en1_status": "active",
+          "en1_inet": "192.168.31.210",
+          "ethernet_likely_active": false,
+          "wifi_likely_active": "192.168.31.210"
+        },
+        "link_class": "wifi",
+        "wired_available": false,
+        "recommendation": "path is Wi-Fi; plug Ethernet on macmini (en0) and local host for G-DEL.3 remeasure"
+      }
+    ]
+  },
+  "g_del_1": {
+    "gate": "G-DEL.1",
+    "kpi": "schedule_success_rate > 99%",
+    "env": "physical multi-host TCP agents over real hosts (ADR-0225)",
+    "env_class": "physical_multi_host",
+    "n_tasks": 200,
+    "successes": 200,
+    "failures": 0,
+    "success_rate": 1.0,
+    "success_rate_pct": 100.0,
+    "dispatch_p99_ms": 154.4761,
+    "nodes": [
+      "local-mac",
+      "macmini"
+    ],
+    "endpoints": [
+      "127.0.0.1:18765",
+      "192.168.31.210:18765"
+    ],
+    "meets_sim_harness": true,
+    "physical_hosts": 2,
+    "min_physical_hosts": 4,
+    "gate_status": "BLOCKED",
+    "blocked_reason": "physical_hosts=2 < min_physical_hosts=4",
+    "meets_physical_gate": false,
+    "meets_gate": false
+  },
+  "g_del_3": {
+    "gate": "G-DEL.3",
+    "kpi": "sync_latency_p99 < 100ms (p99 requires n≥1000)",
+    "env": "physical multi-host cross_host_put over real TCP (ADR-0225)",
+    "env_class": "physical_multi_host",
+    "n_ops": 1000,
+    "successes": 1000,
+    "sync_mode": "cross_host_put",
+    "nodes": [
+      "local-mac",
+      "macmini"
+    ],
+    "endpoints": [
+      "127.0.0.1:18765",
+      "192.168.31.210:18765"
+    ],
+    "latency_summary": {
+      "n": 1000,
+      "max_ms": 172.0935,
+      "min_ms": 6.213,
+      "histogram": {
+        "unit": "ms",
+        "n": 1000,
+        "edges_ms": [
+          0.0,
+          1.0,
+          2.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0,
+          50.0,
+          75.0,
+          100.0,
+          150.0,
+          200.0,
+          500.0,
+          1000.0,
+          null
+        ],
+        "counts": [
+          0,
+          0,
+          0,
+          742,
+          197,
+          29,
+          7,
+          1,
+          0,
+          0,
+          0,
+          24,
+          0,
+          0,
+          0
+        ],
+        "bins": [
+          {
+            "lo_ms": 0.0,
+            "hi_ms": 1.0,
+            "label": "[0.0,1.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 1.0,
+            "hi_ms": 2.0,
+            "label": "[1.0,2.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 2.0,
+            "hi_ms": 5.0,
+            "label": "[2.0,5.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 5.0,
+            "hi_ms": 10.0,
+            "label": "[5.0,10.0)",
+            "count": 742
+          },
+          {
+            "lo_ms": 10.0,
+            "hi_ms": 15.0,
+            "label": "[10.0,15.0)",
+            "count": 197
+          },
+          {
+            "lo_ms": 15.0,
+            "hi_ms": 20.0,
+            "label": "[15.0,20.0)",
+            "count": 29
+          },
+          {
+            "lo_ms": 20.0,
+            "hi_ms": 30.0,
+            "label": "[20.0,30.0)",
+            "count": 7
+          },
+          {
+            "lo_ms": 30.0,
+            "hi_ms": 50.0,
+            "label": "[30.0,50.0)",
+            "count": 1
+          },
+          {
+            "lo_ms": 50.0,
+            "hi_ms": 75.0,
+            "label": "[50.0,75.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 75.0,
+            "hi_ms": 100.0,
+            "label": "[75.0,100.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 100.0,
+            "hi_ms": 150.0,
+            "label": "[100.0,150.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 150.0,
+            "hi_ms": 200.0,
+            "label": "[150.0,200.0)",
+            "count": 24
+          },
+          {
+            "lo_ms": 200.0,
+            "hi_ms": 500.0,
+            "label": "[200.0,500.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 500.0,
+            "hi_ms": 1000.0,
+            "label": "[500.0,1000.0)",
+            "count": 0
+          },
+          {
+            "lo_ms": 1000.0,
+            "hi_ms": null,
+            "label": "[1000.0,+inf)",
+            "count": 0
+          }
+        ]
+      },
+      "p50_ms": 8.6134,
+      "p50_ms_trusted": true,
+      "p50_ms_status": "ok",
+      "p50_ms_min_n": 20,
+      "p50_ms_raw": 8.6134,
+      "p90_ms": 12.2945,
+      "p90_ms_trusted": true,
+      "p90_ms_status": "ok",
+      "p90_ms_min_n": 100,
+      "p90_ms_raw": 12.2945,
+      "p95_ms": 16.0815,
+      "p95_ms_trusted": true,
+      "p95_ms_status": "ok",
+      "p95_ms_min_n": 200,
+      "p95_ms_raw": 16.0815,
+      "p99_ms": 159.8295,
+      "p99_ms_trusted": true,
+      "p99_ms_status": "ok",
+      "p99_ms_min_n": 1000,
+      "p99_ms_raw": 159.8295,
+      "p999_ms": null,
+      "p999_ms_trusted": false,
+      "p999_ms_status": "insufficient_samples",
+      "p999_ms_min_n": 10000,
+      "p999_ms_raw": 168.4569,
+      "p99_definitive": true,
+      "p99_gate_status": "ok",
+      "p99_meets_kpi": false
+    },
+    "p50_ms": 8.6134,
+    "p90_ms": 12.2945,
+    "p95_ms": 16.0815,
+    "p99_ms": 159.8295,
+    "p999_ms": null,
+    "max_ms": 172.0935,
+    "p99_status": "ok",
+    "p99_definitive": true,
+    "histogram": {
+      "unit": "ms",
+      "n": 1000,
+      "edges_ms": [
+        0.0,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        15.0,
+        20.0,
+        30.0,
+        50.0,
+        75.0,
+        100.0,
+        150.0,
+        200.0,
+        500.0,
+        1000.0,
+        null
+      ],
+      "counts": [
+        0,
+        0,
+        0,
+        742,
+        197,
+        29,
+        7,
+        1,
+        0,
+        0,
+        0,
+        24,
+        0,
+        0,
+        0
+      ],
+      "bins": [
+        {
+          "lo_ms": 0.0,
+          "hi_ms": 1.0,
+          "label": "[0.0,1.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 1.0,
+          "hi_ms": 2.0,
+          "label": "[1.0,2.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 2.0,
+          "hi_ms": 5.0,
+          "label": "[2.0,5.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 5.0,
+          "hi_ms": 10.0,
+          "label": "[5.0,10.0)",
+          "count": 742
+        },
+        {
+          "lo_ms": 10.0,
+          "hi_ms": 15.0,
+          "label": "[10.0,15.0)",
+          "count": 197
+        },
+        {
+          "lo_ms": 15.0,
+          "hi_ms": 20.0,
+          "label": "[15.0,20.0)",
+          "count": 29
+        },
+        {
+          "lo_ms": 20.0,
+          "hi_ms": 30.0,
+          "label": "[20.0,30.0)",
+          "count": 7
+        },
+        {
+          "lo_ms": 30.0,
+          "hi_ms": 50.0,
+          "label": "[30.0,50.0)",
+          "count": 1
+        },
+        {
+          "lo_ms": 50.0,
+          "hi_ms": 75.0,
+          "label": "[50.0,75.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 75.0,
+          "hi_ms": 100.0,
+          "label": "[75.0,100.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 100.0,
+          "hi_ms": 150.0,
+          "label": "[100.0,150.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 150.0,
+          "hi_ms": 200.0,
+          "label": "[150.0,200.0)",
+          "count": 24
+        },
+        {
+          "lo_ms": 200.0,
+          "hi_ms": 500.0,
+          "label": "[200.0,500.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 500.0,
+          "hi_ms": 1000.0,
+          "label": "[500.0,1000.0)",
+          "count": 0
+        },
+        {
+          "lo_ms": 1000.0,
+          "hi_ms": null,
+          "label": "[1000.0,+inf)",
+          "count": 0
+        }
+      ]
+    },
+    "wired_path": {
+      "available": false,
+      "reason": "macmini en0 Ethernet inactive; path is Wi-Fi (local route interface en0). Wired remeasure blocked until cable."
+    },
+    "metrics_note": "Large-N n=1000 p99=159.8295ms ≥100ms (definitive). Real tail present (see histogram); not only small-sample noise.",
+    "meets_sim_harness": false,
+    "physical_hosts": 2,
+    "min_physical_hosts": 2,
+    "gate_status": "OPEN",
+    "meets_physical_gate": false,
+    "meets_gate": false
+  },
+  "g_del_1_blocked": true,
+  "g_del_3_physical_pass": false,
+  "all_physical_gates_pass": false,
+  "generated_at": "2026-07-24T13:07:32Z"
+}
