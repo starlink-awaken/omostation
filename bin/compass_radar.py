@@ -183,29 +183,29 @@ def _count_adr_renumber_signals(ws_root: Path) -> int:
 
 
 def _count_concurrent_conflict_signals(ws_root: Path) -> int:
-    """Concurrent agent pressure = distinct active runs + worktree fan-out.
+    """Concurrent pressure = distinct active runs (status=active) + worktree fan-out.
 
-    一个 agent run 持有多个 scope-lock (root-gate / project / path*),
-    故并发竞争按 distinct run_id 计, 不按 scope-lock 文件数计 —
-    否则单 run 多 scope 会把 concurrent_conflicts 虚高数倍
-    (实测 12 个 scope-lock 实为 3 个 run). 详见 collect_governance_execution_surface.
+    读 run 记录的 status (canonical) 而非 lock 文件副作用 (/simplify finding b):
+    旧版数 scope-lock 文件, 不看 run status — 已 close 但 lock 未释放的 run
+    仍被误算活跃. 现按 run 文件 status=active 计 distinct 活跃 run.
     """
     import yaml  # noqa: PLC0415
 
-    locks_dir = ws_root / ".omo" / "_delivery" / "agent-workflows" / "locks"
-    run_ids: set[str] = set()
-    if locks_dir.is_dir():
-        for p in locks_dir.glob("*.lock.yaml"):
+    runs_dir = ws_root / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    active_runs: set[str] = set()
+    if runs_dir.is_dir():
+        for p in runs_dir.glob("*.yaml"):
             if not p.is_file():
                 continue
             try:
                 payload = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
             except (OSError, yaml.YAMLError):
                 continue
-            rid = payload.get("run_id") if isinstance(payload, dict) else None
-            if isinstance(rid, str) and rid:
-                run_ids.add(rid)
-    lock_pressure = max(0, len(run_ids) - 1)
+            if isinstance(payload, dict) and payload.get("status") == "active":
+                rid = payload.get("run_id") or p.stem
+                if isinstance(rid, str):
+                    active_runs.add(rid)
+    run_pressure = max(0, len(active_runs) - 1)
     # worktree fan-out (excluding main) as soft concurrency signal
     try:
         res = subprocess.run(
@@ -220,7 +220,7 @@ def _count_concurrent_conflict_signals(ws_root: Path) -> int:
         wt_pressure = max(0, wt - 2)  # main + 1 active worktree free
     except (OSError, subprocess.TimeoutExpired):
         wt_pressure = 0
-    return lock_pressure + wt_pressure
+    return run_pressure + wt_pressure
 
 
 def collect_governance_execution_surface(ws_root: Path) -> dict:
