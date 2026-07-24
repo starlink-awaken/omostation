@@ -1,10 +1,10 @@
 ---
 id: NEEDS-HUMAN-P80-PHASE45-TICK-TIMEOUT
 title: "P80 T1.2 residual: implement cron.tick_timeout_seconds=30"
-status: candidate
-needs-human: true
+status: closed
 priority: P1
 owner: human
+closed_at: "2026-07-24T03:40:00Z"
 created_at: "2026-07-24T02:38:00Z"
 endpoint: cron.tick_timeout_seconds
 evidence:
@@ -14,3 +14,5 @@ desc: >
   Phase45 plan requires tick_timeout_seconds=30. Live code exposes TICK_INTERVAL
   (default 15s) only. Human/engineering: add hard timeout protection or document
   supersession of plan metric.
+
+closeout: .omo/_knowledge/audits/2026-07-24-p81-s0-phase45-residuals.md

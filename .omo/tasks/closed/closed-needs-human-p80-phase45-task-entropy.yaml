@@ -1,10 +1,10 @@
 ---
 id: NEEDS-HUMAN-P80-PHASE45-TASK-ENTROPY
 title: "P80 T1.2 residual: task_files entropy cleanup to <200"
-status: candidate
-needs-human: true
+status: closed
 priority: P2
 owner: human
+closed_at: "2026-07-24T03:40:00Z"
 created_at: "2026-07-24T02:38:00Z"
 endpoint: task_files
 evidence:
@@ -12,3 +12,5 @@ evidence:
 desc: >
   Recursive count of .omo/tasks/**/*.yaml is 477 (>=200 plan target). Top-level
   done=106. Wave3 entropy cleanup incomplete vs phase45-plan acceptance.
+
+closeout: .omo/_knowledge/audits/2026-07-24-p81-s0-phase45-residuals.md

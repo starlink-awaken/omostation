@@ -151,6 +151,11 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0173 | P78 Phase 2 基线重放 + Foundry v2 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0173-p78-phase2-baseline-foundry-v2.md |
 | STRAT-P79 | P79 2026H2 治理巩固 + Foundry 运营化路线图 (5 phase) | ACCEPTED | 2026-07-08 | governance-team | STRAT-P79-strategic-roadmap.md |
 | STRAT-P80 | P80 收敛期收尾 — M1 提前打绿 + 兑现期底座前置 (4 战线) | PROPOSED | 2026-07-24 | 夏明星 | STRAT-P80-strategic-roadmap.md |
+| STRAT-P81 | P81 兑现期启动 — 蜂群真机化 (Stage 0-3 + 双纵贯线, 2026-08~2027-06) | PROPOSED | 2026-07-24 | 夏明星 | STRAT-P81-strategic-roadmap.md |
+| 0228 | M1 收敛期验收通过 + 物理挂起下的兑现期推进顺序 (S2 提前解锁) | ACCEPTED | 2026-07-24 | 夏明星 | 0228-m1-acceptance-physical-deferred-reorder.md |
+| 0229 | Role framework three roles (engineering/governance/audit) | ACCEPTED | 2026-07-24 | Batch1 B1 | 0229-role-framework-three-roles.md |
+| 0230 | Agent registry node/role/capability sim-first | ACCEPTED | 2026-07-24 | Batch1 C1 | 0230-agent-registry-node-role-capability.md |
+| 0231 | Failover task migration dry-run strategy | ACCEPTED | 2026-07-24 | Batch1 C3 | 0231-failover-task-migration.md |
 | 0174 | P79 Phase 1 Foundry v2 cron 集成 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0174-p79-phase1-foundry-v2-cron.md |
 | 0175 | P79 Phase 2 Health 100 (bare ports 分类 + env var 迁移) | ACCEPTED | 2026-07-08 | governance-team | 0175-p79-phase2-health-100.md |
 | 0176 | P79 Phase 3 跨仓零残留 (ecos 结构化对齐) | ACCEPTED | 2026-07-08 | governance-team | 0176-p79-phase3-cross-repo-zero-residual.md |

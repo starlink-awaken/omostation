@@ -1,0 +1,11 @@
+---
+id: NEEDS-HUMAN-BATCH1-G-DEL-2B-APPLICATION
+title: "Batch1 B4: G-DEL.2b 达标申请（process-local · 待人类宣布）"
+status: candidate
+needs-human: true
+priority: P0
+created_at: "2026-07-24T05:50:00Z"
+evidence:
+  - .omo/_knowledge/audits/2026-07-24-batch1-g-del-2b-measure.md
+desc: >
+  Measure n=30 rate=1.0000 env_class=in-process_simulation. Do NOT self-announce official pass.

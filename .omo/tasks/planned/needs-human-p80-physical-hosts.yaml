@@ -8,7 +8,8 @@ owner: human
 created_at: "2026-07-24T02:29:04.787388+00:00"
 evidence:
   - .omo/_knowledge/audits/2026-07-24-physical-hosts-failclosed.md
+  - .omo/_knowledge/audits/2026-07-24-p81-s0-physical-probe-failclosed.md
 desc: >
-  Probe 2026-07-24: only local host reachable; macmini 192.168.31.210 SSH timeout;
+  Probe 2026-07-24 (P80+P81 S0.3 re-probe): only local host reachable; still fail-closed; macmini 192.168.31.210 SSH timeout;
   y7000p not found. Cannot claim G-DEL.1/3 physical pass. Human: restore LAN nodes
   or approve cloud node plan.
