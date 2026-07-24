@@ -312,6 +312,7 @@ goals:
   vector: V-leap-prep
   bet_status: active
   created_at: '2026-07-18T08:00:00Z'
+  remeasure_audit: .omo/_knowledge/audits/2026-07-24-kos-remeasure.md
 health_targets:
   mcp_isolation_score: 100
   overall: 99
@@ -332,5 +333,4 @@ source_plan_refs:
 start_date: '2026-06-04'
 status: active
 theme: P42 治理面 SSOT 同步纪元 — 14 phase 复盘合并 (Governance SSOT Catch-up)
-  remeasure_audit: .omo/_knowledge/audits/2026-07-24-kos-remeasure.md
 
