@@ -339,7 +339,7 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
         # Try resolving a simple BOS URI
         agora_port = os.environ.get("AGORA_INTERNAL_PORT", "7430")
         resolve_url = f"http://localhost:{agora_port}/api/bos/resolve"
-        req = urlrequest.Request(  # noqa: S310
+        req = urlrequest.Request(
             resolve_url,
             data=_json.dumps({"uri": "bos://test/health/ping"}).encode(),
             headers={"Content-Type": "application/json"},

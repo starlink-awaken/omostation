@@ -759,7 +759,7 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
 
     # 若 Dashboard 已在运行，直接打开
     try:
-        r = urlrequest.urlopen(url, timeout=2)  # noqa: S310
+        r = urlrequest.urlopen(url, timeout=2)
         if getattr(r, "status", 200) == 200:
             webbrowser.open(url)
             c.print(f"[green]✅ Dashboard 已运行: [cyan]{url}[/][/]")
@@ -778,7 +778,7 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
 
     time.sleep(2)
     try:
-        r = urlrequest.urlopen(url, timeout=3)  # noqa: S310
+        r = urlrequest.urlopen(url, timeout=3)
         if getattr(r, "status", 200) != 200:
             c.print(f"[red]Dashboard returned HTTP {r.status}[/]")
             _print_dashboard_fixes()

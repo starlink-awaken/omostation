@@ -242,7 +242,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # noqa: S112  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
 
     # 读取计划任务
@@ -269,7 +269,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # noqa: S112  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
 
     # 读取完成任务
@@ -296,7 +296,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # noqa: S112  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
 
     return tasks
