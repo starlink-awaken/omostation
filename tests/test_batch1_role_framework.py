@@ -16,7 +16,10 @@ def _load(name: str):
     spec = importlib.util.spec_from_file_location(mod_name, path)
     mod = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
-    sys.path.insert(0, str(DELIVERY))
+    # Ensure sibling imports (caliber, scheduler) resolve once
+    delivery_str = str(DELIVERY)
+    if delivery_str not in sys.path:
+        sys.path.insert(0, delivery_str)
     sys.modules[mod_name] = mod
     sys.modules[name] = mod
     spec.loader.exec_module(mod)
@@ -64,6 +67,14 @@ def test_protocol_message_replay_and_boundaries():
     except PermissionError:
         raised = True
     assert raised is True
+
+
+def test_handshake_fail_verify_does_not_complete():
+    rf = _load("role_framework")
+    r = rf.run_three_role_handshake(fail_verify=True)
+    assert r["completed"] is False
+    assert "complete" not in r["steps"]
+    assert "verify_result" in r["steps"]
 
 
 def test_role_memory_share_and_isolate():
@@ -129,14 +140,20 @@ def test_g_del_2b_batch_30_tasks():
     m = rf.measure_three_role_batch(n_tasks=30)
     assert m["n_tasks"] == 30
     assert m["completion_rate"] > 0.95
-    assert m["env_class"] in {
-        "in-process_simulation",
-        "process_local",
-    } or "process" in str(m.get("env", "")).lower() or m.get("meets_sim_harness") is True or m.get(
-        "meets_gate"
-    ) is True
-    # must not claim physical
-    assert m.get("meets_physical_gate") is not True
+    assert m["env_class"] == "in-process_simulation"
+    assert m.get("official_announce") is False
+    # process-local may set meets_gate / meets_sim_harness; never physical
+    assert m.get("meets_physical_gate") is False
+    assert m.get("meets_sim_harness") is True
+
+
+def test_g_del_2b_inject_fail_drops_rate():
+    rf = _load("role_framework")
+    m = rf.measure_three_role_batch(n_tasks=10, inject_fail_every=2)
+    # 5 of 10 fail → rate 0.5
+    assert m["completed"] == 5
+    assert m["completion_rate"] == 0.5
+    assert m.get("meets_sim_harness") is False
 
 
 def test_run_backlog_collab_binds_real_task_path(tmp_path: Path):
@@ -162,3 +179,15 @@ def test_run_backlog_collab_binds_real_task_path(tmp_path: Path):
         or m.get("payload", {}).get("task_id") == "REMEDIATE-TEST-FIX"
         for m in r["replay"]
     )
+
+
+def test_run_backlog_collab_missing_path_fails(tmp_path: Path):
+    rf = _load("role_framework")
+    missing = tmp_path / "no-such.yaml"
+    r = rf.run_backlog_collab(
+        task_id="MISSING-TASK",
+        task_path=str(missing),
+        title="missing",
+    )
+    assert r["completed"] is False
+    assert r["error"] == "handshake_incomplete_or_path_missing"

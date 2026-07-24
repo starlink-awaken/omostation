@@ -85,7 +85,9 @@ class AgentRegistry:
                 dead.append(aid)
         return dead
 
-    def list_agents(self, *, role_id: str | None = None, healthy_only: bool = False) -> list[AgentRecord]:
+    def list_agents(
+        self, *, role_id: str | None = None, healthy_only: bool = False
+    ) -> list[AgentRecord]:
         out = list(self._agents.values())
         if role_id is not None:
             out = [a for a in out if a.role_id == role_id]

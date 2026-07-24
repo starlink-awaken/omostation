@@ -9,6 +9,7 @@ import time
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 # First-ship roles (workorder B1 suggestion)
@@ -185,18 +186,34 @@ class RoleProtocolBus:
         ]
 
 
-def run_three_role_handshake(
-    bus: RoleProtocolBus | None = None,
+def _agent_suffix(task_ref: str) -> str:
+    """Stable short suffix for agent ids (keep within yaml-safe length)."""
+    cleaned = "".join(c if c.isalnum() or c in "-_" else "-" for c in task_ref)
+    return cleaned[:12] or "task"
+
+
+def _run_collab_handshake(
     *,
+    task_ref: str,
+    assign_payload: dict[str, Any],
+    claim_payload: dict[str, Any] | None = None,
+    handoff_payload: dict[str, Any] | None = None,
+    complete_payload: dict[str, Any] | None = None,
     fail_verify: bool = False,
+    verify_extra: Callable[[], dict[str, Any]] | None = None,
+    bus: RoleProtocolBus | None = None,
 ) -> dict[str, Any]:
-    """Full assign→claim→handoff→verify→complete across 3 first-ship roles."""
+    """Shared assign→claim_ack→handoff→verify_result→complete pipeline.
+
+    ``verify_extra`` may return ``{"pass": bool, ...}`` merged into verify payload;
+    if it returns ``pass=False``, handshake fails even when ``fail_verify`` is False.
+    """
     bus = bus or RoleProtocolBus()
     reg = bus.registry
-    eng = reg.register(ROLE_ENGINEERING, agent_id="eng-1")
-    gov = reg.register(ROLE_GOVERNANCE, agent_id="gov-1")
-    aud = reg.register(ROLE_AUDIT, agent_id="aud-1")
-    task_ref = f"batch1-task-{uuid.uuid4().hex[:8]}"
+    suffix = _agent_suffix(task_ref)
+    eng = reg.register(ROLE_ENGINEERING, agent_id=f"eng-{suffix}")
+    gov = reg.register(ROLE_GOVERNANCE, agent_id=f"gov-{suffix}")
+    aud = reg.register(ROLE_AUDIT, agent_id=f"aud-{suffix}")
     steps: list[str] = []
     state: dict[str, Any] = {}
 
@@ -210,6 +227,7 @@ def run_three_role_handshake(
                 from_role=ROLE_ENGINEERING,
                 to_role=ROLE_GOVERNANCE,
                 task_ref=task_ref,
+                payload=dict(claim_payload or {}),
                 correlation_id=m.id,
             )
         )
@@ -224,7 +242,7 @@ def run_three_role_handshake(
                 from_role=ROLE_ENGINEERING,
                 to_role=ROLE_AUDIT,
                 task_ref=task_ref,
-                payload={"evidence": "ok"},
+                payload=dict(handoff_payload or {"evidence": "ok"}),
                 correlation_id=m.correlation_id or m.id,
             )
         )
@@ -232,7 +250,13 @@ def run_three_role_handshake(
     def on_handoff(m: RoleMessage) -> None:
         steps.append("handoff")
         ok = not fail_verify
+        extra: dict[str, Any] = {}
+        if verify_extra is not None:
+            extra = verify_extra() or {}
+            if "pass" in extra:
+                ok = ok and bool(extra["pass"])
         state["verify"] = ok
+        payload = {"pass": ok, **{k: v for k, v in extra.items() if k != "pass"}}
         bus.publish(
             RoleMessage(
                 id=uuid.uuid4().hex,
@@ -241,7 +265,7 @@ def run_three_role_handshake(
                 from_role=ROLE_AUDIT,
                 to_role=ROLE_GOVERNANCE,
                 task_ref=task_ref,
-                payload={"pass": ok},
+                payload=payload,
                 correlation_id=m.correlation_id,
             )
         )
@@ -257,6 +281,7 @@ def run_three_role_handshake(
                     from_role=ROLE_GOVERNANCE,
                     to_role=None,
                     task_ref=task_ref,
+                    payload=dict(complete_payload or {}),
                     correlation_id=m.correlation_id,
                 )
             )
@@ -275,7 +300,7 @@ def run_three_role_handshake(
             from_role=ROLE_GOVERNANCE,
             to_role=ROLE_ENGINEERING,
             task_ref=task_ref,
-            payload={"kpi": "batch1-collab"},
+            payload=dict(assign_payload),
         )
     )
 
@@ -287,13 +312,35 @@ def run_three_role_handshake(
         "replay": bus.replay(),
         "roles": [eng.role_id, gov.role_id, aud.role_id],
         "error": None if completed else "handshake_incomplete",
+        "bus": bus,
     }
+
+
+def run_three_role_handshake(
+    bus: RoleProtocolBus | None = None,
+    *,
+    fail_verify: bool = False,
+) -> dict[str, Any]:
+    """Full assign→claim→handoff→verify→complete across 3 first-ship roles."""
+    task_ref = f"batch1-task-{uuid.uuid4().hex[:8]}"
+    result = _run_collab_handshake(
+        task_ref=task_ref,
+        assign_payload={"kpi": "batch1-collab"},
+        fail_verify=fail_verify,
+        bus=bus,
+    )
+    result.pop("bus", None)
+    return result
 
 
 def measure_three_role_batch(
     *, n_tasks: int = 30, inject_fail_every: int = 0
 ) -> dict[str, Any]:
-    """G-DEL.2b-style batch measure for 3 first-ship roles."""
+    """G-DEL.2b-style batch measure for 3 first-ship roles.
+
+    Note: ``meets_gate`` from ``stamp_non_physical_goal`` means *process-local*
+    protocol success only — not official G-DEL.2b human announce.
+    """
     from caliber import stamp_non_physical_goal
 
     ok = 0
@@ -311,7 +358,7 @@ def measure_three_role_batch(
             }
         )
     rate = ok / n_tasks if n_tasks else 0.0
-    return stamp_non_physical_goal(
+    stamped = stamp_non_physical_goal(
         {
             "n_tasks": n_tasks,
             "completed": ok,
@@ -323,9 +370,13 @@ def measure_three_role_batch(
             "roles": list(FIRST_SHIP_ROLES),
             "trails_sample": trails[:5],
             "trails_all_count": len(trails),
+            "official_announce": False,
         },
         ok=rate > 0.95,
     )
+    # Explicit: process-local gate must never flip physical
+    stamped["meets_physical_gate"] = False
+    return stamped
 
 
 def run_backlog_collab(
@@ -335,6 +386,7 @@ def run_backlog_collab(
     title: str = "",
     work_summary: str = "",
     fail_verify: bool = False,
+    require_path_exists: bool = True,
 ) -> dict[str, Any]:
     """Run 3-role collab bound to a **real** backlog task id/path (Batch1 B2).
 
@@ -344,14 +396,7 @@ def run_backlog_collab(
     """
     if not task_id or not task_path:
         raise ValueError("task_id and task_path required for real backlog collab")
-    bus = RoleProtocolBus()
-    reg = bus.registry
-    eng = reg.register(ROLE_ENGINEERING, agent_id=f"eng-{task_id[:12]}")
-    gov = reg.register(ROLE_GOVERNANCE, agent_id=f"gov-{task_id[:12]}")
-    aud = reg.register(ROLE_AUDIT, agent_id=f"aud-{task_id[:12]}")
-    task_ref = task_id
-    steps: list[str] = []
-    state: dict[str, Any] = {}
+
     handoff_evidence = {
         "task_id": task_id,
         "task_path": task_path,
@@ -361,111 +406,41 @@ def run_backlog_collab(
         "artifacts": [task_path],
     }
 
-    def on_assign(m: RoleMessage) -> None:
-        steps.append("assign")
-        bus.publish(
-            RoleMessage(
-                id=uuid.uuid4().hex,
-                type="claim_ack",
-                from_agent=eng.agent_id,
-                from_role=ROLE_ENGINEERING,
-                to_role=ROLE_GOVERNANCE,
-                task_ref=task_ref,
-                payload={"claimed_path": task_path},
-                correlation_id=m.id,
-            )
-        )
+    def verify_extra() -> dict[str, Any]:
+        path = Path(task_path)
+        # Prefer is_file: remediation cards are files; bare exists() allows dirs
+        path_ok = path.is_file()
+        if not require_path_exists:
+            path_ok = True
+        return {
+            "pass": path_ok,
+            "task_path": task_path,
+            "path_exists": path.is_file() or path.exists(),
+            "path_is_file": path.is_file(),
+            "evidence_keys": list(handoff_evidence.keys()),
+        }
 
-    def on_claim(m: RoleMessage) -> None:
-        steps.append("claim_ack")
-        bus.publish(
-            RoleMessage(
-                id=uuid.uuid4().hex,
-                type="handoff",
-                from_agent=eng.agent_id,
-                from_role=ROLE_ENGINEERING,
-                to_role=ROLE_AUDIT,
-                task_ref=task_ref,
-                payload={"evidence": handoff_evidence},
-                correlation_id=m.correlation_id or m.id,
-            )
-        )
-
-    def on_handoff(m: RoleMessage) -> None:
-        steps.append("handoff")
-        ok = not fail_verify
-        # audit verifies real path exists when possible
-        from pathlib import Path as _P
-
-        path_ok = _P(task_path).is_file() or _P(task_path).exists()
-        state["verify"] = ok and path_ok
-        bus.publish(
-            RoleMessage(
-                id=uuid.uuid4().hex,
-                type="verify_result",
-                from_agent=aud.agent_id,
-                from_role=ROLE_AUDIT,
-                to_role=ROLE_GOVERNANCE,
-                task_ref=task_ref,
-                payload={
-                    "pass": state["verify"],
-                    "task_path": task_path,
-                    "path_exists": path_ok,
-                    "evidence_keys": list(handoff_evidence.keys()),
-                },
-                correlation_id=m.correlation_id,
-            )
-        )
-
-    def on_verify(m: RoleMessage) -> None:
-        steps.append("verify_result")
-        if m.payload.get("pass"):
-            bus.publish(
-                RoleMessage(
-                    id=uuid.uuid4().hex,
-                    type="complete",
-                    from_agent=gov.agent_id,
-                    from_role=ROLE_GOVERNANCE,
-                    to_role=None,
-                    task_ref=task_ref,
-                    payload={"task_path": task_path, "closed": True},
-                    correlation_id=m.correlation_id,
-                )
-            )
-            steps.append("complete")
-
-    bus.subscribe(on_assign, type="assign")
-    bus.subscribe(on_claim, type="claim_ack")
-    bus.subscribe(on_handoff, type="handoff")
-    bus.subscribe(on_verify, type="verify_result")
-
-    bus.publish(
-        RoleMessage(
-            id=uuid.uuid4().hex,
-            type="assign",
-            from_agent=gov.agent_id,
-            from_role=ROLE_GOVERNANCE,
-            to_role=ROLE_ENGINEERING,
-            task_ref=task_ref,
-            payload={
-                "kpi": "real-backlog-collab",
-                "task_id": task_id,
-                "task_path": task_path,
-                "title": title,
-            },
-        )
+    result = _run_collab_handshake(
+        task_ref=task_id,
+        assign_payload={
+            "kpi": "real-backlog-collab",
+            "task_id": task_id,
+            "task_path": task_path,
+            "title": title,
+        },
+        claim_payload={"claimed_path": task_path},
+        handoff_payload={"evidence": handoff_evidence},
+        complete_payload={"task_path": task_path, "closed": True},
+        fail_verify=fail_verify,
+        verify_extra=verify_extra,
     )
-
-    completed = "complete" in steps and state.get("verify") is True
+    result.pop("bus", None)
+    if not result["completed"] and require_path_exists:
+        result["error"] = "handshake_incomplete_or_path_missing"
     return {
-        "task_ref": task_ref,
+        **result,
         "task_id": task_id,
         "task_path": task_path,
         "title": title,
-        "completed": completed,
-        "steps": steps,
-        "replay": bus.replay(),
-        "roles": [eng.role_id, gov.role_id, aud.role_id],
         "handoff_evidence": handoff_evidence,
-        "error": None if completed else "handshake_incomplete_or_path_missing",
     }

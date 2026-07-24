@@ -81,7 +81,10 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     report = run_once(mode=args.mode, out_dir=args.out)
     print(json.dumps(report, indent=2, ensure_ascii=False))
-    return 0 if report.get("ok") or report.get("mode") == "physical" else 1
+    # Honest exit: physical fail-closed (no hosts) is exit 2; sim fail is 1
+    if report.get("mode") == "physical" and not report.get("ok"):
+        return 2
+    return 0 if report.get("ok") else 1
 
 
 if __name__ == "__main__":

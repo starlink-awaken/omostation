@@ -77,7 +77,6 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dry-run", action="store_true", default=True)
     p.add_argument("--live", action="store_true", help="reserved; still sim until physical")
     p.add_argument("--n-nodes", type=int, default=4)
-    p.add_argument("--json", action="store_true")
     args = p.parse_args(argv)
     report = run_drill(dry_run=not args.live, n_nodes=args.n_nodes)
     # Always emit JSON report for evidence capture (CI/scripts parse stdout)
