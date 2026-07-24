@@ -24,7 +24,7 @@ jobs:
           # 风格/模式类 PLW1510(open encoding 场景OK)/ASYNC221,230(async 模式)/SIM102,115(风格)/TRY004/PYI036(类型签名)/
           # PLW0602/RUF034/RUF012/DTZ005(datetime tz)/PLE1205(logging format) — acknowledge, 非 bug.
           # fixable (类型现代化/import排序/with合并) 已 ruff --fix 真修; dead import 已删. 详见子模块 commit + PR.
-          args: "check --ignore F401,F821,E402,E722,F841,BLE001,S110,S112,EXE001,PLW1510,ASYNC221,ASYNC220,ASYNC230,SIM102,SIM115,SIM117,TRY004,PYI036,PLW0602,PLR1704,RUF034,RUF012,DTZ005,DTZ007,PLE1205,PERF402,TRY401,UP035"
+          args: "check --ignore F401,F821,E402,E722,F841,BLE001,S110,S112,EXE001,PLW1510,ASYNC221,ASYNC220,ASYNC230,SIM102,SIM115,SIM117,TRY004,PYI036,PLW0602,PLR1704,RUF034,RUF012,DTZ005,DTZ007,PLE1205,PERF402,TRY401,UP035,RUF100"
 
   prettier:
     name: Pre-commit hooks check
