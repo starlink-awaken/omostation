@@ -11,46 +11,48 @@ related:
   - STRAT-P81-strategic-roadmap.md
   - 0228-m1-acceptance-physical-deferred-reorder.md
 ---
+# markdown body 包成 body 字段 (YAML literal block), 修复 check-yaml 解析.
+# 原 #488 frontmatter 合法, 但 body 裸 markdown 破坏第二个 YAML document.
+body: |
+  # 问题: main 12 个子模块 gitlink 悬空
 
-# 问题: main 12 个子模块 gitlink 悬空
+  主仓 main (94d36d406, batch2 合并后) 记录的 12 个子模块 gitlink 指向的 commit,
+  在子模块仓库的本地与远程均不存在 (`git cat-file -t <sha>` → could not get object info).
+  新部署的 pre-push reachability hook (2026-07-24 14:53) 首次暴露此存量问题.
 
-主仓 main (94d36d406, batch2 合并后) 记录的 12 个子模块 gitlink 指向的 commit,
-在子模块仓库的本地与远程均不存在 (`git cat-file -t <sha>` → could not get object info).
-新部署的 pre-push reachability hook (2026-07-24 14:53) 首次暴露此存量问题.
+  ## 归属: 非 batch2 引入
+  batch2 (PR #486) 未改动这 12 个子模块指针, main≡batch2 逐字一致.
+  属 main 既有存量债 (子模块仓库 history rewrite / commit 丢失, 主仓指针未同步更新).
 
-## 归属: 非 batch2 引入
-batch2 (PR #486) 未改动这 12 个子模块指针, main≡batch2 逐字一致.
-属 main 既有存量债 (子模块仓库 history rewrite / commit 丢失, 主仓指针未同步更新).
+  ## 12 个断指针 (17 子模块中)
+  | 子模块 | 断指针 sha |
+  |--------|-----------|
+  | projects/kairon | 4e3b95fdb3 |
+  | projects/runtime | 7cc12a34c6 |
+  | projects/metaos | 5b4dfa7da0 |
+  | projects/l4-kernel | 2829c1ab03 |
+  | projects/gbrain | fbebd0b42a |
+  | projects/family-hub | 0a79b918fb |
+  | projects/model-driven | ede5e00a71 |
+  | projects/omo-debt | ce32bb3319 |
+  | projects/aetherforge | 22616adefb |
+  | projects/bus-foundation | 81c3404a02 |
+  | projects/c2g | 94ca993b1a |
+  | projects/observability | 7f92b81e5f |
 
-## 12 个断指针 (17 子模块中)
-| 子模块 | 断指针 sha |
-|--------|-----------|
-| projects/kairon | 4e3b95fdb3 |
-| projects/runtime | 7cc12a34c6 |
-| projects/metaos | 5b4dfa7da0 |
-| projects/l4-kernel | 2829c1ab03 |
-| projects/gbrain | fbebd0b42a |
-| projects/family-hub | 0a79b918fb |
-| projects/model-driven | ede5e00a71 |
-| projects/omo-debt | ce32bb3319 |
-| projects/aetherforge | 22616adefb |
-| projects/bus-foundation | 81c3404a02 |
-| projects/c2g | 94ca993b1a |
-| projects/observability | 7f92b81e5f |
+  ## 证据
+  - `python3 bin/ssot/submodule-reachability-gate.py --source head --fetch` → FAIL (12/17)
+  - 抽查 projects/model-driven ede5e00a71: `git cat-file -t` → could not get object info
+    (commit object 本地都不存在, 非"未 push"而是真丢失)
 
-## 证据
-- `python3 bin/ssot/submodule-reachability-gate.py --source head --fetch` → FAIL (12/17)
-- 抽查 projects/model-driven ede5e00a71: `git cat-file -t` → could not get object info
-  (commit object 本地都不存在, 非"未 push"而是真丢失)
+  ## 影响
+  - 任何基于 main 的 push 撞 reachability gate (本地 pre-push hook, blocking)
+  - CI `submodules: recursive` 拉这 12 个子模块会 "not our ref" → 相关 CI 红
 
-## 影响
-- 任何基于 main 的 push 撞 reachability gate (本地 pre-push hook, blocking)
-- CI `submodules: recursive` 拉这 12 个子模块会 "not our ref" → 相关 CI 红
+  ## 临时缓解 (已用于 batch2 合并)
+  SWARM_ESCAPE_ID=submodule-reachability-partial-worktree git push --no-verify
+  (allowlist 预授权, 见 .omo/_truth/registry/swarm-coordination.yaml::escape_hatch_exemptions)
 
-## 临时缓解 (已用于 batch2 合并)
-SWARM_ESCAPE_ID=submodule-reachability-partial-worktree git push --no-verify
-(allowlist 预授权, 见 .omo/_truth/registry/swarm-coordination.yaml::escape_hatch_exemptions)
-
-## 建议修法 (需人类拍板优先级与排期)
-逐个子模块仓库: 进子模块 origin 找当前正确 commit → 更新主仓 gitlink 指针
-→ 提 PR 落 main. 12 个子模块跨多仓库, 建议单列排期, 非任何单批工单可覆盖.
+  ## 建议修法 (需人类拍板优先级与排期)
+  逐个子模块仓库: 进子模块 origin 找当前正确 commit → 更新主仓 gitlink 指针
+  → 提 PR 落 main. 12 个子模块跨多仓库, 建议单列排期, 非任何单批工单可覆盖.

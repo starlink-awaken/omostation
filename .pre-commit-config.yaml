@@ -192,7 +192,7 @@ repos:
 
       - id: ruff
         name: Ruff Linter
-        entry: uv run ruff check --fix --ignore F401,F821,E402,E722,F841,F541
+        entry: uv run ruff check --fix --select E4,E7,E9,F --ignore F401,F821,E402,E722,F841,F541
         language: system
         types: [python]
         # files 只扫主仓直辖 scripts/+bin/; projects/ 子模块各自跑 "Ruff Linter (tracked projects)",
