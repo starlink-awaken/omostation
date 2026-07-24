@@ -1,0 +1,14 @@
+---
+id: NEEDS-HUMAN-BATCH1-BATCH2-PROPOSAL
+title: "STRAT-P81 Batch 2 提案 — CLOSED (ADR-0232 D2 approved)"
+status: closed
+closed_at: "2026-07-24T06:55:00Z"
+priority: P1
+needs-human: false
+close_reason: >
+  User approved Batch 2 scope 2026-07-24. Close reason: ADR-0232 D2.
+  Workorder: .omo/plans/strat-p81-batch2-workorder.md
+closeout_adr: .omo/_knowledge/decisions/0232-g-del-2b-official-pass.md
+evidence:
+  - .omo/plans/strat-p81-batch2-workorder.md
+  - .omo/_knowledge/decisions/0232-g-del-2b-official-pass.md

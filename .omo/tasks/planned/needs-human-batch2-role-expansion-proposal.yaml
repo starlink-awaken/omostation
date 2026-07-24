@@ -1,0 +1,27 @@
+---
+id: NEEDS-HUMAN-BATCH2-ROLE-EXPANSION
+title: "Batch2 B3: 第 4/5 角色（research/delivery）实装提案（评估页已齐 · 待拍板）"
+status: candidate
+needs-human: true
+priority: P2
+owner: human
+created_at: "2026-07-24T07:00:00Z"
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+source_docs:
+  - .omo/_knowledge/audits/2026-07-24-batch2-role-expansion-eval.md
+entry_gate: []
+evidence_required:
+  - human approve or defer expansion
+test_plan:
+  - Human reads eval page and decides Batch3 scope
+desc: >
+  Evaluation only (Batch2 B3). No code implementation of 4th/5th roles in Batch2.
