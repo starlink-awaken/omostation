@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 LANE_PRIORITY = {
     "revalidate_now": 0,
     "schedule_now": 1,

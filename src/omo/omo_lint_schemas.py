@@ -66,7 +66,7 @@ def _check_module_append_has_schema(module_path: Path) -> list[tuple[int, str]]:
     class AppendCallVisitor(ast.NodeVisitor):
         """找 AppendOnlyLog.append() 调用, 检查 schema= kwarg."""
 
-        def visit_Call(self, node: ast.Call) -> None:  # noqa: N802
+        def visit_Call(self, node: ast.Call) -> None:
             # 匹配形式: AppendOnlyLog(...).append(record, schema=SomeSchema)
             #         或 log.append(record, schema=SomeSchema)
             if not isinstance(node.func, ast.Attribute):
@@ -347,8 +347,8 @@ def _check_all_schemas_exported() -> list[tuple[str, str, str]]:
     Returns:
         list of (class_name, issue_type, detail) tuples. 空 list = 全合规.
     """
-    from omo.omo_io_schemas import SCHEMA_REGISTRY
     import omo.omo_io_schemas as schemas_module
+    from omo.omo_io_schemas import SCHEMA_REGISTRY
 
     issues: list[tuple[str, str, str]] = []
     exported = set(getattr(schemas_module, "__all__", []))

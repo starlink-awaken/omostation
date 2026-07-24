@@ -1,10 +1,11 @@
+import json
 import os
 import subprocess
-import json
 from pathlib import Path
+from typing import Optional
+
 from fastmcp import FastMCP
 from pydantic import BaseModel
-from typing import Optional
 
 mcp = FastMCP("omo")
 
@@ -33,7 +34,7 @@ class YieldRequest(BaseModel):
 
 class DebtListRequest(BaseModel):
     omo_dir: str = ".omo"
-    status: Optional[str] = None  # filter: open, closed, or None for all
+    status: str | None = None  # filter: open, closed, or None for all
 
 
 class DebtSummaryRequest(BaseModel):
@@ -42,12 +43,12 @@ class DebtSummaryRequest(BaseModel):
 
 class MetacognitionRequest(BaseModel):
     command: str = "baseline"
-    lens: Optional[str] = None  # X1, X2, X3, or None/empty for all
+    lens: str | None = None  # X1, X2, X3, or None/empty for all
 
 
 class ValidateTaskRequest(BaseModel):
     task_data: dict
-    group: Optional[str] = "planned"
+    group: str | None = "planned"
 
 
 # ── Advisory Lock (TASK-94BB9C70, 防 concurrent-agent-contention) ──
@@ -91,7 +92,7 @@ async def validate_task(req: ValidateTaskRequest) -> str:
         return json.dumps(
             {"valid": len(errors) == 0, "errors": errors}, ensure_ascii=False
         )
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return json.dumps({"valid": False, "errors": [str(e)]}, ensure_ascii=False)
 
 
@@ -244,7 +245,7 @@ async def omo_debt_list(req: DebtListRequest) -> str:
         return json.dumps(
             {"count": len(items), "items": items}, indent=2, ensure_ascii=False
         )
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
@@ -682,8 +683,8 @@ def read_omo_standard(rule: str) -> str:
 
         with open(target_path, "r", encoding="utf-8") as f:
             return f.read()
-    except Exception as e:  # noqa: BLE001  # defensive fallback
-        return f"Error reading standard: {str(e)}"
+    except Exception as e:  # defensive fallback
+        return f"Error reading standard: {e!s}"
 
 
 def main():

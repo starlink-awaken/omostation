@@ -97,7 +97,7 @@ def render_reporting_markdown(packet: dict[str, object]) -> str:
 
 
 def _delta_metric(
-    latest: int | float, prior: int | float | None
+    latest: float, prior: float | None
 ) -> dict[str, int | float | None]:
     if prior is None:
         return {"latest": latest, "prior": None, "delta": None}

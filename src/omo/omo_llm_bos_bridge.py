@@ -33,14 +33,19 @@ except ImportError:  # pragma: no cover - 路径旁路场景
     _OMO_SRC = Path(__file__).resolve().parents[0]
     if str(_OMO_SRC) not in sys.path:
         sys.path.insert(0, str(_OMO_SRC))
-    from omo.omo_bos import load_registry, parse_bos_uri, validate_bos_uri  # type: ignore[no-redef]
+    from omo.omo_bos import (  # type: ignore[no-redef]
+        load_registry,
+        parse_bos_uri,
+        validate_bos_uri,
+    )
 
 # ── P58-W1: 长驻池从 omo_llm_bos_bridge 抽出 ───────────
 # facade 内部只用 _resolve_via_agora_subprocess, _MANAGER 留给 tests/integration 用
 from omo.omo_agora_pool import (  # type: ignore[import-not-found]
-    _MANAGER,  # noqa: F401  # tests/integration re-export
+    _MANAGER,  # tests/integration re-export
     _resolve_via_agora_subprocess,
 )
+
 # P59-W2: dispatcher 在 omo.omo_bos_dispatcher 抽 TOOL_DISPATCHER + _dispatch_sync + _self_test.
 # facade 不 re-export (避免循环依赖, 外部 import 走 dispatcher module).
 
@@ -176,7 +181,7 @@ def list_bos_uris_tool(domain: str | None = None) -> dict[str, Any]:
     """列出已注册 URI (走本地 bos-registry.json via load_registry)."""
     try:
         regs = load_registry()
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         return {"error": f"registry_load_failed: {exc}", "count": 0, "uris": []}
 
     if domain:

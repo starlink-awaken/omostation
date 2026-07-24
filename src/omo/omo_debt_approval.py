@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 APPROVAL_SCOPE_EXECUTE_REVALIDATE = "execute_revalidate"
 VALID_APPROVAL_SCOPES = {
     APPROVAL_SCOPE_EXECUTE_REVALIDATE,

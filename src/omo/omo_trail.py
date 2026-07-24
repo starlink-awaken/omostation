@@ -42,7 +42,6 @@ from pathlib import Path
 from omo.omo_io import AppendOnlyLog
 from omo.omo_io_schemas import OmoTrailRecord
 
-
 _WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 DEFAULT_TRAIL_PATH = _WORKSPACE / ".omo" / "_knowledge" / "omo-trail.jsonl"
 

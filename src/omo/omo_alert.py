@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import os
 import subprocess
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from omo.omo_io import AppendOnlyLog
@@ -42,7 +42,7 @@ def cmd_alert_check(threshold: int, notify: bool) -> int:
         return 0
 
     # Round 4: 用 AppendOnlyLog.since 替代手写 read_text + 时间过滤 (8 行 → 2 行)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     one_hour_ago = (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     recent = AppendOnlyLog(KEI_AUDIT).since(one_hour_ago)
 

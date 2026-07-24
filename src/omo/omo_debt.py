@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
 
-from .omo_shared import load_yaml
+from .omo_debt_action_packet import build_action_packet
 from .omo_debt_approval import (
     APPROVAL_SCOPE_EXECUTE_REVALIDATE,
     approval_current_path,
@@ -16,12 +16,13 @@ from .omo_debt_approval import (
     dispatch_entry_requires_approval,
     find_dispatch_entry,
 )
-from .omo_debt_action_packet import build_action_packet
 from .omo_debt_campaign import build_campaign_packet, render_campaign_markdown
 from .omo_debt_dispatch import build_dispatch_packet
 from .omo_debt_execution import execution_record_path, run_slug_from_ref
+from .omo_debt_lifecycle import classify_review_sections
 from .omo_debt_metrics import compute_debt_metrics
 from .omo_debt_owner_routing import build_owner_routing_packet
+from .omo_debt_registry import DebtItem, load_debt_ledger
 from .omo_debt_reporting import (
     build_reporting_diff_packet,
     build_reporting_history_packet,
@@ -32,14 +33,13 @@ from .omo_debt_reporting import (
     render_reporting_markdown,
     render_reporting_trend_markdown,
 )
-from .omo_debt_registry import DebtItem, load_debt_ledger
 from .omo_debt_review_queue import build_review_queue
-from .omo_debt_lifecycle import classify_review_sections
+from .omo_shared import load_yaml
 
 
 def _timestamp() -> str:
     return (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")
@@ -58,7 +58,7 @@ def _write_yaml(path: Path, payload: dict) -> None:
 
 
 def _parse_iso8601(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.fromisoformat(value)
 
 
 def _positive_int(value: str) -> int:
@@ -146,12 +146,12 @@ def write_dashboard(
 
 
 # _render_* 模板函数 (P110 拆分, omo_debt_render.py). TASK-F7114ABA 治本.
-from omo.omo_debt_render import (  # noqa: E402, F401
-    _render_section,
-    _render_queue_section,
+from omo.omo_debt_render import (
     _render_action_packet_section,
-    _render_owner_routing_section,
     _render_dispatch_owner_section,
+    _render_owner_routing_section,
+    _render_queue_section,
+    _render_section,
 )
 
 
@@ -743,7 +743,7 @@ def approve_item(
 
 
 # CLI 入口 re-export (P110 拆分, omo_debt_cli 持有 argparse + main). TASK-F7114ABA.
-from omo.omo_debt_cli import main  # noqa: E402, F401
+from omo.omo_debt_cli import main
 
 if __name__ == "__main__":
     raise SystemExit(main())

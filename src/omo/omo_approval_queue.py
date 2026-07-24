@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 _PROPOSAL_STATUS_ORDER = {"missing": 0, "proposed": 1, "approved": 2, "verified": 3}
 
 

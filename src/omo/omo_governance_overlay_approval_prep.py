@@ -5,6 +5,8 @@ from pathlib import Path
 
 from .omo_shared import (
     load_yaml as shared_load_yaml,
+)
+from .omo_shared import (
     load_yaml_required as shared_load_yaml_required,
 )
 
@@ -23,7 +25,7 @@ def _load_optional_yaml(path: Path) -> dict | None:
 
 
 def _parse_iso8601(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.fromisoformat(value)
 
 
 def _status_sort_key(entry: dict[str, object]) -> tuple[int, str]:

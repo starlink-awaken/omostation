@@ -10,7 +10,7 @@ import json
 import sqlite3
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 DB_PATH = Path(__file__).resolve().parents[4] / "data" / "cards" / "cards.db"
@@ -93,7 +93,7 @@ VALID_PRIORITIES = {"P0", "P1", "P2", "P3"}
 
 def _now() -> str:
     return (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")
@@ -406,7 +406,7 @@ def cmd_check(args):
     """Check constraints and report violations."""
     conn = _get_db()
     violations = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Check idea pool size
     idea_count = conn.execute(
@@ -436,7 +436,7 @@ def cmd_check(args):
         )
 
     # Check flash ideas older than 48h
-    two_days_ago = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    two_days_ago = datetime.now(UTC).strftime("%Y-%m-%d")
     flash_old = conn.execute(
         "SELECT id, title, created_at FROM cards WHERE type='idea' AND status='flash' AND created_at < ?",
         (two_days_ago,),
@@ -449,7 +449,7 @@ def cmd_check(args):
     # Check incubating > 14 days
     from datetime import timedelta
 
-    two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).strftime(
+    two_weeks_ago = (datetime.now(UTC) - timedelta(days=14)).strftime(
         "%Y-%m-%d"
     )
     incubating_stale = conn.execute(
@@ -601,7 +601,7 @@ def cmd_daemon(args=None):
         cmd_dashboard(args)
         dashboard_output = _sys.stdout.getvalue()
         _sys.stdout = old_stdout
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         dashboard_output = "# DASHBOARD\n\n(update failed)\n"
 
     if dashboard_path.exists():

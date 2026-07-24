@@ -14,7 +14,6 @@ from __future__ import annotations
 import argparse
 import time
 
-
 from omo.omo_paths import OMO_ROOT, PROJECTS_DIR
 from omo.omo_shared import load_yaml
 

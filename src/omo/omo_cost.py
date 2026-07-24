@@ -10,9 +10,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
-
 
 COST_FILE = (
     Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime")))
@@ -77,7 +76,7 @@ def cmd_cost_estimate(period_days: int, model_filter: str | None) -> int:
         print(f"   {COST_FILE}")
         return 0
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=period_days)
+    cutoff = datetime.now(UTC) - timedelta(days=period_days)
     records = []
     for line in COST_FILE.read_text().strip().split("\n"):
         if not line.strip():

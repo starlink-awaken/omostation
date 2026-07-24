@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import argparse
 
-# Re-export facade imports for backward compatibility
+from .omo_worker_cmd_task import execute_task_command, setup_task_parser
 
-from .omo_worker_cmd_worker import setup_worker_parser, execute_worker_command
-from .omo_worker_cmd_task import setup_task_parser, execute_task_command
+# Re-export facade imports for backward compatibility
+from .omo_worker_cmd_worker import execute_worker_command, setup_worker_parser
 
 
 def main(argv: list[str] | None = None) -> int:

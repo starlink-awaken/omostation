@@ -18,7 +18,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-
 RUNTIME_DATA = (
     Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime"))) / "data"
 )

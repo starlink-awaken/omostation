@@ -54,7 +54,7 @@ def content_hash(file_path: Path) -> str:
     try:
         content = file_path.read_bytes()
         return hashlib.sha256(content).hexdigest()[:16]
-    except (OSError, IOError):
+    except OSError:
         return "ERROR"
 
 

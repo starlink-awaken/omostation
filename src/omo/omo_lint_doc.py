@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    import yaml as _doc_lint_yaml  # noqa: E402
+    import yaml as _doc_lint_yaml
 except ImportError:  # pragma: no cover
     _doc_lint_yaml = None
 
@@ -43,10 +43,7 @@ def _classify_doc(rel_path: str) -> str:
                 return category
     # 默认归 history
     if (
-        rel.startswith(".omo/_archive/")
-        or rel.startswith(".omo/_knowledge/audits/")
-        or rel.startswith(".omo/_knowledge/management/")
-        or rel.startswith(".omo/_knowledge/decisions/")
+        rel.startswith((".omo/_archive/", ".omo/_knowledge/audits/", ".omo/_knowledge/management/", ".omo/_knowledge/decisions/"))
     ):
         return "history"
     return "history"
@@ -64,7 +61,7 @@ def _parse_frontmatter(content: str) -> dict[str, Any] | None:
     try:
         data = _doc_lint_yaml.safe_load(parts[1])
         return data if isinstance(data, dict) else None
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return None
 
 
@@ -129,7 +126,7 @@ def _check_doc_referenced(
                 if len(refs) > 5:
                     break
             return (len(refs) > 0, refs)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass  # fallback to rglob
 
     skip_dirs = {".git", ".venv", "node_modules", "__pycache__", "_delivery"}
@@ -149,7 +146,7 @@ def _check_doc_referenced(
                 refs.append(str(rel_p))
                 if len(refs) > 5:
                     break
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
     return (len(refs) > 0, refs)
 
@@ -194,7 +191,7 @@ def cmd_lint_doc_lifecycle(workspace_root: str = ".", verbose: bool = False) -> 
     for f in md_files:
         try:
             contents_cache[f] = f.read_text(encoding="utf-8", errors="ignore")
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
         if f.suffix not in {".py", ".sh"}:
             continue

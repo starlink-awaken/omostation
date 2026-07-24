@@ -57,12 +57,14 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
         phase = 0
         health_score = 0.0
         try:
-            from omo.omo_state import STATE_SYSTEM_YAML  # type: ignore[import-not-found]
+            from omo.omo_state import (
+                STATE_SYSTEM_YAML,  # type: ignore[import-not-found]
+            )
 
             data = load_yaml(STATE_SYSTEM_YAML)
             phase = data.get("current_phase", 0)
             health_score = data.get("health_score", 0.0)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
         if not dry_run:
@@ -91,7 +93,7 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
             "audit_checks": AUDIT_CHECKS,
             "dry_run": dry_run,
         }
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         # 错误也走结构化 log (便于事后审计: 哪些 sync 失败)
         try:
             # Round 15 P0: 加 schema=OmoSyncRecord 走 Pydantic 写时校验
@@ -106,7 +108,7 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
                 schema=OmoSyncRecord,
                 sort_keys=True,
             )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass  # log 失败不阻塞错误返回
         return {
             "status": "error",
@@ -114,4 +116,4 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
         }
 
 
-__all__ = ["run_sync", "AUDIT_CHECKS", "DEFAULT_SYNC_LOG_PATH"]
+__all__ = ["AUDIT_CHECKS", "DEFAULT_SYNC_LOG_PATH", "run_sync"]

@@ -23,8 +23,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from omo.omo_io import AppendOnlyLog
 from omo.omo_audit import _utc_now  # Round 8 P2 锁: 时间戳 Z 结尾统一
+from omo.omo_io import AppendOnlyLog
 from omo.omo_io_schemas import (
     OmoHistoryRecord,
 )  # Round 18 P0: 写时 Pydantic 校验 (X1 审计契约)

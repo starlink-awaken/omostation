@@ -28,7 +28,8 @@ from __future__ import annotations
 import json
 import sys
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 DispatchFn = Callable[[str, dict[str, Any]], dict[str, Any]]
 
@@ -81,7 +82,7 @@ def run_stdio_dispatch(
                         "result": result,
                     }
                 )
-            except Exception as exc:  # noqa: BLE001  # defensive fallback
+            except Exception as exc:  # defensive fallback
                 resp = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
             sys.stdout.write(json.dumps(resp, ensure_ascii=False, default=str) + "\n")
             sys.stdout.flush()
@@ -100,4 +101,4 @@ def run_stdio_dispatch(
         time.sleep(30)
 
 
-__all__ = ["run_stdio_dispatch", "DispatchFn"]
+__all__ = ["DispatchFn", "run_stdio_dispatch"]

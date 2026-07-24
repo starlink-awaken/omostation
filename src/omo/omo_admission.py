@@ -73,8 +73,7 @@ def evaluate_worker_envelope(
 
 def _approval_ref_for_envelope(envelope_ref: Path) -> str:
     stem = envelope_ref.stem
-    if stem.endswith("-envelope"):
-        stem = stem[: -len("-envelope")]
+    stem = stem.removesuffix("-envelope")
     return f".omo/workers/runs/{stem}-approval.yaml"
 
 

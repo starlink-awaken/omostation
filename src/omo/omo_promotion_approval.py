@@ -17,7 +17,7 @@ def _load_yaml_required(path: Path) -> dict:
 def _parse_iso8601(value: str | datetime) -> datetime:
     if isinstance(value, datetime):
         return value
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.fromisoformat(value)
 
 
 def evaluate_promotion_approval(

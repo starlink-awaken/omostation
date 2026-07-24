@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .omo_shared import load_yaml_docs
 from .omo_io import write_text_atomic
+from .omo_shared import load_yaml_docs
 from .opc_phase_paths import resolve_opc_phase_task_path
 
 
@@ -214,7 +214,7 @@ def check_dead_links(workspace_root: Path, key_docs: list[str]) -> list[dict[str
             continue
         for match in link_re.finditer(text):
             link_text, link_target = match.group(1), match.group(2)
-            if link_target.startswith("/") or link_target.startswith("http"):
+            if link_target.startswith(("/", "http")):
                 continue
             target = (workspace_root / rel).parent / link_target
             if not target.exists():

@@ -2,41 +2,36 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
+import sys
 from pathlib import Path
 
-from .omo_shared import load_yaml_required
-
-
-# P104 R1 (P106 修复): snapshots 子模块 re-export
-from .omo_governance_surfaces_snapshots import (  # noqa: E402, F401
-    _mutation_surface_category_counts,
-    _mutation_surface_registry_snapshot,
-    _worker_internal_write_profiles_snapshot,
-    _worker_profile_subtype_counts,
-)
-
 # P105 R1: ingress-check 子模块 re-export
-from .omo_governance_surfaces_ingress import (  # noqa: E402, F401
+from .omo_governance_surfaces_ingress import (
     _check_ingress_registry,
     _resolve_ingress_task_carrier,
 )
 
 # P106 R1: task-policy + ingress-artifacts 子模块 re-export
-
-from .omo_governance_surfaces_ingress_artifacts import (  # noqa: E402, F401
+from .omo_governance_surfaces_ingress_artifacts import (
     _check_ingress_artifacts,
 )
 
 # P110 R1: build_governance_surfaces_report 子模块 (extracted 254L from omo_governance_surfaces.py)
 # Re-export 保持向后兼容 (cli.py / external callers)
-from .omo_governance_surfaces_report import (  # noqa: E402, F401
+from .omo_governance_surfaces_report import (
     build_governance_surfaces_report,
 )
 
-import ast
-import sys
-
+# P104 R1 (P106 修复): snapshots 子模块 re-export
+from .omo_governance_surfaces_snapshots import (
+    _mutation_surface_category_counts,
+    _mutation_surface_registry_snapshot,
+    _worker_internal_write_profiles_snapshot,
+    _worker_profile_subtype_counts,
+)
+from .omo_shared import load_yaml_required
 from .omo_task_policy import task_policy_registry_snapshot
 
 # P107 R1: state-plane + mutation-surface 子模块 re-export
@@ -515,13 +510,12 @@ def _check_state_plane_asset_registry(
             expected
             and isinstance(persistence_mode, str)
             and isinstance(retention_mode, str)
-        ):
-            if (persistence_mode, retention_mode) != expected:
-                issues.append(
-                    "state plane asset lifecycle drift "
-                    f"for {ref}: expected {expected[0]}/{expected[1]}, "
-                    f"got {persistence_mode}/{retention_mode}"
-                )
+        ) and (persistence_mode, retention_mode) != expected:
+            issues.append(
+                "state plane asset lifecycle drift "
+                f"for {ref}: expected {expected[0]}/{expected[1]}, "
+                f"got {persistence_mode}/{retention_mode}"
+            )
 
         if asset_type == "compatibility_alias" and not item.get("alias_target"):
             issues.append(f"compatibility alias missing alias_target: {ref}")
@@ -538,8 +532,7 @@ def _check_state_plane_asset_registry(
 
 def _asset_ref_to_top_level(ref: str) -> str:
     normalized = ref.strip().strip("/")
-    if normalized.startswith(".omo/"):
-        normalized = normalized[len(".omo/") :]
+    normalized = normalized.removeprefix(".omo/")
     if normalized == ".omo":
         return ""
     return normalized.split("/", 1)[0] if normalized else ""
@@ -611,7 +604,7 @@ def _read_c2g_governance_refs(workspace_root: Path) -> tuple[list[str], list[str
         metadata = task.get("metadata", {})
         if metadata.get("ingress_plane") != "projects/c2g":
             issues.append("c2g task builder ingress_plane metadata mismatch")
-    except Exception as exc:  # pragma: no cover - defensive  # noqa: BLE001
+    except Exception as exc:  # pragma: no cover - defensive
         issues.append(f"failed to load c2g governance refs: {exc}")
     finally:
         if sys.path and sys.path[0] == str(c2g_src):

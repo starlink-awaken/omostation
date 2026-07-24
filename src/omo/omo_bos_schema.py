@@ -14,7 +14,7 @@ W3 升级: 引入 Pydantic BaseModel, 让:
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -44,7 +44,7 @@ class BosRegistrationModel(BaseModel):
     protocol: Protocol = "internal"
     description: str = Field(default="", max_length=512)
     registered_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     registered_by: str = Field(default="omo-bos-cli", max_length=64)
 
@@ -67,9 +67,7 @@ class BosRegistrationModel(BaseModel):
     def _validate_endpoint(cls, v: str) -> str:
         # 占位符 (seed 但尚未实装) 允许
         if (
-            v.startswith("placeholder://")
-            or v.startswith("http://")
-            or v.startswith("https://")
+            v.startswith(("placeholder://", "http://", "https://"))
         ):
             return v
         # module:function 形式 — module 部分必须以字母开头
@@ -86,7 +84,7 @@ class BosRegistrationModel(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def _uri_matches_domain(self) -> "BosRegistrationModel":
+    def _uri_matches_domain(self) -> BosRegistrationModel:
         """强制 uri 内的 domain 与 domain 字段一致 (防止拼写漂移).
 
         复用 omo_bos.parse_bos_uri (不再独立跑 BOS_URI_PATTERN) — 避免 regex 3 次
@@ -114,7 +112,7 @@ class BosRegistryModel(BaseModel):
 
     version: Literal["1.0"] = "1.0"
     generated_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     registrations: list[BosRegistrationModel] = Field(default_factory=list)
 
@@ -157,7 +155,7 @@ if __name__ == "__main__":
             package="kos",
             action="search",
         )
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"[OK] bad domain caught: {type(e).__name__}")
 
     # Case 3: uri 内的 domain 与 field domain 不一致应该抛
@@ -168,7 +166,7 @@ if __name__ == "__main__":
             package="kos",
             action="search",
         )
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"[OK] domain mismatch caught: {type(e).__name__}")
 
     # Case 4: legacy 3-段 URI 应该被自动升级

@@ -16,16 +16,16 @@ import sys
 
 import httpx
 
-from omo.omo_daemon import run_once, _write_pid_file, _clear_pid_file, _setup_logging
+from omo.omo_daemon import _clear_pid_file, _setup_logging, _write_pid_file, run_once
 from omo.omo_paths import OMO_ROOT
 
 SSE_DAEMON_PORT = os.environ.get("OMO_SSE_DAEMON_PORT", "9091")
 
-from omo.omo_self_healing import (  # noqa: E402
+from omo.omo_self_healing import (
     get_healing_engine,
-    start_http_status_server,
-    start_hot_reload,
     notify_webhook,
+    start_hot_reload,
+    start_http_status_server,
 )
 
 DAEMON_PID_FILE = OMO_ROOT / "_delivery" / "sse_daemon.pid"
@@ -50,7 +50,7 @@ def _send_notification(title: str, message: str) -> None:
             capture_output=True,
             timeout=3,
         )
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
 
 
@@ -106,9 +106,7 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                                     "debt:reviewed",
                                 )
                                 if (
-                                    ev_type in _governance_types
-                                    or ev_type.startswith("pipeline:")
-                                    or ev_type.startswith("debt:")
+                                    ev_type in _governance_types or ev_type.startswith(("pipeline:", "debt:"))
                                 ):
                                     loop = asyncio.get_running_loop()
                                     tick_result = await loop.run_in_executor(
@@ -161,7 +159,7 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                 if not stop_event.is_set():
                     logger.error(f"SSE connection error: {e}. Retrying in 5s...")
                     await asyncio.sleep(5)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 if not stop_event.is_set():
                     logger.exception(
                         f"Unexpected error in SSE loop: {e}. Retrying in 5s..."

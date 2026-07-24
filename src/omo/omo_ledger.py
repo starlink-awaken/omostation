@@ -1,7 +1,7 @@
 import argparse
-from datetime import datetime, timezone
-from pathlib import Path
 import shutil
+from datetime import UTC, datetime, timezone
+from pathlib import Path
 
 from .omo_paths import find_omo_dir
 from .omo_shared import load_yaml, write_yaml
@@ -27,7 +27,7 @@ def main(argv: list[str]) -> int:
         return 1
 
     print(f"📖 记录 OMO 治理台账 (Ledger) - 目标: {omo_dir}")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     timestamp = now.strftime("%Y%m%d-%H%M%S")
 
     ledger_dir = omo_dir / "_delivery" / "governance-evidence" / "ledgers"

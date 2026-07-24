@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .omo_io import ensure_parent_dir, write_text_atomic
 from .omo_ingress_paths import _drift_history_dir, _runtime_omo_root
+from .omo_io import ensure_parent_dir, write_text_atomic
 
 
 def history_index_path(workspace_root: Path) -> Path:

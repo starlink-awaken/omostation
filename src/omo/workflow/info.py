@@ -5,18 +5,18 @@ import sys
 from typing import Any
 
 from .core import (
-    WORKSPACE,
     REGISTRY_PATH,
-    workflow_rows,
-    agent_rows,
-    integration_rows,
+    WORKSPACE,
     adapter_rows,
+    agent_rows,
     command_display,
+    integration_rows,
     normalize_repo_path,
     path_matches,
+    workflow_rows,
 )
+from .diagnostics import build_doctor_report, check_summary, health_summary
 from .lint import lint_registry
-from .diagnostics import build_doctor_report, health_summary, check_summary
 
 
 def list_workflows(registry: dict[str, Any], as_json: bool) -> None:

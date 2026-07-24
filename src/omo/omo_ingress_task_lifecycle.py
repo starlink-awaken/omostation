@@ -7,19 +7,17 @@ task 创建 (planned/blocked) + metadata 注入. 依赖 paths + registry + trail
 
 from __future__ import annotations
 
-from copy import deepcopy
 import os
-from pathlib import Path
 import re
 import signal
 import subprocess
 import threading
 import time
+from copy import deepcopy
+from pathlib import Path
 from typing import Any
 
 from omo.omo_audit import record as record_audit
-from omo.omo_io import fcntl_lock, write_text_atomic, write_yaml_atomic
-from omo.omo_task_schema import validate_task_data
 from omo.omo_ingress_paths import (
     _artifact_lifecycle_fields,
     _audit_log_path,
@@ -31,26 +29,26 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
+from omo.omo_io import fcntl_lock, write_text_atomic, write_yaml_atomic
+from omo.omo_task_schema import validate_task_data
 
-
-# P110 R1: 3 子模块 (promotion + contract + archive) extracted 936L from omo_ingress_task_lifecycle.py
-# Re-export 保持向后兼容 (cli.py / worker / 外部 import 调用点不破)
-from .omo_ingress_task_promotion import (  # noqa: E402, F401
-    promote_task_to_active,
-    repair_task_promotion_approval,
-    request_task_promotion_approval,
-    revert_task_to_planned,
+from .omo_ingress_task_archive import (
+    archive_done_task,
+    normalize_legacy_planned_task,
+    yield_task_to_planned,
 )
-
-from .omo_ingress_task_contract import (  # noqa: E402, F401
+from .omo_ingress_task_contract import (
     record_task_contract_request,
     route_self_evolution_to_remediation,
 )
 
-from .omo_ingress_task_archive import (  # noqa: E402, F401
-    archive_done_task,
-    normalize_legacy_planned_task,
-    yield_task_to_planned,
+# P110 R1: 3 子模块 (promotion + contract + archive) extracted 936L from omo_ingress_task_lifecycle.py
+# Re-export 保持向后兼容 (cli.py / worker / 外部 import 调用点不破)
+from .omo_ingress_task_promotion import (
+    promote_task_to_active,
+    repair_task_promotion_approval,
+    request_task_promotion_approval,
+    revert_task_to_planned,
 )
 
 

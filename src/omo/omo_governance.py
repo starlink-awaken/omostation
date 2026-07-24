@@ -2,22 +2,23 @@
 from __future__ import annotations
 
 import argparse
-from copy import deepcopy
-from datetime import datetime, timezone
 import json
+from copy import deepcopy
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-from .omo_ingress_goal import create_goal
-from .omo_ingress_task_lifecycle import create_planned_task
-from .omo_ingress import upsert_debt_item
-from .omo_io import write_yaml_atomic
 from .omo_governance_surfaces import (
     main as governance_surfaces_main,
+)
+from .omo_governance_surfaces import (
     resolve_governance_workspace_root,
 )
+from .omo_ingress import upsert_debt_item
+from .omo_ingress_goal import create_goal
+from .omo_ingress_task_lifecycle import create_planned_task
+from .omo_io import write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
 from .omo_shared import load_yaml, load_yaml_docs
-
 
 _REQUIRED_FIELDS = {
     "id",
@@ -37,7 +38,7 @@ _REQUIRED_FIELDS = {
 
 def _utc_now() -> str:
     return (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")

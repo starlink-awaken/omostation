@@ -3,7 +3,6 @@ import hashlib
 import re
 from pathlib import Path
 
-
 from .omo_ingress import create_planned_task
 from .omo_paths import find_omo_dir
 
@@ -28,9 +27,7 @@ def _resolve_depends_on(
         matched = None
         for title, imported_id in title_to_imported.items():
             if (
-                title == ref
-                or title.startswith(ref + ":")
-                or title.startswith(ref + " ")
+                title == ref or title.startswith((ref + ":", ref + " "))
             ):
                 matched = imported_id
                 break

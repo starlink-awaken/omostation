@@ -35,8 +35,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Any, ContextManager
-
+from typing import Any, ContextManager, Self
 
 _thread_local_locks = threading.local()
 
@@ -58,7 +57,7 @@ class fcntl_lock:
     def __init__(self, lock_path: Path) -> None:
         self.lock_path = Path(lock_path).resolve()
 
-    def __enter__(self) -> "fcntl_lock":
+    def __enter__(self) -> Self:
         import fcntl  # POSIX-only; 延迟 import 让 Windows 测试可 import
 
         if not hasattr(_thread_local_locks, "registry"):
@@ -170,14 +169,13 @@ class AppendOnlyLog:
         kwargs: dict[str, Any] = {"ensure_ascii": False}
         kwargs.update(json_kwargs)
         line = json.dumps(record, **kwargs)
-        with self._lock:
-            with open(self.path, "a", encoding="utf-8") as f:
-                f.write(line + "\n")
-                f.flush()
-                try:
-                    os.fsync(f.fileno())
-                except OSError:
-                    pass  # 某些 fs (e.g. 某些 tmpfs) 不支持 fsync
+        with self._lock, open(self.path, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                pass  # 某些 fs (e.g. 某些 tmpfs) 不支持 fsync
         return record
 
     def read_all(self) -> list[dict[str, Any]]:

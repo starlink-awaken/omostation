@@ -4,11 +4,13 @@ OMO Debt Dashboard Generator
 Reads all debt item YAML files and generates a self-contained HTML dashboard.
 """
 
-import yaml
 import json
 import os
-from datetime import datetime, timezone
+import sys
+from datetime import UTC, datetime, timezone
 from pathlib import Path
+
+import yaml
 
 DEBT_DIR = Path.home() / "Workspace" / ".omo" / "debt"
 OUTPUT = Path.home() / "Workspace" / "projects" / "omo" / "debt" / "dashboard.html"
@@ -162,9 +164,9 @@ def get_x1_policy_refs(debt):
             refs.add(r)
 
     # Items with X1- prefix map to specific policies
-    if debt_id.startswith("X1-"):  # noqa: F821
+    if debt_id.startswith("X1-"):
         refs.add("X1-CONST-001")
-        if "audit" in debt_id.lower():  # noqa: F821
+        if "audit" in debt_id.lower():
             refs.add("X1-AUDIT-001")
 
     # If nothing matched, default to most relevant
@@ -179,7 +181,7 @@ def get_x2_rules(debt):
     rules = set()
     entropy = debt.get("entropy_class", "").lower()
     dim = debt.get("dimension", "").lower()
-    _ = debt.get("id", "").upper()  # noqa: F841
+    _ = debt.get("id", "").upper()
 
     if entropy == "time":
         rules.add("X2-FRESH-001")
@@ -231,7 +233,7 @@ def load_debt_items():
 
 def generate_html(items):
     """Generate the complete HTML dashboard."""
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     total = len(items)
     open_items = [d for d in items if d.get("lifecycle_state") == "open"]
     critical_items = [d for d in items if d.get("severity") == "critical"]
@@ -776,4 +778,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

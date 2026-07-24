@@ -19,15 +19,15 @@ import os
 import sqlite3
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal
-
-# 复用 omo_bos.parse_bos_uri (顶层 import, summary() 每次调用都需用到)
-from omo.omo_bos import parse_bos_uri  # noqa: E402
+from typing import Any, Literal, Self
 
 # 复用 omo_audit._utc_now (统一时间戳格式为 "Z" 结尾, 消灭 3 种格式并存)
-from omo.omo_audit import _utc_now  # noqa: E402  (private import 是有意的, 见 #7)
+from omo.omo_audit import _utc_now
+
+# 复用 omo_bos.parse_bos_uri (顶层 import, summary() 每次调用都需用到)
+from omo.omo_bos import parse_bos_uri
 
 # 复用 omo_io.AppendOnlyLog (Round 2: JSONL 物理读写唯一入口)
 from omo.omo_io import AppendOnlyLog
@@ -69,7 +69,7 @@ def _write_watermark(path: Path, watermark: int) -> None:
 
 def _ts_to_iso(ts: float) -> str:
     return (
-        datetime.fromtimestamp(ts, tz=timezone.utc)
+        datetime.fromtimestamp(ts, tz=UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")
@@ -102,7 +102,7 @@ def sync_from_agora_metrics(
             (last_id,),
         ).fetchall()
         conn.close()
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return 0
 
     if not rows:
@@ -124,7 +124,7 @@ def sync_from_agora_metrics(
         try:
             log.append(rec.model_dump(), schema=OmoBosMetricsRecord, sort_keys=True)
             appended += 1
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
 
     if appended:
@@ -177,7 +177,7 @@ def record(
     )
 
 
-def time_invoke(uri: str, transport: str = "") -> "_Timer":
+def time_invoke(uri: str, transport: str = "") -> _Timer:
     """上下文管理器: 测 invoke 耗时并自动 record.
 
     用法:
@@ -198,7 +198,7 @@ class _Timer:
         self.error: str = ""
         self._t0: float = 0.0
 
-    def __enter__(self) -> "_Timer":
+    def __enter__(self) -> Self:
         self._t0 = time.monotonic()
         return self
 
@@ -341,15 +341,15 @@ def reset(path: Path | None = None) -> int:
 
 __all__ = (
     "DEFAULT_METRICS_PATH",
-    "Status",
-    "OmoBosMetricsRecord",  # Round 17 P0: Pydantic 替代旧 BosInvokeRecord dataclass
     "BosStatus",  # Round 17 P0: Pydantic enum 替代旧 Literal
-    "record",
-    "time_invoke",
+    "OmoBosMetricsRecord",  # Round 17 P0: Pydantic 替代旧 BosInvokeRecord dataclass
+    "Status",
     "get_metrics",
-    "summary",
+    "record",
     "reset",
+    "summary",
     "sync_from_agora_metrics",  # 长期机制: Agora SQLite → OMO JSONL
+    "time_invoke",
 )
 
 
@@ -368,4 +368,4 @@ if __name__ == "__main__":
     print(f"[OK] total_invocations: {s['total_invocations']}")
     print(f"[OK] by_status: {s['by_status']}")
     print(f"[OK] by_domain: {s['by_domain']}")
-    print(f"[OK] sample URI stats: {list(s['by_uri'].items())[0]}")
+    print(f"[OK] sample URI stats: {next(iter(s['by_uri'].items()))}")

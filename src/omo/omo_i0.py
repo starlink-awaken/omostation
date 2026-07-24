@@ -22,7 +22,7 @@ def cmd_i0_status() -> int:
         data = json.loads(resp.read())
         print("Agora Hub:       🟢 running")
         print(f"  Route count:   {data.get('routes', data.get('service_count', '?'))}")
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"Agora Hub:       🔴 unreachable ({e})")
     try:
         resp = urlopen(Request(f"{_agora_url('/api/services')}"), timeout=3)
@@ -35,7 +35,7 @@ def cmd_i0_status() -> int:
                 print(f"    - {name}: {st}")
             if len(services) > 10:
                 print(f"    ... and {len(services) - 10} more")
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         print("  Services:      ⚠️  query failed")
     return 0
 
@@ -54,7 +54,7 @@ def cmd_i0_routes() -> int:
                 tools = str(len(s.get("tools", [])))
                 print(f"{name:30s} {st:12s} {tools:8s}")
             print(f"\nTotal: {len(services)} services")
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         print(f"❌ Route query failed: {e}")
     return 0
 

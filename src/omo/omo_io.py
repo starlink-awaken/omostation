@@ -18,15 +18,22 @@ from __future__ import annotations
 import json
 import os
 import warnings
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import yaml
 
+from omo._shared.advisory_lock import (
+    AdvisoryLock,
+)
+
 # Round 24 P0: AppendOnlyLog + fcntl_lock 实现搬到 omo._shared.append_only_log
 # (§12 跨仓 SSOT). 本文件保留原子写 + JSONL 读 + re-export, 保 backward compat.
-from omo._shared.append_only_log import AppendOnlyLog, fcntl_lock  # noqa: F401  (re-export)
-from omo._shared.advisory_lock import AdvisoryLock  # noqa: F401  (re-export, TASK-94BB9C70)
+from omo._shared.append_only_log import (
+    AppendOnlyLog,
+    fcntl_lock,
+)
 
 # ── 原子写 (低层) ────────────────────────────────────────────
 
@@ -150,8 +157,8 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 __all__ = (
     "AppendOnlyLog",
-    "fcntl_lock",
     "ensure_parent_dir",
+    "fcntl_lock",
     "read_jsonl",
     "text_fingerprint",
     "write_text_atomic",

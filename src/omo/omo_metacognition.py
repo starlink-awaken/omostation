@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +15,7 @@ from .omo_shared import load_yaml_value
 
 def _utc_now() -> str:
     return (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")
@@ -173,7 +173,7 @@ def baseline_command(args: argparse.Namespace) -> int:
             t = i.x3_tier or "Unknown"
             tiers[t] = tiers.get(t, 0) + 1
         report["debt_lens"]["x3_tier_breakdown"] = tiers
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         report["debt_lens"] = {"error": str(e)}
 
     output = Path(args.output)

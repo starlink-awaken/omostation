@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Any
 
 from omo.omo_audit import record as record_audit
-from omo.omo_io import AppendOnlyLog, fcntl_lock, write_yaml_atomic
-from omo.omo_io_schemas import OmoTrailRecord
 from omo.omo_ingress_paths import (
     _audit_log_path,
     _delivery_root,
@@ -19,6 +17,8 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
+from omo.omo_io import AppendOnlyLog, fcntl_lock, write_yaml_atomic
+from omo.omo_io_schemas import OmoTrailRecord
 
 
 def _record_trail(
@@ -191,16 +191,20 @@ def write_system_projection_fields(
         return deepcopy(payload)
 
 
-from omo.omo_ingress_doc import (  # noqa: E402, F401
+from omo.omo_ingress_debt import (
+    remove_debt_item,
+    upsert_debt_item,
+)
+from omo.omo_ingress_doc import (
     create_audit_report,
     create_knowledge_doc,
     create_standard_doc,
 )
-from omo.omo_ingress_goal import (  # noqa: E402, F401
+from omo.omo_ingress_goal import (
     create_goal,
     update_goal_progress,
 )
-from omo.omo_ingress_registry_writes import (  # noqa: E402, F401
+from omo.omo_ingress_registry_writes import (
     create_skill_manifest,
     update_governance_overlay_state,
     write_capability_registry_bundle,
@@ -210,30 +214,26 @@ from omo.omo_ingress_registry_writes import (  # noqa: E402, F401
     write_task_center_freshness,
     write_usage_accounting,
 )
-from omo.omo_ingress_task_lifecycle import (  # noqa: E402, F401
+from omo.omo_ingress_task_lifecycle import (
     archive_done_task,
     complete_task,
     create_blocked_task,
     create_planned_task,
+    execute_controlled_task,
+    get_controlled_process_status,
     normalize_legacy_planned_task,
     promote_task_to_active,
     record_task_consensus,
-    record_task_execution,
-    execute_controlled_task,
-    get_controlled_process_status,
-    restart_controlled_task,
-    start_controlled_task,
-    stop_controlled_task,
     record_task_contract_request,
+    record_task_execution,
     repair_task_promotion_approval,
     request_task_promotion_approval,
+    restart_controlled_task,
     revert_task_to_planned,
     route_self_evolution_to_remediation,
+    start_controlled_task,
+    stop_controlled_task,
     update_done_task_evidence_paths,
     update_planned_task_evidence_paths,
     yield_task_to_planned,
-)
-from omo.omo_ingress_debt import (  # noqa: E402, F401
-    remove_debt_item,
-    upsert_debt_item,
 )

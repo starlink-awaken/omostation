@@ -228,7 +228,7 @@ def _check_ingress_artifacts(
 
 # P104 R1: snapshots 子模块 (extracted 553L from omo_governance_surfaces.py)
 # Re-export 保持向后兼容 (内部 call sites: L1157, L1223, L1636)
-from .omo_governance_surfaces_snapshots import (  # noqa: E402, F401
+from .omo_governance_surfaces_snapshots import (
     _mutation_surface_registry_snapshot,
     _worker_internal_write_profiles_snapshot,
 )

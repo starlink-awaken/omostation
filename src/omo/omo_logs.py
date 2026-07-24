@@ -19,7 +19,7 @@ import json
 import os
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 from omo.omo_io import AppendOnlyLog
@@ -65,10 +65,10 @@ def cmd_logs_list() -> int:
         try:
             records = log.read_all()
             count = len(records)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             count = -1
         size = p.stat().st_size
-        mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc).strftime(
+        mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=UTC).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
         print(f"{p.stem:30s} {size:>10,} {count:>10,} {mtime:20s}")
@@ -96,7 +96,7 @@ def cmd_logs_inspect(name: str) -> int:
     field_counter: Counter = Counter()
     for r in records:
         if isinstance(r, dict):
-            for k in r.keys():
+            for k in r:
                 field_counter[k] += 1
 
     # 必填字段缺失
@@ -290,7 +290,7 @@ def cmd_logs_audit(
                 "新代码引入'增量'漂移才 fail. "
                 "刷新: omo logs audit --baseline-init <this_path>."
             ),
-            "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "drift_by_consumer": dict(sorted(drift_by_consumer.items())),
             "total_drift": sum(drift_by_consumer.values()),
             "total_records": total_records,
@@ -387,7 +387,8 @@ def cmd_logs_audit(
 
     # Round 39 P0: --metrics flag 输出 §17 度量 JSON + R0-R5 健康度
     if metrics:
-        from datetime import datetime as _dt, timezone as _tz
+        from datetime import datetime as _dt
+        from datetime import timezone as _tz
 
         # Round 40 P0: 基于"新债"算 density (排除历史锁)
         density = new_debt_drift / total_records if total_records > 0 else 0.0
@@ -410,7 +411,7 @@ def cmd_logs_audit(
             grade = "R5"
             exit_code = 2
         metrics_payload = {
-            "generated_at": _dt.now(_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "generated_at": _dt.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "drift_count": total_failures,
             "drift_count_excluding_locked": new_debt_drift,
             "locked_drift": locked_drift,

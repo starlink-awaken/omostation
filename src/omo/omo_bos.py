@@ -33,7 +33,7 @@ import re
 import sys
 import tempfile
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
@@ -112,7 +112,7 @@ class BosRegistration:
     protocol: Protocol = "internal"
     description: str = ""
     registered_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     registered_by: str = "omo-bos-cli"
 
@@ -120,8 +120,7 @@ class BosRegistration:
         return asdict(self)
 
 
-from .omo_bos_seeds import SEED_REGISTRATIONS  # noqa: E402
-
+from .omo_bos_seeds import SEED_REGISTRATIONS
 
 # ── 验证 + 解析 ────────────────────────────────────────────
 
@@ -157,14 +156,14 @@ def validate_bos_uri(uri: str) -> tuple[bool, str]:
             )
         return (
             False,
-            f"Legacy 3-segment URI but package '{pkg}' not in domain map. "
-            f"Use 4-segment form: bos://<domain>/<package>/<action>",
+            (f"Legacy 3-segment URI but package '{pkg}' not in domain map. "
+            f"Use 4-segment form: bos://<domain>/<package>/<action>"),
         )
     return (
         False,
-        f"Invalid BOS URI: {uri!r}. "
+        (f"Invalid BOS URI: {uri!r}. "
         f"Expected bos://<domain>/<package>/<action> "
-        f"(domain in {ALLOWED_DOMAINS}) or legacy bos://<package>/<action>",
+        f"(domain in {ALLOWED_DOMAINS}) or legacy bos://<package>/<action>"),
     )
 
 
@@ -308,9 +307,15 @@ def save_to_kos(
     if err:
         return {"error": f"kos_not_available: {err}"}
     try:
-        from kos.ontology._types import Entity, EntityType  # type: ignore[import-not-found]
-        from kos.ontology.store import _get_conn, put_entity  # type: ignore[import-not-found]
-    except Exception as exc:  # noqa: BLE001  # pragma: no cover
+        from kos.ontology._types import (  # type: ignore[import-not-found]
+            Entity,
+            EntityType,
+        )
+        from kos.ontology.store import (  # type: ignore[import-not-found]
+            _get_conn,
+            put_entity,
+        )
+    except Exception as exc:  # pragma: no cover
         return {"error": f"kos_import_failed: {exc}"}
 
     # 自愈: 给老 KOS DB 加缺失列 (KOS store.py 已有 zone 自愈, 我们补 source/status 等)
@@ -331,7 +336,7 @@ def save_to_kos(
                 pass  # 列已存在
         conn.commit()
         conn.close()
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass  # 自愈失败不阻塞
 
     uri = registration.get("uri", "")
@@ -366,7 +371,7 @@ def save_to_kos(
             "backend": "kos",
             "zone": zone,
         }
-    except Exception as exc:  # noqa: BLE001  # pragma: no cover
+    except Exception as exc:  # pragma: no cover
         return {"error": f"kos_save_exception: {exc}"[:200]}
 
 
@@ -413,7 +418,7 @@ def register_uri(
         "endpoint": endpoint,
         "protocol": protocol,
         "description": description,
-        "registered_at": datetime.now(timezone.utc).isoformat(),
+        "registered_at": datetime.now(UTC).isoformat(),
         "registered_by": registered_by,
     }
     status = "registered"
@@ -560,7 +565,7 @@ def verify_endpoint(endpoint: str) -> dict[str, Any]:
             "module_found": False,
             "error": f"import_error: {exc}"[:160],
         }
-    except Exception as exc:  # noqa: BLE001  # pragma: no cover - 其他异常
+    except Exception as exc:  # pragma: no cover - 其他异常
         return {
             "endpoint": endpoint,
             "module_found": False,
@@ -612,7 +617,7 @@ def verify_all_endpoints(
         except (ImportError, ModuleNotFoundError, ValueError) as exc:
             module_found[ep] = (False, f"import_error: {exc}"[:160])
             continue
-        except Exception as exc:  # pragma: no cover  # noqa: BLE001
+        except Exception as exc:  # pragma: no cover
             module_found[ep] = (False, f"unexpected: {type(exc).__name__}: {exc}"[:160])
             continue
         module_found[ep] = (spec is not None, None if spec else "module_not_found")
@@ -864,8 +869,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "discover":
         # W3 discover: 扫注册表 + 用 Pydantic schema 验证 + 按 domain 分组
-        from omo.omo_bos_schema import BosRegistryModel
         from pydantic import TypeAdapter
+
+        from omo.omo_bos_schema import BosRegistryModel
 
         path = Path(args.path) if args.path else DEFAULT_REGISTRY_PATH
         raw = load_registry(path)
@@ -947,12 +953,12 @@ __all__ = (
     "ALLOWED_DOMAINS",
     "BOS_URI_LEGACY_PATTERN",
     "BOS_URI_PATTERN",
-    "BosRegistration",
     "DEFAULT_REGISTRY_PATH",
-    "Domain",
     "LEGACY_DOMAIN_MAP",
-    "Protocol",
     "SEED_REGISTRATIONS",
+    "BosRegistration",
+    "Domain",
+    "Protocol",
     "list_registrations",
     "load_registry",
     "main",

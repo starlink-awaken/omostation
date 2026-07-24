@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -20,7 +20,7 @@ from .omo_paths import find_omo_dir
 
 def _utc_now() -> str:
     return (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")
@@ -61,7 +61,7 @@ def cmd_task_list(omo_dir: Path, status: str | None) -> int:
             data = f.read_text().split("\n")[:3]
             tid = ""
             for line in data:
-                if line.startswith("id:") or line.startswith("title:"):
+                if line.startswith(("id:", "title:")):
                     tid += line.strip() + " "
             print(f"  {f.stem}: {tid[:60]}")
         if len(files) > 20:

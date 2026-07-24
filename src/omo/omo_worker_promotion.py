@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import subprocess
 from pathlib import Path
 
+from .omo_approval_queue import (
+    build_approval_queue_packet,
+    render_approval_queue_markdown,
+)
 from .omo_contract_request import (
     build_contract_proposal,
     build_contract_request,
@@ -20,10 +25,6 @@ from .omo_governance_overlay_approval_prep import (
 )
 from .omo_governance_overlay_loop import plan_governance_overlay_cycle
 from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
-from .omo_approval_queue import (
-    build_approval_queue_packet,
-    render_approval_queue_markdown,
-)
 from .omo_ingress import route_self_evolution_to_remediation
 from .omo_io import write_text_atomic
 from .omo_promotion_approval import (

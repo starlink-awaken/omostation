@@ -19,9 +19,8 @@ from typing import Any
 
 from omo.omo_audit_dedup import record_agora_failure  # P58-W1 dedup 抽 module
 
-
 # ── Agora 长驻池 manager singleton ─────────────────────────────
-_MANAGER: "_AgoraPoolManager | None" = None
+_MANAGER: _AgoraPoolManager | None = None
 _MANAGER_INIT_LOCK: asyncio.Lock | None = None
 _DAEMON_SCRIPT_PATH: Path | None = None
 
@@ -51,7 +50,7 @@ def _write_agora_daemon_script() -> str | None:
             "            payload = json.loads(line[4:])\n"
             "            r = asyncio.run(resolve_bos_uri(payload['uri'], **payload.get('args') or {}))\n"
             "            sys.stdout.write('JSON ' + json.dumps(r, ensure_ascii=False) + '\\n')\n"
-            "        except Exception as exc:\n"  # noqa: BLE001
+            "        except Exception as exc:\n"
             "            sys.stdout.write('ERR ' + f'{type(exc).__name__}: {exc}' + '\\n')\n"
             "        sys.stdout.flush()\n"
         )
@@ -115,7 +114,7 @@ class _AgoraPool:
 
             try:
                 line = await asyncio.wait_for(self._proc.stdout.readline(), timeout=30)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return None, {"type": "pool_read_timeout", "details": "30s timeout"}
 
             text = line.decode("utf-8", errors="replace").rstrip()
@@ -140,7 +139,7 @@ class _AgoraPool:
                     self._proc.stdin.write(b"QUIT\n")
                     await self._proc.stdin.drain()
                 await asyncio.wait_for(self._proc.wait(), timeout=5)
-            except (BrokenPipeError, asyncio.TimeoutError, OSError):
+            except (TimeoutError, BrokenPipeError, OSError):
                 try:
                     self._proc.kill()
                 except ProcessLookupError:
@@ -188,7 +187,7 @@ class _AgoraPoolManager:
                     self._active += 1
                     return p
                 # 死的, 关掉 (不等)
-                asyncio.create_task(p.close())  # noqa: RUF006
+                asyncio.create_task(p.close())
             # 无 idle, 尝试新建
             if self._active < self._max_size:
                 p = _AgoraPool(self._cmd)
@@ -202,13 +201,13 @@ class _AgoraPoolManager:
             self._active = max(0, self._active - 1)
             if not alive or not pool.is_alive():
                 # 死的, 关掉
-                asyncio.create_task(pool.close())  # noqa: RUF006
+                asyncio.create_task(pool.close())
                 return
             self._idle.append(pool)
             # LRU: idle 超过 max 时淘汰最旧
             while len(self._idle) > self._max_size:
                 old = self._idle.popleft()
-                asyncio.create_task(old.close())  # noqa: RUF006
+                asyncio.create_task(old.close())
 
     async def start_heartbeat(self) -> None:
         """P45-W5: 启动后台 heartbeat task, 定期清理 idle 池死连接.
@@ -230,7 +229,7 @@ class _AgoraPoolManager:
                     timeout=self._heartbeat_interval,
                 )
                 break  # stop event set
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass  # 30s 到, 跑一次清理
             # 清理死连接
             async with self._lock:
@@ -244,7 +243,7 @@ class _AgoraPoolManager:
                         dead.append(p)
                 self._idle = live
                 for p in dead:
-                    asyncio.create_task(p.close())  # noqa: RUF006
+                    asyncio.create_task(p.close())
 
     async def close_all(self) -> None:
         # P45-W5: 先停 heartbeat, 再清池
@@ -252,7 +251,7 @@ class _AgoraPoolManager:
             self._heartbeat_stop.set()
             try:
                 await asyncio.wait_for(self._heartbeat_task, timeout=2)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self._heartbeat_task.cancel()
             self._heartbeat_task = None
         async with self._lock:
@@ -260,7 +259,7 @@ class _AgoraPoolManager:
                 p = self._idle.popleft()
                 try:
                     await p.close()
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     pass
             self._active = 0
 
@@ -307,7 +306,7 @@ async def _get_agora_pool() -> _AgoraPoolManager | None:
             await manager.start_heartbeat()
             _MANAGER = manager
             return _MANAGER
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             return None
 
 
@@ -345,7 +344,7 @@ async def _resolve_via_agora_subprocess(
                 if isinstance(result, dict):
                     result.setdefault("_transport", "agora_pool")
                 return result
-            except Exception as exc:  # noqa: BLE001  # defensive fallback
+            except Exception as exc:  # defensive fallback
                 await manager.release(pool, alive=False)
                 record_agora_failure(
                     uri, "invoke_exception", f"{type(exc).__name__}: {exc}"
@@ -373,7 +372,7 @@ async def _resolve_via_oneoff_subprocess(
         from omo.omo_paths import PROJECTS_DIR
 
         _AGORA_PROJECT = PROJECTS_DIR / "agora"
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return None
 
     if not (_AGORA_PROJECT / "pyproject.toml").exists():
@@ -409,7 +408,7 @@ async def _resolve_via_oneoff_subprocess(
             stderr=subprocess.PIPE,
         )
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
-    except (subprocess.SubprocessError, asyncio.TimeoutError, OSError) as exc:
+    except (TimeoutError, subprocess.SubprocessError, OSError) as exc:
         record_agora_failure(uri, "spawn_failed", f"{type(exc).__name__}: {exc}")
         return {"_subprocess_error": f"{type(exc).__name__}: {exc}"}
     finally:

@@ -38,7 +38,7 @@ def workspace_status() -> int:
 
 def _sync_system_yaml(dirty_count: int) -> None:
     """写 system.yaml::worktree_dirty_count (SSOT, 让 system.yaml/mof-drift 指针引用此值)."""
-    try:  # noqa: PLC0415
+    try:
         import yaml
 
         if not STATE_SYSTEM_YAML.is_file():
@@ -54,7 +54,7 @@ def _sync_system_yaml(dirty_count: int) -> None:
         )
         tmp.replace(STATE_SYSTEM_YAML)
         print(f"   ✅ system.yaml::worktree_dirty_count = {dirty_count}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"   ⚠️ system.yaml 同步失败: {e}")
 
 

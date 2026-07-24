@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import warnings
 import sys
+import warnings
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
         return cost_main(args[1:])
 
     if args and args[0] == "governance":
-        from omo.omo_audit import governance_main, governance_history_main
+        from omo.omo_audit import governance_history_main, governance_main
         from omo.omo_governance import main as governance_ops_main
 
         sub = args[1] if len(args) > 1 else "audit"
@@ -355,7 +355,7 @@ def _refresh_dashboard_safely(trigger: str = "") -> None:
     refresh_outputs 失败不阻塞主命令 (dashboard 是衍生视图, best-effort 容错).
     由 cli 分发层 post-hook 调用 (task / healing 等状态变更入口).
     """
-    try:  # noqa: PLC0415 — 局部 import 避免顶层副作用
+    try:
         import os
         from datetime import UTC, datetime
         from pathlib import Path
@@ -370,7 +370,7 @@ def _refresh_dashboard_safely(trigger: str = "") -> None:
             datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         )
         refresh_outputs(omo_dir, now)
-    except Exception as e:  # noqa: BLE001 — dashboard refresh 失败不阻塞 task 命令, 但记 stderr 日志方便 debug
+    except Exception as e:
         print(f"⚠️  [dashboard refresh skipped via {trigger}]: {e}", file=sys.stderr)
 
 
@@ -474,8 +474,9 @@ def _cmd_healing(args: list[str]) -> int:
     sub = args[0]
 
     if sub == "status":
-        from omo.omo_self_healing import get_healing_engine
         import json
+
+        from omo.omo_self_healing import get_healing_engine
 
         engine = get_healing_engine()
         status = engine.get_status()
@@ -514,8 +515,9 @@ def _cmd_healing(args: list[str]) -> int:
         print("Rules saved to .omo/self_healing_rules.yaml")
 
     elif sub == "history":
-        from omo.omo_self_healing import get_history
         import json
+
+        from omo.omo_self_healing import get_history
 
         data = get_history()
         print(json.dumps(data, indent=2, default=str, ensure_ascii=False))
@@ -555,8 +557,9 @@ def _cmd_predict(args: list[str]) -> int:
     parsed = parser.parse_args(args)
 
     from pathlib import Path
-    from omo.predictive_governance import PredictiveGovernanceEngine
+
     from omo.bridge_utils import get_omo_dir
+    from omo.predictive_governance import PredictiveGovernanceEngine
 
     omo_dir = get_omo_dir(Path.cwd())
     engine = PredictiveGovernanceEngine(omo_dir)
@@ -656,8 +659,9 @@ def _cmd_cache(args: list[str]) -> int:
     parsed = parser.parse_args(args)
 
     from pathlib import Path
-    from omo.state_cache import GovernanceStateCache
+
     from omo.bridge_utils import get_omo_dir
+    from omo.state_cache import GovernanceStateCache
 
     omo_dir = get_omo_dir(Path.cwd())
     cache = GovernanceStateCache(omo_dir / "_cache")

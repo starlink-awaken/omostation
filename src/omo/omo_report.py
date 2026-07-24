@@ -92,8 +92,8 @@ def _run_inspect() -> dict:
 def _run_audit_freshness() -> dict:
     """运行 audit freshness 检查."""
     from omo.omo_audit_freshness import (
-        check_debt_evidence,
         check_cross_project_lint,
+        check_debt_evidence,
         check_mof_version_bump,
     )
 

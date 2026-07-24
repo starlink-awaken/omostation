@@ -24,10 +24,8 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
-
 from omo.omo_io import fcntl_lock, write_text_if_changed, write_yaml_atomic
 from omo.omo_shared import load_yaml
-
 
 STATE_SYNC_TARGET = (
     ".omo/state/health.yaml + .omo/state/system.yaml + "
@@ -54,7 +52,7 @@ def normalize_health_yaml(payload: str) -> str:
     """Compare health projection semantically, ignoring generation timestamps."""
     lines = []
     for line in payload.splitlines():
-        if line.startswith("# generated_at:") or line.startswith("generated_at:"):
+        if line.startswith(("# generated_at:", "generated_at:")):
             continue
         lines.append(line)
     return "\n".join(lines).strip()

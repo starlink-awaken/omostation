@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import time
 
-
 from omo.omo_paths import OMO_ROOT, TASKS_DIR
 from omo.omo_shared import load_yaml
 
@@ -80,9 +79,7 @@ def cmd_health() -> int:
         data = load_yaml(goals)
         if data and "goals" in data:
             for goal in data["goals"]:
-                if goal.get("status") == "active" and goal.get("progress", 0) < 100:
-                    pass  # OK
-                elif goal.get("status") == "done" and goal.get("progress", 0) == 100:
+                if goal.get("status") == "active" and goal.get("progress", 0) < 100 or goal.get("status") == "done" and goal.get("progress", 0) == 100:
                     pass  # OK
                 else:
                     issues.append(

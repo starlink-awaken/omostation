@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import subprocess
 from pathlib import Path
 
@@ -268,9 +269,9 @@ def dispatch_task(
         def push_log_to_agora(dispatch_id: str, content: str):
             """Push log synchronization event to Agora via internal Event Bus."""
             try:
-                import urllib.request
                 import json
                 import os
+                import urllib.request
 
                 req = urllib.request.Request(
                     "http://127.0.0.1:7430/api/events",
@@ -288,8 +289,9 @@ def dispatch_task(
                 jwt_secret = os.environ.get("AGORA_JWT_SECRET")
                 api_key = os.environ.get("AGORA_API_KEY")
                 if jwt_secret:
-                    import jwt
                     import time
+
+                    import jwt
 
                     token = jwt.encode(
                         {"role": "system_daemon", "exp": time.time() + 3600},
@@ -304,7 +306,7 @@ def dispatch_task(
                 proxy_handler = urllib.request.ProxyHandler({})
                 opener = urllib.request.build_opener(proxy_handler)
                 opener.open(req, timeout=3.0)
-            except Exception as e:  # noqa: BLE001  # defensive fallback
+            except Exception as e:  # defensive fallback
                 print(f"⚠️ Failed to broadcast log via Tri-Plane Bus: {e}")
 
         push_log_to_agora(dispatch_id, log_content)
@@ -568,7 +570,7 @@ def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
                 actor="projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction",
                 source_ref=f"omo:worker-dispatch:fast-track-compaction:{task_file.stem}",
             )
-        except Exception as e:  # noqa: BLE001  # defensive fallback
+        except Exception as e:  # defensive fallback
             print(f"Failed to compact {task_file}: {e}")
 
     if len(report_lines) > 4:

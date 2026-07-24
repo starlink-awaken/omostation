@@ -134,7 +134,7 @@ def _flush_pending_writes() -> None:
     for node_id, fields in to_write.items():
         try:
             _safe_write_back(node_id, fields)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error("Mesh state write-back failed for node=%s: %s", node_id, exc)
 
 
@@ -192,5 +192,5 @@ def _write_to_omo_state(node_id: str, fields: dict[str, Any]) -> None:
             node_id,
             fields.get("status", "?"),
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error("Failed to write mesh state to .omo staging: %s", exc)

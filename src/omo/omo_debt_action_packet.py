@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 def _schedule_command(item_id: str, now: str, review_window_days: int) -> str:
     next_review = (
-        datetime.fromisoformat(now.replace("Z", "+00:00"))
+        datetime.fromisoformat(now)
         + timedelta(days=review_window_days)
     ).isoformat()
     next_review = next_review.replace("+00:00", "Z")

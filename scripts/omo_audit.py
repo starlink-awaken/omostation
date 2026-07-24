@@ -19,7 +19,7 @@ _src = Path(__file__).resolve().parent.parent / "src"
 if str(_src) not in sys.path:
     sys.path.insert(0, str(_src))
 
-from omo.omo_audit import record, query, summary  # noqa: E402
+from omo.omo_audit import query, record, summary
 
 
 def main() -> int:

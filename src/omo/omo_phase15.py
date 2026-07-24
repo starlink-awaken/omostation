@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .omo_shared import utc_now, load_yaml, write_yaml
+from .omo_shared import load_yaml, utc_now, write_yaml
 
 
 def _root() -> Path:

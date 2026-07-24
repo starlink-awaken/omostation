@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from .omo_shared import utc_now, write_yaml, write_text
+from .omo_shared import utc_now, write_text, write_yaml
 
 
 def _external_omo_root() -> Path:

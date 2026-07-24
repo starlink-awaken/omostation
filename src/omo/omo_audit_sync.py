@@ -31,8 +31,8 @@ from typing import Any
 
 from omo.omo_ingress import write_system_projection_fields
 from omo.omo_paths import (
-    DECISIONS_DIR,
     DEBT_ITEMS_DIR,
+    DECISIONS_DIR,
     DELIVERY_DIR,
     KAIRON_PACKAGES,
     STATE_SYSTEM_YAML,
@@ -167,7 +167,7 @@ def _collect_task_state() -> dict[str, Any]:
                 m = re.match(r"W(\d+)", w)
                 return (int(m.group(1)) if m else 0, w)
 
-            current_wave = sorted(waves, key=wave_key)[-1]
+            current_wave = max(waves, key=wave_key)
     return {
         "total": len(tasks),
         "completed": completed,
@@ -665,8 +665,8 @@ def main(argv: list[str] | None = None) -> int:
 __all__ = (
     "ALLOWED_FIELDS",
     "FIELD_TYPES",
-    "FieldDiff",
     "STATE_SYSTEM_YAML",
+    "FieldDiff",
     "apply_diff",
     "collect_actual_state",
     "diff_with_system_yaml",

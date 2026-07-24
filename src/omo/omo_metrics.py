@@ -23,7 +23,7 @@ def _iter_dispatch_runs(root: Path) -> list[dict]:
 def _parse_launched_at(value: str | None) -> datetime | None:
     if not value:
         return None
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.fromisoformat(value)
 
 
 def write_worker_utilization_summary(root: Path) -> str:

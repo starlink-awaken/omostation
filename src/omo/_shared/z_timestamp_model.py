@@ -27,7 +27,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, model_validator
 
-
 # ── 通用 validators ──────────────────────────────────────────
 
 
@@ -38,7 +37,7 @@ def _validate_z_suffix_iso8601(v: str) -> str:
             f"timestamp must end with 'Z' (omo_audit convention), got: {v!r}"
         )
     try:
-        datetime.fromisoformat(v.replace("Z", "+00:00"))
+        datetime.fromisoformat(v)
     except ValueError as exc:
         raise ValueError(f"invalid ISO8601 timestamp: {v!r} ({exc})")
     return v
@@ -58,7 +57,7 @@ class ZTimestampModel(BaseModel):
     """
 
     @model_validator(mode="after")
-    def _check_all_timestamps(self) -> "ZTimestampModel":
+    def _check_all_timestamps(self) -> ZTimestampModel:
         for field_name in TIMESTAMP_FIELDS:
             v = getattr(self, field_name, None)
             if v is not None and isinstance(v, str):
@@ -67,7 +66,7 @@ class ZTimestampModel(BaseModel):
 
 
 __all__ = (
-    "ZTimestampModel",
     "TIMESTAMP_FIELDS",
+    "ZTimestampModel",
     "_validate_z_suffix_iso8601",
 )

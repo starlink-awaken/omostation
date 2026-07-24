@@ -197,7 +197,7 @@ async def _probe_one(
             response_ms=round(elapsed, 1),
             error=None,
         )
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         elapsed = (time.time() - t0) * 1000
         return HealthCheckResult(
             service=service,

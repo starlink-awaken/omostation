@@ -12,14 +12,14 @@ P110 关联: TASK-F7114ABA (omo lint god-module 硬规则 800L, omo_debt 1085L
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def cmd_debt_list(omo_dir: Path) -> int:
@@ -138,7 +138,9 @@ def cmd_debt_desc(
 def main(argv: list[str] | None = None) -> int:
     """CLI 入口. 业务函数从 omo_debt 惰性导入 (避免循环)."""
     # 业务函数 imports (移到这里避免 omo_debt 顶层 re-export 时的循环)
-    from omo.omo_debt import (  # noqa: PLC0415  (intentional lazy)
+    from omo.omo_debt import (
+        _load_yaml,
+        _positive_int,
         _write_yaml,
         approve_item,
         campaign_outputs,
@@ -151,7 +153,6 @@ def main(argv: list[str] | None = None) -> int:
         require_dispatch_bound_revalidate,
         require_matching_revalidate_approval,
     )
-    from omo.omo_debt import _load_yaml, _positive_int
     from omo.omo_debt_execution import build_execution_record, execution_record_path
     from omo.omo_debt_lifecycle import (
         append_history,

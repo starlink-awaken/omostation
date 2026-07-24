@@ -15,7 +15,6 @@ from urllib.request import Request, urlopen
 
 from omo.omo_io import AppendOnlyLog
 
-
 _WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 DEFAULT_EVENT_LOG_PATH = _WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"
 
@@ -41,7 +40,7 @@ def cmd_event_list(limit: int) -> int:
             print(f"\nTotal: {len(events)} events")
         else:
             print(f"EventBus 返回了: {events}")
-    except Exception as ex:  # noqa: BLE001  # defensive fallback
+    except Exception as ex:  # defensive fallback
         print(f"⚠️  EventBus 不可用 ({ex})")
     return 0
 

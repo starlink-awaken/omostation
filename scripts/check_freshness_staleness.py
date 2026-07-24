@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 # Add src/ to path so the package is importable from the repo root
@@ -21,16 +21,16 @@ _src = Path(__file__).resolve().parent.parent / "src"
 if str(_src) not in sys.path:
     sys.path.insert(0, str(_src))
 
-from omo.omo_debt_registry import load_debt_ledger  # noqa: E402
+from omo.omo_debt_registry import load_debt_ledger
 
 
 def _now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _parse_ts(s: str) -> datetime | None:
     try:
-        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+        return datetime.fromisoformat(s)
     except Exception:
         return None
 

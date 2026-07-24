@@ -27,8 +27,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # Round 25 P0: ZTimestampModel + 通用 validator 抽到 omo._shared (跨仓 SSOT 落地)
 # 之前 Round 8 P2 + Round 11 /simplify 收口位置在 omo_io_schemas.py 内.
 # §12.1.3 跨仓契约配套: 任何仓 Pydantic schema 继承 ZTimestampModel 即得 Z-suffix 校验.
-from omo._shared.z_timestamp_model import ZTimestampModel  # noqa: F401  (re-export)
-
+from omo._shared.z_timestamp_model import ZTimestampModel
 
 # ── Consumer 1: omo_audit ───────────────────────────────────
 
@@ -89,7 +88,7 @@ class OmoSyncRecord(ZTimestampModel):
     error: str = ""
 
     @model_validator(mode="after")
-    def _check_error_only_when_error(self) -> "OmoSyncRecord":
+    def _check_error_only_when_error(self) -> OmoSyncRecord:
         if self.status == OmoSyncStatus.ERROR and not self.error:
             raise ValueError("error field required when status=error")
         return self
@@ -164,7 +163,7 @@ class OmoHistoryRecord(ZTimestampModel):
     total_score: float = Field(..., ge=0, le=100)
     grade: OmoHistoryGrade
     watchlist_count: int = Field(..., ge=0)
-    source: Optional[str] = None  # 老记录无
+    source: str | None = None  # 老记录无
     # 用户业务字段: 任意 key, 允许多余 (forward compat)
     model_config = {"extra": "allow"}
 
@@ -240,6 +239,7 @@ SCHEMA_REGISTRY: dict[str, type[BaseModel]] = {
 
 
 __all__ = (
+    "SCHEMA_REGISTRY",
     "BosStatus",
     "OmoAlertRecord",
     "OmoAlertSeverity",
@@ -254,5 +254,4 @@ __all__ = (
     "OmoSyncStatus",
     "OmoTrailRecord",
     "OmoTrailStatus",
-    "SCHEMA_REGISTRY",
 )

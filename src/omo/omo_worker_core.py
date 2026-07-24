@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import shlex
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 from .omo_io import write_text_atomic, write_yaml_atomic
@@ -13,12 +14,12 @@ from .omo_shared import load_yaml
 def _timestamp_slug(now: str | None = None) -> str:
     if now:
         return now.replace("-", "").replace(":", "").replace("T", "-").replace("Z", "")
-    return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    return datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
 
 
 def _utc_now() -> str:
     return (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")
@@ -28,7 +29,7 @@ def _utc_now() -> str:
 def _parse_iso8601(value: str | None) -> datetime | None:
     if not value:
         return None
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.fromisoformat(value)
 
 
 def _load_yaml(path: Path) -> dict:

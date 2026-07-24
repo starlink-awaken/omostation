@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from pathlib import Path
 
 from .omo_debt_campaign import render_campaign_markdown

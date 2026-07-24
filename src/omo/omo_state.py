@@ -198,7 +198,7 @@ def _read_task_title(task_file: Path) -> str:
         for line in task_file.read_text(encoding="utf-8").splitlines():
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip().strip("\"'")[:48]
-            if line.startswith("status:") or line.startswith("description:"):
+            if line.startswith(("status:", "description:")):
                 break
     except OSError:
         pass
@@ -257,7 +257,7 @@ def _rebuild_tasks_registry_index(
     )
 
     # 3. Updated 行 (整行替换, capture 原 archived 数保留)
-    def _repl_updated(m: "re.Match[str]") -> str:
+    def _repl_updated(m: re.Match[str]) -> str:
         archived = m.group(1)
         return (
             f"*Updated: {updated_at[:10]} (依据 `omo state sync-tasks` 与真实目录重算: "
@@ -330,7 +330,7 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool, *, quiet: bool = False) -
         "total_tasks": data.get("total_tasks"),
     }
     updated_at = (
-        _dt.datetime.now(_dt.timezone.utc)
+        _dt.datetime.now(_dt.UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")
@@ -413,7 +413,7 @@ def cmd_state_sync(omo_dir: Path, dry_run: bool, fmt: str) -> int:
     quiet = fmt == "json"
     try:
         report = sync_state_projection(omo_dir.parent, dry_run=dry_run)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(
             f"⚠️  state projection sync failed: {exc}",
             file=sys.stderr if quiet else sys.stdout,

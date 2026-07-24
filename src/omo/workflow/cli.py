@@ -9,44 +9,44 @@ from pathlib import Path
 from .core import (
     REGISTRY_PATH,
     WorkflowError,
-    load_registry,
-    is_default_registry_path,
-    workflow_by_id,
-    context_from_args,
-    validate_agent_profile,
     changed_files_from_git,
-)
-from .lint import lint_registry, print_lint
-from .lifecycle import (
-    workflow_plan,
-    print_plan,
-    run_stage,
-    start_run,
-    claim_run,
-    read_run,
-    close_run,
-    closeout_run,
+    context_from_args,
+    is_default_registry_path,
+    load_registry,
+    validate_agent_profile,
+    workflow_by_id,
 )
 from .diagnostics import (
+    build_status_report,
+    build_verify_report,
+    compliance_report,
     doctor,
     observe,
-    build_status_report,
-    print_status_report,
-    build_verify_report,
-    print_verify_report,
-    compliance_report,
     print_compliance_report,
+    print_status_report,
+    print_verify_report,
 )
 from .info import (
-    list_workflows,
+    bootstrap_report,
+    handoff_markdown,
+    list_adapters,
     list_agents,
     list_integrations,
-    list_adapters,
-    bootstrap_report,
+    list_workflows,
     print_bootstrap_report,
-    handoff_markdown,
     suggest_command,
 )
+from .lifecycle import (
+    claim_run,
+    close_run,
+    closeout_run,
+    print_plan,
+    read_run,
+    run_stage,
+    start_run,
+    workflow_plan,
+)
+from .lint import lint_registry, print_lint
 
 
 def build_parser() -> argparse.ArgumentParser:

@@ -103,9 +103,9 @@ def _render_dispatch_owner_section(owner_packet: dict[str, Any]) -> str:
 
 
 __all__ = [
-    "_render_section",
-    "_render_queue_section",
     "_render_action_packet_section",
-    "_render_owner_routing_section",
     "_render_dispatch_owner_section",
+    "_render_owner_routing_section",
+    "_render_queue_section",
+    "_render_section",
 ]

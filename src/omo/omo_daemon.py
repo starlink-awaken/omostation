@@ -175,7 +175,7 @@ def run_once(
                 os.environ[ENV_SKIP_AGORA] = old_env
         audit_score = report.total_score
         audit_grade = report.grade
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         error = f"audit_failed: {exc}"
 
     # 2. history append (audit 成功才写)
@@ -191,7 +191,7 @@ def run_once(
                 path=target_history,
             )
             history_appended = True
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             error = (error + "; " if error else "") + f"history_failed: {exc}"
 
     # 3. sync dry-run (只 diff, 不写)
@@ -202,9 +202,9 @@ def run_once(
             text = mod["read"](mod["system_yaml"])
             diffs = mod["diff"](actual, text)
             sync_diff_count = len(diffs)
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             error = (error + "; " if error else "") + f"sync_diff_failed: {exc}"
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         error = (error + "; " if error else "") + f"sync_failed: {exc}"
 
     result = TickResult(
@@ -220,7 +220,7 @@ def run_once(
     return result
 
 
-def _publish_tick_event(result: "TickResult") -> None:
+def _publish_tick_event(result: TickResult) -> None:
     """R3 / Round 1: emit omo:audit:completed (or :failed) on bus-foundation.
 
     Best-effort: failures are logged but never propagate, so a missing
@@ -247,7 +247,7 @@ def _publish_tick_event(result: "TickResult") -> None:
             },
             source_uri="bos://capability/omo/governance",
         )
-    except Exception as exc:  # noqa: BLE001  # defensive
+    except Exception as exc:  # defensive
         # Never let bus publish break the daemon.
         import logging as _logging
 

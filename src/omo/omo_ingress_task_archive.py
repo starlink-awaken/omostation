@@ -22,8 +22,6 @@ from pathlib import Path
 from typing import Any
 
 from omo.omo_audit import record as record_audit
-from omo.omo_io import fcntl_lock, write_yaml_atomic
-from omo.omo_task_schema import validate_task_data
 from omo.omo_ingress_paths import (
     _audit_log_path,
     _delivery_root,
@@ -33,6 +31,8 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
+from omo.omo_io import fcntl_lock, write_yaml_atomic
+from omo.omo_task_schema import validate_task_data
 
 
 def yield_task_to_planned(

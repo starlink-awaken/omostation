@@ -53,7 +53,7 @@ def write_readiness_snapshot(
     for old in existing[30:]:
         try:
             old.unlink()
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     snapshot = {
@@ -78,7 +78,7 @@ def write_readiness_snapshot(
     persistent_log = log_dir / "readiness-snapshots.jsonl"
     try:
         AppendOnlyLog(persistent_log).append(snapshot, sort_keys=True)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
 
     return snap_path
@@ -110,7 +110,7 @@ def cmd_readiness_snapshot(omo_dir: Path, payload_json: str) -> int:
             actor="omo-readiness-cli",
             source_ref="omo:readiness:snapshot:cli",
         )
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         print(f"❌ failed to write readiness snapshot: {exc}", file=sys.stderr)
         return 1
 

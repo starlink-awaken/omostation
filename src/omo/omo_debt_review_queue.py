@@ -6,7 +6,6 @@ from pathlib import Path
 from .omo_debt_metrics import collect_stale_evidence_item_ids
 from .omo_debt_registry import DebtItem
 
-
 REVIEW_WINDOW_DAYS = 7
 ESCALATION_THRESHOLD_DAYS = 3
 SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -15,7 +14,7 @@ GATE_ORDER = {"gate": 0, "watchlist": 1, "none": 2}
 
 def _parse_iso8601(value: str) -> datetime:
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return datetime.fromisoformat(value)
     except ValueError as exc:
         raise ValueError(value) from exc
 

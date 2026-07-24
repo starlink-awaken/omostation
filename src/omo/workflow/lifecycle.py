@@ -3,10 +3,10 @@ from __future__ import annotations
 import json
 import os
 import re
+import subprocess
+import sys
 import time
 import uuid
-import sys
-import subprocess
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -19,16 +19,16 @@ from .core import (
     RUN_UPDATE_LOCK_TIMEOUT_SECONDS,
     WORKSPACE,
     WorkflowError,
+    command_display,
     display_path,
     ledger_path,
     lock_state_dir,
     normalize_repo_path,
+    path_matches,
     run_state_dir,
     substitute,
     utc_now,
     validate_agent_profile,
-    command_display,
-    path_matches,
     workflow_by_id,
 )
 
@@ -468,7 +468,7 @@ def closeout_run(
     all_checks: bool,
     keep_locks: bool,
 ) -> dict[str, Any]:
-    from .diagnostics import build_verify_report, build_observe_report
+    from .diagnostics import build_observe_report, build_verify_report
 
     verify_report = build_verify_report(
         registry,

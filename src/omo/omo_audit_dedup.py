@@ -43,7 +43,9 @@ def record_agora_failure(uri: str, failure_type: str, details: str) -> None:
     if not _audit_should_record(uri, failure_type):
         return
     try:
-        from omo.omo_audit import record as audit_record  # type: ignore[import-not-found]
+        from omo.omo_audit import (
+            record as audit_record,  # type: ignore[import-not-found]
+        )
 
         audit_record(
             action="bos_resolve_failure",
@@ -51,17 +53,17 @@ def record_agora_failure(uri: str, failure_type: str, details: str) -> None:
             actor="omo-bridge",
             details=f"uri={uri} failure={failure_type} {details}",
         )
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         # audit 自身失败不阻塞业务流
         pass
 
 
 __all__ = [
-    "_audit_should_record",
-    "record_agora_failure",
-    "_record_agora_failure",  # P58-W1 backward compat alias
-    "_AUDIT_DEDUP_TTL_SEC",
     "_AUDIT_DEDUP_MAX",
+    "_AUDIT_DEDUP_TTL_SEC",
+    "_audit_should_record",
+    "_record_agora_failure",  # P58-W1 backward compat alias
+    "record_agora_failure",
 ]
 
 

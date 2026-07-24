@@ -372,7 +372,7 @@ class SelfHealingEngine:
                 debt_id,
             )
             return str(payload.get("id") or debt_id)
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             logger.error("self_healing_debt_create_failed error=%s", str(exc))
             return None
 
@@ -406,7 +406,7 @@ class SelfHealingEngine:
                 "self_healing_workflow_timeout workflow_id=%s", rule.workflow_id
             )
             return {"status": "timeout", "workflow_id": rule.workflow_id}
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             logger.error("self_healing_workflow_error error=%s", str(exc))
             return {"status": "error", "error": str(exc)}
 
@@ -459,7 +459,7 @@ class SelfHealingEngine:
                     self._agora_event_url,
                     json=payload,
                 )
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass  # 事件发布失败不影响主流程
 
     # ── Status ────────────────────────────────────────────────────────
@@ -498,7 +498,7 @@ def fix_clear_pytest_cache(context: dict | None = None) -> tuple[bool, str]:
                     if path.is_dir():
                         shutil.rmtree(path)
                         cleaned += 1
-                except Exception:  # noqa: BLE001  # defensive fallback
+                except Exception:  # defensive fallback
                     pass
     return True, f"Cleaned {cleaned} cache directories"
 
@@ -508,7 +508,7 @@ def fix_restart_agora(context: dict | None = None) -> tuple[bool, str]:
     try:
         subprocess.run(["pkill", "-f", "agora-mcp"], capture_output=True, timeout=5)
         return True, "Agora MCP process terminated; launchctl will restart"
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return False, f"Failed to restart Agora: {e}"
 
 
@@ -524,7 +524,7 @@ def fix_git_gc(context: dict | None = None) -> tuple[bool, str]:
             timeout=60,
         )
         return result.returncode == 0, result.stdout[:500] or "git gc completed"
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return False, f"git gc failed: {e}"
 
 
@@ -538,7 +538,7 @@ def fix_clean_temp_files(context: dict | None = None) -> tuple[bool, str]:
             try:
                 path.unlink()
                 cleaned += 1
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
     return True, f"Cleaned {cleaned} temp files"
 
@@ -554,7 +554,7 @@ def fix_disk_check(context: dict | None = None) -> tuple[bool, str]:
                 f"Disk usage critical: {pct:.1f}% ({_fmt_bytes(usage.free)} free)",
             )
         return True, f"Disk OK: {pct:.1f}% used"
-    except Exception as e:  # noqa: BLE001  # defensive fallback
+    except Exception as e:  # defensive fallback
         return False, f"Disk check failed: {e}"
 
 
@@ -575,7 +575,7 @@ def fix_process_health_check(context: dict | None = None) -> tuple[bool, str]:
                 timeout=5,
             )
             results[name] = "alive" if result.returncode == 0 else "dead"
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             results[name] = "unknown"
 
     dead = [k for k, v in results.items() if v == "dead"]
@@ -616,7 +616,7 @@ def run_fix(fix_name: str, context: dict | None = None) -> dict:
             output[:200],
         )
         return {"success": success, "output": output, "fix_name": fix_name}
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         logger.error("fix_failed fix=%s error=%s", fix_name, exc)
         return {"success": False, "output": str(exc), "fix_name": fix_name}
 
@@ -730,7 +730,7 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
         engine = get_healing_engine()
 
     try:
-        from http.server import HTTPServer, BaseHTTPRequestHandler
+        from http.server import BaseHTTPRequestHandler, HTTPServer
 
         _engine_ref = engine
 
@@ -778,7 +778,7 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
         )
         t.start()
         logger.info("healing_http_started port=%s", _HEALING_HTTP_PORT)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         logger.warning("healing_http_start_failed — port may be in use")
 
 
@@ -908,7 +908,7 @@ def start_hot_reload(interval_seconds: int = 30) -> None:
             _time.sleep(interval_seconds)
             try:
                 _check_and_reload()
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 pass
 
     t = threading.Thread(target=_loop, daemon=True, name="healing-hot-reload")
@@ -955,7 +955,7 @@ def notify_webhook(rule_name: str, event_type: str, count: int, severity: str) -
         req = urllib.request.Request(NOTIFY_WEBHOOK_URL, data=data, method="POST")
         req.add_header("Content-Type", "application/json")
         urllib.request.urlopen(req, timeout=5)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         pass
 
 

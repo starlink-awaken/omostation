@@ -28,23 +28,15 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+
 import yaml
 
-from .omo_paths import OMO_ROOT, PROJECTS_DIR, WORKSPACE_ROOT
-from .omo_shared import load_yaml
-from omo.omo_io import read_jsonl
 from omo.omo_ingress_paths import _mutation_log_path
-from .omo_task_policy import (
-    OPC_P6_SELF_EVOLUTION_POLICY,
-    TASK_POLICIES,
-    check_task_policy,
-    count_planned_matches,
-    get_task_policy,
-)
+from omo.omo_io import read_jsonl
 
 # P88 R1: doc-lifecycle 子模块 (extracted 304L from omo_lint.py)
 # Re-export 保持向后兼容 (omo.cli / scripts/ / omo_audit.py 可能直接 import)
-from .omo_lint_doc import (  # noqa: E402, F401
+from .omo_lint_doc import (
     _DOC_LIFECYCLE_NEED_FRONTMATTER,
     _DOC_LIFECYCLE_PATTERNS,
     _check_doc_referenced,
@@ -56,11 +48,11 @@ from .omo_lint_doc import (  # noqa: E402, F401
 
 # P100 R1: schemas 子模块 (extracted 488L from omo_lint.py)
 # Re-export 保持向后兼容 (cli.py / omo_audit.py / omo_lint_seed 可能直接 import)
-from .omo_lint_schemas import (  # noqa: E402, F401
-    CONSUMER_MODULES,
-    OMO_SRC,
+from .omo_lint_schemas import (
     _CROSS_MODULE_SRP_ALLOWLIST,
     _SORT_KEYS_DEFAULT_EXEMPT_MODULES,
+    CONSUMER_MODULES,
+    OMO_SRC,
     _check_all_schemas_exported,
     _check_cross_module_srp,
     _check_dead_imports,
@@ -69,7 +61,15 @@ from .omo_lint_schemas import (  # noqa: E402, F401
     _check_sort_keys_default,
     cmd_lint_schemas,
 )
-
+from .omo_paths import OMO_ROOT, PROJECTS_DIR, WORKSPACE_ROOT
+from .omo_shared import load_yaml
+from .omo_task_policy import (
+    OPC_P6_SELF_EVOLUTION_POLICY,
+    TASK_POLICIES,
+    check_task_policy,
+    count_planned_matches,
+    get_task_policy,
+)
 
 # P101 R1: yaml-bypass 子模块 (extracted 102L from omo_lint.py)
 # Re-export 保持向后兼容 (cli.py / scripts/ 可能直接 import)
@@ -430,16 +430,16 @@ def _check_yaml_bypass(omo_dir: Path = Path(".omo")) -> list[tuple[str, str]]:
             issues.append(
                 (
                     path.name,
-                    f"R1: yaml 有 status={status!r} 字段但无 lifecycle_state (OMO 用 "
-                    f"lifecycle_state, 改 status 是越权写入, OMO 不认)",
+                    (f"R1: yaml 有 status={status!r} 字段但无 lifecycle_state (OMO 用 "
+                    f"lifecycle_state, 改 status 是越权写入, OMO 不认)"),
                 )
             )
         elif has_status and status in ("closed", "resolved") and lifecycle != status:
             issues.append(
                 (
                     path.name,
-                    f"R2: status={status!r} 但 lifecycle_state={lifecycle!r} 不一致 "
-                    f"(越权写入, OMO 以 lifecycle_state 为准)",
+                    (f"R2: status={status!r} 但 lifecycle_state={lifecycle!r} 不一致 "
+                    f"(越权写入, OMO 以 lifecycle_state 为准)"),
                 )
             )
 
@@ -797,7 +797,7 @@ def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
             committed += 1
         artifact_ref = entry.get("artifact_ref")
         if not isinstance(artifact_ref, str) or not (
-            artifact_ref.startswith(".omo/") or artifact_ref.startswith("runtime/omo/")
+            artifact_ref.startswith((".omo/", "runtime/omo/"))
         ):
             issues.append(f"entry {idx}: invalid artifact_ref {artifact_ref!r}")
             continue
@@ -845,7 +845,7 @@ def load_gitignore_patterns() -> list[str]:
     patterns: list[str] = []
     for raw in GITIGNORE.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
-        if not line or line.startswith("#") or line.startswith("!"):
+        if not line or line.startswith(("#", "!")):
             continue
         patterns.append(line.rstrip("/"))
     return patterns

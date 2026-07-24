@@ -4,7 +4,6 @@ from pathlib import Path
 
 from .omo_shared import load_yaml
 
-
 PHASE_TASK_IDS = {
     "P3": "OPC-P3-GATE-D-OPENING",
     "P4": "OPC-P4-MODEL-COMPUTE",

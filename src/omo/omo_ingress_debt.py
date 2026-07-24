@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 from omo.omo_audit import record as record_audit
-from omo.omo_io import fcntl_lock, write_yaml_atomic
 from omo.omo_ingress_paths import (
     _audit_log_path,
     _delivery_root,
@@ -21,6 +20,7 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
+from omo.omo_io import fcntl_lock, write_yaml_atomic
 
 
 def upsert_debt_item(

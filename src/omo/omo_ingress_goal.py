@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 from omo.omo_audit import record as record_audit
-from omo.omo_io import fcntl_lock, write_yaml_atomic
 from omo.omo_ingress_paths import (
     _artifact_lifecycle_fields,
     _audit_log_path,
@@ -22,6 +21,7 @@ from omo.omo_ingress_paths import (
     _utc_now,
     _workspace_relative,
 )
+from omo.omo_io import fcntl_lock, write_yaml_atomic
 
 
 def _goal_fingerprint(

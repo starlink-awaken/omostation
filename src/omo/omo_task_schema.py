@@ -170,7 +170,7 @@ def validate_task_file(path: Path) -> list[str]:
                 full_path = root_dir / ev_path
                 if not full_path.exists():
                     errors.append(f"physical evidence_path missing: {ev_path}")
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     return errors

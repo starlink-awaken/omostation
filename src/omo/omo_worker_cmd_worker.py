@@ -7,20 +7,19 @@ from typing import Any
 from .omo_admission import evaluate_worker_envelope, request_conditional_approval
 from .omo_handoff_index import write_handoff_index
 from .omo_metrics import write_worker_utilization_summary
-from .omo_rules import evaluate_rule_bundle
 from .omo_rollout import accept_rollout_envelope, evaluate_rollout_envelope
-
-from .omo_worker_status import (
-    collect_worker_status,
-    scan_runtime_watchdog,
-)
+from .omo_rules import evaluate_rule_bundle
 
 # ── Extracted submodules ────────────────────────────────────────────────────
 from .omo_worker_dispatch import (
+    _worker_gc,
     dispatch_task,
     reclaim_task,
     yield_task,
-    _worker_gc,
+)
+from .omo_worker_status import (
+    collect_worker_status,
+    scan_runtime_watchdog,
 )
 
 

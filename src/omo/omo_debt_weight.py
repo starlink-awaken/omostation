@@ -88,7 +88,7 @@ DEBT_ITEMS: dict[str, dict] = {
 }
 
 
-def load_debt_items_from_ledger(omo_dir: Optional[Path] = None) -> dict[str, dict]:
+def load_debt_items_from_ledger(omo_dir: Path | None = None) -> dict[str, dict]:
     """Load debt items from the actual YAML files via ledger."""
     if omo_dir is None:
         omo_dir = Path(__file__).resolve().parents[2] / ".omo"
@@ -107,12 +107,12 @@ def load_debt_items_from_ledger(omo_dir: Optional[Path] = None) -> dict[str, dic
             }
             for item in ledger.items
         }
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return {}
 
 
 def compute_debt_weight(
-    resolved_items: set[str], debt_items: Optional[dict[str, dict]] = None
+    resolved_items: set[str], debt_items: dict[str, dict] | None = None
 ) -> float:
     """计算债务权重因子.
 
@@ -134,7 +134,7 @@ def compute_debt_weight(
 
 
 def debt_summary(
-    resolved_items: set[str], debt_items: Optional[dict[str, dict]] = None
+    resolved_items: set[str], debt_items: dict[str, dict] | None = None
 ) -> dict:
     """生成债务状态摘要，用于写入 system.yaml."""
     items = debt_items or load_debt_items_from_ledger()

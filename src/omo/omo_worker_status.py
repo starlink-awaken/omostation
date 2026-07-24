@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 from .omo_io import write_text_atomic
@@ -98,7 +98,7 @@ def update_dispatch_checkpoint(
 def scan_runtime_watchdog(
     root: Path, now: str | None = None, omo_dir: str | Path = ".omo"
 ) -> dict[str, object]:
-    current_time = _parse_iso8601(now) or datetime.now(timezone.utc)
+    current_time = _parse_iso8601(now) or datetime.now(UTC)
     status = collect_worker_status(root, omo_dir=omo_dir)
     runs: list[dict[str, object]] = []
     counts = {"healthy": 0, "warning": 0, "stale": 0, "reclaim_due": 0}

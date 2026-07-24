@@ -24,7 +24,7 @@ import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 try:
@@ -100,16 +100,16 @@ def _parse_ts(line: str) -> datetime | None:
     if not isinstance(raw, str) or not raw:
         return None
     try:
-        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(raw)
     except ValueError:
         return None
-    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+    return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt
 
 
 def _probe_jsonl_freshness(m: dict) -> ProbeResult:
     """jsonl_freshness 探针:读文件尾行时间戳判新鲜度。"""
     probe, sla = m["probe"], m.get("sla", {})
-    base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
+    base = {"mechanism_id": m["id"], "axis": m["axis"], "name": m["name"]}
     path = Path(os.path.expanduser(probe["path"]))
     if not path.exists():
         return ProbeResult(**base, status=DEAD, detail=f"文件不存在: {path}")
@@ -119,7 +119,7 @@ def _probe_jsonl_freshness(m: dict) -> ProbeResult:
     ts = _parse_ts(line)
     if ts is None:
         return ProbeResult(**base, status=DEAD, detail="尾行无可解析时间戳")
-    age_h = (datetime.now(timezone.utc) - ts).total_seconds() / 3600
+    age_h = (datetime.now(UTC) - ts).total_seconds() / 3600
     max_h = float(sla.get("max_silence_h", 24))
     detail = (
         f"age={age_h:.1f}h / sla={max_h:.0f}h · last={ts.isoformat(timespec='seconds')}"
@@ -139,7 +139,7 @@ def _probe_command(m: dict, root: Path) -> ProbeResult:
     多数探针默认在 root 跑足够;子项目需 `uv run --package X` 的,显式设 cwd。
     """
     probe = m["probe"]
-    base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
+    base = {"mechanism_id": m["id"], "axis": m["axis"], "name": m["name"]}
     if m.get("runner") != "ready":
         return ProbeResult(**base, status=PENDING, detail="runner 待实现 (档位②)")
     cwd = Path(probe["cwd"]) if probe.get("cwd") else root
@@ -157,7 +157,7 @@ def _probe_command(m: dict, root: Path) -> ProbeResult:
         )
     except subprocess.TimeoutExpired:
         return ProbeResult(**base, status=RED, detail="探活超时")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return ProbeResult(**base, status=RED, detail=f"探活异常: {e}")
     if r.returncode == probe.get("expect_exit", 0):
         return ProbeResult(**base, status=GREEN, detail=f"exit={r.returncode}")
@@ -175,12 +175,12 @@ def _probe_http(m: dict) -> ProbeResult:
     url 解析: 支持 ${VAR:-default} shell 风格(env 变量展开 + 默认值)。
     用途: 端口默认值跟着 env 走,避免硬编码。
     """
-    import urllib.request
-    import urllib.error
     import re
+    import urllib.error
+    import urllib.request
 
     probe = m["probe"]
-    base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
+    base = {"mechanism_id": m["id"], "axis": m["axis"], "name": m["name"]}
     if m.get("runner") != "ready":
         return ProbeResult(**base, status=PENDING, detail="runner 待实现 (档位②)")
     url = probe["url"]
@@ -204,7 +204,7 @@ def _probe_http(m: dict) -> ProbeResult:
         )
     except urllib.error.URLError as e:
         return ProbeResult(**base, status=RED, detail=f"端点不可达: {e.reason} · {url}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return ProbeResult(**base, status=RED, detail=f"探活异常: {e}")
 
 
@@ -215,7 +215,7 @@ def _probe_counter(m: dict, root: Path) -> ProbeResult:
 
 def _probe_one(m: dict, root: Path, quick: bool) -> ProbeResult:
     kind = m.get("probe", {}).get("kind", "")
-    base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
+    base = {"mechanism_id": m["id"], "axis": m["axis"], "name": m["name"]}
     if kind == "jsonl_freshness":
         return _probe_jsonl_freshness(m)
     if kind == "command":
@@ -292,14 +292,14 @@ def compute_xplane_score(quick: bool = True) -> dict:
     results = [_probe_one(m, reg.parent.parent, quick) for m in mechanisms]
     agg = _aggregate(results)
     agg["results"] = results
-    agg["probed_at"] = datetime.now(timezone.utc).isoformat()
+    agg["probed_at"] = datetime.now(UTC).isoformat()
     return agg
 
 
 def _render(results: list[ProbeResult], agg: dict) -> str:
     out = [
         "═" * 66,
-        f"  X-Plane 探活报告  ·  {datetime.now(timezone.utc).isoformat(timespec='seconds')}",
+        f"  X-Plane 探活报告  ·  {datetime.now(UTC).isoformat(timespec='seconds')}",
         "═" * 66,
     ]
     for axis in sorted({r.axis for r in results}):

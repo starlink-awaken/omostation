@@ -32,7 +32,6 @@ from typing import Any
 
 from omo.omo_trail import DEFAULT_TRAIL_PATH, record_step
 
-
 # 5 条代表性 step (反映老王 Round 12-18 工作模式)
 SEED_STEPS: list[dict[str, Any]] = [
     {

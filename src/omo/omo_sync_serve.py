@@ -28,4 +28,4 @@ def serve() -> int:
     return run_stdio_dispatch(_call_action, daemon_mode=True)
 
 
-__all__ = ["serve", "_call_action"]
+__all__ = ["_call_action", "serve"]

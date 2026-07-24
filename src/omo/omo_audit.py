@@ -27,20 +27,19 @@ import re
 import subprocess
 import sys
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
+# 复用 omo_io.AppendOnlyLog (P49+ AppendOnlyLog 抽象: JSONL 物理读写唯一入口)
+from omo.omo_io import AppendOnlyLog
 from omo.omo_paths import (
-    DECISIONS_DIR,
     DEBT_ITEMS_DIR,
+    DECISIONS_DIR,
     KAIRON_PACKAGES,
     TASKS_PLANNED_DIR,
     WORKSPACE_ROOT,
 )
-
-# 复用 omo_io.AppendOnlyLog (P49+ AppendOnlyLog 抽象: JSONL 物理读写唯一入口)
-from omo.omo_io import AppendOnlyLog
 
 # =============================================================================
 # Section 1 — Debt action audit trail (X1-AUDIT-001, pre-existing)
@@ -49,7 +48,7 @@ from omo.omo_io import AppendOnlyLog
 
 def _utc_now() -> str:
     return (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z")
@@ -93,8 +92,8 @@ def record_compute_node_state(node_id: str, **fields: dict) -> dict:
     Loads the corresponding YAML file from projects/ecos/src/ecos/ssot/mof/m1/compute_engine/,
     updates fields (like status, last_seen), and writes back safely.
     """
-    from omo.omo_shared import load_yaml
     from omo.omo_io import write_yaml_atomic
+    from omo.omo_shared import load_yaml
 
     m1_dir = Path(
         "~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/compute_engine"
@@ -108,7 +107,7 @@ def record_compute_node_state(node_id: str, **fields: dict) -> dict:
             if data.get("node_id") == node_id or f.stem == node_id:
                 target_file = f
                 break
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             pass
 
     if target_file is None:
@@ -270,7 +269,7 @@ def _load_yaml_safely(path: Path) -> dict | None:
         return load_yaml_docs(text)
     except ImportError:
         pass
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return None
     return _mini_yaml_parse(text)
 
@@ -281,10 +280,7 @@ def _mini_yaml_parse(text: str) -> dict:
     for line in text.splitlines():
         line = line.rstrip()
         if (
-            not line
-            or line.startswith("#")
-            or line.startswith(" ")
-            or line.startswith("\t")
+            not line or line.startswith(("#", " ", "\t"))
         ):
             continue
         if ":" not in line:
@@ -578,10 +574,10 @@ def governance_check_doc_lifecycle() -> CheckResult:
     - 矛盾路径 (代码引用 .omo/_archive/) = 0 满分
     """
     from omo.omo_lint import (
+        _DOC_LIFECYCLE_NEED_FRONTMATTER,
+        _check_doc_referenced,
         _classify_doc,
         _parse_frontmatter,
-        _check_doc_referenced,
-        _DOC_LIFECYCLE_NEED_FRONTMATTER,
     )
 
     omo = _WORKSPACE_ROOT / ".omo"
@@ -615,7 +611,7 @@ def governance_check_doc_lifecycle() -> CheckResult:
             need_fm_total += 1
             try:
                 content = f.read_text(encoding="utf-8", errors="ignore")
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
             fm = _parse_frontmatter(content)
             if fm and fm.get("status") in {
@@ -634,7 +630,7 @@ def governance_check_doc_lifecycle() -> CheckResult:
                     try:
                         content = f.read_text(encoding="utf-8", errors="ignore")
                         fm = _parse_frontmatter(content)
-                    except Exception:  # noqa: BLE001  # defensive fallback
+                    except Exception:  # defensive fallback
                         fm = None
                     if fm and fm.get("status") in {"deprecated", "archived"}:
                         pass  # 已标注, OK
@@ -644,7 +640,7 @@ def governance_check_doc_lifecycle() -> CheckResult:
         if f.suffix in {".py", ".sh"}:
             try:
                 content = f.read_text(encoding="utf-8", errors="ignore")
-            except Exception:  # noqa: BLE001  # defensive fallback
+            except Exception:  # defensive fallback
                 continue
             if ".omo/_archive/" in content or ".omo/_knowledge/management/" in content:
                 contradictory_refs += 1
@@ -774,7 +770,7 @@ def governance_check_agora_health() -> CheckResult:
             message=f"{healthy_n}/{len(results)} services healthy",
             details=unhealthy,
         )
-    except Exception as exc:  # noqa: BLE001  # defensive fallback
+    except Exception as exc:  # defensive fallback
         return CheckResult(
             name="agora health",
             category="agora",
@@ -945,7 +941,7 @@ def governance_main(argv: list[str] | None = None) -> int:
                 }
             )
             print(f"[AUDIT] 治理历史已 append: {target}")
-        except Exception as exc:  # noqa: BLE001  # defensive fallback
+        except Exception as exc:  # defensive fallback
             print(f"[AUDIT] 治理历史写入失败(不影响主流程): {exc}", file=sys.stderr)
     return 0
 
@@ -995,10 +991,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = (
-    # Section 1 — debt action audit trail
-    "record",
-    "query",
-    "summary",
     # Section 2 — governance compliance checks
     "CheckResult",
     "GovernanceReport",
@@ -1012,12 +1004,16 @@ __all__ = (
     "governance_check_lint",
     "governance_check_task_consistency",
     "governance_check_test_coverage",
-    "render_markdown",
-    "run_governance_audit",
+    "governance_history_main",
     # Section 3 — CLI
     "governance_main",
-    "governance_history_main",
     "main",
+    "query",
+    # Section 1 — debt action audit trail
+    "record",
+    "render_markdown",
+    "run_governance_audit",
+    "summary",
 )
 
 

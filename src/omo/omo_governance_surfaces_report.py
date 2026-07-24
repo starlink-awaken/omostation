@@ -46,20 +46,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from omo.omo_shared import load_yaml_required
-
-# Cross-sibling imports (P107 范式: child → siblings, 无 circular 风险)
-# snapshots: pure data, no further dependencies
-from omo.omo_governance_surfaces_snapshots import (
-    _worker_internal_write_profiles_snapshot,
-)
-
 # ingress / ingress_artifacts / mutation_surface / internal_write_profiles / state_plane
 # (each is a sibling of report, has no dependency on report)
 from omo.omo_governance_surfaces_ingress import (
     _check_ingress_registry,
 )
 from omo.omo_governance_surfaces_ingress_artifacts import _check_ingress_artifacts
+
+# Cross-sibling imports (P107 范式: child → siblings, 无 circular 风险)
+# snapshots: pure data, no further dependencies
+from omo.omo_governance_surfaces_snapshots import (
+    _worker_internal_write_profiles_snapshot,
+)
+from omo.omo_shared import load_yaml_required
 
 
 # P105 范式: inline _load_yaml 避免 child → parent circular import

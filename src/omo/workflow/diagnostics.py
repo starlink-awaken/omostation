@@ -9,32 +9,32 @@ from pathlib import Path
 from typing import Any
 
 from .core import (
-    WORKSPACE,
     REGISTRY_PATH,
+    WORKSPACE,
     WorkflowError,
-    display_path,
-    path_matches,
-    normalize_repo_path,
-    changed_files_from_git,
-    ledger_path,
-    substitute,
-    command_display,
-    integration_rows,
     adapter_rows,
+    changed_files_from_git,
+    command_display,
+    display_path,
+    integration_rows,
+    ledger_path,
+    normalize_repo_path,
+    path_matches,
+    substitute,
 )
-from .lint import diff_check_rows, agcp_drift_check
 from .lifecycle import (
-    read_run,
     append_ledger_event,
-    load_run_records,
-    load_lock_records,
-    ledger_mentions_run,
-    heal_ledger_for_run,
-    claim_policy,
     claim_coverage_report,
-    staged_lane_report,
+    claim_policy,
+    heal_ledger_for_run,
+    ledger_mentions_run,
+    load_lock_records,
+    load_run_records,
+    read_run,
     recommended_next,
+    staged_lane_report,
 )
+from .lint import agcp_drift_check, diff_check_rows
 
 
 def run_check_command(check: dict[str, Any], context: dict[str, str]) -> dict[str, Any]:
@@ -210,7 +210,7 @@ def parse_utc_timestamp(value: str | None) -> datetime | None:
     if not value:
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return datetime.fromisoformat(value)
     except ValueError:
         return None
 

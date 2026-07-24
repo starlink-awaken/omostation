@@ -28,7 +28,7 @@ def archive_resolved_debt_items(
     for item in debt_dir.glob("*.yaml"):
         try:
             data = load_yaml(item)
-        except Exception:  # noqa: BLE001  # defensive fallback
+        except Exception:  # defensive fallback
             continue
         if not (data and data.get("resolved") is True):
             continue
@@ -105,7 +105,7 @@ def main(argv: list[str]) -> int:
                 try:
                     with sqlite3.connect(db_path) as conn:
                         conn.execute("VACUUM")
-                except Exception as e:  # noqa: BLE001  # defensive fallback
+                except Exception as e:  # defensive fallback
                     print(f"    ❌ VACUUM 失败: {e}")
 
     print("✅ 代谢清理与碎片整理完成。")

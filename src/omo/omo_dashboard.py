@@ -22,7 +22,7 @@ _OMO_DASHBOARD_API_KEY = os.environ.get("OMO_DASHBOARD_API_KEY", "")
 def _load_json(path: Path) -> dict:
     try:
         return load_yaml(path)
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         return {}
 
 
@@ -38,7 +38,7 @@ def _generate_html() -> str:
             / "kei_audit.jsonl"
         )
         kei_lines = len(kei.read_text().strip().split("\n")) if kei.exists() else 0
-    except Exception:  # noqa: BLE001  # defensive fallback
+    except Exception:  # defensive fallback
         kei_lines = 0
 
     phase = system.get("current_phase", "?")
@@ -101,7 +101,7 @@ def _generate_html() -> str:
 
 def cmd_dashboard_serve(port: int) -> int:
     """Start HTTP server serving the dashboard."""
-    from http.server import HTTPServer, BaseHTTPRequestHandler
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
     class DashboardHandler(BaseHTTPRequestHandler):
         def _check_auth(self) -> bool:
@@ -165,7 +165,7 @@ def cmd_dashboard_serve(port: int) -> int:
                         {"valid": len(errors) == 0, "errors": errors},
                         ensure_ascii=False,
                     )
-                except Exception as e:  # noqa: BLE001  # defensive fallback
+                except Exception as e:  # defensive fallback
                     result = json.dumps(
                         {"valid": False, "errors": [str(e)]}, ensure_ascii=False
                     )
@@ -183,7 +183,7 @@ def cmd_dashboard_serve(port: int) -> int:
         def log_message(self, fmt, *args):
             sys.stderr.write(f"[dashboard] {args[0]} {args[1]} {args[2]}\n")
 
-    server = HTTPServer(("0.0.0.0", port), DashboardHandler)  # noqa: S104
+    server = HTTPServer(("0.0.0.0", port), DashboardHandler)
     print(f"🚀 eCOS Dashboard: http://localhost:{port}")
     print("   Auto-refresh: 30s")
     try:
