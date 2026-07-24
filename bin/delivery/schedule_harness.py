@@ -17,9 +17,8 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from agent_registry import AgentRegistry  # noqa: E402
-from caliber import ENV_CLASS_SIM  # noqa: E402
-from scheduler import measure_schedule_success_rate  # noqa: E402
+from caliber import ENV_CLASS_SIM
+from scheduler import measure_schedule_success_rate
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = ROOT / ".omo" / "_delivery" / "schedule-harness"

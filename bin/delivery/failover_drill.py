@@ -15,8 +15,8 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from agent_registry import AgentRegistry  # noqa: E402
-from scheduler import Task, TaskScheduler  # noqa: E402
+from agent_registry import AgentRegistry
+from scheduler import Task, TaskScheduler
 
 
 def run_drill(*, dry_run: bool = True, n_nodes: int = 4) -> dict[str, Any]:
@@ -80,8 +80,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--json", action="store_true")
     args = p.parse_args(argv)
     report = run_drill(dry_run=not args.live, n_nodes=args.n_nodes)
-    if args.json or True:
-        print(json.dumps(report, indent=2, ensure_ascii=False))
+    # Always emit JSON report for evidence capture (CI/scripts parse stdout)
+    print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["ok"] else 1
 
 

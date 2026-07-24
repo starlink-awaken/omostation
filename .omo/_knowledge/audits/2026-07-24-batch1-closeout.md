@@ -34,3 +34,15 @@ workorder: .omo/plans/strat-p81-batch1-workorder.md
 ## S1 unlock table
 
 See brief §1 (ADR-0228): S2 OPEN; physical G-DEL.1/3 BLOCKED; S3 LOCKED.
+
+## Skeptic re-verify (2026-07-24 post-closeout)
+
+| Gap | Status | Evidence |
+|-----|--------|----------|
+| A1 PR + locks | **fixed** | PR #483 OPEN; active_runs=[]; lock_count=0 |
+| B2 real backlog | **fixed** | 12 REMEDIATE/OPC trails with task_id+path |
+| D1 KOS growth | **fixed** | measured_documents 5152→5193 (+41) |
+| PR CI (submodule pins / ruff) | **fixing** | Reverted accidental agora/omo/scripts pin bumps; ruff clean on batch1 delivery |
+
+Closeout honesty: C2 remains **partial** (no 3-day wall-clock cron claim).
+

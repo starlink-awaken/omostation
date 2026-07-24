@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 # First-ship roles (workorder B1 suggestion)
 ROLE_ENGINEERING = "engineering"
@@ -293,7 +294,7 @@ def measure_three_role_batch(
     *, n_tasks: int = 30, inject_fail_every: int = 0
 ) -> dict[str, Any]:
     """G-DEL.2b-style batch measure for 3 first-ship roles."""
-    from caliber import stamp_non_physical_goal  # noqa: PLC0415
+    from caliber import stamp_non_physical_goal
 
     ok = 0
     trails: list[dict[str, Any]] = []
