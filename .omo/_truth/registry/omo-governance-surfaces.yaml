@@ -145,6 +145,22 @@ assets:
       - projects/c2g
       - projects/ecos
     status: active
+  - id: OMO-PLANS
+    ref: .omo/plans/
+    plane: state_plane
+    asset_type: strategic_plan
+    persistence_mode: durable
+    retention_mode: manual_cleanup
+    truth_owner: mixed
+    write_via:
+      - humans
+      - agents
+    consumed_by:
+      - agents
+      - projects/omo
+      - projects/c2g
+    status: active
+
   - id: OMO-STATE
     ref: .omo/state/
     plane: state_plane
