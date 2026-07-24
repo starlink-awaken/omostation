@@ -1,18 +1,22 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-15T09:23:23.151393Z` | **SSOT Source**: `.omo/state/system.yaml` | **ISC-1 复合分**: `100/100`
+> **Generated**: `2026-07-24T02:29:29.918301Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `100/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 
-✅ **当前没有需要人工干预的阻断决策，健康免疫运转良好。**
+### ⚠️ 软门禁预警 (Soft Gate Warnings · 不阻断)
+- **[X3-SOFT-GATE/soft]** 工作交付月度软门禁: 2026-07 交付 4 < 阈值 8（环比 0 → 4, Δ+4） → [`.omo/_truth/registry/x3-delivery-soft-gate.yaml`](file:///Users/xiamingxing/Workspace/.omo/_truth/registry/x3-delivery-soft-gate.yaml)
+
+### ⏳ 待处理卡片与债务 (Needs Human Decisions)
+- **[OMO-DEBT]** P80 T2: expand physical hosts ≥4 + G-DEL.3 true two-host measure → [`.omo/tasks/planned/needs-human-p80-physical-hosts.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-p80-physical-hosts.yaml)
 
 ## 📈 X3 价值仪表 (Value Metrics)
 
 | 维度 | 度量指标 | 状态 | 物理数据源 |
 |------|----------|------|------------|
-| **创意创作** | 新增发布数: `636` | 正常 | `@创意创作/_outputs` |
-| **工作交付** | 交付卡片数: `4` | 正常 | `spaces/` 交付声明 |
-| **知识复用** | KOS 索引篇: `0` | 正常 | `kos/` 篇目 |
+| **创意创作** | 新增发布数: `661` | 正常 | `@创意创作/_outputs` |
+| **工作交付** | 本月 `2026-07`: `4` / 上月 `2026-06`: `0` (累计 `4`, 软阈 `8`) | 预警 | `spaces/` + `.omo/_truth/registry/x3-delivery-soft-gate.yaml` |
+| **知识复用** | KOS 索引篇: `11566` | 正常 | `kos/` 篇目 |
 
 <details>
 <summary>⚙️ <b>治理健康分详情 (复合 100/100, 已自动收纳)</b></summary>
