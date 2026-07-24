@@ -1,0 +1,32 @@
+---
+id: NEEDS-HUMAN-BATCH3-PROPOSAL
+title: "STRAT-P81 Batch 3 提案（物理 KPI 冲刺主轴 · 待人类拍板）"
+status: candidate
+needs-human: true
+priority: P1
+owner: human
+created_at: "2026-07-24T07:10:00Z"
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+source_docs:
+  - .omo/_knowledge/audits/2026-07-24-batch2-closeout.md
+  - .omo/plans/strat-p81-batch2-workorder.md
+entry_gate: []
+evidence_required:
+  - human Batch3 scope decision
+test_plan:
+  - Human chooses physical-first vs role-expansion-first scope
+desc: >
+  Batch2 closed. Proposed Batch3 focus: (1) finish C2 3-day harness wall-clock;
+  (2) when hosts return, physical recovery checklist → G-DEL.3 then G-DEL.1 with
+  human announce; (3) optional research/delivery role pilot only after B3 eval
+  approve; (4) S3/emergence only with kill-switch review application.
+  No S3 install without human.

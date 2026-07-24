@@ -1,20 +1,16 @@
-schema: x3-role-metrics/v1
-source: .omo/_knowledge/audits/2026-07-24-batch1-g-del-2b-measure.md
-env_class: in-process_simulation
-batch_n_tasks: 30
+# X3 role metrics projection (Batch2 B2) — pointerizable
+updated_at: "2026-07-24T06:56:00Z"
+batch: 2
 roles:
   engineering:
+    completed: 32
     completion_rate: 1.0
-    completed_tasks: 30
-    cost_units: 30
-    note: process-local collab share of batch
   governance:
+    completed: 32
     completion_rate: 1.0
-    completed_tasks: 30
-    cost_units: 30
-    note: process-local collab share of batch
   audit:
+    completed: 32
     completion_rate: 1.0
-    completed_tasks: 30
-    cost_units: 30
-    note: process-local collab share of batch
+n_tasks: 32
+env_class: in-process_simulation
+source: .omo/_knowledge/audits/2026-07-24-batch2-real-backlog-collab-index.md

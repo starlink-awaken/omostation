@@ -1,0 +1,96 @@
+{
+  "schema": "physical-node-probe/v1",
+  "generated_at": "2026-07-24T03:39:25.785347+00:00",
+  "probe_host": "xiamingingdeMBP.lan",
+  "registry": ".omo/_truth/registry/compute/nodes.yaml",
+  "results": [
+    {
+      "id": "local-mac",
+      "probes": [
+        {
+          "host": "127.0.0.1",
+          "ping": true,
+          "ssh": true,
+          "ping_out": "PING 127.0.0.1 (127.0.0.1): 56 data bytes\n64 bytes from 127.0.0.1: icmp_seq=0 tt",
+          "ssh_out": "xiamingingdeMBP.lan",
+          "ssh_err": ""
+        },
+        {
+          "host": "localhost",
+          "ping": true,
+          "ssh": true,
+          "ping_out": "PING localhost (127.0.0.1): 56 data bytes\n64 bytes from 127.0.0.1: icmp_seq=0 tt",
+          "ssh_out": "xiamingingdeMBP.lan",
+          "ssh_err": ""
+        }
+      ],
+      "reachable_for_measurement": true
+    },
+    {
+      "id": "macmini",
+      "probes": [
+        {
+          "host": "192.168.31.210",
+          "ping": false,
+          "ssh": false,
+          "ping_out": "Command '['ping', '-c', '1', '-W', '2000', '192.168.31.210']' timed out after 3 ",
+          "ssh_out": "",
+          "ssh_err": ""
+        },
+        {
+          "host": "mac-mini.local",
+          "ping": false,
+          "ssh": false,
+          "ping_out": "Command '['ping', '-c', '1', '-W', '2000', 'mac-mini.local']' timed out after 3 ",
+          "ssh_out": "",
+          "ssh_err": ""
+        }
+      ],
+      "reachable_for_measurement": false
+    },
+    {
+      "id": "y7000p",
+      "probes": [
+        {
+          "host": "192.168.31.128",
+          "ping": false,
+          "ssh": false,
+          "ping_out": "Command '['ping', '-c', '1', '-W', '2000', '192.168.31.128']' timed out after 3 ",
+          "ssh_out": "",
+          "ssh_err": ""
+        },
+        {
+          "host": "xia-y7000p.local",
+          "ping": false,
+          "ssh": false,
+          "ping_out": "Command '['ping', '-c', '1', '-W', '2000', 'xia-y7000p.local']' timed out after ",
+          "ssh_out": "",
+          "ssh_err": ""
+        }
+      ],
+      "reachable_for_measurement": false
+    },
+    {
+      "id": "macbook-tailscale",
+      "probes": [],
+      "tailscale": "Command '['tailscale', 'status', '--json']' timed out after 5 seconds",
+      "tailscale_cli_ok": false,
+      "reachable_for_measurement": false
+    }
+  ],
+  "reachable_ids_raw": [
+    "local-mac"
+  ],
+  "reachable_physical_hosts": 1,
+  "reachable_physical_ids": [
+    "local-mac"
+  ],
+  "min_physical_hosts_g_del_1": 4,
+  "meets_g_del_1_unblock": false,
+  "env_class": "insufficient_physical",
+  "hand_fill_forbidden": true,
+  "notes": [
+    "macbook-tailscale not double-counted with local-mac",
+    "fail-closed: do not write meets_gate=true without measure_physical"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "ok": true,
+  "dry_run": true,
+  "ts": "2026-07-24T06:58:43Z",
+  "probes": [
+    {
+      "host": "127.0.0.1",
+      "port": 22,
+      "reachable": true,
+      "latency_ms": 1.59,
+      "error": null
+    },
+    {
+      "host": "192.168.31.210",
+      "port": 22,
+      "reachable": false,
+      "latency_ms": null,
+      "error": "timed out"
+    },
+    {
+      "host": "macmini.local",
+      "port": 22,
+      "reachable": false,
+      "latency_ms": null,
+      "error": "[Errno 8] nodename nor servname provided, or not known"
+    },
+    {
+      "host": "y7000p.local",
+      "port": 22,
+      "reachable": false,
+      "latency_ms": null,
+      "error": "[Errno 8] nodename nor servname provided, or not known"
+    }
+  ],
+  "reachable_count": 1,
+  "registry_plan": {
+    "action": "register_reachable_nodes",
+    "would_register": [
+      "127.0.0.1"
+    ],
+    "skipped_unreachable": [
+      "192.168.31.210",
+      "macmini.local",
+      "y7000p.local"
+    ],
+    "applied": false
+  },
+  "g_del_3_plan": {
+    "gate": "G-DEL.3",
+    "required_hosts": 2,
+    "reachable_hosts": 1,
+    "ready": false,
+    "measure_command": "uv run --project projects/... measure_physical --n-ops 10000",
+    "executed": false,
+    "meets_physical_gate": false
+  },
+  "g_del_1_precheck": {
+    "gate": "G-DEL.1",
+    "required_hosts": 4,
+    "reachable_hosts": 1,
+    "ready": false,
+    "executed": false,
+    "meets_physical_gate": false
+  },
+  "meets_sim_harness": true,
+  "meets_physical_gate": false,
+  "meets_gate": false,
+  "env_class": "physical_multi_host",
+  "note": "Batch2 C1 recovery package. dry-run does not claim physical pass. Human + real measure_physical required for G-DEL.1/3 official."
+}
