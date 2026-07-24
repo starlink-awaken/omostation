@@ -1,0 +1,16 @@
+---
+id: NEEDS-HUMAN-P80-PHASE45-TICK-TIMEOUT
+title: "P80 T1.2 residual: implement cron.tick_timeout_seconds=30"
+status: candidate
+needs-human: true
+priority: P1
+owner: human
+created_at: "2026-07-24T02:38:00Z"
+endpoint: cron.tick_timeout_seconds
+evidence:
+  - .omo/_knowledge/audits/2026-07-24-phase45-reverify.md
+  - projects/runtime/src/runtime/cron_service/config.py
+desc: >
+  Phase45 plan requires tick_timeout_seconds=30. Live code exposes TICK_INTERVAL
+  (default 15s) only. Human/engineering: add hard timeout protection or document
+  supersession of plan metric.

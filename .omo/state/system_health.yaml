@@ -1,62 +1,60 @@
-last_scan: 1784259724.38256
+last_scan: 1784860773.849329
 services:
   agora-gateway:
-    health_check: degraded (probe)
+    health_check: healthy (probe)
     name: agora-gateway
     runtime:
-      degraded_reason: "[PROBE] agora-gateway: PID 73731 degraded \u2014 14/20 backends\
-        \ unresponsive (stdio transient likely)"
-      freshness_seconds: 60
+      freshness_seconds: 61
       last_healthy_seconds: 0
-      pid: '73731'
+      pid: '4052'
       status: running
-      uptime_seconds: 153501
-    timestamp: 1784259724.38256
+      uptime_seconds: 84369
+    timestamp: 1784860773.849329
     type: daemon
   agora-sse:
     health_check: healthy
     name: agora-sse
     port_listening: true
     runtime:
-      freshness_seconds: 60
+      freshness_seconds: 61
       last_healthy_seconds: 0
-      pid: '29109'
+      pid: '70625'
       status: running
-      uptime_seconds: 137566
-    timestamp: 1784259724.38256
+      uptime_seconds: 40565
+    timestamp: 1784860773.849329
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 60
+      freshness_seconds: 61
       last_healthy_seconds: 0
-      pid: '76784'
+      pid: '66759'
       status: running
-      uptime_seconds: 137505
-    timestamp: 1784259724.38256
+      uptime_seconds: 84369
+    timestamp: 1784860773.849329
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1784259724.38256
+    timestamp: 1784860773.849329
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1784259724.38256
+    timestamp: 1784860773.849329
     type: scheduled
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1784259724.38256
+    timestamp: 1784860773.849329
     type: integrated
   ollama:
     health_check: healthy
@@ -65,12 +63,12 @@ services:
     runtime:
       last_healthy_seconds: 0
       status: idle
-    timestamp: 1784259724.38256
+    timestamp: 1784860773.849329
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1784259724.38256
+    timestamp: 1784860773.849329
     type: mcp

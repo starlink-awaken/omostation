@@ -1,0 +1,15 @@
+---
+id: NEEDS-HUMAN-P80-PHASE45-AGORA-HEALTH
+title: "P80 T1.2 residual: agora-gateway HTTP /health live on :9000"
+status: candidate
+needs-human: true
+priority: P1
+owner: human
+created_at: "2026-07-24T02:38:00Z"
+endpoint: agora_gateway.health_check
+evidence:
+  - .omo/_knowledge/audits/2026-07-24-phase45-reverify.md
+desc: >
+  curl :9000/health fails. agora processes present as mcp_gateway/agora-mcp SSE.
+  Minerva :8765/health is not agora. W2.1 PID fallback remains in unit tests.
+  Human: start agora-gateway HTTP health surface or accept PID probe as permanent.
