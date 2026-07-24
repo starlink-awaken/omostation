@@ -18,23 +18,22 @@ SSOT 目标字段见 `.omo/goals/current.yaml` → `id: KOS-Q-GROWTH`。
 | 季度 | 目标 documents | 口径 | 状态（以实测为准） |
 |------|----------------|------|-------------------|
 | 2026Q3 | ≥ 1,500 | workspace docs + decisions + 创意创作 vault 首批扩展 | ✅ 已过 |
-| 2026Q4 | ≥ 3,000 | 叠加学习笔记 / **工作文档 + 驾驶舱** 精选 | ✅ 实测 ≥3000 |
-| 2027Q1 | ≥ 5,000 | 跃迁期个人图谱预备（家庭/个人/残余 vault） | 进行中 |
+| 2026Q4 | ≥ 3,000 | 叠加学习笔记 / **工作文档 + 驾驶舱** 精选 | ✅ 已过 |
+| 2027Q1 | ≥ 5,000 | 家庭/个人 + workspace projects 残余面 | ✅ 实测 ≥5000 |
 
 ## 操作
 
 ```bash
-# 默认：workspace + 默认 vault 集合（含 @工作文档 / @驾驶舱）
+# 默认：workspace + 默认 vault 集合
 python3 bin/gac/kos-seed-import.py --limit 2000
 
-# Q4 扩量推荐：只拉「库中尚无」的路径（避免 limit 被旧文档占满）
-python3 bin/gac/kos-seed-import.py --prefer-new --limit 800 \
+# 增长模式：只拉库中尚无路径
+python3 bin/gac/kos-seed-import.py --prefer-new --limit 2000 \
   --roots-only \
   --root ~/Documents/@工作文档 \
-  --root ~/Documents/@驾驶舱
-
-# 创意创作 vault（legacy 单根）
-python3 bin/gac/kos-seed-import.py --creative-root ~/Documents/@创意创作 --limit 2000
+  --root ~/Documents/@驾驶舱 \
+  --root ~/Documents/@家庭生活 \
+  --root ~/Documents/@个人
 
 # 计数（运行时 DB，gitignored）
 python3 -c "import sqlite3; print(sqlite3.connect('kos/kos-index.sqlite').execute('select count(*) from documents').fetchone()[0])"
@@ -44,13 +43,14 @@ python3 -c "import sqlite3; print(sqlite3.connect('kos/kos-index.sqlite').execut
 
 | 参数 | 作用 |
 |------|------|
-| `--prefer-new` | limit 只计 DB 中尚不存在的路径（季度增长模式） |
+| `--prefer-new` | limit 只计 DB 中尚不存在的路径 |
 | `--root PATH` | 可重复；追加扫描根 |
-| `--roots-only` | 只扫 `--root`，不扫默认 workspace/vault 集合 |
+| `--roots-only` | 只扫 `--root` |
 | `--workspace-docs-only` | 只扫 workspace 默认文档面 |
 
 ## 门禁
 
 - 不以「代码写完」算完成；以 `documents` 实测计数为准。  
-- 季度目标写进 goals SSOT，不写死在本文件正文外的别处。  
-- `kos/` 为运行时索引（gitignored）；PR 只交付 seed 工具与证据/目标字段。
+- 季度目标写进 goals SSOT。  
+- `kos/` 为运行时索引（gitignored）；PR 交付 seed 工具与证据/目标字段。  
+- KOS 篇数增长 **不等于** 物理 G-DEL 过门。
