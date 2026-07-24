@@ -51,6 +51,7 @@
 | Phase / Wave / Health | [state/system.yaml](state/system.yaml) |
 | Goals / code freeze / milestone | [goals/current.yaml](goals/current.yaml) |
 | Active / Planned / Done Tasks | [tasks/](tasks/) |
+| 战略计划 | [plans/](plans/) |
 | 审计证据 | [_delivery/](_delivery/) |
 | 复盘与说明 | [_knowledge/](_knowledge/) |
 
