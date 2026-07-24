@@ -27,7 +27,7 @@ def run_events_dashboard(url: str = "http://127.0.0.1:7431/v1/events"):
             headers = {}
             if token:
                 headers["Authorization"] = f"Bearer {token}"
-            with httpx.Client(timeout=None, headers=headers) as client:  # noqa: S113
+            with httpx.Client(timeout=None, headers=headers) as client:
                 with client.stream("GET", url) as response:
                     response.raise_for_status()
                     for line in response.iter_lines():
