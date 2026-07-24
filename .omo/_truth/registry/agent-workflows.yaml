@@ -501,7 +501,7 @@ doctor_checks:
   - id: mof-drift
     description: MOF architecture drift detector is runnable.
     required: true
-    command: [bin/mof-drift]
+    command: [uv, run, --with, pyyaml, python, bin/mof/mof-drift]
   - id: mof-bootstrap
     description: "M4 5-check 自反校验器 (M4→GaC, ADR-0152/0153/0154)"
     required: false
@@ -527,7 +527,21 @@ diff_checks:
       - .omo/_truth/registry/agent-workflows.yaml
       - .agents/skills/project-governance/SKILL.md
       - .omo/standards/agent-workflow-contract.md
+      - .omo/_delivery/agent-workflows/runs/**  # ADR-0211 §D1 P74 覆盖: handoff-resume write/read
+      - .omo/_delivery/agent-workflows/locks/**  # ADR-0211 §D1 P74 覆盖: observer-audit read
+      - .omo/_delivery/agent-workflows/events.jsonl  # ADR-0211 §D1 P74 覆盖: observer-audit read
     command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+  - id: c2g-spec-consistency
+    description: c2g pitch→planned→active ingress surface consistency (ADR-0211 §D1 P74 覆盖 c2g-spec-ingress surfaces).
+    required: false
+    paths:
+      - .omo/pitches/**
+      - .omo/tasks/planned/**
+      - runtime/omo/_delivery/ingress/**
+      - projects/c2g/**
+      - projects/omo/**
+      - runtime/sandbox/**
+    command: [uv, run, --with, pyyaml, python, bin/gac/gac-validate.py, --gate]
   - id: agent-workflow-tests
     description: Focused tests for executable agent workflow control plane.
     required: true
@@ -612,7 +626,14 @@ diff_checks:
       - .omo/_truth/mof-version.yaml
       - projects/ecos/src/ecos/ssot/mof/**
       - projects/ecos/src/ecos/ssot/tools/mof-*.py
-    command: [bin/mof-drift]
+    command: [uv, run, --with, pyyaml, python, bin/mof/mof-drift]
+  - id: state-stale-consume
+    description: state_stale 事件消费端 (ADR-0227 原则4 闭环; ADR-0128 Phase 2).
+    required: false
+    paths:
+      - .omo/_knowledge/omo-events.jsonl
+      - bin/gac/state-stale-consume.py
+    command: [uv, run, --with, pyyaml, python, bin/gac/state-stale-consume.py, --within, "300", --quiet]
   - id: doc-ssot-lint
     description: Documentation SSOT semantic contract.
     required: true

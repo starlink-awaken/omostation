@@ -46,7 +46,7 @@ repos:
         # Round 12 P0 旧 hook 已被 baseline-check 取代 (删了 files: 过滤, 不再需要).
       - id: health-ssot-consistency
         name: health SSOT consistency
-        entry: python3 bin/check_health_ssot.py --warn-only
+        entry: python3 bin/check_health_ssot.py
         language: system
         pass_filenames: false
         stages: [pre-commit]

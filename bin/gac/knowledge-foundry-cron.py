@@ -246,6 +246,49 @@ def main(argv: list[str] | None = None) -> int:
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
+    # 5:52 — compass_radar 本地刷 health.yaml (E: c2g-radar GHA 去 Commit step 后, 本地产 health 给 BRIEF)
+    # 健康治理理想态原则1: health.yaml 是运行时快照 (L1), 走本地 foundry cron, 不 commit main.
+    print("[5:52] compass-radar (local health refresh)...")
+    results.append(run_tool(
+        "5:52-compass-radar",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/compass_radar.py"],
+        retries=0, timeout=120,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
+    # 5:55 — G-CONV ghost executor check (ADR-0220 破自指: 独立于 radar_cron)
+    # 扫 services.yaml scheduler:gha 服务的 liveness.signal 新鲜度, 检测连挂/静默 ghost.
+    # foundry_cron (独立 launchd daily) 调, 非 radar_cron, 破自指死循环 (GHA 连挂零告警根因).
+    print("[5:55] ghost-executor-check...")
+    results.append(run_tool(
+        "5:55-ghost-executor",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/gac-executor.py", "ghost-check", "--json"],
+        retries=0, timeout=60,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
+    # 5:57 — event-loop-check (原则4 闭环回路: emit 必有消费者)
+    # 扫 omo-events.jsonl 检测死回路 (emit 了零消费者, 如 state_stale 671 条死回路).
+    # omo-events.jsonl gitignored (.omo/_knowledge/*.jsonl), 只主仓/本地有, 故 foundry_cron 跑 (非 CI).
+    print("[5:57] event-loop-check...")
+    results.append(run_tool(
+        "5:57-event-loop",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/event-loop-lint.py", "--json", "--alert"],
+        retries=0, timeout=60,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
+    # 5:58 — gac-coverage-lint (P3 声明即执行覆盖率, ADR-0227 原则2 衍生)
+    # 扫 governance-checks rule, 检查有静态 evidence 的 executor (omo_audit/evidence_smoke/foundry_cron) 新鲜度.
+    # 治声明面膨胀执行面休眠 (decl-exec-gap). evidence gitignored/本地, 故 foundry_cron 跑.
+    print("[5:58] gac-coverage-check...")
+    results.append(run_tool(
+        "5:58-gac-coverage",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/gac-coverage-lint.py", "--json"],
+        retries=0, timeout=60,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
     # 6:00 — BRIEF generate
     print("[6:00] BRIEF gen...")
     results.append(run_tool(

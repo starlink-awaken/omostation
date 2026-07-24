@@ -93,6 +93,9 @@ docs/generated/
 graphify-out/
 agent-runtime/
 _derivation_logs/
+# codebase-memory-mcp local knowledge graph (regenerate via MCP index_repository;
+# ~tens of MB compressed; do not commit — see docs/operations/codebase-memory.md)
+.codebase-memory/
 
 # ---------------------------------------------------------------------------
 # 6. 构建产物与语言缓存
@@ -186,3 +189,10 @@ data/cards/
 # 治本: 不在主仓 SSOT 中保留. P74 governance boundary 守护.
 runtime/.watch-dispatch-stamps.json
 .commit-suggestion
+
+# 生成 dashboard 制品 + 临时下载 (2026-07-23 清理)
+artifacts-*.html
+/archive-*/
+
+# accidental root ecos scaffold (SSOT lives in projects/ecos)
+/ecos/

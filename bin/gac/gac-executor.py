@@ -31,12 +31,14 @@ from __future__ import annotations
 import json
 import sys
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
+SERVICES_REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "services.yaml"
 
 # executor → 实际存在性检查 (文件/目录; 多候选任一存在即 ok)
 EXECUTOR_PRESENCE: dict[str, list[str]] = {
@@ -50,6 +52,7 @@ EXECUTOR_PRESENCE: dict[str, list[str]] = {
     "radar_cron": ["bin/gac/gac-drift.py"],
     "gc_cron": ["bin/gac/gac-gc.py"],
     "gac_local_gate": ["bin/gac/gac-local-gate.py"],  # F-14 (2026-07-03): gac-local-gate 工具作为执行通道, 3 规则已声明 (CR-X2-GOVERNANCE-SEMANTIC-GATE / CR-L0-MATRIX-PORT-CONSISTENCY / CR-L0-MATRIX-LAUNCHD-COVERAGE)
+    "foundry_cron": ["bin/gac/knowledge-foundry-cron.py"],  # 破自指 (ADR-0220): 独立 launchd daily, ghost executor 检测由它跑 (非 radar_cron=被检测对象自己)
     "hook_post": [],  # 声明占位, 无独立文件 (hook_post 是 PostToolUse 事件, 非文件)
 }
 
@@ -144,6 +147,80 @@ def run_check(as_json: bool = False) -> int:
     return 0 if report["ok"] else 1
 
 
+def check_executor_evidence() -> dict:
+    """ghost executor 检测: scheduler:gha 服务的 liveness.signal 新鲜度.
+
+    executor 文件存在 (presence ✓) 不等于真能跑出结果. 扫 services.yaml 里
+    scheduler:gha 服务的 liveness.signal, 超 max_stale_hours 无 evidence 落盘 = ghost
+    (连挂/静默). 治 ADR-0220 自指失效: 本检测由 foundry_cron (独立 launchd daily) 调用,
+    不依赖 radar_cron (被检测对象自己), 破自指死循环.
+    """
+    if not SERVICES_REGISTRY.is_file():
+        return {"checked_total": 0, "alive": 0, "ghosts": [], "ok": True,
+                "error": "services.yaml missing"}
+    docs = [d for d in yaml.safe_load_all(SERVICES_REGISTRY.read_text(encoding="utf-8")) if d]
+    services = docs[-1].get("services", []) if docs else []
+    now = datetime.now(timezone.utc)
+    alive: list[dict] = []
+    ghosts: list[dict] = []
+    for svc in services:
+        if svc.get("scheduler") != "gha":
+            continue
+        liveness = svc.get("liveness") or {}
+        signal = liveness.get("signal")
+        if not signal:
+            continue
+        max_stale = liveness.get("max_stale_hours", 24)
+        sig_rel = signal.split("::")[0]
+        sig_path = WORKSPACE / sig_rel
+        entry: dict = {"id": svc.get("id"), "signal": signal, "max_stale_hours": max_stale}
+        # 目录 signal (如 evidence-smoke/) 取最新文件 mtime; 文件 signal 直接 mtime
+        if sig_path.is_dir():
+            files = sorted(
+                [p for p in sig_path.glob("*") if p.is_file()],
+                key=lambda p: p.stat().st_mtime, reverse=True,
+            )
+            if not files:
+                entry.update(status="ghost", reason=f"signal dir empty: {sig_rel}")
+                ghosts.append(entry)
+                continue
+            mtime = datetime.fromtimestamp(files[0].stat().st_mtime, tz=timezone.utc)
+        elif sig_path.is_file():
+            mtime = datetime.fromtimestamp(sig_path.stat().st_mtime, tz=timezone.utc)
+        else:
+            entry.update(status="ghost", reason=f"signal missing: {sig_rel}")
+            ghosts.append(entry)
+            continue
+        age_h = (now - mtime).total_seconds() / 3600
+        entry["age_hours"] = round(age_h, 1)
+        if age_h > max_stale:
+            entry.update(status="ghost", reason=f"stale {age_h:.1f}h > {max_stale}h")
+            ghosts.append(entry)
+        else:
+            entry["status"] = "alive"
+            alive.append(entry)
+    return {
+        "checked_total": len(alive) + len(ghosts),
+        "alive": len(alive),
+        "ghosts": ghosts,
+        "ok": len(ghosts) == 0,
+    }
+
+
+def run_ghost_check(as_json: bool = False) -> int:
+    """ghost executor 检测主入口 (破自指: foundry_cron 调, 非 radar_cron)."""
+    report = check_executor_evidence()
+    if as_json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if report["ok"] else 1
+    print("═══ GaC ghost executor 检测 (scheduler:gha liveness 新鲜度) ═══")
+    print(f"▶ 检查服务数: {report['checked_total']} (alive={report['alive']} ghost={len(report['ghosts'])})")
+    for g in report["ghosts"]:
+        print(f"  👻 {g['id']}: {g.get('reason', '?')} (signal={g['signal']})")
+    print(f"\n═══ 总体: {'✅ 全 gha 服务 evidence 新鲜' if report['ok'] else '❌ 有 ghost executor'} ═══")
+    return 0 if report["ok"] else 1
+
+
 def run_executors(as_json: bool = False) -> int:
     """机制3深化 POC: 调度可跑 CLI executor (去重, 每种一次).
 
@@ -190,6 +267,8 @@ def run_executors(as_json: bool = False) -> int:
 
 def main() -> int:
     args = sys.argv[1:]
+    if "ghost-check" in args:
+        return run_ghost_check(as_json="--json" in args)
     if "--run" in args:
         return run_executors(as_json="--json" in args)
     return run_check(as_json="--json" in args)

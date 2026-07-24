@@ -126,7 +126,7 @@ The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.
 
 1. For work with more than a couple of steps, keep a visible todo list.
 2. Read the target project `AGENTS.md` / `CLAUDE.md` before editing that project.
-3. Use `rg` for text discovery and project-specific tools for code discovery when available.
+3. Use `rg` for text discovery; for callers/impact prefer codebase-memory MCP (see [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md)).
 4. Use the available file-editing tools (Edit, Create, MultiEdit, or `apply_patch`) for manual edits.
 5. Do not delete, reset, move, commit, or push unless explicitly confirmed. See [`AGENTS.md` §6](AGENTS.md#6-git-and-submodules) for the full git and submodule policy.
 6. If a governance protocol demands a commit but the current user/session policy does not authorize one, finish the working-tree changes, report the exact files, and ask for explicit commit confirmation.
@@ -216,7 +216,8 @@ Run a single test with each framework's native filter (see the target project's 
 | External adapter contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" adapters` |
 | External adapter health | `uv run --with "pyyaml" python "bin/agent-workflow.py" doctor` |
 | L0/SSOT/M0/MOF alignment audit | [`.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md`](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) |
-| Agent 红线/灰线 (severity) | `docs/generated/agent-redlines.md` (`bin/mof/gen-agent-redlines.py` 生成, gitignored; executor ∈ {hook_pre_edit, ci_gate} → red, 否则 gray; ADR-0171) |
+| Agent 红线/灰线 (severity) | `docs/generated/agent-redlines.md` (gitignored 运行时生成; `make gen-agent-redlines` 或 `python3 bin/mof/gen-agent-redlines.py`; executor ∈ {hook_pre_edit, ci_gate} → red, 否则 gray; ADR-0171) |
+| Codebase knowledge graph (callers/impact) | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) |
 
 ### 6b. By task — "I want to change X, where do I look first?"
 
@@ -232,6 +233,7 @@ Run a single test with each framework's native filter (see the target project's 
 | Write an ADR | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [`.omo/standards/adr-process.md`](.omo/standards/adr-process.md) |
 | Project layer placement | [`docs/project-registry.yaml`](docs/project-registry.yaml) → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) |
 | Land changes to root `main` | [`bin/gac/gac-worktree.sh`](bin/gac/gac-worktree.sh) (claim/submit/merge) · [`AGENTS.md` §6.1](AGENTS.md) · [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) |
+| Code callers / impact / structure graph | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) · MCP `codebase-memory-mcp` · skill `codebase-memory` |
 
 ## 7. Closeout
 

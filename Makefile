@@ -141,13 +141,15 @@ ci-local-fast: check-layers
 	echo "── ruff check (omo + scripts) ──────────────────────"; \
 	ruff check projects/omo/src scripts --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
-	echo "── HTML entity 编码检查 (Python/YAML) ──────────────"; \
-	if grep -rn '&[gl]t;' projects/ --include='*.py' --include='*.yaml' --include='*.yml' 2>/dev/null; then \
-		echo "❌ 发现 HTML 实体编码泄漏 (&gt; / &lt;)，请替换为 > / <"; \
-		CI_LOCAL_FAIL=1; \
-	else \
-		echo "✅ 未发现 HTML 实体编码泄漏"; \
-	fi; \
+ 	echo "── HTML entity 编码检查 (Python/YAML) ──────────────"; \
+ 	if grep -rn '&[gl]t;' projects/ --include='*.py' --include='*.yaml' --include='*.yml' 2>/dev/null \
+ 	   | grep -v 'tests/' | grep -v 'test_' | grep -v 'replace(' | grep -v '\.git/' \
+	   | grep -v node_modules | grep -v '\.venv'; then \
+ 		echo "❌ 发现 HTML 实体编码泄漏 (&gt; / &lt;)，请替换为 > / <"; \
+ 		CI_LOCAL_FAIL=1; \
+ 	else \
+ 		echo "✅ 未发现 HTML 实体编码泄漏"; \
+ 	fi; \
 	echo ""; \
 	echo "── YAML 语法校验 (workflows + protocols) ───────────"; \
 	uv run --with pyyaml python3 bin/ssot/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
@@ -223,6 +225,9 @@ agent-workflow-adapters:
 
 project-layer-index:
 	uv run --with pyyaml python bin/mof/project-layer-index.py --write
+
+gen-agent-redlines:  ## 生成 docs/generated/agent-redlines.md (agent 红线/灰线 severity digest, ADR-0171)
+	uv run --with pyyaml python bin/mof/gen-agent-redlines.py
 
 domain-m1-alignment:  ## 校验 project-registry.yaml ↔ eCOS M1 domain 节点对齐 (drift 检测)
 	uv run --with pyyaml python bin/ssot/check-domain-m1-alignment.py

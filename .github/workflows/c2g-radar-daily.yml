@@ -36,21 +36,17 @@ jobs:
         #   0 = OK (0 异常 或 异常已知)
         #   1 = 脚本错误 (fail)
         run: |
-          python3 bin/compass_radar.py
+          uv run --with pyyaml python bin/compass_radar.py
       - name: Upload health.yaml artifact
         uses: actions/upload-artifact@v4
         with:
           name: governance-health-${{ github.run_id }}
           path: .omo/state/health.yaml
           retention-days: 30
-
-      - name: Commit health.yaml SSOT
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .omo/state/health.yaml .omo/state/system.yaml
-          git diff --staged --quiet && { echo "no health change, skip commit"; exit 0; }
-          HEALTH_SCORE=$(python3 -c "import yaml; d=yaml.safe_load(open('.omo/state/health.yaml')); print(d['health_score'])")
-          ANOM=$(python3 -c "import yaml; d=yaml.safe_load(open('.omo/state/health.yaml')); print(d['anomaly_count'])")
-          git commit -m "governance: P44 W1 daily radar — health=${HEALTH_SCORE} anomalies=${ANOM}"
-          git push
+      # E (健康治理理想态·原则1 分层不越界): 去 Commit step.
+      # health.yaml 是运行时快照, 不该 commit main (跟 system_health.yaml 同类, 属 L1 运行时写面).
+      # bot push main 撞分支保护 (required_pull_request_reviews + enforce_admins, GH006) —
+      # 不是 bot 问题, 是 health.yaml 放错地方.
+      # 改由 foundry cron (本地 launchd) 跑 compass_radar 刷 health.yaml + BRIEF 读本地.
+      # GHA 本 job 只做 CI 独立审计 + artifact (30天历史), 不污染 main 历史.
+      # permissions: contents: write 保留 (artifact upload 不需要, 但 submodules checkout token 兼容).
