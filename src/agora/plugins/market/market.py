@@ -342,7 +342,10 @@ class Market:
             "port": 0,
         }
         # Persist to local market registry
-        from agora.persistence import json_load, json_save  # type: ignore[import-not-found]
+        from agora.persistence import (  # type: ignore[import-not-found]
+            json_load,
+            json_save,
+        )
 
         market_path = self.INSTALL_DIR / "published.json"
         existing = json_load(market_path, default={})

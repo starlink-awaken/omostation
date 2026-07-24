@@ -337,9 +337,8 @@ def _find_workspace_root() -> Path | None:
     if (
         _KAIRON_PACKAGES_DIR.name == "packages"
         and _KAIRON_WORKSPACE_ROOT.name == "kairon"
-    ):
-        if _KAIRON_PACKAGES_DIR.is_dir():
-            return _KAIRON_WORKSPACE_ROOT
+    ) and _KAIRON_PACKAGES_DIR.is_dir():
+        return _KAIRON_WORKSPACE_ROOT
 
     # 4. Saved config — read workspace path from existing config
     config_path = _get_config_path()

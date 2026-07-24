@@ -9,7 +9,7 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .services import BosService, POC_SERVICES, _with_uv_package
+from .services import POC_SERVICES, BosService, _with_uv_package
 
 _log = logging.getLogger(__name__)
 

@@ -7,34 +7,35 @@ with round-robin routing strategy.
 from __future__ import annotations
 
 import atexit
+import html
+import json
 import json as _json
 import os
+import re
 import time as _time
 from collections import deque
+from dataclasses import dataclass, field
+from pathlib import Path
 from pathlib import Path as _Path
 
 import structlog
 
+from agora import persistence_db as _persist  # type: ignore[import-not-found]
 from agora._protocols import close_client  # type: ignore[import-not-found]
 from agora._protocols import dispatch as _dispatch
-from agora.auth.identity import Identity, normalize_identity  # type: ignore[import-not-found]
+from agora.auth.identity import (  # type: ignore[import-not-found]
+    Identity,
+    normalize_identity,
+)
 from agora.core.event_bus import EventBus  # type: ignore[import-not-found]
 from agora.core.registry import ServiceRegistry  # type: ignore[import-not-found]
-from agora.mcp.mcp_bootstrap import get_data_dir  # type: ignore[import-not-found]
 from agora.core.service_cache import (  # type: ignore[import-not-found]
     load_service_cache as _load_service_cache,
 )
 from agora.core.service_cache import (
     save_service_cache as _save_service_cache,
 )
-
-import html
-import json
-import re
-from dataclasses import dataclass, field
-from pathlib import Path
-
-from agora import persistence_db as _persist  # type: ignore[import-not-found]
+from agora.mcp.mcp_bootstrap import get_data_dir  # type: ignore[import-not-found]
 
 logger = structlog.get_logger(__name__)
 
@@ -515,7 +516,9 @@ class Router:
         Converts ``Service.to_dict()`` format (uses ``endpoint`` key) to the
         canonical cache format (uses ``mcp_endpoint`` and ``health_endpoint``).
         """
-        from agora.core.service_base import Service as _Service  # type: ignore[import-not-found]
+        from agora.core.service_base import (
+            Service as _Service,  # type: ignore[import-not-found]
+        )
 
         def _convert(svc: _Service | dict) -> dict:
             if isinstance(svc, dict):
@@ -690,7 +693,9 @@ class Router:
             # ── EU cost tracking middleware ────────────────────────────────
             if result.get("status") != "error":
                 try:
-                    from kaironcloud_billing.pricing.eu_ledger import EULedger  # type: ignore[import-not-found]
+                    from kaironcloud_billing.pricing.eu_ledger import (
+                        EULedger,  # type: ignore[import-not-found]
+                    )
 
                     # Map tool name to EU operation — fall back to tool prefix
                     eu_operation = (
@@ -734,7 +739,9 @@ class Router:
                 )
                 # Audit
                 try:
-                    from agora.audit import AuditLogger  # type: ignore[import-not-found]
+                    from agora.audit import (
+                        AuditLogger,  # type: ignore[import-not-found]
+                    )
 
                     AuditLogger().log(
                         "route.call",

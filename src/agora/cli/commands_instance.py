@@ -5,7 +5,10 @@ from agora.cli.output import OutputFormatter
 
 
 def cmd_instance(args):
-    from agora.instance import AgoraInstance, InstanceManager  # type: ignore[import-not-found]
+    from agora.instance import (  # type: ignore[import-not-found]
+        AgoraInstance,
+        InstanceManager,
+    )
 
     out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:

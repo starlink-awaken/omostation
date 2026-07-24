@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import json
 import os
 import time
@@ -162,6 +163,7 @@ class A2ANetworkTransport(A2ATransport):
 
         # HTTP Forwarding
         import httpx
+
         from agora.auth.node_identity import NodeIdentityManager
 
         # ── Phase 9: Sign the payload ──

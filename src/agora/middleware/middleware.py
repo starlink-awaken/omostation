@@ -109,11 +109,11 @@ try:
                         target=target_name,
                         length=len(item.text),
                     )
-                    import uuid
-                    import os
                     import json
-                    import time
+                    import os
                     import random
+                    import time
+                    import uuid
 
                     cache_id = str(uuid.uuid4())
                     cache_dir = os.path.expanduser("~/Workspace/LADS/agora_cache")

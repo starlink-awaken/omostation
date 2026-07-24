@@ -62,8 +62,12 @@ _log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 try:
-    from google.auth.transport.requests import Request as _GoogleRequest  # type: ignore[import]
-    from google.oauth2.credentials import Credentials as _GoogleCredentials  # type: ignore[import]
+    from google.auth.transport.requests import (
+        Request as _GoogleRequest,  # type: ignore[import]
+    )
+    from google.oauth2.credentials import (
+        Credentials as _GoogleCredentials,  # type: ignore[import]
+    )
 
     _HAS_GOOGLE_AUTH = True
 except ImportError:

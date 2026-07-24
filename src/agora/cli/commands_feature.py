@@ -16,8 +16,8 @@ from __future__ import annotations
 import json
 
 from agora.cli.output import OutputFormatter
-from agora.mcp_proxy.feature_gate import FeatureGate
 from agora.mcp import mcp_bootstrap
+from agora.mcp_proxy.feature_gate import FeatureGate
 
 
 def _get_gate() -> FeatureGate:

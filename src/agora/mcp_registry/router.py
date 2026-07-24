@@ -8,7 +8,9 @@ Three modes:
 
 import structlog
 
-from agora.mcp_registry.embeddings import EmbeddingStore  # type: ignore[import-not-found]
+from agora.mcp_registry.embeddings import (
+    EmbeddingStore,  # type: ignore[import-not-found]
+)
 from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
 
 logger = structlog.get_logger(__name__)

@@ -9,8 +9,10 @@ import os
 from datetime import datetime
 from typing import Any
 
-from agora.plugins.calendar.calendar_tool import CalendarTool  # type: ignore[import-not-found]
 from agora.mcp.tool_contract import ToolRequest  # type: ignore[import-not-found]
+from agora.plugins.calendar.calendar_tool import (
+    CalendarTool,  # type: ignore[import-not-found]
+)
 
 
 def _parse_calendar_dates(params: dict) -> tuple[datetime, datetime]:

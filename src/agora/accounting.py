@@ -13,7 +13,10 @@ from pathlib import Path
 
 import structlog
 
-from agora.auth.identity import Identity, normalize_identity  # type: ignore[import-not-found]
+from agora.auth.identity import (  # type: ignore[import-not-found]
+    Identity,
+    normalize_identity,
+)
 
 logger = structlog.get_logger(__name__)
 

@@ -24,8 +24,8 @@ import json
 import logging
 import os
 import socket
-import time
 import threading
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -459,7 +459,7 @@ class SwarmOrchestrator:
                             )
                         except (json.JSONDecodeError, KeyError):
                             pass
-                except socket.timeout:
+                except TimeoutError:
                     continue
                 except OSError:
                     break

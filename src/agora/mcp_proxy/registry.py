@@ -11,7 +11,10 @@ from typing import Any
 
 import structlog
 
-from agora.mcp_proxy.client import MCPClient, create_client  # type: ignore[import-not-found]
+from agora.mcp_proxy.client import (  # type: ignore[import-not-found]
+    MCPClient,
+    create_client,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -376,7 +379,9 @@ class ProxyRegistry:
 
             # HTTP services: use mcp_endpoint from Service
             if svc.mcp_endpoint and svc.mcp_endpoint.startswith("http"):
-                from agora.core.service_base import is_safe_url  # type: ignore[import-not-found]
+                from agora.core.service_base import (
+                    is_safe_url,  # type: ignore[import-not-found]
+                )
 
                 if not is_safe_url(svc.mcp_endpoint):
                     logger.warning(

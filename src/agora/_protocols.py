@@ -289,6 +289,6 @@ async def _call_ws(tool_name: str, arguments: dict, instance: dict) -> dict:
     except TimeoutError:
         return {"status": "error", "error": f"WebSocket timeout after {timeout}s"}
     except websockets.exceptions.InvalidURI as e:
-        return {"status": "error", "error": f"Invalid WebSocket URI: {str(e)}"}
+        return {"status": "error", "error": f"Invalid WebSocket URI: {e!s}"}
     except Exception as e:  # defensive fallback
         return {"status": "error", "error": f"WebSocket call failed: {str(e)[:200]}"}

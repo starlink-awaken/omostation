@@ -7,7 +7,10 @@ import contextlib
 import time
 from collections.abc import Callable
 
-from agora.core.service_base import Service, is_safe_url  # type: ignore[import-not-found]
+from agora.core.service_base import (  # type: ignore[import-not-found]
+    Service,
+    is_safe_url,
+)
 
 
 class CircuitBreaker:

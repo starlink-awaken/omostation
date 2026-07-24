@@ -1,14 +1,16 @@
 from __future__ import annotations
+
 import logging
 from typing import Any
+
 from agora.tools.base import (
-    ToolContext,
     JSONDict,
-    _mcp_surface_contract,
-    SurfaceIngressKind,
-    SurfaceContractError,
-    _surface_payload,
     SurfaceContract,
+    SurfaceContractError,
+    SurfaceIngressKind,
+    ToolContext,
+    _mcp_surface_contract,
+    _surface_payload,
 )
 
 _log = logging.getLogger(__name__)
@@ -18,8 +20,12 @@ def tool_voice_speak(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for voice/speak — synthesize and play text as speech."""
     surface: SurfaceContract | None = None
     try:
-        from organs.D_Voice.interfaces.voice_io import VoiceConfig  # type: ignore[import-not-found]
-        from organs.D_Voice.tts.tts_provider import TTSProviderFactory  # type: ignore[import-not-found]
+        from organs.D_Voice.interfaces.voice_io import (
+            VoiceConfig,  # type: ignore[import-not-found]
+        )
+        from organs.D_Voice.tts.tts_provider import (
+            TTSProviderFactory,  # type: ignore[import-not-found]
+        )
     except ImportError:
         return {"error": "D-Voice TTS not available", "success": False}
 
@@ -85,7 +91,9 @@ def tool_voice_session_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
         return {"error": str(exc), "success": False, **payload}
 
     try:
-        from organs.D_Voice.voice_session_manager import VoiceSessionManager  # type: ignore[import-not-found]
+        from organs.D_Voice.voice_session_manager import (
+            VoiceSessionManager,  # type: ignore[import-not-found]
+        )
     except ImportError:
         return {
             "error": "VoiceSessionManager not available",
@@ -111,7 +119,9 @@ def tool_voice_intent_digest(params: JSONDict, ctx: ToolContext) -> JSONDict:
     surface: SurfaceContract | None = None
     try:
         from organs.D_Voice.interfaces.voice_io import VoiceResult
-        from organs.D_Voice.voice_intent_digestor import VoiceIntentDigestor  # type: ignore[import-not-found]
+        from organs.D_Voice.voice_intent_digestor import (
+            VoiceIntentDigestor,  # type: ignore[import-not-found]
+        )
     except ImportError:
         return {"error": "VoiceIntentDigestor not available", "success": False}
 

@@ -26,17 +26,17 @@ import warnings
 # Re-export the public API from bus-foundation. envelope.py / router.py / dlq.py
 # / backends/base.py are FROZEN per ADR-0008 and not imported here — we delegate
 # to bus_foundation for them.
+# Also expose the new package's Router / DLQ for any code that imports them via
+# `from agora.bus import Router` (they will be removed in 0.x+1.0).
 from bus_foundation import (
+    DLQ,
     BusEnvelope,
     EventType,
+    Router,
     publish,
     schedule,
     subscribe,
 )
-
-# Also expose the new package's Router / DLQ for any code that imports them via
-# `from agora.bus import Router` (they will be removed in 0.x+1.0).
-from bus_foundation import DLQ, Router
 
 # Premium agora-specific backends (NOT in bus-foundation; live in agora.bus.backends).
 # We import them under their original names so existing code keeps working.
@@ -61,15 +61,15 @@ def _ensure_sse_registered() -> None:
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "BusEnvelope",
-    "EventType",
     "DLQ",
+    "BusEnvelope",
+    "CroniterBackend",
+    "EventBusBackend",
+    "EventType",
     "Router",
     "publish",
-    "subscribe",
     "schedule",
-    "EventBusBackend",
-    "CroniterBackend",
+    "subscribe",
 ]
 
 

@@ -27,6 +27,7 @@ def auto_register_from_m1(bos_router=None) -> int:
     返回注册数量。
     """
     import yaml
+
     from agora.mcp.bos_router import bos_router as _br
 
     router = bos_router or _br

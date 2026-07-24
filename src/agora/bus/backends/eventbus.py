@@ -7,8 +7,8 @@ RETRY: passes through to underlying EventBus (3x, exponential backoff).
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from agora.bus.envelope import BusEnvelope
 from agora.core.event_bus import EventBus

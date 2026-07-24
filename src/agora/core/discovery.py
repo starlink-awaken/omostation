@@ -165,12 +165,11 @@ class DiscoveryEngine:
             if not proj_dir.is_dir():
                 continue
 
-            if not venv_bin.is_dir():
-                if (
-                    not (proj_dir / "node_modules").is_dir()
-                    and not (proj_dir.parent.parent / "node_modules").is_dir()
-                ):
-                    continue
+            if not venv_bin.is_dir() and (
+                not (proj_dir / "node_modules").is_dir()
+                and not (proj_dir.parent.parent / "node_modules").is_dir()
+            ):
+                continue
 
             service = DiscoveredService(
                 name=proj_name,

@@ -12,7 +12,9 @@ import structlog
 from fastmcp import FastMCP
 
 from agora.core.service_base import is_safe_url  # type: ignore[import-not-found]
-from agora.plugins.identity.agent_card import service_to_agent_card  # type: ignore[import-not-found]
+from agora.plugins.identity.agent_card import (
+    service_to_agent_card,  # type: ignore[import-not-found]
+)
 from agora.server._response import FORMAT_VERSION, _error, _ok
 
 logger = structlog.get_logger(__name__)

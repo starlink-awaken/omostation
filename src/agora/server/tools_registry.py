@@ -12,7 +12,10 @@ from pathlib import Path
 import structlog
 from fastmcp import FastMCP
 
-from agora.core.service_base import parse_protocol_config, parse_tags  # type: ignore[import-not-found]
+from agora.core.service_base import (  # type: ignore[import-not-found]
+    parse_protocol_config,
+    parse_tags,
+)
 from agora.server._response import FORMAT_VERSION, _error, _ok
 
 logger = structlog.get_logger(__name__)
@@ -48,21 +51,27 @@ def _get_proxy_manager():
 
 def _resolve_caller_identity(caller_identity: str | dict | None) -> str | dict:
     """Resolve caller identity from explicit argument or auth token."""
-    from agora.server.mcp import _resolve_caller_identity as _rci  # type: ignore[import-not-found]
+    from agora.server.mcp import (
+        _resolve_caller_identity as _rci,  # type: ignore[import-not-found]
+    )
 
     return _rci(caller_identity)
 
 
 def _get_lifecycle_manager():
     """Lazy-import LifecycleManager from mcp.py."""
-    from agora.server.mcp import _get_lifecycle_manager as _glm  # type: ignore[import-not-found]
+    from agora.server.mcp import (
+        _get_lifecycle_manager as _glm,  # type: ignore[import-not-found]
+    )
 
     return _glm()
 
 
 def _get_cached_catalog():
     """Lazy-import cached ToolCatalog from mcp.py."""
-    from agora.server.mcp import _get_cached_catalog as _gcc  # type: ignore[import-not-found]
+    from agora.server.mcp import (
+        _get_cached_catalog as _gcc,  # type: ignore[import-not-found]
+    )
 
     return _gcc()
 
@@ -70,7 +79,9 @@ def _get_cached_catalog():
 def _build_registry_orchestrator(catalog):
     """Build Orchestrator reusing the singleton LifecycleManager."""
     lm = _get_lifecycle_manager()
-    from agora.mcp_registry.orchestrator import Orchestrator  # type: ignore[import-not-found]
+    from agora.mcp_registry.orchestrator import (
+        Orchestrator,  # type: ignore[import-not-found]
+    )
 
     return Orchestrator(catalog, lifecycle=lm)
 
@@ -79,7 +90,9 @@ def _load_proxy_services() -> list[dict]:
     """Lazy-import _load_proxy_services from tools_proxy.py."""
     # Import lazily to avoid circular dependency at module level.
     # This is called during register_service to sync proxy config.
-    from agora.server.tools_proxy import _load_proxy_services as _lps  # type: ignore[import-not-found]
+    from agora.server.tools_proxy import (
+        _load_proxy_services as _lps,  # type: ignore[import-not-found]
+    )
 
     return _lps()
 
@@ -93,7 +106,9 @@ def _get_proxy_config_path() -> Path:
 
 def _save_proxy_service(svc: dict) -> None:
     """Append a service config to the proxy services file."""
-    from agora.server.tools_proxy import _save_proxy_service as _sps  # type: ignore[import-not-found]
+    from agora.server.tools_proxy import (
+        _save_proxy_service as _sps,  # type: ignore[import-not-found]
+    )
 
     _sps(svc)
 
@@ -140,8 +155,12 @@ async def register_service(
         provider_info: JSON string with provider info (e.g. '{"organization":"MyOrg"}')
         documentation_url: Documentation URL for the service
     """
-    from agora.core.registry import Service, ServiceConfig  # type: ignore[import-not-found]
     import json as _json
+
+    from agora.core.registry import (  # type: ignore[import-not-found]
+        Service,
+        ServiceConfig,
+    )
 
     registry = _get_registry()
 
@@ -274,7 +293,9 @@ def add_route(tool_name: str, service_name: str) -> dict:
     router = _get_router()
 
     # L0 审计 — 路由变更事件
-    from ecos.ssot.tools.mof_agora_hook import post_audit as _bos_post_audit  # type: ignore[import-not-found]
+    from ecos.ssot.tools.mof_agora_hook import (
+        post_audit as _bos_post_audit,  # type: ignore[import-not-found]
+    )
 
     _bos_post_audit(f"bos://agora/routes/{tool_name}", 200, 0)
 
@@ -392,17 +413,23 @@ async def repo_search(query: str = "", source: str = "local", limit: int = 20) -
         limit: Max results (default 20)
     """
     try:
-        from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
+        from agora.mcp_registry.repository import (
+            ToolCatalog,  # type: ignore[import-not-found]
+        )
 
         catalog = ToolCatalog()
         try:
             if source == "external":
-                from agora.mcp_registry.sources import search_all  # type: ignore[import-not-found]
+                from agora.mcp_registry.sources import (
+                    search_all,  # type: ignore[import-not-found]
+                )
 
                 results = await search_all(query or "mcp-server")
                 results = results[:limit]
             elif source == "all":
-                from agora.mcp_registry.sources import search_all  # type: ignore[import-not-found]
+                from agora.mcp_registry.sources import (
+                    search_all,  # type: ignore[import-not-found]
+                )
 
                 local = catalog.search_tools(query, limit=limit)
                 ext = await search_all(query or "mcp-server")
@@ -438,7 +465,9 @@ async def repo_discover(query: str = "mcp-server") -> dict:
         query: Search query passed to external sources
     """
     try:
-        from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
+        from agora.mcp_registry.repository import (
+            ToolCatalog,  # type: ignore[import-not-found]
+        )
 
         catalog = ToolCatalog()
         try:
@@ -461,7 +490,9 @@ async def repo_discover(query: str = "mcp-server") -> dict:
 async def repo_status() -> dict:
     """Show tool catalog status — counts by status and list of all tools."""
     try:
-        from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
+        from agora.mcp_registry.repository import (
+            ToolCatalog,  # type: ignore[import-not-found]
+        )
 
         catalog = ToolCatalog()
         try:
@@ -489,7 +520,9 @@ async def repo_install(name: str) -> dict:
         name: Tool name or ID to install
     """
     try:
-        from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
+        from agora.mcp_registry.repository import (
+            ToolCatalog,  # type: ignore[import-not-found]
+        )
 
         catalog = ToolCatalog()
         try:
@@ -524,7 +557,9 @@ async def repo_load(name: str) -> dict:
         name: Tool name or ID to load
     """
     try:
-        from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
+        from agora.mcp_registry.repository import (
+            ToolCatalog,  # type: ignore[import-not-found]
+        )
 
         catalog = ToolCatalog()
         try:
@@ -557,7 +592,9 @@ async def repo_unload(name: str) -> dict:
         name: Tool name or ID to unload
     """
     try:
-        from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
+        from agora.mcp_registry.repository import (
+            ToolCatalog,  # type: ignore[import-not-found]
+        )
 
         catalog = ToolCatalog()
         try:
@@ -592,7 +629,9 @@ async def repo_pipeline(query: str = "mcp-server", auto_load: bool = True) -> di
         auto_load: If True, automatically load newly discovered tools (default: True)
     """
     try:
-        from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
+        from agora.mcp_registry.repository import (
+            ToolCatalog,  # type: ignore[import-not-found]
+        )
 
         catalog = ToolCatalog()
         try:

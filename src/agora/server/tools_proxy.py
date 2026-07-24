@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from datetime import UTC
 from pathlib import Path
 from typing import ClassVar
 
@@ -35,7 +36,9 @@ def _set_constants(proxy_config_path: Path, forge_registry_path: Path) -> None:
 
 def _get_proxy_manager() -> ProxyManager | None:
     """Lazy-import ProxyManager singleton from dependencies.py."""
-    from agora.server.dependencies import get_proxy_manager  # type: ignore[import-not-found]
+    from agora.server.dependencies import (
+        get_proxy_manager,  # type: ignore[import-not-found]
+    )
 
     return get_proxy_manager()
 
@@ -241,6 +244,8 @@ async def proxy_call(tool_name: str, arguments: str = "{}") -> dict:
     # L0 前置校验 — lazy import from ecos hook
     from ecos.ssot.tools.mof_agora_hook import (  # type: ignore[import-not-found]
         post_audit as _bos_post_audit,
+    )
+    from ecos.ssot.tools.mof_agora_hook import (
         pre_check as _bos_pre_check,
     )
 
@@ -317,8 +322,8 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         """
         pm = _get_proxy_manager()
         if pm is None:
-            from agora.server.dependencies import set_proxy_manager
             from agora.mcp_proxy.manager import ProxyManager
+            from agora.server.dependencies import set_proxy_manager
 
             pm = ProxyManager()
             set_proxy_manager(pm)
@@ -403,8 +408,8 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         """
         pm = _get_proxy_manager()
         if pm is None:
-            from agora.server.dependencies import set_proxy_manager
             from agora.mcp_proxy.manager import ProxyManager
+            from agora.server.dependencies import set_proxy_manager
 
             pm = ProxyManager()
             set_proxy_manager(pm)
@@ -468,9 +473,10 @@ def register_proxy_tools(mcp: FastMCP) -> None:
             Summary of loaded routes including total count and domain breakdown.
         """
         from collections import Counter
+
         from agora.mcp.resolver.bos_registry import (
-            load_from_yaml,
             DEFAULT_REGISTRY_PATH,
+            load_from_yaml,
         )
         from agora.mcp.resolver.services import POC_SERVICES
 
@@ -555,8 +561,9 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         Returns last heartbeat timestamp, health classification
         (fresh/aging/stale), total log entries, and recent entries.
         """
-        from agora.server._response import _ok
         from datetime import datetime, timezone
+
+        from agora.server._response import _ok
 
         gov_log = Path.home() / ".hermes/architecture/governance_log/governance.jsonl"
         if not gov_log.exists():
@@ -578,7 +585,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
                 health = "unknown"
                 try:
                     dt = datetime.fromisoformat(last_ts)
-                    delta = (datetime.now(timezone.utc) - dt).days
+                    delta = (datetime.now(UTC) - dt).days
                     days_since = delta
                     health = (
                         "fresh" if delta <= 2 else "aging" if delta <= 14 else "stale"

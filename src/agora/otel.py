@@ -27,9 +27,15 @@ def init_otel() -> bool:
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # type: ignore[import-not-found]
             OTLPSpanExporter,  # type: ignore[import-not-found]
         )
-        from opentelemetry.sdk.resources import Resource  # type: ignore[import-not-found]
-        from opentelemetry.sdk.trace import TracerProvider  # type: ignore[import-not-found]
-        from opentelemetry.sdk.trace.export import BatchSpanProcessor  # type: ignore[import-not-found]
+        from opentelemetry.sdk.resources import (
+            Resource,  # type: ignore[import-not-found]
+        )
+        from opentelemetry.sdk.trace import (
+            TracerProvider,  # type: ignore[import-not-found]
+        )
+        from opentelemetry.sdk.trace.export import (
+            BatchSpanProcessor,  # type: ignore[import-not-found]
+        )
 
         resource = Resource.create({"service.name": service_name})
         provider = TracerProvider(resource=resource)

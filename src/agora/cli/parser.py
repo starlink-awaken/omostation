@@ -463,7 +463,9 @@ For more: https://github.com/starlink-awaken/agora#readme""",
     start_parser = sub.add_parser(
         "start-pipeline", help="Start Eidos Pipeline MCP endpoint"
     )
-    from agora.pipelines.eidos_pipeline import EIDOS_PIPELINE_SERVICE  # type: ignore[import-not-found]
+    from agora.pipelines.eidos_pipeline import (
+        EIDOS_PIPELINE_SERVICE,  # type: ignore[import-not-found]
+    )
 
     start_parser.add_argument(
         "--pipeline",
@@ -682,7 +684,9 @@ For more: https://github.com/starlink-awaken/agora#readme""",
     grant_check.add_argument("--cost", type=float, default=0.0, help="Cost in USD")
 
     # pallas subcommands (merged from pallas CLI)
-    from agora.cli.commands_pallas import add_pallas_subparser  # type: ignore[import-not-found]
+    from agora.cli.commands_pallas import (
+        add_pallas_subparser,  # type: ignore[import-not-found]
+    )
 
     add_pallas_subparser(sub)
 
@@ -774,7 +778,7 @@ def run_feature_cmd(args):
 
 def run_domain_cmd(args):
     """Dispatch to domain enable/disable."""
-    from agora.cli.commands_feature import cmd_domain_enable, cmd_domain_disable
+    from agora.cli.commands_feature import cmd_domain_disable, cmd_domain_enable
 
     if args.domain_cmd == "enable":
         return cmd_domain_enable(args)
@@ -797,8 +801,8 @@ def run_proxy_group(args):
 def run_proxy_group_cmd(args):
     """Dispatch to proxy group enable/disable/list."""
     from agora.cli.commands_feature import (
-        cmd_proxy_group_enable,
         cmd_proxy_group_disable,
+        cmd_proxy_group_enable,
         cmd_proxy_group_list,
     )
 

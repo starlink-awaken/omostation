@@ -15,7 +15,9 @@ def cmd_discover(args):
     """Auto-discover MCP services."""
     out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
-        from agora.core.discovery import DiscoveryEngine  # type: ignore[import-not-found]
+        from agora.core.discovery import (
+            DiscoveryEngine,  # type: ignore[import-not-found]
+        )
 
         workspace = args.workspace or None
         engine = DiscoveryEngine(workspace)

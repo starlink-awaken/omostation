@@ -7,8 +7,8 @@
 用法: python -m kos serve --mcp-stdio
 """
 
-import sys
 import json
+import sys
 
 
 class MCPStdioServer:

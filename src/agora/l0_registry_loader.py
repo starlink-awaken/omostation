@@ -17,8 +17,9 @@ Usage:
 from __future__ import annotations
 
 import time
-import yaml
 from pathlib import Path
+
+import yaml
 
 HOME = Path.home()
 L0_M1 = (

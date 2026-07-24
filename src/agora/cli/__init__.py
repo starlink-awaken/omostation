@@ -37,7 +37,9 @@ def main():
 
     # Dispatch to command modules
     if args.command == "discover":
-        from agora.cli.commands_discover import cmd_discover  # type: ignore[import-not-found]
+        from agora.cli.commands_discover import (
+            cmd_discover,  # type: ignore[import-not-found]
+        )
 
         return cmd_discover(args)
 
@@ -52,7 +54,9 @@ def main():
         return cmd_sync(args)
 
     if args.command == "search":
-        from agora.cli.commands_registry import cmd_search  # type: ignore[import-not-found]
+        from agora.cli.commands_registry import (
+            cmd_search,  # type: ignore[import-not-found]
+        )
 
         return cmd_search(args)
 
@@ -92,7 +96,9 @@ def main():
         return cmd_config(args)
 
     elif args.command == "route":
-        from agora.cli.commands_routes import cmd_route  # type: ignore[import-not-found]
+        from agora.cli.commands_routes import (
+            cmd_route,  # type: ignore[import-not-found]
+        )
 
         return cmd_route(args)
 
@@ -107,7 +113,9 @@ def main():
 
             return cmd_instance(args)
         else:
-            from agora.cli.commands_instance import cmd_instance  # type: ignore[import-not-found]
+            from agora.cli.commands_instance import (
+                cmd_instance,  # type: ignore[import-not-found]
+            )
 
             return cmd_instance(args)
 
@@ -132,7 +140,9 @@ def main():
         return cmd_completion(args)
 
     elif args.command == "pipeline":
-        from agora.cli.commands_pipeline import cmd_pipeline  # type: ignore[import-not-found]
+        from agora.cli.commands_pipeline import (
+            cmd_pipeline,  # type: ignore[import-not-found]
+        )
 
         return cmd_pipeline(args)
 
@@ -147,7 +157,9 @@ def main():
         return cmd_pipeline_define(args)
 
     elif args.command == "key":
-        from agora.cli.commands_governance import cmd_key  # type: ignore[import-not-found]
+        from agora.cli.commands_governance import (
+            cmd_key,  # type: ignore[import-not-found]
+        )
 
         return cmd_key(args)
 
@@ -177,7 +189,9 @@ def main():
         return cmd_proto(args)
 
     elif args.command == "transitions":
-        from agora.cli.commands_a2a import cmd_transitions  # type: ignore[import-not-found]
+        from agora.cli.commands_a2a import (
+            cmd_transitions,  # type: ignore[import-not-found]
+        )
 
         return cmd_transitions(args)
 
@@ -197,7 +211,9 @@ def main():
         cmd_event(args)
 
     elif args.command == "enforce":
-        from agora.cli.commands_authorizer import cmd_enforce  # type: ignore[import-not-found]
+        from agora.cli.commands_authorizer import (
+            cmd_enforce,  # type: ignore[import-not-found]
+        )
 
         return cmd_enforce(args)
 
@@ -222,12 +238,16 @@ def main():
             return 0
 
     elif args.command == "pallas":
-        from agora.cli.commands_pallas import dispatch_pallas  # type: ignore[import-not-found]
+        from agora.cli.commands_pallas import (
+            dispatch_pallas,  # type: ignore[import-not-found]
+        )
 
         return dispatch_pallas(args)
 
     elif args.command == "identity":
-        from agora.cli.commands_identity import cmd_identity  # type: ignore[import-not-found]
+        from agora.cli.commands_identity import (
+            cmd_identity,  # type: ignore[import-not-found]
+        )
 
         return cmd_identity(args)
 
@@ -238,10 +258,10 @@ def main():
 
     elif args.command == "bos":
         from agora.cli.commands_bos import (
-            cmd_bos_list,
-            cmd_bos_info,
-            cmd_bos_validate,
             cmd_bos_export,
+            cmd_bos_info,
+            cmd_bos_list,
+            cmd_bos_validate,
         )
 
         sub = getattr(args, "bos_cmd", None)

@@ -271,7 +271,7 @@ class StdioMCPClient(MCPClient):
         self._process = None
         self._reader = None
         self._writer = None
-        for _req_id, fut in self._pending.items():
+        for fut in self._pending.values():
             if not fut.done():
                 fut.set_exception(RuntimeError("Client disconnected"))
         self._pending.clear()
@@ -421,7 +421,7 @@ class StdioMCPClient(MCPClient):
                 "proxy_read_loop_error", service=self.service_name, error=str(e)
             )
         finally:
-            for _req_id, fut in self._pending.items():
+            for fut in self._pending.values():
                 if not fut.done():
                     fut.set_exception(RuntimeError("Subprocess disconnected"))
             self._pending.clear()
@@ -535,8 +535,8 @@ class HttpMCPClient(MCPClient):
         """[Phase 9] Generate security headers for cross-node calls."""
         headers = {}
         try:
-            from agora.mcp.swarm import get_swarm
             from agora.auth.node_identity import NodeIdentityManager
+            from agora.mcp.swarm import get_swarm
 
             swarm = get_swarm()
             nim = NodeIdentityManager()
