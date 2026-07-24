@@ -7,13 +7,13 @@ next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora
 health_score_ref: .omo/state/health.yaml
 health_score: 98
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-24T02:39:35Z'
+health_score_generated_at: '2026-07-24T02:49:16Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 106
-total_tasks: 112
+total_tasks: 113
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -51,7 +51,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-24T02:39:38Z'
+updated_at: '2026-07-24T02:49:19Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -174,13 +174,15 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 6
+planned_tasks: 7
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - OPC-P6-SELF-EVOLUTION-doc-gate-e (Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml)
 - cockpit-debt-debt-1 (治理技术债务：债务)
 - 'needs-human-p80-phase45-agora-health (P80 T1.2 residual: agora-gateway HTTP /health
   li)'
+- 'needs-human-p80-phase45-bos-stdio (P80 T1.2 residual: bos_stdio_ratio < 65% (live
+  ~)'
 - 'needs-human-p80-phase45-task-entropy (P80 T1.2 residual: task_files entropy cleanup
   to)'
 - 'needs-human-p80-phase45-tick-timeout (P80 T1.2 residual: implement cron.tick_timeout_s)'
@@ -198,7 +200,7 @@ runtime_health_summary:
   total_services: 4
   ratio: 1.0
   health_score: 98
-  last_scan: '2026-07-24T02:39:35Z'
+  last_scan: '2026-07-24T02:49:16Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
@@ -218,4 +220,4 @@ governance_anomaly_score: 92
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-24T02:39:35Z'
+governance_feedback_last_run: '2026-07-24T02:49:15Z'
