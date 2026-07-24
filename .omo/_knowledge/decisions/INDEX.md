@@ -152,6 +152,9 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | STRAT-P79 | P79 2026H2 治理巩固 + Foundry 运营化路线图 (5 phase) | ACCEPTED | 2026-07-08 | governance-team | STRAT-P79-strategic-roadmap.md |
 | STRAT-P80 | P80 收敛期收尾 — M1 提前打绿 + 兑现期底座前置 (4 战线) | PROPOSED | 2026-07-24 | 夏明星 | STRAT-P80-strategic-roadmap.md |
 | STRAT-P81 | P81 兑现期启动 — 蜂群真机化 (Stage 0-3 + 双纵贯线, 2026-08~2027-06) | PROPOSED | 2026-07-24 | 夏明星 | STRAT-P81-strategic-roadmap.md |
+| STRAT-P81-DI | P81 入场决策单（7 卡 · 人类拍板汇总） | CANDIDATE | 2026-07-24 | governance-team | STRAT-P81-MASTER-DECISION-INBOX-2026-07-24.md |
+| BOS-MIG-MAP | bos_stdio 真实迁移候选服务图谱（P81 S0.4 evidence, 89/19/2 分组） | CANDIDATE | 2026-07-24 | governance-team | BOS-MIGRATION-CANDIDATE-MAP-2026-07-24.md |
+| BET-C87A-PREP | BET-c87a http-mcp-convergence 收尾准备（KOS REST API 9 测覆 + cockpit-ui 现代化） | CANDIDATE | 2026-07-24 | governance-team | BET-C87A-CLOSEOUT-PREP-2026-07-24.md |
 | 0228 | M1 收敛期验收通过 + 物理挂起下的兑现期推进顺序 (S2 提前解锁) | ACCEPTED | 2026-07-24 | 夏明星 | 0228-m1-acceptance-physical-deferred-reorder.md |
 | 0229 | Role framework three roles (engineering/governance/audit) | ACCEPTED | 2026-07-24 | Batch1 B1 | 0229-role-framework-three-roles.md |
 | 0230 | Agent registry node/role/capability sim-first | ACCEPTED | 2026-07-24 | Batch1 C1 | 0230-agent-registry-node-role-capability.md |
