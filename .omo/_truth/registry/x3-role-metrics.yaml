@@ -1,0 +1,20 @@
+schema: x3-role-metrics/v1
+source: .omo/_knowledge/audits/2026-07-24-batch1-g-del-2b-measure.md
+env_class: in-process_simulation
+batch_n_tasks: 30
+roles:
+  engineering:
+    completion_rate: 1.0
+    completed_tasks: 30
+    cost_units: 30
+    note: process-local collab share of batch
+  governance:
+    completion_rate: 1.0
+    completed_tasks: 30
+    cost_units: 30
+    note: process-local collab share of batch
+  audit:
+    completion_rate: 1.0
+    completed_tasks: 30
+    cost_units: 30
+    note: process-local collab share of batch
