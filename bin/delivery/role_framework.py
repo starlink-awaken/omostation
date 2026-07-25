@@ -499,3 +499,118 @@ def run_backlog_collab(
         "title": title,
         "handoff_evidence": handoff_evidence,
     }
+
+
+# ─── C2: collaboration protocol deepening (Batch3, ADR-0236) ───
+
+
+def run_multi_round_negotiation(
+    bus: RoleProtocolBus | None = None,
+    *,
+    task_ref: str | None = None,
+    max_rounds: int = 3,
+    satisfy_after: int = 2,
+) -> dict[str, Any]:
+    """C2 多轮协商握手 (governance ↔ research).
+
+    governance 发 research_request → research 回 research_result. 若 governance
+    未满意 (round < satisfy_after) 再追问. 比单向 assign→handshake→verify 更深:
+    允许基于研究结果多轮调整 (ADR-0236).
+    """
+    bus = bus or RoleProtocolBus()
+    reg = bus.registry
+    task_ref = task_ref or f"c2-nego-{uuid.uuid4().hex[:8]}"
+    gov = reg.register(ROLE_GOVERNANCE, agent_id=f"gov-{_agent_suffix(task_ref)}")
+    res = reg.register(ROLE_RESEARCH, agent_id=f"res-{_agent_suffix(task_ref)}")
+    log: list[dict[str, Any]] = []
+    satisfied = False
+    for rnd in range(1, max_rounds + 1):
+        req = RoleMessage(
+            id=uuid.uuid4().hex,
+            type="research_request",
+            from_agent=gov.agent_id,
+            from_role=ROLE_GOVERNANCE,
+            to_role=ROLE_RESEARCH,
+            task_ref=task_ref,
+            payload={"round": rnd, "query": f"research round {rnd}"},
+        )
+        bus.publish(req)
+        result = RoleMessage(
+            id=uuid.uuid4().hex,
+            type="research_result",
+            from_agent=res.agent_id,
+            from_role=ROLE_RESEARCH,
+            to_role=ROLE_GOVERNANCE,
+            task_ref=task_ref,
+            payload={"round": rnd, "findings": f"result round {rnd}"},
+            correlation_id=req.id,
+        )
+        bus.publish(result)
+        log.append({"round": rnd, "request": req.id, "result": result.id})
+        if rnd >= satisfy_after:
+            satisfied = True
+            break
+    return {
+        "task_ref": task_ref,
+        "rounds_executed": len(log),
+        "satisfied": satisfied,
+        "negotiation_log": log,
+        "roles": [ROLE_GOVERNANCE, ROLE_RESEARCH],
+    }
+
+
+# Conflict resolution precedence (low → high): governance 仲裁, audit 证据优先
+_CONFLICT_PRECEDENCE = (
+    ROLE_RESEARCH,
+    ROLE_DELIVERY,
+    ROLE_ENGINEERING,
+    ROLE_AUDIT,
+    ROLE_GOVERNANCE,
+)
+
+
+def resolve_message_conflict(messages: list[RoleMessage]) -> RoleMessage | None:
+    """C2 冲突消解: 同一 task_ref+type 多角色消息, 按角色优先级取胜者.
+
+    research < delivery < engineering < audit < governance.
+    governance 可仲裁; audit 证据优先于实现. Returns None if input empty.
+    """
+    if not messages:
+        return None
+    return max(
+        messages,
+        key=lambda m: _CONFLICT_PRECEDENCE.index(m.from_role)
+        if m.from_role in _CONFLICT_PRECEDENCE
+        else -1,
+    )
+
+
+def decompose_into_subtasks(
+    task_ref: str,
+    subtask_refs: list[str],
+) -> dict[str, Any]:
+    """C2 任务分解: 大任务 → 子任务列表, 每个子任务走 3-role handshake 再组合.
+
+    子任务用 run_backlog_collab 骨架 (require_path_exists=False 避免 path 依赖).
+    Returns per-subtask completion + aggregate rate.
+    """
+    results: list[dict[str, Any]] = []
+    completed = 0
+    for sub in subtask_refs:
+        r = run_backlog_collab(
+            task_id=sub,
+            task_path=f"decomposed://{task_ref}/{sub}",
+            title=f"subtask {sub} of {task_ref}",
+            require_path_exists=False,
+        )
+        results.append({"subtask": sub, "completed": r["completed"]})
+        if r["completed"]:
+            completed += 1
+    total = len(subtask_refs) or 1
+    return {
+        "task_ref": task_ref,
+        "subtasks": results,
+        "completed": completed,
+        "total": len(subtask_refs),
+        "aggregate_rate": completed / total,
+    }

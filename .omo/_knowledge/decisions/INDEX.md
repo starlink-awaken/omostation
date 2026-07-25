@@ -163,6 +163,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0232 | G-DEL.2b 官方达标 (3 角色协作 100%, process-local) + Batch 2 批准 | ACCEPTED | 2026-07-24 | 夏明星 | 0232-g-del-2b-official-pass.md |
 | 0233 | STRAT-P81 Stage 0 closeout v2 占位 | SUPERSEDED | 2026-07-24 | 夏明星 | 0233-stage0-closeout-v2-promise.md |
 | 0235 | ROLE_CATALOG C1 扩展 research/delivery (3→5 第二波角色, 边界 enforce) | ACCEPTED | 2026-07-25 | Batch3 C1 | 0235-role-catalog-c1-research-delivery.md |
+| 0236 | C2 协作协议加深 (多轮协商+冲突消解+任务分解, protocol 层) | ACCEPTED | 2026-07-25 | Batch3 C2 | 0236-collab-protocol-c2-deepening.md |
 | 0237 | C3 协作记忆 gbrain 公共黑板 (writeCollabProduct+retrieveCollab 跨任务复用) | ACCEPTED | 2026-07-25 | Batch3 C3 | 0237-collab-memory-c3-gbrain-blackboard.md |
 | 0174 | P79 Phase 1 Foundry v2 cron 集成 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0174-p79-phase1-foundry-v2-cron.md |
 | 0175 | P79 Phase 2 Health 100 (bare ports 分类 + env var 迁移) | ACCEPTED | 2026-07-08 | governance-team | 0175-p79-phase2-health-100.md |
