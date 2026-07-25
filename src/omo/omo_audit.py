@@ -466,7 +466,10 @@ def governance_check_adr_links() -> CheckResult:
         )
     content = index_file.read_text(encoding="utf-8")
     referenced: set[str] = set()
-    for m in re.finditer(r"\b(\d{4})-([a-z0-9-]+)\.md\b", content):
+    # Anchor on table column boundary (| or whitespace) so 4-digit date-like
+    # strings inside table cells (e.g. "2026-07-24") are not extracted as ADR
+    # filenames. ADR file refs always sit in their own table cell.
+    for m in re.finditer(r"(?:^|[|\s])(\d{4})-([a-z0-9-]+)\.md(?=$|[|\s])", content):
         referenced.add(f"{m.group(1)}-{m.group(2)}.md")
     existing: set[str] = {
         p.name for p in decisions_dir.glob("[0-9][0-9][0-9][0-9]-*.md")
