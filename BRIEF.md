@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-25T12:42:01.932401Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `96/100`
+> **Generated**: `2026-07-25T12:53:40.058321Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `96/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 
@@ -9,6 +9,7 @@
 
 ### ⏳ 待处理卡片与债务 (Needs Human Decisions)
 - **[PHYSICAL-SUSPEND-REMINDER]** 物理底座挂起周重申（ADR-0228 D3）: needs-human-p80-physical-hosts 仍开放 · 挂起第 1 天 · 勿宣称 G-DEL.1/3 物理达标 → [`.omo/tasks/planned/needs-human-p80-physical-hosts.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-p80-physical-hosts.yaml)
+- **[OMO-DEBT]** ingress-registry 28 task carrier missing (cockpit-triage WIP 悬空引用, governance-verify fail 根因) → [`.omo/tasks/planned/needs-human-ingress-registry-drift.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-ingress-registry-drift.yaml)
 - **[OMO-DEBT]** Batch2 B3: 第 4/5 角色（research/delivery）实装提案（评估页已齐 · 待拍板） → [`.omo/tasks/planned/needs-human-batch2-role-expansion-proposal.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-batch2-role-expansion-proposal.yaml)
 - **[OMO-DEBT]** MOF/M4 治理优化 D1-D4 决策签核 (Phase 1/2 启动前置) → [`.omo/tasks/planned/needs-human-mof-m4-d1-d4-decisions.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-mof-m4-d1-d4-decisions.yaml)
 - **[OMO-DEBT]** P80 T2: expand physical hosts ≥4 + G-DEL.3 true two-host measure → [`.omo/tasks/planned/needs-human-p80-physical-hosts.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-p80-physical-hosts.yaml)
