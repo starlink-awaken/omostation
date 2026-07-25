@@ -1,0 +1,38 @@
+---
+id: NEEDS-HUMAN-ROUND3-PROPOSAL
+title: "Round 3 提案: W3 cockpit 集成 + C3 gbrain 黑板 + abe091ce 清理 (待人类拍板)"
+status: candidate
+needs-human: true
+priority: P1
+owner: human
+created_at: "2026-07-25T14:57:00Z"
+assigned_to: null
+dispatch_id: null
+run_ref: 20260725T145615Z-governance-state-mutation-3cbde88b
+approval_ref: null
+review_ref: null
+knowledge_refs:
+  - .omo/_knowledge/audits/2026-07-25-round2-stage-closeout.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/strat-p81-round2-workorder.md
+entry_gate: []
+evidence_required:
+  - human Round 3 scope decision (W3/C3 优先级 + abe091ce 清理授权)
+  - W3 cockpit 集成 (5 角色接入 cockpit) 须确认 cockpit 接入点
+  - C3 gbrain 黑板深化 (跨子模块) 须确认跨任务复用 scope
+test_plan:
+  - W3: 5 角色正式进 cockpit, ≥15 真实任务对照 3 角色基线, owner 集中度重测
+  - C3: gbrain 跨任务复用 case ≥3, 隔离测试 (角色 A 不可读 B 私有)
+  - abe091ce: 清理 (abandon/恢复) 释放 project-code-change 通道
+  - 涌现类: kill-switch 评审申请先行 (G-DEL.5b, 须人类评审)
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+desc: >
+  Round 2 核心已 done (W1/W2/C1/C2/C4/D1 + 熔断, 7 PR). 剩余 W3 (cockpit 集成) /
+  C3 (gbrain 黑板) / D2 (KOS) / D3 (X3 八月) / abe091ce 清理 入 Round 3.
+  主轴建议: W3 cockpit 集成 (用户已拍板 C1 go, 需 cockpit 接入工作) +
+  C3 gbrain 黑板深化 (跨任务复用 + 隔离) + abe091ce 清理 (释放 project-code-change).
+  §F 仍须人类: 涌现类 kill-switch / 物理达标 / KOS 新源 / BET-3b90.
+  health 96 全程守住. health<95 或任务静默丢失立即停手 (abe091ce 已熔断送卡).

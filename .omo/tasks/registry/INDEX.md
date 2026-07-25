@@ -10,7 +10,7 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (11 个)
+## Planned Tasks (12 个)
 | ID | Title | Status |
 |----|-------|--------|
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
@@ -24,6 +24,7 @@
 | needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 true | candidate |
 | needs-human-p81-batch4-proposal | STRAT-P81 Batch 4 提案（多 agent 协作深化主轴 · C 波 · 待人类拍 | candidate |
 | needs-human-p81-m1-acceptance | P81 S0.1: M1 提前验收申请（ADR-0210 Confirmation · 人类拍板 | candidate |
+| needs-human-round3-proposal | Round 3 提案: W3 cockpit 集成 + C3 gbrain 黑板 + abe09 | candidate |
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
@@ -66,5 +67,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-25 (依据 `omo state sync-tasks` 与真实目录重算: done=0, planned=11, active=0, archived=6 顶层)*
+*Updated: 2026-07-25 (依据 `omo state sync-tasks` 与真实目录重算: done=0, planned=12, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*

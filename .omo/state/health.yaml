@@ -1,10 +1,10 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-07-25T12:53:38Z
+# generated_at: 2026-07-25T14:57:20Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5}
 
-generated_at: "2026-07-25T12:53:38Z"
+generated_at: "2026-07-25T14:57:20Z"
 source: "c2g.strategy (real audit, no mock)"
 health_score: 96
 governance_anomaly_score: 85
@@ -12,11 +12,11 @@ anomaly_count: 1
 service_online_ratio: 1.000
 freshness_score: 100
 feedback_alive: True
-feedback_last_ts: "2026-07-25T12:50:49Z"
+feedback_last_ts: "2026-07-25T14:57:15Z"
 feedback_staleness_hours: 0.0
-total_tasks: 11
+total_tasks: 12
 done: 0
-planned: 11
+planned: 12
 
 governance_execution_surface:
   base_anomaly_score: 85
@@ -42,24 +42,24 @@ health_composite_breakdown:
   raw: 95.5
 
 anomalies:
-  - "[WARN]  Owner 集中度: human 持有 82% 任务 (单点故障风险, 知识/能力集中)"
+  - "[WARN]  Owner 集中度: human 持有 83% 任务 (单点故障风险, 知识/能力集中)"
 
 distributions:
   priority_dist:
     P0: 3
-    P1: 4
+    P1: 5
     P2: 2
     medium: 1
     unassigned: 1
   risk_dist:
     L1: 6
-    L2: 5
+    L2: 6
   owner_dist:
-    human: 9
+    human: 10
     unassigned: 2
   phase_dist:
-    unphased: 11
+    unphased: 12
   status_dist:
-    candidate: 8
+    candidate: 9
     closed: 2
     pending: 1

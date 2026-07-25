@@ -7,13 +7,13 @@ next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora
 health_score_ref: .omo/state/health.yaml
 health_score: 96
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-25T12:53:38Z'
+health_score_generated_at: '2026-07-25T14:57:20Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 0
-total_tasks: 11
+total_tasks: 12
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -51,7 +51,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-25T12:53:40Z'
+updated_at: '2026-07-25T14:57:21Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -174,7 +174,7 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 11
+planned_tasks: 12
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - OPC-P6-SELF-EVOLUTION-doc-gate-e (Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml)
@@ -191,6 +191,7 @@ next_planned_tasks:
   )'
 - needs-human-p81-batch4-proposal (STRAT-P81 Batch 4 提案（多 agent 协作深化主轴 · C 波 · 待人类拍)
 - 'needs-human-p81-m1-acceptance (P81 S0.1: M1 提前验收申请（ADR-0210 Confirmation · 人类拍板)'
+- 'needs-human-round3-proposal (Round 3 提案: W3 cockpit 集成 + C3 gbrain 黑板 + abe09)'
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
 phase28_status: completed
@@ -203,7 +204,7 @@ runtime_health_summary:
   total_services: 4
   ratio: 1.0
   health_score: 96
-  last_scan: '2026-07-25T12:53:38Z'
+  last_scan: '2026-07-25T14:57:20Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
@@ -223,4 +224,4 @@ governance_anomaly_score: 85
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-25T12:53:38Z'
+governance_feedback_last_run: '2026-07-25T14:57:20Z'
