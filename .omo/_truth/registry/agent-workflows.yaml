@@ -571,6 +571,22 @@ diff_checks:
       - bin/gac/governance-evolution.py
       - tests/test_governance_evolution.py
     command: [uv, run, pytest, tests/test_governance_evolution.py, -q]
+  - id: mof-capabilities-drift
+    description: MOF 能力注册表 drift 守门 (CR-X4-MOF-CAPABILITIES-DRIFT, ADR-0238 P0-2) — path/stats/mcptool_count 三类漂移.
+    required: false
+    paths:
+      - .omo/_truth/registry/mof-capabilities.yaml
+      - bin/mof/check-mof-capabilities-drift.py
+      - projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-MODEL-DRIVEN.yaml
+      - projects/model-driven/src/model_driven/mcp_server.py
+    command: [uv, run, --with, pyyaml, python, bin/mof/check-mof-capabilities-drift.py]
+  - id: mof-capabilities-drift-tests
+    description: MOF 能力注册表 drift 检出测试 (注入漂移验证, ADR-0238 P0-2).
+    required: false
+    paths:
+      - bin/mof/check-mof-capabilities-drift.py
+      - tests/test_mof_capabilities_drift.py
+    command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_mof_capabilities_drift.py, -q]
   - id: cockpit-agent-entry-tests
     description: Cockpit L3 entry tests for agent workflow delegation.
     required: true
