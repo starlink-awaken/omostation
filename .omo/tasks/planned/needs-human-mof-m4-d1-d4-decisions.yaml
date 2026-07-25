@@ -13,6 +13,7 @@ approval_ref: null
 review_ref: null
 knowledge_refs:
   - .omo/_knowledge/decisions/0238-mof-m4-phase0-registry-self-governance.md
+handoff_refs: []
 source_docs:
   - docs/proposals/2026-07-25-mof-m4-governance-optimization-plan.md
   - .omo/_knowledge/audits/2026-07-25-mof-m4-phase0-registry-self-governance.md
