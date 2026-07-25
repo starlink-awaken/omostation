@@ -7,7 +7,7 @@ next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora
 health_score_ref: .omo/state/health.yaml
 health_score: 96
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-25T12:53:38Z'
+health_score_generated_at: '2026-07-25T14:43:33Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -51,7 +51,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-25T12:53:40Z'
+updated_at: '2026-07-25T14:43:34Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -203,7 +203,7 @@ runtime_health_summary:
   total_services: 4
   ratio: 1.0
   health_score: 96
-  last_scan: '2026-07-25T12:53:38Z'
+  last_scan: '2026-07-25T14:43:33Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
@@ -223,4 +223,4 @@ governance_anomaly_score: 85
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-25T12:53:38Z'
+governance_feedback_last_run: '2026-07-25T14:43:33Z'
