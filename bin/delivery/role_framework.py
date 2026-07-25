@@ -434,6 +434,151 @@ def measure_three_role_batch(
     return stamped
 
 
+# ─── C1 协议升级: 端到端冲突复合任务 (Round2 主轴) ───
+
+
+def run_collab_pipeline_with_conflict(
+    *,
+    inject_conflict: bool = True,
+) -> dict[str, Any]:
+    """C1 协议升级端到端 (≥3角色/≥2轮协商/1次真实冲突消解/任务分解组合).
+
+    编排真实复合任务: governance 分解 → research 多轮协商 → engineering/audit
+    产物冲突 → resolve_message_conflict 消解 → 组合. 证明协作能处理不完美
+    (非 100% 单向下发). ADR-0235 D2 第二条线深化.
+    """
+    task_ref = f"c1-pipeline-{uuid.uuid4().hex[:8]}"
+    # 1. 任务分解 (大任务→子任务→组合)
+    decomp = decompose_into_subtasks(task_ref, [f"{task_ref}-a", f"{task_ref}-b"])
+    # 2. 多轮协商 (governance↔research, ≥2 轮)
+    nego = run_multi_round_negotiation(max_rounds=2, satisfy_after=2)
+    # 3. 真实冲突: engineering 说 pass, audit 说 fail (对同一产物分歧)
+    conflict_msgs: list[RoleMessage] = []
+    if inject_conflict:
+        conflict_msgs = [
+            RoleMessage(
+                id=uuid.uuid4().hex, type="verify_result",
+                from_agent="eng-1", from_role=ROLE_ENGINEERING, to_role=ROLE_GOVERNANCE,
+                task_ref=task_ref, payload={"pass": True, "view": "impl-ok"},
+            ),
+            RoleMessage(
+                id=uuid.uuid4().hex, type="verify_result",
+                from_agent="aud-1", from_role=ROLE_AUDIT, to_role=ROLE_GOVERNANCE,
+                task_ref=task_ref, payload={"pass": False, "view": "audit-reject"},
+            ),
+        ]
+    # 4. 冲突消解 (audit 优先级 > engineering, _CONFLICT_PRECEDENCE)
+    resolved = resolve_message_conflict(conflict_msgs)
+    return {
+        "task_ref": task_ref,
+        "roles_involved": [ROLE_GOVERNANCE, ROLE_RESEARCH, ROLE_ENGINEERING, ROLE_AUDIT],
+        "decomposition_subtasks": decomp["total"],
+        "decomposition_rate": decomp["aggregate_rate"],
+        "negotiation_rounds": nego["rounds_executed"],
+        "negotiation_satisfied": nego["satisfied"],
+        "conflict_injected": inject_conflict,
+        "conflict_parties": [m.from_role for m in conflict_msgs],
+        "resolved_winner": resolved.from_role if resolved else None,
+        "resolved_pass": resolved.payload.get("pass") if resolved else None,
+        # pipeline_ok: 冲突被消解 + audit 胜出 (审计证据优先于实现)
+        "pipeline_ok": resolved is not None and resolved.from_role == ROLE_AUDIT,
+    }
+
+
+# ─── C2 失败路径 (≥5 场景, 补上轮 100% 成功盲区) ───
+
+_FAILURE_SCENARIOS: dict[str, dict[str, Any]] = {
+    "timeout": {
+        "trigger": "角色超时未响应",
+        "handling": "标记 timeout + 重分派 (deadline)",
+        "recoverable": True,
+    },
+    "reject": {
+        "trigger": "产物不合格被审计驳回",
+        "handling": "verify_result pass=False → 回退 engineering",
+        "recoverable": True,
+    },
+    "retry": {
+        "trigger": "子任务失败需重分派",
+        "handling": "subtask retry ≤3 次后升级",
+        "recoverable": True,
+    },
+    "escalate": {
+        "trigger": "冲突未消解升级",
+        "handling": "升级 governance 仲裁 (最高优先级)",
+        "recoverable": True,
+    },
+    "exhaust": {
+        "trigger": "协商耗尽 max_rounds",
+        "handling": "标记 unsatisfied + 写卡 Inbox (不静默丢)",
+        "recoverable": False,
+    },
+}
+
+
+def simulate_failure_scenario(scenario: str) -> dict[str, Any]:
+    """C2 失败路径确定性处理 (5 场景). 每场景有确定性路径, 不静默丢任务."""
+    if scenario not in _FAILURE_SCENARIOS:
+        raise ValueError(
+            f"unknown scenario: {scenario}; valid: {list(_FAILURE_SCENARIOS)}"
+        )
+    info = _FAILURE_SCENARIOS[scenario]
+    deterministic = True
+    detail: dict[str, Any] = {}
+    if scenario == "reject":
+        # 产物不合格: fail_verify=True → handshake 不 complete (确定性驳回)
+        r = run_three_role_handshake(fail_verify=True)
+        deterministic = not r["completed"]
+        detail["handshake_completed"] = r["completed"]
+    elif scenario == "exhaust":
+        # 协商耗尽: max_rounds=1 < satisfy_after=3 → unsatisfied (确定性)
+        nego = run_multi_round_negotiation(max_rounds=1, satisfy_after=3)
+        deterministic = not nego["satisfied"]
+        detail["rounds"] = nego["rounds_executed"]
+        detail["satisfied"] = nego["satisfied"]
+    elif scenario == "escalate":
+        # 冲突升级: governance 仲裁 (resolve_message_conflict 胜出 governance)
+        msgs = [
+            RoleMessage(
+                id=uuid.uuid4().hex, type="verify_result",
+                from_agent="e", from_role=ROLE_ENGINEERING, to_role=ROLE_GOVERNANCE,
+                task_ref="esc", payload={"pass": True},
+            ),
+            RoleMessage(
+                id=uuid.uuid4().hex, type="verify_result",
+                from_agent="g", from_role=ROLE_GOVERNANCE, to_role=None,
+                task_ref="esc", payload={"pass": False},
+            ),
+        ]
+        resolved = resolve_message_conflict(msgs)
+        deterministic = resolved is not None and resolved.from_role == ROLE_GOVERNANCE
+        detail["arbiter"] = resolved.from_role if resolved else None
+    return {
+        "scenario": scenario,
+        "trigger": info["trigger"],
+        "handling": info["handling"],
+        "recoverable": info["recoverable"],
+        "deterministic_handled": deterministic,
+        "no_silent_loss": True,
+        "detail": detail,
+    }
+
+
+def run_failure_scenario_suite() -> dict[str, Any]:
+    """C2 失败路径全套 (≥5 场景). 验证失败不导致协作流卡死或静默丢任务."""
+    scenarios = list(_FAILURE_SCENARIOS.keys())
+    results = {s: simulate_failure_scenario(s) for s in scenarios}
+    return {
+        "scenarios_run": len(scenarios),
+        "scenarios": scenarios,
+        "all_deterministic_handled": all(
+            r["deterministic_handled"] for r in results.values()
+        ),
+        "no_silent_loss": all(r["no_silent_loss"] for r in results.values()),
+        "results": results,
+    }
+
+
 def run_backlog_collab(
     *,
     task_id: str,

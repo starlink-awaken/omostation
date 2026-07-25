@@ -1,0 +1,35 @@
+---
+id: NEEDS-HUMAN-RUN-ABE091CE-DORMANT
+title: "run abe091ce 静默卡死 (active 无产出 + observe halt 不能 closeout, 阻塞 project-code-change)"
+status: candidate
+needs-human: true
+priority: P1
+owner: human
+created_at: "2026-07-25T14:35:00Z"
+assigned_to: null
+dispatch_id: null
+run_ref: 20260725T143401Z-governance-state-mutation-c76e84a8
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs: []
+entry_gate: []
+evidence_required:
+  - 人类决策: abe091ce (Kairon broken module 清理 4 PR) 是活跃任务还是静默遗留
+  - 若遗留: 授权强制 closeout/abandon (绕 observe halt)
+  - 若活跃: 确认 owner + 完成或重新分配
+test_plan:
+  - abe091ce closeout 成功 (释放 project.lock + root-gate.lock)
+  - project-code-change 通道恢复 (C 波可走正路)
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+desc: >
+  STRAT-P81 Round2 C 波启动时发现: run abe091ce (project-code-change, objective
+  "Kairon broken module + duplicate stub 清理 4 PR") status=active 但无 claim/无产出
+  (开了没执行), observe halt 阻止 closeout. 持有 project.lock + root-gate.lock,
+  阻塞新 project-code-change. **goal 熔断信号"任务静默丢失"**. actor=xiamingxing
+  (可能前序 session 遗留). 需人类决策: 强制清理 (abandon) 还是恢复执行.
+  当前 C 波绕道 governance-state-mutation (governance_code lane) 推进, 不阻塞,
+  但 project-code-change 通道仍卡.

@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-25T12:53:40.058321Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `96/100`
+> **Generated**: `2026-07-25T14:38:03.041532Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `93/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 
@@ -16,6 +16,7 @@
 - **[OMO-DEBT]** STRAT-P81 Batch 4 提案（多 agent 协作深化主轴 · C 波 · 待人类拍板） → [`.omo/tasks/planned/needs-human-p81-batch4-proposal.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-p81-batch4-proposal.yaml)
 - **[OMO-DEBT]** P80 T1.2 residual: bos_stdio_ratio < 65% (live ~69.2%) — REAL migration pending → [`.omo/tasks/planned/needs-human-p80-phase45-bos-stdio.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-p80-phase45-bos-stdio.yaml)
 - **[OMO-DEBT]** 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） → [`.omo/tasks/planned/needs-human-batch2-physical-recovery-checklist.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-batch2-physical-recovery-checklist.yaml)
+- **[OMO-DEBT]** run abe091ce 静默卡死 (active 无产出 + observe halt 不能 closeout, 阻塞 project-code-change) → [`.omo/tasks/planned/needs-human-run-abe091ce-dormant.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-run-abe091ce-dormant.yaml)
 
 ## 📈 X3 价值仪表 (Value Metrics)
 
@@ -29,9 +30,9 @@
 | **角色·audit** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 
 <details>
-<summary>⚙️ <b>治理健康分详情 (复合 96/100, 已自动收纳)</b></summary>
+<summary>⚙️ <b>治理健康分详情 (复合 93/100, 已自动收纳)</b></summary>
 
-- **GAC 异常扣分**: `85/100` (无 anomalies)
+- **GAC 异常扣分**: `77/100` (无 anomalies)
 - **常驻 daemon 在线率**: `100.00%`
 - **新鲜度分数**: `100/100` (正常)
 
