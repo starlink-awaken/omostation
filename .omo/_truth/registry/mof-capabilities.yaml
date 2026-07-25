@@ -2,14 +2,14 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-29
+last-reviewed: 2026-07-25
 ---
 
 # MOF 能力注册表 — 所有 MOF 工具/约束/流程的唯一注册点
 # 本文件是 MOF 体系的 SSOT，防止遗忘或混乱
 
-version: "2.1"
-updated_at: "2026-06-29"
+version: "2.2"
+updated_at: "2026-07-25"
 
 # ═══════════════════════════════════════════════════════════
 # 四层架构
@@ -45,16 +45,16 @@ layers:
 tools:
   # --- 数据层 ---
   mof-io:
-    path: bin/mof-io
+    path: bin/mof/mof-io
     description: 模型导入/导出 (JSON)
     commands: [export, import]
-    usage: "bin/mof-io export [file]"
+    usage: "bin/mof/mof-io export [file]"
     
   mof-version:
-    path: bin/mof-version
+    path: bin/mof/mof-version
     description: 模型版本管理
     commands: [show, record, diff]
-    usage: "bin/mof-version record 'description'"
+    usage: "bin/mof/mof-version record 'description'"
     
   # --- 知识层 ---
   mof-reason:
@@ -64,79 +64,79 @@ tools:
     usage: "python3 mof-reason.py impact <node_id>"
     
   mof-decide:
-    path: bin/mof-decide
+    path: bin/mof/mof-decide
     description: 智能决策支持
     commands: [<node_id>]
-    usage: "bin/mof-decide COMP-WS-agora"
+    usage: "bin/mof/mof-decide COMP-WS-agora"
     
   mof-graph:
-    path: bin/mof-graph
+    path: bin/mof/mof-graph
     description: 跨项目依赖图生成
     commands: [<无参数>, cycles]
-    usage: "bin/mof-graph cycles"
+    usage: "bin/mof/mof-graph cycles"
     
   # --- 决策层 ---
   mof-autonomous:
-    path: bin/mof-autonomous
+    path: bin/mof/mof-autonomous
     description: 自主决策引擎 (异常检测→推理→建议)
     commands: [detect, decide]
-    usage: "bin/mof-autonomous decide"
+    usage: "bin/mof/mof-autonomous decide"
     
   # --- 行动层 ---
   mof-act:
-    path: bin/mof-act
+    path: bin/mof/mof-act
     description: 自主行动引擎 (规划→验证→执行→验证→记录)
     commands: [fix_test, reduce_drift, improve_coverage, reduce_debt]
-    usage: "bin/mof-act improve_coverage cockpit"
+    usage: "bin/mof/mof-act improve_coverage cockpit"
     
   # --- 分析工具 ---
   mof-analyze:
-    path: bin/mof-analyze
+    path: bin/mof/mof-analyze
     description: 统一分析工具
     commands: [dashboard, testing, cost, quality]
-    usage: "bin/mof-analyze dashboard"
+    usage: "bin/mof/mof-analyze dashboard"
     
   mof-export:
-    path: bin/mof-export
+    path: bin/mof/mof-export
     description: 文档生成工具
     commands: [readme, api, arch]
-    usage: "bin/mof-export readme cockpit"
+    usage: "bin/mof/mof-export readme cockpit"
     
   mof-drift:
-    path: bin/mof-drift
+    path: bin/mof/mof-drift
     description: 架构漂移检测
     commands: [<无参数>]
-    usage: "bin/mof-drift"
+    usage: "bin/mof/mof-drift"
     
   mof-scan:
-    path: bin/mof-scan
+    path: bin/mof/mof-scan
     description: 依赖安全扫描
     commands: [<无参数>]
-    usage: "bin/mof-scan"
+    usage: "bin/mof/mof-scan"
     
   mof-assign:
-    path: bin/mof-assign
+    path: bin/mof/mof-assign
     description: 团队任务分配
     commands: [<domain>]
-    usage: "bin/mof-assign cockpit"
+    usage: "bin/mof/mof-assign cockpit"
     
   mof-evolution:
-    path: bin/mof-evolution
+    path: bin/mof/mof-evolution
     description: 系统演化追踪
     commands: [<project>]
-    usage: "bin/mof-evolution kairon"
+    usage: "bin/mof/mof-evolution kairon"
     
   mof-enforce:
-    path: bin/mof-enforce
+    path: bin/mof/mof-enforce
     description: Agent 约束强制
     commands: [pre-check, post-check, impact, state, value, validate]
-    usage: "bin/mof-enforce pre-check COMP-WS-agora"
+    usage: "bin/mof/mof-enforce pre-check COMP-WS-agora"
 
   mof-manage:
-    path: bin/mof-manage
+    path: bin/mof/mof-manage
     description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)
     commands: [status, validate, update]
-    usage: "bin/mof-manage status"
+    usage: "bin/mof/mof-manage status"
 
 # ═══════════════════════════════════════════════════════════
 # 约束注册表
@@ -248,9 +248,12 @@ autonomous_growth:
 # M1/M2/M3 统计
 # ═══════════════════════════════════════════════════════════
 model_stats:
-  m1_nodes: 1177
-  m2_schemas: 46
+  # 节点计数由 bin/mof/check-mof-capabilities-drift.py 守护 (ADR-0238, P0-2)
+  # source: projects/ecos/src/ecos/ssot/mof/{m1,m2}/ — 以实际文件为准 (ecos CLAUDE.md)
+  m1_nodes: 1419
+  m2_schemas: 55
   m3_elements: 8
+  stats_as_of: "2026-07-25"
   coverage:
     type_drift: 0
     required_missing: 0

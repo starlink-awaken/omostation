@@ -16,6 +16,7 @@
 - **[OMO-DEBT]** P81 S0.1: M1 提前验收申请（ADR-0210 Confirmation · 人类拍板） → [`.omo/tasks/planned/needs-human-p81-m1-acceptance.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-p81-m1-acceptance.yaml)
 - **[OMO-DEBT]** 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） → [`.omo/tasks/planned/needs-human-batch2-physical-recovery-checklist.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-batch2-physical-recovery-checklist.yaml)
 - **[OMO-DEBT]** STRAT-P81 Batch 3 提案（物理 KPI 冲刺主轴 · 待人类拍板） → [`.omo/tasks/planned/needs-human-batch3-proposal.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-batch3-proposal.yaml)
+- **[MOF-M4]** Phase 0 注册面守自止血已完成 (ADR-0238, 三闸门 G-Health delta=0) · D1-D4 决策签核待人类拍板 (Phase 1/2 启动前置, 建议全选推荐项) → [`.omo/tasks/planned/needs-human-mof-m4-d1-d4-decisions.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-mof-m4-d1-d4-decisions.yaml)
 
 ## 📈 X3 价值仪表 (Value Metrics)
 
