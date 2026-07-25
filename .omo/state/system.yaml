@@ -5,9 +5,9 @@ phase_status: active
 current_wave: W3
 next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora-gateway /health + 熵清理
 health_score_ref: .omo/state/health.yaml
-health_score: 93
+health_score: 96
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-25T00:28:45Z'
+health_score_generated_at: '2026-07-25T00:39:34Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -51,7 +51,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-25T08:35:19.158355+08:00'
+updated_at: '2026-07-25T08:42:22.581476+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -200,7 +200,7 @@ runtime_health_summary:
   total_services: 4
   ratio: 1.0
   health_score: 100
-  last_scan: '1784939718.98753'
+  last_scan: '1784940142.428668'
   service_count: 8
   degraded: []
   source: runtime_daemon_de_false_positive
@@ -217,8 +217,8 @@ debt_adjusted_health_score: 83.0
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 77
+governance_anomaly_score: 85
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-25T08:35:19.158355+08:00'
+governance_feedback_last_run: '2026-07-25T08:42:22.581476+08:00'
