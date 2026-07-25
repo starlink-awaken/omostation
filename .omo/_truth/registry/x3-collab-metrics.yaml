@@ -1,0 +1,19 @@
+# X3 协作仪表 (C4, Round2 C 波) — 协作数据快照 (pointerized, 含失败率)
+updated_at: "2026-07-25T14:46:00Z"
+batch: round2-c-wave
+env_class: in-process_simulation
+source: .omo/_knowledge/audits/2026-07-25-c-wave-collab-pipeline-conflict.md
+
+# C1 协议升级 (run_collab_pipeline_with_conflict)
+negotiation_rounds: 2
+conflicts_total: 1
+conflicts_resolved: 1
+conflict_winner: audit
+
+# C2 失败路径 (run_failure_scenario_suite, ≥5 场景)
+failure_scenarios: 5
+failure_scenarios_deterministic: 5
+failure_scenarios_recoverable: 4
+# failure_rate = 不可恢复场景比例 (exhaust 写卡不静默, 但不自动恢复)
+failure_rate: 0.2
+no_silent_loss: true

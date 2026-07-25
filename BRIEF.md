@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-25T12:53:40.058321Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `96/100`
+> **Generated**: `2026-07-25T14:52:35.178274Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `96/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 
@@ -27,6 +27,7 @@
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·audit** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
+| **协作仪表** | 协商轮次 `2` · 冲突消解 `1/1` · 失败率 `20%` (含不静默) | 正常 | `.omo/_truth/registry/x3-collab-metrics.yaml` |
 
 <details>
 <summary>⚙️ <b>治理健康分详情 (复合 96/100, 已自动收纳)</b></summary>

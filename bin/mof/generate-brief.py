@@ -505,6 +505,25 @@ def generate_brief_content() -> str:
                 )
         except Exception:
             pass
+    # B6: 协作仪表 (C4, 含失败率 不只报喜) — x3-collab-metrics
+    _collab_path = WORKSPACE / ".omo" / "_truth" / "registry" / "x3-collab-metrics.yaml"
+    if _collab_path.is_file():
+        try:
+            import yaml as _yc  # noqa: PLC0415
+
+            _cm = _yc.safe_load(_collab_path.read_text(encoding="utf-8")) or {}
+            _nr = _cm.get("negotiation_rounds", "?")
+            _ct = _cm.get("conflicts_total", "?")
+            _cr = _cm.get("conflicts_resolved", "?")
+            _fr = _cm.get("failure_rate", "?")
+            _fr_s = f"{_fr:.0%}" if isinstance(_fr, float) else str(_fr)
+            lines.append(
+                f"| **协作仪表** | 协商轮次 `{_nr}` · 冲突消解 `{_cr}/{_ct}` · "
+                f"失败率 `{_fr_s}` (含不静默) | 正常 | "
+                f"`.omo/_truth/registry/x3-collab-metrics.yaml` |"
+            )
+        except Exception:
+            pass
     lines.append("")
 
     # 3. 治理健康指标折叠逻辑 (Health Folding - WS-5)
