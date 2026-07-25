@@ -1,7 +1,9 @@
 ---
 id: NEEDS-HUMAN-BATCH3-PROPOSAL
 title: "STRAT-P81 Batch 3 提案（物理 KPI 冲刺主轴 · 待人类拍板）"
-status: candidate
+status: closed
+superseded_by: ADR-0233+0235/6/7 (Batch3 实做 C波协作深化, 非物理KPI冲刺)
+closed_at: "2026-07-25T12:40:00Z"
 needs-human: true
 priority: P1
 owner: human

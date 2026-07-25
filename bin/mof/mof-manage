@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-REGISTRY_FILE = Path(__file__).parent.parent / ".omo/_truth/registry/mof-capabilities.yaml"
+REGISTRY_FILE = Path(__file__).resolve().parents[2] / ".omo/_truth/registry/mof-capabilities.yaml"
 
 
 def load_registry() -> dict:
