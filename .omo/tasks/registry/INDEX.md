@@ -10,11 +10,14 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (5 个)
+## Planned Tasks (8 个)
 | ID | Title | Status |
 |----|-------|--------|
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
 | cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
+| needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
+| needs-human-batch2-role-expansion-proposal | Batch2 B3: 第 4/5 角色（research/delivery）实装提案（评估页已齐 | candidate |
+| needs-human-batch3-proposal | STRAT-P81 Batch 3 提案（物理 KPI 冲刺主轴 · 待人类拍板） | candidate |
 | needs-human-p80-phase45-bos-stdio | P80 T1.2 residual: bos_stdio_ratio < 65% (live ~ | candidate |
 | needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 true | candidate |
 | needs-human-p81-m1-acceptance | P81 S0.1: M1 提前验收申请（ADR-0210 Confirmation · 人类拍板 | candidate |
@@ -60,5 +63,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-24 (依据 `omo state sync-tasks` 与真实目录重算: done=0, planned=5, active=0, archived=6 顶层)*
+*Updated: 2026-07-24 (依据 `omo state sync-tasks` 与真实目录重算: done=0, planned=8, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
