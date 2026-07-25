@@ -4,10 +4,11 @@ m3_parent: StructuralElement.Component
 name: model-driven framework
 tool_name: ""
 server: ""
-description: Model-Driven 框架 MCP 工具集 — 41 tools (lifecycle/mof/schema/validate)
+description: Model-Driven 框架 MCP 工具集 — 28 tools (lifecycle/mof/schema/validate)
 project: model-driven
 component: COMP-WS-model-driven
-tool_count: 41
+tool_count: 28
+tool_count_verified_at: "2026-07-25"  # mcp_server.py _register_tool 计数守护 (ADR-0238 P0-4)
 transport: stdio
 status: active
 model_driven_refs:
