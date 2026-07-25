@@ -19,11 +19,20 @@ ROLE_AUDIT = "audit"
 
 FIRST_SHIP_ROLES = (ROLE_ENGINEERING, ROLE_GOVERNANCE, ROLE_AUDIT)
 
+# Second-wave roles (Batch3 C1 expansion — research/delivery, ADR-0235)
+ROLE_RESEARCH = "research"
+ROLE_DELIVERY = "delivery"
+
+SECOND_WAVE_ROLES = (ROLE_RESEARCH, ROLE_DELIVERY)
+ALL_ROLES = FIRST_SHIP_ROLES + SECOND_WAVE_ROLES
+
 # Map to legacy G-DEL.2a role ids used by CollabBus handshake
 LEGACY_ROLE_MAP = {
     ROLE_ENGINEERING: "implementer",
     ROLE_GOVERNANCE: "orchestrator",
     ROLE_AUDIT: "verifier",
+    ROLE_RESEARCH: "researcher",
+    ROLE_DELIVERY: "deliverer",
 }
 
 MessageHandler = Callable[["RoleMessage"], None]
@@ -51,9 +60,32 @@ ROLE_CATALOG: dict[str, RoleSpec] = {
     ROLE_GOVERNANCE: RoleSpec(
         role_id=ROLE_GOVERNANCE,
         display_name="Governance",
-        capabilities=("assign", "claim-path", "write-adr", "closeout"),
-        can_send=("assign", "complete", "progress", "block"),
-        can_recv=("claim_ack", "handoff", "verify_result", "block", "progress"),
+        # C1: 加 dispatch-research/dispatch-delivery 派发二波角色 (不破坏现有 3 角色协议)
+        capabilities=(
+            "assign",
+            "claim-path",
+            "write-adr",
+            "closeout",
+            "dispatch-research",
+            "dispatch-delivery",
+        ),
+        can_send=(
+            "assign",
+            "complete",
+            "progress",
+            "block",
+            "research_request",
+            "delivery_request",
+        ),
+        can_recv=(
+            "claim_ack",
+            "handoff",
+            "verify_result",
+            "block",
+            "progress",
+            "research_result",
+            "delivery_registered",
+        ),
         private_scope_prefix="private.governance",
     ),
     ROLE_AUDIT: RoleSpec(
@@ -63,6 +95,29 @@ ROLE_CATALOG: dict[str, RoleSpec] = {
         can_send=("verify_result", "progress", "block"),
         can_recv=("handoff", "assign", "complete"),
         private_scope_prefix="private.audit",
+    ),
+    # Second-wave roles (Batch3 C1, ADR-0235): read-only knowledge + delivery projection
+    ROLE_RESEARCH: RoleSpec(
+        role_id=ROLE_RESEARCH,
+        display_name="Research",
+        # Read-only 知识面: KOS 检索/文献合成, 不可 claim 代码路径 (eval 页边界)
+        capabilities=("read-evidence", "search-kos", "synthesize-knowledge"),
+        can_send=("research_result", "progress", "block"),
+        can_recv=("assign", "research_request", "verify_result"),
+        private_scope_prefix="private.research",
+    ),
+    ROLE_DELIVERY: RoleSpec(
+        role_id=ROLE_DELIVERY,
+        display_name="Delivery",
+        # 只写 delivery/X3 投影: 交付卡登记, 无代码写权 (eval 页边界, 凑数已禁)
+        capabilities=(
+            "register-delivery",
+            "write-x3-projection",
+            "closeout-delivery",
+        ),
+        can_send=("delivery_registered", "progress", "block"),
+        can_recv=("assign", "delivery_request", "complete"),
+        private_scope_prefix="private.delivery",
     ),
 }
 
