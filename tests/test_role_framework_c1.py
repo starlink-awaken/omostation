@@ -143,3 +143,28 @@ def test_existing_three_role_handshake_unbroken():
     r = run_three_role_handshake()
     assert r["completed"] is True
     assert r["roles"] == ["engineering", "governance", "audit"]
+
+
+def test_five_role_handshake_completes():
+    # C1 深化 (P1, ADR-0235): 5 角色 dispatch 流全链路完成 (边界 enforce)
+    from role_framework import run_five_role_handshake
+
+    r = run_five_role_handshake()
+    assert r["completed"] is True
+    assert len(r["roles"]) == 5
+    assert r["roles"] == ["governance", "research", "delivery", "engineering", "audit"]
+    # 9 步完整流: research→delivery→assign→claim→handoff→verify→complete
+    assert "research_result" in r["steps"]
+    assert "delivery_registered" in r["steps"]
+    assert "complete" in r["steps"]
+
+
+def test_five_role_batch_meets_gate():
+    # C1 深化: 5 角色 batch ≥15 任务 completion >95% (G-DEL.2b 5-role process-local 口径)
+    from role_framework import measure_five_role_batch
+
+    m = measure_five_role_batch(n_tasks=15)
+    assert m["completion_rate"] == 1.0
+    assert m["meets_gate"] is True
+    assert m["meets_physical_gate"] is False  # process-local, 非物理达标
+    assert m["gate"] == "G-DEL.2b-5role"
