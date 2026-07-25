@@ -1,7 +1,9 @@
 ---
 id: NEEDS-HUMAN-MOF-M4-D1-D4-DECISIONS
 title: "MOF/M4 治理优化 D1-D4 决策签核 (Phase 1/2 启动前置)"
-status: candidate
+status: closed
+resolved_by: ADR-0240 (人类拍板 A/A/A/A, 2026-07-25 Round2 W2)
+closed_at: "2026-07-25T14:25:00Z"
 needs-human: true
 priority: P1
 owner: human

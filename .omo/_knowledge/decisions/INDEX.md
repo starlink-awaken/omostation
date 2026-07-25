@@ -166,6 +166,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0236 | C2 协作协议加深 (多轮协商+冲突消解+任务分解, protocol 层) | ACCEPTED | 2026-07-25 | Batch3 C2 | 0236-collab-protocol-c2-deepening.md |
 | 0237 | C3 协作记忆 gbrain 公共黑板 (writeCollabProduct+retrieveCollab 跨任务复用) | ACCEPTED | 2026-07-25 | Batch3 C3 | 0237-collab-memory-c3-gbrain-blackboard.md |
 | 0238 | MOF/M4 Phase0 注册面守自止血 (P0-1..P0-4: 路径/stats/commands 修复+漂移门+文档指针化+MCP口径) | ACCEPTED | 2026-07-25 | MOF-M4 Phase0 | 0238-mof-m4-phase0-registry-self-governance.md |
+| 0240 | MOF/M4 D1-D4 决策 A/A/A/A + Phase 1 启动 (D1删CLI/D2冻结MCP/D3 YAML单真源/D4降级codegen) | ACCEPTED | 2026-07-25 | MOF-M4 Phase1 | 0240-mof-d1d4-decisions-aaaa-phase1.md |
 | 0174 | P79 Phase 1 Foundry v2 cron 集成 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0174-p79-phase1-foundry-v2-cron.md |
 | 0175 | P79 Phase 2 Health 100 (bare ports 分类 + env var 迁移) | ACCEPTED | 2026-07-08 | governance-team | 0175-p79-phase2-health-100.md |
 | 0176 | P79 Phase 3 跨仓零残留 (ecos 结构化对齐) | ACCEPTED | 2026-07-08 | governance-team | 0176-p79-phase3-cross-repo-zero-residual.md |
