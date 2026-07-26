@@ -62,23 +62,10 @@ class A2ATransport:
             return f"a2a_{self._counter:06d}_{uuid.uuid4().hex[:6]}"
 
     def _emit(self, event_type: str, payload: dict) -> bool:
-        try:
-            from kairon_events import get_global_event_bus, make_event
-        except ImportError:
-            _log.debug("[A2ATransport] kairon_lib.events unavailable")
-            return False
-
-        bus = get_global_event_bus()
-        if bus is None:
-            _log.debug("[A2ATransport] Global EventBus not yet registered")
-            return False
-
-        try:
-            bus.publish(make_event(event_type, "a2a_transport", payload))
-        except Exception as exc:  # defensive fallback
-            _log.debug("[A2ATransport] Failed to emit %s: %s", event_type, exc)
-            return False
-        return True
+        # kairon_events L0 shared event bus was removed in P30.5. Events
+        # for a2a are best-effort and never block message delivery; a
+        # future hook can re-introduce observability here if needed.
+        return False
 
     def send_message(
         self,
