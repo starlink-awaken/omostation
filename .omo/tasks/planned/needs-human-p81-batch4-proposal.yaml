@@ -2,7 +2,7 @@
 id: NEEDS-HUMAN-P81-BATCH4-PROPOSAL
 title: "STRAT-P81 Batch 4 提案（多 agent 协作深化主轴 · C 波 · 待人类拍板）"
 status: candidate
-needs-human: true
+needs-human: false  # Round3 D2: 过时, Round3 workorder 已替代 C 波主轴
 priority: P1
 owner: human
 created_at: "2026-07-25T00:45:00Z"
