@@ -435,6 +435,13 @@ def generate_brief_content() -> str:
 
     # 1. 决策收件箱 (Decision Inbox - WS-4)
     lines.append("## 📥 待决策收件箱 (Decision Inbox)")
+    # D3 (Round3, workorder): 决策积压可观测 — 让"人类是瓶颈"本身可见
+    if decisions:
+        lines.append(
+            f"> ⏳ **决策积压**: {len(decisions)} 张待人类拍板 — "
+            "人类决策是当前系统瓶颈 (非技术问题). "
+            "一页勾选清单见 `.omo/tasks/planned/decision-checklist-9-items.md`."
+        )
     lines.append("")
     if not decisions and not violations and not soft_warnings:
         lines.append("✅ **当前没有需要人工干预的阻断决策，健康免疫运转良好。**")

@@ -3,7 +3,7 @@ title: 'P81 S0.1: M1 提前验收申请（ADR-0210 Confirmation · 人类拍板�
 status: closed
 superseded_by: ADR-0228 (M1 验收通过 D2, 2026-07-24 用户拍板)
 closed_at: "2026-07-25T12:40:00Z"
-needs-human: true
+needs-human: false  # Round3 D2: status closed, 清 Inbox 虚高
 priority: P0
 owner: human
 created_at: '2026-07-24T03:36:00Z'
