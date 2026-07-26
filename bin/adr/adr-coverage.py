@@ -71,10 +71,26 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
     actual = set(numbers)
     missing_nums_all = sorted(expected - actual)
     # 区分: P28 (1-99) 和 P50+ (50-999) 的命名约定
+    # 占号中 (adr-claims 存在) 的号不算缺失 — session 在写 ADR (G-CONV.7 D1)
+    claims: dict[int, dict] = {}
+    try:
+        import sys as _sys  # noqa: PLC0415
+        _gac = Path(__file__).resolve().parent.parent / "gac"
+        if str(_gac) not in _sys.path:
+            _sys.path.insert(0, str(_gac))
+        from swarm_discipline import load_adr_claims  # noqa: PLC0415
+
+        _claims_dir = decisions_dir.parents[2] / ".omo" / "_delivery" / "adr-claims"
+        claims = load_adr_claims(_claims_dir)
+    except Exception:
+        pass
     missing_nums = []
     for n in missing_nums_all:
         # 9-49 区间是 P28-P49 历史 gap (命名约定)
         if 9 <= n <= 49:
+            continue
+        # 占号中 (claim 存在) = session 在写, 不算缺失
+        if n in claims:
             continue
         missing_nums.append(n)
     duplicates = duplicate_adr_numbers(decisions_dir)
