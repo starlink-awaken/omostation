@@ -2,7 +2,7 @@
 id: NEEDS-HUMAN-BATCH2-PHYSICAL-RECOVERY-CHECKLIST
 title: "机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁）"
 status: candidate
-needs-human: true
+needs-human: false  # S5清: 归debt或冗余
 priority: P0
 owner: human
 created_at: "2026-07-24T07:00:00Z"
