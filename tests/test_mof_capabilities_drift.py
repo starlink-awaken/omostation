@@ -95,3 +95,90 @@ def test_mcptool_count_clean():
         declared=2, mcp_code="self._register_tool()\nself._register_tool()"
     )
     assert findings == []
+
+
+# ─── metaos registry 漂移注入检出 (§J1 扩展, workorder 2026-07-25) ───
+
+
+def test_projects_capabilities_entrypoint_drift_detected(tmp_path):
+    """注入死 entrypoint → 检出 (metaos 拆迁遗留: kairon.metaos 死路径复现)."""
+    findings = drift.check_projects_capabilities_entrypoints(
+        [{"id": "kairon.metaos", "entrypoint": "projects/kairon/packages/metaos"}],
+        repo=tmp_path,
+    )
+    assert len(findings) == 1
+    assert findings[0]["capability"] == "kairon.metaos"
+    assert findings[0]["actual"] == "MISSING"
+
+
+def test_projects_capabilities_entrypoint_clean(tmp_path):
+    """真实存在 entrypoint → 无漂移."""
+    (tmp_path / "projects" / "metaos").mkdir(parents=True)
+    findings = drift.check_projects_capabilities_entrypoints(
+        [{"id": "project.metaos", "entrypoint": "projects/metaos"}],
+        repo=tmp_path,
+    )
+    assert findings == []
+
+
+def test_metaos_cli_entrypoint_clean():
+    """真实 INTERFACE.yaml (metaos.cli:main) → 无漂移 (入口可达)."""
+    findings = drift.check_metaos_cli_entrypoint(drift.METAOS_INTERFACE)
+    assert findings == []
+
+
+def test_metaos_cli_entrypoint_drift_injected(tmp_path):
+    """注入 ghost module → 检出 (声明/执行鸿沟)."""
+    iface = tmp_path / "INTERFACE.yaml"
+    iface.write_text("cli:\n  - module: ghost.pkg:main\n")
+    findings = drift.check_metaos_cli_entrypoint(iface, repo=tmp_path)
+    assert len(findings) == 1
+    assert findings[0]["declared_module"] == "ghost.pkg:main"
+
+
+def test_metaos_submodule_present_clean():
+    """真实 metaos submodule 目录存在 → 无漂移."""
+    findings = drift.check_metaos_submodule_present(drift.METAOS_SUBMODULE_DIR)
+    assert findings == []
+
+
+def test_metaos_submodule_missing_injected(tmp_path):
+    """注入不存在目录 → 检出."""
+    findings = drift.check_metaos_submodule_present(tmp_path / "nope")
+    assert len(findings) == 1
+    assert findings[0]["check"] == "metaos_submodule_missing"
+
+
+def test_detect_metaos_registry_structure():
+    """detect_metaos_registry_drift 结构正确 (§J1 验收: 一扇门覆盖 metaos 面)."""
+    result = drift.detect_metaos_registry_drift()
+    assert result["rule_id"] == drift.METAOS_RULE_ID
+    assert "total_drifts" in result
+    assert "findings" in result
+    assert isinstance(result["registries"], list) and len(result["registries"]) >= 2
+
+
+def test_detect_metaos_known_kairon_drift():
+    """端到端活体验收: detect_metaos_registry_drift 检出 kairon.metaos 死路径.
+
+    metaos 2026-06-06 从 kairon/packages/metaos 拆到 projects/metaos, 但
+    projects-capabilities.yaml 的 kairon.metaos 条目 entrypoint 仍指向旧路径.
+    维护契约: 若 kairon.metaos 已修(projects-capabilities 重生/退役), 删此测试.
+    """
+    result = drift.detect_metaos_registry_drift()
+    cap_ids = {
+        f["capability"]
+        for f in result["findings"]
+        if f.get("check") == "capability_entrypoint_missing"
+    }
+    assert "kairon.metaos" in cap_ids, (
+        f"应检出 kairon.metaos 死路径, 实际 findings: {result['findings'][:3]}"
+    )
+
+
+def test_detect_all_drift_aggregates_two_scopes():
+    """detect_all_drift 聚合 MOF + metaos 两面 (§J1: 同一扇门覆盖)."""
+    result = drift.detect_all_drift()
+    assert result["rule_id"] == "CR-X4-REGISTRY-DRIFT-AGGREGATE"
+    assert result["scopes"] == ["mof", "metaos"]
+    assert result["total_drifts"] >= 0

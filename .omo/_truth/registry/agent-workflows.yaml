@@ -587,6 +587,21 @@ diff_checks:
       - bin/mof/check-mof-capabilities-drift.py
       - tests/test_mof_capabilities_drift.py
     command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_mof_capabilities_drift.py, -q]
+  - id: metaos-registry-drift
+    description: metaos registry drift 守门 (CR-X4-METAOS-REGISTRY-DRIFT, §J1) — projects-capabilities 死条目 + INTERFACE entrypoint 可达性 + submodule 目录. 扩展 check-mof-capabilities-drift 同一扇门, 不新建门禁框架.
+    required: false
+    paths:
+      - bin/mof/check-mof-capabilities-drift.py
+      - .omo/_truth/registry/projects-capabilities.yaml
+      - projects/metaos/INTERFACE.yaml
+    command: [uv, run, --with, pyyaml, python, bin/mof/check-mof-capabilities-drift.py, --scope, metaos]
+  - id: metaos-registry-drift-tests
+    description: metaos registry drift 检出测试 (§J1 注入 + 现实 kairon.metaos 活体验收).
+    required: false
+    paths:
+      - bin/mof/check-mof-capabilities-drift.py
+      - tests/test_mof_capabilities_drift.py
+    command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_mof_capabilities_drift.py, -q]
   - id: cockpit-agent-entry-tests
     description: Cockpit L3 entry tests for agent workflow delegation.
     required: true
