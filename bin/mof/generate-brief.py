@@ -470,6 +470,12 @@ def generate_brief_content() -> str:
                 )
             lines.append("")
 
+    # S2 (P82): 治理预算约束可见 (ADR-0249)
+    lines.append(
+        "> 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡."
+    )
+    lines.append("")
+
     # 2. X3 价值仪表 (Value Metrics - WS-5)
     lines.append("## 📈 X3 价值仪表 (Value Metrics)")
     lines.append("")
