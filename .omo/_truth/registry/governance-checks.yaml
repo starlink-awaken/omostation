@@ -2074,6 +2074,44 @@ gac:
       created_at: "2026-07-06"
       adr: "ADR-0106"
 
+    # -- 注册面 drift 门 (ADR-0238 MOF + ADR-0242 metaos + P0-5 doc-claims, R-GOV-1 一致性) --
+    - id: CR-X4-MOF-CAPABILITIES-DRIFT
+      source_type: indexed
+      source_ref: "bin/mof/check-mof-capabilities-drift.py"
+      dimension: X4
+      layer: meta
+      check_type: consistency_drift
+      executor: ['ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-25"
+      adr: "ADR-0238"
+    - id: CR-X4-METAOS-REGISTRY-DRIFT
+      source_type: indexed
+      source_ref: "bin/mof/check-mof-capabilities-drift.py"
+      dimension: X4
+      layer: meta
+      check_type: consistency_drift
+      executor: ['ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-26"
+      adr: "ADR-0242"
+    - id: CR-X4-DOC-CLAIMS
+      source_type: indexed
+      source_ref: "bin/mof/check-doc-claims.py"
+      dimension: X4
+      layer: meta
+      check_type: consistency_drift
+      executor: ['ci_gate']
+      enforcement: required
+      lifecycle: active
+      version: 1.0.0
+      created_at: "2026-07-26"
+      adr: "ADR-0242"
+
     # -- M4 自反校验门禁 (5-check) --
     - id: M4-BOOTSTRAP-REFLEX
       dimension: X1

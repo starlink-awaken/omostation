@@ -143,7 +143,7 @@ def check_registry_conflicts(filepath: Path, content: str, registry: dict) -> li
     for proj_name, proj_data in projects.items():
         pkg_count = proj_data.get("packages")
         if pkg_count:
-            for match in re.finditer(rf"{proj_name}.*?(\d+)\s*(?:包|packages|个包)", content, re.IGNORECASE):
+            for match in re.finditer(rf"{proj_name}[^|\n]*?(\d+)\s*(?:包|packages|个包)", content, re.IGNORECASE):
                 found_num = int(match.group(1))
                 if found_num != pkg_count:
                     context_start = max(0, match.start() - 40)
