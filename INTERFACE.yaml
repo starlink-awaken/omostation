@@ -32,4 +32,4 @@ dependencies:
   runtime: [httpx, pyyaml, fastmcp]
   dev: [pytest, pytest-cov, ruff]
 
-tests: 400+
+tests: 400+  # as_of 2026-07-28, 见 pytest tests/ (CI 守, 不硬编码)
