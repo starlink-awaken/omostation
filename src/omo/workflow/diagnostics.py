@@ -452,7 +452,7 @@ def p74_solidification_report(
             ]
         has_check_coverage = (
             any(
-                any(fnmatch.fnmatch(p, pattern) for p in covered_paths)
+                any(fnmatch.fnmatch(pattern, p) for p in covered_paths)
                 for pattern in workflow_paths
             )
             if workflow_paths

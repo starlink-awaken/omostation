@@ -63,10 +63,21 @@ def load_registry(path: Path = REGISTRY_PATH) -> dict[str, Any]:
     documents = [
         doc for doc in yaml.safe_load_all(path.read_text(encoding="utf-8")) if doc
     ]
+    merged: dict[str, Any] = {}
+    workflows_doc: dict[str, Any] | None = None
     for document in documents:
-        if isinstance(document, dict) and "workflows" in document:
-            return document
-    raise WorkflowError(f"workflow registry has no workflows document: {path}")
+        if not isinstance(document, dict):
+            continue
+        if "workflows" in document and workflows_doc is None:
+            workflows_doc = document
+        for key, value in document.items():
+            if key == "workflows":
+                continue
+            merged[key] = value
+    if workflows_doc is None:
+        raise WorkflowError(f"workflow registry has no workflows document: {path}")
+    merged["workflows"] = workflows_doc["workflows"]
+    return merged
 
 
 def is_default_registry_path(path: Path) -> bool:
