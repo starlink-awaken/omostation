@@ -776,6 +776,29 @@ diff_checks:
       - protocols/port-registry.yaml
       - docs/project-registry.yaml
     command: [python3, bin/gac/gac-ingress-check.py]
+  # P0-A (integrated-governance §P0): 三把已存在检查器注册 diff_checks.
+  - id: mof-capabilities-drift-check
+    description: MOF capabilities registry drift (declared entrypoint vs actual).
+    required: false
+    paths:
+      - .omo/capabilities/**
+      - bin/mof/**
+      - projects/*/src/**
+    command: [uv, run, --with, pyyaml, python, bin/mof/check-mof-capabilities-drift.py]
+  - id: doc-claims-check
+    description: Document claims vs implementation consistency (CR-X4-DOC-CLAIMS).
+    required: false
+    paths:
+      - docs/**
+      - projects/*/CLAUDE.md
+      - projects/*/AGENTS.md
+    command: [uv, run, --with, pyyaml, python, bin/mof/check-doc-claims.py]
+  - id: layer-call-direction-check
+    description: Cross-layer call direction (L0-L3 + X) violations. 存量 11 条 grace (检查器 exit=0 只报告); new-violation blocking 待加 baseline 机制.
+    required: false
+    paths:
+      - projects/*/src/**
+    command: [uv, run, --with, pyyaml, python, bin/ssot/check-layer-call-direction.py]
 workflows:
   - id: project-doc-change
     run_frequency: on_demand
