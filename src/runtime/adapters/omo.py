@@ -42,19 +42,14 @@ def _daemon_is_online(service: dict[str, Any]) -> bool:
 
 
 def summarize_system_health_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
-    """Summarize system health snapshot. Lazily imports from omo, falls back to direct summary.
+    """Summarize system health snapshot. Direct summary from snapshot data.
 
     ISC-3 / G-CONV.3 single-source: daemon-only ratio; idle and healthy(probe) count
     online — must match bin/compass_radar.collect_runtime_health so scheduler writes
     do not overwrite compass with a 0.75 phantom (ollama idle ≠ offline).
     """
-    try:
-        from omo.omo_state_schema import summarize_system_health_snapshot as _fn
-
-        return _fn(snapshot)
-    except (ModuleNotFoundError, ImportError):
-        pass
-    # Direct summary from snapshot data — omo_state_schema was removed in refactor
+    # Direct summary from snapshot data — omo.omo_state_schema was removed in
+    # refactor; P82-S4 死 import 清理 (try/except 死块移除, 直接 summary, 非补实现).
     services = snapshot.get("services", {}) or {}
     daemons = {
         k: v
