@@ -732,8 +732,6 @@ services:
     description: "[POC] Minerva 审计 (POC stdio)"
 
   - uri: "bos://analysis/codeanalyze/report"
-
-  - uri: "bos://analysis/codeanalyze/report"
     domain: analysis
     action: "report"
     transport: mcp_stdio

@@ -278,32 +278,49 @@ class TestDefaultPath:
 
 
 def test_unimplemented_services_are_tracked():
-    """所有 [UNIMPLEMENTED] 服务必须在 etc/bos-unimplemented.yaml 登记。"""
+    """所有 [UNIMPLEMENTED] 服务必须在 etc/bos-unimplemented.yaml 登记。
+
+    The POC_SERVICES list intentionally drops status=unimplemented
+    entries at load time (they are non-routable by design), so this
+    test reads the YAML directly to keep the two registries in sync.
+    """
     from pathlib import Path
 
-    from agora.mcp.bos_resolver import POC_SERVICES
+    import yaml
 
     registry_path = (
-        Path(__file__).parent.parent.parent / "etc" / "bos-unimplemented.yaml"
+        Path(__file__).parent.parent.parent / "etc" / "bos-services.yaml"
     )
-    assert registry_path.exists(), f"缺失未实现服务跟踪注册表: {registry_path}"
+    assert registry_path.exists(), f"缺失主注册表: {registry_path}"
 
     with registry_path.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
-    tracked_uris = {entry["uri"] for entry in data.get("unimplemented", [])}
-    unimplemented = [
-        s.uri for s in POC_SERVICES if s.description.startswith("[UNIMPLEMENTED]")
-    ]
+    yaml_unimplemented = {
+        entry["uri"]
+        for entry in data.get("services", [])
+        if entry.get("status") == "unimplemented"
+    }
 
-    missing = [uri for uri in unimplemented if uri not in tracked_uris]
-    unknown = [uri for uri in tracked_uris if uri not in unimplemented]
+    tracker_path = (
+        Path(__file__).parent.parent.parent / "etc" / "bos-unimplemented.yaml"
+    )
+    assert tracker_path.exists(), f"缺失未实现服务跟踪注册表: {tracker_path}"
+
+    with tracker_path.open("r", encoding="utf-8") as f:
+        tracker = yaml.safe_load(f)
+
+    tracked_uris = {entry["uri"] for entry in tracker.get("unimplemented", [])}
+
+    missing = [uri for uri in yaml_unimplemented if uri not in tracked_uris]
+    unknown = [uri for uri in tracked_uris if uri not in yaml_unimplemented]
 
     assert not missing, (
-        f"以下 [UNIMPLEMENTED] 服务未在 {registry_path.name} 登记: {missing}"
+        f"以下 [UNIMPLEMENTED] 服务未在 {tracker_path.name} 登记: {missing}"
     )
     assert not unknown, (
-        f"以下服务已登记为 unimplemented 但 bos-services.yaml 中未标记 [UNIMPLEMENTED]: {unknown}"
+        f"以下服务已登记为 unimplemented 但 bos-services.yaml 中未标记 "
+        f"status: unimplemented: {unknown}"
     )
 
 
