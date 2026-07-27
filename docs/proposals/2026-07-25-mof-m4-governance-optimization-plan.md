@@ -143,3 +143,12 @@ Week 8-12  Phase 2（R-meta）: P2-1..P2-4   → ADR-02xx（门禁外置）+ ADR
 1. 签核 D1–D4（建议全选推荐项，一轮决策会即可）
 2. Phase 0 按 Round playbook 起 `mof-model-change` / `project-doc-change` run 执行
 3. 首个 ADR 占号：`python3 bin/adr/next-adr-id.py --session <session> --claim`
+
+---
+
+## as_of: 2026-07-27（P0-D 附录·防脱钩锚点）
+
+> 本子方案作为 master plan (`2026-07-27-integrated-governance-optimization-master-plan.md`) 的战术附件。
+> **as_of 基线**: 2026-07-27。此后 workspace 持续演进, 本方案的"现状描述"可能已脱钩。
+> **执行前必须**: 对照 master plan §P0 已落地项核实（三把锁接线 / 4 空 type / 44 dead entry 清理 / bus optional extra）, 勿凭本子方案的旧状态判断。
+> **已变化项**（P0 后）: 见 master plan + gac-local-gate DEFAULT_POLICY（drift/doc-claims/layer-call-direction 已接）+ projects-capabilities.yaml（44 dead 已清）。
