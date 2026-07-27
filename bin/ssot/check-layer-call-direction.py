@@ -16,7 +16,12 @@
   I0 -> L2
   X -> X (extensions 不能直接 import 彼此)
 
-enforcement=advisory 默认; Phase 3 升级 hard (CI gate)
+enforcement (P0-A 已落地, 2026-07-28 核实):
+  --baseline <file>   new-violation BLOCKING: 存量 file:line 进 baseline grace,
+                      新违规 (不在 baseline) exit 1. SGF gate 传此参数.
+  无 --baseline        advisory: 有任何违规即 exit 1 (无豁免).
+  定位: BLOCKING (对新违规). 存量 11 条进 baseline grace, 逐条 triage 清零 —
+        红线: 严禁往 baseline 塞新违规 (= 重建假绿, 最高级违规).
 """
 from __future__ import annotations
 
@@ -179,9 +184,9 @@ def scan_workspace(paths: list[Path] | None = None, *, strict: bool = False) -> 
                     continue
                 files_scanned += 1
                 all_findings.extend(scan_file(f))
-    by_pair: dict[tuple[str, str], int] = {}
+    by_pair: dict[str, int] = {}  # str key ("L1->L2") — tuple key 不能 JSON 序列化 (P0-A 修)
     for f in all_findings:
-        key = (f["caller_layer"], f["callee_layer"])
+        key = f"{f['caller_layer']}->{f['callee_layer']}"
         by_pair[key] = by_pair.get(key, 0) + 1
     return {
         "ok": len(all_findings) == 0,
@@ -189,6 +194,35 @@ def scan_workspace(paths: list[Path] | None = None, *, strict: bool = False) -> 
         "violations": len(all_findings),
         "by_call_pair": dict(sorted(by_pair.items())),
         "findings": all_findings[:50] if not strict else all_findings,
+    }
+
+
+def scan_files(file_paths: list[Path]) -> dict:
+    """只扫指定文件 (增量模式, gate --scope files / pre-commit 快路径).
+
+    治全量扫描慢 (G1: CI 带 --baseline 全量扫 >25s exit=124 超时).
+    pre-commit 只扫 staged 文件, 增量判新违规 — baseline 比较逻辑不变
+    (changed file 引入的违规不在 baseline = 新违规 fail).
+    """
+    all_findings: list[dict] = []
+    files_scanned = 0
+    for fp in file_paths:
+        if not fp.exists() or not fp.is_file():
+            continue
+        if fp.suffix not in (".py", ".ts", ".tsx"):
+            continue
+        files_scanned += 1
+        all_findings.extend(scan_file(fp))
+    by_pair: dict[str, int] = {}
+    for f in all_findings:
+        key = f"{f['caller_layer']}->{f['callee_layer']}"
+        by_pair[key] = by_pair.get(key, 0) + 1
+    return {
+        "ok": len(all_findings) == 0,
+        "files_scanned": files_scanned,
+        "violations": len(all_findings),
+        "by_call_pair": dict(sorted(by_pair.items())),
+        "findings": all_findings,
     }
 
 
@@ -201,17 +235,25 @@ def main() -> int:
     p.add_argument("--by-layer", action="store_true", help="Summarize by call pair only")
     p.add_argument("--project", help="Scan specific project (e.g. agora)")
     p.add_argument("--baseline", help="P0-A new-violation blocking: baseline file (file:line signatures, 存量 grace). 新违规 (不在 baseline) 才 fail.")
+    p.add_argument("--files", nargs="*", help="只扫指定文件 (增量, pre-commit 快路径, G1 治 CI >25s 超时). 与 --baseline 配合: changed file 新违规不在 baseline 则 fail.")
     args = p.parse_args()
 
-    if args.project:
-        paths = [WORKSPACE / "projects" / args.project]
+    if args.files:
+        # G1 增量快路径: 只扫 staged/指定文件 (pre-commit <5s 目标)
+        file_paths = []
+        for f in args.files:
+            fp = Path(f)
+            file_paths.append(fp if fp.is_absolute() else WORKSPACE / fp)
+        result = scan_files(file_paths)
     else:
-        paths = None
-    result = scan_workspace(paths, strict=True if args.baseline else args.strict)
+        if args.project:
+            paths = [WORKSPACE / "projects" / args.project]
+        else:
+            paths = None
+        result = scan_workspace(paths, strict=True if args.baseline else args.strict)
 
     # P0-A new-violation blocking: baseline 比较存量 grace vs 新违规
     if args.baseline:
-        from pathlib import Path
         bp = Path(args.baseline)
         if not bp.is_absolute():
             bp = WORKSPACE / args.baseline
@@ -236,8 +278,8 @@ def main() -> int:
         print(f"files_scanned: {result['files_scanned']}")
         print(f"violations: {result['violations']}")
         print("\nby call pair (caller -> callee):")
-        for (c, t), n in result["by_call_pair"].items():
-            print(f"  {c} -> {t}: {n}")
+        for pair, n in result["by_call_pair"].items():
+            print(f"  {pair}: {n}")
     else:
         print(f"files_scanned: {result['files_scanned']}")
         print(f"violations: {result['violations']}")

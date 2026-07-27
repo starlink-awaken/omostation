@@ -90,9 +90,13 @@ DEFAULT_POLICY = {
         # Short-term improvement: INDEX 自动更新检查 (CI strict 跑, pre-commit 跳过)
         # 检测 docs/INDEX-*.md 是否与真实内容漂移
         {"id": "check-index-drift", "command": ["bin/ssot/check-index-drift.py"], "ci_only": True},
-        # P0-A (integrated-governance §P0): 三把已存在检查器接线进 gate (门造好没装上修复).
-        # 注: 三检查器当前 exit=0 (只报告不阻断). layer-call-direction 的 new-violation blocking
-        # (存量 11 条 grace) 需另加 baseline 机制, 见 follow-up task.
+        # P0-A + G2 (2026-07-28): 三锁接线. 均为 BLOCKING (不在 SOFT_CHECKS, exit!=0 → gate [FAIL]).
+        #   layer-call-direction: new-violation blocking (baseline 存量 11 grace, 已实现 L213-229;
+        #     G1 --files 增量快路径, pre-commit <1s, CI strict 全量 ~3s).
+        #   mof-capabilities-drift: exit 1 on any drift (声明/执行鸿沟, 当前 drift=0).
+        #   doc-claims: exit 1 on findings (scope=all 17 projects, 当前 0 findings).
+        # 定位 SSOT: governance-checks.yaml (CR-X4-LAYER-CALL / CR-X4-REGISTRY-DRIFT / CR-X4-DOC-CLAIMS).
+        # 旧注释 "exit=0 只报告不阻断 / 需另加 baseline" 已废 (baseline L213-229 早已实现, G2 核实).
         {"id": "mof-capabilities-drift-check", "command": ["bin/mof/check-mof-capabilities-drift.py"]},
         {"id": "doc-claims-check", "command": ["bin/mof/check-doc-claims.py"]},
         {"id": "layer-call-direction-check", "command": ["bin/ssot/check-layer-call-direction.py", "--baseline", ".omo/_truth/registry/layer-call-baseline.txt"]}
@@ -170,6 +174,9 @@ def gate_checks(
             if cmd is None:
                 continue  # 无 staged md → skip
             result.append((name, cmd))
+        elif name == "layer-call-direction-check":
+            # G1: pre-commit 增量快路径 (--files staged <1s), CI strict 全量 baseline
+            result.append((name, scoped_layer_call_command(scope, files, command, strict)))
         else:
             result.append((name, command))
     return tuple(result)
@@ -214,6 +221,27 @@ def scoped_doc_link_command(scope: str, files: list[str] | None, run_id: str, st
     if not md_files:
         return None
     return ["bin/ssot/doc-link-check.py", "--files"] + md_files
+
+
+def scoped_layer_call_command(scope: str, files: list[str] | None, base_command: list[str], strict: bool) -> list[str]:
+    """G1: layer-call 增量快路径 (治 CI >25s 超时, 2026-07-28).
+
+    strict (CI) → base_command 全量 baseline 检查 (覆盖完整, ~3s).
+    非 strict (pre-commit) → 只扫 staged .py/.ts/.tsx, base_command 追加 --files (<1s).
+    无 staged 代码文件 → base_command (全量, 保持覆盖, 不跳过).
+    """
+    if strict:
+        return base_command
+    if scope == "staged":
+        staged = staged_files_git()
+    elif scope == "files":
+        staged = files or _matched_files_from_env()
+    else:
+        staged = files or []
+    code_files = [f for f in staged if f.endswith((".py", ".ts", ".tsx"))]
+    if not code_files:
+        return base_command
+    return base_command + ["--files"] + code_files
 
 
 def change_lane_files_for_scope(scope: str, files: list[str] | None, run_id: str) -> list[str]:

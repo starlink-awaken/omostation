@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 # Status: implemented (P0-5, workorder 2026-07-25)
+# 定位 (P0-A 核实 2026-07-28): BLOCKING — exit 1 on any finding (见 main L118). 但 scope 受限:
+#   default --project=projects/metaos (P0-5 workorder 只针对 metaos). SGF gate 调用未传 --project,
+#   故仅扫 metaos 一处. 实测 6 project 漏过: agora/cockpit/ecos/kairon/omo/runtime 的
+#   INTERFACE.yaml 'tests:' 行裸数字 (1112/498/859/1810+/400+/175, 无 as_of 指针).
+#   送卡 DEBT-DOC-CLAIMS-SCOPE: 扩 --project all + 6 INTERFACE 补 as_of 指针.
+#   时间表: Stage B 首月内 (配合 P0-D as_of 指针化一并做). 前置: 无.
 """check-doc-claims — 文档测试宣称失真防复发门 (P0-5).
 
 治 "文档宣称 vs 实际漂移" (P0-3 指针化后, 本门退化为禁止裸数字宣称的 lint,
@@ -93,22 +99,59 @@ def detect_doc_claim_drift(project_dir: Path) -> dict:
     }
 
 
+def _scan_all_projects() -> dict:
+    """扫所有含 INTERFACE/AGENTS/CLAUDE 的 project, 聚合 findings (P0-A scope=all, 2026-07-28).
+
+    治 doc-claims gate 默认只扫 metaos 的 scope 漏洞 (DEBT DOC_CLAIMS_SCOPE):
+    6 project INTERFACE tests 裸数字曾从门禁漏过. default=all 让 gate 全覆盖.
+    """
+    all_findings: list[dict] = []
+    projects_scanned = 0
+    for proj_dir in sorted((REPO / "projects").iterdir()):
+        if not proj_dir.is_dir():
+            continue
+        has_target = any(
+            (proj_dir / f).exists() for f in ("INTERFACE.yaml", "AGENTS.md", "CLAUDE.md")
+        )
+        if not has_target:
+            continue
+        projects_scanned += 1
+        r = detect_doc_claim_drift(proj_dir)
+        for f in r["findings"]:
+            f["project"] = r["project"]
+            all_findings.append(f)
+    return {
+        "rule_id": RULE_ID,
+        "scope": "all",
+        "projects_scanned": projects_scanned,
+        "total_findings": len(all_findings),
+        "findings": all_findings,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="文档测试宣称失真防复发门 (P0-5, workorder 2026-07-25)"
+        description="文档测试宣称失真防复发门 (P0-5; scope=all P0-A 2026-07-28)"
     )
     parser.add_argument(
-        "--project", default="projects/metaos", help="项目目录 (相对 repo root)"
+        "--project",
+        default="all",
+        help="项目目录 (相对 repo root) 或 'all' (默认, 扫全 project — 治 DOC_CLAIMS_SCOPE)",
     )
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
 
-    project_dir = (REPO / args.project).resolve()
-    result = detect_doc_claim_drift(project_dir)
+    if args.project == "all":
+        result = _scan_all_projects()
+        scope_label = f"scope=all ({result['projects_scanned']} projects)"
+    else:
+        project_dir = (REPO / args.project).resolve()
+        result = detect_doc_claim_drift(project_dir)
+        scope_label = f"project={args.project}"
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
-        print(f"=== 文档宣称失真防复发门 ({RULE_ID}, project={args.project}) ===\n")
+        print(f"=== 文档宣称失真防复发门 ({RULE_ID}, {scope_label}) ===\n")
         if not result["findings"]:
             print("✅ 无裸数字宣称 — 文档已指针化")
         else:

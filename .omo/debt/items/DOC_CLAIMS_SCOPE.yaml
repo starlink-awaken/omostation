@@ -1,0 +1,54 @@
+id: DOC_CLAIMS_SCOPE
+title: doc-claims gate scope 仅 metaos — 6 project INTERFACE tests 裸数字漏过门禁 (已修复)
+dimension: governance
+subdimension: coverage
+domain: system
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: resolved
+owner: governance-team
+affected_roots:
+- projects/agora
+- projects/cockpit
+- projects/ecos
+- projects/kairon
+- projects/omo
+- projects/runtime
+evidence_refs:
+- bin/mof/check-doc-claims.py:101 — default --project=projects/metaos (P0-5 workorder
+  只针对 metaos)
+- 'P0-A 核实 2026-07-28: SGF gate 调用未传 --project, 仅扫 metaos. 6 project 漏过'
+mitigation_refs:
+- check-doc-claims.py 扩 --project all (default, 17 projects 全覆盖)
+- 6 project INTERFACE.yaml tests 行补 as_of 指针 (B1 协作管线第一个任务)
+opened_at: '2026-07-28'
+last_reviewed_at: '2026-07-28'
+gate_level: P2
+x1_policy_ref: P0-A 核实 2026-07-28 + Stage B B1 协作管线任务#1
+x3_tier: Tool
+source_ref: ''
+description: ''
+source: p0-a-verification
+history:
+- at: '2026-07-28T00:00:00Z'
+  action: register
+  note: Registered debt item DOC_CLAIMS_SCOPE.
+  actor: p0-a-verification
+- at: '2026-07-28T00:00:00Z'
+  action: seen_again
+  note: Observed debt DOC_CLAIMS_SCOPE again (occurrence_count=2).
+  actor: p0-a-verification
+registered_at: '2026-07-28T00:00:00Z'
+first_seen_at: '2026-07-28T00:00:00Z'
+last_seen_at: '2026-07-28T00:00:00Z'
+occurrence_count: 2
+status: open
+resolution_evidence:
+- '2026-07-28: 6 project INTERFACE tests 行补 as_of 指针 (agora:1112 cockpit:498 ecos:859
+  kairon:1810+ omo:400+ runtime:175)'
+- check-doc-claims.py 扩 --project all (default), 17 projects scanned, 0 findings
+- 'doc-claims gate scope: 1/7 → 17/17 全覆盖, exit 0'
+- 'B1 协作管线任务#1: 6 haiku agents 并行 dispatch, 静默丢失=0, 平均 44.5s/agent, 加速比 ~5.4x'
+resolved_at: '2026-07-28'
