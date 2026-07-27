@@ -440,7 +440,7 @@ def generate_brief_content() -> str:
         lines.append(
             f"> ⏳ **决策积压**: {len(decisions)} 张待人类拍板 — "
             "人类决策是当前系统瓶颈 (非技术问题). "
-            "一页勾选清单见 `.omo/tasks/planned/decision-checklist-9-items.md`."
+            "一页勾选清单见 `.omo/tasks/planned/decision-checklist-13-items.md`."
         )
     lines.append("")
     if not decisions and not violations and not soft_warnings:
