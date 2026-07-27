@@ -1,4 +1,4 @@
-# 9 项决策一页清单 (待人类拍板 · Round 3 D1)
+# 13 项决策一页清单 (待人类拍板 · Round 3 D1 + L2 止血包)
 
 > 合并自 3 张卡: `needs-human-mof-m4-d1-d4-decisions` / `needs-human-metaos-phase12-d1-d4` / `needs-human-batch2-role-expansion-proposal`
 > 目标: **一次会话批完 9 项**, 不用读 3 张 YAML. 每项勾 [批准] / [否决] / [改选].
@@ -26,7 +26,7 @@
 | C1 | 第 4/5 角色 (research/delivery) 实装 | 待定 (P2) | 评估页已齐 (batch2-role-expansion) | 协作主轴扩容 (ADR-0235) | ☐批准实装 ☐否决 ☐延后 |
 
 ---
-**拍板方式**: 在「勾选」列标记. 9 项可逐项独立批 (建议全选推荐项, 一轮决策会即可).
+**拍板方式**: 在「勾选」列标记. 13 项可逐项独立批 (建议全选推荐项, 一轮决策会即可).
 **红线**: agent 不代批 (§F). MOF/metaos Phase 1/2 须 D 签核后启动.
 
 
