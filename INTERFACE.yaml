@@ -34,4 +34,4 @@ dependencies:
   runtime: [fastmcp, httpx, aiohttp, fastapi, uvicorn, structlog, cryptography, prometheus-client, psutil]
   dev: [pytest, pytest-asyncio, ruff, mypy]
 
-tests: 1112
+tests: 1112  # as_of 2026-07-28, 见 pytest tests/ (CI 守, 不硬编码)
