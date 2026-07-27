@@ -180,3 +180,12 @@ Week 6-12  Phase 2（R-meta）: P2-1..P2-5   → ADR-02xx（omo 结构）+ ADR-0
 2. Phase 0 立即启动：kairon CI 修复（P0-1）是全 L2 最高优先——152K LOC 项目恢复安全网
 3. 与 MOF/M4、metaos 两方案的 Phase 0 并行推进（零文件冲突）
 4. 三方案全部签核后，可考虑设立"L2 治理 Round"系列统一跟踪（复用 Round playbook §10）
+
+---
+
+## as_of: 2026-07-27（P0-D 附录·防脱钩锚点）
+
+> 本子方案作为 master plan (`2026-07-27-integrated-governance-optimization-master-plan.md`) 的战术附件。
+> **as_of 基线**: 2026-07-27。此后 workspace 持续演进, 本方案的"现状描述"可能已脱钩。
+> **执行前必须**: 对照 master plan §P0 已落地项核实（三把锁接线 / 4 空 type / 44 dead entry 清理 / bus optional extra）, 勿凭本子方案的旧状态判断。
+> **已变化项**（P0 后）: 见 master plan + gac-local-gate DEFAULT_POLICY（drift/doc-claims/layer-call-direction 已接）+ projects-capabilities.yaml（44 dead 已清）。
