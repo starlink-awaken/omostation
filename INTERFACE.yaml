@@ -31,4 +31,4 @@ dependencies:
   runtime: [fastapi, fastmcp, httpx, uvicorn, pydantic, pyyaml, apscheduler, croniter, pyjwt]
   dev: [pytest, pytest-asyncio]
 
-tests: 175
+tests: 175  # as_of 2026-07-28, 见 pytest tests/ (CI 守, 不硬编码)
