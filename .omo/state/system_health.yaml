@@ -1,4 +1,4 @@
-last_scan: 1785065444.448611
+last_scan: 1785155369.03575
 services:
   agora-gateway:
     health_check: healthy (probe)
@@ -8,8 +8,8 @@ services:
       last_healthy_seconds: 0
       pid: '4052'
       status: running
-      uptime_seconds: 172236
-    timestamp: 1785065444.448611
+      uptime_seconds: 20617
+    timestamp: 1785155369.03575
     type: daemon
   agora-sse:
     health_check: healthy
@@ -20,8 +20,8 @@ services:
       last_healthy_seconds: 0
       pid: '6870'
       status: running
-      uptime_seconds: 16523
-    timestamp: 1785065444.448611
+      uptime_seconds: 106448
+    timestamp: 1785155369.03575
     type: daemon
   cron-service:
     health_check: healthy
@@ -32,29 +32,29 @@ services:
       last_healthy_seconds: 0
       pid: '66759'
       status: running
-      uptime_seconds: 289039
-    timestamp: 1785065444.448611
+      uptime_seconds: 378964
+    timestamp: 1785155369.03575
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785065444.448611
+    timestamp: 1785155369.03575
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1785065444.448611
+    timestamp: 1785155369.03575
     type: scheduled
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785065444.448611
+    timestamp: 1785155369.03575
     type: integrated
   ollama:
     health_check: healthy
@@ -63,12 +63,12 @@ services:
     runtime:
       last_healthy_seconds: 0
       status: idle
-    timestamp: 1785065444.448611
+    timestamp: 1785155369.03575
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785065444.448611
+    timestamp: 1785155369.03575
     type: mcp

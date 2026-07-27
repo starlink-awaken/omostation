@@ -1,0 +1,41 @@
+id: NEEDS-HUMAN-TASK-FLOW-STAGNATION
+title: "done/ 流转停滞 — 任务状态机无人推进 (真实运营信号)"
+status: candidate
+needs-human: true   # 真实信号需人类关注, 但按 ADR-0250 不阻断 Stage B
+priority: P2
+owner: human
+created_at: "2026-07-27T00:00:00Z"
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+  - .omo/_knowledge/decisions/0250-health-gate-engineering-surface-only.md
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false   # 观察项, 不需人类拍板才能动
+source_docs:
+  - .omo/state/health.yaml
+desc: |
+  health 审计发现 done/ 目录 = 0 文件, 13 张任务全堆 planned/.
+  反映任务状态机没人推进 (任务完成不挪 done/), 属真实运营信号.
+
+  根因 (假设, 需核实):
+  - agent-workflow closeout 流程对历史 run 不友好 (verify 绑通用 check, 见 Stage A 收尾日志)
+  - 或任务完成判定缺失 (无机制把已完成工作登 done/)
+
+  影响:
+  - strategy.py "done 7天0个" anomaly (战略执行停滞告警)
+  - owner 集中度计算分母偏小 (done 不入算)
+
+  按 ADR-0250: 不作为 Stage B 启动阻断项. Stage B 协作管线 (B1 任务流转) 应自然消化.
+  若 Stage B 月1 仍停滞, 升级处理.
+test_plan:
+  - 核实 closeout 流程对历史 run 的 verify 耦合 (是否过广)
+  - 评估 done/ 登记机制 (PR 合并 → 自动登 done?)
+entry_gate: []
+evidence_required: []
+checklist:
+  - "Stage B 月1 结束核查: done/ 是否仍有流入"
+  - "若停滞, 归因 closeout 流程 or 登记机制"
