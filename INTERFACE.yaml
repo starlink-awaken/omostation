@@ -32,4 +32,4 @@ dependencies:
   runtime: [runtime, rich, pyyaml, fastmcp]
   dev: [pytest]
 
-tests: 498
+tests: 498  # as_of 2026-07-28, 见 pytest tests/ (CI 守, 不硬编码)
