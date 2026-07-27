@@ -1332,27 +1332,6 @@ wheels = [
 ]
 
 [[package]]
-name = "model-driven"
-version = "1.0.0"
-source = { editable = "../model-driven" }
-dependencies = [
-    { name = "fastmcp" },
-    { name = "pyyaml" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "fastmcp", specifier = ">=3.4.2" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8" },
-]
-provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=9.0.3" }]
-
-[[package]]
 name = "more-itertools"
 version = "11.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1453,7 +1432,6 @@ dependencies = [
     { name = "bus-foundation" },
     { name = "fastmcp" },
     { name = "httpx", extra = ["socks"] },
-    { name = "model-driven" },
     { name = "openai" },
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -1479,7 +1457,6 @@ requires-dist = [
     { name = "bus-foundation", directory = "../bus-foundation" },
     { name = "fastmcp", specifier = ">=3.4.2" },
     { name = "httpx", extras = ["socks"], specifier = ">=0.28.1" },
-    { name = "model-driven", editable = "../model-driven" },
     { name = "openai", specifier = ">=2.41.1" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },

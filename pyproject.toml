@@ -10,7 +10,6 @@ dependencies = [
     "aetherforge",
     "agora",
     "bus-foundation",
-    "model-driven",
     "openai>=2.41.1",
     "pydantic>=2.0.0",
     "pyyaml>=6.0.3",
@@ -40,7 +39,6 @@ build-backend = "uv_build"
 aetherforge = { path = "../aetherforge", editable = true }
 agora = { path = "../agora", editable = true }
 bus-foundation = { path = "../bus-foundation" }
-model-driven = { path = "../model-driven", editable = true }
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
