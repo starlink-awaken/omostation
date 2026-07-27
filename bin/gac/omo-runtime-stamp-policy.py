@@ -53,7 +53,13 @@ def load_gitignore_patterns() -> list[str]:
         line = raw.strip()
         if not line or line.startswith("#") or line.startswith("!"):
             continue
-        patterns.append(line.rstrip("/"))
+        if line.endswith("/"):
+            # 目录模式 (gitignore trailing /) 匹配目录下所有内容;
+            # rstrip("/") 会丢目录语义致 fnmatch 不匹配子路径 (P82 StageA 修:
+            # runtime/agent-sessions/ 应匹配其下 IMPACT.md 等).
+            patterns.append(line.rstrip("/") + "/**")
+        else:
+            patterns.append(line)
     return patterns
 
 
