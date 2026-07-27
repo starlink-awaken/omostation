@@ -10,7 +10,7 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (12 个)
+## Planned Tasks (13 个)
 | ID | Title | Status |
 |----|-------|--------|
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
@@ -18,6 +18,7 @@
 | needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
 | needs-human-batch2-role-expansion-proposal | Batch2 B3: 第 4/5 角色（research/delivery）实装提案（评估页已齐 | candidate |
 | needs-human-batch3-proposal | STRAT-P81 Batch 3 提案（物理 KPI 冲刺主轴 · 待人类拍板） | candidate |
+| needs-human-gbrain-427-red-failures | gbrain 427红灯 — mock.module隔离根因已定位 (1根因→427 casca | candidate |
 | needs-human-ingress-registry-drift | ingress-registry 28 task carrier missing (cockpi | candidate |
 | needs-human-metaos-phase12-d1-d4 | metaos 治理批 Phase 1/2 前提: D1-D4 四项决策 (CLI/PID/age | candidate |
 | needs-human-mof-m4-d1-d4-decisions | MOF/M4 治理优化 D1-D4 决策签核 (Phase 1/2 启动前置 | candidate |
@@ -67,5 +68,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-26 (依据 `omo state sync-tasks` 与真实目录重算: done=0, planned=12, active=0, archived=6 顶层)*
+*Updated: 2026-07-27 (依据 `omo state sync-tasks` 与真实目录重算: done=0, planned=13, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
