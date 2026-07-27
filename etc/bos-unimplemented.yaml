@@ -7,7 +7,7 @@
 #   - 数量只减不增；增加需 review
 
 schema_version: "1.0"
-last_reviewed: "2026-07-14"  # 复审2026-07-14: 移除14个已实现条目(P43)，仅保留IRIS(3个P45+)
+last_reviewed: "2026-07-27"  # 复审2026-07-27: 移除 protocols-layer/trigger (yaml 中无此 URI, 登记悬空)
 unimplemented:
   - uri: "bos://analysis/iris/connect"
     reason: "IRIS connect 适配层未实现"
@@ -23,8 +23,3 @@ unimplemented:
     reason: "IRIS validate 适配层未实现"
     dependency: "kairon/packages/iris"
     target_phase: "P45+"
-
-  - uri: "bos://governance/protocols-layer/trigger"
-    reason: "kairon 无 protocols_layer 包, 声明悬空"
-    dependency: "kairon/packages/protocols_layer"
-    target_phase: "P50+"
