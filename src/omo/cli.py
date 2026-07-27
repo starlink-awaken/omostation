@@ -558,10 +558,9 @@ def _cmd_predict(args: list[str]) -> int:
 
     from pathlib import Path
 
-    from omo.bridge_utils import get_omo_dir
     from omo.predictive_governance import PredictiveGovernanceEngine
 
-    omo_dir = get_omo_dir(Path.cwd())
+    omo_dir = Path.cwd() / ".omo"  # S4: bridge_utils死模块移除inline非补实现
     engine = PredictiveGovernanceEngine(omo_dir)
 
     if parsed.predict_sub == "risks":
@@ -660,10 +659,9 @@ def _cmd_cache(args: list[str]) -> int:
 
     from pathlib import Path
 
-    from omo.bridge_utils import get_omo_dir
     from omo.state_cache import GovernanceStateCache
 
-    omo_dir = get_omo_dir(Path.cwd())
+    omo_dir = Path.cwd() / ".omo"  # S4: bridge_utils死模块移除inline非补实现
     cache = GovernanceStateCache(omo_dir / "_cache")
 
     if parsed.cache_sub == "stats":
