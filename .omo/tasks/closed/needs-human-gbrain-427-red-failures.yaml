@@ -1,0 +1,39 @@
+id: NEEDS-HUMAN-GBRAIN-427-RED-FAILURES
+title: 'gbrain 427红灯 — mock.module 隔离根因已定位+修复 (S4 已验证 0fail)'
+status: closed
+needs-human: false   # S4 已修: --isolate (CI+AGENTS.md), 聚焦验证 0fail
+priority: P0
+owner: human
+created_at: '2026-07-27T00:00:00+00:00'
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+source_docs:
+  - projects/gbrain/test/e2e/cross-modal-eval.test.ts
+evidence:
+  - projects/gbrain/test/e2e/cross-modal-eval.test.ts:172
+  - "聚焦验证 (2026-07-27): bun test --isolate test/core/budget/gateway-budget-composition.test.ts test/e2e/cross-modal-eval.test.ts = 10 pass 0 fail"
+entry_gate: []
+evidence_required: []
+test_plan:
+  - "CI 全量 bun test --isolate 验证 427→0 (carrier 补全后)"
+checklist:
+  - "x mock.module 隔离根因定位 (cross-modal-eval:172 全局替换 gateway, afterEach 不恢复 module)"
+  - "x 修法: CI + AGENTS.md 加 bun test --isolate (e2e.yml L40/91, AGENTS.md L25)"
+  - "x 聚焦验证污染对 10 pass 0 fail"
+desc: |
+  gbrain 427红灯根因: cross-modal-eval.test.ts:172 用 mock.module('../../src/core/ai/gateway.ts')
+  全局替换 gateway, afterEach(mock.restore()) 只恢复 mock() stub 不恢复 mock.module() 替换
+  → 后续所有 test 文件 gateway import 被污染 → "forced 5xx" cascading 427 fail.
+
+  证据: gateway-budget-composition.test.ts 单独跑 6 pass 0 fail, 全量跑 fail = 测试隔离问题.
+
+  S4 已修 (PR#532): CI + AGENTS.md 加 bun test --isolate. 聚焦验证污染对 10 pass 0 fail.
+  工作完成, 标 closed.
