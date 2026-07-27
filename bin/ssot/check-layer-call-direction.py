@@ -200,13 +200,33 @@ def main() -> int:
     p.add_argument("--json", action="store_true", help="JSON output")
     p.add_argument("--by-layer", action="store_true", help="Summarize by call pair only")
     p.add_argument("--project", help="Scan specific project (e.g. agora)")
+    p.add_argument("--baseline", help="P0-A new-violation blocking: baseline file (file:line signatures, 存量 grace). 新违规 (不在 baseline) 才 fail.")
     args = p.parse_args()
 
     if args.project:
         paths = [WORKSPACE / "projects" / args.project]
     else:
         paths = None
-    result = scan_workspace(paths, strict=args.strict)
+    result = scan_workspace(paths, strict=True if args.baseline else args.strict)
+
+    # P0-A new-violation blocking: baseline 比较存量 grace vs 新违规
+    if args.baseline:
+        from pathlib import Path
+        bp = Path(args.baseline)
+        if not bp.is_absolute():
+            bp = WORKSPACE / args.baseline
+        baseline_sigs: set[str] = set()
+        if bp.is_file():
+            for ln in bp.read_text(encoding="utf-8").splitlines():
+                ln = ln.strip()
+                if ln and not ln.startswith("#"):
+                    baseline_sigs.add(ln)
+        all_f = result.get("findings", [])
+        new_f = [f for f in all_f if f"{f['file']}:{f['line']}" not in baseline_sigs]
+        result["ok"] = len(new_f) == 0
+        result["new_violations"] = len(new_f)
+        result["baseline_grace"] = len(all_f) - len(new_f)
+        result["findings"] = new_f  # 输出只显示新违规
 
     if args.json:
         import json

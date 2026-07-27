@@ -89,7 +89,13 @@ DEFAULT_POLICY = {
         {"id": "bus-e2e-harness", "command": ["bin/ssot/bus-e2e-harness.py", "--count", "30", "--json"], "ci_only": True},
         # Short-term improvement: INDEX 自动更新检查 (CI strict 跑, pre-commit 跳过)
         # 检测 docs/INDEX-*.md 是否与真实内容漂移
-        {"id": "check-index-drift", "command": ["bin/ssot/check-index-drift.py"], "ci_only": True}
+        {"id": "check-index-drift", "command": ["bin/ssot/check-index-drift.py"], "ci_only": True},
+        # P0-A (integrated-governance §P0): 三把已存在检查器接线进 gate (门造好没装上修复).
+        # 注: 三检查器当前 exit=0 (只报告不阻断). layer-call-direction 的 new-violation blocking
+        # (存量 11 条 grace) 需另加 baseline 机制, 见 follow-up task.
+        {"id": "mof-capabilities-drift-check", "command": ["bin/mof/check-mof-capabilities-drift.py"]},
+        {"id": "doc-claims-check", "command": ["bin/mof/check-doc-claims.py"]},
+        {"id": "layer-call-direction-check", "command": ["bin/ssot/check-layer-call-direction.py", "--baseline", ".omo/_truth/registry/layer-call-baseline.txt"]}
     ]
 }
 
