@@ -384,6 +384,46 @@ services:
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "explain"]
     description: "OntoDerive 推导解释"
 
+  - uri: "bos://analysis/ontoderive/audit"
+    domain: analysis
+    action: "audit"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "audit"]
+    description: "OntoDerive 审计入口"
+
+  - uri: "bos://analysis/ontoderive/fact-check"
+    domain: analysis
+    action: "fact-check"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "fact-check"]
+    description: "OntoDerive 事实核验入口"
+
+  - uri: "bos://analysis/ontoderive/toolforge/match"
+    domain: analysis
+    action: "toolforge/match"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.toolforge.mcp_server"]
+    description: "ToolForge 分组匹配思维工具"
+
+  - uri: "bos://analysis/ontoderive/toolforge/select"
+    domain: analysis
+    action: "toolforge/select"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.toolforge.mcp_server"]
+    description: "ToolForge 跨类别 Top-N 工具选择"
+
+  - uri: "bos://analysis/ontoderive/toolforge/guide"
+    domain: analysis
+    action: "toolforge/guide"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.toolforge.mcp_server"]
+    description: "ToolForge OntoDerive 推导指导"
+
   - uri: "bos://analysis/codeanalyze/scan"
     domain: analysis
     action: "scan"
@@ -691,23 +731,7 @@ services:
     status: active
     description: "[POC] Minerva 审计 (POC stdio)"
 
-  - uri: "bos://analysis/ontoderive/audit"
-    domain: analysis
-    action: "audit"
-    transport: mcp_stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "audit"]
-    status: active
-    description: "[POC] Ontoderive 审计 (POC stdio)"
-
-  - uri: "bos://analysis/ontoderive/fact-check"
-    domain: analysis
-    action: "fact-check"
-    transport: mcp_stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "fact-check"]
-    status: active
-    description: "[POC] Ontoderive 事实校验 (POC stdio)"
+  - uri: "bos://analysis/codeanalyze/report"
 
   - uri: "bos://analysis/codeanalyze/report"
     domain: analysis
