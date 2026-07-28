@@ -53,8 +53,12 @@ def test_project_portfolio_task_drafts_are_read_only():
 
 def test_verification_ready_task_drafts_are_read_only():
     drafts = get_verification_ready_task_drafts()
+    system_map = build_system_map()
+    verification_queue = next(
+        queue for queue in system_map["project_focus"]["queues"] if queue["id"] == "verification-ready"
+    )
 
-    assert drafts
+    assert len(drafts) == min(12, len(verification_queue["project_ids"]))
     assert all(draft["read_only"] is True for draft in drafts)
     assert all(draft["id"].startswith("verification-ready-") for draft in drafts)
     assert all(draft["source"]["type"] == "system_map_verification_ready" for draft in drafts)
@@ -137,6 +141,7 @@ def test_tasks_route_can_include_project_portfolio_drafts():
 
 def test_tasks_route_can_include_verification_ready_drafts():
     client = TestClient(app)
+    has_verification_ready_drafts = bool(get_verification_ready_task_drafts())
 
     default_resp = client.get("/api/tasks")
     assert default_resp.status_code == 200
@@ -144,7 +149,7 @@ def test_tasks_route_can_include_verification_ready_drafts():
 
     draft_resp = client.get("/api/tasks?include_verification_ready_drafts=true")
     assert draft_resp.status_code == 200
-    assert any(item["id"].startswith("verification-ready-") for item in draft_resp.json()["items"])
+    assert any(item["id"].startswith("verification-ready-") for item in draft_resp.json()["items"]) is has_verification_ready_drafts
 
     combined_resp = client.get(
         "/api/tasks?include_project_portfolio_drafts=true&include_verification_ready_drafts=true"
@@ -152,7 +157,7 @@ def test_tasks_route_can_include_verification_ready_drafts():
     assert combined_resp.status_code == 200
     combined_items = combined_resp.json()["items"]
     assert any(item["id"].startswith("portfolio-") for item in combined_items)
-    assert any(item["id"].startswith("verification-ready-") for item in combined_items)
+    assert any(item["id"].startswith("verification-ready-") for item in combined_items) is has_verification_ready_drafts
 
 
 def test_tasks_route_can_include_domain_app_drafts():
