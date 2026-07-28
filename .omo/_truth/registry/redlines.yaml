@@ -1,0 +1,69 @@
+# Redline registry (STRAT-P85 G2.1)
+#
+# Generated: 2026-07-28
+# Owner: governance-team
+# Lifecycle: ssot
+# Purpose: turn the scattered "lessons" in past tickets into a single
+# machine-checkable source. Every red line must declare the `executor`
+# (i.e. the check that will catch a violation) or explicitly mark
+# `enforced: false` with a `gap_reason`. No silent grave markers.
+
+version: "1.0.0"
+last_reviewed: "2026-07-28"
+status: active
+
+# Status legend:
+#   highest    — ADR-0249 / constitutional; one violation is a hard halt.
+#   violation  — break-glass; explicit human ack required.
+#   warn       — visible but not blocking; aggregates to dashboard.
+
+enforced_red_lines:
+  - id: governance-ratio-40pct
+    source: ADR-0249
+    severity: highest
+    rule: "rolling 30-day share of governance runs must not exceed 40%"
+    executor: bin/gac/check-governance-ratio.py
+  - id: work-landed
+    source: STRAT-P82
+    severity: violation
+    rule: "a status: ok run must reach origin/main within 7 days (3 days warn)"
+    executor: bin/gac/check-work-landed.py
+  - id: severity-decl-exec
+    source: ADR-0171
+    severity: violation
+    rule: "declared severity of primary locks must match observed exit code"
+    executor: bin/gac/check-severity-registry.py
+  - id: redline-coverage
+    source: STRAT-P85 G2.1
+    severity: warn
+    rule: "this registry's enforced: false rows with severity: highest must stay 0"
+    executor: bin/gac/check-redline-coverage.py
+  - id: workorder-schema
+    source: STRAT-P85 G2.2
+    severity: warn
+    rule: "new workorders must declare the required fields (track / appetite / 验收标准 / etc.)"
+    executor: bin/gac/check-workorder-schema.py
+
+acknowledged_gaps:
+  - id: silently-lost-zero
+    source: STRAT-P84
+    severity: violation
+    gap_reason: "depends on the P84 W1 scenario library; guard lands in G3.2"
+  - id: scenario-track-purity
+    source: STRAT-P84
+    severity: violation
+    gap_reason: "same dependency: needs scenario library contracts first"
+  - id: adversarial-effectiveness
+    source: STRAT-P84
+    severity: warn
+    gap_reason: "needs the adversarial scenario set; G3.3 deliverable"
+  - id: gate-cost-budget
+    source: STRAT-P85 G4.1
+    severity: warn
+    gap_reason: "budget collection starts in Q4; no enforcement yet"
+  - id: dead-check-retire
+    source: STRAT-P85 G4.2
+    severity: warn
+    gap_reason: "90-day idle detection is part of the Q4 review window"
+
+as_of_principle_ref: .omo/patterns/as_of_principle.md

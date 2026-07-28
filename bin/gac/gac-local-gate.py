@@ -78,6 +78,16 @@ DEFAULT_POLICY = {
         {"id": "omo-state-write-guard", "command": ["bin/gac/omo-state-write-guard.py"]},
         # P45 W1 BRIEF.md protect: 检测 BRIEF.md 是否被外部覆盖
         {"id": "brief-protect", "command": ["bin/mof/generate-brief.py", "--protect"]},
+        # P85 G1+G2: redline executability wiring. The redline registry
+        # at .omo/_truth/registry/redlines.yaml points to these gates;
+        # adding/removing rows there is the safe edit surface.
+        {"id": "check-severity-registry", "command": ["bin/gac/check-severity-registry.py"]},
+        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"]},
+        {"id": "check-governance-ratio", "command": ["bin/gac/check-governance-ratio.py"]},
+        {"id": "check-redline-coverage", "command": ["bin/gac/check-redline-coverage.py"]},
+        # P85 G2.2: workorder schema is warn-only by default; promote
+        # to --strict in CI after the grace period (G2 follow-up).
+        {"id": "check-workorder-schema", "command": ["bin/gac/check-workorder-schema.py"]},
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
