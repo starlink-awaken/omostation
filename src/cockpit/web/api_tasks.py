@@ -506,7 +506,7 @@ async def complete_task_from_execution(task_id: str):
 async def closeout_task_workflow(task_id: str, request: Request):
     """Run the governed agent-workflow closeout and attach its run record to the task."""
     group = _task_group(task_id)
-    if group not in {"active", "done"}:
+    if group not in {"active", "done", "archived/done"}:
         raise HTTPException(status_code=409, detail="Task must have an active or done execution before closeout")
     payload = _load_persisted_task(task_id, group)
     metadata = payload.get("metadata") or {}
