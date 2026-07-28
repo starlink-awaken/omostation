@@ -26,8 +26,8 @@ from cockpit.dashboard.constants import (
 )
 from cockpit.dashboard.routes import _auth_dependency as _auth_dep
 from cockpit.dashboard.routes import router as dashboard_router
-from cockpit.web.versioning import register_app_routes, setup_version_middleware, version_manager
 from cockpit.web.router_health import ROUTER_LOAD_REPORT, ROUTER_MODULES, router_health_snapshot
+from cockpit.web.versioning import register_app_routes, setup_version_middleware, version_manager
 
 # ─── FastAPI App ───────────────────────────────────────────────
 
@@ -106,7 +106,6 @@ except Exception as e:
 # ─── GBrain Proxy ─────────────────────────────────────────────
 
 
-@app.api_route("/admin/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 async def proxy_gbrain_admin(path: str, request: Request):
     """Forward /admin requests to the GBrain service (with Streaming/SSE support)."""
     import os
@@ -162,6 +161,17 @@ async def proxy_gbrain_admin(path: str, request: Request):
                 return Response(content=resp.content, status_code=resp.status_code, headers=resp_headers)
     except httpx.RequestError as e:
         return Response(content=f"Proxy error connecting to GBrain ({gbrain_port}): {str(e)}", status_code=502)
+
+
+# Register each method separately so OpenAPI exposes stable, unique operation IDs.
+for _admin_method in ("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"):
+    app.add_api_route(
+        "/admin/{path:path}",
+        proxy_gbrain_admin,
+        methods=[_admin_method],
+        name=f"proxy_gbrain_admin_{_admin_method.lower()}",
+        operation_id=f"proxy_gbrain_admin_{_admin_method.lower()}",
+    )
 
 
 # ─── Main dashboard router ────────────────────────────────────

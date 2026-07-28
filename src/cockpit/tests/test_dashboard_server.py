@@ -59,6 +59,17 @@ class TestDashboardEndpoints:
             item["module"] == "cockpit.web.api_tasks" and item["status"] == "loaded" for item in payload["items"]
         )
 
+    def test_openapi_operation_ids_are_unique(self, test_client):
+        paths = test_client.get("/openapi.json").json().get("paths", {})
+        operation_ids = [
+            operation["operationId"]
+            for operations in paths.values()
+            for operation in operations.values()
+            if isinstance(operation, dict) and operation.get("operationId")
+        ]
+
+        assert len(operation_ids) == len(set(operation_ids))
+
     def test_favicon_returns_404(self, test_client):
         resp = test_client.get("/favicon.ico")
         assert resp.status_code == 404
