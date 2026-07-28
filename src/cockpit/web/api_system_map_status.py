@@ -531,6 +531,7 @@ def _project_runtime_status(
     probeable_ports = [port for port in ports if port.get("probeable", True)]
     listening_count = sum(1 for port in probeable_ports if port.get("listening") is True)
     profile = _runtime_profile(project_id, project_data, project_path, operational, ports)
+    probe_task = _triage_task_posture(project_id, "runtime-check-ports")
 
     if probeable_ports and listening_count:
         status = "running"
@@ -553,6 +554,9 @@ def _project_runtime_status(
         "profile": profile["profile"],
         "needs_runtime": profile["needs_runtime"],
         "probe_reason": probe_reason,
+        "checked_at": datetime.now(UTC).isoformat(),
+        "probe_source": "registered_port_socket" if probeable_ports else "runtime_profile",
+        "probe_task": probe_task,
         "ports": ports,
         "listening_count": listening_count,
         "latest_verification": latest_verification,

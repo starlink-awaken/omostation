@@ -385,6 +385,9 @@ def test_runtime_status_marks_static_frontend_as_not_applicable(tmp_path, monkey
     assert runtime["profile"] == "static"
     assert runtime["needs_runtime"] is False
     assert "静态前端" in runtime["probe_reason"]
+    assert runtime["checked_at"]
+    assert runtime["probe_source"] == "runtime_profile"
+    assert runtime["probe_task"]["status"] == "not_queued"
 
     checks = api_system_map._project_coverage_checks(
         {
