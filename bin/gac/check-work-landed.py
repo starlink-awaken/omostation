@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
         if kind == "ok":
             continue
         findings.append({
-            "id": run.get("run_id"),
+            "id": run.get("run_id") or path.stem,
             "kind": f"missing_landing:{kind}",
             "age_days": age.total_seconds() / 86400,
             "claimed_refs": sorted(refs),
