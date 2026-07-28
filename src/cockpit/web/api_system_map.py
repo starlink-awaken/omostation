@@ -96,6 +96,7 @@ from cockpit.web.api_system_map_status import (
     _resolved_physical_location,
     _runtime_profile,
 )
+from cockpit.web.router_health import router_health_snapshot
 
 
 def _build_projects(
@@ -646,6 +647,7 @@ def _build_gap_list(
     feature_domains: list[dict[str, Any]],
     domain_apps: dict[str, Any],
     project_capability_coverage: dict[str, Any] | None = None,
+    router_health: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     orientation_only = [project["id"] for project in projects if project["coverage"] == "orientation"]
     operational_gaps = [
@@ -673,6 +675,22 @@ def _build_gap_list(
                 "title": "能力地图不可读",
                 "evidence": "docs/FUNCTIONAL-CAPABILITY-MAP.md 未能解析出能力域。",
                 "next": "修复能力地图格式或提供机器可读 registry。",
+            }
+        )
+
+    unavailable_routers = [
+        item.get("module", "unknown")
+        for item in (router_health or {}).get("items", [])
+        if item.get("status") != "loaded"
+    ]
+    if unavailable_routers:
+        gaps.append(
+            {
+                "id": "router-module-degradation",
+                "severity": "high",
+                "title": "部分 Cockpit 路由模块未加载",
+                "evidence": ", ".join(str(module) for module in unavailable_routers),
+                "next": "补齐缺失依赖或修复模块导入，再重新加载对应能力面。",
             }
         )
 
@@ -896,10 +914,11 @@ def build_system_map() -> dict[str, Any]:
     project_capability_coverage = _build_project_capability_coverage(projects)
     project_portfolio = _build_project_portfolio(projects, project_capability_coverage)
     domain_apps = _build_domain_apps_summary()
+    router_health = router_health_snapshot()
     feature_domains = _parse_capability_domains(capability_map_path)
     layers = _build_layers(registry, projects, registry_path)
     page_lookup = {page["id"]: page for page in COCKPIT_PAGES}
-    gaps = _build_gap_list(projects, feature_domains, domain_apps, project_capability_coverage)
+    gaps = _build_gap_list(projects, feature_domains, domain_apps, project_capability_coverage, router_health)
     roadmap = _build_roadmap()
     playbooks = _build_playbooks(page_lookup)
     usage_paths = _build_usage_paths(page_lookup)
@@ -929,6 +948,7 @@ def build_system_map() -> dict[str, Any]:
         "project_capability_coverage": project_capability_coverage,
         "project_portfolio": project_portfolio,
         "domain_apps": domain_apps,
+        "router_health": router_health,
         "feature_domains": feature_domains,
         "roadmap": roadmap,
         "playbooks": playbooks,

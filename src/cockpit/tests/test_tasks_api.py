@@ -90,6 +90,16 @@ def test_capability_gap_task_drafts_are_read_only():
     assert all(draft["draft"]["evidence_fields"] for draft in drafts)
 
 
+def test_router_degradation_is_forwarded_to_capability_gap_drafts():
+    system_map = build_system_map()
+    unavailable = system_map["router_health"]["summary"]["unavailable"]
+    router_drafts = [
+        draft for draft in get_capability_gap_task_drafts() if draft["source"]["id"] == "router-module-degradation"
+    ]
+
+    assert bool(router_drafts) is bool(unavailable)
+
+
 def test_page_maturity_task_drafts_are_read_only():
     drafts = get_page_maturity_task_drafts()
     attention_items = build_system_map()["page_maturity"]["attention_items"]

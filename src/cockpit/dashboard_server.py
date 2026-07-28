@@ -27,6 +27,7 @@ from cockpit.dashboard.constants import (
 from cockpit.dashboard.routes import _auth_dependency as _auth_dep
 from cockpit.dashboard.routes import router as dashboard_router
 from cockpit.web.versioning import register_app_routes, setup_version_middleware, version_manager
+from cockpit.web.router_health import ROUTER_LOAD_REPORT, ROUTER_MODULES, router_health_snapshot
 
 # ─── FastAPI App ───────────────────────────────────────────────
 
@@ -54,29 +55,7 @@ except ImportError:
 
 # ─── Governance routers (graceful degradation) ────────────────
 
-ROUTER_LOAD_REPORT: list[dict[str, object]] = []
-
-for _router_module in (
-    "cockpit.web.governance.api",
-    "cockpit.web.api_compute",
-    "cockpit.web.api_domain_apps",
-    "cockpit.web.api_system_map",
-    "cockpit.web.api_omos",
-    "cockpit.web.api_ecos",
-    "cockpit.web.api_knowledge",
-    "cockpit.web.api_bos",
-    "cockpit.web.api_proposals",
-    "cockpit.web.api_metaos",
-    "cockpit.web.api_agora",
-    "cockpit.web.api_sandbox",
-    "cockpit.web.api_l4",
-    "cockpit.web.api_health",
-    "cockpit.web.api_alerts",
-    "cockpit.web.api_tasks",
-    "cockpit.web.api_logs",
-    "cockpit.web.api_metrics",
-    "cockpit.web.api_hubs",
-):
+for _router_module in ROUTER_MODULES:
     try:
         _mod = importlib.import_module(_router_module)
         _router = getattr(_mod, "router", None)
@@ -184,17 +163,7 @@ app.include_router(dashboard_router)
 @app.get("/api/cockpit/router-health", dependencies=_AUTH_DEPS)
 async def router_health() -> dict[str, object]:
     """Expose structured router loading evidence after graceful degradation."""
-    loaded = sum(1 for item in ROUTER_LOAD_REPORT if item["status"] == "loaded")
-    unavailable = [item for item in ROUTER_LOAD_REPORT if item["status"] != "loaded"]
-    return {
-        "status": "ready" if not unavailable else "attention",
-        "summary": {
-            "total": len(ROUTER_LOAD_REPORT),
-            "loaded": loaded,
-            "unavailable": len(unavailable),
-        },
-        "items": ROUTER_LOAD_REPORT,
-    }
+    return router_health_snapshot()
 
 # ─── Static files (Cockpit UI) ────────────────────────────
 
