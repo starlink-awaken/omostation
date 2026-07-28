@@ -596,6 +596,40 @@ OPERATING_PLAYBOOKS: tuple[dict[str, Any], ...] = (
         ),
     },
     {
+        "id": "compute-capacity-review",
+        "title": "算力容量巡检",
+        "goal": "确认模型路由、节点资源和成本状态一致，避免把调度问题误判成模型问题。",
+        "frequency": "daily",
+        "owner": "operator",
+        "risk": "medium",
+        "steps": (
+            {
+                "id": "compute-route-scan",
+                "page_id": "Compute",
+                "action": "检查当前模型路由、节点资源和成本采样，定位异常调度对象。",
+                "evidence": "算力调配页的节点、路由、资源和成本状态。",
+                "done_when": "目标路由和资源瓶颈有明确结论，或已进入任务中心继续处理。",
+            },
+        ),
+    },
+    {
+        "id": "gbrain-control-plane-review",
+        "title": "GBrain 控制面巡检",
+        "goal": "核对智能体接入、访问凭证、模型校准和请求审计，确保智能能力可用且可追溯。",
+        "frequency": "weekly",
+        "owner": "knowledge",
+        "risk": "high",
+        "steps": (
+            {
+                "id": "gbrain-control-plane-scan",
+                "page_id": "GBrainAdmin",
+                "action": "检查智能体、凭证、模型校准和请求日志的当前状态与风险。",
+                "evidence": "GBrain 管理页的接入状态、凭证安全门、校准结果和请求审计。",
+                "done_when": "高风险配置已进入受控任务，或已明确记录无需动作的理由。",
+            },
+        ),
+    },
+    {
         "id": "weekly-governance-loop",
         "title": "每周治理闭环",
         "goal": "把战略、工作流、技术债和可观测证据串起来，避免治理停留在文档层。",

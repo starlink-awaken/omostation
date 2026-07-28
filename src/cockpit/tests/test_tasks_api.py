@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cockpit.dashboard_server import app
-from cockpit.web import api_tasks
+from cockpit.web import api_tasks, api_tasks_queues_project
 from cockpit.web import api_tasks_queues_project
 from cockpit.web.api_system_map import build_system_map
 from cockpit.web.api_tasks import (
@@ -464,8 +464,8 @@ def test_queue_page_roadmap_creates_page_roadmap_task(monkeypatch):
         ]
     }
     calls = []
-    monkeypatch.setattr(api_tasks, "build_system_map", lambda: {"roadmap": roadmap})
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: {"roadmap": roadmap})
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda _task_id: None)
 
     def fake_create(*args, **kwargs):
         calls.append(kwargs)

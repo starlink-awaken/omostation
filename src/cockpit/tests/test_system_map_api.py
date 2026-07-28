@@ -78,8 +78,10 @@ def test_system_map_builds_workspace_dimensions():
     assert any(step["page_id"] == "AlertCenter" for step in runtime_playbook["steps"])
     assert payload["summary"]["roadmap_items"] >= 1
     page_contract = next(item for item in payload["roadmap"]["items"] if item["id"] == "page-contract-home")
-    assert page_contract["status"] == "planned"
+    assert page_contract["status"] == "shipped"
     assert page_contract["cockpit_page"] == "Home"
+    assert page_contract["verification"]["status"] == "passed"
+    assert all(check["status"] == "passed" for check in page_contract["verification"]["checks"])
     assert payload["summary"]["ready_projects"] >= 1
     assert "partial_projects" in payload["summary"]
     assert "running_projects" in payload["summary"]
@@ -108,9 +110,20 @@ def test_system_map_builds_workspace_dimensions():
     assert "attention_items" in domain_apps
     assert domain_apps["next_action"]
     assert payload["summary"]["page_maturity_ready"] >= 1
+    assert payload["summary"]["page_maturity_ready"] == payload["summary"]["cockpit_pages"]
+    assert any(
+        step["page_id"] == "Compute"
+        for playbook in payload["playbooks"]
+        for step in playbook["steps"]
+    )
+    assert any(
+        step["page_id"] == "GBrainAdmin"
+        for playbook in payload["playbooks"]
+        for step in playbook["steps"]
+    )
     home_maturity = next(item for item in payload["page_maturity"]["items"] if item["page_id"] == "Home")
-    assert home_maturity["roadmap_status"] == "planned"
-    assert "planned" in home_maturity["traceability_next_action"]
+    assert home_maturity["roadmap_status"] == "shipped"
+    assert "同步" in home_maturity["traceability_next_action"]
     assert "page_maturity_score" in payload["summary"]
     assert payload["summary"]["page_maturity_gap"] >= 0
     assert payload["summary"]["page_maturity_watch"] >= 0

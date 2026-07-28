@@ -715,7 +715,72 @@ def _build_gap_list(
     return gaps
 
 
-def _build_roadmap() -> dict[str, Any]:
+def _page_contract_checks(
+    page_id: str,
+    projects: list[dict[str, Any]],
+    feature_domains: list[dict[str, Any]],
+    usage_paths: list[dict[str, Any]],
+    playbooks: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    linked_project_ids = set(PAGE_PROJECT_LINKS.get(page_id, ()))
+    page_projects = [
+        project
+        for project in projects
+        if project.get("cockpit_page") == page_id or project.get("id") in linked_project_ids
+    ]
+    linked_domain_ids = set(PAGE_CAPABILITY_LINKS.get(page_id, ()))
+    page_domains = [
+        domain
+        for domain in feature_domains
+        if domain.get("cockpit_page") == page_id or domain.get("id") in linked_domain_ids
+    ]
+    page_usage_paths = [
+        path for path in usage_paths if any(page.get("id") == page_id for page in path.get("pages") or [])
+    ]
+    page_playbook_steps = [
+        step
+        for playbook in playbooks
+        for step in playbook.get("steps") or []
+        if step.get("page_id") == page_id or (step.get("page") or {}).get("id") == page_id
+    ]
+    project_action_count = sum(
+        len(project.get("actions") or []) + len(project.get("triage_commands") or []) for project in page_projects
+    )
+    action_count = project_action_count + len(PAGE_OPERATOR_ACTIONS.get(page_id, ()))
+    return [
+        {
+            "id": "object-mapping",
+            "label": "对象映射",
+            "status": "passed" if page_projects or page_domains else "attention",
+            "evidence": f"项目 {len(page_projects)} · 能力域 {len(page_domains)}",
+        },
+        {
+            "id": "usage-path",
+            "label": "使用路径",
+            "status": "passed" if page_usage_paths else "attention",
+            "evidence": f"使用路径 {len(page_usage_paths)}",
+        },
+        {
+            "id": "operating-playbook",
+            "label": "操作清单",
+            "status": "passed" if page_playbook_steps else "attention",
+            "evidence": f"清单步骤 {len(page_playbook_steps)}",
+        },
+        {
+            "id": "operator-actions",
+            "label": "受控动作",
+            "status": "passed" if action_count else "attention",
+            "evidence": f"动作 {action_count}",
+        },
+    ]
+
+
+def _build_roadmap(
+    projects: list[dict[str, Any]],
+    feature_domains: list[dict[str, Any]],
+    usage_paths: list[dict[str, Any]],
+    playbooks: list[dict[str, Any]],
+) -> dict[str, Any]:
     lane_labels = {
         "now": "现在补",
         "next": "下一步",
@@ -728,12 +793,18 @@ def _build_roadmap() -> dict[str, Any]:
     # contracts planned until a page has a real acceptance entry in the
     # curated roadmap; otherwise maturity silently treats missing planning as
     # a healthy page.
+    page_contract_checks = {
+        page["id"]: _page_contract_checks(page["id"], projects, feature_domains, usage_paths, playbooks)
+        for page in COCKPIT_PAGES
+    }
     generated_page_contracts = [
         {
             "id": f"page-contract-{page['id'].lower()}",
             "priority": "P1",
             "stage": "next",
-            "status": "planned",
+            "status": "shipped"
+            if all(check["status"] == "passed" for check in page_contract_checks[page["id"]])
+            else "planned",
             "title": f"补齐{page['title']}页面运营契约",
             "domain": "page-coverage",
             "cockpit_page": page["id"],
@@ -746,6 +817,13 @@ def _build_roadmap() -> dict[str, Any]:
                 "页面能清楚说明对象、动作、证据和当前下一步。",
                 "页面契约能在 SystemMap 和 TaskCenter 之间往返，不再只留下模糊 watch。",
             ),
+            "verification": {
+                "mode": "runtime",
+                "status": "passed"
+                if all(check["status"] == "passed" for check in page_contract_checks[page["id"]])
+                else "attention",
+                "checks": page_contract_checks[page["id"]],
+            },
         }
         for page in COCKPIT_PAGES
         if page["id"] not in covered_pages
@@ -982,9 +1060,9 @@ def build_system_map() -> dict[str, Any]:
     layers = _build_layers(registry, projects, registry_path)
     page_lookup = {page["id"]: page for page in COCKPIT_PAGES}
     gaps = _build_gap_list(projects, feature_domains, domain_apps, project_capability_coverage, router_health)
-    roadmap = _build_roadmap()
     playbooks = _build_playbooks(page_lookup)
     usage_paths = _build_usage_paths(page_lookup)
+    roadmap = _build_roadmap(projects, feature_domains, usage_paths, playbooks)
     page_maturity = _build_page_maturity(projects, feature_domains, usage_paths, playbooks, roadmap)
 
     return {
