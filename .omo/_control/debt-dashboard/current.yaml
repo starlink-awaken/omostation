@@ -1,5 +1,5 @@
-generated_at: '2026-07-09T05:44:00Z'
-last_reconciled_at: '2026-07-09T05:44:00Z'
+generated_at: '2026-07-28T12:50:00Z'
+last_reconciled_at: '2026-07-28T12:50:00Z'
 reconciliation_note: partial 计数对齐 debt.yaml (当前无 partial item). 前值 2 (2026-06-11)
   是历史快照已无对应 registry 记录. 见 ISC-12/50.
 debt_metrics:
