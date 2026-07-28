@@ -775,6 +775,27 @@ metadata:
     assert posture["task_id"] == "cockpit-triage-demo-verification-rerun"
 
 
+def test_triage_posture_exposes_runtime_approval_state(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    task_path = workspace_root / ".omo" / "tasks" / "planned" / "cockpit-triage-demo-runtime-check-ports.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        """id: cockpit-triage-demo-runtime-check-ports
+status: pending
+human_approval_required: true
+metadata: {}
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map_io_commands.compat, "WORKSPACE_ROOT", workspace_root)
+
+    posture = api_system_map_io_commands._triage_task_posture("demo", "runtime-check-ports")
+
+    assert posture["human_approval_required"] is True
+    assert posture["approval_state"] == "missing"
+    assert posture["next_action"] == "先申请人工审批"
+
+
 def test_external_ui_worktree_is_resolved_from_registry_path_env(tmp_path, monkeypatch):
     ui_root = tmp_path / "cockpit-ui-worktree"
     (ui_root / "src").mkdir(parents=True)

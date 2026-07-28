@@ -382,8 +382,13 @@ def _triage_task_posture(project_id: str, command_id: str) -> dict[str, Any]:
         task = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError):
         task = {}
+    # Import lazily because the task data layer depends on SystemMap builders.
+    from cockpit.web.api_tasks_data import _approval_next_action, _approval_state
+
     audit = (task.get("metadata") or {}).get("execution_audit") or {}
     raw_status = str(task.get("status") or "pending")
+    approval_required = bool(task.get("human_approval_required"))
+    approval_state = _approval_state(task)
     if isinstance(audit, dict) and "exit_code" in audit:
         status = "succeeded" if audit.get("exit_code") == 0 else "failed"
     elif group in {"done", "archived/done"} or raw_status in {"completed", "complete"}:
@@ -396,6 +401,9 @@ def _triage_task_posture(project_id: str, command_id: str) -> dict[str, Any]:
         "task_id": task_id,
         "status": status,
         "execution_audit": audit if isinstance(audit, dict) else {},
+        "human_approval_required": approval_required,
+        "approval_state": approval_state,
+        "next_action": _approval_next_action(task),
     }
 
 
