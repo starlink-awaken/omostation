@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 
 from cockpit.dashboard_server import app
 from cockpit.web import api_tasks, api_tasks_queues_project
-from cockpit.web import api_tasks_queues_project
 from cockpit.web.api_system_map import build_system_map
 from cockpit.web.api_tasks import (
     get_capability_gap_task_drafts,
