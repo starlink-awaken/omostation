@@ -244,7 +244,9 @@ projects:
     build_backend: "vite"
     src_dir: "src/"
     role: "Web 控制台 UI (作为 cockpit 前端表现层挂载至/)"
-    note: "非 git 子模块，直接在 projects/ 下，由 cockpit 托管"
+    path_env: "COCKPIT_UI_ROOT"
+    dist_env: "COCKPIT_UI_DIST"
+    note: "独立 UI 仓库；由 COCKPIT_UI_ROOT 指向源码 worktree，COCKPIT_UI_DIST 指向构建产物后由 cockpit 托管"
 
   toolbox:
      layer: "L1-L3"
