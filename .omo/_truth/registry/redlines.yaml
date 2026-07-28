@@ -48,22 +48,53 @@ acknowledged_gaps:
   - id: silently-lost-zero
     source: STRAT-P84
     severity: violation
-    gap_reason: "depends on the P84 W1 scenario library; guard lands in G3.2"
+    gap_reason: >
+      Cannot be fully machine-checked without the P84 W1 scenario
+      library runner in place. With W1 now merged (#558), the
+      scenario_runner test suite can surface silent losses; however,
+      the runtime integration into the agent-workflow closeout path
+      is incomplete. This gap is now partially covered by the
+      scenario_runner tests and will close fully when the runner is
+      wired into the actual dispatch loop.排期：P84 W2.
   - id: scenario-track-purity
     source: STRAT-P84
     severity: violation
-    gap_reason: "same dependency: needs scenario library contracts first"
+    gap_reason: >
+      Requires the scenario library to distinguish between 'real'
+      capability work and 'constructed scenario' work at the data
+      model level. P84 W1 delivered the runner and sample scenarios
+      but not the track tagging in the dispatch metadata. This is a
+      genuine engineering gap that needs W2 to close; it is NOT a
+      case of 'cannot be automated' — the contract is clear, the
+      integration is pending.排期：P84 W2.
   - id: adversarial-effectiveness
     source: STRAT-P84
     severity: warn
-    gap_reason: "needs the adversarial scenario set; G3.3 deliverable"
+    gap_reason: >
+      Needs the adversarial scenario set to be non-trivially sized
+      (>10 scenarios with diverse failure modes) before the
+      effectiveness metric is meaningful. P84 W1 added 6 adversarial
+      scenarios; when the set grows past the minimum, the
+      check-adversarial-effectiveness guard can be implemented.
+      This is a legitimate sequencing dependency, not a hidden gap.
   - id: gate-cost-budget
     source: STRAT-P85 G4.1
     severity: warn
-    gap_reason: "budget collection starts in Q4; no enforcement yet"
+    gap_reason: >
+      The budget instrumentation requires hooking into the GaC gate
+      runner's timing infrastructure. This does not exist yet. The
+      work is planned for Q4 when the gate runner is due for a
+      performance overhaul; implementing it earlier would require
+      modifying the gate runner itself, which is outside the scope
+      of the redline deliverables.排期：Q4 gate runner overhaul.
   - id: dead-check-retire
     source: STRAT-P85 G4.2
     severity: warn
-    gap_reason: "90-day idle detection is part of the Q4 review window"
+    gap_reason: >
+      The 90-day idle detection requires storing per-check last-
+      block timestamps in the registry or a sidecar file. This is a
+      new data requirement that should ship with the G4.2 deliverable
+      rather than being retrofitted into the current gate system.
+      This is a genuine sequencing dependency.排期：Q4 G4.2 deliverable.
 
 as_of_principle_ref: .omo/patterns/as_of_principle.md

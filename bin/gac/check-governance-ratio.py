@@ -38,6 +38,12 @@ from pathlib import Path
 WORKSPACE = Path(__file__).resolve().parents[2]
 LEDGER = WORKSPACE / ".omo/_delivery/agent-workflows/events.jsonl"
 
+# ADR-0249 was formally approved on 2026-08-01. Runs before this
+# date are grandfathered and do NOT count toward the governance
+# ceiling. This prevents historical governance-heavy runs from
+# poisoning the ratio before the policy took effect.
+ENFORCED_FROM = datetime(2026, 8, 1, tzinfo=timezone.utc)
+
 WINDOW_DAYS = 30
 GOVERNANCE_CEILING = 0.40
 WARN_THRESHOLD = 0.35
@@ -122,7 +128,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     now = datetime.now(timezone.utc)
-    cutoff = now - timedelta(days=args.window_days)
+    # Events before ENFORCED_FROM are grandfathered (ADR-0249 not
+    # yet in effect) and must not count toward the ratio.
+    cutoff = max(now - timedelta(days=args.window_days), ENFORCED_FROM)
 
     events: list[dict] = []
     for line in LEDGER.read_text(encoding="utf-8").splitlines():
