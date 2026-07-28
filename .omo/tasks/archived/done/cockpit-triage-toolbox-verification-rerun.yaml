@@ -11,6 +11,7 @@ review_ref: null
 knowledge_refs: []
 handoff_refs:
 - .omo/_delivery/task-center/execution/cockpit-triage-toolbox-verification-rerun-2026-07-23T14-56-25Z.yaml
+- .omo/_delivery/task-center/execution/cockpit-triage-toolbox-verification-rerun-2026-07-28T07-13-49Z.yaml
 risk_level: L1
 allowed_operation_level: L1
 human_approval_required: false
@@ -49,9 +50,9 @@ metadata:
     command: cd "/Users/xiamingxing/ToolBox" && ecos health
     exit_code: 0
     log_ref: runtime/omo/_delivery/ingress/task-execution/cockpit-triage-toolbox-verification-rerun-2026-07-23T14-56-25Z.log
-    closeout_ref: null
+    closeout_ref: .omo/_delivery/agent-workflows/runs/20260728T071314Z-governance-state-mutation-6dffa478.yaml
     actor: cockpit-task-center
-    recorded_at: '2026-07-23T14:56:25Z'
+    recorded_at: '2026-07-28T07:13:49Z'
   completed_at: '2026-07-23T14:56:31Z'
   completed_via: omo task done
   completion_actor: cockpit-task-center
