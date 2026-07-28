@@ -256,7 +256,19 @@ def _project_verify_command(path: Path, commands: list[str], manifests: list[dic
     return None
 
 
-def _project_start_command(path: Path, commands: list[str]) -> str | None:
+_KNOWN_RUNTIME_START_COMMANDS: dict[str, tuple[str, str]] = {
+    # These are documented/native entry points. They are copied for human confirmation;
+    # Cockpit never starts the process itself.
+    "mesh-router": ("workspace", 'uv run python "bin/gac/gac-mesh-router.py"'),
+    "ecos": ("project", "uv run python -m ecos.services.events_sse serve --port 7432"),
+    "l4-kernel": ("project", "uv run python -m l4_kernel.mcp_server --sse"),
+    "omo": ("project", "uv run python -m omo.omo_dashboard serve --port 9190"),
+    "aetherforge": ("project", "docker compose up -d"),
+    "observability": ("project", "docker compose up -d"),
+}
+
+
+def _project_start_command(path: Path, commands: list[str], project_id: str | None = None) -> str | None:
     command = _first_matching_command(
         commands,
         ("dev", "serve", "start", "uvicorn", "dashboard_server", "run api"),
@@ -270,6 +282,15 @@ def _project_start_command(path: Path, commands: list[str]) -> str | None:
         return _command_with_cwd(path, "bun run dev")
     if "api" in scripts:
         return _command_with_cwd(path, "bun run api")
+
+    if project_id in _KNOWN_RUNTIME_START_COMMANDS:
+        location, command = _KNOWN_RUNTIME_START_COMMANDS[project_id]
+        if location == "workspace":
+            source_path = compat.WORKSPACE_ROOT / "bin" / "gac" / "gac-mesh-router.py"
+            return _command_with_cwd(compat.WORKSPACE_ROOT, command) if source_path.is_file() else None
+        if project_id == "aetherforge" or project_id == "observability":
+            return _command_with_cwd(path, command) if (path / "docker-compose.yml").is_file() else None
+        return _command_with_cwd(path, command) if path.is_dir() else None
     return None
 
 
@@ -316,7 +337,7 @@ def _project_actions(
             }
         )
 
-    start_command = _project_start_command(project_path, commands)
+    start_command = _project_start_command(project_path, commands, project_id)
     if start_command:
         actions.append(
             {

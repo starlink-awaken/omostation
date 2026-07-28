@@ -320,6 +320,27 @@ def test_system_map_builds_workspace_dimensions():
     assert governance_domain["source_refs"][0]["line"]
 
 
+def test_stopped_runtime_projects_expose_documented_start_actions():
+    payload = build_system_map()
+    projects = {project["id"]: project for project in payload["projects"]}
+
+    expected_commands = {
+        "mesh-router": "gac-mesh-router.py",
+        "ecos": "ecos.services.events_sse serve",
+        "l4-kernel": "l4_kernel.mcp_server --sse",
+        "omo": "omo.omo_dashboard serve",
+        "aetherforge": "docker compose up -d",
+        "observability": "docker compose up -d",
+    }
+    for project_id, fragment in expected_commands.items():
+        action = next(action for action in projects[project_id]["actions"] if action["id"] == "copy-start-command")
+        assert fragment in action["value"]
+        assert action["executes"] is False
+        assert action["risk"] == "medium"
+
+    assert not any(action["id"] == "copy-start-command" for action in projects["bus-foundation"]["actions"])
+
+
 def test_evidence_freshness_distinguishes_fresh_stale_and_unknown():
     now = datetime(2026, 7, 28, tzinfo=UTC)
 
