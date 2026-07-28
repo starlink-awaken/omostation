@@ -165,6 +165,10 @@ def test_system_map_builds_workspace_dimensions():
         for project in payload["projects"]
         if next(check for check in project["coverage_checks"] if check["id"] == "registry_contract")["status"] != "ready"
     ]
+    runtime_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "runtime_probe")
+    runtime_attention_ids = {item["id"] for item in runtime_dimension["attention_projects"]}
+    assert runtime_dimension["attention_count"] == len(runtime_dimension["attention_projects"])
+    assert runtime_attention_ids >= {"mesh-router", "ecos", "l4-kernel", "aetherforge", "observability"}
     verification_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "verification")
     assert verification_dimension["documented"] == verification_dimension["warning"]
     assert verification_dimension["evidence_score"] >= verification_dimension["score"]

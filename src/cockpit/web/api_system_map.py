@@ -563,7 +563,7 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
             }
             for project, check in checks
             if check["status"] != "ready"
-        ][:4]
+        ]
 
         dimension_summary.append(
             {
@@ -577,6 +577,7 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
                 "score": score,
                 "documented": documented,
                 "evidence_score": evidence_score,
+                "attention_count": len(attention_projects),
                 "attention_projects": attention_projects,
             }
         )
