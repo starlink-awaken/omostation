@@ -10,6 +10,11 @@ from hashlib import sha256
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from cockpit.web import api_tasks_data as _task_data
+from cockpit.web.api_system_map_catalog import (
+    COCKPIT_PAGES,
+    PAGE_OPERATOR_ACTION_METADATA,
+    PAGE_OPERATOR_ACTIONS,
+)
 from cockpit.web.api_tasks_common import (
     _COVERAGE_DRAFT_GETTERS,
     _current_controlled_command,
@@ -39,11 +44,6 @@ from cockpit.web.api_tasks_data import (
     get_project_portfolio_task_drafts,
     get_tasks_from_omo,
     get_verification_ready_task_drafts,
-)
-from cockpit.web.api_system_map_catalog import (
-    COCKPIT_PAGES,
-    PAGE_OPERATOR_ACTION_METADATA,
-    PAGE_OPERATOR_ACTIONS,
 )
 from cockpit.web.api_tasks_data import (
     _transition_task as _data_transition_task,
@@ -209,6 +209,7 @@ async def queue_project_action(project_id: str, action_id: str):
             "risk": risk,
             "cockpit_only": True,
             "controlled_execution": action_id == "copy-verify-command",
+            "controlled_process": action_id == "copy-start-command",
             "timeout_seconds": 900 if action_id == "copy-verify-command" else None,
         },
     }
@@ -235,7 +236,7 @@ async def queue_project_action(project_id: str, action_id: str):
         "action_id": action_id,
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
-        "executes": action_id == "copy-verify",
+        "executes": action_id in {"copy-verify-command", "copy-start-command"},
     }
 
 

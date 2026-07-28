@@ -82,8 +82,12 @@ def _execution_contract(task_data: dict) -> dict:
         "test_plan": task_data.get("test_plan") or [],
         "source_docs": task_data.get("source_docs") or [],
         "command": metadata.get("command"),
-        "executes": metadata.get("cockpit_only") is not True or metadata.get("controlled_execution") is True,
+        "executes": metadata.get("cockpit_only") is not True
+        or metadata.get("controlled_execution") is True
+        or metadata.get("controlled_process") is True,
         "controlled_execution": metadata.get("controlled_execution") is True,
+        "controlled_process": metadata.get("controlled_process") is True,
+        "execution_process": metadata.get("execution_process"),
         "timeout_seconds": metadata.get("timeout_seconds", default_timeout)
         if metadata.get("controlled_execution") is True
         else None,

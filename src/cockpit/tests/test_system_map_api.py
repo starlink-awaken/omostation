@@ -188,6 +188,7 @@ def test_system_map_builds_workspace_dimensions():
     runtime_probes = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-runtime-probes")
     assert runtime_probes["status"] == "shipped"
     runtime_actions = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-runtime-actions")
+    project_execution = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-action-execution-audit")
     assert runtime_actions["status"] == "shipped"
     ssot_links = next(item for item in payload["roadmap"]["items"] if item["id"] == "ssot-deep-links")
     assert ssot_links["status"] == "shipped"
@@ -202,6 +203,7 @@ def test_system_map_builds_workspace_dimensions():
     )
     assert playbook_persistence["status"] == "shipped"
     assert all(item["acceptance"] for item in payload["roadmap"]["items"])
+    assert project_execution["status"] == "shipped"
     daily_playbook = next(item for item in payload["playbooks"] if item["id"] == "daily-health-check")
     assert daily_playbook["frequency"] == "daily"
     assert daily_playbook["steps"]

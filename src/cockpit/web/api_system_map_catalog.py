@@ -1086,19 +1086,20 @@ ROADMAP_ITEMS: tuple[dict[str, Any], ...] = (
     {
         "id": "project-action-execution-audit",
         "priority": "P2",
-        "stage": "later",
-        "status": "planned",
+        "stage": "now",
+        "status": "shipped",
         "title": "项目动作执行与审计",
         "domain": "project-coverage",
         "cockpit_page": "TaskCenter",
-        "problem": "低风险项目验证已接入受控执行与审计，但启动、重启等中高风险动作仍保留人工确认边界。",
+        "problem": "项目动作需要在统一任务中心内形成可审批、可控进程、可审计的执行闭环。",
         "actions": (
             "保持 verify 通过受控任务队列执行，并把退出码和日志回写 OMO。",
-            "继续为 start/restart 评估审批、超时、日志和失败回滚提示。",
+            "为 start/stop/restart 接入人工审批、独立进程组、日志和失败反馈。",
         ),
         "acceptance": (
             "用户能在 TaskCenter 看到项目动作执行历史。",
-            "每次执行都有命令、退出码、日志位置和触发人。",
+            "每次执行都有命令、退出码、日志位置、触发人和进程状态。",
+            "未获批的中高风险动作不能启动、停止或重启服务。",
         ),
     },
     {
