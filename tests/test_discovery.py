@@ -1,13 +1,16 @@
 """Tests for DiscoveryEngine."""
 
 from agora.core.discovery import DiscoveredService, DiscoveryEngine
+from pathlib import Path
 
 
 class TestDiscoveryEngine:
     def test_find_workspace(self):
         engine = DiscoveryEngine()
         root = engine._find_workspace()
-        assert "/Workspace" in root or "/agora" in str(engine.root)
+        root_path = Path(root)
+        assert (root_path / "projects" / "agora").is_dir()
+        assert (root_path / "projects" / "kairon").is_dir()
 
     def test_scan_known_projects(self):
         engine = DiscoveryEngine()
