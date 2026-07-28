@@ -88,6 +88,11 @@ DEFAULT_POLICY = {
         # P85 G2.2: workorder schema is warn-only by default; promote
         # to --strict in CI after the grace period (G2 follow-up).
         {"id": "check-workorder-schema", "command": ["bin/gac/check-workorder-schema.py"]},
+        # P85 G3: P84 dual-track守护. Three checks enforcing the
+        # dual-track isolation contract (P84 §0).
+        {"id": "check-dual-track-purity", "command": ["bin/gac/check-dual-track-purity.py"]},
+        {"id": "check-silent-loss", "command": ["bin/gac/check-silent-loss.py"]},
+        {"id": "check-adversarial-effectiveness", "command": ["bin/gac/check-adversarial-effectiveness.py"]},
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},

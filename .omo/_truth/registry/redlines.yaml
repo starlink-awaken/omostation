@@ -43,40 +43,24 @@ enforced_red_lines:
     severity: warn
     rule: "new workorders must declare the required fields (track / appetite / 验收标准 / etc.)"
     executor: bin/gac/check-workorder-schema.py
-
-acknowledged_gaps:
-  - id: silently-lost-zero
-    source: STRAT-P84
-    severity: violation
-    gap_reason: >
-      Cannot be fully machine-checked without the P84 W1 scenario
-      library runner in place. With W1 now merged (#558), the
-      scenario_runner test suite can surface silent losses; however,
-      the runtime integration into the agent-workflow closeout path
-      is incomplete. This gap is now partially covered by the
-      scenario_runner tests and will close fully when the runner is
-      wired into the actual dispatch loop.排期：P84 W2.
+  # P85 G3: dual-track守护 — three checks now enforcing
   - id: scenario-track-purity
     source: STRAT-P84
     severity: violation
-    gap_reason: >
-      Requires the scenario library to distinguish between 'real'
-      capability work and 'constructed scenario' work at the data
-      model level. P84 W1 delivered the runner and sample scenarios
-      but not the track tagging in the dispatch metadata. This is a
-      genuine engineering gap that needs W2 to close; it is NOT a
-      case of 'cannot be automated' — the contract is clear, the
-      integration is pending.排期：P84 W2.
+    rule: "throughput track must not contain scenario-sourced data"
+    executor: bin/gac/check-dual-track-purity.py
+  - id: silently-lost-zero
+    source: STRAT-P84
+    severity: violation
+    rule: "no dispatched task may be silently lost (silent_loss must be 0)"
+    executor: bin/gac/check-silent-loss.py
   - id: adversarial-effectiveness
     source: STRAT-P84
     severity: warn
-    gap_reason: >
-      Needs the adversarial scenario set to be non-trivially sized
-      (>10 scenarios with diverse failure modes) before the
-      effectiveness metric is meaningful. P84 W1 added 6 adversarial
-      scenarios; when the set grows past the minimum, the
-      check-adversarial-effectiveness guard can be implemented.
-      This is a legitimate sequencing dependency, not a hidden gap.
+    rule: "adversarial scenario pass rate must not be 100% (全过=自欺)"
+    executor: bin/gac/check-adversarial-effectiveness.py
+
+acknowledged_gaps:
   - id: gate-cost-budget
     source: STRAT-P85 G4.1
     severity: warn
