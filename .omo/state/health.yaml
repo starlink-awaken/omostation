@@ -1,30 +1,30 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-07-27T12:27:31Z
+# generated_at: 2026-07-28T07:06:21Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5}
 
-generated_at: "2026-07-27T12:27:31Z"
+generated_at: "2026-07-28T07:06:21Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 96
-governance_anomaly_score: 85
+health_score: 93
+governance_anomaly_score: 77
 anomaly_count: 1
 service_online_ratio: 1.000
 freshness_score: 100
 feedback_alive: True
-feedback_last_ts: "2026-07-27T12:27:22Z"
-feedback_staleness_hours: 0.0
-total_tasks: 13
-done: 0
-planned: 13
+feedback_last_ts: "2026-07-28T07:01:16Z"
+feedback_staleness_hours: 0.1
+total_tasks: 25
+done: 14
+planned: 11
 
 governance_execution_surface:
   base_anomaly_score: 85
-  execution_deduction: 0
+  execution_deduction: 8
   orphan_worktrees: 0
   adr_renumber_events: 0
-  concurrent_conflicts: 0
-  score: 85
+  concurrent_conflicts: 1
+  score: 77
   weights:
     orphan_worktrees: 4
     adr_renumber_events: 5
@@ -36,31 +36,31 @@ health_composite_breakdown:
     freshness: 0.2
     runtime: 0.5
   contributions:
-    governance: 25.5
+    governance: 23.099999999999998
     freshness: 20.0
     runtime: 50.0
-  raw: 95.5
+  raw: 93.1
 
 anomalies:
-  - "[WARN]  Owner 集中度: human 持有 85% 任务 (单点故障风险, 知识/能力集中)"
+  - "[WARN]  Owner 集中度: unassigned 持有 64% 任务 (单点故障风险, 知识/能力集中)"
 
 distributions:
   priority_dist:
-    P0: 4
-    P1: 5
-    P2: 2
-    medium: 1
+    P0: 2
+    P1: 4
+    P2: 3
+    medium: 15
     unassigned: 1
   risk_dist:
-    L1: 6
+    L1: 19
     L2: 5
-    unassigned: 2
+    unassigned: 1
   owner_dist:
-    human: 11
-    unassigned: 2
+    human: 9
+    unassigned: 16
   phase_dist:
-    unphased: 13
+    unphased: 25
   status_dist:
     candidate: 10
-    closed: 2
+    done: 14
     pending: 1
