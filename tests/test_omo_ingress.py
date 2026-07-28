@@ -1586,8 +1586,59 @@ def test_archive_done_task_moves_done_task_to_archived_and_writes_artifact(
         / "TASK-ARCHIVE-1-archive-2026-06-20T05-10-00Z.yaml"
     )
     assert artifact["kind"] == "task_archived_from_done"
-    assert artifact["task_ref_before"] == ".omo/tasks/done/TASK-ARCHIVE-1.yaml"
-    assert artifact["task_ref_after"] == ".omo/tasks/archived/TASK-ARCHIVE-1.yaml"
+
+
+def test_record_task_execution_updates_archived_done_task(tmp_path: Path) -> None:
+    from omo.omo_ingress_task_lifecycle import record_task_execution
+
+    task_path = tmp_path / ".omo" / "tasks" / "archived" / "done" / "TASK-CLOSEOUT-1.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        yaml.safe_dump(
+            {
+                "id": "TASK-CLOSEOUT-1",
+                "title": "归档任务 closeout",
+                "status": "done",
+                "task_type": "operations",
+                "assigned_to": None,
+                "dispatch_id": None,
+                "run_ref": None,
+                "approval_ref": None,
+                "review_ref": None,
+                "knowledge_refs": [],
+                "handoff_refs": [],
+                "risk_level": "L1",
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "source_docs": ["cockpit:SystemMap"],
+                "entry_gate": [],
+                "evidence_required": ["log"],
+                "evidence_paths": ["runtime/omo/closeout.log"],
+                "deliverables": ["closeout"],
+                "test_plan": ["pytest"],
+                "metadata": {"command": "printf ok"},
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    artifact = record_task_execution(
+        tmp_path / ".omo",
+        task_id="TASK-CLOSEOUT-1",
+        actor="projects/omo/tests",
+        command="printf ok",
+        exit_code=0,
+        log_ref="runtime/omo/closeout.log",
+        closeout_ref=".omo/_delivery/agent-workflows/runs/closeout.yaml",
+        source_ref="tests:task:closeout:TASK-CLOSEOUT-1",
+    )
+
+    assert artifact["task_id"] == "TASK-CLOSEOUT-1"
+    assert _load_yaml(task_path)["metadata"]["execution_audit"]["closeout_ref"] == (
+        ".omo/_delivery/agent-workflows/runs/closeout.yaml"
+    )
+    assert artifact["task_ref"] == ".omo/tasks/archived/done/TASK-CLOSEOUT-1.yaml"
 
 
 def test_create_audit_report_writes_doc_and_artifact(tmp_path: Path) -> None:

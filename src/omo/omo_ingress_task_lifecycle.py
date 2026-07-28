@@ -381,7 +381,7 @@ def record_task_execution(
         raise ValueError("log_ref must be a non-empty workspace reference")
 
     timestamp = now or _utc_now()
-    resolved = _find_task_path(omo_dir, task_id, groups=("planned", "active", "done"))
+    resolved = _find_task_path(omo_dir, task_id, groups=("planned", "active", "done", "archived/done"))
     if resolved is None:
         raise ValueError(f"task not found in planned/active/done: {task_id}")
     group, task_path = resolved

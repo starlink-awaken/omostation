@@ -149,11 +149,14 @@ def _find_task_path(
 
     - planned/active/blocked/remediation remain in .omo/tasks/
     - done tasks (including retrospectives) moved to runtime/omo/tasks/registry/done/
+    - archived/done is retained under .omo/tasks/ for post-execution closeout metadata.
     """
     workspace_root = omo_dir.parent
     for group in groups:
         if group == "done":
             group_dir = _done_task_group_dir(group, workspace_root)
+        elif group == "archived/done":
+            group_dir = omo_dir / "tasks" / "archived" / "done"
         else:
             group_dir = omo_dir / "tasks" / group
         if not group_dir.exists():
