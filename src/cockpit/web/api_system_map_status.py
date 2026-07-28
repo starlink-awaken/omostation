@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import socket
 from collections import defaultdict
@@ -373,6 +374,12 @@ def _commands_from_agents(path: Path, limit: int = 4) -> list[str]:
 
 def _project_path(project_id: str, project_data: dict[str, Any] | None = None) -> Path:
     data = project_data or {}
+    if project_id == "cockpit-ui":
+        configured = os.environ.get("COCKPIT_UI_ROOT") or os.environ.get("COCKPIT_UI_DIST")
+        if configured:
+            root = Path(configured).expanduser()
+            return root.parent if root.name == "dist" else root
+        return compat.WORKSPACE_ROOT / "projects" / "cockpit-ui"
     storage = data.get("storage")
     if isinstance(storage, str) and storage.strip():
         return Path(storage).expanduser()
@@ -387,6 +394,8 @@ def _project_path(project_id: str, project_data: dict[str, Any] | None = None) -
 
 def _project_source_location(project_data: dict[str, Any] | None = None) -> Path | None:
     data = project_data or {}
+    if data.get("id") == "cockpit-ui":
+        return _project_path("cockpit-ui", data)
     physical_location = data.get("physical_location")
     if isinstance(physical_location, str) and physical_location.strip():
         return _resolved_physical_location(physical_location)

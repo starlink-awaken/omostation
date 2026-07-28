@@ -200,6 +200,16 @@ def setup_version_middleware(app: FastAPI) -> None:
         return version_manager.get_version_history()
 
 
+def _iter_effective_routes(app: FastAPI):
+    """Flatten custom mounted routers so versioning sees their API endpoints."""
+    for route in app.routes:
+        nested = getattr(route, "routes", None)
+        if nested:
+            yield from nested
+        else:
+            yield route
+
+
 def register_app_routes(app: FastAPI, default_version: str = "v1") -> int:
     """把已经挂载到 FastAPI 的 API 路由同步到版本目录。
 
@@ -208,7 +218,7 @@ def register_app_routes(app: FastAPI, default_version: str = "v1") -> int:
     版本信息自身不计入业务端点，避免目录统计被元数据接口污染。
     """
     registered = 0
-    for route in app.routes:
+    for route in _iter_effective_routes(app):
         path = getattr(route, "path", "")
         if not path.startswith("/api/") or path in {"/api/version", "/api/version/history"}:
             continue
@@ -234,7 +244,7 @@ def generate_openapi_spec(app: FastAPI) -> dict[str, Any]:
     }
 
     # 从 FastAPI 路由表提取路径
-    for route in app.routes:
+    for route in _iter_effective_routes(app):
         if hasattr(route, "path") and route.path.startswith("/api/"):
             methods = getattr(route, "methods", set()) or set()
             methods_str = [m.lower() for m in methods if m not in {"HEAD", "OPTIONS"}]

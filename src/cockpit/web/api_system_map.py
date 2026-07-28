@@ -117,7 +117,7 @@ def _build_projects(
             "cockpit_page": page_id,
             "coverage": "native" if page_id != "SystemMap" or project_id.startswith("cockpit") else "orientation",
             "path": str(project_path),
-            "source_location": str(_project_source_location(project_data) or project_path),
+            "source_location": str(_project_source_location({**project_data, "id": project_id}) or project_path),
             "exists": project_path.exists(),
             "operational": operational,
             "runtime": runtime,
@@ -824,13 +824,15 @@ def _build_page_maturity(
             + (10 if page_roadmap_items else 0)
             + (10 if action_count else 0)
         )
-        status = "ready" if score >= 70 else "watch" if score >= 40 else "gap"
+        traceability_status = "tracked" if page_roadmap_items else "untracked"
+        status = "ready" if score >= 70 and traceability_status == "tracked" else "watch" if score >= 40 else "gap"
         items.append(
             {
                 "page": page,
                 "page_id": page_id,
                 "score": score,
                 "status": status,
+                "traceability_status": traceability_status,
                 "projects": [project.get("id") for project in page_projects],
                 "domains": [domain.get("id") for domain in page_domains],
                 "usage_paths": [path.get("id") for path in page_usage_paths],

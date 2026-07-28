@@ -646,8 +646,9 @@ def _priority_from_page_maturity(page_item: dict) -> str:
 
 def _page_maturity_copy_text(page_item: dict) -> str:
     page = page_item.get("page") or {}
+    action = "纳入追踪" if page_item.get("traceability_status") == "untracked" else "补齐"
     lines = [
-        f"# 页面能力补齐草稿：{page.get('title', page_item.get('page_id', 'unknown'))}",
+        f"# 页面能力{action}草稿：{page.get('title', page_item.get('page_id', 'unknown'))}",
         "",
         f"页面：{page_item.get('page_id', 'unknown')}",
         f"状态：{page_item.get('status', 'unknown')} · 成熟度：{page_item.get('score', 0)}%",
@@ -678,10 +679,11 @@ def get_page_maturity_task_drafts(limit: int = 8) -> list[dict]:
     for page_item in (page_maturity.get("attention_items") or [])[:limit]:
         page = page_item.get("page") or {}
         page_id = page_item.get("page_id", page.get("id", "unknown"))
+        action = "纳入追踪" if page_item.get("traceability_status") == "untracked" else "补齐"
         drafts.append(
             {
                 "id": f"page-maturity-{page_id}",
-                "title": f"页面能力：补齐 {page.get('title', page_id)}",
+                "title": f"页面能力：{action} {page.get('title', page_id)}",
                 "description": page_item.get("next_action", ""),
                 "status": "pending",
                 "progress": 0,
