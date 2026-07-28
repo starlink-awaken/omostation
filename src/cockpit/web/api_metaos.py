@@ -44,6 +44,9 @@ except Exception as exc:  # Optional adapter; keep read-only cockpit routes avai
     SEngine = WorkflowPlanner = WorkflowStore = None  # type: ignore[assignment]
     _METAOS_IMPORT_ERROR = exc
 
+ROUTER_DEGRADED = _METAOS_IMPORT_ERROR is not None
+ROUTER_DEGRADED_REASON = str(_METAOS_IMPORT_ERROR) if _METAOS_IMPORT_ERROR else None
+
 
 def _metaos_unavailable() -> JSONResponse | None:
     if _METAOS_IMPORT_ERROR is None:

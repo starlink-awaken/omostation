@@ -59,6 +59,11 @@ except Exception as exc:  # Optional mutation adapter; status endpoints remain u
 else:
     _OMO_IMPORT_ERROR = None
 
+ROUTER_DEGRADED = _BUS_IMPORT_ERROR is not None or _OMO_IMPORT_ERROR is not None
+ROUTER_DEGRADED_REASON = "; ".join(
+    str(error) for error in (_BUS_IMPORT_ERROR, _OMO_IMPORT_ERROR) if error is not None
+) or None
+
 
 def _omo_adapter_unavailable() -> dict[str, object] | None:
     if _OMO_IMPORT_ERROR is None:

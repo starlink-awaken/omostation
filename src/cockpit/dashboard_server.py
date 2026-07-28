@@ -61,14 +61,23 @@ for _router_module in ROUTER_MODULES:
         _router = getattr(_mod, "router", None)
         if _router is not None:
             app.include_router(_router, dependencies=_AUTH_DEPS)
-            ROUTER_LOAD_REPORT.append(
-                {
-                    "module": _router_module,
-                    "status": "loaded",
-                    "route_count": len(getattr(_router, "routes", []) or []),
-                }
-            )
-            print(f"Successfully loaded router: {_router_module}")
+            route_count = len(getattr(_router, "routes", []) or [])
+            if getattr(_mod, "ROUTER_DEGRADED", False):
+                ROUTER_LOAD_REPORT.append(
+                    {
+                        "module": _router_module,
+                        "status": "degraded",
+                        "route_count": route_count,
+                        "error_type": "OptionalDependencyUnavailable",
+                        "error": str(getattr(_mod, "ROUTER_DEGRADED_REASON", "")),
+                    }
+                )
+                print(f"Loaded degraded router: {_router_module}")
+            else:
+                ROUTER_LOAD_REPORT.append(
+                    {"module": _router_module, "status": "loaded", "route_count": route_count}
+                )
+                print(f"Successfully loaded router: {_router_module}")
         else:
             ROUTER_LOAD_REPORT.append({"module": _router_module, "status": "missing_router", "route_count": 0})
     except Exception as e:  # defensive fallback
