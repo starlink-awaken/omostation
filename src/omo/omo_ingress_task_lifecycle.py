@@ -514,12 +514,23 @@ def execute_controlled_task(
                 "Controlled verification command must declare an explicit working directory"
             )
         cwd = Path(match.group(1)).expanduser().resolve()
-        try:
-            cwd.relative_to(workspace_root)
-        except ValueError as exc:
+        allowed_roots = [workspace_root]
+        for env_name in ("COCKPIT_UI_ROOT", "COCKPIT_UI_DIST"):
+            configured_root = os.environ.get(env_name)
+            if not configured_root:
+                continue
+            candidate_root = Path(configured_root).expanduser().resolve()
+            if env_name == "COCKPIT_UI_DIST" and candidate_root.name == "dist":
+                candidate_root = candidate_root.parent
+            allowed_roots.append(candidate_root)
+        if not any(
+            cwd == allowed_root or allowed_root in cwd.parents
+            for allowed_root in allowed_roots
+        ):
             raise ValueError(
-                "Controlled verification working directory must be inside Workspace"
-            ) from exc
+                "Controlled verification working directory must be inside Workspace "
+                "or an explicitly configured external worktree"
+            )
         command_body = match.group(2).strip()
         if any(
             token in command_body

@@ -863,6 +863,69 @@ def test_execute_controlled_task_runs_project_verification_and_records_log(
     assert artifact["execution_ref"] in payload["handoff_refs"]
 
 
+def test_execute_controlled_task_allows_configured_external_ui_worktree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    external_ui = tmp_path.parent / f"{tmp_path.name}-cockpit-ui"
+    external_ui.mkdir()
+    monkeypatch.setenv("COCKPIT_UI_ROOT", str(external_ui))
+    task_path = tmp_path / ".omo" / "tasks" / "active" / "TASK-UI-VERIFY-1.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    command = f'cd "{external_ui}" && bun run build'
+    task_path.write_text(
+        yaml.safe_dump(
+            {
+                "id": "TASK-UI-VERIFY-1",
+                "title": "external UI verification",
+                "status": "in_progress",
+                "task_type": "operations",
+                "risk_level": "L1",
+                "source_docs": ["cockpit-ui:package.json"],
+                "deliverables": ["build result"],
+                "assigned_to": "operator",
+                "dispatch_id": "dispatch-ui-verify-1",
+                "run_ref": "runtime/dispatch-ui-verify-1.yaml",
+                "approval_ref": None,
+                "review_ref": None,
+                "knowledge_refs": [],
+                "handoff_refs": [],
+                "entry_gate": [],
+                "evidence_required": ["execution log"],
+                "test_plan": [command],
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "started_at": "2026-07-28T06:00:00Z",
+                "metadata": {
+                    "command": command,
+                    "action_id": "copy-verify-command",
+                    "controlled_execution": True,
+                    "cockpit_only": True,
+                },
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+    calls = []
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.subprocess.run",
+        lambda *args, **kwargs: (
+            calls.append(kwargs)
+            or SimpleNamespace(returncode=0, stdout="built", stderr="")
+        ),
+    )
+
+    artifact = execute_controlled_task(
+        tmp_path / ".omo",
+        task_id="TASK-UI-VERIFY-1",
+        actor="projects/omo/tests",
+        source_ref="tests:execute:TASK-UI-VERIFY-1",
+    )
+
+    assert artifact["exit_code"] == 0
+    assert calls[0]["cwd"] == external_ui.resolve()
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX-only")
 def test_controlled_process_start_status_and_stop_are_audited(tmp_path: Path) -> None:
     project_path = tmp_path / "projects" / "demo"
