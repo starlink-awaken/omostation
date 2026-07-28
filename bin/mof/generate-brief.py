@@ -382,6 +382,55 @@ def run_write_owner_audit() -> list[str]:
         return []
 
 
+def _render_collab_dashboard() -> list[str]:
+    """P84 W1.3 协作双轨仪表 — 能力轨(构造场景) + 产能轨(真实 backlog) 分列.
+
+    🔴 红线 (P84 §0): 两轨数据源物理隔离, 禁止合并成单一"任务数".
+       构造场景只计能力轨, 真实 backlog 只计产能轨.
+    数据源: .omo/state/collab-dualtrack.yaml (bin/collab/export-dualtrack.py 产出).
+    未导出时返回空 (不渲染空段, 避免 BRIEF 幻影).
+    """
+    dualtrack_path = WORKSPACE / ".omo" / "state" / "collab-dualtrack.yaml"
+    if not dualtrack_path.is_file():
+        return []
+    import yaml  # noqa: PLC0415
+
+    try:
+        data = yaml.safe_load(dualtrack_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return []
+    cap = data.get("capability_track") or {}
+    thru = data.get("throughput_track") or {}
+    silent = thru.get("silent_loss", 0)
+    silent_mark = "✅ 硬红线达成" if silent == 0 else "🔴 立即停管线写卡"
+    cr = cap.get("conflict_resolution_success_rate")
+    cr_s = f"{cr:.0%}" if isinstance(cr, (int, float)) else "—"
+    return [
+        "## 🤝 协作双轨仪表 (Collaboration Dual-Track · P84)",
+        "",
+        "> 🔴 **能力轨与产能轨数据源物理隔离, 禁止合并** (P84 §0 最高级红线). "
+        "构造场景只计能力轨, 真实 backlog 只计产能轨.",
+        "",
+        "### 🎯 能力轨 (Capability · 构造场景, 可加速)",
+        f"> 数据源: `{cap.get('data_source', '?')}`",
+        "",
+        f"- 场景总数: `{cap.get('scenario_total', 0)}` | 通过率: `{cap.get('pass_rate', 0):.1%}`",
+        f"- 对抗集: `{cap.get('adversarial_total', 0)}` 个, 失败率 `{cap.get('adversarial_fail_rate', 0):.0%}` "
+        "(P84: 全过=对抗不足须加强)",
+        f"- 冲突消解成功率: `{cr_s}` | 平均协商轮次: `{cap.get('avg_resolution_rounds', 0)}`",
+        "",
+        "### 📦 产能轨 (Throughput · 真实 backlog, 不可造)",
+        f"> 数据源: `{thru.get('data_source', '?')}`",
+        "",
+        f"- 真实任务: `{thru.get('done', 0)}` done / `{thru.get('planned', 0)}` planned "
+        f"(完成率 `{thru.get('completion_rate', 0):.1%}`)",
+        f"- 人工直做占比: `{thru.get('human_direct_ratio', 0):.0%}` "
+        f"({thru.get('human_direct_count', 0)}/{thru.get('done', 0)})",
+        f"- **静默丢失: `{silent}`** {silent_mark}",
+        "",
+    ]
+
+
 def generate_brief_content() -> str:
     import yaml  # noqa: PLC0415
 
@@ -519,6 +568,9 @@ def generate_brief_content() -> str:
         except Exception:
             pass
     lines.append("")
+
+    # P84 W1.3 协作双轨仪表 (能力轨+产能轨 分列, 数据源物理隔离)
+    lines.extend(_render_collab_dashboard())
 
     # 3. 治理健康指标折叠逻辑 (Health Folding - WS-5)
     # 当健康分 >= 90 时折叠
