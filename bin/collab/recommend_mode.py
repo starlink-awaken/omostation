@@ -13,6 +13,7 @@ import argparse
 import json
 import re
 import sys
+from pathlib import Path
 
 # 路由表 (SSOT 叙述: .omo/standards/collab-mode-routing.md · ADR-0253/0255)
 RULES: list[tuple[str, str, str]] = [
@@ -95,12 +96,34 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
     )
     ap.add_argument("--describe", default=None, help="自然语言任务描述, 启发式匹配")
+    ap.add_argument(
+        "--batch-file",
+        default=None,
+        help="每行一条任务描述, 批量推荐 (stdout JSONL or table)",
+    )
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--list-types", action="store_true")
     args = ap.parse_args(argv)
     if args.list_types:
         for name, mode, reason in RULES:
             print(f"{name:20} -> {mode:28}  # {reason}")
+        return 0
+    if args.batch_file:
+        path = Path(args.batch_file)
+        lines = [
+            ln.strip()
+            for ln in path.read_text(encoding="utf-8").splitlines()
+            if ln.strip() and not ln.strip().startswith("#")
+        ]
+        rows = [recommend(None, desc) | {"describe": desc} for desc in lines]
+        if args.json:
+            print(json.dumps(rows, ensure_ascii=False, indent=2))
+        else:
+            for r in rows:
+                print(
+                    f"{r['recommended_mode']:28}  type={r['task_type']:20}  "
+                    f"desc={r['describe'][:60]}"
+                )
         return 0
     rec = recommend(args.task_type, args.describe)
     if args.json:

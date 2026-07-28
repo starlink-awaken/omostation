@@ -24,6 +24,11 @@ def main() -> int:
     ap.add_argument("scenario", nargs="?", help="单场景 YAML 路径")
     ap.add_argument("--dir", dest="dir", help="批量跑目录")
     ap.add_argument("--json", action="store_true", help="机器可读 JSON 输出")
+    ap.add_argument(
+        "--adversarial-only",
+        action="store_true",
+        help="只跑 adversarial=true 场景 (能力轨 triage)",
+    )
     args = ap.parse_args()
 
     paths: list[Path] = []
@@ -38,6 +43,8 @@ def main() -> int:
     for p in paths:
         try:
             sc = load_scenario(p)
+            if args.adversarial_only and not sc.get("adversarial"):
+                continue
             r = run_scenario(sc)
             results.append({"file": str(p), "result": r.to_dict()})
         except Exception as e:  # noqa: BLE001

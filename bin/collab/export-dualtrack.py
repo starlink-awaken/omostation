@@ -29,6 +29,13 @@ TASKS_DONE = REPO / ".omo" / "tasks" / "done"
 TASKS_PLANNED = REPO / ".omo" / "tasks" / "planned"
 OUT_YAML = REPO / ".omo" / "state" / "collab-dualtrack.yaml"
 
+# P84 W3 产能目标 (ADR-0256) — 诚实 gap, 不可造卡冲数
+W3_DONE_TARGET = 30
+# planned 中不计入 "active backlog" 的终态 (仍进 planned_total 透明度字段)
+INACTIVE_PLANNED_STATUS = frozenset(
+    {"archived", "done", "closed", "cancelled", "deferred"}
+)
+
 
 def export_capability_track() -> dict:
     """能力轨: 从场景库跑批导出 (构造场景, 可批量注入加速)."""
@@ -73,10 +80,17 @@ def _parse_task_yaml(path: Path) -> dict:
     return {}
 
 
+def _list_planned_yaml() -> list[Path]:
+    """planned 含子目录 (vision-roadmap/), 只计 *.yaml."""
+    if not TASKS_PLANNED.exists():
+        return []
+    return sorted(p for p in TASKS_PLANNED.rglob("*.yaml") if p.is_file())
+
+
 def export_throughput_track() -> dict:
     """产能轨: 从真实 tasks SSOT 导出 (真实 backlog, 不可造)."""
     done_files = sorted(TASKS_DONE.glob("*.yaml")) if TASKS_DONE.exists() else []
-    planned_files = sorted(TASKS_PLANNED.glob("*.yaml")) if TASKS_PLANNED.exists() else []
+    planned_files = _list_planned_yaml()
     done = len(done_files)
     planned = len(planned_files)
     total = done + planned
@@ -96,12 +110,32 @@ def export_throughput_track() -> dict:
             human_direct += 1
         else:
             agent_done += 1
+
+    active_planned = 0
+    inactive_planned = 0
+    for f in planned_files:
+        try:
+            d = _parse_task_yaml(f)
+        except Exception:  # noqa: BLE001
+            active_planned += 1  # 解析失败按 active 计, 避免低估 backlog
+            continue
+        st = str(d.get("status") or "pending").lower()
+        if st in INACTIVE_PLANNED_STATUS:
+            inactive_planned += 1
+        else:
+            active_planned += 1
+
+    gap = max(0, W3_DONE_TARGET - done)
     return {
         "data_source": "真实 backlog (.omo/tasks/done+planned/, 不可造)",
         "real_task_total": total,
         "done": done,
         "planned": planned,
+        "planned_active": active_planned,
+        "planned_inactive": inactive_planned,
         "completion_rate": round(done / total, 3) if total else 0,
+        "w3_done_target": W3_DONE_TARGET,
+        "gap_to_target": gap,
         "human_direct_count": human_direct,
         "human_direct_ratio": round(human_direct / done, 3) if done else 0,
         "agent_done_count": agent_done,
@@ -112,12 +146,22 @@ def export_throughput_track() -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description="P84 W1.3 双轨指标导出")
     ap.add_argument("--quiet", action="store_true", help="只写 YAML 不输出 JSON")
+    ap.add_argument(
+        "--throughput-only",
+        action="store_true",
+        help="只导出产能轨 (跳过场景库跑批, 快速看 gap)",
+    )
     args = ap.parse_args()
 
+    cap = (
+        {"skipped": True, "reason": "--throughput-only"}
+        if args.throughput_only
+        else export_capability_track()
+    )
     out = {
         "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "schema": "p84-dualtrack-v1",
-        "capability_track": export_capability_track(),
+        "capability_track": cap,
         "throughput_track": export_throughput_track(),
         "redline_note": "两轨数据源独立, 禁止合并; 构造场景计产能轨=最高级违规 (P84 §0)",
     }
