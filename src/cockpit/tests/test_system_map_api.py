@@ -602,6 +602,30 @@ def test_project_without_security_contract_gets_security_triage(tmp_path):
     assert security["executes"] is False
 
 
+def test_project_with_security_audit_uses_audit_as_security_evidence(tmp_path):
+    (tmp_path / "AUDIT.md").write_text("# Security audit\n", encoding="utf-8")
+    checks = api_system_map._project_coverage_checks(
+        {
+            "id": "toolbox",
+            "coverage": "native",
+            "cockpit_page": "Assets",
+            "path": str(tmp_path),
+            "operational": {
+                "docs": {"present": 1, "expected": 1},
+                "commands": ["audit"],
+                "manifests": ["package.json"],
+            },
+            "runtime": {"status": "not_applicable", "profile": "external"},
+            "registry_contract": {"missing_fields": []},
+            "source_refs": [{"exists": True}],
+            "actions": [{"id": "copy-project-path"}],
+        }
+    )
+    security = next(check for check in checks if check["id"] == "security_contract")
+    assert security["status"] == "ready"
+    assert "AUDIT.md" in security["detail"]
+
+
 def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatch):
     workspace_root = tmp_path
     project_path = workspace_root / "projects" / "cockpit"

@@ -881,10 +881,20 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         (candidate for candidate in (project_path / "AUDIT.md", project_path / "SECURITY-AUDIT.md") if candidate.is_file()),
         None,
     )
-    security_status = "ready" if security_doc.is_file() else "warning" if project_path.exists() else "failed"
+    security_status = (
+        "ready"
+        if security_doc.is_file() or security_audit
+        else "warning"
+        if project_path.exists()
+        else "failed"
+    )
     security_detail = (
-        f"已发现安全合同：{security_doc.name}"
-        + (f"，审计入口：{security_audit.name}。" if security_audit else "。")
+        (
+            f"已发现安全合同：{security_doc.name}"
+            if security_doc.is_file()
+            else f"已发现安全审计入口：{security_audit.name}"
+        )
+        + (f"，审计入口：{security_audit.name}。" if security_audit and security_doc.is_file() else "。")
         if security_status == "ready"
         else "项目存在，但未发现 SECURITY.md 安全合同。"
         if security_status == "warning"
