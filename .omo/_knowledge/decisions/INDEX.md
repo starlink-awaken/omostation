@@ -168,6 +168,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0238 | MOF/M4 Phase0 注册面守自止血 (P0-1..P0-4: 路径/stats/commands 修复+漂移门+文档指针化+MCP口径) | ACCEPTED | 2026-07-25 | MOF-M4 Phase0 | 0238-mof-m4-phase0-registry-self-governance.md |
 | 0240 | MOF/M4 D1-D4 决策 A/A/A/A + Phase 1 启动 (2026-07-25 拍板 · 2026-07-28 main 追认) | ACCEPTED | 2026-07-28 | 夏明星 | 0240-mof-d1d4-decisions-aaaa-phase1.md |
 | 0252 | metaos Phase1/2 前提 D1-D4 决策 A/A/B/A (CLI/PID/agentkit/admit) | ACCEPTED | 2026-07-28 | 夏明星 | 0252-metaos-d1d4-aaaa-phase12.md |
+| 0253 | P84 协作模式路由 — K4 批次2 协作劣后路线 A（按任务类型选协作/单 agent） | ACCEPTED | 2026-07-28 | 夏明星 | 0253-p84-collab-mode-routing-after-k4.md |
 | 0249 | 治理自省预算封顶 40/40/20 (用户已同意) | ACCEPTED | 2026-07-26 | P82 StageA | 0249-governance-budget-cap-40-40-20.md |
 | 0250 | health 门禁改为只卡工程执行面 (owner 集中度不阻断) | ACCEPTED | 2026-07-27 | P82 StageA | 0250-health-gate-engineering-surface-only.md |
 | 0251 | 三把锁 gate 定位 (layer-call/drift/doc-claims blocking) + layer-call 增量快路径 | ACCEPTED | 2026-07-28 | P83 Stage1 | 0251-three-locks-gate-positioning-layer-call-incremental.md |
@@ -337,4 +338,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-28 · Owner: governance-team · ADR-0240 MOF D1-D4 + ADR-0252 metaos D1-D4 决策落地; GaC rules 见 registry*
+*最近更新: 2026-07-28 · Owner: governance-team · ADR-0253 P84 collab routing A; GaC rules 见 registry*
