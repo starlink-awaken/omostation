@@ -78,9 +78,9 @@ def test_expected_pass_for_well_formed_samples() -> None:
 def test_adversarial_at_least_3_fail() -> None:
     """对抗场景至少 3 个真的让管线失败 (P84 W1.2: 全过=对抗不足须加强).
 
-    W2.2 缺陷闭环: ADV01/03/05 修后转 ✅ (循环检测/死锁打破/断链报 已修);
-    新对抗 ADV07/09/11 (double_claim/partial_failure/starvation) 暴露新缺陷 → 保持 ≥3 失败.
-    对抗集持续进化: 修一批 + 加一批, 永不"全过" (全过=对抗不足须加强).
+    W2.2 闭环 (ADR-0254): C/S 类 (double_claim/partial/starvation/orphan/…) 已修转 ✅;
+    新对抗 ADV13/15/17 (collusion/priority_inversion/cascade) 保持 ≥3 失败.
+    对抗集持续进化: 修一批 + 加一批, 永不"全过".
     """
     results: list[tuple[str, bool]] = []
     for p in sorted(SCN_DIR.glob("*.yaml")):
@@ -93,6 +93,18 @@ def test_adversarial_at_least_3_fail() -> None:
     assert len(failed) >= 3, (
         f"对抗场景仅 {len(failed)} 个失败 (<3), 对抗性不足须加强: {results}"
     )
+
+
+def test_cclass_detectors_pass() -> None:
+    """C 类真缺陷检测已实现 (double_claim / partial_failure / starvation)."""
+    for name in (
+        "ADV07-double-claim.yaml",
+        "ADV09-partial-failure.yaml",
+        "ADV11-resource-starvation.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, f"{name} should pass after ADR-0254: {[c for c in r.criteria if not c.passed]}"
 
 
 def test_adversarial_ratio_ge_20pct() -> None:
