@@ -30,6 +30,21 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 RUNS_DIR = WORKSPACE / ".omo/_delivery/agent-workflows/runs"
 WARN_AFTER = timedelta(days=3)
 BLOCK_AFTER = timedelta(days=7)
+# M2 baseline 模式: 存量 blocking 降级 warn (防"新门被历史存量锁死"第三次)
+# baseline = 本 check 上线时已存在的滞留 run (grace 清单), 新增滞留才 blocking
+# 生成: python3 bin/gac/check-work-landed.py --dump-baseline > baseline-work-landed.txt
+BASELINE_FILE = WORKSPACE / ".omo" / "_truth" / "registry" / "baseline-work-landed.txt"
+
+
+def _load_baseline() -> set[str]:
+    """加载存量 grace 清单 (run_id 或 path.stem)."""
+    if not BASELINE_FILE.is_file():
+        return set()
+    return {
+        line.strip()
+        for line in BASELINE_FILE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.startswith("#")
+    }
 
 PR_RE = re.compile(r"#(\d+)\b")
 SHA_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
@@ -135,7 +150,31 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="do not allow the 'no evidence reference' case to be ignored.",
     )
+    parser.add_argument(
+        "--dump-baseline",
+        action="store_true",
+        help="dump current blocking run_ids as baseline grace list (for M2 migration).",
+    )
     args = parser.parse_args()
+
+    # M2: --dump-baseline 输出当前 blocking run_ids (生成 grace 清单)
+    if args.dump_baseline:
+        if not RUNS_DIR.is_dir():
+            return 0
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(days=args.window_days)
+        for path in sorted(RUNS_DIR.glob("*.yaml")):
+            run = _read_run(path)
+            if not run or run.get("status") != "ok":
+                continue
+            ts = _parse_ts(run.get("updated_at") or run.get("created_at") or "")
+            if ts is None or ts < cutoff:
+                continue
+            age = now - ts
+            if age >= BLOCK_AFTER:
+                rid = run.get("run_id") or path.stem
+                print(f"#{rid}  # age={age.days}d")
+        return 0
 
     if not RUNS_DIR.is_dir():
         print(json.dumps({"ok": True, "summary": {"closed": 0}, "findings": []}, ensure_ascii=False, indent=2))
@@ -146,6 +185,7 @@ def main(argv: list[str] | None = None) -> int:
 
     findings: list[dict[str, Any]] = []
     summary = {"closed": 0, "settled": 0, "warn": 0, "blocking": 0, "no_ref": 0}
+    baseline = _load_baseline()  # M2: 存量 grace 清单
 
     for path in sorted(RUNS_DIR.glob("*.yaml")):
         run = _read_run(path)
@@ -169,6 +209,10 @@ def main(argv: list[str] | None = None) -> int:
                         "claimed_paths": [],
                         "missing_paths": [],
                     })
+                    # M2 baseline: 存量 blocking 降级 warn (grace 清单)
+                    run_id = run.get("run_id") or path.stem
+                    if kind == "blocking" and run_id in baseline:
+                        kind = "warn"
                     if kind == "blocking":
                         summary["blocking"] += 1
                     else:
@@ -190,6 +234,10 @@ def main(argv: list[str] | None = None) -> int:
             "claimed_refs": sorted(refs),
             "unlanded_refs": sorted(unlanded),
         })
+        # M2 baseline: 存量 blocking 降级 warn (grace 清单)
+        run_id = run.get("run_id") or path.stem
+        if kind == "blocking" and run_id in baseline:
+            kind = "warn"
         if kind == "blocking":
             summary["blocking"] += 1
         else:
