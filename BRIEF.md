@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-28T07:05:46.233933Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `91/100`
+> **Generated**: `2026-07-28T07:13:08.153186Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `91/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 6 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/planned/decision-checklist-13-items.md`.
@@ -28,6 +28,24 @@
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·audit** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
+
+## 🤝 协作双轨仪表 (Collaboration Dual-Track · P84)
+
+> 🔴 **能力轨与产能轨数据源物理隔离, 禁止合并** (P84 §0 最高级红线). 构造场景只计能力轨, 真实 backlog 只计产能轨.
+
+### 🎯 能力轨 (Capability · 构造场景, 可加速)
+> 数据源: `构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)`
+
+- 场景总数: `7` | 通过率: `57.1%`
+- 对抗集: `3` 个, 失败率 `100%` (P84: 全过=对抗不足须加强)
+- 冲突消解成功率: `50%` | 平均协商轮次: `0.71`
+
+### 📦 产能轨 (Throughput · 真实 backlog, 不可造)
+> 数据源: `真实 backlog (.omo/tasks/done+planned/, 不可造)`
+
+- 真实任务: `5` done / `10` planned (完成率 `33.3%`)
+- 人工直做占比: `0%` (0/5)
+- **静默丢失: `0`** ✅ 硬红线达成
 
 <details>
 <summary>⚙️ <b>治理健康分详情 (复合 91/100, 已自动收纳)</b></summary>

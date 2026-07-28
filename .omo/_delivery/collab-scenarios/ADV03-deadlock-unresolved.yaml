@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-28
+---
+id: ADV03-deadlock-unresolved
+category: A_conflict
+adversarial: true
+seed: 103
+description: "[对抗·red-team] 5 角色连续写同产物不同值, 制造无法收敛的死锁, 测管线是否在轮次上限内消解"
+setup:
+  blackboard:
+    - {key: doc, value: null}
+  roles: [r1, r2, r3, r4, r5]
+inject:
+  - {type: write_conflict, role: r1, target: doc, value: "v1"}
+  - {type: write_conflict, role: r2, target: doc, value: "v2"}
+  - {type: write_conflict, role: r3, target: doc, value: "v3"}
+  - {type: write_conflict, role: r4, target: doc, value: "v4"}
+  - {type: write_conflict, role: r5, target: doc, value: "v5"}
+expected:
+  behavior: deadlock_broken_within_rounds
+  max_resolution_rounds: 3
+  silent_loss: 0
+verdict:
+  - criterion: resolved_within_rounds
+    check: resolution_rounds_le
+    args: {max: 3}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
