@@ -484,6 +484,13 @@ def _runtime_profile(
     script_text = " ".join(f"{key} {value}" for key, value in scripts.items() if isinstance(value, str)).lower()
     manifests = {item.get("name") for item in (operational.get("manifests") or [])}
 
+    if project_id == "bus-foundation":
+        return {
+            "profile": "library",
+            "needs_runtime": False,
+            "probe_reason": "bus-foundation 是嵌入式库；/metrics 仅在调用 enable_metrics() 时按需开启，没有独立常驻服务。",
+        }
+
     if ports and not any(port.get("probeable", True) for port in ports):
         return {
             "profile": "stdio",
@@ -590,7 +597,10 @@ def _project_runtime_status(
             probe_audit.get("recorded_at"), RUNTIME_EVIDENCE_MAX_AGE_HOURS
         )
 
-    if probeable_ports and listening_count:
+    if not profile["needs_runtime"]:
+        status = "not_applicable"
+        probe_reason = profile["probe_reason"]
+    elif probeable_ports and listening_count:
         status = "running"
         probe_reason = "已探测到登记端口正在监听。"
     elif probeable_ports:

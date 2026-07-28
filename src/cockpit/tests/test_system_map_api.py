@@ -341,17 +341,24 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
     assert not any(action["id"] == "copy-start-command" for action in projects["bus-foundation"]["actions"])
 
 
-def test_system_map_marks_cross_project_runtime_port_conflicts():
+def test_system_map_conflict_diagnostics_clear_after_port_alignment():
     payload = build_system_map()
     projects = {project["id"]: project for project in payload["projects"]}
 
-    for project_id, other_project_id in (("ecos", "aetherforge"), ("aetherforge", "ecos")):
+    for project_id in ("ecos", "aetherforge"):
         project = projects[project_id]
-        conflict = next(item for item in project["runtime"]["port_conflicts"] if item["port"] == 7432)
-        assert other_project_id in conflict["projects"]
-        port = next(item for item in project["runtime"]["ports"] if item["port"] == 7432)
-        assert other_project_id in port["conflict_projects"]
-        assert "端口冲突" in project["runtime"]["probe_reason"]
+        assert project["runtime"]["port_conflicts"] == []
+        assert all(not port.get("conflict_projects") for port in project["runtime"]["ports"])
+
+
+def test_bus_foundation_metrics_is_optional_embedded_runtime():
+    payload = build_system_map()
+    project = next(item for item in payload["projects"] if item["id"] == "bus-foundation")
+
+    assert project["runtime"]["profile"] == "library"
+    assert project["runtime"]["needs_runtime"] is False
+    assert project["runtime"]["status"] == "not_applicable"
+    assert "按需开启" in project["runtime"]["probe_reason"]
 
 
 def test_evidence_freshness_distinguishes_fresh_stale_and_unknown():
