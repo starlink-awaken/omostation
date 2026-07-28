@@ -77,6 +77,9 @@ def test_system_map_builds_workspace_dimensions():
     runtime_playbook = next(item for item in payload["playbooks"] if item["id"] == "runtime-diagnostic-loop")
     assert any(step["page_id"] == "AlertCenter" for step in runtime_playbook["steps"])
     assert payload["summary"]["roadmap_items"] >= 1
+    page_contract = next(item for item in payload["roadmap"]["items"] if item["id"] == "page-contract-home")
+    assert page_contract["status"] == "planned"
+    assert page_contract["cockpit_page"] == "Home"
     assert payload["summary"]["ready_projects"] >= 1
     assert "partial_projects" in payload["summary"]
     assert "running_projects" in payload["summary"]
@@ -105,6 +108,9 @@ def test_system_map_builds_workspace_dimensions():
     assert "attention_items" in domain_apps
     assert domain_apps["next_action"]
     assert payload["summary"]["page_maturity_ready"] >= 1
+    home_maturity = next(item for item in payload["page_maturity"]["items"] if item["page_id"] == "Home")
+    assert home_maturity["roadmap_status"] == "planned"
+    assert "planned" in home_maturity["traceability_next_action"]
     assert "page_maturity_score" in payload["summary"]
     assert payload["summary"]["page_maturity_gap"] >= 0
     assert payload["summary"]["page_maturity_watch"] >= 0

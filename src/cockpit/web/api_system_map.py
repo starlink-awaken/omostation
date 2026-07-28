@@ -722,12 +722,40 @@ def _build_roadmap() -> dict[str, Any]:
         "later": "后续增强",
     }
     lanes = []
+    existing_items = list(ROADMAP_ITEMS)
+    covered_pages = {item.get("cockpit_page") for item in existing_items}
+    # Every page needs an explicit evolution contract.  Keep generated
+    # contracts planned until a page has a real acceptance entry in the
+    # curated roadmap; otherwise maturity silently treats missing planning as
+    # a healthy page.
+    generated_page_contracts = [
+        {
+            "id": f"page-contract-{page['id'].lower()}",
+            "priority": "P1",
+            "stage": "next",
+            "status": "planned",
+            "title": f"补齐{page['title']}页面运营契约",
+            "domain": "page-coverage",
+            "cockpit_page": page["id"],
+            "problem": f"{page['title']}已有 Cockpit 入口，但页面对象、动作、证据和下一步建设还没有独立的路线项。",
+            "actions": (
+                "把页面数据源、可用动作、验证证据和使用路径绑定到同一份页面契约。",
+                "为页面补一个可重复执行的验收项，并把结果回链到 TaskCenter。",
+            ),
+            "acceptance": (
+                "页面能清楚说明对象、动作、证据和当前下一步。",
+                "页面契约能在 SystemMap 和 TaskCenter 之间往返，不再只留下模糊 watch。",
+            ),
+        }
+        for page in COCKPIT_PAGES
+        if page["id"] not in covered_pages
+    ]
     items = [
         {
             **item,
             "source_refs": [_source_ref_for_id(CATALOG_SOURCE, item["id"], "路线图定义", "system_map_api")],
         }
-        for item in ROADMAP_ITEMS
+        for item in [*existing_items, *generated_page_contracts]
     ]
     for lane_id, label in lane_labels.items():
         lane_items = [item for item in items if item["stage"] == lane_id]
@@ -830,6 +858,7 @@ def _build_page_maturity(
             if step.get("page_id") == page_id or (step.get("page") or {}).get("id") == page_id
         ]
         page_roadmap_items = [item for item in roadmap_items if item.get("cockpit_page") == page_id]
+        roadmap_status = "shipped" if any(item.get("status") == "shipped" for item in page_roadmap_items) else "planned"
         project_action_count = sum(
             len(project.get("actions") or []) + len(project.get("triage_commands") or []) for project in page_projects
         )
@@ -859,7 +888,18 @@ def _build_page_maturity(
             + (10 if action_count else 0)
         )
         traceability_status = "tracked" if page_roadmap_items else "untracked"
-        status = "ready" if score >= 70 and traceability_status == "tracked" else "watch" if score >= 40 else "gap"
+        status = (
+            "ready"
+            if score >= 70 and traceability_status == "tracked" and roadmap_status == "shipped"
+            else "watch"
+            if score >= 40
+            else "gap"
+        )
+        traceability_next_action = (
+            "保持页面路线图与验收项同步。"
+            if roadmap_status == "shipped"
+            else "把页面运营契约从 planned 推进到 shipped，并补真实验收证据。"
+        )
         items.append(
             {
                 "page": page,
@@ -867,6 +907,8 @@ def _build_page_maturity(
                 "score": score,
                 "status": status,
                 "traceability_status": traceability_status,
+                "traceability_next_action": traceability_next_action,
+                "roadmap_status": roadmap_status,
                 "projects": [project.get("id") for project in page_projects],
                 "domains": [domain.get("id") for domain in page_domains],
                 "usage_paths": [path.get("id") for path in page_usage_paths],
@@ -875,13 +917,17 @@ def _build_page_maturity(
                 "actions": action_count,
                 "operator_actions": page_action_ids,
                 "operator_action_details": page_action_details,
-                "next_action": _page_maturity_next_action(
-                    page_projects,
-                    page_domains,
-                    page_usage_paths,
-                    page_playbook_steps,
-                    page_roadmap_items,
-                    action_count,
+                "next_action": (
+                    traceability_next_action
+                    if roadmap_status != "shipped"
+                    else _page_maturity_next_action(
+                        page_projects,
+                        page_domains,
+                        page_usage_paths,
+                        page_playbook_steps,
+                        page_roadmap_items,
+                        action_count,
+                    )
                 ),
             }
         )
