@@ -32,6 +32,7 @@ from cockpit.web.api_system_map_catalog import (
     OPERATING_PLAYBOOKS,
     PACKAGE_MANIFESTS,
     PAGE_CAPABILITY_LINKS,
+    PAGE_OPERATOR_ACTION_METADATA,
     PAGE_OPERATOR_ACTIONS,
     PAGE_PROJECT_LINKS,
     PROJECT_COVERAGE_DIMENSIONS,
@@ -833,6 +834,21 @@ def _build_page_maturity(
             len(project.get("actions") or []) + len(project.get("triage_commands") or []) for project in page_projects
         )
         page_action_ids = list(PAGE_OPERATOR_ACTIONS.get(page_id, ()))
+        page_action_details = [
+            {
+                "id": action_id,
+                **PAGE_OPERATOR_ACTION_METADATA.get(
+                    action_id,
+                    {
+                        "label": action_id,
+                        "kind": "queue",
+                        "risk": "medium",
+                        "description": "进入任务中心承接该页面动作。",
+                    },
+                ),
+            }
+            for action_id in page_action_ids
+        ]
         action_count = project_action_count + len(page_action_ids)
         score = (
             (25 if page_projects else 0)
@@ -858,6 +874,7 @@ def _build_page_maturity(
                 "roadmap_items": [item.get("id") for item in page_roadmap_items],
                 "actions": action_count,
                 "operator_actions": page_action_ids,
+                "operator_action_details": page_action_details,
                 "next_action": _page_maturity_next_action(
                     page_projects,
                     page_domains,

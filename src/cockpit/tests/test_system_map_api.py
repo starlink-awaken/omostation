@@ -253,6 +253,16 @@ def test_system_map_builds_workspace_dimensions():
         "documented",
         "unknown",
     }
+    task_center_page = next(
+        item for item in payload["page_maturity"]["items"] if item["page_id"] == "TaskCenter"
+    )
+    complete_task_action = next(
+        action for action in task_center_page["operator_action_details"] if action["id"] == "complete-task"
+    )
+    assert complete_task_action["label"] == "完成任务"
+    assert complete_task_action["kind"] == "queue"
+    assert complete_task_action["risk"] == "medium"
+    assert complete_task_action["description"]
     assert "not_applicable_projects" in payload["summary"]
     assert "verification_ready" in payload["project_focus"]["summary"]
     governance_domain = next(domain for domain in payload["feature_domains"] if domain["title"] == "治理与合规")
