@@ -201,8 +201,12 @@ def setup_version_middleware(app: FastAPI) -> None:
 
 
 def _iter_effective_routes(app: FastAPI):
-    """Flatten custom mounted routers so versioning sees their API endpoints."""
+    """Flatten FastAPI's lazy included routers into effective route contexts."""
     for route in app.routes:
+        effective_contexts = getattr(route, "effective_route_contexts", None)
+        if callable(effective_contexts):
+            yield from effective_contexts()
+            continue
         nested = getattr(route, "routes", None)
         if nested:
             yield from nested

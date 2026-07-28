@@ -40,6 +40,9 @@ class TestDashboardEndpoints:
         assert payload["endpoints"] > 10
         assert "v1" in payload["supported_versions"]
         assert any(item["version"] == "v1" and item["endpoints"] > 10 for item in entries)
+        endpoint_paths = {endpoint.get("path") for item in entries for endpoint in item.get("endpoint_list", [])}
+        assert "/api/tasks" in endpoint_paths
+        assert "/api/cockpit/system-map" in endpoint_paths
 
     def test_api_response_exposes_current_version(self, test_client):
         resp = test_client.get("/api/status")
