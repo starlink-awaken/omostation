@@ -228,6 +228,48 @@ def gen_adversarial() -> list[tuple[str, dict]]:
             idx += 1
             sid = f"ADV-{defect}-v{inst+1}"
             target = f"adv_target_{idx}"
+            roles = [f"r_a_{inst}", f"r_b_{inst}"]
+            roles_with_audit = roles  # overridden for audit-reject-dissent
+
+            # S-class fix: each defect type needs injects that actually
+            # create the condition the verdict checks for.
+            if defect == "orphan-product":
+                # Pre-populate blackboard with an orphan product (no writer).
+                # inject writes to a DIFFERENT target, leaving the orphan untouched.
+                orphan_target = f"orphan_{idx}"
+                setup_bb = [
+                    {"key": orphan_target, "value": "orphan_data", "writer": None},
+                    {"key": target, "value": None},
+                ]
+                injects = [
+                    {"type": "write_conflict", "role": roles[0], "target": target, "value": f"v_a_{inst}"},
+                    {"type": "write_conflict", "role": roles[1], "target": target, "value": f"v_b_{inst}"},
+                ]
+            elif defect == "unauthorized-write":
+                # Use a role NOT in setup.roles (unauthorized).
+                unauthorized_role = f"r_intruder_{inst}"
+                setup_bb = [{"key": target, "value": None}]
+                injects = [
+                    {"type": "write_conflict", "role": unauthorized_role, "target": target, "value": f"v_intrude_{inst}"},
+                ]
+            elif defect == "audit-reject-dissent":
+                # Include audit role and inject an audit rejection event.
+                audit_role = f"r_audit_{inst}"
+                roles_with_audit = roles + [audit_role]
+                setup_bb = [{"key": target, "value": None}]
+                injects = [
+                    {"type": "write_conflict", "role": roles[0], "target": target, "value": f"v_a_{inst}"},
+                    {"type": "audit_reject", "role": audit_role, "target": target, "reason": "policy_violation"},
+                ]
+            else:
+                # C-class (double-claim, partial-failure, starvation):
+                # current inject pattern is correct for these.
+                setup_bb = [{"key": target, "value": None}]
+                injects = [
+                    {"type": "write_conflict", "role": roles[0], "target": target, "value": f"v_a_{inst}"},
+                    {"type": "write_conflict", "role": roles[1], "target": target, "value": f"v_b_{inst}"},
+                ]
+
             sc = {
                 "id": sid,
                 "category": "A_conflict",
@@ -235,13 +277,10 @@ def gen_adversarial() -> list[tuple[str, dict]]:
                 "seed": 9000 + idx,
                 "description": f"[W2.1 red-team] {desc} (对抗变体{inst+1})",
                 "setup": {
-                    "blackboard": [{"key": target, "value": None}],
-                    "roles": [f"r_a_{inst}", f"r_b_{inst}"],
+                    "blackboard": setup_bb,
+                    "roles": roles_with_audit if defect == "audit-reject-dissent" else roles,
                 },
-                "inject": [
-                    {"type": "write_conflict", "role": f"r_a_{inst}", "target": target, "value": f"v_a_{inst}"},
-                    {"type": "write_conflict", "role": f"r_b_{inst}", "target": target, "value": f"v_b_{inst}"},
-                ],
+                "inject": injects,
                 "expected": {"behavior": event_kind, "silent_loss": 0},
                 "verdict": [
                     {"criterion": event_kind, "check": "events_contain", "args": {"kind": event_kind}},

@@ -16,15 +16,16 @@ setup:
   roles:
   - r_a_0
   - r_b_0
+  - r_audit_0
 inject:
 - type: write_conflict
   role: r_a_0
   target: adv_target_21
   value: v_a_0
-- type: write_conflict
-  role: r_b_0
+- type: audit_reject
+  role: r_audit_0
   target: adv_target_21
-  value: v_b_0
+  reason: policy_violation
 expected:
   behavior: audit_reject_handled
   silent_loss: 0
