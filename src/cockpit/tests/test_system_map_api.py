@@ -242,6 +242,8 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["source_refs"][0]["line"]
     assert cockpit_project["actions"]
     assert any(command["id"] == "registry-contract" for command in cockpit_project["triage_commands"])
+    security_check = next(check for check in cockpit_project["coverage_checks"] if check["id"] == "security_contract")
+    assert security_check["status"] == "ready"
     assert "triage_commands" in cockpit_project
     assert cockpit_project["workflow"]["summary"]["runs"] >= 1
     assert cockpit_project["portfolio"]["score"] >= 0
@@ -261,6 +263,7 @@ def test_system_map_builds_workspace_dimensions():
     assert {check["id"] for check in cockpit_project["coverage_checks"]} >= {
         "cockpit_surface",
         "registry_contract",
+        "security_contract",
         "project_docs",
         "commands",
         "manifest",
@@ -565,6 +568,25 @@ def test_unknown_project_without_verify_command_gets_verification_plan_triage(tm
     assert plan["category"] == "verification"
     assert "pytest" in plan["value"]
     assert plan["executes"] is False
+
+
+def test_project_without_security_contract_gets_security_triage(tmp_path):
+    project_path = tmp_path / "projects" / "demo"
+    project_path.mkdir(parents=True, exist_ok=True)
+    commands = api_system_map_io_commands._project_triage_commands(
+        {
+            "id": "demo",
+            "path": str(project_path),
+            "runtime": {"status": "not_applicable", "latest_verification": {"status": "verified"}, "ports": []},
+            "actions": [],
+            "operational": {"status": "ready"},
+            "registry_contract": {"missing_fields": []},
+        }
+    )
+
+    security = next(command for command in commands if command["id"] == "security-contract")
+    assert security["category"] == "coverage"
+    assert security["executes"] is False
 
 
 def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatch):

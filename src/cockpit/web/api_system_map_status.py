@@ -864,6 +864,7 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
     source_refs = project.get("source_refs") or []
     actions = project.get("actions") or []
     registry_contract = project.get("registry_contract") or {}
+    project_path = Path(str(project.get("path") or ""))
 
     docs = operational.get("docs") or {}
     docs_present = int(docs.get("present") or 0)
@@ -875,6 +876,20 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
     controlled_audit = _latest_controlled_verification(str(project.get("id") or ""))
     controlled_passed = controlled_audit.get("exit_code") == 0
     missing_sources = [ref for ref in source_refs if not ref.get("exists")]
+    security_doc = project_path / "SECURITY.md"
+    security_audit = next(
+        (candidate for candidate in (project_path / "AUDIT.md", project_path / "SECURITY-AUDIT.md") if candidate.is_file()),
+        None,
+    )
+    security_status = "ready" if security_doc.is_file() else "warning" if project_path.exists() else "failed"
+    security_detail = (
+        f"已发现安全合同：{security_doc.name}"
+        + (f"，审计入口：{security_audit.name}。" if security_audit else "。")
+        if security_status == "ready"
+        else "项目存在，但未发现 SECURITY.md 安全合同。"
+        if security_status == "warning"
+        else "项目实现路径不可读，无法判断安全合同。"
+    )
 
     verification_detail = f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。" + (
         f" 已登记命令：{verification.get('command')}。" if verification.get("command") else ""
@@ -929,6 +944,14 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
             "在 docs/project-registry.yaml 补齐版本/生命周期、构建运行约束和实现落点。"
             if registry_contract.get("missing_fields")
             else "保持注册合同与实际项目状态同步。",
+        ),
+        _coverage_check(
+            "security_contract",
+            security_status,
+            security_detail,
+            "补充 SECURITY.md，说明信任边界、敏感操作和安全审计入口。"
+            if security_status != "ready"
+            else "保持安全合同与实际入口、权限和审计状态同步。",
         ),
         _coverage_check(
             "project_docs",

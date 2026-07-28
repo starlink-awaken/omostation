@@ -433,6 +433,11 @@ PROJECT_COVERAGE_DIMENSIONS: tuple[dict[str, str], ...] = (
         "description": "项目是否声明版本/生命周期、构建运行约束和可追踪实现落点。",
     },
     {
+        "id": "security_contract",
+        "title": "安全合同",
+        "description": "项目是否提供可追踪的安全边界、风险说明或审计入口。",
+    },
+    {
         "id": "project_docs",
         "title": "项目文档",
         "description": "项目是否具备可读的 README/AGENTS/架构等操作说明。",

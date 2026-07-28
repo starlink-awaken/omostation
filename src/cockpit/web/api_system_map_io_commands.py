@@ -592,6 +592,24 @@ def _project_triage_commands(project: dict[str, Any]) -> list[dict[str, Any]]:
             )
         )
 
+    project_path = Path(str(project.get("path") or ""))
+    if project_path.exists() and not (project_path / "SECURITY.md").is_file():
+        commands.append(
+            _triage_command(
+                project_id,
+                "security-contract",
+                "查安全合同",
+                "coverage",
+                _command_with_cwd(
+                    project_path,
+                    'rg -n "security|安全|auth|权限|secret|凭据|audit|审计" '
+                    '"SECURITY.md" "AUDIT.md" "README.md" "AGENTS.md" 2>/dev/null || true',
+                ),
+                "项目缺少 SECURITY.md，先查找已有安全边界或审计说明，再补齐安全合同。",
+                risk="low",
+            )
+        )
+
     return commands
 
 
