@@ -7,13 +7,13 @@ next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora
 health_score_ref: .omo/state/health.yaml
 health_score: 93
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-28T07:06:21Z'
+health_score_generated_at: '2026-07-28T07:10:57Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 14
-total_tasks: 27
+total_tasks: 34
 active_tasks: 2
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -52,7 +52,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-28T07:06:23Z'
+updated_at: '2026-07-28T07:10:58Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -175,11 +175,18 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 11
+planned_tasks: 18
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - OPC-P6-SELF-EVOLUTION-doc-gate-e (Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml)
 - cockpit-debt-debt-1 (治理技术债务：债务)
+- cockpit-triage-aetherforge-runtime-check-ports (项目排查：aetherforge · 检查端口)
+- cockpit-triage-bus-foundation-runtime-check-ports (项目排查：bus-foundation · 检查端口)
+- cockpit-triage-ecos-runtime-check-ports (项目排查：ecos · 检查端口)
+- cockpit-triage-l4-kernel-runtime-check-ports (项目排查：l4-kernel · 检查端口)
+- cockpit-triage-mesh-router-runtime-check-ports (项目排查：mesh-router · 检查端口)
+- cockpit-triage-observability-runtime-check-ports (项目排查：observability · 检查端口)
+- cockpit-triage-omo-runtime-check-ports (项目排查：omo · 检查端口)
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-batch2-role-expansion-proposal (Batch2 B3: 第 4/5 角色（research/delivery）实装提案（评估页已齐)'
@@ -204,7 +211,7 @@ runtime_health_summary:
   total_services: 4
   ratio: 1.0
   health_score: 93
-  last_scan: '2026-07-28T07:06:21Z'
+  last_scan: '2026-07-28T07:10:57Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
@@ -224,4 +231,4 @@ governance_anomaly_score: 77
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-28T07:06:21Z'
+governance_feedback_last_run: '2026-07-28T07:10:57Z'

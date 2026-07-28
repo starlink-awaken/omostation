@@ -10,11 +10,18 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (11 个)
+## Planned Tasks (18 个)
 | ID | Title | Status |
 |----|-------|--------|
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
 | cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
+| cockpit-triage-aetherforge-runtime-check-ports | 项目排查：aetherforge · 检查端口 | candidate |
+| cockpit-triage-bus-foundation-runtime-check-ports | 项目排查：bus-foundation · 检查端口 | candidate |
+| cockpit-triage-ecos-runtime-check-ports | 项目排查：ecos · 检查端口 | candidate |
+| cockpit-triage-l4-kernel-runtime-check-ports | 项目排查：l4-kernel · 检查端口 | candidate |
+| cockpit-triage-mesh-router-runtime-check-ports | 项目排查：mesh-router · 检查端口 | candidate |
+| cockpit-triage-observability-runtime-check-ports | 项目排查：observability · 检查端口 | candidate |
+| cockpit-triage-omo-runtime-check-ports | 项目排查：omo · 检查端口 | candidate |
 | needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
 | needs-human-batch2-role-expansion-proposal | Batch2 B3: 第 4/5 角色（research/delivery）实装提案（评估页已齐 | candidate |
 | needs-human-ingress-registry-drift | ingress-registry 28 task carrier missing (cockpi | candidate |
@@ -66,5 +73,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-28 (依据 `omo state sync-tasks` 与真实目录重算: done=14, planned=11, active=0, archived=6 顶层)*
+*Updated: 2026-07-28 (依据 `omo state sync-tasks` 与真实目录重算: done=14, planned=18, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*

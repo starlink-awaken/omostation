@@ -1,0 +1,47 @@
+id: cockpit-triage-l4-kernel-runtime-check-ports
+title: 项目排查：l4-kernel · 检查端口
+description: 确认已登记端口是否真的在本机监听。
+status: pending
+task_type: operations
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+source_docs:
+- cockpit:SystemMap:triage:l4-kernel:runtime-check-ports
+entry_gate:
+- 确认项目排查命令和风险
+evidence_required:
+- command exit code
+- execution log
+- agent-workflow closeout
+deliverables:
+- for port in 7456; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done
+test_plan:
+- 复制排查命令；Cockpit 不直接执行终端命令。
+tags:
+- cockpit-project-triage
+- l4-kernel
+- runtime-check-ports
+- medium
+priority: high
+metadata:
+  project_id: l4-kernel
+  command_id: runtime-check-ports
+  action_id: runtime-check-ports
+  command: for port in 7456; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done
+  probe_ports:
+  - 7456
+  risk: medium
+  cockpit_only: true
+  controlled_execution: true
+  timeout_seconds: 120
+  ingress_plane: cockpit-system-map
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: cockpit:project-triage:l4-kernel:runtime-check-ports
