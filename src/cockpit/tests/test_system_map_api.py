@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from cockpit import compat
 from cockpit.dashboard_server import app
-from cockpit.web import api_system_map, api_system_map_status
+from cockpit.web import api_system_map, api_system_map_io_commands, api_system_map_status
 from cockpit.web.api_system_map import build_source_ref_preview, build_system_map
 
 
@@ -528,6 +528,25 @@ def test_latest_project_verification_falls_back_to_documented_command(tmp_path, 
     assert verification["status"] == "documented"
     assert verification["source"] == "project_commands"
     assert "uv run pytest -q" in (verification["command"] or "")
+
+
+def test_unknown_project_without_verify_command_gets_verification_plan_triage(tmp_path):
+    project_path = tmp_path / "projects" / "demo"
+    project_path.mkdir(parents=True, exist_ok=True)
+    commands = api_system_map_io_commands._project_triage_commands(
+        {
+            "id": "demo",
+            "path": str(project_path),
+            "runtime": {"status": "unobserved", "latest_verification": {"status": "unknown"}, "ports": []},
+            "actions": [],
+            "operational": {"status": "missing"},
+            "registry_contract": {"missing_fields": []},
+        }
+    )
+    plan = next(command for command in commands if command["id"] == "verification-plan")
+    assert plan["category"] == "verification"
+    assert "pytest" in plan["value"]
+    assert plan["executes"] is False
 
 
 def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatch):

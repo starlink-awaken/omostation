@@ -438,6 +438,15 @@ def _project_inventory_command(project_path: Path) -> str:
     )
 
 
+def _project_verification_plan_command(project_path: Path) -> str:
+    return _command_with_cwd(
+        project_path,
+        'rg -n "pytest|test|verify|lint|build|check" '
+        '"AGENTS.md" "CLAUDE.md" "README.md" "pyproject.toml" "package.json" '
+        '"Makefile" "docker-compose.yml" 2>/dev/null || true',
+    )
+
+
 def _project_triage_commands(project: dict[str, Any]) -> list[dict[str, Any]]:
     project_id = project["id"]
     project_path = Path(project["path"])
@@ -521,6 +530,18 @@ def _project_triage_commands(project: dict[str, Any]) -> list[dict[str, Any]]:
                 risk="low",
             )
         )
+        if verification.get("status") == "unknown" and not verify_action:
+            commands.append(
+                _triage_command(
+                    project_id,
+                    "verification-plan",
+                    "生成验证方案",
+                    "verification",
+                    _project_verification_plan_command(project_path),
+                    "项目没有可复制验证命令，先扫描测试、构建和校验线索，再登记可执行验证方案。",
+                    risk="low",
+                )
+            )
 
     if project.get("operational", {}).get("status") != "ready":
         commands.append(
