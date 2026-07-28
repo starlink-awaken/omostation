@@ -40,9 +40,72 @@ from cockpit.web.api_tasks_data import (
     get_tasks_from_omo,
     get_verification_ready_task_drafts,
 )
+from cockpit.web.api_system_map_catalog import COCKPIT_PAGES, PAGE_OPERATOR_ACTIONS
 from cockpit.web.api_tasks_data import (
     _transition_task as _data_transition_task,
 )
+
+
+@router.post("/api/cockpit/pages/{page_id}/actions/{action_id}/queue")
+async def queue_page_operator_action(page_id: str, action_id: str):
+    """承接页面目录动作为受控计划任务；Cockpit 不直接执行页面动作。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", page_id) or not re.fullmatch(r"[A-Za-z0-9_.-]+", action_id):
+        raise HTTPException(status_code=400, detail="Invalid page or action id")
+
+    page = next((item for item in COCKPIT_PAGES if item.get("id") == page_id), None)
+    if page is None:
+        raise HTTPException(status_code=404, detail="Cockpit page not found")
+    if action_id not in PAGE_OPERATOR_ACTIONS.get(page_id, ()):
+        raise HTTPException(status_code=404, detail="Page operator action not found")
+
+    task_id = f"cockpit-page-action-{page_id}-{action_id}"
+    existing_group = _task_group(task_id)
+    title = f"页面动作：{page.get('title') or page_id} · {action_id}"
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Page action task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {"id": task_id, "status": "pending", "created": False, "title": title, "action": action_id, "executes": False, "source": "omo_ingress"}
+
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": f"进入 Cockpit 页面 {page_id}，核对并承接受控动作 {action_id}。Cockpit 不直接执行页面动作。",
+        "status": "pending",
+        "task_type": "page_operator_action",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": ["projects/cockpit/src/cockpit/web/api_system_map_catalog.py"],
+        "entry_gate": [f"确认页面 {page_id} 当前运行状态", f"确认动作 {action_id} 的真实执行边界"],
+        "evidence_required": ["动作执行结果或阻塞原因", "相关页面/接口回执", "任务 closeout"],
+        "deliverables": [f"完成页面 {page_id} 的动作 {action_id} 承接并记录证据。"],
+        "test_plan": ["在对应 Cockpit 页面核对动作入口，再按页面安全门执行或转交。"],
+        "tags": ["cockpit-page-action", page_id, action_id],
+        "priority": "medium",
+        "metadata": {"page_id": page_id, "operator_action": action_id, "created_via": "cockpit-system-map", "controlled_execution": False},
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-page-action",
+            source_ref=f"cockpit:page-action:{page_id}:{action_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {"id": task_id, "status": "pending", "created": True, "title": created.get("title", title), "action": action_id, "executes": False, "source": "omo_ingress"}
 
 
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")

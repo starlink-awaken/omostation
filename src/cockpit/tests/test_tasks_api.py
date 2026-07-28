@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from cockpit.dashboard_server import app
 from cockpit.web import api_tasks
+from cockpit.web import api_tasks_queues_project
 from cockpit.web.api_system_map import build_system_map
 from cockpit.web.api_tasks import (
     get_capability_gap_task_drafts,
@@ -415,6 +416,31 @@ def test_queue_project_action_rejects_non_command_action(monkeypatch):
     response = client.post("/api/cockpit/projects/demo/actions/open/queue")
 
     assert response.status_code == 409
+
+
+def test_queue_page_operator_action_creates_non_executing_task(monkeypatch):
+    calls = []
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = TestClient(app).post("/api/cockpit/pages/QuestBoard/actions/complete-quest/queue")
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    assert calls[0]["task_data"]["task_type"] == "page_operator_action"
+    assert calls[0]["task_data"]["metadata"]["page_id"] == "QuestBoard"
+    assert calls[0]["source_ref"] == "cockpit:page-action:QuestBoard:complete-quest"
+
+
+def test_queue_page_operator_action_rejects_unknown_catalog_action():
+    response = TestClient(app).post("/api/cockpit/pages/QuestBoard/actions/not-a-real-action/queue")
+
+    assert response.status_code == 404
 
 
 def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
