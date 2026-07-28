@@ -67,6 +67,49 @@ from cockpit.web.api_system_map_io_commands import (
     build_source_ref_preview,
 )
 
+VERIFICATION_EVIDENCE_MAX_AGE_HOURS = 30 * 24
+RUNTIME_EVIDENCE_MAX_AGE_HOURS = 24
+
+
+def _evidence_freshness(timestamp: Any, max_age_hours: int, now: datetime | None = None) -> dict[str, Any]:
+    """Return explicit freshness metadata for durable evidence timestamps."""
+    raw_timestamp = str(timestamp or "").strip()
+    max_age_seconds = max_age_hours * 60 * 60
+    if not raw_timestamp:
+        return {
+            "status": "unknown",
+            "age_seconds": None,
+            "max_age_seconds": max_age_seconds,
+            "next_action": "补录带时间戳的持久证据。",
+        }
+    try:
+        recorded_at = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
+        if recorded_at.tzinfo is None:
+            recorded_at = recorded_at.replace(tzinfo=UTC)
+        recorded_at = recorded_at.astimezone(UTC)
+    except ValueError:
+        return {
+            "status": "unknown",
+            "age_seconds": None,
+            "max_age_seconds": max_age_seconds,
+            "next_action": "修正证据时间戳后重新留证。",
+        }
+    age_seconds = max(0, int(((now or datetime.now(UTC)) - recorded_at).total_seconds()))
+    fresh = age_seconds <= max_age_seconds
+    return {
+        "status": "fresh" if fresh else "stale",
+        "age_seconds": age_seconds,
+        "max_age_seconds": max_age_seconds,
+        "recorded_at": recorded_at.isoformat(),
+        "next_action": "保持证据新鲜。" if fresh else "重新执行并留存最新证据。",
+    }
+
+
+def _attach_evidence_freshness(evidence: dict[str, Any], max_age_hours: int) -> dict[str, Any]:
+    result = dict(evidence)
+    result["freshness"] = _evidence_freshness(result.get("ts"), max_age_hours)
+    return result
+
 
 def _latest_project_verification(project_id: str, project_path: Path, operational: dict[str, Any]) -> dict[str, Any]:
     events_path = compat.WORKSPACE_ROOT / ".omo" / "_delivery" / "agent-workflows" / "events.jsonl"
@@ -527,11 +570,20 @@ def _project_runtime_status(
 ) -> dict[str, Any]:
     project_path = _project_path(project_id, project_data)
     ports = _project_ports(project_id, port_registry, port_registry_path)
-    latest_verification = _latest_project_verification(project_id, project_path, operational)
+    latest_verification = _attach_evidence_freshness(
+        _latest_project_verification(project_id, project_path, operational),
+        VERIFICATION_EVIDENCE_MAX_AGE_HOURS,
+    )
     probeable_ports = [port for port in ports if port.get("probeable", True)]
     listening_count = sum(1 for port in probeable_ports if port.get("listening") is True)
     profile = _runtime_profile(project_id, project_data, project_path, operational, ports)
     probe_task = _triage_task_posture(project_id, "runtime-check-ports")
+    probe_audit = probe_task.get("execution_audit") or {}
+    if isinstance(probe_audit, dict):
+        probe_task = dict(probe_task)
+        probe_task["freshness"] = _evidence_freshness(
+            probe_audit.get("recorded_at"), RUNTIME_EVIDENCE_MAX_AGE_HOURS
+        )
 
     if probeable_ports and listening_count:
         status = "running"
@@ -843,6 +895,13 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         if verification_status == "documented"
         else "保持验证证据新鲜。"
     )
+    verification_freshness = verification.get("freshness") or {}
+    if verification_freshness.get("status") == "stale":
+        verification_detail += " 最近证据已过期。"
+        verification_next_action = str(verification_freshness.get("next_action") or "重新执行并留存最新证据。")
+    elif verification_freshness.get("status") == "unknown" and verification_status in {"verified", "documented"}:
+        verification_detail += " 证据缺少可判断新鲜度的时间戳。"
+        verification_next_action = str(verification_freshness.get("next_action") or "补录带时间戳的持久证据。")
     if controlled_passed:
         verification_detail += (
             " 受控重跑已通过，agent-workflow closeout 已存在。"
@@ -916,7 +975,10 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         ),
         _coverage_check(
             "verification",
-            "ready"
+            "warning"
+            if verification_freshness.get("status") in {"stale", "unknown"}
+            and verification_status in {"verified", "documented"}
+            else "ready"
             if controlled_passed and closeout_status == "closed"
             else "warning"
             if controlled_passed

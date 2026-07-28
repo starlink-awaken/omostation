@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -88,6 +89,7 @@ def test_system_map_builds_workspace_dimensions():
     assert payload["summary"]["playbooks"] >= 1
     assert payload["summary"]["source_refs"] >= 1
     assert payload["summary"]["project_actions"] >= 1
+
     assert "projects_needing_action" in payload["summary"]
     assert payload["summary"]["project_triage_commands"] >= 1
     assert "project_coverage_score" in payload["summary"]
@@ -300,6 +302,19 @@ def test_system_map_builds_workspace_dimensions():
     governance_domain = next(domain for domain in payload["feature_domains"] if domain["title"] == "治理与合规")
     assert governance_domain["source_refs"][0]["source_key"] == "functional_capability_map"
     assert governance_domain["source_refs"][0]["line"]
+
+
+def test_evidence_freshness_distinguishes_fresh_stale_and_unknown():
+    now = datetime(2026, 7, 28, tzinfo=UTC)
+
+    fresh = api_system_map_status._evidence_freshness("2026-07-27T12:00:00Z", 24, now)
+    stale = api_system_map_status._evidence_freshness("2026-07-26T12:00:00Z", 24, now)
+    unknown = api_system_map_status._evidence_freshness(None, 24, now)
+
+    assert fresh["status"] == "fresh"
+    assert stale["status"] == "stale"
+    assert unknown["status"] == "unknown"
+    assert "重新执行" in stale["next_action"]
 
 
 def test_system_map_route_is_mounted():
