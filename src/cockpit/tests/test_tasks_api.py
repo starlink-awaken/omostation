@@ -446,6 +446,42 @@ def test_queue_page_operator_action_rejects_unknown_catalog_action():
     assert response.status_code == 404
 
 
+def test_queue_page_roadmap_creates_page_roadmap_task(monkeypatch):
+    client = TestClient(app)
+    roadmap = {
+        "items": [
+            {
+                "id": "page-contract-home",
+                "title": "补齐首页页面运营契约",
+                "cockpit_page": "Home",
+                "priority": "P1",
+                "status": "planned",
+                "problem": "首页需要补齐运营契约。",
+                "actions": ["绑定首页数据源和验收证据。"],
+                "acceptance": ["首页能回到任务中心继续收口。"],
+                "source_refs": [{"target": "src/cockpit/web/api_system_map.py:1"}],
+            }
+        ]
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks, "build_system_map", lambda: {"roadmap": roadmap})
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = client.post("/api/cockpit/roadmap/page-contract-home/queue")
+
+    assert response.status_code == 200
+    assert response.json()["page_id"] == "Home"
+    assert calls[0]["task_data"]["task_type"] == "page_roadmap"
+    assert calls[0]["task_data"]["metadata"]["roadmap_status"] == "planned"
+    assert calls[0]["source_ref"] == "cockpit:page-roadmap:Home:page-contract-home"
+
+
 def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
     client = TestClient(app)
     system_map = {

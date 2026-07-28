@@ -239,6 +239,101 @@ async def queue_project_action(project_id: str, action_id: str):
     }
 
 
+@router.post("/api/cockpit/roadmap/{roadmap_id}/queue")
+async def queue_page_roadmap_item(roadmap_id: str):
+    """将页面路线项承接为 OMO planned task，打通架构发现到执行追踪。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", roadmap_id):
+        raise HTTPException(status_code=400, detail="Invalid roadmap id")
+
+    roadmap_item = next(
+        (item for item in build_system_map().get("roadmap", {}).get("items", []) if item.get("id") == roadmap_id),
+        None,
+    )
+    if not isinstance(roadmap_item, dict):
+        raise HTTPException(status_code=404, detail="Roadmap item not found")
+
+    page_id = str(roadmap_item.get("cockpit_page") or "SystemMap")
+    task_id = f"cockpit-roadmap-{roadmap_id}"
+    existing_group = _task_group(task_id)
+    title = str(roadmap_item.get("title") or roadmap_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Roadmap task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {
+            "id": task_id,
+            "status": "pending",
+            "created": False,
+            "title": title,
+            "roadmap_id": roadmap_id,
+            "page_id": page_id,
+            "source": "omo_ingress",
+        }
+
+    problem = str(roadmap_item.get("problem") or "完成页面路线项定义的问题收口。")
+    actions = [str(item) for item in roadmap_item.get("actions") or [] if str(item).strip()]
+    acceptance = [str(item) for item in roadmap_item.get("acceptance") or [] if str(item).strip()]
+    source_refs = [
+        str(ref.get("target") or ref.get("path") or ref.get("label"))
+        for ref in roadmap_item.get("source_refs") or []
+        if isinstance(ref, dict) and (ref.get("target") or ref.get("path") or ref.get("label"))
+    ] or ["projects/cockpit/src/cockpit/web/api_system_map.py"]
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": problem,
+        "status": "pending",
+        "task_type": "page_roadmap",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": source_refs,
+        "entry_gate": [f"确认页面 {page_id} 的路线项边界"],
+        "evidence_required": [*acceptance, "任务 closeout"],
+        "deliverables": actions or [f"完成页面 {page_id} 的路线项 {title}。"],
+        "test_plan": acceptance or ["在 SystemMap 核对页面对象、动作和验收证据。"],
+        "tags": ["cockpit-page-roadmap", page_id, roadmap_id, str(roadmap_item.get("priority") or "P1")],
+        "priority": "high" if roadmap_item.get("priority") == "P0" else "medium",
+        "metadata": {
+            "page_id": page_id,
+            "roadmap_id": roadmap_id,
+            "roadmap_title": title,
+            "roadmap_status": roadmap_item.get("status") or "planned",
+            "created_via": "cockpit-system-map",
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-page-roadmap",
+            source_ref=f"cockpit:page-roadmap:{page_id}:{roadmap_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", title),
+        "roadmap_id": roadmap_id,
+        "page_id": page_id,
+        "source": "omo_ingress",
+    }
+
+
 @router.post("/api/cockpit/projects/{project_id}/triage/{command_id}/queue")
 async def queue_project_triage_command(project_id: str, command_id: str):
     """登记系统地图排查命令为 OMO planned task; never execute it in Cockpit."""
