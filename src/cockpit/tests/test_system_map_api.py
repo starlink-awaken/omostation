@@ -221,6 +221,8 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["registry_contract"]["coverage"]
     assert cockpit_project["registry_contract"]["missing_fields"] == ["实现落点"]
     assert cockpit_project["registry_contract"]["status_text"] == "warning"
+    assert cockpit_project["registry_contract"]["observed_location"] == "projects/cockpit/src"
+    assert cockpit_project["registry_contract"]["implementation_traceability"] == "observed_only"
     assert cockpit_project["operational"]["docs"]["present"] >= 1
     assert cockpit_project["operational"]["commands"]
     mesh_router = next(project for project in payload["projects"] if project["id"] == "mesh-router")

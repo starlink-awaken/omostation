@@ -100,13 +100,27 @@ from cockpit.web.api_system_map_status import (
 from cockpit.web.router_health import router_health_snapshot
 
 
-def _project_registry_contract(project_data: dict[str, Any]) -> dict[str, Any]:
+def _project_registry_contract(project_data: dict[str, Any], project_path: Path | None = None) -> dict[str, Any]:
     fields = {
         "生命周期": project_data.get("version") or project_data.get("status"),
         "构建/运行约束": project_data.get("python") or project_data.get("build_backend"),
         "实现落点": project_data.get("src_dir") or project_data.get("physical_location"),
     }
     missing_fields = [label for label, value in fields.items() if not value]
+    observed_path = project_path
+    if observed_path and observed_path.is_dir():
+        for candidate in ("src", "packages", "app", "bin"):
+            candidate_path = observed_path / candidate
+            if candidate_path.is_dir():
+                observed_path = candidate_path
+                break
+    observed_location = None
+    if observed_path:
+        try:
+            observed_location = str(observed_path.relative_to(compat.WORKSPACE_ROOT))
+        except ValueError:
+            observed_location = str(observed_path)
+    declared_location = project_data.get("src_dir") or project_data.get("physical_location")
     return {
         "status": project_data.get("status"),
         "version": project_data.get("version"),
@@ -117,6 +131,9 @@ def _project_registry_contract(project_data: dict[str, Any]) -> dict[str, Any]:
         "port": project_data.get("port"),
         "port_registry_ref": project_data.get("port_registry_ref"),
         "coverage": project_data.get("coverage") if isinstance(project_data.get("coverage"), list) else [],
+        "observed_location": observed_location,
+        "observed_location_exists": bool(observed_path and observed_path.exists()),
+        "implementation_traceability": "declared" if declared_location else "observed_only" if observed_location else "unknown",
         "missing_fields": missing_fields,
         "status_text": "ready" if not missing_fields else "warning" if len(missing_fields) == 1 else "failed",
     }
@@ -138,7 +155,7 @@ def _build_projects(
             "layer": project_data.get("layer", "unknown"),
             "stack": project_data.get("stack", "unknown"),
             "role": project_data.get("role", ""),
-            "registry_contract": _project_registry_contract(project_data),
+            "registry_contract": _project_registry_contract(project_data, project_path),
             "cockpit_page": page_id,
             "coverage": "native" if page_id != "SystemMap" or project_id.startswith("cockpit") else "orientation",
             "path": str(project_path),

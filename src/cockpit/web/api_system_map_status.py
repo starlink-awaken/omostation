@@ -940,6 +940,11 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
                 else "缺失注册字段："
                 + "、".join(str(item) for item in registry_contract.get("missing_fields") or [])
                 + "。"
+                + (
+                    f" 实际观测落点：{registry_contract.get('observed_location')}。"
+                    if registry_contract.get("observed_location")
+                    else ""
+                )
             ),
             "在 docs/project-registry.yaml 补齐版本/生命周期、构建运行约束和实现落点。"
             if registry_contract.get("missing_fields")
