@@ -175,7 +175,7 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
         if not any(path == project_prefix or path.startswith(f"{project_prefix}/") for path in surfaces):
             continue
         run_status = str(run.get("status", "")).lower()
-        if run_status in {"completed", "complete", "closed", "succeeded", "success"}:
+        if run_status in {"ok", "completed", "complete", "closed", "succeeded", "success"}:
             status = "verified"
         elif run_status in {"blocked", "failed", "error"}:
             status = "failed"
@@ -191,7 +191,7 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
             "command": None,
             "source": "agent_workflow_run",
         }
-        if run.get("closed_at") or run_status in {"closed", "complete", "completed"}:
+        if run.get("closed_at") or run_status in {"ok", "closed", "complete", "completed"}:
             result["closeout_status"] = "closed"
             result["closeout_ref"] = str(run_path.relative_to(compat.WORKSPACE_ROOT))
         return result

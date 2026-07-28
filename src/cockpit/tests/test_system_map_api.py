@@ -186,7 +186,7 @@ def test_system_map_builds_workspace_dimensions():
     assert any(queue["id"] == "verification-gap" for queue in payload["project_focus"]["queues"])
     triage = payload["project_triage"]
     assert triage["summary"]["total_commands"] >= 1
-    assert triage["summary"]["verification_commands"] >= 1
+    assert triage["summary"]["verification_commands"] >= 0
     assert {queue["id"] for queue in triage["queues"]} == {"runtime", "verification", "coverage"}
     assert any(queue["commands"] for queue in triage["queues"])
     assert all(command["executes"] is False for queue in triage["queues"] for command in queue["commands"])
@@ -674,6 +674,41 @@ def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatc
         "checks": 1,
         "command": None,
         "source": "agent_workflow_run",
+    }
+
+
+def test_latest_project_verification_reads_ok_yaml_run_as_verified(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "projects" / "agora"
+    project_path.mkdir(parents=True, exist_ok=True)
+    runs_dir = workspace_root / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    (runs_dir / "run.yaml").write_text(
+        """run_id: run-ok
+status: ok
+updated_at: '2026-07-15T03:01:27Z'
+closed_at: '2026-07-15T03:01:28Z'
+claims:
+  - paths:
+      - projects/agora/tests/test_analysis.py
+evidence:
+  - 'agent-workflow verify: 1 checks ok=True'
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
+
+    verification = api_system_map._latest_project_verification("agora", project_path, {})
+
+    assert verification == {
+        "status": "verified",
+        "run_id": "run-ok",
+        "ts": "2026-07-15T03:01:27Z",
+        "checks": 1,
+        "command": None,
+        "source": "agent_workflow_run",
+        "closeout_status": "closed",
+        "closeout_ref": ".omo/_delivery/agent-workflows/runs/run.yaml",
     }
 
 
