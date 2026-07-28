@@ -48,6 +48,17 @@ class TestDashboardEndpoints:
         resp = test_client.get("/api/status")
         assert resp.headers["X-API-Version"] == "v1"
 
+    def test_router_health_exposes_graceful_degradation_report(self, test_client):
+        resp = test_client.get("/api/cockpit/router-health")
+        assert resp.status_code == 200
+        payload = resp.json()
+        assert payload["summary"]["total"] >= 10
+        assert payload["summary"]["loaded"] >= 1
+        assert payload["summary"]["loaded"] + payload["summary"]["unavailable"] == payload["summary"]["total"]
+        assert any(
+            item["module"] == "cockpit.web.api_tasks" and item["status"] == "loaded" for item in payload["items"]
+        )
+
     def test_favicon_returns_404(self, test_client):
         resp = test_client.get("/favicon.ico")
         assert resp.status_code == 404

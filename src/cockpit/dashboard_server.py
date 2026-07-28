@@ -54,6 +54,8 @@ except ImportError:
 
 # ─── Governance routers (graceful degradation) ────────────────
 
+ROUTER_LOAD_REPORT: list[dict[str, object]] = []
+
 for _router_module in (
     "cockpit.web.governance.api",
     "cockpit.web.api_compute",
@@ -80,8 +82,26 @@ for _router_module in (
         _router = getattr(_mod, "router", None)
         if _router is not None:
             app.include_router(_router, dependencies=_AUTH_DEPS)
+            ROUTER_LOAD_REPORT.append(
+                {
+                    "module": _router_module,
+                    "status": "loaded",
+                    "route_count": len(getattr(_router, "routes", []) or []),
+                }
+            )
             print(f"Successfully loaded router: {_router_module}")
+        else:
+            ROUTER_LOAD_REPORT.append({"module": _router_module, "status": "missing_router", "route_count": 0})
     except Exception as e:  # defensive fallback
+        ROUTER_LOAD_REPORT.append(
+            {
+                "module": _router_module,
+                "status": "unavailable",
+                "route_count": 0,
+                "error_type": type(e).__name__,
+                "error": str(e),
+            }
+        )
         print(f"Error loading router {_router_module}: {e}", file=sys.stderr)
         traceback.print_exc()
 
@@ -159,6 +179,22 @@ async def proxy_gbrain_admin(path: str, request: Request):
 # ─── Main dashboard router ────────────────────────────────────
 
 app.include_router(dashboard_router)
+
+
+@app.get("/api/cockpit/router-health", dependencies=_AUTH_DEPS)
+async def router_health() -> dict[str, object]:
+    """Expose structured router loading evidence after graceful degradation."""
+    loaded = sum(1 for item in ROUTER_LOAD_REPORT if item["status"] == "loaded")
+    unavailable = [item for item in ROUTER_LOAD_REPORT if item["status"] != "loaded"]
+    return {
+        "status": "ready" if not unavailable else "attention",
+        "summary": {
+            "total": len(ROUTER_LOAD_REPORT),
+            "loaded": loaded,
+            "unavailable": len(unavailable),
+        },
+        "items": ROUTER_LOAD_REPORT,
+    }
 
 # ─── Static files (Cockpit UI) ────────────────────────────
 
