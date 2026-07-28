@@ -1,0 +1,19 @@
+---
+id: NEEDS-HUMAN-P84-K4-COLLAB-REASSESS
+title: "P84 K4 批次2 协作劣于单 agent — CLOSED (路线 A · ADR-0253)"
+status: closed
+closed_at: "2026-07-28T12:15:00Z"
+needs-human: false
+human_approval_required: false
+priority: P0
+owner: human
+close_reason: >
+  K4 批次2 如实上报协作 1.7x 劣 (#565)。人类 2026-07-28 授权落地路线 A：
+  保留协作主轴，按任务类型路由（独立批量→协作；简单分析→单 agent）。
+  ADR-0253 ACCEPTED。批次3/4 继续测泛化。
+closeout_adr: .omo/_knowledge/decisions/0253-p84-collab-mode-routing-after-k4.md
+resolved_by: ADR-0253
+approval_ref: "human-session-2026-07-28 go/land route A"
+source_docs:
+  - .omo/_knowledge/audits/2026-07-28-p84-k4-batch2-control-experiment.md
+---
