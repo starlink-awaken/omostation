@@ -64,6 +64,7 @@ def test_system_map_builds_workspace_dimensions():
     assert payload["source_paths"]["project_registry"]["exists"] is True
     assert any(page["id"] == "SystemMap" for page in payload["cockpit_pages"])
     assert any(page["id"] == "Guide" for page in payload["cockpit_pages"])
+    assert any(page["id"] == "GBrainAdmin" for page in payload["cockpit_pages"])
     # domain-app-write-gates is a legitimate dynamic gap when domain-apps are
     # unavailable or have security issues; assert gap shape instead of absence.
     assert all(gap.get("id") and gap.get("severity") for gap in payload["gaps"])
@@ -124,6 +125,7 @@ def test_system_map_builds_workspace_dimensions():
     assert "observability" in maturity_by_page["Topology"]["projects"]
     assert "family-hub" in maturity_by_page["QuestBoard"]["projects"]
     assert "compute-routing" in maturity_by_page["Compute"]["usage_paths"]
+    assert "gbrain" in maturity_by_page["GBrainAdmin"]["projects"]
     assert payload["project_focus"]["summary"]["needs_action"] >= 1
     needs_action_queue = next(queue for queue in payload["project_focus"]["queues"] if queue["id"] == "needs-action")
     assert needs_action_queue["top_projects"]
