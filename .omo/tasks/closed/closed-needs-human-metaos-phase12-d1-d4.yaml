@@ -1,0 +1,16 @@
+---
+id: NEEDS-HUMAN-METAOS-PHASE12-D1-D4
+title: "metaos Phase 1/2 前提 D1-D4 — CLOSED (ADR-0252 A/A/B/A)"
+status: closed
+closed_at: "2026-07-28T09:15:00Z"
+needs-human: false
+human_approval_required: false
+priority: P1
+owner: human
+close_reason: >
+  人类 2026-07-28 批准 O-D1 A / O-D2 A / O-D3 B / O-D4 A+观察期。
+  ADR-0252 ACCEPTED；Phase 1/2 分批实施另起 PR。
+closeout_adr: .omo/_knowledge/decisions/0252-metaos-d1d4-aaaa-phase12.md
+resolved_by: ADR-0252
+approval_ref: "human-session-2026-07-28 approve A/A/B/A"
+---

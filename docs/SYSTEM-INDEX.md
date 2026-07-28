@@ -55,6 +55,8 @@
 
 → [项目索引](INDEX-PROJECTS.md) — 项目按层/栈/状态分类（见 `docs/project-registry.yaml`）
 
+→ [跨包 API 地图](overview/cross-package-api-map.md) — Kairon BOS 路由与跨包接口（生成物）
+
 → [工具索引](INDEX-TOOLS.md) — bin/ + scripts/ + .agents/skills 统一目录
 
 → [知识索引](INDEX-KNOWLEDGE.md) — ADR + 审计 + 模式 + 总结交叉索引

@@ -1,0 +1,16 @@
+---
+id: NEEDS-HUMAN-MOF-M4-D1-D4-DECISIONS
+title: "MOF/M4 治理优化 D1-D4 决策签核 — CLOSED (ADR-0240 A/A/A/A)"
+status: closed
+closed_at: "2026-07-28T09:15:00Z"
+needs-human: false
+human_approval_required: false
+priority: P1
+owner: human
+close_reason: >
+  人类 2026-07-25 拍板 A/A/A/A；2026-07-28 追认并 main 落地 ADR-0240。
+  Phase 1 分批实施另起 PR，不阻塞 Inbox。
+closeout_adr: .omo/_knowledge/decisions/0240-mof-d1d4-decisions-aaaa-phase1.md
+resolved_by: ADR-0240
+approval_ref: "human-session-2026-07-28 reaffirm A/A/A/A"
+---
