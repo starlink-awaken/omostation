@@ -59,6 +59,18 @@ except Exception as exc:  # Optional mutation adapter; status endpoints remain u
 else:
     _OMO_IMPORT_ERROR = None
 
+
+def _omo_adapter_unavailable() -> dict[str, object] | None:
+    if _OMO_IMPORT_ERROR is None:
+        return None
+    return {
+        "status": "degraded",
+        "error": "OMO adapter is unavailable",
+        "error_type": type(_OMO_IMPORT_ERROR).__name__,
+        "detail": str(_OMO_IMPORT_ERROR),
+        "next_action": "安装并挂载 OMO 适配器依赖后重试。",
+    }
+
 _VIOLATIONS_CACHE = None
 _VIOLATIONS_CACHE_TIME = 0.0
 _VIOLATIONS_TTL = 15.0  # 15秒缓存
@@ -274,6 +286,9 @@ if router:
     @router.post("/quests")
     async def create_quest_api(title: str, q_type: str, reward: int, assignee: str):
         """新建一个 Quest，同时在 SQLite 和 OMO 中建立任务"""
+        unavailable = _omo_adapter_unavailable()
+        if unavailable:
+            return unavailable
         try:
             db_path = _REPO_ROOT / "projects" / "family-hub" / "family_hub.db"
             if not db_path.exists():
@@ -654,6 +669,9 @@ if router:
     @router.post("/circuit-break")
     async def post_circuit_break(payload: dict):
         """更新熔断器状态 (处理 broken: bool)"""
+        unavailable = _omo_adapter_unavailable()
+        if unavailable:
+            return unavailable
         broken = payload.get("broken", False)
         try:
             from cockpit.adapters.omo import update_provider_plane_settings
@@ -678,6 +696,9 @@ if router:
     @router.post("/budget")
     async def post_budget(payload: dict):
         """更新单日预算安全线 (处理 budget: float)"""
+        unavailable = _omo_adapter_unavailable()
+        if unavailable:
+            return unavailable
         budget = payload.get("budget", 100.0)
         try:
             from cockpit.adapters.omo import update_provider_plane_settings
