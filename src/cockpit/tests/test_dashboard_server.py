@@ -64,6 +64,9 @@ class TestDashboardEndpoints:
         assert any(
             item["module"] == "cockpit.web.api_tasks" and item["status"] == "loaded" for item in payload["items"]
         )
+        agora = next(item for item in payload["items"] if item["module"] == "cockpit.web.api_agora")
+        assert agora["status"] == "loaded"
+        assert agora["route_count"] > 0
 
     def test_openapi_operation_ids_are_unique(self, test_client):
         paths = test_client.get("/openapi.json").json().get("paths", {})
