@@ -10,19 +10,15 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (10 个)
+## Planned Tasks (5 个)
 | ID | Title | Status |
 |----|-------|--------|
 | OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
-| cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
-| needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
-| needs-human-batch2-role-expansion-proposal | Batch2 B3: 第 4/5 角色（research/delivery）实装提案（评估页已齐 | candidate |
-| needs-human-ingress-registry-drift | ingress-registry 28 task carrier missing (cockpi | candidate |
-| needs-human-metaos-phase12-d1-d4 | metaos 治理批 Phase 1/2 前提: D1-D4 四项决策 (CLI/PID/age | candidate |
-| needs-human-mof-m4-d1-d4-decisions | MOF/M4 治理优化 D1-D4 决策签核 (Phase 1/2 启动前置 | candidate |
-| needs-human-p80-phase45-bos-stdio | P80 T1.2 residual: bos_stdio_ratio < 65% (live ~ | candidate |
-| needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 true | candidate |
-| needs-human-p81-batch4-proposal | STRAT-P81 Batch 4 提案（多 agent 协作深化主轴 · C 波 · 待人类拍 | candidate |
+| cockpit-debt-debt-1 | 治理技术债务：债务 | pending |
+| needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | deferred |
+| needs-human-p80-phase45-bos-stdio | P80 T1.2 residual: bos_stdio real migration (eng | backlog |
+| needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat | deferred |
+
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 

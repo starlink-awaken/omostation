@@ -1,0 +1,16 @@
+---
+id: NEEDS-HUMAN-P81-BATCH4-PROPOSAL
+title: "STRAT-P81 Batch 4 提案 — CLOSED (C1-C3 ADR + P84 BRIEF 已覆盖)"
+status: closed
+closed_at: "2026-07-28T09:15:00Z"
+needs-human: false
+human_approval_required: false
+priority: P1
+owner: human
+close_reason: >
+  C1 ADR-0235 / C2 ADR-0236 / C3 ADR-0237 已 ACCEPTED 并合入；
+  C4 协作仪表经 P84 #558 / Stage1 BRIEF 双轨落地。整包 Batch4 提案过时。
+  涌现 G-DEL.5b 仍 LOCKED（kill-switch 评审），未授权实装。
+resolved_by: "ADR-0235/0236/0237 + P84 W1"
+superseded_by: "ADR-0235+0236+0237 + P84"
+---
