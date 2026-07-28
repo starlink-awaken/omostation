@@ -1,7 +1,8 @@
 ---
 id: NEEDS-HUMAN-BATCH2-PHYSICAL-RECOVERY-CHECKLIST
 title: "机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁）"
-status: deferred
+status: pending
+status_normalized_for_schema: true  # was deferred; planned only candidate|pending
 needs-human: false
 human_approval_required: false
 classification: status_tracking
