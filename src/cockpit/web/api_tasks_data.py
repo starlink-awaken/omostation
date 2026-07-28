@@ -669,14 +669,17 @@ def _page_maturity_copy_text(page_item: dict) -> str:
     return "\n".join(lines)
 
 
-def get_page_maturity_task_drafts(limit: int = 8) -> list[dict]:
+def get_page_maturity_task_drafts(limit: int | None = None) -> list[dict]:
     """Build read-only TaskCenter drafts from Cockpit page maturity attention items."""
     system_map = build_system_map()
     generated_at = system_map.get("generated_at") or datetime.now(UTC).isoformat()
     page_maturity = system_map.get("page_maturity") or {}
     drafts: list[dict] = []
 
-    for page_item in (page_maturity.get("attention_items") or [])[:limit]:
+    attention_items = page_maturity.get("attention_items") or []
+    if limit is not None:
+        attention_items = attention_items[:limit]
+    for page_item in attention_items:
         page = page_item.get("page") or {}
         page_id = page_item.get("page_id", page.get("id", "unknown"))
         action = "纳入追踪" if page_item.get("traceability_status") == "untracked" else "补齐"

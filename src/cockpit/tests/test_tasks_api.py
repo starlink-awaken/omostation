@@ -95,6 +95,7 @@ def test_page_maturity_task_drafts_are_read_only():
     attention_items = build_system_map()["page_maturity"]["attention_items"]
 
     assert bool(drafts) is bool(attention_items)
+    assert len(drafts) == len(attention_items)
     assert all(draft["read_only"] is True for draft in drafts)
     assert all(draft["id"].startswith("page-maturity-") for draft in drafts)
     assert all(draft["source"]["type"] == "system_map_page_maturity" for draft in drafts)

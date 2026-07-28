@@ -855,6 +855,9 @@ def _build_page_maturity(
         "items": items,
         "attention_items": [
             item for item in sorted(items, key=lambda row: (row["score"], row["page_id"])) if item["status"] != "ready"
+        ],
+        "featured_attention_items": [
+            item for item in sorted(items, key=lambda row: (row["score"], row["page_id"])) if item["status"] != "ready"
         ][:8],
         "summary": {
             "total": len(items),
