@@ -23,7 +23,19 @@ def test_bos_metrics_is_unavailable_without_evidence(monkeypatch, tmp_path: Path
 def test_bos_metrics_route_is_unique_in_dashboard_app():
     from cockpit.dashboard_server import app
 
-    routes = [route for route in app.routes if getattr(route, "path", None) == "/api/bos/metrics"]
+    routes = []
+    for route in app.routes:
+        effective_contexts = getattr(route, "effective_route_contexts", None)
+        if callable(effective_contexts):
+            routes.extend(
+                context
+                for context in effective_contexts()
+                if getattr(context, "path", None) == "/api/bos/metrics"
+            )
+            continue
+        nested_routes = getattr(route, "routes", None)
+        candidates = nested_routes if nested_routes else [route]
+        routes.extend(candidate for candidate in candidates if getattr(candidate, "path", None) == "/api/bos/metrics")
 
     assert len(routes) == 1
 

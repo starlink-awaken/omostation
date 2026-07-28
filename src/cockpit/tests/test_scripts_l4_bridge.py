@@ -170,7 +170,7 @@ class TestSharedContextMcp:
         # copy store implementation from real workspace
         import shutil
 
-        src = Path("/Users/xiamingxing/ws-kos-q1-mcp/bin/delivery/shared_context_store.py")
+        src = Path(__file__).resolve().parents[5] / "bin" / "delivery" / "shared_context_store.py"
         shutil.copy(src, delivery / "shared_context_store.py")
         (delivery / "__init__.py").write_text("", encoding="utf-8")
         (ws / ".omo" / "_delivery").mkdir(parents=True)
@@ -210,7 +210,7 @@ class TestSharedContextMcp:
         delivery.mkdir(parents=True)
         import shutil
 
-        src = Path("/Users/xiamingxing/ws-kos-q1-mcp/bin/delivery/shared_context_store.py")
+        src = Path(__file__).resolve().parents[5] / "bin" / "delivery" / "shared_context_store.py"
         shutil.copy(src, delivery / "shared_context_store.py")
         (delivery / "__init__.py").write_text("", encoding="utf-8")
         (ws / ".omo" / "_delivery").mkdir(parents=True)
