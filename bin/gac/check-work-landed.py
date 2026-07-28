@@ -49,7 +49,8 @@ def _parse_ts(value: str) -> datetime | None:
 def _read_run(path: Path) -> dict[str, Any] | None:
     try:
         return yaml_safe_load(path.read_text(encoding="utf-8"))
-    except Exception:
+    except Exception as exc:  # K3: 不静默 (pipe-mask-failure-pattern 同族)
+        print(f"[warn] _read_run {path.name}: {exc}", file=sys.stderr)
         return None
 
 
@@ -57,7 +58,8 @@ def yaml_safe_load(text: str) -> dict[str, Any] | None:
     try:
         import yaml
         return yaml.safe_load(text)
-    except Exception:
+    except Exception as exc:  # K3: 不静默
+        print(f"[warn] yaml_safe_load: {exc}", file=sys.stderr)
         return None
 
 
@@ -96,7 +98,8 @@ def _refs_landed(refs: set[str]) -> dict[str, bool]:
                     timeout=20,
                 )
                 landed[ref] = cp.returncode == 0 and cp.stdout.strip() != ""
-            except Exception:
+            except Exception as exc:  # K3: 不静默 (pipe-mask 同族)
+                print(f"[warn] _refs_landed pr {ref}: {exc}", file=sys.stderr)
                 landed[ref] = False
         elif ref.startswith("sha:"):
             sha = ref.split(":", 1)[1]
@@ -110,7 +113,8 @@ def _refs_landed(refs: set[str]) -> dict[str, bool]:
                     timeout=20,
                 )
                 landed[ref] = cp.returncode == 0 and cp.stdout.strip() != ""
-            except Exception:
+            except Exception as exc:  # K3: 不静默
+                print(f"[warn] _refs_landed sha {ref}: {exc}", file=sys.stderr)
                 landed[ref] = False
     return landed
 
@@ -204,7 +208,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         for f in findings:
             extra = (
-                f.unlanded_refs if "unlanded_refs" in f else f.get("claimed_paths", [])
+                f["unlanded_refs"] if "unlanded_refs" in f else f.get("claimed_paths", [])
             )
             print(f"  - {f['id']} [{f['kind']}] age={f['age_days']:.1f}d refs={extra}")
     return 0 if ok else 1
