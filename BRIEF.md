@@ -1,9 +1,9 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-28T02:53:34.362411Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `96/100`
+> **Generated**: `2026-07-28T07:05:46.233933Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `91/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
-> ⏳ **决策积压**: 7 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/planned/decision-checklist-13-items.md`.
+> ⏳ **决策积压**: 6 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/planned/decision-checklist-13-items.md`.
 
 ### ⚠️ 软门禁预警 (Soft Gate Warnings · 不阻断)
 - **[X3-SOFT-GATE/soft]** 工作交付月度软门禁: 2026-07 交付 4 < 阈值 8（环比 0 → 4, Δ+4） → [`.omo/_truth/registry/x3-delivery-soft-gate.yaml`](file:///Users/xiamingxing/Workspace/.omo/_truth/registry/x3-delivery-soft-gate.yaml)
@@ -15,7 +15,6 @@
 - **[OMO-DEBT]** metaos 治理批 Phase 1/2 前提: D1-D4 四项决策 (CLI/PID/agentkit/admit) → [`.omo/tasks/planned/needs-human-metaos-phase12-d1-d4.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-metaos-phase12-d1-d4.yaml)
 - **[OMO-DEBT]** P80 T2: expand physical hosts ≥4 + G-DEL.3 true two-host measure → [`.omo/tasks/planned/needs-human-p80-physical-hosts.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-p80-physical-hosts.yaml)
 - **[OMO-DEBT]** 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） → [`.omo/tasks/planned/needs-human-batch2-physical-recovery-checklist.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-batch2-physical-recovery-checklist.yaml)
-- **[OMO-DEBT]** done/ 流转停滞 — 任务状态机无人推进 (真实运营信号) → [`.omo/tasks/planned/needs-human-task-flow-stagnation.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/planned/needs-human-task-flow-stagnation.yaml)
 
 > 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡.
 
@@ -31,9 +30,9 @@
 | **角色·audit** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 
 <details>
-<summary>⚙️ <b>治理健康分详情 (复合 96/100, 已自动收纳)</b></summary>
+<summary>⚙️ <b>治理健康分详情 (复合 91/100, 已自动收纳)</b></summary>
 
-- **GAC 异常扣分**: `85/100` (无 anomalies)
+- **GAC 异常扣分**: `69/100` (无 anomalies)
 - **常驻 daemon 在线率**: `100.00%`
 - **新鲜度分数**: `100/100` (正常)
 
