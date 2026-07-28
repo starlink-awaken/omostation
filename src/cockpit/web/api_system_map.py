@@ -516,6 +516,10 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
         warning = sum(1 for _, check in checks if check["status"] == "warning")
         failed = sum(1 for _, check in checks if check["status"] == "failed")
         score = round((ready / total_projects) * 100) if total_projects else 0
+        documented = warning if dimension["id"] == "verification" else 0
+        evidence_score = (
+            round(((ready + documented * 0.5) / total_projects) * 100) if total_projects else 0
+        )
         status = "ready" if warning == 0 and failed == 0 else "warning" if failed == 0 else "failed"
         attention_projects = [
             {
@@ -537,6 +541,8 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
                 "warning": warning,
                 "failed": failed,
                 "score": score,
+                "documented": documented,
+                "evidence_score": evidence_score,
                 "attention_projects": attention_projects,
             }
         )
@@ -550,6 +556,12 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
     )
     failed_cells = sum(
         1 for project in projects for check in project.get("coverage_checks", []) if check["status"] == "failed"
+    )
+    documented_cells = sum(
+        1
+        for project in projects
+        for check in project.get("coverage_checks", [])
+        if check["id"] == "verification" and check["status"] == "warning"
     )
 
     weakest_dimensions = sorted(
@@ -581,6 +593,10 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
             "warning_cells": warning_cells,
             "failed_cells": failed_cells,
             "score": round((ready_cells / total_cells) * 100) if total_cells else 0,
+            "documented_cells": documented_cells,
+            "evidence_score": (
+                round(((ready_cells + documented_cells * 0.5) / total_cells) * 100) if total_cells else 0
+            ),
         },
     }
 

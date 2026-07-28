@@ -165,6 +165,11 @@ def test_system_map_builds_workspace_dimensions():
         for project in payload["projects"]
         if next(check for check in project["coverage_checks"] if check["id"] == "registry_contract")["status"] != "ready"
     ]
+    verification_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "verification")
+    assert verification_dimension["documented"] == verification_dimension["warning"]
+    assert verification_dimension["evidence_score"] >= verification_dimension["score"]
+    assert coverage["summary"]["documented_cells"] == verification_dimension["documented"]
+    assert coverage["summary"]["evidence_score"] >= coverage["summary"]["score"]
     assert coverage["weakest_dimensions"]
     assert coverage["matrix"]
     portfolio = payload["project_portfolio"]
