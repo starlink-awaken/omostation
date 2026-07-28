@@ -568,10 +568,9 @@ def execute_controlled_task(
                     timeout=timeout_seconds,
                     check=False,
                 )
-                if result.returncode != 0:
-                    exit_code = 1
+                probe_status = "listening" if result.returncode == 0 else "not_listening"
                 outputs.append(
-                    f"port={port}\n{result.stdout or ''}{result.stderr or ''}"
+                    f"port={port}\nstatus={probe_status}\n{result.stdout or ''}{result.stderr or ''}"
                 )
             output = "\n".join(outputs)
         else:
