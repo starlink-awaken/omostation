@@ -5,15 +5,15 @@ phase_status: active
 current_wave: W3
 next_milestone: 治理可观测性 — 健康自检 + 债务自动种子 + agora-gateway /health + 熵清理
 health_score_ref: .omo/state/health.yaml
-health_score: 96
+health_score: 91
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-28T02:53:32Z'
+health_score_generated_at: '2026-07-28T07:05:44Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 0
-total_tasks: 13
+completed_tasks: 5
+total_tasks: 15
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -51,7 +51,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-28T10:54:07.284400+08:00'
+updated_at: '2026-07-28T15:05:52.785749+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -174,7 +174,7 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 13
+planned_tasks: 10
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - OPC-P6-SELF-EVOLUTION-doc-gate-e (Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml)
@@ -182,9 +182,6 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-batch2-role-expansion-proposal (Batch2 B3: 第 4/5 角色（research/delivery）实装提案（评估页已齐)'
-- needs-human-batch3-proposal (STRAT-P81 Batch 3 提案（物理 KPI 冲刺主轴 · 待人类拍板）)
-- needs-human-gbrain-427-red-failures (gbrain 427红灯 — mock.module隔离根因已定位 (1根因→427
-  casca)
 - needs-human-ingress-registry-drift (ingress-registry 28 task carrier missing (cockpi)
 - 'needs-human-metaos-phase12-d1-d4 (metaos 治理批 Phase 1/2 前提: D1-D4 四项决策 (CLI/PID/age)'
 - needs-human-mof-m4-d1-d4-decisions (MOF/M4 治理优化 D1-D4 决策签核 (Phase 1/2 启动前置))
@@ -193,7 +190,6 @@ next_planned_tasks:
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 true
   )'
 - needs-human-p81-batch4-proposal (STRAT-P81 Batch 4 提案（多 agent 协作深化主轴 · C 波 · 待人类拍)
-- 'needs-human-p81-m1-acceptance (P81 S0.1: M1 提前验收申请（ADR-0210 Confirmation · 人类拍板)'
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
 phase28_status: completed
@@ -206,7 +202,7 @@ runtime_health_summary:
   total_services: 4
   ratio: 1.0
   health_score: 100
-  last_scan: '1785207244.87064'
+  last_scan: '1785222352.064095'
   service_count: 8
   degraded: []
   source: runtime_daemon_de_false_positive
@@ -223,8 +219,8 @@ debt_adjusted_health_score: 83.0
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 85
+governance_anomaly_score: 69
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-28T10:54:07.284400+08:00'
+governance_feedback_last_run: '2026-07-28T15:05:52.785749+08:00'
