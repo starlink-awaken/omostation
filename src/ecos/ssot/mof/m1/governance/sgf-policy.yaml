@@ -158,3 +158,11 @@ gates:
   # --strict in CI after the grace period (G2 follow-up).
   - id: "check-workorder-schema"
     command: ["bin/gac/check-workorder-schema.py"]
+  # P85 G3: P84 dual-track守护. Three checks enforcing the
+  # dual-track isolation contract (P84 §0).
+  - id: "check-dual-track-purity"
+    command: ["bin/gac/check-dual-track-purity.py"]
+  - id: "check-silent-loss"
+    command: ["bin/gac/check-silent-loss.py"]
+  - id: "check-adversarial-effectiveness"
+    command: ["bin/gac/check-adversarial-effectiveness.py"]
