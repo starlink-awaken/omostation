@@ -6,6 +6,7 @@ import re
 import subprocess
 from datetime import UTC, datetime
 from hashlib import sha256
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
@@ -45,6 +46,30 @@ from cockpit.web.api_tasks_data import (
     get_tasks_from_omo,
     get_verification_ready_task_drafts,
 )
+
+
+def _next_triage_task_id(project_id: str, command_id: str) -> tuple[str, str | None]:
+    base_task_id = f"cockpit-triage-{project_id}-{command_id}"
+    candidates: list[tuple[int, str, Path]] = []
+    task_root = WORKSPACE_DIR / ".omo" / "tasks"
+    for group in ("active", "planned", "done"):
+        for task_path in (task_root / group).glob(f"{base_task_id}*.yaml"):
+            task_id = task_path.stem
+            if task_id == base_task_id:
+                attempt = 1
+            else:
+                match = re.fullmatch(rf"{re.escape(base_task_id)}-r(\d+)", task_id)
+                if not match:
+                    continue
+                attempt = int(match.group(1))
+            candidates.append((attempt, group, task_path))
+
+    if not candidates:
+        return base_task_id, None
+    attempt, group, _ = max(candidates, key=lambda item: item[0])
+    if group in {"active", "planned"}:
+        return f"{base_task_id}-r{attempt}" if attempt > 1 else base_task_id, group
+    return f"{base_task_id}-r{attempt + 1}", None
 from cockpit.web.api_tasks_data import (
     _transition_task as _data_transition_task,
 )
@@ -350,8 +375,9 @@ async def queue_project_triage_command(project_id: str, command_id: str):
     if command.get("kind") != "copy_command" or not command.get("enabled"):
         raise HTTPException(status_code=409, detail="Only enabled triage commands can be queued")
 
-    task_id = f"cockpit-triage-{project_id}-{command_id}"
-    existing_group = _task_group(task_id)
+    task_id, existing_group = _next_triage_task_id(project_id, command_id)
+    if existing_group is None:
+        existing_group = _task_group(task_id)
     if existing_group in {"active", "done"}:
         raise HTTPException(
             status_code=409, detail=f"Project triage task already exists in {existing_group}: {task_id}"

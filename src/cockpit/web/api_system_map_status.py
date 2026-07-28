@@ -156,10 +156,10 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
     # A Cockpit-controlled verification is also durable OMO evidence. Keep it
     # in the same project posture so TaskCenter and SystemMap do not disagree.
     task_paths: list[Path] = []
-    task_ids = (
-        f"cockpit-action-{project_id}-copy-verify-command",
-        f"cockpit-triage-{project_id}-verification-rerun",
-    )
+    task_ids = [f"cockpit-action-{project_id}-copy-verify-command"]
+    triage_posture = _triage_task_posture(project_id, "verification-rerun")
+    if triage_posture.get("task_id"):
+        task_ids.append(str(triage_posture["task_id"]))
     for group in ("active", "done"):
         for task_id in task_ids:
             task_path = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
@@ -788,7 +788,10 @@ def _coverage_check(check_id: str, status: str, detail: str, next_action: str) -
 
 def _latest_controlled_verification(project_id: str) -> dict[str, Any]:
     """Read the latest OMO-controlled verification audit for a project."""
-    task_id = f"cockpit-triage-{project_id}-verification-rerun"
+    posture = _triage_task_posture(project_id, "verification-rerun")
+    task_id = str(posture.get("task_id") or "")
+    if not task_id or posture.get("status") == "not_queued":
+        return {}
     for group in ("active", "done"):
         task_path = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
         if not task_path.is_file():

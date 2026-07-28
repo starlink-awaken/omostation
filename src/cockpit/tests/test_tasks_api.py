@@ -527,6 +527,18 @@ def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
     assert calls[0]["source_ref"] == "cockpit:project-triage:demo:verification-rerun"
 
 
+def test_next_triage_task_id_allocates_new_attempt_after_done(tmp_path, monkeypatch):
+    task_root = tmp_path / ".omo" / "tasks" / "done"
+    task_root.mkdir(parents=True, exist_ok=True)
+    (task_root / "cockpit-triage-demo-verification-rerun.yaml").write_text("status: completed\n", encoding="utf-8")
+    monkeypatch.setattr(api_tasks_queues_project, "WORKSPACE_DIR", tmp_path)
+
+    task_id, existing_group = api_tasks_queues_project._next_triage_task_id("demo", "verification-rerun")
+
+    assert task_id == "cockpit-triage-demo-verification-rerun-r2"
+    assert existing_group is None
+
+
 def test_queue_runtime_port_probe_exposes_structured_controlled_execution(monkeypatch):
     system_map = {
         "projects": [
