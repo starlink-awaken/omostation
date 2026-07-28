@@ -1,0 +1,20 @@
+id: stage1-task3-adr-index-0250-0251
+title: '任务#3: ADR INDEX 补 0250/0251'
+description: INDEX 缺 0250/0251 致 ADR coverage CI fail. 补齐
+status: done
+task_type: collaboration
+assigned_to: orchestrator
+completed_at: '2026-07-28T02:15:33Z'
+completion_evidence:
+- 'PR #547 merged (main)'
+- 对照 speedup 1.0x
+- 'silent_loss: 0'
+collab_metrics:
+  agents: 1
+  wall_seconds: 300
+  sequential_estimate_seconds: 300
+  speedup: 1.0
+  silent_loss: 0
+source_docs:
+- PR:547
+stage: P83-Stage1
