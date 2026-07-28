@@ -341,6 +341,19 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
     assert not any(action["id"] == "copy-start-command" for action in projects["bus-foundation"]["actions"])
 
 
+def test_system_map_marks_cross_project_runtime_port_conflicts():
+    payload = build_system_map()
+    projects = {project["id"]: project for project in payload["projects"]}
+
+    for project_id, other_project_id in (("ecos", "aetherforge"), ("aetherforge", "ecos")):
+        project = projects[project_id]
+        conflict = next(item for item in project["runtime"]["port_conflicts"] if item["port"] == 7432)
+        assert other_project_id in conflict["projects"]
+        port = next(item for item in project["runtime"]["ports"] if item["port"] == 7432)
+        assert other_project_id in port["conflict_projects"]
+        assert "端口冲突" in project["runtime"]["probe_reason"]
+
+
 def test_evidence_freshness_distinguishes_fresh_stale_and_unknown():
     now = datetime(2026, 7, 28, tzinfo=UTC)
 

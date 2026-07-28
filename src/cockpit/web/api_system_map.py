@@ -176,7 +176,41 @@ def _build_projects(
         project["diagnostics"] = _project_diagnostics(project)
         project["portfolio"] = _project_portfolio_state(project)
         projects.append(project)
+    _annotate_runtime_port_conflicts(projects)
     return projects
+
+
+def _annotate_runtime_port_conflicts(projects: list[dict[str, Any]]) -> None:
+    """Mark host-port collisions before runtime actions are shown to operators."""
+    owners: dict[int, list[str]] = defaultdict(list)
+    for project in projects:
+        for port in project.get("runtime", {}).get("ports", []):
+            if port.get("probeable", True) and isinstance(port.get("port"), int):
+                owners[port["port"]].append(project["id"])
+
+    for project in projects:
+        runtime = project.get("runtime", {})
+        conflicts: list[dict[str, Any]] = []
+        for port in runtime.get("ports", []):
+            project_ids = [project_id for project_id in owners.get(port.get("port"), []) if project_id != project["id"]]
+            if not project_ids:
+                continue
+            conflict = {
+                "port": port["port"],
+                "service": port.get("service", ""),
+                "projects": project_ids,
+            }
+            conflicts.append(conflict)
+            port["conflict_projects"] = project_ids
+        if conflicts:
+            runtime["port_conflicts"] = conflicts
+            conflict_ports = ", ".join(f":{item['port']}" for item in conflicts)
+            runtime["probe_reason"] = (
+                f"检测到主机端口冲突：{conflict_ports}；"
+                "启动前必须先确认只保留一个监听方。"
+            )
+        else:
+            runtime["port_conflicts"] = []
 
 
 def _build_domain_apps_summary() -> dict[str, Any]:
