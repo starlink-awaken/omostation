@@ -6,10 +6,11 @@ task_type: operations
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: .omo/workers/runs/cockpit-triage-aetherforge-runtime-check-ports-promotion-approval-2026-07-28T09-08-09Z.yaml
 review_ref: null
 knowledge_refs: []
-handoff_refs: []
+handoff_refs:
+- .omo/_delivery/task-center/execution/cockpit-triage-aetherforge-runtime-check-ports-2026-07-28T09-09-37Z.yaml
 risk_level: L2
 allowed_operation_level: L2
 human_approval_required: true
@@ -48,3 +49,11 @@ metadata:
   ingress_plane: cockpit-system-map
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: cockpit:project-triage:aetherforge:runtime-check-ports
+  execution_audit:
+    command: for port in 8000 9290; do lsof -nP -iTCP:$port -sTCP:LISTEN || true;
+      done
+    exit_code: 1
+    log_ref: runtime/omo/_delivery/ingress/task-execution/cockpit-triage-aetherforge-runtime-check-ports-2026-07-28T09-09-37Z.log
+    closeout_ref: null
+    actor: cockpit-system-map-batch
+    recorded_at: '2026-07-28T09:09:37Z'
