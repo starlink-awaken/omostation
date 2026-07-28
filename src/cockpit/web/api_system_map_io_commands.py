@@ -356,7 +356,7 @@ def _triage_task_posture(project_id: str, command_id: str) -> dict[str, Any]:
     """Expose the OMO task state for a project triage command."""
     base_task_id = f"cockpit-triage-{project_id}-{command_id}"
     candidates: list[tuple[int, float, str, Path]] = []
-    for group in ("active", "planned", "done"):
+    for group in ("active", "planned", "done", "archived/done"):
         task_root = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group
         for task_path in task_root.glob(f"{base_task_id}*.yaml"):
             task_id = task_path.stem
@@ -386,7 +386,7 @@ def _triage_task_posture(project_id: str, command_id: str) -> dict[str, Any]:
     raw_status = str(task.get("status") or "pending")
     if isinstance(audit, dict) and "exit_code" in audit:
         status = "succeeded" if audit.get("exit_code") == 0 else "failed"
-    elif group == "done" or raw_status in {"completed", "complete"}:
+    elif group in {"done", "archived/done"} or raw_status in {"completed", "complete"}:
         status = "completed"
     elif group == "active" or raw_status in {"in_progress", "running"}:
         status = "active"

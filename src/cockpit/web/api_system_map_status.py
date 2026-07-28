@@ -203,7 +203,7 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
     triage_posture = _triage_task_posture(project_id, "verification-rerun")
     if triage_posture.get("task_id"):
         task_ids.append(str(triage_posture["task_id"]))
-    for group in ("active", "done"):
+    for group in ("active", "done", "archived/done"):
         for task_id in task_ids:
             task_path = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
             if task_path.is_file():
@@ -844,7 +844,7 @@ def _latest_controlled_verification(project_id: str) -> dict[str, Any]:
     task_id = str(posture.get("task_id") or "")
     if not task_id or posture.get("status") == "not_queued":
         return {}
-    for group in ("active", "done"):
+    for group in ("active", "done", "archived/done"):
         task_path = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
         if not task_path.is_file():
             continue

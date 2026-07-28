@@ -23,6 +23,7 @@ Functions:
 from __future__ import annotations
 
 import json
+import logging
 import re
 import subprocess
 import sys
@@ -39,6 +40,7 @@ from cockpit.web.api_system_map import build_system_map
 # L4-kernel 项目路径
 WORKSPACE_DIR = WORKSPACE_ROOT
 L4_KERNEL_DIR = WORKSPACE_DIR / "projects" / "l4-kernel"
+logger = logging.getLogger(__name__)
 
 
 def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | None:
@@ -246,7 +248,8 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # defensive fallback
+            except Exception as exc:  # defensive fallback
+                logger.debug("skip malformed active task %s: %s", task_file, exc)
                 continue
 
     # 读取计划任务
@@ -273,7 +276,8 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # defensive fallback
+            except Exception as exc:  # defensive fallback
+                logger.debug("skip malformed planned task %s: %s", task_file, exc)
                 continue
 
     # 读取完成任务
@@ -300,7 +304,8 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # defensive fallback
+            except Exception as exc:  # defensive fallback
+                logger.debug("skip malformed done task %s: %s", task_file, exc)
                 continue
 
     return tasks
@@ -921,7 +926,7 @@ def _task_group(task_id: str) -> str | None:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", task_id):
         raise HTTPException(status_code=400, detail="Invalid task id")
     task_root = WORKSPACE_DIR / ".omo" / "tasks"
-    for group in ("active", "planned", "done"):
+    for group in ("active", "planned", "done", "archived/done"):
         if (task_root / group / f"{task_id}.yaml").is_file():
             return group
     return None

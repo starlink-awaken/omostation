@@ -754,3 +754,22 @@ metadata:
     assert posture["task_id"] == "cockpit-triage-demo-runtime-check-ports-r2"
     assert posture["status"] == "failed"
     assert posture["execution_audit"]["log_ref"] == "runtime/omo/probe-r2.log"
+
+
+def test_triage_posture_reads_archived_done_execution(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    task_path = workspace_root / ".omo" / "tasks" / "archived" / "done" / "cockpit-triage-demo-verification-rerun.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        """id: cockpit-triage-demo-verification-rerun
+status: done
+metadata:
+  execution_audit:
+    exit_code: 0
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map_io_commands.compat, "WORKSPACE_ROOT", workspace_root)
+    posture = api_system_map_io_commands._triage_task_posture("demo", "verification-rerun")
+    assert posture["status"] == "succeeded"
+    assert posture["task_id"] == "cockpit-triage-demo-verification-rerun"
