@@ -40,7 +40,11 @@ from cockpit.web.api_tasks_data import (
     get_tasks_from_omo,
     get_verification_ready_task_drafts,
 )
-from cockpit.web.api_system_map_catalog import COCKPIT_PAGES, PAGE_OPERATOR_ACTIONS
+from cockpit.web.api_system_map_catalog import (
+    COCKPIT_PAGES,
+    PAGE_OPERATOR_ACTION_METADATA,
+    PAGE_OPERATOR_ACTIONS,
+)
 from cockpit.web.api_tasks_data import (
     _transition_task as _data_transition_task,
 )
@@ -58,18 +62,37 @@ async def queue_page_operator_action(page_id: str, action_id: str):
     if action_id not in PAGE_OPERATOR_ACTIONS.get(page_id, ()):
         raise HTTPException(status_code=404, detail="Page operator action not found")
 
+    action_metadata = {
+        "label": action_id,
+        "kind": "queue",
+        "risk": "medium",
+        "description": "进入任务中心承接该页面动作。",
+        **PAGE_OPERATOR_ACTION_METADATA.get(action_id, {}),
+    }
+
     task_id = f"cockpit-page-action-{page_id}-{action_id}"
     existing_group = _task_group(task_id)
-    title = f"页面动作：{page.get('title') or page_id} · {action_id}"
+    title = f"页面动作：{page.get('title') or page_id} · {action_metadata['label']}"
     if existing_group in {"active", "done"}:
         raise HTTPException(status_code=409, detail=f"Page action task already exists in {existing_group}: {task_id}")
     if existing_group == "planned":
-        return {"id": task_id, "status": "pending", "created": False, "title": title, "action": action_id, "executes": False, "source": "omo_ingress"}
+        return {
+            "id": task_id,
+            "status": "pending",
+            "created": False,
+            "title": title,
+            "action": action_id,
+            "action_label": action_metadata["label"],
+            "action_kind": action_metadata["kind"],
+            "action_risk": action_metadata["risk"],
+            "executes": False,
+            "source": "omo_ingress",
+        }
 
     task_data = {
         "id": task_id,
         "title": title,
-        "description": f"进入 Cockpit 页面 {page_id}，核对并承接受控动作 {action_id}。Cockpit 不直接执行页面动作。",
+        "description": f"进入 Cockpit 页面 {page_id}，核对并承接受控动作 {action_metadata['label']}。{action_metadata['description']}",
         "status": "pending",
         "task_type": "page_operator_action",
         "assigned_to": None,
@@ -83,13 +106,22 @@ async def queue_page_operator_action(page_id: str, action_id: str):
         "allowed_operation_level": "L1",
         "human_approval_required": False,
         "source_docs": ["projects/cockpit/src/cockpit/web/api_system_map_catalog.py"],
-        "entry_gate": [f"确认页面 {page_id} 当前运行状态", f"确认动作 {action_id} 的真实执行边界"],
+        "entry_gate": [f"确认页面 {page_id} 当前运行状态", f"确认动作 {action_metadata['label']} 的真实执行边界"],
         "evidence_required": ["动作执行结果或阻塞原因", "相关页面/接口回执", "任务 closeout"],
-        "deliverables": [f"完成页面 {page_id} 的动作 {action_id} 承接并记录证据。"],
+        "deliverables": [f"完成页面 {page_id} 的动作 {action_metadata['label']} 承接并记录证据。"],
         "test_plan": ["在对应 Cockpit 页面核对动作入口，再按页面安全门执行或转交。"],
-        "tags": ["cockpit-page-action", page_id, action_id],
+        "tags": ["cockpit-page-action", page_id, action_id, action_metadata["kind"], action_metadata["risk"]],
         "priority": "medium",
-        "metadata": {"page_id": page_id, "operator_action": action_id, "created_via": "cockpit-system-map", "controlled_execution": False},
+        "metadata": {
+            "page_id": page_id,
+            "operator_action": action_id,
+            "operator_action_label": action_metadata["label"],
+            "operator_action_kind": action_metadata["kind"],
+            "operator_action_risk": action_metadata["risk"],
+            "operator_action_description": action_metadata["description"],
+            "created_via": "cockpit-system-map",
+            "controlled_execution": False,
+        },
     }
     try:
         from omo.omo_ingress_task_lifecycle import create_planned_task
@@ -105,7 +137,18 @@ async def queue_page_operator_action(page_id: str, action_id: str):
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return {"id": task_id, "status": "pending", "created": True, "title": created.get("title", title), "action": action_id, "executes": False, "source": "omo_ingress"}
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", title),
+        "action": action_id,
+        "action_label": action_metadata["label"],
+        "action_kind": action_metadata["kind"],
+        "action_risk": action_metadata["risk"],
+        "executes": False,
+        "source": "omo_ingress",
+    }
 
 
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")

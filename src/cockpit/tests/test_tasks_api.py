@@ -434,6 +434,9 @@ def test_queue_page_operator_action_creates_non_executing_task(monkeypatch):
     assert response.json()["executes"] is False
     assert calls[0]["task_data"]["task_type"] == "page_operator_action"
     assert calls[0]["task_data"]["metadata"]["page_id"] == "QuestBoard"
+    assert calls[0]["task_data"]["metadata"]["operator_action_label"] == "完成积分任务"
+    assert calls[0]["task_data"]["metadata"]["operator_action_kind"] == "queue"
+    assert calls[0]["task_data"]["metadata"]["operator_action_risk"] == "medium"
     assert calls[0]["source_ref"] == "cockpit:page-action:QuestBoard:complete-quest"
 
 
