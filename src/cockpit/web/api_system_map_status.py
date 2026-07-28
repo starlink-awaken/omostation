@@ -569,7 +569,7 @@ def _project_runtime_status(
     port_registry_path: Path,
 ) -> dict[str, Any]:
     project_path = _project_path(project_id, project_data)
-    ports = _project_ports(project_id, port_registry, port_registry_path)
+    ports = _project_ports(project_id, port_registry, port_registry_path, _project_path(project_id, project_data))
     latest_verification = _attach_evidence_freshness(
         _latest_project_verification(project_id, project_path, operational),
         VERIFICATION_EVIDENCE_MAX_AGE_HOURS,

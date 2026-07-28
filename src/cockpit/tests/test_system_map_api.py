@@ -626,6 +626,21 @@ def test_project_with_security_audit_uses_audit_as_security_evidence(tmp_path):
     assert "AUDIT.md" in security["detail"]
 
 
+def test_project_ports_observe_compose_host_ports_without_registry_entry(tmp_path, monkeypatch):
+    compose_path = tmp_path / "docker-compose.yml"
+    compose_path.write_text(
+        "services:\n  langfuse-server:\n    ports:\n      - \"3050:3000\"\n  db:\n    ports:\n      - \"5433:5432\"\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map_io_commands, "_is_port_listening", lambda _port: False)
+    ports = api_system_map_io_commands._project_ports("observability", {}, compose_path, tmp_path)
+    assert [(port["port"], port["service"]) for port in ports] == [
+        (3050, "observability/langfuse-server"),
+        (5433, "observability/db"),
+    ]
+    assert all(port["source_ref"]["source_key"] == "project_compose" for port in ports)
+
+
 def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatch):
     workspace_root = tmp_path
     project_path = workspace_root / "projects" / "cockpit"

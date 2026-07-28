@@ -621,7 +621,12 @@ def _is_port_listening(port: int) -> bool:
         return False
 
 
-def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry_path: Path) -> list[dict[str, Any]]:
+def _project_ports(
+    project_id: str,
+    port_registry: dict[str, Any],
+    port_registry_path: Path,
+    project_path: Path | None = None,
+) -> list[dict[str, Any]]:
     aliases = PROJECT_PORT_ALIASES.get(project_id, (project_id,))
     registry_ports = port_registry.get("ports") or {}
     port_types = port_registry.get("types") or {}
@@ -660,4 +665,43 @@ def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry
                 }
             )
 
-    return sorted(ports, key=lambda item: item["port"])
+    # A compose project can expose a real host port before the workspace port
+    # registry is updated. Keep this as observed evidence, never as a write to
+    # the registry SSOT.
+    compose_path = (project_path or compat.WORKSPACE_ROOT / "projects" / project_id) / "docker-compose.yml"
+    compose = _read_yaml(compose_path)
+    observed_ports: list[dict[str, Any]] = []
+    for service_name, service_data in (compose.get("services") or {}).items():
+        if not isinstance(service_data, dict):
+            continue
+        for raw_mapping in service_data.get("ports") or []:
+            if isinstance(raw_mapping, dict):
+                published = raw_mapping.get("published")
+                target = raw_mapping.get("target")
+                host_port = int(published) if str(published).isdigit() else None
+                container_port = int(target) if str(target).isdigit() else None
+            else:
+                mapping = str(raw_mapping).split("/")[0]
+                parts = mapping.split(":")
+                host_port = int(parts[-2]) if len(parts) >= 2 and parts[-2].isdigit() else None
+                container_port = int(parts[-1]) if parts and parts[-1].isdigit() else None
+            if host_port is None or any(item["port"] == host_port for item in ports + observed_ports):
+                continue
+            observed_ports.append(
+                {
+                    "port": host_port,
+                    "service": f"{project_id}/{service_name}",
+                    "raw_label": f"{host_port}:{container_port or 'container'}",
+                    "type": "tcp",
+                    "probeable": True,
+                    "listening": _is_port_listening(host_port),
+                    "source_ref": _source_ref(
+                        compose_path,
+                        f"compose 端口 {host_port}",
+                        "project_compose",
+                        _line_number(compose_path, rf"{re.escape(str(host_port))}:"),
+                    ),
+                }
+            )
+
+    return sorted(ports + observed_ports, key=lambda item: item["port"])
