@@ -47,6 +47,7 @@ class VersionManager:
 
     def __init__(self):
         self.versions: dict[str, dict[str, Callable]] = {}
+        self.endpoint_records: dict[tuple[str, str, str], Callable] = {}
         self.deprecated: set[str] = set()
         self._current_version: str = ""
 
@@ -63,12 +64,14 @@ class VersionManager:
                 self._current_version = max(all_vers)
         return self._current_version or "v1"
 
-    def register(self, path: str, version: str, handler: Callable) -> None:
+    def register(self, path: str, version: str, handler: Callable, method: str = "GET") -> None:
         """注册一个 API 版本 handler"""
         if path not in self.versions:
             self.versions[path] = {}
         self.versions[path][version] = handler
-        logger.info("Registered %s for %s", version, path)
+        normalized_method = method.upper()
+        self.endpoint_records[(path, normalized_method, version)] = handler
+        logger.info("Registered %s %s for %s", normalized_method, version, path)
 
     def get_handler(self, path: str, version: str = "latest") -> Callable | None:
         """获取指定路径和版本的 handler"""
@@ -109,7 +112,7 @@ class VersionManager:
             "current_version": self.current_version,
             "supported_versions": sorted(all_versions),
             "deprecated_versions": sorted(self.deprecated),
-            "endpoints": len(self.versions),
+            "endpoints": len(self.endpoint_records),
             "updated_at": datetime.now().isoformat(),
         }
 
@@ -117,7 +120,11 @@ class VersionManager:
         """获取版本历史（用于追踪升级路径）"""
         history = []
         for v in sorted(set(v for handlers in self.versions.values() for v in handlers.keys())):
-            endpoints = [{"path": p, "version": v} for p, handlers in self.versions.items() if v in handlers]
+            endpoints = [
+                {"path": path, "method": method, "version": version}
+                for path, method, version in sorted(self.endpoint_records)
+                if version == v
+            ]
             history.append(
                 {
                     "version": v,
@@ -229,8 +236,11 @@ def register_app_routes(app: FastAPI, default_version: str = "v1") -> int:
 
         endpoint = getattr(route, "endpoint", None)
         version = getattr(endpoint, "_api_version", None) or default_version
-        version_manager.register(path, version, endpoint)
-        registered += 1
+        methods = sorted(getattr(route, "methods", set()) or {"GET"})
+        business_methods = [method for method in methods if method not in {"HEAD", "OPTIONS"}]
+        for method in business_methods:
+            version_manager.register(path, version, endpoint, method=method)
+        registered += len(business_methods)
     return registered
 
 

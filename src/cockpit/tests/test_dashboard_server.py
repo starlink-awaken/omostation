@@ -43,6 +43,12 @@ class TestDashboardEndpoints:
         endpoint_paths = {endpoint.get("path") for item in entries for endpoint in item.get("endpoint_list", [])}
         assert "/api/tasks" in endpoint_paths
         assert "/api/cockpit/system-map" in endpoint_paths
+        task_operations = {
+            (endpoint.get("method"), endpoint.get("path"))
+            for item in entries
+            for endpoint in item.get("endpoint_list", [])
+        }
+        assert {("GET", "/api/tasks"), ("POST", "/api/tasks")} <= task_operations
 
     def test_api_response_exposes_current_version(self, test_client):
         resp = test_client.get("/api/status")
