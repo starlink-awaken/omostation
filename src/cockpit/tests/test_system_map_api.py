@@ -773,3 +773,33 @@ metadata:
     posture = api_system_map_io_commands._triage_task_posture("demo", "verification-rerun")
     assert posture["status"] == "succeeded"
     assert posture["task_id"] == "cockpit-triage-demo-verification-rerun"
+
+
+def test_external_ui_worktree_is_resolved_from_registry_path_env(tmp_path, monkeypatch):
+    ui_root = tmp_path / "cockpit-ui-worktree"
+    (ui_root / "src").mkdir(parents=True)
+    (ui_root / "AGENTS.md").write_text("## Commands\n```bash\nbun run build\n```\n", encoding="utf-8")
+    (ui_root / "README.md").write_text("# cockpit-ui\n", encoding="utf-8")
+    (ui_root / "CLAUDE.md").write_text("# cockpit-ui\n", encoding="utf-8")
+    (ui_root / "package.json").write_text(
+        json.dumps({"scripts": {"build": "vite build"}}),
+        encoding="utf-8",
+    )
+    (ui_root / "vite.config.ts").write_text("export default {}\n", encoding="utf-8")
+    monkeypatch.setenv("COCKPIT_UI_ROOT", str(ui_root))
+
+    project_data = {
+        "id": "cockpit-ui",
+        "path_env": "COCKPIT_UI_ROOT",
+        "role": "Web 控制台 UI",
+        "stack": "TypeScript (Vite, React)",
+    }
+    operational = api_system_map._project_operational_status(
+        "cockpit-ui", project_data
+    )
+
+    assert operational["status"] == "ready"
+    assert operational["surface_type"] == "external-worktree"
+    assert operational["path_configured"] is True
+    assert operational["path_env"] == "COCKPIT_UI_ROOT"
+    assert operational["next_action"] == "保持项目注册表与 Cockpit 映射同步。"

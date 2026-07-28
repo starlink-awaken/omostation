@@ -417,6 +417,11 @@ def _commands_from_agents(path: Path, limit: int = 4) -> list[str]:
 
 def _project_path(project_id: str, project_data: dict[str, Any] | None = None) -> Path:
     data = project_data or {}
+    path_env = data.get("path_env")
+    if isinstance(path_env, str) and path_env.strip():
+        configured = os.environ.get(path_env.strip())
+        if configured:
+            return Path(configured).expanduser()
     if project_id == "cockpit-ui":
         configured = os.environ.get("COCKPIT_UI_ROOT") or os.environ.get("COCKPIT_UI_DIST")
         if configured:
@@ -699,10 +704,18 @@ def _project_operational_status(
         "partial": "补齐项目文档、命令或构建清单后升级为原生状态面。",
         "missing": "确认项目是否已归档、迁移或需要从注册表下线。",
     }[status]
+    if status == "missing" and isinstance(data.get("path_env"), str):
+        next_action = f"设置环境变量 {data['path_env']} 指向项目 worktree，再重新加载 Cockpit。"
 
     return {
         "status": status,
-        "surface_type": "external-storage" if data.get("storage") else "native",
+        "surface_type": (
+            "external-worktree"
+            if data.get("path_env")
+            else "external-storage"
+            if data.get("storage")
+            else "native"
+        ),
         "docs": {
             "present": len(present_docs),
             "expected": expected_doc_count,
@@ -713,6 +726,10 @@ def _project_operational_status(
         "manifests": existing_manifests,
         "risks": risks,
         "next_action": next_action,
+        "path_env": data.get("path_env"),
+        "path_configured": bool(
+            data.get("path_env") and os.environ.get(str(data["path_env"]).strip())
+        ),
     }
 
 
