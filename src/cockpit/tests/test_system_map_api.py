@@ -210,6 +210,10 @@ def test_system_map_builds_workspace_dimensions():
     assert all(step["page"]["id"] == step["page_id"] for step in daily_playbook["steps"])
     assert all(step["action"] and step["evidence"] and step["done_when"] for step in daily_playbook["steps"])
     cockpit_project = next(project for project in payload["projects"] if project["id"] == "cockpit")
+    assert cockpit_project["registry_contract"]["version"] == "0.4.0"
+    assert cockpit_project["registry_contract"]["python"] == ">=3.13"
+    assert cockpit_project["registry_contract"]["build_backend"] == "hatchling"
+    assert cockpit_project["registry_contract"]["coverage"]
     assert cockpit_project["operational"]["docs"]["present"] >= 1
     assert cockpit_project["operational"]["commands"]
     mesh_router = next(project for project in payload["projects"] if project["id"] == "mesh-router")
