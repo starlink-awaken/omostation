@@ -104,7 +104,7 @@ def _project_registry_contract(project_data: dict[str, Any], project_path: Path 
     fields = {
         "生命周期": project_data.get("version") or project_data.get("status"),
         "构建/运行约束": project_data.get("python") or project_data.get("build_backend"),
-        "实现落点": project_data.get("src_dir") or project_data.get("physical_location"),
+        "实现落点": project_data.get("src_dir") or project_data.get("physical_location") or project_data.get("storage"),
     }
     missing_fields = [label for label, value in fields.items() if not value]
     observed_path = project_path
@@ -120,7 +120,11 @@ def _project_registry_contract(project_data: dict[str, Any], project_path: Path 
             observed_location = str(observed_path.relative_to(compat.WORKSPACE_ROOT))
         except ValueError:
             observed_location = str(observed_path)
-    declared_location = project_data.get("src_dir") or project_data.get("physical_location")
+    declared_location = (
+        project_data.get("src_dir")
+        or project_data.get("physical_location")
+        or project_data.get("storage")
+    )
     return {
         "status": project_data.get("status"),
         "version": project_data.get("version"),

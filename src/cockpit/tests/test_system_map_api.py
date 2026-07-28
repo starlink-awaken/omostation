@@ -159,7 +159,12 @@ def test_system_map_builds_workspace_dimensions():
     assert any(item["id"] == "verification" for item in coverage["dimension_summary"])
     registry_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "registry_contract")
     assert registry_dimension["status"] in {"ready", "warning", "failed"}
-    assert registry_dimension["attention_projects"]
+    assert registry_dimension["ready"] + registry_dimension["warning"] + registry_dimension["failed"] == coverage["summary"]["projects"]
+    assert registry_dimension["attention_projects"] == [
+        project["id"]
+        for project in payload["projects"]
+        if next(check for check in project["coverage_checks"] if check["id"] == "registry_contract")["status"] != "ready"
+    ]
     assert coverage["weakest_dimensions"]
     assert coverage["matrix"]
     portfolio = payload["project_portfolio"]
@@ -219,10 +224,10 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["registry_contract"]["python"] == ">=3.13"
     assert cockpit_project["registry_contract"]["build_backend"] == "hatchling"
     assert cockpit_project["registry_contract"]["coverage"]
-    assert cockpit_project["registry_contract"]["missing_fields"] == ["实现落点"]
-    assert cockpit_project["registry_contract"]["status_text"] == "warning"
+    assert cockpit_project["registry_contract"]["missing_fields"] == []
+    assert cockpit_project["registry_contract"]["status_text"] == "ready"
     assert cockpit_project["registry_contract"]["observed_location"] == "projects/cockpit/src"
-    assert cockpit_project["registry_contract"]["implementation_traceability"] == "observed_only"
+    assert cockpit_project["registry_contract"]["implementation_traceability"] == "declared"
     assert cockpit_project["operational"]["docs"]["present"] >= 1
     assert cockpit_project["operational"]["commands"]
     mesh_router = next(project for project in payload["projects"] if project["id"] == "mesh-router")
@@ -243,7 +248,8 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["source_refs"][0]["source_key"] == "project_registry"
     assert cockpit_project["source_refs"][0]["line"]
     assert cockpit_project["actions"]
-    assert any(command["id"] == "registry-contract" for command in cockpit_project["triage_commands"])
+    if cockpit_project["registry_contract"]["status_text"] != "ready":
+        assert any(command["id"] == "registry-contract" for command in cockpit_project["triage_commands"])
     security_check = next(check for check in cockpit_project["coverage_checks"] if check["id"] == "security_contract")
     assert security_check["status"] == "ready"
     assert "triage_commands" in cockpit_project
