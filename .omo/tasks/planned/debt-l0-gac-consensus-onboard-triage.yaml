@@ -1,0 +1,22 @@
+---
+id: DEBT-L0-GAC-CONSENSUS-ONBOARD-TRIAGE
+title: "gac-consensus-inject (KOS DB entity_type 缺列) + gac-compute-onboard (15s timeout) triage"
+status: candidate
+needs-human: false
+priority: P2
+owner: governance-team
+created_at: "2026-07-28T12:00:00Z"
+due_date: "2026-08-15"
+risk_level: L2
+desc: >
+  L0 unblock triage: 两个 gac-check 前置债登记 (带 owner 与期限, 非跳过/非放宽超时).
+  1. gac-consensus-inject-check: KOS DB (sqlite3 bin/gac/gac-consensus-inject.py) 缺 entity_type 列,
+     共识注入查询失败 (KOS 避坑共识跨会话基因注入代理 Phase A RAG Top-2).
+     修法: KOS DB schema 加 entity_type 列 + 迁移现有数据.
+  2. gac-compute-onboard-check: 算力网格自检 (bin/gac/gac-compute-onboard.py) 15s timeout.
+     修法: 优化查询 (非调大超时; 红线禁止放宽超时消警).
+test_plan:
+  - gac-consensus-inject-check: KOS DB entity_type 列存在 → 查询成功
+  - gac-compute-onboard-check: 优化后 <2s pre-commit
+redline: 禁止跳过/放宽超时/吞异常消警 (L0 红线).
+---
