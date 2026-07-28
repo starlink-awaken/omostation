@@ -43,9 +43,21 @@ for _path in (
 import time
 from datetime import UTC, datetime
 
-import bus_foundation.facade.event as bus_event
+try:
+    import bus_foundation.facade.event as bus_event
+except Exception as exc:  # Optional mutation bus; status endpoints remain useful.
+    bus_event = None
+    _BUS_IMPORT_ERROR: Exception | None = exc
+else:
+    _BUS_IMPORT_ERROR = None
 
-from cockpit.adapters.omo import omo_ingress
+try:
+    from cockpit.adapters.omo import omo_ingress
+except Exception as exc:  # Optional mutation adapter; status endpoints remain useful.
+    omo_ingress = None
+    _OMO_IMPORT_ERROR: Exception | None = exc
+else:
+    _OMO_IMPORT_ERROR = None
 
 _VIOLATIONS_CACHE = None
 _VIOLATIONS_CACHE_TIME = 0.0

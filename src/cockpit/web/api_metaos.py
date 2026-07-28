@@ -37,7 +37,27 @@ def _ttl_cache(seconds: float):
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
-from cockpit.adapters.metaos import SEngine, WorkflowPlanner, WorkflowStore
+try:
+    from cockpit.adapters.metaos import SEngine, WorkflowPlanner, WorkflowStore
+    _METAOS_IMPORT_ERROR: Exception | None = None
+except Exception as exc:  # Optional adapter; keep read-only cockpit routes available.
+    SEngine = WorkflowPlanner = WorkflowStore = None  # type: ignore[assignment]
+    _METAOS_IMPORT_ERROR = exc
+
+
+def _metaos_unavailable() -> JSONResponse | None:
+    if _METAOS_IMPORT_ERROR is None:
+        return None
+    return JSONResponse(
+        {
+            "status": "degraded",
+            "error": "MetaOS adapter is unavailable",
+            "error_type": type(_METAOS_IMPORT_ERROR).__name__,
+            "detail": str(_METAOS_IMPORT_ERROR),
+            "next_action": "安装并挂载 MetaOS 适配器依赖后重试。",
+        },
+        status_code=503,
+    )
 
 
 def _get_engine():
@@ -48,6 +68,9 @@ def _get_engine():
 @router.post("/plan")
 async def api_metaos_plan(request: Request):
     """🧠 动态规划任务，返回 DAG 结构以供前端绘图"""
+    unavailable = _metaos_unavailable()
+    if unavailable:
+        return unavailable
     try:
         body = await request.json()
         task = body.get("task")
@@ -92,6 +115,9 @@ async def _async_execute_workflow(task_description: str):
 @router.post("/execute")
 async def api_metaos_execute(request: Request, background_tasks: BackgroundTasks):
     """⚙️ 规划并后台异步执行任务"""
+    unavailable = _metaos_unavailable()
+    if unavailable:
+        return unavailable
     try:
         body = await request.json()
         task = body.get("task")
@@ -109,6 +135,9 @@ async def api_metaos_execute(request: Request, background_tasks: BackgroundTasks
 @_ttl_cache(15.0)
 async def api_metaos_workflows():
     """获取所有历史工作流"""
+    unavailable = _metaos_unavailable()
+    if unavailable:
+        return unavailable
     try:
         store = WorkflowStore()
         records = store.list_workflows(50)
@@ -120,6 +149,9 @@ async def api_metaos_workflows():
 @router.get("/workflows/{workflow_id}")
 async def api_metaos_workflow_detail(workflow_id: str):
     """获取工作流详细信息以及各节点状态"""
+    unavailable = _metaos_unavailable()
+    if unavailable:
+        return unavailable
     try:
         store = WorkflowStore()
         wf_detail = store.get_workflow(workflow_id)
@@ -148,6 +180,9 @@ async def api_metaos_workflow_detail(workflow_id: str):
 @router.post("/workflows/{workflow_id}/approve")
 async def api_metaos_workflow_approve(workflow_id: str):
     """✅ 批准被 RED 门控暂停的节点，将其设置为 completed 状态以允许继续运行"""
+    unavailable = _metaos_unavailable()
+    if unavailable:
+        return unavailable
     try:
         store = WorkflowStore()
         wf_detail = store.get_workflow(workflow_id)
