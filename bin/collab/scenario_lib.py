@@ -133,15 +133,31 @@ def run_scenario(scenario: dict) -> ScenarioResult:
 
 
 def _handle_write(board: dict, inj: dict, ts: int) -> dict:
-    """两角色写同一产物 → 检测分歧 (协作机制核心: conflict_detected)."""
+    """两角色写同一产物 → 检测分歧 + 死锁打破 (协作机制核心).
+
+    W2.2 缺陷闭环 (ADV03 死锁暴露): 连续冲突超阈值 (3) → deadlock_break 强制收敛,
+    避免无限冲突循环; 未超阈值 → conflict_detected (resolved=False, 待消解).
+    """
     key = inj["target"]
     role = inj["role"]
     val = inj["value"]
     slot = board.setdefault(key, {"value": None, "writers": []})
+    counter = board.setdefault("_conflict_count", {"value": {}, "writers": []})["value"]
     prior = slot["value"]
     if prior is not None and prior != val:
-        # 分歧 → 协作机制标记冲突 (resolved=True 模拟消解后收敛)
         slot["writers"].append(role)
+        cnt = counter.get(key, 0) + 1
+        counter[key] = cnt
+        if cnt >= 3:
+            # 死锁打破: 强制收敛 (最后写赢), 避免无限冲突
+            slot["value"] = val
+            return {
+                "kind": "deadlock_break",
+                "ts": ts,
+                "target": key,
+                "rounds": cnt,
+                "resolved": True,
+            }
         return {
             "kind": "conflict_detected",
             "ts": ts,
@@ -149,7 +165,7 @@ def _handle_write(board: dict, inj: dict, ts: int) -> dict:
             "role": role,
             "prior": prior,
             "new": val,
-            "resolved": True,
+            "resolved": False,
         }
     slot["value"] = val
     slot["writers"].append(role)
@@ -173,12 +189,27 @@ def _handle_subtask_fail(inj: dict, ts: int) -> dict:
 
 
 def _handle_chain_step(board: dict, inj: dict, ts: int) -> dict:
-    """链式分解步骤 → 测依赖拓扑 (missing dep = silent_loss)."""
+    """链式分解步骤 → 测依赖拓扑.
+
+    W2.2 缺陷闭环 (ADV01/05 暴露):
+    - 循环依赖 → cycle_detected (非 silent_loss, 协作机制应检测环)
+    - 依赖缺失 → broken_chain_detected (显式报, 非静默)
+    - 正常 → chain_step_done
+    """
     step = inj["step"]
     deps = inj.get("depends_on", [])
+    declared = board.setdefault("_declared_deps", {"value": {}, "writers": []})["value"]
+    # self-loop
+    if step in deps:
+        return {"kind": "cycle_detected", "ts": ts, "step": step, "cycle_with": step}
+    # 互依环: step 依赖 d, d 已声明且依赖 step
+    for d in deps:
+        if d in declared and step in declared.get(d, []):
+            return {"kind": "cycle_detected", "ts": ts, "step": step, "cycle_with": d}
+    declared[step] = deps
     missing = [d for d in deps if d not in board or board[d]["value"] is None]
     if missing:
-        return {"kind": "silent_loss", "ts": ts, "step": step, "missing_deps": missing}
+        return {"kind": "broken_chain_detected", "ts": ts, "step": step, "missing_deps": missing}
     board[step] = {"value": "done", "writers": ["chain"]}
     return {"kind": "chain_step_done", "ts": ts, "step": step}
 

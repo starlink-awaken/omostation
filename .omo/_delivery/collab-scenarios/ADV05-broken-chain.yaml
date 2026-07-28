@@ -19,6 +19,9 @@ expected:
   behavior: broken_chain_detected
   silent_loss: 0
 verdict:
+  - criterion: broken_chain_detected
+    check: events_contain
+    args: {kind: broken_chain_detected}
   - criterion: no_silent_loss
     check: silent_loss_eq
     args: {expected: 0}

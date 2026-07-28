@@ -1,0 +1,29 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-28
+---
+id: ADV11-resource-starvation
+category: A_conflict
+adversarial: true
+seed: 111
+description: "[对抗·red-team] 多角色争抢同资源 (starvation), 测管线是否公平调度而非饿死弱势角色 (W2.2 后新对抗)"
+setup:
+  blackboard:
+    - {key: gpu, value: null}
+  roles: [r1, r2, r3]
+inject:
+  - {type: write_conflict, role: r1, target: gpu, value: "use1"}
+  - {type: write_conflict, role: r2, target: gpu, value: "use2"}
+  - {type: write_conflict, role: r3, target: gpu, value: "use3"}
+expected:
+  behavior: starvation_resolved
+  silent_loss: 0
+verdict:
+  - criterion: starvation_resolved
+    check: events_contain
+    args: {kind: starvation_resolved}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

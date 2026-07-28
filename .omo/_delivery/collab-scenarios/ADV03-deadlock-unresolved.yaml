@@ -24,6 +24,9 @@ expected:
   max_resolution_rounds: 3
   silent_loss: 0
 verdict:
+  - criterion: deadlock_broken
+    check: events_contain
+    args: {kind: deadlock_break}
   - criterion: resolved_within_rounds
     check: resolution_rounds_le
     args: {max: 3}

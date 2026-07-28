@@ -19,6 +19,9 @@ expected:
   behavior: cycle_detected
   silent_loss: 0
 verdict:
+  - criterion: cycle_detected
+    check: events_contain
+    args: {kind: cycle_detected}
   - criterion: no_silent_loss
     check: silent_loss_eq
     args: {expected: 0}

@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-28T07:13:08.153186Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `91/100`
+> **Generated**: `2026-07-28T07:54:53.100289Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `91/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 6 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/planned/decision-checklist-13-items.md`.
@@ -36,9 +36,9 @@
 ### 🎯 能力轨 (Capability · 构造场景, 可加速)
 > 数据源: `构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)`
 
-- 场景总数: `7` | 通过率: `57.1%`
-- 对抗集: `3` 个, 失败率 `100%` (P84: 全过=对抗不足须加强)
-- 冲突消解成功率: `50%` | 平均协商轮次: `0.71`
+- 场景总数: `10` | 通过率: `70.0%`
+- 对抗集: `6` 个, 失败率 `50%` (P84: 全过=对抗不足须加强)
+- 冲突消解成功率: `50%` | 平均协商轮次: `0.6`
 
 ### 📦 产能轨 (Throughput · 真实 backlog, 不可造)
 > 数据源: `真实 backlog (.omo/tasks/done+planned/, 不可造)`
