@@ -1,5 +1,5 @@
-
 id: M1-PRED-001
+type: PredictiveGovernance
 name: 债务风险预测
 PredictiveGovernance:
   prediction_id: PRED-DEBT-RISK-2026-07-14
@@ -29,3 +29,5 @@ PredictiveGovernance:
   - prediction
   - governance
   status: active
+prediction_type: debt_risk
+confidence: 0.82

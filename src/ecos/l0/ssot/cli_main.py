@@ -22,7 +22,6 @@ from .cli import (
     _TEMPLATES,
     MONITORING_AVAILABLE,
     _derive_watch,
-    _dispatch,
     _emit,
     cmd_check,
     cmd_compile,

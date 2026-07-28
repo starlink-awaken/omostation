@@ -1,5 +1,5 @@
-
 id: M1-PITCH-001
+type: Pitch
 name: M4 元模型集成
 Pitch:
   pitch_id: M4-INTEGRATION-2026
@@ -10,9 +10,11 @@ Pitch:
   nogos:
   - 不改变现有 M3 结构
   - 不破坏现有 M2 schema
-  context: |
-    我们刚完成 C2G 和 OMO 新功能的开发，现在需要将它们与 MOF 元模型集成，
+  context: '我们刚完成 C2G 和 OMO 新功能的开发，现在需要将它们与 MOF 元模型集成，
+
     以实现完整的闭环治理。
+
+    '
   expected_outcomes:
   - 完整的 M2 schema 定义
   - M1 实例示例
@@ -27,3 +29,6 @@ Pitch:
   - c2g
   - omo
   status: active
+core_idea: 将新功能与 MOF 元模型深度集成
+upstream: M4 metamodel strategic initiative
+appetite: 1 week

@@ -134,3 +134,27 @@ gates:
     command: ["bin/gac/omo-state-write-guard.py"]
   - id: "brief-protect"
     command: ["bin/mof/generate-brief.py", "--protect"]
+  # P0-A (integrated-governance §P0): 三把锁接线到 SGF 真实生效源.
+  # sgf-policy 覆盖 DEFAULT_POLICY (load_sgf_policy or DEFAULT), 故必须接此处才生效.
+  # layer-call 按 new-violation blocking: --baseline 存量 11 grace, 新违规 exit 1.
+  - id: "mof-capabilities-drift-check"
+    command: ["bin/mof/check-mof-capabilities-drift.py"]
+  - id: "doc-claims-check"
+    command: ["bin/mof/check-doc-claims.py"]
+  - id: "layer-call-direction-check"
+    command: ["bin/ssot/check-layer-call-direction.py", "--baseline", ".omo/_truth/registry/layer-call-baseline.txt"]
+  # P85 G1+G2: redline executability wiring. These gates are what
+  # the redline registry at .omo/_truth/registry/redlines.yaml
+  # points to, so adding/removing rows there is safe.
+  - id: "check-severity-registry"
+    command: ["bin/gac/check-severity-registry.py"]
+  - id: "check-work-landed"
+    command: ["bin/gac/check-work-landed.py"]
+  - id: "check-governance-ratio"
+    command: ["bin/gac/check-governance-ratio.py"]
+  - id: "check-redline-coverage"
+    command: ["bin/gac/check-redline-coverage.py"]
+  # P85 G2.2: workorder schema is warn-only by default; promote to
+  # --strict in CI after the grace period (G2 follow-up).
+  - id: "check-workorder-schema"
+    command: ["bin/gac/check-workorder-schema.py"]

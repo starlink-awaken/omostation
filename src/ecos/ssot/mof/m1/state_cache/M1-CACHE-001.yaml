@@ -1,5 +1,5 @@
-
 id: M1-CACHE-001
+type: StateCache
 name: 治理状态缓存
 StateCache:
   cache_id: governance_state_cache
@@ -26,3 +26,5 @@ StateCache:
   - governance
   - performance
   status: active
+cache_id: governance_state_cache
+ttl_seconds: 3600

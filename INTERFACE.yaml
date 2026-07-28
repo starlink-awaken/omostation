@@ -94,4 +94,4 @@ dependencies:
   runtime: [pyyaml, requests, beautifulsoup4, jinja2]
   dev: [pytest, ruff]
 
-tests: 859
+tests: 859  # as_of 2026-07-28, 见 pytest tests/ (CI 守, 不硬编码)

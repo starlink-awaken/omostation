@@ -63,7 +63,7 @@ mof-contract-agent = "ecos.ssot.agents.mof_contract_agent:main"
 
 # 稳定 ruff 配置 — 默认规则集 (E/F/W), 不收紧已有代码
 [tool.ruff.lint]
-ignore = ["E501", "E402"]
+ignore = ["E501", "E402", "F403"]
 per-file-ignores = {"tests/*" = ["N806"]}
 
 [tool.ruff.format]

@@ -34,8 +34,11 @@ try:
         validate_operation,
     )
 except ImportError:
-    validate_operation = lambda *a, **kw: None
-    log_operation = lambda *a, **kw: None
+    def validate_operation(*a, **kw):
+        return None
+
+    def log_operation(*a, **kw):
+        return None
 
 
 # =========================================================================
