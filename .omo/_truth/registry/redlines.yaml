@@ -28,6 +28,8 @@ enforced_red_lines:
     severity: violation
     rule: "a status: ok run must reach origin/main within 7 days (3 days warn)"
     executor: bin/gac/check-work-landed.py
+    baseline: ".omo/_truth/registry/baseline-work-landed.txt"
+    baseline_note: "M2: 存量 blocking 进 grace 清单, 新增滞留才 blocking (防新门被历史存量锁死)"
   - id: severity-decl-exec
     source: ADR-0171
     severity: violation
