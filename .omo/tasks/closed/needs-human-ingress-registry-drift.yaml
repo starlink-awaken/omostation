@@ -1,7 +1,7 @@
 ---
 id: NEEDS-HUMAN-INGRESS-REGISTRY-DRIFT
 title: "ingress-registry 28 task carrier missing (cockpit-triage WIP 悬空引用, governance-verify fail 根因)"
-status: candidate
+status: closed  # W3.2 清: needs-human:false 技术性卡 (governance-verify handoff_refs schema), 28 cockpit-triage carrier 债转 task #9 追踪
 needs-human: false  # S5清: 归debt或冗余
 priority: P2
 owner: human
