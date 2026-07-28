@@ -142,6 +142,73 @@ def extract_clean_description(md_path: Path) -> str:
         return "Consensus pattern guidelines."
 
 
+def _kos_entity_columns(conn: sqlite3.Connection) -> set[str]:
+    """Return kos_entities column names (empty if table missing)."""
+    try:
+        rows = conn.execute("PRAGMA table_info(kos_entities)").fetchall()
+        return {r[1] for r in rows}
+    except Exception:
+        return set()
+
+
+def _ensure_entity_type_column(conn: sqlite3.Connection) -> None:
+    """Add entity_type if missing (debt DEBT-L0-GAC-CONSENSUS-ONBOARD-TRIAGE).
+
+    Migration is additive + best-effort backfill from entity_id/label patterns.
+    Does not drop or rewrite existing data.
+    """
+    cols = _kos_entity_columns(conn)
+    if not cols or "entity_type" in cols:
+        return
+    conn.execute("ALTER TABLE kos_entities ADD COLUMN entity_type TEXT")
+    # Best-effort backfill: Consensus genes often tagged in id/label
+    try:
+        conn.execute(
+            """
+            UPDATE kos_entities
+            SET entity_type = 'Consensus'
+            WHERE entity_type IS NULL
+              AND (
+                lower(coalesce(entity_id, '')) LIKE '%consensus%'
+                OR lower(coalesce(label, '')) LIKE '%consensus%'
+                OR lower(coalesce(entity_id, '')) LIKE 'p7%'
+              )
+            """
+        )
+    except Exception:
+        pass
+    conn.commit()
+
+
+def _select_consensus_entities(conn: sqlite3.Connection, *, full: bool) -> list:
+    """Schema-tolerant Consensus query (entity_type or fallback filter)."""
+    cols = _kos_entity_columns(conn)
+    if "entity_type" in cols:
+        if full:
+            return conn.execute(
+                "SELECT entity_id, label, source_file FROM kos_entities WHERE entity_type='Consensus'"
+            ).fetchall()
+        return conn.execute(
+            "SELECT entity_id FROM kos_entities WHERE entity_type='Consensus'"
+        ).fetchall()
+    # Fallback when column still absent (pre-migration)
+    if full:
+        return conn.execute(
+            """
+            SELECT entity_id, label, source_file FROM kos_entities
+            WHERE lower(coalesce(entity_id,'')) LIKE '%consensus%'
+               OR lower(coalesce(label,'')) LIKE '%consensus%'
+            """
+        ).fetchall()
+    return conn.execute(
+        """
+        SELECT entity_id FROM kos_entities
+        WHERE lower(coalesce(entity_id,'')) LIKE '%consensus%'
+           OR lower(coalesce(label,'')) LIKE '%consensus%'
+        """
+    ).fetchall()
+
+
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--check":
         if not db_path.is_file():
@@ -154,9 +221,8 @@ def main() -> int:
             return 1
         try:
             db_conn = sqlite3.connect(str(db_path))
-            consensuses = db_conn.execute(
-                "SELECT entity_id FROM kos_entities WHERE entity_type='Consensus'"
-            ).fetchall()
+            _ensure_entity_type_column(db_conn)
+            consensuses = _select_consensus_entities(db_conn, full=False)
             db_conn.close()
             print(f"✅ [Consensus Inject Check] KOS DB accessible, found {len(consensuses)} consensus entities.")
             return 0
@@ -170,11 +236,10 @@ def main() -> int:
     try:
         db_conn = sqlite3.connect(str(db_path))
         db_conn.row_factory = sqlite3.Row
+        _ensure_entity_type_column(db_conn)
 
-        # 1. 从 KOS 读取所有 Consensus 实体
-        consensuses = db_conn.execute(
-            "SELECT entity_id, label, source_file FROM kos_entities WHERE entity_type='Consensus'"
-        ).fetchall()
+        # 1. 从 KOS 读取所有 Consensus 实体 (schema-tolerant)
+        consensuses = _select_consensus_entities(db_conn, full=True)
 
         if not consensuses:
             db_conn.close()
