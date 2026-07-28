@@ -11,6 +11,9 @@ seed: 9015
 description: '[W2.1 red-team] 产物无 writer 孤儿 (对抗变体3)'
 setup:
   blackboard:
+  - key: orphan_15
+    value: orphan_data
+    writer: null
   - key: adv_target_15
     value: null
   roles:
