@@ -41,19 +41,36 @@ def run_cmd(args: list[str], timeout: float = 5.0) -> str | None:
         return None
 
 
-def onboard_cc_switch() -> dict:
-    """导入 cc-switch SQLite 数据库中的全部凭据"""
+def onboard_cc_switch(*, quick: bool = False) -> dict:
+    """导入 cc-switch SQLite 数据库中的全部凭据
+
+    quick=True (pre-commit/--check): 只做路径存在性探测, 跳过 uv run 重导入
+    (DEBT-L0: 禁止用放宽 15s 超时消警, 改为轻量路径).
+    """
     print("🔑 [1/5] cc-switch 凭证并网自检...")
     db_path = Path.home() / "SharedConf" / "CC_Switch" / "cc-switch.db"
     if not db_path.is_file():
         return {"status": "FAIL", "reason": f"cc-switch.db 不存在: {db_path}"}
 
-    # 调用 AetherForge python API 导入
+    if quick:
+        # 轻量: 不 spawn uv (常 >2s); 有库即 WARN-OK, 全量导入留给非 --check
+        size = db_path.stat().st_size
+        return {
+            "status": "OK",
+            "mode": "quick",
+            "cc_switch_db_bytes": size,
+            "message": "quick path-check only (full import skipped)",
+        }
+
+    if not AF_PROJECT.is_dir():
+        return {"status": "WARN", "reason": f"aetherforge project missing: {AF_PROJECT}"}
+
+    # 调用 AetherForge python API 导入 (full mode only)
     cmd = [
         "uv", "run", "--project", str(AF_PROJECT), "python", "-c",
         "from llm_gateway.credentials import import_from_cc_switch; print(import_from_cc_switch())"
     ]
-    out = run_cmd(cmd, timeout=15.0)
+    out = run_cmd(cmd, timeout=10.0)
     if out is not None:
         try:
             count = int(out.split()[-1])
@@ -253,6 +270,7 @@ def main() -> int:
         print("✅ [Compute Onboard Check] 本地算力凭证数据库不存在，跳过物理算力并网检查。")
         return 0
 
+    # --check: 轻量路径 (main _fast_check + DEBT-L0 不放宽超时)
     if args.check:
         return _fast_check()
 
@@ -262,7 +280,7 @@ def main() -> int:
         sys.stdout = sys.stderr
 
     try:
-        cc = onboard_cc_switch()
+        cc = onboard_cc_switch(quick=False)
         cb = onboard_codexbar()
         mo = onboard_models()
         lt = onboard_litellm()
