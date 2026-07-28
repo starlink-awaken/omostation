@@ -1,39 +1,59 @@
-# 13 项决策一页清单 (待人类拍板 · Round 3 D1 + L2 止血包)
+# 13 项决策一页清单 — 2026-07-28 已拍板收口
 
-> 合并自 3 张卡: `needs-human-mof-m4-d1-d4-decisions` / `needs-human-metaos-phase12-d1-d4` / `needs-human-batch2-role-expansion-proposal`
-> 目标: **一次会话批完 9 项**, 不用读 3 张 YAML. 每项勾 [批准] / [否决] / [改选].
-> **§F 红线: agent 不代批任何一项.**
+> 人类会话 2026-07-28 拍板落地（worktree `decision-inbox-land-20260728`）。
+> **§F 红线已守**: agent 不代批；本文件为签核记录，非代批。
 
-## MOF/M4 (4 项 · Phase 1/2 前置)
-| # | 决策 | 推荐 | 理由 (一句) | 影响 (一句) | 勾选 |
-|---|------|------|------------|------------|------|
-| M-D1 | model-driven CLI 处置 | **A 删除** | cockpit 已是唯一人类入口 | 移除无消费者 CLI | ☐批准A ☐否决 ☐改选B(保留静默)/C(降级指引) |
-| M-D2 | MCP 面 | **A 冻结2工具** | 无 agent 侧消费实证 | 接通留待真实路由需求 | ☐批准A ☐否决 ☐改选B(全量接通28) |
-| M-D3 | M2 真源方向 | **A YAML为SSOT+Py生成** | 声明侧YAML、执行侧投影 | 统一双轨加锚 | ☐批准A ☐否决 ☐改选B(Py为SSOT)/C(双轨) |
-| M-D4 | codegen | **A 降级模板投影** | 真管线无当前需求方 | 声明诚实化 | ☐批准A ☐否决 ☐改选B(立项真codegen) |
+## 元决策
+| 项 | 决定 |
+|----|------|
+| 三档重切 (A 批量 + B 单独 + C 降级) | **批准** |
 
-## metaos (4 项 · Phase 1/2 前置)
-| # | 决策 | 推荐 | 理由 (一句) | 影响 (一句) | 勾选 |
-|---|------|------|------------|------------|------|
-| O-D1 | metaos CLI 定位 | **A 正名cockpit契约** | metaos CLI 是 cockpit 活契约 (消费实证) | 与 MOF D1(删CLI) 相反 — 按消费定去留 | ☐批准A ☐否决 |
-| O-D2 | PID 控制器 | **A 标experimental降级** | 无消费者宣称一律降级 (S2) | 降级不补 | ☐批准A ☐否决 |
-| O-D3 | agentkit | **B 降级reference** (倾向) | 与 C 波协作主轴资源竞争 | A 值+1周, 战略可延后 | ☐批准B ☐否决 ☐改选A(v0.2门控) |
-| O-D4 | admit 门禁 | **A 转blocking+观察期** | informational=没门禁, 但转 blocking 前须有误拦数据 | 2 周观察期 | ☐批准A ☐否决 |
+## A 档 · MOF + metaos（已全部按推荐签核）
 
-## C1 五角色 (1 项)
-| # | 决策 | 推荐 | 理由 (一句) | 影响 (一句) | 勾选 |
-|---|------|------|------------|------------|------|
-| C1 | 第 4/5 角色 (research/delivery) 实装 | 待定 (P2) | 评估页已齐 (batch2-role-expansion) | 协作主轴扩容 (ADR-0235) | ☐批准实装 ☐否决 ☐延后 |
+### MOF/M4 → ADR-0240
+| # | 决策 | 签核 |
+|---|------|------|
+| M-D1 | model-driven CLI → A 删除 | ✅ 2026-07-25 拍板 · 07-28 追认 |
+| M-D2 | MCP 面 → A 冻结 2 工具 | ✅ |
+| M-D3 | M2 真源 → A YAML SSOT + Py 生成 | ✅ |
+| M-D4 | codegen → A 降级模板投影 | ✅ |
 
----
-**拍板方式**: 在「勾选」列标记. 13 项可逐项独立批 (建议全选推荐项, 一轮决策会即可).
-**红线**: agent 不代批 (§F). MOF/metaos Phase 1/2 须 D 签核后启动.
+卡: `needs-human-mof-m4-d1-d4-decisions` → **closed**
 
+### metaos → ADR-0252
+| # | 决策 | 签核 |
+|---|------|------|
+| O-D1 | CLI → A 正名 cockpit 契约 | ✅ 2026-07-28 |
+| O-D2 | PID → A experimental 降级 | ✅ |
+| O-D3 | agentkit → B 降级 reference | ✅ |
+| O-D4 | admit → A blocking + 2 周观察 | ✅ |
 
-## L2 止血包 (4 项)
-| # | 决策 | 推荐 | 勾选 |
-|---|------|------|------|
-| L2-D1 | kairon CI 跨仓path | D1-A条件依赖 | ☐批准 ☐否决 |
-| L2-D2 | gbrain 红灯 | 诊断后修 | ☐批准 ☐延后 |
-| L2-D3 | omo死命令(bridge_utils) | 移除不补 ✅已修 | ☐批准(已done) |
-| L2-D4 | omo虚假依赖 | 清理 | ☐批准 ☐否决 |
+卡: `needs-human-metaos-phase12-d1-d4` → **closed**
+
+## B 档 · C1 五角色
+| # | 决定 | 依据 |
+|---|------|------|
+| C1 research/delivery | **关卡（已落地）** | ADR-0235 + PR #510；非再决策 |
+
+卡: `needs-human-batch2-role-expansion-proposal` → **closed**
+
+## C 档 · 状态/债（移出 needs-human 决策 Inbox）
+| 卡 | 处置 |
+|----|------|
+| p80-physical-hosts | needs-human:false · deferred · ADR-0247 |
+| batch2-physical-recovery-checklist | needs-human:false · deferred |
+| p80-phase45-bos-stdio | needs-human:false · engineering_debt |
+| p81-batch4-proposal | **closed**（C1–C3 ADR + P84 覆盖） |
+
+## L2 止血（执行授权，非阻塞 Inbox）
+| # | 状态 |
+|---|------|
+| L2-D1 kairon CI path | 工程收敛，按既有主轴执行 |
+| L2-D2 gbrain 红灯 | 已 closed（S4） |
+| L2-D3 omo 死命令 | 已处理方向 |
+| L2-D4 omo 虚假依赖 | 工程清理授权 |
+
+## 引用
+- ADR-0240 / ADR-0252
+- ADR-0235 / ADR-0247
+- run: `20260728T091034Z-governance-state-mutation-c8fbd835`

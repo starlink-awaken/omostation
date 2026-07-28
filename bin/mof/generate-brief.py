@@ -82,17 +82,37 @@ def physical_hosts_weekly_reaffirmation(
     now: datetime | None = None,
     card_path: Path | None = None,
 ) -> dict | None:
-    """Build BRIEF Inbox reaffirmation line while physical-hosts card exists.
+    """Build BRIEF Inbox reaffirmation line while physical-hosts is a decision card.
 
-    Always emits when card present (session-brief regeneration = reaffirmation
-    surface; day-count is the suspend duration signal).
+    ADR-0247 amends ADR-0228 D3: physical multi-host DEFERRED — no weekly reaffirm.
+    Emit only when the planned card exists AND needs-human is still true.
+    Status-track cards (needs-human: false) stay out of Decision Inbox.
     """
-    days = physical_hosts_suspend_day_count(card_path, now=now)
-    if days is None:
-        return None
+    import yaml  # noqa: PLC0415
+
     path = card_path or (
         WORKSPACE / ".omo" / "tasks" / "planned" / f"{PHYSICAL_HOSTS_CARD_STEM}.yaml"
     )
+    if not path.is_file():
+        return None
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        data = {}
+    # ADR-0247: demoted status track → no Inbox reminder
+    if data.get("needs-human") is False:
+        return None
+    if str(data.get("status", "")).lower() in {"deferred", "closed", "backlog"}:
+        return None
+    if str(data.get("classification", "")).lower() in {
+        "status_tracking",
+        "engineering_debt",
+    }:
+        return None
+
+    days = physical_hosts_suspend_day_count(card_path=path, now=now)
+    if days is None:
+        return None
     try:
         rel = str(path.resolve().relative_to(WORKSPACE.resolve()))
     except ValueError:
