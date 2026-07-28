@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # Status: implemented (ADR-0238 P0-2; §J1 metaos 面扩展, workorder 2026-07-25)
+# 定位 (P0-A 核实 2026-07-28): BLOCKING — exit 1 on any drift (见 main L312). 全 registry 覆盖
+#   (MOF 面: tool path / model_stats / mcptool_tool_count + metaos 面: projects-cap 死条目 /
+#    INTERFACE cli 可达 / submodule 存在). 非 informational: drift=0 exit 0; 新增死条目或 path
+#   漂移立即 fail. 当前 drift=0 (P0-C 清 44 dead 后).
 """check-mof-capabilities-drift — 注册表 vs 实现 drift 检测 (一扇门覆盖 MOF + metaos).
 
 治 "守门人无人守" (plan §Q1): 注册表声明的路径/统计与实际文件/计数对齐.
