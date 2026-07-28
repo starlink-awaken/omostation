@@ -880,18 +880,40 @@ def test_execute_verification_triage_runs_only_failed_active_tasks(monkeypatch):
     monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: system_map)
     monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda task_id: "active")
     monkeypatch.setattr(api_tasks_queues_project, "_load_persisted_task", lambda task_id, _group: payloads[task_id])
+    monkeypatch.setattr(api_tasks_queues_project, "_validate_evidence_paths", lambda refs: refs)
+    archived = []
+    monkeypatch.setattr(
+        api_tasks_queues_project,
+        "_transition_task",
+        lambda task_id, action, evidence_paths=None: archived.append((task_id, action, evidence_paths))
+        or {"id": task_id, "status": "completed"},
+    )
 
     def fake_execute(*args, **kwargs):
         calls.append(kwargs)
-        return {"exit_code": 0, "log_ref": "runtime/task-a.log", "execution_ref": ".omo/_delivery/task-a.yaml"}
+        return {
+            "exit_code": 0,
+            "log_ref": "runtime/task-a.log",
+            "execution_ref": ".omo/_delivery/task-a.yaml",
+        }
 
     monkeypatch.setattr("omo.omo_ingress_task_lifecycle.execute_controlled_task", fake_execute)
 
     response = TestClient(app).post("/api/cockpit/triage/execute", json={"limit": 8})
 
     assert response.status_code == 200
-    assert response.json()["summary"] == {"candidates": 1, "selected": 1, "succeeded": 1, "failed": 0}
+    assert response.json()["summary"] == {
+        "candidates": 1,
+        "selected": 1,
+        "succeeded": 1,
+        "failed": 0,
+        "archived": 1,
+        "archive_errors": 0,
+    }
     assert response.json()["executed"][0]["project_id"] == "service-a"
+    assert response.json()["executed"][0]["auto_completed"] is True
+    assert response.json()["summary"]["archived"] == 1
+    assert archived[0][0:2] == ("task-a", "complete")
     assert calls[0]["command_override"] == 'cd "/workspace" && printf a'
     assert calls[0]["timeout_seconds"] == 900
 
@@ -941,7 +963,14 @@ def test_execute_runtime_triage_requires_granted_approval(monkeypatch):
     )
 
     assert response.status_code == 200
-    assert response.json()["summary"] == {"candidates": 1, "selected": 1, "succeeded": 0, "failed": 1}
+    assert response.json()["summary"] == {
+        "candidates": 1,
+        "selected": 1,
+        "succeeded": 0,
+        "failed": 1,
+        "archived": 0,
+        "archive_errors": 0,
+    }
     assert calls[0]["command_override"].startswith("for port in 7437")
     assert calls[0]["timeout_seconds"] == 120
 

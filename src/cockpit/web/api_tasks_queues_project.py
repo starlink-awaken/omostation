@@ -601,7 +601,15 @@ async def execute_verification_triage(request: Request):
             "executed": [],
             "skipped": [],
             "errors": [],
-            "summary": {"candidates": len(candidates), "selected": 0, "succeeded": 0, "failed": 0},
+            "archive_errors": [],
+            "summary": {
+                "candidates": len(candidates),
+                "selected": 0,
+                "succeeded": 0,
+                "failed": 0,
+                "archived": 0,
+                "archive_errors": 0,
+            },
             "source": "omo_controlled_execution",
         }
 
@@ -609,6 +617,7 @@ async def execute_verification_triage(request: Request):
 
     executed: list[dict] = []
     errors: list[dict] = []
+    archive_errors: list[dict] = []
     for candidate in selected:
         try:
             result = execute_controlled_task(
@@ -622,7 +631,34 @@ async def execute_verification_triage(request: Request):
         except (OSError, ValueError, TimeoutError) as exc:
             errors.append({"project_id": candidate["project_id"], "task_id": candidate["task_id"], "detail": str(exc)})
         else:
-            executed.append({"project_id": candidate["project_id"], "task_id": candidate["task_id"], **result})
+            execution = {"project_id": candidate["project_id"], "task_id": candidate["task_id"], **result}
+            if result.get("exit_code") == 0:
+                execution_ref = result.get("execution_ref")
+                log_ref = result.get("log_ref")
+                evidence_paths = [
+                    ref for ref in (execution_ref, log_ref) if isinstance(ref, str) and ref.strip()
+                ]
+                try:
+                    validated = _validate_evidence_paths(evidence_paths)
+                    completion = _transition_task(
+                        candidate["task_id"], "complete", evidence_paths=validated
+                    )
+                except (OSError, ValueError, HTTPException) as exc:
+                    archive_errors.append(
+                        {
+                            "project_id": candidate["project_id"],
+                            "task_id": candidate["task_id"],
+                            "detail": str(exc),
+                        }
+                    )
+                    execution["auto_completed"] = False
+                    execution["closeout_required"] = True
+                else:
+                    execution["auto_completed"] = True
+                    execution["task_status"] = completion.get("status", "completed")
+                    execution["evidence_paths"] = validated
+                    execution["closeout_required"] = True
+            executed.append(execution)
 
     succeeded = sum(1 for item in executed if item.get("exit_code") == 0)
     return {
@@ -630,11 +666,14 @@ async def execute_verification_triage(request: Request):
         "executed": executed,
         "skipped": candidates[raw_limit:],
         "errors": errors,
+        "archive_errors": archive_errors,
         "summary": {
             "candidates": len(candidates),
             "selected": len(selected),
             "succeeded": succeeded,
             "failed": len(executed) - succeeded + len(errors),
+            "archived": sum(1 for item in executed if item.get("auto_completed")),
+            "archive_errors": len(archive_errors),
         },
         "source": "omo_controlled_execution",
     }
