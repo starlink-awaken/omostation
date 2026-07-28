@@ -428,6 +428,11 @@ PROJECT_COVERAGE_DIMENSIONS: tuple[dict[str, str], ...] = (
         "description": "项目是否有站内原生入口，而不是只能在系统地图里定位。",
     },
     {
+        "id": "registry_contract",
+        "title": "注册合同",
+        "description": "项目是否声明版本/生命周期、构建运行约束和可追踪实现落点。",
+    },
+    {
         "id": "project_docs",
         "title": "项目文档",
         "description": "项目是否具备可读的 README/AGENTS/架构等操作说明。",

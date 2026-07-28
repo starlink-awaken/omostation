@@ -804,6 +804,7 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
     verification = runtime.get("latest_verification", {})
     source_refs = project.get("source_refs") or []
     actions = project.get("actions") or []
+    registry_contract = project.get("registry_contract") or {}
 
     docs = operational.get("docs") or {}
     docs_present = int(docs.get("present") or 0)
@@ -848,6 +849,20 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
             "ready" if project.get("coverage") == "native" else "warning",
             f"入口：{project.get('cockpit_page', 'SystemMap')}，覆盖：{project.get('coverage', 'orientation')}。",
             "保持页面映射同步。" if project.get("coverage") == "native" else "补原生项目页面或领域应用挂载入口。",
+        ),
+        _coverage_check(
+            "registry_contract",
+            str(registry_contract.get("status_text") or "failed"),
+            (
+                "注册合同完整：生命周期、构建/运行约束和实现落点均已声明。"
+                if not registry_contract.get("missing_fields")
+                else "缺失注册字段："
+                + "、".join(str(item) for item in registry_contract.get("missing_fields") or [])
+                + "。"
+            ),
+            "在 docs/project-registry.yaml 补齐版本/生命周期、构建运行约束和实现落点。"
+            if registry_contract.get("missing_fields")
+            else "保持注册合同与实际项目状态同步。",
         ),
         _coverage_check(
             "project_docs",

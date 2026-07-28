@@ -100,6 +100,28 @@ from cockpit.web.api_system_map_status import (
 from cockpit.web.router_health import router_health_snapshot
 
 
+def _project_registry_contract(project_data: dict[str, Any]) -> dict[str, Any]:
+    fields = {
+        "生命周期": project_data.get("version") or project_data.get("status"),
+        "构建/运行约束": project_data.get("python") or project_data.get("build_backend"),
+        "实现落点": project_data.get("src_dir") or project_data.get("physical_location"),
+    }
+    missing_fields = [label for label, value in fields.items() if not value]
+    return {
+        "status": project_data.get("status"),
+        "version": project_data.get("version"),
+        "python": project_data.get("python"),
+        "build_backend": project_data.get("build_backend"),
+        "src_dir": project_data.get("src_dir"),
+        "physical_location": project_data.get("physical_location"),
+        "port": project_data.get("port"),
+        "port_registry_ref": project_data.get("port_registry_ref"),
+        "coverage": project_data.get("coverage") if isinstance(project_data.get("coverage"), list) else [],
+        "missing_fields": missing_fields,
+        "status_text": "ready" if not missing_fields else "warning" if len(missing_fields) == 1 else "failed",
+    }
+
+
 def _build_projects(
     registry: dict[str, Any], port_registry: dict[str, Any], registry_path: Path, port_registry_path: Path
 ) -> list[dict[str, Any]]:
@@ -116,17 +138,7 @@ def _build_projects(
             "layer": project_data.get("layer", "unknown"),
             "stack": project_data.get("stack", "unknown"),
             "role": project_data.get("role", ""),
-            "registry_contract": {
-                "status": project_data.get("status"),
-                "version": project_data.get("version"),
-                "python": project_data.get("python"),
-                "build_backend": project_data.get("build_backend"),
-                "src_dir": project_data.get("src_dir"),
-                "physical_location": project_data.get("physical_location"),
-                "port": project_data.get("port"),
-                "port_registry_ref": project_data.get("port_registry_ref"),
-                "coverage": project_data.get("coverage") if isinstance(project_data.get("coverage"), list) else [],
-            },
+            "registry_contract": _project_registry_contract(project_data),
             "cockpit_page": page_id,
             "coverage": "native" if page_id != "SystemMap" or project_id.startswith("cockpit") else "orientation",
             "path": str(project_path),

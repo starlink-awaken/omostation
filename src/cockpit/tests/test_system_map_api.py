@@ -155,6 +155,9 @@ def test_system_map_builds_workspace_dimensions():
     assert coverage["summary"]["ready_cells"] >= 1
     assert coverage["dimension_summary"]
     assert any(item["id"] == "verification" for item in coverage["dimension_summary"])
+    registry_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "registry_contract")
+    assert registry_dimension["status"] in {"ready", "warning", "failed"}
+    assert registry_dimension["attention_projects"]
     assert coverage["weakest_dimensions"]
     assert coverage["matrix"]
     portfolio = payload["project_portfolio"]
@@ -214,6 +217,8 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["registry_contract"]["python"] == ">=3.13"
     assert cockpit_project["registry_contract"]["build_backend"] == "hatchling"
     assert cockpit_project["registry_contract"]["coverage"]
+    assert cockpit_project["registry_contract"]["missing_fields"] == ["实现落点"]
+    assert cockpit_project["registry_contract"]["status_text"] == "warning"
     assert cockpit_project["operational"]["docs"]["present"] >= 1
     assert cockpit_project["operational"]["commands"]
     mesh_router = next(project for project in payload["projects"] if project["id"] == "mesh-router")
@@ -234,6 +239,7 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["source_refs"][0]["source_key"] == "project_registry"
     assert cockpit_project["source_refs"][0]["line"]
     assert cockpit_project["actions"]
+    assert any(command["id"] == "registry-contract" for command in cockpit_project["triage_commands"])
     assert "triage_commands" in cockpit_project
     assert cockpit_project["workflow"]["summary"]["runs"] >= 1
     assert cockpit_project["portfolio"]["score"] >= 0
@@ -252,6 +258,7 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["coverage_checks"]
     assert {check["id"] for check in cockpit_project["coverage_checks"]} >= {
         "cockpit_surface",
+        "registry_contract",
         "project_docs",
         "commands",
         "manifest",

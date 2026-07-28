@@ -536,6 +536,23 @@ def _project_triage_commands(project: dict[str, Any]) -> list[dict[str, Any]]:
             )
         )
 
+    missing_contract_fields = list((project.get("registry_contract") or {}).get("missing_fields") or [])
+    if missing_contract_fields:
+        commands.append(
+            _triage_command(
+                project_id,
+                "registry-contract",
+                "查注册合同",
+                "coverage",
+                _command_with_cwd(
+                    compat.WORKSPACE_ROOT,
+                    f'rg -n "^{re.escape(project_id)}:" "docs/project-registry.yaml"',
+                ),
+                "项目注册合同缺少：" + "、".join(str(item) for item in missing_contract_fields) + "；先定位注册表声明。",
+                risk="low",
+            )
+        )
+
     return commands
 
 
