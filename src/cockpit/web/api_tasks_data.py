@@ -587,13 +587,16 @@ def _capability_gap_copy_text(gap: dict) -> str:
     return "\n".join(lines)
 
 
-def get_capability_gap_task_drafts(limit: int = 8) -> list[dict]:
+def get_capability_gap_task_drafts(limit: int | None = None) -> list[dict]:
     """Build read-only TaskCenter drafts from SystemMap capability gaps."""
     system_map = build_system_map()
     generated_at = system_map.get("generated_at") or datetime.now(UTC).isoformat()
     drafts: list[dict] = []
 
-    for gap in (system_map.get("gaps") or [])[:limit]:
+    gaps = system_map.get("gaps") or []
+    if limit is not None:
+        gaps = gaps[:limit]
+    for gap in gaps:
         gap_id = gap.get("id", "unknown")
         drafts.append(
             {

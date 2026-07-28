@@ -79,8 +79,10 @@ def test_domain_app_task_drafts_are_read_only():
 
 def test_capability_gap_task_drafts_are_read_only():
     drafts = get_capability_gap_task_drafts()
+    gaps = build_system_map()["gaps"]
 
     assert drafts
+    assert len(drafts) == len(gaps)
     assert all(draft["read_only"] is True for draft in drafts)
     assert all(draft["id"].startswith("capability-gap-") for draft in drafts)
     assert all(draft["source"]["type"] == "system_map_capability_gap" for draft in drafts)
