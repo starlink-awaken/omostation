@@ -262,7 +262,6 @@ _KNOWN_RUNTIME_START_COMMANDS: dict[str, tuple[str, str]] = {
     "mesh-router": ("workspace", 'uv run python "bin/gac/gac-mesh-router.py"'),
     "ecos": ("project", "uv run python -m ecos.services.events_sse serve --port 7432"),
     "l4-kernel": ("project", "uv run python -m l4_kernel.mcp_server --sse"),
-    "omo": ("project", "uv run python -m omo.omo_dashboard serve --port 9190"),
     "aetherforge": ("project", "docker compose up -d"),
     "observability": ("project", "docker compose up -d"),
 }

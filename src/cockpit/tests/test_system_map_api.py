@@ -328,7 +328,6 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
         "mesh-router": "gac-mesh-router.py",
         "ecos": "ecos.services.events_sse serve",
         "l4-kernel": "l4_kernel.mcp_server --sse",
-        "omo": "omo.omo_dashboard serve",
         "aetherforge": "docker compose up -d",
         "observability": "docker compose up -d",
     }
@@ -359,6 +358,17 @@ def test_bus_foundation_metrics_is_optional_embedded_runtime():
     assert project["runtime"]["needs_runtime"] is False
     assert project["runtime"]["status"] == "not_applicable"
     assert "按需开启" in project["runtime"]["probe_reason"]
+
+
+def test_omo_dashboard_is_converged_to_cockpit_runtime():
+    payload = build_system_map()
+    project = next(item for item in payload["projects"] if item["id"] == "omo")
+
+    assert project["runtime"]["profile"] == "converged"
+    assert project["runtime"]["needs_runtime"] is False
+    assert project["runtime"]["status"] == "not_applicable"
+    assert "收敛到 Cockpit" in project["runtime"]["probe_reason"]
+    assert not any(action["id"] == "copy-start-command" for action in project["actions"])
 
 
 def test_evidence_freshness_distinguishes_fresh_stale_and_unknown():

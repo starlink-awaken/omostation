@@ -491,6 +491,13 @@ def _runtime_profile(
             "probe_reason": "bus-foundation 是嵌入式库；/metrics 仅在调用 enable_metrics() 时按需开启，没有独立常驻服务。",
         }
 
+    if project_id == "omo":
+        return {
+            "profile": "converged",
+            "needs_runtime": False,
+            "probe_reason": "OMO 历史 dashboard 已收敛到 Cockpit /api/omos/status；9190 是历史入口，9100 是外部 webhook 目标，不属于 OMO 常驻服务。",
+        }
+
     if ports and not any(port.get("probeable", True) for port in ports):
         return {
             "profile": "stdio",
