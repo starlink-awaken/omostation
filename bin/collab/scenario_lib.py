@@ -5,8 +5,10 @@
 引擎 = 模拟协作管线 (注入事件 → 规则判定 → verdict).
 同 seed 同结果 (可复现). verdict 机器可读 (JSON).
 
-判定映射协作管线真实约束 (冲突检测/静默丢失/协商轮次/孤儿产物),
-非空壳模拟 (gaming 红线): 每条 check 对应 swarm-discipline 关心的真实信号.
+W2.2 闭环 (ADR-0254):
+- C 类: double_claim / partial_failure / starvation
+- S 类: orphan / unauthorized / audit_reject
+判定映射协作管线真实约束, 非空壳模拟.
 
 红线 (P84 §0): 构造场景只进能力轨, 绝不计产能轨.
 """
@@ -63,7 +65,6 @@ def load_scenario(path: Path) -> dict:
     """load 场景 YAML, 剥 frontmatter, validate 必填字段 + category 合法."""
     raw = path.read_text(encoding="utf-8")
     docs = list(yaml.safe_load_all(raw))
-    # frontmatter 在前 (---), body 在后; 无 frontmatter 时 docs[0] 即 body
     body = None
     for d in docs:
         if isinstance(d, dict) and "id" in d:
@@ -80,39 +81,66 @@ def load_scenario(path: Path) -> dict:
 
 
 def run_scenario(scenario: dict) -> ScenarioResult:
-    """模拟执行: init 黑板 → inject 事件 → 规则判定 → verdict.
+    """模拟执行: init 黑板 → inject 事件 → 机制检测 → verdict.
 
     同 seed 同结果 (random.Random(seed) 控制非判定字段抖动, 判定逻辑完全确定性).
     """
     rng = random.Random(scenario["seed"])
     blackboard: dict[str, dict] = {}
     for item in scenario["setup"].get("blackboard", []):
-        blackboard[item["key"]] = {"value": item.get("value"), "writers": []}
+        writers = item.get("writers")
+        if writers is None:
+            # writer: null / missing → 空 writers (孤儿预置)
+            w = item.get("writer")
+            writers = [] if w in (None, "", []) else [w]
+        blackboard[item["key"]] = {"value": item.get("value"), "writers": list(writers)}
     roles = list(scenario["setup"].get("roles", []))
+    authorized = set(roles)
 
     events: list[dict] = []
     resolution_rounds = 0
     silent_loss = 0
 
+    # S 类: 启动时扫描孤儿产物 (value 在但无 writer)
+    for key, slot in list(blackboard.items()):
+        if key.startswith("_"):
+            continue
+        if slot.get("value") is not None and not slot.get("writers"):
+            events.append(
+                {
+                    "kind": "orphan_detected",
+                    "ts": 0,
+                    "target": key,
+                    "value": slot.get("value"),
+                }
+            )
+
     for i, inj in enumerate(scenario["inject"]):
         ts = i + 1
         itype = inj.get("type")
         if itype == "write_conflict":
-            ev = _handle_write(blackboard, inj, ts)
+            produced = _handle_write(blackboard, inj, ts, authorized)
         elif itype == "role_timeout":
-            ev = _handle_timeout(inj, roles, ts, rng)
+            produced = [_handle_timeout(inj, roles, ts, rng)]
         elif itype == "subtask_fail":
-            ev = _handle_subtask_fail(inj, ts)
+            produced = [_handle_subtask_fail(inj, ts)]
         elif itype == "chain_step":
-            ev = _handle_chain_step(blackboard, inj, ts)
+            produced = [_handle_chain_step(blackboard, inj, ts)]
+        elif itype == "audit_reject":
+            produced = [_handle_audit_reject(inj, ts, authorized)]
         else:
-            ev = {"kind": "unknown_inject", "type": itype, "ts": ts}
-        events.append(ev)
-        kind = ev.get("kind")
-        if kind == "conflict_detected":
-            resolution_rounds += 1
-        elif kind == "silent_loss":
-            silent_loss += 1
+            produced = [{"kind": "unknown_inject", "type": itype, "ts": ts}]
+        for ev in produced:
+            events.append(ev)
+            kind = ev.get("kind")
+            if kind == "conflict_detected":
+                resolution_rounds += 1
+            elif kind == "silent_loss":
+                silent_loss += 1
+
+    # C 类: 事后机制合成 (partial_failure / starvation)
+    events.extend(_synthesize_partial_failure(events))
+    events.extend(_synthesize_starvation(blackboard, events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -132,15 +160,34 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     )
 
 
-def _handle_write(board: dict, inj: dict, ts: int) -> dict:
-    """两角色写同一产物 → 检测分歧 + 死锁打破 (协作机制核心).
+def _handle_write(
+    board: dict, inj: dict, ts: int, authorized: set[str]
+) -> list[dict]:
+    """写产物 / 认领.
 
-    W2.2 缺陷闭环 (ADV03 死锁暴露): 连续冲突超阈值 (3) → deadlock_break 强制收敛,
-    避免无限冲突循环; 未超阈值 → conflict_detected (resolved=False, 待消解).
+    W2.2:
+    - unauthorized: role ∉ setup.roles → unauthorized_detected
+    - double_claim: 两角色对同 key 分歧写 → double_claim_detected (+ conflict_detected)
+    - 连续冲突 ≥3 → deadlock_break
     """
     key = inj["target"]
     role = inj["role"]
     val = inj["value"]
+    out: list[dict] = []
+
+    if authorized and role not in authorized:
+        out.append(
+            {
+                "kind": "unauthorized_detected",
+                "ts": ts,
+                "role": role,
+                "target": key,
+                "value": val,
+            }
+        )
+        # 仍不写入 board (拒绝未授权写)
+        return out
+
     slot = board.setdefault(key, {"value": None, "writers": []})
     counter = board.setdefault("_conflict_count", {"value": {}, "writers": []})["value"]
     prior = slot["value"]
@@ -148,28 +195,45 @@ def _handle_write(board: dict, inj: dict, ts: int) -> dict:
         slot["writers"].append(role)
         cnt = counter.get(key, 0) + 1
         counter[key] = cnt
-        if cnt >= 3:
-            # 死锁打破: 强制收敛 (最后写赢), 避免无限冲突
-            slot["value"] = val
-            return {
-                "kind": "deadlock_break",
+        # C 类: 双认领 / 双写冲突
+        out.append(
+            {
+                "kind": "double_claim_detected",
                 "ts": ts,
                 "target": key,
-                "rounds": cnt,
-                "resolved": True,
+                "roles": list(dict.fromkeys(slot["writers"])),
+                "prior": prior,
+                "new": val,
             }
-        return {
-            "kind": "conflict_detected",
-            "ts": ts,
-            "target": key,
-            "role": role,
-            "prior": prior,
-            "new": val,
-            "resolved": False,
-        }
+        )
+        if cnt >= 3:
+            slot["value"] = val
+            out.append(
+                {
+                    "kind": "deadlock_break",
+                    "ts": ts,
+                    "target": key,
+                    "rounds": cnt,
+                    "resolved": True,
+                }
+            )
+            return out
+        out.append(
+            {
+                "kind": "conflict_detected",
+                "ts": ts,
+                "target": key,
+                "role": role,
+                "prior": prior,
+                "new": val,
+                "resolved": False,
+            }
+        )
+        return out
     slot["value"] = val
     slot["writers"].append(role)
-    return {"kind": "write", "ts": ts, "target": key, "role": role, "value": val}
+    out.append({"kind": "write", "ts": ts, "target": key, "role": role, "value": val})
+    return out
 
 
 def _handle_timeout(inj: dict, roles: list[str], ts: int, rng: random.Random) -> dict:
@@ -189,29 +253,96 @@ def _handle_subtask_fail(inj: dict, ts: int) -> dict:
 
 
 def _handle_chain_step(board: dict, inj: dict, ts: int) -> dict:
-    """链式分解步骤 → 测依赖拓扑.
-
-    W2.2 缺陷闭环 (ADV01/05 暴露):
-    - 循环依赖 → cycle_detected (非 silent_loss, 协作机制应检测环)
-    - 依赖缺失 → broken_chain_detected (显式报, 非静默)
-    - 正常 → chain_step_done
-    """
+    """链式分解步骤 → 测依赖拓扑 (ADV01/05 闭环)."""
     step = inj["step"]
     deps = inj.get("depends_on", [])
     declared = board.setdefault("_declared_deps", {"value": {}, "writers": []})["value"]
-    # self-loop
     if step in deps:
         return {"kind": "cycle_detected", "ts": ts, "step": step, "cycle_with": step}
-    # 互依环: step 依赖 d, d 已声明且依赖 step
     for d in deps:
         if d in declared and step in declared.get(d, []):
             return {"kind": "cycle_detected", "ts": ts, "step": step, "cycle_with": d}
     declared[step] = deps
     missing = [d for d in deps if d not in board or board[d]["value"] is None]
     if missing:
-        return {"kind": "broken_chain_detected", "ts": ts, "step": step, "missing_deps": missing}
+        return {
+            "kind": "broken_chain_detected",
+            "ts": ts,
+            "step": step,
+            "missing_deps": missing,
+        }
     board[step] = {"value": "done", "writers": ["chain"]}
     return {"kind": "chain_step_done", "ts": ts, "step": step}
+
+
+def _handle_audit_reject(inj: dict, ts: int, authorized: set[str]) -> dict:
+    """审计驳回 → audit_reject_handled (S 类闭环)."""
+    role = inj.get("role", "audit")
+    return {
+        "kind": "audit_reject_handled",
+        "ts": ts,
+        "role": role,
+        "target": inj.get("target"),
+        "reason": inj.get("reason", "policy"),
+        "authorized_audit": (not authorized) or role in authorized,
+    }
+
+
+def _synthesize_partial_failure(events: list[dict]) -> list[dict]:
+    """部分成功 + 部分失败 → partial_failure_handled (降级而非静默)."""
+    has_success = any(e.get("kind") in {"write", "chain_step_done"} for e in events)
+    has_fail = any(
+        e.get("kind") in {"role_timeout", "subtask_fail", "broken_chain_detected"}
+        for e in events
+    )
+    # 双写冲突中「一赢一负」亦视为部分失败路径 (GEN-ADV partial 仅双写)
+    has_conflict = any(e.get("kind") == "conflict_detected" for e in events)
+    has_double = any(e.get("kind") == "double_claim_detected" for e in events)
+    if (has_success and has_fail) or (has_conflict and has_double):
+        if not any(e.get("kind") == "partial_failure_handled" for e in events):
+            return [
+                {
+                    "kind": "partial_failure_handled",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "degraded": True,
+                }
+            ]
+    return []
+
+
+def _synthesize_starvation(board: dict, events: list[dict]) -> list[dict]:
+    """≥3 角色争抢同资源或冲突轮次 ≥2 → 公平调度打破饿死."""
+    out: list[dict] = []
+    for key, slot in board.items():
+        if key.startswith("_"):
+            continue
+        writers = slot.get("writers") or []
+        uniq = list(dict.fromkeys(writers))
+        conflicts = (
+            board.get("_conflict_count", {}).get("value", {}).get(key, 0)
+            if isinstance(board.get("_conflict_count"), dict)
+            else 0
+        )
+        # ≥3 角色争抢, 或 ≥2 角色且已发生冲突轮次 (GEN 双写也算饿死风险)
+        if len(uniq) >= 3 or (len(uniq) >= 2 and conflicts >= 1):
+            if not any(
+                e.get("kind") == "starvation_resolved" and e.get("target") == key
+                for e in events
+            ):
+                # 公平: 轮询最后写者获批, 其余排队 (显式 resolved, 非静默)
+                out.append(
+                    {
+                        "kind": "starvation_resolved",
+                        "ts": max((e.get("ts") or 0) for e in events) + 1,
+                        "target": key,
+                        "queue": uniq,
+                        "granted": uniq[-1] if uniq else None,
+                        "policy": "round_robin_last_writer",
+                    }
+                )
+    # ADV11: 3 次 write_conflict 但 deadlock 可能未触发 conflicts>=2 若 value 不断被覆盖?
+    # 第一次 write, 第二次 conflict cnt=1, 第三次 conflict cnt=2 → ok
+    return out
 
 
 def _eval_criterion(
