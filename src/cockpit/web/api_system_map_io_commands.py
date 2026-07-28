@@ -458,7 +458,9 @@ def _port_probe_command(ports: list[dict[str, Any]]) -> str | None:
     port_values = [str(port["port"]) for port in ports[:6] if port.get("port") and port.get("probeable", True)]
     if not port_values:
         return None
-    return f"for port in {' '.join(port_values)}; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done"
+    # A closed port is probe data, not a failed probe. Make the shell contract
+    # explicit because some task runners preserve the last child exit status.
+    return f"for port in {' '.join(port_values)}; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done; exit 0"
 
 
 def _port_registry_search_command(project_id: str) -> str:

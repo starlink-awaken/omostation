@@ -344,6 +344,15 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
     assert not any(action["id"] == "copy-start-command" for action in projects["bus-foundation"]["actions"])
 
 
+def test_runtime_probe_command_is_successful_when_no_ports_are_listening():
+    payload = build_system_map()
+    project = next(item for item in payload["projects"] if item["id"] == "observability")
+    command = next(item for item in project["triage_commands"] if item["id"] == "runtime-check-ports")["value"]
+
+    assert command.endswith("; exit 0")
+    assert "|| true" in command
+
+
 def test_system_map_conflict_diagnostics_clear_after_port_alignment():
     payload = build_system_map()
     projects = {project["id"]: project for project in payload["projects"]}
