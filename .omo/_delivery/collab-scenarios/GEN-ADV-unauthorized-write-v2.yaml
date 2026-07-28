@@ -18,13 +18,9 @@ setup:
   - r_b_1
 inject:
 - type: write_conflict
-  role: r_a_1
+  role: r_intruder_1
   target: adv_target_18
-  value: v_a_1
-- type: write_conflict
-  role: r_b_1
-  target: adv_target_18
-  value: v_b_1
+  value: v_intrude_1
 expected:
   behavior: unauthorized_detected
   silent_loss: 0
