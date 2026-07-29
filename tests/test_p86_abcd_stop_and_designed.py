@@ -105,14 +105,52 @@ def test_scenario_growth_pass_on_repo_stock() -> None:
 
 
 def test_a2_map_ssot_has_four_true_dispatch_types() -> None:
-    """Structural: A2 map documents ≥4 types with evidence paths."""
-    p = ROOT / ".omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md"
-    text = p.read_text(encoding="utf-8")
-    assert "4/4" in text or "定论" in text
-    for marker in ("independent + none", "ordered + read", "coupled + write", "independent + write"):
+    """Each of 4 type rows must cite on-disk audit + collab/solo wall-clock numbers.
+
+    Also: 5.4x must not appear as a live gain claim (R1 invalidated it).
+    """
+    import re
+
+    map_path = ROOT / ".omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md"
+    text = map_path.read_text(encoding="utf-8")
+    assert "5.4x" not in text or "作废" in text or "剔除" in text
+    # live gain cell must not sell 5.4x as truth
+    assert not re.search(r"优\s*\*?\*?5\.4x", text), "5.4x must not be a live 优 claim"
+
+    # required type markers + audit link stems present in map body
+    required = [
+        ("independent + none", "2026-07-29-p86-a2-batch5-simple-independent-equal-work.md"),
+        ("ordered + read", "2026-07-29-p86-r1-a2-rejudgment-outputfile.md"),
+        ("coupled + write", "2026-07-29-p86-a2-batch3-coupled-write.md"),
+        ("independent + write", "2026-07-29-p86-a2-batch4-independent-write.md"),
+    ]
+    for marker, audit_name in required:
         assert marker in text, f"missing type row {marker}"
-    assert "batch3" in text and "batch4" in text
-    assert "禁止混" in text or "不得" in text
+        assert audit_name in text or audit_name.replace(".md", "") in text, (
+            f"map must link audit {audit_name} for {marker}"
+        )
+        audit_path = ROOT / ".omo/_knowledge/audits" / audit_name
+        assert audit_path.is_file(), f"audit missing on disk: {audit_name}"
+        audit = audit_path.read_text(encoding="utf-8")
+        # each cited audit must contain at least two wall-clock-like numbers with unit s
+        clocks = re.findall(r"\b\d+(?:\.\d+)?s\b", audit)
+        assert len(clocks) >= 2, (
+            f"{audit_name} must document collab+solo wall-clock (got {clocks!r})"
+        )
+
+    # map table itself must contain wall-clock cells (not prose-only)
+    map_clocks = re.findall(r"\b\d+(?:\.\d+)?s\b", text)
+    assert len(map_clocks) >= 8, f"map needs ≥8 wall-clock cells (4× collab+solo), got {map_clocks}"
+
+
+def test_export_dualtrack_w3_target_is_15() -> None:
+    """C 波: shipped export target is 15, not obsolete 30/45/60."""
+    src = (ROOT / "bin/collab/export-dualtrack.py").read_text(encoding="utf-8")
+    assert "W3_DONE_TARGET = 15" in src
+    assert "W3_DONE_TARGET = 30" not in src
+    state = (ROOT / ".omo/state/collab-dualtrack.yaml").read_text(encoding="utf-8")
+    assert "w3_done_target: 15" in state or "w3_done_target:15" in state
+    assert "w3_done_target: 30" not in state
 
 
 def test_brief_monthly_15_and_obsolete_ramp() -> None:

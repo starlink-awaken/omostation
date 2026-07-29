@@ -4,50 +4,54 @@ lifecycle: audit
 owner: governance-team
 last-reviewed: "2026-07-29"
 ---
-# P86 A2 协作收益地图 (定论 · SSOT)
+# P86 A2 协作收益地图 (定论 · 可审计墙钟)
 
-> 上位: P86 §A2 · human-delegated D2 · ADR-0247 amend  
-> 🔴 红线: 只记**真 dispatch**；禁止与机制模拟混成单一数字；禁类型间平均  
-> 状态: **✅ 4/4 类型已测 (真 dispatch) — 定论**  
+> 上位: P86 §A2 · R1 重判 · human-delegated D2  
+> 🔴 红线: 只列**可追溯审计 + 协作/单 墙钟数字对**；禁止与机制模拟混算；禁类型平均  
+> 状态: **✅ 4 类型均有等量/真 dispatch 墙钟对**（**5.4x 已剔除**，见 R1）  
 > A1: `.omo/standards/collab-task-taxonomy.md`  
-> A3: `.omo/_knowledge/audits/2026-07-29-p86-a3-completion-rootcause.md`
+> A3: `.omo/_knowledge/audits/2026-07-29-p86-a3-completion-rootcause.md`  
+> R1: `.omo/_knowledge/audits/2026-07-29-p86-r1-a2-rejudgment-outputfile.md`
 
-## 定论表 (≥4 类型 · 真 dispatch)
+## ⛔ 作废数字
 
-| # | 任务类型 (A1) | 协作墙钟 | 单 agent 墙钟 | 协作收益 | 质量 | 证据路径 |
-|---|---------------|---------|---------------|---------|------|----------|
-| 1 | independent + none + well_defined + few | 快 | 慢 | **优 5.4x** | 优 | 历史 INTERFACE as_of 批次1 (真 dispatch) |
-| 2 | ordered + read + well_defined + few | 223s | 128s | **劣 1.7x** | — | 失败归因 R/S/C 批次2 |
-| 3 | coupled + write + negotiated | 115s | 140s | 墙钟优 18% | **劣 (1/3 有效)** | [batch3](2026-07-29-p86-a2-batch3-coupled-write.md) |
-| 4 | independent + write (思考性设计) | 190s | 110s | **墙钟劣 73%** | 不劣† | [batch4](2026-07-29-p86-a2-batch4-independent-write.md) + [Q2](2026-07-29-p86-q2-harness-bug-falsification.md) |
+| 数字 | 原因 | 处置 |
+|------|------|------|
+| **5.4x** | R1: 非等量对照、无严谨墙钟/output_file、P81 估算 | **禁止出现在定论表**；不得支撑 C 适用面 |
 
-† Q2: harness `result` 空属回收 bug；`output_file` 证实 3/3 有实质方案。墙钟劣 (木桶) 仍成立。
+## 定论表 (4 类型 · 墙钟对可审计)
 
-**禁止混算**: 上表四行**不得**合成「平均协作收益 X」；适用面决策只读分类行。
+| # | 任务类型 (A1) | 协作墙钟 | 单 worker 墙钟 | 墙钟收益 | 质量/产出备注 | 审计路径 (on-disk) |
+|---|---------------|---------|----------------|---------|---------------|-------------------|
+| 1 | independent + none + well_defined | **0.019s** | **0.032s** | 优 **1.65x** | 3/3 PASS (等量 3 单元) | [batch5](2026-07-29-p86-a2-batch5-simple-independent-equal-work.md) |
+| 2 | ordered + read + well_defined | **223s** | **128s** | 劣 **1.7x** | 产出量未纯 text 复验 | [R1 §batch2](2026-07-29-p86-r1-a2-rejudgment-outputfile.md) |
+| 3 | coupled + write + negotiated | **115s** | **140s** | 墙钟优 18% | 纯 text 协作 **0.6x** (单更深) | [batch3](2026-07-29-p86-a2-batch3-coupled-write.md) · [R1](2026-07-29-p86-r1-a2-rejudgment-outputfile.md) |
+| 4 | independent + write (思考性) | **190s** | **110s** | 劣 **73%** | 纯 text 协作 **0.5x** | [batch4](2026-07-29-p86-a2-batch4-independent-write.md) · [R1](2026-07-29-p86-r1-a2-rejudgment-outputfile.md) · [Q2](2026-07-29-p86-q2-harness-bug-falsification.md) |
+
+**禁止混算**: 四行不得合成单一「平均协作收益」。
 
 ## 定论一句话
 
-协作正收益**仅在「简单独立批量」** (批次1: independent + none/read + well_defined) 证实。  
-分析 / 方案设计 / 思考性独立写 → 墙钟劣或质量劣或双劣。
+1. **机械独立批量** (类型1 / batch5): 等量并行相对顺序有墙钟正收益 (1.65x)。  
+2. **有序分析 / 耦合方案 / 思考性独立写** (类型2–4): 墙钟和/或纯 text 产出对单 worker **不占优**。  
+3. **C 适用面** 依据: human D2 + 类型2–4 负证据 + 类型1 等量正证据；**不**依赖已作废 5.4x。
 
-## 对 C 波 / ADR-0247 的约束
+## 对 C / ADR-0247
 
 | 场景 | 是否走协作管线 |
 |------|----------------|
-| 简单独立批量 (as_of / 机械批量) | ✅ 可用 |
-| 分析 / 方案 / 审查 / 调试 | ❌ 单 agent 直做 |
-| 物理依赖 / 人类红线 | ❌ 协作无用 (见 A3) |
+| 简单独立批量 (well_defined 机械单元) | ✅ 可用 (batch5) |
+| 分析 / 方案 / 审查 / 调试 / 思考性写 | ❌ 默认单 agent (batch2–4 + R1) |
 
-产能月目标 **15** 真实任务 (D2)，完成率 ≥85%；旧 30→45→60 **作废**。
+产能: 月 **15** 真实任务 · 完成率 ≥85% · 旧 30→45→60 **作废**。
 
 ## A1 / A3 交叉
 
-- **A1** 四维预测: independent+well_defined 强正 ✅；ordered 弱/负 ✅；coupled+write 负/质量差 ✅；independent 不保证优 (批次4 反转难度维) ✅  
-- **A3**: 未完成任务 **0** 归因协作缺陷 → 产能瓶颈非管线，目标须分层而非「协作越多越好」
+- A1: independent+well_defined 可正 ✅ (batch5)；ordered 负 ✅；coupled/thinking 不占优 ✅  
+- A3: 未完成 **0** 归因协作缺陷 → 产能瓶颈非管线
 
-## 熔断遵守
+## 熔断
 
-- ✅ 未只跑有利类型  
-- ✅ 未混模拟/真 dispatch  
-- ✅ 禁平均  
-- ✅ 本关闭 PR **不**开启 wave32+ ADV 传送带
+- ✅ 5.4x 已剔除  
+- ✅ 每行含协作+单墙钟数字 + on-disk 审计链接  
+- ✅ 未开 wave32+ ADV 传送带  
