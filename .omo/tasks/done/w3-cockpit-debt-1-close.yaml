@@ -1,0 +1,17 @@
+id: w3-cockpit-debt-1-close
+title: '关闭 cockpit-debt-debt-1 占位债 (无明确范围→归档)'
+description: 'P84 W3 产能轨真实任务 (非构造场景)'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-28T13:00:00Z'
+completion_evidence:
+- planned 卡无 source 范围/owner
+- closed as non-actionable placeholder (triage)
+- 非假完成: 债务本身无法执行
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+- .omo/plans/strat-p84-scenario-driven-longplan.md
+stage: P84-W3

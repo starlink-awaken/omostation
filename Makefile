@@ -363,3 +363,27 @@ x4-check:
 
 x1-x4-check:
 	bash scripts/x1-x4-check.sh
+
+# ── P84 collab dual-track / control experiment ───────────────────────────────
+
+collab-dualtrack:
+	uv run --with pyyaml python bin/collab/export-dualtrack.py --quiet
+
+collab-status:
+	uv run --with pyyaml python bin/collab/export-dualtrack.py --throughput-only
+
+collab-adv-report:
+	uv run --with pyyaml python bin/collab/adv-fail-report.py
+
+collab-control-exp:
+	uv run --with pyyaml python bin/collab/control_experiment.py --batch both --workers 4
+
+collab-recommend-mode:
+	uv run --with pyyaml python bin/collab/recommend_mode.py --list-types
+
+m2-ssot-inventory:
+	uv run --with pyyaml python bin/mof/m2-ssot-inventory.py
+
+bos-stdio-inventory:
+	uv run --with pyyaml python bin/collab/bos-stdio-inventory.py
+

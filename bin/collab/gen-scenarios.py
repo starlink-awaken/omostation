@@ -261,13 +261,29 @@ def gen_adversarial() -> list[tuple[str, dict]]:
                     {"type": "write_conflict", "role": roles[0], "target": target, "value": f"v_a_{inst}"},
                     {"type": "audit_reject", "role": audit_role, "target": target, "reason": "policy_violation"},
                 ]
-            else:
-                # C-class (double-claim, partial-failure, starvation):
-                # current inject pattern is correct for these.
+            elif defect == "partial-failure":
+                # C 类: 一成一败 → partial_failure_handled (ADR-0254)
                 setup_bb = [{"key": target, "value": None}]
                 injects = [
-                    {"type": "write_conflict", "role": roles[0], "target": target, "value": f"v_a_{inst}"},
-                    {"type": "write_conflict", "role": roles[1], "target": target, "value": f"v_b_{inst}"},
+                    {"type": "write_conflict", "role": roles[0], "target": target, "value": f"ok_{inst}"},
+                    {"type": "role_timeout", "role": roles[1]},
+                ]
+            elif defect == "resource-starvation":
+                # C 类: ≥3 角色争抢 → starvation_resolved
+                roles3 = [f"r_a_{inst}", f"r_b_{inst}", f"r_c_{inst}"]
+                roles = roles3
+                setup_bb = [{"key": target, "value": None}]
+                injects = [
+                    {"type": "write_conflict", "role": roles3[0], "target": target, "value": f"use1_{inst}"},
+                    {"type": "write_conflict", "role": roles3[1], "target": target, "value": f"use2_{inst}"},
+                    {"type": "write_conflict", "role": roles3[2], "target": target, "value": f"use3_{inst}"},
+                ]
+            else:
+                # C 类 double-claim: 双写冲突 → double_claim_detected
+                setup_bb = [{"key": target, "value": None}]
+                injects = [
+                    {"type": "write_conflict", "role": roles[0], "target": target, "value": f"claim_a_{inst}"},
+                    {"type": "write_conflict", "role": roles[1], "target": target, "value": f"claim_b_{inst}"},
                 ]
 
             sc = {
