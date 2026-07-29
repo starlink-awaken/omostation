@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV167-mass-assignment
+category: A_conflict
+adversarial: true
+seed: 267
+description: >
+  [对抗·red-team wave28] 批量赋值: 用户提交 is_admin=true 写穿模型,
+  管线尚无 mass_assignment_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: user_profile, value: "role_user", writers: [app]}
+  roles: [attacker, app, db]
+inject:
+  - {type: write_conflict, role: attacker, target: profile_payload, value: "is_admin=true&role=admin"}
+  - {type: write_conflict, role: app, target: mass_update, value: "bind_all_fields"}
+  - {type: write_conflict, role: db, target: user_profile, value: "role_admin"}
+  - {type: write_conflict, role: attacker, target: privilege, value: "admin_granted"}
+expected:
+  behavior: mass_assignment_detected
+  silent_loss: 0
+verdict:
+  - criterion: mass_assignment_detected
+    check: events_contain
+    args: {kind: mass_assignment_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

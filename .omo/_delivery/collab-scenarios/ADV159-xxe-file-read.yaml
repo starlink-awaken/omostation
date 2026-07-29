@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 259
 description: >
-  [对抗·red-team wave27] XXE 读文件: 外部实体解析泄露 /etc/passwd,
-  管线尚无 xxe_file_read_detected → 预期 FAIL
+  [对抗·red-team wave28] XXE 读文件: 外部实体解析泄露 /etc/passwd,
+  管线已有 xxe_file_read_detected → 预期 PASS
 setup:
   blackboard:
     - {key: xml_parser, value: "dtd_enabled", writers: [app]}

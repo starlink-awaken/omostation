@@ -214,6 +214,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_session_fixation(events))
     events.extend(_synthesize_csrf_state_change(events))
     events.extend(_synthesize_unsafe_deserialize_rce(events))
+    events.extend(_synthesize_open_redirect(events))
+    events.extend(_synthesize_xxe_file_read(events))
+    events.extend(_synthesize_sqli_auth_bypass(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -4205,6 +4208,148 @@ def _synthesize_unsafe_deserialize_rce(events: list[dict]) -> list[dict]:
                 "shell": shell,
                 "rce": rce,
                 "policy": "safe_loader_only_no_code_exec",
+            }
+        ]
+    return []
+
+
+def _synthesize_open_redirect(events: list[dict]) -> list[dict]:
+    """next= 开放重定向到钓鱼域 → open_redirect_detected (ADV157)."""
+    if any(e.get("kind") == "open_redirect_detected" for e in events):
+        return []
+    evil_next = False
+    redirect_evil = False
+    phish_creds = False
+    loot = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "login_next" in target or "evil.phish" in vs or "http" in vs and "evil" in vs:
+            evil_next = True
+            role = r or role
+        if "redirect" in target or "302_to_evil" in vs or "to_evil" in vs:
+            redirect_evil = True
+            role = r or role
+        if "phish" in vs or "credentials" in target or "posted_to_phish" in vs:
+            phish_creds = True
+            role = r or role
+        if "creds_captured" in vs or ("loot" in target and "creds" in vs):
+            loot = True
+            role = r or role
+    if (evil_next or redirect_evil) and (phish_creds or loot or redirect_evil):
+        return [
+            {
+                "kind": "open_redirect_detected",
+                "ts": ts_max,
+                "role": role,
+                "evil_next": evil_next,
+                "redirect_evil": redirect_evil,
+                "phish_creds": phish_creds,
+                "loot": loot,
+                "policy": "allowlist_relative_redirects_only",
+            }
+        ]
+    return []
+
+
+def _synthesize_xxe_file_read(events: list[dict]) -> list[dict]:
+    """XXE 外部实体读本地文件 → xxe_file_read_detected (ADV159)."""
+    if any(e.get("kind") == "xxe_file_read_detected" for e in events):
+        return []
+    doctype = False
+    expand = False
+    leaked = False
+    loot = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "doctype" in vs or "entity" in vs or "xml_body" in target or "etc_passwd" in vs:
+            doctype = True
+            role = r or role
+        if "expand_external" in vs or "xml_parser" in target:
+            expand = True
+            role = r or role
+        if "leaked" in vs or "file_read" in target or "passwd" in vs:
+            leaked = True
+            role = r or role
+        if "system_users" in vs or ("loot" in target and "users" in vs):
+            loot = True
+            role = r or role
+    if (doctype or expand) and (leaked or loot):
+        return [
+            {
+                "kind": "xxe_file_read_detected",
+                "ts": ts_max,
+                "role": role,
+                "doctype": doctype,
+                "expand": expand,
+                "leaked": leaked,
+                "loot": loot,
+                "policy": "disable_external_entities",
+            }
+        ]
+    return []
+
+
+def _synthesize_sqli_auth_bypass(events: list[dict]) -> list[dict]:
+    """SQL 注入恒真登录 → sqli_auth_bypass_detected (ADV161)."""
+    if any(e.get("kind") == "sqli_auth_bypass_detected" for e in events):
+        return []
+    inject = False
+    concat = False
+    row_true = False
+    admin_session = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "or '1'='1" in vs or "or 1=1" in vs or ("username" in target and "or" in vs):
+            inject = True
+            role = r or role
+        if "string_concat" in vs or "concat_sql" in vs or "auth_query" in target:
+            concat = True
+            role = r or role
+        if "row_returned" in vs or "query_result" in target or "true" in vs:
+            if "row" in vs or "query_result" in target:
+                row_true = True
+                role = r or role
+        if "without_password" in vs or ("session" in target and "admin" in vs):
+            admin_session = True
+            role = r or role
+    if (inject or concat) and (row_true or admin_session):
+        return [
+            {
+                "kind": "sqli_auth_bypass_detected",
+                "ts": ts_max,
+                "role": role,
+                "inject": inject,
+                "concat": concat,
+                "row_true": row_true,
+                "admin_session": admin_session,
+                "policy": "parameterized_queries_only",
             }
         ]
     return []

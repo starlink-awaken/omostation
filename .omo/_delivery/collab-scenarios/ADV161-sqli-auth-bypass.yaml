@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 261
 description: >
-  [对抗·red-team wave27] SQL 注入鉴权绕过: 登录查询拼接导致恒真,
-  管线尚无 sqli_auth_bypass_detected → 预期 FAIL
+  [对抗·red-team wave28] SQL 注入鉴权绕过: 登录查询拼接导致恒真,
+  管线已有 sqli_auth_bypass_detected → 预期 PASS
 setup:
   blackboard:
     - {key: auth_query, value: "parameterized", writers: [app]}
