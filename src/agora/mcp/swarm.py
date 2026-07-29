@@ -186,7 +186,8 @@ class SwarmOrchestrator:
 
     def _setup_node_proxy(self, node: SwarmNode) -> None:
         """为远程节点设置 MCP 代理及 BOS 路由。"""
-        if not self._proxy_manager:
+        proxy = self._proxy_manager
+        if not proxy:
             return
 
         # 1. 在 ProxyManager 中注册远程节点作为后端
@@ -197,7 +198,7 @@ class SwarmOrchestrator:
 
         async def _add():
             try:
-                await self._proxy_manager.add_service(
+                await proxy.add_service(
                     {
                         "name": svc_name,
                         "mcp_endpoint": mcp_url,
