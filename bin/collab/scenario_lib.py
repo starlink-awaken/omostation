@@ -184,6 +184,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_restaking_slash_cascade(events))
     events.extend(_synthesize_intent_solver_theft(events))
     events.extend(_synthesize_dao_treasury_drain(events))
+    events.extend(_synthesize_l2_sequencer_censorship(events))
+    events.extend(_synthesize_mev_builder_collusion(events))
+    events.extend(_synthesize_aa_account_drain(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -2605,6 +2608,182 @@ def _synthesize_dao_treasury_drain(events: list[dict]) -> list[dict]:
                 "snap_vote": snap_vote,
                 "drained": True,
                 "policy": "timelock_and_veto_guardian",
+            }
+        ]
+    return []
+
+
+def _synthesize_l2_sequencer_censorship(events: list[dict]) -> list[dict]:
+    """sequencer 丢弃 exit / 压制 batch → l2_sequencer_censorship_detected (ADV97)."""
+    if any(e.get("kind") == "l2_sequencer_censorship_detected" for e in events):
+        return []
+    exit_req = False
+    drop_tx = False
+    exclude_batch = False
+    hatch_fail = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "exit" in target or "force_exit" in vs or "exit_request" in vs:
+            exit_req = True
+            role = r or role
+        if "drop" in vs or ("sequencer" in target and "drop" in vs) or "drop_user" in vs:
+            drop_tx = True
+            role = r or role
+        if "exclude" in vs or "batch" in target:
+            exclude_batch = True
+            role = r or role
+        if "escape" in target or "hatch" in target or "timeout_not" in vs:
+            hatch_fail = True
+            role = r or role
+    if (drop_tx or exclude_batch) and (exit_req or hatch_fail):
+        return [
+            {
+                "kind": "l2_sequencer_censorship_detected",
+                "ts": ts_max,
+                "role": role,
+                "exit_request": exit_req,
+                "drop_tx": drop_tx,
+                "exclude_batch": exclude_batch,
+                "hatch_fail": hatch_fail,
+                "policy": "forced_inclusion_and_escape_hatch",
+            }
+        ]
+    if drop_tx and exclude_batch:
+        return [
+            {
+                "kind": "l2_sequencer_censorship_detected",
+                "ts": ts_max,
+                "role": role,
+                "drop_tx": True,
+                "exclude_batch": True,
+                "policy": "forced_inclusion_and_escape_hatch",
+            }
+        ]
+    return []
+
+
+def _synthesize_mev_builder_collusion(events: list[dict]) -> list[dict]:
+    """多 builder 共享 orderflow + cartel → mev_builder_collusion_detected (ADV99)."""
+    if any(e.get("kind") == "mev_builder_collusion_detected" for e in events):
+        return []
+    leaks: list[tuple[int, str]] = []
+    extract = False
+    cartel = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "orderflow" in target or "leak" in vs or "share" in target:
+            leaks.append((ts, r))
+            role = r or role
+        if "extract" in target or "extract" in vs or "bundle" in target:
+            extract = True
+            role = r or role
+        if "cartel" in vs or "auction" in target and ("cartel" in vs or "single_winner" in vs):
+            cartel = True
+            role = r or role
+        if "single_winner" in vs or "cartel" in vs:
+            cartel = True
+    leak_roles = {r for _t, r in leaks if r}
+    if len(leak_roles) >= 2 and (extract or cartel):
+        return [
+            {
+                "kind": "mev_builder_collusion_detected",
+                "ts": ts_max,
+                "role": role,
+                "leak_roles": sorted(leak_roles),
+                "extract": extract,
+                "cartel": cartel,
+                "policy": "orderflow_isolation_and_builder_diversity",
+            }
+        ]
+    if len(leaks) >= 2 and extract:
+        return [
+            {
+                "kind": "mev_builder_collusion_detected",
+                "ts": ts_max,
+                "role": role,
+                "leak_count": len(leaks),
+                "extract": True,
+                "policy": "orderflow_isolation_and_builder_diversity",
+            }
+        ]
+    return []
+
+
+def _synthesize_aa_account_drain(events: list[dict]) -> list[dict]:
+    """session key / paymaster 合谋抽干 AA 账户 → aa_account_drain_detected (ADV101)."""
+    if any(e.get("kind") == "aa_account_drain_detected" for e in events):
+        return []
+    session_abuse = False
+    paymaster_bad = False
+    transfer_all = False
+    balance_zero = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "session" in target or "overpermission" in vs or "key_over" in vs:
+            session_abuse = True
+            role = r or role
+        if "paymaster" in target or "sponsor_malicious" in vs or "sponsor" in vs:
+            paymaster_bad = True
+            role = r or role
+        if "userop" in target or "transfer_all" in vs or "batch" in target:
+            transfer_all = True
+            role = r or role
+        if "smart_account" in target or "account" in target:
+            if vs in {"0", "0.0", "balance_0"} or "balance_0" in vs:
+                balance_zero = True
+                role = r or role
+        if vs in {"balance_0", "0"} and ("account" in target or "balance" in target):
+            balance_zero = True
+    if balance_zero and (session_abuse or paymaster_bad or transfer_all):
+        return [
+            {
+                "kind": "aa_account_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "session_abuse": session_abuse,
+                "paymaster_bad": paymaster_bad,
+                "transfer_all": transfer_all,
+                "balance_zero": balance_zero,
+                "policy": "session_key_scopes_and_paymaster_allowlist",
+            }
+        ]
+    if session_abuse and paymaster_bad and transfer_all:
+        return [
+            {
+                "kind": "aa_account_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "session_abuse": True,
+                "paymaster_bad": True,
+                "transfer_all": True,
+                "policy": "session_key_scopes_and_paymaster_allowlist",
             }
         ]
     return []
