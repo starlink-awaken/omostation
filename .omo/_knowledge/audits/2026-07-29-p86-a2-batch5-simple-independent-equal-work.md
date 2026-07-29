@@ -4,7 +4,13 @@ lifecycle: audit
 owner: governance-team
 last-reviewed: "2026-07-29"
 ---
+
 # P86 A2 批次5: scenario_lib 等量并行微基准（已降级）
+
+> ⚠️ **冷启动**: 协作收益**现行定论**只读  
+> [`.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md`](2026-07-29-p86-a2-collaboration-gain-map.md)  
+> （5.4x 作废 · batch5 demote · 多 agent 真 dispatch 3 类型 shortfall · ADR-0289/0290）
+
 
 > 🔴 **DEMOTE (2026-07-29 skeptic)**: 本实验是 ThreadPool × `scenario_lib.run_scenario`，  
 > **不是** 多 agent / 协作管线 vs 单 agent 真 dispatch。  
