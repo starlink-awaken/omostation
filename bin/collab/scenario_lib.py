@@ -202,6 +202,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_blind_signing_drain(events))
     events.extend(_synthesize_dns_rebinding(events))
     events.extend(_synthesize_ci_secret_exfil(events))
+    events.extend(_synthesize_supply_chain_typosquat(events))
+    events.extend(_synthesize_webhook_ssrf(events))
+    events.extend(_synthesize_jwt_alg_none(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -3556,6 +3559,158 @@ def _synthesize_ci_secret_exfil(events: list[dict]) -> list[dict]:
                 "dump": dump,
                 "exfil": exfil_done,
                 "policy": "secret_masking_and_oidc_short_lived",
+            }
+        ]
+    return []
+
+
+def _synthesize_supply_chain_typosquat(events: list[dict]) -> list[dict]:
+    """近似包名恶意依赖 → supply_chain_typosquat_detected (ADV133)."""
+    if any(e.get("kind") == "supply_chain_typosquat_detected" for e in events):
+        return []
+    typosquat_pkg = False
+    wrong_dep = False
+    pulled = False
+    steal = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "pypi" in target or "malicious" in vs or "typosquat" in vs:
+            typosquat_pkg = True
+            role = r or role
+        if "package_json" in target or "reqeusts" in vs:
+            wrong_dep = True
+            role = r or role
+        if "install_log" in target or "pulled_typosquat" in vs or "typosquat" in vs:
+            pulled = True
+            role = r or role
+        if "steal" in vs or "runtime_hook" in target or "tokens" in vs:
+            steal = True
+            role = r or role
+    if (typosquat_pkg or pulled) and (wrong_dep or steal or pulled):
+        return [
+            {
+                "kind": "supply_chain_typosquat_detected",
+                "ts": ts_max,
+                "role": role,
+                "typosquat_pkg": typosquat_pkg,
+                "wrong_dep": wrong_dep,
+                "pulled": pulled,
+                "steal": steal,
+                "policy": "allowlist_and_lockfile_hash",
+            }
+        ]
+    return []
+
+
+def _synthesize_webhook_ssrf(events: list[dict]) -> list[dict]:
+    """Webhook 指向元数据/内网 → webhook_ssrf_detected (ADV135)."""
+    if any(e.get("kind") == "webhook_ssrf_detected" for e in events):
+        return []
+    meta_url = False
+    dispatch = False
+    creds = False
+    loot = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "webhook_url" in target or "169.254" in vs or "meta-data" in vs:
+            meta_url = True
+            role = r or role
+        if "webhook_dispatch" in target or "fetch_attacker" in vs:
+            dispatch = True
+            role = r or role
+        if "meta_response" in target or "iam_credentials" in vs or "credentials_leaked" in vs:
+            creds = True
+            role = r or role
+        if "cloud_keys" in vs or ("loot" in target and "cloud" in vs):
+            loot = True
+            role = r or role
+    if (meta_url or dispatch) and (creds or loot or meta_url and dispatch):
+        return [
+            {
+                "kind": "webhook_ssrf_detected",
+                "ts": ts_max,
+                "role": role,
+                "meta_url": meta_url,
+                "dispatch": dispatch,
+                "creds": creds,
+                "loot": loot,
+                "policy": "url_allowlist_and_block_link_local",
+            }
+        ]
+    return []
+
+
+def _synthesize_jwt_alg_none(events: list[dict]) -> list[dict]:
+    """JWT alg=none 无签名提权 → jwt_alg_none_detected (ADV137)."""
+    if any(e.get("kind") == "jwt_alg_none_detected" for e in events):
+        return []
+    alg_none = False
+    accept_nosig = False
+    admin_action = False
+    priv_esc = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "alg_none" in vs or ("auth_token" in target and "none" in vs):
+            alg_none = True
+            role = r or role
+        if "accept_without_sig" in vs or "token_verify" in target:
+            accept_nosig = True
+            role = r or role
+        if "admin_action" in target or "delete_all" in vs:
+            admin_action = True
+            role = r or role
+        if "privilege_escalation" in vs or "audit_log" in target:
+            priv_esc = True
+            role = r or role
+    if alg_none and (accept_nosig or admin_action or priv_esc):
+        return [
+            {
+                "kind": "jwt_alg_none_detected",
+                "ts": ts_max,
+                "role": role,
+                "alg_none": alg_none,
+                "accept_nosig": accept_nosig,
+                "admin_action": admin_action,
+                "priv_esc": priv_esc,
+                "policy": "deny_alg_none_and_force_verify",
+            }
+        ]
+    if accept_nosig and admin_action:
+        return [
+            {
+                "kind": "jwt_alg_none_detected",
+                "ts": ts_max,
+                "role": role,
+                "accept_nosig": True,
+                "admin_action": True,
+                "policy": "deny_alg_none_and_force_verify",
             }
         ]
     return []

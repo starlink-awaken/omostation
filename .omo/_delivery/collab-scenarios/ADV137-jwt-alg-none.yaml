@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 237
 description: >
-  [对抗·red-team wave23] JWT alg=none: 伪造无签名 token 提升为 admin,
-  管线尚无 jwt_alg_none_detected → 预期 FAIL
+  [对抗·red-team wave24] JWT alg=none: 伪造无签名 token 提升为 admin,
+  管线已有 jwt_alg_none_detected → 预期 PASS
 setup:
   blackboard:
     - {key: auth_token, value: "rs256_valid", writers: [auth]}
