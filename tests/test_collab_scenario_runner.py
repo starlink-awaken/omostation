@@ -272,12 +272,27 @@ def test_wave16_adv858789_detectors_pass() -> None:
         )
 
 
-def test_wave16_hard_adv_still_fail() -> None:
-    """ADV91/93/95 加硬场景须失败 (对抗强度)."""
+def test_wave17_adv919395_detectors_pass() -> None:
+    """wave17 闭环: restaking_slash / intent_solver_theft / dao_treasury_drain."""
     for name in (
         "ADV91-restaking-slashing-cascade.yaml",
         "ADV93-intent-solver-theft.yaml",
         "ADV95-dao-treasury-drain.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave17 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave17_hard_adv_still_fail() -> None:
+    """ADV97/99/101 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV97-l2-sequencer-censorship.yaml",
+        "ADV99-mev-builder-collusion.yaml",
+        "ADV101-account-abstraction-drain.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
