@@ -35,6 +35,7 @@
 
 - 人类授权: `.omo/_control/2026-07-29-human-delegated-decisions.md` D2  
 - 协作收益地图: `.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md`  
+- **结案**: `.omo/_knowledge/audits/2026-07-29-p86-abcd-final-closeout.md` · ADR-0291
 - ADR 适用面: ADR-0247 amend + ADR-0287  
 - 🔴 silent_loss=0 **不**因目标下调而放松  
 
