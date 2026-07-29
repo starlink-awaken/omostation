@@ -168,3 +168,37 @@ def test_brief_monthly_15_and_obsolete_ramp() -> None:
     assert "作废" in text
     assert "30" in text and "45" in text and "60" in text
     assert "简单独立批量" in text
+
+
+def test_adr_0247_amend_aligned_with_shortfall() -> None:
+    """ADR-0247 amend must not claim 4-type true-dispatch or 5.4x as evidence."""
+    text = (ROOT / ".omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md").read_text(
+        encoding="utf-8"
+    )
+    assert "Amend" in text
+    assert "4 类型真 dispatch" not in text
+    assert "3 类型" in text or "shortfall" in text.lower() or "Shortfall" in text or "ADR-0289" in text
+    assert "未闭环" in text or "政策" in text
+
+
+def test_brief_dualtrack_pointer_no_hardcoded_scenario_total() -> None:
+    """BRIEF collab section points to dualtrack SSOT; no stale scenario_total hardcode block."""
+    text = (ROOT / "BRIEF.md").read_text(encoding="utf-8")
+    assert "collab-dualtrack.yaml" in text
+    assert "勿抄" in text or "禁止在本文件硬编码" in text
+    # removed stale snapshot lines
+    assert "场景总数: `134`" not in text
+    assert "对抗集: `30`" not in text
+
+
+def test_high_traffic_audits_have_a2_supersede_banner() -> None:
+    required = [
+        "2026-07-29-p86-c-wave-escalation.md",
+        "2026-07-29-p86-a3-completion-rootcause.md",
+        "2026-07-29-p86-ab-wave-progress.md",
+    ]
+    for name in required:
+        p = ROOT / ".omo/_knowledge/audits" / name
+        t = p.read_text(encoding="utf-8")
+        assert "A2 SSOT 已 supersede" in t, f"{name} missing supersede banner"
+        assert "2026-07-29-p86-a2-collaboration-gain-map.md" in t

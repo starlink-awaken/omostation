@@ -38,23 +38,14 @@
 - ADR 适用面: ADR-0247 amend + ADR-0287  
 - 🔴 silent_loss=0 **不**因目标下调而放松  
 
-### 🎯 能力轨 (Capability · 构造场景, 可加速)
-> 数据源: `构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)`  
-> ⚠️ 能力轨 **不计** 产能；ADV 自动扩面已 §STOP（见 `p84-auto-advance-termination-condition.md`）
+### 🎯 能力轨 / 产能轨运行时数字（指针 · 勿抄）
 
-- 场景总数: `134` | 通过率: `79.9%`
-- 对抗集: `30` 个, 失败率 `90%` (P84: 全过=对抗不足须加强)
-- 冲突消解成功率: `70%` | 平均协商轮次: `0.67`
-- 已设计类成功率分母: 见 `.omo/standards/collab-conflict-protocol-boundary.md`（边界类不计入）
-
-### 📦 产能轨 (Throughput · 真实 backlog, 不可造)
-> 数据源: `真实 backlog (.omo/tasks/done+planned/, 不可造)`
-
-- 真实任务: `5` done / `9` planned (完成率 `35.7%`)
-- 人工直做占比: `0%` (0/5)
-- **静默丢失: `0`** ✅ 硬红线达成
-- **月目标对照**: 15 真实任务 / 完成率 ≥85%（上表 C 波；导出 dualtrack 时以 export 为准）
-
+> 🔴 **禁止在本文件硬编码场景数/完成率/对抗失败数**（易与 export 漂移）。  
+> **唯一运行时 SSOT**: [`.omo/state/collab-dualtrack.yaml`](.omo/state/collab-dualtrack.yaml)  
+> 刷新: `uv run --with pyyaml python bin/collab/export-dualtrack.py`  
+> 能力轨 **不计** 产能；ADV 自动扩面 §STOP: `.omo/standards/p84-auto-advance-termination-condition.md`  
+> 已设计类分母: `.omo/standards/collab-conflict-protocol-boundary.md`  
+> 月目标对照: 上表 C 波 **15** / ≥85%；`w3_done_target` 以 dualtrack export 为准
 <details>
 <summary>⚙️ <b>治理健康分详情 (复合 91/100, 已自动收纳)</b></summary>
 
