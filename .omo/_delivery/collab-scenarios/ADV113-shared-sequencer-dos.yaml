@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV113-shared-sequencer-dos
+category: B_failure_injection
+adversarial: true
+seed: 213
+description: >
+  [对抗·red-team wave19] 共享排序器 DoS: 垃圾交易占满 shared sequencer 配额,
+  管线尚无 shared_sequencer_dos_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: shared_seq_quota, value: "100pct", writers: [seq_network]}
+  roles: [attacker, honest_user, seq_network]
+inject:
+  - {type: write_conflict, role: attacker, target: spam_batch, value: "flood_9999_noop"}
+  - {type: write_conflict, role: attacker, target: shared_seq_quota, value: "quota_exhausted"}
+  - {type: write_conflict, role: honest_user, target: user_tx, value: "stuck_pending"}
+  - {type: write_conflict, role: seq_network, target: liveness_flag, value: "degraded"}
+expected:
+  behavior: shared_sequencer_dos_detected
+  silent_loss: 0
+verdict:
+  - criterion: shared_sequencer_dos_detected
+    check: events_contain
+    args: {kind: shared_sequencer_dos_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
