@@ -152,12 +152,27 @@ def test_wave8_adv373941_detectors_pass() -> None:
         )
 
 
-def test_wave8_hard_adv_still_fail() -> None:
-    """ADV43/45/47 加硬场景须失败 (对抗强度)."""
+def test_wave9_adv434547_detectors_pass() -> None:
+    """wave9 闭环: equivocation / long_range_rewrite / censorship_gap."""
     for name in (
         "ADV43-equivocation.yaml",
         "ADV45-long-range-rewrite.yaml",
         "ADV47-censorship-gap.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave9 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave9_hard_adv_still_fail() -> None:
+    """ADV49/51/53 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV49-vote-buying.yaml",
+        "ADV51-stake-grinding.yaml",
+        "ADV53-nothing-at-stake.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
