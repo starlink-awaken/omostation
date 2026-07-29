@@ -141,7 +141,7 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     # C 类: 事后机制合成 (partial_failure / starvation)
     events.extend(_synthesize_partial_failure(events))
     events.extend(_synthesize_starvation(blackboard, events))
-    # 对抗补强: ADV13..35 + wave8 ADV37/39/41
+    # 对抗补强: ADV13..41 + wave9 ADV43/45/47
     events.extend(_synthesize_collusion(events, blackboard))
     events.extend(_synthesize_priority_inversion(events, roles))
     events.extend(_synthesize_cascade_failure(events))
@@ -157,6 +157,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_clock_skew_eclipse(events))
     events.extend(_synthesize_ghost_writer(events))
     events.extend(_synthesize_double_spend(events, blackboard))
+    events.extend(_synthesize_equivocation(events))
+    events.extend(_synthesize_long_range_rewrite(events))
+    events.extend(_synthesize_censorship_gap(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -1064,6 +1067,132 @@ def _synthesize_double_spend(events: list[dict], board: dict) -> list[dict]:
                     "spent_values": values,
                     "roles": roles,
                     "policy": "single_spend_ledger_abort",
+                }
+            ]
+    return []
+
+
+def _synthesize_equivocation(events: list[dict]) -> list[dict]:
+    """同一角色对不同 key 写不同值 → equivocation_detected (ADV43)."""
+    if any(e.get("kind") == "equivocation_detected" for e in events):
+        return []
+    # role -> list of (target, value)
+    by_role: dict[str, list[tuple[str, object]]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "")
+        val = e.get("value")
+        if not role or not target:
+            continue
+        by_role.setdefault(role, []).append((target, val))
+    for role, pairs in by_role.items():
+        keys = list(dict.fromkeys(t for t, _ in pairs))
+        vals = list(dict.fromkeys(v for _, v in pairs))
+        if len(keys) >= 2 and len(vals) >= 2:
+            return [
+                {
+                    "kind": "equivocation_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "role": role,
+                    "keys": keys,
+                    "values": vals,
+                    "policy": "bind_speaker_to_single_statement",
+                }
+            ]
+    return []
+
+
+def _synthesize_long_range_rewrite(events: list[dict]) -> list[dict]:
+    """checkpoint/history 高版本被压到低版本 fork → long_range_rewrite_detected (ADV45)."""
+    if any(e.get("kind") == "long_range_rewrite_detected" for e in events):
+        return []
+    hist_keys = ("checkpoint", "history", "archive", "genesis", "sealed")
+    for e in events:
+        if e.get("kind") not in {"conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "").lower()
+        if not any(h in target for h in hist_keys):
+            # also value contains sealed/checkpoint markers
+            prior_s = str(e.get("prior") or "").lower()
+            if "cp_" not in prior_s and "sealed" not in prior_s and "checkpoint" not in prior_s:
+                continue
+        prior_rank = _versionish_rank(e.get("prior"))
+        new_rank = _versionish_rank(e.get("new") if "new" in e else e.get("value"))
+        # long-range: drop by ≥3 version steps OR prior sealed + new fork/genesis
+        prior_s = str(e.get("prior") or "").lower()
+        new_s = str(e.get("new") if "new" in e else e.get("value") or "").lower()
+        long_range = False
+        if prior_rank is not None and new_rank is not None and (prior_rank - new_rank) >= 3:
+            long_range = True
+        if "sealed" in prior_s and ("fork" in new_s or "genesis" in new_s):
+            long_range = True
+        if long_range:
+            return [
+                {
+                    "kind": "long_range_rewrite_detected",
+                    "ts": e.get("ts") or 0,
+                    "target": e.get("target"),
+                    "prior_value": e.get("prior"),
+                    "new_value": e.get("new") if "new" in e else e.get("value"),
+                    "role": e.get("role"),
+                    "policy": "immutable_checkpoint_reject",
+                }
+            ]
+    return []
+
+
+def _synthesize_censorship_gap(events: list[dict]) -> list[dict]:
+    """发布者超时后内容被清空/覆盖且读者也超时 → censorship_gap_detected (ADV47)."""
+    if any(e.get("kind") == "censorship_gap_detected" for e in events):
+        return []
+    # track first write per target
+    first_write: dict[str, tuple[int, str, object]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        target = str(e.get("target") or "")
+        if target and target not in first_write:
+            first_write[target] = (
+                int(e.get("ts") or 0),
+                str(e.get("role") or ""),
+                e.get("value"),
+            )
+    timeouts = {
+        str(e.get("role")): int(e.get("ts") or 0)
+        for e in events
+        if e.get("kind") == "role_timeout" and e.get("role")
+    }
+    for e in events:
+        if e.get("kind") not in {"conflict_detected", "double_claim_detected", "write"}:
+            continue
+        target = str(e.get("target") or "")
+        if target not in first_write:
+            continue
+        fw_ts, fw_role, fw_val = first_write[target]
+        new_val = e.get("new") if "new" in e else e.get("value")
+        # content erased or replaced after publisher timeout
+        erased = new_val in (None, "", "null", "censored", "redacted")
+        replaced = new_val is not None and new_val != fw_val
+        pub_to = timeouts.get(fw_role)
+        if pub_to is None or int(e.get("ts") or 0) <= pub_to:
+            continue
+        if not (erased or replaced):
+            continue
+        # reader also timed out or any second timeout exists
+        other_to = [r for r, t in timeouts.items() if r != fw_role]
+        if erased or other_to:
+            return [
+                {
+                    "kind": "censorship_gap_detected",
+                    "ts": e.get("ts") or 0,
+                    "target": target,
+                    "publisher": fw_role,
+                    "original": fw_val,
+                    "replacement": new_val,
+                    "reader_timed_out": other_to,
+                    "policy": "retain_original_under_quorum",
                 }
             ]
     return []
