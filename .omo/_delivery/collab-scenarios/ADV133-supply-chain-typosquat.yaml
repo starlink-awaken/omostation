@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 233
 description: >
-  [对抗·red-team wave23] 供应链 typosquat: 近似包名诱使安装恶意依赖,
-  管线尚无 supply_chain_typosquat_detected → 预期 FAIL
+  [对抗·red-team wave24] 供应链 typosquat: 近似包名诱使安装恶意依赖,
+  管线已有 supply_chain_typosquat_detected → 预期 PASS
 setup:
   blackboard:
     - {key: package_json, value: "requests", writers: [dev]}

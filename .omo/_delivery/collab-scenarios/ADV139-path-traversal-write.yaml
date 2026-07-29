@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV139-path-traversal-write
+category: B_failure_injection
+adversarial: true
+seed: 239
+description: >
+  [对抗·red-team wave24] 路径穿越写: 上传文件名含 ../ 覆盖系统文件,
+  管线尚无 path_traversal_write_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: upload_root, value: "/var/uploads", writers: [app]}
+  roles: [attacker, app, fs]
+inject:
+  - {type: write_conflict, role: attacker, target: upload_name, value: "../../etc/cron.d/pwn"}
+  - {type: write_conflict, role: app, target: write_path, value: "/etc/cron.d/pwn"}
+  - {type: write_conflict, role: fs, target: file_content, value: "malicious_cron"}
+  - {type: write_conflict, role: attacker, target: privilege, value: "root_via_cron"}
+expected:
+  behavior: path_traversal_write_detected
+  silent_loss: 0
+verdict:
+  - criterion: path_traversal_write_detected
+    check: events_contain
+    args: {kind: path_traversal_write_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

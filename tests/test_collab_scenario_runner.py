@@ -377,12 +377,27 @@ def test_wave23_adv127129131_detectors_pass() -> None:
         )
 
 
-def test_wave23_hard_adv_still_fail() -> None:
-    """ADV133/135/137 加硬场景须失败 (对抗强度)."""
+def test_wave24_adv133135137_detectors_pass() -> None:
+    """wave24 闭环: typosquat / webhook_ssrf / jwt_alg_none."""
     for name in (
         "ADV133-supply-chain-typosquat.yaml",
         "ADV135-webhook-ssrf.yaml",
         "ADV137-jwt-alg-none.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave24 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave24_hard_adv_still_fail() -> None:
+    """ADV139/141/143 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV139-path-traversal-write.yaml",
+        "ADV141-cache-poisoning.yaml",
+        "ADV143-toml-bombshell.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)

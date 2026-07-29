@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 235
 description: >
-  [对抗·red-team wave23] Webhook SSRF: 回调 URL 指向内网元数据服务,
-  管线尚无 webhook_ssrf_detected → 预期 FAIL
+  [对抗·red-team wave24] Webhook SSRF: 回调 URL 指向内网元数据服务,
+  管线已有 webhook_ssrf_detected → 预期 PASS
 setup:
   blackboard:
     - {key: webhook_url, value: "https://example.com/hook", writers: [app]}
