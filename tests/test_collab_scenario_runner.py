@@ -287,12 +287,27 @@ def test_wave17_adv919395_detectors_pass() -> None:
         )
 
 
-def test_wave17_hard_adv_still_fail() -> None:
-    """ADV97/99/101 加硬场景须失败 (对抗强度)."""
+def test_wave18_adv9799101_detectors_pass() -> None:
+    """wave18 闭环: l2_sequencer_censorship / mev_builder_collusion / aa_account_drain."""
     for name in (
         "ADV97-l2-sequencer-censorship.yaml",
         "ADV99-mev-builder-collusion.yaml",
         "ADV101-account-abstraction-drain.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave18 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave18_hard_adv_still_fail() -> None:
+    """ADV103/105/107 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV103-validator-equivocation-coverup.yaml",
+        "ADV105-liquidity-migration-trap.yaml",
+        "ADV107-cross-chain-msg-replay.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
