@@ -167,12 +167,27 @@ def test_wave9_adv434547_detectors_pass() -> None:
         )
 
 
-def test_wave9_hard_adv_still_fail() -> None:
-    """ADV49/51/53 加硬场景须失败 (对抗强度)."""
+def test_wave10_adv495153_detectors_pass() -> None:
+    """wave10 闭环: vote_buying / stake_grinding / nothing_at_stake."""
     for name in (
         "ADV49-vote-buying.yaml",
         "ADV51-stake-grinding.yaml",
         "ADV53-nothing-at-stake.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave10 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave10_hard_adv_still_fail() -> None:
+    """ADV55/57/59 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV55-front-running.yaml",
+        "ADV57-griefing-abort.yaml",
+        "ADV59-oracle-manipulation.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
