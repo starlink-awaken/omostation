@@ -4,6 +4,9 @@ lifecycle: audit
 owner: governance-team
 last-reviewed: "2026-07-29"
 ---
+
+> 📌 **唯一协作收益定论 SSOT**（冷启动请只读本文件；旧 audit 中 5.4x 表已 supersede）。
+
 # P86 A2 协作收益地图 (多 agent 真 dispatch 定论)
 
 > 上位: P86 §A2 · R1 重判 · human-delegated D2 · skeptic demote type1  

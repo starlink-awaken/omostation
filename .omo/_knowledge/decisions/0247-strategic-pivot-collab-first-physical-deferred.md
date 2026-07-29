@@ -62,15 +62,17 @@ amends:
 ## Amend · 协作适用面边界 (2026-07-29 · human-delegated D2)
 
 > 凭据: `.omo/_control/2026-07-29-human-delegated-decisions.md` D2  
-> 证据: A2 协作收益地图 4 类型真 dispatch；R1 思考性协作 0.5–0.6x
+> 证据: A2 多 agent 真 dispatch **3 类型**负证据（ordered / coupled+write / independent+write）+ R1 纯 text；  
+> 简单独立批量 = **D2 政策授权**，**非**已闭环的多 agent 墙钟正收益（5.4x 作废；batch5 仅微基准已 demote）。  
+> SSOT: `.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md` · ADR-0289 shortfall
 
 1. **主轴地位保留**: 多 agent 协作优先（本 ADR Decision §1）**不变**；物理多机仍 DEFERRED。
 2. **适用面收窄（硬边界）**: 协作管线**仅**用于「简单独立批量」
-   （A1: independent + none/read + well_defined；A2 批次1 类）。
+   （A1: independent + none/read + well_defined）— **政策允许**，多 agent 真 dispatch 正收益 **未闭环**。
 3. **明确不适用**: 分析 / 方案设计 / 审查 / 调试 / 思考性设计 → **单 agent 直做**，
-   不得默认多角色管线（C1 五角色在思考性任务上同界）。
+   不得默认多角色管线（C1 五角色在思考性任务上同界；A2 类型 2–4）。
 4. **产能目标**: 月真实任务 **15**（完成率 ≥85%）；P84 旧爬坡 30→45→60 **作废**，
    不得作门禁。详见 BRIEF C 波节 + ADR-0287。
 5. **不授权**: D4 四项（涌现实装 / 物理多机达标宣称 / KOS 新源 / BET-3b90 走查）仍须人类逐项拍板。
 
-**Amend status**: ACCEPTED 2026-07-29 (delegated execution E5).
+**Amend status**: ACCEPTED 2026-07-29 (delegated execution E5)；措辞对齐 #620 于 2026-07-29 (ADR-0290)。
