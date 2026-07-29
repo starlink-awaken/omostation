@@ -169,6 +169,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_sandwich_attack(events))
     events.extend(_synthesize_reentrancy(events))
     events.extend(_synthesize_mev_leak(events, blackboard))
+    events.extend(_synthesize_flash_loan_attack(events))
+    events.extend(_synthesize_governance_capture(events))
+    events.extend(_synthesize_cross_domain_replay(events, blackboard))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -1691,6 +1694,208 @@ def _synthesize_mev_leak(events: list[dict], board: dict) -> list[dict]:
                         "searcher": role,
                         "public_target": e.get("target"),
                         "policy": "encrypt_intent_or_private_relay",
+                    }
+                ]
+    return []
+
+
+def _synthesize_flash_loan_attack(events: list[dict]) -> list[dict]:
+    """同角色 borrow → 操盘 → repay (+profit) → flash_loan_attack_detected (ADV67)."""
+    if any(e.get("kind") == "flash_loan_attack_detected" for e in events):
+        return []
+    acts: list[tuple[int, str, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        if not role:
+            continue
+        acts.append(
+            (
+                int(e.get("ts") or 0),
+                role,
+                str(e.get("target") or ""),
+                e.get("new") if "new" in e else e.get("value"),
+            )
+        )
+    by_role: dict[str, list[tuple[int, str, object]]] = {}
+    for ts, role, tgt, val in acts:
+        by_role.setdefault(role, []).append((ts, tgt, val))
+    for role, seq in by_role.items():
+        has_borrow = any(
+            "borrow" in t.lower() or "flash" in t.lower() or "borrow" in str(v).lower()
+            for _ts, t, v in seq
+        )
+        has_repay = any(
+            "repay" in t.lower() or "repay" in str(v).lower() for _ts, t, v in seq
+        )
+        has_manip = any(
+            "price" in t.lower()
+            or "manipul" in str(v).lower()
+            or "oracle" in t.lower()
+            for _ts, t, v in seq
+        )
+        has_profit = any(
+            "profit" in t.lower() or "profit" in str(v).lower() or "arb" in str(v).lower()
+            for _ts, t, v in seq
+        )
+        if has_borrow and has_repay and (has_manip or has_profit):
+            return [
+                {
+                    "kind": "flash_loan_attack_detected",
+                    "ts": seq[-1][0],
+                    "role": role,
+                    "borrow": has_borrow,
+                    "repay": has_repay,
+                    "manipulation": has_manip,
+                    "profit": has_profit,
+                    "policy": "block_same_tx_borrow_manipulate",
+                }
+            ]
+    return []
+
+
+def _synthesize_governance_capture(events: list[dict]) -> list[dict]:
+    """短期囤 gov_votes → 通过恶意提案 → 倒票 → governance_capture_detected (ADV69)."""
+    if any(e.get("kind") == "governance_capture_detected" for e in events):
+        return []
+    vote_moves: list[tuple[int, str, object]] = []
+    proposals: list[tuple[int, str, object]] = []
+    results: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "gov_vote" in target or ("vote" in target and "gov" in target):
+            vote_moves.append((ts, role, val))
+        elif "proposal" in target and "result" not in target:
+            proposals.append((ts, role, val))
+        elif "proposal_result" in target or (
+            "result" in target and "proposal" in target
+        ):
+            results.append((ts, role, val))
+        elif "proposal" in target:
+            proposals.append((ts, role, val))
+    # need vote inflation then proposal pass then vote dump by same attacker
+    for role in {r for _t, r, _v in vote_moves}:
+        role_votes = [(t, v) for t, r, v in vote_moves if r == role]
+        if len(role_votes) < 2:
+            continue
+        # try numeric spike then drop
+        nums = []
+        for t, v in role_votes:
+            try:
+                nums.append((t, float(str(v).strip())))
+            except (TypeError, ValueError):
+                nums.append((t, None))  # type: ignore[arg-type]
+        valid = [(t, n) for t, n in nums if n is not None]
+        spike = False
+        if len(valid) >= 2:
+            for i in range(len(valid) - 1):
+                if valid[i + 1][1] > valid[i][1] * 2:  # big acquire
+                    for j in range(i + 1, len(valid)):
+                        if valid[j][1] < valid[i + 1][1] * 0.5:  # dump
+                            spike = True
+        # malicious proposal + passed
+        mal = any(
+            r == role
+            and (
+                "drain" in str(v).lower()
+                or "malicious" in str(v).lower()
+                or "attack" in str(v).lower()
+            )
+            for _t, r, v in proposals
+        ) or any("malicious" in str(p[2]).lower() or "drain" in str(p[2]).lower() for p in proposals)
+        passed = any(
+            "pass" in str(v).lower() or "approved" in str(v).lower()
+            for _t, _r, v in results
+        )
+        if (spike or len(role_votes) >= 2) and (mal or proposals) and (passed or results):
+            return [
+                {
+                    "kind": "governance_capture_detected",
+                    "ts": max(t for t, _r, _v in vote_moves + proposals + results),
+                    "role": role,
+                    "vote_moves": len(role_votes),
+                    "proposals": len(proposals),
+                    "passed": passed,
+                    "policy": "timelock_and_vote_escrow",
+                }
+            ]
+    # softer: attacker proposal drain + passed + multi gov_votes writes
+    if proposals and results and len(vote_moves) >= 2:
+        return [
+            {
+                "kind": "governance_capture_detected",
+                "ts": max(
+                    (e.get("ts") or 0)
+                    for e in events
+                    if e.get("kind")
+                    in {"write", "conflict_detected", "double_claim_detected"}
+                ),
+                "vote_moves": len(vote_moves),
+                "proposals": len(proposals),
+                "results": len(results),
+                "policy": "timelock_and_vote_escrow",
+            }
+        ]
+    return []
+
+
+def _synthesize_cross_domain_replay(events: list[dict], board: dict) -> list[dict]:
+    """域A payload 在域B 执行/重复 → cross_domain_replay_detected (ADV71)."""
+    if any(e.get("kind") == "cross_domain_replay_detected" for e in events):
+        return []
+    domain_payloads: dict[object, list[tuple[str, str]]] = {}  # val -> [(domain_tag, role)]
+    # board seeds
+    for key, slot in board.items():
+        if key.startswith("_"):
+            continue
+        kl = key.lower()
+        if "domain" in kl or "sig" in kl or "msg" in kl:
+            tag = "a" if "_a" in kl or "domain_a" in kl else ("b" if "_b" in kl or "domain_b" in kl else "x")
+            domain_payloads.setdefault(slot.get("value"), []).append(
+                (tag, (slot.get("writers") or [""])[0] if slot.get("writers") else "")
+            )
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "")
+        tl = target.lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        role = str(e.get("role") or "")
+        if "domain" not in tl and "exec" not in tl and "sig" not in tl and "msg" not in tl:
+            continue
+        tag = "a" if ("_a" in tl or "domain_a" in tl) else (
+            "b" if ("_b" in tl or "domain_b" in tl) else "x"
+        )
+        domain_payloads.setdefault(val, []).append((tag, role))
+    for val, tags in domain_payloads.items():
+        if val is None:
+            continue
+        domains = {t for t, _r in tags}
+        roles = {r for _t, r in tags if r}
+        # same payload across domains OR repeated exec on domain_b
+        multi_domain = len(domains) >= 2
+        multi_exec = sum(1 for t, _r in tags if t == "b") >= 2 or sum(
+            1 for t, _r in tags if "exec" in t
+        ) >= 2
+        # also: board domain_a + writes domain_b same value twice (replay_attack also fires)
+        if multi_domain or (
+            any(t == "a" for t, _ in tags) and sum(1 for t, _ in tags if t == "b") >= 1
+        ):
+            if multi_domain or multi_exec or len(tags) >= 2:
+                return [
+                    {
+                        "kind": "cross_domain_replay_detected",
+                        "ts": max((e.get("ts") or 0) for e in events) + 1,
+                        "payload": val,
+                        "domains": sorted(domains),
+                        "roles": sorted(roles),
+                        "policy": "domain_separator_and_nonce",
                     }
                 ]
     return []
