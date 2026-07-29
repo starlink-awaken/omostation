@@ -1,6 +1,7 @@
 id: NEEDS-HUMAN-P80-PHASE45-BOS-STDIO
 title: 'P80 T1.2 residual: bos_stdio real migration (engineering debt, not needs-human)'
-status: candidate
+status: done
+completed_at: '2026-07-29T01:55:00Z'
 status_normalized_for_schema: true  # was backlog; planned only candidate|pending
 needs-human: false
 human_approval_required: false
