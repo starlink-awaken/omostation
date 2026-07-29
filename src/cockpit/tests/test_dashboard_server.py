@@ -40,10 +40,44 @@ class TestDashboardEndpoints:
         assert payload["endpoints"] > 10
         assert "v1" in payload["supported_versions"]
         assert any(item["version"] == "v1" and item["endpoints"] > 10 for item in entries)
+        endpoint_paths = {endpoint.get("path") for item in entries for endpoint in item.get("endpoint_list", [])}
+        assert "/api/tasks" in endpoint_paths
+        assert "/api/cockpit/system-map" in endpoint_paths
+        task_operations = {
+            (endpoint.get("method"), endpoint.get("path"))
+            for item in entries
+            for endpoint in item.get("endpoint_list", [])
+        }
+        assert {("GET", "/api/tasks"), ("POST", "/api/tasks")} <= task_operations
 
     def test_api_response_exposes_current_version(self, test_client):
         resp = test_client.get("/api/status")
         assert resp.headers["X-API-Version"] == "v1"
+
+    def test_router_health_exposes_graceful_degradation_report(self, test_client):
+        resp = test_client.get("/api/cockpit/router-health")
+        assert resp.status_code == 200
+        payload = resp.json()
+        assert payload["summary"]["total"] >= 10
+        assert payload["summary"]["loaded"] >= 1
+        assert payload["summary"]["loaded"] + payload["summary"]["unavailable"] == payload["summary"]["total"]
+        assert any(
+            item["module"] == "cockpit.web.api_tasks" and item["status"] == "loaded" for item in payload["items"]
+        )
+        agora = next(item for item in payload["items"] if item["module"] == "cockpit.web.api_agora")
+        assert agora["status"] == "loaded"
+        assert agora["route_count"] > 0
+
+    def test_openapi_operation_ids_are_unique(self, test_client):
+        paths = test_client.get("/openapi.json").json().get("paths", {})
+        operation_ids = [
+            operation["operationId"]
+            for operations in paths.values()
+            for operation in operations.values()
+            if isinstance(operation, dict) and operation.get("operationId")
+        ]
+
+        assert len(operation_ids) == len(set(operation_ids))
 
     def test_favicon_returns_404(self, test_client):
         resp = test_client.get("/favicon.ico")

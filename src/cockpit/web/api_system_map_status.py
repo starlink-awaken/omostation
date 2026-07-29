@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import socket
 from collections import defaultdict
@@ -65,6 +66,49 @@ from cockpit.web.api_system_map_io_commands import (
     _workflow_evidence_search_command,
     build_source_ref_preview,
 )
+
+VERIFICATION_EVIDENCE_MAX_AGE_HOURS = 30 * 24
+RUNTIME_EVIDENCE_MAX_AGE_HOURS = 24
+
+
+def _evidence_freshness(timestamp: Any, max_age_hours: int, now: datetime | None = None) -> dict[str, Any]:
+    """Return explicit freshness metadata for durable evidence timestamps."""
+    raw_timestamp = str(timestamp or "").strip()
+    max_age_seconds = max_age_hours * 60 * 60
+    if not raw_timestamp:
+        return {
+            "status": "unknown",
+            "age_seconds": None,
+            "max_age_seconds": max_age_seconds,
+            "next_action": "补录带时间戳的持久证据。",
+        }
+    try:
+        recorded_at = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
+        if recorded_at.tzinfo is None:
+            recorded_at = recorded_at.replace(tzinfo=UTC)
+        recorded_at = recorded_at.astimezone(UTC)
+    except ValueError:
+        return {
+            "status": "unknown",
+            "age_seconds": None,
+            "max_age_seconds": max_age_seconds,
+            "next_action": "修正证据时间戳后重新留证。",
+        }
+    age_seconds = max(0, int(((now or datetime.now(UTC)) - recorded_at).total_seconds()))
+    fresh = age_seconds <= max_age_seconds
+    return {
+        "status": "fresh" if fresh else "stale",
+        "age_seconds": age_seconds,
+        "max_age_seconds": max_age_seconds,
+        "recorded_at": recorded_at.isoformat(),
+        "next_action": "保持证据新鲜。" if fresh else "重新执行并留存最新证据。",
+    }
+
+
+def _attach_evidence_freshness(evidence: dict[str, Any], max_age_hours: int) -> dict[str, Any]:
+    result = dict(evidence)
+    result["freshness"] = _evidence_freshness(result.get("ts"), max_age_hours)
+    return result
 
 
 def _latest_project_verification(project_id: str, project_path: Path, operational: dict[str, Any]) -> dict[str, Any]:
@@ -131,7 +175,7 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
         if not any(path == project_prefix or path.startswith(f"{project_prefix}/") for path in surfaces):
             continue
         run_status = str(run.get("status", "")).lower()
-        if run_status in {"completed", "complete", "closed", "succeeded", "success"}:
+        if run_status in {"ok", "completed", "complete", "closed", "succeeded", "success"}:
             status = "verified"
         elif run_status in {"blocked", "failed", "error"}:
             status = "failed"
@@ -147,7 +191,7 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
             "command": None,
             "source": "agent_workflow_run",
         }
-        if run.get("closed_at") or run_status in {"closed", "complete", "completed"}:
+        if run.get("closed_at") or run_status in {"ok", "closed", "complete", "completed"}:
             result["closeout_status"] = "closed"
             result["closeout_ref"] = str(run_path.relative_to(compat.WORKSPACE_ROOT))
         return result
@@ -155,11 +199,11 @@ def _latest_project_verification(project_id: str, project_path: Path, operationa
     # A Cockpit-controlled verification is also durable OMO evidence. Keep it
     # in the same project posture so TaskCenter and SystemMap do not disagree.
     task_paths: list[Path] = []
-    task_ids = (
-        f"cockpit-action-{project_id}-copy-verify-command",
-        f"cockpit-triage-{project_id}-verification-rerun",
-    )
-    for group in ("active", "done"):
+    task_ids = [f"cockpit-action-{project_id}-copy-verify-command"]
+    triage_posture = _triage_task_posture(project_id, "verification-rerun")
+    if triage_posture.get("task_id"):
+        task_ids.append(str(triage_posture["task_id"]))
+    for group in ("active", "done", "archived/done"):
         for task_id in task_ids:
             task_path = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
             if task_path.is_file():
@@ -373,6 +417,17 @@ def _commands_from_agents(path: Path, limit: int = 4) -> list[str]:
 
 def _project_path(project_id: str, project_data: dict[str, Any] | None = None) -> Path:
     data = project_data or {}
+    path_env = data.get("path_env")
+    if isinstance(path_env, str) and path_env.strip():
+        configured = os.environ.get(path_env.strip())
+        if configured:
+            return Path(configured).expanduser()
+    if project_id == "cockpit-ui":
+        configured = os.environ.get("COCKPIT_UI_ROOT") or os.environ.get("COCKPIT_UI_DIST")
+        if configured:
+            root = Path(configured).expanduser()
+            return root.parent if root.name == "dist" else root
+        return compat.WORKSPACE_ROOT / "projects" / "cockpit-ui"
     storage = data.get("storage")
     if isinstance(storage, str) and storage.strip():
         return Path(storage).expanduser()
@@ -387,6 +442,8 @@ def _project_path(project_id: str, project_data: dict[str, Any] | None = None) -
 
 def _project_source_location(project_data: dict[str, Any] | None = None) -> Path | None:
     data = project_data or {}
+    if data.get("id") == "cockpit-ui":
+        return _project_path("cockpit-ui", data)
     physical_location = data.get("physical_location")
     if isinstance(physical_location, str) and physical_location.strip():
         return _resolved_physical_location(physical_location)
@@ -426,6 +483,20 @@ def _runtime_profile(
     scripts = package_manifest.get("scripts") if isinstance(package_manifest.get("scripts"), dict) else {}
     script_text = " ".join(f"{key} {value}" for key, value in scripts.items() if isinstance(value, str)).lower()
     manifests = {item.get("name") for item in (operational.get("manifests") or [])}
+
+    if project_id == "bus-foundation":
+        return {
+            "profile": "library",
+            "needs_runtime": False,
+            "probe_reason": "bus-foundation 是嵌入式库；/metrics 仅在调用 enable_metrics() 时按需开启，没有独立常驻服务。",
+        }
+
+    if project_id == "omo":
+        return {
+            "profile": "converged",
+            "needs_runtime": False,
+            "probe_reason": "OMO 历史 dashboard 已收敛到 Cockpit /api/omos/status；9190 是历史入口，9100 是外部 webhook 目标，不属于 OMO 常驻服务。",
+        }
 
     if ports and not any(port.get("probeable", True) for port in ports):
         return {
@@ -517,13 +588,26 @@ def _project_runtime_status(
     port_registry_path: Path,
 ) -> dict[str, Any]:
     project_path = _project_path(project_id, project_data)
-    ports = _project_ports(project_id, port_registry, port_registry_path)
-    latest_verification = _latest_project_verification(project_id, project_path, operational)
+    ports = _project_ports(project_id, port_registry, port_registry_path, _project_path(project_id, project_data))
+    latest_verification = _attach_evidence_freshness(
+        _latest_project_verification(project_id, project_path, operational),
+        VERIFICATION_EVIDENCE_MAX_AGE_HOURS,
+    )
     probeable_ports = [port for port in ports if port.get("probeable", True)]
     listening_count = sum(1 for port in probeable_ports if port.get("listening") is True)
     profile = _runtime_profile(project_id, project_data, project_path, operational, ports)
+    probe_task = _triage_task_posture(project_id, "runtime-check-ports")
+    probe_audit = probe_task.get("execution_audit") or {}
+    if isinstance(probe_audit, dict):
+        probe_task = dict(probe_task)
+        probe_task["freshness"] = _evidence_freshness(
+            probe_audit.get("recorded_at"), RUNTIME_EVIDENCE_MAX_AGE_HOURS
+        )
 
-    if probeable_ports and listening_count:
+    if not profile["needs_runtime"]:
+        status = "not_applicable"
+        probe_reason = profile["probe_reason"]
+    elif probeable_ports and listening_count:
         status = "running"
         probe_reason = "已探测到登记端口正在监听。"
     elif probeable_ports:
@@ -544,6 +628,9 @@ def _project_runtime_status(
         "profile": profile["profile"],
         "needs_runtime": profile["needs_runtime"],
         "probe_reason": probe_reason,
+        "checked_at": datetime.now(UTC).isoformat(),
+        "probe_source": "registered_port_socket" if probeable_ports else "runtime_profile",
+        "probe_task": probe_task,
         "ports": ports,
         "listening_count": listening_count,
         "latest_verification": latest_verification,
@@ -634,10 +721,18 @@ def _project_operational_status(
         "partial": "补齐项目文档、命令或构建清单后升级为原生状态面。",
         "missing": "确认项目是否已归档、迁移或需要从注册表下线。",
     }[status]
+    if status == "missing" and isinstance(data.get("path_env"), str):
+        next_action = f"设置环境变量 {data['path_env']} 指向项目 worktree，再重新加载 Cockpit。"
 
     return {
         "status": status,
-        "surface_type": "external-storage" if data.get("storage") else "native",
+        "surface_type": (
+            "external-worktree"
+            if data.get("path_env")
+            else "external-storage"
+            if data.get("storage")
+            else "native"
+        ),
         "docs": {
             "present": len(present_docs),
             "expected": expected_doc_count,
@@ -648,6 +743,10 @@ def _project_operational_status(
         "manifests": existing_manifests,
         "risks": risks,
         "next_action": next_action,
+        "path_env": data.get("path_env"),
+        "path_configured": bool(
+            data.get("path_env") and os.environ.get(str(data["path_env"]).strip())
+        ),
     }
 
 
@@ -775,8 +874,11 @@ def _coverage_check(check_id: str, status: str, detail: str, next_action: str) -
 
 def _latest_controlled_verification(project_id: str) -> dict[str, Any]:
     """Read the latest OMO-controlled verification audit for a project."""
-    task_id = f"cockpit-triage-{project_id}-verification-rerun"
-    for group in ("active", "done"):
+    posture = _triage_task_posture(project_id, "verification-rerun")
+    task_id = str(posture.get("task_id") or "")
+    if not task_id or posture.get("status") == "not_queued":
+        return {}
+    for group in ("active", "done", "archived/done"):
         task_path = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
         if not task_path.is_file():
             continue
@@ -795,6 +897,8 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
     verification = runtime.get("latest_verification", {})
     source_refs = project.get("source_refs") or []
     actions = project.get("actions") or []
+    registry_contract = project.get("registry_contract") or {}
+    project_path = Path(str(project.get("path") or ""))
 
     docs = operational.get("docs") or {}
     docs_present = int(docs.get("present") or 0)
@@ -806,6 +910,30 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
     controlled_audit = _latest_controlled_verification(str(project.get("id") or ""))
     controlled_passed = controlled_audit.get("exit_code") == 0
     missing_sources = [ref for ref in source_refs if not ref.get("exists")]
+    security_doc = project_path / "SECURITY.md"
+    security_audit = next(
+        (candidate for candidate in (project_path / "AUDIT.md", project_path / "SECURITY-AUDIT.md") if candidate.is_file()),
+        None,
+    )
+    security_status = (
+        "ready"
+        if security_doc.is_file() or security_audit
+        else "warning"
+        if project_path.exists()
+        else "failed"
+    )
+    security_detail = (
+        (
+            f"已发现安全合同：{security_doc.name}"
+            if security_doc.is_file()
+            else f"已发现安全审计入口：{security_audit.name}"
+        )
+        + (f"，审计入口：{security_audit.name}。" if security_audit and security_doc.is_file() else "。")
+        if security_status == "ready"
+        else "项目存在，但未发现 SECURITY.md 安全合同。"
+        if security_status == "warning"
+        else "项目实现路径不可读，无法判断安全合同。"
+    )
 
     verification_detail = f"最近验证：{verification_status}，checks={verification.get('checks', 0)}。" + (
         f" 已登记命令：{verification.get('command')}。" if verification.get("command") else ""
@@ -826,6 +954,13 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         if verification_status == "documented"
         else "保持验证证据新鲜。"
     )
+    verification_freshness = verification.get("freshness") or {}
+    if verification_freshness.get("status") == "stale":
+        verification_detail += " 最近证据已过期。"
+        verification_next_action = str(verification_freshness.get("next_action") or "重新执行并留存最新证据。")
+    elif verification_freshness.get("status") == "unknown" and verification_status in {"verified", "documented"}:
+        verification_detail += " 证据缺少可判断新鲜度的时间戳。"
+        verification_next_action = str(verification_freshness.get("next_action") or "补录带时间戳的持久证据。")
     if controlled_passed:
         verification_detail += (
             " 受控重跑已通过，agent-workflow closeout 已存在。"
@@ -839,6 +974,33 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
             "ready" if project.get("coverage") == "native" else "warning",
             f"入口：{project.get('cockpit_page', 'SystemMap')}，覆盖：{project.get('coverage', 'orientation')}。",
             "保持页面映射同步。" if project.get("coverage") == "native" else "补原生项目页面或领域应用挂载入口。",
+        ),
+        _coverage_check(
+            "registry_contract",
+            str(registry_contract.get("status_text") or "failed"),
+            (
+                "注册合同完整：生命周期、构建/运行约束和实现落点均已声明。"
+                if not registry_contract.get("missing_fields")
+                else "缺失注册字段："
+                + "、".join(str(item) for item in registry_contract.get("missing_fields") or [])
+                + "。"
+                + (
+                    f" 实际观测落点：{registry_contract.get('observed_location')}。"
+                    if registry_contract.get("observed_location")
+                    else ""
+                )
+            ),
+            "在 docs/project-registry.yaml 补齐版本/生命周期、构建运行约束和实现落点。"
+            if registry_contract.get("missing_fields")
+            else "保持注册合同与实际项目状态同步。",
+        ),
+        _coverage_check(
+            "security_contract",
+            security_status,
+            security_detail,
+            "补充 SECURITY.md，说明信任边界、敏感操作和安全审计入口。"
+            if security_status != "ready"
+            else "保持安全合同与实际入口、权限和审计状态同步。",
         ),
         _coverage_check(
             "project_docs",
@@ -885,7 +1047,10 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         ),
         _coverage_check(
             "verification",
-            "ready"
+            "warning"
+            if verification_freshness.get("status") in {"stale", "unknown"}
+            and verification_status in {"verified", "documented"}
+            else "ready"
             if controlled_passed and closeout_status == "closed"
             else "warning"
             if controlled_passed

@@ -9,16 +9,42 @@ from cockpit.compat import WORKSPACE_ROOT
 
 router = APIRouter()
 
-from cockpit.adapters.omo import (
-    append_hitl_override,
-    approve_hitl_proposal_async,
-    list_hitl_proposals,
-    reject_hitl_proposal,
-)
+try:
+    from cockpit.adapters.omo import (
+        append_hitl_override,
+        approve_hitl_proposal_async,
+        list_hitl_proposals,
+        reject_hitl_proposal,
+    )
+    _OMO_IMPORT_ERROR: Exception | None = None
+except Exception as exc:  # Optional adapter; keep proposal routes discoverable.
+    append_hitl_override = approve_hitl_proposal_async = list_hitl_proposals = reject_hitl_proposal = None  # type: ignore[assignment]
+    _OMO_IMPORT_ERROR = exc
+
+ROUTER_DEGRADED = _OMO_IMPORT_ERROR is not None
+ROUTER_DEGRADED_REASON = str(_OMO_IMPORT_ERROR) if _OMO_IMPORT_ERROR else None
+
+
+def _proposals_unavailable() -> JSONResponse | None:
+    if _OMO_IMPORT_ERROR is None:
+        return None
+    return JSONResponse(
+        {
+            "status": "degraded",
+            "error": "OMO proposal adapter is unavailable",
+            "error_type": type(_OMO_IMPORT_ERROR).__name__,
+            "detail": str(_OMO_IMPORT_ERROR),
+            "next_action": "安装并挂载 OMO 适配器依赖后重试。",
+        },
+        status_code=503,
+    )
 
 
 @router.get("/api/v1/proposals")
 async def api_list_proposals():
+    unavailable = _proposals_unavailable()
+    if unavailable:
+        return unavailable
     try:
         proposals = list_hitl_proposals(WORKSPACE_ROOT / ".omo")
     except Exception:  # defensive fallback
@@ -81,6 +107,9 @@ async def _execute_mutation(proposal: dict) -> bool:
 
 @router.post("/api/v1/proposals/{proposal_id}/approve")
 async def api_approve_proposal(proposal_id: str):
+    unavailable = _proposals_unavailable()
+    if unavailable:
+        return unavailable
     import logging
 
     _log = logging.getLogger("cockpit.hitl")
@@ -104,6 +133,9 @@ async def api_approve_proposal(proposal_id: str):
 
 @router.post("/api/v1/proposals/{proposal_id}/reject")
 async def api_reject_proposal(proposal_id: str):
+    unavailable = _proposals_unavailable()
+    if unavailable:
+        return unavailable
     reject_hitl_proposal(WORKSPACE_ROOT / ".omo", proposal_id)
     return JSONResponse({"status": "ok"})
 

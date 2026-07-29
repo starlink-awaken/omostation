@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cockpit.dashboard_server import app
-from cockpit.web import api_tasks
+from cockpit.web import api_tasks, api_tasks_common, api_tasks_queues_integration, api_tasks_queues_project
 from cockpit.web.api_system_map import build_system_map
 from cockpit.web.api_tasks import (
     get_capability_gap_task_drafts,
@@ -53,8 +53,12 @@ def test_project_portfolio_task_drafts_are_read_only():
 
 def test_verification_ready_task_drafts_are_read_only():
     drafts = get_verification_ready_task_drafts()
+    system_map = build_system_map()
+    verification_queue = next(
+        queue for queue in system_map["project_focus"]["queues"] if queue["id"] == "verification-ready"
+    )
 
-    assert drafts
+    assert len(drafts) == min(12, len(verification_queue["project_ids"]))
     assert all(draft["read_only"] is True for draft in drafts)
     assert all(draft["id"].startswith("verification-ready-") for draft in drafts)
     assert all(draft["source"]["type"] == "system_map_verification_ready" for draft in drafts)
@@ -79,8 +83,10 @@ def test_domain_app_task_drafts_are_read_only():
 
 def test_capability_gap_task_drafts_are_read_only():
     drafts = get_capability_gap_task_drafts()
+    gaps = build_system_map()["gaps"]
 
     assert drafts
+    assert len(drafts) == len(gaps)
     assert all(draft["read_only"] is True for draft in drafts)
     assert all(draft["id"].startswith("capability-gap-") for draft in drafts)
     assert all(draft["source"]["type"] == "system_map_capability_gap" for draft in drafts)
@@ -90,11 +96,22 @@ def test_capability_gap_task_drafts_are_read_only():
     assert all(draft["draft"]["evidence_fields"] for draft in drafts)
 
 
+def test_router_degradation_is_forwarded_to_capability_gap_drafts():
+    system_map = build_system_map()
+    unavailable = system_map["router_health"]["summary"]["unavailable"]
+    router_drafts = [
+        draft for draft in get_capability_gap_task_drafts() if draft["source"]["id"] == "router-module-degradation"
+    ]
+
+    assert bool(router_drafts) is bool(unavailable)
+
+
 def test_page_maturity_task_drafts_are_read_only():
     drafts = get_page_maturity_task_drafts()
     attention_items = build_system_map()["page_maturity"]["attention_items"]
 
     assert bool(drafts) is bool(attention_items)
+    assert len(drafts) == len(attention_items)
     assert all(draft["read_only"] is True for draft in drafts)
     assert all(draft["id"].startswith("page-maturity-") for draft in drafts)
     assert all(draft["source"]["type"] == "system_map_page_maturity" for draft in drafts)
@@ -124,6 +141,7 @@ def test_tasks_route_can_include_project_portfolio_drafts():
 
 def test_tasks_route_can_include_verification_ready_drafts():
     client = TestClient(app)
+    has_verification_ready_drafts = bool(get_verification_ready_task_drafts())
 
     default_resp = client.get("/api/tasks")
     assert default_resp.status_code == 200
@@ -131,7 +149,7 @@ def test_tasks_route_can_include_verification_ready_drafts():
 
     draft_resp = client.get("/api/tasks?include_verification_ready_drafts=true")
     assert draft_resp.status_code == 200
-    assert any(item["id"].startswith("verification-ready-") for item in draft_resp.json()["items"])
+    assert any(item["id"].startswith("verification-ready-") for item in draft_resp.json()["items"]) is has_verification_ready_drafts
 
     combined_resp = client.get(
         "/api/tasks?include_project_portfolio_drafts=true&include_verification_ready_drafts=true"
@@ -139,7 +157,7 @@ def test_tasks_route_can_include_verification_ready_drafts():
     assert combined_resp.status_code == 200
     combined_items = combined_resp.json()["items"]
     assert any(item["id"].startswith("portfolio-") for item in combined_items)
-    assert any(item["id"].startswith("verification-ready-") for item in combined_items)
+    assert any(item["id"].startswith("verification-ready-") for item in combined_items) is has_verification_ready_drafts
 
 
 def test_tasks_route_can_include_domain_app_drafts():
@@ -222,7 +240,7 @@ def test_task_pause_uses_omo_ingress(monkeypatch):
     client = TestClient(app)
     calls = []
 
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: "active")
 
     def fake_revert(*args, **kwargs):
         calls.append((args, kwargs))
@@ -239,7 +257,7 @@ def test_task_pause_uses_omo_ingress(monkeypatch):
 
 def test_task_cancel_does_not_fabricate_a_cancelled_state(monkeypatch):
     client = TestClient(app)
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: "active")
 
     response = client.post("/api/tasks/task-1/cancel")
 
@@ -261,8 +279,8 @@ def test_task_draft_promotes_through_omo_ingress(monkeypatch):
         "draft": {"guard": "只读草稿；正式写入需走 OMO。"},
     }
     calls = []
-    monkeypatch.setattr(api_tasks, "_get_task_draft", lambda _draft_id: draft)
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(api_tasks_common, "_get_task_draft", lambda _draft_id: draft)
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: None)
 
     def fake_create(*args, **kwargs):
         calls.append((args, kwargs))
@@ -293,8 +311,8 @@ def test_task_draft_promotion_is_idempotent_for_planned_task(monkeypatch):
         "source": {"type": "system_map_playbook", "id": "demo", "source_refs": []},
         "draft": {"guard": "只读草稿。"},
     }
-    monkeypatch.setattr(api_tasks, "_get_task_draft", lambda _draft_id: draft)
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+    monkeypatch.setattr(api_tasks_common, "_get_task_draft", lambda _draft_id: draft)
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: "planned")
     monkeypatch.setattr(
         "omo.omo_ingress_task_lifecycle.create_planned_task",
         lambda *args, **kwargs: kwargs["task_data"],
@@ -330,6 +348,9 @@ def test_task_history_reads_omo_trail_without_shadowing_it(tmp_path, monkeypatch
         encoding="utf-8",
     )
     monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks_common, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
     client = TestClient(app)
 
     response = client.get("/api/tasks/task-history/history")
@@ -373,8 +394,8 @@ def test_queue_project_action_creates_approval_gated_planned_task(monkeypatch):
         ]
     }
     calls = []
-    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda _task_id: None)
 
     def fake_create(*args, **kwargs):
         calls.append(kwargs)
@@ -385,15 +406,16 @@ def test_queue_project_action_creates_approval_gated_planned_task(monkeypatch):
     response = client.post("/api/cockpit/projects/demo/actions/copy-start-command/queue")
 
     assert response.status_code == 200
-    assert response.json()["executes"] is False
+    assert response.json()["executes"] is True
     assert calls[0]["task_data"]["human_approval_required"] is True
     assert calls[0]["task_data"]["allowed_operation_level"] == "L2"
+    assert calls[0]["task_data"]["metadata"]["controlled_process"] is True
     assert calls[0]["source_ref"] == "cockpit:project-action:demo:copy-start-command"
 
 
 def test_queue_project_action_rejects_non_command_action(monkeypatch):
     monkeypatch.setattr(
-        api_tasks,
+        api_tasks_queues_project,
         "build_system_map",
         lambda: {"projects": [{"id": "demo", "actions": [{"id": "open", "kind": "navigate", "enabled": True}]}]},
     )
@@ -402,6 +424,70 @@ def test_queue_project_action_rejects_non_command_action(monkeypatch):
     response = client.post("/api/cockpit/projects/demo/actions/open/queue")
 
     assert response.status_code == 409
+
+
+def test_queue_page_operator_action_creates_non_executing_task(monkeypatch):
+    calls = []
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = TestClient(app).post("/api/cockpit/pages/QuestBoard/actions/complete-quest/queue")
+
+    assert response.status_code == 200
+    assert response.json()["executes"] is False
+    assert calls[0]["task_data"]["task_type"] == "page_operator_action"
+    assert calls[0]["task_data"]["metadata"]["page_id"] == "QuestBoard"
+    assert calls[0]["task_data"]["metadata"]["operator_action_label"] == "完成积分任务"
+    assert calls[0]["task_data"]["metadata"]["operator_action_kind"] == "queue"
+    assert calls[0]["task_data"]["metadata"]["operator_action_risk"] == "medium"
+    assert calls[0]["source_ref"] == "cockpit:page-action:QuestBoard:complete-quest"
+
+
+def test_queue_page_operator_action_rejects_unknown_catalog_action():
+    response = TestClient(app).post("/api/cockpit/pages/QuestBoard/actions/not-a-real-action/queue")
+
+    assert response.status_code == 404
+
+
+def test_queue_page_roadmap_creates_page_roadmap_task(monkeypatch):
+    client = TestClient(app)
+    roadmap = {
+        "items": [
+            {
+                "id": "page-contract-home",
+                "title": "补齐首页页面运营契约",
+                "cockpit_page": "Home",
+                "priority": "P1",
+                "status": "planned",
+                "problem": "首页需要补齐运营契约。",
+                "actions": ["绑定首页数据源和验收证据。"],
+                "acceptance": ["首页能回到任务中心继续收口。"],
+                "source_refs": [{"target": "src/cockpit/web/api_system_map.py:1"}],
+            }
+        ]
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: {"roadmap": roadmap})
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda _task_id: None)
+
+    def fake_create(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs["task_data"]
+
+    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.create_planned_task", fake_create)
+
+    response = client.post("/api/cockpit/roadmap/page-contract-home/queue")
+
+    assert response.status_code == 200
+    assert response.json()["page_id"] == "Home"
+    assert calls[0]["task_data"]["task_type"] == "page_roadmap"
+    assert calls[0]["task_data"]["metadata"]["roadmap_status"] == "planned"
+    assert calls[0]["source_ref"] == "cockpit:page-roadmap:Home:page-contract-home"
 
 
 def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
@@ -427,8 +513,8 @@ def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
         ]
     }
     calls = []
-    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda _task_id: None)
 
     def fake_create(*args, **kwargs):
         calls.append(kwargs)
@@ -444,6 +530,18 @@ def test_queue_project_triage_command_creates_non_executing_task(monkeypatch):
     assert calls[0]["task_data"]["metadata"]["controlled_execution"] is True
     assert calls[0]["task_data"]["metadata"]["action_id"] == "copy-verify-command"
     assert calls[0]["source_ref"] == "cockpit:project-triage:demo:verification-rerun"
+
+
+def test_next_triage_task_id_allocates_new_attempt_after_done(tmp_path, monkeypatch):
+    task_root = tmp_path / ".omo" / "tasks" / "done"
+    task_root.mkdir(parents=True, exist_ok=True)
+    (task_root / "cockpit-triage-demo-verification-rerun.yaml").write_text("status: completed\n", encoding="utf-8")
+    monkeypatch.setattr(api_tasks_queues_project, "WORKSPACE_DIR", tmp_path)
+
+    task_id, existing_group = api_tasks_queues_project._next_triage_task_id("demo", "verification-rerun")
+
+    assert task_id == "cockpit-triage-demo-verification-rerun-r2"
+    assert existing_group is None
 
 
 def test_queue_runtime_port_probe_exposes_structured_controlled_execution(monkeypatch):
@@ -467,8 +565,8 @@ def test_queue_runtime_port_probe_exposes_structured_controlled_execution(monkey
         ]
     }
     calls = []
-    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: None)
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda _task_id: None)
     monkeypatch.setattr(
         "omo.omo_ingress_task_lifecycle.create_planned_task",
         lambda *args, **kwargs: calls.append(kwargs) or kwargs["task_data"],
@@ -706,8 +804,8 @@ def test_queue_verification_triage_batches_only_matching_commands(monkeypatch):
         calls.append((project_id, command_id))
         return {"id": f"cockpit-triage-{project_id}-{command_id}", "executes": False}
 
-    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
-    monkeypatch.setattr(api_tasks, "queue_project_triage_command", fake_queue)
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks_queues_project, "queue_project_triage_command", fake_queue)
 
     response = TestClient(app).post("/api/cockpit/triage/queue", json={"project_ids": ["demo-a", "demo-b"]})
 
@@ -736,8 +834,8 @@ def test_queue_runtime_triage_uses_probe_fallback_per_project(monkeypatch):
         calls.append((project_id, command_id))
         return {"id": f"cockpit-triage-{project_id}-{command_id}", "executes": False}
 
-    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
-    monkeypatch.setattr(api_tasks, "queue_project_triage_command", fake_queue)
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks_queues_project, "queue_project_triage_command", fake_queue)
 
     response = TestClient(app).post("/api/cockpit/triage/queue", json={"category": "runtime"})
 
@@ -784,21 +882,43 @@ def test_execute_verification_triage_runs_only_failed_active_tasks(monkeypatch):
         "task-b": {"metadata": {"controlled_execution": True, "execution_audit": {"exit_code": 0}}},
     }
     calls = []
-    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
-    monkeypatch.setattr(api_tasks, "_task_group", lambda task_id: "active")
-    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda task_id, _group: payloads[task_id])
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda task_id: "active")
+    monkeypatch.setattr(api_tasks_queues_project, "_load_persisted_task", lambda task_id, _group: payloads[task_id])
+    monkeypatch.setattr(api_tasks_queues_project, "_validate_evidence_paths", lambda refs: refs)
+    archived = []
+    monkeypatch.setattr(
+        api_tasks_queues_project,
+        "_transition_task",
+        lambda task_id, action, evidence_paths=None: archived.append((task_id, action, evidence_paths))
+        or {"id": task_id, "status": "completed"},
+    )
 
     def fake_execute(*args, **kwargs):
         calls.append(kwargs)
-        return {"exit_code": 0, "log_ref": "runtime/task-a.log", "execution_ref": ".omo/_delivery/task-a.yaml"}
+        return {
+            "exit_code": 0,
+            "log_ref": "runtime/task-a.log",
+            "execution_ref": ".omo/_delivery/task-a.yaml",
+        }
 
     monkeypatch.setattr("omo.omo_ingress_task_lifecycle.execute_controlled_task", fake_execute)
 
     response = TestClient(app).post("/api/cockpit/triage/execute", json={"limit": 8})
 
     assert response.status_code == 200
-    assert response.json()["summary"] == {"candidates": 1, "selected": 1, "succeeded": 1, "failed": 0}
+    assert response.json()["summary"] == {
+        "candidates": 1,
+        "selected": 1,
+        "succeeded": 1,
+        "failed": 0,
+        "archived": 1,
+        "archive_errors": 0,
+    }
     assert response.json()["executed"][0]["project_id"] == "service-a"
+    assert response.json()["executed"][0]["auto_completed"] is True
+    assert response.json()["summary"]["archived"] == 1
+    assert archived[0][0:2] == ("task-a", "complete")
     assert calls[0]["command_override"] == 'cd "/workspace" && printf a'
     assert calls[0]["timeout_seconds"] == 900
 
@@ -827,10 +947,10 @@ def test_execute_runtime_triage_requires_granted_approval(monkeypatch):
         }
     }
     calls = []
-    monkeypatch.setattr(api_tasks, "build_system_map", lambda: system_map)
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
-    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
-    monkeypatch.setattr(api_tasks, "_approval_state", lambda _task_data: "granted")
+    monkeypatch.setattr(api_tasks_queues_project, "build_system_map", lambda: system_map)
+    monkeypatch.setattr(api_tasks_queues_project, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks_queues_project, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(api_tasks_queues_project, "_approval_state", lambda _task_data: "granted")
 
     def fake_execute(*args, **kwargs):
         calls.append(kwargs)
@@ -848,7 +968,14 @@ def test_execute_runtime_triage_requires_granted_approval(monkeypatch):
     )
 
     assert response.status_code == 200
-    assert response.json()["summary"] == {"candidates": 1, "selected": 1, "succeeded": 0, "failed": 1}
+    assert response.json()["summary"] == {
+        "candidates": 1,
+        "selected": 1,
+        "succeeded": 0,
+        "failed": 1,
+        "archived": 0,
+        "archive_errors": 0,
+    }
     assert calls[0]["command_override"].startswith("for port in 7437")
     assert calls[0]["timeout_seconds"] == 120
 
@@ -864,8 +991,8 @@ def test_queue_coverage_drafts_promotes_selected_dimension(monkeypatch):
         promoted.append(draft_id)
         return {"id": draft_id, "created": draft_id.endswith("demo"), "status": "pending"}
 
-    monkeypatch.setitem(api_tasks._COVERAGE_DRAFT_GETTERS, "capability_gaps", lambda limit=8: drafts[:limit])
-    monkeypatch.setattr(api_tasks, "promote_task_draft", fake_promote)
+    monkeypatch.setitem(api_tasks_queues_integration._COVERAGE_DRAFT_GETTERS, "capability_gaps", lambda limit=8: drafts[:limit])
+    monkeypatch.setattr(api_tasks_queues_integration, "promote_task_draft", fake_promote)
 
     response = TestClient(app).post(
         "/api/cockpit/coverage/queue",
@@ -888,12 +1015,12 @@ def test_queue_coverage_drafts_rejects_unknown_category():
 
 
 def test_queue_all_coverage_dimensions_does_not_starve_later_categories(monkeypatch):
-    categories = list(api_tasks._COVERAGE_DRAFT_GETTERS)
+    categories = list(api_tasks_queues_integration._COVERAGE_DRAFT_GETTERS)
     promoted = []
 
     for category in categories:
         monkeypatch.setitem(
-            api_tasks._COVERAGE_DRAFT_GETTERS,
+            api_tasks_queues_integration._COVERAGE_DRAFT_GETTERS,
             category,
             lambda limit=8, category=category: [{"id": f"{category}-draft"}],
         )
@@ -902,7 +1029,7 @@ def test_queue_all_coverage_dimensions_does_not_starve_later_categories(monkeypa
         promoted.append(draft_id)
         return {"id": draft_id, "created": True, "status": "pending"}
 
-    monkeypatch.setattr(api_tasks, "promote_task_draft", fake_promote)
+    monkeypatch.setattr(api_tasks_queues_integration, "promote_task_draft", fake_promote)
 
     response = TestClient(app).post(
         "/api/cockpit/coverage/queue",
@@ -1175,6 +1302,8 @@ test_plan:
         encoding="utf-8",
     )
     monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks_common, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
 
     response = TestClient(app).get("/api/tasks")
 
@@ -1248,8 +1377,8 @@ def test_approve_task_applies_governed_approval(monkeypatch):
 def test_resume_rejects_unapproved_human_gate(monkeypatch):
     client = TestClient(app)
     payload = {"id": "approval-task", "status": "pending", "human_approval_required": True, "approval_ref": None}
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
-    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: "planned")
+    monkeypatch.setattr(api_tasks_common, "_load_persisted_task", lambda _task_id, _group: payload)
 
     response = client.post("/api/tasks/approval-task/resume")
 
@@ -1313,10 +1442,10 @@ def test_controlled_execute_routes_project_verification_through_omo(monkeypatch)
         },
     }
     calls = []
-    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
-    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks_common, "_load_persisted_task", lambda _task_id, _group: payload)
     monkeypatch.setattr(
-        api_tasks,
+        api_tasks_common,
         "build_system_map",
         lambda: {
             "projects": [
@@ -1349,6 +1478,48 @@ def test_controlled_execute_routes_project_verification_through_omo(monkeypatch)
     assert calls[0]["source_ref"] == "cockpit:task:execute:verify-task"
 
 
+@pytest.mark.parametrize("action", ["start", "stop", "restart"])
+def test_controlled_process_routes_project_start_through_omo(monkeypatch, action):
+    payload = {
+        "id": "start-task",
+        "status": "in_progress",
+        "human_approval_required": True,
+        "metadata": {"controlled_process": True, "action_id": "copy-start-command"},
+    }
+    calls = []
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks_common, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(api_tasks_common, "_approval_state", lambda _payload: "granted")
+    monkeypatch.setattr(
+        f"omo.omo_ingress_task_lifecycle.{action}_controlled_task",
+        lambda *args, **kwargs: calls.append(kwargs) or {"status": "started", "pid": 1234},
+    )
+
+    response = TestClient(app).post(f"/api/tasks/start-task/{action}")
+
+    assert response.status_code == 200
+    assert response.json()["process"]["pid"] == 1234
+    assert calls[0]["task_id"] == "start-task"
+    assert calls[0]["source_ref"] == f"cockpit:task:{action}:start-task"
+
+
+def test_controlled_process_rejects_unapproved_task(monkeypatch):
+    payload = {
+        "id": "start-task",
+        "status": "in_progress",
+        "human_approval_required": True,
+        "metadata": {"controlled_process": True, "action_id": "copy-start-command"},
+    }
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks_common, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(api_tasks_common, "_approval_state", lambda _payload: "requested")
+
+    response = TestClient(app).post("/api/tasks/start-task/start")
+
+    assert response.status_code == 409
+    assert "approval must be granted" in response.json()["detail"]
+
+
 def test_complete_from_execution_uses_generated_artifacts(monkeypatch, tmp_path):
     execution_ref = ".omo/_delivery/task-center/execution/verify-task.yaml"
     log_ref = "runtime/omo/verify-task.log"
@@ -1367,6 +1538,7 @@ def test_complete_from_execution_uses_generated_artifacts(monkeypatch, tmp_path)
     }
     calls = []
     monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks_common, "WORKSPACE_DIR", tmp_path)
     monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
     monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
@@ -1400,6 +1572,7 @@ def test_workflow_closeout_runs_structured_command_and_records_ref(monkeypatch, 
     commands = []
     recorded = []
     monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks_common, "WORKSPACE_DIR", tmp_path)
     monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
     monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
@@ -1480,13 +1653,13 @@ def test_domain_app_verification_promotes_and_executes_only_verify_action(monkey
         executions.append(task_id)
         return {"exit_code": 0, "log_ref": "runtime/demo.log"}
 
-    monkeypatch.setattr(api_tasks, "queue_domain_app_action", fake_queue)
+    monkeypatch.setattr(api_tasks_queues_project, "queue_domain_app_action", fake_queue)
     monkeypatch.setattr(
-        api_tasks,
+        api_tasks_queues_project,
         "_transition_task",
         lambda task_id, action: transitions.append((task_id, action)) or {"status": "in_progress"},
     )
-    monkeypatch.setattr(api_tasks, "execute_task_endpoint", fake_execute)
+    monkeypatch.setattr(api_tasks_queues_project, "execute_task_endpoint", fake_execute)
 
     response = TestClient(app).post("/api/cockpit/domain-apps/demo/verify")
 
@@ -1521,6 +1694,8 @@ reclaim:
     (tmp_path / ".omo/workers/runs/dispatch-task-checkpoint.md").write_text("checkpoint", encoding="utf-8")
     payload = {"id": "dispatch-task", "status": "in_progress", "run_ref": dispatch_ref, "dispatch_id": "dispatch-task"}
     monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks_common, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
     monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
 
@@ -1539,8 +1714,12 @@ def test_complete_passes_existing_evidence_to_omo(monkeypatch, tmp_path):
     payload = {"id": "evidence-task", "status": "in_progress"}
     calls = []
     monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks_common, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
     monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
     monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: payload)
+    monkeypatch.setattr(api_tasks_common, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(api_tasks_common, "_load_persisted_task", lambda _task_id, _group: payload)
     monkeypatch.setattr(
         "omo.omo_ingress_task_lifecycle.complete_task",
         lambda *args, **kwargs: calls.append(kwargs) or {"completed_at": "now"},

@@ -61,12 +61,12 @@ class DataIndexPaths:
 
 
 def resolve_workspace_root(start: Path | None = None) -> Path:
-    env_root = os.environ.get(_WORKSPACE_ROOT_ENV)
     candidates: list[Path] = []
-    if env_root:
-        candidates.extend(_expand_candidate(Path(env_root)))
     if start is not None:
         candidates.extend(_expand_candidate(start))
+    env_root = os.environ.get(_WORKSPACE_ROOT_ENV)
+    if env_root:
+        candidates.extend(_expand_candidate(Path(env_root)))
     candidates.extend(_expand_candidate(Path.cwd()))
     candidates.extend(_expand_candidate(Path(__file__).resolve()))
 

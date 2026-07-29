@@ -26,6 +26,7 @@ from cockpit.dashboard.constants import (
 )
 from cockpit.dashboard.routes import _auth_dependency as _auth_dep
 from cockpit.dashboard.routes import router as dashboard_router
+from cockpit.web.router_health import ROUTER_LOAD_REPORT, ROUTER_MODULES, router_health_snapshot
 from cockpit.web.versioning import register_app_routes, setup_version_middleware, version_manager
 
 # ─── FastAPI App ───────────────────────────────────────────────
@@ -54,34 +55,41 @@ except ImportError:
 
 # ─── Governance routers (graceful degradation) ────────────────
 
-for _router_module in (
-    "cockpit.web.governance.api",
-    "cockpit.web.api_compute",
-    "cockpit.web.api_domain_apps",
-    "cockpit.web.api_system_map",
-    "cockpit.web.api_omos",
-    "cockpit.web.api_ecos",
-    "cockpit.web.api_knowledge",
-    "cockpit.web.api_bos",
-    "cockpit.web.api_proposals",
-    "cockpit.web.api_metaos",
-    "cockpit.web.api_agora",
-    "cockpit.web.api_sandbox",
-    "cockpit.web.api_l4",
-    "cockpit.web.api_health",
-    "cockpit.web.api_alerts",
-    "cockpit.web.api_tasks",
-    "cockpit.web.api_logs",
-    "cockpit.web.api_metrics",
-    "cockpit.web.api_hubs",
-):
+for _router_module in ROUTER_MODULES:
     try:
         _mod = importlib.import_module(_router_module)
         _router = getattr(_mod, "router", None)
         if _router is not None:
             app.include_router(_router, dependencies=_AUTH_DEPS)
-            print(f"Successfully loaded router: {_router_module}")
+            route_count = len(getattr(_router, "routes", []) or [])
+            if getattr(_mod, "ROUTER_DEGRADED", False):
+                ROUTER_LOAD_REPORT.append(
+                    {
+                        "module": _router_module,
+                        "status": "degraded",
+                        "route_count": route_count,
+                        "error_type": "OptionalDependencyUnavailable",
+                        "error": str(getattr(_mod, "ROUTER_DEGRADED_REASON", "")),
+                    }
+                )
+                print(f"Loaded degraded router: {_router_module}")
+            else:
+                ROUTER_LOAD_REPORT.append(
+                    {"module": _router_module, "status": "loaded", "route_count": route_count}
+                )
+                print(f"Successfully loaded router: {_router_module}")
+        else:
+            ROUTER_LOAD_REPORT.append({"module": _router_module, "status": "missing_router", "route_count": 0})
     except Exception as e:  # defensive fallback
+        ROUTER_LOAD_REPORT.append(
+            {
+                "module": _router_module,
+                "status": "unavailable",
+                "route_count": 0,
+                "error_type": type(e).__name__,
+                "error": str(e),
+            }
+        )
         print(f"Error loading router {_router_module}: {e}", file=sys.stderr)
         traceback.print_exc()
 
@@ -98,7 +106,6 @@ except Exception as e:
 # ─── GBrain Proxy ─────────────────────────────────────────────
 
 
-@app.api_route("/admin/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 async def proxy_gbrain_admin(path: str, request: Request):
     """Forward /admin requests to the GBrain service (with Streaming/SSE support)."""
     import os
@@ -156,9 +163,26 @@ async def proxy_gbrain_admin(path: str, request: Request):
         return Response(content=f"Proxy error connecting to GBrain ({gbrain_port}): {str(e)}", status_code=502)
 
 
+# Register each method separately so OpenAPI exposes stable, unique operation IDs.
+for _admin_method in ("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"):
+    app.add_api_route(
+        "/admin/{path:path}",
+        proxy_gbrain_admin,
+        methods=[_admin_method],
+        name=f"proxy_gbrain_admin_{_admin_method.lower()}",
+        operation_id=f"proxy_gbrain_admin_{_admin_method.lower()}",
+    )
+
+
 # ─── Main dashboard router ────────────────────────────────────
 
 app.include_router(dashboard_router)
+
+
+@app.get("/api/cockpit/router-health", dependencies=_AUTH_DEPS)
+async def router_health() -> dict[str, object]:
+    """Expose structured router loading evidence after graceful degradation."""
+    return router_health_snapshot()
 
 # ─── Static files (Cockpit UI) ────────────────────────────
 

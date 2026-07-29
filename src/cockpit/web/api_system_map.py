@@ -32,6 +32,7 @@ from cockpit.web.api_system_map_catalog import (
     OPERATING_PLAYBOOKS,
     PACKAGE_MANIFESTS,
     PAGE_CAPABILITY_LINKS,
+    PAGE_OPERATOR_ACTION_METADATA,
     PAGE_OPERATOR_ACTIONS,
     PAGE_PROJECT_LINKS,
     PROJECT_COVERAGE_DIMENSIONS,
@@ -96,6 +97,50 @@ from cockpit.web.api_system_map_status import (
     _resolved_physical_location,
     _runtime_profile,
 )
+from cockpit.web.router_health import router_health_snapshot
+
+
+def _project_registry_contract(project_data: dict[str, Any], project_path: Path | None = None) -> dict[str, Any]:
+    fields = {
+        "生命周期": project_data.get("version") or project_data.get("status"),
+        "构建/运行约束": project_data.get("python") or project_data.get("build_backend"),
+        "实现落点": project_data.get("src_dir") or project_data.get("physical_location") or project_data.get("storage"),
+    }
+    missing_fields = [label for label, value in fields.items() if not value]
+    observed_path = project_path
+    if observed_path and observed_path.is_dir():
+        for candidate in ("src", "packages", "app", "bin"):
+            candidate_path = observed_path / candidate
+            if candidate_path.is_dir():
+                observed_path = candidate_path
+                break
+    observed_location = None
+    if observed_path:
+        try:
+            observed_location = str(observed_path.relative_to(compat.WORKSPACE_ROOT))
+        except ValueError:
+            observed_location = str(observed_path)
+    declared_location = (
+        project_data.get("src_dir")
+        or project_data.get("physical_location")
+        or project_data.get("storage")
+    )
+    return {
+        "status": project_data.get("status"),
+        "version": project_data.get("version"),
+        "python": project_data.get("python"),
+        "build_backend": project_data.get("build_backend"),
+        "src_dir": project_data.get("src_dir"),
+        "physical_location": project_data.get("physical_location"),
+        "port": project_data.get("port"),
+        "port_registry_ref": project_data.get("port_registry_ref"),
+        "coverage": project_data.get("coverage") if isinstance(project_data.get("coverage"), list) else [],
+        "observed_location": observed_location,
+        "observed_location_exists": bool(observed_path and observed_path.exists()),
+        "implementation_traceability": "declared" if declared_location else "observed_only" if observed_location else "unknown",
+        "missing_fields": missing_fields,
+        "status_text": "ready" if not missing_fields else "warning" if len(missing_fields) == 1 else "failed",
+    }
 
 
 def _build_projects(
@@ -114,10 +159,11 @@ def _build_projects(
             "layer": project_data.get("layer", "unknown"),
             "stack": project_data.get("stack", "unknown"),
             "role": project_data.get("role", ""),
+            "registry_contract": _project_registry_contract(project_data, project_path),
             "cockpit_page": page_id,
             "coverage": "native" if page_id != "SystemMap" or project_id.startswith("cockpit") else "orientation",
             "path": str(project_path),
-            "source_location": str(_project_source_location(project_data) or project_path),
+            "source_location": str(_project_source_location({**project_data, "id": project_id}) or project_path),
             "exists": project_path.exists(),
             "operational": operational,
             "runtime": runtime,
@@ -130,7 +176,41 @@ def _build_projects(
         project["diagnostics"] = _project_diagnostics(project)
         project["portfolio"] = _project_portfolio_state(project)
         projects.append(project)
+    _annotate_runtime_port_conflicts(projects)
     return projects
+
+
+def _annotate_runtime_port_conflicts(projects: list[dict[str, Any]]) -> None:
+    """Mark host-port collisions before runtime actions are shown to operators."""
+    owners: dict[int, list[str]] = defaultdict(list)
+    for project in projects:
+        for port in project.get("runtime", {}).get("ports", []):
+            if port.get("probeable", True) and isinstance(port.get("port"), int):
+                owners[port["port"]].append(project["id"])
+
+    for project in projects:
+        runtime = project.get("runtime", {})
+        conflicts: list[dict[str, Any]] = []
+        for port in runtime.get("ports", []):
+            project_ids = [project_id for project_id in owners.get(port.get("port"), []) if project_id != project["id"]]
+            if not project_ids:
+                continue
+            conflict = {
+                "port": port["port"],
+                "service": port.get("service", ""),
+                "projects": project_ids,
+            }
+            conflicts.append(conflict)
+            port["conflict_projects"] = project_ids
+        if conflicts:
+            runtime["port_conflicts"] = conflicts
+            conflict_ports = ", ".join(f":{item['port']}" for item in conflicts)
+            runtime["probe_reason"] = (
+                f"检测到主机端口冲突：{conflict_ports}；"
+                "启动前必须先确认只保留一个监听方。"
+            )
+        else:
+            runtime["port_conflicts"] = []
 
 
 def _build_domain_apps_summary() -> dict[str, Any]:
@@ -470,6 +550,10 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
         warning = sum(1 for _, check in checks if check["status"] == "warning")
         failed = sum(1 for _, check in checks if check["status"] == "failed")
         score = round((ready / total_projects) * 100) if total_projects else 0
+        documented = warning if dimension["id"] == "verification" else 0
+        evidence_score = (
+            round(((ready + documented * 0.5) / total_projects) * 100) if total_projects else 0
+        )
         status = "ready" if warning == 0 and failed == 0 else "warning" if failed == 0 else "failed"
         attention_projects = [
             {
@@ -479,7 +563,7 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
             }
             for project, check in checks
             if check["status"] != "ready"
-        ][:4]
+        ]
 
         dimension_summary.append(
             {
@@ -491,6 +575,9 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
                 "warning": warning,
                 "failed": failed,
                 "score": score,
+                "documented": documented,
+                "evidence_score": evidence_score,
+                "attention_count": len(attention_projects),
                 "attention_projects": attention_projects,
             }
         )
@@ -504,6 +591,12 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
     )
     failed_cells = sum(
         1 for project in projects for check in project.get("coverage_checks", []) if check["status"] == "failed"
+    )
+    documented_cells = sum(
+        1
+        for project in projects
+        for check in project.get("coverage_checks", [])
+        if check["id"] == "verification" and check["status"] == "warning"
     )
 
     weakest_dimensions = sorted(
@@ -535,6 +628,10 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
             "warning_cells": warning_cells,
             "failed_cells": failed_cells,
             "score": round((ready_cells / total_cells) * 100) if total_cells else 0,
+            "documented_cells": documented_cells,
+            "evidence_score": (
+                round(((ready_cells + documented_cells * 0.5) / total_cells) * 100) if total_cells else 0
+            ),
         },
     }
 
@@ -646,6 +743,7 @@ def _build_gap_list(
     feature_domains: list[dict[str, Any]],
     domain_apps: dict[str, Any],
     project_capability_coverage: dict[str, Any] | None = None,
+    router_health: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     orientation_only = [project["id"] for project in projects if project["coverage"] == "orientation"]
     operational_gaps = [
@@ -676,6 +774,22 @@ def _build_gap_list(
             }
         )
 
+    unavailable_routers = [
+        item.get("module", "unknown")
+        for item in (router_health or {}).get("items", [])
+        if item.get("status") != "loaded"
+    ]
+    if unavailable_routers:
+        gaps.append(
+            {
+                "id": "router-module-degradation",
+                "severity": "high",
+                "title": "部分 Cockpit 路由模块未加载",
+                "evidence": ", ".join(str(module) for module in unavailable_routers),
+                "next": "补齐缺失依赖或修复模块导入，再重新加载对应能力面。",
+            }
+        )
+
     for dimension in (project_capability_coverage or {}).get("weakest_dimensions") or []:
         if dimension.get("status") not in {"failed", "warning"}:
             continue
@@ -696,19 +810,125 @@ def _build_gap_list(
     return gaps
 
 
-def _build_roadmap() -> dict[str, Any]:
+def _page_contract_checks(
+    page_id: str,
+    projects: list[dict[str, Any]],
+    feature_domains: list[dict[str, Any]],
+    usage_paths: list[dict[str, Any]],
+    playbooks: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    linked_project_ids = set(PAGE_PROJECT_LINKS.get(page_id, ()))
+    page_projects = [
+        project
+        for project in projects
+        if project.get("cockpit_page") == page_id or project.get("id") in linked_project_ids
+    ]
+    linked_domain_ids = set(PAGE_CAPABILITY_LINKS.get(page_id, ()))
+    page_domains = [
+        domain
+        for domain in feature_domains
+        if domain.get("cockpit_page") == page_id or domain.get("id") in linked_domain_ids
+    ]
+    page_usage_paths = [
+        path for path in usage_paths if any(page.get("id") == page_id for page in path.get("pages") or [])
+    ]
+    page_playbook_steps = [
+        step
+        for playbook in playbooks
+        for step in playbook.get("steps") or []
+        if step.get("page_id") == page_id or (step.get("page") or {}).get("id") == page_id
+    ]
+    project_action_count = sum(
+        len(project.get("actions") or []) + len(project.get("triage_commands") or []) for project in page_projects
+    )
+    action_count = project_action_count + len(PAGE_OPERATOR_ACTIONS.get(page_id, ()))
+    return [
+        {
+            "id": "object-mapping",
+            "label": "对象映射",
+            "status": "passed" if page_projects or page_domains else "attention",
+            "evidence": f"项目 {len(page_projects)} · 能力域 {len(page_domains)}",
+        },
+        {
+            "id": "usage-path",
+            "label": "使用路径",
+            "status": "passed" if page_usage_paths else "attention",
+            "evidence": f"使用路径 {len(page_usage_paths)}",
+        },
+        {
+            "id": "operating-playbook",
+            "label": "操作清单",
+            "status": "passed" if page_playbook_steps else "attention",
+            "evidence": f"清单步骤 {len(page_playbook_steps)}",
+        },
+        {
+            "id": "operator-actions",
+            "label": "受控动作",
+            "status": "passed" if action_count else "attention",
+            "evidence": f"动作 {action_count}",
+        },
+    ]
+
+
+def _build_roadmap(
+    projects: list[dict[str, Any]],
+    feature_domains: list[dict[str, Any]],
+    usage_paths: list[dict[str, Any]],
+    playbooks: list[dict[str, Any]],
+) -> dict[str, Any]:
     lane_labels = {
         "now": "现在补",
         "next": "下一步",
         "later": "后续增强",
     }
     lanes = []
+    existing_items = list(ROADMAP_ITEMS)
+    covered_pages = {item.get("cockpit_page") for item in existing_items}
+    # Every page needs an explicit evolution contract.  Keep generated
+    # contracts planned until a page has a real acceptance entry in the
+    # curated roadmap; otherwise maturity silently treats missing planning as
+    # a healthy page.
+    page_contract_checks = {
+        page["id"]: _page_contract_checks(page["id"], projects, feature_domains, usage_paths, playbooks)
+        for page in COCKPIT_PAGES
+    }
+    generated_page_contracts = [
+        {
+            "id": f"page-contract-{page['id'].lower()}",
+            "priority": "P1",
+            "stage": "next",
+            "status": "shipped"
+            if all(check["status"] == "passed" for check in page_contract_checks[page["id"]])
+            else "planned",
+            "title": f"补齐{page['title']}页面运营契约",
+            "domain": "page-coverage",
+            "cockpit_page": page["id"],
+            "problem": f"{page['title']}已有 Cockpit 入口，但页面对象、动作、证据和下一步建设还没有独立的路线项。",
+            "actions": (
+                "把页面数据源、可用动作、验证证据和使用路径绑定到同一份页面契约。",
+                "为页面补一个可重复执行的验收项，并把结果回链到 TaskCenter。",
+            ),
+            "acceptance": (
+                "页面能清楚说明对象、动作、证据和当前下一步。",
+                "页面契约能在 SystemMap 和 TaskCenter 之间往返，不再只留下模糊 watch。",
+            ),
+            "verification": {
+                "mode": "runtime",
+                "status": "passed"
+                if all(check["status"] == "passed" for check in page_contract_checks[page["id"]])
+                else "attention",
+                "checks": page_contract_checks[page["id"]],
+            },
+        }
+        for page in COCKPIT_PAGES
+        if page["id"] not in covered_pages
+    ]
     items = [
         {
             **item,
             "source_refs": [_source_ref_for_id(CATALOG_SOURCE, item["id"], "路线图定义", "system_map_api")],
         }
-        for item in ROADMAP_ITEMS
+        for item in [*existing_items, *generated_page_contracts]
     ]
     for lane_id, label in lane_labels.items():
         lane_items = [item for item in items if item["stage"] == lane_id]
@@ -811,10 +1031,26 @@ def _build_page_maturity(
             if step.get("page_id") == page_id or (step.get("page") or {}).get("id") == page_id
         ]
         page_roadmap_items = [item for item in roadmap_items if item.get("cockpit_page") == page_id]
+        roadmap_status = "shipped" if any(item.get("status") == "shipped" for item in page_roadmap_items) else "planned"
         project_action_count = sum(
             len(project.get("actions") or []) + len(project.get("triage_commands") or []) for project in page_projects
         )
         page_action_ids = list(PAGE_OPERATOR_ACTIONS.get(page_id, ()))
+        page_action_details = [
+            {
+                "id": action_id,
+                **PAGE_OPERATOR_ACTION_METADATA.get(
+                    action_id,
+                    {
+                        "label": action_id,
+                        "kind": "queue",
+                        "risk": "medium",
+                        "description": "进入任务中心承接该页面动作。",
+                    },
+                ),
+            }
+            for action_id in page_action_ids
+        ]
         action_count = project_action_count + len(page_action_ids)
         score = (
             (25 if page_projects else 0)
@@ -824,13 +1060,28 @@ def _build_page_maturity(
             + (10 if page_roadmap_items else 0)
             + (10 if action_count else 0)
         )
-        status = "ready" if score >= 70 else "watch" if score >= 40 else "gap"
+        traceability_status = "tracked" if page_roadmap_items else "untracked"
+        status = (
+            "ready"
+            if score >= 70 and traceability_status == "tracked" and roadmap_status == "shipped"
+            else "watch"
+            if score >= 40
+            else "gap"
+        )
+        traceability_next_action = (
+            "保持页面路线图与验收项同步。"
+            if roadmap_status == "shipped"
+            else "把页面运营契约从 planned 推进到 shipped，并补真实验收证据。"
+        )
         items.append(
             {
                 "page": page,
                 "page_id": page_id,
                 "score": score,
                 "status": status,
+                "traceability_status": traceability_status,
+                "traceability_next_action": traceability_next_action,
+                "roadmap_status": roadmap_status,
                 "projects": [project.get("id") for project in page_projects],
                 "domains": [domain.get("id") for domain in page_domains],
                 "usage_paths": [path.get("id") for path in page_usage_paths],
@@ -838,13 +1089,18 @@ def _build_page_maturity(
                 "roadmap_items": [item.get("id") for item in page_roadmap_items],
                 "actions": action_count,
                 "operator_actions": page_action_ids,
-                "next_action": _page_maturity_next_action(
-                    page_projects,
-                    page_domains,
-                    page_usage_paths,
-                    page_playbook_steps,
-                    page_roadmap_items,
-                    action_count,
+                "operator_action_details": page_action_details,
+                "next_action": (
+                    traceability_next_action
+                    if roadmap_status != "shipped"
+                    else _page_maturity_next_action(
+                        page_projects,
+                        page_domains,
+                        page_usage_paths,
+                        page_playbook_steps,
+                        page_roadmap_items,
+                        action_count,
+                    )
                 ),
             }
         )
@@ -852,6 +1108,9 @@ def _build_page_maturity(
     return {
         "items": items,
         "attention_items": [
+            item for item in sorted(items, key=lambda row: (row["score"], row["page_id"])) if item["status"] != "ready"
+        ],
+        "featured_attention_items": [
             item for item in sorted(items, key=lambda row: (row["score"], row["page_id"])) if item["status"] != "ready"
         ][:8],
         "summary": {
@@ -891,13 +1150,14 @@ def build_system_map() -> dict[str, Any]:
     project_capability_coverage = _build_project_capability_coverage(projects)
     project_portfolio = _build_project_portfolio(projects, project_capability_coverage)
     domain_apps = _build_domain_apps_summary()
+    router_health = router_health_snapshot()
     feature_domains = _parse_capability_domains(capability_map_path)
     layers = _build_layers(registry, projects, registry_path)
     page_lookup = {page["id"]: page for page in COCKPIT_PAGES}
-    gaps = _build_gap_list(projects, feature_domains, domain_apps, project_capability_coverage)
-    roadmap = _build_roadmap()
+    gaps = _build_gap_list(projects, feature_domains, domain_apps, project_capability_coverage, router_health)
     playbooks = _build_playbooks(page_lookup)
     usage_paths = _build_usage_paths(page_lookup)
+    roadmap = _build_roadmap(projects, feature_domains, usage_paths, playbooks)
     page_maturity = _build_page_maturity(projects, feature_domains, usage_paths, playbooks, roadmap)
 
     return {
@@ -924,6 +1184,7 @@ def build_system_map() -> dict[str, Any]:
         "project_capability_coverage": project_capability_coverage,
         "project_portfolio": project_portfolio,
         "domain_apps": domain_apps,
+        "router_health": router_health,
         "feature_domains": feature_domains,
         "roadmap": roadmap,
         "playbooks": playbooks,

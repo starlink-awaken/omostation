@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def _discover_workspace_root() -> Path:
-    configured = os.environ.get("WORKSPACE_ROOT") or os.environ.get("WORKSPACE")
+    configured = os.environ.get("WORKSPACE") or os.environ.get("WORKSPACE_ROOT")
     if configured:
         return Path(configured).expanduser()
 

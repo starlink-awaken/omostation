@@ -181,3 +181,56 @@ async def execute_task_endpoint(task_id: str):
         "timed_out": result.get("timed_out", False),
         "source": "omo_controlled_execution",
     }
+
+
+async def _control_task_process(task_id: str, action: str) -> dict:
+    """Route process control through the OMO broker and return its audit record."""
+    group = _task_group(task_id)
+    if group != "active":
+        raise HTTPException(status_code=409, detail="Only active tasks can control a service process")
+    payload = _load_persisted_task(task_id, group)
+    if payload.get("human_approval_required") and _approval_state(payload) != "granted":
+        raise HTTPException(status_code=409, detail="Task approval must be granted before process control")
+    metadata = payload.get("metadata") or {}
+    if metadata.get("controlled_process") is not True:
+        raise HTTPException(status_code=409, detail="Task is not eligible for controlled process control")
+
+    try:
+        from omo.omo_ingress_task_lifecycle import (
+            restart_controlled_task,
+            start_controlled_task,
+            stop_controlled_task,
+        )
+
+        kwargs = {
+            "omo_dir": WORKSPACE_DIR / ".omo",
+            "task_id": task_id,
+            "actor": "cockpit-task-center",
+            "source_ref": f"cockpit:task:{action}:{task_id}",
+        }
+        handler = {
+            "start": start_controlled_task,
+            "stop": stop_controlled_task,
+            "restart": restart_controlled_task,
+        }[action]
+        process = handler(**kwargs)
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO controlled process broker is unavailable") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"id": task_id, "status": "recorded", "process": process, "source": "omo_controlled_process"}
+
+
+@router.post("/api/tasks/{task_id}/start")
+async def start_task_process(task_id: str):
+    return await _control_task_process(task_id, "start")
+
+
+@router.post("/api/tasks/{task_id}/stop")
+async def stop_task_process(task_id: str):
+    return await _control_task_process(task_id, "stop")
+
+
+@router.post("/api/tasks/{task_id}/restart")
+async def restart_task_process(task_id: str):
+    return await _control_task_process(task_id, "restart")

@@ -23,6 +23,7 @@ Functions:
 from __future__ import annotations
 
 import json
+import logging
 import re
 import subprocess
 import sys
@@ -39,6 +40,7 @@ from cockpit.web.api_system_map import build_system_map
 # L4-kernel 项目路径
 WORKSPACE_DIR = WORKSPACE_ROOT
 L4_KERNEL_DIR = WORKSPACE_DIR / "projects" / "l4-kernel"
+logger = logging.getLogger(__name__)
 
 
 def run_l4_script(script_name: str, args: list[str] | None = None) -> dict | None:
@@ -82,8 +84,12 @@ def _execution_contract(task_data: dict) -> dict:
         "test_plan": task_data.get("test_plan") or [],
         "source_docs": task_data.get("source_docs") or [],
         "command": metadata.get("command"),
-        "executes": metadata.get("cockpit_only") is not True or metadata.get("controlled_execution") is True,
+        "executes": metadata.get("cockpit_only") is not True
+        or metadata.get("controlled_execution") is True
+        or metadata.get("controlled_process") is True,
         "controlled_execution": metadata.get("controlled_execution") is True,
+        "controlled_process": metadata.get("controlled_process") is True,
+        "execution_process": metadata.get("execution_process"),
         "timeout_seconds": metadata.get("timeout_seconds", default_timeout)
         if metadata.get("controlled_execution") is True
         else None,
@@ -242,7 +248,8 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # defensive fallback
+            except Exception as exc:  # defensive fallback
+                logger.debug("skip malformed active task %s: %s", task_file, exc)
                 continue
 
     # 读取计划任务
@@ -269,7 +276,8 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # defensive fallback
+            except Exception as exc:  # defensive fallback
+                logger.debug("skip malformed planned task %s: %s", task_file, exc)
                 continue
 
     # 读取完成任务
@@ -296,7 +304,8 @@ def get_tasks_from_omo() -> list[dict]:
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
-            except Exception:  # defensive fallback
+            except Exception as exc:  # defensive fallback
+                logger.debug("skip malformed done task %s: %s", task_file, exc)
                 continue
 
     return tasks
@@ -587,13 +596,16 @@ def _capability_gap_copy_text(gap: dict) -> str:
     return "\n".join(lines)
 
 
-def get_capability_gap_task_drafts(limit: int = 8) -> list[dict]:
+def get_capability_gap_task_drafts(limit: int | None = None) -> list[dict]:
     """Build read-only TaskCenter drafts from SystemMap capability gaps."""
     system_map = build_system_map()
     generated_at = system_map.get("generated_at") or datetime.now(UTC).isoformat()
     drafts: list[dict] = []
 
-    for gap in (system_map.get("gaps") or [])[:limit]:
+    gaps = system_map.get("gaps") or []
+    if limit is not None:
+        gaps = gaps[:limit]
+    for gap in gaps:
         gap_id = gap.get("id", "unknown")
         drafts.append(
             {
@@ -646,8 +658,9 @@ def _priority_from_page_maturity(page_item: dict) -> str:
 
 def _page_maturity_copy_text(page_item: dict) -> str:
     page = page_item.get("page") or {}
+    action = "纳入追踪" if page_item.get("traceability_status") == "untracked" else "补齐"
     lines = [
-        f"# 页面能力补齐草稿：{page.get('title', page_item.get('page_id', 'unknown'))}",
+        f"# 页面能力{action}草稿：{page.get('title', page_item.get('page_id', 'unknown'))}",
         "",
         f"页面：{page_item.get('page_id', 'unknown')}",
         f"状态：{page_item.get('status', 'unknown')} · 成熟度：{page_item.get('score', 0)}%",
@@ -668,20 +681,24 @@ def _page_maturity_copy_text(page_item: dict) -> str:
     return "\n".join(lines)
 
 
-def get_page_maturity_task_drafts(limit: int = 8) -> list[dict]:
+def get_page_maturity_task_drafts(limit: int | None = None) -> list[dict]:
     """Build read-only TaskCenter drafts from Cockpit page maturity attention items."""
     system_map = build_system_map()
     generated_at = system_map.get("generated_at") or datetime.now(UTC).isoformat()
     page_maturity = system_map.get("page_maturity") or {}
     drafts: list[dict] = []
 
-    for page_item in (page_maturity.get("attention_items") or [])[:limit]:
+    attention_items = page_maturity.get("attention_items") or []
+    if limit is not None:
+        attention_items = attention_items[:limit]
+    for page_item in attention_items:
         page = page_item.get("page") or {}
         page_id = page_item.get("page_id", page.get("id", "unknown"))
+        action = "纳入追踪" if page_item.get("traceability_status") == "untracked" else "补齐"
         drafts.append(
             {
                 "id": f"page-maturity-{page_id}",
-                "title": f"页面能力：补齐 {page.get('title', page_id)}",
+                "title": f"页面能力：{action} {page.get('title', page_id)}",
                 "description": page_item.get("next_action", ""),
                 "status": "pending",
                 "progress": 0,
@@ -909,7 +926,7 @@ def _task_group(task_id: str) -> str | None:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", task_id):
         raise HTTPException(status_code=400, detail="Invalid task id")
     task_root = WORKSPACE_DIR / ".omo" / "tasks"
-    for group in ("active", "planned", "done"):
+    for group in ("active", "planned", "done", "archived/done"):
         if (task_root / group / f"{task_id}.yaml").is_file():
             return group
     return None

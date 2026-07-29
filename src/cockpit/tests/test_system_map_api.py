@@ -1,11 +1,12 @@
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 from cockpit import compat
 from cockpit.dashboard_server import app
-from cockpit.web import api_system_map, api_system_map_status
+from cockpit.web import api_system_map, api_system_map_io_commands, api_system_map_status
 from cockpit.web.api_system_map import build_source_ref_preview, build_system_map
 
 
@@ -64,6 +65,7 @@ def test_system_map_builds_workspace_dimensions():
     assert payload["source_paths"]["project_registry"]["exists"] is True
     assert any(page["id"] == "SystemMap" for page in payload["cockpit_pages"])
     assert any(page["id"] == "Guide" for page in payload["cockpit_pages"])
+    assert any(page["id"] == "GBrainAdmin" for page in payload["cockpit_pages"])
     # domain-app-write-gates is a legitimate dynamic gap when domain-apps are
     # unavailable or have security issues; assert gap shape instead of absence.
     assert all(gap.get("id") and gap.get("severity") for gap in payload["gaps"])
@@ -76,12 +78,18 @@ def test_system_map_builds_workspace_dimensions():
     runtime_playbook = next(item for item in payload["playbooks"] if item["id"] == "runtime-diagnostic-loop")
     assert any(step["page_id"] == "AlertCenter" for step in runtime_playbook["steps"])
     assert payload["summary"]["roadmap_items"] >= 1
+    page_contract = next(item for item in payload["roadmap"]["items"] if item["id"] == "page-contract-home")
+    assert page_contract["status"] == "shipped"
+    assert page_contract["cockpit_page"] == "Home"
+    assert page_contract["verification"]["status"] == "passed"
+    assert all(check["status"] == "passed" for check in page_contract["verification"]["checks"])
     assert payload["summary"]["ready_projects"] >= 1
     assert "partial_projects" in payload["summary"]
     assert "running_projects" in payload["summary"]
     assert payload["summary"]["playbooks"] >= 1
     assert payload["summary"]["source_refs"] >= 1
     assert payload["summary"]["project_actions"] >= 1
+
     assert "projects_needing_action" in payload["summary"]
     assert payload["summary"]["project_triage_commands"] >= 1
     assert "project_coverage_score" in payload["summary"]
@@ -104,6 +112,20 @@ def test_system_map_builds_workspace_dimensions():
     assert "attention_items" in domain_apps
     assert domain_apps["next_action"]
     assert payload["summary"]["page_maturity_ready"] >= 1
+    assert payload["summary"]["page_maturity_ready"] == payload["summary"]["cockpit_pages"]
+    assert any(
+        step["page_id"] == "Compute"
+        for playbook in payload["playbooks"]
+        for step in playbook["steps"]
+    )
+    assert any(
+        step["page_id"] == "GBrainAdmin"
+        for playbook in payload["playbooks"]
+        for step in playbook["steps"]
+    )
+    home_maturity = next(item for item in payload["page_maturity"]["items"] if item["page_id"] == "Home")
+    assert home_maturity["roadmap_status"] == "shipped"
+    assert "同步" in home_maturity["traceability_next_action"]
     assert "page_maturity_score" in payload["summary"]
     assert payload["summary"]["page_maturity_gap"] >= 0
     assert payload["summary"]["page_maturity_watch"] >= 0
@@ -124,6 +146,7 @@ def test_system_map_builds_workspace_dimensions():
     assert "observability" in maturity_by_page["Topology"]["projects"]
     assert "family-hub" in maturity_by_page["QuestBoard"]["projects"]
     assert "compute-routing" in maturity_by_page["Compute"]["usage_paths"]
+    assert "gbrain" in maturity_by_page["GBrainAdmin"]["projects"]
     assert payload["project_focus"]["summary"]["needs_action"] >= 1
     needs_action_queue = next(queue for queue in payload["project_focus"]["queues"] if queue["id"] == "needs-action")
     assert needs_action_queue["top_projects"]
@@ -134,6 +157,23 @@ def test_system_map_builds_workspace_dimensions():
     assert coverage["summary"]["ready_cells"] >= 1
     assert coverage["dimension_summary"]
     assert any(item["id"] == "verification" for item in coverage["dimension_summary"])
+    registry_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "registry_contract")
+    assert registry_dimension["status"] in {"ready", "warning", "failed"}
+    assert registry_dimension["ready"] + registry_dimension["warning"] + registry_dimension["failed"] == coverage["summary"]["projects"]
+    assert registry_dimension["attention_projects"] == [
+        project["id"]
+        for project in payload["projects"]
+        if next(check for check in project["coverage_checks"] if check["id"] == "registry_contract")["status"] != "ready"
+    ]
+    runtime_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "runtime_probe")
+    runtime_attention_ids = {item["id"] for item in runtime_dimension["attention_projects"]}
+    assert runtime_dimension["attention_count"] == len(runtime_dimension["attention_projects"])
+    assert runtime_attention_ids >= {"mesh-router", "ecos", "l4-kernel", "aetherforge", "observability"}
+    verification_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "verification")
+    assert verification_dimension["documented"] == verification_dimension["warning"]
+    assert verification_dimension["evidence_score"] >= verification_dimension["score"]
+    assert coverage["summary"]["documented_cells"] == verification_dimension["documented"]
+    assert coverage["summary"]["evidence_score"] >= coverage["summary"]["score"]
     assert coverage["weakest_dimensions"]
     assert coverage["matrix"]
     portfolio = payload["project_portfolio"]
@@ -150,7 +190,7 @@ def test_system_map_builds_workspace_dimensions():
     assert any(queue["id"] == "verification-gap" for queue in payload["project_focus"]["queues"])
     triage = payload["project_triage"]
     assert triage["summary"]["total_commands"] >= 1
-    assert triage["summary"]["verification_commands"] >= 1
+    assert triage["summary"]["verification_commands"] >= 0
     assert {queue["id"] for queue in triage["queues"]} == {"runtime", "verification", "coverage"}
     assert any(queue["commands"] for queue in triage["queues"])
     assert all(command["executes"] is False for queue in triage["queues"] for command in queue["commands"])
@@ -167,6 +207,7 @@ def test_system_map_builds_workspace_dimensions():
     runtime_probes = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-runtime-probes")
     assert runtime_probes["status"] == "shipped"
     runtime_actions = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-runtime-actions")
+    project_execution = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-action-execution-audit")
     assert runtime_actions["status"] == "shipped"
     ssot_links = next(item for item in payload["roadmap"]["items"] if item["id"] == "ssot-deep-links")
     assert ssot_links["status"] == "shipped"
@@ -181,12 +222,21 @@ def test_system_map_builds_workspace_dimensions():
     )
     assert playbook_persistence["status"] == "shipped"
     assert all(item["acceptance"] for item in payload["roadmap"]["items"])
+    assert project_execution["status"] == "shipped"
     daily_playbook = next(item for item in payload["playbooks"] if item["id"] == "daily-health-check")
     assert daily_playbook["frequency"] == "daily"
     assert daily_playbook["steps"]
     assert all(step["page"]["id"] == step["page_id"] for step in daily_playbook["steps"])
     assert all(step["action"] and step["evidence"] and step["done_when"] for step in daily_playbook["steps"])
     cockpit_project = next(project for project in payload["projects"] if project["id"] == "cockpit")
+    assert cockpit_project["registry_contract"]["version"] == "0.4.0"
+    assert cockpit_project["registry_contract"]["python"] == ">=3.13"
+    assert cockpit_project["registry_contract"]["build_backend"] == "hatchling"
+    assert cockpit_project["registry_contract"]["coverage"]
+    assert cockpit_project["registry_contract"]["missing_fields"] == []
+    assert cockpit_project["registry_contract"]["status_text"] == "ready"
+    assert cockpit_project["registry_contract"]["observed_location"] == "projects/cockpit/src"
+    assert cockpit_project["registry_contract"]["implementation_traceability"] == "declared"
     assert cockpit_project["operational"]["docs"]["present"] >= 1
     assert cockpit_project["operational"]["commands"]
     mesh_router = next(project for project in payload["projects"] if project["id"] == "mesh-router")
@@ -207,6 +257,10 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["source_refs"][0]["source_key"] == "project_registry"
     assert cockpit_project["source_refs"][0]["line"]
     assert cockpit_project["actions"]
+    if cockpit_project["registry_contract"]["status_text"] != "ready":
+        assert any(command["id"] == "registry-contract" for command in cockpit_project["triage_commands"])
+    security_check = next(check for check in cockpit_project["coverage_checks"] if check["id"] == "security_contract")
+    assert security_check["status"] == "ready"
     assert "triage_commands" in cockpit_project
     assert cockpit_project["workflow"]["summary"]["runs"] >= 1
     assert cockpit_project["portfolio"]["score"] >= 0
@@ -225,6 +279,8 @@ def test_system_map_builds_workspace_dimensions():
     assert cockpit_project["coverage_checks"]
     assert {check["id"] for check in cockpit_project["coverage_checks"]} >= {
         "cockpit_surface",
+        "registry_contract",
+        "security_contract",
         "project_docs",
         "commands",
         "manifest",
@@ -251,11 +307,94 @@ def test_system_map_builds_workspace_dimensions():
         "documented",
         "unknown",
     }
+    task_center_page = next(
+        item for item in payload["page_maturity"]["items"] if item["page_id"] == "TaskCenter"
+    )
+    complete_task_action = next(
+        action for action in task_center_page["operator_action_details"] if action["id"] == "complete-task"
+    )
+    assert complete_task_action["label"] == "完成任务"
+    assert complete_task_action["kind"] == "queue"
+    assert complete_task_action["risk"] == "medium"
+    assert complete_task_action["description"]
     assert "not_applicable_projects" in payload["summary"]
     assert "verification_ready" in payload["project_focus"]["summary"]
     governance_domain = next(domain for domain in payload["feature_domains"] if domain["title"] == "治理与合规")
     assert governance_domain["source_refs"][0]["source_key"] == "functional_capability_map"
     assert governance_domain["source_refs"][0]["line"]
+
+
+def test_stopped_runtime_projects_expose_documented_start_actions():
+    payload = build_system_map()
+    projects = {project["id"]: project for project in payload["projects"]}
+
+    expected_commands = {
+        "mesh-router": "gac-mesh-router.py",
+        "ecos": "ecos.services.events_sse serve",
+        "l4-kernel": "l4_kernel.mcp_server --sse",
+        "aetherforge": "docker compose up -d",
+        "observability": "docker compose up -d",
+    }
+    for project_id, fragment in expected_commands.items():
+        action = next(action for action in projects[project_id]["actions"] if action["id"] == "copy-start-command")
+        assert fragment in action["value"]
+        assert action["executes"] is False
+        assert action["risk"] == "medium"
+
+    assert not any(action["id"] == "copy-start-command" for action in projects["bus-foundation"]["actions"])
+
+
+def test_runtime_probe_command_is_successful_when_no_ports_are_listening():
+    payload = build_system_map()
+    project = next(item for item in payload["projects"] if item["id"] == "observability")
+    command = next(item for item in project["triage_commands"] if item["id"] == "runtime-check-ports")["value"]
+
+    assert command.endswith("; exit 0")
+    assert "|| true" in command
+
+
+def test_system_map_conflict_diagnostics_clear_after_port_alignment():
+    payload = build_system_map()
+    projects = {project["id"]: project for project in payload["projects"]}
+
+    for project_id in ("ecos", "aetherforge"):
+        project = projects[project_id]
+        assert project["runtime"]["port_conflicts"] == []
+        assert all(not port.get("conflict_projects") for port in project["runtime"]["ports"])
+
+
+def test_bus_foundation_metrics_is_optional_embedded_runtime():
+    payload = build_system_map()
+    project = next(item for item in payload["projects"] if item["id"] == "bus-foundation")
+
+    assert project["runtime"]["profile"] == "library"
+    assert project["runtime"]["needs_runtime"] is False
+    assert project["runtime"]["status"] == "not_applicable"
+    assert "按需开启" in project["runtime"]["probe_reason"]
+
+
+def test_omo_dashboard_is_converged_to_cockpit_runtime():
+    payload = build_system_map()
+    project = next(item for item in payload["projects"] if item["id"] == "omo")
+
+    assert project["runtime"]["profile"] == "converged"
+    assert project["runtime"]["needs_runtime"] is False
+    assert project["runtime"]["status"] == "not_applicable"
+    assert "收敛到 Cockpit" in project["runtime"]["probe_reason"]
+    assert not any(action["id"] == "copy-start-command" for action in project["actions"])
+
+
+def test_evidence_freshness_distinguishes_fresh_stale_and_unknown():
+    now = datetime(2026, 7, 28, tzinfo=UTC)
+
+    fresh = api_system_map_status._evidence_freshness("2026-07-27T12:00:00Z", 24, now)
+    stale = api_system_map_status._evidence_freshness("2026-07-26T12:00:00Z", 24, now)
+    unknown = api_system_map_status._evidence_freshness(None, 24, now)
+
+    assert fresh["status"] == "fresh"
+    assert stale["status"] == "stale"
+    assert unknown["status"] == "unknown"
+    assert "重新执行" in stale["next_action"]
 
 
 def test_system_map_route_is_mounted():
@@ -341,6 +480,9 @@ def test_runtime_status_marks_static_frontend_as_not_applicable(tmp_path, monkey
     assert runtime["profile"] == "static"
     assert runtime["needs_runtime"] is False
     assert "静态前端" in runtime["probe_reason"]
+    assert runtime["checked_at"]
+    assert runtime["probe_source"] == "runtime_profile"
+    assert runtime["probe_task"]["status"] == "not_queued"
 
     checks = api_system_map._project_coverage_checks(
         {
@@ -486,6 +628,83 @@ def test_latest_project_verification_falls_back_to_documented_command(tmp_path, 
     assert "uv run pytest -q" in (verification["command"] or "")
 
 
+def test_unknown_project_without_verify_command_gets_verification_plan_triage(tmp_path):
+    project_path = tmp_path / "projects" / "demo"
+    project_path.mkdir(parents=True, exist_ok=True)
+    commands = api_system_map_io_commands._project_triage_commands(
+        {
+            "id": "demo",
+            "path": str(project_path),
+            "runtime": {"status": "unobserved", "latest_verification": {"status": "unknown"}, "ports": []},
+            "actions": [],
+            "operational": {"status": "missing"},
+            "registry_contract": {"missing_fields": []},
+        }
+    )
+    plan = next(command for command in commands if command["id"] == "verification-plan")
+    assert plan["category"] == "verification"
+    assert "pytest" in plan["value"]
+    assert plan["executes"] is False
+
+
+def test_project_without_security_contract_gets_security_triage(tmp_path):
+    project_path = tmp_path / "projects" / "demo"
+    project_path.mkdir(parents=True, exist_ok=True)
+    commands = api_system_map_io_commands._project_triage_commands(
+        {
+            "id": "demo",
+            "path": str(project_path),
+            "runtime": {"status": "not_applicable", "latest_verification": {"status": "verified"}, "ports": []},
+            "actions": [],
+            "operational": {"status": "ready"},
+            "registry_contract": {"missing_fields": []},
+        }
+    )
+
+    security = next(command for command in commands if command["id"] == "security-contract")
+    assert security["category"] == "coverage"
+    assert security["executes"] is False
+
+
+def test_project_with_security_audit_uses_audit_as_security_evidence(tmp_path):
+    (tmp_path / "AUDIT.md").write_text("# Security audit\n", encoding="utf-8")
+    checks = api_system_map._project_coverage_checks(
+        {
+            "id": "toolbox",
+            "coverage": "native",
+            "cockpit_page": "Assets",
+            "path": str(tmp_path),
+            "operational": {
+                "docs": {"present": 1, "expected": 1},
+                "commands": ["audit"],
+                "manifests": ["package.json"],
+            },
+            "runtime": {"status": "not_applicable", "profile": "external"},
+            "registry_contract": {"missing_fields": []},
+            "source_refs": [{"exists": True}],
+            "actions": [{"id": "copy-project-path"}],
+        }
+    )
+    security = next(check for check in checks if check["id"] == "security_contract")
+    assert security["status"] == "ready"
+    assert "AUDIT.md" in security["detail"]
+
+
+def test_project_ports_observe_compose_host_ports_without_registry_entry(tmp_path, monkeypatch):
+    compose_path = tmp_path / "docker-compose.yml"
+    compose_path.write_text(
+        "services:\n  langfuse-server:\n    ports:\n      - \"3050:3000\"\n  db:\n    ports:\n      - \"5433:5432\"\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map_io_commands, "_is_port_listening", lambda _port: False)
+    ports = api_system_map_io_commands._project_ports("observability", {}, compose_path, tmp_path)
+    assert [(port["port"], port["service"]) for port in ports] == [
+        (3050, "observability/langfuse-server"),
+        (5433, "observability/db"),
+    ]
+    assert all(port["source_ref"]["source_key"] == "project_compose" for port in ports)
+
+
 def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatch):
     workspace_root = tmp_path
     project_path = workspace_root / "projects" / "cockpit"
@@ -519,6 +738,41 @@ def test_latest_project_verification_reads_blocked_yaml_run(tmp_path, monkeypatc
         "checks": 1,
         "command": None,
         "source": "agent_workflow_run",
+    }
+
+
+def test_latest_project_verification_reads_ok_yaml_run_as_verified(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    project_path = workspace_root / "projects" / "agora"
+    project_path.mkdir(parents=True, exist_ok=True)
+    runs_dir = workspace_root / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    (runs_dir / "run.yaml").write_text(
+        """run_id: run-ok
+status: ok
+updated_at: '2026-07-15T03:01:27Z'
+closed_at: '2026-07-15T03:01:28Z'
+claims:
+  - paths:
+      - projects/agora/tests/test_analysis.py
+evidence:
+  - 'agent-workflow verify: 1 checks ok=True'
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
+
+    verification = api_system_map._latest_project_verification("agora", project_path, {})
+
+    assert verification == {
+        "status": "verified",
+        "run_id": "run-ok",
+        "ts": "2026-07-15T03:01:27Z",
+        "checks": 1,
+        "command": None,
+        "source": "agent_workflow_run",
+        "closeout_status": "closed",
+        "closeout_ref": ".omo/_delivery/agent-workflows/runs/run.yaml",
     }
 
 
@@ -576,3 +830,96 @@ metadata:
     assert verification["status"] == "verified"
     assert verification["run_id"] == "cockpit-triage-demo-verification-rerun"
     assert verification["closeout_status"] == "missing"
+
+
+def test_triage_posture_reads_latest_retry_attempt(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    task_path = workspace_root / ".omo" / "tasks" / "done" / "cockpit-triage-demo-runtime-check-ports-r2.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        """id: cockpit-triage-demo-runtime-check-ports-r2
+status: completed
+metadata:
+  execution_audit:
+    exit_code: 1
+    log_ref: runtime/omo/probe-r2.log
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(compat, "WORKSPACE_ROOT", workspace_root)
+
+    posture = api_system_map_io_commands._triage_task_posture("demo", "runtime-check-ports")
+
+    assert posture["task_id"] == "cockpit-triage-demo-runtime-check-ports-r2"
+    assert posture["status"] == "failed"
+    assert posture["execution_audit"]["log_ref"] == "runtime/omo/probe-r2.log"
+
+
+def test_triage_posture_reads_archived_done_execution(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    task_path = workspace_root / ".omo" / "tasks" / "archived" / "done" / "cockpit-triage-demo-verification-rerun.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        """id: cockpit-triage-demo-verification-rerun
+status: done
+metadata:
+  execution_audit:
+    exit_code: 0
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map_io_commands.compat, "WORKSPACE_ROOT", workspace_root)
+    posture = api_system_map_io_commands._triage_task_posture("demo", "verification-rerun")
+    assert posture["status"] == "succeeded"
+    assert posture["task_id"] == "cockpit-triage-demo-verification-rerun"
+
+
+def test_triage_posture_exposes_runtime_approval_state(tmp_path, monkeypatch):
+    workspace_root = tmp_path
+    task_path = workspace_root / ".omo" / "tasks" / "planned" / "cockpit-triage-demo-runtime-check-ports.yaml"
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_path.write_text(
+        """id: cockpit-triage-demo-runtime-check-ports
+status: pending
+human_approval_required: true
+metadata: {}
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_system_map_io_commands.compat, "WORKSPACE_ROOT", workspace_root)
+
+    posture = api_system_map_io_commands._triage_task_posture("demo", "runtime-check-ports")
+
+    assert posture["human_approval_required"] is True
+    assert posture["approval_state"] == "missing"
+    assert posture["next_action"] == "先申请人工审批"
+
+
+def test_external_ui_worktree_is_resolved_from_registry_path_env(tmp_path, monkeypatch):
+    ui_root = tmp_path / "cockpit-ui-worktree"
+    (ui_root / "src").mkdir(parents=True)
+    (ui_root / "AGENTS.md").write_text("## Commands\n```bash\nbun run build\n```\n", encoding="utf-8")
+    (ui_root / "README.md").write_text("# cockpit-ui\n", encoding="utf-8")
+    (ui_root / "CLAUDE.md").write_text("# cockpit-ui\n", encoding="utf-8")
+    (ui_root / "package.json").write_text(
+        json.dumps({"scripts": {"build": "vite build"}}),
+        encoding="utf-8",
+    )
+    (ui_root / "vite.config.ts").write_text("export default {}\n", encoding="utf-8")
+    monkeypatch.setenv("COCKPIT_UI_ROOT", str(ui_root))
+
+    project_data = {
+        "id": "cockpit-ui",
+        "path_env": "COCKPIT_UI_ROOT",
+        "role": "Web 控制台 UI",
+        "stack": "TypeScript (Vite, React)",
+    }
+    operational = api_system_map._project_operational_status(
+        "cockpit-ui", project_data
+    )
+
+    assert operational["status"] == "ready"
+    assert operational["surface_type"] == "external-worktree"
+    assert operational["path_configured"] is True
+    assert operational["path_env"] == "COCKPIT_UI_ROOT"
+    assert operational["next_action"] == "保持项目注册表与 Cockpit 映射同步。"

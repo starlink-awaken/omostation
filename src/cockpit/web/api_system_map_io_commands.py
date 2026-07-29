@@ -256,7 +256,18 @@ def _project_verify_command(path: Path, commands: list[str], manifests: list[dic
     return None
 
 
-def _project_start_command(path: Path, commands: list[str]) -> str | None:
+_KNOWN_RUNTIME_START_COMMANDS: dict[str, tuple[str, str]] = {
+    # These are documented/native entry points. They are copied for human confirmation;
+    # Cockpit never starts the process itself.
+    "mesh-router": ("workspace", 'uv run python "bin/gac/gac-mesh-router.py"'),
+    "ecos": ("project", "uv run python -m ecos.services.events_sse serve --port 7432"),
+    "l4-kernel": ("project", "uv run python -m l4_kernel.mcp_server --sse"),
+    "aetherforge": ("project", "docker compose up -d"),
+    "observability": ("project", "docker compose up -d"),
+}
+
+
+def _project_start_command(path: Path, commands: list[str], project_id: str | None = None) -> str | None:
     command = _first_matching_command(
         commands,
         ("dev", "serve", "start", "uvicorn", "dashboard_server", "run api"),
@@ -270,6 +281,15 @@ def _project_start_command(path: Path, commands: list[str]) -> str | None:
         return _command_with_cwd(path, "bun run dev")
     if "api" in scripts:
         return _command_with_cwd(path, "bun run api")
+
+    if project_id in _KNOWN_RUNTIME_START_COMMANDS:
+        location, command = _KNOWN_RUNTIME_START_COMMANDS[project_id]
+        if location == "workspace":
+            source_path = compat.WORKSPACE_ROOT / "bin" / "gac" / "gac-mesh-router.py"
+            return _command_with_cwd(compat.WORKSPACE_ROOT, command) if source_path.is_file() else None
+        if project_id == "aetherforge" or project_id == "observability":
+            return _command_with_cwd(path, command) if (path / "docker-compose.yml").is_file() else None
+        return _command_with_cwd(path, command) if path.is_dir() else None
     return None
 
 
@@ -316,7 +336,7 @@ def _project_actions(
             }
         )
 
-    start_command = _project_start_command(project_path, commands)
+    start_command = _project_start_command(project_path, commands, project_id)
     if start_command:
         actions.append(
             {
@@ -354,31 +374,57 @@ def _first_action(actions: list[dict[str, Any]], action_id: str) -> dict[str, An
 
 def _triage_task_posture(project_id: str, command_id: str) -> dict[str, Any]:
     """Expose the OMO task state for a project triage command."""
-    task_id = f"cockpit-triage-{project_id}-{command_id}"
-    for group in ("active", "planned", "done"):
-        task_path = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group / f"{task_id}.yaml"
-        if not task_path.is_file():
-            continue
-        try:
-            task = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
-        except (OSError, yaml.YAMLError):
-            task = {}
-        audit = (task.get("metadata") or {}).get("execution_audit") or {}
-        raw_status = str(task.get("status") or "pending")
-        if isinstance(audit, dict) and "exit_code" in audit:
-            status = "succeeded" if audit.get("exit_code") == 0 else "failed"
-        elif group == "done" or raw_status in {"completed", "complete"}:
-            status = "completed"
-        elif group == "active" or raw_status in {"in_progress", "running"}:
-            status = "active"
-        else:
-            status = "planned"
-        return {
-            "task_id": task_id,
-            "status": status,
-            "execution_audit": audit if isinstance(audit, dict) else {},
-        }
-    return {"task_id": task_id, "status": "not_queued", "execution_audit": {}}
+    base_task_id = f"cockpit-triage-{project_id}-{command_id}"
+    candidates: list[tuple[int, float, str, Path]] = []
+    for group in ("active", "planned", "done", "archived/done"):
+        task_root = compat.WORKSPACE_ROOT / ".omo" / "tasks" / group
+        for task_path in task_root.glob(f"{base_task_id}*.yaml"):
+            task_id = task_path.stem
+            if task_id == base_task_id:
+                attempt = 1
+            else:
+                match = re.fullmatch(rf"{re.escape(base_task_id)}-r(\d+)", task_id)
+                if not match:
+                    continue
+                attempt = int(match.group(1))
+            try:
+                mtime = task_path.stat().st_mtime
+            except OSError:
+                mtime = 0.0
+            candidates.append((attempt, mtime, group, task_path))
+
+    if not candidates:
+        return {"task_id": base_task_id, "status": "not_queued", "execution_audit": {}}
+
+    _, _, group, task_path = max(candidates, key=lambda item: (item[0], item[1]))
+    task_id = task_path.stem
+    try:
+        task = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        task = {}
+    # Import lazily because the task data layer depends on SystemMap builders.
+    from cockpit.web.api_tasks_data import _approval_next_action, _approval_state
+
+    audit = (task.get("metadata") or {}).get("execution_audit") or {}
+    raw_status = str(task.get("status") or "pending")
+    approval_required = bool(task.get("human_approval_required"))
+    approval_state = _approval_state(task)
+    if isinstance(audit, dict) and "exit_code" in audit:
+        status = "succeeded" if audit.get("exit_code") == 0 else "failed"
+    elif group in {"done", "archived/done"} or raw_status in {"completed", "complete"}:
+        status = "completed"
+    elif group == "active" or raw_status in {"in_progress", "running"}:
+        status = "active"
+    else:
+        status = "planned"
+    return {
+        "task_id": task_id,
+        "status": status,
+        "execution_audit": audit if isinstance(audit, dict) else {},
+        "human_approval_required": approval_required,
+        "approval_state": approval_state,
+        "next_action": _approval_next_action(task),
+    }
 
 
 def _triage_command(
@@ -412,7 +458,9 @@ def _port_probe_command(ports: list[dict[str, Any]]) -> str | None:
     port_values = [str(port["port"]) for port in ports[:6] if port.get("port") and port.get("probeable", True)]
     if not port_values:
         return None
-    return f"for port in {' '.join(port_values)}; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done"
+    # A closed port is probe data, not a failed probe. Make the shell contract
+    # explicit because some task runners preserve the last child exit status.
+    return f"for port in {' '.join(port_values)}; do lsof -nP -iTCP:$port -sTCP:LISTEN || true; done; exit 0"
 
 
 def _port_registry_search_command(project_id: str) -> str:
@@ -435,6 +483,15 @@ def _project_inventory_command(project_path: Path) -> str:
         project_path,
         'ls -la "AGENTS.md" "CLAUDE.md" "README.md" "ARCHITECTURE.md" '
         '"pyproject.toml" "package.json" "docker-compose.yml" 2>/dev/null || true',
+    )
+
+
+def _project_verification_plan_command(project_path: Path) -> str:
+    return _command_with_cwd(
+        project_path,
+        'rg -n "pytest|test|verify|lint|build|check" '
+        '"AGENTS.md" "CLAUDE.md" "README.md" "pyproject.toml" "package.json" '
+        '"Makefile" "docker-compose.yml" 2>/dev/null || true',
     )
 
 
@@ -521,6 +578,18 @@ def _project_triage_commands(project: dict[str, Any]) -> list[dict[str, Any]]:
                 risk="low",
             )
         )
+        if verification.get("status") == "unknown" and not verify_action:
+            commands.append(
+                _triage_command(
+                    project_id,
+                    "verification-plan",
+                    "生成验证方案",
+                    "verification",
+                    _project_verification_plan_command(project_path),
+                    "项目没有可复制验证命令，先扫描测试、构建和校验线索，再登记可执行验证方案。",
+                    risk="low",
+                )
+            )
 
     if project.get("operational", {}).get("status") != "ready":
         commands.append(
@@ -536,6 +605,41 @@ def _project_triage_commands(project: dict[str, Any]) -> list[dict[str, Any]]:
             )
         )
 
+    missing_contract_fields = list((project.get("registry_contract") or {}).get("missing_fields") or [])
+    if missing_contract_fields:
+        commands.append(
+            _triage_command(
+                project_id,
+                "registry-contract",
+                "查注册合同",
+                "coverage",
+                _command_with_cwd(
+                    compat.WORKSPACE_ROOT,
+                    f'rg -n "^{re.escape(project_id)}:" "docs/project-registry.yaml"',
+                ),
+                "项目注册合同缺少：" + "、".join(str(item) for item in missing_contract_fields) + "；先定位注册表声明。",
+                risk="low",
+            )
+        )
+
+    project_path = Path(str(project.get("path") or ""))
+    if project_path.exists() and not (project_path / "SECURITY.md").is_file():
+        commands.append(
+            _triage_command(
+                project_id,
+                "security-contract",
+                "查安全合同",
+                "coverage",
+                _command_with_cwd(
+                    project_path,
+                    'rg -n "security|安全|auth|权限|secret|凭据|audit|审计" '
+                    '"SECURITY.md" "AUDIT.md" "README.md" "AGENTS.md" 2>/dev/null || true',
+                ),
+                "项目缺少 SECURITY.md，先查找已有安全边界或审计说明，再补齐安全合同。",
+                risk="low",
+            )
+        )
+
     return commands
 
 
@@ -547,7 +651,12 @@ def _is_port_listening(port: int) -> bool:
         return False
 
 
-def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry_path: Path) -> list[dict[str, Any]]:
+def _project_ports(
+    project_id: str,
+    port_registry: dict[str, Any],
+    port_registry_path: Path,
+    project_path: Path | None = None,
+) -> list[dict[str, Any]]:
     aliases = PROJECT_PORT_ALIASES.get(project_id, (project_id,))
     registry_ports = port_registry.get("ports") or {}
     port_types = port_registry.get("types") or {}
@@ -586,4 +695,43 @@ def _project_ports(project_id: str, port_registry: dict[str, Any], port_registry
                 }
             )
 
-    return sorted(ports, key=lambda item: item["port"])
+    # A compose project can expose a real host port before the workspace port
+    # registry is updated. Keep this as observed evidence, never as a write to
+    # the registry SSOT.
+    compose_path = (project_path or compat.WORKSPACE_ROOT / "projects" / project_id) / "docker-compose.yml"
+    compose = _read_yaml(compose_path)
+    observed_ports: list[dict[str, Any]] = []
+    for service_name, service_data in (compose.get("services") or {}).items():
+        if not isinstance(service_data, dict):
+            continue
+        for raw_mapping in service_data.get("ports") or []:
+            if isinstance(raw_mapping, dict):
+                published = raw_mapping.get("published")
+                target = raw_mapping.get("target")
+                host_port = int(published) if str(published).isdigit() else None
+                container_port = int(target) if str(target).isdigit() else None
+            else:
+                mapping = str(raw_mapping).split("/")[0]
+                parts = mapping.split(":")
+                host_port = int(parts[-2]) if len(parts) >= 2 and parts[-2].isdigit() else None
+                container_port = int(parts[-1]) if parts and parts[-1].isdigit() else None
+            if host_port is None or any(item["port"] == host_port for item in ports + observed_ports):
+                continue
+            observed_ports.append(
+                {
+                    "port": host_port,
+                    "service": f"{project_id}/{service_name}",
+                    "raw_label": f"{host_port}:{container_port or 'container'}",
+                    "type": "tcp",
+                    "probeable": True,
+                    "listening": _is_port_listening(host_port),
+                    "source_ref": _source_ref(
+                        compose_path,
+                        f"compose 端口 {host_port}",
+                        "project_compose",
+                        _line_number(compose_path, rf"{re.escape(str(host_port))}:"),
+                    ),
+                }
+            )
+
+    return sorted(ports + observed_ports, key=lambda item: item["port"])

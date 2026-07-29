@@ -6,10 +6,16 @@ import re
 import subprocess
 from datetime import UTC, datetime
 from hashlib import sha256
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from cockpit.web import api_tasks_data as _task_data
+from cockpit.web.api_system_map_catalog import (
+    COCKPIT_PAGES,
+    PAGE_OPERATOR_ACTION_METADATA,
+    PAGE_OPERATOR_ACTIONS,
+)
 from cockpit.web.api_tasks_common import (
     _COVERAGE_DRAFT_GETTERS,
     _current_controlled_command,
@@ -40,9 +46,134 @@ from cockpit.web.api_tasks_data import (
     get_tasks_from_omo,
     get_verification_ready_task_drafts,
 )
+
+
+def _next_triage_task_id(project_id: str, command_id: str) -> tuple[str, str | None]:
+    base_task_id = f"cockpit-triage-{project_id}-{command_id}"
+    candidates: list[tuple[int, str, Path]] = []
+    task_root = WORKSPACE_DIR / ".omo" / "tasks"
+    for group in ("active", "planned", "done"):
+        for task_path in (task_root / group).glob(f"{base_task_id}*.yaml"):
+            task_id = task_path.stem
+            if task_id == base_task_id:
+                attempt = 1
+            else:
+                match = re.fullmatch(rf"{re.escape(base_task_id)}-r(\d+)", task_id)
+                if not match:
+                    continue
+                attempt = int(match.group(1))
+            candidates.append((attempt, group, task_path))
+
+    if not candidates:
+        return base_task_id, None
+    attempt, group, _ = max(candidates, key=lambda item: item[0])
+    if group in {"active", "planned"}:
+        return f"{base_task_id}-r{attempt}" if attempt > 1 else base_task_id, group
+    return f"{base_task_id}-r{attempt + 1}", None
 from cockpit.web.api_tasks_data import (
     _transition_task as _data_transition_task,
 )
+
+
+@router.post("/api/cockpit/pages/{page_id}/actions/{action_id}/queue")
+async def queue_page_operator_action(page_id: str, action_id: str):
+    """承接页面目录动作为受控计划任务；Cockpit 不直接执行页面动作。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", page_id) or not re.fullmatch(r"[A-Za-z0-9_.-]+", action_id):
+        raise HTTPException(status_code=400, detail="Invalid page or action id")
+
+    page = next((item for item in COCKPIT_PAGES if item.get("id") == page_id), None)
+    if page is None:
+        raise HTTPException(status_code=404, detail="Cockpit page not found")
+    if action_id not in PAGE_OPERATOR_ACTIONS.get(page_id, ()):
+        raise HTTPException(status_code=404, detail="Page operator action not found")
+
+    action_metadata = {
+        "label": action_id,
+        "kind": "queue",
+        "risk": "medium",
+        "description": "进入任务中心承接该页面动作。",
+        **PAGE_OPERATOR_ACTION_METADATA.get(action_id, {}),
+    }
+
+    task_id = f"cockpit-page-action-{page_id}-{action_id}"
+    existing_group = _task_group(task_id)
+    title = f"页面动作：{page.get('title') or page_id} · {action_metadata['label']}"
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Page action task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {
+            "id": task_id,
+            "status": "pending",
+            "created": False,
+            "title": title,
+            "action": action_id,
+            "action_label": action_metadata["label"],
+            "action_kind": action_metadata["kind"],
+            "action_risk": action_metadata["risk"],
+            "executes": False,
+            "source": "omo_ingress",
+        }
+
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": f"进入 Cockpit 页面 {page_id}，核对并承接受控动作 {action_metadata['label']}。{action_metadata['description']}",
+        "status": "pending",
+        "task_type": "page_operator_action",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": ["projects/cockpit/src/cockpit/web/api_system_map_catalog.py"],
+        "entry_gate": [f"确认页面 {page_id} 当前运行状态", f"确认动作 {action_metadata['label']} 的真实执行边界"],
+        "evidence_required": ["动作执行结果或阻塞原因", "相关页面/接口回执", "任务 closeout"],
+        "deliverables": [f"完成页面 {page_id} 的动作 {action_metadata['label']} 承接并记录证据。"],
+        "test_plan": ["在对应 Cockpit 页面核对动作入口，再按页面安全门执行或转交。"],
+        "tags": ["cockpit-page-action", page_id, action_id, action_metadata["kind"], action_metadata["risk"]],
+        "priority": "medium",
+        "metadata": {
+            "page_id": page_id,
+            "operator_action": action_id,
+            "operator_action_label": action_metadata["label"],
+            "operator_action_kind": action_metadata["kind"],
+            "operator_action_risk": action_metadata["risk"],
+            "operator_action_description": action_metadata["description"],
+            "created_via": "cockpit-system-map",
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-page-action",
+            source_ref=f"cockpit:page-action:{page_id}:{action_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", title),
+        "action": action_id,
+        "action_label": action_metadata["label"],
+        "action_kind": action_metadata["kind"],
+        "action_risk": action_metadata["risk"],
+        "executes": False,
+        "source": "omo_ingress",
+    }
 
 
 @router.post("/api/cockpit/projects/{project_id}/actions/{action_id}/queue")
@@ -103,6 +234,7 @@ async def queue_project_action(project_id: str, action_id: str):
             "risk": risk,
             "cockpit_only": True,
             "controlled_execution": action_id == "copy-verify-command",
+            "controlled_process": action_id == "copy-start-command",
             "timeout_seconds": 900 if action_id == "copy-verify-command" else None,
         },
     }
@@ -129,7 +261,102 @@ async def queue_project_action(project_id: str, action_id: str):
         "action_id": action_id,
         "title": created.get("title", task_data["title"]),
         "source": "omo_ingress",
-        "executes": action_id == "copy-verify",
+        "executes": action_id in {"copy-verify-command", "copy-start-command"},
+    }
+
+
+@router.post("/api/cockpit/roadmap/{roadmap_id}/queue")
+async def queue_page_roadmap_item(roadmap_id: str):
+    """将页面路线项承接为 OMO planned task，打通架构发现到执行追踪。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", roadmap_id):
+        raise HTTPException(status_code=400, detail="Invalid roadmap id")
+
+    roadmap_item = next(
+        (item for item in build_system_map().get("roadmap", {}).get("items", []) if item.get("id") == roadmap_id),
+        None,
+    )
+    if not isinstance(roadmap_item, dict):
+        raise HTTPException(status_code=404, detail="Roadmap item not found")
+
+    page_id = str(roadmap_item.get("cockpit_page") or "SystemMap")
+    task_id = f"cockpit-roadmap-{roadmap_id}"
+    existing_group = _task_group(task_id)
+    title = str(roadmap_item.get("title") or roadmap_id)
+    if existing_group in {"active", "done"}:
+        raise HTTPException(status_code=409, detail=f"Roadmap task already exists in {existing_group}: {task_id}")
+    if existing_group == "planned":
+        return {
+            "id": task_id,
+            "status": "pending",
+            "created": False,
+            "title": title,
+            "roadmap_id": roadmap_id,
+            "page_id": page_id,
+            "source": "omo_ingress",
+        }
+
+    problem = str(roadmap_item.get("problem") or "完成页面路线项定义的问题收口。")
+    actions = [str(item) for item in roadmap_item.get("actions") or [] if str(item).strip()]
+    acceptance = [str(item) for item in roadmap_item.get("acceptance") or [] if str(item).strip()]
+    source_refs = [
+        str(ref.get("target") or ref.get("path") or ref.get("label"))
+        for ref in roadmap_item.get("source_refs") or []
+        if isinstance(ref, dict) and (ref.get("target") or ref.get("path") or ref.get("label"))
+    ] or ["projects/cockpit/src/cockpit/web/api_system_map.py"]
+    task_data = {
+        "id": task_id,
+        "title": title,
+        "description": problem,
+        "status": "pending",
+        "task_type": "page_roadmap",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "risk_level": "L1",
+        "allowed_operation_level": "L1",
+        "human_approval_required": False,
+        "source_docs": source_refs,
+        "entry_gate": [f"确认页面 {page_id} 的路线项边界"],
+        "evidence_required": [*acceptance, "任务 closeout"],
+        "deliverables": actions or [f"完成页面 {page_id} 的路线项 {title}。"],
+        "test_plan": acceptance or ["在 SystemMap 核对页面对象、动作和验收证据。"],
+        "tags": ["cockpit-page-roadmap", page_id, roadmap_id, str(roadmap_item.get("priority") or "P1")],
+        "priority": "high" if roadmap_item.get("priority") == "P0" else "medium",
+        "metadata": {
+            "page_id": page_id,
+            "roadmap_id": roadmap_id,
+            "roadmap_title": title,
+            "roadmap_status": roadmap_item.get("status") or "planned",
+            "created_via": "cockpit-system-map",
+            "controlled_execution": False,
+        },
+    }
+    try:
+        from omo.omo_ingress_task_lifecycle import create_planned_task
+
+        created = create_planned_task(
+            WORKSPACE_DIR / ".omo",
+            task_data=task_data,
+            ingress_plane="cockpit-page-roadmap",
+            source_ref=f"cockpit:page-roadmap:{page_id}:{roadmap_id}",
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO task ingress is unavailable") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "status": "pending",
+        "created": True,
+        "title": created.get("title", title),
+        "roadmap_id": roadmap_id,
+        "page_id": page_id,
+        "source": "omo_ingress",
     }
 
 
@@ -148,8 +375,9 @@ async def queue_project_triage_command(project_id: str, command_id: str):
     if command.get("kind") != "copy_command" or not command.get("enabled"):
         raise HTTPException(status_code=409, detail="Only enabled triage commands can be queued")
 
-    task_id = f"cockpit-triage-{project_id}-{command_id}"
-    existing_group = _task_group(task_id)
+    task_id, existing_group = _next_triage_task_id(project_id, command_id)
+    if existing_group is None:
+        existing_group = _task_group(task_id)
     if existing_group in {"active", "done"}:
         raise HTTPException(
             status_code=409, detail=f"Project triage task already exists in {existing_group}: {task_id}"
@@ -373,7 +601,15 @@ async def execute_verification_triage(request: Request):
             "executed": [],
             "skipped": [],
             "errors": [],
-            "summary": {"candidates": len(candidates), "selected": 0, "succeeded": 0, "failed": 0},
+            "archive_errors": [],
+            "summary": {
+                "candidates": len(candidates),
+                "selected": 0,
+                "succeeded": 0,
+                "failed": 0,
+                "archived": 0,
+                "archive_errors": 0,
+            },
             "source": "omo_controlled_execution",
         }
 
@@ -381,6 +617,7 @@ async def execute_verification_triage(request: Request):
 
     executed: list[dict] = []
     errors: list[dict] = []
+    archive_errors: list[dict] = []
     for candidate in selected:
         try:
             result = execute_controlled_task(
@@ -394,7 +631,34 @@ async def execute_verification_triage(request: Request):
         except (OSError, ValueError, TimeoutError) as exc:
             errors.append({"project_id": candidate["project_id"], "task_id": candidate["task_id"], "detail": str(exc)})
         else:
-            executed.append({"project_id": candidate["project_id"], "task_id": candidate["task_id"], **result})
+            execution = {"project_id": candidate["project_id"], "task_id": candidate["task_id"], **result}
+            if result.get("exit_code") == 0:
+                execution_ref = result.get("execution_ref")
+                log_ref = result.get("log_ref")
+                evidence_paths = [
+                    ref for ref in (execution_ref, log_ref) if isinstance(ref, str) and ref.strip()
+                ]
+                try:
+                    validated = _validate_evidence_paths(evidence_paths)
+                    completion = _transition_task(
+                        candidate["task_id"], "complete", evidence_paths=validated
+                    )
+                except (OSError, ValueError, HTTPException) as exc:
+                    archive_errors.append(
+                        {
+                            "project_id": candidate["project_id"],
+                            "task_id": candidate["task_id"],
+                            "detail": str(exc),
+                        }
+                    )
+                    execution["auto_completed"] = False
+                    execution["closeout_required"] = True
+                else:
+                    execution["auto_completed"] = True
+                    execution["task_status"] = completion.get("status", "completed")
+                    execution["evidence_paths"] = validated
+                    execution["closeout_required"] = True
+            executed.append(execution)
 
     succeeded = sum(1 for item in executed if item.get("exit_code") == 0)
     return {
@@ -402,11 +666,14 @@ async def execute_verification_triage(request: Request):
         "executed": executed,
         "skipped": candidates[raw_limit:],
         "errors": errors,
+        "archive_errors": archive_errors,
         "summary": {
             "candidates": len(candidates),
             "selected": len(selected),
             "succeeded": succeeded,
             "failed": len(executed) - succeeded + len(errors),
+            "archived": sum(1 for item in executed if item.get("auto_completed")),
+            "archive_errors": len(archive_errors),
         },
         "source": "omo_controlled_execution",
     }
