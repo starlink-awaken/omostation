@@ -193,6 +193,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_oracle_latency_exploit(events))
     events.extend(_synthesize_governance_timelock_bypass(events))
     events.extend(_synthesize_shared_sequencer_dos(events))
+    events.extend(_synthesize_private_mempool_leak(events))
+    events.extend(_synthesize_state_bloat_grief(events))
+    events.extend(_synthesize_threshold_sig_share_theft(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -3100,6 +3103,148 @@ def _synthesize_shared_sequencer_dos(events: list[dict]) -> list[dict]:
                 "stuck": stuck,
                 "degraded": degraded,
                 "policy": "per_sender_rate_limit_and_priority_lanes",
+            }
+        ]
+    return []
+
+
+def _synthesize_private_mempool_leak(events: list[dict]) -> list[dict]:
+    """私有订单泄露给 searcher → private_mempool_leak_detected (ADV115)."""
+    if any(e.get("kind") == "private_mempool_leak_detected" for e in events):
+        return []
+    private_tx = False
+    leak = False
+    extract = False
+    worse = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "private_tx" in target or "exclusive" in vs or "private" in target and "tx" in target:
+            private_tx = True
+            role = r or role
+        if "leak" in vs or ("relay" in target and "leak" in vs):
+            leak = True
+            role = r or role
+        if "frontrun" in target or "extract_from_leak" in vs or "extract" in vs:
+            extract = True
+            role = r or role
+        if "worse" in vs or "user_fill" in target:
+            worse = True
+            role = r or role
+    if leak and (private_tx or extract or worse):
+        return [
+            {
+                "kind": "private_mempool_leak_detected",
+                "ts": ts_max,
+                "role": role,
+                "private_tx": private_tx,
+                "leak": leak,
+                "extract": extract,
+                "worse_fill": worse,
+                "policy": "sealed_relay_and_orderflow_audit",
+            }
+        ]
+    if private_tx and extract:
+        return [
+            {
+                "kind": "private_mempool_leak_detected",
+                "ts": ts_max,
+                "role": role,
+                "private_tx": True,
+                "extract": True,
+                "policy": "sealed_relay_and_orderflow_audit",
+            }
+        ]
+    return []
+
+
+def _synthesize_state_bloat_grief(events: list[dict]) -> list[dict]:
+    """廉价 dust 写入撑爆 state → state_bloat_grief_detected (ADV117)."""
+    if any(e.get("kind") == "state_bloat_grief_detected" for e in events):
+        return []
+    dust = False
+    bloat = False
+    lagging = False
+    disk_full = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "storage" in target or "dust" in vs or "1m" in vs:
+            dust = True
+            role = r or role
+        if "bloat" in vs or "state_size" in target:
+            bloat = True
+            role = r or role
+        if "lagging" in vs or "sync" in target:
+            lagging = True
+            role = r or role
+        if "disk_full" in vs or "rejected" in vs:
+            disk_full = True
+            role = r or role
+    if (dust or bloat) and (lagging or disk_full or bloat):
+        return [
+            {
+                "kind": "state_bloat_grief_detected",
+                "ts": ts_max,
+                "role": role,
+                "dust_writes": dust,
+                "bloat": bloat,
+                "lagging": lagging,
+                "disk_full": disk_full,
+                "policy": "storage_rent_and_state_expiry",
+            }
+        ]
+    return []
+
+
+def _synthesize_threshold_sig_share_theft(events: list[dict]) -> list[dict]:
+    """收集 t 份 share 伪造签名 → threshold_sig_share_theft_detected (ADV119)."""
+    if any(e.get("kind") == "threshold_sig_share_theft_detected" for e in events):
+        return []
+    shares: list[tuple[int, str]] = []
+    forged = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "share" in target or "exfil_share" in vs or "exfil" in vs:
+            shares.append((ts, target or vs))
+            role = r or role
+        if "forged" in vs or "forged_sig" in target or "threshold_sig" in vs:
+            forged = True
+            role = r or role
+    if len(shares) >= 2 and (forged or len(shares) >= 3):
+        return [
+            {
+                "kind": "threshold_sig_share_theft_detected",
+                "ts": ts_max,
+                "role": role,
+                "share_count": len(shares),
+                "forged": forged,
+                "policy": "share_hsm_and_refresh_protocol",
             }
         ]
     return []
