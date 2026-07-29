@@ -1,0 +1,30 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV21-replay-attack
+category: B_failure_injection
+adversarial: true
+seed: 121
+description: >
+  [对抗·red-team] 重放已消费的写事件冒充新鲜进度 (replay attack),
+  管线尚无 replay_attack_detected → 预期 FAIL 暴露真缺口
+setup:
+  blackboard:
+    - {key: progress, value: "step1", writers: [worker]}
+  roles: [worker, attacker]
+inject:
+  - {type: write_conflict, role: attacker, target: progress, value: "step1"}
+  - {type: write_conflict, role: attacker, target: progress, value: "step1"}
+expected:
+  behavior: replay_attack_detected
+  silent_loss: 0
+verdict:
+  - criterion: replay_attack_detected
+    check: events_contain
+    args: {kind: replay_attack_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

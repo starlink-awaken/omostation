@@ -14,8 +14,9 @@ related:
 ## Decision
 
 1. **能力轨**: scenario_lib 补 `collusion_detected` / `priority_inversion_detected` /
-   `cascade_failure_contained`（ADV13/15/17），对抗集 33/33 通过（全过时仍须保持对抗强度，
-   后续可增 red-team 场景，非本 ADR 放宽判定）。
+   `cascade_failure_contained`（ADV13/15/17 闭环）。**同时**加硬 ADV19/21/23
+   （byzantine_quorum / replay / cross_key_collusion）— 管线未实现 → 诚实 FAIL，
+   满足 P84「全过=自欺」与 `check-adversarial-effectiveness` 门禁。
 2. **治理面**: 注册 `.omo/patterns/` 为 `OMO-PATTERNS` top-level asset（消 interface-check
    unregistered patterns）。
 3. **工程债盘点**: `bos-stdio-inventory.py` 只读统计 stdio-ish 比（禁止标签假迁移）。

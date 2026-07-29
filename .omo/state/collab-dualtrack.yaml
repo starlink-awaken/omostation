@@ -1,28 +1,28 @@
-generated_at: '2026-07-29T01:20:36.983624Z'
+generated_at: '2026-07-29T01:24:25.297555Z'
 schema: p84-dualtrack-v1
 capability_track:
   data_source: 构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)
-  scenario_total: 137
+  scenario_total: 140
   scenario_passed: 137
-  pass_rate: 1.0
+  pass_rate: 0.979
   category_coverage:
     A_conflict:
-      total: 90
+      total: 92
       passed: 90
     C_decomposition:
       total: 15
       passed: 15
     B_failure_injection:
-      total: 19
+      total: 20
       passed: 19
     D_reuse_pair:
       total: 13
       passed: 13
-  adversarial_total: 33
-  adversarial_failed: 0
-  adversarial_fail_rate: 0.0
-  conflict_resolution_success_rate: 1.0
-  avg_resolution_rounds: 0.6
+  adversarial_total: 36
+  adversarial_failed: 3
+  adversarial_fail_rate: 0.083
+  conflict_resolution_success_rate: 0.978
+  avg_resolution_rounds: 0.59
 throughput_track:
   data_source: 真实 backlog (.omo/tasks/done+planned/, 不可造)
   real_task_total: 35
