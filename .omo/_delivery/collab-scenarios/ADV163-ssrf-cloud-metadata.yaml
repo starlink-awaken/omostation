@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 263
 description: >
-  [对抗·red-team wave28] SSRF 打云元数据: 内网请求窃取实例角色凭证,
-  管线尚无 ssrf_cloud_metadata_detected → 预期 FAIL
+  [对抗·red-team wave29] SSRF 打云元数据: 内网请求窃取实例角色凭证,
+  管线已有 ssrf_cloud_metadata_detected → 预期 PASS
 setup:
   blackboard:
     - {key: fetch_url, value: "https://api.example.com", writers: [app]}

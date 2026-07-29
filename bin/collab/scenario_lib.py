@@ -217,6 +217,15 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_open_redirect(events))
     events.extend(_synthesize_xxe_file_read(events))
     events.extend(_synthesize_sqli_auth_bypass(events))
+    events.extend(_synthesize_ssrf_cloud_metadata(events))
+    events.extend(_synthesize_insecure_cookie_deserial(events))
+    events.extend(_synthesize_mass_assignment(events))
+    events.extend(_synthesize_idor_object_access(events))
+    events.extend(_synthesize_broken_access_admin(events))
+    events.extend(_synthesize_file_upload_webshell(events))
+    events.extend(_synthesize_prototype_pollution(events))
+    events.extend(_synthesize_http_request_smuggling(events))
+    events.extend(_synthesize_jwt_kid_injection(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -4350,6 +4359,436 @@ def _synthesize_sqli_auth_bypass(events: list[dict]) -> list[dict]:
                 "row_true": row_true,
                 "admin_session": admin_session,
                 "policy": "parameterized_queries_only",
+            }
+        ]
+    return []
+
+
+def _synthesize_ssrf_cloud_metadata(events: list[dict]) -> list[dict]:
+    """SSRF 访问云元数据 → ssrf_cloud_metadata_detected (ADV163)."""
+    if any(e.get("kind") == "ssrf_cloud_metadata_detected" for e in events):
+        return []
+    meta_url = False
+    server_fetch = False
+    keys_leaked = False
+    loot = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "169.254" in vs or "meta-data" in vs or "fetch_url" in target:
+            if "169.254" in vs or "meta-data" in vs or "iam" in vs:
+                meta_url = True
+                role = r or role
+        if "server_side_fetch" in vs or "http_client" in target:
+            server_fetch = True
+            role = r or role
+        if "role_keys" in vs or "iam_creds" in target or "leaked" in vs:
+            keys_leaked = True
+            role = r or role
+        if "aws_keys" in vs or ("loot" in target and "keys" in vs):
+            loot = True
+            role = r or role
+    if (meta_url or server_fetch) and (keys_leaked or loot):
+        return [
+            {
+                "kind": "ssrf_cloud_metadata_detected",
+                "ts": ts_max,
+                "role": role,
+                "meta_url": meta_url,
+                "server_fetch": server_fetch,
+                "keys_leaked": keys_leaked,
+                "loot": loot,
+                "policy": "block_link_local_and_imds_v2",
+            }
+        ]
+    return []
+
+
+def _synthesize_insecure_cookie_deserial(events: list[dict]) -> list[dict]:
+    """不安全 cookie 反序列化提权 → insecure_cookie_deserial_detected (ADV165)."""
+    if any(e.get("kind") == "insecure_cookie_deserial_detected" for e in events):
+        return []
+    tampered = False
+    unpickle = False
+    admin_role = False
+    priv_op = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "tampered" in vs or "session_cookie" in target or "serialized_admin" in vs:
+            tampered = True
+            role = r or role
+        if "unpickle" in vs or "deserial" in target or "without_verify" in vs:
+            unpickle = True
+            role = r or role
+        if target == "role" and "admin" in vs:
+            admin_role = True
+            role = r or role
+        if "privileged" in vs or ("action" in target and "priv" in vs):
+            priv_op = True
+            role = r or role
+    if (tampered or unpickle) and (admin_role or priv_op):
+        return [
+            {
+                "kind": "insecure_cookie_deserial_detected",
+                "ts": ts_max,
+                "role": role,
+                "tampered": tampered,
+                "unpickle": unpickle,
+                "admin_role": admin_role,
+                "priv_op": priv_op,
+                "policy": "signed_stateless_tokens_no_pickle",
+            }
+        ]
+    return []
+
+
+def _synthesize_mass_assignment(events: list[dict]) -> list[dict]:
+    """批量赋值写穿敏感字段 → mass_assignment_detected (ADV167)."""
+    if any(e.get("kind") == "mass_assignment_detected" for e in events):
+        return []
+    payload = False
+    bind_all = False
+    role_admin = False
+    granted = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "is_admin" in vs or "profile_payload" in target or "role=admin" in vs:
+            payload = True
+            role = r or role
+        if "bind_all" in vs or "mass_update" in target:
+            bind_all = True
+            role = r or role
+        if "role_admin" in vs or ("user_profile" in target and "admin" in vs):
+            role_admin = True
+            role = r or role
+        if "admin_granted" in vs or ("privilege" in target and "admin" in vs):
+            granted = True
+            role = r or role
+    if (payload or bind_all) and (role_admin or granted):
+        return [
+            {
+                "kind": "mass_assignment_detected",
+                "ts": ts_max,
+                "role": role,
+                "payload": payload,
+                "bind_all": bind_all,
+                "role_admin": role_admin,
+                "granted": granted,
+                "policy": "allowlist_fields_dto",
+            }
+        ]
+    return []
+
+
+def _synthesize_idor_object_access(events: list[dict]) -> list[dict]:
+    """改对象 ID 读他人数据 → idor_object_access_detected (ADV169)."""
+    if any(e.get("kind") == "idor_object_access_detected" for e in events):
+        return []
+    req_id = False
+    skip_authz = False
+    pii = False
+    exfil = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "request_id" in target or "order_id" in vs:
+            req_id = True
+            role = r or role
+        if "skipped_owner" in vs or "authz_check" in target or "no_owner" in vs:
+            skip_authz = True
+            role = r or role
+        if "pii" in vs or "victim" in vs or "response" in target:
+            if "pii" in vs or "victim" in vs:
+                pii = True
+                role = r or role
+        if "pii_exfil" in vs or ("loot" in target and "pii" in vs):
+            exfil = True
+            role = r or role
+    if (req_id or skip_authz) and (pii or exfil):
+        return [
+            {
+                "kind": "idor_object_access_detected",
+                "ts": ts_max,
+                "role": role,
+                "req_id": req_id,
+                "skip_authz": skip_authz,
+                "pii": pii,
+                "exfil": exfil,
+                "policy": "object_level_authz",
+            }
+        ]
+    return []
+
+
+def _synthesize_broken_access_admin(events: list[dict]) -> list[dict]:
+    """普通用户调 admin API → broken_access_admin_detected (ADV171)."""
+    if any(e.get("kind") == "broken_access_admin_detected" for e in events):
+        return []
+    admin_path = False
+    no_gate = False
+    deleted = False
+    unpriv = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "/admin" in vs or "api_path" in target:
+            admin_path = True
+            role = r or role
+        if "no_role_gate" in vs or "rbac" in target:
+            no_gate = True
+            role = r or role
+        if "user_deleted" in vs or "delete_result" in target:
+            deleted = True
+            role = r or role
+        if "unprivileged_admin" in vs or ("audit" in target and "admin" in vs):
+            unpriv = True
+            role = r or role
+    if (admin_path or no_gate) and (deleted or unpriv):
+        return [
+            {
+                "kind": "broken_access_admin_detected",
+                "ts": ts_max,
+                "role": role,
+                "admin_path": admin_path,
+                "no_gate": no_gate,
+                "deleted": deleted,
+                "unpriv": unpriv,
+                "policy": "rbac_on_every_admin_route",
+            }
+        ]
+    return []
+
+
+def _synthesize_file_upload_webshell(events: list[dict]) -> list[dict]:
+    """双扩展名上传 webshell → file_upload_webshell_detected (ADV173)."""
+    if any(e.get("kind") == "file_upload_webshell_detected" for e in events):
+        return []
+    dual_ext = False
+    trust_mime = False
+    stored_php = False
+    rce = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if ".php" in vs or "filename" in target:
+            if ".php" in vs or "jpg.php" in vs:
+                dual_ext = True
+                role = r or role
+        if "trust_client" in vs or "mime_check" in target:
+            trust_mime = True
+            role = r or role
+        if "stored_path" in target or ".php" in vs:
+            if "uploads" in vs or ".php" in vs:
+                stored_php = True
+                role = r or role
+        if "webshell" in vs or ("exec" in target and "rce" in vs) or "webshell_rce" in vs:
+            rce = True
+            role = r or role
+    if (dual_ext or trust_mime) and (stored_php or rce):
+        return [
+            {
+                "kind": "file_upload_webshell_detected",
+                "ts": ts_max,
+                "role": role,
+                "dual_ext": dual_ext,
+                "trust_mime": trust_mime,
+                "stored_php": stored_php,
+                "rce": rce,
+                "policy": "content_sniff_and_noexec_upload",
+            }
+        ]
+    return []
+
+
+def _synthesize_prototype_pollution(events: list[dict]) -> list[dict]:
+    """__proto__ 注入污染 isAdmin → prototype_pollution_detected (ADV175)."""
+    if any(e.get("kind") == "prototype_pollution_detected" for e in events):
+        return []
+    proto_inject = False
+    unsafe_merge = False
+    polluted = False
+    bypass = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "__proto__" in vs or "json_body" in target:
+            if "__proto__" in vs or "isadmin" in vs:
+                proto_inject = True
+                role = r or role
+        if "unsafe_recursive_merge" in vs or "merge_lib" in target:
+            unsafe_merge = True
+            role = r or role
+        if "isadmin_true" in vs or "object_prototype" in target:
+            polluted = True
+            role = r or role
+        if "bypass_via_polluted" in vs or ("auth_check" in target and "bypass" in vs):
+            bypass = True
+            role = r or role
+    if (proto_inject or unsafe_merge) and (polluted or bypass):
+        return [
+            {
+                "kind": "prototype_pollution_detected",
+                "ts": ts_max,
+                "role": role,
+                "proto_inject": proto_inject,
+                "unsafe_merge": unsafe_merge,
+                "polluted": polluted,
+                "bypass": bypass,
+                "policy": "proto_safe_merge_and_frozen_object",
+            }
+        ]
+    return []
+
+
+def _synthesize_http_request_smuggling(events: list[dict]) -> list[dict]:
+    """CL.TE 歧义走私 → http_request_smuggling_detected (ADV177)."""
+    if any(e.get("kind") == "http_request_smuggling_detected" for e in events):
+        return []
+    dual_headers = False
+    prefer_cl = False
+    prefer_te = False
+    smuggled = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "content-length" in vs or "transfer-encoding" in vs or "headers" in target:
+            if "content-length" in vs or "transfer-encoding" in vs or "chunked" in vs:
+                dual_headers = True
+                role = r or role
+        if "prefer_cl" in vs:
+            prefer_cl = True
+            role = r or role
+        if "prefer_te" in vs:
+            prefer_te = True
+            role = r or role
+        if "admin_post_hidden" in vs or "smuggled" in target:
+            smuggled = True
+            role = r or role
+    if dual_headers and ((prefer_cl and prefer_te) or smuggled):
+        return [
+            {
+                "kind": "http_request_smuggling_detected",
+                "ts": ts_max,
+                "role": role,
+                "dual_headers": dual_headers,
+                "prefer_cl": prefer_cl,
+                "prefer_te": prefer_te,
+                "smuggled": smuggled,
+                "policy": "reject_ambiguous_cl_te",
+            }
+        ]
+    return []
+
+
+def _synthesize_jwt_kid_injection(events: list[dict]) -> list[dict]:
+    """JWT kid 路径穿越空密钥 → jwt_kid_injection_detected (ADV179)."""
+    if any(e.get("kind") == "jwt_kid_injection_detected" for e in events):
+        return []
+    kid_path = False
+    empty_key = False
+    accept_empty = False
+    forged = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "kid=" in vs or "../../" in vs or "jwt_header" in target:
+            if "kid" in vs or "../../" in vs or "dev/null" in vs:
+                kid_path = True
+                role = r or role
+        if "empty_key" in vs or "key_load" in target:
+            empty_key = True
+            role = r or role
+        if "accept_hmac_empty" in vs or ("verify" in target and "empty" in vs):
+            accept_empty = True
+            role = r or role
+        if "forged_admin_jwt" in vs or ("session" in target and "forged" in vs):
+            forged = True
+            role = r or role
+    if (kid_path or empty_key) and (accept_empty or forged):
+        return [
+            {
+                "kind": "jwt_kid_injection_detected",
+                "ts": ts_max,
+                "role": role,
+                "kid_path": kid_path,
+                "empty_key": empty_key,
+                "accept_empty": accept_empty,
+                "forged": forged,
+                "policy": "kid_allowlist_no_path_lookup",
             }
         ]
     return []

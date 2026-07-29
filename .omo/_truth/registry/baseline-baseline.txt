@@ -1,0 +1,6 @@
+# Z2 baseline 冻结点 (2026-07-29 ABCD STOP freeze): 各 baseline 文件行数上限
+# 扩大 (current > meta) → blocking; 缩小 (清偿) → 自由
+baseline-perf-budget.txt: 38
+baseline-scenario-detectors.txt: 1
+baseline-scenario-growth.txt: 117
+baseline-work-landed.txt: 0

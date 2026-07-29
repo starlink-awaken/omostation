@@ -9,8 +9,8 @@ category: A_conflict
 adversarial: true
 seed: 267
 description: >
-  [对抗·red-team wave28] 批量赋值: 用户提交 is_admin=true 写穿模型,
-  管线尚无 mass_assignment_detected → 预期 FAIL
+  [对抗·red-team wave29] 批量赋值: 用户提交 is_admin=true 写穿模型,
+  管线已有 mass_assignment_detected → 预期 PASS
 setup:
   blackboard:
     - {key: user_profile, value: "role_user", writers: [app]}
