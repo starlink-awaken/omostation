@@ -9,8 +9,8 @@ category: A_conflict
 adversarial: true
 seed: 179
 description: >
-  [对抗·red-team wave14] 女巫空投: 多地址领同一空投后归集,
-  管线尚无 sybil_airdrop_detected → 预期 FAIL
+  [对抗·red-team wave15] 女巫空投: 多地址领同一空投后归集,
+  管线已有 sybil_airdrop_detected → 预期 PASS
 setup:
   blackboard:
     - {key: airdrop_pool, value: "10000", writers: [distributor]}

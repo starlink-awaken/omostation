@@ -9,8 +9,8 @@ category: A_conflict
 adversarial: true
 seed: 181
 description: >
-  [对抗·red-team wave14] NFT 对倒: 关联地址互卖抬高地板价,
-  管线尚无 wash_trade_detected → 预期 FAIL
+  [对抗·red-team wave15] NFT 对倒: 关联地址互卖抬高地板价,
+  管线已有 wash_trade_detected → 预期 PASS
 setup:
   blackboard:
     - {key: nft_1, value: "owner_a", writers: [a]}
