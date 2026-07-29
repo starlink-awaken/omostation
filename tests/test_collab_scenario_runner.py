@@ -467,12 +467,27 @@ def test_wave29_adv163165167_detectors_pass() -> None:
         )
 
 
-def test_wave29_hard_adv_still_fail() -> None:
-    """ADV169/171/173 加硬场景须失败 (对抗强度)."""
+def test_wave30_adv169171173_detectors_pass() -> None:
+    """wave30 闭环: idor / broken_access_admin / file_upload_webshell."""
     for name in (
         "ADV169-idor-object-access.yaml",
         "ADV171-broken-access-admin.yaml",
         "ADV173-file-upload-webshell.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave30 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave30_hard_adv_still_fail() -> None:
+    """ADV175/177/179 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV175-prototype-pollution.yaml",
+        "ADV177-http-request-smuggling.yaml",
+        "ADV179-jwt-kid-injection.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)

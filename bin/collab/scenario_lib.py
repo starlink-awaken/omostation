@@ -220,6 +220,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_ssrf_cloud_metadata(events))
     events.extend(_synthesize_insecure_cookie_deserial(events))
     events.extend(_synthesize_mass_assignment(events))
+    events.extend(_synthesize_idor_object_access(events))
+    events.extend(_synthesize_broken_access_admin(events))
+    events.extend(_synthesize_file_upload_webshell(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -4495,6 +4498,150 @@ def _synthesize_mass_assignment(events: list[dict]) -> list[dict]:
                 "role_admin": role_admin,
                 "granted": granted,
                 "policy": "allowlist_fields_dto",
+            }
+        ]
+    return []
+
+
+def _synthesize_idor_object_access(events: list[dict]) -> list[dict]:
+    """改对象 ID 读他人数据 → idor_object_access_detected (ADV169)."""
+    if any(e.get("kind") == "idor_object_access_detected" for e in events):
+        return []
+    req_id = False
+    skip_authz = False
+    pii = False
+    exfil = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "request_id" in target or "order_id" in vs:
+            req_id = True
+            role = r or role
+        if "skipped_owner" in vs or "authz_check" in target or "no_owner" in vs:
+            skip_authz = True
+            role = r or role
+        if "pii" in vs or "victim" in vs or "response" in target:
+            if "pii" in vs or "victim" in vs:
+                pii = True
+                role = r or role
+        if "pii_exfil" in vs or ("loot" in target and "pii" in vs):
+            exfil = True
+            role = r or role
+    if (req_id or skip_authz) and (pii or exfil):
+        return [
+            {
+                "kind": "idor_object_access_detected",
+                "ts": ts_max,
+                "role": role,
+                "req_id": req_id,
+                "skip_authz": skip_authz,
+                "pii": pii,
+                "exfil": exfil,
+                "policy": "object_level_authz",
+            }
+        ]
+    return []
+
+
+def _synthesize_broken_access_admin(events: list[dict]) -> list[dict]:
+    """普通用户调 admin API → broken_access_admin_detected (ADV171)."""
+    if any(e.get("kind") == "broken_access_admin_detected" for e in events):
+        return []
+    admin_path = False
+    no_gate = False
+    deleted = False
+    unpriv = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "/admin" in vs or "api_path" in target:
+            admin_path = True
+            role = r or role
+        if "no_role_gate" in vs or "rbac" in target:
+            no_gate = True
+            role = r or role
+        if "user_deleted" in vs or "delete_result" in target:
+            deleted = True
+            role = r or role
+        if "unprivileged_admin" in vs or ("audit" in target and "admin" in vs):
+            unpriv = True
+            role = r or role
+    if (admin_path or no_gate) and (deleted or unpriv):
+        return [
+            {
+                "kind": "broken_access_admin_detected",
+                "ts": ts_max,
+                "role": role,
+                "admin_path": admin_path,
+                "no_gate": no_gate,
+                "deleted": deleted,
+                "unpriv": unpriv,
+                "policy": "rbac_on_every_admin_route",
+            }
+        ]
+    return []
+
+
+def _synthesize_file_upload_webshell(events: list[dict]) -> list[dict]:
+    """双扩展名上传 webshell → file_upload_webshell_detected (ADV173)."""
+    if any(e.get("kind") == "file_upload_webshell_detected" for e in events):
+        return []
+    dual_ext = False
+    trust_mime = False
+    stored_php = False
+    rce = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if ".php" in vs or "filename" in target:
+            if ".php" in vs or "jpg.php" in vs:
+                dual_ext = True
+                role = r or role
+        if "trust_client" in vs or "mime_check" in target:
+            trust_mime = True
+            role = r or role
+        if "stored_path" in target or ".php" in vs:
+            if "uploads" in vs or ".php" in vs:
+                stored_php = True
+                role = r or role
+        if "webshell" in vs or ("exec" in target and "rce" in vs) or "webshell_rce" in vs:
+            rce = True
+            role = r or role
+    if (dual_ext or trust_mime) and (stored_php or rce):
+        return [
+            {
+                "kind": "file_upload_webshell_detected",
+                "ts": ts_max,
+                "role": role,
+                "dual_ext": dual_ext,
+                "trust_mime": trust_mime,
+                "stored_php": stored_php,
+                "rce": rce,
+                "policy": "content_sniff_and_noexec_upload",
             }
         ]
     return []
