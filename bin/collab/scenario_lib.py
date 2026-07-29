@@ -141,13 +141,16 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     # C 类: 事后机制合成 (partial_failure / starvation)
     events.extend(_synthesize_partial_failure(events))
     events.extend(_synthesize_starvation(blackboard, events))
-    # 对抗补强: ADV13/15/17 + wave5 ADV19/21/23
+    # 对抗补强: ADV13..23 + wave6 ADV25/27/29
     events.extend(_synthesize_collusion(events, blackboard))
     events.extend(_synthesize_priority_inversion(events, roles))
     events.extend(_synthesize_cascade_failure(events))
     events.extend(_synthesize_byzantine_quorum(events, blackboard))
     events.extend(_synthesize_replay_attack(events, blackboard))
     events.extend(_synthesize_cross_key_collusion(events))
+    events.extend(_synthesize_split_brain(events))
+    events.extend(_synthesize_identity_spoof(events))
+    events.extend(_synthesize_supply_chain_tamper(events, scenario, blackboard))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -296,15 +299,20 @@ def _handle_chain_step(board: dict, inj: dict, ts: int) -> dict:
 
 
 def _handle_audit_reject(inj: dict, ts: int, authorized: set[str]) -> dict:
-    """审计驳回 → audit_reject_handled (S 类闭环)."""
+    """审计驳回 → audit_reject_handled (S 类闭环).
+
+    未授权角色 (∉ setup.roles) 的 audit_reject 标 authorized_audit=false,
+    由 _synthesize_identity_spoof 提升为 identity_spoof_detected (ADV27).
+    """
     role = inj.get("role", "audit")
+    auth = (not authorized) or role in authorized
     return {
         "kind": "audit_reject_handled",
         "ts": ts,
         "role": role,
         "target": inj.get("target"),
         "reason": inj.get("reason", "policy"),
-        "authorized_audit": (not authorized) or role in authorized,
+        "authorized_audit": auth,
     }
 
 
@@ -620,6 +628,140 @@ def _synthesize_cross_key_collusion(events: list[dict]) -> list[dict]:
                 }
             )
     return out
+
+
+def _synthesize_split_brain(events: list[dict]) -> list[dict]:
+    """分区脑裂: 权威 key 分歧写 + 两侧 timeout → split_brain_detected (ADV25)."""
+    if any(e.get("kind") == "split_brain_detected" for e in events):
+        return []
+    conflicts = [
+        e
+        for e in events
+        if e.get("kind") in {"conflict_detected", "double_claim_detected"}
+    ]
+    timeouts = [e for e in events if e.get("kind") == "role_timeout"]
+    if not conflicts or len(timeouts) < 2:
+        return []
+    timeout_roles = {str(e.get("role")) for e in timeouts if e.get("role")}
+    for c in conflicts:
+        target = c.get("target")
+        # writers involved in conflict
+        roles = set()
+        if c.get("role"):
+            roles.add(str(c.get("role")))
+        for r in c.get("roles") or []:
+            roles.add(str(r))
+        # also gather write roles for same target
+        for e in events:
+            if e.get("kind") == "write" and e.get("target") == target and e.get("role"):
+                roles.add(str(e.get("role")))
+        if len(roles) >= 2 and len(timeout_roles & roles) >= 2:
+            return [
+                {
+                    "kind": "split_brain_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "partitions": sorted(roles),
+                    "timed_out": sorted(timeout_roles & roles),
+                    "policy": "fence_and_elect_or_abort",
+                }
+            ]
+    return []
+
+
+def _synthesize_identity_spoof(events: list[dict]) -> list[dict]:
+    """未授权 audit_reject → identity_spoof_detected (ADV27)."""
+    if any(e.get("kind") == "identity_spoof_detected" for e in events):
+        return []
+    for e in events:
+        if e.get("kind") != "audit_reject_handled":
+            continue
+        if e.get("authorized_audit") is False:
+            return [
+                {
+                    "kind": "identity_spoof_detected",
+                    "ts": e.get("ts") or 0,
+                    "role": e.get("role"),
+                    "target": e.get("target"),
+                    "reason": e.get("reason"),
+                    "policy": "reject_unauth_audit_and_alert",
+                }
+            ]
+        # role name spoofs audit but may still be "authorized" if in roles
+        role = str(e.get("role") or "")
+        if "attack" in role.lower() or (
+            "audit" in role.lower() and role.lower() not in {"audit", "auditor"}
+        ):
+            return [
+                {
+                    "kind": "identity_spoof_detected",
+                    "ts": e.get("ts") or 0,
+                    "role": role,
+                    "target": e.get("target"),
+                    "reason": "spoofed_audit_identity",
+                    "policy": "reject_unauth_audit_and_alert",
+                }
+            ]
+    return []
+
+
+def _synthesize_supply_chain_tamper(
+    events: list[dict], scenario: dict, board: dict
+) -> list[dict]:
+    """链步骤使用依赖后依赖被改写 → supply_chain_tamper_detected (ADV29)."""
+    if any(e.get("kind") == "supply_chain_tamper_detected" for e in events):
+        return []
+    # map inject chain_step deps
+    chain_injects = [
+        inj
+        for inj in scenario.get("inject") or []
+        if inj.get("type") == "chain_step"
+    ]
+    if not chain_injects:
+        return []
+    # chronological events: if chain_step_done for step S, then later conflict on dep of S
+    done_steps: dict[str, int] = {}
+    for e in events:
+        if e.get("kind") == "chain_step_done" and e.get("step"):
+            done_steps[str(e["step"])] = int(e.get("ts") or 0)
+    # find conflicts after a dependent chain step ran
+    for e in events:
+        if e.get("kind") not in {"conflict_detected", "double_claim_detected", "write"}:
+            continue
+        target = str(e.get("target") or "")
+        ts = int(e.get("ts") or 0)
+        if not target:
+            continue
+        for inj in chain_injects:
+            step = str(inj.get("step") or "")
+            deps = [str(d) for d in (inj.get("depends_on") or [])]
+            if target not in deps:
+                continue
+            # any prior chain_step that used this dep completed before the tamper?
+            # either this step already done, or an earlier step that depends on target done
+            prior_use = False
+            if step in done_steps and done_steps[step] < ts:
+                prior_use = True
+            for other in chain_injects:
+                os_ = str(other.get("step") or "")
+                if target in [str(d) for d in (other.get("depends_on") or [])]:
+                    if os_ in done_steps and done_steps[os_] < ts:
+                        prior_use = True
+            if prior_use and e.get("kind") in {
+                "conflict_detected",
+                "double_claim_detected",
+            }:
+                return [
+                    {
+                        "kind": "supply_chain_tamper_detected",
+                        "ts": ts,
+                        "dependency": target,
+                        "tamper_kind": e.get("kind"),
+                        "affected_step": step,
+                        "policy": "pin_digest_and_rebuild",
+                    }
+                ]
+    return []
 
 
 def _eval_criterion(

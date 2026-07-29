@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV35-quorum-eclipse
+category: A_conflict
+adversarial: true
+seed: 135
+description: >
+  [对抗·red-team wave6] 法定人数日食: 关键角色超时后伪法定人数仍通过,
+  管线尚无 quorum_eclipse_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: quorum_vote, value: null}
+  roles: [q1, q2, q3, critical]
+inject:
+  - {type: role_timeout, role: critical}
+  - {type: write_conflict, role: q1, target: quorum_vote, value: "pass"}
+  - {type: write_conflict, role: q2, target: quorum_vote, value: "pass"}
+  - {type: write_conflict, role: q3, target: quorum_vote, value: "pass"}
+expected:
+  behavior: quorum_eclipse_detected
+  silent_loss: 0
+verdict:
+  - criterion: quorum_eclipse_detected
+    check: events_contain
+    args: {kind: quorum_eclipse_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
