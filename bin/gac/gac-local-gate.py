@@ -419,9 +419,9 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
     output_cfg = POLICY.get("settings", {}).get("output", {})
     terminal_mode = output_cfg.get("terminal_mode", "slim")
     
-    checks_list = report["checks"]
-    change_lane = report["change_lane_files"]
-    is_ok = report["ok"]
+    checks_list: list[dict] = report["checks"]  # type: ignore[assignment]
+    change_lane: list[str] = report["change_lane_files"]  # type: ignore[assignment]
+    is_ok: bool = report["ok"]  # type: ignore[assignment]
     checks_count = len(checks_list)
 
     if is_ok and terminal_mode == "slim" and not verbose:
