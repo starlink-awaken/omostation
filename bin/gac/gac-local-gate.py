@@ -69,7 +69,7 @@ DEFAULT_POLICY = {
         {"id": "service-config-drift", "command": ["bin/mof/gen-service-configs.py", "--check"], "ci_skip": True},
         {"id": "gac-mesh-router-check", "command": ["bin/gac/gac-mesh-router.py", "--check"]},
         {"id": "gac-consensus-inject-check", "command": ["bin/gac/gac-consensus-inject.py", "--check"]},
-        {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"], "broken": True, "broken_reason": "依赖本地算力服务 (cc-switch/codexbar/litellm/omlxc), 本地不存在 → 超时"},
+        {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"]},
         # P44 测试覆盖门禁: 每个 Python 项目必须有 tests/
         {"id": "test-coverage-check", "command": ["bin/gac/test-coverage-check.py"]},
         # P45 债务完整性门禁: seed_items 全部存在且非空
