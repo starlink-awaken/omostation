@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV147-log-injection
+category: B_failure_injection
+adversarial: true
+seed: 247
+description: >
+  [对抗·red-team wave25] 日志注入: 伪造换行与级别伪造管理员操作记录,
+  管线尚无 log_injection_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: app_log, value: "clean", writers: [logger]}
+  roles: [attacker, logger, auditor]
+inject:
+  - {type: write_conflict, role: attacker, target: user_input, value: "x\nINFO admin approved grant"}
+  - {type: write_conflict, role: logger, target: app_log, value: "injected_admin_line"}
+  - {type: write_conflict, role: auditor, target: audit_review, value: "trusted_fake_approval"}
+  - {type: write_conflict, role: attacker, target: fraud_result, value: "grant_executed"}
+expected:
+  behavior: log_injection_detected
+  silent_loss: 0
+verdict:
+  - criterion: log_injection_detected
+    check: events_contain
+    args: {kind: log_injection_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

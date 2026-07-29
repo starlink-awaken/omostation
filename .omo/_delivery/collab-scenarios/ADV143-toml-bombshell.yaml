@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 243
 description: >
-  [对抗·red-team wave24] 配置炸弹: 超深嵌套/巨量键拖垮解析器导致 DoS,
-  管线尚无 config_bombshell_detected → 预期 FAIL
+  [对抗·red-team wave25] 配置炸弹: 超深嵌套/巨量键拖垮解析器导致 DoS,
+  管线已有 config_bombshell_detected → 预期 PASS
 setup:
   blackboard:
     - {key: config_doc, value: "normal", writers: [loader]}

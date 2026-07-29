@@ -1,0 +1,33 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV145-race-to-double-spend
+category: A_conflict
+adversarial: true
+seed: 245
+description: >
+  [对抗·red-team wave25] 竞态双花: 并发提交两笔同余额扣减均成功,
+  管线尚无 race_double_spend_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: account_bal, value: "100", writers: [ledger]}
+  roles: [attacker, ledger, merchant_a, merchant_b]
+inject:
+  - {type: write_conflict, role: attacker, target: pay_a, value: "debit_100_to_a"}
+  - {type: write_conflict, role: attacker, target: pay_b, value: "debit_100_to_b_same_ms"}
+  - {type: write_conflict, role: ledger, target: account_bal, value: "0"}
+  - {type: write_conflict, role: merchant_a, target: credit_a, value: "100"}
+  - {type: write_conflict, role: merchant_b, target: credit_b, value: "100"}
+expected:
+  behavior: race_double_spend_detected
+  silent_loss: 0
+verdict:
+  - criterion: race_double_spend_detected
+    check: events_contain
+    args: {kind: race_double_spend_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
