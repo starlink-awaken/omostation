@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 229
 description: >
-  [对抗·red-team wave22] DNS 重绑定: 恶意域名 TTL 翻转访问内网 RPC,
-  管线尚无 dns_rebinding_detected → 预期 FAIL
+  [对抗·red-team wave23] DNS 重绑定: 恶意域名 TTL 翻转访问内网 RPC,
+  管线已有 dns_rebinding_detected → 预期 PASS
 setup:
   blackboard:
     - {key: dns_record, value: "evil.example->public_ip", writers: [dns]}

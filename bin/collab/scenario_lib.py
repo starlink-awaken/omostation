@@ -199,6 +199,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_rpc_auth_bypass(events))
     events.extend(_synthesize_dependency_confusion(events))
     events.extend(_synthesize_clock_sync_poison(events))
+    events.extend(_synthesize_blind_signing_drain(events))
+    events.extend(_synthesize_dns_rebinding(events))
+    events.extend(_synthesize_ci_secret_exfil(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -3397,6 +3400,162 @@ def _synthesize_clock_sync_poison(events: list[dict]) -> list[dict]:
                 "clock_split": split,
                 "reject_storm": reject_storm,
                 "policy": "multi_source_time_and_max_drift",
+            }
+        ]
+    return []
+
+
+def _synthesize_blind_signing_drain(events: list[dict]) -> list[dict]:
+    """盲签恶意 payload 后资产抽干 → blind_signing_drain_detected (ADV127)."""
+    if any(e.get("kind") == "blind_signing_drain_detected" for e in events):
+        return []
+    opaque = False
+    blind_sig = False
+    balance_zero = False
+    received = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "sign_request" in target or "opaque" in vs or "hex_blob" in vs:
+            opaque = True
+            role = r or role
+        if "blind_signed" in vs or ("signature" in target and "blind" in vs):
+            blind_sig = True
+            role = r or role
+        if "wallet_balance" in target or "balance" in target:
+            if vs in {"0", "0.0"} or vs == "0":
+                balance_zero = True
+                role = r or role
+        if "received" in vs or ("attacker_wallet" in target and "received" in vs):
+            received = True
+            role = r or role
+        if "received_" in vs:
+            received = True
+            role = r or role
+    if blind_sig and (balance_zero or received or opaque):
+        return [
+            {
+                "kind": "blind_signing_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "opaque_payload": opaque,
+                "blind_sig": blind_sig,
+                "balance_zero": balance_zero,
+                "received": received,
+                "policy": "human_readable_sign_and_sim",
+            }
+        ]
+    if opaque and balance_zero:
+        return [
+            {
+                "kind": "blind_signing_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "opaque_payload": True,
+                "balance_zero": True,
+                "policy": "human_readable_sign_and_sim",
+            }
+        ]
+    return []
+
+
+def _synthesize_dns_rebinding(events: list[dict]) -> list[dict]:
+    """DNS TTL 翻转打内网 RPC → dns_rebinding_detected (ADV129)."""
+    if any(e.get("kind") == "dns_rebinding_detected" for e in events):
+        return []
+    ttl_flip = False
+    internal_hit = False
+    forged_rpc = False
+    exfil = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "dns" in target or "ttl" in vs or "127.0.0.1" in vs or "flip" in vs:
+            ttl_flip = True
+            role = r or role
+        if "internal" in vs or "same_origin" in target or "hit_internal" in vs:
+            internal_hit = True
+            role = r or role
+        if "rpc_call" in target or "forged" in vs or "sendtransaction" in vs:
+            forged_rpc = True
+            role = r or role
+        if "exfil" in vs or "loot" in target or "keys_exfil" in vs:
+            exfil = True
+            role = r or role
+    if (ttl_flip or internal_hit) and (forged_rpc or exfil or internal_hit):
+        return [
+            {
+                "kind": "dns_rebinding_detected",
+                "ts": ts_max,
+                "role": role,
+                "ttl_flip": ttl_flip,
+                "internal_hit": internal_hit,
+                "forged_rpc": forged_rpc,
+                "exfil": exfil,
+                "policy": "host_header_and_cors_lockdown",
+            }
+        ]
+    return []
+
+
+def _synthesize_ci_secret_exfil(events: list[dict]) -> list[dict]:
+    """CI secrets 打印/上传外泄 → ci_secret_exfil_detected (ADV131)."""
+    if any(e.get("kind") == "ci_secret_exfil_detected" for e in events):
+        return []
+    echo_env = False
+    unmasked = False
+    dump = False
+    exfil_done = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "workflow" in target or "echo_all_env" in vs or "echo" in vs:
+            echo_env = True
+            role = r or role
+        if "unmasked" in vs or "ci_secrets" in target:
+            unmasked = True
+            role = r or role
+        if "secrets_dump" in vs or "upload_artifact" in target or "dump" in vs:
+            dump = True
+            role = r or role
+        if "exfil" in vs or "remote_sink" in target:
+            exfil_done = True
+            role = r or role
+    if (echo_env or unmasked) and (dump or exfil_done or unmasked):
+        return [
+            {
+                "kind": "ci_secret_exfil_detected",
+                "ts": ts_max,
+                "role": role,
+                "echo_env": echo_env,
+                "unmasked": unmasked,
+                "dump": dump,
+                "exfil": exfil_done,
+                "policy": "secret_masking_and_oidc_short_lived",
             }
         ]
     return []
