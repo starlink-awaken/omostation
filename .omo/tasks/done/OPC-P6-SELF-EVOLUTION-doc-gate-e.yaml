@@ -1,6 +1,7 @@
 id: OPC-P6-SELF-EVOLUTION-doc-gate-e
 title: Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml
-status: candidate
+status: done
+completed_at: '2026-07-29T01:40:00Z'
 task_type: governance
 risk_level: L1
 depends_on: []
