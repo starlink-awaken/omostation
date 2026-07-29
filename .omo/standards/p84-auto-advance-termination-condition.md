@@ -78,3 +78,11 @@ P84 自动推进 / 系统续跑 / linter 应在以下条件**停止**:
 - goal Q1 · P86 longplan §B1' · §熔断
 - B1' 取舍 `.omo/_knowledge/audits/2026-07-29-p86-b1prime-conflict-triage.md`
 - P3 红线 (P86 longplan §熔断)
+
+## 7. 可执行冻结点 (ABCD close 2026-07-29)
+
+- Gate: `python3 bin/gac/check-scenario-growth.py` (stock grace; **new** no-evidence ADV → blocking)
+- Cap: `ADV_CAP` = stock max at freeze; detector count baseline frozen
+- Meta: `check-baseline-growth.py` 守 baseline 行数不得静默扩大
+- Closeout: `.omo/_knowledge/audits/2026-07-29-p86-abcd-closeout.md` · ADR-0287
+- 🔴 ABCD 关闭后 **禁止** 无人类派单的 wave32+ 检测器/加硬传送带

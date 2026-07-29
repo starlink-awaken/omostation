@@ -24,12 +24,28 @@
 
 > 🔴 **能力轨与产能轨数据源物理隔离, 禁止合并** (P84 §0 最高级红线). 构造场景只计能力轨, 真实 backlog 只计产能轨.
 
+### 🎯 产能目标 (P86 C 波 · human-delegated D2 · 2026-07-29)
+
+| 项 | 现行目标 | 门禁含义 |
+|----|----------|----------|
+| **月度真实任务** | **15**（2026-08 起；达成后再议） | 仅真实 backlog / 有交付凭据任务 |
+| **完成率** | **≥85%** | 不变 |
+| **协作管线适用面** | **仅「简单独立批量」** | 分析/方案/审查/调试 → **单 agent** |
+| **旧爬坡表 30→45→60→60** | ⛔ **作废** | **不得**再作任何门禁/KPI 依据 |
+
+- 人类授权: `.omo/_control/2026-07-29-human-delegated-decisions.md` D2  
+- 协作收益地图: `.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md`  
+- ADR 适用面: ADR-0247 amend + ADR-0287  
+- 🔴 silent_loss=0 **不**因目标下调而放松  
+
 ### 🎯 能力轨 (Capability · 构造场景, 可加速)
-> 数据源: `构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)`
+> 数据源: `构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)`  
+> ⚠️ 能力轨 **不计** 产能；ADV 自动扩面已 §STOP（见 `p84-auto-advance-termination-condition.md`）
 
 - 场景总数: `134` | 通过率: `79.9%`
 - 对抗集: `30` 个, 失败率 `90%` (P84: 全过=对抗不足须加强)
 - 冲突消解成功率: `70%` | 平均协商轮次: `0.67`
+- 已设计类成功率分母: 见 `.omo/standards/collab-conflict-protocol-boundary.md`（边界类不计入）
 
 ### 📦 产能轨 (Throughput · 真实 backlog, 不可造)
 > 数据源: `真实 backlog (.omo/tasks/done+planned/, 不可造)`
@@ -37,6 +53,7 @@
 - 真实任务: `5` done / `9` planned (完成率 `35.7%`)
 - 人工直做占比: `0%` (0/5)
 - **静默丢失: `0`** ✅ 硬红线达成
+- **月目标对照**: 15 真实任务 / 完成率 ≥85%（上表 C 波；导出 dualtrack 时以 export 为准）
 
 <details>
 <summary>⚙️ <b>治理健康分详情 (复合 91/100, 已自动收纳)</b></summary>

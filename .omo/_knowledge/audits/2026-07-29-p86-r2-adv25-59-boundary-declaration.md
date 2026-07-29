@@ -37,8 +37,20 @@ last-reviewed: "2026-07-29"
 | ADV49-65 | wave10+ | (系统持续加) | 标注边界 (同标准) |
 
 **统一处置**: ADV25-65 (及以后) 全部"协议不支持, 已知边界", 不补 _synthesize_* 实现.
-真实任务 (runs) 0 发生这些类. baseline-scenario-growth.txt 含全部 57 存量 ADV (grace).
-新增 ADV (ADV67+) 无 real_occurrence_evidence → check-scenario-growth **blocking** (S1 实测验证).
+真实任务 (runs) 0 发生这些类.
+
+## ABCD 关闭扩展 (2026-07-29)
+
+wave10+ 传送带已将 stock 推至 **ADV185**（含 wave31）。按 B1'/Q1 **一律 known boundary**:
+
+| 范围 | 处置 |
+|------|------|
+| ADV67–185 | unsupported / 已知边界；已有检测器不回滚、**不算产能** |
+| 新增 ADV | 无 `real_occurrence_evidence` → `check-scenario-growth` **blocking** |
+| SSOT | `.omo/standards/collab-conflict-protocol-boundary.md` · ADR-0287 |
+
+baseline-scenario-growth.txt 于 ABCD freeze 点 grandfather 全部无证据 stock（grace）。
+**禁止**在无人类派单下继续 wave32+ 加硬传送带。
 
 ## 统一边界声明
 
