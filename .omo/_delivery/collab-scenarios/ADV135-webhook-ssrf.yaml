@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV135-webhook-ssrf
+category: B_failure_injection
+adversarial: true
+seed: 235
+description: >
+  [对抗·red-team wave24] Webhook SSRF: 回调 URL 指向内网元数据服务,
+  管线已有 webhook_ssrf_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: webhook_url, value: "https://example.com/hook", writers: [app]}
+  roles: [attacker, app, metadata]
+inject:
+  - {type: write_conflict, role: attacker, target: webhook_url, value: "http://169.254.169.254/latest/meta-data"}
+  - {type: write_conflict, role: app, target: webhook_dispatch, value: "fetch_attacker_url"}
+  - {type: write_conflict, role: metadata, target: meta_response, value: "iam_credentials_leaked"}
+  - {type: write_conflict, role: attacker, target: loot, value: "cloud_keys"}
+expected:
+  behavior: webhook_ssrf_detected
+  silent_loss: 0
+verdict:
+  - criterion: webhook_ssrf_detected
+    check: events_contain
+    args: {kind: webhook_ssrf_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
