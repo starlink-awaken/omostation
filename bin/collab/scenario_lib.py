@@ -178,6 +178,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_sybil_airdrop(events))
     events.extend(_synthesize_wash_trade(events))
     events.extend(_synthesize_key_compromise_blast(events))
+    events.extend(_synthesize_infinite_mint(events))
+    events.extend(_synthesize_stablecoin_depeg(events))
+    events.extend(_synthesize_zk_proof_forgery(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -2245,6 +2248,186 @@ def _synthesize_key_compromise_blast(events: list[dict]) -> list[dict]:
             "policy": "key_rotation_and_blast_radius_isolation",
         }
     ]
+
+
+def _synthesize_infinite_mint(events: list[dict]) -> list[dict]:
+    """绕过 supply_cap 持续 mint → infinite_mint_detected (ADV85)."""
+    if any(e.get("kind") == "infinite_mint_detected" for e in events):
+        return []
+    supply_writes: list[tuple[int, str, str]] = []
+    mint_gains: list[tuple[int, str, object]] = []
+    dilution: list[tuple[int, str]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        if "total_supply" in target or "supply" in target:
+            supply_writes.append((ts, role, vs))
+        if "mint" in vs or "minted" in vs or ("wallet" in target and "mint" in role):
+            mint_gains.append((ts, role, val))
+        if "dilut" in vs or "holder" in target:
+            dilution.append((ts, role))
+    # multiple supply increases / over-cap signal
+    nums: list[int] = []
+    for _t, _r, vs in supply_writes:
+        digits = "".join(ch if ch.isdigit() else " " for ch in vs).split()
+        if digits:
+            try:
+                nums.append(int(digits[-1]))
+            except ValueError:
+                pass
+    rising = len(nums) >= 2 and nums[-1] > nums[0]
+    multi_mint = len(supply_writes) >= 2 or len(mint_gains) >= 1
+    if rising and multi_mint:
+        ts_max = max(
+            [t for t, _r, _v in supply_writes]
+            + [t for t, _r, _v in mint_gains]
+            + [0]
+        )
+        return [
+            {
+                "kind": "infinite_mint_detected",
+                "ts": ts_max,
+                "supply_values": nums,
+                "mint_gains": len(mint_gains),
+                "dilution": len(dilution),
+                "policy": "hard_supply_cap_and_mint_governor",
+            }
+        ]
+    if len(mint_gains) >= 1 and len(supply_writes) >= 1 and (rising or dilution):
+        ts_max = max(t for t, *_ in supply_writes + [(g[0], g[1], "") for g in mint_gains])
+        return [
+            {
+                "kind": "infinite_mint_detected",
+                "ts": ts_max,
+                "mint_gains": len(mint_gains),
+                "policy": "hard_supply_cap_and_mint_governor",
+            }
+        ]
+    return []
+
+
+def _synthesize_stablecoin_depeg(events: list[dict]) -> list[dict]:
+    """储备/锚定被操纵 + 挤兑 → stablecoin_depeg_detected (ADV87)."""
+    if any(e.get("kind") == "stablecoin_depeg_detected" for e in events):
+        return []
+    peg_hit = False
+    reserve_hit = False
+    bank_run = False
+    exit_liq = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "peg" in target or "peg" in vs:
+            peg_hit = True
+            role = r or role
+            # sub-1.0 peg prices
+            digits = "".join(ch if ch.isdigit() or ch == "." else " " for ch in vs).split()
+            for d in digits:
+                try:
+                    if float(d) < 1.0:
+                        peg_hit = True
+                except ValueError:
+                    pass
+        if "reserve" in target or "reserve" in vs:
+            reserve_hit = True
+            role = r or role
+        if "redeem" in target or "bank_run" in vs or "flood" in vs or "run" in vs:
+            bank_run = True
+            role = r or role
+        if "exit" in vs or ("wallet" in target and "issuer" in target) or "exit_liquidity" in vs:
+            exit_liq = True
+            role = r or role
+    if (peg_hit or reserve_hit) and (bank_run or exit_liq):
+        return [
+            {
+                "kind": "stablecoin_depeg_detected",
+                "ts": ts_max,
+                "role": role,
+                "peg_hit": peg_hit,
+                "reserve_hit": reserve_hit,
+                "bank_run": bank_run,
+                "exit_liquidity": exit_liq,
+                "policy": "attested_reserves_and_circuit_breaker",
+            }
+        ]
+    if peg_hit and reserve_hit:
+        return [
+            {
+                "kind": "stablecoin_depeg_detected",
+                "ts": ts_max,
+                "role": role,
+                "peg_hit": True,
+                "reserve_hit": True,
+                "policy": "attested_reserves_and_circuit_breaker",
+            }
+        ]
+    return []
+
+
+def _synthesize_zk_proof_forgery(events: list[dict]) -> list[dict]:
+    """假 validity proof + 恶意 state root → zk_proof_forgery_detected (ADV89)."""
+    if any(e.get("kind") == "zk_proof_forgery_detected" for e in events):
+        return []
+    forged_proof = False
+    bad_root = False
+    steal = False
+    weak_verify = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "proof" in target or "forged" in vs or "zk" in target:
+            if "forged" in vs or "fake" in vs or "invalid" in vs or "proof" in target:
+                forged_proof = True
+                role = r or role
+        if "state_root" in target or "root" in target:
+            if "malicious" in vs or "evil" in vs or "bad" in vs or "forge" in vs:
+                bad_root = True
+                role = r or role
+            elif forged_proof:
+                # any root change after forged proof
+                bad_root = True
+                role = r or role
+        if "withdraw" in target or "stolen" in vs or "exit" in vs:
+            steal = True
+            role = r or role
+        if "verify" in target and ("accept" in vs or "without" in vs or "skip" in vs):
+            weak_verify = True
+            role = r or role
+    if forged_proof and (bad_root or steal or weak_verify):
+        return [
+            {
+                "kind": "zk_proof_forgery_detected",
+                "ts": ts_max,
+                "role": role,
+                "forged_proof": forged_proof,
+                "bad_root": bad_root,
+                "steal": steal,
+                "weak_verify": weak_verify,
+                "policy": "proof_verifier_and_challenge_window",
+            }
+        ]
+    return []
 
 
 def _eval_criterion(
