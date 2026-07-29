@@ -452,12 +452,57 @@ def test_wave28_adv157159161_detectors_pass() -> None:
         )
 
 
-def test_wave28_hard_adv_still_fail() -> None:
-    """ADV163/165/167 加硬场景须失败 (对抗强度)."""
+def test_wave29_adv163165167_detectors_pass() -> None:
+    """wave29 闭环: ssrf_cloud_metadata / insecure_cookie_deserial / mass_assignment."""
     for name in (
         "ADV163-ssrf-cloud-metadata.yaml",
         "ADV165-insecure-deserial-cookie.yaml",
         "ADV167-mass-assignment.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave29 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave30_adv169171173_detectors_pass() -> None:
+    """wave30 闭环: idor / broken_access_admin / file_upload_webshell."""
+    for name in (
+        "ADV169-idor-object-access.yaml",
+        "ADV171-broken-access-admin.yaml",
+        "ADV173-file-upload-webshell.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave30 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave31_adv175177179_detectors_pass() -> None:
+    """wave31 闭环: prototype_pollution / http_request_smuggling / jwt_kid_injection."""
+    for name in (
+        "ADV175-prototype-pollution.yaml",
+        "ADV177-http-request-smuggling.yaml",
+        "ADV179-jwt-kid-injection.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave31 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave31_hard_adv_still_fail() -> None:
+    """ADV181/183/185 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV181-ssti-template-rce.yaml",
+        "ADV183-ldap-injection.yaml",
+        "ADV185-cors-null-origin.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)

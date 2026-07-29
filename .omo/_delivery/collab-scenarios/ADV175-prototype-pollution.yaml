@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV175-prototype-pollution
+category: B_failure_injection
+adversarial: true
+seed: 275
+description: >
+  [对抗·red-team wave31 闭环] 原型污染: __proto__ 注入污染全局 isAdmin,
+  检测器 prototype_pollution_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: merge_lib, value: "deep_merge", writers: [app]}
+  roles: [attacker, app, runtime]
+inject:
+  - {type: write_conflict, role: attacker, target: json_body, value: '{"__proto__":{"isAdmin":true}}'}
+  - {type: write_conflict, role: app, target: merge_lib, value: "unsafe_recursive_merge"}
+  - {type: write_conflict, role: runtime, target: Object_prototype, value: "isAdmin_true"}
+  - {type: write_conflict, role: attacker, target: auth_check, value: "bypass_via_polluted_proto"}
+expected:
+  behavior: prototype_pollution_detected
+  silent_loss: 0
+verdict:
+  - criterion: prototype_pollution_detected
+    check: events_contain
+    args: {kind: prototype_pollution_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

@@ -27,7 +27,7 @@ SCENARIOS_DIR = WORKSPACE / ".omo/_delivery/collab-scenarios"
 BASELINE_FILE = WORKSPACE / ".omo/_truth/registry/baseline-scenario-growth.txt"
 # T2: ADV 编号上限锁死 + detector 增长门 (防 W14 detector 形态绕过)
 SCENARIO_LIB = WORKSPACE / "bin/collab/scenario_lib.py"
-ADV_CAP = 77  # T2: 编号空间冻结, 新增须人类批准
+ADV_CAP = 185  # ABCD STOP freeze: stock max  # T2: 编号空间冻结, 新增须人类批准
 DETECTOR_BASELINE_FILE = WORKSPACE / ".omo/_truth/registry/baseline-scenario-detectors.txt"
 
 
@@ -107,11 +107,24 @@ def main(argv: list[str] | None = None) -> int:
         help="dump 当前无真实证据的 ADV id (baseline grace 清单)",
     )
     parser.add_argument(
+        "--workspace",
+        default=None,
+        help="override workspace root (tests / dry-run)",
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="baseline grace 也算 fail (CI 模式)",
     )
     args = parser.parse_args(argv)
+
+    global WORKSPACE, SCENARIOS_DIR, BASELINE_FILE, SCENARIO_LIB, DETECTOR_BASELINE_FILE
+    if args.workspace:
+        WORKSPACE = Path(args.workspace).resolve()
+        SCENARIOS_DIR = WORKSPACE / ".omo/_delivery/collab-scenarios"
+        BASELINE_FILE = WORKSPACE / ".omo/_truth/registry/baseline-scenario-growth.txt"
+        SCENARIO_LIB = WORKSPACE / "bin/collab/scenario_lib.py"
+        DETECTOR_BASELINE_FILE = WORKSPACE / ".omo/_truth/registry/baseline-scenario-detectors.txt"
 
     advs = [(p, _load_yaml(p)) for p in _adv_files()]
 

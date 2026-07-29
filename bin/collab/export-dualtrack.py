@@ -29,8 +29,8 @@ TASKS_DONE = REPO / ".omo" / "tasks" / "done"
 TASKS_PLANNED = REPO / ".omo" / "tasks" / "planned"
 OUT_YAML = REPO / ".omo" / "state" / "collab-dualtrack.yaml"
 
-# P84 W3 产能目标 (ADR-0256) — 诚实 gap, 不可造卡冲数
-W3_DONE_TARGET = 30
+# P86 C 波 / human-delegated D2 / ADR-0287 — 月真实任务目标 (旧 30→45→60 作废)
+W3_DONE_TARGET = 15
 # planned 中不计入 "active backlog" 的终态 (仍进 planned_total 透明度字段)
 INACTIVE_PLANNED_STATUS = frozenset(
     {"archived", "done", "closed", "cancelled", "deferred"}
@@ -88,8 +88,23 @@ def _list_planned_yaml() -> list[Path]:
 
 
 def export_throughput_track() -> dict:
-    """产能轨: 从真实 tasks SSOT 导出 (真实 backlog, 不可造)."""
-    done_files = sorted(TASKS_DONE.glob("*.yaml")) if TASKS_DONE.exists() else []
+    """产能轨: 从真实 tasks SSOT 导出 (真实 backlog, 不可造).
+
+    Z4/T1 去污: 自产任务 (W 波/能力轨: adv/detector/harden/collab-tests/dualtrack)
+    不计产能轨 (P84 §0 构造场景不计产能). 旧版报 103/98.1% 含 67% 污染, 去污后真实.
+    """
+    import re
+    SELFPROD_PATTERNS = [
+        r"adv", r"detector", r"harden", r"scenario", r"collab", r"synthesize",
+        r"wave", r"boundary", r"dual.?track", r"rejudg", r"harness", r"falsif",
+        r"p84", r"p86", r"conflict", r"resolution",
+    ]
+    def _is_selfprod(name: str) -> bool:
+        return any(re.search(p, name, re.I) for p in SELFPROD_PATTERNS)
+
+    raw_done = sorted(TASKS_DONE.glob("*.yaml")) if TASKS_DONE.exists() else []
+    selfprod_done = [f for f in raw_done if _is_selfprod(f.stem)]
+    done_files = [f for f in raw_done if not _is_selfprod(f.stem)]  # Z4 去污: 仅真实 backlog
     planned_files = _list_planned_yaml()
     done = len(done_files)
     planned = len(planned_files)
@@ -127,7 +142,7 @@ def export_throughput_track() -> dict:
 
     gap = max(0, W3_DONE_TARGET - done)
     return {
-        "data_source": "真实 backlog (.omo/tasks/done+planned/, 不可造)",
+        "data_source": "真实 backlog (.omo/tasks/done+planned/, 不可造), Z4 去污后 (剔自产)",
         "real_task_total": total,
         "done": done,
         "planned": planned,
@@ -140,6 +155,9 @@ def export_throughput_track() -> dict:
         "human_direct_ratio": round(human_direct / done, 3) if done else 0,
         "agent_done_count": agent_done,
         "silent_loss": silent_loss,  # 硬红线 = 0
+        "selfprod_excluded": len(selfprod_done),  # Z4: 剔出的自产数 (透明)
+        "raw_done_total": len(raw_done),  # 原始 done (含污染, 透明)
+        "decontamination_note": "Z4/T1: 自产 (W波/能力轨) 不计产能轨, P84 §0",
     }
 
 

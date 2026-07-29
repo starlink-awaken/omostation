@@ -1,0 +1,17 @@
+id: w30-adv-harden-175177179
+title: 'ADV175/177/179 加硬 (proto-pollution/smuggling/jwt-kid)'
+description: 'P84 wave30 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T07:00:00Z'
+completion_evidence:
+  - .omo/_delivery/collab-scenarios/ADV175-prototype-pollution.yaml
+  - .omo/_delivery/collab-scenarios/ADV177-http-request-smuggling.yaml
+  - .omo/_delivery/collab-scenarios/ADV179-jwt-kid-injection.yaml
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0285-p84-wave30-adv169171173.md
+stage: P84-W30
