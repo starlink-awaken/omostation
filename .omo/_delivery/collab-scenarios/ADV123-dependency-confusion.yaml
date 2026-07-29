@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 223
 description: >
-  [对抗·red-team wave21] 依赖混淆: 同名恶意包抢先解析替换内部依赖,
-  管线尚无 dependency_confusion_detected → 预期 FAIL
+  [对抗·red-team wave22] 依赖混淆: 同名恶意包抢先解析替换内部依赖,
+  管线已有 dependency_confusion_detected → 预期 PASS
 setup:
   blackboard:
     - {key: package_lock, value: "internal/lib-core@1.2.0", writers: [ci]}

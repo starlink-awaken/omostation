@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 225
 description: >
-  [对抗·red-team wave21] 时钟同步投毒: 伪造 NTP/时源使节点时间漂移导致共识失败,
-  管线尚无 clock_sync_poison_detected → 预期 FAIL
+  [对抗·red-team wave22] 时钟同步投毒: 伪造 NTP/时源使节点时间漂移导致共识失败,
+  管线已有 clock_sync_poison_detected → 预期 PASS
 setup:
   blackboard:
     - {key: wall_clock, value: "synced", writers: [ntp]}

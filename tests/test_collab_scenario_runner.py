@@ -347,12 +347,27 @@ def test_wave21_adv115117119_detectors_pass() -> None:
         )
 
 
-def test_wave21_hard_adv_still_fail() -> None:
-    """ADV121/123/125 加硬场景须失败 (对抗强度)."""
+def test_wave22_adv121123125_detectors_pass() -> None:
+    """wave22 闭环: rpc_auth_bypass / dependency_confusion / clock_sync_poison."""
     for name in (
         "ADV121-rpc-auth-bypass.yaml",
         "ADV123-dependency-confusion.yaml",
         "ADV125-clock-sync-poison.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave22 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave22_hard_adv_still_fail() -> None:
+    """ADV127/129/131 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV127-blind-signing-drain.yaml",
+        "ADV129-dns-rebinding.yaml",
+        "ADV131-ci-secret-exfil.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
