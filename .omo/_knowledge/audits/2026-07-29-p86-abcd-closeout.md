@@ -11,10 +11,10 @@ last-reviewed: "2026-07-29"
 
 ## A — 协作收益地图 ✅
 
-- SSOT: `.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md` (**4/4 定论**)
-- A1: `.omo/standards/collab-task-taxonomy.md`
-- A3: `.omo/_knowledge/audits/2026-07-29-p86-a3-completion-rootcause.md`
-- 真 dispatch 证据: batch3/4 + 历史 batch1/2；未混模拟
+- SSOT: `.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md` (**4 类型墙钟对可审计**)
+- **5.4x 已剔除** (R1)；类型1 = batch5 等量并行 vs 顺序
+- 证据: batch5 + batch2(R1) + batch3 + batch4；每行 on-disk 审计 + 协作/单墙钟
+- A1/A3 交叉链保留
 
 ## B — 协议边界 + 已设计类复测 ✅
 
