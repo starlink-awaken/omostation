@@ -187,6 +187,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_l2_sequencer_censorship(events))
     events.extend(_synthesize_mev_builder_collusion(events))
     events.extend(_synthesize_aa_account_drain(events))
+    events.extend(_synthesize_validator_equivocation_coverup(events))
+    events.extend(_synthesize_liquidity_migration_trap(events))
+    events.extend(_synthesize_cross_chain_msg_replay(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -2786,6 +2789,161 @@ def _synthesize_aa_account_drain(events: list[dict]) -> list[dict]:
                 "policy": "session_key_scopes_and_paymaster_allowlist",
             }
         ]
+    return []
+
+
+def _synthesize_validator_equivocation_coverup(events: list[dict]) -> list[dict]:
+    """双签后改写证据 → validator_equivocation_coverup_detected (ADV103)."""
+    if any(e.get("kind") == "validator_equivocation_coverup_detected" for e in events):
+        return []
+    fork_votes: list[tuple[int, str, str]] = []
+    rewrite = False
+    evidence_purged = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "vote" in target or "vote_fork" in vs or "fork" in vs:
+            fork_votes.append((ts, r, target or vs))
+            role = r or role
+        if "attestation" in target or "rewrite" in vs or "rewrite_clean" in vs:
+            rewrite = True
+            role = r or role
+        if "evidence" in target or "purged" in vs or "purge" in vs:
+            evidence_purged = True
+            role = r or role
+    multi_fork = len(fork_votes) >= 2
+    if multi_fork and (rewrite or evidence_purged):
+        return [
+            {
+                "kind": "validator_equivocation_coverup_detected",
+                "ts": ts_max,
+                "role": role,
+                "fork_votes": len(fork_votes),
+                "rewrite": rewrite,
+                "evidence_purged": evidence_purged,
+                "policy": "immutable_attestation_and_slashing",
+            }
+        ]
+    if multi_fork:
+        # still require coverup signal for this detector
+        return []
+    return []
+
+
+def _synthesize_liquidity_migration_trap(events: list[dict]) -> list[dict]:
+    """诱导迁移后 rug → liquidity_migration_trap_detected (ADV105)."""
+    if any(e.get("kind") == "liquidity_migration_trap_detected" for e in events):
+        return []
+    migrate_notice = False
+    old_drained = False
+    new_pool = False
+    rug = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "migrate" in target or "migrate" in vs:
+            migrate_notice = True
+            role = r or role
+        if "old_pool" in target or ( "pool" in target and "old" in target):
+            if vs in {"0", "0.0", "liq_0"} or "liq_0" in vs:
+                old_drained = True
+                role = r or role
+        if "new_pool" in target or "malicious" in vs:
+            new_pool = True
+            role = r or role
+        if "rug" in vs or "rug_after" in vs:
+            rug = True
+            role = r or role
+    if (migrate_notice or old_drained) and (new_pool or rug) and (rug or (old_drained and new_pool)):
+        return [
+            {
+                "kind": "liquidity_migration_trap_detected",
+                "ts": ts_max,
+                "role": role,
+                "migrate_notice": migrate_notice,
+                "old_drained": old_drained,
+                "new_pool": new_pool,
+                "rug": rug,
+                "policy": "migration_timelock_and_pool_allowlist",
+            }
+        ]
+    if old_drained and new_pool and migrate_notice:
+        return [
+            {
+                "kind": "liquidity_migration_trap_detected",
+                "ts": ts_max,
+                "role": role,
+                "old_drained": True,
+                "new_pool": True,
+                "migrate_notice": True,
+                "policy": "migration_timelock_and_pool_allowlist",
+            }
+        ]
+    return []
+
+
+def _synthesize_cross_chain_msg_replay(events: list[dict]) -> list[dict]:
+    """同 nonce 跨链重复执行 → cross_chain_msg_replay_detected (ADV107)."""
+    if any(e.get("kind") == "cross_chain_msg_replay_detected" for e in events):
+        return []
+    payload = False
+    execs: list[tuple[int, str, str]] = []
+    double_credit = False
+    replay = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "payload" in target or "transfer_" in vs:
+            payload = True
+            role = r or role
+        if "exec_nonce" in target or "executed" in vs or "nonce" in target:
+            execs.append((ts, r, target or vs))
+            role = r or role
+        if "replay" in vs or "replay" in target:
+            replay = True
+            role = r or role
+        if "double_credit" in vs or "double" in vs:
+            double_credit = True
+            role = r or role
+    multi_exec = len(execs) >= 2
+    if (multi_exec or replay) and (payload or double_credit or multi_exec):
+        if multi_exec or replay or double_credit:
+            return [
+                {
+                    "kind": "cross_chain_msg_replay_detected",
+                    "ts": ts_max,
+                    "role": role,
+                    "exec_count": len(execs),
+                    "replay": replay,
+                    "double_credit": double_credit,
+                    "payload": payload,
+                    "policy": "global_nonce_and_destination_domain_bind",
+                }
+            ]
     return []
 
 
