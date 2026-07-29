@@ -196,6 +196,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_private_mempool_leak(events))
     events.extend(_synthesize_state_bloat_grief(events))
     events.extend(_synthesize_threshold_sig_share_theft(events))
+    events.extend(_synthesize_rpc_auth_bypass(events))
+    events.extend(_synthesize_dependency_confusion(events))
+    events.extend(_synthesize_clock_sync_poison(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -3245,6 +3248,155 @@ def _synthesize_threshold_sig_share_theft(events: list[dict]) -> list[dict]:
                 "share_count": len(shares),
                 "forged": forged,
                 "policy": "share_hsm_and_refresh_protocol",
+            }
+        ]
+    return []
+
+
+def _synthesize_rpc_auth_bypass(events: list[dict]) -> list[dict]:
+    """未授权 admin RPC / ACL 关闭 → rpc_auth_bypass_detected (ADV121)."""
+    if any(e.get("kind") == "rpc_auth_bypass_detected" for e in events):
+        return []
+    acl_off = False
+    admin_rpc = False
+    debug_open = False
+    compromised = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "rpc_acl" in target or "auth_disabled" in vs or "auth_required" in vs and "disabled" in vs:
+            acl_off = True
+            role = r or role
+        if "auth_disabled" in vs:
+            acl_off = True
+            role = r or role
+        if "admin_rpc" in target or "peer_ban" in vs or "set_peer" in vs:
+            admin_rpc = True
+            role = r or role
+        if "debug" in vs or "node_config" in target:
+            debug_open = True
+            role = r or role
+        if "compromised" in vs or "security_flag" in target:
+            compromised = True
+            role = r or role
+    if (acl_off or admin_rpc) and (admin_rpc or debug_open or compromised):
+        return [
+            {
+                "kind": "rpc_auth_bypass_detected",
+                "ts": ts_max,
+                "role": role,
+                "acl_off": acl_off,
+                "admin_rpc": admin_rpc,
+                "debug_open": debug_open,
+                "compromised": compromised,
+                "policy": "mutual_tls_and_rpc_allowlist",
+            }
+        ]
+    return []
+
+
+def _synthesize_dependency_confusion(events: list[dict]) -> list[dict]:
+    """同名恶意包抢解析 → dependency_confusion_detected (ADV123)."""
+    if any(e.get("kind") == "dependency_confusion_detected" for e in events):
+        return []
+    public_publish = False
+    resolved_malicious = False
+    exfil_hook = False
+    backdoor = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "registry" in target or "publish" in vs:
+            public_publish = True
+            role = r or role
+        if "malicious" in vs or "package_lock" in target and "public" in vs:
+            resolved_malicious = True
+            role = r or role
+        if "resolved_public" in vs or "malicious" in vs:
+            resolved_malicious = True
+            role = r or role
+        if "postinstall" in vs or "exfil" in vs or "install_hook" in target:
+            exfil_hook = True
+            role = r or role
+        if "backdoor" in vs or "build_artifact" in target:
+            backdoor = True
+            role = r or role
+    if (public_publish or resolved_malicious) and (exfil_hook or backdoor or resolved_malicious):
+        return [
+            {
+                "kind": "dependency_confusion_detected",
+                "ts": ts_max,
+                "role": role,
+                "public_publish": public_publish,
+                "resolved_malicious": resolved_malicious,
+                "exfil_hook": exfil_hook,
+                "backdoor": backdoor,
+                "policy": "scoped_registry_and_lockfile_pin",
+            }
+        ]
+    return []
+
+
+def _synthesize_clock_sync_poison(events: list[dict]) -> list[dict]:
+    """NTP/时源投毒导致时钟分裂 → clock_sync_poison_detected (ADV125)."""
+    if any(e.get("kind") == "clock_sync_poison_detected" for e in events):
+        return []
+    ntp_skew = False
+    skewed = False
+    split = False
+    reject_storm = False
+    role = ""
+    ts_max = 0
+    clocks: list[str] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "ntp" in target or "skew" in vs:
+            ntp_skew = True
+            role = r or role
+        if "wall_clock" in target or "skewed" in vs or "still_correct" in vs:
+            clocks.append(vs)
+            if "skewed" in vs:
+                skewed = True
+            role = r or role
+        if "timestamp_reject" in vs or "reject_storm" in vs or "consensus" in target:
+            reject_storm = True
+            role = r or role
+    if len(set(clocks)) >= 2:
+        split = True
+    if (ntp_skew or skewed) and (split or reject_storm or skewed):
+        return [
+            {
+                "kind": "clock_sync_poison_detected",
+                "ts": ts_max,
+                "role": role,
+                "ntp_skew": ntp_skew,
+                "skewed": skewed,
+                "clock_split": split,
+                "reject_storm": reject_storm,
+                "policy": "multi_source_time_and_max_drift",
             }
         ]
     return []
