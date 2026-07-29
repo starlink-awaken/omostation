@@ -107,6 +107,63 @@ def test_cclass_detectors_pass() -> None:
         assert r.passed, f"{name} should pass after ADR-0254: {[c for c in r.criteria if not c.passed]}"
 
 
+def test_wave6_adv252729_detectors_pass() -> None:
+    """wave6 闭环: split_brain / identity_spoof / supply_chain_tamper."""
+    for name in (
+        "ADV25-split-brain-partition.yaml",
+        "ADV27-identity-spoof.yaml",
+        "ADV29-supply-chain-tamper.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave6 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave7_adv313335_detectors_pass() -> None:
+    """wave7 闭环: sybil_flood / time_travel / quorum_eclipse."""
+    for name in (
+        "ADV31-sybil-flood.yaml",
+        "ADV33-time-travel-write.yaml",
+        "ADV35-quorum-eclipse.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave7 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave8_adv373941_detectors_pass() -> None:
+    """wave8 闭环: clock_skew / ghost_writer / double_spend."""
+    for name in (
+        "ADV37-eclipse-clock-skew.yaml",
+        "ADV39-ghost-writer.yaml",
+        "ADV41-double-spend-claim.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave8 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave8_hard_adv_still_fail() -> None:
+    """ADV43/45/47 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV43-equivocation.yaml",
+        "ADV45-long-range-rewrite.yaml",
+        "ADV47-censorship-gap.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert not r.passed, f"{name} must remain failing hard-adv (got PASS)"
+
+
 def test_adversarial_ratio_ge_20pct() -> None:
     """对抗集占库 ≥20% (P84 W1.2)."""
     all_sc = [load_scenario(p) for p in sorted(SCN_DIR.glob("*.yaml"))]

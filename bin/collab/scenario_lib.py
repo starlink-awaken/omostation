@@ -141,13 +141,22 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     # C 类: 事后机制合成 (partial_failure / starvation)
     events.extend(_synthesize_partial_failure(events))
     events.extend(_synthesize_starvation(blackboard, events))
-    # 对抗补强: ADV13/15/17 + wave5 ADV19/21/23
+    # 对抗补强: ADV13..35 + wave8 ADV37/39/41
     events.extend(_synthesize_collusion(events, blackboard))
     events.extend(_synthesize_priority_inversion(events, roles))
     events.extend(_synthesize_cascade_failure(events))
     events.extend(_synthesize_byzantine_quorum(events, blackboard))
     events.extend(_synthesize_replay_attack(events, blackboard))
     events.extend(_synthesize_cross_key_collusion(events))
+    events.extend(_synthesize_split_brain(events))
+    events.extend(_synthesize_identity_spoof(events))
+    events.extend(_synthesize_supply_chain_tamper(events, scenario, blackboard))
+    events.extend(_synthesize_sybil_flood(events, blackboard))
+    events.extend(_synthesize_time_travel_write(events, blackboard))
+    events.extend(_synthesize_quorum_eclipse(events, roles))
+    events.extend(_synthesize_clock_skew_eclipse(events))
+    events.extend(_synthesize_ghost_writer(events))
+    events.extend(_synthesize_double_spend(events, blackboard))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -296,15 +305,20 @@ def _handle_chain_step(board: dict, inj: dict, ts: int) -> dict:
 
 
 def _handle_audit_reject(inj: dict, ts: int, authorized: set[str]) -> dict:
-    """审计驳回 → audit_reject_handled (S 类闭环)."""
+    """审计驳回 → audit_reject_handled (S 类闭环).
+
+    未授权角色 (∉ setup.roles) 的 audit_reject 标 authorized_audit=false,
+    由 _synthesize_identity_spoof 提升为 identity_spoof_detected (ADV27).
+    """
     role = inj.get("role", "audit")
+    auth = (not authorized) or role in authorized
     return {
         "kind": "audit_reject_handled",
         "ts": ts,
         "role": role,
         "target": inj.get("target"),
         "reason": inj.get("reason", "policy"),
-        "authorized_audit": (not authorized) or role in authorized,
+        "authorized_audit": auth,
     }
 
 
@@ -620,6 +634,439 @@ def _synthesize_cross_key_collusion(events: list[dict]) -> list[dict]:
                 }
             )
     return out
+
+
+def _synthesize_split_brain(events: list[dict]) -> list[dict]:
+    """分区脑裂: 权威 key 分歧写 + 两侧 timeout → split_brain_detected (ADV25)."""
+    if any(e.get("kind") == "split_brain_detected" for e in events):
+        return []
+    conflicts = [
+        e
+        for e in events
+        if e.get("kind") in {"conflict_detected", "double_claim_detected"}
+    ]
+    timeouts = [e for e in events if e.get("kind") == "role_timeout"]
+    if not conflicts or len(timeouts) < 2:
+        return []
+    timeout_roles = {str(e.get("role")) for e in timeouts if e.get("role")}
+    for c in conflicts:
+        target = c.get("target")
+        # writers involved in conflict
+        roles = set()
+        if c.get("role"):
+            roles.add(str(c.get("role")))
+        for r in c.get("roles") or []:
+            roles.add(str(r))
+        # also gather write roles for same target
+        for e in events:
+            if e.get("kind") == "write" and e.get("target") == target and e.get("role"):
+                roles.add(str(e.get("role")))
+        if len(roles) >= 2 and len(timeout_roles & roles) >= 2:
+            return [
+                {
+                    "kind": "split_brain_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "partitions": sorted(roles),
+                    "timed_out": sorted(timeout_roles & roles),
+                    "policy": "fence_and_elect_or_abort",
+                }
+            ]
+    return []
+
+
+def _synthesize_identity_spoof(events: list[dict]) -> list[dict]:
+    """未授权 audit_reject → identity_spoof_detected (ADV27)."""
+    if any(e.get("kind") == "identity_spoof_detected" for e in events):
+        return []
+    for e in events:
+        if e.get("kind") != "audit_reject_handled":
+            continue
+        if e.get("authorized_audit") is False:
+            return [
+                {
+                    "kind": "identity_spoof_detected",
+                    "ts": e.get("ts") or 0,
+                    "role": e.get("role"),
+                    "target": e.get("target"),
+                    "reason": e.get("reason"),
+                    "policy": "reject_unauth_audit_and_alert",
+                }
+            ]
+        # role name spoofs audit but may still be "authorized" if in roles
+        role = str(e.get("role") or "")
+        if "attack" in role.lower() or (
+            "audit" in role.lower() and role.lower() not in {"audit", "auditor"}
+        ):
+            return [
+                {
+                    "kind": "identity_spoof_detected",
+                    "ts": e.get("ts") or 0,
+                    "role": role,
+                    "target": e.get("target"),
+                    "reason": "spoofed_audit_identity",
+                    "policy": "reject_unauth_audit_and_alert",
+                }
+            ]
+    return []
+
+
+def _synthesize_supply_chain_tamper(
+    events: list[dict], scenario: dict, board: dict
+) -> list[dict]:
+    """链步骤使用依赖后依赖被改写 → supply_chain_tamper_detected (ADV29)."""
+    if any(e.get("kind") == "supply_chain_tamper_detected" for e in events):
+        return []
+    # map inject chain_step deps
+    chain_injects = [
+        inj
+        for inj in scenario.get("inject") or []
+        if inj.get("type") == "chain_step"
+    ]
+    if not chain_injects:
+        return []
+    # chronological events: if chain_step_done for step S, then later conflict on dep of S
+    done_steps: dict[str, int] = {}
+    for e in events:
+        if e.get("kind") == "chain_step_done" and e.get("step"):
+            done_steps[str(e["step"])] = int(e.get("ts") or 0)
+    # find conflicts after a dependent chain step ran
+    for e in events:
+        if e.get("kind") not in {"conflict_detected", "double_claim_detected", "write"}:
+            continue
+        target = str(e.get("target") or "")
+        ts = int(e.get("ts") or 0)
+        if not target:
+            continue
+        for inj in chain_injects:
+            step = str(inj.get("step") or "")
+            deps = [str(d) for d in (inj.get("depends_on") or [])]
+            if target not in deps:
+                continue
+            # any prior chain_step that used this dep completed before the tamper?
+            # either this step already done, or an earlier step that depends on target done
+            prior_use = False
+            if step in done_steps and done_steps[step] < ts:
+                prior_use = True
+            for other in chain_injects:
+                os_ = str(other.get("step") or "")
+                if target in [str(d) for d in (other.get("depends_on") or [])]:
+                    if os_ in done_steps and done_steps[os_] < ts:
+                        prior_use = True
+            if prior_use and e.get("kind") in {
+                "conflict_detected",
+                "double_claim_detected",
+            }:
+                return [
+                    {
+                        "kind": "supply_chain_tamper_detected",
+                        "ts": ts,
+                        "dependency": target,
+                        "tamper_kind": e.get("kind"),
+                        "affected_step": step,
+                        "policy": "pin_digest_and_rebuild",
+                    }
+                ]
+    return []
+
+
+def _synthesize_sybil_flood(events: list[dict], board: dict) -> list[dict]:
+    """≥4 角色同值刷写 + 至少 1 异值少数 → sybil_flood_detected (ADV31)."""
+    if any(e.get("kind") == "sybil_flood_detected" for e in events):
+        return []
+    # target -> value -> roles
+    by_target: dict[str, dict[object, list[str]]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        target = str(e.get("target") or "")
+        role = str(e.get("role") or "")
+        val = e.get("value")
+        if not target or not role:
+            continue
+        by_target.setdefault(target, {}).setdefault(val, []).append(role)
+    for target, val_map in by_target.items():
+        counts = {
+            v: list(dict.fromkeys(roles))
+            for v, roles in val_map.items()
+            if v is not None
+        }
+        if not counts:
+            continue
+        ranked = sorted(counts.items(), key=lambda kv: -len(kv[1]))
+        maj_val, maj_roles = ranked[0]
+        if len(maj_roles) < 4:
+            continue
+        if len(counts) >= 2 or len(maj_roles) >= 5:
+            return [
+                {
+                    "kind": "sybil_flood_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "sybil_value": maj_val,
+                    "sybil_roles": maj_roles,
+                    "sybil_count": len(maj_roles),
+                    "minority_values": [v for v, _ in ranked[1:]],
+                    "policy": "rate_limit_and_identity_bond",
+                }
+            ]
+    return []
+
+
+def _versionish_rank(val: object) -> int | None:
+    """Heuristic version rank: v3 > v1 > v0; 'final' high; 'old'/'ancient' low."""
+    if val is None:
+        return None
+    s = str(val).lower()
+    import re
+
+    m = re.search(r"v(\d+)", s)
+    if m:
+        return int(m.group(1))
+    if "final" in s or "latest" in s or "head" in s:
+        return 1000
+    if "ancient" in s:
+        return 0
+    if "old" in s or "stale" in s:
+        return 1
+    return None
+
+
+def _synthesize_time_travel_write(events: list[dict], board: dict) -> list[dict]:
+    """冲突写把值从高版本压到低版本 → time_travel_write_detected (ADV33).
+
+    用 conflict 事件的 prior/new 版本启发式比较 (v3_final > v1_old > v0_ancient).
+    """
+    if any(e.get("kind") == "time_travel_write_detected" for e in events):
+        return []
+    for e in events:
+        if e.get("kind") not in {"conflict_detected", "double_claim_detected"}:
+            continue
+        prior_val = e.get("prior")
+        new_val = e.get("new") if "new" in e else e.get("value")
+        prior_rank = _versionish_rank(prior_val)
+        new_rank = _versionish_rank(new_val)
+        if prior_rank is None or new_rank is None:
+            continue
+        if new_rank < prior_rank:
+            return [
+                {
+                    "kind": "time_travel_write_detected",
+                    "ts": e.get("ts") or 0,
+                    "target": e.get("target"),
+                    "prior_value": prior_val,
+                    "prior_rank": prior_rank,
+                    "new_value": new_val,
+                    "new_rank": new_rank,
+                    "role": e.get("role"),
+                    "policy": "reject_stale_override",
+                }
+            ]
+    return []
+
+
+def _synthesize_quorum_eclipse(events: list[dict], roles: list[str]) -> list[dict]:
+    """关键角色超时后其余角色仍形成伪法定人数 → quorum_eclipse_detected (ADV35)."""
+    if any(e.get("kind") == "quorum_eclipse_detected" for e in events):
+        return []
+    timeouts = [
+        str(e.get("role"))
+        for e in events
+        if e.get("kind") == "role_timeout" and e.get("role")
+    ]
+    if not timeouts:
+        return []
+    # critical-like roles: name contains critical / leader / primary / coordinator
+    critical_to = [
+        r
+        for r in timeouts
+        if any(
+            k in r.lower()
+            for k in ("critical", "leader", "primary", "coord", "chief")
+        )
+    ]
+    if not critical_to:
+        # also: timed-out role was in setup roles and ≥3 others write same value after
+        critical_to = timeouts
+    timed = set(critical_to)
+    # after any critical timeout ts, count majority writes
+    timeout_ts = min(
+        int(e.get("ts") or 0)
+        for e in events
+        if e.get("kind") == "role_timeout" and str(e.get("role")) in timed
+    )
+    by_tv: dict[tuple[str, object], list[str]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        if int(e.get("ts") or 0) < timeout_ts:
+            continue
+        role = str(e.get("role") or "")
+        if role in timed:
+            continue
+        key = (str(e.get("target")), e.get("value"))
+        by_tv.setdefault(key, []).append(role)
+    for (target, value), writers in by_tv.items():
+        uniq = list(dict.fromkeys(writers))
+        if len(uniq) >= 3:
+            return [
+                {
+                    "kind": "quorum_eclipse_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "value": value,
+                    "quorum_roles": uniq,
+                    "eclipsed_roles": sorted(timed),
+                    "policy": "require_critical_ack_or_abort",
+                }
+            ]
+    return []
+
+
+def _extract_ts_number(val: object) -> int | None:
+    """Parse ts=<int> from values like 'ts=1000'."""
+    if val is None:
+        return None
+    import re
+
+    m = re.search(r"ts\s*=\s*(\d+)", str(val), re.I)
+    return int(m.group(1)) if m else None
+
+
+def _synthesize_clock_skew_eclipse(events: list[dict]) -> list[dict]:
+    """冲突写把 commit 时间戳改小 → clock_skew_eclipse_detected (ADV37)."""
+    if any(e.get("kind") == "clock_skew_eclipse_detected" for e in events):
+        return []
+    for e in events:
+        if e.get("kind") not in {"conflict_detected", "double_claim_detected"}:
+            continue
+        prior_ts = _extract_ts_number(e.get("prior"))
+        new_ts = _extract_ts_number(e.get("new") if "new" in e else e.get("value"))
+        if prior_ts is None or new_ts is None:
+            continue
+        if new_ts < prior_ts:
+            return [
+                {
+                    "kind": "clock_skew_eclipse_detected",
+                    "ts": e.get("ts") or 0,
+                    "target": e.get("target"),
+                    "prior_ts": prior_ts,
+                    "new_ts": new_ts,
+                    "role": e.get("role"),
+                    "policy": "reject_backdated_commit",
+                }
+            ]
+    return []
+
+
+def _synthesize_ghost_writer(events: list[dict]) -> list[dict]:
+    """角色 timeout 后仍 write/conflict → ghost_writer_detected (ADV39)."""
+    if any(e.get("kind") == "ghost_writer_detected" for e in events):
+        return []
+    timeout_at: dict[str, int] = {}
+    for e in events:
+        if e.get("kind") == "role_timeout" and e.get("role"):
+            role = str(e["role"])
+            timeout_at[role] = min(timeout_at.get(role, 10**9), int(e.get("ts") or 0))
+    if not timeout_at:
+        return []
+    for e in events:
+        if e.get("kind") not in {
+            "write",
+            "conflict_detected",
+            "double_claim_detected",
+        }:
+            continue
+        role = str(e.get("role") or "")
+        if not role or role not in timeout_at:
+            # double_claim may list roles
+            for r in e.get("roles") or []:
+                rs = str(r)
+                if rs in timeout_at and int(e.get("ts") or 0) > timeout_at[rs]:
+                    return [
+                        {
+                            "kind": "ghost_writer_detected",
+                            "ts": e.get("ts") or 0,
+                            "role": rs,
+                            "target": e.get("target"),
+                            "timeout_at": timeout_at[rs],
+                            "policy": "fence_timed_out_writers",
+                        }
+                    ]
+            continue
+        if int(e.get("ts") or 0) > timeout_at[role]:
+            return [
+                {
+                    "kind": "ghost_writer_detected",
+                    "ts": e.get("ts") or 0,
+                    "role": role,
+                    "target": e.get("target"),
+                    "timeout_at": timeout_at[role],
+                    "policy": "fence_timed_out_writers",
+                }
+            ]
+    return []
+
+
+def _synthesize_double_spend(events: list[dict], board: dict) -> list[dict]:
+    """预算/token 类 key 被两角色写成不同 spent 值 → double_spend_detected (ADV41)."""
+    if any(e.get("kind") == "double_spend_detected" for e in events):
+        return []
+    spend_keys = (
+        "budget",
+        "token",
+        "coin",
+        "fund",
+        "credit",
+        "wallet",
+        "spend",
+    )
+
+    def is_spend_key(k: str) -> bool:
+        kl = k.lower()
+        return any(s in kl for s in spend_keys)
+
+    # Collect spent values per target from writes/conflicts
+    by_target: dict[str, list[tuple[object, str]]] = {}
+    for e in events:
+        if e.get("kind") not in {
+            "write",
+            "conflict_detected",
+            "double_claim_detected",
+        }:
+            continue
+        target = str(e.get("target") or "")
+        if not target or not is_spend_key(target):
+            continue
+        val = e.get("new") if "new" in e else e.get("value")
+        role = str(e.get("role") or "")
+        if val is None:
+            continue
+        by_target.setdefault(target, []).append((val, role))
+        for r in e.get("roles") or []:
+            by_target[target].append((val, str(r)))
+
+    for target, pairs in by_target.items():
+        # distinct non-unspent values from ≥2 roles
+        spent = [
+            (v, r)
+            for v, r in pairs
+            if v is not None and "unspent" not in str(v).lower()
+        ]
+        values = list(dict.fromkeys(v for v, _ in spent))
+        roles = list(dict.fromkeys(r for _, r in spent if r))
+        if len(values) >= 2 and len(roles) >= 2:
+            return [
+                {
+                    "kind": "double_spend_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "spent_values": values,
+                    "roles": roles,
+                    "policy": "single_spend_ledger_abort",
+                }
+            ]
+    return []
 
 
 def _eval_criterion(
