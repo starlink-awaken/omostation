@@ -11,10 +11,10 @@ last-reviewed: "2026-07-29"
 
 ## A — 协作收益地图 ✅
 
-- SSOT: `.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md` (**4 类型墙钟对可审计**)
-- **5.4x 已剔除** (R1)；类型1 = batch5 等量并行 vs 顺序
-- 证据: batch5 + batch2(R1) + batch3 + batch4；每行 on-disk 审计 + 协作/单墙钟
-- A1/A3 交叉链保留
+- SSOT: `.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md`
+- **多 agent 真 dispatch 定论: 3 类型** (ordered / coupled+write / independent+write)；**shortfall vs ≥4**
+- **5.4x 剔除**；**batch5 降级**为 scenario_lib 微基准（非真 dispatch，不支撑 C 多 agent 正收益）
+- C 适用面: human D2 + 类型2–4 负证据；简单独立批量 = D2 授权、待真 dispatch 闭环
 
 ## B — 协议边界 + 已设计类复测 ✅
 

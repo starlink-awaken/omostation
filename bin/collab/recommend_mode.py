@@ -20,7 +20,7 @@ RULES: list[tuple[str, str, str]] = [
     (
         "independent_batch",
         "collab_parallel",
-        "独立无依赖批量 (I/O 或 LLM 绑定) — batch5 等量并行墙钟正收益; 非 5.4x",
+        "独立无依赖批量 — D2 人类允许; 多 agent 墙钟未闭环 (batch5 仅微基准非真 dispatch)",
     ),
     (
         "simple_analysis",

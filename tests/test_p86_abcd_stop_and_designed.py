@@ -104,43 +104,52 @@ def test_scenario_growth_pass_on_repo_stock() -> None:
     assert "PASS" in proc.stdout
 
 
-def test_a2_map_ssot_has_four_true_dispatch_types() -> None:
-    """Each of 4 type rows must cite on-disk audit + collab/solo wall-clock numbers.
+def test_a2_map_true_dispatch_three_types_and_type1_demoted() -> None:
+    """Multi-agent 真 dispatch table = types 2–4 only; type1/batch5 demoted.
 
-    Also: 5.4x must not appear as a live gain claim (R1 invalidated it).
+    - 5.4x must not be a live 优 claim
+    - shortfall vs ≥4 multi-agent types must be explicit
+    - batch5 must be labeled demote / non multi-agent
+    - each of the 3 true-dispatch types links an on-disk audit with ≥2 Ns clocks
     """
     import re
 
     map_path = ROOT / ".omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md"
     text = map_path.read_text(encoding="utf-8")
-    assert "5.4x" not in text or "作废" in text or "剔除" in text
-    # live gain cell must not sell 5.4x as truth
+    assert "shortfall" in text.lower() or "Shortfall" in text
+    assert "3 类型" in text or "仅 3" in text or "3 类" in text
     assert not re.search(r"优\s*\*?\*?5\.4x", text), "5.4x must not be a live 优 claim"
+    assert "1.65x" not in text.split("## 定论表")[1].split("## 附录")[0] if "## 定论表" in text else True
+    # demote language for batch5
+    assert "降级" in text or "DEMOTE" in text or "微基准" in text
+    assert "不得" in text or "禁止" in text
 
-    # required type markers + audit link stems present in map body
-    required = [
-        ("independent + none", "2026-07-29-p86-a2-batch5-simple-independent-equal-work.md"),
+    batch5 = ROOT / ".omo/_knowledge/audits/2026-07-29-p86-a2-batch5-simple-independent-equal-work.md"
+    b5 = batch5.read_text(encoding="utf-8")
+    assert "DEMOTE" in b5 or "降级" in b5
+    assert ("不是" in b5 or "非" in b5) and ("真 dispatch" in b5 or "多 agent" in b5)
+    assert "禁止" in b5
+
+    true_dispatch = [
         ("ordered + read", "2026-07-29-p86-r1-a2-rejudgment-outputfile.md"),
         ("coupled + write", "2026-07-29-p86-a2-batch3-coupled-write.md"),
         ("independent + write", "2026-07-29-p86-a2-batch4-independent-write.md"),
     ]
-    for marker, audit_name in required:
-        assert marker in text, f"missing type row {marker}"
-        assert audit_name in text or audit_name.replace(".md", "") in text, (
-            f"map must link audit {audit_name} for {marker}"
-        )
+    # only the 定论表 section (before 附录) should sell multi-agent clocks
+    body = text
+    if "## 附录" in text:
+        body = text.split("## 附录")[0]
+    for marker, audit_name in true_dispatch:
+        assert marker in body, f"missing true-dispatch type {marker}"
+        assert audit_name in body or audit_name.replace(".md", "") in body
         audit_path = ROOT / ".omo/_knowledge/audits" / audit_name
-        assert audit_path.is_file(), f"audit missing on disk: {audit_name}"
-        audit = audit_path.read_text(encoding="utf-8")
-        # each cited audit must contain at least two wall-clock-like numbers with unit s
-        clocks = re.findall(r"\b\d+(?:\.\d+)?s\b", audit)
-        assert len(clocks) >= 2, (
-            f"{audit_name} must document collab+solo wall-clock (got {clocks!r})"
-        )
+        assert audit_path.is_file(), f"audit missing: {audit_name}"
+        clocks = re.findall(r"\b\d+(?:\.\d+)?s\b", audit_path.read_text(encoding="utf-8"))
+        assert len(clocks) >= 2, f"{audit_name} needs collab+solo clocks, got {clocks!r}"
 
-    # map table itself must contain wall-clock cells (not prose-only)
-    map_clocks = re.findall(r"\b\d+(?:\.\d+)?s\b", text)
-    assert len(map_clocks) >= 8, f"map needs ≥8 wall-clock cells (4× collab+solo), got {map_clocks}"
+    # 定论表 needs ≥6 wall-clock cells (3× collab+solo), not counting appendix microbench only
+    map_clocks = re.findall(r"\b\d+(?:\.\d+)?s\b", body)
+    assert len(map_clocks) >= 6, f"true-dispatch section needs ≥6 clocks, got {map_clocks}"
 
 
 def test_export_dualtrack_w3_target_is_15() -> None:
