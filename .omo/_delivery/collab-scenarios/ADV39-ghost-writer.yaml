@@ -1,0 +1,31 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV39-ghost-writer
+category: A_conflict
+adversarial: true
+seed: 139
+description: >
+  [对抗·red-team wave7] 幽灵写者: 已超时角色仍继续写产物,
+  管线尚无 ghost_writer_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: artifact, value: null}
+  roles: [alive, zombie]
+inject:
+  - {type: role_timeout, role: zombie}
+  - {type: write_conflict, role: zombie, target: artifact, value: "from_beyond"}
+  - {type: write_conflict, role: alive, target: artifact, value: "live"}
+expected:
+  behavior: ghost_writer_detected
+  silent_loss: 0
+verdict:
+  - criterion: ghost_writer_detected
+    check: events_contain
+    args: {kind: ghost_writer_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
