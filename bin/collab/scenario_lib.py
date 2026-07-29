@@ -211,6 +211,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_race_double_spend(events))
     events.extend(_synthesize_log_injection(events))
     events.extend(_synthesize_prompt_injection_tool(events))
+    events.extend(_synthesize_session_fixation(events))
+    events.extend(_synthesize_csrf_state_change(events))
+    events.extend(_synthesize_unsafe_deserialize_rce(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -4035,6 +4038,173 @@ def _synthesize_prompt_injection_tool(events: list[dict]) -> list[dict]:
                 "destructive": destructive,
                 "policy_bypassed": bypassed,
                 "policy": "tool_allowlist_and_human_confirm",
+            }
+        ]
+    return []
+
+
+def _synthesize_session_fixation(events: list[dict]) -> list[dict]:
+    """登录后 session id 未轮换被劫持 → session_fixation_detected (ADV151)."""
+    if any(e.get("kind") == "session_fixation_detected" for e in events):
+        return []
+    preauth_sid = None
+    login_ok = False
+    sid_after_login = None
+    hijack = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "session_id" in target or "preauth" in vs:
+            if preauth_sid is None and "preauth" in vs:
+                preauth_sid = vs
+                role = r or role
+            elif login_ok or "preauth" in vs:
+                sid_after_login = vs
+                role = r or role
+            elif preauth_sid is None:
+                preauth_sid = vs
+                role = r or role
+            else:
+                sid_after_login = vs
+                role = r or role
+        if "login" in target or "password_ok" in vs:
+            login_ok = True
+            role = r or role
+        if "hijack" in target or "act_as" in vs:
+            hijack = True
+            role = r or role
+    fixed = (
+        preauth_sid is not None
+        and sid_after_login is not None
+        and preauth_sid == sid_after_login
+    )
+    if (fixed or (preauth_sid and login_ok and "preauth" in (sid_after_login or preauth_sid))) and (
+        hijack or login_ok
+    ):
+        return [
+            {
+                "kind": "session_fixation_detected",
+                "ts": ts_max,
+                "role": role,
+                "preauth_sid": preauth_sid,
+                "sid_after_login": sid_after_login,
+                "login_ok": login_ok,
+                "hijack": hijack,
+                "policy": "rotate_session_id_on_auth",
+            }
+        ]
+    if login_ok and hijack and preauth_sid:
+        return [
+            {
+                "kind": "session_fixation_detected",
+                "ts": ts_max,
+                "role": role,
+                "preauth_sid": preauth_sid,
+                "login_ok": True,
+                "hijack": True,
+                "policy": "rotate_session_id_on_auth",
+            }
+        ]
+    return []
+
+
+def _synthesize_csrf_state_change(events: list[dict]) -> list[dict]:
+    """跨站 cookie 自动附带状态变更 → csrf_state_change_detected (ADV153)."""
+    if any(e.get("kind") == "csrf_state_change_detected" for e in events):
+        return []
+    forged = False
+    cookie_auto = False
+    no_csrf = False
+    profit = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "forged" in target or "forged_form" in target or "post_transfer" in vs:
+            forged = True
+            role = r or role
+        if "cookie" in target or "auto_attach" in vs:
+            cookie_auto = True
+            role = r or role
+        if "without_csrf" in vs or "transfer" in target:
+            no_csrf = True
+            role = r or role
+        if "profit" in vs or ("balance" in target and "profit" in vs):
+            profit = True
+            role = r or role
+    if (forged or cookie_auto) and (no_csrf or profit):
+        return [
+            {
+                "kind": "csrf_state_change_detected",
+                "ts": ts_max,
+                "role": role,
+                "forged": forged,
+                "cookie_auto": cookie_auto,
+                "without_csrf": no_csrf,
+                "profit": profit,
+                "policy": "csrf_token_and_samesite",
+            }
+        ]
+    return []
+
+
+def _synthesize_unsafe_deserialize_rce(events: list[dict]) -> list[dict]:
+    """不安全反序列化执行代码 → unsafe_deserialize_rce_detected (ADV155)."""
+    if any(e.get("kind") == "unsafe_deserialize_rce_detected" for e in events):
+        return []
+    payload = False
+    unsafe_load = False
+    shell = False
+    rce = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "payload" in target or "yaml_load" in vs or "python/object" in vs or "pickle" in vs:
+            payload = True
+            role = r or role
+        if "unsafe" in vs or "full_load" in vs or "config_loader" in target:
+            unsafe_load = True
+            role = r or role
+        if "reverse_shell" in vs or "exec_result" in target or "spawned" in vs:
+            shell = True
+            role = r or role
+        if "rce" in vs or "foothold" in target:
+            rce = True
+            role = r or role
+    if (payload or unsafe_load) and (shell or rce or unsafe_load and payload):
+        return [
+            {
+                "kind": "unsafe_deserialize_rce_detected",
+                "ts": ts_max,
+                "role": role,
+                "payload": payload,
+                "unsafe_load": unsafe_load,
+                "shell": shell,
+                "rce": rce,
+                "policy": "safe_loader_only_no_code_exec",
             }
         ]
     return []

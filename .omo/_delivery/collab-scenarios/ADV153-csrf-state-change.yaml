@@ -9,8 +9,8 @@ category: A_conflict
 adversarial: true
 seed: 253
 description: >
-  [对抗·red-team wave26] CSRF 状态变更: 跨站请求在 cookie 会话下转账,
-  管线尚无 csrf_state_change_detected → 预期 FAIL
+  [对抗·red-team wave27] CSRF 状态变更: 跨站请求在 cookie 会话下转账,
+  管线已有 csrf_state_change_detected → 预期 PASS
 setup:
   blackboard:
     - {key: csrf_token, value: "missing", writers: [browser]}

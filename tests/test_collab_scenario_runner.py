@@ -422,12 +422,27 @@ def test_wave26_adv145147149_detectors_pass() -> None:
         )
 
 
-def test_wave26_hard_adv_still_fail() -> None:
-    """ADV151/153/155 加硬场景须失败 (对抗强度)."""
+def test_wave27_adv151153155_detectors_pass() -> None:
+    """wave27 闭环: session_fixation / csrf_state_change / unsafe_deserialize_rce."""
     for name in (
         "ADV151-session-fixation.yaml",
         "ADV153-csrf-state-change.yaml",
         "ADV155-toml-yaml-rce.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave27 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave27_hard_adv_still_fail() -> None:
+    """ADV157/159/161 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV157-open-redirect.yaml",
+        "ADV159-xxe-file-read.yaml",
+        "ADV161-sqli-auth-bypass.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
