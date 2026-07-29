@@ -227,12 +227,27 @@ def test_wave13_adv676971_detectors_pass() -> None:
         )
 
 
-def test_wave13_hard_adv_still_fail() -> None:
-    """ADV73/75/77 加硬场景须失败 (对抗强度)."""
+def test_wave14_adv737577_detectors_pass() -> None:
+    """wave14 闭环: rug_pull / approval_phishing / bridge_drain."""
     for name in (
         "ADV73-rug-pull.yaml",
         "ADV75-approval-phishing.yaml",
         "ADV77-bridge-drain.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave14 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave14_hard_adv_still_fail() -> None:
+    """ADV79/81/83 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV79-sybil-airdrop.yaml",
+        "ADV81-nft-wash-trade.yaml",
+        "ADV83-key-compromise-blast.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
