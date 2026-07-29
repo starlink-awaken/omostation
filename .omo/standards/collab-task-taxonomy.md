@@ -14,7 +14,7 @@ last-reviewed: "2026-07-29"
 ## 1. 核心问题
 
 P84 "协作普遍正收益" 假设被四组测量 challenge:
-- 批次1 (独立并行批量): 协作 **优 5.4x**
+- 批次1 (独立并行批量): 历史 **5.4x 已作废** (R1)；多 agent 真 dispatch **未闭环**
 - 批次2 (简单分析归因): 协作 **劣 1.7x**
 - 批次3 (对抗冲突消解): **4% 消解** (协议没设计)
 
@@ -54,7 +54,7 @@ P84 "协作普遍正收益" 假设被四组测量 challenge:
 
 | 组合 | 协作收益 | 典型任务 | 实测印证 |
 |------|---------|---------|---------|
-| independent + none/read + well_defined + few/long | **强正** | doc 修复 / 场景生成 / 批量 as_of | 批次1 5.4x ✅ |
+| independent + none/read + well_defined + few/long | **待多 agent 闭环** (D2 人类允许) | doc 修复 / 场景生成 / 批量 as_of | 5.4x 作废；非 batch5 线程池 |
 | ordered + read + well_defined + few | **弱正/平** | 串行审查 / 归因 | 批次2 1.7x 劣 ⚠️ |
 | coupled + write + negotiated + few | **负/需消解** | 多 agent 共写 / 设计协商 | 批次3 4% (协议没设计) 🔴 |
 | any + write + any + any | **取决于消解** | 双写/抢占 | 批次3 暴露盲区 |
@@ -72,7 +72,7 @@ P84 "协作普遍正收益" 假设被四组测量 challenge:
 ### 4.2 真实任务 (11, 见 A3 归因)
 | 任务 | 并行度 | 冲突面 | 确定性 | 规模 | 协作适用? |
 |------|--------|--------|--------|------|----------|
-| stage1-task1 doc-claims-scope (6 INTERFACE) | independent | none | well_defined | few | ✅ 适用 (实测批次1 5.4x) |
+| stage1-task1 doc-claims-scope (6 INTERFACE) | independent | none | well_defined | few | D2 允许；多 agent 墙钟未闭环 |
 | stage1-task2 kairon-ruff | independent | none | well_defined | single | 边界 (单步) |
 | stage1-task3 adr-index | independent | read | well_defined | few | ✅ |
 | stage1-task4 adr-coverage | independent | read | well_defined | few | ✅ |
