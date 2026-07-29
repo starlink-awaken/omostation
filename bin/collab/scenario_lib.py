@@ -184,6 +184,21 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_restaking_slash_cascade(events))
     events.extend(_synthesize_intent_solver_theft(events))
     events.extend(_synthesize_dao_treasury_drain(events))
+    events.extend(_synthesize_l2_sequencer_censorship(events))
+    events.extend(_synthesize_mev_builder_collusion(events))
+    events.extend(_synthesize_aa_account_drain(events))
+    events.extend(_synthesize_validator_equivocation_coverup(events))
+    events.extend(_synthesize_liquidity_migration_trap(events))
+    events.extend(_synthesize_cross_chain_msg_replay(events))
+    events.extend(_synthesize_oracle_latency_exploit(events))
+    events.extend(_synthesize_governance_timelock_bypass(events))
+    events.extend(_synthesize_shared_sequencer_dos(events))
+    events.extend(_synthesize_private_mempool_leak(events))
+    events.extend(_synthesize_state_bloat_grief(events))
+    events.extend(_synthesize_threshold_sig_share_theft(events))
+    events.extend(_synthesize_rpc_auth_bypass(events))
+    events.extend(_synthesize_dependency_confusion(events))
+    events.extend(_synthesize_clock_sync_poison(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -2605,6 +2620,783 @@ def _synthesize_dao_treasury_drain(events: list[dict]) -> list[dict]:
                 "snap_vote": snap_vote,
                 "drained": True,
                 "policy": "timelock_and_veto_guardian",
+            }
+        ]
+    return []
+
+
+def _synthesize_l2_sequencer_censorship(events: list[dict]) -> list[dict]:
+    """sequencer 丢弃 exit / 压制 batch → l2_sequencer_censorship_detected (ADV97)."""
+    if any(e.get("kind") == "l2_sequencer_censorship_detected" for e in events):
+        return []
+    exit_req = False
+    drop_tx = False
+    exclude_batch = False
+    hatch_fail = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "exit" in target or "force_exit" in vs or "exit_request" in vs:
+            exit_req = True
+            role = r or role
+        if "drop" in vs or ("sequencer" in target and "drop" in vs) or "drop_user" in vs:
+            drop_tx = True
+            role = r or role
+        if "exclude" in vs or "batch" in target:
+            exclude_batch = True
+            role = r or role
+        if "escape" in target or "hatch" in target or "timeout_not" in vs:
+            hatch_fail = True
+            role = r or role
+    if (drop_tx or exclude_batch) and (exit_req or hatch_fail):
+        return [
+            {
+                "kind": "l2_sequencer_censorship_detected",
+                "ts": ts_max,
+                "role": role,
+                "exit_request": exit_req,
+                "drop_tx": drop_tx,
+                "exclude_batch": exclude_batch,
+                "hatch_fail": hatch_fail,
+                "policy": "forced_inclusion_and_escape_hatch",
+            }
+        ]
+    if drop_tx and exclude_batch:
+        return [
+            {
+                "kind": "l2_sequencer_censorship_detected",
+                "ts": ts_max,
+                "role": role,
+                "drop_tx": True,
+                "exclude_batch": True,
+                "policy": "forced_inclusion_and_escape_hatch",
+            }
+        ]
+    return []
+
+
+def _synthesize_mev_builder_collusion(events: list[dict]) -> list[dict]:
+    """多 builder 共享 orderflow + cartel → mev_builder_collusion_detected (ADV99)."""
+    if any(e.get("kind") == "mev_builder_collusion_detected" for e in events):
+        return []
+    leaks: list[tuple[int, str]] = []
+    extract = False
+    cartel = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "orderflow" in target or "leak" in vs or "share" in target:
+            leaks.append((ts, r))
+            role = r or role
+        if "extract" in target or "extract" in vs or "bundle" in target:
+            extract = True
+            role = r or role
+        if "cartel" in vs or "auction" in target and ("cartel" in vs or "single_winner" in vs):
+            cartel = True
+            role = r or role
+        if "single_winner" in vs or "cartel" in vs:
+            cartel = True
+    leak_roles = {r for _t, r in leaks if r}
+    if len(leak_roles) >= 2 and (extract or cartel):
+        return [
+            {
+                "kind": "mev_builder_collusion_detected",
+                "ts": ts_max,
+                "role": role,
+                "leak_roles": sorted(leak_roles),
+                "extract": extract,
+                "cartel": cartel,
+                "policy": "orderflow_isolation_and_builder_diversity",
+            }
+        ]
+    if len(leaks) >= 2 and extract:
+        return [
+            {
+                "kind": "mev_builder_collusion_detected",
+                "ts": ts_max,
+                "role": role,
+                "leak_count": len(leaks),
+                "extract": True,
+                "policy": "orderflow_isolation_and_builder_diversity",
+            }
+        ]
+    return []
+
+
+def _synthesize_aa_account_drain(events: list[dict]) -> list[dict]:
+    """session key / paymaster 合谋抽干 AA 账户 → aa_account_drain_detected (ADV101)."""
+    if any(e.get("kind") == "aa_account_drain_detected" for e in events):
+        return []
+    session_abuse = False
+    paymaster_bad = False
+    transfer_all = False
+    balance_zero = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "session" in target or "overpermission" in vs or "key_over" in vs:
+            session_abuse = True
+            role = r or role
+        if "paymaster" in target or "sponsor_malicious" in vs or "sponsor" in vs:
+            paymaster_bad = True
+            role = r or role
+        if "userop" in target or "transfer_all" in vs or "batch" in target:
+            transfer_all = True
+            role = r or role
+        if "smart_account" in target or "account" in target:
+            if vs in {"0", "0.0", "balance_0"} or "balance_0" in vs:
+                balance_zero = True
+                role = r or role
+        if vs in {"balance_0", "0"} and ("account" in target or "balance" in target):
+            balance_zero = True
+    if balance_zero and (session_abuse or paymaster_bad or transfer_all):
+        return [
+            {
+                "kind": "aa_account_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "session_abuse": session_abuse,
+                "paymaster_bad": paymaster_bad,
+                "transfer_all": transfer_all,
+                "balance_zero": balance_zero,
+                "policy": "session_key_scopes_and_paymaster_allowlist",
+            }
+        ]
+    if session_abuse and paymaster_bad and transfer_all:
+        return [
+            {
+                "kind": "aa_account_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "session_abuse": True,
+                "paymaster_bad": True,
+                "transfer_all": True,
+                "policy": "session_key_scopes_and_paymaster_allowlist",
+            }
+        ]
+    return []
+
+
+def _synthesize_validator_equivocation_coverup(events: list[dict]) -> list[dict]:
+    """双签后改写证据 → validator_equivocation_coverup_detected (ADV103)."""
+    if any(e.get("kind") == "validator_equivocation_coverup_detected" for e in events):
+        return []
+    fork_votes: list[tuple[int, str, str]] = []
+    rewrite = False
+    evidence_purged = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "vote" in target or "vote_fork" in vs or "fork" in vs:
+            fork_votes.append((ts, r, target or vs))
+            role = r or role
+        if "attestation" in target or "rewrite" in vs or "rewrite_clean" in vs:
+            rewrite = True
+            role = r or role
+        if "evidence" in target or "purged" in vs or "purge" in vs:
+            evidence_purged = True
+            role = r or role
+    multi_fork = len(fork_votes) >= 2
+    if multi_fork and (rewrite or evidence_purged):
+        return [
+            {
+                "kind": "validator_equivocation_coverup_detected",
+                "ts": ts_max,
+                "role": role,
+                "fork_votes": len(fork_votes),
+                "rewrite": rewrite,
+                "evidence_purged": evidence_purged,
+                "policy": "immutable_attestation_and_slashing",
+            }
+        ]
+    if multi_fork:
+        # still require coverup signal for this detector
+        return []
+    return []
+
+
+def _synthesize_liquidity_migration_trap(events: list[dict]) -> list[dict]:
+    """诱导迁移后 rug → liquidity_migration_trap_detected (ADV105)."""
+    if any(e.get("kind") == "liquidity_migration_trap_detected" for e in events):
+        return []
+    migrate_notice = False
+    old_drained = False
+    new_pool = False
+    rug = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "migrate" in target or "migrate" in vs:
+            migrate_notice = True
+            role = r or role
+        if "old_pool" in target or ( "pool" in target and "old" in target):
+            if vs in {"0", "0.0", "liq_0"} or "liq_0" in vs:
+                old_drained = True
+                role = r or role
+        if "new_pool" in target or "malicious" in vs:
+            new_pool = True
+            role = r or role
+        if "rug" in vs or "rug_after" in vs:
+            rug = True
+            role = r or role
+    if (migrate_notice or old_drained) and (new_pool or rug) and (rug or (old_drained and new_pool)):
+        return [
+            {
+                "kind": "liquidity_migration_trap_detected",
+                "ts": ts_max,
+                "role": role,
+                "migrate_notice": migrate_notice,
+                "old_drained": old_drained,
+                "new_pool": new_pool,
+                "rug": rug,
+                "policy": "migration_timelock_and_pool_allowlist",
+            }
+        ]
+    if old_drained and new_pool and migrate_notice:
+        return [
+            {
+                "kind": "liquidity_migration_trap_detected",
+                "ts": ts_max,
+                "role": role,
+                "old_drained": True,
+                "new_pool": True,
+                "migrate_notice": True,
+                "policy": "migration_timelock_and_pool_allowlist",
+            }
+        ]
+    return []
+
+
+def _synthesize_cross_chain_msg_replay(events: list[dict]) -> list[dict]:
+    """同 nonce 跨链重复执行 → cross_chain_msg_replay_detected (ADV107)."""
+    if any(e.get("kind") == "cross_chain_msg_replay_detected" for e in events):
+        return []
+    payload = False
+    execs: list[tuple[int, str, str]] = []
+    double_credit = False
+    replay = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "payload" in target or "transfer_" in vs:
+            payload = True
+            role = r or role
+        if "exec_nonce" in target or "executed" in vs or "nonce" in target:
+            execs.append((ts, r, target or vs))
+            role = r or role
+        if "replay" in vs or "replay" in target:
+            replay = True
+            role = r or role
+        if "double_credit" in vs or "double" in vs:
+            double_credit = True
+            role = r or role
+    multi_exec = len(execs) >= 2
+    if (multi_exec or replay) and (payload or double_credit or multi_exec):
+        if multi_exec or replay or double_credit:
+            return [
+                {
+                    "kind": "cross_chain_msg_replay_detected",
+                    "ts": ts_max,
+                    "role": role,
+                    "exec_count": len(execs),
+                    "replay": replay,
+                    "double_credit": double_credit,
+                    "payload": payload,
+                    "policy": "global_nonce_and_destination_domain_bind",
+                }
+            ]
+    return []
+
+
+def _synthesize_oracle_latency_exploit(events: list[dict]) -> list[dict]:
+    """过期喂价 + 套利/清算 → oracle_latency_exploit_detected (ADV109)."""
+    if any(e.get("kind") == "oracle_latency_exploit_detected" for e in events):
+        return []
+    stale = False
+    true_price = False
+    liq_stale = False
+    arb = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "stale" in vs or ("price" in target and "stale" in vs) or "age_" in vs:
+            stale = True
+            role = r or role
+        if "true_price" in vs or "spot" in target:
+            true_price = True
+            role = r or role
+        if "liq" in target or "liquidate" in vs or "stale_price" in vs:
+            liq_stale = True
+            role = r or role
+        if "arb" in vs or "profit" in vs:
+            arb = True
+            role = r or role
+    if stale and (liq_stale or arb or true_price):
+        return [
+            {
+                "kind": "oracle_latency_exploit_detected",
+                "ts": ts_max,
+                "role": role,
+                "stale": stale,
+                "true_price": true_price,
+                "liq_on_stale": liq_stale,
+                "arb": arb,
+                "policy": "heartbeat_and_max_price_age",
+            }
+        ]
+    return []
+
+
+def _synthesize_governance_timelock_bypass(events: list[dict]) -> list[dict]:
+    """紧急角色跳过 delay 执行 → governance_timelock_bypass_detected (ADV111)."""
+    if any(e.get("kind") == "governance_timelock_bypass_detected" for e in events):
+        return []
+    proposal = False
+    emergency = False
+    skip_delay = False
+    malicious = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "proposal" in target or "set_param" in vs:
+            proposal = True
+            role = r or role
+        if "emergency" in target or "grant_self" in vs or "emergency" in vs:
+            emergency = True
+            role = r or role
+        if "skip_delay" in vs or "execute_now" in vs or (
+            "timelock" in target and ("skip" in vs or "now" in vs)
+        ):
+            skip_delay = True
+            role = r or role
+        if "malicious" in vs or "system_param" in target:
+            malicious = True
+            role = r or role
+    if skip_delay and (proposal or emergency or malicious):
+        return [
+            {
+                "kind": "governance_timelock_bypass_detected",
+                "ts": ts_max,
+                "role": role,
+                "proposal": proposal,
+                "emergency": emergency,
+                "skip_delay": skip_delay,
+                "malicious": malicious,
+                "policy": "immutable_timelock_and_multisig_guardian",
+            }
+        ]
+    if emergency and malicious and proposal:
+        return [
+            {
+                "kind": "governance_timelock_bypass_detected",
+                "ts": ts_max,
+                "role": role,
+                "emergency": True,
+                "malicious": True,
+                "proposal": True,
+                "policy": "immutable_timelock_and_multisig_guardian",
+            }
+        ]
+    return []
+
+
+def _synthesize_shared_sequencer_dos(events: list[dict]) -> list[dict]:
+    """垃圾占满 shared sequencer 配额 → shared_sequencer_dos_detected (ADV113)."""
+    if any(e.get("kind") == "shared_sequencer_dos_detected" for e in events):
+        return []
+    spam = False
+    quota_out = False
+    stuck = False
+    degraded = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "spam" in target or "flood" in vs or "noop" in vs:
+            spam = True
+            role = r or role
+        if "quota" in target or "exhausted" in vs or "quota_exhausted" in vs:
+            quota_out = True
+            role = r or role
+        if "stuck" in vs or "pending" in vs or "user_tx" in target:
+            stuck = True
+            role = r or role
+        if "degraded" in vs or "liveness" in target:
+            degraded = True
+            role = r or role
+    if (spam or quota_out) and (stuck or degraded or quota_out):
+        return [
+            {
+                "kind": "shared_sequencer_dos_detected",
+                "ts": ts_max,
+                "role": role,
+                "spam": spam,
+                "quota_exhausted": quota_out,
+                "stuck": stuck,
+                "degraded": degraded,
+                "policy": "per_sender_rate_limit_and_priority_lanes",
+            }
+        ]
+    return []
+
+
+def _synthesize_private_mempool_leak(events: list[dict]) -> list[dict]:
+    """私有订单泄露给 searcher → private_mempool_leak_detected (ADV115)."""
+    if any(e.get("kind") == "private_mempool_leak_detected" for e in events):
+        return []
+    private_tx = False
+    leak = False
+    extract = False
+    worse = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "private_tx" in target or "exclusive" in vs or "private" in target and "tx" in target:
+            private_tx = True
+            role = r or role
+        if "leak" in vs or ("relay" in target and "leak" in vs):
+            leak = True
+            role = r or role
+        if "frontrun" in target or "extract_from_leak" in vs or "extract" in vs:
+            extract = True
+            role = r or role
+        if "worse" in vs or "user_fill" in target:
+            worse = True
+            role = r or role
+    if leak and (private_tx or extract or worse):
+        return [
+            {
+                "kind": "private_mempool_leak_detected",
+                "ts": ts_max,
+                "role": role,
+                "private_tx": private_tx,
+                "leak": leak,
+                "extract": extract,
+                "worse_fill": worse,
+                "policy": "sealed_relay_and_orderflow_audit",
+            }
+        ]
+    if private_tx and extract:
+        return [
+            {
+                "kind": "private_mempool_leak_detected",
+                "ts": ts_max,
+                "role": role,
+                "private_tx": True,
+                "extract": True,
+                "policy": "sealed_relay_and_orderflow_audit",
+            }
+        ]
+    return []
+
+
+def _synthesize_state_bloat_grief(events: list[dict]) -> list[dict]:
+    """廉价 dust 写入撑爆 state → state_bloat_grief_detected (ADV117)."""
+    if any(e.get("kind") == "state_bloat_grief_detected" for e in events):
+        return []
+    dust = False
+    bloat = False
+    lagging = False
+    disk_full = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "storage" in target or "dust" in vs or "1m" in vs:
+            dust = True
+            role = r or role
+        if "bloat" in vs or "state_size" in target:
+            bloat = True
+            role = r or role
+        if "lagging" in vs or "sync" in target:
+            lagging = True
+            role = r or role
+        if "disk_full" in vs or "rejected" in vs:
+            disk_full = True
+            role = r or role
+    if (dust or bloat) and (lagging or disk_full or bloat):
+        return [
+            {
+                "kind": "state_bloat_grief_detected",
+                "ts": ts_max,
+                "role": role,
+                "dust_writes": dust,
+                "bloat": bloat,
+                "lagging": lagging,
+                "disk_full": disk_full,
+                "policy": "storage_rent_and_state_expiry",
+            }
+        ]
+    return []
+
+
+def _synthesize_threshold_sig_share_theft(events: list[dict]) -> list[dict]:
+    """收集 t 份 share 伪造签名 → threshold_sig_share_theft_detected (ADV119)."""
+    if any(e.get("kind") == "threshold_sig_share_theft_detected" for e in events):
+        return []
+    shares: list[tuple[int, str]] = []
+    forged = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "share" in target or "exfil_share" in vs or "exfil" in vs:
+            shares.append((ts, target or vs))
+            role = r or role
+        if "forged" in vs or "forged_sig" in target or "threshold_sig" in vs:
+            forged = True
+            role = r or role
+    if len(shares) >= 2 and (forged or len(shares) >= 3):
+        return [
+            {
+                "kind": "threshold_sig_share_theft_detected",
+                "ts": ts_max,
+                "role": role,
+                "share_count": len(shares),
+                "forged": forged,
+                "policy": "share_hsm_and_refresh_protocol",
+            }
+        ]
+    return []
+
+
+def _synthesize_rpc_auth_bypass(events: list[dict]) -> list[dict]:
+    """未授权 admin RPC / ACL 关闭 → rpc_auth_bypass_detected (ADV121)."""
+    if any(e.get("kind") == "rpc_auth_bypass_detected" for e in events):
+        return []
+    acl_off = False
+    admin_rpc = False
+    debug_open = False
+    compromised = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "rpc_acl" in target or "auth_disabled" in vs or "auth_required" in vs and "disabled" in vs:
+            acl_off = True
+            role = r or role
+        if "auth_disabled" in vs:
+            acl_off = True
+            role = r or role
+        if "admin_rpc" in target or "peer_ban" in vs or "set_peer" in vs:
+            admin_rpc = True
+            role = r or role
+        if "debug" in vs or "node_config" in target:
+            debug_open = True
+            role = r or role
+        if "compromised" in vs or "security_flag" in target:
+            compromised = True
+            role = r or role
+    if (acl_off or admin_rpc) and (admin_rpc or debug_open or compromised):
+        return [
+            {
+                "kind": "rpc_auth_bypass_detected",
+                "ts": ts_max,
+                "role": role,
+                "acl_off": acl_off,
+                "admin_rpc": admin_rpc,
+                "debug_open": debug_open,
+                "compromised": compromised,
+                "policy": "mutual_tls_and_rpc_allowlist",
+            }
+        ]
+    return []
+
+
+def _synthesize_dependency_confusion(events: list[dict]) -> list[dict]:
+    """同名恶意包抢解析 → dependency_confusion_detected (ADV123)."""
+    if any(e.get("kind") == "dependency_confusion_detected" for e in events):
+        return []
+    public_publish = False
+    resolved_malicious = False
+    exfil_hook = False
+    backdoor = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "registry" in target or "publish" in vs:
+            public_publish = True
+            role = r or role
+        if "malicious" in vs or "package_lock" in target and "public" in vs:
+            resolved_malicious = True
+            role = r or role
+        if "resolved_public" in vs or "malicious" in vs:
+            resolved_malicious = True
+            role = r or role
+        if "postinstall" in vs or "exfil" in vs or "install_hook" in target:
+            exfil_hook = True
+            role = r or role
+        if "backdoor" in vs or "build_artifact" in target:
+            backdoor = True
+            role = r or role
+    if (public_publish or resolved_malicious) and (exfil_hook or backdoor or resolved_malicious):
+        return [
+            {
+                "kind": "dependency_confusion_detected",
+                "ts": ts_max,
+                "role": role,
+                "public_publish": public_publish,
+                "resolved_malicious": resolved_malicious,
+                "exfil_hook": exfil_hook,
+                "backdoor": backdoor,
+                "policy": "scoped_registry_and_lockfile_pin",
+            }
+        ]
+    return []
+
+
+def _synthesize_clock_sync_poison(events: list[dict]) -> list[dict]:
+    """NTP/时源投毒导致时钟分裂 → clock_sync_poison_detected (ADV125)."""
+    if any(e.get("kind") == "clock_sync_poison_detected" for e in events):
+        return []
+    ntp_skew = False
+    skewed = False
+    split = False
+    reject_storm = False
+    role = ""
+    ts_max = 0
+    clocks: list[str] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "ntp" in target or "skew" in vs:
+            ntp_skew = True
+            role = r or role
+        if "wall_clock" in target or "skewed" in vs or "still_correct" in vs:
+            clocks.append(vs)
+            if "skewed" in vs:
+                skewed = True
+            role = r or role
+        if "timestamp_reject" in vs or "reject_storm" in vs or "consensus" in target:
+            reject_storm = True
+            role = r or role
+    if len(set(clocks)) >= 2:
+        split = True
+    if (ntp_skew or skewed) and (split or reject_storm or skewed):
+        return [
+            {
+                "kind": "clock_sync_poison_detected",
+                "ts": ts_max,
+                "role": role,
+                "ntp_skew": ntp_skew,
+                "skewed": skewed,
+                "clock_split": split,
+                "reject_storm": reject_storm,
+                "policy": "multi_source_time_and_max_drift",
             }
         ]
     return []

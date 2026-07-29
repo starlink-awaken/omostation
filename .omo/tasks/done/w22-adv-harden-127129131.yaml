@@ -1,0 +1,17 @@
+id: w22-adv-harden-127129131
+title: 'ADV127/129/131 加硬 (blind-sign/dns-rebind/ci-exfil)'
+description: 'P84 wave22 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T05:55:00Z'
+completion_evidence:
+  - .omo/_delivery/collab-scenarios/ADV127-blind-signing-drain.yaml
+  - .omo/_delivery/collab-scenarios/ADV129-dns-rebinding.yaml
+  - .omo/_delivery/collab-scenarios/ADV131-ci-secret-exfil.yaml
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0277-p84-wave22-adv121123125.md
+stage: P84-W22

@@ -287,12 +287,87 @@ def test_wave17_adv919395_detectors_pass() -> None:
         )
 
 
-def test_wave17_hard_adv_still_fail() -> None:
-    """ADV97/99/101 加硬场景须失败 (对抗强度)."""
+def test_wave18_adv9799101_detectors_pass() -> None:
+    """wave18 闭环: l2_sequencer_censorship / mev_builder_collusion / aa_account_drain."""
     for name in (
         "ADV97-l2-sequencer-censorship.yaml",
         "ADV99-mev-builder-collusion.yaml",
         "ADV101-account-abstraction-drain.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave18 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave19_adv103105107_detectors_pass() -> None:
+    """wave19 闭环: equivocation_coverup / migration_trap / msg_replay."""
+    for name in (
+        "ADV103-validator-equivocation-coverup.yaml",
+        "ADV105-liquidity-migration-trap.yaml",
+        "ADV107-cross-chain-msg-replay.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave19 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave20_adv109111113_detectors_pass() -> None:
+    """wave20 闭环: oracle_latency / timelock_bypass / shared_sequencer_dos."""
+    for name in (
+        "ADV109-oracle-latency-exploit.yaml",
+        "ADV111-governance-timelock-bypass.yaml",
+        "ADV113-shared-sequencer-dos.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave20 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave21_adv115117119_detectors_pass() -> None:
+    """wave21 闭环: private_mempool_leak / state_bloat_grief / threshold_sig_share_theft."""
+    for name in (
+        "ADV115-private-mempool-leak.yaml",
+        "ADV117-state-bloat-grief.yaml",
+        "ADV119-threshold-sig-share-theft.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave21 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave22_adv121123125_detectors_pass() -> None:
+    """wave22 闭环: rpc_auth_bypass / dependency_confusion / clock_sync_poison."""
+    for name in (
+        "ADV121-rpc-auth-bypass.yaml",
+        "ADV123-dependency-confusion.yaml",
+        "ADV125-clock-sync-poison.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave22 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave22_hard_adv_still_fail() -> None:
+    """ADV127/129/131 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV127-blind-signing-drain.yaml",
+        "ADV129-dns-rebinding.yaml",
+        "ADV131-ci-secret-exfil.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
