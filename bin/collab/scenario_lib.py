@@ -208,6 +208,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_path_traversal_write(events))
     events.extend(_synthesize_cache_poisoning(events))
     events.extend(_synthesize_config_bombshell(events))
+    events.extend(_synthesize_race_double_spend(events))
+    events.extend(_synthesize_log_injection(events))
+    events.extend(_synthesize_prompt_injection_tool(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -3879,6 +3882,159 @@ def _synthesize_config_bombshell(events: list[dict]) -> list[dict]:
                 "oom": True,
                 "down": True,
                 "policy": "depth_limit_and_parse_budget",
+            }
+        ]
+    return []
+
+
+def _synthesize_race_double_spend(events: list[dict]) -> list[dict]:
+    """并发同额扣减双入账 → race_double_spend_detected (ADV145)."""
+    if any(e.get("kind") == "race_double_spend_detected" for e in events):
+        return []
+    debits: list[tuple[int, str, str]] = []
+    credits: list[tuple[int, str]] = []
+    bal_zero = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "debit" in vs or "pay_" in target:
+            debits.append((ts, r, target or vs))
+            role = r or role
+        if "credit" in target or "credit" in vs:
+            credits.append((ts, target or vs))
+            role = r or role
+        if "account_bal" in target or "bal" in target:
+            if vs in {"0", "0.0"}:
+                bal_zero = True
+                role = r or role
+    multi_debit = len(debits) >= 2
+    multi_credit = len(credits) >= 2
+    if multi_debit and (multi_credit or bal_zero):
+        return [
+            {
+                "kind": "race_double_spend_detected",
+                "ts": ts_max,
+                "role": role,
+                "debit_count": len(debits),
+                "credit_count": len(credits),
+                "balance_zero": bal_zero,
+                "policy": "serializable_ledger_and_idempotency_key",
+            }
+        ]
+    if multi_debit and multi_credit:
+        return [
+            {
+                "kind": "race_double_spend_detected",
+                "ts": ts_max,
+                "role": role,
+                "debit_count": len(debits),
+                "credit_count": len(credits),
+                "policy": "serializable_ledger_and_idempotency_key",
+            }
+        ]
+    return []
+
+
+def _synthesize_log_injection(events: list[dict]) -> list[dict]:
+    """换行注入伪造审计行 → log_injection_detected (ADV147)."""
+    if any(e.get("kind") == "log_injection_detected" for e in events):
+        return []
+    newline_inject = False
+    injected_line = False
+    trusted_fake = False
+    fraud = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        # preserve raw newline detection from original value
+        raw = str(val or "")
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "\n" in raw or "user_input" in target:
+            if "\n" in raw or "admin approved" in vs or "info admin" in vs:
+                newline_inject = True
+                role = r or role
+        if "injected" in vs or "app_log" in target:
+            injected_line = True
+            role = r or role
+        if "trusted_fake" in vs or "audit_review" in target or "fake_approval" in vs:
+            trusted_fake = True
+            role = r or role
+        if "grant_executed" in vs or "fraud_result" in target:
+            fraud = True
+            role = r or role
+    if (newline_inject or injected_line) and (trusted_fake or fraud or injected_line):
+        return [
+            {
+                "kind": "log_injection_detected",
+                "ts": ts_max,
+                "role": role,
+                "newline_inject": newline_inject,
+                "injected_line": injected_line,
+                "trusted_fake": trusted_fake,
+                "fraud": fraud,
+                "policy": "structured_json_logs_and_escape",
+            }
+        ]
+    return []
+
+
+def _synthesize_prompt_injection_tool(events: list[dict]) -> list[dict]:
+    """提示注入劫持敏感工具 → prompt_injection_tool_detected (ADV149)."""
+    if any(e.get("kind") == "prompt_injection_tool_detected" for e in events):
+        return []
+    ignore_policy = False
+    shell_call = False
+    destructive = False
+    bypassed = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "ignore_policy" in vs or "user_msg" in target:
+            ignore_policy = True
+            role = r or role
+        if "shell" in vs or "tool_call" in target or "rm_rf" in vs or "rm " in vs:
+            shell_call = True
+            role = r or role
+        if "deleted" in vs or "secrets_dir" in vs or "tool_result" in target:
+            destructive = True
+            role = r or role
+        if "policy_bypassed" in vs or "agent_policy" in target:
+            bypassed = True
+            role = r or role
+    if (ignore_policy or shell_call) and (destructive or bypassed or shell_call):
+        return [
+            {
+                "kind": "prompt_injection_tool_detected",
+                "ts": ts_max,
+                "role": role,
+                "ignore_policy": ignore_policy,
+                "shell_call": shell_call,
+                "destructive": destructive,
+                "policy_bypassed": bypassed,
+                "policy": "tool_allowlist_and_human_confirm",
             }
         ]
     return []
