@@ -187,6 +187,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0269 | wave14 — ADV73/75/77 闭环 + ADV79/81/83 加硬 | ACCEPTED | 2026-07-29 | governance-team | 0269-p84-wave14-adv737577.md |
 | 0270 | wave15 — ADV79/81/83 闭环 + ADV85/87/89 加硬 | ACCEPTED | 2026-07-29 | governance-team | 0270-p84-wave15-adv798183.md |
 | 0271 | wave16 — ADV85/87/89 闭环 + ADV91/93/95 加硬 | ACCEPTED | 2026-07-29 | governance-team | 0271-p84-wave16-adv858789.md |
+| 0272 | wave17 — ADV91/93/95 闭环 + ADV97/99/101 加硬 | ACCEPTED | 2026-07-29 | governance-team | 0272-p84-wave17-adv919395.md |
 | 0249 | 治理自省预算封顶 40/40/20 (用户已同意) | ACCEPTED | 2026-07-26 | P82 StageA | 0249-governance-budget-cap-40-40-20.md |
 | 0250 | health 门禁改为只卡工程执行面 (owner 集中度不阻断) | ACCEPTED | 2026-07-27 | P82 StageA | 0250-health-gate-engineering-surface-only.md |
 | 0251 | 三把锁 gate 定位 (layer-call/drift/doc-claims blocking) + layer-call 增量快路径 | ACCEPTED | 2026-07-28 | P83 Stage1 | 0251-three-locks-gate-positioning-layer-call-incremental.md |
