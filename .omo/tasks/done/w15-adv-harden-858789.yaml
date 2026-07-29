@@ -1,0 +1,17 @@
+id: w15-adv-harden-858789
+title: 'ADV85/87/89 加硬 (infinite-mint/depeg/zk-forgery)'
+description: 'P84 wave15 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T04:15:00Z'
+completion_evidence:
+  - .omo/_delivery/collab-scenarios/ADV85-infinite-mint-inflation.yaml
+  - .omo/_delivery/collab-scenarios/ADV87-stablecoin-depeg-attack.yaml
+  - .omo/_delivery/collab-scenarios/ADV89-zk-proof-forgery.yaml
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0270-p84-wave15-adv798183.md
+stage: P84-W15

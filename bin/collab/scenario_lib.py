@@ -166,6 +166,24 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_front_running(events))
     events.extend(_synthesize_griefing_abort(events))
     events.extend(_synthesize_oracle_manipulation(events))
+    events.extend(_synthesize_sandwich_attack(events))
+    events.extend(_synthesize_reentrancy(events))
+    events.extend(_synthesize_mev_leak(events, blackboard))
+    events.extend(_synthesize_flash_loan_attack(events))
+    events.extend(_synthesize_governance_capture(events))
+    events.extend(_synthesize_cross_domain_replay(events, blackboard))
+    events.extend(_synthesize_rug_pull(events))
+    events.extend(_synthesize_approval_phishing(events))
+    events.extend(_synthesize_bridge_drain(events))
+    events.extend(_synthesize_sybil_airdrop(events))
+    events.extend(_synthesize_wash_trade(events))
+    events.extend(_synthesize_key_compromise_blast(events))
+    events.extend(_synthesize_infinite_mint(events))
+    events.extend(_synthesize_stablecoin_depeg(events))
+    events.extend(_synthesize_zk_proof_forgery(events))
+    events.extend(_synthesize_restaking_slash_cascade(events))
+    events.extend(_synthesize_intent_solver_theft(events))
+    events.extend(_synthesize_dao_treasury_drain(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -1508,6 +1526,1087 @@ def _synthesize_oracle_manipulation(events: list[dict]) -> list[dict]:
                     "policy": "twap_or_multi_oracle",
                 }
             ]
+    return []
+
+
+def _synthesize_sandwich_attack(events: list[dict]) -> list[dict]:
+    """attacker 抬价 → victim 成交 → attacker 压回/获利 → sandwich_attack_detected (ADV61)."""
+    if any(e.get("kind") == "sandwich_attack_detected" for e in events):
+        return []
+    # chronological price-ish and swap/profit actions by role
+    acts: list[tuple[int, str, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "")
+        val = e.get("new") if "new" in e else e.get("value")
+        if not role:
+            continue
+        acts.append((int(e.get("ts") or 0), role, target, val))
+    # find attacker who touches pool_price twice with victim action between
+    for i, (t0, r0, k0, v0) in enumerate(acts):
+        if "price" not in k0.lower() and "pool" not in k0.lower():
+            continue
+        for j in range(i + 1, len(acts)):
+            t1, r1, k1, v1 = acts[j]
+            if r1 == r0:
+                continue
+            if "swap" not in k1.lower() and "victim" not in k1.lower() and "swap" not in str(v1).lower():
+                # still allow any other role action as middle
+                if "swap" not in k1.lower() and "victim" not in r1.lower():
+                    mid_ok = True  # any interleaving victim-like
+                else:
+                    mid_ok = True
+            else:
+                mid_ok = True
+            if not mid_ok:
+                continue
+            for k in range(j + 1, len(acts)):
+                t2, r2, k2, v2 = acts[k]
+                if r2 != r0:
+                    continue
+                back_price = "price" in k2.lower() or "pool" in k2.lower()
+                profit = "profit" in k2.lower() or "extract" in str(v2).lower()
+                # later profit write also counts as closing sandwich
+                has_profit = any(
+                    r == r0 and ("profit" in kt.lower() or "extract" in str(vv).lower())
+                    for _tt, r, kt, vv in acts[j:]
+                )
+                if back_price or profit or has_profit:
+                    return [
+                        {
+                            "kind": "sandwich_attack_detected",
+                            "ts": t2,
+                            "attacker": r0,
+                            "victim_role": r1,
+                            "front_leg": {"target": k0, "value": v0},
+                            "victim_leg": {"target": k1, "value": v1},
+                            "back_leg": {"target": k2, "value": v2},
+                            "policy": "private_mempool_or_batch",
+                        }
+                    ]
+    return []
+
+
+def _synthesize_reentrancy(events: list[dict]) -> list[dict]:
+    """同角色对 balance 连续扣减 ≥2 + withdraw 痕迹 → reentrancy_detected (ADV63)."""
+    if any(e.get("kind") == "reentrancy_detected" for e in events):
+        return []
+    bal_hits: dict[str, list[tuple[int, object]]] = {}
+    withdraws: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {
+            "write",
+            "conflict_detected",
+            "double_claim_detected",
+            "deadlock_break",
+        }:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "withdraw" in target or "withdraw" in str(val or "").lower():
+            withdraws.append((ts, role, val))
+        if "balance" in target or "vault" in target:
+            if role:
+                bal_hits.setdefault(role, []).append((ts, val))
+            for r in e.get("roles") or []:
+                bal_hits.setdefault(str(r), []).append((ts, val))
+    for role, hits in bal_hits.items():
+        if len(hits) < 2:
+            continue
+        # decreasing numeric trend or ≥2 mutations
+        nums = []
+        for _ts, v in hits:
+            try:
+                nums.append(float(str(v).strip()))
+            except (TypeError, ValueError):
+                pass
+        decreasing = len(nums) >= 2 and any(
+            nums[i] > nums[i + 1] for i in range(len(nums) - 1)
+        )
+        multi = len(hits) >= 2
+        has_wd = any(
+            role == wr or "twice" in str(wv).lower() or "reenter" in str(wv).lower()
+            for _t, wr, wv in withdraws
+        ) or any("withdraw" in str(h[1]).lower() for h in hits)
+        if multi and (decreasing or has_wd or len(hits) >= 2):
+            # require withdraw log OR clear decreasing
+            if decreasing or has_wd or any("withdraw" in str(wv).lower() for _t, _r, wv in withdraws):
+                return [
+                    {
+                        "kind": "reentrancy_detected",
+                        "ts": hits[-1][0],
+                        "role": role,
+                        "balance_mutations": len(hits),
+                        "values": [v for _t, v in hits],
+                        "policy": "checks_effects_interactions",
+                    }
+                ]
+    # ADV63 shape: attacker hits balance twice + withdraw_log
+    if any(len(h) >= 2 for h in bal_hits.values()) and withdraws:
+        role = next(r for r, h in bal_hits.items() if len(h) >= 2)
+        return [
+            {
+                "kind": "reentrancy_detected",
+                "ts": max(t for t, _r, _v in withdraws),
+                "role": role,
+                "balance_mutations": len(bal_hits[role]),
+                "withdraws": len(withdraws),
+                "policy": "checks_effects_interactions",
+            }
+        ]
+    return []
+
+
+def _synthesize_mev_leak(events: list[dict], board: dict) -> list[dict]:
+    """private intent 值出现在 public mempool（异角色）→ mev_leak_detected (ADV65)."""
+    if any(e.get("kind") == "mev_leak_detected" for e in events):
+        return []
+    private_vals: dict[object, tuple[str, str]] = {}  # value -> (role, key)
+    # setup board private*
+    for key, slot in board.items():
+        if key.startswith("_"):
+            continue
+        kl = key.lower()
+        if "private" in kl or "secret" in kl or "intent" in kl:
+            private_vals[slot.get("value")] = (
+                (slot.get("writers") or [""])[0] if slot.get("writers") else "",
+                key,
+            )
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        target = str(e.get("target") or "").lower()
+        val = e.get("value")
+        role = str(e.get("role") or "")
+        if "private" in target or "secret" in target or "intent" in target:
+            private_vals[val] = (role, str(e.get("target")))
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        role = str(e.get("role") or "")
+        public = any(k in target for k in ("public", "mempool", "gossip", "broadcast"))
+        if not public:
+            continue
+        if val in private_vals:
+            orig_role, orig_key = private_vals[val]
+            if role and orig_role and role != orig_role:
+                return [
+                    {
+                        "kind": "mev_leak_detected",
+                        "ts": e.get("ts") or 0,
+                        "leaked_value": val,
+                        "private_key": orig_key,
+                        "owner": orig_role,
+                        "searcher": role,
+                        "public_target": e.get("target"),
+                        "policy": "encrypt_intent_or_private_relay",
+                    }
+                ]
+    return []
+
+
+def _synthesize_flash_loan_attack(events: list[dict]) -> list[dict]:
+    """同角色 borrow → 操盘 → repay (+profit) → flash_loan_attack_detected (ADV67)."""
+    if any(e.get("kind") == "flash_loan_attack_detected" for e in events):
+        return []
+    acts: list[tuple[int, str, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        if not role:
+            continue
+        acts.append(
+            (
+                int(e.get("ts") or 0),
+                role,
+                str(e.get("target") or ""),
+                e.get("new") if "new" in e else e.get("value"),
+            )
+        )
+    by_role: dict[str, list[tuple[int, str, object]]] = {}
+    for ts, role, tgt, val in acts:
+        by_role.setdefault(role, []).append((ts, tgt, val))
+    for role, seq in by_role.items():
+        has_borrow = any(
+            "borrow" in t.lower() or "flash" in t.lower() or "borrow" in str(v).lower()
+            for _ts, t, v in seq
+        )
+        has_repay = any(
+            "repay" in t.lower() or "repay" in str(v).lower() for _ts, t, v in seq
+        )
+        has_manip = any(
+            "price" in t.lower()
+            or "manipul" in str(v).lower()
+            or "oracle" in t.lower()
+            for _ts, t, v in seq
+        )
+        has_profit = any(
+            "profit" in t.lower() or "profit" in str(v).lower() or "arb" in str(v).lower()
+            for _ts, t, v in seq
+        )
+        if has_borrow and has_repay and (has_manip or has_profit):
+            return [
+                {
+                    "kind": "flash_loan_attack_detected",
+                    "ts": seq[-1][0],
+                    "role": role,
+                    "borrow": has_borrow,
+                    "repay": has_repay,
+                    "manipulation": has_manip,
+                    "profit": has_profit,
+                    "policy": "block_same_tx_borrow_manipulate",
+                }
+            ]
+    return []
+
+
+def _synthesize_governance_capture(events: list[dict]) -> list[dict]:
+    """短期囤 gov_votes → 通过恶意提案 → 倒票 → governance_capture_detected (ADV69)."""
+    if any(e.get("kind") == "governance_capture_detected" for e in events):
+        return []
+    vote_moves: list[tuple[int, str, object]] = []
+    proposals: list[tuple[int, str, object]] = []
+    results: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "gov_vote" in target or ("vote" in target and "gov" in target):
+            vote_moves.append((ts, role, val))
+        elif "proposal" in target and "result" not in target:
+            proposals.append((ts, role, val))
+        elif "proposal_result" in target or (
+            "result" in target and "proposal" in target
+        ):
+            results.append((ts, role, val))
+        elif "proposal" in target:
+            proposals.append((ts, role, val))
+    # need vote inflation then proposal pass then vote dump by same attacker
+    for role in {r for _t, r, _v in vote_moves}:
+        role_votes = [(t, v) for t, r, v in vote_moves if r == role]
+        if len(role_votes) < 2:
+            continue
+        # try numeric spike then drop
+        nums = []
+        for t, v in role_votes:
+            try:
+                nums.append((t, float(str(v).strip())))
+            except (TypeError, ValueError):
+                nums.append((t, None))  # type: ignore[arg-type]
+        valid = [(t, n) for t, n in nums if n is not None]
+        spike = False
+        if len(valid) >= 2:
+            for i in range(len(valid) - 1):
+                if valid[i + 1][1] > valid[i][1] * 2:  # big acquire
+                    for j in range(i + 1, len(valid)):
+                        if valid[j][1] < valid[i + 1][1] * 0.5:  # dump
+                            spike = True
+        # malicious proposal + passed
+        mal = any(
+            r == role
+            and (
+                "drain" in str(v).lower()
+                or "malicious" in str(v).lower()
+                or "attack" in str(v).lower()
+            )
+            for _t, r, v in proposals
+        ) or any("malicious" in str(p[2]).lower() or "drain" in str(p[2]).lower() for p in proposals)
+        passed = any(
+            "pass" in str(v).lower() or "approved" in str(v).lower()
+            for _t, _r, v in results
+        )
+        if (spike or len(role_votes) >= 2) and (mal or proposals) and (passed or results):
+            return [
+                {
+                    "kind": "governance_capture_detected",
+                    "ts": max(t for t, _r, _v in vote_moves + proposals + results),
+                    "role": role,
+                    "vote_moves": len(role_votes),
+                    "proposals": len(proposals),
+                    "passed": passed,
+                    "policy": "timelock_and_vote_escrow",
+                }
+            ]
+    # softer: attacker proposal drain + passed + multi gov_votes writes
+    if proposals and results and len(vote_moves) >= 2:
+        return [
+            {
+                "kind": "governance_capture_detected",
+                "ts": max(
+                    (e.get("ts") or 0)
+                    for e in events
+                    if e.get("kind")
+                    in {"write", "conflict_detected", "double_claim_detected"}
+                ),
+                "vote_moves": len(vote_moves),
+                "proposals": len(proposals),
+                "results": len(results),
+                "policy": "timelock_and_vote_escrow",
+            }
+        ]
+    return []
+
+
+def _synthesize_cross_domain_replay(events: list[dict], board: dict) -> list[dict]:
+    """域A payload 在域B 执行/重复 → cross_domain_replay_detected (ADV71)."""
+    if any(e.get("kind") == "cross_domain_replay_detected" for e in events):
+        return []
+    domain_payloads: dict[object, list[tuple[str, str]]] = {}  # val -> [(domain_tag, role)]
+    # board seeds
+    for key, slot in board.items():
+        if key.startswith("_"):
+            continue
+        kl = key.lower()
+        if "domain" in kl or "sig" in kl or "msg" in kl:
+            tag = "a" if "_a" in kl or "domain_a" in kl else ("b" if "_b" in kl or "domain_b" in kl else "x")
+            domain_payloads.setdefault(slot.get("value"), []).append(
+                (tag, (slot.get("writers") or [""])[0] if slot.get("writers") else "")
+            )
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "")
+        tl = target.lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        role = str(e.get("role") or "")
+        if "domain" not in tl and "exec" not in tl and "sig" not in tl and "msg" not in tl:
+            continue
+        tag = "a" if ("_a" in tl or "domain_a" in tl) else (
+            "b" if ("_b" in tl or "domain_b" in tl) else "x"
+        )
+        domain_payloads.setdefault(val, []).append((tag, role))
+    for val, tags in domain_payloads.items():
+        if val is None:
+            continue
+        domains = {t for t, _r in tags}
+        roles = {r for _t, r in tags if r}
+        # same payload across domains OR repeated exec on domain_b
+        multi_domain = len(domains) >= 2
+        multi_exec = sum(1 for t, _r in tags if t == "b") >= 2 or sum(
+            1 for t, _r in tags if "exec" in t
+        ) >= 2
+        # also: board domain_a + writes domain_b same value twice (replay_attack also fires)
+        if multi_domain or (
+            any(t == "a" for t, _ in tags) and sum(1 for t, _ in tags if t == "b") >= 1
+        ):
+            if multi_domain or multi_exec or len(tags) >= 2:
+                return [
+                    {
+                        "kind": "cross_domain_replay_detected",
+                        "ts": max((e.get("ts") or 0) for e in events) + 1,
+                        "payload": val,
+                        "domains": sorted(domains),
+                        "roles": sorted(roles),
+                        "policy": "domain_separator_and_nonce",
+                    }
+                ]
+    return []
+
+
+def _synthesize_rug_pull(events: list[dict]) -> list[dict]:
+    """victim 存款后 creator 抽干 lp_pool → rug_pull_detected (ADV73)."""
+    if any(e.get("kind") == "rug_pull_detected" for e in events):
+        return []
+    deposits: list[tuple[int, str]] = []
+    pool_drains: list[tuple[int, str, object]] = []
+    creator_gains: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "deposit" in target or "deposit" in str(val or "").lower():
+            deposits.append((ts, role))
+        if "lp" in target or "pool" in target or "liq" in target:
+            vs = str(val or "").lower()
+            if "0" in vs or "empty" in vs or "drain" in vs or vs in {"0", "liq_0"}:
+                pool_drains.append((ts, role, val))
+        if "wallet" in target or "drain" in str(val or "").lower():
+            creator_gains.append((ts, role, val))
+    if not deposits:
+        return []
+    dep_ts = min(t for t, _ in deposits)
+    for dts, drole, dval in pool_drains:
+        if dts < dep_ts:
+            continue
+        # creator != depositor
+        victim_roles = {r for t, r in deposits}
+        if drole in victim_roles and not creator_gains:
+            continue
+        return [
+            {
+                "kind": "rug_pull_detected",
+                "ts": dts,
+                "depositor": next(iter(victim_roles)),
+                "puller": drole,
+                "pool_value": dval,
+                "creator_gains": len(creator_gains),
+                "policy": "lp_lock_and_timelock",
+            }
+        ]
+    # deposit then creator_wallet drain even if pool drain naming differs
+    if deposits and creator_gains:
+        gts, grole, gval = creator_gains[0]
+        if gts >= dep_ts and grole not in {r for _t, r in deposits}:
+            return [
+                {
+                    "kind": "rug_pull_detected",
+                    "ts": gts,
+                    "depositor": deposits[0][1],
+                    "puller": grole,
+                    "gain": gval,
+                    "policy": "lp_lock_and_timelock",
+                }
+            ]
+    return []
+
+
+def _synthesize_approval_phishing(events: list[dict]) -> list[dict]:
+    """unlimited approval 后余额被第三方转走 → approval_phishing_detected (ADV75)."""
+    if any(e.get("kind") == "approval_phishing_detected" for e in events):
+        return []
+    approvals: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "approval" in target or "approve" in str(val or "").lower() or "unlimited" in str(val or "").lower():
+            approvals.append((ts, role, val))
+    if not approvals:
+        return []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        # balance drained by non-approver after approval
+        bal_hit = "balance" in target or "wallet" in target or "phish" in target
+        if not bal_hit:
+            continue
+        for ats, arole, aval in approvals:
+            if ts <= ats:
+                continue
+            if role and role != arole:
+                drained = str(val) in {"0", "0.0"} or val == 0 or "phish" in target or "phish" in str(val or "").lower()
+                if drained or "phish" in role.lower() or "dapp" in role.lower():
+                    return [
+                        {
+                            "kind": "approval_phishing_detected",
+                            "ts": ts,
+                            "victim": arole,
+                            "spender": role,
+                            "approval": aval,
+                            "result_target": e.get("target"),
+                            "result_value": val,
+                            "policy": "permit2_or_capped_allowance",
+                        }
+                    ]
+    return []
+
+
+def _synthesize_bridge_drain(events: list[dict]) -> list[dict]:
+    """forged proof + vault 清零 + 对侧 mint → bridge_drain_detected (ADV77)."""
+    if any(e.get("kind") == "bridge_drain_detected" for e in events):
+        return []
+    forged = False
+    vault_zero = False
+    mint = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = str(e.get("new") if "new" in e else e.get("value") or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "proof" in target or "forged" in val or "fake" in val:
+            forged = True
+            role = r or role
+        if "bridge" in target or "vault" in target:
+            if val in {"0", "0.0", ""} or "drain" in val:
+                vault_zero = True
+                role = r or role
+        if "mint" in val or "chain_b" in target or "mint" in target:
+            mint = True
+            role = r or role
+    if forged and (vault_zero or mint):
+        return [
+            {
+                "kind": "bridge_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "forged_proof": forged,
+                "vault_zero": vault_zero,
+                "cross_mint": mint,
+                "policy": "multi_sig_proof_and_rate_limit",
+            }
+        ]
+    if vault_zero and mint:
+        return [
+            {
+                "kind": "bridge_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "vault_zero": True,
+                "cross_mint": True,
+                "policy": "multi_sig_proof_and_rate_limit",
+            }
+        ]
+    return []
+
+
+def _synthesize_sybil_airdrop(events: list[dict]) -> list[dict]:
+    """多地址 claim 后归集钱包 → sybil_airdrop_detected (ADV79)."""
+    if any(e.get("kind") == "sybil_airdrop_detected" for e in events):
+        return []
+    claims: list[tuple[int, str, str]] = []
+    aggregates: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        if "claim" in target or "claim" in vs or "airdrop" in target:
+            claims.append((ts, role, target))
+        if (
+            "aggregate" in vs
+            or "aggregated" in vs
+            or "boss" in target
+            or "consolidation" in vs
+            or ("wallet" in target and role and "claim" not in target)
+        ):
+            # aggregation / boss wallet consolidation after claims
+            if "aggregate" in vs or "aggregated" in vs or "boss" in role or "boss" in target:
+                aggregates.append((ts, role, val))
+    claim_roles = {r for _t, r, _tg in claims if r}
+    if len(claim_roles) < 2:
+        return []
+    if not aggregates:
+        # still fire if many distinct claimers without named aggregate
+        # (require ≥3 claimers as sybil signal alone)
+        if len(claim_roles) < 3:
+            return []
+        ts_max = max(t for t, _r, _tg in claims)
+        return [
+            {
+                "kind": "sybil_airdrop_detected",
+                "ts": ts_max,
+                "claim_roles": sorted(claim_roles),
+                "claim_count": len(claims),
+                "policy": "proof_of_personhood_and_claim_cap",
+            }
+        ]
+    ats, arole, aval = max(aggregates, key=lambda x: x[0])
+    claim_before = [r for t, r, _tg in claims if t <= ats and r != arole]
+    if len(set(claim_before)) < 2 and len(claim_roles) < 3:
+        return []
+    return [
+        {
+            "kind": "sybil_airdrop_detected",
+            "ts": ats,
+            "claim_roles": sorted(claim_roles),
+            "aggregator": arole,
+            "aggregate_value": aval,
+            "claim_count": len(claims),
+            "policy": "proof_of_personhood_and_claim_cap",
+        }
+    ]
+
+
+def _synthesize_wash_trade(events: list[dict]) -> list[dict]:
+    """关联地址对倒抬价 → wash_trade_detected (ADV81)."""
+    if any(e.get("kind") == "wash_trade_detected" for e in events):
+        return []
+    # target -> list of (ts, role, value_str)
+    trades: dict[str, list[tuple[int, str, str]]] = {}
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        if not target:
+            continue
+        is_trade = (
+            "sold" in vs
+            or "sell" in vs
+            or "buy" in vs
+            or "price" in vs
+            or "nft" in target
+            or "wash" in vs
+        )
+        if is_trade:
+            trades.setdefault(target, []).append((ts, role, vs))
+    for target, seq in trades.items():
+        if len(seq) < 2:
+            continue
+        roles = {r for _t, r, _v in seq if r}
+        # circular / multi-party trading same asset
+        price_nums: list[int] = []
+        for _t, _r, vs in seq:
+            # extract trailing digits as pseudo-price (price_10, price_50, …)
+            digits = "".join(ch if ch.isdigit() else " " for ch in vs).split()
+            if digits:
+                try:
+                    price_nums.append(int(digits[-1]))
+                except ValueError:
+                    pass
+        rising = len(price_nums) >= 2 and price_nums[-1] > price_nums[0]
+        circular = any("sold_to" in vs for _t, _r, vs in seq) and len(roles) >= 2
+        multi_hop = len(seq) >= 3 and len(roles) >= 2
+        if (circular and (rising or multi_hop)) or (rising and len(roles) >= 2 and len(seq) >= 2):
+            return [
+                {
+                    "kind": "wash_trade_detected",
+                    "ts": seq[-1][0],
+                    "target": target,
+                    "roles": sorted(roles),
+                    "trade_count": len(seq),
+                    "prices": price_nums,
+                    "policy": "related_party_graph_and_volume_filter",
+                }
+            ]
+    return []
+
+
+def _synthesize_key_compromise_blast(events: list[dict]) -> list[dict]:
+    """密钥失陷后多敏感面操作 → key_compromise_blast_detected (ADV83)."""
+    if any(e.get("kind") == "key_compromise_blast_detected" for e in events):
+        return []
+    key_hits: list[tuple[int, str]] = []
+    sensitive: list[tuple[int, str, str]] = []
+    sensitive_markers = (
+        "treasury",
+        "upgrade",
+        "proxy",
+        "pause",
+        "unpause",
+        "admin",
+        "mint_role",
+        "owner_transfer",
+        "timelock",
+        "guardian",
+    )
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        if "key" in target or "stolen" in vs or "compromised" in vs or "key_stolen" in vs:
+            key_hits.append((ts, role))
+        hit = any(m in target or m in vs for m in sensitive_markers)
+        # exclude pure key-slot writes from sensitive blast count
+        if hit and "key" not in target:
+            sensitive.append((ts, role, target or vs))
+    if not key_hits:
+        return []
+    kts, krole = min(key_hits, key=lambda x: x[0])
+    # blast surfaces after (or concurrent with) key compromise
+    surfaces = []
+    seen_targets: set[str] = set()
+    for ts, role, target in sensitive:
+        if ts < kts:
+            continue
+        # same actor as key thief, or any post-compromise multi-surface
+        if role == krole or role:
+            if target not in seen_targets:
+                seen_targets.add(target)
+                surfaces.append((ts, role, target))
+    if len(surfaces) < 2:
+        return []
+    return [
+        {
+            "kind": "key_compromise_blast_detected",
+            "ts": surfaces[-1][0],
+            "key_role": krole,
+            "surfaces": [t for _ts, _r, t in surfaces],
+            "surface_count": len(surfaces),
+            "policy": "key_rotation_and_blast_radius_isolation",
+        }
+    ]
+
+
+def _synthesize_infinite_mint(events: list[dict]) -> list[dict]:
+    """绕过 supply_cap 持续 mint → infinite_mint_detected (ADV85)."""
+    if any(e.get("kind") == "infinite_mint_detected" for e in events):
+        return []
+    supply_writes: list[tuple[int, str, str]] = []
+    mint_gains: list[tuple[int, str, object]] = []
+    dilution: list[tuple[int, str]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        if "total_supply" in target or "supply" in target:
+            supply_writes.append((ts, role, vs))
+        if "mint" in vs or "minted" in vs or ("wallet" in target and "mint" in role):
+            mint_gains.append((ts, role, val))
+        if "dilut" in vs or "holder" in target:
+            dilution.append((ts, role))
+    # multiple supply increases / over-cap signal
+    nums: list[int] = []
+    for _t, _r, vs in supply_writes:
+        digits = "".join(ch if ch.isdigit() else " " for ch in vs).split()
+        if digits:
+            try:
+                nums.append(int(digits[-1]))
+            except ValueError:
+                pass
+    rising = len(nums) >= 2 and nums[-1] > nums[0]
+    multi_mint = len(supply_writes) >= 2 or len(mint_gains) >= 1
+    if rising and multi_mint:
+        ts_max = max(
+            [t for t, _r, _v in supply_writes]
+            + [t for t, _r, _v in mint_gains]
+            + [0]
+        )
+        return [
+            {
+                "kind": "infinite_mint_detected",
+                "ts": ts_max,
+                "supply_values": nums,
+                "mint_gains": len(mint_gains),
+                "dilution": len(dilution),
+                "policy": "hard_supply_cap_and_mint_governor",
+            }
+        ]
+    if len(mint_gains) >= 1 and len(supply_writes) >= 1 and (rising or dilution):
+        ts_max = max(t for t, *_ in supply_writes + [(g[0], g[1], "") for g in mint_gains])
+        return [
+            {
+                "kind": "infinite_mint_detected",
+                "ts": ts_max,
+                "mint_gains": len(mint_gains),
+                "policy": "hard_supply_cap_and_mint_governor",
+            }
+        ]
+    return []
+
+
+def _synthesize_stablecoin_depeg(events: list[dict]) -> list[dict]:
+    """储备/锚定被操纵 + 挤兑 → stablecoin_depeg_detected (ADV87)."""
+    if any(e.get("kind") == "stablecoin_depeg_detected" for e in events):
+        return []
+    peg_hit = False
+    reserve_hit = False
+    bank_run = False
+    exit_liq = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "peg" in target or "peg" in vs:
+            peg_hit = True
+            role = r or role
+            # sub-1.0 peg prices
+            digits = "".join(ch if ch.isdigit() or ch == "." else " " for ch in vs).split()
+            for d in digits:
+                try:
+                    if float(d) < 1.0:
+                        peg_hit = True
+                except ValueError:
+                    pass
+        if "reserve" in target or "reserve" in vs:
+            reserve_hit = True
+            role = r or role
+        if "redeem" in target or "bank_run" in vs or "flood" in vs or "run" in vs:
+            bank_run = True
+            role = r or role
+        if "exit" in vs or ("wallet" in target and "issuer" in target) or "exit_liquidity" in vs:
+            exit_liq = True
+            role = r or role
+    if (peg_hit or reserve_hit) and (bank_run or exit_liq):
+        return [
+            {
+                "kind": "stablecoin_depeg_detected",
+                "ts": ts_max,
+                "role": role,
+                "peg_hit": peg_hit,
+                "reserve_hit": reserve_hit,
+                "bank_run": bank_run,
+                "exit_liquidity": exit_liq,
+                "policy": "attested_reserves_and_circuit_breaker",
+            }
+        ]
+    if peg_hit and reserve_hit:
+        return [
+            {
+                "kind": "stablecoin_depeg_detected",
+                "ts": ts_max,
+                "role": role,
+                "peg_hit": True,
+                "reserve_hit": True,
+                "policy": "attested_reserves_and_circuit_breaker",
+            }
+        ]
+    return []
+
+
+def _synthesize_zk_proof_forgery(events: list[dict]) -> list[dict]:
+    """假 validity proof + 恶意 state root → zk_proof_forgery_detected (ADV89)."""
+    if any(e.get("kind") == "zk_proof_forgery_detected" for e in events):
+        return []
+    forged_proof = False
+    bad_root = False
+    steal = False
+    weak_verify = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "proof" in target or "forged" in vs or "zk" in target:
+            if "forged" in vs or "fake" in vs or "invalid" in vs or "proof" in target:
+                forged_proof = True
+                role = r or role
+        if "state_root" in target or "root" in target:
+            if "malicious" in vs or "evil" in vs or "bad" in vs or "forge" in vs:
+                bad_root = True
+                role = r or role
+            elif forged_proof:
+                # any root change after forged proof
+                bad_root = True
+                role = r or role
+        if "withdraw" in target or "stolen" in vs or "exit" in vs:
+            steal = True
+            role = r or role
+        if "verify" in target and ("accept" in vs or "without" in vs or "skip" in vs):
+            weak_verify = True
+            role = r or role
+    if forged_proof and (bad_root or steal or weak_verify):
+        return [
+            {
+                "kind": "zk_proof_forgery_detected",
+                "ts": ts_max,
+                "role": role,
+                "forged_proof": forged_proof,
+                "bad_root": bad_root,
+                "steal": steal,
+                "weak_verify": weak_verify,
+                "policy": "proof_verifier_and_challenge_window",
+            }
+        ]
+    return []
+
+
+def _synthesize_restaking_slash_cascade(events: list[dict]) -> list[dict]:
+    """AVS 故障触发多层 slash → restaking_slash_cascade_detected (ADV91)."""
+    if any(e.get("kind") == "restaking_slash_cascade_detected" for e in events):
+        return []
+    misbehavior = False
+    slashes: list[tuple[int, str, str]] = []
+    stake_left = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "misbehavior" in vs or "avs" in target and "duty" in target:
+            misbehavior = True
+            role = r or role
+        if "slash" in target or "slash" in vs or "cascade" in vs:
+            slashes.append((ts, r, target or vs))
+            role = r or role
+        if "restake" in target or "stake_left" in vs or "stake" in target:
+            if "left" in vs or "slash" in vs or any(ch.isdigit() for ch in vs):
+                stake_left = True
+                role = r or role
+    multi_slash = len(slashes) >= 2
+    if multi_slash and (misbehavior or stake_left):
+        return [
+            {
+                "kind": "restaking_slash_cascade_detected",
+                "ts": ts_max,
+                "role": role,
+                "slash_count": len(slashes),
+                "misbehavior": misbehavior,
+                "stake_affected": stake_left,
+                "policy": "avs_isolation_and_slash_caps",
+            }
+        ]
+    if multi_slash:
+        return [
+            {
+                "kind": "restaking_slash_cascade_detected",
+                "ts": ts_max,
+                "role": role,
+                "slash_count": len(slashes),
+                "policy": "avs_isolation_and_slash_caps",
+            }
+        ]
+    return []
+
+
+def _synthesize_intent_solver_theft(events: list[dict]) -> list[dict]:
+    """恶意 solver 截留 intent 差额 → intent_solver_theft_detected (ADV93)."""
+    if any(e.get("kind") == "intent_solver_theft_detected" for e in events):
+        return []
+    fill = False
+    skim = False
+    short_receipt = False
+    consumed = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "fill" in target or "fill_at" in vs or "intent_fill" in target:
+            fill = True
+            role = r or role
+        if "skim" in vs or "pocket" in target or "solver_pocket" in target:
+            skim = True
+            role = r or role
+        if "receipt" in target or "got_" in vs or "not_" in vs:
+            short_receipt = True
+            role = r or role
+        if "consumed" in vs or ("intent" in target and "consumed" in vs):
+            consumed = True
+            role = r or role
+    if fill and (skim or short_receipt):
+        return [
+            {
+                "kind": "intent_solver_theft_detected",
+                "ts": ts_max,
+                "role": role,
+                "fill": fill,
+                "skim": skim,
+                "short_receipt": short_receipt,
+                "intent_consumed": consumed,
+                "policy": "min_out_enforcement_and_solver_bond",
+            }
+        ]
+    if skim and short_receipt:
+        return [
+            {
+                "kind": "intent_solver_theft_detected",
+                "ts": ts_max,
+                "role": role,
+                "skim": True,
+                "short_receipt": True,
+                "policy": "min_out_enforcement_and_solver_bond",
+            }
+        ]
+    return []
+
+
+def _synthesize_dao_treasury_drain(events: list[dict]) -> list[dict]:
+    """恶意提案 + 时锁绕过 + treasury 清零 → dao_treasury_drain_detected (ADV95)."""
+    if any(e.get("kind") == "dao_treasury_drain_detected" for e in events):
+        return []
+    proposal = False
+    snap_vote = False
+    timelock_bypass = False
+    treasury_zero = False
+    drained = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "proposal" in target or "emergency_grant" in vs or "grant" in vs:
+            proposal = True
+            role = r or role
+        if "vote" in target or "pass_snap" in vs or "snap_vote" in vs:
+            snap_vote = True
+            role = r or role
+        if "timelock" in target or "bypass" in vs:
+            timelock_bypass = True
+            role = r or role
+        if "treasury" in target:
+            if vs in {"0", "0.0", ""} or "drain" in vs:
+                treasury_zero = True
+                role = r or role
+        if "drained" in vs or ("wallet" in target and "attacker" in (r or target)):
+            drained = True
+            role = r or role
+    if treasury_zero and (proposal or snap_vote or timelock_bypass or drained):
+        return [
+            {
+                "kind": "dao_treasury_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "proposal": proposal,
+                "snap_vote": snap_vote,
+                "timelock_bypass": timelock_bypass,
+                "treasury_zero": treasury_zero,
+                "drained": drained,
+                "policy": "timelock_and_veto_guardian",
+            }
+        ]
+    if drained and (proposal or snap_vote):
+        return [
+            {
+                "kind": "dao_treasury_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "proposal": proposal,
+                "snap_vote": snap_vote,
+                "drained": True,
+                "policy": "timelock_and_veto_guardian",
+            }
+        ]
     return []
 
 

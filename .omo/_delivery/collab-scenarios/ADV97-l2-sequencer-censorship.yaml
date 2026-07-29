@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV97-l2-sequencer-censorship
+category: B_failure_injection
+adversarial: true
+seed: 197
+description: >
+  [对抗·red-team wave17] L2 sequencer 审查: 独占排序器压制用户 exit 交易,
+  管线尚无 l2_sequencer_censorship_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: sequencer_queue, value: "open", writers: [sequencer]}
+  roles: [sequencer, user, watcher]
+inject:
+  - {type: write_conflict, role: user, target: exit_tx, value: "force_exit_request"}
+  - {type: write_conflict, role: sequencer, target: sequencer_queue, value: "drop_user_tx"}
+  - {type: write_conflict, role: sequencer, target: batch_include, value: "exclude_exit"}
+  - {type: write_conflict, role: watcher, target: l1_escape_hatch, value: "timeout_not_fired"}
+expected:
+  behavior: l2_sequencer_censorship_detected
+  silent_loss: 0
+verdict:
+  - criterion: l2_sequencer_censorship_detected
+    check: events_contain
+    args: {kind: l2_sequencer_censorship_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
