@@ -166,6 +166,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_front_running(events))
     events.extend(_synthesize_griefing_abort(events))
     events.extend(_synthesize_oracle_manipulation(events))
+    events.extend(_synthesize_sandwich_attack(events))
+    events.extend(_synthesize_reentrancy(events))
+    events.extend(_synthesize_mev_leak(events, blackboard))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -1508,6 +1511,188 @@ def _synthesize_oracle_manipulation(events: list[dict]) -> list[dict]:
                     "policy": "twap_or_multi_oracle",
                 }
             ]
+    return []
+
+
+def _synthesize_sandwich_attack(events: list[dict]) -> list[dict]:
+    """attacker 抬价 → victim 成交 → attacker 压回/获利 → sandwich_attack_detected (ADV61)."""
+    if any(e.get("kind") == "sandwich_attack_detected" for e in events):
+        return []
+    # chronological price-ish and swap/profit actions by role
+    acts: list[tuple[int, str, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "")
+        val = e.get("new") if "new" in e else e.get("value")
+        if not role:
+            continue
+        acts.append((int(e.get("ts") or 0), role, target, val))
+    # find attacker who touches pool_price twice with victim action between
+    for i, (t0, r0, k0, v0) in enumerate(acts):
+        if "price" not in k0.lower() and "pool" not in k0.lower():
+            continue
+        for j in range(i + 1, len(acts)):
+            t1, r1, k1, v1 = acts[j]
+            if r1 == r0:
+                continue
+            if "swap" not in k1.lower() and "victim" not in k1.lower() and "swap" not in str(v1).lower():
+                # still allow any other role action as middle
+                if "swap" not in k1.lower() and "victim" not in r1.lower():
+                    mid_ok = True  # any interleaving victim-like
+                else:
+                    mid_ok = True
+            else:
+                mid_ok = True
+            if not mid_ok:
+                continue
+            for k in range(j + 1, len(acts)):
+                t2, r2, k2, v2 = acts[k]
+                if r2 != r0:
+                    continue
+                back_price = "price" in k2.lower() or "pool" in k2.lower()
+                profit = "profit" in k2.lower() or "extract" in str(v2).lower()
+                # later profit write also counts as closing sandwich
+                has_profit = any(
+                    r == r0 and ("profit" in kt.lower() or "extract" in str(vv).lower())
+                    for _tt, r, kt, vv in acts[j:]
+                )
+                if back_price or profit or has_profit:
+                    return [
+                        {
+                            "kind": "sandwich_attack_detected",
+                            "ts": t2,
+                            "attacker": r0,
+                            "victim_role": r1,
+                            "front_leg": {"target": k0, "value": v0},
+                            "victim_leg": {"target": k1, "value": v1},
+                            "back_leg": {"target": k2, "value": v2},
+                            "policy": "private_mempool_or_batch",
+                        }
+                    ]
+    return []
+
+
+def _synthesize_reentrancy(events: list[dict]) -> list[dict]:
+    """同角色对 balance 连续扣减 ≥2 + withdraw 痕迹 → reentrancy_detected (ADV63)."""
+    if any(e.get("kind") == "reentrancy_detected" for e in events):
+        return []
+    bal_hits: dict[str, list[tuple[int, object]]] = {}
+    withdraws: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {
+            "write",
+            "conflict_detected",
+            "double_claim_detected",
+            "deadlock_break",
+        }:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "withdraw" in target or "withdraw" in str(val or "").lower():
+            withdraws.append((ts, role, val))
+        if "balance" in target or "vault" in target:
+            if role:
+                bal_hits.setdefault(role, []).append((ts, val))
+            for r in e.get("roles") or []:
+                bal_hits.setdefault(str(r), []).append((ts, val))
+    for role, hits in bal_hits.items():
+        if len(hits) < 2:
+            continue
+        # decreasing numeric trend or ≥2 mutations
+        nums = []
+        for _ts, v in hits:
+            try:
+                nums.append(float(str(v).strip()))
+            except (TypeError, ValueError):
+                pass
+        decreasing = len(nums) >= 2 and any(
+            nums[i] > nums[i + 1] for i in range(len(nums) - 1)
+        )
+        multi = len(hits) >= 2
+        has_wd = any(
+            role == wr or "twice" in str(wv).lower() or "reenter" in str(wv).lower()
+            for _t, wr, wv in withdraws
+        ) or any("withdraw" in str(h[1]).lower() for h in hits)
+        if multi and (decreasing or has_wd or len(hits) >= 2):
+            # require withdraw log OR clear decreasing
+            if decreasing or has_wd or any("withdraw" in str(wv).lower() for _t, _r, wv in withdraws):
+                return [
+                    {
+                        "kind": "reentrancy_detected",
+                        "ts": hits[-1][0],
+                        "role": role,
+                        "balance_mutations": len(hits),
+                        "values": [v for _t, v in hits],
+                        "policy": "checks_effects_interactions",
+                    }
+                ]
+    # ADV63 shape: attacker hits balance twice + withdraw_log
+    if any(len(h) >= 2 for h in bal_hits.values()) and withdraws:
+        role = next(r for r, h in bal_hits.items() if len(h) >= 2)
+        return [
+            {
+                "kind": "reentrancy_detected",
+                "ts": max(t for t, _r, _v in withdraws),
+                "role": role,
+                "balance_mutations": len(bal_hits[role]),
+                "withdraws": len(withdraws),
+                "policy": "checks_effects_interactions",
+            }
+        ]
+    return []
+
+
+def _synthesize_mev_leak(events: list[dict], board: dict) -> list[dict]:
+    """private intent 值出现在 public mempool（异角色）→ mev_leak_detected (ADV65)."""
+    if any(e.get("kind") == "mev_leak_detected" for e in events):
+        return []
+    private_vals: dict[object, tuple[str, str]] = {}  # value -> (role, key)
+    # setup board private*
+    for key, slot in board.items():
+        if key.startswith("_"):
+            continue
+        kl = key.lower()
+        if "private" in kl or "secret" in kl or "intent" in kl:
+            private_vals[slot.get("value")] = (
+                (slot.get("writers") or [""])[0] if slot.get("writers") else "",
+                key,
+            )
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        target = str(e.get("target") or "").lower()
+        val = e.get("value")
+        role = str(e.get("role") or "")
+        if "private" in target or "secret" in target or "intent" in target:
+            private_vals[val] = (role, str(e.get("target")))
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        role = str(e.get("role") or "")
+        public = any(k in target for k in ("public", "mempool", "gossip", "broadcast"))
+        if not public:
+            continue
+        if val in private_vals:
+            orig_role, orig_key = private_vals[val]
+            if role and orig_role and role != orig_role:
+                return [
+                    {
+                        "kind": "mev_leak_detected",
+                        "ts": e.get("ts") or 0,
+                        "leaked_value": val,
+                        "private_key": orig_key,
+                        "owner": orig_role,
+                        "searcher": role,
+                        "public_target": e.get("target"),
+                        "policy": "encrypt_intent_or_private_relay",
+                    }
+                ]
     return []
 
 

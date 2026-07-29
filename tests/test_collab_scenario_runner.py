@@ -197,12 +197,27 @@ def test_wave11_adv555759_detectors_pass() -> None:
         )
 
 
-def test_wave11_hard_adv_still_fail() -> None:
-    """ADV61/63/65 加硬场景须失败 (对抗强度)."""
+def test_wave12_adv616365_detectors_pass() -> None:
+    """wave12 闭环: sandwich / reentrancy / mev_leak."""
     for name in (
         "ADV61-sandwich-attack.yaml",
         "ADV63-reentrancy.yaml",
         "ADV65-mev-leak.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave12 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave12_hard_adv_still_fail() -> None:
+    """ADV67/69/71 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV67-flash-loan-attack.yaml",
+        "ADV69-governance-capture.yaml",
+        "ADV71-cross-domain-replay.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
