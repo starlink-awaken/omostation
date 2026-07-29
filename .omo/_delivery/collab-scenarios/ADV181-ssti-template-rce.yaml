@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV181-ssti-template-rce
+category: B_failure_injection
+adversarial: true
+seed: 281
+description: >
+  [对抗·red-team wave31] SSTI: 用户输入直接进 Jinja render 导致 RCE,
+  管线尚无 ssti_template_rce_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: template_engine, value: "jinja2", writers: [app]}
+  roles: [attacker, app, runtime]
+inject:
+  - {type: write_conflict, role: attacker, target: user_input, value: "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}"}
+  - {type: write_conflict, role: app, target: render_path, value: "render_string_unsandboxed"}
+  - {type: write_conflict, role: runtime, target: exec_result, value: "uid=0_root"}
+  - {type: write_conflict, role: attacker, target: loot, value: "rce_via_ssti"}
+expected:
+  behavior: ssti_template_rce_detected
+  silent_loss: 0
+verdict:
+  - criterion: ssti_template_rce_detected
+    check: events_contain
+    args: {kind: ssti_template_rce_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

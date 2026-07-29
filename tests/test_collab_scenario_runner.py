@@ -482,12 +482,27 @@ def test_wave30_adv169171173_detectors_pass() -> None:
         )
 
 
-def test_wave30_hard_adv_still_fail() -> None:
-    """ADV175/177/179 加硬场景须失败 (对抗强度)."""
+def test_wave31_adv175177179_detectors_pass() -> None:
+    """wave31 闭环: prototype_pollution / http_request_smuggling / jwt_kid_injection."""
     for name in (
         "ADV175-prototype-pollution.yaml",
         "ADV177-http-request-smuggling.yaml",
         "ADV179-jwt-kid-injection.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave31 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave31_hard_adv_still_fail() -> None:
+    """ADV181/183/185 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV181-ssti-template-rce.yaml",
+        "ADV183-ldap-injection.yaml",
+        "ADV185-cors-null-origin.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
