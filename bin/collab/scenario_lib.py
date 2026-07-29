@@ -190,6 +190,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_validator_equivocation_coverup(events))
     events.extend(_synthesize_liquidity_migration_trap(events))
     events.extend(_synthesize_cross_chain_msg_replay(events))
+    events.extend(_synthesize_oracle_latency_exploit(events))
+    events.extend(_synthesize_governance_timelock_bypass(events))
+    events.extend(_synthesize_shared_sequencer_dos(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -2944,6 +2947,161 @@ def _synthesize_cross_chain_msg_replay(events: list[dict]) -> list[dict]:
                     "policy": "global_nonce_and_destination_domain_bind",
                 }
             ]
+    return []
+
+
+def _synthesize_oracle_latency_exploit(events: list[dict]) -> list[dict]:
+    """过期喂价 + 套利/清算 → oracle_latency_exploit_detected (ADV109)."""
+    if any(e.get("kind") == "oracle_latency_exploit_detected" for e in events):
+        return []
+    stale = False
+    true_price = False
+    liq_stale = False
+    arb = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "stale" in vs or ("price" in target and "stale" in vs) or "age_" in vs:
+            stale = True
+            role = r or role
+        if "true_price" in vs or "spot" in target:
+            true_price = True
+            role = r or role
+        if "liq" in target or "liquidate" in vs or "stale_price" in vs:
+            liq_stale = True
+            role = r or role
+        if "arb" in vs or "profit" in vs:
+            arb = True
+            role = r or role
+    if stale and (liq_stale or arb or true_price):
+        return [
+            {
+                "kind": "oracle_latency_exploit_detected",
+                "ts": ts_max,
+                "role": role,
+                "stale": stale,
+                "true_price": true_price,
+                "liq_on_stale": liq_stale,
+                "arb": arb,
+                "policy": "heartbeat_and_max_price_age",
+            }
+        ]
+    return []
+
+
+def _synthesize_governance_timelock_bypass(events: list[dict]) -> list[dict]:
+    """紧急角色跳过 delay 执行 → governance_timelock_bypass_detected (ADV111)."""
+    if any(e.get("kind") == "governance_timelock_bypass_detected" for e in events):
+        return []
+    proposal = False
+    emergency = False
+    skip_delay = False
+    malicious = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "proposal" in target or "set_param" in vs:
+            proposal = True
+            role = r or role
+        if "emergency" in target or "grant_self" in vs or "emergency" in vs:
+            emergency = True
+            role = r or role
+        if "skip_delay" in vs or "execute_now" in vs or (
+            "timelock" in target and ("skip" in vs or "now" in vs)
+        ):
+            skip_delay = True
+            role = r or role
+        if "malicious" in vs or "system_param" in target:
+            malicious = True
+            role = r or role
+    if skip_delay and (proposal or emergency or malicious):
+        return [
+            {
+                "kind": "governance_timelock_bypass_detected",
+                "ts": ts_max,
+                "role": role,
+                "proposal": proposal,
+                "emergency": emergency,
+                "skip_delay": skip_delay,
+                "malicious": malicious,
+                "policy": "immutable_timelock_and_multisig_guardian",
+            }
+        ]
+    if emergency and malicious and proposal:
+        return [
+            {
+                "kind": "governance_timelock_bypass_detected",
+                "ts": ts_max,
+                "role": role,
+                "emergency": True,
+                "malicious": True,
+                "proposal": True,
+                "policy": "immutable_timelock_and_multisig_guardian",
+            }
+        ]
+    return []
+
+
+def _synthesize_shared_sequencer_dos(events: list[dict]) -> list[dict]:
+    """垃圾占满 shared sequencer 配额 → shared_sequencer_dos_detected (ADV113)."""
+    if any(e.get("kind") == "shared_sequencer_dos_detected" for e in events):
+        return []
+    spam = False
+    quota_out = False
+    stuck = False
+    degraded = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "spam" in target or "flood" in vs or "noop" in vs:
+            spam = True
+            role = r or role
+        if "quota" in target or "exhausted" in vs or "quota_exhausted" in vs:
+            quota_out = True
+            role = r or role
+        if "stuck" in vs or "pending" in vs or "user_tx" in target:
+            stuck = True
+            role = r or role
+        if "degraded" in vs or "liveness" in target:
+            degraded = True
+            role = r or role
+    if (spam or quota_out) and (stuck or degraded or quota_out):
+        return [
+            {
+                "kind": "shared_sequencer_dos_detected",
+                "ts": ts_max,
+                "role": role,
+                "spam": spam,
+                "quota_exhausted": quota_out,
+                "stuck": stuck,
+                "degraded": degraded,
+                "policy": "per_sender_rate_limit_and_priority_lanes",
+            }
+        ]
     return []
 
 

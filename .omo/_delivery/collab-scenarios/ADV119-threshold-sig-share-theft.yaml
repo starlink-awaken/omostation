@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV119-threshold-sig-share-theft
+category: B_failure_injection
+adversarial: true
+seed: 219
+description: >
+  [对抗·red-team wave20] 门限签名份额窃取: 收集 t 份 share 伪造 threshold 签名,
+  管线尚无 threshold_sig_share_theft_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: threshold_t, value: "3_of_5", writers: [coordinator]}
+  roles: [share_holder_1, share_holder_2, share_holder_3, attacker]
+inject:
+  - {type: write_conflict, role: attacker, target: share_1, value: "exfil_share_1"}
+  - {type: write_conflict, role: attacker, target: share_2, value: "exfil_share_2"}
+  - {type: write_conflict, role: attacker, target: share_3, value: "exfil_share_3"}
+  - {type: write_conflict, role: attacker, target: forged_sig, value: "threshold_sig_forged"}
+expected:
+  behavior: threshold_sig_share_theft_detected
+  silent_loss: 0
+verdict:
+  - criterion: threshold_sig_share_theft_detected
+    check: events_contain
+    args: {kind: threshold_sig_share_theft_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

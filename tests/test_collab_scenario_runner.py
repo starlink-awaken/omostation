@@ -317,12 +317,27 @@ def test_wave19_adv103105107_detectors_pass() -> None:
         )
 
 
-def test_wave19_hard_adv_still_fail() -> None:
-    """ADV109/111/113 加硬场景须失败 (对抗强度)."""
+def test_wave20_adv109111113_detectors_pass() -> None:
+    """wave20 闭环: oracle_latency / timelock_bypass / shared_sequencer_dos."""
     for name in (
         "ADV109-oracle-latency-exploit.yaml",
         "ADV111-governance-timelock-bypass.yaml",
         "ADV113-shared-sequencer-dos.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave20 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave20_hard_adv_still_fail() -> None:
+    """ADV115/117/119 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV115-private-mempool-leak.yaml",
+        "ADV117-state-bloat-grief.yaml",
+        "ADV119-threshold-sig-share-theft.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
