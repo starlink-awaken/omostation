@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV165-insecure-deserial-cookie
+category: B_failure_injection
+adversarial: true
+seed: 265
+description: >
+  [对抗·red-team wave28] Cookie 反序列化: 篡改序列化 cookie 提权为 admin,
+  管线尚无 insecure_cookie_deserial_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: session_cookie, value: "signed_blob", writers: [app]}
+  roles: [attacker, app, auth]
+inject:
+  - {type: write_conflict, role: attacker, target: session_cookie, value: "tampered_serialized_admin"}
+  - {type: write_conflict, role: app, target: deserial, value: "unpickle_without_verify"}
+  - {type: write_conflict, role: auth, target: role, value: "admin"}
+  - {type: write_conflict, role: attacker, target: action, value: "privileged_op"}
+expected:
+  behavior: insecure_cookie_deserial_detected
+  silent_loss: 0
+verdict:
+  - criterion: insecure_cookie_deserial_detected
+    check: events_contain
+    args: {kind: insecure_cookie_deserial_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
