@@ -1,0 +1,31 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV75-approval-phishing
+category: A_conflict
+adversarial: true
+seed: 175
+description: >
+  [对抗·red-team wave13] 授权钓鱼: 无限额度 approve 后被转走,
+  管线尚无 approval_phishing_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: token_balance, value: "1000", writers: [user]}
+  roles: [user, phishing_dapp]
+inject:
+  - {type: write_conflict, role: user, target: token_approval, value: "unlimited_to_phish"}
+  - {type: write_conflict, role: phishing_dapp, target: token_balance, value: "0"}
+  - {type: write_conflict, role: phishing_dapp, target: phish_wallet, value: "1000"}
+expected:
+  behavior: approval_phishing_detected
+  silent_loss: 0
+verdict:
+  - criterion: approval_phishing_detected
+    check: events_contain
+    args: {kind: approval_phishing_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
