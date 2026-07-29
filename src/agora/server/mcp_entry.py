@@ -32,13 +32,15 @@ def http_main() -> None:
     from starlette.routing import Route
 
     async def health_endpoint(request):
-        return JSONResponse(
-            {
-                "status": "ok",
-                "service": "agora-mcp-http",
-                "tools": len(await mcp.list_tools()),
-            }
-        )
+        from agora.server.tools_health import health_self_check
+
+        try:
+            result = await health_self_check()
+            return JSONResponse(result)
+        except Exception:  # defensive fallback
+            return JSONResponse(
+                {"status": "ok", "service": "agora-mcp-http", "tools": len(await mcp.list_tools())}
+            )
 
     async def tool_call_endpoint(request: Request):
         from fastmcp.server.dependencies import _current_http_request
@@ -138,13 +140,15 @@ def sse_main() -> None:
     from starlette.routing import Route
 
     async def health_endpoint(request):
-        return JSONResponse(
-            {
-                "status": "ok",
-                "service": "agora-mcp-sse",
-                "tools": len(await mcp.list_tools()),
-            }
-        )
+        from agora.server.tools_health import health_self_check
+
+        try:
+            result = await health_self_check()
+            return JSONResponse(result)
+        except Exception:  # defensive fallback
+            return JSONResponse(
+                {"status": "ok", "service": "agora-mcp-sse", "tools": len(await mcp.list_tools())}
+            )
 
     from agora.server.a2a import a2a_send_endpoint
 

@@ -449,6 +449,10 @@ register_diagnostics_tools(mcp)
 register_governance_tools(mcp)
 register_workspace_audit_tools(mcp)  # Round 43 P1: 6 维度全方位审计 MCP 暴露
 
+from agora.server.tools_health import register_health_tools
+
+register_health_tools(mcp)  # Phase 45: 健康自检 + 熵清理 + 债务自动种子
+
 
 async def _init_proxy():
     """Initialize the proxy manager and connect to all configured downstream services.
