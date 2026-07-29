@@ -99,6 +99,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model-driven", type=Path, default=DEFAULT_MD)
     ap.add_argument("--batch-size", type=int, default=8)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument(
+        "--emit-batch",
+        type=int,
+        default=0,
+        help="写出第 N 批迁移计划 YAML 到 --emit-path (默认 .omo/state/m2-ssot-batch-N.yaml)",
+    )
+    ap.add_argument("--emit-path", type=Path, default=None)
     args = ap.parse_args(argv)
 
     if not args.m2_dir.is_dir():
@@ -107,6 +114,43 @@ def main(argv: list[str] | None = None) -> int:
 
     md = args.model_driven if args.model_driven.is_dir() else None
     rep = inventory(args.m2_dir, max(1, args.batch_size), md)
+
+    if args.emit_batch:
+        batches = rep.get("batches") or []
+        idx = args.emit_batch
+        if idx < 1 or idx > len(batches):
+            print(
+                f"ERROR: --emit-batch {idx} out of range 1..{len(batches)}",
+                file=sys.stderr,
+            )
+            return 2
+        chosen = batches[idx - 1]
+        plan = {
+            "schema": "m2-ssot-batch-plan-v1",
+            "adr": "ADR-0240 P1-1",
+            "batch_index": idx,
+            "batch_size_cap": rep["batch_size"],
+            "files": chosen["files"],
+            "count": chosen["count"],
+            "ssot": rep["ssot"],
+            "next_action": (
+                "Implement generation path DO-NOT-EDIT + 溯源指针; "
+                "do not edit m2 yaml semantics in this plan file"
+            ),
+            "redline": "不碰 LifecycleStage 8 阶段枚举; 不改 m3.yaml 字段语义 (P52)",
+        }
+        out_path = args.emit_path or (
+            REPO / ".omo" / "state" / f"m2-ssot-batch-{idx}.yaml"
+        )
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(
+            yaml.safe_dump(plan, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        print(f"wrote {out_path} ({chosen['count']} files)")
+        if args.json:
+            print(json.dumps(plan, ensure_ascii=False, indent=2))
+        return 0
 
     if args.json:
         print(json.dumps(rep, ensure_ascii=False, indent=2))

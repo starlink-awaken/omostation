@@ -387,3 +387,9 @@ m2-ssot-inventory:
 bos-stdio-inventory:
 	uv run --with pyyaml python bin/collab/bos-stdio-inventory.py
 
+bos-stdio-candidates:
+	uv run --with pyyaml python bin/collab/bos-stdio-inventory.py --migrate-candidates --limit 15
+
+m2-ssot-batch1:
+	uv run --with pyyaml python bin/mof/m2-ssot-inventory.py --emit-batch 1
+
