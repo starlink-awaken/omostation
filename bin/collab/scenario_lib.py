@@ -163,6 +163,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_vote_buying(events))
     events.extend(_synthesize_stake_grinding(events))
     events.extend(_synthesize_nothing_at_stake(events))
+    events.extend(_synthesize_front_running(events))
+    events.extend(_synthesize_griefing_abort(events))
+    events.extend(_synthesize_oracle_manipulation(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -1339,6 +1342,170 @@ def _synthesize_nothing_at_stake(events: list[dict]) -> list[dict]:
                     "forks": keys,
                     "values": vals,
                     "policy": "slash_multi_fork_attestation",
+                }
+            ]
+    return []
+
+
+def _synthesize_front_running(events: list[dict]) -> list[dict]:
+    """pending_order 之后 sniper 改 order_book/吃单 → front_running_detected (ADV55)."""
+    if any(e.get("kind") == "front_running_detected" for e in events):
+        return []
+    pending: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "").lower()
+        role = str(e.get("role") or "")
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "pending" in target or "intent" in target:
+            pending.append((ts, role, val))
+    if not pending:
+        return []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "").lower()
+        role = str(e.get("role") or "")
+        val = str(e.get("new") if "new" in e else e.get("value") or "").lower()
+        ts = int(e.get("ts") or 0)
+        sniper_like = (
+            "snipe" in role.lower()
+            or "snipe" in val
+            or "fill" in val
+            or "front" in val
+        )
+        book_touch = any(k in target for k in ("order", "book", "pending", "market"))
+        if not (sniper_like or book_touch):
+            continue
+        for p_ts, victim, p_val in pending:
+            if ts <= p_ts:
+                continue
+            if role and role != victim:
+                return [
+                    {
+                        "kind": "front_running_detected",
+                        "ts": ts,
+                        "victim": victim,
+                        "sniper": role,
+                        "pending_target_value": p_val,
+                        "sniper_action": e.get("new") if "new" in e else e.get("value"),
+                        "target": e.get("target"),
+                        "policy": "commit_reveal_or_batch_auction",
+                    }
+                ]
+    return []
+
+
+def _synthesize_griefing_abort(events: list[dict]) -> list[dict]:
+    """worker 超时后 griefer 清零产物 + subtask_fail → griefing_abort_detected (ADV57)."""
+    if any(e.get("kind") == "griefing_abort_detected" for e in events):
+        return []
+    timeouts = {
+        str(e.get("role")): int(e.get("ts") or 0)
+        for e in events
+        if e.get("kind") == "role_timeout" and e.get("role")
+    }
+    if not timeouts:
+        return []
+    has_sub_fail = any(e.get("kind") == "subtask_fail" for e in events)
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        wipe = str(val or "").lower() in {
+            "wiped",
+            "null",
+            "empty",
+            "deleted",
+            "cleared",
+            "",
+        } or val is None
+        # griefer is not the timed-out worker; acts after worker timeout
+        for worker, t_to in timeouts.items():
+            if role == worker:
+                continue
+            if ts > t_to and (wipe or has_sub_fail):
+                return [
+                    {
+                        "kind": "griefing_abort_detected",
+                        "ts": ts,
+                        "worker": worker,
+                        "griefer": role,
+                        "target": e.get("target"),
+                        "replacement": val,
+                        "subtask_failed": has_sub_fail,
+                        "policy": "bond_and_refund_worker",
+                    }
+                ]
+    return []
+
+
+def _synthesize_oracle_manipulation(events: list[dict]) -> list[dict]:
+    """oracle 价格大幅跳变后结算再恢复 → oracle_manipulation_detected (ADV59)."""
+    if any(e.get("kind") == "oracle_manipulation_detected" for e in events):
+        return []
+    # collect numeric prices in order (conflict prior+new both count)
+    price_events: list[tuple[int, object, str]] = []
+    settlements: list[tuple[int, object, str]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "").lower()
+        ts = int(e.get("ts") or 0)
+        role = str(e.get("role") or "")
+        if "settle" in target or "settlement" in target:
+            settlements.append(
+                (ts, e.get("new") if "new" in e else e.get("value"), role)
+            )
+        if not ("oracle" in target or "price" in target):
+            continue
+        if e.get("kind") in {"conflict_detected", "double_claim_detected"}:
+            if e.get("prior") is not None:
+                price_events.append((ts, e.get("prior"), role))
+            if e.get("new") is not None:
+                price_events.append((ts, e.get("new"), role))
+        else:
+            price_events.append((ts, e.get("value"), role))
+    nums: list[tuple[int, float, str]] = []
+    for ts, val, role in price_events:
+        try:
+            nums.append((ts, float(str(val).strip()), role))
+        except (TypeError, ValueError):
+            continue
+    if len(nums) < 2:
+        return []
+    for i in range(len(nums) - 1):
+        t0, p0, _r0 = nums[i]
+        t1, p1, _r1 = nums[i + 1]
+        if p0 <= 0:
+            continue
+        drop_ratio = (p0 - p1) / p0
+        if drop_ratio < 0.5:  # ≥50% crash
+            continue
+        settled = any(st >= t1 for st, _, _ in settlements)
+        # settlement value may embed the spike price
+        settled = settled or any(
+            str(p1) in str(sv) for _st, sv, _ in settlements
+        )
+        recovered = any(
+            j > i + 1 and p0 > 0 and abs(nums[j][1] - p0) / p0 < 0.25
+            for j in range(i + 2, len(nums))
+        )
+        if settled or recovered or drop_ratio >= 0.9:
+            return [
+                {
+                    "kind": "oracle_manipulation_detected",
+                    "ts": t1,
+                    "price_before": p0,
+                    "price_spike": p1,
+                    "drop_ratio": round(drop_ratio, 3),
+                    "settlements": len(settlements),
+                    "recovered": recovered,
+                    "policy": "twap_or_multi_oracle",
                 }
             ]
     return []
