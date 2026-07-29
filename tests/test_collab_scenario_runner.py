@@ -332,12 +332,27 @@ def test_wave20_adv109111113_detectors_pass() -> None:
         )
 
 
-def test_wave20_hard_adv_still_fail() -> None:
-    """ADV115/117/119 加硬场景须失败 (对抗强度)."""
+def test_wave21_adv115117119_detectors_pass() -> None:
+    """wave21 闭环: private_mempool_leak / state_bloat_grief / threshold_sig_share_theft."""
     for name in (
         "ADV115-private-mempool-leak.yaml",
         "ADV117-state-bloat-grief.yaml",
         "ADV119-threshold-sig-share-theft.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave21 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave21_hard_adv_still_fail() -> None:
+    """ADV121/123/125 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV121-rpc-auth-bypass.yaml",
+        "ADV123-dependency-confusion.yaml",
+        "ADV125-clock-sync-poison.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
