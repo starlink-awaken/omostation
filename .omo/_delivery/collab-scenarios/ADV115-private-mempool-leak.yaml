@@ -9,8 +9,8 @@ category: A_conflict
 adversarial: true
 seed: 215
 description: >
-  [对抗·red-team wave20] 私有 mempool 泄露: 专线订单被中继转售给 searcher,
-  管线尚无 private_mempool_leak_detected → 预期 FAIL
+  [对抗·red-team wave21] 私有 mempool 泄露: 专线订单被中继转售给 searcher,
+  管线已有 private_mempool_leak_detected → 预期 PASS
 setup:
   blackboard:
     - {key: private_relay, value: "sealed", writers: [relay]}
