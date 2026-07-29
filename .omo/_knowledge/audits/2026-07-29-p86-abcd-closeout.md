@@ -56,3 +56,6 @@ last-reviewed: "2026-07-29"
 
 - longplan §STOP · p84-auto-advance-termination-condition.md  
 - e1-e2-e4-e5-execution.md · e3-exception-two-list.md  
+
+## 最终结案
+见 [2026-07-29-p86-abcd-final-closeout.md](2026-07-29-p86-abcd-final-closeout.md) · ADR-0291。
