@@ -199,6 +199,15 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_rpc_auth_bypass(events))
     events.extend(_synthesize_dependency_confusion(events))
     events.extend(_synthesize_clock_sync_poison(events))
+    events.extend(_synthesize_blind_signing_drain(events))
+    events.extend(_synthesize_dns_rebinding(events))
+    events.extend(_synthesize_ci_secret_exfil(events))
+    events.extend(_synthesize_supply_chain_typosquat(events))
+    events.extend(_synthesize_webhook_ssrf(events))
+    events.extend(_synthesize_jwt_alg_none(events))
+    events.extend(_synthesize_path_traversal_write(events))
+    events.extend(_synthesize_cache_poisoning(events))
+    events.extend(_synthesize_config_bombshell(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -3397,6 +3406,479 @@ def _synthesize_clock_sync_poison(events: list[dict]) -> list[dict]:
                 "clock_split": split,
                 "reject_storm": reject_storm,
                 "policy": "multi_source_time_and_max_drift",
+            }
+        ]
+    return []
+
+
+def _synthesize_blind_signing_drain(events: list[dict]) -> list[dict]:
+    """盲签恶意 payload 后资产抽干 → blind_signing_drain_detected (ADV127)."""
+    if any(e.get("kind") == "blind_signing_drain_detected" for e in events):
+        return []
+    opaque = False
+    blind_sig = False
+    balance_zero = False
+    received = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "sign_request" in target or "opaque" in vs or "hex_blob" in vs:
+            opaque = True
+            role = r or role
+        if "blind_signed" in vs or ("signature" in target and "blind" in vs):
+            blind_sig = True
+            role = r or role
+        if "wallet_balance" in target or "balance" in target:
+            if vs in {"0", "0.0"} or vs == "0":
+                balance_zero = True
+                role = r or role
+        if "received" in vs or ("attacker_wallet" in target and "received" in vs):
+            received = True
+            role = r or role
+        if "received_" in vs:
+            received = True
+            role = r or role
+    if blind_sig and (balance_zero or received or opaque):
+        return [
+            {
+                "kind": "blind_signing_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "opaque_payload": opaque,
+                "blind_sig": blind_sig,
+                "balance_zero": balance_zero,
+                "received": received,
+                "policy": "human_readable_sign_and_sim",
+            }
+        ]
+    if opaque and balance_zero:
+        return [
+            {
+                "kind": "blind_signing_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "opaque_payload": True,
+                "balance_zero": True,
+                "policy": "human_readable_sign_and_sim",
+            }
+        ]
+    return []
+
+
+def _synthesize_dns_rebinding(events: list[dict]) -> list[dict]:
+    """DNS TTL 翻转打内网 RPC → dns_rebinding_detected (ADV129)."""
+    if any(e.get("kind") == "dns_rebinding_detected" for e in events):
+        return []
+    ttl_flip = False
+    internal_hit = False
+    forged_rpc = False
+    exfil = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "dns" in target or "ttl" in vs or "127.0.0.1" in vs or "flip" in vs:
+            ttl_flip = True
+            role = r or role
+        if "internal" in vs or "same_origin" in target or "hit_internal" in vs:
+            internal_hit = True
+            role = r or role
+        if "rpc_call" in target or "forged" in vs or "sendtransaction" in vs:
+            forged_rpc = True
+            role = r or role
+        if "exfil" in vs or "loot" in target or "keys_exfil" in vs:
+            exfil = True
+            role = r or role
+    if (ttl_flip or internal_hit) and (forged_rpc or exfil or internal_hit):
+        return [
+            {
+                "kind": "dns_rebinding_detected",
+                "ts": ts_max,
+                "role": role,
+                "ttl_flip": ttl_flip,
+                "internal_hit": internal_hit,
+                "forged_rpc": forged_rpc,
+                "exfil": exfil,
+                "policy": "host_header_and_cors_lockdown",
+            }
+        ]
+    return []
+
+
+def _synthesize_ci_secret_exfil(events: list[dict]) -> list[dict]:
+    """CI secrets 打印/上传外泄 → ci_secret_exfil_detected (ADV131)."""
+    if any(e.get("kind") == "ci_secret_exfil_detected" for e in events):
+        return []
+    echo_env = False
+    unmasked = False
+    dump = False
+    exfil_done = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "workflow" in target or "echo_all_env" in vs or "echo" in vs:
+            echo_env = True
+            role = r or role
+        if "unmasked" in vs or "ci_secrets" in target:
+            unmasked = True
+            role = r or role
+        if "secrets_dump" in vs or "upload_artifact" in target or "dump" in vs:
+            dump = True
+            role = r or role
+        if "exfil" in vs or "remote_sink" in target:
+            exfil_done = True
+            role = r or role
+    if (echo_env or unmasked) and (dump or exfil_done or unmasked):
+        return [
+            {
+                "kind": "ci_secret_exfil_detected",
+                "ts": ts_max,
+                "role": role,
+                "echo_env": echo_env,
+                "unmasked": unmasked,
+                "dump": dump,
+                "exfil": exfil_done,
+                "policy": "secret_masking_and_oidc_short_lived",
+            }
+        ]
+    return []
+
+
+def _synthesize_supply_chain_typosquat(events: list[dict]) -> list[dict]:
+    """近似包名恶意依赖 → supply_chain_typosquat_detected (ADV133)."""
+    if any(e.get("kind") == "supply_chain_typosquat_detected" for e in events):
+        return []
+    typosquat_pkg = False
+    wrong_dep = False
+    pulled = False
+    steal = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "pypi" in target or "malicious" in vs or "typosquat" in vs:
+            typosquat_pkg = True
+            role = r or role
+        if "package_json" in target or "reqeusts" in vs:
+            wrong_dep = True
+            role = r or role
+        if "install_log" in target or "pulled_typosquat" in vs or "typosquat" in vs:
+            pulled = True
+            role = r or role
+        if "steal" in vs or "runtime_hook" in target or "tokens" in vs:
+            steal = True
+            role = r or role
+    if (typosquat_pkg or pulled) and (wrong_dep or steal or pulled):
+        return [
+            {
+                "kind": "supply_chain_typosquat_detected",
+                "ts": ts_max,
+                "role": role,
+                "typosquat_pkg": typosquat_pkg,
+                "wrong_dep": wrong_dep,
+                "pulled": pulled,
+                "steal": steal,
+                "policy": "allowlist_and_lockfile_hash",
+            }
+        ]
+    return []
+
+
+def _synthesize_webhook_ssrf(events: list[dict]) -> list[dict]:
+    """Webhook 指向元数据/内网 → webhook_ssrf_detected (ADV135)."""
+    if any(e.get("kind") == "webhook_ssrf_detected" for e in events):
+        return []
+    meta_url = False
+    dispatch = False
+    creds = False
+    loot = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "webhook_url" in target or "169.254" in vs or "meta-data" in vs:
+            meta_url = True
+            role = r or role
+        if "webhook_dispatch" in target or "fetch_attacker" in vs:
+            dispatch = True
+            role = r or role
+        if "meta_response" in target or "iam_credentials" in vs or "credentials_leaked" in vs:
+            creds = True
+            role = r or role
+        if "cloud_keys" in vs or ("loot" in target and "cloud" in vs):
+            loot = True
+            role = r or role
+    if (meta_url or dispatch) and (creds or loot or meta_url and dispatch):
+        return [
+            {
+                "kind": "webhook_ssrf_detected",
+                "ts": ts_max,
+                "role": role,
+                "meta_url": meta_url,
+                "dispatch": dispatch,
+                "creds": creds,
+                "loot": loot,
+                "policy": "url_allowlist_and_block_link_local",
+            }
+        ]
+    return []
+
+
+def _synthesize_jwt_alg_none(events: list[dict]) -> list[dict]:
+    """JWT alg=none 无签名提权 → jwt_alg_none_detected (ADV137)."""
+    if any(e.get("kind") == "jwt_alg_none_detected" for e in events):
+        return []
+    alg_none = False
+    accept_nosig = False
+    admin_action = False
+    priv_esc = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "alg_none" in vs or ("auth_token" in target and "none" in vs):
+            alg_none = True
+            role = r or role
+        if "accept_without_sig" in vs or "token_verify" in target:
+            accept_nosig = True
+            role = r or role
+        if "admin_action" in target or "delete_all" in vs:
+            admin_action = True
+            role = r or role
+        if "privilege_escalation" in vs or "audit_log" in target:
+            priv_esc = True
+            role = r or role
+    if alg_none and (accept_nosig or admin_action or priv_esc):
+        return [
+            {
+                "kind": "jwt_alg_none_detected",
+                "ts": ts_max,
+                "role": role,
+                "alg_none": alg_none,
+                "accept_nosig": accept_nosig,
+                "admin_action": admin_action,
+                "priv_esc": priv_esc,
+                "policy": "deny_alg_none_and_force_verify",
+            }
+        ]
+    if accept_nosig and admin_action:
+        return [
+            {
+                "kind": "jwt_alg_none_detected",
+                "ts": ts_max,
+                "role": role,
+                "accept_nosig": True,
+                "admin_action": True,
+                "policy": "deny_alg_none_and_force_verify",
+            }
+        ]
+    return []
+
+
+def _synthesize_path_traversal_write(events: list[dict]) -> list[dict]:
+    """../ 穿越写系统路径 → path_traversal_write_detected (ADV139)."""
+    if any(e.get("kind") == "path_traversal_write_detected" for e in events):
+        return []
+    traversal = False
+    system_path = False
+    malicious = False
+    priv = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if ".." in vs or "upload_name" in target:
+            if ".." in vs or "/etc/" in vs:
+                traversal = True
+                role = r or role
+        if "write_path" in target or "/etc/" in vs or "cron.d" in vs:
+            system_path = True
+            role = r or role
+        if "malicious" in vs or "file_content" in target:
+            malicious = True
+            role = r or role
+        if "root_via" in vs or "privilege" in target:
+            priv = True
+            role = r or role
+    if traversal and (system_path or malicious or priv):
+        return [
+            {
+                "kind": "path_traversal_write_detected",
+                "ts": ts_max,
+                "role": role,
+                "traversal": traversal,
+                "system_path": system_path,
+                "malicious": malicious,
+                "privilege": priv,
+                "policy": "canonicalize_and_root_jail",
+            }
+        ]
+    if system_path and malicious:
+        return [
+            {
+                "kind": "path_traversal_write_detected",
+                "ts": ts_max,
+                "role": role,
+                "system_path": True,
+                "malicious": True,
+                "policy": "canonicalize_and_root_jail",
+            }
+        ]
+    return []
+
+
+def _synthesize_cache_poisoning(events: list[dict]) -> list[dict]:
+    """污染缓存键/体 → cache_poisoning_detected (ADV141)."""
+    if any(e.get("kind") == "cache_poisoning_detected" for e in events):
+        return []
+    key_poison = False
+    body_malicious = False
+    served = False
+    hijack = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "cache_key" in target or "x-forwarded-host" in vs or "evil" in vs:
+            key_poison = True
+            role = r or role
+        if "cached_body" in target or "malicious_script" in vs or "payload" in vs:
+            body_malicious = True
+            role = r or role
+        if "poisoned_cache" in vs or "page_render" in target or "served_poisoned" in vs:
+            served = True
+            role = r or role
+        if "session_hijack" in target or "cookie_stolen" in vs:
+            hijack = True
+            role = r or role
+    if (key_poison or body_malicious) and (served or hijack or body_malicious):
+        return [
+            {
+                "kind": "cache_poisoning_detected",
+                "ts": ts_max,
+                "role": role,
+                "key_poison": key_poison,
+                "body_malicious": body_malicious,
+                "served": served,
+                "hijack": hijack,
+                "policy": "vary_safe_headers_and_cache_key_normalize",
+            }
+        ]
+    return []
+
+
+def _synthesize_config_bombshell(events: list[dict]) -> list[dict]:
+    """超深嵌套配置拖垮解析 → config_bombshell_detected (ADV143)."""
+    if any(e.get("kind") == "config_bombshell_detected" for e in events):
+        return []
+    nested = False
+    oom = False
+    down = False
+    dos = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "nested_depth" in vs or "config_doc" in target:
+            if "nested" in vs or "10000" in vs or "depth" in vs:
+                nested = True
+                role = r or role
+        if "oom" in vs or "timeout" in vs or "parse_status" in target:
+            oom = True
+            role = r or role
+        if "liveness" in target or vs == "down":
+            down = True
+            role = r or role
+        if "dos_success" in vs or "attack_result" in target:
+            dos = True
+            role = r or role
+    if nested and (oom or down or dos):
+        return [
+            {
+                "kind": "config_bombshell_detected",
+                "ts": ts_max,
+                "role": role,
+                "nested": nested,
+                "oom": oom,
+                "down": down,
+                "dos": dos,
+                "policy": "depth_limit_and_parse_budget",
+            }
+        ]
+    if oom and down:
+        return [
+            {
+                "kind": "config_bombshell_detected",
+                "ts": ts_max,
+                "role": role,
+                "oom": True,
+                "down": True,
+                "policy": "depth_limit_and_parse_budget",
             }
         ]
     return []

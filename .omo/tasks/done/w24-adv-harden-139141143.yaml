@@ -1,0 +1,17 @@
+id: w24-adv-harden-139141143
+title: 'ADV139/141/143 加硬 (path-traversal/cache-poison/config-bomb)'
+description: 'P84 wave24 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T06:10:00Z'
+completion_evidence:
+  - .omo/_delivery/collab-scenarios/ADV139-path-traversal-write.yaml
+  - .omo/_delivery/collab-scenarios/ADV141-cache-poisoning.yaml
+  - .omo/_delivery/collab-scenarios/ADV143-toml-bombshell.yaml
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0279-p84-wave24-adv133135137.md
+stage: P84-W24
