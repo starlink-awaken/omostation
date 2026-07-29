@@ -1,0 +1,31 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV55-front-running
+category: A_conflict
+adversarial: true
+seed: 155
+description: >
+  [对抗·red-team wave10] 抢跑: 观察者先写入更高价吃单,
+  管线尚无 front_running_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: order_book, value: "bid=10", writers: [maker]}
+  roles: [maker, sniper, victim]
+inject:
+  - {type: write_conflict, role: victim, target: pending_order, value: "buy_at_11"}
+  - {type: write_conflict, role: sniper, target: order_book, value: "bid=11_sniped"}
+  - {type: write_conflict, role: sniper, target: pending_order, value: "filled_by_sniper"}
+expected:
+  behavior: front_running_detected
+  silent_loss: 0
+verdict:
+  - criterion: front_running_detected
+    check: events_contain
+    args: {kind: front_running_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

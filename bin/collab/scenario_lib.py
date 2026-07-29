@@ -160,6 +160,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_equivocation(events))
     events.extend(_synthesize_long_range_rewrite(events))
     events.extend(_synthesize_censorship_gap(events))
+    events.extend(_synthesize_vote_buying(events))
+    events.extend(_synthesize_stake_grinding(events))
+    events.extend(_synthesize_nothing_at_stake(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -1193,6 +1196,149 @@ def _synthesize_censorship_gap(events: list[dict]) -> list[dict]:
                     "replacement": new_val,
                     "reader_timed_out": other_to,
                     "policy": "retain_original_under_quorum",
+                }
+            ]
+    return []
+
+
+def _synthesize_vote_buying(events: list[dict]) -> list[dict]:
+    """bribe/payment 写之后 ballot 被改向买方 → vote_buying_detected (ADV49)."""
+    if any(e.get("kind") == "vote_buying_detected" for e in events):
+        return []
+    bribe_keys = ("bribe", "payment", "payoff", "kickback")
+    ballot_keys = ("ballot", "vote", "choice")
+    bribes: list[tuple[int, str, str, object]] = []
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        target = str(e.get("target") or "").lower()
+        role = str(e.get("role") or "")
+        if any(k in target for k in bribe_keys):
+            bribes.append((int(e.get("ts") or 0), role, target, e.get("value")))
+    if not bribes:
+        return []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = str(e.get("target") or "").lower()
+        if not any(k in target for k in ballot_keys):
+            continue
+        ts = int(e.get("ts") or 0)
+        role = str(e.get("role") or "")
+        val = str(e.get("new") if "new" in e else e.get("value") or "").lower()
+        for b_ts, buyer, b_key, b_val in bribes:
+            if ts < b_ts:
+                continue
+            # ballot changed after bribe; voter != buyer; value references buyer or buyer_choice
+            if role and role != buyer and (
+                "buyer" in val or buyer.lower() in val or "choice" in val
+            ):
+                return [
+                    {
+                        "kind": "vote_buying_detected",
+                        "ts": ts,
+                        "buyer": buyer,
+                        "voter": role,
+                        "bribe_key": b_key,
+                        "bribe_value": b_val,
+                        "ballot_target": e.get("target"),
+                        "ballot_value": e.get("new") if "new" in e else e.get("value"),
+                        "policy": "invalidate_ballot_and_slash",
+                    }
+                ]
+    return []
+
+
+def _synthesize_stake_grinding(events: list[dict]) -> list[dict]:
+    """同一角色对 seed/lottery 类 key 反复改写 ≥3 → stake_grinding_detected (ADV51)."""
+    if any(e.get("kind") == "stake_grinding_detected" for e in events):
+        return []
+    seed_keys = ("seed", "lottery", "nonce", "vrf", "rand")
+    # role+target -> count of mutations (write or conflict)
+    counts: dict[tuple[str, str], int] = {}
+    last_vals: dict[tuple[str, str], list[object]] = {}
+    for e in events:
+        if e.get("kind") not in {
+            "write",
+            "conflict_detected",
+            "double_claim_detected",
+            "deadlock_break",
+        }:
+            continue
+        target = str(e.get("target") or "")
+        if not target or not any(k in target.lower() for k in seed_keys):
+            continue
+        role = str(e.get("role") or "")
+        if not role and e.get("roles"):
+            # attribute multi-role to each
+            for r in e["roles"]:
+                key = (str(r), target)
+                counts[key] = counts.get(key, 0) + 1
+            continue
+        if not role:
+            continue
+        key = (role, target)
+        counts[key] = counts.get(key, 0) + 1
+        val = e.get("new") if "new" in e else e.get("value")
+        last_vals.setdefault(key, []).append(val)
+    for (role, target), n in counts.items():
+        if n >= 3:
+            return [
+                {
+                    "kind": "stake_grinding_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "role": role,
+                    "target": target,
+                    "mutations": n,
+                    "values_seen": last_vals.get((role, target), [])[-5:],
+                    "policy": "commit_seed_before_reveal",
+                }
+            ]
+    return []
+
+
+def _synthesize_nothing_at_stake(events: list[dict]) -> list[dict]:
+    """同一角色在多条 fork_* 上同值 attest → nothing_at_stake_detected (ADV53)."""
+    if any(e.get("kind") == "nothing_at_stake_detected" for e in events):
+        return []
+    # role -> list of (target, value) for fork keys
+    by_role: dict[str, list[tuple[str, object]]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        target = str(e.get("target") or "")
+        role = str(e.get("role") or "")
+        if not role or not target:
+            continue
+        tl = target.lower()
+        if "fork" not in tl and "chain" not in tl and "branch" not in tl:
+            continue
+        by_role.setdefault(role, []).append((target, e.get("value")))
+    for role, pairs in by_role.items():
+        keys = list(dict.fromkeys(t for t, _ in pairs))
+        vals = list(dict.fromkeys(v for _, v in pairs))
+        # attest same value on ≥2 forks
+        if len(keys) >= 2 and len(vals) == 1:
+            return [
+                {
+                    "kind": "nothing_at_stake_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "role": role,
+                    "forks": keys,
+                    "attestation": vals[0],
+                    "policy": "slash_multi_fork_attestation",
+                }
+            ]
+        # or any multi-fork write even with different vals
+        if len(keys) >= 2:
+            return [
+                {
+                    "kind": "nothing_at_stake_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "role": role,
+                    "forks": keys,
+                    "values": vals,
+                    "policy": "slash_multi_fork_attestation",
                 }
             ]
     return []
