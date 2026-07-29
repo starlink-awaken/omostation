@@ -1,0 +1,15 @@
+id: w11-adv555759-detectors
+title: 'ADV55/57/59 front-running/griefing/oracle 检测闭环'
+description: 'P84 wave11 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T03:15:00Z'
+completion_evidence:
+  - bin/collab/scenario_lib.py
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0266-p84-wave11-adv555759.md
+stage: P84-W11
