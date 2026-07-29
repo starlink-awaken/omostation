@@ -141,7 +141,7 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     # C 类: 事后机制合成 (partial_failure / starvation)
     events.extend(_synthesize_partial_failure(events))
     events.extend(_synthesize_starvation(blackboard, events))
-    # 对抗补强: ADV13..29 + wave7 ADV31/33/35
+    # 对抗补强: ADV13..35 + wave8 ADV37/39/41
     events.extend(_synthesize_collusion(events, blackboard))
     events.extend(_synthesize_priority_inversion(events, roles))
     events.extend(_synthesize_cascade_failure(events))
@@ -154,6 +154,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_sybil_flood(events, blackboard))
     events.extend(_synthesize_time_travel_write(events, blackboard))
     events.extend(_synthesize_quorum_eclipse(events, roles))
+    events.extend(_synthesize_clock_skew_eclipse(events))
+    events.extend(_synthesize_ghost_writer(events))
+    events.extend(_synthesize_double_spend(events, blackboard))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -915,6 +918,152 @@ def _synthesize_quorum_eclipse(events: list[dict], roles: list[str]) -> list[dic
                     "quorum_roles": uniq,
                     "eclipsed_roles": sorted(timed),
                     "policy": "require_critical_ack_or_abort",
+                }
+            ]
+    return []
+
+
+def _extract_ts_number(val: object) -> int | None:
+    """Parse ts=<int> from values like 'ts=1000'."""
+    if val is None:
+        return None
+    import re
+
+    m = re.search(r"ts\s*=\s*(\d+)", str(val), re.I)
+    return int(m.group(1)) if m else None
+
+
+def _synthesize_clock_skew_eclipse(events: list[dict]) -> list[dict]:
+    """冲突写把 commit 时间戳改小 → clock_skew_eclipse_detected (ADV37)."""
+    if any(e.get("kind") == "clock_skew_eclipse_detected" for e in events):
+        return []
+    for e in events:
+        if e.get("kind") not in {"conflict_detected", "double_claim_detected"}:
+            continue
+        prior_ts = _extract_ts_number(e.get("prior"))
+        new_ts = _extract_ts_number(e.get("new") if "new" in e else e.get("value"))
+        if prior_ts is None or new_ts is None:
+            continue
+        if new_ts < prior_ts:
+            return [
+                {
+                    "kind": "clock_skew_eclipse_detected",
+                    "ts": e.get("ts") or 0,
+                    "target": e.get("target"),
+                    "prior_ts": prior_ts,
+                    "new_ts": new_ts,
+                    "role": e.get("role"),
+                    "policy": "reject_backdated_commit",
+                }
+            ]
+    return []
+
+
+def _synthesize_ghost_writer(events: list[dict]) -> list[dict]:
+    """角色 timeout 后仍 write/conflict → ghost_writer_detected (ADV39)."""
+    if any(e.get("kind") == "ghost_writer_detected" for e in events):
+        return []
+    timeout_at: dict[str, int] = {}
+    for e in events:
+        if e.get("kind") == "role_timeout" and e.get("role"):
+            role = str(e["role"])
+            timeout_at[role] = min(timeout_at.get(role, 10**9), int(e.get("ts") or 0))
+    if not timeout_at:
+        return []
+    for e in events:
+        if e.get("kind") not in {
+            "write",
+            "conflict_detected",
+            "double_claim_detected",
+        }:
+            continue
+        role = str(e.get("role") or "")
+        if not role or role not in timeout_at:
+            # double_claim may list roles
+            for r in e.get("roles") or []:
+                rs = str(r)
+                if rs in timeout_at and int(e.get("ts") or 0) > timeout_at[rs]:
+                    return [
+                        {
+                            "kind": "ghost_writer_detected",
+                            "ts": e.get("ts") or 0,
+                            "role": rs,
+                            "target": e.get("target"),
+                            "timeout_at": timeout_at[rs],
+                            "policy": "fence_timed_out_writers",
+                        }
+                    ]
+            continue
+        if int(e.get("ts") or 0) > timeout_at[role]:
+            return [
+                {
+                    "kind": "ghost_writer_detected",
+                    "ts": e.get("ts") or 0,
+                    "role": role,
+                    "target": e.get("target"),
+                    "timeout_at": timeout_at[role],
+                    "policy": "fence_timed_out_writers",
+                }
+            ]
+    return []
+
+
+def _synthesize_double_spend(events: list[dict], board: dict) -> list[dict]:
+    """预算/token 类 key 被两角色写成不同 spent 值 → double_spend_detected (ADV41)."""
+    if any(e.get("kind") == "double_spend_detected" for e in events):
+        return []
+    spend_keys = (
+        "budget",
+        "token",
+        "coin",
+        "fund",
+        "credit",
+        "wallet",
+        "spend",
+    )
+
+    def is_spend_key(k: str) -> bool:
+        kl = k.lower()
+        return any(s in kl for s in spend_keys)
+
+    # Collect spent values per target from writes/conflicts
+    by_target: dict[str, list[tuple[object, str]]] = {}
+    for e in events:
+        if e.get("kind") not in {
+            "write",
+            "conflict_detected",
+            "double_claim_detected",
+        }:
+            continue
+        target = str(e.get("target") or "")
+        if not target or not is_spend_key(target):
+            continue
+        val = e.get("new") if "new" in e else e.get("value")
+        role = str(e.get("role") or "")
+        if val is None:
+            continue
+        by_target.setdefault(target, []).append((val, role))
+        for r in e.get("roles") or []:
+            by_target[target].append((val, str(r)))
+
+    for target, pairs in by_target.items():
+        # distinct non-unspent values from ≥2 roles
+        spent = [
+            (v, r)
+            for v, r in pairs
+            if v is not None and "unspent" not in str(v).lower()
+        ]
+        values = list(dict.fromkeys(v for v, _ in spent))
+        roles = list(dict.fromkeys(r for _, r in spent if r))
+        if len(values) >= 2 and len(roles) >= 2:
+            return [
+                {
+                    "kind": "double_spend_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "spent_values": values,
+                    "roles": roles,
+                    "policy": "single_spend_ledger_abort",
                 }
             ]
     return []
