@@ -362,12 +362,27 @@ def test_wave22_adv121123125_detectors_pass() -> None:
         )
 
 
-def test_wave22_hard_adv_still_fail() -> None:
-    """ADV127/129/131 加硬场景须失败 (对抗强度)."""
+def test_wave23_adv127129131_detectors_pass() -> None:
+    """wave23 闭环: blind_signing_drain / dns_rebinding / ci_secret_exfil."""
     for name in (
         "ADV127-blind-signing-drain.yaml",
         "ADV129-dns-rebinding.yaml",
         "ADV131-ci-secret-exfil.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave23 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave23_hard_adv_still_fail() -> None:
+    """ADV133/135/137 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV133-supply-chain-typosquat.yaml",
+        "ADV135-webhook-ssrf.yaml",
+        "ADV137-jwt-alg-none.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
