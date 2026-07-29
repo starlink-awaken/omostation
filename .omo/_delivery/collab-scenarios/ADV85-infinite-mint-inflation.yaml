@@ -9,8 +9,8 @@ category: A_conflict
 adversarial: true
 seed: 185
 description: >
-  [对抗·red-team wave15] 无限增发: minter 绕过 supply_cap 持续 mint,
-  管线尚无 infinite_mint_detected → 预期 FAIL
+  [对抗·red-team wave16] 无限增发: minter 绕过 supply_cap 持续 mint,
+  管线已有 infinite_mint_detected → 预期 PASS
 setup:
   blackboard:
     - {key: supply_cap, value: "1000000", writers: [minter]}

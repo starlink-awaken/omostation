@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 189
 description: >
-  [对抗·red-team wave15] ZK 证明伪造: 假 validity proof 驱动状态根更新,
-  管线尚无 zk_proof_forgery_detected → 预期 FAIL
+  [对抗·red-team wave16] ZK 证明伪造: 假 validity proof 驱动状态根更新,
+  管线已有 zk_proof_forgery_detected → 预期 PASS
 setup:
   blackboard:
     - {key: state_root, value: "root_honest", writers: [prover]}
