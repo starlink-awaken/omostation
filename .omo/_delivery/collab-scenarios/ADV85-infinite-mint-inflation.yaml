@@ -1,0 +1,33 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV85-infinite-mint-inflation
+category: A_conflict
+adversarial: true
+seed: 185
+description: >
+  [对抗·red-team wave16] 无限增发: minter 绕过 supply_cap 持续 mint,
+  管线已有 infinite_mint_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: supply_cap, value: "1000000", writers: [minter]}
+    - {key: total_supply, value: "900000", writers: [minter]}
+  roles: [minter, holder]
+inject:
+  - {type: write_conflict, role: minter, target: total_supply, value: "1500000"}
+  - {type: write_conflict, role: minter, target: minter_wallet, value: "minted_600000"}
+  - {type: write_conflict, role: minter, target: total_supply, value: "2500000"}
+  - {type: write_conflict, role: holder, target: holder_balance, value: "diluted"}
+expected:
+  behavior: infinite_mint_detected
+  silent_loss: 0
+verdict:
+  - criterion: infinite_mint_detected
+    check: events_contain
+    args: {kind: infinite_mint_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

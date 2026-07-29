@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV91-restaking-slashing-cascade
+category: B_failure_injection
+adversarial: true
+seed: 191
+description: >
+  [对抗·red-team wave16] 再质押罚没级联: 单 AVS 故障触发多层 restake slash,
+  管线尚无 restaking_slash_cascade_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: restake_root, value: "eth_stake_1000", writers: [operator]}
+  roles: [operator, avs1, avs2, slasher]
+inject:
+  - {type: write_conflict, role: avs1, target: avs1_duty, value: "misbehavior"}
+  - {type: write_conflict, role: slasher, target: slash_avs1, value: "slash_400"}
+  - {type: write_conflict, role: slasher, target: slash_avs2, value: "cascade_slash_300"}
+  - {type: write_conflict, role: operator, target: restake_root, value: "stake_left_300"}
+expected:
+  behavior: restaking_slash_cascade_detected
+  silent_loss: 0
+verdict:
+  - criterion: restaking_slash_cascade_detected
+    check: events_contain
+    args: {kind: restaking_slash_cascade_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
