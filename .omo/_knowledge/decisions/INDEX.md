@@ -175,6 +175,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0257 | P84 W3 wave2 — MOF D4 模板投影 + L0 gac 债关闭 | ACCEPTED | 2026-07-28 | governance-team | 0257-p84-w3-wave2-mof-d4-l0-debt.md |
 | 0258 | P84 W3 wave3 — dualtrack gap 工具 + M2 inventory + planned 卫生 | ACCEPTED | 2026-07-28 | governance-team | 0258-p84-w3-wave3-tooling-hygiene.md |
 | 0259 | P84 W3 wave4 — ADV 检测 + patterns 注册 + gap 收口 | ACCEPTED | 2026-07-29 | governance-team | 0259-p84-w3-wave4-close-gap.md |
+| 0260 | wave5 — ADV19/21/23 闭环 + ADV25/27/29 加硬 + bos/m2 工具 | ACCEPTED | 2026-07-29 | governance-team | 0260-p84-wave5-adv-bos-m2.md |
 | 0249 | 治理自省预算封顶 40/40/20 (用户已同意) | ACCEPTED | 2026-07-26 | P82 StageA | 0249-governance-budget-cap-40-40-20.md |
 | 0250 | health 门禁改为只卡工程执行面 (owner 集中度不阻断) | ACCEPTED | 2026-07-27 | P82 StageA | 0250-health-gate-engineering-surface-only.md |
 | 0251 | 三把锁 gate 定位 (layer-call/drift/doc-claims blocking) + layer-call 增量快路径 | ACCEPTED | 2026-07-28 | P83 Stage1 | 0251-three-locks-gate-positioning-layer-call-incremental.md |

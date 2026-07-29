@@ -8,6 +8,7 @@ Usage:
   python3 bin/collab/bos-stdio-inventory.py
   python3 bin/collab/bos-stdio-inventory.py --json
   python3 bin/collab/bos-stdio-inventory.py --target-ratio 0.65
+  python3 bin/collab/bos-stdio-inventory.py --migrate-candidates --limit 15
 """
 from __future__ import annotations
 
@@ -32,7 +33,70 @@ def load_services(path: Path) -> list[dict]:
     raise ValueError(f"no services: list in {path}")
 
 
-def inventory(path: Path, target_ratio: float) -> dict:
+def _candidate_score(svc: dict) -> tuple[int, str]:
+    """启发式: 越像可迁 internal/mcp_proxy 分越高. 绝不自动改标签."""
+    score = 0
+    reasons: list[str] = []
+    transport = str(svc.get("transport") or "")
+    if transport not in STDIO_ISH:
+        return (-1, "not_stdio_ish")
+    cmd = svc.get("command") or []
+    pkg = str(svc.get("package") or "")
+    uri = str(svc.get("uri") or "")
+    # in-tree python -m modules are better internal candidates
+    if isinstance(cmd, list) and any(
+        x in {"-m", "python", "python3", "uv"} for x in (str(c) for c in cmd)
+    ):
+        score += 2
+        reasons.append("python_module_cmd")
+    if pkg and not pkg.endswith("-mcp"):
+        score += 1
+        reasons.append("non_mcp_package")
+    if "mcp-server" in uri or transport == "mcp_stdio":
+        score += 1
+        reasons.append("mcp_server_shape")
+    if svc.get("module_path") or svc.get("func_name"):
+        score += 3
+        reasons.append("already_has_module_path")
+    if svc.get("mcp_tool"):
+        score += 2
+        reasons.append("has_mcp_tool")
+    # governance/cockpit domains often already have internal peers
+    domain = str(svc.get("domain") or "")
+    if domain in {"governance", "cockpit", "agora", "omo"}:
+        score += 1
+        reasons.append(f"domain_{domain}")
+    return (score, ",".join(reasons) or "stdio_only")
+
+
+def migrate_candidates(path: Path, limit: int) -> list[dict]:
+    svcs = load_services(path)
+    rows: list[dict] = []
+    for s in svcs:
+        if str(s.get("transport") or "") not in STDIO_ISH:
+            continue
+        score, reason = _candidate_score(s)
+        rows.append(
+            {
+                "uri": s.get("uri"),
+                "domain": s.get("domain"),
+                "transport": s.get("transport"),
+                "package": s.get("package"),
+                "score": score,
+                "reason": reason,
+                "suggested_target": (
+                    "internal"
+                    if "module_path" in reason or "python_module_cmd" in reason
+                    else "mcp_proxy+mcp_tool"
+                ),
+                "command": s.get("command"),
+            }
+        )
+    rows.sort(key=lambda r: (-int(r["score"]), str(r.get("uri") or "")))
+    return rows[: max(1, limit)]
+
+
+def inventory(path: Path, target_ratio: float, candidates_limit: int = 0) -> dict:
     svcs = load_services(path)
     transports = Counter(str(s.get("transport") or "missing") for s in svcs)
     total = len(svcs)
@@ -45,7 +109,7 @@ def inventory(path: Path, target_ratio: float) -> dict:
         bucket["total"] += 1
         if str(s.get("transport") or "") in STDIO_ISH:
             bucket["stdio_ish"] += 1
-    return {
+    out = {
         "registry": str(path.relative_to(REPO)) if path.is_relative_to(REPO) else str(path),
         "service_total": total,
         "transport_histogram": dict(transports.most_common()),
@@ -64,6 +128,13 @@ def inventory(path: Path, target_ratio: float) -> dict:
         "redline_note": "只读盘点; 禁止仅改 transport 标签降比 (须真实 internal/mcp_proxy+mcp_tool)",
         "task_ref": ".omo/tasks/planned/needs-human-p80-phase45-bos-stdio.yaml",
     }
+    if candidates_limit:
+        out["migrate_candidates"] = migrate_candidates(path, candidates_limit)
+        out["migrate_note"] = (
+            "candidates are ranked heuristics only; each needs module_path/func_name "
+            "or mcp_proxy+mcp_tool proof before transport change"
+        )
+    return out
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -71,14 +142,21 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--registry", type=Path, default=DEFAULT_REG)
     ap.add_argument("--target-ratio", type=float, default=0.65)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument(
+        "--migrate-candidates",
+        action="store_true",
+        help="列出可迁移候选 (只读启发式, 不改 registry)",
+    )
+    ap.add_argument("--limit", type=int, default=15, help="候选条数上限")
     args = ap.parse_args(argv)
     if not args.registry.is_file():
         print(f"ERROR: missing {args.registry}", file=sys.stderr)
         return 2
-    rep = inventory(args.registry, args.target_ratio)
+    lim = args.limit if args.migrate_candidates else 0
+    rep = inventory(args.registry, args.target_ratio, candidates_limit=lim)
     if args.json:
         print(json.dumps(rep, ensure_ascii=False, indent=2))
-        return 0
+        return 0 if rep["meets_target"] else 1
     print("=" * 60)
     print("📦 BOS stdio inventory (read-only)")
     print("=" * 60)
@@ -95,6 +173,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     for d, b in ranked[:12]:
         print(f"  {d:16} stdio_ish={b['stdio_ish']:3}/{b['total']:<3} ratio={b['ratio']}")
+    if args.migrate_candidates:
+        print(f"\nmigrate candidates (top {args.limit}, heuristic only):")
+        for i, c in enumerate(rep.get("migrate_candidates") or [], 1):
+            print(
+                f"  {i:2}. score={c['score']} → {c['suggested_target']:18}  "
+                f"{c['uri']}  ({c['reason']})"
+            )
+        print(f"  note: {rep.get('migrate_note')}")
     print(f"\n{rep['redline_note']}")
     return 0 if rep["meets_target"] else 1
 
