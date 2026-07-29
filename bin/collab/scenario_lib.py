@@ -175,6 +175,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_rug_pull(events))
     events.extend(_synthesize_approval_phishing(events))
     events.extend(_synthesize_bridge_drain(events))
+    events.extend(_synthesize_sybil_airdrop(events))
+    events.extend(_synthesize_wash_trade(events))
+    events.extend(_synthesize_key_compromise_blast(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -2063,6 +2066,185 @@ def _synthesize_bridge_drain(events: list[dict]) -> list[dict]:
             }
         ]
     return []
+
+
+def _synthesize_sybil_airdrop(events: list[dict]) -> list[dict]:
+    """多地址 claim 后归集钱包 → sybil_airdrop_detected (ADV79)."""
+    if any(e.get("kind") == "sybil_airdrop_detected" for e in events):
+        return []
+    claims: list[tuple[int, str, str]] = []
+    aggregates: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        if "claim" in target or "claim" in vs or "airdrop" in target:
+            claims.append((ts, role, target))
+        if (
+            "aggregate" in vs
+            or "aggregated" in vs
+            or "boss" in target
+            or "consolidation" in vs
+            or ("wallet" in target and role and "claim" not in target)
+        ):
+            # aggregation / boss wallet consolidation after claims
+            if "aggregate" in vs or "aggregated" in vs or "boss" in role or "boss" in target:
+                aggregates.append((ts, role, val))
+    claim_roles = {r for _t, r, _tg in claims if r}
+    if len(claim_roles) < 2:
+        return []
+    if not aggregates:
+        # still fire if many distinct claimers without named aggregate
+        # (require ≥3 claimers as sybil signal alone)
+        if len(claim_roles) < 3:
+            return []
+        ts_max = max(t for t, _r, _tg in claims)
+        return [
+            {
+                "kind": "sybil_airdrop_detected",
+                "ts": ts_max,
+                "claim_roles": sorted(claim_roles),
+                "claim_count": len(claims),
+                "policy": "proof_of_personhood_and_claim_cap",
+            }
+        ]
+    ats, arole, aval = max(aggregates, key=lambda x: x[0])
+    claim_before = [r for t, r, _tg in claims if t <= ats and r != arole]
+    if len(set(claim_before)) < 2 and len(claim_roles) < 3:
+        return []
+    return [
+        {
+            "kind": "sybil_airdrop_detected",
+            "ts": ats,
+            "claim_roles": sorted(claim_roles),
+            "aggregator": arole,
+            "aggregate_value": aval,
+            "claim_count": len(claims),
+            "policy": "proof_of_personhood_and_claim_cap",
+        }
+    ]
+
+
+def _synthesize_wash_trade(events: list[dict]) -> list[dict]:
+    """关联地址对倒抬价 → wash_trade_detected (ADV81)."""
+    if any(e.get("kind") == "wash_trade_detected" for e in events):
+        return []
+    # target -> list of (ts, role, value_str)
+    trades: dict[str, list[tuple[int, str, str]]] = {}
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        if not target:
+            continue
+        is_trade = (
+            "sold" in vs
+            or "sell" in vs
+            or "buy" in vs
+            or "price" in vs
+            or "nft" in target
+            or "wash" in vs
+        )
+        if is_trade:
+            trades.setdefault(target, []).append((ts, role, vs))
+    for target, seq in trades.items():
+        if len(seq) < 2:
+            continue
+        roles = {r for _t, r, _v in seq if r}
+        # circular / multi-party trading same asset
+        price_nums: list[int] = []
+        for _t, _r, vs in seq:
+            # extract trailing digits as pseudo-price (price_10, price_50, …)
+            digits = "".join(ch if ch.isdigit() else " " for ch in vs).split()
+            if digits:
+                try:
+                    price_nums.append(int(digits[-1]))
+                except ValueError:
+                    pass
+        rising = len(price_nums) >= 2 and price_nums[-1] > price_nums[0]
+        circular = any("sold_to" in vs for _t, _r, vs in seq) and len(roles) >= 2
+        multi_hop = len(seq) >= 3 and len(roles) >= 2
+        if (circular and (rising or multi_hop)) or (rising and len(roles) >= 2 and len(seq) >= 2):
+            return [
+                {
+                    "kind": "wash_trade_detected",
+                    "ts": seq[-1][0],
+                    "target": target,
+                    "roles": sorted(roles),
+                    "trade_count": len(seq),
+                    "prices": price_nums,
+                    "policy": "related_party_graph_and_volume_filter",
+                }
+            ]
+    return []
+
+
+def _synthesize_key_compromise_blast(events: list[dict]) -> list[dict]:
+    """密钥失陷后多敏感面操作 → key_compromise_blast_detected (ADV83)."""
+    if any(e.get("kind") == "key_compromise_blast_detected" for e in events):
+        return []
+    key_hits: list[tuple[int, str]] = []
+    sensitive: list[tuple[int, str, str]] = []
+    sensitive_markers = (
+        "treasury",
+        "upgrade",
+        "proxy",
+        "pause",
+        "unpause",
+        "admin",
+        "mint_role",
+        "owner_transfer",
+        "timelock",
+        "guardian",
+    )
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        if "key" in target or "stolen" in vs or "compromised" in vs or "key_stolen" in vs:
+            key_hits.append((ts, role))
+        hit = any(m in target or m in vs for m in sensitive_markers)
+        # exclude pure key-slot writes from sensitive blast count
+        if hit and "key" not in target:
+            sensitive.append((ts, role, target or vs))
+    if not key_hits:
+        return []
+    kts, krole = min(key_hits, key=lambda x: x[0])
+    # blast surfaces after (or concurrent with) key compromise
+    surfaces = []
+    seen_targets: set[str] = set()
+    for ts, role, target in sensitive:
+        if ts < kts:
+            continue
+        # same actor as key thief, or any post-compromise multi-surface
+        if role == krole or role:
+            if target not in seen_targets:
+                seen_targets.add(target)
+                surfaces.append((ts, role, target))
+    if len(surfaces) < 2:
+        return []
+    return [
+        {
+            "kind": "key_compromise_blast_detected",
+            "ts": surfaces[-1][0],
+            "key_role": krole,
+            "surfaces": [t for _ts, _r, t in surfaces],
+            "surface_count": len(surfaces),
+            "policy": "key_rotation_and_blast_radius_isolation",
+        }
+    ]
 
 
 def _eval_criterion(

@@ -242,12 +242,27 @@ def test_wave14_adv737577_detectors_pass() -> None:
         )
 
 
-def test_wave14_hard_adv_still_fail() -> None:
-    """ADV79/81/83 加硬场景须失败 (对抗强度)."""
+def test_wave15_adv798183_detectors_pass() -> None:
+    """wave15 闭环: sybil_airdrop / wash_trade / key_compromise_blast."""
     for name in (
         "ADV79-sybil-airdrop.yaml",
         "ADV81-nft-wash-trade.yaml",
         "ADV83-key-compromise-blast.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave15 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave15_hard_adv_still_fail() -> None:
+    """ADV85/87/89 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV85-infinite-mint-inflation.yaml",
+        "ADV87-stablecoin-depeg-attack.yaml",
+        "ADV89-zk-proof-forgery.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
