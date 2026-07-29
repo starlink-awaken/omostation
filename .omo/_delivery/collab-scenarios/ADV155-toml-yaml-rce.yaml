@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV155-toml-yaml-rce
+category: B_failure_injection
+adversarial: true
+seed: 255
+description: >
+  [对抗·red-team wave26] 反序列化 RCE: 不安全 YAML/pickle 加载执行代码,
+  管线尚无 unsafe_deserialize_rce_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: config_loader, value: "safe_mode", writers: [app]}
+  roles: [attacker, app, runtime]
+inject:
+  - {type: write_conflict, role: attacker, target: payload, value: "yaml_load_!!python/object/apply:os.system"}
+  - {type: write_conflict, role: app, target: config_loader, value: "unsafe_full_load"}
+  - {type: write_conflict, role: runtime, target: exec_result, value: "reverse_shell_spawned"}
+  - {type: write_conflict, role: attacker, target: foothold, value: "rce_ok"}
+expected:
+  behavior: unsafe_deserialize_rce_detected
+  silent_loss: 0
+verdict:
+  - criterion: unsafe_deserialize_rce_detected
+    check: events_contain
+    args: {kind: unsafe_deserialize_rce_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

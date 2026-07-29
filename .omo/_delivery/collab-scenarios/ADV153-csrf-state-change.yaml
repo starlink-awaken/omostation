@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV153-csrf-state-change
+category: A_conflict
+adversarial: true
+seed: 253
+description: >
+  [对抗·red-team wave26] CSRF 状态变更: 跨站请求在 cookie 会话下转账,
+  管线尚无 csrf_state_change_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: csrf_token, value: "missing", writers: [browser]}
+  roles: [attacker, browser, bank]
+inject:
+  - {type: write_conflict, role: attacker, target: forged_form, value: "post_transfer_to_attacker"}
+  - {type: write_conflict, role: browser, target: cookie_session, value: "auto_attach"}
+  - {type: write_conflict, role: bank, target: transfer, value: "executed_without_csrf"}
+  - {type: write_conflict, role: attacker, target: balance, value: "profit"}
+expected:
+  behavior: csrf_state_change_detected
+  silent_loss: 0
+verdict:
+  - criterion: csrf_state_change_detected
+    check: events_contain
+    args: {kind: csrf_state_change_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

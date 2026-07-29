@@ -407,12 +407,27 @@ def test_wave25_adv139141143_detectors_pass() -> None:
         )
 
 
-def test_wave25_hard_adv_still_fail() -> None:
-    """ADV145/147/149 加硬场景须失败 (对抗强度)."""
+def test_wave26_adv145147149_detectors_pass() -> None:
+    """wave26 闭环: race_double_spend / log_injection / prompt_injection_tool."""
     for name in (
         "ADV145-race-to-double-spend.yaml",
         "ADV147-log-injection.yaml",
         "ADV149-prompt-injection-tool.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave26 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave26_hard_adv_still_fail() -> None:
+    """ADV151/153/155 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV151-session-fixation.yaml",
+        "ADV153-csrf-state-change.yaml",
+        "ADV155-toml-yaml-rce.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
