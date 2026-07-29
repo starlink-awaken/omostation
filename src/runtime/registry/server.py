@@ -224,3 +224,5 @@ def _node_to_response(n: NodeInfo) -> NodeResponse:
 
 
 __all__ = ["create_app"]
+
+app = create_app()
