@@ -32,6 +32,7 @@ projects:
   mesh-router:
     layer: "L0"
     stack: "Python (http/urllib)"
+    python: ">=3.13"
     role: "omlx 算力网格智能路由代理"
     version: "1.0.0"
     port: 7437
@@ -58,6 +59,7 @@ projects:
     build_backend: "hatchling"
     version: "1.0.0"
     role: "知识引擎 monorepo"
+    src_dir: "src/"
     packages: 16                 # ls packages/*/ | wc -l
     package_list:
       - codeanalyze
@@ -94,6 +96,8 @@ projects:
   gbrain:
     layer: "L2"
     stack: "TypeScript (bun)"
+    version: "0.39.0.0"
+    build_backend: "bun"
     role: "Postgres 知识数据库"
     src_dir: "src/"
 
@@ -104,6 +108,7 @@ projects:
     build_backend: "uv_build"
     version: "1.0.0"
     role: "治理中枢 · Agent OS 内核"
+    src_dir: "src/"
     src_files: 173               # find src/omo -name "*.py" | wc -l
     cli_subcommands: 39          # grep -c 'args\[0\]' cli.py
     mcp_tools: 19                # grep -c '@mcp.tool()' mcp_server.py
@@ -115,6 +120,7 @@ projects:
     build_backend: "hatchling"
     version: "1.0.0"
     role: "编排引擎 · 决策门控/免疫/路由"
+    src_dir: "src/"
 
   runtime:
     layer: "L1"
@@ -123,6 +129,7 @@ projects:
     build_backend: "hatchling"
     version: "1.0.0"
     role: "运行时 · Matrix/Scheduler/KEI 沙箱"
+    src_dir: "src/"
 
   ecos:
     layer: "L0"
@@ -131,6 +138,7 @@ projects:
     build_backend: "hatchling"
     version: "0.8.0"
     role: "SSB 签名链 + MOF 元模型 + L0 约束"
+    src_dir: "src/"
     mof_tools: 34                # find ssot/tools -name "*.py" ! -name "__init__" ! -name "_*" | wc -l
     m1_yaml: 1196                # find mof/m1 -name "*.yaml" | wc -l
     m2_yaml: 55                  # find mof/m2 -name "*.yaml" | wc -l
@@ -144,6 +152,7 @@ projects:
     build_backend: "hatchling"
     version: "0.4.0"
     role: "统一入口 (CLI + MCP + Web)"
+    src_dir: "src/"
     cli_entry: "cockpit"
     coverage:
       - "agora (BOS 网关)"
@@ -163,6 +172,7 @@ projects:
     build_backend: "hatchling"
     version: "1.0.0"
     role: "自我层管理面 · 域统一注册 · KEMS"
+    src_dir: "src/"
     domains: 28                 # grep -c "Domain(" registry.py
 
   model-driven:
@@ -172,6 +182,7 @@ projects:
     build_backend: "hatchling"
     version: "1.0.0"
     role: "生命周期横切框架 · M3→M2→M1 桥接"
+    src_dir: "src/"
 
   aetherforge:
     layer: "X"
@@ -180,6 +191,7 @@ projects:
     build_backend: "hatchling"
     version: "1.0.0"
     role: "能力与算力框架 (gateway/mesh/swarm)"
+    src_dir: "src/"
 
   c2g:
     layer: "X"
@@ -188,6 +200,7 @@ projects:
     build_backend: "uv_build"
     version: "0.1.0"
     role: "战略需求引擎 (V2P → C2G)"
+    src_dir: "src/"
 
   bus-foundation:
     layer: "X"
@@ -196,6 +209,7 @@ projects:
     build_backend: "hatchling"
     version: "0.3.0"
     role: "Omni-Bus (Data/Event/Control)"
+    src_dir: "src/"
 
   omo-debt:
     layer: "L2"
@@ -204,11 +218,15 @@ projects:
     build_backend: "hatchling"
     version: "1.0.0"
     role: "技术债务评分 CLI"
+    src_dir: "src/"
 
   observability:
     layer: "X"
     stack: "Docker"
+    version: "langfuse:2"
+    build_backend: "docker-compose"
     role: "Langfuse 可观测性"
+    src_dir: "."
 
   family-hub:
     layer: "L2"
@@ -217,17 +235,24 @@ projects:
     build_backend: "uv_build"
     version: "0.1.0"
     role: "家庭数字枢纽"
+    src_dir: "src/"
 
   cockpit-ui:
     layer: "L3"
     stack: "TypeScript (Vite, React)"
+    version: "1.0.0"
+    build_backend: "vite"
+    src_dir: "src/"
     role: "Web 控制台 UI (作为 cockpit 前端表现层挂载至/)"
-    note: "非 git 子模块，直接在 projects/ 下，由 cockpit 托管"
+    path_env: "COCKPIT_UI_ROOT"
+    dist_env: "COCKPIT_UI_DIST"
+    note: "独立 UI 仓库；由 COCKPIT_UI_ROOT 指向源码 worktree，COCKPIT_UI_DIST 指向构建产物后由 cockpit 托管"
 
   toolbox:
      layer: "L1-L3"
      layer_aligned_with: "ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-toolbox-tools.yaml"
      stack: "Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline)"
+     build_backend: "external-capability-runtime"
      role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP×5 / Skill×5 / CLI×1 / Pipeline×2)"
      storage: "/Users/xiamingxing/ToolBox/"
      version: "v5 (2026-07-21)"

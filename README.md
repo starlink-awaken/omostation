@@ -79,6 +79,7 @@ cd projects/gbrain && bun test
 | Document | Purpose |
 |----------|---------|
 | [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) | **Start here** — unified navigation hub |
+| [`docs/PROJECT-COMPLETE-GUIDE.md`](docs/PROJECT-COMPLETE-GUIDE.md) | Project-wide architecture, usage, operations, and delivery guide |
 | [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) | Projects by layer and stack |
 | [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) | Tools and scripts |
 | [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) | ADRs, audits, patterns |
@@ -164,6 +165,7 @@ cd projects/gbrain && bun test
 | 文档 | 用途 |
 |------|------|
 | [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) | **从这里开始** — 统一导航中心 |
+| [`docs/PROJECT-COMPLETE-GUIDE.md`](docs/PROJECT-COMPLETE-GUIDE.md) | 项目架构、使用、运维和交付全景手册 |
 | [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) | 按层/栈的项目索引 |
 | [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) | 工具和脚本索引 |
 | [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) | ADR、审计、模式索引 |
