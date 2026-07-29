@@ -326,11 +326,25 @@ objectives:
   id: W3
 - desc: Wave 4 — OMO MCP Server (硬件级剥夺与防越权)
   id: W4
-phase: 42
+  status: done
+  progress: 100.0
+- desc: 'Wave 5 — Multi-Machine Foundation (Q4 Phase 2: Agent 注册中心 + 分布式调度原型)'
+  id: W5
+  status: active
+  progress: 0.0
+  kpi: 'Agent 注册中心 MVP + 分布式任务调度原型 (单机模拟多节点)'
+  tasks: []
+- desc: 'Wave 6 — State Sync + Failover (Q4 Phase 2: 状态同步 + 故障转移)'
+  id: W6
+  status: pending
+  progress: 0.0
+  kpi: '跨节点状态同步机制 + 基础故障转移 (需物理主机)'
+  tasks: []
+phase: 45
 source_plan_refs:
 - .omo/plans/phase27-swarm-network.md
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: P42 治理面 SSOT 同步纪元 — 14 phase 复盘合并 (Governance SSOT Catch-up)
+theme: P45 多机协作奠基 — Phase 2 Q4 启动 (Multi-Machine Foundation)
 
