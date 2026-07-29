@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV185-cors-null-origin
+category: B_failure_injection
+adversarial: true
+seed: 285
+description: >
+  [对抗·red-team wave31] CORS 误配: 反射 null Origin + ACAO + credentials,
+  管线尚无 cors_null_origin_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: cors_policy, value: "reflect_origin", writers: [api]}
+  roles: [attacker, api, browser]
+inject:
+  - {type: write_conflict, role: attacker, target: origin_header, value: "null"}
+  - {type: write_conflict, role: api, target: acao, value: "Access-Control-Allow-Origin_null"}
+  - {type: write_conflict, role: api, target: acac, value: "Access-Control-Allow-Credentials_true"}
+  - {type: write_conflict, role: attacker, target: exfil, value: "cookie_via_sandboxed_iframe"}
+expected:
+  behavior: cors_null_origin_detected
+  silent_loss: 0
+verdict:
+  - criterion: cors_null_origin_detected
+    check: events_contain
+    args: {kind: cors_null_origin_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
