@@ -126,7 +126,8 @@ exceptions:
       - "projects/runtime/src/runtime/adapters/omo.py"
   - project: "kairon"
     depends_on: "agora"
-    reason: "ADR-0217: kairon e2e/forge 调 agora (test + market)"
+    reason: "ADR-0217: kairon e2e/forge/integration 调 agora (test + market + importorskip 跨包集成)"
     files:
       - "projects/kairon/tests/test_e2e_agora.py"
+      - "projects/kairon/tests/test_integration_cross_package.py"
       - "projects/kairon/packages/forge/src/forge/market.py"

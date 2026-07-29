@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: B05-blackboard-write-fail-v2
+category: B_failure_injection
+adversarial: false
+seed: 2051
+description: '[W2.1 批量] 黑板写入失败 (失败注入05 实例2)'
+setup:
+  blackboard: []
+  roles:
+  - research
+  - delivery
+  - audit
+inject:
+- type: role_timeout
+  role: delivery
+expected:
+  behavior: failure_handled
+  silent_loss: 0
+verdict:
+- criterion: timeout_detected
+  check: events_contain
+  args:
+    kind: role_timeout
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

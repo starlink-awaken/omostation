@@ -1,10 +1,15 @@
 id: NEEDS-HUMAN-P80-PHYSICAL-HOSTS
-title: 'P80 T2: expand physical hosts ≥4 + G-DEL.3 true two-host measure'
-status: candidate
-needs-human: true
-priority: P0
+title: 'P80 T2: expand physical hosts ≥4 + G-DEL.3 (status track, ADR-0247 DEFERRED)'
+status: pending
+status_normalized_for_schema: true  # was deferred; planned only candidate|pending
+needs-human: false
+human_approval_required: false
+classification: status_tracking
+demotion_reason: 'ADR-0247 physical DEFERRED; not decision inbox; no weekly reaffirm; no G-DEL self-announce'
+priority: P2
 owner: human
 created_at: '2026-07-24T02:29:04.787388+00:00'
+demoted_at: '2026-07-28T09:15:00Z'
 evidence:
 - .omo/_knowledge/audits/2026-07-24-physical-hosts-failclosed.md
 - .omo/_knowledge/audits/2026-07-24-p81-s0-physical-probe-failclosed.md
@@ -27,7 +32,6 @@ handoff_refs: []
 entry_gate: []
 risk_level: L1
 allowed_operation_level: L1
-human_approval_required: true
 source_docs:
 - .omo/_knowledge/audits/2026-07-24-physical-hosts-failclosed.md
 - .omo/_knowledge/audits/2026-07-24-p81-s0-physical-probe-failclosed.md

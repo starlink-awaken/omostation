@@ -1,11 +1,16 @@
 id: NEEDS-HUMAN-P80-PHASE45-BOS-STDIO
-title: 'P80 T1.2 residual: bos_stdio_ratio < 65% (live ~69.2%) — REAL migration pending'
+title: 'P80 T1.2 residual: bos_stdio real migration (engineering debt, not needs-human)'
 status: candidate
-needs-human: false  # S5清: 归debt或冗余
-priority: P1
-owner: human
+status_normalized_for_schema: true  # was backlog; planned only candidate|pending
+needs-human: false
+human_approval_required: false
+classification: engineering_debt
+demotion_reason: 'real BOS migration backlog; schedule under governance quota; not strategic decision gate'
+priority: P2
+owner: engineering
 created_at: '2026-07-24T02:42:00Z'
 reopened_at: '2026-07-24T04:01:00Z'
+demoted_at: '2026-07-28T09:15:00Z'
 endpoint: bos_stdio_ratio
 evidence:
 - .omo/_knowledge/audits/2026-07-24-p81-s0-phase45-residuals.md
@@ -27,7 +32,6 @@ handoff_refs: []
 entry_gate: []
 risk_level: L1
 allowed_operation_level: L1
-human_approval_required: true
 source_docs:
 - .omo/_knowledge/audits/2026-07-24-p81-s0-phase45-residuals.md
 - projects/agora/etc/bos-services.yaml

@@ -1,0 +1,18 @@
+schema: m2-ssot-batch-plan-v1
+adr: ADR-0240 P1-1
+batch_index: 1
+batch_size_cap: 8
+files:
+- AvailabilityCheck.yaml
+- ComputeEngine.yaml
+- ComputeNode.yaml
+- HardwareAsset.yaml
+- NetworkZone.yaml
+- QuotaDefinition.yaml
+- RoutingPolicy.yaml
+- VaultPath.yaml
+count: 8
+ssot: projects/ecos/src/ecos/ssot/mof/m2
+next_action: Implement generation path DO-NOT-EDIT + 溯源指针; do not edit m2 yaml semantics
+  in this plan file
+redline: 不碰 LifecycleStage 8 阶段枚举; 不改 m3.yaml 字段语义 (P52)

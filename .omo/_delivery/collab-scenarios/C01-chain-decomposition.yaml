@@ -1,0 +1,28 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: C01-chain-decomposition
+category: C_decomposition
+adversarial: false
+seed: 11
+description: 链式依赖分解 (A→B→C), 测依赖拓扑与静默丢失检测 (分解组合·链式)
+setup:
+  blackboard: []
+  roles: [research, delivery]
+inject:
+  - {type: chain_step, step: A, depends_on: []}
+  - {type: chain_step, step: B, depends_on: [A]}
+  - {type: chain_step, step: C, depends_on: [B]}
+expected:
+  behavior: chain_completed_no_loss
+  silent_loss: 0
+verdict:
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
+  - criterion: chain_completed
+    check: final_artifact_present
+    args: {key: C}
