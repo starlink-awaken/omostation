@@ -383,3 +383,7 @@ collab-recommend-mode:
 
 m2-ssot-inventory:
 	uv run --with pyyaml python bin/mof/m2-ssot-inventory.py
+
+bos-stdio-inventory:
+	uv run --with pyyaml python bin/collab/bos-stdio-inventory.py
+

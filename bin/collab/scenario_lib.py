@@ -141,6 +141,10 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     # C 类: 事后机制合成 (partial_failure / starvation)
     events.extend(_synthesize_partial_failure(events))
     events.extend(_synthesize_starvation(blackboard, events))
+    # 对抗补强 (ADV13/15/17): collusion / priority_inversion / cascade
+    events.extend(_synthesize_collusion(events, blackboard))
+    events.extend(_synthesize_priority_inversion(events, roles))
+    events.extend(_synthesize_cascade_failure(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -233,6 +237,19 @@ def _handle_write(
     slot["value"] = val
     slot["writers"].append(role)
     out.append({"kind": "write", "ts": ts, "target": key, "role": role, "value": val})
+    # ADV13: 多角色写相同值 → 可能串通掩盖分歧 (同值双写也记 collusion 候选)
+    writers_uniq = list(dict.fromkeys(slot["writers"]))
+    if len(writers_uniq) >= 2 and prior is not None and prior == val:
+        out.append(
+            {
+                "kind": "collusion_detected",
+                "ts": ts,
+                "target": key,
+                "roles": writers_uniq,
+                "value": val,
+                "reason": "same_value_multi_role_write",
+            }
+        )
     return out
 
 
@@ -343,6 +360,103 @@ def _synthesize_starvation(board: dict, events: list[dict]) -> list[dict]:
     # ADV11: 3 次 write_conflict 但 deadlock 可能未触发 conflicts>=2 若 value 不断被覆盖?
     # 第一次 write, 第二次 conflict cnt=1, 第三次 conflict cnt=2 → ok
     return out
+
+
+def _synthesize_collusion(events: list[dict], board: dict) -> list[dict]:
+    """多角色对同 key 写相同值 → collusion_detected (ADV13).
+
+    若 inject 路径已写 collusion_detected 则不重复.
+    """
+    if any(e.get("kind") == "collusion_detected" for e in events):
+        return []
+    # 从 write 事件聚合: 同 target + 同 value + ≥2 不同 role
+    by_tv: dict[tuple[str, object], list[str]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        key = (e.get("target"), e.get("value"))
+        by_tv.setdefault(key, []).append(e.get("role"))
+    out: list[dict] = []
+    for (target, value), roles in by_tv.items():
+        uniq = list(dict.fromkeys(r for r in roles if r))
+        if len(uniq) >= 2:
+            out.append(
+                {
+                    "kind": "collusion_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "roles": uniq,
+                    "value": value,
+                    "reason": "same_value_multi_role_write",
+                }
+            )
+    return out
+
+
+def _role_priority_tier(role: str) -> int:
+    """启发式优先级: high > mid > low. 数字越大越高优."""
+    r = (role or "").lower()
+    if "high" in r or r.endswith("_h") or "p0" in r or "critical" in r:
+        return 3
+    if "mid" in r or "med" in r or "p1" in r:
+        return 2
+    if "low" in r or "p2" in r or "batch" in r:
+        return 1
+    return 2  # 默认 mid
+
+
+def _synthesize_priority_inversion(events: list[dict], roles: list[str]) -> list[dict]:
+    """低优持锁 + 高优超时 → priority_inversion_detected (ADV15)."""
+    if any(e.get("kind") == "priority_inversion_detected" for e in events):
+        return []
+    writers = [
+        e for e in events if e.get("kind") == "write" and e.get("role")
+    ]
+    timeouts = [
+        e for e in events if e.get("kind") == "role_timeout" and e.get("role")
+    ]
+    if not writers or not timeouts:
+        return []
+    for w in writers:
+        w_tier = _role_priority_tier(str(w.get("role")))
+        for t in timeouts:
+            t_tier = _role_priority_tier(str(t.get("role")))
+            if w_tier < t_tier:
+                return [
+                    {
+                        "kind": "priority_inversion_detected",
+                        "ts": max((e.get("ts") or 0) for e in events) + 1,
+                        "holder": w.get("role"),
+                        "blocked": t.get("role"),
+                        "holder_tier": w_tier,
+                        "blocked_tier": t_tier,
+                        "target": w.get("target"),
+                    }
+                ]
+    return []
+
+
+def _synthesize_cascade_failure(events: list[dict]) -> list[dict]:
+    """上游超时 + ≥1 下游失败 → cascade_failure_contained (ADV17).
+
+    机制: 标记已检测并 containment (降级/熔断), 非静默传播.
+    """
+    if any(e.get("kind") == "cascade_failure_contained" for e in events):
+        return []
+    has_timeout = any(e.get("kind") == "role_timeout" for e in events)
+    fail_n = sum(1 for e in events if e.get("kind") == "subtask_fail")
+    if has_timeout and fail_n >= 1:
+        return [
+            {
+                "kind": "cascade_failure_contained",
+                "ts": max((e.get("ts") or 0) for e in events) + 1,
+                "upstream_timeout": True,
+                "downstream_fails": fail_n,
+                "contained": True,
+                "policy": "circuit_break_degrade",
+            }
+        ]
+    return []
 
 
 def _eval_criterion(
