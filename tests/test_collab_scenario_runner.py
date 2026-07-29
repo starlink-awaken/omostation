@@ -122,12 +122,27 @@ def test_wave6_adv252729_detectors_pass() -> None:
         )
 
 
-def test_wave6_hard_adv_still_fail() -> None:
-    """ADV31/33/35 加硬场景须失败 (对抗强度)."""
+def test_wave7_adv313335_detectors_pass() -> None:
+    """wave7 闭环: sybil_flood / time_travel / quorum_eclipse."""
     for name in (
         "ADV31-sybil-flood.yaml",
         "ADV33-time-travel-write.yaml",
         "ADV35-quorum-eclipse.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave7 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave7_hard_adv_still_fail() -> None:
+    """ADV37/39/41 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV37-eclipse-clock-skew.yaml",
+        "ADV39-ghost-writer.yaml",
+        "ADV41-double-spend-claim.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
