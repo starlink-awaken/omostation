@@ -4,6 +4,12 @@ lifecycle: audit
 owner: governance-team
 last-reviewed: "2026-07-29"
 ---
+
+> ⚠️ **A2 SSOT 已 supersede 本文件中任何「5.4x / 协作普遍正收益」定论句**。  
+> 唯一协作收益定论: [`.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md`](2026-07-29-p86-a2-collaboration-gain-map.md)  
+> （5.4x 作废 · batch5 demote · 多 agent 真 dispatch 仅 3 类型 + shortfall · ADR-0289）  
+> 本文件保留为历史实验记录，**不得**单独作 C 适用面依据。
+
 # P86 A2 批次4: independent+write 真 dispatch 对照 (反转 A1 预测)
 
 > 🔴 Q2 修正 (2026-07-29, harness bug 确认): 本文档原结论"协作 3/3 全空 = 质量劣"基于
