@@ -419,20 +419,22 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
     output_cfg = POLICY.get("settings", {}).get("output", {})
     terminal_mode = output_cfg.get("terminal_mode", "slim")
     
+    checks_list = report["checks"]
+    change_lane = report["change_lane_files"]
     is_ok = report["ok"]
-    checks_count = len(report["checks"])
-    
+    checks_count = len(checks_list)
+
     if is_ok and terminal_mode == "slim" and not verbose:
         print("═══ GaC local gate ═══")
-        print(f"scope={report['scope']} change_lane_files={len(report['change_lane_files'])}")
+        print(f"scope={report['scope']} change_lane_files={len(change_lane)}")
         print(f"GaC local gate: PASS ({checks_count} checks executed, ALL GREEN)")
         if BROKEN_CHECKS:
             print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
         return
-        
+
     print("═══ GaC local gate ═══")
-    print(f"scope={report['scope']} change_lane_files={len(report['change_lane_files'])}")
-    for item in report["checks"]:
+    print(f"scope={report['scope']} change_lane_files={len(change_lane)}")
+    for item in checks_list:
         if item["ok"]:
             status = "PASS"
         elif item["name"] in SOFT_CHECKS:
@@ -445,18 +447,22 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
                 print(item["stdout"])
             if item["stderr"]:
                 print(item["stderr"], file=sys.stderr)
-    topics = report.get("finding_topics") or []
+    topics_raw = report.get("finding_topics")
+    topics: list[object] = topics_raw if isinstance(topics_raw, list) else []
     if topics:
         print(f"finding_topics={len(topics)}")
         for topic in topics:
+            t = topic if isinstance(topic, dict) else {}
             print(
-                f"  [{str(topic.get('severity', 'info')).upper()}] "
-                f"{topic.get('topic')}: {topic.get('summary')}"
+                f"  [{str(t.get('severity', 'info')).upper()}] "
+                f"{t.get('topic')}: {t.get('summary')}"
             )
     if BROKEN_CHECKS:
         print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
-    hard_count = len(report.get("hard_fails", []))
-    soft_count = len(report.get("soft_warns", []))
+    hard_raw = report.get("hard_fails")
+    hard_count = len(hard_raw) if isinstance(hard_raw, list) else 0
+    soft_raw = report.get("soft_warns")
+    soft_count = len(soft_raw) if isinstance(soft_raw, list) else 0
     parts = []
     if is_ok:
         parts.append("PASS")
