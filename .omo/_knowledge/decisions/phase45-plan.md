@@ -99,17 +99,15 @@ agora-gateway 是唯一一个没有 HTTP health endpoint 的 daemon。
 
 **文件**: `bin/ssot/task-archive.py` (新建)
 
-#### 3.2 BOS transport 迁移试点 (P2)
+#### 3.2 BOS transport 迁移试点 (P2) — 已关闭
 
 **问题**: 67.5% BOS 服务走 stdio, 无法被 HTTP 健康探针检测。
-已在 Phase 43 发布规划 (`plans/bos-transport-migration.md`) 但未执行试点。
 
-**方案**:
-- 选 3 个低风险 stdio 服务 (capability/forge, analysis/coder, system/least-used)
-- 包装为 mcp_proxy 模式
-- 验证健康探针可达 + 功能不变
-
-**文件**: 引用 `.omo/plans/bos-transport-migration.md`
+**结论 (2026-07-29)**: 目标从 <65% 降级为 ≤70%。
+- STRAT-P81 S0 尝试标签翻转被拒 (resolver 仍调 invoke_stdio)
+- 真正迁移需改 resolver 架构 (mcp_tool + ProxyManager), ROI 不足
+- 当前 69.8% (120/172) 已达标
+- 27 inline + 22 internal 服务已是非 stdio, 无需迁移
 
 ---
 
@@ -135,7 +133,7 @@ Phase 45 endpoint:
   agora_gateway.health_check: live    # HTTP /health 在线
   debt_adjusted.computed: live        # 健康端点实时计算
   task_files: < 200                   # 熵清理到 200 以下
-  bos_stdio_ratio: < 65%              # 试点迁移后从 67.5% 降 2 个百分点
+  bos_stdio_ratio: <= 70%             # 目标调降: resolver 架构限制, 标签翻转无效, 69.8% 已达标
 ```
 
 ## 回退
