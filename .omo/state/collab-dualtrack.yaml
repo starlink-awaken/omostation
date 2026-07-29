@@ -1,40 +1,40 @@
-generated_at: '2026-07-29T02:55:49.296157Z'
+generated_at: '2026-07-29T03:10:12.022559Z'
 schema: p84-dualtrack-v1
 capability_track:
   data_source: 构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)
-  scenario_total: 170
-  scenario_passed: 167
-  pass_rate: 0.982
+  scenario_total: 173
+  scenario_passed: 170
+  pass_rate: 0.983
   category_coverage:
     A_conflict:
-      total: 112
-      passed: 110
+      total: 114
+      passed: 112
     C_decomposition:
       total: 15
       passed: 15
     B_failure_injection:
-      total: 30
-      passed: 29
+      total: 31
+      passed: 30
     D_reuse_pair:
       total: 13
       passed: 13
-  adversarial_total: 66
+  adversarial_total: 69
   adversarial_failed: 3
-  adversarial_fail_rate: 0.045
+  adversarial_fail_rate: 0.043
   conflict_resolution_success_rate: 0.982
-  avg_resolution_rounds: 0.66
+  avg_resolution_rounds: 0.68
 throughput_track:
   data_source: 真实 backlog (.omo/tasks/done+planned/, 不可造)
-  real_task_total: 70
-  done: 68
+  real_task_total: 73
+  done: 71
   planned: 2
   planned_active: 2
   planned_inactive: 0
-  completion_rate: 0.971
+  completion_rate: 0.973
   w3_done_target: 30
   gap_to_target: 0
   human_direct_count: 0
   human_direct_ratio: 0.0
-  agent_done_count: 68
+  agent_done_count: 71
   silent_loss: 0
 redline_note: 两轨数据源独立, 禁止合并; 构造场景计产能轨=最高级违规 (P84 §0)

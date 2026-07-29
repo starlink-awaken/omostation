@@ -1,0 +1,33 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV87-stablecoin-depeg-attack
+category: A_conflict
+adversarial: true
+seed: 187
+description: >
+  [对抗·red-team wave15] 稳定币脱锚: 操纵储备报告后挤兑 redeem,
+  管线尚无 stablecoin_depeg_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: peg_price, value: "1.00", writers: [oracle]}
+    - {key: reserve_ratio, value: "1.05", writers: [issuer]}
+  roles: [oracle, issuer, attacker]
+inject:
+  - {type: write_conflict, role: attacker, target: reserve_ratio, value: "0.40"}
+  - {type: write_conflict, role: attacker, target: peg_price, value: "0.72"}
+  - {type: write_conflict, role: attacker, target: redeem_queue, value: "bank_run_flood"}
+  - {type: write_conflict, role: issuer, target: issuer_wallet, value: "exit_liquidity"}
+expected:
+  behavior: stablecoin_depeg_detected
+  silent_loss: 0
+verdict:
+  - criterion: stablecoin_depeg_detected
+    check: events_contain
+    args: {kind: stablecoin_depeg_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

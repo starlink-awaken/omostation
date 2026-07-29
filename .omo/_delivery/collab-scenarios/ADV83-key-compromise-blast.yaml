@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 183
 description: >
-  [对抗·red-team wave14] 密钥失陷扩散: 同一 admin 钥操作多敏感面,
-  管线尚无 key_compromise_blast_detected → 预期 FAIL
+  [对抗·red-team wave15] 密钥失陷扩散: 同一 admin 钥操作多敏感面,
+  管线已有 key_compromise_blast_detected → 预期 PASS
 setup:
   blackboard:
     - {key: admin_key, value: "key_live", writers: [admin]}
