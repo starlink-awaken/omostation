@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 277
 description: >
-  [对抗·red-team wave30] HTTP 请求走私: CL.TE 歧义走私后门请求,
-  管线尚无 http_request_smuggling_detected → 预期 FAIL
+  [对抗·red-team wave31 闭环] HTTP 请求走私: CL.TE 歧义走私后门请求,
+  检测器 http_request_smuggling_detected → 预期 PASS
 setup:
   blackboard:
     - {key: front_proxy, value: "CL", writers: [proxy]}

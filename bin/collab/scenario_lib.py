@@ -223,6 +223,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_idor_object_access(events))
     events.extend(_synthesize_broken_access_admin(events))
     events.extend(_synthesize_file_upload_webshell(events))
+    events.extend(_synthesize_prototype_pollution(events))
+    events.extend(_synthesize_http_request_smuggling(events))
+    events.extend(_synthesize_jwt_kid_injection(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -4642,6 +4645,150 @@ def _synthesize_file_upload_webshell(events: list[dict]) -> list[dict]:
                 "stored_php": stored_php,
                 "rce": rce,
                 "policy": "content_sniff_and_noexec_upload",
+            }
+        ]
+    return []
+
+
+def _synthesize_prototype_pollution(events: list[dict]) -> list[dict]:
+    """__proto__ 注入污染 isAdmin → prototype_pollution_detected (ADV175)."""
+    if any(e.get("kind") == "prototype_pollution_detected" for e in events):
+        return []
+    proto_inject = False
+    unsafe_merge = False
+    polluted = False
+    bypass = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "__proto__" in vs or "json_body" in target:
+            if "__proto__" in vs or "isadmin" in vs:
+                proto_inject = True
+                role = r or role
+        if "unsafe_recursive_merge" in vs or "merge_lib" in target:
+            unsafe_merge = True
+            role = r or role
+        if "isadmin_true" in vs or "object_prototype" in target:
+            polluted = True
+            role = r or role
+        if "bypass_via_polluted" in vs or ("auth_check" in target and "bypass" in vs):
+            bypass = True
+            role = r or role
+    if (proto_inject or unsafe_merge) and (polluted or bypass):
+        return [
+            {
+                "kind": "prototype_pollution_detected",
+                "ts": ts_max,
+                "role": role,
+                "proto_inject": proto_inject,
+                "unsafe_merge": unsafe_merge,
+                "polluted": polluted,
+                "bypass": bypass,
+                "policy": "proto_safe_merge_and_frozen_object",
+            }
+        ]
+    return []
+
+
+def _synthesize_http_request_smuggling(events: list[dict]) -> list[dict]:
+    """CL.TE 歧义走私 → http_request_smuggling_detected (ADV177)."""
+    if any(e.get("kind") == "http_request_smuggling_detected" for e in events):
+        return []
+    dual_headers = False
+    prefer_cl = False
+    prefer_te = False
+    smuggled = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "content-length" in vs or "transfer-encoding" in vs or "headers" in target:
+            if "content-length" in vs or "transfer-encoding" in vs or "chunked" in vs:
+                dual_headers = True
+                role = r or role
+        if "prefer_cl" in vs:
+            prefer_cl = True
+            role = r or role
+        if "prefer_te" in vs:
+            prefer_te = True
+            role = r or role
+        if "admin_post_hidden" in vs or "smuggled" in target:
+            smuggled = True
+            role = r or role
+    if dual_headers and ((prefer_cl and prefer_te) or smuggled):
+        return [
+            {
+                "kind": "http_request_smuggling_detected",
+                "ts": ts_max,
+                "role": role,
+                "dual_headers": dual_headers,
+                "prefer_cl": prefer_cl,
+                "prefer_te": prefer_te,
+                "smuggled": smuggled,
+                "policy": "reject_ambiguous_cl_te",
+            }
+        ]
+    return []
+
+
+def _synthesize_jwt_kid_injection(events: list[dict]) -> list[dict]:
+    """JWT kid 路径穿越空密钥 → jwt_kid_injection_detected (ADV179)."""
+    if any(e.get("kind") == "jwt_kid_injection_detected" for e in events):
+        return []
+    kid_path = False
+    empty_key = False
+    accept_empty = False
+    forged = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "kid=" in vs or "../../" in vs or "jwt_header" in target:
+            if "kid" in vs or "../../" in vs or "dev/null" in vs:
+                kid_path = True
+                role = r or role
+        if "empty_key" in vs or "key_load" in target:
+            empty_key = True
+            role = r or role
+        if "accept_hmac_empty" in vs or ("verify" in target and "empty" in vs):
+            accept_empty = True
+            role = r or role
+        if "forged_admin_jwt" in vs or ("session" in target and "forged" in vs):
+            forged = True
+            role = r or role
+    if (kid_path or empty_key) and (accept_empty or forged):
+        return [
+            {
+                "kind": "jwt_kid_injection_detected",
+                "ts": ts_max,
+                "role": role,
+                "kid_path": kid_path,
+                "empty_key": empty_key,
+                "accept_empty": accept_empty,
+                "forged": forged,
+                "policy": "kid_allowlist_no_path_lookup",
             }
         ]
     return []
