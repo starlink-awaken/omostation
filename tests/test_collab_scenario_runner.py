@@ -392,12 +392,27 @@ def test_wave24_adv133135137_detectors_pass() -> None:
         )
 
 
-def test_wave24_hard_adv_still_fail() -> None:
-    """ADV139/141/143 加硬场景须失败 (对抗强度)."""
+def test_wave25_adv139141143_detectors_pass() -> None:
+    """wave25 闭环: path_traversal / cache_poisoning / config_bombshell."""
     for name in (
         "ADV139-path-traversal-write.yaml",
         "ADV141-cache-poisoning.yaml",
         "ADV143-toml-bombshell.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave25 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave25_hard_adv_still_fail() -> None:
+    """ADV145/147/149 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV145-race-to-double-spend.yaml",
+        "ADV147-log-injection.yaml",
+        "ADV149-prompt-injection-tool.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)

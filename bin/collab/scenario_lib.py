@@ -205,6 +205,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_supply_chain_typosquat(events))
     events.extend(_synthesize_webhook_ssrf(events))
     events.extend(_synthesize_jwt_alg_none(events))
+    events.extend(_synthesize_path_traversal_write(events))
+    events.extend(_synthesize_cache_poisoning(events))
+    events.extend(_synthesize_config_bombshell(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -3711,6 +3714,171 @@ def _synthesize_jwt_alg_none(events: list[dict]) -> list[dict]:
                 "accept_nosig": True,
                 "admin_action": True,
                 "policy": "deny_alg_none_and_force_verify",
+            }
+        ]
+    return []
+
+
+def _synthesize_path_traversal_write(events: list[dict]) -> list[dict]:
+    """../ 穿越写系统路径 → path_traversal_write_detected (ADV139)."""
+    if any(e.get("kind") == "path_traversal_write_detected" for e in events):
+        return []
+    traversal = False
+    system_path = False
+    malicious = False
+    priv = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if ".." in vs or "upload_name" in target:
+            if ".." in vs or "/etc/" in vs:
+                traversal = True
+                role = r or role
+        if "write_path" in target or "/etc/" in vs or "cron.d" in vs:
+            system_path = True
+            role = r or role
+        if "malicious" in vs or "file_content" in target:
+            malicious = True
+            role = r or role
+        if "root_via" in vs or "privilege" in target:
+            priv = True
+            role = r or role
+    if traversal and (system_path or malicious or priv):
+        return [
+            {
+                "kind": "path_traversal_write_detected",
+                "ts": ts_max,
+                "role": role,
+                "traversal": traversal,
+                "system_path": system_path,
+                "malicious": malicious,
+                "privilege": priv,
+                "policy": "canonicalize_and_root_jail",
+            }
+        ]
+    if system_path and malicious:
+        return [
+            {
+                "kind": "path_traversal_write_detected",
+                "ts": ts_max,
+                "role": role,
+                "system_path": True,
+                "malicious": True,
+                "policy": "canonicalize_and_root_jail",
+            }
+        ]
+    return []
+
+
+def _synthesize_cache_poisoning(events: list[dict]) -> list[dict]:
+    """污染缓存键/体 → cache_poisoning_detected (ADV141)."""
+    if any(e.get("kind") == "cache_poisoning_detected" for e in events):
+        return []
+    key_poison = False
+    body_malicious = False
+    served = False
+    hijack = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "cache_key" in target or "x-forwarded-host" in vs or "evil" in vs:
+            key_poison = True
+            role = r or role
+        if "cached_body" in target or "malicious_script" in vs or "payload" in vs:
+            body_malicious = True
+            role = r or role
+        if "poisoned_cache" in vs or "page_render" in target or "served_poisoned" in vs:
+            served = True
+            role = r or role
+        if "session_hijack" in target or "cookie_stolen" in vs:
+            hijack = True
+            role = r or role
+    if (key_poison or body_malicious) and (served or hijack or body_malicious):
+        return [
+            {
+                "kind": "cache_poisoning_detected",
+                "ts": ts_max,
+                "role": role,
+                "key_poison": key_poison,
+                "body_malicious": body_malicious,
+                "served": served,
+                "hijack": hijack,
+                "policy": "vary_safe_headers_and_cache_key_normalize",
+            }
+        ]
+    return []
+
+
+def _synthesize_config_bombshell(events: list[dict]) -> list[dict]:
+    """超深嵌套配置拖垮解析 → config_bombshell_detected (ADV143)."""
+    if any(e.get("kind") == "config_bombshell_detected" for e in events):
+        return []
+    nested = False
+    oom = False
+    down = False
+    dos = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "nested_depth" in vs or "config_doc" in target:
+            if "nested" in vs or "10000" in vs or "depth" in vs:
+                nested = True
+                role = r or role
+        if "oom" in vs or "timeout" in vs or "parse_status" in target:
+            oom = True
+            role = r or role
+        if "liveness" in target or vs == "down":
+            down = True
+            role = r or role
+        if "dos_success" in vs or "attack_result" in target:
+            dos = True
+            role = r or role
+    if nested and (oom or down or dos):
+        return [
+            {
+                "kind": "config_bombshell_detected",
+                "ts": ts_max,
+                "role": role,
+                "nested": nested,
+                "oom": oom,
+                "down": down,
+                "dos": dos,
+                "policy": "depth_limit_and_parse_budget",
+            }
+        ]
+    if oom and down:
+        return [
+            {
+                "kind": "config_bombshell_detected",
+                "ts": ts_max,
+                "role": role,
+                "oom": True,
+                "down": True,
+                "policy": "depth_limit_and_parse_budget",
             }
         ]
     return []
