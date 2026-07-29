@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV159-xxe-file-read
+category: B_failure_injection
+adversarial: true
+seed: 259
+description: >
+  [对抗·red-team wave28] XXE 读文件: 外部实体解析泄露 /etc/passwd,
+  管线已有 xxe_file_read_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: xml_parser, value: "dtd_enabled", writers: [app]}
+  roles: [attacker, app, fs]
+inject:
+  - {type: write_conflict, role: attacker, target: xml_body, value: "DOCTYPE_entity_file_etc_passwd"}
+  - {type: write_conflict, role: app, target: xml_parser, value: "expand_external_entity"}
+  - {type: write_conflict, role: fs, target: file_read, value: "etc_passwd_leaked"}
+  - {type: write_conflict, role: attacker, target: loot, value: "system_users"}
+expected:
+  behavior: xxe_file_read_detected
+  silent_loss: 0
+verdict:
+  - criterion: xxe_file_read_detected
+    check: events_contain
+    args: {kind: xxe_file_read_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
