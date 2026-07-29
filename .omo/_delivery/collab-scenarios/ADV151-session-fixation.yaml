@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV151-session-fixation
+category: B_failure_injection
+adversarial: true
+seed: 251
+description: >
+  [对抗·red-team wave26] 会话固定: 登录后未轮换 session id 被劫持,
+  管线尚无 session_fixation_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: session_id, value: "preauth_sid_attacker", writers: [attacker]}
+  roles: [attacker, victim, auth]
+inject:
+  - {type: write_conflict, role: attacker, target: session_id, value: "preauth_sid_attacker"}
+  - {type: write_conflict, role: victim, target: login, value: "password_ok"}
+  - {type: write_conflict, role: auth, target: session_id, value: "preauth_sid_attacker"}
+  - {type: write_conflict, role: attacker, target: hijack, value: "act_as_victim"}
+expected:
+  behavior: session_fixation_detected
+  silent_loss: 0
+verdict:
+  - criterion: session_fixation_detected
+    check: events_contain
+    args: {kind: session_fixation_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

@@ -9,8 +9,8 @@ category: A_conflict
 adversarial: true
 seed: 245
 description: >
-  [对抗·red-team wave25] 竞态双花: 并发提交两笔同余额扣减均成功,
-  管线尚无 race_double_spend_detected → 预期 FAIL
+  [对抗·red-team wave26] 竞态双花: 并发提交两笔同余额扣减均成功,
+  管线已有 race_double_spend_detected → 预期 PASS
 setup:
   blackboard:
     - {key: account_bal, value: "100", writers: [ledger]}

@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 247
 description: >
-  [对抗·red-team wave25] 日志注入: 伪造换行与级别伪造管理员操作记录,
-  管线尚无 log_injection_detected → 预期 FAIL
+  [对抗·red-team wave26] 日志注入: 伪造换行与级别伪造管理员操作记录,
+  管线已有 log_injection_detected → 预期 PASS
 setup:
   blackboard:
     - {key: app_log, value: "clean", writers: [logger]}
