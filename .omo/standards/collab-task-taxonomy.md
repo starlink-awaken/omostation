@@ -99,3 +99,11 @@ P84 "协作普遍正收益" 假设被四组测量 challenge:
 - P86 longplan §A1 · §熔断
 - 批次1/2/3 实测 (`.omo/_knowledge/audits/2026-07-2X-p84-*`)
 - A3 归因 (`.omo/_knowledge/audits/2026-07-29-p86-a3-completion-rootcause.md`, 待写)
+
+## 6. 下游 SSOT 指针 (ABCD 关闭)
+
+- A2 协作收益地图定论: `.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md`
+- A3 完成率归因: `.omo/_knowledge/audits/2026-07-29-p86-a3-completion-rootcause.md`
+- B 协议边界: `.omo/standards/collab-conflict-protocol-boundary.md`
+- C 目标 / BRIEF 产能节: `BRIEF.md` · ADR-0247 amend · ADR-0287
+- §STOP: `.omo/standards/p84-auto-advance-termination-condition.md`
