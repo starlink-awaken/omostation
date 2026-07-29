@@ -1,4 +1,4 @@
-generated_at: '2026-07-29T01:35:16.914862Z'
+generated_at: '2026-07-29T01:46:49.521234Z'
 schema: p84-dualtrack-v1
 capability_track:
   data_source: 构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)
@@ -25,16 +25,16 @@ capability_track:
   avg_resolution_rounds: 0.59
 throughput_track:
   data_source: 真实 backlog (.omo/tasks/done+planned/, 不可造)
-  real_task_total: 40
-  done: 36
-  planned: 4
-  planned_active: 4
+  real_task_total: 42
+  done: 39
+  planned: 3
+  planned_active: 3
   planned_inactive: 0
-  completion_rate: 0.9
+  completion_rate: 0.929
   w3_done_target: 30
   gap_to_target: 0
   human_direct_count: 0
   human_direct_ratio: 0.0
-  agent_done_count: 36
+  agent_done_count: 39
   silent_loss: 0
 redline_note: 两轨数据源独立, 禁止合并; 构造场景计产能轨=最高级违规 (P84 §0)
