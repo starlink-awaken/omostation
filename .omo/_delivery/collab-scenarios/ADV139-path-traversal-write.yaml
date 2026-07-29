@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 239
 description: >
-  [对抗·red-team wave24] 路径穿越写: 上传文件名含 ../ 覆盖系统文件,
-  管线尚无 path_traversal_write_detected → 预期 FAIL
+  [对抗·red-team wave25] 路径穿越写: 上传文件名含 ../ 覆盖系统文件,
+  管线已有 path_traversal_write_detected → 预期 PASS
 setup:
   blackboard:
     - {key: upload_root, value: "/var/uploads", writers: [app]}
