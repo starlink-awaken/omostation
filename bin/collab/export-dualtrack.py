@@ -29,8 +29,8 @@ TASKS_DONE = REPO / ".omo" / "tasks" / "done"
 TASKS_PLANNED = REPO / ".omo" / "tasks" / "planned"
 OUT_YAML = REPO / ".omo" / "state" / "collab-dualtrack.yaml"
 
-# P84 W3 产能目标 (ADR-0256) — 诚实 gap, 不可造卡冲数
-W3_DONE_TARGET = 30
+# P86 C 波 / human-delegated D2 / ADR-0287 — 月真实任务目标 (旧 30→45→60 作废)
+W3_DONE_TARGET = 15
 # planned 中不计入 "active backlog" 的终态 (仍进 planned_total 透明度字段)
 INACTIVE_PLANNED_STATUS = frozenset(
     {"archived", "done", "closed", "cancelled", "deferred"}
