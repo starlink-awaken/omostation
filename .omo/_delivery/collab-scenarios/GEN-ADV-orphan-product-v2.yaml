@@ -1,0 +1,42 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: ADV-orphan-product-v2
+category: A_conflict
+adversarial: true
+seed: 9014
+description: '[W2.1 red-team] 产物无 writer 孤儿 (对抗变体2)'
+setup:
+  blackboard:
+  - key: orphan_14
+    value: orphan_data
+    writer: null
+  - key: adv_target_14
+    value: null
+  roles:
+  - r_a_1
+  - r_b_1
+inject:
+- type: write_conflict
+  role: r_a_1
+  target: adv_target_14
+  value: v_a_1
+- type: write_conflict
+  role: r_b_1
+  target: adv_target_14
+  value: v_b_1
+expected:
+  behavior: orphan_detected
+  silent_loss: 0
+verdict:
+- criterion: orphan_detected
+  check: events_contain
+  args:
+    kind: orphan_detected
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

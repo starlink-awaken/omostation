@@ -227,22 +227,6 @@ capabilities:
     - research-pipeline
     - workspace-governance
     source: projects/gbrain/examples
-- id: gbrain.node-modules
-  type: capability
-  protocol: local
-  entrypoint: projects/gbrain/node_modules
-  lifecycle: active
-  metadata:
-    description: 'gbrain component capability: node_modules'
-    version: local
-    tags:
-    - gbrain
-    - component
-    - node_modules
-    scenario_tags:
-    - research-pipeline
-    - workspace-governance
-    source: projects/gbrain/node_modules
 - id: gbrain.recipes
   type: capability
   protocol: local

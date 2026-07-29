@@ -163,6 +163,29 @@ def _count_orphan_worktrees(ws_root: Path) -> int:
     return orphans
 
 
+def _prune_orphan_worktrees(ws_root: Path) -> int:
+    """治本 (N1, 2026-07-28): 清 orphan worktree record (目录已不存在), 防 wt_pressure 累积.
+
+    orphan = worktree record 在但目录已删. `git worktree prune` 清 record (安全, 不动实际文件).
+    产生机制: 并行作业开 worktree (gac-worktree/手动) 后未 remove, 目录删了 record 残留 →
+      _count_concurrent_conflict_signals wt_pressure 累积 → concurrent_conflicts 假高 → health 扣分.
+    修法: run_radar 生成 health 前自动 prune, orphan 不累积 (N1 第二次系统性治本).
+    返回 git returncode (0=成功).
+    """
+    try:
+        res = subprocess.run(
+            ["git", "worktree", "prune"],
+            cwd=ws_root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
+        )
+        return res.returncode
+    except (OSError, subprocess.TimeoutExpired):
+        return 1
+
+
 def _count_adr_renumber_signals(ws_root: Path) -> int:
     """Real ADR number collisions (duplicate ids) — via bin/adr/_lib 单一真相源.
 
@@ -456,6 +479,8 @@ def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
 
 def run_radar(omo_dir: Path) -> dict:
     """调 c2g.strategy 真审计,返回 metrics 字典."""
+    # 治本 (N1, 2026-07-28): 清 orphan worktree, 防 wt_pressure 累积 (concurrent_conflicts 系统性副产品)
+    _prune_orphan_worktrees(omo_dir.parent if omo_dir.name == ".omo" else omo_dir)
     # 把 c2g src 加进 sys.path (c2g 是 src 布局, 但本脚本不在 c2g venv)
     c2g_src = Path(__file__).resolve().parent.parent / "projects" / "c2g" / "src"
     if c2g_src.is_dir() and str(c2g_src) not in sys.path:

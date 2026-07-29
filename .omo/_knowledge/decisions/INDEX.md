@@ -166,7 +166,19 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0236 | C2 协作协议加深 (多轮协商+冲突消解+任务分解, protocol 层) | ACCEPTED | 2026-07-25 | Batch3 C2 | 0236-collab-protocol-c2-deepening.md |
 | 0237 | C3 协作记忆 gbrain 公共黑板 (writeCollabProduct+retrieveCollab 跨任务复用) | ACCEPTED | 2026-07-25 | Batch3 C3 | 0237-collab-memory-c3-gbrain-blackboard.md |
 | 0238 | MOF/M4 Phase0 注册面守自止血 (P0-1..P0-4: 路径/stats/commands 修复+漂移门+文档指针化+MCP口径) | ACCEPTED | 2026-07-25 | MOF-M4 Phase0 | 0238-mof-m4-phase0-registry-self-governance.md |
+| 0240 | MOF/M4 D1-D4 决策 A/A/A/A + Phase 1 启动 (2026-07-25 拍板 · 2026-07-28 main 追认) | ACCEPTED | 2026-07-28 | 夏明星 | 0240-mof-d1d4-decisions-aaaa-phase1.md |
+| 0252 | metaos Phase1/2 前提 D1-D4 决策 A/A/B/A (CLI/PID/agentkit/admit) | ACCEPTED | 2026-07-28 | 夏明星 | 0252-metaos-d1d4-aaaa-phase12.md |
+| 0253 | P84 协作模式路由 — K4 批次2 协作劣后路线 A（按任务类型选协作/单 agent） | ACCEPTED | 2026-07-28 | 夏明星 | 0253-p84-collab-mode-routing-after-k4.md |
+| 0254 | P84 W2.2 C/S 类协作检测器 (double_claim/partial/starvation/orphan/…) | ACCEPTED | 2026-07-28 | governance-team | 0254-p84-w22-cclass-collab-detectors.md |
+| 0255 | P84 K4 批次3/4 对照结果 — 强化路由表 (冲突/失败协作墙钟劣) | ACCEPTED | 2026-07-28 | governance-team | 0255-p84-k4-batch34-control-results.md |
+| 0256 | P84 W3 产能轨波次 — 真实任务记账纪律 (done 5→14) | ACCEPTED | 2026-07-28 | governance-team | 0256-p84-w3-throughput-wave.md |
+| 0257 | P84 W3 wave2 — MOF D4 模板投影 + L0 gac 债关闭 | ACCEPTED | 2026-07-28 | governance-team | 0257-p84-w3-wave2-mof-d4-l0-debt.md |
+| 0258 | P84 W3 wave3 — dualtrack gap 工具 + M2 inventory + planned 卫生 | ACCEPTED | 2026-07-28 | governance-team | 0258-p84-w3-wave3-tooling-hygiene.md |
+| 0259 | P84 W3 wave4 — ADV 检测 + patterns 注册 + gap 收口 | ACCEPTED | 2026-07-29 | governance-team | 0259-p84-w3-wave4-close-gap.md |
+| 0260 | wave5 — ADV19/21/23 闭环 + ADV25/27/29 加硬 + bos/m2 工具 | ACCEPTED | 2026-07-29 | governance-team | 0260-p84-wave5-adv-bos-m2.md |
 | 0249 | 治理自省预算封顶 40/40/20 (用户已同意) | ACCEPTED | 2026-07-26 | P82 StageA | 0249-governance-budget-cap-40-40-20.md |
+| 0250 | health 门禁改为只卡工程执行面 (owner 集中度不阻断) | ACCEPTED | 2026-07-27 | P82 StageA | 0250-health-gate-engineering-surface-only.md |
+| 0251 | 三把锁 gate 定位 (layer-call/drift/doc-claims blocking) + layer-call 增量快路径 | ACCEPTED | 2026-07-28 | P83 Stage1 | 0251-three-locks-gate-positioning-layer-call-incremental.md |
 | 0242 | metaos registry drift 门扩展 (§J1 一扇门覆盖 MOF+metaos) | ACCEPTED | 2026-07-26 | metaos Phase0 | 0242-metaos-registry-drift-gate-extension.md |
 | 0247 | 战略转向 多 agent 协作优先 物理多机 DEFERRED (补立追认) | ACCEPTED | 2026-07-26 | P82 StageA | 0247-strategic-pivot-collab-first-physical-deferred.md |
 | 0174 | P79 Phase 1 Foundry v2 cron 集成 (10-deck) | ACCEPTED | 2026-07-08 | governance-team | 0174-p79-phase1-foundry-v2-cron.md |
@@ -333,4 +345,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-18 · Owner: governance-team · ADR-0221 G-DEL.5a L3 risk review; GaC rules 见 registry*
+*最近更新: 2026-07-28 · Owner: governance-team · ADR-0253 P84 collab routing A; GaC rules 见 registry*

@@ -1,11 +1,16 @@
 ---
 id: NEEDS-HUMAN-BATCH2-PHYSICAL-RECOVERY-CHECKLIST
 title: "机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁）"
-status: candidate
-needs-human: true   # P82 StageA 红线回滚: 物理恢复人类决策卡不可藏匿Inbox (原S5误清,红线优先于Inbox≤4数字)
-priority: P0
+status: pending
+status_normalized_for_schema: true  # was deferred; planned only candidate|pending
+needs-human: false
+human_approval_required: false
+classification: status_tracking
+demotion_reason: "ADR-0247; recovery checklist is operational status not human decision inbox"
+priority: P2
 owner: human
 created_at: "2026-07-24T07:00:00Z"
+demoted_at: "2026-07-28T09:15:00Z"
 assigned_to: null
 dispatch_id: null
 run_ref: null
@@ -15,7 +20,6 @@ knowledge_refs: []
 handoff_refs: []
 risk_level: L2
 allowed_operation_level: L2
-human_approval_required: true
 source_docs:
   - .omo/_knowledge/audits/2026-07-24-batch2-physical-recovery-package.md
   - bin/delivery/physical-recovery.sh

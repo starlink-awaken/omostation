@@ -1,0 +1,40 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: ADV-audit-reject-dissent-v4
+category: A_conflict
+adversarial: true
+seed: 9024
+description: '[W2.1 red-team] 审计驳回后不服 (对抗变体4)'
+setup:
+  blackboard:
+  - key: adv_target_24
+    value: null
+  roles:
+  - r_a_3
+  - r_b_3
+  - r_audit_3
+inject:
+- type: write_conflict
+  role: r_a_3
+  target: adv_target_24
+  value: v_a_3
+- type: audit_reject
+  role: r_audit_3
+  target: adv_target_24
+  reason: policy_violation
+expected:
+  behavior: audit_reject_handled
+  silent_loss: 0
+verdict:
+- criterion: audit_reject_handled
+  check: events_contain
+  args:
+    kind: audit_reject_handled
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

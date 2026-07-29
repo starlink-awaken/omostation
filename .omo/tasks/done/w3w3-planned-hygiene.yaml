@@ -1,0 +1,15 @@
+id: w3w3-planned-hygiene
+title: 'planned 卫生: vision archived + decision checklist → closed'
+description: 'P84 W3 wave3 真实任务 — 僵尸 planned 清理, 非造 done'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-28T14:00:00Z'
+completion_evidence:
+  - .omo/tasks/archived/vision-roadmap/
+  - .omo/tasks/closed/decision-checklist-13-items.md
+  - .omo/tasks/closed/decision-checklist-redesign-3-tier.md
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+stage: P84-W3

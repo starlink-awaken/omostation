@@ -1,0 +1,16 @@
+id: w3w4-adv-harden
+title: 'ADV19/21/23 加硬 (byzantine/replay/cross-key) 守 P84 全过=自欺'
+description: 'P84 W3 wave4 真实任务 — 对抗不足门禁修复'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T01:35:00Z'
+completion_evidence:
+  - .omo/_delivery/collab-scenarios/ADV19-byzantine-quorum.yaml
+  - .omo/_delivery/collab-scenarios/ADV21-replay-attack.yaml
+  - .omo/_delivery/collab-scenarios/ADV23-cross-key-collusion.yaml
+  - bin/gac/check-adversarial-effectiveness.py
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+stage: P84-W3

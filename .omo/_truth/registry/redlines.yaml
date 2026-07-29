@@ -1,0 +1,86 @@
+# Redline registry (STRAT-P85 G2.1)
+#
+# Generated: 2026-07-28
+# Owner: governance-team
+# Lifecycle: ssot
+# Purpose: turn the scattered "lessons" in past tickets into a single
+# machine-checkable source. Every red line must declare the `executor`
+# (i.e. the check that will catch a violation) or explicitly mark
+# `enforced: false` with a `gap_reason`. No silent grave markers.
+
+version: "1.0.0"
+last_reviewed: "2026-07-28"
+status: active
+
+# Status legend:
+#   highest    — ADR-0249 / constitutional; one violation is a hard halt.
+#   violation  — break-glass; explicit human ack required.
+#   warn       — visible but not blocking; aggregates to dashboard.
+
+enforced_red_lines:
+  - id: governance-ratio-40pct
+    source: ADR-0249
+    severity: highest
+    rule: "rolling 30-day share of governance runs must not exceed 40%"
+    executor: bin/gac/check-governance-ratio.py
+  - id: work-landed
+    source: STRAT-P82
+    severity: violation
+    rule: "a status: ok run must reach origin/main within 7 days (3 days warn)"
+    executor: bin/gac/check-work-landed.py
+    baseline: ".omo/_truth/registry/baseline-work-landed.txt"
+    baseline_note: "M2: 存量 blocking 进 grace 清单, 新增滞留才 blocking (防新门被历史存量锁死)"
+  - id: severity-decl-exec
+    source: ADR-0171
+    severity: violation
+    rule: "declared severity of primary locks must match observed exit code"
+    executor: bin/gac/check-severity-registry.py
+  - id: redline-coverage
+    source: STRAT-P85 G2.1
+    severity: warn
+    rule: "this registry's enforced: false rows with severity: highest must stay 0"
+    executor: bin/gac/check-redline-coverage.py
+  - id: workorder-schema
+    source: STRAT-P85 G2.2
+    severity: warn
+    rule: "new workorders must declare the required fields (track / appetite / 验收标准 / etc.)"
+    executor: bin/gac/check-workorder-schema.py
+  # P85 G3: dual-track守护 — three checks now enforcing
+  - id: scenario-track-purity
+    source: STRAT-P84
+    severity: violation
+    rule: "throughput track must not contain scenario-sourced data"
+    executor: bin/gac/check-dual-track-purity.py
+  - id: silently-lost-zero
+    source: STRAT-P84
+    severity: violation
+    rule: "no dispatched task may be silently lost (silent_loss must be 0)"
+    executor: bin/gac/check-silent-loss.py
+  - id: adversarial-effectiveness
+    source: STRAT-P84
+    severity: warn
+    rule: "adversarial scenario pass rate must not be 100% (全过=自欺)"
+    executor: bin/gac/check-adversarial-effectiveness.py
+
+acknowledged_gaps:
+  - id: gate-cost-budget
+    source: STRAT-P85 G4.1
+    severity: warn
+    gap_reason: >
+      The budget instrumentation requires hooking into the GaC gate
+      runner's timing infrastructure. This does not exist yet. The
+      work is planned for Q4 when the gate runner is due for a
+      performance overhaul; implementing it earlier would require
+      modifying the gate runner itself, which is outside the scope
+      of the redline deliverables.排期：Q4 gate runner overhaul.
+  - id: dead-check-retire
+    source: STRAT-P85 G4.2
+    severity: warn
+    gap_reason: >
+      The 90-day idle detection requires storing per-check last-
+      block timestamps in the registry or a sidecar file. This is a
+      new data requirement that should ship with the G4.2 deliverable
+      rather than being retrofitted into the current gate system.
+      This is a genuine sequencing dependency.排期：Q4 G4.2 deliverable.
+
+as_of_principle_ref: .omo/patterns/as_of_principle.md

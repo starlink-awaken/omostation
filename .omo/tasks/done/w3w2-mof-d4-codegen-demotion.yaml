@@ -1,0 +1,13 @@
+id: w3w2-mof-d4-codegen-demotion
+title: 'MOF D4 tool_generate 降级为模板投影 (ADR-0240)'
+description: 'P84 W3 wave2 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-28T13:15:00Z'
+completion_evidence:
+  - wave2 PR
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+stage: P84-W3

@@ -69,7 +69,7 @@ DEFAULT_POLICY = {
         {"id": "service-config-drift", "command": ["bin/mof/gen-service-configs.py", "--check"], "ci_skip": True},
         {"id": "gac-mesh-router-check", "command": ["bin/gac/gac-mesh-router.py", "--check"]},
         {"id": "gac-consensus-inject-check", "command": ["bin/gac/gac-consensus-inject.py", "--check"]},
-        {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"], "broken": True, "broken_reason": "依赖本地算力服务 (cc-switch/codexbar/litellm/omlxc), 本地不存在 → 超时"},
+        {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"]},
         # P44 测试覆盖门禁: 每个 Python 项目必须有 tests/
         {"id": "test-coverage-check", "command": ["bin/gac/test-coverage-check.py"]},
         # P45 债务完整性门禁: seed_items 全部存在且非空
@@ -78,6 +78,21 @@ DEFAULT_POLICY = {
         {"id": "omo-state-write-guard", "command": ["bin/gac/omo-state-write-guard.py"]},
         # P45 W1 BRIEF.md protect: 检测 BRIEF.md 是否被外部覆盖
         {"id": "brief-protect", "command": ["bin/mof/generate-brief.py", "--protect"]},
+        # P85 G1+G2: redline executability wiring. The redline registry
+        # at .omo/_truth/registry/redlines.yaml points to these gates;
+        # adding/removing rows there is the safe edit surface.
+        {"id": "check-severity-registry", "command": ["bin/gac/check-severity-registry.py"]},
+        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"]},
+        {"id": "check-governance-ratio", "command": ["bin/gac/check-governance-ratio.py"]},
+        {"id": "check-redline-coverage", "command": ["bin/gac/check-redline-coverage.py"]},
+        # P85 G2.2: workorder schema is warn-only by default; promote
+        # to --strict in CI after the grace period (G2 follow-up).
+        {"id": "check-workorder-schema", "command": ["bin/gac/check-workorder-schema.py"]},
+        # P85 G3: P84 dual-track守护. Three checks enforcing the
+        # dual-track isolation contract (P84 §0).
+        {"id": "check-dual-track-purity", "command": ["bin/gac/check-dual-track-purity.py"]},
+        {"id": "check-silent-loss", "command": ["bin/gac/check-silent-loss.py"]},
+        {"id": "check-adversarial-effectiveness", "command": ["bin/gac/check-adversarial-effectiveness.py"]},
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},

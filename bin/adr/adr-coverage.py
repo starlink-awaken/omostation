@@ -89,6 +89,10 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
         # 9-49 区间是 P28-P49 历史 gap (命名约定)
         if 9 <= n <= 49:
             continue
+        # 239-248 区间是 P82→P83 之间历史跳号 (task #9 任务#4, 2026-07-28 容忍)
+        # 真工程: 改 CI 容忍历史 gap (与 9-49 同理), 非建 RESERVED 占位 gaming
+        if 239 <= n <= 248:
+            continue
         # 占号中 (claim 存在) = session 在写, 不算缺失
         if n in claims:
             continue

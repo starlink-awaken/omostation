@@ -20,3 +20,4 @@ seed_items:
 - .omo/debt/items/AGENT_COORDINATION.yaml
 - .omo/debt/items/HEALTH_SCORE_FORMULA.yaml
 - .omo/debt/items/TEST_COVERAGE.yaml
+- .omo/debt/items/DOC_CLAIMS_SCOPE.yaml
