@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV129-dns-rebinding
+category: B_failure_injection
+adversarial: true
+seed: 229
+description: >
+  [对抗·red-team wave22] DNS 重绑定: 恶意域名 TTL 翻转访问内网 RPC,
+  管线尚无 dns_rebinding_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: dns_record, value: "evil.example->public_ip", writers: [dns]}
+  roles: [attacker, browser, internal_rpc]
+inject:
+  - {type: write_conflict, role: attacker, target: dns_record, value: "ttl_0_flip_to_127.0.0.1"}
+  - {type: write_conflict, role: browser, target: same_origin_fetch, value: "hit_internal_rpc"}
+  - {type: write_conflict, role: internal_rpc, target: rpc_call, value: "eth_sendTransaction_forged"}
+  - {type: write_conflict, role: attacker, target: loot, value: "keys_exfiltrated"}
+expected:
+  behavior: dns_rebinding_detected
+  silent_loss: 0
+verdict:
+  - criterion: dns_rebinding_detected
+    check: events_contain
+    args: {kind: dns_rebinding_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
