@@ -9,8 +9,8 @@ category: A_conflict
 adversarial: true
 seed: 195
 description: >
-  [对抗·red-team wave16] DAO 金库抽干: 恶意提案短时窗通过后转走 treasury,
-  管线尚无 dao_treasury_drain_detected → 预期 FAIL
+  [对抗·red-team wave17] DAO 金库抽干: 恶意提案短时窗通过后转走 treasury,
+  管线已有 dao_treasury_drain_detected → 预期 PASS
 setup:
   blackboard:
     - {key: dao_treasury, value: "5000000", writers: [timelock]}

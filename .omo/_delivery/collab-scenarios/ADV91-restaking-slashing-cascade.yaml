@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 191
 description: >
-  [对抗·red-team wave16] 再质押罚没级联: 单 AVS 故障触发多层 restake slash,
-  管线尚无 restaking_slash_cascade_detected → 预期 FAIL
+  [对抗·red-team wave17] 再质押罚没级联: 单 AVS 故障触发多层 restake slash,
+  管线已有 restaking_slash_cascade_detected → 预期 PASS
 setup:
   blackboard:
     - {key: restake_root, value: "eth_stake_1000", writers: [operator]}

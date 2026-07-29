@@ -181,6 +181,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_infinite_mint(events))
     events.extend(_synthesize_stablecoin_depeg(events))
     events.extend(_synthesize_zk_proof_forgery(events))
+    events.extend(_synthesize_restaking_slash_cascade(events))
+    events.extend(_synthesize_intent_solver_theft(events))
+    events.extend(_synthesize_dao_treasury_drain(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -2425,6 +2428,183 @@ def _synthesize_zk_proof_forgery(events: list[dict]) -> list[dict]:
                 "steal": steal,
                 "weak_verify": weak_verify,
                 "policy": "proof_verifier_and_challenge_window",
+            }
+        ]
+    return []
+
+
+def _synthesize_restaking_slash_cascade(events: list[dict]) -> list[dict]:
+    """AVS 故障触发多层 slash → restaking_slash_cascade_detected (ADV91)."""
+    if any(e.get("kind") == "restaking_slash_cascade_detected" for e in events):
+        return []
+    misbehavior = False
+    slashes: list[tuple[int, str, str]] = []
+    stake_left = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "misbehavior" in vs or "avs" in target and "duty" in target:
+            misbehavior = True
+            role = r or role
+        if "slash" in target or "slash" in vs or "cascade" in vs:
+            slashes.append((ts, r, target or vs))
+            role = r or role
+        if "restake" in target or "stake_left" in vs or "stake" in target:
+            if "left" in vs or "slash" in vs or any(ch.isdigit() for ch in vs):
+                stake_left = True
+                role = r or role
+    multi_slash = len(slashes) >= 2
+    if multi_slash and (misbehavior or stake_left):
+        return [
+            {
+                "kind": "restaking_slash_cascade_detected",
+                "ts": ts_max,
+                "role": role,
+                "slash_count": len(slashes),
+                "misbehavior": misbehavior,
+                "stake_affected": stake_left,
+                "policy": "avs_isolation_and_slash_caps",
+            }
+        ]
+    if multi_slash:
+        return [
+            {
+                "kind": "restaking_slash_cascade_detected",
+                "ts": ts_max,
+                "role": role,
+                "slash_count": len(slashes),
+                "policy": "avs_isolation_and_slash_caps",
+            }
+        ]
+    return []
+
+
+def _synthesize_intent_solver_theft(events: list[dict]) -> list[dict]:
+    """恶意 solver 截留 intent 差额 → intent_solver_theft_detected (ADV93)."""
+    if any(e.get("kind") == "intent_solver_theft_detected" for e in events):
+        return []
+    fill = False
+    skim = False
+    short_receipt = False
+    consumed = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "fill" in target or "fill_at" in vs or "intent_fill" in target:
+            fill = True
+            role = r or role
+        if "skim" in vs or "pocket" in target or "solver_pocket" in target:
+            skim = True
+            role = r or role
+        if "receipt" in target or "got_" in vs or "not_" in vs:
+            short_receipt = True
+            role = r or role
+        if "consumed" in vs or ("intent" in target and "consumed" in vs):
+            consumed = True
+            role = r or role
+    if fill and (skim or short_receipt):
+        return [
+            {
+                "kind": "intent_solver_theft_detected",
+                "ts": ts_max,
+                "role": role,
+                "fill": fill,
+                "skim": skim,
+                "short_receipt": short_receipt,
+                "intent_consumed": consumed,
+                "policy": "min_out_enforcement_and_solver_bond",
+            }
+        ]
+    if skim and short_receipt:
+        return [
+            {
+                "kind": "intent_solver_theft_detected",
+                "ts": ts_max,
+                "role": role,
+                "skim": True,
+                "short_receipt": True,
+                "policy": "min_out_enforcement_and_solver_bond",
+            }
+        ]
+    return []
+
+
+def _synthesize_dao_treasury_drain(events: list[dict]) -> list[dict]:
+    """恶意提案 + 时锁绕过 + treasury 清零 → dao_treasury_drain_detected (ADV95)."""
+    if any(e.get("kind") == "dao_treasury_drain_detected" for e in events):
+        return []
+    proposal = False
+    snap_vote = False
+    timelock_bypass = False
+    treasury_zero = False
+    drained = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        vs = str(val or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "proposal" in target or "emergency_grant" in vs or "grant" in vs:
+            proposal = True
+            role = r or role
+        if "vote" in target or "pass_snap" in vs or "snap_vote" in vs:
+            snap_vote = True
+            role = r or role
+        if "timelock" in target or "bypass" in vs:
+            timelock_bypass = True
+            role = r or role
+        if "treasury" in target:
+            if vs in {"0", "0.0", ""} or "drain" in vs:
+                treasury_zero = True
+                role = r or role
+        if "drained" in vs or ("wallet" in target and "attacker" in (r or target)):
+            drained = True
+            role = r or role
+    if treasury_zero and (proposal or snap_vote or timelock_bypass or drained):
+        return [
+            {
+                "kind": "dao_treasury_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "proposal": proposal,
+                "snap_vote": snap_vote,
+                "timelock_bypass": timelock_bypass,
+                "treasury_zero": treasury_zero,
+                "drained": drained,
+                "policy": "timelock_and_veto_guardian",
+            }
+        ]
+    if drained and (proposal or snap_vote):
+        return [
+            {
+                "kind": "dao_treasury_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "proposal": proposal,
+                "snap_vote": snap_vote,
+                "drained": True,
+                "policy": "timelock_and_veto_guardian",
             }
         ]
     return []
