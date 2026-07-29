@@ -1,7 +1,8 @@
 ---
 id: DEBT-L0-GAC-CONSENSUS-ONBOARD-TRIAGE
 title: "gac-consensus-inject (KOS DB entity_type 缺列) + gac-compute-onboard (15s timeout) triage"
-status: candidate
+status: done
+completed_at: '2026-07-29T01:17:24Z'
 needs-human: false
 priority: P2
 owner: governance-team
