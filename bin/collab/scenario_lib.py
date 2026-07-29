@@ -141,10 +141,13 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     # C 类: 事后机制合成 (partial_failure / starvation)
     events.extend(_synthesize_partial_failure(events))
     events.extend(_synthesize_starvation(blackboard, events))
-    # 对抗补强 (ADV13/15/17): collusion / priority_inversion / cascade
+    # 对抗补强: ADV13/15/17 + wave5 ADV19/21/23
     events.extend(_synthesize_collusion(events, blackboard))
     events.extend(_synthesize_priority_inversion(events, roles))
     events.extend(_synthesize_cascade_failure(events))
+    events.extend(_synthesize_byzantine_quorum(events, blackboard))
+    events.extend(_synthesize_replay_attack(events, blackboard))
+    events.extend(_synthesize_cross_key_collusion(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -457,6 +460,166 @@ def _synthesize_cascade_failure(events: list[dict]) -> list[dict]:
             }
         ]
     return []
+
+
+def _synthesize_byzantine_quorum(events: list[dict], board: dict) -> list[dict]:
+    """同 key 上 ≥3 角色同值 + ≥1 异值少数派 → byzantine_quorum_detected (ADV19).
+
+    伪共识: 多数写相同假值, 诚实少数被淹没.
+    """
+    if any(e.get("kind") == "byzantine_quorum_detected" for e in events):
+        return []
+    # target -> value -> roles
+    by_target: dict[str, dict[object, list[str]]] = {}
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        target = e.get("target")
+        if not target:
+            continue
+        val = e.get("value") if "value" in e else e.get("new")
+        role = e.get("role")
+        if role is None and e.get("roles"):
+            for r in e["roles"]:
+                by_target.setdefault(str(target), {}).setdefault(val, []).append(r)
+            continue
+        if role is None:
+            continue
+        by_target.setdefault(str(target), {}).setdefault(val, []).append(str(role))
+
+    # also board final state writers
+    for key, slot in board.items():
+        if key.startswith("_"):
+            continue
+        val = slot.get("value")
+        writers = list(dict.fromkeys(slot.get("writers") or []))
+        if val is not None and writers:
+            bucket = by_target.setdefault(key, {})
+            for r in writers:
+                if r not in bucket.get(val, []):
+                    bucket.setdefault(val, []).append(r)
+
+    out: list[dict] = []
+    for target, val_map in by_target.items():
+        # normalize unique roles per value
+        counts = {
+            v: list(dict.fromkeys(roles))
+            for v, roles in val_map.items()
+            if v is not None
+        }
+        if len(counts) < 2:
+            continue
+        ranked = sorted(counts.items(), key=lambda kv: -len(kv[1]))
+        maj_val, maj_roles = ranked[0]
+        if len(maj_roles) < 3:
+            continue
+        minority = [(v, r) for v, r in ranked[1:] if r]
+        if not minority:
+            continue
+        out.append(
+            {
+                "kind": "byzantine_quorum_detected",
+                "ts": max((e.get("ts") or 0) for e in events) + 1,
+                "target": target,
+                "majority_value": maj_val,
+                "majority_roles": maj_roles,
+                "majority_size": len(maj_roles),
+                "minority": [
+                    {"value": v, "roles": r, "size": len(r)} for v, r in minority
+                ],
+                "policy": "require_supermajority_or_abort",
+            }
+        )
+    return out
+
+
+def _synthesize_replay_attack(events: list[dict], board: dict) -> list[dict]:
+    """重放已存在 value 的写 → replay_attack_detected (ADV21).
+
+    条件 (任一):
+    1. 同一 (target, value) 出现 ≥2 次 write (含 attacker 双写 step1)
+    2. write 的 value 已在 board 上且 writer 不在该 slot 的原始 writers 集合
+       (setup 预置 + 他角色重放)
+    """
+    if any(e.get("kind") == "replay_attack_detected" for e in events):
+        return []
+    writes = [e for e in events if e.get("kind") == "write"]
+    if not writes:
+        return []
+
+    by_tv: dict[tuple[str, object], list[dict]] = {}
+    for e in writes:
+        by_tv.setdefault((str(e.get("target")), e.get("value")), []).append(e)
+
+    for (target, value), group in by_tv.items():
+        if len(group) >= 2:
+            return [
+                {
+                    "kind": "replay_attack_detected",
+                    "ts": max(g.get("ts") or 0 for g in group),
+                    "target": target,
+                    "value": value,
+                    "roles": list(
+                        dict.fromkeys(str(g.get("role")) for g in group)
+                    ),
+                    "reason": "identical_value_multi_write",
+                }
+            ]
+
+    # setup preseed: board has value; a write restates it from a new role
+    for e in writes:
+        target = str(e.get("target") or "")
+        val = e.get("value")
+        slot = board.get(target) or {}
+        writers = list(slot.get("writers") or [])
+        # After inject, writers includes the replaying role; detect multi-role same value
+        uniq = list(dict.fromkeys(writers))
+        if val is not None and slot.get("value") == val and len(uniq) >= 2:
+            return [
+                {
+                    "kind": "replay_attack_detected",
+                    "ts": e.get("ts") or 0,
+                    "target": target,
+                    "value": val,
+                    "roles": uniq,
+                    "role": e.get("role"),
+                    "reason": "restated_preseed_or_shared_value",
+                }
+            ]
+    return []
+
+
+def _synthesize_cross_key_collusion(events: list[dict]) -> list[dict]:
+    """不同 key、相同 value、不同 role → cross_key_collusion_detected (ADV23)."""
+    if any(e.get("kind") == "cross_key_collusion_detected" for e in events):
+        return []
+    # value -> list of (target, role)
+    by_val: dict[object, list[tuple[str, str]]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        val = e.get("value")
+        target = str(e.get("target") or "")
+        role = str(e.get("role") or "")
+        if val is None or not target:
+            continue
+        by_val.setdefault(val, []).append((target, role))
+    out: list[dict] = []
+    for val, pairs in by_val.items():
+        keys = list(dict.fromkeys(t for t, _ in pairs))
+        roles = list(dict.fromkeys(r for _, r in pairs if r))
+        if len(keys) >= 2 and len(roles) >= 2:
+            out.append(
+                {
+                    "kind": "cross_key_collusion_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "value": val,
+                    "keys": keys,
+                    "roles": roles,
+                    "reason": "same_value_across_keys_multi_role",
+                }
+            )
+    return out
 
 
 def _eval_criterion(
