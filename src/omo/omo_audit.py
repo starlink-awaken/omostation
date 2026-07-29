@@ -101,11 +101,13 @@ def record_compute_node_state(node_id: str, **fields: dict) -> dict:
     m1_dir.mkdir(parents=True, exist_ok=True)
     target_file = None
 
+    data: dict = {}
     for f in m1_dir.glob("*.yaml"):
         try:
-            data = load_yaml(f)
-            if data.get("node_id") == node_id or f.stem == node_id:
+            loaded = load_yaml(f)
+            if loaded.get("node_id") == node_id or f.stem == node_id:
                 target_file = f
+                data = loaded
                 break
         except Exception:  # defensive fallback
             pass
