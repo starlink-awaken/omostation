@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV67-flash-loan-attack
+category: A_conflict
+adversarial: true
+seed: 167
+description: >
+  [对抗·red-team wave12] 闪电贷攻击: 同交易内借-操盘-还,
+  管线尚无 flash_loan_attack_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: pool_liquidity, value: "1000000", writers: [pool]}
+  roles: [pool, attacker]
+inject:
+  - {type: write_conflict, role: attacker, target: flash_borrow, value: "borrow_900000"}
+  - {type: write_conflict, role: attacker, target: pool_price, value: "manipulated"}
+  - {type: write_conflict, role: attacker, target: flash_repay, value: "repay_900000"}
+  - {type: write_conflict, role: attacker, target: attacker_profit, value: "arb_profit"}
+expected:
+  behavior: flash_loan_attack_detected
+  silent_loss: 0
+verdict:
+  - criterion: flash_loan_attack_detected
+    check: events_contain
+    args: {kind: flash_loan_attack_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
