@@ -197,12 +197,102 @@ def test_wave11_adv555759_detectors_pass() -> None:
         )
 
 
-def test_wave11_hard_adv_still_fail() -> None:
-    """ADV61/63/65 加硬场景须失败 (对抗强度)."""
+def test_wave12_adv616365_detectors_pass() -> None:
+    """wave12 闭环: sandwich / reentrancy / mev_leak."""
     for name in (
         "ADV61-sandwich-attack.yaml",
         "ADV63-reentrancy.yaml",
         "ADV65-mev-leak.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave12 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave13_adv676971_detectors_pass() -> None:
+    """wave13 闭环: flash_loan / governance_capture / cross_domain_replay."""
+    for name in (
+        "ADV67-flash-loan-attack.yaml",
+        "ADV69-governance-capture.yaml",
+        "ADV71-cross-domain-replay.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave13 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave14_adv737577_detectors_pass() -> None:
+    """wave14 闭环: rug_pull / approval_phishing / bridge_drain."""
+    for name in (
+        "ADV73-rug-pull.yaml",
+        "ADV75-approval-phishing.yaml",
+        "ADV77-bridge-drain.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave14 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave15_adv798183_detectors_pass() -> None:
+    """wave15 闭环: sybil_airdrop / wash_trade / key_compromise_blast."""
+    for name in (
+        "ADV79-sybil-airdrop.yaml",
+        "ADV81-nft-wash-trade.yaml",
+        "ADV83-key-compromise-blast.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave15 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave16_adv858789_detectors_pass() -> None:
+    """wave16 闭环: infinite_mint / stablecoin_depeg / zk_proof_forgery."""
+    for name in (
+        "ADV85-infinite-mint-inflation.yaml",
+        "ADV87-stablecoin-depeg-attack.yaml",
+        "ADV89-zk-proof-forgery.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave16 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave17_adv919395_detectors_pass() -> None:
+    """wave17 闭环: restaking_slash / intent_solver_theft / dao_treasury_drain."""
+    for name in (
+        "ADV91-restaking-slashing-cascade.yaml",
+        "ADV93-intent-solver-theft.yaml",
+        "ADV95-dao-treasury-drain.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave17 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave17_hard_adv_still_fail() -> None:
+    """ADV97/99/101 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV97-l2-sequencer-censorship.yaml",
+        "ADV99-mev-builder-collusion.yaml",
+        "ADV101-account-abstraction-drain.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)

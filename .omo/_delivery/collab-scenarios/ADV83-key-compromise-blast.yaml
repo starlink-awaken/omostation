@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV83-key-compromise-blast
+category: B_failure_injection
+adversarial: true
+seed: 183
+description: >
+  [对抗·red-team wave15] 密钥失陷扩散: 同一 admin 钥操作多敏感面,
+  管线已有 key_compromise_blast_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: admin_key, value: "key_live", writers: [admin]}
+  roles: [admin, attacker]
+inject:
+  - {type: write_conflict, role: attacker, target: admin_key, value: "key_stolen"}
+  - {type: write_conflict, role: attacker, target: treasury_ops, value: "transfer_all"}
+  - {type: write_conflict, role: attacker, target: upgrade_proxy, value: "malicious_impl"}
+  - {type: write_conflict, role: attacker, target: pause_switch, value: "unpause_attack"}
+expected:
+  behavior: key_compromise_blast_detected
+  silent_loss: 0
+verdict:
+  - criterion: key_compromise_blast_detected
+    check: events_contain
+    args: {kind: key_compromise_blast_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

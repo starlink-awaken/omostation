@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV99-mev-builder-collusion
+category: A_conflict
+adversarial: true
+seed: 199
+description: >
+  [对抗·red-team wave17] MEV builder 串谋: 多 builder 共享 orderflow 抬高 extract,
+  管线尚无 mev_builder_collusion_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: block_auction, value: "open", writers: [relay]}
+  roles: [builder_a, builder_b, relay, searcher]
+inject:
+  - {type: write_conflict, role: builder_a, target: orderflow_share, value: "leak_to_b"}
+  - {type: write_conflict, role: builder_b, target: orderflow_share, value: "leak_to_a"}
+  - {type: write_conflict, role: searcher, target: bundle_extract, value: "extract_max_shared"}
+  - {type: write_conflict, role: relay, target: block_auction, value: "single_winner_cartel"}
+expected:
+  behavior: mev_builder_collusion_detected
+  silent_loss: 0
+verdict:
+  - criterion: mev_builder_collusion_detected
+    check: events_contain
+    args: {kind: mev_builder_collusion_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

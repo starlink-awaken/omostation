@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV101-account-abstraction-drain
+category: B_failure_injection
+adversarial: true
+seed: 201
+description: >
+  [对抗·red-team wave17] AA 账户抽干: 恶意 session key / paymaster 合谋转走资产,
+  管线尚无 aa_account_drain_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: smart_account, value: "balance_10000", writers: [owner]}
+  roles: [owner, session_key, paymaster, attacker]
+inject:
+  - {type: write_conflict, role: attacker, target: session_key, value: "key_overpermissioned"}
+  - {type: write_conflict, role: paymaster, target: paymaster_policy, value: "sponsor_malicious_ops"}
+  - {type: write_conflict, role: session_key, target: userop_batch, value: "transfer_all"}
+  - {type: write_conflict, role: attacker, target: smart_account, value: "balance_0"}
+expected:
+  behavior: aa_account_drain_detected
+  silent_loss: 0
+verdict:
+  - criterion: aa_account_drain_detected
+    check: events_contain
+    args: {kind: aa_account_drain_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
