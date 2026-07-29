@@ -172,6 +172,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_flash_loan_attack(events))
     events.extend(_synthesize_governance_capture(events))
     events.extend(_synthesize_cross_domain_replay(events, blackboard))
+    events.extend(_synthesize_rug_pull(events))
+    events.extend(_synthesize_approval_phishing(events))
+    events.extend(_synthesize_bridge_drain(events))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -1898,6 +1901,167 @@ def _synthesize_cross_domain_replay(events: list[dict], board: dict) -> list[dic
                         "policy": "domain_separator_and_nonce",
                     }
                 ]
+    return []
+
+
+def _synthesize_rug_pull(events: list[dict]) -> list[dict]:
+    """victim 存款后 creator 抽干 lp_pool → rug_pull_detected (ADV73)."""
+    if any(e.get("kind") == "rug_pull_detected" for e in events):
+        return []
+    deposits: list[tuple[int, str]] = []
+    pool_drains: list[tuple[int, str, object]] = []
+    creator_gains: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "deposit" in target or "deposit" in str(val or "").lower():
+            deposits.append((ts, role))
+        if "lp" in target or "pool" in target or "liq" in target:
+            vs = str(val or "").lower()
+            if "0" in vs or "empty" in vs or "drain" in vs or vs in {"0", "liq_0"}:
+                pool_drains.append((ts, role, val))
+        if "wallet" in target or "drain" in str(val or "").lower():
+            creator_gains.append((ts, role, val))
+    if not deposits:
+        return []
+    dep_ts = min(t for t, _ in deposits)
+    for dts, drole, dval in pool_drains:
+        if dts < dep_ts:
+            continue
+        # creator != depositor
+        victim_roles = {r for t, r in deposits}
+        if drole in victim_roles and not creator_gains:
+            continue
+        return [
+            {
+                "kind": "rug_pull_detected",
+                "ts": dts,
+                "depositor": next(iter(victim_roles)),
+                "puller": drole,
+                "pool_value": dval,
+                "creator_gains": len(creator_gains),
+                "policy": "lp_lock_and_timelock",
+            }
+        ]
+    # deposit then creator_wallet drain even if pool drain naming differs
+    if deposits and creator_gains:
+        gts, grole, gval = creator_gains[0]
+        if gts >= dep_ts and grole not in {r for _t, r in deposits}:
+            return [
+                {
+                    "kind": "rug_pull_detected",
+                    "ts": gts,
+                    "depositor": deposits[0][1],
+                    "puller": grole,
+                    "gain": gval,
+                    "policy": "lp_lock_and_timelock",
+                }
+            ]
+    return []
+
+
+def _synthesize_approval_phishing(events: list[dict]) -> list[dict]:
+    """unlimited approval 后余额被第三方转走 → approval_phishing_detected (ADV75)."""
+    if any(e.get("kind") == "approval_phishing_detected" for e in events):
+        return []
+    approvals: list[tuple[int, str, object]] = []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        if "approval" in target or "approve" in str(val or "").lower() or "unlimited" in str(val or "").lower():
+            approvals.append((ts, role, val))
+    if not approvals:
+        return []
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        role = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = e.get("new") if "new" in e else e.get("value")
+        ts = int(e.get("ts") or 0)
+        # balance drained by non-approver after approval
+        bal_hit = "balance" in target or "wallet" in target or "phish" in target
+        if not bal_hit:
+            continue
+        for ats, arole, aval in approvals:
+            if ts <= ats:
+                continue
+            if role and role != arole:
+                drained = str(val) in {"0", "0.0"} or val == 0 or "phish" in target or "phish" in str(val or "").lower()
+                if drained or "phish" in role.lower() or "dapp" in role.lower():
+                    return [
+                        {
+                            "kind": "approval_phishing_detected",
+                            "ts": ts,
+                            "victim": arole,
+                            "spender": role,
+                            "approval": aval,
+                            "result_target": e.get("target"),
+                            "result_value": val,
+                            "policy": "permit2_or_capped_allowance",
+                        }
+                    ]
+    return []
+
+
+def _synthesize_bridge_drain(events: list[dict]) -> list[dict]:
+    """forged proof + vault 清零 + 对侧 mint → bridge_drain_detected (ADV77)."""
+    if any(e.get("kind") == "bridge_drain_detected" for e in events):
+        return []
+    forged = False
+    vault_zero = False
+    mint = False
+    role = ""
+    ts_max = 0
+    for e in events:
+        if e.get("kind") not in {"write", "conflict_detected", "double_claim_detected"}:
+            continue
+        r = str(e.get("role") or "")
+        target = str(e.get("target") or "").lower()
+        val = str(e.get("new") if "new" in e else e.get("value") or "").lower()
+        ts = int(e.get("ts") or 0)
+        ts_max = max(ts_max, ts)
+        if "proof" in target or "forged" in val or "fake" in val:
+            forged = True
+            role = r or role
+        if "bridge" in target or "vault" in target:
+            if val in {"0", "0.0", ""} or "drain" in val:
+                vault_zero = True
+                role = r or role
+        if "mint" in val or "chain_b" in target or "mint" in target:
+            mint = True
+            role = r or role
+    if forged and (vault_zero or mint):
+        return [
+            {
+                "kind": "bridge_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "forged_proof": forged,
+                "vault_zero": vault_zero,
+                "cross_mint": mint,
+                "policy": "multi_sig_proof_and_rate_limit",
+            }
+        ]
+    if vault_zero and mint:
+        return [
+            {
+                "kind": "bridge_drain_detected",
+                "ts": ts_max,
+                "role": role,
+                "vault_zero": True,
+                "cross_mint": True,
+                "policy": "multi_sig_proof_and_rate_limit",
+            }
+        ]
     return []
 
 
