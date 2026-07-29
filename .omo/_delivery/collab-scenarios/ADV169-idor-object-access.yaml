@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV169-idor-object-access
+category: A_conflict
+adversarial: true
+seed: 269
+description: >
+  [对抗·red-team wave29] IDOR: 改对象 ID 读取他人订单/隐私数据,
+  管线尚无 idor_object_access_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: order_42, value: "owner_victim", writers: [app]}
+  roles: [attacker, app, victim]
+inject:
+  - {type: write_conflict, role: attacker, target: request_id, value: "order_id=42"}
+  - {type: write_conflict, role: app, target: authz_check, value: "skipped_owner_check"}
+  - {type: write_conflict, role: app, target: response, value: "victim_pii_returned"}
+  - {type: write_conflict, role: attacker, target: loot, value: "pii_exfil"}
+expected:
+  behavior: idor_object_access_detected
+  silent_loss: 0
+verdict:
+  - criterion: idor_object_access_detected
+    check: events_contain
+    args: {kind: idor_object_access_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

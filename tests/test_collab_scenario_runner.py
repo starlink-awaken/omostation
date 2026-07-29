@@ -452,12 +452,27 @@ def test_wave28_adv157159161_detectors_pass() -> None:
         )
 
 
-def test_wave28_hard_adv_still_fail() -> None:
-    """ADV163/165/167 加硬场景须失败 (对抗强度)."""
+def test_wave29_adv163165167_detectors_pass() -> None:
+    """wave29 闭环: ssrf_cloud_metadata / insecure_cookie_deserial / mass_assignment."""
     for name in (
         "ADV163-ssrf-cloud-metadata.yaml",
         "ADV165-insecure-deserial-cookie.yaml",
         "ADV167-mass-assignment.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave29 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave29_hard_adv_still_fail() -> None:
+    """ADV169/171/173 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV169-idor-object-access.yaml",
+        "ADV171-broken-access-admin.yaml",
+        "ADV173-file-upload-webshell.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
