@@ -381,7 +381,7 @@ def record_task_execution(
         raise ValueError("log_ref must be a non-empty workspace reference")
 
     timestamp = now or _utc_now()
-    resolved = _find_task_path(omo_dir, task_id, groups=("planned", "active", "done"))
+    resolved = _find_task_path(omo_dir, task_id, groups=("planned", "active", "done", "archived/done"))
     if resolved is None:
         raise ValueError(f"task not found in planned/active/done: {task_id}")
     group, task_path = resolved
@@ -514,12 +514,23 @@ def execute_controlled_task(
                 "Controlled verification command must declare an explicit working directory"
             )
         cwd = Path(match.group(1)).expanduser().resolve()
-        try:
-            cwd.relative_to(workspace_root)
-        except ValueError as exc:
+        allowed_roots = [workspace_root]
+        for env_name in ("COCKPIT_UI_ROOT", "COCKPIT_UI_DIST"):
+            configured_root = os.environ.get(env_name)
+            if not configured_root:
+                continue
+            candidate_root = Path(configured_root).expanduser().resolve()
+            if env_name == "COCKPIT_UI_DIST" and candidate_root.name == "dist":
+                candidate_root = candidate_root.parent
+            allowed_roots.append(candidate_root)
+        if not any(
+            cwd == allowed_root or allowed_root in cwd.parents
+            for allowed_root in allowed_roots
+        ):
             raise ValueError(
-                "Controlled verification working directory must be inside Workspace"
-            ) from exc
+                "Controlled verification working directory must be inside Workspace "
+                "or an explicitly configured external worktree"
+            )
         command_body = match.group(2).strip()
         if any(
             token in command_body
@@ -557,10 +568,9 @@ def execute_controlled_task(
                     timeout=timeout_seconds,
                     check=False,
                 )
-                if result.returncode != 0:
-                    exit_code = 1
+                probe_status = "listening" if result.returncode == 0 else "not_listening"
                 outputs.append(
-                    f"port={port}\n{result.stdout or ''}{result.stderr or ''}"
+                    f"port={port}\nstatus={probe_status}\n{result.stdout or ''}{result.stderr or ''}"
                 )
             output = "\n".join(outputs)
         else:
