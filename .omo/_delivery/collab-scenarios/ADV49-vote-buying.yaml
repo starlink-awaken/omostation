@@ -1,0 +1,30 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV49-vote-buying
+category: A_conflict
+adversarial: true
+seed: 149
+description: >
+  [对抗·red-team wave9] 贿选: 买家写支付凭证后卖家改票,
+  管线尚无 vote_buying_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: ballot, value: "undecided", writers: [voter]}
+  roles: [buyer, voter]
+inject:
+  - {type: write_conflict, role: buyer, target: bribe_payment, value: "paid_100"}
+  - {type: write_conflict, role: voter, target: ballot, value: "buyer_choice"}
+expected:
+  behavior: vote_buying_detected
+  silent_loss: 0
+verdict:
+  - criterion: vote_buying_detected
+    check: events_contain
+    args: {kind: vote_buying_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
