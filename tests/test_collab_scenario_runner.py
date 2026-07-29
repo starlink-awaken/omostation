@@ -137,12 +137,27 @@ def test_wave7_adv313335_detectors_pass() -> None:
         )
 
 
-def test_wave7_hard_adv_still_fail() -> None:
-    """ADV37/39/41 加硬场景须失败 (对抗强度)."""
+def test_wave8_adv373941_detectors_pass() -> None:
+    """wave8 闭环: clock_skew / ghost_writer / double_spend."""
     for name in (
         "ADV37-eclipse-clock-skew.yaml",
         "ADV39-ghost-writer.yaml",
         "ADV41-double-spend-claim.yaml",
+    ):
+        sc = load_scenario(SCN_DIR / name)
+        r = run_scenario(sc)
+        assert r.passed, (
+            f"{name} should pass after wave8 detectors: "
+            f"{[c.name for c in r.criteria if not c.passed]}"
+        )
+
+
+def test_wave8_hard_adv_still_fail() -> None:
+    """ADV43/45/47 加硬场景须失败 (对抗强度)."""
+    for name in (
+        "ADV43-equivocation.yaml",
+        "ADV45-long-range-rewrite.yaml",
+        "ADV47-censorship-gap.yaml",
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
