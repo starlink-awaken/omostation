@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV117-state-bloat-grief
+category: B_failure_injection
+adversarial: true
+seed: 217
+description: >
+  [对抗·red-team wave21] 状态膨胀 grief: 廉价写入撑爆 state 导致诚实节点掉队,
+  管线已有 state_bloat_grief_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: state_size, value: "baseline", writers: [node]}
+  roles: [attacker, node, honest]
+inject:
+  - {type: write_conflict, role: attacker, target: storage_slots, value: "write_1m_dust_keys"}
+  - {type: write_conflict, role: attacker, target: state_size, value: "bloat_10x"}
+  - {type: write_conflict, role: node, target: sync_status, value: "lagging"}
+  - {type: write_conflict, role: honest, target: honest_tx, value: "rejected_disk_full"}
+expected:
+  behavior: state_bloat_grief_detected
+  silent_loss: 0
+verdict:
+  - criterion: state_bloat_grief_detected
+    check: events_contain
+    args: {kind: state_bloat_grief_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

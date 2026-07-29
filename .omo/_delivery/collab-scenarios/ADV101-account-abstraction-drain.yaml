@@ -9,8 +9,8 @@ category: B_failure_injection
 adversarial: true
 seed: 201
 description: >
-  [对抗·red-team wave17] AA 账户抽干: 恶意 session key / paymaster 合谋转走资产,
-  管线尚无 aa_account_drain_detected → 预期 FAIL
+  [对抗·red-team wave18] AA 账户抽干: 恶意 session key / paymaster 合谋转走资产,
+  管线已有 aa_account_drain_detected → 预期 PASS
 setup:
   blackboard:
     - {key: smart_account, value: "balance_10000", writers: [owner]}
