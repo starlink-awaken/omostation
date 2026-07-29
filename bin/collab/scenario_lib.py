@@ -141,7 +141,7 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     # C 类: 事后机制合成 (partial_failure / starvation)
     events.extend(_synthesize_partial_failure(events))
     events.extend(_synthesize_starvation(blackboard, events))
-    # 对抗补强: ADV13..23 + wave6 ADV25/27/29
+    # 对抗补强: ADV13..29 + wave7 ADV31/33/35
     events.extend(_synthesize_collusion(events, blackboard))
     events.extend(_synthesize_priority_inversion(events, roles))
     events.extend(_synthesize_cascade_failure(events))
@@ -151,6 +151,9 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_split_brain(events))
     events.extend(_synthesize_identity_spoof(events))
     events.extend(_synthesize_supply_chain_tamper(events, scenario, blackboard))
+    events.extend(_synthesize_sybil_flood(events, blackboard))
+    events.extend(_synthesize_time_travel_write(events, blackboard))
+    events.extend(_synthesize_quorum_eclipse(events, roles))
 
     criteria = [
         _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
@@ -761,6 +764,159 @@ def _synthesize_supply_chain_tamper(
                         "policy": "pin_digest_and_rebuild",
                     }
                 ]
+    return []
+
+
+def _synthesize_sybil_flood(events: list[dict], board: dict) -> list[dict]:
+    """≥4 角色同值刷写 + 至少 1 异值少数 → sybil_flood_detected (ADV31)."""
+    if any(e.get("kind") == "sybil_flood_detected" for e in events):
+        return []
+    # target -> value -> roles
+    by_target: dict[str, dict[object, list[str]]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        target = str(e.get("target") or "")
+        role = str(e.get("role") or "")
+        val = e.get("value")
+        if not target or not role:
+            continue
+        by_target.setdefault(target, {}).setdefault(val, []).append(role)
+    for target, val_map in by_target.items():
+        counts = {
+            v: list(dict.fromkeys(roles))
+            for v, roles in val_map.items()
+            if v is not None
+        }
+        if not counts:
+            continue
+        ranked = sorted(counts.items(), key=lambda kv: -len(kv[1]))
+        maj_val, maj_roles = ranked[0]
+        if len(maj_roles) < 4:
+            continue
+        if len(counts) >= 2 or len(maj_roles) >= 5:
+            return [
+                {
+                    "kind": "sybil_flood_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "sybil_value": maj_val,
+                    "sybil_roles": maj_roles,
+                    "sybil_count": len(maj_roles),
+                    "minority_values": [v for v, _ in ranked[1:]],
+                    "policy": "rate_limit_and_identity_bond",
+                }
+            ]
+    return []
+
+
+def _versionish_rank(val: object) -> int | None:
+    """Heuristic version rank: v3 > v1 > v0; 'final' high; 'old'/'ancient' low."""
+    if val is None:
+        return None
+    s = str(val).lower()
+    import re
+
+    m = re.search(r"v(\d+)", s)
+    if m:
+        return int(m.group(1))
+    if "final" in s or "latest" in s or "head" in s:
+        return 1000
+    if "ancient" in s:
+        return 0
+    if "old" in s or "stale" in s:
+        return 1
+    return None
+
+
+def _synthesize_time_travel_write(events: list[dict], board: dict) -> list[dict]:
+    """冲突写把值从高版本压到低版本 → time_travel_write_detected (ADV33).
+
+    用 conflict 事件的 prior/new 版本启发式比较 (v3_final > v1_old > v0_ancient).
+    """
+    if any(e.get("kind") == "time_travel_write_detected" for e in events):
+        return []
+    for e in events:
+        if e.get("kind") not in {"conflict_detected", "double_claim_detected"}:
+            continue
+        prior_val = e.get("prior")
+        new_val = e.get("new") if "new" in e else e.get("value")
+        prior_rank = _versionish_rank(prior_val)
+        new_rank = _versionish_rank(new_val)
+        if prior_rank is None or new_rank is None:
+            continue
+        if new_rank < prior_rank:
+            return [
+                {
+                    "kind": "time_travel_write_detected",
+                    "ts": e.get("ts") or 0,
+                    "target": e.get("target"),
+                    "prior_value": prior_val,
+                    "prior_rank": prior_rank,
+                    "new_value": new_val,
+                    "new_rank": new_rank,
+                    "role": e.get("role"),
+                    "policy": "reject_stale_override",
+                }
+            ]
+    return []
+
+
+def _synthesize_quorum_eclipse(events: list[dict], roles: list[str]) -> list[dict]:
+    """关键角色超时后其余角色仍形成伪法定人数 → quorum_eclipse_detected (ADV35)."""
+    if any(e.get("kind") == "quorum_eclipse_detected" for e in events):
+        return []
+    timeouts = [
+        str(e.get("role"))
+        for e in events
+        if e.get("kind") == "role_timeout" and e.get("role")
+    ]
+    if not timeouts:
+        return []
+    # critical-like roles: name contains critical / leader / primary / coordinator
+    critical_to = [
+        r
+        for r in timeouts
+        if any(
+            k in r.lower()
+            for k in ("critical", "leader", "primary", "coord", "chief")
+        )
+    ]
+    if not critical_to:
+        # also: timed-out role was in setup roles and ≥3 others write same value after
+        critical_to = timeouts
+    timed = set(critical_to)
+    # after any critical timeout ts, count majority writes
+    timeout_ts = min(
+        int(e.get("ts") or 0)
+        for e in events
+        if e.get("kind") == "role_timeout" and str(e.get("role")) in timed
+    )
+    by_tv: dict[tuple[str, object], list[str]] = {}
+    for e in events:
+        if e.get("kind") != "write":
+            continue
+        if int(e.get("ts") or 0) < timeout_ts:
+            continue
+        role = str(e.get("role") or "")
+        if role in timed:
+            continue
+        key = (str(e.get("target")), e.get("value"))
+        by_tv.setdefault(key, []).append(role)
+    for (target, value), writers in by_tv.items():
+        uniq = list(dict.fromkeys(writers))
+        if len(uniq) >= 3:
+            return [
+                {
+                    "kind": "quorum_eclipse_detected",
+                    "ts": max((e.get("ts") or 0) for e in events) + 1,
+                    "target": target,
+                    "value": value,
+                    "quorum_roles": uniq,
+                    "eclipsed_roles": sorted(timed),
+                    "policy": "require_critical_ack_or_abort",
+                }
+            ]
     return []
 
 
