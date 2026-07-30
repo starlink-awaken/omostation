@@ -2076,7 +2076,7 @@ gac:
 
     # -- 注册面 drift 门 (ADR-0238 MOF + ADR-0242 metaos + P0-5 doc-claims, R-GOV-1 一致性) --
     - id: CR-X4-MOF-CAPABILITIES-DRIFT
-      source_type: indexed
+      source_type: native
       source_ref: "bin/mof/check-mof-capabilities-drift.py"
       dimension: X4
       layer: meta
@@ -2088,7 +2088,7 @@ gac:
       created_at: "2026-07-25"
       adr: "ADR-0238"
     - id: CR-X4-METAOS-REGISTRY-DRIFT
-      source_type: indexed
+      source_type: native
       source_ref: "bin/mof/check-mof-capabilities-drift.py"
       dimension: X4
       layer: meta
@@ -2100,7 +2100,7 @@ gac:
       created_at: "2026-07-26"
       adr: "ADR-0242"
     - id: CR-X4-DOC-CLAIMS
-      source_type: indexed
+      source_type: native
       source_ref: "bin/mof/check-doc-claims.py"
       dimension: X4
       layer: meta
@@ -2183,7 +2183,7 @@ gac:
       name: "派生面范式审计"
       description: "派生面应gitignored不占用SSOT.验证DERIVED_PATHS列表."
       check_type: ssot_pointer
-      target: .omo/_derived/
+      target: projects/ecos/.omo/_derived/
       source_ref: bin/gac/omo-state-cleanup.py::audit
       executor: [omo_audit, radar_cron]
       enforcement: advisory

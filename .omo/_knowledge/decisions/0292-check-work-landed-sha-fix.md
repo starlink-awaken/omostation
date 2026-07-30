@@ -1,10 +1,19 @@
+---
+status: ACCEPTED
+lifecycle: decision
+owner: governance-agent
+last-reviewed: 2026-07-30
+related:
+  - 0293-phase45-governance-observability.md
+---
+
 # ADR-0292: check-work-landed SHA Detection Fix + M3 Grace Baseline
 
 > **Status**: Accepted
 > **Date**: 2026-07-30
 > **Author**: governance-agent
 > **Supersedes**: (none)
-> **Related**: ADR-0249 (governance budget), ADR-0291 (Phase 45 observability), Z2 baseline protection rule, M3 grace baseline protocol
+> **Related**: ADR-0249 (governance budget), ADR-0293 (Phase 45 observability), Z2 baseline protection rule, M3 grace baseline protocol
 
 ## Context
 
@@ -103,5 +112,5 @@ This change is backward-compatible:
 
 - Z2 baseline protection rule (`.omo/standards/adr-process.md`)
 - ADR-0249 (governance budget 40/40/20)
-- ADR-0291 (Phase 45 observability)
+- ADR-0293 (Phase 45 observability)
 - P71 baseline recovery, P72 follow-up, P78 triple-axis diagnostic

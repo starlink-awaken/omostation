@@ -1,4 +1,15 @@
-# ADR-0291: Phase 45 — Governance Observability Layer
+---
+status: ACCEPTED
+lifecycle: decision
+owner: governance-agent
+last-reviewed: 2026-07-30
+related:
+  - 0247-strategic-pivot-collab-first-physical-deferred.md
+  - 0291-p86-abcd-final-closeout.md
+  - 0292-check-work-landed-sha-fix.md
+---
+
+# ADR-0293: Phase 45 — Governance Observability Layer
 
 > **Status**: Accepted
 > **Date**: 2026-07-29
