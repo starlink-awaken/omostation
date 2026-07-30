@@ -1,6 +1,6 @@
 # AGENTS.md — Workspace Development Guide
 
-> 最后更新: 2026-07-15
+> 最后更新: 2026-07-29
 > Root operating guide for AI coding agents and developers working in this workspace.
 > Keep this file operational. Put runtime facts in SSOT files, not here.
 
@@ -307,6 +307,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 | State generation convergence | [`.omo/_knowledge/decisions/0128-state-generation-concurrency.md`](.omo/_knowledge/decisions/0128-state-generation-concurrency.md) |
 | **3 类声明/执行鸿沟 (P71 §1)** | 路径错位 (类 A, PR#4 baseline 漂移) / 工具未接 (类 B, 9 check-* 0 caller) / CI 永红 (类 C, doctor + project-layer-index). 修复见 P71 5 阶段流程. 防复发见 4 GaC 规则 (CR-X1-EVIDENCE-RUNNABLE / CR-L0-BOS-DOMAIN-NORM / CR-META-BIN-NAMING / CR-META-BIN-ORPHAN) |
 | **P78 triple-axis diagnostic pattern** (2026-07-17, 静态/运行时/决策三维查证, 深化 P73) | [P78](.omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md) + [audit](.omo/_knowledge/audits/2026-07-17-static-vs-runtime-diagnostic-audit.md) — 报系统问题前过 4 问: 反证 / 运行时实证 / ADR / 覆盖度 |
+| **Phase 45 治理可观测性** (2026-07-29, 健康自检 + 熵清理 + 债务自动种子) | [agora `tools_health.py`](projects/agora/src/agora/server/tools_health.py) — 3 个 MCP 工具 (`health_check` / `entropy_cleanup_tool` / `debt_auto_seed_tool`) + 增强 `/health` HTTP 端点. 8/8 单元测试通过, 184/184 全量通过. |
 
 ## 9. Closeout Checklist
 

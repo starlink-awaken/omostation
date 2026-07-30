@@ -330,8 +330,8 @@ objectives:
   progress: 100.0
 - desc: 'Wave 5 — Multi-Machine Foundation (Q4 Phase 2: Agent 注册中心 + 分布式调度原型)'
   id: W5
-  status: active
-  progress: 0.0
+  status: done
+  progress: 100.0
   kpi: 'Agent 注册中心 MVP + 分布式任务调度原型 (单机模拟多节点)'
   tasks: []
 - desc: 'Wave 6 — State Sync + Failover (Q4 Phase 2: 状态同步 + 故障转移)'
