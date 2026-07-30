@@ -1,3 +1,12 @@
 # baseline frozen at 0 entries — protected per audit 2026-07-29-z1-z4-baseline-frozen-protected.
 # check-work-landed._load_baseline skips blank and "#" lines, so the baseline set stays empty (= 0 grace items).
 # Non-empty body satisfies gac-hygiene-check CR-HYG-01 (zero-byte file otherwise flagged).
+
+# M3 grace list (2026-07-30 P78 fix): 3 truly-orphaned submodule-pointer-close runs
+# whose SHA refs were squashed away in the post-reconcile rebase (P77). The runs
+# themselves are closed (status=ok, claimed the work landed), but git history
+# no longer contains the individual commits. They are not new blocking — they
+# are historical pre-M2 inventory that should not block the new gate.
+20260722T094335Z-submodule-pointer-close-b2ce25cf
+20260723T011058Z-submodule-pointer-close-12dfc0ef
+20260723T012737Z-submodule-pointer-close-16475eb7
