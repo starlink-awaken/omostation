@@ -95,6 +95,17 @@
 
 ## 三、Roadmap 规划
 
+### 3.0 当前执行位置
+
+路线图的目标仍是“收敛执行面 → 兑现蜂群 → 跃迁个人大脑”。当前应以运行态与验收文档为准：
+
+- 当前阶段、波次、健康状态与下一里程碑：[`.omo/state/system.yaml`](../.omo/state/system.yaml)。
+- 多智能体协作优先、物理多机延后：[`ADR-0247`](../.omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md)。
+- Phase 46 的 Registry、同步与故障转移验收：[`projects/runtime/src/runtime/registry/README.md`](../projects/runtime/src/runtime/registry/README.md)。
+- 用户价值主流程与验收口径：[`PROJECT-COMPLETE-GUIDE.md`](PROJECT-COMPLETE-GUIDE.md) 和 [`G-DEL-PHASE2-BOARD.md`](G-DEL-PHASE2-BOARD.md)。
+
+因此，项目目前处在**基础设施收敛末段、兑现期入口**：核心能力正在从“代码存在”推进到“可同步、可故障转移、可证明”；尚未进入真实物理多机和个人大脑产品化阶段。进入下一阶段的必要条件不是继续堆功能，而是完成 Registry 端到端验收、真实用户流程走查，并让多角色协作产生可重复的业务收益。
+
 ### 3.1 总体路线图
 
 ```

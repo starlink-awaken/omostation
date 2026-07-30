@@ -1,30 +1,30 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-07-29T23:55:54Z
+# generated_at: 2026-07-30T07:15:34Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5}
 
-generated_at: "2026-07-29T23:55:54Z"
+generated_at: "2026-07-30T07:15:34Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 96
-governance_anomaly_score: 85
+health_score: 94
+governance_anomaly_score: 80
 anomaly_count: 1
 service_online_ratio: 1.000
 freshness_score: 100
 feedback_alive: True
-feedback_last_ts: "2026-07-29T23:42:54+00:00"
-feedback_staleness_hours: 0.2
+feedback_last_ts: "2026-07-30T06:57:54+00:00"
+feedback_staleness_hours: 0.3
 total_tasks: 121
 done: 119
 planned: 2
 
 governance_execution_surface:
   base_anomaly_score: 85
-  execution_deduction: 0
+  execution_deduction: 5
   orphan_worktrees: 0
-  adr_renumber_events: 0
+  adr_renumber_events: 1
   concurrent_conflicts: 0
-  score: 85
+  score: 80
   weights:
     orphan_worktrees: 4
     adr_renumber_events: 5
@@ -36,10 +36,10 @@ health_composite_breakdown:
     freshness: 0.2
     runtime: 0.5
   contributions:
-    governance: 25.5
+    governance: 24.0
     freshness: 20.0
     runtime: 50.0
-  raw: 95.5
+  raw: 94.0
 
 anomalies:
   - "[WARN]  Owner 集中度: engineering-agent 持有 91% 任务 (单点故障风险, 知识/能力集中)"
