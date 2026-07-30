@@ -193,8 +193,10 @@ class TestDebtAutoSeed:
 
         assert result["seeded_count"] >= 1
         assert any("SVC-HEALTH" in s for s in result["seeded"])
-        # Verify file was created
-        created_files = list(debt_dir.glob("DEBT-SVC-HEALTH-*.yaml"))
+        # Verify file was created in proposal dir (not .omo directly)
+        from agora.server.tools_health import _resolve_proposal_dir
+
+        created_files = list(_resolve_proposal_dir().glob("DEBT-SVC-HEALTH-*.yaml"))
         assert len(created_files) == 1
 
     @pytest.mark.asyncio

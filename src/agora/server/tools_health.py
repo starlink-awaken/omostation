@@ -47,6 +47,16 @@ def _resolve_workspace_root() -> str:
     return os.environ.get("WORKSPACE_AUDIT_ROOT") or str(default_root)
 
 
+def _resolve_proposal_dir() -> Path:
+    """Return the local proposal directory for debt items.
+
+    Debt proposals are written here rather than directly to .omo/debt/items/
+    because governed writes must route through omo CLI / c2g ingress per
+    ADR-0214. The omo broker reads from this proposal dir on next sync.
+    """
+    return Path(os.environ.get("AGORA_DATA_DIR", "/tmp/agora")) / "debt-proposals"
+
+
 # ═══════════════════════════════════════════════════════════════
 # Health Self-Check
 # ═══════════════════════════════════════════════════════════════
@@ -254,11 +264,15 @@ async def debt_auto_seed() -> dict:
     - Missing governance documentation
     """
     ws_root = _resolve_workspace_root()
-    debt_dir = Path(ws_root) / ".omo" / "debt" / "items"
-    debt_dir.mkdir(parents=True, exist_ok=True)
+    # Scan existing debts for dedup, but write proposals to local proposal dir
+    # (NOT directly to .omo/debt/items/ — governed writes must route through
+    # omo CLI / c2g ingress per ADR-0214)
+    ws_debt_dir = Path(ws_root) / ".omo" / "debt" / "items"
+    proposal_dir = _resolve_proposal_dir()
+    proposal_dir.mkdir(parents=True, exist_ok=True)
 
     seeded: list[str] = []
-    existing = {f.stem for f in debt_dir.glob("*.yaml")}
+    existing = {f.stem for f in ws_debt_dir.glob("*.yaml")} if ws_debt_dir.exists() else set()
 
     # Check 1: Services without health endpoints
     registry = _get_registry()
@@ -269,7 +283,7 @@ async def debt_auto_seed() -> dict:
             debt_id = f"DEBT-SVC-HEALTH-{svc_name.upper()}"
             if not health_ep and debt_id not in existing:
                 _write_debt_item(
-                    debt_dir,
+                    proposal_dir,
                     debt_id,
                     title=f"Service '{svc_name}' missing health endpoint",
                     dimension="reliability",
@@ -290,7 +304,7 @@ async def debt_auto_seed() -> dict:
                     debt_id = f"DEBT-PROXY-TAGS-{tool_name.upper().replace('.', '-')}"
                     if debt_id not in existing:
                         _write_debt_item(
-                            debt_dir,
+                            proposal_dir,
                             debt_id,
                             title=f"Proxy tool '{tool_name}' has no governance tags",
                             dimension="governance",
