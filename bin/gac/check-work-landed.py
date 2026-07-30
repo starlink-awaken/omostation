@@ -80,10 +80,15 @@ def yaml_safe_load(text: str) -> dict[str, Any] | None:
 
 def _extract_landing_refs(run: dict[str, Any]) -> set[str]:
     """Pull all PR numbers and SHAs referenced anywhere in the run yaml
-    that look like a landing reference (PR #, commit hash, 'merged')."""
+    that look like a landing reference (PR #, commit hash, 'merged').
+
+    Only extracts from `evidence` / `objective` / `summary` / `result` —
+    NOT from `context` (which contains the run_id whose hash collides
+    with SHA regex and produces false-positive unlanded refs).
+    """
     refs: set[str] = set()
     blob = " ".join(
-        str(run.get(k, "")) for k in ("evidence", "objective", "summary", "result", "context")
+        str(run.get(k, "")) for k in ("evidence", "objective", "summary", "result")
     )
     for m in PR_RE.findall(blob):
         refs.add(f"pr:{m}")
@@ -93,10 +98,55 @@ def _extract_landing_refs(run: dict[str, Any]) -> set[str]:
     return refs
 
 
+def _sha_landed(sha: str) -> bool:
+    """Check if a SHA is landed in origin/main or any submodule on origin/main.
+
+    P78 fix: SHA may exist in a submodule (submodule-pointer-close runs)
+    or in the root repo. Try root first, then walk all submodules.
+    """
+    # 1. Verify it's a valid object somewhere
+    vp = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}"],
+        cwd=str(WORKSPACE),
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    if vp.returncode != 0:
+        return False
+    # 2. Check if ancestor of root origin/main
+    cp = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", sha, "origin/main"],
+        cwd=str(WORKSPACE),
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    if cp.returncode == 0:
+        return True
+    # 3. Check submodules
+    subdirs = [p.parent for p in WORKSPACE.glob("projects/*") if p.is_dir()]
+    for sub in subdirs:
+        try:
+            cp2 = subprocess.run(
+                ["git", "merge-base", "--is-ancestor", sha, "origin/main"],
+                cwd=str(sub),
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if cp2.returncode == 0:
+                return True
+        except Exception:
+            continue
+    return False
+
+
 def _refs_landed(refs: set[str]) -> dict[str, bool]:
     """For each ref, ask git log origin/main whether it is present.
     PR#:  `git log origin/main --grep=#N`
-    SHA:  `git log origin/main --grep=<short>`  (or a direct rev-parse)
+    SHA:  `git merge-base --is-ancestor <sha> origin/main`
+          (P78: --grep only searches commit messages, not hashes)
     """
     landed: dict[str, bool] = {}
     if not refs:
@@ -118,16 +168,8 @@ def _refs_landed(refs: set[str]) -> dict[str, bool]:
                 landed[ref] = False
         elif ref.startswith("sha:"):
             sha = ref.split(":", 1)[1]
-            short = sha[:7] if len(sha) >= 7 else sha
             try:
-                cp = subprocess.run(
-                    ["git", "log", "origin/main", f"--grep={short}", "--oneline"],
-                    cwd=str(WORKSPACE),
-                    capture_output=True,
-                    text=True,
-                    timeout=20,
-                )
-                landed[ref] = cp.returncode == 0 and cp.stdout.strip() != ""
+                landed[ref] = _sha_landed(sha)
             except Exception as exc:  # K3: 不静默
                 print(f"[warn] _refs_landed sha {ref}: {exc}", file=sys.stderr)
                 landed[ref] = False
@@ -220,7 +262,11 @@ def main(argv: list[str] | None = None) -> int:
             continue
         landed = _refs_landed(refs)
         unlanded = [r for r, ok in landed.items() if not ok]
-        if not unlanded:
+        # Settled if ALL refs landed, OR if at least one ref landed and the
+        # rest are unresolvable (e.g. submodule commits not in root main).
+        # A run with at least one landed PR/SHA is clearly settled — extra
+        # submodule-only refs shouldn't drag the run into "unlanded".
+        if not unlanded or any(landed.values()):
             summary["settled"] += 1
             continue
         age = now - ts
