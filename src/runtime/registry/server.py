@@ -245,36 +245,6 @@ def create_app(persist_path: str | None = None, node_id: str = "local") -> FastA
         healthy = [a for a in agents if a.status != AgentStatus.OFFLINE]
         return HealthResponse(status="ok", agents=len(agents), nodes=len(store.list_nodes()), healthy_agents=len(healthy))
 
-    # ── Sync endpoints (Phase 46 W2) ────────────────────────────
-
-    @app.post("/sync/delta")
-    def sync_delta(body: dict) -> dict:
-        """Receive a delta push from a peer node.
-
-        Body: {source_node_id, vclock, agents: [...]}
-        """
-        from .sync import GossipSync
-
-        store = _get_store()
-        local_id = body.get("source_node_id", "")
-        remote_agents = body.get("agents", [])
-        merged = 0
-        for agent_dict in remote_agents:
-            try:
-                agent = AgentInfo.from_dict(agent_dict)
-            except (KeyError, ValueError):
-                continue
-            existing = store.get_agent(agent.agent_id)
-            if existing is None:
-                store.register_agent(agent)
-                merged += 1
-        return {"received": merged, "source_node_id": local_id}
-
-    @app.post("/sync/force")
-    def sync_force() -> dict:
-        """Trigger an on-demand sync cycle (placeholder for full reconciler)."""
-        return {"status": "scheduled"}
-
     return app
 
 

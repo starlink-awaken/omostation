@@ -208,6 +208,18 @@ class TestRegistryServer:
         assert r.json()["local_node_id"] == "local"
         assert r.json()["vclock"] >= 0
 
+    def test_force_sync_runs_real_sync_cycle(self, client):
+        r = client.post("/sync/force")
+        assert r.status_code == 200
+        assert set(r.json()) == {
+            "pulled",
+            "pushed",
+            "conflicts_resolved",
+            "peers_unreachable",
+            "duration_ms",
+            "errors",
+        }
+
     def test_failover_redispatches_inflight_task(self, client):
         failed = client.post(
             "/agents",
