@@ -20,6 +20,7 @@ class AgentStatus(str, enum.Enum):
     OFFLINE = "offline"
     ERROR = "error"
     DRAINING = "draining"
+    REMOTE_OFFLINE = "remote_offline"
 
 
 class NodeRole(str, enum.Enum):

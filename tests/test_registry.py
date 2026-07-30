@@ -192,6 +192,41 @@ class TestRegistryServer:
         assert r.status_code == 201
         assert r.json()["status"] == "pending"
 
+    def test_sync_delta_merges_remote_agent(self, client):
+        remote = AgentInfo(name="remote", node_id="node-b", capabilities=[Capability(name="code")])
+        r = client.post(
+            "/sync/delta",
+            json={"source_node_id": "node-b", "vclock": 4, "agents": [remote.to_dict()]},
+        )
+        assert r.status_code == 200
+        assert r.json()["merged"] == 1
+        assert client.get("/agents/find", params={"node_id": "node-b"}).json()[0]["name"] == "remote"
+
+    def test_sync_status_exposes_vclock(self, client):
+        r = client.get("/sync/status")
+        assert r.status_code == 200
+        assert r.json()["local_node_id"] == "local"
+        assert r.json()["vclock"] >= 0
+
+    def test_failover_redispatches_inflight_task(self, client):
+        failed = client.post(
+            "/agents",
+            json={"name": "failed", "node_id": "node-failed", "capabilities": [{"name": "code"}]},
+        ).json()
+        healthy = client.post(
+            "/agents",
+            json={"name": "healthy", "node_id": "node-good", "capabilities": [{"name": "code"}]},
+        ).json()
+        task = client.post("/tasks", json={"name": "t1", "required_capabilities": ["code"]}).json()
+        assert task["agent_id"] == failed["agent_id"]
+
+        r = client.post("/failover/node-failed")
+        assert r.status_code == 200
+        assert r.json()["redispatched"] == 1
+        assert r.json()["assignments"][0]["agent_id"] == healthy["agent_id"]
+        failed_state = client.get(f"/agents/{failed['agent_id']}").json()
+        assert failed_state["status"] == "remote_offline"
+
 
 class TestDispatcher:
     def test_dispatch_to_capable_agent(self):

@@ -117,6 +117,7 @@ class GossipSync:
         self._running = False
         self._task: asyncio.Task | None = None
         self._last_sync_result: SyncResult | None = None
+        self._mutation_task: asyncio.Task | None = None
 
     # ── Peer management ──────────────────────────────────────────
 
@@ -153,6 +154,9 @@ class GossipSync:
             except asyncio.CancelledError:
                 pass
         self._task = None
+        if self._mutation_task:
+            self._mutation_task.cancel()
+            self._mutation_task = None
         logger.info("GossipSync stopped")
 
     # ── Sync loop ───────────────────────────────────────────────
@@ -193,6 +197,7 @@ class GossipSync:
                 peer.consecutive_failures += 1
                 if peer.consecutive_failures >= 3:
                     peer.reachable = False
+                    self._store.mark_node_agents_offline(peer.node_id)
                 result.peers_unreachable += 1
                 result.errors.append(f"{peer.node_id}: {type(e).__name__}")
                 logger.warning("Peer %s unreachable: %s", peer.node_id, e)
@@ -210,6 +215,50 @@ class GossipSync:
         result.duration_ms = (time.time() - start) * 1000
         self._last_sync_result = result
         return result
+
+    def notify_local_mutation(self) -> None:
+        """Schedule an immediate push after a local registry mutation."""
+        if not self._running or self._mutation_task and not self._mutation_task.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._vclock += 1
+        self._mutation_task = loop.create_task(self._push_reachable(), name="gossip-push")
+
+    async def _push_reachable(self) -> int:
+        agents = self._store.list_agents()
+        pushed = 0
+        for peer in self._peers.values():
+            if not peer.reachable:
+                continue
+            try:
+                pushed += await self._push_to_peer(peer, agents)
+            except (httpx.HTTPError, OSError, asyncio.TimeoutError):
+                peer.consecutive_failures += 1
+                if peer.consecutive_failures >= 3:
+                    peer.reachable = False
+                    self._store.mark_node_agents_offline(peer.node_id)
+        return pushed
+
+    def apply_delta(self, agents: list[dict], source_node_id: str = "", vclock: int = 0) -> int:
+        """Merge a peer delta and advance the local logical clock."""
+        self._vclock = max(self._vclock, vclock) + 1
+        merged = 0
+        for payload in agents:
+            try:
+                remote = AgentInfo.from_dict(payload)
+            except (KeyError, ValueError, TypeError):
+                continue
+            existing = self._store.get_agent(remote.agent_id)
+            if existing is None:
+                self._store.register_agent(remote)
+                merged += 1
+            elif self._should_override(existing, remote):
+                self._store.update_agent(remote.agent_id, **remote.to_dict())
+                merged += 1
+        return merged
 
     # ── Pull from peer ──────────────────────────────────────────
 

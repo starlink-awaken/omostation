@@ -45,8 +45,10 @@ class Dispatcher:
         self._store = store
         self._assignments: dict[str, TaskAssignment] = {}
         self._pending: dict[str, TaskRequest] = {}
+        self._requests: dict[str, TaskRequest] = {}
 
     def submit(self, request: TaskRequest) -> TaskAssignment | None:
+        self._requests[request.task_id] = request
         candidates = self._find_capable_agents(request.required_capabilities)
         if not candidates:
             self._pending[request.task_id] = request
@@ -89,6 +91,21 @@ class Dispatcher:
         if agent and agent.active_tasks > 0:
             self._store.update_agent(agent.agent_id, active_tasks=agent.active_tasks - 1)
         return True
+
+    def failover_node(self, node_id: str) -> list[TaskAssignment]:
+        """Requeue dispatched work from a failed node and route it elsewhere."""
+        for task_id, assignment in list(self._assignments.items()):
+            if assignment.status != TaskStatus.DISPATCHED:
+                continue
+            agent = self._store.get_agent(assignment.agent_id)
+            if agent is None or agent.node_id != node_id:
+                continue
+            assignment.status = TaskStatus.FAILED
+            request = self._requests.get(task_id)
+            if request is not None:
+                self._pending[task_id] = request
+            self._store.set_agent_status(agent.agent_id, AgentStatus.REMOTE_OFFLINE)
+        return self.dispatch_pending()
 
     def get_assignment(self, task_id: str) -> TaskAssignment | None:
         return self._assignments.get(task_id)

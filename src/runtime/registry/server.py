@@ -13,6 +13,7 @@ from .dispatch import Dispatcher, TaskRequest, TaskStatus
 from .heartbeat import HeartbeatManager
 from .models import AgentInfo, AgentStatus, Capability, NodeInfo, NodeRole
 from .store import RegistryStore
+from .sync import GossipSync
 
 logger = logging.getLogger(__name__)
 
@@ -80,17 +81,27 @@ class HealthResponse(BaseModel):
 _store: RegistryStore | None = None
 _heartbeat: HeartbeatManager | None = None
 _dispatcher: Dispatcher | None = None
+_sync: GossipSync | None = None
 
 
-def create_app(persist_path: str | None = None) -> FastAPI:
+class SyncDeltaRequest(BaseModel):
+    source_node_id: str = ""
+    vclock: int = 0
+    agents: list[dict[str, Any]] = []
+
+
+def create_app(persist_path: str | None = None, node_id: str = "local") -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        global _store, _heartbeat, _dispatcher
+        global _store, _heartbeat, _dispatcher, _sync
         _store = RegistryStore(persist_path)
         _heartbeat = HeartbeatManager(_store)
         _dispatcher = Dispatcher(_store)
+        _sync = GossipSync(_store, local_node_id=node_id)
         _heartbeat.start()
+        await _sync.start()
         yield
+        await _sync.stop()
         _heartbeat.stop()
 
     app = FastAPI(title="Agent Registry", version="0.1.0", lifespan=lifespan)
@@ -99,11 +110,16 @@ def create_app(persist_path: str | None = None) -> FastAPI:
         assert _store is not None
         return _store
 
+    def _get_sync() -> GossipSync:
+        assert _sync is not None
+        return _sync
+
     @app.post("/agents", response_model=AgentResponse, status_code=201)
     def register_agent(req: RegisterAgentRequest) -> AgentResponse:
         caps = [Capability(name=c.name, tags=c.tags, cost_eu=c.cost_eu) for c in req.capabilities]
         agent = AgentInfo(name=req.name, node_id=req.node_id, endpoint=req.endpoint, capabilities=caps, max_concurrency=req.max_concurrency, metadata=req.metadata)
         _get_store().register_agent(agent)
+        _get_sync().notify_local_mutation()
         return _agent_to_response(agent)
 
     @app.get("/agents", response_model=list[AgentResponse])
@@ -127,12 +143,14 @@ def create_app(persist_path: str | None = None) -> FastAPI:
     def agent_heartbeat(agent_id: str) -> dict:
         if not _get_store().heartbeat(agent_id):
             raise HTTPException(404, f"Agent {agent_id} not found")
+        _get_sync().notify_local_mutation()
         return {"ok": True}
 
     @app.delete("/agents/{agent_id}")
     def deregister_agent(agent_id: str) -> dict:
         if not _get_store().remove_agent(agent_id):
             raise HTTPException(404, f"Agent {agent_id} not found")
+        _get_sync().notify_local_mutation()
         return {"ok": True}
 
     @app.post("/nodes", response_model=NodeResponse, status_code=201)
@@ -196,6 +214,29 @@ def create_app(persist_path: str | None = None) -> FastAPI:
     def dispatch_pending() -> dict:
         assigned = _dispatcher.dispatch_pending()
         return {"dispatched": len(assigned), "assignments": [{"task_id": a.task_id, "agent_id": a.agent_id} for a in assigned]}
+
+    @app.post("/sync/delta")
+    def apply_sync_delta(req: SyncDeltaRequest) -> dict:
+        merged = _get_sync().apply_delta(req.agents, req.source_node_id, req.vclock)
+        return {"ok": True, "merged": merged, "vclock": _get_sync().get_status()["vclock"]}
+
+    @app.post("/sync/force")
+    async def force_sync() -> dict:
+        return (await _get_sync().sync_once()).to_dict()
+
+    @app.get("/sync/status")
+    def sync_status() -> dict:
+        return _get_sync().get_status()
+
+    @app.post("/failover/{node_id}")
+    def failover_node(node_id: str) -> dict:
+        assignments = _dispatcher.failover_node(node_id)
+        return {
+            "ok": True,
+            "node_id": node_id,
+            "redispatched": len(assignments),
+            "assignments": [{"task_id": a.task_id, "agent_id": a.agent_id} for a in assignments],
+        }
 
     @app.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:

@@ -33,6 +33,11 @@ curl -X POST http://localhost:8100/tasks \
 │                     ├─ select_best(least_load)       │
 │                     └─ assign ──→ TaskAssignment     │
 │                                                      │
+│  GossipSync (pull + mutation push)                   │
+│    ├─ /sync/delta → LWW merge + logical clock        │
+│    ├─ /sync/force → on-demand reconciliation          │
+│    └─ 3 failures → remote_offline + task failover     │
+│                                                      │
 │  HeartbeatManager (background sweep)                 │
 │    ├─ TTL 60s → mark OFFLINE                         │
 │    └─ Zombie 3600s → remove                          │
@@ -47,7 +52,8 @@ curl -X POST http://localhost:8100/tasks \
 | `store.py` | Thread-safe in-memory cache + JSON file persistence |
 | `heartbeat.py` | Background daemon: TTL-based liveness sweep + zombie removal |
 | `dispatch.py` | Task dispatcher: capability matching, least-load selection, concurrency-aware routing |
-| `server.py` | FastAPI HTTP API (17 endpoints) |
+| `sync.py` | Cross-node pull/push gossip and fail-closed state merge |
+| `server.py` | FastAPI HTTP API |
 
 ## API Reference
 
@@ -89,6 +95,20 @@ curl -X POST http://localhost:8100/tasks \
 |--------|----------|-------------|
 | GET | `/health` | Registry health check |
 
+### Cross-node sync and failover
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/sync/delta` | Merge a peer's agent delta using last-heartbeat-wins |
+| POST | `/sync/force` | Pull and push one reconciliation cycle |
+| GET | `/sync/status` | Read peer, logical-clock, and last-sync state |
+| POST | `/failover/{node_id}` | Requeue in-flight tasks and dispatch them to healthy agents |
+
+Local agent registration, heartbeat, and deregistration schedule an immediate
+best-effort push to reachable peers. Three consecutive peer failures mark the
+peer's agents as `remote_offline`; the registry keeps their records so a later
+gossip cycle can recover them.
+
 ## Data Model
 
 ```python
@@ -98,7 +118,7 @@ AgentInfo:
   node_id: str         # which node this agent lives on
   endpoint: str        # network address
   capabilities: list[Capability]
-  status: AgentStatus  # idle/busy/offline/error/draining
+  status: AgentStatus  # idle/busy/offline/remote_offline/error/draining
   max_concurrency: int
   active_tasks: int
   load_ratio: float    # active_tasks / max_concurrency
@@ -116,6 +136,7 @@ Capability:
 3. Selects agent with lowest `load_ratio` (least load)
 4. If no capable agent, queues task to pending
 5. `dispatch_pending()` retries all queued tasks
+6. `failover_node(node_id)` requeues dispatched work owned by an unreachable node
 
 ## Heartbeat
 

@@ -52,6 +52,28 @@ class RegistryStore:
             self._save()
             return True
 
+    def set_agent_status(self, agent_id: str, status: AgentStatus) -> bool:
+        """Change liveness state without refreshing the remote heartbeat."""
+        with self._lock:
+            agent = self._agents.get(agent_id)
+            if agent is None:
+                return False
+            agent.status = status
+            self._save()
+            return True
+
+    def mark_node_agents_offline(self, node_id: str) -> list[str]:
+        """Fail closed for agents owned by an unreachable peer node."""
+        with self._lock:
+            marked: list[str] = []
+            for agent in self._agents.values():
+                if agent.node_id == node_id and agent.status != AgentStatus.REMOTE_OFFLINE:
+                    agent.status = AgentStatus.REMOTE_OFFLINE
+                    marked.append(agent.agent_id)
+            if marked:
+                self._save()
+            return marked
+
     def remove_agent(self, agent_id: str) -> bool:
         with self._lock:
             removed = self._agents.pop(agent_id, None)
