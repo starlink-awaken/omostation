@@ -30,7 +30,7 @@ LAYER_SOURCES: list[dict] = [
     {
         "layer": "I0",
         "name": "agora",
-        "url": f"http://localhost:{os.environ.get('AGORA_MCP_SSE_PORT', '7431')}/v1/health",
+        "url": f"http://localhost:{os.environ.get('AGORA_MCP_SSE_PORT', '7431')}/health",
         "port": int(os.environ.get("AGORA_MCP_SSE_PORT", "7431")),
     },
     {

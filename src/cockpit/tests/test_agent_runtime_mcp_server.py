@@ -175,3 +175,27 @@ class TestMain:
         with mock.patch.object(agent_runtime_mcp_server.mcp, "run") as mock_run:
             agent_runtime_mcp_server.main()
             mock_run.assert_called_once_with(transport="stdio")
+
+
+class TestL0ToolRegistration:
+    """L0 治理工具自动注册 (P78 audit: 8 个 l0_mcp_tools 工具必须暴露)"""
+
+    def test_l0_tools_registered(self):
+        """L0 工具在 mcp 中可调用"""
+        import asyncio
+        from cockpit import l0_mcp_tools
+
+        tools = asyncio.run(agent_runtime_mcp_server.mcp.list_tools())
+        names = {t.name for t in tools}
+        expected = set(l0_mcp_tools.MCP_TOOLS.keys())
+        missing = expected - names
+        assert not missing, f"L0 tools not registered: {missing}"
+
+    def test_l0_tools_have_descriptions(self):
+        """L0 工具都带 description 注解"""
+        import asyncio
+        tools = asyncio.run(agent_runtime_mcp_server.mcp.list_tools())
+        for t in tools:
+            if t.name in {"run_task", "chat"}:
+                continue  # builtin agent-runtime tools
+            assert t.description, f"Tool {t.name} missing description"

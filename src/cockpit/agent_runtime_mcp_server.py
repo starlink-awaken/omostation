@@ -134,6 +134,20 @@ def chat(message: str, history_json: str = "") -> str:
     return messages[-1].get("content", "")
 
 
+# ── L0 治理查询工具 (P78 audit 发现 8 个工具定义在 l0_mcp_tools.py 但未注册) ──
+# 让 Agent Runtime MCP 客户端可直接调 L0 状态/校验/审计
+# 用 fallback 防止 l0_mcp_tools 不可用时整个 server 挂掉
+try:
+    from cockpit.l0_mcp_tools import MCP_TOOLS as _L0_TOOLS
+    for _name, _meta in _L0_TOOLS.items():
+        _fn = _meta["function"]
+        # 闭包绑定: FastMCP 用名字作为 tool identifier
+        globals()[_name] = _fn
+        mcp.tool(name=_name, description=_meta["description"])(_fn)
+except ImportError:
+    _log.warning("l0_mcp_tools 不可用, 跳过 L0 治理工具注册 (cockpit.l0_mcp_tools 模块未找到)")
+
+
 def main():
     """MCP server entry point (used by pyproject.scripts)."""
     logging.basicConfig(level=logging.ERROR)
