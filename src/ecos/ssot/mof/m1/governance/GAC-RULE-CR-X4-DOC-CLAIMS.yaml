@@ -22,7 +22,7 @@ properties:
   version: 1.0.0
   created_at: '2026-07-26'
   adr: ADR-0242
-  source_type: indexed
+  source_type: native
   source_ref: bin/mof/check-doc-claims.py
   enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
