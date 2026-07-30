@@ -188,9 +188,14 @@ def compute_diff(rules: list[dict], m1_nodes: dict[str, dict]) -> dict:
         if rid not in m1_nodes:
             continue
         m1_props = m1_nodes[rid]["data"].get("properties", {})
-        for field in ["dimension", "layer", "check_type", "executor", "lifecycle", "version"]:
-            reg_val = rule.get(field)
-            m1_val = m1_props.get(field)
+        # Include target and source reference so moved paths do not leave stale M1 nodes.
+        for field in [
+            "dimension", "layer", "check_type", "executor", "lifecycle", "version",
+            "target", "source_ref", "source_type",
+        ]:
+            # source_type defaults to native in the projection generator.
+            reg_val = rule.get(field, "native") if field == "source_type" else rule.get(field)
+            m1_val = m1_props.get(field, "native") if field == "source_type" else m1_props.get(field)
             if reg_val != m1_val:
                 stale.append({"id": rid, "field": field, "registry": reg_val, "m1": m1_val})
 
