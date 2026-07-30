@@ -1,13 +1,13 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-CR-META-BIN-ORPHAN
 type: GacRule
 name: bin 工具未接 caller drift (工具存在但 0 caller)
 description: '防元治理盲区 2.0: bin/*.py 工具应至少有一个 caller (Makefile / .github/workflows/
   / pre-commit / gac-local-gate.py::CHECKS / docs 之一). 0 caller 工具落入''声明/执行鸿沟'' (同
   CR-X1-EVIDENCE-RUNNABLE 警示). 当前已知 8 个 check-* 工具 0 caller 待 ADR-0115 Phase 3 评估接入.
-  实现: bin/gac-executor.py 扩展检查 ''caller 引用'' 而非仅 ''文件存在'''
+  实现: bin/gac/gac-executor.py 扩展检查 ''caller 引用'' 而非仅 ''文件存在'''
 status: active
 domain: meta
 layer: meta
@@ -25,7 +25,7 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: '2026-07-02'
-  target: 'bin/gac-executor.py (扩展: 检查 bin/*.py 是否有 caller 引用)'
+  target: 'bin/gac/gac-executor.py (扩展: 检查 bin/*.py 是否有 caller 引用)'
   adr: ADR-0106
   source_type: native
 source: .omo/_truth/registry/governance-checks.yaml
@@ -33,7 +33,7 @@ model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-07-02T00:00:00Z'

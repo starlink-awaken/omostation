@@ -1,39 +1,30 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
 # DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
-id: GAC-RULE-CR-SUBMODULE-BUMP-AUTO
+id: GAC-RULE-CR-X4-MOF-CAPABILITIES-DRIFT
 type: GacRule
-name: Submodule pointer 落后检测 (主仓-子仓对称修复)
-description: '当主仓主分支 .gitmodules 路径下 submodule 实际 HEAD ≠ 主仓 pin SHA,
-
-  radar_cron 报 [advisory]; 24h 未修正 升 [hard]. 治 P76 矛盾 3.
-
-  实施: bin/ssot/submodule-bump-check.py.
-
-  '
+name: GaC 规则 CR-X4-MOF-CAPABILITIES-DRIFT
+description: GaC 治理规则 CR-X4-MOF-CAPABILITIES-DRIFT (X4/meta/consistency_drift)
 status: active
 domain: meta
 layer: meta
-created: '2026-07-07'
+created: '2026-07-25'
 version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
-  id: CR-SUBMODULE-BUMP-AUTO
-  dimension: X1
+  id: CR-X4-MOF-CAPABILITIES-DRIFT
+  dimension: X4
   layer: meta
-  check_type: drift_audit
+  check_type: consistency_drift
   executor:
-  - radar_cron
   - ci_gate
-  - gac_local_gate
   lifecycle: active
   version: 1.0.0
-  created_at: '2026-07-07'
-  target: bin/ssot/submodule-bump-check.py
-  adr: ADR-0158
-  source_type: native
-  source_ref: bin/ssot/submodule-bump-check.py::main
-  enforcement: advisory
+  created_at: '2026-07-25'
+  adr: ADR-0238
+  source_type: indexed
+  source_ref: bin/mof/check-mof-capabilities-drift.py
+  enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
@@ -42,5 +33,5 @@ model_driven_refs:
   derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
-  timestamp: '2026-07-07T00:00:00Z'
+  timestamp: '2026-07-25T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生

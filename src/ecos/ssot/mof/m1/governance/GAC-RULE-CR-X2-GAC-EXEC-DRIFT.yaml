@@ -1,11 +1,11 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-CR-X2-GAC-EXEC-DRIFT
 type: GacRule
 name: GaC executor 注册 drift (声明 vs 实际存在)
 description: GaC 规则声明 executor (ci_gate/omo_audit/evidence_smoke 等), 验证实际存在 (文件/命令/CI
-  workflow); bin/gac-executor.py 检测 missing executor = 规则声明不存在的执行器
+  workflow); bin/gac/gac-executor.py 检测 missing executor = 规则声明不存在的执行器
 status: active
 domain: meta
 layer: meta
@@ -19,11 +19,11 @@ properties:
   check_type: drift_audit
   executor:
   - ci_gate
-  - radar_cron
+  - foundry_cron
   lifecycle: active
   version: 1.0.0
   created_at: '2026-06-27'
-  target: bin/gac-executor.py (executor 声明 vs 实际存在性)
+  target: bin/gac/gac-executor.py (executor 声明 vs 实际存在性)
   adr: ADR-0106
   source_type: native
 source: .omo/_truth/registry/governance-checks.yaml
@@ -31,7 +31,7 @@ model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-06-27T00:00:00Z'

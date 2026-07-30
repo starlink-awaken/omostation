@@ -1,6 +1,6 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-M4-SUBMODULE-HYGIENE
 type: GacRule
 name: 子模块卫生守门
@@ -25,14 +25,14 @@ properties:
   target: .gitignore
   adr: ADR-0152
   source_type: native
-  source_ref: bin/check-submodule-hygiene.py::strict
+  source_ref: bin/ssot/check-submodule-hygiene.py::strict
   enforcement: preferred
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-07-06T00:00:00Z'

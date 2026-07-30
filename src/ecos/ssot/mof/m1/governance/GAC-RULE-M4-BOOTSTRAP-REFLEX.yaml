@@ -1,10 +1,10 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-M4-BOOTSTRAP-REFLEX
 type: GacRule
 name: M4 自反校验门禁 (5-check)
-description: M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema)
+description: M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema).覆盖schema:constraint_l0.yaml/m2_base_schema.yaml/m3-meta.yaml/mof_driven.py
 status: active
 domain: meta
 layer: meta
@@ -26,14 +26,14 @@ properties:
   target: projects/ecos/src/ecos/ssot/mof/
   adr: ADR-0152
   source_type: native
-  source_ref: bin/mof-bootstrap.py::all
+  source_ref: bin/mof/mof-bootstrap.py::all
   enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-07-06T00:00:00Z'
