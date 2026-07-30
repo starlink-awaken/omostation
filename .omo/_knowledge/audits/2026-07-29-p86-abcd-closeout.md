@@ -4,7 +4,15 @@ lifecycle: audit
 owner: governance-team
 last-reviewed: "2026-07-29"
 ---
+
 # P86 A/B/C/D 关闭审计
+
+> ⚠️ **冷启动**: 协作收益**现行定论**只读  
+> [`.omo/_knowledge/audits/2026-07-29-p86-a2-collaboration-gain-map.md`](2026-07-29-p86-a2-collaboration-gain-map.md)  
+> （5.4x 作废 · batch5 demote · 多 agent 真 dispatch 3 类型 shortfall · ADR-0289/0290）
+
+> 卫生 follow-up: ADR-0290 / PR #622；本文件为关闭审计摘要。
+
 
 > 上位: strat-p86 longplan · human-delegated 2026-07-29 · ADR-0287  
 > 本 PR: work/p86-abcd-close — **不**开启 ADV wave32+
@@ -48,3 +56,6 @@ last-reviewed: "2026-07-29"
 
 - longplan §STOP · p84-auto-advance-termination-condition.md  
 - e1-e2-e4-e5-execution.md · e3-exception-two-list.md  
+
+## 最终结案
+见 [2026-07-29-p86-abcd-final-closeout.md](2026-07-29-p86-abcd-final-closeout.md) · ADR-0291。

@@ -196,9 +196,29 @@ def test_high_traffic_audits_have_a2_supersede_banner() -> None:
         "2026-07-29-p86-c-wave-escalation.md",
         "2026-07-29-p86-a3-completion-rootcause.md",
         "2026-07-29-p86-ab-wave-progress.md",
+        "2026-07-29-p86-a2-batch3-coupled-write.md",
+        "2026-07-29-p86-a2-batch4-independent-write.md",
+        "2026-07-29-p86-q2-harness-bug-falsification.md",
     ]
     for name in required:
         p = ROOT / ".omo/_knowledge/audits" / name
         t = p.read_text(encoding="utf-8")
         assert "A2 SSOT 已 supersede" in t, f"{name} missing supersede banner"
         assert "2026-07-29-p86-a2-collaboration-gain-map.md" in t
+
+
+def test_r1_and_batch5_and_closeout_point_to_gain_map() -> None:
+    """R1 / batch5 / abcd-closeout must cold-start to canonical gain-map."""
+    for name in (
+        "2026-07-29-p86-r1-a2-rejudgment-outputfile.md",
+        "2026-07-29-p86-a2-batch5-simple-independent-equal-work.md",
+        "2026-07-29-p86-abcd-closeout.md",
+    ):
+        t = (ROOT / ".omo/_knowledge/audits" / name).read_text(encoding="utf-8")
+        assert "2026-07-29-p86-a2-collaboration-gain-map.md" in t, f"{name} missing gain-map pointer"
+
+
+def test_dualtrack_w3_target_fifteen_after_export() -> None:
+    state = (ROOT / ".omo/state/collab-dualtrack.yaml").read_text(encoding="utf-8")
+    assert "w3_done_target: 15" in state
+    assert "generated_at:" in state
