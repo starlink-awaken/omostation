@@ -1,1558 +1,2370 @@
-# BOS 服务注册表 — 声明式 YAML
-# SSOT: 所有 BOS URI 路由在此定义，替代硬编码 POC_SERVICES
-# 版本: 1.0
-# 自动生成自 services.py POC_SERVICES, 之后手动维护
-# 加载顺序: AGORA_BOS_REGISTRY 环境变量 → 本文件 → POC_SERVICES fallback
-
 services:
-  - uri: "bos://memory/kos/search"
-    domain: memory
-    action: "search"
-    transport: stdio
-    package: "kos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "search"]
-    description: "KOS 知识图谱检索入口 (P33-W1 战役 2 起步)"
-
-  - uri: "bos://memory/kos/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "kos-mcp"
-    command: ["python3", "bin/gac/mcp-server-kos.py"]
-    description: "KOS 统一只读 MCP 服务器入口 (SGF-v1 硬件外挂)"
-
-  # kairon MCP Gateway backend 注册 (P0, agora mcp_proxy 声明式聚合, 2026-07-14)
-  # kairon 9 MCP 全 FastMCP (协议统一完成), agora 作 I0 hub subprocess 代理 (复用, 不重造)
-  - uri: "bos://memory/eidos/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "eidos-mcp"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.mcp_server"]
-    description: "eidos MCP (schema modeling: list/validate/meta/define/export/migrate)"
-    status: active
-
-  - uri: "bos://memory/ontoderive/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "ontoderive-mcp"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.mcp_server"]
-    description: "ontoderive MCP (本体推导 derive)"
-    status: active
-
-  - uri: "bos://memory/minerva/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "minerva-mcp"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.mcp_server.server"]
-    description: "minerva MCP (深度研究 build_cross_domain_report)"
-    status: active
-
-  - uri: "bos://memory/kronos/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "kronos-mcp"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos.mcp_server"]
-    description: "kronos MCP (摄取 fetch_layers/methods)"
-    status: active
-
-  - uri: "bos://memory/iris/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "iris-mcp"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.mcp_server"]
-    description: "iris MCP (发现与召回 connectors)"
-    status: active
-
-  - uri: "bos://memory/sophia/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "sophia-mcp"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sophia.server.mcp_server"]
-    description: "sophia MCP (KEMS 运行时 list_operations/states)"
-    status: active
-
-  - uri: "bos://memory/forge/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "forge-mcp"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.mcp_server"]
-    description: "forge MCP (工具集市 market_install/list)"
-    status: active
-
-  # omostation MCP Gateway backend 注册 (P1, agora mcp_proxy 全局收敛, 2026-07-14)
-  # omostation 6 子项目 MCP (独立 projects/<pkg>, 非 kairon 包) — 全局 15+ MCP 收敛
-  # ADR-0181 Phase 2: standalone metaos MCP 入口封顶
-  # 恢复遗留: AGORA_BOS_INCLUDE_DEPRECATED=1 + METAOS_MCP_ALLOW_STANDALONE=1
-  - uri: "bos://memory/metaos/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "metaos-mcp"
-    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.mcp_server"]
-    description: "[DEPRECATED ADR-0181] metaos standalone MCP — use bos://ecos/workflow + bos://governance/metaos/*"
-    status: deprecated
-
-  - uri: "bos://memory/ecos/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "ecos-mcp"
-    command: ["uv", "run", "--directory", "projects/ecos", "python", "-m", "ecos.mcp_server"]
-    description: "ecos MCP (MOF 治理主 server; 子 services/integration + l0/ssot 留评估)"
-    status: active
-
-  - uri: "bos://memory/omo/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "omo-mcp"
-    command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.mcp_server"]
-    description: "omo MCP (治理内核)"
-    status: active
-
-  - uri: "bos://memory/aetherforge/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "aetherforge-mcp"
-    command: ["uv", "run", "--directory", "projects/aetherforge", "python", "-m", "aetherforge.mcp_server"]
-    description: "aetherforge MCP (生成引擎)"
-    status: active
-
-  - uri: "bos://memory/c2g/mcp-server"
-    domain: memory
-    action: "mcp-server"
-    transport: stdio
-    package: "c2g-mcp"
-    command: ["uv", "run", "--directory", "projects/c2g", "python", "-m", "c2g.mcp_server"]
-    description: "c2g MCP (c2g 引擎)"
-    status: active
-
-  - uri: "bos://capability/cockpit/mcp-server"
+- uri: bos://memory/kos/search
+  domain: memory
+  action: search
+  transport: stdio
+  package: kos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kos.cli
+  - search
+  description: KOS 知识图谱检索入口 (P33-W1 战役 2 起步)
+  status: active
+- uri: bos://memory/kos/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: kos-mcp
+  command:
+  - python3
+  - bin/gac/mcp-server-kos.py
+  description: KOS 统一只读 MCP 服务器入口 (SGF-v1 硬件外挂)
+  status: active
+- uri: bos://memory/eidos/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: eidos-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - eidos.mcp_server
+  description: 'eidos MCP (schema modeling: list/validate/meta/define/export/migrate)'
+  status: active
+- uri: bos://memory/ontoderive/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: ontoderive-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive.mcp_server
+  description: ontoderive MCP (本体推导 derive)
+  status: active
+- uri: bos://memory/minerva/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: minerva-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - minerva.mcp_server.server
+  description: minerva MCP (深度研究 build_cross_domain_report)
+  status: active
+- uri: bos://memory/kronos/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: kronos-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kronos.mcp_server
+  description: kronos MCP (摄取 fetch_layers/methods)
+  status: active
+- uri: bos://memory/iris/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: iris-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - iris.mcp_server
+  description: iris MCP (发现与召回 connectors)
+  status: active
+- uri: bos://memory/sophia/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: sophia-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - sophia.server.mcp_server
+  description: sophia MCP (KEMS 运行时 list_operations/states)
+  status: active
+- uri: bos://memory/forge/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: forge-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge.mcp_server
+  description: forge MCP (工具集市 market_install/list)
+  status: active
+- uri: bos://memory/metaos/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: metaos-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/metaos
+  - python
+  - -m
+  - metaos.mcp_server
+  description: '[DEPRECATED ADR-0181] metaos standalone MCP — use bos://ecos/workflow + bos://governance/metaos/*'
+  status: deprecated
+- uri: bos://memory/ecos/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: ecos-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/ecos
+  - python
+  - -m
+  - ecos.mcp_server
+  description: ecos MCP (MOF 治理主 server; 子 services/integration + l0/ssot 留评估)
+  status: active
+- uri: bos://memory/omo/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: omo-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.mcp_server
+  description: omo MCP (治理内核)
+  status: active
+- uri: bos://memory/aetherforge/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: aetherforge-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/aetherforge
+  - python
+  - -m
+  - aetherforge.mcp_server
+  description: aetherforge MCP (生成引擎)
+  status: active
+- uri: bos://memory/c2g/mcp-server
+  domain: memory
+  action: mcp-server
+  transport: stdio
+  package: c2g-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/c2g
+  - python
+  - -m
+  - c2g.mcp_server
+  description: c2g MCP (c2g 引擎)
+  status: active
+- uri: bos://capability/cockpit/mcp-server
+  domain: capability
+  action: mcp-server
+  transport: stdio
+  package: cockpit-mcp
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/cockpit
+  - python
+  - -m
+  - cockpit.agent_runtime_mcp_server
+  description: cockpit MCP (agent runtime)
+  status: active
+- uri: bos://memory/kos/rest-api
+  domain: memory
+  action: rest-api
+  transport: http
+  package: kos
+  http_url: http://localhost:8766/api/v1
+  description: KOS REST API v1 (9 endpoints)
+  status: active
+- uri: bos://memory/kos/graphrag
+  domain: memory
+  action: graphrag
+  transport: mcp_proxy
+  package: kos
+  mcp_tool: knowledge_ask
+  description: 'KOS GraphRAG: 实体+BFS+证据+LLM'
+  status: active
+- uri: bos://memory/kos/mcp-v2
+  domain: memory
+  action: mcp-v2
+  transport: mcp_proxy
+  package: kos
+  tools:
+  - graph_search
+  - entity_explore
+  - knowledge_ask
+  - subscribe_topic
+  - build_context
+  - verify_claim
+  description: KOS MCP v2.0 (25 tools)
+  status: active
+- uri: bos://memory/kos/ingest
+  domain: memory
+  action: ingest
+  transport: stdio
+  package: kos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kos.cli
+  - ingest
+  description: KOS 知识摄取入口
+  status: active
+- uri: bos://memory/kos/schema
+  domain: memory
+  action: schema
+  transport: stdio
+  package: kos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kos.cli
+  - schema
+  description: KOS Schema 查询
+  status: active
+- uri: bos://memory/kronos/ingest
+  domain: memory
+  action: ingest
+  transport: stdio
+  package: kronos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kronos.cli
+  - ingest
+  description: Kronos 知识摄取管线入口
+  status: active
+- uri: bos://memory/kronos/scan
+  domain: memory
+  action: scan
+  transport: stdio
+  package: kronos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kronos.cli
+  - scan
+  description: Kronos 扫描入口
+  status: active
+- uri: bos://governance/metaos/decide
+  domain: governance
+  action: decide
+  transport: stdio
+  package: metaos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/metaos
+  - python
+  - -m
+  - metaos.cli
+  - decide
+  description: MetaOS 决策门控
+  status: active
+- uri: bos://governance/metaos/immune
+  domain: governance
+  action: immune
+  transport: stdio
+  package: metaos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/metaos
+  - python
+  - -m
+  - metaos.cli
+  - immune
+  description: MetaOS 免疫响应
+  status: active
+- uri: bos://governance/metaos/route
+  domain: governance
+  action: route
+  transport: stdio
+  package: metaos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/metaos
+  - python
+  - -m
+  - metaos.cli
+  - route
+  description: MetaOS 路由决策
+  status: active
+- uri: bos://governance/omo/state
+  domain: governance
+  action: state
+  transport: stdio
+  package: omo
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.cli
+  - state
+  description: OMO 状态查询
+  status: active
+- uri: bos://governance/omo/debt
+  domain: governance
+  action: debt
+  transport: stdio
+  package: omo
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.cli
+  - debt
+  description: OMO 债务查询
+  status: active
+- uri: bos://governance/agent-workflow/bootstrap
+  domain: governance
+  action: bootstrap
+  transport: stdio
+  package: agent-workflow
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - bootstrap
+  - --skip-health
+  - --json
+  description: Agent Governance Control Plane 启动上下文
+  status: active
+- uri: bos://governance/agent-workflow/verify-plan
+  domain: governance
+  action: verify-plan
+  transport: stdio
+  package: agent-workflow
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - verify
+  - --file
+  - bin/agent-workflow.py
+  - --json
+  description: Agent Governance Control Plane diff-aware 验证规划
+  status: active
+- uri: bos://governance/agent-workflow/observe
+  domain: governance
+  action: observe
+  transport: stdio
+  package: agent-workflow
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - observe
+  - --json
+  description: Agent Governance Control Plane run/lock/ledger 观察
+  status: active
+- uri: bos://governance/agent-workflow/compliance
+  domain: governance
+  action: compliance
+  transport: stdio
+  package: agent-workflow
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - compliance
+  - --json
+  description: Agent Governance Control Plane 合规审计
+  status: active
+- uri: bos://governance/agent-workflow/doctor
+  domain: governance
+  action: doctor
+  transport: stdio
+  package: agent-workflow
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - doctor
+  - --json
+  description: Agent Governance Control Plane 内外部集成健康检查
+  status: active
+- uri: bos://governance/evolution/status
+  domain: governance
+  action: status
+  transport: stdio
+  package: governance-evolution
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - status
+  - --json
+  description: 治理演进路线图状态入口
+  status: active
+- uri: bos://governance/evolution/validate
+  domain: governance
+  action: validate
+  transport: stdio
+  package: governance-evolution
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - validate
+  - --json
+  description: 治理演进路线图结构与追踪校验
+  status: active
+- uri: bos://governance/evolution/traces
+  domain: governance
+  action: traces
+  transport: stdio
+  package: governance-evolution
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - traces
+  - --json
+  description: 治理能力到入口/SSOT/验证器的追踪视图
+  status: active
+- uri: bos://governance/evolution/golden-paths
+  domain: governance
+  action: golden-paths
+  transport: stdio
+  package: governance-evolution
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - golden-paths
+  - --json
+  description: 治理 Golden Path 端到端流程视图
+  status: active
+- uri: bos://governance/evolution/packages
+  domain: governance
+  action: packages
+  transport: stdio
+  package: governance-evolution
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - packages
+  - --json
+  description: 治理演进发布包与工作树收口视图
+  status: active
+- uri: bos://governance/eidos/validate
+  domain: governance
+  action: validate
+  transport: stdio
+  package: eidos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - eidos.cli
+  - validate
+  description: Eidos Schema 约束校验
+  status: active
+- uri: bos://analysis/minerva/research
+  domain: analysis
+  action: research
+  transport: stdio
+  package: minerva
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - minerva.cli
+  - research
+  description: Minerva 深度研究入口
+  status: active
+- uri: bos://analysis/minerva/ask
+  domain: analysis
+  action: ask
+  transport: stdio
+  package: minerva
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - minerva.cli
+  - ask
+  description: Minerva 追问入口
+  status: active
+- uri: bos://analysis/minerva/summarize
+  domain: analysis
+  action: summarize
+  transport: stdio
+  package: minerva
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - minerva.cli
+  - summarize
+  description: Minerva 摘要入口
+  status: active
+- uri: bos://analysis/ontoderive/derive
+  domain: analysis
+  action: derive
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive.cli
+  - derive
+  description: OntoDerive 本体推导入口
+  status: active
+- uri: bos://analysis/ontoderive/validate
+  domain: analysis
+  action: validate
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive.cli
+  - validate
+  description: OntoDerive 推导验证
+  status: active
+- uri: bos://analysis/ontoderive/explain
+  domain: analysis
+  action: explain
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive.cli
+  - explain
+  description: OntoDerive 推导解释
+  status: active
+- uri: bos://analysis/ontoderive/audit
+  domain: analysis
+  action: audit
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive
+  - serve
+  - --action
+  - audit
+  description: OntoDerive 审计入口
+  status: active
+- uri: bos://analysis/ontoderive/fact-check
+  domain: analysis
+  action: fact-check
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive
+  - serve
+  - --action
+  - fact-check
+  description: OntoDerive 事实核验入口
+  status: active
+- uri: bos://analysis/ontoderive/toolforge/match
+  domain: analysis
+  action: toolforge/match
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive.toolforge.mcp_server
+  description: ToolForge 分组匹配思维工具
+  status: active
+- uri: bos://analysis/ontoderive/toolforge/select
+  domain: analysis
+  action: toolforge/select
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive.toolforge.mcp_server
+  description: ToolForge 跨类别 Top-N 工具选择
+  status: active
+- uri: bos://analysis/ontoderive/toolforge/guide
+  domain: analysis
+  action: toolforge/guide
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive.toolforge.mcp_server
+  description: ToolForge OntoDerive 推导指导
+  status: active
+- uri: bos://analysis/codeanalyze/scan
+  domain: analysis
+  action: scan
+  transport: stdio
+  package: codeanalyze
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - codeanalyze.cli
+  - scan
+  description: CodeAnalyze AST 扫描入口
+  status: active
+- uri: bos://analysis/codeanalyze/analyze
+  domain: analysis
+  action: analyze
+  transport: stdio
+  package: codeanalyze
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - codeanalyze.cli
+  - analyze
+  description: CodeAnalyze 深度分析
+  status: active
+- uri: bos://analysis/codeanalyze/metrics
+  domain: analysis
+  action: metrics
+  transport: stdio
+  package: codeanalyze
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - codeanalyze.cli
+  - metrics
+  description: CodeAnalyze 代码度量
+  status: active
+- uri: bos://analysis/iris/discover
+  domain: analysis
+  action: discover
+  transport: stdio
+  package: iris
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - iris.cli
+  - discover
+  description: Iris 发现入口
+  status: active
+- uri: bos://analysis/iris/scan
+  domain: analysis
+  action: scan
+  transport: stdio
+  package: iris
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - iris.cli
+  - scan
+  description: Iris 扫描入口
+  status: active
+- uri: bos://analysis/iris/recall
+  domain: analysis
+  action: recall
+  transport: stdio
+  package: iris
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - iris.cli
+  - recall
+  description: Iris 召回入口
+  status: active
+- uri: bos://persona/core-models/schema
+  domain: persona
+  action: schema
+  transport: stdio
+  package: core-models
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - core_models.cli
+  - schema
+  description: Core Models Schema 查询
+  status: active
+- uri: bos://persona/core-models/validate
+  domain: persona
+  action: validate
+  transport: stdio
+  package: core-models
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - core_models.cli
+  - validate
+  description: Core Models 校验
+  status: active
+- uri: bos://persona/health-profile/query
+  domain: persona
+  action: query
+  transport: stdio
+  package: health-profile
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - health_profile.cli
+  - query
+  description: Health Profile 查询
+  status: active
+- uri: bos://persona/health-profile/update
+  domain: persona
+  action: update
+  transport: stdio
+  package: health-profile
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - health_profile.cli
+  - update
+  description: Health Profile 更新
+  status: active
+- uri: bos://persona/sot-bridge-persona/recall-entity
+  domain: persona
+  action: recall-entity
+  transport: internal
+  package: sot-bridge-persona
+  module_path: agora.mcp.bos_resolver
+  func_name: _sharedbrain_bridge_recall_entity
+  description: SharedBrain Bridge 实体召回 (P36-W1 GAP 补全, canonical URI)
+  status: active
+- uri: bos://capability/agent-runtime/execute
+  domain: capability
+  action: execute
+  transport: mcp_stdio
+  package: agent-runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: Agent Runtime 执行入口
+  status: active
+- uri: bos://capability/agent-runtime/list-tools
+  domain: capability
+  action: list-tools
+  transport: mcp_stdio
+  package: agent-runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: Agent Runtime 工具列表
+  status: active
+- uri: bos://capability/agent-runtime/status
+  domain: capability
+  action: status
+  transport: mcp_stdio
+  package: agent-runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: Agent Runtime 状态
+  status: active
+- uri: bos://capability/forge/agent-list
+  domain: capability
+  action: agent-list
+  transport: stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge.cli
+  - agent-list
+  description: Forge 集市 Agent 列表
+  status: active
+- uri: bos://capability/forge/agent-install
+  domain: capability
+  action: agent-install
+  transport: stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge.cli
+  - agent-install
+  description: Forge 集市 Agent 安装
+  status: active
+- uri: bos://capability/forge/registry
+  domain: capability
+  action: registry
+  transport: stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge.cli
+  - registry
+  description: Forge 注册表查询
+  status: active
+- uri: bos://capability/forge/publish
+  domain: capability
+  action: publish
+  transport: stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge.cli
+  - publish
+  description: Forge 发布入口
+  status: active
+- uri: bos://capability/forge/lint
+  domain: capability
+  action: lint
+  transport: stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge.cli
+  - lint
+  description: Forge Lint 检查
+  status: active
+- uri: bos://capability/swarm/run
+  domain: capability
+  action: run
+  transport: internal
+  package: aetherforge
+  module_path: aetherforge.swarm.rpc
+  func_name: run_swarm_workflow
+  description: AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)
+  status: active
+- uri: bos://capability/compute/generate
+  domain: capability
+  action: generate
+  transport: internal
+  package: aetherforge
+  module_path: aetherforge.gateway.rpc
+  func_name: run_generate
+  description: AetherForge 网关生成 — 经 SSOT registry 路由到 omlx/本地/云 (internal 直调)
+  status: active
+- uri: bos://capability/compute/mesh-status
+  domain: capability
+  action: mesh-status
+  transport: internal
+  package: aetherforge
+  module_path: aetherforge.mesh.rpc
+  func_name: run_mesh_status
+  description: AetherForge 算力网格节点健康/在线摘要 (internal 直调)
+  status: active
+- uri: bos://memory/local/all-search
+  domain: memory
+  action: all-search
+  transport: internal
+  package: memory
+  module_path: agora.mcp.bos_resolver
+  func_name: _memory_all_search
+  description: P2 多区聚合搜索 — cockpit local + KOS + vault
+  status: active
+- uri: bos://persona/family-hub/health
+  domain: persona
+  action: health
+  transport: mcp_stdio
+  package: family-hub
+  command:
+  - uv
+  - run
+  - python
+  - projects/family-hub/mcp_server.py
+  description: Family Hub local MCP Server
+  status: active
+- uri: bos://governance/omo/audit
+  domain: governance
+  action: audit
+  transport: internal
+  package: omo
+  module_path: omo.omo_audit
+  func_name: run_governance_audit
+  description: OMO 治理审计 (internal — 同进程 importlib)
+  status: active
+- uri: bos://governance/omo/inspect
+  domain: governance
+  action: inspect
+  transport: internal
+  package: omo
+  module_path: omo.omo_inspect
+  func_name: run_full_inspection
+  description: OMO 系统检查 (internal 同进程)
+  status: active
+- uri: bos://governance/omo/sync
+  domain: governance
+  action: sync
+  transport: mcp_stdio
+  package: omo
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo
+  - serve
+  description: OMO 状态同步 (mcp_stdio transport 跨进程)
+  status: active
+- uri: bos://governance/cockpit/context
+  domain: governance
+  action: mcp
+  transport: mcp_stdio
+  package: cockpit
+  command:
+  - uv
+  - run
+  - --package
+  - cockpit
+  - python
+  - -m
+  - cockpit.scripts.cockpit_mcp
+  description: Cockpit MCP Server — 20 工具
+  status: active
+- uri: bos://cockpit/context
+  domain: governance
+  action: mcp
+  transport: mcp_stdio
+  package: cockpit
+  command:
+  - uv
+  - run
+  - --package
+  - cockpit
+  - python
+  - -m
+  - cockpit.scripts.cockpit_mcp
+  description: Cockpit MCP (短路径别名)
+  status: active
+- uri: bos://governance/l4-kernel/domains
+  domain: governance
+  action: mcp
+  transport: mcp_stdio
+  package: l4-kernel
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/l4-kernel
+  - python
+  - -m
+  - l4_kernel.mcp_server
+  description: L4 Domain Kernel MCP — 24域管理
+  status: active
+- uri: bos://l4-kernel/domains
+  domain: governance
+  action: mcp
+  transport: mcp_stdio
+  package: l4-kernel
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/l4-kernel
+  - python
+  - -m
+  - l4_kernel.mcp_server
+  description: L4 Kernel MCP (短路径别名)
+  status: active
+- uri: bos://capability/runtime/health
+  domain: capability
+  action: mcp
+  transport: mcp_stdio
+  package: runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: Runtime MCP — 服务注册表/健康/协议/KEI
+  status: active
+- uri: bos://runtime/health
+  domain: capability
+  action: mcp
+  transport: mcp_stdio
+  package: runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: Runtime MCP (短路径别名)
+  status: active
+- uri: bos://meta/discover
+  domain: governance
+  action: discover
+  transport: internal
+  package: meta
+  module_path: agora.mcp.bos_resolver
+  func_name: _meta_discover
+  description: 发现所有可用 BOS 资源和入口
+  status: active
+- uri: bos://memory/vault/search
+  domain: memory
+  action: vault-search
+  transport: internal
+  package: memory
+  module_path: agora.mcp.bos_resolver
+  func_name: _memory_vault_search
+  description: L4 Vault 知识库搜索
+  status: active
+- uri: bos://analysis/minerva/draft
+  domain: analysis
+  action: draft
+  transport: mcp_stdio
+  package: minerva
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - minerva
+  - serve
+  - --action
+  - draft
+  status: active
+  description: '[POC] Minerva 草稿生成 (POC stdio)'
+- uri: bos://analysis/minerva/audit
+  domain: analysis
+  action: audit
+  transport: mcp_stdio
+  package: minerva
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - minerva
+  - serve
+  - --action
+  - audit
+  status: active
+  description: '[POC] Minerva 审计 (POC stdio)'
+- uri: bos://analysis/codeanalyze/report
+  domain: analysis
+  action: report
+  transport: mcp_stdio
+  package: codeanalyze
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - codeanalyze
+  - serve
+  - --action
+  - report
+  status: active
+  description: '[POC] CodeAnalyze 分析报告 (POC stdio)'
+- uri: bos://analysis/codeanalyze/lint
+  domain: analysis
+  action: lint
+  transport: mcp_stdio
+  package: codeanalyze
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - codeanalyze
+  - serve
+  - --action
+  - lint
+  status: active
+  description: '[POC] CodeAnalyze Lint (POC stdio)'
+- uri: bos://analysis/iris/connect
+  domain: analysis
+  action: connect
+  transport: mcp_stdio
+  package: iris
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - iris
+  - serve
+  - --action
+  - connect
+  status: unimplemented
+  description: '[UNIMPLEMENTED] Iris 连接 (POC stdio)'
+- uri: bos://analysis/iris/transform
+  domain: analysis
+  action: transform
+  transport: mcp_stdio
+  package: iris
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - iris
+  - serve
+  - --action
+  - transform
+  status: unimplemented
+  description: '[UNIMPLEMENTED] Iris 数据转换 (POC stdio)'
+- uri: bos://analysis/iris/validate
+  domain: analysis
+  action: validate
+  transport: mcp_stdio
+  package: iris
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - iris
+  - serve
+  - --action
+  - validate
+  status: unimplemented
+  description: '[UNIMPLEMENTED] Iris 数据校验 (POC stdio)'
+- uri: bos://persona/health-profile/summary
+  domain: persona
+  action: summary
+  transport: mcp_stdio
+  package: health-profile
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - health_profile
+  - serve
+  - --action
+  - summary
+  status: active
+  description: '[POC] Health-Profile 健康摘要 (POC stdio)'
+- uri: bos://persona/health-profile/alert
+  domain: persona
+  action: alert
+  transport: mcp_stdio
+  package: health-profile
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - health_profile
+  - serve
+  - --action
+  - alert
+  status: active
+  description: '[POC] Health-Profile 健康告警 (POC stdio)'
+- uri: bos://capability/forge/discover
+  domain: capability
+  action: discover
+  transport: mcp_stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge
+  - serve
+  - --action
+  - discover
+  status: active
+  description: '[POC] Forge 工具发现 (POC stdio)'
+- uri: bos://capability/forge/exec-tool
+  domain: capability
+  action: exec-tool
+  transport: mcp_stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge
+  - serve
+  - --action
+  - exec-tool
+  status: active
+  description: '[POC] Forge 工具执行 (POC stdio)'
+- uri: bos://capability/forge/list-tools
+  domain: capability
+  action: list-tools
+  transport: mcp_stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge
+  - serve
+  - --action
+  - list-tools
+  status: active
+  description: '[POC] Forge 工具列表 (POC stdio)'
+- uri: bos://capability/forge/register-tool
+  domain: capability
+  action: register-tool
+  transport: mcp_stdio
+  package: forge
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - forge
+  - serve
+  - --action
+  - register-tool
+  status: active
+  description: '[POC] Forge 工具注册 (POC stdio)'
+- uri: bos://memory/kronos/query
+  domain: memory
+  action: query
+  transport: mcp_stdio
+  package: kronos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kronos
+  - serve
+  - --action
+  - query
+  status: active
+  description: '[POC] KRONOS 时间序列查询 (POC stdio)'
+- uri: bos://memory/kronos/schedule
+  domain: memory
+  action: schedule
+  transport: mcp_stdio
+  package: kronos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kronos
+  - serve
+  - --action
+  - schedule
+  status: active
+  description: '[POC] KRONOS 调度任务 (POC stdio)'
+- uri: bos://governance/metaos/gate
+  domain: governance
+  action: gate
+  transport: mcp_stdio
+  package: metaos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/metaos
+  - python
+  - -m
+  - metaos
+  - serve
+  - --action
+  - gate
+  description: MetaOS 门控检查 (POC stdio)
+  status: active
+- uri: bos://governance/metaos/register
+  domain: governance
+  action: register
+  transport: mcp_stdio
+  package: metaos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/metaos
+  - python
+  - -m
+  - metaos
+  - serve
+  - --action
+  - register
+  description: MetaOS 包注册 (POC stdio)
+  status: active
+- uri: bos://capability/bus/data
+  domain: capability
+  action: data
+  transport: internal
+  package: bus-foundation
+  module_path: bus_foundation.facade.data
+  func_name: emit
+  description: Omni-Bus 数据面路由 (日志/遥测)
+  status: active
+- uri: bos://capability/bus/event
+  domain: capability
+  action: event
+  transport: internal
+  package: bus-foundation
+  module_path: bus_foundation.facade.event
+  func_name: publish
+  description: Omni-Bus 事件面路由 (Pub/Sub)
+  status: active
+- uri: bos://capability/bus/control
+  domain: capability
+  action: control
+  transport: internal
+  package: bus-foundation
+  module_path: bus_foundation.facade.control
+  func_name: submit_task
+  description: Omni-Bus 控制面路由 (异步/定时任务)
+  status: active
+- uri: bos://memory/gbrain/search
+  domain: memory
+  action: search
+  transport: mcp_stdio
+  command:
+  - bun
+  - run
+  - projects/gbrain/src/cli.ts
+  - serve
+  package: gbrain
+  description: gbrain 知识库全文搜索 (高性能 Postgres)
+  status: active
+- uri: bos://memory/gbrain/query
+  domain: memory
+  action: query
+  transport: mcp_stdio
+  command:
+  - bun
+  - run
+  - projects/gbrain/src/cli.ts
+  - serve
+  package: gbrain
+  description: gbrain 知识库结构化查询
+  status: active
+- uri: bos://memory/gbrain/sync
+  domain: memory
+  action: sync
+  transport: mcp_stdio
+  command:
+  - bun
+  - run
+  - projects/gbrain/src/cli.ts
+  - serve
+  package: gbrain
+  description: gbrain 知识库增量同步
+  status: active
+- uri: bos://swarm/orchestrator/status
+  domain: swarm
+  action: status
+  transport: internal
+  package: agent-runtime
+  module_path: agora.mcp.swarm
+  func_name: get_swarm_status
+  description: 获取分布式蜂群实时拓扑与负载状态
+  status: active
+- uri: bos://governance/evolution/loop
+  domain: governance
+  action: loop
+  transport: internal
+  package: governance-evolution
+  module_path: omo.omo_evolution_loop
+  func_name: get_loop_status
+  description: OMO 自动进化循环监控
+  status: active
+- uri: bos://governance/quality/audit
+  domain: governance
+  action: audit
+  transport: internal
+  package: governance-evolution
+  module_path: agora.mcp.knowledge_quality
+  func_name: audit_knowledge_quality
+  description: 记忆脊知识质量审计与评分
+  status: active
+- uri: bos://capability/agent-runtime/chat
+  domain: capability
+  action: chat
+  transport: mcp_stdio
+  package: agent-runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: Agent 交互式对话接口
+  status: active
+- uri: bos://capability/agent-runtime/run-task
+  domain: capability
+  action: run-task
+  transport: mcp_stdio
+  package: agent-runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: Agent 任务执行接口
+  status: active
+- uri: bos://capability/agent-runtime/task-status
+  domain: capability
+  action: task-status
+  transport: mcp_stdio
+  package: agent-runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: Agent 任务状态查询
+  status: active
+- uri: bos://capability/agent-runtime/agent-list
+  domain: capability
+  action: agent-list
+  transport: mcp_stdio
+  package: agent-runtime
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/runtime
+  - python
+  - -m
+  - runtime.mcp_server
+  description: 列出所有可用 Agent 实例
+  status: active
+- uri: bos://analysis/eidos/validate
+  domain: analysis
+  action: validate
+  transport: stdio
+  package: eidos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - eidos.cli
+  - validate
+  description: Eidos 数据模型校验
+  status: active
+- uri: bos://memory/kos/query
+  domain: memory
+  action: query
+  transport: stdio
+  package: kos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - kos.cli
+  - query
+  description: KOS 知识查询
+  status: active
+- uri: bos://analysis/ontoderive/align
+  domain: analysis
+  action: align
+  transport: stdio
+  package: ontoderive
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - ontoderive.cli
+  - align
+  description: OntoDerive 语义对齐
+  status: active
+- uri: bos://omo/eidos/pipeline
+  domain: omo
+  action: pipeline
+  transport: stdio
+  package: eidos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - python
+  - -m
+  - eidos.cli
+  - pipeline
+  description: Eidos 治理管线调度
+  status: active
+- uri: bos://ecos/workflow/list
+  domain: meta
+  action: list
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --package
+  - ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  - list
+  description: eCOS L0 工作流列表
+  status: active
+- uri: bos://ecos/workflow/describe
+  domain: meta
+  action: describe
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --package
+  - ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  - describe
+  description: eCOS L0 工作流定义查询
+  status: active
+- uri: bos://ecos/workflow/run
+  domain: meta
+  action: run
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --package
+  - ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  - run
+  description: eCOS L0 工作流执行
+  status: active
+- uri: bos://ecos/workflow/logs
+  domain: meta
+  action: logs
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --package
+  - ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  - logs
+  description: eCOS L0 工作流运行历史
+  status: active
+- uri: bos://ecos/workflow/cache-status
+  domain: meta
+  action: cache-status
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --package
+  - ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  - cache-status
+  description: eCOS 工作流缓存状态查询
+  status: active
+- uri: bos://ecos/workflow/cache-invalidate
+  domain: meta
+  action: cache-invalidate
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --package
+  - ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  - cache-invalidate
+  description: eCOS 工作流缓存全部清除
+  status: active
+- uri: bos://ecos/workflow/cb-status
+  domain: meta
+  action: cb-status
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --package
+  - ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  - cb-status
+  description: eCOS 后端熔断器状态查询
+  status: active
+- uri: bos://ecos/workflow/cb-reset
+  domain: meta
+  action: cb-reset
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --package
+  - ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  - cb-reset
+  description: eCOS 后端熔断器全部重置
+  status: active
+- uri: bos://system/backends/list
+  domain: system
+  action: list
+  transport: internal
+  module_path: agora.mcp.resolver.api
+  func_name: list_services
+  package: agora
+  description: 列出所有已注册 MCP backend (代理 KNOWN_BACKENDS)
+  status: active
+- uri: bos://system/backends/register
+  domain: system
+  action: register
+  transport: internal
+  module_path: agora.mcp.resolver.api
+  func_name: register_backend
+  package: agora
+  description: 动态注册新 MCP backend (POST /v1/backends/register)
+  status: active
+- uri: bos://system/backends/health
+  domain: system
+  action: health
+  transport: internal
+  module_path: agora.mcp.resolver.api
+  func_name: list_backend_health
+  package: agora
+  description: 后端健康探活 — 每个 backend 的状态/失败计数
+  status: active
+- uri: bos://system/routes/reload
+  domain: system
+  action: reload
+  transport: internal
+  module_path: agora.mcp.resolver.api
+  func_name: reload_routes
+  package: agora
+  description: BOS 路由表热重载 (从 YAML 重新加载)
+  status: active
+- uri: bos://system/governance/status
+  domain: system
+  action: status
+  transport: internal
+  module_path: agora.mcp.resolver.api
+  func_name: governance_status
+  package: cockpit
+  description: 治理管道健康状态 (心跳时间/日志条目/健康等级)
+  status: active
+- uri: bos://system/governance/heartbeat
+  domain: system
+  action: heartbeat
+  transport: internal
+  module_path: agora.mcp.resolver.api
+  func_name: governance_heartbeat
+  package: scripts
+  description: 写入治理管道心跳 (governance.jsonl)
+  status: active
+- uri: bos://system/omo/debt
+  domain: system
+  action: debt
+  transport: internal
+  module_path: agora.mcp.resolver.api
+  func_name: omo_debt_summary
+  package: omo
+  description: OMO 技术债务评分 — 当前总债务/趋势/热点
+  status: active
+- uri: bos://capability/wps-office-mcp/invoke
+  domain: capability
+  action: invoke
+  transport: stdio
+  package: toolbox/wps-office-mcp
+  command:
+  - node
+  - /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/dist/index.js
+  tools_count: 243
+  description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写
+  cross_references:
     domain: capability
-    action: "mcp-server"
-    transport: stdio
-    package: "cockpit-mcp"
-    command: ["uv", "run", "--directory", "projects/cockpit", "python", "-m", "cockpit.agent_runtime_mcp_server"]
-    description: "cockpit MCP (agent runtime)"
-    status: active
-
-  # KOS REST API v1 (HTTP, port 8766) — 跨项目松耦合集成
-  - uri: "bos://memory/kos/rest-api"
-    domain: memory
-    action: "rest-api"
-    transport: http
-    package: "kos"
-    http_url: "http://localhost:8766/api/v1"
-    description: "KOS REST API v1 (9 endpoints)"
-    status: active
-
-  # KOS GraphRAG 深度推理
-  - uri: "bos://memory/kos/graphrag"
-    domain: memory
-    action: "graphrag"
-    transport: mcp_proxy
-    package: "kos"
-    mcp_tool: "knowledge_ask"
-    description: "KOS GraphRAG: 实体+BFS+证据+LLM"
-    status: active
-
-  # KOS Agent-Native MCP v2.0
-  - uri: "bos://memory/kos/mcp-v2"
-    domain: memory
-    action: "mcp-v2"
-    transport: mcp_proxy
-    package: "kos"
-    tools: [graph_search, entity_explore, knowledge_ask, subscribe_topic, build_context, verify_claim]
-    description: "KOS MCP v2.0 (25 tools)"
-    status: active
-
-  # ── Minerva接入点（由 kairon 子模块 packages/minerva/ 提供）──
-
-  - uri: "bos://memory/kos/ingest"
-    domain: memory
-    action: "ingest"
-    transport: stdio
-    package: "kos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "ingest"]
-    description: "KOS 知识摄取入口"
-
-  - uri: "bos://memory/kos/schema"
-    domain: memory
-    action: "schema"
-    transport: stdio
-    package: "kos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "schema"]
-    description: "KOS Schema 查询"
-
-  - uri: "bos://memory/kronos/ingest"
-    domain: memory
-    action: "ingest"
-    transport: stdio
-    package: "kronos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos.cli", "ingest"]
-    description: "Kronos 知识摄取管线入口"
-
-  - uri: "bos://memory/kronos/scan"
-    domain: memory
-    action: "scan"
-    transport: stdio
-    package: "kronos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos.cli", "scan"]
-    description: "Kronos 扫描入口"
-
-  - uri: "bos://governance/metaos/decide"
-    domain: governance
-    action: "decide"
-    transport: stdio
-    package: "metaos"
-    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "decide"]
-    description: "MetaOS 决策门控"
-
-  - uri: "bos://governance/metaos/immune"
-    domain: governance
-    action: "immune"
-    transport: stdio
-    package: "metaos"
-    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "immune"]
-    description: "MetaOS 免疫响应"
-
-  - uri: "bos://governance/metaos/route"
-    domain: governance
-    action: "route"
-    transport: stdio
-    package: "metaos"
-    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "route"]
-    description: "MetaOS 路由决策"
-
-  - uri: "bos://governance/omo/state"
-    domain: governance
-    action: "state"
-    transport: stdio
-    package: "omo"
-    command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.cli", "state"]
-    description: "OMO 状态查询"
-
-  - uri: "bos://governance/omo/debt"
-    domain: governance
-    action: "debt"
-    transport: stdio
-    package: "omo"
-    command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.cli", "debt"]
-    description: "OMO 债务查询"
-
-  - uri: "bos://governance/agent-workflow/bootstrap"
-    domain: governance
-    action: "bootstrap"
-    transport: stdio
-    package: "agent-workflow"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "bootstrap", "--skip-health", "--json"]
-    description: "Agent Governance Control Plane 启动上下文"
-
-  - uri: "bos://governance/agent-workflow/verify-plan"
-    domain: governance
-    action: "verify-plan"
-    transport: stdio
-    package: "agent-workflow"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "verify", "--file", "bin/agent-workflow.py", "--json"]
-    description: "Agent Governance Control Plane diff-aware 验证规划"
-
-  - uri: "bos://governance/agent-workflow/observe"
-    domain: governance
-    action: "observe"
-    transport: stdio
-    package: "agent-workflow"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "observe", "--json"]
-    description: "Agent Governance Control Plane run/lock/ledger 观察"
-
-  - uri: "bos://governance/agent-workflow/compliance"
-    domain: governance
-    action: "compliance"
-    transport: stdio
-    package: "agent-workflow"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "compliance", "--json"]
-    description: "Agent Governance Control Plane 合规审计"
-
-  - uri: "bos://governance/agent-workflow/doctor"
-    domain: governance
-    action: "doctor"
-    transport: stdio
-    package: "agent-workflow"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "doctor", "--json"]
-    description: "Agent Governance Control Plane 内外部集成健康检查"
-
-  - uri: "bos://governance/evolution/status"
-    domain: governance
-    action: "status"
-    transport: stdio
-    package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "status", "--json"]
-    description: "治理演进路线图状态入口"
-
-  - uri: "bos://governance/evolution/validate"
-    domain: governance
-    action: "validate"
-    transport: stdio
-    package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "validate", "--json"]
-    description: "治理演进路线图结构与追踪校验"
-
-  - uri: "bos://governance/evolution/traces"
-    domain: governance
-    action: "traces"
-    transport: stdio
-    package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "traces", "--json"]
-    description: "治理能力到入口/SSOT/验证器的追踪视图"
-
-  - uri: "bos://governance/evolution/golden-paths"
-    domain: governance
-    action: "golden-paths"
-    transport: stdio
-    package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "golden-paths", "--json"]
-    description: "治理 Golden Path 端到端流程视图"
-
-  - uri: "bos://governance/evolution/packages"
-    domain: governance
-    action: "packages"
-    transport: stdio
-    package: "governance-evolution"
-    command: ["uv", "run", "--with", "pyyaml", "python", "bin/gac/governance-evolution.py", "packages", "--json"]
-    description: "治理演进发布包与工作树收口视图"
-
-  - uri: "bos://governance/eidos/validate"
-    domain: governance
-    action: "validate"
-    transport: stdio
-    package: "eidos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "validate"]
-    description: "Eidos Schema 约束校验"
-
-  - uri: "bos://analysis/minerva/research"
-    domain: analysis
-    action: "research"
-    transport: stdio
-    package: "minerva"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "research"]
-    description: "Minerva 深度研究入口"
-
-  - uri: "bos://analysis/minerva/ask"
-    domain: analysis
-    action: "ask"
-    transport: stdio
-    package: "minerva"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "ask"]
-    description: "Minerva 追问入口"
-
-  - uri: "bos://analysis/minerva/summarize"
-    domain: analysis
-    action: "summarize"
-    transport: stdio
-    package: "minerva"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "summarize"]
-    description: "Minerva 摘要入口"
-
-  - uri: "bos://analysis/ontoderive/derive"
-    domain: analysis
-    action: "derive"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "derive"]
-    description: "OntoDerive 本体推导入口"
-
-  - uri: "bos://analysis/ontoderive/validate"
-    domain: analysis
-    action: "validate"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "validate"]
-    description: "OntoDerive 推导验证"
-
-  - uri: "bos://analysis/ontoderive/explain"
-    domain: analysis
-    action: "explain"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "explain"]
-    description: "OntoDerive 推导解释"
-
-  - uri: "bos://analysis/ontoderive/audit"
-    domain: analysis
-    action: "audit"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "audit"]
-    description: "OntoDerive 审计入口"
-
-  - uri: "bos://analysis/ontoderive/fact-check"
-    domain: analysis
-    action: "fact-check"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "fact-check"]
-    description: "OntoDerive 事实核验入口"
-
-  - uri: "bos://analysis/ontoderive/toolforge/match"
-    domain: analysis
-    action: "toolforge/match"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.toolforge.mcp_server"]
-    description: "ToolForge 分组匹配思维工具"
-
-  - uri: "bos://analysis/ontoderive/toolforge/select"
-    domain: analysis
-    action: "toolforge/select"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.toolforge.mcp_server"]
-    description: "ToolForge 跨类别 Top-N 工具选择"
-
-  - uri: "bos://analysis/ontoderive/toolforge/guide"
-    domain: analysis
-    action: "toolforge/guide"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.toolforge.mcp_server"]
-    description: "ToolForge OntoDerive 推导指导"
-
-  - uri: "bos://analysis/codeanalyze/scan"
-    domain: analysis
-    action: "scan"
-    transport: stdio
-    package: "codeanalyze"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "scan"]
-    description: "CodeAnalyze AST 扫描入口"
-
-  - uri: "bos://analysis/codeanalyze/analyze"
-    domain: analysis
-    action: "analyze"
-    transport: stdio
-    package: "codeanalyze"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "analyze"]
-    description: "CodeAnalyze 深度分析"
-
-  - uri: "bos://analysis/codeanalyze/metrics"
-    domain: analysis
-    action: "metrics"
-    transport: stdio
-    package: "codeanalyze"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "metrics"]
-    description: "CodeAnalyze 代码度量"
-
-  - uri: "bos://analysis/iris/discover"
-    domain: analysis
-    action: "discover"
-    transport: stdio
-    package: "iris"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "discover"]
-    description: "Iris 发现入口"
-
-  - uri: "bos://analysis/iris/scan"
-    domain: analysis
-    action: "scan"
-    transport: stdio
-    package: "iris"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "scan"]
-    description: "Iris 扫描入口"
-
-  - uri: "bos://analysis/iris/recall"
-    domain: analysis
-    action: "recall"
-    transport: stdio
-    package: "iris"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "recall"]
-    description: "Iris 召回入口"
-
-  - uri: "bos://persona/core-models/schema"
-    domain: persona
-    action: "schema"
-    transport: stdio
-    package: "core-models"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "core_models.cli", "schema"]
-    description: "Core Models Schema 查询"
-
-  - uri: "bos://persona/core-models/validate"
-    domain: persona
-    action: "validate"
-    transport: stdio
-    package: "core-models"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "core_models.cli", "validate"]
-    description: "Core Models 校验"
-
-  - uri: "bos://persona/health-profile/query"
-    domain: persona
-    action: "query"
-    transport: stdio
-    package: "health-profile"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile.cli", "query"]
-    description: "Health Profile 查询"
-
-  - uri: "bos://persona/health-profile/update"
-    domain: persona
-    action: "update"
-    transport: stdio
-    package: "health-profile"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile.cli", "update"]
-    description: "Health Profile 更新"
-
-  - uri: "bos://persona/sot-bridge-persona/recall-entity"
-    domain: persona
-    action: "recall-entity"
-    transport: internal
-    package: "sot-bridge-persona"
-    module_path: "agora.mcp.bos_resolver"
-    func_name: "_sharedbrain_bridge_recall_entity"
-    description: "SharedBrain Bridge 实体召回 (P36-W1 GAP 补全, canonical URI)"
-
-  - uri: "bos://capability/agent-runtime/execute"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/.git
+  i0_route: pending
+  status: active
+- uri: bos://capability/wps-skills/load
+  domain: capability
+  action: load
+  transport: stdio
+  package: toolbox/wps-skills
+  command:
+  - node
+  - /Users/xiamingxing/ToolBox/skills/wps-skills/dist/index.js
+  description: WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发
+  cross_references:
     domain: capability
-    action: "execute"
-    transport: mcp_stdio
-    package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "Agent Runtime 执行入口"
-
-  - uri: "bos://capability/agent-runtime/list-tools"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/skills/wps-skills/.git
+  i0_route: pending
+  status: active
+- uri: bos://capability/bos-skill-cli/exec
+  domain: capability
+  action: exec
+  transport: stdio
+  package: toolbox/bos-skill-cli
+  command:
+  - uv
+  - run
+  - --directory
+  - /Users/xiamingxing/ToolBox/cli/bos-skill-cli
+  - bos-skill-cli
+  description: BOS Skill 管理 CLI/TUI — 搜索/暂存/promote/回退 skill 包
+  cross_references:
     domain: capability
-    action: "list-tools"
-    transport: mcp_stdio
-    package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "Agent Runtime 工具列表"
-
-  - uri: "bos://capability/agent-runtime/status"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/cli/bos-skill-cli/.git
+  i0_route: pending
+  status: active
+- uri: bos://capability/headroom/compress
+  domain: capability
+  action: compress
+  transport: stdio
+  package: toolbox/headroom
+  command:
+  - python3
+  - -m
+  - headroom
+  description: Agent 上下文压缩层 — 60-95% token 节省 + 模型压缩 + MCP 代理
+  cross_references:
     domain: capability
-    action: "status"
-    transport: mcp_stdio
-    package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "Agent Runtime 状态"
-
-  - uri: "bos://capability/forge/agent-list"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/mcp/headroom/.git
+  i0_route: pending
+  status: active
+- uri: bos://capability/code-review-graph/analyze
+  domain: capability
+  action: analyze
+  transport: stdio
+  package: toolbox/code-review-graph
+  command:
+  - python3
+  - -m
+  - code_review_graph
+  description: Token 优化型代码评审图工具 — PyPI 发布，MCP 兼容
+  cross_references:
     domain: capability
-    action: "agent-list"
-    transport: stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "agent-list"]
-    description: "Forge 集市 Agent 列表"
-
-  - uri: "bos://capability/forge/agent-install"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/mcp/code-review-graph/.git
+  i0_route: pending
+  status: active
+- uri: bos://capability/claude-skills/load
+  domain: capability
+  action: load
+  transport: inline
+  package: toolbox/claude-skills
+  description: 354 个 Claude Code Skill 最全库 — 593 CLI 脚本 + 711 模板
+  cross_references:
     domain: capability
-    action: "agent-install"
-    transport: stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "agent-install"]
-    description: "Forge 集市 Agent 安装"
-
-  - uri: "bos://capability/forge/registry"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/skills/claude-skills/.git
+  i0_route: skill_host
+  status: active
+- uri: bos://capability/last30days-skill/fetch
+  domain: capability
+  action: fetch
+  transport: stdio
+  package: toolbox/last30days-skill
+  command:
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill" && test -f skills/last30days/SKILL.md && echo ok:last30days-skill
+  description: 'AI Agent 驱动的搜索/打分类信息流聚合 — GitHub Trending #1'
+  cross_references:
     domain: capability
-    action: "registry"
-    transport: stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "registry"]
-    description: "Forge 注册表查询"
-
-  - uri: "bos://capability/forge/publish"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/skills/last30days-skill/.git
+  i0_route: skill_host
+  status: active
+- uri: bos://capability/media-crawler/crawl
+  domain: capability
+  action: crawl
+  transport: stdio
+  package: toolbox/media-crawler
+  command:
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler" && if [ -x .venv/bin/python ]; then PY=.venv/bin/python; else
+    PY=python3; fi && "$PY" main.py --help
+  description: 自媒体平台爬虫 — 抖音/小红书/快手/B站/微博等 12 平台，含反爬能力
+  cross_references:
     domain: capability
-    action: "publish"
-    transport: stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "publish"]
-    description: "Forge 发布入口"
-
-  - uri: "bos://capability/forge/lint"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/pipelines/media-crawler/.git
+  i0_route: host_cli
+  status: active
+- uri: bos://capability/open-montage/render
+  domain: capability
+  action: render
+  transport: stdio
+  package: toolbox/open-montage
+  command:
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/open-montage" && test -d . && ls README.md >/dev/null && echo ok:open-montage
+  description: 开源 Agentic 视频制作系统 — 从剧本到成品的全流程 Pipeline
+  cross_references:
     domain: capability
-    action: "lint"
-    transport: stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "lint"]
-    description: "Forge Lint 检查"
-
-  - uri: "bos://capability/swarm/run"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/pipelines/open-montage/.git
+  i0_route: host_cli
+  status: active
+- uri: bos://capability/skills-for-fabric/load
+  domain: capability
+  action: load
+  transport: inline
+  package: toolbox/skills-for-fabric
+  description: 微软 Fabric AI 技能集 — 作者/消费/运维三类 Skill
+  cross_references:
     domain: capability
-    action: "run"
-    transport: internal
-    package: "aetherforge"
-    module_path: "aetherforge.swarm.rpc"
-    func_name: "run_swarm_workflow"
-    description: "AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)"
-
-  - uri: "bos://capability/compute/generate"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/skills/skills-for-fabric/.git
+  i0_route: skill_host
+  status: active
+- uri: bos://capability/deer-flow/run
+  domain: capability
+  action: run
+  transport: stdio
+  package: toolbox/deer-flow
+  command:
+  - python3
+  - -m
+  - deer_flow
+  description: 字节开源超 Agent 框架 v2.0 — 子 Agent/记忆/沙箱/技能
+  cross_references:
     domain: capability
-    action: "generate"
-    transport: internal
-    package: "aetherforge"
-    module_path: "aetherforge.gateway.rpc"
-    func_name: "run_generate"
-    description: "AetherForge 网关生成 — 经 SSOT registry 路由到 omlx/本地/云 (internal 直调)"
-
-  - uri: "bos://capability/compute/mesh-status"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/mcp/deer-flow/.git
+  i0_route: pending
+  status: active
+- uri: bos://capability/datafoundry/analyze
+  domain: capability
+  action: analyze
+  transport: stdio
+  package: toolbox/datafoundry
+  command:
+  - python3
+  - -m
+  - datafoundry
+  description: 企业级 Data Agent 工作台 — 28 数据源 + 语义层 + 多步分析
+  cross_references:
     domain: capability
-    action: "mesh-status"
-    transport: internal
-    package: "aetherforge"
-    module_path: "aetherforge.mesh.rpc"
-    func_name: "run_mesh_status"
-    description: "AetherForge 算力网格节点健康/在线摘要 (internal 直调)"
-
-  - uri: "bos://memory/local/all-search"
-    domain: memory
-    action: "all-search"
-    transport: internal
-    package: "memory"
-    module_path: "agora.mcp.bos_resolver"
-    func_name: "_memory_all_search"
-    description: "P2 多区聚合搜索 — cockpit local + KOS + vault"
-
-  - uri: "bos://persona/family-hub/health"
-    domain: persona
-    action: "health"
-    transport: mcp_stdio
-    package: "family-hub"
-    command: ["uv", "run", "python", "projects/family-hub/mcp_server.py"]
-    description: "Family Hub local MCP Server"
-
-  - uri: "bos://governance/omo/audit"
-    domain: governance
-    action: "audit"
-    transport: internal
-    package: "omo"
-    module_path: "omo.omo_audit"
-    func_name: "run_governance_audit"
-    description: "OMO 治理审计 (internal — 同进程 importlib)"
-
-  - uri: "bos://governance/omo/inspect"
-    domain: governance
-    action: "inspect"
-    transport: internal
-    package: "omo"
-    module_path: "omo.omo_inspect"
-    func_name: "run_full_inspection"
-    description: "OMO 系统检查 (internal 同进程)"
-
-  - uri: "bos://governance/omo/sync"
-    domain: governance
-    action: "sync"
-    transport: mcp_stdio
-    package: "omo"
-    command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo", "serve"]
-    description: "OMO 状态同步 (mcp_stdio transport 跨进程)"
-
-  - uri: "bos://governance/cockpit/context"
-    domain: governance
-    action: "mcp"
-    transport: mcp_stdio
-    package: "cockpit"
-    command: ["uv", "run", "--package", "cockpit", "python", "-m", "cockpit.scripts.cockpit_mcp"]
-    description: "Cockpit MCP Server — 20 工具"
-
-  - uri: "bos://cockpit/context"
-    domain: governance
-    action: "mcp"
-    transport: mcp_stdio
-    package: "cockpit"
-    command: ["uv", "run", "--package", "cockpit", "python", "-m", "cockpit.scripts.cockpit_mcp"]
-    description: "Cockpit MCP (短路径别名)"
-
-  - uri: "bos://governance/l4-kernel/domains"
-    domain: governance
-    action: "mcp"
-    transport: mcp_stdio
-    package: "l4-kernel"
-    command: ["uv", "run", "--directory", "projects/l4-kernel", "python", "-m", "l4_kernel.mcp_server"]
-    description: "L4 Domain Kernel MCP — 24域管理"
-
-  - uri: "bos://l4-kernel/domains"
-    domain: governance
-    action: "mcp"
-    transport: mcp_stdio
-    package: "l4-kernel"
-    command: ["uv", "run", "--directory", "projects/l4-kernel", "python", "-m", "l4_kernel.mcp_server"]
-    description: "L4 Kernel MCP (短路径别名)"
-
-  - uri: "bos://capability/runtime/health"
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/mcp/datafoundry/.git
+  i0_route: pending
+  status: active
+- uri: bos://capability/knowledge-work-plugins/load
+  domain: capability
+  action: load
+  transport: inline
+  package: toolbox/knowledge-work-plugins
+  description: Claude Cowork 11 个生产力插件 — Claude Code 兼容
+  cross_references:
     domain: capability
-    action: "mcp"
-    transport: mcp_stdio
-    package: "runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "Runtime MCP — 服务注册表/健康/协议/KEI"
-
-  - uri: "bos://runtime/health"
-    domain: capability
-    action: "mcp"
-    transport: mcp_stdio
-    package: "runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "Runtime MCP (短路径别名)"
-
-  - uri: "bos://meta/discover"
-    domain: governance
-    action: "discover"
-    transport: internal
-    package: "meta"
-    module_path: "agora.mcp.bos_resolver"
-    func_name: "_meta_discover"
-    description: "发现所有可用 BOS 资源和入口"
-
-  - uri: "bos://memory/vault/search"
-    domain: memory
-    action: "vault-search"
-    transport: internal
-    package: "memory"
-    module_path: "agora.mcp.bos_resolver"
-    func_name: "_memory_vault_search"
-    description: "L4 Vault 知识库搜索"
-
-  - uri: "bos://analysis/minerva/draft"
-    domain: analysis
-    action: "draft"
-    transport: mcp_stdio
-    package: "minerva"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva", "serve", "--action", "draft"]
-    status: active
-    description: "[POC] Minerva 草稿生成 (POC stdio)"
-
-  - uri: "bos://analysis/minerva/audit"
-    domain: analysis
-    action: "audit"
-    transport: mcp_stdio
-    package: "minerva"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva", "serve", "--action", "audit"]
-    status: active
-    description: "[POC] Minerva 审计 (POC stdio)"
-
-  - uri: "bos://analysis/codeanalyze/report"
-    domain: analysis
-    action: "report"
-    transport: mcp_stdio
-    package: "codeanalyze"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze", "serve", "--action", "report"]
-    status: active
-    description: "[POC] CodeAnalyze 分析报告 (POC stdio)"
-
-  - uri: "bos://analysis/codeanalyze/lint"
-    domain: analysis
-    action: "lint"
-    transport: mcp_stdio
-    package: "codeanalyze"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze", "serve", "--action", "lint"]
-    status: active
-    description: "[POC] CodeAnalyze Lint (POC stdio)"
-
-  - uri: "bos://analysis/iris/connect"
-    domain: analysis
-    action: "connect"
-    transport: mcp_stdio
-    package: "iris"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "connect"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Iris 连接 (POC stdio)"
-
-  - uri: "bos://analysis/iris/transform"
-    domain: analysis
-    action: "transform"
-    transport: mcp_stdio
-    package: "iris"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "transform"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Iris 数据转换 (POC stdio)"
-
-  - uri: "bos://analysis/iris/validate"
-    domain: analysis
-    action: "validate"
-    transport: mcp_stdio
-    package: "iris"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "validate"]
-    status: unimplemented
-    description: "[UNIMPLEMENTED] Iris 数据校验 (POC stdio)"
-
-  - uri: "bos://persona/health-profile/summary"
-    domain: persona
-    action: "summary"
-    transport: mcp_stdio
-    package: "health-profile"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile", "serve", "--action", "summary"]
-    status: active
-    description: "[POC] Health-Profile 健康摘要 (POC stdio)"
-
-  - uri: "bos://persona/health-profile/alert"
-    domain: persona
-    action: "alert"
-    transport: mcp_stdio
-    package: "health-profile"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile", "serve", "--action", "alert"]
-    status: active
-    description: "[POC] Health-Profile 健康告警 (POC stdio)"
-
-  - uri: "bos://capability/forge/discover"
-    domain: capability
-    action: "discover"
-    transport: mcp_stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "discover"]
-    status: active
-    description: "[POC] Forge 工具发现 (POC stdio)"
-
-  - uri: "bos://capability/forge/exec-tool"
-    domain: capability
-    action: "exec-tool"
-    transport: mcp_stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "exec-tool"]
-    status: active
-    description: "[POC] Forge 工具执行 (POC stdio)"
-
-  - uri: "bos://capability/forge/list-tools"
-    domain: capability
-    action: "list-tools"
-    transport: mcp_stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "list-tools"]
-    status: active
-    description: "[POC] Forge 工具列表 (POC stdio)"
-
-  - uri: "bos://capability/forge/register-tool"
-    domain: capability
-    action: "register-tool"
-    transport: mcp_stdio
-    package: "forge"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "register-tool"]
-    status: active
-    description: "[POC] Forge 工具注册 (POC stdio)"
-
-  - uri: "bos://memory/kronos/query"
-    domain: memory
-    action: "query"
-    transport: mcp_stdio
-    package: "kronos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos", "serve", "--action", "query"]
-    status: active
-    description: "[POC] KRONOS 时间序列查询 (POC stdio)"
-
-  - uri: "bos://memory/kronos/schedule"
-    domain: memory
-    action: "schedule"
-    transport: mcp_stdio
-    package: "kronos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos", "serve", "--action", "schedule"]
-    status: active
-    description: "[POC] KRONOS 调度任务 (POC stdio)"
-
-  - uri: "bos://governance/metaos/gate"
-    domain: governance
-    action: "gate"
-    transport: mcp_stdio
-    package: "metaos"
-    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos", "serve", "--action", "gate"]
-    description: "MetaOS 门控检查 (POC stdio)"
-
-  - uri: "bos://governance/metaos/register"
-    domain: governance
-    action: "register"
-    transport: mcp_stdio
-    package: "metaos"
-    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos", "serve", "--action", "register"]
-    description: "MetaOS 包注册 (POC stdio)"
-
-  - uri: "bos://capability/bus/data"
-    domain: capability
-    action: "data"
-    transport: internal
-    package: "bus-foundation"
-    module_path: "bus_foundation.facade.data"
-    func_name: "emit"
-    description: "Omni-Bus 数据面路由 (日志/遥测)"
-
-  - uri: "bos://capability/bus/event"
-    domain: capability
-    action: "event"
-    transport: internal
-    package: "bus-foundation"
-    module_path: "bus_foundation.facade.event"
-    func_name: "publish"
-    description: "Omni-Bus 事件面路由 (Pub/Sub)"
-
-  - uri: "bos://capability/bus/control"
-    domain: capability
-    action: "control"
-    transport: internal
-    package: "bus-foundation"
-    module_path: "bus_foundation.facade.control"
-    func_name: "submit_task"
-    description: "Omni-Bus 控制面路由 (异步/定时任务)"
-
-  - uri: "bos://memory/gbrain/search"
-    domain: memory
-    action: "search"
-    transport: mcp_stdio
-    command: ["bun", "run", "projects/gbrain/src/cli.ts", "serve"]
-    package: "gbrain"
-    description: "gbrain 知识库全文搜索 (高性能 Postgres)"
-
-  - uri: "bos://memory/gbrain/query"
-    domain: memory
-    action: "query"
-    transport: mcp_stdio
-    command: ["bun", "run", "projects/gbrain/src/cli.ts", "serve"]
-    package: "gbrain"
-    description: "gbrain 知识库结构化查询"
-
-  - uri: "bos://memory/gbrain/sync"
-    domain: memory
-    action: "sync"
-    transport: mcp_stdio
-    command: ["bun", "run", "projects/gbrain/src/cli.ts", "serve"]
-    package: "gbrain"
-    description: "gbrain 知识库增量同步"
-
-  - uri: "bos://swarm/orchestrator/status"
-    domain: swarm
-    action: "status"
-    transport: internal
-    package: "agent-runtime"
-    module_path: "agora.mcp.swarm"
-    func_name: "get_swarm_status"
-    description: "获取分布式蜂群实时拓扑与负载状态"
-
-  - uri: "bos://governance/evolution/loop"
-    domain: governance
-    action: "loop"
-    transport: internal
-    package: "governance-evolution"
-    module_path: "omo.omo_evolution_loop"
-    func_name: "get_loop_status"
-    description: "OMO 自动进化循环监控"
-
-  - uri: "bos://governance/quality/audit"
-    domain: governance
-    action: "audit"
-    transport: internal
-    package: "governance-evolution"
-    module_path: "agora.mcp.knowledge_quality"
-    func_name: "audit_knowledge_quality"
-    description: "记忆脊知识质量审计与评分"
-
-  - uri: "bos://capability/agent-runtime/chat"
-    domain: capability
-    action: "chat"
-    transport: mcp_stdio
-    package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "Agent 交互式对话接口"
-
-  - uri: "bos://capability/agent-runtime/run-task"
-    domain: capability
-    action: "run-task"
-    transport: mcp_stdio
-    package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "Agent 任务执行接口"
-
-  - uri: "bos://capability/agent-runtime/task-status"
-    domain: capability
-    action: "task-status"
-    transport: mcp_stdio
-    package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "Agent 任务状态查询"
-
-  - uri: "bos://capability/agent-runtime/agent-list"
-    domain: capability
-    action: "agent-list"
-    transport: mcp_stdio
-    package: "agent-runtime"
-    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
-    description: "列出所有可用 Agent 实例"
-
-  - uri: "bos://analysis/eidos/validate"
-    domain: analysis
-    action: "validate"
-    transport: stdio
-    package: "eidos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "validate"]
-    description: "Eidos 数据模型校验"
-
-  - uri: "bos://memory/kos/query"
-    domain: memory
-    action: "query"
-    transport: stdio
-    package: "kos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "query"]
-    description: "KOS 知识查询"
-
-  - uri: "bos://analysis/ontoderive/align"
-    domain: analysis
-    action: "align"
-    transport: stdio
-    package: "ontoderive"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "align"]
-    description: "OntoDerive 语义对齐"
-
-  - uri: "bos://omo/eidos/pipeline"
-    domain: omo
-    action: "pipeline"
-    transport: stdio
-    package: "eidos"
-    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "pipeline"]
-    description: "Eidos 治理管线调度"
-
-  # ── ecos workflow (L0 协议层工作流引擎) ──
-  - uri: "bos://ecos/workflow/list"
-    domain: meta
-    action: "list"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "list"]
-    description: "eCOS L0 工作流列表"
-
-  - uri: "bos://ecos/workflow/describe"
-    domain: meta
-    action: "describe"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "describe"]
-    description: "eCOS L0 工作流定义查询"
-
-  - uri: "bos://ecos/workflow/run"
-    domain: meta
-    action: "run"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "run"]
-    description: "eCOS L0 工作流执行"
-
-  - uri: "bos://ecos/workflow/logs"
-    domain: meta
-    action: "logs"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "logs"]
-    description: "eCOS L0 工作流运行历史"
-
-  - uri: "bos://ecos/workflow/cache-status"
-    domain: meta
-    action: "cache-status"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "cache-status"]
-    description: "eCOS 工作流缓存状态查询"
-
-  - uri: "bos://ecos/workflow/cache-invalidate"
-    domain: meta
-    action: "cache-invalidate"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "cache-invalidate"]
-    description: "eCOS 工作流缓存全部清除"
-
-  - uri: "bos://ecos/workflow/cb-status"
-    domain: meta
-    action: "cb-status"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "cb-status"]
-    description: "eCOS 后端熔断器状态查询"
-
-  - uri: "bos://ecos/workflow/cb-reset"
-    domain: meta
-    action: "cb-reset"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "cb-reset"]
-    description: "eCOS 后端熔断器全部重置"
-
-# ═══════════════════════════════════════════════════════
-# 系统管理域 — system (后台管理 + 治理管道 + 健康检查)
-# ═══════════════════════════════════════════════════════
-
-  - uri: "bos://system/backends/list"
-    domain: system
-    action: "list"
-    transport: internal
-    module_path: "agora.mcp.resolver.api"
-    func_name: "list_services"
-    package: "agora"
-    description: "列出所有已注册 MCP backend (代理 KNOWN_BACKENDS)"
-
-  - uri: "bos://system/backends/register"
-    domain: system
-    action: "register"
-    transport: internal
-    module_path: "agora.mcp.resolver.api"
-    func_name: "register_backend"
-    package: "agora"
-    description: "动态注册新 MCP backend (POST /v1/backends/register)"
-
-  - uri: "bos://system/backends/health"
-    domain: system
-    action: "health"
-    transport: internal
-    module_path: "agora.mcp.resolver.api"
-    func_name: "list_backend_health"
-    package: "agora"
-    description: "后端健康探活 — 每个 backend 的状态/失败计数"
-
-  - uri: "bos://system/routes/reload"
-    domain: system
-    action: "reload"
-    transport: internal
-    module_path: "agora.mcp.resolver.api"
-    func_name: "reload_routes"
-    package: "agora"
-    description: "BOS 路由表热重载 (从 YAML 重新加载)"
-
-  - uri: "bos://system/governance/status"
-    domain: system
-    action: "status"
-    transport: internal
-    module_path: "agora.mcp.resolver.api"
-    func_name: "governance_status"
-    package: "cockpit"
-    description: "治理管道健康状态 (心跳时间/日志条目/健康等级)"
-
-  - uri: "bos://system/governance/heartbeat"
-    domain: system
-    action: "heartbeat"
-    transport: internal
-    module_path: "agora.mcp.resolver.api"
-    func_name: "governance_heartbeat"
-    package: "scripts"
-    description: "写入治理管道心跳 (governance.jsonl)"
-
-  - uri: "bos://system/omo/debt"
-    domain: system
-    action: "debt"
-    transport: internal
-    module_path: "agora.mcp.resolver.api"
-    func_name: "omo_debt_summary"
-    package: "omo"
-    description: "OMO 技术债务评分 — 当前总债务/趋势/热点"
-
-  # ── ToolBox 3 instances (L1-L3 local service entry) ──
-  # 收敛到 bos://capability/ 域 (5 域锁定约定) — 不创建新域
-  # CS-10 元数据: cross_references.realized_by 指向 omo broker
-  # 外部域: /Users/xiamingxing/ToolBox/{mcp,skills,cli,pipelines}/
-  - uri: "bos://capability/wps-office-mcp/invoke"
-    domain: capability
-    action: "invoke"
-    transport: stdio
-    package: "toolbox/wps-office-mcp"
-    command: ["node", "/Users/xiamingxing/ToolBox/mcp/wps-office-mcp/dist/index.js"]
-    tools_count: 243
-    description: "WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/mcp/wps-office-mcp/.git"
-    i0_route: pending
-    status: active
-
-  - uri: "bos://capability/wps-skills/load"
-    domain: capability
-    action: "load"
-    transport: stdio
-    package: "toolbox/wps-skills"
-    command: ["node", "/Users/xiamingxing/ToolBox/skills/wps-skills/dist/index.js"]
-    description: "WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/skills/wps-skills/.git"
-    i0_route: pending
-    status: active
-
-  - uri: "bos://capability/bos-skill-cli/exec"
-    domain: capability
-    action: "exec"
-    transport: stdio
-    package: "toolbox/bos-skill-cli"
-    command: ["uv", "run", "--directory", "/Users/xiamingxing/ToolBox/cli/bos-skill-cli", "bos-skill-cli"]
-    description: "BOS Skill 管理 CLI/TUI — 搜索/暂存/promote/回退 skill 包"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/cli/bos-skill-cli/.git"
-    i0_route: pending
-    status: active
-
-  # ── v5 Phase 2: 7 新实例注册 (迁入 L2 分区) ──
-  - uri: "bos://capability/headroom/compress"
-    domain: capability
-    action: "compress"
-    transport: stdio
-    package: "toolbox/headroom"
-    command: ["python3", "-m", "headroom"]
-    description: "Agent 上下文压缩层 — 60-95% token 节省 + 模型压缩 + MCP 代理"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/mcp/headroom/.git"
-    i0_route: pending
-    status: active
-
-  - uri: "bos://capability/code-review-graph/analyze"
-    domain: capability
-    action: "analyze"
-    transport: stdio
-    package: "toolbox/code-review-graph"
-    command: ["python3", "-m", "code_review_graph"]
-    description: "Token 优化型代码评审图工具 — PyPI 发布，MCP 兼容"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/mcp/code-review-graph/.git"
-    i0_route: pending
-    status: active
-
-  - uri: "bos://capability/claude-skills/load"
-    domain: capability
-    action: "load"
-    transport: inline
-    package: "toolbox/claude-skills"
-    description: "354 个 Claude Code Skill 最全库 — 593 CLI 脚本 + 711 模板"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/skills/claude-skills/.git"
-    i0_route: skill_host
-    status: active
-
-  - uri: "bos://capability/last30days-skill/fetch"
-    domain: capability
-    action: "fetch"
-    transport: stdio
-    package: "toolbox/last30days-skill"
-    # Skill 宿主执行面（非 Python -m 模块）；agent 侧加载 SKILL.md 后跑 CLI
-    command:
-      [
-        "bash",
-        "-lc",
-        "cd \"${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill\" && test -f skills/last30days/SKILL.md && echo ok:last30days-skill",
-      ]
-    description: "AI Agent 驱动的搜索/打分类信息流聚合 — GitHub Trending #1"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/skills/last30days-skill/.git"
-    # 声明已注册；真 invoke 仍依赖 Agent Skill 宿主（非常驻 stdio MCP）
-    i0_route: skill_host
-    status: active
-
-  - uri: "bos://capability/media-crawler/crawl"
-    domain: capability
-    action: "crawl"
-    transport: stdio
-    package: "toolbox/media-crawler"
-    # 真实入口是 pipelines/media-crawler/main.py（非 installable package media_crawler）
-    # 依赖: playwright 等；未装齐时 command 会失败 — 见 docs/operations/external-ingest-callchain.md
-    command:
-      [
-        "bash",
-        "-lc",
-        "cd \"${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler\" && if [ -x .venv/bin/python ]; then PY=.venv/bin/python; else PY=python3; fi && \"$PY\" main.py --help",
-      ]
-    description: "自媒体平台爬虫 — 抖音/小红书/快手/B站/微博等 12 平台，含反爬能力"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/pipelines/media-crawler/.git"
-    i0_route: host_cli
-    status: active
-
-  - uri: "bos://capability/open-montage/render"
-    domain: capability
-    action: "render"
-    transport: stdio
-    package: "toolbox/open-montage"
-    command:
-      [
-        "bash",
-        "-lc",
-        "cd \"${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/open-montage\" && test -d . && ls README.md >/dev/null && echo ok:open-montage",
-      ]
-    description: "开源 Agentic 视频制作系统 — 从剧本到成品的全流程 Pipeline"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/pipelines/open-montage/.git"
-    i0_route: host_cli
-    status: active
-
-  - uri: "bos://capability/skills-for-fabric/load"
-    domain: capability
-    action: "load"
-    transport: inline
-    package: "toolbox/skills-for-fabric"
-    description: "微软 Fabric AI 技能集 — 作者/消费/运维三类 Skill"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/skills/skills-for-fabric/.git"
-    i0_route: skill_host
-    status: active
-
-  # ── v5 续: 3 新实例注册 ──
-  - uri: "bos://capability/deer-flow/run"
-    domain: capability
-    action: "run"
-    transport: stdio
-    package: "toolbox/deer-flow"
-    command: ["python3", "-m", "deer_flow"]
-    description: "字节开源超 Agent 框架 v2.0 — 子 Agent/记忆/沙箱/技能"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/mcp/deer-flow/.git"
-    i0_route: pending
-    status: active
-
-  - uri: "bos://capability/datafoundry/analyze"
-    domain: capability
-    action: "analyze"
-    transport: stdio
-    package: "toolbox/datafoundry"
-    command: ["python3", "-m", "datafoundry"]
-    description: "企业级 Data Agent 工作台 — 28 数据源 + 语义层 + 多步分析"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/mcp/datafoundry/.git"
-    i0_route: pending
-    status: active
-
-  - uri: "bos://capability/knowledge-work-plugins/load"
-    domain: capability
-    action: "load"
-    transport: inline
-    package: "toolbox/knowledge-work-plugins"
-    description: "Claude Cowork 11 个生产力插件 — Claude Code 兼容"
-    cross_references:
-      domain: capability
-      realized_by: "agora.register"
-      upstream: "/Users/xiamingxing/ToolBox/skills/knowledge-work-plugins/.git"
-    i0_route: skill_host
-    status: active
-
-  # ── P77 Phase 3 治本: 补登 17 unregistered (跨仓真引用) ──
-  - uri: "bos://agora/metrics"
-    domain: agora
-    action: "metrics"
-    transport: inline
-    package: "agora"
-    description: "agora 内部指标源 self-identifier (metrics collector source_uri)"
-    i0_route: pending
-    status: active
-  - uri: "bos://agora/registry"
-    domain: agora
-    action: "registry"
-    transport: inline
-    package: "agora"
-    description: "agora @mcp.resource — 列出所有已注册 tools/resources 的 introspection 入口"
-    i0_route: pending
-    status: active
-  - uri: "bos://agora/status"
-    domain: agora
-    action: "status"
-    transport: inline
-    package: "agora"
-    description: "agora @mcp.resource — BOS 系统内省统一大盘 (router/middleware/调用量)"
-    i0_route: pending
-    status: active
-  - uri: "bos://capability/evaluator"
-    domain: capability
-    action: "evaluator"
-    transport: inline
-    package: "governance-evolution"
-    description: "evaluator 域 (CR-RBAC-01 强制权限, role='evaluator' or 'admin')"
-    i0_route: pending
-    status: active
-  - uri: "bos://cockpit/tools/cards_status"
-    domain: cockpit
-    action: "tools/cards_status"
-    transport: inline
-    package: "cockpit"
-    description: "cockpit cards_status 工具 — mof_agora_hook 路由表入口"
-    i0_route: pending
-    status: active
-  - uri: "bos://cockpit/tools/test"
-    domain: cockpit
-    action: "tools/test"
-    transport: inline
-    package: "cockpit"
-    description: "cockpit test 工具 — mof_agora_hook 路由表入口"
-    i0_route: pending
-    status: active
-  - uri: "bos://system/discovery/package"
-    domain: system
-    action: "discovery/package"
-    transport: inline
-    package: "agora"
-    description: "domain package 通用入口 (mcp/bos_discovery discovery 路径)"
-    i0_route: pending
-    status: active
-  - uri: "bos://system/discovery/package/action"
-    domain: system
-    action: "discovery/package/action"
-    transport: inline
-    package: "agora"
-    description: "domain package action 子入口 (mcp/bos_discovery dynamic discovery)"
-    i0_route: pending
-    status: active
-  - uri: "bos://ecos/events"
-    domain: ecos
-    action: "events"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--directory", "projects/ecos", "python", "-m", "ecos.services.events_sse"]
-    description: "ecos SSE events 入口 (events_sse.py 服务)"
-    i0_route: pending
-    status: active
-  - uri: "bos://ecos/workflow"
-    domain: ecos
-    action: "workflow"
-    transport: stdio
-    package: "ecos"
-    command: ["uv", "run", "--directory", "projects/ecos", "python", "-m", "ecos.cli.workflow"]
-    description: "ecos workflow CLI 入口 (ecos/cli/workflow.py)"
-    i0_route: pending
-    status: active
-  - uri: "bos://system/runtime/workers/status"
-    domain: system
-    action: "runtime/workers/status"
-    transport: inline
-    package: "agent-runtime"
-    description: "execution workers status 端点 (mcp_protocol registry 端点)"
-    i0_route: pending
-    status: active
-  - uri: "bos://forge/market/list"
-    domain: forge
-    action: "market/list"
-    transport: inline
-    package: "agora-market"
-    description: "agora forge market list — plugin market 查询入口"
-    i0_route: pending
-    status: active
-  - uri: "bos://governance/protocols-layer/trigger"
-    domain: governance
-    action: "protocols-layer/trigger"
-    transport: inline
-    package: "metaos"
-    description: "[UNIMPLEMENTED] governance protocols-layer 触发器入口 — kairon 无 protocols_layer 包, 声明悬空 (A2/2026-07-13 止血 deprecate); 能力实现另立项"
-    i0_route: pending
-    status: deprecated
-  - uri: "bos://governance/roles/list"
-    domain: governance
-    action: "roles/list"
-    transport: inline
-    package: "agora"
-    description: "governance roles list 端点 (mcp_protocol registry 端点)"
-    i0_route: pending
-    status: active
-  - uri: "bos://analysis/minerva"
-    domain: analysis
-    action: "minerva"
-    transport: inline
-    package: "kairon"
-    description: "kairon minerva 集成入口 (agora l0_registry_loader 引用)"
-    i0_route: pending
-    status: active
-  - uri: "bos://memory/docs/readme"
-    domain: memory
-    action: "docs/readme"
-    transport: inline
-    package: "kairon"
-    description: "memory docs readme 端点 (mcp_protocol registry 端点)"
-    i0_route: pending
-    status: active
-  - uri: "bos://system/vault/state"
-    domain: system
-    action: "vault/state"
-    transport: inline
-    package: "ecos"
-    description: "vault _state 端点 (ecos services integration gateway 引用)"
-    i0_route: pending
-    status: active
-
-  # ── P77 Phase 3 治本第二批: omo + cockpit + c2g 引用 (init submodule 后浮现) ──
-  - uri: "bos://governance/governance/tasks"
-    domain: governance
-    action: "governance/tasks"
-    transport: inline
-    package: "cockpit"
-    description: "gov tasks 端点 (cockpit dashboard helpers_compute 引用)"
-    i0_route: pending
-    status: active
-  - uri: "bos://governance/governance/circuit_breaker"
-    domain: governance
-    action: "governance/circuit_breaker"
-    transport: inline
-    package: "cockpit"
-    description: "governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)"
-    i0_route: pending
-    status: active
-  - uri: "bos://governance/governance/daily_budget"
-    domain: governance
-    action: "governance/daily_budget"
-    transport: inline
-    package: "cockpit"
-    description: "governance cockpit daily_budget 端点 (cockpit api_omos metrics source)"
-    i0_route: pending
-    status: active
-  - uri: "bos://governance/governance/quests"
-    domain: governance
-    action: "governance/quests"
-    transport: inline
-    package: "cockpit"
-    description: "governance cockpit quests 端点 (cockpit api_omos metrics source)"
-    i0_route: pending
-    status: active
-  - uri: "bos://governance/governance/omo_worker_dispatch"
-    domain: governance
-    action: "governance/omo_worker_dispatch"
-    transport: inline
-    package: "omo"
-    description: "governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics source)"
-    i0_route: pending
-    status: active
-  - uri: "bos://memory/fast-track/virtual-doc"
-    domain: memory
-    action: "fast-track/virtual-doc"
-    transport: inline
-    package: "omo"
-    description: "memory fast-track virtual-doc 端点 (omo bridge source_docs)"
-    i0_route: pending
-    status: active
-  - uri: "bos://omo/audit"
-    domain: omo
-    action: "audit"
-    transport: inline
-    package: "omo"
-    description: "omo audit 端点 (omo BOS schema LEGACY_DOMAIN_MAP 升级示例)"
-    i0_route: pending
-    status: active
-  - uri: "bos://omo/debt"
-    domain: omo
-    action: "debt"
-    transport: inline
-    package: "omo"
-    description: "omo debt 端点 (omo @mcp.resource 引用)"
-    i0_route: pending
-    status: active
-  - uri: "bos://omo/tasks/active"
-    domain: omo
-    action: "tasks/active"
-    transport: inline
-    package: "omo"
-    description: "omo tasks/active 端点 (omo @mcp.resource 引用)"
-    i0_route: pending
-    status: active
+    realized_by: agora.register
+    upstream: /Users/xiamingxing/ToolBox/skills/knowledge-work-plugins/.git
+  i0_route: skill_host
+  status: active
+- uri: bos://agora/metrics
+  domain: agora
+  action: metrics
+  transport: inline
+  package: agora
+  description: agora 内部指标源 self-identifier (metrics collector source_uri)
+  i0_route: pending
+  status: active
+- uri: bos://agora/registry
+  domain: agora
+  action: registry
+  transport: inline
+  package: agora
+  description: agora @mcp.resource — 列出所有已注册 tools/resources 的 introspection 入口
+  i0_route: pending
+  status: active
+- uri: bos://agora/status
+  domain: agora
+  action: status
+  transport: inline
+  package: agora
+  description: agora @mcp.resource — BOS 系统内省统一大盘 (router/middleware/调用量)
+  i0_route: pending
+  status: active
+- uri: bos://capability/evaluator
+  domain: capability
+  action: evaluator
+  transport: inline
+  package: governance-evolution
+  description: evaluator 域 (CR-RBAC-01 强制权限, role='evaluator' or 'admin')
+  i0_route: pending
+  status: active
+- uri: bos://cockpit/tools/cards_status
+  domain: cockpit
+  action: tools/cards_status
+  transport: inline
+  package: cockpit
+  description: cockpit cards_status 工具 — mof_agora_hook 路由表入口
+  i0_route: pending
+  status: active
+- uri: bos://cockpit/tools/test
+  domain: cockpit
+  action: tools/test
+  transport: inline
+  package: cockpit
+  description: cockpit test 工具 — mof_agora_hook 路由表入口
+  i0_route: pending
+  status: active
+- uri: bos://system/discovery/package
+  domain: system
+  action: discovery/package
+  transport: inline
+  package: agora
+  description: domain package 通用入口 (mcp/bos_discovery discovery 路径)
+  i0_route: pending
+  status: active
+- uri: bos://system/discovery/package/action
+  domain: system
+  action: discovery/package/action
+  transport: inline
+  package: agora
+  description: domain package action 子入口 (mcp/bos_discovery dynamic discovery)
+  i0_route: pending
+  status: active
+- uri: bos://ecos/events
+  domain: ecos
+  action: events
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/ecos
+  - python
+  - -m
+  - ecos.services.events_sse
+  description: ecos SSE events 入口 (events_sse.py 服务)
+  i0_route: pending
+  status: active
+- uri: bos://ecos/workflow
+  domain: ecos
+  action: workflow
+  transport: stdio
+  package: ecos
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/ecos
+  - python
+  - -m
+  - ecos.cli.workflow
+  description: ecos workflow CLI 入口 (ecos/cli/workflow.py)
+  i0_route: pending
+  status: active
+- uri: bos://system/runtime/workers/status
+  domain: system
+  action: runtime/workers/status
+  transport: inline
+  package: agent-runtime
+  description: execution workers status 端点 (mcp_protocol registry 端点)
+  i0_route: pending
+  status: active
+- uri: bos://forge/market/list
+  domain: forge
+  action: market/list
+  transport: inline
+  package: agora-market
+  description: agora forge market list — plugin market 查询入口
+  i0_route: pending
+  status: active
+- uri: bos://governance/protocols-layer/trigger
+  domain: governance
+  action: protocols-layer/trigger
+  transport: inline
+  package: metaos
+  description: '[UNIMPLEMENTED] governance protocols-layer 触发器入口 — kairon 无 protocols_layer 包, 声明悬空 (A2/2026-07-13 止血 deprecate);
+    能力实现另立项'
+  i0_route: pending
+  status: unimplemented
+- uri: bos://governance/roles/list
+  domain: governance
+  action: roles/list
+  transport: inline
+  package: agora
+  description: governance roles list 端点 (mcp_protocol registry 端点)
+  i0_route: pending
+  status: active
+- uri: bos://analysis/minerva
+  domain: analysis
+  action: minerva
+  transport: inline
+  package: kairon
+  description: kairon minerva 集成入口 (agora l0_registry_loader 引用)
+  i0_route: pending
+  status: active
+- uri: bos://memory/docs/readme
+  domain: memory
+  action: docs/readme
+  transport: inline
+  package: kairon
+  description: memory docs readme 端点 (mcp_protocol registry 端点)
+  i0_route: pending
+  status: active
+- uri: bos://system/vault/state
+  domain: system
+  action: vault/state
+  transport: inline
+  package: ecos
+  description: vault _state 端点 (ecos services integration gateway 引用)
+  i0_route: pending
+  status: active
+- uri: bos://governance/governance/tasks
+  domain: governance
+  action: governance/tasks
+  transport: inline
+  package: cockpit
+  description: gov tasks 端点 (cockpit dashboard helpers_compute 引用)
+  i0_route: pending
+  status: active
+- uri: bos://governance/governance/circuit_breaker
+  domain: governance
+  action: governance/circuit_breaker
+  transport: inline
+  package: cockpit
+  description: governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)
+  i0_route: pending
+  status: active
+- uri: bos://governance/governance/daily_budget
+  domain: governance
+  action: governance/daily_budget
+  transport: inline
+  package: cockpit
+  description: governance cockpit daily_budget 端点 (cockpit api_omos metrics source)
+  i0_route: pending
+  status: active
+- uri: bos://governance/governance/quests
+  domain: governance
+  action: governance/quests
+  transport: inline
+  package: cockpit
+  description: governance cockpit quests 端点 (cockpit api_omos metrics source)
+  i0_route: pending
+  status: active
+- uri: bos://governance/governance/omo_worker_dispatch
+  domain: governance
+  action: governance/omo_worker_dispatch
+  transport: inline
+  package: omo
+  description: governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics source)
+  i0_route: pending
+  status: active
+- uri: bos://memory/fast-track/virtual-doc
+  domain: memory
+  action: fast-track/virtual-doc
+  transport: inline
+  package: omo
+  description: memory fast-track virtual-doc 端点 (omo bridge source_docs)
+  i0_route: pending
+  status: active
+- uri: bos://omo/audit
+  domain: omo
+  action: audit
+  transport: inline
+  package: omo
+  description: omo audit 端点 (omo BOS schema LEGACY_DOMAIN_MAP 升级示例)
+  i0_route: pending
+  status: active
+- uri: bos://omo/debt
+  domain: omo
+  action: debt
+  transport: inline
+  package: omo
+  description: omo debt 端点 (omo @mcp.resource 引用)
+  i0_route: pending
+  status: active
+- uri: bos://omo/tasks/active
+  domain: omo
+  action: tasks/active
+  transport: inline
+  package: omo
+  description: omo tasks/active 端点 (omo @mcp.resource 引用)
+  i0_route: pending
+  status: active
