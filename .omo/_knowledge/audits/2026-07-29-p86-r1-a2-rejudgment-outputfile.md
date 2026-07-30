@@ -4,7 +4,13 @@ lifecycle: audit
 owner: governance-team
 last-reviewed: "2026-07-29"
 ---
+
 # P86 R1: A2 结论作废 + output_file 等量重判
+
+> 📌 **本文件是 5.4x 作废 / 纯 text 重判的证据源**。  
+> 现行 A2 定论地图: [2026-07-29-p86-a2-collaboration-gain-map.md](2026-07-29-p86-a2-collaboration-gain-map.md)（3 类型真 dispatch + shortfall）。  
+> 勿把本文件中的历史中间结论当现行 SSOT。
+
 
 > 🔴 P73 诚实纠错 (二次反转): 本文档初版用 output_file **byte** 对比得出"协作 3-4x 优势",
 > **该结论错误** — byte 含 transcript 噪音 (工具调用/读文件输出).
