@@ -5,9 +5,9 @@ phase_status: active
 current_wave: W3
 next_milestone: Phase 46 W3 — Registry push trigger + failover E2E + task fallback
 health_score_ref: .omo/state/health.yaml
-health_score: 94
+health_score: 88
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-30T07:15:34Z'
+health_score_generated_at: '2026-07-30T22:00:49Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -51,7 +51,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-30T07:15:36Z'
+updated_at: '2026-07-31T09:06:45.985073+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -191,10 +191,11 @@ runtime_health_summary:
   online_services: 4
   total_services: 4
   ratio: 1.0
-  health_score: 94
-  last_scan: '2026-07-30T07:15:34Z'
-  source: compass_radar_isc3_daemon_ratio
+  health_score: 100
+  last_scan: '1785460005.058825'
+  service_count: 8
   degraded: []
+  source: runtime_daemon_de_false_positive
 phase42_status: completed
 phase42_completed_at: '2026-07-14T20:59:00Z'
 phase43_status: completed
@@ -208,8 +209,8 @@ debt_adjusted_health_score: 83.0
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 80
+governance_anomaly_score: 61
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-30T07:15:34Z'
+governance_feedback_last_run: '2026-07-31T09:06:45.985073+08:00'
