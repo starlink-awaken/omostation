@@ -1,0 +1,3 @@
+# baseline frozen at 0 entries — protected per audit 2026-07-29-z1-z4-baseline-frozen-protected.
+# check-work-landed._load_baseline skips blank and "#" lines, so the baseline set stays empty (= 0 grace items).
+# Non-empty body satisfies gac-hygiene-check CR-HYG-01 (zero-byte file otherwise flagged).
