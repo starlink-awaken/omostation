@@ -453,6 +453,10 @@ from agora.server.tools_health import register_health_tools
 
 register_health_tools(mcp)  # Phase 45: 健康自检 + 熵清理 + 债务自动种子
 
+from agora.server.tools_registry_mcp import register_registry_mcp_tools
+
+register_registry_mcp_tools(mcp)  # Phase 46: Agent Registry 暴露为 MCP 工具
+
 
 async def _init_proxy():
     """Initialize the proxy manager and connect to all configured downstream services.
