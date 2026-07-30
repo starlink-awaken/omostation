@@ -322,7 +322,7 @@ async def debt_auto_seed() -> dict:
 
 
 def _write_debt_item(
-    debt_dir: Path,
+    target_dir: Path,
     item_id: str,
     title: str,
     dimension: str,
@@ -352,7 +352,7 @@ last_reviewed_at: "{now}"
 gate_level: "P2"
 x3_tier: "Operational"
 """
-    (debt_dir / f"{item_id}.yaml").write_text(content, encoding="utf-8")
+    (target_dir / f"{item_id}.yaml").write_text(content, encoding="utf-8")
 
 
 # ═══════════════════════════════════════════════════════════════
