@@ -10,7 +10,11 @@ import json
 import sqlite3
 import subprocess
 import sys
-from datetime import UTC, datetime, timezone
+from datetime import datetime, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 from pathlib import Path
 
 DB_PATH = Path(__file__).resolve().parents[4] / "data" / "cards" / "cards.db"

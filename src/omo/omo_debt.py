@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime, timezone
+from datetime import datetime, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 from pathlib import Path
 
 import yaml
