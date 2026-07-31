@@ -47,14 +47,28 @@ or sends a dispatch request:
 export BOS_REACHBRIDGE_ENDPOINT="https://<enterprise-endpoint>/dispatch"
 export BOS_REACHBRIDGE_TOKEN="<secret-from-the-runtime-secret-store>"
 export KEMS_EVALUATION_MANIFEST="/secure/kems/evaluation-manifest.json"
+export KEMS_MODEL_ACCEPTANCE_REPORT="/secure/kems/model-acceptance.json"
 export KEMS_OMO_TASK_ID="<approved-task-id>"
 python scripts/kems_production_preflight.py --production
 ```
 
+Generate the manifest-bound model report with the Kairon evaluator before the
+preflight:
+
+```bash
+python projects/kairon/scripts/kems_evaluate_model_candidate.py \
+  --input /secure/kems/redacted-forecast-cases.json \
+  --evaluation-manifest "$KEMS_EVALUATION_MANIFEST" \
+  --candidate-model-id "candidate-v1" \
+  --output "$KEMS_MODEL_ACCEPTANCE_REPORT"
+```
+
 The command exits non-zero until the enterprise endpoint, token, adjudicated
-redacted evaluation manifest, controlled source inventory, and approved OMO
-task are all present. Local Hermes is intentionally not accepted by
-`--production`.
+redacted evaluation manifest, a `shadow_pass` candidate-model report bound to
+that manifest's dataset identity and SHA-256, controlled source inventory, and
+approved OMO task are all present. The model report must retain
+`promotion=blocked_until_omo_approval`; this preflight never grants promotion.
+Local Hermes is intentionally not accepted by `--production`.
 
 After the enterprise gateway returns its safe dispatch result, record the
 receipt without copying response content or credentials:

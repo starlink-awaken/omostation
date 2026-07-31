@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 from dataclasses import dataclass
@@ -21,6 +22,7 @@ SOURCE_PATTERNS = (
 FORBIDDEN_KEYS = {"body", "content", "ocr_text", "raw_text", "text"}
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 APPROVED_STATUSES = {"approved", "dispatched", "executing", "verified", "closed"}
+MODEL_ACCEPTANCE_SCHEMA = "kems.model-acceptance.v1"
 
 
 @dataclass(frozen=True)
@@ -158,6 +160,121 @@ def _evaluation_check(path: Path | None) -> Check:
     )
 
 
+def _model_acceptance_check(
+    path: Path | None, evaluation_manifest: Path | None
+) -> Check:
+    """Require a passing, manifest-bound candidate-model shadow report."""
+    if path is None:
+        return Check("model_acceptance", False, "missing model acceptance report path")
+    if not path.is_file():
+        return Check(
+            "model_acceptance", False, "model acceptance report is unavailable"
+        )
+    if evaluation_manifest is None or not evaluation_manifest.is_file():
+        return Check(
+            "model_acceptance",
+            False,
+            "evaluation manifest is required to bind model acceptance",
+        )
+    try:
+        payload = _load_json(path)
+        manifest = _load_json(evaluation_manifest)
+    except ValueError as exc:
+        return Check("model_acceptance", False, str(exc))
+    if not isinstance(payload, dict):
+        return Check(
+            "model_acceptance", False, "model acceptance report must be an object"
+        )
+    if not isinstance(manifest, dict):
+        return Check("model_acceptance", False, "evaluation manifest must be an object")
+    forbidden = _contains_forbidden_key(payload)
+    if forbidden:
+        return Check("model_acceptance", False, "raw content key is forbidden")
+    if payload.get("schema_version") != MODEL_ACCEPTANCE_SCHEMA:
+        return Check("model_acceptance", False, "unsupported model acceptance schema")
+    if payload.get("status") != "shadow_pass":
+        return Check(
+            "model_acceptance", False, "candidate model did not pass shadow evaluation"
+        )
+    if payload.get("promotion") != "blocked_until_omo_approval":
+        return Check(
+            "model_acceptance", False, "model acceptance cannot authorize promotion"
+        )
+    for field in ("candidate_model_id", "baseline_model_id"):
+        if not isinstance(payload.get(field), str) or not payload[field].strip():
+            return Check("model_acceptance", False, f"{field} is missing")
+    for field in ("dataset_id", "dataset_version", "evaluation_manifest_sha256"):
+        if not isinstance(payload.get(field), str) or not payload[field].strip():
+            return Check("model_acceptance", False, f"{field} is missing")
+    if payload["dataset_id"] != manifest.get("dataset_id"):
+        return Check(
+            "model_acceptance",
+            False,
+            "model acceptance dataset_id does not match manifest",
+        )
+    if payload["dataset_version"] != manifest.get("dataset_version"):
+        return Check(
+            "model_acceptance",
+            False,
+            "model acceptance dataset_version does not match manifest",
+        )
+    if payload["evaluation_manifest_sha256"] != _sha256(evaluation_manifest):
+        return Check(
+            "model_acceptance",
+            False,
+            "model acceptance is bound to a different manifest",
+        )
+    samples = manifest.get("samples")
+    try:
+        dataset_sample_count = int(payload["dataset_sample_count"])
+    except (KeyError, TypeError, ValueError):
+        return Check(
+            "model_acceptance",
+            False,
+            "model acceptance dataset sample count is invalid",
+        )
+    if not isinstance(samples, list) or dataset_sample_count != len(samples):
+        return Check(
+            "model_acceptance",
+            False,
+            "model acceptance sample count does not match manifest",
+        )
+
+    try:
+        case_count = int(payload["case_count"])
+        min_cases = int(payload["min_cases"])
+        model_mae = float(payload["model_mae"])
+        baseline_mae = float(payload["baseline_mae"])
+        relative_improvement = float(payload["relative_improvement"])
+        min_relative_improvement = float(payload["min_relative_improvement"])
+    except (KeyError, TypeError, ValueError):
+        return Check("model_acceptance", False, "model acceptance metrics are invalid")
+    if (
+        case_count < min_cases
+        or min_cases <= 0
+        or not all(
+            math.isfinite(value)
+            for value in (
+                model_mae,
+                baseline_mae,
+                relative_improvement,
+                min_relative_improvement,
+            )
+        )
+        or model_mae > baseline_mae * (1.0 - min_relative_improvement)
+    ):
+        return Check(
+            "model_acceptance",
+            False,
+            "model acceptance metrics do not satisfy thresholds",
+        )
+    return Check(
+        "model_acceptance",
+        True,
+        f"shadow_pass model={payload['candidate_model_id']} cases={case_count}",
+    )
+
+
 def _omo_check(omo_root: Path, task_id: str | None) -> Check:
     if not task_id:
         return Check("omo_approval", False, "missing approved OMO task id")
@@ -182,7 +299,9 @@ def _omo_check(omo_root: Path, task_id: str | None) -> Check:
     if payload.get("id") not in {None, task_id}:
         return Check("omo_approval", False, "OMO task id does not match task path")
     if not isinstance(approval_ref, str) or not approval_ref.endswith(".yaml"):
-        return Check("omo_approval", False, "OMO task approval_ref is missing or invalid")
+        return Check(
+            "omo_approval", False, "OMO task approval_ref is missing or invalid"
+        )
 
     root = omo_root.resolve().parent
     approval_path = _resolve_omo_ref(omo_root, approval_ref)
@@ -192,7 +311,9 @@ def _omo_check(omo_root: Path, task_id: str | None) -> Check:
         approval = yaml.safe_load(approval_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, ValueError, yaml.YAMLError) as exc:
         return Check(
-            "omo_approval", False, f"invalid OMO approval metadata: {type(exc).__name__}"
+            "omo_approval",
+            False,
+            f"invalid OMO approval metadata: {type(exc).__name__}",
         )
     if not isinstance(approval, dict):
         return Check("omo_approval", False, "OMO approval metadata must be an object")
@@ -250,6 +371,25 @@ def _evaluation_metadata(path: Path | None) -> dict[str, object]:
     }
 
 
+def _model_acceptance_metadata(path: Path | None) -> dict[str, object]:
+    if path is None or not path.is_file():
+        return {"available": False}
+    try:
+        payload = _load_json(path)
+    except ValueError:
+        return {"available": False}
+    if not isinstance(payload, dict):
+        return {"available": False}
+    return {
+        "available": True,
+        "candidate_model_id": payload.get("candidate_model_id"),
+        "status": payload.get("status"),
+        "dataset_id": payload.get("dataset_id"),
+        "dataset_version": payload.get("dataset_version"),
+        "sha256": _sha256(path),
+    }
+
+
 def _omo_metadata(omo_root: Path, task_id: str | None) -> dict[str, object]:
     if not task_id:
         return {"available": False}
@@ -299,6 +439,7 @@ def run_preflight(
     task_id: str | None,
     production: bool,
     evidence_output: Path | None = None,
+    model_acceptance: Path | None = None,
 ) -> dict[str, object]:
     checks: list[Check] = []
     endpoint = os.environ.get("BOS_REACHBRIDGE_ENDPOINT", "").strip()
@@ -348,6 +489,11 @@ def run_preflight(
     inventory, inventory_sha256 = _source_inventory(sources)
 
     checks.append(_evaluation_check(evaluation_manifest))
+    checks.append(
+        _model_acceptance_check(model_acceptance, evaluation_manifest)
+        if production
+        else Check("model_acceptance", True, "not required outside production")
+    )
     checks.append(_omo_check(omo_root, task_id))
     ok = all(check.ok for check in checks)
     result = {
@@ -366,6 +512,7 @@ def run_preflight(
             "source_inventory_sha256": inventory_sha256,
             "sources": inventory,
             "evaluation": _evaluation_metadata(evaluation_manifest),
+            "model_acceptance": _model_acceptance_metadata(model_acceptance),
             "omo": _omo_metadata(omo_root, task_id),
             "checks": result["checks"],
         }
@@ -387,6 +534,14 @@ def main() -> int:
         default=Path(os.environ["KEMS_EVALUATION_MANIFEST"])
         if os.environ.get("KEMS_EVALUATION_MANIFEST")
         else None,
+    )
+    parser.add_argument(
+        "--model-acceptance",
+        type=Path,
+        default=Path(os.environ["KEMS_MODEL_ACCEPTANCE_REPORT"])
+        if os.environ.get("KEMS_MODEL_ACCEPTANCE_REPORT")
+        else None,
+        help="redacted candidate-model shadow acceptance report",
     )
     parser.add_argument(
         "--omo-root",
@@ -412,6 +567,9 @@ def main() -> int:
         docs_root=args.docs_root.expanduser().resolve(),
         evaluation_manifest=args.evaluation_manifest.expanduser().resolve()
         if args.evaluation_manifest
+        else None,
+        model_acceptance=args.model_acceptance.expanduser().resolve()
+        if args.model_acceptance
         else None,
         omo_root=args.omo_root.expanduser().resolve(),
         task_id=args.task_id,

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from reach_gateway.kems import dispatch_manifest
+
 from scripts.kems_dispatch_receipt import build_receipt
 from scripts.kems_production_preflight import run_preflight
 
@@ -46,6 +48,37 @@ def _manifest(tmp_path: Path) -> Path:
     return path
 
 
+def _model_acceptance(tmp_path: Path, manifest: Path) -> Path:
+    path = tmp_path / "model-acceptance.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": "kems.model-acceptance.v1",
+                "candidate_model_id": "candidate-v1",
+                "baseline_model_id": "naive-last-v1",
+                "case_count": 2,
+                "observation_count": 4,
+                "model_mae": 0.5,
+                "baseline_mae": 2.0,
+                "relative_improvement": 0.75,
+                "min_cases": 2,
+                "min_relative_improvement": 0.1,
+                "status": "shadow_pass",
+                "promotion": "blocked_until_omo_approval",
+                "dataset_id": "kems-real-fixture",
+                "dataset_version": "v1",
+                "evaluation_manifest_sha256": hashlib.sha256(
+                    manifest.read_bytes()
+                ).hexdigest(),
+                "dataset_sample_count": 1,
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
 def _approved_omo(tmp_path: Path) -> Path:
     omo_root = tmp_path / "omo"
     (omo_root / "tasks" / "active").mkdir(parents=True)
@@ -69,9 +102,11 @@ def test_redacted_production_lane_reaches_http_receipt(tmp_path, monkeypatch) ->
         "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
     )
     monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "fixture-token")
+    manifest_path = _manifest(tmp_path)
     preflight = run_preflight(
         docs_root=_source_tree(tmp_path),
-        evaluation_manifest=_manifest(tmp_path),
+        evaluation_manifest=manifest_path,
+        model_acceptance=_model_acceptance(tmp_path, manifest_path),
         omo_root=_approved_omo(tmp_path),
         task_id="KEMS-E2E",
         production=True,
