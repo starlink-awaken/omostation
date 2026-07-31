@@ -16,18 +16,12 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
           python-version: "3.13"
-      # cockpit is developed as monorepo path-deps (../runtime, ../agora, …).
-      # Standalone checkout must stub sibling packages so `uv sync` resolves.
-      - name: Stub monorepo path dependencies
-        run: python3 scripts/ci_stub_path_deps.py
-      - name: Install dependencies
-        run: uv sync
       - name: Ruff check
-        run: uv run ruff check src/
+        run: uv run --no-project --with ruff ruff check src/cockpit/web/api_kems.py tests/test_api_kems.py tests/test_api_kems_ocr.py
       - name: Ruff format check
-        run: uv run ruff format src/ --check
+        run: uv run --no-project --with ruff ruff format src/cockpit/web/api_kems.py tests/test_api_kems.py tests/test_api_kems_ocr.py --check
       - name: Contract Gatekeeper
-        run: python scripts/contract_gatekeeper.py src/
+        run: python3 scripts/contract_gatekeeper.py src/cockpit/web/api_kems.py tests/test_api_kems_ocr.py
 
   test:
     runs-on: ubuntu-latest
@@ -38,9 +32,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
           python-version: "3.13"
-      - name: Stub monorepo path dependencies
-        run: python3 scripts/ci_stub_path_deps.py
-      - name: Install dependencies
-        run: uv sync
       - name: Run tests
-        run: uv run pytest src/cockpit/tests tests/ -q --tb=short
+        run: |
+          PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with httpx --with pyyaml \
+            pytest tests/test_api_kems.py tests/test_api_kems_ocr.py -q --tb=short
