@@ -20,7 +20,12 @@ lifecycle, review cadence, and discoverability policy.
 - The frontmatter contract is `status`, `lifecycle`, `owner`, and
   `last-reviewed`. `ssot` and `verifier` identify authority and the executable
   check when a document needs a local override.
-- `last-reviewed` is a review timestamp, not a content-generation timestamp.
+- `last-reviewed` records the latest governance metadata review; it does not by
+  itself claim that the document content was substantively reviewed.
+- Optional `review-state` makes that distinction explicit:
+  `metadata-only` is used after a metadata migration, while `content-reviewed`
+  requires a matching `content-reviewed-at` date. Metadata migrations record
+  their event in `metadata-migrated-at`.
 - `active` documents must have a discoverable owner and a valid SSOT pointer.
 - `stale`, `superseded`, and `archived` are explicit lifecycle outcomes; do not
   hide historical documents by deleting their references.
