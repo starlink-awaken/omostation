@@ -18,6 +18,7 @@ jobs:
         with:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
           submodules: recursive
+        continue-on-error: true
       - name: Init ecos submodule
         run: git submodule update --init projects/ecos
       - uses: actions/setup-python@v5

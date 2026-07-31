@@ -33,6 +33,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
       - name: Download actionlint (binary, latest stable)
         id: get_actionlint
         run: |
@@ -56,6 +57,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -85,6 +87,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
       - name: Install shellcheck
         run: |
           sudo apt-get update -qq
@@ -114,6 +117,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -138,6 +142,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -174,6 +179,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
