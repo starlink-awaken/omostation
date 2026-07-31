@@ -2,7 +2,7 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-07-31
 ---
 
 # management/ INDEX — P77 物理迁移后结构
@@ -59,6 +59,7 @@ ls .omo/_knowledge/management/guides/
 - **架构分析** (architecture-analysis): architecture-pure-analysis, health-snapshot-phase16, etc
 - **5+3+1 框架** (5+3+1): full-audit, layer-deep-architecture
 - **债务分析** (debt): DEBT-ANALYSIS, debt-systems-analysis
+- **心智模型** (mental-model): information-triage-mental-model (信息分诊三分类框架, PR #641, 2026-07-31)
 - **其他指南** (guide): 各种 explainer
 
 ## 工具
