@@ -38,6 +38,7 @@ def test_adjudication_lifecycle_and_manifest(monkeypatch, tmp_path) -> None:
         ).status_code
         == 200
     )
+    assert api.post("/api/kems/adjudication/sample-1/claim", json={"annotator": "reviewer-2"}).status_code == 200
     assert (
         api.post(
             "/api/kems/adjudication/sample-1/annotate",
