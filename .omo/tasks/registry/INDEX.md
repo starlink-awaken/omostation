@@ -10,9 +10,10 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (2 个)
+## Planned Tasks (3 个)
 | ID | Title | Status |
 |----|-------|--------|
+| OPC-P6-SELF-EVOLUTION-doc-gate-e | Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml | candidate |
 | needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
 | needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat | candidate |
 
@@ -57,5 +58,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-07-30 (依据 `omo state sync-tasks` 与真实目录重算: done=119, planned=2, active=0, archived=6 顶层)*
+*Updated: 2026-07-31 (依据 `omo state sync-tasks` 与真实目录重算: done=119, planned=3, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
