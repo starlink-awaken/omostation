@@ -3,7 +3,7 @@
 > Status: **CLOSED** · 2026-07-24 · Appetite: **2-3 周** · Closeout: `.omo/_knowledge/audits/2026-07-24-batch2-closeout.md`
 > 上位: STRAT-P81 + ADR-0228 + **ADR-0232**（G-DEL.2b 官方达标 + 本批批准）
 > 交接单: `.omo/plans/strat-p81-agent-execution-brief.md`（启动序列/红线/升级协议全部适用）
-> 前批: Batch 1（CLOSED, 11 done + C2 partial, closeout: `audits/2026-07-24-batch1-closeout.md`）
+> 前批: Batch 1（CLOSED, 11 done + C2 partial, closeout: `.omo/_knowledge/audits/2026-07-24-batch1-closeout.md`）
 > **用户授权范围**: 工单内全部任务一次性授权, 含既有 PR 流程落 main。例外见 §F。**11 任务, A→E 波次。**
 
 ---

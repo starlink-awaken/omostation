@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 """P58 R1: 跨面引用一致性深度检查.
 
-扫描 .omo/ 下所有 .md 文件的内部链接, 检测:
+扫描 .omo/ 下可治理的 .md 文件内部链接, 检测:
 1. 相对路径引用 (./other.md, ../other.md, path/to.md)
 2. 绝对路径引用 (.omo/xxx, docs/xxx)
 3. 跨仓引用 (projects/*/xxx)
 4. 引用目标是否存在
+
+默认只扫描 Git 已跟踪文档；使用 ``--scope workspace`` 才扫描工作区中的
+ignored 计划和运行态文档。这样 CI/changed-files 门禁不会把本地派生物当成
+交付缺陷，同时保留显式 workspace 审计入口。
 
 输出格式: file:broken_link 列表 + 修复建议
 """
 
 from __future__ import annotations
 
+import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -172,22 +178,78 @@ def check_file(file: Path, root: Path) -> list[tuple[str, str]]:
     return issues
 
 
+def _is_scan_candidate(file: Path, root: Path) -> bool:
+    """Return whether a markdown file belongs to the actionable scan surface."""
+    if file.suffix != ".md":
+        return False
+    try:
+        relative = file.relative_to(root)
+    except ValueError:
+        return False
+    return (
+        relative.parts
+        and relative.parts[0] == ".omo"
+        and "_delivery" not in relative.parts
+        and "_knowledge" not in relative.parts
+        and "_archive" not in relative.parts
+        and "registry" not in relative.parts
+    )
+
+
+def _tracked_markdown_files(root: Path) -> list[Path]:
+    """Read tracked OMO markdown paths from Git without including ignored files."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-z", "--", ".omo"],
+            check=True,
+            capture_output=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError("tracked scope requires a Git worktree") from exc
+
+    paths = [
+        root / raw_path.decode("utf-8")
+        for raw_path in result.stdout.split(b"\0")
+        if raw_path
+    ]
+    return sorted(path for path in paths if _is_scan_candidate(path, root))
+
+
+def collect_markdown_files(root: Path, *, scope: str) -> list[Path]:
+    """Collect the .omo markdown files for a named governance scope."""
+    if scope == "tracked":
+        return _tracked_markdown_files(root)
+    if scope == "workspace":
+        return sorted(
+            path
+            for path in (root / ".omo").rglob("*.md")
+            if _is_scan_candidate(path, root)
+        )
+    raise ValueError(f"unsupported scope: {scope}")
+
+
 def main() -> int:
-    root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("root", nargs="?", default=".", help="workspace root")
+    parser.add_argument(
+        "--scope",
+        choices=("tracked", "workspace"),
+        default="tracked",
+        help="tracked Git docs (default) or all workspace docs",
+    )
+    args = parser.parse_args()
+    root = Path(args.root).resolve()
     omo = root / ".omo"
 
     if not omo.exists():
         print(f"❌ .omo/ not found at {root}")
         return 1
 
-    # 排除运行时产物: _delivery + tasks/registry/* (运行时快照)
-    # 排除 _knowledge/ (历史知识库文档, 引用的是旧结构, TASK-236A991C)
-    md_files = [
-        f for f in omo.rglob("*.md")
-        if "_delivery" not in f.parts
-        and "registry" not in f.parts
-        and "_knowledge" not in f.parts
-    ]
+    try:
+        md_files = collect_markdown_files(root, scope=args.scope)
+    except RuntimeError as exc:
+        print(f"❌ {exc}")
+        return 1
 
     total_issues = 0
     files_with_issues = 0
@@ -204,7 +266,7 @@ def main() -> int:
                 print(f"  {rel}: ... and {len(issues) - 5} more")
 
     print()
-    print(f"📊 总文件: {len(md_files)}")
+    print(f"📊 scope={args.scope} 总文件: {len(md_files)}")
     print(f"❌ 有问题文件: {files_with_issues}")
     print(f"❌ 总问题链接: {total_issues}")
 
