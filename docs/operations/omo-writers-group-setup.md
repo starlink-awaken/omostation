@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # macOS `omo-writers` 组创建说明（ADR-0207 残留）
 
 > **Agent 禁止**自动创建/修改系统组。本页仅供**人类运维**在确认多用户写面需求后执行。

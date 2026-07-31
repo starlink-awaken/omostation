@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: kems-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # eCOS 深度复盘 — 2026-07-14 治理循环
 
 > 复盘范围: ~51 commits, Phase P42→P44, 7 项债务全部解决

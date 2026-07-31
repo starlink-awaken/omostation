@@ -1,6 +1,6 @@
 ---
 title: 织星架构演进实施方案与系统性方案设计（2026H2）
-status: 已采纳
+status: active
 type: architecture-spec
 owner: 夏明星
 created: 2026-07-02
@@ -10,6 +10,9 @@ related:
   - ARCHITECTURE.md
   - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
   - docs/VISION-ROADMAP.md
+lifecycle: contract
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # 织星架构演进与方案设计（2026H2）

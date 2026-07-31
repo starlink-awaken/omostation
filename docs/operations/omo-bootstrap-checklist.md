@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # OMO / omostation 新机 Bootstrap 清单
 
 > 配套: [omo-path-acl-runbook.md](./omo-path-acl-runbook.md) · ADR-0199 · ADR-0200 · **ADR-0206**

@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: architecture-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # eCOS v6 系统性架构分析 (2026-07-14)
 
 > 基于架构 SSOT (`ARCHITECTURE.md` / `BRIEF.md` / `.omo/state/system.yaml`) +

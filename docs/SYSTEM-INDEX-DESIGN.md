@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # 系统索引体系设计方案 — 全景调研 + 架构设计
 
 > 调研日期: 2026-07-03 | 实施: 2026-07-03

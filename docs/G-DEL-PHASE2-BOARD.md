@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # Phase 2 兑现期 · 门禁诚实看板
 
 > 禁止用 sim 数字填物理门禁。SSOT：`phase-scope.yaml::metrics_caliber`。

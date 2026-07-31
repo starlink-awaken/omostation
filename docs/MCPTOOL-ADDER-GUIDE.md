@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # MCPTOOL M1 实例 Adder Guide (Round 5b)
 
 > **配套 ADR-0147** (Round 5b, 2026-07-06)

@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # OMO Path ACL 运维 Runbook（Scheme C 5c）
 
 > ADR: 0186 · 0187 · 0189 · 0194 · 0196 · 0198 · **0199**（doctor 日常节奏）

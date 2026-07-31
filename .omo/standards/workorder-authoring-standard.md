@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # Workorder Authoring Standard (STRAT-P85 G2.2)
 
 Every workflow-supporting task under `.omo/tasks/` must use this

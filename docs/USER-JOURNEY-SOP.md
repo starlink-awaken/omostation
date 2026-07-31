@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # eCOS v6 用户旅程设计 + Workflow SOP
 
 > 用户场景 · 操作流程 · 标准化 SOP

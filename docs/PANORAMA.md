@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # PANORAMA.md — eCOS 系统全景架构
 
 > 本文是全景骨架与导航，不是运行时快照。

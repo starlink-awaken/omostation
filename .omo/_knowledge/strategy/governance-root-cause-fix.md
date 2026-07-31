@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # 治本方案 — 治理状态平面写协议
 
 > 2026-07-16

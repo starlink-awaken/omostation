@@ -8,6 +8,12 @@ progress: 0/33
 mode: interactive
 started: 2026-07-01T02:00:00Z
 updated: 2026-07-01T02:00:00Z
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # Auto PR Review + 分级 Auto-merge ISA

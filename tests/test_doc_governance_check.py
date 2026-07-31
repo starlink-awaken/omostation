@@ -193,3 +193,92 @@ def test_warning_baseline_detects_budget_regression() -> None:
             "exception": "legacy-stale-review",
         }
     ]
+
+
+def test_signature_baseline_rejects_warning_replacement(tmp_path: Path) -> None:
+    registry = _registry()
+    registry["warning_exceptions"] = {
+        "version": 2,
+        "policy": "no-new-warnings",
+        "matching": "file-signature",
+        "baseline_file": "baseline.yaml",
+        "entries": [
+            {
+                "id": "legacy-stale-review",
+                "rule": "stale_review",
+                "surface": "docs",
+                "max_findings": 2,
+                "expires": "2026-10-31",
+                "owner": "governance-team",
+                "reason": "Legacy metadata migration.",
+            }
+        ],
+    }
+    findings = [
+        {
+            "path": "docs/guide.md",
+            "rule": "stale_review",
+            "severity": "warning",
+            "evidence": "age=900d threshold=30d",
+        }
+    ]
+    CHECKER.write_warning_baseline(
+        tmp_path / "baseline.yaml",
+        findings,
+        date(2026, 7, 31),
+    )
+
+    baseline, registry_findings = CHECKER.evaluate_warning_baseline(
+        findings,
+        registry,
+        date(2026, 7, 31),
+        tmp_path,
+    )
+    assert not registry_findings
+    assert baseline["signature"]["unbaselined"] == []
+    assert baseline["signature"]["registered"] == 1
+
+    replacement = [
+        {
+            "path": "docs/other.md",
+            "rule": "stale_review",
+            "severity": "warning",
+            "evidence": "age=900d threshold=30d",
+        }
+    ]
+    replaced, registry_findings = CHECKER.evaluate_warning_baseline(
+        replacement,
+        registry,
+        date(2026, 7, 31),
+        tmp_path,
+    )
+    assert not registry_findings
+    assert replaced["unbaselined"][0]["path"] == "docs/other.md"
+
+
+def test_warning_burndown_uses_latest_due_checkpoint() -> None:
+    registry = {
+        "warning_burndown": {
+            "checkpoints": [
+                {"date": "2026-08-31", "max_findings": 109},
+                {"date": "2026-09-30", "max_findings": 55},
+                {"date": "2026-10-31", "max_findings": 0},
+            ]
+        }
+    }
+
+    before_checkpoint = CHECKER.evaluate_warning_burndown(
+        registry,
+        164,
+        date(2026, 7, 31),
+    )
+    assert before_checkpoint["on_track"]
+    assert before_checkpoint["current_checkpoint"] is None
+
+    behind = CHECKER.evaluate_warning_burndown(
+        registry,
+        110,
+        date(2026, 8, 31),
+    )
+    assert not behind["on_track"]
+    assert behind["expected_max_findings"] == 109

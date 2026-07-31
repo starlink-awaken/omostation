@@ -1,12 +1,17 @@
 ---
 id: GIP-2026-001
 title: DigitalBrainOS Global Implementation Plan
-status: approved
+status: archived
 owner_role: Conductor
 created_at: 2026-05-14
 updated_at: 2026-05-24
 ssot: true
 scope: global
+lifecycle: history
+owner: kems-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # DigitalBrainOS 全局实施计划
