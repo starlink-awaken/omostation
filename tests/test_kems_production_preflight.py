@@ -82,6 +82,33 @@ def test_preflight_is_ready_only_when_all_production_gates_pass(tmp_path, monkey
     assert result["source_count"] == 1
 
 
+def test_preflight_writes_redacted_auditable_evidence(tmp_path, monkeypatch):
+    monkeypatch.setenv(
+        "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
+    )
+    monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
+    _approved_task(tmp_path / "omo")
+    output = tmp_path / "evidence" / "preflight.json"
+    result = run_preflight(
+        docs_root=_source_tree(tmp_path),
+        evaluation_manifest=_evaluation_manifest(tmp_path),
+        omo_root=tmp_path / "omo",
+        task_id="KEMS-001",
+        production=True,
+        evidence_output=output,
+    )
+
+    evidence = json.loads(output.read_text(encoding="utf-8"))
+    assert result["evidence_output"] == str(output.resolve())
+    assert evidence["schema"] == "kems.production-preflight-evidence.v1"
+    assert evidence["status"] == "ready"
+    assert evidence["sources"][0]["name"] == "2026-auto-apple-mail.md"
+    assert evidence["evaluation"]["dataset_id"] == "real-kems"
+    assert evidence["omo"]["approval_ref"] == "review-001"
+    assert "private source" not in output.read_text(encoding="utf-8")
+    assert not list(output.parent.glob(".*.tmp"))
+
+
 def test_preflight_rejects_raw_evaluation_fields(tmp_path, monkeypatch):
     monkeypatch.setenv(
         "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"

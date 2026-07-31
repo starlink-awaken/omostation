@@ -41,6 +41,23 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _write_json_atomically(payload: dict[str, object], output: Path) -> None:
+    """Persist only redacted gate evidence, without leaving a partial artifact."""
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_name(f".{output.name}.tmp")
+    try:
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        temporary.chmod(0o600)
+        temporary.replace(output)
+        output.chmod(0o600)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
 def _source_files(docs_root: Path) -> list[Path]:
     inbox = docs_root / "_inbox"
     return sorted(
@@ -51,6 +68,17 @@ def _source_files(docs_root: Path) -> list[Path]:
             if path.is_file()
         }
     )
+
+
+def _source_inventory(sources: list[Path]) -> tuple[list[dict[str, object]], str]:
+    inventory = [
+        {"name": path.name, "bytes": path.stat().st_size, "sha256": _sha256(path)}
+        for path in sources
+    ]
+    canonical = json.dumps(
+        inventory, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return inventory, hashlib.sha256(canonical).hexdigest()
 
 
 def _contains_forbidden_key(value: object) -> str | None:
@@ -167,6 +195,56 @@ def _omo_check(omo_root: Path, task_id: str | None) -> Check:
     return Check("omo_approval", True, "approved OMO task metadata confirmed")
 
 
+def _evaluation_metadata(path: Path | None) -> dict[str, object]:
+    if path is None or not path.is_file():
+        return {"available": False}
+    try:
+        payload = _load_json(path)
+    except ValueError:
+        return {"available": False}
+    if not isinstance(payload, dict):
+        return {"available": False}
+    samples = payload.get("samples")
+    return {
+        "available": True,
+        "dataset_id": payload.get("dataset_id"),
+        "dataset_version": payload.get("dataset_version"),
+        "sample_count": len(samples) if isinstance(samples, list) else 0,
+        "sha256": _sha256(path),
+    }
+
+
+def _omo_metadata(omo_root: Path, task_id: str | None) -> dict[str, object]:
+    if not task_id:
+        return {"available": False}
+    candidates = (
+        omo_root / "tasks" / "active" / f"{task_id}.yaml",
+        omo_root / "tasks" / "planned" / f"{task_id}.yaml",
+        omo_root / "tasks" / "completed" / f"{task_id}.yaml",
+    )
+    task_path = next((path for path in candidates if path.is_file()), None)
+    if task_path is None:
+        return {"available": False, "task_id": task_id}
+    try:
+        import yaml
+    except ImportError:
+        return {"available": False, "task_id": task_id}
+    try:
+        payload = yaml.safe_load(task_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError, yaml.YAMLError):
+        return {"available": False, "task_id": task_id}
+    if not isinstance(payload, dict):
+        return {"available": False, "task_id": task_id}
+    return {
+        "available": True,
+        "task_id": task_id,
+        "status": payload.get("status"),
+        "approval_state": payload.get("approval_state"),
+        "approval_ref": payload.get("approval_ref"),
+        "sha256": _sha256(task_path),
+    }
+
+
 def run_preflight(
     *,
     docs_root: Path,
@@ -174,6 +252,7 @@ def run_preflight(
     omo_root: Path,
     task_id: str | None,
     production: bool,
+    evidence_output: Path | None = None,
 ) -> dict[str, object]:
     checks: list[Check] = []
     endpoint = os.environ.get("BOS_REACHBRIDGE_ENDPOINT", "").strip()
@@ -220,19 +299,33 @@ def run_preflight(
         )
     )
     # Hashing proves inventory stability without placing private content in the report.
-    if sources:
-        _ = [_sha256(path) for path in sources]
+    inventory, inventory_sha256 = _source_inventory(sources)
 
     checks.append(_evaluation_check(evaluation_manifest))
     checks.append(_omo_check(omo_root, task_id))
     ok = all(check.ok for check in checks)
-    return {
+    result = {
         "schema": "kems.production-preflight.v1",
         "status": "ready" if ok else "blocked",
         "production": production,
         "source_count": len(sources),
         "checks": [check.as_dict() for check in checks],
     }
+    if evidence_output is not None:
+        evidence = {
+            "schema": "kems.production-preflight-evidence.v1",
+            "status": result["status"],
+            "production": production,
+            "source_count": len(sources),
+            "source_inventory_sha256": inventory_sha256,
+            "sources": inventory,
+            "evaluation": _evaluation_metadata(evaluation_manifest),
+            "omo": _omo_metadata(omo_root, task_id),
+            "checks": result["checks"],
+        }
+        _write_json_atomically(evidence, evidence_output.expanduser().resolve())
+        result["evidence_output"] = str(evidence_output.expanduser().resolve())
+    return result
 
 
 def main() -> int:
@@ -258,6 +351,14 @@ def main() -> int:
     )
     parser.add_argument("--task-id", default=os.environ.get("KEMS_OMO_TASK_ID"))
     parser.add_argument(
+        "--evidence-output",
+        type=Path,
+        default=Path(os.environ["KEMS_PREFLIGHT_EVIDENCE_OUTPUT"])
+        if os.environ.get("KEMS_PREFLIGHT_EVIDENCE_OUTPUT")
+        else None,
+        help="atomically write redacted preflight evidence JSON",
+    )
+    parser.add_argument(
         "--production", action="store_true", help="require enterprise HTTP transport"
     )
     args = parser.parse_args()
@@ -269,6 +370,7 @@ def main() -> int:
         omo_root=args.omo_root.expanduser().resolve(),
         task_id=args.task_id,
         production=args.production,
+        evidence_output=args.evidence_output,
     )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0 if result["status"] == "ready" else 1
