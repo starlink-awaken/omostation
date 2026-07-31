@@ -11,6 +11,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
       - name: Init scripts submodule
         # 脚本在 scripts 子模块 (public). 不用 recursive — 避开 private 子模块.
         run: git submodule update --init scripts

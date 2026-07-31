@@ -17,6 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
           submodules: recursive
       - name: Init ecos submodule
         run: git submodule update --init projects/ecos
