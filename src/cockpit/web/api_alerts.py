@@ -317,3 +317,149 @@ async def get_alert(alert_id: str):
         if alert["id"] == alert_id:
             return alert
     raise HTTPException(status_code=404, detail="Alert not found")
+
+
+# ============================================================
+# Triage endpoint — 分诊集成
+# ============================================================
+
+import urllib.request as _urllib_request
+
+
+class TriageRequest(BaseModel):
+    """分诊请求."""
+    text: str = Field(..., description="待分诊文本")
+    consensus: bool = Field(False, description="是否使用共识模式 (3模型投票)")
+
+
+class TriageResponse(BaseModel):
+    """分诊响应."""
+    verdict: str = Field(..., description="分诊结果: 丢弃/沉淀/提醒")
+    agreement: float = Field(1.0, description="一致率 (0-1)")
+    status: str = Field("ok", description="状态: 共识/多数/分歧/错误")
+    latency: float = Field(0.0, description="延迟 (秒)")
+    error: str | None = Field(None, description="错误信息")
+
+
+GATEWAY_URL = "http://100.96.126.35:4000/v1/chat/completions"
+GATEWAY_KEY = "sk-omlx-admin"
+
+TRIAGE_PROMPT = """你是信息分诊助手。判断: 丢弃 / 沉淀 / 提醒 三选一。
+
+标准:
+- 丢弃: 营销/广告/促销/社交动态/APP推送/续费推销
+- 沉淀: 技术文章/知识教程/研究分析/笔记同步/课程更新 (有价值内容)
+- 提醒: 会议/截止日期/账单/告警/待办/预约/需行动事项
+
+示例:
+【淘宝】5折→丢弃  【GitHub】新PR→沉淀  【日历】开会→提醒
+【读书笔记】已同步→沉淀  【京东】续费优惠→丢弃  【银行】账单→提醒
+
+信息: {text}
+只输出一个词:"""
+
+
+def _call_triage_model(model: str, text: str, needs_reasoning_off: bool = True) -> tuple[str, float]:
+    """调用单个分诊模型."""
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": TRIAGE_PROMPT.format(text=text)}],
+        "max_tokens": 20,
+        "temperature": 0,
+    }
+    if needs_reasoning_off:
+        payload["extra_body"] = {"reasoning_effort": "none"}
+
+    data = json.dumps(payload).encode()
+    req = _urllib_request.Request(
+        GATEWAY_URL,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {GATEWAY_KEY}",
+        },
+    )
+
+    import time as _time
+    t0 = _time.time()
+    try:
+        with _urllib_request.urlopen(req, timeout=15) as resp:  # noqa: S310
+            d = json.loads(resp.read())
+        latency = _time.time() - t0
+        content = d["choices"][0]["message"]["content"].strip()
+        for v in ("丢弃", "沉淀", "提醒"):
+            if v in content:
+                return v, latency
+        return "未知", latency
+    except Exception:
+        return "错误", _time.time() - t0
+
+
+@router.post("/api/triage")
+async def triage_notification(request: TriageRequest):
+    """分诊通知 — 自动分类为 丢弃/沉淀/提醒.
+
+    consensus=false: 单模型快速分诊 (~0.5s)
+    consensus=true: 两级共识 (stage1 双模型并行 + stage2 分歧复核, ~1.5s)
+    """
+    import time as _time
+    from concurrent.futures import ThreadPoolExecutor
+
+    t0 = _time.time()
+
+    if not request.consensus:
+        # 单模型模式
+        verdict, latency = _call_triage_model("triage", request.text)
+        return TriageResponse(
+            verdict=verdict,
+            agreement=1.0,
+            status="单模型",
+            latency=latency,
+            error="模型返回未知" if verdict == "未知" else None,
+        )
+
+    # 共识模式: stage1 双模型并行
+    stage1_models = [("mid-local", True), ("mini-9b", True)]
+    stage2_model = ("deepseek-chat", False)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [
+            pool.submit(_call_triage_model, m, request.text, off)
+            for m, off in stage1_models
+        ]
+        results = [f.result() for f in futures]
+
+    votes: dict[str, int] = {}
+    for verdict, _ in results:
+        if verdict in ("丢弃", "沉淀", "提醒"):
+            votes[verdict] = votes.get(verdict, 0) + 1
+
+    max_verdict = max(votes, key=votes.get) if votes else "未知"
+    max_count = max(votes.values()) if votes else 0
+
+    # Stage 1 一致 → 直接返回
+    if max_count == 2:
+        return TriageResponse(
+            verdict=max_verdict,
+            agreement=1.0,
+            status="共识",
+            latency=_time.time() - t0,
+        )
+
+    # Stage 1 分歧 → 调 Stage 2
+    verdict2, lat2 = _call_triage_model(stage2_model[0], request.text, stage2_model[1])
+    if verdict2 in ("丢弃", "沉淀", "提醒"):
+        votes[verdict2] = votes.get(verdict2, 0) + 1
+
+    max_verdict = max(votes, key=votes.get) if votes else "未知"
+    max_count = max(votes.values()) if votes else 0
+    agreement = max_count / 3
+
+    status = "共识" if agreement == 1.0 else ("多数" if agreement >= 2 / 3 else "分歧")
+
+    return TriageResponse(
+        verdict=max_verdict,
+        agreement=agreement,
+        status=status,
+        latency=_time.time() - t0,
+    )
