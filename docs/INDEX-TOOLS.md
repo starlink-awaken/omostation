@@ -53,7 +53,7 @@
 | ssot-writeback.py | SSOT 回写 | `python3 bin/ssot/ssot-writeback.py` |
 | check-boundary.py | 项目边界校验 | `python3 bin/ssot/check-boundary.py` |
 | check-cross-refs.py | 交叉引用一致性 | `python3 bin/ssot/check-cross-refs.py` (tracked; `--scope workspace` 做全量审计) |
-| doc-governance-check.py | 文档 ownership/lifecycle/freshness/discoverability | `python3 bin/ssot/doc-governance-check.py` (`--strict` 阻断 warning) |
+| doc-governance-check.py | 文档 ownership/lifecycle/freshness/discoverability | `python3 bin/ssot/doc-governance-check.py` (`--no-new-warnings` 阻断新增 warning，`--strict` 阻断全部 warning) |
 | check_health_ssot.py | health SSOT 一致 | `python3 bin/ssot/check_health_ssot.py` |
 | doc-ssot-lint.py | 文档 SSOT 门禁 (CI) | `python3 bin/ssot/doc-ssot-lint.py` |
 | gen-project-registry.py | registry 派生 | `python3 bin/ssot/gen-project-registry.py` |
