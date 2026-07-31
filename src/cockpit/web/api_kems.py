@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,28 @@ def _ocr_store():
     _, store_type, _ = _ocr_symbols()
     path = Path(os.environ.get("KEMS_OCR_DB", str(Path.home() / ".kems" / "ocr-quality.sqlite")))
     return store_type(path)
+
+
+def _graph_store():
+    try:
+        from kos.kems import GraphStore
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="KOS graph store is unavailable") from exc
+    path = Path(os.environ.get("KEMS_GRAPH_DB", str(Path.home() / ".kems" / "graph.sqlite")))
+    return GraphStore(path)
+
+
+def _forecast_symbols():
+    try:
+        from kos.kems import (
+            ForecastStore,
+            build_moving_average_shadow_forecast,
+            evaluate_shadow_forecast,
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="KOS forecast store is unavailable") from exc
+    path = Path(os.environ.get("KEMS_FORECAST_DB", str(Path.home() / ".kems" / "forecast.sqlite")))
+    return ForecastStore(path), build_moving_average_shadow_forecast, evaluate_shadow_forecast
 
 
 def _reject_private_fields(value: object) -> None:
@@ -212,3 +235,137 @@ async def record_ocr_correction(run_id: str, request: Request) -> dict[str, Any]
     except (OSError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"run_id": run_id, "correction_id": correction_id, "review_status": "corrected"}
+
+
+@router.get("/api/kems/graph/entities")
+async def search_kems_entities(
+    q: str = Query(..., min_length=1), limit: int = Query(50, ge=1, le=500)
+) -> dict[str, Any]:
+    try:
+        items = _graph_store().search_entities(q, limit=limit)
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"items": items, "count": len(items), "mode": "review_only"}
+
+
+@router.get("/api/kems/graph/entities/{entity_id}/neighbors")
+async def get_kems_entity_neighbors(entity_id: str, limit: int = Query(50, ge=1, le=500)) -> dict[str, Any]:
+    try:
+        items = _graph_store().neighbors(entity_id, limit=limit)
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"entity_id": entity_id, "items": items, "count": len(items), "mode": "review_only"}
+
+
+@router.post("/api/kems/graph/entities/{entity_id}/review")
+async def review_kems_entity(entity_id: str, request: Request) -> dict[str, Any]:
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="graph review must be an object")
+    _reject_private_fields(body)
+    required = ("decision", "reviewer", "reason", "decision_id")
+    missing = [field for field in required if not body.get(field)]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing graph review fields: {', '.join(missing)}")
+    try:
+        _graph_store().review_entity(
+            entity_id=entity_id,
+            decision=str(body["decision"]),
+            reviewer=str(body["reviewer"]),
+            reason=str(body["reason"]),
+            decision_id=str(body["decision_id"]),
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"entity_id": entity_id, "decision": body["decision"], "persisted": True}
+
+
+@router.post("/api/kems/graph/runs/{run_id}/rollback")
+async def rollback_kems_graph_run(run_id: str, request: Request) -> dict[str, Any]:
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="graph rollback must be an object")
+    required = ("reviewer", "reason", "decision_id")
+    missing = [field for field in required if not body.get(field)]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing rollback fields: {', '.join(missing)}")
+    try:
+        counts = _graph_store().rollback_run(
+            run_id, reviewer=str(body["reviewer"]), reason=str(body["reason"]), decision_id=str(body["decision_id"])
+        )
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"run_id": run_id, "rolled_back": True, "counts": counts}
+
+
+@router.post("/api/kems/forecast/shadow")
+async def create_kems_shadow_forecast(request: Request) -> dict[str, Any]:
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="forecast request must be an object")
+    _reject_private_fields(body)
+    required = ("forecast_id", "series_id", "source_run_id", "values", "horizon")
+    missing = [field for field in required if body.get(field) in (None, "", [])]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing forecast fields: {', '.join(missing)}")
+    values = body["values"]
+    if (
+        not isinstance(values, list)
+        or not values
+        or any(not isinstance(value, (int, float)) or not math.isfinite(value) for value in values)
+    ):
+        raise HTTPException(status_code=422, detail="values must be a finite numeric list")
+    try:
+        store, builder, _ = _forecast_symbols()
+        forecast = builder(
+            tuple(float(value) for value in values),
+            series_id=str(body["series_id"]),
+            source_run_id=str(body["source_run_id"]),
+            horizon=int(body["horizon"]),
+            window=int(body.get("window", 3)),
+        )
+        persisted = store.record_forecast(str(body["forecast_id"]), forecast)
+    except (OSError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"forecast_id": body["forecast_id"], "persisted": persisted, "forecast": forecast.to_dict()}
+
+
+@router.get("/api/kems/forecast/{forecast_id}")
+async def get_kems_shadow_forecast(forecast_id: str) -> dict[str, Any]:
+    try:
+        result = _forecast_symbols()[0].get_forecast(forecast_id)
+    except OSError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail="forecast not found")
+    return result
+
+
+@router.post("/api/kems/forecast/{forecast_id}/evaluation")
+async def evaluate_kems_shadow_forecast(forecast_id: str, request: Request) -> dict[str, Any]:
+    body = await request.json()
+    if not isinstance(body, dict) or not body.get("evaluation_id") or not isinstance(body.get("actual"), list):
+        raise HTTPException(status_code=422, detail="evaluation_id and actual are required")
+    _reject_private_fields(body)
+    actual = body["actual"]
+    if not actual or any(not isinstance(value, (int, float)) or not math.isfinite(value) for value in actual):
+        raise HTTPException(status_code=422, detail="actual must be a finite numeric list")
+    try:
+        store, _, evaluator = _forecast_symbols()
+        saved = store.get_forecast(forecast_id)
+        if saved is None:
+            raise KeyError(forecast_id)
+        evaluation = evaluator(
+            model_id=str(saved["model_id"]),
+            predictions=tuple(float(value) for value in saved["predictions"]),
+            actual=tuple(float(value) for value in actual),
+            baseline_value=float(saved["baseline_value"]),
+        )
+        persisted = store.record_evaluation(str(body["evaluation_id"]), forecast_id, evaluation)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=f"forecast not found: {exc.args[0]}") from exc
+    except (OSError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"forecast_id": forecast_id, "persisted": persisted, "evaluation": evaluation.to_dict()}
