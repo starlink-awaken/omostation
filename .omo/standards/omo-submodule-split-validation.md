@@ -150,12 +150,12 @@ print('✅ all N re-exports OK')
 
 ## 3. 验证脚本 (Quick validation)
 
-放在 `bin/omo-submodule-split-validate.sh` 提供一键检查:
+历史验证脚本已归档于 `bin/_archive/omo-submodule-split-validate.sh`，仅供追溯，不是现行入口:
 
 ```bash
 #!/usr/bin/env bash
 # omo submodule 拆分验证脚本 (P109-A)
-# 用法: bin/omo-submodule-split-validate.sh <parent_module> <child_module> [N symbols]
+# 用法: bin/_archive/omo-submodule-split-validate.sh <parent_module> <child_module> [N symbols]
 set -euo pipefail
 
 PARENT="${1:?parent module required (e.g. omo_governance_surfaces)}"
