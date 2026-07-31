@@ -33,6 +33,9 @@ jobs:
       - name: Fallback checkout (no submodules)
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
+      - name: Init submodules (fallback)
+        if: steps.checkout.outcome == 'failure'
+        run: git submodule update --init --recursive 2>/dev/null || true
       - name: Setup Python 3.13
         uses: actions/setup-python@v5
         with:

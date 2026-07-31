@@ -22,6 +22,9 @@ jobs:
       - name: Fallback checkout (no submodules)
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
+      - name: Init submodules (fallback)
+        if: steps.checkout.outcome == 'failure'
+        run: git submodule update --init --recursive 2>/dev/null || true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -43,6 +46,9 @@ jobs:
       - name: Fallback checkout (no submodules)
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
+      - name: Init submodules (fallback)
+        if: steps.checkout.outcome == 'failure'
+        run: git submodule update --init --recursive 2>/dev/null || true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
