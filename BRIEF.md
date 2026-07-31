@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-07-31T06:48:34.425595Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `96/100`
+> **Generated**: `2026-07-31T11:43:49.832637Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `70/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
@@ -42,11 +42,8 @@
 - 人工直做占比: `0%` (0/30)
 - **静默丢失: `0`** ✅ 硬红线达成
 
-<details>
-<summary>⚙️ <b>治理健康分详情 (复合 96/100, 已自动收纳)</b></summary>
+## ⚙️ 治理健康分详情 (Health Detail)
 
-- **GAC 异常扣分**: `85/100` (无 anomalies)
+- **复合健康分**: `70/100` (警戒, 请看下方分项)
+- **GAC 异常扣分**: `0/100`
 - **常驻 daemon 在线率**: `100.00%`
-- **新鲜度分数**: `100/100` (正常)
-
-</details>
