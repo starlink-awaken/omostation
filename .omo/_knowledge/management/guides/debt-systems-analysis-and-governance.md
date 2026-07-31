@@ -94,6 +94,13 @@ deprecated-since: 2026-06-23
 - 证据: 16 个 Phase 中，0 个是纯债务清理 Phase
 - 如何改变: 允许 Phase 被定义为"收敛 Phase"
 
+**信念 5: "所有信息都值得同等注意力"** ← 新增
+- 持有者: 信息处理流程（隐含）
+- 证据: 采集/通知/推送未分诊，噪音与价值信息混杂
+- 如何改变: 引入信息分诊心智模型（丢弃/沉淀/提醒三分类）
+- 实现: `aetherforge/triage/` — 两级共识分诊，100% 准确率
+- 详见: `information-triage-mental-model.md`
+
 ---
 
 # 系统原型匹配 (FindArchetype)
