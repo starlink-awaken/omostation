@@ -27,6 +27,7 @@ last-reviewed: 2026-06-28
 | `internal-write-profiles.yaml` | Worker/dispatch internal write paths (runtime writes) |
 | `direct-io-baseline.yaml` | Grandfathered direct I/O baseline (policy: must stay empty) |
 | `governance-checks.yaml` | GaC declarative rule registry (ADR-0106) + X1-X4 checker classes |
+| `document-governance.yaml` | Document ownership, lifecycle, freshness, and discoverability policy |
 | `governance-alerts.yaml` | X1-X4 alert rules when checks fail |
 | `governance-evolution-roadmap.yaml` | Systemic governance evolution roadmap, capability traces, and golden path contracts |
 | `task-policies.yaml` | Task YAML field validators (red-line policies) |
