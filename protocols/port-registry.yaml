@@ -95,6 +95,11 @@ ports:
     transport: http
     status: active
     note: "omo dashboard (converged to cockpit)"
+  9222:
+    name: chrome-cdp-debug
+    transport: http
+    status: active
+    note: "Chrome DevTools Protocol Remote Debugging (seeyon-oa-cdp-ingest)"
   9290:
     name: llm-gateway
     transport: http
