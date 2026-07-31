@@ -569,7 +569,17 @@ def main() -> int:
     bos_sub.add_parser("discover", help="扫描 workspace 发现 MCP 服务")
     bos_sub.add_parser("status", help="BOS 系统状态与蜂群情况")
 
+    # BOS Inbox / Neural Mesh
+    bos_inbox_p = bos_sub.add_parser("inbox", help="BOS Inbox 多源私有知识神经网查询与操作")
+    bos_inbox_sub = bos_inbox_p.add_subparsers(dest="inbox_cmd")
+    bos_inbox_sub.add_parser("status", help="统计多源神经网本地证据与嵌入状态")
+    bos_inbox_search_p = bos_inbox_sub.add_parser("search", help="语义搜索多源记忆")
+    bos_inbox_search_p.add_argument("query", help="搜索关键词")
+    bos_inbox_pending_p = bos_inbox_sub.add_parser("pending", help="查看未决待办快照预览")
+    bos_inbox_pending_p.add_argument("--source", default="seeyon_oa", help="来源: seeyon_oa | netease_mailmaster | apple_mail")
+
     # BOS Capability / Toolbox
+
     bos_capability_p = bos_sub.add_parser("capability", help="BOS capability 域 / toolbox 外部能力")
     bos_capability_sub = bos_capability_p.add_subparsers(dest="capability_command")
     bos_capability_sub.add_parser("list", help="列出 toolbox 中的 capability 服务")
@@ -881,8 +891,12 @@ def main() -> int:
             return cmd_bos_discover(a)
         elif sub == "capability":
             return cmd_bos_capability(a)
+        elif sub == "inbox":
+            from cockpit.commands.bos_inbox import cmd_bos_inbox
+            return cmd_bos_inbox(a)
         else:
             return cmd_bos_status(a)
+
 
     def dispatch_bus(a):
         return cmd_bus(a)
