@@ -29,6 +29,7 @@ dependencies = [
     "ecos",
     "bus-foundation",
     "kairon-observability",
+    "kos",
     "psutil",
 ]
 
@@ -76,6 +77,7 @@ omo-debt = { path = "../omo-debt", editable = true }
 l4-kernel = { path = "../l4-kernel", editable = true }
 metaos = { path = "../metaos", editable = true }
 kairon-observability = { path = "../kairon/packages/kairon-observability", editable = true }
+kos = { path = "../kairon/packages/kos", editable = true }
 
 [dependency-groups]
 dev = [
