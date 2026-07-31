@@ -8,6 +8,11 @@ related:
   - .omo/goals/current.yaml
 created: 2026-07-18
 updated: 2026-07-20
+lifecycle: contract
+owner: kems-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # KOS 季度扩量目标

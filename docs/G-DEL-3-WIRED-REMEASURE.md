@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # G-DEL.3 有线复测清单
 
 > 目标：在 **ethernet** 路径上用 n≥1000（默认 10000）重测 p99&lt;100ms。  

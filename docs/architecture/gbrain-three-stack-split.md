@@ -1,6 +1,6 @@
 ---
 status: draft
-lifecycle: architecture
+lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-07-07
 related:
@@ -8,6 +8,8 @@ related:
   - ../../../.omo/_knowledge/decisions/STRAT-P76-strategic-roadmap.md
   - ../../../.omo/_knowledge/decisions/0155-p76-phase1-cleanup.md
   - ../../../docs/SOP-GOD-MODULE-SPLIT.md
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # gbrain 三栈拆分架构图 (P76 Phase 2 / ADR-0156)

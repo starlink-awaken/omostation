@@ -1,12 +1,14 @@
 ---
 status: draft
-lifecycle: operations
+lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-07-07
 related:
   - ../../../.omo/_knowledge/decisions/0160-p76-phase6-foundry-runtime.md
   - ../../../.omo/_knowledge/decisions/0159-p76-phase5-foundry.md
   - ../../../docs/architecture/knowledge-foundry-cron.md
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # Knowledge Foundry Monitor (cockpit L3 出口) — P76 Phase 6

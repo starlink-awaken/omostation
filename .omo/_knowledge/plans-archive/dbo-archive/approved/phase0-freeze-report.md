@@ -1,10 +1,15 @@
 ---
 id: PHASE0-FREEZE-2026-05-14
 title: Phase 0 Freeze Report
-status: conditional-pass
+status: archived
 owner_role: Conductor
 created_at: 2026-05-14
 updated_at: 2026-05-14
+lifecycle: history
+owner: kems-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # Phase 0 Freeze Report

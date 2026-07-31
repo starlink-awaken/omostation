@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: kems-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # 架构收敛审计 — 2026-07-14T23:20:00Z
 
 > 审计范围: ISC-2 健康分 / Daemon 在线率 / 债务系统 / BOS 追踪 / GaC 门禁 / Submodule / Cron 调度

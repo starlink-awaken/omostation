@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # 系统性战略分析 — omostation 项目
 
 > 生成时间: 2026-07-16

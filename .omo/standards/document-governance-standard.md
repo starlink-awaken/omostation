@@ -5,6 +5,8 @@ owner: governance-team
 last-reviewed: 2026-07-31
 ssot: .omo/_truth/registry/document-governance.yaml
 verifier: bin/ssot/doc-governance-check.py
+review-state: content-reviewed
+content-reviewed-at: 2026-07-31
 ---
 
 # Document Governance Standard
@@ -47,6 +49,23 @@ auditing ignored plans and runtime projections. Findings use the common
 `path/rule/owner/severity/workflow/evidence` shape so GaC and dashboards can
 consume the same output.
 
+## Review-state batches
+
+Metadata migration and substantive content review are separate batches. Use the
+migrator for metadata-only work, then promote only documents that were actually
+read and reviewed:
+
+```bash
+python3 bin/ssot/doc-governance-migrate.py --scope tracked
+python3 bin/ssot/doc-governance-migrate.py \
+  --files path/to/document.md \
+  --review-state content-reviewed \
+  --date YYYY-MM-DD
+```
+
+`content-reviewed` requires `content-reviewed-at`; do not use it as a shortcut
+for adding frontmatter.
+
 ## Warning debt
 
 The registry's `warning_exceptions` section records the accepted warning budget
@@ -56,3 +75,15 @@ blocks expired exceptions, unbaselined warning buckets, and increases above the
 registered budget while preserving grace for the current baseline. It is not a
 replacement for `--strict`; the migration goal is to reduce each budget to zero
 before removing the exception.
+
+Warning exceptions use a per-file signature baseline. After a reviewed batch,
+rewrite the baseline explicitly so resolved signatures are retired and newly
+introduced warnings cannot consume released budget:
+
+```bash
+python3 bin/ssot/doc-governance-check.py \
+  --scope tracked \
+  --write-warning-baseline \
+  .omo/_truth/registry/document-warning-baseline.yaml
+python3 bin/ssot/doc-governance-check.py --no-new-warnings --json
+```

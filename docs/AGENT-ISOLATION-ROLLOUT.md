@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # Agent 并发隔离落地计划 — Worktree + Branch Protection
 
 > **状态**: ✅ Phase 3 已落地 (branch protection + enforce_admins 启用 2026-07-08) · **创建**: 2026-06-30 · **关联**: ADR-0106 P2 · `docs/GOVERNANCE-EVOLUTION-ROLLOUT.md:36`

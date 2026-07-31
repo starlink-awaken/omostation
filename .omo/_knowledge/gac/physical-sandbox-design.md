@@ -1,10 +1,12 @@
 ---
 status: draft
-lifecycle: design
+lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-06-27
 adr: ADR-0106
 related-rules: CR-L2-DIRECT-IO
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # 物理沙箱设计 — .omo 写权限收归 (债务①专项)

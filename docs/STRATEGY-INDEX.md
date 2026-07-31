@@ -7,6 +7,10 @@ created: 2026-07-15
 note: >
   从战略叙事 → 决策定档 → c2g 拆解 → 对齐审计的全链路一页导航。
   运行时数字以 .omo/state/system.yaml 为准；任务属性为 c2g local 草案态。
+lifecycle: contract
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # 三年战略 · 全链路 Index（2026-07-15）

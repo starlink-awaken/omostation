@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # Workflow waiver 证据模板（ADR-0203 窄豁免）
 
 > 仅当用户 **书面明确** 允许跳过 agent-workflow 时使用。  

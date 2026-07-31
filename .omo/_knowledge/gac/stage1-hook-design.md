@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # GaC 阶段 1 机制 3 设计 — hook + MCP + CI 多通道 (ADR-0106)
 
 > **机制 3 (泛化执行器) 的跨工具实现**. hook 原型 ✅ done / MCP 待 omo / CI 兜底 ✅.

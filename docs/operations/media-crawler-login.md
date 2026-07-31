@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # MediaCrawler 登录与最小真爬
 
 > 路径：`$TOOLBOX_ROOT/pipelines/media-crawler`（默认 `~/ToolBox/pipelines/media-crawler`）  

@@ -1,8 +1,10 @@
 ---
 status: active
-lifecycle: standard
+lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-07-02
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # bin/ 工具命名规范 (P3-1 ADR-0115 Phase 1)

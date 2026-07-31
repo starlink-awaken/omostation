@@ -11,6 +11,10 @@ related:
 note: >
   按 eCOS goal 模式 + agent-workflow 生命周期封装的收敛期落地下发单。
   每个 G-CONV.* block 可独立下发给一个 agent 执行。运行时数字以 .omo/state/*.yaml 为准。
+lifecycle: contract
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # 收敛期 · Goal 模式命令下发模版

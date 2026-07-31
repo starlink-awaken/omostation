@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # eCOS v6 本地运行时一键启动
 
 > **目标**: 把 eCOS v6 核心运行时服务从“手动逐个启动”变成“一条命令拉起”。

@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: standard
+lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-07-03
 related:
@@ -8,6 +8,8 @@ related:
   - ../_knowledge/patterns/p74-workflow-solidification-pattern.md
   - ../_truth/registry/agent-workflows.yaml
   - ../_truth/registry/governance-checks.yaml
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # P74 Solidification Contract — 操作契约
