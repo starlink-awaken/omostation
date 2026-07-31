@@ -1,3 +1,12 @@
+---
+status: planned
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
+
 # KEMS 生产化实施方案
 
 > 状态：提案基线

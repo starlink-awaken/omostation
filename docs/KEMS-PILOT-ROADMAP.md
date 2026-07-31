@@ -1,3 +1,12 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
+
 # KEMS 分阶段落地路线
 
 > 对应业务输入：卫健委《KEMS场景分析与需求描述》2026-07-30。本文记录可交付的工程边界，不把需求文档中的目标指标冒充为当前能力。

@@ -545,6 +545,9 @@ def check_file(
 
         valid_statuses = set(registry.get("metadata", {}).get("valid_statuses", []))
         valid_lifecycles = set(registry.get("metadata", {}).get("valid_lifecycles", []))
+        valid_review_states = set(
+            registry.get("metadata", {}).get("valid_review_states", [])
+        )
         if "status" in metadata and metadata.get("status") not in valid_statuses:
             findings.append(
                 _finding(
@@ -571,6 +574,72 @@ def check_file(
                     line=1,
                 )
             )
+        review_state = metadata.get("review-state")
+        if valid_review_states and review_state is not None:
+            if review_state not in valid_review_states:
+                findings.append(
+                    _finding(
+                        path=rel,
+                        rule="invalid_metadata",
+                        surface=surface,
+                        severity=_severity(registry, "invalid_metadata", surface),
+                        workflow=workflow,
+                        evidence=f"review-state={review_state!r}",
+                        message=f"review-state must be one of {sorted(valid_review_states)}",
+                        line=1,
+                    )
+                )
+            else:
+                required_review_date = {
+                    "metadata-only": "metadata-migrated-at",
+                    "content-reviewed": "content-reviewed-at",
+                }[str(review_state)]
+                if not metadata.get(required_review_date):
+                    findings.append(
+                        _finding(
+                            path=rel,
+                            rule="invalid_metadata",
+                            surface=surface,
+                            severity=_severity(registry, "invalid_metadata", surface),
+                            workflow=workflow,
+                            evidence=f"review-state={review_state!r}",
+                            message=f"{required_review_date} is required for review-state={review_state}",
+                            line=1,
+                        )
+                    )
+        for review_date_field in ("metadata-migrated-at", "content-reviewed-at"):
+            review_date = metadata.get(review_date_field)
+            if review_date is None:
+                continue
+            try:
+                review_date_value = date.fromisoformat(str(review_date))
+            except ValueError:
+                review_date_value = None
+                findings.append(
+                    _finding(
+                        path=rel,
+                        rule="invalid_metadata",
+                        surface=surface,
+                        severity=_severity(registry, "invalid_metadata", surface),
+                        workflow=workflow,
+                        evidence=f"{review_date_field}={review_date!r}",
+                        message=f"{review_date_field} must use YYYY-MM-DD",
+                        line=1,
+                    )
+                )
+            if review_date_value and review_date_value > today:
+                findings.append(
+                    _finding(
+                        path=rel,
+                        rule="invalid_metadata",
+                        surface=surface,
+                        severity=_severity(registry, "invalid_metadata", surface),
+                        workflow=workflow,
+                        evidence=f"{review_date_field}={review_date_value.isoformat()}",
+                        message=f"{review_date_field} cannot be in the future",
+                        line=1,
+                    )
+                )
         reviewed = metadata.get("last-reviewed")
         if reviewed:
             try:

@@ -24,6 +24,7 @@ def _registry(*, index: str = "docs/SYSTEM-INDEX.md") -> dict:
         "metadata": {
             "valid_statuses": ["draft", "active", "stale", "superseded", "archived"],
             "valid_lifecycles": ["contract", "entry"],
+            "valid_review_states": ["content-reviewed", "metadata-only"],
             "required_frontmatter": ["status", "lifecycle", "owner", "last-reviewed"],
         },
         "surfaces": [
@@ -83,6 +84,65 @@ def test_frontmatter_and_freshness_are_reported(tmp_path: Path) -> None:
     rules = {finding["rule"] for finding in result}
     assert "stale_review" in rules
     assert "orphan_document" not in rules
+
+
+def test_metadata_only_review_state_records_migration_without_content_review(
+    tmp_path: Path,
+) -> None:
+    index = tmp_path / "docs" / "SYSTEM-INDEX.md"
+    doc = tmp_path / "docs" / "guide.md"
+    index.parent.mkdir(parents=True)
+    index.write_text("docs/guide.md\n", encoding="utf-8")
+    doc.write_text(
+        "---\n"
+        "status: active\n"
+        "lifecycle: contract\n"
+        "owner: team\n"
+        "last-reviewed: 2026-07-31\n"
+        "review-state: metadata-only\n"
+        "metadata-migrated-at: 2026-07-31\n"
+        "---\n"
+        "# guide\n",
+        encoding="utf-8",
+    )
+    result = CHECKER.check_file(
+        doc,
+        tmp_path,
+        _registry(),
+        {},
+        date(2026, 7, 31),
+    )
+    assert not [finding for finding in result if finding["rule"] == "invalid_metadata"]
+
+
+def test_content_review_state_requires_content_review_date(tmp_path: Path) -> None:
+    index = tmp_path / "docs" / "SYSTEM-INDEX.md"
+    doc = tmp_path / "docs" / "guide.md"
+    index.parent.mkdir(parents=True)
+    index.write_text("docs/guide.md\n", encoding="utf-8")
+    doc.write_text(
+        "---\n"
+        "status: active\n"
+        "lifecycle: contract\n"
+        "owner: team\n"
+        "last-reviewed: 2026-07-31\n"
+        "review-state: content-reviewed\n"
+        "---\n"
+        "# guide\n",
+        encoding="utf-8",
+    )
+    result = CHECKER.check_file(
+        doc,
+        tmp_path,
+        _registry(),
+        {},
+        date(2026, 7, 31),
+    )
+    assert any(
+        finding["rule"] == "invalid_metadata"
+        and "content-reviewed-at" in finding["message"]
+        for finding in result
+    )
 
 
 def test_registry_requires_metadata_enums(tmp_path: Path, monkeypatch) -> None:

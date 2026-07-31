@@ -1,3 +1,12 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
+
 # 剩余债务清理专项 (DEBT-CLEANUP-2026-07-01)
 
 > **建立**: 2026-07-01 · **状态**: 📋 专项建立, 启动中
