@@ -19,6 +19,7 @@ ROUTER_MODULES = (
     "cockpit.web.api_health",
     "cockpit.web.api_alerts",
     "cockpit.web.api_tasks",
+    "cockpit.web.api_kems",
     "cockpit.web.api_logs",
     "cockpit.web.api_metrics",
     "cockpit.web.api_hubs",
