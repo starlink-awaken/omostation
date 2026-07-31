@@ -72,6 +72,14 @@ def _adjudication_store():
     return AdjudicationStore(path)
 
 
+def _annotation_schema(scenario_id: str) -> dict[str, Any]:
+    try:
+        from kos.kems.annotation_schema import annotation_schema
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="KOS annotation schema is unavailable") from exc
+    return annotation_schema(scenario_id)
+
+
 def _model_acceptance_symbols():
     try:
         from kos.kems import ModelAcceptanceStore, ModelInputError, evaluate_candidate
@@ -664,6 +672,14 @@ async def get_kems_adjudication_queue(
     except (OSError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"items": items, "count": len(items), "mode": "review_only"}
+
+
+@router.get("/api/kems/adjudication/schema")
+async def get_kems_adjudication_schema(
+    scenario_id: str = Query("private-source-review-v1", min_length=1),
+) -> dict[str, Any]:
+    """Expose the Kairon-owned label contract to formal review clients."""
+    return _annotation_schema(scenario_id)
 
 
 @router.post("/api/kems/adjudication/{sample_id}/claim")

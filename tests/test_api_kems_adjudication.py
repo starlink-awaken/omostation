@@ -74,3 +74,20 @@ def test_adjudication_api_requires_independent_annotations(monkeypatch, tmp_path
     )
     assert response.status_code == 422
     assert "two independent annotators" in response.json()["detail"]
+
+
+def test_adjudication_schema_comes_from_kos_contract() -> None:
+    response = client().get("/api/kems/adjudication/schema?scenario_id=private-source-review-v1")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["schema_version"] == "private-source-review-v1.0"
+    assert [field["name"] for field in payload["fields"]] == [
+        "source_kind",
+        "document_type",
+        "actionability",
+        "priority",
+        "has_deadline",
+        "has_owner",
+        "requires_omo_task",
+    ]
