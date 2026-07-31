@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,7 +20,7 @@ from pathlib import Path
 DOCS_ROOT = Path("/Users/xiamingxing/Documents")
 INBOX_DIR = DOCS_ROOT / "_inbox"
 SEEYON_URL = "http://10.216.16.151/seeyon/main.do?method=main"
-CDP_PORT = 9222
+CDP_PORT = int(os.environ.get("SEEYON_CDP_PORT", "9222"))
 
 
 def check_chrome_cdp_status() -> dict | None:
