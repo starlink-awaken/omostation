@@ -3,7 +3,8 @@ status: active
 lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-07-31
-review-state: metadata-only
+review-state: content-reviewed
+content-reviewed-at: 2026-07-31
 metadata-migrated-at: 2026-07-31
 ---
 
@@ -80,8 +81,8 @@ KEMS 的正确落地顺序是“先证据闭环，再扩大场景，再接模型
 
 ## 当前生产化阶段
 
-当前处于“工程核心完成，生产闭环未完成”阶段。下一步优先启动 M0 基础契约、M1 OCR 质量治理和 M2 真实标注评测集；持久化图谱、正式 UI 和 OMO 派发依赖统一运行与证据契约，预测模型最后进入影子运行。
+当前处于“工程闭环已贯通、生产放行未完成”阶段。M0～M6 的核心代码、契约测试、隔离 worktree、PR 合并和本地证据已完成；下一步集中处理真实人工标注、企业连接器配置、模型 acceptance 和 OMO 批准回执。系统继续保持 fail-closed，不把本地演练当作生产授权。
 
 ## 仍未完成的业务能力
 
-当前仍未完成的产品化能力包括：OCR 质量治理、协作编辑、持久化知识图谱、正式调查表单与通知工作流、任务派发到 OMO、报告模板渲染、真实数据评测集和预测模型。这些不是本次规则分析核心的隐性承诺，应分别立项并补齐权限、审计和数据脱敏方案。
+当前仍未完成的是生产验收而非全部工程能力：真实数据集尚未完成双人 adjudication，企业 ReachBridge endpoint/token 尚未配置，真实 OMO approved task 尚未产生，业务表单/通知/报告模板仍需按试点场景扩展。已有代码能力、远端 PR 和当前上线闸门以 [KEMS 生产计划](KEMS-PRODUCTION-PLAN.md) 及外部验收报告为准；任何缺少真实证据的项目不得标记为生产完成。
