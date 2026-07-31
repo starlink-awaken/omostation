@@ -27,7 +27,7 @@ def _urlopen_safe(url: str, timeout: float = 5.0):
     """只允许 http/https 的内部 urlopen 包装。"""
     if not url.startswith(("http://", "https://")):
         raise ValueError(f"不支持的 URL scheme: {url}")
-    return urlrequest.urlopen(url, timeout=timeout)
+    return urlrequest.urlopen(url, timeout=timeout)  # noqa: S310
 
 
 def cmd_mesh(args: argparse.Namespace) -> int:

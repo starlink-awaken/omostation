@@ -34,7 +34,7 @@ def _check_cli_tools() -> dict[str, bool]:
 def _check_ollama_running() -> bool:
     try:
         req = urlrequest.Request("http://localhost:11434/api/tags", method="GET")
-        resp = urlrequest.urlopen(req, timeout=3)
+        resp = urlrequest.urlopen(req, timeout=3)  # noqa: S310
         return resp.status == 200
     except Exception:  # defensive fallback
         return False
@@ -126,7 +126,7 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
             default_model = args.model or "llama3.2"
             try:
                 req = urlrequest.Request("http://localhost:11434/api/tags", method="GET")
-                resp = urlrequest.urlopen(req, timeout=5)
+                resp = urlrequest.urlopen(req, timeout=5)  # noqa: S310
                 import json as _json
 
                 tags = _json.loads(resp.read().decode())
@@ -227,8 +227,8 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
             ("Ollama", "http://localhost:11434/api/tags"),
         ]:
             try:
-                req = urlrequest.Request(svc_url, method="GET")
-                with urlrequest.urlopen(req, timeout=3) as resp:
+                req = urlrequest.Request(svc_url, method="GET")  # noqa: S310
+                with urlrequest.urlopen(req, timeout=3) as resp:  # noqa: S310
                     if resp.status == 200:
                         c.print(f"  [green]✅ {svc_name}[/green] — 可达")
             except Exception:  # defensive fallback
@@ -346,7 +346,7 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
             method="POST",
         )
         try:
-            with urlrequest.urlopen(req, timeout=5) as resp:
+            with urlrequest.urlopen(req, timeout=5) as resp:  # noqa: S310
                 result = _json.loads(resp.read().decode())
                 c.print(f"  [green]✅ BOS 解析器[/green] — 测试 URI 返回 {result.get('status', 'ok')}")
         except Exception:  # defensive fallback
@@ -356,7 +356,7 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
         dashboard_port = os.environ.get("COCKPIT_DASHBOARD_PORT", "8090")
         try:
             req = urlrequest.Request(f"http://localhost:{dashboard_port}/api/bos/metrics", method="GET")
-            with urlrequest.urlopen(req, timeout=3) as resp:
+            with urlrequest.urlopen(req, timeout=3) as resp:  # noqa: S310
                 data = _json.loads(resp.read().decode())
                 total = data.get("summary", {}).get("total_calls", 0)
                 c.print(f"  [green]✅ BOS metrics API[/green] — {total} 条历史调用")

@@ -93,7 +93,7 @@ def _fetch_url_raw(url: str, timeout: int = 30) -> tuple[str, str, str]:
         return text, url, method
 
     try:
-        with urlrequest.urlopen(url, timeout=min(timeout, 15)) as response:
+        with urlrequest.urlopen(url, timeout=min(timeout, 15)) as response:  # noqa: S310
             raw_text = response.read().decode("utf-8", errors="replace")
             resolved = response.geturl()
     except urlerror.URLError:
