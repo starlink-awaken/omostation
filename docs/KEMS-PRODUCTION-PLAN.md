@@ -16,6 +16,8 @@ KEMS 当前已经具备受控导入、政策分析、运行记录、证据绑定
                                       +-> 人工/模型增强
 ```
 
+M1/M2 的第一批工程基础已落地到 Kairon/KOS：`kems.ocr-quality.v1` 提供 OCR 页级质量、指标门禁和 `pass/review/reject` 状态；`kems.evaluation-manifest.v1` 与 `kems.evaluation-run.v1` 提供脱敏评测样本、版本和确定性基线。它们还没有接入正式 UI 或生产 OCR 调度，不能据此宣称真实业务准确率。
+
 本轮目标是把它推进到可审计的业务闭环：
 
 ```mermaid
