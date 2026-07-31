@@ -101,6 +101,9 @@ python scripts/kems_production_closeout.py \
 The closeout emits only redacted metadata and exits non-zero when any gate is
 missing, failed, mismatched, or backed by a non-HTTP receipt.
 
+For the cross-team evidence contract and release responsibilities, see
+[`docs/KEMS-PRODUCTION-HANDOFF.md`](docs/KEMS-PRODUCTION-HANDOFF.md).
+
     ## Key Surfaces
 
     - `src/runtime/matrix.py`
