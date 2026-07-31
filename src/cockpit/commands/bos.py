@@ -81,6 +81,56 @@ def cmd_bos_list(args):
         print(f"  BOS 服务不可用: {e}")
 
 
+def cmd_bos_resolve(args):
+    """通过 BOS 网关解析指定 URI 的路由与执行元数据。"""
+    try:
+        from agora.mcp.resolver.api import get_service
+
+        uri = getattr(args, "uri", "")
+        service = get_service(uri)
+        if not service:
+            print(f"❌ 无法解析 BOS URI: {uri} (未在 bos-services.yaml 中注册)")
+            return 1
+
+        print("═══ BOS URI Route Resolution ═══")
+        print(f"🔗 URI:         {service.uri}")
+        print(f"📦 Domain:      {service.domain}")
+        print(f"⚡️ Action:      {service.action}")
+        print(f"🚀 Transport:   {service.transport}")
+        print(f"🛠️ Package:     {service.package or '(builtin/gateway)'}")
+        print(f"💻 Command:     {' '.join(service.command)}")
+        print(f"📖 Description: {service.description}")
+        return 0
+    except Exception as e:
+        print(f"❌ 解析异常: {e}")
+        return 1
+
+
+def cmd_bos_read(args):
+    """通过 BOS 网关读取并执行目标 URI 的结果，支持参数传参。"""
+    try:
+        import json
+        from agora.mcp.resolver.api import _run_maybe_async
+        from agora.server.tools_bos import _resolve_with_router
+
+        uri = getattr(args, "uri", "")
+        raw_args = getattr(args, "args", "{}")
+        try:
+            params = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+        except Exception:
+            print(f"❌ 无法解析 JSON 参数: {raw_args}")
+            return 1
+
+        res, source = _run_maybe_async(_resolve_with_router(uri, **params))
+        print("═══ BOS URI Read Result ═══")
+        print(f"🔗 Target: {uri} (source={source})")
+        print(f"📤 Output:\n{json.dumps(res, indent=2, ensure_ascii=False)}")
+        return 0
+    except Exception as e:
+        print(f"❌ 读取异常: {e}")
+        return 1
+
+
 def cmd_bos_discover(args):
     """扫描 workspace 项目，发现可注册的 MCP 服务。"""
     workspace = Path.home() / "Workspace" / "projects"

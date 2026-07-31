@@ -32,6 +32,8 @@ from .commands.bos import (
     cmd_bos_capability,
     cmd_bos_discover,
     cmd_bos_list,
+    cmd_bos_read,
+    cmd_bos_resolve,
     cmd_bos_status,
 )
 from .commands.brief import _cmd_brief
@@ -568,6 +570,11 @@ def main() -> int:
     bos_sub.add_parser("list", help="列出所有 BOS URI 路由")
     bos_sub.add_parser("discover", help="扫描 workspace 发现 MCP 服务")
     bos_sub.add_parser("status", help="BOS 系统状态与蜂群情况")
+    bos_resolve_p = bos_sub.add_parser("resolve", help="统一 BOS URI 路由解析与目标元数据提取")
+    bos_resolve_p.add_argument("uri", help="BOS URI, e.g. bos://memory/inbox/status")
+    bos_read_p = bos_sub.add_parser("read", help="通过 BOS 网关统一读取指定 URI 资源")
+    bos_read_p.add_argument("uri", help="BOS URI, e.g. bos://memory/inbox/status")
+    bos_read_p.add_argument("--args", default="{}", help="JSON 格式查询参数字符串")
 
     # BOS Inbox / Neural Mesh
     bos_inbox_p = bos_sub.add_parser("inbox", help="BOS Inbox 多源私有知识神经网查询与操作")
@@ -577,6 +584,10 @@ def main() -> int:
     bos_inbox_search_p.add_argument("query", help="搜索关键词")
     bos_inbox_pending_p = bos_inbox_sub.add_parser("pending", help="查看未决待办快照预览")
     bos_inbox_pending_p.add_argument("--source", default="seeyon_oa", help="来源: seeyon_oa | netease_mailmaster | apple_mail")
+    bos_inbox_sub.add_parser("watch", help="监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)")
+    bos_inbox_archive_p = bos_inbox_sub.add_parser("archive", help="归档已处理完毕的 Inbox 待办文件")
+    bos_inbox_archive_p.add_argument("filename", help="文件名或 all")
+    bos_inbox_archive_p.add_argument("--reason", default="resolved", help="归档事由")
 
     # BOS Capability / Toolbox
 
@@ -889,6 +900,10 @@ def main() -> int:
             return cmd_bos_list(a)
         elif sub == "discover":
             return cmd_bos_discover(a)
+        elif sub == "resolve":
+            return cmd_bos_resolve(a)
+        elif sub == "read":
+            return cmd_bos_read(a)
         elif sub == "capability":
             return cmd_bos_capability(a)
         elif sub == "inbox":

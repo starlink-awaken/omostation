@@ -34,6 +34,12 @@ def cmd_bos_inbox(args: Any) -> int:
     elif subcmd == "pending":
         source = getattr(args, "source", "seeyon_oa") or "seeyon_oa"
         return _cmd_inbox_pending(source)
+    elif subcmd == "watch":
+        return _cmd_inbox_watch()
+    elif subcmd == "archive":
+        filename = getattr(args, "filename", "") or ""
+        reason = getattr(args, "reason", "resolved") or "resolved"
+        return _cmd_inbox_archive(filename, reason)
     else:
         err.print(f"[red]未知子命令: {subcmd}[/red]")
         return 1
@@ -122,4 +128,119 @@ def _cmd_inbox_pending(source: str) -> int:
 
     content = fpath.read_text(encoding="utf-8")
     console.print(Panel(content[:1500] + "\n...\n[dim](已截断)[/dim]", title=f"📋 [{source}] 最新未决记录预览"))
+    return 0
+
+
+def _cmd_inbox_watch() -> int:
+    """监听 BOS Inbox 紧急待办事宜及核心提醒 (Event-Driven Watcher v2.0)。"""
+    _, inbox_dir = _get_inbox_paths()
+    table = Table(
+        title="⚡️ BOS Inbox 紧急待办与事件侦测 (Event-Driven Watch v2.0)",
+        show_header=True,
+    )
+    table.add_column("文件名 (File)", style="cyan", width=34)
+    table.add_column("优先级标识 (Priority)", style="red", width=16)
+    table.add_column("触发词 (Reasons)", style="yellow", width=16)
+    table.add_column("最新更新时间 (Modified)", style="magenta", width=20)
+    table.add_column("内容预览 (Snippet)", style="white")
+
+    matched = 0
+    urgent_keywords = [
+        "priority: HIGH",
+        "priority: URGENT",
+        "[URGENT]",
+        "紧急",
+        "急件",
+        "加急",
+        "特急",
+        "催办",
+    ]
+    if inbox_dir.exists():
+        for file_path in inbox_dir.glob("*.md"):
+            try:
+                content = file_path.read_text(encoding="utf-8")
+                reasons = [k for k in urgent_keywords if k in content]
+                if reasons:
+                    mtime_str = time.strftime(
+                        "%Y-%m-%d %H:%M:%S",
+                        time.localtime(file_path.stat().st_mtime),
+                    )
+                    snip = content[:80].replace("\n", " ")
+                    priority_str = (
+                        "🔴 URGENT"
+                        if any(
+                            u in reasons
+                            for u in ["priority: URGENT", "[URGENT]", "特急"]
+                        )
+                        else "🟠 HIGH"
+                    )
+                    table.add_row(
+                        file_path.name,
+                        priority_str,
+                        ",".join(reasons[:2]),
+                        mtime_str,
+                        snip,
+                    )
+                    matched += 1
+            except Exception:
+                continue
+
+    if matched == 0:
+        console.print("[green]✅ 当前无紧急(URGENT/HIGH)工单或待办项。[/green]")
+    else:
+        console.print(table)
+        console.print(
+            f"[bold red]⚠️ 发现 {matched} 份高优先级工单，请立即调度处理！(可执行 omo bos-inbox archive 归档)[/bold red]"
+        )
+    return 0
+
+
+def _cmd_inbox_archive(filename: str, reason: str) -> int:
+    """按文件名或 all 批量归档 Inbox 待办事宜至冷归档区。"""
+    _, inbox_dir = _get_inbox_paths()
+    if not filename:
+        err.print(
+            "[red]请提供待归档文件名: omo bos-inbox archive <filename|all>[/red]"
+        )
+        return 1
+
+    doc_root = Path(
+        os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents"))
+    )
+    archive_dir = doc_root / "_knowledge" / "archive" / "inbox"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+
+    target_files = []
+    if filename == "all":
+        if inbox_dir.exists():
+            target_files = list(inbox_dir.glob("*.md"))
+    else:
+        f = inbox_dir / filename
+        if f.exists():
+            target_files = [f]
+
+    if not target_files:
+        err.print(f"[yellow]未在 Inbox 中找到匹配的单据: {filename}[/yellow]")
+        return 1
+
+    archived_count = 0
+    for src in target_files:
+        try:
+            content = src.read_text(encoding="utf-8")
+            meta = (
+                f"\n\n---\n"
+                f"archive_ts: {time.strftime('%Y-%m-%dT%H:%M:%S+08:00', time.localtime())}\n"
+                f"archive_reason: {reason}\n"
+            )
+            dst = archive_dir / src.name
+            dst.write_text(content + meta, encoding="utf-8")
+            src.unlink()
+            archived_count += 1
+            console.print(f"[green]✅ 已归档: {src.name} -> {dst}[/green]")
+        except Exception as exc:
+            err.print(f"[red]归档失败 {src.name}: {exc}[/red]")
+
+    console.print(
+        f"[bold green]成功归档 {archived_count} 份 Inbox 待办文件！[/bold green]"
+    )
     return 0
