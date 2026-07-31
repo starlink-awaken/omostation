@@ -106,7 +106,9 @@ def collect_markdown_files(
 
 
 def _matches(rel: str, pattern: str) -> bool:
-    if fnmatch.fnmatchcase(rel, pattern) or PurePosixPath(rel).match(pattern):
+    # Governance patterns are workspace-root-relative.  Path.match() also
+    # matches suffixes, which can classify nested project docs as root docs.
+    if fnmatch.fnmatchcase(rel, pattern):
         return True
     # Python's glob implementations treat `**/` as requiring at least one
     # directory. Governance patterns must also match files directly below the
