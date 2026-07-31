@@ -65,6 +65,13 @@ def test_tracked_scope_uses_git_index(tmp_path: Path) -> None:
     assert CHECKER.collect_markdown_files(tmp_path, scope="tracked") == [tracked.resolve()]
 
 
+def test_surface_patterns_are_workspace_root_relative() -> None:
+    registry = _registry()
+
+    assert CHECKER.match_surface("docs/guide.md", registry) is not None
+    assert CHECKER.match_surface("projects/example/docs/guide.md", registry) is None
+
+
 def test_frontmatter_and_freshness_are_reported(tmp_path: Path) -> None:
     index = tmp_path / "docs" / "SYSTEM-INDEX.md"
     doc = tmp_path / "docs" / "guide.md"

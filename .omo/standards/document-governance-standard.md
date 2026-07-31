@@ -17,6 +17,8 @@ lifecycle, review cadence, and discoverability policy.
 ## Contract
 
 - Every governed document belongs to one registered surface.
+- Surface patterns are workspace-root-relative; nested project paths must be
+  declared explicitly instead of being matched by a root `docs/**` pattern.
 - Entry documents keep metadata in the registry; governed content documents use
   YAML frontmatter.
 - The frontmatter contract is `status`, `lifecycle`, `owner`, and
