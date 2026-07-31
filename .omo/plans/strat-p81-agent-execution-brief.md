@@ -3,13 +3,13 @@
 > Status: **ACTIVE** · SSOT 上位: `.omo/_knowledge/decisions/STRAT-P81-strategic-roadmap.md` (PROPOSED)
 > 适用对象: 承接兑现期任一 Stage / 纵贯线的 agentic worker
 > 跨度: 2026-08 ~ 2027-06。本文件是**执行指令**, 战略变更去改 STRAT-P81。
-> 前序交接单: `.omo/plans/strat-p80-agent-execution-brief.md`（其 §0 启动序列与全局禁令**全部继承**, 不再重抄）
+> 前序战略 SSOT: `.omo/_knowledge/decisions/STRAT-P80-strategic-roadmap.md`（P80 执行简报属于 ignored 运行计划，不作为 tracked 入口）
 
 ---
 
 ## 0. 每次会话启动（继承 P80 §0, 增补两条）
 
-1. 照 P80 brief §0 执行: bootstrap → status → 读 BRIEF → **红线: 有 diff 先 start workflow**（ADR-0203）
+1. 照本文件启动序列执行: bootstrap → status → 读 BRIEF → **红线: 有 diff 先 start workflow**（ADR-0203）
 2. **增补 · Stage 门禁检查**: 读本文件 §1 进度表 + `phase-scope.yaml::metrics_caliber`,
    确认自己领的任务属于**当前已解锁的 Stage**。上一 Stage 门禁未过 → 不得启动下一 Stage 新建设, 只能做修复/清欠
 3. **增补 · 物理口径自检**: 凡产出 G-DEL 指标, 先确认 `env_class`。

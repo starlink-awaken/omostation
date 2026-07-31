@@ -130,7 +130,7 @@ uv run --with pyyaml python bin/agent-workflow.py suggest --from-diff --profile 
 
 ## 4. 主动触发
 
-P74 报告通过 omo state sync 派生进 `.omo/state/runtime/health.yaml`(observability 阶段)。
+P74 报告通过 omo state sync 派生进 tracked legacy mirror `.omo/state/health.yaml`；canonical runtime projection 由 OMO runtime projection plane 管理。
 当前阶段(PR #X)只手动触发:`uv run --with pyyaml python bin/agent-workflow.py compliance`。
 
 ## 5. 防复发机制
