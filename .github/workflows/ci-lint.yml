@@ -35,10 +35,10 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      - name: Fallback checkout (no submodules)
+      - name: Retry checkout
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
-      - name: Init submodules (fallback)
+      - name: Init submodules
         if: steps.checkout.outcome == 'failure'
         run: git submodule update --init --recursive 2>/dev/null || true
       - name: Download actionlint (binary, latest stable)
@@ -66,10 +66,10 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      - name: Fallback checkout (no submodules)
+      - name: Retry checkout
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
-      - name: Init submodules (fallback)
+      - name: Init submodules
         if: steps.checkout.outcome == 'failure'
         run: git submodule update --init --recursive 2>/dev/null || true
       - uses: actions/setup-python@v5
@@ -103,10 +103,10 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      - name: Fallback checkout (no submodules)
+      - name: Retry checkout
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
-      - name: Init submodules (fallback)
+      - name: Init submodules
         if: steps.checkout.outcome == 'failure'
         run: git submodule update --init --recursive 2>/dev/null || true
       - name: Install shellcheck
@@ -140,10 +140,10 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      - name: Fallback checkout (no submodules)
+      - name: Retry checkout
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
-      - name: Init submodules (fallback)
+      - name: Init submodules
         if: steps.checkout.outcome == 'failure'
         run: git submodule update --init --recursive 2>/dev/null || true
       - uses: actions/setup-python@v5
@@ -172,10 +172,10 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      - name: Fallback checkout (no submodules)
+      - name: Retry checkout
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
-      - name: Init submodules (fallback)
+      - name: Init submodules
         if: steps.checkout.outcome == 'failure'
         run: git submodule update --init --recursive 2>/dev/null || true
       - uses: actions/setup-python@v5
@@ -216,10 +216,10 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      - name: Fallback checkout (no submodules)
+      - name: Retry checkout
         if: steps.checkout.outcome == 'failure'
         uses: actions/checkout@v4
-      - name: Init submodules (fallback)
+      - name: Init submodules
         if: steps.checkout.outcome == 'failure'
         run: git submodule update --init --recursive 2>/dev/null || true
       - uses: actions/setup-python@v5

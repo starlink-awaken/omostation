@@ -18,18 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        id: checkout
       
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
-        continue-on-error: true
-      - name: Fallback checkout (no submodules)
-        if: steps.checkout.outcome == 'failure'
-        uses: actions/checkout@v4
-      - name: Init submodules (fallback)
-        if: steps.checkout.outcome == 'failure'
-        run: git submodule update --init --recursive 2>/dev/null || true
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
