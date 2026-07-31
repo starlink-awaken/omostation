@@ -37,6 +37,25 @@ make fmt
 make sync-state
     ```
 
+## KEMS Production Gate
+
+Run the read-only production preflight before enabling the KEMS production
+lane. It emits metadata and counts only; it never prints private source text
+or sends a dispatch request:
+
+```bash
+export BOS_REACHBRIDGE_ENDPOINT="https://<enterprise-endpoint>/dispatch"
+export BOS_REACHBRIDGE_TOKEN="<secret-from-the-runtime-secret-store>"
+export KEMS_EVALUATION_MANIFEST="/secure/kems/evaluation-manifest.json"
+export KEMS_OMO_TASK_ID="<approved-task-id>"
+python scripts/kems_production_preflight.py --production
+```
+
+The command exits non-zero until the enterprise endpoint, token, adjudicated
+redacted evaluation manifest, controlled source inventory, and approved OMO
+task are all present. Local Hermes is intentionally not accepted by
+`--production`.
+
     ## Key Surfaces
 
     - `src/runtime/matrix.py`
