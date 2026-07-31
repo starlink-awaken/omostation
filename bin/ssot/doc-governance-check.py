@@ -246,6 +246,228 @@ def validate_registry(
     return findings
 
 
+def _warning_bucket(
+    finding: dict[str, Any],
+    registry: dict[str, Any],
+) -> str:
+    surface = match_surface(str(finding["path"]), registry)
+    surface_id = str(surface.get("id")) if surface else "unmatched"
+    return f"{finding['rule']}:{surface_id}"
+
+
+def evaluate_warning_baseline(
+    findings: list[dict[str, Any]],
+    registry: dict[str, Any],
+    today: date,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Compare warning counts with expiring, registry-owned exception budgets."""
+    config = registry.get("warning_exceptions")
+    baseline: dict[str, Any] = {
+        "configured": isinstance(config, dict),
+        "policy": (config or {}).get("policy", "none"),
+        "observed": {},
+        "budgets": {},
+        "expired": [],
+        "unbaselined": [],
+        "over_budget": [],
+        "ok": False,
+    }
+    registry_findings: list[dict[str, Any]] = []
+    if not isinstance(config, dict):
+        registry_findings.append(
+            _finding(
+                path=".omo/_truth/registry/document-governance.yaml",
+                rule="warning_exception_registry",
+                surface=None,
+                severity="error",
+                workflow="governance-state-mutation",
+                evidence="warning_exceptions",
+                message="registry must define warning exception budgets",
+            )
+        )
+        return baseline, registry_findings
+
+    entries = config.get("entries")
+    if not isinstance(entries, list) or not entries:
+        registry_findings.append(
+            _finding(
+                path=".omo/_truth/registry/document-governance.yaml",
+                rule="warning_exception_registry",
+                surface=None,
+                severity="error",
+                workflow="governance-state-mutation",
+                evidence="warning_exceptions.entries",
+                message="warning exception registry must define entries",
+            )
+        )
+        return baseline, registry_findings
+
+    entry_ids: set[str] = set()
+    entries_by_bucket: dict[str, dict[str, Any]] = {}
+    valid_rules = set(registry.get("rules", {}))
+    valid_surfaces = {
+        str(surface.get("id"))
+        for surface in registry.get("surfaces", [])
+        if surface.get("id")
+    }
+    for index, entry in enumerate(entries, start=1):
+        if not isinstance(entry, dict):
+            registry_findings.append(
+                _finding(
+                    path=".omo/_truth/registry/document-governance.yaml",
+                    rule="warning_exception_registry",
+                    surface=None,
+                    severity="error",
+                    workflow="governance-state-mutation",
+                    evidence=f"entries[{index}]",
+                    message="warning exception entries must be mappings",
+                )
+            )
+            continue
+        entry_id = str(entry.get("id", ""))
+        rule = str(entry.get("rule", ""))
+        surface = str(entry.get("surface", ""))
+        bucket = f"{rule}:{surface}"
+        if not entry_id or entry_id in entry_ids:
+            registry_findings.append(
+                _finding(
+                    path=".omo/_truth/registry/document-governance.yaml",
+                    rule="warning_exception_registry",
+                    surface=None,
+                    severity="error",
+                    workflow="governance-state-mutation",
+                    evidence=entry_id or f"entries[{index}]",
+                    message="warning exception ids must be present and unique",
+                )
+            )
+        entry_ids.add(entry_id)
+        try:
+            max_findings = int(entry["max_findings"])
+        except (KeyError, TypeError, ValueError):
+            max_findings = -1
+        try:
+            expires = date.fromisoformat(str(entry["expires"]))
+        except (KeyError, TypeError, ValueError):
+            expires = None
+        if (
+            not rule
+            or rule not in valid_rules
+            or not surface
+            or surface not in valid_surfaces
+            or max_findings < 0
+            or expires is None
+            or not entry.get("owner")
+            or not entry.get("reason")
+        ):
+            registry_findings.append(
+                _finding(
+                    path=".omo/_truth/registry/document-governance.yaml",
+                    rule="warning_exception_registry",
+                    surface=None,
+                    severity="error",
+                    workflow="governance-state-mutation",
+                    evidence=entry_id or f"entries[{index}]",
+                    message="exception entries require rule, surface, non-negative max_findings, and YYYY-MM-DD expires",
+                )
+            )
+            continue
+        if bucket in entries_by_bucket:
+            registry_findings.append(
+                _finding(
+                    path=".omo/_truth/registry/document-governance.yaml",
+                    rule="warning_exception_registry",
+                    surface=None,
+                    severity="error",
+                    workflow="governance-state-mutation",
+                    evidence=bucket,
+                    message="only one exception budget may exist for each rule/surface bucket",
+                )
+            )
+        entries_by_bucket[bucket] = entry
+        baseline["budgets"][bucket] = {
+            "id": entry_id,
+            "max_findings": max_findings,
+            "expires": expires.isoformat(),
+        }
+        if expires < today:
+            baseline["expired"].append(entry_id)
+
+    warning_counts: dict[str, int] = {}
+    for finding in findings:
+        if finding["severity"] != "warning":
+            continue
+        bucket = _warning_bucket(finding, registry)
+        warning_counts[bucket] = warning_counts.get(bucket, 0) + 1
+    baseline["observed"] = dict(sorted(warning_counts.items()))
+    for bucket, count in warning_counts.items():
+        entry = entries_by_bucket.get(bucket)
+        if entry is None:
+            baseline["unbaselined"].append({"bucket": bucket, "count": count})
+        elif count > int(entry["max_findings"]):
+            baseline["over_budget"].append(
+                {
+                    "bucket": bucket,
+                    "count": count,
+                    "max_findings": int(entry["max_findings"]),
+                    "exception": entry["id"],
+                }
+            )
+
+    baseline["ok"] = not (
+        registry_findings
+        or baseline["expired"]
+        or baseline["unbaselined"]
+        or baseline["over_budget"]
+    )
+    return baseline, registry_findings
+
+
+def _baseline_violation_findings(
+    baseline: dict[str, Any],
+) -> list[dict[str, Any]]:
+    violations: list[dict[str, Any]] = []
+    for entry_id in baseline["expired"]:
+        violations.append(
+            _finding(
+                path=".omo/_truth/registry/document-governance.yaml",
+                rule="expired_warning_exception",
+                surface=None,
+                severity="error",
+                workflow="governance-state-mutation",
+                evidence=entry_id,
+                message="warning exception has expired and must be renewed or removed",
+            )
+        )
+    for item in baseline["unbaselined"]:
+        violations.append(
+            _finding(
+                path=".omo/_truth/registry/document-governance.yaml",
+                rule="unbaselined_warning",
+                surface=None,
+                severity="error",
+                workflow="project-doc-change",
+                evidence=f"{item['bucket']} count={item['count']}",
+                message="warning bucket is not covered by an exception budget",
+            )
+        )
+    for item in baseline["over_budget"]:
+        violations.append(
+            _finding(
+                path=".omo/_truth/registry/document-governance.yaml",
+                rule="warning_budget_exceeded",
+                surface=None,
+                severity="error",
+                workflow="project-doc-change",
+                evidence=(
+                    f"{item['bucket']} count={item['count']} "
+                    f"max={item['max_findings']}"
+                ),
+                message=f"warning exception {item['exception']} has been exceeded",
+            )
+        )
+    return violations
+
+
 def _is_discoverable(rel: str, surface: dict[str, Any], index_text: str) -> bool:
     if rel == surface.get("index"):
         return True
@@ -432,6 +654,7 @@ def run(
     scope: str = "tracked",
     paths: list[str] | None = None,
     strict: bool = False,
+    no_new_warnings: bool = False,
     today: date | None = None,
 ) -> dict[str, Any]:
     registry_path = REGISTRY_PATH
@@ -451,14 +674,33 @@ def run(
                 today or datetime.now(timezone.utc).date(),
             )
         )
-    blocking = [finding for finding in findings if finding["severity"] == "error" or strict]
+    baseline, registry_findings = evaluate_warning_baseline(
+        findings,
+        registry,
+        today or datetime.now(timezone.utc).date(),
+    )
+    findings.extend(registry_findings)
+    baseline_violations = _baseline_violation_findings(baseline)
+    if no_new_warnings:
+        findings.extend(baseline_violations)
+    blocking = [
+        finding
+        for finding in findings
+        if finding["severity"] == "error" or strict
+    ]
     return {
         "ok": not blocking,
         "scope": scope,
         "strict": strict,
+        "no_new_warnings": no_new_warnings,
         "files_scanned": len(files),
         "surfaces": len(registry.get("surfaces", [])),
         "findings": findings,
+        "warning_baseline": {
+            **baseline,
+            "mode": "no-new-warnings" if no_new_warnings else "advisory",
+            "violations": baseline_violations,
+        },
         "summary": {
             "errors": sum(f["severity"] == "error" for f in findings),
             "warnings": sum(f["severity"] == "warning" for f in findings),
@@ -470,16 +712,27 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Document governance ownership/lifecycle checker")
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--strict", action="store_true", help="treat warnings as blocking")
+    parser.add_argument(
+        "--no-new-warnings",
+        action="store_true",
+        help="block unbaselined or over-budget warnings while preserving baseline grace",
+    )
     parser.add_argument("--scope", choices=("tracked", "workspace"), default="tracked")
     parser.add_argument("--files", nargs="*", default=None, help="check only these workspace-relative files")
     args = parser.parse_args(argv)
     try:
-        result = run(scope=args.scope, paths=args.files, strict=args.strict)
+        result = run(
+            scope=args.scope,
+            paths=args.files,
+            strict=args.strict,
+            no_new_warnings=args.no_new_warnings,
+        )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         result = {
             "ok": False,
             "scope": args.scope,
             "strict": args.strict,
+            "no_new_warnings": args.no_new_warnings,
             "files_scanned": 0,
             "surfaces": 0,
             "findings": [
@@ -493,6 +746,12 @@ def main(argv: list[str] | None = None) -> int:
                     "message": "unable to load document governance registry",
                 }
             ],
+            "warning_baseline": {
+                "configured": False,
+                "mode": "no-new-warnings" if args.no_new_warnings else "advisory",
+                "ok": False,
+                "violations": [],
+            },
             "summary": {"errors": 1, "warnings": 0},
         }
     if args.json:

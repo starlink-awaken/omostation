@@ -93,3 +93,43 @@ def test_registry_requires_metadata_enums(tmp_path: Path, monkeypatch) -> None:
     result = CHECKER.run(root=tmp_path, scope="workspace", strict=True)
     assert not result["ok"]
     assert any(finding["rule"] == "registry-integrity" for finding in result["findings"])
+
+
+def test_warning_baseline_detects_budget_regression() -> None:
+    registry = _registry()
+    registry["warning_exceptions"] = {
+        "version": 1,
+        "policy": "no-new-warnings",
+        "entries": [
+            {
+                "id": "legacy-stale-review",
+                "rule": "stale_review",
+                "surface": "docs",
+                "max_findings": 1,
+                "expires": "2026-10-31",
+                "owner": "governance-team",
+                "reason": "Legacy metadata migration.",
+            }
+        ],
+    }
+    findings = [
+        {"path": "docs/guide.md", "rule": "stale_review", "severity": "warning"},
+        {"path": "docs/other.md", "rule": "stale_review", "severity": "warning"},
+    ]
+
+    baseline, registry_findings = CHECKER.evaluate_warning_baseline(
+        findings,
+        registry,
+        date(2026, 7, 31),
+    )
+
+    assert not registry_findings
+    assert not baseline["ok"]
+    assert baseline["over_budget"] == [
+        {
+            "bucket": "stale_review:docs",
+            "count": 2,
+            "max_findings": 1,
+            "exception": "legacy-stale-review",
+        }
+    ]
