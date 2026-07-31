@@ -1,0 +1,10 @@
+{
+  "updated_at": "2026-07-31T01:01:33.077160+00:00",
+  "preference_vector": {
+    "prefer_mvp_speed": 0.5,
+    "prefer_privacy_local": 0.9,
+    "prefer_rich_ui": 0.8,
+    "prefer_bdsk_deliberation": 0.85
+  },
+  "sample_size": 0
+}
