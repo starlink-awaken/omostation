@@ -309,7 +309,7 @@ doc-lint:
 	@echo "=== 文档格式检查 ==="
 	@echo ""
 	@echo "--- 文档治理 ownership/lifecycle/freshness ---"
-	@uv run --with pyyaml python bin/ssot/doc-governance-check.py
+	@uv run --with pyyaml python bin/ssot/doc-governance-check.py --no-new-warnings
 	@echo ""
 	@echo "--- 检查文档版本信息 ---"
 	@for f in AGENTS.md CLAUDE.md .omo/_knowledge/governance/README.md; do \
