@@ -6,71 +6,18 @@ and verifies that PushTrigger pushes the delta to node-b where it's applied.
 
 from __future__ import annotations
 
-import asyncio
-
 import httpx
 import pytest
 
-from runtime.registry.models import AgentInfo, AgentStatus, Capability
 from runtime.registry.push import PushResult, PushTrigger
-
-
-@pytest.fixture
-def node_a_store():
-    return RegistryStore()  # in-memory
-
-
-@pytest.fixture
-def node_b_store():
-    return RegistryStore()  # in-memory
-
-
-@pytest.fixture
-def app_a(node_a_store):
-    """Create FastAPI app with pre-populated store."""
-    from fastapi import FastAPI
-    from contextlib import asynccontextmanager
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        # Inject the pre-created store
-        from runtime.registry import server as srv
-        srv._store = node_a_store
-        srv._heartbeat = None
-        srv._dispatcher = None
-        srv._sync = None
-        yield
-
-    app = create_app.__wrapped__ if hasattr(create_app, '__wrapped__') else None
-    # Simpler: just use the global app but override its store
-    app = create_app()
-    return app
 
 
 class TestPushTriggerE2E:
     """Verify PushTrigger propagates deltas between two running registry servers."""
 
     @pytest.mark.asyncio
-    async def test_push_delta_between_two_nodes(self, node_a_store, node_b_store):
-        """Register agent on node-a → push delta → node-b has the agent."""
-        # Create two test servers
-        app_a = create_app()
-        app_b = create_app()
-
-        # We need to inject our stores. Since create_app() creates its own,
-        # we'll use a different approach: directly test the push mechanism
-        # by having node-b's /sync/delta endpoint receive from PushTrigger.
-
-        # Register an agent in node_a's store
-        agent = AgentInfo(
-            name="test-agent",
-            node_id="node-a",
-            capabilities=[Capability(name="coding")],
-            status=AgentStatus.IDLE,
-        )
-        node_a_store.register_agent(agent)
-
-        # Create PushTrigger pointing at node-b (we'll mock the HTTP endpoint)
+    async def test_push_delta_between_two_nodes(self):
+        """Push delta → peer receives correct payload."""
         received_deltas: list[dict] = []
 
         async def _mock_push(peer_id, url, delta, source_node_id):
@@ -81,10 +28,8 @@ class TestPushTriggerE2E:
         # Monkeypatch _push_to_peer to capture instead of HTTP
         trigger._push_to_peer = _mock_push  # type: ignore
 
-        results = await trigger.push_delta(
-            {"type": "agent_registered", "agent": agent.to_dict()},
-            local_node_id="node-a",
-        )
+        delta = {"type": "agent_registered", "agent": {"name": "test-agent", "node_id": "node-a"}}
+        results = await trigger.push_delta(delta, local_node_id="node-a")
 
         assert len(results) == 1
         assert results[0].success is True
