@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # omo_audit 7 检查 → GaC 规则映射表
 
 > 最后更新: 2026-06-28 (Phase 4 孤儿规则补全)
