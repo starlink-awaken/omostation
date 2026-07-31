@@ -240,6 +240,35 @@ async def entropy_cleanup() -> dict:
     except (OSError, ValueError) as e:  # defensive fallback
         skipped.append(f"audit_cleanup_error: {e!s}")
 
+    # 4. Clean stale Inbox snapshots (> 7 days or closed status)
+    try:
+        import shutil
+
+        inbox_dir = Path(
+            os.environ.get(
+                "BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")
+            )
+        ) / "_inbox"
+        archive_dir = (
+            Path(ws_root) / "_knowledge" / "archive" / "inbox"
+        )
+        if inbox_dir.exists():
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            now = time.time()
+            for f in inbox_dir.glob("*.md"):
+                try:
+                    if now - f.stat().st_mtime > 86400 * 7:  # 7 days TTL
+                        shutil.move(
+                            str(f), str(archive_dir / f.name)
+                        )
+                        cleaned.append(
+                            f"archived stale inbox: {f.name}"
+                        )
+                except OSError as e:  # defensive fallback
+                    skipped.append(f"inbox_archive_error: {f.name} - {e!s}")
+    except Exception as e:
+        skipped.append(f"inbox_cleanup_error: {e!s}")
+
     return {
         "format_version": FORMAT_VERSION,
         "cleaned": cleaned,

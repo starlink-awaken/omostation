@@ -73,6 +73,44 @@ _FALLBACK_SERVICES: list[BosService] = [
         description="BOS Inbox 待办快照与多源预览",
     ),
     BosService(
+        uri="bos://memory/inbox/watch",
+        domain="memory",
+        package="agora",
+        action="inbox-watch",
+        transport="stdio",
+        command=["python", "-m", "agora.server.tools_bos"],
+        description="BOS Inbox 实时事件驱动监控与紧急提醒快照 (v2.0)",
+    ),
+    BosService(
+        uri="bos://memory/inbox/archive",
+        domain="memory",
+        package="agora",
+        action="inbox-archive",
+        transport="stdio",
+        command=["python", "-m", "agora.server.tools_bos"],
+        description="BOS Inbox 待办事宜归档闭环接口 (Lifecycle Archive)",
+    ),
+    BosService(
+        uri="bos://memory/inbox/triage",
+        domain="memory",
+        package="agora",
+        action="inbox-triage",
+        transport="internal",
+        module_path="agora.server.tools_bos",
+        func_name="bos_inbox_triage",
+        description="BOS Inbox 公文与待办事项智能分类分拣与紧急度测算引擎 (Triage Engine)",
+    ),
+    BosService(
+        uri="bos://memory/inbox/draft",
+        domain="memory",
+        package="agora",
+        action="inbox-draft",
+        transport="internal",
+        module_path="agora.server.tools_bos",
+        func_name="bos_inbox_draft",
+        description="BOS Inbox 智能拟办意见与风险提示批复草拟引擎 (Draft Assistant)",
+    ),
+    BosService(
         uri="bos://memory/kos/search",
         domain="memory",
         package="kos",
@@ -511,8 +549,18 @@ _FALLBACK_SERVICES: list[BosService] = [
         description="Iris 召回入口",
     ),
     # ════════════════════════════════════════════════════════════════
-    # Domain: persona (7)
+    # Domain: persona (8)
     # ════════════════════════════════════════════════════════════════
+    BosService(
+        uri="bos://persona/bdsk/evaluate",
+        domain="persona",
+        package="agora",
+        action="persona-evaluate",
+        transport="internal",
+        module_path="agora.server.tools_bos",
+        func_name="persona_bdsk_evaluate",
+        description="B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关",
+    ),
     BosService(
         uri="bos://persona/core-models/schema",
         domain="persona",

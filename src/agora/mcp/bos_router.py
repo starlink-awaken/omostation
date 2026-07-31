@@ -284,3 +284,50 @@ class BOSRouter:
 
 # ── 全局单例 ──
 bos_router = BOSRouter()
+
+
+def clean_inbox_content(content: str) -> str:
+    """BOS Inbox 数据脱敏与清洗屏障 v2.0 (Sanitizer - CR-DOMAIN-AUTH-01 / Anti-Injection).
+
+    过滤规则:
+    1. 剥离 <script>...</script> 与 <iframe>...</iframe> 危险 HTML 标签
+    2. 过滤 javascript: 与 data:text/html 等危险伪协议连接
+    3. 过滤内联 HTML 事件捕获器 (e.g. onload=, onerror=, onclick=, onmouseover=)
+    4. 清洗隐藏的高危系统命令伪造控制转义序列
+    """
+    import re
+
+    if not content:
+        return ""
+    cleaned = re.sub(
+        r"<script[^>]*>[\s\S]*?</script>",
+        "[SCRIPT_REMOVED_FOR_SECURITY]",
+        content,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(
+        r"<iframe[^>]*>[\s\S]*?</iframe>",
+        "[IFRAME_REMOVED_FOR_SECURITY]",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    # 过滤 javascript: 与 data:text/html 伪协议
+    cleaned = re.sub(
+        r"javascript:", "sanitized-javascript:", cleaned, flags=re.IGNORECASE
+    )
+    cleaned = re.sub(
+        r"data:\s*(?:text/html|application/javascript)[^\"'>\s]*",
+        "[DATA_URI_REMOVED]",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    # 阻断内联事件属性，如 onerror=, onload=, onclick=
+    cleaned = re.sub(
+        r"\bon[a-zA-Z]{3,}\s*=",
+        "sanitized_event=",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    # 剥离低阶非打印转义 ASCII 字符
+    cleaned = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", cleaned)
+    return cleaned
