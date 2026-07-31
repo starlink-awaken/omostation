@@ -56,6 +56,22 @@ redacted evaluation manifest, controlled source inventory, and approved OMO
 task are all present. Local Hermes is intentionally not accepted by
 `--production`.
 
+After the enterprise gateway returns its safe dispatch result, record the
+receipt without copying response content or credentials:
+
+```bash
+python scripts/kems_dispatch_receipt.py \
+  --manifest /secure/kems/reachbridge-manifest.json \
+  --response /secure/kems/dispatch-response.json \
+  --output /secure/kems/receipts/dispatch.json \
+  --production
+```
+
+The receipt stores only the run ID, dispatch ID, manifest SHA-256, document
+count, transport, status, and timestamp. It rejects local Hermes receipts in
+production mode and requires the gateway response to confirm both identity and
+manifest integrity.
+
     ## Key Surfaces
 
     - `src/runtime/matrix.py`
