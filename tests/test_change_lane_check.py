@@ -30,6 +30,11 @@ def test_classify_legacy_state_health_still_governance_state():
     assert clc.classify(".omo/state/health.yaml", submodules=set()) == "governance_state"
 
 
+def test_classify_root_governance_pointer_as_docs():
+    """Workspace governance navigation is a documentation-lane entry point."""
+    assert clc.classify("GOVERNANCE.md", submodules=set()) == "docs"
+
+
 def test_allowed_for_workflow_auth_overrides_runtime_snapshot_isolation():
     """ADR-0129 §11.3.2: workflow 显式授权优先于硬编码 runtime_snapshot 隔离."""
     lanes = {"runtime_snapshot", "governance_state"}
