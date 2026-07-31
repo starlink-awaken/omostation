@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 SOURCE_PATTERNS = (
@@ -30,12 +31,17 @@ def _load_graph_types():
     package_src = root / "packages" / "kos" / "src"
     if not package_src.is_dir():
         raise RuntimeError(f"Kairon KOS source is unavailable: {package_src}")
-    sys.path.insert(0, str(package_src))
     try:
-        from kos.kems import DocumentVersion, EvidenceSpan, GraphEntity, GraphStore
-    except ImportError as exc:
+        module_path = package_src / "kos" / "kems" / "graph_store.py"
+        spec = importlib.util.spec_from_file_location("kems_graph_store", module_path)
+        if spec is None or spec.loader is None:
+            raise ImportError("unable to load graph store module")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        return module.DocumentVersion, module.EvidenceSpan, module.GraphEntity, module.GraphStore
+    except (ImportError, OSError) as exc:
         raise RuntimeError("Kairon KEMS graph store is unavailable") from exc
-    return DocumentVersion, EvidenceSpan, GraphEntity, GraphStore
 
 
 def _sha256(path: Path) -> str:
@@ -57,7 +63,7 @@ def materialize(docs_root: Path, graph_db: Path, run_id: str) -> dict[str, objec
     if not files:
         raise RuntimeError("no source documents available for KEMS materialization")
     store = GraphStore(graph_db)
-    now = datetime.now(UTC).isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     entities = 0
     evidence = 0
     for path in files:
