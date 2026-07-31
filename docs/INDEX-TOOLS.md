@@ -7,7 +7,7 @@
 > - validation: 工具数与实际扫描结果一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-31T11:36:56.730951+00:00
+> - generated_at: 2026-07-31T13:06:00.000000+00:00
 
 ---
 
