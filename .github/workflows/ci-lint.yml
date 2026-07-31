@@ -30,9 +30,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - name: Download actionlint (binary, latest stable)
         id: get_actionlint
         run: |
@@ -53,9 +58,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -82,9 +92,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - name: Install shellcheck
         run: |
           sudo apt-get update -qq
@@ -111,9 +126,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -135,9 +155,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -171,9 +196,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"

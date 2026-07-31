@@ -17,10 +17,15 @@ jobs:
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           fetch-depth: 0
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5

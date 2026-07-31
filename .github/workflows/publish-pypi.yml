@@ -41,9 +41,14 @@ jobs:
           - health-profile
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

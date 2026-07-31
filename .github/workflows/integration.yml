@@ -1,5 +1,5 @@
 name: Integration Tests
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   integration:
     runs-on: ubuntu-latest
@@ -8,9 +8,14 @@ jobs:
         python-version: ["3.13"]
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}

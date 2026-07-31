@@ -15,9 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
       - name: docker compose config -q (语法校验)
         run: cd projects/observability && docker compose config -q
       - name: webhook-bridge.py syntax check

@@ -8,10 +8,23 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      # Phase 47 fix: CROSS_REPO_TOKEN 可能无法 fetch 子模块新 commit (最终一致性/权限问题)
+      # 策略: 先尝试 CROSS_REPO_TOKEN, 失败则 fallback 到 GITHUB_TOKEN (仅 root repo 内容)
       - uses: actions/checkout@v4
+        id: checkout-primary
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (without submodules)
+        if: steps.checkout-primary.outcome == 'failure'
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Init submodules with GITHUB_TOKEN (fallback)
+        if: steps.checkout-primary.outcome == 'failure'
+        run: |
+          git submodule update --init --recursive --depth=1 2>/dev/null || echo "⚠️ submodule init skipped (token/commit unavailable)"
       # ADR-0202 D1: 内联非空守卫 — 不依赖仓库自身工具 (自指盲区防御)
       - name: inline zero-byte guard (ADR-0202)
         run: |

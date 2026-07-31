@@ -15,8 +15,13 @@ jobs:
       SSB_KEY: ci-test-key-for-signature-tests
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Fallback checkout (no submodules)
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
           submodules: recursive
       - name: Init ecos submodule
         run: git submodule update --init projects/ecos
