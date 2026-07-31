@@ -3,4 +3,4 @@
 baseline-perf-budget.txt: 38
 baseline-scenario-detectors.txt: 1
 baseline-scenario-growth.txt: 117
-baseline-work-landed.txt: 3
+baseline-work-landed.txt: 7
