@@ -76,6 +76,11 @@ ports:
     transport: http
     status: active
     note: "唯一人类 Web 入口, 已收敛 dashboard_server/omo/ecos"
+  8095:
+    name: triage-http
+    transport: http
+    status: active
+    note: "aetherforge triage REST API server (分诊 HTTP 服务)"
   8888:
     name: mcp-stdio-debug
     transport: stdio
