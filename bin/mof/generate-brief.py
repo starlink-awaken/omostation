@@ -12,6 +12,12 @@ BRIEF_MD = WORKSPACE / "BRIEF.md"
 DELIVERY_SOFT_GATE_YAML = (
     WORKSPACE / ".omo" / "_truth" / "registry" / "x3-delivery-soft-gate.yaml"
 )
+DECISION_CHECKLIST_PATH = ".omo/tasks/closed/decision-checklist-13-items.md"
+
+
+def decision_checklist_reference() -> str:
+    """Render the canonical decision checklist pointer for the inbox summary."""
+    return f"一页勾选清单见 `{DECISION_CHECKLIST_PATH}`."
 
 
 def get_now_str() -> str:
@@ -509,7 +515,7 @@ def generate_brief_content() -> str:
         lines.append(
             f"> ⏳ **决策积压**: {len(decisions)} 张待人类拍板 — "
             "人类决策是当前系统瓶颈 (非技术问题). "
-            "一页勾选清单见 `.omo/tasks/planned/decision-checklist-13-items.md`."
+            f"{decision_checklist_reference()}"
         )
     lines.append("")
     if not decisions and not violations and not soft_warnings:
