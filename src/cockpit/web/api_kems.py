@@ -99,7 +99,14 @@ async def kems_status() -> dict[str, Any]:
     return {
         "status": "ready",
         "mode": "review_only",
-        "capabilities": ["ocr_review", "graph_review", "evaluation", "model_acceptance", "omo_task_draft"],
+        "capabilities": [
+            "ocr_review",
+            "graph_review",
+            "evaluation",
+            "dual_adjudication",
+            "model_acceptance",
+            "omo_task_draft",
+        ],
         "dispatch": "omo_only",
     }
 
@@ -654,13 +661,38 @@ async def claim_kems_adjudication(sample_id: str, request: Request) -> dict[str,
     return {"item": item, "status": item["annotation_status"]}
 
 
+@router.post("/api/kems/adjudication/{sample_id}/annotate")
+async def submit_kems_annotation(sample_id: str, request: Request) -> dict[str, Any]:
+    """Persist one independent annotation without replacing another annotator's work."""
+    body = await request.json()
+    if not isinstance(body, dict) or not isinstance(body.get("labels"), dict):
+        raise HTTPException(status_code=422, detail="labels must be an object")
+    _reject_private_fields(body)
+    required = ("annotation_version", "annotator")
+    missing = [field for field in required if not body.get(field)]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing annotation fields: {', '.join(missing)}")
+    try:
+        item = _adjudication_store().submit_annotation(
+            sample_id,
+            labels=body["labels"],
+            annotation_version=str(body["annotation_version"]),
+            annotator=str(body["annotator"]),
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=f"sample not found: {exc.args[0]}") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"item": item, "status": item["annotation_status"]}
+
+
 @router.post("/api/kems/adjudication/{sample_id}/adjudicate")
 async def adjudicate_kems_sample(sample_id: str, request: Request) -> dict[str, Any]:
     body = await request.json()
     if not isinstance(body, dict) or not isinstance(body.get("labels"), dict):
         raise HTTPException(status_code=422, detail="labels must be an object")
     _reject_private_fields(body)
-    required = ("annotation_version", "annotator")
+    required = ("annotation_version", "adjudicator")
     missing = [field for field in required if not body.get(field)]
     if missing:
         raise HTTPException(status_code=422, detail=f"missing adjudication fields: {', '.join(missing)}")
@@ -669,7 +701,7 @@ async def adjudicate_kems_sample(sample_id: str, request: Request) -> dict[str, 
             sample_id,
             labels=body["labels"],
             annotation_version=str(body["annotation_version"]),
-            annotator=str(body["annotator"]),
+            adjudicator=str(body["adjudicator"]),
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=f"sample not found: {exc.args[0]}") from exc
