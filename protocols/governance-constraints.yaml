@@ -1,0 +1,67 @@
+# L0 协议约束注册表 — 用于宪法级约束验证
+# derived_from: X1 policy references for constitutional traceability
+
+version: 1
+updated: "2026-06-16"
+
+# 每个协议的操作都有对应的约束类型
+# 违反约束的操作被阻止
+
+constraints:
+  # ── L0 协议约束 ─────────────────────────────────────────────────
+  # ── MCP 传输约束 (2026-06-16 收敛) ────────────────────────────────
+  - protocol: "MCP"
+    operations:
+      - name: "tools/call"
+        constraint: "工具调用必须受限 — 禁止直接系统调用"
+        severity: "mandatory"
+        derived_from: "X1-AUDIT-002"
+      - name: "tools/list"
+        constraint: "工具列举不限制"
+        severity: "none"
+      - name: "transport/stdio"
+        constraint: "本地 MCP 服务默认使用 stdio 传输，避免端口冲突"
+        severity: "mandatory"
+        derived_from: "X4-CONSISTENCY-001"
+      - name: "transport/http-sse"
+        constraint: "HTTP/SSE 传输仅用于远程接入或中心路由，需显式标志"
+        severity: "advisory"
+        derived_from: "X4-CONSISTENCY-001"
+
+  - protocol: "Tri-Plane Bus"
+    operations:
+      - name: "governance_plane"
+        constraint: "治理操作必须通过 OMO 审计链"
+        severity: "mandatory"
+        derived_from: "X1-AUDIT-001"
+      - name: "engine_plane"
+        constraint: "引擎操作不能修改底层状态"
+        severity: "advisory"
+        derived_from: "X1-AUDIT-002"
+      - name: "memory_plane"
+        constraint: "记忆查询必须标注来源（remote/local）"
+        severity: "mandatory"
+        derived_from: "X1-AUTH-001"
+
+  - protocol: "TaskObject"
+    operations:
+      - name: "dispatch"
+        constraint: "任务必须携带 context.source 标识来源"
+        severity: "mandatory"
+        derived_from: "X1-AUTH-001"
+      - name: "callback"
+        constraint: "回调必须指定 channel 和 format"
+        severity: "advisory"
+        derived_from: "X1-AUDIT-001"
+
+  # ── KEI 扩展约束 ────────────────────────────────────────────────
+  - protocol: "KEI Extension"
+    operations:
+      - name: "registration"
+        constraint: "扩展必须声明权限范围（K1 规则）"
+        severity: "mandatory"
+        derived_from: "X1-AUDIT-002"
+      - name: "permission_escalation"
+        constraint: "扩展不能自行提升权限"
+        severity: "blocking"
+        derived_from: "X1-AUDIT-002"
