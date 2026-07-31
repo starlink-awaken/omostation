@@ -44,6 +44,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
