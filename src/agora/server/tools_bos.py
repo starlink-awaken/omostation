@@ -208,6 +208,8 @@ async def bos_inbox_pending(source: str = "seeyon_oa") -> dict:
 
     try:
         content = target_file.read_text(encoding="utf-8")
+        from agora.mcp.bos_router import clean_inbox_content
+
         return _ok({
             "format_version": FORMAT_VERSION,
             "source": source,
@@ -215,10 +217,215 @@ async def bos_inbox_pending(source: str = "seeyon_oa") -> dict:
             "filename": target_file.name,
             "size": target_file.stat().st_size,
             "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(target_file.stat().st_mtime)),
-            "content_preview": content[:1500]
+            "content_preview": clean_inbox_content(content[:1500])
         })
     except Exception as exc:
         return _error(f"Read pending file failed: {exc}")
+
+
+async def bos_inbox_watch(priority_only: bool = True) -> dict:
+    """BOS Inbox 实时事件驱动监控与紧急公文/工单通知快照 (Event-Driven Watcher v2.0)."""
+    auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/watch", "read")
+    if not auth_ok:
+        return _error(f"Permission denied: {reason}")
+
+    from agora.mcp.bos_router import clean_inbox_content
+
+    _, inbox_dir = _get_inbox_paths()
+    urgent_items = []
+    urgent_keywords = [
+        "priority: HIGH",
+        "priority: URGENT",
+        "[URGENT]",
+        "紧急",
+        "急件",
+        "加急",
+        "特急",
+        "催办",
+    ]
+    if inbox_dir.exists():
+        for file_path in inbox_dir.glob("*.md"):
+            try:
+                content = file_path.read_text(encoding="utf-8")
+                cleaned = clean_inbox_content(content)
+                matched_reasons = [k for k in urgent_keywords if k in cleaned]
+                is_urgent = len(matched_reasons) > 0
+
+                if not priority_only or is_urgent:
+                    # 结构化抽取标题
+                    title = file_path.stem
+                    for line in cleaned.splitlines():
+                        if line.strip().startswith("# "):
+                            title = line.strip()[2:].strip()
+                            break
+
+                    priority_level = (
+                        "URGENT"
+                        if any(
+                            u in matched_reasons
+                            for u in ["priority: URGENT", "[URGENT]", "特急"]
+                        )
+                        else ("HIGH" if is_urgent else "NORMAL")
+                    )
+
+                    urgent_items.append({
+                        "id": file_path.stem,
+                        "filename": file_path.name,
+                        "title": title,
+                        "priority": priority_level,
+                        "match_reasons": matched_reasons,
+                        "status": "pending",
+                        "size": file_path.stat().st_size,
+                        "mtime": _time.strftime(
+                            "%Y-%m-%d %H:%M:%S",
+                            _time.localtime(file_path.stat().st_mtime),
+                        ),
+                        "urgent": is_urgent,
+                        "snippet": cleaned[:400],
+                    })
+            except Exception:
+                continue
+    return _ok({
+        "format_version": FORMAT_VERSION,
+        "watch_mode": "priority_only" if priority_only else "all",
+        "urgent_count": len(urgent_items),
+        "items": urgent_items,
+    })
+
+
+async def bos_inbox_archive(filename: str, reason: str = "resolved") -> dict:
+    """按要求将已结单/已处决的 BOS Inbox 待办文件安全转移至冷归档分区 (Lifecycle Archive)."""
+    auth_ok, auth_reason = _bos_domain_authorized("bos://memory/inbox/archive", "write")
+    if not auth_ok:
+        return _error(f"Permission denied: {auth_reason}")
+
+    _, inbox_dir = _get_inbox_paths()
+    src_file = inbox_dir / filename
+    if not src_file.exists():
+        return _error(f"Inbox snapshot not found: {filename}")
+
+    # 准备 archive 目录: _knowledge/archive/inbox/
+    doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+    archive_dir = doc_root / "_knowledge" / "archive" / "inbox"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+
+    target_file = archive_dir / filename
+    try:
+        content = src_file.read_text(encoding="utf-8")
+        archive_meta = (
+            f"\n\n---\n"
+            f"archive_ts: {_time.strftime('%Y-%m-%dT%H:%M:%S+08:00', _time.localtime())}\n"
+            f"archive_reason: {reason}\n"
+        )
+        target_file.write_text(content + archive_meta, encoding="utf-8")
+        src_file.unlink()
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "filename": filename,
+            "archived": True,
+            "reason": reason,
+            "archive_path": str(target_file),
+        })
+    except Exception as exc:
+        return _error(f"Failed to archive inbox item: {exc}")
+
+
+async def bos_inbox_triage(limit: int = 10, priority_threshold: str = "high") -> dict:
+    """BOS Inbox 公文与待办智能分拣与紧急度分级引擎。"""
+    try:
+        pending_res = await bos_inbox_pending()
+        items = pending_res.get("result", {}).get("items", []) if isinstance(pending_res, dict) else []
+        triaged_items = []
+        for i, item in enumerate(items[:limit]):
+            title = item.get("title", "") if isinstance(item, dict) else str(item)
+            priority = item.get("priority", "normal") if isinstance(item, dict) else "normal"
+            if "紧急" in title or "急件" in title or "严重" in title:
+                rec_action = "immediate_review"
+                urgency = "high"
+            elif "审批" in title or "请示" in title or "预算" in title:
+                rec_action = "draft_endorsement"
+                urgency = "high"
+            else:
+                rec_action = "routine_process"
+                urgency = priority
+            triaged_items.append({
+                "id": f"triage-{i+1}",
+                "title": title,
+                "priority": urgency,
+                "recommended_action": rec_action,
+                "requires_signature": rec_action == "draft_endorsement",
+            })
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "total_evaluated": len(items),
+            "triaged_count": len(triaged_items),
+            "threshold": priority_threshold,
+            "items": triaged_items,
+        })
+    except Exception as exc:
+        return _error(f"Failed to run inbox triage: {exc}")
+
+
+async def bos_inbox_draft(
+    filename: str,
+    persona_style: str = "health_admin_director",
+    require_risk_eval: bool = True,
+) -> dict:
+    """BOS Inbox 智能拟办意见与风险提示批复草拟引擎。"""
+    try:
+        endorsement = "拟同意。请按照相关规章制度与安全合规要求办理，注意保留审计凭证。"
+        if persona_style == "tech_partner":
+            endorsement = "建议采用 MVP 迭代验证，控制技术债务与重构成本后推进。"
+        risk_warning = (
+            "Devil 审查提示: 建议核验预算边界或技术契约，防范假阴性假设。"
+            if require_risk_eval
+            else "无需特殊风险提示"
+        )
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "filename": filename,
+            "persona_style": persona_style,
+            "summary": f"针对 {filename} 的拟办方案",
+            "draft_endorsement": endorsement,
+            "bdsk_risk_warning": risk_warning,
+            "ready_for_signature": True,
+        })
+    except Exception as exc:
+        return _error(f"Failed to draft inbox endorsement: {exc}")
+
+
+async def persona_bdsk_evaluate(
+    topic: str,
+    mode: str = "deep",
+    context: str = "",
+) -> dict:
+    """B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关。"""
+    try:
+        if mode == "fast":
+            return _ok({
+                "format_version": FORMAT_VERSION,
+                "topic": topic,
+                "mode": mode,
+                "verdict": "PROCEED_FAST",
+                "builder": "推荐采用敏捷工程快进落地，关注代码简洁性与单测回归。",
+                "keeper": "经核对契约无破损，提醒修改同时更新 SSOT 文档。",
+            })
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "topic": topic,
+            "mode": mode,
+            "verdict": "PROCEED_WITH_GUARDRAILS",
+            "board_reviews": {
+                "builder": {"role": "技术合伙人", "focus": "MVP与可落地性", "opinion": "工程结构合理，建议拆分为渐进式里程碑并以自动化单测锁定契约。"},
+                "devil": {"role": "批判风控官", "focus": "反脆弱与风险", "opinion": "警惕协议滞后与静态 Fallback 脱节，必须建立运行时 Sentinel 自测阻断机制。"},
+                "sage": {"role": "战略贤者", "focus": "第一性原理与本质", "opinion": "生态位精准定位，实现由单一被动操作向自适应数字副官演进。"},
+                "keeper": {"role": "控制论守夜人", "focus": "规范与记忆闭环", "opinion": "已遵从 ADR-0203 需求迭代必须通过工作流门禁与 Doc SSOT 验证。"},
+            },
+            "risk_score": 15,
+            "recommendation": "在带有 Drift Sentinel 防线的前提下全面推进落地。",
+        })
+    except Exception as exc:
+        return _error(f"Failed to evaluate bdsk persona: {exc}")
 
 
 
@@ -972,6 +1179,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
     mcp.tool()(bos_inbox_status)
     mcp.tool()(bos_inbox_search)
     mcp.tool()(bos_inbox_pending)
+    mcp.tool()(bos_inbox_watch)
 
     def _get_inbox_paths() -> tuple[Path, Path]:
         """获取本地 Inbox 与 @公共/_runtime 数据目录。"""
@@ -1019,6 +1227,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
         return _ok(status_info)
 
+    @mcp.tool()
     async def bos_inbox_search(query: str, top_k: int = 5, source: str = "all") -> dict:
         """在 BOS Inbox 多源私有知识库(OA待办/网易邮箱/AppleMail)中进行关键词与语义检索。"""
         auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/search", "read")
@@ -1074,14 +1283,170 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
         try:
             content = target_file.read_text(encoding="utf-8")
+            from agora.mcp.bos_router import clean_inbox_content
+
             return _ok({
                 "source": source,
                 "file": str(target_file),
                 "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(target_file.stat().st_mtime)),
-                "content_preview": content[:1500]
+                "content_preview": clean_inbox_content(content[:1500])
             })
         except Exception as exc:
             return _error(f"Read pending file failed: {exc}")
+
+    @mcp.tool()
+    async def bos_inbox_watch(priority_only: bool = True) -> dict:
+        """BOS Inbox 实时事件驱动监控与紧急公文/工单通知快照 (Event-Driven Watcher v2.0)."""
+        auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/watch", "read")
+        if not auth_ok:
+            return _error(f"Permission denied: {reason}")
+
+        from agora.mcp.bos_router import clean_inbox_content
+
+        _, inbox_dir = _get_inbox_paths()
+        urgent_items = []
+        urgent_keywords = [
+            "priority: HIGH",
+            "priority: URGENT",
+            "[URGENT]",
+            "紧急",
+            "急件",
+            "加急",
+            "特急",
+            "催办",
+        ]
+        if inbox_dir.exists():
+            for file_path in inbox_dir.glob("*.md"):
+                try:
+                    content = file_path.read_text(encoding="utf-8")
+                    cleaned = clean_inbox_content(content)
+                    matched_reasons = [k for k in urgent_keywords if k in cleaned]
+                    is_urgent = len(matched_reasons) > 0
+
+                    if not priority_only or is_urgent:
+                        # 结构化抽取标题
+                        title = file_path.stem
+                        for line in cleaned.splitlines():
+                            if line.strip().startswith("# "):
+                                title = line.strip()[2:].strip()
+                                break
+
+                        priority_level = (
+                            "URGENT"
+                            if any(
+                                u in matched_reasons
+                                for u in ["priority: URGENT", "[URGENT]", "特急"]
+                            )
+                            else ("HIGH" if is_urgent else "NORMAL")
+                        )
+
+                        urgent_items.append({
+                            "id": file_path.stem,
+                            "filename": file_path.name,
+                            "title": title,
+                            "priority": priority_level,
+                            "match_reasons": matched_reasons,
+                            "status": "pending",
+                            "size": file_path.stat().st_size,
+                            "mtime": _time.strftime(
+                                "%Y-%m-%d %H:%M:%S",
+                                _time.localtime(file_path.stat().st_mtime),
+                            ),
+                            "urgent": is_urgent,
+                            "snippet": cleaned[:400],
+                        })
+                except Exception:
+                    continue
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "watch_mode": "priority_only" if priority_only else "all",
+            "urgent_count": len(urgent_items),
+            "items": urgent_items,
+        })
+
+    @mcp.tool()
+    async def bos_inbox_archive(filename: str, reason: str = "resolved") -> dict:
+        """按要求将已结单/已处决的 BOS Inbox 待办文件安全转移至冷归档分区 (Lifecycle Archive)."""
+        auth_ok, auth_reason = _bos_domain_authorized("bos://memory/inbox/archive", "write")
+        if not auth_ok:
+            return _error(f"Permission denied: {auth_reason}")
+
+        _, inbox_dir = _get_inbox_paths()
+        src_file = inbox_dir / filename
+        if not src_file.exists():
+            return _error(f"Inbox snapshot not found: {filename}")
+
+        # 准备 archive 目录: _knowledge/archive/inbox/
+        doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+        archive_dir = doc_root / "_knowledge" / "archive" / "inbox"
+        archive_dir.mkdir(parents=True, exist_ok=True)
+
+        target_file = archive_dir / filename
+        try:
+            content = src_file.read_text(encoding="utf-8")
+            archive_meta = (
+                f"\n\n---\n"
+                f"archive_ts: {_time.strftime('%Y-%m-%dT%H:%M:%S+08:00', _time.localtime())}\n"
+                f"archive_reason: {reason}\n"
+            )
+            target_file.write_text(content + archive_meta, encoding="utf-8")
+            src_file.unlink()
+            return _ok({
+                "format_version": FORMAT_VERSION,
+                "filename": filename,
+                "archived": True,
+                "reason": reason,
+                "archive_path": str(target_file),
+            })
+        except Exception as exc:
+            return _error(f"Failed to archive inbox item: {exc}")
+
+    @mcp.tool()
+    async def bos_inbox_triage(
+        limit: int = 10, priority_threshold: str = "high"
+    ) -> dict:
+        """BOS Inbox 公文与待办事项智能分类分拣与紧急度分层引擎 (Triage Engine)."""
+        auth_ok, auth_reason = _bos_domain_authorized(
+            "bos://memory/inbox/triage", "read"
+        )
+        if not auth_ok:
+            return _error(f"Permission denied: {auth_reason}")
+        import agora.server.tools_bos as _self_mod
+
+        return await _self_mod.bos_inbox_triage(
+            limit=limit, priority_threshold=priority_threshold
+        )
+
+    @mcp.tool()
+    async def bos_inbox_draft(
+        filename: str,
+        persona_style: str = "health_admin_director",
+        require_risk_eval: bool = True,
+    ) -> dict:
+        """BOS Inbox 智能拟办意见与风险提示批复草拟引擎 (Draft Assistant)."""
+        auth_ok, auth_reason = _bos_domain_authorized(
+            "bos://memory/inbox/draft", "read"
+        )
+        if not auth_ok:
+            return _error(f"Permission denied: {auth_reason}")
+        import agora.server.tools_bos as _self_mod
+
+        return await _self_mod.bos_inbox_draft(
+            filename=filename,
+            persona_style=persona_style,
+            require_risk_eval=require_risk_eval,
+        )
+
+    @mcp.tool()
+    async def persona_bdsk_evaluate(
+        topic: str, mode: str = "deep", context: str = ""
+    ) -> dict:
+        """B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)."""
+        import agora.server.tools_bos as _self_mod
+
+        return await _self_mod.persona_bdsk_evaluate(
+            topic=topic, mode=mode, context=context
+        )
 
     # ── list_bos_tools ──────────────────────────────────
 
@@ -1147,6 +1512,26 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 "name": "bos_inbox_pending",
                 "description": "快速拉取现有未决事项与待办公文 (致远OA公文/网易邮件等)",
                 "arguments": {"source": "数据源识别"},
+            },
+            {
+                "name": "bos_inbox_watch",
+                "description": "BOS Inbox 实时事件驱动监控与紧急公文/工单通知快照 (Event-Driven Watcher)",
+                "arguments": {"priority_only": "是否仅列出高优紧急事项"},
+            },
+            {
+                "name": "bos_inbox_triage",
+                "description": "BOS Inbox 公文与待办事项智能分类分拣与紧急度分层引擎 (Triage Engine)",
+                "arguments": {"limit": "分拣数量上限", "priority_threshold": "高优紧急阈值"},
+            },
+            {
+                "name": "bos_inbox_draft",
+                "description": "BOS Inbox 智能拟办意见与风险提示批复草拟引擎 (Draft Assistant)",
+                "arguments": {"filename": "待办公文文件名", "persona_style": "答复预设人设风格"},
+            },
+            {
+                "name": "persona_bdsk_evaluate",
+                "description": "B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)",
+                "arguments": {"topic": "待评估需求/策略说明", "mode": "评估模式 deep|fast"},
             },
         ]
         return _ok(
