@@ -183,6 +183,7 @@ class TestL0ToolRegistration:
     def test_l0_tools_registered(self):
         """L0 工具在 mcp 中可调用"""
         import asyncio
+
         from cockpit import l0_mcp_tools
 
         tools = asyncio.run(agent_runtime_mcp_server.mcp.list_tools())

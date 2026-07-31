@@ -481,7 +481,7 @@ def _runtime_profile(
     commands_text = " ".join(commands).lower()
     package_manifest = _read_package_manifest(project_path)
     scripts = package_manifest.get("scripts") if isinstance(package_manifest.get("scripts"), dict) else {}
-    script_text = " ".join(f"{key} {value}" for key, value in scripts.items() if isinstance(value, str)).lower()
+    script_text = " ".join(f"{key} {value}" for key, value in scripts.items() if isinstance(value, str)).lower()  # type: ignore[union-attr]
     manifests = {item.get("name") for item in (operational.get("manifests") or [])}
 
     if project_id == "bus-foundation":
@@ -926,7 +926,7 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
         (
             f"已发现安全合同：{security_doc.name}"
             if security_doc.is_file()
-            else f"已发现安全审计入口：{security_audit.name}"
+            else f"已发现安全审计入口：{security_audit.name}"  # type: ignore[union-attr]
         )
         + (f"，审计入口：{security_audit.name}。" if security_audit and security_doc.is_file() else "。")
         if security_status == "ready"

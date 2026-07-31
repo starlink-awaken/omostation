@@ -44,7 +44,7 @@ import time
 from datetime import UTC, datetime
 
 try:
-    import bus_foundation.facade.event as bus_event
+    import bus_foundation.facade.event as bus_event  # type: ignore[import-not-found]
 except Exception as exc:  # Optional mutation bus; status endpoints remain useful.
     bus_event = None
     _BUS_IMPORT_ERROR: Exception | None = exc
@@ -354,7 +354,7 @@ if router:
                 },
             }
 
-            omo_ingress.create_planned_task(
+            omo_ingress.create_planned_task(  # type: ignore[union-attr]
                 omo_dir,
                 task_data=task_data,
                 ingress_plane="projects/cockpit",
@@ -398,7 +398,7 @@ if router:
                         )
 
                 try:
-                    bus_event.publish(
+                    bus_event.publish(  # type: ignore[union-attr]
                         topic="QuestCompleted",
                         payload={
                             "quest_id": quest_id,
@@ -483,7 +483,7 @@ if router:
 
                 try:
                     omo_dir = _REPO_ROOT / ".omo"
-                    from cockpit.adapters.omo import complete_task
+                    from cockpit.adapters.omo import complete_task  # type: ignore[attr-defined]
 
                     complete_task(
                         omo_dir,
@@ -497,7 +497,7 @@ if router:
                     pass
 
                 try:
-                    bus_event.publish(
+                    bus_event.publish(  # type: ignore[union-attr]
                         topic="QuestCompleted",
                         payload={
                             "quest_id": quest_id,
@@ -548,7 +548,7 @@ if router:
                     def _utc_now() -> str:
                         return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
-                    omo_ingress.complete_task(
+                    omo_ingress.complete_task(  # type: ignore[union-attr]
                         omo_dir,
                         task_id=task_id,
                         actor="projects/cockpit",
@@ -560,7 +560,7 @@ if router:
                     pass
 
                 try:
-                    bus_event.publish(
+                    bus_event.publish(  # type: ignore[union-attr]
                         topic="QuestCompleted",
                         payload={
                             "quest_id": quest_id,
@@ -679,13 +679,13 @@ if router:
             return unavailable
         broken = payload.get("broken", False)
         try:
-            from cockpit.adapters.omo import update_provider_plane_settings
+            from cockpit.adapters.omo import update_provider_plane_settings  # type: ignore[attr-defined]
 
             omo_dir = _REPO_ROOT / ".omo"
             success = update_provider_plane_settings(omo_dir, circuit_broken=broken)
             if success:
                 try:
-                    bus_event.publish(
+                    bus_event.publish(  # type: ignore[union-attr]
                         topic="CircuitBreakerUpdated",
                         payload={"circuit_broken": broken},
                         source_uri="bos://governance/cockpit/circuit_breaker",
@@ -706,13 +706,13 @@ if router:
             return unavailable
         budget = payload.get("budget", 100.0)
         try:
-            from cockpit.adapters.omo import update_provider_plane_settings
+            from cockpit.adapters.omo import update_provider_plane_settings  # type: ignore[attr-defined]
 
             omo_dir = _REPO_ROOT / ".omo"
             success = update_provider_plane_settings(omo_dir, daily_budget=budget)
             if success:
                 try:
-                    bus_event.publish(
+                    bus_event.publish(  # type: ignore[union-attr]
                         topic="DailyBudgetUpdated",
                         payload={"daily_budget": budget},
                         source_uri="bos://governance/cockpit/daily_budget",

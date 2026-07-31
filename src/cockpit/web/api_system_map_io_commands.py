@@ -708,8 +708,8 @@ def _project_ports(
             if isinstance(raw_mapping, dict):
                 published = raw_mapping.get("published")
                 target = raw_mapping.get("target")
-                host_port = int(published) if str(published).isdigit() else None
-                container_port = int(target) if str(target).isdigit() else None
+                host_port = int(published) if str(published).isdigit() else None  # type: ignore[arg-type]
+                container_port = int(target) if str(target).isdigit() else None  # type: ignore[arg-type]
             else:
                 mapping = str(raw_mapping).split("/")[0]
                 parts = mapping.split(":")

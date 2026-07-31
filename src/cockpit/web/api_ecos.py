@@ -113,7 +113,7 @@ if router:
     async def list_workflows():
         """列出所有 ecos L0 工作流"""
         try:
-            from cockpit.adapters.ecos import list_workflows
+            from cockpit.adapters.ecos import list_workflows  # type: ignore[attr-defined]
 
             wfs = list_workflows()
             # 去掉 Python 对象中不可 JSON 序列化的字段
@@ -135,7 +135,7 @@ if router:
             dry_run: 干跑模式
         """
         try:
-            from cockpit.adapters.ecos import execute_m1_workflow
+            from cockpit.adapters.ecos import execute_m1_workflow  # type: ignore[attr-defined]
 
             result = execute_m1_workflow(name, dry_run=dry_run)
             # 确保可 JSON 序列化
@@ -156,7 +156,7 @@ if router:
     async def describe_workflow(name: str):
         """查看 ecos L0 工作流定义"""
         try:
-            from cockpit.adapters.ecos import load_workflow
+            from cockpit.adapters.ecos import load_workflow  # type: ignore[attr-defined]
 
             wf = load_workflow(name)
             if not wf:
@@ -169,7 +169,7 @@ if router:
     async def list_backends():
         """列出所有已注册 workflow backend"""
         try:
-            from cockpit.adapters.ecos import list_backends
+            from cockpit.adapters.ecos import list_backends  # type: ignore[attr-defined]
 
             return {"backends": list_backends()}
         except Exception as e:  # defensive fallback
@@ -179,7 +179,7 @@ if router:
     async def list_workflow_actions():
         """列出所有已注册 workflow action"""
         try:
-            from cockpit.adapters.ecos import list_actions
+            from cockpit.adapters.ecos import list_actions  # type: ignore[attr-defined]
 
             return {"actions": list_actions()}
         except Exception as e:  # defensive fallback
@@ -189,7 +189,7 @@ if router:
     async def validate_workflow_api(name: str):
         """验证工作流定义（X1-X4 约束检查）"""
         try:
-            from cockpit.adapters.ecos import load_workflow, validate_workflow
+            from cockpit.adapters.ecos import load_workflow, validate_workflow  # type: ignore[attr-defined]
 
             wf = load_workflow(name)
             if not wf:
@@ -211,7 +211,7 @@ if router:
     async def list_workflow_logs(recent: int = 10, status: str = ""):
         """查询工作流运行历史（M0 快照）"""
         try:
-            from cockpit.adapters.ecos import load_all_workflow_runs as _load_all_runs
+            from cockpit.adapters.ecos import load_all_workflow_runs as _load_all_runs  # type: ignore[attr-defined]
 
             runs = _load_all_runs()
             if status:
@@ -230,7 +230,7 @@ if router:
     async def test_workflow_api(name: str):
         """测试工作流编排（mock action，不执行真实脚本）"""
         try:
-            from cockpit.adapters.ecos import test_workflow
+            from cockpit.adapters.ecos import test_workflow  # type: ignore[attr-defined]
 
             result = test_workflow(name)
             safe = {}
@@ -314,4 +314,4 @@ if router:
 
             return JSONResponse(content={"status": "ok", "skills": parsed_skills})
         except Exception as e:  # defensive fallback
-            return JSONResponse(content={"status": "error", "error": str(e)}, status_code=500)
+            return JSONResponse(content={"status": "error", "error": str(e)}, status_code=500)  # type: ignore[possibly-undefined]

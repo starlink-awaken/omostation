@@ -44,13 +44,13 @@ if router:
             "unresolved_count": 0,
         }
 
-    @router.get("/dashboard", response_class=HTMLResponse)
+    @router.get("/dashboard", response_class=HTMLResponse)  # type: ignore[possibly-undefined]
     async def get_dashboard():
         """获取治理仪表板 HTML"""
         dashboard_path = Path(__file__).parent / "index.html"
         if dashboard_path.exists():
-            return HTMLResponse(content=dashboard_path.read_text())
-        return HTMLResponse(content="<h1>治理仪表板</h1><p>仪表板文件不存在</p>")
+            return HTMLResponse(content=dashboard_path.read_text())  # type: ignore[possibly-undefined]
+        return HTMLResponse(content="<h1>治理仪表板</h1><p>仪表板文件不存在</p>")  # type: ignore[possibly-undefined]
 
     @router.get("/projects")
     async def get_projects():

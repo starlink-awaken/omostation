@@ -103,6 +103,16 @@ try:
 except Exception as e:
     print(f"Warning: KOS proxy not available: {e}", file=sys.stderr)
 
+# ─── Brain API (Phase 48 MVP) ───────────────────────────────
+
+try:
+    from cockpit.web.api_brain import router as brain_router
+
+    app.include_router(brain_router)
+    print("Successfully loaded Brain API routes")
+except Exception as e:
+    print(f"Warning: Brain API not available: {e}", file=sys.stderr)
+
 # ─── GBrain Proxy ─────────────────────────────────────────────
 
 

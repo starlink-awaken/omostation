@@ -13,12 +13,15 @@ console = Console()
 def _get_l4_registry():
     """获取 l4-kernel DomainRegistry；配置缺失时返回 None 而不是崩溃。"""
     try:
-        from cockpit.adapters.l4_kernel import DomainRegistry, load_overrides_from_config
+        from cockpit.adapters.l4_kernel import (  # type: ignore[import-not-found]
+            DomainRegistry,
+            load_overrides_from_config,
+        )
 
         l4_config_path = Path(
             os.environ.get("L4_DOMAIN_CONFIG", str(Path.home() / ".config" / "l4-kernel" / "domains.toml"))
         )
-        return DomainRegistry(path_overrides=load_overrides_from_config(l4_config_path))
+        return DomainRegistry(path_overrides=load_overrides_from_config(l4_config_path))  # type: ignore[call-arg]
     except Exception:
         return None
 
@@ -102,7 +105,7 @@ def _cmd_health(args: Namespace) -> int:
         # ── L4 Domain Health ──────────────────────────────────────
         console.print("\n[bold cyan]═══ L4 域健康 ═══[/]\n")
         try:
-            from cockpit.adapters.l4_kernel import DomainHealth
+            from cockpit.adapters.l4_kernel import DomainHealth  # type: ignore[import-not-found]
 
             reg = _get_l4_registry()
             if reg is not None:

@@ -92,7 +92,7 @@ def cmd_research(args: argparse.Namespace) -> int:
                     [minerva, "research", topic],
                     capture_output=True,
                     text=True,
-                    timeout=os.environ.get("MINERVA_TIMEOUT", 180),
+                    timeout=float(os.environ.get("MINERVA_TIMEOUT", "180")),
                 )
                 progress.update(task, description="minerva 引擎研究完成")
             raw = (result.stdout or result.stderr or "").strip()

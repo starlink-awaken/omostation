@@ -48,6 +48,7 @@ from .commands.contracts import (
 from .commands.data import cmd_data_gc, cmd_data_index, cmd_data_types
 from .commands.discover import _cmd_discover
 from .commands.family_hub import cmd_family_hub
+from .commands.brain import cmd_brain
 from .commands.gbrain import cmd_gbrain
 from .commands.governance import cmd_governance
 from .commands.health import _cmd_health
@@ -174,7 +175,7 @@ def _c_version(a):
 
 def main() -> int:
     try:
-        from kairon_observability.tracing import setup_tracing
+        from kairon_observability.tracing import setup_tracing  # type: ignore[import-not-found]
 
         setup_tracing("cockpit-cli")
     except ImportError:
@@ -509,6 +510,23 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     model_driven_p.add_argument("model_driven_args", nargs=argparse.REMAINDER, help="传递给 model-driven CLI 的参数")
+
+    # ── 个人数字大脑 (Phase 48 MVP) ──────────────────────────
+    brain_p = sub.add_parser(
+        "brain",
+        help="个人数字大脑 — 知识检索 + 记忆 + 智能问答",
+        epilog="子命令: ask / context / remember / history\n"
+        '示例: cockpit brain ask "卫健委借调总结怎么写？"',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    brain_sub = brain_p.add_subparsers(dest="brain_subcommand", parser_class=WorkspaceParser)
+    brain_ask_p = brain_sub.add_parser("ask", help="向大脑提问（知识检索 + LLM 回答）")
+    brain_ask_p.add_argument("question", nargs=argparse.REMAINDER, help="你的问题")
+    brain_sub.add_parser("context", help="查看当前记忆摘要")
+    brain_remember_p = brain_sub.add_parser("remember", help="手动存入偏好/事实")
+    brain_remember_p.add_argument("fact", nargs=argparse.REMAINDER, help="要记住的内容")
+    brain_history_p = brain_sub.add_parser("history", help="查看对话历史")
+    brain_history_p.add_argument("--limit", "-n", type=int, default=20, help="显示条数")
 
     # ── CLI 收敛: gbrain 知识库 ──────────────────────────────
     gbrain_p = sub.add_parser(
@@ -1110,6 +1128,7 @@ def main() -> int:
         "mof": cmd_mof,
         "agora": cmd_agora,
         "model-driven": cmd_model_driven,
+        "brain": cmd_brain,
         "gbrain": cmd_gbrain,
         "kairon": cmd_kairon,
         "bus": dispatch_bus,

@@ -13,10 +13,10 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-import omo.omo_ingress as omo_ingress
+import omo.omo_ingress as omo_ingress  # type: ignore[import-not-found]
 
 try:
-    from omo.omo_cockpit_bridge import (
+    from omo.omo_cockpit_bridge import (  # type: ignore[import-not-found]
         append_hitl_override,
         approve_hitl_proposal_async,
         archive_scenario_receipt,
@@ -28,8 +28,13 @@ except ModuleNotFoundError as exc:
     if exc.name != "omo.omo_cockpit_bridge":
         raise
 
-    from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic, write_yaml_atomic
-    from omo.omo_shared import load_yaml
+    from omo.omo_io import (  # type: ignore[import-not-found]
+        AppendOnlyLog,
+        fcntl_lock,
+        write_text_atomic,
+        write_yaml_atomic,
+    )
+    from omo.omo_shared import load_yaml  # type: ignore[import-not-found]
 
     def _bridge_now() -> str:
         return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -117,9 +122,9 @@ except ModuleNotFoundError as exc:
             return False
 
 
-from omo.omo_dashboard import _load_json as load_json
-from omo.omo_debt_registry import load_debt_ledger
-from omo.omo_ingress import complete_task
+from omo.omo_dashboard import _load_json as load_json  # type: ignore[import-not-found]
+from omo.omo_debt_registry import load_debt_ledger  # type: ignore[import-not-found]
+from omo.omo_ingress import complete_task  # type: ignore[import-not-found]
 
 __all__ = [
     "append_hitl_override",
