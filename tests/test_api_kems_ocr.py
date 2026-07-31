@@ -27,10 +27,21 @@ class FakeStore:
         return True
 
     def review_queue(self, *, limit):
-        return [{"run_id": "ocr-1", "quality_status": "review"}]
+        return [{"run_id": "ocr-1", "document_id": "doc-1", "quality_status": "review", "review_status": "pending"}]
 
     def get_report(self, run_id):
-        return {"run_id": run_id, "quality_status": "review", "report": {}}
+        return {
+            "run_id": run_id,
+            "document_id": "doc-1",
+            "quality_status": "review",
+            "review_status": "pending",
+            "report": {
+                "cer": 0.1,
+                "field_accuracy": 0.8,
+                "evidence_refs": ["vault://redacted/evidence"],
+                "model_version": "v1",
+            },
+        }
 
     def record_correction(self, run_id, **kwargs):
         return 7
@@ -92,8 +103,14 @@ def test_ocr_report_routes_review_and_rejects_raw_content(monkeypatch):
 
 def test_ocr_queue_run_and_correction_endpoints(monkeypatch):
     _install_fake_kos(monkeypatch)
-    assert client().get("/api/kems/ocr/review-queue").json()["count"] == 1
-    assert client().get("/api/kems/ocr/runs/ocr-1").json()["admitted"] is False
+    queue = client().get("/api/kems/ocr/review-queue").json()
+    assert queue["count"] == 1
+    assert queue["items"][0]["source_ref"] == "doc-1"
+    assert queue["items"][0]["review_status"] == "review"
+    detail = client().get("/api/kems/ocr/runs/ocr-1").json()
+    assert detail["admitted"] is False
+    assert detail["metrics"]["field_accuracy"] == 0.8
+    assert detail["evidence_ref"] == "vault://redacted/evidence"
     result = client().post(
         "/api/kems/ocr/runs/ocr-1/correction",
         json={

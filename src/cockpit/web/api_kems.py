@@ -268,7 +268,16 @@ async def get_ocr_review_queue(limit: int = Query(100, ge=1, le=1000)) -> dict[s
         items = _ocr_store().review_queue(limit=limit)
     except (OSError, ValueError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
-    return {"items": items, "count": len(items), "mode": "review_only"}
+    normalized = []
+    for item in items:
+        normalized_item = dict(item)
+        normalized_item["source_ref"] = normalized_item.get("source_ref") or normalized_item.get("document_id")
+        normalized_item["review_status"] = (
+            "review" if normalized_item.get("review_status") == "pending" else normalized_item.get("review_status")
+        )
+        normalized_item["admitted"] = normalized_item.get("quality_status") == "pass"
+        normalized.append(normalized_item)
+    return {"items": normalized, "count": len(normalized), "mode": "review_only"}
 
 
 @router.get("/api/kems/ocr/runs/{run_id}")
@@ -280,6 +289,17 @@ async def get_ocr_run(run_id: str) -> dict[str, Any]:
     if result is None:
         raise HTTPException(status_code=404, detail="OCR run not found")
     result["admitted"] = result["quality_status"] == "pass"
+    report = result.get("report")
+    if isinstance(report, dict):
+        result["source_ref"] = result.get("source_ref") or result.get("document_id")
+        result["review_status"] = "review" if result.get("review_status") == "pending" else result.get("review_status")
+        result["metrics"] = {
+            field: report[field]
+            for field in ("cer", "field_accuracy", "table_cell_f1")
+            if report.get(field) is not None
+        }
+        result["evidence_ref"] = ", ".join(str(ref) for ref in report.get("evidence_refs", []))
+        result["extractor_version"] = report.get("model_version") or result.get("model_version")
     return result
 
 
