@@ -60,3 +60,11 @@ def test_normalize_brief_content_masks_generated_stamp():
 
     assert generate_brief.normalize_brief_content(raw) == generate_brief.normalize_brief_content(other)
     assert "<runtime>" in generate_brief.normalize_brief_content(raw)
+
+
+def test_decision_inbox_points_to_canonical_checklist():
+    """决策收件箱应指向已归档的 canonical checklist，而不是旧 planned 路径."""
+    reference = generate_brief.decision_checklist_reference()
+
+    assert reference == "一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`."
+    assert "planned/decision-checklist-13-items.md" not in reference
