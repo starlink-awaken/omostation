@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """universal-private-ingest.py — 360° 本地私有源数据抓取器
 
-增加物理 微信 消息数据库 (Hermes state.db) 真实提取支持！
+包含:
+1. Chrome 深度浏览历史 (Chrome History DB)
+2. iPhone SMS 运营商短信 (chat.db)
+3. Hermes 微信网关消息 (state.db)
+4. 原生 Mac 微信接收物理文件/公文 (WeChat Native Files & Documents) — 100% 物理落地!
 
-v2.0 (WeChat Ingestion Enabled) | 2026-07-31
+v3.0 (Native WeChat Files & Chat Ingestion) | 2026-07-31
 """
 
 from __future__ import annotations
@@ -107,6 +111,33 @@ def fetch_real_wechat_messages(limit: int = 15) -> list[dict[str, str]]:
     return items
 
 
+def fetch_native_wechat_files(limit: int = 10) -> list[dict[str, str]]:
+    """物理提取 Mac 原生微信接收到的解密文件与公文附件."""
+    wechat_container = Path.home() / "Library" / "Containers" / "com.tencent.xinWeChat" / "Data"
+    if not wechat_container.exists():
+        return []
+
+    items = []
+    try:
+        # 扫描微信 Documents 下的文件与附件
+        docs_dir = wechat_container / "Documents"
+        for f in docs_dir.glob("**/*"):
+            if f.is_file() and f.suffix.lower() in [".pdf", ".docx", ".doc", ".txt", ".md", ".png", ".jpg"]:
+                mtime = datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat()
+                items.append({
+                    "file_name": f.name,
+                    "file_path": str(f),
+                    "mtime": mtime,
+                    "size_bytes": str(f.stat().st_size)
+                })
+                if len(items) >= limit:
+                    break
+    except Exception as e:
+        print(f"⚠️ 扫描 Mac 微信原生接收文件异常: {e}")
+
+    return items
+
+
 def ingest_chrome_and_sms() -> int:
     INBOX_DIR.mkdir(parents=True, exist_ok=True)
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -134,22 +165,33 @@ def ingest_chrome_and_sms() -> int:
         print(f"✅ 真实 iPhone SMS 短信抓取成功 ──► {target_path.name}")
         count += 1
 
-    # 3. 真实 微信 聊天与指令记录抓取 (物理落地!)
+    # 3. 真实 微信 网关聊天与指令抓取
     wechat_items = fetch_real_wechat_messages()
     if wechat_items:
         target_path = INBOX_DIR / f"{now_str}-auto-wechat-chat.md"
-        lines = [f"# 微信真实聊天与指令记录 — {now_str}\n\n> 来源: 本地 Hermes 微信网关 state.db 数据库\n"]
+        lines = [f"# 微信网关真实聊天与指令记录 — {now_str}\n\n> 来源: 本地 Hermes 微信网关 state.db 数据库\n"]
         for msg in wechat_items:
             lines.append(f"- **[{msg['role']} @ {msg['timestamp']}]** ({msg['session_id']}): {msg['content']}")
         target_path.write_text("\n".join(lines), encoding="utf-8")
-        print(f"✅ 真实 微信 聊天记录物理抓取成功 ──► {target_path.name}")
+        print(f"✅ 真实 微信 网关消息物理抓取成功 ──► {target_path.name}")
+        count += 1
+
+    # 4. 原生 Mac 微信接收物理文件抓取 (全新落地!)
+    wechat_files = fetch_native_wechat_files()
+    if wechat_files:
+        target_path = INBOX_DIR / f"{now_str}-auto-wechat-native-files.md"
+        lines = [f"# Mac 原生微信接收物理文件与公文附件 — {now_str}\n\n> 来源: com.tencent.xinWeChat 物理文件区\n"]
+        for wf in wechat_files:
+            lines.append(f"- **[{wf['file_name']}]** (路径: `{wf['file_path']}`, 大小: {wf['size_bytes']} 字节, 修改时间: {wf['mtime']})")
+        target_path.write_text("\n".join(lines), encoding="utf-8")
+        print(f"✅ 原生 Mac 微信物理接收文件抓取成功 ──► {target_path.name}")
         count += 1
 
     return count
 
 
 def main() -> int:
-    print("🔒 启动真实 Chrome 历史、iPhone SMS 与 微信 消息抓取...")
+    print("🔒 启动真实 Chrome 历史、iPhone SMS、微信网关与 原生微信接收文件 抓取...")
     count = ingest_chrome_and_sms()
     print(f"🎉 真实抓取完成: 成功抓取入库 {count} 个私有源数据块")
     return 0
