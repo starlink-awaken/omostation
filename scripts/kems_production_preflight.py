@@ -121,6 +121,10 @@ def _evaluation_check(path: Path | None) -> Check:
         return Check("evaluation_manifest", False, "unsupported manifest schema")
     if payload.get("redaction_status") != "verified":
         return Check("evaluation_manifest", False, "manifest is not redaction-verified")
+    for field in ("dataset_id", "dataset_version"):
+        value = payload.get(field)
+        if not isinstance(value, str) or not value.strip():
+            return Check("evaluation_manifest", False, f"manifest {field} is missing")
     samples = payload.get("samples")
     if not isinstance(samples, list) or not samples:
         return Check("evaluation_manifest", False, "manifest has no samples")
@@ -151,6 +155,11 @@ def _evaluation_check(path: Path | None) -> Check:
         if sample.get("annotation_status") != "adjudicated":
             return Check(
                 "evaluation_manifest", False, "all samples must be adjudicated"
+            )
+        annotation_version = sample.get("annotation_version")
+        if not isinstance(annotation_version, str) or not annotation_version.strip():
+            return Check(
+                "evaluation_manifest", False, "all samples require annotation_version"
             )
         if not isinstance(sample.get("labels"), dict) or not sample["labels"]:
             return Check("evaluation_manifest", False, "all samples require labels")
@@ -298,6 +307,8 @@ def _omo_check(omo_root: Path, task_id: str | None) -> Check:
     approval_ref = payload.get("approval_ref")
     if payload.get("id") not in {None, task_id}:
         return Check("omo_approval", False, "OMO task id does not match task path")
+    if payload.get("status") not in APPROVED_STATUSES:
+        return Check("omo_approval", False, "OMO task is not approved for promotion")
     if not isinstance(approval_ref, str) or not approval_ref.endswith(".yaml"):
         return Check(
             "omo_approval", False, "OMO task approval_ref is missing or invalid"

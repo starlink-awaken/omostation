@@ -84,7 +84,7 @@ def _approved_omo(tmp_path: Path) -> Path:
     (omo_root / "tasks" / "active").mkdir(parents=True)
     (omo_root / "workers" / "runs").mkdir(parents=True)
     (omo_root / "tasks" / "active" / "KEMS-E2E.yaml").write_text(
-        "id: KEMS-E2E\nstatus: active\n"
+        "id: KEMS-E2E\nstatus: approved\n"
         "approval_ref: .omo/workers/runs/KEMS-E2E-approval.yaml\n",
         encoding="utf-8",
     )

@@ -75,7 +75,7 @@ def _approved_task(tmp_path):
     task_dir = tmp_path / "tasks" / "active"
     task_dir.mkdir(parents=True)
     (task_dir / "KEMS-001.yaml").write_text(
-        "id: KEMS-001\nstatus: active\napproval_ref: .omo/workers/runs/KEMS-001-approval.yaml\n",
+        "id: KEMS-001\nstatus: approved\napproval_ref: .omo/workers/runs/KEMS-001-approval.yaml\n",
         encoding="utf-8",
     )
     approval_dir = tmp_path / "workers" / "runs"
@@ -282,5 +282,62 @@ def test_preflight_rejects_ungranted_omo_promotion(tmp_path, monkeypatch):
         item["id"] == "omo_approval"
         and not item["ok"]
         and "ungranted" in item["detail"]
+        for item in result["checks"]
+    )
+
+
+def test_preflight_rejects_omo_task_that_is_only_active(tmp_path, monkeypatch):
+    monkeypatch.setenv(
+        "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
+    )
+    monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
+    _approved_task(tmp_path / "omo")
+    task = tmp_path / "omo" / "tasks" / "active" / "KEMS-001.yaml"
+    task.write_text(
+        "id: KEMS-001\nstatus: active\napproval_ref: .omo/workers/runs/KEMS-001-approval.yaml\n",
+        encoding="utf-8",
+    )
+    manifest = _evaluation_manifest(tmp_path)
+    result = run_preflight(
+        docs_root=_source_tree(tmp_path),
+        evaluation_manifest=manifest,
+        model_acceptance=_model_acceptance(tmp_path, manifest),
+        omo_root=tmp_path / "omo",
+        task_id="KEMS-001",
+        production=True,
+    )
+    assert result["status"] == "blocked"
+    assert any(
+        item["id"] == "omo_approval"
+        and not item["ok"]
+        and "not approved" in item["detail"]
+        for item in result["checks"]
+    )
+
+
+def test_preflight_rejects_incomplete_manifest_identity(tmp_path, monkeypatch):
+    monkeypatch.setenv(
+        "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
+    )
+    monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
+    _approved_task(tmp_path / "omo")
+    manifest = _evaluation_manifest(tmp_path)
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload.pop("dataset_version")
+    payload["samples"][0].pop("annotation_version")
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    result = run_preflight(
+        docs_root=_source_tree(tmp_path),
+        evaluation_manifest=manifest,
+        model_acceptance=None,
+        omo_root=tmp_path / "omo",
+        task_id="KEMS-001",
+        production=True,
+    )
+    assert result["status"] == "blocked"
+    assert any(
+        item["id"] == "evaluation_manifest"
+        and not item["ok"]
+        and "dataset_version" in item["detail"]
         for item in result["checks"]
     )
