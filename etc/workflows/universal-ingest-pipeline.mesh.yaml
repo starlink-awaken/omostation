@@ -1,0 +1,56 @@
+# BOS Neural Mesh Spec v1.0 — 织星神经网编排规范契约
+# 物理路径: projects/ecos/etc/workflows/universal-ingest-pipeline.mesh.yaml
+
+mesh_id: "mesh-universal-ingest-pipeline"
+name: "BOS 织星神经网 (360° 私有源捕抓-B.D.S.K.董事会研讨-打钩自进化闭环)"
+version: "v1.0"
+domain: "@驾驶舱/_control"
+architecture_type: "neural_mesh"
+
+# 1. 触发器网络 (Triggers Mesh)
+triggers:
+  - type: "cron_schedule"
+    expression: "0 7,20 * * *"
+  - type: "event_watch"
+    path: "~/Documents/_inbox/"
+
+# 2. 6 大自演进 DAG 节点拓扑
+nodes:
+  - node_id: "ST-01"
+    name: "360° 个人与工作私有数据抓取"
+    engine: "projects/runtime/scripts/universal-private-ingest.py"
+    sources: ["Chrome History", "iPhone SMS", "Zsh History", "Downloads Docs", "Git Log"]
+
+  - node_id: "ST-02"
+    name: "EX05 智能路由与 KOS 知识图谱三元组抽取"
+    engine: "projects/kairon/scripts/kairon-entity-ingest.py"
+    outputs: ["kos-index.sqlite"]
+
+  - node_id: "ST-03"
+    name: "OPC 需求开单与 BOS 协议 Schema 编译"
+    parallel:
+      - engine: "projects/omo/scripts/opc-product-pipeline.py"
+      - engine: "projects/ecos/scripts/domain-protocol-translator.py"
+
+  - node_id: "ST-04"
+    name: "B.D.S.K. 4 Agent 虚拟董事会研讨"
+    engine: "projects/omo/scripts/bdsk-board-engine.py"
+    roles: ["Builder", "Devil", "Sage", "Keeper"]
+    outputs: ["BDSK-VERDICT-*.md"]
+
+  - node_id: "ST-05"
+    name: "注意力预算单点裁决与手机锁屏推送"
+    engine: "projects/runtime/scripts/notify-push-bridge.py"
+    outputs: ["WEEKLY-VERDICT-latest.md", "Bark Push", "Feishu Webhook"]
+
+  - node_id: "ST-06"
+    name: "人类打钩偏好自进化与 Mesh 规格重构"
+    engine: "projects/omo/scripts/self-evolution-engine.py"
+    outputs: [".omo/state/human_preference_vector.json"]
+
+# 3. 控制论门禁 (Cybernetics & RLHF Loop)
+governance:
+  security_mode: "100%_local_privacy"
+  reinforcement_learning: "enabled"
+  human_in_the_loop:
+    decision_mode: "5min_single_click"
