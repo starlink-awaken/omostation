@@ -49,6 +49,8 @@
 | BOS 服务 | `projects/agora/etc/bos-services.yaml` | 边界层 |
 | L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 协议层 |
 | MOF 能力 | `.omo/_truth/registry/mof-capabilities.yaml` | 事实层 |
+| 运维脚本入口 | `scripts/AGENTS.md` · `scripts/INDEX.md` | 运行时工具 |
+| 空间配置入口 | `spaces/AGENTS.md` · `spaces/registry.yaml` | 空间策略 |
 
 ---
 
