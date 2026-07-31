@@ -86,6 +86,21 @@ count, transport, status, and timestamp. It rejects local Hermes receipts in
 production mode and requires the gateway response to confirm both identity and
 manifest integrity.
 
+After the dispatch, close the production evidence bundle only when the same
+run's preflight evidence, redacted manifest, and HTTP receipt agree on run ID,
+document inventory, manifest SHA-256, dispatch ID, and accepted transport:
+
+```bash
+python scripts/kems_production_closeout.py \
+  --preflight-evidence /secure/kems/production-preflight.json \
+  --manifest /secure/kems/reachbridge-manifest.json \
+  --receipt /secure/kems/receipts/dispatch.json \
+  --output /secure/kems/receipts/production-closeout.json
+```
+
+The closeout emits only redacted metadata and exits non-zero when any gate is
+missing, failed, mismatched, or backed by a non-HTTP receipt.
+
     ## Key Surfaces
 
     - `src/runtime/matrix.py`
