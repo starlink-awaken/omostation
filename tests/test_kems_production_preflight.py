@@ -104,3 +104,30 @@ def test_preflight_rejects_raw_evaluation_fields(tmp_path, monkeypatch):
         item["id"] == "evaluation_manifest" and not item["ok"]
         for item in result["checks"]
     )
+
+
+def test_preflight_blocks_on_invalid_omo_yaml(tmp_path, monkeypatch):
+    monkeypatch.setenv(
+        "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
+    )
+    monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
+    task_dir = tmp_path / "omo" / "tasks" / "active"
+    task_dir.mkdir(parents=True)
+    (task_dir / "KEMS-001.yaml").write_text(
+        "status: [approved\napproval_state: approved\n",
+        encoding="utf-8",
+    )
+    result = run_preflight(
+        docs_root=_source_tree(tmp_path),
+        evaluation_manifest=_evaluation_manifest(tmp_path),
+        omo_root=tmp_path / "omo",
+        task_id="KEMS-001",
+        production=True,
+    )
+    assert result["status"] == "blocked"
+    assert any(
+        item["id"] == "omo_approval"
+        and not item["ok"]
+        and "invalid OMO task metadata" in item["detail"]
+        for item in result["checks"]
+    )

@@ -143,9 +143,13 @@ def _omo_check(omo_root: Path, task_id: str | None) -> Check:
         return Check("omo_approval", False, "approved OMO task is unavailable")
     try:
         import yaml
-
+    except ImportError as exc:
+        return Check(
+            "omo_approval", False, f"invalid OMO task metadata: {type(exc).__name__}"
+        )
+    try:
         payload = yaml.safe_load(task_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, ValueError) as exc:
+    except (OSError, UnicodeError, ValueError, yaml.YAMLError) as exc:
         return Check(
             "omo_approval", False, f"invalid OMO task metadata: {type(exc).__name__}"
         )
