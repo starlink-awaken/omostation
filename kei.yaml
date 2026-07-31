@@ -1,0 +1,50 @@
+version: "1.0"
+permissions:
+  network:
+    allow:
+      - "localhost"
+      - "127.0.0.1"
+      # Allow some external APIs if needed
+      # - "api.github.com"
+  filesystem:
+    allow_read:
+      - "/"
+    # allow_write 同时控制创建/删除/重命名等 FS mutation。
+    # KEI sandbox 会拦截 os.remove/os.unlink/os.mkdir/os.rmdir/os.rename，
+    # 仅当目标路径（rename 时源与目标）全部落在 allow_write 前缀下才放行。
+    allow_write:
+      - "/dev"
+      - "/tmp"
+      - "/var/folders"
+      - "/private/var/folders"
+      - "${HOME}/Workspace"
+      - "${HOME}/.runtime"
+      - "${HOME}/runtime"
+      - "${HOME}/.hermes"
+      - "${HOME}/.local"
+      - "${HOME}/Library/Mobile Documents"
+  execution:
+    allow_subprocess: true
+
+roles:
+  generator:
+    permissions:
+      network:
+        allow:
+          - "localhost"
+          - "127.0.0.1"
+      execution:
+        allow_subprocess: true  # Generator can execute tools and compile code
+  evaluator:
+    permissions:
+      network:
+        allow:
+          - "*"  # Evaluator might need to reach external truth/APIs
+      filesystem:
+        allow_write:
+          - "/tmp"
+          - "/var/folders"
+          - "/private/var/folders"
+          - "${HOME}/Workspace/.omo"  # Evaluator writes judgments to OMO
+      execution:
+        allow_subprocess: false # Evaluator strictly evaluates, no side-effect execution

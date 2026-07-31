@@ -1,0 +1,85 @@
+# =============================================================================
+# L0 Protocol Weave — eCOS Meta-Model Ontology (SSOT)
+# Defines the types, relationships, and enumerations of all entities in eCOS v6.
+# =============================================================================
+version: 1.0.0
+updated: "2026-06-05"
+
+# ── 1. Meta-Model Ontology ──────────────────────────────────────────────────
+ecos:Entity:
+  - ecos:Agent:
+      description: "运行时实例 (Runtime Instance)"
+      examples: ["Hermes", "Kairon", "gbrain"]
+  - ecos:Task:
+      description: "工作单元 (Task Object)"
+      examples: ["OMO Task", "ACP Task"]
+  - ecos:Context:
+      description: "上下文容器 (Context Container)"
+      examples: ["Session", "Workspace", "Project"]
+  - ecos:Protocol:
+      description: "通信协议 (Communication Protocol)"
+      examples: ["MCP", "HTTP", "Event", "CLI"]
+  - ecos:Capability:
+      description: "能力定义 (Capability Definition)"
+      examples: ["Skill", "Tool", "Pipeline"]
+  - ecos:Governance:
+      description: "治理规则 (Governance Rule)"
+      examples: ["Constraint", "Policy", "Constitution"]
+  - ecos:Extension:
+      description: "KEI 扩展 (Kernel Extension)"
+      examples: ["Plugin", "Filter", "Observer"]
+  - ecos:Value:
+      description: "价值对象 (Value Object)"
+      examples: ["Tier", "Consensus", "Reference"]
+
+ecos:Relation:
+  - ecos:Implements: "A 实现 B 接口"
+  - ecos:Extends: "A 扩展 B 能力"
+  - ecos:DependsOn: "A 依赖 B"
+  - ecos:MapsTo: "A 映射到 B (协议转换)"
+  - ecos:Governs: "A 治理 B"
+  - ecos:CommunicatesVia: "A 通过协议 P 通信"
+
+# ── 2. Unified Enumerations (Previously Implicit) ───────────────────────────
+enumerations:
+  # Task Risk Levels (used by OMO Governance)
+  TaskRiskLevel:
+    - value: "L0"
+      description: "Safe, readonly or fully sandboxed execution"
+    - value: "L1"
+      description: "Low risk, minimal state changes"
+    - value: "L2"
+      description: "Medium risk, significant local state changes"
+    - value: "L3"
+      description: "High risk, changes to production or global state"
+    - value: "L4"
+      description: "Critical risk, foundational architecture changes"
+
+  # Task Execution Levels (used by OMO Worker)
+  TaskExecutionLevel:
+    - value: "E0"
+      description: "Fully automated, no approval required"
+    - value: "E1"
+      description: "Automated execution, asynchronous human review"
+    - value: "E2"
+      description: "Synchronous human approval required before critical steps"
+
+  # Protocol Transport Modes (used by Entry Bridge)
+  ProtocolTransport:
+    - value: "stdio"
+      description: "Standard IO, typical for local MCP/CLI"
+    - value: "http"
+      description: "RESTful HTTP or SSE"
+    - value: "websocket"
+      description: "Bi-directional WebSocket"
+    - value: "file"
+      description: "File-based sync or drop-folder"
+
+  # Extension Lifecycle States (used by KEI)
+  ExtensionLifecycle:
+    - "REGISTERED"
+    - "LOADED"
+    - "ACTIVE"
+    - "SUSPENDED"
+    - "UNLOADED"
+    - "FAILED"

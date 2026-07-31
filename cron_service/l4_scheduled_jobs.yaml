@@ -1,0 +1,240 @@
+# =============================================================================
+# L4 Scheduled Skills — Cron Job Definitions for runtime cron-service
+# =============================================================================
+# 来源: ecos/src/ecos/ssot/mof/m1/skill/SKILL-SCHEDULED-*.yaml (30 skills)
+# layer: L4 · 用途: cockpit CLI 定时触发各域维护任务
+# 执行器: cockpit workspace context → 读取对应 skill YAML → 执行指令
+# =============================================================================
+
+jobs:
+
+  # ── 每日 ─────────────────────────────────────────────────────────────
+  - name: "kos-daily-ontology-sync"
+    schedule: "0 4 * * *"
+    script: "cockpit workspace skill run kos-daily-ontology-sync"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  - name: "kos-kuabu"
+    schedule: "0 4 * * *"
+    script: "cockpit workspace skill run kos-kuabu"
+    deliver: "local"
+    timeout: 600
+    enabled: true
+
+  - name: "metaos-daily-health"
+    schedule: "0 6 * * *"
+    script: "cockpit workspace skill run metaos-daily-health"
+    deliver: "local"
+    timeout: 120
+    enabled: true
+
+  - name: "cross-domain-sync"
+    schedule: "0 */6 * * *"
+    script: "cockpit workspace skill run cross-domain-sync"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  - name: "forge-daily-maintenance"
+    schedule: "0 5 * * *"
+    script: "cockpit workspace skill run forge-daily-maintenance"
+    deliver: "local"
+    timeout: 180
+    enabled: true
+
+  - name: "ai-toolbox-health-check"
+    schedule: "0 8 * * *"
+    script: "cockpit workspace skill run ai-toolbox-health-check"
+    deliver: "local"
+    timeout: 60
+    enabled: true
+
+  - name: "timeline-daily-sync"
+    schedule: "0 3 * * *"
+    script: "cockpit workspace skill run timeline-daily-sync"
+    deliver: "local"
+    timeout: 120
+    enabled: true
+
+  - name: "vault-index-sync"
+    schedule: "0 2 * * *"
+    script: "cockpit workspace skill run vault-index-sync"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  - name: "gzh-daily-fetch"
+    schedule: "0 10 * * *"
+    script: "cockpit workspace skill run gzh-daily-fetch"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  - name: "pingtai-kanban"
+    schedule: "0 7 * * *"
+    script: "cockpit workspace skill run pingtai-kanban"
+    deliver: "local"
+    timeout: 60
+    enabled: true
+
+  # ── 每周一 ───────────────────────────────────────────────────────────
+  - name: "kos-weekly-health-check"
+    schedule: "0 9 * * 1"
+    script: "cockpit workspace skill run kos-weekly-health-check"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  - name: "forge-weekly-report"
+    schedule: "0 7 * * 1"
+    script: "cockpit workspace skill run forge-weekly-report"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  - name: "monday-vault-comprehensive"
+    schedule: "0 8 * * 1"
+    script: "cockpit workspace skill run monday-vault-comprehensive"
+    deliver: "local"
+    timeout: 600
+    enabled: true
+
+  - name: "refresh-knowledge-index"
+    schedule: "0 10 * * 1"
+    script: "cockpit workspace skill run refresh-knowledge-index"
+    deliver: "local"
+    timeout: 180
+    enabled: true
+
+  - name: "kronos-rss-weekly"
+    schedule: "4 11 * * 1"
+    script: "cockpit workspace skill run kronos-rss-weekly"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  - name: "family-weekly-maintenance"
+    schedule: "0 8 * * 1"
+    script: "cockpit workspace skill run family-weekly-maintenance"
+    deliver: "local"
+    timeout: 120
+    enabled: true
+
+  - name: "skills-weekly-review"
+    schedule: "0 14 * * 1"
+    script: "cockpit workspace skill run skills-weekly-review"
+    deliver: "local"
+    timeout: 180
+    enabled: true
+
+  # ── 每周一/三/五 ───────────────────────────────────────────────────
+  - name: "policy-weekly-brief"
+    schedule: "0 9 * * 1,3,5"
+    script: "cockpit workspace skill run policy-weekly-brief"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  # ── 每周三 ──────────────────────────────────────────────────────────
+  - name: "wednesday-maintenance"
+    schedule: "0 9 * * 3"
+    script: "cockpit workspace skill run wednesday-maintenance"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  # ── 每周五 ──────────────────────────────────────────────────────────
+  - name: "friday-check"
+    schedule: "0 9 * * 5"
+    script: "cockpit workspace skill run friday-check"
+    deliver: "local"
+    timeout: 120
+    enabled: true
+
+  - name: "sanyi-friday-report"
+    schedule: "0 15 * * 5"
+    script: "cockpit workspace skill run sanyi-friday-report"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  # ── 每周一10:00 ────────────────────────────────────────────────────
+  - name: "eureka-weekly-insight"
+    schedule: "0 10 * * 1"
+    script: "cockpit workspace skill run eureka-weekly-insight"
+    deliver: "local"
+    timeout: 600
+    enabled: true
+
+  # ── 每周 (内容采集) ─────────────────────────────────────────────────
+  - name: "neirong-caiji"
+    schedule: "0 12 * * 1"
+    script: "cockpit workspace skill run neirong-caiji"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  # ── 半月 (1日/15日) ────────────────────────────────────────────────
+  - name: "emr-biweekly-report"
+    schedule: "0 9 1,15 * *"
+    script: "cockpit workspace skill run emr-biweekly-report"
+    deliver: "local"
+    timeout: 120
+    enabled: true
+
+  # ── 每月18日 ────────────────────────────────────────────────────────
+  - name: "emr-monthly-report"
+    schedule: "0 9 18 * *"
+    script: "cockpit workspace skill run emr-monthly-report"
+    deliver: "local"
+    timeout: 120
+    enabled: true
+
+  # ── 季度 ────────────────────────────────────────────────────────────
+  - name: "metaos-quarterly-review"
+    schedule: "0 9 1 1,4,7,10 *"
+    script: "cockpit workspace skill run metaos-quarterly-review"
+    deliver: "local"
+    timeout: 600
+    enabled: true
+
+  # ── vault 维护 ──────────────────────────────────────────────────────
+  - name: "vault-weekly-check"
+    schedule: "0 8 * * 1"
+    script: "cockpit workspace skill run vault-weekly-check"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  - name: "vault-method-digest"
+    schedule: "0 10 * * 1"
+    script: "cockpit workspace skill run vault-method-digest"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  # ── 平台看板 ────────────────────────────────────────────────────────
+  - name: "update-platforms-dashboard"
+    schedule: "0 7 * * *"
+    script: "cockpit workspace skill run update-platforms-dashboard"
+    deliver: "local"
+    timeout: 60
+    enabled: true
+
+  # ── 政策简报 ────────────────────────────────────────────────────────
+  - name: "zhengce-jianbao"
+    schedule: "0 9 * * 1,3,5"
+    script: "cockpit workspace skill run zhengce-jianbao"
+    deliver: "local"
+    timeout: 300
+    enabled: true
+
+  # ── AI-ToolBox 周报 ─────────────────────────────────────────────────
+  - name: "ai-toolbox-weekly-insight"
+    schedule: "0 10 * * 1"
+    script: "cockpit workspace skill run ai-toolbox-weekly-insight"
+    deliver: "local"
+    timeout: 300
+    enabled: true

@@ -1,0 +1,33 @@
+name: audit-baseline-monthly
+
+# R52 P0: runtime executor AppendOnlyLog audit-rollout
+# 目标: 跑 omo logs audit 检查 executor execution_log.jsonl 漂移
+# 触发: 每月 1 号 00:30 UTC
+
+on:
+  schedule:
+    - cron: "30 0 1 * *"
+  workflow_dispatch:
+
+jobs:
+  audit-baseline:
+    name: audit-baseline (executor AppendOnlyLog)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.13"
+
+      # R51 P0: runtime executor now uses AppendOnlyLog (io.py + io_schemas.py)
+      # Audit execution_log.jsonl for schema drift
+      - name: Audit executor execution_log.jsonl
+        run: |
+          uv sync --quiet
+
+          # R52 P0: audit 轻量脚本，验证 JSON + Z-suffix + 必填字段
+          # CI checks out the runtime repo directly (not as workspace subdir)
+          uv run python scripts/audit_execution_log.py \
+            --path ~/.runtime/execution_log.jsonl || true
