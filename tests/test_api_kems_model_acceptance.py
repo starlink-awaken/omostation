@@ -25,11 +25,20 @@ def test_model_acceptance_persists_and_can_be_read(monkeypatch, tmp_path) -> Non
 
     response = api.post(
         "/api/kems/models/candidates/candidate-v1/evaluation",
-        json={"run_id": "model-run-1", "cases": cases(), "min_cases": 2},
+        json={
+            "run_id": "model-run-1",
+            "cases": cases(),
+            "min_cases": 2,
+            "dataset_id": "kems-real",
+            "dataset_version": "v1",
+            "evaluation_manifest_sha256": "a" * 64,
+            "dataset_sample_count": 2,
+        },
     )
     assert response.status_code == 200
     assert response.json()["evaluation"]["status"] == "shadow_pass"
     assert response.json()["evaluation"]["promotion"] == "blocked_until_omo_approval"
+    assert response.json()["evaluation"]["dataset_id"] == "kems-real"
 
     response = api.get("/api/kems/models/evaluations/model-run-1")
     assert response.status_code == 200
@@ -40,6 +49,23 @@ def test_model_acceptance_rejects_raw_content(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("KEMS_MODEL_ACCEPTANCE_DB", str(tmp_path / "model-acceptance.sqlite"))
     response = client().post(
         "/api/kems/models/candidates/candidate-v1/evaluation",
-        json={"run_id": "model-run-raw", "cases": cases() + [{"text": "private"}]},
+        json={
+            "run_id": "model-run-raw",
+            "cases": cases() + [{"text": "private"}],
+            "dataset_id": "kems-real",
+            "dataset_version": "v1",
+            "evaluation_manifest_sha256": "a" * 64,
+            "dataset_sample_count": 2,
+        },
     )
     assert response.status_code == 422
+
+
+def test_model_acceptance_requires_manifest_binding(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("KEMS_MODEL_ACCEPTANCE_DB", str(tmp_path / "model-acceptance.sqlite"))
+    response = client().post(
+        "/api/kems/models/candidates/candidate-v1/evaluation",
+        json={"run_id": "model-run-unbound", "cases": cases()},
+    )
+    assert response.status_code == 422
+    assert "dataset_id" in response.json()["detail"]

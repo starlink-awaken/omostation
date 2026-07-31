@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -549,20 +550,46 @@ async def evaluate_kems_candidate_model(candidate_model_id: str, request: Reques
     if not isinstance(body, dict):
         raise HTTPException(status_code=422, detail="model evaluation request must be an object")
     _reject_private_fields(body)
-    required = ("run_id", "cases")
+    required = (
+        "run_id",
+        "cases",
+        "dataset_id",
+        "dataset_version",
+        "evaluation_manifest_sha256",
+        "dataset_sample_count",
+    )
     missing = [field for field in required if not body.get(field)]
     if missing:
         raise HTTPException(status_code=422, detail=f"missing model evaluation fields: {', '.join(missing)}")
     if not isinstance(body["cases"], list):
         raise HTTPException(status_code=422, detail="cases must be a list")
+    if not all(isinstance(body[field], str) and body[field].strip() for field in ("dataset_id", "dataset_version")):
+        raise HTTPException(status_code=422, detail="dataset identity is required")
+    if not isinstance(body["evaluation_manifest_sha256"], str) or not re.fullmatch(
+        r"[0-9a-f]{64}", body["evaluation_manifest_sha256"]
+    ):
+        raise HTTPException(status_code=422, detail="evaluation_manifest_sha256 must be a SHA-256")
+    if (
+        isinstance(body["dataset_sample_count"], bool)
+        or not isinstance(body["dataset_sample_count"], int)
+        or body["dataset_sample_count"] <= 0
+    ):
+        raise HTTPException(status_code=422, detail="dataset_sample_count must be positive")
     try:
         store, input_error, evaluator = _model_acceptance_symbols()
+    except HTTPException:
+        raise
+    try:
         evaluation = evaluator(
             body["cases"],
             candidate_model_id=candidate_model_id,
             baseline_model_id=str(body.get("baseline_model_id") or "naive-last-v1"),
             min_cases=int(body.get("min_cases", 1)),
             min_relative_improvement=float(body.get("min_relative_improvement", 0.0)),
+            dataset_id=body["dataset_id"].strip(),
+            dataset_version=body["dataset_version"].strip(),
+            evaluation_manifest_sha256=body["evaluation_manifest_sha256"],
+            dataset_sample_count=body["dataset_sample_count"],
         )
         store.record(str(body["run_id"]), evaluation)
     except input_error as exc:
