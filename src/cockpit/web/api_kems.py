@@ -53,6 +53,15 @@ def _forecast_symbols():
     return ForecastStore(path), build_moving_average_shadow_forecast, evaluate_shadow_forecast
 
 
+def _evaluation_symbols():
+    try:
+        from kos.kems import EvaluationManifest, EvaluationSample, EvaluationStore, evaluate_field_mapping
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="KOS evaluation store is unavailable") from exc
+    path = Path(os.environ.get("KEMS_EVALUATION_DB", str(Path.home() / ".kems" / "evaluation.sqlite")))
+    return EvaluationManifest, EvaluationSample, EvaluationStore(path), evaluate_field_mapping
+
+
 def _reject_private_fields(value: object) -> None:
     if isinstance(value, dict):
         leaked = _PRIVATE_FIELDS.intersection(value)
@@ -404,3 +413,112 @@ async def evaluate_kems_shadow_forecast(forecast_id: str, request: Request) -> d
     except (OSError, TypeError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"forecast_id": forecast_id, "persisted": persisted, "evaluation": evaluation.to_dict()}
+
+
+@router.post("/api/kems/evaluations/manifests")
+async def register_kems_evaluation_manifest(request: Request) -> dict[str, Any]:
+    """Register an adjudicated, redaction-verified evaluation manifest."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="evaluation manifest must be an object")
+    _reject_private_fields(body)
+    required = ("dataset_id", "dataset_version", "samples")
+    missing = [field for field in required if not body.get(field)]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing evaluation fields: {', '.join(missing)}")
+    if body.get("redaction_status", "verified") != "verified":
+        raise HTTPException(status_code=422, detail="evaluation manifest must be redaction-verified")
+    raw_samples = body["samples"]
+    if not isinstance(raw_samples, list) or not raw_samples:
+        raise HTTPException(status_code=422, detail="samples must be a non-empty list")
+    try:
+        manifest_type, sample_type, store, _ = _evaluation_symbols()
+        samples = []
+        for index, sample in enumerate(raw_samples, 1):
+            if not isinstance(sample, dict):
+                raise ValueError(f"sample {index} must be an object")
+            if sample.get("annotation_status") != "adjudicated":
+                raise ValueError(f"sample {index} must be adjudicated")
+            labels = sample.get("labels")
+            if not isinstance(labels, dict) or not labels:
+                raise ValueError(f"sample {index} labels must be a non-empty object")
+            samples.append(
+                sample_type(
+                    sample_id=str(sample.get("sample_id", "")),
+                    source_sha256=str(sample.get("source_sha256", "")),
+                    source_ref=str(sample.get("source_ref", "")),
+                    scenario_id=str(sample.get("scenario_id", "")),
+                    split=str(sample.get("split", "test")),
+                    annotation_status="adjudicated",
+                    labels=labels,
+                    annotation_version=str(sample.get("annotation_version", "")),
+                )
+            )
+        manifest = manifest_type(
+            schema_version="kems.evaluation-manifest.v1",
+            dataset_id=str(body["dataset_id"]),
+            dataset_version=str(body["dataset_version"]),
+            redaction_status="verified",
+            samples=tuple(samples),
+        )
+        persisted = store.register_manifest(manifest)
+    except HTTPException:
+        raise
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=503, detail="evaluation persistence is unavailable") from exc
+    return {
+        "dataset_id": manifest.dataset_id,
+        "dataset_version": manifest.dataset_version,
+        "sample_count": len(manifest.samples),
+        "persisted": persisted,
+        "redaction_status": manifest.redaction_status,
+    }
+
+
+@router.post("/api/kems/evaluations/runs/{run_id}")
+async def record_kems_evaluation_run(run_id: str, request: Request) -> dict[str, Any]:
+    """Record an exact-match baseline run against a registered dataset."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="evaluation run must be an object")
+    _reject_private_fields(body)
+    required = ("dataset_id", "dataset_version", "model_id", "expected", "actual")
+    missing = [field for field in required if field not in body or body[field] in (None, "")]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing evaluation run fields: {', '.join(missing)}")
+    if not isinstance(body["expected"], dict) or not isinstance(body["actual"], dict):
+        raise HTTPException(status_code=422, detail="expected and actual must be objects")
+    try:
+        _, _, store, evaluator = _evaluation_symbols()
+        dataset_id = str(body["dataset_id"])
+        dataset_version = str(body["dataset_version"])
+        if store.sample_count(dataset_id, dataset_version) == 0:
+            raise KeyError(f"unknown dataset: {dataset_id}@{dataset_version}")
+        evaluation = evaluator(
+            dataset_id=dataset_id,
+            dataset_version=dataset_version,
+            model_id=str(body["model_id"]),
+            expected=body["expected"],
+            actual=body["actual"],
+        )
+        store.record_run(run_id, evaluation)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=503, detail="evaluation persistence is unavailable") from exc
+    return {"run_id": run_id, "persisted": True, "evaluation": evaluation.to_dict()}
+
+
+@router.get("/api/kems/evaluations/runs/{run_id}")
+async def get_kems_evaluation_run(run_id: str) -> dict[str, Any]:
+    try:
+        result = _evaluation_symbols()[2].get_run(run_id)
+    except OSError as exc:
+        raise HTTPException(status_code=503, detail="evaluation persistence is unavailable") from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail="evaluation run not found")
+    return result
