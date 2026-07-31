@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from . import ReachGateway, ReachPayload, ScenarioLevel, dispatch_http
 
@@ -64,7 +64,7 @@ def prepare_manifest(manifest: dict[str, object]) -> dict[str, object]:
     digest = hashlib.sha256(_canonical_manifest(manifest)).hexdigest()
     prepared["manifest_sha256"] = digest
     prepared["dispatch_id"] = f"reach-{manifest['run_id']}-{digest[:16]}"
-    prepared.setdefault("created_at", datetime.now(UTC).isoformat())
+    prepared.setdefault("created_at", datetime.now(timezone.utc).isoformat())  # noqa: UP017
     return prepared
 
 
