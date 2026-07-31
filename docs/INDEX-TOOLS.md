@@ -7,7 +7,7 @@
 > - validation: 工具数与实际扫描结果一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-15T06:45:52.252011
+> - generated_at: 2026-07-31T06:52:10.791378+00:00
 
 ---
 
@@ -52,7 +52,7 @@
 | ssot-guardian.py | task_count + workspace_hygiene 守护 | `python3 bin/ssot/ssot-guardian.py` |
 | ssot-writeback.py | SSOT 回写 | `python3 bin/ssot/ssot-writeback.py` |
 | check-boundary.py | 项目边界校验 | `python3 bin/ssot/check-boundary.py` |
-| check-cross-refs.py | 交叉引用一致性 | `python3 bin/ssot/check-cross-refs.py` |
+| check-cross-refs.py | 交叉引用一致性 | `python3 bin/ssot/check-cross-refs.py` (tracked; `--scope workspace` 做全量审计) |
 | check_health_ssot.py | health SSOT 一致 | `python3 bin/ssot/check_health_ssot.py` |
 | doc-ssot-lint.py | 文档 SSOT 门禁 (CI) | `python3 bin/ssot/doc-ssot-lint.py` |
 | gen-project-registry.py | registry 派生 | `python3 bin/ssot/gen-project-registry.py` |

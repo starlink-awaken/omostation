@@ -3,7 +3,7 @@
 > **Generated**: `2026-07-31T03:08:05.202378Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `91/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
-> ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/planned/decision-checklist-13-items.md`.
+> ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
 
 ### ⚠️ 软门禁预警 (Soft Gate Warnings · 不阻断)
 - **[X3-SOFT-GATE/soft]** 工作交付月度软门禁: 2026-07 交付 4 < 阈值 8（环比 0 → 4, Δ+4） → [`.omo/_truth/registry/x3-delivery-soft-gate.yaml`](file:///Users/xiamingxing/Workspace/.omo/_truth/registry/x3-delivery-soft-gate.yaml)
