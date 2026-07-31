@@ -50,6 +50,7 @@ name = "aetherforge-gateway"
 version = "1.0.1"
 source = { editable = "../aetherforge/packages/gateway" }
 dependencies = [
+    { name = "aiohttp" },
     { name = "fastmcp" },
     { name = "httpx" },
     { name = "pydantic" },
@@ -59,6 +60,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp", specifier = ">=3.10.0" },
     { name = "click", marker = "extra == 'legacy'", specifier = ">=8.1.0" },
     { name = "fastmcp", specifier = ">=3.4.2" },
     { name = "gitpython", marker = "extra == 'legacy'", specifier = ">=3.1.0" },
