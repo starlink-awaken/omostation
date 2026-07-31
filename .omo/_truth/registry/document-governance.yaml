@@ -50,6 +50,7 @@ surfaces:
       - AGENTS.md
       - CLAUDE.md
       - README.md
+      - GOVERNANCE.md
       - ARCHITECTURE.md
       - LAYER-INDEX.md
       - docs/SYSTEM-INDEX.md

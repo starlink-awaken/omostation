@@ -87,6 +87,7 @@ cd projects/gbrain && bun test
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stable architecture contracts |
 | [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
 | [`CLAUDE.md`](CLAUDE.md) | AI session context loader |
+| [`GOVERNANCE.md`](GOVERNANCE.md) | Governance source map and delivery entry points |
 | [`docs/PANORAMA.md`](docs/PANORAMA.md) | BOS routing and system panorama |
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | Project metadata SSOT |
 
