@@ -25,6 +25,33 @@ The endpoint and token are injected by the credential manager at process
 startup. They must not be written to this directory, a manifest, a receipt,
 the OMO task, a log, or a screenshot.
 
+## Current Checkpoint
+
+As of 2026-08-01, the engineering path is integrated and fail-closed, but the
+release bundle is not yet production-ready:
+
+- The real redacted queue contains 5 samples in
+  `/Users/xiamingxing/.kems/adjudication.sqlite`; all 5 are `pending`, with no
+  independent annotations and no adjudication decision.
+- Cockpit reads that persistent store successfully:
+  `GET /api/kems/adjudication/queue?limit=100` returns HTTP 200 and `count=5`.
+- Manifest creation is correctly blocked:
+  `POST /api/kems/adjudication/manifest` returns HTTP 422 because no sample is
+  adjudicated. Do not create a fixture manifest to bypass this gate.
+- The latest production preflight evidence is
+  `/Users/xiamingxing/Documents/@公共/_runtime/evidence/production-preflight-latest-20260801.json`.
+  Source inventory passes with 5 sources; ReachBridge endpoint/token,
+  evaluation manifest, model acceptance report, and approved OMO task are
+  still missing.
+
+The next executable sequence is: two named annotators independently claim and
+submit all 5 records, a third named adjudicator resolves every conflict, the
+manifest builder creates the immutable evaluation manifest, the evaluator
+produces a manifest-bound shadow report, and only then do the credential
+administrator and OMO approver supply the remaining production inputs. The
+release reviewer reruns preflight before any dispatch. Until that sequence is
+complete, the only valid state is `integration pre-production / blocked`.
+
 ## Ownership And Deliverables
 
 | Owner | Must provide | Machine acceptance |
