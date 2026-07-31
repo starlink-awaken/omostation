@@ -16,6 +16,10 @@ note: >
   本文是战略叙事层文档，不拥有运行时事实。所有健康分、Phase、服务数、在线率等
   数字均为「截至 2026-07-15 快照」，权威读源为 .omo/state/system.yaml 与
   docs/project-registry.yaml。落地时以 SSOT 为准，不得反向手抄回运行态。
+lifecycle: contract
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # eCOS v6 · 织星三年综合全景战略规划（2026H2 – 2029）

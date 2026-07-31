@@ -8,6 +8,12 @@ triggers:
   - "FAILED=1 exit 1"
   - "check pass but CI fail"
   - "本地全 pass CI fail"
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # CI Silent Fail Debug Chain

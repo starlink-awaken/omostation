@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # Workspace 工程优化 Roadmap (2026 H2)
 
 > Human-readable navigation for the systemic engineering optimization plan.

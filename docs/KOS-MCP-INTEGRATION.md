@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: kems-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # KOS MCP Integration Guide — 知识操作系统硬件外挂指南
 
 > **最后更新**: 2026-07-03

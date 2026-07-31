@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # GaC Quickstart — 治理即代码使用指南
 
 > 7 机制全闭环 + 115 规则 + healthcheck 12 项全绿. 本文档是"怎么用 GaC".

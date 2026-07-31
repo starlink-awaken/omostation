@@ -1,3 +1,11 @@
+---
+status: planned
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # Track A/B · 全面交接总索引（durable，放 outputs 免被并发 clean）
 
 > 生成: 2026-07-13/14 · 这是单一权威交接件。仓库内 git 不可靠（并发 agent starlink-awaken 会改写 HEAD、删分支、clean 未跟踪文件），故权威副本放 outputs 文件夹。

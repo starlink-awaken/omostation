@@ -1,6 +1,6 @@
 ---
 status: draft
-lifecycle: sop
+lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-07-07
 related:
@@ -8,6 +8,8 @@ related:
   - ../../../.omo/_knowledge/audits/2026-07-02-system-comprehensive-audit.md
   - ../../../.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md
   - CR-X1-GOD-MODULE-LIMIT (governance-checks)
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # SOP: God-Module 渐进拆分

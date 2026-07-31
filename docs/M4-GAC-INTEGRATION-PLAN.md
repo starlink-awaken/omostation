@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # M4 → GaC 全面接入方案
 
 > **配套 ADR 待定** (Round 6, 可择 ADR-0152 ~ 0154)

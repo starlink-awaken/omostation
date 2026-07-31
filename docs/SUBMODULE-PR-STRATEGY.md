@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # 子模块 PR 策略 — Phase 2a-4 设计
 
 > 状态: 📋 设计完成(方案 A' 推荐) · 2026-06-30 · 关联: [`docs/AGENT-ISOLATION-ROLLOUT.md`](AGENT-ISOLATION-ROLLOUT.md) §4 Phase 2

@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # omostation / eCOS v6 项目全景手册
 
 > 本文是项目级总览与使用入口。稳定架构看 [`ARCHITECTURE.md`](../ARCHITECTURE.md)，项目元数据看 [`project-registry.yaml`](project-registry.yaml)，运行态看 [`.omo/state/system.yaml`](../.omo/state/system.yaml)，端口看 [`protocols/port-registry.yaml`](../protocols/port-registry.yaml)。本文不复制这些文件中的易变数量、端口和健康分数。

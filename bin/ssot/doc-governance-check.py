@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import hashlib
 import json
 import subprocess
 import sys
@@ -255,10 +256,196 @@ def _warning_bucket(
     return f"{finding['rule']}:{surface_id}"
 
 
+def warning_signature(finding: dict[str, Any]) -> str:
+    """Return a stable signature for one warning at one document location."""
+    rule = str(finding.get("rule", ""))
+    path = str(finding.get("path", ""))
+    evidence = str(finding.get("evidence", ""))
+    if rule == "stale_review":
+        evidence = "stale_review"
+    payload = json.dumps(
+        [rule, path, evidence],
+        ensure_ascii=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _warning_record(finding: dict[str, Any]) -> dict[str, str]:
+    return {
+        "signature": warning_signature(finding),
+        "path": str(finding.get("path", "")),
+        "rule": str(finding.get("rule", "")),
+        "evidence": str(finding.get("evidence", "")),
+    }
+
+
+def _load_signature_baseline(
+    root: Path,
+    config: dict[str, Any],
+) -> tuple[dict[str, dict[str, str]], list[dict[str, Any]]]:
+    """Load and validate the explicit per-file warning signature registry."""
+    baseline_file = config.get("baseline_file")
+    if not baseline_file:
+        return {}, [
+            {
+                "evidence": "warning_exceptions.baseline_file",
+                "message": "signature warning baselines require baseline_file",
+            }
+        ]
+    path = root / str(baseline_file)
+    if not path.is_file():
+        return {}, [
+            {
+                "evidence": str(baseline_file),
+                "message": "signature warning baseline file does not exist",
+            }
+        ]
+    try:
+        data = _load_yaml_documents(path)
+    except (OSError, RuntimeError, TypeError, ValueError) as exc:
+        return {}, [
+            {
+                "evidence": str(baseline_file),
+                "message": f"unable to load signature warning baseline: {exc}",
+            }
+        ]
+    entries = data.get("signatures")
+    if not isinstance(entries, list):
+        return {}, [
+            {
+                "evidence": f"{baseline_file}.signatures",
+                "message": "signature warning baseline must define a list",
+            }
+        ]
+    records: dict[str, dict[str, str]] = {}
+    errors: list[dict[str, Any]] = []
+    for index, entry in enumerate(entries, start=1):
+        if not isinstance(entry, dict):
+            errors.append(
+                {
+                    "evidence": f"{baseline_file}.signatures[{index}]",
+                    "message": "signature baseline entries must be mappings",
+                }
+            )
+            continue
+        record = {
+            "signature": str(entry.get("signature", "")),
+            "path": str(entry.get("path", "")),
+            "rule": str(entry.get("rule", "")),
+            "evidence": str(entry.get("evidence", "")),
+        }
+        if not all(record.values()):
+            errors.append(
+                {
+                    "evidence": f"{baseline_file}.signatures[{index}]",
+                    "message": "signature baseline entries require signature, path, rule, and evidence",
+                }
+            )
+            continue
+        expected_signature = warning_signature(record)
+        if record["signature"] != expected_signature:
+            errors.append(
+                {
+                    "evidence": record["signature"],
+                    "message": "signature baseline entry does not match its path/rule/evidence",
+                }
+            )
+            continue
+        if record["signature"] in records:
+            errors.append(
+                {
+                    "evidence": record["signature"],
+                    "message": "signature warning baseline entries must be unique",
+                }
+            )
+            continue
+        records[record["signature"]] = record
+    return records, errors
+
+
+def _evaluate_signature_baseline(
+    findings: list[dict[str, Any]],
+    root: Path,
+    config: dict[str, Any],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    expected, errors = _load_signature_baseline(root, config)
+    observed_records = {
+        record["signature"]: record
+        for finding in findings
+        if finding["severity"] == "warning"
+        for record in [_warning_record(finding)]
+    }
+    observed = set(observed_records)
+    expected_signatures = set(expected)
+    return (
+        {
+            "algorithm": str(config.get("signature_algorithm", "sha256")),
+            "baseline_file": str(config.get("baseline_file", "")),
+            "registered": len(expected),
+            "observed": len(observed_records),
+            "unbaselined": [
+                observed_records[signature]
+                for signature in sorted(observed - expected_signatures)
+            ],
+            "retired": [
+                expected[signature]
+                for signature in sorted(expected_signatures - observed)
+            ],
+        },
+        errors,
+    )
+
+
+def evaluate_warning_burndown(
+    registry: dict[str, Any],
+    warning_count: int,
+    today: date,
+) -> dict[str, Any]:
+    """Evaluate the explicit monthly warning-debt checkpoints."""
+    config = registry.get("warning_burndown")
+    result: dict[str, Any] = {
+        "configured": isinstance(config, dict),
+        "warning_count": warning_count,
+        "current_checkpoint": None,
+        "expected_max_findings": None,
+        "on_track": True,
+    }
+    if not isinstance(config, dict):
+        return result
+    checkpoints = config.get("checkpoints", [])
+    if not isinstance(checkpoints, list):
+        result["on_track"] = False
+        result["error"] = "warning_burndown.checkpoints must be a list"
+        return result
+    parsed: list[tuple[date, int]] = []
+    for checkpoint in checkpoints:
+        if not isinstance(checkpoint, dict):
+            result["on_track"] = False
+            result["error"] = "warning_burndown checkpoints must be mappings"
+            return result
+        try:
+            checkpoint_date = date.fromisoformat(str(checkpoint["date"]))
+            max_findings = int(checkpoint["max_findings"])
+        except (KeyError, TypeError, ValueError):
+            result["on_track"] = False
+            result["error"] = "warning_burndown checkpoints require date and max_findings"
+            return result
+        parsed.append((checkpoint_date, max_findings))
+    due = [(checkpoint_date, max_findings) for checkpoint_date, max_findings in parsed if checkpoint_date <= today]
+    if due:
+        checkpoint_date, max_findings = due[-1]
+        result["current_checkpoint"] = checkpoint_date.isoformat()
+        result["expected_max_findings"] = max_findings
+        result["on_track"] = warning_count <= max_findings
+    return result
+
+
 def evaluate_warning_baseline(
     findings: list[dict[str, Any]],
     registry: dict[str, Any],
     today: date,
+    root: Path | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Compare warning counts with expiring, registry-owned exception budgets."""
     config = registry.get("warning_exceptions")
@@ -399,19 +586,41 @@ def evaluate_warning_baseline(
         bucket = _warning_bucket(finding, registry)
         warning_counts[bucket] = warning_counts.get(bucket, 0) + 1
     baseline["observed"] = dict(sorted(warning_counts.items()))
-    for bucket, count in warning_counts.items():
-        entry = entries_by_bucket.get(bucket)
-        if entry is None:
-            baseline["unbaselined"].append({"bucket": bucket, "count": count})
-        elif count > int(entry["max_findings"]):
-            baseline["over_budget"].append(
-                {
-                    "bucket": bucket,
-                    "count": count,
-                    "max_findings": int(entry["max_findings"]),
-                    "exception": entry["id"],
-                }
+    matching = str(config.get("matching", "bucket"))
+    if matching == "file-signature":
+        signature_baseline, signature_findings = _evaluate_signature_baseline(
+            findings,
+            root or WORKSPACE,
+            config,
+        )
+        baseline["signature"] = signature_baseline
+        baseline["unbaselined"] = signature_baseline["unbaselined"]
+        for item in signature_findings:
+            registry_findings.append(
+                _finding(
+                    path=".omo/_truth/registry/document-governance.yaml",
+                    rule="warning_signature_registry",
+                    surface=None,
+                    severity="error",
+                    workflow="governance-state-mutation",
+                    evidence=str(item["evidence"]),
+                    message=str(item["message"]),
+                )
             )
+    else:
+        for bucket, count in warning_counts.items():
+            entry = entries_by_bucket.get(bucket)
+            if entry is None:
+                baseline["unbaselined"].append({"bucket": bucket, "count": count})
+            elif count > int(entry["max_findings"]):
+                baseline["over_budget"].append(
+                    {
+                        "bucket": bucket,
+                        "count": count,
+                        "max_findings": int(entry["max_findings"]),
+                        "exception": entry["id"],
+                    }
+                )
 
     baseline["ok"] = not (
         registry_findings
@@ -439,6 +648,13 @@ def _baseline_violation_findings(
             )
         )
     for item in baseline["unbaselined"]:
+        if "signature" in item:
+            evidence = (
+                f"{item['path']} rule={item['rule']} "
+                f"signature={item['signature']}"
+            )
+        else:
+            evidence = f"{item['bucket']} count={item['count']}"
         violations.append(
             _finding(
                 path=".omo/_truth/registry/document-governance.yaml",
@@ -446,7 +662,7 @@ def _baseline_violation_findings(
                 surface=None,
                 severity="error",
                 workflow="project-doc-change",
-                evidence=f"{item['bucket']} count={item['count']}",
+                evidence=evidence,
                 message="warning bucket is not covered by an exception budget",
             )
         )
@@ -466,6 +682,39 @@ def _baseline_violation_findings(
             )
         )
     return violations
+
+
+def write_warning_baseline(
+    path: Path,
+    findings: list[dict[str, Any]],
+    generated: date,
+) -> None:
+    """Write an explicit, reviewable baseline of the current warning findings."""
+    if yaml is None:
+        raise RuntimeError("pyyaml is required")
+    records = sorted(
+        (
+            _warning_record(finding)
+            for finding in findings
+            if finding["severity"] == "warning"
+        ),
+        key=lambda record: (
+            record["path"],
+            record["rule"],
+            record["evidence"],
+        ),
+    )
+    payload = {
+        "version": 1,
+        "generated": generated.isoformat(),
+        "algorithm": "sha256(rule,path,evidence)",
+        "signatures": records,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
 
 
 def _is_discoverable(rel: str, surface: dict[str, Any], index_text: str) -> bool:
@@ -726,6 +975,7 @@ def run(
     no_new_warnings: bool = False,
     today: date | None = None,
 ) -> dict[str, Any]:
+    current_date = today or datetime.now(timezone.utc).date()
     registry_path = REGISTRY_PATH
     if REGISTRY_PATH.is_relative_to(WORKSPACE):
         registry_path = root / REGISTRY_PATH.relative_to(WORKSPACE)
@@ -740,18 +990,41 @@ def run(
                 root,
                 registry,
                 index_cache,
-                today or datetime.now(timezone.utc).date(),
+                current_date,
             )
         )
     baseline, registry_findings = evaluate_warning_baseline(
         findings,
         registry,
-        today or datetime.now(timezone.utc).date(),
+        current_date,
+        root,
     )
     findings.extend(registry_findings)
+    warning_count = sum(finding["severity"] == "warning" for finding in findings)
+    warning_burndown = evaluate_warning_burndown(
+        registry,
+        warning_count,
+        current_date,
+    )
     baseline_violations = _baseline_violation_findings(baseline)
     if no_new_warnings:
         findings.extend(baseline_violations)
+        if warning_burndown.get("configured") and not warning_burndown["on_track"]:
+            findings.append(
+                _finding(
+                    path=".omo/_truth/registry/document-governance.yaml",
+                    rule="warning_burndown_lag",
+                    surface=None,
+                    severity="error",
+                    workflow="project-doc-change",
+                    evidence=(
+                        f"checkpoint={warning_burndown.get('current_checkpoint')} "
+                        f"count={warning_count} "
+                        f"max={warning_burndown.get('expected_max_findings')}"
+                    ),
+                    message="warning debt is behind the registered monthly burn-down target",
+                )
+            )
     blocking = [
         finding
         for finding in findings
@@ -770,6 +1043,7 @@ def run(
             "mode": "no-new-warnings" if no_new_warnings else "advisory",
             "violations": baseline_violations,
         },
+        "warning_burndown": warning_burndown,
         "summary": {
             "errors": sum(f["severity"] == "error" for f in findings),
             "warnings": sum(f["severity"] == "warning" for f in findings),
@@ -784,7 +1058,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--no-new-warnings",
         action="store_true",
-        help="block unbaselined or over-budget warnings while preserving baseline grace",
+        help="block unbaselined warnings while preserving explicit baseline grace",
+    )
+    parser.add_argument(
+        "--write-warning-baseline",
+        metavar="PATH",
+        help="write the current warning signatures to a reviewable YAML file",
     )
     parser.add_argument("--scope", choices=("tracked", "workspace"), default="tracked")
     parser.add_argument("--files", nargs="*", default=None, help="check only these workspace-relative files")
@@ -796,6 +1075,15 @@ def main(argv: list[str] | None = None) -> int:
             strict=args.strict,
             no_new_warnings=args.no_new_warnings,
         )
+        if args.write_warning_baseline:
+            output_path = Path(args.write_warning_baseline)
+            if not output_path.is_absolute():
+                output_path = WORKSPACE / output_path
+            write_warning_baseline(
+                output_path,
+                result["findings"],
+                datetime.now(timezone.utc).date(),
+            )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         result = {
             "ok": False,

@@ -6,10 +6,9 @@ Owner: governance-team
 Trigger: 新增 bin/ 工具 / 新增脚本 / 新增 skill
 """
 
-import os
-from pathlib import Path
 import datetime
 from datetime import UTC
+from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
@@ -132,6 +131,8 @@ def generate_ssot_tools():
 | ssot-writeback.py | SSOT 回写 | `python3 bin/ssot/ssot-writeback.py` |
 | check-boundary.py | 项目边界校验 | `python3 bin/ssot/check-boundary.py` |
 | check-cross-refs.py | 交叉引用一致性 | `python3 bin/ssot/check-cross-refs.py` (tracked; `--scope workspace` 做全量审计) |
+| doc-governance-check.py | 文档治理检查（ownership/lifecycle/freshness/discoverability；支持 warning signature baseline） | `python3 bin/ssot/doc-governance-check.py --no-new-warnings` |
+| doc-governance-migrate.py | 文档元数据迁移与 review-state 批次升级 | `python3 bin/ssot/doc-governance-migrate.py --scope tracked` |
 | check_health_ssot.py | health SSOT 一致 | `python3 bin/ssot/check_health_ssot.py` |
 | doc-ssot-lint.py | 文档 SSOT 门禁 (CI) | `python3 bin/ssot/doc-ssot-lint.py` |
 | gen-project-registry.py | registry 派生 | `python3 bin/ssot/gen-project-registry.py` |

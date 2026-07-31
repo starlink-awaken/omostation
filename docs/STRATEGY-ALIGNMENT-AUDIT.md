@@ -13,6 +13,10 @@ note: >
   本报告记录 ADR-0210 三年战略经 c2g (Concept→Pitch→Bet→Task) 管线拆解后的
   战略对齐审计 (radar) 结果。任务属性为 local adapter 草案态，正式入 .omo 需
   切 ecos adapter + ADR-0203 workflow。
+lifecycle: contract
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # 三年战略 · c2g 对齐审计报告（2026-07-15）
