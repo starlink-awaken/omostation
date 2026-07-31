@@ -13,7 +13,7 @@ from .dispatch import Dispatcher, TaskRequest, TaskStatus
 from .heartbeat import HeartbeatManager
 from .models import AgentInfo, AgentStatus, Capability, NodeInfo, NodeRole
 from .store import RegistryStore
-from .sync import GossipSync
+from .sync import GossipSync, Peer
 
 logger = logging.getLogger(__name__)
 
@@ -227,6 +227,20 @@ def create_app(persist_path: str | None = None, node_id: str = "local") -> FastA
     @app.get("/sync/status")
     def sync_status() -> dict:
         return _get_sync().get_status()
+
+    @app.post("/peers")
+    def add_peer(peer: RegisterNodeRequest) -> dict:
+        """Configure a gossip peer for sync."""
+        # Use provided node_id or derive from host-port
+        nid = getattr(peer, "node_id", None) or peer.host.replace(".", "-") + f"-{peer.port}"
+        p = Peer(node_id=nid, host=peer.host, port=peer.port)
+        _get_sync().add_peer(p)
+        return {"ok": True, "peer_id": p.node_id, "peers": len(_get_sync().list_peers())}
+
+    @app.delete("/peers/{peer_id}")
+    def remove_peer(peer_id: str) -> dict:
+        _get_sync().remove_peer(peer_id)
+        return {"ok": True, "peers": len(_get_sync().list_peers())}
 
     @app.post("/failover/{node_id}")
     def failover_node(node_id: str) -> dict:
