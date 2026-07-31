@@ -2359,12 +2359,35 @@ services:
   package: omo
   description: omo debt 端点 (omo @mcp.resource 引用)
   i0_route: pending
-  status: active
 - uri: bos://omo/tasks/active
   domain: omo
   action: tasks/active
   transport: inline
   package: omo
   description: omo tasks/active 端点 (omo @mcp.resource 引用)
+  i0_route: pending
+  status: active
+- uri: bos://memory/inbox/status
+  domain: memory
+  action: status
+  transport: mcp
+  package: agora-bos
+  description: BOS Inbox 多源私有知识神经网运行状态统计
+  i0_route: pending
+  status: active
+- uri: bos://memory/inbox/search
+  domain: memory
+  action: search
+  transport: mcp
+  package: agora-bos
+  description: BOS Inbox 多源私有知识库全文与高维关键词检索
+  i0_route: pending
+  status: active
+- uri: bos://memory/inbox/pending
+  domain: memory
+  action: pending
+  transport: mcp
+  package: agora-bos
+  description: BOS Inbox 实时待办公文与未读事项读取
   i0_route: pending
   status: active

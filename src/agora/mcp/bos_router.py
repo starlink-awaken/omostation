@@ -236,18 +236,18 @@ class BOSRouter:
         """
         count = 0
         for svc in poc_services:
-            uri = getattr(svc, "uri", "")
+            uri = svc.get("uri", "") if isinstance(svc, dict) else getattr(svc, "uri", "")
             if not uri:
                 continue
             self.register(
                 uri,
                 adapter="poc",
                 config={
-                    "domain": getattr(svc, "domain", ""),
-                    "package": getattr(svc, "package", ""),
-                    "action": getattr(svc, "action", ""),
-                    "transport": getattr(svc, "transport", ""),
-                    "description": getattr(svc, "description", ""),
+                    "domain": svc.get("domain", "") if isinstance(svc, dict) else getattr(svc, "domain", ""),
+                    "package": svc.get("package", "") if isinstance(svc, dict) else getattr(svc, "package", ""),
+                    "action": svc.get("action", "") if isinstance(svc, dict) else getattr(svc, "action", ""),
+                    "transport": svc.get("transport", "") if isinstance(svc, dict) else getattr(svc, "transport", ""),
+                    "description": svc.get("description", "") if isinstance(svc, dict) else getattr(svc, "description", ""),
                 },
             )
             count += 1
