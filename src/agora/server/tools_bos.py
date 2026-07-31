@@ -93,6 +93,135 @@ def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str
     return True, ""
 
 
+# ── BOS Inbox Neural Mesh 顶层方法 (多源私有知识神经网接口) ──
+
+def _get_inbox_paths() -> tuple[Path, Path]:
+    """获取本地 Inbox 与 @公共/_runtime 数据目录。"""
+    doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+    runtime_dir = doc_root / "@公共" / "_runtime"
+    inbox_dir = doc_root / "_inbox"
+    return runtime_dir, inbox_dir
+
+
+async def bos_inbox_status() -> dict:
+    """查询 BOS Inbox 多源神经网实时摄取状态与证据库统计。"""
+    auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/status", "read")
+    if not auth_ok:
+        return _error(f"Permission denied: {reason}")
+
+    runtime_dir, inbox_dir = _get_inbox_paths()
+    vector_store_file = runtime_dir / "vector_store.json"
+    
+    inbox_files = {}
+    if inbox_dir.exists():
+        for filename in ["2026-07-31-auto-seeyon-oa-pending.md", "2026-07-31-auto-netease-mailmaster.md", "2026-07-31-auto-apple-mail.md"]:
+            filepath = inbox_dir / filename
+            if filepath.exists():
+                stat = filepath.stat()
+                inbox_files[filename] = {
+                    "exists": True,
+                    "size": stat.st_size,
+                    "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(stat.st_mtime))
+                }
+            else:
+                inbox_files[filename] = {"exists": False, "size": 0, "mtime": "N/A"}
+
+    vs_info = {"exists": False, "size": 0, "mtime": "N/A"}
+    if vector_store_file.exists():
+        stat = vector_store_file.stat()
+        vs_info = {
+            "exists": True,
+            "size": stat.st_size,
+            "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(stat.st_mtime))
+        }
+
+    return _ok({
+        "format_version": FORMAT_VERSION,
+        "runtime_dir": str(runtime_dir),
+        "inbox_dir": str(inbox_dir),
+        "vector_store": vs_info,
+        "inbox_files": inbox_files,
+        "status": "ready" if (vs_info["exists"] or any(f["exists"] for f in inbox_files.values())) else "empty"
+    })
+
+
+async def bos_inbox_search(query: str, top_k: int = 5, source: str = "all") -> dict:
+    """在多源私有神经网中语义检索公文、邮件及待办事项。"""
+    auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/search", "read")
+    if not auth_ok:
+        return _error(f"Permission denied: {reason}")
+
+    runtime_dir, _ = _get_inbox_paths()
+    vector_store_file = runtime_dir / "vector_store.json"
+
+    if not vector_store_file.exists():
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "query": query,
+            "matches": [],
+            "note": "本地向量库 vector_store.json 暂未建立或未同步"
+        })
+
+    try:
+        data = json.loads(vector_store_file.read_text(encoding="utf-8"))
+        records = data if isinstance(data, list) else data.get("records", data.get("items", []))
+        
+        results = []
+        for rec in records:
+            if not isinstance(rec, dict):
+                continue
+            content = str(rec.get("content", "") + rec.get("title", ""))
+            if query.lower() in content.lower():
+                results.append(rec)
+                if len(results) >= top_k:
+                    break
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "query": query,
+            "matches": results,
+            "total_matched": len(results)
+        })
+    except Exception as exc:
+        return _error(f"Failed to read vector store: {exc}")
+
+
+async def bos_inbox_pending(source: str = "seeyon_oa") -> dict:
+    """获取多源私有神经网的最新未决待办快照 (致远OA / 网易邮箱 / Apple Mail)。"""
+    auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/pending", "read")
+    if not auth_ok:
+        return _error(f"Permission denied: {reason}")
+
+    _, inbox_dir = _get_inbox_paths()
+    target_file = inbox_dir / "2026-07-31-auto-seeyon-oa-pending.md"
+    if source == "netease_mailmaster":
+        target_file = inbox_dir / "2026-07-31-auto-netease-mailmaster.md"
+    elif source == "apple_mail":
+        target_file = inbox_dir / "2026-07-31-auto-apple-mail.md"
+
+    if not target_file.exists():
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "source": source,
+            "exists": False,
+            "message": f"未找到对应的数据快照文件: {target_file.name}"
+        })
+
+    try:
+        content = target_file.read_text(encoding="utf-8")
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "source": source,
+            "exists": True,
+            "filename": target_file.name,
+            "size": target_file.stat().st_size,
+            "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(target_file.stat().st_mtime)),
+            "content_preview": content[:1500]
+        })
+    except Exception as exc:
+        return _error(f"Read pending file failed: {exc}")
+
+
+
 # ── 路由辅助 ──────────────────────────────────────────────
 
 
@@ -839,6 +968,121 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             }
         )
 
+    # ── BOS Inbox Neural Mesh 工具 (多源私有知识神经网接口) ──
+    mcp.tool()(bos_inbox_status)
+    mcp.tool()(bos_inbox_search)
+    mcp.tool()(bos_inbox_pending)
+
+    def _get_inbox_paths() -> tuple[Path, Path]:
+        """获取本地 Inbox 与 @公共/_runtime 数据目录。"""
+        doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+        runtime_dir = doc_root / "@公共" / "_runtime"
+        inbox_dir = doc_root / "_inbox"
+        return runtime_dir, inbox_dir
+
+    async def bos_inbox_status() -> dict:
+        """查询 BOS Inbox 多源神经网实时摄取状态与证据库统计。"""
+        auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/status", "read")
+        if not auth_ok:
+            return _error(f"Permission denied: {reason}")
+
+        runtime_dir, inbox_dir = _get_inbox_paths()
+        vector_store_file = runtime_dir / "vector_store.json"
+        
+        status_info: dict[str, Any] = {
+            "runtime_dir": str(runtime_dir),
+            "inbox_dir": str(inbox_dir),
+            "vector_store_exists": vector_store_file.exists(),
+            "sources": {}
+        }
+
+        if vector_store_file.exists():
+            try:
+                data = json.loads(vector_store_file.read_text(encoding="utf-8"))
+                status_info["vector_count"] = len(data.get("vectors", {}))
+                status_info["metadata_count"] = len(data.get("metadata", {}))
+                status_info["updated_at"] = _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(vector_store_file.stat().st_mtime))
+            except Exception as exc:
+                status_info["error"] = f"Parse vector_store.json failed: {exc}"
+
+        if inbox_dir.exists():
+            for filename in ["2026-07-31-auto-seeyon-oa-pending.md", "2026-07-31-auto-netease-mailmaster.md", "2026-07-31-auto-apple-mail.md"]:
+                filepath = inbox_dir / filename
+                if filepath.exists():
+                    status_info["sources"][filename] = {
+                        "exists": True,
+                        "size_bytes": filepath.stat().st_size,
+                        "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(filepath.stat().st_mtime))
+                    }
+                else:
+                    status_info["sources"][filename] = {"exists": False}
+
+        return _ok(status_info)
+
+    async def bos_inbox_search(query: str, top_k: int = 5, source: str = "all") -> dict:
+        """在 BOS Inbox 多源私有知识库(OA待办/网易邮箱/AppleMail)中进行关键词与语义检索。"""
+        auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/search", "read")
+        if not auth_ok:
+            return _error(f"Permission denied: {reason}")
+
+        runtime_dir, _ = _get_inbox_paths()
+        vector_store_file = runtime_dir / "vector_store.json"
+        if not vector_store_file.exists():
+            return _error("vector_store.json not found. Please trigger sync first.")
+
+        try:
+            data = json.loads(vector_store_file.read_text(encoding="utf-8"))
+            meta_dict = data.get("metadata", {})
+            results = []
+            query_lower = query.lower()
+            for item_id, item_meta in meta_dict.items():
+                item_src = str(item_meta.get("source", "")).lower()
+                if source != "all" and source not in item_src:
+                    continue
+                content_snip = str(item_meta.get("content_snippet", ""))
+                title = str(item_meta.get("title", ""))
+                if query_lower in content_snip.lower() or query_lower in title.lower() or query_lower in item_id.lower():
+                    results.append({
+                        "id": item_id,
+                        "title": title,
+                        "source": item_meta.get("source"),
+                        "timestamp": item_meta.get("timestamp"),
+                        "snippet": content_snip[:200]
+                    })
+                if len(results) >= top_k:
+                    break
+            return _ok({"query": query, "count": len(results), "results": results})
+        except Exception as exc:
+            return _error(f"Search failed: {exc}")
+
+    @mcp.tool()
+    async def bos_inbox_pending(source: str = "seeyon_oa") -> dict:
+        """快速拉取现有未决事项与待办公文 (致远OA公文/未读邮件等)。"""
+        auth_ok, reason = _bos_domain_authorized("bos://memory/inbox/pending", "read")
+        if not auth_ok:
+            return _error(f"Permission denied: {reason}")
+
+        _, inbox_dir = _get_inbox_paths()
+        target_file = inbox_dir / "2026-07-31-auto-seeyon-oa-pending.md"
+        if source == "netease_mailmaster":
+            target_file = inbox_dir / "2026-07-31-auto-netease-mailmaster.md"
+        elif source == "apple_mail":
+            target_file = inbox_dir / "2026-07-31-auto-apple-mail.md"
+
+        if not target_file.exists():
+            return _error(f"Pending snapshot file not found for source={source}: {target_file}")
+
+        try:
+            content = target_file.read_text(encoding="utf-8")
+            return _ok({
+                "source": source,
+                "file": str(target_file),
+                "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(target_file.stat().st_mtime)),
+                "content_preview": content[:1500]
+            })
+        except Exception as exc:
+            return _error(f"Read pending file failed: {exc}")
+
     # ── list_bos_tools ──────────────────────────────────
 
     @mcp.tool()
@@ -889,7 +1133,23 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 "description": "限流/熔断/缓存/路由实时状态",
                 "arguments": {},
             },
+            {
+                "name": "bos_inbox_status",
+                "description": "查询 BOS Inbox 多源神经网实时摄取状态与证据统计",
+                "arguments": {},
+            },
+            {
+                "name": "bos_inbox_search",
+                "description": "在 BOS Inbox 多源私有知识库(OA待办/网易邮箱/AppleMail)中进行关键词与语义检索",
+                "arguments": {"query": "搜索关键词", "top_k": "返回条数", "source": "数据源过滤"},
+            },
+            {
+                "name": "bos_inbox_pending",
+                "description": "快速拉取现有未决事项与待办公文 (致远OA公文/网易邮件等)",
+                "arguments": {"source": "数据源识别"},
+            },
         ]
         return _ok(
             {"format_version": FORMAT_VERSION, "tools": tools, "total": len(tools)}
         )
+

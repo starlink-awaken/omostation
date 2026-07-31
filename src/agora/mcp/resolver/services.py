@@ -43,8 +43,35 @@ def _with_uv_package(service: BosService) -> list[str]:
 
 _FALLBACK_SERVICES: list[BosService] = [
     # ════════════════════════════════════════════════════════════════
-    # Domain: memory (5)
+    # Domain: memory
     # ════════════════════════════════════════════════════════════════
+    BosService(
+        uri="bos://memory/inbox/status",
+        domain="memory",
+        package="agora",
+        action="inbox-status",
+        transport="stdio",
+        command=["python", "-m", "agora.server.tools_bos"],
+        description="BOS Inbox 神经网状态统计",
+    ),
+    BosService(
+        uri="bos://memory/inbox/search",
+        domain="memory",
+        package="agora",
+        action="inbox-search",
+        transport="stdio",
+        command=["python", "-m", "agora.server.tools_bos"],
+        description="BOS Inbox 语义检索",
+    ),
+    BosService(
+        uri="bos://memory/inbox/pending",
+        domain="memory",
+        package="agora",
+        action="inbox-pending",
+        transport="stdio",
+        command=["python", "-m", "agora.server.tools_bos"],
+        description="BOS Inbox 待办快照与多源预览",
+    ),
     BosService(
         uri="bos://memory/kos/search",
         domain="memory",
