@@ -132,23 +132,23 @@ rules:
       与 `.omo/_knowledge/audits/*.md` 联合审计。
 
   - rule_id: X2-FRESH-DOC-LIFECYCLE
-    title: 文档生命周期健康度必须持续维护
+    title: 文档 ownership/lifecycle 健康度必须持续维护
     type: doc_lifecycle_freshness
     status: active
     created: '2026-06-22'
-    target: .omo/
+    target: .omo/_truth/registry/document-governance.yaml
     freshness:
-      mechanism: doc-lifecycle-lint
+      mechanism: doc-governance-check
       threshold_days: 7
       action: warn
     owner: governance-team
     notes: >
-      P45 R2: 用 `omo lint doc-lifecycle` 检查 .omo/ 全部 .md/.yaml 文件.
-      健康分 < 70 触发告警, 提示:
-      - frontmatter 覆盖率 < 80% (缺 status/lifecycle/owner)
-      - 死文档占比 > 30% (contract/pattern 0 引用)
-      - 矛盾路径 > 0 (代码引用 .omo/_archive/ 或 .omo/_knowledge/management/)
-      治理面: 触发时在 cron 邮件中加 §doc-lifecycle 健康分.
+      P45 R2/P100: `bin/ssot/doc-governance-check.py` 是文档 ownership、
+      lifecycle、review freshness 和 discoverability 的统一入口。
+      PR 默认扫描 tracked 文档；定时审计使用 `--scope workspace --json`
+      扫描 ignored plans 和 runtime projections。缺 frontmatter、旧 review
+      日期和 orphan 文档先作为 warning，registry 损坏和 malformed metadata
+      阻断；治理面消费统一的 path/rule/owner/severity/workflow/evidence findings.
 
   - rule_id: X2-FRESH-COMMIT-FATIGUE
     title: 工作树累积预警 (commit fatigue detector)
@@ -243,4 +243,3 @@ rules:
       post-hook). 7 天 stale 说明 task pipeline 停滞或 post-hook 失效. 配合 ISC-50
       (两套看板 SSOT 统一 ADR) — _control/debt-dashboard/ 废弃后本 rule 成为唯一
       dashboard freshness 守护. 验证: grep generated_at + 距今 > 7 天 → warn.
-
