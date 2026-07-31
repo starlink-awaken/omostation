@@ -413,7 +413,10 @@ def classify_release_package(path: str) -> tuple[str, str]:
         return "data-output", "keep user/runtime data out of governance release packages unless explicitly required"
     if path.startswith("runtime/"):
         return "runtime-or-control-output", "review evidence/control output before including in a release package"
-    if path.startswith((".omo/_truth/registry/", ".omo/standards/", "runtime/omo/_truth/registry/", "runtime/omo/standards/")):
+    if path.startswith((
+        ".omo/_truth/registry/", ".omo/_truth/goals/", ".omo/goals/", ".omo/standards/",
+        "runtime/omo/_truth/registry/", "runtime/omo/_truth/goals/", "runtime/omo/goals/", "runtime/omo/standards/",
+    )):
         return "governance-truth-and-standards", "review with AGCP claim coverage and SSOT checks"
     if path.startswith("ecos/src/ecos/ssot/mof/") or path.startswith("projects/ecos/src/ecos/ssot/mof/"):
         return "mof-model-registry", "review MOF schema/state bridge and model drift checks"
