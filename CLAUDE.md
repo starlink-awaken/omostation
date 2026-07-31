@@ -10,7 +10,7 @@
 
 `omostation` is the root workspace for **eCOS v6**: a multi-project workspace for knowledge engineering, agent governance, BOS service routing, runtime orchestration, and personal/work knowledge operations.
 
-- **Shape**: a polyglot monorepo. Sub-projects live under `projects/*` and are mostly independent git submodules — Python via `uv`, TypeScript via `bun`, plus Docker. Each sub-project has its own `AGENTS.md` / `CLAUDE.md` / `Makefile`; read it before editing that project.
+- **Shape**: a polyglot monorepo. Sub-projects live under `projects/*` and are mostly independent git submodules — Python via `uv`, TypeScript via `bun`, plus Docker. Each sub-project has its own `AGENTS.md` / `CLAUDE.md` and may expose project-local build commands; read its guidance before editing.
 - **Architecture skeleton** (concepts only — full contracts in [`ARCHITECTURE.md`](ARCHITECTURE.md)): the `5+4+1+1` layering (L0 protocol → L1 runtime → L2 kernel → L3 entry → L4 docs), the `X1-X4` governance axes, and BOS URI domain routing. Layer/project placement → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md); BOS domains → ARCHITECTURE.md §4; entry surfaces → ARCHITECTURE.md §3.
 - **Document division of labor** (orthogonal SSOT — each doc owns one dimension):
 
