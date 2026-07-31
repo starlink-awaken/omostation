@@ -1,4 +1,0 @@
-[console_scripts]
-ecos-bus-consumer = runtime.bus_consumer:main
-ecos-matrix-scheduler = runtime.scheduler:main
-runtime = runtime.cli:main
