@@ -71,6 +71,15 @@ def _adjudication_store():
     return AdjudicationStore(path)
 
 
+def _model_acceptance_symbols():
+    try:
+        from kos.kems import ModelAcceptanceStore, ModelInputError, evaluate_candidate
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="KOS model acceptance store is unavailable") from exc
+    path = Path(os.environ.get("KEMS_MODEL_ACCEPTANCE_DB", str(Path.home() / ".kems" / "model-acceptance.sqlite")))
+    return ModelAcceptanceStore(path), ModelInputError, evaluate_candidate
+
+
 def _reject_private_fields(value: object) -> None:
     if isinstance(value, dict):
         leaked = _PRIVATE_FIELDS.intersection(value)
@@ -89,7 +98,7 @@ async def kems_status() -> dict[str, Any]:
     return {
         "status": "ready",
         "mode": "review_only",
-        "capabilities": ["ocr_review", "graph_review", "evaluation", "omo_task_draft"],
+        "capabilities": ["ocr_review", "graph_review", "evaluation", "model_acceptance", "omo_task_draft"],
         "dispatch": "omo_only",
     }
 
@@ -530,6 +539,49 @@ async def get_kems_evaluation_run(run_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=503, detail="evaluation persistence is unavailable") from exc
     if result is None:
         raise HTTPException(status_code=404, detail="evaluation run not found")
+    return result
+
+
+@router.post("/api/kems/models/candidates/{candidate_model_id}/evaluation")
+async def evaluate_kems_candidate_model(candidate_model_id: str, request: Request) -> dict[str, Any]:
+    """Evaluate and persist numeric, redacted candidate-model evidence."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="model evaluation request must be an object")
+    _reject_private_fields(body)
+    required = ("run_id", "cases")
+    missing = [field for field in required if not body.get(field)]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing model evaluation fields: {', '.join(missing)}")
+    if not isinstance(body["cases"], list):
+        raise HTTPException(status_code=422, detail="cases must be a list")
+    try:
+        store, input_error, evaluator = _model_acceptance_symbols()
+        evaluation = evaluator(
+            body["cases"],
+            candidate_model_id=candidate_model_id,
+            baseline_model_id=str(body.get("baseline_model_id") or "naive-last-v1"),
+            min_cases=int(body.get("min_cases", 1)),
+            min_relative_improvement=float(body.get("min_relative_improvement", 0.0)),
+        )
+        store.record(str(body["run_id"]), evaluation)
+    except input_error as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=503, detail="model acceptance persistence is unavailable") from exc
+    return {"run_id": str(body["run_id"]), "persisted": True, "evaluation": evaluation}
+
+
+@router.get("/api/kems/models/evaluations/{run_id}")
+async def get_kems_model_evaluation(run_id: str) -> dict[str, Any]:
+    try:
+        result = _model_acceptance_symbols()[0].get(run_id)
+    except OSError as exc:
+        raise HTTPException(status_code=503, detail="model acceptance persistence is unavailable") from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail="model evaluation run not found")
     return result
 
 
