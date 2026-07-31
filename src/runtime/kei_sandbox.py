@@ -341,7 +341,7 @@ if __name__ == "__main__":
     try:
         import subprocess
 
-        subprocess.run(["echo", "hello"])
+        subprocess.run(["echo", "hello"], check=False)
         print("Subprocess succeeded (should not happen if allow_subprocess=False)")
     except PermissionError as e:
         print(f"Blocked as expected: {e}")

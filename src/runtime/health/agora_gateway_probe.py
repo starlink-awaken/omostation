@@ -88,33 +88,31 @@ def _find_pid() -> int | None:
     if PID_FILE.exists():
         try:
             return int(PID_FILE.read_text().strip())
-        except (ValueError, OSError):
-            pass
+        except (ValueError, OSError):  # noqa: S110, S112
+            pass  # noqa: S110, BLE001, S112  # defensive fallback
     # launchctl (launchd KeepAlive 管理的真实 PID)
     try:
         result = subprocess.run(
             ["launchctl", "list", "com.agora.gateway"],
             capture_output=True,
             text=True,
-            timeout=5,
-        )
+            timeout=5, check=False)
         m = re.search(r'"PID"\s*=\s*(\d+)', result.stdout)
         if m:
             return int(m.group(1))
-    except (subprocess.TimeoutExpired, OSError, ValueError):
-        pass
+    except (subprocess.TimeoutExpired, OSError, ValueError):  # noqa: S110, S112
+        pass  # noqa: S110, BLE001, S112  # defensive fallback
     # pgrep fallback
     try:
         result = subprocess.run(
             ["pgrep", "-f", "agora"],
             capture_output=True,
             text=True,
-            timeout=5,
-        )
+            timeout=5, check=False)
         if result.returncode == 0 and result.stdout.strip():
             return int(result.stdout.strip().split("\n")[0])
-    except (subprocess.TimeoutExpired, OSError, ValueError):
-        pass
+    except (subprocess.TimeoutExpired, OSError, ValueError):  # noqa: S110, S112
+        pass  # noqa: S110, BLE001, S112  # defensive fallback
     return None
 
 

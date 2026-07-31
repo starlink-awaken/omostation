@@ -211,8 +211,8 @@ def _log_execution(
             duration_sec=duration_sec,
             error=result.get("error"),
         )
-    except Exception:  # noqa: BLE001  # defensive fallback
-        pass  # Matrix bridge failure must not break execution logging
+    except Exception:  # noqa: BLE001, S110, S112  # defensive fallback
+        pass  # noqa: S110, BLE001, S112  # defensive fallback
 
 
 def _build_alert_message(task_id: str, result: dict) -> str:

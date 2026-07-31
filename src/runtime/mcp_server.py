@@ -38,8 +38,7 @@ def handle_health() -> dict:
     if not script.exists():
         return {"status": "error", "detail": "health-check 脚本不存在"}
     r = subprocess.run(
-        ["python3", str(script), "--json"], capture_output=True, text=True, timeout=30
-    )
+        ["python3", str(script), "--json"], capture_output=True, text=True, timeout=30, check=False)
     try:
         return json.loads(r.stdout)
     except json.JSONDecodeError:
@@ -59,12 +58,11 @@ def handle_matrix_list() -> dict:
             ["python3", str(script), "--status"],
             capture_output=True,
             text=True,
-            timeout=10,
-        )
+            timeout=10, check=False)
         try:
             return json.loads(r.stdout)
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError:  # noqa: S110, S112
+            pass  # noqa: S110, BLE001, S112  # defensive fallback
     return {"services": [], "note": "Runtime Registry 不可用"}
 
 
@@ -145,8 +143,7 @@ def handle_brief() -> dict:
     if not script.exists():
         return {"error": "ecos-brief.py 不存在"}
     r = subprocess.run(
-        ["python3", str(script), "--json"], capture_output=True, text=True, timeout=45
-    )
+        ["python3", str(script), "--json"], capture_output=True, text=True, timeout=45, check=False)
     try:
         return json.loads(r.stdout)
     except json.JSONDecodeError:
@@ -370,8 +367,8 @@ def main():
 
         kei_config = str(Path(__file__).resolve().parent.parent.parent / "kei.yaml")
         enable_sandbox(config_path=kei_config)
-    except ImportError:
-        pass
+    except ImportError:  # noqa: S110, S112
+        pass  # noqa: S110, BLE001, S112  # defensive fallback
 
     # 测试模式: 直接调用并打印
     if args.test:

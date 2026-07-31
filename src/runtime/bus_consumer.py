@@ -108,7 +108,7 @@ def process_event(conn, event_id, payload):
         # We assume gbrain needs to be set up, so we catch errors
         result = subprocess.run(
             cmd, cwd=str(GBRAIN_DIR), capture_output=True, text=True, timeout=30
-        )
+, check=False)
 
         if result.returncode == 0:
             logger.info(f"Successfully ingested log into gbrain: {slug}")

@@ -43,7 +43,7 @@ def _run_script(name: str, *args: str) -> int:
         return 1
     env = os.environ.copy()
     env.setdefault("RUNTIME_HOME", str(RUNTIME_HOME))
-    r = subprocess.run([str(script), *args], env=env)
+    r = subprocess.run([str(script), *args], env=env, check=False)
     return r.returncode
 
 

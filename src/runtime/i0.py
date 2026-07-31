@@ -103,12 +103,11 @@ def _get_pid_for_port(port: int) -> Optional[int]:
             ["lsof", "-ti", f":{port}"],
             capture_output=True,
             text=True,
-            timeout=5,
-        )
+            timeout=5, check=False)
         if r.stdout.strip():
             return int(r.stdout.strip().split("\n")[0])
-    except (subprocess.TimeoutExpired, FileNotFoundError, ValueError, OSError):
-        pass
+    except (subprocess.TimeoutExpired, FileNotFoundError, ValueError, OSError):  # noqa: S110, S112
+        pass  # noqa: S110, BLE001, S112  # defensive fallback
     return None
 
 
@@ -128,10 +127,10 @@ def _fetch_events_from_agora(limit: int = 20) -> list[dict]:
                 try:
                     event = json.loads(line[6:])
                     events.append(event)
-                except json.JSONDecodeError:
-                    pass
-    except (urllib.error.URLError, OSError, ConnectionRefusedError):
-        pass
+                except json.JSONDecodeError:  # noqa: S110, S112
+                    pass  # noqa: S110, BLE001, S112  # defensive fallback
+    except (urllib.error.URLError, OSError, ConnectionRefusedError):  # noqa: S110, S112
+        pass  # noqa: S110, BLE001, S112  # defensive fallback
     # Return most recent events (last N)
     return events[-limit:] if len(events) > limit else events
 

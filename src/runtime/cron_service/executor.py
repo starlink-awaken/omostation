@@ -179,8 +179,8 @@ def execute(
         if prior_cwd is not None:
             try:
                 os.chdir(prior_cwd)
-            except OSError:
-                pass
+            except OSError:  # noqa: S110, S112
+                pass  # noqa: S110, BLE001, S112  # defensive fallback
 
 
 def _kill_process(proc: subprocess.Popen):
@@ -192,5 +192,5 @@ def _kill_process(proc: subprocess.Popen):
                 os.killpg(pgid, signal.SIGKILL)
             else:
                 proc.kill()
-    except Exception:  # noqa: BLE001  # defensive fallback
-        pass
+    except Exception:  # noqa: BLE001, S110, S112  # defensive fallback
+        pass  # noqa: S110, BLE001, S112  # defensive fallback

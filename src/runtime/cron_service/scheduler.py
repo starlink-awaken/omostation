@@ -245,8 +245,7 @@ def _run_job_sync(job_id: str) -> None:
             shell=True,
             capture_output=True,
             text=True,
-            timeout=120,
-        )
+            timeout=120, check=False)
         status = "ok" if result.returncode == 0 else "error"
         record_run(job_id, status, result.stdout or "", result.stderr or "")
         _bus_emit_cron_fired(
@@ -273,7 +272,7 @@ def _run_job_sync(job_id: str) -> None:
             error="Timed out after 120s",
             output="",
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  # defensive fallback, logged below
         logger.error("Job %s error: %s", job_id, e)
         record_run(job_id, "error", "", str(e)[:500])
         _bus_emit_cron_fired(

@@ -76,8 +76,7 @@ def _probe_daemons(state: dict) -> None:
                 ["python3", str(probe_script)],
                 capture_output=True,
                 text=True,
-                timeout=10,
-            )
+                timeout=10, check=False)
             if result.returncode == 0:
                 svc["health_check"] = "healthy (probe)"
             elif result.returncode == 2:

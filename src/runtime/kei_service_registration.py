@@ -62,8 +62,8 @@ def _audit(action: str, status: str, details: str) -> None:
     if _has_audit and _sandbox_audit is not None:
         try:
             _sandbox_audit(action, EXTENSION_ID, status, details)
-        except Exception:  # noqa: BLE001  # defensive fallback
-            pass  # Best-effort
+        except Exception:  # noqa: BLE001, S110, S112  # defensive fallback
+            pass  # noqa: S110, BLE001, S112  # defensive fallback
 
     # Also write to local audit file as fallback
     audit_dir = RUNTIME_HOME / "audit"
@@ -80,8 +80,8 @@ def _audit(action: str, status: str, details: str) -> None:
         fd = os.open(str(audit_file), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
         os.write(fd, (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8"))
         os.close(fd)
-    except OSError:
-        pass
+    except OSError:  # noqa: S110, S112
+        pass  # noqa: S110, BLE001, S112  # defensive fallback
 
 
 def validate_service_entry(entry: dict, source: str = "unknown") -> dict:

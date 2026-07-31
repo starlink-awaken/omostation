@@ -150,7 +150,7 @@ def _is_safe_url(url: str) -> bool:
             return False
     except ValueError:
         # 不是 IP 地址（域名），放行
-        pass
+        pass  # noqa: S110, BLE001, S112  # defensive fallback
 
     return True
 
@@ -190,8 +190,7 @@ class Tools:
                 capture_output=True,
                 text=True,
                 cwd=cwd or str(ECOS_DIR),
-                timeout=timeout,
-            )
+                timeout=timeout, check=False)
             return {
                 "exit_code": r.returncode,
                 "stdout": r.stdout[:5000],

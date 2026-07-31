@@ -54,8 +54,7 @@ class MatrixScheduler:
             return {"status": "unknown"}
         try:
             r = subprocess.run(
-                ["launchctl", "list", label], capture_output=True, text=True
-            )
+                ["launchctl", "list", label], capture_output=True, text=True, check=False)
             if r.returncode != 0:
                 return {"status": "failed", "exit_code": r.returncode}
 
@@ -92,11 +91,9 @@ class MatrixScheduler:
         try:
             print(f"🔧 [launchd repair] {label}: unloading/loading {cfg}")
             subprocess.run(
-                ["launchctl", "unload", str(cfg)], capture_output=True, timeout=10
-            )
+                ["launchctl", "unload", str(cfg)], capture_output=True, timeout=10, check=False)
             subprocess.run(
-                ["launchctl", "load", str(cfg)], capture_output=True, timeout=10
-            )
+                ["launchctl", "load", str(cfg)], capture_output=True, timeout=10, check=False)
             time.sleep(0.5)
             status = self._check_launchd(label)
             return status.get("status") == "running"
@@ -118,8 +115,7 @@ class MatrixScheduler:
                     "{{.Status}}",
                 ],
                 capture_output=True,
-                text=True,
-            )
+                text=True, check=False)
             status = r.stdout.strip()
             if status:
                 return {"status": "running", "details": status}
@@ -133,8 +129,7 @@ class MatrixScheduler:
             return False
         try:
             r = subprocess.run(
-                ["lsof", f"-iTCP:{port}", "-sTCP:LISTEN", "-P"], capture_output=True
-            )
+                ["lsof", f"-iTCP:{port}", "-sTCP:LISTEN", "-P"], capture_output=True, check=False)
             return r.returncode == 0
         except Exception:  # noqa: BLE001  # defensive fallback
             return False
@@ -174,8 +169,8 @@ class MatrixScheduler:
             try:
                 with open(state_file, "r") as f:
                     state = json.load(f)
-            except Exception:  # noqa: BLE001  # defensive fallback
-                pass
+            except Exception:  # noqa: BLE001, S110, S112  # defensive fallback
+                pass  # noqa: S110, BLE001, S112  # defensive fallback
 
         # Heartbeat & run statistics
         run_count = state.get("run_count", 0) + 1
@@ -297,12 +292,10 @@ class MatrixScheduler:
                             )
                             subprocess.run(
                                 ["launchctl", "stop", svc.launchd_label],
-                                capture_output=True,
-                            )
+                                capture_output=True, check=False)
                             subprocess.run(
                                 ["launchctl", "start", svc.launchd_label],
-                                capture_output=True,
-                            )
+                                capture_output=True, check=False)
                             svc_history.append(current_time)
                             result["runtime"]["self_heal_attempted"] = True
                         else:
@@ -323,8 +316,7 @@ class MatrixScheduler:
                         )
                         subprocess.run(
                             ["docker", "restart", svc.docker_container],
-                            capture_output=True,
-                        )
+                            capture_output=True, check=False)
                         svc_history.append(current_time)
                         result["runtime"]["self_heal_attempted"] = True
                     else:
@@ -458,8 +450,8 @@ class MatrixScheduler:
         try:
             with open(state_file, "w") as f:
                 json.dump(state, f)
-        except Exception:  # noqa: BLE001  # defensive fallback
-            pass
+        except Exception:  # noqa: BLE001, S110, S112  # defensive fallback
+            pass  # noqa: S110, BLE001, S112  # defensive fallback
 
         self.state = {"last_scan": current_time, "services": scan_results}
 
@@ -509,8 +501,7 @@ class MatrixScheduler:
                         ],
                         capture_output=True,
                         text=True,
-                        timeout=10,
-                    )
+                        timeout=10, check=False)
                 except Exception as e:  # noqa: BLE001  # defensive fallback
                     print(f"Failed to run notify script for {svc_name}: {e}")
             self._prev_health[svc_name] = current_hc
@@ -568,8 +559,7 @@ class MatrixScheduler:
                 ["bash", str(autoheal_script), svc_name],
                 capture_output=True,
                 text=True,
-                timeout=30,
-            )
+                timeout=30, check=False)
             if r.returncode == 0:
                 print(f"✅ [P1-AUTO_HEAL] {svc_name}: autoheal succeeded")
             else:
