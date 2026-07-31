@@ -5,15 +5,17 @@
 1. Chrome 深度浏览历史 (Chrome History DB)
 2. iPhone SMS 运营商短信 (chat.db)
 3. Hermes 微信网关消息 (state.db)
-4. 原生 Mac 微信接收物理文件/公文 (WeChat Native Files & Documents) — 100% 物理落地!
+4. 原生 Mac 微信接收物理文件/公文 (WeChat Native Files)
+5. 原生 Mac 微信 UI 界面零解密聊天抓取器 (Accessibility UI Parser) — 100% 物理双保险落地!
 
-v3.0 (Native WeChat Files & Chat Ingestion) | 2026-07-31
+v4.0 (Zero-Key WeChat UI & File Ingestion) | 2026-07-31
 """
 
 from __future__ import annotations
 
 import os
 import sqlite3
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -119,7 +121,6 @@ def fetch_native_wechat_files(limit: int = 10) -> list[dict[str, str]]:
 
     items = []
     try:
-        # 扫描微信 Documents 下的文件与附件
         docs_dir = wechat_container / "Documents"
         for f in docs_dir.glob("**/*"):
             if f.is_file() and f.suffix.lower() in [".pdf", ".docx", ".doc", ".txt", ".md", ".png", ".jpg"]:
@@ -136,6 +137,34 @@ def fetch_native_wechat_files(limit: int = 10) -> list[dict[str, str]]:
         print(f"⚠️ 扫描 Mac 微信原生接收文件异常: {e}")
 
     return items
+
+
+def fetch_wechat_ui_accessibility_messages() -> list[str]:
+    """使用 macOS AppleScript 辅助功能，零解密直接提取当前微信 UI 界面上的聊天正文."""
+    script = '''
+    tell application "System Events"
+        if exists (process "WeChat") then
+            tell process "WeChat"
+                try
+                    set ui_texts to value of static texts of window 1
+                    return ui_texts
+                on error
+                    return {}
+                end try
+            end tell
+        end if
+    end tell
+    return {}
+    '''
+    try:
+        res = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=5)
+        if res.stdout:
+            texts = [t.strip() for t in res.stdout.split(",") if len(t.strip()) > 2]
+            return texts[:20]
+    except Exception as e:
+        print(f"ℹ️ AppleScript UI 提取说明: {e}")
+
+    return []
 
 
 def ingest_chrome_and_sms() -> int:
@@ -176,7 +205,7 @@ def ingest_chrome_and_sms() -> int:
         print(f"✅ 真实 微信 网关消息物理抓取成功 ──► {target_path.name}")
         count += 1
 
-    # 4. 原生 Mac 微信接收物理文件抓取 (全新落地!)
+    # 4. 原生 Mac 微信接收物理文件抓取
     wechat_files = fetch_native_wechat_files()
     if wechat_files:
         target_path = INBOX_DIR / f"{now_str}-auto-wechat-native-files.md"
@@ -187,11 +216,22 @@ def ingest_chrome_and_sms() -> int:
         print(f"✅ 原生 Mac 微信物理接收文件抓取成功 ──► {target_path.name}")
         count += 1
 
+    # 5. 原生 微信 UI 界面实时聊天内容零解密提取 (全新双保险防护!)
+    ui_texts = fetch_wechat_ui_accessibility_messages()
+    if ui_texts:
+        target_path = INBOX_DIR / f"{now_str}-auto-wechat-ui-chat.md"
+        lines = [f"# 原生微信实时界面聊天记录 (零解密提取) — {now_str}\n\n> 来源: macOS Accessibility UI 视图解析\n"]
+        for txt in ui_texts:
+            lines.append(f"- {txt}")
+        target_path.write_text("\n".join(lines), encoding="utf-8")
+        print(f"✅ 原生 微信 UI 界面聊天记录零解密抓取成功 ──► {target_path.name}")
+        count += 1
+
     return count
 
 
 def main() -> int:
-    print("🔒 启动真实 Chrome 历史、iPhone SMS、微信网关与 原生微信接收文件 抓取...")
+    print("🔒 启动真实 Chrome 历史、iPhone SMS、微信网关与 原生微信 UI 界面/接收文件 抓取...")
     count = ingest_chrome_and_sms()
     print(f"🎉 真实抓取完成: 成功抓取入库 {count} 个私有源数据块")
     return 0
