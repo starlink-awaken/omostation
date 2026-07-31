@@ -161,12 +161,7 @@ def _evaluation_check(path: Path | None) -> Check:
 def _omo_check(omo_root: Path, task_id: str | None) -> Check:
     if not task_id:
         return Check("omo_approval", False, "missing approved OMO task id")
-    candidates = (
-        omo_root / "tasks" / "active" / f"{task_id}.yaml",
-        omo_root / "tasks" / "planned" / f"{task_id}.yaml",
-        omo_root / "tasks" / "completed" / f"{task_id}.yaml",
-    )
-    task_path = next((path for path in candidates if path.is_file()), None)
+    task_path = _omo_task_path(omo_root, task_id)
     if task_path is None:
         return Check("omo_approval", False, "approved OMO task is unavailable")
     try:
@@ -183,16 +178,57 @@ def _omo_check(omo_root: Path, task_id: str | None) -> Check:
         )
     if not isinstance(payload, dict):
         return Check("omo_approval", False, "OMO task metadata must be an object")
-    status = str(payload.get("status", ""))
     approval_ref = payload.get("approval_ref")
-    approval_state = payload.get("approval_state")
+    if payload.get("id") not in {None, task_id}:
+        return Check("omo_approval", False, "OMO task id does not match task path")
+    if not isinstance(approval_ref, str) or not approval_ref.endswith(".yaml"):
+        return Check("omo_approval", False, "OMO task approval_ref is missing or invalid")
+
+    root = omo_root.resolve().parent
+    approval_path = _resolve_omo_ref(omo_root, approval_ref)
+    if root not in approval_path.parents or not approval_path.is_file():
+        return Check("omo_approval", False, "OMO approval artifact is unavailable")
+    try:
+        approval = yaml.safe_load(approval_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError, yaml.YAMLError) as exc:
+        return Check(
+            "omo_approval", False, f"invalid OMO approval metadata: {type(exc).__name__}"
+        )
+    if not isinstance(approval, dict):
+        return Check("omo_approval", False, "OMO approval metadata must be an object")
+    task_ref = str(Path(".omo") / task_path.resolve().relative_to(omo_root.resolve()))
     if (
-        status not in APPROVED_STATUSES
-        or not approval_ref
-        or approval_state not in {"approved", "granted"}
+        approval.get("task_id") != task_id
+        or approval.get("approval_status") != "granted"
+        or approval.get("approval_scope") != "task.promote_apply"
+        or approval.get("refs", {}).get("task_ref") != task_ref
     ):
-        return Check("omo_approval", False, "OMO task is not approved for production")
-    return Check("omo_approval", True, "approved OMO task metadata confirmed")
+        return Check(
+            "omo_approval",
+            False,
+            "OMO promotion approval is missing, ungranted, or mismatched",
+        )
+    return Check("omo_approval", True, "official OMO promotion approval confirmed")
+
+
+def _omo_task_path(omo_root: Path, task_id: str) -> Path | None:
+    candidates = (
+        omo_root / "tasks" / "active" / f"{task_id}.yaml",
+        omo_root / "tasks" / "planned" / f"{task_id}.yaml",
+        omo_root / "tasks" / "completed" / f"{task_id}.yaml",
+    )
+    return next((path for path in candidates if path.is_file()), None)
+
+
+def _resolve_omo_ref(omo_root: Path, reference: str) -> Path:
+    """Resolve a repo-relative `.omo/...` ref against the supplied OMO root."""
+    root = omo_root.resolve().parent
+    prefix = f"{omo_root.name}/"
+    if reference.startswith(prefix):
+        return (root / reference).resolve()
+    if reference.startswith(".omo/"):
+        return (omo_root / reference.removeprefix(".omo/")).resolve()
+    return (root / reference).resolve()
 
 
 def _evaluation_metadata(path: Path | None) -> dict[str, object]:
@@ -217,12 +253,7 @@ def _evaluation_metadata(path: Path | None) -> dict[str, object]:
 def _omo_metadata(omo_root: Path, task_id: str | None) -> dict[str, object]:
     if not task_id:
         return {"available": False}
-    candidates = (
-        omo_root / "tasks" / "active" / f"{task_id}.yaml",
-        omo_root / "tasks" / "planned" / f"{task_id}.yaml",
-        omo_root / "tasks" / "completed" / f"{task_id}.yaml",
-    )
-    task_path = next((path for path in candidates if path.is_file()), None)
+    task_path = _omo_task_path(omo_root, task_id)
     if task_path is None:
         return {"available": False, "task_id": task_id}
     try:
@@ -235,13 +266,28 @@ def _omo_metadata(omo_root: Path, task_id: str | None) -> dict[str, object]:
         return {"available": False, "task_id": task_id}
     if not isinstance(payload, dict):
         return {"available": False, "task_id": task_id}
+    approval_ref = payload.get("approval_ref")
+    if not isinstance(approval_ref, str):
+        return {"available": False, "task_id": task_id}
+    root = omo_root.resolve().parent
+    approval_path = _resolve_omo_ref(omo_root, approval_ref)
+    if root not in approval_path.parents or not approval_path.is_file():
+        return {"available": False, "task_id": task_id}
+    try:
+        approval = yaml.safe_load(approval_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError, yaml.YAMLError):
+        return {"available": False, "task_id": task_id}
+    if not isinstance(approval, dict):
+        return {"available": False, "task_id": task_id}
     return {
         "available": True,
         "task_id": task_id,
-        "status": payload.get("status"),
-        "approval_state": payload.get("approval_state"),
-        "approval_ref": payload.get("approval_ref"),
-        "sha256": _sha256(task_path),
+        "task_status": payload.get("status"),
+        "approval_status": approval.get("approval_status"),
+        "approval_scope": approval.get("approval_scope"),
+        "approval_ref": approval_ref,
+        "task_sha256": _sha256(task_path),
+        "approval_sha256": _sha256(approval_path),
     }
 
 

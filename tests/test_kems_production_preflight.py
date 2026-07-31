@@ -44,7 +44,14 @@ def _approved_task(tmp_path):
     task_dir = tmp_path / "tasks" / "active"
     task_dir.mkdir(parents=True)
     (task_dir / "KEMS-001.yaml").write_text(
-        "status: approved\napproval_state: approved\napproval_ref: review-001\n",
+        "id: KEMS-001\nstatus: active\napproval_ref: .omo/workers/runs/KEMS-001-approval.yaml\n",
+        encoding="utf-8",
+    )
+    approval_dir = tmp_path / "workers" / "runs"
+    approval_dir.mkdir(parents=True)
+    (approval_dir / "KEMS-001-approval.yaml").write_text(
+        "task_id: KEMS-001\napproval_status: granted\napproval_scope: task.promote_apply\n"
+        "refs:\n  task_ref: .omo/tasks/active/KEMS-001.yaml\n",
         encoding="utf-8",
     )
 
@@ -104,7 +111,7 @@ def test_preflight_writes_redacted_auditable_evidence(tmp_path, monkeypatch):
     assert evidence["status"] == "ready"
     assert evidence["sources"][0]["name"] == "2026-auto-apple-mail.md"
     assert evidence["evaluation"]["dataset_id"] == "real-kems"
-    assert evidence["omo"]["approval_ref"] == "review-001"
+    assert evidence["omo"]["approval_ref"] == ".omo/workers/runs/KEMS-001-approval.yaml"
     assert "private source" not in output.read_text(encoding="utf-8")
     assert not list(output.parent.glob(".*.tmp"))
 
@@ -156,5 +163,33 @@ def test_preflight_blocks_on_invalid_omo_yaml(tmp_path, monkeypatch):
         item["id"] == "omo_approval"
         and not item["ok"]
         and "invalid OMO task metadata" in item["detail"]
+        for item in result["checks"]
+    )
+
+
+def test_preflight_rejects_ungranted_omo_promotion(tmp_path, monkeypatch):
+    monkeypatch.setenv(
+        "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
+    )
+    monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
+    _approved_task(tmp_path / "omo")
+    approval = tmp_path / "omo" / "workers" / "runs" / "KEMS-001-approval.yaml"
+    approval.write_text(
+        "task_id: KEMS-001\napproval_status: requested\napproval_scope: task.promote_apply\n"
+        "refs:\n  task_ref: .omo/tasks/active/KEMS-001.yaml\n",
+        encoding="utf-8",
+    )
+    result = run_preflight(
+        docs_root=_source_tree(tmp_path),
+        evaluation_manifest=_evaluation_manifest(tmp_path),
+        omo_root=tmp_path / "omo",
+        task_id="KEMS-001",
+        production=True,
+    )
+    assert result["status"] == "blocked"
+    assert any(
+        item["id"] == "omo_approval"
+        and not item["ok"]
+        and "ungranted" in item["detail"]
         for item in result["checks"]
     )
