@@ -62,6 +62,15 @@ def _evaluation_symbols():
     return EvaluationManifest, EvaluationSample, EvaluationStore(path), evaluate_field_mapping
 
 
+def _adjudication_store():
+    try:
+        from kos.kems import AdjudicationStore
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="KOS adjudication store is unavailable") from exc
+    path = Path(os.environ.get("KEMS_ADJUDICATION_DB", str(Path.home() / ".kems" / "adjudication.sqlite")))
+    return AdjudicationStore(path)
+
+
 def _reject_private_fields(value: object) -> None:
     if isinstance(value, dict):
         leaked = _PRIVATE_FIELDS.intersection(value)
@@ -522,3 +531,119 @@ async def get_kems_evaluation_run(run_id: str) -> dict[str, Any]:
     if result is None:
         raise HTTPException(status_code=404, detail="evaluation run not found")
     return result
+
+
+@router.post("/api/kems/adjudication/queue")
+async def import_kems_adjudication_queue(request: Request) -> dict[str, Any]:
+    """Import only redacted queue metadata into the persistent adjudication store."""
+    body = await request.json()
+    if not isinstance(body, dict) or not isinstance(body.get("items"), list):
+        raise HTTPException(status_code=422, detail="items must be a list")
+    _reject_private_fields(body)
+    try:
+        inserted = _adjudication_store().ingest_queue(body["items"])
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=503, detail="adjudication persistence is unavailable") from exc
+    return {"inserted": inserted, "count": len(body["items"]), "mode": "review_only"}
+
+
+@router.get("/api/kems/adjudication/queue")
+async def get_kems_adjudication_queue(
+    status: str | None = Query(None), limit: int = Query(100, ge=1, le=1000)
+) -> dict[str, Any]:
+    try:
+        items = _adjudication_store().list_items(status=status, limit=limit)
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"items": items, "count": len(items), "mode": "review_only"}
+
+
+@router.post("/api/kems/adjudication/{sample_id}/claim")
+async def claim_kems_adjudication(sample_id: str, request: Request) -> dict[str, Any]:
+    body = await request.json()
+    if not isinstance(body, dict) or not body.get("annotator"):
+        raise HTTPException(status_code=422, detail="annotator is required")
+    _reject_private_fields(body)
+    try:
+        item = _adjudication_store().claim(sample_id, annotator=str(body["annotator"]))
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=f"sample not found: {exc.args[0]}") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"item": item, "status": item["annotation_status"]}
+
+
+@router.post("/api/kems/adjudication/{sample_id}/adjudicate")
+async def adjudicate_kems_sample(sample_id: str, request: Request) -> dict[str, Any]:
+    body = await request.json()
+    if not isinstance(body, dict) or not isinstance(body.get("labels"), dict):
+        raise HTTPException(status_code=422, detail="labels must be an object")
+    _reject_private_fields(body)
+    required = ("annotation_version", "annotator")
+    missing = [field for field in required if not body.get(field)]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing adjudication fields: {', '.join(missing)}")
+    try:
+        item = _adjudication_store().adjudicate(
+            sample_id,
+            labels=body["labels"],
+            annotation_version=str(body["annotation_version"]),
+            annotator=str(body["annotator"]),
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=f"sample not found: {exc.args[0]}") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"item": item, "status": item["annotation_status"]}
+
+
+@router.post("/api/kems/adjudication/manifest")
+async def build_kems_adjudicated_manifest(request: Request) -> dict[str, Any]:
+    """Materialize a manifest only from persisted, adjudicated queue records."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="manifest request must be an object")
+    _reject_private_fields(body)
+    required = ("dataset_id", "dataset_version")
+    missing = [field for field in required if not body.get(field)]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"missing manifest fields: {', '.join(missing)}")
+    try:
+        manifest_type, sample_type, evaluation_store, _ = _evaluation_symbols()
+        rows = _adjudication_store().adjudicated_items()
+        if not rows:
+            raise ValueError("no adjudicated samples are available")
+        samples = tuple(
+            sample_type(
+                sample_id=str(row["sample_id"]),
+                source_sha256=str(row["source_sha256"]),
+                source_ref=str(row["source_ref"]),
+                scenario_id=str(row["scenario_id"]),
+                split=str(row["split"]),
+                annotation_status="adjudicated",
+                labels=row["labels"],
+                annotation_version=str(row["annotation_version"]),
+            )
+            for row in rows
+        )
+        manifest = manifest_type(
+            schema_version="kems.evaluation-manifest.v1",
+            dataset_id=str(body["dataset_id"]),
+            dataset_version=str(body["dataset_version"]),
+            redaction_status="verified",
+            samples=samples,
+        )
+        persisted = evaluation_store.register_manifest(manifest)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=503, detail="evaluation persistence is unavailable") from exc
+    return {
+        "dataset_id": manifest.dataset_id,
+        "dataset_version": manifest.dataset_version,
+        "sample_count": len(manifest.samples),
+        "persisted": persisted,
+        "redaction_status": manifest.redaction_status,
+    }
