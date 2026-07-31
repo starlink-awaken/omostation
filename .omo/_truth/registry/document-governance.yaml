@@ -1,0 +1,120 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+---
+
+version: 1
+description: Document ownership, lifecycle, freshness, and discoverability policy.
+
+metadata:
+  valid_statuses: [draft, active, stale, superseded, archived, deprecated, experimental, planned]
+  valid_lifecycles: [ssot, entry, contract, pattern, plan, history, generated]
+  required_frontmatter: [status, lifecycle, owner, last-reviewed]
+  date_format: YYYY-MM-DD
+
+surfaces:
+  - id: root-entry
+    patterns:
+      - AGENTS.md
+      - CLAUDE.md
+      - README.md
+      - ARCHITECTURE.md
+      - LAYER-INDEX.md
+      - docs/SYSTEM-INDEX.md
+      - docs/INDEX-*.md
+    owner: governance-team
+    lifecycle: entry
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: external
+    review_days: 30
+    workflow: project-doc-change
+
+  - id: omo-standards
+    patterns:
+      - .omo/standards/*.md
+    owner: governance-team
+    lifecycle: contract
+    ssot: .omo/standards/doc-ssot-contract.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 90
+    workflow: project-doc-change
+
+  - id: omo-truth-docs
+    patterns:
+      - .omo/_truth/*.md
+    owner: governance-team
+    lifecycle: ssot
+    ssot: .omo/_truth/INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 90
+    workflow: governance-state-mutation
+
+  - id: omo-knowledge
+    patterns:
+      - .omo/_knowledge/**/*.md
+    excludes:
+      - .omo/_knowledge/audits/**
+      - .omo/_knowledge/decisions/**
+      - .omo/_knowledge/management/**
+    owner: governance-team
+    lifecycle: history
+    ssot: docs/INDEX-KNOWLEDGE.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    workflow: project-doc-change
+
+  - id: docs-discoverable
+    patterns:
+      - docs/**/*.md
+    excludes:
+      - docs/generated/**
+      - docs/closeout/**
+      - docs/reports/**
+    owner: governance-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+  - id: project-entry
+    patterns:
+      - projects/*/AGENTS.md
+      - projects/*/CLAUDE.md
+      - projects/*/ARCHITECTURE.md
+      - projects/*/BOUNDARY.md
+      - projects/*/GOVERNANCE.md
+    owner: project-owner
+    lifecycle: entry
+    ssot: docs/project-registry.yaml
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: external
+    review_days: 90
+    workflow: project-doc-change
+
+rules:
+  missing_frontmatter:
+    severity: warning
+  malformed_frontmatter:
+    severity: error
+  invalid_metadata:
+    severity: warning
+  stale_review:
+    severity: warning
+  orphan_document:
+    severity: warning
+  missing_index:
+    severity: error
