@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.13"
+      - name: Ruff check
+        run: uv run --no-project --with ruff ruff check src/cockpit/web/api_kems.py tests/test_api_kems.py tests/test_api_kems_ocr.py
+      - name: Ruff format check
+        run: uv run --no-project --with ruff ruff format src/cockpit/web/api_kems.py tests/test_api_kems.py tests/test_api_kems_ocr.py --check
+      - name: Contract Gatekeeper
+        run: python3 scripts/contract_gatekeeper.py src/cockpit/web/api_kems.py tests/test_api_kems_ocr.py
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.13"
+      - name: Run tests
+        run: |
+          PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with httpx --with pyyaml \
+            pytest tests/test_api_kems.py tests/test_api_kems_ocr.py -q --tb=short

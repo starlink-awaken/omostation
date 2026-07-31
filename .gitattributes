@@ -1,0 +1,47 @@
+# ── 文本文件行尾规范化 ──
+* text=auto eol=lf
+
+# ── Python ──
+*.py text diff=python
+*.pyi text diff=python
+*.pyw text
+
+# ── Shell ──
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+
+# ── 文档 ──
+*.md text diff=markdown
+*.rst text
+*.txt text
+
+# ── 配置 ──
+*.yaml text
+*.yml text
+*.json text
+*.toml text
+*.ini text
+*.cfg text
+*.conf text
+
+# ── Git 文件 ──
+.gitignore text
+.gitattributes text
+
+# ── 二进制（禁止 diff） ──
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.gz binary
+*.db binary
+*.sqlite binary
+
+# ── Lock 文件 ──
+uv.lock linguist-language=Python
