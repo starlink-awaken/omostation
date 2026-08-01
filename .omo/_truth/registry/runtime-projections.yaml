@@ -25,7 +25,7 @@ projections:
     canonical: .omo/state/runtime/system_health.yaml
     legacy: .omo/state/system_health.yaml
     state: pending
-    generator: omo state refresh (planned, ADR-0129 phase 4)
+    generator: omo state refresh (implemented, activation pending runtime bootstrap)
     lane: runtime_snapshot
 
   governance_data:
