@@ -23,7 +23,7 @@ async def api_sandbox_execute(request: Request):
                 {"status": "error", "error": "code must be no longer than 20000 characters"}, status_code=413
             )
 
-        from runtime.executor.sandbox import Sandbox
+        from runtime.executor.sandbox import Sandbox  # type: ignore[import-not-found]
 
         # Execute code in restricted KEI sandbox
         res = Sandbox.execute(code)
