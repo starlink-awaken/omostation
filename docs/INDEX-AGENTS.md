@@ -7,7 +7,7 @@
 > - validation: skill 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-31T08:11:19.601394+00:00
+> - generated_at: 2026-08-01T02:31:12.027939+00:00
 
 ---
 
@@ -36,6 +36,7 @@
 
 | Skill | 用途 | 触发场景 |
 |-------|------|---------|
+| bdsk-virtual-board | bdsk virtual board | 相关操作 |
 | bos-contract-fix | bos contract fix | 相关操作 |
 | ci-red-triage | ci red triage | 相关操作 |
 | ecos-test-cycle | ecos test cycle | 相关操作 |
