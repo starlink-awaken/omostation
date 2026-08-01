@@ -10,6 +10,9 @@ def _source_tree(tmp_path):
     inbox = docs / "_inbox"
     inbox.mkdir(parents=True, exist_ok=True)
     (inbox / "2026-auto-apple-mail.md").write_text("private source\n", encoding="utf-8")
+    (inbox / "2026-auto-browser-history.md").write_text(
+        "excluded source\n", encoding="utf-8"
+    )
     return docs
 
 
@@ -140,6 +143,10 @@ def test_preflight_blocks_without_external_gates(tmp_path, monkeypatch):
     assert all(
         "private source" not in json.dumps(result, ensure_ascii=False) for _ in [0]
     )
+    assert result["source_scope"]["scope_id"] == "kems.private-source-review.v1"
+    assert result["source_scope"]["excluded_auto_sources"] == [
+        {"name": "2026-auto-browser-history.md", "reason": "outside_controlled_scope"}
+    ]
 
 
 def test_preflight_is_ready_only_when_all_production_gates_pass(tmp_path, monkeypatch):

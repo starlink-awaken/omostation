@@ -20,6 +20,8 @@ SOURCE_PATTERNS = (
     "*-auto-apple-mail.md",
     "*-auto-iphone-sms.md",
 )
+SOURCE_SCOPE_ID = "kems.private-source-review.v1"
+ALL_AUTO_SOURCE_PATTERN = "*-auto-*.md"
 FORBIDDEN_KEYS = {"body", "content", "ocr_text", "raw_text", "text"}
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 APPROVED_STATUSES = {"approved", "dispatched", "executing", "verified", "closed"}
@@ -71,6 +73,26 @@ def _source_files(docs_root: Path) -> list[Path]:
             if path.is_file()
         }
     )
+
+
+def _source_scope_metadata(docs_root: Path, sources: list[Path]) -> dict[str, object]:
+    """Expose controlled scope and explicit exclusions without hashing excluded content."""
+    inbox = docs_root / "_inbox"
+    controlled = {path.resolve() for path in sources}
+    excluded = sorted(
+        {
+            path.name
+            for path in inbox.glob(ALL_AUTO_SOURCE_PATTERN)
+            if path.is_file() and path.resolve() not in controlled
+        }
+    )
+    return {
+        "scope_id": SOURCE_SCOPE_ID,
+        "controlled_patterns": list(SOURCE_PATTERNS),
+        "excluded_auto_sources": [
+            {"name": name, "reason": "outside_controlled_scope"} for name in excluded
+        ],
+    }
 
 
 def _source_inventory(sources: list[Path]) -> tuple[list[dict[str, object]], str]:
@@ -649,6 +671,7 @@ def run_preflight(
     )
     # Hashing proves inventory stability without placing private content in the report.
     inventory, inventory_sha256 = _source_inventory(sources)
+    source_scope = _source_scope_metadata(docs_root, sources)
 
     checks.append(
         _evaluation_check(evaluation_manifest, sources, bind_sources=production)
@@ -670,6 +693,7 @@ def run_preflight(
         "status": "ready" if ok else "blocked",
         "production": production,
         "source_count": len(sources),
+        "source_scope": source_scope,
         "checks": [check.as_dict() for check in checks],
     }
     if evidence_output is not None:
@@ -679,6 +703,7 @@ def run_preflight(
             "production": production,
             "run_id": os.environ.get("BOS_MESH_RUN_ID", "").strip() or None,
             "source_count": len(sources),
+            "source_scope": source_scope,
             "source_inventory_sha256": inventory_sha256,
             "sources": inventory,
             "evaluation": _evaluation_metadata(evaluation_manifest),
