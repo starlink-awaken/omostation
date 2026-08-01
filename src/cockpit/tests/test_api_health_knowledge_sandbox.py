@@ -176,6 +176,34 @@ class TestKnowledgeAPI:
         resp = client.post("/api/knowledge/put", json={"slug": "test"})
         assert resp.status_code == 400
 
+    def test_search_via_http_network_resolver(self, client):
+        mock_resp = MagicMock(status_code=200)
+        mock_resp.json.return_value = {"status": "ok", "results": [{"title": "network-resolved"}]}
+        mock_client = AsyncMock()
+        mock_client.__aenter__.return_value.post = AsyncMock(return_value=mock_resp)
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            resp = client.post("/api/knowledge/search", json={"query": "network-test"})
+        assert resp.status_code == 200
+        assert resp.json()["result"]["results"][0]["title"] == "network-resolved"
+
+    def test_put_emits_card_updated_event(self, client, tmp_path, monkeypatch):
+        monkeypatch.setenv("WORKSPACE_ROOT", str(tmp_path))
+        mock_client = AsyncMock()
+        mock_post = AsyncMock(return_value=MagicMock(status_code=200))
+        mock_client.__aenter__.return_value.post = mock_post
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            resp = client.post(
+                "/api/knowledge/put",
+                json={
+                    "slug": "event-card",
+                    "title": "Event Test",
+                    "content": "Event Content",
+                    "tags": ["event"],
+                },
+            )
+        assert resp.status_code == 200
+        assert mock_post.call_count >= 1
+
 
 class TestSandboxAPI:
     """Cover api_sandbox.py endpoints."""

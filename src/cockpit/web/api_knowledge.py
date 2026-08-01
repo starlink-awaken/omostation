@@ -1,19 +1,58 @@
 """Knowledge API routes."""
 
 import json
+import logging
+import os
 import re
 from inspect import isawaitable
 from pathlib import Path
 
+import httpx
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from cockpit.compat import WORKSPACE_ROOT
 
+logger = logging.getLogger("cockpit.web.api_knowledge")
 router = APIRouter()
 
 _CARDS_DIR = WORKSPACE_ROOT / "data" / "cards"
 _SLUG_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$")
+_AGORA_HTTP_ENDPOINT = os.environ.get("AGORA_HTTP_ENDPOINT", "http://127.0.0.1:7422")
+
+
+async def _resolve_bos_uri_network_or_compat(uri: str, payload: dict) -> dict:
+    """Resolve BOS URI via HTTP network endpoint (L3/L2 contract) with graceful local fallback."""
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            resp = await client.post(
+                f"{_AGORA_HTTP_ENDPOINT}/bos/resolve",
+                json={"uri": uri, "payload": payload},
+            )
+            if resp.status_code == 200:
+                return resp.json()
+    except Exception as e:
+        logger.debug("Network BOS resolution fallback to in-process compat: %s", e)
+
+    # Defensive fallback to compat in-process adapter for standalone / unit tests
+    from cockpit.adapters.agora import resolve_bos_uri
+
+    res = resolve_bos_uri(uri, payload)
+    if isawaitable(res):
+        res = await res
+    return res
+
+
+async def _notify_knowledge_event(event_uri: str, payload: dict) -> None:
+    """Emit write-after event for immediate vector indexing and RAG cache invalidation."""
+    try:
+        async with httpx.AsyncClient(timeout=1.5) as client:
+            await client.post(
+                f"{_AGORA_HTTP_ENDPOINT}/bos/emit",
+                json={"uri": event_uri, "payload": payload},
+            )
+    except Exception as e:
+        logger.debug("Knowledge event emission non-blocking fallback: %s", e)
 
 
 @router.post("/api/knowledge/search")
@@ -31,14 +70,11 @@ async def api_knowledge_search(request: Request):
         except (TypeError, ValueError):
             return JSONResponse({"status": "error", "error": "limit must be an integer"}, status_code=400)
 
-        from cockpit.adapters.agora import resolve_bos_uri
-
-        # 传递 proxy_manager 是 Phase 3 蜂群感知的关键，但在 cockpit 层面我们直接调用 local resolve 即可，
-        # 真正的 proxy_manager 会由 agora_mcp 守护进程持有。Cockpit 这里作为客户端发起调用。
-        # 最规范的做法是通过 HTTP 调用 Agora 7422 端口，但这里保持与旧版兼容的直接 import 调用。
-        res = resolve_bos_uri("bos://memory/local/all-search", {"query": query.strip(), "limit": limit})
-        if isawaitable(res):
-            res = await res
+        # 架构收敛：优先使用 HTTP BOS Transport 网络解耦协议，带兼容态平滑降级
+        res = await _resolve_bos_uri_network_or_compat(
+            "bos://memory/local/all-search",
+            {"query": query.strip(), "limit": limit},
+        )
         if isinstance(res, dict) and isawaitable(res.get("result")):
             res = {**res, "result": await res["result"]}
         return JSONResponse({"status": "ok", "result": res})
@@ -86,6 +122,17 @@ slug: {json.dumps(slug, ensure_ascii=False)}
         file_path = _CARDS_DIR / f"{slug}.md"
         file_path.write_text(card_content, encoding="utf-8")
 
+        # 方案 C：写后即时分发卡片更新通知（Event-Driven Card Indexing Convergence）
+        await _notify_knowledge_event(
+            "bos://brain/events/card_updated",
+            {
+                "slug": slug,
+                "title": title,
+                "path": str(file_path),
+                "action": "upsert",
+            },
+        )
+
         return JSONResponse(
             {
                 "status": "success",
@@ -97,3 +144,4 @@ slug: {json.dumps(slug, ensure_ascii=False)}
         )
     except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
