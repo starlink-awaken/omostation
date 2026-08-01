@@ -2364,8 +2364,20 @@ services:
   action: tasks/active
   transport: inline
   package: omo
-  description: omo tasks/active 端点 (omo @mcp.resource 引用)
-  i0_route: pending
+  status: active
+- uri: bos://governance/board/execute
+  domain: governance
+  action: execute
+  transport: inline
+  package: runtime
+  description: B.D.S.K. Virtual Board consensus engine & Mode-A/B execution
+  status: active
+- uri: bos://persona/board/route
+  domain: persona
+  action: route
+  transport: inline
+  package: runtime
+  description: B.D.S.K. 4-Corner Persona Router (@Builder/@Devil/@Sage/@Keeper)
   status: active
 - uri: bos://memory/inbox/status
   domain: memory
