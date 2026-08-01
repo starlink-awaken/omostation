@@ -52,3 +52,5 @@ def test_runtime_and_swarm_events_project_into_omo(tmp_path: Path) -> None:
     assert snapshots["integration-swarm"]["state"] == "succeeded"
     assert snapshots["integration-runtime"]["event_count"] == 7
     assert snapshots["integration-swarm"]["event_count"] == 7
+    assert snapshots["integration-runtime"]["checkpoints"]
+    assert snapshots["integration-swarm"]["checkpoints"]
