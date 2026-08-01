@@ -1,7 +1,7 @@
 #!/bin/bash
 # test-resolve-root-remote.sh — Tests for canonical root remote resolution
 #
-# Tests 3 remote topologies:
+# Tests canonical remote topologies:
 # 1. origin=wrong (omostation-runtime), omostation-root=correct → resolves to omostation-root
 # 2. Only origin=correct → resolves to origin
 # 3. No correct remote → fail closed (exit 1)
@@ -120,6 +120,29 @@ echo "=== Test 6: SSH URL variant ==="
   git remote add omostation-root git@github.com:starlink-awaken/omostation.git
   result=$(bash -c "source '$RESOLVER' && resolve_root_remote" 2>/dev/null) && rc=0 || rc=$?
   assert_eq "resolves SSH URL" "omostation-root" "$result"
+  cleanup_test_repo "$tmpdir"
+}
+
+echo ""
+echo "=== Test 7: Fetch canonical but push runtime → fail closed ==="
+{
+  tmpdir=$(setup_test_repo)
+  cd "$tmpdir"
+  git remote add split https://github.com/starlink-awaken/omostation.git
+  git remote set-url --push split https://github.com/starlink-awaken/omostation-runtime.git
+  output=$(source "$RESOLVER" && resolve_root_remote 2>&1) && rc=0 || rc=$?
+  assert_fail "split fetch/push URL fails" "$output" "$rc"
+  cleanup_test_repo "$tmpdir"
+}
+
+echo ""
+echo "=== Test 8: Lookalike host/path → fail closed ==="
+{
+  tmpdir=$(setup_test_repo)
+  cd "$tmpdir"
+  git remote add origin https://evil.example/github.com/starlink-awaken/omostation.git
+  output=$(source "$RESOLVER" && resolve_root_remote 2>&1) && rc=0 || rc=$?
+  assert_fail "lookalike URL fails" "$output" "$rc"
   cleanup_test_repo "$tmpdir"
 }
 
