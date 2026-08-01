@@ -1,3 +1,11 @@
+---
+status: planned
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # B2 · 分布式状态同步设计 v2（bus-foundation 驱动版）
 
 > 状态: DRAFT v2 · 日期: 2026-07-13 · 取代 B2 v1（raw gossip 版）

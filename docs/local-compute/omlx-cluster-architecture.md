@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: architecture-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # omlx × aetherforge 本地算力集群 — 架构与运维
 
 > 最后更新: 2026-07-05 · 三机 Tailscale 集群 · 统一 LiteLLM 网关 · aetherforge/agora/cockpit 消费

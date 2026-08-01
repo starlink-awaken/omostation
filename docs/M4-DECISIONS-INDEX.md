@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # M4 决策速查表 (Round 4b)
 
 > **配套 ADR-0142** (Round 4b, 2026-07-06)

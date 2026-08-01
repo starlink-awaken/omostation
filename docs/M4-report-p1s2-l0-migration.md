@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # L0-constraints v1 → v2 Migration Report
 **Date**: 2026-07-06
 **ADR**: ADR-0132 P1-S2

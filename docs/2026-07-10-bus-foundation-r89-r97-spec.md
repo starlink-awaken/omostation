@@ -1,3 +1,12 @@
+---
+status: planned
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
+
 # bus-foundation R89–R97 现代化路线图 — 架构与实施方案
 
 > **Spec 状态**: 提案 v1 (2026-07-10)

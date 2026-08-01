@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # G-DEL.4 角色记忆共享 · 调用链
 
 > 口径：`single_repo_gbrain`（非多机）。与 G-DEL.2a handoff 载荷对齐。

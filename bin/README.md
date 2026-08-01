@@ -57,6 +57,8 @@ last-reviewed: 2026-06-29
 | `ssot-writeback.py` | SSOT 回写 |
 | `check-boundary.py` | 项目边界校验 |
 | `check-cross-refs.py` | 交叉引用一致性（默认 tracked；`--scope workspace` 审计 ignored/运行态文档） |
+| `doc-governance-check.py` | ownership/lifecycle/freshness/discoverability 统一检查（默认 tracked；`--no-new-warnings` 阻断新增 warning；`--scope workspace` 宽审计；支持区分 `review-state: metadata-only` 与内容复审） |
+| `doc-governance-migrate.py` | 文档元数据迁移与 `metadata-only` → `content-reviewed` 批次升级 |
 | `check_health_ssot.py` | health SSOT 一致 (snake_case, 待渐进改) |
 
 ### 4. God Module (3) — F7114ABA 拆分支持

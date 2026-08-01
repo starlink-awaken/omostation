@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # Iris 连接器凭据矩阵
 
 > 配套：`projects/kairon/packages/iris` · 抓取全景见 [external-ingest-callchain.md](./external-ingest-callchain.md)  

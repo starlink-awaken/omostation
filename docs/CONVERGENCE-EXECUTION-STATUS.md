@@ -15,6 +15,10 @@ related:
 note: >
   ADR-0210 收敛期 6 项落地实况。2026-07-15 沙箱盘点 → 2026-07-17 授权终端激活收口。
   运行时数字权威源 .omo/state/*.yaml。
+lifecycle: contract
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
 ---
 
 # 收敛期六项 · 落地执行总表

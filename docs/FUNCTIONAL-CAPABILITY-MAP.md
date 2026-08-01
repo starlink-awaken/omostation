@@ -1,3 +1,12 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
+
 # omostation 全量功能能力地图
 
 > **SSOT**: 本文档是 omostation 系统功能能力的唯一全景地图 (聚焦 WHAT: 谁提供什么能力)

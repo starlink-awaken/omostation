@@ -1,3 +1,12 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
+
 # omostation 全量架构功能地图 (细化版)
 
 > **SSOT**: 本文档是 omostation 系统架构、模块依赖、内部功能、数据流/控制流/逻辑流的唯一全景地图

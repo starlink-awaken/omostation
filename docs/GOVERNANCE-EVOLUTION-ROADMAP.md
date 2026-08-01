@@ -1,3 +1,13 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: content-reviewed
+metadata-migrated-at: 2026-07-31
+content-reviewed-at: 2026-07-31
+---
+
 # Governance Evolution Roadmap
 
 > Human-readable navigation for the systemic governance evolution plan.

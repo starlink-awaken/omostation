@@ -1,0 +1,318 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+---
+
+version: 1
+description: Document ownership, lifecycle, freshness, and discoverability policy.
+
+metadata:
+  valid_statuses: [draft, active, stale, superseded, archived, deprecated, experimental, planned]
+  valid_lifecycles: [ssot, entry, contract, pattern, plan, history, generated]
+  valid_review_states: [content-reviewed, metadata-only]
+  required_frontmatter: [status, lifecycle, owner, last-reviewed]
+  optional_frontmatter: [review-state, metadata-migrated-at, content-reviewed-at]
+  date_format: YYYY-MM-DD
+  enum_migrations:
+    status:
+      approved: archived
+      conditional-pass: archived
+      已采纳: active
+    lifecycle:
+      design: plan
+      standard: contract
+      sop: pattern
+      architecture: contract
+      operations: pattern
+
+owners:
+  governance-team:
+    label: Governance and SSOT
+    workflow: governance-state-mutation
+  architecture-team:
+    label: Architecture and system navigation
+    workflow: project-doc-change
+  kems-team:
+    label: Knowledge engineering and KEMS
+    workflow: project-doc-change
+  runtime-team:
+    label: Runtime operations and observability
+    workflow: project-doc-change
+  project-owner:
+    label: Project-specific maintainer
+    workflow: project-doc-change
+
+surfaces:
+  - id: root-entry
+    patterns:
+      - AGENTS.md
+      - CLAUDE.md
+      - README.md
+      - GOVERNANCE.md
+      - ARCHITECTURE.md
+      - LAYER-INDEX.md
+      - docs/SYSTEM-INDEX.md
+      - docs/INDEX-*.md
+    owner: governance-team
+    lifecycle: entry
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: external
+    review_days: 30
+    workflow: project-doc-change
+
+  - id: omo-standards
+    patterns:
+      - .omo/standards/*.md
+    owner: governance-team
+    lifecycle: contract
+    ssot: .omo/standards/doc-ssot-contract.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 90
+    workflow: project-doc-change
+
+  - id: omo-truth-docs
+    patterns:
+      - .omo/_truth/*.md
+    owner: governance-team
+    lifecycle: ssot
+    ssot: .omo/_truth/INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 90
+    workflow: governance-state-mutation
+
+  - id: omo-governance-knowledge
+    patterns:
+      - .omo/_knowledge/gac/*.md
+      - .omo/_knowledge/patterns/*.md
+      - .omo/_knowledge/strategy/*.md
+    owner: governance-team
+    lifecycle: ssot
+    ssot: .omo/_truth/INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 90
+    workflow: project-doc-change
+
+  - id: omo-knowledge
+    patterns:
+      - .omo/_knowledge/**/*.md
+    excludes:
+      - .omo/_knowledge/audits/**
+      - .omo/_knowledge/decisions/**
+      - .omo/_knowledge/management/**
+    owner: kems-team
+    lifecycle: history
+    ssot: docs/INDEX-KNOWLEDGE.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    workflow: project-doc-change
+
+  - id: docs-architecture
+    patterns:
+      - docs/ARCHITECTURE*.md
+      - docs/architecture/**/*.md
+      - docs/local-compute/**/*.md
+      - docs/overview/**/*.md
+    owner: architecture-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+  - id: docs-kems
+    patterns:
+      - docs/KEMS-*.md
+      - docs/KOS-*.md
+      - docs/knowledge/**/*.md
+    owner: kems-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+  - id: docs-runtime
+    patterns:
+      - docs/operations/**/*.md
+      - docs/LOCAL-RUNTIME-STARTUP.md
+      - docs/RUNTIME-*.md
+    owner: runtime-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+  - id: docs-discoverable
+    patterns:
+      - docs/**/*.md
+    excludes:
+      - docs/generated/**
+      - docs/closeout/**
+      - docs/reports/**
+    owner: governance-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+  - id: project-entry
+    patterns:
+      - projects/*/AGENTS.md
+      - projects/*/CLAUDE.md
+      - projects/*/ARCHITECTURE.md
+      - projects/*/BOUNDARY.md
+      - projects/*/GOVERNANCE.md
+    owner: project-owner
+    lifecycle: entry
+    ssot: docs/project-registry.yaml
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: external
+    review_days: 90
+    workflow: project-doc-change
+
+  - id: scripts-entry
+    patterns:
+      - scripts/AGENTS.md
+      - scripts/ARCHITECTURE.md
+      - scripts/INDEX.md
+      - scripts/README.md
+    owner: runtime-team
+    lifecycle: entry
+    ssot: docs/INDEX-TOOLS.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: external
+    review_days: 90
+    discoverability: directory-index
+    index: docs/INDEX-TOOLS.md
+    workflow: project-doc-change
+
+  - id: spaces-entry
+    patterns:
+      - spaces/AGENTS.md
+      - spaces/ARCHITECTURE.md
+      - spaces/BOUNDARY.md
+      - spaces/CALLCHAIN.md
+      - spaces/README.md
+    owner: architecture-team
+    lifecycle: entry
+    ssot: spaces/registry.yaml
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: external
+    review_days: 90
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+rules:
+  missing_frontmatter:
+    severity: warning
+  malformed_frontmatter:
+    severity: error
+  invalid_metadata:
+    severity: warning
+  stale_review:
+    severity: warning
+  orphan_document:
+    severity: warning
+  missing_index:
+    severity: error
+
+warning_exceptions:
+  version: 2
+  generated: 2026-07-31
+  policy: no-new-warnings
+  matching: file-signature
+  signature_algorithm: sha256
+  baseline_file: .omo/_truth/registry/document-warning-baseline.yaml
+  entries:
+    - id: legacy-omo-knowledge-frontmatter
+      rule: missing_frontmatter
+      surface: omo-knowledge
+      max_findings: 0
+      expires: 2026-10-31
+      owner: kems-team
+      reason: Legacy knowledge documents are being migrated to the frontmatter contract.
+    - id: legacy-omo-truth-frontmatter
+      rule: missing_frontmatter
+      surface: omo-truth-docs
+      max_findings: 0
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing truth documentation needs metadata migration without rewriting SSOT history.
+    - id: legacy-omo-standards-frontmatter
+      rule: missing_frontmatter
+      surface: omo-standards
+      max_findings: 0
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing standards are being migrated in controlled batches.
+    - id: legacy-docs-frontmatter
+      rule: missing_frontmatter
+      surface: docs-discoverable
+      max_findings: 0
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing discoverable docs need frontmatter migration and index review.
+    - id: legacy-omo-knowledge-enums
+      rule: invalid_metadata
+      surface: omo-knowledge
+      max_findings: 0
+      expires: 2026-10-31
+      owner: kems-team
+      reason: Historical lifecycle values require explicit mapping to the current enum.
+    - id: legacy-omo-standards-enums
+      rule: invalid_metadata
+      surface: omo-standards
+      max_findings: 0
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing standard lifecycle values require controlled normalization.
+    - id: legacy-docs-enums
+      rule: invalid_metadata
+      surface: docs-discoverable
+      max_findings: 0
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing document status/lifecycle values require explicit migration decisions.
+
+warning_burndown:
+  start_date: 2026-07-31
+  start_findings: 164
+  target_date: 2026-10-31
+  target_findings: 0
+  checkpoints:
+    - date: 2026-08-31
+      max_findings: 109
+    - date: 2026-09-30
+      max_findings: 55
+    - date: 2026-10-31
+      max_findings: 0

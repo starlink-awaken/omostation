@@ -52,6 +52,10 @@ DEFAULT_POLICY = {
         {"id": "m4-bootstrap-reflex", "command": ["bin/mof/mof-bootstrap.py", "all"]},
         {"id": "m4-mcp-tool-integrity", "command": ["bin/gac/mcp-tool-data-complete.py"]},
         {"id": "doc-ssot-lint", "command": ["bin/ssot/doc-ssot-lint.py"]},
+        {
+            "id": "doc-governance",
+            "command": ["bin/ssot/doc-governance-check.py", "--no-new-warnings"],
+        },
         {"id": "project-layer-index", "command": ["bin/mof/project-layer-index.py", "--check"], "ci_only": True},
         {"id": "doc-ssot-snapshots", "command": ["scripts/check-doc-ssot-snapshots.py"]},
         {"id": "doc-link-check", "command": ["bin/ssot/doc-link-check.py"]},
@@ -120,7 +124,17 @@ DEFAULT_POLICY = {
 
 # 动态读取并组装策略
 POLICY = load_sgf_policy() or DEFAULT_POLICY
-GATES_LIST = POLICY.get("gates", DEFAULT_POLICY["gates"])
+GATES_LIST = list(POLICY.get("gates", DEFAULT_POLICY["gates"]))
+
+# Root-owned document governance is intentionally appended outside the ecos
+# submodule policy so a submodule update cannot silently remove the gate.
+if not any(gate.get("id") == "doc-governance" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "doc-governance",
+            "command": ["bin/ssot/doc-governance-check.py", "--no-new-warnings"],
+        }
+    )
 
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,

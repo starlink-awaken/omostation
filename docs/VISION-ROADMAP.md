@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # eCOS v6 愿景与 Roadmap
 
 > 蜂群式AI超级大脑 · 多机多角色多场景多领域 · 个人OPC外置数字大脑

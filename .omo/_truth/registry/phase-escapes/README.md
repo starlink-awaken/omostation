@@ -1,3 +1,12 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: content-reviewed
+content-reviewed-at: 2026-07-31
+---
+
 # Phase escapes (committed, CI-visible)
 
 Escapes under `.omo/_delivery/phase-escape/` are runtime-only (often gitignored).

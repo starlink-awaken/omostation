@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
 # GaC 北极星 — 治理即代码 (Governance-as-Code)
 
 > **锚定 GaC 体系的方向 / 不变量 / 反模式. 防走偏的北极星.**

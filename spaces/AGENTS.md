@@ -32,7 +32,24 @@ spaces/
 
 ## CI
 
-无测试环境。修改后需通过 `bash tests/integration/run-all.sh` 或手工验证。
+配置校验入口为 `python3 bin/ssot/verify-spaces.py`。跨项目变更再运行
+`bash tests/integration/run-all.sh`；不要把工作区测试命令当作本目录的 SSOT。
+
+## Requirement Workflow
+
+对 `spaces/` 配置或文档的需求迭代，先从工作区根目录执行：
+
+```bash
+uv run --with pyyaml python bin/agent-workflow.py bootstrap
+uv run --with pyyaml python bin/agent-workflow.py status --json
+uv run --with pyyaml python bin/agent-workflow.py start governance-state-mutation \
+  --profile governance-agent --objective "<summary>"
+uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path spaces/<path>
+```
+
+完成编辑后执行 `verify --from-diff --execute`，再 `closeout`。运行态或
+`.omo/`/`spaces/` 受治理的写入必须走 OMO/C2G broker；不要直接生成或覆盖
+runtime projection。
 
 ## Workspace-Wide Governance (2026-06-24)
 

@@ -1,3 +1,12 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-07-31
+review-state: metadata-only
+metadata-migrated-at: 2026-07-31
+---
+
 # ARCHITECTURE-EVOLUTION.md — eCOS Architecture Evolution & Project Boundaries
 
 > 架构演进路线与各项目边界索引。本文档作为项目级 `BOUNDARY.md` 的回指目标。

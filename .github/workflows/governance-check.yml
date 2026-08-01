@@ -6,6 +6,10 @@ on:
       - ".pre-commit-config.yaml"
       - ".omo/**"
       - "docs/OPC-*.md"
+      - "docs/**"
+      - "bin/ssot/doc-governance-check.py"
+      - ".omo/_truth/registry/document-governance.yaml"
+      - ".omo/standards/document-governance-standard.md"
       - "projects/*/pyproject.toml"
       - "projects/*/src/**"
       - "projects/omo/tests/**"
@@ -21,6 +25,10 @@ on:
       - ".pre-commit-config.yaml"
       - ".omo/**"
       - "docs/OPC-*.md"
+      - "docs/**"
+      - "bin/ssot/doc-governance-check.py"
+      - ".omo/_truth/registry/document-governance.yaml"
+      - ".omo/standards/document-governance-standard.md"
       - "projects/*/pyproject.toml"
       - "projects/*/src/**"
       - "projects/omo/tests/**"
@@ -77,6 +85,7 @@ jobs:
           python3 scripts/check-governance-guides-ssot.py || FAILED=1
           python3 scripts/check-knowledge-history-ssot.py || FAILED=1
           python3 scripts/check-phase-closeout-ssot.py || FAILED=1
+          python3 bin/ssot/doc-governance-check.py --no-new-warnings || FAILED=1
           cd projects/omo
           uv sync --quiet   # 显式 sync (确保 pydantic 等依赖装好)
           uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || { echo "=== governance surfaces FAIL, output: ==="; cat /tmp/omo-governance-surfaces.json 2>/dev/null; FAILED=1; }
@@ -135,6 +144,7 @@ jobs:
       - name: Check documentation freshness
         run: |
           python3 scripts/check-interfaces.py
+          python3 bin/ssot/doc-governance-check.py --scope workspace --no-new-warnings --json
 
   governance-verify:
     runs-on: ubuntu-latest
@@ -155,6 +165,8 @@ jobs:
         run: make governance-verify
       - name: GaC local gate
         run: python3 bin/gac/gac-local-gate.py
+      - name: Document governance
+        run: python3 bin/ssot/doc-governance-check.py --no-new-warnings
       - name: Emit failure signal on break
         if: failure()
         run: |

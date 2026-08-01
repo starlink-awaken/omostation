@@ -44,10 +44,13 @@
 | 架构契约 | `ARCHITECTURE.md` | 架构层 |
 | 端口分配 | `protocols/port-registry.yaml` | 边界层 |
 | 治理规则 | `.omo/_truth/registry/governance-checks.yaml` | 事实层 |
+| 文档治理 | `.omo/_truth/registry/document-governance.yaml` | 事实层 |
 | ADR 决策 | `.omo/_knowledge/decisions/INDEX.md` | 知识层 |
 | BOS 服务 | `projects/agora/etc/bos-services.yaml` | 边界层 |
 | L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 协议层 |
 | MOF 能力 | `.omo/_truth/registry/mof-capabilities.yaml` | 事实层 |
+| 运维脚本入口 | `scripts/AGENTS.md` · `scripts/INDEX.md` | 运行时工具 |
+| 空间配置入口 | `spaces/AGENTS.md` · `spaces/registry.yaml` | 空间策略 |
 
 ---
 
@@ -169,6 +172,7 @@
 → [CLAUDE.md](../CLAUDE.md) — 会话上下文加载
 → [README.md](../README.md) — 项目快速开始
 → [doc-ssot-contract.md](../.omo/standards/doc-ssot-contract.md) — 文档正交契约
+→ [document-governance-standard.md](../.omo/standards/document-governance-standard.md) — ownership/lifecycle/freshness 契约
 → [layer-contract.yaml](layer-contract.yaml) — 分层依赖规则
 → [生成的索引](generated/) — `project-layer-index.md`, `agent-gac-rules.md` 等自动生成的文档
 → [近期报告](closeout/) — 2026-07-15 各轮 closeout 记录
