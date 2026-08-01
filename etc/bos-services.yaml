@@ -2372,6 +2372,8 @@ services:
   action: status
   transport: mcp
   package: agora-bos
+  module_path: agora.server.tools_bos
+  func_name: bos_inbox_status
   description: BOS Inbox 多源私有知识神经网运行状态统计
   i0_route: pending
   security_level: internal
@@ -2381,6 +2383,8 @@ services:
   action: search
   transport: mcp
   package: agora-bos
+  module_path: agora.server.tools_bos
+  func_name: bos_inbox_search
   description: BOS Inbox 多源私有知识库全文与高维关键词检索
   i0_route: pending
   security_level: internal
@@ -2390,6 +2394,8 @@ services:
   action: pending
   transport: mcp
   package: agora-bos
+  module_path: agora.server.tools_bos
+  func_name: bos_inbox_pending
   description: BOS Inbox 实时待办公文与未读事项读取
   i0_route: pending
   security_level: internal
@@ -2399,6 +2405,8 @@ services:
   action: watch
   transport: mcp
   package: agora-bos
+  module_path: agora.server.tools_bos
+  func_name: bos_inbox_watch
   description: BOS Inbox 实时事件驱动监控与紧急公文/工单待办通知 (Event-Driven Watcher)
   i0_route: pending
   security_level: internal
@@ -2408,6 +2416,8 @@ services:
   action: archive
   transport: mcp
   package: agora-bos
+  module_path: agora.server.tools_bos
+  func_name: bos_inbox_archive
   description: BOS Inbox 工单处理完结与冷归档闭环接口 (Lifecycle Archive)
   i0_route: pending
   security_level: internal
