@@ -37,6 +37,7 @@ EVENT_STATE = {
     "CompensationStarted": "compensating",
     "StepFailed": "failed",
     "BackendUnavailable": "unavailable",
+    "WorkflowRecovered": "running",
     "WorkflowVerified": "verified",
     "PRMerged": "merged",
     "WorkflowSucceeded": "succeeded",
@@ -44,7 +45,41 @@ EVENT_STATE = {
     "WorkflowCancelled": "cancelled",
     "WorkflowClosed": "closed",
 }
-TERMINAL_STATES = {"succeeded", "failed", "unavailable", "cancelled", "closed"}
+# 只有 closed 才是不可再推进的生命周期终态。succeeded/failed/unavailable
+# 仍可能进入验证、关闭或受控恢复。
+TERMINAL_STATES = {"closed"}
+_ALLOWED_TRANSITIONS = {
+    "unknown": {"planned"},
+    "planned": {"admitted", "dispatched", "running", "failed", "unavailable", "cancelled"},
+    "admitted": {"dispatched", "running", "failed", "unavailable", "cancelled"},
+    "dispatched": {"running", "failed", "unavailable", "cancelled"},
+    "running": {"running", "waiting_approval", "compensating", "failed", "unavailable", "succeeded", "cancelled"},
+    "waiting_approval": {"running", "failed", "unavailable", "cancelled"},
+    "compensating": {"running", "failed", "unavailable", "succeeded", "cancelled"},
+    "failed": {"running", "closed"},
+    "unavailable": {"running", "closed"},
+    "succeeded": {"verified", "closed"},
+    "verified": {"merged", "closed"},
+    "merged": {"closed"},
+    "cancelled": {"closed"},
+    "closed": set(),
+}
+_ALLOWED_EVENTS = {
+    "unknown": {"WorkflowRequested"},
+    "planned": {"WorkflowAdmitted", "StepDispatched", "StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
+    "admitted": {"StepDispatched", "StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
+    "dispatched": {"StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
+    "running": {"StepStarted", "StepHeartbeat", "CheckpointSaved", "ApprovalRequested", "CompensationStarted", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
+    "waiting_approval": {"ApprovalGranted", "StepFailed", "BackendUnavailable", "WorkflowCancelled"},
+    "compensating": {"WorkflowRecovered", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
+    "failed": {"WorkflowRecovered", "WorkflowClosed"},
+    "unavailable": {"WorkflowRecovered", "WorkflowClosed"},
+    "succeeded": {"WorkflowVerified", "WorkflowClosed"},
+    "verified": {"PRMerged", "WorkflowClosed"},
+    "merged": {"WorkflowClosed"},
+    "cancelled": {"WorkflowClosed"},
+    "closed": set(),
+}
 
 
 class WorkflowMeshEventError(ValueError):
@@ -96,10 +131,11 @@ def project_workflow_run(
     events: list[dict[str, Any]], workflow_run_id: str
 ) -> dict[str, Any]:
     """从事件重建一个运行快照，拒绝终态后的幽灵事件。"""
-    relevant = sorted(
-        (event for event in events if event.get("workflow_run_id") == workflow_run_id),
-        key=lambda event: event["occurred_at"],
-    )
+    # Append-only 文件顺序是状态机顺序；不能按调用方时间戳重排，否则迟到事件
+    # 可能被插入历史位置，绕过终态和恢复检查。
+    relevant = [
+        event for event in events if event.get("workflow_run_id") == workflow_run_id
+    ]
     snapshot: dict[str, Any] = {
         "workflow_run_id": workflow_run_id,
         "trace_id": None,
@@ -107,17 +143,41 @@ def project_workflow_run(
         "event_count": 0,
         "step_states": {},
         "last_event_type": None,
+        "last_event_at": None,
+        "metadata": {},
     }
     for event in relevant:
         validate_workflow_event(event)
+        next_state = EVENT_STATE[event["event_type"]]
         if snapshot["state"] in TERMINAL_STATES:
             raise WorkflowMeshEventError(
                 f"Workflow run is terminal; event is not allowed: {event['event_type']}"
             )
+        if (
+            event["event_type"] not in _ALLOWED_EVENTS.get(snapshot["state"], set())
+            or next_state not in _ALLOWED_TRANSITIONS.get(snapshot["state"], set())
+        ):
+            raise WorkflowMeshEventError(
+                "Workflow run is terminal or requires recovery; "
+                f"invalid transition {snapshot['state']} -> {next_state} "
+                f"for {event['event_type']}"
+            )
         snapshot["trace_id"] = snapshot["trace_id"] or event["trace_id"]
-        snapshot["state"] = EVENT_STATE[event["event_type"]]
+        snapshot["state"] = next_state
         snapshot["event_count"] += 1
         snapshot["last_event_type"] = event["event_type"]
+        snapshot["last_event_at"] = event["occurred_at"]
+        for key in (
+            "workflow",
+            "workflow_definition_id",
+            "intent_id",
+            "task_id",
+            "evidence_id",
+            "pr_id",
+            "pr_url",
+        ):
+            if key in event["payload"] and key not in snapshot["metadata"]:
+                snapshot["metadata"][key] = event["payload"][key]
         step_run_id = event["payload"].get("step_run_id")
         if step_run_id:
             snapshot["step_states"][step_run_id] = {
@@ -164,6 +224,25 @@ class WorkflowMeshStore:
 
     def snapshot(self, workflow_run_id: str) -> dict[str, Any]:
         return project_workflow_run(self.events(), workflow_run_id)
+
+    def snapshots(self) -> list[dict[str, Any]]:
+        """返回所有运行快照，顺序按事件日志中最后一次出现的顺序。"""
+        events = self.events()
+        run_ids = list(dict.fromkeys(
+            event.get("workflow_run_id") for event in events if event.get("workflow_run_id")
+        ))
+        last_indexes = {
+            str(run_id): index
+            for index, event in enumerate(events)
+            for run_id in [event.get("workflow_run_id")]
+            if run_id
+        }
+        snapshots = []
+        for run_id in run_ids:
+            snapshot = project_workflow_run(events, str(run_id))
+            snapshot["event_sequence"] = last_indexes[str(run_id)]
+            snapshots.append(snapshot)
+        return sorted(snapshots, key=lambda snapshot: snapshot["event_sequence"])
 
     def sink(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
         return self.append
