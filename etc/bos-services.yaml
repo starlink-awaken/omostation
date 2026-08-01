@@ -2300,15 +2300,6 @@ services:
   status: active
   transport: inline
   uri: bos://forge/market/list
-- action: protocols-layer/trigger
-  description: '[UNIMPLEMENTED] governance protocols-layer 触发器入口 — kairon 无 protocols_layer
-    包, 声明悬空 (A2/2026-07-13 止血 deprecate); 能力实现另立项'
-  domain: governance
-  i0_route: pending
-  package: metaos
-  status: unimplemented
-  transport: inline
-  uri: bos://governance/protocols-layer/trigger
 - action: roles/list
   description: governance roles list 端点 (mcp_protocol registry 端点)
   domain: governance
@@ -2506,7 +2497,7 @@ services:
   description: B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)
   domain: persona
   func_name: persona_bdsk_evaluate
-  i0_route: pending
+  i0_route: active
   module_path: agora.server.tools_bos
   package: agora
   security_level: internal

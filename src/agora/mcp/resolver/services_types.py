@@ -20,6 +20,7 @@ BOS_URI_DOMAINS = (
     "omo",
     "analysis",
     "persona",
+    "compute",
     "capability",
     "forge",
     "meta",

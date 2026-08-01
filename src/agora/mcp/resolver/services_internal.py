@@ -75,4 +75,14 @@ _INTERNAL_SERVICES: list[BosService] = [
         func_name="_memory_vault_search",
         description="L4 Vault 知识库搜索",
     ),
+    BosService(
+        uri="bos://persona/bdsk/evaluate",
+        domain="persona",
+        package="agora",
+        action="evaluate",
+        transport="internal",
+        module_path="agora.server.tools_bos",
+        func_name="persona_bdsk_evaluate",
+        description="B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)",
+    ),
 ]
