@@ -386,6 +386,16 @@ def _seed_workspace(root: Path) -> None:
                     "category": "human_cli",
                 },
                 {
+                    "name": "omo-goal-reconcile",
+                    "entrypoint": "omo goal reconcile",
+                    "runtime_ref": "projects/omo/src/omo/omo_goal.py:cmd_goal_reconcile",
+                    "mutation_target": ".omo/goals/current.yaml",
+                    "broker_ref": "projects/omo/src/omo/omo_ingress.py:reconcile_goals",
+                    "delivery_artifact_root": "runtime/omo/_delivery/ingress/goals/",
+                    "mode": "brokered",
+                    "category": "human_cli",
+                },
+                {
                     "name": "omo-task-create",
                     "entrypoint": "omo task create",
                     "runtime_ref": "projects/omo/src/omo/omo_task.py:cmd_task_create",
@@ -1195,6 +1205,7 @@ def test_build_governance_surfaces_report_ok(tmp_path: Path) -> None:
         "omo-capability-registry-scan",
         "omo-goal-create",
         "omo-goal-progress",
+        "omo-goal-reconcile",
         "omo-governance-ingress-debt",
         "omo-governance-ingress-goal",
         "omo-governance-ingress-task",
@@ -1218,7 +1229,7 @@ def test_build_governance_surfaces_report_ok(tmp_path: Path) -> None:
         "bridge_import": 4,
         "c2g_adapter": 2,
         "governance_ingress": 11,
-        "human_cli": 10,
+            "human_cli": 11,
         "runtime_cache": 2,
     }
     assert report["internal_write_profile_registry"]["runtime_profile_names"] == [
