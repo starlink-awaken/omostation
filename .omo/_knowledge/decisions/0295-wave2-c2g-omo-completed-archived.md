@@ -1,4 +1,11 @@
-# ADR-0294: Wave 2 (C2G + OMO) — Completed & Archived
+---
+status: ACCEPTED
+lifecycle: decision
+owner: governance-agent
+last-reviewed: 2026-08-01
+---
+
+# ADR-0295: Wave 2 (C2G + OMO) — Completed & Archived
 
 > **Status**: ACCEPTED (Phase A/B/C) → ARCHIVED (completed, maintenance mode)
 > **Date**: 2026-08-01
