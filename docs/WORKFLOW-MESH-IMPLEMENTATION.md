@@ -41,7 +41,7 @@ Workflow Mesh 不是新增一个工作流引擎，而是把现有 C2G、OMO、EC
 
 `event_id`、`event_type`、`trace_id`、`workflow_run_id`、`occurred_at`、`producer`、`schema_version`、`idempotency_key`、`payload`。
 
-OMO 只追加原始事件，再由投影器生成运行快照。重复 `event_id` 且内容相同是幂等成功；内容冲突必须失败。运行进入终态后，后续事件必须被拒绝，避免幽灵状态覆盖已交付结果。
+OMO 只追加原始事件，再由投影器生成运行快照。重复 `event_id` 或重复 `idempotency_key` 且内容相同是幂等成功；内容冲突必须失败。只有 `closed` 是不可再推进的终态；`succeeded`、`failed`、`unavailable` 必须分别进入验证、关闭或显式恢复，不得被提前当成结案。
 
 ## 4. 状态机
 
@@ -59,6 +59,8 @@ stateDiagram-v2
     running --> unavailable: BackendUnavailable
     running --> succeeded: WorkflowSucceeded
     running --> failed: WorkflowFailed
+    failed --> running: WorkflowRecovered
+    unavailable --> running: WorkflowRecovered
     succeeded --> verified: WorkflowVerified
     verified --> merged: PRMerged
     merged --> closed: WorkflowClosed
@@ -67,7 +69,7 @@ stateDiagram-v2
     planned --> cancelled: WorkflowCancelled
 ```
 
-`succeeded` 表示执行步骤成功，`verified` 表示验证证据已通过，`merged` 表示交付已进入主线，`closed` 表示生命周期已结案；这几个状态不能混用。
+`succeeded` 表示执行步骤成功，`verified` 表示验证证据已通过，`merged` 表示交付已进入主线，`closed` 表示生命周期已结案；这几个状态不能混用。失败和不可用只能通过 `WorkflowRecovered` 回到运行态。
 
 ## 5. 本轮已落地
 
@@ -76,23 +78,29 @@ stateDiagram-v2
 - Agora、Runtime、Swarm 在服务不可用时返回 `BACKEND_UNAVAILABLE`，不再返回 fake mock success。
 - ECOS 检测嵌套的 mock/simulation 结果并阻断“假成功”。
 - ECOS 支持注入 OMO-compatible event sink，执行开始和结束可以写入同一条 trace。
-- OMO 增加 Workflow Mesh 事件信封、幂等 AppendOnlyLog 存储和运行态投影。
+- ECOS 执行 admitted、step dispatch/start、step failure 和 terminal 事件，并为事件生成稳定幂等键。
+- OMO 增加 Workflow Mesh 事件信封、按 event/idempotency key 幂等的 AppendOnlyLog 存储和严格运行态投影。
+- OMO 快照保留 workflow、task、intent、evidence、PR 元数据，支持从事件恢复业务链路。
 - Cockpit 将“有 Git worktree”与“有活动 Agent Workflow run”分开；无活动 run 时显示 `stale`。
+- Cockpit 在 Agent Workflow YAML 缺失时直接消费 OMO Mesh 快照，展示真实运行、验证、PR 和证据阶段。
+- Runtime `AgentRuntime.run_task` 支持注入 `event_sink`，发出 requested/admitted、step dispatch/start、heartbeat、checkpoint、failure 和 terminal 事件；payload 不包含提示词和模型输出。
+- AetherForge `GraphWorkflow.run` 支持相同的 `workflow_run_id / trace_id / event_sink` 入口，并在 Swarm RPC 中透传，节点执行可直接投影到 OMO。
+- 根仓跨模块验收已用真实 Runtime 与 Swarm 执行写入 OMO append-only store，并验证两个运行快照均收敛到 `succeeded`。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
 ## 6. 分阶段路线
 
 ### P0：执行真相收敛
 
-1. 将所有跨层调用统一映射到 `workflow_run_id / trace_id`。
-2. 给 Runtime 和 Agent 执行补齐 `StepDispatched`、`StepStarted`、`StepHeartbeat`、`StepFailed`、`CheckpointSaved`。
+1. 将所有跨层调用统一映射到 `workflow_run_id / trace_id`（ECOS、OMO、Cockpit、Runtime、AetherForge 已具备注入式入口；CLI/subprocess 传播仍需在真实部署链路中逐步打开）。
+2. 给 Runtime 和 Agent 执行补齐 `StepDispatched`、`StepStarted`、`StepHeartbeat`、`StepFailed`、`CheckpointSaved`（ECOS、Runtime、AetherForge 已完成事件发射；当前 checkpoint 是控制面进度证据，尚不是可恢复的业务状态快照）。
 3. 将审批、预算、权限和后端可用性纳入 admitted gate；没有证据就不能进入 verified。
-4. Cockpit 只读取 OMO 投影和事件证据，不读取文件名、分支名或日志猜状态。
+4. Cockpit 优先读取 OMO 投影和事件证据；在没有 Mesh 事件的历史兼容场景保留 `stale` 降级，不把 Git 文件存在推断为成功。
 
 ### P1：可恢复执行
 
 1. OMO 将事件投影扩展为 WorkflowRun、StepRun、Approval、Evidence 的完整权威读写接口。
-2. Runtime 以 checkpoint 和幂等 key 实现断点恢复、超时重试和补偿步骤。
+2. Runtime 以持久化 checkpoint、幂等 key 实现断点恢复、超时重试和补偿步骤（本轮已完成事件与幂等键，恢复令牌和副作用边界仍是下一交付）。
 3. Agora 增加能力健康、版本、权限和降级原因的可观测记录。
 4. AetherForge 只接收已 admitted 的 StepRun，资源失败必须回写 `unavailable` 或 `failed`。
 
@@ -124,5 +132,8 @@ stateDiagram-v2
 ```bash
 cd projects/ecos && uv run pytest -q tests/test_workflow_mesh_contract.py tests/test_m1_adversarial.py tests/test_adversarial_m1.py tests/test_swarm_no_subprocess.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pydantic --with httpx python -m pytest -q tests/test_workflow_mesh.py tests/test_omo_io_pydantic.py
-cd projects/cockpit && PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with pyyaml --with httpx --with rich python -m pytest -q src/cockpit/tests/test_delivery_journey.py src/cockpit/tests/test_delivery_journey_mesh_states.py src/cockpit/tests/test_agent_workflow_command.py
+cd projects/cockpit && PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with pyyaml --with httpx --with rich python -m pytest -q src/cockpit/tests/test_delivery_journey.py src/cockpit/tests/test_delivery_journey_mesh_states.py src/cockpit/tests/test_delivery_journey_workflow_mesh.py src/cockpit/tests/test_agent_workflow_command.py
+cd projects/runtime && PYTHONPATH=src uv run --no-project --with pytest --with pydantic python -m pytest -q tests/test_workflow_mesh_runtime.py
+cd projects/aetherforge && PYTHONPATH="packages/swarm/src:src" uv run --no-project --with pytest python -m pytest -q packages/swarm/tests/test_workflow_mesh.py
+PYTHONPATH="projects/omo/src:projects/runtime/src:projects/aetherforge/packages/swarm/src" uv run --no-project --with pytest --with pydantic --with pyyaml --with httpx python -m pytest -q tests/integration/workflow_mesh/test_runtime_and_swarm_projection.py
 ```
