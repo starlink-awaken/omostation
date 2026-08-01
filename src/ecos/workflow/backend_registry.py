@@ -15,6 +15,10 @@ logger = logging.getLogger("ecos.workflow.backend_registry")
 # 后端注册表: name → {"module_path", "entrypoint", "instance"}
 _backends: dict[str, dict[str, Any]] = {}
 
+
+class BackendResolutionError(RuntimeError):
+    """明确指定的后端不可用时，禁止静默回退到默认执行器。"""
+
 # ── 默认后端：沿用现有的硬编码 action 执行器 ──
 
 
@@ -373,10 +377,9 @@ def resolve(m1_node: dict) -> Callable:
     _ensure_backends_registered()
     backend_info = _backends.get(backend_name)
     if not backend_info:
-        logger.warning(
-            "Backend '%s' not registered, falling back to default", backend_name
+        raise BackendResolutionError(
+            f"Workflow backend is not registered: {backend_name}"
         )
-        return _default_executor
 
     # Lazy load
     if backend_info["instance"] is None:
@@ -386,7 +389,9 @@ def resolve(m1_node: dict) -> Callable:
             backend_info["instance"] = func
         except (ImportError, AttributeError) as e:
             logger.error("Failed to load backend '%s': %s", backend_name, e)
-            return _default_executor
+            raise BackendResolutionError(
+                f"Workflow backend cannot be loaded: {backend_name}"
+            ) from e
 
     return backend_info["instance"]
 

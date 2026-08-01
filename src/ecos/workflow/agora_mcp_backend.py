@@ -23,7 +23,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
     """通过 Agora MCP 执行工作流
 
     每步的 action 映射为 BOS URI 调用，通过 Agora 路由到后端。
-    如果 Agora 不可用，优雅降级为默认后端行为。
+    如果 Agora 不可用，返回明确的不可用状态，不伪造默认后端成功。
     """
     import httpx
 
@@ -46,7 +46,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
         trip as _cb_trip,
     )
 
-    # ── 熔断检查：如果 Agora MCP 最近不可达，直接降级 ──
+    # ── 熔断检查：如果 Agora MCP 最近不可达，明确返回不可用 ──
     if _cb_available("agora", "mcp-gateway"):
         # 检查 Agora 是否可达
         try:
@@ -54,18 +54,18 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                 r = client.get(f"{_AGORA_MCP_URL}/health", timeout=2)
                 if r.status_code != 200:
                     logger.warning(
-                        "Agora MCP unreachable (HTTP %d), falling back to default",
+                        "Agora MCP unreachable (HTTP %d)",
                         r.status_code,
                     )
                     _cb_trip("agora", "mcp-gateway")
-                    return _fallback_default(m1_node, params)
+                    return _unavailable_result("Agora MCP gateway unavailable")
         except Exception as e:  # defensive fallback
-            logger.warning("Agora MCP uncontactable: %s, falling back to default", e)
+            logger.warning("Agora MCP uncontactable: %s", e)
             _cb_trip("agora", "mcp-gateway")
-            return _fallback_default(m1_node, params)
+            return _unavailable_result("Agora MCP gateway unavailable")
     else:
-        logger.info("Agora circuit breaker OPEN, skip health check → fallback directly")
-        return _fallback_default(m1_node, params)
+        logger.info("Agora circuit breaker OPEN, skip health check")
+        return _unavailable_result("Agora MCP circuit breaker is open")
 
     # Agora 可用，开始路由
     for i, step in enumerate(steps, 1):
@@ -129,6 +129,8 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                     }
                 )
                 results["failed"] += 1
+                results["mode"] = "unavailable"
+                results["error_code"] = "BACKEND_UNAVAILABLE"
 
                 on_failure = (
                     step.get("on_failure") or execution.get("on_failure") or "continue"
@@ -146,6 +148,8 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                 }
             )
             results["failed"] += 1
+            results["mode"] = "unavailable"
+            results["error_code"] = "BACKEND_UNAVAILABLE"
 
     return results
 
@@ -190,8 +194,17 @@ def _step_to_bos_uri(step: dict, action: str) -> str:
 
 
 def _fallback_default(m1_node: dict, params: dict | None = None) -> dict:
-    """Agora 不可用时的优雅降级"""
-    from ecos.workflow.backend_registry import _default_executor
+    """保留旧测试入口，但不再伪造默认后端成功。"""
+    return _unavailable_result("Agora MCP gateway unavailable")
 
-    logger.info("Agora unavailable, falling back to default backend")
-    return _default_executor(m1_node, params)
+
+def _unavailable_result(error: str) -> dict[str, Any]:
+    return {
+        "ok": False,
+        "mode": "unavailable",
+        "error_code": "BACKEND_UNAVAILABLE",
+        "error": error,
+        "steps": [],
+        "passed": 0,
+        "failed": 1,
+    }

@@ -3,7 +3,7 @@
 适配策略 (优先级降序)：
 1. Agora MCP 路由 (通过 agora_mcp_backend 复用)
 2. subprocess 调用 runtime CLI (uv run --package runtime)
-3. mock fallback (向后兼容)
+3. 明确返回不可用（不伪造成功）
 
 关键原则：ecos 是 L0，不直接 import L1 包。所有跨层通过 CLI subprocess 或 MCP 路由。
 """
@@ -115,6 +115,10 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                 }
             )
             results["failed"] += 1
+            if result.get("mode") == "unavailable":
+                results["mode"] = "unavailable"
+                results["error_code"] = "BACKEND_UNAVAILABLE"
+                results["error"] = result.get("error", "Runtime backend unavailable")
             on_failure = (
                 step.get("on_failure") or execution.get("on_failure") or "continue"
             )
@@ -166,20 +170,16 @@ def _execute_step_runtime(
             except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
                 logger.debug("Runtime CLI not available: %s", e)
 
-        # 所有 CLI 不可用 → 触发熔断 + mock fallback
+        # 所有 CLI 不可用 → 触发熔断并返回真实不可用状态
         _cb_trip("runtime", "cli")
     else:
-        logger.info("Runtime circuit breaker OPEN, skip CLI → mock fallback")
+        logger.info("Runtime circuit breaker OPEN, skip CLI")
 
-    # mock fallback
-    logger.info("Runtime backend: no CLI available, mock recording")
+    logger.info("Runtime backend: no CLI available")
     return {
-        "ok": True,
-        "data": {
-            "step": step_name,
-            "phase": phase,
-            "action": action,
-            "mode": "mock",
-            "note": "Runtime CLI not found; step recorded as passed",
-        },
+        "ok": False,
+        "mode": "unavailable",
+        "error_code": "BACKEND_UNAVAILABLE",
+        "error": "Runtime CLI unavailable; step was not executed",
+        "data": {"step": step_name, "phase": phase, "action": action, "mode": "unavailable"},
     }

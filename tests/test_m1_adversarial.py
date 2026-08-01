@@ -62,10 +62,12 @@ def test_agora_unreachable_fallback_connection_error():
         # Run execute_m1_workflow
         result = execute_m1_workflow("test-fallback-wf")
 
-        # Verify fallback executor was called
-        mock_default_exec.assert_called_once()
-        assert result["passed"] == 1
-        assert result["failed"] == 0
+        # Explicit Agora backend unavailable must not invoke the default executor.
+        mock_default_exec.assert_not_called()
+        assert result["passed"] == 0
+        assert result["failed"] >= 1
+        assert result["run_metadata"]["state"] == "unavailable"
+        assert result["error_code"] == "BACKEND_UNAVAILABLE"
 
         # Verify circuit breaker got TRIPPED
         assert cb.is_available("agora", "mcp-gateway") is False
@@ -101,8 +103,9 @@ def test_agora_unreachable_fallback_http_error():
 
         result = execute_m1_workflow("test-fallback-wf-http")
 
-        mock_default_exec.assert_called_once()
-        assert result["passed"] == 1
+        mock_default_exec.assert_not_called()
+        assert result["passed"] == 0
+        assert result["error_code"] == "BACKEND_UNAVAILABLE"
         assert cb.is_available("agora", "mcp-gateway") is False
 
 
@@ -131,8 +134,9 @@ def test_agora_unreachable_fallback_timeout():
 
         result = execute_m1_workflow("test-fallback-wf-timeout")
 
-        mock_default_exec.assert_called_once()
-        assert result["passed"] == 1
+        mock_default_exec.assert_not_called()
+        assert result["passed"] == 0
+        assert result["error_code"] == "BACKEND_UNAVAILABLE"
         assert cb.is_available("agora", "mcp-gateway") is False
 
 
@@ -166,10 +170,11 @@ def test_circuit_breaker_open_skips_health_check():
 
         result = execute_m1_workflow("test-cb-open-wf")
 
-        # Verify default executor called, but httpx.Client.get was NEVER called
-        mock_default_exec.assert_called_once()
+        # Verify default executor is never called and health check is skipped.
+        mock_default_exec.assert_not_called()
         mock_get.assert_not_called()
-        assert result["passed"] == 1
+        assert result["passed"] == 0
+        assert result["error_code"] == "BACKEND_UNAVAILABLE"
 
 
 # ── 3. Proxy Bypassing Robustness Tests ──
@@ -266,12 +271,12 @@ def test_swarm_backend_graceful_error_no_crash():
         # Run execute_m1_workflow
         result = execute_m1_workflow("test-swarm-fail-wf")
 
-        # Verify it did not crash, but reported the fallback to mock gracefully
-        assert result["passed"] == 1
-        assert result["failed"] == 0
+        # Verify unavailable is explicit and not a mock success.
+        assert result["passed"] == 0
+        assert result["failed"] >= 1
         assert "steps" in result
-        assert result["steps"][0]["status"] == "ok"
-        assert result["steps"][0]["result"]["mode"] == "mock"
+        assert result["run_metadata"]["state"] == "unavailable"
+        assert result["error_code"] == "BACKEND_UNAVAILABLE"
 
 
 # ── 5. Agora Backend mid-workflow step failures ──

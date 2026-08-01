@@ -11,10 +11,16 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from ecos.workflow.backend_registry import resolve
+from ecos.workflow.backend_registry import BackendResolutionError, resolve
 from ecos.workflow.cache import get as cache_get
 from ecos.workflow.cache import set as cache_set
 from ecos.workflow.loader import load_workflow
+from ecos.workflow.mesh_contract import (
+    WorkflowRunState,
+    is_silent_mock,
+    new_workflow_event,
+    run_metadata,
+)
 from ecos.workflow.preflight import inject_preflight
 from ecos.workflow.validator import (
     X2BudgetDeducer,
@@ -67,6 +73,17 @@ def execute_m1_workflow(
     wf_name = m1_node.get("name", name)
     is_m1 = m1_node.get("source") == "m1"
 
+    backend_name = m1_node.get("execution", {}).get("backend", "default")
+    params = dict(params or {})
+    event_sink = params.pop("event_sink", None)
+    workflow_run_id = params.pop("workflow_run_id", None)
+    metadata = run_metadata(
+        wf_name,
+        workflow_definition_id=name,
+        backend=backend_name,
+        execution_mode="dry_run" if dry_run else "real",
+        workflow_run_id=workflow_run_id,
+    )
     results = {
         "workflow": name,
         "display": wf_name,
@@ -75,12 +92,33 @@ def execute_m1_workflow(
         "steps": [],
         "passed": 0,
         "failed": 0,
+        "run_metadata": metadata,
     }
+
+    def emit_event(event_type: str, payload: dict | None = None) -> None:
+        if dry_run or not callable(event_sink):
+            return
+        try:
+            event_sink(
+                new_workflow_event(
+                    event_type,
+                    metadata["workflow_run_id"],
+                    trace_id=metadata["trace_id"],
+                    payload=payload,
+                )
+            )
+        except Exception as exc:  # event persistence must not hide execution outcome
+            results.setdefault("event_sink_errors", []).append(str(exc))
+
+    emit_event(
+        "WorkflowRequested",
+        {"workflow": name, "backend": backend_name, "execution_mode": metadata["execution_mode"]},
+    )
 
     logger.info(
         "Executing workflow: %s (backend=%s, mode=%s)",
         wf_name,
-        m1_node.get("execution", {}).get("backend", "default"),
+        backend_name,
         m1_node.get("execution", {}).get("mode", "workflow"),
     )
 
@@ -132,7 +170,9 @@ def execute_m1_workflow(
             cached = cache_get(name, 0, params)
             if cached is not None:
                 logger.info("Cache HIT for workflow: %s (skip budget check)", name)
-                return dict(cached)
+                cached_result = dict(cached)
+                cached_result.setdefault("run_metadata", metadata)
+                return cached_result
 
         budget_status = X2BudgetDeducer.check_budget(m1_node)
         if not budget_status.get("ok") and budget_status.get("budget"):
@@ -157,13 +197,33 @@ def execute_m1_workflow(
         )
         backend_result = backend_fn(wf, params_with_pf)
 
-        if "steps" in backend_result:
+        if is_silent_mock(backend_result):
+            results["error"] = "Backend returned a mock/simulation result"
+            results["error_code"] = "SILENT_MOCK_BLOCKED"
+            results["run_metadata"]["state"] = WorkflowRunState.UNAVAILABLE.value
+            results["steps"].append(
+                {
+                    "name": wf_name,
+                    "status": "unavailable",
+                    "result": backend_result,
+                }
+            )
+            results["failed"] = 1
+            backend_result = None
+
+        if backend_result is not None and "steps" in backend_result:
             results["steps"] = backend_result["steps"]
             results["passed"] = backend_result.get("passed", 0)
             results["failed"] = backend_result.get("failed", 0)
-        else:
+            if backend_result.get("mode") == "unavailable" or backend_result.get(
+                "error_code"
+            ) == "BACKEND_UNAVAILABLE":
+                results["error_code"] = "BACKEND_UNAVAILABLE"
+                results["error"] = backend_result.get("error", "Backend unavailable")
+                results["run_metadata"]["state"] = WorkflowRunState.UNAVAILABLE.value
+        elif backend_result is not None:
             # 后端的简略返回模式
-            ok = backend_result.get("passed", True)
+            ok = backend_result.get("passed", False)
             results["steps"].append(
                 {
                     "name": wf_name,
@@ -175,6 +235,21 @@ def execute_m1_workflow(
                 results["passed"] += 1
             else:
                 results["failed"] += 1
+            if backend_result.get("mode") == "unavailable" or backend_result.get(
+                "error_code"
+            ) == "BACKEND_UNAVAILABLE":
+                results["error_code"] = "BACKEND_UNAVAILABLE"
+                results["error"] = backend_result.get("error", "Backend unavailable")
+                results["run_metadata"]["state"] = WorkflowRunState.UNAVAILABLE.value
+    except BackendResolutionError as e:
+        logger.error("Workflow backend unavailable: %s", e)
+        results["failed"] += 1
+        results["error"] = str(e)
+        results["error_code"] = "BACKEND_UNAVAILABLE"
+        results["run_metadata"]["state"] = WorkflowRunState.UNAVAILABLE.value
+        results["steps"].append(
+            {"name": "backend", "status": "unavailable", "error": str(e)}
+        )
     except Exception as e:  # defensive fallback
         logger.error("Workflow execution failed: %s", e)
         results["failed"] += 1
@@ -185,6 +260,26 @@ def execute_m1_workflow(
                 "error": str(e),
             }
         )
+
+    if results["run_metadata"]["state"] == WorkflowRunState.PLANNED.value:
+        results["run_metadata"]["state"] = (
+            WorkflowRunState.SUCCEEDED.value
+            if results["failed"] == 0
+            else WorkflowRunState.FAILED.value
+        )
+    results["run_metadata"]["finished_at"] = datetime.now().isoformat()
+    emit_event(
+        {
+            WorkflowRunState.SUCCEEDED.value: "WorkflowSucceeded",
+            WorkflowRunState.UNAVAILABLE.value: "BackendUnavailable",
+            WorkflowRunState.FAILED.value: "WorkflowFailed",
+        }.get(results["run_metadata"]["state"], "WorkflowFailed"),
+        {
+            "backend": backend_name,
+            "state": results["run_metadata"]["state"],
+            "error_code": results.get("error_code"),
+        },
+    )
 
     # ── 缓存写入：如果工作流配置了 cache_ttl，将结果写入缓存 ──
     if cache_ttl > 0 and "error" not in results:

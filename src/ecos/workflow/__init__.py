@@ -22,6 +22,7 @@ from ecos.workflow.actions import (
     resolve_action,
 )
 from ecos.workflow.backend_registry import (
+    BackendResolutionError,
     get_backend,
     list_backends,
     register,
@@ -62,6 +63,11 @@ from ecos.workflow.validator import (
     validate_step,
     validate_workflow,
 )
+from ecos.workflow.mesh_contract import (
+    WorkflowRunState,
+    new_workflow_event,
+    new_workflow_run_id,
+)
 
 __all__ = [
     # loader
@@ -90,6 +96,11 @@ __all__ = [
     "resolve",
     "list_backends",
     "get_backend",
+    "BackendResolutionError",
+    # workflow mesh
+    "WorkflowRunState",
+    "new_workflow_run_id",
+    "new_workflow_event",
     # validator
     "validate_workflow",
     "validate_step",

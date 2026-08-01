@@ -4,7 +4,7 @@
 1. Agora MCP 路由 (agora_mcp_backend.py 复用)
 2. subprocess 调用 aetherforge CLI (uv run --package aetherforge)
 3. subprocess 调用 swarm-engine CLI (直接)
-4. mock fallback (向后兼容)
+4. 明确返回不可用（不伪造成功）
 
 关键原则：ecos 是 L0，不直接 import L2 包。所有跨层通过 CLI subprocess 或 MCP 路由。
 """
@@ -91,6 +91,10 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                 }
             )
             results["failed"] += 1
+            if result.get("mode") == "unavailable":
+                results["mode"] = "unavailable"
+                results["error_code"] = "BACKEND_UNAVAILABLE"
+                results["error"] = result.get("error", "Swarm backend unavailable")
             on_failure = (
                 step.get("on_failure") or execution.get("on_failure") or "continue"
             )
@@ -203,14 +207,12 @@ def _execute_step_swarm(
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
             logger.debug("Swarm CLI not available: %s", e)
 
-    # 所有 CLI 不可用 → mock fallback
-    logger.info("Swarm backend: no CLI available, mock recording")
+    # 所有 CLI 不可用 → 明确失败，不把记录当成执行
+    logger.info("Swarm backend: no CLI available")
     return {
-        "ok": True,
-        "data": {
-            "step": step_name,
-            "action": action,
-            "mode": "mock",
-            "note": "Swarm engine CLI not found; step recorded as passed",
-        },
+        "ok": False,
+        "mode": "unavailable",
+        "error_code": "BACKEND_UNAVAILABLE",
+        "error": "Swarm engine CLI unavailable; step was not executed",
+        "data": {"step": step_name, "action": action, "mode": "unavailable"},
     }

@@ -56,11 +56,12 @@ def test_agora_connection_refused_fallback():
     # 模拟 httpx.Client 抛出 ConnectError
     with (
         patch("httpx.Client.get", side_effect=httpx.ConnectError("Connection refused")),
-        patch("ecos.workflow.agora_mcp_backend._fallback_default") as mock_fallback,
+        patch("ecos.workflow.agora_mcp_backend._unavailable_result") as mock_unavailable,
     ):
-        mock_fallback.return_value = {
-            "status": "ok",
-            "steps": [{"name": "s1", "status": "ok", "result": "mock_fallback"}],
+        mock_unavailable.return_value = {
+            "mode": "unavailable",
+            "error_code": "BACKEND_UNAVAILABLE",
+            "steps": [],
         }
 
         node = {
@@ -71,9 +72,10 @@ def test_agora_connection_refused_fallback():
 
         result = execute(node, {})
 
-        # 验证是否降级并触发了 fallback
-        mock_fallback.assert_called_once()
-        assert result["status"] == "ok"
+        # 验证不可用状态并触发熔断
+        mock_unavailable.assert_called_once()
+        assert result["mode"] == "unavailable"
+        assert result["error_code"] == "BACKEND_UNAVAILABLE"
 
         # 验证熔断器状态已变更为 TRIPPED (不可用)
         assert cb.is_available("agora", "mcp-gateway") is False
@@ -85,14 +87,18 @@ def test_agora_timeout_fallback():
         patch(
             "httpx.Client.get", side_effect=httpx.ConnectTimeout("Connection timed out")
         ),
-        patch("ecos.workflow.agora_mcp_backend._fallback_default") as mock_fallback,
+        patch("ecos.workflow.agora_mcp_backend._unavailable_result") as mock_unavailable,
     ):
-        mock_fallback.return_value = {"status": "ok", "steps": []}
+        mock_unavailable.return_value = {
+            "mode": "unavailable",
+            "error_code": "BACKEND_UNAVAILABLE",
+            "steps": [],
+        }
         node = {"steps": [{"name": "s1", "action": "health_check"}]}
 
         execute(node, {})
 
-        mock_fallback.assert_called_once()
+        mock_unavailable.assert_called_once()
         assert cb.is_available("agora", "mcp-gateway") is False
 
 
@@ -103,14 +109,18 @@ def test_agora_http_error_code_fallback():
 
     with (
         patch("httpx.Client.get", return_value=mock_resp),
-        patch("ecos.workflow.agora_mcp_backend._fallback_default") as mock_fallback,
+        patch("ecos.workflow.agora_mcp_backend._unavailable_result") as mock_unavailable,
     ):
-        mock_fallback.return_value = {"status": "ok", "steps": []}
+        mock_unavailable.return_value = {
+            "mode": "unavailable",
+            "error_code": "BACKEND_UNAVAILABLE",
+            "steps": [],
+        }
         node = {"steps": [{"name": "s1", "action": "health_check"}]}
 
         execute(node, {})
 
-        mock_fallback.assert_called_once()
+        mock_unavailable.assert_called_once()
         assert cb.is_available("agora", "mcp-gateway") is False
 
 
@@ -169,8 +179,9 @@ def test_global_proxy_invalid_fallback():
     # 验证在 3 秒之内就做出了 ConnectionRefusedError 响应并 fallback，没有被 192.0.2.1 的代理超时（默认 10s+）卡死。
     # 本地 health_check 可能因为 ~/.ecos/scripts/ecos-health-check.py 未安装而返回 failed；这里验证的是代理绕过和优雅降级。
     assert elapsed < 3.0
-    assert result["steps"]
-    assert result["steps"][0]["status"] in {"ok", "failed"}
+    assert result["steps"] == []
+    assert result["mode"] == "unavailable"
+    assert result["error_code"] == "BACKEND_UNAVAILABLE"
 
 
 # ── 3. 压力校验与熔断器拦截测试集 ──────────────────────────────────────────────────
@@ -190,7 +201,11 @@ def test_high_frequency_circuit_breaker_stress():
         patch("httpx.Client.get", side_effect=fake_get),
         patch("ecos.workflow.agora_mcp_backend._fallback_default") as mock_fallback,
     ):
-        mock_fallback.return_value = {"status": "ok", "steps": []}
+        mock_fallback.return_value = {
+            "mode": "unavailable",
+            "error_code": "BACKEND_UNAVAILABLE",
+            "steps": [],
+        }
         node = {"steps": [{"name": "s1", "action": "health_check"}]}
 
         # 连续调用 100 次
