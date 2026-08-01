@@ -34,6 +34,7 @@ EVENT_STATE = {
     "StepDispatched": "dispatched",
     "StepStarted": "running",
     "StepHeartbeat": "running",
+    "StepRetryScheduled": "running",
     "CheckpointSaved": "running",
     "EvidenceRecorded": "succeeded",
     "ApprovalRequested": "waiting_approval",
@@ -73,9 +74,9 @@ _ALLOWED_EVENTS = {
     "planned": {"WorkflowAdmitted", "StepDispatched", "StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
     "admitted": {"StepDispatched", "StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
     "dispatched": {"StepDispatched", "StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
-    "running": {"StepDispatched", "StepStarted", "StepHeartbeat", "CheckpointSaved", "ApprovalRequested", "CompensationStarted", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
+    "running": {"StepDispatched", "StepStarted", "StepHeartbeat", "StepRetryScheduled", "CheckpointSaved", "ApprovalRequested", "CompensationStarted", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
     "waiting_approval": {"ApprovalGranted", "StepFailed", "BackendUnavailable", "WorkflowCancelled"},
-    "compensating": {"WorkflowRecovered", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
+    "compensating": {"WorkflowRecovered", "StepFailed", "WorkflowFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
     "failed": {"WorkflowRecovered", "StepFailed", "WorkflowFailed", "WorkflowClosed"},
     "unavailable": {"WorkflowRecovered", "BackendUnavailable", "WorkflowClosed"},
     "succeeded": {"WorkflowSucceeded", "EvidenceRecorded", "WorkflowVerified", "WorkflowClosed"},
@@ -241,7 +242,9 @@ def project_workflow_run(
             "StepDispatched",
             "StepStarted",
             "StepHeartbeat",
+            "StepRetryScheduled",
             "CheckpointSaved",
+            "CompensationStarted",
             "StepFailed",
         }:
             step_run_id = event["payload"].get("step_run_id")
@@ -304,7 +307,9 @@ def project_workflow_run(
                 "StepDispatched": "dispatched",
                 "StepStarted": "running",
                 "StepHeartbeat": "running",
+                "StepRetryScheduled": "running",
                 "CheckpointSaved": "running",
+                "CompensationStarted": "compensating",
                 "StepFailed": "failed",
             }.get(event_type, step_projection["state"])
             step_projection["last_event_type"] = event_type

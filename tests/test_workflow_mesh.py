@@ -218,6 +218,54 @@ def test_unadmitted_step_is_rejected(tmp_path):
         )
 
 
+def test_retry_and_compensation_events_preserve_step_truth(tmp_path):
+    store = WorkflowMeshStore(tmp_path)
+    run_id = "run-compensation"
+    step_id = f"{run_id}:step-1"
+    grant = _grant(run_id, [step_id])
+    store.append(new_workflow_event("WorkflowRequested", run_id))
+    store.append(_admit(run_id, [step_id]))
+    store.append(
+        new_workflow_event(
+            "StepDispatched",
+            run_id,
+            payload={"step_run_id": step_id, "admission_id": grant["admission_id"]},
+        )
+    )
+    store.append(
+        new_workflow_event(
+            "StepStarted",
+            run_id,
+            payload={"step_run_id": step_id, "admission_id": grant["admission_id"]},
+        )
+    )
+    store.append(
+        new_workflow_event(
+            "StepRetryScheduled",
+            run_id,
+            payload={"step_run_id": step_id, "admission_id": grant["admission_id"]},
+        )
+    )
+    store.append(
+        new_workflow_event(
+            "CompensationStarted",
+            run_id,
+            payload={"step_run_id": step_id, "admission_id": grant["admission_id"]},
+        )
+    )
+    store.append(
+        new_workflow_event(
+            "StepFailed",
+            run_id,
+            payload={"step_run_id": step_id, "admission_id": grant["admission_id"]},
+        )
+    )
+    store.append(new_workflow_event("WorkflowFailed", run_id))
+    snapshot = store.snapshot(run_id)
+    assert snapshot["state"] == "failed"
+    assert snapshot["step_runs"][step_id]["last_event_type"] == "StepFailed"
+
+
 def test_unknown_event_is_rejected(tmp_path):
     store = WorkflowMeshStore(tmp_path)
     with pytest.raises(WorkflowMeshEventError, match="Unknown"):
