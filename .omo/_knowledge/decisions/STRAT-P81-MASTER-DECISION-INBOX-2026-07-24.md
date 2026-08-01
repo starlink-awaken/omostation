@@ -25,11 +25,11 @@ warning: |
 | 2 | `needs-human-p81-m1-acceptance` | P0 | 战略 | ✅ DONE |
 | 3 | `needs-human-batch2-physical-recovery-checklist` | P0 | 流程 | ❌ 已取消 |
 | 4 | `needs-human-p80-phase45-bos-stdio` | P1 | 架构 | ✅ DONE |
-| 5 | `needs-human-batch3-proposal` | P1 | 范围 | ❌ |
-| 6 | `needs-human-batch2-role-expansion-proposal` | P1 | 范围 | ❌ |
+| 5 | `needs-human-batch3-proposal` | P1 | 范围 | ⏳ 延期至下阶段 |
+| 6 | `needs-human-batch2-role-expansion-proposal` | P1 | 范围 | ⏳ 延期至下阶段 |
 | 7 | `BET-c87a` http-mcp-convergence 收尾 | P2 | 工程 | ✅ Stage 0 收尾后可启 |
 
-**结论**: #2 M1 验收已通过, #4 BOS stdio 已完成, #7 BET-c87a 已完成。剩余 #5/#6 待下一阶段。
+**结论**: #2 M1 验收已通过, #4 BOS stdio 已完成, #7 BET-c87a 已完成。#5/#6 延期至下阶段，优先监控稳定性和技术债清理。
 
 ## 1. 决策顺序(推荐)
 
