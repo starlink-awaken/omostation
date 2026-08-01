@@ -31,6 +31,7 @@ def dispatch_task(
     transport: str = "cli_prompt",
     prior_evidence: list[str] | None = None,
     prompt_addendum: list[str] | None = None,
+    workflow_packet: dict[str, object] | None = None,
     now: str | None = None,
     omo_dir: str | Path = ".omo",
 ) -> dict[str, str]:
@@ -106,6 +107,13 @@ def dispatch_task(
             f"- You may write to `{review_path}`",
             "- Do not modify global state files.",
             "- Do not mark the task `done`.",
+            *(
+                "- Workflow Mesh admission: `"
+                + str(workflow_packet.get("admission", {}).get("admission_id"))
+                + "`"
+                for _ in [0]
+                if workflow_packet
+            ),
             "",
             "## Required deliverables",
             "",
@@ -147,6 +155,7 @@ def dispatch_task(
             "source_docs": source_docs,
             "required_context": [str(task_file.relative_to(root))],
             "prior_evidence": list(prior_evidence or []),
+            "workflow_mesh": workflow_packet or {},
         },
         "outputs": {
             "required_deliverables": deliverables,
@@ -175,6 +184,7 @@ def dispatch_task(
             "human_approval_required_for": [],
             "approval_ref": task.get("approval_ref"),
             "sensitive_capabilities_blocked": True,
+            "workflow_mesh_admission_required": bool(workflow_packet),
         },
         "knowledge_contract": {
             "output_summary_required": True,
@@ -225,6 +235,7 @@ def dispatch_task(
             "session_ref": None,
             "log_ref": str(stdout_path),
             "checkpoint_refs": [str(checkpoint_path)],
+            "workflow_mesh": workflow_packet or {},
         },
         "handoff": {
             "output_summary_ref": str(review_path),
