@@ -86,6 +86,10 @@ stateDiagram-v2
 - Runtime `AgentRuntime.run_task` 支持注入 `event_sink`，发出 requested/admitted、step dispatch/start、heartbeat、checkpoint、failure 和 terminal 事件；payload 不包含提示词和模型输出。
 - AetherForge `GraphWorkflow.run` 支持相同的 `workflow_run_id / trace_id / event_sink` 入口，并在 Swarm RPC 中透传，节点执行可直接投影到 OMO。
 - 根仓跨模块验收已用真实 Runtime 与 Swarm 执行写入 OMO append-only store，并验证两个运行快照均收敛到 `succeeded`。
+- Runtime 提供 append-only `WorkflowCheckpointStore`，保存安全执行边界并支持同一 run 恢复；完成态恢复直接返回已持久化结果，避免重复调用模型。
+- AetherForge Swarm 图执行器支持从最后一个已提交节点 checkpoint 继续，失败节点会重放，已经成功的节点不会重复执行。
+- OMO 快照现在包含 `step_runs`、`checkpoints`、`evidence`、`approvals`，提供 StepRun/Evidence 查询入口，并拒绝没有 Evidence 的 `WorkflowVerified`。
+- ECOS 将 `workflow_run_id / trace_id` 透传到后端；Runtime 子进程通过环境变量接收，AetherForge CLI 通过显式参数接收。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
 ## 6. 分阶段路线
@@ -99,10 +103,10 @@ stateDiagram-v2
 
 ### P1：可恢复执行
 
-1. OMO 将事件投影扩展为 WorkflowRun、StepRun、Approval、Evidence 的完整权威读写接口。
-2. Runtime 以持久化 checkpoint、幂等 key 实现断点恢复、超时重试和补偿步骤（本轮已完成事件与幂等键，恢复令牌和副作用边界仍是下一交付）。
+1. OMO 将事件投影扩展为 WorkflowRun、StepRun、Approval、Evidence 的权威读接口；写入仍统一走事件 sink。
+2. Runtime 和 AetherForge 已以持久化 checkpoint 实现断点恢复与完成态幂等；超时重试、外部副作用幂等键和补偿步骤仍需结合真实 StepRun admission 落地。
 3. Agora 增加能力健康、版本、权限和降级原因的可观测记录。
-4. AetherForge 只接收已 admitted 的 StepRun，资源失败必须回写 `unavailable` 或 `failed`。
+4. ECOS 已将运行身份传递到 Runtime/AetherForge；AetherForge 只接收已 admitted 的 StepRun、资源失败回写 `unavailable/failed`，仍是下一交付的准入强化项。
 
 ### P2：智能化与进化
 
