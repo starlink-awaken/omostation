@@ -54,6 +54,14 @@ surfaces:
     delivery_artifact_root: runtime/omo/_delivery/ingress/goals/
     mode: brokered
     category: human_cli
+  - name: omo-goal-reconcile
+    entrypoint: omo goal reconcile
+    runtime_ref: projects/omo/src/omo/omo_goal.py:cmd_goal_reconcile
+    mutation_target: .omo/goals/current.yaml
+    broker_ref: projects/omo/src/omo/omo_ingress.py:reconcile_goals
+    delivery_artifact_root: runtime/omo/_delivery/ingress/goals/
+    mode: brokered
+    category: human_cli
   - name: omo-task-create
     entrypoint: omo task create
     runtime_ref: projects/omo/src/omo/omo_task.py:cmd_task_create
@@ -219,7 +227,7 @@ surfaces:
   - name: omo-state-refresh
     entrypoint: omo state refresh
     runtime_ref: projects/omo/src/omo/omo_state.py:cmd_state_refresh
-    mutation_target: .omo/state/system_health.yaml
+    mutation_target: .omo/state/runtime/system_health.yaml + .omo/state/system_health.yaml
     broker_ref: null
     delivery_artifact_root: null
     mode: direct-runtime-cache

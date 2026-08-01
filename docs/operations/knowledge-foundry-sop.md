@@ -50,3 +50,62 @@ runtime/omo/_delivery/foundry/
 - `bin/gac/knowledge-foundry-cron.py` — 主 cron 脚本
 - `bin/decks/port-governance-deck.py` — v2 新增 deck
 - `docs/operations/knowledge-foundry-monitor.md` — cockpit 面板文档
+
+---
+
+## 5. 知识处理全链路架构（PR #740 起生效，ADR-0294）
+
+> **Last updated**: 2026-08-01 · **Ref**: `.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`
+
+### 5.1 全链路数据流
+
+```
+用户或 Agent
+    │
+    ▼  POST /api/knowledge/put
+╔═══════════════════════════╗
+║  cockpit api_knowledge    ║  ← L3 服务层
+║  (network-first resolver) ║
+╚═══════════╦═══════════════╝
+            │  1. 写入 data/cards/{slug}.md
+            │  2. 非阻塞 POST /bos/emit → card_updated
+            ▼
+╔═══════════════════════════╗
+║  Agora EventBus           ║  ← I0 网关层
+║  bos://brain/events/      ║
+║  card_updated             ║
+╚═══════════╦═══════════════╝
+            │  推送/回调 (subscribe pattern)
+            ▼
+╔═══════════════════════════╗
+║  KnowledgeIndexer         ║  ← L3 消费者（cockpit 内）
+║  (knowledge_indexer.py)   ║
+║  + KOS / LanceDB          ║
+╚═══════════════════════════╝
+            │
+            ▼  向量化 & 索引写入
+    GET /api/knowledge/search
+    └─ 网络解析 → Agora /bos/resolve → 召回
+```
+
+### 5.2 关键配置
+
+| 环境变量 | 默认值 | 说明 |
+|:---|:---|:---|
+| `AGORA_HTTP_ENDPOINT` | `http://127.0.0.1:7422` | Agora 网关地址 |
+| `KNOWLEDGE_CARDS_DIR` | `WORKSPACE_ROOT/data/cards` | 卡片存储目录 |
+
+### 5.3 运维排查（知识处理链路）
+
+| 症状 | 排查步骤 |
+|:---|:---|
+| `/api/knowledge/search` 返回空结果 | 1. 检查 Agora 是否在 `:7422` 在线；2. 检查 `data/cards/` 是否有 Markdown 文件；3. 看 Indexer 日志是否有 `card_updated` 消费记录 |
+| PUT 后搜索没有立即更新 | 1. 检查 `agora-events.json` 中是否有 `card_updated` 事件记录；2. 确认 `KnowledgeIndexer` 已启动订阅 |
+| `test_put_emits_card_updated_event` 失败 | httpx Mock 路径验证，检查 `_AGORA_HTTP_ENDPOINT` 是否被测试环境覆盖 |
+| Agora 离线时 `/search` 是否受影响 | 不受影响 — 触发兼容降级路径（进程内 `cockpit.adapters.agora`），有 2s 超时保护 |
+
+### 5.4 接口契约摘要
+
+- **Producer**: `POST {AGORA_HTTP_ENDPOINT}/bos/emit` → `uri=bos://brain/events/card_updated`
+- **Consumer**: `KnowledgeIndexer.subscribe(pattern="bos://brain/events/card_updated")`
+- **完整契约**: 见 `.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`
