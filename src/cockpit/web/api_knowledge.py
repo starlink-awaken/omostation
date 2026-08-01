@@ -22,15 +22,21 @@ _AGORA_HTTP_ENDPOINT = os.environ.get("AGORA_HTTP_ENDPOINT", "http://127.0.0.1:7
 
 
 async def _resolve_bos_uri_network_or_compat(uri: str, payload: dict) -> dict:
-    """Resolve BOS URI via HTTP network endpoint (L3/L2 contract) with graceful local fallback."""
+    """Resolve BOS URI via Agora /v1/tools/call (bos_resolve tool) with graceful local fallback.
+
+    Agora 实际暴露的 HTTP 端点: /v1/tools/call, /v1/backends/register, /health, /api/v1/a2a/send
+    /bos/resolve 不存在于 HTTP 层，通过 /v1/tools/call 调用 bos_resolve MCP tool。
+    """
     try:
         async with httpx.AsyncClient(timeout=2.0) as client:
             resp = await client.post(
-                f"{_AGORA_HTTP_ENDPOINT}/bos/resolve",
-                json={"uri": uri, "payload": payload},
+                f"{_AGORA_HTTP_ENDPOINT}/v1/tools/call",
+                json={"tool": "bos_resolve", "arguments": {"uri": uri, "payload": payload}},
             )
             if resp.status_code == 200:
-                return resp.json()
+                data = resp.json()
+                if data.get("status") == "ok":
+                    return data.get("result", data)
     except Exception as e:
         logger.debug("Network BOS resolution fallback to in-process compat: %s", e)
 
@@ -44,12 +50,24 @@ async def _resolve_bos_uri_network_or_compat(uri: str, payload: dict) -> dict:
 
 
 async def _notify_knowledge_event(event_uri: str, payload: dict) -> None:
-    """Emit write-after event for immediate vector indexing and RAG cache invalidation."""
+    """Emit write-after event via Agora /v1/tools/call (publish_event MCP tool).
+
+    /bos/emit 不存在于 agora HTTP 层，正确路径是 /v1/tools/call + publish_event 工具。
+    Agora EventBus 收到事件后，通过 callback_url push 给已注册的 KnowledgeIndexer。
+    失败静默降级：Agora offline 不影响写入成功，Indexer 重新上线后可通过 get_event_log 补偿。
+    """
     try:
         async with httpx.AsyncClient(timeout=1.5) as client:
             await client.post(
-                f"{_AGORA_HTTP_ENDPOINT}/bos/emit",
-                json={"uri": event_uri, "payload": payload},
+                f"{_AGORA_HTTP_ENDPOINT}/v1/tools/call",
+                json={
+                    "tool": "publish_event",
+                    "arguments": {
+                        "event_type": event_uri,
+                        "payload": json.dumps(payload),
+                        "source": "cockpit.api_knowledge",
+                    },
+                },
             )
     except Exception as e:
         logger.debug("Knowledge event emission non-blocking fallback: %s", e)

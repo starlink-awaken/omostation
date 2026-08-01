@@ -11,6 +11,7 @@ Usage:
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 import sys
 import traceback
@@ -29,9 +30,34 @@ from cockpit.dashboard.routes import router as dashboard_router
 from cockpit.web.router_health import ROUTER_LOAD_REPORT, ROUTER_MODULES, router_health_snapshot
 from cockpit.web.versioning import register_app_routes, setup_version_middleware, version_manager
 
+# ─── Lifespan (startup / shutdown hooks) ─────────────────────
+
+
+@contextlib.asynccontextmanager
+async def _lifespan(app: FastAPI):
+    """FastAPI lifespan — startup/shutdown 键 (ADR-0294)."""
+    # ── startup ──
+    try:
+        from cockpit.web.knowledge_indexer import start_knowledge_indexer
+
+        await start_knowledge_indexer()
+    except Exception as e:
+        print(f"Warning: KnowledgeIndexer startup error (non-fatal): {e}", file=sys.stderr)
+
+    yield  # 应用运行期间
+
+    # ── shutdown ──
+    try:
+        from cockpit.web.knowledge_indexer import stop_knowledge_indexer
+
+        await stop_knowledge_indexer()
+    except Exception as e:
+        print(f"Warning: KnowledgeIndexer shutdown error: {e}", file=sys.stderr)
+
+
 # ─── FastAPI App ───────────────────────────────────────────────
 
-app = FastAPI(title="Cockpit Dashboard", version=version_manager.current_version)
+app = FastAPI(title="Cockpit Dashboard", version=version_manager.current_version, lifespan=_lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -103,7 +129,7 @@ try:
 except Exception as e:
     print(f"Warning: KOS proxy not available: {e}", file=sys.stderr)
 
-# ─── Brain API (Phase 48 MVP) ───────────────────────────────
+# ─── Brain API (Phase 48 MVP) ──────────────────────────────────
 
 try:
     from cockpit.web.api_brain import router as brain_router
@@ -112,6 +138,16 @@ try:
     print("Successfully loaded Brain API routes")
 except Exception as e:
     print(f"Warning: Brain API not available: {e}", file=sys.stderr)
+
+# ─── Knowledge Indexer callback endpoint (ADR-0294) ───────────────
+
+try:
+    from cockpit.web.knowledge_indexer import callback_router as _ki_callback_router
+
+    app.include_router(_ki_callback_router)
+    print("Successfully loaded KnowledgeIndexer callback route")
+except Exception as e:
+    print(f"Warning: KnowledgeIndexer callback router not available: {e}", file=sys.stderr)
 
 # ─── GBrain Proxy ─────────────────────────────────────────────
 
