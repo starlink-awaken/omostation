@@ -24,8 +24,8 @@ projections:
     description: Runtime Matrix health scan snapshot
     canonical: .omo/state/runtime/system_health.yaml
     legacy: .omo/state/system_health.yaml
-    state: pending
-    generator: omo state refresh (implemented, activation pending runtime bootstrap)
+    state: active
+    generator: omo state refresh (implemented, active after fresh runtime bootstrap validation)
     lane: runtime_snapshot
 
   governance_data:
