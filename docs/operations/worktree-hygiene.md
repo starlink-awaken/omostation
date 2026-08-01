@@ -45,3 +45,4 @@ bash bin/gac/gac-worktree-prune.sh --apply  # 真删 unique=0 且 dirty=0
 - 从 **已更新** 的仓库根跑 `bin/gac/gac-worktree.sh claim`（含 ADR-0204 默认 init）。  
   若本地 main 落后 origin，脚本本身可能是旧版 → 先 `git fetch` / 更新主仓指针或直接用 `origin/main` 上的脚本。
 - 默认 init：`ecos scripts omo cockpit agora`。
+- **Canonical root remote 解析**：`claim`/`submit`/`merge` 自动解析指向 `starlink-awaken/omostation` 的 remote，不再硬编码 `origin`；fetch 和 push URL 必须同时匹配，GitHub CLI 也显式绑定该仓库。解析顺序：`$OMOSTATION_ROOT_REMOTE` env → `omostation-root` named remote → URL 匹配 → fail closed。参见 `bin/gac/resolve-root-remote.sh`。
