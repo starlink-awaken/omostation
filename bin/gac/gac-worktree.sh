@@ -18,6 +18,10 @@
 
 set -e
 
+# Canonical root remote resolution (fail closed if wrong remote)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/resolve-root-remote.sh"
+
 WS_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
 if [ -z "$WS_ROOT" ]; then
   echo "❌ 不在 git 仓库" >&2
@@ -64,13 +68,12 @@ case "$cmd" in
     if [ -d "$wt" ]; then
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
-      # followup D 真根因治本 (2026-07-04): claim 基于 origin/main (fetch 后), 不依赖本地 HEAD.
-      # 本地 main 可能被并发 agent 直接 commit (未 push, 应走 worktree PR) → 分叉 → worktree 继承旧/分叉状态.
-      # 基于 origin/main 保证 worktree 总是最新 merged 状态 (含所有已 merge PR). 详见 docs/AGENT-ISOLATION-ROLLOUT.md
-      git fetch origin main 2>&1 | grep -v 'FETCH_HEAD' >&2 || true
-      git worktree add "$wt" -b "$branch" origin/main 2>&1
+      # Resolve canonical root remote (fail closed if wrong)
+      ROOT_REMOTE=$(resolve_root_remote) || exit 1
+      git fetch "$ROOT_REMOTE" main 2>&1 | grep -v 'FETCH_HEAD' >&2 || true
+      git worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
-      echo "   分支: $branch (base: origin/main)"
+      echo "   分支: $branch (base: $ROOT_REMOTE/main)"
       # Phase 2d ISC-3e + ADR-0204: default init set for gate + agent-workflow + cockpit/agora.
       # worktree 默认不 init → mof-*/doc-ssot-snapshots / omo.workflow / doctor-cron 等跑不了.
       # 默认: ecos+scripts (gate) + omo+cockpit+agora (workflow/L3/I0).
@@ -152,7 +155,8 @@ case "$cmd" in
     bash "$(dirname "$0")/../sync-submodules.sh" --dry-run 2>&1 | tail -5
     bash "$(dirname "$0")/../sync-submodules.sh" 2>&1 | tail -5
     # push 分支
-    git push -u origin "$branch" 2>&1 | tail -3
+    ROOT_REMOTE=$(resolve_root_remote) || exit 1
+    git push -u "$ROOT_REMOTE" "$branch" 2>&1 | tail -3
     # 开 PR
     if command -v gh &>/dev/null; then
       gh pr create --base main --head "$branch" \
@@ -219,8 +223,9 @@ case "$cmd" in
       echo "❌ gh 未装, 手动: gh pr merge --squash --head $branch --delete-branch" >&2
       exit 1
     fi
+    ROOT_REMOTE=$(resolve_root_remote) || exit 1
     # 查 PR (head work/<session>, base main, open)
-    pr_number=$(gh pr list --head "$branch" --base main --state open --json number 2>/dev/null \
+    pr_number=$(gh pr list --repo "starlink-awaken/omostation" --head "$branch" --base main --state open --json number 2>/dev/null \
       | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
     if [ -z "$pr_number" ]; then
       echo "❌ 未找到 open PR (head=$branch base=main). 先 submit 开 PR." >&2
