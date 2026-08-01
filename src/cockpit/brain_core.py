@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import json
 import os
-import uuid
-from datetime import datetime, timezone
-from pathlib import Path
 import sqlite3
+import uuid
+from datetime import UTC, datetime, timezone
+from pathlib import Path
 
 # ── Storage (从 brain.py 迁移) ──────────────────────────────────────
 
@@ -107,7 +107,7 @@ def store_preference(key: str, value: str, source: str = "explicit") -> None:
         conn.execute(
             "INSERT INTO brain_preferences (key, value, source, updated_at) VALUES (?, ?, ?, ?) "
             "ON CONFLICT(key) DO UPDATE SET value=excluded.value, source=excluded.source, updated_at=excluded.updated_at",
-            (key, value, source, datetime.now(timezone.utc).isoformat()),
+            (key, value, source, datetime.now(UTC).isoformat()),
         )
         conn.commit()
     finally:

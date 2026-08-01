@@ -91,8 +91,9 @@ class TestBrainWeekly:
     @patch("cockpit.commands.brain.get_history")
     @patch("cockpit.knowledge_activation.recommend_for_context")
     def test_weekly_outputs_structure(self, mock_rec, mock_hist, mock_llm):
-        from cockpit.commands.brain import cmd_brain_weekly
         import argparse
+
+        from cockpit.commands.brain import cmd_brain_weekly
 
         mock_rec.return_value = [{"title": "政策A", "score": 0.9}]
         mock_hist.return_value = [{"role": "user", "content": "测试对话"}]
@@ -105,8 +106,9 @@ class TestBrainWeekly:
     @patch("cockpit.commands.brain.llm_complete")
     @patch("cockpit.knowledge_activation.recommend_for_context")
     def test_weekly_fallback_when_llm_unavailable(self, mock_rec, mock_llm):
-        from cockpit.commands.brain import cmd_brain_weekly
         import argparse
+
+        from cockpit.commands.brain import cmd_brain_weekly
 
         mock_rec.return_value = [{"title": "政策A", "score": 0.9}]
         mock_llm.return_value = None  # LLM 不可用
@@ -122,8 +124,9 @@ class TestBrainGongwen:
     @patch("cockpit.commands.brain.llm_complete")
     @patch("cockpit.knowledge_activation.recommend_for_context")
     def test_gongwen_with_topic(self, mock_rec, mock_llm):
-        from cockpit.commands.brain import cmd_brain_gongwen
         import argparse
+
+        from cockpit.commands.brain import cmd_brain_gongwen
 
         mock_rec.return_value = [{"title": "规范A", "snippet": "摘要"}]
         mock_llm.return_value = "大纲：..."
@@ -133,8 +136,9 @@ class TestBrainGongwen:
         assert result == 0
 
     def test_gongwen_no_topic_fails(self):
-        from cockpit.commands.brain import cmd_brain_gongwen
         import argparse
+
+        from cockpit.commands.brain import cmd_brain_gongwen
 
         args = argparse.Namespace(topic=[])
         result = cmd_brain_gongwen(args)
@@ -143,8 +147,9 @@ class TestBrainGongwen:
     @patch("cockpit.commands.brain.llm_complete")
     @patch("cockpit.knowledge_activation.recommend_for_context")
     def test_gongwen_fallback_when_llm_unavailable(self, mock_rec, mock_llm):
-        from cockpit.commands.brain import cmd_brain_gongwen
         import argparse
+
+        from cockpit.commands.brain import cmd_brain_gongwen
 
         mock_rec.return_value = [{"title": "规范A", "snippet": "摘要"}]
         mock_llm.return_value = None

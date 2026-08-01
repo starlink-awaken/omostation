@@ -57,10 +57,11 @@ class TestBrainWebAPI:
     @patch("cockpit.web.api_brain.kos_search_sync")
     def test_ask_empty_question_raises_400(self, mock_kos):
         """空 question 返回 400."""
-        from cockpit.web.api_brain import brain_ask
+        import asyncio
+
         from fastapi import HTTPException
 
-        import asyncio
+        from cockpit.web.api_brain import brain_ask
 
         with pytest.raises(HTTPException) as exc_info:
             asyncio.run(brain_ask({"question": ""}))
@@ -68,9 +69,9 @@ class TestBrainWebAPI:
 
     def test_history_endpoint_returns_list(self):
         """history 端点返回列表格式."""
-        from cockpit.web.api_brain import brain_history
-
         import asyncio
+
+        from cockpit.web.api_brain import brain_history
 
         result = asyncio.run(brain_history(limit=10))
         # 验证返回的是列表（可能有历史数据）

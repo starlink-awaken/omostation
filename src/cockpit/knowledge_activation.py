@@ -8,12 +8,12 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from cockpit.brain_core import kos_search
 
 
-class ActivationContext(str, Enum):
+class ActivationContext(StrEnum):
     """知识激活触发场景."""
 
     WEEKLY_REPORT = "weekly_report"
@@ -72,13 +72,13 @@ def recommend_for_context(
             pass  # 偏好加载失败时静默降级
 
     # 低分过滤阈值
-    SCORE_THRESHOLD = 0.2
+    score_threshold = 0.2
 
     result = kos_search(query, limit=limit)
     results = result.get("results", [])
 
     # 过滤低分结果 (Phase 49 T1)
-    filtered = [r for r in results if (r.get("score") or 0) >= SCORE_THRESHOLD or r.get("score") is None]
+    filtered = [r for r in results if (r.get("score") or 0) >= score_threshold or r.get("score") is None]
 
     return filtered or results  # 若全被过滤则返回原始结果
 

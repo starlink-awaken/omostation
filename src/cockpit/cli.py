@@ -36,6 +36,7 @@ from .commands.bos import (
     cmd_bos_resolve,
     cmd_bos_status,
 )
+from .commands.brain import cmd_brain
 from .commands.brief import _cmd_brief
 from .commands.bus import cmd_bus
 from .commands.contracts import (
@@ -48,7 +49,6 @@ from .commands.contracts import (
 from .commands.data import cmd_data_gc, cmd_data_index, cmd_data_types
 from .commands.discover import _cmd_discover
 from .commands.family_hub import cmd_family_hub
-from .commands.brain import cmd_brain
 from .commands.gbrain import cmd_gbrain
 from .commands.governance import cmd_governance
 from .commands.health import _cmd_health

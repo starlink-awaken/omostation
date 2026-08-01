@@ -16,7 +16,7 @@ import json
 import os
 import sqlite3
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # ── Storage ──────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ def store_preference(key: str, value: str, source: str = "explicit") -> None:
         conn.execute(
             "INSERT INTO brain_preferences (key, value, source, updated_at) VALUES (?, ?, ?, ?) "
             "ON CONFLICT(key) DO UPDATE SET value=excluded.value, source=excluded.source, updated_at=excluded.updated_at",
-            (key, value, source, datetime.now(timezone.utc).isoformat()),
+            (key, value, source, datetime.now(UTC).isoformat()),
         )
         conn.commit()
     finally:
