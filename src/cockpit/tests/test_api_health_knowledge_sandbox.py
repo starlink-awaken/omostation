@@ -242,3 +242,89 @@ class TestSandboxAPI:
     def test_execute_rejects_oversized_code(self, client):
         resp = client.post("/api/sandbox/execute", json={"code": "x" * 20001})
         assert resp.status_code == 413
+
+
+class TestKnowledgeIndexer:
+    """Tests for knowledge_indexer.py — Consumer side of ADR-0294 event pipeline."""
+
+    @pytest.mark.asyncio
+    async def test_start_subscribes_to_event_bus(self):
+        """KnowledgeIndexer.start() should POST to /bos/subscribe on Agora."""
+        from cockpit.web.knowledge_indexer import KnowledgeIndexer
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"subscription_id": "sub-abc-123"}
+
+        with patch("cockpit.web.knowledge_indexer.httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client.post = AsyncMock(return_value=mock_resp)
+            mock_client_cls.return_value = mock_client
+
+            indexer = KnowledgeIndexer(agora_endpoint="http://127.0.0.1:7422")
+            await indexer.start()
+
+        assert indexer._running is True
+        assert indexer._sub_id == "sub-abc-123"
+        mock_client.post.assert_called_once_with(
+            "http://127.0.0.1:7422/bos/subscribe",
+            json={
+                "service": "cockpit-knowledge-indexer",
+                "pattern": "bos://brain/events/card_updated",
+            },
+        )
+
+    @pytest.mark.asyncio
+    async def test_start_graceful_when_agora_offline(self):
+        """KnowledgeIndexer.start() should not raise when Agora is unreachable."""
+        import httpx as real_httpx
+
+        from cockpit.web.knowledge_indexer import KnowledgeIndexer
+
+        with patch("cockpit.web.knowledge_indexer.httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client.post = AsyncMock(side_effect=real_httpx.ConnectError("refused"))
+            mock_client_cls.return_value = mock_client
+
+            indexer = KnowledgeIndexer()
+            await indexer.start()  # must not raise
+
+        assert indexer._running is False
+
+    @pytest.mark.asyncio
+    async def test_handle_card_updated_calls_kos_upsert(self):
+        """handle_card_updated() should POST to KOS upsert endpoint."""
+        from cockpit.web.knowledge_indexer import KnowledgeIndexer
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+
+        with patch("cockpit.web.knowledge_indexer.httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client.post = AsyncMock(return_value=mock_resp)
+            mock_client_cls.return_value = mock_client
+
+            indexer = KnowledgeIndexer()
+            await indexer.handle_card_updated(
+                {"slug": "my-note", "title": "My Note", "path": "data/cards/my-note.md", "action": "upsert"}
+            )
+
+        mock_client.post.assert_called_once()
+        call_kwargs = mock_client.post.call_args
+        assert "upsert" in str(call_kwargs)
+        assert "my-note" in str(call_kwargs)
+
+    @pytest.mark.asyncio
+    async def test_handle_card_updated_skips_malformed_payload(self):
+        """handle_card_updated() should not raise on malformed payload."""
+        from cockpit.web.knowledge_indexer import KnowledgeIndexer
+
+        indexer = KnowledgeIndexer()
+        # Should not raise; bad payload → just logs a warning
+        await indexer.handle_card_updated({"action": "upsert"})
