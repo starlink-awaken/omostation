@@ -1,3 +1,4 @@
+---
 status: active
 lifecycle: ssot
 owner: governance-team
@@ -6,7 +7,7 @@ last-reviewed: 2026-06-24
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-24
-current_wave: W6
+current_wave: W1
 entry_gate: phase41_completed
 goals:
 - desc: Wave 1 — Agora MCP 隔离
@@ -139,12 +140,14 @@ goals:
 - id: BET-c87a
   desc: 'Bet: http-mcp-convergence-optimization (Appetite: >  2 weeks)'
   progress: 80.0
-  status: done
+  status: archived
   note: '核心收敛已完成 (24→5 HTTP, 29/29 MCP stdio). 剩余: test coverage 提升 + 前端现代化. 建议拆为独立小
     bet.'
   tasks: []
   bet_status: closed
   completed_at: '2026-08-01T00:00:00Z'
+  archived_at: '2026-08-01T12:13:13Z'
+  archive_reason: governed goal reconciliation
 - id: BET-9001
   title: 统一持久化 broker
   desc: 'Bet: 统一持久化 broker (Appetite: 1 week)'
@@ -204,7 +207,7 @@ goals:
   title: 15-deep-defensive-hardening
   desc: 'Bet: 15-deep-defensive-hardening (Appetite: 3 days)'
   progress: 1.0
-  status: completed
+  status: archived
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-f478
@@ -213,11 +216,13 @@ goals:
   appetite: 3 days
   vector: V2
   bet_status: closed
+  archived_at: '2026-08-01T12:13:13Z'
+  archive_reason: governed goal reconciliation
 - id: BET-102d
   title: Pitch-c2g-brainstorm-derust
   desc: 'Bet: Pitch-c2g-brainstorm-derust (Appetite: 1 day)'
   progress: 0.0
-  status: done
+  status: archived
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-102d
@@ -225,6 +230,8 @@ goals:
   appetite: 1 day
   vector: V2
   bet_status: closed
+  archived_at: '2026-08-01T12:13:13Z'
+  archive_reason: governed goal reconciliation
 - id: BET-a7c1
   title: batch1-agora-omo-modules
   desc: 'Bet: Batch 1 — agora dead-code audit + omo 分类索引 (Appetite: 1 week)'
@@ -301,7 +308,7 @@ goals:
   title: Pitch-v3-workspace-naming-ssot
   desc: 'Bet: Pitch-v3-workspace-naming-ssot (Appetite: 0.5 day)'
   progress: 0.0
-  status: done
+  status: archived
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-71d9
@@ -309,6 +316,8 @@ goals:
   appetite: 0.5 day
   vector: V2
   bet_status: closed
+  archived_at: '2026-08-01T12:13:13Z'
+  archive_reason: governed goal reconciliation
 - id: BET-3b90
   title: Idea-v5普通用户产品走查followup-补强12中断点-dis
   desc: 'Bet: Idea-v5普通用户产品走查followup-补强12中断点-dis (Appetite: 1 周)'
@@ -386,10 +395,11 @@ objectives:
   progress: 0.0
   kpi: 跨节点状态同步机制 + 基础故障转移 (需物理主机)
   tasks: []
-phase: 46
+phase: 47
 source_plan_refs:
 - .omo/plans/phase27-swarm-network.md
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: P46 SSOT convergence + monitoring stability
+theme: P47 resilience + distributed deepening
+execution_mode: waiting-for-scenario/next-bet
