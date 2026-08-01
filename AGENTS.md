@@ -55,3 +55,39 @@ uv run ruff check "src/"
     - Tools index: [`../../docs/INDEX-TOOLS.md`](../../docs/INDEX-TOOLS.md) — 工具索引
     - Knowledge index: [`../../docs/INDEX-KNOWLEDGE.md`](../../docs/INDEX-KNOWLEDGE.md) — 知识索引
     - Agents index: [`../../docs/INDEX-AGENTS.md`](../../docs/INDEX-AGENTS.md) — Agent索引
+
+## Knowledge API 链路 (ADR-0294, 2026-08-01)
+
+### 关键文件
+
+| 文件 | 职责 |
+|:-----|:-----|
+| `src/cockpit/web/api_knowledge.py` | `/api/knowledge/search` + `/api/knowledge/put` 路由，网络优先 BOS 解析 |
+| `src/cockpit/web/knowledge_indexer.py` | 事件消费者，订阅 `bos://brain/events/card_updated` 驱动增量索引 |
+| `src/cockpit/adapters/agora.py` | 进程内兼容适配器（仅供降级路径使用，不直接调用） |
+
+### API 契约
+
+```
+POST /api/knowledge/put   → 写入 data/cards/{slug}.md
+                          → 非阻塞发射 bos://brain/events/card_updated
+                          → KnowledgeIndexer 消费 → KOS/LanceDB upsert
+
+POST /api/knowledge/search → 网络解析 AGORA_HTTP_ENDPOINT/bos/resolve
+                           → 兼容降级 cockpit.adapters.agora.resolve_bos_uri()
+```
+
+### 环境变量
+
+| 变量 | 默认值 | 说明 |
+|:-----|:-------|:-----|
+| `AGORA_HTTP_ENDPOINT` | `http://127.0.0.1:7422` | Agora 网关（BOS 解析 + 事件总线） |
+| `KOS_HTTP_ENDPOINT` | `http://127.0.0.1:7428` | KOS 向量索引服务 |
+
+### SSOT 决策
+
+- 架构决策: [`../../.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](../../.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md)
+- 操作手册: [`../../docs/operations/knowledge-foundry-sop.md`](../../docs/operations/knowledge-foundry-sop.md) §5
+- BOS 域越界登记: [`../../.omo/standards/bos-uri-domain-standard.md`](../../.omo/standards/bos-uri-domain-standard.md)
+
+> ⚠️ `bos://brain/events/card_updated` 为非标准域，计划 Phase 2 迁移至 `bos://memory/events/card_updated`。
