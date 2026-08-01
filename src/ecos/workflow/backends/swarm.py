@@ -113,6 +113,18 @@ def _execute_step_swarm(
 ) -> dict[str, Any]:
     """Execute a single step via swarm MCP first, then fallback to subprocess."""
     goal = step.get("description") or step.get("name") or action or "task"
+    child_admission = params.get("admission")
+    if isinstance(child_admission, dict):
+        from ecos.workflow.admission import derive_admission_grant
+
+        child_admission = derive_admission_grant(
+            child_admission,
+            step_run_ids=[
+                f"{params.get('workflow_run_id') or child_admission['workflow_run_id']}:任务规划",
+                f"{params.get('workflow_run_id') or child_admission['workflow_run_id']}:任务执行",
+            ],
+            backend="aetherforge",
+        )
 
     # ── 熔断检查：如果 Agora MCP 已不可达，直接走 subprocess 降级 ──
     from ecos.workflow.circuit_breaker import is_available as _cb_available
@@ -145,6 +157,7 @@ def _execute_step_swarm(
                         "arguments": {
                             "goal": goal,
                             "params": params,
+                            "admission": child_admission,
                         },
                     },
                 }
@@ -190,6 +203,15 @@ def _execute_step_swarm(
                 cmd.extend(["--workflow-run-id", str(params["workflow_run_id"])])
             if params.get("trace_id"):
                 cmd.extend(["--trace-id", str(params["trace_id"])])
+            if child_admission:
+                cmd.extend(
+                    [
+                        "--admission-json",
+                        json.dumps(
+                            child_admission, ensure_ascii=False, sort_keys=True
+                        ),
+                    ]
+                )
             logger.debug("Swarm subprocess: %s", " ".join(cmd))
 
             r = subprocess.run(

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from unittest.mock import patch
 
 
@@ -12,6 +14,21 @@ def test_runtime_backend_exports_mesh_identity_to_child_process():
         stderr = ""
 
     captured: dict = {}
+    admission = {
+        "admission_id": "adm-run-child",
+        "status": "admitted",
+        "workflow_run_id": "run-child",
+        "trace_id": "trace-child",
+        "backend": "runtime",
+        "step_run_ids": ["run-child:step"],
+        "capabilities": ["execute"],
+        "policy_digest": "policy-test",
+        "issued_at": datetime.now(UTC).isoformat(),
+        "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+    }
+    from ecos.workflow.admission import admission_proof
+
+    admission["proof"] = admission_proof(admission)
 
     def run(command, **kwargs):
         captured["command"] = command
@@ -31,8 +48,10 @@ def test_runtime_backend_exports_mesh_identity_to_child_process():
             "project",
             workflow_run_id="run-child",
             trace_id="trace-child",
+            admission=admission,
         )
 
     assert result["ok"] is True
     assert captured["env"]["WORKFLOW_RUN_ID"] == "run-child"
     assert captured["env"]["TRACE_ID"] == "trace-child"
+    assert "WORKFLOW_ADMISSION" in captured["env"]

@@ -104,6 +104,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
             project_id,
             workflow_run_id=params.get("workflow_run_id"),
             trace_id=params.get("trace_id"),
+            admission=params.get("admission"),
         )
 
         if result.get("ok", False):
@@ -146,6 +147,7 @@ def _execute_step_runtime(
     *,
     workflow_run_id: str | None = None,
     trace_id: str | None = None,
+    admission: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Execute a single step via runtime CLI subprocess."""
     # ── 熔断检查：如果 runtime CLI 最近全部不可达，跳过直接降级 ──
@@ -167,6 +169,19 @@ def _execute_step_runtime(
                     env["WORKFLOW_RUN_ID"] = workflow_run_id
                 if trace_id:
                     env["TRACE_ID"] = trace_id
+                if admission:
+                    from ecos.workflow.admission import derive_admission_grant
+
+                    child_admission = derive_admission_grant(
+                        admission,
+                        step_run_ids=[
+                            f"{workflow_run_id or admission['workflow_run_id']}:runtime"
+                        ],
+                        backend="runtime",
+                    )
+                    env["WORKFLOW_ADMISSION"] = json.dumps(
+                        child_admission, ensure_ascii=False, sort_keys=True
+                    )
                 logger.debug("Runtime subprocess: %s", " ".join(cmd))
 
                 r = subprocess.run(

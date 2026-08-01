@@ -12,6 +12,7 @@ import logging
 from datetime import datetime
 
 from ecos.workflow.backend_registry import BackendResolutionError, resolve
+from ecos.workflow.admission import new_admission_grant
 from ecos.workflow.cache import get as cache_get
 from ecos.workflow.cache import set as cache_set
 from ecos.workflow.loader import load_workflow
@@ -224,9 +225,31 @@ def execute_m1_workflow(
                 logger.info("X2 circuit break triggered for workflow: %s", name)
                 return results
 
+        step_run_ids = []
+        for index, step in enumerate(steps, 1):
+            step_name = step.get("name", f"step-{index}")
+            step_run_ids.append(f"{metadata['workflow_run_id']}:{step_name}")
+        admission = new_admission_grant(
+            metadata["workflow_run_id"],
+            metadata["trace_id"],
+            step_run_ids,
+            backend=backend_name,
+            policy_snapshot={
+                "workflow_definition_id": name,
+                "execution_mode": metadata["execution_mode"],
+                "budget_checked": True,
+                "preflight_validated": True,
+            },
+        )
+        results["admission"] = admission
         emit_event(
             "WorkflowAdmitted",
-            {"workflow": name, "backend": backend_name},
+            {
+                "workflow": name,
+                "backend": backend_name,
+                "admission": admission,
+                **admission,
+            },
             idempotency_key=f"{metadata['workflow_run_id']}:admitted",
         )
         for index, step in enumerate(steps, 1):
@@ -234,12 +257,20 @@ def execute_m1_workflow(
             step_run_id = f"{metadata['workflow_run_id']}:{step_name}"
             emit_event(
                 "StepDispatched",
-                {"step_run_id": step_run_id, "step_name": step_name},
+                {
+                    "step_run_id": step_run_id,
+                    "step_name": step_name,
+                    "admission_id": admission["admission_id"],
+                },
                 idempotency_key=f"{step_run_id}:dispatched",
             )
             emit_event(
                 "StepStarted",
-                {"step_run_id": step_run_id, "step_name": step_name},
+                {
+                    "step_run_id": step_run_id,
+                    "step_name": step_name,
+                    "admission_id": admission["admission_id"],
+                },
                 idempotency_key=f"{step_run_id}:started",
             )
 
@@ -256,6 +287,7 @@ def execute_m1_workflow(
         # the non-sensitive correlation identifiers.
         params_with_pf["workflow_run_id"] = metadata["workflow_run_id"]
         params_with_pf["trace_id"] = metadata["trace_id"]
+        params_with_pf["admission"] = admission
         backend_result = backend_fn(wf, params_with_pf)
 
         if is_silent_mock(backend_result):
@@ -333,13 +365,16 @@ def execute_m1_workflow(
             if step.get("status") not in {"failed", "error", "unavailable"}:
                 continue
             step_name = step.get("name", "unknown-step")
+            failure_payload = {
+                "step_run_id": f"{metadata['workflow_run_id']}:{step_name}",
+                "step_name": step_name,
+                "error": step.get("error"),
+            }
+            if isinstance(results.get("admission"), dict):
+                failure_payload["admission_id"] = results["admission"]["admission_id"]
             emit_event(
                 "StepFailed",
-                {
-                    "step_run_id": f"{metadata['workflow_run_id']}:{step_name}",
-                    "step_name": step_name,
-                    "error": step.get("error"),
-                },
+                failure_payload,
                 idempotency_key=f"{metadata['workflow_run_id']}:{step_name}:failed",
             )
     results["run_metadata"]["finished_at"] = datetime.now().isoformat()
