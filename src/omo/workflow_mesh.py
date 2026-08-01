@@ -32,6 +32,7 @@ EVENT_STATE = {
     "StepStarted": "running",
     "StepHeartbeat": "running",
     "CheckpointSaved": "running",
+    "EvidenceRecorded": "succeeded",
     "ApprovalRequested": "waiting_approval",
     "ApprovalGranted": "running",
     "CompensationStarted": "compensating",
@@ -74,7 +75,7 @@ _ALLOWED_EVENTS = {
     "compensating": {"WorkflowRecovered", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
     "failed": {"WorkflowRecovered", "StepFailed", "WorkflowFailed", "WorkflowClosed"},
     "unavailable": {"WorkflowRecovered", "BackendUnavailable", "WorkflowClosed"},
-    "succeeded": {"WorkflowSucceeded", "WorkflowVerified", "WorkflowClosed"},
+    "succeeded": {"WorkflowSucceeded", "EvidenceRecorded", "WorkflowVerified", "WorkflowClosed"},
     "verified": {"PRMerged", "WorkflowClosed"},
     "merged": {"WorkflowClosed"},
     "cancelled": {"WorkflowClosed"},
@@ -147,6 +148,10 @@ def project_workflow_run(
         "last_event_type": None,
         "last_event_at": None,
         "metadata": {},
+        "step_runs": {},
+        "checkpoints": [],
+        "evidence": {},
+        "approvals": {},
     }
     for event in relevant:
         validate_workflow_event(event)
@@ -176,6 +181,12 @@ def project_workflow_run(
                 f"invalid transition {snapshot['state']} -> {next_state} "
                 f"for {event_type}"
             )
+        if event_type == "EvidenceRecorded" and not event["payload"].get("evidence_id"):
+            raise WorkflowMeshEventError("EvidenceRecorded requires evidence_id")
+        if event_type == "WorkflowVerified" and not snapshot["evidence"]:
+            raise WorkflowMeshEventError(
+                "WorkflowVerified requires at least one EvidenceRecorded event"
+            )
         snapshot["trace_id"] = snapshot["trace_id"] or event["trace_id"]
         snapshot["state"] = next_state
         snapshot["event_count"] += 1
@@ -194,9 +205,59 @@ def project_workflow_run(
                 snapshot["metadata"][key] = event["payload"][key]
         step_run_id = event["payload"].get("step_run_id")
         if step_run_id:
+            step_projection = snapshot["step_runs"].setdefault(
+                step_run_id,
+                {
+                    "step_run_id": step_run_id,
+                    "step_name": event["payload"].get("step_name"),
+                    "state": "unknown",
+                    "attempt": event["payload"].get("attempt", 1),
+                    "last_event_type": None,
+                    "checkpoint": None,
+                },
+            )
+            step_projection["step_name"] = (
+                step_projection.get("step_name")
+                or event["payload"].get("step_name")
+            )
+            step_projection["state"] = {
+                "StepDispatched": "dispatched",
+                "StepStarted": "running",
+                "StepHeartbeat": "running",
+                "CheckpointSaved": "running",
+                "StepFailed": "failed",
+            }.get(event_type, step_projection["state"])
+            step_projection["last_event_type"] = event_type
+            if event_type == "CheckpointSaved":
+                checkpoint = {
+                    "checkpoint_id": event["payload"].get("checkpoint_id") or event["event_id"],
+                    "step_run_id": step_run_id,
+                    "attempt": event["payload"].get("attempt", 1),
+                    "next_turn": event["payload"].get("next_turn"),
+                    "checkpoint": event["payload"].get("checkpoint"),
+                    "event_id": event["event_id"],
+                }
+                step_projection["checkpoint"] = checkpoint
+                snapshot["checkpoints"].append(checkpoint)
             snapshot["step_states"][step_run_id] = {
-                "state": snapshot["state"],
+                "state": step_projection["state"],
                 "last_event_type": event["event_type"],
+            }
+        if event_type == "EvidenceRecorded":
+            evidence_id = event["payload"]["evidence_id"]
+            snapshot["evidence"][evidence_id] = {
+                "evidence_id": evidence_id,
+                "kind": event["payload"].get("kind"),
+                "uri": event["payload"].get("uri"),
+                "sha256": event["payload"].get("sha256"),
+                "event_id": event["event_id"],
+            }
+        if event_type in {"ApprovalRequested", "ApprovalGranted"}:
+            approval_id = event["payload"].get("approval_id") or "workflow"
+            snapshot["approvals"][approval_id] = {
+                "approval_id": approval_id,
+                "state": "requested" if event_type == "ApprovalRequested" else "granted",
+                "event_id": event["event_id"],
             }
     return snapshot
 
@@ -240,6 +301,18 @@ class WorkflowMeshStore:
 
     def snapshot(self, workflow_run_id: str) -> dict[str, Any]:
         return project_workflow_run(self.events(), workflow_run_id)
+
+    def step_snapshot(
+        self, workflow_run_id: str, step_run_id: str
+    ) -> dict[str, Any] | None:
+        """Return the projected StepRun owned by a WorkflowRun."""
+        return self.snapshot(workflow_run_id)["step_runs"].get(step_run_id)
+
+    def evidence_snapshot(
+        self, workflow_run_id: str, evidence_id: str
+    ) -> dict[str, Any] | None:
+        """Return one evidence projection owned by a WorkflowRun."""
+        return self.snapshot(workflow_run_id)["evidence"].get(evidence_id)
 
     def snapshots(self) -> list[dict[str, Any]]:
         """返回所有运行快照，顺序按事件日志中最后一次出现的顺序。"""

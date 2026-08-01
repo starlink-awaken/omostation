@@ -37,16 +37,57 @@ def test_successful_run_can_be_verified_merged_and_closed(tmp_path):
         "WorkflowRequested",
         "StepStarted",
         "WorkflowSucceeded",
+        "EvidenceRecorded",
         "WorkflowVerified",
         "PRMerged",
         "WorkflowClosed",
     ):
-        store.append(new_workflow_event(event_type, "run-lifecycle"))
+        payload = (
+            {"evidence_id": "evidence-1", "kind": "test", "uri": "memory://evidence-1"}
+            if event_type == "EvidenceRecorded"
+            else {}
+        )
+        store.append(new_workflow_event(event_type, "run-lifecycle", payload=payload))
 
     snapshot = store.snapshot("run-lifecycle")
     assert snapshot["state"] == "closed"
     assert snapshot["last_event_type"] == "WorkflowClosed"
-    assert snapshot["event_count"] == 6
+    assert snapshot["event_count"] == 7
+
+
+def test_step_run_checkpoint_and_evidence_are_queryable(tmp_path):
+    store = WorkflowMeshStore(tmp_path)
+    events = [
+        ("WorkflowRequested", {}),
+        ("StepDispatched", {"step_run_id": "step-1", "step_name": "compile"}),
+        ("StepStarted", {"step_run_id": "step-1", "step_name": "compile", "attempt": 2}),
+        (
+            "CheckpointSaved",
+            {
+                "step_run_id": "step-1",
+                "step_name": "compile",
+                "checkpoint_id": "cp-1",
+                "next_turn": 3,
+                "attempt": 2,
+            },
+        ),
+        ("WorkflowSucceeded", {}),
+        ("EvidenceRecorded", {"evidence_id": "ev-1", "sha256": "abc"}),
+    ]
+    for event_type, payload in events:
+        store.append(new_workflow_event(event_type, "run-query", payload=payload))
+
+    assert store.step_snapshot("run-query", "step-1")["checkpoint"]["checkpoint_id"] == "cp-1"
+    assert store.evidence_snapshot("run-query", "ev-1")["sha256"] == "abc"
+
+
+def test_verified_requires_evidence(tmp_path):
+    store = WorkflowMeshStore(tmp_path)
+    store.append(new_workflow_event("WorkflowRequested", "run-no-evidence"))
+    store.append(new_workflow_event("StepStarted", "run-no-evidence"))
+    store.append(new_workflow_event("WorkflowSucceeded", "run-no-evidence"))
+    with pytest.raises(WorkflowMeshEventError, match="EvidenceRecorded"):
+        store.append(new_workflow_event("WorkflowVerified", "run-no-evidence"))
 
 
 def test_failed_backend_can_recover_with_explicit_event(tmp_path):
