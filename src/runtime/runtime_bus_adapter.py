@@ -12,7 +12,7 @@ gets a span with trace_id.
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from collections.abc import Callable
 
 from bus_foundation.facade import control as bus_control
 
@@ -49,3 +49,21 @@ def register_cron_job(expr: str, callback: Callable) -> Callable:
         logger.debug("runtime_cron_register_skipped expr=%r: %s", expr, exc)
 
     return callback
+
+
+def register_board_service() -> None:
+    """Register B.D.S.K. Virtual Board consensus engine with bus facade."""
+    try:
+        from .board_engine import dispatch_board_command
+
+        bus_control.register_handler("bos.board.execute", dispatch_board_command)
+        logger.info("Registered B.D.S.K. Board handler for 'bos.board.execute'")
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("runtime_board_register_skipped: %s", exc)
+
+
+def dispatch_board(payload: dict) -> dict:
+    """Convenience helper to execute Board consensus directly via adapter."""
+    from .board_engine import dispatch_board_command
+
+    return dispatch_board_command(payload)

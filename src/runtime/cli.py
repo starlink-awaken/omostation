@@ -26,11 +26,10 @@ from .matrix import (
     RUNTIME_HOME,
     RUNTIME_MATRIX,
     get_service,
-    resolve_path,
     list_services,
+    resolve_path,
 )
 from .protocol import L0_PROTOCOLS, get_protocol, validate_protocol_message
-
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -323,7 +322,33 @@ def cmd_status() -> int:
     return 0
 
 
+def cmd_board(proposal: str, mode: str, session_id: str) -> int:
+    """Run B.D.S.K. Virtual Board consensus cycle."""
+    from .board_engine import BoardConsensusEngine, BoardMode
+
+    try:
+        b_mode = BoardMode(mode)
+    except ValueError:
+        b_mode = BoardMode.AUTO
+
+    engine = BoardConsensusEngine(session_id=session_id)
+    result = engine.execute(proposal=proposal, mode=b_mode)
+
+    print(f"🎭 B.D.S.K. Board Cycle ({result.mode}) — Status: {result.status}")
+    print(f"📌 Proposal: {result.proposal}")
+    print("─── Transcript ───────────────────────────────────")
+    for msg in result.transcript:
+        print(f"[{msg.persona.value}] {msg.title}:")
+        print(f"  {msg.content}")
+    if result.action_items:
+        print("─── Action Items ─────────────────────────────────")
+        for idx, item in enumerate(result.action_items, 1):
+            print(f"  {idx}. {item}")
+    return 0
+
+
 # ─── Main ───────────────────────────────────────────────────────────────────
+
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -399,6 +424,25 @@ def main(argv: list[str] | None = None) -> int:
 
     add_i0_subparser(sub)
 
+    # board
+    board_p = sub.add_parser(
+        "board", help="Execute B.D.S.K. Virtual Board consensus cycle"
+    )
+    board_p.add_argument(
+        "proposal", help="Proposal or question (can include @Builder/@Devil/@Sage/@Keeper)"
+    )
+    board_p.add_argument(
+        "--mode",
+        default="auto",
+        choices=["auto", "Mode-A", "Mode-B"],
+        help="Consensus mode (default: auto)",
+    )
+    board_p.add_argument(
+        "--session-id",
+        default="cli-board-session",
+        help="Session identifier for memory trajectory",
+    )
+
     args = parser.parse_args(argv)
 
     # Enable KEI Sandbox
@@ -467,9 +511,12 @@ def main(argv: list[str] | None = None) -> int:
             return 1
     elif args.command == "i0":
         return handle_i0_command(args)
+    elif args.command == "board":
+        return cmd_board(args.proposal, args.mode, args.session_id)
     else:
         parser.print_help()
         return 1
+
 
 
 if __name__ == "__main__":
