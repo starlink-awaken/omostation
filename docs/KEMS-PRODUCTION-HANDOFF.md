@@ -155,12 +155,14 @@ The credential administrator injects values only in the process environment:
 export BOS_REACHBRIDGE_ENDPOINT="https://<enterprise-endpoint>/dispatch"
 export BOS_REACHBRIDGE_TOKEN="<short-lived-secret>"
 export KEMS_EVALUATION_MANIFEST="/secure/kems/evaluation-manifest.json"
+export KEMS_ADJUDICATION_DB="$HOME/.kems/adjudication.sqlite"
 export KEMS_MODEL_ACCEPTANCE_REPORT="/secure/kems/model-acceptance.json"
 export KEMS_OMO_TASK_ID="<approved-task-id>"
 
 python scripts/kems_production_preflight.py \
   --docs-root "<controlled-docs-root>" \
   --evaluation-manifest "$KEMS_EVALUATION_MANIFEST" \
+  --adjudication-database "$KEMS_ADJUDICATION_DB" \
   --model-acceptance "$KEMS_MODEL_ACCEPTANCE_REPORT" \
   --omo-root "<workspace>/.omo" \
   --task-id "$KEMS_OMO_TASK_ID" \

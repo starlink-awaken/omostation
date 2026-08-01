@@ -9,9 +9,10 @@ import json
 import math
 import os
 import re
+import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 SOURCE_PATTERNS = (
     "*-auto-seeyon-oa-pending.md",
@@ -188,6 +189,128 @@ def _evaluation_check(
     if bind_sources:
         detail += "; source hashes match current inventory"
     return Check("evaluation_manifest", True, detail)
+
+
+def _adjudication_check(
+    database_path: Path | None, evaluation_manifest: Path | None
+) -> Check:
+    """Bind every manifest row to the persisted, independently adjudicated record."""
+    if database_path is None:
+        return Check(
+            "adjudication_persistence",
+            False,
+            "missing adjudication database path",
+        )
+    if evaluation_manifest is None or not evaluation_manifest.is_file():
+        return Check(
+            "adjudication_persistence",
+            False,
+            "evaluation manifest is required to bind adjudication records",
+        )
+    if not database_path.is_file():
+        return Check(
+            "adjudication_persistence",
+            False,
+            "adjudication database is unavailable",
+        )
+    try:
+        manifest = _load_json(evaluation_manifest)
+        samples = manifest.get("samples") if isinstance(manifest, dict) else None
+        if not isinstance(samples, list) or not samples:
+            return Check(
+                "adjudication_persistence",
+                False,
+                "evaluation manifest has no samples to bind",
+            )
+        uri = f"file:{quote(str(database_path.resolve()), safe='/')}?mode=ro"
+        with sqlite3.connect(uri, uri=True) as connection:
+            connection.row_factory = sqlite3.Row
+            for sample in samples:
+                if not isinstance(sample, dict):
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "manifest sample is not an object",
+                    )
+                sample_id = sample.get("sample_id")
+                if not isinstance(sample_id, str) or not sample_id:
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "manifest sample_id is invalid",
+                    )
+                row = connection.execute(
+                    "SELECT annotation_status, source_sha256, source_ref, labels_json, "
+                    "annotation_version, adjudicator FROM adjudication_queue WHERE sample_id=?",
+                    (sample_id,),
+                ).fetchone()
+                if row is None:
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "manifest sample is absent from adjudication database",
+                    )
+                if row["annotation_status"] != "adjudicated":
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "manifest sample is not adjudicated in persistent store",
+                    )
+                if row["source_sha256"] != sample.get("source_sha256") or row[
+                    "source_ref"
+                ] != sample.get("source_ref"):
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "persistent adjudication source identity differs from manifest",
+                    )
+                if row["annotation_version"] != sample.get("annotation_version"):
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "persistent annotation version differs from manifest",
+                    )
+                try:
+                    persisted_labels = json.loads(str(row["labels_json"]))
+                except json.JSONDecodeError:
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "persistent adjudication labels are invalid",
+                    )
+                if persisted_labels != sample.get("labels"):
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "persistent adjudication labels differ from manifest",
+                    )
+                if not str(row["adjudicator"] or "").strip():
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "persistent adjudication has no adjudicator",
+                    )
+                annotation_count = connection.execute(
+                    "SELECT COUNT(*) FROM adjudication_annotations WHERE sample_id=?",
+                    (sample_id,),
+                ).fetchone()[0]
+                if annotation_count < 2:
+                    return Check(
+                        "adjudication_persistence",
+                        False,
+                        "persistent adjudication lacks two independent annotations",
+                    )
+    except (OSError, sqlite3.Error, TypeError, ValueError) as exc:
+        return Check(
+            "adjudication_persistence",
+            False,
+            f"invalid adjudication database metadata: {type(exc).__name__}",
+        )
+    return Check(
+        "adjudication_persistence",
+        True,
+        f"persisted independently adjudicated samples={len(samples)}",
+    )
 
 
 def _model_acceptance_check(
@@ -403,6 +526,12 @@ def _evaluation_metadata(path: Path | None) -> dict[str, object]:
     }
 
 
+def _adjudication_metadata(path: Path | None) -> dict[str, object]:
+    if path is None or not path.is_file():
+        return {"available": False}
+    return {"available": True, "sha256": _sha256(path)}
+
+
 def _model_acceptance_metadata(path: Path | None) -> dict[str, object]:
     if path is None or not path.is_file():
         return {"available": False}
@@ -472,6 +601,7 @@ def run_preflight(
     production: bool,
     evidence_output: Path | None = None,
     model_acceptance: Path | None = None,
+    adjudication_database: Path | None = None,
 ) -> dict[str, object]:
     checks: list[Check] = []
     endpoint = os.environ.get("BOS_REACHBRIDGE_ENDPOINT", "").strip()
@@ -524,6 +654,11 @@ def run_preflight(
         _evaluation_check(evaluation_manifest, sources, bind_sources=production)
     )
     checks.append(
+        _adjudication_check(adjudication_database, evaluation_manifest)
+        if production
+        else Check("adjudication_persistence", True, "not required outside production")
+    )
+    checks.append(
         _model_acceptance_check(model_acceptance, evaluation_manifest)
         if production
         else Check("model_acceptance", True, "not required outside production")
@@ -547,6 +682,7 @@ def run_preflight(
             "source_inventory_sha256": inventory_sha256,
             "sources": inventory,
             "evaluation": _evaluation_metadata(evaluation_manifest),
+            "adjudication": _adjudication_metadata(adjudication_database),
             "model_acceptance": _model_acceptance_metadata(model_acceptance),
             "omo": _omo_metadata(omo_root, task_id),
             "checks": result["checks"],
@@ -579,6 +715,14 @@ def main() -> int:
         help="redacted candidate-model shadow acceptance report",
     )
     parser.add_argument(
+        "--adjudication-database",
+        type=Path,
+        default=Path(os.environ["KEMS_ADJUDICATION_DB"])
+        if os.environ.get("KEMS_ADJUDICATION_DB")
+        else None,
+        help="read-only persistent adjudication SQLite database",
+    )
+    parser.add_argument(
         "--omo-root",
         type=Path,
         default=Path(
@@ -605,6 +749,9 @@ def main() -> int:
         else None,
         model_acceptance=args.model_acceptance.expanduser().resolve()
         if args.model_acceptance
+        else None,
+        adjudication_database=args.adjudication_database.expanduser().resolve()
+        if args.adjudication_database
         else None,
         omo_root=args.omo_root.expanduser().resolve(),
         task_id=args.task_id,

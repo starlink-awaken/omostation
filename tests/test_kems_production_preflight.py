@@ -1,5 +1,6 @@
 import hashlib
 import json
+import sqlite3
 
 from scripts.kems_production_preflight import run_preflight
 
@@ -76,6 +77,39 @@ def _model_acceptance(tmp_path, manifest):
     return path
 
 
+def _adjudication_database(tmp_path):
+    path = tmp_path / "adjudication.sqlite"
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "CREATE TABLE adjudication_queue ("
+            "sample_id TEXT PRIMARY KEY, source_sha256 TEXT, source_ref TEXT, "
+            "annotation_status TEXT, labels_json TEXT, annotation_version TEXT, "
+            "adjudicator TEXT)"
+        )
+        connection.execute(
+            "CREATE TABLE adjudication_annotations ("
+            "annotation_id INTEGER PRIMARY KEY, sample_id TEXT, annotator TEXT)"
+        )
+        source = tmp_path / "docs" / "_inbox" / "2026-auto-apple-mail.md"
+        connection.execute(
+            "INSERT INTO adjudication_queue VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                "sample-1",
+                hashlib.sha256(source.read_bytes()).hexdigest(),
+                "vault://redacted/2026-auto-apple-mail.md",
+                "adjudicated",
+                json.dumps({"title": "通知"}, ensure_ascii=False, sort_keys=True),
+                "ann-1",
+                "reviewer",
+            ),
+        )
+        connection.executemany(
+            "INSERT INTO adjudication_annotations VALUES (?, ?, ?)",
+            [(1, "sample-1", "annotator-a"), (2, "sample-1", "annotator-b")],
+        )
+    return path
+
+
 def _approved_task(tmp_path):
     task_dir = tmp_path / "tasks" / "active"
     task_dir.mkdir(parents=True)
@@ -115,10 +149,12 @@ def test_preflight_is_ready_only_when_all_production_gates_pass(tmp_path, monkey
     monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
     _approved_task(tmp_path / "omo")
     manifest = _evaluation_manifest(tmp_path)
+    adjudication_database = _adjudication_database(tmp_path)
     result = run_preflight(
         docs_root=_source_tree(tmp_path),
         evaluation_manifest=manifest,
         model_acceptance=_model_acceptance(tmp_path, manifest),
+        adjudication_database=adjudication_database,
         omo_root=tmp_path / "omo",
         task_id="KEMS-001",
         production=True,
@@ -184,11 +220,13 @@ def test_preflight_writes_redacted_auditable_evidence(tmp_path, monkeypatch):
     monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
     _approved_task(tmp_path / "omo")
     manifest = _evaluation_manifest(tmp_path)
+    adjudication_database = _adjudication_database(tmp_path)
     output = tmp_path / "evidence" / "preflight.json"
     result = run_preflight(
         docs_root=_source_tree(tmp_path),
         evaluation_manifest=manifest,
         model_acceptance=_model_acceptance(tmp_path, manifest),
+        adjudication_database=adjudication_database,
         omo_root=tmp_path / "omo",
         task_id="KEMS-001",
         production=True,
@@ -201,10 +239,37 @@ def test_preflight_writes_redacted_auditable_evidence(tmp_path, monkeypatch):
     assert evidence["status"] == "ready"
     assert evidence["sources"][0]["name"] == "2026-auto-apple-mail.md"
     assert evidence["evaluation"]["dataset_id"] == "real-kems"
+    assert evidence["adjudication"]["available"] is True
     assert evidence["model_acceptance"]["status"] == "shadow_pass"
     assert evidence["omo"]["approval_ref"] == ".omo/workers/runs/KEMS-001-approval.yaml"
     assert "private source" not in output.read_text(encoding="utf-8")
     assert not list(output.parent.glob(".*.tmp"))
+
+
+def test_preflight_requires_persisted_adjudication_for_production(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setenv(
+        "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
+    )
+    monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
+    _approved_task(tmp_path / "omo")
+    manifest = _evaluation_manifest(tmp_path)
+    result = run_preflight(
+        docs_root=_source_tree(tmp_path),
+        evaluation_manifest=manifest,
+        model_acceptance=_model_acceptance(tmp_path, manifest),
+        omo_root=tmp_path / "omo",
+        task_id="KEMS-001",
+        production=True,
+    )
+    assert result["status"] == "blocked"
+    assert any(
+        item["id"] == "adjudication_persistence"
+        and not item["ok"]
+        and "database path" in item["detail"]
+        for item in result["checks"]
+    )
 
 
 def test_production_preflight_rejects_manifest_source_drift(tmp_path, monkeypatch):
