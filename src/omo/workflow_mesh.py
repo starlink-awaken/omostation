@@ -6,6 +6,8 @@ JSONL 保存原始事件，并从事件重建可审计的运行态。
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
@@ -88,6 +90,51 @@ class WorkflowMeshEventError(ValueError):
     """事件结构或状态转换不符合 Workflow Mesh 契约。"""
 
 
+def _canonical_admission(value: dict[str, Any]) -> bytes:
+    return json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+
+
+def _validate_admission_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    admission = payload.get("admission") or payload
+    if not isinstance(admission, dict):
+        raise WorkflowMeshEventError("WorkflowAdmitted requires an admission grant")
+    required = {
+        "admission_id",
+        "status",
+        "workflow_run_id",
+        "trace_id",
+        "step_run_ids",
+        "capabilities",
+        "policy_digest",
+        "issued_at",
+        "expires_at",
+        "proof",
+    }
+    missing = sorted(required - admission.keys())
+    if missing:
+        raise WorkflowMeshEventError(f"Admission grant missing fields: {missing}")
+    if admission["status"] != "admitted":
+        raise WorkflowMeshEventError("WorkflowAdmitted grant must be admitted")
+    unsigned = {
+        key: value for key, value in admission.items() if key != "proof"
+    }
+    expected_proof = hashlib.sha256(_canonical_admission(unsigned)).hexdigest()
+    if admission["proof"] != expected_proof:
+        raise WorkflowMeshEventError("Admission grant proof mismatch")
+    if not isinstance(admission["step_run_ids"], list) or not admission["step_run_ids"]:
+        raise WorkflowMeshEventError("Admission grant requires step_run_ids")
+    return admission
+
+
+def _step_is_admitted(step_run_id: str, admission: dict[str, Any]) -> bool:
+    return any(
+        step_run_id == admitted or step_run_id.startswith(f"{admitted}:")
+        for admitted in admission["step_run_ids"]
+    )
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -153,6 +200,7 @@ def project_workflow_run(
         "checkpoints": [],
         "evidence": {},
         "approvals": {},
+        "admission": None,
     }
     for event in relevant:
         validate_workflow_event(event)
@@ -184,6 +232,36 @@ def project_workflow_run(
             )
         if event_type == "EvidenceRecorded" and not event["payload"].get("evidence_id"):
             raise WorkflowMeshEventError("EvidenceRecorded requires evidence_id")
+        if event_type == "WorkflowAdmitted":
+            admission = _validate_admission_payload(event["payload"])
+            if admission["workflow_run_id"] != workflow_run_id:
+                raise WorkflowMeshEventError("Admission grant workflow_run_id mismatch")
+            snapshot["admission"] = dict(admission)
+        if event_type in {
+            "StepDispatched",
+            "StepStarted",
+            "StepHeartbeat",
+            "CheckpointSaved",
+            "StepFailed",
+        }:
+            step_run_id = event["payload"].get("step_run_id")
+            admission = snapshot.get("admission")
+            if not step_run_id or not isinstance(admission, dict):
+                raise WorkflowMeshEventError(
+                    f"{event_type} requires an admitted StepRun"
+                )
+            if event["payload"].get("admission_id") != admission["admission_id"]:
+                raise WorkflowMeshEventError(
+                    f"{event_type} admission_id mismatch"
+                )
+            if not _step_is_admitted(step_run_id, admission):
+                raise WorkflowMeshEventError(
+                    f"StepRun is not admitted: {step_run_id}"
+                )
+            if event_type != "StepDispatched" and step_run_id not in snapshot["step_runs"]:
+                raise WorkflowMeshEventError(
+                    f"{event_type} requires prior StepDispatched"
+                )
         if event_type == "WorkflowVerified" and not snapshot["evidence"]:
             raise WorkflowMeshEventError(
                 "WorkflowVerified requires at least one EvidenceRecorded event"
@@ -215,6 +293,7 @@ def project_workflow_run(
                     "attempt": event["payload"].get("attempt", 1),
                     "last_event_type": None,
                     "checkpoint": None,
+                    "admission_id": event["payload"].get("admission_id"),
                 },
             )
             step_projection["step_name"] = (
@@ -229,6 +308,9 @@ def project_workflow_run(
                 "StepFailed": "failed",
             }.get(event_type, step_projection["state"])
             step_projection["last_event_type"] = event_type
+            step_projection["admission_id"] = event["payload"].get(
+                "admission_id", step_projection.get("admission_id")
+            )
             if event_type == "CheckpointSaved":
                 checkpoint = {
                     "checkpoint_id": event["payload"].get("checkpoint_id") or event["event_id"],
