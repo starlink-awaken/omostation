@@ -26,6 +26,8 @@ write_owners:
     owner: "script:strategy-sync"
   - path: ".omo/state/system_health.yaml"
     owner: "script:runtime-scan"
+  - path: ".omo/state/runtime/system_health.yaml"
+    owner: "script:runtime-scan"
   - path: ".omo/debt/*"
     owner: "script:omo-debt"
   - path: ".omo/debt/**"
@@ -56,6 +58,9 @@ fields:
 
   # system_health.yaml — 健康扫描 SSOT
   .omo/state/system_health.yaml:
+    last_scan: runtime-scan
+    services: runtime-scan
+  .omo/state/runtime/system_health.yaml:
     last_scan: runtime-scan
     services: runtime-scan
 
