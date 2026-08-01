@@ -9,7 +9,7 @@ lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-24
 
-current_wave: W1
+current_wave: W5
 entry_gate: phase41_completed
 goals:
 - desc: Wave 1 — Agora MCP 隔离
