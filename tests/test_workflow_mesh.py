@@ -83,3 +83,16 @@ def test_unknown_event_is_rejected(tmp_path):
     store = WorkflowMeshStore(tmp_path)
     with pytest.raises(WorkflowMeshEventError, match="Unknown"):
         store.append(new_workflow_event("NotARealEvent", "run-3"))
+
+
+def test_idempotency_key_is_authoritative_across_event_ids(tmp_path):
+    store = WorkflowMeshStore(tmp_path)
+    first = new_workflow_event(
+        "WorkflowRequested", "run-idempotent", idempotency_key="run-idempotent:requested"
+    )
+    duplicate = new_workflow_event(
+        "WorkflowRequested", "run-idempotent", idempotency_key="run-idempotent:requested"
+    )
+    store.append(first)
+    with pytest.raises(WorkflowMeshEventError, match="Conflicting duplicate"):
+        store.append(duplicate)

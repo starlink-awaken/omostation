@@ -56,9 +56,9 @@ _ALLOWED_TRANSITIONS = {
     "running": {"running", "waiting_approval", "compensating", "failed", "unavailable", "succeeded", "cancelled"},
     "waiting_approval": {"running", "failed", "unavailable", "cancelled"},
     "compensating": {"running", "failed", "unavailable", "succeeded", "cancelled"},
-    "failed": {"running", "closed"},
-    "unavailable": {"running", "closed"},
-    "succeeded": {"verified", "closed"},
+    "failed": {"running", "failed", "closed"},
+    "unavailable": {"running", "unavailable", "closed"},
+    "succeeded": {"succeeded", "verified", "closed"},
     "verified": {"merged", "closed"},
     "merged": {"closed"},
     "cancelled": {"closed"},
@@ -68,13 +68,13 @@ _ALLOWED_EVENTS = {
     "unknown": {"WorkflowRequested"},
     "planned": {"WorkflowAdmitted", "StepDispatched", "StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
     "admitted": {"StepDispatched", "StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
-    "dispatched": {"StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
-    "running": {"StepStarted", "StepHeartbeat", "CheckpointSaved", "ApprovalRequested", "CompensationStarted", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
+    "dispatched": {"StepDispatched", "StepStarted", "WorkflowFailed", "BackendUnavailable", "WorkflowCancelled"},
+    "running": {"StepDispatched", "StepStarted", "StepHeartbeat", "CheckpointSaved", "ApprovalRequested", "CompensationStarted", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
     "waiting_approval": {"ApprovalGranted", "StepFailed", "BackendUnavailable", "WorkflowCancelled"},
     "compensating": {"WorkflowRecovered", "StepFailed", "BackendUnavailable", "WorkflowSucceeded", "WorkflowCancelled"},
-    "failed": {"WorkflowRecovered", "WorkflowClosed"},
-    "unavailable": {"WorkflowRecovered", "WorkflowClosed"},
-    "succeeded": {"WorkflowVerified", "WorkflowClosed"},
+    "failed": {"WorkflowRecovered", "StepFailed", "WorkflowFailed", "WorkflowClosed"},
+    "unavailable": {"WorkflowRecovered", "BackendUnavailable", "WorkflowClosed"},
+    "succeeded": {"WorkflowSucceeded", "WorkflowVerified", "WorkflowClosed"},
     "verified": {"PRMerged", "WorkflowClosed"},
     "merged": {"WorkflowClosed"},
     "cancelled": {"WorkflowClosed"},
@@ -97,8 +97,10 @@ def new_workflow_event(
     trace_id: str | None = None,
     producer: str = "omo",
     payload: dict[str, Any] | None = None,
+    idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     event_id = uuid4().hex
+    event_payload = payload or {}
     return {
         "event_id": event_id,
         "event_type": event_type,
@@ -107,8 +109,8 @@ def new_workflow_event(
         "occurred_at": _utc_now(),
         "producer": producer,
         "schema_version": "workflow-mesh/v1",
-        "idempotency_key": f"{workflow_run_id}:{event_type}:{event_id}",
-        "payload": payload or {},
+        "idempotency_key": idempotency_key or f"{workflow_run_id}:{event_type}:{event_payload.get('step_run_id', 'workflow')}",
+        "payload": event_payload,
     }
 
 
@@ -148,19 +150,31 @@ def project_workflow_run(
     }
     for event in relevant:
         validate_workflow_event(event)
-        next_state = EVENT_STATE[event["event_type"]]
+        event_type = event["event_type"]
+        next_state = EVENT_STATE[event_type]
+        # Step-level progress can arrive out of order or in batches. It updates
+        # the step projection without moving the workflow backwards.
+        if snapshot["state"] == "running" and event_type in {
+            "StepDispatched",
+            "StepStarted",
+            "StepHeartbeat",
+            "CheckpointSaved",
+        }:
+            next_state = "running"
+        elif snapshot["state"] == "dispatched" and event_type == "StepDispatched":
+            next_state = "dispatched"
         if snapshot["state"] in TERMINAL_STATES:
             raise WorkflowMeshEventError(
                 f"Workflow run is terminal; event is not allowed: {event['event_type']}"
             )
         if (
-            event["event_type"] not in _ALLOWED_EVENTS.get(snapshot["state"], set())
+            event_type not in _ALLOWED_EVENTS.get(snapshot["state"], set())
             or next_state not in _ALLOWED_TRANSITIONS.get(snapshot["state"], set())
         ):
             raise WorkflowMeshEventError(
                 "Workflow run is terminal or requires recovery; "
                 f"invalid transition {snapshot['state']} -> {next_state} "
-                f"for {event['event_type']}"
+                f"for {event_type}"
             )
         snapshot["trace_id"] = snapshot["trace_id"] or event["trace_id"]
         snapshot["state"] = next_state
@@ -211,11 +225,13 @@ class WorkflowMeshStore:
             current = self._log.read_all()
             for existing in current:
                 if existing.get("event_id") != event["event_id"]:
-                    continue
+                    if existing.get("idempotency_key") != event["idempotency_key"]:
+                        continue
                 if existing == event:
                     return existing
                 raise WorkflowMeshEventError(
-                    f"Conflicting duplicate Workflow Mesh event: {event['event_id']}"
+                    "Conflicting duplicate Workflow Mesh event: "
+                    f"{event['event_id']} / {event['idempotency_key']}"
                 )
             run_id = event["workflow_run_id"]
             candidate = [*current, event]
