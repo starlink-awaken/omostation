@@ -1175,12 +1175,6 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             }
         )
 
-    # ── BOS Inbox Neural Mesh 工具 (多源私有知识神经网接口) ──
-    mcp.tool()(bos_inbox_status)
-    mcp.tool()(bos_inbox_search)
-    mcp.tool()(bos_inbox_pending)
-    mcp.tool()(bos_inbox_watch)
-
     def _get_inbox_paths() -> tuple[Path, Path]:
         """获取本地 Inbox 与 @公共/_runtime 数据目录。"""
         doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
@@ -1537,4 +1531,3 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         return _ok(
             {"format_version": FORMAT_VERSION, "tools": tools, "total": len(tools)}
         )
-
