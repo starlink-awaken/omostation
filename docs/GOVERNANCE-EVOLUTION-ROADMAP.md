@@ -55,6 +55,7 @@ Agent/BOS entries:
 | Golden Path E2E | Rules | `governance-evolution golden-paths --json` |
 | Entry point convergence | Rules | Cockpit/AGCP/GaC entry contracts |
 | Runtime projection convergence | Feedback delays | `uv run --project projects/omo omo state sync --dry-run --json` |
+| Adaptive Digital 副官操作系统 (ADR-0300) | Information flow / Rules | `bos://memory/inbox/triage`, `bos://memory/inbox/draft`, `bos://persona/bdsk/evaluate` |
 
 ## Golden Paths
 
@@ -65,6 +66,7 @@ The canonical paths are registry-owned:
 3. BOS invocation: `bos://governance/evolution/status -> traces -> verifier`.
 4. Release package review: `packages -> unknown_count -> runtime/data exclusions -> AGCP closeout`.
 5. Runtime projection sync: `state_stale event -> state-sync workflow -> omo state sync -> mutation ledger`.
+6. Digital 副官/B.D.S.K. Decision Loop: `bos://memory/inbox/triage -> draft -> bos://persona/bdsk/evaluate -> sign-off`.
 
 Do not duplicate the full steps here. Update the registry, then run:
 

@@ -130,6 +130,9 @@ def test_governance_evolution_bos_routes_are_aligned() -> None:
         "bos://governance/evolution/golden-paths",
         "bos://governance/evolution/packages",
         "bos://governance/evolution/loop",
+        "bos://memory/inbox/triage",
+        "bos://memory/inbox/draft",
+        "bos://persona/bdsk/evaluate",
     } == set(status["entrypoints"]["bos"])
 
 

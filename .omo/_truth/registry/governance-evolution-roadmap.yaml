@@ -23,6 +23,9 @@ entrypoints:
     - bos://governance/evolution/golden-paths
     - bos://governance/evolution/packages
     - bos://governance/evolution/loop
+    - bos://memory/inbox/triage
+    - bos://memory/inbox/draft
+    - bos://persona/bdsk/evaluate
 preferred_entrypoints:
   human:
     command: cockpit

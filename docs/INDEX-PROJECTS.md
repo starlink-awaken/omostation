@@ -7,7 +7,7 @@
 > - validation: 与 project-registry.yaml 项目数一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-15T06:45:52.738094
+> - generated_at: 2026-07-31T08:11:19.564130+00:00
 
 ---
 
@@ -18,7 +18,7 @@
 | I0 | agora | Python (uv, pytest) | 各项目 `AGENTS.md` |
 | L0 | ecos | Python (uv, pytest) | 各项目 `AGENTS.md` |
 | L1 | runtime | Python (uv, pytest) | 各项目 `AGENTS.md` |
-| L1-L3 | toolbox | Multi (TypeScript MCP / JS Skills / Python CLI) | 各项目 `AGENTS.md` |
+| L1-L3 | toolbox | Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline) | 各项目 `AGENTS.md` |
 | L2 | family-hub, gbrain, kairon, metaos, omo, omo-debt | Python (FastMCP) + Python (uv, pytest) + TypeScript (bun) | 各项目 `AGENTS.md` |
 | L3 | cockpit, cockpit-ui | Python (uv, pytest) + TypeScript (Vite, React) | 各项目 `AGENTS.md` |
 | L4 | l4-kernel | Python (uv, pytest) | 各项目 `AGENTS.md` |
@@ -32,7 +32,7 @@
 | 栈 | 项目 |
 |----|------|
 | Docker | observability |
-| Multi (TypeScript MCP / JS Skills / Python CLI) | toolbox |
+| Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline) | toolbox |
 | Python (FastMCP) | family-hub |
 | Python (uv) | c2g |
 | Python (uv, pytest) | aetherforge, agora, bus-foundation, cockpit, ecos, kairon, l4-kernel, metaos, model-driven, omo, omo-debt, runtime |
@@ -61,7 +61,7 @@
 | omo | L2 | 治理中枢 · Agent OS 内核 | ✅ |
 | omo-debt | L2 | 技术债务评分 CLI | ✅ |
 | runtime | L1 | 运行时 · Matrix/Scheduler/KEI 沙箱 | ✅ |
-| toolbox | L1-L3 | 本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP / Skill / CLI) | ✅ |
+| toolbox | L1-L3 | 本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP×5 / Skill×5 / CLI×1 / Pipeline×2) | ✅ |
 
 ### TypeScript (bun) 项目
 
