@@ -14,7 +14,7 @@ Before editing:
 4. **需求迭代强制 Workflow（ADR-0203）** — see §1.6. Run `bootstrap` → `status` → `start` → `claim` **before** any requirement delivery edit. Prompt-only execution is non-compliant.
 5. For governed state, use OMO/C2G brokers instead of direct `.omo` writes.
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
-7. **B.D.S.K. Virtual Board Deliberation** — For high-risk architectural changes, trade-offs, or local LLM integration, refer to [`.agents/skills/bdsk-virtual-board/SKILL.md`](.agents/skills/bdsk-virtual-board/SKILL.md) to invoke the 4-Corner (`@Builder`/`@Devil`/`@Sage`/`@Keeper`) consensus engine (Mode-A/B).
+7. **B.D.S.K. Virtual Board & Compute Deliberation** — For high-risk architectural changes, trade-offs, or local LLM/edge compute integration, refer to [`.agents/skills/bdsk-virtual-board/SKILL.md`](.agents/skills/bdsk-virtual-board/SKILL.md) to invoke the 4-Corner (`@Builder`/`@Devil`/`@Sage`/`@Keeper`) consensus engine (Mode-A/B). All local/edge LLM inference MUST route through **AetherForge + omlxc (`bos://compute/aetherforge/infer`)**.
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 
