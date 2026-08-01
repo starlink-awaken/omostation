@@ -78,6 +78,16 @@ def _mutation_surface_registry_snapshot() -> list[dict[str, object]]:
             "category": "human_cli",
         },
         {
+            "name": "omo-goal-reconcile",
+            "entrypoint": "omo goal reconcile",
+            "runtime_ref": "projects/omo/src/omo/omo_goal.py:cmd_goal_reconcile",
+            "mutation_target": ".omo/goals/current.yaml",
+            "broker_ref": "projects/omo/src/omo/omo_ingress.py:reconcile_goals",
+            "delivery_artifact_root": "runtime/omo/_delivery/ingress/goals/",
+            "mode": "brokered",
+            "category": "human_cli",
+        },
+        {
             "name": "omo-task-create",
             "entrypoint": "omo task create",
             "runtime_ref": "projects/omo/src/omo/omo_task.py:cmd_task_create",

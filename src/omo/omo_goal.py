@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-from omo.omo_ingress import create_goal, update_goal_progress
+from omo.omo_ingress import create_goal, reconcile_goals, update_goal_progress
 from omo.omo_paths import find_omo_dir
 from omo.omo_shared import load_yaml_required
 
@@ -124,6 +124,39 @@ def cmd_goal_progress(omo_dir: Path, goal_id: str, progress: float) -> int:
     return 0
 
 
+def cmd_goal_reconcile(
+    omo_dir: Path,
+    *,
+    phase: int,
+    current_wave: str,
+    execution_mode: str,
+    theme: str,
+    archive_completed: bool,
+    source_ref: str,
+) -> int:
+    """Reconcile phase/state fields through the governed goal broker."""
+    try:
+        payload = reconcile_goals(
+            omo_dir,
+            phase=phase,
+            current_wave=current_wave,
+            execution_mode=execution_mode,
+            theme=theme,
+            archive_completed=archive_completed,
+            actor="projects/omo",
+            source_ref=source_ref,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"❌ {exc}", file=sys.stderr)
+        return 1
+    print(
+        f"✅ Goals reconciled: phase={payload.get('phase')} "
+        f"wave={payload.get('current_wave')} "
+        f"mode={payload.get('execution_mode')}"
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="omo goal", description="OMO Phase goal management"
@@ -142,6 +175,21 @@ def main(argv: list[str] | None = None) -> int:
     gp.add_argument(
         "--pct", type=float, required=True, help="Progress percentage (0-100)"
     )
+    gr = sub.add_parser("reconcile", help="Reconcile governed phase and goal state")
+    gr.add_argument("--phase", type=int, required=True, help="Current phase")
+    gr.add_argument("--wave", dest="current_wave", required=True, help="Current wave")
+    gr.add_argument(
+        "--execution-mode",
+        default="waiting-for-scenario/next-bet",
+        help="Execution mode (default: waiting-for-scenario/next-bet)",
+    )
+    gr.add_argument("--theme", default="", help="Current phase theme")
+    gr.add_argument(
+        "--archive-completed",
+        action="store_true",
+        help="Archive goals already marked done/completed",
+    )
+    gr.add_argument("--source-ref", default="", help="Stable mutation source reference")
     args = parser.parse_args(argv)
     omo_dir = _find_omo_dir()
     if args.command == "list":
@@ -152,6 +200,16 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_goal_create(omo_dir, args.id, args.desc, args.source_ref)
     elif args.command == "progress":
         return cmd_goal_progress(omo_dir, args.id, args.pct)
+    elif args.command == "reconcile":
+        return cmd_goal_reconcile(
+            omo_dir,
+            phase=args.phase,
+            current_wave=args.current_wave,
+            execution_mode=args.execution_mode,
+            theme=args.theme,
+            archive_completed=args.archive_completed,
+            source_ref=args.source_ref,
+        )
     else:
         parser.print_help()
         return 1

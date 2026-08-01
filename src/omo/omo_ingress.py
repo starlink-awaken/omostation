@@ -202,6 +202,7 @@ from omo.omo_ingress_doc import (
 )
 from omo.omo_ingress_goal import (
     create_goal,
+    reconcile_goals,
     update_goal_progress,
 )
 from omo.omo_ingress_registry_writes import (
