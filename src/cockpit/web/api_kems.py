@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import math
 import os
 import re
@@ -528,6 +529,8 @@ async def register_kems_evaluation_manifest(request: Request) -> dict[str, Any]:
         "sample_count": len(manifest.samples),
         "persisted": persisted,
         "redaction_status": manifest.redaction_status,
+        "manifest_sha256": hashlib.sha256(manifest.to_json().encode("utf-8")).hexdigest(),
+        "samples": [sample.to_dict() for sample in manifest.samples],
     }
 
 
@@ -793,4 +796,6 @@ async def build_kems_adjudicated_manifest(request: Request) -> dict[str, Any]:
         "sample_count": len(manifest.samples),
         "persisted": persisted,
         "redaction_status": manifest.redaction_status,
+        "manifest_sha256": hashlib.sha256(manifest.to_json().encode("utf-8")).hexdigest(),
+        "samples": [sample.to_dict() for sample in manifest.samples],
     }

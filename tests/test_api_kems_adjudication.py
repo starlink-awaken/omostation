@@ -55,7 +55,11 @@ def test_adjudication_lifecycle_and_manifest(monkeypatch, tmp_path) -> None:
 
     response = api.post("/api/kems/adjudication/manifest", json={"dataset_id": "kems-real", "dataset_version": "v1"})
     assert response.status_code == 200
-    assert response.json()["sample_count"] == 1
+    payload = response.json()
+    assert payload["sample_count"] == 1
+    assert len(payload["manifest_sha256"]) == 64
+    assert payload["samples"][0]["sample_id"] == "sample-1"
+    assert "text" not in response.text
 
 
 def test_adjudication_api_rejects_raw_content(monkeypatch, tmp_path) -> None:
