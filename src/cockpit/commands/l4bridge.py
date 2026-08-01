@@ -18,6 +18,10 @@ try:
 
     _HAS_L4 = True
 except ImportError:
+    cards_check = None  # type: ignore[assignment]
+    cards_status = None  # type: ignore[assignment]
+    vault_search = None  # type: ignore[assignment]
+    workspace_context = None  # type: ignore[assignment]
     _HAS_L4 = False
 
 
@@ -30,7 +34,7 @@ def cmd_context(_args: Namespace) -> int:
         return 1
 
     try:
-        ctx = json.loads(workspace_context())
+        ctx = json.loads(workspace_context())  # type: ignore[union-attr]
     except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ workspace_context 调用失败: {e}[/]")
         return 1
@@ -156,7 +160,7 @@ def cmd_cards(args: Namespace) -> int:
     if getattr(args, "check", False):
         card_id = getattr(args, "card_id", "") or ""
         try:
-            result = json.loads(cards_check(card_id=card_id))
+            result = json.loads(cards_check(card_id=card_id))  # type: ignore[union-attr]
         except Exception as e:  # defensive fallback
             _get_err().print(f"[red]❌ cards_check 失败: {e}[/]")
             return 1
@@ -171,7 +175,7 @@ def cmd_cards(args: Namespace) -> int:
         return 0
 
     try:
-        items = json.loads(cards_status())
+        items = json.loads(cards_status())  # type: ignore[union-attr]
     except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ cards_status 失败: {e}[/]")
         return 1
@@ -216,7 +220,7 @@ def cmd_vault(args: Namespace) -> int:
         return 1
 
     try:
-        result = json.loads(vault_search(keyword=keyword))
+        result = json.loads(vault_search(keyword=keyword))  # type: ignore[union-attr]
     except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ vault_search 失败: {e}[/]")
         return 1
