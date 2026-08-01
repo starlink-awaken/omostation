@@ -2494,7 +2494,7 @@ services:
   transport: internal
   uri: bos://memory/inbox/draft
 - action: evaluate
-  description: B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)
+  description: B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Mode-A Debate & ADR 自动落盘存证)
   domain: persona
   func_name: persona_bdsk_evaluate
   i0_route: active
