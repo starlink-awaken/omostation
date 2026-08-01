@@ -60,7 +60,11 @@ def cmd_state_show(omo_dir: Path, fmt: str) -> int:
 
 
 def cmd_state_health(omo_dir: Path) -> int:
-    health_file = omo_dir / "state" / "system_health.yaml"
+    canonical_health_file = omo_dir / "state" / "runtime" / "system_health.yaml"
+    legacy_health_file = omo_dir / "state" / "system_health.yaml"
+    health_file = (
+        canonical_health_file if canonical_health_file.exists() else legacy_health_file
+    )
     if not health_file.exists():
         print("⚠️  state/system_health.yaml not found")
         return 0
@@ -111,7 +115,11 @@ def cmd_state_refresh(omo_dir: Path, dry_run: bool) -> int:
     import subprocess
     import time
 
-    health_file = omo_dir / "state" / "system_health.yaml"
+    canonical_health_file = omo_dir / "state" / "runtime" / "system_health.yaml"
+    legacy_health_file = omo_dir / "state" / "system_health.yaml"
+    health_file = (
+        canonical_health_file if canonical_health_file.exists() else legacy_health_file
+    )
     current_data = load_yaml(health_file) if health_file.exists() else {"services": {}}
     services = (
         current_data.get("services", {}) if isinstance(current_data, dict) else {}
@@ -182,9 +190,13 @@ def cmd_state_refresh(omo_dir: Path, dry_run: bool) -> int:
         print(json.dumps(output, indent=2, default=str))
         print(f"\n(dry-run: {updates} services would be updated)")
     else:
-        health_file.write_text(
-            yaml.dump(output, default_flow_style=False, allow_unicode=True)
+        payload = yaml.dump(output, default_flow_style=False, allow_unicode=True)
+        write_text_atomic(canonical_health_file, payload)
+        write_text_atomic(
+            legacy_health_file,
+            payload,
         )
+        health_file = canonical_health_file
         print(f"✅ system_health.yaml refreshed: {updates} services updated")
     return 0
 

@@ -24,32 +24,32 @@ import yaml
 # Ensure omo src is importable
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from omo.omo_debt_cli import cmd_debt_close, cmd_debt_desc, cmd_debt_list
+from omo.omo_delivery import cmd_delivery_archive, cmd_delivery_list
+from omo.omo_evidence import cmd_evidence_list
 from omo.omo_goal import (
     cmd_goal_create,
     cmd_goal_list,
     cmd_goal_progress,
     cmd_goal_status,
 )
+from omo.omo_i0 import cmd_i0_routes, cmd_i0_status
+from omo.omo_knowledge import cmd_knowledge_add, cmd_knowledge_list
+from omo.omo_paths import OMO_ROOT, find_omo_dir
+from omo.omo_standard import cmd_standard_add, cmd_standard_list
 from omo.omo_state import (
     cmd_state_health,
+    cmd_state_refresh,
     cmd_state_show,
     cmd_state_sync,
     cmd_state_sync_tasks,
 )
-from omo.omo_debt_cli import cmd_debt_close, cmd_debt_desc, cmd_debt_list
-from omo.omo_knowledge import cmd_knowledge_add, cmd_knowledge_list
-from omo.omo_delivery import cmd_delivery_archive, cmd_delivery_list
-from omo.omo_standard import cmd_standard_add, cmd_standard_list
-from omo.omo_i0 import cmd_i0_routes, cmd_i0_status
 from omo.omo_task import (
     cmd_task_create,
     cmd_task_done,
     cmd_task_list,
     cmd_task_refresh_evidence,
 )
-from omo.omo_evidence import cmd_evidence_list
-from omo.omo_paths import OMO_ROOT, find_omo_dir
-
 
 # -- omo_goal --
 
@@ -325,6 +325,65 @@ class TestOmoState:
         assert "Agora: healthy" in captured.out
         assert "Runtime: failed" in captured.out
         assert "gbrain: idle" in captured.out
+
+    def test_cmd_state_health_prefers_canonical_projection(
+        self, capsys, tmp_path: Path
+    ) -> None:
+        omo_dir = tmp_path
+        canonical_dir = omo_dir / "state" / "runtime"
+        canonical_dir.mkdir(parents=True)
+        (omo_dir / "state").mkdir(exist_ok=True)
+        (omo_dir / "state" / "system_health.yaml").write_text(
+            yaml.dump(
+                {"services": {"legacy": {"name": "Legacy", "health_check": "failed"}}}
+            )
+        )
+        (canonical_dir / "system_health.yaml").write_text(
+            yaml.dump(
+                {
+                    "services": {
+                        "canonical": {"name": "Canonical", "health_check": "healthy"}
+                    }
+                }
+            )
+        )
+
+        ret = cmd_state_health(omo_dir)
+
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "Canonical: healthy" in captured.out
+        assert "Legacy" not in captured.out
+
+    def test_cmd_state_refresh_dual_writes_canonical_projection(
+        self, capsys, tmp_path: Path
+    ) -> None:
+        omo_dir = tmp_path
+        (omo_dir / "state").mkdir()
+        result = MagicMock(
+            returncode=0,
+            stdout=json.dumps([{"name": "agora", "status": "running", "port": 7430}]),
+        )
+
+        with patch("subprocess.run", return_value=result):
+            ret = cmd_state_refresh(omo_dir, dry_run=False)
+
+        assert ret == 0
+        canonical = omo_dir / "state" / "runtime" / "system_health.yaml"
+        legacy = omo_dir / "state" / "system_health.yaml"
+        assert canonical.exists()
+        assert legacy.exists()
+        assert yaml.safe_load(canonical.read_text()) == yaml.safe_load(
+            legacy.read_text()
+        )
+        assert (
+            yaml.safe_load(canonical.read_text())["services"]["agora"]["health_check"]
+            == "healthy"
+        )
+        assert (
+            "system_health.yaml refreshed: 1 services updated"
+            in capsys.readouterr().out
+        )
 
     def test_cmd_state_sync_tasks_fixes_drift(self, capsys, tmp_path: Path) -> None:
         """sync-tasks 从 tasks/ 真实文件数重算计数 (治本手动维护漂移, OPT-7)."""

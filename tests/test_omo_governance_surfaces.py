@@ -591,7 +591,7 @@ def _seed_workspace(root: Path) -> None:
                     "name": "omo-state-refresh",
                     "entrypoint": "omo state refresh",
                     "runtime_ref": "projects/omo/src/omo/omo_state.py:cmd_state_refresh",
-                    "mutation_target": ".omo/state/system_health.yaml",
+                    "mutation_target": ".omo/state/runtime/system_health.yaml + .omo/state/system_health.yaml",
                     "broker_ref": None,
                     "delivery_artifact_root": None,
                     "mode": "direct-runtime-cache",
