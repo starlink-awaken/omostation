@@ -19,7 +19,7 @@
   - operating rules → [`AGENTS.md`](AGENTS.md) + this file
   - front-door entry → [`README.md`](README.md)
   - **system navigation** → [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) (NEW: unified navigation hub)
-  - **agent capabilities & board consensus** → [`.agents/skills/bdsk-virtual-board/SKILL.md`](.agents/skills/bdsk-virtual-board/SKILL.md) (B.D.S.K. Mode-A/B 4-Corner debate matrix & local LLM architecture)
+  - **agent capabilities & board consensus** → [`.agents/skills/bdsk-virtual-board/SKILL.md`](.agents/skills/bdsk-virtual-board/SKILL.md) (B.D.S.K. Mode-A/B 4-Corner debate matrix & AetherForge/omlxc local compute architecture)
 
 > **First Stop**: Read [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) to understand the workspace structure, then use the specialized indexes:
 >
