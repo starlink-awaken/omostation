@@ -335,6 +335,13 @@ def check_service(svc) -> dict:
             ok, reason = True, "local-only (toolbox package host: CI 无 ToolBox 安装, 非鸿沟)"
     elif transport == "internal":
         ok, reason = _check_internal(svc.module_path, svc.func_name)
+    elif transport == "mcp":
+        # MCP tools registered by an in-repository server are executable
+        # declarations; validate their owning module like internal routes.
+        ok, reason = _check_internal(
+            getattr(svc, "module_path", ""),
+            getattr(svc, "func_name", ""),
+        )
     elif transport == "http":
         ok, reason = _check_http(svc.http_url)
     elif transport == "mcp_proxy":

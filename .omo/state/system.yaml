@@ -7,9 +7,9 @@ phase_status: active
 current_wave: W1
 next_milestone: Phase 47 W1 — 韧性+分布式深化 (health-score 修复 + 多节点验证 + 故障注入)
 health_score_ref: .omo/state/health.yaml
-health_score: 70
+health_score: 93
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-31T11:43:46Z'
+health_score_generated_at: '2026-07-31T12:49:29Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -52,7 +52,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-07-31T11:43:49Z'
+updated_at: '2026-07-31T12:49:32Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -192,8 +192,8 @@ runtime_health_summary:
   online_services: 4
   total_services: 4
   ratio: 1.0
-  health_score: 70
-  last_scan: '2026-07-31T11:43:46Z'
+  health_score: 93
+  last_scan: '2026-07-31T12:49:29Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
@@ -210,8 +210,8 @@ debt_adjusted_health_score: 83.0
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 0
+governance_anomaly_score: 77
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-07-31T11:43:46Z'
+governance_feedback_last_run: '2026-07-31T12:49:29Z'

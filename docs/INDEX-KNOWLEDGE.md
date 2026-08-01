@@ -7,7 +7,7 @@
 > - validation: ADR 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-15T06:45:53.542317
+> - generated_at: 2026-07-31T08:11:19.492413+00:00
 
 ---
 
@@ -36,6 +36,9 @@
 | ADR | 0108-p110a-ecos-domain-manager-split.md | 0108-p110a-ecos-domain-manager-split |
 | ADR | 0132-l0-mof-m4-metamodel.md | 0132-l0-mof-m4-metamodel |
 | ADR | 0133-l0-constraints-v2-cutover.md | 0133-l0-constraints-v2-cutover |
+| ADR | 0238-mof-m4-phase0-registry-self-governance.md | 0238-mof-m4-phase0-registry-self-governance |
+| ADR | 0240-mof-d1d4-decisions-aaaa-phase1.md | 0240-mof-d1d4-decisions-aaaa-phase1 |
+| ADR | 0257-p84-w3-wave2-mof-d4-l0-debt.md | 0257-p84-w3-wave2-mof-d4-l0-debt |
 
 ### GaC 治理相关
 
@@ -62,9 +65,10 @@
 | ADR | 0105-phase0-bos-contract-linter.md | 0105-phase0-bos-contract-linter |
 | ADR | 0107-phase3-bos-contract-linter.md | 0107-phase3-bos-contract-linter |
 | ADR | 0113-phase2-bos-contract-linter.md | 0113-phase2-bos-contract-linter |
+| ADR | 0219-bos-evidence-smoke-full-path.md | 0219-bos-evidence-smoke-full-path |
+| ADR | 0235-role-catalog-c1-research-delivery.md | 0235-role-catalog-c1-research-delivery |
+| ADR | 0260-p84-wave5-adv-bos-m2.md | 0260-p84-wave5-adv-bos-m2 |
 | ADR | phase0-bos-contract-linter-pre-analysis.md | phase0-bos-contract-linter-pre-analysis |
-| ADR | phase2-bos-contract-linter-pre-analysis.md | phase2-bos-contract-linter-pre-analysis |
-| ADR | phase3-bos-contract-linter-pre-analysis.md | phase3-bos-contract-linter-pre-analysis |
 
 ### P7x 系列（声明/执行鸿沟）
 
@@ -137,7 +141,7 @@
 | workflow-solidification-closeout | 2026-07-03-p74-workflow-solidification-closeout.md |
 | comprehensive-audit | 2026-07-02-system-comprehensive-audit.md |
 
-> 共 86 份审计报告，完整清单见 `.omo/_knowledge/audits/`
+> 共 202 份审计报告，完整清单见 `.omo/_knowledge/audits/`
 
 ---
 
@@ -146,6 +150,7 @@
 | 模式 | 文件 | 主题 |
 |------|------|------|
 | adr-concurrent-number-collision | adr-concurrent-number-collision.md | adr-concurrent-number-collision |
+| as-of-baseline-anti-drift-pattern | as-of-baseline-anti-drift-pattern.md | as-of-baseline-anti-drift-pattern |
 | ci-silent-fail-debug-chain | ci-silent-fail-debug-chain.md | ci-silent-fail-debug-chain |
 | host-mutation-dual-gate | host-mutation-dual-gate.md | host-mutation-dual-gate |
 | p43-closed-loop-pattern | p43-closed-loop-pattern.md | p43-closed-loop-pattern |
@@ -156,6 +161,9 @@
 | p74-workflow-solidification-pattern | p74-workflow-solidification-pattern.md | p74-workflow-solidification-pattern |
 | p75-ci-red-triage-pattern | p75-ci-red-triage-pattern.md | p75-ci-red-triage-pattern |
 | p76-launcher-zombie-false-positive | p76-launcher-zombie-false-positive.md | p76-launcher-zombie-false-positive |
+| p77-agora-heartbeat-transport-mismatch | p77-agora-heartbeat-transport-mismatch.md | p77-agora-heartbeat-transport-mismatch |
+| p78-triple-axis-diagnostic-pattern | p78-triple-axis-diagnostic-pattern.md | p78-triple-axis-diagnostic-pattern |
+| pipe-mask-failure-pattern | pipe-mask-failure-pattern.md | pipe-mask-failure-pattern |
 | pre-push-ssot-path-drift | pre-push-ssot-path-drift.md | pre-push-ssot-path-drift |
 
 ---
