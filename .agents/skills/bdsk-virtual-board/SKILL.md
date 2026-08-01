@@ -66,33 +66,45 @@ print(verdict.to_markdown())
 
 ---
 
-## 4. 本地 LLM (Local LLM / Air-gapped Edge) 协同接入架构
+## 4. AetherForge + OMLXC 本地与边缘算力协同架构 (Compute & LLM Integration)
 
-根据**“LLM=CPU, Agent=OS, MCP=硬件”**架构体系，系统天然保持计算单元（CPU/LLM）的无状态与解耦。在需要**高机密数据主权（医疗/政企）**或**降低 4 角辩论高频 Token 成本**时，适用以下选型策略：
+根据**“LLM=CPU, Agent=OS, MCP/BOS=硬件”**架构体系，系统天然保持计算单元（CPU/LLM）的无状态与解耦。在需要**高机密数据主权（医疗/政企）**、**降低 4 角辩论高频 Token 成本**，或调用本地边缘计算时，应用层不可盲目重构推理后端或写死调用库，必须统一通过 **AetherForge (`projects/aetherforge`)** 算力框架与 **OMLXC (Omostation MLX Compute / Apple MLX Edge Client)** 进行路由与编排。
 
-### 4.1 为什么要接入本地 LLM (Why Local LLM)?
-1. **安全与数据主权 (Air-gapped Compliance)**：在处理脱敏医疗数据、政企架构资产或审计网络中，纯本地局域网（Ollama / vLLM）运行，完全杜绝公有云数据传输风险。
-2. **零成本的高频第一轮初审 (Cost-Free First-Pass Review)**：B.D.S.K. 的 4 角高频对话如果全部消耗外部高参数推理 API 将大幅增加开销。通过本地中等参数量模型（如 Qwen-2.5-14B / Llama-3.1-8B）作为 Builder 初稿与 Devil 漏洞预扫描机，成本几乎为零。
-3. **云边双向混编 (Cloud-Edge Hybrid Engine)**：
-   - ** Edge LLM (本地计算单元)**：绑定至 `@Builder` (代码构建) 与 `@Devil` (基础语法/边界挑刺)。
-   - ** Cloud LLM (云端大推理单元)**：绑定至 `@Sage` (顶级架构权衡) 与终裁整合。
+### 4.1 为什么要使用 AetherForge + OMLXC 接入算力 (First-Principles ROI)?
+1. **统一网关与模型服务网格 (Gateway & Mesh)**：
+   - AetherForge 作为“能力与算力框架”，天然承载 `gateway / mesh / swarm`。上层 B.D.S.K. 虚拟董事会无须感知底层物理推理节点是苹果 MLX 芯片、Ollama 还是大模型集群。
+   - 杜绝散乱连接，通过服务网格路由进行并发负载均衡与故障剔除。
+2. **安全与数据主权 (Air-gapped Compliance)**：
+   - 处理政务与卫生脱敏数据、私有工程架构或处于物理隔绝无网环境时，通过本地 **omlxc / MLX 量化模型（或边缘算力集群）**提供推理，确保数据在本地闭环零外泄。
+3. **云边协同与成本削减 (Cloud-Edge Hybrid Engine)**：
+   - **边缘高频初审 (omlxc / Local Edge)**：绑定至 `@Builder` (代码草拟/语法扫描) 与 `@Devil` (边界漏洞与回归排查)，利用本地芯片高吞吐、零 API 计费的优势完成高频轮查。
+   - **云端战略决断 (Cloud Authoritative)**：绑定至 `@Sage` (第一性原理与架构权衡) 与 `@Keeper` 终裁整合，用高参云端模型把关架构演进。
 
-### 4.2 接入设计规范 (OpenAI Compatible Protocol)
-- **拒绝专有 SDK 强耦合**：全部模型对接一律采用标准 `OpenAI Compatible REST API`。
-- **默认端点配置建议**：
-  ```yaml
-  llm_compute_units:
-    local_edge:
-      provider: ollama
-      base_url: "http://127.0.0.1:11434/v1"
-      default_model: "qwen2.5:14b"
-      role_bindings: ["builder", "devil"]
-    cloud_authoritative:
-      provider: openai_compatible
-      base_url: "${ARK_ENDPOINT_URL}"
-      default_model: "${ARK_MODEL_ID}"
-      role_bindings: ["sage", "keeper"]
-  ```
+### 4.2 BOS 算力服务绑定契约 (BOS Compute URI)
+AetherForge 已在系统真理库中正式注册以下协议接口（见 `projects/agora/etc/bos-services.yaml`）：
+- **`bos://compute/aetherforge/infer`** (`domain: compute`)：统一通用推理接口，无缝转发 OpenAI Compatible 与 MLX JSON-RPC 调用。
+- **`bos://compute/aetherforge/mesh`** (`domain: compute`)：算力服务网格拓扑发现与多模型负载均衡器。
+- **`bos://compute/aetherforge/swarm`** (`domain: compute`)：多智能体并发群体决策及算力资源调度编排。
+
+### 4.3 标准接入配置文件参考 (AetherForge Compute Config)
+在 `projects/aetherforge` 与 B.D.S.K. 引擎的关联映射中，推荐声明以下计算拓扑（仅修改端点，不侵入业务逻辑）：
+```yaml
+llm_compute_units:
+  local_omlxc_edge:
+    provider: omlxc_mlx               # Apple MLX Client / Ollama OpenAI-compatible
+    endpoint_uri: "bos://compute/aetherforge/infer"
+    base_url: "http://127.0.0.1:8000/v1"
+    default_model: "mlx-community/Qwen2.5-14B-Instruct-4bit"
+    role_bindings: ["builder", "devil"]
+    mesh_strategy: "latency_first"
+  cloud_authoritative:
+    provider: openai_compatible       # Cloud High-Param Authoritative
+    endpoint_uri: "bos://compute/aetherforge/infer"
+    base_url: "${ARK_ENDPOINT_URL}"
+    default_model: "${ARK_MODEL_ID}"
+    role_bindings: ["sage", "keeper"]
+    mesh_strategy: "quality_first"
+```
 
 ---
 

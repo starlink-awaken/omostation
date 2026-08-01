@@ -7,7 +7,7 @@
 > - validation: skill 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-08-01T02:31:12.027939+00:00
+> - generated_at: 2026-08-01T02:43:03.282321+00:00
 
 ---
 
