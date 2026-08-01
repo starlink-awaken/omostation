@@ -43,6 +43,8 @@ metadata-migrated-at: 2026-07-31
 | `bos://analysis/iris/*` (6 条) | iris 是摄取连接器, 应在 memory | `bos://memory/iris/*` | 45 处引用 (含 agora consumers + tests) |
 | `bos://ecos/workflow/*` (8 条) | workflow 不属 L0 协议, 应在 system | `bos://system/workflow/*` | 86 处引用 (含 agora + metaos consumers) |
 | `bos://persona/health-profile/*` (4 条) | health-profile 是 L4 域元数据, 不属人格 | `bos://capability/health-profile/*` | 27 处引用 (含 omo consumers) |
+| `bos://brain/events/card_updated` (1 条) | `brain` 非 5 主域, 应在 memory 域 (知识摄取场景) | `bos://memory/events/card_updated` | cockpit api_knowledge.py + knowledge_indexer.py (ADR-0294, PR #740) — **Phase 2 计划迁移** |
+
 
 ### Rename 流程 (跨仓破坏性变更)
 

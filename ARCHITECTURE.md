@@ -28,6 +28,7 @@
 | MOF M1 governance 实例 | [`projects/ecos/src/ecos/ssot/mof/m1/governance/`](projects/ecos/src/ecos/ssot/mof/m1/governance/) |
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | P74 workflow solidification (ADR-0130) | [`.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) |
+| 知识网关 L3-I0 解耦 + 事件索引管道 (ADR-0294) | [`.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md) |
 
 ## 2. Layer Model
 
@@ -47,6 +48,7 @@ entry surfaces -> routing mesh -> engines/runtime/protocol -> governed state and
 | AI agent | `agora` MCP via `bos://` URI | Cross-layer calls go through the mesh |
 | Governance automation | `omo` CLI/MCP broker | Governed state mutations are audited |
 | Web/API consumers | cockpit-mounted HTTP surfaces | Public web entry remains converged at L3 |
+| Knowledge write (card PUT) | `cockpit /api/knowledge/put` → EventBus → `KnowledgeIndexer` | L3 网络优先解析 + 写后事件广播 (ADR-0294) |
 
 Do not introduce a new top-level human or agent entry without updating the relevant registry, boundary documentation, and governance checks.
 

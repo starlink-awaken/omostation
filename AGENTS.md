@@ -310,6 +310,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 | **P78 triple-axis diagnostic pattern** (2026-07-17, 静态/运行时/决策三维查证, 深化 P73) | [P78](.omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md) + [audit](.omo/_knowledge/audits/2026-07-17-static-vs-runtime-diagnostic-audit.md) — 报系统问题前过 4 问: 反证 / 运行时实证 / ADR / 覆盖度 |
 | **Phase 45 治理可观测性** (2026-07-29, 健康自检 + 熵清理 + 债务自动种子) | [agora `tools_health.py`](projects/agora/src/agora/server/tools_health.py) — 3 个 MCP 工具 (`health_check` / `entropy_cleanup_tool` / `debt_auto_seed_tool`) + 增强 `/health` HTTP 端点. 8/8 单元测试通过, 184/184 全量通过. |
 | **check-work-landed SHA 检测修复 + M3 grace baseline** (2026-07-30, ADR-0292) | 修复 `_refs_landed` 用 `git merge-base --is-ancestor` 取代 `git log --grep` (后者只搜 commit messages). 3 个 squash-orphan 的 `submodule-pointer-close` run 列入 grace baseline. Z2 meta-baseline cap 0→3. GaC local gate: 38/39 → **39/39 ALL GREEN**. |
+| **知识网关 L3-I0 解耦 + 增量事件索引管道** (2026-08-01, ADR-0294, PR #740) | `api_knowledge.py` 从进程内强 import 迁移到 HTTP 网络优先解析 (`/bos/resolve`) + 兼容降级; `/put` 写后发射 `bos://brain/events/card_updated`; `knowledge_indexer.py` Consumer 订阅后驱动 KOS/LanceDB 增量 upsert 打通检索闭环. 25/25 pytest 全绿. 分层调用方向无新越权. 详见 ADR + SOP §5 + `bos-uri-domain-standard.md` 越界登记 (`bos://brain/events/` → Phase 2 迁移至 `bos://memory/events/`). |
 
 ## 9. Closeout Checklist
 
