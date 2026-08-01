@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -21,6 +22,9 @@ def _source_tree(tmp_path: Path) -> Path:
 
 def _manifest(tmp_path: Path) -> Path:
     path = tmp_path / "evaluation.json"
+    source = tmp_path / "docs" / "_inbox" / "2026-auto-apple-mail.md"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("private source\n", encoding="utf-8")
     path.write_text(
         json.dumps(
             {
@@ -31,8 +35,10 @@ def _manifest(tmp_path: Path) -> Path:
                 "samples": [
                     {
                         "sample_id": "sample-1",
-                        "source_sha256": "a" * 64,
-                        "source_ref": "vault://redacted/sample-1",
+                        "source_sha256": hashlib.sha256(
+                            source.read_bytes()
+                        ).hexdigest(),
+                        "source_ref": "vault://redacted/2026-auto-apple-mail.md",
                         "scenario_id": "oa-notice",
                         "split": "test",
                         "annotation_status": "adjudicated",
@@ -45,6 +51,42 @@ def _manifest(tmp_path: Path) -> Path:
         ),
         encoding="utf-8",
     )
+    return path
+
+
+def _adjudication_database(tmp_path: Path, manifest: Path) -> Path:
+    path = tmp_path / "adjudication.sqlite"
+    sample = json.loads(manifest.read_text(encoding="utf-8"))["samples"][0]
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "CREATE TABLE adjudication_queue ("
+            "sample_id TEXT PRIMARY KEY, source_sha256 TEXT, source_ref TEXT, "
+            "annotation_status TEXT, labels_json TEXT, annotation_version TEXT, "
+            "adjudicator TEXT)"
+        )
+        connection.execute(
+            "CREATE TABLE adjudication_annotations ("
+            "annotation_id INTEGER PRIMARY KEY, sample_id TEXT, annotator TEXT)"
+        )
+        connection.execute(
+            "INSERT INTO adjudication_queue VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                sample["sample_id"],
+                sample["source_sha256"],
+                sample["source_ref"],
+                sample["annotation_status"],
+                json.dumps(sample["labels"], ensure_ascii=False, sort_keys=True),
+                sample["annotation_version"],
+                "adjudicator-c",
+            ),
+        )
+        connection.executemany(
+            "INSERT INTO adjudication_annotations VALUES (?, ?, ?)",
+            [
+                (1, sample["sample_id"], "annotator-a"),
+                (2, sample["sample_id"], "annotator-b"),
+            ],
+        )
     return path
 
 
@@ -103,10 +145,12 @@ def test_redacted_production_lane_reaches_http_receipt(tmp_path, monkeypatch) ->
     )
     monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "fixture-token")
     manifest_path = _manifest(tmp_path)
+    adjudication_database = _adjudication_database(tmp_path, manifest_path)
     preflight = run_preflight(
         docs_root=_source_tree(tmp_path),
         evaluation_manifest=manifest_path,
         model_acceptance=_model_acceptance(tmp_path, manifest_path),
+        adjudication_database=adjudication_database,
         omo_root=_approved_omo(tmp_path),
         task_id="KEMS-E2E",
         production=True,
@@ -145,8 +189,10 @@ def test_redacted_production_lane_reaches_http_receipt(tmp_path, monkeypatch) ->
             "run_id": "kems-e2e",
             "documents": [
                 {
-                    "source_ref": "vault://redacted/sample-1",
-                    "sha256": "a" * 64,
+                    "source_ref": "vault://redacted/2026-auto-apple-mail.md",
+                    "sha256": json.loads(manifest_path.read_text(encoding="utf-8"))[
+                        "samples"
+                    ][0]["source_sha256"],
                     "bytes": 0,
                 }
             ],

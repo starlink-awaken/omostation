@@ -49,7 +49,7 @@ omo = { path = "../omo", editable = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "packages/reach/src"]
 addopts = ["-q", "--tb=short"]
 asyncio_mode = "auto"
 
