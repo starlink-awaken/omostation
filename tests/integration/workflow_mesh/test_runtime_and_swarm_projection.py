@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
@@ -17,7 +18,24 @@ for source in (
 def test_runtime_and_swarm_events_project_into_omo(tmp_path: Path) -> None:
     from omo.workflow_mesh import WorkflowMeshStore
     from runtime.executor.engine import AgentRuntime
+    from runtime.workflow_admission import admission_proof
     from swarm_engine.graph_workflow import GraphWorkflow
+
+    def grant(run_id: str, step_run_ids: list[str], backend: str) -> dict:
+        value = {
+            "admission_id": f"adm-{run_id}",
+            "status": "admitted",
+            "workflow_run_id": run_id,
+            "trace_id": run_id,
+            "backend": backend,
+            "step_run_ids": step_run_ids,
+            "capabilities": ["execute"],
+            "policy_digest": "integration-policy",
+            "issued_at": datetime.now(UTC).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+        }
+        value["proof"] = admission_proof(value)
+        return value
 
     store = WorkflowMeshStore(tmp_path)
 
@@ -32,6 +50,7 @@ def test_runtime_and_swarm_events_project_into_omo(tmp_path: Path) -> None:
         "runtime integration",
         workflow_run_id="integration-runtime",
         event_sink=store.sink(),
+        admission=grant("integration-runtime", ["integration-runtime:runtime"], "runtime"),
     )
 
     workflow = GraphWorkflow()
@@ -42,7 +61,10 @@ def test_runtime_and_swarm_events_project_into_omo(tmp_path: Path) -> None:
 
     workflow.set_entry("compute")
     swarm_result = workflow.run(
-        {}, workflow_run_id="integration-swarm", event_sink=store.sink()
+        {},
+        workflow_run_id="integration-swarm",
+        event_sink=store.sink(),
+        admission=grant("integration-swarm", ["integration-swarm:compute"], "aetherforge"),
     )
 
     assert runtime_result["result"] == "runtime done"
