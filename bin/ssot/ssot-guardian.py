@@ -99,6 +99,10 @@ def _count_tasks() -> dict[str, int]:
     for sub in ("active", "planned", "done"):
         d = TASKS_DIR / sub
         counts[sub] = len(list(d.glob("*.yaml"))) if d.exists() else 0
+    # Include archived/done as completed tasks
+    archived_done = TASKS_DIR / "archived" / "done"
+    archived_count = len(list(archived_done.glob("*.yaml"))) if archived_done.exists() else 0
+    counts["done"] += archived_count
     counts["total"] = counts["active"] + counts["planned"] + counts["done"]
     return counts
 
