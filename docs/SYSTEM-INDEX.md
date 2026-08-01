@@ -76,7 +76,7 @@
 
 → [设计方案](proposals/) — 设计提案和历史方案（详见 `docs/proposals/`）
 
-→ [本地计算集群](local-compute/) — omlx 集群架构（详见 `docs/local-compute/`）
+→ [本地与边缘自适应计算集群](local-compute/) — omlx 集群架构与下一代自适应硬件感知及 @B.D.S.K 存证（详见 `docs/local-compute/`；含 [NextGen Edge Compute & Governance](local-compute/nextgen-edge-compute-and-governance.md)）
 
 → [战略体检报告](reports/) — c2g.strategy 周期产出的战略/治理健康周报（详见 `docs/reports/`）
 

@@ -46,6 +46,7 @@ Agent/BOS entries:
 
 | Theme | System Lever | Runtime Proof |
 |-------|--------------|---------------|
+| Hardware-Aware Compute & ADR Persistence | Compute & Governance | `bos://persona/bdsk/evaluate` (`persist_adr=True`), `bos://compute/aetherforge/infer` |
 | Worktree/release convergence | Information flow | `agent-workflow status`, `make gac-local-gate` |
 | Cockpit governance status plane | Information flow | `cockpit governance evolution status --json` |
 | Claim policy tiering | Rules | required/advisory tiers in `agent-workflow status` claim coverage |
