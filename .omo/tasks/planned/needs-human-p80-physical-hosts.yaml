@@ -1,0 +1,42 @@
+allowed_operation_level: L1
+approval_ref: null
+assigned_to: null
+cancellation_reason: P82 cleanup - physical multi-machine indefinitely deferred
+cancelled_at: '2026-08-01T19:39:16.018604'
+classification: status_tracking
+created_at: '2026-07-24T02:29:04.787388+00:00'
+demoted_at: '2026-07-28T09:15:00Z'
+demotion_reason: ADR-0247 physical DEFERRED; not decision inbox; no weekly reaffirm;
+  no G-DEL self-announce
+desc: 'Update 2026-07-24 (P81 P1 真机测量): macmini 192.168.31.210 可达 (ping 7.4ms + SSH:22
+  key 自动). G-DEL.3 两机 n=1000 WiFi p99=159.83ms (≥100ms, 未达标, WiFi 尾部尖峰). wired_path
+  unavailable (macmini en0 Ethernet inactive). 待 macmini 插 以太网重测 (p99<100ms) + 待 y7000p/macbook
+  到 4 机 (G-DEL.1 ADR-0226). 老王不自宣. Human: 批准以太网重测 or 4 机就绪. '
+dispatch_id: null
+entry_gate: []
+evidence:
+- .omo/_knowledge/audits/2026-07-24-physical-hosts-failclosed.md
+- .omo/_knowledge/audits/2026-07-24-p81-s0-physical-probe-failclosed.md
+- .omo/_knowledge/audits/2026-07-24-macmini-reachable-probe.md
+- .omo/_knowledge/audits/2026-07-24-physical-g-del3-quick.json
+- .omo/_knowledge/audits/2026-07-24-physical-g-del3-measure.md
+evidence_required:
+- human decision recorded
+handoff_refs: []
+human_approval_required: false
+id: NEEDS-HUMAN-P80-PHYSICAL-HOSTS
+knowledge_refs: []
+needs-human: false
+owner: human
+priority: P2
+review_ref: null
+risk_level: L1
+run_ref: null
+source_docs:
+- .omo/_knowledge/audits/2026-07-24-physical-hosts-failclosed.md
+- .omo/_knowledge/audits/2026-07-24-p81-s0-physical-probe-failclosed.md
+status: cancelled
+status_normalized_for_schema: true
+test_plan:
+- Human reviews card and updates status
+title: 'P80 T2: expand physical hosts ≥4 + G-DEL.3 (status track, ADR-0247 DEFERRED)'
