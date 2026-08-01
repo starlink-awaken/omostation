@@ -6,9 +6,10 @@ JSONL 保存原始事件，并从事件重建可审计的运行态。
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from uuid import uuid4
 
 from omo.omo_io import AppendOnlyLog, fcntl_lock
@@ -285,9 +286,11 @@ class WorkflowMeshStore:
         with self._lock:
             current = self._log.read_all()
             for existing in current:
-                if existing.get("event_id") != event["event_id"]:
-                    if existing.get("idempotency_key") != event["idempotency_key"]:
-                        continue
+                if (
+                    existing.get("event_id") != event["event_id"]
+                    and existing.get("idempotency_key") != event["idempotency_key"]
+                ):
+                    continue
                 if existing == event:
                     return existing
                 raise WorkflowMeshEventError(

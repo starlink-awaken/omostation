@@ -1,5 +1,4 @@
 import pytest
-
 from omo.workflow_mesh import (
     WorkflowMeshEventError,
     WorkflowMeshStore,
