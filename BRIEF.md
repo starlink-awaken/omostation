@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-08-01T02:18:08.085718Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `70/100`
+> **Generated**: `2026-08-01T13:31:40.735491Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `94/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
@@ -9,7 +9,7 @@
 - **[X3-SOFT-GATE/soft]** 工作交付月度软门禁: 2026-08 交付 0 < 阈值 8（环比 4 → 0, Δ-4） → [`.omo/_truth/registry/x3-delivery-soft-gate.yaml`](file:///Users/xiamingxing/Workspace/.omo/_truth/registry/x3-delivery-soft-gate.yaml)
 
 ### ⏳ 待处理卡片与债务 (Needs Human Decisions)
-- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/done/w3w3-planned-status-normalize.yaml)
+- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
 
 > 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡.
 
@@ -42,8 +42,11 @@
 - 人工直做占比: `0%` (0/30)
 - **静默丢失: `0`** ✅ 硬红线达成
 
-## ⚙️ 治理健康分详情 (Health Detail)
+<details>
+<summary>⚙️ <b>治理健康分详情 (复合 94/100, 已自动收纳)</b></summary>
 
-- **复合健康分**: `70/100` (警戒, 请看下方分项)
-- **GAC 异常扣分**: `0/100`
+- **GAC 异常扣分**: `80/100` (无 anomalies)
 - **常驻 daemon 在线率**: `100.00%`
+- **新鲜度分数**: `100/100` (正常)
+
+</details>

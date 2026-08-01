@@ -1,6 +1,6 @@
 # AGENTS.md — Workspace Development Guide
 
-> 最后更新: 2026-07-29
+> 最后更新: 2026-08-01
 > Root operating guide for AI coding agents and developers working in this workspace.
 > Keep this file operational. Put runtime facts in SSOT files, not here.
 
