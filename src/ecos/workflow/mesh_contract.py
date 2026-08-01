@@ -61,9 +61,11 @@ def new_workflow_event(
     trace_id: str | None = None,
     producer: str = "ecos",
     payload: dict[str, Any] | None = None,
+    idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     """生成 workflow-mesh/v1 事件信封。"""
     event_id = uuid4().hex
+    event_payload = payload or {}
     return {
         "event_id": event_id,
         "event_type": event_type,
@@ -72,8 +74,8 @@ def new_workflow_event(
         "occurred_at": _now(),
         "producer": producer,
         "schema_version": "workflow-mesh/v1",
-        "idempotency_key": f"{workflow_run_id}:{event_type}:{event_id}",
-        "payload": payload or {},
+        "idempotency_key": idempotency_key or f"{workflow_run_id}:{event_type}:{event_payload.get('step_run_id', 'workflow')}",
+        "payload": event_payload,
     }
 
 

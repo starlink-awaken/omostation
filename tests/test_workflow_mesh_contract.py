@@ -49,7 +49,8 @@ def test_executor_blocks_mock_success_and_emits_mesh_events():
     assert result["run_metadata"]["workflow_run_id"] == "run-mesh-test"
     assert result["run_metadata"]["state"] == "unavailable"
     assert result["error_code"] == "SILENT_MOCK_BLOCKED"
-    assert [event["event_type"] for event in events] == [
-        "WorkflowRequested",
-        "BackendUnavailable",
-    ]
+    event_types = [event["event_type"] for event in events]
+    assert event_types[0] == "WorkflowRequested"
+    assert event_types[-1] == "BackendUnavailable"
+    assert {"WorkflowAdmitted", "StepDispatched", "StepStarted"}.issubset(event_types)
+    assert len({event["idempotency_key"] for event in events}) == len(events)

@@ -95,7 +95,12 @@ def execute_m1_workflow(
         "run_metadata": metadata,
     }
 
-    def emit_event(event_type: str, payload: dict | None = None) -> None:
+    def emit_event(
+        event_type: str,
+        payload: dict | None = None,
+        *,
+        idempotency_key: str | None = None,
+    ) -> None:
         if dry_run or not callable(event_sink):
             return
         try:
@@ -105,6 +110,7 @@ def execute_m1_workflow(
                     metadata["workflow_run_id"],
                     trace_id=metadata["trace_id"],
                     payload=payload,
+                    idempotency_key=idempotency_key,
                 )
             )
         except Exception as exc:  # event persistence must not hide execution outcome
@@ -112,7 +118,13 @@ def execute_m1_workflow(
 
     emit_event(
         "WorkflowRequested",
-        {"workflow": name, "backend": backend_name, "execution_mode": metadata["execution_mode"]},
+        {
+            "workflow": name,
+            "workflow_definition_id": name,
+            "backend": backend_name,
+            "execution_mode": metadata["execution_mode"],
+        },
+        idempotency_key=f"{metadata['workflow_run_id']}:requested",
     )
 
     logger.info(
@@ -130,7 +142,15 @@ def execute_m1_workflow(
 
     steps = wf.get("steps", [])
     if not steps:
-        return {**results, "error": "工作流无步骤定义"}
+        results["error"] = "工作流无步骤定义"
+        results["failed"] = 1
+        results["run_metadata"]["state"] = WorkflowRunState.FAILED.value
+        emit_event(
+            "WorkflowFailed",
+            {"error_code": "EMPTY_WORKFLOW", "state": results["run_metadata"]["state"]},
+            idempotency_key=f"{metadata['workflow_run_id']}:failed",
+        )
+        return results
 
     # L0 audit: pre-check
     validate_operation("_workflow", "workflow_execute", f"bos://_workflow/{name}")
@@ -159,6 +179,13 @@ def execute_m1_workflow(
                     "Workflow blocked by %d validation violations", len(violations)
                 )
                 results["error"] = f"治理约束未通过: {len(violations)} 个违规"
+                results["failed"] = 1
+                results["run_metadata"]["state"] = WorkflowRunState.FAILED.value
+                emit_event(
+                    "WorkflowFailed",
+                    {"error_code": "ADMISSION_REJECTED", "violations": violations},
+                    idempotency_key=f"{metadata['workflow_run_id']}:failed",
+                )
                 results["finished"] = datetime.now().isoformat()
                 return results
             logger.info(
@@ -183,9 +210,36 @@ def execute_m1_workflow(
                 results["error"] = (
                     f"X2 熔断: Token 余额不足 ({budget_status.get('balance', 0)})"
                 )
+                results["failed"] = 1
+                results["error_code"] = "BUDGET_EXHAUSTED"
+                results["run_metadata"]["state"] = WorkflowRunState.FAILED.value
+                emit_event(
+                    "WorkflowFailed",
+                    {"error_code": "BUDGET_EXHAUSTED"},
+                    idempotency_key=f"{metadata['workflow_run_id']}:failed",
+                )
                 results["finished"] = datetime.now().isoformat()
                 logger.info("X2 circuit break triggered for workflow: %s", name)
                 return results
+
+        emit_event(
+            "WorkflowAdmitted",
+            {"workflow": name, "backend": backend_name},
+            idempotency_key=f"{metadata['workflow_run_id']}:admitted",
+        )
+        for index, step in enumerate(steps, 1):
+            step_name = step.get("name", f"step-{index}")
+            step_run_id = f"{metadata['workflow_run_id']}:{step_name}"
+            emit_event(
+                "StepDispatched",
+                {"step_run_id": step_run_id, "step_name": step_name},
+                idempotency_key=f"{step_run_id}:dispatched",
+            )
+            emit_event(
+                "StepStarted",
+                {"step_run_id": step_run_id, "step_name": step_name},
+                idempotency_key=f"{step_run_id}:started",
+            )
 
         # ── 执行（注入 preflight：backend 可验证治理管线已通过）──
         backend_fn = resolve(wf)
@@ -267,6 +321,20 @@ def execute_m1_workflow(
             if results["failed"] == 0
             else WorkflowRunState.FAILED.value
         )
+    if results["run_metadata"]["state"] == WorkflowRunState.FAILED.value:
+        for step in results.get("steps", []):
+            if step.get("status") not in {"failed", "error", "unavailable"}:
+                continue
+            step_name = step.get("name", "unknown-step")
+            emit_event(
+                "StepFailed",
+                {
+                    "step_run_id": f"{metadata['workflow_run_id']}:{step_name}",
+                    "step_name": step_name,
+                    "error": step.get("error"),
+                },
+                idempotency_key=f"{metadata['workflow_run_id']}:{step_name}:failed",
+            )
     results["run_metadata"]["finished_at"] = datetime.now().isoformat()
     emit_event(
         {
@@ -279,6 +347,7 @@ def execute_m1_workflow(
             "state": results["run_metadata"]["state"],
             "error_code": results.get("error_code"),
         },
+        idempotency_key=f"{metadata['workflow_run_id']}:terminal",
     )
 
     # ── 缓存写入：如果工作流配置了 cache_ttl，将结果写入缓存 ──
