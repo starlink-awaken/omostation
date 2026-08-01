@@ -38,7 +38,7 @@
   },
   "build": {
     "buildCommand": "make build",
-    "testCommand": "cd \"/Users/xiamingxing/Workspace/projects/cockpit-format-all\"\necho \"===== ruff check --fix (修 3 fixable lint) =====\"\nuv run ruff check --fix src/ 2>&1 | tail -3\necho \"===== ruff format (确保) + 再 check =====\"\nuv run ruff format src/ 2>&1 | tail -1\necho \"check: $(uv run ruff check src/ 2>&1 | tail -1)\"\necho \"format: $(uv run ruff format --check src/ 2>&1 | tail -1)\"\necho \"===== 确认 24 test fail 是预存 (main 也 fail?) — stash format + test main =====\"\ngit stash 2>&1 | tail -1\nuv run pytest src/cockpit/tests/test_tasks_api.py -q 2>&1 | tail -2\ngit stash pop 2>&1 | tail -1",
+    "testCommand": "cd ~/Workspace/projects/cockpit && uv run pytest src/cockpit/tests/test_research_knowledge.py src/cockpit/tests/test_brain_web.py -v --tb=short 2>&1 | tail -25",
     "lintCommand": "ruff check",
     "devCommand": null,
     "scripts": {}
@@ -90,6 +90,25 @@
       "keyFiles": []
     }
   },
-  "hotPaths": [],
+  "hotPaths": [
+    {
+      "path": "src/cockpit/knowledge_activation.py",
+      "accessCount": 5,
+      "lastAccessed": 1785580738108,
+      "type": "file"
+    },
+    {
+      "path": "src/cockpit/commands/brain.py",
+      "accessCount": 4,
+      "lastAccessed": 1785580719018,
+      "type": "file"
+    },
+    {
+      "path": "src/cockpit/brain_core.py",
+      "accessCount": 1,
+      "lastAccessed": 1785580690196,
+      "type": "file"
+    }
+  ],
   "userDirectives": []
 }

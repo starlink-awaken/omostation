@@ -1,8 +1,9 @@
 """Tests for Cockpit BOS Gateway CLI (resolve, read, list, status)."""
 
 from unittest.mock import patch
+
 from cockpit.cli import main
-from cockpit.commands.bos import cmd_bos_resolve, cmd_bos_read
+from cockpit.commands.bos import cmd_bos_read, cmd_bos_resolve
 
 
 class DummyArgs:

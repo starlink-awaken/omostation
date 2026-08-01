@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from unittest.mock import patch
+
 from cockpit.commands.bos_inbox import cmd_bos_inbox
 
 

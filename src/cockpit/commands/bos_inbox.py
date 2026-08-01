@@ -8,8 +8,8 @@ import time
 from pathlib import Path
 from typing import Any
 
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 from cockpit.cli import console, err
 

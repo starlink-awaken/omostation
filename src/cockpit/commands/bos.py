@@ -110,6 +110,7 @@ def cmd_bos_read(args):
     """通过 BOS 网关读取并执行目标 URI 的结果，支持参数传参。"""
     try:
         import json
+
         from agora.mcp.resolver.api import _run_maybe_async
         from agora.server.tools_bos import _resolve_with_router
 
