@@ -106,7 +106,9 @@ def _load_json(path: Path) -> object:
         raise ValueError(f"invalid JSON metadata: {type(exc).__name__}") from exc
 
 
-def _evaluation_check(path: Path | None) -> Check:
+def _evaluation_check(
+    path: Path | None, sources: list[Path], *, bind_sources: bool
+) -> Check:
     if path is None:
         return Check("evaluation_manifest", False, "missing evaluation manifest path")
     if not path.is_file():
@@ -121,10 +123,16 @@ def _evaluation_check(path: Path | None) -> Check:
         return Check("evaluation_manifest", False, "unsupported manifest schema")
     if payload.get("redaction_status") != "verified":
         return Check("evaluation_manifest", False, "manifest is not redaction-verified")
+    for field in ("dataset_id", "dataset_version"):
+        if not isinstance(payload.get(field), str) or not payload[field].strip():
+            return Check("evaluation_manifest", False, f"{field} is missing")
     samples = payload.get("samples")
     if not isinstance(samples, list) or not samples:
         return Check("evaluation_manifest", False, "manifest has no samples")
     sample_ids: set[str] = set()
+    source_inventory = {
+        f"vault://redacted/{source.name}": _sha256(source) for source in sources
+    }
     for sample in samples:
         if not isinstance(sample, dict):
             return Check("evaluation_manifest", False, "sample must be an object")
@@ -154,10 +162,32 @@ def _evaluation_check(path: Path | None) -> Check:
             )
         if not isinstance(sample.get("labels"), dict) or not sample["labels"]:
             return Check("evaluation_manifest", False, "all samples require labels")
+        if (
+            not isinstance(sample.get("annotation_version"), str)
+            or not sample["annotation_version"].strip()
+        ):
+            return Check(
+                "evaluation_manifest", False, "all samples require annotation_version"
+            )
+        if bind_sources:
+            expected_sha256 = source_inventory.get(source_ref)
+            if expected_sha256 is None:
+                return Check(
+                    "evaluation_manifest",
+                    False,
+                    "manifest source_ref is not present in the current source inventory",
+                )
+            if source_sha256 != expected_sha256:
+                return Check(
+                    "evaluation_manifest",
+                    False,
+                    "manifest source_sha256 does not match the current source inventory",
+                )
         sample_ids.add(sample_id)
-    return Check(
-        "evaluation_manifest", True, f"verified adjudicated samples={len(samples)}"
-    )
+    detail = f"verified adjudicated samples={len(samples)}"
+    if bind_sources:
+        detail += "; source hashes match current inventory"
+    return Check("evaluation_manifest", True, detail)
 
 
 def _model_acceptance_check(
@@ -295,6 +325,8 @@ def _omo_check(omo_root: Path, task_id: str | None) -> Check:
         )
     if not isinstance(payload, dict):
         return Check("omo_approval", False, "OMO task metadata must be an object")
+    if payload.get("status") not in APPROVED_STATUSES:
+        return Check("omo_approval", False, "OMO task is not approved")
     approval_ref = payload.get("approval_ref")
     if payload.get("id") not in {None, task_id}:
         return Check("omo_approval", False, "OMO task id does not match task path")
@@ -488,7 +520,9 @@ def run_preflight(
     # Hashing proves inventory stability without placing private content in the report.
     inventory, inventory_sha256 = _source_inventory(sources)
 
-    checks.append(_evaluation_check(evaluation_manifest))
+    checks.append(
+        _evaluation_check(evaluation_manifest, sources, bind_sources=production)
+    )
     checks.append(
         _model_acceptance_check(model_acceptance, evaluation_manifest)
         if production

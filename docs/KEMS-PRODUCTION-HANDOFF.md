@@ -96,7 +96,11 @@ for every sample:
 
 Build the manifest with the Kairon manifest builder and record its dataset ID,
 version, sample count, and SHA-256 in the release ticket. The manifest builder
-and preflight both reject raw-content fields.
+and preflight both reject raw-content fields. In production mode, preflight
+also resolves every `vault://redacted/<name>` reference against the current
+controlled source inventory and recomputes its SHA-256. A manifest whose source
+is missing or has drifted is rejected before any enterprise request, even when
+the manifest itself is internally valid.
 
 ```bash
 python "<workspace>/projects/kairon/scripts/kems_build_eval_manifest.py" \

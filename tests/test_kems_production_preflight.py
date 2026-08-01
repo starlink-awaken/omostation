@@ -7,13 +7,16 @@ from scripts.kems_production_preflight import run_preflight
 def _source_tree(tmp_path):
     docs = tmp_path / "docs"
     inbox = docs / "_inbox"
-    inbox.mkdir(parents=True)
+    inbox.mkdir(parents=True, exist_ok=True)
     (inbox / "2026-auto-apple-mail.md").write_text("private source\n", encoding="utf-8")
     return docs
 
 
 def _evaluation_manifest(tmp_path):
     path = tmp_path / "evaluation.json"
+    source = tmp_path / "docs" / "_inbox" / "2026-auto-apple-mail.md"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("private source\n", encoding="utf-8")
     path.write_text(
         json.dumps(
             {
@@ -24,8 +27,10 @@ def _evaluation_manifest(tmp_path):
                 "samples": [
                     {
                         "sample_id": "sample-1",
-                        "source_sha256": "a" * 64,
-                        "source_ref": "vault://redacted/sample-1",
+                        "source_sha256": hashlib.sha256(
+                            source.read_bytes()
+                        ).hexdigest(),
+                        "source_ref": "vault://redacted/2026-auto-apple-mail.md",
                         "scenario_id": "oa-notice",
                         "split": "test",
                         "annotation_status": "adjudicated",
@@ -200,6 +205,62 @@ def test_preflight_writes_redacted_auditable_evidence(tmp_path, monkeypatch):
     assert evidence["omo"]["approval_ref"] == ".omo/workers/runs/KEMS-001-approval.yaml"
     assert "private source" not in output.read_text(encoding="utf-8")
     assert not list(output.parent.glob(".*.tmp"))
+
+
+def test_production_preflight_rejects_manifest_source_drift(tmp_path, monkeypatch):
+    monkeypatch.setenv(
+        "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
+    )
+    monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
+    _approved_task(tmp_path / "omo")
+    manifest = _evaluation_manifest(tmp_path)
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["samples"][0]["source_sha256"] = "b" * 64
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    result = run_preflight(
+        docs_root=_source_tree(tmp_path),
+        evaluation_manifest=manifest,
+        model_acceptance=_model_acceptance(tmp_path, manifest),
+        omo_root=tmp_path / "omo",
+        task_id="KEMS-001",
+        production=True,
+    )
+    assert result["status"] == "blocked"
+    assert any(
+        item["id"] == "evaluation_manifest"
+        and not item["ok"]
+        and "current source inventory" in item["detail"]
+        for item in result["checks"]
+    )
+
+
+def test_production_preflight_rejects_manifest_source_not_in_inventory(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setenv(
+        "BOS_REACHBRIDGE_ENDPOINT", "https://reachbridge.example.test/dispatch"
+    )
+    monkeypatch.setenv("BOS_REACHBRIDGE_TOKEN", "test-token")
+    _approved_task(tmp_path / "omo")
+    manifest = _evaluation_manifest(tmp_path)
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["samples"][0]["source_ref"] = "vault://redacted/removed.md"
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    result = run_preflight(
+        docs_root=_source_tree(tmp_path),
+        evaluation_manifest=manifest,
+        model_acceptance=_model_acceptance(tmp_path, manifest),
+        omo_root=tmp_path / "omo",
+        task_id="KEMS-001",
+        production=True,
+    )
+    assert result["status"] == "blocked"
+    assert any(
+        item["id"] == "evaluation_manifest"
+        and not item["ok"]
+        and "not present" in item["detail"]
+        for item in result["checks"]
+    )
 
 
 def test_preflight_rejects_raw_evaluation_fields(tmp_path, monkeypatch):
