@@ -64,8 +64,8 @@ def fetch_http(source: dict) -> dict:
         if token:
             headers["Authorization"] = f"Bearer {token}"
             headers["X-Api-Key"] = token
-        req = urllib.request.Request(source["url"], method="GET", headers=headers)  # noqa: S310
-        with urllib.request.urlopen(req, timeout=3) as resp:  # noqa: S310
+        req = urllib.request.Request(source["url"], method="GET", headers=headers)
+        with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode())
         return {
             "layer": source["layer"],
