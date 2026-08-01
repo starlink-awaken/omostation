@@ -312,7 +312,6 @@ Historical closeout details are useful evidence but should not be pasted into th
 | **check-work-landed SHA 检测修复 + M3 grace baseline** (2026-07-30, ADR-0292) | 修复 `_refs_landed` 用 `git merge-base --is-ancestor` 取代 `git log --grep` (后者只搜 commit messages). 3 个 squash-orphan 的 `submodule-pointer-close` run 列入 grace baseline. Z2 meta-baseline cap 0→3. GaC local gate: 38/39 → **39/39 ALL GREEN**. |
 | **知识网关 L3-I0 解耦 + 增量事件索引管道** (2026-08-01, ADR-0294, PR #740) | `api_knowledge.py` 从进程内强 import 迁移到 HTTP 网络优先解析 (`/bos/resolve`) + 兼容降级; `/put` 写后发射 `bos://brain/events/card_updated`; `knowledge_indexer.py` Consumer 订阅后驱动 KOS/LanceDB 增量 upsert 打通检索闭环. 25/25 pytest 全绿. 分层调用方向无新越权. 详见 ADR + SOP §5 + `bos-uri-domain-standard.md` 越界登记 (`bos://brain/events/` → Phase 2 迁移至 `bos://memory/events/`). |
 
-
 ## 9. Closeout Checklist
 
 1. Review `git diff --stat`.
