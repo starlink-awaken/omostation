@@ -16,7 +16,7 @@
 # 对标: git worktree + PR 流程 (Linux kernel / Devin / Codex).
 # 落地计划: docs/AGENT-ISOLATION-ROLLOUT.md (Phase 1).
 
-set -e
+set -euo pipefail
 
 # Canonical root remote resolution (fail closed if wrong remote)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -45,6 +45,7 @@ case "$cmd" in
   claim)
     [ -z "$session" ] && echo "用法: claim <session>" >&2 && exit 1
     validate_session "$session"
+    ROOT_REMOTE=$(resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
     # ── G-CONV.7 / ADR-0220 D2: branch occupancy lock ─────────────────
@@ -68,12 +69,10 @@ case "$cmd" in
     if [ -d "$wt" ]; then
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
-      # Resolve canonical root remote (fail closed if wrong)
-      ROOT_REMOTE=$(resolve_root_remote) || exit 1
-      git fetch "$ROOT_REMOTE" main 2>&1 | grep -v 'FETCH_HEAD' >&2 || true
+      git fetch "$ROOT_REMOTE" main 2>&1 | sed '/FETCH_HEAD/d' >&2
       git worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
-      echo "   分支: $branch (base: $ROOT_REMOTE/main)"
+      echo "   分支: $branch (base: $ROOT_REMOTE/main, repo: $CANONICAL_ROOT_REPO)"
       # Phase 2d ISC-3e + ADR-0204: default init set for gate + agent-workflow + cockpit/agora.
       # worktree 默认不 init → mof-*/doc-ssot-snapshots / omo.workflow / doctor-cron 等跑不了.
       # 默认: ecos+scripts (gate) + omo+cockpit+agora (workflow/L3/I0).
@@ -130,6 +129,7 @@ case "$cmd" in
       exit 1
     fi
     cd "$wt"
+    ROOT_REMOTE=$(resolve_root_remote) || exit 1
     # 提交未提交改动 (如有)
     if ! git diff --quiet || ! git diff --cached --quiet; then
       git add -A
@@ -156,13 +156,13 @@ case "$cmd" in
     bash "$(dirname "$0")/../sync-submodules.sh" 2>&1 | tail -5
     # push 分支
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
+    echo "   remote: $ROOT_REMOTE ($(git remote get-url "$ROOT_REMOTE")); repo: $CANONICAL_ROOT_REPO"
     git push -u "$ROOT_REMOTE" "$branch" 2>&1 | tail -3
     # 开 PR
     if command -v gh &>/dev/null; then
-      gh pr create --base main --head "$branch" \
+      gh pr create --repo "$CANONICAL_ROOT_REPO" --base main --head "$branch" \
         --title "[$session] worktree 提交" \
-        --body "GaC worktree per session (ADR-0106 P2). 自动生成 PR." 2>&1 | tail -2 \
-        || echo "(PR 创建失败, 手动: gh pr create --base main --head $branch)"
+        --body "GaC worktree per session (ADR-0106 P2). 自动生成 PR." 2>&1 | tail -2
     else
       echo "⚠️  gh 未装, 手动开 PR: base main <- $branch"
     fi
@@ -224,6 +224,7 @@ case "$cmd" in
       exit 1
     fi
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
+    echo "   remote: $ROOT_REMOTE ($(git remote get-url "$ROOT_REMOTE")); repo: $CANONICAL_ROOT_REPO"
     # 查 PR (head work/<session>, base main, open)
     pr_number=$(gh pr list --repo "starlink-awaken/omostation" --head "$branch" --base main --state open --json number 2>/dev/null \
       | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
@@ -235,7 +236,7 @@ case "$cmd" in
       # D3 (F5): GitHub native auto-merge — 启用 (等 CI+review 满足后 GitHub 自动合).
       # 不做 cleanup (PR 未真合). 真合后手动: gac-worktree.sh release <session>.
       echo "🔗 PR #$pr_number 启用 auto-merge (squash, 等 CI+review 满足自动合)..."
-      if ! gh pr merge "$pr_number" --squash --auto --delete-branch 2>&1; then
+      if ! gh pr merge "$pr_number" --repo "$CANONICAL_ROOT_REPO" --squash --auto --delete-branch 2>&1; then
         echo "❌ PR #$pr_number 启用 auto-merge 失败 (repo 未 enable auto-merge 或 conditions 不满足)" >&2
         exit 1
       fi
@@ -244,14 +245,14 @@ case "$cmd" in
     else
       echo "🔗 合并 PR #$pr_number ($branch → main, squash)..."
       # squash merge + 删远程分支. 失败即停 (冲突/constraint 失败等).
-      if ! gh pr merge "$pr_number" --squash --delete-branch 2>&1; then
+      if ! gh pr merge "$pr_number" --repo "$CANONICAL_ROOT_REPO" --squash --delete-branch 2>&1; then
         echo "❌ PR #$pr_number 合并失败 (可能冲突或 CI 未过)" >&2
         exit 1
       fi
       echo "✅ PR #$pr_number 已 squash 合并"
       # 主仓切 main + 拉最新 (含刚合并的)
       git checkout main 2>&1 | tail -1
-      git pull --ff-only origin main 2>&1 | tail -2
+      git pull --ff-only "$ROOT_REMOTE" main 2>&1 | tail -2
       # 释放 worktree (clean, 因 submit 已 push 全部)
       git worktree remove "$wt" 2>&1
       echo "✅ worktree 释放: $wt"
