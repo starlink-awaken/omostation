@@ -2513,3 +2513,54 @@ services:
   status: active
   transport: internal
   uri: bos://persona/bdsk/evaluate
+- action: infer
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/aetherforge
+  - python
+  - -m
+  - aetherforge.cli
+  - infer
+  description: AetherForge 算力网关与 omlxc (Apple MLX/Local LLM) 本地量化模型通用推理调度端点
+  domain: compute
+  package: aetherforge
+  security_level: internal
+  status: active
+  transport: stdio
+  uri: bos://compute/aetherforge/infer
+- action: mesh
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/aetherforge
+  - python
+  - -m
+  - aetherforge.cli
+  - mesh
+  description: AetherForge 算力网格拓扑发现与模型负载均衡控制器 (Model Mesh & Load Balancing)
+  domain: compute
+  package: aetherforge
+  security_level: internal
+  status: active
+  transport: stdio
+  uri: bos://compute/aetherforge/mesh
+- action: swarm
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/aetherforge
+  - python
+  - -m
+  - aetherforge.cli
+  - swarm
+  description: AetherForge 多智能体群体算力与复杂决策任务并发编排引擎
+  domain: compute
+  package: aetherforge
+  security_level: internal
+  status: active
+  transport: stdio
+  uri: bos://compute/aetherforge/swarm
