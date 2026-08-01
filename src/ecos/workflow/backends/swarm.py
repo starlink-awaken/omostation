@@ -186,6 +186,10 @@ def _execute_step_swarm(
     for cli_cmd in _CLI_PATHS:
         try:
             cmd = [*cli_cmd, "run", "--goal", goal, "--json"]
+            if params.get("workflow_run_id"):
+                cmd.extend(["--workflow-run-id", str(params["workflow_run_id"])])
+            if params.get("trace_id"):
+                cmd.extend(["--trace-id", str(params["trace_id"])])
             logger.debug("Swarm subprocess: %s", " ".join(cmd))
 
             r = subprocess.run(

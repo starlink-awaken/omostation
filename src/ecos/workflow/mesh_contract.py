@@ -40,6 +40,7 @@ def run_metadata(
     backend: str = "default",
     execution_mode: str = "real",
     workflow_run_id: str | None = None,
+    trace_id: str | None = None,
 ) -> dict[str, Any]:
     """构造 OMO/控制面可识别的运行元数据。"""
     run_id = new_workflow_run_id(workflow_name, workflow_run_id)
@@ -47,7 +48,7 @@ def run_metadata(
         "workflow_run_id": run_id,
         "workflow_definition_id": workflow_definition_id or workflow_name,
         "backend": backend,
-        "trace_id": run_id,
+        "trace_id": trace_id or run_id,
         "state": WorkflowRunState.PLANNED.value,
         "execution_mode": execution_mode,
         "started_at": _now(),

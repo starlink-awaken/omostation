@@ -77,12 +77,14 @@ def execute_m1_workflow(
     params = dict(params or {})
     event_sink = params.pop("event_sink", None)
     workflow_run_id = params.pop("workflow_run_id", None)
+    trace_id = params.pop("trace_id", None)
     metadata = run_metadata(
         wf_name,
         workflow_definition_id=name,
         backend=backend_name,
         execution_mode="dry_run" if dry_run else "real",
         workflow_run_id=workflow_run_id,
+        trace_id=trace_id,
     )
     results = {
         "workflow": name,
@@ -249,6 +251,11 @@ def execute_m1_workflow(
             backend=m1_node.get("execution", {}).get("backend", "default"),
             source=m1_node.get("source", "definition"),
         )
+        # Keep the control-plane identity available to subprocess backends. The
+        # event sink remains owned by the parent executor; children only receive
+        # the non-sensitive correlation identifiers.
+        params_with_pf["workflow_run_id"] = metadata["workflow_run_id"]
+        params_with_pf["trace_id"] = metadata["trace_id"]
         backend_result = backend_fn(wf, params_with_pf)
 
         if is_silent_mock(backend_result):

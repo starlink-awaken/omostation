@@ -54,3 +54,29 @@ def test_executor_blocks_mock_success_and_emits_mesh_events():
     assert event_types[-1] == "BackendUnavailable"
     assert {"WorkflowAdmitted", "StepDispatched", "StepStarted"}.issubset(event_types)
     assert len({event["idempotency_key"] for event in events}) == len(events)
+
+
+def test_executor_passes_mesh_identity_to_backend():
+    workflow = {
+        "name": "identity-test",
+        "steps": [{"name": "step", "action": "run"}],
+        "execution": {"backend": "custom"},
+    }
+    received: dict = {}
+
+    def backend(_workflow, params):
+        received.update(params)
+        return {"steps": [{"name": "step", "status": "ok"}], "passed": 1, "failed": 0}
+
+    with (
+        patch("ecos.workflow.executor.load_workflow", return_value=workflow),
+        patch("ecos.workflow.executor.validate_workflow", return_value=[]),
+        patch("ecos.workflow.executor.resolve", return_value=backend),
+    ):
+        execute_m1_workflow(
+            "identity-test",
+            params={"workflow_run_id": "run-identity", "trace_id": "trace-identity"},
+        )
+
+    assert received["workflow_run_id"] == "run-identity"
+    assert received["trace_id"] == "trace-identity"

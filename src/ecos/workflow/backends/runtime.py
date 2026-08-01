@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -95,7 +96,15 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
         phase_name = _ACTION_TO_PHASE.get(action, "init")
         goal = step.get("description") or step.get("name") or action or "task"
 
-        result = _execute_step_runtime(step_name, phase_name, goal, action, project_id)
+        result = _execute_step_runtime(
+            step_name,
+            phase_name,
+            goal,
+            action,
+            project_id,
+            workflow_run_id=params.get("workflow_run_id"),
+            trace_id=params.get("trace_id"),
+        )
 
         if result.get("ok", False):
             results["steps"].append(
@@ -134,6 +143,9 @@ def _execute_step_runtime(
     goal: str,
     action: str,
     project_id: str,
+    *,
+    workflow_run_id: str | None = None,
+    trace_id: str | None = None,
 ) -> dict[str, Any]:
     """Execute a single step via runtime CLI subprocess."""
     # ── 熔断检查：如果 runtime CLI 最近全部不可达，跳过直接降级 ──
@@ -150,6 +162,11 @@ def _execute_step_runtime(
                 cmd = [*cli_cmd, "--phase", phase, "--goal", goal, "--json"]
                 if project_id:
                     cmd.extend(["--project-id", project_id])
+                env = os.environ.copy()
+                if workflow_run_id:
+                    env["WORKFLOW_RUN_ID"] = workflow_run_id
+                if trace_id:
+                    env["TRACE_ID"] = trace_id
                 logger.debug("Runtime subprocess: %s", " ".join(cmd))
 
                 r = subprocess.run(
@@ -158,6 +175,7 @@ def _execute_step_runtime(
                     text=True,
                     timeout=300,
                     cwd=Path.home(),
+                    env=env,
                 )
                 if r.returncode == 0 and r.stdout.strip():
                     try:
