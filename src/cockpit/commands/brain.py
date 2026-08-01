@@ -429,6 +429,122 @@ def cmd_brain_history(args: argparse.Namespace) -> int:
 # ── Main dispatcher ───────────────────────────────────────────────
 
 
+def cmd_brain_weekly(args: argparse.Namespace) -> int:
+    """cockpit brain weekly — 基于本周 KOS 变更 + 对话历史生成周报素材 (Phase 49 T3)."""
+    from cockpit.knowledge_activation import (
+        ActivationContext,
+        format_recommendations,
+        recommend_for_context,
+    )
+
+    days = getattr(args, "days", 7)
+
+    print("=" * 60)
+    print(f"📝 周报素材生成 (回顾 {days} 天)")
+    print("=" * 60)
+
+    # 1. 从对话历史提取话题
+    recent_history = get_history(limit=50)
+    history_text = ""
+    if recent_history:
+        history_lines = [f"{h['role']}: {h['content'][:100]}" for h in recent_history[-20:]]
+        history_text = "\n".join(history_lines)
+
+    # 2. 知识推荐
+    recommendations = recommend_for_context(
+        ActivationContext.WEEKLY_REPORT,
+        content=history_text[:500],
+        limit=8,
+    )
+
+    # 3. 构建周报 prompt
+    weekly_prompt = f"""基于以下信息生成本周工作总结素材：
+
+## 本周对话摘要
+{history_text or "(无最近对话)"}
+
+## 知识库推荐内容
+{format_recommendations(recommendations, ActivationContext.WEEKLY_REPORT) or "(无推荐)"}
+
+请生成结构化周报素材：
+1. **本周重点** (3-5 条)
+2. **知识沉淀** (新增/学习的知识点)
+3. **下周关注** (基于知识推荐)
+4. **风险/阻塞** (如有)
+
+用中文输出，Markdown 格式。"""
+
+    print("\n🎯 正在生成周报素材...\n")
+
+    result = llm_complete(weekly_prompt)
+    if result:
+        print(result)
+    else:
+        print("⚠️  LLM 暂不可用，输出知识推荐:\n")
+        if recommendations:
+            print(format_recommendations(recommendations, ActivationContext.WEEKLY_REPORT))
+        else:
+            print("  (暂无推荐内容)")
+
+    print(f"\n{'=' * 60}")
+    return 0
+
+
+def cmd_brain_gongwen(args: argparse.Namespace) -> int:
+    """cockpit brain gongwen "主题" — 基于 KOS 知识库辅助公文写作 (Phase 49 T3)."""
+    from cockpit.knowledge_activation import (
+        ActivationContext,
+        format_recommendations,
+        recommend_for_context,
+    )
+
+    topic = " ".join(getattr(args, "topic", []))
+    if not topic:
+        print("❌ 请提供公文主题: cockpit brain gongwen \"卫健委通知\"")
+        return 1
+
+    print("=" * 60)
+    print(f"📄 公文写作辅助 — {topic}")
+    print("=" * 60)
+
+    # 1. KOS 检索相关政策/规范
+    print(f"\n🔍 检索与【{topic}】相关的知识...\n")
+    recommendations = recommend_for_context(
+        ActivationContext.DOCUMENT,
+        content=topic,
+        limit=10,
+    )
+
+    # 2. 构建公文写作 prompt
+    rec_text = format_recommendations(recommendations, ActivationContext.DOCUMENT) or "(无相关知识)"
+
+    gongwen_prompt = f"""辅助公文写作：{topic}
+
+## 相关知识与政策依据
+{rec_text}
+
+请生成：
+1. **写作大纲** (3-5 个章节)
+2. **关键要点** (每章节 2-3 个核心观点)
+3. **政策引用** (从上述知识中提取)
+4. **注意事项** (公文格式/用语规范)
+
+用中文输出，Markdown 格式。"""
+
+    result = llm_complete(gongwen_prompt)
+    if result:
+        print(result)
+    else:
+        print("⚠️  LLM 暂不可用，仅显示相关知识:\n")
+        if recommendations:
+            print(format_recommendations(recommendations, ActivationContext.DOCUMENT))
+        else:
+            print("  (暂无相关知识)")
+
+    print(f"\n{'=' * 60}")
+    return 0
+
+
 def cmd_brain(args: argparse.Namespace) -> int:  # pyright: ignore[reportUnusedParameter]
     """cockpit brain — 个人数字大脑主入口."""
     subcommand = getattr(args, "brain_subcommand", None)
@@ -440,6 +556,10 @@ def cmd_brain(args: argparse.Namespace) -> int:  # pyright: ignore[reportUnusedP
         return cmd_brain_remember(args)
     elif subcommand == "history":
         return cmd_brain_history(args)
+    elif subcommand == "weekly":
+        return cmd_brain_weekly(args)
+    elif subcommand == "gongwen":
+        return cmd_brain_gongwen(args)
     else:
         # 默认显示 context
         return cmd_brain_context(args)

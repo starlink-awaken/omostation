@@ -435,6 +435,27 @@ def cmd_research_ask(args: argparse.Namespace) -> int:
     quality_label = "（真实研究）" if answer_quality == "real" else "（降级回答）"
     style = "green" if answer_quality == "real" else "yellow"
     _render_markdown_block(f"💬 追问已回答 · ID {research_id} {quality_label}", answer, style=style)
+
+    # 知识激活: 推荐相关知识 (Phase 49 T1)
+    try:
+        from cockpit.knowledge_activation import (
+            ActivationContext,
+            format_recommendations,
+            recommend_for_context,
+        )
+        _get_console().print("")  # 空行分隔
+        knowledge_results = recommend_for_context(
+            ActivationContext.RESEARCH,
+            content=f"{research['topic']} {question}",
+            limit=5,
+        )
+        if knowledge_results:
+            formatted = format_recommendations(knowledge_results, ActivationContext.RESEARCH)
+            if formatted:
+                _get_console().print(_panel(formatted, "blue", title="📚 相关知识推荐"))
+    except Exception:
+        pass  # KOS 不可用时静默降级，不影响主流程
+
     lines = [
         f"- `cockpit research --open {research_id}`",
         f"- `cockpit research --dossier {research_id}`",

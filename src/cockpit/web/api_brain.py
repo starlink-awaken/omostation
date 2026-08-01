@@ -81,6 +81,30 @@ async def brain_ask(payload: dict[str, Any]) -> dict[str, Any]:
     store_conversation("user", question)
     store_conversation("assistant", answer or "[无回答]", sources=source_ids)
 
+    # 知识激活: 追加相关知识推荐 (Phase 49 T1)
+    knowledge_suggestions: list[dict[str, Any]] = []
+    try:
+        from cockpit.knowledge_activation import (
+            ActivationContext,
+            recommend_for_context,
+        )
+        suggestions = recommend_for_context(
+            ActivationContext.RESEARCH,
+            content=question,
+            limit=3,
+        )
+        knowledge_suggestions = [
+            {
+                "title": s.get("title", ""),
+                "score": s.get("score"),
+                "snippet": (s.get("snippet") or s.get("content") or "")[:120],
+            }
+            for s in suggestions
+            if s.get("title")
+        ]
+    except Exception:
+        pass  # KOS 不可用时静默降级
+
     return {
         "answer": answer or "",
         "sources": [
@@ -96,6 +120,7 @@ async def brain_ask(payload: dict[str, Any]) -> dict[str, Any]:
             "history": len(recent),
         },
         "fallback": not bool(answer),
+        "knowledge_suggestions": knowledge_suggestions,
     }
 
 
