@@ -1,25 +1,25 @@
 current_phase: 49
-phase46_status: completed
-phase46_completed_at: '2026-07-31T12:00:00Z'
-phase47_status: completed
-phase47_completed_at: '2026-08-01T00:00:00Z'
-phase49_status: active
-phase49_started_at: '2026-08-01T23:11:00Z'
 phase41_status: completed
 phase41_completed_at: '2026-06-16T00:00:00Z'
+phase45_status: completed
+phase45_completed_at: '2026-08-01T00:00:00Z'
+phase46_status: completed
+phase46_completed_at: '2026-08-01T00:00:00Z'
+phase49_status: active
+phase49_started_at: '2026-08-01T13:32:00Z'
 phase_status: active
 current_wave: W5
 next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
 health_score_ref: .omo/state/health.yaml
-health_score: 93
+health_score: 96
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-07-31T12:49:29Z'
+health_score_generated_at: '2026-08-01T23:40:27Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 120
-total_tasks: 122
+completed_tasks: 0
+total_tasks: 2
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -34,7 +34,8 @@ phase36_status: completed
 phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
 - (No active tasks)
-last_go_nogo: Phase 47 GO (health=91, W3 3/3 delivered, theme=韧性+分布式, 2026-07-31)
+last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
+  may proceed)
 phase2_status: completed
 phase2_completed_at: '2026-05-30T15:36:00Z'
 phase4_worker_collab_status: wave2_completed
@@ -56,7 +57,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-08-02T07:12:10.843843+08:00'
+updated_at: '2026-08-01T23:40:30Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -68,7 +69,8 @@ phase30_completed_at: '2026-06-06T01:30:00Z'
 phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
 phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
-divergence_flags: []
+divergence_flags:
+- missing_goal_tasks:6
 task_gate_summary: {}
 promotion_blockers: {}
 phase12_status: completed
@@ -196,27 +198,32 @@ runtime_health_summary:
   online_services: 4
   total_services: 4
   ratio: 1.0
-  health_score: 100
-  last_scan: '1785625927.049279'
-  service_count: 8
+  health_score: 96
+  last_scan: '2026-08-01T23:40:27Z'
+  source: compass_radar_isc3_daemon_ratio
   degraded: []
-  source: runtime_daemon_de_false_positive
 phase42_status: completed
 phase42_completed_at: '2026-07-14T20:59:00Z'
 phase43_status: completed
 phase43_completed_at: '2026-07-14T21:00:00Z'
-phase44_status: completed
-phase44_completed_at: '2026-07-31T10:00:00Z'
+phase44_status: active
 health_score_raw: 88.0
 xplane_score: 0.0
 xplane_coverage: 100.0
 xplane_factor: 0.7
-debt_adjusted_health_score: 83.0
+debt_adjusted_health_score: 61.6
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 77
+governance_anomaly_score: 85
 service_online_ratio: 1.0
-divergence_detail_refs: {}
-divergence_triage_summary: {}
-governance_feedback_last_run: '2026-08-02T07:12:10.843843+08:00'
+divergence_detail_refs:
+  missing_goal_tasks:
+    count: 6
+    ref: .omo/evidence/divergence/missing_goal_tasks.yaml
+divergence_triage_summary:
+  missing_goal_tasks:6:
+    severity: medium
+    owner: control
+    disposition: must_fix
+governance_feedback_last_run: '2026-08-01T23:40:27Z'
