@@ -303,6 +303,13 @@ Phase 28 把这件事从“下一步建议”推进为可运行的证据底座�
 同时保留 proposal-only 的离线策略比较。该能力提高了未来真实场景的可测量性，但不意味着已有外部
 provider 已激活，也不把当前样本宣称为业务质量或预测模型训练集。
 
+Phase 29 先把“能执行并留证”在无业务副作用的边界内跑通：OMO 的 sandbox ToolPack runner 复用
+admission、WorkerLease、append-only Mesh 和 receipt broker，只允许 `sandbox.digest_ref` 处理安全引用与
+SHA-256 摘要，输出 `ToolInvocationRecorded`、`WorkflowSucceeded` 和 `EvidenceRecorded`，并可按稳定
+invocation identity 回放。它让系统可以验证执行契约、租约失效、幂等和运营可见性，但仍保持
+`activation=sandbox`、`external_side_effects=disabled`；没有真实 Scene Card、责任人和结果指标时，不能
+借此晋升任何外部 provider。
+
 ## 9. 受控智能与进化闭环
 
 系统的智能化成熟度按五级递进：
