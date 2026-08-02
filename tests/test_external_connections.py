@@ -442,6 +442,49 @@ def test_catalog_diff_detects_health_change_and_error_resolution() -> None:
         "removed_count": 0,
         "changed_count": 1,
         "error_change_count": 1,
+        "review_required": False,
+        "review_required_count": 0,
+        "operational_observation_count": 1,
+        "risk_codes": ["availability_changed", "health_changed"],
     }
     assert diff["changes"][0]["changed_fields"] == ["availability", "health"]
+    assert diff["changes"][0]["risk_class"] == "operational_observation"
+    assert diff["changes"][0]["review_required"] is False
     assert diff["error_changes"][0]["change"] == "resolved"
+
+
+def test_catalog_diff_marks_descriptor_changes_for_manual_review() -> None:
+    previous = {
+        "schema": "external-resource-catalog/v1",
+        "observed_at": "2026-08-01T00:00:00+00:00",
+        "resources": [
+            {
+                "id": "source:test",
+                "provider": "provider-a",
+                "capabilities": ["search"],
+            }
+        ],
+        "errors": [],
+    }
+    current = {
+        "schema": "external-resource-catalog/v1",
+        "observed_at": "2026-08-02T00:00:00+00:00",
+        "resources": [
+            {
+                "id": "source:test",
+                "provider": "provider-b",
+                "capabilities": ["search", "summarize"],
+            },
+            {"id": "source:new", "provider": "provider-c", "capabilities": ["search"]},
+        ],
+        "errors": [],
+    }
+
+    diff = diff_external_resource_catalog_snapshots(previous, current)
+
+    assert diff["summary"]["review_required"] is True
+    assert diff["summary"]["review_required_count"] == 2
+    assert diff["summary"]["operational_observation_count"] == 0
+    assert diff["changes"][0]["risk_class"] == "manual_review"
+    assert diff["changes"][0]["risk_codes"] == ["resource_added"]
+    assert "descriptor_provider_changed" in diff["changes"][1]["risk_codes"]
