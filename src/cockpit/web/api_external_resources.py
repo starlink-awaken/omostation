@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 _OMO_SRC = _REPO_ROOT / "projects" / "omo" / "src"
@@ -25,6 +25,12 @@ try:
         record_external_resource_pack_proposal,
     )
     from omo.omo_external_resources import read_latest_external_resource_observation
+    from omo.omo_external_scene_trial import read_external_scene_trials
+    from omo.omo_external_scene_trial_feedback import (
+        ExternalSceneTrialFeedbackError,
+        read_external_scene_trial_feedback,
+        record_external_scene_trial_feedback,
+    )
     from omo.workflow_eval import (
         build_external_resource_selection_dataset,
         propose_selection_policy_feedback,
@@ -33,6 +39,10 @@ except Exception as exc:  # OMO is optional while Cockpit is being bootstrapped.
     read_latest_external_resource_observation = None  # type: ignore[assignment]
     record_external_resource_evaluation = None  # type: ignore[assignment]
     record_external_resource_pack_proposal = None  # type: ignore[assignment]
+    read_external_scene_trials = None  # type: ignore[assignment]
+    read_external_scene_trial_feedback = None  # type: ignore[assignment]
+    record_external_scene_trial_feedback = None  # type: ignore[assignment]
+    ExternalSceneTrialFeedbackError = ValueError
     ExternalResourcePackProposalError = ValueError
     build_external_resource_selection_dataset = None  # type: ignore[assignment]
     propose_selection_policy_feedback = None  # type: ignore[assignment]
@@ -94,6 +104,7 @@ else:
 router = APIRouter(prefix="/api/external-resources", tags=["external-resources"])
 
 _REVIEW_QUEUE_SCHEMA = "external-resource-review-queue/v1"
+_SCENE_TRIAL_REVIEW_SCHEMA = "external-scene-trial-review/v1"
 _REVIEW_SNAPSHOT_FIELDS = (
     "id",
     "provider",
@@ -271,6 +282,94 @@ def _review_queue_projection(observation: Mapping[str, Any] | None) -> dict[str,
     }
 
 
+def _scene_trial_review_projection(scene_id: str | None = None) -> dict[str, Any]:
+    """Project proposal-only trials and their review receipts without promotion."""
+    base = {
+        "schema": _SCENE_TRIAL_REVIEW_SCHEMA,
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": "forbidden",
+        "raw_content_policy": "never_read_or_export",
+        "source": "omo.external_scene_trial",
+        "items": [],
+        "summary": {
+            "trial_count": 0,
+            "unreviewed_count": 0,
+            "reviewed_count": 0,
+            "review_actions": {},
+        },
+    }
+    if read_external_scene_trials is None or read_external_scene_trial_feedback is None:
+        return {**base, "status": "unavailable", "next_action": "检查 OMO 试运行审阅存储后重试。"}
+    trials = read_external_scene_trials(_REPO_ROOT / ".omo")
+    feedback = read_external_scene_trial_feedback(_REPO_ROOT / ".omo")
+    latest_feedback: dict[str, dict[str, Any]] = {}
+    for item in feedback:
+        trial_id = str(item.get("trial_id") or "")
+        if trial_id:
+            latest_feedback[trial_id] = item
+    items: list[dict[str, Any]] = []
+    action_counts: dict[str, int] = {}
+    for trial in trials:
+        binding = trial.get("scene_binding")
+        if not isinstance(binding, Mapping):
+            continue
+        if scene_id and binding.get("scene_id") != scene_id:
+            continue
+        review = latest_feedback.get(str(trial.get("trial_id") or ""))
+        if review:
+            action = str(review.get("review_action") or "")
+            action_counts[action] = action_counts.get(action, 0) + 1
+        items.append(
+            {
+                key: trial.get(key)
+                for key in (
+                    "trial_id",
+                    "scene_binding",
+                    "consumer_ref",
+                    "owner_ref",
+                    "approver_ref",
+                    "permission_ref",
+                    "evidence_refs",
+                    "preflight_ref",
+                    "catalog_observation_id",
+                    "trial_stage",
+                    "status",
+                    "metric",
+                    "sample_plan",
+                    "rollback_ref",
+                    "feedback_contract",
+                    "activation",
+                    "provider_invocation",
+                    "workflow_run_id",
+                    "observed_at",
+                    "trial_receipt_id",
+                )
+                if key in trial
+            }
+            | {"latest_review": review}
+        )
+    unreviewed = sum(1 for item in items if not item.get("latest_review"))
+    return {
+        **base,
+        "status": "empty" if not items else ("attention" if unreviewed else "clear"),
+        "scene_id": scene_id,
+        "items": items,
+        "summary": {
+            "trial_count": len(items),
+            "unreviewed_count": unreviewed,
+            "reviewed_count": len(items) - unreviewed,
+            "review_actions": action_counts,
+        },
+        "next_action": (
+            "先提交人工评审回执；评审不会创建 WorkflowRun 或激活连接。"
+            if unreviewed
+            else "可继续观察；只有真实消费者、WorkflowRun、外部回执和结果反馈齐备后才能申请晋升。"
+        ),
+    }
+
+
 def _projection_status(projection: Mapping[str, Any]) -> str:
     return "degraded" if projection.get("errors") else "live"
 
@@ -385,6 +484,100 @@ async def get_external_resource_review_queue() -> dict[str, Any]:
         "projection": projection,
         "external_side_effects": "disabled",
         "worker_launch": False,
+    }
+
+
+@router.get("/scene-trials")
+async def get_external_scene_trial_review(
+    scene_id: str | None = Query(None, description="Optional scene filter"),
+) -> dict[str, Any]:
+    """Expose proposal-only scene trials and their latest review receipt."""
+    try:
+        projection = _scene_trial_review_projection(scene_id)
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        projection = {
+            **_scene_trial_review_projection(None),
+            "status": "unavailable",
+            "error": type(exc).__name__,
+            "next_action": "检查 OMO 试运行日志格式后重试。",
+        }
+        return {
+            "ok": False,
+            "projection": projection,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    return {
+        "ok": projection.get("status") != "unavailable",
+        "projection": projection,
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.post("/scene-trials/review")
+async def review_external_scene_trial(request: Request) -> dict[str, Any]:
+    """Record a proposal-only review; it never creates a WorkflowRun."""
+    if record_external_scene_trial_feedback is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_scene_trial_feedback_unavailable",
+            "activation": "forbidden",
+            "provider_invocation": False,
+            "workflow_run_creation": "forbidden",
+        }
+    try:
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ExternalSceneTrialFeedbackError("review payload must be an object")
+        payload = dict(body)
+        actor = str(payload.pop("actor_ref", "cockpit-user") or "cockpit-user")
+        payload.update(
+            {
+                "schema": "external-scene-trial-feedback/v1",
+                "activation": "forbidden",
+                "provider_invocation": False,
+                "workflow_run_id": None,
+                "actor": actor,
+                "source_ref": str(
+                    payload.get("source_ref") or "cockpit:external-resources:scene-trial-review"
+                ),
+                "observed_at": str(
+                    payload.get("observed_at")
+                    or datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+                ),
+            }
+        )
+        result = record_external_scene_trial_feedback(_REPO_ROOT / ".omo", payload)
+    except (ExternalSceneTrialFeedbackError, ValueError, TypeError) as exc:
+        return {
+            "ok": False,
+            "status": "invalid",
+            "error": "external_scene_trial_feedback_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "provider_invocation": False,
+            "workflow_run_creation": "forbidden",
+        }
+    except OSError as exc:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_scene_trial_feedback_unavailable",
+            "message": f"评审回执持久化不可用: {type(exc).__name__}",
+            "activation": "forbidden",
+            "provider_invocation": False,
+            "workflow_run_creation": "forbidden",
+        }
+    return {
+        "ok": True,
+        "status": result["status"],
+        "feedback": result["feedback"],
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": "forbidden",
+        "persistence": "omo_append_only",
     }
 
 

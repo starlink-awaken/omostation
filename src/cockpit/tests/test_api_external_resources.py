@@ -471,6 +471,86 @@ def test_external_resource_review_queue_fails_closed_on_invalid_observation(monk
     assert body["external_side_effects"] == "disabled"
 
 
+def _scene_trial(trial_id: str = "scene-trial:test") -> dict:
+    return {
+        "schema": "external-scene-trial/v1",
+        "trial_id": trial_id,
+        "scene_binding": {
+            "scene_id": "research-brief",
+            "journey_id": "weekly-decision",
+            "outcome_metric": "decision_latency_hours",
+        },
+        "consumer_ref": "ref://consumer/test",
+        "owner_ref": "ref://owner/test",
+        "approver_ref": "ref://approver/test",
+        "permission_ref": "ref://permission/test",
+        "evidence_refs": ["evidence://demand/test", "evidence://activation/test"],
+        "preflight_ref": "ref://preflight/test",
+        "catalog_observation_id": "observation:test",
+        "trial_stage": "observation_only",
+        "status": "proposal_only",
+        "metric": {"metric_id": "decision_latency_hours", "direction": "decrease"},
+        "sample_plan": {"minimum_samples": 3, "window_seconds": 3600},
+        "rollback_ref": "ref://rollback/test",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_id": None,
+        "feedback_contract": {"schema": "outcome-feedback/v1"},
+        "observed_at": "2026-08-03T00:00:00Z",
+        "trial_receipt_id": "receipt:test",
+    }
+
+
+def test_external_scene_trial_review_projection_is_read_only(monkeypatch):
+    monkeypatch.setattr(api_external_resources, "read_external_scene_trials", lambda _path: [_scene_trial()])
+    monkeypatch.setattr(api_external_resources, "read_external_scene_trial_feedback", lambda _path: [])
+
+    response = TestClient(_app()).get("/api/external-resources/scene-trials?scene_id=research-brief")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["projection"]["status"] == "attention"
+    assert body["projection"]["summary"]["unreviewed_count"] == 1
+    assert body["projection"]["items"][0]["trial_id"] == "scene-trial:test"
+    assert body["projection"]["activation"] == "forbidden"
+    assert body["projection"]["workflow_run_creation"] == "forbidden"
+
+
+def test_external_scene_trial_review_records_proposal_only_receipt(monkeypatch, tmp_path):
+    calls: list[dict] = []
+
+    def fake_record(root, payload):
+        calls.append({"root": root, "payload": payload})
+        return {"status": "recorded", "feedback": {"feedback_id": payload["feedback_id"]}}
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "record_external_scene_trial_feedback", fake_record)
+    response = TestClient(_app()).post(
+        "/api/external-resources/scene-trials/review",
+        json={
+            "feedback_id": "review:test",
+            "trial_id": "scene-trial:test",
+            "review_action": "continue",
+            "evidence_refs": ["evidence://review/test"],
+            "reviewer_ref": "ref://reviewer/test",
+            "review_ref": "ref://review/test",
+            "actor_ref": "cockpit:test",
+        },
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["status"] == "recorded"
+    assert body["activation"] == "forbidden"
+    assert body["provider_invocation"] is False
+    assert body["workflow_run_creation"] == "forbidden"
+    assert calls[0]["root"] == tmp_path / ".omo"
+    assert calls[0]["payload"]["schema"] == "external-scene-trial-feedback/v1"
+    assert calls[0]["payload"]["workflow_run_id"] is None
+
+
 def test_external_resource_evaluation_returns_explainable_read_only_decision(monkeypatch, tmp_path):
     projection = _projection()
     calls: list[dict] = []
