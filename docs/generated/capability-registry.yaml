@@ -1,14 +1,14 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-02T11:23:42Z
+# 生成时间: 2026-08-02T11:45:49Z
 
 version: 1.0.0
-generated_at: '2026-08-02T11:23:42Z'
+generated_at: '2026-08-02T11:45:49Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 24
-  mcp_tools: 541
+  mcp_tools: 535
   bos_services: 188
   bos_domains: 16
   cli_commands: 103
@@ -167,7 +167,6 @@ mcp_servers:
   - l4_domain_freeze
   - l4_domain_info
   - l4_domain_migrate
-  - l4_domain_sync
   - l4_domain_unfreeze
   - l4_domain_validate
   - l4_domains_list
@@ -177,13 +176,9 @@ mcp_servers:
   - l4_evolution_status
   - l4_evolution_tasks
   - l4_evolution_trigger
-  - l4_file_delete
-  - l4_file_move
   - l4_files_list
   - l4_freshness
   - l4_health
-  - l4_health_detail
-  - l4_kems_plane_scan
   - l4_kems_validate
   - l4_memory_read
   - l4_models_list
@@ -192,7 +187,6 @@ mcp_servers:
   - l4_plugin_run_mechanism
   - l4_plugin_specs
   - l4_plugin_workflows
-  - l4_project_check
   - l4_reload
   - l4_rules_read
   - l4_search
@@ -205,7 +199,7 @@ mcp_servers:
   - l4_timeline_list
   - l4_tools_list
   - l4_workspace_search
-  tool_count: 51
+  tool_count: 45
 - id: agora
   name: Agora Service Convergence Hub
   layer: I0
@@ -1626,7 +1620,7 @@ cli_commands:
 - name: health
   description: 一键系统健康检查
 - name: help
-  description: 查看产品地图与快速入门
+  description: 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)
 - name: history
   description: 查看对话历史
 - name: identity
