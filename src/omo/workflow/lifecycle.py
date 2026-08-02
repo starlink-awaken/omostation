@@ -14,6 +14,11 @@ from typing import Any
 
 import yaml
 
+try:
+    from .mesh_agent_events import emit_workflow_mesh_event
+except ImportError:  # graceful degradation during refactoring
+    emit_workflow_mesh_event = lambda *a, **kw: False
+
 from .core import (
     CLAIM_POLICY_MODES,
     RUN_UPDATE_LOCK_TIMEOUT_SECONDS,
@@ -348,6 +353,18 @@ def start_run(
             "locks": record["locks"],
         },
     )
+    # Phase 1b: Bridge to Workflow Mesh
+    emit_workflow_mesh_event(
+        "AgentWorkflowStarted",
+        run_id,
+        {
+            "workflow_id": plan["id"],
+            "agent_profile": context.get("profile", ""),
+            "objective": objective,
+            "actor": context["actor"],
+        },
+        workspace=WORKSPACE,
+    )
     return record
 
 
@@ -598,6 +615,19 @@ def closeout_run(
                     )
         except Exception:
             pass
+    # Phase 1b: Bridge to Workflow Mesh
+    emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        run_id,
+        {
+            "status": status,
+            "ok": report["ok"],
+            "verify_ok": verify_report["ok"],
+            "observe_decision": observe_report["decision"],
+            "evidence_count": len(closeout_evidence),
+        },
+        workspace=WORKSPACE,
+    )
     return report
 
 

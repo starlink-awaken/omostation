@@ -316,3 +316,30 @@ def test_idempotency_key_is_authoritative_across_event_ids(tmp_path):
     store.append(first)
     with pytest.raises(WorkflowMeshEventError, match="Conflicting duplicate"):
         store.append(duplicate)
+
+
+def test_agent_workflow_mesh_bridge_start_event(tmp_path, monkeypatch):
+    """Phase 1b: Agent Workflow start emits Mesh event."""
+    from pathlib import Path
+    from omo.workflow.mesh_agent_events import emit_workflow_mesh_event
+    import os
+
+    # Simulate workspace with minimal OMO structure
+    omo_dir = tmp_path / ".omo"
+    omo_dir.mkdir()
+
+    # Test direct emission
+    result = emit_workflow_mesh_event(
+        "AgentWorkflowStarted",
+        "test-run-123",
+        {"workflow_id": "test-wf", "actor": "test-user"},
+        workspace=tmp_path,
+    )
+    assert result is True, "Should succeed in emitting event"
+
+    # Verify event was stored
+    event_file = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    assert event_file.exists()
+    content = event_file.read_text()
+    assert "AgentWorkflowStarted" in content
+    assert "test-run-123" in content
