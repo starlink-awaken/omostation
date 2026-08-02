@@ -268,11 +268,77 @@ class StdioAdapter:
             }
 
     def call(self, service: BosService, *args: Any, **kwargs: Any) -> dict:
-        """通过 stdio 调用 BOS 服务并返回结果."""
-        cmd = _with_uv_package(service)
+        """通过合适协议调用 BOS 服务并返回结果.
+
+        F-04: 显式分派所有 transport, 不再让不支持的协议落入 `_call_stdio`
+        用错误协议执行 (Popen([]) 等)。
+        """
         if service.transport == "mcp_stdio":
+            cmd = _with_uv_package(service)
             return self._call_mcp_stdio(service, cmd, args, kwargs)
+        if service.transport == "http":
+            return self._call_http(service, args, kwargs)
+        if service.transport == "mcp_proxy":
+            # 无 proxy_manager 上下文时显式降级, 而非 Popen([])
+            return {
+                "status": "error",
+                "transport": "mcp_proxy",
+                "error": (
+                    "mcp_proxy transport requires ProxyManager context; "
+                    f"call {service.uri} via proxy_manager.dispatch()"
+                ),
+            }
+        if service.transport == "inline":
+            # inline 为文档锚点或同进程 handler, 无 command 时不可 stdio 调用
+            if not service.command:
+                return {
+                    "status": "error",
+                    "transport": "inline",
+                    "error": (
+                        f"inline service {service.uri} has no command "
+                        "(document anchor or in-process handler)"
+                    ),
+                }
+            # 有 command 的 inline 走 stdio 协议
+            cmd = _with_uv_package(service)
+            return self._call_stdio(service, cmd, args, kwargs)
+        cmd = _with_uv_package(service)
         return self._call_stdio(service, cmd, args, kwargs)
+
+    def _call_http(
+        self,
+        service: BosService,
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        """HTTP transport: 对 http_url 发起 GET (或带参数的 POST)。"""
+        import urllib.request
+
+        url = service.http_url or service.uri.replace("bos://", "http://", 1)
+        try:
+            method = "GET"
+            payload: bytes | None = None
+            data = args[0] if args else kwargs
+            if isinstance(data, dict) and data:
+                method = "POST"
+                payload = json.dumps(data).encode()
+            req = urllib.request.Request(
+                url, data=payload, method=method, headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                body = resp.read().decode(errors="replace")
+                try:
+                    parsed = json.loads(body)
+                except json.JSONDecodeError:
+                    parsed = {"raw": body}
+                return {"status": "ok", "result": parsed, "http_status": resp.status}
+        except Exception as e:  # noqa: BLE001 — defensive fallback (align with file style)
+            return {
+                "status": "error",
+                "transport": "http",
+                "error": f"{type(e).__name__}: {e}",
+                "url": url,
+            }
 
 
 _adapter = StdioAdapter()
