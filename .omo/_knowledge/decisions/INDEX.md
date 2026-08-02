@@ -392,6 +392,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0322: Workflow Mesh 受控 Sandbox ToolPack 执行闭环 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 29 | 0322-sandbox-toolpack-mesh-execution.md
 - ADR-0323: Workflow Mesh Sandbox ToolPack 失败、不可用与恢复契约 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 30 | 0323-sandbox-toolpack-failure-recovery.md
 - ADR-0324: BackendUnavailable 的 WorkflowRun 与 StepRun 投影一致性 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 31 | 0324-backend-unavailable-step-projection.md
+- ADR-0325: 外部动态路由注册的统一准入闭环 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 32 | 0325-external-route-admission-closure.md
 
 ---
 
