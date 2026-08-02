@@ -207,3 +207,60 @@ def test_runtime_effect_receipt_can_close_the_same_mesh_run(tmp_path: Path) -> N
     assert snapshot["state"] == "verified"
     assert snapshot["evidence"]
     assert all("content" not in str(event) for event in store.events())
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+def test_runtime_compensation_returns_to_running_without_raw_payload(tmp_path: Path) -> None:
+    from runtime.executor.engine import AgentRuntime
+    from runtime.workflow_admission import admission_proof
+    from runtime.workflow_effects import WorkflowEffectStore
+
+    run_id = "workflow-runtime-compensation"
+    step_run_id = f"{run_id}:runtime:1"
+    grant = _grant(run_id, f"{run_id}:runtime")
+    grant["step_run_ids"] = [f"{run_id}:runtime"]
+    grant["capabilities"] = ["execute"]
+    grant["proof"] = admission_proof(grant)
+    store = WorkflowMeshStore(tmp_path / "omo")
+    store.append(new_workflow_event("WorkflowRequested", run_id))
+    store.append(
+        new_workflow_event(
+            "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
+        )
+    )
+    store.append(
+        new_workflow_event(
+            "StepDispatched",
+            run_id,
+            payload={"step_run_id": step_run_id, "admission_id": grant["admission_id"]},
+        )
+    )
+    store.append(
+        new_workflow_event(
+            "StepStarted",
+            run_id,
+            payload={"step_run_id": step_run_id, "admission_id": grant["admission_id"]},
+        )
+    )
+
+    effects = WorkflowEffectStore(tmp_path / "effects.jsonl")
+    effect_key = f"{run_id}:effect:send"
+    effects.execute_once_with_outcome(effect_key, lambda: {"remote_id": "obj-1"})
+    payload = AgentRuntime().compensate_effect(
+        effects,
+        effect_key,
+        lambda: {"remote_id": "obj-1", "content": "private"},
+        workflow_run_id=run_id,
+        step_run_id=step_run_id,
+        admission=grant,
+        event_sink=store.sink(),
+    )
+
+    assert payload["status"] == "compensated"
+    snapshot = store.snapshot(run_id)
+    assert snapshot["state"] == "running"
+    assert [event["event_type"] for event in store.events()][-2:] == [
+        "CompensationStarted",
+        "WorkflowRecovered",
+    ]
+    assert all("private" not in str(event) for event in store.events())
