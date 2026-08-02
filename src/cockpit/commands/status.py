@@ -487,8 +487,43 @@ def cmd_demo(_: argparse.Namespace) -> int:
     return 0
 
 
+def _print_capability_summary(c) -> None:
+    """从 capability-registry.yaml 加载并打印动态能力统计.
+
+    若注册表不存在则静默跳过 (向后兼容).
+    """
+    try:
+        import yaml
+    except ImportError:
+        return
+    from .base import _SCRIPT_DIR
+
+    registry_path = _SCRIPT_DIR.parent.parent.parent.parent.parent / "docs" / "generated" / "capability-registry.yaml"
+    if not registry_path.exists():
+        return
+    try:
+        reg = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+
+    totals = reg.get("totals", {})
+    c.print(
+        Panel.fit(
+            "[bold cyan]🧭 Cockpit 能力全景[/bold cyan]\n\n"
+            f"[bold]CLI 命令[/]: {totals.get('cli_commands', '?')}  |  "
+            f"[bold]MCP 工具[/]: {totals.get('mcp_tools', '?')} ({totals.get('mcp_servers', '?')} servers)  |  "
+            f"[bold]BOS 服务[/]: {totals.get('bos_services', '?')} ({totals.get('bos_domains', '?')} domains)\n\n"
+            "[dim]新增: cockpit knowledge · cockpit kems · cockpit workflow mesh[/dim]\n"
+            "[dim]详情: cockpit <command> --help | Web: cockpit dashboard[/dim]",
+            border_style="bright_cyan",
+        )
+    )
+
+
 def cmd_help(_: argparse.Namespace) -> int:
     c = _get_console()
+    # ── 动态能力统计 (从 capability-registry.yaml 加载) ──
+    _print_capability_summary(c)
     c.print(
         _panel(
             "[bold cyan]🧭 Workspace 产品地图[/bold cyan]\n\n"

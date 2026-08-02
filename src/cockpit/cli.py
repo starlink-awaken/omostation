@@ -791,6 +791,31 @@ def main() -> int:
     compute_p.add_argument("compute_command", nargs="?", help="gateway/mesh/swarm")
     compute_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 aetherforge 的参数")
 
+    # ── Phase 49+: 能力全景覆盖 — 新增命令组 ──────────────────
+    # knowledge — KOS 知识检索治理 (5193 篇索引)
+    knowledge_p = sub.add_parser("knowledge", help="📚 KOS 知识检索 (search/status/stats)")
+    knowledge_sub = knowledge_p.add_subparsers(dest="knowledge_command")
+    knowledge_search_p = knowledge_sub.add_parser("search", help="语义搜索")
+    knowledge_search_p.add_argument("query", nargs="?", help="搜索词")
+    knowledge_search_p.add_argument("--limit", type=int, default=5, help="结果数 (默认 5)")
+    knowledge_sub.add_parser("status", help="KOS 服务健康")
+    knowledge_sub.add_parser("stats", help="索引统计")
+
+    # kems — KEMS 域治理 (28 域)
+    kems_p = sub.add_parser("kems", help="🧬 KEMS 域治理 (domains/status/scan)")
+    kems_sub = kems_p.add_subparsers(dest="kems_command")
+    kems_sub.add_parser("domains", help="列出 28 域状态")
+    kems_sub.add_parser("status", help="控制面状态")
+    kems_sub.add_parser("scan", help="平面扫描")
+
+    # c2g — C2G 战略罗盘全局状态
+    c2g_p = sub.add_parser("c2g", help="🎯 C2G 战略罗盘 (status/pipeline)")
+    c2g_sub = c2g_p.add_subparsers(dest="c2g_command")
+    c2g_sub.add_parser("status", help="全局状态 (radar)")
+    c2g_sub.add_parser("pipeline", help="pipeline 概览")
+
+    # workflow mesh 子命令通过 dispatch 处理 (避免与 workflow_args nargs=* 冲突)
+
     args = parser.parse_args()
 
     # ── Registry-Based Dispatch ──
@@ -953,6 +978,18 @@ def main() -> int:
 
         return cmd_iterate(a)
 
+    def _dispatch_debt(a):
+        """cockpit debt 子命令路由: score → 评分算法, 其他 → omo debt 委派."""
+        sub = getattr(a, "debt_subcommand", None)
+        if sub == "score" or sub is None:
+            from cockpit.commands.debt_scoring import cmd_debt_score
+
+            return cmd_debt_score(a)
+        # 其他子命令 (list/summary/predict 等) 委派给 omo debt
+        from cockpit.commands.omo import cmd_omo_debt
+
+        return cmd_omo_debt(a)
+
     def dispatch_agent_runtime(a):
         from cockpit import agent_runtime_cli
 
@@ -987,9 +1024,21 @@ def main() -> int:
         return cmd_wave2(a)
 
     def dispatch_workflow(a):
+        wf_args = getattr(a, "workflow_args", [])
+        # workflow mesh 子命令路由到 workflow_mesh 模块
+        if wf_args and wf_args[0] == "mesh":
+            from cockpit.commands.workflow_mesh import cmd_workflow_mesh
+
+            mesh_args = argparse.Namespace(mesh_command=wf_args[1] if len(wf_args) > 1 else None)
+            if len(wf_args) > 2 and wf_args[1] == "events":
+                try:
+                    mesh_args.limit = int(wf_args[2])
+                except (ValueError, IndexError):
+                    mesh_args.limit = 20
+            return cmd_workflow_mesh(mesh_args)
         from cockpit.commands.workflow import handle_workflow
 
-        return handle_workflow(getattr(a, "workflow_args", []))
+        return handle_workflow(wf_args)
 
     def dispatch_agent_workflow(a):
         from cockpit.commands.agent_workflow import cmd_agent_workflow
@@ -1146,7 +1195,10 @@ def main() -> int:
         "init": lambda a: __import__("cockpit.commands.quickstart", fromlist=["cmd_quickstart"]).cmd_quickstart(a),
         # P66 增: readiness dashboard 子命令 (升级自 P65 wrapper)
         "readiness": lambda a: __import__("cockpit.commands.readiness", fromlist=["cmd_readiness"]).cmd_readiness(a),
-        "debt": lambda a: __import__("cockpit.commands.debt_scoring", fromlist=["cmd_debt_score"]).cmd_debt_score(a),
+        "debt": lambda a: _dispatch_debt(a),
+        "knowledge": lambda a: __import__("cockpit.commands.knowledge", fromlist=["cmd_knowledge"]).cmd_knowledge(a),
+        "kems": lambda a: __import__("cockpit.commands.kems", fromlist=["cmd_kems"]).cmd_kems(a),
+        "c2g": lambda a: __import__("cockpit.commands.c2g", fromlist=["cmd_c2g"]).cmd_c2g(a),
     }
 
     handler = handlers.get(args.command)
