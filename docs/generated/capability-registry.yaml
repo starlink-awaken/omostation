@@ -1,15 +1,15 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-02T10:18:06Z
+# 生成时间: 2026-08-02T11:23:42Z
 
 version: 1.0.0
-generated_at: '2026-08-02T10:18:06Z'
+generated_at: '2026-08-02T11:23:42Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 24
   mcp_tools: 541
-  bos_services: 184
+  bos_services: 188
   bos_domains: 16
   cli_commands: 103
 mcp_servers:
@@ -752,7 +752,7 @@ mcp_servers:
 bos_services:
   _domain_counts:
     agora: 3
-    analysis: 27
+    analysis: 28
     capability: 38
     cockpit: 3
     compute: 3
@@ -760,7 +760,7 @@ bos_services:
     forge: 1
     governance: 32
     l4-kernel: 1
-    memory: 38
+    memory: 41
     meta: 1
     omo: 4
     persona: 10
@@ -890,6 +890,10 @@ bos_services:
       description: kairon minerva 集成入口 (agora l0_registry_loader 引用)
       transport: inline
       status: active
+    - uri: bos://analysis/kems/forecast
+      description: KEMS 知识推断与影子评估推演分析 (ADR-0300)
+      transport: http
+      status: active
     capability:
     - uri: bos://capability/cockpit/mcp-server
       description: Cockpit MCP Server (HTTP proxy mode)
@@ -1009,7 +1013,7 @@ bos_services:
       status: active
     - uri: bos://capability/claude-skills/load
       description: 354 个 Claude Code Skill 最全库 — 593 CLI 脚本 + 711 模板
-      transport: inline
+      transport: stdio
       status: active
     - uri: bos://capability/last30days-skill/fetch
       description: 'AI Agent 驱动的搜索/打分类信息流聚合 — GitHub Trending #1'
@@ -1025,7 +1029,7 @@ bos_services:
       status: active
     - uri: bos://capability/skills-for-fabric/load
       description: 微软 Fabric AI 技能集 — 作者/消费/运维三类 Skill
-      transport: inline
+      transport: stdio
       status: active
     - uri: bos://capability/deer-flow/run
       description: 字节开源超 Agent 框架 v2.0 — 子 Agent/记忆/沙箱/技能
@@ -1037,7 +1041,7 @@ bos_services:
       status: active
     - uri: bos://capability/knowledge-work-plugins/load
       description: Claude Cowork 11 个生产力插件 — Claude Code 兼容
-      transport: inline
+      transport: stdio
       status: active
     - uri: bos://capability/evaluator
       description: evaluator 域 (CR-RBAC-01 强制权限, role='evaluator' or 'admin')
@@ -1376,23 +1380,23 @@ bos_services:
       status: active
     - uri: bos://memory/inbox/status
       description: BOS Inbox 多源私有知识神经网运行状态统计
-      transport: mcp
+      transport: internal
       status: active
     - uri: bos://memory/inbox/search
       description: BOS Inbox 多源私有知识库全文与高维关键词检索
-      transport: mcp
+      transport: internal
       status: active
     - uri: bos://memory/inbox/pending
       description: BOS Inbox 实时待办公文与未读事项读取
-      transport: mcp
+      transport: internal
       status: active
     - uri: bos://memory/inbox/watch
       description: BOS Inbox 实时事件驱动监控与紧急公文/工单待办通知 (Event-Driven Watcher)
-      transport: mcp
+      transport: internal
       status: active
     - uri: bos://memory/inbox/archive
       description: BOS Inbox 工单处理完结与冷归档闭环接口 (Lifecycle Archive)
-      transport: mcp
+      transport: internal
       status: active
     - uri: bos://memory/inbox/triage
       description: BOS Inbox 公文与待办事项智能分类分拣与紧急度测算引擎 (Triage Engine)
@@ -1401,6 +1405,18 @@ bos_services:
     - uri: bos://memory/inbox/draft
       description: BOS Inbox 智能拟办意见与风险提示批复草拟引擎 (Draft Assistant)
       transport: internal
+      status: active
+    - uri: bos://memory/kems/status
+      description: KEMS 知识管理引擎与图谱服务运行状态 (ADR-0300)
+      transport: http
+      status: active
+    - uri: bos://memory/kems/graph
+      description: KEMS 实体关系图谱查询与关系拓扑推导 (ADR-0300)
+      transport: http
+      status: active
+    - uri: bos://memory/kems/ocr-queue
+      description: KEMS 多源知识抽提与 OCR 纠错审阅队列 (ADR-0300)
+      transport: http
       status: active
     meta:
     - uri: bos://meta/discover
@@ -1421,7 +1437,7 @@ bos_services:
       transport: inline
       status: active
     - uri: bos://omo/tasks/active
-      description: ''
+      description: OMO 任务控制台与活跃任务展示
       transport: inline
       status: active
     persona:
@@ -1462,7 +1478,7 @@ bos_services:
       transport: inline
       status: active
     - uri: bos://persona/bdsk/evaluate
-      description: B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)
+      description: B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Mode-A Debate & ADR 自动落盘存证)
       transport: internal
       status: active
     runtime:
