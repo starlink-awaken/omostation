@@ -63,6 +63,8 @@ Iris 同时保留 `iris.connectors` 作为自身注册组，并将同一批 conn
 期限和回滚方案。单个插件探活失败只能隔离该候选并生成错误记录，不能污染其他连接或让旧的健康
 快照继续伪装成实时可用。
 
+发现结果先通过 `external-resource-catalog/v1` 只读投影进入人工目录。投影必须保留资源身份、类型、生命周期、健康探针摘要、来源引用、入口标识和可解释的 `reason_codes`；缺失探针时间、来源或有效期限时只能显示为 `stale/unavailable`。根仓入口为 `bin/ssot/external-resource-catalog.py`，Cockpit 入口为 `GET /api/external-resources` 和 `/external-resources`，这些入口均固定 `activation: forbidden`，不执行 provider、不写 OMO，也不把目录观察误判为业务激活。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
