@@ -119,6 +119,35 @@ def test_descriptor_only_mode_does_not_claim_live_availability() -> None:
     assert payload["errors"][0]["error"] == "health_probe_skipped"
 
 
+def test_evaluates_catalog_with_scene_binding_without_activation() -> None:
+    payload = MODULE.collect_external_resources(
+        Path(__file__).parents[1],
+        entry_points=[_EntryPoint()],
+        now=datetime(2026, 8, 2, tzinfo=UTC),
+    )
+
+    evaluation = MODULE.evaluate_external_resources(
+        Path(__file__).parents[1],
+        payload,
+        capability="search",
+        scene_binding={
+            "scene_id": "research-brief",
+            "journey_id": "weekly-decision",
+            "outcome_metric": "decision_latency_hours",
+            "data_scope": "public:research",
+            "operator": "human:test",
+            "permission_ref": "permission://test",
+        },
+        trace_id="trace-catalog-evaluation",
+        now=datetime(2026, 8, 2, tzinfo=UTC),
+    )
+
+    assert evaluation["schema"] == "external-resource-evaluation/v1"
+    assert evaluation["activation"] == "forbidden"
+    assert evaluation["selected_resource_id"] == "source:test"
+    assert evaluation["summary"]["eligible_count"] == 1
+
+
 def test_previous_snapshot_produces_safe_change_report() -> None:
     previous = {
         "schema": "external-resource-catalog/v1",
