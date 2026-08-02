@@ -172,6 +172,9 @@ dynamic_discovery:
     pack_schema: external-resource-pack/v1
     pack_check_schema: external-resource-pack-check/v1
     pack_preview_schema: external-resource-pack-catalog-preview/v1
+    pack_proposal_observation_schema: external-resource-pack-proposal-observation/v1
+    pack_proposal_recorder: projects/omo/src/omo/omo_external_pack.py
+    pack_proposal_log: .omo/_knowledge/workflow-mesh/external-resource-pack-proposals.jsonl
     pack_checker: bin/ssot/external-resource-pack.py
     new_provider_requires: [descriptor, permission_ref, health_probe, rollback_plan, owner]
     pack_requires: [pack_id, pack_version, extension, descriptor]
@@ -192,6 +195,14 @@ dynamic_discovery:
       provider_invocation: forbidden
       omo_write: forbidden
       next_step: catalog_discovery_then_health_probe
+    pack_proposal_semantics:
+      allowed_statuses: [proposal_only, ready_for_catalog_preview]
+      review_actions: [submit, defer, request_changes]
+      blocked_persistence: forbidden
+      workflow_mesh_mutation: forbidden
+      admission_mutation: forbidden
+      provider_invocation: forbidden
+      idempotency_key: proposal_id_and_projection_digest
     pack_lifecycle_start: [discovered, sandbox]
     route_code_change_required: false
     activation_requires_scene_binding: true

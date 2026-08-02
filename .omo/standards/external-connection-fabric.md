@@ -123,6 +123,20 @@ pack 预检只负责“扩展是否可被安全观察”，目录负责“当前
 但不得把它当作可用、已探活、已准入或可调用资源；仍需沿用 catalog、Scene Card、OMO admission 和
 Workflow Mesh receipt 链。
 
+### 4.1.4 外部扩展包人工评审回执
+
+人工确认不应停留在浏览器瞬时状态。通过静态预检的 pack 可以由 OMO broker 追加一条
+`external-resource-pack-proposal-observation/v1`，日志由 OMO 独占写入
+`.omo/_knowledge/workflow-mesh/external-resource-pack-proposals.jsonl`。broker 只接受
+`proposal_only` 或 `ready_for_catalog_preview`，重新校验 `catalog_preview` 的
+`availability=unobserved`、`health.status=unobserved` 和 `activation=forbidden`，并递归拒绝原文、载荷和凭据。
+
+回执只记录 pack/resource 的安全摘要、`proposal_id`、`review_action`、`actor`、可选的脱敏证据引用、
+下一阶段和稳定 `proposal_receipt_id`。`proposal_id + projection_digest` 重试幂等，冲突则拒绝。
+`submit`、`defer`、`request_changes` 只是人工评审事实，不是批准；它们不会创建 WorkflowRun、改变
+admission、写入 `EvidenceRecorded`、加载 provider、执行健康探针或激活资源。普通资源下一步是
+catalog discovery，方法/模型或显式 proposal-only 资源下一步是 proposal/evaluation。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
