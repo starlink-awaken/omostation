@@ -30,6 +30,7 @@
 | P74 workflow solidification (ADR-0130) | [`.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) |
 | 知识网关 L3-I0 解耦 + 事件索引管道 (ADR-0294) | [`.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md) |
 | 外部连接织层 | [`.omo/_truth/registry/external-connection-fabric.yaml`](.omo/_truth/registry/external-connection-fabric.yaml) · [standard](.omo/standards/external-connection-fabric.md) |
+| 外部连接织层运行时边界 (ADR-0298) | [`.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md`](.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md) |
 
 ## 2. Layer Model
 
@@ -81,7 +82,7 @@ lifecycle contract. The fabric is a cross-cutting capability, not a new top-leve
 |---|---|
 | Descriptor and protocol contract | ECOS |
 | Scene-bound admission, approval and evidence | OMO |
-| Discovery and capability routing | Agora |
+| Discovery and capability routing | Agora (`agora.external_connections`) |
 | Knowledge source adapters | Kairon / Iris |
 | Method compilation and evaluation | Kairon / Sophia |
 | Execution, delivery receipts and recovery | Runtime / Workflow Mesh |
@@ -91,6 +92,8 @@ lifecycle contract. The fabric is a cross-cutting capability, not a new top-leve
 The machine-readable contract is [`external-connection-fabric.yaml`](.omo/_truth/registry/external-connection-fabric.yaml).
 Credentials are referenced, never stored in descriptors; unavailable or stale resources must remain
 visible as such and must not be projected as successful live state.
+Runtime discovery uses the `external.resources` entry-point group; Agora returns a credential-free
+receipt that can be appended as OMO `EvidenceRecorded` without owning workflow state.
 
 ## 5. Governance Surfaces
 

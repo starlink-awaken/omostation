@@ -1694,7 +1694,7 @@
     "protocol": "internal",
     "transport": "internal",
     "status": "active",
-    "description": "B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)",
+    "description": "B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Mode-A Debate & ADR 自动落盘存证)",
     "registered_at": "2026-08-01T10:39:34.931474+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
