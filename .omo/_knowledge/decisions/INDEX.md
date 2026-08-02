@@ -408,7 +408,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0338: External Resource Pack Proposal-only 评审回执 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 45 | 0338-external-pack-proposal-receipt.md
 - ADR-0339: 外部资源只读目录观察运行回执 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 46 | 0339-external-catalog-observation-run.md
 - ADR-0340: 外部场景试运行合同与反馈晋升边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 47 | 0340-external-scene-trial-contract.md
-- ADR-0341: 外部场景试运行审阅反馈边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 48 | 0341-external-scene-trial-review-feedback.md
+- ADR-0341: 外部场景试运行审阅反馈边界 - **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 48 | 0341-external-scene-trial-review-feedback.md
 
 ---
 
@@ -419,6 +419,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - **过期判定**: 每个 Phase 入口处审阅已 `ACCEPTED` 的 ADR，决定是否需 `DEPRECATED`
   或 `SUPERSEDED`
 
+- ADR-0342: Workflow Mesh Bridge 四阶段桥接策略 - **ACCEPTED** | 2026-08-02 | Workflow Mesh bridge | 0342-workflow-mesh-bridge-strategy.md
 ---
 
 ## 相关文件
