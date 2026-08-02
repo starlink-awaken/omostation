@@ -147,12 +147,17 @@ try:
             return result
 
         def _validate_agent_token(self, meta: dict) -> str:
-            """Phase 34: Token-based Identity Trust (Anti-Spoofing)"""
+            """Phase 34: Token-based Identity Trust (Anti-Spoofing).
+
+            Fail-closed: AGORA_AGENT_TOKEN 未配置时任何非 anonymous agent 身份
+            都无法通过校验 (expected_token 为空 → 恒不匹配), 禁止伪造身份。
+            """
             import os
 
             token = meta.get("x-agent-token", "")
             agent_id = meta.get("x-agent-id", "anonymous")
-            expected_token = os.environ.get("AGORA_AGENT_TOKEN", "eCOS-v5-Trust-Token")
+            # Fail-closed: 无 env 时 expected_token 为空, 非 anonymous 身份无法通过
+            expected_token = os.environ.get("AGORA_AGENT_TOKEN", "")
 
             if agent_id != "anonymous" and token != expected_token:
                 self._logger.warning("agent_spoofing_detected", claimed_id=agent_id)

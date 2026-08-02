@@ -12,6 +12,31 @@ class TestMarket:
         assert "minerva" in names
         assert "filesystem" in names
 
+    # ── F-13: SSRF 防护 ──────────────────────────────────────
+
+    def test_fetch_repo_metadata_rejects_path_traversal(self):
+        """路径穿越/协议注入 repo 输入被拒绝 (SSRF 防护)。"""
+        m = Market()
+        for evil in [
+            "../../../../etc/passwd",
+            "https://evil.example/x",
+            "http://169.254.169.254/latest",
+            "a/../b",
+            "",
+            "no-slash-repo",
+            "owner/name/extra",
+        ]:
+            result = m._fetch_repo_metadata(evil)
+            assert "error" in result, f"repo={evil!r} 应被拒绝"
+            assert "invalid repo format" in result["error"]
+
+    def test_fetch_repo_metadata_accepts_valid_format(self):
+        """合法 owner/name 输入通过校验并触发 GitHub API 请求。"""
+        m = Market()
+        result = m._fetch_repo_metadata("starlink-awaken/omostation")
+        # 无论网络可达性如何, 都不应返回格式错误
+        assert "error" not in result
+
     def test_search_finds_match(self):
         m = Market()
         results = m.search("research")

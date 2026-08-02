@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -11,9 +12,12 @@ from agora.persistence_db import _get_db  # type: ignore[import-not-found]
 GRANTS_DB = Path.home() / ".kos" / "grants.db"
 
 # 全局门禁 — 指定强制授权的工具列表
-ENFORCE_TOOLS = ["collab.*"]  # 默认只对此类工具强制授权
-# 空列表 = 全部 pass-through
-# ["*"] = 全部强制
+# 默认只对 collab.* 强制授权; 设置 AGORA_ENFORCE_ALL_TOOLS=1 可全量收紧
+# 空列表 = 全部 pass-through / ["*"] = 全部强制
+if os.environ.get("AGORA_ENFORCE_ALL_TOOLS") == "1":
+    ENFORCE_TOOLS = ["*"]
+else:
+    ENFORCE_TOOLS = ["collab.*"]
 
 
 def set_enforce_tools(tools: list[str]) -> None:

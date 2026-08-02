@@ -9,6 +9,8 @@ of idle services and supports dynamic load/unload via reference counting.
 
 from __future__ import annotations
 
+import os
+
 import structlog
 
 from agora.mcp_proxy.client import create_client  # type: ignore[import-not-found]
@@ -257,10 +259,14 @@ class ProxyManager:
                     "serena",
                 }
                 # Local workspace services are trusted by default (self-hosted / source-controlled).
+                # Use WORKSPACE_ROOT env (no hard-coded absolute path).
+                _workspace_root = os.environ.get(
+                    "WORKSPACE_ROOT", "/Users/xiamingxing/Workspace"
+                )
                 _cmd = " ".join([svc.get("command", ""), *svc.get("args", [])])
                 _is_local_workspace = (
-                    "/Users/xiamingxing/Workspace/projects/" in _cmd
-                    or _cmd.startswith("/Users/xiamingxing/Workspace/")
+                    f"{_workspace_root}/projects/" in _cmd
+                    or _cmd.startswith(f"{_workspace_root}/")
                 )
                 if (
                     name not in core_services
