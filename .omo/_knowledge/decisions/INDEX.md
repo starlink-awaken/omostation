@@ -369,6 +369,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 - ADR-0300: Adaptive Digital 副官决策循环的 Workflow Mesh 边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh strategy | 0300-adaptive-digital-officer-decision-loop.md
 - ADR-0301: Workflow Mesh Watchdog 只写过期事件 — **ACCEPTED** | 2026-08-02 | Workflow Mesh P1.5 | 0301-workflow-mesh-watchdog.md
+- ADR-0302: Workflow Mesh watchdog 真实 cadence 与运行账本 — **ACCEPTED** | 2026-08-02 | Workflow Mesh P1.5 | 0302-workflow-mesh-watchdog-deployment.md
 
 ---
 

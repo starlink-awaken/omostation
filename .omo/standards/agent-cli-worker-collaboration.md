@@ -199,11 +199,16 @@ The lifecycle APIs are exposed as `omo worker mesh-ack`, `mesh-heartbeat`,
 `mesh-expire`, and `mesh-reclaim`. `omo worker mesh-watchdog` scans the same
 Workflow Mesh event log for expired live leases. It is read-only by default;
 only `--apply` may append `WorkerLeaseExpired`, and it never chooses a
-successor or appends `WorkerReclaimed`. All calls carry the same admission and
-StepRun context. A repeated call with the same idempotency key is successful
-only when its payload is identical; an owner mismatch, premature expiry, or
-reclaim before expiry is rejected. The OMO event log and projection are the
-source of truth; dispatch YAML remains the human-readable handoff artifact.
+successor or appends `WorkerReclaimed`. The governed `omo worker
+mesh-watchdog-run` adapter is the cadence-facing entry point: the existing
+`omo daemon` invokes it once per tick, while cron/launchd may invoke it once
+for an explicit run. A non-blocking process lock prevents overlap; every run
+persists a privacy-safe summary to `.omo/_log/`, and ledger or scan failure is
+reported as failed/degraded. All calls carry the same admission and StepRun
+context. A repeated call with the same idempotency key is successful only when
+its payload is identical; an owner mismatch, premature expiry, or reclaim
+before expiry is rejected. The OMO event log and projection are the source of
+truth; dispatch YAML remains the human-readable handoff artifact.
 
 This keeps reassignment auditable and reduces knowledge loss during recovery.
 
@@ -320,9 +325,11 @@ After the budget is exhausted, the worker must produce one of:
 
 ### 8.2 Progress Lease & Auto-Reap
 
-The durable lease contract is enforced by OMO Workflow Mesh. A scheduler or
-operator can run `omo worker mesh-watchdog --json` for a safe preview and
-`omo worker mesh-watchdog --apply --json` for the explicit expiry write:
+The durable lease contract is enforced by OMO Workflow Mesh. The existing OMO
+daemon owns cadence and can run the default dry-run scan on every tick. A
+scheduler or operator can run `omo worker mesh-watchdog-run --json` for a
+durable preview and `omo worker mesh-watchdog-run --apply --json` for the
+explicit expiry write:
 
 - **heartbeat/checkpoint**: every 5 minutes (via `mcp.tool: heartbeat` or material write).
 - **warning**: at 15 minutes.
@@ -331,7 +338,8 @@ operator can run `omo worker mesh-watchdog --json` for a safe preview and
 
 The watchdog is intentionally not a scheduler implementation or a reclaim
 policy. Existing cron/launchd/daemon infrastructure owns cadence; OMO owns
-the state transition and its evidence.
+the state transition and its evidence. The runner does not execute workers,
+choose successors, or create a second scheduler.
 
 ### 8.3 Stuck Worker Recovery
 
