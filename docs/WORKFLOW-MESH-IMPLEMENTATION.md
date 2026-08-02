@@ -304,9 +304,10 @@ WorkflowRun；人工备注只保留哈希，回执只包含安全候选摘要和
 
 Cockpit 已提供同一边界的正式消费入口：`GET /api/scene-cards` 返回候选投影，
 `POST /api/scene-cards/review` 返回 proposal-only 评审回执，页面入口为 `/scene-cards`。
-后端通过受限子进程调用上述纯脚本，评审人引用和备注走 stdin envelope，不进入命令行参数；
-两条 API 都不写 OMO、不创建 WorkflowRun、不激活外部连接。`approve` 仍以 `blocked` 回执
-结束，必须先补齐真实业务证据和完整 Scene Card，再进入既有 Agora admission 闸门。
+后端直接加载仓内的纯候选/评审模块，评审人引用和备注只在内存中生成摘要哈希，不进入 OMO
+或命令行参数；两条 API 都不写 OMO、不创建 WorkflowRun、不激活外部连接。`approve` 仍以
+`blocked` 回执结束，必须先补齐真实业务证据和完整 Scene Card，再进入既有 Agora admission
+闸门。接口不可用时返回显式 `unavailable`，不以空列表伪造正常状态。
 
 ### P1.5：派发与健康闭环
 
