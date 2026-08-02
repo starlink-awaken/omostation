@@ -176,6 +176,22 @@ OMO 独占写入 `.omo/_knowledge/workflow-mesh/external-scene-trial-feedback.js
 只追加评审事实。评审回执不会创建 WorkflowRun、改变 admission、写入业务结果证据或激活连接；真实消费者执行
 仍必须另行产生 external receipt 和 `outcome-feedback/v1`，才可申请晋升。
 
+### 4.1.8 外部场景晋升就绪度投影
+
+Phase 49 增加 `external-scene-trial-promotion-readiness/v1`，把试运行晋升前必须存在的事实收敛为一个可重放的
+只读投影。OMO `scene-trial-readiness` CLI 和 Cockpit `GET /api/external-resources/scene-trials/readiness` 只读取：
+
+1. 已持久化的 `external-scene-trial/v1`；
+2. 最新人工评审回执是否为 `continue`；
+3. 与同一 `scene_binding` 对应且处于可验证生命周期的真实 WorkflowRun；
+4. 该运行中的 `external-connection-receipt/v1` EvidenceRecorded；
+5. 同一运行和场景的正向 `outcome-feedback/v1` 消费反馈。
+
+输出状态固定为 `empty`、`blocked`、`ready` 或 `unavailable`，并列出可操作的阻断码。`ready` 只表示可以提交人工
+晋升提案，不表示已经 admission、激活或上线。投影固定声明 `activation=forbidden`、`workflow_run_creation=forbidden`、
+`admission_mutation=forbidden` 和 `external_side_effects=disabled`；任何缺少真实消费者证据的场景都不能被审阅动作或
+静态 catalog 预览伪装成正式 Workflow。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
