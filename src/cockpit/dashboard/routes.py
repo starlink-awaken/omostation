@@ -38,6 +38,9 @@ try:
 
     _HAS_L4_BRIDGE = True
 except ImportError:
+    cards_check = None  # type: ignore[assignment]
+    cards_status = None  # type: ignore[assignment]
+    workspace_context = None  # type: ignore[assignment]
     _HAS_L4_BRIDGE = False
 
 
@@ -202,21 +205,21 @@ async def api_omo_report():
 async def api_context():
     if not _HAS_L4_BRIDGE:
         return JSONResponse(content={"error": "L4 bridge not available"})
-    return JSONResponse(content=json.loads(workspace_context()))
+    return JSONResponse(content=json.loads(workspace_context()))  # type: ignore[union-attr]
 
 
 @router.get("/api/cards", dependencies=_AUTH_DEPS)
 async def api_cards():
     if not _HAS_L4_BRIDGE:
         return JSONResponse(content={"error": "L4 bridge not available"})
-    return JSONResponse(content=json.loads(cards_status()))
+    return JSONResponse(content=json.loads(cards_status()))  # type: ignore[union-attr]
 
 
 @router.get("/api/cards/check", dependencies=_AUTH_DEPS)
 async def api_cards_check():
     if not _HAS_L4_BRIDGE:
         return JSONResponse(content={"error": "L4 bridge not available"})
-    return JSONResponse(content=json.loads(cards_check()))
+    return JSONResponse(content=json.loads(cards_check()))  # type: ignore[union-attr]
 
 
 # ─── BOS 可观测 ────────────────────────────────────────────────
