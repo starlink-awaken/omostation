@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import datetime
+import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any
+
+import httpx
 
 try:
     from fastapi import APIRouter, Query, Request
@@ -33,6 +37,8 @@ else:
 
 
 router = APIRouter(prefix="/api/workflow-mesh", tags=["workflow-mesh"]) if APIRouter else None
+_AGORA_HTTP_ENDPOINT = os.environ.get("AGORA_HTTP_ENDPOINT", "http://127.0.0.1:7422")
+_logger = logging.getLogger(__name__)
 
 
 def _unavailable_projection(error_type: str, next_action: str) -> dict[str, Any]:
@@ -47,7 +53,65 @@ def _unavailable_projection(error_type: str, next_action: str) -> dict[str, Any]
     }
 
 
+async def _read_capability_health(required_capabilities: list[str]) -> dict[str, Any]:
+    """Read Agora's evidence projection without creating a connection or run."""
+    async with httpx.AsyncClient(timeout=2.0) as client:
+        response = await client.post(
+            f"{_AGORA_HTTP_ENDPOINT}/v1/tools/call",
+            json={
+                "name": "workflow_capability_health",
+                "arguments": {"required_capabilities": required_capabilities},
+            },
+        )
+    if response.status_code != 200:
+        raise RuntimeError(f"Agora capability health returned HTTP {response.status_code}")
+    payload = response.json()
+    if not isinstance(payload, dict) or payload.get("status") != "ok":
+        raise RuntimeError("Agora capability health response is invalid")
+    health = payload.get("result")
+    if not isinstance(health, dict) or health.get("source") != "agora.workflow_health":
+        raise RuntimeError("Agora capability health projection is missing provenance")
+    return health
+
+
 if router:
+
+    @router.get("/capability-health")
+    async def get_workflow_capability_health(
+        required_capabilities: list[str] = Query(default=[]),  # type: ignore[union-attr]
+    ) -> dict[str, Any]:
+        """Expose server-owned health evidence for the admission preview flow."""
+        capabilities = list(dict.fromkeys(item.strip() for item in required_capabilities if item.strip()))
+        if not capabilities:
+            return {
+                "ok": False,
+                "status": "invalid",
+                "error": "required_capabilities_required",
+                "message": "至少需要一个 required_capabilities。",
+            }
+        try:
+            health = await _read_capability_health(capabilities)
+        except (httpx.HTTPError, OSError, RuntimeError, ValueError, TypeError) as exc:
+            _logger.info("workflow_capability_health_unavailable: %s", type(exc).__name__)
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "capability_health_unavailable",
+                "message": "Agora capability health 不可用，已停止准入链路。",
+                "required_capabilities": capabilities,
+                "external_side_effects": "disabled",
+                "worker_launch": False,
+            }
+        return {
+            "ok": True,
+            "status": health.get("status", "unhealthy"),
+            "source": health["source"],
+            "observed_at": health.get("observed_at"),
+            "required_capabilities": capabilities,
+            "capability_health": health,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
 
     @router.get("/operations")
     async def get_workflow_mesh_operations(

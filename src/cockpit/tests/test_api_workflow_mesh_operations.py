@@ -6,6 +6,71 @@ from fastapi.testclient import TestClient
 from cockpit.web import api_workflow_mesh_operations
 
 
+def test_capability_health_api_projects_server_owned_agora_evidence(monkeypatch):
+    async def fake_health(required_capabilities):
+        assert required_capabilities == ["runtime", "ocr"]
+        return {
+            "status": "healthy",
+            "source": "agora.workflow_health",
+            "observed_at": "2026-08-03T00:00:00Z",
+            "required_capabilities": required_capabilities,
+            "capabilities": {},
+        }
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "_read_capability_health", fake_health)
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)
+
+    response = TestClient(app).get(
+        "/api/workflow-mesh/capability-health?required_capabilities=runtime&required_capabilities=ocr"
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "ok": True,
+        "status": "healthy",
+        "source": "agora.workflow_health",
+        "observed_at": "2026-08-03T00:00:00Z",
+        "required_capabilities": ["runtime", "ocr"],
+        "capability_health": {
+            "status": "healthy",
+            "source": "agora.workflow_health",
+            "observed_at": "2026-08-03T00:00:00Z",
+            "required_capabilities": ["runtime", "ocr"],
+            "capabilities": {},
+        },
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+def test_capability_health_api_fails_closed_when_agora_is_unavailable(monkeypatch):
+    async def fail_health(_required_capabilities):
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "_read_capability_health", fail_health)
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)
+
+    response = TestClient(app).get("/api/workflow-mesh/capability-health?required_capabilities=runtime")
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is False
+    assert response.json()["status"] == "unavailable"
+    assert response.json()["external_side_effects"] == "disabled"
+    assert response.json()["worker_launch"] is False
+
+
+def test_capability_health_api_rejects_empty_capabilities():
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)
+
+    response = TestClient(app).get("/api/workflow-mesh/capability-health")
+
+    assert response.status_code == 200
+    assert response.json()["error"] == "required_capabilities_required"
+
+
 def test_workflow_mesh_operations_api_is_read_only_projection(monkeypatch, tmp_path):
     projection = {
         "schema_version": "workflow-mesh-operations/v1",
