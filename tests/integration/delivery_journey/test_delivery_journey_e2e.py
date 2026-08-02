@@ -31,6 +31,8 @@ def test_e2e_fixture_four_states_transitions():
         assert data.status == "live"
         assert len(data.source) > 0
         assert len(data.stages) == 7
+        assert data.scene_binding["scene_id"] == "engineering-delivery"
+        assert data.scene_binding["journey_id"] == "intent-to-evidence"
 
         # Ensure all 7 stages exist
         for k in ["intent", "task", "run", "worktree", "verification", "pr", "evidence"]:
@@ -67,6 +69,17 @@ def test_e2e_fixture_unavailable_degradation():
     for k, stage in data.stages.items():
         assert stage["status"] == "unavailable"
         assert "Unavailable" in stage["title"] or "降级" in stage["title"]
+
+
+def test_e2e_fixture_exposes_next_action_and_mode():
+    """Product consumers get an explicit mode and next action, not only technical stages."""
+    pending = build_delivery_journey_projection(fixture_state="PENDING")
+    merged = build_delivery_journey_projection(fixture_state="MERGED")
+
+    assert pending.mode == "active"
+    assert pending.next_action
+    assert merged.mode == "completed"
+    assert "复盘" in merged.next_action
 
 
 def test_e2e_api_endpoint_four_states_integration():
