@@ -126,6 +126,7 @@ stateDiagram-v2
 - Phase 32 关闭 Agora 动态路由注册旁路：BOSRouter、POC seed、M1 热加载和 AGENTS.md 自动发现统一经过 admission；拒绝、provider 异常和非法结果不落入路由表，批量注册只统计实际接受项，并保留 credential-free 的拒绝摘要。该门禁仍独立于 ExternalConnectionCatalog 的 SceneCard 激活和 OMO Workflow admission，未激活真实 provider。
 - Phase 33 增加 `bin/ssot/external-activation-preflight.py`：把完整 Scene Card、外部资源只读目录和必需能力合并成 `external-activation-preflight/v1`，明确输出 `blocked`、`proposal_only` 或 `ready_for_admission_preview`。它始终 `activation=forbidden`，不调用 provider、不写 OMO、不创建 WorkflowRun；没有真实消费者和结果证据时，系统可以持续准备但不会误激活。
 - Phase 37 将外部资源风险投影接入 Cockpit 只读复核队列：`GET /api/external-resources/review-queue` 只读取 OMO 最新观测，按 `review_required` 展示安全变更字段、风险分类和风险码；没有观测时显示 `empty`，观测格式或 OMO 不可用时显示 `unavailable`。该队列是 `latest_observation_delta`，不是持久审批状态机，不触发实时发现、provider 调用、WorkflowRun 或激活。
+- Phase 38 将复核队列接入 Cockpit UI 的外部能力目录页，使用同一接口展示 `attention`、`clear`、`empty`、`unavailable` 四态，并在条目中展示资源、风险码和变化字段；UI 不提供批准、激活或写入按钮，避免把观察面误做成授权面。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
 ## 6. 分阶段路线
@@ -518,6 +519,26 @@ review queue -> 核查风险码/变化字段 -> 补齐或更新 Scene Card -> pr
 availability、reason code 波动继续作为 `operational_observation` 计数，不进入人工复核条目。
 产品契约和边界见 [`ADR-0330`](../.omo/_knowledge/decisions/0330-external-resource-review-queue.md)。
 
+### 7.3.6 Phase 38 Cockpit UI 复核队列消费面
+
+Phase 38 在已有“外部能力目录”页面中消费 `external-resource-review-queue/v1`，不新增独立导航或
+第二套复核工作台。UI 保留四种可观察状态：
+
+| 状态 | UI 表达 | 业务含义 |
+| --- | --- | --- |
+| `attention` | 需要人工复核 + 资源条目 | 当前最新观测包含 descriptor/准入相关变化 |
+| `clear` | 当前无待复核变化 | 当前观测只有运营观察或没有变化 |
+| `empty` | 尚无观测 | 还没有受治理的 OMO 外部资源观察 |
+| `unavailable` | 独立错误和重试 | 观测源不可用或契约损坏，不回退动态发现 |
+
+条目只展示资源 ID、变化类型、`manual_review`、风险码和变化字段；前后快照仍由后端白名单裁剪，
+UI 不显示原文、凭据或未知字段。页面明确展示 `latest_observation_delta` 和
+`activation=forbidden`，不提供批准、激活、派发或修改生命周期的操作。
+
+这样形成“观察 -> 人工判断 -> Scene Card/preflight -> OMO admission”的连续产品路径：UI 让人
+看见风险，但不会把看见风险误判为已完成复核，更不会把复核结果直接写成准入事实。契约见
+[`ADR-0331`](../.omo/_knowledge/decisions/0331-external-resource-review-queue-ui.md)。
+
 ### 7.3.1 Phase 25 真实能力健康证据闭环
 
 Phase 25 将准入所需的 `capability_health` 从调用方手工输入收敛为服务端可追溯证据：Cockpit
@@ -557,6 +578,9 @@ cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyam
 uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_external_resource_catalog.py tests/test_external_activation_preflight.py
 cd projects/agora && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connections.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_external_resources.py
+cd projects/cockpit-ui && bun run vitest run src/components/__tests__/ExternalResourceCatalogView.test.tsx
+cd projects/cockpit-ui && bun run build
+cd projects/cockpit-ui && bunx eslint src/api/endpoints.ts src/api/hooks.ts src/components/ExternalResourceCatalogView.tsx src/components/__tests__/ExternalResourceCatalogView.test.tsx
 cd projects/agora && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connections.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_omo_external_resources.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_knowledge_actions.py src/cockpit/tests/test_tasks_api.py
