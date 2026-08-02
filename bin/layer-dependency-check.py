@@ -186,6 +186,27 @@ class LayerDependencyChecker:
 
         return False
     
+    NON_PROD_DIRS = {"scripts", "tests", "bin", ".scratch-archive", "examples"}
+
+    def _resolve_file_project(self, file_path: Path, project_path: Path) -> str:
+        """Resolve the actual project for a file, detecting nested project dirs.
+        
+        Handles deep nesting: projects/runtime/projects/runtime/projects/metaos/foo.py → metaos
+        Skips non-production directories (scripts, tests, bin, etc.).
+        """
+        rel = file_path.relative_to(project_path)
+        parts = rel.parts
+        # Skip non-production directories (check all path parts)
+        if any(p in self.NON_PROD_DIRS for p in parts):
+            return "__skip__"
+        # Walk path parts to find the deepest matching project name
+        # e.g. projects/runtime/projects/agora/foo.py → agora
+        # e.g. projects/runtime/projects/runtime/projects/metaos/foo.py → metaos
+        for part in reversed(parts):
+            if part in self.project_dirs and part != project_path.name:
+                return part
+        return project_path.name
+
     def check_project(self, project_path: Path) -> List[DependencyViolation]:
         """检查单个项目的依赖"""
         project_name = project_path.name
@@ -205,6 +226,13 @@ class LayerDependencyChecker:
             if ".git" in py_file.parts:
                 continue
             if "__pycache__" in py_file.parts:
+                continue
+            
+            # Detect nested project directories and skip (they're checked separately)
+            actual_project = self._resolve_file_project(py_file, project_path)
+            if actual_project == "__skip__":
+                continue
+            if actual_project != project_name:
                 continue
             
             imports = find_python_imports(py_file)
