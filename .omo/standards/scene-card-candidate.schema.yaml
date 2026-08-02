@@ -1,0 +1,67 @@
+---
+title: Scene Card Candidate Projection Schema
+status: active
+type: standard
+owner: architecture-governance
+last-reviewed: 2026-08-02
+related:
+  - ../../docs/scene-card-candidate-seeds.yaml
+  - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
+  - ./external-connection-fabric.md
+---
+schema: scene-card-candidate/v1
+purpose: Discover and review possible business scenes without activating runtime capability.
+input_sources:
+  - governed scenario contracts under .omo/_truth/scenarios
+  - explicitly curated strategy seed catalog
+output:
+  mode: candidate_only
+  activation: forbidden
+  raw_content_policy: never_read_or_export
+  required_fields:
+    - candidate_id
+    - title
+    - discovery_source
+    - discovery_refs
+    - proposed_scene_id
+    - proposed_journey_id
+    - outcome_metric_hint
+    - capability_refs
+    - safe_observations
+    - missing_activation_fields
+  empty_until_business_confirmation:
+    - activation_evidence_refs
+    - sample_refs
+    - demand_evidence_refs
+    - opportunity_window
+activation_boundary:
+  required_scene_card_fields:
+    - scene_id
+    - journey_id
+    - goal
+    - trigger
+    - input_contract
+    - result_contract
+    - outcome_metric
+    - consumer
+    - approver
+    - owner
+    - failure_cost
+    - data_classification
+    - data_scope
+    - operator
+    - permission_ref
+    - rollback_plan
+    - sample_refs
+    - demand_evidence_or_opportunity_window
+  evidence_policy: References only; use evidence:// or vault://redacted/ and never business raw content.
+  activation_owner: Business owner and OMO admission contract
+  candidate_discovery_must_not:
+    - call an external provider
+    - read private source content
+    - persist credentials or raw samples
+    - mutate OMO runtime state
+    - create or dispatch a WorkflowRun
+  next_states:
+    - proposal_only
+    - sandbox
