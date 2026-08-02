@@ -188,6 +188,9 @@ def test_previous_snapshot_produces_safe_change_report() -> None:
     assert [item["id"] for item in diff["changes"]] == ["source:new", "source:test"]
     assert diff["summary"]["changed_count"] == 1
     assert diff["summary"]["error_change_count"] == 1
+    assert diff["summary"]["review_required"] is True
+    assert diff["summary"]["review_required_count"] == 1
+    assert diff["summary"]["operational_observation_count"] == 1
 
 
 def test_observe_routes_safe_catalog_through_omo_broker(monkeypatch) -> None:
