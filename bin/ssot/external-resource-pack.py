@@ -137,6 +137,60 @@ def _safe_descriptor(parsed: Any) -> dict[str, Any]:
     }
 
 
+def _catalog_preview(
+    pack: Mapping[str, Any], parsed: Any, status: str
+) -> dict[str, Any]:
+    """Build a non-observed catalog preview from the validated descriptor.
+
+    A manifest is not a discovery result. Keep health and availability explicit
+    so consumers cannot mistake descriptor claims for a provider probe.
+    """
+    descriptor = _safe_descriptor(parsed)
+    resource = {
+        "id": descriptor["id"],
+        "kind": descriptor["kind"],
+        "provider": descriptor["provider"],
+        "protocol": descriptor["protocol"],
+        "capabilities": descriptor["capabilities"],
+        "data_classification": descriptor["data_classification"],
+        "provenance": descriptor["provenance"],
+        "lifecycle": descriptor["lifecycle"],
+        "owner": descriptor["owner"],
+        "version": descriptor["version"],
+        "permission_ref": descriptor["permission_ref"],
+        "mode": descriptor["mode"],
+        "expires_at": descriptor["expires_at"],
+        "review_at": descriptor["review_at"],
+        "rollback_plan": descriptor["rollback_plan"],
+        "availability": "unobserved",
+        "reason_codes": ["pack_descriptor_not_observed"],
+        "health": {
+            "status": "unobserved",
+            "observed_at": None,
+            "latency_ms": None,
+            "source": "external-resource-pack-manifest",
+        },
+    }
+    return {
+        "schema": "external-resource-pack-catalog-preview/v1",
+        "mode": "read_only_pack_preview",
+        "activation": "forbidden",
+        "raw_content_policy": "never_read_or_export",
+        "status": status,
+        "source": "external-resource-pack-manifest",
+        "pack": {
+            "pack_id": str(pack.get("pack_id") or "").strip() or None,
+            "pack_version": str(pack.get("pack_version") or "").strip() or None,
+        },
+        "resource": resource,
+        "next_action": (
+            "通过只读目录发现和健康探针后再评估可用性。"
+            if status == "ready_for_catalog_preview"
+            else "进入 proposal/evaluation；不得作为生产路由候选。"
+        ),
+    }
+
+
 def check_external_resource_pack(root: Path, pack: Mapping[str, Any]) -> dict[str, Any]:
     """Return a deterministic, activation-forbidden conformance projection."""
     if not isinstance(pack, Mapping):
@@ -204,8 +258,10 @@ def check_external_resource_pack(root: Path, pack: Mapping[str, Any]) -> dict[st
         reasons.append("activation_must_be_forbidden")
 
     status = "blocked"
+    catalog_preview = None
     if not reasons and parsed is not None:
         status = "proposal_only" if parsed.mode == "proposal_only" else "ready_for_catalog_preview"
+        catalog_preview = _catalog_preview(pack, parsed, status)
     return {
         "schema": "external-resource-pack-check/v1",
         "mode": "read_only_conformance",
@@ -218,6 +274,7 @@ def check_external_resource_pack(root: Path, pack: Mapping[str, Any]) -> dict[st
             "provider": str(pack.get("provider") or "").strip() or None,
         },
         "descriptor": safe_descriptor,
+        "catalog_preview": catalog_preview,
         "extension": {
             "entry_point_group": extension.get("entry_point_group"),
             "entry_point": str(extension.get("entry_point") or "").strip() or None,
