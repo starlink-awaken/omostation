@@ -32,6 +32,10 @@ from omo.omo_external_scene_trial import (
     ExternalSceneTrialError,
     record_external_scene_trial,
 )
+from omo.omo_external_scene_trial_feedback import (
+    ExternalSceneTrialFeedbackError,
+    record_external_scene_trial_feedback,
+)
 from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic
 from omo.omo_paths import find_omo_dir
 from omo.workflow_eval import build_external_resource_selection_dataset
@@ -275,6 +279,10 @@ def main(argv: list[str] | None = None) -> int:
         "record-scene-trial", help="persist one proposal-only external scene trial"
     )
     record_scene_trial.add_argument("--stdin", action="store_true")
+    record_scene_trial_feedback = sub.add_parser(
+        "record-scene-trial-feedback", help="persist one proposal-only scene trial review"
+    )
+    record_scene_trial_feedback.add_argument("--stdin", action="store_true")
     selection_eval = sub.add_parser(
         "selection-eval", help="build the event-derived selection evaluation dataset"
     )
@@ -349,6 +357,17 @@ def main(argv: list[str] | None = None) -> int:
             result = record_external_scene_trial(omo_dir, _payload_from_stdin())
         except (ExternalSceneTrialError, OSError, ValueError) as exc:
             print(f"external-resources record-scene-trial: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    if args.command == "record-scene-trial-feedback":
+        if not args.stdin:
+            print("external-resources record-scene-trial-feedback requires --stdin", file=sys.stderr)
+            return 2
+        try:
+            result = record_external_scene_trial_feedback(omo_dir, _payload_from_stdin())
+        except (ExternalSceneTrialFeedbackError, OSError, ValueError) as exc:
+            print(f"external-resources record-scene-trial-feedback: {exc}", file=sys.stderr)
             return 2
         print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
