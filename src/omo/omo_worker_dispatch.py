@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
+import json
 import subprocess
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from uuid import uuid4
 
 from .omo_ingress import archive_done_task, create_audit_report, yield_task_to_planned
 from .omo_io import write_text_atomic
@@ -20,6 +24,127 @@ from .omo_worker_core import (
     _worker_command,
     _write_yaml,
 )
+
+
+def _bridge_dispatch_to_mesh(
+    root: Path,
+    omo: Path,
+    *,
+    dispatch_id: str,
+    task_id: str,
+    worker_id: str,
+    workflow_packet: dict[str, object] | None,
+    now: str,
+) -> None:
+    """Emit Workflow Mesh events for a worker dispatch.
+
+    When a workflow_packet is provided (Mesh-aware path), emit StepDispatched
+    using the packet's admission context. When no packet (legacy path), create
+    a minimal admission grant and emit the full chain so the dispatch is
+    visible in Mesh.
+    """
+    try:
+        from .workflow_mesh import WorkflowMeshStore, new_workflow_event
+
+        store = WorkflowMeshStore(omo)
+
+        if workflow_packet:
+            run_id = str(workflow_packet.get("workflow_run_id", dispatch_id))
+            trace_id = str(workflow_packet.get("trace_id", run_id))
+            grant = workflow_packet.get("admission", {})
+            admission_id = str(grant.get("admission_id", ""))
+            step_run_ids = grant.get("step_run_ids", [f"{run_id}:execute"])
+            step_run_id = str(step_run_ids[0]) if step_run_ids else f"{run_id}:execute"
+
+            store.append(
+                new_workflow_event(
+                    "StepDispatched",
+                    run_id,
+                    trace_id=trace_id,
+                    producer="omo.omo_worker_dispatch",
+                    idempotency_key=f"{run_id}:step-dispatched:{dispatch_id}",
+                    payload={
+                        "dispatch_id": dispatch_id,
+                        "worker_id": worker_id,
+                        "step_run_id": step_run_id,
+                        "step_name": "execute",
+                        "admission_id": admission_id,
+                    },
+                )
+            )
+        else:
+            run_id = f"dispatch-{dispatch_id}"
+            trace_id = run_id
+            step_run_id = f"{run_id}:execute"
+            admission_id = f"legacy-{uuid4().hex[:12]}"
+            issued_at = now
+            expires_at = (
+                datetime.fromisoformat(now) + timedelta(seconds=1200)
+            ).isoformat()
+
+            grant = {
+                "admission_id": admission_id,
+                "status": "admitted",
+                "workflow_run_id": run_id,
+                "trace_id": trace_id,
+                "backend": "legacy-dispatch",
+                "step_run_ids": [step_run_id],
+                "capabilities": [],
+                "policy_digest": hashlib.sha256(
+                    json.dumps(
+                        {"task_id": task_id, "worker_id": worker_id},
+                        sort_keys=True,
+                    ).encode()
+                ).hexdigest(),
+                "issued_at": issued_at,
+                "expires_at": expires_at,
+            }
+            grant["proof"] = hashlib.sha256(
+                json.dumps(grant, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+
+            store.append(
+                new_workflow_event(
+                    "WorkflowRequested",
+                    run_id,
+                    trace_id=trace_id,
+                    producer="omo.omo_worker_dispatch",
+                    idempotency_key=f"{run_id}:requested",
+                    payload={
+                        "task_id": task_id,
+                        "backend": "legacy-dispatch",
+                        "required_capabilities": [],
+                    },
+                )
+            )
+            store.append(
+                new_workflow_event(
+                    "WorkflowAdmitted",
+                    run_id,
+                    trace_id=trace_id,
+                    producer="omo.omo_worker_dispatch",
+                    idempotency_key=f"{run_id}:admitted",
+                    payload={"admission": grant, **grant, "task_id": task_id},
+                )
+            )
+            store.append(
+                new_workflow_event(
+                    "StepDispatched",
+                    run_id,
+                    trace_id=trace_id,
+                    producer="omo.omo_worker_dispatch",
+                    idempotency_key=f"{run_id}:step-dispatched:{dispatch_id}",
+                    payload={
+                        "dispatch_id": dispatch_id,
+                        "worker_id": worker_id,
+                        "step_run_id": step_run_id,
+                        "step_name": "execute",
+                        "admission_id": admission_id,
+                    },
+                )
+            )
+    except Exception:
+        pass
 
 
 def dispatch_task(
@@ -266,6 +391,16 @@ def dispatch_task(
         [str(envelope_path), str(prompt_path), str(checkpoint_path)],
     )
     _write_yaml(task_file, task)
+
+    _bridge_dispatch_to_mesh(
+        root,
+        omo,
+        dispatch_id=dispatch_id,
+        task_id=task_id,
+        worker_id=worker_id,
+        workflow_packet=workflow_packet,
+        now=dispatch_now,
+    )
 
     if launch:
         prompt_text = (root / prompt_path).read_text(encoding="utf-8")

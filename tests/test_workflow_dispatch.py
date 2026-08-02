@@ -158,3 +158,96 @@ def test_admit_workflow_rejects_budget_overrun(tmp_path: Path) -> None:
             requested_budget=2,
             remaining_budget=1,
         )
+
+
+def test_legacy_dispatch_without_packet_emits_mesh_events(tmp_path: Path) -> None:
+    """Phase 2: dispatch_task without workflow_packet should emit Mesh events."""
+    _task(tmp_path)
+    from omo.omo_worker_dispatch import dispatch_task
+    from omo.workflow_mesh import WorkflowMeshStore
+
+    result = dispatch_task(
+        tmp_path,
+        task_id="TASK-MESH-1",
+        worker_id="worker-a",
+        allowed_write_paths=["docs/"],
+        launch=False,
+        transport="cli_prompt",
+        now="2026-08-02T10:00:00+00:00",
+    )
+
+    store = WorkflowMeshStore(tmp_path / ".omo")
+    events = store.events()
+    event_types = [e["event_type"] for e in events]
+
+    assert "WorkflowRequested" in event_types
+    assert "WorkflowAdmitted" in event_types
+    assert "StepDispatched" in event_types
+
+    snapshot = store.snapshot(f"dispatch-{result['dispatch_id']}")
+    assert snapshot["state"] == "dispatched"
+    assert snapshot["worker"]["worker_id"] == "worker-a"
+    assert snapshot["worker"]["dispatch_id"] == result["dispatch_id"]
+
+
+def test_dispatch_with_packet_emits_step_dispatched(tmp_path: Path) -> None:
+    """Phase 2: dispatch_task with workflow_packet should emit StepDispatched only."""
+    _task(tmp_path)
+    from omo.omo_worker_dispatch import dispatch_task
+    from omo.workflow_mesh import WorkflowMeshStore
+
+    packet = admit_workflow(
+        tmp_path,
+        task_id="TASK-MESH-1",
+        backend="runtime",
+        required_capabilities=["workflow.execute", "runtime"],
+        capability_health=_health(),
+        workflow_run_id="run-packet-test",
+        now="2026-08-02T10:00:00+00:00",
+    )
+
+    dispatch_task(
+        tmp_path,
+        task_id="TASK-MESH-1",
+        worker_id="worker-a",
+        allowed_write_paths=["docs/"],
+        launch=False,
+        transport="cli_prompt",
+        workflow_packet=packet,
+        now="2026-08-02T10:00:00+00:00",
+    )
+
+    store = WorkflowMeshStore(tmp_path / ".omo")
+    events = store.events()
+    step_dispatched = [e for e in events if e["event_type"] == "StepDispatched"]
+
+    assert len(step_dispatched) == 1, "Should emit exactly one StepDispatched"
+    assert step_dispatched[0]["workflow_run_id"] == "run-packet-test"
+    assert step_dispatched[0]["payload"]["worker_id"] == "worker-a"
+
+    snapshot = store.snapshot("run-packet-test")
+    assert snapshot["state"] == "dispatched"
+
+
+def test_dispatch_admitted_workflow_no_double_step_dispatched(tmp_path: Path) -> None:
+    """Phase 2: dispatch_admitted_workflow should not double-emit StepDispatched."""
+    _task(tmp_path)
+    from omo.workflow_mesh import WorkflowMeshStore
+
+    dispatch_admitted_workflow(
+        tmp_path,
+        task_id="TASK-MESH-1",
+        worker_id="worker-a",
+        allowed_write_paths=["docs/"],
+        backend="runtime",
+        required_capabilities=["workflow.execute", "runtime"],
+        capability_health=_health(),
+        workflow_run_id="run-no-double",
+        now="2026-08-02T10:00:00+00:00",
+    )
+
+    store = WorkflowMeshStore(tmp_path / ".omo")
+    events = store.events()
+    step_dispatched = [e for e in events if e["event_type"] == "StepDispatched"]
+
+    assert len(step_dispatched) == 1, "Should not double-emit StepDispatched"
