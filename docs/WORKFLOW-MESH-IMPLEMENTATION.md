@@ -238,6 +238,13 @@ execution record -> complete_task -> EvidenceRecorded -> WorkflowVerified -> Wor
 
 目录差异是调用方驱动的纯投影：上一份快照由调度器、审计任务或人类操作方保存和传入，根仓命令只读取它并输出变化；需要持久化时只能通过 OMO 的 `external-resources observe` broker 写入观察日志，不写入 provider 本地状态。这样可以先获得动态扩展的可观察性，等真实业务场景出现后，再由 Scene Card 和 OMO admission 接管业务执行证据。
 
+Phase 27 又补齐了观察到选择之间的只读评估层：Agora 的 `evaluate_candidates()` 对目录中的全部资源
+生成 `external-resource-evaluation/v1`，明确记录候选、淘汰原因、排序因子、策略摘要和安全边界；
+`POST /api/external-resources/evaluate` 与 Cockpit UI 将其作为人工评估入口。它复用 `route()` 的同一套
+决策算法，但不调用 provider、不写 OMO、不创建 WorkflowRun，`activation` 固定为 `forbidden`。因此
+系统现在能回答“为什么选它、为什么排除其他候选”，但还没有把排序结果当作业务质量标签；真实标签、
+调用 receipt 和结果指标仍需在下一阶段的场景评测闭环中形成。
+
 ### 6.3.1 J2 task -> WorkflowRequested 晋升
 
 Phase 23 将知识到行动漏斗从 `task_created` 推进到一个可审计、但尚未执行的 Workflow Mesh 请求：
