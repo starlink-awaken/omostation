@@ -148,6 +148,8 @@ dynamic_discovery:
     change_policy: record_diff_and_re_evaluate_admission
     stale_policy: degrade_then_unavailable
     provider_isolation: required
+    projection_contract: external-resource-catalog/v1
+    human_catalog_api: /api/external-resources
   health_contract:
     required_probe_fields: [observed_at, status, latency_ms, source]
     expired_health_policy: unavailable
