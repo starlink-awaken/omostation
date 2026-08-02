@@ -161,6 +161,101 @@ def test_scene_cards_intake_rejects_invalid_payload(monkeypatch):
     assert response.json()["persistence"] == "none"
 
 
+def test_scene_cards_preflight_uses_latest_omo_catalog(monkeypatch):
+    scene_card = {"schema": "scene-card/v1", "scene_id": "research-brief"}
+    intake = {
+        "status": "proposal_only",
+        "missing_fields": [],
+        "scene_card": {
+            "scene_id": "research-brief",
+            "journey_id": "question-to-brief",
+            "outcome_metric": "verified_brief_acceptance",
+            "sample_refs": ["sample://1", "sample://2", "sample://3"],
+            "demand_evidence_refs": ["evidence://demand"],
+            "activation_evidence_refs": ["evidence://approval"],
+            "required_capabilities": ["source.research"],
+        },
+    }
+    catalog = {"schema": "external-resource-catalog/v1", "observed_at": "now"}
+    calls: list[dict] = []
+
+    def fake_intake(card):
+        calls.append({"kind": "intake", "card": card})
+        return intake
+
+    def fake_preflight(card, received_catalog):
+        calls.append({"kind": "preflight", "card": card, "catalog": received_catalog})
+        return {
+            "schema": "external-activation-preflight/v1",
+            "status": "proposal_only",
+            "activation": "forbidden",
+            "next_action": "replace_proposal_only_capabilities_before_admission",
+        }
+
+    monkeypatch.setattr(api_scene_cards, "build_intake", fake_intake)
+    monkeypatch.setattr(api_scene_cards, "build_preflight", fake_preflight)
+    monkeypatch.setattr(api_scene_cards, "_latest_catalog", lambda: catalog)
+
+    response = TestClient(_app()).post("/api/scene-cards/preflight", json=scene_card)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert body["status"] == "proposal_only"
+    assert body["catalog_source"] == "omo.external_resource_observation"
+    assert body["activation"] == "forbidden"
+    assert body["persistence"] == "none"
+    assert calls == [
+        {"kind": "intake", "card": scene_card},
+        {"kind": "preflight", "card": scene_card, "catalog": catalog},
+    ]
+
+
+def test_scene_cards_preflight_blocks_without_omo_catalog(monkeypatch):
+    intake = {
+        "status": "proposal_only",
+        "missing_fields": [],
+        "scene_card": {
+            "scene_id": "research-brief",
+            "journey_id": "question-to-brief",
+            "outcome_metric": "verified_brief_acceptance",
+            "sample_refs": [],
+            "demand_evidence_refs": [],
+            "activation_evidence_refs": [],
+            "required_capabilities": [],
+        },
+    }
+    monkeypatch.setattr(api_scene_cards, "build_intake", lambda _card: intake)
+    monkeypatch.setattr(api_scene_cards, "_latest_catalog", lambda: None)
+
+    response = TestClient(_app()).post(
+        "/api/scene-cards/preflight", json={"scene_card": {"schema": "scene-card/v1"}}
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["status"] == "blocked"
+    assert body["projection"]["missing_fields"] == ["catalog_observation"]
+    assert body["projection"]["activation"] == "forbidden"
+
+
+def test_scene_cards_preflight_rejects_forbidden_input(monkeypatch):
+    monkeypatch.setattr(
+        api_scene_cards,
+        "build_intake",
+        lambda _card: (_ for _ in ()).throw(ValueError("scene card contains forbidden field: raw_content")),
+    )
+
+    response = TestClient(_app()).post(
+        "/api/scene-cards/preflight", json={"scene_card": {"raw_content": "secret"}}
+    )
+
+    assert response.json()["ok"] is False
+    assert response.json()["status"] == "invalid"
+    assert response.json()["activation"] == "forbidden"
+
+
 def test_scene_cards_degrades_when_candidate_discovery_is_unavailable(monkeypatch, tmp_path):
     monkeypatch.setattr(api_scene_cards, "_REPO_ROOT", tmp_path)
 

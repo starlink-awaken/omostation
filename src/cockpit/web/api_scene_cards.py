@@ -52,6 +52,25 @@ except Exception as exc:
 else:
     _INTAKE_IMPORT_ERROR = None
 
+try:
+    _preflight_module = _load_script(
+        "cockpit_external_activation_preflight", "external-activation-preflight.py"
+    )
+    build_preflight = _preflight_module.build_preflight
+except Exception as exc:
+    build_preflight = None  # type: ignore[assignment]
+    _PREFLIGHT_IMPORT_ERROR: Exception | None = exc
+else:
+    _PREFLIGHT_IMPORT_ERROR = None
+
+try:
+    from cockpit.web.api_external_resources import _latest_catalog
+except Exception as exc:
+    _latest_catalog = None  # type: ignore[assignment]
+    _CATALOG_IMPORT_ERROR: Exception | None = exc
+else:
+    _CATALOG_IMPORT_ERROR = None
+
 
 router = APIRouter(prefix="/api/scene-cards", tags=["scene-cards"])
 
@@ -128,6 +147,116 @@ async def intake_scene_card(request: Request) -> dict[str, Any]:
         "activation": "forbidden",
         "activation_attempted": False,
         "persistence": "none",
+    }
+
+
+def _catalog_missing_projection(
+    intake: dict[str, Any], *, status: str = "blocked", error: str | None = None
+) -> dict[str, Any]:
+    safe_scene = intake.get("scene_card", {})
+    scene = {
+        "scene_id": str(safe_scene.get("scene_id") or ""),
+        "journey_id": str(safe_scene.get("journey_id") or ""),
+        "outcome_metric": str(safe_scene.get("outcome_metric") or ""),
+    }
+    missing = sorted(
+        {
+            *[str(field) for field in intake.get("missing_fields", [])],
+            "catalog_observation",
+        }
+    )
+    projection: dict[str, Any] = {
+        "schema": "external-activation-preflight/v1",
+        "mode": "read_only_preflight",
+        "activation": "forbidden",
+        "scene": scene,
+        "status": status,
+        "next_action": "run_governed_external_resource_observation",
+        "missing_fields": missing,
+        "scene_card": {
+            "missing_fields": [str(field) for field in intake.get("missing_fields", [])],
+            "sample_ref_count": len(safe_scene.get("sample_refs", [])),
+            "demand_evidence_ref_count": len(safe_scene.get("demand_evidence_refs", [])),
+            "activation_evidence_ref_count": len(safe_scene.get("activation_evidence_refs", [])),
+            "required_capabilities": [
+                str(capability)
+                for capability in safe_scene.get("required_capabilities", [])
+            ],
+        },
+        "capability_checks": [],
+        "catalog_freshness": {
+            "status": "unknown",
+            "observed_at": None,
+            "age_seconds": None,
+            "ttl_seconds": None,
+            "reason_codes": ["missing_catalog_observation"],
+        },
+        "catalog_observed_at": None,
+        "policy_digest": None,
+        "side_effects": {
+            "provider_called": False,
+            "omo_written": False,
+            "workflow_created": False,
+        },
+    }
+    if error:
+        projection["error"] = error
+        projection["next_action"] = "检查 OMO 外部资源观测存储后重试。"
+    return projection
+
+
+@router.post("/preflight")
+async def preflight_scene_card(request: Request) -> dict[str, Any]:
+    """Run a read-only Scene Card preflight against the latest OMO catalog."""
+    if build_intake is None or build_preflight is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "scene_card_preflight_unavailable",
+            "activation": "forbidden",
+            "persistence": "none",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    try:
+        payload = await request.json()
+        if not isinstance(payload, dict):
+            raise ValueError("preflight payload must be an object")
+        scene_card = payload.get("scene_card", payload)
+        if not isinstance(scene_card, dict):
+            raise ValueError("scene_card must be an object")
+        intake = build_intake(scene_card)
+        if _latest_catalog is None:
+            projection = _catalog_missing_projection(
+                intake, status="unavailable", error="external_catalog_unavailable"
+            )
+        else:
+            catalog = _latest_catalog()
+            if catalog is None:
+                projection = _catalog_missing_projection(intake)
+            else:
+                projection = build_preflight(scene_card, catalog)
+                projection["intake_status"] = intake["status"]
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {
+            "ok": False,
+            "status": "invalid",
+            "error": "scene_card_preflight_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "persistence": "none",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    return {
+        "ok": True,
+        "status": projection["status"],
+        "projection": projection,
+        "catalog_source": "omo.external_resource_observation",
+        "activation": "forbidden",
+        "persistence": "none",
+        "external_side_effects": "disabled",
+        "worker_launch": False,
     }
 
 
