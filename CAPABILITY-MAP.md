@@ -1,6 +1,6 @@
 # Cockpit 能力地图
 
-> 自动生成于 2026-08-02T11:40:31Z | 版本 1.0.0
+> 自动生成于 2026-08-02T12:21:10Z | 版本 1.0.0
 > 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑
 > 生成器: `bin/cockpit/gen-help-docs.py`
 
@@ -9,8 +9,8 @@
 | 通道 | 数量 |
 |------|------|
 | CLI 命令 (含子命令) | 103 |
-| MCP 工具 | 541 |
-| MCP 服务器 | 24 |
+| MCP 工具 | 385 |
+| MCP 服务器 | 25 |
 | BOS 服务 | 188 |
 | BOS 域 | 16 |
 
@@ -18,30 +18,31 @@
 
 | 服务器 | 层 | 工具数 | 传输 | 文件 |
 |--------|-----|--------|------|------|
-| `agora` | I0 | 86 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `gbrain` | L2 | 75 | stdio | `projects/gbrain/src/core/operations/exports.ts` |
-| `l4-kernel` | L4 | 51 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
+| `l4-kernel` | L4 | 45 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
-| `ecos` | L0 | 28 | stdio | `projects/ecos/src/ecos/mcp_server.py` |
+| `agora` | I0 | 31 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
+| `cockpit-mcp` | L3 | 30 | stdio | `projects/cockpit/src/cockpit/scripts/cockpit_mcp.py` |
 | `model-driven` | M0 | 28 | stdio | `projects/model-driven/src/model_driven/mcp_server.py` |
 | `ecos-integration` | L0 | 26 | stdio | `projects/ecos/src/ecos/services/integration/mcp_server.py` |
-| `codeanalyze` | L2 | 25 | stdio | `projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py` |
 | `metaos` | L2 | 24 | stdio | `projects/metaos/src/metaos/mcp_server.py` |
-| `omo` | L2 | 19 | stdio | `projects/omo/src/omo/mcp_server.py` |
-| `kronos` | L2 | 16 | stdio | `projects/kairon/packages/kronos/src/kronos/mcp_server.py` |
 | `aetherforge` | X | 10 | stdio | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
-| `iris` | L2 | 8 | stdio | `projects/kairon/packages/iris/src/iris/mcp_server.py` |
-| `sophia` | L2 | 8 | stdio | `projects/kairon/packages/sophia/src/sophia/server/mcp_server.py` |
-| `minerva` | L2 | 8 | stdio | `projects/kairon/packages/minerva/src/minerva/mcp_server/server.py` |
-| `forge` | L2 | 7 | stdio | `projects/kairon/packages/forge/src/mcp_server.py` |
+| `kronos` | L2 | 7 | stdio | `projects/kairon/packages/kronos/src/kronos/mcp_server.py` |
 | `ontoderive` | L2 | 7 | stdio | `projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py` |
-| `family-hub` | X | 6 | stdio | `projects/family-hub/mcp_server.py` |
 | `toolforge` | L2 | 5 | stdio | `projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py` |
-| `c2g` | X | 3 | stdio | `projects/c2g/src/c2g/mcp_server.py` |
-| `model-driven-fastmcp` | M0 | 2 | stdio | `projects/model-driven/src/model_driven/fastmcp_server.py` |
-| `agent-runtime` | L3 | 2 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
+| `omo` | L2 | 0 | stdio | `projects/omo/src/omo/mcp_server.py` |
+| `ecos` | L0 | 0 | stdio | `projects/ecos/src/ecos/mcp_server.py` |
+| `model-driven-fastmcp` | M0 | 0 | stdio | `projects/model-driven/src/model_driven/fastmcp_server.py` |
+| `c2g` | X | 0 | stdio | `projects/c2g/src/c2g/mcp_server.py` |
+| `family-hub` | X | 0 | stdio | `projects/family-hub/mcp_server.py` |
+| `agent-runtime` | L3 | 0 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
+| `iris` | L2 | 0 | stdio | `projects/kairon/packages/iris/src/iris/mcp_server.py` |
+| `sophia` | L2 | 0 | stdio | `projects/kairon/packages/sophia/src/sophia/server/mcp_server.py` |
+| `minerva` | L2 | 0 | stdio | `projects/kairon/packages/minerva/src/minerva/mcp_server/server.py` |
+| `codeanalyze` | L2 | 0 | stdio | `projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py` |
+| `forge` | L2 | 0 | stdio | `projects/kairon/packages/forge/src/mcp_server.py` |
 
 ## BOS 服务域分布
 
@@ -175,4 +176,4 @@
 | `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
 
 ---
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T11:40:31Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T12:21:10Z 生成*
