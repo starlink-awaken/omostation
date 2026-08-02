@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import sys
 from pathlib import Path
@@ -109,3 +110,28 @@ def test_cli_reads_stdin_and_does_not_write(tmp_path: Path, monkeypatch, capsys)
     after = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
     assert receipt["status"] == "pending"
     assert after == before
+
+
+def test_cli_reads_private_review_envelope_from_stdin(monkeypatch, capsys) -> None:
+    payload = _payload()
+    payload["_review"] = {
+        "reviewer_ref": "operator://redacted/reviewer-1",
+        "note": "这条意见只允许进入摘要哈希",
+    }
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload, ensure_ascii=False)))
+
+    assert (
+        MODULE.main(
+            [
+                "--candidate-id",
+                "scene-candidate:engineering-delivery",
+                "--decision",
+                "request_evidence",
+                "--review-envelope-stdin",
+            ]
+        )
+        == 0
+    )
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["status"] == "needs_evidence"
+    assert "这条意见" not in json.dumps(receipt, ensure_ascii=False)

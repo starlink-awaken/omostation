@@ -204,6 +204,12 @@ uv run --with pyyaml --with pytest pytest tests/test_scene_card_candidates.py -q
 WorkflowRun；人工备注只保留哈希，回执只包含安全候选摘要和缺失字段。具体命令、状态表和进入
 真实场景的门槛见 [`SCENE-CARD-REVIEW-RUNBOOK.md`](./SCENE-CARD-REVIEW-RUNBOOK.md)。
 
+Cockpit 已提供同一边界的正式消费入口：`GET /api/scene-cards` 返回候选投影，
+`POST /api/scene-cards/review` 返回 proposal-only 评审回执，页面入口为 `/scene-cards`。
+后端通过受限子进程调用上述纯脚本，评审人引用和备注走 stdin envelope，不进入命令行参数；
+两条 API 都不写 OMO、不创建 WorkflowRun、不激活外部连接。`approve` 仍以 `blocked` 回执
+结束，必须先补齐真实业务证据和完整 Scene Card，再进入既有 Agora admission 闸门。
+
 ### P1.5：派发与健康闭环
 
 1. 通过 OMO admission/dispatch broker 生成唯一的 `workflow_run_id`、短期 grant 和 worker dispatch packet；任何 capability、approval 或 budget gate 失败都不得产生执行派发。
