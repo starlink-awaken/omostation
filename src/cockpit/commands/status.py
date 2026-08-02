@@ -520,8 +520,75 @@ def _print_capability_summary(c) -> None:
     )
 
 
-def cmd_help(_: argparse.Namespace) -> int:
+def _help_search(c, keyword: str) -> int:
+    """cockpit help <keyword> — 模糊搜 CLI 命令 / MCP 工具 / BOS 服务."""
+    try:
+        import yaml
+    except ImportError:
+        c.print("[red]❌ 需要 pyyaml[/red]")
+        return 1
+    from .base import _SCRIPT_DIR
+
+    registry_path = _SCRIPT_DIR.parent.parent.parent.parent.parent / "docs" / "generated" / "capability-registry.yaml"
+    if not registry_path.exists():
+        c.print(f"[yellow]⚠️  能力注册表未生成, 无法搜索。运行 make sync-capability-registry[/yellow]")
+        return 1
+
+    reg = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    kw = keyword.lower()
+    hits: list[tuple[str, str, str]] = []  # (type, name, detail)
+
+    # 搜 CLI 命令
+    for cmd in reg.get("cli_commands", []):
+        name = cmd.get("name", "")
+        desc = cmd.get("description", "")
+        if kw in name.lower() or kw in desc.lower():
+            hits.append(("CLI", f"cockpit {name}", desc))
+
+    # 搜 MCP 工具
+    for srv in reg.get("mcp_servers", []):
+        for tool in srv.get("tools", []):
+            if kw in str(tool).lower():
+                hits.append(("MCP", f"{srv['id']}.{tool}", f"L{srv.get('layer', '?')} · {srv.get('name', '')}"))
+        if kw in srv.get("id", "").lower() or kw in srv.get("name", "").lower():
+            hits.append(("MCP-server", srv["id"], f"{srv.get('tool_count', 0)} tools · {srv.get('name', '')}"))
+
+    # 搜 BOS 服务
+    for domain, svcs in reg.get("bos_services", {}).get("domains", {}).items():
+        if domain == "_domain_counts":
+            continue
+        for svc in svcs:
+            uri = svc.get("uri", "")
+            if kw in uri.lower() or kw in svc.get("description", "").lower():
+                hits.append(("BOS", uri, svc.get("description", "")))
+
+    if not hits:
+        c.print(f"[yellow]🔍 未找到与 '{keyword}' 相关的能力[/yellow]")
+        c.print("[dim]   提示: 试 cockpit search / cockpit bos list / cockpit mcp --list[/dim]")
+        return 0
+
+    from rich import box as rich_box
+    from rich.table import Table
+
+    c.print(f"[bold cyan]🔍 搜索 '{keyword}' · {len(hits)} 条匹配[/bold cyan]")
+    table = Table(box=rich_box.ROUNDED, header_style="bold cyan")
+    table.add_column("类型", style="magenta", width=12)
+    table.add_column("名称", style="bold green", no_wrap=False)
+    table.add_column("详情", style="dim", no_wrap=False)
+    for typ, name, detail in hits[:30]:
+        table.add_row(typ, name, str(detail)[:60])
+    c.print(table)
+    if len(hits) > 30:
+        c.print(f"[dim]... 还有 {len(hits) - 30} 条, 用更精确的关键词缩小范围[/dim]")
+    return 0
+
+
+def cmd_help(args: argparse.Namespace) -> int:
     c = _get_console()
+    # 若带关键词 → 模糊搜命令/MCP 工具/BOS 服务
+    keyword = getattr(args, "keyword", None)
+    if keyword:
+        return _help_search(c, keyword)
     # ── 动态能力统计 (从 capability-registry.yaml 加载) ──
     _print_capability_summary(c)
     c.print(

@@ -30,12 +30,33 @@ def _safe_urlopen(url: str, timeout: float = 5.0):
 
 
 def _kos_available() -> bool:
-    """探测 KOS REST API 是否在线."""
+    """探测 KOS REST API 是否在线 (且确实是 KOS, 非 runtime 抢端口)."""
+    try:
+        with _safe_urlopen(f"{KOS_API_URL}/api/v1/health", timeout=2.0) as resp:
+            if resp.status != 200:
+                return False
+            import json as _json
+
+            data = _json.loads(resp.read().decode("utf-8", errors="replace"))
+            # KOS 健康响应有 status/version 字段; runtime 抢端口时返回 {"agents":0,"nodes":0}
+            return bool(data.get("version") or data.get("documents") is not None or data.get("indexed"))
+    except (URLError, OSError, ValueError, KeyError):
+        return False
+
+
+def _kos_port_conflict() -> str | None:
+    """若端口被非 KOS 服务占用, 返回占用者信息 (帮助诊断)."""
     try:
         with _safe_urlopen(f"{KOS_API_URL}/health", timeout=2.0) as resp:
-            return resp.status == 200
+            if resp.status == 200:
+                import json as _json
+
+                data = _json.loads(resp.read().decode("utf-8", errors="replace"))
+                if not (data.get("version") or data.get("documents") is not None):
+                    return f"端口被非 KOS 服务占用 (响应: {data})"
     except (URLError, OSError, ValueError):
-        return False
+        pass
+    return None
 
 
 def cmd_knowledge_search(args: argparse.Namespace) -> int:
@@ -171,6 +192,11 @@ def cmd_knowledge(args: argparse.Namespace) -> int:
         console.print("[green]✅ KOS 服务在线[/green]")
     else:
         console.print(f"[yellow]⚠️  KOS 服务离线 ({KOS_API_URL})[/yellow]")
+        conflict = _kos_port_conflict()
+        if conflict:
+            console.print(f"[red]   {conflict}[/red]")
+            console.print("[dim]   端口冲突: runtime 服务抢占了 8766 (port-registry 归属 kos-rest-api)[/dim]")
+            console.print("[dim]   解决: 停 runtime 服务, 或 KOS 改用其他端口 + 改 KOS_API_URL 环境变量[/dim]")
     console.print("\n[bold]可用子命令:[/]")
     console.print("  [cyan]cockpit knowledge search \"查询词\"[/]  — 语义搜索")
     console.print("  [cyan]cockpit knowledge status[/]            — 服务健康")

@@ -1,6 +1,6 @@
 # Cockpit 能力地图
 
-> 自动生成于 2026-08-02T10:17:40Z | 版本 1.0.0
+> 自动生成于 2026-08-02T11:40:31Z | 版本 1.0.0
 > 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑
 > 生成器: `bin/cockpit/gen-help-docs.py`
 
@@ -11,7 +11,7 @@
 | CLI 命令 (含子命令) | 103 |
 | MCP 工具 | 541 |
 | MCP 服务器 | 24 |
-| BOS 服务 | 184 |
+| BOS 服务 | 188 |
 | BOS 域 | 16 |
 
 ## MCP 服务器清单
@@ -48,7 +48,7 @@
 | 域 | 服务数 |
 |-----|--------|
 | `agora` | 3 |
-| `analysis` | 27 |
+| `analysis` | 28 |
 | `capability` | 38 |
 | `cockpit` | 3 |
 | `compute` | 3 |
@@ -56,7 +56,7 @@
 | `forge` | 1 |
 | `governance` | 32 |
 | `l4-kernel` | 1 |
-| `memory` | 38 |
+| `memory` | 41 |
 | `meta` | 1 |
 | `omo` | 4 |
 | `persona` | 10 |
@@ -114,7 +114,7 @@
 | `cockpit governance` | 架构治理 (委派 arcnode-*) |
 | `cockpit graph` | 运行语义图谱分析 |
 | `cockpit health` | 一键系统健康检查 |
-| `cockpit help` | 查看产品地图与快速入门 |
+| `cockpit help` | 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务) |
 | `cockpit history` | 查看对话历史 |
 | `cockpit identity` | 导出身份封套 (IdentityEnvelope) |
 | `cockpit impact` | 分析符号的变更影响面 |
@@ -175,4 +175,4 @@
 | `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
 
 ---
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T10:17:40Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T11:40:31Z 生成*
