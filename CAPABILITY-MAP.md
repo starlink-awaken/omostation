@@ -1,6 +1,6 @@
 # Cockpit 能力地图
 
-> 自动生成于 2026-08-02T10:09:57Z | 版本 1.0.0
+> 自动生成于 2026-08-02T10:17:40Z | 版本 1.0.0
 > 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑
 > 生成器: `bin/cockpit/gen-help-docs.py`
 
@@ -175,4 +175,4 @@
 | `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
 
 ---
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T10:09:57Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T10:17:40Z 生成*

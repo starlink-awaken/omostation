@@ -149,6 +149,16 @@ try:
 except Exception as e:
     print(f"Warning: KnowledgeIndexer callback router not available: {e}", file=sys.stderr)
 
+# ─── Capability Registry API (能力全景覆盖) ─────────────────────
+
+try:
+    from cockpit.web.api_capability import router as _capability_router
+
+    app.include_router(_capability_router)
+    print("Successfully loaded Capability Registry API routes")
+except Exception as e:
+    print(f"Warning: Capability API not available: {e}", file=sys.stderr)
+
 # ─── GBrain Proxy ─────────────────────────────────────────────
 
 
