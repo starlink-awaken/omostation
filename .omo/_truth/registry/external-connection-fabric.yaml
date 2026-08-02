@@ -203,6 +203,18 @@ dynamic_discovery:
       admission_mutation: forbidden
       provider_invocation: forbidden
       idempotency_key: proposal_id_and_projection_digest
+    observation_run_schema: external-resource-observation-run/v1
+    observation_run_recorder: projects/omo/src/omo/omo_external_observation_run.py
+    observation_run_log: .omo/_knowledge/workflow-mesh/external-resource-observation-runs.jsonl
+    observation_run_semantics:
+      provider_business_invocation: forbidden
+      activation: forbidden
+      workflow_mesh_mutation: forbidden
+      admission_mutation: forbidden
+      cost_without_metering: unmetered_and_amount_null
+      empty_catalog_result: unavailable
+      partial_health_or_errors_result: degraded
+      idempotency_key: run_id_and_run_digest
     pack_lifecycle_start: [discovered, sandbox]
     route_code_change_required: false
     activation_requires_scene_binding: true

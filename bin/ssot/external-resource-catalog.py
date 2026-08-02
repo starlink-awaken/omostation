@@ -15,6 +15,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
@@ -162,9 +163,12 @@ def observe_external_resources(
     previous_snapshot: Mapping[str, Any] | None = None,
     actor: str = "external-resource-observer",
     source_ref: str = "root:external-resource-catalog:observe",
+    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Observe a safe catalog through OMO's brokered persistence boundary."""
     root = root.resolve()
+    started_at = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    started_clock = time.perf_counter()
     if previous_snapshot is None:
         latest = _run_omo(root, ("external-resources", "latest", "--json"))
         previous_observation = latest.get("observation")
@@ -195,12 +199,97 @@ def observe_external_resources(
     observation = result.get("observation")
     if not isinstance(observation, Mapping):
         raise ExternalResourceCatalogInputError("OMO did not return an observation")
+    resources = [item for item in catalog.get("resources", []) if isinstance(item, Mapping)]
+    health_statuses = [
+        str((item.get("health") or {}).get("status") or "").strip().lower()
+        for item in resources
+    ]
+    availability = [str(item.get("availability") or "").strip().lower() for item in resources]
+    probe_latencies = [
+        float((item.get("health") or {}).get("latency_ms"))
+        for item in resources
+        if isinstance((item.get("health") or {}).get("latency_ms"), (int, float))
+        and not isinstance((item.get("health") or {}).get("latency_ms"), bool)
+    ]
+    unavailable_count = sum(value in {"unavailable", "stale"} for value in availability)
+    degraded_count = sum(
+        value == "degraded" or health == "degraded"
+        for value, health in zip(availability, health_statuses)
+    )
+    healthy_count = max(0, len(resources) - unavailable_count - degraded_count)
+    errors = catalog.get("errors", [])
+    error_count = len(errors) if isinstance(errors, list) else 0
+    result_state = (
+        "unavailable"
+        if not resources
+        else "degraded"
+        if error_count or unavailable_count
+        else "succeeded"
+    )
+    finished_at = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    catalog_digest = str(observation.get("catalog_digest") or "").strip()
+    observation_run = _run_omo(
+        root,
+        ("external-resources", "record-observation-run", "--stdin"),
+        input_text=json.dumps(
+            {
+                "schema": "external-resource-observation-run/v1",
+                "run_id": run_id or f"external-observation-run:{catalog_digest[:32]}",
+                "trace_id": f"external-observation:{catalog_digest[:24]}",
+                "activation": "forbidden",
+                "provider_business_invocation": False,
+                "health_probe_invocation": probe,
+                "started_at": started_at,
+                "finished_at": finished_at,
+                "catalog_observation_id": str(observation.get("observation_id") or ""),
+                "catalog_digest": catalog_digest,
+                "result_state": result_state,
+                "summary": {
+                    "resource_count": len(resources),
+                    "healthy_count": healthy_count,
+                    "degraded_count": degraded_count,
+                    "unavailable_count": unavailable_count,
+                    "error_count": error_count,
+                    "probe_count": len(resources) if probe else 0,
+                    "probe_failure_count": sum(
+                        health in {"unhealthy", ""} or latency is None
+                        for health, latency in zip(
+                            health_statuses,
+                            [
+                                (item.get("health") or {}).get("latency_ms")
+                                for item in resources
+                            ],
+                        )
+                    )
+                    if probe
+                    else 0,
+                },
+                "latency": {
+                    "duration_ms": round((time.perf_counter() - started_clock) * 1000, 3),
+                    "probe_latency_ms_sum": round(sum(probe_latencies), 3) if probe_latencies else None,
+                    "probe_latency_ms_max": round(max(probe_latencies), 3) if probe_latencies else None,
+                },
+                "cost": {
+                    "state": "unmetered",
+                    "amount": None,
+                    "currency": "USD",
+                    "basis": "catalog discovery and read-only health probes; provider billing not observed",
+                },
+                "actor": actor,
+                "source_ref": source_ref,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+    )
     return {
         "schema": "external-resource-observation-result/v1",
         "mode": "governed_observation",
         "catalog": catalog,
         "observation": observation,
+        "observation_run": observation_run.get("receipt"),
         "status": result.get("status", "recorded"),
+        "observation_run_status": observation_run.get("status", "recorded"),
     }
 
 
@@ -235,6 +324,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--source-ref", default="root:external-resource-catalog:observe"
     )
+    parser.add_argument("--run-id", help="稳定的只读观察运行标识，用于重试幂等")
     args = parser.parse_args(argv)
     try:
         previous_snapshot = None
@@ -256,6 +346,7 @@ def main(argv: list[str] | None = None) -> int:
                 previous_snapshot=previous_snapshot,
                 actor=args.actor,
                 source_ref=args.source_ref,
+                run_id=args.run_id,
             )
         else:
             payload = collect_external_resources(
