@@ -480,6 +480,19 @@ Phase 35 将目录快照自身的新鲜度从 provider health 中拆出。`exter
 真正的 provider 失败最终进入 `unavailable/degraded` 与既有 receipt/补偿链。恢复顺序是刷新观察、
 重新做 preflight、重新走 admission，不复用过期的 activation 结论。
 
+### 7.3.4 Phase 36 外部资源变化风险分类与复核投影
+
+Phase 36 将目录 diff 从单纯的 `changed_count` 提升为可操作的风险投影。Agora 对每一项新增、
+移除或变更输出 `review_required`、`risk_class` 和 `risk_codes`：新增/移除资源，以及 provider、
+protocol、version、capabilities、mode、lifecycle、permission、expiry/review 或 rollback 等
+描述符变化，归类为 `manual_review`；仅 health、availability、reason code 波动归类为
+`operational_observation`。
+
+OMO 观察记录只持久化上述安全摘要和计数，不把它变成第二套审批状态机。它让 Cockpit、运营报表和
+后续人工评审能够回答“发生了什么变化、是否影响准入、下一步是否需要复核”；真正的 active、
+admission、WorkflowRun 和外部调用仍必须经过既有 Scene Card、OMO admission、receipt 和补偿边界。
+没有复核结论时，不得把 `manual_review` 当成自动激活许可；health 波动也不能被误报成能力版本变更。
+
 ### 7.3.1 Phase 25 真实能力健康证据闭环
 
 Phase 25 将准入所需的 `capability_health` 从调用方手工输入收敛为服务端可追溯证据：Cockpit
@@ -519,6 +532,8 @@ cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyam
 uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_external_resource_catalog.py tests/test_external_activation_preflight.py
 cd projects/agora && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connections.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_external_resources.py
+cd projects/agora && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connections.py
+cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_omo_external_resources.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_knowledge_actions.py src/cockpit/tests/test_tasks_api.py
 cd projects/runtime/projects/runtime && PYTHONPATH=src uv run --no-project --with pytest --with pydantic python -m pytest -q tests/test_workflow_mesh_runtime.py
 cd projects/aetherforge && PYTHONPATH="packages/swarm/src:packages/mesh/src:src" uv run --no-project --with pytest --with pyyaml python -m pytest -q packages/swarm/tests/test_workflow_mesh.py packages/mesh/tests/
