@@ -453,6 +453,17 @@ WorkflowRequested(planned)
 approval-required、admitted 等漏斗状态纳入事实统计。它只保留事件 ID、摘要哈希和最小场景字段，
 不把请求变成执行结果，也不为预测模型提供未经标注的成功标签。
 
+### 7.3.2 Phase 34 状态投影的时间戳语义
+
+Phase 34 修复了 OMO `system.yaml` 语义比较对运行元数据的误判。`health_score_generated_at`、
+`governance_feedback_last_run` 和 `updated_at` 只表示投影新鲜度或最后一次运行时间，不构成业务
+状态变化；它们在 `normalize_system_yaml()` 中从比较面排除。健康分、阶段、任务计数等业务字段仍
+参与比较，变化时必须产生 canonical projection 写入和状态同步证据。
+
+该规则只影响“是否需要写入投影”的判定，不删除或改写文件中的运行时间字段，也不改变
+WorkflowRun、StepRun、事件日志或外部 receipt 的事实语义。回归测试同时覆盖“仅时间戳变化为 0
+变更”和“健康分变化产生 2 个投影变更”两条路径。
+
 ### 7.3.1 Phase 25 真实能力健康证据闭环
 
 Phase 25 将准入所需的 `capability_health` 从调用方手工输入收敛为服务端可追溯证据：Cockpit
@@ -488,6 +499,7 @@ cd projects/omo && PYTHONPATH=src uv run --no-project --with pyyaml python -m om
 PYTHONPATH="projects/omo/src:projects/agora/src" uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connection_runtime.py
 cd projects/cockpit && PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with pyyaml --with httpx --with rich python -m pytest -q src/cockpit/tests/test_delivery_journey.py src/cockpit/tests/test_delivery_journey_mesh_states.py src/cockpit/tests/test_delivery_journey_workflow_mesh.py src/cockpit/tests/test_agent_workflow_command.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pytest-asyncio --with pyyaml --with httpx python -m pytest -q tests/test_knowledge_action.py
+cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_omo_ingress_state.py tests/test_omo_governance_data.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_knowledge_actions.py src/cockpit/tests/test_tasks_api.py
 cd projects/runtime/projects/runtime && PYTHONPATH=src uv run --no-project --with pytest --with pydantic python -m pytest -q tests/test_workflow_mesh_runtime.py
 cd projects/aetherforge && PYTHONPATH="packages/swarm/src:packages/mesh/src:src" uv run --no-project --with pytest --with pyyaml python -m pytest -q packages/swarm/tests/test_workflow_mesh.py packages/mesh/tests/
