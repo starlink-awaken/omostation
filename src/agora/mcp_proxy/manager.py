@@ -261,7 +261,7 @@ class ProxyManager:
                 # Local workspace services are trusted by default (self-hosted / source-controlled).
                 # Use WORKSPACE_ROOT env (no hard-coded absolute path).
                 _workspace_root = os.environ.get(
-                    "WORKSPACE_ROOT", "/Users/xiamingxing/Workspace"
+                    "WORKSPACE_ROOT", os.path.expanduser("~/Workspace")
                 )
                 _cmd = " ".join([svc.get("command", ""), *svc.get("args", [])])
                 _is_local_workspace = (

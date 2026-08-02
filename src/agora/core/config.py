@@ -116,3 +116,19 @@ def get_agent_config(agent_id: str) -> AgentConfig | None:
 def get_all_agent_configs() -> list[AgentConfig]:
     """Get all agent configs from current configuration."""
     return list(get_config().agents)
+
+
+# ── 端口 env 单一来源 (P77 env-var-SSOT, 收敛重复配置) ──────────
+# SSOT: protocols/port-registry.yaml (7430=agora-internal, 7420=agora-api-gateway)
+_DEFAULT_INTERNAL_PORT = "7430"
+_DEFAULT_API_PORT = "7420"
+
+
+def get_internal_port() -> int:
+    """Agora internal HTTP port (AGORA_INTERNAL_PORT, default 7430)."""
+    return int(os.environ.get("AGORA_INTERNAL_PORT", _DEFAULT_INTERNAL_PORT))
+
+
+def get_api_port() -> int:
+    """Agora API gateway port (BOS_API_PORT, default 7420)."""
+    return int(os.environ.get("BOS_API_PORT", _DEFAULT_API_PORT))

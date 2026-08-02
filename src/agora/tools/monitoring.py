@@ -8,6 +8,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from agora.core.config import get_api_port
 from agora.tools.base import (
     _HAS_PSUTIL,
     JSONDict,
@@ -93,7 +94,7 @@ def tool_get_metrics_snapshot(params: JSONDict, ctx: ToolContext) -> JSONDict:
         eu_balance = float(os.environ.get("BOS_EU_BALANCE", "0"))
     except ValueError:
         eu_balance = 0.0
-    daemon_port = int(os.environ.get("BOS_API_PORT", "7420"))
+    daemon_port = get_api_port()
     tasks_total = tasks_success = active_workers = p99_latency_ms = 0.0
     try:
         req = urllib.request.Request(

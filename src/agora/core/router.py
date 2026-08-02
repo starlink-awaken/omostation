@@ -324,8 +324,12 @@ class _Compressor:
             )
             conn.commit()
             conn.close()
-        except Exception:
-            pass
+        except Exception as exc:  # noqa: BLE001 — 统计落库失败不影响响应压缩主流程
+            logger.warning(
+                "compression_stats_record_failed",
+                content_type=content_type,
+                error=str(exc),
+            )
 
 
 # Module-level compressor for response compression middleware

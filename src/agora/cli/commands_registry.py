@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Any
 
 from agora.cli.output import OutputFormatter
+from agora.core.config import get_internal_port
 from agora.core.state import get_registry  # type: ignore[import-not-found]
 from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 
@@ -236,11 +237,11 @@ def cmd_config(_args):
         "Trace file": data_dir / "trace_log.jsonl",
         "Dashboard": os.environ.get(
             "AGORA_DASHBOARD_URL",
-            f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}",
+            f"http://localhost:{get_internal_port()}",
         ),
         "Metrics": os.environ.get(
             "AGORA_METRICS_URL",
-            f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}/metrics",
+            f"http://localhost:{get_internal_port()}/metrics",
         ),
     }
     out.print_key_value(config_data, "配置状态")
