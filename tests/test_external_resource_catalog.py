@@ -200,6 +200,18 @@ def test_observe_routes_safe_catalog_through_omo_broker(monkeypatch) -> None:
         calls.append((args, input_text))
         if args[:2] == ("external-resources", "latest"):
             return {"ok": True, "observation": None}
+        if args[:2] == ("external-resources", "record-observation-run"):
+            run = json.loads(input_text or "{}")
+            assert run["schema"] == "external-resource-observation-run/v1"
+            assert run["provider_business_invocation"] is False
+            return {
+                "ok": True,
+                "status": "recorded",
+                "receipt": {
+                    "schema": "external-resource-observation-run/v1",
+                    "receipt_id": "external-observation-run:test",
+                },
+            }
         assert args[:2] == ("external-resources", "observe")
         assert input_text and json.loads(input_text)["activation"] == "forbidden"
         return {
@@ -208,6 +220,7 @@ def test_observe_routes_safe_catalog_through_omo_broker(monkeypatch) -> None:
             "observation": {
                 "schema": "external-resource-observation/v1",
                 "observation_id": "observation:test",
+                "catalog_digest": "sha256:catalog-test",
             },
         }
 
@@ -220,4 +233,33 @@ def test_observe_routes_safe_catalog_through_omo_broker(monkeypatch) -> None:
 
     assert payload["schema"] == "external-resource-observation-result/v1"
     assert payload["status"] == "recorded"
-    assert len(calls) == 2
+    assert payload["observation_run"]["schema"] == "external-resource-observation-run/v1"
+    assert payload["observation_run_status"] == "recorded"
+    assert len(calls) == 3
+
+
+def test_empty_catalog_is_unavailable_not_success(monkeypatch) -> None:
+    run_payloads: list[dict[str, object]] = []
+
+    def fake_omo(_root, args, *, input_text=None):
+        if args[:2] == ("external-resources", "latest"):
+            return {"ok": True, "observation": None}
+        if args[:2] == ("external-resources", "observe"):
+            return {
+                "ok": True,
+                "status": "recorded",
+                "observation": {
+                    "schema": "external-resource-observation/v1",
+                    "observation_id": "observation:empty",
+                    "catalog_digest": "sha256:empty",
+                },
+            }
+        run_payloads.append(json.loads(input_text or "{}"))
+        return {"ok": True, "status": "recorded", "receipt": {"receipt_id": "run:empty"}}
+
+    monkeypatch.setattr(MODULE, "_run_omo", fake_omo)
+    MODULE.observe_external_resources(
+        Path(__file__).parents[1], entry_points=[], now=datetime(2026, 8, 2, tzinfo=UTC)
+    )
+
+    assert run_payloads[0]["result_state"] == "unavailable"

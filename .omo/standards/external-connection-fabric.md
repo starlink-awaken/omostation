@@ -137,6 +137,20 @@ Workflow Mesh receipt 链。
 admission、写入 `EvidenceRecorded`、加载 provider、执行健康探针或激活资源。普通资源下一步是
 catalog discovery，方法/模型或显式 proposal-only 资源下一步是 proposal/evaluation。
 
+### 4.1.5 只读目录观察运行回执
+
+目录使用 `--observe` 时，除了 `external-resource-observation/v1` 目录事实，还必须由 OMO 追加
+`external-resource-observation-run/v1` 运行回执。回执把一次发现/只读探活作为可审计的运营样本，关联
+`observation_id` 和 `catalog_digest`，并保存资源健康分布、探活失败数、运行总延迟、探针延迟摘要和
+成本计量状态。
+
+成本没有接入真实计量时只能标记 `unmetered`，金额必须为空；不得用 0 或默认价格冒充成本事实。运行
+回执必须明确 `provider_business_invocation=false` 和 `activation=forbidden`，不承载 provider 原文、
+凭据、输入输出或模型结果，也不创建 WorkflowRun、admission 或 `EvidenceRecorded`。
+
+结果口径固定为：空目录为 `unavailable`；存在错误或不可用候选为 `degraded`；有候选且没有不可用/错误
+才是 `succeeded`。因此“发现过程本身没有抛错”不等于“外部能力可用”。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
