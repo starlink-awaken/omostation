@@ -173,9 +173,21 @@ def _discover_consumers(projects_dir: Path) -> list[Path]:
     return projects
 
 
+def _detect_workspace_root() -> Path:
+    """Auto-detect workspace root by walking up to find the projects/ directory."""
+    p = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (p / "projects").is_dir():
+            return p
+        if p.parent == p:
+            break
+        p = p.parent
+    return Path(__file__).resolve().parents[5]  # fallback
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[5])
+    parser.add_argument("--root", type=Path, default=_detect_workspace_root())
     parser.add_argument("--json", action="store_true", help="emit JSON output")
     parser.add_argument("--projects-dir", default="projects")
     args = parser.parse_args()
