@@ -357,6 +357,22 @@ Phase 21 已补齐独立的 `outcome-feedback/v1` 反馈契约：OMO 将最小�
 状态，不新增第二套状态机，也不触发外部资源或业务系统。契约细节见
 [`docs/operations/outcome-feedback.md`](./operations/outcome-feedback.md) 和 ADR-0314。
 
+### 7.2 J2 知识到行动垂直切片
+
+Phase 22 将 `知识检索 -> 引用 -> 受治理任务 -> 行动回执` 接入同一条产品路径。OMO 新增
+`knowledge-action/v1` 参考平面，追加日志位于 `_knowledge/knowledge-mesh/actions.jsonl`，只允许
+`ref/title/source_type/rank` 等引用元数据和 `sha256:` 查询摘要；原文、prompt、模型输出、凭据和
+用户输入均拒绝落盘。Cockpit 的 `/knowledge-action` 页面通过 `GET /api/kos/search` 读取候选，
+`POST /api/tasks` 只承接 `knowledge_refs: string[]`，再以 `POST /api/knowledge/action-receipt`
+写入 `task_created` 回执。任务创建成功而回执失败时，界面明确显示“任务已创建、回执未记录”，
+不得伪造闭环完成。
+
+`build_operations_snapshot()` 同时挂载 `knowledge_action` 的日志派生投影，提供检索、引用、任务、
+工作流请求和结果回执漏斗；它不创建第二个工作流引擎、不替代任务状态机，也不自动调用外部系统。
+当真实业务场景和外部连接准入条件成熟后，才允许从 `task_created` 进入 `workflow_requested`，
+并沿用既有审批、证据和外部 receipt 契约。字段、验证命令和恢复语义见
+[`docs/operations/knowledge-to-action.md`](./operations/knowledge-to-action.md) 和 ADR-0315。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
@@ -371,6 +387,8 @@ cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pydan
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pyyaml python -m omo.cli worker mesh-watchdog-run --json
 PYTHONPATH="projects/omo/src:projects/agora/src" uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connection_runtime.py
 cd projects/cockpit && PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with pyyaml --with httpx --with rich python -m pytest -q src/cockpit/tests/test_delivery_journey.py src/cockpit/tests/test_delivery_journey_mesh_states.py src/cockpit/tests/test_delivery_journey_workflow_mesh.py src/cockpit/tests/test_agent_workflow_command.py
+cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pytest-asyncio --with pyyaml --with httpx python -m pytest -q tests/test_knowledge_action.py
+cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_knowledge_actions.py src/cockpit/tests/test_tasks_api.py
 cd projects/runtime/projects/runtime && PYTHONPATH=src uv run --no-project --with pytest --with pydantic python -m pytest -q tests/test_workflow_mesh_runtime.py
 cd projects/aetherforge && PYTHONPATH="packages/swarm/src:packages/mesh/src:src" uv run --no-project --with pytest --with pyyaml python -m pytest -q packages/swarm/tests/test_workflow_mesh.py packages/mesh/tests/
 PYTHONPATH="projects/omo/src:projects/runtime/projects/runtime/src:projects/aetherforge/packages/swarm/src:projects/aetherforge/packages/mesh/src:projects/aetherforge/src" uv run --no-project --with pytest --with pydantic --with pyyaml --with httpx python -m pytest -q tests/integration/workflow_mesh/test_runtime_and_swarm_projection.py
