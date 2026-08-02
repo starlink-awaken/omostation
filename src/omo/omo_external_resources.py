@@ -20,6 +20,10 @@ from omo.omo_external_evaluation import (
     ExternalResourceEvaluationError,
     record_external_resource_evaluation,
 )
+from omo.omo_external_observation_run import (
+    ExternalObservationRunError,
+    record_external_observation_run,
+)
 from omo.omo_external_pack import (
     ExternalResourcePackProposalError,
     record_external_resource_pack_proposal,
@@ -259,6 +263,10 @@ def main(argv: list[str] | None = None) -> int:
     record_pack_proposal.add_argument("--review-ref")
     record_pack_proposal.add_argument("--recorded-at")
     record_pack_proposal.add_argument("--json", action="store_true")
+    record_observation_run = sub.add_parser(
+        "record-observation-run", help="persist one read-only catalog observation run receipt"
+    )
+    record_observation_run.add_argument("--stdin", action="store_true")
     selection_eval = sub.add_parser(
         "selection-eval", help="build the event-derived selection evaluation dataset"
     )
@@ -311,6 +319,17 @@ def main(argv: list[str] | None = None) -> int:
             )
         except (ExternalResourcePackProposalError, OSError, ValueError) as exc:
             print(f"external-resources record-pack-proposal: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    if args.command == "record-observation-run":
+        if not args.stdin:
+            print("external-resources record-observation-run requires --stdin", file=sys.stderr)
+            return 2
+        try:
+            result = record_external_observation_run(omo_dir, _payload_from_stdin())
+        except (ExternalObservationRunError, OSError, ValueError) as exc:
+            print(f"external-resources record-observation-run: {exc}", file=sys.stderr)
             return 2
         print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
