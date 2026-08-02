@@ -599,6 +599,37 @@ Phase 25 将准入所需的 `capability_health` 从调用方手工输入收敛�
 `GET /api/workflow-mesh/capability-health`，统一返回健康状态、证据来源、观测时间和
 `external_side_effects=disabled`、`worker_launch=false` 的安全边界。
 
+### 7.3.9 Phase 41 外部扩展包一致性预检
+
+Phase 41 补上动态外部能力的“接入前”一层。未来外部知识、数据、资料、方法、理论、渠道、工具和模型
+先提交 `external-resource-pack/v1` manifest，由 `bin/ssot/external-resource-pack.py` 做只读一致性
+检查，再决定是否允许进入动态 catalog。
+
+预检检查四类事实：
+
+1. pack 身份和扩展入口：`external.resources`、`external_descriptor`、只读且必需的 `health_probe`；
+2. descriptor 合同：`external-resource/v1`、kind/capability 组合、权限引用、回滚方案、owner 和起始生命周期；
+3. 数据边界：递归拒绝 token、密码、Authorization、Cookie、私有原文、样例数据和输入输出载荷；
+4. 行为边界：预检过程禁止安装、provider import、health probe、业务调用、OMO 写入和 activation。
+
+返回 `external-resource-pack-check/v1`，状态含义如下：
+
+| 状态 | 含义 |
+| --- | --- |
+| `blocked` | 扩展包不能进入目录，必须修正合同、能力、权限、生命周期或敏感字段问题 |
+| `proposal_only` | 可被观察，但方法/模型/工具能力继续停留在提案、离线评测或 shadow 阶段 |
+| `ready_for_catalog_preview` | 可交给 catalog 做动态发现和隔离探活，不代表准入或可调用 |
+
+这一步不新增运行时注册中心。责任链保持收敛：pack checker 负责接入前静态安全，Agora catalog 负责
+发现和健康，Scene Card/OMO 负责业务准入，Agora/Workflow Mesh 负责路由、执行和 receipt。扩展包合规
+不能替代真实消费者、结果指标、权限边界、回滚方案或人工批准。
+
+验证：
+
+```bash
+uv run --with pyyaml --with pytest python -m pytest -q tests/test_external_resource_pack.py
+```
+
 运营工作台现在可执行以下人工确认链：
 
 ```text
