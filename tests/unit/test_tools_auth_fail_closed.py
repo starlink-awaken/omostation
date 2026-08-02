@@ -75,8 +75,9 @@ def test_bos_domain_authorized_fail_closed_without_key(monkeypatch):
     """AGORA_API_KEY 未配置 + 默认 required → _bos_domain_authorized 拒绝。"""
     monkeypatch.delenv("AGORA_AUTH_MODE", raising=False)
     from agora.server import tools_bos
+    from agora.server.tools_bos import _helpers
 
-    monkeypatch.setattr(tools_bos, "_AGORA_API_KEY", "")
+    monkeypatch.setattr(_helpers, "_AGORA_API_KEY", "")
     ok, msg = tools_bos._bos_domain_authorized(
         "bos://capability/foo/invoke", operation="read"
     )
@@ -88,8 +89,9 @@ def test_bos_domain_authorized_permissive_without_key(monkeypatch):
     """AGORA_API_KEY 未配置 + AGORA_AUTH_MODE=permissive → 放行。"""
     monkeypatch.setenv("AGORA_AUTH_MODE", "permissive")
     from agora.server import tools_bos
+    from agora.server.tools_bos import _helpers
 
-    monkeypatch.setattr(tools_bos, "_AGORA_API_KEY", "")
+    monkeypatch.setattr(_helpers, "_AGORA_API_KEY", "")
     ok, msg = tools_bos._bos_domain_authorized(
         "bos://capability/foo/invoke", operation="read"
     )

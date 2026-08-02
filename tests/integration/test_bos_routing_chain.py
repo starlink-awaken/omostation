@@ -70,13 +70,13 @@ class TestResolveWithRouter:
 
         from agora.server.tools_bos import _resolve_with_router
 
-        with patch("agora.server.tools_bos._bos_router") as mock_router:
+        with patch("agora.server.tools_bos.routing._bos_router") as mock_router:
             mock_router.resolve.return_value = {
                 "adapter": "poc",
                 "prefix": "bos://memory/kos/search/",
                 "config": {"domain": "memory"},
             }
-            with patch("agora.server.tools_bos._resolve_bos_uri") as mock_resolve:
+            with patch("agora.server.tools_bos.routing._resolve_bos_uri") as mock_resolve:
                 mock_resolve.return_value = {"status": "ok", "result": "mock_data"}
 
                 result, source = await _resolve_with_router(
@@ -91,7 +91,7 @@ class TestResolveWithRouter:
 
         from agora.server.tools_bos import _resolve_with_router
 
-        with patch("agora.server.tools_bos._bos_router") as mock_router:
+        with patch("agora.server.tools_bos.routing._bos_router") as mock_router:
             mock_router.resolve.return_value = {
                 "adapter": "proxy",
                 "prefix": "bos://runtime/health/",
@@ -111,9 +111,9 @@ class TestResolveWithRouter:
 
         from agora.server.tools_bos import _resolve_with_router
 
-        with patch("agora.server.tools_bos._bos_router") as mock_router:
+        with patch("agora.server.tools_bos.routing._bos_router") as mock_router:
             mock_router.resolve.return_value = None  # BOSRouter 未匹配
-            with patch("agora.server.tools_bos._resolve_bos_uri") as mock_resolve:
+            with patch("agora.server.tools_bos.routing._resolve_bos_uri") as mock_resolve:
                 mock_resolve.return_value = {"status": "ok", "result": "poc_data"}
 
                 result, source = await _resolve_with_router(
@@ -128,9 +128,9 @@ class TestResolveWithRouter:
 
         from agora.server.tools_bos import _resolve_with_router
 
-        with patch("agora.server.tools_bos._bos_router") as mock_router:
+        with patch("agora.server.tools_bos.routing._bos_router") as mock_router:
             mock_router.resolve.return_value = None
-            with patch("agora.server.tools_bos._resolve_bos_uri") as mock_resolve:
+            with patch("agora.server.tools_bos.routing._resolve_bos_uri") as mock_resolve:
                 mock_resolve.return_value = {
                     "status": "error",
                     "error": "unknown_bos_uri",
@@ -149,13 +149,13 @@ class TestResolveWithRouter:
 
         from agora.server.tools_bos import _resolve_with_router
 
-        with patch("agora.server.tools_bos._bos_router") as mock_router:
+        with patch("agora.server.tools_bos.routing._bos_router") as mock_router:
             mock_router.resolve.return_value = {
                 "adapter": "poc",
                 "prefix": "bos://ecos/workflow/approve/",
                 "config": {"domain": "ecos", "workflow": "approve-flow"},
             }
-            with patch("agora.server.tools_bos._resolve_bos_uri") as mock_resolve:
+            with patch("agora.server.tools_bos.routing._resolve_bos_uri") as mock_resolve:
                 mock_resolve.return_value = {
                     "status": "error",
                     "error": "unknown_bos_uri",
@@ -175,13 +175,13 @@ class TestResolveWithRouter:
 
         from agora.server.tools_bos import _resolve_with_router
 
-        with patch("agora.server.tools_bos._bos_router") as mock_router:
+        with patch("agora.server.tools_bos.routing._bos_router") as mock_router:
             mock_router.resolve.return_value = {
                 "adapter": "poc",
                 "prefix": "bos://capability/wps-skills/load/",
                 "config": {"domain": "capability"},
             }
-            with patch("agora.server.tools_bos._resolve_bos_uri") as mock_resolve:
+            with patch("agora.server.tools_bos.routing._resolve_bos_uri") as mock_resolve:
                 mock_resolve.return_value = {
                     "status": "error",
                     "error": "ModuleNotFoundError: No module named 'headroom'",
