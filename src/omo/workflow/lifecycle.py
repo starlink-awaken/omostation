@@ -23,7 +23,8 @@ except ImportError:  # graceful degradation during refactoring
 try:
     from .scene_bridge import extract_scene_binding
 except ImportError:
-    extract_scene_binding = lambda *a, **kw: None
+    def extract_scene_binding(*a, **kw):
+        return None
 
 from .core import (
     CLAIM_POLICY_MODES,
