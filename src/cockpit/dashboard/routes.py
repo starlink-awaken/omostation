@@ -20,7 +20,7 @@ from cockpit.dashboard.constants import (
 )
 from cockpit.dashboard.helpers import (
     fetch_layer_status,
-    load_arch_health,
+    load_arch_health,  # type: ignore[union-attr]
     load_bos_trends,
     load_compute,
     load_convergence_status,
@@ -143,7 +143,7 @@ async def api_v1_m0():
 @router.get("/api/status", dependencies=_AUTH_DEPS)
 async def api_status():
     try:
-        from cockpit.adapters.runtime import i0_status
+        from cockpit.adapters.runtime import i0_status  # pyright: ignore[reportAttributeAccessIssue]
 
         return JSONResponse(content=(i0_status() if i0_status else {"error": "runtime.i0 not available"}))
     except ImportError:
@@ -153,7 +153,7 @@ async def api_status():
 @router.get("/api/services", dependencies=_AUTH_DEPS)
 async def api_services():
     try:
-        from cockpit.adapters.runtime import i0_services
+        from cockpit.adapters.runtime import i0_services  # pyright: ignore[reportAttributeAccessIssue]
 
         return JSONResponse(content=(i0_services() if i0_services else {"error": "runtime.i0 not available"}))
     except ImportError:
@@ -163,7 +163,7 @@ async def api_services():
 @router.get("/api/events", dependencies=_AUTH_DEPS)
 async def api_events():
     try:
-        from cockpit.adapters.runtime import i0_events
+        from cockpit.adapters.runtime import i0_events  # pyright: ignore[reportAttributeAccessIssue]
 
         return JSONResponse(content=(i0_events(50) if i0_events else {"error": "runtime.i0 not available"}))
     except ImportError:
@@ -173,7 +173,7 @@ async def api_events():
 @router.get("/api/protocols", dependencies=_AUTH_DEPS)
 async def api_protocols():
     try:
-        from cockpit.adapters.runtime import i0_protocols
+        from cockpit.adapters.runtime import i0_protocols  # pyright: ignore[reportAttributeAccessIssue]
 
         return JSONResponse(content=(i0_protocols() if i0_protocols else {"error": "runtime.i0 not available"}))
     except ImportError:
@@ -231,7 +231,7 @@ async def api_cards_check():
 @router.get("/api/v1/arch-health", dependencies=_AUTH_DEPS)
 async def api_arch_health():
     """Architecture health aggregation."""
-    return JSONResponse(content=load_arch_health())
+    return JSONResponse(content=load_arch_health() if load_arch_health else {"error": "runtime.arch_health not available"})
 
 
 # ─── Wave 3: Observability APIs ──────────────────────────────

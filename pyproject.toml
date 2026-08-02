@@ -16,7 +16,6 @@ dependencies = [
     "rich>=13.0",
     "pyyaml>=6.0.3",
     "httpx>=0.28.0",
-    "runtime",
     "fastapi[standard]>=0.128.8",
     "python-multipart>=0.0.20",
     "uvicorn[standard]>=0.49.0",
@@ -52,7 +51,7 @@ packages = ["src/cockpit"]
 
 [tool.pytest.ini_options]
 testpaths = ["src/cockpit/tests", "tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "../runtime/src"]
 
 [tool.ruff]
 target-version = "py313"
@@ -70,7 +69,9 @@ quote-style = "double"
 # - model-driven 通过 omo/l4-kernel 解析
 # - ecos / bus-foundation 通过 agora 解析
 # - metaos 仅在 agora[admission] 中，需本项目的 source 覆盖
-runtime = { path = "../runtime", editable = true }
+# 注: runtime 不是可构建包 (其 pyproject 仅 ruff 配置), 不作为 uv 依赖;
+#     cockpit 对 runtime 的 import 通过 pytest pythonpath ../runtime/src (源码 namespace)
+#     和 adapters/runtime.py 的优雅降级支撑。
 agora = { path = "../agora", editable = true }
 omo = { path = "../omo", editable = true }
 omo-debt = { path = "../omo-debt", editable = true }

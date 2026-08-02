@@ -15,7 +15,7 @@ def _get_l4_registry():
     try:
         from cockpit.adapters.l4_kernel import (  # type: ignore[import-not-found]
             DomainRegistry,
-            load_overrides_from_config,
+            load_overrides_from_config,  # pyright: ignore[reportAttributeAccessIssue]
         )
 
         l4_config_path = Path(

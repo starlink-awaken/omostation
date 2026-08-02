@@ -4,10 +4,31 @@ import json
 import time
 from pathlib import Path
 
-from runtime.executor.config import AUTH_TOKEN, EXEC_LOG_FILE, log
-from runtime.executor.engine import AgentRuntime, _build_alert_message, _log_execution
+try:
+    from runtime.executor.config import AUTH_TOKEN, EXEC_LOG_FILE, log  # type: ignore[import-not-found]
+    from runtime.executor.engine import (  # type: ignore[import-not-found]
+        AgentRuntime,
+        _build_alert_message,
+        _log_execution,
+    )
+
+    _HAS_RUNTIME = True
+except ImportError:  # runtime not installed / tree without executor — degrade gracefully
+    AUTH_TOKEN = None  # type: ignore[assignment]
+    EXEC_LOG_FILE = None  # type: ignore[assignment]
+    log = None  # type: ignore[assignment]
+    AgentRuntime = None  # type: ignore[assignment]
+    _build_alert_message = None  # type: ignore[assignment]
+    _log_execution = None  # type: ignore[assignment]
+    _HAS_RUNTIME = False
+
 
 # ── FastAPI 应用 ──────────────────────────────────────────────────────────────
+
+
+def _log_warning(msg: str) -> None:
+    if log is not None:
+        log.warning(msg)
 
 
 def _verify_auth(request):
@@ -19,7 +40,7 @@ def _verify_auth(request):
     if auth_header != expected:
         from fastapi import HTTPException
 
-        log.warning(f"⛔ Auth failed: got header={auth_header[:30]}...")
+        _log_warning(f"⛔ Auth failed: got header={auth_header[:30]}...")
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
@@ -28,8 +49,11 @@ def create_app():
     from fastapi import FastAPI, HTTPException, Request
     from pydantic import BaseModel
 
+    if not _HAS_RUNTIME:
+        raise RuntimeError("runtime unavailable: install projects/runtime or add it to PYTHONPATH")
+
     app = FastAPI(title="Agent Runtime", version="1.0.0")
-    runtime = AgentRuntime()
+    runtime = AgentRuntime()  # type: ignore[union-attr]
 
     # ── 中间件：认证 ──────────────────────────────────────────────────────
     @app.middleware("http")
@@ -45,7 +69,7 @@ def create_app():
         if auth != expected:
             from fastapi.responses import JSONResponse
 
-            log.warning(f"⛔ Auth blocked: {request.method} {request.url.path}")
+            _log_warning(f"⛔ Auth blocked: {request.method} {request.url.path}")
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Unauthorized. Set AGENT_RUNTIME_AUTH_TOKEN env var."},
@@ -151,10 +175,10 @@ def create_app():
 
         status = "error" if "error" in result else "ok"
         summary = result.get("result", "")[:200]
-        _log_execution(task_id, status, summary, result, elapsed)
+        _log_execution(task_id, status, summary, result, elapsed)  # type: ignore[union-attr]
 
         if "error" in result:
-            alert = _build_alert_message(task_id, result)
+            alert = _build_alert_message(task_id, result)  # type: ignore[union-attr]
             try:
                 runtime.tools.send_message(text=alert)
             except Exception:  # defensive fallback
@@ -167,9 +191,9 @@ def create_app():
     @app.get("/logs")
     def get_logs(limit: int = 50):
         """返回最近的执行日志。"""
-        if not EXEC_LOG_FILE.exists():
+        if not EXEC_LOG_FILE.exists():  # type: ignore[union-attr]
             return {"logs": []}
-        lines = EXEC_LOG_FILE.read_text(encoding="utf-8").strip().splitlines()
+        lines = EXEC_LOG_FILE.read_text(encoding="utf-8").strip().splitlines()  # type: ignore[union-attr]
         entries = []
         for line in lines[-limit:]:
             try:
@@ -182,9 +206,9 @@ def create_app():
     @app.get("/task-history/{task_id}")
     def get_task_history(task_id: str, limit: int = 20):
         """返回指定任务的执行历史。"""
-        if not EXEC_LOG_FILE.exists():
+        if not EXEC_LOG_FILE.exists():  # type: ignore[union-attr]
             return {"logs": []}
-        lines = EXEC_LOG_FILE.read_text(encoding="utf-8").strip().splitlines()
+        lines = EXEC_LOG_FILE.read_text(encoding="utf-8").strip().splitlines()  # type: ignore[union-attr]
         entries = []
         for line in lines[-500:]:
             try:
