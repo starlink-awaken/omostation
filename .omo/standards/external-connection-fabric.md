@@ -88,6 +88,29 @@ OMO 是观察日志和最新投影的唯一写入所有者：
 `--observe --no-health-probe` 保持只读发现语义：资源可以被记录，但未探活资源必须继续按
 `stale/unavailable` 处理，不能因为进入观察日志就获得可用资格。
 
+### 4.1.2 外部扩展包一致性预检
+
+第三方连接器、未来的 SourcePack/MethodPack/ToolPack/ModelPack/ChannelPack 先以
+`external-resource-pack/v1` manifest 进入静态预检。根仓入口为
+`bin/ssot/external-resource-pack.py`，它只读取 manifest，不安装依赖、不加载 entry point、不调用
+provider 或 `health_probe`、不写 OMO，也不产生 activation/admission。
+
+pack 至少声明 `pack_id`、`pack_version`、`extension` 和一个 `external-resource/v1` descriptor。
+`extension` 必须固定使用 `external.resources`、`external_descriptor` 和声明为
+`read_only` 的必需 `health_probe`。descriptor 必须处于 `discovered` 或 `sandbox`，具备不透明的
+`permission_ref`、`rollback_plan`、有效的 capability/kind 组合，且递归禁止凭据、token、原文和
+结果载荷。pack 自己不能将 `activation` 声明为允许。
+
+预检输出 `external-resource-pack-check/v1`，状态只有三种：
+
+- `blocked`：合同、权限、能力、生命周期或敏感字段不满足，不能进入目录。
+- `proposal_only`：descriptor 合同完整，但方法、模型或显式 `proposal_only` 能力只能进入提案/评测。
+- `ready_for_catalog_preview`：可以进入下一步只读 catalog discovery，但仍不代表探活、准入、激活或可调用。
+
+pack 预检只负责“扩展是否可被安全观察”，目录负责“当前 provider 是否可被发现和探活”，Scene Card/OMO
+负责“是否有业务场景和权限可以准入”，Agora/Workflow Mesh 负责“如何路由、执行和回写 receipt”。任何
+扩展包都必须按这四层逐级推进，不能用 manifest 合规结果绕过业务准入。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
@@ -190,4 +213,5 @@ WorkflowRun 状态迁移或知识持久化塞回适配器。这样外部知识�
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest -q tests/test_external_connection_fabric_registry.py
+uv run --with pyyaml --with pytest python -m pytest -q tests/test_external_resource_pack.py
 ```
