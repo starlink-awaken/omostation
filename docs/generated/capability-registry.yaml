@@ -1,0 +1,1729 @@
+# docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
+# 自动生成，请勿手动编辑
+# 生成器: bin/cockpit/gen-capability-registry.py
+# 生成时间: 2026-08-02T10:09:57Z
+
+version: 1.0.0
+generated_at: '2026-08-02T10:09:57Z'
+generator: bin/cockpit/gen-capability-registry.py
+totals:
+  mcp_servers: 24
+  mcp_tools: 541
+  bos_services: 184
+  bos_domains: 16
+  cli_commands: 103
+mcp_servers:
+- id: omo
+  name: OMO Agent OS Kernel
+  layer: L2
+  file: projects/omo/src/omo/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - acquire_lock
+  - cards_check
+  - cards_create
+  - cards_search
+  - cards_status
+  - cards_update
+  - check_gac_rule
+  - check_lock
+  - list_locks
+  - omo_bridge
+  - omo_debt_list
+  - omo_debt_summary
+  - omo_gc
+  - omo_metacognition
+  - omo_worker_dispatch
+  - omo_worker_reclaim
+  - omo_yield_task
+  - release_lock
+  - validate_task
+  tool_count: 19
+- id: kos
+  name: KOS Knowledge Retrieval
+  layer: L2
+  file: projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
+  transport: stdio
+  exists: true
+  tools:
+  - build_context
+  - check_subscription
+  - collab.add_artifact
+  - collab.claim_subtask
+  - collab.create_task
+  - collab.get_task
+  - collab.list_tasks
+  - collab.update_task
+  - consensus.create
+  - consensus.get
+  - consensus.list_expired
+  - consensus.renew
+  - consensus.trace
+  - cross_domain_sync
+  - db_vacuum
+  - entity_explore
+  - fact_check
+  - full_sync
+  - get_entity
+  - get_entity_timeline
+  - get_knowledge
+  - get_stats
+  - get_system_status
+  - graph_search
+  - knowledge_ask
+  - list_domains
+  - mcp_market_discover
+  - memory_stats
+  - ontology_graph
+  - ontology_rebuild
+  - research_now
+  - research_pipeline
+  - run_indexer
+  - search_entity
+  - search_knowledge
+  - self.get_current_role
+  - self.get_profile
+  - self.get_vision_summary
+  - semantic_scholar
+  - semantic_search
+  - subscribe_topic
+  - sync_gbrain
+  - verify_claim
+  - viz_render
+  tool_count: 44
+- id: kos-stdio
+  name: KOS (stdio JSON-RPC, legacy)
+  layer: L2
+  file: projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
+  transport: stdio
+  exists: true
+  tools:
+  - build_context
+  - check_subscription
+  - collab.add_artifact
+  - collab.claim_subtask
+  - collab.create_task
+  - collab.get_task
+  - collab.list_tasks
+  - collab.update_task
+  - consensus.create
+  - consensus.get
+  - consensus.list_expired
+  - consensus.renew
+  - consensus.trace
+  - cross_domain_sync
+  - db_vacuum
+  - entity_explore
+  - fact_check
+  - full_sync
+  - get_entity
+  - get_entity_timeline
+  - get_knowledge
+  - get_stats
+  - get_system_status
+  - graph_search
+  - knowledge_ask
+  - list_domains
+  - mcp_market_discover
+  - memory_stats
+  - ontology_graph
+  - ontology_rebuild
+  - research_now
+  - research_pipeline
+  - run_indexer
+  - search_entity
+  - search_knowledge
+  - self.get_current_role
+  - self.get_profile
+  - self.get_vision_summary
+  - semantic_scholar
+  - semantic_search
+  - subscribe_topic
+  - sync_gbrain
+  - verify_claim
+  - viz_render
+  tool_count: 44
+- id: l4-kernel
+  name: L4 Self-Layer Kernel
+  layer: L4
+  file: projects/l4-kernel/src/l4_kernel/mcp_server.py
+  transport: stdio/http/sse
+  exists: true
+  ports:
+    http: 7455
+    sse: 7456
+  tools:
+  - l4_cards_check
+  - l4_cards_compliance
+  - l4_cards_get
+  - l4_cards_list
+  - l4_cards_search
+  - l4_claude_validate
+  - l4_config_read
+  - l4_cross_search
+  - l4_dashboard
+  - l4_domain_create
+  - l4_domain_freeze
+  - l4_domain_info
+  - l4_domain_migrate
+  - l4_domain_sync
+  - l4_domain_unfreeze
+  - l4_domain_validate
+  - l4_domains_list
+  - l4_engine_check
+  - l4_engine_logs
+  - l4_entrypoint_read
+  - l4_evolution_status
+  - l4_evolution_tasks
+  - l4_evolution_trigger
+  - l4_file_delete
+  - l4_file_move
+  - l4_files_list
+  - l4_freshness
+  - l4_health
+  - l4_health_detail
+  - l4_kems_plane_scan
+  - l4_kems_validate
+  - l4_memory_read
+  - l4_models_list
+  - l4_plugin_actions
+  - l4_plugin_run_action
+  - l4_plugin_run_mechanism
+  - l4_plugin_specs
+  - l4_plugin_workflows
+  - l4_project_check
+  - l4_reload
+  - l4_rules_read
+  - l4_search
+  - l4_signal_emit
+  - l4_signal_patterns
+  - l4_signals_list
+  - l4_state_read
+  - l4_status_read
+  - l4_storage_usage
+  - l4_timeline_list
+  - l4_tools_list
+  - l4_workspace_search
+  tool_count: 51
+- id: agora
+  name: Agora Service Convergence Hub
+  layer: I0
+  file: projects/agora/src/agora/server/mcp.py
+  transport: stdio/sse
+  exists: true
+  tools:
+  - a2a_cancel_task
+  - a2a_get_task
+  - a2a_list_tasks
+  - a2a_send_task
+  - add_route
+  - agora_execute
+  - audit_query
+  - audit_stats
+  - bos_health
+  - bos_inbox_archive
+  - bos_inbox_draft
+  - bos_inbox_pending
+  - bos_inbox_search
+  - bos_inbox_status
+  - bos_inbox_triage
+  - bos_inbox_watch
+  - bos_metrics_status
+  - bos_middleware_status
+  - bos_reload_discovery
+  - bos_reload_m1
+  - bos_reload_routes
+  - create_api_key
+  - debt_auto_seed_tool
+  - entropy_cleanup_tool
+  - get_agent_card
+  - get_bos_schema
+  - get_event_log
+  - get_state_transitions
+  - health_check
+  - lifecycle_load_all
+  - lifecycle_start_watch
+  - lifecycle_status
+  - lifecycle_stop_watch
+  - lifecycle_unload_all
+  - list_agent_cards
+  - list_api_keys
+  - list_bos_domains
+  - list_bos_resources
+  - list_bos_tools
+  - list_routes
+  - list_services
+  - mutate_resource
+  - persona_bdsk_evaluate
+  - proxy_add_service
+  - proxy_arch_health
+  - proxy_backend_health
+  - proxy_connect
+  - proxy_governance_status
+  - proxy_list_tools
+  - proxy_omo_debt
+  - publish_event
+  - python
+  - read_resource
+  - register_push_notification
+  - register_service
+  - registry_find_agent_tool
+  - registry_health_tool
+  - registry_heartbeat_tool
+  - registry_list_agents_tool
+  - registry_list_tasks_tool
+  - registry_register_agent_tool
+  - registry_submit_task_tool
+  - repo_discover
+  - repo_install
+  - repo_load
+  - repo_pipeline
+  - repo_search
+  - repo_status
+  - repo_unload
+  - resolve_bos_uri
+  - revoke_api_key
+  - route_call
+  - subscribe_event
+  - swarm_nodes
+  - swarm_resolve
+  - swarm_status
+  - unwatch_resource
+  - watch_resource
+  - workflow_capability_health
+  - workspace_audit_gitlink
+  - workspace_audit_governance
+  - workspace_audit_lint
+  - workspace_audit_ops
+  - workspace_audit_radar
+  - workspace_audit_run
+  - workspace_audit_ssot
+  tool_count: 86
+- id: ecos
+  name: eCOS SSOT Kernel
+  layer: L0
+  file: projects/ecos/src/ecos/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - domain_list
+  - domain_read
+  - domain_resolve
+  - domain_search
+  - domain_stats
+  - domain_tree
+  - domain_validate
+  - ecos_brief
+  - ecos_health
+  - ssot_check
+  - ssot_compile
+  - ssot_derive
+  - ssot_evolve
+  - ssot_extract
+  - ssot_stats
+  - ssot_sync
+  - workflow_actions
+  - workflow_backends
+  - workflow_cache_invalidate
+  - workflow_cache_status
+  - workflow_circuit_breaker_reset
+  - workflow_circuit_breaker_status
+  - workflow_list
+  - workflow_logs
+  - workflow_run
+  - workflow_show
+  - workflow_test
+  - workflow_validate
+  tool_count: 28
+- id: ecos-ssot
+  name: eCOS L0 SSOT
+  layer: L0
+  file: projects/ecos/src/ecos/l0/ssot/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - check
+  - compile
+  - derive
+  - evolve
+  - extract_from_file
+  - handle_message
+  - ssot-kernel
+  - stats
+  - sync
+  tool_count: 9
+- id: ecos-integration
+  name: eCOS Integration
+  layer: L0
+  file: projects/ecos/src/ecos/services/integration/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - bos_routes
+  - domain_list
+  - domain_read
+  - domain_resolve
+  - domain_search
+  - domain_stats
+  - domain_tree
+  - domain_validate
+  - ecos_brief
+  - ecos_health
+  - handle_bos_routes
+  - handle_domain_list
+  - handle_domain_stats
+  - handle_domain_tree
+  - handle_domain_validate
+  - handle_ecos_brief
+  - handle_ecos_health
+  - handle_read
+  - handle_resolve
+  - handle_search
+  - handle_workflow_list
+  - handle_workflow_relations
+  - handle_workflow_show
+  - workflow_list
+  - workflow_relations
+  - workflow_show
+  tool_count: 26
+- id: metaos
+  name: MetaOS Orchestration
+  layer: L2
+  file: projects/metaos/src/metaos/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - handle_day
+  - handle_device_orchestrator
+  - handle_evening
+  - handle_family_brief
+  - handle_gate
+  - handle_health
+  - handle_morning
+  - handle_request
+  - handle_review
+  - handle_ssot
+  - handle_status
+  - handle_trace
+  - metaos-engine
+  - metaos_day
+  - metaos_device_orchestrator
+  - metaos_evening
+  - metaos_family_brief
+  - metaos_gate
+  - metaos_health
+  - metaos_morning
+  - metaos_review
+  - metaos_ssot
+  - metaos_status
+  - metaos_trace
+  tool_count: 24
+- id: aetherforge
+  name: AetherForge Compute
+  layer: X
+  file: projects/aetherforge/src/aetherforge/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - forge_cost_report
+  - forge_generate
+  - forge_generate_mesh
+  - forge_health_check
+  - forge_list_nodes
+  - forge_mesh_status
+  - forge_triage
+  - forge_triage_batch
+  - forge_triage_consensus
+  - forge_triage_status
+  tool_count: 10
+- id: model-driven
+  name: Model-Driven Lifecycle
+  layer: M0
+  file: projects/model-driven/src/model_driven/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - adr-create
+  - adr-list
+  - audit-record
+  - collab-assign
+  - collab-create
+  - collab-status
+  - cross-stage-check
+  - debt-register
+  - lifecycle-advance
+  - lifecycle-blockers
+  - lifecycle-create
+  - lifecycle-dashboard
+  - lifecycle-status
+  - model-execute
+  - model-tools
+  - okr-create
+  - okr-progress
+  - spec-create
+  - spec-list
+  - ssot-drift-check
+  - task-create
+  - trigger-dashboard
+  - trigger-derive
+  - trigger-drift
+  - trigger-heal
+  - trigger-list
+  - trigger-status
+  - value-roi
+  tool_count: 28
+- id: model-driven-fastmcp
+  name: Model-Driven FastMCP
+  layer: M0
+  file: projects/model-driven/src/model_driven/fastmcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - model_tool_execute
+  - model_tools_list
+  tool_count: 2
+- id: c2g
+  name: C2G Strategy Compass
+  layer: X
+  file: projects/c2g/src/c2g/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - c2g_bet
+  - c2g_gc
+  - c2g_radar
+  tool_count: 3
+- id: family-hub
+  name: Family Hub
+  layer: X
+  file: projects/family-hub/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - complete_quest
+  - create_quest
+  - generate_smart_quests
+  - get_active_quests
+  - get_health
+  - get_profiles
+  tool_count: 6
+- id: agent-runtime
+  name: Cockpit Agent Runtime
+  layer: L3
+  file: projects/cockpit/src/cockpit/agent_runtime_mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - chat
+  - run_task
+  tool_count: 2
+- id: iris
+  name: Iris
+  layer: L2
+  file: projects/kairon/packages/iris/src/iris/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - iris_connector_status
+  - iris_get_item
+  - iris_list_connectors
+  - iris_list_items
+  - iris_search
+  - iris_sync
+  - iris_sync_bidirectional
+  - iris_validate
+  tool_count: 8
+- id: sophia
+  name: Sophia Research Paradigm
+  layer: L2
+  file: projects/kairon/packages/sophia/src/sophia/server/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - compile_paradigm
+  - get_effective_ops
+  - get_transitions
+  - list_operations
+  - list_states
+  - record_trace
+  - suggest_ops
+  - suggest_paradigm
+  tool_count: 8
+- id: kronos
+  name: Kronos
+  layer: L2
+  file: projects/kairon/packages/kronos/src/kronos/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - cloakbrowser
+  - eidos
+  - kos
+  - kronos
+  - kronos_browser_fetch
+  - kronos_extract
+  - kronos_fetch
+  - kronos_insight
+  - kronos_pipelines
+  - kronos_plan
+  - kronos_route
+  - kronos_status
+  - kronos_tools
+  - ollama
+  - vault
+  - wps_note
+  tool_count: 16
+- id: minerva
+  name: Minerva
+  layer: L2
+  file: projects/kairon/packages/minerva/src/minerva/mcp_server/server.py
+  transport: stdio
+  exists: true
+  tools:
+  - cross_domain_research
+  - knowledge_closed_loop
+  - knowledge_ingest
+  - knowledge_search
+  - minerva_bfs_search
+  - research_now
+  - research_schedule
+  - research_watch
+  tool_count: 8
+- id: codeanalyze
+  name: CodeAnalyze
+  layer: L2
+  file: projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py
+  transport: stdio
+  exists: true
+  tools:
+  - analyze_project
+  - architecture_generate_diagram
+  - architecture_get_code_metrics
+  - ast_search
+  - audit_project
+  - cgc_query
+  - codegraph_callees
+  - codegraph_callers
+  - codegraph_context
+  - codegraph_get_affected_tests
+  - codegraph_get_impact_radius
+  - codegraph_get_symbol_graph
+  - codegraph_init
+  - codegraph_search
+  - codegraph_sync
+  - crg_build
+  - crg_status
+  - export_graph
+  - extract_policy_docs
+  - pack_repo
+  - rg_search
+  - scan_directory
+  - status
+  - workflow_impact_analysis
+  - workflow_onboarding
+  tool_count: 25
+- id: forge
+  name: Forge
+  layer: L2
+  file: projects/kairon/packages/forge/src/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - get_project_status
+  - get_tool_info
+  - list_tools
+  - market_install
+  - market_list
+  - market_remove
+  - search_tools
+  tool_count: 7
+- id: ontoderive
+  name: OntoDerive
+  layer: L2
+  file: projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - derive
+  - handle_mcp_request
+  - list_entities
+  - ontoderive
+  - pipeline_status
+  - trace
+  - validate
+  tool_count: 7
+- id: toolforge
+  name: ToolForge
+  layer: L2
+  file: projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py
+  transport: stdio
+  exists: true
+  tools:
+  - handle_request
+  - ontoderive-toolforge
+  - toolforge_guide
+  - toolforge_match
+  - toolforge_select
+  tool_count: 5
+- id: gbrain
+  name: gbrain Knowledge DB
+  layer: L2
+  file: projects/gbrain/src/core/operations/exports.ts
+  transport: stdio
+  exists: true
+  tools:
+  - add_link
+  - add_tag
+  - add_timeline_entry
+  - cancel_job
+  - code_blast
+  - code_callees
+  - code_callers
+  - code_def
+  - code_flow
+  - code_refs
+  - code_traversal_cache_clear
+  - delete_page
+  - extract_facts
+  - file_list
+  - file_upload
+  - file_url
+  - find_anomalies
+  - find_contradictions
+  - find_experts
+  - find_orphans
+  - find_trajectory
+  - forget_fact
+  - get_backlinks
+  - get_brain_identity
+  - get_calibration_profile
+  - get_chunks
+  - get_health
+  - get_ingest_log
+  - get_job
+  - get_job_progress
+  - get_links
+  - get_page
+  - get_raw_data
+  - get_recent_salience
+  - get_recent_transcripts
+  - get_stats
+  - get_tags
+  - get_timeline
+  - get_versions
+  - list_jobs
+  - list_pages
+  - log_ingest
+  - memory_tree
+  - pause_job
+  - purge_deleted_pages
+  - put_page
+  - put_raw_data
+  - query
+  - recall
+  - remove_link
+  - remove_tag
+  - replay_job
+  - resolve_slugs
+  - restore_page
+  - resume_job
+  - retry_job
+  - revert_version
+  - run_doctor
+  - search
+  - search_by_image
+  - send_job_message
+  - sources_add
+  - sources_list
+  - sources_remove
+  - sources_status
+  - submit_agent
+  - submit_job
+  - sync_brain
+  - takes_calibration
+  - takes_list
+  - takes_scorecard
+  - takes_search
+  - think
+  - traverse_graph
+  - whoami
+  tool_count: 75
+bos_services:
+  _domain_counts:
+    agora: 3
+    analysis: 27
+    capability: 38
+    cockpit: 3
+    compute: 3
+    ecos: 10
+    forge: 1
+    governance: 32
+    l4-kernel: 1
+    memory: 38
+    meta: 1
+    omo: 4
+    persona: 10
+    runtime: 1
+    swarm: 1
+    system: 11
+  domains:
+    agora:
+    - uri: bos://agora/metrics
+      description: agora 内部指标源 self-identifier (metrics collector source_uri)
+      transport: inline
+      status: active
+    - uri: bos://agora/registry
+      description: agora @mcp.resource — 列出所有已注册 tools/resources 的 introspection 入口
+      transport: inline
+      status: active
+    - uri: bos://agora/status
+      description: agora @mcp.resource — BOS 系统内省统一大盘 (router/middleware/调用量)
+      transport: inline
+      status: active
+    analysis:
+    - uri: bos://analysis/minerva/research
+      description: Minerva 深度研究入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/minerva/ask
+      description: Minerva 追问入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/minerva/summarize
+      description: Minerva 摘要入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/derive
+      description: OntoDerive 本体推导入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/validate
+      description: OntoDerive 推导验证
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/explain
+      description: OntoDerive 推导解释
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/audit
+      description: OntoDerive 审计入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/fact-check
+      description: OntoDerive 事实核验入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/toolforge/match
+      description: ToolForge 分组匹配思维工具
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/toolforge/select
+      description: ToolForge 跨类别 Top-N 工具选择
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/toolforge/guide
+      description: ToolForge OntoDerive 推导指导
+      transport: stdio
+      status: active
+    - uri: bos://analysis/codeanalyze/scan
+      description: CodeAnalyze AST 扫描入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/codeanalyze/analyze
+      description: CodeAnalyze 深度分析
+      transport: stdio
+      status: active
+    - uri: bos://analysis/codeanalyze/metrics
+      description: CodeAnalyze 代码度量
+      transport: stdio
+      status: active
+    - uri: bos://analysis/iris/discover
+      description: Iris 发现入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/iris/scan
+      description: Iris 扫描入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/iris/recall
+      description: Iris 召回入口
+      transport: stdio
+      status: active
+    - uri: bos://analysis/minerva/draft
+      description: '[POC] Minerva 草稿生成 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://analysis/minerva/audit
+      description: '[POC] Minerva 审计 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://analysis/codeanalyze/report
+      description: '[POC] CodeAnalyze 分析报告 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://analysis/codeanalyze/lint
+      description: '[POC] CodeAnalyze Lint (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://analysis/iris/connect
+      description: '[UNIMPLEMENTED] Iris 连接 (POC stdio)'
+      transport: mcp_stdio
+      status: unimplemented
+    - uri: bos://analysis/iris/transform
+      description: '[UNIMPLEMENTED] Iris 数据转换 (POC stdio)'
+      transport: mcp_stdio
+      status: unimplemented
+    - uri: bos://analysis/iris/validate
+      description: '[UNIMPLEMENTED] Iris 数据校验 (POC stdio)'
+      transport: mcp_stdio
+      status: unimplemented
+    - uri: bos://analysis/eidos/validate
+      description: Eidos 数据模型校验
+      transport: stdio
+      status: active
+    - uri: bos://analysis/ontoderive/align
+      description: OntoDerive 语义对齐
+      transport: stdio
+      status: active
+    - uri: bos://analysis/minerva
+      description: kairon minerva 集成入口 (agora l0_registry_loader 引用)
+      transport: inline
+      status: active
+    capability:
+    - uri: bos://capability/cockpit/mcp-server
+      description: Cockpit MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://capability/agent-runtime/execute
+      description: Agent Runtime 执行入口
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/agent-runtime/list-tools
+      description: Agent Runtime 工具列表
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/agent-runtime/status
+      description: Agent Runtime 状态
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/forge/agent-list
+      description: Forge 集市 Agent 列表
+      transport: stdio
+      status: active
+    - uri: bos://capability/forge/agent-install
+      description: Forge 集市 Agent 安装
+      transport: stdio
+      status: active
+    - uri: bos://capability/forge/registry
+      description: Forge 注册表查询
+      transport: stdio
+      status: active
+    - uri: bos://capability/forge/publish
+      description: Forge 发布入口
+      transport: stdio
+      status: active
+    - uri: bos://capability/forge/lint
+      description: Forge Lint 检查
+      transport: stdio
+      status: active
+    - uri: bos://capability/swarm/run
+      description: AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)
+      transport: internal
+      status: active
+    - uri: bos://capability/compute/generate
+      description: AetherForge 网关生成 — 经 SSOT registry 路由到 omlx/本地/云 (internal 直调)
+      transport: internal
+      status: active
+    - uri: bos://capability/compute/mesh-status
+      description: AetherForge 算力网格节点健康/在线摘要 (internal 直调)
+      transport: internal
+      status: active
+    - uri: bos://capability/runtime/health
+      description: Runtime MCP — 服务注册表/健康/协议/KEI
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/forge/discover
+      description: '[POC] Forge 工具发现 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/forge/exec-tool
+      description: '[POC] Forge 工具执行 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/forge/list-tools
+      description: '[POC] Forge 工具列表 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/forge/register-tool
+      description: '[POC] Forge 工具注册 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/bus/data
+      description: Omni-Bus 数据面路由 (日志/遥测)
+      transport: internal
+      status: active
+    - uri: bos://capability/bus/event
+      description: Omni-Bus 事件面路由 (Pub/Sub)
+      transport: internal
+      status: active
+    - uri: bos://capability/bus/control
+      description: Omni-Bus 控制面路由 (异步/定时任务)
+      transport: internal
+      status: active
+    - uri: bos://capability/agent-runtime/chat
+      description: Agent 交互式对话接口
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/agent-runtime/run-task
+      description: Agent 任务执行接口
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/agent-runtime/task-status
+      description: Agent 任务状态查询
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/agent-runtime/agent-list
+      description: 列出所有可用 Agent 实例
+      transport: mcp_stdio
+      status: active
+    - uri: bos://capability/wps-office-mcp/invoke
+      description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写
+      transport: stdio
+      status: active
+    - uri: bos://capability/wps-skills/load
+      description: WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发
+      transport: stdio
+      status: active
+    - uri: bos://capability/bos-skill-cli/exec
+      description: BOS Skill 管理 CLI/TUI — 搜索/暂存/promote/回退 skill 包
+      transport: stdio
+      status: active
+    - uri: bos://capability/headroom/compress
+      description: Agent 上下文压缩层 — 60-95% token 节省 + 模型压缩 + MCP 代理
+      transport: stdio
+      status: active
+    - uri: bos://capability/code-review-graph/analyze
+      description: Token 优化型代码评审图工具 — PyPI 发布，MCP 兼容
+      transport: stdio
+      status: active
+    - uri: bos://capability/claude-skills/load
+      description: 354 个 Claude Code Skill 最全库 — 593 CLI 脚本 + 711 模板
+      transport: inline
+      status: active
+    - uri: bos://capability/last30days-skill/fetch
+      description: 'AI Agent 驱动的搜索/打分类信息流聚合 — GitHub Trending #1'
+      transport: stdio
+      status: active
+    - uri: bos://capability/media-crawler/crawl
+      description: 自媒体平台爬虫 — 抖音/小红书/快手/B站/微博等 12 平台，含反爬能力
+      transport: stdio
+      status: active
+    - uri: bos://capability/open-montage/render
+      description: 开源 Agentic 视频制作系统 — 从剧本到成品的全流程 Pipeline
+      transport: stdio
+      status: active
+    - uri: bos://capability/skills-for-fabric/load
+      description: 微软 Fabric AI 技能集 — 作者/消费/运维三类 Skill
+      transport: inline
+      status: active
+    - uri: bos://capability/deer-flow/run
+      description: 字节开源超 Agent 框架 v2.0 — 子 Agent/记忆/沙箱/技能
+      transport: stdio
+      status: active
+    - uri: bos://capability/datafoundry/analyze
+      description: 企业级 Data Agent 工作台 — 28 数据源 + 语义层 + 多步分析
+      transport: stdio
+      status: active
+    - uri: bos://capability/knowledge-work-plugins/load
+      description: Claude Cowork 11 个生产力插件 — Claude Code 兼容
+      transport: inline
+      status: active
+    - uri: bos://capability/evaluator
+      description: evaluator 域 (CR-RBAC-01 强制权限, role='evaluator' or 'admin')
+      transport: inline
+      status: active
+    cockpit:
+    - uri: bos://cockpit/context
+      description: Cockpit MCP (短路径别名)
+      transport: mcp_stdio
+      status: active
+    - uri: bos://cockpit/tools/cards_status
+      description: cockpit cards_status 工具 — mof_agora_hook 路由表入口
+      transport: inline
+      status: active
+    - uri: bos://cockpit/tools/test
+      description: cockpit test 工具 — mof_agora_hook 路由表入口
+      transport: inline
+      status: active
+    compute:
+    - uri: bos://compute/aetherforge/infer
+      description: AetherForge 算力网关与 omlxc (Apple MLX/Local LLM) 本地量化模型通用推理调度端点
+      transport: stdio
+      status: active
+    - uri: bos://compute/aetherforge/mesh
+      description: AetherForge 算力网格拓扑发现与模型负载均衡控制器 (Model Mesh & Load Balancing)
+      transport: stdio
+      status: active
+    - uri: bos://compute/aetherforge/swarm
+      description: AetherForge 多智能体群体算力与复杂决策任务并发编排引擎
+      transport: stdio
+      status: active
+    ecos:
+    - uri: bos://ecos/workflow/list
+      description: eCOS L0 工作流列表
+      transport: stdio
+      status: active
+    - uri: bos://ecos/workflow/describe
+      description: eCOS L0 工作流定义查询
+      transport: stdio
+      status: active
+    - uri: bos://ecos/workflow/run
+      description: eCOS L0 工作流执行
+      transport: stdio
+      status: active
+    - uri: bos://ecos/workflow/logs
+      description: eCOS L0 工作流运行历史
+      transport: stdio
+      status: active
+    - uri: bos://ecos/workflow/cache-status
+      description: eCOS 工作流缓存状态查询
+      transport: stdio
+      status: active
+    - uri: bos://ecos/workflow/cache-invalidate
+      description: eCOS 工作流缓存全部清除
+      transport: stdio
+      status: active
+    - uri: bos://ecos/workflow/cb-status
+      description: eCOS 后端熔断器状态查询
+      transport: stdio
+      status: active
+    - uri: bos://ecos/workflow/cb-reset
+      description: eCOS 后端熔断器全部重置
+      transport: stdio
+      status: active
+    - uri: bos://ecos/events
+      description: ecos SSE events 入口 (events_sse.py 服务)
+      transport: stdio
+      status: active
+    - uri: bos://ecos/workflow
+      description: ecos workflow CLI 入口 (ecos/cli/workflow.py)
+      transport: stdio
+      status: active
+    forge:
+    - uri: bos://forge/market/list
+      description: agora forge market list — plugin market 查询入口
+      transport: inline
+      status: active
+    governance:
+    - uri: bos://governance/metaos/decide
+      description: MetaOS 决策门控
+      transport: stdio
+      status: active
+    - uri: bos://governance/metaos/immune
+      description: MetaOS 免疫响应
+      transport: stdio
+      status: active
+    - uri: bos://governance/metaos/route
+      description: MetaOS 路由决策
+      transport: stdio
+      status: active
+    - uri: bos://governance/omo/state
+      description: OMO 状态查询
+      transport: stdio
+      status: active
+    - uri: bos://governance/omo/debt
+      description: OMO 债务查询
+      transport: stdio
+      status: active
+    - uri: bos://governance/agent-workflow/bootstrap
+      description: Agent Governance Control Plane 启动上下文
+      transport: stdio
+      status: active
+    - uri: bos://governance/agent-workflow/verify-plan
+      description: Agent Governance Control Plane diff-aware 验证规划
+      transport: stdio
+      status: active
+    - uri: bos://governance/agent-workflow/observe
+      description: Agent Governance Control Plane run/lock/ledger 观察
+      transport: stdio
+      status: active
+    - uri: bos://governance/agent-workflow/compliance
+      description: Agent Governance Control Plane 合规审计
+      transport: stdio
+      status: active
+    - uri: bos://governance/agent-workflow/doctor
+      description: Agent Governance Control Plane 内外部集成健康检查
+      transport: stdio
+      status: active
+    - uri: bos://governance/evolution/status
+      description: 治理演进路线图状态入口
+      transport: stdio
+      status: active
+    - uri: bos://governance/evolution/validate
+      description: 治理演进路线图结构与追踪校验
+      transport: stdio
+      status: active
+    - uri: bos://governance/evolution/traces
+      description: 治理能力到入口/SSOT/验证器的追踪视图
+      transport: stdio
+      status: active
+    - uri: bos://governance/evolution/golden-paths
+      description: 治理 Golden Path 端到端流程视图
+      transport: stdio
+      status: active
+    - uri: bos://governance/evolution/packages
+      description: 治理演进发布包与工作树收口视图
+      transport: stdio
+      status: active
+    - uri: bos://governance/eidos/validate
+      description: Eidos Schema 约束校验
+      transport: stdio
+      status: active
+    - uri: bos://governance/omo/audit
+      description: OMO 治理审计 (internal — 同进程 importlib)
+      transport: internal
+      status: active
+    - uri: bos://governance/omo/inspect
+      description: OMO 系统检查 (internal 同进程)
+      transport: internal
+      status: active
+    - uri: bos://governance/omo/sync
+      description: OMO 状态同步 (mcp_stdio transport 跨进程)
+      transport: mcp_stdio
+      status: active
+    - uri: bos://governance/cockpit/context
+      description: Cockpit MCP Server — 20 工具
+      transport: mcp_stdio
+      status: active
+    - uri: bos://governance/l4-kernel/domains
+      description: L4 Domain Kernel MCP — 24域管理
+      transport: mcp_stdio
+      status: active
+    - uri: bos://governance/metaos/gate
+      description: MetaOS 门控检查 (POC stdio)
+      transport: mcp_stdio
+      status: active
+    - uri: bos://governance/metaos/register
+      description: MetaOS 包注册 (POC stdio)
+      transport: mcp_stdio
+      status: active
+    - uri: bos://governance/evolution/loop
+      description: OMO 自动进化循环监控
+      transport: internal
+      status: active
+    - uri: bos://governance/quality/audit
+      description: 记忆脊知识质量审计与评分
+      transport: internal
+      status: active
+    - uri: bos://governance/roles/list
+      description: governance roles list 端点 (mcp_protocol registry 端点)
+      transport: inline
+      status: active
+    - uri: bos://governance/governance/tasks
+      description: gov tasks 端点 (cockpit dashboard helpers_compute 引用)
+      transport: inline
+      status: active
+    - uri: bos://governance/governance/circuit_breaker
+      description: governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)
+      transport: inline
+      status: active
+    - uri: bos://governance/governance/daily_budget
+      description: governance cockpit daily_budget 端点 (cockpit api_omos metrics source)
+      transport: inline
+      status: active
+    - uri: bos://governance/governance/quests
+      description: governance cockpit quests 端点 (cockpit api_omos metrics source)
+      transport: inline
+      status: active
+    - uri: bos://governance/governance/omo_worker_dispatch
+      description: governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics source)
+      transport: inline
+      status: active
+    - uri: bos://governance/board/execute
+      description: B.D.S.K. Virtual Board consensus engine & Mode-A/B execution
+      transport: inline
+      status: active
+    l4-kernel:
+    - uri: bos://l4-kernel/domains
+      description: L4 Kernel MCP (短路径别名)
+      transport: mcp_stdio
+      status: active
+    memory:
+    - uri: bos://memory/kos/search
+      description: KOS 知识图谱检索入口 (P33-W1 战役 2 起步)
+      transport: stdio
+      status: active
+    - uri: bos://memory/kos/mcp-server
+      description: KOS MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/eidos/mcp-server
+      description: Eidos MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/ontoderive/mcp-server
+      description: Ontoderive MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/minerva/mcp-server
+      description: Minerva MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/kronos/mcp-server
+      description: Kronos MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/iris/mcp-server
+      description: Iris MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/sophia/mcp-server
+      description: Sophia MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/forge/mcp-server
+      description: Forge MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/metaos/mcp-server
+      description: MetaOS MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: deprecated
+    - uri: bos://memory/ecos/mcp-server
+      description: ECOS MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/omo/mcp-server
+      description: OMO MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/aetherforge/mcp-server
+      description: AetherForge MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/c2g/mcp-server
+      description: C2G MCP Server (HTTP proxy mode)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/kos/rest-api
+      description: KOS REST API v1 (9 endpoints)
+      transport: http
+      status: active
+    - uri: bos://memory/kos/graphrag
+      description: 'KOS GraphRAG: 实体+BFS+证据+LLM'
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/kos/mcp-v2
+      description: KOS MCP v2.0 (25 tools)
+      transport: mcp_proxy
+      status: active
+    - uri: bos://memory/kos/ingest
+      description: KOS 知识摄取入口
+      transport: stdio
+      status: active
+    - uri: bos://memory/kos/schema
+      description: KOS Schema 查询
+      transport: stdio
+      status: active
+    - uri: bos://memory/kronos/ingest
+      description: Kronos 知识摄取管线入口
+      transport: stdio
+      status: active
+    - uri: bos://memory/kronos/scan
+      description: Kronos 扫描入口
+      transport: stdio
+      status: active
+    - uri: bos://memory/local/all-search
+      description: P2 多区聚合搜索 — cockpit local + KOS + vault
+      transport: internal
+      status: active
+    - uri: bos://memory/vault/search
+      description: L4 Vault 知识库搜索
+      transport: internal
+      status: active
+    - uri: bos://memory/kronos/query
+      description: '[POC] KRONOS 时间序列查询 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://memory/kronos/schedule
+      description: '[POC] KRONOS 调度任务 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://memory/gbrain/search
+      description: gbrain 知识库全文搜索 (高性能 Postgres)
+      transport: mcp_stdio
+      status: active
+    - uri: bos://memory/gbrain/query
+      description: gbrain 知识库结构化查询
+      transport: mcp_stdio
+      status: active
+    - uri: bos://memory/gbrain/sync
+      description: gbrain 知识库增量同步
+      transport: mcp_stdio
+      status: active
+    - uri: bos://memory/kos/query
+      description: KOS 知识查询
+      transport: stdio
+      status: active
+    - uri: bos://memory/docs/readme
+      description: memory docs readme 端点 (mcp_protocol registry 端点)
+      transport: inline
+      status: active
+    - uri: bos://memory/fast-track/virtual-doc
+      description: memory fast-track virtual-doc 端点 (omo bridge source_docs)
+      transport: inline
+      status: active
+    - uri: bos://memory/inbox/status
+      description: BOS Inbox 多源私有知识神经网运行状态统计
+      transport: mcp
+      status: active
+    - uri: bos://memory/inbox/search
+      description: BOS Inbox 多源私有知识库全文与高维关键词检索
+      transport: mcp
+      status: active
+    - uri: bos://memory/inbox/pending
+      description: BOS Inbox 实时待办公文与未读事项读取
+      transport: mcp
+      status: active
+    - uri: bos://memory/inbox/watch
+      description: BOS Inbox 实时事件驱动监控与紧急公文/工单待办通知 (Event-Driven Watcher)
+      transport: mcp
+      status: active
+    - uri: bos://memory/inbox/archive
+      description: BOS Inbox 工单处理完结与冷归档闭环接口 (Lifecycle Archive)
+      transport: mcp
+      status: active
+    - uri: bos://memory/inbox/triage
+      description: BOS Inbox 公文与待办事项智能分类分拣与紧急度测算引擎 (Triage Engine)
+      transport: internal
+      status: active
+    - uri: bos://memory/inbox/draft
+      description: BOS Inbox 智能拟办意见与风险提示批复草拟引擎 (Draft Assistant)
+      transport: internal
+      status: active
+    meta:
+    - uri: bos://meta/discover
+      description: 发现所有可用 BOS 资源和入口
+      transport: internal
+      status: active
+    omo:
+    - uri: bos://omo/eidos/pipeline
+      description: Eidos 治理管线调度
+      transport: stdio
+      status: active
+    - uri: bos://omo/audit
+      description: omo audit 端点 (omo BOS schema LEGACY_DOMAIN_MAP 升级示例)
+      transport: inline
+      status: active
+    - uri: bos://omo/debt
+      description: omo debt 端点 (omo @mcp.resource 引用)
+      transport: inline
+      status: active
+    - uri: bos://omo/tasks/active
+      description: ''
+      transport: inline
+      status: active
+    persona:
+    - uri: bos://persona/core-models/schema
+      description: Core Models Schema 查询
+      transport: stdio
+      status: active
+    - uri: bos://persona/core-models/validate
+      description: Core Models 校验
+      transport: stdio
+      status: active
+    - uri: bos://persona/health-profile/query
+      description: Health Profile 查询
+      transport: stdio
+      status: active
+    - uri: bos://persona/health-profile/update
+      description: Health Profile 更新
+      transport: stdio
+      status: active
+    - uri: bos://persona/sot-bridge-persona/recall-entity
+      description: SharedBrain Bridge 实体召回 (P36-W1 GAP 补全, canonical URI)
+      transport: internal
+      status: active
+    - uri: bos://persona/family-hub/health
+      description: Family Hub local MCP Server
+      transport: mcp_stdio
+      status: active
+    - uri: bos://persona/health-profile/summary
+      description: '[POC] Health-Profile 健康摘要 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://persona/health-profile/alert
+      description: '[POC] Health-Profile 健康告警 (POC stdio)'
+      transport: mcp_stdio
+      status: active
+    - uri: bos://persona/board/route
+      description: B.D.S.K. 4-Corner Persona Router (@Builder/@Devil/@Sage/@Keeper)
+      transport: inline
+      status: active
+    - uri: bos://persona/bdsk/evaluate
+      description: B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)
+      transport: internal
+      status: active
+    runtime:
+    - uri: bos://runtime/health
+      description: Runtime MCP (短路径别名)
+      transport: mcp_stdio
+      status: active
+    swarm:
+    - uri: bos://swarm/orchestrator/status
+      description: 获取分布式蜂群实时拓扑与负载状态
+      transport: internal
+      status: active
+    system:
+    - uri: bos://system/backends/list
+      description: 列出所有已注册 MCP backend (代理 KNOWN_BACKENDS)
+      transport: internal
+      status: active
+    - uri: bos://system/backends/register
+      description: 动态注册新 MCP backend (POST /v1/backends/register)
+      transport: internal
+      status: active
+    - uri: bos://system/backends/health
+      description: 后端健康探活 — 每个 backend 的状态/失败计数
+      transport: internal
+      status: active
+    - uri: bos://system/routes/reload
+      description: BOS 路由表热重载 (从 YAML 重新加载)
+      transport: internal
+      status: active
+    - uri: bos://system/governance/status
+      description: 治理管道健康状态 (心跳时间/日志条目/健康等级)
+      transport: internal
+      status: active
+    - uri: bos://system/governance/heartbeat
+      description: 写入治理管道心跳 (governance.jsonl)
+      transport: internal
+      status: active
+    - uri: bos://system/omo/debt
+      description: OMO 技术债务评分 — 当前总债务/趋势/热点
+      transport: internal
+      status: active
+    - uri: bos://system/discovery/package
+      description: domain package 通用入口 (mcp/bos_discovery discovery 路径)
+      transport: inline
+      status: active
+    - uri: bos://system/discovery/package/action
+      description: domain package action 子入口 (mcp/bos_discovery dynamic discovery)
+      transport: inline
+      status: active
+    - uri: bos://system/runtime/workers/status
+      description: execution workers status 端点 (mcp_protocol registry 端点)
+      transport: inline
+      status: active
+    - uri: bos://system/vault/state
+      description: vault _state 端点 (ecos services integration gateway 引用)
+      transport: inline
+      status: active
+cli_commands:
+- name: agent
+  description: 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)
+- name: agent-runtime
+  description: 🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令)
+- name: agent-workflow
+  description: 🤖 Agent 可执行治理流程 (委派 root bin/agent-workflow.py)
+- name: agora
+  description: Agora BOS 网关入口 (委派 agora CLI)
+- name: analyze
+  description: 运行全部分析工具
+- name: api
+  description: 启动 API server
+- name: archive
+  description: 归档已处理完毕的 Inbox 待办文件
+- name: ask
+  description: 向大脑提问（知识检索 + LLM 回答）
+- name: assistant
+  description: 'P5-F2 work-assistant: 1 真实工作 query → 结构化草稿'
+- name: audit
+  description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
+- name: bos
+  description: BOS URI 查询与管理
+- name: brain
+  description: 个人数字大脑 — 知识检索 + 记忆 + 智能问答
+- name: brief
+  description: 会话简报
+- name: bus
+  description: Omni-Bus 三平面入口
+- name: c2g
+  description: 🎯 C2G 战略罗盘 (status/pipeline)
+- name: capability
+  description: BOS capability 域 / toolbox 外部能力
+- name: cards
+  description: 显示 CARDS 卡片状态
+- name: code
+  description: 代码库分析与审查 (基于 codeanalyze)
+- name: compass
+  description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
+- name: compute
+  description: 算力与 LLM 网关操作 (委派 aetherforge)
+- name: context
+  description: 显示系统上下文 (Phase/CARDS/约束/引导)
+- name: contracts
+  description: 契约验证
+- name: daily
+  description: 每日研究简报
+- name: dashboard
+  description: 打开 Web Dashboard
+- name: data
+  description: 数据目录索引 / 类型注册 / TTL 清理
+- name: debt
+  description: 债务评分 (omo-debt Pattern 09 v2.1)
+- name: demo
+  description: 快速演示
+- name: discover
+  description: 发现可用功能和资源
+- name: domains
+  description: 列出 L4 所有域及其状态
+- name: down
+  description: 停止观测栈
+- name: event
+  description: 导出事件封套 (EventEnvelope)
+- name: events
+  description: 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)
+- name: export
+  description: 导出契约封套
+- name: export-research
+  description: 将研究对象导出为 WorkspaceObject JSON
+- name: family-hub
+  description: 家庭数字枢纽入口
+- name: finance
+  description: 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)
+- name: gac
+  description: GaC 治理健康检查 (ADR-0106, 7 机制 + 115 规则 + drift)
+- name: gbrain
+  description: Postgres-native 知识库入口 (委派 gbrain CLI)
+- name: gc
+  description: 清理 data/tmp 过期文件
+- name: get
+  description: 查 1 个 card
+- name: gongwen
+  description: 📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域)
+- name: governance
+  description: 架构治理 (委派 arcnode-*)
+- name: graph
+  description: 运行语义图谱分析
+- name: health
+  description: 一键系统健康检查
+- name: help
+  description: 查看产品地图与快速入门
+- name: history
+  description: 查看对话历史
+- name: identity
+  description: 导出身份封套 (IdentityEnvelope)
+- name: impact
+  description: 分析符号的变更影响面
+- name: import
+  description: 导入外部内容
+- name: inbox
+  description: BOS Inbox 多源私有知识神经网查询与操作
+- name: index
+  description: 刷新 data/_index 元数据
+- name: init
+  description: 🚀 初始化向导（同 quickstart）
+- name: invoke
+  description: 调用 capability 服务（执行 BOS YAML command）
+- name: iterate
+  description: ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)
+- name: kairon
+  description: kairon 知识引擎 monorepo 聚合入口
+- name: kems
+  description: 🧬 KEMS 域治理 (domains/status/scan)
+- name: knowledge
+  description: 📚 KOS 知识检索 (search/status/stats)
+- name: list
+  description: 列出所有已注册的 Schema
+- name: logs
+  description: 查看日志
+- name: mcp
+  description: 启动 MCP server 或列出工具
+- name: mesh
+  description: omlx 算力网格路由入口
+- name: metrics
+  description: 查看 bus metrics 快照
+- name: model-driven
+  description: 模型驱动生命周期入口 (委派 model-driven CLI)
+- name: mof
+  description: MOF 元模型操作 (委派 mof CLI)
+- name: monitor
+  description: 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)
+- name: nodes
+  description: 列出 KOS 中注册的算力节点
+- name: observe
+  description: 可观测性栈（Langfuse）入口
+- name: omo
+  description: OMO CLI 委派 (debt/state/governance/lint/...)
+- name: onboarding
+  description: 为 AI 构建项目全貌上下文
+- name: pack
+  description: 将代码库打包为 LLM 友好格式
+- name: pending
+  description: 查看未决待办快照预览
+- name: pipeline
+  description: pipeline 概览
+- name: product-health
+  description: 产品健康度检测
+- name: profile
+  description: 查看/编辑身份档案 (L4 入口)
+- name: publish
+  description: 发布事件
+- name: quickstart
+  description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
+- name: radar
+  description: 'P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates'
+- name: read
+  description: 通过 BOS 网关统一读取指定 URI 资源
+- name: readiness
+  description: 'P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history)'
+- name: remember
+  description: 手动存入偏好/事实
+- name: research
+  description: 深度研究
+- name: resolve
+  description: 统一 BOS URI 路由解析与目标元数据提取
+- name: route
+  description: 为模型选择最优节点
+- name: runtime
+  description: runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)
+- name: scan
+  description: 平面扫描
+- name: scenario
+  description: P5 统一 scenario 入口 (radar/assistant/health)
+- name: score
+  description: 评分债务项
+- name: search
+  description: 全文搜 CARDS
+- name: serve
+  description: stdio JSON-RPC serve mode
+- name: skill
+  description: 运行 L4 定时技能
+- name: ssb
+  description: SSB 签名链操作 (委派 ecos-ssb)
+- name: stats
+  description: 索引统计
+- name: status
+  description: 系统健康
+- name: topics
+  description: 列出已注册 topic
+- name: types
+  description: 查看已注册的数据类型
+- name: up
+  description: 启动观测栈
+- name: url
+  description: 打印 Langfuse Web URL
+- name: validate
+  description: 验证 Workspace 契约
+- name: vault
+  description: 搜索 L4 Vault 知识库
+- name: version
+  description: 版本信息
+- name: watch
+  description: 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)
+- name: wave2
+  description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
+- name: workflow
+  description: 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎）

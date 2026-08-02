@@ -183,6 +183,26 @@ sync-submodules:  ## 推送子模块未推送的 commit 到远程
 	@echo "── 同步子模块 ────────────────────────────────────────"
 	bash bin/sync-submodules.sh
 
+# ── 能力注册表 + 文档自动生成 (P0-T2) ─────────────────────
+sync-capability-registry:  ## 生成能力注册表 SSOT (扫描 MCP/BOS/CLI)
+	@echo "── 生成能力注册表 ────────────────────────────────────"
+	python3 bin/cockpit/gen-capability-registry.py
+
+sync-help-docs: sync-capability-registry  ## 从注册表生成 CAPABILITY-MAP/CLI-REFERENCE/INDEX-MCP
+	@echo "── 生成派生文档 ────────────────────────────────────"
+	python3 bin/cockpit/gen-help-docs.py
+
+sync-all-docs: sync-help-docs  ## 全量文档同步 (注册表 + 所有派生文档)
+	@echo "── 全量文档同步完成 ────────────────────────────────"
+
+check-docs-drift:  ## 检测文档漂移 (CI 门禁)
+	@echo "── 检测文档漂移 ────────────────────────────────────"
+	@python3 bin/cockpit/gen-capability-registry.py --quiet
+	@python3 bin/cockpit/gen-help-docs.py > /dev/null
+	@git diff --exit-code docs/generated/ projects/cockpit/CAPABILITY-MAP.md docs/CLI-REFERENCE.md docs/INDEX-MCP.md 2>/dev/null || \
+		(echo "❌ 文档漂移! 运行 make sync-all-docs 修复" && exit 1)
+	@echo "✅ 文档无漂移"
+
 evidence-smoke:  ## BOS 全量 evidence smoke (agora .venv bootstrap + resolve rate)
 	@echo "── evidence-smoke (ADR-0219) ────────────────────────────"
 	@test -d projects/agora || (echo "init agora: git submodule update --init projects/agora" && git submodule update --init projects/agora)
