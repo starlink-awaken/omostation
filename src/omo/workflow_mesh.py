@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -170,10 +170,37 @@ _WORKER_EVENTS = {
     "WorkerLeaseExpired",
     "WorkerReclaimed",
 }
+SCENE_BINDING_FIELDS = frozenset({"scene_id", "journey_id", "outcome_metric"})
 
 
 class WorkflowMeshEventError(ValueError):
     """事件结构或状态转换不符合 Workflow Mesh 契约。"""
+
+
+def _scene_binding(payload: Mapping[str, Any]) -> dict[str, str] | None:
+    """Return the minimal business context carried by a workflow run.
+
+    The Mesh does not own permissions or raw business data. It only preserves
+    the stable identifiers that let product surfaces and evidence receipts
+    relate an execution to a user journey and a measurable outcome.
+    """
+    value = payload.get("scene_binding")
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise WorkflowMeshEventError("scene_binding must be an object")
+    missing = sorted(SCENE_BINDING_FIELDS - value.keys())
+    if missing:
+        raise WorkflowMeshEventError(
+            f"scene_binding missing fields: {missing}"
+        )
+    binding = {field: str(value[field]).strip() for field in SCENE_BINDING_FIELDS}
+    empty = sorted(field for field, item in binding.items() if not item)
+    if empty:
+        raise WorkflowMeshEventError(
+            f"scene_binding fields must be non-empty: {empty}"
+        )
+    return binding
 
 
 def _canonical_admission(value: dict[str, Any]) -> bytes:
@@ -230,10 +257,16 @@ def new_workflow_event(
     trace_id: str | None = None,
     producer: str = "omo",
     payload: dict[str, Any] | None = None,
+    scene_binding: Mapping[str, Any] | None = None,
     idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     event_id = uuid4().hex
-    event_payload = payload or {}
+    event_payload = dict(payload or {})
+    if scene_binding is not None:
+        existing = event_payload.get("scene_binding")
+        if existing is not None and existing != scene_binding:
+            raise WorkflowMeshEventError("conflicting scene_binding payload")
+        event_payload["scene_binding"] = dict(scene_binding)
     return {
         "event_id": event_id,
         "event_type": event_type,
@@ -262,6 +295,7 @@ def validate_workflow_event(event: dict[str, Any]) -> dict[str, Any]:
         )
     if not isinstance(event["payload"], dict):
         raise WorkflowMeshEventError("Workflow Mesh event payload must be an object")
+    _scene_binding(event["payload"])
     return event
 
 
@@ -290,6 +324,7 @@ def project_workflow_run(
         "admission": None,
         "worker": None,
         "worker_events": [],
+        "scene_binding": None,
     }
     for event in relevant:
         validate_workflow_event(event)
@@ -330,6 +365,16 @@ def project_workflow_run(
             if admission["workflow_run_id"] != workflow_run_id:
                 raise WorkflowMeshEventError("Admission grant workflow_run_id mismatch")
             snapshot["admission"] = dict(admission)
+        scene_binding = _scene_binding(event["payload"])
+        if event_type == "WorkflowRequested":
+            snapshot["scene_binding"] = scene_binding
+        elif scene_binding is not None:
+            if snapshot["scene_binding"] is None:
+                raise WorkflowMeshEventError(
+                    "scene_binding requires a prior WorkflowRequested event"
+                )
+            if scene_binding != snapshot["scene_binding"]:
+                raise WorkflowMeshEventError("scene_binding cannot change within a run")
         if (
             event_type
             in {

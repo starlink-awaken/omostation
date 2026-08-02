@@ -72,6 +72,39 @@ def test_workflow_mesh_store_projects_lifecycle_and_is_idempotent(tmp_path):
     assert store.snapshot("run-1")["metadata"]["workflow"] == "mesh-test"
 
 
+def test_scene_binding_is_projected_and_immutable(tmp_path):
+    store = WorkflowMeshStore(tmp_path)
+    run_id = "run-scene-binding"
+    binding = {
+        "scene_id": "official-document-review",
+        "journey_id": "draft-to-approval",
+        "outcome_metric": "review_cycle_time",
+    }
+    store.append(
+        new_workflow_event("WorkflowRequested", run_id, scene_binding=binding)
+    )
+
+    assert store.snapshot(run_id)["scene_binding"] == binding
+
+    changed_binding = {**binding, "outcome_metric": "unapproved-change"}
+    with pytest.raises(WorkflowMeshEventError, match="cannot change"):
+        store.append(
+            new_workflow_event("WorkflowFailed", run_id, scene_binding=changed_binding)
+        )
+
+
+def test_scene_binding_requires_all_business_identifiers(tmp_path):
+    store = WorkflowMeshStore(tmp_path)
+    with pytest.raises(WorkflowMeshEventError, match="missing fields"):
+        store.append(
+            new_workflow_event(
+                "WorkflowRequested",
+                "run-incomplete-scene",
+                scene_binding={"scene_id": "official-document-review"},
+            )
+        )
+
+
 def test_successful_run_can_be_verified_merged_and_closed(tmp_path):
     store = WorkflowMeshStore(tmp_path)
     grant = _grant("run-lifecycle", ["step-1"])
