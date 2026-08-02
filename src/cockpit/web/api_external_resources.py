@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
 import importlib.util
+import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 _OMO_SRC = _REPO_ROOT / "projects" / "omo" / "src"
@@ -41,8 +43,10 @@ def _load_catalog_module() -> Any:
 try:
     _catalog_module = _load_catalog_module()
     collect_external_resources = _catalog_module.collect_external_resources
+    evaluate_external_resources = _catalog_module.evaluate_external_resources
 except Exception as exc:  # Discovery is allowed to degrade independently.
     collect_external_resources = None  # type: ignore[assignment]
+    evaluate_external_resources = None  # type: ignore[assignment]
     _CATALOG_IMPORT_ERROR: Exception | None = exc
 else:
     _CATALOG_IMPORT_ERROR = None
@@ -95,6 +99,30 @@ def _projection_status(projection: Mapping[str, Any]) -> str:
     return "degraded" if projection.get("errors") else "live"
 
 
+def _resolve_catalog_projection() -> tuple[dict[str, Any], str]:
+    try:
+        latest = _latest_catalog()
+    except (OSError, ValueError, TypeError):
+        latest = None
+    if latest is not None:
+        return latest, "omo.external_resource_observation"
+    if collect_external_resources is None:
+        raise RuntimeError("external_resource_catalog_unavailable")
+    return (
+        collect_external_resources(_REPO_ROOT, probe=True),
+        "agora.external_resource_discovery",
+    )
+
+
+def _default_trace_id(capability: str, scene_binding: Mapping[str, Any]) -> str:
+    material = json.dumps(
+        {"capability": capability, "scene_binding": dict(scene_binding)},
+        ensure_ascii=False,
+        sort_keys=True,
+    ).encode("utf-8")
+    return f"cockpit:external-evaluation:{hashlib.sha256(material).hexdigest()[:16]}"
+
+
 @router.get("")
 async def get_external_resources() -> dict[str, Any]:
     """Expose a governed observation, or a safe discovery fallback.
@@ -104,34 +132,7 @@ async def get_external_resources() -> dict[str, Any]:
     explicit read-only health probe while building a fresh projection.
     """
     try:
-        latest = _latest_catalog()
-    except (OSError, ValueError, TypeError):
-        latest = None
-    if latest is not None:
-        return {
-            "ok": True,
-            "status": _projection_status(latest),
-            "source": "omo.external_resource_observation",
-            "projection": latest,
-            "external_side_effects": "disabled",
-            "worker_launch": False,
-        }
-
-    if collect_external_resources is None:
-        projection = _unavailable_projection(
-            type(_CATALOG_IMPORT_ERROR or _OMO_IMPORT_ERROR).__name__,
-            "先运行 external-resource-catalog observe 建立受治理观察，再刷新 Cockpit。",
-        )
-        return {
-            "ok": False,
-            "status": "unavailable",
-            "source": "cockpit.external_resource_catalog",
-            "projection": projection,
-            "external_side_effects": "disabled",
-            "worker_launch": False,
-        }
-    try:
-        projection = collect_external_resources(_REPO_ROOT, probe=True)
+        projection, source = _resolve_catalog_projection()
     except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
         projection = _unavailable_projection(
             type(exc).__name__,
@@ -145,11 +146,74 @@ async def get_external_resources() -> dict[str, Any]:
             "external_side_effects": "disabled",
             "worker_launch": False,
         }
+    if source == "omo.external_resource_observation":
+        return {
+            "ok": True,
+            "status": _projection_status(projection),
+            "source": source,
+            "projection": projection,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
     return {
         "ok": True,
         "status": _projection_status(projection),
-        "source": "agora.external_resource_discovery",
+        "source": source,
         "projection": projection,
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.post("/evaluate")
+async def evaluate_external_resource_candidates(request: Request) -> dict[str, Any]:
+    """Evaluate catalog candidates for one scene without activation or writes."""
+    if evaluate_external_resources is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_resource_evaluation_unavailable",
+            "activation": "forbidden",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    try:
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError("evaluation payload must be an object")
+        capability = str(body.get("capability") or "").strip()
+        scene_binding = body.get("scene_binding")
+        if not capability:
+            raise ValueError("capability is required")
+        if not isinstance(scene_binding, Mapping):
+            raise ValueError("scene_binding must be an object")
+        trace_id = str(body.get("trace_id") or "").strip() or _default_trace_id(
+            capability, scene_binding
+        )
+        projection, source = _resolve_catalog_projection()
+        evaluation = evaluate_external_resources(
+            _REPO_ROOT,
+            projection,
+            capability=capability,
+            scene_binding=scene_binding,
+            trace_id=trace_id,
+        )
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {
+            "ok": False,
+            "status": "invalid" if isinstance(exc, (ValueError, TypeError)) else "unavailable",
+            "error": "external_resource_evaluation_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    return {
+        "ok": True,
+        "status": evaluation.get("status", "unavailable"),
+        "source": source,
+        "evaluation": evaluation,
+        "activation": "forbidden",
         "external_side_effects": "disabled",
         "worker_launch": False,
     }

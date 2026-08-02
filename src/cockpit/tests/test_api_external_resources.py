@@ -96,3 +96,69 @@ def test_external_resources_fails_closed_when_discovery_is_unavailable(monkeypat
     assert body["projection"]["activation"] == "forbidden"
     assert body["external_side_effects"] == "disabled"
     assert body["worker_launch"] is False
+
+
+def test_external_resource_evaluation_returns_explainable_read_only_decision(monkeypatch, tmp_path):
+    projection = _projection()
+    calls: list[dict] = []
+
+    def fake_evaluate(root, snapshot, *, capability, scene_binding, trace_id, now=None):
+        calls.append({
+            "root": root,
+            "snapshot": snapshot,
+            "capability": capability,
+            "scene_binding": scene_binding,
+            "trace_id": trace_id,
+        })
+        return {
+            "schema": "external-resource-evaluation/v1",
+            "mode": "read_only_evaluation",
+            "activation": "forbidden",
+            "status": "unavailable",
+            "selected_resource_id": None,
+            "candidates": [],
+            "reasons": ["no_eligible_candidate"],
+            "summary": {"candidate_count": 0, "eligible_count": 0, "rejected_count": 0, "not_applicable_count": 0},
+        }
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "read_latest_external_resource_observation", lambda _path: {"catalog": projection})
+    monkeypatch.setattr(api_external_resources, "evaluate_external_resources", fake_evaluate)
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/evaluate",
+        json={
+            "capability": "search",
+            "scene_binding": {
+                "scene_id": "research-brief",
+                "journey_id": "weekly-decision",
+                "outcome_metric": "decision_latency_hours",
+                "data_scope": "public:research",
+                "operator": "human:test",
+                "permission_ref": "permission://test",
+            },
+        },
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["status"] == "unavailable"
+    assert body["evaluation"]["activation"] == "forbidden"
+    assert body["external_side_effects"] == "disabled"
+    assert body["worker_launch"] is False
+    assert calls[0]["capability"] == "search"
+    assert calls[0]["scene_binding"]["scene_id"] == "research-brief"
+    assert calls[0]["trace_id"].startswith("cockpit:external-evaluation:")
+
+
+def test_external_resource_evaluation_rejects_missing_scene_binding(monkeypatch):
+    response = TestClient(_app()).post(
+        "/api/external-resources/evaluate",
+        json={"capability": "search"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is False
+    assert response.json()["status"] == "invalid"
+    assert response.json()["activation"] == "forbidden"
