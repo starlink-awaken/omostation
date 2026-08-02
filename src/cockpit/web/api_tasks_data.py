@@ -31,6 +31,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from cockpit.compat import WORKSPACE_ROOT
@@ -111,7 +113,6 @@ def _approval_state(task_data: dict) -> str:
         return "missing"
     approval_path = WORKSPACE_DIR / approval_ref
     try:
-        import yaml
 
         approval = yaml.safe_load(approval_path.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError):
@@ -146,7 +147,6 @@ def _execution_next_action(task_data: dict) -> str:
 def _load_persisted_task(task_id: str, group: str) -> dict[str, Any]:
     task_path = WORKSPACE_DIR / ".omo" / "tasks" / group / f"{task_id}.yaml"
     try:
-        import yaml
 
         return yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError) as exc:
@@ -181,8 +181,7 @@ def _execution_snapshot(task_data: dict[str, Any]) -> dict[str, object]:
     if isinstance(run_ref, str):
         dispatch_path = WORKSPACE_DIR / run_ref
         try:
-            import yaml
-
+    
             dispatch = yaml.safe_load(dispatch_path.read_text(encoding="utf-8")) or {}
         except (OSError, yaml.YAMLError):
             dispatch = {}
@@ -229,8 +228,7 @@ def get_tasks_from_omo() -> list[dict]:
     if active_dir.exists():
         for task_file in active_dir.glob("*.yaml"):
             try:
-                import yaml
-
+        
                 with open(task_file) as f:
                     task_data = yaml.safe_load(f) or {}
                 tasks.append(
@@ -257,8 +255,7 @@ def get_tasks_from_omo() -> list[dict]:
     if planned_dir.exists():
         for task_file in planned_dir.glob("*.yaml"):
             try:
-                import yaml
-
+        
                 with open(task_file) as f:
                     task_data = yaml.safe_load(f) or {}
                 tasks.append(
@@ -285,8 +282,7 @@ def get_tasks_from_omo() -> list[dict]:
     if done_dir.exists():
         for task_file in list(done_dir.glob("*.yaml"))[:10]:  # 只取最近 10 个
             try:
-                import yaml
-
+        
                 with open(task_file) as f:
                     task_data = yaml.safe_load(f) or {}
                 tasks.append(
@@ -937,7 +933,6 @@ def _task_history(task_id: str, group: str) -> list[dict]:
     task_path = WORKSPACE_DIR / ".omo" / "tasks" / group / f"{task_id}.yaml"
     history: list[dict] = []
     try:
-        import yaml
 
         payload = yaml.safe_load(task_path.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError):
