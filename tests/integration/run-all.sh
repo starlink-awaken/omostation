@@ -2,6 +2,33 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
+# Per-step timeout guard (default 15min, override with RUN_ALL_TIMEOUT=seconds).
+# Prevents any sub-suite from hanging the harness indefinitely (gbrain bun test
+# alone takes ~30min and, when a test wedges, spins at 100% CPU forever).
+# Returns 124 on timeout; the killer subshell is reaped when the step finishes.
+run_with_timeout() {
+  local secs="${RUN_ALL_TIMEOUT:-900}"
+  local pid killer rc
+  "$@" &
+  pid=$!
+  ( sleep "$secs" && /bin/kill -9 "$pid" 2>/dev/null ) &
+  killer=$!
+  wait "$pid" 2>/dev/null
+  rc=$?
+  if [ "$rc" -eq 0 ]; then
+    /bin/kill -9 "$killer" 2>/dev/null
+    wait "$killer" 2>/dev/null || true
+    return 0
+  fi
+  /bin/kill -9 "$killer" 2>/dev/null
+  wait "$killer" 2>/dev/null || true
+  if [ "$rc" -eq 137 ] || [ "$rc" -eq 143 ]; then
+    echo "  ⏱  step exceeded ${secs}s timeout — killed"
+    return 124
+  fi
+  return "$rc"
+}
+
 echo "=================================================="
 echo " eCOS v6 (5+4+1+1) Unified Test Harness"
 echo "=================================================="
@@ -25,7 +52,7 @@ done
 # 2. Run Kairon Monorepo Tests (Python)
 TOTAL=$((TOTAL + 1))
 echo "▸ Kairon Monorepo (Python 3.14 + uv)"
-if (cd "$ROOT/projects/kairon" && make test-fast > /dev/null 2>&1); then
+if run_with_timeout bash -c "cd '$ROOT/projects/kairon' && make test-fast > /dev/null 2>&1"; then
   PASS=$((PASS + 1))
   echo "  ✅ Kairon Pytest Suite (31 Packages)"
 else
@@ -35,7 +62,7 @@ fi
 # 3. Run Gbrain Tests (TypeScript)
 TOTAL=$((TOTAL + 1))
 echo "▸ gbrain (TypeScript + bun)"
-if (cd "$ROOT/projects/gbrain" && bun test > /dev/null 2>&1); then
+if run_with_timeout bash -c "cd '$ROOT/projects/gbrain' && bun test > /dev/null 2>&1"; then
   PASS=$((PASS + 1))
   echo "  ✅ gbrain Bun Test Suite"
 else
@@ -45,7 +72,7 @@ fi
 # 4. Runtime E2E Health Check (Python)
 TOTAL=$((TOTAL + 1))
 echo "▸ Runtime E2E Health Check"
-if python3 "$ROOT/tests/integration/test_runtime_e2e.py" > /dev/null 2>&1; then
+if run_with_timeout python3 "$ROOT/tests/integration/test_runtime_e2e.py" > /dev/null 2>&1; then
   PASS=$((PASS + 1))
   echo "  ✅ Runtime E2E (9/9 checks)"
 else
