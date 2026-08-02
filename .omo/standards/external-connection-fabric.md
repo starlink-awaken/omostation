@@ -63,7 +63,9 @@ Iris 同时保留 `iris.connectors` 作为自身注册组，并将同一批 conn
 期限和回滚方案。单个插件探活失败只能隔离该候选并生成错误记录，不能污染其他连接或让旧的健康
 快照继续伪装成实时可用。
 
-发现结果先通过 `external-resource-catalog/v1` 只读投影进入人工目录。投影必须保留资源身份、类型、生命周期、健康探针摘要、来源引用、入口标识和可解释的 `reason_codes`；缺失探针时间、来源或有效期限时只能显示为 `stale/unavailable`。根仓入口为 `bin/ssot/external-resource-catalog.py`，Cockpit 入口为 `GET /api/external-resources` 和 `/external-resources`，这些入口均固定 `activation: forbidden`，不执行 provider、不写 OMO，也不把目录观察误判为业务激活。
+发现结果先通过 `external-resource-catalog/v1` 只读投影进入人工目录。投影必须保留资源身份、类型、生命周期、健康探针摘要、来源引用、入口标识和可解释的 `reason_codes`；缺失探针时间、来源或有效期限时只能显示为 `stale/unavailable`。根仓入口为 `bin/ssot/external-resource-catalog.py`，默认只调用 provider 明确声明的只读 `health_probe`，不调用业务方法、不写 OMO；`--no-health-probe` 仅用于 descriptor 观察，不能把未探活的资源当作实时可用。Cockpit 入口为 `GET /api/external-resources` 和 `/external-resources`，这些入口均固定 `activation: forbidden`，也不把目录观察误判为业务激活。
+
+目录命令支持调用方传入 `--previous-snapshot`，输出 `external-resource-catalog-diff/v1`，比较资源新增、移除、健康/生命周期变化以及 provider 错误恢复。上一份快照不由根命令隐式保存，避免在目录投影旁形成第二份状态真相；需要持久化的证据由 OMO 或后续受治理的观察任务承接。
 
 ## 4. 触达模式
 
