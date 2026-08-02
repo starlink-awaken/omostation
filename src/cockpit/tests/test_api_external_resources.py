@@ -206,6 +206,46 @@ def test_external_resource_pack_preflight_is_read_only(monkeypatch, tmp_path):
     assert calls == [(tmp_path, _pack())]
 
 
+def test_external_resource_pack_preflight_exposes_unobserved_catalog_preview(monkeypatch, tmp_path):
+    projection = {
+        "schema": "external-resource-pack-check/v1",
+        "mode": "read_only_conformance",
+        "activation": "forbidden",
+        "status": "ready_for_catalog_preview",
+        "reason_codes": [],
+        "catalog_preview": {
+            "schema": "external-resource-pack-catalog-preview/v1",
+            "mode": "read_only_pack_preview",
+            "activation": "forbidden",
+            "status": "ready_for_catalog_preview",
+            "resource": {
+                "id": "source:research",
+                "availability": "unobserved",
+                "health": {"status": "unobserved"},
+            },
+        },
+    }
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_external_resources,
+        "check_external_resource_pack",
+        lambda root, pack: projection,
+    )
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/packs/preflight", json={"pack": _pack()}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["projection"]["catalog_preview"]["resource"]["availability"] == "unobserved"
+    assert body["projection"]["catalog_preview"]["resource"]["health"]["status"] == "unobserved"
+    assert body["activation"] == "forbidden"
+    assert body["persistence"] == "none"
+    assert body["provider_invocation"] is False
+
+
 def test_external_resource_pack_preflight_returns_invalid_without_activation(monkeypatch):
     def reject(_root, _pack):
         raise api_external_resources.ExternalResourcePackError(
