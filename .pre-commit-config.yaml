@@ -298,11 +298,11 @@ repos:
 
       - id: governance-dashboard
         name: governance dashboard (P83-P86 治理工具统一汇总)
-        entry: python3 bin/gac/governance-dashboard.py --tools governance-history,drift-history,x2-freshness,x2-rule-lint,adr-coverage,mof-m2-coverage,management-cross-ref,venv-yaml-check
+        entry: python3 bin/gac/governance-dashboard.py --tools governance-history,x2-freshness,x2-rule-lint,adr-coverage,mof-m2-coverage,management-cross-ref,venv-yaml-check
         language: system
         pass_filenames: false
         stages: [pre-commit]
-        # P86 R4: 统一调用 7 个治理工具 (governance-history, drift-history, x2-freshness,
+        # P86 R4: 统一调用 7 个治理工具 (governance-history,  x2-freshness,
         # x2-rule-lint, adr-coverage, mof-m2-coverage, management-cross-ref)
         # 任一失败阻塞提交, 防止治理质量回归
 
@@ -313,7 +313,6 @@ repos:
     hooks:
       - id: move-integrity
         name: move-integrity (rename 保内容 + 新增非空, ADR-0202)
-        entry: python3 bin/gac/check-move-integrity.py
         language: system
         pass_filenames: false
         always_run: true

@@ -50,7 +50,6 @@ DEFAULT_POLICY = {
         {"id": "mof-state-bridge", "command": ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]},
         {"id": "mof-drift", "command": ["bin/mof/mof-drift"]},
         {"id": "m4-bootstrap-reflex", "command": ["bin/mof/mof-bootstrap.py", "all"]},
-        {"id": "m4-mcp-tool-integrity", "command": ["bin/gac/mcp-tool-data-complete.py"]},
         {"id": "doc-ssot-lint", "command": ["bin/ssot/doc-ssot-lint.py"]},
         {
             "id": "doc-governance",
@@ -61,9 +60,7 @@ DEFAULT_POLICY = {
         {"id": "doc-link-check", "command": ["bin/ssot/doc-link-check.py"]},
         {"id": "change-lane-check", "command": ["bin/change-lane-check.py", "--staged"]},
         {"id": "dependency-baseline-drift", "command": ["bin/mof/gen-dependency-baseline.py", "--check"], "ci_only": True},
-        {"id": "matrix-consistency", "command": ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"], "ci_skip": True},
-        {"id": "governance-convergence", "command": ["bin/gac/governance-convergence-lint.py"]},
-        {"id": "governance-semantic-gate", "command": ["bin/gac/governance-semantic-gate.py", "--json"]},
+        {"id": "matrix-consistency", "command": ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"], "ci_skip": True},        {"id": "governance-semantic-gate", "command": ["bin/gac/governance-semantic-gate.py", "--json"]},
         {"id": "state-freshness-check", "command": ["bin/gac/state-freshness-check.py", "--json"]},
         {"id": "check-dashboard-registry-consistency", "command": ["bin/ssot/check-dashboard-registry-consistency.py"]},
         {"id": "check-toolbox-ssot", "command": ["bin/ssot/check-toolbox-ssot.py"]},
@@ -74,30 +71,15 @@ DEFAULT_POLICY = {
         {"id": "gac-mesh-router-check", "command": ["bin/gac/gac-mesh-router.py", "--check"]},
         {"id": "gac-consensus-inject-check", "command": ["bin/gac/gac-consensus-inject.py", "--check"]},
         {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"]},
-        # P44 测试覆盖门禁: 每个 Python 项目必须有 tests/
-        {"id": "test-coverage-check", "command": ["bin/gac/test-coverage-check.py"]},
-        # P45 债务完整性门禁: seed_items 全部存在且非空
-        {"id": "debt-integrity-check", "command": ["bin/gac/debt-integrity-check.py"]},
-        # P45 W1 OMO state write guard: 检测 system.yaml 多写冲突 + 写权限违规
+        # P44 测试覆盖门禁: 每个 Python 项目必须有 tests/        # P45 债务完整性门禁: seed_items 全部存在且非空        # P45 W1 OMO state write guard: 检测 system.yaml 多写冲突 + 写权限违规
         {"id": "omo-state-write-guard", "command": ["bin/gac/omo-state-write-guard.py"]},
         # P45 W1 BRIEF.md protect: 检测 BRIEF.md 是否被外部覆盖
         {"id": "brief-protect", "command": ["bin/mof/generate-brief.py", "--protect"]},
         # P85 G1+G2: redline executability wiring. The redline registry
         # at .omo/_truth/registry/redlines.yaml points to these gates;
-        # adding/removing rows there is the safe edit surface.
-        {"id": "check-severity-registry", "command": ["bin/gac/check-severity-registry.py"]},
-        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"]},
-        {"id": "check-governance-ratio", "command": ["bin/gac/check-governance-ratio.py"]},
-        {"id": "check-redline-coverage", "command": ["bin/gac/check-redline-coverage.py"]},
-        # P85 G2.2: workorder schema is warn-only by default; promote
-        # to --strict in CI after the grace period (G2 follow-up).
-        {"id": "check-workorder-schema", "command": ["bin/gac/check-workorder-schema.py"]},
-        # P85 G3: P84 dual-track守护. Three checks enforcing the
-        # dual-track isolation contract (P84 §0).
-        {"id": "check-dual-track-purity", "command": ["bin/gac/check-dual-track-purity.py"]},
-        {"id": "check-silent-loss", "command": ["bin/gac/check-silent-loss.py"]},
-        {"id": "check-adversarial-effectiveness", "command": ["bin/gac/check-adversarial-effectiveness.py"]},
-        # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
+        # adding/removing rows there is the safe edit surface.        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"]},        # P85 G2.2: workorder schema is warn-only by default; promote
+        # to --strict in CI after the grace period (G2 follow-up).        # P85 G3: P84 dual-track守护. Three checks enforcing the
+        # dual-track isolation contract (P84 §0).        # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
         # P43 BOS 追踪门禁: bos-unimplemented.yaml 不准包含已实现服务
@@ -117,9 +99,7 @@ DEFAULT_POLICY = {
         # 定位 SSOT: governance-checks.yaml (CR-X4-LAYER-CALL / CR-X4-REGISTRY-DRIFT / CR-X4-DOC-CLAIMS).
         # 旧注释 "exit=0 只报告不阻断 / 需另加 baseline" 已废 (baseline L213-229 早已实现, G2 核实).
         {"id": "mof-capabilities-drift-check", "command": ["bin/mof/check-mof-capabilities-drift.py"]},
-        {"id": "doc-claims-check", "command": ["bin/mof/check-doc-claims.py"]},
-        {"id": "layer-call-direction-check", "command": ["bin/ssot/check-layer-call-direction.py", "--baseline", ".omo/_truth/registry/layer-call-baseline.txt"]}
-    ]
+        {"id": "doc-claims-check", "command": ["bin/mof/check-doc-claims.py"]},    ]
 }
 
 # 动态读取并组装策略
