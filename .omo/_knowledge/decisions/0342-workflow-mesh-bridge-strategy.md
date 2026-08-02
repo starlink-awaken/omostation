@@ -1,5 +1,5 @@
 ---
-id: ADR-0341
+id: ADR-0342
 title: Workflow Mesh Bridge 四阶段桥接策略
 status: accepted
 date: 2026-08-02
@@ -12,7 +12,7 @@ related:
   - 0307-external-invocation-safety-contract.md
 ---
 
-# ADR-0341: Workflow Mesh Bridge 四阶段桥接策略
+# ADR-0342: Workflow Mesh Bridge 四阶段桥接策略
 
 ## Context
 
