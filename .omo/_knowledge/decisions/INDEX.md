@@ -387,6 +387,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0317: WorkflowRequested 到受治理 admission 的晋升边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh P2 | 0317-workflow-requested-admission.md
 - ADR-0318: Agora 能力健康作为 Cockpit 准入证据 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 25 | 0318-workflow-capability-health-projection.md
 - ADR-0319: External Connection Fabric 观察与候选评审产品边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 26 | 0319-external-resource-observation-surfaces.md
+- ADR-0320: External Resource 评估与可解释选择边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 27 | 0320-external-resource-evaluation-and-explainable-selection.md
+- ADR-0321: External Resource Selection 评测证据与提案边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 28 | 0321-external-resource-selection-evaluation-evidence.md
 
 ---
 
