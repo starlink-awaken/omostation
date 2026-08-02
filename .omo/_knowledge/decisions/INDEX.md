@@ -377,6 +377,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0307: Workflow Mesh 外部调用安全契约 — **ACCEPTED** | 2026-08-02 | Workflow Mesh external fabric | 0307-external-invocation-safety-contract.md
 - ADR-0308: Cockpit 首页运行态真值与分源降级契约 — **ACCEPTED** | 2026-08-02 | Cockpit product truthfulness | 0308-cockpit-home-runtime-truthfulness.md
 - ADR-0309: Cockpit 首页工作焦点只读投影与日常入口 — **ACCEPTED** | 2026-08-02 | Cockpit J1 daily workbench | 0309-cockpit-home-operating-focus.md
+- ADR-0310: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递 — **ACCEPTED** | 2026-08-02 | Workflow Mesh M1 dogfood | 0310-workflow-mesh-engineering-dogfood-verifier.md
 
 ---
 
