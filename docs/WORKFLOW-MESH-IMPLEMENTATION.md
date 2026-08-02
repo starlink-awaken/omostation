@@ -110,6 +110,7 @@ stateDiagram-v2
 - Agora 增加 `SceneCard` 激活契约：外部连接必须携带目标、触发、输入/结果契约、消费者、审批人、责任人、失败代价、数据范围、三到十个脱敏样本引用，以及需求证据或机会窗口；原文和凭据 fail-closed。`activate_with_scene_card` 通过后才复用旧 `SceneBinding` 进入既有权限/健康/期限/回滚准入，旧绑定继续服务兼容路由但不再代表完整业务激活。
 - Iris 将 connector 同时暴露为 `iris.connectors` 和 `external.resources`，新增连接器不需要修改 Agora 路由代码。
 - `ConnectionReceipt` 只携带 receipt、来源、策略、摘要哈希和结果状态，可直接生成 OMO `EvidenceRecorded` payload；`proposal_only` 资源不执行副作用。
+- OMO 新增外部 receipt broker：执行方通过 `omo worker external-receipt` 或 `record_external_receipt()` 回写最小 receipt；broker 校验来源、策略、时间、摘要和结果状态，以稳定事件身份幂等追加 `EvidenceRecorded`，并在投影中保留 provenance/decision factors。失败、不可用和 proposal receipt 不会被提升为成功证据。
 - Agora 的动态发现结果现在通过 `external-resource-catalog/v1` 归一为只读目录快照：统一暴露资源类型、生命周期、健康探针、新鲜度、来源引用、错误记录和显式不可用原因；根仓 `bin/ssot/external-resource-catalog.py` 只调用 provider 明确声明的只读 `health_probe`，不调用业务方法、不写 OMO。
 - 外部目录增加受治理观察链：根仓 `--observe` 通过 OMO CLI broker 追加 `external-resource-observation/v1`，OMO 独占观察日志和最新投影写入；重复目录按 `observed_at + catalog_digest` 去重，Cockpit 默认读取观察并在缺失时显式回退到动态发现。
 - Cockpit 提供 `GET /api/external-resources`，cockpit-ui 提供 `/external-resources` 目录页；它是人类判断外部能力是否值得进入 Scene Card 的观察面，不是激活面或执行面。
@@ -223,7 +224,7 @@ Cockpit 已提供同一边界的正式消费入口：`GET /api/scene-cards` 返�
 
 1. 通过 OMO admission/dispatch broker 生成唯一的 `workflow_run_id`、短期 grant 和 worker dispatch packet；任何 capability、approval 或 budget gate 失败都不得产生执行派发。
 2. Agora 以 `workflow_capability_health` 输出统一的 `healthy/degraded/unhealthy` 快照，附带每项 capability 的来源节点、服务或 backend，作为 admission 的输入证据。
-3. 外部连接 receipt 已能回写同一条 Mesh 事件链；worker ACK、租约心跳、超时失效和接管的事件合同已经落地。`mesh-watchdog-run` 已由现有 `omo daemon` tick 调用，launchd/cron 只负责启动已有 cadence，不在 OMO 内新增 scheduler；默认 dry-run，显式 `--apply` 才追加过期事件。下一道交付仍是把外部系统的真实副作用回执接入同一条链，不能只把 packet 生成当成执行完成。
+3. 外部连接 receipt 已通过 OMO broker 回写同一条 Mesh 事件链；成功/降级 receipt 形成 `EvidenceRecorded`，失败/不可用必须走明确的 StepFailed/BackendUnavailable 路径。worker ACK、租约心跳、超时失效和接管的事件合同已经落地。`mesh-watchdog-run` 已由现有 `omo daemon` tick 调用，launchd/cron 只负责启动已有 cadence，不在 OMO 内新增 scheduler；默认 dry-run，显式 `--apply` 才追加过期事件。下一道交付是将真实低风险 Channel/Tool 调用接入相同 broker，并补齐补偿回执，不能只把 packet 生成当成执行完成。
 
 4. 外部连接调用必须使用 `resource_id + trace_id + receipt_id` 作为可重放边界；原文不进入 Mesh
    事件，只有 provenance、摘要、哈希和结果状态进入证据面。
@@ -251,6 +252,13 @@ runner 通过 `.omo/_log/workflow-mesh-watchdog-run.lock` 防止并发扫描，�
 追加到 `.omo/_log/workflow-mesh-watchdog-runs.jsonl`，最新结果投影到
 `.omo/_log/workflow-mesh-watchdog-latest.json`。
 
+外部调用完成后，执行方把 `ConnectionReceipt.to_dict()` 写入受控文件，再调用
+`omo worker external-receipt <workflow_run_id> --receipt-file <path> --step-run-id <id> --json`。
+broker 只接受 `succeeded/degraded` receipt 作为 `EvidenceRecorded`，以
+`workflow_run_id + receipt_id` 生成稳定事件身份；`failed/unavailable/proposed` 必须通过
+对应的失败、不可用或 proposal 事件表达。receipt 文件只应包含摘要、哈希、来源、策略和决策
+因素，不得携带 provider 原文、模型输出或凭据。
+
 ## 7. 关键里程碑与验收
 
 | 里程碑 | 交付条件 | 验收口径 |
@@ -273,7 +281,9 @@ runner 通过 `.omo/_log/workflow-mesh-watchdog-run.lock` 防止并发扫描，�
 cd projects/ecos && uv run pytest -q tests/test_workflow_mesh_contract.py tests/test_m1_adversarial.py tests/test_adversarial_m1.py tests/test_swarm_no_subprocess.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pydantic --with httpx python -m pytest -q tests/test_workflow_mesh.py tests/test_worker_lifecycle_mesh.py tests/test_workflow_dispatch.py tests/test_omo_io_pydantic.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pydantic --with httpx python -m pytest -q tests/test_mesh_watchdog_runner.py tests/test_omo_daemon_mesh_watchdog.py
+cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with httpx python -m pytest -q tests/test_omo_external_receipt.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pyyaml python -m omo.cli worker mesh-watchdog-run --json
+PYTHONPATH="projects/omo/src:projects/agora/src" uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connection_runtime.py
 cd projects/cockpit && PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with pyyaml --with httpx --with rich python -m pytest -q src/cockpit/tests/test_delivery_journey.py src/cockpit/tests/test_delivery_journey_mesh_states.py src/cockpit/tests/test_delivery_journey_workflow_mesh.py src/cockpit/tests/test_agent_workflow_command.py
 cd projects/runtime/projects/runtime && PYTHONPATH=src uv run --no-project --with pytest --with pydantic python -m pytest -q tests/test_workflow_mesh_runtime.py
 cd projects/aetherforge && PYTHONPATH="packages/swarm/src:packages/mesh/src:src" uv run --no-project --with pytest --with pyyaml python -m pytest -q packages/swarm/tests/test_workflow_mesh.py packages/mesh/tests/

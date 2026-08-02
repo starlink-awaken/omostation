@@ -106,6 +106,14 @@ Agora 根据相关性、可信度、新鲜度、权限、可用性、成本和�
 哈希和引用，不携带外部原文或凭据；它可以直接转换成 OMO `EvidenceRecorded` 的 payload。
 外部结果只有在同一条证据链中完成 provenance 校验后，才能进入派生知识。
 
+实际回写必须经过 OMO 的 `record_external_receipt()` broker，或其 CLI
+`omo worker external-receipt`。broker 只把 `succeeded/degraded` receipt 提升为
+`EvidenceRecorded`，使用 `workflow_run_id + receipt_id` 的稳定事件身份保证重试幂等，并把
+`evidence_schema`、`resource_id`、`trace_id`、`result_state`、`observed_at`、`provenance_ref`、
+`policy_digest` 和 `decision_factors` 投影到可查询证据。`failed`、`unavailable` 和
+`proposal` 不得通过该入口伪装成成功；它们必须由 Workflow Mesh 的失败/不可用/提案事件表达。
+receipt 文件和事件投影都禁止 provider 原文、模型输出、凭据和 secret 字段。
+
 运行时入口为 `agora.external_connections.ExternalConnectionCatalog`：
 
 - `register` / `discover_entry_points`：登记或发现 credential-free descriptor。
@@ -114,6 +122,8 @@ Agora 根据相关性、可信度、新鲜度、权限、可用性、成本和�
   替代新连接的完整业务激活契约。
 - `route`：按能力和决策因子选择资源；无候选时只返回显式 `unavailable`。
 - `invoke`：返回受控 receipt；`proposal_only` 不执行副作用。
+- `record_external_receipt`：由执行方在调用结束后把最小 receipt 回写 OMO；连接器本身不得直接
+  改 WorkflowRun 或知识存储。
 
 连接器开发者只需实现 descriptor、健康探针和受控调用适配器；不得把连接器注册、权限判定、
 WorkflowRun 状态迁移或知识持久化塞回适配器。这样外部知识、方法、工具、模型和渠道可以动态
