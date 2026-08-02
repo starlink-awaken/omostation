@@ -1,0 +1,30 @@
+from __future__ import annotations
+
+from pathlib import Path
+import yaml
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_external_scene_trial_review_contract_is_registered():
+    documents = list(
+        yaml.safe_load_all(
+            (ROOT / ".omo/_truth/registry/external-connection-fabric.yaml").read_text(encoding="utf-8")
+        )
+    )
+    registry = next(document for document in documents if isinstance(document, dict) and "dynamic_discovery" in document)
+    extension = registry["dynamic_discovery"]["extension_contract"]
+    assert extension["scene_trial_review_schema"] == "external-scene-trial-feedback/v1"
+    assert extension["scene_trial_review_api"] == {
+        "read": "GET /api/external-resources/scene-trials",
+        "write": "POST /api/external-resources/scene-trials/review",
+        "mode": "proposal_only",
+        "allowed_actions": ["continue", "request_changes", "reject"],
+        "required_refs": ["trial_id", "reviewer_ref", "review_ref", "evidence_refs"],
+        "activation": "forbidden",
+        "provider_invocation": "forbidden",
+        "workflow_run_creation": "forbidden",
+        "admission_mutation": "forbidden",
+        "idempotency_key": "feedback_id_and_stable_review_digest",
+    }
