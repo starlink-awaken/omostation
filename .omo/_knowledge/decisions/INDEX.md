@@ -380,6 +380,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0310: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递 — **ACCEPTED** | 2026-08-02 | Workflow Mesh M1 dogfood | 0310-workflow-mesh-engineering-dogfood-verifier.md
 - ADR-0311: 当前状态一致性与场景激活门 — **ACCEPTED** | 2026-08-02 | architecture-governance | 0311-current-state-coherence-and-scene-activation-gate.md
 - ADR-0312: Cockpit Delivery Journey 真实状态投影 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J1 | 0312-delivery-journey-truthful-state-projection.md
+- ADR-0313: Workflow Mesh 运营投影与显式消费边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J1 | 0313-workflow-mesh-operations-projection.md
 
 ---
 
