@@ -718,6 +718,33 @@ Cockpit UI 展示目录预览时必须同时显示“未探活”和下一步建
 `activation=forbidden`、`persistence=none`、`provider_invocation=false`，不会写 OMO、加载 provider、
 运行健康探针或创建 WorkflowRun。该阶段完成的是动态扩展的可解释过渡，不是外部连接的生产启用。
 
+### 7.3.13 Phase 45 外部扩展包 Proposal-only 评审回执
+
+Phase 45 把静态预检后的人工动作接入 OMO 的追加日志，但仍保持观察/评审面与执行面分离。Cockpit
+`POST /api/external-resources/packs/proposals` 会重新对提交的 manifest 运行 Phase 41 checker，只有
+`proposal_only` 或 `ready_for_catalog_preview` 才交给
+`omo_external_pack.record_external_resource_pack_proposal()`；`blocked` 包不会持久化。
+
+OMO 输出 `external-resource-pack-proposal-observation/v1`，只保留脱敏的 pack/resource 摘要、预览中的
+未探活语义、`proposal_id`、评审动作、actor、可选证据引用、proposal receipt 和下一阶段。它使用
+`proposal_id + projection_digest` 幂等，冲突拒绝，不修改 Workflow Mesh 状态，不创建
+`EvidenceRecorded`、admission 或 WorkflowRun。
+
+当前路径为：
+
+`UI manifest -> 静态 preflight -> 人工 review action -> OMO proposal receipt -> catalog discovery/evaluation -> Scene Card -> OMO admission`
+
+其中 `submit` 只表示“提交到下一阶段”，不表示批准；`defer` 和 `request_changes` 也只是可追踪的人工
+判断。该回执补齐了动态扩展的决策留痕，但没有伪造真实 provider、业务结果或质量标签。
+
+验证：
+
+```bash
+cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pydantic python -m pytest -q tests/test_omo_external_pack.py tests/test_omo_external_evaluation.py tests/test_omo_external_receipt.py
+cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx --with pydantic --with pyyaml python -m pytest -q src/cockpit/tests/test_api_external_resources.py
+cd projects/cockpit-ui && bun run test:unit -- src/components/__tests__/ExternalResourcePackPreflightPanel.test.tsx
+```
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
