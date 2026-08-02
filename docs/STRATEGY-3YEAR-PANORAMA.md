@@ -248,6 +248,11 @@ External Connection Fabric 统一承接六类外部能力：`SourcePack`、`Reso
 
 成功标准不是索引数量，而是知识是否减少查找时间、改善决策并被后续任务复用。
 
+当前落地进度：Phase 22 已完成 `knowledge_refs -> task_created -> result feedback` 的垂直切片；
+Phase 23 又补齐了 `task_created -> WorkflowRequested` 的受治理请求层。请求必须带场景绑定、操作级别
+和证据计划，重复请求可幂等回放，但不会自动 admission、启动 worker 或触达外部系统。J2 仍处于
+Stage C 的产品化过渡，退出条件仍是有真实任务证明时间节省、知识复用和结果质量改善。
+
 ### 8.3 J3 受控多 Agent 协作闭环
 
 ```text
@@ -330,6 +335,8 @@ B.D.S.K. 后续演进重点不是增加 Persona 文案，而是让四角意见�
 - 打通工程知识检索、决策依据、任务创建和结果回写。
 - 将外部连接织层 v1 接入 SourcePack、ToolPack、MethodPack 和 ChannelPack 的真实小场景；运行时 descriptor、动态发现、场景准入、能力路由和 Mesh receipt 边界已具备，下一步只激活有真实消费者的连接。
 - 建立“被检索、被引用、产生行动、产生结果”的价值链指标。
+- 将 `task_created -> workflow_requested -> approval/admission -> result_feedback` 作为可观测漏斗，
+  先验证请求质量、审批等待和证据完整性，再决定是否进入真实场景的 Workflow dispatch。
 
 里程碑 M2：J2 产生可证明的时间节省和知识复用收益。
 
