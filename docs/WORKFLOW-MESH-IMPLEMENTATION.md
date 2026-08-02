@@ -564,6 +564,33 @@ Cockpit 通过 `POST /api/scene-cards/intake` 提供同一入口。它只做 L3 
 持久化知识图谱、预测模型或外部写入渠道。决策见
 [`ADR-0332`](../.omo/_knowledge/decisions/0332-scene-card-intake-gate.md)。
 
+### 7.3.8 Phase 40 Scene Card -> activation preflight 产品闭环
+
+Phase 40 将 Phase39 的输入闸门接入可消费的只读 preflight。Cockpit 新增
+`POST /api/scene-cards/preflight`：先执行 `scene-card-intake/v1`，再读取 OMO 最新的
+`external-resource-catalog/v1` 观察，最后输出 `external-activation-preflight/v1`。API 不接受
+调用方传入的目录作为运行事实，不回退到实时 provider discovery；没有受治理观察时明确返回
+`blocked + catalog_observation`，观察存储不可用时返回 `unavailable`。
+
+Scene Card 页面现在提供正式输入表单，收集业务目标、旅程、触发、输入/结果契约、结果消费者、
+审批人、责任人、失败代价、数据范围、操作人、权限、回滚、3-10 个脱敏样本引用、需求/机会证据、
+激活证据和所需能力。生命周期和激活状态由界面固定为 `proposal_only` / `forbidden`，避免用户
+通过表单字段绕过治理边界。
+
+产品状态和后续动作如下：
+
+| 状态 | 含义 | 后续动作 |
+| --- | --- | --- |
+| `blocked` | Scene Card 不完整、目录没有受治理观察、目录过期或能力不可用 | 补字段、补证据或刷新观察 |
+| `proposal_only` | 卡片与目录检查完成，但至少一个能力仍是提案态 | 替换/评估能力后再请求 admission preview |
+| `ready_for_admission_preview` | 输入、证据、目录 freshness 和能力候选均满足只读预检 | 人工确认后进入既有 OMO admission |
+| `unavailable` | preflight 依赖或观察存储不可用 | 修复依赖/观察链后重试 |
+
+`ready_for_admission_preview` 不是 `admitted`，更不是 WorkflowRun 成功或业务结果成立。页面不提供
+激活、派发或修改生命周期的操作；所有真实 provider、外部写入和业务 receipt 仍需沿用
+`Scene Card -> OMO admission -> WorkflowRun -> receipt/evidence` 控制链。决策见
+[`ADR-0333`](../.omo/_knowledge/decisions/0333-scene-card-preflight-readiness.md)。
+
 ### 7.3.1 Phase 25 真实能力健康证据闭环
 
 Phase 25 将准入所需的 `capability_health` 从调用方手工输入收敛为服务端可追溯证据：Cockpit
@@ -602,9 +629,13 @@ cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pytes
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_omo_ingress_state.py tests/test_omo_governance_data.py
 uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_external_resource_catalog.py tests/test_external_activation_preflight.py
 uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_scene_card_intake.py
+uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_external_activation_preflight.py
 cd projects/agora && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connections.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_external_resources.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_scene_cards.py
+cd projects/cockpit-ui && bun run vitest run src/components/__tests__/SceneCardIntakePanel.test.tsx src/components/__tests__/SceneCardReviewView.test.tsx
+cd projects/cockpit-ui && bun run build
+cd projects/cockpit-ui && bunx eslint src/api/endpoints.ts src/api/hooks.ts src/components/SceneCardIntakePanel.tsx src/components/SceneCardReviewView.tsx src/components/__tests__/SceneCardIntakePanel.test.tsx
 cd projects/cockpit-ui && bun run vitest run src/components/__tests__/ExternalResourceCatalogView.test.tsx
 cd projects/cockpit-ui && bun run build
 cd projects/cockpit-ui && bunx eslint src/api/endpoints.ts src/api/hooks.ts src/components/ExternalResourceCatalogView.tsx src/components/__tests__/ExternalResourceCatalogView.test.tsx

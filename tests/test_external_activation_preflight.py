@@ -155,6 +155,22 @@ def test_unavailable_capability_is_explicitly_blocked():
     assert result["capability_checks"][1]["status"] == "unavailable"
 
 
+def test_requested_activation_or_non_proposal_lifecycle_is_blocked():
+    result = MODULE.build_preflight(
+        _scene(activation="active", lifecycle="active"), _catalog()
+    )
+
+    assert result["status"] == "blocked"
+    assert "activation_must_be_forbidden" in result["missing_fields"]
+    assert "lifecycle_must_be_proposal_only" in result["missing_fields"]
+    assert result["activation"] == "forbidden"
+
+
+def test_wrong_scene_card_schema_fails_closed():
+    with pytest.raises(MODULE.PreflightInputError, match="scene-card/v1"):
+        MODULE.build_preflight(_scene(schema="scene-card/v0"), _catalog())
+
+
 def test_raw_content_and_non_opaque_refs_fail_closed():
     with pytest.raises(MODULE.PreflightInputError, match="forbidden field"):
         MODULE.build_preflight(

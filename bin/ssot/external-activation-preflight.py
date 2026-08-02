@@ -20,6 +20,7 @@ SCHEMA = "external-activation-preflight/v1"
 CATALOG_SCHEMA = "external-resource-catalog/v1"
 DEFAULT_CATALOG_TTL_SECONDS = 3600
 OPAQUE_REF_PREFIXES = ("vault://", "evidence://", "ref://", "sample://")
+SCENE_CARD_SCHEMA = "scene-card/v1"
 REQUIRED_SCENE_FIELDS = (
     "scene_id",
     "journey_id",
@@ -163,6 +164,10 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
     if raw_field:
         raise PreflightInputError(f"scene card contains forbidden field: {raw_field}")
 
+    schema = scene_card.get("schema")
+    if schema is not None and schema != SCENE_CARD_SCHEMA:
+        raise PreflightInputError(f"scene card must use {SCENE_CARD_SCHEMA}")
+
     missing = [field for field in REQUIRED_SCENE_FIELDS if not _text(scene_card.get(field))]
     sample_refs = _refs(scene_card.get("sample_refs", []), "scene_card.sample_refs")
     demand_refs = _refs(
@@ -195,6 +200,10 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
     )
     if not required_capabilities:
         missing.append("required_capabilities")
+    if scene_card.get("activation") not in {None, "forbidden"}:
+        missing.append("activation_must_be_forbidden")
+    if scene_card.get("lifecycle") not in {None, "proposal_only"}:
+        missing.append("lifecycle_must_be_proposal_only")
 
     return {
         "missing_fields": sorted(set(missing)),
