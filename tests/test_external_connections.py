@@ -265,6 +265,7 @@ def test_invocation_receipt_is_safe_and_mesh_compatible() -> None:
     assert evidence["kind"] == "external_connection"
     assert evidence["resource_id"] == "source:live"
     assert evidence["workflow_run_id"] == "workflow-1"
+    assert evidence["decision_factors"]
     assert "count" not in receipt.to_dict()
     assert "password" not in receipt.to_dict()
 

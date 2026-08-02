@@ -473,10 +473,16 @@ class ConnectionReceipt:
     def evidence_payload(
         self, workflow_run_id: str, step_run_id: str | None = None
     ) -> dict[str, Any]:
-        """Build the minimum payload accepted by OMO EvidenceRecorded."""
+        """Build a legacy-compatible payload for inspection.
+
+        New writes must pass ``to_dict()`` through OMO's
+        ``record_external_receipt`` broker; callers must not append this
+        payload directly to the Workflow Mesh event log.
+        """
         evidence_id = f"external:{self.resource_id}:{self.receipt_id}"
         payload = {
             "evidence_id": evidence_id,
+            "evidence_schema": "external-connection-receipt/v1",
             "kind": "external_connection",
             "uri": f"external://{self.resource_id}/{self.operation}",
             "sha256": self.output_digest,
@@ -488,6 +494,7 @@ class ConnectionReceipt:
             "provenance_ref": self.provenance_ref,
             "policy_digest": self.policy_digest,
             "receipt_id": self.receipt_id,
+            "decision_factors": dict(self.decision_factors),
         }
         if step_run_id:
             payload["step_run_id"] = step_run_id
