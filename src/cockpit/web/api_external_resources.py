@@ -72,6 +72,7 @@ def _unavailable_projection(error_type: str, next_action: str) -> dict[str, Any]
         "raw_content_policy": "never_read_or_export",
         "observed_at": now_iso,
         "health_ttl_seconds": 900,
+        "catalog_ttl_seconds": 3600,
         "policy_digest": "external-connection-fabric/v1",
         "resources": [],
         "errors": [{"entry_point": "cockpit", "status": "unavailable", "error": error_type}],
