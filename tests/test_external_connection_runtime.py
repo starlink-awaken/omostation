@@ -13,6 +13,7 @@ for candidate in (ROOT / "projects/agora/src", ROOT / "projects/omo/src"):
         sys.path.insert(0, str(candidate))
 
 from agora.external_connections import ExternalConnectionCatalog, SceneBinding  # noqa: E402
+from omo.omo_external_receipt import record_external_receipt  # noqa: E402
 from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event  # noqa: E402
 
 
@@ -104,13 +105,13 @@ def test_external_receipt_can_close_a_workflow_mesh_evidence_chain(tmp_path: Pat
         )
     )
     store.append(new_workflow_event("WorkflowSucceeded", run_id))
-    store.append(
-        new_workflow_event(
-            "EvidenceRecorded",
-            run_id,
-            payload=receipt.evidence_payload(run_id, step_run_id),
-        )
+    recorded = record_external_receipt(
+        tmp_path,
+        receipt,
+        workflow_run_id=run_id,
+        step_run_id=step_run_id,
     )
+    assert recorded["payload"]["decision_factors"]
     store.append(new_workflow_event("WorkflowVerified", run_id))
 
     snapshot = store.snapshot(run_id)
