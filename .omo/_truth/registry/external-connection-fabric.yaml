@@ -229,6 +229,20 @@ dynamic_discovery:
       feedback_contract: outcome-feedback/v1
       promotion_requires: [real_consumer, workflow_run_id, external_receipt, outcome_feedback]
       idempotency_key: trial_id_and_stable_contract_digest
+    scene_trial_review_schema: external-scene-trial-feedback/v1
+    scene_trial_review_recorder: projects/omo/src/omo/omo_external_scene_trial_feedback.py
+    scene_trial_review_log: .omo/_knowledge/workflow-mesh/external-scene-trial-feedback.jsonl
+    scene_trial_review_api:
+      read: GET /api/external-resources/scene-trials
+      write: POST /api/external-resources/scene-trials/review
+      mode: proposal_only
+      allowed_actions: [continue, request_changes, reject]
+      required_refs: [trial_id, reviewer_ref, review_ref, evidence_refs]
+      activation: forbidden
+      provider_invocation: forbidden
+      workflow_run_creation: forbidden
+      admission_mutation: forbidden
+      idempotency_key: feedback_id_and_stable_review_digest
     pack_lifecycle_start: [discovered, sandbox]
     route_code_change_required: false
     activation_requires_scene_binding: true

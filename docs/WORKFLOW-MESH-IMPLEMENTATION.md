@@ -782,6 +782,22 @@ provider、创建 WorkflowRun、修改 admission 或写入 `EvidenceRecorded`。
 存在 receipt 或人工浏览都不能推断业务价值。Phase 47 dogfood 使用脱敏 fixture 验证了完整的
 `Scene Card -> preflight -> trial -> OMO receipt` 链路，结果保持 proposal-only/observation-only。
 
+### 7.3.16 Phase 48 外部场景试运行审阅与反馈闭环
+
+Phase 48 在试运行合同之上增加 `external-scene-trial-feedback/v1`。OMO 记录试运行审阅回执，Cockpit 提供
+`GET /api/external-resources/scene-trials` 的只读投影和 `POST /api/external-resources/scene-trials/review` 的
+proposal-only 评审入口，Cockpit UI 在外部能力目录中展示场景、消费者、指标、样本窗口、证据引用、最近评审和
+下一步动作。
+
+评审动作仅允许 `continue`、`request_changes`、`reject`，并且只能携带脱敏引用。读写接口都固定声明
+`activation=forbidden`、`provider_invocation=false`、`workflow_run_creation=forbidden`；评审不会创建 WorkflowRun、
+改变 admission、写业务结果证据或调用外部 provider。它只把“人已评审什么”变成可重放事实，真实执行仍必须沿用：
+
+`observation-only trial -> real consumer use -> WorkflowRun/external receipt -> outcome-feedback -> admission proposal`
+
+因此“继续试运行”不等于批准连接，“已评审”也不等于业务成功。Cockpit 没有试运行记录时返回 `empty`，OMO 或日志
+格式异常时返回 `unavailable`，不回退到未经治理的 provider 读取。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。

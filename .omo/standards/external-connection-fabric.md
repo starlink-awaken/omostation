@@ -165,6 +165,17 @@ Scene Card 和 activation preflight 通过后，不能直接视为业务试用�
 试运行 digest 必须排除 actor、source 和观察时间。broker 对历史记录按稳定合同字段重算 digest，保证
 同一 trial 在观察时间变化、执行方重试或代码升级后仍能幂等回放；合同字段真正变化时才 fail-closed。
 
+### 4.1.7 外部场景试运行审阅回执
+
+试运行进入 Cockpit 后，人工评审只能通过 `external-scene-trial-feedback/v1` 追加 proposal-only 回执。
+回执必须引用已记录的 `trial_id`、评审动作（`continue`、`request_changes` 或 `reject`）、评审人、评审依据
+和至少一条脱敏证据引用；原文、理由正文、WorkflowRun 和 provider 调用均禁止进入该日志。
+
+OMO 独占写入 `.omo/_knowledge/workflow-mesh/external-scene-trial-feedback.jsonl`，Cockpit
+`GET /api/external-resources/scene-trials` 只投影试运行及最新回执，`POST /api/external-resources/scene-trials/review`
+只追加评审事实。评审回执不会创建 WorkflowRun、改变 admission、写入业务结果证据或激活连接；真实消费者执行
+仍必须另行产生 external receipt 和 `outcome-feedback/v1`，才可申请晋升。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
