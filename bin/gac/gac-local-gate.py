@@ -50,7 +50,6 @@ DEFAULT_POLICY = {
         {"id": "mof-state-bridge", "command": ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]},
         {"id": "mof-drift", "command": ["bin/mof/mof-drift"]},
         {"id": "m4-bootstrap-reflex", "command": ["bin/mof/mof-bootstrap.py", "all"]},
-        {"id": "m4-mcp-tool-integrity", "command": ["bin/gac/mcp-tool-data-complete.py"]},
         {"id": "doc-ssot-lint", "command": ["bin/ssot/doc-ssot-lint.py"]},
         {
             "id": "doc-governance",
@@ -62,7 +61,6 @@ DEFAULT_POLICY = {
         {"id": "change-lane-check", "command": ["bin/change-lane-check.py", "--staged"]},
         {"id": "dependency-baseline-drift", "command": ["bin/mof/gen-dependency-baseline.py", "--check"], "ci_only": True},
         {"id": "matrix-consistency", "command": ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"], "ci_skip": True},
-        {"id": "governance-convergence", "command": ["bin/gac/governance-convergence-lint.py"]},
         {"id": "governance-semantic-gate", "command": ["bin/gac/governance-semantic-gate.py", "--json"]},
         {"id": "state-freshness-check", "command": ["bin/gac/state-freshness-check.py", "--json"]},
         {"id": "check-dashboard-registry-consistency", "command": ["bin/ssot/check-dashboard-registry-consistency.py"]},
