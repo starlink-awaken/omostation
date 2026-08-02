@@ -154,6 +154,16 @@ dynamic_discovery:
     diff_contract: external-resource-catalog-diff/v1
     previous_snapshot_owner: caller_or_governed_observer
     human_catalog_api: /api/external-resources
+    governed_observation:
+      owner: omo
+      schema: external-resource-observation/v1
+      append_only_log: .omo/_log/external-resource-observations.jsonl
+      latest_projection: .omo/_log/external-resource-observation-latest.json
+      write_entrypoint: omo external-resources observe --stdin
+      read_entrypoint: omo external-resources latest --json
+      idempotency_key: observed_at_and_catalog_digest
+      provider_invocation: forbidden
+      cockpit_default_view: observed_then_dynamic_fallback
   health_contract:
     required_probe_fields: [observed_at, status, latency_ms, source]
     expired_health_policy: unavailable
