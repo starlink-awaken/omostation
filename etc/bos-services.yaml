@@ -2007,7 +2007,7 @@ services:
 - action: load
   command:
   - node
-  - /Users/xiamingxing/ToolBox/skills/wps-skills/dist/index.js
+  - /Users/xiamingxing/ToolBox/skills/wps-skills/wps-office-mcp/dist/index.js
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2039,9 +2039,11 @@ services:
   uri: bos://capability/bos-skill-cli/exec
 - action: compress
   command:
-  - python3
-  - -m
-  - headroom
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/headroom" && if [ -x .venv/bin/python ]; then
+    PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python -m headroom;
+    else PY=python3; fi && "$PY" -m headroom --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2055,9 +2057,11 @@ services:
   uri: bos://capability/headroom/compress
 - action: analyze
   command:
-  - python3
-  - -m
-  - code_review_graph
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/code-review-graph" && if [ -x .venv/bin/python
+    ]; then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python -m
+    code_review_graph; else PY=python3; fi && "$PY" -m code_review_graph --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2070,6 +2074,11 @@ services:
   transport: stdio
   uri: bos://capability/code-review-graph/analyze
 - action: load
+  command:
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/claude-skills" && test -d skills && echo
+    ok:claude-skills
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2079,7 +2088,7 @@ services:
   i0_route: skill_host
   package: toolbox/claude-skills
   status: active
-  transport: inline
+  transport: stdio
   uri: bos://capability/claude-skills/load
 - action: fetch
   command:
@@ -2133,6 +2142,11 @@ services:
   transport: stdio
   uri: bos://capability/open-montage/render
 - action: load
+  command:
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/skills-for-fabric" && test -d skills && echo
+    ok:skills-for-fabric
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2142,13 +2156,15 @@ services:
   i0_route: skill_host
   package: toolbox/skills-for-fabric
   status: active
-  transport: inline
+  transport: stdio
   uri: bos://capability/skills-for-fabric/load
 - action: run
   command:
-  - python3
-  - -m
-  - deer_flow
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/deer-flow" && if [ -x .venv/bin/python ];
+    then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python -m
+    deer_flow; else PY=python3; fi && "$PY" -m deer_flow --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2162,9 +2178,11 @@ services:
   uri: bos://capability/deer-flow/run
 - action: analyze
   command:
-  - python3
-  - -m
-  - datafoundry
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/datafoundry" && if [ -x .venv/bin/python ];
+    then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python -m
+    datafoundry; else PY=python3; fi && "$PY" -m datafoundry --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2177,6 +2195,11 @@ services:
   transport: stdio
   uri: bos://capability/datafoundry/analyze
 - action: load
+  command:
+  - bash
+  - -lc
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/knowledge-work-plugins" && test -d skills
+    && echo ok:knowledge-work-plugins
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2186,7 +2209,7 @@ services:
   i0_route: skill_host
   package: toolbox/knowledge-work-plugins
   status: active
-  transport: inline
+  transport: stdio
   uri: bos://capability/knowledge-work-plugins/load
 - action: metrics
   description: agora 内部指标源 self-identifier (metrics collector source_uri)
