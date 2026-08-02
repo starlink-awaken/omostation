@@ -2397,6 +2397,7 @@ services:
   transport: inline
   uri: bos://omo/debt
 - action: tasks/active
+  description: OMO 任务控制台与活跃任务展示
   domain: omo
   package: omo
   status: active
@@ -2425,7 +2426,7 @@ services:
   package: agora-bos
   security_level: internal
   status: active
-  transport: mcp
+  transport: internal
   uri: bos://memory/inbox/status
 - action: search
   description: BOS Inbox 多源私有知识库全文与高维关键词检索
@@ -2436,7 +2437,7 @@ services:
   package: agora-bos
   security_level: internal
   status: active
-  transport: mcp
+  transport: internal
   uri: bos://memory/inbox/search
 - action: pending
   description: BOS Inbox 实时待办公文与未读事项读取
@@ -2447,7 +2448,7 @@ services:
   package: agora-bos
   security_level: internal
   status: active
-  transport: mcp
+  transport: internal
   uri: bos://memory/inbox/pending
 - action: watch
   description: BOS Inbox 实时事件驱动监控与紧急公文/工单待办通知 (Event-Driven Watcher)
@@ -2458,7 +2459,7 @@ services:
   package: agora-bos
   security_level: internal
   status: active
-  transport: mcp
+  transport: internal
   uri: bos://memory/inbox/watch
 - action: archive
   description: BOS Inbox 工单处理完结与冷归档闭环接口 (Lifecycle Archive)
@@ -2469,7 +2470,7 @@ services:
   package: agora-bos
   security_level: internal
   status: active
-  transport: mcp
+  transport: internal
   uri: bos://memory/inbox/archive
 - action: triage
   description: BOS Inbox 公文与待办事项智能分类分拣与紧急度测算引擎 (Triage Engine)
@@ -2555,3 +2556,36 @@ services:
   status: active
   transport: stdio
   uri: bos://compute/aetherforge/swarm
+- action: status
+  description: KEMS 知识管理引擎与图谱服务运行状态 (ADR-0300)
+  domain: memory
+  http_url: http://localhost:8000/api/kems/status
+  package: kems
+  status: active
+  transport: http
+  uri: bos://memory/kems/status
+- action: graph
+  description: KEMS 实体关系图谱查询与关系拓扑推导 (ADR-0300)
+  domain: memory
+  http_url: http://localhost:8000/api/kems/graph/entities
+  package: kems
+  status: active
+  transport: http
+  uri: bos://memory/kems/graph
+- action: ocr-queue
+  description: KEMS 多源知识抽提与 OCR 纠错审阅队列 (ADR-0300)
+  domain: memory
+  http_url: http://localhost:8000/api/kems/ocr/review-queue
+  package: kems
+  status: active
+  transport: http
+  uri: bos://memory/kems/ocr-queue
+- action: forecast
+  description: KEMS 知识推断与影子评估推演分析 (ADR-0300)
+  domain: analysis
+  http_url: http://localhost:8000/api/kems/forecast/shadow
+  package: kems
+  status: active
+  transport: http
+  uri: bos://analysis/kems/forecast
+

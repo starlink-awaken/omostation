@@ -7,6 +7,7 @@ and agent card discovery.
 from __future__ import annotations
 
 import json
+import os
 
 import structlog
 from fastmcp import FastMCP
@@ -53,6 +54,53 @@ def _get_task_manager():
     from agora.server.mcp import _get_task_manager  # type: ignore[import-not-found]
 
     return _get_task_manager()
+
+
+# ── A2A Convergence Helper (ADR-0300) ──────────────────────────────
+
+
+def _resolve_convergence_meta(
+    tool_name: str, run_id: str = "", bos_uri: str = ""
+) -> dict[str, str]:
+    """Derive OMO Agent Workflow Run-ID and BOS 5-domain convergence metadata (ADR-0300)."""
+    resolved_run_id = (
+        run_id
+        or os.environ.get("AGCP_RUN_ID", "")
+        or os.environ.get("OMO_WORKFLOW_RUN_ID", "")
+    )
+    resolved_uri = bos_uri
+    if not resolved_uri and tool_name:
+        parts = tool_name.split(".", 1)
+        pkg = parts[0] if parts else "unknown"
+        action = parts[1] if len(parts) > 1 else "execute"
+        domain_map = {
+            "kems": "memory",
+            "kos": "memory",
+            "eidos": "memory",
+            "minerva": "analysis",
+            "codeanalyze": "analysis",
+            "iris": "analysis",
+            "ontoderive": "analysis",
+            "metaos": "governance",
+            "omo": "governance",
+            "cockpit": "capability",
+            "aetherforge": "compute",
+        }
+        dom = domain_map.get(pkg, "capability")
+        resolved_uri = f"bos://{dom}/{pkg}/{action}"
+
+    domain = "capability"
+    if resolved_uri.startswith("bos://"):
+        segments = resolved_uri[len("bos://") :].split("/", 1)
+        if segments:
+            domain = segments[0]
+
+    return {
+        "run_id": resolved_run_id,
+        "bos_uri": resolved_uri,
+        "domain": domain,
+        "adr_policy": "ADR-0300",
+    }
 
 
 # ── Agent Card helpers ──────────────────────────────────────────────
@@ -228,17 +276,23 @@ def register_governance_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def a2a_send_task(
-        tool_name: str, arguments: str = "{}", session_id: str = ""
+        tool_name: str,
+        arguments: str = "{}",
+        session_id: str = "",
+        run_id: str = "",
+        bos_uri: str = "",
     ) -> dict:
-        """Submit a tool call as an A2A task and execute it.
+        """Submit a tool call as an A2A task and execute it with OMO convergence metadata (ADR-0300).
 
         Creates a task, routes it to the appropriate service via the router,
-        and returns the completed result with task metadata.
+        and returns the completed result with task metadata and convergence bridge info.
 
         Args:
             tool_name: Full tool name (e.g. 'minerva.research_now')
             arguments: JSON string of tool arguments
             session_id: Optional session identifier for grouping related tasks
+            run_id: Optional OMO Agent Workflow run identifier for task convergence
+            bos_uri: Optional BOS URI mapping for 5-domain convergence
         """
         try:
             args = json.loads(arguments) if isinstance(arguments, str) else arguments
@@ -251,10 +305,17 @@ def register_governance_tools(mcp: FastMCP) -> None:
         if result is None:
             return _error("Task execution returned no result")
 
+        convergence_meta = _resolve_convergence_meta(tool_name, run_id, bos_uri)
+        result_dict = result.to_dict()
+        if convergence_meta["run_id"]:
+            result_dict["run_id"] = convergence_meta["run_id"]
+        result_dict["bos_uri"] = convergence_meta["bos_uri"]
+
         return _ok(
             {
                 "format_version": FORMAT_VERSION,
-                "task": result.to_dict(),
+                "task": result_dict,
+                "convergence_meta": convergence_meta,
             }
         )
 
