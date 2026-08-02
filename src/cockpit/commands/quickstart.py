@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import time
@@ -45,8 +46,6 @@ def _check_workspace_db() -> dict:
     if not db_path.exists():
         return {"exists": False, "research_count": 0}
     try:
-        import sqlite3
-
         conn = sqlite3.connect(str(db_path))
         count = conn.execute("SELECT COUNT(*) FROM research").fetchone()[0]
         conn.close()
