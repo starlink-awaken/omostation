@@ -8,6 +8,7 @@ projects/cockpit/src/cockpit/dashboard/helpers_wave2.py:92
 projects/ecos/src/ecos/ssot/tools/mof_contract_lint.py:150
 projects/ecos/src/ecos/ssot/tools/omo_bridge_interface.py:42
 projects/ecos/src/ecos/workflow/backends/metaos.py:35
+projects/ecos/src/ecos/workflow/default_mesh_sink.py:55
 projects/omo/src/omo/omo_governance_surfaces.py:592
 projects/runtime/scripts/check_stale_debts.py:8
 projects/runtime/src/runtime/adapters/omo.py:15

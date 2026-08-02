@@ -97,6 +97,7 @@ exceptions:
     files:
       - "projects/ecos/src/ecos/ssot/tools/mof_contract_lint.py"
       - "projects/ecos/src/ecos/ssot/tools/omo_bridge_interface.py"
+      - "projects/ecos/src/ecos/workflow/default_mesh_sink.py"
   - project: "ecos"
     depends_on: "metaos"
     reason: "ADR-0181 Phase 2: MetaOS workflow backend adapter，用于执行 M1 workflow"
