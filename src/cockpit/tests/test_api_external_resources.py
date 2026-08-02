@@ -551,6 +551,43 @@ def test_external_scene_trial_review_records_proposal_only_receipt(monkeypatch, 
     assert calls[0]["payload"]["workflow_run_id"] is None
 
 
+def test_external_scene_trial_readiness_is_read_only_and_preserves_blockers(monkeypatch, tmp_path):
+    projection = {
+        "schema": "external-scene-trial-promotion-readiness/v1",
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": "forbidden",
+        "admission_mutation": "forbidden",
+        "external_side_effects": "disabled",
+        "status": "blocked",
+        "items": [{"trial_id": "scene-trial:test", "blockers": ["workflow_run_missing"]}],
+        "summary": {"trial_count": 1, "ready_count": 0, "blocked_count": 1},
+        "next_action": "补齐阻断项后重新评估",
+    }
+    monkeypatch.setattr(
+        api_external_resources,
+        "build_external_scene_trial_promotion_readiness",
+        lambda root, scene_id=None: projection,
+    )
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+
+    response = TestClient(_app()).get(
+        "/api/external-resources/scene-trials/readiness?scene_id=research-brief"
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["projection"]["status"] == "blocked"
+    assert body["projection"]["items"][0]["blockers"] == ["workflow_run_missing"]
+    assert body["activation"] == "forbidden"
+    assert body["provider_invocation"] is False
+    assert body["workflow_run_creation"] == "forbidden"
+    assert body["admission_mutation"] == "forbidden"
+    assert body["worker_launch"] is False
+
+
 def test_external_resource_evaluation_returns_explainable_read_only_decision(monkeypatch, tmp_path):
     projection = _projection()
     calls: list[dict] = []

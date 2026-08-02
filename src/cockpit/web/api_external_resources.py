@@ -31,6 +31,9 @@ try:
         read_external_scene_trial_feedback,
         record_external_scene_trial_feedback,
     )
+    from omo.omo_external_scene_readiness import (
+        build_external_scene_trial_promotion_readiness,
+    )
     from omo.workflow_eval import (
         build_external_resource_selection_dataset,
         propose_selection_policy_feedback,
@@ -42,6 +45,7 @@ except Exception as exc:  # OMO is optional while Cockpit is being bootstrapped.
     read_external_scene_trials = None  # type: ignore[assignment]
     read_external_scene_trial_feedback = None  # type: ignore[assignment]
     record_external_scene_trial_feedback = None  # type: ignore[assignment]
+    build_external_scene_trial_promotion_readiness = None  # type: ignore[assignment]
     ExternalSceneTrialFeedbackError = ValueError
     ExternalResourcePackProposalError = ValueError
     build_external_resource_selection_dataset = None  # type: ignore[assignment]
@@ -105,6 +109,7 @@ router = APIRouter(prefix="/api/external-resources", tags=["external-resources"]
 
 _REVIEW_QUEUE_SCHEMA = "external-resource-review-queue/v1"
 _SCENE_TRIAL_REVIEW_SCHEMA = "external-scene-trial-review/v1"
+_SCENE_TRIAL_READINESS_SCHEMA = "external-scene-trial-promotion-readiness/v1"
 _REVIEW_SNAPSHOT_FIELDS = (
     "id",
     "provider",
@@ -512,6 +517,47 @@ async def get_external_scene_trial_review(
         "projection": projection,
         "external_side_effects": "disabled",
         "worker_launch": False,
+    }
+
+
+@router.get("/scene-trials/readiness")
+async def get_external_scene_trial_promotion_readiness(
+    scene_id: str | None = Query(None, description="Optional scene filter"),
+) -> dict[str, Any]:
+    """Expose promotion readiness without creating or activating a WorkflowRun."""
+    boundary = {
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": "forbidden",
+        "admission_mutation": "forbidden",
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+    if build_external_scene_trial_promotion_readiness is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "schema": _SCENE_TRIAL_READINESS_SCHEMA,
+            "error": "external_scene_trial_readiness_unavailable",
+            **boundary,
+        }
+    try:
+        projection = build_external_scene_trial_promotion_readiness(
+            _REPO_ROOT / ".omo", scene_id=scene_id
+        )
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "schema": _SCENE_TRIAL_READINESS_SCHEMA,
+            "error": type(exc).__name__,
+            "next_action": "检查场景试运行、Workflow Mesh 和结果反馈日志后重试。",
+            **boundary,
+        }
+    return {
+        "ok": projection.get("status") != "unavailable",
+        "projection": projection,
+        **boundary,
     }
 
 
