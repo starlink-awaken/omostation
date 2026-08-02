@@ -63,6 +63,7 @@ _KNOWN_MCP_SERVERS: list[dict] = [
     {"id": "c2g", "name": "C2G Strategy Compass", "layer": "X", "file": "projects/c2g/src/c2g/mcp_server.py", "transport": "stdio"},
     {"id": "family-hub", "name": "Family Hub", "layer": "X", "file": "projects/family-hub/mcp_server.py", "transport": "stdio"},
     {"id": "agent-runtime", "name": "Cockpit Agent Runtime", "layer": "L3", "file": "projects/cockpit/src/cockpit/agent_runtime_mcp_server.py", "transport": "stdio"},
+    {"id": "cockpit-mcp", "name": "Cockpit Workspace MCP", "layer": "L3", "file": "projects/cockpit/src/cockpit/scripts/cockpit_mcp.py", "transport": "stdio", "note": "工具经 _tool() 别名注册, 含 workspace_context/cards_check 等"},
     {"id": "iris", "name": "Iris", "layer": "L2", "file": "projects/kairon/packages/iris/src/iris/mcp_server.py", "transport": "stdio"},
     {"id": "sophia", "name": "Sophia Research Paradigm", "layer": "L2", "file": "projects/kairon/packages/sophia/src/sophia/server/mcp_server.py", "transport": "stdio"},
     {"id": "kronos", "name": "Kronos", "layer": "L2", "file": "projects/kairon/packages/kronos/src/kronos/mcp_server.py", "transport": "stdio"},
@@ -144,16 +145,32 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
         except SyntaxError:
             pass
 
-    # 策略 5: @xxx.tool() 无名时, 从紧邻的 def/async def 提取函数名
+    # 策略 5: @xxx.tool() 或 @_tool() 无名时, 从紧邻的 def/async def 提取函数名
     if not tools:
         for m in re.finditer(
-            r'@(?:mcp|server|app)\.tool\s*\([^)]*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)',
+            r'@(?:mcp|server|app)\.tool\s*\([^)]*\)|@_tool\s*\(\s*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)',
+            content,
+        ):
+            name = m.group(1)
+            if name and name not in seen:
+                seen.add(name)
+                tools.append(name)
+        # 单独处理 @_tool() 模式 (cockpit_mcp 别名)
+        for m in re.finditer(
+            r'@_tool\s*\(\s*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)',
             content,
         ):
             name = m.group(1)
             if name not in seen:
                 seen.add(name)
                 tools.append(name)
+
+    # 策略 5b: cockpit_mcp 风格 _tool("name", ...) 别名调用
+    for m in re.finditer(r'(?:^|\s)_tool\s*\(\s*["\']([a-zA-Z0-9_.\-]+)["\']', content):
+        name = m.group(1)
+        if name not in seen:
+            seen.add(name)
+            tools.append(name)
 
     # 策略 6: ecos-ssot TOOLS = [{"name": "x"}, ...] 列表字典
     for m in re.finditer(r'"name"\s*:\s*"([a-zA-Z0-9_.\-]+)"', content):
@@ -356,13 +373,72 @@ def write_yaml(registry: dict) -> Path:
     return OUTPUT_YAML
 
 
+def verify_runtime(registry: dict) -> int:
+    """运行时内省校验 — 对可 in-process 访问的 MCP server 调 list_tools() 对比静态数.
+
+    目前覆盖 cockpit 自身 MCP (可 import). 其他 server 需独立启动, 留待后续.
+    返回: 0=全部匹配, 1=有偏差.
+    """
+    import asyncio
+
+    runtime_checks: list[dict] = []
+
+    # cockpit MCP — 可 in-process 内省
+    try:
+        sys.path.insert(0, str(WORKSPACE / "projects" / "cockpit" / "src"))
+        from cockpit.scripts.cockpit_mcp import mcp  # type: ignore[import-not-found]
+
+        async def _list() -> list[str]:
+            tools = await mcp.list_tools()
+            return [getattr(t, "name", str(t)) for t in (tools or [])]
+
+        runtime_tools = set(asyncio.run(_list()))
+        # 注册表中 cockpit-mcp 的工具 (cockpit_mcp.py 的入口)
+        static_entry = next((s for s in registry["mcp_servers"] if s["id"] == "cockpit-mcp"), {})
+        static_tools = set(static_entry.get("tools", []))
+        match = runtime_tools == static_tools
+        runtime_checks.append({
+            "server": "cockpit-mcp (in-process)",
+            "runtime": len(runtime_tools),
+            "static": len(static_tools),
+            "match": match,
+            "missing": sorted(static_tools - runtime_tools)[:5],
+            "extra": sorted(runtime_tools - static_tools)[:5],
+        })
+    except Exception as exc:
+        runtime_checks.append({"server": "cockpit-mcp", "error": str(exc)[:80]})
+
+    print("🔍 运行时内省校验 (in-process MCP servers):")
+    print("=" * 60)
+    all_match = True
+    for chk in runtime_checks:
+        if "error" in chk:
+            print(f"  ⚠️  {chk['server']}: 内省失败 ({chk['error']})")
+            continue
+        flag = "✅" if chk["match"] else "⚠️ "
+        print(f"  {flag} {chk['server']}: 运行时={chk['runtime']} 静态={chk['static']}")
+        if not chk["match"]:
+            all_match = False
+            if chk["missing"]:
+                print(f"     静态多 (运行时无): {chk['missing']}")
+            if chk["extra"]:
+                print(f"     运行时多 (静态漏): {chk['extra']}")
+    print("=" * 60)
+    print("✅ 全部匹配" if all_match else "⚠️  有偏差 — 见上方详情 (动态注册工具静态扫描会漏)")
+    return 0 if all_match else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="能力注册表生成器")
     parser.add_argument("--json", action="store_true", help="输出 JSON 到 stdout (不写文件)")
     parser.add_argument("--quiet", action="store_true", help="静默模式")
+    parser.add_argument("--verify", action="store_true", help="运行时内省校验 (对比静态 vs 实际 MCP 工具)")
     args = parser.parse_args()
 
     registry = build_registry()
+
+    if args.verify:
+        return verify_runtime(registry)
 
     if args.json:
         json.dump(registry, sys.stdout, ensure_ascii=False, indent=2)
@@ -376,6 +452,7 @@ def main() -> int:
         print(f"   MCP 服务器: {t['mcp_servers']}  |  MCP 工具: {t['mcp_tools']}")
         print(f"   BOS 服务: {t['bos_services']}  |  BOS 域: {t['bos_domains']}")
         print(f"   CLI 命令: {t['cli_commands']}")
+        print(f"   运行时校验: python {Path(__file__).name} --verify")
     return 0
 
 
