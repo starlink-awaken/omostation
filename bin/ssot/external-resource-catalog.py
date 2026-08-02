@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Project dynamically discovered external resources without activating them.
+"""Project and optionally observe dynamically discovered external resources.
 
-The command is a read-only bridge from Agora's discovery boundary to human
-surfaces. It emits safe descriptors, health freshness and explicit errors;
-it never invokes providers, writes OMO state or accepts credentials.
+The default command is a read-only bridge from Agora's discovery boundary to
+human surfaces. ``--observe`` sends the safe projection through OMO's CLI
+broker for append-only persistence; it never invokes provider business methods
+or accepts credentials.
 """
 
 from __future__ import annotations
@@ -11,6 +12,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
@@ -22,6 +25,9 @@ SCHEMA = "external-resource-catalog/v1"
 
 class ExternalResourceCatalogInputError(ValueError):
     """Raised when the catalog projection cannot be built safely."""
+
+
+_OMO_COMMAND_TIMEOUT_SECONDS = 15
 
 
 def _load_agora(root: Path):
@@ -76,6 +82,101 @@ def collect_external_resources(
     return snapshot
 
 
+def _omo_command(root: Path, *args: str) -> list[str]:
+    return [sys.executable, "-m", "omo.cli", *args]
+
+
+def _omo_environment(root: Path) -> dict[str, str]:
+    environment = os.environ.copy()
+    omo_src = str(root / "projects/omo/src")
+    existing = environment.get("PYTHONPATH")
+    environment["PYTHONPATH"] = (
+        f"{omo_src}{os.pathsep}{existing}" if existing else omo_src
+    )
+    return environment
+
+
+def _run_omo(
+    root: Path, args: tuple[str, ...], *, input_text: str | None = None
+) -> dict[str, Any]:
+    completed = subprocess.run(
+        _omo_command(root, *args),
+        cwd=root,
+        env=_omo_environment(root),
+        input=input_text,
+        capture_output=True,
+        text=True,
+        timeout=_OMO_COMMAND_TIMEOUT_SECONDS,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise ExternalResourceCatalogInputError(
+            completed.stderr.strip() or "OMO external resource observer is unavailable"
+        )
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise ExternalResourceCatalogInputError(
+            "OMO external resource observer returned invalid JSON"
+        ) from exc
+    if not isinstance(payload, dict):
+        raise ExternalResourceCatalogInputError(
+            "OMO external resource observer must return an object"
+        )
+    return payload
+
+
+def observe_external_resources(
+    root: Path,
+    *,
+    entry_points: Iterable[Any] | None = None,
+    now: datetime | None = None,
+    health_ttl_seconds: int = 900,
+    probe: bool = True,
+    previous_snapshot: Mapping[str, Any] | None = None,
+    actor: str = "external-resource-observer",
+    source_ref: str = "root:external-resource-catalog:observe",
+) -> dict[str, Any]:
+    """Observe a safe catalog through OMO's brokered persistence boundary."""
+    root = root.resolve()
+    if previous_snapshot is None:
+        latest = _run_omo(root, ("external-resources", "latest", "--json"))
+        previous_observation = latest.get("observation")
+        if isinstance(previous_observation, Mapping):
+            previous_snapshot = previous_observation.get("catalog")
+    catalog = collect_external_resources(
+        root,
+        entry_points=entry_points,
+        now=now,
+        health_ttl_seconds=health_ttl_seconds,
+        probe=probe,
+        previous_snapshot=previous_snapshot,
+    )
+    result = _run_omo(
+        root,
+        (
+            "external-resources",
+            "observe",
+            "--stdin",
+            "--actor",
+            actor,
+            "--source-ref",
+            source_ref,
+        ),
+        input_text=json.dumps(catalog, ensure_ascii=False, sort_keys=True),
+    )
+    observation = result.get("observation")
+    if not isinstance(observation, Mapping):
+        raise ExternalResourceCatalogInputError("OMO did not return an observation")
+    return {
+        "schema": "external-resource-observation-result/v1",
+        "mode": "governed_observation",
+        "catalog": catalog,
+        "observation": observation,
+        "status": result.get("status", "recorded"),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -92,6 +193,15 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         help="读取上一份只读目录快照并附加变化报告，不写入任何状态",
     )
+    parser.add_argument(
+        "--observe",
+        action="store_true",
+        help="通过 OMO CLI broker 追加受治理观察记录",
+    )
+    parser.add_argument("--actor", default="external-resource-observer")
+    parser.add_argument(
+        "--source-ref", default="root:external-resource-catalog:observe"
+    )
     args = parser.parse_args(argv)
     try:
         previous_snapshot = None
@@ -104,12 +214,22 @@ def main(argv: list[str] | None = None) -> int:
                 raise ExternalResourceCatalogInputError(
                     f"cannot read previous snapshot: {args.previous_snapshot}"
                 ) from exc
-        payload = collect_external_resources(
-            args.root,
-            health_ttl_seconds=args.health_ttl_seconds,
-            probe=not args.no_health_probe,
-            previous_snapshot=previous_snapshot,
-        )
+        if args.observe:
+            payload = observe_external_resources(
+                args.root,
+                health_ttl_seconds=args.health_ttl_seconds,
+                probe=not args.no_health_probe,
+                previous_snapshot=previous_snapshot,
+                actor=args.actor,
+                source_ref=args.source_ref,
+            )
+        else:
+            payload = collect_external_resources(
+                args.root,
+                health_ttl_seconds=args.health_ttl_seconds,
+                probe=not args.no_health_probe,
+                previous_snapshot=previous_snapshot,
+            )
     except (ExternalResourceCatalogInputError, ValueError) as exc:
         print(f"external-resource-catalog: {exc}", file=sys.stderr)
         return 2
