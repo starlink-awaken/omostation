@@ -82,6 +82,45 @@
 | commit-assist.py | 提交辅助脚本 | `python3 bin/commit-assist.py` |
 | cockpit-readiness.py | Cockpit 就绪度检查 | `python3 bin/cockpit-readiness.py` |
 
+### 5.1 能力注册表生成器 (bin/cockpit/)
+
+| 工具 | 功能 | 调用方 |
+|:-----|:-----|:-------|
+| gen-capability-registry.py | 扫描全生态 MCP/BOS/CLI → `docs/generated/capability-registry.yaml` | `make sync-capability-registry` |
+| gen-help-docs.py | 从注册表生成 CAPABILITY-MAP/CLI-REFERENCE/INDEX-MCP | `make sync-help-docs` |
+
+**CI 门禁**: `make check-docs-drift` 检测文档漂移。
+
+### 5.2 Cockpit CLI (46+ 命令)
+
+> 完整命令参考见 [`CLI-REFERENCE.md`](CLI-REFERENCE.md) · 能力地图见 [`projects/cockpit/CAPABILITY-MAP.md`](../projects/cockpit/CAPABILITY-MAP.md)
+
+| 命令组 | 说明 |
+|:-------|:-----|
+| `cockpit research/import/search/vault` | 深度研究管线 |
+| `cockpit knowledge` | KOS 知识检索 (search/status/stats) |
+| `cockpit kems` | KEMS 域治理 (domains/status/scan) |
+| `cockpit workflow mesh` | workflow-mesh 交付事件织网 |
+| `cockpit c2g` / `compass` / `iterate` | C2G 战略罗盘 |
+| `cockpit omo` / `governance` / `gac` / `debt` | 治理中枢 |
+| `cockpit agora` / `kairon` / `gbrain` / `mesh` / `compute` | 项目入口 |
+| `cockpit bos` / `mcp` | BOS URI + MCP 管理 |
+| `cockpit help` / `quickstart` / `dashboard` | 入门与导航 |
+
+### 5.3 MCP 服务器 (24 servers · 541 tools)
+
+> 完整索引见 [`INDEX-MCP.md`](INDEX-MCP.md)
+
+| 服务器 | 层 | 工具数 | 说明 |
+|:-------|:---|:-------|:-----|
+| `omo` | L2 | 19 | 治理中枢 (任务/锁/债务/CARDS) |
+| `kos` | L2 | 44 | 知识检索 (5193 篇索引) |
+| `l4-kernel` | L4 | 51 | 自我层 (域/KEMS/健康) |
+| `agora` | I0 | 71+ | BOS 服务汇聚 Hub |
+| `gbrain` | L2 | 75 | Postgres 知识库 |
+| `ecos` | L0 | 28 | SSOT 内核 + 工作流引擎 |
+| `aetherforge` | X | 10 | 算力网关 + 蜂群 |
+
 ### 6. P74 Solidification (工作流沉默治理)
 
 | 工具 | 功能 | 对应 GaC 规则 |
