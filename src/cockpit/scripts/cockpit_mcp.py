@@ -24,10 +24,11 @@ try:
 
     HAS_FASTMCP = True
 except ImportError:
+    FastMCP = None  # type: ignore[assignment]
     HAS_FASTMCP = False
 
 if HAS_FASTMCP:
-    mcp = FastMCP("cockpit")
+    mcp = FastMCP("cockpit")  # type: ignore[union-attr]
     _tool = mcp.tool
 else:
     mcp = None  # type: ignore[assignment]
@@ -346,7 +347,7 @@ def daily_summary(days: int = 1) -> str:
 # ══════════════════════════════════════════════════════════════
 
 try:
-    from cockpit.adapters.l4_kernel import (
+    from cockpit.adapters.l4_kernel import (  # type: ignore[import-not-found]
         CardsPlane,
         DomainRegistry,
         KemsPlane,
@@ -359,11 +360,14 @@ try:
             str(Path.home() / ".config" / "l4-kernel" / "domains.toml"),
         )
     )
-    _registry = DomainRegistry(path_overrides=load_overrides_from_config(_L4_CONFIG_PATH))
+    _registry = DomainRegistry(path_overrides=load_overrides_from_config(_L4_CONFIG_PATH))  # type: ignore[union-attr]
     _HAS_L4_KERNEL = True
 except (ImportError, FileNotFoundError, ValueError) as _e:
     _log.debug("L4-kernel 不可用: %s", _e)
     _registry = None
+    CardsPlane = None  # type: ignore[assignment]
+    KemsPlane = None  # type: ignore[assignment]
+    load_overrides_from_config = None  # type: ignore[assignment]
     _HAS_L4_KERNEL = False
 
 _DEFAULT_CARDS_DIR = Path.home() / "Documents" / "@驾驶舱" / "CARDS"
@@ -455,7 +459,7 @@ def _scan_cards() -> list[dict[str, str]]:
     if cards_dir == _DEFAULT_CARDS_DIR and _HAS_L4_KERNEL and _registry:
         cockpit = _registry.get("cockpit")
         if cockpit:
-            cards = CardsPlane(cockpit.path)
+            cards = CardsPlane(cockpit.path)  # type: ignore[union-attr]
             return cards.scan_cards()
 
     # Fallback: 直接解析
@@ -533,7 +537,7 @@ def _search_vault(keyword: str, base_dir: Path | None = None) -> list[dict]:
         # Use l4-kernel KemsPlane
         vault = _registry.get("vault")
         if vault:
-            kems = KemsPlane(vault.path)
+            kems = KemsPlane(vault.path)  # type: ignore[union-attr]
             return kems.search(keyword)
 
     # Fallback: 直接搜索
