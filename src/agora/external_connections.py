@@ -50,6 +50,21 @@ LIFECYCLE_TRANSITIONS: dict[str, frozenset[str]] = {
 _SECRET_KEYS = frozenset(
     {"access_token", "refresh_token", "password", "private_key", "raw_private_content"}
 )
+_RAW_CONTENT_KEYS = frozenset(
+    {
+        "content",
+        "raw_content",
+        "raw_input",
+        "raw_output",
+        "sample_data",
+        "input_data",
+        "output_data",
+    }
+)
+_OPAQUE_REF_PREFIXES = ("evidence://", "vault://redacted/")
+_SCENE_CARD_MARKERS = frozenset(
+    {"goal", "trigger", "input_contract", "result_contract", "sample_refs"}
+)
 
 
 class ExternalConnectionError(ValueError):
@@ -75,6 +90,38 @@ def _required_text(value: Any, field_name: str) -> str:
     if not text:
         raise ExternalConnectionError(f"missing required field: {field_name}")
     return text
+
+
+def _reject_raw_content(value: Any, path: str = "scene_card") -> None:
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            if str(key).lower() in _RAW_CONTENT_KEYS:
+                raise ExternalConnectionError(
+                    f"raw content field is forbidden: {path}.{key}"
+                )
+            _reject_raw_content(nested, f"{path}.{key}")
+    elif isinstance(value, list):
+        for index, nested in enumerate(value):
+            _reject_raw_content(nested, f"{path}[{index}]")
+
+
+def _opaque_refs(
+    value: Any, field_name: str, *, minimum: int, maximum: int | None = None
+) -> tuple[str, ...]:
+    if not isinstance(value, (list, tuple, set)):
+        raise ExternalConnectionError(f"{field_name} must be a list of opaque refs")
+    raw_refs = tuple(str(item).strip() for item in value if str(item).strip())
+    invalid = [ref for ref in raw_refs if not ref.startswith(_OPAQUE_REF_PREFIXES)]
+    if invalid:
+        raise ExternalConnectionError(f"{field_name} contains a non-opaque ref")
+    refs = tuple(sorted(set(raw_refs)))
+    if len(refs) < minimum:
+        raise ExternalConnectionError(
+            f"{field_name} must contain at least {minimum} opaque refs"
+        )
+    if maximum is not None and len(refs) > maximum:
+        raise ExternalConnectionError(f"{field_name} must contain at most {maximum} refs")
+    return refs
 
 
 def _iso_now() -> str:
@@ -125,6 +172,141 @@ class SceneBinding:
             "operator": self.operator,
             "permission_ref": self.permission_ref,
         }
+
+
+@dataclass(frozen=True)
+class SceneCard:
+    """Business-owned activation contract for one product scene.
+
+    A card contains descriptions and opaque references only.  It is the
+    minimum evidence needed to activate an external capability; raw business
+    samples and credentials remain outside Agora.
+    """
+
+    scene_id: str
+    journey_id: str
+    goal: str
+    trigger: str
+    input_contract: str
+    result_contract: str
+    outcome_metric: str
+    consumer: str
+    approver: str
+    owner: str
+    failure_cost: str
+    data_classification: str
+    data_scope: str
+    operator: str
+    permission_ref: str
+    rollback_plan: str
+    sample_refs: tuple[str, ...]
+    demand_evidence_refs: tuple[str, ...] = ()
+    opportunity_window: str = ""
+
+    @classmethod
+    def from_mapping(cls, value: Mapping[str, Any]) -> SceneCard:
+        _reject_secrets(value)
+        _reject_raw_content(value)
+        return cls(
+            scene_id=_required_text(value.get("scene_id"), "scene_id"),
+            journey_id=_required_text(value.get("journey_id"), "journey_id"),
+            goal=_required_text(value.get("goal"), "goal"),
+            trigger=_required_text(value.get("trigger"), "trigger"),
+            input_contract=_required_text(
+                value.get("input_contract"), "input_contract"
+            ),
+            result_contract=_required_text(
+                value.get("result_contract"), "result_contract"
+            ),
+            outcome_metric=_required_text(
+                value.get("outcome_metric"), "outcome_metric"
+            ),
+            consumer=_required_text(value.get("consumer"), "consumer"),
+            approver=_required_text(value.get("approver"), "approver"),
+            owner=_required_text(value.get("owner"), "owner"),
+            failure_cost=_required_text(
+                value.get("failure_cost"), "failure_cost"
+            ),
+            data_classification=_required_text(
+                value.get("data_classification"), "data_classification"
+            ),
+            data_scope=_required_text(value.get("data_scope"), "data_scope"),
+            operator=_required_text(value.get("operator"), "operator"),
+            permission_ref=_required_text(
+                value.get("permission_ref"), "permission_ref"
+            ),
+            rollback_plan=_required_text(
+                value.get("rollback_plan"), "rollback_plan"
+            ),
+            sample_refs=_opaque_refs(
+                value.get("sample_refs"), "sample_refs", minimum=3, maximum=10
+            ),
+            demand_evidence_refs=_opaque_refs(
+                value.get("demand_evidence_refs", ()),
+                "demand_evidence_refs",
+                minimum=0,
+            ),
+            opportunity_window=str(value.get("opportunity_window") or "").strip(),
+        )
+
+    def to_binding(self) -> SceneBinding:
+        return SceneBinding(
+            scene_id=self.scene_id,
+            journey_id=self.journey_id,
+            outcome_metric=self.outcome_metric,
+            data_scope=self.data_scope,
+            operator=self.operator,
+            permission_ref=self.permission_ref,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "scene_id": self.scene_id,
+            "journey_id": self.journey_id,
+            "goal": self.goal,
+            "trigger": self.trigger,
+            "input_contract": self.input_contract,
+            "result_contract": self.result_contract,
+            "outcome_metric": self.outcome_metric,
+            "consumer": self.consumer,
+            "approver": self.approver,
+            "owner": self.owner,
+            "failure_cost": self.failure_cost,
+            "data_classification": self.data_classification,
+            "data_scope": self.data_scope,
+            "operator": self.operator,
+            "permission_ref": self.permission_ref,
+            "rollback_plan": self.rollback_plan,
+            "sample_refs": list(self.sample_refs),
+            "demand_evidence_refs": list(self.demand_evidence_refs),
+            "opportunity_window": self.opportunity_window,
+        }
+
+
+@dataclass(frozen=True)
+class SceneCardDecision:
+    status: str
+    scene_id: str
+    reasons: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "scene_id": self.scene_id,
+            "reasons": list(self.reasons),
+        }
+
+
+def evaluate_scene_card(card: SceneCard) -> SceneCardDecision:
+    """Apply the business activation gate without touching runtime state."""
+    reasons: list[str] = []
+    if not card.demand_evidence_refs and not card.opportunity_window:
+        reasons.append("missing_demand_evidence_or_opportunity_window")
+    return SceneCardDecision(
+        status="eligible" if not reasons else "rejected",
+        scene_id=card.scene_id,
+        reasons=tuple(reasons),
+    )
 
 
 @dataclass(frozen=True)
@@ -455,12 +637,60 @@ class ExternalConnectionCatalog:
     def activate(
         self,
         resource_id: str,
-        scene: SceneBinding | Mapping[str, Any],
+        scene: SceneCard | SceneBinding | Mapping[str, Any],
         *,
         trace_id: str,
         now: datetime | None = None,
     ) -> AdmissionDecision:
+        if isinstance(scene, SceneCard) or (
+            isinstance(scene, Mapping)
+            and bool(_SCENE_CARD_MARKERS.intersection(scene))
+        ):
+            return self.activate_with_scene_card(
+                resource_id, scene, trace_id=trace_id, now=now
+            )
         decision = self.admit(resource_id, scene, trace_id=trace_id, now=now)
+        if decision.status != "admitted":
+            return decision
+        resource = self._resources[resource_id]
+        if resource.lifecycle == "sandbox":
+            self.transition(resource_id, "admitted")
+            self.transition(resource_id, "active")
+        return decision
+
+    def activate_with_scene_card(
+        self,
+        resource_id: str,
+        scene: SceneCard | Mapping[str, Any],
+        *,
+        trace_id: str,
+        now: datetime | None = None,
+    ) -> AdmissionDecision:
+        """Activate only after the full business Scene Card passes its gate."""
+        try:
+            card = scene if isinstance(scene, SceneCard) else SceneCard.from_mapping(scene)
+        except ExternalConnectionError as exc:
+            return AdmissionDecision(
+                status="rejected",
+                resource_id=resource_id,
+                trace_id=trace_id,
+                policy_digest=self.policy_digest,
+                reasons=(f"invalid_scene_card:{exc}",),
+            )
+        card_decision = evaluate_scene_card(card)
+        if card_decision.status != "eligible":
+            return AdmissionDecision(
+                status="rejected",
+                resource_id=resource_id,
+                trace_id=trace_id,
+                policy_digest=self.policy_digest,
+                reasons=tuple(
+                    f"scene_card:{reason}" for reason in card_decision.reasons
+                ),
+            )
+        decision = self.admit(
+            resource_id, card.to_binding(), trace_id=trace_id, now=now
+        )
         if decision.status != "admitted":
             return decision
         resource = self._resources[resource_id]
@@ -676,6 +906,9 @@ __all__ = [
     "ExternalConnectionError",
     "ExternalResourceDescriptor",
     "RouteDecision",
+    "SceneCard",
+    "SceneCardDecision",
     "SceneBinding",
     "discover_entry_points",
+    "evaluate_scene_card",
 ]

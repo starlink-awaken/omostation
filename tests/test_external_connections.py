@@ -6,8 +6,10 @@ from agora.external_connections import (
     ExternalConnectionCatalog,
     ExternalConnectionError,
     ExternalResourceDescriptor,
+    SceneCard,
     SceneBinding,
     discover_entry_points,
+    evaluate_scene_card,
 )
 
 NOW = datetime(2026, 8, 2, tzinfo=UTC)
@@ -18,6 +20,30 @@ SCENE = SceneBinding(
     data_scope="private:research",
     operator="human:xiamingxing",
     permission_ref="credential://research",
+)
+SCENE_CARD = SceneCard(
+    scene_id="research-brief",
+    journey_id="weekly-decision",
+    goal="缩短研究结论形成时间",
+    trigger="每周决策会前",
+    input_contract="已授权的研究资料引用",
+    result_contract="带来源和置信度的决策简报",
+    outcome_metric="decision_latency_hours",
+    consumer="research-lead",
+    approver="human:xiamingxing",
+    owner="research-ops",
+    failure_cost="错误结论进入决策会",
+    data_classification="private",
+    data_scope="private:research",
+    operator="human:xiamingxing",
+    permission_ref="credential://research",
+    rollback_plan="disable-resource",
+    sample_refs=(
+        "vault://redacted/sample-1",
+        "vault://redacted/sample-2",
+        "vault://redacted/sample-3",
+    ),
+    demand_evidence_refs=("evidence://research/demand-1",),
 )
 
 
@@ -75,6 +101,49 @@ def test_scene_bound_activation_requires_permission_and_expiry() -> None:
     )
     assert rejected.status == "rejected"
     assert "missing_or_mismatched_permission" in rejected.reasons
+
+
+def test_scene_card_gate_requires_demand_evidence_or_opportunity_window() -> None:
+    card = SceneCard(**{**SCENE_CARD.__dict__, "demand_evidence_refs": ()})
+
+    decision = evaluate_scene_card(card)
+
+    assert decision.status == "rejected"
+    assert "missing_demand_evidence_or_opportunity_window" in decision.reasons
+
+
+def test_scene_card_rejects_raw_content_and_keeps_only_opaque_refs() -> None:
+    payload = SCENE_CARD.to_dict()
+    payload["sample_data"] = "private body"
+
+    with pytest.raises(ExternalConnectionError, match="raw content field"):
+        SceneCard.from_mapping(payload)
+
+    payload = SCENE_CARD.to_dict()
+    payload["sample_refs"] = ["https://example.test/raw-document"] * 3
+    with pytest.raises(ExternalConnectionError, match="non-opaque ref"):
+        SceneCard.from_mapping(payload)
+
+
+def test_full_scene_card_is_required_for_strict_activation() -> None:
+    catalog = ExternalConnectionCatalog()
+    catalog.register(_descriptor("source:card"))
+
+    decision = catalog.activate_with_scene_card(
+        "source:card", SCENE_CARD, trace_id="trace-card", now=NOW
+    )
+
+    assert decision.status == "admitted"
+    assert catalog.get("source:card").lifecycle == "active"
+
+    rejected = catalog.activate_with_scene_card(
+        "source:card",
+        {**SCENE.to_dict()},
+        trace_id="trace-card-missing",
+        now=NOW,
+    )
+    assert rejected.status == "rejected"
+    assert rejected.reasons[0].startswith("invalid_scene_card:")
 
 
 def test_router_prefers_healthy_trusted_resource_and_records_factors() -> None:
