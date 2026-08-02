@@ -236,6 +236,14 @@ def main() -> int:
   cockpit dashboard
         """,
     )
+    parser.add_argument(
+        "--output",
+        "-o",
+        dest="global_output",
+        choices=["text", "json", "tui", "markdown"],
+        default="text",
+        help="控制全局输出模式 (传 tui 启动极客终端交互控制台)",
+    )
     sub = parser.add_subparsers(dest="command", parser_class=WorkspaceParser)
 
     r = sub.add_parser("research", help="深度研究")
@@ -475,6 +483,10 @@ def main() -> int:
     )
 
     sub.add_parser("version", help="版本信息")
+
+    # ── TUI 极客终端控制台 ───────────────────────────────────
+    tui_p = sub.add_parser("tui", help="极客终端交互控制台 (Textual 全屏 TUI)")
+    tui_p.add_argument("--theme", default="dark", choices=["dark", "light"], help="配色主题")
 
     # ── CLI 收敛: SSB 签名链 ────────────────────────────────
     ssb_p = sub.add_parser(
@@ -818,6 +830,13 @@ def main() -> int:
     # workflow mesh 子命令通过 dispatch 处理 (避免与 workflow_args nargs=* 冲突)
 
     args = parser.parse_args()
+
+    # ── Phase 2: --output tui 全自动分流路由 ──
+    if getattr(args, "global_output", None) == "tui":
+        from cockpit.tui import is_tui_available, launch
+
+        if is_tui_available():
+            return launch(args)
 
     # ── Registry-Based Dispatch ──
     if not args.command:
@@ -1200,6 +1219,7 @@ def main() -> int:
         "knowledge": lambda a: __import__("cockpit.commands.knowledge", fromlist=["cmd_knowledge"]).cmd_knowledge(a),
         "kems": lambda a: __import__("cockpit.commands.kems", fromlist=["cmd_kems"]).cmd_kems(a),
         "c2g": lambda a: __import__("cockpit.commands.c2g", fromlist=["cmd_c2g"]).cmd_c2g(a),
+        "tui": lambda a: __import__("cockpit.tui", fromlist=["launch"]).launch(a),
     }
 
     handler = handlers.get(args.command)
