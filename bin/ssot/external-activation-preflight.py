@@ -12,11 +12,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 SCHEMA = "external-activation-preflight/v1"
 CATALOG_SCHEMA = "external-resource-catalog/v1"
+DEFAULT_CATALOG_TTL_SECONDS = 3600
 OPAQUE_REF_PREFIXES = ("vault://", "evidence://", "ref://", "sample://")
 REQUIRED_SCENE_FIELDS = (
     "scene_id",
@@ -106,6 +108,54 @@ def _validate_catalog(catalog: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(resources, list):
         raise PreflightInputError("catalog.resources must be a list")
     return [resource for resource in resources if isinstance(resource, dict)]
+
+
+def _catalog_freshness(
+    catalog: dict[str, Any], *, now: datetime | None = None
+) -> dict[str, Any]:
+    """Classify the catalog snapshot itself, separately from provider health."""
+    observed_at = _text(catalog.get("observed_at"))
+    raw_ttl = catalog.get("catalog_ttl_seconds", DEFAULT_CATALOG_TTL_SECONDS)
+    if isinstance(raw_ttl, bool) or not isinstance(raw_ttl, int) or raw_ttl <= 0:
+        return {
+            "status": "unknown",
+            "observed_at": observed_at or None,
+            "age_seconds": None,
+            "ttl_seconds": None,
+            "reason_codes": ["invalid_catalog_ttl"],
+        }
+    if not observed_at:
+        return {
+            "status": "unknown",
+            "observed_at": None,
+            "age_seconds": None,
+            "ttl_seconds": raw_ttl,
+            "reason_codes": ["missing_catalog_observed_at"],
+        }
+    try:
+        parsed = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            raise ValueError("catalog observed_at must include timezone")
+    except ValueError:
+        return {
+            "status": "unknown",
+            "observed_at": observed_at,
+            "age_seconds": None,
+            "ttl_seconds": raw_ttl,
+            "reason_codes": ["invalid_catalog_observed_at"],
+        }
+    current = now or datetime.now(UTC)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=UTC)
+    age_seconds = max(0.0, (current - parsed).total_seconds())
+    stale = age_seconds > raw_ttl
+    return {
+        "status": "stale" if stale else "fresh",
+        "observed_at": observed_at,
+        "age_seconds": age_seconds,
+        "ttl_seconds": raw_ttl,
+        "reason_codes": ["catalog_stale"] if stale else [],
+    }
 
 
 def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
@@ -201,10 +251,14 @@ def _capability_checks(
 
 
 def build_preflight(
-    scene_card: dict[str, Any], catalog: dict[str, Any]
+    scene_card: dict[str, Any],
+    catalog: dict[str, Any],
+    *,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     """Return a deterministic, non-activating activation readiness projection."""
     resources = _validate_catalog(catalog)
+    catalog_freshness = _catalog_freshness(catalog, now=now)
     scene_check = _scene_card_check(scene_card)
     capability_checks = _capability_checks(
         scene_check["required_capabilities"], resources
@@ -212,6 +266,8 @@ def build_preflight(
     missing = list(scene_check["missing_fields"])
     if any(check["status"] == "unavailable" for check in capability_checks):
         missing.append("catalog_capability_availability")
+    if catalog_freshness["status"] != "fresh":
+        missing.append("catalog_freshness")
     proposal_only = any(
         check["status"] == "proposal_only" for check in capability_checks
     )
@@ -238,6 +294,7 @@ def build_preflight(
         "missing_fields": sorted(set(missing)),
         "scene_card": scene_check,
         "capability_checks": capability_checks,
+        "catalog_freshness": catalog_freshness,
         "catalog_observed_at": catalog.get("observed_at"),
         "policy_digest": catalog.get("policy_digest"),
         "side_effects": {
