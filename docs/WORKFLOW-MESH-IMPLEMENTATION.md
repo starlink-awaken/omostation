@@ -188,6 +188,17 @@ uv run --with pyyaml --with pytest pytest tests/test_scene_card_candidates.py -q
 演化，但任何智能化建议、外部资源扩展或业务自动化都必须在同一张 Scene Card 上完成确认、评测、
 审批和可回滚交付。
 
+### 6.4 人工消费与评审回执
+
+候选投影可以通过 `bin/ssot/scene-card-review.py` 进入人工评审队列。评审器只接受
+`scene-card-candidate/v1` 且 `activation=forbidden` 的输入，并输出 `scene-card-review/v1`
+回执：`pending` 表示待分派，`needs_evidence` 表示业务证据不足，`rejected` 表示候选关闭，
+`blocked` 表示任何试图批准但尚未完成 Scene Card 的请求。
+
+评审回执是人工消费记录，不是 OMO 状态迁移。工具不会调用外部 provider、写 OMO 运行态或创建
+WorkflowRun；人工备注只保留哈希，回执只包含安全候选摘要和缺失字段。具体命令、状态表和进入
+真实场景的门槛见 [`SCENE-CARD-REVIEW-RUNBOOK.md`](./SCENE-CARD-REVIEW-RUNBOOK.md)。
+
 ### P1.5：派发与健康闭环
 
 1. 通过 OMO admission/dispatch broker 生成唯一的 `workflow_run_id`、短期 grant 和 worker dispatch packet；任何 capability、approval 或 budget gate 失败都不得产生执行派发。
