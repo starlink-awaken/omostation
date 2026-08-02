@@ -120,6 +120,7 @@ stateDiagram-v2
 - Runtime 增加显式 retry policy、稳定 effect key 的副作用日志和 replay，AetherForge 增加节点重试与可选 compensation hook；默认不重试，避免隐式放大副作用。Runtime effect journal 输出 `runtime-effect-outcome/v1` 安全摘要和可供 OMO broker 消费的 credential-free receipt；本地 replay 所需的工具结果不进入 Mesh 事件、receipt 或证据投影。journal 的读-判重-写已由跨进程锁保护，网络超时/连接失败会落为 `unavailable` 和稳定错误码。
 - OMO 增加 `workflow_eval`：从真实 append-only 事件生成 `workflow-mesh-eval/v1` 数据集，保留事件 ID 作为标签来源，并提供只读的候选策略离线评估/人工审批 proposal。
 - Phase 28 将外部资源选择评估升级为可追踪证据：OMO 通过 `external-resource-evaluation-observation/v1` 持久化安全观察，`external-resource-selection-eval/v1` 只读 join 评估、真实 Mesh 事件、external receipt 和显式 Outcome Feedback；未执行或歧义样本不会被标成成功。Cockpit 提供显式记录开关、评测集摘要和 proposal-only 策略比较，仍不激活 provider、不改变 admission/WorkflowRun。
+- Phase 29 将已有 admission、worker lease 和 receipt broker 串成一个最小可回放的 sandbox ToolPack 闭环：`omo worker sandbox-tool` 只允许确定性的 `sandbox.digest_ref`，要求 `sandbox.tool.invoke` admission 能力和 live WorkerLease，只接收安全引用与 SHA-256 摘要，追加 `ToolInvocationRecorded` 后完成 `WorkflowSucceeded -> EvidenceRecorded`。该执行器固定 `activation=sandbox`、`external_side_effects=disabled`，不调用 provider、不读取原文、不运行任意命令；Cockpit 的 OMO 运营投影同时暴露 sandbox invocation/receipt 计数。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
 ## 6. 分阶段路线
@@ -145,6 +146,7 @@ stateDiagram-v2
 3. 建立基于证据的 workflow 版本比较、成本分析和自动淘汰机制。
 4. 将高频稳定流程提升为模板，将不稳定流程沉淀为治理债务和人工审批规则。
 5. `workflow_eval` 先完成事件衍生标签和 proposal-only 反馈；待真实运行样本达到业务阈值后，再引入预测模型，模型不得直接写入 admission 或状态机。
+6. 用 sandbox ToolPack 先验证 admission、租约、确定性执行、receipt、幂等回放和运营可见性；只有真实低风险 Scene Card、责任人和结果指标齐备后，才把同一执行契约替换为真实 Tool/Channel provider。
 
 ### P1.1：Effect Outcome 与 Receipt 边界
 
@@ -251,6 +253,13 @@ Phase 28 完成了这条评测闭环的证据前置：用户只有显式选择�
 和消费反馈。输出 `external-resource-selection-eval/v1`，区分 `not_executed`、`incomplete`、
 `failed`、`unavailable`、`degraded` 和 `success`，并保留事件、receipt、feedback 的来源 ID。
 该数据集目前用于离线指标和 proposal-only 对比，不是预测模型训练集，也不是自动路由准入依据。
+
+Phase 29 补上执行闭环的低风险验证层。sandbox runner 复用同一条 WorkflowRun 状态机和 worker lease，
+但只执行无副作用的 `sandbox.digest_ref`：输入是受限 URI 和已有摘要，输出是新的摘要与
+`sandbox-tool-receipt/v1` 观察。它用于验证“已准入的 StepRun 能否被正确占用、执行、回放和留证”，
+不代表外部 provider 已激活，也不代表业务结果成立。运营投影仅报告 invocation/receipt 事实，业务消费
+仍需独立的 Outcome Feedback；下一阶段的真实 provider 接入必须保留相同的 invocation identity、receipt
+和失败/不可用边界。
 
 ### 6.3.1 J2 task -> WorkflowRequested 晋升
 
