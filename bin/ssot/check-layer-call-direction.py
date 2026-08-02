@@ -93,12 +93,22 @@ def detect_project(file_path: Path) -> str | None:
 
 
 def detect_project_name(file_path: Path) -> str | None:
-    """返回所在项目的 dir name (caller 项目名)."""
+    """返回所在项目的 dir name (caller 项目名).
+    
+    Handles nested project dirs: projects/runtime/projects/aetherforge/foo.py → aetherforge
+    """
     try:
         rel = file_path.resolve().relative_to(WORKSPACE / "projects")
     except ValueError:
         return None
-    return rel.parts[0] if rel.parts else None
+    parts = rel.parts
+    if not parts:
+        return None
+    # Find the deepest matching project name (handles nested project dirs)
+    for part in reversed(parts):
+        if part in PROJECT_LAYER:
+            return part
+    return parts[0]
 
 
 def scan_file(file_path: Path) -> list[dict]:
@@ -180,7 +190,11 @@ def scan_workspace(paths: list[Path] | None = None, *, strict: bool = False) -> 
         for ext in ("*.py", "*.ts", "*.tsx"):
             for f in project_dir.rglob(ext):
                 # 跳过测试目录, venv, node_modules, dist
-                if any(part in f.parts for part in ("tests", ".venv", "node_modules", "dist", "build", "__pycache__")):
+                if any(part in f.parts for part in ("tests", "scripts", "bin", ".scratch-archive", ".venv", "node_modules", "dist", "build", "__pycache__")):
+                    continue
+                # Skip nested project directories (they're scanned with their own project)
+                rel = f.relative_to(project_dir)
+                if any(part in PROJECT_LAYER for part in rel.parts):
                     continue
                 files_scanned += 1
                 all_findings.extend(scan_file(f))
