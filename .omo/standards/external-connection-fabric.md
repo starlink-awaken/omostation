@@ -3,12 +3,13 @@ title: External Connection Fabric Standard
 status: active
 type: standard
 owner: architecture-governance
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-03
 related:
   - ../_truth/registry/external-connection-fabric.yaml
   - ../../ARCHITECTURE.md
   - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - ../_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
+  - ../_knowledge/decisions/0320-external-resource-evaluation-and-explainable-selection.md
 ---
 
 # External Connection Fabric 标准
@@ -132,6 +133,26 @@ receipt 文件和事件投影都禁止 provider 原文、模型输出、凭据�
   确定性前置失败。
 - `record_external_receipt`：由执行方在调用结束后把最小 receipt 回写 OMO；连接器本身不得直接
   改 WorkflowRun 或知识存储。
+
+### 5.1 场景化资源评估
+
+资源目录在进入正式准入前，可以通过 `external-resource-evaluation/v1` 生成一次可重放的只读评估。
+评估输入是 `capability`、完整 `SceneBinding`、`trace_id`、目录快照和可选的健康观察；输出必须包含：
+
+- 全部目录候选，而不只是最终选择；
+- 每个候选的 `status`、稳定 `reason_codes`、`decision_factors` 和排序值；
+- `policy_digest`、`trace_id`、场景绑定摘要和汇总计数；
+- `activation: forbidden`、`mode: read_only_evaluation`，以及无 provider 调用、无 OMO 状态写入的声明。
+
+Agora 的 `evaluate_candidates()` 是唯一决策算法，已有 `route()` 只能复用该结果，不得维护第二套
+评分逻辑。根仓通过 `evaluate_external_resources()` 暴露快照评估，Cockpit 通过
+`POST /api/external-resources/evaluate` 提供人机消费入口。评估结果不是 admission、不是 WorkflowRun、
+不是业务成功标签，也不能替代真实 receipt；只有经过 Scene Card、人工批准和 OMO admission 后，才可
+进入实际调用链。
+
+评估因子只允许使用安全元数据：能力匹配、权限、信任、新鲜度、健康、成本、延迟和资源身份。原文、
+凭据、provider 响应和模型输出不得进入评估结果。真实质量标签、人工判定、调用回执和结果指标应在
+后续评测集/证据闭环中另行采集，不能从评估排名反推。
 
 连接器开发者只需实现 descriptor、健康探针和受控调用适配器；不得把连接器注册、权限判定、
 WorkflowRun 状态迁移或知识持久化塞回适配器。这样外部知识、方法、工具、模型和渠道可以动态
