@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -114,6 +115,7 @@ def admit_workflow(
     remaining_budget: float | None = None,
     ttl_seconds: int = 900,
     now: str | None = None,
+    scene_binding: Mapping[str, Any] | None = None,
     omo_dir: str | Path = ".omo",
 ) -> dict[str, Any]:
     """Validate gates, append request/admission events, and return a packet."""
@@ -186,6 +188,7 @@ def admit_workflow(
                 "health": health,
                 "requested_budget": requested_budget,
             },
+            scene_binding=scene_binding,
         )
     )
     store.append(
@@ -206,6 +209,7 @@ def admit_workflow(
         "admission": grant,
         "approval": approval,
         "capability_health": health,
+        "scene_binding": dict(scene_binding) if scene_binding is not None else None,
         "dispatch_state": "admitted",
     }
 
