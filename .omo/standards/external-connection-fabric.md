@@ -51,11 +51,21 @@ Iris 同时保留 `iris.connectors` 作为自身注册组，并将同一批 conn
 `external.resources`，因此新增外部连接只需要新增插件声明和 descriptor，不需要修改 Agora
 路由代码。
 
+动态扩展必须经过四步：发现 descriptor、隔离探活、重新评估场景准入、再进入路由候选。descriptor
+变更不能静默覆盖活动连接，至少要记录 `id + provider + version` 的差异并重新检查权限、健康、
+期限和回滚方案。单个插件探活失败只能隔离该候选并生成错误记录，不能污染其他连接或让旧的健康
+快照继续伪装成实时可用。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
 `governed_snapshot`。事件订阅和消息投递必须带最小化载荷、去重、免打扰、升级和投递回执。
 方法和模型默认 `proposal_only`，必须经过评测、影子运行和人工批准才能产生生产副作用。
+
+SourcePack 的动态刷新必须保留来源、时间、新鲜度、权限和用途标签；TTL 到期后只能标记
+`degraded/unavailable`，不能继续按 live 结果使用。MethodPack、ModelPack 和 ChannelPack
+必须分别留下离线评测、shadow、批准、canary 和 rollback 证据，路由或模型替换不能直接写入
+admission 或 WorkflowRun 状态。
 
 ## 5. 路由与证据
 
@@ -75,11 +85,18 @@ Agora 根据相关性、可信度、新鲜度、权限、可用性、成本和�
 - `route`：按能力和决策因子选择资源；无候选时只返回显式 `unavailable`。
 - `invoke`：返回受控 receipt；`proposal_only` 不执行副作用。
 
+连接器开发者只需实现 descriptor、健康探针和受控调用适配器；不得把连接器注册、权限判定、
+WorkflowRun 状态迁移或知识持久化塞回适配器。这样外部知识、方法、工具、模型和渠道可以动态
+扩展，但能力边界仍收敛在 ECOS 合同、OMO 准入、Agora 路由和 Workflow Mesh 回执四个位置。
+
 ## 6. 受控进化
 
 连接优化、方法改写、路由调整和模型切换只能生成提案。提案按
 `proposal -> shadow -> approval -> canary -> rollback` 推进，并且必须能比较结果质量、成本、
 延迟、权限失败率和人工接管率。
+
+每轮扩展至少要有一个真实场景、一个可量化结果指标和一个可回滚版本；没有重复需求或真实消费方
+时，保持 `sandbox`/`proposal_only`，不提前建设生产级连接器。
 
 验证命令：
 

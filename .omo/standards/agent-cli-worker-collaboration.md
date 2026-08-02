@@ -136,6 +136,12 @@ Coordinator sets:
 Worker then acknowledges against the dispatch record or live session, but does
 not own the first task-state transition.
 
+For a Workflow Mesh admitted run, the acknowledgement must also be durable in
+OMO. The worker or coordinator calls `omo worker mesh-ack` with the exact
+`workflow_run_id`, `trace_id`, `dispatch_id`, `step_run_id`, `admission_id` and
+worker ID. This appends `WorkerAcknowledged` and establishes the first lease;
+updating the YAML dispatch record alone is insufficient evidence.
+
 ### 5.4 Execute
 
 Worker runs within:
@@ -176,6 +182,25 @@ Each worker run should have explicit artifacts:
 - prompt contract
 - dispatch record
 - reclaim note, if the worker stalls
+
+## 5.9 Workflow Mesh Event Contract
+
+The durable worker control-plane sequence is:
+
+```text
+StepDispatched
+  -> WorkerAcknowledged
+  -> WorkerLeaseRenewed *
+  -> WorkerLeaseExpired
+  -> WorkerReclaimed (optional successor)
+```
+
+The lifecycle APIs are exposed as `omo worker mesh-ack`, `mesh-heartbeat`,
+`mesh-expire`, and `mesh-reclaim`. All calls carry the same admission and
+StepRun context. A repeated call with the same idempotency key is successful
+only when its payload is identical; an owner mismatch, premature expiry, or
+reclaim before expiry is rejected. The OMO event log and projection are the
+source of truth; dispatch YAML remains the human-readable handoff artifact.
 
 This keeps reassignment auditable and reduces knowledge loss during recovery.
 
@@ -292,12 +317,14 @@ After the budget is exhausted, the worker must produce one of:
 
 ### 8.2 Progress Lease & Auto-Reap
 
-Default execution lease enforced by MCP-Native Reaper:
+The durable lease contract is enforced by OMO Workflow Mesh; the legacy YAML
+watchdog remains an operator-facing observation surface until the real daemon
+is wired to these APIs:
 
 - **heartbeat/checkpoint**: every 5 minutes (via `mcp.tool: heartbeat` or material write).
 - **warning**: at 15 minutes.
-- **stale**: at 20 minutes (`lease_expired`).
-- **auto-reap**: at 30 minutes (`reclaim_due`), the `omo_worker.py` Auto-Reaper will forcibly terminate the lease and trigger `AUTO_RECLAIM_TIMEOUT`.
+- **stale**: at the dispatch lease deadline, append `WorkerLeaseExpired` with an explicit observation time.
+- **reclaim**: after expiry, append `WorkerReclaimed` with a successor dispatch; no silent lease deletion is allowed.
 
 ### 8.3 Stuck Worker Recovery
 
