@@ -32,6 +32,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -217,7 +218,7 @@ def _run_omo_lint(subcmd: str) -> subprocess.CompletedProcess[str]:
     python = venv_python if venv_python.exists() else Path(sys.executable)
     env = os.environ.copy()
     env["PYTHONPATH"] = str(OMO_PROJECT_DIR / "src")
-    return subprocess.run(
+    result = subprocess.run(
         [str(python), "-m", "omo.omo_lint", subcmd],
         cwd=WORKSPACE_ROOT,
         capture_output=True,
@@ -225,6 +226,33 @@ def _run_omo_lint(subcmd: str) -> subprocess.CompletedProcess[str]:
         check=False,
         env=env,
     )
+    if (
+        result.returncode != 0
+        and "ModuleNotFoundError" in result.stderr
+        and shutil.which("uv")
+    ):
+        # 隔离 worktree 的本地 venv 可能未安装治理依赖；保持同一 lint 规则，临时补齐最小运行时。
+        fallback_env = env.copy()
+        fallback_env["PYTHONPATH"] = str(OMO_PROJECT_DIR / "src")
+        result = subprocess.run(
+            [
+                "uv",
+                "run",
+                "--no-project",
+                "--with",
+                "pyyaml>=6",
+                "python",
+                "-m",
+                "omo.omo_lint",
+                subcmd,
+            ],
+            cwd=WORKSPACE_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+            env=fallback_env,
+        )
+    return result
 
 
 def _check_direct_omo_io() -> dict:
