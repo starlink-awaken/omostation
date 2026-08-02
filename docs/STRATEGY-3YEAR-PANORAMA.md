@@ -4,9 +4,9 @@ status: active
 type: strategy
 owner: 夏明星
 created: 2026-07-15
-updated: 2026-08-02
+updated: 2026-08-03
 horizon: 2026H2-2029
-version: v2.0
+version: v2.1
 lifecycle: contract
 last-reviewed: 2026-08-02
 review-state: scenario-and-mesh-converged
@@ -19,6 +19,7 @@ related:
   - .omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md
   - .omo/_knowledge/decisions/0297-external-connection-fabric-and-product-truth.md
   - .omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
+  - .omo/_knowledge/decisions/0319-external-resource-observation-surfaces.md
   - .omo/_truth/registry/external-connection-fabric.yaml
   - .omo/standards/external-connection-fabric.md
 note: >
@@ -280,6 +281,13 @@ Agora 的只读 `workflow_capability_health` 投影获取带来源和观测时�
 OMO admission preview。只有 preview 通过且人工确认，才进入受治理 admission；该链路仍不
 启动 worker、不触达外部系统。这样可以先在工程 dogfood 场景验证“健康证据是否可用、准入
 是否可解释、失败是否真实阻断”，再把同一契约复用于外部 SourcePack/ToolPack/ChannelPack。
+
+Phase 26 已把 J4 的观察门接到真实产品后端：`GET /api/external-resources` 优先消费 OMO
+最新观察，缺失时回退到 Agora 安全发现；`GET /api/scene-cards` 与
+`POST /api/scene-cards/review` 将候选发现和人工回执接入 Cockpit。目录、候选和评审均明确
+`activation=forbidden`，接口不可用时 fail-closed。这意味着 J4 已从“脚本和页面声明”进入
+“可被人消费的只读垂直切片”，但仍没有真实业务激活，下一阶段的价值重点转为真实场景卡、
+评测集和回执证据，而不是继续堆连接器数量。
 
 ## 9. 受控智能与进化闭环
 
