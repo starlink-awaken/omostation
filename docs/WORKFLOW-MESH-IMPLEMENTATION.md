@@ -663,6 +663,29 @@ cd projects/cockpit
 PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx --with pydantic --with pyyaml python -m pytest -q src/cockpit/tests/test_api_external_resources.py
 ```
 
+### 7.3.11 Phase 43 Cockpit UI 外部扩展包预检消费面
+
+Phase 43 在既有 `外部能力目录` 页面内增加扩展包预检面板，使用
+`ExternalResourcePackPreflightPanel` 调用 `/api/external-resources/packs/preflight`。面板提供 JSON
+manifest 输入和沙盒示例，消费 `external-resource-pack-check/v1`，展示阻断原因、提案态和可进入目录预览
+状态，不新增导航和第二状态中心。
+
+UI 永远不提供安装、provider 加载、health probe、OMO 写入、业务调用、admission 或 activation 操作；
+结果固定显示 `activation: forbidden`，并将 `install/provider_import/health_probe/omo_write/business_invoke`
+投影为禁止。用户在页面上得到的动作只有“提交 manifest 做只读合同检查”。
+
+因此，当前外部动态扩展产品链是：
+
+`UI manifest -> Cockpit pack preflight API -> root static checker -> catalog discovery/OMO observation -> Scene Card/preflight -> OMO admission -> Agora/Workflow Mesh`
+
+UI 测试与构建：
+
+```bash
+cd projects/cockpit-ui
+bun run test:unit -- src/components/__tests__/ExternalResourcePackPreflightPanel.test.tsx src/components/__tests__/ExternalResourceCatalogView.test.tsx
+bun run build
+```
+
 运营工作台现在可执行以下人工确认链：
 
 ```text
