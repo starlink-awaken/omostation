@@ -440,6 +440,73 @@ class RouteDecision:
 
 
 @dataclass(frozen=True)
+class ResourceCandidateDecision:
+    """Explainable, credential-free decision for one catalog resource."""
+
+    resource_id: str
+    capability: str
+    status: str
+    reasons: tuple[str, ...] = ()
+    decision_factors: Mapping[str, Any] = field(default_factory=dict)
+    rank: tuple[Any, ...] = ()
+    availability: str | None = None
+    provenance_ref: str = "unavailable"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "resource_id": self.resource_id,
+            "capability": self.capability,
+            "status": self.status,
+            "reasons": list(self.reasons),
+            "decision_factors": dict(self.decision_factors),
+            "rank": list(self.rank),
+            "availability": self.availability,
+            "provenance_ref": self.provenance_ref,
+        }
+
+
+@dataclass(frozen=True)
+class ResourceEvaluation:
+    """Read-only evaluation result shared by route and human observation surfaces."""
+
+    capability: str
+    trace_id: str
+    policy_digest: str
+    scene_binding: Mapping[str, str]
+    status: str
+    candidates: tuple[ResourceCandidateDecision, ...]
+    selected_resource_id: str | None = None
+    reasons: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        eligible_count = sum(item.status == "eligible" for item in self.candidates)
+        rejected_count = sum(item.status == "rejected" for item in self.candidates)
+        not_applicable_count = sum(
+            item.status == "not_applicable" for item in self.candidates
+        )
+        return {
+            "schema": "external-resource-evaluation/v1",
+            "mode": "read_only_evaluation",
+            "activation": "forbidden",
+            "raw_content_policy": "never_read_or_export",
+            "capability": self.capability,
+            "trace_id": self.trace_id,
+            "policy_digest": self.policy_digest,
+            "scene_binding": dict(self.scene_binding),
+            "status": self.status,
+            "selected_resource_id": self.selected_resource_id,
+            "candidates": [item.to_dict() for item in self.candidates],
+            "reasons": list(self.reasons),
+            "summary": {
+                "candidate_count": len(self.candidates),
+                "eligible_count": eligible_count,
+                "rejected_count": rejected_count,
+                "not_applicable_count": not_applicable_count,
+            },
+        }
+
+
+@dataclass(frozen=True)
 class ConnectionReceipt:
     """Safe result of an external invocation; never carries raw output."""
 
@@ -1109,35 +1176,72 @@ class ExternalConnectionCatalog:
             self.transition(resource_id, "active")
         return decision
 
-    def route(
+    def evaluate_candidates(
         self,
         capability: str,
         scene: SceneBinding | Mapping[str, Any],
         *,
         trace_id: str,
         now: datetime | None = None,
-    ) -> RouteDecision:
+        availability_by_resource: Mapping[str, str] | None = None,
+    ) -> ResourceEvaluation:
+        """Evaluate every resource without changing state or invoking providers."""
         binding = (
             scene
             if isinstance(scene, SceneBinding)
             else SceneBinding.from_mapping(scene)
         )
-        candidates: list[
-            tuple[tuple[Any, ...], ExternalResourceDescriptor, dict[str, Any]]
-        ] = []
+        requested_capability = _required_text(capability, "capability")
+        availability = availability_by_resource or {}
+        candidates: list[ResourceCandidateDecision] = []
+        eligible: list[tuple[tuple[Any, ...], ExternalResourceDescriptor, dict[str, Any]]] = []
         rejected: list[str] = []
+
         for resource in self.list():
-            if capability not in resource.capabilities:
-                continue
-            if resource.lifecycle not in {"active", "degraded", "admitted"}:
-                rejected.append(f"{resource.id}:lifecycle_{resource.lifecycle}")
-                continue
-            admission = self.admit(resource.id, binding, trace_id=trace_id, now=now)
-            if admission.status != "admitted":
-                rejected.extend(
-                    f"{resource.id}:{reason}" for reason in admission.reasons
+            resource_availability = availability.get(resource.id)
+            provenance_ref = self._provenance_ref(resource)
+            if requested_capability not in resource.capabilities:
+                candidates.append(
+                    ResourceCandidateDecision(
+                        resource_id=resource.id,
+                        capability=requested_capability,
+                        status="not_applicable",
+                        reasons=("capability_not_supported",),
+                        availability=resource_availability,
+                        provenance_ref=provenance_ref,
+                    )
                 )
                 continue
+
+            reasons: list[str] = []
+            if resource_availability and resource_availability not in {"available", "degraded"}:
+                reasons.append(f"catalog_{resource_availability}")
+            if resource.lifecycle not in {"active", "degraded", "admitted"}:
+                reasons.append(f"lifecycle_{resource.lifecycle}")
+            if not reasons:
+                admission = self.admit(
+                    resource.id,
+                    binding,
+                    trace_id=trace_id,
+                    now=now,
+                )
+                if admission.status != "admitted":
+                    reasons.extend(admission.reasons)
+
+            if reasons:
+                rejected.extend(f"{resource.id}:{reason}" for reason in reasons)
+                candidates.append(
+                    ResourceCandidateDecision(
+                        resource_id=resource.id,
+                        capability=requested_capability,
+                        status="rejected",
+                        reasons=tuple(sorted(set(reasons))),
+                        availability=resource_availability,
+                        provenance_ref=provenance_ref,
+                    )
+                )
+                continue
+
             factors = self._decision_factors(resource, binding)
             rank = (
                 1 if factors["health"] == "healthy" else 0,
@@ -1148,15 +1252,63 @@ class ExternalConnectionCatalog:
                 -factors["latency"],
                 resource.id,
             )
-            candidates.append((rank, resource, factors))
-        if not candidates:
+            eligible.append((rank, resource, factors))
+            candidates.append(
+                ResourceCandidateDecision(
+                    resource_id=resource.id,
+                    capability=requested_capability,
+                    status="eligible",
+                    decision_factors=factors,
+                    rank=rank,
+                    availability=resource_availability,
+                    provenance_ref=provenance_ref,
+                )
+            )
+
+        selected_resource_id = None
+        if eligible:
+            _, selected, _ = max(eligible, key=lambda item: item[0])
+            selected_resource_id = selected.id
+        evaluation_status = "selected" if selected_resource_id else "unavailable"
+        reasons = () if selected_resource_id else ("no_eligible_candidate", *rejected)
+        return ResourceEvaluation(
+            capability=requested_capability,
+            trace_id=trace_id,
+            policy_digest=self.policy_digest,
+            scene_binding=binding.to_dict(),
+            status=evaluation_status,
+            candidates=tuple(candidates),
+            selected_resource_id=selected_resource_id,
+            reasons=tuple(reasons),
+        )
+
+    def route(
+        self,
+        capability: str,
+        scene: SceneBinding | Mapping[str, Any],
+        *,
+        trace_id: str,
+        now: datetime | None = None,
+    ) -> RouteDecision:
+        evaluation = self.evaluate_candidates(
+            capability,
+            scene,
+            trace_id=trace_id,
+            now=now,
+        )
+        if evaluation.selected_resource_id is None:
             return RouteDecision(
                 status="unavailable",
                 trace_id=trace_id,
                 policy_digest=self.policy_digest,
-                reasons=("no_admitted_capability", *rejected),
+                reasons=("no_admitted_capability", *evaluation.reasons[1:]),
             )
-        _, selected, factors = max(candidates, key=lambda item: item[0])
+        selected = self._resources[evaluation.selected_resource_id]
+        factors = next(
+            item.decision_factors
+            for item in evaluation.candidates
+            if item.resource_id == selected.id
+        )
         return RouteDecision(
             status="selected",
             trace_id=trace_id,
@@ -1306,6 +1458,59 @@ class ExternalConnectionCatalog:
         return f"receipt-{hashlib.sha256(raw).hexdigest()[:20]}"
 
 
+def evaluate_external_resource_catalog_snapshot(
+    snapshot: Mapping[str, Any],
+    capability: str,
+    scene: SceneBinding | Mapping[str, Any],
+    *,
+    trace_id: str,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    """Evaluate a safe catalog snapshot without activating or invoking resources."""
+    _reject_secrets(snapshot, "catalog")
+    _reject_raw_content(snapshot, "catalog")
+    if snapshot.get("schema") != "external-resource-catalog/v1":
+        raise ExternalConnectionError("catalog snapshot has an unexpected schema")
+    if snapshot.get("mode") != "read_only_projection":
+        raise ExternalConnectionError("catalog snapshot must be read_only_projection")
+    if snapshot.get("activation") != "forbidden":
+        raise ExternalConnectionError("catalog snapshot activation must be forbidden")
+    resources = snapshot.get("resources")
+    if not isinstance(resources, list):
+        raise ExternalConnectionError("catalog resources must be a list")
+
+    catalog = ExternalConnectionCatalog(
+        policy_digest=str(snapshot.get("policy_digest") or "external-connection-fabric/v1")
+    )
+    availability: dict[str, str] = {}
+    for resource in resources:
+        if not isinstance(resource, Mapping):
+            raise ExternalConnectionError("catalog resource must be an object")
+        resource_id = _required_text(resource.get("id"), "resource.id")
+        provenance_ref = _required_text(
+            resource.get("provenance_ref"), "resource.provenance_ref"
+        )
+        descriptor = dict(resource)
+        descriptor.pop("availability", None)
+        descriptor.pop("reason_codes", None)
+        descriptor.pop("entry_point", None)
+        descriptor["provenance"] = {"source_ref": provenance_ref}
+        descriptor["rollback_plan"] = (
+            "declared" if bool(resource.get("rollback_plan")) else ""
+        )
+        descriptor["metadata"] = {}
+        catalog.register(descriptor)
+        availability[resource_id] = str(resource.get("availability") or "unavailable")
+
+    return catalog.evaluate_candidates(
+        capability,
+        scene,
+        trace_id=trace_id,
+        now=now,
+        availability_by_resource=availability,
+    ).to_dict()
+
+
 __all__ = [
     "LIFECYCLE_TRANSITIONS",
     "RESOURCE_KINDS",
@@ -1315,6 +1520,8 @@ __all__ = [
     "ExternalConnectionCatalog",
     "ExternalConnectionError",
     "ExternalResourceDescriptor",
+    "ResourceCandidateDecision",
+    "ResourceEvaluation",
     "RouteDecision",
     "SceneBinding",
     "SceneCard",
@@ -1322,5 +1529,6 @@ __all__ = [
     "build_external_resource_catalog_snapshot",
     "diff_external_resource_catalog_snapshots",
     "discover_entry_points",
+    "evaluate_external_resource_catalog_snapshot",
     "evaluate_scene_card",
 ]
