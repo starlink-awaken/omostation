@@ -275,6 +275,12 @@ Phase 23 又补齐了 `task_created -> WorkflowRequested` 的受治理请求层�
 J4 的成功标准不是连接数量，而是外部资源是否缩短了决策和交付时间、提高了证据质量，
 并且在权限、成本、时效或可用性变化时能够降级、隔离和回滚。
 
+当前优先补齐 J4 的内部前置能力：Cockpit 不再接受无来源的手工能力健康快照，而是通过
+Agora 的只读 `workflow_capability_health` 投影获取带来源和观测时间的运行证据，再交给
+OMO admission preview。只有 preview 通过且人工确认，才进入受治理 admission；该链路仍不
+启动 worker、不触达外部系统。这样可以先在工程 dogfood 场景验证“健康证据是否可用、准入
+是否可解释、失败是否真实阻断”，再把同一契约复用于外部 SourcePack/ToolPack/ChannelPack。
+
 ## 9. 受控智能与进化闭环
 
 系统的智能化成熟度按五级递进：
@@ -340,6 +346,9 @@ B.D.S.K. 后续演进重点不是增加 Persona 文案，而是让四角意见�
 - 将 `task_created -> workflow_requested -> approval/admission -> result_feedback` 作为可观测漏斗，
   先验证请求质量、审批等待、能力健康、预算阻断和证据完整性，再决定是否进入真实场景的 Workflow dispatch；
   preview 必须只读，admission 必须承接已有请求且不隐式启动 worker。
+- 将 Agora server-owned capability health 接入 Cockpit admission preview，形成
+  `health observation -> preview -> human confirmation -> admission` 的最小真实闭环；
+  健康不可用必须显式 `unavailable`，不得用静态样本或手工快照冒充运行事实。
 
 里程碑 M2：J2 产生可证明的时间节省和知识复用收益。
 
