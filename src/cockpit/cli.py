@@ -475,6 +475,10 @@ def main() -> int:
 
     sub.add_parser("version", help="版本信息")
 
+    # ── TUI 极客终端控制台 ───────────────────────────────────
+    tui_p = sub.add_parser("tui", help="极客终端交互控制台 (Textual 全屏 TUI)")
+    tui_p.add_argument("--theme", default="dark", choices=["dark", "light"], help="配色主题")
+
     # ── CLI 收敛: SSB 签名链 ────────────────────────────────
     ssb_p = sub.add_parser(
         "ssb",
@@ -1199,6 +1203,7 @@ def main() -> int:
         "knowledge": lambda a: __import__("cockpit.commands.knowledge", fromlist=["cmd_knowledge"]).cmd_knowledge(a),
         "kems": lambda a: __import__("cockpit.commands.kems", fromlist=["cmd_kems"]).cmd_kems(a),
         "c2g": lambda a: __import__("cockpit.commands.c2g", fromlist=["cmd_c2g"]).cmd_c2g(a),
+        "tui": lambda a: __import__("cockpit.tui", fromlist=["launch"]).launch(a),
     }
 
     handler = handlers.get(args.command)

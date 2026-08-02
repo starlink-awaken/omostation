@@ -34,6 +34,11 @@ dependencies = [
 
 [project.optional-dependencies]
 web = []  # Web UI lives in web/ (TypeScript), no Python deps needed
+tui = [
+    "textual>=0.80.0",
+    "watchfiles>=0.20.0",
+]  # 极客 TUI 终端交互控制台 (cockpit tui)
+
 
 [project.scripts]
 cockpit = "cockpit.cli:main"
