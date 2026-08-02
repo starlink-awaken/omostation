@@ -1,10 +1,10 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-02T11:23:42Z
+# 生成时间: 2026-08-02T11:40:31Z
 
 version: 1.0.0
-generated_at: '2026-08-02T11:23:42Z'
+generated_at: '2026-08-02T11:40:31Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 24
@@ -1626,7 +1626,7 @@ cli_commands:
 - name: health
   description: 一键系统健康检查
 - name: help
-  description: 查看产品地图与快速入门
+  description: 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)
 - name: history
   description: 查看对话历史
 - name: identity

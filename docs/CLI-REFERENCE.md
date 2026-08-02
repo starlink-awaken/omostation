@@ -1,6 +1,6 @@
 # Cockpit CLI 命令参考
 
-> 自动生成于 2026-08-02T10:17:40Z
+> 自动生成于 2026-08-02T11:40:31Z
 > 源: `docs/generated/capability-registry.yaml`
 
 共 **103** 个命令 (含子命令)。按场景分组如下。
@@ -9,7 +9,7 @@
 
 | 命令 | 描述 |
 |------|------|
-| `cockpit help` | 查看产品地图与快速入门 |
+| `cockpit help` | 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务) |
 | `cockpit init` | 🚀 初始化向导（同 quickstart） |
 | `cockpit quickstart` | 🚀 新用户快速上手向导（环境核验 + 上手指引） |
 
@@ -175,4 +175,4 @@
 | `cockpit mesh` | `aetherforge` | 10 |
 | `cockpit compute` | `aetherforge` | 10 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T10:17:40Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T11:40:31Z 生成*
