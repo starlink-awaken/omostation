@@ -1668,3 +1668,105 @@ class TestSceneBindingBridge:
         requested = [c for c in sink_calls if c.get("event_type") == "WorkflowRequested"]
         assert len(requested) >= 1
         assert "scene_binding" not in requested[0]["payload"]
+
+
+class TestMeshHealth:
+    """Mesh health monitor tests"""
+
+    def test_health_unavailable_when_no_store(self, monkeypatch):
+        """Health should report unavailable when Mesh store not found."""
+        import ecos.workflow.default_mesh_sink as dms
+        from ecos.workflow.mesh_health import mesh_health_snapshot
+
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            health = mesh_health_snapshot()
+            assert health["status"] == "unavailable"
+            assert health["connected"] is False
+            assert health["event_count"] == 0
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+
+    def test_health_degraded_when_store_empty(self, monkeypatch):
+        """Health should report degraded when store has no events."""
+        from ecos.workflow.mesh_health import mesh_health_snapshot
+
+        class MockEmptyStore:
+            def events(self):
+                return []
+
+        monkeypatch.setattr(
+            "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockEmptyStore(),
+        )
+
+        health = mesh_health_snapshot()
+        assert health["status"] == "degraded"
+        assert health["connected"] is True
+        assert health["event_count"] == 0
+
+    def test_health_healthy_with_recent_events(self, monkeypatch):
+        """Health should report healthy when store has recent events."""
+        from datetime import UTC, datetime
+        from ecos.workflow.mesh_health import mesh_health_snapshot
+
+        now = datetime.now(UTC).isoformat()
+
+        class MockActiveStore:
+            def events(self):
+                return [
+                    {"event_type": "WorkflowRequested", "occurred_at": now, "producer": "agent-workflow"},
+                    {"event_type": "StepDispatched", "occurred_at": now, "producer": "omo.omo_worker_dispatch"},
+                ]
+
+        monkeypatch.setattr(
+            "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockActiveStore(),
+        )
+
+        health = mesh_health_snapshot()
+        assert health["status"] == "healthy"
+        assert health["event_count"] == 2
+        assert health["events_last_hour"] >= 2
+        assert "agent-workflow" in health["bridges_active"]
+        assert "omo.omo_worker_dispatch" in health["bridges_active"]
+
+    def test_health_check_returns_violations(self, monkeypatch):
+        """mesh_health_check should return violations when degraded."""
+        from ecos.workflow.mesh_health import mesh_health_check
+
+        class MockEmptyStore:
+            def events(self):
+                return []
+
+        monkeypatch.setattr(
+            "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockEmptyStore(),
+        )
+
+        violations = mesh_health_check()
+        assert len(violations) == 1
+        assert violations[0]["severity"] == "warning"
+        assert "MESH-HEALTH" in violations[0]["id"]
+
+    def test_health_check_empty_when_healthy(self, monkeypatch):
+        """mesh_health_check should return empty list when healthy."""
+        from datetime import UTC, datetime
+        from ecos.workflow.mesh_health import mesh_health_check
+
+        now = datetime.now(UTC).isoformat()
+
+        class MockStore:
+            def events(self):
+                return [{"event_type": "WorkflowRequested", "occurred_at": now, "producer": "test"}]
+
+        monkeypatch.setattr(
+            "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockStore(),
+        )
+
+        violations = mesh_health_check()
+        assert len(violations) == 0
