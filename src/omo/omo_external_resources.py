@@ -36,6 +36,9 @@ from omo.omo_external_scene_trial_feedback import (
     ExternalSceneTrialFeedbackError,
     record_external_scene_trial_feedback,
 )
+from omo.omo_external_scene_readiness import (
+    build_external_scene_trial_promotion_readiness,
+)
 from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic
 from omo.omo_paths import find_omo_dir
 from omo.workflow_eval import build_external_resource_selection_dataset
@@ -289,6 +292,12 @@ def main(argv: list[str] | None = None) -> int:
     selection_eval.add_argument("--scene-id")
     selection_eval.add_argument("--output", type=Path)
     selection_eval.add_argument("--json", action="store_true")
+    readiness = sub.add_parser(
+        "scene-trial-readiness",
+        help="build a read-only scene trial promotion readiness projection",
+    )
+    readiness.add_argument("--scene-id")
+    readiness.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     omo_dir = find_omo_dir()
 
@@ -380,6 +389,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"external-resources selection-eval: {exc}", file=sys.stderr)
             return 2
         print(json.dumps(dataset, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    if args.command == "scene-trial-readiness":
+        try:
+            projection = build_external_scene_trial_promotion_readiness(
+                omo_dir, scene_id=args.scene_id
+            )
+        except (OSError, ValueError, TypeError) as exc:
+            print(f"external-resources scene-trial-readiness: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(projection, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
     if args.command != "observe":
         parser.print_help()
