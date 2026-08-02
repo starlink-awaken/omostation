@@ -1458,3 +1458,114 @@ class TestDefaultMeshSink:
             assert result is not None  # 不崩溃
         finally:
             dms._find_omo_root = original
+
+
+class TestMeshGate:
+    """Mesh connection gate tests - Phase 3 governance gate"""
+
+    def test_mesh_gate_warning_when_omo_not_found(self, tmp_path, monkeypatch):
+        """Mesh gate should produce warning (not error) when OMO not found."""
+        import ecos.workflow.default_mesh_sink as dms
+        from ecos.workflow.mesh_gate import mesh_gate_check
+
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            violations = mesh_gate_check()
+            assert len(violations) == 1
+            assert violations[0]["severity"] == "warning"
+            assert violations[0]["id"] == "MESH-GATE-01"
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+
+    def test_mesh_gate_error_in_strict_mode(self, tmp_path, monkeypatch):
+        """Mesh gate should produce error in strict mode when OMO not found."""
+        import ecos.workflow.default_mesh_sink as dms
+        from ecos.workflow.mesh_gate import mesh_gate_check
+
+        monkeypatch.setenv("ECOS_MESH_GATE_STRICT", "1")
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            violations = mesh_gate_check()
+            assert len(violations) == 1
+            assert violations[0]["severity"] == "error"
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+            monkeypatch.delenv("ECOS_MESH_GATE_STRICT", raising=False)
+
+    def test_mesh_gate_passes_when_store_available(self, tmp_path, monkeypatch):
+        """Mesh gate should pass (no violations) when store is available."""
+        from ecos.workflow.mesh_gate import mesh_gate_check
+        from ecos.workflow.default_mesh_sink import _get_workflow_mesh_store
+
+        class MockStore:
+            def __init__(self):
+                self.omo_dir = tmp_path
+            def events(self):
+                return []
+
+        monkeypatch.setattr(
+            "ecos.workflow.mesh_gate._get_workflow_mesh_store"
+            if hasattr(__import__("ecos.workflow.mesh_gate", fromlist=["_get_workflow_mesh_store"]), "_get_workflow_mesh_store")
+            else "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockStore(),
+        )
+
+        violations = mesh_gate_check()
+        assert len(violations) == 0
+
+    def test_executor_blocks_in_strict_mode(self, tmp_path, monkeypatch):
+        """Executor should block execution when Mesh gate is in strict mode."""
+        import ecos.workflow.default_mesh_sink as dms
+
+        monkeypatch.setenv("ECOS_MESH_GATE_STRICT", "1")
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            monkeypatch.setattr(
+                "ecos.workflow.executor.load_workflow",
+                lambda name: {
+                    "name": "test-strict-block",
+                    "steps": [{"name": "noop"}],
+                    "execution": {"backend": "default", "mode": "workflow"},
+                },
+            )
+            result = execute_m1_workflow("test-strict-block")
+            assert result["failed"] == 1
+            assert result.get("error_code") == "MESH_GATE_BLOCKED"
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+            monkeypatch.delenv("ECOS_MESH_GATE_STRICT", raising=False)
+
+    def test_executor_warns_in_default_mode(self, tmp_path, monkeypatch):
+        """Executor should continue with warning in default (non-strict) mode."""
+        import ecos.workflow.default_mesh_sink as dms
+
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            monkeypatch.setattr(
+                "ecos.workflow.executor.load_workflow",
+                lambda name: {
+                    "name": "test-warn-continue",
+                    "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                    "execution": {"backend": "default", "mode": "workflow"},
+                },
+            )
+            result = execute_m1_workflow("test-warn-continue")
+            assert result.get("error_code") != "MESH_GATE_BLOCKED"
+            assert any(
+                v.get("id") == "MESH-GATE-01"
+                for v in result.get("violations", [])
+            )
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None

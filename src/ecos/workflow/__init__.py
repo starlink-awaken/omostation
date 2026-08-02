@@ -71,6 +71,11 @@ from ecos.workflow.mesh_contract import (
 from ecos.workflow.default_mesh_sink import (
     get_default_mesh_sink,
 )
+from ecos.workflow.mesh_gate import (
+    check_mesh_connection,
+    mesh_gate_check,
+    is_strict_mode,
+)
 
 
 __all__ = [
@@ -105,6 +110,10 @@ __all__ = [
     "WorkflowRunState",
     "new_workflow_run_id",
     "new_workflow_event",
+    # mesh gate
+    "check_mesh_connection",
+    "mesh_gate_check",
+    "is_strict_mode",
     # validator
     "validate_workflow",
     "validate_step",
