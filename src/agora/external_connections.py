@@ -834,6 +834,56 @@ _CATALOG_DIFF_FIELDS = (
     "rollback_plan",
 )
 
+_REVIEW_REQUIRED_CHANGE_FIELDS = frozenset(
+    {
+        "provider",
+        "protocol",
+        "version",
+        "capabilities",
+        "mode",
+        "lifecycle",
+        "permission_ref",
+        "expires_at",
+        "review_at",
+        "rollback_plan",
+    }
+)
+
+
+def _classify_catalog_change(
+    change: str, changed_fields: Iterable[str]
+) -> dict[str, Any]:
+    """Separate admission-relevant descriptor changes from health noise."""
+    fields = frozenset(changed_fields)
+    if change == "added":
+        return {
+            "review_required": True,
+            "risk_class": "manual_review",
+            "risk_codes": ["resource_added"],
+        }
+    if change == "removed":
+        return {
+            "review_required": True,
+            "risk_class": "manual_review",
+            "risk_codes": ["resource_removed"],
+        }
+    if fields & _REVIEW_REQUIRED_CHANGE_FIELDS:
+        return {
+            "review_required": True,
+            "risk_class": "manual_review",
+            "risk_codes": [
+                f"descriptor_{field}_changed"
+                for field in sorted(fields & _REVIEW_REQUIRED_CHANGE_FIELDS)
+            ],
+        }
+    return {
+        "review_required": False,
+        "risk_class": "operational_observation",
+        "risk_codes": [
+            f"{field}_changed" for field in sorted(fields)
+        ],
+    }
+
 
 def _catalog_resource_view(resource: Mapping[str, Any]) -> dict[str, Any]:
     resource_id = str(resource.get("id") or "").strip()
@@ -896,26 +946,26 @@ def diff_external_resource_catalog_snapshots(
         old = previous_index.get(resource_id)
         new = current_index.get(resource_id)
         if old is None:
-            changes.append(
-                {
-                    "id": resource_id,
-                    "change": "added",
-                    "changed_fields": list(_CATALOG_DIFF_FIELDS),
-                    "previous": None,
-                    "current": _catalog_resource_view(new),
-                }
-            )
+            item = {
+                "id": resource_id,
+                "change": "added",
+                "changed_fields": list(_CATALOG_DIFF_FIELDS),
+                "previous": None,
+                "current": _catalog_resource_view(new),
+            }
+            item.update(_classify_catalog_change("added", item["changed_fields"]))
+            changes.append(item)
             continue
         if new is None:
-            changes.append(
-                {
-                    "id": resource_id,
-                    "change": "removed",
-                    "changed_fields": list(_CATALOG_DIFF_FIELDS),
-                    "previous": _catalog_resource_view(old),
-                    "current": None,
-                }
-            )
+            item = {
+                "id": resource_id,
+                "change": "removed",
+                "changed_fields": list(_CATALOG_DIFF_FIELDS),
+                "previous": _catalog_resource_view(old),
+                "current": None,
+            }
+            item.update(_classify_catalog_change("removed", item["changed_fields"]))
+            changes.append(item)
             continue
         old_view = _catalog_resource_view(old)
         new_view = _catalog_resource_view(new)
@@ -923,15 +973,15 @@ def diff_external_resource_catalog_snapshots(
             field for field in _CATALOG_DIFF_FIELDS if old_view.get(field) != new_view.get(field)
         ]
         if changed_fields:
-            changes.append(
-                {
-                    "id": resource_id,
-                    "change": "changed",
-                    "changed_fields": changed_fields,
-                    "previous": old_view,
-                    "current": new_view,
-                }
-            )
+            item = {
+                "id": resource_id,
+                "change": "changed",
+                "changed_fields": changed_fields,
+                "previous": old_view,
+                "current": new_view,
+            }
+            item.update(_classify_catalog_change("changed", changed_fields))
+            changes.append(item)
 
     previous_errors = _catalog_errors(previous)
     current_errors = _catalog_errors(current)
@@ -960,6 +1010,20 @@ def diff_external_resource_catalog_snapshots(
             "removed_count": sum(item["change"] == "removed" for item in changes),
             "changed_count": sum(item["change"] == "changed" for item in changes),
             "error_change_count": len(error_changes),
+            "review_required": any(item["review_required"] for item in changes),
+            "review_required_count": sum(
+                item["review_required"] for item in changes
+            ),
+            "operational_observation_count": sum(
+                item["risk_class"] == "operational_observation" for item in changes
+            ),
+            "risk_codes": sorted(
+                {
+                    code
+                    for item in changes
+                    for code in item["risk_codes"]
+                }
+            ),
         },
     }
 
