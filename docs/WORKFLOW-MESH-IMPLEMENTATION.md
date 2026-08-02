@@ -114,7 +114,7 @@ stateDiagram-v2
 - Agora 的动态发现结果现在通过 `external-resource-catalog/v1` 归一为只读目录快照：统一暴露资源类型、生命周期、健康探针、新鲜度、来源引用、错误记录和显式不可用原因；根仓 `bin/ssot/external-resource-catalog.py` 只调用 provider 明确声明的只读 `health_probe`，不调用业务方法、不写 OMO。
 - 外部目录增加受治理观察链：根仓 `--observe` 通过 OMO CLI broker 追加 `external-resource-observation/v1`，OMO 独占观察日志和最新投影写入；重复目录按 `observed_at + catalog_digest` 去重，Cockpit 默认读取观察并在缺失时显式回退到动态发现。
 - Cockpit 提供 `GET /api/external-resources`，cockpit-ui 提供 `/external-resources` 目录页；它是人类判断外部能力是否值得进入 Scene Card 的观察面，不是激活面或执行面。
-- Runtime 增加显式 retry policy、稳定 effect key 的副作用日志和 replay，AetherForge 增加节点重试与可选 compensation hook；默认不重试，避免隐式放大副作用。Runtime effect journal 进一步输出 `runtime-effect-outcome/v1` 安全摘要和可供 OMO broker 消费的 credential-free receipt；本地 replay 所需的工具结果不进入 Mesh 事件、receipt 或证据投影。
+- Runtime 增加显式 retry policy、稳定 effect key 的副作用日志和 replay，AetherForge 增加节点重试与可选 compensation hook；默认不重试，避免隐式放大副作用。Runtime effect journal 输出 `runtime-effect-outcome/v1` 安全摘要和可供 OMO broker 消费的 credential-free receipt；本地 replay 所需的工具结果不进入 Mesh 事件、receipt 或证据投影。journal 的读-判重-写已由跨进程锁保护，网络超时/连接失败会落为 `unavailable` 和稳定错误码。
 - OMO 增加 `workflow_eval`：从真实 append-only 事件生成 `workflow-mesh-eval/v1` 数据集，保留事件 ID 作为标签来源，并提供只读的候选策略离线评估/人工审批 proposal。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
@@ -130,7 +130,7 @@ stateDiagram-v2
 ### P1：可恢复执行
 
 1. OMO 将事件投影扩展为 WorkflowRun、StepRun、Approval、Evidence 的权威读接口；写入仍统一走事件 sink。
-2. Runtime 和 AetherForge 已以持久化 checkpoint 实现断点恢复与完成态幂等，并要求 Mesh 运行携带有效 admission grant；Runtime effect journal 已能产出结构化成功/失败/重放摘要，并通过 OMO receipt broker 写入同一条证据链。网络传输级 timeout、真实外部系统补偿回执和跨进程 effect store 仍需继续落地。
+2. Runtime 和 AetherForge 已以持久化 checkpoint 实现断点恢复与完成态幂等，并要求 Mesh 运行携带有效 admission grant；Runtime effect journal 已能产出结构化成功/失败/重放摘要，并通过 OMO receipt broker 写入同一条证据链。跨进程 effect journal、网络失败分类和显式补偿生命周期已落地；真实外部系统的 provider-specific 补偿回执仍需等真实 Channel/Tool 场景激活后接入。
 3. Agora 已增加能力健康 projection 和 MCP 查询入口；版本、权限声明与降级原因的生产级采集仍需绑定真实节点注册和服务心跳。
 4. ECOS 已将运行身份和子授予传递到 Runtime/AetherForge；AetherForge 只接收已 admitted 的 StepRun，资源失败回写 `unavailable/failed` 的细化策略仍是下一交付项。
 
@@ -160,9 +160,28 @@ output 或 secret 的 `runtime-effect-outcome/v1` 摘要。成功或降级 outco
    admission 上下文、幂等身份和 EvidenceRecorded 投影。
 
 当前验证路径是：`AgentRuntime -> WorkflowEffectStore -> safe receipt ->
-omo.omo_external_receipt.record_external_receipt -> EvidenceRecorded -> WorkflowVerified`。下一步
-只在有真实低风险场景时接入外部 Tool/Channel，并补齐 timeout、补偿和跨进程 journal；不能因为
-receipt 已经可写回就把 Runtime 视为业务完成。
+omo.omo_external_receipt.record_external_receipt -> EvidenceRecorded -> WorkflowVerified`。只有在有
+真实低风险场景时才接入外部 Tool/Channel；receipt 已可写回不等于 Runtime 已完成业务目标。
+
+### P1.2：跨进程 Effect 与显式补偿
+
+本阶段把 P1.1 的本地恢复边界从“单进程可用”提升为可部署的执行基础：
+
+1. `WorkflowEffectStore` 使用进程内线程锁和同路径 lock file 的 `flock`，把读取、判重和追加
+   放进同一临界区；两个 Runtime 进程共享一个 `effect_key` 时最多一个执行真实 effect。
+2. `TimeoutError` / `ConnectionError` 进入 `unavailable`，分别输出 `EFFECT_TIMEOUT` /
+   `EFFECT_BACKEND_UNAVAILABLE`；权限和未知异常也使用稳定错误码，异常原文只留在调用方日志。
+3. 补偿必须由调用方显式确认并调用 `compensate()`；它要求前向 effect 已成功，使用独立的
+   compensation journal 记录并对成功补偿幂等 replay。Runtime 可用
+   `AgentRuntime.compensate_effect()` 将 `CompensationStarted -> WorkflowRecovered` 或
+   `StepFailed -> WorkflowFailed` 写入同一条 Mesh 事件链。
+4. 不对超时自动补偿。超时可能代表远端已提交副作用，必须先由业务/连接器判断，再执行
+   provider-specific compensation；没有安全补偿方案时保持 `unavailable`，不能假装回滚。
+5. 补偿结果和 effect 结果都只以安全摘要跨边界，补偿不会生成 `EvidenceRecorded`；业务验证仍
+   需要独立证据。
+
+本阶段验收覆盖：双进程同 key 单次副作用、超时不可用分类、补偿成功幂等、Runtime 安全摘要、
+OMO `CompensationStarted/WorkflowRecovered` 投影，以及原有 receipt -> `EvidenceRecorded` 链。
 
 ### P2.5：外部连接与触达
 
@@ -246,7 +265,7 @@ Cockpit 已提供同一边界的正式消费入口：`GET /api/scene-cards` 返�
 
 1. 通过 OMO admission/dispatch broker 生成唯一的 `workflow_run_id`、短期 grant 和 worker dispatch packet；任何 capability、approval 或 budget gate 失败都不得产生执行派发。
 2. Agora 以 `workflow_capability_health` 输出统一的 `healthy/degraded/unhealthy` 快照，附带每项 capability 的来源节点、服务或 backend，作为 admission 的输入证据。
-3. Runtime effect outcome 和外部连接 receipt 已通过 OMO broker 回写同一条 Mesh 事件链；成功/降级 receipt 形成 `EvidenceRecorded`，失败/不可用必须走明确的 StepFailed/BackendUnavailable 路径。worker ACK、租约心跳、超时失效和接管的事件合同已经落地。`mesh-watchdog-run` 已由现有 `omo daemon` tick 调用，launchd/cron 只负责启动已有 cadence，不在 OMO 内新增 scheduler；默认 dry-run，显式 `--apply` 才追加过期事件。下一道交付是将真实低风险 Channel/Tool 调用接入相同 broker，并补齐补偿回执，不能只把 packet 生成当成执行完成。
+3. Runtime effect outcome 和外部连接 receipt 已通过 OMO broker 回写同一条 Mesh 事件链；成功/降级 receipt 形成 `EvidenceRecorded`，失败/不可用必须走明确的 StepFailed/BackendUnavailable 路径。worker ACK、租约心跳、超时失效和接管的事件合同已经落地。`mesh-watchdog-run` 已由现有 `omo daemon` tick 调用，launchd/cron 只负责启动已有 cadence，不在 OMO 内新增 scheduler；默认 dry-run，显式 `--apply` 才追加过期事件。下一道交付是将真实低风险 Channel/Tool 调用接入相同 broker，并让 provider-specific 补偿回执使用 P1.2 的显式边界，不能只把 packet 生成当成执行完成。
 
 4. 外部连接调用必须使用 `resource_id + trace_id + receipt_id` 作为可重放边界；原文不进入 Mesh
    事件，只有 provenance、摘要、哈希和结果状态进入证据面。

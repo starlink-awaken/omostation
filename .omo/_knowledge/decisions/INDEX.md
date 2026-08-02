@@ -372,6 +372,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0302: Workflow Mesh watchdog 真实 cadence 与运行账本 — **ACCEPTED** | 2026-08-02 | Workflow Mesh P1.5 | 0302-workflow-mesh-watchdog-deployment.md
 - ADR-0303: Workflow Mesh 外部 receipt 回写 broker — **ACCEPTED** | 2026-08-02 | Workflow Mesh P1.5 | 0303-workflow-mesh-external-receipt-broker.md
 - ADR-0304: Runtime effect outcome 与 Workflow Mesh receipt 边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh P1.1 | 0304-runtime-effect-outcome-receipts.md
+- ADR-0305: Runtime 跨进程 effect journal 与显式补偿边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh P1.2 | 0305-runtime-cross-process-effects.md
 
 ---
 
