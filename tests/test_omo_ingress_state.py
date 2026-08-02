@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import yaml
-
 from omo.omo_ingress_state import sync_state_projection
 
 
@@ -61,3 +60,17 @@ def test_sync_state_projection_skips_timestamp_only_changes(tmp_path: Path) -> N
         (omo_dir / "_control" / "governance-data.json").read_text(encoding="utf-8")
     )
     assert written_governance["generated_at"] == "2026-07-03T00:00:00Z"
+
+    semantic_change = sync_state_projection(
+        tmp_path,
+        health_content='# generated_at: 2026-07-03T00:02:00Z\nhealth_score: 92\n',
+        system_updates={
+            "health_score": 92,
+            "health_score_generated_at": "2026-07-03T00:02:00Z",
+        },
+        brief_content="# BRIEF.md\n\n> **Generated**: `2026-07-03T00:02:00Z`\n",
+        governance_data=governance_data,
+    )
+
+    assert semantic_change["changed_count"] == 2
+    assert semantic_change["artifact_ref"]

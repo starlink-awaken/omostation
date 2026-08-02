@@ -62,7 +62,12 @@ def normalize_system_yaml(payload: str) -> str:
     data = yaml.safe_load(payload) or {}
     if isinstance(data, dict):
         data = deepcopy(data)
-        data.pop("health_score_generated_at", None)
+        for field in (
+            "health_score_generated_at",
+            "governance_feedback_last_run",
+            "updated_at",
+        ):
+            data.pop(field, None)
     return yaml.safe_dump(data, allow_unicode=True, sort_keys=True)
 
 
@@ -108,7 +113,7 @@ def _system_payload(
 ) -> str:
     payload = load_yaml(system_path)
     if not isinstance(payload, dict):
-        raise ValueError(
+        raise TypeError(
             f"state/system.yaml top-level must be a mapping: {system_path}"
         )
     payload.update(deepcopy(system_updates))
