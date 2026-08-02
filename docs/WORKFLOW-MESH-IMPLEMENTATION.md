@@ -415,6 +415,25 @@ WorkflowRequested(planned)
 approval-required、admitted 等漏斗状态纳入事实统计。它只保留事件 ID、摘要哈希和最小场景字段，
 不把请求变成执行结果，也不为预测模型提供未经标注的成功标签。
 
+### 7.3.1 Phase 25 真实能力健康证据闭环
+
+Phase 25 将准入所需的 `capability_health` 从调用方手工输入收敛为服务端可追溯证据：Cockpit
+通过内部只读 MCP HTTP transport 调用 Agora `workflow_capability_health`，只接受带有
+`source=agora.workflow_health`、`observed_at` 和逐能力来源的快照。Cockpit 暴露
+`GET /api/workflow-mesh/capability-health`，统一返回健康状态、证据来源、观测时间和
+`external_side_effects=disabled`、`worker_launch=false` 的安全边界。
+
+运营工作台现在可执行以下人工确认链：
+
+```text
+required_capabilities -> Agora health observation -> admission preview
+                       -> human confirmation -> OMO admission
+```
+
+健康不可用、证据来源不合法、预览未通过或任务不满足 OMO 状态门槛时，链路在当前层停止；
+UI 不伪造健康、不把 preview 当成 admitted，也不启动 worker。该能力只解决内部运行态证据
+闭环，真实外部知识、渠道和业务写操作仍必须等待 J4 Scene Card、权限、receipt 和补偿证据。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。

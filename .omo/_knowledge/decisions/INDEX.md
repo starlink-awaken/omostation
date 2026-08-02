@@ -385,6 +385,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0315: Knowledge to Action 以引用、任务和行动回执组成 J2 垂直切片 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J2 | 0315-knowledge-to-action-loop.md
 - ADR-0316: 知识行动任务到 Workflow Mesh 请求的晋升边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J2 | 0316-task-to-workflow-promotion.md
 - ADR-0317: WorkflowRequested 到受治理 admission 的晋升边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh P2 | 0317-workflow-requested-admission.md
+- ADR-0318: Agora 能力健康作为 Cockpit 准入证据 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 25 | 0318-workflow-capability-health-projection.md
 
 ---
 
