@@ -186,6 +186,11 @@ def main(argv: list[str] | None = None) -> int:
 
         return readiness_main(args[1:])
 
+    if args and args[0] == "external-resources":
+        from omo.omo_external_resources import main as external_resources_main
+
+        return external_resources_main(args[1:])
+
     if args and args[0] in ("x-axis", "xaxis"):
         from omo.omo_xplane import main as xplane_main
 
