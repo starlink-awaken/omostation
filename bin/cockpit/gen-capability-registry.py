@@ -13,6 +13,12 @@ CLI 参考均从本生成器输出的 YAML 派生。
 
 输出: docs/generated/capability-registry.yaml
 
+准确性说明 (静态扫描的固有限制):
+  本生成器用正则/AST 静态提取工具名, 对动态注册的工具 (如 mcp.tool(name=var))
+  可能漏抓, 实测准确率 ~95% (如 KOS 静态 44 vs 运行时 46)。
+  长期改进: 加 --verify 模式启动各 MCP server 调 list_tools() 做运行时内省,
+  用运行时结果校正静态扫描。当前数字作为"能力规模近似"已足够驱动 help/文档/UI。
+
 Usage:
     uv run --with pyyaml python bin/cockpit/gen-capability-registry.py
     uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --json

@@ -12,12 +12,20 @@ on:
       - ".github/workflows/**"
       - "scripts/**"
       - ".pre-commit-config.yaml"
+      - "bin/cockpit/**"
+      - "docs/generated/capability-registry.yaml"
+      - "projects/agora/etc/bos-services.yaml"
+      - "projects/cockpit/src/cockpit/cli.py"
   pull_request:
     branches: [main]
     paths:
       - ".github/workflows/**"
       - "scripts/**"
       - ".pre-commit-config.yaml"
+      - "bin/cockpit/**"
+      - "docs/generated/capability-registry.yaml"
+      - "projects/agora/etc/bos-services.yaml"
+      - "projects/cockpit/src/cockpit/cli.py"
   schedule:
     # 周一 06:00 UTC ≈ 北京时间 14:00, 早于 omostation-governance (UTC 07:00+)
     # 抢在治理扫描前发现 drift
@@ -192,3 +200,32 @@ jobs:
         run: |
           cd projects/omo
           uv run python -m omo.cli lint schemas
+
+  # ── 6. capability-registry-drift — 能力注册表 SSOT 漂移检测 ───────
+  capability-registry-drift:
+    name: capability-registry drift (SSOT 同步)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pyyaml
+        run: pip install --quiet pyyaml
+      - name: Check capability registry drift
+        # 能力注册表 (docs/generated/capability-registry.yaml) 是 help/文档/UI 的 SSOT
+        # 若 MCP/BOS/CLI 源变了但注册表没重新生成 → 漂移, 失败
+        # 修复: make sync-all-docs
+        run: |
+          python3 bin/cockpit/gen-capability-registry.py --quiet
+          python3 bin/cockpit/gen-help-docs.py > /dev/null
+          git diff --exit-code \
+            docs/generated/capability-registry.yaml \
+            projects/cockpit/CAPABILITY-MAP.md \
+            docs/CLI-REFERENCE.md \
+            docs/INDEX-MCP.md \
+            || (echo "::error::能力注册表漂移! 运行 'make sync-all-docs' 后重新提交" && exit 1)
