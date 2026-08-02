@@ -20,6 +20,10 @@ from omo.omo_external_evaluation import (
     ExternalResourceEvaluationError,
     record_external_resource_evaluation,
 )
+from omo.omo_external_pack import (
+    ExternalResourcePackProposalError,
+    record_external_resource_pack_proposal,
+)
 from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic
 from omo.omo_paths import find_omo_dir
 from omo.workflow_eval import build_external_resource_selection_dataset
@@ -242,6 +246,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     record_evaluation.add_argument("--observed-at")
     record_evaluation.add_argument("--evaluation-id")
+    record_pack_proposal = sub.add_parser(
+        "record-pack-proposal", help="persist one safe external pack review receipt"
+    )
+    record_pack_proposal.add_argument("--stdin", action="store_true")
+    record_pack_proposal.add_argument("--proposal-id", required=True)
+    record_pack_proposal.add_argument("--review-action", default="submit")
+    record_pack_proposal.add_argument("--actor", default="cockpit")
+    record_pack_proposal.add_argument(
+        "--source-ref", default="omo:external-resources:pack-proposal"
+    )
+    record_pack_proposal.add_argument("--review-ref")
+    record_pack_proposal.add_argument("--recorded-at")
+    record_pack_proposal.add_argument("--json", action="store_true")
     selection_eval = sub.add_parser(
         "selection-eval", help="build the event-derived selection evaluation dataset"
     )
@@ -274,6 +291,26 @@ def main(argv: list[str] | None = None) -> int:
             )
         except (ExternalResourceEvaluationError, OSError, ValueError) as exc:
             print(f"external-resources record-evaluation: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    if args.command == "record-pack-proposal":
+        if not args.stdin:
+            print("external-resources record-pack-proposal requires --stdin", file=sys.stderr)
+            return 2
+        try:
+            result = record_external_resource_pack_proposal(
+                omo_dir,
+                _payload_from_stdin(),
+                proposal_id=args.proposal_id,
+                review_action=args.review_action,
+                actor=args.actor,
+                source_ref=args.source_ref,
+                review_ref=args.review_ref,
+                recorded_at=args.recorded_at,
+            )
+        except (ExternalResourcePackProposalError, OSError, ValueError) as exc:
+            print(f"external-resources record-pack-proposal: {exc}", file=sys.stderr)
             return 2
         print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
