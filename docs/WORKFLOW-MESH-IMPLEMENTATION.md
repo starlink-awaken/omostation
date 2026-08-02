@@ -393,6 +393,28 @@ Phase 22 将 `知识检索 -> 引用 -> 受治理任务 -> 行动回执` 接入�
 并沿用既有审批、证据和外部 receipt 契约。字段、验证命令和恢复语义见
 [`docs/operations/knowledge-to-action.md`](./operations/knowledge-to-action.md) 和 ADR-0315。
 
+### 7.3 Phase 24 请求到准入的受治理漏斗
+
+Phase 24 将 Phase 23 的 `WorkflowRequested` 承接到两个明确步骤：
+
+```text
+WorkflowRequested(planned)
+       -> admission preview(read-only)
+       -> approval + active task + capability health + budget
+       -> WorkflowAdmitted
+       -> 后续显式 dispatch
+```
+
+`preview_requested_workflow()` 只读取事实并返回 `eligible/blocked`，不写事件、不改变任务、不
+启动 worker。`admit_requested_workflow()` 不再重复创建请求事件，只能承接已存在的请求，并将
+场景绑定作为不可变上下文保留。缺少 active 任务、审批、健康能力或预算时 fail-closed；重复 apply
+返回 `deduplicated`。Cockpit 暴露 `/workflow-admission-preview` 和 `/admit-workflow` 两个显式
+入口，均声明外部副作用关闭，apply 不含 worker 启动。
+
+同时新增 `workflow-request-eval/v1` 请求评测集和运营投影 `workflow_requests`，把 pending、
+approval-required、admitted 等漏斗状态纳入事实统计。它只保留事件 ID、摘要哈希和最小场景字段，
+不把请求变成执行结果，也不为预测模型提供未经标注的成功标签。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
@@ -402,6 +424,7 @@ Phase 22 将 `知识检索 -> 引用 -> 受治理任务 -> 行动回执` 接入�
 ```bash
 cd projects/ecos && uv run pytest -q tests/test_workflow_mesh_contract.py tests/test_m1_adversarial.py tests/test_adversarial_m1.py tests/test_swarm_no_subprocess.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pydantic --with httpx python -m pytest -q tests/test_workflow_mesh.py tests/test_worker_lifecycle_mesh.py tests/test_workflow_dispatch.py tests/test_omo_io_pydantic.py
+cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pydantic python -m pytest -q tests/test_workflow_admission.py tests/test_workflow_eval.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pydantic --with httpx python -m pytest -q tests/test_mesh_watchdog_runner.py tests/test_omo_daemon_mesh_watchdog.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with httpx python -m pytest -q tests/test_omo_external_receipt.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pyyaml python -m omo.cli worker mesh-watchdog-run --json
