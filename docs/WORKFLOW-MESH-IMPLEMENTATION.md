@@ -267,7 +267,7 @@ watchdog 触发仍属于下一阶段的真实部署接入。
 cd projects/ecos && uv run pytest -q tests/test_workflow_mesh_contract.py tests/test_m1_adversarial.py tests/test_adversarial_m1.py tests/test_swarm_no_subprocess.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pydantic --with httpx python -m pytest -q tests/test_workflow_mesh.py tests/test_worker_lifecycle_mesh.py tests/test_workflow_dispatch.py tests/test_omo_io_pydantic.py
 cd projects/cockpit && PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with pyyaml --with httpx --with rich python -m pytest -q src/cockpit/tests/test_delivery_journey.py src/cockpit/tests/test_delivery_journey_mesh_states.py src/cockpit/tests/test_delivery_journey_workflow_mesh.py src/cockpit/tests/test_agent_workflow_command.py
-cd projects/runtime && PYTHONPATH=src uv run --no-project --with pytest --with pydantic python -m pytest -q tests/test_workflow_mesh_runtime.py
-cd projects/aetherforge && PYTHONPATH="packages/swarm/src:src" uv run --no-project --with pytest python -m pytest -q packages/swarm/tests/test_workflow_mesh.py
-PYTHONPATH="projects/omo/src:projects/runtime/src:projects/aetherforge/packages/swarm/src" uv run --no-project --with pytest --with pydantic --with pyyaml --with httpx python -m pytest -q tests/integration/workflow_mesh/test_runtime_and_swarm_projection.py
+cd projects/runtime/projects/runtime && PYTHONPATH=src uv run --no-project --with pytest --with pydantic python -m pytest -q tests/test_workflow_mesh_runtime.py
+cd projects/aetherforge && PYTHONPATH="packages/swarm/src:packages/mesh/src:src" uv run --no-project --with pytest --with pyyaml python -m pytest -q packages/swarm/tests/test_workflow_mesh.py packages/mesh/tests/
+PYTHONPATH="projects/omo/src:projects/runtime/projects/runtime/src:projects/aetherforge/packages/swarm/src:projects/aetherforge/packages/mesh/src:projects/aetherforge/src" uv run --no-project --with pytest --with pydantic --with pyyaml --with httpx python -m pytest -q tests/integration/workflow_mesh/test_runtime_and_swarm_projection.py
 ```
