@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from .mesh_watchdog_runner import run_once as run_mesh_watchdog_once
 from .omo_admission import evaluate_worker_envelope, request_conditional_approval
 from .omo_handoff_index import write_handoff_index
 from .omo_metrics import write_worker_utilization_summary
@@ -171,6 +172,29 @@ def _print_mesh_watchdog(
     return 2 if result["errors"] else 0
 
 
+def _print_mesh_watchdog_run(
+    omo_dir: str | Path,
+    *,
+    now: str | None = None,
+    apply: bool = False,
+    reason: str = "lease_expired",
+    json_output: bool = False,
+) -> int:
+    result = run_mesh_watchdog_once(Path(omo_dir), now=now, apply=apply, reason=reason)
+    if json_output:
+        print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+    else:
+        scan = result["scan"]
+        print(
+            f"status={result['status']} mode={result['mode']} "
+            f"due={scan['due_count']} expired={scan['expired_count']} "
+            f"errors={len(result['errors'])}"
+        )
+        if result.get("skip_reason"):
+            print(f"skip_reason={result['skip_reason']}")
+    return 2 if result["status"] in {"degraded", "failed"} else 0
+
+
 def _add_mesh_worker_context(parser: Any) -> None:
     parser.add_argument("workflow_run_id")
     parser.add_argument("--trace-id", required=True)
@@ -271,6 +295,14 @@ def setup_worker_parser(subparsers: Any) -> None:
     mesh_watchdog_parser.add_argument("--reason", default="lease_expired")
     mesh_watchdog_parser.add_argument("--json", action="store_true", dest="json_output")
     mesh_watchdog_parser.add_argument("--omo-dir", default=".omo")
+    mesh_watchdog_run_parser = worker_sub.add_parser("mesh-watchdog-run")
+    mesh_watchdog_run_parser.add_argument("--now")
+    mesh_watchdog_run_parser.add_argument("--apply", action="store_true")
+    mesh_watchdog_run_parser.add_argument("--reason", default="lease_expired")
+    mesh_watchdog_run_parser.add_argument(
+        "--json", action="store_true", dest="json_output"
+    )
+    mesh_watchdog_run_parser.add_argument("--omo-dir", default=".omo")
     admission_parser = worker_sub.add_parser("admission-eval")
     admission_parser.add_argument("envelope_ref")
     admission_parser.add_argument("--matrix-ref")
@@ -364,6 +396,15 @@ def execute_worker_command(args: argparse.Namespace) -> int:
 
     if args.worker_command == "mesh-watchdog":
         return _print_mesh_watchdog(
+            Path.cwd() / args.omo_dir,
+            now=args.now,
+            apply=args.apply,
+            reason=args.reason,
+            json_output=args.json_output,
+        )
+
+    if args.worker_command == "mesh-watchdog-run":
+        return _print_mesh_watchdog_run(
             Path.cwd() / args.omo_dir,
             now=args.now,
             apply=args.apply,

@@ -4,7 +4,7 @@
   - 30 分钟 tick (可配)
   - PID file: /tmp/omo-governance-daemon.pid (优先); 兼容旧 /tmp/kairon-governance-daemon.pid
   - 日志: .omo/_delivery/daemon.log (append)
-  - 每个 tick: audit (skip agora_health) -> history append -> sync (dry-run)
+  - 每个 tick: audit (skip agora_health) -> history append -> sync (dry-run) -> Mesh watchdog (dry-run)
   - 优雅 stop: SIGTERM / SIGINT
   - 启动失败: 立即报错
   - **只读**: daemon 不写 system.yaml (sync 走 dry-run), 不动 goals / INDEX.md
@@ -24,11 +24,13 @@ import threading
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
+from omo.mesh_watchdog_runner import run_once as run_mesh_watchdog_once
 from omo.omo_audit import run_governance_audit
 from omo.omo_history import DEFAULT_PATH as DEFAULT_HISTORY_PATH
 from omo.omo_history import append_entry
-from omo.omo_paths import DAEMON_LOG_FILE, DAEMON_PID_FILE
+from omo.omo_paths import DAEMON_LOG_FILE, DAEMON_PID_FILE, OMO_ROOT
 
 # ── 默认配置 ────────────────────────────────────────────
 DEFAULT_INTERVAL_SECONDS = 1800  # 30 min
@@ -75,6 +77,7 @@ class TickResult:
     sync_diff_count: int
     history_appended: bool
     error: str | None = None
+    mesh_watchdog: dict[str, Any] | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -147,10 +150,14 @@ def _setup_logging(log_file: Path = DAEMON_LOG_FILE) -> logging.Logger:
 def run_once(
     *,
     history_path: Path | None = None,
+    mesh_watchdog: bool = False,
+    mesh_watchdog_apply: bool = False,
+    mesh_watchdog_now: str | None = None,
 ) -> TickResult:
     """执行一次 tick: audit -> history append -> sync (dry-run).
 
     daemon 跑时**跳过** agora_health 检查 (避免每 30min 发 11 个 HTTP 请求).
+    Mesh watchdog 默认只读；只有显式 apply 配置才允许追加过期事件。
     """
     timestamp = datetime.now(UTC).isoformat()
     audit_score: float | None = None
@@ -158,6 +165,7 @@ def run_once(
     sync_diff_count = 0
     error: str | None = None
     history_appended = False
+    mesh_watchdog_result: dict[str, Any] | None = None
     target_history = history_path if history_path is not None else DEFAULT_HISTORY_PATH
 
     # 1. audit (daemon 跳过 agora 探活)
@@ -207,6 +215,20 @@ def run_once(
     except Exception as exc:  # defensive fallback
         error = (error + "; " if error else "") + f"sync_failed: {exc}"
 
+    # The existing daemon owns cadence; the runner owns one safe Mesh scan.
+    if mesh_watchdog:
+        mesh_watchdog_result = run_mesh_watchdog_once(
+            OMO_ROOT,
+            now=mesh_watchdog_now,
+            apply=mesh_watchdog_apply,
+        )
+        if mesh_watchdog_result["status"] in {"degraded", "failed"}:
+            error = (error + "; " if error else "") + (
+                "mesh_watchdog_"
+                f"{mesh_watchdog_result['status']}: "
+                f"{len(mesh_watchdog_result['errors'])} error(s)"
+            )
+
     result = TickResult(
         timestamp=timestamp,
         audit_score=audit_score,
@@ -214,6 +236,7 @@ def run_once(
         sync_diff_count=sync_diff_count,
         history_appended=history_appended,
         error=error,
+        mesh_watchdog=mesh_watchdog_result,
     )
     # Round 1: emit lifecycle event on bus-foundation. Best-effort, never raises.
     _publish_tick_event(result)
@@ -262,6 +285,8 @@ def run_daemon(
     *,
     pid_file: Path = DAEMON_PID_FILE,
     log_file: Path = DAEMON_LOG_FILE,
+    mesh_watchdog: bool = True,
+    mesh_watchdog_apply: bool = False,
 ) -> None:
     """主 daemon 循环 (阻塞). 重复跑 run_once, 直到 SIGTERM / SIGINT."""
     if (pid := _is_daemon_running(pid_file)) is not None:
@@ -288,13 +313,17 @@ def run_daemon(
 
     try:
         while not stop_event.is_set():
-            tick_result = run_once()
+            tick_result = run_once(
+                mesh_watchdog=mesh_watchdog,
+                mesh_watchdog_apply=mesh_watchdog_apply,
+            )
             if tick_result.error:
                 logger.error(f"tick_error: {tick_result.error}")
             else:
                 logger.info(
                     f"tick_done score={tick_result.audit_score} "
-                    f"diffs={tick_result.sync_diff_count}"
+                    f"diffs={tick_result.sync_diff_count} "
+                    f"mesh_watchdog={tick_result.mesh_watchdog is not None}"
                 )
             stop_event.wait(interval_seconds)
     finally:
@@ -350,6 +379,16 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_INTERVAL_SECONDS,
         help=f"tick 间隔秒数 (默认 {DEFAULT_INTERVAL_SECONDS})",
     )
+    p_start.add_argument(
+        "--no-mesh-watchdog",
+        action="store_true",
+        help="禁用每个 daemon tick 的 Mesh watchdog 扫描",
+    )
+    p_start.add_argument(
+        "--mesh-watchdog-apply",
+        action="store_true",
+        help="显式允许 watchdog 追加 WorkerLeaseExpired（默认只读）",
+    )
 
     p_stop = sub.add_parser("stop", help="发 SIGTERM 停止 daemon")
     p_stop.add_argument(
@@ -361,12 +400,19 @@ def main(argv: list[str] | None = None) -> int:
         "--pid-file", type=Path, default=DAEMON_PID_FILE, help="PID 文件路径"
     )
 
-    sub.add_parser("once", help="跑一次 tick 就退出 (用于 cron / 测试)")
+    p_once = sub.add_parser("once", help="跑一次 tick 就退出 (用于 cron / 测试)")
+    p_once.add_argument("--mesh-watchdog", action="store_true")
+    p_once.add_argument("--mesh-watchdog-apply", action="store_true")
+    p_once.add_argument("--now")
 
     args = parser.parse_args(argv)
 
     if args.cmd == "start":
-        run_daemon(interval_seconds=args.interval)
+        run_daemon(
+            interval_seconds=args.interval,
+            mesh_watchdog=not args.no_mesh_watchdog,
+            mesh_watchdog_apply=args.mesh_watchdog_apply,
+        )
         return 0
     if args.cmd == "stop":
         if stop_daemon(args.pid_file):
@@ -378,7 +424,11 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(daemon_status(args.pid_file), indent=2))
         return 0
     if args.cmd == "once":
-        result = run_once()
+        result = run_once(
+            mesh_watchdog=args.mesh_watchdog,
+            mesh_watchdog_apply=args.mesh_watchdog_apply,
+            mesh_watchdog_now=args.now,
+        )
         print(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
         return 0
     parser.print_help()
