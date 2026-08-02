@@ -1,10 +1,10 @@
 """
-cockpit.tui.widgets.status_bar — 底部状态栏
+cockpit.tui.widgets.status_bar — 底部状态栏 (Phase 2 升级版)
 
 展示:
-  · 实时系统健康状态 (Agora / KOS)
-  · 当前选中课题
-  · 最近执行的命令
+  · 实时动态系统健康状态 (调用 health_probe 监测 Agora / KOS 实际存活度)
+  · 当前选中的研究课题或运行任务
+  · 最近执行的命令及输出日志指示
 """
 
 from __future__ import annotations
@@ -12,11 +12,12 @@ from __future__ import annotations
 from textual.app import ComposeResult
 from textual.widget import Widget
 from textual.widgets import Label
-from textual.containers import Horizontal
+
+from cockpit.tui.health_probe import probe_system_health
 
 
 class StatusBar(Widget):
-    """底部系统状态栏."""
+    """底部系统状态栏 (集成系统服务在线探针)."""
 
     CSS = """
     StatusBar {
@@ -40,7 +41,7 @@ class StatusBar(Widget):
     """
 
     def compose(self) -> ComposeResult:
-        yield Label("🟢 Agora SSE  ● KOS", id="health-indicator")
+        yield Label("🟢 Agora SSE  ● KOS Memory", id="health-indicator")
         yield Label("", id="cmd-indicator")
 
     def set_running_command(self, cmd: str) -> None:
@@ -48,11 +49,16 @@ class StatusBar(Widget):
         self.query_one("#cmd-indicator", Label).update(
             f"⚡ 执行中: [cyan]{cmd}[/]"
         )
-        # 3 秒后自动清除
-        self.set_timer(3.0, self._clear_command)
 
-    def _clear_command(self) -> None:
+    def set_idle_command(self, msg: str = "就绪") -> None:
+        """重置命令状态指示."""
+        self.query_one("#cmd-indicator", Label).update(f"[dim]{msg}[/]")
+
+    def refresh_health_probe(self) -> None:
+        """异步/定时调用服务健康探针."""
         try:
-            self.query_one("#cmd-indicator", Label).update("")
+            status = probe_system_health()
+            label_text = status.get("summary_label", "⚪ Agora  ⚪ KOS")
+            self.query_one("#health-indicator", Label).update(label_text)
         except Exception:
-            pass
+            self.query_one("#health-indicator", Label).update("⚪ 探针降级")

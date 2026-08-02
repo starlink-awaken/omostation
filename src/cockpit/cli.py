@@ -236,6 +236,14 @@ def main() -> int:
   cockpit dashboard
         """,
     )
+    parser.add_argument(
+        "--output",
+        "-o",
+        dest="global_output",
+        choices=["text", "json", "tui", "markdown"],
+        default="text",
+        help="控制全局输出模式 (传 tui 启动极客终端交互控制台)",
+    )
     sub = parser.add_subparsers(dest="command", parser_class=WorkspaceParser)
 
     r = sub.add_parser("research", help="深度研究")
@@ -821,6 +829,13 @@ def main() -> int:
     # workflow mesh 子命令通过 dispatch 处理 (避免与 workflow_args nargs=* 冲突)
 
     args = parser.parse_args()
+
+    # ── Phase 2: --output tui 全自动分流路由 ──
+    if getattr(args, "global_output", None) == "tui":
+        from cockpit.tui import is_tui_available, launch
+
+        if is_tui_available():
+            return launch(args)
 
     # ── Registry-Based Dispatch ──
     if not args.command:
