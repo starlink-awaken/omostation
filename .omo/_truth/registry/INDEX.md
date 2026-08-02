@@ -36,6 +36,7 @@ last-reviewed: 2026-06-28
 | `mof-capabilities.yaml` | 4-layer MOF tool registry |
 | `workers.yaml` | Worker role/lease/transport policy |
 | `external-connection-fabric.yaml` | External knowledge/data/resource/method/tool/channel/model descriptor and lifecycle SSOT |
+| `agent-workflows.yaml` | Executable workflow and diff-check registry, including current-state coherence coverage |
 | `compute/engines.yaml` | LLM runtime engine + scheduling endpoints |
 | `compute/nodes.yaml` | Physical compute nodes |
 
