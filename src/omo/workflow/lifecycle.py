@@ -20,6 +20,11 @@ except ImportError:  # graceful degradation during refactoring
     def emit_workflow_mesh_event(*a, **kw):
         return False
 
+try:
+    from .scene_bridge import extract_scene_binding
+except ImportError:
+    extract_scene_binding = lambda *a, **kw: None
+
 from .core import (
     CLAIM_POLICY_MODES,
     RUN_UPDATE_LOCK_TIMEOUT_SECONDS,
@@ -354,7 +359,10 @@ def start_run(
             "locks": record["locks"],
         },
     )
-    # Phase 1b: Bridge to Workflow Mesh
+    # Phase 1b/4: Bridge to Workflow Mesh with scene_binding
+    _scene_binding = extract_scene_binding(
+        context=context, workflow=workflow
+    )
     emit_workflow_mesh_event(
         "AgentWorkflowStarted",
         run_id,
@@ -365,6 +373,7 @@ def start_run(
             "actor": context["actor"],
         },
         workspace=WORKSPACE,
+        scene_binding=_scene_binding,
     )
     return record
 

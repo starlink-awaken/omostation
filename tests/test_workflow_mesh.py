@@ -343,3 +343,32 @@ def test_agent_workflow_mesh_bridge_start_event(tmp_path, monkeypatch):
     content = event_file.read_text()
     assert "AgentWorkflowStarted" in content
     assert "test-run-123" in content
+
+
+def test_agent_workflow_mesh_bridge_with_scene_binding(tmp_path, monkeypatch):
+    """Phase 4: Agent Workflow start emits Mesh event with scene_binding."""
+    from omo.workflow.mesh_agent_events import emit_workflow_mesh_event
+    from omo.workflow_mesh import WorkflowMeshStore
+
+    omo_dir = tmp_path / ".omo"
+    omo_dir.mkdir()
+
+    result = emit_workflow_mesh_event(
+        "AgentWorkflowStarted",
+        "test-run-scene-001",
+        {"workflow_id": "test-wf", "actor": "test-user"},
+        workspace=tmp_path,
+        scene_binding={
+            "scene_id": "scene-test",
+            "journey_id": "journey-test",
+            "outcome_metric": "metric-test",
+        },
+    )
+    assert result is True
+
+    store = WorkflowMeshStore(omo_dir)
+    events = store.events()
+    assert len(events) >= 1
+    assert events[-1]["payload"]["scene_binding"]["scene_id"] == "scene-test"
+    assert events[-1]["payload"]["scene_binding"]["journey_id"] == "journey-test"
+    assert events[-1]["payload"]["scene_binding"]["outcome_metric"] == "metric-test"
