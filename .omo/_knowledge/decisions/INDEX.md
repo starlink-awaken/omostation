@@ -214,6 +214,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0296 | C2G Predictive Outcomes to Knowledge Graph Pipeline | ACCEPTED | 2026-08-02 | engineering-agent | 0296-c2g-predictive-outcomes-to-knowledge-graph.md |
 | 0297 | 收敛产品真相与外部连接织层 | ACCEPTED | 2026-08-02 | architecture-governance | 0297-external-connection-fabric-and-product-truth.md |
 | 0298 | 外部连接织层运行时边界与 Workflow Mesh 回执 | ACCEPTED | 2026-08-02 | architecture-governance | 0298-external-connection-fabric-runtime-boundary.md |
+| 0299 | Workflow Mesh worker 租约、失效与接管证据 | ACCEPTED | 2026-08-02 | architecture-governance | 0299-workflow-mesh-worker-lease-and-reclaim.md |
 | 0249 | 治理自省预算封顶 40/40/20 (用户已同意) | ACCEPTED | 2026-07-26 | P82 StageA | 0249-governance-budget-cap-40-40-20.md |
 | 0250 | health 门禁改为只卡工程执行面 (owner 集中度不阻断) | ACCEPTED | 2026-07-27 | P82 StageA | 0250-health-gate-engineering-surface-only.md |
 | 0251 | 三把锁 gate 定位 (layer-call/drift/doc-claims blocking) + layer-call 增量快路径 | ACCEPTED | 2026-07-28 | P83 Stage1 | 0251-three-locks-gate-positioning-layer-call-incremental.md |

@@ -142,6 +142,33 @@ dynamic_discovery:
   provider_method: external_descriptor
   failure_policy: isolate_provider_and_return_error_record
   direct_project_imports: forbidden
+  refresh_contract:
+    triggers: [startup, periodic, on_demand, descriptor_change]
+    identity_fields: [id, provider, version]
+    change_policy: record_diff_and_re_evaluate_admission
+    stale_policy: degrade_then_unavailable
+    provider_isolation: required
+  health_contract:
+    required_probe_fields: [observed_at, status, latency_ms, source]
+    expired_health_policy: unavailable
+    failed_probe_policy: quarantine_candidate
+  extension_contract:
+    new_provider_requires: [descriptor, permission_ref, health_probe, rollback_plan, owner]
+    route_code_change_required: false
+    activation_requires_scene_binding: true
+evaluation:
+  source_pack:
+    required_labels: [provenance, freshness, permission, usefulness]
+    stale_result_policy: reject_or_mark_degraded
+  method_pack:
+    stages: [offline, proposal_only, shadow, approval, canary, rollback]
+    production_side_effect_requires: human_approval
+  model_pack:
+    stages: [offline, proposal_only, shadow, approval, canary, rollback]
+    direct_admission_write: forbidden
+  channel_pack:
+    required_receipt: delivery_receipt
+    retry_policy: explicit_and_idempotent
 scene_activation_gate:
   required: true
   minimum_repeated_demand: 连续四周或明确机会窗口

@@ -31,6 +31,7 @@
 | 知识网关 L3-I0 解耦 + 事件索引管道 (ADR-0294) | [`.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md) |
 | 外部连接织层 | [`.omo/_truth/registry/external-connection-fabric.yaml`](.omo/_truth/registry/external-connection-fabric.yaml) · [standard](.omo/standards/external-connection-fabric.md) |
 | 外部连接织层运行时边界 (ADR-0298) | [`.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md`](.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md) |
+| Workflow Mesh worker 租约与接管 (ADR-0299) | [`.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md`](.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md) |
 
 ## 2. Layer Model
 
@@ -48,6 +49,17 @@ External resources enter through the same direction:
 external descriptor -> sandbox/admission -> Agora route -> Workflow Mesh execution
                     -> OMO evidence -> Kairon/KOS/gbrain derived memory
 ```
+
+Workflow execution has one control-plane fact source:
+
+```text
+admission -> StepDispatched -> worker ACK/lease -> timeout/reclaim -> evidence/verification
+                         \-> OMO append-only events and projections
+```
+
+Worker YAML dispatch artifacts, runtime logs and handoff notes are derived
+operational materials. They may explain or recover an execution, but they do
+not advance WorkflowRun state without the corresponding OMO event.
 
 ## 3. Entry Architecture
 
@@ -110,6 +122,7 @@ Rules:
 - State mutations should use OMO CLI/MCP, C2G ingress, or registered brokers.
 - New governance surfaces require runtime behavior, registry entries, and validation gates. Documentation alone is not implementation.
 - External capabilities require a registered descriptor, scene binding, health evidence, and a reversible lifecycle before activation.
+- Worker execution requires a durable dispatch context, ACK/lease evidence and an explicit reclaim path; a generated packet is not completion evidence.
 - Direct `.omo/` or `spaces/` writes are violations unless routed through an approved audited path.
 
 ## 6. Port Registry & Transport (P77/P78)
