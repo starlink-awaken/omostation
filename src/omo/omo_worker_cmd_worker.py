@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,18 @@ from .worker_lifecycle import (
     reclaim_worker,
     renew_worker_lease,
 )
+
+
+def _mesh_lease_seconds() -> int:
+    """Read the operator-configurable default lease without coupling it to a port rule."""
+    raw = os.environ.get("OMO_MESH_LEASE_SECONDS", "1200")
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError("OMO_MESH_LEASE_SECONDS must be an integer") from exc
+    if value <= 0:
+        raise ValueError("OMO_MESH_LEASE_SECONDS must be positive")
+    return value
 
 
 def _print_worker_status(root: Path, omo_dir: str | Path = ".omo") -> int:
@@ -168,12 +181,16 @@ def setup_worker_parser(subparsers: Any) -> None:
 
     mesh_ack_parser = worker_sub.add_parser("mesh-ack")
     _add_mesh_worker_context(mesh_ack_parser)
-    mesh_ack_parser.add_argument("--lease-seconds", type=int, default=1200)
+    mesh_ack_parser.add_argument(
+        "--lease-seconds", type=int, default=_mesh_lease_seconds()
+    )
     mesh_ack_parser.add_argument("--now")
 
     mesh_heartbeat_parser = worker_sub.add_parser("mesh-heartbeat")
     _add_mesh_worker_context(mesh_heartbeat_parser)
-    mesh_heartbeat_parser.add_argument("--lease-seconds", type=int, default=1200)
+    mesh_heartbeat_parser.add_argument(
+        "--lease-seconds", type=int, default=_mesh_lease_seconds()
+    )
     mesh_heartbeat_parser.add_argument("--heartbeat-id")
     mesh_heartbeat_parser.add_argument("--now")
 
