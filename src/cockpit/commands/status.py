@@ -531,7 +531,7 @@ def _help_search(c, keyword: str) -> int:
 
     registry_path = _SCRIPT_DIR.parent.parent.parent.parent.parent / "docs" / "generated" / "capability-registry.yaml"
     if not registry_path.exists():
-        c.print(f"[yellow]⚠️  能力注册表未生成, 无法搜索。运行 make sync-capability-registry[/yellow]")
+        c.print("[yellow]⚠️  能力注册表未生成, 无法搜索。运行 make sync-capability-registry[/yellow]")
         return 1
 
     reg = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
