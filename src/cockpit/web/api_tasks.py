@@ -126,6 +126,53 @@ async def request_task_approval(task_id: str):
     }
 
 
+@router.post("/api/tasks/{task_id}/request-workflow")
+async def request_task_workflow(task_id: str, request: Request):
+    """Record a governed Workflow Mesh request without admitting or launching it."""
+    group = _task_group(task_id)
+    if group != "planned":
+        raise HTTPException(status_code=409, detail="Only planned tasks can request a workflow")
+    payload = _load_persisted_task(task_id, group)
+    try:
+        body = await request.json()
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="Workflow request must be a JSON object") from exc
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Workflow request must be a JSON object")
+
+    workflow_name = str(body.get("workflow_name") or "").strip()
+    scene_binding = body.get("scene_binding")
+    evidence_plan = body.get("evidence_plan")
+    if not workflow_name or not isinstance(scene_binding, dict) or not isinstance(evidence_plan, list):
+        raise HTTPException(
+            status_code=422,
+            detail="workflow_name, scene_binding, and evidence_plan are required",
+        )
+    try:
+        from omo.workflow_promotion import request_workflow_from_task
+
+        result = request_workflow_from_task(
+            WORKSPACE_DIR,
+            task_id=task_id,
+            workflow_name=workflow_name,
+            workflow_version=str(body.get("workflow_version") or "v1"),
+            scene_binding=scene_binding,
+            evidence_plan=evidence_plan,
+            operation_level=body.get("operation_level"),
+            actor=str(body.get("actor_ref") or "cockpit-task-center"),
+        )
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO workflow promotion is unavailable") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return {
+        "id": task_id,
+        "source": "omo.workflow_promotion",
+        **result,
+    }
+
+
 @router.post("/api/tasks/{task_id}/approve")
 async def approve_task(task_id: str):
     """Grant and apply the OMO promotion approval for a planned task."""

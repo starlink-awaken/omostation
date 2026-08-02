@@ -1352,6 +1352,46 @@ def test_request_task_approval_uses_omo_brokers(monkeypatch):
     assert calls[0]["actor"] == "cockpit-task-center"
 
 
+def test_request_task_workflow_stops_at_mesh_request(monkeypatch):
+    client = TestClient(app)
+    calls = []
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+    monkeypatch.setattr(api_tasks, "_load_persisted_task", lambda _task_id, _group: {"knowledge_refs": ["kos:1"]})
+
+    def fake_request(root, **kwargs):
+        calls.append((root, kwargs))
+        return {
+            "status": "requested",
+            "request_state": "ready_for_admission",
+            "workflow_run_id": "mesh-request-task-1",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+
+    monkeypatch.setattr("omo.workflow_promotion.request_workflow_from_task", fake_request)
+
+    response = client.post(
+        "/api/tasks/task-1/request-workflow",
+        json={
+            "workflow_name": "knowledge-to-action",
+            "scene_binding": {
+                "scene_id": "engineering-delivery",
+                "journey_id": "knowledge-to-action",
+                "outcome_metric": "task_adoption_rate",
+            },
+            "evidence_plan": ["result summary"],
+            "actor_ref": "cockpit-ui://knowledge-action",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "requested"
+    assert response.json()["worker_launch"] is False
+    assert response.json()["external_side_effects"] == "disabled"
+    assert calls[0][1]["workflow_name"] == "knowledge-to-action"
+    assert calls[0][1]["actor"] == "cockpit-ui://knowledge-action"
+
+
 def test_approve_task_applies_governed_approval(monkeypatch):
     client = TestClient(app)
     approval_ref = ".omo/workers/runs/approval-task-promotion-approval-2026-07-15T00-00-00Z.yaml"
