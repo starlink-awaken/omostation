@@ -21,6 +21,12 @@ from .omo_worker_status import (
     collect_worker_status,
     scan_runtime_watchdog,
 )
+from .worker_lifecycle import (
+    acknowledge_worker,
+    expire_worker_lease,
+    reclaim_worker,
+    renew_worker_lease,
+)
 
 
 def _print_worker_status(root: Path, omo_dir: str | Path = ".omo") -> int:
@@ -115,6 +121,24 @@ def _print_worker_rules_eval(root: Path, envelope_ref: str) -> int:
     return 0
 
 
+def _print_mesh_event(event: dict[str, Any]) -> int:
+    print(
+        f"event_id={event['event_id']} event_type={event['event_type']} "
+        f"workflow_run_id={event['workflow_run_id']}"
+    )
+    return 0
+
+
+def _add_mesh_worker_context(parser: Any) -> None:
+    parser.add_argument("workflow_run_id")
+    parser.add_argument("--trace-id", required=True)
+    parser.add_argument("--dispatch-id", required=True)
+    parser.add_argument("--worker", required=True, dest="worker_id")
+    parser.add_argument("--step-run-id", required=True)
+    parser.add_argument("--admission-id", required=True)
+    parser.add_argument("--omo-dir", default=".omo")
+
+
 def setup_worker_parser(subparsers: Any) -> None:
     worker_parser = subparsers.add_parser("worker")
     worker_sub = worker_parser.add_subparsers(dest="worker_command", required=True)
@@ -141,6 +165,33 @@ def setup_worker_parser(subparsers: Any) -> None:
     reclaim_parser.add_argument("--launch", action="store_true")
     reclaim_parser.add_argument("--transport", default="cli_prompt")
     reclaim_parser.add_argument("--omo-dir", default=".omo")
+
+    mesh_ack_parser = worker_sub.add_parser("mesh-ack")
+    _add_mesh_worker_context(mesh_ack_parser)
+    mesh_ack_parser.add_argument("--lease-seconds", type=int, default=1200)
+    mesh_ack_parser.add_argument("--now")
+
+    mesh_heartbeat_parser = worker_sub.add_parser("mesh-heartbeat")
+    _add_mesh_worker_context(mesh_heartbeat_parser)
+    mesh_heartbeat_parser.add_argument("--lease-seconds", type=int, default=1200)
+    mesh_heartbeat_parser.add_argument("--heartbeat-id")
+    mesh_heartbeat_parser.add_argument("--now")
+
+    mesh_expire_parser = worker_sub.add_parser("mesh-expire")
+    _add_mesh_worker_context(mesh_expire_parser)
+    mesh_expire_parser.add_argument("--reason", default="lease_expired")
+    mesh_expire_parser.add_argument("--now")
+
+    mesh_reclaim_parser = worker_sub.add_parser("mesh-reclaim")
+    _add_mesh_worker_context(mesh_reclaim_parser)
+    mesh_reclaim_parser.add_argument(
+        "--successor-worker", required=True, dest="successor_worker_id"
+    )
+    mesh_reclaim_parser.add_argument(
+        "--successor-dispatch", required=True, dest="successor_dispatch_id"
+    )
+    mesh_reclaim_parser.add_argument("--reason", default="lease_expired")
+    mesh_reclaim_parser.add_argument("--now")
 
     yield_parser = worker_sub.add_parser("yield")
     yield_parser.add_argument("task_id")
@@ -210,6 +261,54 @@ def execute_worker_command(args: argparse.Namespace) -> int:
             omo_dir=args.omo_dir,
         )
         return 0
+
+    mesh_context = {
+        "omo_dir": Path.cwd() / getattr(args, "omo_dir", ".omo"),
+        "workflow_run_id": getattr(args, "workflow_run_id", None),
+        "trace_id": getattr(args, "trace_id", None),
+        "dispatch_id": getattr(args, "dispatch_id", None),
+        "worker_id": getattr(args, "worker_id", None),
+        "step_run_id": getattr(args, "step_run_id", None),
+        "admission_id": getattr(args, "admission_id", None),
+    }
+    if args.worker_command == "mesh-ack":
+        return _print_mesh_event(
+            acknowledge_worker(
+                **mesh_context,
+                lease_seconds=args.lease_seconds,
+                now=args.now,
+            )
+        )
+
+    if args.worker_command == "mesh-heartbeat":
+        return _print_mesh_event(
+            renew_worker_lease(
+                **mesh_context,
+                lease_seconds=args.lease_seconds,
+                heartbeat_id=args.heartbeat_id,
+                now=args.now,
+            )
+        )
+
+    if args.worker_command == "mesh-expire":
+        return _print_mesh_event(
+            expire_worker_lease(
+                **mesh_context,
+                reason=args.reason,
+                now=args.now,
+            )
+        )
+
+    if args.worker_command == "mesh-reclaim":
+        return _print_mesh_event(
+            reclaim_worker(
+                **mesh_context,
+                successor_worker_id=args.successor_worker_id,
+                successor_dispatch_id=args.successor_dispatch_id,
+                reason=args.reason,
+                now=args.now,
+            )
+        )
 
     if args.worker_command == "yield":
         return yield_task(

@@ -16,6 +16,7 @@ from uuid import uuid4
 
 from .omo_shared import load_yaml
 from .omo_task_schema import validate_task_file
+from .worker_lifecycle import record_step_dispatch
 from .workflow_mesh import WorkflowMeshStore, new_workflow_event
 
 
@@ -133,7 +134,9 @@ def admit_workflow(
         raise WorkflowDispatchError("; ".join(validation_errors))
     task = load_yaml(task_file)
     approval = _approval_state(root, task, task_file)
-    health = _parse_health(capability_health, list(dict.fromkeys(required_capabilities)))
+    health = _parse_health(
+        capability_health, list(dict.fromkeys(required_capabilities))
+    )
     if requested_budget < 0:
         raise WorkflowDispatchError("requested budget must be non-negative")
     if remaining_budget is not None and requested_budget > remaining_budget:
@@ -241,7 +244,21 @@ def dispatch_admitted_workflow(
         transport=transport,
         workflow_packet=packet,
     )
-    return {**packet, "worker_dispatch": worker_dispatch, "dispatch_state": "dispatched"}
+    grant = packet["admission"]
+    record_step_dispatch(
+        root / Path(admission_options.get("omo_dir", ".omo")),
+        workflow_run_id=packet["workflow_run_id"],
+        trace_id=packet["trace_id"],
+        dispatch_id=worker_dispatch["dispatch_id"],
+        worker_id=worker_id,
+        step_run_id=grant["step_run_ids"][0],
+        admission_id=grant["admission_id"],
+    )
+    return {
+        **packet,
+        "worker_dispatch": worker_dispatch,
+        "dispatch_state": "dispatched",
+    }
 
 
 __all__ = [

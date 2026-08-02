@@ -1,17 +1,41 @@
 from __future__ import annotations
 
+# ruff: noqa: I001
+
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 import yaml
-from omo.workflow_dispatch import WorkflowDispatchError, admit_workflow
+
+from omo.workflow_dispatch import (
+    WorkflowDispatchError,
+    admit_workflow,
+    dispatch_admitted_workflow,
+)
 from omo.workflow_mesh import WorkflowMeshStore
 
 
 def _task(tmp_path: Path, *, approval_ref: str | None = None) -> None:
     task_dir = tmp_path / ".omo" / "tasks" / "active"
     task_dir.mkdir(parents=True)
+    registry_dir = tmp_path / ".omo" / "_truth" / "registry"
+    registry_dir.mkdir(parents=True)
+    (registry_dir / "workers.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "workers": [
+                    {
+                        "id": "worker-a",
+                        "enabled": True,
+                        "transports": {"cli_prompt": {"command": "worker-a"}},
+                    }
+                ]
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
     task = {
         "id": "TASK-MESH-1",
         "title": "Mesh dispatch",
@@ -81,6 +105,26 @@ def test_admit_workflow_fails_closed_for_unhealthy_capability(tmp_path: Path) ->
             required_capabilities=["runtime"],
             capability_health=health,
         )
+
+
+def test_dispatch_bridge_records_step_dispatch_worker_context(tmp_path: Path) -> None:
+    _task(tmp_path)
+    packet = dispatch_admitted_workflow(
+        tmp_path,
+        task_id="TASK-MESH-1",
+        worker_id="worker-a",
+        allowed_write_paths=["docs/"],
+        backend="runtime",
+        required_capabilities=["workflow.execute", "runtime"],
+        capability_health=_health(),
+        workflow_run_id="run-dispatch-bridge",
+        now="2026-08-01T10:00:00+00:00",
+    )
+
+    snapshot = WorkflowMeshStore(tmp_path / ".omo").snapshot("run-dispatch-bridge")
+    assert snapshot["state"] == "dispatched"
+    assert snapshot["worker"]["dispatch_id"] == packet["worker_dispatch"]["dispatch_id"]
+    assert snapshot["worker"]["worker_id"] == "worker-a"
 
 
 def test_admit_workflow_requires_granted_approval(tmp_path: Path) -> None:
