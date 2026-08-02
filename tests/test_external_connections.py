@@ -235,6 +235,38 @@ def test_router_prefers_healthy_trusted_resource_and_records_factors() -> None:
     assert decision.decision_factors["permission"] == 1
 
 
+def test_evaluate_candidates_exposes_explainable_decisions_without_activation() -> None:
+    catalog = ExternalConnectionCatalog()
+    catalog.register(_descriptor("source:healthy", lifecycle="active", trust=0.7))
+    wrong_permission = _descriptor("source:wrong-permission", lifecycle="active")
+    wrong_permission["permission_ref"] = "credential://other"
+    catalog.register(wrong_permission)
+    no_capability = _descriptor("source:no-capability", lifecycle="active")
+    no_capability["capabilities"] = ["read"]
+    catalog.register(no_capability)
+
+    evaluation = catalog.evaluate_candidates(
+        "search",
+        SCENE,
+        trace_id="trace-evaluation",
+        now=NOW,
+    ).to_dict()
+
+    assert evaluation["schema"] == "external-resource-evaluation/v1"
+    assert evaluation["mode"] == "read_only_evaluation"
+    assert evaluation["activation"] == "forbidden"
+    assert evaluation["status"] == "selected"
+    assert evaluation["selected_resource_id"] == "source:healthy"
+    decisions = {item["resource_id"]: item for item in evaluation["candidates"]}
+    assert decisions["source:healthy"]["status"] == "eligible"
+    assert decisions["source:healthy"]["decision_factors"]["health"] == "healthy"
+    assert decisions["source:healthy"]["rank"]
+    assert decisions["source:wrong-permission"]["status"] == "rejected"
+    assert "missing_or_mismatched_permission" in decisions["source:wrong-permission"]["reasons"]
+    assert decisions["source:no-capability"]["status"] == "not_applicable"
+    assert catalog.get("source:healthy").lifecycle == "active"
+
+
 def test_missing_capability_is_explicitly_unavailable() -> None:
     catalog = ExternalConnectionCatalog()
     catalog.register(_descriptor("source:only-read", lifecycle="active"))
