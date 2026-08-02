@@ -13,13 +13,13 @@ next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面�
 health_score_ref: .omo/state/health.yaml
 health_score: 96
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-08-01T23:36:11Z'
+health_score_generated_at: '2026-08-01T23:56:49Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 120
-total_tasks: 122
+completed_tasks: 225
+total_tasks: 228
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -57,7 +57,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-08-01T23:36:13Z'
+updated_at: '2026-08-02T08:02:20.820948+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -181,9 +181,10 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 2
+planned_tasks: 3
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
+- cockpit-debt-debt-1 (治理技术债务：债务)
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
@@ -198,10 +199,11 @@ runtime_health_summary:
   online_services: 4
   total_services: 4
   ratio: 1.0
-  health_score: 96
-  last_scan: '2026-08-01T23:36:11Z'
-  source: compass_radar_isc3_daemon_ratio
+  health_score: 100
+  last_scan: '1785628939.98944'
+  service_count: 8
   degraded: []
+  source: runtime_daemon_de_false_positive
 phase42_status: completed
 phase42_completed_at: '2026-07-14T20:59:00Z'
 phase43_status: completed
@@ -226,4 +228,4 @@ divergence_triage_summary:
     severity: medium
     owner: control
     disposition: must_fix
-governance_feedback_last_run: '2026-08-01T23:36:11Z'
+governance_feedback_last_run: '2026-08-02T08:02:20.820948+08:00'

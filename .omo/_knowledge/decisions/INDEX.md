@@ -207,10 +207,12 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0289 | A2 type1 demote batch5 + true-dispatch shortfall | ACCEPTED | 2026-07-29 | governance-team | 0289-p86-a2-type1-demote-true-dispatch-shortfall.md |
 | 0290 | ABCD review follow-up SSOT hygiene | ACCEPTED | 2026-07-29 | governance-team | 0290-p86-review-followup-ssot-hygiene.md |
 | 0291 | P86 A/B/C/D 最终结案 | ACCEPTED | 2026-07-29 | governance-team | 0291-p86-abcd-final-closeout.md |
-| 0293 | Phase 45 governance observability layer | ACCEPTED | 2026-07-29 | governance-agent | 0293-phase45-governance-observability.md |
 | 0292 | check-work-landed SHA detection fix + M3 grace baseline | ACCEPTED | 2026-07-30 | governance-agent | 0292-check-work-landed-sha-fix.md |
-| 0294 | 知识网关 L3-I0 解耦与事件索引管道 | ACCEPTED | 2026-07-31 | governance-agent | 0294-knowledge-gateway-decoupling-and-event-pipeline.md |
-| 0295 | 收敛产品真相与外部连接织层 | ACCEPTED | 2026-08-02 | architecture-governance | 0295-external-connection-fabric-and-product-truth.md |
+| 0293 | Phase 45 governance observability layer | ACCEPTED | 2026-07-29 | governance-agent | 0293-phase45-governance-observability.md |
+| 0294 | 知识网关解耦与增量事件索引管道 | ACCEPTED | 2026-08-01 | engineering-agent | 0294-knowledge-gateway-decoupling-and-event-pipeline.md |
+| 0295 | Wave 2 (C2G + OMO) — Completed & Archived | ACCEPTED | 2026-08-01 | governance-agent | 0295-wave2-c2g-omo-completed-archived.md |
+| 0296 | C2G Predictive Outcomes to Knowledge Graph Pipeline | ACCEPTED | 2026-08-02 | engineering-agent | 0296-c2g-predictive-outcomes-to-knowledge-graph.md |
+| 0297 | 收敛产品真相与外部连接织层 | ACCEPTED | 2026-08-02 | architecture-governance | 0297-external-connection-fabric-and-product-truth.md |
 | 0249 | 治理自省预算封顶 40/40/20 (用户已同意) | ACCEPTED | 2026-07-26 | P82 StageA | 0249-governance-budget-cap-40-40-20.md |
 | 0250 | health 门禁改为只卡工程执行面 (owner 集中度不阻断) | ACCEPTED | 2026-07-27 | P82 StageA | 0250-health-gate-engineering-surface-only.md |
 | 0251 | 三把锁 gate 定位 (layer-call/drift/doc-claims blocking) + layer-call 增量快路径 | ACCEPTED | 2026-07-28 | P83 Stage1 | 0251-three-locks-gate-positioning-layer-call-incremental.md |

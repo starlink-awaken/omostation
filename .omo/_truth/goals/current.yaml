@@ -4,121 +4,93 @@ lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-24
 ---
+
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-24
-current_wave: W1
+
+current_wave: W5
 entry_gate: phase41_completed
 goals:
 - desc: Wave 1 — Agora MCP 隔离
   id: G27.1
   kpi: 所有 L1 知识工具包必须通过 agora 网关代理，切断跨包函数直连调用
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476332'
-  archive_reason: P82 SSOT convergence - goal completed
 - desc: Wave 2 — 算力调度统一
   id: G27.2
   kpi: Agent 移除本地 API Key，全系接入 llm-gateway，实现排队与限流
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476340'
-  archive_reason: P82 SSOT convergence - goal completed
 - desc: Wave 3 — 图谱记忆共享
   id: G27.3
   kpi: OMO 运行日志自动入库 gbrain Postgres，建立 Agent 跨任务记忆上下文
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476342'
-  archive_reason: P82 SSOT convergence - goal completed
 - desc: Wave 4 — OMO MCP 化
   id: G27.4
   kpi: 建立 omo-mcp-server，禁止终端 Agent 绕过 OMO 工具链直接读写 .omo 核心库
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476343'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P30.1
   desc: M1 低风险搬家 — metaos → projects/metaos (7.8K, 自包含)
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476344'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P30.2
   desc: M1 低风险搬家 — ecos → projects/ecos (6.3K, 自包含)
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476345'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P30.3
   desc: M1 低风险搬家 — wksp → cockpit (15K, 依赖 agora)
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476346'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P30.4
   desc: M2 中风险拆分 — cron-service → runtime (1.8K, 自包含)
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476346'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P30.5
   desc: M2 中风险拆分 — agent-runtime 拆分为 runtime+ext/cockpit (20K)
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476347'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P30.6
   desc: M3 高风险核心 — agora 从 kairon 独立 (38K, 改5包接口)
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476348'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P30.7
   desc: M4 收尾 — kairon-governance → omo 合并 (2.5K)
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476348'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P31.1
   desc: 'I0精简: Agora web/dashboard → cockpit (1,121L)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476349'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P31.2
   desc: 'I0精简: Agora a2a → metaos (257L)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476350'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: P31.3
   desc: 'M3核心: Agora 从 kairon 独立为 projects/agora (38K→35K)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476351'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: BET-c685
   desc: 'Bet: TestPitch (Appetite: 1 day)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
-  archived_at: '2026-08-01T19:26:16.476351'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: BET-ea47
   desc: 'Bet: Pitch-Valid (Appetite: Unknown)'
   progress: 0.0
@@ -127,7 +99,7 @@ goals:
 - id: BET-a15b
   desc: 'Bet: PITCH-llm-gateway-merge (Appetite: -  1 Week（中等复杂度，高架构影响）。)'
   progress: 100.0
-  status: archived
+  status: done
   tasks:
   - OPC-P43-LLM-MERGE-CODE
   - OPC-P43-LLM-MERGE-MOF
@@ -135,19 +107,13 @@ goals:
   - OPC-P43-LLM-MERGE-CONFIG
   - OPC-P43-LLM-MERGE-DOCS
   - OPC-P43-LLM-MERGE-ARCHIVE
-  archived_at: '2026-08-01T19:26:16.476352'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: BET-c87a
   desc: 'Bet: http-mcp-convergence-optimization (Appetite: >  2 weeks)'
   progress: 80.0
-  status: archived
+  status: done
   note: '核心收敛已完成 (24→5 HTTP, 29/29 MCP stdio). 剩余: test coverage 提升 + 前端现代化. 建议拆为独立小
     bet.'
   tasks: []
-  bet_status: closed
-  completed_at: '2026-08-01T00:00:00Z'
-  archived_at: '2026-08-01T12:13:13Z'
-  archive_reason: governed goal reconciliation
 - id: BET-9001
   title: 统一持久化 broker
   desc: 'Bet: 统一持久化 broker (Appetite: 1 week)'
@@ -165,49 +131,43 @@ goals:
   title: 16-p0-task-triage
   desc: 'Bet: 16-p0-task-triage (Appetite: 1 day)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-38c6
   created_at: '2026-06-18T14:51:17Z'
   appetite: 1 day
   vector: V2
-  bet_status: closed
-  archived_at: '2026-08-01T19:26:16.476353'
-  archive_reason: P82 SSOT convergence - goal completed
+  bet_status: active
 - id: BET-9cfa
   title: 17-submodule-dirty-cleanup
   desc: 'Bet: 17-submodule-dirty-cleanup (Appetite: 1 day)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-9cfa
   created_at: '2026-06-18T14:55:44Z'
   appetite: 1 day
   vector: V2
-  bet_status: closed
-  archived_at: '2026-08-01T19:26:16.476354'
-  archive_reason: P82 SSOT convergence - goal completed
+  bet_status: active
 - id: BET-5433
   title: 18-untracked-files-triage
   desc: 'Bet: 18-untracked-files-triage (Appetite: 0.5 day)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-5433
   created_at: '2026-06-18T14:55:45Z'
   appetite: 0.5 day
   vector: V2
-  bet_status: closed
-  archived_at: '2026-08-01T19:26:16.476354'
-  archive_reason: P82 SSOT convergence - goal completed
+  bet_status: active
 - id: BET-f478
   title: 15-deep-defensive-hardening
   desc: 'Bet: 15-deep-defensive-hardening (Appetite: 3 days)'
   progress: 1.0
-  status: archived
+  status: completed
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-f478
@@ -216,66 +176,58 @@ goals:
   appetite: 3 days
   vector: V2
   bet_status: closed
-  archived_at: '2026-08-01T12:13:13Z'
-  archive_reason: governed goal reconciliation
 - id: BET-102d
   title: Pitch-c2g-brainstorm-derust
   desc: 'Bet: Pitch-c2g-brainstorm-derust (Appetite: 1 day)'
   progress: 0.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-102d
   created_at: '2026-06-19T00:06:07Z'
   appetite: 1 day
   vector: V2
-  bet_status: closed
-  archived_at: '2026-08-01T12:13:13Z'
-  archive_reason: governed goal reconciliation
+  bet_status: active
 - id: BET-a7c1
   title: batch1-agora-omo-modules
   desc: 'Bet: Batch 1 — agora dead-code audit + omo 分类索引 (Appetite: 1 week)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-a7c1
   created_at: '2026-06-19T01:30:00Z'
   appetite: 1 week
   vector: V2
-  bet_status: closed
+  bet_status: active
   batch: 1
   scope:
   - DEBT-AGORA-MODULE-BLOAT (agora 230文件→清理未用模块)
   - DEBT-OMO-MODULE-BLOAT (omo 125文件→按子系统分包)
   note: agora dead-code ✅; omo categories 模块创建 ✅ (不破坏 import)
-  archived_at: '2026-08-01T19:26:16.476355'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: BET-b8d2
   title: batch2-kairon-runtime-types
   desc: 'Bet: Batch 2 — kairon mypy 逐步启用 + runtime setuptools→hatchling (Appetite:
     2 weeks)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-b8d2
   created_at: '2026-06-19T01:30:00Z'
   appetite: 2 weeks
   vector: V2
-  bet_status: closed
+  bet_status: active
   batch: 2
   scope:
   - DEBT-KAIRON-TYPE-SAFETY (kairon 184K LOC mypy strict 逐步启用)
   - DEBT-RUNTIME-BUILD-SYSTEM (runtime setuptools→hatchling + executor 拆分)
   note: 'kairon mypy: 10 strict + 6 check-only (16/16); runtime hatchling; done'
-  archived_at: '2026-08-01T19:26:16.476356'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: BET-c9e3
   title: batch3-gbrain-remaining
   desc: 'Bet: Batch 3 — gbrain operations.ts 拆分 + 剩余小项 (Appetite: 1 week)'
   progress: 100.0
-  status: archived
+  status: done
   note: 'gbrain operations.ts 评估完成: 3841行/94 exports/31 importers, 拆分需 dedicated session'
   tasks: []
   ingress_plane: projects/c2g
@@ -283,41 +235,35 @@ goals:
   created_at: '2026-06-19T01:30:00Z'
   appetite: 1 week
   vector: V2
-  bet_status: closed
+  bet_status: active
   batch: 3
   scope:
   - DEBT-GBRAIN-OPERATIONS-TS (gbrain operations.ts 3.8K→拆分)
   - 剩余文档/配置收尾
-  archived_at: '2026-08-01T19:26:16.476357'
-  archive_reason: P82 SSOT convergence - goal completed
 - id: BET-e6bf
   title: Idea-iterate非交互环境EOFError健壮性修复
   desc: 'Bet: Idea-iterate非交互环境EOFError健壮性修复 (Appetite: Unknown)'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-e6bf
   created_at: '2026-06-19T00:38:42Z'
   appetite: 0.5 day
   vector: V2
-  bet_status: closed
-  archived_at: '2026-08-01T19:26:16.476357'
-  archive_reason: P82 SSOT convergence - goal completed
+  bet_status: active
 - id: BET-71d9
   title: Pitch-v3-workspace-naming-ssot
   desc: 'Bet: Pitch-v3-workspace-naming-ssot (Appetite: 0.5 day)'
   progress: 0.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-71d9
   created_at: '2026-06-19T02:01:25Z'
   appetite: 0.5 day
   vector: V2
-  bet_status: closed
-  archived_at: '2026-08-01T12:13:13Z'
-  archive_reason: governed goal reconciliation
+  bet_status: active
 - id: BET-3b90
   title: Idea-v5普通用户产品走查followup-补强12中断点-dis
   desc: 'Bet: Idea-v5普通用户产品走查followup-补强12中断点-dis (Appetite: 1 周)'
@@ -334,22 +280,21 @@ goals:
   title: 架构整合与收敛 — 6 Phase 全量解决系统断层
   desc: 'Bet: 架构整合与收敛 — 治理自动化/缓存/Agora拆分/metaos治理化/X3成本/校准'
   progress: 100.0
-  status: archived
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-ARCH-CONVERGENCE
   created_at: '2026-06-23T00:00:00+08:00'
   appetite: 9 天（6 Phase x 1.5d/Phase 均值）
   vector: V3
-  bet_status: closed
-  archived_at: '2026-08-01T19:26:16.476358'
-  archive_reason: P82 SSOT convergence - goal completed
+  bet_status: active
 - id: KOS-Q-GROWTH
   title: KOS 季度扩量（跃迁期长交期前置）
-  desc: G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑
+  desc: 'G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑'
+  # Q3+Q4+2027Q1 floors met (1500/3000/5000)
   progress: 100.0
   status: active
-  kpi: 2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)
+  kpi: '2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)'
   measured_documents: 5193
   measured_at: '2026-07-24T02:29:04.787388+00:00'
   q4_floor_met: true
@@ -357,12 +302,12 @@ goals:
   evidence: .omo/_knowledge/audits/2026-07-20-kos-q1-floor-mcp.md
   tasks: []
   quarterly_targets:
-  - quarter: 2026Q3
-    documents_min: 1500
-  - quarter: 2026Q4
-    documents_min: 3000
-  - quarter: 2027Q1
-    documents_min: 5000
+    - quarter: 2026Q3
+      documents_min: 1500
+    - quarter: 2026Q4
+      documents_min: 3000
+    - quarter: 2027Q1
+      documents_min: 5000
   source_ref: docs/KOS-QUARTERLY-GROWTH.md
   vector: V-leap-prep
   bet_status: active
@@ -387,19 +332,19 @@ objectives:
   id: W5
   status: done
   progress: 100.0
-  kpi: Agent 注册中心 MVP + 分布式任务调度原型 (单机模拟多节点)
+  kpi: 'Agent 注册中心 MVP + 分布式任务调度原型 (单机模拟多节点)'
   tasks: []
 - desc: 'Wave 6 — State Sync + Failover (Q4 Phase 2: 状态同步 + 故障转移)'
   id: W6
   status: pending
   progress: 0.0
-  kpi: 跨节点状态同步机制 + 基础故障转移 (需物理主机)
+  kpi: '跨节点状态同步机制 + 基础故障转移 (需物理主机)'
   tasks: []
-phase: 47
+phase: 45
 source_plan_refs:
 - .omo/plans/phase27-swarm-network.md
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: P47 resilience + distributed deepening
-execution_mode: waiting-for-scenario/next-bet
+theme: P45 多机协作奠基 — Phase 2 Q4 启动 (Multi-Machine Foundation)
+

@@ -17,7 +17,7 @@ related:
   - docs/proposals/2026-08-01-ECOS-NEXT-STAGE-AGENT-TASK-PACKS.md
   - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
   - .omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md
-  - .omo/_knowledge/decisions/0295-external-connection-fabric-and-product-truth.md
+  - .omo/_knowledge/decisions/0297-external-connection-fabric-and-product-truth.md
   - .omo/_truth/registry/external-connection-fabric.yaml
   - .omo/standards/external-connection-fabric.md
 note: >

@@ -1,10 +1,10 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-08-01T23:36:11Z
+# generated_at: 2026-08-01T23:56:49Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5}
 
-generated_at: "2026-08-01T23:36:11Z"
+generated_at: "2026-08-01T23:56:49Z"
 source: "c2g.strategy (real audit, no mock)"
 health_score: 96
 governance_anomaly_score: 85
@@ -12,11 +12,11 @@ anomaly_count: 1
 service_online_ratio: 1.000
 freshness_score: 100
 feedback_alive: True
-feedback_last_ts: "2026-08-01T23:35:52+00:00"
+feedback_last_ts: "2026-08-01T23:55:56+00:00"
 feedback_staleness_hours: 0.0
-total_tasks: 122
-done: 120
-planned: 2
+total_tasks: 3
+done: 0
+planned: 3
 
 governance_execution_surface:
   base_anomaly_score: 85
@@ -42,27 +42,19 @@ health_composite_breakdown:
   raw: 95.5
 
 anomalies:
-  - "[WARN]  Owner 集中度: human 持有 100% 待处理任务 (单点故障风险, 知识/能力集中)"
+  - "[WARN]  Owner 集中度: human 持有 67% 待处理任务 (单点故障风险, 知识/能力集中)"
 
 distributions:
   priority_dist:
-    P2: 4
+    P2: 2
     medium: 1
-    unassigned: 117
   risk_dist:
-    L1: 5
-    L2: 2
-    unassigned: 115
+    L1: 2
+    L2: 1
   owner_dist:
-    engineering: 1
-    engineering-agent: 110
-    governance-team: 1
     human: 2
-    orchestrator: 3
-    stage1-b1-pipeline: 2
-    unassigned: 3
+    unassigned: 1
   phase_dist:
-    unphased: 122
+    unphased: 3
   status_dist:
-    done: 120
-    pending: 2
+    pending: 3

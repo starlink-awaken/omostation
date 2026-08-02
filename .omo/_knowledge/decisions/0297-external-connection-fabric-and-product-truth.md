@@ -12,7 +12,7 @@ related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
 ---
 
-# ADR-0295 收敛产品真相与外部连接织层
+# ADR-0297 收敛产品真相与外部连接织层
 
 ## Context
 
