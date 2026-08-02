@@ -111,6 +111,18 @@ pack 预检只负责“扩展是否可被安全观察”，目录负责“当前
 负责“是否有业务场景和权限可以准入”，Agora/Workflow Mesh 负责“如何路由、执行和回写 receipt”。任何
 扩展包都必须按这四层逐级推进，不能用 manifest 合规结果绕过业务准入。
 
+### 4.1.3 外部扩展包目录预览
+
+当预检状态为 `proposal_only` 或 `ready_for_catalog_preview` 时，checker 可以附带
+`external-resource-pack-catalog-preview/v1`。这是从已校验 descriptor 提取的安全投影，不是
+`external-resource-catalog/v1` 的观测结果：`availability` 和 `health.status` 必须固定为
+`unobserved`，来源固定为 manifest，且不得包含 provider 响应、原文、凭据或结果载荷。
+
+目录预览只回答“人可以先看到什么”和“下一步应进入哪一层”：普通资源进入只读 catalog discovery
+和健康探针，方法/模型或显式 proposal-only 资源进入 proposal/evaluation。Cockpit 可以展示该预览，
+但不得把它当作可用、已探活、已准入或可调用资源；仍需沿用 catalog、Scene Card、OMO admission 和
+Workflow Mesh receipt 链。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
