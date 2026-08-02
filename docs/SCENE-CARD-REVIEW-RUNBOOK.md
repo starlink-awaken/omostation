@@ -65,3 +65,13 @@ uv run --with pyyaml python bin/ssot/scene-card-candidates.py --root . \
 方、可量化结果指标、审批人和责任人、数据分级与权限引用、失败代价、回滚方案、三到十个脱敏
 样本引用，以及真实需求证据或明确机会窗口。材料不足时继续停留在 `candidate`、`sandbox` 或
 `proposal_only`。
+
+## 内部 dogfood 卡片
+
+`scene-cards/engineering-delivery-dogfood.yaml` 是第一张完整形态的内部 dogfood 卡片。它使用已
+合并的工程交付 PR 和 Workflow Mesh 垂直切片作为不透明证据引用，便于验证“卡片可审阅、结果可
+消费、回执可追踪”的产品路径；这些引用不等价于外部业务批准，也不代表外部连接已经激活。
+
+该卡片明确保持 `proposal_only` 与 `activation=forbidden`。后续若要推广到公文审查、会议督办或
+其他业务场景，必须替换为业务负责人确认的场景身份、消费方、权限引用和真实脱敏样本，不能直接
+复制这张内部卡片的角色或证据。

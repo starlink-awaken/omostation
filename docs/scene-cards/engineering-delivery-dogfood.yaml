@@ -1,0 +1,46 @@
+---
+title: Engineering Delivery Dogfood Scene Card
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-02
+related:
+  - ../WORKFLOW-MESH-IMPLEMENTATION.md
+  - ../SCENE-CARD-REVIEW-RUNBOOK.md
+  - ../../.omo/standards/external-connection-fabric.md
+---
+schema: scene-card/v1
+lifecycle: proposal_only
+activation: forbidden
+approval_state: pending_business_confirmation
+scene_id: engineering-delivery
+journey_id: intent-to-evidence
+goal: 将已确认的工程意图转化为可验证、可回滚、可消费的交付证据
+trigger: 需求、缺陷或治理任务进入已确认的工程执行队列
+input_contract: 具备目标、范围、约束、验收标准和责任人的工程任务引用
+result_contract: 包含实施、测试、审查、合并、结果消费位置和复盘提案的 Workflow Mesh 证据
+outcome_metric: verified_delivery_lead_time
+consumer: delivery-owner-and-reviewer
+approver: architecture-governance
+owner: engineering-delivery
+failure_cost: 未验证的变更进入主干，造成回滚、重复劳动或业务交付延误
+data_classification: internal
+data_scope: repository-metadata-governed-ci-evidence-and-redacted-task-references
+operator: engineering-agent-under-human-review
+permission_ref: permission://workflow-mesh/engineering-delivery
+rollback_plan: stop-dispatch-revoke-grant-revert-or-repair-through-pr
+sample_refs:
+  - evidence://github/pr/755
+  - evidence://github/pr/765
+  - evidence://github/pr/766
+demand_evidence_refs:
+  - evidence://workflow-mesh/engineering-delivery/vertical-slice
+  - evidence://github/pr/761
+opportunity_window: 持续治理与产品化交付期间的内部 dogfood 窗口
+external_resource_policy: proposal_only
+activation_blockers:
+  - business_owner_confirmation
+  - confirmed_result_consumer
+  - approved_permission_ref
+  - validated_sample_refs
+  - OMO_admission_evidence
