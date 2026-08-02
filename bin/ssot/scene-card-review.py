@@ -183,6 +183,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--decision", choices=DECISIONS, default="pending")
     parser.add_argument("--reviewer-ref", default="")
     parser.add_argument("--note", default="")
+    parser.add_argument(
+        "--review-envelope-stdin",
+        action="store_true",
+        help="read reviewer_ref and note from a private _review stdin envelope",
+    )
     args = parser.parse_args(argv)
     try:
         if args.input:
@@ -190,12 +195,22 @@ def main(argv: list[str] | None = None) -> int:
                 payload = _read_json(stream)
         else:
             payload = _read_json(sys.stdin)
+        reviewer_ref = args.reviewer_ref
+        note = args.note
+        if args.review_envelope_stdin:
+            review = payload.pop("_review", None)
+            if not isinstance(review, dict):
+                raise ReviewInputError("stdin _review envelope must be an object")
+            reviewer_ref = review.get("reviewer_ref", "")
+            note = review.get("note", "")
+            if not isinstance(reviewer_ref, str) or not isinstance(note, str):
+                raise ReviewInputError("stdin _review fields must be strings")
         receipt = create_review_receipt(
             payload,
             candidate_id=args.candidate_id,
             decision=args.decision,
-            reviewer_ref=args.reviewer_ref,
-            note=args.note,
+            reviewer_ref=reviewer_ref,
+            note=note,
         )
     except (OSError, ReviewInputError) as exc:
         print(f"scene-card-review: {exc}", file=sys.stderr)
