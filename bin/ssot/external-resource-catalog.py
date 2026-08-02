@@ -28,6 +28,7 @@ class ExternalResourceCatalogInputError(ValueError):
 
 
 _OMO_COMMAND_TIMEOUT_SECONDS = 15
+DEFAULT_CATALOG_TTL_SECONDS = 3600
 
 
 def _load_agora(root: Path):
@@ -64,6 +65,7 @@ def collect_external_resources(
     entry_points: Iterable[Any] | None = None,
     now: datetime | None = None,
     health_ttl_seconds: int = 900,
+    catalog_ttl_seconds: int = DEFAULT_CATALOG_TTL_SECONDS,
     probe: bool = True,
     previous_snapshot: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -75,6 +77,7 @@ def collect_external_resources(
         records,
         now=now or datetime.now(UTC),
         health_ttl_seconds=health_ttl_seconds,
+        catalog_ttl_seconds=catalog_ttl_seconds,
     )
     if snapshot.get("schema") != SCHEMA:
         raise ExternalResourceCatalogInputError("unexpected catalog schema")
@@ -154,6 +157,7 @@ def observe_external_resources(
     entry_points: Iterable[Any] | None = None,
     now: datetime | None = None,
     health_ttl_seconds: int = 900,
+    catalog_ttl_seconds: int = DEFAULT_CATALOG_TTL_SECONDS,
     probe: bool = True,
     previous_snapshot: Mapping[str, Any] | None = None,
     actor: str = "external-resource-observer",
@@ -171,6 +175,7 @@ def observe_external_resources(
         entry_points=entry_points,
         now=now,
         health_ttl_seconds=health_ttl_seconds,
+        catalog_ttl_seconds=catalog_ttl_seconds,
         probe=probe,
         previous_snapshot=previous_snapshot,
     )
@@ -206,6 +211,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--health-ttl-seconds", type=int, default=900)
     parser.add_argument(
+        "--catalog-ttl-seconds",
+        type=int,
+        default=DEFAULT_CATALOG_TTL_SECONDS,
+        help="目录快照在进入 activation preflight 前的最大有效时长",
+    )
+    parser.add_argument(
         "--no-health-probe",
         action="store_true",
         help="只发现 descriptor，不调用显式只读 health_probe",
@@ -240,6 +251,7 @@ def main(argv: list[str] | None = None) -> int:
             payload = observe_external_resources(
                 args.root,
                 health_ttl_seconds=args.health_ttl_seconds,
+                catalog_ttl_seconds=args.catalog_ttl_seconds,
                 probe=not args.no_health_probe,
                 previous_snapshot=previous_snapshot,
                 actor=args.actor,
@@ -249,6 +261,7 @@ def main(argv: list[str] | None = None) -> int:
             payload = collect_external_resources(
                 args.root,
                 health_ttl_seconds=args.health_ttl_seconds,
+                catalog_ttl_seconds=args.catalog_ttl_seconds,
                 probe=not args.no_health_probe,
                 previous_snapshot=previous_snapshot,
             )

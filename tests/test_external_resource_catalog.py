@@ -70,6 +70,7 @@ def test_collects_dynamic_resources_as_read_only_safe_projection(tmp_path: Path)
     assert payload["schema"] == "external-resource-catalog/v1"
     assert payload["mode"] == "read_only_projection"
     assert payload["activation"] == "forbidden"
+    assert payload["catalog_ttl_seconds"] == 3600
     assert payload["summary"]["resource_count"] == 1
     assert payload["resources"][0]["entry_point"] == "external.resources:test-source"
     assert payload["resources"][0]["health"]["source"] == "probe:test"

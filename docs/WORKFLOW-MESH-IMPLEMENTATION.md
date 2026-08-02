@@ -464,6 +464,22 @@ Phase 34 修复了 OMO `system.yaml` 语义比较对运行元数据的误判。`
 WorkflowRun、StepRun、事件日志或外部 receipt 的事实语义。回归测试同时覆盖“仅时间戳变化为 0
 变更”和“健康分变化产生 2 个投影变更”两条路径。
 
+### 7.3.3 Phase 35 外部资源目录 freshness 与失效回退
+
+Phase 35 将目录快照自身的新鲜度从 provider health 中拆出。`external-resource-catalog/v1`
+现在携带 `catalog_ttl_seconds`；它描述“这份目录观察在进入 activation preflight 前最多可信多久”，
+与资源内部的 `health_ttl_seconds`、descriptor 的 `expires_at/review_at` 分别负责三层不同事实。
+
+`bin/ssot/external-activation-preflight.py` 会输出 `catalog_freshness`，并将 `fresh`、`stale`、
+`unknown` 区分开。目录过期、缺少观察时间、时间格式非法或 TTL 非法时，preflight 必须进入
+`blocked`，不能因为候选资源仍显示 `available` 就进入 `ready_for_admission_preview`。刷新动作仍然
+是只读观察，既不激活 provider，也不写 OMO WorkflowRun；Cockpit 的 unavailable projection 同样
+声明目录 TTL，避免降级返回伪装成新鲜目录。
+
+这形成外部动态扩展的三层失效模型：目录快照过期先阻断；资源 health/descriptor 过期再隔离单项；
+真正的 provider 失败最终进入 `unavailable/degraded` 与既有 receipt/补偿链。恢复顺序是刷新观察、
+重新做 preflight、重新走 admission，不复用过期的 activation 结论。
+
 ### 7.3.1 Phase 25 真实能力健康证据闭环
 
 Phase 25 将准入所需的 `capability_health` 从调用方手工输入收敛为服务端可追溯证据：Cockpit
@@ -500,6 +516,9 @@ PYTHONPATH="projects/omo/src:projects/agora/src" uv run --no-project --with pyte
 cd projects/cockpit && PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with pyyaml --with httpx --with rich python -m pytest -q src/cockpit/tests/test_delivery_journey.py src/cockpit/tests/test_delivery_journey_mesh_states.py src/cockpit/tests/test_delivery_journey_workflow_mesh.py src/cockpit/tests/test_agent_workflow_command.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pytest-asyncio --with pyyaml --with httpx python -m pytest -q tests/test_knowledge_action.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_omo_ingress_state.py tests/test_omo_governance_data.py
+uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_external_resource_catalog.py tests/test_external_activation_preflight.py
+cd projects/agora && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connections.py
+cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_external_resources.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_knowledge_actions.py src/cockpit/tests/test_tasks_api.py
 cd projects/runtime/projects/runtime && PYTHONPATH=src uv run --no-project --with pytest --with pydantic python -m pytest -q tests/test_workflow_mesh_runtime.py
 cd projects/aetherforge && PYTHONPATH="packages/swarm/src:packages/mesh/src:src" uv run --no-project --with pytest --with pyyaml python -m pytest -q packages/swarm/tests/test_workflow_mesh.py packages/mesh/tests/
