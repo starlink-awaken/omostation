@@ -630,6 +630,39 @@ Phase 41 补上动态外部能力的“接入前”一层。未来外部知识�
 uv run --with pyyaml --with pytest python -m pytest -q tests/test_external_resource_pack.py
 ```
 
+### 7.3.10 Phase 42 Cockpit 外部扩展包人工预检入口
+
+Phase 42 将 Phase41 的静态 checker 接入已有 External Resources 入口：
+`POST /api/external-resources/packs/preflight`。它接收一个
+`external-resource-pack/v1` manifest，返回 `external-resource-pack-check/v1` 的可解释 projection，
+让业务负责人和连接器开发者在同一产品入口看到合同问题、proposal-only 边界和目录预览资格。
+
+API 固定返回和执行边界：
+
+| 字段 | 固定语义 |
+| --- | --- |
+| `activation` | `forbidden` |
+| `persistence` | `none` |
+| `provider_invocation` | `false` |
+| `external_side_effects` | `disabled` |
+| `worker_launch` | `false` |
+
+它不会安装依赖、加载 entry point、调用健康探针、写 OMO、生成 admission 或创建 WorkflowRun。状态含义
+仍由 Phase41 契约决定：`blocked` 必须修正后再试，`proposal_only` 只能走评测/影子路径，
+`ready_for_catalog_preview` 仅表示可以交给下一步 catalog discovery，不表示 provider 已被发现、健康、
+准入或可调用。
+
+这样产品路径变成：
+
+`Cockpit manifest 输入 -> pack preflight -> catalog discovery/OMO observation -> Scene Card/preflight -> OMO admission -> Agora/Workflow Mesh`
+
+入口复用了既有 External Resources 页面和 API，不新增插件市场或第二状态中心。验证：
+
+```bash
+cd projects/cockpit
+PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx --with pydantic --with pyyaml python -m pytest -q src/cockpit/tests/test_api_external_resources.py
+```
+
 运营工作台现在可执行以下人工确认链：
 
 ```text
