@@ -44,7 +44,7 @@ class _Provider:
             "mode": "live_query",
             "expires_at": "2099-01-01T00:00:00+00:00",
             "rollback_plan": "disable",
-            "metadata": {"raw_content": "must never be exported"},
+            "metadata": {"internal": "must never be exported"},
         }
 
     @staticmethod

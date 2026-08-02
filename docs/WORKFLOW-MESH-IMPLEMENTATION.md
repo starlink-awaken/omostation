@@ -198,6 +198,7 @@ OMO `CompensationStarted/WorkflowRecovered` 投影，以及原有 receipt -> `Ev
 6. 外部 provider 通过 `external.resources` 动态加入；descriptor 变更先记录差异并重新评估准入，单个 provider 探活失败只隔离该候选。目录命令可读取调用方提供的上一份快照，生成 `external-resource-catalog-diff/v1`；需要审计的目录再通过 `--observe` 交给 OMO 持久化，不建立第二份写入真相。
 7. SourcePack、MethodPack、ModelPack 和 ChannelPack 必须携带刷新/评测/回滚证据；没有真实场景、结果指标和责任人时保持 `sandbox` 或 `proposal_only`。
 8. 目录投影将 provider 探活缺失、健康过期、生命周期未到 active、描述符过期和插件加载错误分别转成可解释的 `reason_codes`；任何无法确认的新鲜度或来源的资源都不得伪装成可用。
+9. 外部调用 receipt 对 provider 异常只允许输出稳定的 `EXTERNAL_*` 错误码，统一区分超时、后端不可用、权限拒绝、响应不合法和未知 provider 失败；异常原文不跨越 Agora/OMO/Cockpit 边界。descriptor 还必须递归拒绝常见凭据字段和原始内容字段，确保动态扩展不能把凭据或载荷藏进 `metadata`、`health` 或 `provenance`。
 
 ### 6.2 当前垂直切片与下一道门
 
