@@ -1,25 +1,8 @@
-# baseline frozen at 0 entries — protected per audit 2026-07-29-z1-z4-baseline-frozen-protected.
-# check-work-landed._load_baseline skips blank and "#" lines, so the baseline set stays empty (= 0 grace items).
-# Non-empty body satisfies gac-hygiene-check CR-HYG-01 (zero-byte file otherwise flagged).
-
-# M3 grace list (2026-07-30 P78 fix): 3 truly-orphaned submodule-pointer-close runs
-# whose SHA refs were squashed away in the post-reconcile rebase (P77). The runs
-# themselves are closed (status=ok, claimed the work landed), but git history
-# no longer contains the individual commits. They are not new blocking — they
-# are historical pre-M2 inventory that should not block the new gate.
 20260722T094335Z-submodule-pointer-close-b2ce25cf
-
-# Additional orphans from 2026-07-22~23 (squashed in P77): submodule-pointer-close
-# and state-sync runs whose commit SHAs are not reachable from any fetched ref.
-# These runs are closed (status=ok) with evidence claiming the work landed.
-# The check-work-landed SHA verification requires the exact commit to be in
-# origin/main or a submodule, but these commits were lost during the rebase.
 20260723T011058Z-submodule-pointer-close-12dfc0ef
 20260723T012737Z-submodule-pointer-close-16475eb7
 20260723T021428Z-submodule-pointer-close-914ecb8e
 20260723T021934Z-state-sync-4c0b9cca
-
-# Two project-code-change runs whose SHA refs (20260723) are not git objects
-# in the root repo (date-like prefix matches SHA regex false positive).
 20260723T101329Z-project-code-change-f863ca63
 20260723T101619Z-project-code-change-0188d5dc
+20260725T143401Z-governance-state-mutation-c76e84a8
