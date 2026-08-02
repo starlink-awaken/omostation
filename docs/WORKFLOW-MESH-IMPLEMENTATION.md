@@ -114,6 +114,7 @@ stateDiagram-v2
 - Agora 的动态发现结果现在通过 `external-resource-catalog/v1` 归一为只读目录快照：统一暴露资源类型、生命周期、健康探针、新鲜度、来源引用、错误记录和显式不可用原因；根仓 `bin/ssot/external-resource-catalog.py` 只调用 provider 明确声明的只读 `health_probe`，不调用业务方法、不写 OMO。
 - 外部目录增加受治理观察链：根仓 `--observe` 通过 OMO CLI broker 追加 `external-resource-observation/v1`，OMO 独占观察日志和最新投影写入；重复目录按 `observed_at + catalog_digest` 去重，Cockpit 默认读取观察并在缺失时显式回退到动态发现。
 - Cockpit 提供 `GET /api/external-resources`，cockpit-ui 提供 `/external-resources` 目录页；它是人类判断外部能力是否值得进入 Scene Card 的观察面，不是激活面或执行面。
+- Cockpit 首页现在按数据源表达 `loading`、`complete`、`partial`、`unavailable`，移除默认健康分、示例告警/任务和随机趋势；刷新失败会清空未标记的旧读数。该展示契约由 ADR-0308 和 `HomePage.truthfulness.test.tsx` 固化，避免 Mesh unavailable 被用户误读为正常运行。
 - Runtime 增加显式 retry policy、稳定 effect key 的副作用日志和 replay，AetherForge 增加节点重试与可选 compensation hook；默认不重试，避免隐式放大副作用。Runtime effect journal 输出 `runtime-effect-outcome/v1` 安全摘要和可供 OMO broker 消费的 credential-free receipt；本地 replay 所需的工具结果不进入 Mesh 事件、receipt 或证据投影。journal 的读-判重-写已由跨进程锁保护，网络超时/连接失败会落为 `unavailable` 和稳定错误码。
 - OMO 增加 `workflow_eval`：从真实 append-only 事件生成 `workflow-mesh-eval/v1` 数据集，保留事件 ID 作为标签来源，并提供只读的候选策略离线评估/人工审批 proposal。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
