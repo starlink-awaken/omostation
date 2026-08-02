@@ -10,7 +10,6 @@
 
 from __future__ import annotations
 
-
 from agora.mcp.bos_router import BOSRouter
 
 
@@ -45,6 +44,7 @@ class TestBOSRouterRegister:
         router.register("bos://memory/kos", adapter="poc")
         route = router._routes.get("bos://memory/kos/")
         assert route[0]["config"] == {}
+        assert route[0]["admission"]["status"] == "admitted"
 
     def test_register_duplicate_skips(self):
         """重复注册同一 prefix 应跳过并记录 warning。"""
@@ -53,6 +53,110 @@ class TestBOSRouterRegister:
         router.register("bos://memory/kos", adapter="proxy")  # duplicate
         route = router._routes.get("bos://memory/kos/")
         assert route[0]["adapter"] == "poc"  # 仍然保留第一次的
+
+    def test_register_rejects_without_admission_and_keeps_route_absent(self):
+        router = BOSRouter(admission_evaluator=lambda _request: {
+            "status": "rejected",
+            "reasons": ["provider_unavailable"],
+        })
+
+        registered = router.register(
+            "bos://external/provider/search",
+            adapter="proxy",
+            config={"domain": "external", "source": "external.resources"},
+        )
+
+        assert registered is False
+        assert router.resolve("bos://external/provider/search") is None
+        assert router.admission_rejections() == [
+            {
+                "prefix": "bos://external/provider/search/",
+                "adapter": "proxy",
+                "status": "rejected",
+                "reasons": ["provider_unavailable"],
+                "provider": None,
+            }
+        ]
+
+    def test_register_sends_only_allowlisted_admission_metadata(self):
+        requests = []
+
+        def evaluate(request):
+            requests.append(request)
+            return {"status": "admitted", "provider": "stub"}
+
+        router = BOSRouter(admission_evaluator=evaluate)
+        router.register(
+            "bos://external/provider/search",
+            adapter="proxy",
+            config={
+                "domain": "external",
+                "source": "external.resources",
+                "secret": "must-not-cross-boundary",
+                "admission": {
+                    "resource_id": "source:provider",
+                    "permission_ref": "credential://external",
+                },
+            },
+        )
+
+        assert requests == [
+            {
+                "domain": "external",
+                "role": "route_registry",
+                "capability": "bos://external/provider/search/",
+                "adapter": "proxy",
+                "source": "external.resources",
+                "resource_id": "source:provider",
+                "permission_ref": "credential://external",
+            }
+        ]
+
+    def test_register_rejects_unsupported_admission_metadata(self):
+        router = BOSRouter(admission_evaluator=lambda _request: {
+            "status": "admitted",
+        })
+
+        assert router.register(
+            "bos://external/provider/search",
+            adapter="proxy",
+            config={
+                "domain": "external",
+                "admission": {"access_token": "must-not-land"},
+            },
+        ) is False
+        assert router.resolve("bos://external/provider/search") is None
+
+    def test_default_router_fails_closed_when_provider_is_missing(self, monkeypatch):
+        from agora.admission import port, reset_admission_provider_cache
+
+        monkeypatch.delenv("AGORA_ADMISSION_MODE", raising=False)
+        monkeypatch.setenv("AGORA_ADMISSION_PROVIDER", "missing.module:PROVIDER")
+        monkeypatch.setattr(port, "_SOFT_PROVIDERS", ())
+        monkeypatch.setattr(
+            port.metadata,
+            "entry_points",
+            lambda: type("EP", (), {"select": lambda **k: []})(),
+        )
+        reset_admission_provider_cache()
+
+        router = BOSRouter()
+        assert router.register("bos://external/provider/search", adapter="proxy") is False
+        assert router.count() == 0
+        assert router.admission_rejections()[0]["reasons"]
+
+    def test_seed_count_excludes_rejected_routes(self):
+        router = BOSRouter(admission_evaluator=lambda _request: {
+            "status": "rejected",
+            "reasons": ["denied"],
+        })
+
+        count = router.seed_from_poc(
+            [{"uri": "bos://external/provider/search", "domain": "external"}]
+        )
+
+        assert count == 0
+        assert router.count() == 0
 
 
 class TestBOSRouterUnregister:

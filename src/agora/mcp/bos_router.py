@@ -16,12 +16,26 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from typing import Any
+
+from agora.admission import evaluate_admission
 
 _log = logging.getLogger(__name__)
 
 # Trie 路由节点标记
 _ROUTE_MARKER = "__route__"
+_ADMISSION_FIELDS = frozenset(
+    {
+        "capability",
+        "data_classification",
+        "owner",
+        "permission_ref",
+        "resource_id",
+        "role",
+        "trace_id",
+    }
+)
 
 
 class BOSRouter:
@@ -32,10 +46,17 @@ class BOSRouter:
     - 使用 Trie 前缀索引，resolve 时间复杂度 O(k) 其中 k=URI seg 数
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        *,
+        admission_evaluator: Callable[[dict[str, Any]], dict[str, Any]]
+        | None = None,
+    ):
         self._routes: dict[str, list[dict[str, Any]]] = {}
         # Trie: nested dict, 叶子节点含 _ROUTE_MARKER
         self._trie: dict[str, Any] = {}
+        self._admission_evaluator = admission_evaluator or evaluate_admission
+        self._admission_rejections: list[dict[str, Any]] = []
 
     # ── Trie 操作 ─────────────────────────────────────
 
@@ -87,9 +108,12 @@ class BOSRouter:
             break
 
         # 末尾空段回退: 检查有无 "" child (斜杠注册)
-        if _ROUTE_MARKER not in node and "" in node:
-            if _ROUTE_MARKER in node[""]:
-                best = node[""][_ROUTE_MARKER]
+        if (
+            _ROUTE_MARKER not in node
+            and "" in node
+            and _ROUTE_MARKER in node[""]
+        ):
+            best = node[""][_ROUTE_MARKER]
 
         # 精确匹配: 注册时自动加 / 但 URI 没 /
         if best is None and not uri.endswith("/"):
@@ -133,7 +157,7 @@ class BOSRouter:
 
     def register(
         self, prefix: str, adapter: str, config: dict[str, Any] | None = None
-    ) -> None:
+    ) -> bool:
         """注册一条路由。
 
         Args:
@@ -143,21 +167,96 @@ class BOSRouter:
         """
         if not prefix.endswith("/"):
             prefix += "/"
-        if prefix not in self._routes:
-            self._routes[prefix] = []
-        else:
+        route_config = dict(config or {})
+        if prefix in self._routes:
             # 避免完全重复的注册
             for r in self._routes[prefix]:
-                if r["adapter"] == adapter and r.get("config") == (config or {}):
-                    return
+                if r["adapter"] == adapter and r.get("config") == route_config:
+                    return True
+
+        decision = self._evaluate_route_admission(prefix, adapter, route_config)
+        if decision.get("status") != "admitted":
+            rejection = {
+                "prefix": prefix,
+                "adapter": adapter,
+                "status": "rejected",
+                "reasons": [str(reason) for reason in decision.get("reasons", [])],
+                "provider": decision.get("provider"),
+            }
+            self._admission_rejections.append(rejection)
+            _log.warning("[BOSRouter] Route admission rejected: %s", rejection)
+            return False
+
+        self._routes.setdefault(prefix, [])
         route = {
             "adapter": adapter,
             "prefix": prefix,
-            "config": config or {},
+            "config": route_config,
+            "admission": {
+                "status": "admitted",
+                "provider": decision.get("provider"),
+                "policy_digest": decision.get("policy_digest"),
+            },
         }
         self._routes[prefix].append(route)
         self._trie_insert(prefix, route)
         _log.info("[BOSRouter] Registered: %s → %s", prefix, adapter)
+        return True
+
+    def _evaluate_route_admission(
+        self, prefix: str, adapter: str, config: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Build a credential-free admission request for every route write."""
+        admission_meta = config.get("admission", {})
+        if admission_meta is None:
+            admission_meta = {}
+        if not isinstance(admission_meta, dict):
+            return {
+                "status": "rejected",
+                "reasons": ["invalid_admission_metadata"],
+            }
+        unknown_fields = sorted(set(admission_meta) - _ADMISSION_FIELDS)
+        if unknown_fields:
+            return {
+                "status": "rejected",
+                "reasons": ["unsupported_admission_metadata"],
+            }
+
+        request: dict[str, Any] = {
+            "domain": config.get("domain") or prefix.split("/", 3)[2],
+            "role": admission_meta.get("role", "route_registry"),
+            "capability": admission_meta.get("capability", prefix),
+            "adapter": adapter,
+            "source": config.get("source", "agora.bos_router"),
+        }
+        for key in (
+            "permission_ref",
+            "resource_id",
+            "trace_id",
+            "owner",
+            "data_classification",
+        ):
+            if key in admission_meta:
+                request[key] = admission_meta[key]
+        try:
+            result = self._admission_evaluator(request)
+        except Exception as exc:  # noqa: BLE001 - admission must fail closed
+            return {
+                "status": "rejected",
+                "reasons": ["admission_evaluator_error"],
+                "provider": type(self._admission_evaluator).__name__,
+                "error_type": type(exc).__name__,
+            }
+        if not isinstance(result, dict) or "status" not in result:
+            return {
+                "status": "rejected",
+                "reasons": ["invalid_admission_result"],
+            }
+        return result
+
+    def admission_rejections(self) -> list[dict[str, Any]]:
+        """Return safe, immutable-by-copy admission rejection summaries."""
+        return [dict(item) for item in self._admission_rejections]
 
     def unregister(self, prefix: str) -> None:
         """注销路由。"""
@@ -240,7 +339,7 @@ class BOSRouter:
             uri = svc.get("uri", "") if isinstance(svc, dict) else getattr(svc, "uri", "")
             if not uri:
                 continue
-            self.register(
+            registered = self.register(
                 uri,
                 adapter="poc",
                 config={
@@ -251,7 +350,7 @@ class BOSRouter:
                     "description": svc.get("description", "") if isinstance(svc, dict) else getattr(svc, "description", ""),
                 },
             )
-            count += 1
+            count += int(registered)
         _log.info("BOSRouter seeded from POC: %d routes", count)
         return count
 
