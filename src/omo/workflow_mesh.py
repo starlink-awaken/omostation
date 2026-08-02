@@ -561,6 +561,7 @@ def project_workflow_run(
                 "EvidenceRecorded": "succeeded",
                 "CompensationStarted": "compensating",
                 "StepFailed": "failed",
+                "BackendUnavailable": "unavailable",
                 "WorkerLeaseRenewed": "running",
                 "WorkerLeaseExpired": "unavailable",
                 "WorkerReclaimed": "running",

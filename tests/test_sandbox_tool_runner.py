@@ -213,6 +213,7 @@ def test_sandbox_tool_failure_never_creates_success_or_evidence(
     assert "EvidenceRecorded" not in event_types
     snapshot = WorkflowMeshStore(tmp_path).snapshot(context["workflow_run_id"])
     assert snapshot["state"] == run_state
+    assert snapshot["step_runs"][context["step_run_id"]]["state"] == run_state
     assert build_operations_snapshot(tmp_path)["sandbox_tools"]["outcomes"] == {outcome: 1}
 
 
