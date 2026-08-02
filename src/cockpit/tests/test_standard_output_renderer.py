@@ -125,3 +125,61 @@ def test_all_catalog_commands_registered_in_parser():
     catalog_keys = set(COMMAND_CATALOG.keys())
     missing_in_handlers = catalog_keys - handler_keys - {"tui"}  # tui 独立判断
     assert not missing_in_handlers, f"发现 COMMAND_CATALOG 声明但未注册 Handler 的子命令: {missing_in_handlers}"
+
+
+def test_bos_capability_list_rendering_json(capsys):
+    """测试 bos-capability list 支持 --output json."""
+    import argparse
+    import json
+
+    from cockpit.commands.bos import cmd_bos_capability
+
+    args = argparse.Namespace(capability_command="list", global_output="json")
+    ret = cmd_bos_capability(args)
+    assert ret == 0
+    data = json.loads(capsys.readouterr().out)
+    assert isinstance(data, list)
+    if data:
+        assert "uri" in data[0]
+
+
+def test_bos_capability_list_rendering_markdown():
+    """测试 bos-capability list 支持 --output markdown."""
+    import argparse
+
+    from cockpit.commands.bos import cmd_bos_capability
+
+    args = argparse.Namespace(capability_command="list", global_output="markdown")
+    with patch("cockpit.commands.base._get_console") as mock_console:
+        ret = cmd_bos_capability(args)
+        assert ret == 0
+        mock_console.return_value.print.assert_called()
+
+
+def test_bos_inbox_status_rendering_json(capsys):
+    """测试 bos-inbox status 支持 --output json."""
+    import argparse
+    import json
+
+    from cockpit.commands.bos_inbox import _cmd_inbox_status
+
+    ret = _cmd_inbox_status(output_format="json")
+    assert ret == 0
+    data = json.loads(capsys.readouterr().out)
+    assert isinstance(data, list)
+    assert any(row["source"] == "vector_store.json (嵌入向量库)" for row in data)
+
+
+def test_quickstart_check_rendering_json(capsys):
+    """测试 quickstart-check 支持 JSON 输出."""
+    import argparse
+    import json
+
+    from cockpit.commands.quickstart import _cmd_quickstart_check
+
+    args = argparse.Namespace(json=True)
+    ret = _cmd_quickstart_check(args, output_format="json")
+    assert ret == 0
+    data = json.loads(capsys.readouterr().out)
+    assert isinstance(data, list)
+    assert any("Python" in row["item"] for row in data)

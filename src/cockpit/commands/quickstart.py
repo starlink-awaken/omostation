@@ -197,8 +197,64 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
     return 0 if not issues else 1
 
 
+def _cmd_quickstart_check(args: argparse.Namespace, output_format: str = "tty") -> int:
+    import sys
+
+    from cockpit.commands.base import render_command_result
+
+    data = []
+    # Python
+    data.append(
+        {
+            "item": "Python 版本",
+            "status": "✅ 正常" if _check_python() else "❌ 未达标",
+            "detail": sys.version.split()[0],
+        }
+    )
+    # Tools
+    for tool, found in _check_cli_tools().items():
+        data.append(
+            {
+                "item": f"CLI 依赖 — {tool}",
+                "status": "✅ 已安装" if found else "❌ 缺失",
+                "detail": shutil.which(tool) or "N/A",
+            }
+        )
+    # Ollama
+    data.append(
+        {
+            "item": "Ollama 服务",
+            "status": "✅ 运行中" if _check_ollama_running() else "⚠️  未就绪 (可选)",
+            "detail": "localhost:11434",
+        }
+    )
+    # DB
+    db_res = _check_workspace_db()
+    data.append(
+        {
+            "item": "Workspace 数据库",
+            "status": "✅ 就绪" if db_res.get("exists") else "❌ 未创建",
+            "detail": f"{db_res.get('research_count', 0)} 条研究记录",
+        }
+    )
+
+    if getattr(args, "json", False):
+        output_format = "json"
+
+    render_command_result(
+        title="🚀 Cockpit 新用户与开发环境核验状态",
+        data=data,
+        output_format=output_format,
+        columns=["item", "status", "detail"],
+    )
+    return 0
+
+
 def cmd_quickstart(args: argparse.Namespace) -> int:
     c = _get_console()
+    output_format = getattr(args, "global_output", "tty") or "tty"
+    if getattr(args, "check", False):
+        return _cmd_quickstart_check(args, output_format=output_format)
     if getattr(args, "fix", False):
         return _auto_fix(c, args)
     c.print()

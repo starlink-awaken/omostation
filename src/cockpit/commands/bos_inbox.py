@@ -22,9 +22,10 @@ def _get_inbox_paths() -> tuple[Path, Path]:
 def cmd_bos_inbox(args: Any) -> int:
     """处理 omo bos-inbox [status|search|pending] 子命令。"""
     subcmd = getattr(args, "inbox_cmd", "status") or "status"
+    output_format = getattr(args, "global_output", "tty") or "tty"
 
     if subcmd == "status":
-        return _cmd_inbox_status()
+        return _cmd_inbox_status(output_format=output_format)
     elif subcmd == "search":
         query = getattr(args, "query", "") or ""
         if not query:
@@ -45,30 +46,31 @@ def cmd_bos_inbox(args: Any) -> int:
         return 1
 
 
-def _cmd_inbox_status() -> int:
+def _cmd_inbox_status(output_format: str = "tty") -> int:
     runtime_dir, inbox_dir = _get_inbox_paths()
-    table = Table(title="🧠 BOS Inbox 多源私有知识神经网运行状态", show_header=True)
-    table.add_column("数据来源 (Source)", style="cyan")
-    table.add_column("存在性 (Exists)", style="green")
-    table.add_column("大小 (Bytes)", style="yellow")
-    table.add_column("更新时间 (Modified Time)", style="magenta")
-
     files = [
         ("vector_store.json (嵌入向量库)", runtime_dir / "vector_store.json"),
         ("致远 OA 待办公文 (seeyon_oa)", inbox_dir / "2026-07-31-auto-seeyon-oa-pending.md"),
         ("网易邮箱大师正文 (netease_mailmaster)", inbox_dir / "2026-07-31-auto-netease-mailmaster.md"),
         ("Apple Mail 邮件正文 (apple_mail)", inbox_dir / "2026-07-31-auto-apple-mail.md"),
     ]
-
+    data = []
     for label, fpath in files:
         if fpath.exists():
             stat = fpath.stat()
             mtime_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(stat.st_mtime))
-            table.add_row(label, "✅ Yes", str(stat.st_size), mtime_str)
+            data.append({"source": label, "exists": "✅ Yes", "size": str(stat.st_size), "mtime": mtime_str})
         else:
-            table.add_row(label, "❌ No", "0", "N/A")
+            data.append({"source": label, "exists": "❌ No", "size": "0", "mtime": "N/A"})
 
-    console.print(table)
+    from cockpit.commands.base import render_command_result
+
+    render_command_result(
+        title="🧠 BOS Inbox 多源私有知识神经网运行状态",
+        data=data,
+        output_format=output_format,
+        columns=["source", "exists", "size", "mtime"],
+    )
     return 0
 
 

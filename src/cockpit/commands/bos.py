@@ -516,22 +516,30 @@ def _match_capability_service(services: list, key: str):
 def cmd_bos_capability(args) -> int:
     """BOS capability / toolbox 外部能力入口。"""
     subcmd = getattr(args, "capability_command", "list")
+    output_format = getattr(args, "global_output", "tty") or "tty"
 
     if subcmd == "list":
         try:
             services = _load_capability_services()
-            print(f"\n  Capability 服务 ({len(services)} 条)")
-            print(f"  {'=' * 40}")
+            data = []
             for s in services:
-                uri = getattr(s, "uri", "?")
-                desc = getattr(s, "description", "") or ""
                 cmd = list(getattr(s, "command", None) or [])
                 cmd_hint = " ".join(cmd[:3]) + (" …" if len(cmd) > 3 else "") if cmd else "(no command)"
-                print(f"  {uri}")
-                print(f"      {desc}")
-                print(f"      invoke: {cmd_hint}")
-            if not services:
-                print("  (empty — check projects/agora/etc/bos-services.yaml)")
+                data.append(
+                    {
+                        "uri": getattr(s, "uri", "?"),
+                        "description": getattr(s, "description", "") or "",
+                        "command": cmd_hint,
+                    }
+                )
+            from cockpit.commands.base import render_command_result
+
+            render_command_result(
+                title="BOS Capability 服务注册表大盘",
+                data=data,
+                output_format=output_format,
+                columns=["uri", "description", "command"],
+            )
             return 0
         except Exception as e:  # defensive fallback
             print(f"  Capability 服务不可用: {e}")

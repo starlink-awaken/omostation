@@ -515,6 +515,19 @@ def render_command_result(
     """
     console = _get_console()
 
+    def _normalize_cols(cols_in: Any, sample_keys: Any) -> list[tuple[str, str]]:
+        if not cols_in:
+            return [(str(k), str(k).upper()) for k in sample_keys]
+        res = []
+        for c in cols_in:
+            if isinstance(c, tuple) and len(c) == 2:
+                res.append((str(c[0]), str(c[1])))
+            elif isinstance(c, str):
+                res.append((c, c.upper()))
+            else:
+                res.append((str(c), str(c).upper()))
+        return res
+
     # 1. 结构化 JSON 模式 (自动化管道 / 机器消费友善)
     if output_format == OutputFormat.JSON:
         payload = {"title": title, "summary": summary, "data": data} if summary else data
@@ -527,7 +540,7 @@ def render_command_result(
         if summary:
             md_lines.append(f"> {summary}\n")
         if isinstance(data, list) and data and isinstance(data[0], dict):
-            cols = columns or [(k, str(k).capitalize()) for k in data[0].keys()]
+            cols = _normalize_cols(columns, list(data[0].keys()))
             md_lines.append("| " + " | ".join(name for _, name in cols) + " |")
             md_lines.append("| " + " | ".join("---" for _ in cols) + " |")
             for item in data:
@@ -559,7 +572,7 @@ def render_command_result(
         )
         first_item = data[0]
         if isinstance(first_item, dict):
-            cols = columns or [(k, str(k).upper()) for k in first_item.keys()]
+            cols = _normalize_cols(columns, list(first_item.keys()))
             for _, col_name in cols:
                 table.add_column(col_name, overflow="fold")
             for item in data:
