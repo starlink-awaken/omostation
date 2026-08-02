@@ -160,6 +160,34 @@ stateDiagram-v2
 
 没有这四组证据时，External Connection Fabric 继续保持 `sandbox`/`proposal_only`。这样既保留动态扩展能力，也避免在没有场景的时期提前建设大规模采集、OCR、知识图谱或预测模型生产链。
 
+### 6.3 候选发现与激活边界
+
+在业务资料尚未形成连续使用场景时，系统只运行候选发现，不运行连接激活。入口
+`bin/ssot/scene-card-candidates.py` 将现有 `.omo/_truth/scenarios` 合同和显式维护的
+`docs/scene-card-candidate-seeds.yaml` 归一为 `scene-card-candidate/v1` 投影，供产品、业务
+负责人和架构治理共同审阅。
+
+候选投影的固定边界是：
+
+1. `mode=candidate_only` 且 `activation=forbidden`；
+2. 只输出来源引用、能力引用和安全观察，不读取或导出私人原文、样本和凭据；
+3. `activation_evidence_refs`、`sample_refs`、`demand_evidence_refs` 和 `opportunity_window`
+   在业务确认前保持为空；
+4. 不调用外部 provider，不写 OMO 运行态，不创建或派发 WorkflowRun；
+5. 只有完整 Scene Card、真实消费方、结果指标、权限边界、回滚方案和证据引用齐备后，才允许
+   进入 `proposal_only`/`sandbox`，再由既有 Agora Scene Card gate 和 OMO admission 继续处理。
+
+可重复验证命令：
+
+```bash
+uv run --with pyyaml python bin/ssot/scene-card-candidates.py --root .
+uv run --with pyyaml --with pytest pytest tests/test_scene_card_candidates.py -q
+```
+
+这一步的产品意义是把“想做什么”与“已经获准执行什么”明确分开：候选可以持续从战略和已登记合同中
+演化，但任何智能化建议、外部资源扩展或业务自动化都必须在同一张 Scene Card 上完成确认、评测、
+审批和可回滚交付。
+
 ### P1.5：派发与健康闭环
 
 1. 通过 OMO admission/dispatch broker 生成唯一的 `workflow_run_id`、短期 grant 和 worker dispatch packet；任何 capability、approval 或 budget gate 失败都不得产生执行派发。
