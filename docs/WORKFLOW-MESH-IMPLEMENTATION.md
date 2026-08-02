@@ -206,6 +206,24 @@ OMO `CompensationStarted/WorkflowRecovered` 投影，以及原有 receipt -> `Ev
 
 当前已经打通的是“工程交付”垂直切片：Workflow Mesh 记录业务绑定，OMO 生成可信投影，Cockpit 后端暴露投影，cockpit-ui 展示绑定和未绑定状态。它证明了产品可以把技术交付阶段放回业务旅程，而不证明任何外部连接已经产生业务收益。
 
+#### 6.2.1 工程 dogfood 端到端验收
+
+Phase 17 增加了一个隔离的工程 dogfood 验收器
+[`test_workflow_mesh_task_dogfood.py`](../projects/omo/tests/test_workflow_mesh_task_dogfood.py)。它使用临时
+OMO 工作区和受控的本地 worker 注册，不调用外部 provider、不读取私人业务资料，实际走过：
+
+`create_planned_task -> promote_task_to_active -> dispatch_admitted_workflow -> WorkerAcknowledged ->
+execution record -> complete_task -> EvidenceRecorded -> WorkflowVerified -> WorkflowClosed`。
+
+该验收器同时检查任务 YAML 与 Mesh 快照：任务必须以物理 evidence path 进入 `done`，Mesh 必须以
+同一个 `workflow_run_id` 收敛到 `closed`，并保留 `scene_id / journey_id / outcome_metric`、worker
+租约上下文和 evidence projection。准入桥现在显式接受 `scene_binding`，绑定只在
+`WorkflowRequested` 建立，后续由 Mesh 状态投影保证不可静默变更。决策记录见
+[`ADR-0310`](../.omo/_knowledge/decisions/0310-workflow-mesh-engineering-dogfood-verifier.md)。
+
+这条验收链是 M1 的工程真实性门槛，不等于外部连接已激活，也不能用来替代真实业务 Scene Card、
+权限、责任人、结果指标和 receipt 证据。
+
 下一道门是 **J4 外部知识与能力触达的真实激活**，不是继续扩展连接器数量。进入 active 前必须同时满足：
 
 1. 有一个连续使用或明确机会窗口的真实场景，以及唯一的 `scene_id`、`journey_id` 和 `outcome_metric`。

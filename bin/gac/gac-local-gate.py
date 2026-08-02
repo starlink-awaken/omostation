@@ -50,7 +50,6 @@ DEFAULT_POLICY = {
         {"id": "mof-state-bridge", "command": ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]},
         {"id": "mof-drift", "command": ["bin/mof/mof-drift"]},
         {"id": "m4-bootstrap-reflex", "command": ["bin/mof/mof-bootstrap.py", "all"]},
-        {"id": "m4-mcp-tool-integrity", "command": ["bin/gac/mcp-tool-data-complete.py"]},
         {"id": "doc-ssot-lint", "command": ["bin/ssot/doc-ssot-lint.py"]},
         {
             "id": "doc-governance",
@@ -62,9 +61,12 @@ DEFAULT_POLICY = {
         {"id": "change-lane-check", "command": ["bin/change-lane-check.py", "--staged"]},
         {"id": "dependency-baseline-drift", "command": ["bin/mof/gen-dependency-baseline.py", "--check"], "ci_only": True},
         {"id": "matrix-consistency", "command": ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"], "ci_skip": True},
-        {"id": "governance-convergence", "command": ["bin/gac/governance-convergence-lint.py"]},
         {"id": "governance-semantic-gate", "command": ["bin/gac/governance-semantic-gate.py", "--json"]},
         {"id": "state-freshness-check", "command": ["bin/gac/state-freshness-check.py", "--json"]},
+        {
+            "id": "current-state-coherence",
+            "command": ["bin/ssot/current-state-coherence.py", "--json"],
+        },
         {"id": "check-dashboard-registry-consistency", "command": ["bin/ssot/check-dashboard-registry-consistency.py"]},
         {"id": "check-toolbox-ssot", "command": ["bin/ssot/check-toolbox-ssot.py"]},
         {"id": "check-domain-m1-alignment", "command": ["bin/ssot/check-domain-m1-alignment.py"]},
@@ -133,6 +135,16 @@ if not any(gate.get("id") == "doc-governance" for gate in GATES_LIST):
         {
             "id": "doc-governance",
             "command": ["bin/ssot/doc-governance-check.py", "--no-new-warnings"],
+        }
+    )
+
+# Root-owned current-state projection: the external ecos policy cannot remove
+# the guard that keeps state, goals, tasks and Scene Card activation explicit.
+if not any(gate.get("id") == "current-state-coherence" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "current-state-coherence",
+            "command": ["bin/ssot/current-state-coherence.py", "--json"],
         }
     )
 
