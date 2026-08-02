@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .outcome_feedback import ELIGIBLE_WORKFLOW_STATES, read_outcome_feedback
 from .workflow_mesh import WorkflowMeshStore
 
 OPERATIONS_SCHEMA_VERSION = "workflow-mesh-operations/v1"
@@ -232,8 +233,8 @@ def build_operations_snapshot(
 ) -> dict[str, Any]:
     """Build the read-only operational projection from OMO's event truth.
 
-    This projection is deliberately event-derived. It reports business outcome
-    consumption as unknown until an explicit feedback contract exists; closure,
+    This projection is derived from OMO's event and outcome-feedback logs. It
+    reports consumption only when an explicit feedback record exists; closure,
     verification, or evidence presence must not be treated as consumption.
     """
     store = WorkflowMeshStore(omo_dir)
@@ -249,6 +250,13 @@ def build_operations_snapshot(
             for snapshot in snapshots
             if (snapshot.get("scene_binding") or {}).get("scene_id") == scene_id
         ]
+    feedback_records = read_outcome_feedback(omo_dir)
+    selected_run_ids = {snapshot["workflow_run_id"] for snapshot in snapshots}
+    feedback_by_run: dict[str, list[dict[str, Any]]] = {}
+    for feedback in feedback_records:
+        run_id = str(feedback["workflow_run_id"])
+        if run_id in selected_run_ids:
+            feedback_by_run.setdefault(run_id, []).append(feedback)
 
     state_counts: Counter[str] = Counter()
     scene_rows: dict[str, dict[str, Any]] = {}
@@ -282,6 +290,8 @@ def build_operations_snapshot(
                 "verified_runs": 0,
                 "closed_runs": 0,
                 "evidence_complete_runs": 0,
+                "consumed_runs": 0,
+                "feedback_count": 0,
             },
         )
         scene["run_count"] += 1
@@ -316,6 +326,13 @@ def build_operations_snapshot(
             failed_runs += 1
         if "BackendUnavailable" in event_types or "WorkerLeaseExpired" in event_types:
             unavailable_runs += 1
+        run_feedback = feedback_by_run.get(snapshot["workflow_run_id"], [])
+        consumed_feedback = [
+            item for item in run_feedback if item["consumption_state"] != "rejected"
+        ]
+        scene["feedback_count"] += len(run_feedback)
+        if consumed_feedback:
+            scene["consumed_runs"] += 1
         duration = _duration_seconds(run_events)
         if duration is not None:
             durations.append(duration)
@@ -326,16 +343,77 @@ def build_operations_snapshot(
     active_runs = sum(
         count for state, count in state_counts.items() if state not in {"closed", "cancelled"}
     )
+    consumed_feedback = [
+        item
+        for items in feedback_by_run.values()
+        for item in items
+        if item["consumption_state"] != "rejected"
+    ]
+    eligible_closed_runs = sum(
+        1
+        for snapshot in snapshots
+        if snapshot.get("state") == "closed" and snapshot.get("evidence")
+    )
+    consumed_run_ids = {item["workflow_run_id"] for item in consumed_feedback}
+    feedback_states = Counter(
+        item["consumption_state"]
+        for items in feedback_by_run.values()
+        for item in items
+    )
+    eligible_outcomes = [
+        {
+            "workflow_run_id": snapshot["workflow_run_id"],
+            "outcome_id": f"outcome:{snapshot['workflow_run_id']}",
+            "state": snapshot.get("state"),
+            "scene_binding": snapshot.get("scene_binding"),
+            "evidence_count": len(snapshot.get("evidence") or []),
+        }
+        for snapshot in snapshots
+        if snapshot.get("state") in ELIGIBLE_WORKFLOW_STATES
+        and snapshot.get("scene_binding")
+    ]
     consumption = {
-        "status": "not_observed",
-        "consumed_runs": 0,
-        "observed_event_types": [],
-        "eligible_closed_runs": sum(
-            1
-            for snapshot in snapshots
-            if snapshot.get("state") == "closed" and snapshot.get("evidence")
+        "status": (
+            "observed"
+            if consumed_feedback
+            else "rejected"
+            if feedback_by_run
+            else "not_observed"
         ),
-        "next_action": "record_explicit_outcome_consumption_feedback",
+        "consumed_runs": len(consumed_run_ids),
+        "feedback_count": sum(len(items) for items in feedback_by_run.values()),
+        "observed_event_types": [],
+        "eligible_closed_runs": eligible_closed_runs,
+        "consumption_rate_among_eligible_closed_runs": _operations_rate(
+            len(consumed_run_ids), eligible_closed_runs
+        ),
+        "states": dict(sorted(feedback_states.items())),
+        "eligible_outcomes": eligible_outcomes,
+        "feedback": [
+            {
+                key: item[key]
+                for key in (
+                    "feedback_id",
+                    "workflow_run_id",
+                    "outcome_id",
+                    "scene_binding",
+                    "consumption_state",
+                    "consumer_ref",
+                    "result_ref",
+                    "evidence_refs",
+                    "value",
+                    "observed_at",
+                    "recorded_at",
+                )
+            }
+            for items in feedback_by_run.values()
+            for item in items
+        ],
+        "next_action": (
+            "review_feedback_and_value"
+            if consumed_feedback
+            else "record_explicit_outcome_consumption_feedback"
+        ),
     }
     return {
         "schema_version": OPERATIONS_SCHEMA_VERSION,
