@@ -365,6 +365,10 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0174: P79 Phase 1 (Foundry v2 cron 集成) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0174-p79-phase1-foundry-v2-cron.md
 - ADR-0178: P79 Phase 5 (收官: SOP + GaC 冻结) — **ACCEPTED** | 2026-07-08 | omostation P79 | 0178-p79-phase5-closeout.md
 
+### Workflow Mesh 运行治理
+
+- ADR-0301: Workflow Mesh Watchdog 只写过期事件 — **ACCEPTED** | 2026-08-02 | Workflow Mesh P1.5 | 0301-workflow-mesh-watchdog.md
+
 ---
 
 ## 维护责任

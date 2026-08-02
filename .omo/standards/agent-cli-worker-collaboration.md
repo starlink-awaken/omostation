@@ -196,7 +196,10 @@ StepDispatched
 ```
 
 The lifecycle APIs are exposed as `omo worker mesh-ack`, `mesh-heartbeat`,
-`mesh-expire`, and `mesh-reclaim`. All calls carry the same admission and
+`mesh-expire`, and `mesh-reclaim`. `omo worker mesh-watchdog` scans the same
+Workflow Mesh event log for expired live leases. It is read-only by default;
+only `--apply` may append `WorkerLeaseExpired`, and it never chooses a
+successor or appends `WorkerReclaimed`. All calls carry the same admission and
 StepRun context. A repeated call with the same idempotency key is successful
 only when its payload is identical; an owner mismatch, premature expiry, or
 reclaim before expiry is rejected. The OMO event log and projection are the
@@ -317,14 +320,18 @@ After the budget is exhausted, the worker must produce one of:
 
 ### 8.2 Progress Lease & Auto-Reap
 
-The durable lease contract is enforced by OMO Workflow Mesh; the legacy YAML
-watchdog remains an operator-facing observation surface until the real daemon
-is wired to these APIs:
+The durable lease contract is enforced by OMO Workflow Mesh. A scheduler or
+operator can run `omo worker mesh-watchdog --json` for a safe preview and
+`omo worker mesh-watchdog --apply --json` for the explicit expiry write:
 
 - **heartbeat/checkpoint**: every 5 minutes (via `mcp.tool: heartbeat` or material write).
 - **warning**: at 15 minutes.
-- **stale**: at the dispatch lease deadline, append `WorkerLeaseExpired` with an explicit observation time.
+- **stale**: at the dispatch lease deadline, `mesh-watchdog --apply` appends `WorkerLeaseExpired` with an explicit observation time.
 - **reclaim**: after expiry, append `WorkerReclaimed` with a successor dispatch; no silent lease deletion is allowed.
+
+The watchdog is intentionally not a scheduler implementation or a reclaim
+policy. Existing cron/launchd/daemon infrastructure owns cadence; OMO owns
+the state transition and its evidence.
 
 ### 8.3 Stuck Worker Recovery
 
