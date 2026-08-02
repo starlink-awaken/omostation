@@ -68,6 +68,10 @@ from ecos.workflow.mesh_contract import (
     new_workflow_event,
     new_workflow_run_id,
 )
+from ecos.workflow.default_mesh_sink import (
+    get_default_mesh_sink,
+)
+
 
 __all__ = [
     # loader

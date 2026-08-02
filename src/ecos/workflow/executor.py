@@ -22,6 +22,9 @@ from ecos.workflow.mesh_contract import (
     new_workflow_event,
     run_metadata,
 )
+from ecos.workflow.default_mesh_sink import (
+    get_default_mesh_sink,
+)
 from ecos.workflow.preflight import inject_preflight
 from ecos.workflow.validator import (
     X2BudgetDeducer,
@@ -76,7 +79,7 @@ def execute_m1_workflow(
 
     backend_name = m1_node.get("execution", {}).get("backend", "default")
     params = dict(params or {})
-    event_sink = params.pop("event_sink", None)
+    event_sink = params.pop("event_sink", get_default_mesh_sink())
     workflow_run_id = params.pop("workflow_run_id", None)
     trace_id = params.pop("trace_id", None)
     metadata = run_metadata(

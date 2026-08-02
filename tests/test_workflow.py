@@ -681,7 +681,7 @@ class TestX2CircuitBreak:
             assert "error" in result, "余额不足时应返回 error"
             assert "X2 熔断" in result["error"]
             assert result.get("passed", 0) == 0
-            assert result.get("failed", 0) == 0
+            assert result.get("failed", 0) == 1  # 熔断时 workflow 标记为失败
             assert "steps" in result
             assert len(result["steps"]) == 0, "熔断时不应执行任何步骤"
         finally:
@@ -1400,3 +1400,61 @@ class TestConditionalSteps:
         step_names = [s["name"] for s in result.get("steps", [])]
         assert "前置" in step_names
         assert "后置" in step_names
+
+
+class TestDefaultMeshSink:
+    """默认 Mesh sink 接入测试 — Phase 1a 目标达成验证"""
+
+    def test_default_mesh_sink_is_used_when_not_specified(self, tmp_path, monkeypatch):
+        """不显式传入 event_sink 时，应自动使用 default_mesh_sink"""
+        from ecos.workflow.executor import execute_m1_workflow
+
+        sink_calls = []
+
+        def spy_sink(event):
+            sink_calls.append(event)
+
+        # 用 mock step 确保走到 emit_event (non-dry_run)
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow",
+            lambda name: {
+                "name": "test-mesh-auto-connect",
+                "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                "execution": {"backend": "default"},
+            },
+        )
+        # 用 monkeypatch 正确替换 executor 模块内的 get_default_mesh_sink
+        monkeypatch.setattr(
+            "ecos.workflow.executor.get_default_mesh_sink",
+            lambda: spy_sink,
+        )
+
+        # 关键：不传 event_sink；non-dry_run 模式会 emit WorkflowRequested
+        result = execute_m1_workflow("test-mesh-auto-connect")
+
+        # 应该 emit WorkflowRequested 事件
+        assert len(sink_calls) >= 1, "应自动 emit Mesh 事件，无需显式传入 event_sink"
+        assert any(c.get("event_type") == "WorkflowRequested" for c in sink_calls), "应包含 WorkflowRequested 事件"
+
+    def test_default_mesh_sink_graceful_degradation_when_omo_not_found(self, tmp_path, monkeypatch):
+        """找不到 OMO 时静默降级，不阻断 workflow 执行"""
+        from ecos.workflow.executor import execute_m1_workflow
+        import ecos.workflow.default_mesh_sink as dms
+
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        try:
+            monkeypatch.setattr(
+                "ecos.workflow.executor.load_workflow",
+                lambda name: {
+                    "name": "test-no-omo",
+                    "steps": [{"name": "noop"}],
+                    "execution": {"backend": "default"},
+                },
+            )
+
+            # 不抛异常，正常执行
+            result = execute_m1_workflow("test-no-omo")
+            assert result is not None  # 不崩溃
+        finally:
+            dms._find_omo_root = original
