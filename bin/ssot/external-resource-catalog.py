@@ -12,7 +12,7 @@ import argparse
 import importlib.util
 import json
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -42,6 +42,7 @@ def _load_agora(root: Path):
         spec.loader.exec_module(module)
         return (
             module.build_external_resource_catalog_snapshot,
+            module.diff_external_resource_catalog_snapshots,
             module.discover_entry_points,
         )
     except (ImportError, OSError) as exc:
@@ -56,11 +57,13 @@ def collect_external_resources(
     entry_points: Iterable[Any] | None = None,
     now: datetime | None = None,
     health_ttl_seconds: int = 900,
+    probe: bool = True,
+    previous_snapshot: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Collect an external-resource snapshot through Agora's boundary."""
     root = root.resolve()
-    build_snapshot, discover = _load_agora(root)
-    records = discover(entry_points)
+    build_snapshot, diff_snapshots, discover = _load_agora(root)
+    records = discover(entry_points, probe=probe, mark_unprobed=not probe)
     snapshot = build_snapshot(
         records,
         now=now or datetime.now(UTC),
@@ -68,6 +71,8 @@ def collect_external_resources(
     )
     if snapshot.get("schema") != SCHEMA:
         raise ExternalResourceCatalogInputError("unexpected catalog schema")
+    if previous_snapshot is not None:
+        snapshot["changes"] = diff_snapshots(previous_snapshot, snapshot)
     return snapshot
 
 
@@ -77,10 +82,33 @@ def main(argv: list[str] | None = None) -> int:
         "--root", type=Path, default=Path(__file__).resolve().parents[2]
     )
     parser.add_argument("--health-ttl-seconds", type=int, default=900)
+    parser.add_argument(
+        "--no-health-probe",
+        action="store_true",
+        help="只发现 descriptor，不调用显式只读 health_probe",
+    )
+    parser.add_argument(
+        "--previous-snapshot",
+        type=Path,
+        help="读取上一份只读目录快照并附加变化报告，不写入任何状态",
+    )
     args = parser.parse_args(argv)
     try:
+        previous_snapshot = None
+        if args.previous_snapshot:
+            try:
+                previous_snapshot = json.loads(
+                    args.previous_snapshot.read_text(encoding="utf-8")
+                )
+            except (OSError, json.JSONDecodeError) as exc:
+                raise ExternalResourceCatalogInputError(
+                    f"cannot read previous snapshot: {args.previous_snapshot}"
+                ) from exc
         payload = collect_external_resources(
-            args.root, health_ttl_seconds=args.health_ttl_seconds
+            args.root,
+            health_ttl_seconds=args.health_ttl_seconds,
+            probe=not args.no_health_probe,
+            previous_snapshot=previous_snapshot,
         )
     except (ExternalResourceCatalogInputError, ValueError) as exc:
         print(f"external-resource-catalog: {exc}", file=sys.stderr)
