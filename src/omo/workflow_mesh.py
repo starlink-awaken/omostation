@@ -191,15 +191,11 @@ def _scene_binding(payload: Mapping[str, Any]) -> dict[str, str] | None:
         raise WorkflowMeshEventError("scene_binding must be an object")
     missing = sorted(SCENE_BINDING_FIELDS - value.keys())
     if missing:
-        raise WorkflowMeshEventError(
-            f"scene_binding missing fields: {missing}"
-        )
+        raise WorkflowMeshEventError(f"scene_binding missing fields: {missing}")
     binding = {field: str(value[field]).strip() for field in SCENE_BINDING_FIELDS}
     empty = sorted(field for field, item in binding.items() if not item)
     if empty:
-        raise WorkflowMeshEventError(
-            f"scene_binding fields must be non-empty: {empty}"
-        )
+        raise WorkflowMeshEventError(f"scene_binding fields must be non-empty: {empty}")
     return binding
 
 
@@ -610,13 +606,30 @@ def project_workflow_run(
             )
         if event_type == "EvidenceRecorded":
             evidence_id = event["payload"]["evidence_id"]
-            snapshot["evidence"][evidence_id] = {
+            evidence = {
                 "evidence_id": evidence_id,
                 "kind": event["payload"].get("kind"),
                 "uri": event["payload"].get("uri"),
                 "sha256": event["payload"].get("sha256"),
                 "event_id": event["event_id"],
             }
+            # Keep the external receipt's provenance and decision context
+            # queryable without copying provider output into the projection.
+            for key in (
+                "evidence_schema",
+                "receipt_id",
+                "resource_id",
+                "trace_id",
+                "result_state",
+                "observed_at",
+                "provenance_ref",
+                "policy_digest",
+                "decision_factors",
+                "step_run_id",
+            ):
+                if key in event["payload"]:
+                    evidence[key] = event["payload"][key]
+            snapshot["evidence"][evidence_id] = evidence
         if event_type in {"ApprovalRequested", "ApprovalGranted"}:
             approval_id = event["payload"].get("approval_id") or "workflow"
             snapshot["approvals"][approval_id] = {

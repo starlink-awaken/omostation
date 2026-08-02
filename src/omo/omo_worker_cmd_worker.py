@@ -8,6 +8,10 @@ from typing import Any
 
 from .mesh_watchdog_runner import run_once as run_mesh_watchdog_once
 from .omo_admission import evaluate_worker_envelope, request_conditional_approval
+from .omo_external_receipt import (
+    ExternalReceiptError,
+    record_external_receipt,
+)
 from .omo_handoff_index import write_handoff_index
 from .omo_metrics import write_worker_utilization_summary
 from .omo_rollout import accept_rollout_envelope, evaluate_rollout_envelope
@@ -195,6 +199,38 @@ def _print_mesh_watchdog_run(
     return 2 if result["status"] in {"degraded", "failed"} else 0
 
 
+def _print_external_receipt(
+    omo_dir: str | Path,
+    receipt_file: str | Path,
+    *,
+    workflow_run_id: str,
+    step_run_id: str | None = None,
+    producer: str = "external-connection-fabric",
+    json_output: bool = False,
+) -> int:
+    try:
+        receipt = json.loads(Path(receipt_file).read_text(encoding="utf-8"))
+        event = record_external_receipt(
+            Path(omo_dir),
+            receipt,
+            workflow_run_id=workflow_run_id,
+            step_run_id=step_run_id,
+            producer=producer,
+        )
+    except (OSError, json.JSONDecodeError, ExternalReceiptError, ValueError) as exc:
+        print(f"error={type(exc).__name__}: {exc}")
+        return 2
+    if json_output:
+        print(json.dumps(event, ensure_ascii=False, sort_keys=True))
+    else:
+        print(
+            f"event_id={event['event_id']} event_type={event['event_type']} "
+            f"workflow_run_id={event['workflow_run_id']} "
+            f"evidence_id={event['payload']['evidence_id']}"
+        )
+    return 0
+
+
 def _add_mesh_worker_context(parser: Any) -> None:
     parser.add_argument("workflow_run_id")
     parser.add_argument("--trace-id", required=True)
@@ -303,6 +339,17 @@ def setup_worker_parser(subparsers: Any) -> None:
         "--json", action="store_true", dest="json_output"
     )
     mesh_watchdog_run_parser.add_argument("--omo-dir", default=".omo")
+    external_receipt_parser = worker_sub.add_parser("external-receipt")
+    external_receipt_parser.add_argument("workflow_run_id")
+    external_receipt_parser.add_argument("--receipt-file", required=True)
+    external_receipt_parser.add_argument("--step-run-id")
+    external_receipt_parser.add_argument(
+        "--producer", default="external-connection-fabric"
+    )
+    external_receipt_parser.add_argument(
+        "--json", action="store_true", dest="json_output"
+    )
+    external_receipt_parser.add_argument("--omo-dir", default=".omo")
     admission_parser = worker_sub.add_parser("admission-eval")
     admission_parser.add_argument("envelope_ref")
     admission_parser.add_argument("--matrix-ref")
@@ -409,6 +456,16 @@ def execute_worker_command(args: argparse.Namespace) -> int:
             now=args.now,
             apply=args.apply,
             reason=args.reason,
+            json_output=args.json_output,
+        )
+
+    if args.worker_command == "external-receipt":
+        return _print_external_receipt(
+            Path.cwd() / args.omo_dir,
+            args.receipt_file,
+            workflow_run_id=args.workflow_run_id,
+            step_run_id=args.step_run_id,
+            producer=args.producer,
             json_output=args.json_output,
         )
 
