@@ -330,6 +330,11 @@ def cmd_state_sync_tasks(omo_dir: Path, dry_run: bool, *, quiet: bool = False) -
         if sub in ("active", "planned"):
             by_id[sub] = [f"{f.stem} ({_read_task_title(f)})" for f in files]
 
+    # Align with ssot-guardian: include archived/done in completed tasks count
+    archived_done = omo_dir / "tasks" / "archived" / "done"
+    archived_count = len(list(archived_done.glob("*.yaml"))) if archived_done.exists() else 0
+    counts["done"] += archived_count
+
     active_n, planned_n, done_n = counts["active"], counts["planned"], counts["done"]
     total_n = active_n + planned_n + done_n
     new_active_list = by_id.get("active", [])
