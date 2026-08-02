@@ -1,6 +1,6 @@
 # MCP 服务器索引
 
-> 自动生成于 2026-08-02T10:09:57Z
+> 自动生成于 2026-08-02T10:17:40Z
 > 源: `docs/generated/capability-registry.yaml`
 
 全生态共 **24** 个 MCP 服务器, **541** 个工具。
@@ -130,4 +130,4 @@
 
 `chat`, `run_task`
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T10:09:57Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T10:17:40Z 生成*

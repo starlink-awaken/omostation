@@ -334,7 +334,19 @@ def write_yaml(registry: dict) -> Path:
         f"# 生成时间: {registry['generated_at']}\n\n"
     )
     body = yaml.dump(registry, allow_unicode=True, sort_keys=False, default_flow_style=False, width=120)
-    OUTPUT_YAML.write_text(header + body, encoding="utf-8")
+    new_content = header + body
+
+    # 时间戳稳定: 若已存在文件且仅时间戳不同, 保留旧文件避免假漂移
+    if OUTPUT_YAML.exists():
+        old_content = OUTPUT_YAML.read_text(encoding="utf-8")
+        # 将所有 ISO 时间戳 (2026-08-02T10:17:40Z) 替换为占位符后比较
+        iso_pattern = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z"
+        old_no_ts = re.sub(iso_pattern, "TIMESTAMP", old_content)
+        new_no_ts = re.sub(iso_pattern, "TIMESTAMP", new_content)
+        if old_no_ts == new_no_ts:
+            return OUTPUT_YAML  # 内容无变化, 不写 (避免时间戳假漂移)
+
+    OUTPUT_YAML.write_text(new_content, encoding="utf-8")
     return OUTPUT_YAML
 
 

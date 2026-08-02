@@ -14,6 +14,7 @@ Usage:
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -208,6 +209,15 @@ def main() -> int:
     }
     for path, content in outputs.items():
         path.parent.mkdir(parents=True, exist_ok=True)
+        # 时间戳稳定: 仅内容 (忽略 ISO 时间戳) 变化时才写
+        if path.exists():
+            old = path.read_text(encoding="utf-8")
+            iso_pattern = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z"
+            old_no_ts = re.sub(iso_pattern, "TIMESTAMP", old)
+            new_no_ts = re.sub(iso_pattern, "TIMESTAMP", content)
+            if old_no_ts == new_no_ts:
+                print(f"⏭️  {path.relative_to(WORKSPACE)} (无变化)")
+                continue
         path.write_text(content, encoding="utf-8")
         print(f"✅ {path.relative_to(WORKSPACE)}")
 

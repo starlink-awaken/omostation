@@ -1,6 +1,6 @@
 # Cockpit CLI 命令参考
 
-> 自动生成于 2026-08-02T10:09:57Z
+> 自动生成于 2026-08-02T10:17:40Z
 > 源: `docs/generated/capability-registry.yaml`
 
 共 **103** 个命令 (含子命令)。按场景分组如下。
@@ -175,4 +175,4 @@
 | `cockpit mesh` | `aetherforge` | 10 |
 | `cockpit compute` | `aetherforge` | 10 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T10:09:57Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T10:17:40Z 生成*
