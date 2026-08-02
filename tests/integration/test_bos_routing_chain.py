@@ -169,6 +169,32 @@ class TestResolveWithRouter:
                 assert "config" in result
 
     @pytest.mark.asyncio
+    async def test_chain_poc_real_error_passthrough(self):
+        """真实执行错误 (非 unknown/unimplemented) → 透传 error, 不掩盖。"""
+        from unittest.mock import patch
+
+        from agora.server.tools_bos import _resolve_with_router
+
+        with patch("agora.server.tools_bos._bos_router") as mock_router:
+            mock_router.resolve.return_value = {
+                "adapter": "poc",
+                "prefix": "bos://capability/wps-skills/load/",
+                "config": {"domain": "capability"},
+            }
+            with patch("agora.server.tools_bos._resolve_bos_uri") as mock_resolve:
+                mock_resolve.return_value = {
+                    "status": "error",
+                    "error": "ModuleNotFoundError: No module named 'headroom'",
+                }
+
+                result, source = await _resolve_with_router(
+                    "bos://capability/wps-skills/load"
+                )
+                assert source == "bos_router_poc_error"
+                assert result.get("status") == "error"
+                assert "ModuleNotFoundError" in result.get("error", "")
+
+    @pytest.mark.asyncio
     async def test_chain_cache_invalidation(self):
         """mutate 成功后手动 invalidate 缓存."""
 

@@ -256,6 +256,10 @@ class SwarmOrchestrator:
             nodes = [n for n in nodes if n.role == role]
         return nodes
 
+    def get_node(self, node_id: str) -> SwarmNode | None:
+        """按 node_id 查询节点 (公开 API, 替代 _nodes 私有访问)。"""
+        return self._nodes.get(node_id)
+
     def get_node_by_uri(self, uri: str) -> SwarmNode | None:
         """根据 BOS URI 查找能处理它的节点（负载感知）。
 
