@@ -14,8 +14,10 @@ try:
     from fastapi import APIRouter, HTTPException, Query
 except ImportError:
     APIRouter = None  # type: ignore[assignment,misc]
+    HTTPException = None  # type: ignore[assignment,misc]
+    Query = None  # type: ignore[assignment,misc]
 
-from cockpit.delivery_journey import (
+from cockpit.delivery_journey import (  # type: ignore[import-not-found]
     DeliveryJourneySnapshot,
     build_delivery_journey_projection,
 )
@@ -32,7 +34,7 @@ if router:
     @router.get("")
     @router.get("/")
     async def get_delivery_journey(
-        fixture: Optional[str] = Query(None, description="Optional safe fixture state: PENDING, RUNNING, VERIFIED, MERGED, UNAVAILABLE"),
+        fixture: Optional[str] = Query(None, description="Optional safe fixture state: PENDING, RUNNING, VERIFIED, MERGED, UNAVAILABLE"),  # type: ignore[union-attr]
     ) -> dict[str, Any]:
         """Get the current engineering delivery journey projection snapshot."""
         try:
@@ -70,7 +72,7 @@ if router:
 
     @router.get("/current")
     async def get_current_delivery_journey(
-        fixture: Optional[str] = Query(None, description="Optional safe fixture state"),
+        fixture: Optional[str] = Query(None, description="Optional safe fixture state"),  # type: ignore[union-attr]
     ) -> dict[str, Any]:
         """Alias for retrieving the active/current delivery journey."""
         return await get_delivery_journey(fixture=fixture)
