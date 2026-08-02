@@ -49,7 +49,7 @@ class TestCreateApp:
 
     def test_health_bypasses_auth(self):
         """GET /health 有认证配置仍应放行"""
-        app = self._make_app(auth_token="test-token")
+        app = self._make_app(auth_token="test-token")  # noqa: S106 (测试用假 token)
         client = TestClient(app)
         response = client.get("/health")
         assert response.status_code == 200

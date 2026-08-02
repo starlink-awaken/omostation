@@ -34,7 +34,9 @@ if router:
     @router.get("")
     @router.get("/")
     async def get_delivery_journey(
-        fixture: Optional[str] = Query(None, description="Optional safe fixture state: PENDING, RUNNING, VERIFIED, MERGED, UNAVAILABLE"),  # type: ignore[union-attr]
+        fixture: str | None = Query(
+            None, description="Optional safe fixture state: PENDING, RUNNING, VERIFIED, MERGED, UNAVAILABLE"
+        ),  # type: ignore[union-attr]
     ) -> dict[str, Any]:
         """Get the current engineering delivery journey projection snapshot."""
         try:
@@ -51,7 +53,7 @@ if router:
                 "last_updated": snapshot.last_updated,
             }
         except Exception as e:
-            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            now_iso = datetime.datetime.now(datetime.UTC).isoformat()
             return {
                 "ok": False,
                 "status": "unavailable",
@@ -72,7 +74,7 @@ if router:
 
     @router.get("/current")
     async def get_current_delivery_journey(
-        fixture: Optional[str] = Query(None, description="Optional safe fixture state"),  # type: ignore[union-attr]
+        fixture: str | None = Query(None, description="Optional safe fixture state"),  # type: ignore[union-attr]
     ) -> dict[str, Any]:
         """Alias for retrieving the active/current delivery journey."""
         return await get_delivery_journey(fixture=fixture)

@@ -101,7 +101,7 @@ class TestDashboardAuth:
         import cockpit.dashboard.constants as c
 
         importlib.reload(c)
-        assert c.DASHBOARD_TOKEN == "test-secret"
+        assert c.DASHBOARD_TOKEN == "test-secret"  # noqa: S105 (测试用假 token)
         assert c.DASHBOARD_TOKEN != ""
 
 

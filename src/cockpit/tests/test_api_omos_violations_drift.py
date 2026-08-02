@@ -83,7 +83,7 @@ class TestOmosFixDrift:
 
     def test_fix_drift_success(self, client):
         mock_proc = MagicMock(returncode=0, stdout="Fixed 3 issues", stderr="")
-        with patch("subprocess.run", return_value=mock_proc) as mock_run:
+        with patch("subprocess.run", return_value=mock_proc):
             resp = client.post("/api/omos/fix-drift", json={})
         assert resp.status_code == 200
         data = resp.json()

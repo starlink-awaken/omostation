@@ -177,7 +177,7 @@ class TestDashboardToken:
         assert constants.DASHBOARD_TOKEN == ""
 
     def test_token_from_env(self, monkeypatch):
-        token_value = "secret123"
+        token_value = "secret123"  # noqa: S105 (测试用假 token)
         monkeypatch.setenv("COCKPIT_DASHBOARD_TOKEN", token_value)
         import importlib
 

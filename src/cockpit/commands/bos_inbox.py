@@ -99,7 +99,7 @@ def _cmd_inbox_search(query: str) -> int:
                     item_id[:10],
                     str(item_meta.get("source", "N/A")),
                     title[:40],
-                    content_snip[:80] + "..." if len(content_snip) > 80 else content_snip
+                    content_snip[:80] + "..." if len(content_snip) > 80 else content_snip,
                 )
                 matched += 1
                 if matched >= 10:
@@ -118,7 +118,7 @@ def _cmd_inbox_pending(source: str) -> int:
     fname_map = {
         "seeyon_oa": "2026-07-31-auto-seeyon-oa-pending.md",
         "netease_mailmaster": "2026-07-31-auto-netease-mailmaster.md",
-        "apple_mail": "2026-07-31-auto-apple-mail.md"
+        "apple_mail": "2026-07-31-auto-apple-mail.md",
     }
     fname = fname_map.get(source, "2026-07-31-auto-seeyon-oa-pending.md")
     fpath = inbox_dir / fname
@@ -168,10 +168,7 @@ def _cmd_inbox_watch() -> int:
                     snip = content[:80].replace("\n", " ")
                     priority_str = (
                         "🔴 URGENT"
-                        if any(
-                            u in reasons
-                            for u in ["priority: URGENT", "[URGENT]", "特急"]
-                        )
+                        if any(u in reasons for u in ["priority: URGENT", "[URGENT]", "特急"])
                         else "🟠 HIGH"
                     )
                     table.add_row(
@@ -182,7 +179,7 @@ def _cmd_inbox_watch() -> int:
                         snip,
                     )
                     matched += 1
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
     if matched == 0:
@@ -199,14 +196,10 @@ def _cmd_inbox_archive(filename: str, reason: str) -> int:
     """按文件名或 all 批量归档 Inbox 待办事宜至冷归档区。"""
     _, inbox_dir = _get_inbox_paths()
     if not filename:
-        err.print(
-            "[red]请提供待归档文件名: omo bos-inbox archive <filename|all>[/red]"
-        )
+        err.print("[red]请提供待归档文件名: omo bos-inbox archive <filename|all>[/red]")
         return 1
 
-    doc_root = Path(
-        os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents"))
-    )
+    doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
     archive_dir = doc_root / "_knowledge" / "archive" / "inbox"
     archive_dir.mkdir(parents=True, exist_ok=True)
 
@@ -240,7 +233,5 @@ def _cmd_inbox_archive(filename: str, reason: str) -> int:
         except Exception as exc:
             err.print(f"[red]归档失败 {src.name}: {exc}[/red]")
 
-    console.print(
-        f"[bold green]成功归档 {archived_count} 份 Inbox 待办文件！[/bold green]"
-    )
+    console.print(f"[bold green]成功归档 {archived_count} 份 Inbox 待办文件！[/bold green]")
     return 0

@@ -52,6 +52,7 @@ except ImportError:  # runtime unavailable or tree without executor/i0/arch_heal
         """No-op fallback so cockpit entry points survive without runtime."""
         return None
 
+
 __all__ = [
     "AGENT_RUNTIME_PORT",
     "AUTH_TOKEN",

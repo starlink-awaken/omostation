@@ -10,8 +10,8 @@ from pathlib import Path
 
 from rich.console import Console
 
-from cockpit.commands import base as B
-from cockpit.commands import status as S
+from cockpit.commands import base as B  # noqa: N812 (monkeypatch 别名)
+from cockpit.commands import status as S  # noqa: N812 (monkeypatch 别名)
 
 # ── 保存原函数引用（避免递归）──
 _ORIG_DISCOVER_SERVICES = B._discover_services

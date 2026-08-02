@@ -231,7 +231,9 @@ async def api_cards_check():
 @router.get("/api/v1/arch-health", dependencies=_AUTH_DEPS)
 async def api_arch_health():
     """Architecture health aggregation."""
-    return JSONResponse(content=load_arch_health() if load_arch_health else {"error": "runtime.arch_health not available"})
+    return JSONResponse(
+        content=load_arch_health() if load_arch_health else {"error": "runtime.arch_health not available"}
+    )
 
 
 # ─── Wave 3: Observability APIs ──────────────────────────────

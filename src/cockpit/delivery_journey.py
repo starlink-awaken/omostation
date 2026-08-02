@@ -23,6 +23,7 @@ except ImportError:
 @dataclass
 class DeliveryStage:
     """A single stage in the engineering delivery journey."""
+
     name: str
     status: str  # "verified" | "running" | "pending" | "failed" | "unavailable" | "merged" | "open"
     title: str
@@ -36,6 +37,7 @@ class DeliveryStage:
 @dataclass
 class DeliveryJourneySnapshot:
     """A complete engineering delivery journey snapshot."""
+
     id: str
     title: str
     status: str  # "live" | "stale" | "failed" | "unavailable"
@@ -49,7 +51,7 @@ class DeliveryJourneySnapshot:
 
 
 def _get_iso_now() -> str:
-    return datetime.datetime.now(datetime.timezone.utc).isoformat()
+    return datetime.datetime.now(datetime.UTC).isoformat()
 
 
 def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
@@ -80,13 +82,49 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
 
     if state_up == "PENDING":
         stages = {
-            "intent": {"name": "intent", "status": "pending", "title": "目标定义中", "details": {"objective": "准备执行任务包"}, "last_updated": now_iso},
-            "task": {"name": "task", "status": "pending", "title": "任务待分配", "details": {}, "last_updated": now_iso},
-            "run": {"name": "run", "status": "pending", "title": "待启动工作流", "details": {}, "last_updated": now_iso},
-            "worktree": {"name": "worktree", "status": "pending", "title": "工作树未初始化", "details": {}, "last_updated": now_iso},
-            "verification": {"name": "verification", "status": "pending", "title": "门禁检查等待中", "details": {}, "last_updated": now_iso},
+            "intent": {
+                "name": "intent",
+                "status": "pending",
+                "title": "目标定义中",
+                "details": {"objective": "准备执行任务包"},
+                "last_updated": now_iso,
+            },
+            "task": {
+                "name": "task",
+                "status": "pending",
+                "title": "任务待分配",
+                "details": {},
+                "last_updated": now_iso,
+            },
+            "run": {
+                "name": "run",
+                "status": "pending",
+                "title": "待启动工作流",
+                "details": {},
+                "last_updated": now_iso,
+            },
+            "worktree": {
+                "name": "worktree",
+                "status": "pending",
+                "title": "工作树未初始化",
+                "details": {},
+                "last_updated": now_iso,
+            },
+            "verification": {
+                "name": "verification",
+                "status": "pending",
+                "title": "门禁检查等待中",
+                "details": {},
+                "last_updated": now_iso,
+            },
             "pr": {"name": "pr", "status": "pending", "title": "PR 尚未创建", "details": {}, "last_updated": now_iso},
-            "evidence": {"name": "evidence", "status": "pending", "title": "交付工件待记录", "details": {}, "last_updated": now_iso},
+            "evidence": {
+                "name": "evidence",
+                "status": "pending",
+                "title": "交付工件待记录",
+                "details": {},
+                "last_updated": now_iso,
+            },
         }
         return DeliveryJourneySnapshot(
             id="fixture-pending-101",
@@ -100,13 +138,49 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
 
     elif state_up == "RUNNING":
         stages = {
-            "intent": {"name": "intent", "status": "verified", "title": "目标已确定", "details": {"objective": "落实 Cockpit 黄金旅程投影"}, "last_updated": now_iso},
-            "task": {"name": "task", "status": "verified", "title": "任务包 C 认领", "details": {"task_id": "TASK-2026-C"}, "last_updated": now_iso},
-            "run": {"name": "run", "status": "running", "title": "执行 project-code-change", "details": {"run_id": "20260801T113654Z-run-001", "profile": "engineering-agent"}, "last_updated": now_iso},
-            "worktree": {"name": "worktree", "status": "running", "title": "工作树进行中", "details": {"branch": "codex/cockpit-delivery-golden-journey", "clean": False}, "last_updated": now_iso},
-            "verification": {"name": "verification", "status": "pending", "title": "门禁检查执行中", "details": {"gac_local_gate": "running"}, "last_updated": now_iso},
+            "intent": {
+                "name": "intent",
+                "status": "verified",
+                "title": "目标已确定",
+                "details": {"objective": "落实 Cockpit 黄金旅程投影"},
+                "last_updated": now_iso,
+            },
+            "task": {
+                "name": "task",
+                "status": "verified",
+                "title": "任务包 C 认领",
+                "details": {"task_id": "TASK-2026-C"},
+                "last_updated": now_iso,
+            },
+            "run": {
+                "name": "run",
+                "status": "running",
+                "title": "执行 project-code-change",
+                "details": {"run_id": "20260801T113654Z-run-001", "profile": "engineering-agent"},
+                "last_updated": now_iso,
+            },
+            "worktree": {
+                "name": "worktree",
+                "status": "running",
+                "title": "工作树进行中",
+                "details": {"branch": "codex/cockpit-delivery-golden-journey", "clean": False},
+                "last_updated": now_iso,
+            },
+            "verification": {
+                "name": "verification",
+                "status": "pending",
+                "title": "门禁检查执行中",
+                "details": {"gac_local_gate": "running"},
+                "last_updated": now_iso,
+            },
             "pr": {"name": "pr", "status": "pending", "title": "准备创建 PR", "details": {}, "last_updated": now_iso},
-            "evidence": {"name": "evidence", "status": "pending", "title": "证据链采集", "details": {}, "last_updated": now_iso},
+            "evidence": {
+                "name": "evidence",
+                "status": "pending",
+                "title": "证据链采集",
+                "details": {},
+                "last_updated": now_iso,
+            },
         }
         return DeliveryJourneySnapshot(
             id="fixture-running-102",
@@ -120,13 +194,55 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
 
     elif state_up == "VERIFIED":
         stages = {
-            "intent": {"name": "intent", "status": "verified", "title": "目标已确定", "details": {"objective": "落实 Cockpit 黄金旅程投影"}, "last_updated": now_iso},
-            "task": {"name": "task", "status": "verified", "title": "任务包 C 认领", "details": {"task_id": "TASK-2026-C"}, "last_updated": now_iso},
-            "run": {"name": "run", "status": "verified", "title": "工作流执行完毕", "details": {"run_id": "20260801T113654Z-run-001"}, "last_updated": now_iso},
-            "worktree": {"name": "worktree", "status": "verified", "title": "工作树整洁且就绪", "details": {"branch": "codex/cockpit-delivery-golden-journey", "clean": True}, "last_updated": now_iso},
-            "verification": {"name": "verification", "status": "verified", "title": "所有集成测试通过", "details": {"gac_local_gate": "PASS", "test_count": 42}, "last_updated": now_iso},
-            "pr": {"name": "pr", "status": "open", "title": "PR 已开启并就绪", "details": {"pr_url": "https://github.com/starlink-awaken/omostation/pull/732", "state": "OPEN"}, "last_updated": now_iso},
-            "evidence": {"name": "evidence", "status": "verified", "title": "合规与日志已固化", "details": {"evidence_id": "EV-2026-C"}, "last_updated": now_iso},
+            "intent": {
+                "name": "intent",
+                "status": "verified",
+                "title": "目标已确定",
+                "details": {"objective": "落实 Cockpit 黄金旅程投影"},
+                "last_updated": now_iso,
+            },
+            "task": {
+                "name": "task",
+                "status": "verified",
+                "title": "任务包 C 认领",
+                "details": {"task_id": "TASK-2026-C"},
+                "last_updated": now_iso,
+            },
+            "run": {
+                "name": "run",
+                "status": "verified",
+                "title": "工作流执行完毕",
+                "details": {"run_id": "20260801T113654Z-run-001"},
+                "last_updated": now_iso,
+            },
+            "worktree": {
+                "name": "worktree",
+                "status": "verified",
+                "title": "工作树整洁且就绪",
+                "details": {"branch": "codex/cockpit-delivery-golden-journey", "clean": True},
+                "last_updated": now_iso,
+            },
+            "verification": {
+                "name": "verification",
+                "status": "verified",
+                "title": "所有集成测试通过",
+                "details": {"gac_local_gate": "PASS", "test_count": 42},
+                "last_updated": now_iso,
+            },
+            "pr": {
+                "name": "pr",
+                "status": "open",
+                "title": "PR 已开启并就绪",
+                "details": {"pr_url": "https://github.com/starlink-awaken/omostation/pull/732", "state": "OPEN"},
+                "last_updated": now_iso,
+            },
+            "evidence": {
+                "name": "evidence",
+                "status": "verified",
+                "title": "合规与日志已固化",
+                "details": {"evidence_id": "EV-2026-C"},
+                "last_updated": now_iso,
+            },
         }
         return DeliveryJourneySnapshot(
             id="fixture-verified-103",
@@ -140,13 +256,55 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
 
     else:  # MERGED
         stages = {
-            "intent": {"name": "intent", "status": "verified", "title": "目标已确定", "details": {"objective": "落实 Cockpit 黄金旅程投影"}, "last_updated": now_iso},
-            "task": {"name": "task", "status": "verified", "title": "任务包 C 认领", "details": {"task_id": "TASK-2026-C"}, "last_updated": now_iso},
-            "run": {"name": "run", "status": "verified", "title": "工作流结单", "details": {"run_id": "20260801T113654Z-run-001"}, "last_updated": now_iso},
-            "worktree": {"name": "worktree", "status": "verified", "title": "工作区清理已同步", "details": {"branch": "codex/cockpit-delivery-golden-journey", "clean": True}, "last_updated": now_iso},
-            "verification": {"name": "verification", "status": "verified", "title": "全量验证完成", "details": {"gac_local_gate": "PASS"}, "last_updated": now_iso},
-            "pr": {"name": "pr", "status": "merged", "title": "PR 合并完成", "details": {"pr_url": "https://github.com/starlink-awaken/omostation/pull/732", "merged_at": now_iso}, "last_updated": now_iso},
-            "evidence": {"name": "evidence", "status": "verified", "title": "证据链与审计封存", "details": {"evidence_id": "EV-2026-C-CLOSED"}, "last_updated": now_iso},
+            "intent": {
+                "name": "intent",
+                "status": "verified",
+                "title": "目标已确定",
+                "details": {"objective": "落实 Cockpit 黄金旅程投影"},
+                "last_updated": now_iso,
+            },
+            "task": {
+                "name": "task",
+                "status": "verified",
+                "title": "任务包 C 认领",
+                "details": {"task_id": "TASK-2026-C"},
+                "last_updated": now_iso,
+            },
+            "run": {
+                "name": "run",
+                "status": "verified",
+                "title": "工作流结单",
+                "details": {"run_id": "20260801T113654Z-run-001"},
+                "last_updated": now_iso,
+            },
+            "worktree": {
+                "name": "worktree",
+                "status": "verified",
+                "title": "工作区清理已同步",
+                "details": {"branch": "codex/cockpit-delivery-golden-journey", "clean": True},
+                "last_updated": now_iso,
+            },
+            "verification": {
+                "name": "verification",
+                "status": "verified",
+                "title": "全量验证完成",
+                "details": {"gac_local_gate": "PASS"},
+                "last_updated": now_iso,
+            },
+            "pr": {
+                "name": "pr",
+                "status": "merged",
+                "title": "PR 合并完成",
+                "details": {"pr_url": "https://github.com/starlink-awaken/omostation/pull/732", "merged_at": now_iso},
+                "last_updated": now_iso,
+            },
+            "evidence": {
+                "name": "evidence",
+                "status": "verified",
+                "title": "证据链与审计封存",
+                "details": {"evidence_id": "EV-2026-C-CLOSED"},
+                "last_updated": now_iso,
+            },
         }
         return DeliveryJourneySnapshot(
             id="fixture-merged-104",
@@ -206,11 +364,11 @@ def build_delivery_journey_projection(
     if runs_dir.exists() and yaml is not None:
         for fpath in runs_dir.glob("*.yaml"):
             try:
-                with open(fpath, "r", encoding="utf-8") as f:
+                with open(fpath, encoding="utf-8") as f:
                     data = yaml.safe_load(f)
                     if isinstance(data, dict):
                         active_runs.append(data)
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
     # Sort runs by timestamp descending if possible
@@ -223,10 +381,18 @@ def build_delivery_journey_projection(
         return _get_fixture_snapshot("UNAVAILABLE")
 
     run_id = str(latest_run.get("run_id", "live-session")) if latest_run else "git-live-session"
-    title = str(latest_run.get("objective", "当前工程实践分支")) if latest_run else f"Git Worktree: {git_info.get('branch', 'unknown')}"
+    title = (
+        str(latest_run.get("objective", "当前工程实践分支"))
+        if latest_run
+        else f"Git Worktree: {git_info.get('branch', 'unknown')}"
+    )
 
     # Stage 1: Intent
-    intent_status = "verified" if latest_run and latest_run.get("objective") else ("verified" if git_info.get("ok") else "unavailable")
+    intent_status = (
+        "verified"
+        if latest_run and latest_run.get("objective")
+        else ("verified" if git_info.get("ok") else "unavailable")
+    )
     intent_stage = {
         "name": "intent",
         "status": intent_status,
@@ -237,27 +403,42 @@ def build_delivery_journey_projection(
 
     # Stage 2: Task
     task_status = "verified" if latest_run else "pending"
-    workflow_name = latest_run.get("workflow_id") or latest_run.get("workflow", "standard") if latest_run else "standard"
+    workflow_name = (
+        latest_run.get("workflow_id") or latest_run.get("workflow", "standard") if latest_run else "standard"
+    )
     task_stage = {
         "name": "task",
         "status": task_status,
         "title": f"任务流 ({workflow_name})" if latest_run else "自由开发会话",
-        "details": {"run_id": run_id, "profile": latest_run.get("agent_profile") or latest_run.get("profile", "")} if latest_run else {},
+        "details": {"run_id": run_id, "profile": latest_run.get("agent_profile") or latest_run.get("profile", "")}
+        if latest_run
+        else {},
         "last_updated": now_iso,
     }
 
     # Stage 3: Run
-    is_closed = bool(latest_run and (latest_run.get("closed_at") or latest_run.get("end_time") or latest_run.get("status") in ["ok", "closed", "completed"]))
+    is_closed = bool(
+        latest_run
+        and (
+            latest_run.get("closed_at")
+            or latest_run.get("end_time")
+            or latest_run.get("status") in ["ok", "closed", "completed"]
+        )
+    )
     run_status = "verified" if is_closed else ("running" if latest_run else "pending")
     run_stage = {
         "name": "run",
         "status": run_status,
-        "title": "工作流已收口结单" if run_status == "verified" else ("Agent Workflow 活跃中" if run_status == "running" else "工作流状态"),
+        "title": "工作流已收口结单"
+        if run_status == "verified"
+        else ("Agent Workflow 活跃中" if run_status == "running" else "工作流状态"),
         "details": {
             "claimed_paths": latest_run.get("claimed_paths", []),
             "staged_files": latest_run.get("staged_files", []),
             "closed_at": latest_run.get("closed_at", "") if is_closed else "",
-        } if latest_run else {},
+        }
+        if latest_run
+        else {},
         "last_updated": now_iso,
     }
 
@@ -274,12 +455,18 @@ def build_delivery_journey_projection(
     # Stage 5: Verification
     ev_list = latest_run.get("evidence", []) if latest_run and isinstance(latest_run.get("evidence"), list) else []
     has_verify_ev = any("verify:" in str(e) and "ok=True" in str(e) for e in ev_list)
-    verification_status = "verified" if (latest_run and (latest_run.get("verification") or has_verify_ev or is_closed)) else "pending"
+    verification_status = (
+        "verified" if (latest_run and (latest_run.get("verification") or has_verify_ev or is_closed)) else "pending"
+    )
     verification_stage = {
         "name": "verification",
         "status": verification_status,
         "title": "验证检查已通过" if verification_status == "verified" else "等待验证测试",
-        "details": {"evidence": ev_list} if has_verify_ev else ({"verification": latest_run.get("verification")} if latest_run and latest_run.get("verification") else {}),
+        "details": {"evidence": ev_list}
+        if has_verify_ev
+        else (
+            {"verification": latest_run.get("verification")} if latest_run and latest_run.get("verification") else {}
+        ),
         "last_updated": now_iso,
     }
 

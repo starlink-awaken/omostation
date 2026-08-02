@@ -11,14 +11,12 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from httpx import AsyncClient, Response
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
+from httpx import AsyncClient, Response
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 

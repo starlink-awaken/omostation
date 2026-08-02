@@ -21,7 +21,7 @@ from cockpit.dashboard.constants import (
 )
 from cockpit.web.auth import get_subservice_token
 
-from .helpers_arch_health import load_arch_health
+from .helpers_arch_health import load_arch_health  # pyright: ignore[reportAttributeAccessIssue]
 
 # P110-E (TASK-F7114ABA 治本): load_compute / load_arch_health 拆分
 from .helpers_compute import load_compute
@@ -64,8 +64,8 @@ def fetch_http(source: dict) -> dict:
         if token:
             headers["Authorization"] = f"Bearer {token}"
             headers["X-Api-Key"] = token
-        req = urllib.request.Request(source["url"], method="GET", headers=headers)
-        with urllib.request.urlopen(req, timeout=3) as resp:
+        req = urllib.request.Request(source["url"], method="GET", headers=headers)  # noqa: S310
+        with urllib.request.urlopen(req, timeout=3) as resp:  # noqa: S310
             data = json.loads(resp.read().decode())
         return {
             "layer": source["layer"],
@@ -144,7 +144,7 @@ def fetch_layer_status(source: dict) -> dict:
     # L1 runtime — try direct import
     if source["layer"] == "L1":
         try:
-            from cockpit.adapters.runtime import i0_status
+            from cockpit.adapters.runtime import i0_status  # pyright: ignore[reportAttributeAccessIssue]
 
             status = i0_status() if i0_status else {}
             return {

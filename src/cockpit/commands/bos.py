@@ -145,7 +145,7 @@ def cmd_bos_discover(args):
 
             with open(pyproject, "rb") as f:
                 data = tomllib.load(f)
-        except Exception:  # defensive fallback
+        except Exception:  # defensive fallback  # noqa: S112
             continue
 
         scripts = data.get("project", {}).get("scripts", {})

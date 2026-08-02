@@ -100,7 +100,7 @@ def _iso_time(ts: float) -> str:
 
 def _http_health(url: str, timeout: float = 3.0) -> bool:
     try:
-        with urlrequest.urlopen(url, timeout=timeout):
+        with urlrequest.urlopen(url, timeout=timeout):  # noqa: S310
             return True
     except (urlerror.URLError, TimeoutError, ValueError):
         return False
@@ -366,8 +366,8 @@ def _ollama_request(prompt: str, *, stream: bool, timeout: int) -> bytes:
             "options": {"num_predict": 500, "temperature": 0.3},
         }
     ).encode()
-    req = urlrequest.Request(_OLLAMA_BASE, data=body, headers={"Content-Type": "application/json"})
-    with urlrequest.urlopen(req, timeout=timeout) as resp:
+    req = urlrequest.Request(_OLLAMA_BASE, data=body, headers={"Content-Type": "application/json"})  # noqa: S310
+    with urlrequest.urlopen(req, timeout=timeout) as resp:  # noqa: S310
         return resp.read()
 
 
@@ -455,8 +455,8 @@ def _discover_services() -> list[tuple[str, str, str | None, str, str]]:
         token = get_cockpit_jwt()
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        req = urlrequest.Request(f"{agora_url}/api/services", headers=headers)
-        resp = urlrequest.urlopen(req, timeout=3)
+        req = urlrequest.Request(f"{agora_url}/api/services", headers=headers)  # noqa: S310
+        resp = urlrequest.urlopen(req, timeout=3)  # noqa: S310
         data = json.loads(resp.read())
         if isinstance(data, list) and data:
             svc: list[tuple[str, str, str | None, str, str]] = []

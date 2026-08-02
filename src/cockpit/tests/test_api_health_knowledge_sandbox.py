@@ -217,7 +217,7 @@ class TestSandboxAPI:
         import types
 
         mock_module = types.ModuleType("runtime.executor.sandbox")
-        mock_module.Sandbox = mock_sandbox
+        setattr(mock_module, "Sandbox", mock_sandbox)
         sys.modules["runtime.executor.sandbox"] = mock_module
 
         try:
@@ -248,13 +248,13 @@ class TestKnowledgeIndexer:
     """Tests for knowledge_indexer.py — Consumer side of ADR-0294 event pipeline."""
 
     @pytest.mark.asyncio
-    async def test_start_subscribes_to_event_bus(self):
-        """KnowledgeIndexer.start() should POST to /bos/subscribe on Agora."""
-        from cockpit.web.knowledge_indexer import KnowledgeIndexer
+    async def test_register_subscription_calls_agora(self):
+        """_register_subscription() should POST subscribe_event to Agora /v1/tools/call."""
+        import cockpit.web.knowledge_indexer as ki
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
-        mock_resp.json.return_value = {"subscription_id": "sub-abc-123"}
+        mock_resp.json.return_value = {"result": {"subscription_id": "sub-abc-123"}}
 
         with patch("cockpit.web.knowledge_indexer.httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
@@ -263,68 +263,117 @@ class TestKnowledgeIndexer:
             mock_client.post = AsyncMock(return_value=mock_resp)
             mock_client_cls.return_value = mock_client
 
-            indexer = KnowledgeIndexer(agora_endpoint="http://127.0.0.1:7422")
-            await indexer.start()
+            ki._subscription_id = None
+            await ki._register_subscription()
 
-        assert indexer._running is True
-        assert indexer._sub_id == "sub-abc-123"
-        mock_client.post.assert_called_once_with(
-            "http://127.0.0.1:7422/bos/subscribe",
-            json={
-                "service": "cockpit-knowledge-indexer",
-                "pattern": "bos://brain/events/card_updated",
-            },
-        )
+        assert ki._subscription_id == "sub-abc-123"
+        mock_client.post.assert_called_once()
+        call_args, call_kwargs = mock_client.post.call_args
+        assert call_args[0] == "http://127.0.0.1:7422/v1/tools/call"
+        assert call_kwargs["json"]["tool"] == "subscribe_event"
+        assert call_kwargs["json"]["arguments"]["pattern"] == "bos://brain/events/card_updated"
+        assert "callback" in call_kwargs["json"]["arguments"]["callback_url"]
 
     @pytest.mark.asyncio
-    async def test_start_graceful_when_agora_offline(self):
-        """KnowledgeIndexer.start() should not raise when Agora is unreachable."""
+    async def test_register_subscription_graceful_when_agora_offline(self):
+        """_register_subscription() should not raise when Agora is unreachable."""
         import httpx as real_httpx
 
-        from cockpit.web.knowledge_indexer import KnowledgeIndexer
+        import cockpit.web.knowledge_indexer as ki
 
-        with patch("cockpit.web.knowledge_indexer.httpx.AsyncClient") as mock_client_cls:
+        with (
+            patch("cockpit.web.knowledge_indexer.httpx.AsyncClient") as mock_client_cls,
+            patch("cockpit.web.knowledge_indexer.asyncio.sleep", AsyncMock()),
+        ):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=False)
             mock_client.post = AsyncMock(side_effect=real_httpx.ConnectError("refused"))
             mock_client_cls.return_value = mock_client
 
-            indexer = KnowledgeIndexer()
-            await indexer.start()  # must not raise
+            ki._subscription_id = None
+            await ki._register_subscription()  # must not raise
 
-        assert indexer._running is False
+        assert ki._subscription_id is None
 
     @pytest.mark.asyncio
-    async def test_handle_card_updated_calls_kos_upsert(self):
-        """handle_card_updated() should POST to KOS upsert endpoint."""
-        from cockpit.web.knowledge_indexer import KnowledgeIndexer
+    async def test_upsert_card_posts_to_kos(self):
+        """_upsert_card() should POST to KOS upsert endpoint."""
+        import cockpit.web.knowledge_indexer as ki
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
 
-        with patch("cockpit.web.knowledge_indexer.httpx.AsyncClient") as mock_client_cls:
+        with (
+            patch("cockpit.web.knowledge_indexer.httpx.AsyncClient") as mock_client_cls,
+            patch("cockpit.web.knowledge_indexer.Path.exists", return_value=True),
+            patch("cockpit.web.knowledge_indexer.Path.read_text", return_value="# My Note\ncontent"),
+        ):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=False)
             mock_client.post = AsyncMock(return_value=mock_resp)
             mock_client_cls.return_value = mock_client
 
-            indexer = KnowledgeIndexer()
-            await indexer.handle_card_updated(
-                {"slug": "my-note", "title": "My Note", "path": "data/cards/my-note.md", "action": "upsert"}
-            )
+            await ki._upsert_card("my-note", {"title": "My Note"})
 
         mock_client.post.assert_called_once()
-        call_kwargs = mock_client.post.call_args
-        assert "upsert" in str(call_kwargs)
-        assert "my-note" in str(call_kwargs)
+        call_args, call_kwargs = mock_client.post.call_args
+        assert call_args[0] == "http://127.0.0.1:7430/api/index/upsert"
+        assert call_kwargs["json"]["slug"] == "my-note"
+        assert call_kwargs["json"]["title"] == "My Note"
 
     @pytest.mark.asyncio
-    async def test_handle_card_updated_skips_malformed_payload(self):
-        """handle_card_updated() should not raise on malformed payload."""
-        from cockpit.web.knowledge_indexer import KnowledgeIndexer
+    async def test_callback_handles_card_updated(self):
+        """callback should queue upsert for card_updated events."""
+        import asyncio
 
-        indexer = KnowledgeIndexer()
-        # Should not raise; bad payload → just logs a warning
-        await indexer.handle_card_updated({"action": "upsert"})
+        import cockpit.web.knowledge_indexer as ki
+
+        mock_upsert = AsyncMock()
+        with patch.object(ki, "_upsert_card", mock_upsert):
+            request = AsyncMock()
+            request.json.return_value = {
+                "type": "bos://brain/events/card_updated",
+                "data": {"slug": "my-note", "title": "My Note"},
+            }
+
+            resp = await ki.knowledge_indexer_callback(request)
+
+        assert resp.status_code == 200
+        assert json.loads(bytes(resp.body).decode())["action"] == "upsert_queued"
+        assert json.loads(bytes(resp.body).decode())["slug"] == "my-note"
+        # 让 callback 通过 create_task 派生的 _upsert_card 协程完成
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        mock_upsert.assert_awaited_once_with("my-note", {"slug": "my-note", "title": "My Note"})
+
+    @pytest.mark.asyncio
+    async def test_callback_skips_malformed_payload(self):
+        """callback should not raise on malformed payloads."""
+        import cockpit.web.knowledge_indexer as ki
+
+        request = AsyncMock()
+        request.json.return_value = {"action": "upsert"}  # no type/data
+
+        resp = await ki.knowledge_indexer_callback(request)
+        assert resp.status_code == 200
+        assert json.loads(bytes(resp.body).decode())["action"] == "ignored"
+
+        # invalid JSON body → 400
+        request2 = AsyncMock()
+        request2.json.side_effect = ValueError("bad json")
+        resp2 = await ki.knowledge_indexer_callback(request2)
+        assert resp2.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_start_stop_lifecycle(self):
+        """start_knowledge_indexer() spawns keepalive; stop cancels it."""
+        import cockpit.web.knowledge_indexer as ki
+
+        with patch.object(ki, "_register_subscription", AsyncMock()):
+            await ki.start_knowledge_indexer()
+            assert ki._indexer_task is not None and not ki._indexer_task.done()
+
+        await ki.stop_knowledge_indexer()
+        assert ki._indexer_task is None

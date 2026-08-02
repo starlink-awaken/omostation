@@ -113,16 +113,8 @@ def test_system_map_builds_workspace_dimensions():
     assert domain_apps["next_action"]
     assert payload["summary"]["page_maturity_ready"] >= 1
     assert payload["summary"]["page_maturity_ready"] == payload["summary"]["cockpit_pages"]
-    assert any(
-        step["page_id"] == "Compute"
-        for playbook in payload["playbooks"]
-        for step in playbook["steps"]
-    )
-    assert any(
-        step["page_id"] == "GBrainAdmin"
-        for playbook in payload["playbooks"]
-        for step in playbook["steps"]
-    )
+    assert any(step["page_id"] == "Compute" for playbook in payload["playbooks"] for step in playbook["steps"])
+    assert any(step["page_id"] == "GBrainAdmin" for playbook in payload["playbooks"] for step in playbook["steps"])
     home_maturity = next(item for item in payload["page_maturity"]["items"] if item["page_id"] == "Home")
     assert home_maturity["roadmap_status"] == "shipped"
     assert "同步" in home_maturity["traceability_next_action"]
@@ -159,16 +151,26 @@ def test_system_map_builds_workspace_dimensions():
     assert any(item["id"] == "verification" for item in coverage["dimension_summary"])
     registry_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "registry_contract")
     assert registry_dimension["status"] in {"ready", "warning", "failed"}
-    assert registry_dimension["ready"] + registry_dimension["warning"] + registry_dimension["failed"] == coverage["summary"]["projects"]
+    assert (
+        registry_dimension["ready"] + registry_dimension["warning"] + registry_dimension["failed"]
+        == coverage["summary"]["projects"]
+    )
     assert registry_dimension["attention_projects"] == [
         project["id"]
         for project in payload["projects"]
-        if next(check for check in project["coverage_checks"] if check["id"] == "registry_contract")["status"] != "ready"
+        if next(check for check in project["coverage_checks"] if check["id"] == "registry_contract")["status"]
+        != "ready"
     ]
     runtime_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "runtime_probe")
     runtime_attention_ids = {item["id"] for item in runtime_dimension["attention_projects"]}
     assert runtime_dimension["attention_count"] == len(runtime_dimension["attention_projects"])
-    assert runtime_attention_ids >= {"mesh-router", "ecos", "l4-kernel", "aetherforge", "observability"}
+    # 数据驱动断言（与 registry_contract 一致）：attention 集合必须与 payload 中
+    # runtime_probe 非 ready 的项目一致，避免硬编码项目集合随 workspace 数据漂移而脆化
+    assert runtime_attention_ids == {
+        project["id"]
+        for project in payload["projects"]
+        if next(check for check in project["coverage_checks"] if check["id"] == "runtime_probe")["status"] != "ready"
+    }
     verification_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "verification")
     assert verification_dimension["documented"] == verification_dimension["warning"]
     assert verification_dimension["evidence_score"] >= verification_dimension["score"]
@@ -207,7 +209,9 @@ def test_system_map_builds_workspace_dimensions():
     runtime_probes = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-runtime-probes")
     assert runtime_probes["status"] == "shipped"
     runtime_actions = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-runtime-actions")
-    project_execution = next(item for item in payload["roadmap"]["items"] if item["id"] == "project-action-execution-audit")
+    project_execution = next(
+        item for item in payload["roadmap"]["items"] if item["id"] == "project-action-execution-audit"
+    )
     assert runtime_actions["status"] == "shipped"
     ssot_links = next(item for item in payload["roadmap"]["items"] if item["id"] == "ssot-deep-links")
     assert ssot_links["status"] == "shipped"
@@ -307,9 +311,7 @@ def test_system_map_builds_workspace_dimensions():
         "documented",
         "unknown",
     }
-    task_center_page = next(
-        item for item in payload["page_maturity"]["items"] if item["page_id"] == "TaskCenter"
-    )
+    task_center_page = next(item for item in payload["page_maturity"]["items"] if item["page_id"] == "TaskCenter")
     complete_task_action = next(
         action for action in task_center_page["operator_action_details"] if action["id"] == "complete-task"
     )
@@ -693,7 +695,7 @@ def test_project_with_security_audit_uses_audit_as_security_evidence(tmp_path):
 def test_project_ports_observe_compose_host_ports_without_registry_entry(tmp_path, monkeypatch):
     compose_path = tmp_path / "docker-compose.yml"
     compose_path.write_text(
-        "services:\n  langfuse-server:\n    ports:\n      - \"3050:3000\"\n  db:\n    ports:\n      - \"5433:5432\"\n",
+        'services:\n  langfuse-server:\n    ports:\n      - "3050:3000"\n  db:\n    ports:\n      - "5433:5432"\n',
         encoding="utf-8",
     )
     monkeypatch.setattr(api_system_map_io_commands, "_is_port_listening", lambda _port: False)
@@ -914,9 +916,7 @@ def test_external_ui_worktree_is_resolved_from_registry_path_env(tmp_path, monke
         "role": "Web 控制台 UI",
         "stack": "TypeScript (Vite, React)",
     }
-    operational = api_system_map._project_operational_status(
-        "cockpit-ui", project_data
-    )
+    operational = api_system_map._project_operational_status("cockpit-ui", project_data)
 
     assert operational["status"] == "ready"
     assert operational["surface_type"] == "external-worktree"
