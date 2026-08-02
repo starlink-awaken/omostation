@@ -62,6 +62,24 @@ else:
 
 router = APIRouter(prefix="/api/external-resources", tags=["external-resources"])
 
+_REVIEW_QUEUE_SCHEMA = "external-resource-review-queue/v1"
+_REVIEW_SNAPSHOT_FIELDS = (
+    "id",
+    "provider",
+    "protocol",
+    "version",
+    "capabilities",
+    "mode",
+    "lifecycle",
+    "availability",
+    "reason_codes",
+    "health",
+    "permission_ref",
+    "expires_at",
+    "review_at",
+    "rollback_plan",
+)
+
 
 def _unavailable_projection(error_type: str, next_action: str) -> dict[str, Any]:
     now_iso = datetime.datetime.now(datetime.UTC).isoformat()
@@ -88,11 +106,18 @@ def _unavailable_projection(error_type: str, next_action: str) -> dict[str, Any]
     }
 
 
-def _latest_catalog() -> dict[str, Any] | None:
+def _latest_observation() -> dict[str, Any] | None:
     if read_latest_external_resource_observation is None:
         return None
     observation = read_latest_external_resource_observation(_REPO_ROOT / ".omo")
     if not isinstance(observation, Mapping):
+        return None
+    return dict(observation)
+
+
+def _latest_catalog() -> dict[str, Any] | None:
+    observation = _latest_observation()
+    if observation is None:
         return None
     catalog = observation.get("catalog")
     if not isinstance(catalog, Mapping):
@@ -102,6 +127,117 @@ def _latest_catalog() -> dict[str, Any] | None:
     if catalog.get("activation") != "forbidden":
         return None
     return dict(catalog)
+
+
+def _safe_review_snapshot(value: Any) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise ValueError("review snapshot must be an object")
+    return {
+        field: value[field]
+        for field in _REVIEW_SNAPSHOT_FIELDS
+        if field in value
+    }
+
+
+def _review_queue_projection(observation: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Project the latest delta; this is not a durable approval queue."""
+    base = {
+        "schema": _REVIEW_QUEUE_SCHEMA,
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "raw_content_policy": "never_read_or_export",
+        "source": "omo.external_resource_observation",
+        "queue_semantics": "latest_observation_delta",
+        "items": [],
+        "summary": {
+            "review_required_count": 0,
+            "operational_observation_count": 0,
+            "risk_codes": [],
+        },
+    }
+    if observation is None:
+        return {
+            **base,
+            "status": "empty",
+            "next_action": "先运行受治理的外部资源观测，再查看人工复核队列。",
+        }
+    if observation.get("schema") != "external-resource-observation/v1":
+        raise ValueError("external resource observation schema is invalid")
+    catalog = observation.get("catalog")
+    if not isinstance(catalog, Mapping):
+        raise ValueError("external resource observation catalog is invalid")
+    changes = catalog.get("changes")
+    if changes is None:
+        changes = {}
+    if not isinstance(changes, Mapping):
+        raise ValueError("external resource catalog changes are invalid")
+    if changes and changes.get("schema") != "external-resource-catalog-diff/v1":
+        raise ValueError("external resource catalog diff schema is invalid")
+    raw_changes = changes.get("changes", [])
+    if not isinstance(raw_changes, list):
+        raise ValueError("external resource catalog diff changes are invalid")
+
+    items: list[dict[str, Any]] = []
+    operational_count = 0
+    risk_codes: set[str] = set()
+    for change in raw_changes:
+        if not isinstance(change, Mapping):
+            raise ValueError("external resource catalog change is invalid")
+        codes = sorted(
+            {
+                str(code).strip()
+                for code in change.get("risk_codes", [])
+                if str(code).strip()
+            }
+        )
+        risk_codes.update(codes)
+        if not bool(change.get("review_required", False)):
+            if change.get("risk_class") == "operational_observation":
+                operational_count += 1
+            continue
+        resource_id = str(change.get("id") or "").strip()
+        if not resource_id:
+            raise ValueError("external resource review item is missing id")
+        changed_fields = sorted(
+            {
+                str(field).strip()
+                for field in change.get("changed_fields", [])
+                if str(field).strip()
+            }
+        )
+        items.append(
+            {
+                "resource_id": resource_id,
+                "change": str(change.get("change") or "unknown"),
+                "risk_class": "manual_review",
+                "risk_codes": codes,
+                "changed_fields": changed_fields,
+                "previous": _safe_review_snapshot(change.get("previous")),
+                "current": _safe_review_snapshot(change.get("current")),
+            }
+        )
+
+    return {
+        **base,
+        "status": "attention" if items else "clear",
+        "observed_at": observation.get("observed_at"),
+        "recorded_at": observation.get("recorded_at"),
+        "observation_id": observation.get("observation_id"),
+        "change_state": observation.get("change_state"),
+        "items": items,
+        "summary": {
+            "review_required_count": len(items),
+            "operational_observation_count": operational_count,
+            "risk_codes": sorted(risk_codes),
+        },
+        "next_action": (
+            "按风险码和变更字段完成人工核查；复核本身不会批准或激活资源。"
+            if items
+            else "当前观测没有需要人工复核的资源变化。"
+        ),
+    }
 
 
 def _projection_status(projection: Mapping[str, Any]) -> str:
@@ -168,6 +304,53 @@ async def get_external_resources() -> dict[str, Any]:
         "ok": True,
         "status": _projection_status(projection),
         "source": source,
+        "projection": projection,
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.get("/review-queue")
+async def get_external_resource_review_queue() -> dict[str, Any]:
+    """Expose only the latest governed manual-review delta.
+
+    The endpoint intentionally reads OMO only. It does not fall back to live
+    discovery, mutate review state, invoke providers, or activate a resource.
+    """
+    if read_latest_external_resource_observation is None:
+        projection = _review_queue_projection(None)
+        projection.update(
+            {
+                "status": "unavailable",
+                "error": "external_resource_observation_unavailable",
+                "next_action": "检查 OMO 外部资源观测存储后重试。",
+            }
+        )
+        return {
+            "ok": False,
+            "projection": projection,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    try:
+        projection = _review_queue_projection(_latest_observation())
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        projection = _review_queue_projection(None)
+        projection.update(
+            {
+                "status": "unavailable",
+                "error": type(exc).__name__,
+                "next_action": "检查 OMO 外部资源观测格式后重试。",
+            }
+        )
+        return {
+            "ok": False,
+            "projection": projection,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    return {
+        "ok": True,
         "projection": projection,
         "external_side_effects": "disabled",
         "worker_launch": False,

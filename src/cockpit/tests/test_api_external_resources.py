@@ -132,6 +132,117 @@ def test_external_resources_fails_closed_when_discovery_is_unavailable(monkeypat
     assert body["worker_launch"] is False
 
 
+def test_external_resource_review_queue_projects_manual_review_delta_without_discovery(
+    monkeypatch, tmp_path
+):
+    calls: list[object] = []
+    observation = {
+        "schema": "external-resource-observation/v1",
+        "observation_id": "observation:test",
+        "observed_at": "2026-08-03T00:00:00Z",
+        "recorded_at": "2026-08-03T00:01:00Z",
+        "change_state": "changed",
+        "catalog": {
+            "schema": "external-resource-catalog/v1",
+            "changes": {
+                "schema": "external-resource-catalog-diff/v1",
+                "changes": [
+                    {
+                        "id": "source:test",
+                        "change": "changed",
+                        "review_required": True,
+                        "risk_class": "manual_review",
+                        "risk_codes": ["descriptor_provider_changed"],
+                        "changed_fields": ["provider"],
+                        "previous": {
+                            "provider": "old-provider",
+                            "content": "must not leak",
+                        },
+                        "current": {
+                            "provider": "new-provider",
+                            "version": "2.0.0",
+                        },
+                    },
+                    {
+                        "id": "source:health",
+                        "change": "changed",
+                        "review_required": False,
+                        "risk_class": "operational_observation",
+                        "risk_codes": ["health_changed"],
+                        "changed_fields": ["health"],
+                    },
+                ],
+            },
+        },
+    }
+
+    def fake_latest(omo_dir):
+        calls.append(omo_dir)
+        return observation
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "read_latest_external_resource_observation", fake_latest)
+    monkeypatch.setattr(
+        api_external_resources,
+        "collect_external_resources",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("discovery must not run")),
+    )
+
+    response = TestClient(_app()).get("/api/external-resources/review-queue")
+    body = response.json()
+    projection = body["projection"]
+
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert projection["schema"] == "external-resource-review-queue/v1"
+    assert projection["status"] == "attention"
+    assert projection["summary"] == {
+        "review_required_count": 1,
+        "operational_observation_count": 1,
+        "risk_codes": ["descriptor_provider_changed", "health_changed"],
+    }
+    assert projection["items"][0]["resource_id"] == "source:test"
+    assert projection["items"][0]["current"] == {
+        "provider": "new-provider",
+        "version": "2.0.0",
+    }
+    assert "content" not in projection["items"][0]["previous"]
+    assert projection["activation"] == "forbidden"
+    assert body["external_side_effects"] == "disabled"
+    assert body["worker_launch"] is False
+    assert calls == [tmp_path / ".omo"]
+
+
+def test_external_resource_review_queue_is_empty_before_first_observation(monkeypatch):
+    monkeypatch.setattr(api_external_resources, "read_latest_external_resource_observation", lambda _path: None)
+
+    response = TestClient(_app()).get("/api/external-resources/review-queue")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["projection"]["status"] == "empty"
+    assert body["projection"]["items"] == []
+    assert body["projection"]["activation"] == "forbidden"
+
+
+def test_external_resource_review_queue_fails_closed_on_invalid_observation(monkeypatch):
+    monkeypatch.setattr(
+        api_external_resources,
+        "read_latest_external_resource_observation",
+        lambda _path: {"schema": "unexpected"},
+    )
+
+    response = TestClient(_app()).get("/api/external-resources/review-queue")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is False
+    assert body["projection"]["status"] == "unavailable"
+    assert body["projection"]["activation"] == "forbidden"
+    assert body["external_side_effects"] == "disabled"
+
+
 def test_external_resource_evaluation_returns_explainable_read_only_decision(monkeypatch, tmp_path):
     projection = _projection()
     calls: list[dict] = []
