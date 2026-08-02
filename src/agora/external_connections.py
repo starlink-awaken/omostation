@@ -680,6 +680,7 @@ def build_external_resource_catalog_snapshot(
     observed_at: str | None = None,
     now: datetime | None = None,
     health_ttl_seconds: int = 900,
+    catalog_ttl_seconds: int = 3600,
     policy_digest: str = "external-connection-fabric/v1",
 ) -> dict[str, Any]:
     """Build a read-only, credential-free projection for human consumers.
@@ -690,6 +691,8 @@ def build_external_resource_catalog_snapshot(
     """
     if health_ttl_seconds <= 0:
         raise ExternalConnectionError("health_ttl_seconds must be positive")
+    if catalog_ttl_seconds <= 0:
+        raise ExternalConnectionError("catalog_ttl_seconds must be positive")
     current = now or datetime.now(UTC)
     resources: list[dict[str, Any]] = []
     errors: list[dict[str, str]] = []
@@ -802,6 +805,7 @@ def build_external_resource_catalog_snapshot(
         "raw_content_policy": "never_read_or_export",
         "observed_at": observed_at or current.isoformat(),
         "health_ttl_seconds": health_ttl_seconds,
+        "catalog_ttl_seconds": catalog_ttl_seconds,
         "policy_digest": policy_digest,
         "resources": resources,
         "errors": errors,
