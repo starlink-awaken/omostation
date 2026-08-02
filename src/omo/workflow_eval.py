@@ -591,6 +591,7 @@ def build_operations_snapshot(
     unavailable_runs = 0
     sandbox_tool_invocations = 0
     sandbox_tool_receipt_runs = 0
+    sandbox_tool_outcomes: Counter[str] = Counter()
 
     for snapshot in snapshots:
         run_events = by_run.get(snapshot["workflow_run_id"], [])
@@ -629,6 +630,10 @@ def build_operations_snapshot(
         if sandbox_invocations:
             sandbox_tool_invocations += len(sandbox_invocations)
             sandbox_tool_receipt_runs += int(evidence_complete)
+            sandbox_tool_outcomes.update(
+                str(event.get("payload", {}).get("outcome") or "unknown")
+                for event in sandbox_invocations
+            )
             scene["sandbox_tool_runs"] += 1
         if succeeded:
             success_runs += 1
@@ -816,6 +821,7 @@ def build_operations_snapshot(
             "external_side_effects": "disabled",
             "invocation_count": sandbox_tool_invocations,
             "receipt_run_count": sandbox_tool_receipt_runs,
+            "outcomes": dict(sorted(sandbox_tool_outcomes.items())),
             "next_action": (
                 "review_sandbox_receipt_and_promote_only_with_real_scene"
                 if sandbox_tool_invocations

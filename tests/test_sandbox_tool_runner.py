@@ -6,7 +6,12 @@ import json
 import pytest
 from omo.cli import main as cli_main
 from omo.sandbox_tool_runner import SandboxToolError, run_sandbox_tool
-from omo.worker_lifecycle import acknowledge_worker, record_step_dispatch
+from omo.worker_lifecycle import (
+    acknowledge_worker,
+    expire_worker_lease,
+    reclaim_worker,
+    record_step_dispatch,
+)
 from omo.workflow_eval import build_operations_snapshot
 from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event
 
@@ -112,6 +117,7 @@ def test_sandbox_tool_records_deterministic_receipt_and_evidence(tmp_path):
         "external_side_effects": "disabled",
         "invocation_count": 1,
         "receipt_run_count": 1,
+        "outcomes": {"succeeded": 1},
         "next_action": "review_sandbox_receipt_and_promote_only_with_real_scene",
     }
 
@@ -163,7 +169,6 @@ def test_sandbox_tool_requires_live_worker_lease(tmp_path):
             input_digest="d" * 64,
             now="2026-08-03T00:00:10Z",
         )
-
     with pytest.raises(SandboxToolError, match="lease has expired"):
         run_sandbox_tool(
             tmp_path,
@@ -173,6 +178,99 @@ def test_sandbox_tool_requires_live_worker_lease(tmp_path):
             now="2026-08-03T00:01:00Z",
         )
 
+
+@pytest.mark.parametrize(
+    ("outcome", "error_code", "run_state"),
+    [
+        ("failed", "SANDBOX_TOOL_FAILED", "failed"),
+        ("unavailable", "SANDBOX_BACKEND_UNAVAILABLE", "unavailable"),
+    ],
+)
+def test_sandbox_tool_failure_never_creates_success_or_evidence(
+    tmp_path, outcome, error_code, run_state
+):
+    context = _context(tmp_path, f"run-{outcome}")
+    kwargs = {
+        **context,
+        "input_ref": "sandbox://descriptor/failure",
+        "input_digest": "f" * 64,
+        "outcome": outcome,
+        "now": "2026-08-03T00:00:10Z",
+    }
+
+    first = run_sandbox_tool(tmp_path, **kwargs)
+    repeated = run_sandbox_tool(tmp_path, **kwargs)
+    events = WorkflowMeshStore(tmp_path).events()
+    event_types = [event["event_type"] for event in events]
+
+    assert first["status"] == "executed"
+    assert repeated["status"] == "replayed"
+    assert first["outcome"] == outcome
+    assert first["error_code"] == error_code
+    assert first["receipt_event_id"] is None
+    assert event_types.count("ToolInvocationRecorded") == 1
+    assert "WorkflowSucceeded" not in event_types
+    assert "EvidenceRecorded" not in event_types
+    snapshot = WorkflowMeshStore(tmp_path).snapshot(context["workflow_run_id"])
+    assert snapshot["state"] == run_state
+    assert build_operations_snapshot(tmp_path)["sandbox_tools"]["outcomes"] == {outcome: 1}
+
+
+def test_sandbox_tool_replays_after_worker_reclaim_with_new_attempt(tmp_path):
+    context = _context(tmp_path, "run-reclaimed")
+    expire_worker_lease(
+        tmp_path,
+        **context,
+        now="2026-08-03T00:01:00Z",
+    )
+    reclaim_worker(
+        tmp_path,
+        **context,
+        successor_worker_id="worker-successor",
+        successor_dispatch_id="dispatch-successor",
+        now="2026-08-03T00:01:01Z",
+    )
+    successor_step = f"{context['workflow_run_id']}:execute:attempt-2"
+    record_step_dispatch(
+        tmp_path,
+        workflow_run_id=context["workflow_run_id"],
+        trace_id=context["trace_id"],
+        dispatch_id="dispatch-successor",
+        worker_id="worker-successor",
+        step_run_id=successor_step,
+        admission_id=context["admission_id"],
+    )
+    acknowledge_worker(
+        tmp_path,
+        workflow_run_id=context["workflow_run_id"],
+        trace_id=context["trace_id"],
+        dispatch_id="dispatch-successor",
+        worker_id="worker-successor",
+        step_run_id=successor_step,
+        admission_id=context["admission_id"],
+        lease_seconds=60,
+        now="2026-08-03T00:01:01Z",
+    )
+
+    result = run_sandbox_tool(
+        tmp_path,
+        **{
+            **context,
+            "dispatch_id": "dispatch-successor",
+            "worker_id": "worker-successor",
+            "step_run_id": successor_step,
+            "input_ref": "artifact://knowledge/recovered",
+            "input_digest": "9" * 64,
+            "now": "2026-08-03T00:01:10Z",
+        },
+    )
+
+    assert result["status"] == "executed"
+    assert result["outcome"] == "succeeded"
+    snapshot = WorkflowMeshStore(tmp_path).snapshot(context["workflow_run_id"])
+    assert snapshot["state"] == "succeeded"
+    assert snapshot["worker"]["worker_id"] == "worker-successor"
+    assert snapshot["step_runs"][successor_step]["state"] == "succeeded"
 
 def test_sandbox_tool_cli_is_explicit_and_json(capsys, tmp_path):
     context = _context(tmp_path, "run-cli")

@@ -55,6 +55,7 @@ EVENT_STATE = {
     "WorkerLeaseExpired": "unavailable",
     "WorkerReclaimed": "running",
 }
+TOOL_OUTCOMES = frozenset({"succeeded", "failed", "unavailable"})
 # 只有 closed 才是不可再推进的生命周期终态。succeeded/failed/unavailable
 # 仍可能进入验证、关闭或受控恢复。
 TERMINAL_STATES = {"closed"}
@@ -492,6 +493,7 @@ def project_workflow_run(
                 "dispatch_id",
                 "worker_id",
                 "request_digest",
+                "outcome",
             }
             missing_tool_fields = sorted(
                 required_tool_fields - event["payload"].keys()
@@ -507,6 +509,10 @@ def project_workflow_run(
             if event["payload"].get("external_side_effects") != "disabled":
                 raise WorkflowMeshEventError(
                     "ToolInvocationRecorded external_side_effects must be disabled"
+                )
+            if event["payload"].get("outcome") not in TOOL_OUTCOMES:
+                raise WorkflowMeshEventError(
+                    "ToolInvocationRecorded outcome must be succeeded, failed, or unavailable"
                 )
         if event_type == "WorkflowVerified" and not snapshot["evidence"]:
             raise WorkflowMeshEventError(
@@ -559,6 +565,8 @@ def project_workflow_run(
                 "WorkerLeaseExpired": "unavailable",
                 "WorkerReclaimed": "running",
             }.get(event_type, step_projection["state"])
+            if event_type == "ToolInvocationRecorded":
+                step_projection["tool_outcome"] = event["payload"].get("outcome")
             step_projection["last_event_type"] = event_type
             step_projection["admission_id"] = event["payload"].get(
                 "admission_id", step_projection.get("admission_id")
@@ -763,6 +771,7 @@ class WorkflowMeshStore:
 __all__ = [
     "EVENT_STATE",
     "TERMINAL_STATES",
+    "TOOL_OUTCOMES",
     "WORKFLOW_MESH_LOG",
     "WorkflowMeshEventError",
     "WorkflowMeshStore",

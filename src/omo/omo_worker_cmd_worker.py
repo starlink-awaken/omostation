@@ -244,6 +244,7 @@ def _print_sandbox_tool(
     tool_id: str,
     input_ref: str,
     input_digest: str,
+    outcome: str = "succeeded",
     now: str | None = None,
 ) -> int:
     try:
@@ -258,6 +259,7 @@ def _print_sandbox_tool(
             tool_id=tool_id,
             input_ref=input_ref,
             input_digest=input_digest,
+            outcome=outcome,
             now=now,
         )
     except (SandboxToolError, OSError, ValueError) as exc:
@@ -391,6 +393,11 @@ def setup_worker_parser(subparsers: Any) -> None:
     sandbox_tool_parser.add_argument("--tool-id", default="sandbox.digest_ref")
     sandbox_tool_parser.add_argument("--input-ref", required=True)
     sandbox_tool_parser.add_argument("--input-digest", required=True)
+    sandbox_tool_parser.add_argument(
+        "--outcome",
+        choices=("succeeded", "failed", "unavailable"),
+        default="succeeded",
+    )
     sandbox_tool_parser.add_argument("--now")
     admission_parser = worker_sub.add_parser("admission-eval")
     admission_parser.add_argument("envelope_ref")
@@ -523,6 +530,7 @@ def execute_worker_command(args: argparse.Namespace) -> int:
             tool_id=args.tool_id,
             input_ref=args.input_ref,
             input_digest=args.input_digest,
+            outcome=args.outcome,
             now=args.now,
         )
 

@@ -16,7 +16,12 @@ from pathlib import Path
 from typing import Any
 
 from .omo_external_receipt import record_external_receipt
-from .workflow_mesh import WorkflowMeshEventError, WorkflowMeshStore, new_workflow_event
+from .workflow_mesh import (
+    TOOL_OUTCOMES,
+    WorkflowMeshEventError,
+    WorkflowMeshStore,
+    new_workflow_event,
+)
 
 SANDBOX_TOOL_SCHEMA = "sandbox-tool-invocation/v1"
 SANDBOX_TOOL_RECEIPT_SCHEMA = "sandbox-tool-receipt/v1"
@@ -165,6 +170,7 @@ def run_sandbox_tool(
     tool_id: str = SANDBOX_TOOL_ID,
     input_ref: str,
     input_digest: str,
+    outcome: str = "succeeded",
     now: str | None = None,
 ) -> dict[str, Any]:
     """Run one deterministic sandbox ToolPack operation and persist its receipt.
@@ -175,6 +181,11 @@ def run_sandbox_tool(
     """
     input_ref = str(input_ref or "").strip()
     input_digest = str(input_digest or "").strip().lower()
+    outcome = str(outcome or "").strip().lower()
+    if outcome not in TOOL_OUTCOMES:
+        raise SandboxToolError(
+            "outcome must be succeeded, failed, or unavailable"
+        )
     _validate_request(tool_id, input_ref, input_digest)
     observed_at = _utc(now)
     store = WorkflowMeshStore(omo_dir)
@@ -211,6 +222,7 @@ def run_sandbox_tool(
         "step_run_id": step_run_id,
         "admission_id": admission_id,
         "request_digest": _digest(invocation_material),
+        "outcome": outcome,
     }
     prior = _existing(store, invocation_key)
     if prior is not None and prior.get("payload") != invocation_payload:
@@ -244,14 +256,41 @@ def run_sandbox_tool(
         idempotency_key=invocation_key,
         payload=invocation_payload,
     )
-    succeeded = _append(
-        store,
-        "WorkflowSucceeded",
-        workflow_run_id,
-        trace_id=trace_id,
-        idempotency_key=f"{workflow_run_id}:sandbox-workflow-succeeded",
-        payload={"step_count": 1, "execution_mode": "sandbox"},
-    )
+    result_event_type = {
+        "failed": "StepFailed",
+        "unavailable": "BackendUnavailable",
+    }.get(outcome)
+    result_event = None
+    if result_event_type is None:
+        result_event = _append(
+            store,
+            "WorkflowSucceeded",
+            workflow_run_id,
+            trace_id=trace_id,
+            idempotency_key=f"{workflow_run_id}:sandbox-workflow-succeeded",
+            payload={"step_count": 1, "execution_mode": "sandbox"},
+        )
+    else:
+        error_code = (
+            "SANDBOX_TOOL_FAILED"
+            if outcome == "failed"
+            else "SANDBOX_BACKEND_UNAVAILABLE"
+        )
+        result_event = _append(
+            store,
+            result_event_type,
+            workflow_run_id,
+            trace_id=trace_id,
+            idempotency_key=f"{workflow_run_id}:sandbox-tool-result:{step_run_id}",
+            payload={
+                "step_run_id": step_run_id,
+                "admission_id": admission_id,
+                "dispatch_id": dispatch_id,
+                "worker_id": worker_id,
+                "error_code": error_code,
+                "outcome": outcome,
+            },
+        )
     observed_at_stamp = _stamp(now)
     output_digest = _digest(
         {
@@ -261,12 +300,32 @@ def run_sandbox_tool(
             "request_digest": invocation_payload["request_digest"],
         }
     )
+    if outcome != "succeeded":
+        events = [step_started["event_id"], invocation["event_id"], result_event["event_id"]]
+        return {
+            "schema": SANDBOX_TOOL_SCHEMA,
+            "status": "replayed" if prior is not None else "executed",
+            "activation": "sandbox",
+            "external_side_effects": "disabled",
+            "workflow_run_id": workflow_run_id,
+            "step_run_id": step_run_id,
+            "invocation_id": invocation_id,
+            "tool_id": tool_id,
+            "outcome": outcome,
+            "error_code": result_event["payload"]["error_code"],
+            "output_digest": None,
+            "events": events,
+            "receipt_event_id": None,
+            "receipt_schema": SANDBOX_TOOL_RECEIPT_SCHEMA,
+            "run_state": WorkflowMeshStore(omo_dir).snapshot(workflow_run_id)["state"],
+            "worker_state": snapshot.get("worker", {}).get("state"),
+        }
     receipt = {
         "receipt_id": invocation_id,
         "trace_id": trace_id,
         "resource_id": f"sandbox-toolpack:{tool_id}",
         "operation": "digest_ref",
-        "result_state": "succeeded",
+        "result_state": outcome,
         "observed_at": observed_at_stamp,
         "provenance_ref": f"sandbox://invocations/{invocation_id}",
         "policy_digest": str(admission["policy_digest"]),
@@ -297,10 +356,11 @@ def run_sandbox_tool(
         "invocation_id": invocation_id,
         "tool_id": tool_id,
         "output_digest": output_digest,
+        "outcome": outcome,
         "events": [
             step_started["event_id"],
             invocation["event_id"],
-            succeeded["event_id"],
+            result_event["event_id"],
             evidence["event_id"],
         ],
         "receipt_event_id": evidence["event_id"],
