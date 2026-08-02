@@ -357,33 +357,6 @@ class AuditSubscriber:
             logger.error("audit_stats_failed", error=str(e))
         return stats
 
-    def to_otel_json(self, since=""):
-        entries = self.query(since=since, limit=1000)
-        import hashlib
-
-        spans = []
-        for entry in entries:
-            trace_id = entry.get("trace_id", "") or entry.get("id", "")
-            trace_hex = hashlib.md5(trace_id.encode()).hexdigest()[:32]
-            span_id_hex = hashlib.md5((trace_id + ":span").encode()).hexdigest()[:16]
-            spans.append(
-                {
-                    "name": entry.get("event_type", "unknown"),
-                    "traceId": trace_hex,
-                    "spanId": span_id_hex,
-                    "startTime": entry.get("timestamp", ""),
-                    "attributes": {
-                        "audit.actor": entry.get("actor", ""),
-                        "audit.resource": entry.get("resource", ""),
-                        "audit.action": entry.get("action", ""),
-                        "audit.risk_level": entry.get("risk_level", "INFO"),
-                        "audit.source": entry.get("source", ""),
-                        "audit.event_type": entry.get("event_type", ""),
-                    },
-                }
-            )
-        return spans
-
 
 _auditor = AuditSubscriber(_bus, registry)
 # Wire audit into event bus: every published event is automatically persisted

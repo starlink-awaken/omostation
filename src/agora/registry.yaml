@@ -119,8 +119,8 @@ services:
   # ── ToolBox L2 分区服务 (v5 I0 接入) ──
   - name: toolbox-wps-office-mcp
     description: WPS Office MCP Server — Excel/Word/PPT 243 工具
-    mcp_url: "stdio://node /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/dist/index.js"
-    health_url: "cli://node /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/dist/index.js --health"
+    mcp_url: "stdio://node ~/ToolBox/mcp/wps-office-mcp/dist/index.js"
+    health_url: "cli://node ~/ToolBox/mcp/wps-office-mcp/dist/index.js --health"
     tags: [toolbox, mcp, wps, office]
     tools:
       - wps_excel: {description: "Excel 操控", args: {action: string, params: dict}}

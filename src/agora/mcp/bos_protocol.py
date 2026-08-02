@@ -150,17 +150,3 @@ class MCPStdioAdapter:
     @property
     def alive(self) -> bool:
         return self._proc is not None and self._proc.poll() is None
-
-
-async def test_adapter():
-    """测试适配器：连接本地 MCP server。"""
-    # 示例: 连接 ecos bos mounter
-    try:
-        adapter = MCPStdioAdapter("uv run -m agora.mcp.bos_resolve serve")
-        ok = await adapter.start()
-        print(f"MCP adapter started: {ok}, tools: {list(adapter._tools.keys())}")
-        adapter.shutdown()
-    except Exception as e:  # defensive fallback
-        print(f"Test failed (expected in non-MCP env): {e}")
-        return False
-    return True

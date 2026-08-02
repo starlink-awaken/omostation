@@ -11,6 +11,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from agora.core.config import get_internal_port
+
 INSTANCE_CONFIG_DIR = Path.home() / ".config" / "agora" / "instances"
 
 
@@ -72,11 +74,11 @@ class InstanceManager:
             display_name="Default",
             endpoint=os.environ.get(
                 "AGORA_ENDPOINT",
-                f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}",
+                f"http://localhost:{get_internal_port()}",
             ),
             a2a_endpoint=os.environ.get(
                 "AGORA_A2A_ENDPOINT",
-                f"http://localhost:{os.environ.get('AGORA_INTERNAL_PORT', '7430')}/a2a",
+                f"http://localhost:{get_internal_port()}/a2a",
             ),
             owner="org:starlink",
             capabilities=["identity", "capability", "event", "knowledge", "task"],

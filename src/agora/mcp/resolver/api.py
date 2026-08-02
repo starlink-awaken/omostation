@@ -127,7 +127,7 @@ def get_bos_contract_health(yaml_path: str = "") -> dict:
     try:
         # Resolve yaml path (relative to workspace root or absolute)
         repo_root = Path(
-            os.environ.get("WORKSPACE_ROOT", "/Users/xiamingxing/Workspace")
+            os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
         )
         if yaml_path:
             yaml_full = Path(yaml_path)
