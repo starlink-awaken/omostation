@@ -539,6 +539,31 @@ UI 不显示原文、凭据或未知字段。页面明确展示 `latest_observat
 看见风险，但不会把看见风险误判为已完成复核，更不会把复核结果直接写成准入事实。契约见
 [`ADR-0331`](../.omo/_knowledge/decisions/0331-external-resource-review-queue-ui.md)。
 
+### 7.3.7 Phase 39 Scene Card 业务输入闸门
+
+Phase 39 补齐“候选/评审 -> 完整业务输入”的缺口。根仓
+`bin/ssot/scene-card-intake.py` 接收 `scene-card/v1`，输出 `scene-card-intake/v1`，检查业务
+合同、3-10 个 `sample://`/`evidence://` 等不透明引用、需求或机会证据、激活证据、能力标识和
+proposal-only 生命周期。原文、凭据、非不透明引用和请求激活的字段都 fail-closed；输入摘要哈希
+只用于确定性识别，不构成业务批准或执行证据。
+
+输入结果只有两个产品状态：
+
+| 状态 | 下一步 | 边界 |
+| --- | --- | --- |
+| `blocked` | 补齐字段或修正引用后重新提交 | 不写 OMO、不调用 provider、不创建 WorkflowRun |
+| `proposal_only` | 运行 external activation preflight | 仍然 `activation=forbidden`，不代表已批准或可执行 |
+
+Cockpit 通过 `POST /api/scene-cards/intake` 提供同一入口。它只做 L3 请求适配，返回安全投影和
+`persistence=none`，不建立第二套审批状态机，也不把“输入通过”显示成“工作流成功”。真实业务
+场景出现后，必须继续沿着 `preflight -> OMO admission -> WorkflowRun -> receipt/evidence`，
+由业务负责人确认消费者、责任人、权限、回滚和结果指标。
+
+这一步的长期价值是把动态外部知识、资料、方法、模型和渠道的扩展入口统一到一张可审计的业务卡片；
+没有真实场景时，系统仍能验证安全输入、提案态和 sandbox 契约，但不会提前建设或激活生产 OCR、
+持久化知识图谱、预测模型或外部写入渠道。决策见
+[`ADR-0332`](../.omo/_knowledge/decisions/0332-scene-card-intake-gate.md)。
+
 ### 7.3.1 Phase 25 真实能力健康证据闭环
 
 Phase 25 将准入所需的 `capability_health` 从调用方手工输入收敛为服务端可追溯证据：Cockpit
@@ -576,8 +601,10 @@ cd projects/cockpit && PYTHONPATH=src uv run --no-project --with pytest --with f
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pytest-asyncio --with pyyaml --with httpx python -m pytest -q tests/test_knowledge_action.py
 cd projects/omo && PYTHONPATH=src uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_omo_ingress_state.py tests/test_omo_governance_data.py
 uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_external_resource_catalog.py tests/test_external_activation_preflight.py
+uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/test_scene_card_intake.py
 cd projects/agora && PYTHONPATH=src uv run --no-project --with pytest --with pydantic --with pyyaml --with fastmcp python -m pytest -q tests/test_external_connections.py
 cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_external_resources.py
+cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with pytest --with fastapi --with httpx python -m pytest -q src/cockpit/tests/test_api_scene_cards.py
 cd projects/cockpit-ui && bun run vitest run src/components/__tests__/ExternalResourceCatalogView.test.tsx
 cd projects/cockpit-ui && bun run build
 cd projects/cockpit-ui && bunx eslint src/api/endpoints.ts src/api/hooks.ts src/components/ExternalResourceCatalogView.tsx src/components/__tests__/ExternalResourceCatalogView.test.tsx
