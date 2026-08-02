@@ -46,6 +46,63 @@ def test_projection_unavailable_state():
         assert st["status"] == "unavailable"
 
 
+def test_projection_without_workflow_run_is_waiting_and_stale(monkeypatch, tmp_path):
+    """A readable worktree is not evidence of an active delivery journey."""
+    import cockpit.delivery_journey as delivery_journey
+
+    monkeypatch.setattr(
+        delivery_journey,
+        "_try_get_git_info",
+        lambda _root: {"branch": "work/example", "sha": "abc123", "is_clean": True, "ok": True},
+    )
+    snapshot = build_delivery_journey_projection(root_dir=tmp_path)
+
+    assert snapshot.status == "stale"
+    assert snapshot.mode == "waiting_for_run"
+    assert snapshot.id == "waiting-for-run"
+    assert snapshot.scene_binding is None
+    assert snapshot.stages["intent"]["status"] == "pending"
+    assert snapshot.stages["run"]["status"] == "pending"
+    assert snapshot.stages["worktree"]["status"] == "verified"
+    assert "受治理任务" in snapshot.next_action
+
+
+def test_projection_reads_scene_binding_from_real_run(monkeypatch, tmp_path):
+    """A real run carries the business binding; the projection does not invent it."""
+    import cockpit.delivery_journey as delivery_journey
+
+    runs_dir = tmp_path / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    runs_dir.mkdir(parents=True)
+    (runs_dir / "run.yaml").write_text(
+        """run_id: run-001
+objective: verify delivery truth
+status: running
+start_time: '2026-08-02T13:00:00Z'
+scene_binding:
+  scene_id: engineering-delivery
+  journey_id: intent-to-evidence
+  outcome_metric: verified_delivery_lead_time
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        delivery_journey,
+        "_try_get_git_info",
+        lambda _root: {"branch": "work/example", "sha": "abc123", "is_clean": False, "ok": True},
+    )
+
+    snapshot = build_delivery_journey_projection(root_dir=tmp_path)
+
+    assert snapshot.status == "live"
+    assert snapshot.mode == "active"
+    assert snapshot.scene_binding == {
+        "scene_id": "engineering-delivery",
+        "journey_id": "intent-to-evidence",
+        "outcome_metric": "verified_delivery_lead_time",
+    }
+    assert snapshot.stages["run"]["status"] == "running"
+
+
 def test_delivery_journey_api_endpoints():
     """Test FastAPI endpoints for delivery journey."""
     app = FastAPI()

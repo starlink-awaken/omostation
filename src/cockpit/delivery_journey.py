@@ -45,6 +45,9 @@ class DeliveryJourneySnapshot:
     freshness: int
     last_updated: str
     stages: dict[str, dict[str, Any]]
+    mode: str = "active"  # "active" | "completed" | "waiting_for_run" | "failed" | "unavailable"
+    scene_binding: dict[str, str] | None = None
+    next_action: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -78,6 +81,8 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
             freshness=0,
             last_updated=now_iso,
             stages=stages_unavail,
+            mode="unavailable",
+            next_action="检查 OMO、Agent Workflow 和 Git 事实源后重试。",
         )
 
     if state_up == "PENDING":
@@ -134,6 +139,13 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
             freshness=1,
             last_updated=now_iso,
             stages=stages,
+            mode="active",
+            scene_binding={
+                "scene_id": "engineering-delivery",
+                "journey_id": "intent-to-evidence",
+                "outcome_metric": "verified_delivery_lead_time",
+            },
+            next_action="继续补齐任务、执行和验证阶段。",
         )
 
     elif state_up == "RUNNING":
@@ -190,6 +202,13 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
             freshness=0,
             last_updated=now_iso,
             stages=stages,
+            mode="active",
+            scene_binding={
+                "scene_id": "engineering-delivery",
+                "journey_id": "intent-to-evidence",
+                "outcome_metric": "verified_delivery_lead_time",
+            },
+            next_action="处理当前 WorkflowRun 的验证、审批或恢复动作。",
         )
 
     elif state_up == "VERIFIED":
@@ -252,6 +271,13 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
             freshness=0,
             last_updated=now_iso,
             stages=stages,
+            mode="active",
+            scene_binding={
+                "scene_id": "engineering-delivery",
+                "journey_id": "intent-to-evidence",
+                "outcome_metric": "verified_delivery_lead_time",
+            },
+            next_action="确认验证证据和 PR 状态，再进入交付闭环。",
         )
 
     else:  # MERGED
@@ -314,6 +340,13 @@ def _get_fixture_snapshot(state: str) -> DeliveryJourneySnapshot:
             freshness=0,
             last_updated=now_iso,
             stages=stages,
+            mode="completed",
+            scene_binding={
+                "scene_id": "engineering-delivery",
+                "journey_id": "intent-to-evidence",
+                "outcome_metric": "verified_delivery_lead_time",
+            },
+            next_action="查看 evidence 和结果反馈，形成下一轮复盘提案。",
         )
 
 
@@ -341,6 +374,33 @@ def _try_get_git_info(root_dir: Path) -> dict[str, Any]:
         return {"branch": branch, "sha": sha, "is_clean": is_clean, "ok": True}
     except Exception:
         return {"ok": False}
+
+
+def _extract_scene_binding(run: dict[str, Any] | None) -> dict[str, str] | None:
+    """Read scene context from the run without inventing a business binding."""
+    if not isinstance(run, dict):
+        return None
+    candidates: list[Any] = [run.get("scene_binding")]
+    context = run.get("context")
+    if isinstance(context, dict):
+        candidates.append(context.get("scene_binding"))
+    candidates.append(
+        {
+            "scene_id": run.get("scene_id"),
+            "journey_id": run.get("journey_id"),
+            "outcome_metric": run.get("outcome_metric"),
+        }
+    )
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        binding = {
+            key: str(candidate.get(key, "")).strip()
+            for key in ("scene_id", "journey_id", "outcome_metric")
+        }
+        if all(binding.values()):
+            return binding
+    return None
 
 
 def build_delivery_journey_projection(
@@ -380,24 +440,19 @@ def build_delivery_journey_projection(
     if latest_run is None and not git_info.get("ok"):
         return _get_fixture_snapshot("UNAVAILABLE")
 
-    run_id = str(latest_run.get("run_id", "live-session")) if latest_run else "git-live-session"
-    title = (
-        str(latest_run.get("objective", "当前工程实践分支"))
-        if latest_run
-        else f"Git Worktree: {git_info.get('branch', 'unknown')}"
+    run_id = str(latest_run.get("run_id", "")) if latest_run else "waiting-for-run"
+    title = str(latest_run.get("objective", "当前工程交付旅程")) if latest_run else (
+        f"等待受治理 WorkflowRun: {git_info.get('branch', 'unknown')}"
     )
+    scene_binding = _extract_scene_binding(latest_run)
 
     # Stage 1: Intent
-    intent_status = (
-        "verified"
-        if latest_run and latest_run.get("objective")
-        else ("verified" if git_info.get("ok") else "unavailable")
-    )
+    intent_status = "verified" if latest_run and latest_run.get("objective") else "pending"
     intent_stage = {
         "name": "intent",
         "status": intent_status,
         "title": "意图与需求捕获" if intent_status == "verified" else "目标不可读",
-        "details": {"objective": latest_run.get("objective", "")} if latest_run else {},
+        "details": {"objective": latest_run.get("objective", "")} if latest_run else {"reason": "no_active_workflow_run"},
         "last_updated": now_iso,
     }
 
@@ -447,7 +502,11 @@ def build_delivery_journey_projection(
     worktree_stage = {
         "name": "worktree",
         "status": worktree_status,
-        "title": f"Worktree ({git_info.get('branch', 'unknown')})" if worktree_status == "verified" else "工作树不可用",
+        "title": (
+            f"Worktree ({git_info.get('branch', 'unknown')})"
+            if latest_run and worktree_status == "verified"
+            else ("工作树可读，等待受治理运行" if worktree_status == "verified" else "工作树不可用")
+        ),
         "details": git_info if worktree_status == "verified" else {},
         "last_updated": now_iso,
     }
@@ -504,12 +563,31 @@ def build_delivery_journey_projection(
         "evidence": evidence_stage,
     }
 
+    run_state = str(latest_run.get("status", "")).lower() if latest_run else ""
+    mode = "waiting_for_run" if latest_run is None else (
+        "failed" if run_state in {"failed", "error"} else ("completed" if is_closed else "active")
+    )
+    snapshot_status = "stale" if latest_run is None else ("failed" if mode == "failed" else "live")
+    if latest_run is None:
+        next_action = "从 Cockpit/OMO 创建或认领一个受治理任务，再查看执行旅程。"
+    elif scene_binding is None:
+        next_action = "补齐 scene_id、journey_id 和 outcome_metric；未绑定运行只作为兼容状态观察。"
+    elif mode == "failed":
+        next_action = "打开失败证据并通过恢复或重试路径处理，不直接标记完成。"
+    elif mode == "completed":
+        next_action = "查看 evidence 和结果反馈，形成下一轮复盘提案。"
+    else:
+        next_action = "按当前运行阶段处理审批、验证或恢复动作。"
+
     return DeliveryJourneySnapshot(
         id=run_id,
         title=title,
-        status="live",
-        source=["omo", "agent-workflow", "git"],
-        freshness=0,
+        status=snapshot_status,
+        source=["omo", "agent-workflow", "git"] if latest_run else ["git"],
+        freshness=0 if latest_run else 1,
         last_updated=now_iso,
         stages=stages,
+        mode=mode,
+        scene_binding=scene_binding,
+        next_action=next_action,
     )
