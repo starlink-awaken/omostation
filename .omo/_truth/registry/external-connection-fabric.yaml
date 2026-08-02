@@ -215,6 +215,20 @@ dynamic_discovery:
       empty_catalog_result: unavailable
       partial_health_or_errors_result: degraded
       idempotency_key: run_id_and_run_digest
+    scene_trial_schema: external-scene-trial/v1
+    scene_trial_recorder: projects/omo/src/omo/omo_external_scene_trial.py
+    scene_trial_log: .omo/_knowledge/workflow-mesh/external-scene-trials.jsonl
+    scene_trial_semantics:
+      allowed_stage: observation_only
+      allowed_status: proposal_only
+      activation: forbidden
+      provider_invocation: forbidden
+      workflow_run_binding_before_promotion: forbidden
+      workflow_mesh_mutation: forbidden
+      admission_mutation: forbidden
+      feedback_contract: outcome-feedback/v1
+      promotion_requires: [real_consumer, workflow_run_id, external_receipt, outcome_feedback]
+      idempotency_key: trial_id_and_stable_contract_digest
     pack_lifecycle_start: [discovered, sandbox]
     route_code_change_required: false
     activation_requires_scene_binding: true

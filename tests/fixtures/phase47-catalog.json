@@ -1,0 +1,22 @@
+{
+  "schema": "external-resource-catalog/v1",
+  "mode": "read_only_projection",
+  "activation": "forbidden",
+  "raw_content_policy": "never_read_or_export",
+  "observed_at": "2026-08-02T22:51:18Z",
+  "catalog_ttl_seconds": 3600,
+  "policy_digest": "external-connection-fabric/v1",
+  "resources": [
+    {
+      "id": "source:phase47",
+      "kind": "knowledge_source",
+      "capabilities": ["discover"],
+      "availability": "available",
+      "lifecycle": "sandbox",
+      "reason_codes": [],
+      "health": {"status": "healthy", "source": "probe:phase47"}
+    }
+  ],
+  "errors": [],
+  "summary": {"resource_count": 1, "unavailable_count": 0, "error_count": 0}
+}

@@ -151,6 +151,20 @@ catalog discovery，方法/模型或显式 proposal-only 资源下一步是 prop
 结果口径固定为：空目录为 `unavailable`；存在错误或不可用候选为 `degraded`；有候选且没有不可用/错误
 才是 `succeeded`。因此“发现过程本身没有抛错”不等于“外部能力可用”。
 
+### 4.1.6 外部场景试运行合同
+
+Scene Card 和 activation preflight 通过后，不能直接视为业务试用成功。根仓可以生成
+`external-scene-trial/v1`，由业务方补齐真实消费者、责任人、审批人、权限引用、脱敏证据、量化指标、
+样本窗口和回滚引用，再交给 OMO `record-scene-trial` broker 持久化。
+
+当前试运行只允许 `trial_stage=observation_only` 和 `status=proposal_only`。合同固定
+`activation=forbidden`、`provider_invocation=false`、`workflow_run_id=null`，因此不会创建 WorkflowRun、
+改变 admission 或伪造业务结果。反馈合同固定引用 `outcome-feedback/v1`，要求未来真实执行拥有
+`workflow_run_id`、显式消费状态和证据引用；关闭或验证不能替代 outcome feedback。
+
+试运行 digest 必须排除 actor、source 和观察时间。broker 对历史记录按稳定合同字段重算 digest，保证
+同一 trial 在观察时间变化、执行方重试或代码升级后仍能幂等回放；合同字段真正变化时才 fail-closed。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或

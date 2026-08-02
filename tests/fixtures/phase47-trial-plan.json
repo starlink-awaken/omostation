@@ -1,0 +1,17 @@
+{
+  "consumer_ref": "ref://consumer/phase47",
+  "owner_ref": "ref://owner/phase47",
+  "approver_ref": "ref://approver/phase47",
+  "evidence_refs": ["evidence://phase47/demand", "evidence://phase47/activation"],
+  "catalog_observation_id": "external-resource-observation:phase47-dogfood",
+  "metric": {
+    "metric_id": "metric:trial-latency",
+    "direction": "decrease",
+    "unit": "seconds",
+    "target": 20,
+    "baseline_ref": "evidence://phase47/baseline",
+    "measurement_ref": "evidence://phase47/measurement"
+  },
+  "sample_plan": {"minimum_samples": 3, "window_seconds": 604800},
+  "rollback_ref": "ref://rollback/phase47"
+}
