@@ -63,7 +63,7 @@ def cmd_knowledge_search(args: argparse.Namespace) -> int:
     """cockpit knowledge search <query> — KOS 语义搜索."""
     query = getattr(args, "query", None)
     if not query:
-        _get_err().print("[red]❌ 请提供搜索词: cockpit knowledge search \"借调政策\"[/red]")
+        _get_err().print('[red]❌ 请提供搜索词: cockpit knowledge search "借调政策"[/red]')
         return 1
 
     console = _get_console()
@@ -72,7 +72,7 @@ def cmd_knowledge_search(args: argparse.Namespace) -> int:
     if not _kos_available():
         console.print(f"[yellow]⚠️  KOS 服务未在线 ({KOS_API_URL})[/yellow]")
         console.print("[dim]   启动: cd projects/kairon/packages/kos && uv run kos serve[/dim]")
-        console.print(f"[dim]   或降级使用: cockpit search \"{query}\"[/dim]")
+        console.print(f'[dim]   或降级使用: cockpit search "{query}"[/dim]')
         return 1
 
     import urllib.parse
@@ -88,7 +88,7 @@ def cmd_knowledge_search(args: argparse.Namespace) -> int:
 
     results = data.get("results") or data.get("documents") or []
     if not results:
-        console.print(f"[yellow]🔍 未找到与 \"{query}\" 相关的知识[/yellow]")
+        console.print(f'[yellow]🔍 未找到与 "{query}" 相关的知识[/yellow]')
         return 0
 
     console.print(
@@ -198,7 +198,7 @@ def cmd_knowledge(args: argparse.Namespace) -> int:
             console.print("[dim]   端口冲突: runtime 服务抢占了 8766 (port-registry 归属 kos-rest-api)[/dim]")
             console.print("[dim]   解决: 停 runtime 服务, 或 KOS 改用其他端口 + 改 KOS_API_URL 环境变量[/dim]")
     console.print("\n[bold]可用子命令:[/]")
-    console.print("  [cyan]cockpit knowledge search \"查询词\"[/]  — 语义搜索")
+    console.print('  [cyan]cockpit knowledge search "查询词"[/]  — 语义搜索')
     console.print("  [cyan]cockpit knowledge status[/]            — 服务健康")
     console.print("  [cyan]cockpit knowledge stats[/]             — 索引统计")
     return 0

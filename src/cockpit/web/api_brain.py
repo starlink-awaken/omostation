@@ -42,14 +42,9 @@ async def brain_ask(payload: dict[str, Any]) -> dict[str, Any]:
     recent = get_history(limit=6)
     memory_parts = []
     if prefs:
-        memory_parts.append(
-            "用户偏好:\n" + "\n".join(f"  • {p['key']}: {p['value']}" for p in prefs[:5])
-        )
+        memory_parts.append("用户偏好:\n" + "\n".join(f"  • {p['key']}: {p['value']}" for p in prefs[:5]))
     if recent:
-        memory_parts.append(
-            "最近对话:\n"
-            + "\n".join(f"  [{h['role']}] {h['content'][:80]}" for h in recent[-4:])
-        )
+        memory_parts.append("最近对话:\n" + "\n".join(f"  [{h['role']}] {h['content'][:80]}" for h in recent[-4:]))
     memory_context = "\n\n".join(memory_parts) if memory_parts else "(无历史记忆)"
 
     # 3. 构建 prompt
@@ -88,6 +83,7 @@ async def brain_ask(payload: dict[str, Any]) -> dict[str, Any]:
             ActivationContext,
             recommend_for_context,
         )
+
         suggestions = recommend_for_context(
             ActivationContext.RESEARCH,
             content=question,
@@ -131,9 +127,7 @@ async def brain_context() -> dict[str, Any]:
     history = get_history(limit=20)
     return {
         "preferences": [{"key": p["key"], "value": p["value"]} for p in prefs],
-        "recent_history": [
-            {"role": h["role"], "content": h["content"][:200]} for h in history[-10:]
-        ],
+        "recent_history": [{"role": h["role"], "content": h["content"][:200]} for h in history[-10:]],
         "total_conversations": len(history),
     }
 

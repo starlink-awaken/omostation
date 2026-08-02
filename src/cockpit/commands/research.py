@@ -443,6 +443,7 @@ def cmd_research_ask(args: argparse.Namespace) -> int:
             format_recommendations,
             recommend_for_context,
         )
+
         _get_console().print("")  # 空行分隔
         knowledge_results = recommend_for_context(
             ActivationContext.RESEARCH,

@@ -30,7 +30,7 @@ def check_port_open(host: str, port: int, timeout: float = 0.35) -> bool:
         try:
             sock.connect((host, port))
             return True
-        except (socket.timeout, OSError):
+        except (TimeoutError, OSError):
             return False
 
 
@@ -43,6 +43,7 @@ def check_kos_health() -> bool:
     """检测 KOS 是否可以从当前环境读取(通过本地存储库或套接字)."""
     try:
         from cockpit.storage import Storage
+
         s = Storage()
         return s is not None
     except Exception:

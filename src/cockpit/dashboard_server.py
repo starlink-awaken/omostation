@@ -100,9 +100,7 @@ for _router_module in ROUTER_MODULES:
                 )
                 print(f"Loaded degraded router: {_router_module}")
             else:
-                ROUTER_LOAD_REPORT.append(
-                    {"module": _router_module, "status": "loaded", "route_count": route_count}
-                )
+                ROUTER_LOAD_REPORT.append({"module": _router_module, "status": "loaded", "route_count": route_count})
                 print(f"Successfully loaded router: {_router_module}")
         else:
             ROUTER_LOAD_REPORT.append({"module": _router_module, "status": "missing_router", "route_count": 0})
@@ -239,6 +237,7 @@ app.include_router(dashboard_router)
 async def router_health() -> dict[str, object]:
     """Expose structured router loading evidence after graceful degradation."""
     return router_health_snapshot()
+
 
 # ─── Static files (Cockpit UI) ────────────────────────────
 

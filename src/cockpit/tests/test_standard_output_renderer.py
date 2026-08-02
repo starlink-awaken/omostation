@@ -2,6 +2,7 @@
 
 import json
 from unittest.mock import patch
+
 from cockpit.commands.base import OutputFormat, render_command_header, render_command_result
 
 
@@ -55,6 +56,7 @@ def test_render_command_result_tty_list_dict():
 def test_status_command_with_global_output_json(capsys):
     """验证 cmd_status 支持 global_output=json 标准结构化输出."""
     import argparse
+
     from cockpit.commands.status import cmd_status
 
     args = argparse.Namespace(global_output="json", json=False)
@@ -69,6 +71,7 @@ def test_status_command_with_global_output_json(capsys):
 def test_status_command_with_global_output_markdown():
     """验证 cmd_status 支持 global_output=markdown 标准 Markdown 大纲渲染."""
     import argparse
+
     from cockpit.commands.status import cmd_status
 
     args = argparse.Namespace(global_output="markdown", json=False)
@@ -82,6 +85,7 @@ def test_status_command_with_global_output_markdown():
 def test_cards_list_with_global_output_json(capsys):
     """验证 cockpit cards list 支持 --output json 标准渲染."""
     import argparse
+
     from cockpit.commands.cards import cmd_cards
 
     args = argparse.Namespace(cards_command="list", global_output="json")
@@ -95,6 +99,7 @@ def test_cards_list_with_global_output_json(capsys):
 def test_cards_list_with_global_output_markdown():
     """验证 cockpit cards list 支持 --output markdown 标准渲染."""
     import argparse
+
     from cockpit.commands.cards import cmd_cards
 
     args = argparse.Namespace(cards_command="list", global_output="markdown")

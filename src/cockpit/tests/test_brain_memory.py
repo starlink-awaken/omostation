@@ -80,6 +80,7 @@ class TestAutoExtractAndStore:
             assert len(prefs) >= 2
             # 验证确实存入了
             from cockpit.brain_core import get_preferences
+
             stored = get_preferences()
             assert len(stored) >= 2
 

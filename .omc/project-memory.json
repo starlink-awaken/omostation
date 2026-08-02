@@ -38,7 +38,7 @@
   },
   "build": {
     "buildCommand": "make build",
-    "testCommand": "cd ~/Workspace/projects/cockpit && uv run pytest src/cockpit/tests/test_research_knowledge.py src/cockpit/tests/test_brain_web.py -v --tb=short 2>&1 | tail -25",
+    "testCommand": "cd /Users/xiamingxing/Workspace\necho \"=== 同步文档 ===\" && python3 bin/cockpit/gen-help-docs.py 2>&1 | grep -E \"✅|⏭️\" | head -3\necho \"=== check-docs-drift ===\" && make check-docs-drift 2>&1 | tail -1\necho \"\"\necho \"=== 全量测试 (含新 14 测试) ===\" \ncd projects/cockpit && uv run --no-sync python -m pytest src/cockpit/tests/test_capability_commands.py src/cockpit/tests/test_cli.py -q --tb=line 2>&1 | tail -3",
     "lintCommand": "ruff check",
     "devCommand": null,
     "scripts": {}
@@ -104,9 +104,45 @@
       "type": "file"
     },
     {
+      "path": "src/cockpit/commands/c2g.py",
+      "accessCount": 3,
+      "lastAccessed": 1785665264301,
+      "type": "file"
+    },
+    {
+      "path": "src/cockpit/commands/status.py",
+      "accessCount": 2,
+      "lastAccessed": 1785665198367,
+      "type": "file"
+    },
+    {
+      "path": "src/cockpit/cli.py",
+      "accessCount": 2,
+      "lastAccessed": 1785665278204,
+      "type": "file"
+    },
+    {
+      "path": "src/cockpit/web/api_capability.py",
+      "accessCount": 2,
+      "lastAccessed": 1785665644426,
+      "type": "file"
+    },
+    {
+      "path": "src/cockpit/tests/test_capability_commands.py",
+      "accessCount": 2,
+      "lastAccessed": 1785673140235,
+      "type": "file"
+    },
+    {
       "path": "src/cockpit/brain_core.py",
       "accessCount": 1,
       "lastAccessed": 1785580690196,
+      "type": "file"
+    },
+    {
+      "path": "src/cockpit/dashboard_server.py",
+      "accessCount": 1,
+      "lastAccessed": 1785665638039,
       "type": "file"
     }
   ],

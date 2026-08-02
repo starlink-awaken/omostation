@@ -60,9 +60,9 @@ else:
     _OMO_IMPORT_ERROR = None
 
 ROUTER_DEGRADED = _BUS_IMPORT_ERROR is not None or _OMO_IMPORT_ERROR is not None
-ROUTER_DEGRADED_REASON = "; ".join(
-    str(error) for error in (_BUS_IMPORT_ERROR, _OMO_IMPORT_ERROR) if error is not None
-) or None
+ROUTER_DEGRADED_REASON = (
+    "; ".join(str(error) for error in (_BUS_IMPORT_ERROR, _OMO_IMPORT_ERROR) if error is not None) or None
+)
 
 
 def _omo_adapter_unavailable() -> dict[str, object] | None:
@@ -75,6 +75,7 @@ def _omo_adapter_unavailable() -> dict[str, object] | None:
         "detail": str(_OMO_IMPORT_ERROR),
         "next_action": "安装并挂载 OMO 适配器依赖后重试。",
     }
+
 
 _VIOLATIONS_CACHE = None
 _VIOLATIONS_CACHE_TIME = 0.0

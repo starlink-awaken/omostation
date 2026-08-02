@@ -121,9 +121,7 @@ def _project_registry_contract(project_data: dict[str, Any], project_path: Path 
         except ValueError:
             observed_location = str(observed_path)
     declared_location = (
-        project_data.get("src_dir")
-        or project_data.get("physical_location")
-        or project_data.get("storage")
+        project_data.get("src_dir") or project_data.get("physical_location") or project_data.get("storage")
     )
     return {
         "status": project_data.get("status"),
@@ -137,7 +135,11 @@ def _project_registry_contract(project_data: dict[str, Any], project_path: Path 
         "coverage": project_data.get("coverage") if isinstance(project_data.get("coverage"), list) else [],
         "observed_location": observed_location,
         "observed_location_exists": bool(observed_path and observed_path.exists()),
-        "implementation_traceability": "declared" if declared_location else "observed_only" if observed_location else "unknown",
+        "implementation_traceability": "declared"
+        if declared_location
+        else "observed_only"
+        if observed_location
+        else "unknown",
         "missing_fields": missing_fields,
         "status_text": "ready" if not missing_fields else "warning" if len(missing_fields) == 1 else "failed",
     }
@@ -205,10 +207,7 @@ def _annotate_runtime_port_conflicts(projects: list[dict[str, Any]]) -> None:
         if conflicts:
             runtime["port_conflicts"] = conflicts
             conflict_ports = ", ".join(f":{item['port']}" for item in conflicts)
-            runtime["probe_reason"] = (
-                f"检测到主机端口冲突：{conflict_ports}；"
-                "启动前必须先确认只保留一个监听方。"
-            )
+            runtime["probe_reason"] = f"检测到主机端口冲突：{conflict_ports}；启动前必须先确认只保留一个监听方。"
         else:
             runtime["port_conflicts"] = []
 
@@ -551,9 +550,7 @@ def _build_project_capability_coverage(projects: list[dict[str, Any]]) -> dict[s
         failed = sum(1 for _, check in checks if check["status"] == "failed")
         score = round((ready / total_projects) * 100) if total_projects else 0
         documented = warning if dimension["id"] == "verification" else 0
-        evidence_score = (
-            round(((ready + documented * 0.5) / total_projects) * 100) if total_projects else 0
-        )
+        evidence_score = round(((ready + documented * 0.5) / total_projects) * 100) if total_projects else 0
         status = "ready" if warning == 0 and failed == 0 else "warning" if failed == 0 else "failed"
         attention_projects = [
             {

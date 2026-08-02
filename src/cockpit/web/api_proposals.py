@@ -16,6 +16,7 @@ try:
         list_hitl_proposals,
         reject_hitl_proposal,
     )
+
     _OMO_IMPORT_ERROR: Exception | None = None
 except Exception as exc:  # Optional adapter; keep proposal routes discoverable.
     append_hitl_override = approve_hitl_proposal_async = list_hitl_proposals = reject_hitl_proposal = None  # type: ignore[assignment]

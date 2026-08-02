@@ -51,8 +51,8 @@ def _normalize_key(content: str) -> str:
     例: "用 Markdown 写周报" → "用_markdown_写周报"
     """
     key = content[:20].strip().lower()
-    key = re.sub(r'[^\w一-鿿]', '_', key)
-    key = re.sub(r'_+', '_', key).strip('_')
+    key = re.sub(r"[^\w一-鿿]", "_", key)
+    key = re.sub(r"_+", "_", key).strip("_")
     return key or "pref"
 
 

@@ -162,4 +162,3 @@ slug: {json.dumps(slug, ensure_ascii=False)}
         )
     except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
-

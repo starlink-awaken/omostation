@@ -481,6 +481,7 @@ def _discover_services() -> list[tuple[str, str, str | None, str, str]]:
 
 class OutputFormat:
     """输出呈现格式名称常量枚举."""
+
     TTY = "tty"
     JSON = "json"
     MARKDOWN = "markdown"

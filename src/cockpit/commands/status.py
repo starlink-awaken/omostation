@@ -210,6 +210,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     if output_json or global_output == "markdown":
         import json as _json
         import sqlite3
+
         from .base import OutputFormat, render_command_result
 
         services = _discover_services()

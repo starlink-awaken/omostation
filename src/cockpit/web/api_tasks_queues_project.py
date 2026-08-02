@@ -70,6 +70,8 @@ def _next_triage_task_id(project_id: str, command_id: str) -> tuple[str, str | N
     if group in {"active", "planned"}:
         return f"{base_task_id}-r{attempt}" if attempt > 1 else base_task_id, group
     return f"{base_task_id}-r{attempt + 1}", None
+
+
 from cockpit.web.api_tasks_data import (
     _transition_task as _data_transition_task,
 )
@@ -635,14 +637,10 @@ async def execute_verification_triage(request: Request):
             if result.get("exit_code") == 0:
                 execution_ref = result.get("execution_ref")
                 log_ref = result.get("log_ref")
-                evidence_paths = [
-                    ref for ref in (execution_ref, log_ref) if isinstance(ref, str) and ref.strip()
-                ]
+                evidence_paths = [ref for ref in (execution_ref, log_ref) if isinstance(ref, str) and ref.strip()]
                 try:
                     validated = _validate_evidence_paths(evidence_paths)
-                    completion = _transition_task(
-                        candidate["task_id"], "complete", evidence_paths=validated
-                    )
+                    completion = _transition_task(candidate["task_id"], "complete", evidence_paths=validated)
                 except (OSError, ValueError, HTTPException) as exc:
                     archive_errors.append(
                         {

@@ -142,8 +142,7 @@ async def _register_subscription() -> None:
                     if sub_id:
                         _subscription_id = sub_id
                         logger.info(
-                            "knowledge_indexer: subscribed to card_updated events "
-                            "sub_id=%s callback=%s",
+                            "knowledge_indexer: subscribed to card_updated events sub_id=%s callback=%s",
                             sub_id,
                             callback_url,
                         )

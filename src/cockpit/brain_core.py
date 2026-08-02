@@ -58,6 +58,7 @@ def _get_db() -> sqlite3.Connection:
 
 # ── Conversation storage ───────────────────────────────────────────
 
+
 def store_conversation(
     role: str,
     content: str,
@@ -101,6 +102,7 @@ def get_history(limit: int = 20, user: str = "default") -> list[dict]:
 
 # ── Preferences ───────────────────────────────────────────────────
 
+
 def store_preference(key: str, value: str, source: str = "explicit") -> None:
     conn = _get_db()
     try:
@@ -118,13 +120,11 @@ def get_preferences(limit: int = 50) -> list[dict]:
     conn = _get_db()
     try:
         rows = conn.execute(
-            "SELECT key, value, source, updated_at FROM brain_preferences "
-            "ORDER BY updated_at DESC LIMIT ?",
+            "SELECT key, value, source, updated_at FROM brain_preferences ORDER BY updated_at DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [
-            {"key": r["key"], "value": r["value"], "source": r["source"], "updated_at": r["updated_at"]}
-            for r in rows
+            {"key": r["key"], "value": r["value"], "source": r["source"], "updated_at": r["updated_at"]} for r in rows
         ]
     finally:
         conn.close()
@@ -144,6 +144,7 @@ def parse_fact(fact: str) -> tuple[str, str]:
 
 try:
     import httpx
+
     _kos_client: httpx.Client | None = None
 except ImportError:
     _kos_client = None  # type: ignore[assignment]
@@ -154,6 +155,7 @@ def _get_kos_client():
     global _kos_client
     if _kos_client is None:
         import httpx
+
         kos_url = os.environ.get("KOS_API_URL", "http://localhost:8766")
         _kos_client = httpx.Client(
             base_url=kos_url,
@@ -166,9 +168,14 @@ def kos_search(query: str, limit: int = 5) -> dict:
     """KOS 搜索 — 连接池复用 + 超时缩短 + 优雅降级."""
     try:
         client = _get_kos_client()
-        resp = client.get("/api/v1/search", params={
-            "q": query, "mode": "hybrid", "limit": limit,
-        })
+        resp = client.get(
+            "/api/v1/search",
+            params={
+                "q": query,
+                "mode": "hybrid",
+                "limit": limit,
+            },
+        )
         resp.raise_for_status()
         data = resp.json()
         return {"results": data.get("results", [])}
@@ -180,9 +187,13 @@ def kos_context(query: str) -> dict:
     """KOS 上下文构建."""
     try:
         client = _get_kos_client()
-        resp = client.get("/api/v1/context", params={
-            "q": query, "mode": "balanced",
-        })
+        resp = client.get(
+            "/api/v1/context",
+            params={
+                "q": query,
+                "mode": "balanced",
+            },
+        )
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
@@ -191,11 +202,13 @@ def kos_context(query: str) -> dict:
 
 # ── LLM Gateway (best-effort) ─────────────────────────────────────
 
+
 def llm_complete(prompt: str, model: str = "deepseek-v4-flash") -> str:
     """调用 LLM Gateway. 失败返回空字符串."""
     gateway_url = os.environ.get("LLM_GATEWAY_URL", "http://localhost:3000")
     try:
         import httpx
+
         resp = httpx.post(
             f"{gateway_url}/api/v1/chat/completions",
             json={
@@ -213,6 +226,7 @@ def llm_complete(prompt: str, model: str = "deepseek-v4-flash") -> str:
     # 降级: ollama 本地
     try:
         import httpx
+
         resp = httpx.post(
             "http://localhost:11434/api/chat",
             json={
@@ -229,6 +243,7 @@ def llm_complete(prompt: str, model: str = "deepseek-v4-flash") -> str:
 
 
 # ── Prompt 构建 (单一源头) ────────────────────────────────────────
+
 
 def build_brain_prompt(
     question: str,
@@ -255,9 +270,7 @@ def build_brain_prompt(
     # 历史上下文
     history_text = ""
     if recent_history:
-        history_text = "\n".join(
-            f"[{h['role']}] {h['content'][:80]}" for h in recent_history[-4:]
-        )
+        history_text = "\n".join(f"[{h['role']}] {h['content'][:80]}" for h in recent_history[-4:])
 
     return f"""你是用户的个人数字大脑助手。
 
@@ -277,6 +290,7 @@ def build_brain_prompt(
 
 # ── 来源格式化 ────────────────────────────────────────────────────
 
+
 def format_sources_cli(results: list[dict]) -> str:
     """CLI 格式: 带 score + snippet 的来源列表."""
     if not results:
@@ -294,6 +308,7 @@ def format_sources_cli(results: list[dict]) -> str:
 
 
 # ── 核心问答流程 ──────────────────────────────────────────────────
+
 
 def ask(question: str, user: str = "default") -> dict:
     """核心问答: KOS 搜索 + 记忆加载 + LLM 调用 + 存储.
@@ -321,15 +336,18 @@ def ask(question: str, user: str = "default") -> dict:
         title = r.get("title") or r.get("name") or ""
         if sid or title:
             source_ids.append(sid)
-            source_objs.append({
-                "id": sid,
-                "title": title,
-                "score": r.get("score"),
-            })
+            source_objs.append(
+                {
+                    "id": sid,
+                    "title": title,
+                    "score": r.get("score"),
+                }
+            )
 
     # 6. 自动提取偏好
     try:
         from cockpit.brain_memory import auto_extract_and_store
+
         auto_extract_and_store(question, source="inferred")
     except Exception:
         pass  # 偏好提取失败不影响主流程

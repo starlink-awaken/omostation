@@ -10,11 +10,10 @@ cockpit.tui.widgets.detail_panel — 研究课题详情右栏面板
 from __future__ import annotations
 
 from textual.app import ComposeResult
-from textual.widget import Widget
-from textual.widgets import Markdown, Label
-from textual.containers import ScrollableContainer
 from textual.binding import Binding
-
+from textual.containers import ScrollableContainer
+from textual.widget import Widget
+from textual.widgets import Label, Markdown
 
 _EMPTY_MD = """
 # 📋 研究详情
@@ -118,10 +117,7 @@ class DetailPanel(Widget):
         ask_section = ""
         asks = topic.get("asks", [])
         if asks:
-            ask_lines = "\n".join(
-                f"  {i+1}. {a.get('query', '')[:60]}"
-                for i, a in enumerate(asks[:5])
-            )
+            ask_lines = "\n".join(f"  {i + 1}. {a.get('query', '')[:60]}" for i, a in enumerate(asks[:5]))
             ask_section = f"\n## 💬 近期追问记录\n\n{ask_lines}\n"
 
         return f"""# {name}
@@ -134,7 +130,7 @@ class DetailPanel(Widget):
 
 ## 📝 摘要
 
-{summary or '> 暂无摘要'}
+{summary or "> 暂无摘要"}
 
 {ask_section}
 

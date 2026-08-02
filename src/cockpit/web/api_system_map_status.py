@@ -600,9 +600,7 @@ def _project_runtime_status(
     probe_audit = probe_task.get("execution_audit") or {}
     if isinstance(probe_audit, dict):
         probe_task = dict(probe_task)
-        probe_task["freshness"] = _evidence_freshness(
-            probe_audit.get("recorded_at"), RUNTIME_EVIDENCE_MAX_AGE_HOURS
-        )
+        probe_task["freshness"] = _evidence_freshness(probe_audit.get("recorded_at"), RUNTIME_EVIDENCE_MAX_AGE_HOURS)
 
     if not profile["needs_runtime"]:
         status = "not_applicable"
@@ -727,11 +725,7 @@ def _project_operational_status(
     return {
         "status": status,
         "surface_type": (
-            "external-worktree"
-            if data.get("path_env")
-            else "external-storage"
-            if data.get("storage")
-            else "native"
+            "external-worktree" if data.get("path_env") else "external-storage" if data.get("storage") else "native"
         ),
         "docs": {
             "present": len(present_docs),
@@ -744,9 +738,7 @@ def _project_operational_status(
         "risks": risks,
         "next_action": next_action,
         "path_env": data.get("path_env"),
-        "path_configured": bool(
-            data.get("path_env") and os.environ.get(str(data["path_env"]).strip())
-        ),
+        "path_configured": bool(data.get("path_env") and os.environ.get(str(data["path_env"]).strip())),
     }
 
 
@@ -912,15 +904,15 @@ def _project_coverage_checks(project: dict[str, Any]) -> list[dict[str, str]]:
     missing_sources = [ref for ref in source_refs if not ref.get("exists")]
     security_doc = project_path / "SECURITY.md"
     security_audit = next(
-        (candidate for candidate in (project_path / "AUDIT.md", project_path / "SECURITY-AUDIT.md") if candidate.is_file()),
+        (
+            candidate
+            for candidate in (project_path / "AUDIT.md", project_path / "SECURITY-AUDIT.md")
+            if candidate.is_file()
+        ),
         None,
     )
     security_status = (
-        "ready"
-        if security_doc.is_file() or security_audit
-        else "warning"
-        if project_path.exists()
-        else "failed"
+        "ready" if security_doc.is_file() or security_audit else "warning" if project_path.exists() else "failed"
     )
     security_detail = (
         (

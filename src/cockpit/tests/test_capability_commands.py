@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 from cockpit.commands import c2g, knowledge, workflow_mesh
 
-
 # ── knowledge 命令 ─────────────────────────────────────────────
 
 

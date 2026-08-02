@@ -49,16 +49,12 @@ def _db_path() -> Path:
 def _migrate_brain_tables(conn: sqlite3.Connection) -> None:
     """Schema 迁移 — 确保 brain 表结构最新."""
     # 检查 brain_conversations 是否有 sources 列
-    existing = conn.execute(
-        "PRAGMA table_info(brain_conversations)"
-    ).fetchall()
+    existing = conn.execute("PRAGMA table_info(brain_conversations)").fetchall()
     col_names = {row["name"] for row in existing}
     if "sources" not in col_names:
         conn.execute("ALTER TABLE brain_conversations ADD COLUMN sources TEXT")
     # 检查 brain_preferences 是否存在
-    tables = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='brain_preferences'"
-    ).fetchone()
+    tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='brain_preferences'").fetchone()
     if not tables:
         conn.executescript("""
             CREATE TABLE brain_preferences (
@@ -150,13 +146,11 @@ def get_preferences(limit: int = 50) -> list[dict]:
     conn = _get_db()
     try:
         rows = conn.execute(
-            "SELECT key, value, source, updated_at FROM brain_preferences "
-            "ORDER BY updated_at DESC LIMIT ?",
+            "SELECT key, value, source, updated_at FROM brain_preferences ORDER BY updated_at DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [
-            {"key": r["key"], "value": r["value"], "source": r["source"], "updated_at": r["updated_at"]}
-            for r in rows
+            {"key": r["key"], "value": r["value"], "source": r["source"], "updated_at": r["updated_at"]} for r in rows
         ]
     finally:
         conn.close()
@@ -271,7 +265,7 @@ def cmd_brain_ask(args: argparse.Namespace) -> int:
     """cockpit brain ask — 知识检索 + 记忆 + LLM 回答."""
     question = " ".join(getattr(args, "question", []))
     if not question:
-        print("❌ 请提供问题: cockpit brain ask \"你的问题\"")
+        print('❌ 请提供问题: cockpit brain ask "你的问题"')
         return 1
 
     # 1. 检索 KOS 知识
@@ -289,8 +283,7 @@ def cmd_brain_ask(args: argparse.Namespace) -> int:
         memory_parts.append("用户偏好:\n" + "\n".join(f"  • {p['key']}: {p['value']}" for p in prefs[:5]))
     if recent_history:
         memory_parts.append(
-            "最近对话:\n"
-            + "\n".join(f"  [{h['role']}] {h['content'][:80]}" for h in recent_history[-4:])
+            "最近对话:\n" + "\n".join(f"  [{h['role']}] {h['content'][:80]}" for h in recent_history[-4:])
         )
     memory_context = "\n\n".join(memory_parts) if memory_parts else "(无历史记忆)"
 
@@ -323,15 +316,15 @@ def cmd_brain_ask(args: argparse.Namespace) -> int:
     answer = llm_complete(prompt)
 
     if answer:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(answer)
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"\n📚 知识来源:\n{_format_sources(results)}")
         store_conversation("user", question)
         store_conversation("assistant", answer, sources=source_ids)
     else:
         # LLM 不可用，返回知识检索结果
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("⚠️  LLM 暂不可用，返回知识检索结果:\n")
         if results:
             for i, r in enumerate(results[:5], 1):
@@ -342,7 +335,7 @@ def cmd_brain_ask(args: argparse.Namespace) -> int:
                 print()
         else:
             print("  未找到相关知识。")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         store_conversation("user", question)
         store_conversation("assistant", f"[知识检索] 找到 {len(results)} 条结果", sources=source_ids)
 
@@ -375,7 +368,7 @@ def cmd_brain_context(_args: argparse.Namespace) -> int:  # pyright: ignore[repo
     else:
         print("  (暂无对话记录)")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     return 0
 
 
@@ -383,7 +376,7 @@ def cmd_brain_remember(args: argparse.Namespace) -> int:
     """cockpit brain remember — 手动存入事实/偏好."""
     fact = " ".join(getattr(args, "fact", []))
     if not fact:
-        print("❌ 请提供要记住的内容: cockpit brain remember \"我喜欢用 Markdown\"")
+        print('❌ 请提供要记住的内容: cockpit brain remember "我喜欢用 Markdown"')
         return 1
 
     # 尝试解析 key: value 格式
@@ -500,7 +493,7 @@ def cmd_brain_gongwen(args: argparse.Namespace) -> int:
 
     topic = " ".join(getattr(args, "topic", []))
     if not topic:
-        print("❌ 请提供公文主题: cockpit brain gongwen \"卫健委通知\"")
+        print('❌ 请提供公文主题: cockpit brain gongwen "卫健委通知"')
         return 1
 
     print("=" * 60)

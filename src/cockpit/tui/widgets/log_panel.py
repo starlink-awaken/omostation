@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
+
 from textual import work
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -84,7 +85,7 @@ class CommandLogModal(ModalScreen[None]):
                 check=False,
             )
             output = result.stdout or result.stderr or "*(命令已成功执行，无控制台打印内容)*"
-            
+
             # 使用 call_from_thread 回调给 GUI 主线程更新 UI
             self.app.call_from_thread(self.update_log_content, output, result.returncode)
         except Exception as e:
@@ -97,7 +98,7 @@ class CommandLogModal(ModalScreen[None]):
     def update_log_content(self, text: str, code: int = 0) -> None:
         status_icon = "✅" if code == 0 else "❌"
         md_view = self.query_one("#log-modal-body", Markdown)
-        
+
         # 将输出包裹为代码块或直接 markdown
         body = f"### {status_icon} 执行结束 (退出码 {code})\n\n```\n{text.strip()}\n```"
         md_view.update(body)

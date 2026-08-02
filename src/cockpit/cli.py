@@ -528,8 +528,7 @@ def main() -> int:
     brain_p = sub.add_parser(
         "brain",
         help="个人数字大脑 — 知识检索 + 记忆 + 智能问答",
-        epilog="子命令: ask / context / remember / history\n"
-        '示例: cockpit brain ask "卫健委借调总结怎么写？"',
+        epilog='子命令: ask / context / remember / history\n示例: cockpit brain ask "卫健委借调总结怎么写？"',
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     brain_sub = brain_p.add_subparsers(dest="brain_subcommand", parser_class=WorkspaceParser)
@@ -614,7 +613,9 @@ def main() -> int:
     bos_inbox_search_p = bos_inbox_sub.add_parser("search", help="语义搜索多源记忆")
     bos_inbox_search_p.add_argument("query", help="搜索关键词")
     bos_inbox_pending_p = bos_inbox_sub.add_parser("pending", help="查看未决待办快照预览")
-    bos_inbox_pending_p.add_argument("--source", default="seeyon_oa", help="来源: seeyon_oa | netease_mailmaster | apple_mail")
+    bos_inbox_pending_p.add_argument(
+        "--source", default="seeyon_oa", help="来源: seeyon_oa | netease_mailmaster | apple_mail"
+    )
     bos_inbox_sub.add_parser("watch", help="监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)")
     bos_inbox_archive_p = bos_inbox_sub.add_parser("archive", help="归档已处理完毕的 Inbox 待办文件")
     bos_inbox_archive_p.add_argument("filename", help="文件名或 all")
@@ -971,10 +972,10 @@ def main() -> int:
             return cmd_bos_capability(a)
         elif sub == "inbox":
             from cockpit.commands.bos_inbox import cmd_bos_inbox
+
             return cmd_bos_inbox(a)
         else:
             return cmd_bos_status(a)
-
 
     def dispatch_bus(a):
         return cmd_bus(a)

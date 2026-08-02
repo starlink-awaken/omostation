@@ -46,9 +46,7 @@ class StatusBar(Widget):
 
     def set_running_command(self, cmd: str) -> None:
         """显示正在执行的命令."""
-        self.query_one("#cmd-indicator", Label).update(
-            f"⚡ 执行中: [cyan]{cmd}[/]"
-        )
+        self.query_one("#cmd-indicator", Label).update(f"⚡ 执行中: [cyan]{cmd}[/]")
 
     def set_idle_command(self, msg: str = "就绪") -> None:
         """重置命令状态指示."""

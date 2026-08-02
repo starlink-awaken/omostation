@@ -11,15 +11,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent  # cockpit/src/cockpit/
 WORKSPACE_ROOT = Path(
     os.environ.get("WORKSPACE") or os.environ.get("WORKSPACE_ROOT", str(DISCOVERED_WORKSPACE_ROOT))
 ).expanduser()
-_COCKPIT_UI_ROOT = Path(
-    os.environ.get("COCKPIT_UI_ROOT", str(WORKSPACE_ROOT / "projects" / "cockpit-ui"))
-).expanduser()
+_COCKPIT_UI_ROOT = Path(os.environ.get("COCKPIT_UI_ROOT", str(WORKSPACE_ROOT / "projects" / "cockpit-ui"))).expanduser()
 OMO_ROOT = WORKSPACE_ROOT / "projects" / "omo"
 RUNTIME_HOME = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime")))
 M0_SNAPSHOT_PATH = WORKSPACE_ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
-COCKPIT_UI_DIST = Path(
-    os.environ.get("COCKPIT_UI_DIST", str(_COCKPIT_UI_ROOT / "dist"))
-).expanduser()
+COCKPIT_UI_DIST = Path(os.environ.get("COCKPIT_UI_DIST", str(_COCKPIT_UI_ROOT / "dist"))).expanduser()
 PROVIDER_PLANE_PATH = WORKSPACE_ROOT / ".omo" / "state" / "provider-plane.yaml"
 LLM_QUOTA_SUMMARY_PATH = RUNTIME_HOME / "data" / "llm_quota_summary.json"
 LLM_COST_LOG_PATH = RUNTIME_HOME / "data" / "llm_cost.jsonl"

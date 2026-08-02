@@ -195,6 +195,7 @@ class TestL0ToolRegistration:
     def test_l0_tools_have_descriptions(self):
         """L0 工具都带 description 注解"""
         import asyncio
+
         tools = asyncio.run(agent_runtime_mcp_server.mcp.list_tools())
         for t in tools:
             if t.name in {"run_task", "chat"}:

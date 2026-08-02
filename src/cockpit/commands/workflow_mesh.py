@@ -36,7 +36,7 @@ def _read_events(path: Path, limit: int = 100) -> list[dict]:
         lines = path.read_text(encoding="utf-8").strip().splitlines()
     except OSError:
         return []
-    for line in reversed(lines[-limit * 3:]):  # 多读一些再截断
+    for line in reversed(lines[-limit * 3 :]):  # 多读一些再截断
         line = line.strip()
         if not line:
             continue
@@ -64,8 +64,7 @@ def cmd_mesh_status(args: argparse.Namespace) -> int:
     if not events:
         console.print(
             _panel(
-                f"[yellow]⚠️  无 workflow-mesh 事件[/yellow]\n"
-                f"查找路径:\n  {_EVENTS_PATH}\n  {_DELIVERY_EVENTS}",
+                f"[yellow]⚠️  无 workflow-mesh 事件[/yellow]\n查找路径:\n  {_EVENTS_PATH}\n  {_DELIVERY_EVENTS}",
                 "yellow",
             )
         )

@@ -110,9 +110,15 @@ def cmd_kems_scan(args: argparse.Namespace) -> int:
 
     workspace = Path(__file__).resolve().parents[5]
     cmd = [
-        "uv", "run", "--directory",
+        "uv",
+        "run",
+        "--directory",
         str(workspace / "projects" / "l4-kernel"),
-        "python", "-m", "l4_kernel.cli", "kems", "scan",
+        "python",
+        "-m",
+        "l4_kernel.cli",
+        "kems",
+        "scan",
     ]
     result = subprocess.run(cmd, cwd=str(workspace))
     return result.returncode

@@ -149,7 +149,10 @@ def test_tasks_route_can_include_verification_ready_drafts():
 
     draft_resp = client.get("/api/tasks?include_verification_ready_drafts=true")
     assert draft_resp.status_code == 200
-    assert any(item["id"].startswith("verification-ready-") for item in draft_resp.json()["items"]) is has_verification_ready_drafts
+    assert (
+        any(item["id"].startswith("verification-ready-") for item in draft_resp.json()["items"])
+        is has_verification_ready_drafts
+    )
 
     combined_resp = client.get(
         "/api/tasks?include_project_portfolio_drafts=true&include_verification_ready_drafts=true"
@@ -890,8 +893,9 @@ def test_execute_verification_triage_runs_only_failed_active_tasks(monkeypatch):
     monkeypatch.setattr(
         api_tasks_queues_project,
         "_transition_task",
-        lambda task_id, action, evidence_paths=None: archived.append((task_id, action, evidence_paths))
-        or {"id": task_id, "status": "completed"},
+        lambda task_id, action, evidence_paths=None: (
+            archived.append((task_id, action, evidence_paths)) or {"id": task_id, "status": "completed"}
+        ),
     )
 
     def fake_execute(*args, **kwargs):
@@ -991,7 +995,9 @@ def test_queue_coverage_drafts_promotes_selected_dimension(monkeypatch):
         promoted.append(draft_id)
         return {"id": draft_id, "created": draft_id.endswith("demo"), "status": "pending"}
 
-    monkeypatch.setitem(api_tasks_queues_integration._COVERAGE_DRAFT_GETTERS, "capability_gaps", lambda limit=8: drafts[:limit])
+    monkeypatch.setitem(
+        api_tasks_queues_integration._COVERAGE_DRAFT_GETTERS, "capability_gaps", lambda limit=8: drafts[:limit]
+    )
     monkeypatch.setattr(api_tasks_queues_integration, "promote_task_draft", fake_promote)
 
     response = TestClient(app).post(

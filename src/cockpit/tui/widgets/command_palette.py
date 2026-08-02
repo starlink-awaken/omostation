@@ -13,12 +13,12 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from textual.app import ComposeResult
-from textual.widget import Widget
-from textual.widgets import Input, ListView, ListItem, Label
-from textual.message import Message
-from textual.binding import Binding
 from textual import on
+from textual.app import ComposeResult
+from textual.binding import Binding
+from textual.message import Message
+from textual.widget import Widget
+from textual.widgets import Input, Label, ListItem, ListView
 
 
 class CommandPalette(Widget):
@@ -88,6 +88,7 @@ class CommandPalette(Widget):
 
     class CommandExecuted(Message):
         """命令已执行事件."""
+
         def __init__(self, command_name: str) -> None:
             self.command_name = command_name
             super().__init__()
@@ -113,6 +114,7 @@ class CommandPalette(Widget):
         """从 COMMAND_CATALOG 加载命令元数据."""
         try:
             from cockpit.commands.registry import COMMAND_CATALOG
+
             self._catalog = [
                 {
                     "name": meta.name,
@@ -144,11 +146,9 @@ class CommandPalette(Widget):
             self._filtered = list(self._catalog)
         else:
             self._filtered = [
-                cmd for cmd in self._catalog
-                if all(
-                    t in cmd["name"].lower() or t in cmd["summary"].lower()
-                    for t in tokens
-                )
+                cmd
+                for cmd in self._catalog
+                if all(t in cmd["name"].lower() or t in cmd["summary"].lower() for t in tokens)
             ]
         self._render_list(self._filtered)
 

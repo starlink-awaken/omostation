@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd ~/Workspace/projects/cockpit && rtk git push origin main 2>&1\",\"description\":\"Push cockpit with lint fixes\"}",
-  "error": "Exit code 1\n🔍 Pre-push: cockpit\nS310 Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.\n   --> src/cockpit/commands/base.py:103:14\n    |\n101 | def _http_health(url: str, timeout: float = 3.0) -> bool:\n102 |     try:\n103 |         with urlrequest.urlopen(url, timeout=timeout):\n    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n104 |             return True\n105 |     except (urlerror.URLError, TimeoutError, ValueError):\n    |\nS310 Audit U...",
-  "timestamp": "2026-08-01T10:39:14.910Z",
-  "retry_count": 4
+  "tool_input_preview": "{\"command\":\"cd /Users/xiamingxing/Workspace && rtk git add bin/cockpit/ docs/CLI-REFERENCE.md docs/INDEX-MCP.md docs/generated/capability-registry.yaml Makefile projects/cockpit Plans/wobbly-enchantin...",
+  "error": "Exit code 1\nFAILED: git add\nThe following paths are ignored by one of your .gitignore files:\ndocs/generated\nhint: Use -f if you really want to add them.\nhint: Disable this message with \"git config set advice.addIgnoredFile false\"",
+  "timestamp": "2026-08-02T10:11:29.517Z",
+  "retry_count": 1
 }

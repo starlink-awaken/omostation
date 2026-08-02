@@ -617,7 +617,9 @@ def _project_triage_commands(project: dict[str, Any]) -> list[dict[str, Any]]:
                     compat.WORKSPACE_ROOT,
                     f'rg -n "^{re.escape(project_id)}:" "docs/project-registry.yaml"',
                 ),
-                "项目注册合同缺少：" + "、".join(str(item) for item in missing_contract_fields) + "；先定位注册表声明。",
+                "项目注册合同缺少："
+                + "、".join(str(item) for item in missing_contract_fields)
+                + "；先定位注册表声明。",
                 risk="low",
             )
         )

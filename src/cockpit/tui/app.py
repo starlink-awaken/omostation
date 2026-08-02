@@ -12,6 +12,7 @@ cockpit.tui.app — Textual 全屏 TUI 应用主程序 (Phase 2 升级版)
 from __future__ import annotations
 
 import logging
+
 from textual import on, work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -118,6 +119,7 @@ class CockpitTUIApp(App):
     @work(thread=True, exclusive=True)
     def _start_file_watcher(self) -> None:
         """后台独立线程运行 watchfiles 监控区变化."""
+
         def _on_change():
             self.call_from_thread(self._on_state_changed_main_thread)
 

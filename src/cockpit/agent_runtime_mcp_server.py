@@ -139,6 +139,7 @@ def chat(message: str, history_json: str = "") -> str:
 # 用 fallback 防止 l0_mcp_tools 不可用时整个 server 挂掉
 try:
     from cockpit.l0_mcp_tools import MCP_TOOLS as _L0_TOOLS
+
     for _name, _meta in _L0_TOOLS.items():
         _fn = _meta["function"]
         # 闭包绑定: FastMCP 用名字作为 tool identifier

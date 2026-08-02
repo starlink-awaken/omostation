@@ -19,6 +19,7 @@ def is_tui_available() -> bool:
     """检测 Textual 是否可用（用于优雅降级判断）."""
     try:
         import importlib.util
+
         return importlib.util.find_spec("textual") is not None
     except Exception:
         return False
@@ -28,6 +29,7 @@ def launch(args=None) -> int:
     """启动 TUI 控制台入口，自动检测并降级."""
     if is_tui_available():
         from cockpit.tui.app import CockpitTUIApp
+
         app = CockpitTUIApp()
         app.run()
         return 0
@@ -35,14 +37,17 @@ def launch(args=None) -> int:
         # 优雅降级：打印提示并回落到 Rich 静态版
         from rich.console import Console
         from rich.panel import Panel
+
         c = Console()
-        c.print(Panel(
-            "[bold yellow]⚠️  TUI 增强模式需要安装 textual[/bold yellow]\n\n"
-            "安装方式:\n"
-            "  [cyan]pip install textual[/]\n\n"
-            "当前已回落至静态版面（功能完整，体验降级）。\n"
-            "运行 [cyan]cockpit status[/] 查看当前研究工作台。",
-            title="🛸 Cockpit TUI",
-            border_style="yellow",
-        ))
+        c.print(
+            Panel(
+                "[bold yellow]⚠️  TUI 增强模式需要安装 textual[/bold yellow]\n\n"
+                "安装方式:\n"
+                "  [cyan]pip install textual[/]\n\n"
+                "当前已回落至静态版面（功能完整，体验降级）。\n"
+                "运行 [cyan]cockpit status[/] 查看当前研究工作台。",
+                title="🛸 Cockpit TUI",
+                border_style="yellow",
+            )
+        )
         return 0

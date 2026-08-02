@@ -90,9 +90,7 @@ class TestAsk:
     @patch("cockpit.brain_core.kos_search")
     def test_ask_with_kos_results(self, mock_search, mock_llm):
         """验证 KOS 结果被正确注入并返回."""
-        mock_search.return_value = {
-            "results": [{"id": "doc1", "title": "测试文档", "snippet": "内容", "score": 0.95}]
-        }
+        mock_search.return_value = {"results": [{"id": "doc1", "title": "测试文档", "snippet": "内容", "score": 0.95}]}
         mock_llm.return_value = "根据文档，答案是 X"
 
         result = ask("测试问题")

@@ -74,16 +74,12 @@ class TestGetTopSuggestions:
 
     @patch("cockpit.knowledge_activation.kos_search")
     def test_returns_titles(self, mock_search):
-        mock_search.return_value = {
-            "results": [{"title": "A"}, {"title": "B"}, {"title": "C"}]
-        }
+        mock_search.return_value = {"results": [{"title": "A"}, {"title": "B"}, {"title": "C"}]}
         titles = get_top_suggestions(ActivationContext.DOCUMENT, limit=3)
         assert titles == ["A", "B", "C"]
 
     @patch("cockpit.knowledge_activation.kos_search")
     def test_filters_empty(self, mock_search):
-        mock_search.return_value = {
-            "results": [{"title": "A"}, {"name": ""}, {"title": ""}]
-        }
+        mock_search.return_value = {"results": [{"title": "A"}, {"name": ""}, {"title": ""}]}
         titles = get_top_suggestions(ActivationContext.NOTE)
         assert "A" in titles

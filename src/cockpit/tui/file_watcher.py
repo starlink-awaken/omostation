@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 def is_watcher_supported() -> bool:
     """检查是否能够运行异步 watchfiles."""
     try:
-        import watchfiles  # noqa: F401
+        import watchfiles
+
         return True
     except ImportError:
         return False

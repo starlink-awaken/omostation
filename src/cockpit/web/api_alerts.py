@@ -328,12 +328,14 @@ import urllib.request as _urllib_request
 
 class TriageRequest(BaseModel):
     """分诊请求."""
+
     text: str = Field(..., description="待分诊文本")
     consensus: bool = Field(False, description="是否使用共识模式 (3模型投票)")
 
 
 class TriageResponse(BaseModel):
     """分诊响应."""
+
     verdict: str = Field(..., description="分诊结果: 丢弃/沉淀/提醒")
     agreement: float = Field(1.0, description="一致率 (0-1)")
     status: str = Field("ok", description="状态: 共识/多数/分歧/错误")
@@ -381,6 +383,7 @@ def _call_triage_model(model: str, text: str, needs_reasoning_off: bool = True) 
     )
 
     import time as _time
+
     t0 = _time.time()
     try:
         with _urllib_request.urlopen(req, timeout=15) as resp:  # noqa: S310
@@ -423,10 +426,7 @@ async def triage_notification(request: TriageRequest):
     stage2_model = ("deepseek-chat", False)
 
     with ThreadPoolExecutor(max_workers=2) as pool:
-        futures = [
-            pool.submit(_call_triage_model, m, request.text, off)
-            for m, off in stage1_models
-        ]
+        futures = [pool.submit(_call_triage_model, m, request.text, off) for m, off in stage1_models]
         results = [f.result() for f in futures]
 
     votes: dict[str, int] = {}

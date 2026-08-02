@@ -39,6 +39,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[5]
 
 try:
     from cockpit.adapters.metaos import SEngine, WorkflowPlanner, WorkflowStore
+
     _METAOS_IMPORT_ERROR: Exception | None = None
 except Exception as exc:  # Optional adapter; keep read-only cockpit routes available.
     SEngine = WorkflowPlanner = WorkflowStore = None  # type: ignore[assignment]

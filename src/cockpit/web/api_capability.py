@@ -61,7 +61,9 @@ async def capability_summary() -> JSONResponse:
 
 
 @router.get("/servers")
-async def capability_servers(layer: str | None = Query(None, description="按层过滤 (L0/L1/L2/L3/L4/I0/X/M0)")) -> JSONResponse:
+async def capability_servers(
+    layer: str | None = Query(None, description="按层过滤 (L0/L1/L2/L3/L4/I0/X/M0)"),
+) -> JSONResponse:
     """MCP 服务器列表, 可按层过滤."""
     reg = _load_registry()
     servers = reg.get("mcp_servers", [])
