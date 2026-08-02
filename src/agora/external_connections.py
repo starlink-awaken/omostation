@@ -499,6 +499,53 @@ class DiscoveryRecord:
     descriptor: ExternalResourceDescriptor | None
     entry_point: str
     error: str | None = None
+    health_override: Mapping[str, Any] | None = None
+
+
+def _probe_health(provider: Any) -> tuple[dict[str, Any] | None, str | None]:
+    """Run only the provider's explicit, read-only health probe.
+
+    Discovery must never infer health by calling an adapter's business API.
+    A provider that cannot expose the probe contract is retained as an
+    unavailable candidate so one bad adapter cannot hide the rest of the
+    catalog.
+    """
+    probe = getattr(provider, "health_probe", None)
+    if not callable(probe):
+        return None, "missing_health_probe"
+    try:
+        result = probe()
+        if not isinstance(result, Mapping):
+            return None, "invalid_health_probe"
+        _reject_secrets(result, "health_probe")
+        required = ("observed_at", "status", "source")
+        if any(not str(result.get(field) or "").strip() for field in required):
+            return None, "invalid_health_probe"
+        status = str(result["status"]).strip().lower()
+        if status not in {"healthy", "degraded", "unhealthy"}:
+            return None, "invalid_health_probe"
+        try:
+            datetime.fromisoformat(str(result["observed_at"]))
+        except ValueError:
+            return None, "invalid_health_probe"
+        latency_ms = result["latency_ms"]
+        if isinstance(latency_ms, bool) or not isinstance(
+            latency_ms, (int, float)
+        ) or latency_ms < 0:
+            return None, "invalid_health_probe"
+        return dict(result), None
+    except Exception as exc:  # noqa: BLE001 - isolate one provider failure
+        return None, type(exc).__name__
+
+
+def _probe_failure_health() -> dict[str, Any]:
+    """Force a failed probe to remain unavailable instead of reusing old health."""
+    return {
+        "status": "unhealthy",
+        "observed_at": datetime.now(UTC).isoformat(),
+        "latency_ms": None,
+        "source": "agora.external_connections.health_probe",
+    }
 
 
 def _health_projection(
@@ -583,16 +630,16 @@ def build_external_resource_catalog_snapshot(
                     "error": record.error,
                 }
             )
-            continue
         descriptor = record.descriptor
         if descriptor is None:
-            errors.append(
-                {
-                    "entry_point": record.entry_point,
-                    "status": "unavailable",
-                    "error": "missing_descriptor",
-                }
-            )
+            if not record.error:
+                errors.append(
+                    {
+                        "entry_point": record.entry_point,
+                        "status": "unavailable",
+                        "error": "missing_descriptor",
+                    }
+                )
             continue
         previous_entry_point = seen.get(descriptor.id)
         if previous_entry_point is not None:
@@ -607,9 +654,13 @@ def build_external_resource_catalog_snapshot(
         seen[descriptor.id] = record.entry_point
 
         health_state, health_reasons, health = _health_projection(
-            descriptor.health, now=current, ttl_seconds=health_ttl_seconds
+            record.health_override or descriptor.health,
+            now=current,
+            ttl_seconds=health_ttl_seconds,
         )
         reasons = list(health_reasons)
+        if record.error:
+            reasons.append("provider_probe_failed")
         lifecycle = descriptor.lifecycle
         if lifecycle not in {"active", "degraded"}:
             reasons.append(f"lifecycle_{lifecycle}")
@@ -690,12 +741,163 @@ def build_external_resource_catalog_snapshot(
     }
 
 
+_CATALOG_DIFF_FIELDS = (
+    "provider",
+    "version",
+    "capabilities",
+    "mode",
+    "lifecycle",
+    "availability",
+    "reason_codes",
+    "health",
+    "permission_ref",
+    "expires_at",
+    "review_at",
+    "rollback_plan",
+)
+
+
+def _catalog_resource_view(resource: Mapping[str, Any]) -> dict[str, Any]:
+    resource_id = str(resource.get("id") or "").strip()
+    if not resource_id:
+        raise ExternalConnectionError("catalog resource is missing id")
+    return {
+        key: resource.get(key)
+        for key in _CATALOG_DIFF_FIELDS
+        if key in resource
+    }
+
+
+def _catalog_resource_index(snapshot: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+    resources = snapshot.get("resources", [])
+    if not isinstance(resources, list):
+        raise ExternalConnectionError("catalog resources must be a list")
+    indexed: dict[str, Mapping[str, Any]] = {}
+    for resource in resources:
+        if not isinstance(resource, Mapping):
+            raise ExternalConnectionError("catalog resource must be an object")
+        resource_id = str(resource.get("id") or "").strip()
+        if not resource_id:
+            raise ExternalConnectionError("catalog resource is missing id")
+        if resource_id in indexed:
+            raise ExternalConnectionError(f"duplicate catalog resource: {resource_id}")
+        indexed[resource_id] = resource
+    return indexed
+
+
+def _catalog_errors(snapshot: Mapping[str, Any]) -> set[tuple[str, str, str]]:
+    errors = snapshot.get("errors", [])
+    if not isinstance(errors, list):
+        raise ExternalConnectionError("catalog errors must be a list")
+    normalized: set[tuple[str, str, str]] = set()
+    for error in errors:
+        if not isinstance(error, Mapping):
+            raise ExternalConnectionError("catalog error must be an object")
+        normalized.add(
+            (
+                str(error.get("entry_point") or ""),
+                str(error.get("status") or ""),
+                str(error.get("error") or ""),
+            )
+        )
+    return normalized
+
+
+def diff_external_resource_catalog_snapshots(
+    previous: Mapping[str, Any], current: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Compare two safe catalog projections without persisting either one."""
+    for name, snapshot in (("previous", previous), ("current", current)):
+        if not isinstance(snapshot, Mapping) or snapshot.get("schema") != "external-resource-catalog/v1":
+            raise ExternalConnectionError(f"{name} is not an external resource catalog")
+
+    previous_index = _catalog_resource_index(previous)
+    current_index = _catalog_resource_index(current)
+    changes: list[dict[str, Any]] = []
+    for resource_id in sorted(set(previous_index) | set(current_index)):
+        old = previous_index.get(resource_id)
+        new = current_index.get(resource_id)
+        if old is None:
+            changes.append(
+                {
+                    "id": resource_id,
+                    "change": "added",
+                    "changed_fields": list(_CATALOG_DIFF_FIELDS),
+                    "previous": None,
+                    "current": _catalog_resource_view(new),
+                }
+            )
+            continue
+        if new is None:
+            changes.append(
+                {
+                    "id": resource_id,
+                    "change": "removed",
+                    "changed_fields": list(_CATALOG_DIFF_FIELDS),
+                    "previous": _catalog_resource_view(old),
+                    "current": None,
+                }
+            )
+            continue
+        old_view = _catalog_resource_view(old)
+        new_view = _catalog_resource_view(new)
+        changed_fields = [
+            field for field in _CATALOG_DIFF_FIELDS if old_view.get(field) != new_view.get(field)
+        ]
+        if changed_fields:
+            changes.append(
+                {
+                    "id": resource_id,
+                    "change": "changed",
+                    "changed_fields": changed_fields,
+                    "previous": old_view,
+                    "current": new_view,
+                }
+            )
+
+    previous_errors = _catalog_errors(previous)
+    current_errors = _catalog_errors(current)
+    error_changes = [
+        {
+            "change": change,
+            "entry_point": entry_point,
+            "status": status,
+            "error": error,
+        }
+        for change, error_set in (
+            ("resolved", previous_errors - current_errors),
+            ("added", current_errors - previous_errors),
+        )
+        for entry_point, status, error in sorted(error_set)
+    ]
+    return {
+        "schema": "external-resource-catalog-diff/v1",
+        "previous_observed_at": previous.get("observed_at"),
+        "current_observed_at": current.get("observed_at"),
+        "changes": changes,
+        "error_changes": error_changes,
+        "summary": {
+            "change_count": len(changes),
+            "added_count": sum(item["change"] == "added" for item in changes),
+            "removed_count": sum(item["change"] == "removed" for item in changes),
+            "changed_count": sum(item["change"] == "changed" for item in changes),
+            "error_change_count": len(error_changes),
+        },
+    }
+
+
 def discover_entry_points(
     entry_points: Iterable[Any] | None = None,
     *,
     group: str = "external.resources",
+    probe: bool = False,
+    mark_unprobed: bool = False,
 ) -> list[DiscoveryRecord]:
-    """Discover descriptor providers without importing Kairon directly."""
+    """Discover providers and optionally run only their explicit health probe.
+
+    ``mark_unprobed`` is used by descriptor-only observers that need to make
+    the absence of a fresh probe explicit in the catalog projection.
+    """
     if entry_points is None:
         available = metadata.entry_points()
         entry_points = (
@@ -718,10 +920,22 @@ def discover_entry_points(
                 raise ExternalConnectionError(
                     "provider returned a non-object descriptor"
                 )
+            parsed_descriptor = ExternalResourceDescriptor.from_mapping(descriptor)
+            health_override = None
+            probe_error = None
+            if probe:
+                health_override, probe_error = _probe_health(provider)
+                if probe_error:
+                    health_override = _probe_failure_health()
+            elif mark_unprobed:
+                probe_error = "health_probe_skipped"
+                health_override = _probe_failure_health()
             records.append(
                 DiscoveryRecord(
-                    descriptor=ExternalResourceDescriptor.from_mapping(descriptor),
+                    descriptor=parsed_descriptor,
                     entry_point=label,
+                    error=probe_error,
+                    health_override=health_override,
                 )
             )
         except Exception as exc:  # noqa: BLE001 - one bad adapter must not stop discovery
@@ -1099,6 +1313,7 @@ __all__ = [
     "SceneCard",
     "SceneCardDecision",
     "build_external_resource_catalog_snapshot",
+    "diff_external_resource_catalog_snapshots",
     "discover_entry_points",
     "evaluate_scene_card",
 ]

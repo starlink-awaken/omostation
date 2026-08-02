@@ -10,6 +10,7 @@ from agora.external_connections import (
     SceneBinding,
     SceneCard,
     build_external_resource_catalog_snapshot,
+    diff_external_resource_catalog_snapshots,
     discover_entry_points,
     evaluate_scene_card,
 )
@@ -311,3 +312,103 @@ def test_external_entry_points_are_isolated_and_discoverable() -> None:
     assert len(records) == 1
     assert records[0].descriptor.id == "entry:test"
     assert records[0].error is None
+
+
+class _ProbingEntryPoint:
+    group = "external.resources"
+    name = "probing"
+
+    def load(self):
+        class Provider:
+            def external_descriptor(self):
+                return _descriptor("entry:probing", lifecycle="active")
+
+            def health_probe(self):
+                return {
+                    "status": "healthy",
+                    "observed_at": "2026-08-02T00:00:00+00:00",
+                    "latency_ms": 0,
+                    "source": "probe:test",
+                }
+
+        return Provider
+
+
+def test_explicit_health_probe_overrides_descriptor_health() -> None:
+    records = discover_entry_points([_ProbingEntryPoint()], probe=True)
+
+    assert records[0].error is None
+    assert records[0].health_override["source"] == "probe:test"
+    snapshot = build_external_resource_catalog_snapshot(records, now=NOW)
+    assert snapshot["resources"][0]["health"]["latency_ms"] == 0
+
+
+class _FailingProbeEntryPoint:
+    group = "external.resources"
+    name = "failing-probe"
+
+    def load(self):
+        class Provider:
+            def external_descriptor(self):
+                return _descriptor("entry:failing-probe", lifecycle="active")
+
+            def health_probe(self):
+                raise RuntimeError("probe failure")
+
+        return Provider
+
+
+def test_failed_health_probe_keeps_candidate_but_quarantines_availability() -> None:
+    records = discover_entry_points([_FailingProbeEntryPoint()], probe=True)
+
+    assert records[0].error == "RuntimeError"
+    snapshot = build_external_resource_catalog_snapshot(records, now=NOW)
+    resource = snapshot["resources"][0]
+    assert resource["availability"] == "unavailable"
+    assert "provider_probe_failed" in resource["reason_codes"]
+    assert snapshot["errors"][0]["error"] == "RuntimeError"
+
+
+def test_catalog_diff_detects_health_change_and_error_resolution() -> None:
+    previous = {
+        "schema": "external-resource-catalog/v1",
+        "observed_at": "2026-08-01T00:00:00+00:00",
+        "resources": [
+            {
+                "id": "source:test",
+                "availability": "available",
+                "health": {"status": "healthy"},
+            }
+        ],
+        "errors": [
+            {
+                "entry_point": "external.resources:broken",
+                "status": "unavailable",
+                "error": "ImportError",
+            }
+        ],
+    }
+    current = {
+        "schema": "external-resource-catalog/v1",
+        "observed_at": "2026-08-02T00:00:00+00:00",
+        "resources": [
+            {
+                "id": "source:test",
+                "availability": "unavailable",
+                "health": {"status": "unhealthy"},
+            }
+        ],
+        "errors": [],
+    }
+
+    diff = diff_external_resource_catalog_snapshots(previous, current)
+
+    assert diff["summary"] == {
+        "change_count": 1,
+        "added_count": 0,
+        "removed_count": 0,
+        "changed_count": 1,
+        "error_change_count": 1,
+    }
+    assert diff["changes"][0]["changed_fields"] == ["availability", "health"]
+    assert diff["error_changes"][0]["change"] == "resolved"
