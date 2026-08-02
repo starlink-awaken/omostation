@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -157,3 +158,33 @@ def test_previous_snapshot_produces_safe_change_report() -> None:
     assert [item["id"] for item in diff["changes"]] == ["source:new", "source:test"]
     assert diff["summary"]["changed_count"] == 1
     assert diff["summary"]["error_change_count"] == 1
+
+
+def test_observe_routes_safe_catalog_through_omo_broker(monkeypatch) -> None:
+    calls: list[tuple[tuple[str, ...], str | None]] = []
+
+    def fake_omo(_root, args, *, input_text=None):
+        calls.append((args, input_text))
+        if args[:2] == ("external-resources", "latest"):
+            return {"ok": True, "observation": None}
+        assert args[:2] == ("external-resources", "observe")
+        assert input_text and json.loads(input_text)["activation"] == "forbidden"
+        return {
+            "ok": True,
+            "status": "recorded",
+            "observation": {
+                "schema": "external-resource-observation/v1",
+                "observation_id": "observation:test",
+            },
+        }
+
+    monkeypatch.setattr(MODULE, "_run_omo", fake_omo)
+    payload = MODULE.observe_external_resources(
+        Path(__file__).parents[1],
+        entry_points=[_EntryPoint()],
+        now=datetime(2026, 8, 2, tzinfo=UTC),
+    )
+
+    assert payload["schema"] == "external-resource-observation-result/v1"
+    assert payload["status"] == "recorded"
+    assert len(calls) == 2

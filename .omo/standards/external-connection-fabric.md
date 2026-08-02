@@ -67,6 +67,23 @@ Iris 同时保留 `iris.connectors` 作为自身注册组，并将同一批 conn
 
 目录命令支持调用方传入 `--previous-snapshot`，输出 `external-resource-catalog-diff/v1`，比较资源新增、移除、健康/生命周期变化以及 provider 错误恢复。上一份快照不由根命令隐式保存，避免在目录投影旁形成第二份状态真相；需要持久化的证据由 OMO 或后续受治理的观察任务承接。
 
+### 4.1.1 受治理观察
+
+当目录需要进入可审计的人机消费链时，根仓命令可以使用 `--observe` 将同一个安全目录通过
+OMO CLI broker 记录为 `external-resource-observation/v1`。根仓脚本不得直接写入 `.omo`；
+OMO 是观察日志和最新投影的唯一写入所有者：
+
+- `omo external-resources observe --stdin` 校验目录 schema、`activation: forbidden` 和敏感字段禁入，
+  然后追加到 `.omo/_log/external-resource-observations.jsonl`；
+- `omo external-resources latest --json` 只读返回最新观察，最新快照损坏时可以从追加日志恢复；
+- 观测以 `observed_at + catalog_digest` 去重，重复观测不得产生重复事实；
+- Cockpit 默认先读 OMO 观察，没有观察或 OMO 不可用时才回退到动态目录，并明确标记
+  `unobserved`/`observer_unavailable`；`view=dynamic` 只用于显式的实时查看；
+- 观察仍然只是健康、来源、新鲜度和差异证据，不是 Scene Card 批准、OMO admission 或 WorkflowRun。
+
+`--observe --no-health-probe` 保持只读发现语义：资源可以被记录，但未探活资源必须继续按
+`stale/unavailable` 处理，不能因为进入观察日志就获得可用资格。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
