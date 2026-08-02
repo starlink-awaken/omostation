@@ -390,6 +390,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0320: External Resource 评估与可解释选择边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 27 | 0320-external-resource-evaluation-and-explainable-selection.md
 - ADR-0321: External Resource Selection 评测证据与提案边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 28 | 0321-external-resource-selection-evaluation-evidence.md
 - ADR-0322: Workflow Mesh 受控 Sandbox ToolPack 执行闭环 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 29 | 0322-sandbox-toolpack-mesh-execution.md
+- ADR-0323: Workflow Mesh Sandbox ToolPack 失败、不可用与恢复契约 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 30 | 0323-sandbox-toolpack-failure-recovery.md
 
 ---
 
