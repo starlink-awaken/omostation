@@ -3,12 +3,14 @@ title: External Connection Fabric Standard
 status: active
 type: standard
 owner: architecture-governance
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-03
 related:
   - ../_truth/registry/external-connection-fabric.yaml
   - ../../ARCHITECTURE.md
   - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - ../_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
+  - ../_knowledge/decisions/0320-external-resource-evaluation-and-explainable-selection.md
+  - ../_knowledge/decisions/0321-external-resource-selection-evaluation-evidence.md
 ---
 
 # External Connection Fabric 标准
@@ -132,6 +134,44 @@ receipt 文件和事件投影都禁止 provider 原文、模型输出、凭据�
   确定性前置失败。
 - `record_external_receipt`：由执行方在调用结束后把最小 receipt 回写 OMO；连接器本身不得直接
   改 WorkflowRun 或知识存储。
+
+### 5.1 场景化资源评估
+
+资源目录在进入正式准入前，可以通过 `external-resource-evaluation/v1` 生成一次可重放的只读评估。
+评估输入是 `capability`、完整 `SceneBinding`、`trace_id`、目录快照和可选的健康观察；输出必须包含：
+
+- 全部目录候选，而不只是最终选择；
+- 每个候选的 `status`、稳定 `reason_codes`、`decision_factors` 和排序值；
+- `policy_digest`、`trace_id`、场景绑定摘要和汇总计数；
+- `activation: forbidden`、`mode: read_only_evaluation`，以及无 provider 调用、无 OMO 状态写入的声明。
+
+Agora 的 `evaluate_candidates()` 是唯一决策算法，已有 `route()` 只能复用该结果，不得维护第二套
+评分逻辑。根仓通过 `evaluate_external_resources()` 暴露快照评估，Cockpit 通过
+`POST /api/external-resources/evaluate` 提供人机消费入口。评估结果不是 admission、不是 WorkflowRun、
+不是业务成功标签，也不能替代真实 receipt；只有经过 Scene Card、人工批准和 OMO admission 后，才可
+进入实际调用链。
+
+评估因子只允许使用安全元数据：能力匹配、权限、信任、新鲜度、健康、成本、延迟和资源身份。原文、
+凭据、provider 响应和模型输出不得进入评估结果。真实质量标签、人工判定、调用回执和结果指标应在
+后续评测集/证据闭环中另行采集，不能从评估排名反推。
+
+### 5.1.1 选择评测证据
+
+评估结果需要进入长期评测时，必须由 OMO 的 `record_external_resource_evaluation()` 写入
+`external-resource-evaluation-observation/v1` 追加日志。该观察是安全的选择事实，不是
+`EvidenceRecorded`、admission 或 WorkflowRun 状态；默认 API 行为仍为只读，只有显式
+`persist_observation=true` 才记录。观察 broker 使用 `evaluation_id`/评估摘要去重，冲突时拒绝，
+并递归禁止原文、凭据、模型输出和 provider 响应。
+
+OMO 的 `build_external_resource_selection_dataset()` 只读 join 三类真相：评估观察、Workflow Mesh
+事件/receipt 和 `outcome-feedback/v1`。显式 `workflow_run_id` 优先，缺失时只允许唯一 `trace_id`
+匹配；未绑定或歧义样本保留为 `not_executed`/未归因，不能成为成功样本。执行成功必须来自 Mesh
+成功事件，资源对齐必须来自真实 external receipt，结果消费必须来自显式反馈；关闭、验证或证据存在
+本身不能推断业务价值。
+
+Cockpit 提供评测集只读查询和 proposal-only 策略比较。提案只输出离线指标和人工审批要求，不修改
+路由、准入、WorkflowRun 或连接器状态。没有真实 Scene Card、连续使用和结果指标时，评测链保持
+shadow/proposal-only，不推进 provider 激活。
 
 连接器开发者只需实现 descriptor、健康探针和受控调用适配器；不得把连接器注册、权限判定、
 WorkflowRun 状态迁移或知识持久化塞回适配器。这样外部知识、方法、工具、模型和渠道可以动态

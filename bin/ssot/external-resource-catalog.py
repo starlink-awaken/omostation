@@ -50,6 +50,7 @@ def _load_agora(root: Path):
             module.build_external_resource_catalog_snapshot,
             module.diff_external_resource_catalog_snapshots,
             module.discover_entry_points,
+            module.evaluate_external_resource_catalog_snapshot,
         )
     except (ImportError, OSError) as exc:
         raise ExternalResourceCatalogInputError(
@@ -68,7 +69,7 @@ def collect_external_resources(
 ) -> dict[str, Any]:
     """Collect an external-resource snapshot through Agora's boundary."""
     root = root.resolve()
-    build_snapshot, diff_snapshots, discover = _load_agora(root)
+    build_snapshot, diff_snapshots, discover, _ = _load_agora(root)
     records = discover(entry_points, probe=probe, mark_unprobed=not probe)
     snapshot = build_snapshot(
         records,
@@ -80,6 +81,27 @@ def collect_external_resources(
     if previous_snapshot is not None:
         snapshot["changes"] = diff_snapshots(previous_snapshot, snapshot)
     return snapshot
+
+
+def evaluate_external_resources(
+    root: Path,
+    snapshot: Mapping[str, Any],
+    *,
+    capability: str,
+    scene_binding: Mapping[str, Any],
+    trace_id: str,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    """Evaluate a safe catalog through Agora's shared decision contract."""
+    root = root.resolve()
+    _, _, _, evaluate_snapshot = _load_agora(root)
+    return evaluate_snapshot(
+        snapshot,
+        capability,
+        scene_binding,
+        trace_id=trace_id,
+        now=now or datetime.now(UTC),
+    )
 
 
 def _omo_command(root: Path, *args: str) -> list[str]:

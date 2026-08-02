@@ -6,9 +6,9 @@ owner: 夏明星
 created: 2026-07-15
 updated: 2026-08-03
 horizon: 2026H2-2029
-version: v2.1
+version: v2.3
 lifecycle: contract
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-03
 review-state: scenario-and-mesh-converged
 related:
   - docs/VISION-ROADMAP.md
@@ -20,6 +20,8 @@ related:
   - .omo/_knowledge/decisions/0297-external-connection-fabric-and-product-truth.md
   - .omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
   - .omo/_knowledge/decisions/0319-external-resource-observation-surfaces.md
+  - .omo/_knowledge/decisions/0320-external-resource-evaluation-and-explainable-selection.md
+  - .omo/_knowledge/decisions/0321-external-resource-selection-evaluation-evidence.md
   - .omo/_truth/registry/external-connection-fabric.yaml
   - .omo/standards/external-connection-fabric.md
 note: >
@@ -288,6 +290,18 @@ Phase 26 已把 J4 的观察门接到真实产品后端：`GET /api/external-res
 `activation=forbidden`，接口不可用时 fail-closed。这意味着 J4 已从“脚本和页面声明”进入
 “可被人消费的只读垂直切片”，但仍没有真实业务激活，下一阶段的价值重点转为真实场景卡、
 评测集和回执证据，而不是继续堆连接器数量。
+
+Phase 27 将 J4 从“能观察资源”推进到“能解释选择”：目录快照现在可以按能力和 Scene Binding
+ 评估全部候选，输出统一 schema、淘汰原因、决策因子、排序和安全声明，Cockpit 提供人工评估入口。
+ 该层是纯决策投影，不触达 provider，不改变 OMO/WorkflowRun，也不把排名当成质量标签。下一步应
+用真实低风险场景建立标注评测集，把“选得是否合适、结果是否有效、成本/延迟是否可接受”与实际
+receipt 分开测量，再决定是否进入 shadow、canary 和受治理 active。
+
+Phase 28 把这件事从“下一步建议”推进为可运行的证据底座：选择评估可由用户显式记录为 OMO 安全观察，
+再与 Workflow Mesh 事件、真实 external receipt 和显式消费反馈生成 `external-resource-selection-eval/v1`。
+因此系统现在能区分“选了但没执行”“执行失败”“用了不同资源”“执行成功且资源对齐”“结果被明确消费”，
+同时保留 proposal-only 的离线策略比较。该能力提高了未来真实场景的可测量性，但不意味着已有外部
+provider 已激活，也不把当前样本宣称为业务质量或预测模型训练集。
 
 ## 9. 受控智能与进化闭环
 

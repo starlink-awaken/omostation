@@ -119,6 +119,7 @@ stateDiagram-v2
 - Cockpit 首页新增只读“今天需要处理”区，消费 `/api/cockpit/system-map` 的 `project_focus` 和 `project_portfolio.priority_projects`，将队列原因、项目 `next_action` 和 TaskCenter/SystemMap 导航放回第一入口；焦点接口失败时独立显示 unavailable，不计算或复制第二套任务真相。契约见 ADR-0309。
 - Runtime 增加显式 retry policy、稳定 effect key 的副作用日志和 replay，AetherForge 增加节点重试与可选 compensation hook；默认不重试，避免隐式放大副作用。Runtime effect journal 输出 `runtime-effect-outcome/v1` 安全摘要和可供 OMO broker 消费的 credential-free receipt；本地 replay 所需的工具结果不进入 Mesh 事件、receipt 或证据投影。journal 的读-判重-写已由跨进程锁保护，网络超时/连接失败会落为 `unavailable` 和稳定错误码。
 - OMO 增加 `workflow_eval`：从真实 append-only 事件生成 `workflow-mesh-eval/v1` 数据集，保留事件 ID 作为标签来源，并提供只读的候选策略离线评估/人工审批 proposal。
+- Phase 28 将外部资源选择评估升级为可追踪证据：OMO 通过 `external-resource-evaluation-observation/v1` 持久化安全观察，`external-resource-selection-eval/v1` 只读 join 评估、真实 Mesh 事件、external receipt 和显式 Outcome Feedback；未执行或歧义样本不会被标成成功。Cockpit 提供显式记录开关、评测集摘要和 proposal-only 策略比较，仍不激活 provider、不改变 admission/WorkflowRun。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
 ## 6. 分阶段路线
@@ -237,6 +238,19 @@ execution record -> complete_task -> EvidenceRecorded -> WorkflowVerified -> Wor
 当前已先落地 J4 的“观察门”：`external-resource-catalog/v1` 目录允许系统持续发现外部知识、数据、方法、工具、模型和渠道，并把健康、新鲜度、来源和隔离错误交给人判断；通过 `--previous-snapshot` 还能识别新增、移除、健康变化和错误恢复，`--observe` 则把安全投影纳入 OMO 的可审计观察链。只有在真实场景证据齐备后，才从目录观察进入 Scene Card 评审，再进入 OMO/Agora 的正式准入链。
 
 目录差异是调用方驱动的纯投影：上一份快照由调度器、审计任务或人类操作方保存和传入，根仓命令只读取它并输出变化；需要持久化时只能通过 OMO 的 `external-resources observe` broker 写入观察日志，不写入 provider 本地状态。这样可以先获得动态扩展的可观察性，等真实业务场景出现后，再由 Scene Card 和 OMO admission 接管业务执行证据。
+
+Phase 27 又补齐了观察到选择之间的只读评估层：Agora 的 `evaluate_candidates()` 对目录中的全部资源
+生成 `external-resource-evaluation/v1`，明确记录候选、淘汰原因、排序因子、策略摘要和安全边界；
+`POST /api/external-resources/evaluate` 与 Cockpit UI 将其作为人工评估入口。它复用 `route()` 的同一套
+决策算法，但不调用 provider、不写 OMO、不创建 WorkflowRun，`activation` 固定为 `forbidden`。因此
+系统现在能回答“为什么选它、为什么排除其他候选”，但还没有把排序结果当作业务质量标签；真实标签、
+调用 receipt 和结果指标仍需在下一阶段的场景评测闭环中形成。
+
+Phase 28 完成了这条评测闭环的证据前置：用户只有显式选择记录观察时，Cockpit 才调用 OMO broker
+追加安全评估记录；评测构建器再按显式 run、唯一 trace 或未绑定状态关联 Mesh 事件、真实 receipt
+和消费反馈。输出 `external-resource-selection-eval/v1`，区分 `not_executed`、`incomplete`、
+`failed`、`unavailable`、`degraded` 和 `success`，并保留事件、receipt、feedback 的来源 ID。
+该数据集目前用于离线指标和 proposal-only 对比，不是预测模型训练集，也不是自动路由准入依据。
 
 ### 6.3.1 J2 task -> WorkflowRequested 晋升
 
