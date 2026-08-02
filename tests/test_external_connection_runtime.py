@@ -6,16 +6,21 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[1]
-for candidate in (ROOT / "projects/agora/src", ROOT / "projects/omo/src"):
+for candidate in (
+    ROOT / "projects/agora/src",
+    ROOT / "projects/omo/src",
+    ROOT / "projects/runtime/src",
+):
     if candidate.is_dir():
         sys.path.insert(0, str(candidate))
 
-from agora.external_connections import ExternalConnectionCatalog, SceneBinding  # noqa: E402
-from omo.omo_external_receipt import record_external_receipt  # noqa: E402
-from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event  # noqa: E402
-
+from agora.external_connections import (
+    ExternalConnectionCatalog,
+    SceneBinding,
+)
+from omo.omo_external_receipt import record_external_receipt
+from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event
 
 NOW = datetime(2026, 8, 2, tzinfo=UTC)
 
@@ -64,13 +69,17 @@ def _grant(run_id: str, step_run_id: str) -> dict:
         "expires_at": (NOW + timedelta(hours=1)).isoformat(),
     }
     grant["proof"] = hashlib.sha256(
-        json.dumps(grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+        json.dumps(
+            grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode()
     ).hexdigest()
     return grant
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def test_external_receipt_can_close_a_workflow_mesh_evidence_chain(tmp_path: Path) -> None:
+def test_external_receipt_can_close_a_workflow_mesh_evidence_chain(
+    tmp_path: Path,
+) -> None:
     pytest.importorskip("omo.workflow_mesh")
     catalog = ExternalConnectionCatalog()
     catalog.register(_descriptor())
@@ -89,7 +98,11 @@ def test_external_receipt_can_close_a_workflow_mesh_evidence_chain(tmp_path: Pat
     grant = _grant(run_id, step_run_id)
     store = WorkflowMeshStore(tmp_path)
     store.append(new_workflow_event("WorkflowRequested", run_id))
-    store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
+    store.append(
+        new_workflow_event(
+            "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
+        )
+    )
     store.append(
         new_workflow_event(
             "StepDispatched",
@@ -116,4 +129,81 @@ def test_external_receipt_can_close_a_workflow_mesh_evidence_chain(tmp_path: Pat
 
     snapshot = store.snapshot(run_id)
     assert snapshot["state"] == "verified"
-    assert snapshot["evidence"][f"external:source:mesh-test:{receipt.receipt_id}"]["sha256"]
+    assert snapshot["evidence"][f"external:source:mesh-test:{receipt.receipt_id}"][
+        "sha256"
+    ]
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+def test_runtime_effect_receipt_can_close_the_same_mesh_run(tmp_path: Path) -> None:
+    from runtime.executor.engine import AgentRuntime
+    from runtime.workflow_admission import admission_proof
+
+    run_id = "workflow-runtime-effect"
+    step_run_id = f"{run_id}:runtime"
+    grant = _grant(run_id, step_run_id)
+    grant["step_run_ids"] = [step_run_id]
+    grant["capabilities"] = ["execute", "search"]
+    grant["issued_at"] = datetime.now(UTC).isoformat()
+    grant["expires_at"] = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
+    grant["proof"] = admission_proof(grant)
+    store = WorkflowMeshStore(tmp_path)
+
+    runtime = AgentRuntime()
+    runtime._tool_registry = {
+        "lookup": {"fn": lambda query="": {"remote_id": query, "content": "private"}}
+    }
+    responses = iter(
+        [
+            {
+                "content": "",
+                "tool_calls": [
+                    {
+                        "id": "call-runtime-1",
+                        "function": {
+                            "name": "lookup",
+                            "arguments": '{"query":"object-1"}',
+                        },
+                    }
+                ],
+                "finish_reason": "tool_calls",
+                "usage": {"total_tokens": 1},
+            },
+            {
+                "content": "runtime complete",
+                "tool_calls": [],
+                "finish_reason": "stop",
+                "usage": {"total_tokens": 2},
+            },
+        ]
+    )
+    runtime._call_llm = lambda *args, **kwargs: next(responses)  # type: ignore[method-assign]
+    result = runtime.run_task(
+        "private runtime prompt",
+        workflow_run_id=run_id,
+        event_sink=store.sink(),
+        admission=grant,
+        context={
+            "effect_store_path": str(tmp_path / "effects.jsonl"),
+            "resource_id": "source:runtime-test",
+            "operation": "lookup",
+            "provenance_ref": "runtime-test://lookup",
+        },
+    )
+
+    assert result["result"] == "runtime complete"
+    receipt = result["effect_receipts"][0]
+    recorded = record_external_receipt(
+        tmp_path,
+        receipt,
+        workflow_run_id=run_id,
+        step_run_id=f"{step_run_id}:1",
+        producer="runtime",
+    )
+    assert recorded["payload"]["evidence_schema"] == "external-connection-receipt/v1"
+    store.append(new_workflow_event("WorkflowVerified", run_id))
+
+    snapshot = store.snapshot(run_id)
+    assert snapshot["state"] == "verified"
+    assert snapshot["evidence"]
+    assert all("content" not in str(event) for event in store.events())

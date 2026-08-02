@@ -114,7 +114,7 @@ stateDiagram-v2
 - Agora 的动态发现结果现在通过 `external-resource-catalog/v1` 归一为只读目录快照：统一暴露资源类型、生命周期、健康探针、新鲜度、来源引用、错误记录和显式不可用原因；根仓 `bin/ssot/external-resource-catalog.py` 只调用 provider 明确声明的只读 `health_probe`，不调用业务方法、不写 OMO。
 - 外部目录增加受治理观察链：根仓 `--observe` 通过 OMO CLI broker 追加 `external-resource-observation/v1`，OMO 独占观察日志和最新投影写入；重复目录按 `observed_at + catalog_digest` 去重，Cockpit 默认读取观察并在缺失时显式回退到动态发现。
 - Cockpit 提供 `GET /api/external-resources`，cockpit-ui 提供 `/external-resources` 目录页；它是人类判断外部能力是否值得进入 Scene Card 的观察面，不是激活面或执行面。
-- Runtime 增加显式 retry policy、稳定 effect key 的副作用日志和 replay，AetherForge 增加节点重试与可选 compensation hook；默认不重试，避免隐式放大副作用。
+- Runtime 增加显式 retry policy、稳定 effect key 的副作用日志和 replay，AetherForge 增加节点重试与可选 compensation hook；默认不重试，避免隐式放大副作用。Runtime effect journal 进一步输出 `runtime-effect-outcome/v1` 安全摘要和可供 OMO broker 消费的 credential-free receipt；本地 replay 所需的工具结果不进入 Mesh 事件、receipt 或证据投影。
 - OMO 增加 `workflow_eval`：从真实 append-only 事件生成 `workflow-mesh-eval/v1` 数据集，保留事件 ID 作为标签来源，并提供只读的候选策略离线评估/人工审批 proposal。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
@@ -130,7 +130,7 @@ stateDiagram-v2
 ### P1：可恢复执行
 
 1. OMO 将事件投影扩展为 WorkflowRun、StepRun、Approval、Evidence 的权威读接口；写入仍统一走事件 sink。
-2. Runtime 和 AetherForge 已以持久化 checkpoint 实现断点恢复与完成态幂等，并要求 Mesh 运行携带有效 admission grant；首版显式 retry/effect journal/compensation 已落地，网络传输级 timeout、真实外部系统 receipt 和跨进程 effect store 仍需继续落地。
+2. Runtime 和 AetherForge 已以持久化 checkpoint 实现断点恢复与完成态幂等，并要求 Mesh 运行携带有效 admission grant；Runtime effect journal 已能产出结构化成功/失败/重放摘要，并通过 OMO receipt broker 写入同一条证据链。网络传输级 timeout、真实外部系统补偿回执和跨进程 effect store 仍需继续落地。
 3. Agora 已增加能力健康 projection 和 MCP 查询入口；版本、权限声明与降级原因的生产级采集仍需绑定真实节点注册和服务心跳。
 4. ECOS 已将运行身份和子授予传递到 Runtime/AetherForge；AetherForge 只接收已 admitted 的 StepRun，资源失败回写 `unavailable/failed` 的细化策略仍是下一交付项。
 
@@ -141,6 +141,28 @@ stateDiagram-v2
 3. 建立基于证据的 workflow 版本比较、成本分析和自动淘汰机制。
 4. 将高频稳定流程提升为模板，将不稳定流程沉淀为治理债务和人工审批规则。
 5. `workflow_eval` 先完成事件衍生标签和 proposal-only 反馈；待真实运行样本达到业务阈值后，再引入预测模型，模型不得直接写入 admission 或状态机。
+
+### P1.1：Effect Outcome 与 Receipt 边界
+
+Runtime 的 effect journal 是执行恢复面，不是 OMO 的事实库。每个副作用使用稳定的
+`effect_key`，本地记录成功结果用于幂等 replay，同时生成不含 prompt、tool arguments、provider
+output 或 secret 的 `runtime-effect-outcome/v1` 摘要。成功或降级 outcome 可以进一步编译为
+`external-connection-receipt/v1`，交给 OMO 的 `record_external_receipt()` broker；失败只保留
+`error_code` 和失败状态，必须继续走 `StepFailed`/`BackendUnavailable`，不能伪造证据。
+
+这条边界有三个固定不变量：
+
+1. 同一 `effect_key` 的成功执行只产生一次真实工具副作用，后续执行返回本地 journal 结果并标记
+   `replayed=true`。
+2. receipt 的 `receipt_id`、时间、结果摘要和决策因素基于首次成功记录稳定生成；重放不会产生
+   冲突的 OMO 事件。
+3. Runtime 不直接写 OMO、不调用 provider broker；调用方负责把安全 receipt 交给 OMO，OMO 负责
+   admission 上下文、幂等身份和 EvidenceRecorded 投影。
+
+当前验证路径是：`AgentRuntime -> WorkflowEffectStore -> safe receipt ->
+omo.omo_external_receipt.record_external_receipt -> EvidenceRecorded -> WorkflowVerified`。下一步
+只在有真实低风险场景时接入外部 Tool/Channel，并补齐 timeout、补偿和跨进程 journal；不能因为
+receipt 已经可写回就把 Runtime 视为业务完成。
 
 ### P2.5：外部连接与触达
 
@@ -224,7 +246,7 @@ Cockpit 已提供同一边界的正式消费入口：`GET /api/scene-cards` 返�
 
 1. 通过 OMO admission/dispatch broker 生成唯一的 `workflow_run_id`、短期 grant 和 worker dispatch packet；任何 capability、approval 或 budget gate 失败都不得产生执行派发。
 2. Agora 以 `workflow_capability_health` 输出统一的 `healthy/degraded/unhealthy` 快照，附带每项 capability 的来源节点、服务或 backend，作为 admission 的输入证据。
-3. 外部连接 receipt 已通过 OMO broker 回写同一条 Mesh 事件链；成功/降级 receipt 形成 `EvidenceRecorded`，失败/不可用必须走明确的 StepFailed/BackendUnavailable 路径。worker ACK、租约心跳、超时失效和接管的事件合同已经落地。`mesh-watchdog-run` 已由现有 `omo daemon` tick 调用，launchd/cron 只负责启动已有 cadence，不在 OMO 内新增 scheduler；默认 dry-run，显式 `--apply` 才追加过期事件。下一道交付是将真实低风险 Channel/Tool 调用接入相同 broker，并补齐补偿回执，不能只把 packet 生成当成执行完成。
+3. Runtime effect outcome 和外部连接 receipt 已通过 OMO broker 回写同一条 Mesh 事件链；成功/降级 receipt 形成 `EvidenceRecorded`，失败/不可用必须走明确的 StepFailed/BackendUnavailable 路径。worker ACK、租约心跳、超时失效和接管的事件合同已经落地。`mesh-watchdog-run` 已由现有 `omo daemon` tick 调用，launchd/cron 只负责启动已有 cadence，不在 OMO 内新增 scheduler；默认 dry-run，显式 `--apply` 才追加过期事件。下一道交付是将真实低风险 Channel/Tool 调用接入相同 broker，并补齐补偿回执，不能只把 packet 生成当成执行完成。
 
 4. 外部连接调用必须使用 `resource_id + trace_id + receipt_id` 作为可重放边界；原文不进入 Mesh
    事件，只有 provenance、摘要、哈希和结果状态进入证据面。
