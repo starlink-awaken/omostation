@@ -80,19 +80,19 @@ last-reviewed: 2026-06-29
 | 脚本 | 功能 |
 |:-----|:-----|
 | `governance-dashboard.py` | P86 R4 dashboard wrapper |
-| `governance-readiness.py` | P60 治理就绪度 (5 维度) |
-| `governance-readiness-trend.py` | 就绪度趋势 |
+| `bin/gac/governance-readiness.py` | P60 治理就绪度 (5 维度) |
+| `bin/gac/governance-readiness-trend.py` | 就绪度趋势 |
 | `governance-history-insight.py` | history 洞察 |
 | `governance-history-stats.py` | P91 R1 history 趋势深化 (ADR-0115 Phase 2 rename) |
 | `governance-trend-report.py` | 趋势报告 (ADR-0115 Phase 2 rename) |
 | `dashboard-readiness-summary.py` | 就绪度摘要 |
 | `dashboard-ui-render.py` | UI 渲染 |
-| `alert-aggregator.py` | 告警聚合 |
-| `alert-history.py` | 告警历史 |
-| `alert-mock-p0-notify.py` | P0 告警 mock |
+| `bin/gac/alert-aggregator.py` | 告警聚合 |
+| `bin/gac/alert-history.py` | 告警历史 |
+| `bin/gac/alert-mock-p0-notify.py` | P0 告警 mock |
 | `drift-history-insight.py` | drift history 洞察 |
 | `rule-history-insight.py` | 规则 history 洞察 |
-| `status-distribution.py` / `dim-weight.py` | 状态分布 / 维度权重 |
+| `status-distribution.py` / `bin/gac/dim-weight.py` | 状态分布 / 维度权重 |
 
 > ⚠️ 前缀不一 (`governance-` vs `gov-` vs `dashboard-`), 同域历史碎片, 待渐进归并.
 
