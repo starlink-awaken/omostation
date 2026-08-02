@@ -375,6 +375,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0305: Runtime 跨进程 effect journal 与显式补偿边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh P1.2 | 0305-runtime-cross-process-effects.md
 - ADR-0306: KEMS 生产持久化恢复证据作为放行前置条件 — **ACCEPTED** | 2026-08-02 | KEMS production readiness | 0306-kems-production-recovery-evidence.md
 - ADR-0307: Workflow Mesh 外部调用安全契约 — **ACCEPTED** | 2026-08-02 | Workflow Mesh external fabric | 0307-external-invocation-safety-contract.md
+- ADR-0308: Cockpit 首页运行态真值与分源降级契约 — **ACCEPTED** | 2026-08-02 | Cockpit product truthfulness | 0308-cockpit-home-runtime-truthfulness.md
 
 ---
 
