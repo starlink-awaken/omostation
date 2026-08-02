@@ -9,11 +9,13 @@ from pathlib import Path
 from typing import Any
 
 from .knowledge_action import build_knowledge_action_snapshot
+from .omo_external_evaluation import read_external_resource_evaluations
 from .outcome_feedback import ELIGIBLE_WORKFLOW_STATES, read_outcome_feedback
 from .workflow_mesh import WorkflowMeshStore
 
 OPERATIONS_SCHEMA_VERSION = "workflow-mesh-operations/v1"
 REQUEST_EVAL_SCHEMA_VERSION = "workflow-request-eval/v1"
+SELECTION_EVAL_SCHEMA_VERSION = "external-resource-selection-eval/v1"
 
 
 def _duration_seconds(events: list[dict[str, Any]]) -> float | None:
@@ -257,6 +259,227 @@ def propose_policy_feedback(
 ) -> dict[str, Any]:
     """Return an auditable proposal; production policy mutation is out of scope."""
     evaluation = evaluate_policy(dataset, candidate)
+    return {
+        "proposal_id": proposal_id,
+        "status": "proposal_only",
+        "source_dataset_version": dataset.get("dataset_version"),
+        "evaluation": evaluation,
+        "requires_human_approval": True,
+        "apply_ref": None,
+        "decision": "eligible_for_review"
+        if evaluation["offline_gate_passed"]
+        else "rejected_offline",
+    }
+
+
+def _selection_run_outcome(
+    run_events: list[dict[str, Any]], evidence: list[dict[str, Any]]
+) -> str:
+    event_types = {str(event.get("event_type")) for event in run_events}
+    if not run_events:
+        return "not_executed"
+    if "WorkflowFailed" in event_types or "StepFailed" in event_types:
+        return "failed"
+    if "BackendUnavailable" in event_types or "WorkerLeaseExpired" in event_types:
+        return "unavailable"
+    if any(item.get("result_state") == "degraded" for item in evidence):
+        return "degraded"
+    if "WorkflowSucceeded" in event_types:
+        return "success"
+    return "incomplete"
+
+
+def build_external_resource_selection_dataset(
+    omo_dir: Path | str,
+    *,
+    scene_id: str | None = None,
+    output_path: Path | None = None,
+) -> dict[str, Any]:
+    """Join safe selection observations with Mesh receipts and human feedback.
+
+    The join is intentionally read-only. A selection without a matching run is
+    retained as ``not_executed`` so the dataset distinguishes lack of evidence
+    from failure; it is never promoted to a success label.
+    """
+    store = WorkflowMeshStore(omo_dir)
+    events = store.events()
+    snapshots = {snapshot["workflow_run_id"]: snapshot for snapshot in store.snapshots()}
+    events_by_run: dict[str, list[dict[str, Any]]] = {}
+    runs_by_trace: dict[str, set[str]] = {}
+    for event in events:
+        run_id = str(event["workflow_run_id"])
+        events_by_run.setdefault(run_id, []).append(event)
+        runs_by_trace.setdefault(str(event.get("trace_id", run_id)), set()).add(run_id)
+
+    feedback_by_run: dict[str, list[dict[str, Any]]] = {}
+    for feedback in read_outcome_feedback(omo_dir):
+        feedback_by_run.setdefault(str(feedback["workflow_run_id"]), []).append(feedback)
+
+    rows: list[dict[str, Any]] = []
+    for observation in read_external_resource_evaluations(omo_dir):
+        binding = observation.get("scene_binding") or {}
+        if scene_id is not None and binding.get("scene_id") != scene_id:
+            continue
+        requested_run_id = str(observation.get("workflow_run_id") or "").strip() or None
+        trace_id = str(observation.get("trace_id") or "")
+        trace_runs = runs_by_trace.get(trace_id, set())
+        run_id = requested_run_id
+        join_status = "explicit" if requested_run_id else "unbound"
+        if run_id is None and len(trace_runs) == 1:
+            run_id = next(iter(trace_runs))
+            join_status = "trace_match"
+        elif run_id is None and len(trace_runs) > 1:
+            join_status = "ambiguous_trace"
+
+        run_events = events_by_run.get(run_id or "", [])
+        snapshot = snapshots.get(run_id or "", {})
+        evidence = [
+            item
+            for item in (snapshot.get("evidence") or {}).values()
+            if isinstance(item, dict) and item.get("resource_id")
+        ]
+        receipts = [
+            item
+            for item in evidence
+            if item.get("evidence_schema") == "external-connection-receipt/v1"
+        ]
+        selected_resource_id = observation.get("selected_resource_id")
+        used_resource_ids = {str(item["resource_id"]) for item in receipts}
+        if not run_id:
+            alignment = "not_executed"
+        elif not selected_resource_id:
+            alignment = "no_selection"
+        elif not receipts:
+            alignment = "missing_receipt"
+        elif selected_resource_id in used_resource_ids:
+            alignment = "aligned"
+        else:
+            alignment = "different_resource"
+
+        feedback = [
+            item
+            for item in feedback_by_run.get(run_id or "", [])
+            if item.get("consumption_state") != "rejected"
+        ]
+        outcome = _selection_run_outcome(run_events, evidence)
+        labels = {
+            "execution_outcome": outcome,
+            "selection_alignment": alignment,
+            "consumption_state": feedback[0]["consumption_state"] if feedback else "unobserved",
+            "terminal": "WorkflowClosed" in {str(event.get("event_type")) for event in run_events},
+            "verified": "WorkflowVerified" in {str(event.get("event_type")) for event in run_events},
+            "evidence_complete": bool(evidence),
+            "label_quality": (
+                "execution_and_consumption"
+                if feedback and outcome not in {"not_executed", "incomplete"}
+                else "execution"
+                if run_events
+                else "unbound"
+            ),
+        }
+        rows.append(
+            {
+                "evaluation_id": observation["evaluation_id"],
+                "workflow_run_id": run_id,
+                "trace_id": trace_id,
+                "scene_binding": binding,
+                "features": {
+                    "capability": observation["capability"],
+                    "selected_resource_id": selected_resource_id,
+                    "candidate_count": observation["summary"]["candidate_count"],
+                    "eligible_count": observation["summary"]["eligible_count"],
+                    "rejected_count": observation["summary"]["rejected_count"],
+                    "selected_decision_factors": next(
+                        (
+                            item["decision_factors"]
+                            for item in observation["candidates"]
+                            if item["resource_id"] == selected_resource_id
+                        ),
+                        {},
+                    ),
+                },
+                "labels": labels,
+                "join": {"status": join_status, "receipt_count": len(receipts)},
+                "label_source": {
+                    "evaluation_observation_id": observation["observation_id"],
+                    "event_ids": [str(event["event_id"]) for event in run_events],
+                    "receipt_ids": [str(item["receipt_id"]) for item in receipts if item.get("receipt_id")],
+                    "feedback_ids": [str(item["feedback_id"]) for item in feedback],
+                    "labeling_rule": f"{SELECTION_EVAL_SCHEMA_VERSION}:event-receipt-feedback-join",
+                },
+            }
+        )
+
+    dataset = {
+        "dataset_version": SELECTION_EVAL_SCHEMA_VERSION,
+        "source": {
+            "kind": "omo_external_evaluation_log_joined_with_mesh",
+            "evaluation_log": "_knowledge/workflow-mesh/external-resource-evaluations.jsonl",
+            "event_log": "_knowledge/workflow-mesh/events.jsonl",
+            "outcome_feedback_log": "_knowledge/workflow-mesh/outcome-feedback.jsonl",
+            "raw_content_policy": "never_read_or_export",
+        },
+        "filter": {"scene_id": scene_id},
+        "rows": rows,
+        "summary": {
+            "row_count": len(rows),
+            "linked_run_count": sum(bool(row["workflow_run_id"]) for row in rows),
+            "executed_count": sum(
+                row["labels"]["execution_outcome"] not in {"not_executed", "incomplete"}
+                for row in rows
+            ),
+            "aligned_count": sum(row["labels"]["selection_alignment"] == "aligned" for row in rows),
+            "outcomes": dict(Counter(row["labels"]["execution_outcome"] for row in rows)),
+            "label_quality": dict(Counter(row["labels"]["label_quality"] for row in rows)),
+        },
+    }
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(dataset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return dataset
+
+
+def evaluate_selection_policy(
+    dataset: dict[str, Any], candidate: dict[str, Any]
+) -> dict[str, Any]:
+    """Compare a selection policy offline; never apply it to routing or admission."""
+    max_unaligned_rate = float(candidate.get("max_unaligned_rate", 0.2))
+    if not 0 <= max_unaligned_rate <= 1:
+        raise ValueError("max_unaligned_rate must be between 0 and 1")
+    rows = [
+        row
+        for row in dataset.get("rows", [])
+        if row.get("labels", {}).get("execution_outcome")
+        not in {"not_executed", "incomplete"}
+    ]
+    unaligned = sum(
+        row.get("labels", {}).get("selection_alignment") == "different_resource"
+        for row in rows
+    )
+    successful = sum(row.get("labels", {}).get("execution_outcome") == "success" for row in rows)
+    aligned_successful = sum(
+        row.get("labels", {}).get("execution_outcome") == "success"
+        and row.get("labels", {}).get("selection_alignment") == "aligned"
+        for row in rows
+    )
+    return {
+        "candidate": candidate,
+        "dataset_version": dataset.get("dataset_version"),
+        "rows_considered": len(rows),
+        "unaligned_count": unaligned,
+        "unaligned_rate": round(unaligned / len(rows), 4) if rows else None,
+        "success_rate": round(successful / len(rows), 4) if rows else None,
+        "aligned_success_rate": round(aligned_successful / len(rows), 4) if rows else None,
+        "offline_gate_passed": bool(rows) and (unaligned / len(rows)) <= max_unaligned_rate,
+        "not_applied": True,
+    }
+
+
+def propose_selection_policy_feedback(
+    dataset: dict[str, Any], candidate: dict[str, Any], *, proposal_id: str
+) -> dict[str, Any]:
+    """Create a reviewable selection proposal without changing production policy."""
+    evaluation = evaluate_selection_policy(dataset, candidate)
     return {
         "proposal_id": proposal_id,
         "status": "proposal_only",
@@ -581,9 +804,13 @@ def build_operations_snapshot(
 
 __all__ = [
     "OPERATIONS_SCHEMA_VERSION",
+    "SELECTION_EVAL_SCHEMA_VERSION",
     "build_eval_dataset",
-    "build_request_eval_dataset",
+    "build_external_resource_selection_dataset",
     "build_operations_snapshot",
+    "build_request_eval_dataset",
     "evaluate_policy",
+    "evaluate_selection_policy",
     "propose_policy_feedback",
+    "propose_selection_policy_feedback",
 ]

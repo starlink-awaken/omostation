@@ -16,8 +16,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from omo.omo_external_evaluation import (
+    ExternalResourceEvaluationError,
+    record_external_resource_evaluation,
+)
 from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic
 from omo.omo_paths import find_omo_dir
+from omo.workflow_eval import build_external_resource_selection_dataset
 
 CATALOG_SCHEMA = "external-resource-catalog/v1"
 OBSERVATION_SCHEMA = "external-resource-observation/v1"
@@ -208,6 +213,23 @@ def main(argv: list[str] | None = None) -> int:
     observe.add_argument("--source-ref", default="omo:external-resources:observe")
     latest = sub.add_parser("latest", help="read the latest governed observation")
     latest.add_argument("--json", action="store_true", help="emit JSON")
+    record_evaluation = sub.add_parser(
+        "record-evaluation", help="persist one safe selection evaluation"
+    )
+    record_evaluation.add_argument("--stdin", action="store_true")
+    record_evaluation.add_argument("--workflow-run-id")
+    record_evaluation.add_argument("--actor", default="cockpit")
+    record_evaluation.add_argument(
+        "--source-ref", default="omo:external-resources:evaluate"
+    )
+    record_evaluation.add_argument("--observed-at")
+    record_evaluation.add_argument("--evaluation-id")
+    selection_eval = sub.add_parser(
+        "selection-eval", help="build the event-derived selection evaluation dataset"
+    )
+    selection_eval.add_argument("--scene-id")
+    selection_eval.add_argument("--output", type=Path)
+    selection_eval.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     omo_dir = find_omo_dir()
 
@@ -217,6 +239,35 @@ def main(argv: list[str] | None = None) -> int:
         except ExternalResourceObservationError as exc:
             print(f"external-resources latest: {exc}", file=sys.stderr)
             return 2
+        return 0
+    if args.command == "record-evaluation":
+        if not args.stdin:
+            print("external-resources record-evaluation requires --stdin", file=sys.stderr)
+            return 2
+        try:
+            result = record_external_resource_evaluation(
+                omo_dir,
+                _payload_from_stdin(),
+                workflow_run_id=args.workflow_run_id,
+                actor=args.actor,
+                source_ref=args.source_ref,
+                observed_at=args.observed_at,
+                evaluation_id=args.evaluation_id,
+            )
+        except (ExternalResourceEvaluationError, OSError, ValueError) as exc:
+            print(f"external-resources record-evaluation: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    if args.command == "selection-eval":
+        try:
+            dataset = build_external_resource_selection_dataset(
+                omo_dir, scene_id=args.scene_id, output_path=args.output
+            )
+        except (ExternalResourceEvaluationError, OSError, ValueError) as exc:
+            print(f"external-resources selection-eval: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(dataset, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
     if args.command != "observe":
         parser.print_help()
@@ -246,4 +297,3 @@ __all__ = (
     "read_latest_external_resource_observation",
     "record_external_resource_observation",
 )
-
