@@ -10,6 +10,7 @@ related:
   - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - ../_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
   - ../_knowledge/decisions/0320-external-resource-evaluation-and-explainable-selection.md
+  - ../_knowledge/decisions/0321-external-resource-selection-evaluation-evidence.md
 ---
 
 # External Connection Fabric 标准
@@ -153,6 +154,24 @@ Agora 的 `evaluate_candidates()` 是唯一决策算法，已有 `route()` 只�
 评估因子只允许使用安全元数据：能力匹配、权限、信任、新鲜度、健康、成本、延迟和资源身份。原文、
 凭据、provider 响应和模型输出不得进入评估结果。真实质量标签、人工判定、调用回执和结果指标应在
 后续评测集/证据闭环中另行采集，不能从评估排名反推。
+
+### 5.1.1 选择评测证据
+
+评估结果需要进入长期评测时，必须由 OMO 的 `record_external_resource_evaluation()` 写入
+`external-resource-evaluation-observation/v1` 追加日志。该观察是安全的选择事实，不是
+`EvidenceRecorded`、admission 或 WorkflowRun 状态；默认 API 行为仍为只读，只有显式
+`persist_observation=true` 才记录。观察 broker 使用 `evaluation_id`/评估摘要去重，冲突时拒绝，
+并递归禁止原文、凭据、模型输出和 provider 响应。
+
+OMO 的 `build_external_resource_selection_dataset()` 只读 join 三类真相：评估观察、Workflow Mesh
+事件/receipt 和 `outcome-feedback/v1`。显式 `workflow_run_id` 优先，缺失时只允许唯一 `trace_id`
+匹配；未绑定或歧义样本保留为 `not_executed`/未归因，不能成为成功样本。执行成功必须来自 Mesh
+成功事件，资源对齐必须来自真实 external receipt，结果消费必须来自显式反馈；关闭、验证或证据存在
+本身不能推断业务价值。
+
+Cockpit 提供评测集只读查询和 proposal-only 策略比较。提案只输出离线指标和人工审批要求，不修改
+路由、准入、WorkflowRun 或连接器状态。没有真实 Scene Card、连续使用和结果指标时，评测链保持
+shadow/proposal-only，不推进 provider 激活。
 
 连接器开发者只需实现 descriptor、健康探针和受控调用适配器；不得把连接器注册、权限判定、
 WorkflowRun 状态迁移或知识持久化塞回适配器。这样外部知识、方法、工具、模型和渠道可以动态
