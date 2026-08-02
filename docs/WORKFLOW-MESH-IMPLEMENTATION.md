@@ -348,7 +348,14 @@ Cockpit `GET /api/workflow-mesh/operations` 只读展示。快照提供状态、
 
 当前最重要的诚实边界是 `consumption.status=not_observed`：`WorkflowClosed`、
 `WorkflowVerified`、`PRMerged` 或 `EvidenceRecorded` 都不能推断业务用户已消费、采用或完成
-结果回写。下一阶段只有在真实消费者、回写位置、责任人和隐私范围明确后，才设计独立反馈契约。
+结果回写。
+
+Phase 21 已补齐独立的 `outcome-feedback/v1` 反馈契约：OMO 将最小化、隐私安全的结果消费回执
+追加到 `_knowledge/workflow-mesh/outcome-feedback.jsonl`，运营投影聚合为 `observed`、
+`rejected` 或 `not_observed`，Cockpit 提供只记录回执的人工表单。反馈要求 WorkflowRun 已进入
+可反馈状态并且 `scene_binding` 完全一致，备注只保留 `sha256:` 摘要；它不改变 WorkflowRun
+状态，不新增第二套状态机，也不触发外部资源或业务系统。契约细节见
+[`docs/operations/outcome-feedback.md`](./operations/outcome-feedback.md) 和 ADR-0314。
 
 ## 8. 明确延期和边界
 
