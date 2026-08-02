@@ -36,6 +36,7 @@ EVENT_STATE = {
     "StepHeartbeat": "running",
     "StepRetryScheduled": "running",
     "CheckpointSaved": "running",
+    "ToolInvocationRecorded": "running",
     "EvidenceRecorded": "succeeded",
     "ApprovalRequested": "waiting_approval",
     "ApprovalGranted": "running",
@@ -121,6 +122,7 @@ _ALLOWED_EVENTS = {
         "StepHeartbeat",
         "StepRetryScheduled",
         "CheckpointSaved",
+        "ToolInvocationRecorded",
         "WorkerAcknowledged",
         "WorkerLeaseRenewed",
         "WorkerLeaseExpired",
@@ -379,6 +381,7 @@ def project_workflow_run(
                 "StepHeartbeat",
                 "StepRetryScheduled",
                 "CheckpointSaved",
+                "ToolInvocationRecorded",
                 "CompensationStarted",
                 "StepFailed",
             }
@@ -477,6 +480,34 @@ def project_workflow_run(
                 raise WorkflowMeshEventError(
                     "WorkerReclaimed requires an expired worker lease"
                 )
+        if event_type == "ToolInvocationRecorded":
+            required_tool_fields = {
+                "invocation_id",
+                "tool_id",
+                "operation",
+                "input_ref",
+                "input_digest",
+                "activation",
+                "external_side_effects",
+                "dispatch_id",
+                "worker_id",
+                "request_digest",
+            }
+            missing_tool_fields = sorted(
+                required_tool_fields - event["payload"].keys()
+            )
+            if missing_tool_fields:
+                raise WorkflowMeshEventError(
+                    f"ToolInvocationRecorded missing fields: {missing_tool_fields}"
+                )
+            if event["payload"].get("activation") != "sandbox":
+                raise WorkflowMeshEventError(
+                    "ToolInvocationRecorded activation must be sandbox"
+                )
+            if event["payload"].get("external_side_effects") != "disabled":
+                raise WorkflowMeshEventError(
+                    "ToolInvocationRecorded external_side_effects must be disabled"
+                )
         if event_type == "WorkflowVerified" and not snapshot["evidence"]:
             raise WorkflowMeshEventError(
                 "WorkflowVerified requires at least one EvidenceRecorded event"
@@ -520,6 +551,8 @@ def project_workflow_run(
                 "StepHeartbeat": "running",
                 "StepRetryScheduled": "running",
                 "CheckpointSaved": "running",
+                "ToolInvocationRecorded": "running",
+                "EvidenceRecorded": "succeeded",
                 "CompensationStarted": "compensating",
                 "StepFailed": "failed",
                 "WorkerLeaseRenewed": "running",

@@ -28,6 +28,7 @@ from .omo_worker_status import (
     collect_worker_status,
     scan_runtime_watchdog,
 )
+from .sandbox_tool_runner import SandboxToolError, run_sandbox_tool
 from .worker_lifecycle import (
     acknowledge_worker,
     expire_worker_lease,
@@ -231,6 +232,41 @@ def _print_external_receipt(
     return 0
 
 
+def _print_sandbox_tool(
+    omo_dir: str | Path,
+    *,
+    workflow_run_id: str,
+    trace_id: str,
+    dispatch_id: str,
+    worker_id: str,
+    step_run_id: str,
+    admission_id: str,
+    tool_id: str,
+    input_ref: str,
+    input_digest: str,
+    now: str | None = None,
+) -> int:
+    try:
+        result = run_sandbox_tool(
+            omo_dir,
+            workflow_run_id=workflow_run_id,
+            trace_id=trace_id,
+            dispatch_id=dispatch_id,
+            worker_id=worker_id,
+            step_run_id=step_run_id,
+            admission_id=admission_id,
+            tool_id=tool_id,
+            input_ref=input_ref,
+            input_digest=input_digest,
+            now=now,
+        )
+    except (SandboxToolError, OSError, ValueError) as exc:
+        print(f"error={type(exc).__name__}: {exc}")
+        return 2
+    print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+    return 0
+
+
 def _add_mesh_worker_context(parser: Any) -> None:
     parser.add_argument("workflow_run_id")
     parser.add_argument("--trace-id", required=True)
@@ -350,6 +386,12 @@ def setup_worker_parser(subparsers: Any) -> None:
         "--json", action="store_true", dest="json_output"
     )
     external_receipt_parser.add_argument("--omo-dir", default=".omo")
+    sandbox_tool_parser = worker_sub.add_parser("sandbox-tool")
+    _add_mesh_worker_context(sandbox_tool_parser)
+    sandbox_tool_parser.add_argument("--tool-id", default="sandbox.digest_ref")
+    sandbox_tool_parser.add_argument("--input-ref", required=True)
+    sandbox_tool_parser.add_argument("--input-digest", required=True)
+    sandbox_tool_parser.add_argument("--now")
     admission_parser = worker_sub.add_parser("admission-eval")
     admission_parser.add_argument("envelope_ref")
     admission_parser.add_argument("--matrix-ref")
@@ -467,6 +509,21 @@ def execute_worker_command(args: argparse.Namespace) -> int:
             step_run_id=args.step_run_id,
             producer=args.producer,
             json_output=args.json_output,
+        )
+
+    if args.worker_command == "sandbox-tool":
+        return _print_sandbox_tool(
+            mesh_context["omo_dir"],
+            workflow_run_id=args.workflow_run_id,
+            trace_id=args.trace_id,
+            dispatch_id=args.dispatch_id,
+            worker_id=args.worker_id,
+            step_run_id=args.step_run_id,
+            admission_id=args.admission_id,
+            tool_id=args.tool_id,
+            input_ref=args.input_ref,
+            input_digest=args.input_digest,
+            now=args.now,
         )
 
     if args.worker_command == "yield":

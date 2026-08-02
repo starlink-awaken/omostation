@@ -589,6 +589,8 @@ def build_operations_snapshot(
     retry_runs = 0
     failed_runs = 0
     unavailable_runs = 0
+    sandbox_tool_invocations = 0
+    sandbox_tool_receipt_runs = 0
 
     for snapshot in snapshots:
         run_events = by_run.get(snapshot["workflow_run_id"], [])
@@ -606,6 +608,7 @@ def build_operations_snapshot(
                 "verified_runs": 0,
                 "closed_runs": 0,
                 "evidence_complete_runs": 0,
+                "sandbox_tool_runs": 0,
                 "consumed_runs": 0,
                 "feedback_count": 0,
             },
@@ -618,6 +621,15 @@ def build_operations_snapshot(
         verified = "WorkflowVerified" in event_types
         closed = "WorkflowClosed" in event_types
         evidence_complete = bool(snapshot.get("evidence"))
+        sandbox_invocations = [
+            event
+            for event in run_events
+            if event.get("event_type") == "ToolInvocationRecorded"
+        ]
+        if sandbox_invocations:
+            sandbox_tool_invocations += len(sandbox_invocations)
+            sandbox_tool_receipt_runs += int(evidence_complete)
+            scene["sandbox_tool_runs"] += 1
         if succeeded:
             success_runs += 1
             scene["succeeded_runs"] += 1
@@ -798,6 +810,18 @@ def build_operations_snapshot(
         "review_queue": review_queue,
         "workflow_requests": workflow_requests,
         "consumption": consumption,
+        "sandbox_tools": {
+            "status": "observed" if sandbox_tool_invocations else "not_observed",
+            "activation": "sandbox",
+            "external_side_effects": "disabled",
+            "invocation_count": sandbox_tool_invocations,
+            "receipt_run_count": sandbox_tool_receipt_runs,
+            "next_action": (
+                "review_sandbox_receipt_and_promote_only_with_real_scene"
+                if sandbox_tool_invocations
+                else "run_one_admitted_sandbox_tool_probe"
+            ),
+        },
         "knowledge_action": build_knowledge_action_snapshot(omo_dir, scene_id=scene_id),
     }
 
