@@ -60,6 +60,31 @@ else:
     _CATALOG_IMPORT_ERROR = None
 
 
+def _load_pack_module() -> Any:
+    module_path = _REPO_ROOT / "bin" / "ssot" / "external-resource-pack.py"
+    spec = importlib.util.spec_from_file_location(
+        "cockpit_external_resource_pack_projection", module_path
+    )
+    if spec is None or spec.loader is None:
+        raise ImportError("external resource pack checker is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+try:
+    _pack_module = _load_pack_module()
+    check_external_resource_pack = _pack_module.check_external_resource_pack
+    ExternalResourcePackError = _pack_module.ExternalResourcePackError
+except Exception as exc:
+    check_external_resource_pack = None  # type: ignore[assignment]
+    ExternalResourcePackError = ValueError
+    _PACK_IMPORT_ERROR: Exception | None = exc
+else:
+    _PACK_IMPORT_ERROR = None
+
+
 router = APIRouter(prefix="/api/external-resources", tags=["external-resources"])
 
 _REVIEW_QUEUE_SCHEMA = "external-resource-review-queue/v1"
@@ -352,6 +377,58 @@ async def get_external_resource_review_queue() -> dict[str, Any]:
     return {
         "ok": True,
         "projection": projection,
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.post("/packs/preflight")
+async def preflight_external_resource_pack(request: Request) -> dict[str, Any]:
+    """Check an extension manifest without loading or invoking its provider."""
+    if check_external_resource_pack is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_resource_pack_checker_unavailable",
+            "activation": "forbidden",
+            "persistence": "none",
+            "provider_invocation": False,
+        }
+    try:
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError("pack payload must be an object")
+        pack = body.get("pack", body)
+        if not isinstance(pack, Mapping):
+            raise ValueError("pack must be an object")
+        projection = check_external_resource_pack(_REPO_ROOT, pack)
+    except ExternalResourcePackError as exc:
+        return {
+            "ok": False,
+            "status": "invalid",
+            "error": "external_resource_pack_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "persistence": "none",
+            "provider_invocation": False,
+        }
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {
+            "ok": False,
+            "status": "invalid",
+            "error": "external_resource_pack_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "persistence": "none",
+            "provider_invocation": False,
+        }
+    return {
+        "ok": True,
+        "status": projection["status"],
+        "projection": projection,
+        "activation": "forbidden",
+        "persistence": "none",
+        "provider_invocation": False,
         "external_side_effects": "disabled",
         "worker_launch": False,
     }

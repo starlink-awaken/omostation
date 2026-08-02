@@ -67,6 +67,47 @@ def _evaluation() -> dict:
     }
 
 
+def _pack() -> dict:
+    return {
+        "schema": "external-resource-pack/v1",
+        "pack_id": "pack:research",
+        "pack_version": "1.0.0",
+        "activation": "forbidden",
+        "extension": {
+            "entry_point_group": "external.resources",
+            "entry_point": "research",
+            "provider_method": "external_descriptor",
+            "health_probe": {
+                "method": "health_probe",
+                "side_effect": "read_only",
+                "required": True,
+            },
+        },
+        "descriptor": {
+            "id": "source:research",
+            "kind": "knowledge_source",
+            "provider": "research-provider",
+            "protocol": "external-resource/v1",
+            "capabilities": ["discover", "search"],
+            "data_classification": "public",
+            "provenance": {"source_ref": "evidence://research/provider"},
+            "lifecycle": "sandbox",
+            "health": {
+                "status": "healthy",
+                "observed_at": "2026-08-03T00:00:00+00:00",
+                "latency_ms": 10,
+                "source": "probe:research",
+            },
+            "owner": "owner:research",
+            "version": "1.0.0",
+            "permission_ref": "permission://research/read",
+            "mode": "live_query",
+            "expires_at": "2099-01-01T00:00:00+00:00",
+            "rollback_plan": "disable provider",
+        },
+    }
+
+
 def test_external_resources_prefers_latest_omo_observation(monkeypatch, tmp_path):
     projection = _projection()
     calls: list[object] = []
@@ -130,6 +171,61 @@ def test_external_resources_fails_closed_when_discovery_is_unavailable(monkeypat
     assert body["projection"]["activation"] == "forbidden"
     assert body["external_side_effects"] == "disabled"
     assert body["worker_launch"] is False
+
+
+def test_external_resource_pack_preflight_is_read_only(monkeypatch, tmp_path):
+    calls: list[tuple[object, dict]] = []
+    projection = {
+        "schema": "external-resource-pack-check/v1",
+        "mode": "read_only_conformance",
+        "activation": "forbidden",
+        "status": "ready_for_catalog_preview",
+        "reason_codes": [],
+    }
+
+    def fake_check(root, pack):
+        calls.append((root, pack))
+        return projection
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "check_external_resource_pack", fake_check)
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/packs/preflight", json={"pack": _pack()}
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["status"] == "ready_for_catalog_preview"
+    assert body["projection"] == projection
+    assert body["activation"] == "forbidden"
+    assert body["persistence"] == "none"
+    assert body["provider_invocation"] is False
+    assert body["external_side_effects"] == "disabled"
+    assert calls == [(tmp_path, _pack())]
+
+
+def test_external_resource_pack_preflight_returns_invalid_without_activation(monkeypatch):
+    def reject(_root, _pack):
+        raise api_external_resources.ExternalResourcePackError(
+            "secret field is forbidden: pack.descriptor.metadata.token"
+        )
+
+    monkeypatch.setattr(api_external_resources, "check_external_resource_pack", reject)
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/packs/preflight", json={"pack": _pack()}
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is False
+    assert body["status"] == "invalid"
+    assert body["error"] == "external_resource_pack_invalid"
+    assert body["activation"] == "forbidden"
+    assert body["persistence"] == "none"
+    assert body["provider_invocation"] is False
 
 
 def test_external_resource_review_queue_projects_manual_review_delta_without_discovery(
