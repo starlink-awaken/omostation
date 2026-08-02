@@ -1,12 +1,26 @@
 """Tests for Phase 2: dynamic load/unload, lazy reconnect, and idle timeout."""
 
 import asyncio
+import os
 from unittest.mock import patch
 
+import pytest
+
+from agora.admission import reset_admission_provider_cache
 from agora.mcp_proxy.client import MCPClient
 from agora.mcp_proxy.idle_timeout import IdleTimeoutConfig, IdleTimeoutManager
 from agora.mcp_proxy.manager import ProxyManager
 from agora.mcp_proxy.registry import ProxyRegistry
+
+
+@pytest.fixture(autouse=True)
+def _admission_degraded(monkeypatch):
+    """F-03: admission 默认 required (fail-closed) — 本测试无 provider,
+    显式 degraded 使 add_service 可注册下游服务。"""
+    monkeypatch.setenv("AGORA_ADMISSION_MODE", "degraded")
+    reset_admission_provider_cache()
+    yield
+    reset_admission_provider_cache()
 
 # ── Helpers ─────────────────────────────────────────────────────────
 
