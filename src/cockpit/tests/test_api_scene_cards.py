@@ -106,6 +106,61 @@ def test_scene_cards_review_rejects_missing_candidate_id(monkeypatch):
     assert response.json()["activation"] == "forbidden"
 
 
+def test_scene_cards_intake_returns_proposal_only_projection(monkeypatch):
+    projection = {
+        "schema": "scene-card-intake/v1",
+        "mode": "proposal_only_intake",
+        "status": "proposal_only",
+        "activation": "forbidden",
+        "next_action": "run_external_activation_preflight",
+        "side_effects": {
+            "raw_content_read": False,
+            "provider_called": False,
+            "omo_written": False,
+            "workflow_created": False,
+            "activation_attempted": False,
+        },
+    }
+    calls: list[dict] = []
+
+    def fake_intake(scene_card):
+        calls.append(scene_card)
+        return projection
+
+    monkeypatch.setattr(api_scene_cards, "build_intake", fake_intake)
+    response = TestClient(_app()).post(
+        "/api/scene-cards/intake",
+        json={"scene_card": {"schema": "scene-card/v1", "scene_id": "research-brief"}},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "ok": True,
+        "status": "proposal_only",
+        "projection": projection,
+        "activation": "forbidden",
+        "activation_attempted": False,
+        "persistence": "none",
+    }
+    assert calls == [{"schema": "scene-card/v1", "scene_id": "research-brief"}]
+
+
+def test_scene_cards_intake_rejects_invalid_payload(monkeypatch):
+    def fail_intake(_scene_card):
+        raise ValueError("scene card contains forbidden field: raw_content")
+
+    monkeypatch.setattr(api_scene_cards, "build_intake", fail_intake)
+    response = TestClient(_app()).post(
+        "/api/scene-cards/intake", json={"scene_card": {"raw_content": "secret"}}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is False
+    assert response.json()["status"] == "invalid"
+    assert response.json()["activation"] == "forbidden"
+    assert response.json()["persistence"] == "none"
+
+
 def test_scene_cards_degrades_when_candidate_discovery_is_unavailable(monkeypatch, tmp_path):
     monkeypatch.setattr(api_scene_cards, "_REPO_ROOT", tmp_path)
 

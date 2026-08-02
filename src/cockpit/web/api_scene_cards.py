@@ -43,6 +43,15 @@ except Exception as exc:
 else:
     _REVIEW_IMPORT_ERROR = None
 
+try:
+    _intake_module = _load_script("cockpit_scene_card_intake", "scene-card-intake.py")
+    build_intake = _intake_module.build_intake
+except Exception as exc:
+    build_intake = None  # type: ignore[assignment]
+    _INTAKE_IMPORT_ERROR: Exception | None = exc
+else:
+    _INTAKE_IMPORT_ERROR = None
+
 
 router = APIRouter(prefix="/api/scene-cards", tags=["scene-cards"])
 
@@ -82,6 +91,44 @@ async def get_scene_card_candidates() -> dict[str, Any]:
         )
         return {"ok": False, "status": "unavailable", "projection": projection}
     return {"ok": True, "status": "live", "projection": projection}
+
+
+@router.post("/intake")
+async def intake_scene_card(request: Request) -> dict[str, Any]:
+    """Validate a Scene Card without persisting or activating it."""
+    if build_intake is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "scene_card_intake_unavailable",
+            "message": "Scene Card 输入契约不可用，未产生任何运行态变更。",
+            "activation": "forbidden",
+        }
+    try:
+        payload = await request.json()
+        if not isinstance(payload, dict):
+            raise ValueError("intake payload must be an object")
+        scene_card = payload.get("scene_card", payload)
+        if not isinstance(scene_card, dict):
+            raise ValueError("scene_card must be an object")
+        projection = build_intake(scene_card)
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {
+            "ok": False,
+            "status": "invalid",
+            "error": "scene_card_intake_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "persistence": "none",
+        }
+    return {
+        "ok": True,
+        "status": projection["status"],
+        "projection": projection,
+        "activation": "forbidden",
+        "activation_attempted": False,
+        "persistence": "none",
+    }
 
 
 @router.post("/review")
