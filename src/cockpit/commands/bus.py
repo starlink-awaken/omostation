@@ -55,9 +55,10 @@ def _print_bus_status(bus_foundation: Any) -> None:
     table.add_column("项", style="cyan")
     table.add_column("值")
     table.add_row("version", getattr(bus_foundation, "__version__", "unknown"))
+    reg = getattr(bus_foundation, "_MetricsRegistry", None)
     table.add_row(
         "metrics_enabled",
-        str(bool(getattr(bus_foundation, "_MetricsRegistry", type("X", (), {"enabled": False}))().enabled)),
+        str(bool(reg.is_enabled() if reg else False)),
     )
     console.print(table)
 
