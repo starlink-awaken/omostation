@@ -3,7 +3,7 @@ title: Workflow Mesh 实施架构与交付路线
 status: active
 lifecycle: plan
 owner: engineering-team
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-03
 review-state: evidence-refreshed
 related:
   - docs/STRATEGY-3YEAR-PANORAMA.md
@@ -125,6 +125,7 @@ stateDiagram-v2
 - Phase 31 修正 `BackendUnavailable` 的 StepRun 投影：当不可用事件携带合法 `step_run_id` 时，WorkflowRun 与 StepRun 都投影为 `unavailable`；恢复、重试和 successor 选择仍由既有协调流程显式完成。
 - Phase 32 关闭 Agora 动态路由注册旁路：BOSRouter、POC seed、M1 热加载和 AGENTS.md 自动发现统一经过 admission；拒绝、provider 异常和非法结果不落入路由表，批量注册只统计实际接受项，并保留 credential-free 的拒绝摘要。该门禁仍独立于 ExternalConnectionCatalog 的 SceneCard 激活和 OMO Workflow admission，未激活真实 provider。
 - Phase 33 增加 `bin/ssot/external-activation-preflight.py`：把完整 Scene Card、外部资源只读目录和必需能力合并成 `external-activation-preflight/v1`，明确输出 `blocked`、`proposal_only` 或 `ready_for_admission_preview`。它始终 `activation=forbidden`，不调用 provider、不写 OMO、不创建 WorkflowRun；没有真实消费者和结果证据时，系统可以持续准备但不会误激活。
+- Phase 37 将外部资源风险投影接入 Cockpit 只读复核队列：`GET /api/external-resources/review-queue` 只读取 OMO 最新观测，按 `review_required` 展示安全变更字段、风险分类和风险码；没有观测时显示 `empty`，观测格式或 OMO 不可用时显示 `unavailable`。该队列是 `latest_observation_delta`，不是持久审批状态机，不触发实时发现、provider 调用、WorkflowRun 或激活。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
 ## 6. 分阶段路线
@@ -492,6 +493,30 @@ OMO 观察记录只持久化上述安全摘要和计数，不把它变成第二�
 后续人工评审能够回答“发生了什么变化、是否影响准入、下一步是否需要复核”；真正的 active、
 admission、WorkflowRun 和外部调用仍必须经过既有 Scene Card、OMO admission、receipt 和补偿边界。
 没有复核结论时，不得把 `manual_review` 当成自动激活许可；health 波动也不能被误报成能力版本变更。
+
+### 7.3.5 Phase 37 Cockpit 只读外部资源复核队列
+
+Phase 37 把 Phase 36 的 `review_required` 投影变成 Cockpit 可消费的人工工作面：
+`GET /api/external-resources/review-queue` 返回 `external-resource-review-queue/v1`，每个条目包含
+资源 ID、变化类型、`manual_review` 风险分类、稳定风险码、变化字段，以及经过字段白名单裁剪的
+前后安全快照。它不读取 provider 原文、凭据或未知字段，且始终声明 `activation=forbidden`、
+`external_side_effects=disabled` 和 `worker_launch=false`。
+
+队列明确采用 `queue_semantics=latest_observation_delta`：它只反映 OMO 最新一次目录观察中的
+差异，不记录“已看/已批准/已驳回”，也不跨观察周期保留待办。这样可以先提供真实的人工判断入口，
+不凭空新增第二套审批状态机。没有 OMO 观测时返回 `empty` 并提示先运行受治理观测；观测损坏或
+存储不可用时返回 `unavailable`，不得回退到动态发现来制造一个看似新鲜的复核队列。
+
+运营人员的正确处理链是：
+
+```text
+review queue -> 核查风险码/变化字段 -> 补齐或更新 Scene Card -> preflight
+             -> OMO admission -> provider/WorkflowRun -> receipt/evidence
+```
+
+复核队列的 `attention` 只表示“需要人看”，不表示资源可用、业务批准或执行成功；纯 health、
+availability、reason code 波动继续作为 `operational_observation` 计数，不进入人工复核条目。
+产品契约和边界见 [`ADR-0330`](../.omo/_knowledge/decisions/0330-external-resource-review-queue.md)。
 
 ### 7.3.1 Phase 25 真实能力健康证据闭环
 
