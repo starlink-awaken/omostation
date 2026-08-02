@@ -402,6 +402,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0332: Scene Card 业务输入闸门与提案态归一化 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 39 | 0332-scene-card-intake-gate.md
 - ADR-0333: Scene Card 输入到只读 activation preflight 的产品闭环 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 40 | 0333-scene-card-preflight-readiness.md
 - ADR-0334: External Resource Pack 动态扩展前一致性预检 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 41 | 0334-external-resource-pack-conformance.md
+- ADR-0335: Cockpit External Resource Pack 人工预检入口 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 42 | 0335-external-resource-pack-review-surface.md
 
 ---
 
