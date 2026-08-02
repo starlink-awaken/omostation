@@ -33,10 +33,17 @@ Workflow Mesh、Kairon、AetherForge 和 Cockpit 协同消费。
 ## 3. 生命周期与准入
 
 连接必须经过 `discovered -> sandbox -> admitted -> active`，运行中可进入 `degraded` 或
-`quarantined`，最终进入 `retired`。激活前必须具备场景、旅程、结果指标、数据范围、操作人、
-健康探针、来源证据、审查时间和回滚方案。
+`quarantined`，最终进入 `retired`。激活前必须具备一张完整的 `Scene Card`，以及健康探针、
+来源证据、审查时间和回滚方案。
 
-没有真实消费者、结果指标、责任人或权限边界时，资源保持冻结，不得因为“已经能连通”而激活。
+`Scene Card` 至少包含 `scene_id`、`journey_id`、目标、触发、输入/结果契约、消费者、审批人、
+责任人、失败代价、结果指标、数据分级/范围、操作人、`permission_ref`、回滚方案、三到十个
+脱敏样本引用，以及重复需求证据或明确机会窗口。样本和需求证据只能是
+`evidence://` 或 `vault://redacted/` 不透明引用，不能携带业务原文。
+
+没有真实消费者、结果指标、责任人、权限边界或需求证据时，资源保持冻结，不得因为“已经能连通”
+而激活。Agora 的 `SceneCard` 评估只做确定性门禁，不拥有业务事实；业务确认和证据持久化仍归
+业务负责人及 OMO。
 
 准入请求还必须携带与 descriptor 匹配的 `permission_ref`。`permission_ref` 是权限/凭据的
 不透明引用，不是凭据本身；场景绑定不匹配时必须拒绝，不允许由 Agora 猜测或降级放行。
@@ -81,7 +88,9 @@ Agora 根据相关性、可信度、新鲜度、权限、可用性、成本和�
 运行时入口为 `agora.external_connections.ExternalConnectionCatalog`：
 
 - `register` / `discover_entry_points`：登记或发现 credential-free descriptor。
-- `activate`：执行场景、权限、健康、期限和回滚检查，并推进 sandbox → admitted → active。
+- `activate` / `activate_with_scene_card`：先执行 `Scene Card` 门禁，再执行场景绑定、权限、健康、
+  期限和回滚检查，并推进 sandbox → admitted → active；旧 `SceneBinding` 仅保留给兼容路由，不能
+  替代新连接的完整业务激活契约。
 - `route`：按能力和决策因子选择资源；无候选时只返回显式 `unavailable`。
 - `invoke`：返回受控 receipt；`proposal_only` 不执行副作用。
 
