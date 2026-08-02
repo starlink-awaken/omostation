@@ -121,6 +121,7 @@ stateDiagram-v2
 - OMO 增加 `workflow_eval`：从真实 append-only 事件生成 `workflow-mesh-eval/v1` 数据集，保留事件 ID 作为标签来源，并提供只读的候选策略离线评估/人工审批 proposal。
 - Phase 28 将外部资源选择评估升级为可追踪证据：OMO 通过 `external-resource-evaluation-observation/v1` 持久化安全观察，`external-resource-selection-eval/v1` 只读 join 评估、真实 Mesh 事件、external receipt 和显式 Outcome Feedback；未执行或歧义样本不会被标成成功。Cockpit 提供显式记录开关、评测集摘要和 proposal-only 策略比较，仍不激活 provider、不改变 admission/WorkflowRun。
 - Phase 29 将已有 admission、worker lease 和 receipt broker 串成一个最小可回放的 sandbox ToolPack 闭环：`omo worker sandbox-tool` 只允许确定性的 `sandbox.digest_ref`，要求 `sandbox.tool.invoke` admission 能力和 live WorkerLease，只接收安全引用与 SHA-256 摘要，追加 `ToolInvocationRecorded` 后完成 `WorkflowSucceeded -> EvidenceRecorded`。该执行器固定 `activation=sandbox`、`external_side_effects=disabled`，不调用 provider、不读取原文、不运行任意命令；Cockpit 的 OMO 运营投影同时暴露 sandbox invocation/receipt 计数。
+- Phase 30 为同一 sandbox ToolPack 增加 provider-neutral outcome 契约：`ToolInvocationRecorded` 必须声明 `succeeded`、`failed` 或 `unavailable`；非成功结果分别落为 `StepFailed` 或 `BackendUnavailable`，只保留稳定错误码，不创建 receipt/evidence。失败调用可幂等回放；租约失效后必须先由既有 watchdog/reclaim 交接，再用新的 StepRun attempt 执行。运营投影增加 outcome 计数，继续把 sandbox 验证与真实业务结果分开。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
 ## 6. 分阶段路线
@@ -137,7 +138,7 @@ stateDiagram-v2
 1. OMO 将事件投影扩展为 WorkflowRun、StepRun、Approval、Evidence 的权威读接口；写入仍统一走事件 sink。
 2. Runtime 和 AetherForge 已以持久化 checkpoint 实现断点恢复与完成态幂等，并要求 Mesh 运行携带有效 admission grant；Runtime effect journal 已能产出结构化成功/失败/重放摘要，并通过 OMO receipt broker 写入同一条证据链。跨进程 effect journal、网络失败分类和显式补偿生命周期已落地；真实外部系统的 provider-specific 补偿回执仍需等真实 Channel/Tool 场景激活后接入。
 3. Agora 已增加能力健康 projection 和 MCP 查询入口；版本、权限声明与降级原因的生产级采集仍需绑定真实节点注册和服务心跳。
-4. ECOS 已将运行身份和子授予传递到 Runtime/AetherForge；AetherForge 只接收已 admitted 的 StepRun，资源失败回写 `unavailable/failed` 的细化策略仍是下一交付项。
+4. ECOS 已将运行身份和子授予传递到 Runtime/AetherForge；sandbox 已验证资源失败回写 `unavailable/failed` 的事件边界，真实 provider 的错误分类、补偿和成本回执仍需等具体 Scene Card 激活后接入。
 
 ### P2：智能化与进化
 
@@ -258,8 +259,11 @@ Phase 29 补上执行闭环的低风险验证层。sandbox runner 复用同一�
 但只执行无副作用的 `sandbox.digest_ref`：输入是受限 URI 和已有摘要，输出是新的摘要与
 `sandbox-tool-receipt/v1` 观察。它用于验证“已准入的 StepRun 能否被正确占用、执行、回放和留证”，
 不代表外部 provider 已激活，也不代表业务结果成立。运营投影仅报告 invocation/receipt 事实，业务消费
-仍需独立的 Outcome Feedback；下一阶段的真实 provider 接入必须保留相同的 invocation identity、receipt
-和失败/不可用边界。
+仍需独立的 Outcome Feedback；Phase 30 又把同一执行器的失败、不可用和恢复边界固化为
+provider-neutral outcome：非成功只留下 `StepFailed` 或 `BackendUnavailable` 与稳定 `error_code`，
+不产生成功 receipt。worker lease 失效后，恢复路径是既有 `WorkerLeaseExpired -> WorkerReclaimed`，
+再由 successor 生成新的 attempt；不能复用失效 worker 上下文，也不能把 reclaim 事件当成执行成功。
+下一阶段的真实 provider 接入必须保留相同的 invocation identity、receipt、失败/不可用和 replay 边界。
 
 ### 6.3.1 J2 task -> WorkflowRequested 晋升
 
