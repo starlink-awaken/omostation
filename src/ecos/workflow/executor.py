@@ -123,6 +123,22 @@ def execute_m1_workflow(
         except Exception as exc:  # event persistence must not hide execution outcome
             results.setdefault("event_sink_errors", []).append(str(exc))
 
+    # Phase 4: Extract scene_binding from workflow metadata or params
+    _scene_binding = None
+    wf_meta = wf.get("metadata", {})
+    if isinstance(wf_meta, dict) and isinstance(wf_meta.get("scene_binding"), dict):
+        sb = wf_meta["scene_binding"]
+        if all(sb.get(k) for k in ("scene_id", "journey_id", "outcome_metric")):
+            _scene_binding = {
+                k: str(sb[k]) for k in ("scene_id", "journey_id", "outcome_metric")
+            }
+    elif params.get("scene_binding") and isinstance(params["scene_binding"], dict):
+        sb = params["scene_binding"]
+        if all(sb.get(k) for k in ("scene_id", "journey_id", "outcome_metric")):
+            _scene_binding = {
+                k: str(sb[k]) for k in ("scene_id", "journey_id", "outcome_metric")
+            }
+
     emit_event(
         "WorkflowRequested",
         {
@@ -130,6 +146,7 @@ def execute_m1_workflow(
             "workflow_definition_id": name,
             "backend": backend_name,
             "execution_mode": metadata["execution_mode"],
+            **({"scene_binding": _scene_binding} if _scene_binding else {}),
         },
         idempotency_key=f"{metadata['workflow_run_id']}:requested",
     )

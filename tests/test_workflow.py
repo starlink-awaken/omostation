@@ -1569,3 +1569,102 @@ class TestMeshGate:
         finally:
             dms._find_omo_root = original
             dms._store_instance = None
+
+
+class TestSceneBindingBridge:
+    """Phase 4: Scene binding bridge tests"""
+
+    def test_executor_emits_scene_binding_from_workflow_metadata(self, tmp_path, monkeypatch):
+        """Executor should include scene_binding in WorkflowRequested when defined in workflow metadata."""
+        sink_calls = []
+
+        def spy_sink(event):
+            sink_calls.append(event)
+
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow",
+            lambda name: {
+                "name": "test-scene",
+                "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                "execution": {"backend": "default", "mode": "workflow"},
+                "metadata": {
+                    "scene_binding": {
+                        "scene_id": "scene-1",
+                        "journey_id": "journey-1",
+                        "outcome_metric": "success_rate",
+                    }
+                },
+            },
+        )
+        monkeypatch.setattr(
+            "ecos.workflow.executor.get_default_mesh_sink",
+            lambda: spy_sink,
+        )
+
+        execute_m1_workflow("test-scene")
+
+        requested = [c for c in sink_calls if c.get("event_type") == "WorkflowRequested"]
+        assert len(requested) >= 1
+        assert requested[0]["payload"]["scene_binding"]["scene_id"] == "scene-1"
+        assert requested[0]["payload"]["scene_binding"]["journey_id"] == "journey-1"
+
+    def test_executor_emits_scene_binding_from_params(self, tmp_path, monkeypatch):
+        """Executor should include scene_binding from params when not in workflow metadata."""
+        sink_calls = []
+
+        def spy_sink(event):
+            sink_calls.append(event)
+
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow",
+            lambda name: {
+                "name": "test-scene-params",
+                "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                "execution": {"backend": "default", "mode": "workflow"},
+            },
+        )
+        monkeypatch.setattr(
+            "ecos.workflow.executor.get_default_mesh_sink",
+            lambda: spy_sink,
+        )
+
+        execute_m1_workflow(
+            "test-scene-params",
+            params={
+                "scene_binding": {
+                    "scene_id": "param-scene",
+                    "journey_id": "param-journey",
+                    "outcome_metric": "param-metric",
+                }
+            },
+        )
+
+        requested = [c for c in sink_calls if c.get("event_type") == "WorkflowRequested"]
+        assert len(requested) >= 1
+        assert requested[0]["payload"]["scene_binding"]["scene_id"] == "param-scene"
+
+    def test_executor_omits_scene_binding_when_absent(self, tmp_path, monkeypatch):
+        """Executor should not include scene_binding when not available."""
+        sink_calls = []
+
+        def spy_sink(event):
+            sink_calls.append(event)
+
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow",
+            lambda name: {
+                "name": "test-no-scene",
+                "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                "execution": {"backend": "default", "mode": "workflow"},
+            },
+        )
+        monkeypatch.setattr(
+            "ecos.workflow.executor.get_default_mesh_sink",
+            lambda: spy_sink,
+        )
+
+        execute_m1_workflow("test-no-scene")
+
+        requested = [c for c in sink_calls if c.get("event_type") == "WorkflowRequested"]
+        assert len(requested) >= 1
+        assert "scene_binding" not in requested[0]["payload"]
