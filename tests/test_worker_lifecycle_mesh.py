@@ -15,8 +15,10 @@ from omo.worker_lifecycle import (
     reclaim_worker,
     record_step_dispatch,
     renew_worker_lease,
+    scan_worker_leases,
 )
 from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event
+from omo.cli import main as cli_main
 
 
 def _grant(run_id: str, step_run_id: str) -> dict:
@@ -169,3 +171,69 @@ def test_worker_reclaim_requires_expiry(tmp_path):
             successor_dispatch_id="dispatch-2",
             now="2026-08-02T00:01:00Z",
         )
+
+
+def test_mesh_watchdog_dry_run_is_read_only_and_apply_expires_once(tmp_path):
+    context = _context(tmp_path, "run-watchdog")
+    acknowledge_worker(
+        tmp_path, **context, lease_seconds=60, now="2026-08-02T00:00:00Z"
+    )
+
+    dry_run = scan_worker_leases(tmp_path, now="2026-08-02T00:01:00Z", apply=False)
+
+    assert dry_run["schema"] == "workflow-mesh-watchdog/v1"
+    assert dry_run["mode"] == "dry_run"
+    assert dry_run["due_count"] == 1
+    assert dry_run["expired_count"] == 0
+    assert len(WorkflowMeshStore(tmp_path).events()) == 4
+
+    applied = scan_worker_leases(
+        tmp_path,
+        now="2026-08-02T00:01:00Z",
+        apply=True,
+        reason="watchdog_timeout",
+    )
+    assert applied["mode"] == "apply"
+    assert applied["expired_count"] == 1
+    snapshot = WorkflowMeshStore(tmp_path).snapshot(context["workflow_run_id"])
+    assert snapshot["worker"]["state"] == "lease_expired"
+    assert snapshot["worker"]["reason"] == "watchdog_timeout"
+
+    repeated = scan_worker_leases(tmp_path, now="2026-08-02T00:02:00Z", apply=True)
+    assert repeated["expired_count"] == 0
+    assert repeated["due_count"] == 0
+    assert not any(
+        event["event_type"] == "WorkerReclaimed"
+        for event in WorkflowMeshStore(tmp_path).events()
+    )
+
+
+def test_mesh_watchdog_does_not_expire_a_live_lease(tmp_path):
+    context = _context(tmp_path, "run-live")
+    acknowledge_worker(
+        tmp_path, **context, lease_seconds=60, now="2026-08-02T00:00:00Z"
+    )
+
+    result = scan_worker_leases(tmp_path, now="2026-08-02T00:00:59Z", apply=True)
+
+    assert result["due_count"] == 0
+    assert result["expired_count"] == 0
+    assert (
+        WorkflowMeshStore(tmp_path).snapshot(context["workflow_run_id"])["worker"][
+            "state"
+        ]
+        == "acknowledged"
+    )
+
+
+def test_mesh_watchdog_cli_uses_public_worker_command(tmp_path, capsys):
+    assert (
+        cli_main(
+            ["worker", "mesh-watchdog", "--json", "--omo-dir", str(tmp_path)]
+        )
+        == 0
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "workflow-mesh-watchdog/v1"
+    assert payload["mode"] == "dry_run"

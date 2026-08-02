@@ -367,6 +367,132 @@ def reclaim_worker(
     )
 
 
+def scan_worker_leases(
+    omo_dir: Path | str,
+    *,
+    now: str | None = None,
+    apply: bool = False,
+    reason: str = "lease_expired",
+) -> dict[str, Any]:
+    """Find expired Mesh leases and optionally persist expiry events.
+
+    The default is deliberately read-only so an operator, cron job, or UI can
+    inspect the result without changing workflow state. ``apply=True`` only
+    appends ``WorkerLeaseExpired``; successor selection remains a separate
+    coordinator decision through :func:`reclaim_worker`.
+    """
+    if not str(reason).strip():
+        raise WorkerLifecycleError("watchdog expiry reason is required")
+
+    store = _store(omo_dir)
+    observed_at = _stamp(now)
+    run_ids = sorted(
+        {
+            str(event.get("workflow_run_id"))
+            for event in store.events()
+            if str(event.get("workflow_run_id") or "").strip()
+        }
+    )
+    due: list[dict[str, Any]] = []
+    expired: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+    worker_count = 0
+
+    for workflow_run_id in run_ids:
+        try:
+            snapshot = store.snapshot(workflow_run_id)
+        except (WorkflowMeshEventError, OSError, ValueError) as exc:
+            errors.append({"workflow_run_id": workflow_run_id, "error": str(exc)})
+            continue
+
+        worker = snapshot.get("worker")
+        if not isinstance(worker, dict):
+            continue
+        worker_count += 1
+        state = str(worker.get("state") or "unknown")
+        if state not in {"acknowledged", "active"}:
+            continue
+
+        lease_expires_at = str(worker.get("lease_expires_at") or "")
+        if not lease_expires_at:
+            errors.append(
+                {
+                    "workflow_run_id": workflow_run_id,
+                    "error": "live worker has no lease_expires_at",
+                }
+            )
+            continue
+        try:
+            expired_now = _utc(observed_at) >= _utc(lease_expires_at)
+        except ValueError as exc:
+            errors.append({"workflow_run_id": workflow_run_id, "error": str(exc)})
+            continue
+        if not expired_now:
+            continue
+
+        context = {
+            "workflow_run_id": workflow_run_id,
+            "trace_id": str(snapshot.get("trace_id") or workflow_run_id),
+            "dispatch_id": str(worker.get("dispatch_id") or ""),
+            "worker_id": str(worker.get("worker_id") or ""),
+            "step_run_id": str(worker.get("step_run_id") or ""),
+            "admission_id": str(worker.get("admission_id") or ""),
+            "lease_expires_at": lease_expires_at,
+            "observed_at": observed_at,
+        }
+        if not all(
+            context[key]
+            for key in ("dispatch_id", "worker_id", "step_run_id", "admission_id")
+        ):
+            errors.append(
+                {
+                    "workflow_run_id": workflow_run_id,
+                    "error": "expired worker context is incomplete",
+                }
+            )
+            continue
+        if not apply:
+            due.append({**context, "action": "would_expire"})
+            continue
+
+        try:
+            event = expire_worker_lease(
+                Path(omo_dir),
+                workflow_run_id=workflow_run_id,
+                trace_id=context["trace_id"],
+                dispatch_id=context["dispatch_id"],
+                worker_id=context["worker_id"],
+                step_run_id=context["step_run_id"],
+                admission_id=context["admission_id"],
+                now=observed_at,
+                reason=reason,
+            )
+        except WorkerLifecycleError as exc:
+            errors.append({"workflow_run_id": workflow_run_id, "error": str(exc)})
+            continue
+        expired.append(
+            {
+                **context,
+                "action": "expired",
+                "event_id": event.get("event_id"),
+                "event_type": event.get("event_type"),
+            }
+        )
+
+    return {
+        "schema": "workflow-mesh-watchdog/v1",
+        "mode": "apply" if apply else "dry_run",
+        "observed_at": observed_at,
+        "run_count": len(run_ids),
+        "worker_count": worker_count,
+        "due_count": len(due),
+        "expired_count": len(expired),
+        "due": due,
+        "expired": expired,
+        "errors": errors,
+    }
+
+
 __all__ = [
     "WorkerLifecycleError",
     "acknowledge_worker",
@@ -374,4 +500,5 @@ __all__ = [
     "reclaim_worker",
     "record_step_dispatch",
     "renew_worker_lease",
+    "scan_worker_leases",
 ]

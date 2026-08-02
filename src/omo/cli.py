@@ -258,7 +258,9 @@ def main(argv: list[str] | None = None) -> int:
     if args and args[0] in {"worker", "wt"}:
         from omo.omo_worker import main as worker_main
 
-        return worker_main(args[1:])
+        # The facade parser still owns the worker/task namespace. Preserve the
+        # public `omo worker <command>` shape while routing through that parser.
+        return worker_main(["worker", *args[1:]])
 
     if args and args[0] == "workspace":
         # ISC-46: workspace status 作为 worktree dirty 计数唯一 SSOT (治本 E3)
