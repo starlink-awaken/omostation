@@ -65,6 +65,10 @@ def test_valid_pack_is_ready_for_catalog_preview_without_activation() -> None:
     assert result["activation"] == "forbidden"
     assert result["reason_codes"] == []
     assert result["execution_policy"]["provider_import"] == "forbidden"
+    assert result["catalog_preview"]["schema"] == "external-resource-pack-catalog-preview/v1"
+    assert result["catalog_preview"]["resource"]["availability"] == "unobserved"
+    assert result["catalog_preview"]["resource"]["health"]["status"] == "unobserved"
+    assert result["catalog_preview"]["next_action"] == "通过只读目录发现和健康探针后再评估可用性。"
 
 
 def test_method_pack_remains_proposal_only() -> None:
@@ -75,6 +79,8 @@ def test_method_pack_remains_proposal_only() -> None:
 
     assert result["status"] == "proposal_only"
     assert result["descriptor"]["kind"] == "method_pack"
+    assert result["catalog_preview"]["status"] == "proposal_only"
+    assert result["catalog_preview"]["resource"]["availability"] == "unobserved"
 
 
 def test_invalid_extension_and_capability_are_blocked() -> None:
@@ -88,6 +94,7 @@ def test_invalid_extension_and_capability_are_blocked() -> None:
     assert "health_probe_method_must_be_health_probe" in result["reason_codes"]
     assert "health_probe_must_be_read_only" in result["reason_codes"]
     assert "capability_not_allowed_for_kind" in result["reason_codes"]
+    assert result["catalog_preview"] is None
 
 
 def test_active_descriptor_cannot_smuggle_activation_into_a_pack() -> None:

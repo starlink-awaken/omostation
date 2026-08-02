@@ -697,6 +697,27 @@ required_capabilities -> Agora health observation -> admission preview
 UI 不伪造健康、不把 preview 当成 admitted，也不启动 worker。该能力只解决内部运行态证据
 闭环，真实外部知识、渠道和业务写操作仍必须等待 J4 Scene Card、权限、receipt 和补偿证据。
 
+### 7.3.12 Phase 44 外部扩展包目录预览与未探活语义
+
+Phase 44 为通过静态合同检查的 pack 增加 `external-resource-pack-catalog-preview/v1` 安全投影。
+它从 descriptor 提取资源身份、类型、能力、权限引用、生命周期和回滚摘要，但将
+`availability=unobserved`、`health.status=unobserved` 固定写死，并明确来源为
+`external-resource-pack-manifest`。这样人工可以在预检结果中看到“它将以什么资源形态进入目录”和
+“下一步需要什么动作”，但不能把 manifest 中自报的健康值当成实时健康证据。
+
+Phase 44 的责任边界为：
+
+| 层 | 能回答的问题 | 不能回答的问题 |
+| --- | --- | --- |
+| pack checker | manifest 是否可安全形成目录预览 | provider 是否存在、健康或可调用 |
+| catalog discovery | provider 当前是否可发现、探活、过期 | 是否存在真实业务场景和权限批准 |
+| Scene Card/OMO | 场景、权限、责任和 admission 是否成立 | 如何代替执行方返回业务结果 |
+| Agora/Workflow Mesh | 路由、调用、receipt 和结果证据 | 用静态预览伪造成功 |
+
+Cockpit UI 展示目录预览时必须同时显示“未探活”和下一步建议；预览结果仍固定
+`activation=forbidden`、`persistence=none`、`provider_invocation=false`，不会写 OMO、加载 provider、
+运行健康探针或创建 WorkflowRun。该阶段完成的是动态扩展的可解释过渡，不是外部连接的生产启用。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。

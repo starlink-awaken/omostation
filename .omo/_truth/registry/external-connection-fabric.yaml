@@ -171,6 +171,7 @@ dynamic_discovery:
   extension_contract:
     pack_schema: external-resource-pack/v1
     pack_check_schema: external-resource-pack-check/v1
+    pack_preview_schema: external-resource-pack-catalog-preview/v1
     pack_checker: bin/ssot/external-resource-pack.py
     new_provider_requires: [descriptor, permission_ref, health_probe, rollback_plan, owner]
     pack_requires: [pack_id, pack_version, extension, descriptor]
@@ -184,6 +185,13 @@ dynamic_discovery:
       omo_write_during_check: forbidden
     pack_statuses: [blocked, proposal_only, ready_for_catalog_preview]
     pack_activation: forbidden
+    pack_preview_semantics:
+      source: manifest_only
+      availability: unobserved
+      health: unobserved
+      provider_invocation: forbidden
+      omo_write: forbidden
+      next_step: catalog_discovery_then_health_probe
     pack_lifecycle_start: [discovered, sandbox]
     route_code_change_required: false
     activation_requires_scene_binding: true
