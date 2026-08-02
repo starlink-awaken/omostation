@@ -383,6 +383,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0313: Workflow Mesh 运营投影与显式消费边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J1 | 0313-workflow-mesh-operations-projection.md
 - ADR-0314: Workflow Mesh 显式结果消费反馈契约 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J1 | 0314-workflow-mesh-outcome-feedback.md
 - ADR-0315: Knowledge to Action 以引用、任务和行动回执组成 J2 垂直切片 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J2 | 0315-knowledge-to-action-loop.md
+- ADR-0316: 知识行动任务到 Workflow Mesh 请求的晋升边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J2 | 0316-task-to-workflow-promotion.md
 
 ---
 
