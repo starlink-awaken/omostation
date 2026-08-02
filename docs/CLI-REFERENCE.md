@@ -1,9 +1,9 @@
 # Cockpit CLI 命令参考
 
-> 自动生成于 2026-08-02T11:40:31Z
+> 自动生成于 2026-08-02T12:56:53Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **103** 个命令 (含子命令)。按场景分组如下。
+共 **104** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -152,6 +152,7 @@
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit stats` | 索引统计 |
 | `cockpit topics` | 列出已注册 topic |
+| `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
 | `cockpit up` | 启动观测栈 |
 | `cockpit url` | 打印 Langfuse Web URL |
@@ -166,13 +167,13 @@
 
 | CLI 命令 | MCP 服务器 | 工具数 |
 |----------|-----------|--------|
-| `cockpit omo` | `omo` | 19 |
-| `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
+| `cockpit omo` | `omo` | 0 |
+| `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 58 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 86 |
-| `cockpit family-hub` | `family-hub` | 6 |
+| `cockpit agora` | `agora` | 31 |
+| `cockpit family-hub` | `family-hub` | 0 |
 | `cockpit mesh` | `aetherforge` | 10 |
 | `cockpit compute` | `aetherforge` | 10 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T11:40:31Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T12:56:53Z 生成*
