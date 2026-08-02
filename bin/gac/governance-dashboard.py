@@ -3,7 +3,6 @@
 
 统一调用 P83-P85 治理工具, 输出一份治理健康仪表盘:
 - governance-history insight (P83)
-- drift-history insight (P83)
 - x2 freshness check (P84)
 - x2 rule lint (P85)
 - adr coverage (P85)
@@ -33,7 +32,6 @@ from pathlib import Path
 TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     # (id, 描述, bin_path, args)
     ("governance-history", "P83 governance 评分历史", "bin/gac/governance-history-insight.py", []),
-    ("drift-history", "P83 drift 漂移历史", "bin/gac/drift-history-insight.py", []),
     ("x2-freshness", "P84 X2 freshness 11 规则", "bin/gac/x2-freshness-check.py", []),
     ("x2-rule-lint", "P85 X2 rule schema lint", "bin/gac/x2-rule-lint.py", []),
     ("x2-rule-add", "P87 X2 rule 交互式添加 (template 模式)", "bin/gac/x2-rule-add.py", ["--template"]),
