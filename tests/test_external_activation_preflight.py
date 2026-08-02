@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -46,12 +47,18 @@ def _scene(**overrides):
     return value
 
 
-def _catalog(*, summarize_availability="available"):
+def _catalog(
+    *,
+    summarize_availability="available",
+    observed_at="2026-08-03T00:00:00Z",
+    catalog_ttl_seconds=3600,
+):
     return {
         "schema": "external-resource-catalog/v1",
         "mode": "read_only_projection",
         "activation": "forbidden",
-        "observed_at": "2026-08-03T00:00:00Z",
+        "observed_at": observed_at,
+        "catalog_ttl_seconds": catalog_ttl_seconds,
         "policy_digest": "external-connection-fabric/v1",
         "resources": [
             {
@@ -73,12 +80,17 @@ def _catalog(*, summarize_availability="available"):
 
 
 def test_ready_preflight_is_non_activating():
-    result = MODULE.build_preflight(_scene(), _catalog())
+    result = MODULE.build_preflight(
+        _scene(),
+        _catalog(),
+        now=datetime(2026, 8, 3, 1, tzinfo=UTC),
+    )
 
     assert result["schema"] == "external-activation-preflight/v1"
     assert result["status"] == "ready_for_admission_preview"
     assert result["activation"] == "forbidden"
     assert result["next_action"] == "submit_omo_admission_preview"
+    assert result["catalog_freshness"]["status"] == "fresh"
     assert result["side_effects"] == {
         "provider_called": False,
         "omo_written": False,
@@ -104,6 +116,32 @@ def test_proposal_only_capability_never_becomes_executable():
     assert result["status"] == "proposal_only"
     assert result["next_action"] == "replace_proposal_only_capabilities_before_admission"
     assert result["capability_checks"][1]["status"] == "proposal_only"
+
+
+def test_stale_catalog_blocks_admission_preview():
+    result = MODULE.build_preflight(
+        _scene(),
+        _catalog(observed_at="2026-08-02T00:00:00Z"),
+        now=datetime(2026, 8, 3, 1, tzinfo=UTC),
+    )
+
+    assert result["status"] == "blocked"
+    assert "catalog_freshness" in result["missing_fields"]
+    assert result["catalog_freshness"]["status"] == "stale"
+    assert result["catalog_freshness"]["reason_codes"] == ["catalog_stale"]
+
+
+def test_invalid_catalog_freshness_fails_closed():
+    result = MODULE.build_preflight(
+        _scene(),
+        _catalog(observed_at="not-a-timestamp", catalog_ttl_seconds=0),
+        now=datetime(2026, 8, 3, 1, tzinfo=UTC),
+    )
+
+    assert result["status"] == "blocked"
+    assert "catalog_freshness" in result["missing_fields"]
+    assert result["catalog_freshness"]["status"] == "unknown"
+    assert result["catalog_freshness"]["reason_codes"] == ["invalid_catalog_ttl"]
 
 
 def test_unavailable_capability_is_explicitly_blocked():

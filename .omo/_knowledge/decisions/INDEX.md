@@ -395,6 +395,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0325: 外部动态路由注册的统一准入闭环 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 32 | 0325-external-route-admission-closure.md
 - ADR-0326: 外部连接激活前置检查与只读提案边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 33 | 0326-external-activation-preflight.md
 - ADR-0327: OMO 状态投影的时间戳语义与业务变更判定 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 34 | 0327-omo-state-projection-timestamp-semantics.md
+- ADR-0328: 外部资源目录 freshness、失效与回退边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 35 | 0328-external-resource-catalog-freshness.md
 
 ---
 
