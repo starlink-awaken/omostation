@@ -13,6 +13,7 @@ from .outcome_feedback import ELIGIBLE_WORKFLOW_STATES, read_outcome_feedback
 from .workflow_mesh import WorkflowMeshStore
 
 OPERATIONS_SCHEMA_VERSION = "workflow-mesh-operations/v1"
+REQUEST_EVAL_SCHEMA_VERSION = "workflow-request-eval/v1"
 
 
 def _duration_seconds(events: list[dict[str, Any]]) -> float | None:
@@ -104,6 +105,97 @@ def build_eval_dataset(
             "row_count": len(rows),
             "outcomes": dict(Counter(row["labels"]["outcome"] for row in rows)),
             "excluded": dict(excluded),
+        },
+    }
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(dataset, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    return dataset
+
+
+def build_request_eval_dataset(
+    omo_dir: Path | str,
+    *,
+    output_path: Path | None = None,
+) -> dict[str, Any]:
+    """Build an event-derived dataset for the request-to-admission funnel.
+
+    This dataset deliberately includes planned requests. They are useful
+    labels for approval, capability, budget, and product-friction analysis,
+    even though they are not safe execution-outcome rows yet.
+    """
+    store = WorkflowMeshStore(omo_dir)
+    events = store.events()
+    by_run: dict[str, list[dict[str, Any]]] = {}
+    requests: dict[str, dict[str, Any]] = {}
+    for event in events:
+        run_id = str(event["workflow_run_id"])
+        by_run.setdefault(run_id, []).append(event)
+        if event.get("event_type") == "WorkflowRequested":
+            requests.setdefault(run_id, event)
+
+    snapshots = {
+        snapshot["workflow_run_id"]: snapshot for snapshot in store.snapshots()
+    }
+    rows: list[dict[str, Any]] = []
+    for run_id, event in requests.items():
+        payload = event.get("payload") or {}
+        snapshot = snapshots.get(run_id, {})
+        run_events = by_run.get(run_id, [])
+        state = str(snapshot.get("state", "unknown"))
+        rows.append(
+            {
+                "workflow_run_id": run_id,
+                "trace_id": event.get("trace_id", run_id),
+                "task_id": payload.get("task_id"),
+                "workflow": payload.get("workflow"),
+                "operation_level": payload.get("operation_level"),
+                "approval_required": bool(payload.get("approval_required")),
+                "evidence_plan_count": len(payload.get("evidence_plan") or []),
+                "knowledge_ref_digest": payload.get("knowledge_ref_digest"),
+                "scene_binding": payload.get("scene_binding"),
+                "request_event_id": event.get("event_id"),
+                "requested_at": payload.get("requested_at") or event.get("occurred_at"),
+                "duration_seconds": _duration_seconds(run_events),
+                "labels": {
+                    "current_state": state,
+                    "admitted": snapshot.get("admission") is not None,
+                    "gate_outcome": (
+                        "admitted"
+                        if snapshot.get("admission") is not None
+                        else "pending_admission"
+                        if state == "planned"
+                        else state
+                    ),
+                },
+                "label_source": {
+                    "event_log": "_knowledge/workflow-mesh/events.jsonl",
+                    "event_ids": [str(item["event_id"]) for item in run_events],
+                    "labeling_rule": f"{REQUEST_EVAL_SCHEMA_VERSION}:event-derived",
+                },
+            }
+        )
+
+    dataset = {
+        "dataset_version": REQUEST_EVAL_SCHEMA_VERSION,
+        "source": {
+            "kind": "omo_append_only_event_log",
+            "path": "_knowledge/workflow-mesh/events.jsonl",
+            "labels_are_event_derived": True,
+        },
+        "rows": rows,
+        "summary": {
+            "row_count": len(rows),
+            "states": dict(
+                Counter(row["labels"]["current_state"] for row in rows)
+            ),
+            "approval_required_count": sum(
+                row["approval_required"] for row in rows
+            ),
+            "admitted_count": sum(row["labels"]["admitted"] for row in rows),
         },
     }
     if output_path is not None:
@@ -341,6 +433,33 @@ def build_operations_snapshot(
         if item is not None:
             review_queue.append(item)
 
+    request_rows = build_request_eval_dataset(omo_dir)["rows"]
+    if scene_id is not None:
+        request_rows = [
+            row
+            for row in request_rows
+            if (row.get("scene_binding") or {}).get("scene_id") == scene_id
+        ]
+    request_states = Counter(
+        row["labels"]["current_state"] for row in request_rows
+    )
+    workflow_requests = {
+        "request_count": len(request_rows),
+        "pending_count": sum(
+            row["labels"]["current_state"] == "planned" for row in request_rows
+        ),
+        "admitted_count": sum(row["labels"]["admitted"] for row in request_rows),
+        "approval_required_count": sum(
+            row["approval_required"] for row in request_rows
+        ),
+        "states": dict(sorted(request_states.items())),
+        "next_action": (
+            "review_pending_workflow_requests"
+            if any(row["labels"]["current_state"] == "planned" for row in request_rows)
+            else "record_more_workflow_requests"
+        ),
+    }
+
     active_runs = sum(
         count for state, count in state_counts.items() if state not in {"closed", "cancelled"}
     )
@@ -454,6 +573,7 @@ def build_operations_snapshot(
             key=lambda row: _scene_key(row.get("scene_binding")),
         ),
         "review_queue": review_queue,
+        "workflow_requests": workflow_requests,
         "consumption": consumption,
         "knowledge_action": build_knowledge_action_snapshot(omo_dir, scene_id=scene_id),
     }
@@ -462,6 +582,7 @@ def build_operations_snapshot(
 __all__ = [
     "OPERATIONS_SCHEMA_VERSION",
     "build_eval_dataset",
+    "build_request_eval_dataset",
     "build_operations_snapshot",
     "evaluate_policy",
     "propose_policy_feedback",
