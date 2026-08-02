@@ -10,10 +10,9 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (3 个)
+## Planned Tasks (2 个)
 | ID | Title | Status |
 |----|-------|--------|
-| cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
 | needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
 | needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat | candidate |
 
@@ -58,5 +57,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-08-01 (依据 `omo state sync-tasks` 与真实目录重算: done=225, planned=3, active=0, archived=6 顶层)*
+*Updated: 2026-08-02 (依据 `omo state sync-tasks` 与真实目录重算: done=225, planned=2, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
