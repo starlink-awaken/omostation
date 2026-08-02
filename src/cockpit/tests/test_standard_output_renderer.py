@@ -77,3 +77,29 @@ def test_status_command_with_global_output_markdown():
         ret = cmd_status(args)
         assert ret == 0
         mock_console.print.assert_called()
+
+
+def test_cards_list_with_global_output_json(capsys):
+    """验证 cockpit cards list 支持 --output json 标准渲染."""
+    import argparse
+    from cockpit.commands.cards import cmd_cards
+
+    args = argparse.Namespace(cards_command="list", global_output="json")
+    ret = cmd_cards(args)
+    assert ret == 0
+    out = capsys.readouterr().out
+    data = json.loads(out)
+    assert "data" in data or isinstance(data, list)
+
+
+def test_cards_list_with_global_output_markdown():
+    """验证 cockpit cards list 支持 --output markdown 标准渲染."""
+    import argparse
+    from cockpit.commands.cards import cmd_cards
+
+    args = argparse.Namespace(cards_command="list", global_output="markdown")
+    with patch("cockpit.commands.base._get_console") as mock_get_console:
+        mock_console = mock_get_console.return_value
+        ret = cmd_cards(args)
+        assert ret == 0
+        mock_console.print.assert_called()

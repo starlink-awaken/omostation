@@ -67,10 +67,11 @@ def _parse_frontmatter(path: Path) -> tuple[dict, str]:
 
 def cmd_cards(args: argparse.Namespace) -> int:
     c, e = _get_console(), _get_err()
+    global_output = getattr(args, "global_output", "text")
     if args.cards_command == "serve":
         return _serve_stdio()
     if args.cards_command == "list":
-        return _do_list(c, e)
+        return _do_list(c, e, global_output=global_output)
     if args.cards_command == "get":
         return _do_get(args.id, c, e)
     if args.cards_command == "search":
@@ -79,7 +80,24 @@ def cmd_cards(args: argparse.Namespace) -> int:
     return 1
 
 
-def _do_list(c, e) -> int:
+def _do_list(c, e, global_output: str = "text") -> int:
+    if global_output in ("json", "markdown"):
+        items = []
+        for cat, path, fm, _ in _iter_cards():
+            items.append(
+                {
+                    "id": path.stem,
+                    "category": cat,
+                    "title": fm.get("title", ""),
+                    "status": fm.get("status", ""),
+                    "priority": fm.get("priority", ""),
+                }
+            )
+        from .base import OutputFormat, render_command_result
+
+        fmt = OutputFormat.JSON if global_output == "json" else OutputFormat.MARKDOWN
+        render_command_result("L4 CARDS 资产卡片清单", items, output_format=fmt)
+        return 0
     if not CARDS_ROOT.exists():
         e.print(f"[red]L4 CARDS_ROOT 不存在: {CARDS_ROOT}[/]")
         return 1
