@@ -1,0 +1,19 @@
+id: MCPTOOL-COCKPIT-shared_context_read
+type: MCPTool
+subtype: CockpitTool
+name: shared_context_read
+description: 'cockpit MCP 工具: shared_context_read'
+status: active
+domain: meta
+created: '2026-08-02'
+version: 1.0.0
+layer: L3
+properties:
+  tool_name: shared_context_read
+  server: cockpit
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+state_history:
+- state: active
+  timestamp: '2026-08-02T00:00:00Z'
+  reason: sync from cockpit mcp --list-tools (MOF 注册 ↔ 实现 drift 治本, PR#125 探针 follow-up)
