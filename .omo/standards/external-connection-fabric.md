@@ -25,7 +25,9 @@ Workflow Mesh、Kairon、AetherForge 和 Cockpit 协同消费。
 
 每个连接必须提供 `external-resource/v1` descriptor，至少包含身份、类型、提供方、协议、
 能力、数据分级、来源、生命周期、健康、所有者、版本和 `permission_ref`。凭据只允许使用
-引用，禁止落盘 token、密码、私钥或未经治理的私人原文。
+引用，禁止落盘 token、密码、私钥、API key、DSN、Cookie、Authorization、未经治理的私人
+原文和结果载荷。禁止字段检查必须递归覆盖 descriptor 的 `provenance`、`health` 和
+`metadata`；`permission_ref` 仍只能是不透明引用，字段名本身不能成为凭据载体。
 
 资源类型统一为：`knowledge_source`、`data_source`、`resource_provider`、`method_pack`、
 `tool_capability`、`channel`、`model_provider`。
@@ -122,6 +124,12 @@ receipt 文件和事件投影都禁止 provider 原文、模型输出、凭据�
   替代新连接的完整业务激活契约。
 - `route`：按能力和决策因子选择资源；无候选时只返回显式 `unavailable`。
 - `invoke`：返回受控 receipt；`proposal_only` 不执行副作用。
+- `invoke` 对 provider 异常只输出稳定的 `EXTERNAL_*` 错误码：超时为
+  `EXTERNAL_TIMEOUT`，连接不可用为 `EXTERNAL_BACKEND_UNAVAILABLE`，权限拒绝为
+  `EXTERNAL_PERMISSION_DENIED`，响应不合法为 `EXTERNAL_INVALID_RESPONSE`，其余为
+  `EXTERNAL_PROVIDER_FAILURE`。异常类型、消息和堆栈只能留在调用方受控日志，不能进入
+  receipt、OMO 事件或 Cockpit 投影；`no_route` 和 `invoker_unavailable` 仍表示连接层的
+  确定性前置失败。
 - `record_external_receipt`：由执行方在调用结束后把最小 receipt 回写 OMO；连接器本身不得直接
   改 WorkflowRun 或知识存储。
 
