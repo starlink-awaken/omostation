@@ -35,6 +35,7 @@ last-reviewed: 2026-06-28
 | `dependency-baseline.yaml` | Workspace-wide min version constraints |
 | `mof-capabilities.yaml` | 4-layer MOF tool registry |
 | `workers.yaml` | Worker role/lease/transport policy |
+| `external-connection-fabric.yaml` | External knowledge/data/resource/method/tool/channel/model descriptor and lifecycle SSOT |
 | `compute/engines.yaml` | LLM runtime engine + scheduling endpoints |
 | `compute/nodes.yaml` | Physical compute nodes |
 

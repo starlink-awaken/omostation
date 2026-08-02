@@ -1,0 +1,155 @@
+---
+title: External Connection Fabric Registry
+status: active
+type: registry
+owner: architecture-governance
+last-reviewed: 2026-08-02
+lifecycle: ssot
+---
+version: "1.0"
+registry_id: external-connection-fabric
+description: >-
+  Unified contract for external knowledge, data, resources, methods, tools, channels and model
+  providers. It defines discovery, admission, routing, evidence and reversible lifecycle without
+  creating a second task, credential, knowledge or runtime truth.
+truth_owners:
+  contract: ecos
+  admission_and_evidence: omo
+  discovery_and_routing: agora
+  source_adapters: kairon.iris
+  method_compilation_and_evaluation: kairon.sophia
+  execution_and_delivery: runtime
+  compute_and_credentials: aetherforge
+  canonical_memory: kairon.kos-gbrain
+  human_catalog: cockpit
+descriptor:
+  schema_version: external-resource/v1
+  required_fields:
+    - id
+    - kind
+    - provider
+    - protocol
+    - capabilities
+    - data_classification
+    - provenance
+    - lifecycle
+    - health
+    - owner
+    - version
+  secret_policy: credential_ref_only
+  forbidden_fields:
+    - access_token
+    - refresh_token
+    - password
+    - private_key
+    - raw_private_content
+resource_kinds:
+  knowledge_source:
+    owner: kairon.iris
+    allowed_capabilities: [discover, search, read, snapshot, subscribe]
+    default_mode: live_query
+  data_source:
+    owner: kairon
+    allowed_capabilities: [discover, query, export, snapshot, subscribe]
+    default_mode: governed_snapshot
+  resource_provider:
+    owner: agora
+    allowed_capabilities: [discover, resolve, quote, reserve]
+    default_mode: live_query
+  method_pack:
+    owner: kairon.sophia
+    allowed_capabilities: [discover, explain, compile, evaluate]
+    default_mode: proposal_only
+  tool_capability:
+    owner: agora
+    allowed_capabilities: [discover, invoke, validate]
+    default_mode: proposal_only
+  channel:
+    owner: runtime
+    allowed_capabilities: [discover, deliver, receipt, suppress]
+    default_mode: approved_delivery
+  model_provider:
+    owner: aetherforge
+    allowed_capabilities: [discover, infer, embed, evaluate]
+    default_mode: proposal_only
+connection_modes:
+  live_query:
+    copy_policy: zero_copy_preferred
+    evidence: source_ref_and_query_receipt
+  live_invoke:
+    copy_policy: request_scoped
+    evidence: invocation_receipt_and_output_provenance
+  ttl_snapshot:
+    copy_policy: bounded_snapshot
+    evidence: snapshot_hash_and_expiry
+  governed_snapshot:
+    copy_policy: approved_snapshot
+    evidence: approval_ref_snapshot_hash_and_expiry
+  event_subscription:
+    copy_policy: event_payload_minimized
+    evidence: subscription_ref_and_delivery_receipt
+  approved_delivery:
+    copy_policy: recipient_scoped
+    evidence: delivery_receipt_and_channel_policy
+  proposal_only:
+    copy_policy: no_production_side_effect
+    evidence: proposal_ref_and_evaluation_ref
+lifecycle:
+  states: [discovered, sandbox, admitted, active, degraded, quarantined, retired]
+  transitions:
+    discovered: [sandbox, retired]
+    sandbox: [admitted, discovered, quarantined, retired]
+    admitted: [active, sandbox, quarantined, retired]
+    active: [degraded, quarantined, retired]
+    degraded: [active, quarantined, retired]
+    quarantined: [sandbox, retired]
+    retired: []
+  active_requirements:
+    - expiry_or_review_at
+    - health_probe
+    - rollback_plan
+    - owner
+admission:
+  owner: omo
+  required_scene_binding:
+    - scene_id
+    - journey_id
+    - outcome_metric
+    - data_scope
+    - operator
+  fail_closed_on:
+    - missing_permission
+    - missing_health
+    - missing_provenance
+    - expired_descriptor
+    - unbounded_copy
+    - missing_scene_binding
+routing:
+  owner: agora
+  score_factors: [relevance, trust, freshness, permission, availability, cost, latency]
+  required_result_fields: [selected_resource_id, decision_factors, policy_digest, trace_id]
+  circuit_breaker: required
+  fallback: explicit_unavailable
+evidence:
+  workflow_envelope: workflow-mesh/v1
+  required_for: [discovery, admission, invocation, delivery, retirement]
+  minimum_fields: [trace_id, resource_id, observed_at, result_state, provenance_ref]
+scene_activation_gate:
+  required: true
+  minimum_repeated_demand: 连续四周或明确机会窗口
+  freeze_when:
+    - no_real_consumer
+    - no_outcome_metric
+    - no_owner
+    - no_permission_boundary
+bindings:
+  source_adapters: projects/kairon/packages/iris
+  method_compiler: projects/kairon/packages/sophia
+  capability_router: projects/agora
+  workflow_execution: docs/WORKFLOW-MESH-IMPLEMENTATION.md
+  governance: projects/omo
+  contract_validation: projects/ecos
+  user_entry: [projects/cockpit, projects/cockpit-ui]
+validation:
+  contract_test: tests/test_external_connection_fabric_registry.py
+  checks: [registry_shape, secret_field_absence, lifecycle_transition_closure, architecture_pointer_integrity]

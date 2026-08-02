@@ -29,6 +29,7 @@
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | P74 workflow solidification (ADR-0130) | [`.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) |
 | 知识网关 L3-I0 解耦 + 事件索引管道 (ADR-0294) | [`.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md) |
+| 外部连接织层 | [`.omo/_truth/registry/external-connection-fabric.yaml`](.omo/_truth/registry/external-connection-fabric.yaml) · [standard](.omo/standards/external-connection-fabric.md) |
 
 ## 2. Layer Model
 
@@ -38,6 +39,13 @@ The stable dependency direction remains:
 
 ```text
 entry surfaces -> routing mesh -> engines/runtime/protocol -> governed state and evidence
+```
+
+External resources enter through the same direction:
+
+```text
+external descriptor -> sandbox/admission -> Agora route -> Workflow Mesh execution
+                    -> OMO evidence -> Kairon/KOS/gbrain derived memory
 ```
 
 ## 3. Entry Architecture
@@ -64,6 +72,26 @@ Do not introduce a new top-level human or agent entry without updating the relev
 
 The complete machine-readable service map is [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml). Markdown should reference that file rather than duplicating service counts or route inventories.
 
+### 4.1 External Connection Fabric
+
+External knowledge, data, resources, methods, tools, models and channels share one descriptor and
+lifecycle contract. The fabric is a cross-cutting capability, not a new top-level project:
+
+| Responsibility | Owner |
+|---|---|
+| Descriptor and protocol contract | ECOS |
+| Scene-bound admission, approval and evidence | OMO |
+| Discovery and capability routing | Agora |
+| Knowledge source adapters | Kairon / Iris |
+| Method compilation and evaluation | Kairon / Sophia |
+| Execution, delivery receipts and recovery | Runtime / Workflow Mesh |
+| Model, credentials, quota and cost | AetherForge |
+| Human connection catalog and visibility | Cockpit |
+
+The machine-readable contract is [`external-connection-fabric.yaml`](.omo/_truth/registry/external-connection-fabric.yaml).
+Credentials are referenced, never stored in descriptors; unavailable or stale resources must remain
+visible as such and must not be projected as successful live state.
+
 ## 5. Governance Surfaces
 
 ```
@@ -78,6 +106,7 @@ Rules:
 - `.omo/` is data and evidence, not a place for new long-lived execution logic.
 - State mutations should use OMO CLI/MCP, C2G ingress, or registered brokers.
 - New governance surfaces require runtime behavior, registry entries, and validation gates. Documentation alone is not implementation.
+- External capabilities require a registered descriptor, scene binding, health evidence, and a reversible lifecycle before activation.
 - Direct `.omo/` or `spaces/` writes are violations unless routed through an approved audited path.
 
 ## 6. Port Registry & Transport (P77/P78)
@@ -99,6 +128,7 @@ user or agent -> cockpit or agora -> bos:// route -> target service -> audited r
 external or local source -> kairon ingestion/schema/search -> gbrain or local substrate -> retrieval
 intent or pitch -> c2g or OMO broker -> task/debt/audit registry -> validation -> evidence
 service definition -> runtime scheduler/matrix/sandbox -> health observation -> governance alert or recovery
+external resource -> descriptor -> scene-bound admission -> capability route -> receipt/evidence -> derived memory
 ```
 
 ## 9. Related Documents
@@ -113,5 +143,6 @@ service definition -> runtime scheduler/matrix/sandbox -> health observation -> 
 | [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) | Architecture deep-dive (modules, data flow, control flow) |
 | [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) | Functional capability map (8 domains, 32 capabilities) |
 | [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) | Agora BOS URI callchain white-box |
+| [`.omo/standards/external-connection-fabric.md`](.omo/standards/external-connection-fabric.md) | External resource, method, tool and channel contract |
 | [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) | Vision and roadmap |
 | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | Documentation ownership contract |

@@ -9,6 +9,7 @@ related:
   - docs/STRATEGY-3YEAR-PANORAMA.md
   - ARCHITECTURE.md
   - .omo/standards/agent-workflow-contract.md
+  - .omo/standards/external-connection-fabric.md
 ---
 
 # Workflow Mesh 实施架构与交付路线
@@ -17,7 +18,7 @@ related:
 
 Workflow Mesh 不是新增一个工作流引擎，而是把现有 C2G、OMO、ECOS、Agora、Runtime、AetherForge、Cockpit 的执行边界收敛到一条可追踪、可恢复、可验收的运行链上。
 
-核心结果是：每一项业务意图都能沿着 `intent_id -> task_id -> workflow_run_id -> step_run_id -> evidence_id -> pr_id` 找到真实执行、失败原因、验证结果和交付结果。
+核心结果是：每一项业务意图都能沿着 `scene_id -> journey_id -> intent_id -> task_id -> workflow_run_id -> step_run_id -> evidence_id -> pr_id` 找到真实执行、失败原因、验证结果和交付结果。
 
 ## 2. 模块边界
 
@@ -32,10 +33,11 @@ Workflow Mesh 不是新增一个工作流引擎，而是把现有 C2G、OMO、EC
 | Cockpit | 任务操作、运行态、验证和交付可视化 | 不凭 Git 文件存在推断运行成功 |
 | gbrain / KOS | 事实记忆和索引检索 | 不承载一次运行的生命周期 |
 | MetaOS | 策略、预算、权限和准入约束 | 不绕过执行证据直接宣布完成 |
+| External Connection Fabric | 外部资源描述、健康、来源和生命周期 | 不拥有任务、知识、凭据或运行状态真相 |
 
 ## 3. 运行身份与事件契约
 
-所有执行必须拥有稳定的 `workflow_run_id`，默认让 `trace_id` 与其一致；调用方重试时可复用同一 ID，禁止为同一次业务执行创建无法关联的新运行。
+所有执行必须拥有稳定的 `workflow_run_id`，默认让 `trace_id` 与其一致；调用方重试时可复用同一 ID，禁止为同一次业务执行创建无法关联的新运行。面向产品的执行还必须绑定 `scene_id`、`journey_id` 和 `outcome_metric`，否则只能进入 proposal-only 或 sandbox。
 
 事件采用 `workflow-mesh/v1` 信封，至少包含：
 
@@ -122,6 +124,14 @@ stateDiagram-v2
 4. 将高频稳定流程提升为模板，将不稳定流程沉淀为治理债务和人工审批规则。
 5. `workflow_eval` 先完成事件衍生标签和 proposal-only 反馈；待真实运行样本达到业务阈值后，再引入预测模型，模型不得直接写入 admission 或状态机。
 
+### P2.5：外部连接与触达
+
+1. 所有外部知识、数据、资源、方法、工具、模型和渠道先登记为统一 descriptor，再由 OMO 按场景准入。
+2. SourcePack 默认 live query 或有期限快照；未经审批不得全量复制私人原文。
+3. MethodPack 由 Sophia 编译为候选工作流，必须经过离线评测、proposal-only、shadow 和人工批准。
+4. ToolPack、ModelPack 和 ChannelPack 由 Agora、AetherForge、Runtime 分别路由和执行，回执必须回到同一条 Mesh 事件链。
+5. 外部不可用、权限过期、数据过时或预算超限时，工作流进入 `degraded/unavailable`，禁止假成功。
+
 ### P1.5：派发与健康闭环
 
 1. 通过 OMO admission/dispatch broker 生成唯一的 `workflow_run_id`、短期 grant 和 worker dispatch packet；任何 capability、approval 或 budget gate 失败都不得产生执行派发。
@@ -142,7 +152,7 @@ stateDiagram-v2
 
 ## 8. 明确延期和边界
 
-当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。先把一条业务旅程的真实执行、失败、恢复、验证和交付闭环跑通，再扩大覆盖面。
+当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
 
 ## 9. 验证命令
 

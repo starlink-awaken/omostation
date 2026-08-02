@@ -17,6 +17,9 @@ related:
   - docs/proposals/2026-08-01-ECOS-NEXT-STAGE-AGENT-TASK-PACKS.md
   - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
   - .omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md
+  - .omo/_knowledge/decisions/0297-external-connection-fabric-and-product-truth.md
+  - .omo/_truth/registry/external-connection-fabric.yaml
+  - .omo/standards/external-connection-fabric.md
 note: >
   本文是战略叙事与执行框架，不拥有当前 Phase、健康分、服务数、项目数、端口、
   测试数或任务数。所有运行时事实必须从对应 SSOT 动态读取，不得从本文反向抄录。
@@ -128,6 +131,7 @@ eCOS 的目标使用者首先是系统所有者本人。核心需求不是拥有
 5. 单机主路径先稳定，再扩大到多 Agent 和多设备。
 6. 任何“智能化”声明必须有上下文、评测、成本、置信度和回滚证据。
 7. 自进化只能生成受治理提案，不能直接修改生产真相。
+8. 外部知识、数据、方法、工具、模型和渠道必须通过统一连接织层接入，并绑定真实场景、结果指标和可撤销生命周期。
 
 ## 6. 五平面目标架构
 
@@ -148,6 +152,8 @@ eCOS 的目标使用者首先是系统所有者本人。核心需求不是拥有
 
 Observability 横切所有平面，提供度量、追踪和告警。
 ```
+
+外部连接织层横切体验、控制、执行和知识平面，但不拥有任务、知识、凭据或运行状态真相。
 
 ### 6.1 体验面
 
@@ -185,6 +191,14 @@ Observability 横切所有平面，提供度量、追踪和告警。
 - `model-driven` 只负责投影、生成和生命周期 DSL，不持有运行任务状态。
 - `l4-kernel` 只负责系统自我模型、域目录、能力边界和演进提案。
 - KEMS 从 L4 内核职责降为可冻结、可安装、可移除的领域包。
+
+### 6.6 外部连接织层
+
+External Connection Fabric 统一承接六类外部能力：`SourcePack`、`ResourcePack`、`MethodPack`、
+`ToolPack`、`ChannelPack` 和 `ModelPack`。它只拥有描述、准入、路由、健康、来源和生命周期，
+不创建第二套任务、权限、证据或持久知识真相。机器契约见
+[`external-connection-fabric.yaml`](../.omo/_truth/registry/external-connection-fabric.yaml)，
+操作标准见 [`external-connection-fabric.md`](../.omo/standards/external-connection-fabric.md)。
 
 ## 7. 项目组合决策
 
@@ -241,6 +255,16 @@ Observability 横切所有平面，提供度量、追踪和告警。
 仅用于边界清晰、无共享写入或可分区写入、可独立验收的工作。架构分析、调试、复杂设计和
 强耦合改动继续由单 Agent 主导。物理多机保持 deferred，直到真实需求重新触发。
 
+### 8.4 J4 外部知识与能力触达闭环
+
+```text
+场景 -> 发现资源 -> 沙箱验证 -> OMO 准入 -> Agora 选择
+     -> Workflow Mesh 调用 -> 来源/回执/成本证据 -> 结果回写 -> 方法或路由改进提案
+```
+
+J4 的成功标准不是连接数量，而是外部资源是否缩短了决策和交付时间、提高了证据质量，
+并且在权限、成本、时效或可用性变化时能够降级、隔离和回滚。
+
 ## 9. 受控智能与进化闭环
 
 系统的智能化成熟度按五级递进：
@@ -275,6 +299,7 @@ B.D.S.K. 后续演进重点不是增加 Persona 文案，而是让四角意见�
 - 对齐 current goals、current phase、task registry 和真实执行计划。
 - UI 移除误导性随机/默认运行指标，明确 live、stale、demo、unavailable。
 - 建立黄金旅程的事件 ID、run ID 和 evidence ID 贯通规则。
+- 建立 `scene_id`、`journey_id`、`outcome_metric` 与外部资源 descriptor 的绑定规则。
 
 里程碑 M0：Git、项目注册、当前目标和 UI 状态没有互相冲突的真相。
 
@@ -291,6 +316,7 @@ B.D.S.K. 后续演进重点不是增加 Persona 文案，而是让四角意见�
 
 - 统一 source manifest、knowledge object 和 derived index 的身份。
 - 打通工程知识检索、决策依据、任务创建和结果回写。
+- 将外部连接织层 v1 接入 SourcePack、ToolPack、MethodPack 和 ChannelPack 的真实小场景。
 - 建立“被检索、被引用、产生行动、产生结果”的价值链指标。
 
 里程碑 M2：J2 产生可证明的时间节省和知识复用收益。
@@ -331,6 +357,7 @@ B.D.S.K. 后续演进重点不是增加 Persona 文案，而是让四角意见�
 | 架构收敛 | 顶层入口数、重复 SSOT、跨层反向依赖、独立项目数 |
 | 治理效率 | 治理投入占比、规则命中率、误报率、证据自动生成率 |
 | 协作收益 | 适用任务数、墙钟收益、冲突率、汇总返工率 |
+| 外部连接价值 | 连接激活时间、来源引用覆盖率、外部调用回执率、单位旅程成本、降级恢复率 |
 
 健康分只用于定位风险，不能替代用户价值和端到端旅程指标。
 
@@ -345,16 +372,18 @@ B.D.S.K. 后续演进重点不是增加 Persona 文案，而是让四角意见�
 | UI 假绿 | fallback 必须显式 demo/unavailable，禁止随机值表现为 live |
 | Agent 并发覆盖 | 独立 worktree、路径 claim、PR 和 branch protection |
 | 自动进化失控 | 影子、审批、灰度、kill switch、回滚缺一不可 |
+| 外部连接失控或数据泄漏 | descriptor 只存 credential_ref；默认零复制；OMO 准入；数据分级；可隔离和可撤销 |
 | 物理多机提前投入 | 保持 deferred，由真实场景重新触发 |
 | KEMS 等领域过早建设 | 冻结为领域包，通过场景激活门后恢复 |
 
 ## 13. 近期执行入口
 
-近期工作拆为三个可独立交付的任务包：
+近期工作拆为四个可独立交付的任务包：
 
 1. 根仓身份与 worktree/PR 路径修复。
 2. SSOT、current goals 与状态时间线归一。
 3. 工程交付黄金旅程与 Cockpit 真实状态体验。
+4. 外部连接织层 descriptor、Iris 插件发现和场景化准入。
 
 每个任务包的文件边界、Agent Workflow、验收门禁和可直接使用的 Agent 指令见：
 
