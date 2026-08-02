@@ -23,6 +23,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.table import Table
 
 # ── Lazy accessors (look up from cli module for monkeypatch compatibility) ──
 
@@ -473,3 +474,128 @@ def _discover_services() -> list[tuple[str, str, str | None, str, str]]:
     except (urlerror.URLError, json.JSONDecodeError, OSError, TimeoutError):
         pass
     return _status_services()
+
+
+# ── Standard Output Renderer (Phase 3: 命令行优雅输出系统) ──────────────────
+
+
+class OutputFormat:
+    """输出呈现格式名称常量枚举."""
+    TTY = "tty"
+    JSON = "json"
+    MARKDOWN = "markdown"
+    TUI = "tui"
+
+
+def render_command_header(title: str, subtitle: str | None = None, category: str = "COMMAND") -> None:
+    """渲染极客顶栏 Header，展示统一视觉形象."""
+    console = _get_console()
+    header_text = f"[bold cyan]🛸 Cockpit ·[/bold cyan] [bold white]{title}[/bold white]"
+    if subtitle:
+        header_text += f"\n[dim]{subtitle}[/dim]"
+    console.print(Panel(header_text, border_style="cyan", box=_box.ROUNDED, expand=False))
+
+
+def render_command_result(
+    title: str,
+    data: Any,
+    output_format: str = OutputFormat.TTY,
+    columns: list[tuple[str, str]] | None = None,
+    summary: str | None = None,
+) -> None:
+    """标准·优雅多形态命令结果通用输出引擎.
+
+    参数:
+        title: 表格/面板的主标题
+        data: 支持 list[dict] 或 dict 数据格式
+        output_format: "tty", "json", 或 "markdown"
+        columns: [(field_key, column_name), ...] 可选的显式列声明
+        summary: 可选的附加底注或描述文字
+    """
+    console = _get_console()
+
+    # 1. 结构化 JSON 模式 (自动化管道 / 机器消费友善)
+    if output_format == OutputFormat.JSON:
+        payload = {"title": title, "summary": summary, "data": data} if summary else data
+        print(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+        return
+
+    # 2. Markdown 模式 (GitHub Markdown 输出)
+    if output_format == OutputFormat.MARKDOWN:
+        md_lines = [f"### 🛸 {title}\n"]
+        if summary:
+            md_lines.append(f"> {summary}\n")
+        if isinstance(data, list) and data and isinstance(data[0], dict):
+            cols = columns or [(k, str(k).capitalize()) for k in data[0].keys()]
+            md_lines.append("| " + " | ".join(name for _, name in cols) + " |")
+            md_lines.append("| " + " | ".join("---" for _ in cols) + " |")
+            for item in data:
+                md_lines.append("| " + " | ".join(str(item.get(k, "")) for k, _ in cols) + " |")
+        elif isinstance(data, dict):
+            md_lines.append("| Field | Value |")
+            md_lines.append("| --- | --- |")
+            for k, v in data.items():
+                md_lines.append(f"| {k} | {v} |")
+        else:
+            md_lines.append(f"```\n{data}\n```")
+        console.print(Markdown("\n".join(md_lines)))
+        return
+
+    # 3. TTY 交互模式 (Rich 极客视觉输出)
+    if summary:
+        console.print(f"[dim]ℹ️  {summary}[/dim]")
+
+    if isinstance(data, list):
+        if not data:
+            console.print(f"[dim]🛸 {title} — (无数据记录)[/dim]")
+            return
+        table = Table(
+            title=f"[bold cyan]{title}[/bold cyan]",
+            box=_box.ROUNDED,
+            border_style="cyan",
+            show_header=True,
+            header_style="bold yellow",
+        )
+        first_item = data[0]
+        if isinstance(first_item, dict):
+            cols = columns or [(k, str(k).upper()) for k in first_item.keys()]
+            for _, col_name in cols:
+                table.add_column(col_name, overflow="fold")
+            for item in data:
+                row_cells = []
+                for field_key, _ in cols:
+                    val = item.get(field_key, "")
+                    s_val = str(val) if val is not None else ""
+                    # 极客状态关键字颜色微渲染
+                    if s_val.lower() in ("active", "ok", "passed", "true", "alive"):
+                        s_val = f"[bold green]{s_val}[/bold green]"
+                    elif s_val.lower() in ("error", "failed", "false", "dead"):
+                        s_val = f"[bold red]{s_val}[/bold red]"
+                    elif s_val.lower() in ("draft", "warning", "pending"):
+                        s_val = f"[bold yellow]{s_val}[/bold yellow]"
+                    row_cells.append(s_val)
+                table.add_row(*row_cells)
+            console.print(table)
+        else:
+            for idx, val in enumerate(data, 1):
+                console.print(f"  [cyan]{idx}.[/cyan] {val}")
+    elif isinstance(data, dict):
+        table = Table(
+            title=f"[bold cyan]{title}[/bold cyan]",
+            box=_box.ROUNDED,
+            border_style="cyan",
+            show_header=True,
+            header_style="bold yellow",
+        )
+        table.add_column("属性 (Field)", style="cyan")
+        table.add_column("取值 (Value)", overflow="fold")
+        for k, v in data.items():
+            s_val = str(v)
+            if s_val.lower() in ("ok", "active", "true"):
+                s_val = f"[bold green]{s_val}[/bold green]"
+            elif s_val.lower() in ("error", "false"):
+                s_val = f"[bold red]{s_val}[/bold red]"
+            table.add_row(str(k), s_val)
+        console.print(table)
+    else:
+        console.print(Panel(str(data), title=f"[bold cyan]{title}[/bold cyan]", box=_box.ROUNDED))

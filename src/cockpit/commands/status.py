@@ -205,10 +205,12 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
 
 
 def cmd_status(args: argparse.Namespace) -> int:
-    output_json = bool(getattr(args, "json", False))
-    if output_json:
+    global_output = getattr(args, "global_output", "text")
+    output_json = bool(getattr(args, "json", False)) or global_output == "json"
+    if output_json or global_output == "markdown":
         import json as _json
         import sqlite3
+        from .base import OutputFormat, render_command_result
 
         services = _discover_services()
         svc_status = []
@@ -245,19 +247,14 @@ def cmd_status(args: argparse.Namespace) -> int:
             except sqlite3.Error:
                 pass
         recent_research = _get_data_access().list_research(limit=5)
-        _get_console().print(
-            _json.dumps(
-                {
-                    "status": "ok",
-                    "services": svc_status,
-                    "research_stats": stats,
-                    "recent_research": recent_research,
-                },
-                ensure_ascii=False,
-                indent=2,
-                default=str,
-            )
-        )
+        payload = {
+            "status": "ok",
+            "services": svc_status,
+            "research_stats": stats,
+            "recent_research": recent_research,
+        }
+        fmt = OutputFormat.JSON if output_json else OutputFormat.MARKDOWN
+        render_command_result("系统状态 (System Status)", payload, output_format=fmt)
         return 0
     watch = bool(getattr(args, "watch", False))
     interval = float(getattr(args, "interval", 5.0))

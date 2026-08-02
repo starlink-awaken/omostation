@@ -1222,8 +1222,26 @@ def main() -> int:
         "tui": lambda a: __import__("cockpit.tui", fromlist=["launch"]).launch(a),
     }
 
+    global_output = getattr(args, "global_output", "text")
+    if global_output == "tui":
+        return __import__("cockpit.tui", fromlist=["launch"]).launch(args)
+
     handler = handlers.get(args.command)
     if handler:
+        if (
+            global_output == "text"
+            and args.command not in ("tui", "completion", "help", "demo")
+            and sys.stdout.isatty()
+        ):
+            try:
+                from .commands.base import render_command_header
+                from .commands.registry import COMMAND_CATALOG
+
+                meta = COMMAND_CATALOG.get(args.command)
+                title = f"{args.command.upper()}  ·  {meta.summary}" if meta else args.command.upper()
+                render_command_header(title=title, category=meta.category if meta else "SYSTEM")
+            except Exception:
+                pass
         return handler(args)
 
     console.print(f"[red]未知命令: {args.command}[/]")
