@@ -1,17 +1,17 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-02T12:56:53Z
+# 生成时间: 2026-08-02T13:03:36Z
 
 version: 1.0.0
-generated_at: '2026-08-02T12:56:53Z'
+generated_at: '2026-08-02T13:03:36Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 25
   mcp_tools: 385
   bos_services: 188
   bos_domains: 16
-  cli_commands: 104
+  cli_commands: 103
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -1577,8 +1577,6 @@ cli_commands:
   description: 系统健康
 - name: topics
   description: 列出已注册 topic
-- name: tui
-  description: 极客终端交互控制台 (Textual 全屏 TUI)
 - name: types
   description: 查看已注册的数据类型
 - name: up
