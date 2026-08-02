@@ -17,7 +17,8 @@ import yaml
 try:
     from .mesh_agent_events import emit_workflow_mesh_event
 except ImportError:  # graceful degradation during refactoring
-    emit_workflow_mesh_event = lambda *a, **kw: False
+    def emit_workflow_mesh_event(*a, **kw):
+        return False
 
 from .core import (
     CLAIM_POLICY_MODES,
