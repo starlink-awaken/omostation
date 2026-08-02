@@ -64,7 +64,7 @@ _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
 def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str]:
     """检查 BOS URI 的域级别权限，并执行 CR-RBAC-01 鉴权。"""
-    from agora.server.tools_auth import agora_role_ctx
+    from agora.server.tools_auth import agora_role_ctx, auth_permissive
 
     role = agora_role_ctx.get()
 
@@ -77,7 +77,9 @@ def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str
             )
 
     if not _AGORA_API_KEY:
-        return True, ""  # 本地开发模式
+        if auth_permissive():
+            return True, ""  # 显式 permissive (本地开发)
+        return False, "AGORA_API_KEY not configured (auth required)"  # fail-closed
 
     domain = uri.split("/")[2] if uri.startswith("bos://") and "/" in uri else ""
     if not domain:

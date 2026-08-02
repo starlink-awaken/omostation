@@ -185,13 +185,18 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
     # ------------------------------------------------------------------ MCP dispatch
 
     def _handle_mcp(self) -> None:
-        # Authentication check - validate Bearer token when provided.
-        # Compatibility note: the server remains usable for local/integration
-        # tests without auth headers, while the auth middleware itself is still
-        # covered by dedicated unit tests.
+        # Authentication check - fail-closed: authenticate every request.
+        # Requests without an Authorization header are rejected with 401
+        # unless AGORA_AUTH_MODE=permissive is explicitly set (local dev).
         try:
+            from agora.server.tools_auth import auth_permissive
+
             auth_middleware = get_auth_middleware()
-            if self.headers.get("Authorization"):
+            if auth_permissive():
+                if self.headers.get("Authorization"):
+                    auth_middleware.authenticate_request(dict(self.headers))
+            else:
+                # Fail-closed: missing header → authenticate_request raises 401.
                 auth_middleware.authenticate_request(dict(self.headers))
         except MCPAuthError as auth_exc:
             self._send_rpc_error(None, auth_exc.code, auth_exc.message)
