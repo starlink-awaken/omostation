@@ -519,6 +519,20 @@ doctor_checks:
     required: false
     command: [uv, run, --with, pyyaml, python, bin/gac/mcp-tool-data-complete.py]
 diff_checks:
+  - id: current-state-coherence
+    description: >
+      Read-only coherence projection for current phase, goals, task counts,
+      execution mode and Scene Card activation boundary. Waiting for a real
+      scenario is valid; contradictory state or stale counts are blocking.
+    required: true
+    paths:
+      - bin/ssot/current-state-coherence.py
+      - .omo/state/system.yaml
+      - .omo/goals/current.yaml
+      - .omo/tasks/**
+      - docs/scene-card-candidate-seeds.yaml
+      - docs/scene-cards/**
+    command: [uv, run, --with, pyyaml, python, bin/ssot/current-state-coherence.py, --json]
   - id: agent-workflow-lint
     description: Workflow runner and registry contract validation.
     required: true
@@ -1361,4 +1375,3 @@ workflows:
         - id: diff-stat
           mode: required
           command: [git, diff, --stat]
-
