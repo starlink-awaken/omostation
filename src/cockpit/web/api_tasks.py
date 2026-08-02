@@ -288,6 +288,7 @@ async def create_manual_task(request: Request):
     priority = str(body.get("priority") or "medium").strip().lower()
     risk_level = str(body.get("risk_level") or "L1").strip().upper()
     evidence_required = body.get("evidence_required") or []
+    knowledge_refs = body.get("knowledge_refs") or []
     if not title or len(title) > 200:
         raise HTTPException(status_code=422, detail="title is required and must be at most 200 characters")
     if not description or len(description) > 4000:
@@ -300,6 +301,11 @@ async def create_manual_task(request: Request):
         isinstance(item, str) and item.strip() for item in evidence_required
     ):
         raise HTTPException(status_code=422, detail="evidence_required must be a list[str]")
+    if not isinstance(knowledge_refs, list) or len(knowledge_refs) > 20 or not all(
+        isinstance(item, str) and item.strip() for item in knowledge_refs
+    ):
+        raise HTTPException(status_code=422, detail="knowledge_refs must be a list[str] with at most 20 items")
+    knowledge_refs = [item.strip() for item in knowledge_refs]
 
     now = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     fingerprint = sha256(f"{title}\n{description}".encode()).hexdigest()[:10]
@@ -316,7 +322,7 @@ async def create_manual_task(request: Request):
         "run_ref": None,
         "approval_ref": None,
         "review_ref": None,
-        "knowledge_refs": [],
+        "knowledge_refs": knowledge_refs,
         "handoff_refs": [],
         "risk_level": risk_level,
         "allowed_operation_level": risk_level,
@@ -355,6 +361,7 @@ async def create_manual_task(request: Request):
         "risk_level": risk_level,
         "human_approval_required": approval_required,
         "source": "omo_ingress",
+        "knowledge_refs": created.get("knowledge_refs", knowledge_refs),
     }
 
 

@@ -1642,6 +1642,40 @@ def test_create_manual_task_uses_omo_ingress_and_derives_approval(monkeypatch):
     assert created[0]["allowed_operation_level"] == "L2"
 
 
+def test_create_manual_task_preserves_knowledge_refs(monkeypatch):
+    created = []
+    monkeypatch.setattr(
+        "omo.omo_ingress_task_lifecycle.create_planned_task",
+        lambda *args, **kwargs: created.append(kwargs["task_data"]) or kwargs["task_data"],
+    )
+
+    response = TestClient(app).post(
+        "/api/tasks",
+        json={
+            "title": "依据复盘补齐证据",
+            "description": "将知识结论转成可验证的工程任务。",
+            "knowledge_refs": ["kos:delivery-1", "kos:delivery-2"],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["knowledge_refs"] == ["kos:delivery-1", "kos:delivery-2"]
+    assert created[0]["knowledge_refs"] == ["kos:delivery-1", "kos:delivery-2"]
+
+
+def test_create_manual_task_rejects_raw_knowledge_payload():
+    response = TestClient(app).post(
+        "/api/tasks",
+        json={
+            "title": "不应接收原文",
+            "description": "任务只允许持有引用标识。",
+            "knowledge_refs": [{"ref": "kos:1", "content": "原文"}],
+        },
+    )
+
+    assert response.status_code == 422
+
+
 def test_domain_app_verification_promotes_and_executes_only_verify_action(monkeypatch):
     queued = {
         "id": "cockpit-domain-app-demo-copy-verify",
