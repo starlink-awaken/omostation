@@ -399,6 +399,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0329: 外部资源目录变化风险分类与人工复核投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 36 | 0329-external-resource-change-review.md
 - ADR-0330: Cockpit 外部资源只读人工复核队列 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 37 | 0330-external-resource-review-queue.md
 - ADR-0331: Cockpit UI 外部资源只读人工复核队列消费面 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 38 | 0331-external-resource-review-queue-ui.md
+- ADR-0332: Scene Card 业务输入闸门与提案态归一化 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 39 | 0332-scene-card-intake-gate.md
 
 ---
 
