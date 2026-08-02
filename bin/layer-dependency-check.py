@@ -191,7 +191,7 @@ class LayerDependencyChecker:
     def _resolve_file_project(self, file_path: Path, project_path: Path) -> str:
         """Resolve the actual project for a file, detecting nested project dirs.
         
-        e.g. projects/runtime/projects/agora/foo.py → agora (not runtime)
+        Handles deep nesting: projects/runtime/projects/runtime/projects/metaos/foo.py → metaos
         Skips non-production directories (scripts, tests, bin, etc.).
         """
         rel = file_path.relative_to(project_path)
@@ -199,11 +199,12 @@ class LayerDependencyChecker:
         # Skip non-production directories (check all path parts)
         if any(p in self.NON_PROD_DIRS for p in parts):
             return "__skip__"
-        # Check if the file is inside a nested project directory (e.g. projects/agora/)
-        if len(parts) >= 2 and parts[0] == "projects":
-            nested = parts[1]
-            if nested in self.project_dirs and nested != project_path.name:
-                return nested
+        # Walk path parts to find the deepest matching project name
+        # e.g. projects/runtime/projects/agora/foo.py → agora
+        # e.g. projects/runtime/projects/runtime/projects/metaos/foo.py → metaos
+        for part in reversed(parts):
+            if part in self.project_dirs and part != project_path.name:
+                return part
         return project_path.name
 
     def check_project(self, project_path: Path) -> List[DependencyViolation]:
