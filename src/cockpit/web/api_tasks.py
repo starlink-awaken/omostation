@@ -173,6 +173,90 @@ async def request_task_workflow(task_id: str, request: Request):
     }
 
 
+async def _workflow_admission_request(request: Request) -> dict[str, object]:
+    try:
+        body = await request.json()
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="Workflow admission must be a JSON object") from exc
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="Workflow admission must be a JSON object")
+    workflow_run_id = str(body.get("workflow_run_id") or "").strip()
+    backend = str(body.get("backend") or "").strip()
+    required_capabilities = body.get("required_capabilities")
+    capability_health = body.get("capability_health")
+    if (
+        not workflow_run_id
+        or not backend
+        or not isinstance(required_capabilities, list)
+        or not required_capabilities
+        or not isinstance(capability_health, dict)
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="workflow_run_id, backend, required_capabilities, and capability_health are required",
+        )
+    requested_budget = body.get("requested_budget", 0.0)
+    remaining_budget = body.get("remaining_budget")
+    if not isinstance(requested_budget, (int, float)) or isinstance(requested_budget, bool):
+        raise HTTPException(status_code=422, detail="requested_budget must be numeric")
+    if remaining_budget is not None and (
+        not isinstance(remaining_budget, (int, float)) or isinstance(remaining_budget, bool)
+    ):
+        raise HTTPException(status_code=422, detail="remaining_budget must be numeric")
+    scene_binding = body.get("scene_binding")
+    if scene_binding is not None and not isinstance(scene_binding, dict):
+        raise HTTPException(status_code=422, detail="scene_binding must be an object")
+    return {
+        "workflow_run_id": workflow_run_id,
+        "backend": backend,
+        "required_capabilities": required_capabilities,
+        "capability_health": capability_health,
+        "requested_budget": float(requested_budget),
+        "remaining_budget": float(remaining_budget) if remaining_budget is not None else None,
+        "scene_binding": scene_binding,
+    }
+
+
+@router.post("/api/tasks/{task_id}/workflow-admission-preview")
+async def preview_task_workflow_admission(task_id: str, request: Request):
+    """Evaluate an existing Mesh request without changing state or launching a worker."""
+    group = _task_group(task_id)
+    if group not in {"planned", "active"}:
+        raise HTTPException(status_code=409, detail="Task is not available for workflow admission")
+    inputs = await _workflow_admission_request(request)
+    try:
+        from omo.workflow_dispatch import preview_requested_workflow
+
+        result = preview_requested_workflow(WORKSPACE_DIR, **inputs)
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO workflow admission is unavailable") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if result.get("task_id") not in {None, task_id}:
+        raise HTTPException(status_code=409, detail="Workflow request task mismatch")
+    return {"id": task_id, "source": "omo.workflow_dispatch", **result}
+
+
+@router.post("/api/tasks/{task_id}/admit-workflow")
+async def admit_task_workflow(task_id: str, request: Request):
+    """Admit an existing request; worker launch remains an explicit later action."""
+    group = _task_group(task_id)
+    if group != "active":
+        raise HTTPException(status_code=409, detail="Only active tasks can admit a workflow")
+    inputs = await _workflow_admission_request(request)
+    try:
+        from omo.workflow_dispatch import admit_requested_workflow
+
+        result = admit_requested_workflow(WORKSPACE_DIR, **inputs)
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="OMO workflow admission is unavailable") from exc
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if result.get("task_id") not in {None, task_id}:
+        raise HTTPException(status_code=409, detail="Workflow request task mismatch")
+    return {"id": task_id, "source": "omo.workflow_dispatch", **result}
+
+
 @router.post("/api/tasks/{task_id}/approve")
 async def approve_task(task_id: str):
     """Grant and apply the OMO promotion approval for a planned task."""

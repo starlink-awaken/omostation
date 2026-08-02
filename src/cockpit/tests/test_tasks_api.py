@@ -1392,6 +1392,76 @@ def test_request_task_workflow_stops_at_mesh_request(monkeypatch):
     assert calls[0][1]["actor"] == "cockpit-ui://knowledge-action"
 
 
+def test_workflow_admission_preview_is_explicit_and_read_only(monkeypatch):
+    client = TestClient(app)
+    calls = []
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "planned")
+
+    def fake_preview(root, **kwargs):
+        calls.append((root, kwargs))
+        return {
+            "status": "eligible",
+            "dispatch_state": "preview",
+            "workflow_run_id": kwargs["workflow_run_id"],
+            "task_id": "task-1",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+
+    monkeypatch.setattr("omo.workflow_dispatch.preview_requested_workflow", fake_preview)
+    response = client.post(
+        "/api/tasks/task-1/workflow-admission-preview",
+        json={
+            "workflow_run_id": "mesh-request-task-1",
+            "backend": "runtime",
+            "required_capabilities": ["runtime"],
+            "capability_health": {
+                "status": "healthy",
+                "capabilities": {"runtime": {"available": True}},
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["dispatch_state"] == "preview"
+    assert response.json()["worker_launch"] is False
+    assert calls[0][1]["backend"] == "runtime"
+
+
+def test_admit_workflow_api_requires_active_task_and_never_launches(monkeypatch):
+    client = TestClient(app)
+    monkeypatch.setattr(api_tasks, "_task_group", lambda _task_id: "active")
+    monkeypatch.setattr(
+        "omo.workflow_dispatch.admit_requested_workflow",
+        lambda root, **kwargs: {
+            "status": "admitted",
+            "dispatch_state": "admitted",
+            "workflow_run_id": kwargs["workflow_run_id"],
+            "task_id": "task-1",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        },
+    )
+
+    response = client.post(
+        "/api/tasks/task-1/admit-workflow",
+        json={
+            "workflow_run_id": "mesh-request-task-1",
+            "backend": "runtime",
+            "required_capabilities": ["runtime"],
+            "capability_health": {
+                "status": "healthy",
+                "capabilities": {"runtime": {"available": True}},
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "admitted"
+    assert response.json()["external_side_effects"] == "disabled"
+    assert response.json()["worker_launch"] is False
+
+
 def test_approve_task_applies_governed_approval(monkeypatch):
     client = TestClient(app)
     approval_ref = ".omo/workers/runs/approval-task-promotion-approval-2026-07-15T00-00-00Z.yaml"
