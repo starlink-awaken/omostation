@@ -238,6 +238,26 @@ execution record -> complete_task -> EvidenceRecorded -> WorkflowVerified -> Wor
 
 目录差异是调用方驱动的纯投影：上一份快照由调度器、审计任务或人类操作方保存和传入，根仓命令只读取它并输出变化；需要持久化时只能通过 OMO 的 `external-resources observe` broker 写入观察日志，不写入 provider 本地状态。这样可以先获得动态扩展的可观察性，等真实业务场景出现后，再由 Scene Card 和 OMO admission 接管业务执行证据。
 
+### 6.3.1 J2 task -> WorkflowRequested 晋升
+
+Phase 23 将知识到行动漏斗从 `task_created` 推进到一个可审计、但尚未执行的 Workflow Mesh 请求：
+
+`知识引用 -> planned task -> 人工请求 -> WorkflowRequested(planned) -> approval/admission -> dispatch`
+
+产品入口是 Cockpit 的知识到行动页面，后端入口为 `POST /api/tasks/{task_id}/request-workflow`，
+核心 broker 为 `omo.workflow_promotion.request_workflow_from_task()`。请求阶段固定执行以下门禁：
+
+1. 任务必须仍在 OMO `planned` 队列，且至少带一个知识引用；
+2. 必须有完整 `scene_id / journey_id / outcome_metric`、工作流名称/版本、操作级别和证据计划；
+3. 请求操作级别不能超过任务允许级别；L2/L3 保留 `approval_required`，不会因为请求成功而放行；
+4. 只写 `WorkflowRequested` 和对应的 `knowledge-action/v1` 回执，事件投影停留在 `planned`；
+5. 请求使用稳定幂等身份，重复点击返回 `deduplicated`，不重复写事件、不重复写行动回执；
+6. 返回体和 UI 明确声明 `worker_launch=false`、`external_side_effects=disabled`。
+
+这个阶段的验收标准是“请求可审计、边界可解释、可幂等回放”，不是“工作流已经运行”。只有在真实
+业务 Scene Card、人工审批、能力健康、预算和结果证据齐备后，才调用既有 `admit_workflow()`；
+外部连接仍保持 `proposal_only/sandbox`。
+
 ### 6.3 候选发现与激活边界
 
 在业务资料尚未形成连续使用场景时，系统只运行候选发现，不运行连接激活。入口
