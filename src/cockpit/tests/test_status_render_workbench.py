@@ -408,7 +408,7 @@ def test_workbench_service_health_recommendation(monkeypatch):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-def test_cmd_status_json(monkeypatch):
+def test_cmd_status_json(monkeypatch, capsys):
     """status --json 输出 JSON 格式状态。"""
     c, buf = _capture_console()
     monkeypatch.setattr(S, "_get_console", lambda: c)
@@ -426,7 +426,8 @@ def test_cmd_status_json(monkeypatch):
 
     code = S.cmd_status(argparse.Namespace(watch=False, interval=5.0, json=True))
 
-    output = buf.getvalue()
+    # d082f9b: json 路径经 render_command_result 输出到真实 stdout（capsys 捕获）
+    output = capsys.readouterr().out
     assert code == 0
     assert '"status": "ok"' in output
     assert '"services"' in output
