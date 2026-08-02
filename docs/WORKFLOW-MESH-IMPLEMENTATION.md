@@ -177,6 +177,11 @@ stateDiagram-v2
 5. 只有完整 Scene Card、真实消费方、结果指标、权限边界、回滚方案和证据引用齐备后，才允许
    进入 `proposal_only`/`sandbox`，再由既有 Agora Scene Card gate 和 OMO admission 继续处理。
 
+当前已固化一张内部 dogfood 卡片 [`engineering-delivery-dogfood.yaml`](./scene-cards/engineering-delivery-dogfood.yaml)。
+它完整填写 Scene Card 结构，但仍保持 `proposal_only` 和 `activation=forbidden`，只用于验证人工
+消费、结果回写和证据引用的产品路径；不能把工程 PR 证据当作外部业务批准，也不能据此跳过正式
+业务负责人、权限和 OMO admission。
+
 可重复验证命令：
 
 ```bash
