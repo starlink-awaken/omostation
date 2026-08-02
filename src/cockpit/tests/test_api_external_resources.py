@@ -268,6 +268,98 @@ def test_external_resource_pack_preflight_returns_invalid_without_activation(mon
     assert body["provider_invocation"] is False
 
 
+def test_external_resource_pack_proposal_rechecks_and_persists_only_safe_projection(
+    monkeypatch, tmp_path
+):
+    calls: list[dict] = []
+    projection = {
+        "schema": "external-resource-pack-check/v1",
+        "mode": "read_only_conformance",
+        "activation": "forbidden",
+        "status": "ready_for_catalog_preview",
+        "reason_codes": [],
+        "catalog_preview": {
+            "schema": "external-resource-pack-catalog-preview/v1",
+            "mode": "read_only_pack_preview",
+            "activation": "forbidden",
+            "status": "ready_for_catalog_preview",
+            "resource": {
+                "id": "source:research",
+                "availability": "unobserved",
+                "health": {"status": "unobserved"},
+            },
+        },
+    }
+
+    def fake_check(root, pack):
+        calls.append({"kind": "check", "root": root, "pack": pack})
+        return projection
+
+    def fake_record(omo_dir, checked, **kwargs):
+        calls.append({"kind": "record", "omo_dir": omo_dir, "projection": checked, **kwargs})
+        return {"status": "recorded", "proposal": {"proposal_receipt_id": "receipt:pack-1"}}
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "check_external_resource_pack", fake_check)
+    monkeypatch.setattr(api_external_resources, "record_external_resource_pack_proposal", fake_record)
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/packs/proposals",
+        json={
+            "pack": _pack(),
+            "proposal_id": "proposal:research:1",
+            "actor_ref": "operator:test",
+            "review_action": "submit",
+        },
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["status"] == "recorded"
+    assert body["proposal_status"] == "ready_for_catalog_preview"
+    assert body["proposal"]["proposal_receipt_id"] == "receipt:pack-1"
+    assert body["activation"] == "forbidden"
+    assert body["persistence"] == "omo_append_only"
+    assert body["provider_invocation"] is False
+    assert calls[0]["kind"] == "check"
+    assert calls[1]["kind"] == "record"
+    assert calls[1]["omo_dir"] == tmp_path / ".omo"
+    assert calls[1]["proposal_id"] == "proposal:research:1"
+
+
+def test_external_resource_pack_proposal_does_not_persist_blocked_pack(monkeypatch, tmp_path):
+    calls: list[object] = []
+    projection = {
+        "schema": "external-resource-pack-check/v1",
+        "mode": "read_only_conformance",
+        "activation": "forbidden",
+        "status": "blocked",
+        "reason_codes": ["missing_permission_ref"],
+    }
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "check_external_resource_pack", lambda *_args: projection)
+    monkeypatch.setattr(
+        api_external_resources,
+        "record_external_resource_pack_proposal",
+        lambda *_args, **_kwargs: calls.append(True),
+    )
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/packs/proposals",
+        json={"pack": _pack(), "proposal_id": "proposal:blocked:1"},
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["ok"] is False
+    assert body["status"] == "blocked"
+    assert body["persistence"] == "none"
+    assert body["provider_invocation"] is False
+    assert calls == []
+
+
 def test_external_resource_review_queue_projects_manual_review_delta_without_discovery(
     monkeypatch, tmp_path
 ):

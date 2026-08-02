@@ -20,6 +20,10 @@ if str(_OMO_SRC) not in sys.path:
 
 try:
     from omo.omo_external_evaluation import record_external_resource_evaluation
+    from omo.omo_external_pack import (
+        ExternalResourcePackProposalError,
+        record_external_resource_pack_proposal,
+    )
     from omo.omo_external_resources import read_latest_external_resource_observation
     from omo.workflow_eval import (
         build_external_resource_selection_dataset,
@@ -28,6 +32,8 @@ try:
 except Exception as exc:  # OMO is optional while Cockpit is being bootstrapped.
     read_latest_external_resource_observation = None  # type: ignore[assignment]
     record_external_resource_evaluation = None  # type: ignore[assignment]
+    record_external_resource_pack_proposal = None  # type: ignore[assignment]
+    ExternalResourcePackProposalError = ValueError
     build_external_resource_selection_dataset = None  # type: ignore[assignment]
     propose_selection_policy_feedback = None  # type: ignore[assignment]
     _OMO_IMPORT_ERROR: Exception | None = exc
@@ -428,6 +434,90 @@ async def preflight_external_resource_pack(request: Request) -> dict[str, Any]:
         "projection": projection,
         "activation": "forbidden",
         "persistence": "none",
+        "provider_invocation": False,
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.post("/packs/proposals")
+async def record_external_resource_pack_proposal_route(request: Request) -> dict[str, Any]:
+    """Persist only a fresh, safe pack check as a human review receipt."""
+    if check_external_resource_pack is None or record_external_resource_pack_proposal is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_resource_pack_proposal_unavailable",
+            "activation": "forbidden",
+            "persistence": "none",
+            "provider_invocation": False,
+        }
+    try:
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError("proposal payload must be an object")
+        pack = body.get("pack")
+        if not isinstance(pack, Mapping):
+            raise ValueError("pack must be an object")
+        proposal_id = str(body.get("proposal_id") or "").strip()
+        if not proposal_id:
+            raise ValueError("proposal_id is required")
+        projection = check_external_resource_pack(_REPO_ROOT, pack)
+        if projection.get("status") == "blocked":
+            return {
+                "ok": False,
+                "status": "blocked",
+                "error": "external_resource_pack_blocked",
+                "projection": projection,
+                "activation": "forbidden",
+                "persistence": "none",
+                "provider_invocation": False,
+                "external_side_effects": "disabled",
+                "worker_launch": False,
+            }
+        result = record_external_resource_pack_proposal(
+            _REPO_ROOT / ".omo",
+            projection,
+            proposal_id=proposal_id,
+            review_action=str(body.get("review_action") or "submit").strip() or "submit",
+            actor=str(body.get("actor_ref") or "cockpit").strip() or "cockpit",
+            source_ref=(
+                str(body.get("source_ref") or "cockpit:external-resources:pack-proposal").strip()
+                or "cockpit:external-resources:pack-proposal"
+            ),
+            review_ref=str(body.get("review_ref") or "").strip() or None,
+        )
+    except ExternalResourcePackProposalError as exc:
+        return {
+            "ok": False,
+            "status": "invalid",
+            "error": "external_resource_pack_proposal_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "persistence": "none",
+            "provider_invocation": False,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {
+            "ok": False,
+            "status": "invalid" if isinstance(exc, (ValueError, TypeError)) else "unavailable",
+            "error": "external_resource_pack_proposal_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "persistence": "none",
+            "provider_invocation": False,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    return {
+        "ok": True,
+        "status": result["status"],
+        "proposal_status": projection["status"],
+        "proposal": result["proposal"],
+        "activation": "forbidden",
+        "persistence": "omo_append_only",
         "provider_invocation": False,
         "external_side_effects": "disabled",
         "worker_launch": False,
