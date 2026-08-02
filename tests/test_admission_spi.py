@@ -69,6 +69,25 @@ def test_evaluate_strict_rejects_when_provider_missing(monkeypatch):
     assert result["status"] == "rejected"
 
 
+def test_evaluate_default_mode_required_fail_closed(monkeypatch):
+    """默认 AGORA_ADMISSION_MODE=required (fail-closed): provider 缺失即拒绝。"""
+    monkeypatch.delenv("AGORA_ADMISSION_MODE", raising=False)
+    monkeypatch.setenv("AGORA_ADMISSION_PROVIDER", "nonexistent.module:Nope")
+    import agora.admission.port as port
+
+    monkeypatch.setattr(port, "_SOFT_PROVIDERS", ())
+    monkeypatch.setattr(
+        port.metadata,
+        "entry_points",
+        lambda: type("EP", (), {"select": lambda **k: [], "get": lambda *a, **k: []})(),
+    )
+    reset_admission_provider_cache()
+
+    result = evaluate_admission({"domain": "test"})
+    assert result["status"] == "rejected"
+    assert any("fail-closed" in r for r in result["reasons"])
+
+
 def test_evaluate_with_stub_provider(monkeypatch):
     class Stub:
         def evaluate(self, request):

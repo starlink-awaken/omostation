@@ -6,8 +6,9 @@ Binding order (first match wins):
 3. optional soft import of known provider module (no hard dep on metaos package at import time)
 
 Missing provider policy (env AGORA_ADMISSION_MODE):
-- degraded (default): return admitted with reason provider_unavailable (compat with historical skip)
+- required (default): return rejected with reason provider_unavailable (fail-closed)
 - strict: return rejected with reason provider_unavailable
+- degraded: return admitted with reason provider_unavailable (explicit local-dev opt-in)
 """
 
 from __future__ import annotations
@@ -147,8 +148,8 @@ def get_admission_provider() -> AdmissionPort | None:
 
 
 def _missing_mode() -> str:
-    mode = os.environ.get("AGORA_ADMISSION_MODE", "degraded").strip().lower()
-    return mode if mode in {"degraded", "strict"} else "degraded"
+    mode = os.environ.get("AGORA_ADMISSION_MODE", "required").strip().lower()
+    return mode if mode in {"required", "strict", "degraded"} else "required"
 
 
 def evaluate_admission(request: dict[str, Any]) -> dict[str, Any]:
@@ -159,11 +160,12 @@ def evaluate_admission(request: dict[str, Any]) -> dict[str, Any]:
     provider = get_admission_provider()
     if provider is None:
         mode = _missing_mode()
-        if mode == "strict":
+        if mode in {"required", "strict"}:
             return {
                 "status": "rejected",
                 "reasons": [
-                    "[SPI] Admission provider unavailable (AGORA_ADMISSION_MODE=strict)."
+                    ("[SPI] Admission provider unavailable "
+                    f"(AGORA_ADMISSION_MODE={mode}); fail-closed.")
                 ],
                 "provider": None,
             }
@@ -171,7 +173,7 @@ def evaluate_admission(request: dict[str, Any]) -> dict[str, Any]:
             "status": "admitted",
             "reasons": [
                 ("[SPI] Admission provider unavailable; degraded admit "
-                "(set AGORA_ADMISSION_MODE=strict to fail closed).")
+                "(AGORA_ADMISSION_MODE=degraded, explicit local-dev opt-in).")
             ],
             "provider": None,
             "degraded": True,

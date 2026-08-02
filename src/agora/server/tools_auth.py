@@ -57,7 +57,12 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
     token_str = None
     if ctx.token is not None:
         token_str = ctx.token.token
-        logger.info("auth check token found in ctx", token_str=token_str)
+        # 脱敏: 不记录 token 明文, 只记录存在性与长度
+        logger.info(
+            "auth check token found in ctx",
+            token_present=True,
+            token_len=len(token_str),
+        )
     else:
         # Fallback to checking HTTP headers directly (for our REST backdoor)
         try:
@@ -72,11 +77,15 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
                 req = get_http_request()
             if req is None:
                 raise MCPAuthError(401, "No HTTP request context")
-            logger.info("auth check all headers", headers=dict(req.headers))
             auth_header = req.headers.get("Authorization", "")
-            if auth_header.startswith("Bearer "):
-                token_str = auth_header[7:]
-            logger.info("auth check auth_header", auth_header=auth_header)
+            # 不记录 headers 全量 (含 Authorization 凭据), 只记录非敏感子集
+            logger.info(
+                "auth check headers present",
+                has_authorization=bool(auth_header),
+                auth_type=(
+                    auth_header.split(" ", 1)[0] if auth_header.startswith("Bearer ") else ""
+                ),
+            )
             if auth_header.startswith("Bearer "):
                 token_str = auth_header[7:]
         except Exception as e:  # defensive fallback

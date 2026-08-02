@@ -295,7 +295,23 @@ class Market:
         }
 
     def _fetch_repo_metadata(self, repo: str) -> dict:
-        """Fetch repo metadata from GitHub API."""
+        """Fetch repo metadata from GitHub API.
+
+        SSRF 防护: repo 必须为 "owner/name" 格式 (仅字母数字/连字符/下划线),
+        拒绝路径穿越 (../)、协议注入 (://)、host 篡改等输入。
+        """
+        import re
+
+        if not re.fullmatch(r"[\w.-]+/[\w.-]+", repo or ""):
+            return {
+                "name": (repo or "unknown").split("/")[-1],
+                "description": "",
+                "type": "python",
+                "entry": "server.py",
+                "tags": [],
+                "error": "invalid repo format (expected owner/name)",
+            }
+
         import httpx
 
         try:
