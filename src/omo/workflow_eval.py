@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .knowledge_action import build_knowledge_action_snapshot
 from .outcome_feedback import ELIGIBLE_WORKFLOW_STATES, read_outcome_feedback
 from .workflow_mesh import WorkflowMeshStore
 
@@ -454,6 +455,7 @@ def build_operations_snapshot(
         ),
         "review_queue": review_queue,
         "consumption": consumption,
+        "knowledge_action": build_knowledge_action_snapshot(omo_dir, scene_id=scene_id),
     }
 
 
