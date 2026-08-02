@@ -763,6 +763,25 @@ Phase 46 将“发现外部能力”从一次性的目录快照推进为可复�
 
 后续只有在出现真实消费者和结果指标后，才把该场景绑定到 Workflow Mesh 的 admission、业务调用 receipt 和 outcome feedback；观察运行回执本身不能成为业务质量标签。
 
+### 7.3.15 Phase 47 外部场景试运行合同
+
+Phase 47 在 Scene Card/preflight 和 Workflow Mesh admission 之间增加 `external-scene-trial/v1`。根仓
+`bin/ssot/external-scene-trial.py` 接收 Scene Card、catalog 和业务-owned trial plan，重新执行 intake/preflight，
+只有场景完整且 catalog 能力满足时才输出 proposal-only trial；`--record` 通过 OMO
+`external-resources record-scene-trial --stdin` 追加安全回执。
+
+试运行合同要求真实消费者、责任人、审批人、权限边界、两条以上脱敏证据引用、可量化指标、基线/测量引用、
+最小样本数、观察窗口和回滚引用。当前阶段固定为 `observation_only`，状态固定为 `proposal_only`，不会调用
+provider、创建 WorkflowRun、修改 admission 或写入 `EvidenceRecorded`。
+
+试运行之后的晋升链为：
+
+`Scene Card -> catalog/preflight -> observation-only trial -> real consumer use -> WorkflowRun/receipt -> outcome-feedback -> admission/promotion proposal`
+
+只有真实消费者实际使用并产生 external receipt 和显式 outcome feedback，才允许进入正式执行晋升；关闭、验证、
+存在 receipt 或人工浏览都不能推断业务价值。Phase 47 dogfood 使用脱敏 fixture 验证了完整的
+`Scene Card -> preflight -> trial -> OMO receipt` 链路，结果保持 proposal-only/observation-only。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
