@@ -407,6 +407,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0337: External Resource Pack 目录预览语义 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 44 | 0337-external-pack-catalog-preview.md
 - ADR-0338: External Resource Pack Proposal-only 评审回执 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 45 | 0338-external-pack-proposal-receipt.md
 - ADR-0339: 外部资源只读目录观察运行回执 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 46 | 0339-external-catalog-observation-run.md
+- ADR-0340: 外部场景试运行合同与反馈晋升边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 47 | 0340-external-scene-trial-contract.md
 
 ---
 
