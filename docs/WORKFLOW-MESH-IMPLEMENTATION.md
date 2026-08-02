@@ -123,6 +123,7 @@ stateDiagram-v2
 - Phase 29 将已有 admission、worker lease 和 receipt broker 串成一个最小可回放的 sandbox ToolPack 闭环：`omo worker sandbox-tool` 只允许确定性的 `sandbox.digest_ref`，要求 `sandbox.tool.invoke` admission 能力和 live WorkerLease，只接收安全引用与 SHA-256 摘要，追加 `ToolInvocationRecorded` 后完成 `WorkflowSucceeded -> EvidenceRecorded`。该执行器固定 `activation=sandbox`、`external_side_effects=disabled`，不调用 provider、不读取原文、不运行任意命令；Cockpit 的 OMO 运营投影同时暴露 sandbox invocation/receipt 计数。
 - Phase 30 为同一 sandbox ToolPack 增加 provider-neutral outcome 契约：`ToolInvocationRecorded` 必须声明 `succeeded`、`failed` 或 `unavailable`；非成功结果分别落为 `StepFailed` 或 `BackendUnavailable`，只保留稳定错误码，不创建 receipt/evidence。失败调用可幂等回放；租约失效后必须先由既有 watchdog/reclaim 交接，再用新的 StepRun attempt 执行。运营投影增加 outcome 计数，继续把 sandbox 验证与真实业务结果分开。
 - Phase 31 修正 `BackendUnavailable` 的 StepRun 投影：当不可用事件携带合法 `step_run_id` 时，WorkflowRun 与 StepRun 都投影为 `unavailable`；恢复、重试和 successor 选择仍由既有协调流程显式完成。
+- Phase 32 关闭 Agora 动态路由注册旁路：BOSRouter、POC seed、M1 热加载和 AGENTS.md 自动发现统一经过 admission；拒绝、provider 异常和非法结果不落入路由表，批量注册只统计实际接受项，并保留 credential-free 的拒绝摘要。该门禁仍独立于 ExternalConnectionCatalog 的 SceneCard 激活和 OMO Workflow admission，未激活真实 provider。
 - 各模块增加 fail-closed、事件投影、幂等和 stale 状态测试。
 
 ## 6. 分阶段路线
@@ -207,6 +208,7 @@ OMO `CompensationStarted/WorkflowRecovered` 投影，以及原有 receipt -> `Ev
 7. SourcePack、MethodPack、ModelPack 和 ChannelPack 必须携带刷新/评测/回滚证据；没有真实场景、结果指标和责任人时保持 `sandbox` 或 `proposal_only`。
 8. 目录投影将 provider 探活缺失、健康过期、生命周期未到 active、描述符过期和插件加载错误分别转成可解释的 `reason_codes`；任何无法确认的新鲜度或来源的资源都不得伪装成可用。
 9. 外部调用 receipt 对 provider 异常只允许输出稳定的 `EXTERNAL_*` 错误码，统一区分超时、后端不可用、权限拒绝、响应不合法和未知 provider 失败；异常原文不跨越 Agora/OMO/Cockpit 边界。descriptor 还必须递归拒绝常见凭据字段和原始内容字段，确保动态扩展不能把凭据或载荷藏进 `metadata`、`health` 或 `provenance`。
+10. 动态路由写入也必须先过 Agora admission；目录可见不等于路由可用，M1/AGENTS 自动发现和 POC seed 的拒绝结果必须在注册统计中如实体现。
 
 ### 6.2 当前垂直切片与下一道门
 
