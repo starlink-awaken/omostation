@@ -10,7 +10,6 @@ POC_SERVICES 已升级到 mcp_stdio transport (P54-W0)，
 
 from __future__ import annotations
 
-
 import pytest
 
 
@@ -50,9 +49,8 @@ class FakeToolCatalog:
                 not query
                 or query.lower() in tid.lower()
                 or query.lower() in t.get("name", "").lower()
-            ):
-                if all(t.get(k) == v for k, v in filters.items()):
-                    results.append(t)
+            ) and all(t.get(k) == v for k, v in filters.items()):
+                results.append(t)
         return results[:limit]
 
     def count_by_status(self) -> dict[str, int]:
@@ -89,3 +87,9 @@ def downgrade_mcp_stdio_to_stdio(monkeypatch: pytest.MonkeyPatch):
     for svc in br.POC_SERVICES:
         if hasattr(svc, "transport") and svc.transport == "mcp_stdio":
             monkeypatch.setattr(svc, "transport", "stdio")
+
+
+@pytest.fixture(autouse=True)
+def allow_local_route_registration(monkeypatch: pytest.MonkeyPatch):
+    """测试显式使用本地降级舱，生产默认仍由 admission fail-closed。"""
+    monkeypatch.setenv("AGORA_ADMISSION_MODE", "degraded")
