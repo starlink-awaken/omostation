@@ -38,6 +38,21 @@ uv run --with pyyaml python bin/ssot/current-state-coherence.py --json
 输出包含 `phase`、`execution`、`scene_activation`、`divergence`、`errors` 和 `warnings`。
 产品入口可以消费这份投影，但不得把它回写成另一份状态。
 
+## 工程交付旅程消费语义
+
+Cockpit 的 `DeliveryJourney` 是上述状态的只读产品投影，不是第二套任务状态机。它必须区分：
+
+| `status` / `mode` | 含义 | 产品动作 |
+| --- | --- | --- |
+| `live` / `active` | 有可读取的受治理 WorkflowRun | 展示当前步骤、审批、验证、证据和恢复动作 |
+| `live` / `completed` | 该 Run 已收口，但结果仍可复盘 | 展示证据、结果反馈和复盘入口 |
+| `stale` / `waiting_for_run` | 工作树可读，但没有活动 WorkflowRun | 引导创建或认领受治理任务，不得显示为活跃交付 |
+| `failed` / `failed` | Run 明确失败 | 展示失败原因和恢复路径，不得自动标记完成 |
+| `unavailable` / `unavailable` | 事实源不可读取 | 显示不可用并保留来源，不生成默认数据 |
+
+`scene_binding` 只有在 Run 或其上下文明确携带完整 `scene_id`、`journey_id`、`outcome_metric`
+时才返回。工作树、分支、文件或 Git 提交本身不能推导业务场景，也不能证明交付成功。
+
 ## 状态解释
 
 | 状态 | 含义 | 是否阻断 |
