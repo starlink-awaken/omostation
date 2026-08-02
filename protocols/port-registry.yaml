@@ -1,292 +1,18 @@
-# ── Port Registry SSOT (P78 重构) ──
-# 每端口: name, transport (stdio|http|sse|udp|deprecated), status (active|deprecated|reserved)
-# SSOT 对齐: protocols/port-registry.yaml > ecos/port-registry.yaml (I0 > L0)
-# 更新准则: 新增端口必须先注册, 功能收敛后标记 status: deprecated
-
-ports:
-  3100:
-    name: mcp-stdio
-    transport: stdio
-    status: active
-  3101:
-    name: mcp-stdio-alt
-    transport: stdio
-    status: active
-  7420:
-    name: bos-api
-    transport: http
-    status: active
-    note: "BOS API service (agora tools_proxy, ecos watchdog)"
-  7422:
-    name: agora-mcp-http
-    transport: http
-    status: active
-    note: "[Phase 9] Unified A2A/BOS Entry (HTTP)"
-  7430:
-    name: agora-internal
-    transport: http
-    status: active
-    note: "agora internal dashboard / instance / worker_dispatch"
-  7431:
-    name: agora-mcp-sse
-    transport: sse
-    status: active
-    note: "Agora SSE Main + cockpit dashboard probe"
-  7432:
-    name: ecos-event-listener
-    transport: http
-    status: active
-    note: "ecos workflow event_listener SSE endpoint"
-  7437:
-    name: omlx-mesh-router
-    transport: http
-    status: active
-    note: "omlx Multi-node Intelligent Proxy Router (HTTP)"
-  7450:
-    name: runtime-cron-http
-    transport: http
-    status: active
-    note: "runtime-cron service (http via --http flag)"
-  7455:
-    name: agora-swarm-udp
-    transport: udp
-    status: active
-    note: "[Phase 55] Swarm Discovery/Heartbeat"
-  7456:
-    name: l4-kernel-mcp-sse
-    transport: sse
-    status: active
-  8000:
-    name: aetherforge-web-helm
-    transport: http
-    status: active
-    note: "aetherforge k8s helm chart Web 端口"
-  8080:
-    name: ontoderive-web
-    transport: http
-    status: active
-    note: "web serve default (agora-api-gateway 已移除, 重用)"
-  8081:
-    name: kairon-internal
-    transport: http
-    status: active
-    note: "kairon INTERFACE 内部声明端口"
-  8090:
-    name: cockpit-dashboard
-    transport: http
-    status: active
-    note: "唯一人类 Web 入口, 已收敛 dashboard_server/omo/ecos"
-  8095:
-    name: triage-http
-    transport: http
-    status: active
-    note: "aetherforge triage REST API server (分诊 HTTP 服务)"
-  8888:
-    name: mcp-stdio-debug
-    transport: stdio
-    status: active
-  9100:
-    name: omo-webhook
-    transport: http
-    status: active
-    note: "observability webhook-bridge target"
-  9190:
-    name: omo-dashboard
-    transport: http
-    status: active
-    note: "omo dashboard (converged to cockpit)"
-  9222:
-    name: chrome-cdp-debug
-    transport: http
-    status: active
-    note: "Chrome DevTools Protocol Remote Debugging (seeyon-oa-cdp-ingest)"
-  9290:
-    name: llm-gateway
-    transport: http
-    status: active
-    note: "LLM Gateway HTTP (legacy)"
-  9876:
-    name: runtime-l1
-    transport: http
-    status: active
-    note: "runtime L1 service (cockpit dashboard constants.py 引用)"
-  8745:
-    name: bus-foundation-metrics
-    transport: http
-    status: active
-    note: "bus-foundation R89 /metrics HTTP endpoint (default; set BUS_METRICS_PORT env to override)"
-  11434:
-    name: ollama
-    transport: http
-    status: active
-    note: "Ollama Local LLM Engine"
-  18801:
-    name: wps-office-mcp-stdio
-    transport: stdio
-    status: reserved
-    note: "tool X-ext · 预留 HTTP 升级 (stdio 当前)"
-  18802:
-    name: wps-skills-stdio
-    transport: stdio
-    status: reserved
-    note: "tool X-ext · 预留 HTTP 升级 (stdio 当前)"
-  18803:
-    name: bos-skill-cli-stdio
-    transport: stdio
-    status: reserved
-    note: "tool X-ext · 预留 HTTP 升级 (stdio 当前)"
-  8181:
-    name: omlx-vision
-    transport: http
-    status: active
-    note: "omlx local MLX VLM (Qwen3-VL-8B-4bit)"
-  8182:
-    name: omlx-vision-large
-    transport: http
-    status: active
-    note: "omlx local MLX VLM large"
-  8183:
-    name: omlx-embedding
-    transport: http
-    status: active
-    note: "omlx local MLX embeddings (Qwen3-Embedding-8B)"
-  8184:
-    name: omlx-mythos
-    transport: http
-    status: active
-    note: "omlx local MLX VLM mythos"
-  8185:
-    name: omlx-mythos-fast
-    transport: http
-    status: active
-    note: "omlx local MLX text mythos (Qwythos-9B mxfp4, mlx_lm)"
-  8086:
-    name: omlx-deepseek-v4-flash
-    transport: http
-    status: active
-    note: "omlx 本地新接入 (DeepSeek-V4 Flash MoE, mlx_lm)"
-  8087:
-    name: omlx-deepseek-v4-pro
-    transport: http
-    status: active
-    note: "omlx 本地新接入 (DeepSeek-V4 Pro MoE)"
-  8088:
-    name: omlx-mistral-medium-128b
-    transport: http
-    status: active
-    note: "omlx 本地新接入 (Mistral-Medium 128B, 重, 按需)"
-  8089:
-    name: omlx-nemotron-omni
-    transport: http
-    status: active
-    note: "omlx 本地新接入 (Nemotron Omni 30B 推理)"
-  8186:
-    name: omlx-ornith-9b
-    transport: http
-    status: active
-    note: "omlx 本地新接入 (Ornith 1.0 9B VLM)"
-  8187:
-    name: omlx-ornith-35b
-    transport: http
-    status: active
-    note: "omlx 本地新接入 (Ornith 1.0 35B VLM)"
-  8188:
-    name: omlx-embed-bge-m3
-    transport: http
-    status: active
-    note: "omlx 本地新接入 (bge-m3 embedding)"
-  8189:
-    name: omlx-bge-reranker
-    transport: http
-    status: active
-    note: "omlx link 自动接入 (bge-reranker-v2-m3)"
-  8190:
-    name: omlx-gemma-4-26b
-    transport: http
-    status: active
-    note: "omlx link 自动接入 (gemma-4-26B VLM)"
-  8191:
-    name: omlx-gemma-4-31b
-    transport: http
-    status: active
-    note: "omlx link 自动接入 (gemma-4-31B VLM)"
-  8192:
-    name: omlx-gemma-4-e2b
-    transport: http
-    status: active
-    note: "omlx link 自动接入 (gemma-4-E2B VLM)"
-  # ── deprecated / converged (功能已收敛到 cockpit, 保留仅用于历史追溯) ──
-  8765:
-    name: minerva-kos-ontoderive
-    transport: deprecated
-    status: deprecated
-    note: "2026-06 收敛到 cockpit /dev/*. P78 标记 deprecated."
-  8766:
-    name: kos-rest-api
-    transport: http
-    status: active
-    note: "KOS REST API v1 (9 endpoints: search/suggest/context/verify/stats/health/clusters). FastAPI uvicorn."
-    owner: kairon/kos
-  9090:
-    name: ecos-dashboard
-    transport: deprecated
-    status: deprecated
-    note: "2026-06 收敛到 cockpit /api/ecos/*. P78 标记 deprecated."
-
-# ── 端口类型 ──
-# env-only: 端口仅通过 env var 引用
-types:
-  7422: env-only
-  7456: env-only
-  8090: env-only
-
-# ── Env Var 映射 ──
-env_vars:
-  7420: BOS_API_PORT
-  7422: AGORA_MCP_HTTP_PORT
-  7430: AGORA_INTERNAL_PORT
-  7431: AGORA_MCP_SSE_PORT
-  7432: ECOS_EVENT_LISTENER_PORT
-  7437: OMLX_MESH_ROUTER_PORT
-  7450: RUNTIME_CRON_HTTP_PORT
-  7455: AGORA_SWARM_UDP_PORT
-  7456: L4_KERNEL_MCP_SSE_PORT
-  8000: AETHERFORGE_WEB_HELM_PORT
-  8080: ONTODERIVE_WEB_PORT
-  8081: KAIRON_INTERNAL_PORT
-  8090: COCKPIT_DASHBOARD_PORT
-  8766: KOS_REST_API_PORT
-  8888: MCP_STDIO_DEBUG_PORT
-  9100: OMO_WEBHOOK_PORT
-  9190: OMO_DASHBOARD_PORT
-  9290: LLM_GATEWAY_PORT
-  9876: RUNTIME_L1_PORT
-  11434: OLLAMA_PORT
-  18801: WPS_OFFICE_MCP_STDIO_PORT
-  18802: WPS_SKILLS_STDIO_PORT
-  18803: BOS_SKILL_CLI_STDIO_PORT
-  8181: OMLX_VISION_PORT
-  8182: OMLX_VISION_LARGE_PORT
-  8183: OMLX_EMBEDDING_PORT
-  8184: OMLX_MYTHOS_PORT
-  8185: OMLX_MYTHOS_FAST_PORT
-  # stdio-only (no env var needed)
-  # 3100: mcp-stdio
-  # 3101: mcp-stdio-alt
-
-# ── Conflicts ──
 conflicts_resolved:
   7422:
   - agora
   - kairon
+  - runtime
   7430:
-  # agora owns the listener; omo/cockpit are clients (AGORA_*_PORT / health probes)
   - agora
   - omo
   - cockpit
   7431:
   - agora
   - cockpit
+  - l4-kernel
+  7455:
+  - agora
   - l4-kernel
   8765:
   - minerva
@@ -310,34 +36,299 @@ conflicts_resolved:
   - l4-kernel
   - omo
   - aetherforge
-  7455:
-  - agora
-  - l4-kernel
   9290:
   - llm-gateway
   - aetherforge
-  7422:
-  - agora
-  - kairon
-
-# Web 面板收敛状态
-web_convergence:
-  cockpit_dashboard:
-    port: 8090
+env_vars:
+  7420: BOS_API_PORT
+  7422: AGORA_MCP_HTTP_PORT
+  7430: AGORA_INTERNAL_PORT
+  7431: AGORA_MCP_SSE_PORT
+  7432: ECOS_EVENT_LISTENER_PORT
+  7437: OMLX_MESH_ROUTER_PORT
+  7450: RUNTIME_CRON_HTTP_PORT
+  7455: AGORA_SWARM_UDP_PORT
+  7456: L4_KERNEL_MCP_SSE_PORT
+  8000: AETHERFORGE_WEB_HELM_PORT
+  8080: ONTODERIVE_WEB_PORT
+  8081: KAIRON_INTERNAL_PORT
+  8090: COCKPIT_DASHBOARD_PORT
+  8181: OMLX_VISION_PORT
+  8182: OMLX_VISION_LARGE_PORT
+  8183: OMLX_EMBEDDING_PORT
+  8184: OMLX_MYTHOS_PORT
+  8185: OMLX_MYTHOS_FAST_PORT
+  8766: KOS_REST_API_PORT
+  8888: MCP_STDIO_DEBUG_PORT
+  9100: OMO_WEBHOOK_PORT
+  9190: OMO_DASHBOARD_PORT
+  9290: LLM_GATEWAY_PORT
+  9876: RUNTIME_L1_PORT
+  11434: OLLAMA_PORT
+  18801: WPS_OFFICE_MCP_STDIO_PORT
+  18802: WPS_SKILLS_STDIO_PORT
+  18803: BOS_SKILL_CLI_STDIO_PORT
+ports:
+  3100:
+    name: mcp-stdio
     status: active
-    routes: 51
-    note: "唯一人类 Web 入口"
+    transport: stdio
+  3101:
+    name: mcp-stdio-alt
+    status: active
+    transport: stdio
+  7420:
+    name: bos-api
+    note: BOS API service (agora tools_proxy, ecos watchdog)
+    status: active
+    transport: http
+  7422:
+    name: agora-mcp-http
+    note: '[Phase 9] Unified A2A/BOS Entry (HTTP)'
+    status: active
+    transport: http
+  7430:
+    name: agora-internal
+    note: agora internal dashboard / instance / worker_dispatch
+    status: active
+    transport: http
+  7431:
+    name: agora-mcp-sse
+    note: Agora SSE Main + cockpit dashboard probe
+    status: active
+    transport: sse
+  7432:
+    name: ecos-event-listener
+    note: ecos workflow event_listener SSE endpoint
+    status: active
+    transport: http
+  7437:
+    name: omlx-mesh-router
+    note: omlx Multi-node Intelligent Proxy Router (HTTP)
+    status: active
+    transport: http
+  7450:
+    name: runtime-cron-http
+    note: runtime-cron service (http via --http flag)
+    status: active
+    transport: http
+  7455:
+    name: agora-swarm-udp
+    note: '[Phase 55] Swarm Discovery/Heartbeat'
+    status: active
+    transport: udp
+  7456:
+    name: l4-kernel-mcp-sse
+    status: active
+    transport: sse
+  8000:
+    name: aetherforge-web-helm
+    note: aetherforge k8s helm chart Web 端口
+    status: active
+    transport: http
+  8001:
+    name: agora-internal-alt
+    note: agora alternative internal port (P31 task reference)
+    status: reserved
+    transport: http
+  8080:
+    name: ontoderive-web
+    note: web serve default (agora-api-gateway 已移除, 重用)
+    status: active
+    transport: http
+  8081:
+    name: kairon-internal
+    note: kairon INTERFACE 内部声明端口
+    status: active
+    transport: http
+  8086:
+    name: omlx-deepseek-v4-flash
+    note: omlx 本地新接入 (DeepSeek-V4 Flash MoE, mlx_lm)
+    status: active
+    transport: http
+  8087:
+    name: omlx-deepseek-v4-pro
+    note: omlx 本地新接入 (DeepSeek-V4 Pro MoE)
+    status: active
+    transport: http
+  8088:
+    name: omlx-mistral-medium-128b
+    note: omlx 本地新接入 (Mistral-Medium 128B, 重, 按需)
+    status: active
+    transport: http
+  8089:
+    name: omlx-nemotron-omni
+    note: omlx 本地新接入 (Nemotron Omni 30B 推理)
+    status: active
+    transport: http
+  8090:
+    name: cockpit-dashboard
+    note: 唯一人类 Web 入口, 已收敛 dashboard_server/omo/ecos
+    status: active
+    transport: http
+  8095:
+    name: triage-http
+    note: aetherforge triage REST API server (分诊 HTTP 服务)
+    status: active
+    transport: http
+  8181:
+    name: omlx-vision
+    note: omlx local MLX VLM (Qwen3-VL-8B-4bit)
+    status: active
+    transport: http
+  8182:
+    name: omlx-vision-large
+    note: omlx local MLX VLM large
+    status: active
+    transport: http
+  8183:
+    name: omlx-embedding
+    note: omlx local MLX embeddings (Qwen3-Embedding-8B)
+    status: active
+    transport: http
+  8184:
+    name: omlx-mythos
+    note: omlx local MLX VLM mythos
+    status: active
+    transport: http
+  8185:
+    name: omlx-mythos-fast
+    note: omlx local MLX text mythos (Qwythos-9B mxfp4, mlx_lm)
+    status: active
+    transport: http
+  8186:
+    name: omlx-ornith-9b
+    note: omlx 本地新接入 (Ornith 1.0 9B VLM)
+    status: active
+    transport: http
+  8187:
+    name: omlx-ornith-35b
+    note: omlx 本地新接入 (Ornith 1.0 35B VLM)
+    status: active
+    transport: http
+  8188:
+    name: omlx-embed-bge-m3
+    note: omlx 本地新接入 (bge-m3 embedding)
+    status: active
+    transport: http
+  8189:
+    name: omlx-bge-reranker
+    note: omlx link 自动接入 (bge-reranker-v2-m3)
+    status: active
+    transport: http
+  8190:
+    name: omlx-gemma-4-26b
+    note: omlx link 自动接入 (gemma-4-26B VLM)
+    status: active
+    transport: http
+  8191:
+    name: omlx-gemma-4-31b
+    note: omlx link 自动接入 (gemma-4-31B VLM)
+    status: active
+    transport: http
+  8192:
+    name: omlx-gemma-4-e2b
+    note: omlx link 自动接入 (gemma-4-E2B VLM)
+    status: active
+    transport: http
+  8745:
+    name: bus-foundation-metrics
+    note: bus-foundation R89 /metrics HTTP endpoint (default; set BUS_METRICS_PORT
+      env to override)
+    status: active
+    transport: http
+  8765:
+    name: minerva-kos-ontoderive
+    note: 2026-06 收敛到 cockpit /dev/*. P78 标记 deprecated.
+    status: deprecated
+    transport: deprecated
+  8766:
+    name: kos-rest-api
+    note: 'KOS REST API v1 (9 endpoints: search/suggest/context/verify/stats/health/clusters).
+      FastAPI uvicorn.'
+    owner: kairon/kos
+    status: active
+    transport: http
+  8888:
+    name: mcp-stdio-debug
+    status: active
+    transport: stdio
+  9090:
+    name: ecos-dashboard
+    note: 2026-06 收敛到 cockpit /api/ecos/*. P78 标记 deprecated.
+    status: deprecated
+    transport: deprecated
+  9100:
+    name: omo-webhook
+    note: observability webhook-bridge target
+    status: active
+    transport: http
+  9190:
+    name: omo-dashboard
+    note: omo dashboard (converged to cockpit)
+    status: active
+    transport: http
+  9222:
+    name: chrome-cdp-debug
+    note: Chrome DevTools Protocol Remote Debugging (seeyon-oa-cdp-ingest)
+    status: active
+    transport: http
+  9290:
+    name: llm-gateway
+    note: LLM Gateway HTTP (legacy)
+    status: active
+    transport: http
+  9876:
+    name: runtime-l1
+    note: runtime L1 service (cockpit dashboard constants.py 引用)
+    status: active
+    transport: http
+  11434:
+    name: ollama
+    note: Ollama Local LLM Engine
+    status: active
+    transport: http
+  18765:
+    name: runtime-physical-node
+    note: runtime physical node delivery script default port
+    status: reserved
+    transport: http
+  18801:
+    name: wps-office-mcp-stdio
+    note: tool X-ext · 预留 HTTP 升级 (stdio 当前)
+    status: reserved
+    transport: stdio
+  18802:
+    name: wps-skills-stdio
+    note: tool X-ext · 预留 HTTP 升级 (stdio 当前)
+    status: reserved
+    transport: stdio
+  18803:
+    name: bos-skill-cli-stdio
+    note: tool X-ext · 预留 HTTP 升级 (stdio 当前)
+    status: reserved
+    transport: stdio
+types:
+  7422: env-only
+  7456: env-only
+  8090: env-only
+web_convergence:
+  agora_bridge:
+    note: 简化为重定向到 cockpit :8090
+    status: simplified
   agora_extras:
     status: deleted
-  agora_bridge:
-    status: simplified
-    note: "简化为重定向到 cockpit :8090"
-  omo_dashboards:
-    status: converged
-    routes: "/api/omo/status, /api/omo/debt, /api/omo/report"
+  cockpit_dashboard:
+    note: 唯一人类 Web 入口
+    port: 8090
+    routes: 51
+    status: active
   ecos_dashboard:
+    routes: /api/ecos/status
     status: converged
-    routes: "/api/ecos/status"
   kairon_debug_panels:
+    routes: /dev/*
     status: converged
-    routes: "/dev/*"
+  omo_dashboards:
+    routes: /api/omo/status, /api/omo/debt, /api/omo/report
+    status: converged
