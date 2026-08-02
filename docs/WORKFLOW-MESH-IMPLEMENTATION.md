@@ -339,6 +339,17 @@ broker 只接受 `succeeded/degraded` receipt 作为 `EvidenceRecorded`，以
 
 建议持续观察：真实完成旅程数、端到端成功率、无证据完成率、后端不可用率、恢复成功率、人工介入率、单旅程成本和事件投影延迟。
 
+### 7.1 J1 运营投影与消费边界
+
+Phase 20 已将上述观察收敛为 OMO 的 `workflow-mesh-operations/v1` 事件派生快照，并由
+Cockpit `GET /api/workflow-mesh/operations` 只读展示。快照提供状态、验证、证据、恢复、
+交付收口、场景归因和确定性复盘队列；它不写入运行态，也不创建第二套指标数据库。详细字段和
+验证命令见 [`docs/operations/workflow-mesh-operations.md`](./operations/workflow-mesh-operations.md)。
+
+当前最重要的诚实边界是 `consumption.status=not_observed`：`WorkflowClosed`、
+`WorkflowVerified`、`PRMerged` 或 `EvidenceRecorded` 都不能推断业务用户已消费、采用或完成
+结果回写。下一阶段只有在真实消费者、回写位置、责任人和隐私范围明确后，才设计独立反馈契约。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
