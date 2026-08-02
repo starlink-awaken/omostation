@@ -51,6 +51,20 @@ uv run --with pyyaml python bin/ssot/scene-card-candidates.py --root . \
 `approve` 返回 `blocked` 是设计约束，不是异常。候选投影缺少完整 Scene Card 时不能形成业务
 激活事实；即使缺口已经补齐，仍必须由 Agora Scene Card gate 和 OMO admission 产生正式准入证据。
 
+## 进入 admission 前的 preflight
+
+当业务负责人已经补齐完整 Scene Card，并且拥有最新的外部目录快照时，先运行只读 preflight：
+
+```bash
+uv run --with pyyaml python bin/ssot/external-activation-preflight.py \
+  --scene-card /path/to/scene-card.json \
+  --catalog /path/to/external-resource-catalog.json
+```
+
+输出 `blocked` 表示需要补字段、证据或能力；`proposal_only` 表示候选存在但仍不可执行；
+`ready_for_admission_preview` 只表示可以提交 OMO admission preview。三种结果都保持
+`activation=forbidden`，命令不调用 provider、不写 OMO、不创建 WorkflowRun。
+
 ## 安全边界
 
 - 只接受 `scene-card-candidate/v1` 且 `activation=forbidden` 的 JSON。
