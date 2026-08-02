@@ -4,11 +4,9 @@ lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-24
 ---
-
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-24
-
 current_wave: W5
 entry_gate: phase41_completed
 goals:
@@ -290,11 +288,10 @@ goals:
   bet_status: active
 - id: KOS-Q-GROWTH
   title: KOS 季度扩量（跃迁期长交期前置）
-  desc: 'G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑'
-  # Q3+Q4+2027Q1 floors met (1500/3000/5000)
+  desc: G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑
   progress: 100.0
   status: active
-  kpi: '2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)'
+  kpi: 2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)
   measured_documents: 5193
   measured_at: '2026-07-24T02:29:04.787388+00:00'
   q4_floor_met: true
@@ -302,12 +299,12 @@ goals:
   evidence: .omo/_knowledge/audits/2026-07-20-kos-q1-floor-mcp.md
   tasks: []
   quarterly_targets:
-    - quarter: 2026Q3
-      documents_min: 1500
-    - quarter: 2026Q4
-      documents_min: 3000
-    - quarter: 2027Q1
-      documents_min: 5000
+  - quarter: 2026Q3
+    documents_min: 1500
+  - quarter: 2026Q4
+    documents_min: 3000
+  - quarter: 2027Q1
+    documents_min: 5000
   source_ref: docs/KOS-QUARTERLY-GROWTH.md
   vector: V-leap-prep
   bet_status: active
@@ -332,19 +329,19 @@ objectives:
   id: W5
   status: done
   progress: 100.0
-  kpi: 'Agent 注册中心 MVP + 分布式任务调度原型 (单机模拟多节点)'
+  kpi: Agent 注册中心 MVP + 分布式任务调度原型 (单机模拟多节点)
   tasks: []
 - desc: 'Wave 6 — State Sync + Failover (Q4 Phase 2: 状态同步 + 故障转移)'
   id: W6
   status: pending
   progress: 0.0
-  kpi: '跨节点状态同步机制 + 基础故障转移 (需物理主机)'
+  kpi: 跨节点状态同步机制 + 基础故障转移 (需物理主机)
   tasks: []
-phase: 45
+phase: 49
 source_plan_refs:
 - .omo/plans/phase27-swarm-network.md
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: P45 多机协作奠基 — Phase 2 Q4 启动 (Multi-Machine Foundation)
-
+theme: Phase 49 — 知识流动与用户价值兑现
+execution_mode: waiting-for-scenario/next-bet
