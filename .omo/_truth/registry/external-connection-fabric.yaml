@@ -36,6 +36,7 @@ descriptor:
     - health
     - owner
     - version
+    - permission_ref
   secret_policy: credential_ref_only
   forbidden_fields:
     - access_token
@@ -109,6 +110,7 @@ lifecycle:
     - health_probe
     - rollback_plan
     - owner
+    - permission_ref
 admission:
   owner: omo
   required_scene_binding:
@@ -117,6 +119,7 @@ admission:
     - outcome_metric
     - data_scope
     - operator
+    - permission_ref
   fail_closed_on:
     - missing_permission
     - missing_health
@@ -133,7 +136,12 @@ routing:
 evidence:
   workflow_envelope: workflow-mesh/v1
   required_for: [discovery, admission, invocation, delivery, retirement]
-  minimum_fields: [trace_id, resource_id, observed_at, result_state, provenance_ref]
+  minimum_fields: [trace_id, resource_id, receipt_id, observed_at, result_state, provenance_ref, policy_digest]
+dynamic_discovery:
+  entry_point_group: external.resources
+  provider_method: external_descriptor
+  failure_policy: isolate_provider_and_return_error_record
+  direct_project_imports: forbidden
 scene_activation_gate:
   required: true
   minimum_repeated_demand: 连续四周或明确机会窗口
@@ -145,11 +153,12 @@ scene_activation_gate:
 bindings:
   source_adapters: projects/kairon/packages/iris
   method_compiler: projects/kairon/packages/sophia
-  capability_router: projects/agora
+  capability_router: projects/agora/src/agora/external_connections.py
   workflow_execution: docs/WORKFLOW-MESH-IMPLEMENTATION.md
   governance: projects/omo
   contract_validation: projects/ecos
   user_entry: [projects/cockpit, projects/cockpit-ui]
 validation:
   contract_test: tests/test_external_connection_fabric_registry.py
-  checks: [registry_shape, secret_field_absence, lifecycle_transition_closure, architecture_pointer_integrity]
+  runtime_test: tests/test_external_connection_runtime.py
+  checks: [registry_shape, secret_field_absence, lifecycle_transition_closure, architecture_pointer_integrity, runtime_receipt_mesh_compatibility]

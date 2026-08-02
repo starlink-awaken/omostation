@@ -8,6 +8,7 @@ related:
   - ../_truth/registry/external-connection-fabric.yaml
   - ../../ARCHITECTURE.md
   - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
+  - ../_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
 ---
 
 # External Connection Fabric 标准
@@ -23,8 +24,8 @@ Workflow Mesh、Kairon、AetherForge 和 Cockpit 协同消费。
 ## 2. Descriptor 合同
 
 每个连接必须提供 `external-resource/v1` descriptor，至少包含身份、类型、提供方、协议、
-能力、数据分级、来源、生命周期、健康、所有者和版本。凭据只允许使用 `credential_ref`，
-禁止落盘 token、密码、私钥或未经治理的私人原文。
+能力、数据分级、来源、生命周期、健康、所有者、版本和 `permission_ref`。凭据只允许使用
+引用，禁止落盘 token、密码、私钥或未经治理的私人原文。
 
 资源类型统一为：`knowledge_source`、`data_source`、`resource_provider`、`method_pack`、
 `tool_capability`、`channel`、`model_provider`。
@@ -36,6 +37,19 @@ Workflow Mesh、Kairon、AetherForge 和 Cockpit 协同消费。
 健康探针、来源证据、审查时间和回滚方案。
 
 没有真实消费者、结果指标、责任人或权限边界时，资源保持冻结，不得因为“已经能连通”而激活。
+
+准入请求还必须携带与 descriptor 匹配的 `permission_ref`。`permission_ref` 是权限/凭据的
+不透明引用，不是凭据本身；场景绑定不匹配时必须拒绝，不允许由 Agora 猜测或降级放行。
+
+## 4.1 动态发现
+
+Agora 通过 Python entry point group `external.resources` 发现提供方。提供方可以是类、实例或
+映射，但必须返回 `external_descriptor()` 结果。单个提供方加载失败只生成错误记录，不能阻断
+其他连接器发现；Agora 不得直接导入 Kairon、Iris 或某个具体供应商模块。
+
+Iris 同时保留 `iris.connectors` 作为自身注册组，并将同一批 connector 暴露到
+`external.resources`，因此新增外部连接只需要新增插件声明和 descriptor，不需要修改 Agora
+路由代码。
 
 ## 4. 触达模式
 
@@ -50,7 +64,16 @@ Agora 根据相关性、可信度、新鲜度、权限、可用性、成本和�
 返回显式 `unavailable/degraded`，不得使用默认值伪装成功。
 
 每次发现、准入、调用、投递和退役都回写 `workflow-mesh/v1` 证据，至少包含资源身份、时间、
-结果状态和来源引用。外部结果只有在同一条证据链中完成 provenance 校验后，才能进入派生知识。
+`receipt_id`、结果状态、策略摘要和来源引用。Agora 的 invocation receipt 只能包含摘要、
+哈希和引用，不携带外部原文或凭据；它可以直接转换成 OMO `EvidenceRecorded` 的 payload。
+外部结果只有在同一条证据链中完成 provenance 校验后，才能进入派生知识。
+
+运行时入口为 `agora.external_connections.ExternalConnectionCatalog`：
+
+- `register` / `discover_entry_points`：登记或发现 credential-free descriptor。
+- `activate`：执行场景、权限、健康、期限和回滚检查，并推进 sandbox → admitted → active。
+- `route`：按能力和决策因子选择资源；无候选时只返回显式 `unavailable`。
+- `invoke`：返回受控 receipt；`proposal_only` 不执行副作用。
 
 ## 6. 受控进化
 

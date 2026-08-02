@@ -8,7 +8,7 @@ updated: 2026-08-01
 horizon: 2026H2-2029
 version: v1.0
 lifecycle: contract
-last-reviewed: 2026-08-01
+last-reviewed: 2026-08-02
 review-state: evidence-refreshed
 related:
   - docs/VISION-ROADMAP.md
@@ -18,6 +18,7 @@ related:
   - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
   - .omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md
   - .omo/_knowledge/decisions/0297-external-connection-fabric-and-product-truth.md
+  - .omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
   - .omo/_truth/registry/external-connection-fabric.yaml
   - .omo/standards/external-connection-fabric.md
 note: >
@@ -316,7 +317,7 @@ B.D.S.K. 后续演进重点不是增加 Persona 文案，而是让四角意见�
 
 - 统一 source manifest、knowledge object 和 derived index 的身份。
 - 打通工程知识检索、决策依据、任务创建和结果回写。
-- 将外部连接织层 v1 接入 SourcePack、ToolPack、MethodPack 和 ChannelPack 的真实小场景。
+- 将外部连接织层 v1 接入 SourcePack、ToolPack、MethodPack 和 ChannelPack 的真实小场景；运行时 descriptor、动态发现、场景准入、能力路由和 Mesh receipt 边界已具备，下一步只激活有真实消费者的连接。
 - 建立“被检索、被引用、产生行动、产生结果”的价值链指标。
 
 里程碑 M2：J2 产生可证明的时间节省和知识复用收益。
