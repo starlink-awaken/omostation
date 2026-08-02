@@ -161,6 +161,20 @@ def record_external_resource_observation(
     change_summary = (changes or {}).get("summary", {}) if isinstance(changes, Mapping) else {}
     change_count = int(change_summary.get("change_count", 0) or 0)
     error_change_count = int(change_summary.get("error_change_count", 0) or 0)
+    review_required = bool(change_summary.get("review_required", False))
+    review_required_count = int(
+        change_summary.get("review_required_count", 0) or 0
+    )
+    operational_observation_count = int(
+        change_summary.get("operational_observation_count", 0) or 0
+    )
+    risk_codes = sorted(
+        {
+            str(code).strip()
+            for code in change_summary.get("risk_codes", [])
+            if str(code).strip()
+        }
+    )
     change_state = "baseline" if previous is None else (
         "changed" if change_count or error_change_count else "unchanged"
     )
@@ -177,6 +191,10 @@ def record_external_resource_observation(
         "change_summary": {
             "change_count": change_count,
             "error_change_count": error_change_count,
+            "review_required": review_required,
+            "review_required_count": review_required_count,
+            "operational_observation_count": operational_observation_count,
+            "risk_codes": risk_codes,
         },
         "catalog": catalog,
     }

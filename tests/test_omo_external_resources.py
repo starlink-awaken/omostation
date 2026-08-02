@@ -42,12 +42,19 @@ def _catalog(*, observed_at: str = "2026-08-02T00:00:00Z", changes=None) -> dict
     return payload
 
 
-def _diff(change_count: int = 1) -> dict:
+def _diff(change_count: int = 1, *, review_required: bool = False) -> dict:
     return {
         "schema": "external-resource-catalog-diff/v1",
         "changes": [],
         "error_changes": [],
-        "summary": {"change_count": change_count, "error_change_count": 0},
+        "summary": {
+            "change_count": change_count,
+            "error_change_count": 0,
+            "review_required": review_required,
+            "review_required_count": change_count if review_required else 0,
+            "operational_observation_count": 0 if review_required else change_count,
+            "risk_codes": ["descriptor_provider_changed"] if review_required else ["health_changed"],
+        },
     }
 
 
@@ -113,3 +120,22 @@ def test_latest_falls_back_to_append_only_log(tmp_path: Path) -> None:
         .read_text()
         .splitlines()[0]
     )
+
+
+def test_observation_projects_manual_review_requirement(tmp_path: Path) -> None:
+    result = record_external_resource_observation(
+        tmp_path,
+        _catalog(
+            observed_at="2026-08-02T00:05:00Z",
+            changes=_diff(review_required=True),
+        ),
+    )
+
+    assert result["observation"]["change_summary"] == {
+        "change_count": 1,
+        "error_change_count": 0,
+        "review_required": True,
+        "review_required_count": 1,
+        "operational_observation_count": 0,
+        "risk_codes": ["descriptor_provider_changed"],
+    }
