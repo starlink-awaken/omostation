@@ -745,6 +745,24 @@ cd projects/cockpit && PYTHONPATH="src:../omo/src" uv run --no-project --with py
 cd projects/cockpit-ui && bun run test:unit -- src/components/__tests__/ExternalResourcePackPreflightPanel.test.tsx
 ```
 
+### 7.3.14 Phase 46 真实只读目录观察运行闭环
+
+Phase 46 将“发现外部能力”从一次性的目录快照推进为可复盘的运行样本。`bin/ssot/external-resource-catalog.py --observe` 在 OMO 追加目录 observation 后，再追加 `external-resource-observation-run/v1`，记录：
+
+- 本次运行的 `run_id`、`trace_id`、目录 `observation_id` 和 `catalog_digest`；
+- 资源数量、健康/降级/不可用、错误和 health probe 失败计数；
+- 运行总延迟、显式 health probe 返回的延迟摘要；
+- 成本计量状态。当前没有真实 provider 计费数据，因此是 `unmetered`、金额为空；
+- 业务 provider 调用固定为 false，activation 固定为 forbidden。
+
+空目录的结果状态固定为 `unavailable`，有错误或不可用候选为 `degraded`，只有有候选且没有不可用/错误时才为 `succeeded`。这次真实工作区演练发现当前环境没有已登记 provider，因此得到的是 `unavailable`，而不是虚假的成功；整个过程没有读取业务内容、没有激活连接、没有创建 WorkflowRun。
+
+当前闭环为：
+
+`动态发现 -> 只读 health probe（可选） -> catalog observation -> observation run receipt -> 人工复核/Scene Card`
+
+后续只有在出现真实消费者和结果指标后，才把该场景绑定到 Workflow Mesh 的 admission、业务调用 receipt 和 outcome feedback；观察运行回执本身不能成为业务质量标签。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
