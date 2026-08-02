@@ -163,6 +163,11 @@ output 或 secret 的 `runtime-effect-outcome/v1` 摘要。成功或降级 outco
 omo.omo_external_receipt.record_external_receipt -> EvidenceRecorded -> WorkflowVerified`。只有在有
 真实低风险场景时才接入外部 Tool/Channel；receipt 已可写回不等于 Runtime 已完成业务目标。
 
+KEMS 生产路径在进入真实派发前还必须通过 Runtime 的
+`kems.persistence-recovery-evidence.v1` 检查：PostgreSQL 备份/恢复演练、图谱快照 hash、RPO/RTO
+和验证方法都进入安全 preflight evidence；缺失或不一致时保持 `blocked`，不能把本地 SQLite
+测试或 fixture 评测当作生产放行。
+
 ### P1.2：跨进程 Effect 与显式补偿
 
 本阶段把 P1.1 的本地恢复边界从“单进程可用”提升为可部署的执行基础：

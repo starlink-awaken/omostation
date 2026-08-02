@@ -11,7 +11,7 @@ metadata-migrated-at: 2026-07-31
 # KEMS 生产化实施方案
 
 > 状态：实施中，进入集成预生产
-> 更新：2026-07-31
+> 更新：2026-08-02
 > 范围：OCR 质量治理、正式 UI/表单、持久化知识图谱、OMO 任务派发、真实标注评测集、预测模型
 >
 > 本文定义实施顺序、系统边界、数据契约和放行条件。它不把目标指标冒充为当前能力，也不把真实业务材料放入代码仓库。
@@ -26,7 +26,7 @@ KEMS 当前已经具备受控导入、政策分析、运行记录、证据绑定
                                       +-> 人工/模型增强
 ```
 
-M1～M6 的工程基础已落地到 Kairon/KOS、Cockpit 和 Runtime：`kems.ocr-quality.v1` 提供 OCR 页级质量、指标门禁和 `pass/review/reject` 状态；Cockpit 提供 OCR 审核与图谱工作台；KEMS 提供持久化图谱、双人标注与 adjudication 约束、`kems.evaluation-manifest.v1`、候选模型 shadow 评测和生产 preflight。真实源队列目前仍等待人工标注，生产连接器和 OMO 批准仍未提供，因此不能宣称真实业务准确率或生产动作已开放。
+M1～M6 的工程基础已落地到 Kairon/KOS、Cockpit 和 Runtime：`kems.ocr-quality.v1` 提供 OCR 页级质量、指标门禁和 `pass/review/reject` 状态；Cockpit 提供 OCR 审核与图谱工作台；KEMS 提供持久化图谱、双人标注与 adjudication 约束、`kems.evaluation-manifest.v1`、候选模型 shadow 评测和生产 preflight。生产 preflight 现在还显式要求 `kems.persistence-recovery-evidence.v1`，证明 PostgreSQL 备份/恢复演练和图谱快照可恢复。真实源队列目前仍等待人工标注，生产连接器和 OMO 批准仍未提供，因此不能宣称真实业务准确率或生产动作已开放。
 
 当前实现与验收证据集中记录在 [KEMS 落地验收与上线闸门报告](</Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md>)；生产前置检查入口见 `projects/runtime/scripts/kems_production_preflight.py`。
 
@@ -80,6 +80,11 @@ created_at: <timestamp>
 ```
 
 统一 API 响应至少包含：`run_id`、`source_sha256`、`model_version`、`evidence_refs`、`review_state`、`audit_ref`、`next_action`。
+
+生产持久化放行必须额外提交 `kems.persistence-recovery-evidence.v1`：仅允许
+PostgreSQL 备份/恢复演练的安全元数据和 `vault://evidence/` 引用，要求源图谱与恢复后图谱
+快照 SHA-256 一致，实际 RPO/RTO 不超过目标，并注明验证方法。证据缺失、泄露 DSN/凭据/原文
+或校验不一致时，preflight 与 closeout 均保持 fail-closed，M3/G2 不得标记通过。
 
 ## 4. OCR 质量治理
 
@@ -282,11 +287,11 @@ evaluation/
 | M0 基础契约 | 已落地 | 持续按 SSOT 与运行证据维护 |
 | M1 OCR 治理 | 已落地 | 需要真实业务样本持续校准阈值 |
 | M2 真实评测集 | 工具与队列已落地 | 5 个真实源样本仍需双人标注和 adjudication |
-| M3 图谱持久化 | 已落地 | 生产 PostgreSQL 与备份/恢复演练待部署 |
+| M3 图谱持久化 | 工程能力已落地 | 生产 PostgreSQL 备份/恢复演练及 `persistence-recovery-evidence` 待业务/运维执行 |
 | M4 正式 UI | 核心工作台已落地 | 业务表单和评测看板仍需按试点场景扩展 |
 | M5 OMO 派发 | 草稿、审批契约和生产等价测试已落地 | 真实 OMO 批准任务与企业 ReachBridge 仍待接入 |
 | M6 预测影子 | 候选预测器、manifest 绑定和 acceptance 校验已落地 | 依赖 adjudicated manifest 后才能形成真实 acceptance |
-| M7 试点收口 | 未完成 | G1～G4 的外部证据齐备后执行 |
+| M7 试点收口 | 未完成 | 生产 preflight/closeout fail-closed；G1～G4 与外部恢复证据齐备后执行 |
 
 总周期预估 12～16 周。M1、M2、M3、M4 可部分并行；M5 依赖图谱主键和证据契约稳定；M6 依赖真实评测集。
 
