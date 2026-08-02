@@ -378,6 +378,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0308: Cockpit 首页运行态真值与分源降级契约 — **ACCEPTED** | 2026-08-02 | Cockpit product truthfulness | 0308-cockpit-home-runtime-truthfulness.md
 - ADR-0309: Cockpit 首页工作焦点只读投影与日常入口 — **ACCEPTED** | 2026-08-02 | Cockpit J1 daily workbench | 0309-cockpit-home-operating-focus.md
 - ADR-0310: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递 — **ACCEPTED** | 2026-08-02 | Workflow Mesh M1 dogfood | 0310-workflow-mesh-engineering-dogfood-verifier.md
+<<<<<<< HEAD
 - ADR-0311: 当前状态一致性与场景激活门 — **ACCEPTED** | 2026-08-02 | architecture-governance | 0311-current-state-coherence-and-scene-activation-gate.md
 - ADR-0312: Cockpit Delivery Journey 真实状态投影 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J1 | 0312-delivery-journey-truthful-state-projection.md
 - ADR-0313: Workflow Mesh 运营投影与显式消费边界 — **ACCEPTED** | 2026-08-02 | Workflow Mesh J1 | 0313-workflow-mesh-operations-projection.md
@@ -408,7 +409,10 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0338: External Resource Pack Proposal-only 评审回执 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 45 | 0338-external-pack-proposal-receipt.md
 - ADR-0339: 外部资源只读目录观察运行回执 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 46 | 0339-external-catalog-observation-run.md
 - ADR-0340: 外部场景试运行合同与反馈晋升边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 47 | 0340-external-scene-trial-contract.md
-- ADR-0341: 外部场景试运行审阅反馈边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 48 | 0341-external-scene-trial-review-feedback.md
+||||||| parent of d483e071d (feat(mesh): ADR-0311 + mesh health monitor + integration test suite)
+=======
+- ADR-0311: Workflow Mesh Bridge 四阶段桥接策略 - **ACCEPTED** | 2026-08-02 | Workflow Mesh bridge | 0311-workflow-mesh-bridge-strategy.md
+>>>>>>> d483e071d (feat(mesh): ADR-0311 + mesh health monitor + integration test suite)
 
 ---
 
@@ -419,6 +423,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - **过期判定**: 每个 Phase 入口处审阅已 `ACCEPTED` 的 ADR，决定是否需 `DEPRECATED`
   或 `SUPERSEDED`
 
+- ADR-0342: Workflow Mesh Bridge 四阶段桥接策略 - **ACCEPTED** | 2026-08-02 | Workflow Mesh bridge | 0342-workflow-mesh-bridge-strategy.md
 ---
 
 ## 相关文件
