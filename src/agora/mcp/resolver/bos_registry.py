@@ -121,16 +121,20 @@ def load_from_yaml(path: str | pathlib.Path | None = None) -> list:
         raise ValueError(f"YAML 注册表缺少 'services' 根键: {path}")
 
     # ADR-0181 Phase 2: status=deprecated 默认不进入可路由表
-    # P0-1: status=unimplemented 同样不进入可路由表（声明/执行鸿沟修复）
+    # P0-1: status=unimplemented 永远不进入可路由表（声明/执行鸿沟修复）
+    # 注意: AGORA_BOS_INCLUDE_DEPRECATED=1 仅放行 deprecated (调试用),
+    #       unimplemented 不受该 env 影响, 始终排除。
     include_deprecated = (
         os.environ.get("AGORA_BOS_INCLUDE_DEPRECATED", "0").strip() == "1"
     )
     if not include_deprecated:
         data["services"] = [
-            s
-            for s in data["services"]
-            if s.get("status", "active") not in ("deprecated", "unimplemented")
+            s for s in data["services"] if s.get("status", "active") != "deprecated"
         ]
+    # unimplemented 始终排除
+    data["services"] = [
+        s for s in data["services"] if s.get("status", "active") != "unimplemented"
+    ]
 
     services = []
     for entry in data["services"]:

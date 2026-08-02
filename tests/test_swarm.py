@@ -48,6 +48,17 @@ class TestSwarmOrchestrator:
         assert len(s.get_online_nodes()) == 1
         assert s.get_online_nodes(role="worker")[0].node_id == "test-node"
 
+    def test_get_node_public_api(self):
+        """get_node() 公开 API 返回节点 (替代 _nodes 私有访问)。"""
+        from agora.mcp.swarm import SwarmOrchestrator
+
+        s = SwarmOrchestrator(role="master")
+        n = make_node()
+        s.register_node(n)
+
+        assert s.get_node("test-node") is n
+        assert s.get_node("nonexistent") is None
+
     def test_get_node_by_uri(self):
         from agora.mcp.swarm import SwarmOrchestrator
 

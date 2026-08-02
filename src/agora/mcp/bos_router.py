@@ -183,8 +183,9 @@ class BOSRouter:
                     from agora.mcp.swarm import get_swarm
 
                     orch = get_swarm()
-                    if orch and node_id in orch._nodes:
-                        node = orch._nodes[node_id]
+                    # 用公开 get_node() API, 不访问 _nodes 私有属性
+                    node = orch.get_node(node_id) if orch else None
+                    if node is not None:
                         if not node.is_online:
                             return 9999.0
                         score = node.load_score

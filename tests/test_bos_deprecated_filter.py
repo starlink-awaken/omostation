@@ -53,3 +53,29 @@ def test_deprecated_included_with_env(registry_yaml, monkeypatch):
     services = load_from_yaml(registry_yaml)
     uris = {s.uri for s in services}
     assert "bos://memory/metaos/mcp-server" in uris
+
+
+def test_unimplemented_never_included_even_with_env(monkeypatch, tmp_path):
+    """unimplemented 服务即使 AGORA_BOS_INCLUDE_DEPRECATED=1 也始终排除 (P0-1 增强)。"""
+    import yaml
+    from pathlib import Path
+
+    data = {
+        "services": [
+            {
+                "uri": "bos://memory/unimpl/svc",
+                "domain": "memory",
+                "action": "svc",
+                "package": "x",
+                "transport": "inline",
+                "status": "unimplemented",
+            }
+        ]
+    }
+    p = tmp_path / "unimpl.yaml"
+    p.write_text(yaml.dump(data), encoding="utf-8")
+    monkeypatch.setenv("AGORA_BOS_INCLUDE_DEPRECATED", "1")
+    from agora.mcp.resolver.bos_registry import load_from_yaml
+
+    services = load_from_yaml(p)
+    assert services == []
