@@ -23,6 +23,32 @@ logger = structlog.get_logger(__name__)
 _start_time = time.time()
 
 
+def _workflow_capability_health(required_capabilities: list[str]) -> dict:
+    from agora.workflow_health import build_capability_health_snapshot
+
+    registry = _get_registry()
+    services = registry.list_all() if hasattr(registry, "list_all") else []
+    pm = _get_proxy_manager()
+    backends = {}
+    if pm is not None:
+        checker = getattr(pm, "_health_checker", None)
+        if checker is not None and hasattr(checker, "get_all_status"):
+            backends = checker.get_all_status()
+    nodes = []
+    try:
+        from agora.mcp.swarm import get_swarm
+
+        nodes = get_swarm().get_online_nodes()
+    except (ImportError, OSError, RuntimeError):
+        nodes = []
+    return build_capability_health_snapshot(
+        required_capabilities,
+        nodes=nodes,
+        services=services,
+        backends=backends,
+    )
+
+
 def _get_registry():
     from agora.server.mcp import registry  # type: ignore[import-not-found]
 
@@ -405,6 +431,17 @@ def register_health_tools(mcp: FastMCP) -> None:
         except (OSError, ValueError, KeyError) as e:  # defensive fallback
             logger.exception("health_check_error")
             return _error(f"Health check failed: {e}")
+
+    @mcp.tool()
+    async def workflow_capability_health(required_capabilities: list[str]) -> dict:
+        """Return the capability health projection used before Mesh admission."""
+        if not required_capabilities:
+            return _error("required_capabilities must not be empty")
+        try:
+            return _ok(_workflow_capability_health(required_capabilities))
+        except (OSError, ValueError, KeyError) as e:  # defensive fallback
+            logger.exception("workflow_capability_health_error")
+            return _error(f"Capability health query failed: {e}")
 
     @mcp.tool()
     async def entropy_cleanup_tool() -> dict:
