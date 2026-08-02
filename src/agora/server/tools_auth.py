@@ -17,15 +17,38 @@ _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 agora_role_ctx: ContextVar[str] = ContextVar("agora_role_ctx", default="unknown")
 
 
+def auth_mode() -> str:
+    """Current auth enforcement mode.
+
+    - ``required`` (default, fail-closed): a missing ``AGORA_API_KEY`` rejects
+      all requests. This is the safe default for any deployment.
+    - ``permissive``: allow all without a key — explicit opt-in for local dev
+      only (e.g. ``AGORA_AUTH_MODE=permissive``).
+    """
+    return os.environ.get("AGORA_AUTH_MODE", "required")
+
+
+def auth_permissive() -> bool:
+    """True when explicitly opted into permissive (local-dev) auth."""
+    return auth_mode() == "permissive"
+
+
 def require_agora_api_key(ctx: AuthContext) -> bool:
     """Auth check for AGORA_API_KEY and JWT tokens.
 
-    - If AGORA_API_KEY is not configured → permissive mode (allow all, local dev).
+    Fail-closed by default:
+
+    - ``AGORA_AUTH_MODE`` unset or ``required`` + ``AGORA_API_KEY`` not
+      configured → deny (no implicit admin / permissive bypass).
+    - Explicit ``AGORA_AUTH_MODE=permissive`` → allow all (local dev opt-in).
     - If configured → require exact bearer token match OR valid JWT.
     """
     if not _AGORA_API_KEY:
-        agora_role_ctx.set("admin")
-        return True  # permissive mode for local development
+        if auth_permissive():
+            agora_role_ctx.set("admin")
+            return True  # explicit permissive mode for local development
+        agora_role_ctx.set("denied")
+        return False  # fail-closed: no key configured → reject
 
     import structlog
 
