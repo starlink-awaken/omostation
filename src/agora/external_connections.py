@@ -501,6 +501,195 @@ class DiscoveryRecord:
     error: str | None = None
 
 
+def _health_projection(
+    health: Mapping[str, Any], *, now: datetime, ttl_seconds: int
+) -> tuple[str, list[str], dict[str, Any]]:
+    """Normalize provider health into a safe, explainable catalog state."""
+    status = str(health.get("status") or "").strip().lower()
+    observed_at = str(health.get("observed_at") or "").strip()
+    source = str(health.get("source") or "").strip()
+    latency_ms = health.get("latency_ms")
+    reasons: list[str] = []
+
+    if status not in {"healthy", "degraded", "unhealthy"}:
+        reasons.append("missing_health_status")
+    if not observed_at:
+        reasons.append("missing_health_observed_at")
+    if not source:
+        reasons.append("missing_health_source")
+
+    age_seconds: float | None = None
+    if observed_at:
+        try:
+            age_seconds = max(0.0, (now - datetime.fromisoformat(observed_at)).total_seconds())
+        except ValueError:
+            reasons.append("invalid_health_observed_at")
+    if age_seconds is not None and age_seconds > ttl_seconds:
+        reasons.append("health_stale")
+
+    if reasons:
+        state = "stale" if "health_stale" in reasons else "unavailable"
+    elif status == "healthy":
+        state = "healthy"
+    elif status == "degraded":
+        state = "degraded"
+    else:
+        state = "unavailable"
+        reasons.append("health_unhealthy")
+
+    metrics = health.get("metrics")
+    safe_metrics = {}
+    if isinstance(metrics, Mapping):
+        for key in ("trust", "freshness", "cost", "latency"):
+            if key in metrics:
+                safe_metrics[key] = metrics[key]
+    return state, reasons, {
+        "status": status or "unknown",
+        "observed_at": observed_at or None,
+        "source": source or None,
+        "latency_ms": latency_ms,
+        "age_seconds": age_seconds,
+        "metrics": safe_metrics,
+    }
+
+
+def build_external_resource_catalog_snapshot(
+    records: Iterable[DiscoveryRecord],
+    *,
+    observed_at: str | None = None,
+    now: datetime | None = None,
+    health_ttl_seconds: int = 900,
+    policy_digest: str = "external-connection-fabric/v1",
+) -> dict[str, Any]:
+    """Build a read-only, credential-free projection for human consumers.
+
+    The snapshot is deliberately not a runtime catalog. It exposes discovery
+    facts and explicit failure reasons, while activation, invocation and OMO
+    evidence remain owned by their existing boundaries.
+    """
+    if health_ttl_seconds <= 0:
+        raise ExternalConnectionError("health_ttl_seconds must be positive")
+    current = now or datetime.now(UTC)
+    resources: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+    seen: dict[str, str] = {}
+
+    for record in records:
+        if record.error:
+            errors.append(
+                {
+                    "entry_point": record.entry_point,
+                    "status": "unavailable",
+                    "error": record.error,
+                }
+            )
+            continue
+        descriptor = record.descriptor
+        if descriptor is None:
+            errors.append(
+                {
+                    "entry_point": record.entry_point,
+                    "status": "unavailable",
+                    "error": "missing_descriptor",
+                }
+            )
+            continue
+        previous_entry_point = seen.get(descriptor.id)
+        if previous_entry_point is not None:
+            errors.append(
+                {
+                    "entry_point": record.entry_point,
+                    "status": "unavailable",
+                    "error": f"duplicate_descriptor:{descriptor.id}:{previous_entry_point}",
+                }
+            )
+            continue
+        seen[descriptor.id] = record.entry_point
+
+        health_state, health_reasons, health = _health_projection(
+            descriptor.health, now=current, ttl_seconds=health_ttl_seconds
+        )
+        reasons = list(health_reasons)
+        lifecycle = descriptor.lifecycle
+        if lifecycle not in {"active", "degraded"}:
+            reasons.append(f"lifecycle_{lifecycle}")
+
+        deadline = descriptor.expires_at or descriptor.review_at
+        if deadline:
+            try:
+                if (_parse_time(deadline) or current) <= current:
+                    reasons.append("descriptor_expired")
+            except ExternalConnectionError:
+                reasons.append("invalid_descriptor_deadline")
+        else:
+            reasons.append("missing_expiry_or_review")
+
+        if descriptor.mode == "proposal_only":
+            availability = "proposal_only"
+        elif (
+            lifecycle not in {"active", "degraded"}
+            or health_state not in {"healthy", "degraded"}
+            or any(
+                reason in reasons
+                for reason in ("descriptor_expired", "invalid_descriptor_deadline")
+            )
+        ):
+            availability = "unavailable"
+        else:
+            availability = "available"
+
+        provenance_ref = ExternalConnectionCatalog._provenance_ref(descriptor)
+        resources.append(
+            {
+                "id": descriptor.id,
+                "kind": descriptor.kind,
+                "provider": descriptor.provider,
+                "protocol": descriptor.protocol,
+                "capabilities": list(descriptor.capabilities),
+                "data_classification": descriptor.data_classification,
+                "owner": descriptor.owner,
+                "version": descriptor.version,
+                "permission_ref": descriptor.permission_ref,
+                "mode": descriptor.mode,
+                "lifecycle": lifecycle,
+                "availability": availability,
+                "reason_codes": sorted(set(reasons)),
+                "provenance_ref": provenance_ref,
+                "entry_point": record.entry_point,
+                "health": health,
+                "rollback_plan": bool(descriptor.rollback_plan),
+                "expires_at": descriptor.expires_at,
+                "review_at": descriptor.review_at,
+            }
+        )
+
+    resources.sort(key=lambda item: item["id"])
+    by_kind: dict[str, int] = {}
+    by_availability: dict[str, int] = {}
+    for resource in resources:
+        by_kind[resource["kind"]] = by_kind.get(resource["kind"], 0) + 1
+        by_availability[resource["availability"]] = by_availability.get(resource["availability"], 0) + 1
+    unavailable_count = by_availability.get("unavailable", 0) + len(errors)
+    return {
+        "schema": "external-resource-catalog/v1",
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "raw_content_policy": "never_read_or_export",
+        "observed_at": observed_at or current.isoformat(),
+        "health_ttl_seconds": health_ttl_seconds,
+        "policy_digest": policy_digest,
+        "resources": resources,
+        "errors": errors,
+        "summary": {
+            "resource_count": len(resources),
+            "unavailable_count": unavailable_count,
+            "error_count": len(errors),
+            "by_kind": dict(sorted(by_kind.items())),
+            "by_availability": dict(sorted(by_availability.items())),
+        },
+    }
+
+
 def discover_entry_points(
     entry_points: Iterable[Any] | None = None,
     *,
@@ -906,9 +1095,10 @@ __all__ = [
     "ExternalConnectionError",
     "ExternalResourceDescriptor",
     "RouteDecision",
+    "SceneBinding",
     "SceneCard",
     "SceneCardDecision",
-    "SceneBinding",
+    "build_external_resource_catalog_snapshot",
     "discover_entry_points",
     "evaluate_scene_card",
 ]

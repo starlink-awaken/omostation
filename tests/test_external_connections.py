@@ -3,11 +3,13 @@ from datetime import UTC, datetime
 import pytest
 
 from agora.external_connections import (
+    DiscoveryRecord,
     ExternalConnectionCatalog,
     ExternalConnectionError,
     ExternalResourceDescriptor,
-    SceneCard,
     SceneBinding,
+    SceneCard,
+    build_external_resource_catalog_snapshot,
     discover_entry_points,
     evaluate_scene_card,
 )
@@ -82,6 +84,73 @@ def test_descriptor_rejects_secret_fields_recursively() -> None:
     payload["metadata"] = {"nested": {"access_token": "must-not-land"}}
     with pytest.raises(ExternalConnectionError, match="secret field"):
         ExternalResourceDescriptor.from_mapping(payload)
+
+
+def test_catalog_snapshot_exposes_safe_health_and_lifecycle_reasons() -> None:
+    payload = _descriptor("source:snapshot", lifecycle="active")
+    payload["health"] = {
+        "status": "healthy",
+        "observed_at": "2026-08-02T00:00:00+00:00",
+        "latency_ms": 42,
+        "source": "probe:test",
+        "metrics": {"trust": 0.9, "freshness": 0.8, "secret": "omit"},
+    }
+    snapshot = build_external_resource_catalog_snapshot(
+        [
+            DiscoveryRecord(
+                descriptor=ExternalResourceDescriptor.from_mapping(payload),
+                entry_point="external.resources:test",
+            ),
+            DiscoveryRecord(
+                descriptor=None,
+                entry_point="external.resources:broken",
+                error="ImportError",
+            ),
+        ],
+        now=NOW,
+        health_ttl_seconds=3600,
+    )
+
+    resource = snapshot["resources"][0]
+    assert snapshot["schema"] == "external-resource-catalog/v1"
+    assert snapshot["activation"] == "forbidden"
+    assert resource["availability"] == "available"
+    assert resource["health"]["status"] == "healthy"
+    assert resource["health"]["metrics"] == {"trust": 0.9, "freshness": 0.8}
+    assert "metadata" not in resource
+    assert snapshot["errors"] == [
+        {
+            "entry_point": "external.resources:broken",
+            "status": "unavailable",
+            "error": "ImportError",
+        }
+    ]
+
+
+def test_catalog_snapshot_marks_stale_health_and_proposal_only_explicitly() -> None:
+    payload = _descriptor("source:stale", lifecycle="active", mode="proposal_only")
+    payload["health"] = {
+        "status": "healthy",
+        "observed_at": "2026-08-01T00:00:00+00:00",
+        "latency_ms": 80,
+        "source": "probe:test",
+    }
+    snapshot = build_external_resource_catalog_snapshot(
+        [
+            DiscoveryRecord(
+                descriptor=ExternalResourceDescriptor.from_mapping(payload),
+                entry_point="external.resources:stale",
+            )
+        ],
+        now=NOW,
+        health_ttl_seconds=60,
+    )
+
+    resource = snapshot["resources"][0]
+    assert resource["availability"] == "proposal_only"
+    assert resource["health"]["status"] == "healthy"
+    assert "health_stale" in resource["reason_codes"]
+    assert "missing_expiry_or_review" not in resource["reason_codes"]
 
 
 def test_scene_bound_activation_requires_permission_and_expiry() -> None:
