@@ -8,10 +8,11 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from fastapi import APIRouter, Query
+    from fastapi import APIRouter, Query, Request
 except ImportError:
     APIRouter = None  # type: ignore[assignment,misc]
     Query = None  # type: ignore[assignment,misc]
+    Request = None  # type: ignore[assignment,misc]
 
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
@@ -20,9 +21,12 @@ if str(_OMO_SRC) not in sys.path:
     sys.path.insert(0, str(_OMO_SRC))
 
 try:
+    from omo.outcome_feedback import OutcomeFeedbackError, record_outcome_feedback
     from omo.workflow_eval import build_operations_snapshot
 except Exception as exc:  # OMO is an optional runtime dependency for Cockpit.
     build_operations_snapshot = None  # type: ignore[assignment]
+    record_outcome_feedback = None  # type: ignore[assignment]
+    OutcomeFeedbackError = ValueError  # type: ignore[assignment,misc]
     _OMO_IMPORT_ERROR: Exception | None = exc
 else:
     _OMO_IMPORT_ERROR = None
@@ -70,3 +74,38 @@ if router:
             "operations": projection,
         }
 
+    @router.post("/outcome-feedback")
+    async def post_workflow_mesh_outcome_feedback(request: Request) -> dict[str, Any]:  # type: ignore[valid-type]
+        """Persist an explicit, privacy-safe consumption receipt through OMO."""
+        if record_outcome_feedback is None:
+            projection = _unavailable_projection(
+                type(_OMO_IMPORT_ERROR).__name__ if _OMO_IMPORT_ERROR else "ImportError",
+                "安装并挂载 OMO 运行时后重试。",
+            )
+            return {"ok": False, "status": "unavailable", "feedback": projection}
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise OutcomeFeedbackError("feedback payload must be an object")
+            payload = dict(payload)
+            actor = str(payload.pop("actor_ref", "cockpit-user") or "cockpit-user")
+            result = record_outcome_feedback(_REPO_ROOT / ".omo", payload, actor=actor)
+        except (OutcomeFeedbackError, ValueError, TypeError) as exc:
+            return {
+                "ok": False,
+                "status": "invalid",
+                "error": "outcome_feedback_invalid",
+                "message": str(exc),
+            }
+        except OSError as exc:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "outcome_feedback_unavailable",
+                "message": f"反馈持久化不可用: {type(exc).__name__}",
+            }
+        return {
+            "ok": True,
+            "status": result["status"],
+            "feedback": result["feedback"],
+        }
