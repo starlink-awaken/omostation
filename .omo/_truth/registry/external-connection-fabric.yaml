@@ -148,6 +148,12 @@ dynamic_discovery:
     change_policy: record_diff_and_re_evaluate_admission
     stale_policy: degrade_then_unavailable
     provider_isolation: required
+    probe_method: health_probe
+    probe_side_effect_policy: read_only_only
+    projection_contract: external-resource-catalog/v1
+    diff_contract: external-resource-catalog-diff/v1
+    previous_snapshot_owner: caller_or_governed_observer
+    human_catalog_api: /api/external-resources
   health_contract:
     required_probe_fields: [observed_at, status, latency_ms, source]
     expired_health_policy: unavailable
