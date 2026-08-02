@@ -19,9 +19,17 @@ if str(_OMO_SRC) not in sys.path:
     sys.path.insert(0, str(_OMO_SRC))
 
 try:
+    from omo.omo_external_evaluation import record_external_resource_evaluation
     from omo.omo_external_resources import read_latest_external_resource_observation
+    from omo.workflow_eval import (
+        build_external_resource_selection_dataset,
+        propose_selection_policy_feedback,
+    )
 except Exception as exc:  # OMO is optional while Cockpit is being bootstrapped.
     read_latest_external_resource_observation = None  # type: ignore[assignment]
+    record_external_resource_evaluation = None  # type: ignore[assignment]
+    build_external_resource_selection_dataset = None  # type: ignore[assignment]
+    propose_selection_policy_feedback = None  # type: ignore[assignment]
     _OMO_IMPORT_ERROR: Exception | None = exc
 else:
     _OMO_IMPORT_ERROR = None
@@ -167,7 +175,7 @@ async def get_external_resources() -> dict[str, Any]:
 
 @router.post("/evaluate")
 async def evaluate_external_resource_candidates(request: Request) -> dict[str, Any]:
-    """Evaluate catalog candidates for one scene without activation or writes."""
+    """Evaluate candidates; persist only when the caller explicitly requests it."""
     if evaluate_external_resources is None:
         return {
             "ok": False,
@@ -198,10 +206,26 @@ async def evaluate_external_resource_candidates(request: Request) -> dict[str, A
             scene_binding=scene_binding,
             trace_id=trace_id,
         )
+        persist_observation = bool(body.get("persist_observation", False))
+        observation_result: dict[str, Any] | None = None
+        if persist_observation:
+            if record_external_resource_evaluation is None:
+                raise RuntimeError("external_resource_evaluation_observer_unavailable")
+            observation_result = record_external_resource_evaluation(
+                _REPO_ROOT / ".omo",
+                evaluation,
+                workflow_run_id=str(body.get("workflow_run_id") or "").strip() or None,
+                actor=str(body.get("actor_ref") or "cockpit").strip() or "cockpit",
+                source_ref=str(body.get("source_ref") or "cockpit:external-resources:evaluate").strip()
+                or "cockpit:external-resources:evaluate",
+                observed_at=str(body.get("observed_at") or "").strip() or None,
+                evaluation_id=str(body.get("evaluation_id") or "").strip() or None,
+            )
     except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        status = "invalid" if isinstance(exc, (ValueError, TypeError)) else "unavailable"
         return {
             "ok": False,
-            "status": "invalid" if isinstance(exc, (ValueError, TypeError)) else "unavailable",
+            "status": status,
             "error": "external_resource_evaluation_invalid",
             "message": str(exc),
             "activation": "forbidden",
@@ -213,6 +237,98 @@ async def evaluate_external_resource_candidates(request: Request) -> dict[str, A
         "status": evaluation.get("status", "unavailable"),
         "source": source,
         "evaluation": evaluation,
+        "observation_status": (
+            observation_result["status"] if observation_result else "not_requested"
+        ),
+        "observation_persisted": observation_result is not None,
+        "observation": observation_result["observation"] if observation_result else None,
+        "activation": "forbidden",
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.get("/evaluations/selection")
+async def get_external_resource_selection_evaluation(scene_id: str | None = None) -> dict[str, Any]:
+    """Expose event-derived selection labels without changing Mesh state."""
+    if build_external_resource_selection_dataset is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_resource_selection_evaluation_unavailable",
+            "activation": "forbidden",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    try:
+        dataset = build_external_resource_selection_dataset(
+            _REPO_ROOT / ".omo", scene_id=scene_id
+        )
+    except (OSError, RuntimeError, ValueError, TypeError) as exc:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_resource_selection_evaluation_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    return {
+        "ok": True,
+        "status": "live",
+        "dataset": dataset,
+        "activation": "forbidden",
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.post("/evaluations/proposal")
+async def propose_external_resource_selection_policy(request: Request) -> dict[str, Any]:
+    """Evaluate a candidate policy offline; never apply it to routing."""
+    if (
+        build_external_resource_selection_dataset is None
+        or propose_selection_policy_feedback is None
+    ):
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_resource_selection_proposal_unavailable",
+            "activation": "forbidden",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    try:
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError("proposal payload must be an object")
+        candidate = body.get("candidate")
+        if not isinstance(candidate, Mapping):
+            raise ValueError("candidate must be an object")
+        proposal_id = str(body.get("proposal_id") or "").strip()
+        if not proposal_id:
+            raise ValueError("proposal_id is required")
+        dataset = build_external_resource_selection_dataset(
+            _REPO_ROOT / ".omo", scene_id=body.get("scene_id")
+        )
+        proposal = propose_selection_policy_feedback(
+            dataset, dict(candidate), proposal_id=proposal_id
+        )
+    except (OSError, RuntimeError, ValueError, TypeError) as exc:
+        return {
+            "ok": False,
+            "status": "invalid" if isinstance(exc, (ValueError, TypeError)) else "unavailable",
+            "error": "external_resource_selection_proposal_invalid",
+            "message": str(exc),
+            "activation": "forbidden",
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    return {
+        "ok": True,
+        "status": "proposal_only",
+        "proposal": proposal,
         "activation": "forbidden",
         "external_side_effects": "disabled",
         "worker_launch": False,

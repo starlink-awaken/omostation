@@ -33,6 +33,40 @@ def _projection() -> dict:
     }
 
 
+def _evaluation() -> dict:
+    return {
+        "schema": "external-resource-evaluation/v1",
+        "mode": "read_only_evaluation",
+        "activation": "forbidden",
+        "raw_content_policy": "never_read_or_export",
+        "capability": "search",
+        "trace_id": "trace:test",
+        "policy_digest": "external-connection-fabric/v1",
+        "scene_binding": {
+            "scene_id": "research-brief",
+            "journey_id": "weekly-decision",
+            "outcome_metric": "decision_latency_hours",
+            "data_scope": "public:research",
+            "operator": "human:test",
+            "permission_ref": "permission://test",
+        },
+        "status": "selected",
+        "selected_resource_id": "source:test",
+        "candidates": [{
+            "resource_id": "source:test",
+            "capability": "search",
+            "status": "eligible",
+            "reasons": [],
+            "decision_factors": {"health": "healthy"},
+            "rank": [1, "source:test"],
+            "availability": "available",
+            "provenance_ref": "evidence://source/test",
+        }],
+        "reasons": [],
+        "summary": {"candidate_count": 1, "eligible_count": 1, "rejected_count": 0, "not_applicable_count": 0},
+    }
+
+
 def test_external_resources_prefers_latest_omo_observation(monkeypatch, tmp_path):
     projection = _projection()
     calls: list[object] = []
@@ -162,3 +196,81 @@ def test_external_resource_evaluation_rejects_missing_scene_binding(monkeypatch)
     assert response.json()["ok"] is False
     assert response.json()["status"] == "invalid"
     assert response.json()["activation"] == "forbidden"
+
+
+def test_external_resource_evaluation_persists_only_when_explicitly_requested(monkeypatch, tmp_path):
+    calls: list[dict] = []
+
+    def fake_evaluate(*_args, **_kwargs):
+        return _evaluation()
+
+    def fake_record(omo_dir, evaluation, **kwargs):
+        calls.append({"omo_dir": omo_dir, "evaluation": evaluation, **kwargs})
+        return {"status": "recorded", "observation": {"observation_id": "observation-1"}}
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "read_latest_external_resource_observation", lambda _path: {"catalog": _projection()})
+    monkeypatch.setattr(api_external_resources, "evaluate_external_resources", fake_evaluate)
+    monkeypatch.setattr(api_external_resources, "record_external_resource_evaluation", fake_record)
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/evaluate",
+        json={
+            "capability": "search",
+            "scene_binding": _evaluation()["scene_binding"],
+            "persist_observation": True,
+            "workflow_run_id": "run-test",
+            "actor_ref": "operator:test",
+        },
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["observation_status"] == "recorded"
+    assert body["observation_persisted"] is True
+    assert calls[0]["omo_dir"] == tmp_path / ".omo"
+    assert calls[0]["workflow_run_id"] == "run-test"
+    assert calls[0]["actor"] == "operator:test"
+
+
+def test_selection_evaluation_projection_is_read_only(monkeypatch, tmp_path):
+    dataset = {"dataset_version": "external-resource-selection-eval/v1", "rows": [], "summary": {"row_count": 0}}
+    calls: list[object] = []
+
+    def fake_dataset(omo_dir, *, scene_id=None):
+        calls.append((omo_dir, scene_id))
+        return dataset
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "build_external_resource_selection_dataset", fake_dataset)
+
+    response = TestClient(_app()).get(
+        "/api/external-resources/evaluations/selection?scene_id=research-brief"
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "live"
+    assert body["dataset"] == dataset
+    assert body["activation"] == "forbidden"
+    assert calls == [(tmp_path / ".omo", "research-brief")]
+
+
+def test_selection_policy_proposal_never_applies_policy(monkeypatch, tmp_path):
+    dataset = {"dataset_version": "external-resource-selection-eval/v1", "rows": [], "summary": {"row_count": 0}}
+    proposal = {"proposal_id": "proposal-1", "status": "proposal_only", "not_applied": True}
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "build_external_resource_selection_dataset", lambda *_args, **_kwargs: dataset)
+    monkeypatch.setattr(api_external_resources, "propose_selection_policy_feedback", lambda *_args, **_kwargs: proposal)
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/evaluations/proposal",
+        json={"proposal_id": "proposal-1", "candidate": {"max_unaligned_rate": 0.2}},
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "proposal_only"
+    assert body["proposal"]["not_applied"] is True
+    assert body["external_side_effects"] == "disabled"
