@@ -108,3 +108,20 @@ def test_cards_list_with_global_output_markdown():
         ret = cmd_cards(args)
         assert ret == 0
         mock_console.print.assert_called()
+
+
+def test_all_catalog_commands_registered_in_parser():
+    """验证所有在 COMMAND_CATALOG 声明的命令都已经在 CLI Parser 及 handlers 注册."""
+    import inspect
+    import re
+
+    import cockpit.cli as cli
+    from cockpit.commands.registry import COMMAND_CATALOG
+
+    with open(inspect.getfile(cli), encoding="utf-8") as f:
+        code = f.read()
+
+    handler_keys = set(re.findall(r"\"([a-z0-9\-]+)\":\s*(?:cmd_|dispatch_|_c_|lambda|_cmd_)", code))
+    catalog_keys = set(COMMAND_CATALOG.keys())
+    missing_in_handlers = catalog_keys - handler_keys - {"tui"}  # tui 独立判断
+    assert not missing_in_handlers, f"发现 COMMAND_CATALOG 声明但未注册 Handler 的子命令: {missing_in_handlers}"

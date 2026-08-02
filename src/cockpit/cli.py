@@ -488,6 +488,19 @@ def main() -> int:
     tui_p = sub.add_parser("tui", help="极客终端交互控制台 (Textual 全屏 TUI)")
     tui_p.add_argument("--theme", default="dark", choices=["dark", "light"], help="配色主题")
 
+    # ── BOS 知识能力与收件箱及监控快查命令 ─────────────────────
+    bcap_p = sub.add_parser("bos-capability", help="BOS capability / toolbox 外部能力")
+    bcap_p.add_argument("capability_command", nargs="?", default="list", choices=["list", "invoke"], help="子命令")
+    binbox_p = sub.add_parser("bos-inbox", help="BOS Inbox 多源私有知识神经网查询与操作")
+    binbox_p.add_argument(
+        "inbox_cmd", nargs="?", default="status", choices=["status", "search", "pending", "archive"], help="子命令"
+    )
+    binbox_p.add_argument("query", nargs="?", default="", help="搜索关键词")
+    ewatch_p = sub.add_parser("events-watch", help="实时监听 SSE 事件流简便入口")
+    ewatch_p.add_argument("--limit", type=int, default=20, help="显示最近的事件条数")
+    qcheck_p = sub.add_parser("quickstart-check", help="快速检查新用户环境核验状态")
+    qcheck_p.add_argument("--json", action="store_true", help="JSON 格式输出")
+
     # ── CLI 收敛: SSB 签名链 ────────────────────────────────
     ssb_p = sub.add_parser(
         "ssb",
@@ -1221,6 +1234,16 @@ def main() -> int:
         "kems": lambda a: __import__("cockpit.commands.kems", fromlist=["cmd_kems"]).cmd_kems(a),
         "c2g": lambda a: __import__("cockpit.commands.c2g", fromlist=["cmd_c2g"]).cmd_c2g(a),
         "tui": lambda a: __import__("cockpit.tui", fromlist=["launch"]).launch(a),
+        "bos-capability": lambda a: __import__(
+            "cockpit.commands.bos", fromlist=["cmd_bos_capability"]
+        ).cmd_bos_capability(a),
+        "bos-inbox": lambda a: __import__("cockpit.commands.bos_inbox", fromlist=["cmd_bos_inbox"]).cmd_bos_inbox(a),
+        "events-watch": lambda a: _c_events(
+            __import__("argparse").Namespace(watch=True, limit=getattr(a, "limit", 20), topic=None)
+        ),
+        "quickstart-check": lambda a: __import__(
+            "cockpit.commands.quickstart", fromlist=["cmd_quickstart"]
+        ).cmd_quickstart(__import__("argparse").Namespace(check=True, json=getattr(a, "json", False))),
     }
 
     global_output = getattr(args, "global_output", "text")

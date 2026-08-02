@@ -1,6 +1,6 @@
 # Cockpit 能力地图
 
-> 自动生成于 2026-08-02T12:21:10Z | 版本 1.0.0
+> 自动生成于 2026-08-02T12:56:53Z | 版本 1.0.0
 > 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑
 > 生成器: `bin/cockpit/gen-help-docs.py`
 
@@ -8,7 +8,7 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 103 |
+| CLI 命令 (含子命令) | 104 |
 | MCP 工具 | 385 |
 | MCP 服务器 | 25 |
 | BOS 服务 | 188 |
@@ -165,6 +165,7 @@
 | `cockpit stats` | 索引统计 |
 | `cockpit status` | 系统健康 |
 | `cockpit topics` | 列出已注册 topic |
+| `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
 | `cockpit up` | 启动观测栈 |
 | `cockpit url` | 打印 Langfuse Web URL |
@@ -176,4 +177,4 @@
 | `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
 
 ---
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T12:21:10Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T12:56:53Z 生成*
