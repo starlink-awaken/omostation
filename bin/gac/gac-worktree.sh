@@ -163,6 +163,30 @@ case "$cmd" in
       gh pr create --repo "$CANONICAL_ROOT_REPO" --base main --head "$branch" \
         --title "[$session] worktree 提交" \
         --body "GaC worktree per session (ADR-0106 P2). 自动生成 PR." 2>&1 | tail -2
+      # PR 文件清单校验 (P74: 防运行时文件混入 PR)
+      pr_num=$(gh pr list --repo "$CANONICAL_ROOT_REPO" --head "$branch" --base main --state open --json number 2>/dev/null \
+        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
+      if [ -n "$pr_num" ]; then
+        bad_files=$(gh pr view "$pr_num" --repo "$CANONICAL_ROOT_REPO" --json files 2>/dev/null \
+          | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    bad = [f['path'] for f in d.get('files',[])
+            if ('.jsonl' in f['path'] or '.lock' in f['path'] or f['path'].startswith('.omo/_knowledge/workflow-mesh/'))
+            and f.get('changeType') in ('ADDED', 'MODIFIED')]
+    print('\n'.join(bad))
+except Exception:
+    print('')
+" 2>/dev/null)
+        if [ -n "$bad_files" ]; then
+          echo "❌ PR #$pr_num 混入运行时文件, 请移除后重推:" >&2
+          echo "$bad_files" | sed 's/^/    /' >&2
+          echo "   git rm --cached <file> && git commit --amend && git push --force" >&2
+          exit 1
+        fi
+        echo "   ✅ PR #$pr_num 文件清单校验通过"
+      fi
     else
       echo "⚠️  gh 未装, 手动开 PR: base main <- $branch"
     fi
@@ -191,7 +215,16 @@ case "$cmd" in
     cd "$WS_ROOT"
     git worktree remove "$wt" 2>&1
     echo "✅ worktree 释放: $wt"
-    echo "   分支 work/$session 保留 (合并后可删: git branch -D work/$session)"
+    # 分支清理: 已合并到 main → 删; 否则保留 (内容未并入)
+    branch="work/$session"
+    if git rev-parse --verify "$branch" >/dev/null 2>&1; then
+      if git log --oneline --not "origin/main" "$branch" 2>/dev/null | head -1 | grep -q .; then
+        echo "   分支 $branch 有 main 外 commit, 保留 (可手动 git branch -D)"
+      else
+        git branch -D "$branch" 2>&1 | tail -1
+        echo "   ✅ 分支 $branch 已删除 (内容已并入 main)"
+      fi
+    fi
     ;;
 
   merge)
