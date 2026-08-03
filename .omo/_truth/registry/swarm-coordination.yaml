@@ -9,6 +9,7 @@
 #   D2 branch_occupancy      — work/<slug> occupancy lock
 #   D3 shared_worktree_claim — shared main tree requires agent-workflow claim
 #   D4 escape_hatch          — --no-verify / CI_LOCAL_SKIP allowlist only
+#   D5 pasw_submodule_isolation — Per-Agent Submodule Worktree (ADR-0344)
 
 version: 1
 last_updated: "2026-07-17"
@@ -54,6 +55,18 @@ gates:
     check: bin/gac/swarm-discipline-cli.py escape-check | git-argv-check
     fail_closed: true
     agent_wrapper: bin/gac/swarm-git
+  d5_pasw_submodule_isolation:
+    id: d5
+    name: Per-Agent Submodule Worktree isolation
+    entry: >
+      PASW (ADR-0344): 高冲突子模块 (gbrain/cockpit/agora) 的 per-agent 独立 worktree.
+      claim 时创建 .subtrees/<sub>/ 隔离 worktree, release 时清理.
+      强制: 子模块修改必须在 .subtrees/ 内, 不允许 root 直接 git add projects/<sub>.
+    check: .githooks/pre-commit (submodule-guard) + CI reachability gate
+    fail_closed: true
+    isolated_submodules: projects/gbrain, projects/cockpit, projects/agora
+    ttl_hours: 24
+    cleanup_script: bin/gac/gac-worktree-cleanup.sh
 
 # Paths that may be committed on the shared main worktree without isolation
 # (docs-only / generated / self-describing). Everything else needs claim or worktree.
@@ -86,6 +99,9 @@ conflict_event_kinds:
   - unclaimed_write
   - orphan_commit
   - escape_hatch_abuse
+  - pasw_submodule_shared_write
+  - pasw_pointer_not_on_main
+  - pasw_worktree_leak
 
 observation:
   window_hours: 72

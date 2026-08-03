@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -65,6 +65,10 @@ help:
 	@echo ""
 	@echo "=== 开发环境 ==="
 	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate)"
+	@echo ""
+	@echo "=== PASW 子模块隔离 (ADR-0344) ==="
+	@echo "make pasw-status         显示 PASW 子模块 worktree 状态"
+	@echo "make pasw-cleanup        TTL 回收过期子模块 worktree (默认 24h, 可 PASW_TTL_HOURS=12)"
 	@echo ""
 	@echo "=== 本地 CI ==="
 	@echo "make ci-local            本地 CI 预检 (push 前跑, ~30s, 拦 90% CI 失败)"
@@ -179,9 +183,22 @@ ssot-sync:  ## SSOT 变更记录到审计日志
 	read -p "Reason: " reason; \
 	uv run --with pyyaml python bin/ssot-watcher.py sync --author "$$author" --reason "$$reason"
 
-sync-submodules:  ## 推送子模块未推送的 commit 到远程
-	@echo "── 同步子模块 ────────────────────────────────────────"
-	bash bin/sync-submodules.sh
+sync-submodules:  ## 推送子模块未推送的 commit 到远程 (PASW-aware)
+	@echo "── 同步子模块 (PASW-aware: 含 .subtrees/ 隔离 worktree) ──"
+	bash bin/ssot/sync-submodules-push.sh
+
+# ── Worktree 治理 (P74: 防堆积) ──────────────────────────
+worktree-guard:  ## 检查 worktree 数量上限 (超 MAX_WORKTREES=8 返回 1)
+	bash bin/gac/gac-worktree-guard.sh --check
+
+worktree-prune:  ## 清理已合并/冗余 worktree (gac-worktree-prune.sh --apply)
+	bash bin/gac/gac-worktree-prune.sh --apply
+
+worktree-cleanup:  ## 回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h; cron 入口)
+	bash bin/gac/gac-worktree-cleanup.sh
+
+worktree-audit:  ## 列出可清理的冗余分支 (check-branch-redundant --json)
+	python3 bin/ssot/check-branch-redundant.py --json
 
 # ── 能力注册表 + 文档自动生成 (P0-T2) ─────────────────────
 sync-capability-registry:  ## 生成能力注册表 SSOT (扫描 MCP/BOS/CLI)
@@ -415,3 +432,19 @@ bos-stdio-candidates:
 
 m2-ssot-batch1:
 	uv run --with pyyaml python bin/mof/m2-ssot-inventory.py --emit-batch 1
+
+# ── PASW: Per-Agent Submodule Worktree (ADR-0344) ─────────────────────────
+# 高冲突子模块 (gbrain/cockpit/agora) per-agent 独立 worktree 隔离.
+# claim 时自动创建, release/merge 时自动清理, cleanup 定期回收.
+
+pasw-status:  ## 显示 PASW 子模块 worktree 状态
+	@echo "── PASW 子模块 Worktree 状态 ────────────────────────"
+	@bash bin/gac/gac-worktree.sh list
+	@echo ""
+	@echo "隔离子模块: projects/gbrain projects/cockpit projects/agora"
+	@echo "存储路径:   .subtrees/ (已 gitignore)"
+	@echo "TTL:        $(or $(PASW_TTL_HOURS),24)h"
+
+pasw-cleanup:  ## TTL 回收过期子模块 worktree (默认 24h)
+	@echo "── PASW 子模块 Worktree 回收 ────────────────────────"
+	bash bin/gac/gac-worktree-cleanup.sh

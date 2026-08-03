@@ -11,6 +11,10 @@
 .omo/_delivery/
 .omo/_log/
 .omo/_knowledge/*.jsonl
+# workflow-mesh 运行时事件流 (高频 churn, 非治理 SSOT; governance-history.jsonl 保留入仓)
+.omo/_knowledge/workflow-mesh/
+# 通用锁文件 (git 不追踪 .lock)
+**/*.lock
 .omo/_control/evolution/drift-history/*.json.lock
 .omo/capabilities/
 # debt/ 派生产物 (dashboard/dispatch/action-packet/review-queue/owner-routing/reviews/
@@ -196,3 +200,10 @@ artifacts-*.html
 
 # accidental root ecos scaffold (SSOT lives in projects/ecos)
 /ecos/
+
+# ---------------------------------------------------------------------------
+# 11. PASW (Per-Agent Submodule Worktree) 隔离存储
+#    高冲突子模块的独立 worktree 存放目录. 不属于 root 仓库, 禁止 commit.
+#    gac-worktree.sh claim 时创建, release/merge 时清理.
+# ---------------------------------------------------------------------------
+.subtrees/

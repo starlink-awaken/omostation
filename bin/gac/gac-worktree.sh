@@ -41,6 +41,54 @@ validate_session() {
   fi
 }
 
+# PASW: 需要独立 worktree 隔离的高冲突子模块 (按冲突频率排序)
+ISOLATED_SUBS="projects/gbrain projects/cockpit projects/agora"
+# PASW: 子模块 worktree 存放路径 (root worktree 内)
+PASW_SUBTREE_DIR=".subtrees"
+# PASW: 过期 TTL (小时)
+PASW_TTL_HOURS="${PASW_TTL_HOURS:-24}"
+
+pasw_create() {
+  local wt="$1" session="$2"
+  local created=0
+  for sub in $ISOLATED_SUBS; do
+    local sub_name
+    sub_name=$(basename "$sub")
+    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
+    local sub_branch="agent/${session}-${sub_name}"
+    if [ ! -e "$wt/$sub/.git" ]; then
+      echo "   📥 init $sub (PASW 需要)..."
+      (cd "$wt" && git submodule update --init "$sub" 2>&1) || { echo "   ⚠️  $sub init 失败, 跳过"; continue; }
+    fi
+    [ -d "$sub_wt" ] && { echo "   ⏭  $sub worktree 已存在"; continue; }
+    ( cd "$wt/$sub" && local current_sha && current_sha=$(git rev-parse HEAD) && git branch -f "$sub_branch" "$current_sha" 2>/dev/null || true && mkdir -p "$(dirname "$sub_wt")" && git worktree add "$sub_wt" "$sub_branch" 2>&1 ) && {
+      echo "   🔧 PASW: $sub → $PASW_SUBTREE_DIR/$sub_name (branch: $sub_branch)"
+      created=$((created + 1))
+    } || echo "   ⚠️  $sub worktree 创建失败, 跳过"
+  done
+  [ "$created" -gt 0 ] && echo "   ✅ PASW: $created 个子模块 worktree 已隔离"
+}
+
+pasw_cleanup() {
+  local wt="$1"
+  local cleaned=0
+  for sub in $ISOLATED_SUBS; do
+    local sub_name
+    sub_name=$(basename "$sub")
+    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
+    local sub_branch
+    if [ -d "$sub_wt" ]; then
+      sub_branch=$(git -C "$sub_wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+      ( cd "$wt/$sub" && git worktree remove "$sub_wt" 2>/dev/null && [ -n "$sub_branch" ] && [ "$sub_branch" != "HEAD" ] && git branch -d "$sub_branch" 2>/dev/null || true ) && {
+        echo "   🧹 PASW: 已清理 $sub worktree"
+        cleaned=$((cleaned + 1))
+      } || { echo "   ⚠️  $sub 清理失败, 强制移除"; rm -rf "$sub_wt" 2>/dev/null || true; }
+    fi
+  done
+  rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
+  [ "$cleaned" -gt 0 ] && echo "   ✅ PASW: $cleaned 个子模块 worktree 已清理"
+}
+
 case "$cmd" in
   claim)
     [ -z "$session" ] && echo "用法: claim <session>" >&2 && exit 1
@@ -110,11 +158,15 @@ case "$cmd" in
           echo "   📋 next ADR hint: $next_adr  (claim: python3 bin/adr/next-adr-id.py --session $session --claim)"
         fi
       fi
+      # PASW: 创建子模块隔离 worktree
+      pasw_create "$wt" "$session"
       echo ""
       echo "   下一步:"
       echo "     cd $wt"
       echo "     uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> --profile <agent> --objective '...'"
       echo "     # ... 工作 (改文件, commit) ..."
+      echo "     # 如需改子模块: cd $wt/$PASW_SUBTREE_DIR/<sub_name> && git add . && git commit"
+      echo "     # 更新指针:    gac-worktree.sh bump-pointer $session projects/<sub_name>"
       echo "     gac-worktree.sh submit $session"
     fi
     ;;
@@ -130,9 +182,9 @@ case "$cmd" in
     fi
     cd "$wt"
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
-    # 提交未提交改动 (如有)
+    # 提交未提交改动 (如有). PASW: 只 commit root 已 staged 的改动
     if ! git diff --quiet || ! git diff --cached --quiet; then
-      git add -A
+      git add -- ':!.subtrees' .
       git commit -m "wip: $session worktree 提交" 2>&1 | tail -2
     fi
     # 防 CI 死锁: 检查 dependency-baseline drift (submodule bump 可能引入新依赖)
@@ -163,6 +215,28 @@ case "$cmd" in
       gh pr create --repo "$CANONICAL_ROOT_REPO" --base main --head "$branch" \
         --title "[$session] worktree 提交" \
         --body "GaC worktree per session (ADR-0106 P2). 自动生成 PR." 2>&1 | tail -2
+      # PR 文件清单校验 (P74: 防运行时文件混入 PR)
+      pr_num=$(gh pr list --repo "$CANONICAL_ROOT_REPO" --head "$branch" --base main --state open --json number 2>/dev/null \
+        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
+      if [ -n "$pr_num" ]; then
+        bad_files=$(gh pr view "$pr_num" --repo "$CANONICAL_ROOT_REPO" --json files 2>/dev/null \
+          | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    bad = [f['path'] for f in d.get('files',[]) if '.jsonl' in f['path'] or '.lock' in f['path'] or f['path'].startswith('.omo/_knowledge/workflow-mesh/')]
+    print('\n'.join(bad))
+except Exception:
+    print('')
+" 2>/dev/null)
+        if [ -n "$bad_files" ]; then
+          echo "❌ PR #$pr_num 混入运行时文件, 请移除后重推:" >&2
+          echo "$bad_files" | sed 's/^/    /' >&2
+          echo "   git rm --cached <file> && git commit --amend && git push --force" >&2
+          exit 1
+        fi
+        echo "   ✅ PR #$pr_num 文件清单校验通过"
+      fi
     else
       echo "⚠️  gh 未装, 手动开 PR: base main <- $branch"
     fi
@@ -189,9 +263,21 @@ case "$cmd" in
       exit 1
     fi
     cd "$WS_ROOT"
+    # PASW: 清理子模块 worktree (在移除 root worktree 前)
+    pasw_cleanup "$wt"
     git worktree remove "$wt" 2>&1
     echo "✅ worktree 释放: $wt"
-    echo "   分支 work/$session 保留 (合并后可删: git branch -D work/$session)"
+    # 分支清理: 已合并到 main → 删; 否则保留 (check-branch-redundant 判重)
+    branch="work/$session"
+    if git rev-parse --verify "$branch" >/dev/null 2>&1; then
+      if git log --oneline --not "origin/main" "$branch" 2>/dev/null | head -1 | grep -q .; then
+        echo "   分支 $branch 有 main 外 commit, 保留 (可手动 git branch -D)"
+      else
+        # 已合并 (无 main 外 commit) → 安全删
+        git branch -D "$branch" 2>&1 | tail -1
+        echo "   ✅ 分支 $branch 已删除 (内容已并入 main)"
+      fi
+    fi
     ;;
 
   merge)
@@ -253,6 +339,8 @@ case "$cmd" in
       # 主仓切 main + 拉最新 (含刚合并的)
       git checkout main 2>&1 | tail -1
       git pull --ff-only "$ROOT_REMOTE" main 2>&1 | tail -2
+      # PASW: 清理子模块 worktree (在移除 root worktree 前)
+      pasw_cleanup "$wt"
       # 释放 worktree (clean, 因 submit 已 push 全部)
       git worktree remove "$wt" 2>&1
       echo "✅ worktree 释放: $wt"
@@ -263,22 +351,109 @@ case "$cmd" in
     fi
     ;;
 
+  bump-pointer)
+    [ -z "$session" ] && echo "用法: bump-pointer <session> <submodule>" >&2 && exit 1
+    validate_session "$session"
+    wt="$WS_PARENT/ws-$session"
+    sub="${3:-}"
+    [ -z "$sub" ] && { echo "❌ 缺少子模块参数" >&2; exit 1; }
+    [ ! -d "$wt" ] && { echo "❌ worktree 不存在: $wt" >&2; exit 1; }
+    sub_name=$(basename "$sub")
+    sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
+    [ ! -d "$sub_wt" ] && { echo "❌ 子模块 worktree 不存在: $sub_wt" >&2; exit 1; }
+    new_sha=$(git -C "$sub_wt" rev-parse HEAD 2>/dev/null)
+    [ -z "$new_sha" ] && { echo "❌ 无法获取 $sub worktree HEAD" >&2; exit 1; }
+    # PASW: 验证 SHA 在 submodule origin/main 上
+    ( cd "$wt/$sub" && if git branch -r --contains "$new_sha" 2>/dev/null | grep -q "origin/main"; then
+        echo "   ✅ SHA $new_sha 在子模块 origin/main 上 (CI 可达)"
+      else
+        echo "   ❌ SHA $new_sha 不在子模块 origin/main 上" >&2
+        echo "   请先合并子模块 PR 到 main, 再运行 bump-pointer" >&2
+        exit 1
+      fi )
+    cd "$wt"
+    git update-index --cacheinfo 160000,"$new_sha","$sub"
+    echo "✅ 指针已更新: $sub → $new_sha"
+    echo "   下一步: git commit -m 'bump $sub' && gac-worktree.sh submit $session"
+    ;;
+
   list)
     echo "=== GaC worktree 列表 ==="
     git worktree list
+    echo ""
+    echo "=== PASW 子模块 Worktree ==="
+    for wt_path in "$WS_PARENT"/ws-*/; do
+      [ -d "$wt_path" ] || continue
+      wt_name=$(basename "$wt_path")
+      sub_list=""
+      for sub in $ISOLATED_SUBS; do
+        sub_name=$(basename "$sub")
+        [ -d "$wt_path/$PASW_SUBTREE_DIR/$sub_name" ] && sub_list="$sub_list $sub_name"
+      done
+      [ -n "$sub_list" ] && echo "  $wt_name:$sub_list"
+    done
+    ;;
+
+  cleanup)
+    # TTL 过期 worktree 回收 (cron 调用入口; gac-worktree-cleanup.sh 委托本子命令)
+    # 判定: mtime (非 atime — relatime 下 atime 不更新) 超 TTL 且无脏改动 → 删除
+    TTL_HOURS="${PASW_TTL_HOURS:-24}"
+    DRY=false
+    [ "${2:-}" = "--dry-run" ] && DRY=true
+    echo "=== Worktree Cleanup TTL=${TTL_HOURS}h dry=$DRY ==="
+    now=$(date +%s)
+    pruned=0
+    for wt_path in "$WS_PARENT"/ws-*/; do
+      [ -d "$wt_path" ] || continue
+      wt_name=$(basename "$wt_path")
+      # 用 mtime (stat -f %m on macOS / %Y on Linux)
+      last_mtime=$(stat -f %m "$wt_path" 2>/dev/null || stat -c %Y "$wt_path" 2>/dev/null || echo 0)
+      age_hours=$(( (now - last_mtime) / 3600 ))
+      if [ "$age_hours" -lt "$TTL_HOURS" ]; then
+        continue
+      fi
+      # 有未提交改动则跳过 (防丢工作)
+      if ! git -C "$wt_path" diff --quiet 2>/dev/null || ! git -C "$wt_path" diff --cached --quiet 2>/dev/null; then
+        echo "  ⏭️  $wt_name 有未提交改动, 跳过 (age=${age_hours}h)"
+        continue
+      fi
+      # PASW: 先清理子模块 worktree
+      for sub in $ISOLATED_SUBS; do
+        sub_name=$(basename "$sub")
+        sub_wt="$wt_path/$PASW_SUBTREE_DIR/$sub_name"
+        if [ -d "$sub_wt" ]; then
+          (git -C "$wt_path/$sub" worktree remove "$sub_wt" 2>/dev/null) || rm -rf "$sub_wt" 2>/dev/null || true
+          echo "   🧹 已清理 $sub worktree"
+        fi
+      done
+      rmdir "$wt_path/$PASW_SUBTREE_DIR" 2>/dev/null || true
+      if [ "$DRY" = true ]; then
+        echo "  🧹 [dry-run] 将回收: $wt_name (age=${age_hours}h)"
+      else
+        git worktree remove --force "$wt_path" 2>&1 | head -1
+        branch="work/${wt_name#ws-}"
+        git branch -D "$branch" 2>/dev/null | head -1
+        echo "  🧹 回收: $wt_name (age=${age_hours}h)"
+      fi
+      pruned=$((pruned+1))
+    done
+    echo "=== Cleanup 完成 (回收 $pruned) ==="
     ;;
 
   *)
     echo "GaC worktree per session (ADR-0106 P2)"
     echo ""
-    echo "用法: gac-worktree.sh {claim|submit|merge|release|list} [session]"
+    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-pointer|list|cleanup} [args]"
     echo ""
-    echo "  claim <session>      创建 worktree + 分支 work/<session>"
+    echo "  claim <session>      创建 worktree + 分支 work/<session> (+ PASW 子模块隔离)"
     echo "  submit <session>     push 分支 + 开 PR (base main)"
     echo "  merge <session>      squash 合并 PR + release worktree + 删分支"
     echo "  release <session>    清理 worktree (手动, 合并后)"
-    echo "  list                 列所有 worktree"
+    echo "  bump-pointer <session> <submodule>  更新子模块指针到 worktree HEAD"
+    echo "  list                 列所有 worktree + PASW 状态"
+    echo "  cleanup              回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h)"
     echo ""
+    echo "PASW 隔离子模块: $ISOLATED_SUBS"
     echo "session 命名: 只允许 [a-z0-9-] (如 fix-route-bug)"
     exit 1
     ;;

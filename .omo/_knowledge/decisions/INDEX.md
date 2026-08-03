@@ -410,6 +410,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0340: 外部场景试运行合同与反馈晋升边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 47 | 0340-external-scene-trial-contract.md
 - ADR-0341: 外部场景试运行审阅反馈边界 - **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 48 | 0341-external-scene-trial-review-feedback.md
 - ADR-0343: 外部场景试运行晋升就绪度投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 49 | 0343-external-scene-trial-promotion-readiness.md
+- ADR-0344: PASW — Per-Agent Submodule Worktree 子模块隔离 — **ACCEPTED** | 2026-08-03 | architecture-governance | 0344-pasw-submodule-isolation.md
 
 ---
 
