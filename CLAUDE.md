@@ -234,7 +234,7 @@ Run a single test with each framework's native filter (see the target project's 
 | Write an ADR | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [`.omo/standards/adr-process.md`](.omo/standards/adr-process.md) |
 | Project layer placement | [`docs/project-registry.yaml`](docs/project-registry.yaml) → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) |
 | Land changes to root `main` | [`bin/gac/gac-worktree.sh`](bin/gac/gac-worktree.sh) (claim/submit/merge) · [`AGENTS.md` §6.1](AGENTS.md) · [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) |
-| Modify a high-conflict submodule (gbrain/cockpit/agora) | PASW: work in `.subtrees/<sub>/` via `gac-worktree.sh claim` → `bump-pointer` · [`AGENTS.md` §6.2`](AGENTS.md) · [ADR-0344](.omo/_knowledge/decisions/0344-pasw-submodule-isolation.md) |
+| Modify a high-conflict submodule (gbrain/cockpit/agora) | PASW: work in `.subtrees/<sub>/` via `gac-worktree.sh` claim → bump-pointer · [`AGENTS.md` §6.2`](AGENTS.md) · [ADR-0345](.omo/_knowledge/decisions/0345-pasw-submodule-isolation.md) |
 | Code callers / impact / structure graph | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) · MCP `codebase-memory-mcp` · skill `codebase-memory` |
 
 ## 7. Closeout

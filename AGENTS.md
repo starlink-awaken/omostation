@@ -281,6 +281,7 @@ git commit -m "bump gbrain" && gac-worktree.sh submit <session>
 ```
 
 **强制约束 (pre-commit hook 守门)**:
+
 - 不允许 root 直接 `git add projects/<sub>` (gitlink 变更) — 必须通过 `.subtrees/` worktree
 - 指针 SHA 必须与 `.subtrees/<sub>` HEAD 一致
 - `.subtrees/` 不入 root 仓库 (.gitignore)

@@ -9,7 +9,7 @@
 #   D2 branch_occupancy      — work/<slug> occupancy lock
 #   D3 shared_worktree_claim — shared main tree requires agent-workflow claim
 #   D4 escape_hatch          — --no-verify / CI_LOCAL_SKIP allowlist only
-#   D5 pasw_submodule_isolation — Per-Agent Submodule Worktree (ADR-0345)
+#   D5 pasw_submodule_isolation — Per-Agent Submodule Worktree (ADR-0346)
 
 version: 1
 last_updated: "2026-07-17"
@@ -59,7 +59,7 @@ gates:
     id: d5
     name: Per-Agent Submodule Worktree isolation
     entry: >
-      PASW (ADR-0345): 高冲突子模块 (gbrain/cockpit/agora) 的 per-agent 独立 worktree.
+      PASW (ADR-0346): 高冲突子模块 (gbrain/cockpit/agora) 的 per-agent 独立 worktree.
       claim 时创建 .subtrees/<sub>/ 隔离 worktree, release 时清理.
       强制: 子模块修改必须在 .subtrees/ 内, 不允许 root 直接 git add projects/<sub>.
     check: .githooks/pre-commit (submodule-guard) + CI reachability gate
