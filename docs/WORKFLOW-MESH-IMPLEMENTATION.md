@@ -798,6 +798,17 @@ proposal-only 评审入口，Cockpit UI 在外部能力目录中展示场景、�
 因此“继续试运行”不等于批准连接，“已评审”也不等于业务成功。Cockpit 没有试运行记录时返回 `empty`，OMO 或日志
 格式异常时返回 `unavailable`，不回退到未经治理的 provider 读取。
 
+### 7.3.17 Phase 49 外部场景晋升就绪度
+
+Phase 49 把试运行后的“是否具备正式 Workflow Mesh 晋升条件”固化为
+`external-scene-trial-promotion-readiness/v1`。OMO 的 `scene-trial-readiness` 和 Cockpit 的
+`GET /api/external-resources/scene-trials/readiness` 从同一组 append-only 事实重建投影：试运行记录、最新评审动作、
+同场景的真实 WorkflowRun、`external-connection-receipt/v1` 证据，以及正向 `outcome-feedback/v1`。
+
+投影按场景返回 `empty`、`blocked`、`ready`、`unavailable` 和阻断码。`ready` 只允许人工提交晋升提案，不会自动创建
+WorkflowRun、执行 admission、激活连接或调用 provider；Cockpit UI 同时展示匹配的运行、外部回执、结果反馈和阻断项。
+没有真实消费者与结果反馈时，任何“继续试运行”或静态扩展包预览都只能保持 proposal-only。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
