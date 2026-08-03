@@ -990,6 +990,26 @@ Phase 60 将已有的外部资源发现、只读健康探活、OMO observation �
 Phase 60 仍不引入定时后台激活、自动恢复或自动替换。下一步用真实低风险消费者产生第一批完整 receipt、outcome feedback 和
 `ready` 评测样本，再决定是否开启受控定时观察和模型化路由。
 
+### 7.3.28 Phase 61 人工评测标签回执与双人放行队列
+
+Phase 61 将 `ready` 评测样本接到真实人工标注闭环，但保持评测与执行严格分离。OMO 新增
+`workflow-mesh-evaluation-label/v1` append-only receipt，允许人工提交有限枚举的选择质量、结果质量、结论和置信度，
+以及证据引用、复核人引用和可选摘要哈希；原文、提示词、模型输出、自由文本备注、凭据和未知字段在边界处拒绝。
+Cockpit 新增 `POST /api/workflow-mesh/evaluation-label`，写入仍由 OMO broker 负责，接口固定返回
+`activation=forbidden`、`provider_invocation=false`、`workflow_run_creation=false` 和 `worker_launch=false`。
+
+运营投影增加 `workflow-mesh-evaluation-label-queue/v1`，把每个评测样本分成 `unlabeled`、`single_review`、`consensus`、
+`adjudication_required`、`adjudicated` 和 `blocked`。一条样本只有两名主标注一致，或经过 adjudication 且最终接受，才计入
+`label_ready_count`；`ready` 只代表运行事实完整，不代表已经可训练。UI 同时展示队列计数和最小标注表单，不展示或接收外部
+原文。标签回执、外部 receipt 和 outcome feedback 三类事实保持独立，后续生成 manifest 时再按 evaluation_id 做可审计 join。
+
+当前产品链进一步收敛为：
+
+`WorkflowRun -> external receipt -> outcome feedback -> readiness -> primary labels -> consensus/adjudication -> evaluation manifest`
+
+本阶段仍不生成训练集、不训练预测模型、不改变路由策略。下一阶段应选择一个真实低风险消费者，产生第一批双人标注并形成脱敏
+manifest，之后才进入规则基线、离线评测和 shadow 预测。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
