@@ -418,6 +418,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0349: Scene Card 到 OMO planned task 的场景承接 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 56 | 0349-scene-card-planned-task-handoff.md
 - ADR-0350: 任务中心的场景化 Workflow 请求 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 57 | 0350-task-center-scene-workflow-request.md
 - ADR-0351: 任务中心 Workflow 请求投影与准入触达 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 58 | 0351-task-center-workflow-request-projection.md
+- ADR-0352: Workflow Mesh 结果回执与评测样本准备度投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 59 | 0352-workflow-result-feedback-evaluation-readiness.md
 
 ---
 
