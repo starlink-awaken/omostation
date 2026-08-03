@@ -101,6 +101,20 @@ assets:
       - projects/ecos
       - projects/omo
     status: active
+  - id: OMO-CONFIG
+    ref: .omo/_config/
+    plane: state_plane
+    asset_type: config_state
+    persistence_mode: operational
+    retention_mode: manual_archive
+    truth_owner: governance
+    write_via:
+      - projects/omo
+      - approved_automation
+    consumed_by:
+      - projects/omo
+      - cockpit
+    status: active
   - id: OMO-DELIVERY
     ref: .omo/_delivery/
     plane: state_plane

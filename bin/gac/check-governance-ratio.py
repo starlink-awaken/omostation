@@ -71,6 +71,14 @@ GOVERNANCE_WORKFLOWS = {
     "mof-state-bridge-audit",
     "c2g-spec-ingress",
 }
+# Workflows that are product-delivery surfaces even when run by a governance
+# profile agent. The governance ratio measures governance *effort*, not the
+# actor's title; a governance-agent doing project-code-change is delivering
+# product value, not doing governance overhead.
+FLEX_OVERRIDE_WORKFLOWS = {
+    "project-code-change",
+    "project-doc-change",
+}
 
 
 def _parse_ts(value: str) -> datetime | None:
@@ -84,17 +92,26 @@ def _parse_ts(value: str) -> datetime | None:
         return None
 
 
+_WORKFLOW_LOCK_PREFIX = ".omo/_delivery/agent-workflows/locks/"
+
+
 def _classify(evt: dict) -> str:
     if evt.get("track") in {"governance", "collaboration", "flex"}:
         return evt["track"]
+    wf = evt.get("workflow_id") or ""
+    if wf in FLEX_OVERRIDE_WORKFLOWS:
+        return "flex"
     if evt.get("agent_profile") in GOVERNANCE_PROFILES:
         return "governance"
-    if evt.get("workflow_id") in GOVERNANCE_WORKFLOWS:
+    if wf in GOVERNANCE_WORKFLOWS:
         return "governance"
     locks = evt.get("locks") or []
     for lock in locks:
+        lock_str = str(lock)
+        if lock_str.startswith(_WORKFLOW_LOCK_PREFIX):
+            continue
         for pat in GOVERNANCE_PATHS:
-            if pat in str(lock):
+            if pat in lock_str:
                 return "governance"
     if "collaboration" in (evt.get("objective") or "").lower():
         return "collaboration"
