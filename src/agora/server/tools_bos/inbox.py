@@ -23,17 +23,23 @@ async def bos_inbox_status() -> dict:
 
     runtime_dir, inbox_dir = _get_inbox_paths()
     vector_store_file = runtime_dir / "vector_store.json"
-    
+
     inbox_files = {}
     if inbox_dir.exists():
-        for filename in ["2026-07-31-auto-seeyon-oa-pending.md", "2026-07-31-auto-netease-mailmaster.md", "2026-07-31-auto-apple-mail.md"]:
+        for filename in [
+            "2026-07-31-auto-seeyon-oa-pending.md",
+            "2026-07-31-auto-netease-mailmaster.md",
+            "2026-07-31-auto-apple-mail.md",
+        ]:
             filepath = inbox_dir / filename
             if filepath.exists():
                 stat = filepath.stat()
                 inbox_files[filename] = {
                     "exists": True,
                     "size": stat.st_size,
-                    "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(stat.st_mtime))
+                    "mtime": _time.strftime(
+                        "%Y-%m-%d %H:%M:%S", _time.localtime(stat.st_mtime)
+                    ),
                 }
             else:
                 inbox_files[filename] = {"exists": False, "size": 0, "mtime": "N/A"}
@@ -44,18 +50,23 @@ async def bos_inbox_status() -> dict:
         vs_info = {
             "exists": True,
             "size": stat.st_size,
-            "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(stat.st_mtime))
+            "mtime": _time.strftime(
+                "%Y-%m-%d %H:%M:%S", _time.localtime(stat.st_mtime)
+            ),
         }
 
-    return _ok({
-        "format_version": FORMAT_VERSION,
-        "runtime_dir": str(runtime_dir),
-        "inbox_dir": str(inbox_dir),
-        "vector_store": vs_info,
-        "inbox_files": inbox_files,
-        "status": "ready" if (vs_info["exists"] or any(f["exists"] for f in inbox_files.values())) else "empty"
-    })
-
+    return _ok(
+        {
+            "format_version": FORMAT_VERSION,
+            "runtime_dir": str(runtime_dir),
+            "inbox_dir": str(inbox_dir),
+            "vector_store": vs_info,
+            "inbox_files": inbox_files,
+            "status": "ready"
+            if (vs_info["exists"] or any(f["exists"] for f in inbox_files.values()))
+            else "empty",
+        }
+    )
 
 
 async def bos_inbox_search(query: str, top_k: int = 5, source: str = "all") -> dict:
@@ -68,17 +79,23 @@ async def bos_inbox_search(query: str, top_k: int = 5, source: str = "all") -> d
     vector_store_file = runtime_dir / "vector_store.json"
 
     if not vector_store_file.exists():
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "query": query,
-            "matches": [],
-            "note": "本地向量库 vector_store.json 暂未建立或未同步"
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "query": query,
+                "matches": [],
+                "note": "本地向量库 vector_store.json 暂未建立或未同步",
+            }
+        )
 
     try:
         data = json.loads(vector_store_file.read_text(encoding="utf-8"))
-        records = data if isinstance(data, list) else data.get("records", data.get("items", []))
-        
+        records = (
+            data
+            if isinstance(data, list)
+            else data.get("records", data.get("items", []))
+        )
+
         results = []
         for rec in records:
             if not isinstance(rec, dict):
@@ -88,15 +105,16 @@ async def bos_inbox_search(query: str, top_k: int = 5, source: str = "all") -> d
                 results.append(rec)
                 if len(results) >= top_k:
                     break
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "query": query,
-            "matches": results,
-            "total_matched": len(results)
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "query": query,
+                "matches": results,
+                "total_matched": len(results),
+            }
+        )
     except Exception as exc:
         return _error(f"Failed to read vector store: {exc}")
-
 
 
 async def bos_inbox_pending(source: str = "seeyon_oa") -> dict:
@@ -113,29 +131,34 @@ async def bos_inbox_pending(source: str = "seeyon_oa") -> dict:
         target_file = inbox_dir / "2026-07-31-auto-apple-mail.md"
 
     if not target_file.exists():
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "source": source,
-            "exists": False,
-            "message": f"未找到对应的数据快照文件: {target_file.name}"
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "source": source,
+                "exists": False,
+                "message": f"未找到对应的数据快照文件: {target_file.name}",
+            }
+        )
 
     try:
         content = target_file.read_text(encoding="utf-8")
         from agora.mcp.bos_router import clean_inbox_content
 
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "source": source,
-            "exists": True,
-            "filename": target_file.name,
-            "size": target_file.stat().st_size,
-            "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(target_file.stat().st_mtime)),
-            "content_preview": clean_inbox_content(content[:1500])
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "source": source,
+                "exists": True,
+                "filename": target_file.name,
+                "size": target_file.stat().st_size,
+                "mtime": _time.strftime(
+                    "%Y-%m-%d %H:%M:%S", _time.localtime(target_file.stat().st_mtime)
+                ),
+                "content_preview": clean_inbox_content(content[:1500]),
+            }
+        )
     except Exception as exc:
         return _error(f"Read pending file failed: {exc}")
-
 
 
 async def bos_inbox_watch(priority_only: bool = True) -> dict:
@@ -183,30 +206,33 @@ async def bos_inbox_watch(priority_only: bool = True) -> dict:
                         else ("HIGH" if is_urgent else "NORMAL")
                     )
 
-                    urgent_items.append({
-                        "id": file_path.stem,
-                        "filename": file_path.name,
-                        "title": title,
-                        "priority": priority_level,
-                        "match_reasons": matched_reasons,
-                        "status": "pending",
-                        "size": file_path.stat().st_size,
-                        "mtime": _time.strftime(
-                            "%Y-%m-%d %H:%M:%S",
-                            _time.localtime(file_path.stat().st_mtime),
-                        ),
-                        "urgent": is_urgent,
-                        "snippet": cleaned[:400],
-                    })
+                    urgent_items.append(
+                        {
+                            "id": file_path.stem,
+                            "filename": file_path.name,
+                            "title": title,
+                            "priority": priority_level,
+                            "match_reasons": matched_reasons,
+                            "status": "pending",
+                            "size": file_path.stat().st_size,
+                            "mtime": _time.strftime(
+                                "%Y-%m-%d %H:%M:%S",
+                                _time.localtime(file_path.stat().st_mtime),
+                            ),
+                            "urgent": is_urgent,
+                            "snippet": cleaned[:400],
+                        }
+                    )
             except Exception:
                 continue
-    return _ok({
-        "format_version": FORMAT_VERSION,
-        "watch_mode": "priority_only" if priority_only else "all",
-        "urgent_count": len(urgent_items),
-        "items": urgent_items,
-    })
-
+    return _ok(
+        {
+            "format_version": FORMAT_VERSION,
+            "watch_mode": "priority_only" if priority_only else "all",
+            "urgent_count": len(urgent_items),
+            "items": urgent_items,
+        }
+    )
 
 
 async def bos_inbox_archive(filename: str, reason: str = "resolved") -> dict:
@@ -221,7 +247,9 @@ async def bos_inbox_archive(filename: str, reason: str = "resolved") -> dict:
         return _error(f"Inbox snapshot not found: {filename}")
 
     # 准备 archive 目录: _knowledge/archive/inbox/
-    doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+    doc_root = Path(
+        os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents"))
+    )
     archive_dir = doc_root / "_knowledge" / "archive" / "inbox"
     archive_dir.mkdir(parents=True, exist_ok=True)
 
@@ -235,27 +263,34 @@ async def bos_inbox_archive(filename: str, reason: str = "resolved") -> dict:
         )
         target_file.write_text(content + archive_meta, encoding="utf-8")
         src_file.unlink()
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "filename": filename,
-            "archived": True,
-            "reason": reason,
-            "archive_path": str(target_file),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "filename": filename,
+                "archived": True,
+                "reason": reason,
+                "archive_path": str(target_file),
+            }
+        )
     except Exception as exc:
         return _error(f"Failed to archive inbox item: {exc}")
-
 
 
 async def bos_inbox_triage(limit: int = 10, priority_threshold: str = "high") -> dict:
     """BOS Inbox 公文与待办智能分拣与紧急度分级引擎。"""
     try:
         pending_res = await bos_inbox_pending()
-        items = pending_res.get("result", {}).get("items", []) if isinstance(pending_res, dict) else []
+        items = (
+            pending_res.get("result", {}).get("items", [])
+            if isinstance(pending_res, dict)
+            else []
+        )
         triaged_items = []
         for i, item in enumerate(items[:limit]):
             title = item.get("title", "") if isinstance(item, dict) else str(item)
-            priority = item.get("priority", "normal") if isinstance(item, dict) else "normal"
+            priority = (
+                item.get("priority", "normal") if isinstance(item, dict) else "normal"
+            )
             if "紧急" in title or "急件" in title or "严重" in title:
                 rec_action = "immediate_review"
                 urgency = "high"
@@ -265,23 +300,26 @@ async def bos_inbox_triage(limit: int = 10, priority_threshold: str = "high") ->
             else:
                 rec_action = "routine_process"
                 urgency = priority
-            triaged_items.append({
-                "id": f"triage-{i+1}",
-                "title": title,
-                "priority": urgency,
-                "recommended_action": rec_action,
-                "requires_signature": rec_action == "draft_endorsement",
-            })
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "total_evaluated": len(items),
-            "triaged_count": len(triaged_items),
-            "threshold": priority_threshold,
-            "items": triaged_items,
-        })
+            triaged_items.append(
+                {
+                    "id": f"triage-{i + 1}",
+                    "title": title,
+                    "priority": urgency,
+                    "recommended_action": rec_action,
+                    "requires_signature": rec_action == "draft_endorsement",
+                }
+            )
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "total_evaluated": len(items),
+                "triaged_count": len(triaged_items),
+                "threshold": priority_threshold,
+                "items": triaged_items,
+            }
+        )
     except Exception as exc:
         return _error(f"Failed to run inbox triage: {exc}")
-
 
 
 async def bos_inbox_draft(
@@ -299,14 +337,16 @@ async def bos_inbox_draft(
             if require_risk_eval
             else "无需特殊风险提示"
         )
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "filename": filename,
-            "persona_style": persona_style,
-            "summary": f"针对 {filename} 的拟办方案",
-            "draft_endorsement": endorsement,
-            "bdsk_risk_warning": risk_warning,
-            "ready_for_signature": True,
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "filename": filename,
+                "persona_style": persona_style,
+                "summary": f"针对 {filename} 的拟办方案",
+                "draft_endorsement": endorsement,
+                "bdsk_risk_warning": risk_warning,
+                "ready_for_signature": True,
+            }
+        )
     except Exception as exc:
         return _error(f"Failed to draft inbox endorsement: {exc}")

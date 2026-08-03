@@ -138,7 +138,9 @@ async def registry_register_agent(
     )
 
 
-async def registry_list_agents(capability: str = "", status: str = "", node_id: str = "") -> dict:
+async def registry_list_agents(
+    capability: str = "", status: str = "", node_id: str = ""
+) -> dict:
     """List agents in the registry, with optional filters.
 
     Args:

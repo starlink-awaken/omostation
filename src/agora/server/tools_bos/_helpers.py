@@ -69,7 +69,9 @@ def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str
 
 def _get_inbox_paths() -> tuple[Path, Path]:
     """获取本地 Inbox 与 @公共/_runtime 数据目录。"""
-    doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+    doc_root = Path(
+        os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents"))
+    )
     runtime_dir = doc_root / "@公共" / "_runtime"
     inbox_dir = doc_root / "_inbox"
     return runtime_dir, inbox_dir

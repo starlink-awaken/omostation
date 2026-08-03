@@ -23,9 +23,7 @@ class TestSchedule:
         croniter = bus_foundation._backends["croniter"]
         assert len(croniter._jobs) >= 1
         # Find our job by interval (every 1h = 3600 seconds)
-        found = any(
-            interval == 3600 for _, _, interval, _ in croniter._jobs.values()
-        )
+        found = any(interval == 3600 for _, _, interval, _ in croniter._jobs.values())
         assert found
 
     def test_schedule_invalid_expr_type_raises(self):

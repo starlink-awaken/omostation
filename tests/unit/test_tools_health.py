@@ -48,7 +48,10 @@ def mock_proxy_manager():
         "backend-2": {"alive": False, "last_ok": time.time() - 100},
     }
     pm.registry = MagicMock()
-    pm.registry.entries = {"tool-a": MagicMock(tags=["governance"]), "tool-b": MagicMock(tags=[])}
+    pm.registry.entries = {
+        "tool-a": MagicMock(tags=["governance"]),
+        "tool-b": MagicMock(tags=[]),
+    }
     return pm
 
 

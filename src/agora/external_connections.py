@@ -120,7 +120,9 @@ def _opaque_refs(
             f"{field_name} must contain at least {minimum} opaque refs"
         )
     if maximum is not None and len(refs) > maximum:
-        raise ExternalConnectionError(f"{field_name} must contain at most {maximum} refs")
+        raise ExternalConnectionError(
+            f"{field_name} must contain at most {maximum} refs"
+        )
     return refs
 
 
@@ -224,9 +226,7 @@ class SceneCard:
             consumer=_required_text(value.get("consumer"), "consumer"),
             approver=_required_text(value.get("approver"), "approver"),
             owner=_required_text(value.get("owner"), "owner"),
-            failure_cost=_required_text(
-                value.get("failure_cost"), "failure_cost"
-            ),
+            failure_cost=_required_text(value.get("failure_cost"), "failure_cost"),
             data_classification=_required_text(
                 value.get("data_classification"), "data_classification"
             ),
@@ -235,9 +235,7 @@ class SceneCard:
             permission_ref=_required_text(
                 value.get("permission_ref"), "permission_ref"
             ),
-            rollback_plan=_required_text(
-                value.get("rollback_plan"), "rollback_plan"
-            ),
+            rollback_plan=_required_text(value.get("rollback_plan"), "rollback_plan"),
             sample_refs=_opaque_refs(
                 value.get("sample_refs"), "sample_refs", minimum=3, maximum=10
             ),
@@ -603,9 +601,11 @@ def _probe_health(provider: Any) -> tuple[dict[str, Any] | None, str | None]:
         except ValueError:
             return None, "invalid_health_probe"
         latency_ms = result["latency_ms"]
-        if isinstance(latency_ms, bool) or not isinstance(
-            latency_ms, (int, float)
-        ) or latency_ms < 0:
+        if (
+            isinstance(latency_ms, bool)
+            or not isinstance(latency_ms, (int, float))
+            or latency_ms < 0
+        ):
             return None, "invalid_health_probe"
         return dict(result), None
     except Exception as exc:
@@ -642,7 +642,9 @@ def _health_projection(
     age_seconds: float | None = None
     if observed_at:
         try:
-            age_seconds = max(0.0, (now - datetime.fromisoformat(observed_at)).total_seconds())
+            age_seconds = max(
+                0.0, (now - datetime.fromisoformat(observed_at)).total_seconds()
+            )
         except ValueError:
             reasons.append("invalid_health_observed_at")
     if age_seconds is not None and age_seconds > ttl_seconds:
@@ -664,14 +666,18 @@ def _health_projection(
         for key in ("trust", "freshness", "cost", "latency"):
             if key in metrics:
                 safe_metrics[key] = metrics[key]
-    return state, reasons, {
-        "status": status or "unknown",
-        "observed_at": observed_at or None,
-        "source": source or None,
-        "latency_ms": latency_ms,
-        "age_seconds": age_seconds,
-        "metrics": safe_metrics,
-    }
+    return (
+        state,
+        reasons,
+        {
+            "status": status or "unknown",
+            "observed_at": observed_at or None,
+            "source": source or None,
+            "latency_ms": latency_ms,
+            "age_seconds": age_seconds,
+            "metrics": safe_metrics,
+        },
+    )
 
 
 def build_external_resource_catalog_snapshot(
@@ -796,7 +802,9 @@ def build_external_resource_catalog_snapshot(
     by_availability: dict[str, int] = {}
     for resource in resources:
         by_kind[resource["kind"]] = by_kind.get(resource["kind"], 0) + 1
-        by_availability[resource["availability"]] = by_availability.get(resource["availability"], 0) + 1
+        by_availability[resource["availability"]] = (
+            by_availability.get(resource["availability"], 0) + 1
+        )
     unavailable_count = by_availability.get("unavailable", 0) + len(errors)
     return {
         "schema": "external-resource-catalog/v1",
@@ -879,9 +887,7 @@ def _classify_catalog_change(
     return {
         "review_required": False,
         "risk_class": "operational_observation",
-        "risk_codes": [
-            f"{field}_changed" for field in sorted(fields)
-        ],
+        "risk_codes": [f"{field}_changed" for field in sorted(fields)],
     }
 
 
@@ -889,14 +895,12 @@ def _catalog_resource_view(resource: Mapping[str, Any]) -> dict[str, Any]:
     resource_id = str(resource.get("id") or "").strip()
     if not resource_id:
         raise ExternalConnectionError("catalog resource is missing id")
-    return {
-        key: resource.get(key)
-        for key in _CATALOG_DIFF_FIELDS
-        if key in resource
-    }
+    return {key: resource.get(key) for key in _CATALOG_DIFF_FIELDS if key in resource}
 
 
-def _catalog_resource_index(snapshot: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+def _catalog_resource_index(
+    snapshot: Mapping[str, Any],
+) -> dict[str, Mapping[str, Any]]:
     resources = snapshot.get("resources", [])
     if not isinstance(resources, list):
         raise ExternalConnectionError("catalog resources must be a list")
@@ -936,7 +940,10 @@ def diff_external_resource_catalog_snapshots(
 ) -> dict[str, Any]:
     """Compare two safe catalog projections without persisting either one."""
     for name, snapshot in (("previous", previous), ("current", current)):
-        if not isinstance(snapshot, Mapping) or snapshot.get("schema") != "external-resource-catalog/v1":
+        if (
+            not isinstance(snapshot, Mapping)
+            or snapshot.get("schema") != "external-resource-catalog/v1"
+        ):
             raise ExternalConnectionError(f"{name} is not an external resource catalog")
 
     previous_index = _catalog_resource_index(previous)
@@ -970,7 +977,9 @@ def diff_external_resource_catalog_snapshots(
         old_view = _catalog_resource_view(old)
         new_view = _catalog_resource_view(new)
         changed_fields = [
-            field for field in _CATALOG_DIFF_FIELDS if old_view.get(field) != new_view.get(field)
+            field
+            for field in _CATALOG_DIFF_FIELDS
+            if old_view.get(field) != new_view.get(field)
         ]
         if changed_fields:
             item = {
@@ -1011,18 +1020,12 @@ def diff_external_resource_catalog_snapshots(
             "changed_count": sum(item["change"] == "changed" for item in changes),
             "error_change_count": len(error_changes),
             "review_required": any(item["review_required"] for item in changes),
-            "review_required_count": sum(
-                item["review_required"] for item in changes
-            ),
+            "review_required_count": sum(item["review_required"] for item in changes),
             "operational_observation_count": sum(
                 item["risk_class"] == "operational_observation" for item in changes
             ),
             "risk_codes": sorted(
-                {
-                    code
-                    for item in changes
-                    for code in item["risk_codes"]
-                }
+                {code for item in changes for code in item["risk_codes"]}
             ),
         },
     }
@@ -1174,7 +1177,10 @@ class ExternalConnectionCatalog:
                 owner=owner,
                 version=version,
                 permission_ref="agora.bos",
-                metadata={"description": description, "use_metrics": dict(use_metrics or {})},
+                metadata={
+                    "description": description,
+                    "use_metrics": dict(use_metrics or {}),
+                },
             )
             self._resources[uri] = descriptor
         return self._resources[uri]
@@ -1235,8 +1241,7 @@ class ExternalConnectionCatalog:
         now: datetime | None = None,
     ) -> AdmissionDecision:
         if isinstance(scene, SceneCard) or (
-            isinstance(scene, Mapping)
-            and bool(_SCENE_CARD_MARKERS.intersection(scene))
+            isinstance(scene, Mapping) and bool(_SCENE_CARD_MARKERS.intersection(scene))
         ):
             return self.activate_with_scene_card(
                 resource_id, scene, trace_id=trace_id, now=now
@@ -1260,7 +1265,9 @@ class ExternalConnectionCatalog:
     ) -> AdmissionDecision:
         """Activate only after the full business Scene Card passes its gate."""
         try:
-            card = scene if isinstance(scene, SceneCard) else SceneCard.from_mapping(scene)
+            card = (
+                scene if isinstance(scene, SceneCard) else SceneCard.from_mapping(scene)
+            )
         except ExternalConnectionError as exc:
             return AdmissionDecision(
                 status="rejected",
@@ -1309,7 +1316,9 @@ class ExternalConnectionCatalog:
         requested_capability = _required_text(capability, "capability")
         availability = availability_by_resource or {}
         candidates: list[ResourceCandidateDecision] = []
-        eligible: list[tuple[tuple[Any, ...], ExternalResourceDescriptor, dict[str, Any]]] = []
+        eligible: list[
+            tuple[tuple[Any, ...], ExternalResourceDescriptor, dict[str, Any]]
+        ] = []
         rejected: list[str] = []
 
         for resource in self.list():
@@ -1329,7 +1338,10 @@ class ExternalConnectionCatalog:
                 continue
 
             reasons: list[str] = []
-            if resource_availability and resource_availability not in {"available", "degraded"}:
+            if resource_availability and resource_availability not in {
+                "available",
+                "degraded",
+            }:
                 reasons.append(f"catalog_{resource_availability}")
             if resource.lifecycle not in {"active", "degraded", "admitted"}:
                 reasons.append(f"lifecycle_{resource.lifecycle}")
@@ -1595,7 +1607,9 @@ def evaluate_external_resource_catalog_snapshot(
         raise ExternalConnectionError("catalog resources must be a list")
 
     catalog = ExternalConnectionCatalog(
-        policy_digest=str(snapshot.get("policy_digest") or "external-connection-fabric/v1")
+        policy_digest=str(
+            snapshot.get("policy_digest") or "external-connection-fabric/v1"
+        )
     )
     availability: dict[str, str] = {}
     for resource in resources:

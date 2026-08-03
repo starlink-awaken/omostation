@@ -164,16 +164,20 @@ def evaluate_admission(request: dict[str, Any]) -> dict[str, Any]:
             return {
                 "status": "rejected",
                 "reasons": [
-                    ("[SPI] Admission provider unavailable "
-                    f"(AGORA_ADMISSION_MODE={mode}); fail-closed.")
+                    (
+                        "[SPI] Admission provider unavailable "
+                        f"(AGORA_ADMISSION_MODE={mode}); fail-closed."
+                    )
                 ],
                 "provider": None,
             }
         return {
             "status": "admitted",
             "reasons": [
-                ("[SPI] Admission provider unavailable; degraded admit "
-                "(AGORA_ADMISSION_MODE=degraded, explicit local-dev opt-in).")
+                (
+                    "[SPI] Admission provider unavailable; degraded admit "
+                    "(AGORA_ADMISSION_MODE=degraded, explicit local-dev opt-in)."
+                )
             ],
             "provider": None,
             "degraded": True,

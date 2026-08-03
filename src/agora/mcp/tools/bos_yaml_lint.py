@@ -54,9 +54,7 @@ def _lint(services: list[dict]) -> list[str]:
         if domain and action:
             key = (domain, action, uri)
             if key in seen_keys:
-                errors.append(
-                    f"#{idx} duplicate (domain, action, uri) triple: {key}"
-                )
+                errors.append(f"#{idx} duplicate (domain, action, uri) triple: {key}")
             seen_keys.add(key)
     return errors
 

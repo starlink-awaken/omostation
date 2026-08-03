@@ -44,7 +44,9 @@ class SmartRouter:
             from minerva.llm.client import OpenAICompatibleClient
 
             # 本地 LLM 服务配置 env 化, 不硬编码 (P77 env-var-SSOT)
-            base_url = os.environ.get("AGORA_SMART_ROUTER_LLM_URL", "http://localhost:11434/v1")
+            base_url = os.environ.get(
+                "AGORA_SMART_ROUTER_LLM_URL", "http://localhost:11434/v1"
+            )
             api_key = os.environ.get("AGORA_SMART_ROUTER_LLM_KEY", "ollama")
             model = os.environ.get("AGORA_SMART_ROUTER_LLM_MODEL", "qwen3:30b-a3b")
             self._llm = OpenAICompatibleClient(

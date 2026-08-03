@@ -136,9 +136,7 @@ async def health_self_check() -> dict:
     # Determine overall health
     issues: list[str] = []
     if len(healthy_services) < len(all_services):
-        issues.append(
-            f"{len(all_services) - len(healthy_services)} unhealthy services"
-        )
+        issues.append(f"{len(all_services) - len(healthy_services)} unhealthy services")
     dead_backends = [
         name
         for name, info in backend_health.items()
@@ -270,26 +268,19 @@ async def entropy_cleanup() -> dict:
     try:
         import shutil
 
-        inbox_dir = Path(
-            os.environ.get(
-                "BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")
-            )
-        ) / "_inbox"
-        archive_dir = (
-            Path(ws_root) / "_knowledge" / "archive" / "inbox"
+        inbox_dir = (
+            Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+            / "_inbox"
         )
+        archive_dir = Path(ws_root) / "_knowledge" / "archive" / "inbox"
         if inbox_dir.exists():
             archive_dir.mkdir(parents=True, exist_ok=True)
             now = time.time()
             for f in inbox_dir.glob("*.md"):
                 try:
                     if now - f.stat().st_mtime > 86400 * 7:  # 7 days TTL
-                        shutil.move(
-                            str(f), str(archive_dir / f.name)
-                        )
-                        cleaned.append(
-                            f"archived stale inbox: {f.name}"
-                        )
+                        shutil.move(str(f), str(archive_dir / f.name))
+                        cleaned.append(f"archived stale inbox: {f.name}")
                 except OSError as e:  # defensive fallback
                     skipped.append(f"inbox_archive_error: {f.name} - {e!s}")
     except Exception as e:
@@ -327,7 +318,9 @@ async def debt_auto_seed() -> dict:
     proposal_dir.mkdir(parents=True, exist_ok=True)
 
     seeded: list[str] = []
-    existing = {f.stem for f in ws_debt_dir.glob("*.yaml")} if ws_debt_dir.exists() else set()
+    existing = (
+        {f.stem for f in ws_debt_dir.glob("*.yaml")} if ws_debt_dir.exists() else set()
+    )
 
     # Check 1: Services without health endpoints
     registry = _get_registry()
@@ -353,7 +346,9 @@ async def debt_auto_seed() -> dict:
         proxy_registry = getattr(pm, "registry", None)
         if proxy_registry is not None:
             entries = getattr(proxy_registry, "entries", {})
-            for tool_name, entry in (entries.items() if hasattr(entries, "items") else []):
+            for tool_name, entry in (
+                entries.items() if hasattr(entries, "items") else []
+            ):
                 tags = getattr(entry, "tags", [])
                 if not tags:
                     debt_id = f"DEBT-PROXY-TAGS-{tool_name.upper().replace('.', '-')}"

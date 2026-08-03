@@ -144,9 +144,7 @@ def test_resolve_backend_docker_strict_raises(monkeypatch, profiles_path: Path):
     def _no(_bin="docker"):
         return False
 
-    monkeypatch.setattr(
-        "agora.execution.container_executor.docker_available", _no
-    )
+    monkeypatch.setattr("agora.execution.container_executor.docker_available", _no)
     with pytest.raises(RuntimeError, match="docker"):
         resolve_backend(config=cfg, force_check_docker=True)
 

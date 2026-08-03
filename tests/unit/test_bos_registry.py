@@ -288,9 +288,7 @@ def test_unimplemented_services_are_tracked():
 
     import yaml
 
-    registry_path = (
-        Path(__file__).parent.parent.parent / "etc" / "bos-services.yaml"
-    )
+    registry_path = Path(__file__).parent.parent.parent / "etc" / "bos-services.yaml"
     assert registry_path.exists(), f"缺失主注册表: {registry_path}"
 
     with registry_path.open("r", encoding="utf-8") as f:

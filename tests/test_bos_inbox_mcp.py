@@ -116,7 +116,9 @@ def test_bos_persona_router_resolution():
 async def test_bos_inbox_mcp_endpoints(monkeypatch):
     """测试 inbox status / search / pending / watch / triage / draft 等异步 MCP Tool 接口。"""
     res_status = await bos_inbox_status()
-    assert res_status.get("result") or res_status.get("error") or res_status.get("status")
+    assert (
+        res_status.get("result") or res_status.get("error") or res_status.get("status")
+    )
 
     res_search = await bos_inbox_search("规划", top_k=2)
     assert isinstance(res_search, dict)
