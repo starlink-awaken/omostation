@@ -86,7 +86,7 @@ def discover_from_workspace(workspace_root: str = "") -> int:
                 raw_adapter = (match.group("adapter") or "poc").lower()
                 adapter = "proxy" if "proxy" in raw_adapter else raw_adapter
 
-                bos_router.register(
+                route_registered = bos_router.register(
                     uri,
                     adapter=adapter,
                     config={
@@ -97,8 +97,8 @@ def discover_from_workspace(workspace_root: str = "") -> int:
                         "source": "AGENTS.md",
                     },
                 )
-                registered += 1
-        except Exception as e:  # defensive fallback
+                registered += int(route_registered)
+        except Exception as e:  # noqa: BLE001 - one bad project is isolated
             _log.warning("Failed to parse %s: %s", agents_md, e)
 
     _log.info("bos_discovery: registered %d URIs from AGENTS.md", registered)
