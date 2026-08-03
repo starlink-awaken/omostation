@@ -265,6 +265,43 @@ class BOSMetrics:
             "db_enabled": self._store.enabled,
         }
 
+    def capability_status(self) -> dict[str, Any]:
+        """能力粒度使用统计 (B1: 深化 — 按 domain/package/action 全维度)。
+
+        输出:
+            { "bos://domain/package/action": {calls, success, failure,
+              success_rate, avg_latency_ms, last_used, stale_days} }
+        """
+        if not self._store.enabled:
+            return {"_note": "metrics store disabled", "capabilities": {}}
+        try:
+            conn = self._store._get_conn()
+            rows = conn.execute(
+                "SELECT domain, package, action, COUNT(*) as calls, "
+                "SUM(success) as ok, SUM(latency_ms) as lat, "
+                "MAX(timestamp) as last_ts "
+                "FROM bos_metrics GROUP BY domain, package, action"
+            ).fetchall()
+        except Exception:  # defensive fallback
+            return {"capabilities": {}}
+        now = time.time()
+        caps: dict[str, dict[str, Any]] = {}
+        for domain, package, action, calls, ok, lat, last_ts in rows:
+            if not action or not package:
+                continue
+            uri = f"bos://{domain}/{package}/{action}"
+            success = ok or 0
+            caps[uri] = {
+                "calls": calls,
+                "success": success,
+                "failure": calls - success,
+                "success_rate": round(success / calls, 4) if calls > 0 else 0,
+                "avg_latency_ms": round((lat or 0) / calls, 1) if calls > 0 else 0,
+                "last_used": last_ts or 0,
+                "stale_days": round((now - (last_ts or 0)) / 86400, 1),
+            }
+        return {"capabilities": caps, "count": len(caps)}
+
     def health(self) -> dict[str, Any]:
         """BOS 可观测性健康检查。"""
         s = self.summary()
