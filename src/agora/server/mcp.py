@@ -399,10 +399,10 @@ def _get_task_manager() -> TaskManager:
     """Lazy-init and return the global TaskManager instance."""
     global _task_manager
     if _task_manager is None:
-        from metaos.a2a.task_manager import TaskManager
+        from metaos.a2a.task_manager import TaskManager  # type: ignore[reportMissingImports]
 
         _task_manager = TaskManager(router)
-    return _task_manager
+    return _task_manager  # type: ignore[reportReturnType]
 
 
 # ── MCP Proxy Configs ───────────────────────────────────────────────────────
@@ -649,7 +649,7 @@ def _install_signal_handler() -> None:
             except Exception as e:  # defensive fallback
                 logger.error("signal_handler: failed to reload rates: %s", e)
         # Reload BOSRouter from POC_SERVICES
-        for uri, svc in _POC_SERVICES.items():
+        for uri, svc in _POC_SERVICES.items():  # type: ignore[reportAttributeAccessIssue]
             _bos_router.register(
                 uri,
                 adapter="poc",
@@ -691,7 +691,7 @@ def agora_registry() -> str:
     pm = get_proxy_manager()
     if pm:
         tools = pm.registry.entries
-        resources = pm.registry.resources if hasattr(pm.registry, "resources") else {}
+        resources = pm.registry.resources if hasattr(pm.registry, "resources") else {}  # type: ignore[reportAttributeAccessIssue]
         return json.dumps(
             {
                 "tools": [
@@ -841,6 +841,81 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
     except Exception as e:  # defensive fallback
         logger.exception("agora_execute_failed", query=query, mode=mode)
         return _error(f"Execution failed: {e}")
+
+
+@mcp.tool()
+async def agora_capability_discover(
+    status_filter: str = "",
+    stale_days: float = 7.0,
+) -> dict:
+    """B3 discover 落地: 发现 agora 全部已注册能力 (BOS 路由 + B1/B2 能力治理)。
+
+    返回 agora 能力生态全貌:
+    - BOS 路由清单 (bos_router.list_all)
+    - capability 有效状态 (capability_catalog.get: 含僵尸能力 deprecated 标记)
+    - 使用统计汇总 (bos_metrics)
+    - 僵尸能力候选 (report: active 但长期零调用)
+
+    Args:
+        status_filter: 按能力状态过滤 (active/deprecated/'' 全量)
+        stale_days: 僵尸判定阈值 (默认 7 天)
+
+    Returns:
+        { total, active, deprecated, zombie_candidates, capabilities: [...] }
+    """
+    try:
+        from agora.mcp.bos_router import bos_router as _br
+        from agora.mcp.capability_catalog import capability_catalog as _cc
+
+        # 1. BOS 路由清单
+        routes = _br.list_all()
+        route_uris = {r.get("prefix", "").rstrip("/") for r in routes}
+
+        # 2. capability 有效状态 + 使用统计
+        report = _cc.report(stale_days=stale_days)
+        caps_raw = report.get("capabilities", {})
+        caps: list[dict] = []
+        active_count = 0
+        deprecated_count = 0
+        for uri, decl in sorted(caps_raw.items()):
+            effective = _cc.get(uri, stale_days=stale_days) or decl
+            status = effective.get("status", "active")
+            if status_filter and status != status_filter:
+                continue
+            if status == "active":
+                active_count += 1
+            else:
+                deprecated_count += 1
+            entry = {
+                "uri": uri,
+                "status": status,
+                "domain": decl.get("domain", ""),
+                "package": decl.get("package", ""),
+                "action": decl.get("action", ""),
+                "description": decl.get("description", "")[:120],
+                "routed": uri in route_uris or any(
+                    uri.startswith(r) for r in route_uris
+                ),
+                "calls": decl.get("calls", 0),
+                "stale_days": decl.get("usage", {}).get("stale_days"),
+                "zombie": bool(effective.get("zombie")),
+            }
+            caps.append(entry)
+
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "total": len(caps),
+                "active": active_count,
+                "deprecated": deprecated_count,
+                "zombie_candidates": report.get("stale_candidates", []),
+                "routes_total": len(routes),
+                "capabilities": caps,
+            }
+        )
+    except Exception as e:  # defensive fallback
+        logger.exception("agora_capability_discover_failed")
+        return _error(f"Discovery failed: {e}")
 
 
 def main():
