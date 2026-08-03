@@ -48,3 +48,23 @@ def test_external_scene_trial_review_contract_is_registered():
         "external_side_effects": "disabled",
         "promotion_semantics": "human_proposal_only",
     }
+    assert extension["scene_consumer_schema"] == "external-scene-consumer/v1"
+    assert extension["scene_consumer_cli"] == "omo external-resources record-scene-consumer --stdin"
+    assert extension["scene_consumer_semantics"] == {
+        "allowed_status": ["declared"],
+        "required_refs": [
+            "consumer_ref",
+            "owner_ref",
+            "entrypoint_ref",
+            "capability_ref",
+            "permission_ref",
+            "metric_ref",
+            "rollback_ref",
+        ],
+        "required_scene_binding": True,
+        "activation": "forbidden",
+        "provider_invocation": "forbidden",
+        "workflow_run_binding_before_promotion": "forbidden",
+        "readiness_role": "required_fact",
+        "idempotency_key": "consumer_id_and_stable_contract_digest",
+    }

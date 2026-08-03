@@ -257,6 +257,19 @@ dynamic_discovery:
       admission_mutation: forbidden
       external_side_effects: disabled
       promotion_semantics: human_proposal_only
+    scene_consumer_schema: external-scene-consumer/v1
+    scene_consumer_recorder: projects/omo/src/omo/omo_external_scene_consumer.py
+    scene_consumer_log: .omo/_knowledge/workflow-mesh/external-scene-consumers.jsonl
+    scene_consumer_cli: omo external-resources record-scene-consumer --stdin
+    scene_consumer_semantics:
+      allowed_status: [declared]
+      required_refs: [consumer_ref, owner_ref, entrypoint_ref, capability_ref, permission_ref, metric_ref, rollback_ref]
+      required_scene_binding: true
+      activation: forbidden
+      provider_invocation: forbidden
+      workflow_run_binding_before_promotion: forbidden
+      readiness_role: required_fact
+      idempotency_key: consumer_id_and_stable_contract_digest
     pack_lifecycle_start: [discovered, sandbox]
     route_code_change_required: false
     activation_requires_scene_binding: true
