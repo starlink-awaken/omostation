@@ -809,6 +809,20 @@ Phase 49 把试运行后的“是否具备正式 Workflow Mesh 晋升条件”�
 WorkflowRun、执行 admission、激活连接或调用 provider；Cockpit UI 同时展示匹配的运行、外部回执、结果反馈和阻断项。
 没有真实消费者与结果反馈时，任何“继续试运行”或静态扩展包预览都只能保持 proposal-only。
 
+### 7.3.18 Phase 50 外部场景消费者契约
+
+Phase 50 增加 `external-scene-consumer/v1` 注册入口。业务方通过 OMO `record-scene-consumer --stdin` 声明真实
+消费者的类型、入口引用、能力、权限、指标、回滚和证据引用；系统只把它作为与 `scene_binding` 对齐的晋升事实，
+不会把声明直接当成调用、admission 或业务结果。
+
+readiness 现在先检查 `consumer_contract_missing` / `consumer_contract_not_declared`，再检查真实 WorkflowRun、
+`external-connection-receipt/v1` 和 `outcome-feedback/v1`。下一次出现真实业务场景时，接入路径收敛为：
+
+`consumer contract -> observation-only trial -> reviewed -> real WorkflowRun -> external receipt -> outcome feedback -> promotion proposal`
+
+消费者日志仍是 OMO 独占的 append-only 事实，字段只允许 opaque 引用，且固定 `activation=forbidden`、
+`provider_invocation=false`、`workflow_run_id=null`。当前没有业务方提交该契约时，系统明确保持 blocked，不用内部测试或静态预览冒充真实消费。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
