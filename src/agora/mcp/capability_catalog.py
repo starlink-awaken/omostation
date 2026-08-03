@@ -19,8 +19,6 @@ from typing import Any
 
 import yaml
 
-from agora.mcp.bos_metrics import bos_metrics
-
 # capability 目录数据源: etc/bos-services.yaml (默认)
 # src/agora/mcp/ → parents[3] = projects/agora 项目根
 _DEFAULT_BOS_YAML = str(
@@ -67,11 +65,33 @@ class CapabilityCatalog:
         except Exception:  # noqa: BLE001 — YAML 加载失败返回空 (defensive fallback, 对齐 bos_metrics)
             return {}
 
-    def get(self, uri: str) -> dict[str, Any] | None:
-        """获取单个能力声明 (B2: 语义路由准入校验用)。"""
+    def get(self, uri: str, stale_days: float = 7.0) -> dict[str, Any] | None:
+        """获取单个能力声明 (B2: 语义路由准入校验用)。
+
+        返回**有效状态** — active 声明但使用度量显示僵尸
+        (超过 stale_days 零调用) 时, status 覆写为 deprecated 并附 zombie: true,
+        使语义路由 (resolve_with_capability) 自动拦截僵尸能力 (闭环)。
+        """
         if not self._loaded:
             self.load()
-        return self._capabilities.get(uri)
+        decl = self._capabilities.get(uri)
+        if decl is None or decl.get("status") != "active":
+            return decl
+        # 延迟取模块属性: 使测试 monkeypatch bos_metrics 生效 (from-import 是值绑定)
+        from agora.mcp import bos_metrics as _bm
+
+        usage = _bm.bos_metrics.capability_status().get("capabilities", {}).get(uri, {})
+        # 僵尸判定: 仅当 metrics 有该能力的历史记录 (stale_days 为实际值)
+        # 且超过阈值才判定。无记录 = 未开始使用, 不视为僵尸 (避免误杀新能力)。
+        sd = usage.get("stale_days")
+        if sd is not None and sd > stale_days:
+            effective = dict(decl)
+            effective["status"] = "deprecated"
+            effective["zombie"] = True
+            effective["stale_days"] = sd
+            effective["calls"] = usage.get("calls", 0)
+            return effective
+        return decl
 
     def report(self, stale_days: float = 7.0, min_calls: int = 0) -> dict[str, Any]:
         """能力使用报告。
@@ -85,7 +105,10 @@ class CapabilityCatalog:
         """
         if not self._loaded:
             self.load()
-        usage = bos_metrics.capability_status().get("capabilities", {})
+        # 延迟取模块属性: 使测试 monkeypatch bos_metrics 生效 (from-import 是值绑定)
+        from agora.mcp import bos_metrics as _bm
+
+        usage = _bm.bos_metrics.capability_status().get("capabilities", {})
 
         report: dict[str, dict[str, Any]] = {}
         for uri, decl in self._capabilities.items():
