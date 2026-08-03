@@ -1,14 +1,14 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-03T01:04:00Z
+# 生成时间: 2026-08-03T09:49:40Z
 
 version: 1.0.0
-generated_at: '2026-08-03T01:04:00Z'
+generated_at: '2026-08-03T09:49:40Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 28
-  mcp_tools: 580
+  mcp_tools: 581
   bos_services: 188
   bos_domains: 16
   cli_commands: 108
@@ -212,6 +212,7 @@ mcp_servers:
   - a2a_list_tasks
   - a2a_send_task
   - add_route
+  - agora_capability_discover
   - agora_execute
   - audit_query
   - audit_stats
@@ -271,7 +272,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 64
+  tool_count: 65
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0

@@ -1,8 +1,148 @@
-# 能力全景覆盖 · Cockpit 全通道对齐
+# eCOS swarm 体系迭代优化 · 全面规划
 
-> **创建时间**: 2026-08-02 | **模式**: Plan Mode | **前置**: Phase 49 已交付 (health=81, X3=8)
-> **时间窗**: 2026-08-02 ~ 2026-08-23 (3 周)
-> **目标**: 全量暴露 26 MCP 服务器·~394 工具·184 BOS 服务·46 CLI 命令，help 自动生成，文档自动同步，治理规则 CI 门禁
+> **创建**: 2026-08-03 | **模式**: Plan Mode | **前置**: 本次 swarm 调查 + ADR-0355 + 架构分析
+> **健康底数**: health=93 / ecosystem_maturity=100 / governance_loop_safety=100（成熟体系）
+> **判断**: eCOS 不是"要重构"，是"成熟期闭环泄漏 + 可观测弱"。优化 = 补闭环 + 加观测 + 集成散点，**不动骨架**
+
+---
+
+## 0. Context — 为什么做
+
+### 0.1 触发：本次会话踩出 swarm 撞车坑（真实证据，非脑补）
+
+本次会话（老王以 `engineering-agent`/`docs-agent` 身份参与 swarm）撞了 swarm **5 次**，挖出体系债：
+1. PASW cleanup 不查 swarm claim → 清了老王手动 claim 的 worktree（PR #877 已修）
+2. claim 堆积 195 孤儿 → 堵 D2 lock（runtime 清零 + ADR-0355 F3）
+3. gatekeeper 盲目 bump origin/main tip → agora 两线撞车（agora#14 根因解）
+4. 手动操作没接入 swarm window → 跟 12 agent 并发撞
+5. swarm 闭环泄漏 → 132 个 closed_run_missing_verify（证据链断）
+
+### 0.2 架构现状底数（调查实证）
+
+| 维度 | 数据 | 判断 |
+|---|---|---|
+| health / maturity / governance_loop | 93 / 100 / 100 | 🟢 极度成熟 |
+| projects / governance checks / swarm agents | 19 / 195 / 12 | 🟢 齐全 |
+| swarm runs / events / 泄漏 | 229 / 454 / **132 missing-verify** | 🟠 闭环泄漏 |
+| swarm 宿主 | 本地查不到（ps/launchd/cron都不是）→ 远程/外部 | 🟡 不透明 |
+| cockpit swarm 观测 | views 仅 BrainChat，无 swarm dashboard | 🟡 黑盒 |
+
+### 0.3 核心判断
+
+**eCOS 架构骨架是好的（93-100），问题在「闭环执行泄漏 + 可观测黑盒 + 手动没接入避让」**。优化路线：补闭环（verify 强制）+ 加可观测（SwarmDashboard）+ 集成避让（window hook），**不动 5+4+1 + swarm OS 骨架**。
+
+---
+
+## 1. 架构债（8 个，按严重度，均实证）
+
+| # | 债 | 严重度 | 证据 |
+|---|---|---|---|
+| B1 | **swarm 闭环泄漏**（closed run 没 verify）| 🔴 P0 | compliance 132 个 closed_run_missing_verify_event |
+| B2 | 可观测性弱（swarm 无 dashboard）| 🔴 P0 | cockpit-ui 无 swarm 视图，12 agent 黑盒 |
+| B3 | 避让没集成（window 没接手动）| 🟠 P1 | 老王本次撞车 5 次（没用 window-start）|
+| B4 | claim GC 缺（孤儿堆积）| 🟡 P1 | 195 孤儿（已清零，ADR-0355 F3）|
+| B5 | bump 盲（governance-verify 占位）| 🟡 P2 | agora 两线撞车（ADR-0355 F1）|
+| B6 | 外部 agent 不接入 swarm | 🟡 P2 | ADR-0355 F2 |
+| B7 | submodule 分叉检测弱 | 🟡 P2 | reachability 只查可达不查分叉 |
+| B8 | swarm 宿主不透明 | ⚪ P3 | 跑哪不可见 |
+
+---
+
+## 2. 优化设计（D1-D8 映射债）
+
+### 🟥 D1 · swarm 闭环补全（P0，治 B1，132 泄漏）— 实施路径（基于本次调查）
+- **现状**：`agent-workflow compliance` 检测到 132 closed_run_missing_verify_event（检测有，强制门缺）
+- **实施**：
+  1. closeout 加 **verify 强制门**——closeout 命令检查 run 有 verify event（复用 compliance 的 missing_verify 检测逻辑），无 verify 拒 closeout
+  2. **132 泄漏清理**——compliance 加 cleanup 子命令（补 verify event / 标 degraded / 按时间归档）
+  3. governance-checks.yaml 扩展（参考 line 2345 ADR closeout evidence 模式）→ agent-workflow closeout verify 强制规则
+- **可复用**：`agent-workflow compliance`（泄漏检测）+ governance-checks closeout 规则
+- **可行性**：高（compliance 已检测，加强制门 + 清理即可）| **风险**：历史 132 泄漏清理可能误标（先 dry-run）
+
+### 🟥 D2 · SwarmDashboard 可观测（P0，治 B2，12 agent 黑盒）— 实施路径
+- **现状**：cockpit-ui views 仅 BrainChat；数据源 ready（`agent-workflow status --json`）
+- **实施**：
+  1. `projects/cockpit/src/cockpit/web/api_swarm.py`（聚合 agent-workflow status --json + `swarm-discipline-cli.py window-status` + `load_branch_claims` + compliance verify 缺失）—— 参考 `api_tasks.py` 模式
+  2. `projects/cockpit-ui/src/views/SwarmDashboard.tsx`（react-query 拉数据，显示 12 agent + window + claim + verify 缺失高亮）—— 参考 `components/SystemMapView.tsx` + `BrainChat.tsx`
+  3. router 注册 `/swarm`
+- **可复用**：api_tasks.py（api）+ SystemMapView.tsx（ui）+ agent-workflow status --json + swarm window-status + load_branch_claims
+- **可行性**：高（数据源 ready + React 19/Vite 8/tanstack-react-query 成熟）| **风险**：低（纯只读 view）
+
+### 🟧 D3 · window 自动化（P1，治 B3，撞车根治）— 实施路径
+- **现状**：Claude hooks 完整（`~/.claude/hooks/` SessionStart/SessionEnd + `CheckpointPerISC.hook.ts`）+ swarm window-start（`swarm_discipline.py:748` window_open）
+- **实施**：
+  1. `~/.claude/settings.json` hooks.SessionStart 加脚本——session 启动自动 `swarm-discipline-cli.py window-start`（声明手动窗口，swarm M1 避让）
+  2. hooks.SessionEnd 关 window（或 window TTL 自动过期）
+  3. 参考 `CheckpointPerISC.hook.ts` 现有 SessionStart hook 模式
+- **可复用**：CheckpointPerISC.hook.ts（hook 模式）+ swarm-discipline-cli.py window-start/window-status
+- **可行性**：高（hook 机制完整 + window-start ready）| **风险**：中（hook 影响所有 Claude session，需充分测试 + 可禁用）
+
+### 🟧 D4 · claim TTL GC（P1，治 B4，ADR-0355 F3）
+- 基于 ADR-0355 F3：cleanup 自动 GC 孤儿 claim（worktree 不存在 + mtime/TTL → release）
+- 实施点：`bin/gac/gac-worktree-cleanup.sh`（PR #877 已加 #2b 报告，加 GC 执行）+ 注意 mtime 可被 git restore 重置（本次 195 孤儿 mtime 全 <1d），用 worktree 存在性双条件
+
+### 🟨 D5 · governance-verify 真测试（P2，治 B5，ADR-0355 F1）
+- **现状**：`governance-verify` make target（Makefile:319）= `bash bin/ssot/verify-omo.sh`；gatekeeper（`submodule-freshness-gatekeeper.yml:48-54`）跑它 + 注释"暂时允许通过，后续由真实的单测取代"——占位，bump 后不查下游断裂
+- **实施**：gatekeeper governance-verify 步骤（line 48-54）加真下游测试——cockpit 关键 import 抽查（`from agora.server.tools_bos import _resolve_with_router` 等）+ 复用 `make ci-local`/`check-layers`
+- **触发**：高耦合 submodule（agora/cockpit）分叉 bump 断裂时
+
+### 🟨 D6 · 外部 agent 接入 swarm（P2，治 B6，ADR-0355 F2）
+- 外部 agent loop 跑前查 `swarm window-status` + 活跃 claim，避让手动
+- 代码不在本仓（外部 agent），给规范 + 用现有 swarm window 机制
+
+### 🟨 D7 · submodule 分叉检测（P2，治 B7）
+- **现状**：`bin/ssot/submodule-reachability-gate.py` 只有 `remote_contains()`（line 53，`branch --contains sha` 查可达），**无分叉检测**
+- **实施**：`check()` 函数（line 77）加一步——`git merge-base --is-ancestor <gitlink_sha> <remote_head>`，判断 gitlink 跟 remote HEAD 是否同线，分叉（非 ancestor）→ warn（不阻断，但报告两线风险）
+- **价值**：防 agora 两线撞车重演（本次线A/线B 分叉导致 catalog 崩）
+
+### ⬜ D8 · swarm 宿主 registry（P3，治 B8）
+- **现状**：`.omo/_truth/registry/` 有 swarm-coordination.yaml（policy）但**无 swarm-hosts registry**
+- **实施**：新建 `.omo/_truth/registry/swarm-hosts.yaml`——注册 12 agent 跑在哪（远程服务器 ssh / GitHub Actions workflow / 本地 cron OPC）+ 触发源 + owner
+- **价值**：swarm 宿主透明（当前本地查不到高频 push 源，D8 让它可见，是"把控 swarm"的观测基础）
+
+---
+
+## 3. 迭代路线（3 Phase）
+
+| Phase | 维度 | 交付 | 前置 |
+|---|---|---|---|
+| **A（P0）** | D1 闭环 + D2 可观测 | verify 强制门 + 132 泄漏清理 + SwarmDashboard | 现在（最大债）|
+| **B（P1）** | D3 避让 + D4 claim GC | Claude SessionStart window hook + claim TTL GC | A 后 |
+| **C（P2+）** | D5/D6/D7/D8 | bump 真测试 + 外部接入 + 分叉检测 + 宿主 registry | 触发条件满足（ADR-0355 deferred）|
+
+---
+
+## 4. 验证（每维度）
+
+- **D1**：`agent-workflow compliance` → closed_run_missing_verify 归零 + 新 closeout 无 verify 被拒
+- **D2**：cockpit-ui `/swarm` 显示 12 agent + window + claim + verify 缺失；`bun run build` 过
+- **D3**：Claude session 启动 → `swarm window-status` 自动 window_open；session 结束 → window 关
+- **D4**：cleanup 跑 → 孤儿 claim 自动 release（load_branch_claims 验证）
+- **D5**：gatekeeper bump 模拟分叉 → governance-verify 真测试拦
+- **D7**：reachability gate 加分叉检测 → 模拟两线 → warn
+
+---
+
+## 5. 架构原则（沉淀）
+
+1. **自治优先**：swarm 任务驱动，不靠人工 pause（保持）
+2. **闭环强约束**：verify 强制，防执行泄漏（B1 教训）
+3. **可观测先行**：dashboard 让 swarm 可见（B2 补）
+4. **避让自动化**：手动自动接入 swarm（window hook）（B3 补）
+5. **YAGNI**：不提前建复杂 gate（ADR-0355 deferred 债）
+
+---
+
+## 6. 已交付（本次会话，关联）
+
+- **PR #877**：cleanup 查 claim + 回收 release + 孤儿报告（D4 雏形 + B3 部分）
+- **PR #882 / ADR-0355**：F1/F2/F3 deferred 记债（D5/D6/D4）
+- **PR agora#14**：agora 两线合璧（B5/B7 根因解）
+- **runtime**：195 孤儿 claim 清零（B4 存量）
+
+---
+
+⚠️ **以下为旧 Cockpit plan（Phase 49，能力全景覆盖），已废弃保留供参考**
 
 ---
 
