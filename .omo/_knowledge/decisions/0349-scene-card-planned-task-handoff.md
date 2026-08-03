@@ -1,6 +1,10 @@
 ---
 title: Scene Card planned task handoff
 status: accepted
+type: adr
+lifecycle: active
+owner: architecture-governance
+last-reviewed: 2026-08-03
 type: decision
 scope: workflow-mesh scene intake and cockpit task center
 date: 2026-08-03

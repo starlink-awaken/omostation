@@ -420,6 +420,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0351: 任务中心 Workflow 请求投影与准入触达 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 58 | 0351-task-center-workflow-request-projection.md
 - ADR-0352: Workflow Mesh 结果回执与评测样本准备度投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 59 | 0352-workflow-result-feedback-evaluation-readiness.md
 - ADR-0353: 外部资源受治理刷新与 freshness 恢复投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 60 | 0353-external-resource-governed-refresh.md
+- ADR-0354: PASW — Per-Agent Submodule Worktree 子模块隔离 — **ACCEPTED** | 2026-08-03 | architecture-governance | 0354-pasw-submodule-isolation.md
 
 ---
 

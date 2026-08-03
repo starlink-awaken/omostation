@@ -1,6 +1,10 @@
 ---
 title: Task Center scene-bound Workflow request
 status: accepted
+type: adr
+lifecycle: active
+owner: architecture-governance
+last-reviewed: 2026-08-03
 type: decision
 scope: cockpit task center and workflow mesh promotion
 date: 2026-08-03

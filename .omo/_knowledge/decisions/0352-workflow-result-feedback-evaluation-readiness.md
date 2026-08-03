@@ -1,6 +1,10 @@
 ---
 title: Workflow Mesh result receipt and evaluation readiness projection
 status: accepted
+type: adr
+lifecycle: active
+owner: architecture-governance
+last-reviewed: 2026-08-03
 type: decision
 scope: omo workflow mesh evaluation and cockpit operations
 date: 2026-08-03
