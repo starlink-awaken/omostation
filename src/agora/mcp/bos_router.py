@@ -49,8 +49,7 @@ class BOSRouter:
     def __init__(
         self,
         *,
-        admission_evaluator: Callable[[dict[str, Any]], dict[str, Any]]
-        | None = None,
+        admission_evaluator: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     ):
         self._routes: dict[str, list[dict[str, Any]]] = {}
         # Trie: nested dict, 叶子节点含 _ROUTE_MARKER
@@ -108,11 +107,7 @@ class BOSRouter:
             break
 
         # 末尾空段回退: 检查有无 "" child (斜杠注册)
-        if (
-            _ROUTE_MARKER not in node
-            and "" in node
-            and _ROUTE_MARKER in node[""]
-        ):
+        if _ROUTE_MARKER not in node and "" in node and _ROUTE_MARKER in node[""]:
             best = node[""][_ROUTE_MARKER]
 
         # 精确匹配: 注册时自动加 / 但 URI 没 /
