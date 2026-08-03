@@ -969,6 +969,27 @@ Workflow Mesh 运营页现在形成顺序明确的闭环：
 这一步仍不激活真实 provider，也不把评测投影直接变成预测模型或自动策略。下一阶段应以一个真实低风险场景为样本，
 验证 receipt 来源、消费反馈和评测标注的连续产生，再决定是否建设模型训练、模型注册和预测服务。
 
+### 7.3.27 Phase 60 外部资源受治理刷新与恢复状态
+
+Phase 60 将已有的外部资源发现、只读健康探活、OMO observation 和 observation-run receipt 收敛成一个可操作入口，解决
+“系统有观测能力，但产品只能读取缓存或临时发现”的断点。Cockpit 新增：
+
+- `POST /api/external-resources/refresh`：复用根仓 `observe_external_resources()`，执行一次显式的只读目录观察，并通过 OMO
+  append-only broker 持久化 catalog observation 与 observation-run receipt；重复观察按 OMO 幂等语义去重；
+- `GET /api/external-resources/refresh-status`：从最新 OMO observation 投影 freshness、目录 TTL、变化状态、风险码和下一步
+  恢复动作，不触发发现、探活或任何写操作；
+- Cockpit UI 将“读取目录”和“受治理刷新”分开，显示新鲜度、是否待复核、风险码和恢复动作。刷新成功后统一失效目录、复核队列、
+  连接计划和刷新状态查询，避免页面各自持有旧快照。
+
+刷新动作的硬边界为 `activation=forbidden`、`provider_invocation=false`、`workflow_run_creation=false` 和
+`worker_launch=false`。`probe=true` 只允许 provider 合同声明的只读健康探活，不能读取原文、提交业务请求或改变外部系统。
+因此外部资源动态扩展的实际闭环变为：
+
+`descriptor -> discovery -> governed refresh -> observation receipt -> freshness/review queue -> scene evaluation -> admission`
+
+Phase 60 仍不引入定时后台激活、自动恢复或自动替换。下一步用真实低风险消费者产生第一批完整 receipt、outcome feedback 和
+`ready` 评测样本，再决定是否开启受控定时观察和模型化路由。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
