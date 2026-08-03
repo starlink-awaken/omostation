@@ -13,7 +13,7 @@ related:
   - 0294-knowledge-gateway-decoupling.md
 ---
 
-# ADR-0346: PASW — Per-Agent Submodule Worktree 子模块隔离
+# ADR-0347: PASW — Per-Agent Submodule Worktree 子模块隔离
 
 ## Context
 
