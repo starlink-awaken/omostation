@@ -1,13 +1,13 @@
 # MCP 服务器索引
 
-> 自动生成于 2026-08-03T01:04:00Z
+> 自动生成于 2026-08-03T09:49:40Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **28** 个 MCP 服务器, **580** 个工具。
+全生态共 **28** 个 MCP 服务器, **581** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
-| `agora` | I0 | 64 | stdio/sse | — | `projects/agora/src/agora/server/mcp.py` |
+| `agora` | I0 | 65 | stdio/sse | — | `projects/agora/src/agora/server/mcp.py` |
 | `ecos` | L0 | 28 | stdio | — | `projects/ecos/src/ecos/mcp_server.py` |
 | `ecos-integration` | L0 | 26 | stdio | — | `projects/ecos/src/ecos/services/integration/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | — | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
@@ -42,9 +42,9 @@
 
 `add_link`, `add_tag`, `add_timeline_entry`, `cancel_job`, `code_blast`, `code_callees`, `code_callers`, `code_def`, `code_flow`, `code_refs`, `code_traversal_cache_clear`, `delete_page`, `extract_facts`, `file_list`, `file_upload`, `file_url`, `find_anomalies`, `find_contradictions`, `find_experts`, `find_orphans`, `find_trajectory`, `forget_fact`, `get_backlinks`, `get_brain_identity`, `get_calibration_profile`, `get_chunks`, `get_health`, `get_ingest_log`, `get_job`, `get_job_progress`, `get_links`, `get_page`, `get_raw_data`, `get_recent_salience`, `get_recent_transcripts`, `get_stats`, `get_tags`, `get_timeline`, `get_versions`, `list_jobs`, `list_pages`, `log_ingest`, `memory_tree`, `pause_job`, `purge_deleted_pages`, `put_page`, `put_raw_data`, `query`, `recall`, `remove_link`, `remove_tag`, `replay_job`, `resolve_slugs`, `restore_page`, `resume_job`, `retry_job`, `revert_version`, `run_doctor`, `search`, `search_by_image`, `send_job_message`, `sources_add`, `sources_list`, `sources_remove`, `sources_status`, `submit_agent`, `submit_job`, `sync_brain`, `takes_calibration`, `takes_list`, `takes_scorecard`, `takes_search`, `think`, `traverse_graph`, `whoami`
 
-### agora (64 tools)
+### agora (65 tools)
 
-`a2a_cancel_task`, `a2a_get_task`, `a2a_list_tasks`, `a2a_send_task`, `add_route`, `agora_execute`, `audit_query`, `audit_stats`, `bos_reload_routes`, `create_api_key`, `debt_auto_seed_tool`, `entropy_cleanup_tool`, `get_agent_card`, `get_event_log`, `get_state_transitions`, `health_check`, `lifecycle_load_all`, `lifecycle_start_watch`, `lifecycle_status`, `lifecycle_stop_watch`, `lifecycle_unload_all`, `list_agent_cards`, `list_api_keys`, `list_routes`, `list_services`, `proxy_add_service`, `proxy_arch_health`, `proxy_backend_health`, `proxy_connect`, `proxy_governance_status`, `proxy_list_tools`, `proxy_omo_debt`, `publish_event`, `python`, `register_push_notification`, `register_service`, `registry_find_agent_tool`, `registry_health_tool`, `registry_heartbeat_tool`, `registry_list_agents_tool`, `registry_list_tasks_tool`, `registry_register_agent_tool`, `registry_submit_task_tool`, `repo_discover`, `repo_install`, `repo_load`, `repo_pipeline`, `repo_search`, `repo_status`, `repo_unload`, `revoke_api_key`, `route_call`, `subscribe_event`, `swarm_nodes`, `swarm_resolve`, `swarm_status`, `workflow_capability_health`, `workspace_audit_gitlink`, `workspace_audit_governance`, `workspace_audit_lint`, `workspace_audit_ops`, `workspace_audit_radar`, `workspace_audit_run`, `workspace_audit_ssot`
+`a2a_cancel_task`, `a2a_get_task`, `a2a_list_tasks`, `a2a_send_task`, `add_route`, `agora_capability_discover`, `agora_execute`, `audit_query`, `audit_stats`, `bos_reload_routes`, `create_api_key`, `debt_auto_seed_tool`, `entropy_cleanup_tool`, `get_agent_card`, `get_event_log`, `get_state_transitions`, `health_check`, `lifecycle_load_all`, `lifecycle_start_watch`, `lifecycle_status`, `lifecycle_stop_watch`, `lifecycle_unload_all`, `list_agent_cards`, `list_api_keys`, `list_routes`, `list_services`, `proxy_add_service`, `proxy_arch_health`, `proxy_backend_health`, `proxy_connect`, `proxy_governance_status`, `proxy_list_tools`, `proxy_omo_debt`, `publish_event`, `python`, `register_push_notification`, `register_service`, `registry_find_agent_tool`, `registry_health_tool`, `registry_heartbeat_tool`, `registry_list_agents_tool`, `registry_list_tasks_tool`, `registry_register_agent_tool`, `registry_submit_task_tool`, `repo_discover`, `repo_install`, `repo_load`, `repo_pipeline`, `repo_search`, `repo_status`, `repo_unload`, `revoke_api_key`, `route_call`, `subscribe_event`, `swarm_nodes`, `swarm_resolve`, `swarm_status`, `workflow_capability_health`, `workspace_audit_gitlink`, `workspace_audit_governance`, `workspace_audit_lint`, `workspace_audit_ops`, `workspace_audit_radar`, `workspace_audit_run`, `workspace_audit_ssot`
 
 ### l4-kernel (45 tools)
 
@@ -150,4 +150,4 @@
 
 `chat`, `run_task`
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T01:04:00Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T09:49:40Z 生成*

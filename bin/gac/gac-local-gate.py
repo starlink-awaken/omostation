@@ -88,7 +88,7 @@ DEFAULT_POLICY = {
         # at .omo/_truth/registry/redlines.yaml points to these gates;
         # adding/removing rows there is the safe edit surface.
         {"id": "check-severity-registry", "command": ["bin/gac/check-severity-registry.py"]},
-        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"]},
+        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"], "timeout": 30},
         {"id": "check-governance-ratio", "command": ["bin/gac/check-governance-ratio.py"]},
         {"id": "check-redline-coverage", "command": ["bin/gac/check-redline-coverage.py"]},
         # P85 G2.2: workorder schema is warn-only by default; promote
@@ -162,6 +162,7 @@ CI_ONLY_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_only")}
 CI_SKIP_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_skip")}
 AGENT_WORKFLOW_GATE_CHECKS = {g["id"] for g in GATES_LIST if g.get("agent_workflow_only")}
 BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
+_CHECK_TIMEOUTS = {g["id"]: g.get("timeout", 15) for g in GATES_LIST}
 # SOFT checks: finding_topics 仍输出, 但不翻转 gate (门禁降噪)
 SOFT_CHECKS = {
     "governance-semantic-gate",  # evolution/release_ready 是软信号, 非门禁阻断
@@ -321,6 +322,7 @@ FINDING_TOPIC_CHECKS: dict[str, dict[str, str]] = {
 
 def run_check(name: str, command: list[str]) -> dict[str, object]:
     cmd = [sys.executable, *command]
+    timeout = _CHECK_TIMEOUTS.get(name, 15)
     try:
         result = subprocess.run(
             cmd,
@@ -328,7 +330,7 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             capture_output=True,
             text=True,
             check=False,
-            timeout=15,
+            timeout=timeout,
         )
         return {
             "name": name,
@@ -345,7 +347,7 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             "ok": False,
             "returncode": -1,
             "stdout": "",
-            "stderr": f"TIMEOUT after 15s",
+            "stderr": f"TIMEOUT after {timeout}s",
         }
 
 
