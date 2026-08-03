@@ -37,9 +37,9 @@ jobs:
           git diff --cached --stat -- projects/ scripts 2>/dev/null || true
       - name: PASW — 子模块指针可达性前置检查
         # PASW 适配: 确保所有子模块指针在 submodule remote 上可达.
-        # 失败原因通常是 bump-pointer 前未 push 子模块分支, 或 squash merge 丢失了指针.
+        # 使用 source=index 检查同步后的 index (sync 脚本可能更新了指针).
         run: |
-          python3 bin/ssot/submodule-reachability-gate.py --source head --fetch 2>&1
+          python3 bin/ssot/submodule-reachability-gate.py --source index --fetch 2>&1
         continue-on-error: false
       - name: generate digests
         run: |
