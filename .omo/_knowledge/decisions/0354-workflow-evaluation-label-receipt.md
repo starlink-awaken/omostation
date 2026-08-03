@@ -1,6 +1,10 @@
 ---
 title: Workflow Mesh evaluation label receipt and dual-review release queue
 status: accepted
+type: adr
+lifecycle: active
+owner: architecture-governance
+last-reviewed: 2026-08-03
 type: decision
 scope: workflow mesh evaluation and cockpit operations
 date: 2026-08-03

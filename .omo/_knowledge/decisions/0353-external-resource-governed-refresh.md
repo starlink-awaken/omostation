@@ -1,6 +1,10 @@
 ---
 title: External resource governed refresh and freshness recovery projection
 status: accepted
+type: adr
+lifecycle: active
+owner: architecture-governance
+last-reviewed: 2026-08-03
 type: decision
 scope: external connection fabric and cockpit operations
 date: 2026-08-03
