@@ -2,7 +2,6 @@ from pathlib import Path
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / ".omo/_truth/registry/external-connection-fabric.yaml"
 STANDARD = ROOT / ".omo/standards/external-connection-fabric.md"
@@ -47,6 +46,8 @@ def test_architecture_pointers_are_present() -> None:
     assert body["validation"]["contract_test"] == "tests/test_external_connection_fabric_registry.py"
     assert body["validation"]["runtime_test"] == "tests/test_external_connection_runtime.py"
     assert body["dynamic_discovery"]["entry_point_group"] == "external.resources"
+    assert body["dynamic_discovery"]["capability_directory_contract"] == "external-resource-directory/v1"
+    assert body["dynamic_discovery"]["capability_directory_semantics"]["activation"] == "forbidden"
     assert body["bindings"]["capability_router"].endswith("agora/external_connections.py")
     assert STANDARD.exists()
     architecture = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
