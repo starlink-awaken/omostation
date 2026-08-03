@@ -67,9 +67,7 @@ class CapabilityCatalog:
         except Exception:  # noqa: BLE001 — YAML 加载失败返回空 (defensive fallback, 对齐 bos_metrics)
             return {}
 
-    def report(
-        self, stale_days: float = 7.0, min_calls: int = 0
-    ) -> dict[str, Any]:
+    def report(self, stale_days: float = 7.0, min_calls: int = 0) -> dict[str, Any]:
         """能力使用报告。
 
         Args:

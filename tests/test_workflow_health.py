@@ -34,9 +34,7 @@ def test_capability_health_keeps_degraded_worker_available() -> None:
     assert result["capabilities"]["runtime"] == {
         "available": True,
         "health": "yellow",
-        "sources": [
-            {"source": "swarm_node", "id": "node-1", "health": "yellow"}
-        ],
+        "sources": [{"source": "swarm_node", "id": "node-1", "health": "yellow"}],
     }
 
 

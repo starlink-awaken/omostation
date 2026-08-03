@@ -262,7 +262,10 @@ def test_evaluate_candidates_exposes_explainable_decisions_without_activation() 
     assert decisions["source:healthy"]["decision_factors"]["health"] == "healthy"
     assert decisions["source:healthy"]["rank"]
     assert decisions["source:wrong-permission"]["status"] == "rejected"
-    assert "missing_or_mismatched_permission" in decisions["source:wrong-permission"]["reasons"]
+    assert (
+        "missing_or_mismatched_permission"
+        in decisions["source:wrong-permission"]["reasons"]
+    )
     assert decisions["source:no-capability"]["status"] == "not_applicable"
     assert catalog.get("source:healthy").lifecycle == "active"
 
@@ -496,9 +499,7 @@ def test_catalog_diff_marks_descriptor_changes_for_manual_review() -> None:
 def test_register_capability_admitted_with_usage():
     """有调用记录的能力注册为 admitted。"""
     cat = ExternalConnectionCatalog()
-    r = cat.register_capability(
-        "bos://capability/foo/invoke", use_metrics={"calls": 5}
-    )
+    r = cat.register_capability("bos://capability/foo/invoke", use_metrics={"calls": 5})
     assert r.lifecycle == "admitted"
     assert r.kind == "tool_capability"
     assert r.protocol == "bos"
@@ -507,9 +508,7 @@ def test_register_capability_admitted_with_usage():
 def test_register_capability_zero_usage_sandboxed():
     """零调用能力自动降级为 sandbox (防僵尸能力直接 active)。"""
     cat = ExternalConnectionCatalog()
-    r = cat.register_capability(
-        "bos://capability/bar/invoke", use_metrics={"calls": 0}
-    )
+    r = cat.register_capability("bos://capability/bar/invoke", use_metrics={"calls": 0})
     assert r.lifecycle == "sandbox"
 
 

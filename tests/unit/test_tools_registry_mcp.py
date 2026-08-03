@@ -149,16 +149,12 @@ class TestRegistryRegisterAgent:
 
     @pytest.mark.asyncio
     async def test_rejects_invalid_metadata(self):
-        result = await registry_register_agent(
-            name="test-agent", metadata="not json"
-        )
+        result = await registry_register_agent(name="test-agent", metadata="not json")
         assert "error" in result
 
     @pytest.mark.asyncio
     async def test_rejects_non_object_metadata(self):
-        result = await registry_register_agent(
-            name="test-agent", metadata="[1,2,3]"
-        )
+        result = await registry_register_agent(name="test-agent", metadata="[1,2,3]")
         assert "error" in result
 
 

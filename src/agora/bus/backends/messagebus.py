@@ -36,7 +36,7 @@ class MessageBusBackend:
         return True
 
     def publish(self, envelope: BusEnvelope) -> str:
-        for (pattern, callback) in self._subscribers.values():
+        for pattern, callback in self._subscribers.values():
             if self._match(pattern, envelope.type):
                 try:
                     callback(envelope)

@@ -14,10 +14,12 @@ envelope = BusEnvelope(
 )
 publish(envelope)  # → 走 router → 选 backend → 失败入 DLQ
 
+
 # 2. 订阅事件
 @subscribe(pattern="pipeline:*")
 def on_pipeline_event(envelope: BusEnvelope) -> None:
     print(f"received {envelope.type}: {envelope.payload}")
+
 
 # 3. 调度任务 (Phase A.1)
 @schedule(expr="every 5m")

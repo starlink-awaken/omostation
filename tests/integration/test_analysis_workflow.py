@@ -62,11 +62,14 @@ def test_resolver_has_core_analysis_uris():
 def test_resolver_does_not_expose_unimplemented_analysis_uris():
     """未实现路由可以登记，但不能被错误暴露为可路由服务。"""
     resolver_uris = {u.uri for u in POC_SERVICES}
-    assert not {
-        "bos://analysis/iris/connect",
-        "bos://analysis/iris/transform",
-        "bos://analysis/iris/validate",
-    } & resolver_uris
+    assert (
+        not {
+            "bos://analysis/iris/connect",
+            "bos://analysis/iris/transform",
+            "bos://analysis/iris/validate",
+        }
+        & resolver_uris
+    )
 
 
 # ── 集成级别 (Stdio 真实调用) ─────────────────────────

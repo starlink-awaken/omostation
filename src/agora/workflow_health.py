@@ -83,7 +83,9 @@ def build_capability_health_snapshot(
 
     for name, backend in (backends or {}).items():
         for capability in required:
-            if capability == name or capability in str(_value(backend, "capability", "")):
+            if capability == name or capability in str(
+                _value(backend, "capability", "")
+            ):
                 candidates[capability].append(
                     {
                         "source": "backend",
@@ -95,8 +97,10 @@ def build_capability_health_snapshot(
     projected: dict[str, dict[str, Any]] = {}
     for capability, sources in candidates.items():
         healthy = [item for item in sources if item["health"] != "red"]
-        best = "green" if any(item["health"] == "green" for item in sources) else (
-            "yellow" if healthy else "red"
+        best = (
+            "green"
+            if any(item["health"] == "green" for item in sources)
+            else ("yellow" if healthy else "red")
         )
         projected[capability] = {
             "available": bool(healthy),
@@ -106,7 +110,11 @@ def build_capability_health_snapshot(
 
     available = all(item["available"] for item in projected.values())
     all_green = all(item["health"] == "green" for item in projected.values())
-    status = "healthy" if available and all_green else ("degraded" if available else "unhealthy")
+    status = (
+        "healthy"
+        if available and all_green
+        else ("degraded" if available else "unhealthy")
+    )
     return {
         "status": status,
         "observed_at": observed_at or datetime.now(UTC).isoformat(),

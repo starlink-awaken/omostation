@@ -83,7 +83,9 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
                 "auth check headers present",
                 has_authorization=bool(auth_header),
                 auth_type=(
-                    auth_header.split(" ", 1)[0] if auth_header.startswith("Bearer ") else ""
+                    auth_header.split(" ", 1)[0]
+                    if auth_header.startswith("Bearer ")
+                    else ""
                 ),
             )
             if auth_header.startswith("Bearer "):

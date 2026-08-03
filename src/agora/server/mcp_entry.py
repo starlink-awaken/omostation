@@ -39,7 +39,11 @@ def http_main() -> None:
             return JSONResponse(result)
         except Exception:  # defensive fallback
             return JSONResponse(
-                {"status": "ok", "service": "agora-mcp-http", "tools": len(await mcp.list_tools())}
+                {
+                    "status": "ok",
+                    "service": "agora-mcp-http",
+                    "tools": len(await mcp.list_tools()),
+                }
             )
 
     async def tool_call_endpoint(request: Request):
@@ -147,7 +151,11 @@ def sse_main() -> None:
             return JSONResponse(result)
         except Exception:  # defensive fallback
             return JSONResponse(
-                {"status": "ok", "service": "agora-mcp-sse", "tools": len(await mcp.list_tools())}
+                {
+                    "status": "ok",
+                    "service": "agora-mcp-sse",
+                    "tools": len(await mcp.list_tools()),
+                }
             )
 
     from agora.server.a2a import a2a_send_endpoint

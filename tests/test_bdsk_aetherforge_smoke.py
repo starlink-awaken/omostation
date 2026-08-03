@@ -43,14 +43,16 @@ def test_bdsk_evaluate_yaml_active_route():
     assert cfg_file.exists()
     data = yaml.safe_load(cfg_file.read_text(encoding="utf-8"))
     services = data.get("services", [])
-    
+
     target_service = None
     for s in services:
         if s.get("uri") == "bos://persona/bdsk/evaluate":
             target_service = s
             break
-            
-    assert target_service is not None, "未在 bos-services.yaml 中找到 bos://persona/bdsk/evaluate"
+
+    assert target_service is not None, (
+        "未在 bos-services.yaml 中找到 bos://persona/bdsk/evaluate"
+    )
     assert target_service.get("i0_route") == "active", "i0_route 应激活为 active"
     assert target_service.get("transport") == "internal"
     assert target_service.get("module_path") == "agora.server.tools_bos"

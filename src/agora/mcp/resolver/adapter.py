@@ -323,7 +323,10 @@ class StdioAdapter:
                 method = "POST"
                 payload = json.dumps(data).encode()
             req = urllib.request.Request(
-                url, data=payload, method=method, headers={"Content-Type": "application/json"}
+                url,
+                data=payload,
+                method=method,
+                headers={"Content-Type": "application/json"},
             )
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 body = resp.read().decode(errors="replace")

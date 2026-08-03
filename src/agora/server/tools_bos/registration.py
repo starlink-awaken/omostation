@@ -703,7 +703,9 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
     def _get_inbox_paths() -> tuple[Path, Path]:
         """获取本地 Inbox 与 @公共/_runtime 数据目录。"""
-        doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+        doc_root = Path(
+            os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents"))
+        )
         runtime_dir = doc_root / "@公共" / "_runtime"
         inbox_dir = doc_root / "_inbox"
         return runtime_dir, inbox_dir
@@ -716,12 +718,12 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
         runtime_dir, inbox_dir = _get_inbox_paths()
         vector_store_file = runtime_dir / "vector_store.json"
-        
+
         status_info: dict[str, Any] = {
             "runtime_dir": str(runtime_dir),
             "inbox_dir": str(inbox_dir),
             "vector_store_exists": vector_store_file.exists(),
-            "sources": {}
+            "sources": {},
         }
 
         if vector_store_file.exists():
@@ -729,18 +731,28 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 data = json.loads(vector_store_file.read_text(encoding="utf-8"))
                 status_info["vector_count"] = len(data.get("vectors", {}))
                 status_info["metadata_count"] = len(data.get("metadata", {}))
-                status_info["updated_at"] = _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(vector_store_file.stat().st_mtime))
+                status_info["updated_at"] = _time.strftime(
+                    "%Y-%m-%d %H:%M:%S",
+                    _time.localtime(vector_store_file.stat().st_mtime),
+                )
             except Exception as exc:
                 status_info["error"] = f"Parse vector_store.json failed: {exc}"
 
         if inbox_dir.exists():
-            for filename in ["2026-07-31-auto-seeyon-oa-pending.md", "2026-07-31-auto-netease-mailmaster.md", "2026-07-31-auto-apple-mail.md"]:
+            for filename in [
+                "2026-07-31-auto-seeyon-oa-pending.md",
+                "2026-07-31-auto-netease-mailmaster.md",
+                "2026-07-31-auto-apple-mail.md",
+            ]:
                 filepath = inbox_dir / filename
                 if filepath.exists():
                     status_info["sources"][filename] = {
                         "exists": True,
                         "size_bytes": filepath.stat().st_size,
-                        "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(filepath.stat().st_mtime))
+                        "mtime": _time.strftime(
+                            "%Y-%m-%d %H:%M:%S",
+                            _time.localtime(filepath.stat().st_mtime),
+                        ),
                     }
                 else:
                     status_info["sources"][filename] = {"exists": False}
@@ -770,14 +782,20 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     continue
                 content_snip = str(item_meta.get("content_snippet", ""))
                 title = str(item_meta.get("title", ""))
-                if query_lower in content_snip.lower() or query_lower in title.lower() or query_lower in item_id.lower():
-                    results.append({
-                        "id": item_id,
-                        "title": title,
-                        "source": item_meta.get("source"),
-                        "timestamp": item_meta.get("timestamp"),
-                        "snippet": content_snip[:200]
-                    })
+                if (
+                    query_lower in content_snip.lower()
+                    or query_lower in title.lower()
+                    or query_lower in item_id.lower()
+                ):
+                    results.append(
+                        {
+                            "id": item_id,
+                            "title": title,
+                            "source": item_meta.get("source"),
+                            "timestamp": item_meta.get("timestamp"),
+                            "snippet": content_snip[:200],
+                        }
+                    )
                 if len(results) >= top_k:
                     break
             return _ok({"query": query, "count": len(results), "results": results})
@@ -799,18 +817,25 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             target_file = inbox_dir / "2026-07-31-auto-apple-mail.md"
 
         if not target_file.exists():
-            return _error(f"Pending snapshot file not found for source={source}: {target_file}")
+            return _error(
+                f"Pending snapshot file not found for source={source}: {target_file}"
+            )
 
         try:
             content = target_file.read_text(encoding="utf-8")
             from agora.mcp.bos_router import clean_inbox_content
 
-            return _ok({
-                "source": source,
-                "file": str(target_file),
-                "mtime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(target_file.stat().st_mtime)),
-                "content_preview": clean_inbox_content(content[:1500])
-            })
+            return _ok(
+                {
+                    "source": source,
+                    "file": str(target_file),
+                    "mtime": _time.strftime(
+                        "%Y-%m-%d %H:%M:%S",
+                        _time.localtime(target_file.stat().st_mtime),
+                    ),
+                    "content_preview": clean_inbox_content(content[:1500]),
+                }
+            )
         except Exception as exc:
             return _error(f"Read pending file failed: {exc}")
 
@@ -860,34 +885,40 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                             else ("HIGH" if is_urgent else "NORMAL")
                         )
 
-                        urgent_items.append({
-                            "id": file_path.stem,
-                            "filename": file_path.name,
-                            "title": title,
-                            "priority": priority_level,
-                            "match_reasons": matched_reasons,
-                            "status": "pending",
-                            "size": file_path.stat().st_size,
-                            "mtime": _time.strftime(
-                                "%Y-%m-%d %H:%M:%S",
-                                _time.localtime(file_path.stat().st_mtime),
-                            ),
-                            "urgent": is_urgent,
-                            "snippet": cleaned[:400],
-                        })
+                        urgent_items.append(
+                            {
+                                "id": file_path.stem,
+                                "filename": file_path.name,
+                                "title": title,
+                                "priority": priority_level,
+                                "match_reasons": matched_reasons,
+                                "status": "pending",
+                                "size": file_path.stat().st_size,
+                                "mtime": _time.strftime(
+                                    "%Y-%m-%d %H:%M:%S",
+                                    _time.localtime(file_path.stat().st_mtime),
+                                ),
+                                "urgent": is_urgent,
+                                "snippet": cleaned[:400],
+                            }
+                        )
                 except Exception:
                     continue
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "watch_mode": "priority_only" if priority_only else "all",
-            "urgent_count": len(urgent_items),
-            "items": urgent_items,
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "watch_mode": "priority_only" if priority_only else "all",
+                "urgent_count": len(urgent_items),
+                "items": urgent_items,
+            }
+        )
 
     @mcp.tool()
     async def bos_inbox_archive(filename: str, reason: str = "resolved") -> dict:
         """按要求将已结单/已处决的 BOS Inbox 待办文件安全转移至冷归档分区 (Lifecycle Archive)."""
-        auth_ok, auth_reason = _bos_domain_authorized("bos://memory/inbox/archive", "write")
+        auth_ok, auth_reason = _bos_domain_authorized(
+            "bos://memory/inbox/archive", "write"
+        )
         if not auth_ok:
             return _error(f"Permission denied: {auth_reason}")
 
@@ -897,7 +928,9 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             return _error(f"Inbox snapshot not found: {filename}")
 
         # 准备 archive 目录: _knowledge/archive/inbox/
-        doc_root = Path(os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
+        doc_root = Path(
+            os.environ.get("BOS_DOCUMENTS_ROOT", str(Path.home() / "Documents"))
+        )
         archive_dir = doc_root / "_knowledge" / "archive" / "inbox"
         archive_dir.mkdir(parents=True, exist_ok=True)
 
@@ -911,13 +944,15 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             )
             target_file.write_text(content + archive_meta, encoding="utf-8")
             src_file.unlink()
-            return _ok({
-                "format_version": FORMAT_VERSION,
-                "filename": filename,
-                "archived": True,
-                "reason": reason,
-                "archive_path": str(target_file),
-            })
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "filename": filename,
+                    "archived": True,
+                    "reason": reason,
+                    "archive_path": str(target_file),
+                }
+            )
         except Exception as exc:
             return _error(f"Failed to archive inbox item: {exc}")
 
@@ -1034,7 +1069,11 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             {
                 "name": "bos_inbox_search",
                 "description": "在 BOS Inbox 多源私有知识库(OA待办/网易邮箱/AppleMail)中进行关键词与语义检索",
-                "arguments": {"query": "搜索关键词", "top_k": "返回条数", "source": "数据源过滤"},
+                "arguments": {
+                    "query": "搜索关键词",
+                    "top_k": "返回条数",
+                    "source": "数据源过滤",
+                },
             },
             {
                 "name": "bos_inbox_pending",
@@ -1049,17 +1088,26 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             {
                 "name": "bos_inbox_triage",
                 "description": "BOS Inbox 公文与待办事项智能分类分拣与紧急度分层引擎 (Triage Engine)",
-                "arguments": {"limit": "分拣数量上限", "priority_threshold": "高优紧急阈值"},
+                "arguments": {
+                    "limit": "分拣数量上限",
+                    "priority_threshold": "高优紧急阈值",
+                },
             },
             {
                 "name": "bos_inbox_draft",
                 "description": "BOS Inbox 智能拟办意见与风险提示批复草拟引擎 (Draft Assistant)",
-                "arguments": {"filename": "待办公文文件名", "persona_style": "答复预设人设风格"},
+                "arguments": {
+                    "filename": "待办公文文件名",
+                    "persona_style": "答复预设人设风格",
+                },
             },
             {
                 "name": "persona_bdsk_evaluate",
                 "description": "B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Persona Evaluate)",
-                "arguments": {"topic": "待评估需求/策略说明", "mode": "评估模式 deep|fast"},
+                "arguments": {
+                    "topic": "待评估需求/策略说明",
+                    "mode": "评估模式 deep|fast",
+                },
             },
         ]
         return _ok(
