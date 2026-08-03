@@ -16,5 +16,6 @@ jobs:
       - name: PASW — 自动同步子模块指针
         run: bash bin/ssot/sync-submodule-pointers.sh 2>&1 || true
       - name: PASW — 子模块指针可达性前置检查
-        run: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch 2>&1
+        # source=index: 检查同步后的 index
+        run: python3 bin/ssot/submodule-reachability-gate.py --source index --fetch 2>&1
         continue-on-error: false
