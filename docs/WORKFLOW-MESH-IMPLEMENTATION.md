@@ -1046,7 +1046,8 @@ proposal-only broker。OMO 新增 `engineering-delivery-consumption/v1`，通过
 fixture 伪造运行记录。
 
 消费者复用现有 `external-connection-receipt/v1` 和 `outcome-feedback/v1` broker：先把合并交付摘要的 SHA-256 和证据引用写入
-`EvidenceRecorded`，再记录 `reviewed`/`adopted` 等消费状态。为满足 Workflow Mesh 的事件顺序，消费者必须在
+`EvidenceRecorded`，再记录机器摄取的 `submitted` 状态。机器摄取不得冒充人工 `reviewed`/`adopted`；人工复核必须通过独立的
+`review-engineering-delivery --workflow-run-id <id> --actor <human-ref> --stdin` 入口追加反馈。为满足 Workflow Mesh 的事件顺序，消费者必须在
 `WorkflowVerified`/`PRMerged`/`WorkflowClosed` 之前运行；已进入后续状态的重试只有在同一 receipt 已存在时才允许幂等通过。
 输入层拒绝原文、自由内容、凭据和未知字段，输出固定携带 `proposal_only`、`activation=forbidden`、
 `provider_invocation=false` 和 `automatic_promotion=false`。
@@ -1054,6 +1055,16 @@ fixture 伪造运行记录。
 这一步形成了“真实仓库元数据消费”证据，但不等同于真实业务 provider 激活，也不等同于真实 OCR/知识图谱消费。下一道业务门仍是：
 责任人确认、连续真实结果反馈、双人标注、adjudication、脱敏 manifest 和人工上线评审；工程交付场景可以作为低风险 dogfood，
 不能替代业务侧正式场景。
+
+### 7.3.32 Phase 65 工程交付人工反馈与运营投影
+
+Phase 65 修正 Phase 64 的语义边界：`consume-engineering-delivery` 只产生 `submitted`，表示系统已收到并验证一份脱敏交付摘要，
+不表示任何人已经消费或认可结果。人工责任人通过独立的 `review-engineering-delivery` broker 追加 `reviewed`、`adopted` 或
+`rejected` 反馈；该 broker 要求已有交付 receipt、已有 `submitted` feedback、明确 actor、复核时间和至少一条复核证据引用。
+
+OMO 同时提供只读 `engineering-delivery-review-queue` 投影，按真实 WorkflowRun、receipt、feedback 状态和交付时长聚合待复核项，
+供 Cockpit 后续接入正式审核工作台。投影不改变 WorkflowRun，不派发任务，不调用 provider，也不自动晋升策略。相同 decision 和证据
+重复提交幂等；不同阶段的反馈可以沿 `submitted -> reviewed -> adopted/rejected` 追加，避免把反馈生命周期误判为冲突。
 
 ## 8. 明确延期和边界
 

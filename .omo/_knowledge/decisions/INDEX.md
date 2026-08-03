@@ -424,6 +424,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0355: Workflow Mesh 显式裁决评测 manifest 材料化 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 62 | 0355-workflow-evaluation-manifest-materialization.md
 - ADR-0356: Manifest-bound Shadow Evaluation 报告与激活边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 63 | 0356-shadow-evaluation-report-contract.md
 - ADR-0357: Engineering Delivery 真实元数据消费者与 Workflow Mesh 回执顺序 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 64 | 0357-real-engineering-delivery-consumer.md
+- ADR-0358: Engineering Delivery 机器摄取与人工复核反馈边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 65 | 0358-engineering-delivery-human-review.md
 
 ---
 
