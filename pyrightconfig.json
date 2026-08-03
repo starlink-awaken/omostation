@@ -1,0 +1,16 @@
+{
+  "extraPaths": [
+    "../agora/src",
+    "../omo/src",
+    "../omo-debt/src",
+    "../l4-kernel/src",
+    "../metaos/src",
+    "../runtime/src",
+    "../ecos/src",
+    "../bus-foundation/src",
+    "../model-driven/src",
+    "../kairon/packages/kairon-observability/src",
+    "../kairon/packages/kos/src",
+    "src/cockpit"
+  ]
+}

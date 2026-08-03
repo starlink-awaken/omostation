@@ -90,3 +90,22 @@ dev = [
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
 ]
+
+[tool.pyright]
+# Workspace deps resolve via editable installs at runtime, but pyright can't
+# follow the .pth indirection; point it at the source trees so
+# try/except-imported re-exports (omo/l4/model-driven/runtime/...) resolve
+# instead of degrading to 177 "unknown import symbol" diagnostics.
+extraPaths = [
+  "../agora/src",
+  "../omo/src",
+  "../omo-debt/src",
+  "../l4-kernel/src",
+  "../metaos/src",
+  "../runtime/src",
+  "../ecos/src",
+  "../bus-foundation/src",
+  "../model-driven/src",
+  "../kairon/packages/kairon-observability/src",
+  "../kairon/packages/kos/src",
+]
