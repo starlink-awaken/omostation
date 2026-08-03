@@ -36,7 +36,7 @@ async def test_a2a_rejects_outdated_timestamp():
 
     response = await a2a_mod.a2a_send_endpoint(request)
     assert response.status_code == 401
-    body = json.loads(response.body)
+    body = json.loads(response.body)  # type: ignore[reportArgumentType]
     assert body["error"] == "timestamp_out_of_window"
 
 
@@ -69,6 +69,6 @@ async def test_a2a_rejects_replayed_signature():
 
         request2 = _FakeRequest(payload, {"X-Swarm-Signature": "sig-replay"})
         response2 = await a2a_mod.a2a_send_endpoint(request2)
-        assert response2.status_code == 401, json.loads(response2.body)
-        body = json.loads(response2.body)
+        assert response2.status_code == 401, json.loads(response2.body)  # type: ignore[reportArgumentType]
+        body = json.loads(response2.body)  # type: ignore[reportArgumentType]
         assert body["error"] == "replay_detected"

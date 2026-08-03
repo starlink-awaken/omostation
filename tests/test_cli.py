@@ -15,7 +15,7 @@ class TestParserStructure:
         choices = set()
         for action in self.parser._actions:
             if hasattr(action, "choices") and action.choices is not None:
-                choices.update(action.choices.keys())
+                choices.update(action.choices.keys())  # type: ignore[reportAttributeAccessIssue]
         expected = {
             "register",
             "list",

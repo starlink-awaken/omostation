@@ -686,12 +686,12 @@ class TestProxyManagerIdleTimeoutWithServices:
 
             # Simulate a dispatch
             cb = pm._idle_manager  # type: ignore
-            cb.refresh("kos")
-            assert "kos" in cb.last_used
+            cb.refresh("kos")  # type: ignore[reportOptionalMemberAccess]
+            assert "kos" in cb.last_used  # type: ignore[reportOptionalMemberAccess]
 
             # The usage callback should refresh the timer
             await pm._on_usage("kos", "ping", {})
-            assert "kos" in cb.last_used
+            assert "kos" in cb.last_used  # type: ignore[reportOptionalMemberAccess]
 
             await pm.disable_idle_timeout()
 
@@ -702,11 +702,11 @@ class TestProxyManagerIdleTimeoutWithServices:
             pm = _make_manager()
             pm.enable_idle_timeout(IdleTimeoutConfig(sweep_interval=9999.0))
             cb = pm._idle_manager  # type: ignore
-            cb.refresh("kos")
-            assert "kos" in cb.last_used
+            cb.refresh("kos")  # type: ignore[reportOptionalMemberAccess]
+            assert "kos" in cb.last_used  # type: ignore[reportOptionalMemberAccess]
 
             await pm._on_unloaded("kos")
-            assert "kos" not in cb.last_used
+            assert "kos" not in cb.last_used  # type: ignore[reportOptionalMemberAccess]
 
             await pm.disable_idle_timeout()
 

@@ -893,9 +893,8 @@ async def agora_capability_discover(
                 "package": decl.get("package", ""),
                 "action": decl.get("action", ""),
                 "description": decl.get("description", "")[:120],
-                "routed": uri in route_uris or any(
-                    uri.startswith(r) for r in route_uris
-                ),
+                "routed": uri in route_uris
+                or any(uri.startswith(r) for r in route_uris),
                 "calls": decl.get("calls", 0),
                 "stale_days": decl.get("usage", {}).get("stale_days"),
                 "zombie": bool(effective.get("zombie")),

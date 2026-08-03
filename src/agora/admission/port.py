@@ -118,7 +118,7 @@ def get_admission_provider() -> AdmissionPort | None:
                     if callable(obj) and not hasattr(obj, "evaluate"):
                         obj = obj()
                     if hasattr(obj, "evaluate"):
-                        provider = obj
+                        provider = obj  # type: ignore[reportAssignmentType]
                         break
                     if hasattr(obj, "evaluate_admission"):
                         provider = _LegacyGatewayAdapter(obj)

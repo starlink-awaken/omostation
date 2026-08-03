@@ -52,7 +52,7 @@ def _make_service(name: str = "minerva", **kwargs) -> Service:
         tags=["test", name],
     )
     defaults.update(kwargs)
-    return Service(name=name, **defaults)
+    return Service(name=name, **defaults)  # type: ignore[reportArgumentType]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -69,7 +69,7 @@ class TestServiceRegistryLifecycle:
         svc = _make_service("minerva")
         r.register(svc)
         assert r.get("minerva") is not None
-        assert r.get("minerva").name == "minerva"
+        assert r.get("minerva").name == "minerva"  # type: ignore[reportOptionalMemberAccess]
 
     def test_register_persists_across_registry_reload(self, tmp_path: Path):
         """注册的数据持久化到 SQLite，重新创建 registry 后依然可用。"""
@@ -79,7 +79,7 @@ class TestServiceRegistryLifecycle:
 
         r2 = ServiceRegistry(storage_path=str(path))
         assert r2.get("minerva") is not None
-        assert r2.get("minerva").port == 0
+        assert r2.get("minerva").port == 0  # type: ignore[reportOptionalMemberAccess]
 
     def test_list_all_returns_registered_services(self, tmp_path: Path):
         """list_all() 返回所有已注册的服务。"""
@@ -123,7 +123,7 @@ class TestServiceRegistryLifecycle:
     def test_service_max_limit_enforced(self, tmp_path: Path):
         """超过最大服务限制时抛出 ValueError。"""
         r = _new_registry(tmp_path)
-        r._MAX_SERVICES = 3
+        r._MAX_SERVICES = 3  # type: ignore[reportAttributeAccessIssue]
         r.register(_make_service("a"))
         r.register(_make_service("b"))
         r.register(_make_service("c"))
@@ -193,9 +193,9 @@ class TestHeartbeatSystem:
         svc = r.get("worker")
         assert result["status"] == "heartbeat_registered"
         assert result["last_heartbeat"] == 100.0
-        assert svc.last_health_check == 100.0
-        assert svc.healthy is True
-        assert svc.provider_info == {"role": "indexer"}
+        assert svc.last_health_check == 100.0  # type: ignore[reportOptionalMemberAccess]
+        assert svc.healthy is True  # type: ignore[reportOptionalMemberAccess]
+        assert svc.provider_info == {"role": "indexer"}  # type: ignore[reportOptionalMemberAccess]
 
     def test_heartbeat_nonexistent_service_raises(self, tmp_path: Path):
         """对未注册的服务发送心跳抛出 ValueError。"""
@@ -240,8 +240,8 @@ class TestHeartbeatSystem:
 
         r2 = ServiceRegistry(storage_path=str(path))
         svc = r2.get("agent")
-        assert svc.provider_info == {"version": "1.2.3"}
-        assert svc.healthy is True
+        assert svc.provider_info == {"version": "1.2.3"}  # type: ignore[reportOptionalMemberAccess]
+        assert svc.healthy is True  # type: ignore[reportOptionalMemberAccess]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -278,14 +278,14 @@ class TestCircuitBreaker:
         r.register(_make_service("svc"))
         for _ in range(3):
             r.mark_failure("svc")
-        assert not r.get("svc").is_available
+        assert not r.get("svc").is_available  # type: ignore[reportOptionalMemberAccess]
 
         # 恢复：连续成功
         r.mark_success("svc")
-        assert r.get("svc").failure_count == 2
+        assert r.get("svc").failure_count == 2  # type: ignore[reportOptionalMemberAccess]
         r.mark_success("svc")
-        assert r.get("svc").failure_count == 1
-        assert r.get("svc").is_available
+        assert r.get("svc").failure_count == 1  # type: ignore[reportOptionalMemberAccess]
+        assert r.get("svc").is_available  # type: ignore[reportOptionalMemberAccess]
 
     def test_failure_reopens_after_partial_recovery(self, tmp_path: Path):
         """部分恢复后再次失败，熔断器重新打开。"""
@@ -480,7 +480,7 @@ class TestPersistence:
         db_path = tmp_path / "concurrent.db"
 
         # 使用 db_save 通过完整的 persistence_db 路径写入（内部使用 _get_db -> agora.db）
-        assert db_save(db_path, "data") is True
+        assert db_save(db_path, "data") is True  # type: ignore[reportArgumentType]
 
         # 通过同一个文件路径读取（db_load 内部归一化为 <parent>/agora.db）
         loaded = db_load(db_path)
@@ -909,7 +909,7 @@ class TestServiceEdgeCases:
         r = _new_registry(tmp_path)
         r.register(_make_service("svc", port=1000))
         r.register(_make_service("svc", port=2000))
-        assert r.get("svc").port == 2000
+        assert r.get("svc").port == 2000  # type: ignore[reportOptionalMemberAccess]
         assert len(r.list_all()) == 1
 
     def test_service_with_empty_name(self, tmp_path: Path):
@@ -924,8 +924,8 @@ class TestServiceEdgeCases:
         instances = [{"host": "node1", "port": 9001}, {"host": "node2", "port": 9002}]
         r.register(_make_service("cluster", instances=instances))
         svc = r.get("cluster")
-        assert len(svc.instances) == 2
-        assert svc.instances[0]["host"] == "node1"
+        assert len(svc.instances) == 2  # type: ignore[reportOptionalMemberAccess]
+        assert svc.instances[0]["host"] == "node1"  # type: ignore[reportOptionalMemberAccess]
 
     def test_service_tags_round_trip(self, tmp_path: Path):
         """标签列表通过序列化/反序列化保持不变。"""
@@ -937,21 +937,21 @@ class TestServiceEdgeCases:
         path = tmp_path / "test-services.json"
         r2 = ServiceRegistry(storage_path=str(path))
         svc = r2.get("tagged")
-        assert sorted(svc.tags) == sorted(tags)
+        assert sorted(svc.tags) == sorted(tags)  # type: ignore[reportOptionalMemberAccess]
 
     def test_register_with_heartbeat_then_mark_failure(self, tmp_path: Path):
         """心跳后将服务标记为失败，验证 hearteart 状态被覆盖。"""
         r = _new_registry(tmp_path)
         r.register(_make_service("svc"))
         r.register_heartbeat("svc", now=100.0)
-        assert r.get("svc").healthy is True
+        assert r.get("svc").healthy is True  # type: ignore[reportOptionalMemberAccess]
 
         r.mark_failure("svc")
         r.mark_failure("svc")
         r.mark_failure("svc")
-        assert r.get("svc").healthy is False
+        assert r.get("svc").healthy is False  # type: ignore[reportOptionalMemberAccess]
         # 熔断打开，但 last_health_check 仍然保留
-        assert r.get("svc").last_health_check == 100.0
+        assert r.get("svc").last_health_check == 100.0  # type: ignore[reportOptionalMemberAccess]
 
 
 # ═══════════════════════════════════════════════════════════════

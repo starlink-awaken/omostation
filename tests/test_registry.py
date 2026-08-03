@@ -106,7 +106,7 @@ class TestServiceRegistry:
         r.register(Service("minerva", port=8765))
         r.register(Service("sophia", port=9001))
         assert len(r.list_all()) == 2
-        assert r.get("minerva").port == 8765
+        assert r.get("minerva").port == 8765  # type: ignore[reportOptionalMemberAccess]
         assert r.get("nonexistent") is None
 
     def test_list_healthy(self):
@@ -125,11 +125,13 @@ class TestServiceRegistry:
         r.mark_failure("test")
         r.mark_failure("test")
         r.mark_failure("test")
-        assert not r.get("test").is_available
+        assert not r.get("test").is_available  # type: ignore[reportOptionalMemberAccess]
         r.mark_success("test")
         r.mark_success("test")
         r.mark_success("test")
-        assert r.get("test").is_available  # 3 successes gradually decay to 0
+        assert r.get(
+            "test"
+        ).is_available  # 3 successes gradually decay to 0  # type: ignore[reportOptionalMemberAccess]
 
     def test_unregister(self):
         r = _new_registry()
@@ -150,7 +152,7 @@ class TestServiceRegistry:
         r.register(
             Service("api", protocol="rest", mcp_endpoint="http://192.0.2.1:3000")
         )
-        assert r.get("api").protocol == "rest"
+        assert r.get("api").protocol == "rest"  # type: ignore[reportOptionalMemberAccess]
 
     def test_register_invalid_protocol(self):
         r = _new_registry()
@@ -262,12 +264,12 @@ class TestGrpcHealthCheck:
 
 class TestParseGrpcEndpoint:
     def test_http_url(self):
-        host, port = ServiceRegistry._parse_grpc_endpoint("http://example.com:50051")
+        host, port = ServiceRegistry._parse_grpc_endpoint("http://example.com:50051")  # type: ignore[reportGeneralTypeIssues]
         assert host == "example.com"
         assert port == 50051
 
     def test_plain_host_port(self):
-        host, port = ServiceRegistry._parse_grpc_endpoint("example.com:50051")
+        host, port = ServiceRegistry._parse_grpc_endpoint("example.com:50051")  # type: ignore[reportGeneralTypeIssues]
         assert host == "example.com"
         assert port == 50051
 
@@ -278,7 +280,7 @@ class TestParseGrpcEndpoint:
         assert ServiceRegistry._parse_grpc_endpoint("http://example.com") is None
 
     def test_https_url(self):
-        host, port = ServiceRegistry._parse_grpc_endpoint("https://my-server:443")
+        host, port = ServiceRegistry._parse_grpc_endpoint("https://my-server:443")  # type: ignore[reportGeneralTypeIssues]
         assert host == "my-server"
         assert port == 443
 

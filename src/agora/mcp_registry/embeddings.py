@@ -5,7 +5,7 @@ import threading
 import typing
 
 if typing.TYPE_CHECKING:
-    import numpy as np
+    import numpy as np  # type: ignore[reportMissingImports]
 
 import structlog
 
@@ -25,7 +25,7 @@ class EmbeddingCache:
 
     def load(self, tool_ids: list[str], embeddings: "np.ndarray") -> None:
         """Replace cache contents with a new set of embeddings."""
-        import numpy as np
+        import numpy as np  # type: ignore[reportMissingImports]
 
         with self._lock:
             self._tool_ids = tool_ids
@@ -39,7 +39,7 @@ class EmbeddingCache:
         """Return top-k (tool_id, score) pairs via vectorized cosine similarity."""
         if self._embeddings is None or len(self._tool_ids) == 0:
             return []
-        import numpy as np
+        import numpy as np  # type: ignore[reportMissingImports]
 
         scores = self._embeddings @ query_embedding  # vectorized dot product
         top_indices = np.argsort(scores)[-top_k:][::-1]
@@ -99,7 +99,7 @@ class EmbeddingStore:
         if self._model is not None:
             return self._model if self._model is not False else None
         try:
-            from sentence_transformers import SentenceTransformer
+            from sentence_transformers import SentenceTransformer  # type: ignore[reportMissingImports]
 
             self._model = SentenceTransformer("all-MiniLM-L6-v2")
             logger.info("embedding_model_loaded", model="all-MiniLM-L6-v2")
@@ -119,7 +119,7 @@ class EmbeddingStore:
         if not model:
             return None
         try:
-            emb = model.encode(text, normalize_embeddings=True)
+            emb = model.encode(text, normalize_embeddings=True)  # type: ignore[reportAttributeAccessIssue]
             return [float(v) for v in emb]
         except Exception as e:  # defensive fallback
             logger.warning("embedding_failed", error=str(e))
@@ -127,7 +127,7 @@ class EmbeddingStore:
 
     def refresh_cache(self) -> None:
         """Load all embeddings from SQLite into in-memory cache."""
-        import numpy as np
+        import numpy as np  # type: ignore[reportMissingImports]
 
         conn = self._get_conn()
         rows = conn.execute("SELECT tool_id, embedding FROM tool_embeddings").fetchall()
@@ -194,7 +194,7 @@ class EmbeddingStore:
         if query_vec is None:
             return []
 
-        import numpy as np
+        import numpy as np  # type: ignore[reportMissingImports]
 
         query_np = np.array(query_vec, dtype=np.float32)
 

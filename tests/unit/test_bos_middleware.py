@@ -366,5 +366,5 @@ class TestConfigWatcher:
         watcher.start(interval=0.05)
         watcher.stop()
         assert watcher._running is False
-        watcher._thread.join(timeout=2)
-        assert not watcher._thread.is_alive()
+        watcher._thread.join(timeout=2)  # type: ignore[reportOptionalMemberAccess]
+        assert not watcher._thread.is_alive()  # type: ignore[reportOptionalMemberAccess]

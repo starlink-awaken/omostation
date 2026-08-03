@@ -105,7 +105,7 @@ class TestSwarmOrchestrator:
 
         # 精确匹配应优于泛匹配
         node = s.get_node_by_uri("bos://memory/kos/search")
-        assert node.node_id == "specific"
+        assert node.node_id == "specific"  # type: ignore[reportOptionalMemberAccess]
 
     def test_filter_by_role(self):
         from agora.mcp.swarm import SwarmOrchestrator
@@ -210,7 +210,7 @@ class TestSwarmAdvanced:
 
         # w2 has more specific prefix AND lower load
         node = s.get_node_by_uri("bos://memory/kos/search")
-        assert node.node_id == "w2"
+        assert node.node_id == "w2"  # type: ignore[reportOptionalMemberAccess]
 
     def test_leader_election_master_wins(self):
         from agora.mcp.swarm import SwarmOrchestrator

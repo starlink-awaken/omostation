@@ -62,10 +62,10 @@ _log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 try:
-    from google.auth.transport.requests import (
+    from google.auth.transport.requests import (  # type: ignore[reportMissingImports]
         Request as _GoogleRequest,  # type: ignore[import]
     )
-    from google.oauth2.credentials import (
+    from google.oauth2.credentials import (  # type: ignore[reportMissingImports]
         Credentials as _GoogleCredentials,  # type: ignore[import]
     )
 
@@ -344,7 +344,7 @@ class MailTool(BaseTool):
                 self._oauth2_token_path
             )
             if creds and creds.refresh_token and not creds.valid:
-                req = _GoogleRequest()
+                req = _GoogleRequest()  # type: ignore[reportOptionalCall]
                 creds.refresh(req)
                 with open(self._oauth2_token_path, "w") as fh:
                     fh.write(creds.to_json())

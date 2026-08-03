@@ -22,8 +22,8 @@ class TestCircuitBreakerLifecycle:
         for _ in range(3):
             r.mark_failure("test-cb")
         svc = r.get("test-cb")
-        assert svc.circuit_state == "OPEN"
-        assert not svc.healthy
+        assert svc.circuit_state == "OPEN"  # type: ignore[reportOptionalMemberAccess]
+        assert not svc.healthy  # type: ignore[reportOptionalMemberAccess]
 
     def test_gradual_recovery(self):
         """4 successes should close the circuit (gradual decay)."""
@@ -31,12 +31,12 @@ class TestCircuitBreakerLifecycle:
         r.register(Service("test-cb"))
         for _ in range(3):
             r.mark_failure("test-cb")
-        assert r.get("test-cb").circuit_state == "OPEN"
+        assert r.get("test-cb").circuit_state == "OPEN"  # type: ignore[reportOptionalMemberAccess]
         for _ in range(4):
             r.mark_success("test-cb")
         svc = r.get("test-cb")
-        assert svc.circuit_state == "CLOSED"
-        assert svc.healthy
+        assert svc.circuit_state == "CLOSED"  # type: ignore[reportOptionalMemberAccess]
+        assert svc.healthy  # type: ignore[reportOptionalMemberAccess]
 
     def test_circuit_state_persistence_only_static(self):
         """Only static config should be persisted, not runtime state."""
@@ -50,4 +50,4 @@ class TestCircuitBreakerLifecycle:
         # Reload from disk
         r2 = ServiceRegistry(storage_path=str(path))
         svc = r2.get("test-cb")
-        assert svc.healthy  # Should be True (default), not persisted
+        assert svc.healthy  # Should be True (default), not persisted  # type: ignore[reportOptionalMemberAccess]

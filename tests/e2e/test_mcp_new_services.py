@@ -15,8 +15,8 @@ import time
 def send_message(proc: subprocess.Popen, msg: dict) -> None:
     payload = json.dumps(msg)
     data = (payload + "\n").encode("utf-8")
-    proc.stdin.write(data)
-    proc.stdin.flush()
+    proc.stdin.write(data)  # type: ignore[reportOptionalMemberAccess]
+    proc.stdin.flush()  # type: ignore[reportOptionalMemberAccess]
 
 
 class LineReader:
@@ -37,9 +37,9 @@ class LineReader:
                 line = self._buf[:idx].decode("utf-8", errors="replace")
                 self._buf = self._buf[idx + 1 :]
                 return line
-            if select.select([self._proc.stdout], [], [], min(remaining, 1.0))[0]:
+            if select.select([self._proc.stdout], [], [], min(remaining, 1.0))[0]:  # type: ignore[reportArgumentType]
                 try:
-                    data = os.read(self._proc.stdout.fileno(), 65536)
+                    data = os.read(self._proc.stdout.fileno(), 65536)  # type: ignore[reportOptionalMemberAccess]
                 except Exception:
                     break
                 if not data:
@@ -109,7 +109,7 @@ def drain_stderr(proc: subprocess.Popen, echo: bool = False) -> None:
     - Silent failures swallowed by bare except
     """
     try:
-        fd = proc.stderr.fileno()
+        fd = proc.stderr.fileno()  # type: ignore[reportOptionalMemberAccess]
         _set_nonblocking(fd)
         while True:
             try:
@@ -131,7 +131,7 @@ def _cleanup(proc: subprocess.Popen) -> None:
     drain_stderr(proc, echo=True)
     # Close stderr pipe to prevent lingering writes
     try:
-        proc.stderr.close()
+        proc.stderr.close()  # type: ignore[reportOptionalMemberAccess]
     except Exception:
         pass
     if proc.poll() is None:

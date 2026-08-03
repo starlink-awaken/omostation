@@ -18,12 +18,12 @@ _log = logging.getLogger(__name__)
 
 def tool_voice_speak(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for voice/speak — synthesize and play text as speech."""
-    surface: SurfaceContract | None = None
+    surface: SurfaceContract | None = None  # type: ignore[reportInvalidTypeForm]
     try:
-        from organs.D_Voice.interfaces.voice_io import (
+        from organs.D_Voice.interfaces.voice_io import (  # type: ignore[reportMissingImports]
             VoiceConfig,  # type: ignore[import-not-found]
         )
-        from organs.D_Voice.tts.tts_provider import (
+        from organs.D_Voice.tts.tts_provider import (  # type: ignore[reportMissingImports]
             TTSProviderFactory,  # type: ignore[import-not-found]
         )
     except ImportError:
@@ -35,7 +35,7 @@ def tool_voice_speak(params: JSONDict, ctx: ToolContext) -> JSONDict:
             operation="voice/speak",
             default_kind=SurfaceIngressKind.OBSERVABILITY,
         )
-        surface.require(SurfaceIngressKind.SOVEREIGN_CONTROL, operation="voice/speak")
+        surface.require(SurfaceIngressKind.SOVEREIGN_CONTROL, operation="voice/speak")  # type: ignore[reportOptionalMemberAccess]
     except SurfaceContractError as exc:
         payload: dict[str, Any] = (
             _surface_payload(surface) if surface is not None else {}
@@ -72,14 +72,14 @@ def tool_voice_speak(params: JSONDict, ctx: ToolContext) -> JSONDict:
 
 def tool_voice_session_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for voice/session_info — return current voice session state."""
-    surface: SurfaceContract | None = None
+    surface: SurfaceContract | None = None  # type: ignore[reportInvalidTypeForm]
     try:
         surface = _mcp_surface_contract(
             params,
             operation="voice/session_info",
             default_kind=SurfaceIngressKind.OBSERVABILITY,
         )
-        surface.require(
+        surface.require(  # type: ignore[reportOptionalMemberAccess]
             SurfaceIngressKind.OBSERVABILITY,
             SurfaceIngressKind.SOVEREIGN_CONTROL,
             operation="voice/session_info",
@@ -91,7 +91,7 @@ def tool_voice_session_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
         return {"error": str(exc), "success": False, **payload}
 
     try:
-        from organs.D_Voice.voice_session_manager import (
+        from organs.D_Voice.voice_session_manager import (  # type: ignore[reportMissingImports]
             VoiceSessionManager,  # type: ignore[import-not-found]
         )
     except ImportError:
@@ -116,10 +116,10 @@ def tool_voice_session_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
 
 def tool_voice_intent_digest(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for voice/intent_digest — convert transcribed text to intent."""
-    surface: SurfaceContract | None = None
+    surface: SurfaceContract | None = None  # type: ignore[reportInvalidTypeForm]
     try:
-        from organs.D_Voice.interfaces.voice_io import VoiceResult
-        from organs.D_Voice.voice_intent_digestor import (
+        from organs.D_Voice.interfaces.voice_io import VoiceResult  # type: ignore[reportMissingImports]
+        from organs.D_Voice.voice_intent_digestor import (  # type: ignore[reportMissingImports]
             VoiceIntentDigestor,  # type: ignore[import-not-found]
         )
     except ImportError:
@@ -131,7 +131,7 @@ def tool_voice_intent_digest(params: JSONDict, ctx: ToolContext) -> JSONDict:
             operation="voice/intent_digest",
             default_kind=SurfaceIngressKind.PERCEPTION,
         )
-        surface.require(
+        surface.require(  # type: ignore[reportOptionalMemberAccess]
             SurfaceIngressKind.PERCEPTION,
             SurfaceIngressKind.SOVEREIGN_CONTROL,
             operation="voice/intent_digest",
@@ -150,7 +150,7 @@ def tool_voice_intent_digest(params: JSONDict, ctx: ToolContext) -> JSONDict:
         return {
             "success": True,
             **intent_data,
-            "surface": intent_data.get("surface", surface.to_dict()),
+            "surface": intent_data.get("surface", surface.to_dict()),  # type: ignore[reportOptionalMemberAccess]
         }
     except Exception as exc:  # defensive fallback
         _log.error("[MCPToolRegistry] voice/intent_digest error: %s", exc)

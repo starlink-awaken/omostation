@@ -300,8 +300,8 @@ def register_governance_tools(mcp: FastMCP) -> None:
             args = {}
 
         tm = _get_task_manager()
-        task = tm.create_task("", tool_name, args, session_id)
-        result = await tm.execute_task(task.id)
+        task = tm.create_task("", tool_name, args, session_id)  # type: ignore[reportCallIssue]
+        result = await tm.execute_task(task.id)  # type: ignore[reportAttributeAccessIssue]
         if result is None:
             return _error("Task execution returned no result")
 
@@ -336,7 +336,7 @@ def register_governance_tools(mcp: FastMCP) -> None:
         return _ok(
             {
                 "format_version": FORMAT_VERSION,
-                "task": task.to_dict(),
+                "task": task.to_dict(),  # type: ignore[reportAttributeAccessIssue]
             }
         )
 
@@ -359,7 +359,7 @@ def register_governance_tools(mcp: FastMCP) -> None:
                     "format_version": FORMAT_VERSION,
                     "action": "canceled",
                     "task_id": task_id,
-                    "task": task.to_dict() if task else None,
+                    "task": task.to_dict() if task else None,  # type: ignore[reportAttributeAccessIssue]
                 }
             )
         else:
@@ -380,7 +380,7 @@ def register_governance_tools(mcp: FastMCP) -> None:
             limit: Max results (default 50)
         """
         tm = _get_task_manager()
-        tasks = tm.list_tasks(service=service, status=status, since=since, limit=limit)
+        tasks = tm.list_tasks(service=service, status=status, since=since, limit=limit)  # type: ignore[reportAttributeAccessIssue]
         return _ok(
             {
                 "format_version": FORMAT_VERSION,

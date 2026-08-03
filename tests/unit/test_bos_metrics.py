@@ -54,8 +54,8 @@ class TestBOSMetricsRecord:
         self.m.record("bos://memory/kos/search", success=False, latency_ms=100)
         stats = self.m.status("bos://memory/kos")
         s = stats.get("bos://memory/kos")
-        assert s["failure"] == 1
-        assert s["success"] == 0
+        assert s["failure"] == 1  # type: ignore[reportOptionalSubscript]
+        assert s["success"] == 0  # type: ignore[reportOptionalSubscript]
 
     def test_record_multiple_calls(self):
         """多次调用应累加。"""
@@ -99,7 +99,7 @@ class TestBOSMetricsRecord:
         self.m.record("bos://test", success=True, latency_ms=30)
         stats = self.m.status("bos://test")
         s = stats.get("bos://test")
-        assert s["avg_latency_ms"] == 20.0
+        assert s["avg_latency_ms"] == 20.0  # type: ignore[reportOptionalSubscript]
 
 
 class TestBOSMetricsTrack:

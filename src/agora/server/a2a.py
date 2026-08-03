@@ -56,10 +56,12 @@ async def a2a_send_endpoint(request):
 
             swarm = get_swarm()
             sender_node = swarm._nodes.get(sender_node_id)
-            if sender_node and sender_node.public_key:
+            if sender_node and sender_node.public_key:  # type: ignore[reportAttributeAccessIssue]
                 # Verify signature directly against raw received bytes
                 is_valid = NodeIdentity.verify(
-                    raw_body, signature, sender_node.public_key
+                    raw_body,
+                    signature,
+                    sender_node.public_key,  # type: ignore[reportAttributeAccessIssue]
                 )
                 if not is_valid:
                     logger.warning("a2a_auth_failed", extra={"node_id": sender_node_id})

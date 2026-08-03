@@ -54,9 +54,9 @@ def _fake_github_response(num_items: int = 5) -> dict:
 
 
 @pytest.fixture
-def catalog() -> ToolCatalog:
+def catalog() -> ToolCatalog:  # type: ignore[reportInvalidTypeForm]
     c = ToolCatalog(db_path=":memory:")
-    yield c
+    yield c  # type: ignore[reportReturnType]
     c.close()
 
 

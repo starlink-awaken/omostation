@@ -77,16 +77,16 @@ class TestAgoraIntegration:
         self.registry.mark_failure("offline")
         self.registry.mark_failure("offline")
         self.registry.mark_failure("offline")
-        assert not self.registry.get("offline").is_available
+        assert not self.registry.get("offline").is_available  # type: ignore[reportOptionalMemberAccess]
 
     def test_recovery_after_success(self):
         self.registry.register(Service("flaky", port=9999))
         for _ in range(3):
             self.registry.mark_failure("flaky")
-        assert not self.registry.get("flaky").is_available
+        assert not self.registry.get("flaky").is_available  # type: ignore[reportOptionalMemberAccess]
         for _ in range(4):  # Gradual decay: 4 successes → 0 failures
             self.registry.mark_success("flaky")
-        assert self.registry.get("flaky").is_available
+        assert self.registry.get("flaky").is_available  # type: ignore[reportOptionalMemberAccess]
 
     def test_service_to_dict_serialization(self):
         self.registry.register(

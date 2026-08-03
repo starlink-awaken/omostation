@@ -27,16 +27,16 @@ def registry_path() -> str:
 
 
 @pytest.fixture
-def catalog() -> ToolCatalog:
+def catalog() -> ToolCatalog:  # type: ignore[reportInvalidTypeForm]
     c = ToolCatalog(db_path=":memory:")
-    yield c
+    yield c  # type: ignore[reportReturnType]
     c.close()
 
 
 @pytest.fixture
-def embeddings() -> EmbeddingStore:
+def embeddings() -> EmbeddingStore:  # type: ignore[reportInvalidTypeForm]
     e = EmbeddingStore(db_path=":memory:")
-    yield e
+    yield e  # type: ignore[reportReturnType]
     e.close()
 
 

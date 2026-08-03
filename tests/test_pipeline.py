@@ -47,7 +47,7 @@ class TestPipelineCustom:
             ],
         )
         assert "my-pipe" in pl.list_pipelines()
-        assert len(pl.get_pipeline("my-pipe")) == 1
+        assert len(pl.get_pipeline("my-pipe")) == 1  # type: ignore[reportArgumentType]
 
     def test_load_save_definition(self):
         pl = _new_pipeline()

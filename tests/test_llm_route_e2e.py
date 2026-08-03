@@ -401,7 +401,7 @@ class TestRouteRecommend:
 def _real_llm_available() -> bool:
     """Check if both minerva package and local Ollama are available."""
     try:
-        import minerva  # noqa: F401
+        import minerva  # type: ignore[reportMissingImports]  # noqa: F401
     except ImportError:
         return False
     try:
@@ -420,7 +420,7 @@ def _real_llm_available() -> bool:
 @pytest.mark.asyncio
 async def test_real_llm_selects_tool():
     """Integration test with actual Ollama — validates real LLM output format."""
-    from minerva.llm.client import OpenAICompatibleClient
+    from minerva.llm.client import OpenAICompatibleClient  # type: ignore[reportMissingImports]
 
     client = OpenAICompatibleClient(
         base_url="http://localhost:11434/v1",

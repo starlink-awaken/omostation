@@ -44,7 +44,7 @@ class OutputFormatter:
         self.json_mode = json_mode
         self.console: Console | None = None
         if _RICH:
-            theme = Theme(
+            theme = Theme(  # type: ignore[reportPossiblyUnboundVariable]
                 {
                     "success": "green",
                     "error": "red bold",
@@ -55,7 +55,7 @@ class OutputFormatter:
                     "header": "bold cyan",
                 }
             )
-            self.console = Console(theme=theme)
+            self.console = Console(theme=theme)  # type: ignore[reportPossiblyUnboundVariable]
         else:
             self.console = None
 
@@ -290,10 +290,10 @@ class OutputFormatter:
                 from rich.markdown import Markdown
 
                 self._console().print(
-                    Panel(Markdown(content), title=title, border_style=style)
+                    Panel(Markdown(content), title=title, border_style=style)  # type: ignore[reportPossiblyUnboundVariable]
                 )
             except ImportError:
-                self._console().print(Panel(content, title=title, border_style=style))
+                self._console().print(Panel(content, title=title, border_style=style))  # type: ignore[reportPossiblyUnboundVariable]
         else:
             if title:
                 print(f"\n── {title} ──")
@@ -315,8 +315,9 @@ class OutputFormatter:
         """创建进度条上下文"""
         if not _RICH or self.json_mode:
             return None
-        return Progress(
-            SpinnerColumn(), TextColumn("[progress.description]{task.description}")
+        return Progress(  # type: ignore[reportPossiblyUnboundVariable]
+            SpinnerColumn(),  # type: ignore[reportPossiblyUnboundVariable]
+            TextColumn("[progress.description]{task.description}"),  # type: ignore[reportPossiblyUnboundVariable]
         )
 
 

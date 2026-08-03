@@ -88,6 +88,6 @@ class TestGetTracer:
 
     def test_real_tracer_can_start_span(self):
         tracer = get_tracer("test-module")
-        with tracer.start_as_current_span("test-span") as span:
+        with tracer.start_as_current_span("test-span") as span:  # type: ignore[reportGeneralTypeIssues]
             span.set_attribute("key", "value")
         assert span is not None

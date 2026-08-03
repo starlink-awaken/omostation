@@ -41,7 +41,7 @@ class SmartRouter:
         try:
             import os
 
-            from minerva.llm.client import OpenAICompatibleClient
+            from minerva.llm.client import OpenAICompatibleClient  # type: ignore[reportMissingImports]
 
             # 本地 LLM 服务配置 env 化, 不硬编码 (P77 env-var-SSOT)
             base_url = os.environ.get(
@@ -181,7 +181,7 @@ class SmartRouter:
     async def _route_auto_discover(self, query: str) -> dict:
         """Full auto-discover → install → load pipeline."""
         try:
-            result = await self._orchestrator.discover_install_load(query)
+            result = await self._orchestrator.discover_install_load(query)  # type: ignore[reportOptionalMemberAccess]
             loaded_count = result.get("loaded", 0)
             if loaded_count > 0:
                 return {
@@ -240,7 +240,7 @@ class SmartRouter:
         if self._llm is None:
             return {}
         try:
-            response = await self._llm.generate("", prompt, max_tokens=100)
+            response = await self._llm.generate("", prompt, max_tokens=100)  # type: ignore[reportAttributeAccessIssue]
             selected_name = response.strip().lower()
         except Exception as e:  # defensive fallback
             logger.warning("llm_select_failed", error=str(e))

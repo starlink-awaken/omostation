@@ -283,7 +283,7 @@ def _get_builtin_mcp_tools() -> list[dict]:
     ]
 
 
-def handle_tools_call(params: dict, ctx: ToolContext) -> dict:
+def handle_tools_call(params: dict, ctx: ToolContext) -> dict:  # type: ignore[reportReturnType]
     """MCP tools/call — invoke a registered tool by name with given arguments."""
     tool_name = params.get("name")
     arguments = params.get("arguments") or {}
@@ -318,9 +318,9 @@ def handle_tools_call(params: dict, ctx: ToolContext) -> dict:
             "isError": True,
         }
 
-    except _ParamError:
+    except _ParamError:  # type: ignore[reportUnusedExcept]
         raise
-    except (ImportError, KeyError, AttributeError) as exc:
+    except (ImportError, KeyError, AttributeError) as exc:  # type: ignore[reportUnusedExcept]
         _log.error("[MCPServer] tools/call '%s' failed: %s", tool_name, exc)
         return {
             "content": [{"type": "text", "text": f"[internal error] {exc}"}],

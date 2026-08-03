@@ -175,7 +175,7 @@ class _Compressor:
             for k, v in node.items():
                 short = self._key_map.get(k, k)
                 if short != k:
-                    self._reverse_map[short] = k
+                    self._reverse_map[short] = k  # type: ignore[reportArgumentType]
                 new[short] = self._walk_and_shorten(v)
             return new
         if isinstance(node, list):
@@ -408,7 +408,7 @@ class Router:
                 from agora.persistence import json_load
 
                 data = json_load(self._routes_path, default={})
-                json_routes = data.get("routes", {})
+                json_routes = data.get("routes", {})  # type: ignore[reportAttributeAccessIssue]
                 # JSON agora-internal routes supplement L0
                 for k, v in json_routes.items():
                     if v == "agora-internal":
@@ -421,7 +421,7 @@ class Router:
         from agora.persistence import json_load
 
         data = json_load(self._routes_path, default={})
-        self._routes = data.get("routes", {})
+        self._routes = data.get("routes", {})  # type: ignore[reportAttributeAccessIssue]
 
     def _save_routes(self):
         """Persist route mappings to JSON file."""
@@ -697,7 +697,7 @@ class Router:
             # ── EU cost tracking middleware ────────────────────────────────
             if result.get("status") != "error":
                 try:
-                    from kaironcloud_billing.pricing.eu_ledger import (
+                    from kaironcloud_billing.pricing.eu_ledger import (  # type: ignore[reportMissingImports]
                         EULedger,  # type: ignore[import-not-found]
                     )
 
