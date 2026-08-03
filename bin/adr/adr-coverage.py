@@ -206,7 +206,7 @@ def main() -> int:
     else:
         print(f"\n⚠️  {issues_count} 个问题需处理")
 
-    return 1 if (result["missing_numbers"] or result["duplicate_numbers"] or result["index_refs_not_in_files"]) else 0
+    return 1 if (result["missing_numbers"] or result["duplicate_numbers"] or result["frontmatter_issues"] or result["files_not_in_index"] or result["index_refs_not_in_files"]) else 0
 
 
 if __name__ == "__main__":
