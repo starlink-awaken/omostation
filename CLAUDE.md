@@ -151,7 +151,7 @@ uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
 make ssot-status                            # SSOT 变更状态检查
 make ssot-log                               # SSOT 审计日志查看
 make ssot-sync                              # SSOT 变更记录到审计日志
-make sync-submodules                        # 推送子模块未推送的 commit 到远程
+make sync-submodules                        # 推送子模块未推送的 commit 到远程 (PASW-aware: 含 .subtrees/ 隔离 worktree)
 ```
 
 **Agent workflow lifecycle** (`bootstrap` → inspect → `start` → `claim` → `verify` → `closeout` → `compliance`):
@@ -234,6 +234,7 @@ Run a single test with each framework's native filter (see the target project's 
 | Write an ADR | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [`.omo/standards/adr-process.md`](.omo/standards/adr-process.md) |
 | Project layer placement | [`docs/project-registry.yaml`](docs/project-registry.yaml) → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) |
 | Land changes to root `main` | [`bin/gac/gac-worktree.sh`](bin/gac/gac-worktree.sh) (claim/submit/merge) · [`AGENTS.md` §6.1](AGENTS.md) · [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) |
+| Modify a high-conflict submodule (gbrain/cockpit/agora) | PASW: work in `.subtrees/<sub>/` via `gac-worktree.sh` claim → bump-pointer · [`AGENTS.md` §6.2`](AGENTS.md) · [ADR-0345](.omo/_knowledge/decisions/0345-pasw-submodule-isolation.md) |
 | Code callers / impact / structure graph | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) · MCP `codebase-memory-mcp` · skill `codebase-memory` |
 
 ## 7. Closeout
@@ -245,6 +246,8 @@ uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
 ```
 
 Run broader tests only when the edited surface warrants them. Documentation-only changes usually need the documentation SSOT check plus a clear diff review. For the full closeout checklist (including reporting files changed and checks skipped), see [`AGENTS.md` §9](AGENTS.md#9-closeout-checklist).
+
+> **PASW 清理**: 任务结束前确认 `.subtrees/` 内无未 push 的 commit, worktree 已 release. 详见 [`AGENTS.md` §6.2](AGENTS.md).
 
 ## 🧬 Onboarding Consensus (🧬 历史演进避坑基因)
 

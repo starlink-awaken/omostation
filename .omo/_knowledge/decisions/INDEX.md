@@ -415,6 +415,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0346: External Resource Connection Plan 接入准备与证据阻塞 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 53 | 0346-external-resource-connection-plan.md
 - ADR-0347: Cockpit 外部能力连接计划只读触达面 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 54 | 0347-external-resource-connection-plan-cockpit-surface.md
 - ADR-0348: 外部能力连接计划 UI 产品化 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 55 | 0348-external-resource-connection-plan-ui.md
+- ADR-0349: PASW — Per-Agent Submodule Worktree 子模块隔离 — **ACCEPTED** | 2026-08-03 | architecture-governance | 0349-pasw-submodule-isolation.md
 
 ---
 
