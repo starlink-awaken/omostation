@@ -153,6 +153,62 @@ def test_directory_rejects_observe_combination_at_cli_boundary() -> None:
     assert MODULE.main(["--directory", "--observe"]) == 2
 
 
+def test_builds_read_only_connection_plan_with_explicit_evidence_blockers() -> None:
+    directory = {
+        "schema": "external-resource-directory/v1",
+        "directory_digest": "sha256:directory-test",
+        "resources": [
+            {
+                "id": "source:research",
+                "kind": "knowledge_source",
+                "provider": "research-provider",
+                "owner": "owner:research",
+                "lifecycle": "active",
+                "availability": "available",
+                "next_step": "route_evaluation",
+                "permission_ref": "permission://research",
+            },
+            {
+                "id": "tool:ocr",
+                "kind": "tool_capability",
+                "provider": "ocr-provider",
+                "owner": "owner:ocr",
+                "lifecycle": "discovered",
+                "availability": "unavailable",
+                "next_step": "health_probe",
+                "permission_ref": "permission://ocr",
+            },
+        ],
+    }
+
+    plan = MODULE.build_external_resource_connection_plan(
+        directory, now=datetime(2026, 8, 2, tzinfo=UTC)
+    )
+
+    assert plan["schema"] == "external-resource-connection-plan/v1"
+    assert plan["activation"] == "forbidden"
+    assert plan["provider_invocation"] is False
+    assert plan["summary"] == {
+        "resource_count": 2,
+        "blocked_count": 1,
+        "ready_for_review_count": 1,
+        "next_step_counts": {"health_probe": 1, "route_evaluation": 1},
+    }
+    items = {item["resource_id"]: item for item in plan["items"]}
+    assert items["tool:ocr"]["owner_ref"] == "owner:ocr"
+    assert items["tool:ocr"]["required_inputs"] == ["health_probe"]
+    assert items["source:research"]["blockers"] == [
+        "policy_evaluation_required",
+        "scene_card_required",
+    ]
+    assert items["source:research"]["status"] == "ready_for_review"
+    assert plan["plan_digest"].startswith("sha256:")
+
+
+def test_connection_plan_rejects_directory_and_connection_plan_combination() -> None:
+    assert MODULE.main(["--directory", "--connection-plan"]) == 2
+
+
 def test_failed_probe_isolated_and_explicitly_unavailable() -> None:
     class FailingProvider:
         @staticmethod
