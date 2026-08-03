@@ -866,6 +866,23 @@ Phase 53 增加 `external-resource-connection-plan/v1`，由
 没有真实消费者时，计划会停在 `blocked`，并明确缺口；出现真实消费者后，计划中的字段只能作为
 Scene Card、试运行、真实 WorkflowRun、external receipt 和 outcome feedback 的准备索引，不能代替这些事实。
 
+### 7.3.21 Phase 54 Cockpit 外部能力触达准备面
+
+Phase 54 将连接计划接入 Cockpit：`GET /api/external-resources/connection-plan`。接口沿用外部目录的
+观察优先策略：优先读取 OMO 最新 catalog observation，缺失时才通过 Agora 做显式只读发现；两条路径都经过同一
+根仓 directory 和 connection-plan builder。
+
+产品面展示的是“当前可触达准备度”而非“已连接能力”：
+
+- `available`：存在可进入人工/治理复核的计划项；
+- `attention`：存在健康、权限、场景或证据阻塞项；
+- `empty`：当前没有可规划的外部资源；
+- `unavailable`：观察、发现或根仓投影不可用。
+
+接口固定 `activation=forbidden`、`external_side_effects=disabled`、`worker_launch=false`，不创建
+WorkflowRun、不调用 provider 业务方法、不修改 admission。这样用户可以从 Cockpit 看到“为什么还不能用、下一步
+需要谁提供什么”，但真正触达仍必须经过 Scene Card、OMO admission、Workflow Mesh receipt 和结果反馈。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
