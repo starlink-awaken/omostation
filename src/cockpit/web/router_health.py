@@ -28,6 +28,7 @@ ROUTER_MODULES = (
     "cockpit.web.api_knowledge_actions",
     "cockpit.web.api_external_resources",
     "cockpit.web.api_scene_cards",
+    "cockpit.web.api_swarm",
 )
 
 ROUTER_LOAD_REPORT: list[dict[str, object]] = []
