@@ -374,3 +374,20 @@ omo external-resources consume-engineering-delivery --workflow-run-id <id> --std
 
 摄取输入只允许交付 ID、仓库引用、PR、merge SHA、时间和证据引用；人工复核输入只允许交付 ID、决策、复核时间和复核证据引用。
 原文、prompt、模型输出、凭据和任意外部 provider 数据均不得进入这两个入口。
+
+### 12.4 Phase 66 Cockpit 工程交付复核工作台
+
+Phase 66 将人工复核能力放入 Cockpit 的既有 Workflow Mesh 入口，形成可供后续 UI 表单直接消费的 L3 契约：
+
+```text
+GET  /api/workflow-mesh/engineering-delivery/review-queue
+POST /api/workflow-mesh/engineering-delivery/review
+```
+
+队列接口只投影 OMO 的真实 receipt、WorkflowRun 状态、反馈阶段、最新决策、交付时长和证据数量，支持按
+`workflow_run_id` 限定范围；复核接口只接收有限 envelope，并将 `actor_ref` 从业务载荷中分离后交给 OMO broker。
+Cockpit 不直接写 `.omo`，也不持有人工状态真相。两个接口均返回无 provider、无 WorkflowRun 变更、无自动晋升的控制面，
+OMO 不可用或 envelope 不合法时 fail-closed 地返回结构化错误。
+
+这一步完成“可操作的人类入口”，但不等于真实业务场景已经验证。下一步仍需由责任人连续提交真实低风险工程交付反馈，
+再将通过复核的样本送入双人标注、adjudication、脱敏 manifest 和 shadow evaluation。
