@@ -117,6 +117,86 @@ def _scene_binding_projection(task_data: dict) -> dict[str, str] | None:
     return projection if all(projection.values()) else None
 
 
+def _workflow_request_projection(task_id: str) -> dict[str, Any] | None:
+    """Project the latest WorkflowRequested fact without exposing raw inputs."""
+    try:
+        from omo.workflow_mesh import WorkflowMeshStore
+
+        store = WorkflowMeshStore(WORKSPACE_DIR / ".omo")
+        events = store.events()
+    except (ImportError, OSError, ValueError):
+        return None
+
+    requested = next(
+        (
+            event
+            for event in reversed(events)
+            if event.get("event_type") == "WorkflowRequested"
+            and isinstance(event.get("payload"), dict)
+            and event["payload"].get("task_id") == task_id
+        ),
+        None,
+    )
+    if requested is None:
+        return None
+
+    workflow_run_id = str(requested.get("workflow_run_id") or "").strip()
+    if not workflow_run_id:
+        return None
+    try:
+        snapshot = store.snapshot(workflow_run_id)
+    except (OSError, ValueError):
+        return None
+
+    payload = requested["payload"]
+    workflow = payload.get("workflow") if isinstance(payload.get("workflow"), dict) else {}
+    scene_binding = requested.get("scene_binding")
+    if not isinstance(scene_binding, dict):
+        scene_binding = payload.get("scene_binding")
+    safe_scene_binding = None
+    if isinstance(scene_binding, dict):
+        candidate = {
+            key: str(scene_binding.get(key) or "").strip()
+            for key in ("scene_id", "journey_id", "outcome_metric")
+        }
+        if all(candidate.values()):
+            safe_scene_binding = candidate
+
+    evidence_plan = payload.get("evidence_plan")
+    safe_evidence_plan = (
+        [str(item).strip() for item in evidence_plan[:12] if str(item).strip()]
+        if isinstance(evidence_plan, list)
+        else []
+    )
+    state = str(snapshot.get("state") or "unknown")
+    admission = snapshot.get("admission")
+    approval_required = bool(payload.get("approval_required"))
+    if state == "planned":
+        next_action = "等待准入预览"
+    elif state == "admitted":
+        next_action = "等待显式 worker 派发"
+    elif state in {"dispatched", "running"}:
+        next_action = "等待运行证据"
+    elif state in {"succeeded", "verified"}:
+        next_action = "提交结果消费反馈"
+    else:
+        next_action = "查看 Workflow Mesh 运行事实"
+
+    return {
+        "workflow_run_id": workflow_run_id,
+        "workflow_name": str(workflow.get("name") or ""),
+        "workflow_version": str(workflow.get("version") or ""),
+        "state": state,
+        "request_state": "approval_required" if approval_required else "ready_for_admission",
+        "approval_required": approval_required,
+        "admission_state": "admitted" if isinstance(admission, dict) else "pending",
+        "scene_binding": safe_scene_binding,
+        "evidence_plan": safe_evidence_plan,
+        "last_event_type": str(snapshot.get("last_event_type") or ""),
+        "next_action": next_action,
+    }
+
+
 def _approval_state(task_data: dict) -> str:
     if not task_data.get("human_approval_required"):
         return "not_required"
@@ -252,6 +332,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
                         "scene_binding": _scene_binding_projection(task_data),
+                        "workflow_request": _workflow_request_projection(str(task_data.get("id", task_file.stem))),
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
@@ -279,6 +360,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
                         "scene_binding": _scene_binding_projection(task_data),
+                        "workflow_request": _workflow_request_projection(str(task_data.get("id", task_file.stem))),
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
@@ -306,6 +388,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
                         "scene_binding": _scene_binding_projection(task_data),
+                        "workflow_request": _workflow_request_projection(str(task_data.get("id", task_file.stem))),
                         "execution_contract": _execution_contract(task_data),
                     }
                 )

@@ -1,3 +1,4 @@
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -1326,6 +1327,111 @@ test_plan:
         "scene_id": "research-brief",
         "journey_id": "question-to-brief",
         "outcome_metric": "verified_brief_acceptance",
+    }
+
+
+def test_task_list_exposes_safe_workflow_request_projection(monkeypatch, tmp_path):
+    planned = tmp_path / ".omo" / "tasks" / "planned"
+    planned.mkdir(parents=True)
+    (planned / "workflow-task.yaml").write_text(
+        "id: workflow-task\ntitle: Workflow task\nstatus: pending\npriority: medium\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_tasks, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks_common, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(
+        api_tasks._task_data,
+        "_workflow_request_projection",
+        lambda task_id: {
+            "workflow_run_id": f"mesh-request-{task_id}",
+            "workflow_name": "scene-to-workflow",
+            "workflow_version": "v1",
+            "state": "planned",
+            "request_state": "ready_for_admission",
+            "approval_required": False,
+            "admission_state": "pending",
+            "scene_binding": None,
+            "evidence_plan": ["运行证据"],
+            "last_event_type": "WorkflowRequested",
+            "next_action": "等待准入预览",
+        },
+    )
+
+    response = TestClient(app).get("/api/tasks")
+
+    assert response.status_code == 200
+    task = next(item for item in response.json()["items"] if item["id"] == "workflow-task")
+    assert task["workflow_request"] == {
+        "workflow_run_id": "mesh-request-workflow-task",
+        "workflow_name": "scene-to-workflow",
+        "workflow_version": "v1",
+        "state": "planned",
+        "request_state": "ready_for_admission",
+        "approval_required": False,
+        "admission_state": "pending",
+        "scene_binding": None,
+        "evidence_plan": ["运行证据"],
+        "last_event_type": "WorkflowRequested",
+        "next_action": "等待准入预览",
+    }
+
+
+def test_workflow_request_projection_is_safe_and_event_derived(monkeypatch, tmp_path):
+    events = [
+        {
+            "event_type": "WorkflowRequested",
+            "workflow_run_id": "mesh-safe-1",
+            "payload": {
+                "task_id": "safe-task",
+                "workflow": {"name": "scene-to-workflow", "version": "v1"},
+                "approval_required": False,
+                "evidence_plan": ["运行证据", "原始输入不应进入投影"],
+            },
+            "scene_binding": {
+                "scene_id": "research-brief",
+                "journey_id": "question-to-brief",
+                "outcome_metric": "verified_brief_acceptance",
+            },
+        }
+    ]
+
+    class FakeStore:
+        def __init__(self, _omo_dir):
+            pass
+
+        def events(self):
+            return events
+
+        def snapshot(self, _workflow_run_id):
+            return {
+                "state": "planned",
+                "admission": None,
+                "last_event_type": "WorkflowRequested",
+            }
+
+    fake_mesh = SimpleNamespace(WorkflowMeshStore=FakeStore)
+    monkeypatch.setitem(sys.modules, "omo.workflow_mesh", fake_mesh)
+    monkeypatch.setattr(api_tasks._task_data, "WORKSPACE_DIR", tmp_path)
+
+    projection = api_tasks._task_data._workflow_request_projection("safe-task")
+
+    assert projection == {
+        "workflow_run_id": "mesh-safe-1",
+        "workflow_name": "scene-to-workflow",
+        "workflow_version": "v1",
+        "state": "planned",
+        "request_state": "ready_for_admission",
+        "approval_required": False,
+        "admission_state": "pending",
+        "scene_binding": {
+            "scene_id": "research-brief",
+            "journey_id": "question-to-brief",
+            "outcome_metric": "verified_brief_acceptance",
+        },
+        "evidence_plan": ["运行证据", "原始输入不应进入投影"],
+        "last_event_type": "WorkflowRequested",
+        "next_action": "等待准入预览",
     }
 
 
