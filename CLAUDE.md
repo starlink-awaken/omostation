@@ -1,6 +1,6 @@
 # CLAUDE.md — omostation AI Context Loader
 
-> 最后更新: 2026-08-01
+> 最后更新: 2026-08-03
 > Purpose: session startup protocol for AI agents.
 > Detailed engineering rules live in [`AGENTS.md`](AGENTS.md).
 > Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md).
@@ -53,8 +53,8 @@ Load context before changing code or governed state. Two phases — run Step A w
 ### Step B · Workflow load (every editing session)
 
 ```bash
-uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
-uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
+make agent-workflow-bootstrap
+make agent-workflow-status
 ```
 
 Read the SSOT files reported by `bootstrap` for task-specific runtime facts — **do not copy their values into this document** (they drift quickly). If MCP context is available, prefer the cockpit `workspace_context` tool.
@@ -81,7 +81,7 @@ After bootstrap, every agent MUST verify P74 health. P74 is the常态化 mechani
 (常态化机制) for agent-workflow silence detection — see `.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`.
 
 ```bash
-uv run --with "pyyaml" python "bin/agent-workflow.py" compliance --json
+make agent-workflow-compliance
 ```
 
 Read `.p74_solidification.warn_count`:
@@ -140,9 +140,9 @@ The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.
 make ci-local                               # 本地一键跑全部门 (ci-local-fast 超集, Makefile:105)
 make check-layers                           # 分层依赖检查 (docs/layer-contract.yaml)
 make gac-local-gate
-uv run --with "pyyaml" python "bin/gac/gac-local-gate.py" --scope files --file <path> --json
-uv run --with "pyyaml" python "bin/ssot/doc-ssot-lint.py" --json
-uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
+uv run --with pyyaml python bin/gac/gac-local-gate.py --scope files --file <path> --json
+make doc-ssot-lint
+make ssot-guardian
 ```
 
 **SSOT 变更追踪:**
@@ -151,31 +151,31 @@ uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
 make ssot-status                            # SSOT 变更状态检查
 make ssot-log                               # SSOT 审计日志查看
 make ssot-sync                              # SSOT 变更记录到审计日志
-make sync-submodules                        # 推送子模块未推送的 commit 到远程
+make sync-submodules                        # 推送子模块未推送的 commit 到远程 (PASW-aware: 含 .subtrees/ 隔离 worktree)
 ```
 
 **Agent workflow lifecycle** (`bootstrap` → inspect → `start` → `claim` → `verify` → `closeout` → `compliance`):
 
 ```bash
-uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
-uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
-uv run --with "pyyaml" python "bin/agent-workflow.py" list
-uv run --with "pyyaml" python "bin/agent-workflow.py" agents
-uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
-uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
+make agent-workflow-bootstrap
+make agent-workflow-status
+make agent-workflows
+make agent-workflow-agents
+make agent-workflow-integrations
+make agent-workflow-adapters
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
-uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
-uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
-uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
+make agent-workflow-closeout RUN_ID=<run-id>
+make agent-workflow-compliance  # optional: RUN_ID for specific run
+make agent-workflow-doctor
 ```
 
 **State sync:**
 
 ```bash
-uv run --project "projects/omo" omo state sync --dry-run --json
-uv run --project "projects/omo" omo state sync --json
+make state-sync-dry
+make state-sync
 ```
 
 **Tests — project-level and single-test:**
@@ -212,10 +212,10 @@ Run a single test with each framework's native filter (see the target project's 
 | OMO governance kernel rules | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
 | Executable agent workflows | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
 | AGCP status/scoped gate/claim policy | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
-| Internal integration contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" integrations` |
+| Internal integration contracts | `make agent-workflow-integrations` |
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
-| External adapter contracts | `uv run --with "pyyaml" python "bin/agent-workflow.py" adapters` |
-| External adapter health | `uv run --with "pyyaml" python "bin/agent-workflow.py" doctor` |
+| External adapter contracts | `make agent-workflow-adapters` |
+| External adapter health | `make agent-workflow-doctor` |
 | L0/SSOT/M0/MOF alignment audit | [`.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md`](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) |
 | Agent 红线/灰线 (severity) | `docs/generated/agent-redlines.md` (gitignored 运行时生成; `make gen-agent-redlines` 或 `python3 bin/mof/gen-agent-redlines.py`; executor ∈ {hook_pre_edit, ci_gate} → red, 否则 gray; ADR-0171) |
 | Codebase knowledge graph (callers/impact) | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) |
@@ -234,6 +234,7 @@ Run a single test with each framework's native filter (see the target project's 
 | Write an ADR | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [`.omo/standards/adr-process.md`](.omo/standards/adr-process.md) |
 | Project layer placement | [`docs/project-registry.yaml`](docs/project-registry.yaml) → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) |
 | Land changes to root `main` | [`bin/gac/gac-worktree.sh`](bin/gac/gac-worktree.sh) (claim/submit/merge) · [`AGENTS.md` §6.1](AGENTS.md) · [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) |
+| Modify a high-conflict submodule (gbrain/cockpit/agora) | PASW: work in `.subtrees/<sub>/` via `gac-worktree.sh` claim → bump-pointer · [`AGENTS.md` §6.2`](AGENTS.md) · [ADR-0345](.omo/_knowledge/decisions/0345-pasw-submodule-isolation.md) |
 | Code callers / impact / structure graph | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) · MCP `codebase-memory-mcp` · skill `codebase-memory` |
 
 ## 7. Closeout
@@ -241,10 +242,12 @@ Run a single test with each framework's native filter (see the target project's 
 ```bash
 git status --short
 make gac-local-gate
-uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
+make ssot-guardian
 ```
 
 Run broader tests only when the edited surface warrants them. Documentation-only changes usually need the documentation SSOT check plus a clear diff review. For the full closeout checklist (including reporting files changed and checks skipped), see [`AGENTS.md` §9](AGENTS.md#9-closeout-checklist).
+
+> **PASW 清理**: 任务结束前确认 `.subtrees/` 内无未 push 的 commit, worktree 已 release. 详见 [`AGENTS.md` §6.2](AGENTS.md).
 
 ## 🧬 Onboarding Consensus (🧬 历史演进避坑基因)
 

@@ -1,6 +1,6 @@
 # AGENTS.md — Workspace Development Guide
 
-> 最后更新: 2026-08-01
+> 最后更新: 2026-08-03
 > Root operating guide for AI coding agents and developers working in this workspace.
 > Keep this file operational. Put runtime facts in SSOT files, not here.
 
@@ -36,8 +36,8 @@ Project-specific instructions override this guide only within that project and o
 **可执行闸门（ADR-0204）**：`compliance` / `status` 对 **已 stage** 的需求面路径检查是否存在 active run；无 run → **halt**（exit 1）。仅 unstaged dirty → warn。旁路：`AGCP_REQUIREMENT_ITERATION_GATE=0`（须用户授权并写入 waiver 证据）。
 
 ```bash
-uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
-uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
+make agent-workflow-bootstrap
+make agent-workflow-status
 # 有 diff 时先 suggest，避免错位 workflow（P74）
 uv run --with "pyyaml" python "bin/agent-workflow.py" suggest --from-diff --profile <agent-profile>
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
@@ -45,7 +45,7 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 # ... edit / test ...
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
-uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
+make agent-workflow-closeout RUN_ID=<run-id>
 # ADR 占号（防撞车）:
 python3 bin/adr/next-adr-id.py --session <session> --claim
 # 栈落地后清 worktree:
@@ -100,6 +100,7 @@ M1 hard pre-gate for concurrent main conflict = 0:
 | D2 branch lock | `bash bin/gac/gac-worktree.sh claim <s>` |
 | D3 shared claim | `make install-hooks` → pre-commit `claim-check` |
 | D4 escape | `SWARM_ESCAPE_ID=...` for `CI_LOCAL_SKIP`; agents use `bin/gac/swarm-git` for `--no-verify` |
+| D5 PASW submodule | 高冲突子模块 (gbrain/cockpit/agora) 隔离 worktree; pre-commit `submodule-guard` 强制 |
 
 72h window: `python3 bin/gac/swarm-discipline-cli.py window-status`
 
@@ -170,11 +171,11 @@ For `.omo` or `spaces` mutations, use the registered broker/CLI path. If a task 
 make gac-local-gate                          # 全量治理-as-Code 门禁
 make ci-local                                # 本地一键全部门 (Makefile:105)
 make check-layers                            # 分层依赖检查 (docs/layer-contract.yaml)
-uv run --with "pyyaml" python "bin/gac/gac-local-gate.py" --scope files --file <path> --json
-uv run --with "pyyaml" python "bin/ssot/doc-ssot-lint.py" --json
-uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
-uv run --with "pyyaml" python "bin/gac/gac-validate.py" --gate
-uv run --with "pyyaml" python "bin/gac/gac-drift.py"
+uv run --with pyyaml python bin/gac/gac-local-gate.py --scope files --file <path> --json
+make doc-ssot-lint
+make ssot-guardian
+make gac-validate
+make gac-drift
 ```
 
 `make gac-local-gate` runs the default (non-strict) GaC gate — GaC validate/drift, agent-workflow lint/integrations/adapters/bootstrap/observe, MOF schema/state-bridge/drift, documentation SSOT, doc link/snapshot, and staged change-lane checks. Two skip rules apply in default mode, both isolating concurrent-agent dirty in a shared worktree: `verify-plan`/`compliance`/`doctor` run only when staged touches agent-workflow (`896e60ba`); `project-layer-index` (generated layer digest) is CI-only — pre-commit/`make` skip it, `--strict`/CI runs it (`d33af25c`). For run/file-scoped AGCP verification use `bin/gac/gac-local-gate.py --scope ...`. Authoritative check list + skip rules live in `bin/gac/gac-local-gate.py` (`CHECKS`, `AGENT_WORKFLOW_GATE_CHECKS`, `CI_ONLY_CHECKS`) — do not duplicate here.
@@ -191,26 +192,26 @@ make sync-submodules                         # 推送子模块未推送的 commi
 ### Agent 工作流生命周期
 
 ```bash
-uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
-uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
-uv run --with "pyyaml" python "bin/agent-workflow.py" list
-uv run --with "pyyaml" python "bin/agent-workflow.py" agents
-uv run --with "pyyaml" python "bin/agent-workflow.py" lint
-uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
-uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
+make agent-workflow-bootstrap
+make agent-workflow-status
+make agent-workflows
+make agent-workflow-agents
+make agent-workflow-lint
+make agent-workflow-integrations
+make agent-workflow-adapters
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
-uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
-uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
-uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
+make agent-workflow-closeout RUN_ID=<run-id>
+make agent-workflow-compliance  # optional: RUN_ID for specific run
+make agent-workflow-doctor
 ```
 
 ### 运行态与治理状态
 
 ```bash
-uv run --project "projects/omo" omo state sync --dry-run --json
-uv run --project "projects/omo" omo state sync --json
+make state-sync-dry
+make state-sync
 uv run --with "pyyaml" python "bin/gac/governance-evolution.py" status --json
 uv run --with "pyyaml" python "bin/gac/governance-evolution.py" validate --json
 ```
@@ -226,8 +227,8 @@ cd "projects/gbrain" && bun test             # gbrain (TypeScript)
 ### 附加诊断工具
 
 ```bash
-uv run --with "pyyaml" python "bin/gac/gac-healthcheck.py"   # GaC 13-point health check
-uv run --with "pyyaml" python "bin/gac/evidence-smoke.py"     # BOS declaration vs execution gap audit
+make gac-healthcheck
+make evidence-smoke  # BOS declaration vs execution gap audit
 uv run --with "pyyaml" python "bin/mof/gen-project-registry.py"  # Registry drift detection (code→registry)
 ```
 
@@ -258,6 +259,35 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 - **L0 萃取不破坏**: `post-commit` 是 commit 级触发(worktree 共享 `.git/hooks`),worktree 内 commit 照样萃取,派生文件进 PR。
 - **完整计划**: [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) §4 Phase 2-3 (已落地)。
 
+### 6.2 PASW — 子模块隔离 (ADR-0344)
+
+高冲突子模块 (gbrain/cockpit/agora) 使用 per-agent 独立 worktree 隔离, 根除 10 agent 并发时的指针冲突。
+
+```bash
+# claim 时自动创建子模块隔离 worktree (在 .subtrees/ 内)
+bash bin/gac/gac-worktree.sh claim <session>
+# → 创建 ws-<session>/.subtrees/gbrain/  (branch: agent/<session>-gbrain)
+# → 创建 ws-<session>/.subtrees/cockpit/ (branch: agent/<session>-cockpit)
+# → 创建 ws-<session>/.subtrees/agora/   (branch: agent/<session>-agora)
+
+# 子模块修改流程 (在隔离 worktree 内)
+cd ws-<session>/.subtrees/gbrain
+vim ... && git add . && git commit -m "..."
+git push origin HEAD                              # push 到子模块 remote
+# 合并到子模块 main 后, 回到 root worktree 更新指针
+cd ../..
+bash bin/gac/gac-worktree.sh bump-pointer <session> projects/gbrain
+git commit -m "bump gbrain" && gac-worktree.sh submit <session>
+```
+
+**强制约束 (pre-commit hook 守门)**:
+
+- 不允许 root 直接 `git add projects/<sub>` (gitlink 变更) — 必须通过 `.subtrees/` worktree
+- 指针 SHA 必须与 `.subtrees/<sub>` HEAD 一致
+- `.subtrees/` 不入 root 仓库 (.gitignore)
+
+**定时回收**: `bash bin/gac/gac-worktree-cleanup.sh` (TTL 24h, cron 每 6h)
+
 #### 6.1.1 Worktree 常见踩坑诊断(2026-07-05 多 PR 实战)
 
 | 症状 | 根因 | 解法 |
@@ -277,7 +307,7 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 | Change Surface | Minimum Verification |
 |----------------|----------------------|
 | Documentation only | `make gac-local-gate` and diff review |
-| Root governance docs | `make gac-local-gate` plus `uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"` |
+| Root governance docs | `make gac-local-gate` plus `make ssot-guardian` |
 | Python code (generic) | Targeted `uv run pytest` or project Makefile `test` target |
 | kairon package | `make test-diff` from `projects/kairon` |
 | gbrain | `bun test` or targeted Bun test |
@@ -316,10 +346,11 @@ Historical closeout details are useful evidence but should not be pasted into th
 
 1. Review `git diff --stat`.
 2. Run the verification appropriate for the change.
-3. Prefer `uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>` for governed runs.
+3. Prefer `make agent-workflow-closeout RUN_ID=<run-id>` for governed runs.
 4. Mention files changed and checks run.
 5. Mention any checks skipped or blocked.
 6. Do not create commits unless explicitly requested and confirmed.
+6a. **PASW 清理**: 确认子模块 worktree 已清理 (`gac-worktree.sh release` 或 `merge` 自动清理); 确认 `.subtrees/` 内无未 push 的 commit。
 7. **大任务后复盘+固化** (P74 常态化精神 — 不靠自觉靠机制):
    - **复盘触发**: 系统性分析/方案任务 / 多轮返工 / Stop hook 反馈后 / 判断错误发现时
    - **判断错误复盘**: 识别"基于不完整信息下结论 / grep 假阴性 / 重复造轮 / 跳过冷启动"等模式 (实证: memory `verify-claim-three-layers`)
@@ -336,17 +367,17 @@ Historical closeout details are useful evidence but should not be pasted into th
 Round X 的 7 步:
 
 0. baseline: 跑 m4-health-score, 留当前分数快照
-   uv run --with "pyyaml" python bin/mof/m4-health-score.py --emit
-1. single-worktree: bash bin/gac/gac-worktree.sh claim round-{X}
+   make m4-health
+1. single-worktree: bash bin/gac/gac-worktree.sh claim round-{X}  (PASW: 自动创建 gbrain/cockpit/agora 隔离 worktree)
 2. deliver: 实施 N 个 deliverable (每 PR 1 deliverable)
    - 每次 commit: git log --oneline e2f8f4d7..HEAD
 3. tests: 加 T-X 系列测试, 跑 regression
    uv run --with "pyyaml" python tests/integration/m4_metamodel/run_all.py
 4. self-reflex: 5-check strict all PASS
-   uv run --with "pyyaml" python bin/mof/mof-bootstrap.py all
+   make mof-bootstrap
 5. ADR: 写新 ADR (.omo/_knowledge/decisions/{NNN}-title.md), INDEX append
 6. health-check: 跑 m4-health-score.py, delta 对比 baseline (不回退)
-   uv run --with "pyyaml" python bin/mof/m4-health-score.py --compare
+   make m4-health-compare
 7. close: 写 docs/M4-DECISIONS-INDEX.md (新 ADR 加入),
    准备 PR, 显式 commit PR | round-X-final
 
