@@ -915,6 +915,23 @@ Phase 56 补齐“场景输入已经通过只读预检，但还没有进入真�
 确认场景绑定、能力健康、预算和审批，再显式请求 Workflow Mesh。没有真实场景或目录证据时，接口只返回阻塞原因，
 不写 OMO。
 
+### 7.3.24 Phase 57 任务中心的场景化 Workflow 请求
+
+Phase 57 把 Phase 56 创建的 planned task 继续接到既有 `WorkflowRequested` broker。Cockpit 任务列表只投影任务
+metadata 中的三元场景绑定 `scene_id`、`journey_id`、`outcome_metric`，不暴露 Scene Card 原始表单字段；带有场景绑定
+且仍处于 planned/pending 的任务，在任务详情中提供“请求 Workflow”表单。
+
+表单复用 `POST /api/tasks/{task_id}/request-workflow`，将固定的 `scene_binding`、工作流版本和显式证据计划交给 OMO。
+成功后只显示 `workflow_run_id` 与请求状态，并明确后续仍需 admission preview、审批、能力健康和预算校验。任务中心不
+直接调用 provider、不派发 worker、不把 `WorkflowRequested` 显示成运行成功。
+
+场景链现在可以由业务人员连续操作：
+
+`Scene Card -> preflight -> planned task -> Task Center -> WorkflowRequested -> admission preview -> dispatch -> receipt/feedback`
+
+这一步仍不新增第二套任务或工作流状态机；Task Center 是 OMO 事实的产品适配面，运行态和结果继续由 Workflow Mesh
+事件、外部 receipt 和显式 outcome feedback 提供。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
