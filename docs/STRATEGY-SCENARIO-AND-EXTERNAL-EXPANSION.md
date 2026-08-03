@@ -207,6 +207,7 @@ flowchart LR
 - 以工程交付、知识到行动和研究简报为三类 dogfood 场景；
 - 完成 Task Center 的请求状态、Admission Preview 和结果反馈连续体验；
 - 补齐真实评测样本最小集和外部 receipt 质量检查；
+- 对真实低风险样本完成双人结构化标注、冲突 adjudication 和脱敏 manifest；
 - 让外部目录、连接计划、Scene Card、Task Center 和 Workflow Operations 共享同一场景绑定。
 
 ### 3-6 个月：外部能力可控扩展
@@ -247,9 +248,10 @@ flowchart LR
 
 当前最优先的交付顺序是：
 
-`Task Center 请求投影 -> Admission Preview 场景化 -> 真实执行回执 -> 结果反馈 -> 评测样本准备度 -> 外部资源受治理刷新 -> freshness/恢复队列`
+`Task Center 请求投影 -> Admission Preview 场景化 -> 真实执行回执 -> 结果反馈 -> 评测样本准备度 -> 双人标注/adjudication -> manifest -> 外部资源受治理刷新 -> freshness/恢复队列`
 
 Phase 58 已完成任务中心对 WorkflowRequested 的安全投影和准入工作台导航；Phase 59 已补齐外部回执 broker 的产品入口和
 真实评测样本准备度投影。当前系统仍处于“可观察、可验证、可反馈，但默认不激活 provider”的阶段，下一步应以真实低风险
-消费者产生第一批 `ready` 样本。Phase 60 已将外部目录的显式刷新、OMO 观测回执和过期恢复状态接入产品入口，但仍保持
-默认不激活 provider。模型训练与预测服务必须等真实样本、标注协议、评测门禁和人工审批同时成立后再独立立项。
+消费者产生第一批 `ready` 样本。Phase 60 已将外部目录的显式刷新、OMO 观测回执和过期恢复状态接入产品入口，Phase 61 又补齐了
+结构化人工标签回执和双人/Adjudication 队列，但仍保持默认不激活 provider。模型训练与预测服务必须等脱敏 manifest、标注一致性、
+规则/人工基线、评测门禁和人工审批同时成立后再独立立项。
