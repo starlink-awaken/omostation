@@ -7,7 +7,7 @@ from pathlib import Path
 
 try:
     from runtime.executor.config import (  # type: ignore[import-not-found]
-        AGENT_RUNTIME_PORT,
+        AGENT_RUNTIME_PORT,  # pyright: ignore[reportAttributeAccessIssue]  # removed upstream (agent-runtime archived); mock/fallback only
         DEFAULT_MODEL,
         log,
         setup_logging,

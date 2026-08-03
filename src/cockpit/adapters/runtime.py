@@ -13,7 +13,7 @@ dashboard / API call sites).
 try:
     from runtime.arch_health import load_arch_health  # type: ignore[import-not-found]
     from runtime.executor.config import (  # type: ignore[import-not-found]
-        AGENT_RUNTIME_PORT,
+        AGENT_RUNTIME_PORT,  # pyright: ignore[reportAttributeAccessIssue]  # removed upstream (agent-runtime archived); mock/fallback only
         AUTH_TOKEN,
         DEFAULT_MODEL,
         EXEC_LOG_FILE,

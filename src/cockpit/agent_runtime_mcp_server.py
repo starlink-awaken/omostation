@@ -13,9 +13,9 @@ import time
 from pathlib import Path
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP  # type: ignore[import-not-found]
 
-mcp = FastMCP("agent-runtime", log_level="ERROR")
+mcp = FastMCP("agent-runtime")
 
 # 延迟导入避免启动时挂住
 _runtime = None
@@ -107,7 +107,7 @@ def chat(message: str, history_json: str = "") -> str:
             messages.append({"role": h["role"], "content": h["content"]})
     messages.append({"role": "user", "content": message})
 
-    schemas = runtime._build_tool_schemas()
+    schemas = runtime._build_tool_schemas()  # type: ignore[union-attr]
     max_turns = 30
 
     for turn in range(max_turns):
