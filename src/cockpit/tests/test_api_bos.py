@@ -29,8 +29,8 @@ def test_bos_metrics_route_is_unique_in_dashboard_app():
         if callable(effective_contexts):
             routes.extend(
                 context
-                for context in effective_contexts()
-                if getattr(context, "path", None) == "/api/bos/metrics"  # type: ignore[reportGeneralTypeIssues]
+                for context in effective_contexts()  # type: ignore[reportGeneralTypeIssues]
+                if getattr(context, "path", None) == "/api/bos/metrics"
             )
             continue
         nested_routes = getattr(route, "routes", None)
