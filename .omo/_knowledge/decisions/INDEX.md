@@ -413,6 +413,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0344: 外部场景消费者契约 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 50 | 0344-external-scene-consumer-contract.md
 - ADR-0345: External Capability Directory 只读能力地图 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 51 | 0345-external-capability-directory.md
 - ADR-0346: External Resource Connection Plan 接入准备与证据阻塞 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 53 | 0346-external-resource-connection-plan.md
+- ADR-0347: Cockpit 外部能力连接计划只读触达面 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 54 | 0347-external-resource-connection-plan-cockpit-surface.md
 
 ---
 
