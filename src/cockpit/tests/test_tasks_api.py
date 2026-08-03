@@ -1293,6 +1293,10 @@ priority: medium
 metadata:
   command: echo verify
   cockpit_only: true
+  scene_binding:
+    scene_id: research-brief
+    journey_id: question-to-brief
+    outcome_metric: verified_brief_acceptance
 risk_level: L2
 allowed_operation_level: L2
 human_approval_required: true
@@ -1318,6 +1322,11 @@ test_plan:
     assert task["execution_contract"]["human_approval_required"] is True
     assert task["execution_contract"]["executes"] is False
     assert task["execution_contract"]["command"] == "echo verify"
+    assert task["scene_binding"] == {
+        "scene_id": "research-brief",
+        "journey_id": "question-to-brief",
+        "outcome_metric": "verified_brief_acceptance",
+    }
 
 
 def test_request_task_approval_uses_omo_brokers(monkeypatch):

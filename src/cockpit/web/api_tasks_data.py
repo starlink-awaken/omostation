@@ -104,6 +104,19 @@ def _execution_contract(task_data: dict) -> dict:
     }
 
 
+def _scene_binding_projection(task_data: dict) -> dict[str, str] | None:
+    """Expose only the stable Scene Card binding, never the source form fields."""
+    metadata = task_data.get("metadata") or {}
+    binding = metadata.get("scene_binding") if isinstance(metadata, dict) else None
+    if not isinstance(binding, dict):
+        return None
+    projection = {
+        key: str(binding.get(key) or "").strip()
+        for key in ("scene_id", "journey_id", "outcome_metric")
+    }
+    return projection if all(projection.values()) else None
+
+
 def _approval_state(task_data: dict) -> str:
     if not task_data.get("human_approval_required"):
         return "not_required"
@@ -238,6 +251,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "assignee": task_data.get("assignee", None),
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
+                        "scene_binding": _scene_binding_projection(task_data),
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
@@ -264,6 +278,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "assignee": task_data.get("assignee", None),
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
+                        "scene_binding": _scene_binding_projection(task_data),
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
@@ -290,6 +305,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "assignee": task_data.get("assignee", None),
                         "priority": task_data.get("priority", "medium"),
                         "tags": task_data.get("tags", []),
+                        "scene_binding": _scene_binding_projection(task_data),
                         "execution_contract": _execution_contract(task_data),
                     }
                 )
