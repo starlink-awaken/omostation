@@ -3,7 +3,7 @@ title: External Connection Fabric Registry
 status: active
 type: registry
 owner: architecture-governance
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-03
 lifecycle: ssot
 ---
 version: "1.0"
@@ -243,6 +243,20 @@ dynamic_discovery:
       workflow_run_creation: forbidden
       admission_mutation: forbidden
       idempotency_key: feedback_id_and_stable_review_digest
+    scene_trial_readiness_schema: external-scene-trial-promotion-readiness/v1
+    scene_trial_readiness_builder: projects/omo/src/omo/omo_external_scene_readiness.py
+    scene_trial_readiness_cli: omo external-resources scene-trial-readiness
+    scene_trial_readiness_api:
+      read: GET /api/external-resources/scene-trials/readiness
+      mode: read_only_projection
+      required_facts: [trial_recorded, review_continue, workflow_run, external_receipt, outcome_feedback]
+      statuses: [empty, blocked, ready, unavailable]
+      activation: forbidden
+      provider_invocation: forbidden
+      workflow_run_creation: forbidden
+      admission_mutation: forbidden
+      external_side_effects: disabled
+      promotion_semantics: human_proposal_only
     pack_lifecycle_start: [discovered, sandbox]
     route_code_change_required: false
     activation_requires_scene_binding: true
