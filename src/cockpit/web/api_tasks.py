@@ -132,7 +132,7 @@ async def request_task_workflow(task_id: str, request: Request):
     group = _task_group(task_id)
     if group != "planned":
         raise HTTPException(status_code=409, detail="Only planned tasks can request a workflow")
-    payload = _load_persisted_task(task_id, group)
+    _load_persisted_task(task_id, group)  # validate the task exists (raises if missing)
     try:
         body = await request.json()
     except Exception as exc:
