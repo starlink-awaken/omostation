@@ -482,6 +482,17 @@ def close_run(
             "released_locks": payload.get("released_locks", []),
         },
     )
+    # Phase 5: Bridge close to Workflow Mesh (same as closeout_run)
+    emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        payload["run_id"],
+        {
+            "status": status,
+            "ok": status == "ok",
+            "evidence_count": len(evidence),
+        },
+        workspace=WORKSPACE,
+    )
     return payload
 
 
