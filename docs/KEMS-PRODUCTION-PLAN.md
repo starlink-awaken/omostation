@@ -26,7 +26,7 @@ KEMS 当前已经具备受控导入、政策分析、运行记录、证据绑定
                                       +-> 人工/模型增强
 ```
 
-M1～M6 的工程基础已落地到 Kairon/KOS、Cockpit 和 Runtime：`kems.ocr-quality.v1` 提供 OCR 页级质量、指标门禁和 `pass/review/reject` 状态；Cockpit 提供 OCR 审核与图谱工作台；KEMS 提供持久化图谱、双人标注与 adjudication 约束、`kems.evaluation-manifest.v1`、候选模型 shadow 评测和生产 preflight。生产 preflight 现在还显式要求 `kems.persistence-recovery-evidence.v1`，证明 PostgreSQL 备份/恢复演练和图谱快照可恢复。真实源队列目前仍等待人工标注，生产连接器和 OMO 批准仍未提供，因此不能宣称真实业务准确率或生产动作已开放。
+M1～M6 的工程基础已落地到 Kairon/KOS、Cockpit 和 Runtime：`kems.ocr-quality.v1` 提供 OCR 页级质量、指标门禁和 `pass/review/reject` 状态；Cockpit 提供 OCR 审核与图谱工作台；KEMS 提供持久化图谱、双人标注与 adjudication 约束、`kems.evaluation-manifest.v1`、候选模型 shadow 评测和生产 preflight。生产 preflight 现在还显式要求 `kems.persistence-recovery-evidence.v1`，证明 PostgreSQL 备份/恢复演练和图谱快照可恢复。真实源队列目前已具备结构化标签回执与双人/adjudication 队列，但仍等待真实低风险样本完成复核和脱敏 manifest；生产连接器和 OMO 批准仍未提供，因此不能宣称真实业务准确率或生产动作已开放。
 
 当前实现与验收证据集中记录在 [KEMS 落地验收与上线闸门报告](</Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md>)；生产前置检查入口见 `projects/runtime/scripts/kems_production_preflight.py`。
 
