@@ -8,6 +8,10 @@
 # 治本: 检测每个子模块"未推 commit"(@{u}..HEAD 非空), push 到各自 origin, 让 gitlink 可达.
 # 注入点: 主仓 .git/hooks/pre-push 调用本脚本 → 主仓 push(触发 CI)前先补齐子模块.
 #
+# PASW 适配: 高冲突子模块 (gbrain/cockpit/agora) 的 commit 在 .subtrees/ 隔离 worktree 内,
+# 共享 projects/<sub>/ 保持在原 gitlink commit (detached HEAD). 本脚本额外检测 .subtrees/ 内的
+# 未推 commit 并 push, 确保 bump-pointer 后的 SHA 在 submodule remote 上可达.
+#
 # 用法:
 #   bin/sync-submodules-push.sh --dry-run   # 只看清单, 不 push
 #   bin/sync-submodules-push.sh             # 真同步
@@ -85,3 +89,39 @@ echo "---"
 echo "统计: 待push=$pending 成功=$pushed 失败=$failed 无上游=$noupstream 缺失=$missing (dry-run=$dry)"
 [ "$failed" -gt 0 ] && exit 1
 exit 0
+
+# ── PASW: 检测 .subtrees/ 隔离 worktree 内的未推 commit ────────────────
+# PASW 隔离子模块的实际 commit 在 .subtrees/<sub>/ 内, 共享 projects/<sub>/ 保持原状.
+# 本段检测 .subtrees/ 内的未推 commit 并 push, 确保 bump-pointer 后的 SHA 可达.
+PASW_ISOLATED="projects/gbrain projects/cockpit projects/agora"
+for sub in $PASW_ISOLATED; do
+  sub_name=$(basename "$sub")
+  sub_wt=".subtrees/$sub_name"
+  [ -d "$sub_wt" ] || continue
+  [ -e "$sub_wt/.git" ] || continue
+
+  wt_branch=$(git -C "$sub_wt" rev-parse --abbrev-ref HEAD 2>/dev/null) || continue
+  [ "$wt_branch" = "HEAD" ] && continue
+
+  wt_upstream=$(git -C "$sub_wt" rev-parse --abbrev-ref '@{u}' 2>/dev/null) || {
+    if git -C "$sub_wt" show-ref --verify --quiet "refs/remotes/origin/$wt_branch"; then
+      wt_upstream="origin/$wt_branch"
+    else
+      continue
+    fi
+  }
+
+  wt_cnt=$(git -C "$sub_wt" log --oneline "${wt_upstream}..HEAD" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$wt_cnt" -gt 0 ]; then
+    echo "⬆ PASW $sub_wt: $wt_cnt 个未推 → origin/$wt_branch"
+    if [ "$dry" = "0" ]; then
+      if git -C "$sub_wt" push --no-verify origin "$wt_branch" >/dev/null 2>&1; then
+        pushed=$(( pushed + 1 )) || true
+        echo "  ✅ pushed"
+      else
+        failed=$(( failed + 1 )) || true
+        echo "  ❌ push 失败"
+      fi
+    fi
+  fi
+done

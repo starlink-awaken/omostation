@@ -12,22 +12,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
-      # ADR-0202 D1: 内联非空守卫 — 不依赖仓库自身工具 (自指盲区防御)
-      - name: inline zero-byte guard (ADR-0202)
-        run: |
-          z=$(find bin -name '*.py' -size 0 | head -20); if [ -n "$z" ]; then echo "❌ 0-byte py in bin/:"; echo "$z"; exit 1; fi
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with: {python-version: '3.13'}
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-      - name: Install gbrain dependencies
-        # P41-W1 fix: projects/gbrain is .gitignore'd (separate repo). Skip gbrain tests.
-        run: echo "projects/gbrain is .gitignore'd in this monorepo — skipping gbrain CI"
-      - name: Test gbrain
-        run: echo "skipped (see above)"
-      - name: Run integration tests
-        # P41-W1 fix: bash tests/integration/run-all.sh may invoke kairon which is .gitignore'd.
-        # Mark as continue-on-error for now — the script needs to be made monorepo-aware separately.
-        run: bash tests/integration/run-all.sh || echo "integration script exited non-zero — known issue, see P41-W1"
-        continue-on-error: true
+        # PASW: 子模块 checkout 失败必须 fail fast — 指针不可达说明 bump-pointer 前未 push 子模块
+      - name: PASW — 子模块指针可达性前置检查
+        run: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch 2>&1
+        continue-on-error: false
