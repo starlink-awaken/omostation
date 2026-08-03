@@ -12,11 +12,11 @@ from pathlib import Path
 from typing import Any
 
 from .omo_external_receipt import RECEIPT_SCHEMA
+from .omo_external_scene_consumer import read_external_scene_consumers
 from .omo_external_scene_trial import read_external_scene_trials
 from .omo_external_scene_trial_feedback import read_external_scene_trial_feedback
 from .outcome_feedback import (
     ELIGIBLE_WORKFLOW_STATES,
-    OUTCOME_FEEDBACK_SCHEMA,
     read_outcome_feedback,
 )
 from .workflow_mesh import WorkflowMeshStore
@@ -48,6 +48,15 @@ def _latest_reviews(records: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         trial_id = str(record.get("trial_id") or "").strip()
         if trial_id:
             latest[trial_id] = record
+    return latest
+
+
+def _latest_consumers(records: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    latest: dict[str, dict[str, Any]] = {}
+    for record in records:
+        consumer_ref = str(record.get("consumer_ref") or "").strip()
+        if consumer_ref:
+            latest[consumer_ref] = record
     return latest
 
 
@@ -99,6 +108,7 @@ def _feedback_summaries(
 def _item(
     trial: Mapping[str, Any],
     review: Mapping[str, Any] | None,
+    consumer: Mapping[str, Any] | None,
     snapshots: list[Mapping[str, Any]],
     feedback: list[dict[str, Any]],
 ) -> dict[str, Any]:
@@ -136,6 +146,7 @@ def _item(
 
     checks = {
         "trial_recorded": True,
+        "consumer_registered": bool(consumer and consumer.get("status") == "declared"),
         "review_continued": bool(review and review.get("review_action") == _REVIEW_ACTION),
         "workflow_run_present": bool(run_ids),
         "workflow_run_eligible": bool(eligible),
@@ -143,6 +154,10 @@ def _item(
         "outcome_feedback_recorded": bool(positive_outcomes),
     }
     blockers: list[str] = []
+    if consumer is None:
+        blockers.append("consumer_contract_missing")
+    elif consumer.get("status") != "declared":
+        blockers.append("consumer_contract_not_declared")
     if review is None:
         blockers.append("review_missing")
     elif review.get("review_action") != _REVIEW_ACTION:
@@ -162,6 +177,20 @@ def _item(
         "trial_id": trial.get("trial_id"),
         "scene_binding": binding,
         "consumer_ref": trial.get("consumer_ref"),
+        "consumer_contract": (
+            {
+                "consumer_id": consumer.get("consumer_id"),
+                "consumer_kind": consumer.get("consumer_kind"),
+                "entrypoint_ref": consumer.get("entrypoint_ref"),
+                "capability_ref": consumer.get("capability_ref"),
+                "permission_ref": consumer.get("permission_ref"),
+                "metric_ref": consumer.get("metric_ref"),
+                "rollback_ref": consumer.get("rollback_ref"),
+                "status": consumer.get("status"),
+            }
+            if consumer
+            else None
+        ),
         "metric": trial.get("metric"),
         "latest_review": (
             {
@@ -198,6 +227,7 @@ def build_external_scene_trial_promotion_readiness(
     root = Path(omo_dir)
     trials = read_external_scene_trials(root)
     reviews = _latest_reviews(read_external_scene_trial_feedback(root))
+    consumers = _latest_consumers(read_external_scene_consumers(root))
     feedback = read_outcome_feedback(root)
     snapshots = WorkflowMeshStore(root).snapshots()
     items = []
@@ -206,7 +236,11 @@ def build_external_scene_trial_promotion_readiness(
         if binding is None or (scene_id and binding["scene_id"] != scene_id):
             continue
         trial_id = str(trial.get("trial_id") or "").strip()
-        items.append(_item(trial, reviews.get(trial_id), snapshots, feedback))
+        consumer_ref = str(trial.get("consumer_ref") or "").strip()
+        consumer = consumers.get(consumer_ref)
+        if consumer and not _same_scene(consumer.get("scene_binding"), binding):
+            consumer = None
+        items.append(_item(trial, reviews.get(trial_id), consumer, snapshots, feedback))
     ready_count = sum(item["status"] == "ready" for item in items)
     blocked_count = len(items) - ready_count
     status = "empty" if not items else ("ready" if ready_count else "blocked")

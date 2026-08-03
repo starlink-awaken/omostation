@@ -28,6 +28,13 @@ from omo.omo_external_pack import (
     ExternalResourcePackProposalError,
     record_external_resource_pack_proposal,
 )
+from omo.omo_external_scene_consumer import (
+    ExternalSceneConsumerError,
+    record_external_scene_consumer,
+)
+from omo.omo_external_scene_readiness import (
+    build_external_scene_trial_promotion_readiness,
+)
 from omo.omo_external_scene_trial import (
     ExternalSceneTrialError,
     record_external_scene_trial,
@@ -35,9 +42,6 @@ from omo.omo_external_scene_trial import (
 from omo.omo_external_scene_trial_feedback import (
     ExternalSceneTrialFeedbackError,
     record_external_scene_trial_feedback,
-)
-from omo.omo_external_scene_readiness import (
-    build_external_scene_trial_promotion_readiness,
 )
 from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic
 from omo.omo_paths import find_omo_dir
@@ -282,6 +286,10 @@ def main(argv: list[str] | None = None) -> int:
         "record-scene-trial", help="persist one proposal-only external scene trial"
     )
     record_scene_trial.add_argument("--stdin", action="store_true")
+    record_scene_consumer = sub.add_parser(
+        "record-scene-consumer", help="persist one proposal-only external scene consumer contract"
+    )
+    record_scene_consumer.add_argument("--stdin", action="store_true")
     record_scene_trial_feedback = sub.add_parser(
         "record-scene-trial-feedback", help="persist one proposal-only scene trial review"
     )
@@ -366,6 +374,17 @@ def main(argv: list[str] | None = None) -> int:
             result = record_external_scene_trial(omo_dir, _payload_from_stdin())
         except (ExternalSceneTrialError, OSError, ValueError) as exc:
             print(f"external-resources record-scene-trial: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    if args.command == "record-scene-consumer":
+        if not args.stdin:
+            print("external-resources record-scene-consumer requires --stdin", file=sys.stderr)
+            return 2
+        try:
+            result = record_external_scene_consumer(omo_dir, _payload_from_stdin())
+        except (ExternalSceneConsumerError, OSError, ValueError) as exc:
+            print(f"external-resources record-scene-consumer: {exc}", file=sys.stderr)
             return 2
         print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2, sort_keys=True))
         return 0

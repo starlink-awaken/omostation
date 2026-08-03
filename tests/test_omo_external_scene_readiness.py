@@ -5,11 +5,12 @@ import json
 from datetime import UTC, datetime, timedelta
 
 from omo.omo_external_receipt import record_external_receipt
-from omo.omo_external_scene_trial import record_external_scene_trial
-from omo.omo_external_scene_trial_feedback import record_external_scene_trial_feedback
+from omo.omo_external_scene_consumer import record_external_scene_consumer
 from omo.omo_external_scene_readiness import (
     build_external_scene_trial_promotion_readiness,
 )
+from omo.omo_external_scene_trial import record_external_scene_trial
+from omo.omo_external_scene_trial_feedback import record_external_scene_trial_feedback
 from omo.outcome_feedback import record_outcome_feedback
 from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event
 
@@ -71,6 +72,30 @@ def _review() -> dict[str, object]:
         "actor": "test-reviewer",
         "source_ref": "test:scene-trial-review",
         "observed_at": "2026-08-03T00:10:00Z",
+    }
+
+
+def _consumer() -> dict[str, object]:
+    return {
+        "schema": "external-scene-consumer/v1",
+        "consumer_id": "consumer:research",
+        "consumer_ref": "ref://consumer/research",
+        "consumer_kind": "workflow",
+        "scene_binding": _binding(),
+        "owner_ref": "ref://owner/research",
+        "entrypoint_ref": "ref://entrypoint/research",
+        "capability_ref": "ref://capability/research",
+        "permission_ref": "ref://permission/research",
+        "metric_ref": "ref://metric/decision-latency",
+        "rollback_ref": "ref://rollback/research",
+        "evidence_refs": ["evidence://consumer/research"],
+        "status": "declared",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_id": None,
+        "actor": "test-consumer",
+        "source_ref": "test:scene-consumer",
+        "observed_at": "2026-08-03T00:00:00Z",
     }
 
 
@@ -155,6 +180,7 @@ def test_empty_and_blocked_projection_are_explicit(tmp_path):
 def test_projection_is_ready_only_after_real_run_receipt_and_consumption(tmp_path):
     record_external_scene_trial(tmp_path, _trial())
     record_external_scene_trial_feedback(tmp_path, _review())
+    record_external_scene_consumer(tmp_path, _consumer())
     _completed_run(tmp_path)
 
     projection = build_external_scene_trial_promotion_readiness(tmp_path)
