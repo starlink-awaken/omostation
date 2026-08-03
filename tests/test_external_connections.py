@@ -591,3 +591,37 @@ def test_resolve_with_capability_blocks_retired(tmp_path):
     router.register("bos://capability/old/invoke", adapter="poc")
     route = router.resolve_with_capability("bos://capability/old/invoke", None, admission)
     assert route is None
+
+
+def test_resolve_upgrades_to_semantic_after_gating_enabled():
+    """B2 接入: enable_capability_gating 后, resolve() 自动升级为语义路由。"""
+    from agora.mcp.bos_router import BOSRouter
+
+    # 未挂载时纯路由正常
+    router = BOSRouter()
+    router.register("bos://capability/gate/invoke", adapter="poc")
+    assert router.resolve("bos://capability/gate/invoke") is not None
+
+    # 挂载 admission catalog + retired → resolve 拦截
+    admission = ExternalConnectionCatalog()
+    admission.register_capability("bos://capability/gate/invoke", use_metrics={"calls": 3})
+    router.enable_capability_gating(None, admission)
+    assert router.resolve("bos://capability/gate/invoke") is not None
+
+    admission.transition("bos://capability/gate/invoke", "retired")
+    assert router.resolve("bos://capability/gate/invoke") is None
+
+
+def test_resolve_with_capability_blocks_discovered():
+    """准入生命周期 discovered (未 admitted) → 拦截。"""
+    from agora.mcp.bos_router import BOSRouter
+
+    admission = ExternalConnectionCatalog()
+    admission.register_capability(
+        "bos://capability/new/invoke", lifecycle="discovered", use_metrics={"calls": 0}
+    )
+
+    router = BOSRouter()
+    router.register("bos://capability/new/invoke", adapter="poc")
+    route = router.resolve_with_capability("bos://capability/new/invoke", None, admission)
+    assert route is None

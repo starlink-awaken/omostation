@@ -50,12 +50,48 @@ class BOSRouter:
         self,
         *,
         admission_evaluator: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        capability_catalog: Any | None = None,
+        admission_catalog: Any | None = None,
     ):
         self._routes: dict[str, list[dict[str, Any]]] = {}
         # Trie: nested dict, 叶子节点含 _ROUTE_MARKER
         self._trie: dict[str, Any] = {}
         self._admission_evaluator = admission_evaluator or evaluate_admission
         self._admission_rejections: list[dict[str, Any]] = []
+        # B2 能力感知: 挂载 capability/admission catalog 后 resolve 自动走语义路由
+        self._capability_catalog = capability_catalog
+        self._admission_catalog = admission_catalog
+
+    def enable_capability_gating(
+        self,
+        capability_catalog: Any | None = None,
+        admission_catalog: Any | None = None,
+    ) -> None:
+        """启用 B2 能力感知路由 (capability 声明 + 准入生命周期)。
+
+        挂载后, resolve() 自动升级为 resolve_with_capability() 语义路由:
+        deprecated 声明 / retired|quarantined|discovered 生命周期 → 不路由。
+        显式传入 catalog 优先; 未传则惰性加载默认实现。
+        """
+        if capability_catalog is None:
+            try:
+                from agora.mcp.capability_catalog import CapabilityCatalog
+
+                self._capability_catalog = CapabilityCatalog()
+            except Exception as exc:  # defensive fallback
+                _log.debug("[BOSRouter] capability catalog unavailable: %s", exc)
+        else:
+            self._capability_catalog = capability_catalog
+        if admission_catalog is None:
+            try:
+                from agora.external_connections import ExternalConnectionCatalog
+
+                self._admission_catalog = ExternalConnectionCatalog()
+            except Exception as exc:  # defensive fallback
+                _log.debug("[BOSRouter] admission catalog unavailable: %s", exc)
+        else:
+            self._admission_catalog = admission_catalog
+        _log.info("[BOSRouter] capability gating enabled (B2 semantic routing)")
 
     # ── Trie 操作 ─────────────────────────────────────
 
@@ -261,7 +297,21 @@ class BOSRouter:
         self._trie_remove(prefix)
 
     def resolve(self, uri: str) -> dict[str, Any] | None:
-        """最长前缀匹配 — 支持负载感知调度 (Smart Partitioning)。"""
+        """最长前缀匹配 — 支持负载感知调度 (Smart Partitioning)。
+
+        若已启用 B2 能力感知 (enable_capability_gating), 自动升级为语义路由:
+        能力声明 deprecated / 准入生命周期 retired|quarantined|discovered → None。
+        """
+        if self._capability_catalog is not None or self._admission_catalog is not None:
+            return self.resolve_with_capability(
+                uri,
+                capability_catalog=self._capability_catalog,
+                admission_catalog=self._admission_catalog,
+            )
+        return self._resolve_plain(uri)
+
+    def _resolve_plain(self, uri: str) -> dict[str, Any] | None:
+        """底层最长前缀匹配 — 不含能力感知, 供 resolve_with_capability 内部复用。"""
         routes = self._trie_lookup(uri)
         if not routes:
             return None
@@ -313,8 +363,8 @@ class BOSRouter:
         Returns:
             路由 (admitted/sandbox 且存在) 或 None (被准入拦截/未注册)
         """
-        # 1. 常规路由
-        route = self.resolve(uri)
+        # 1. 常规路由 (绕过能力感知, 避免递归)
+        route = self._resolve_plain(uri)
         if route is None:
             return None
 
@@ -434,6 +484,10 @@ class BOSRouter:
 
 # ── 全局单例 ──
 bos_router = BOSRouter()
+try:  # B2: 单例默认启用能力感知语义路由 (惰性加载, 失败降级为纯路由)
+    bos_router.enable_capability_gating()
+except Exception:  # noqa: BLE001 - 单例初始化必须 fail-open (纯路由兜底)
+    _log.warning("[BOSRouter] capability gating disabled on singleton init")
 
 
 def clean_inbox_content(content: str) -> str:
