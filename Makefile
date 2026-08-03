@@ -223,6 +223,19 @@ worktree-cleanup:  ## 回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h; cr
 worktree-audit:  ## 列出可清理的冗余分支 (check-branch-redundant --json)
 	python3 bin/ssot/check-branch-redundant.py --json
 
+# ── Worktree 治理 (P74: 防堆积) ──────────────────────────
+worktree-guard:  ## 检查 worktree 数量上限 (超 MAX_WORKTREES=8 返回 1)
+	bash bin/gac/gac-worktree-guard.sh --check
+
+worktree-prune:  ## 清理已合并/冗余 worktree (gac-worktree-prune.sh --apply)
+	bash bin/gac/gac-worktree-prune.sh --apply
+
+worktree-cleanup:  ## 回收 TTL 过期 worktree (委托 gac-worktree-cleanup.sh)
+	bash bin/gac/gac-worktree.sh cleanup
+
+worktree-audit:  ## 列出可清理的冗余分支 (check-branch-redundant --json)
+	python3 bin/ssot/check-branch-redundant.py --json
+
 # ── 能力注册表 + 文档自动生成 (P0-T2) ─────────────────────
 sync-capability-registry:  ## 生成能力注册表 SSOT (扫描 MCP/BOS/CLI)
 	@echo "── 生成能力注册表 ────────────────────────────────────"

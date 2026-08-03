@@ -226,7 +226,9 @@ case "$cmd" in
 import sys, json
 try:
     d = json.load(sys.stdin)
-    bad = [f['path'] for f in d.get('files',[]) if '.jsonl' in f['path'] or '.lock' in f['path'] or f['path'].startswith('.omo/_knowledge/workflow-mesh/')]
+    bad = [f['path'] for f in d.get('files',[])
+            if ('.jsonl' in f['path'] or '.lock' in f['path'] or f['path'].startswith('.omo/_knowledge/workflow-mesh/'))
+            and f.get('changeType') in ('ADDED', 'MODIFIED')]
     print('\n'.join(bad))
 except Exception:
     print('')
@@ -269,13 +271,12 @@ except Exception:
     pasw_cleanup "$wt"
     git worktree remove "$wt" 2>&1
     echo "✅ worktree 释放: $wt"
-    # 分支清理: 已合并到 main → 删; 否则保留 (check-branch-redundant 判重)
+    # 分支清理: 已合并到 main → 删; 否则保留
     branch="work/$session"
     if git rev-parse --verify "$branch" >/dev/null 2>&1; then
       if git log --oneline --not "origin/main" "$branch" 2>/dev/null | head -1 | grep -q .; then
         echo "   分支 $branch 有 main 外 commit, 保留 (可手动 git branch -D)"
       else
-        # 已合并 (无 main 外 commit) → 安全删
         git branch -D "$branch" 2>&1 | tail -1
         echo "   ✅ 分支 $branch 已删除 (内容已并入 main)"
       fi
