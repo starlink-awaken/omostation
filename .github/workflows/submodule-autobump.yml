@@ -1,0 +1,47 @@
+name: Submodule Auto-Bump
+# 自动 bump 子模块指针到最新 origin/main, 每 2h 运行一次.
+# 如果有变动, 自动开 PR.
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+jobs:
+  autobump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          fetch-depth: 0
+
+      - name: Fetch all submodule remotes
+        run: |
+          git submodule foreach 'git fetch origin main 2>/dev/null || true'
+
+      - name: Check for submodule advances
+        id: check
+        run: |
+          chmod +x bin/ssot/submodule-autobump.sh
+          if bash bin/ssot/submodule-autobump.sh --check-only 2>&1; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Apply bump and create PR
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          bash bin/ssot/submodule-autobump.sh
+          BRANCH="auto/submodule-bump-$(date +%Y%m%d%H%M)"
+          git checkout -b "$BRANCH"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "chore: auto-bump submodule pointers to latest main" \
+            --body "Auto-generated: bumped submodule pointers to latest origin/main." \
+            --base main \
+            --head "$BRANCH"
+        env:
+          GITHUB_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
