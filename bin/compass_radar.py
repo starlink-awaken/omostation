@@ -777,7 +777,45 @@ def build_system_projection_updates(
             "source": "compass_radar_isc3_daemon_ratio",
             "degraded": [],
         }
+    # Workflow Mesh health snapshot
+    mesh_health = _collect_mesh_health(workspace_root)
+    if mesh_health:
+        updates["workflow_mesh_health"] = mesh_health
     return updates
+
+
+def _collect_mesh_health(workspace_root: Path) -> dict[str, Any] | None:
+    """Collect Workflow Mesh health snapshot via protocol-based discovery."""
+    try:
+        import importlib
+        omo_src = workspace_root / "projects" / "omo" / "src"
+        if str(omo_src) not in sys.path:
+            sys.path.insert(0, str(omo_src))
+        from omo.workflow_mesh import WorkflowMeshStore
+        store = WorkflowMeshStore(workspace_root / ".omo")
+        events = store.events()
+        from datetime import datetime, UTC, timedelta
+        now = datetime.now(UTC)
+        events_last_hour = sum(
+            1 for e in events
+            if (now - datetime.fromisoformat(
+                e.get("occurred_at", "2000-01-01T00:00:00Z").replace("Z", "+00:00")
+            )).total_seconds() < 3600
+        )
+        producers = {e.get("producer", "") for e in events}
+        last_event_age = None
+        if events:
+            last_ts = events[-1].get("occurred_at", "").replace("Z", "+00:00")
+            last_event_age = (now - datetime.fromisoformat(last_ts)).total_seconds()
+        return {
+            "status": "healthy" if events else "degraded",
+            "event_count": len(events),
+            "events_last_hour": events_last_hour,
+            "last_event_age_seconds": round(last_event_age, 1) if last_event_age else None,
+            "bridges_active": sorted(producers),
+        }
+    except Exception:
+        return None
 
 
 def main() -> int:
