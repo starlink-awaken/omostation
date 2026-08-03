@@ -256,3 +256,38 @@ class TestProxyTools:
         result = add_route("", "")
         assert result["status"] == "error"
         assert "required" in result["error"].lower()
+
+
+def test_agora_capability_discover_returns_ok():
+    """B3 discover: agora_capability_discover 返回能力清单。"""
+    from agora.server.mcp import agora_capability_discover
+
+    result = asyncio.run(agora_capability_discover())
+    assert result["status"] == "ok"
+    assert "capabilities" in result
+    assert "total" in result
+    assert result["total"] >= 0
+    # 字段完整性
+    for field in ("format_version", "active", "deprecated", "routes_total"):
+        assert field in result, f"缺少字段 {field}"
+
+
+def test_agora_capability_discover_status_filter():
+    """B3 discover: status_filter 过滤生效。"""
+    from agora.server.mcp import agora_capability_discover
+
+    result = asyncio.run(agora_capability_discover(status_filter="active"))
+    assert result["status"] == "ok"
+    for cap in result["capabilities"]:
+        assert cap["status"] == "active"
+
+
+def test_agora_capability_discover_capability_shape():
+    """B3 discover: 每条能力记录字段完整。"""
+    from agora.server.mcp import agora_capability_discover
+
+    result = asyncio.run(agora_capability_discover())
+    caps = result["capabilities"]
+    for cap in caps[:3]:
+        for field in ("uri", "status", "routed", "calls", "zombie"):
+            assert field in cap, f"能力记录缺少字段 {field}: {cap}"
