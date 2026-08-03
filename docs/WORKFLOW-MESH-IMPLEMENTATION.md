@@ -883,6 +883,19 @@ Phase 54 将连接计划接入 Cockpit：`GET /api/external-resources/connection
 WorkflowRun、不调用 provider 业务方法、不修改 admission。这样用户可以从 Cockpit 看到“为什么还不能用、下一步
 需要谁提供什么”，但真正触达仍必须经过 Scene Card、OMO admission、Workflow Mesh receipt 和结果反馈。
 
+### 7.3.22 Phase 55 外部能力连接计划 UI 产品化
+
+Phase 55 将 Phase 54 的 API 投影接入现有 `/external-resources` 页面，不新增顶级导航。连接计划区直接显示：
+
+- 当前资源数、可进入人工/治理复核数、待补证据数；
+- 每个资源的下一步、状态、责任人和权限引用；
+- 阻塞原因与最小需要收集的输入；
+- `available`、`attention`、`empty`、`unavailable` 四类产品状态。
+
+前端只消费 `external-resource-connection-plan/v1`，并对旧后端/缺失 builder 做 schema guard，避免把 catalog
+误当成 connection plan 导致页面崩溃。任何 UI 状态都不代表准入或激活，所有写操作和执行仍沿用 Scene Card、OMO
+admission、Workflow Mesh receipt 与 outcome feedback 的既有链路。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
