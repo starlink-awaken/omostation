@@ -28,3 +28,23 @@ def test_external_scene_trial_review_contract_is_registered():
         "admission_mutation": "forbidden",
         "idempotency_key": "feedback_id_and_stable_review_digest",
     }
+    assert extension["scene_trial_readiness_schema"] == "external-scene-trial-promotion-readiness/v1"
+    assert extension["scene_trial_readiness_cli"] == "omo external-resources scene-trial-readiness"
+    assert extension["scene_trial_readiness_api"] == {
+        "read": "GET /api/external-resources/scene-trials/readiness",
+        "mode": "read_only_projection",
+        "required_facts": [
+            "trial_recorded",
+            "review_continue",
+            "workflow_run",
+            "external_receipt",
+            "outcome_feedback",
+        ],
+        "statuses": ["empty", "blocked", "ready", "unavailable"],
+        "activation": "forbidden",
+        "provider_invocation": "forbidden",
+        "workflow_run_creation": "forbidden",
+        "admission_mutation": "forbidden",
+        "external_side_effects": "disabled",
+        "promotion_semantics": "human_proposal_only",
+    }
