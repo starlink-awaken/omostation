@@ -1,9 +1,9 @@
 # Cockpit CLI 命令参考
 
-> 自动生成于 2026-08-02T12:56:53Z
+> 自动生成于 2026-08-03T01:04:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **104** 个命令 (含子命令)。按场景分组如下。
+共 **108** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -116,10 +116,13 @@
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
 | `cockpit assistant` | P5-F2 work-assistant: 1 真实工作 query → 结构化草稿 |
+| `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
+| `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
+| `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
 | `cockpit gc` | 清理 data/tmp 过期文件 |
@@ -142,6 +145,7 @@
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit pipeline` | pipeline 概览 |
 | `cockpit publish` | 发布事件 |
+| `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
 | `cockpit radar` | P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
 | `cockpit remember` | 手动存入偏好/事实 |
@@ -167,13 +171,13 @@
 
 | CLI 命令 | MCP 服务器 | 工具数 |
 |----------|-----------|--------|
-| `cockpit omo` | `omo` | 0 |
-| `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 58 |
+| `cockpit omo` | `omo` | 19 |
+| `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 31 |
-| `cockpit family-hub` | `family-hub` | 0 |
+| `cockpit agora` | `agora` | 64 |
+| `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 10 |
 | `cockpit compute` | `aetherforge` | 10 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-02T12:56:53Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T01:04:00Z 生成*
