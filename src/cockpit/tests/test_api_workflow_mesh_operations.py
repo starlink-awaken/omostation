@@ -110,6 +110,118 @@ def test_workflow_mesh_operations_api_degrades_without_omo(monkeypatch):
     assert response.json()["operations"]["status"] == "unavailable"
 
 
+def test_engineering_delivery_review_queue_is_read_only_projection(monkeypatch, tmp_path):
+    calls: list[tuple[object, str | None]] = []
+    projection = {
+        "schema": "engineering-delivery-review-queue/v1",
+        "summary": {"row_count": 1, "pending_review_count": 1},
+        "rows": [{"delivery_id": "delivery-1", "review_status": "pending"}],
+        "controls": {"read_only": True},
+    }
+
+    def fake_queue(omo_dir, *, workflow_run_id=None):
+        calls.append((omo_dir, workflow_run_id))
+        return projection
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "build_engineering_delivery_review_queue",
+        fake_queue,
+    )
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).get("/api/workflow-mesh/engineering-delivery/review-queue?workflow_run_id=run-1")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "ok": True,
+        "status": "live",
+        "projection": projection,
+        "read_only": True,
+        "workflow_state_mutation": False,
+        "provider_invocation": False,
+        "automatic_promotion": False,
+    }
+    assert calls == [(tmp_path / ".omo", "run-1")]
+
+
+def test_engineering_delivery_review_api_forwards_only_review_fields(monkeypatch, tmp_path):
+    captured: list[tuple[object, dict, str, str]] = []
+
+    def fake_review(omo_dir, review, *, workflow_run_id, actor):
+        captured.append((omo_dir, review, workflow_run_id, actor))
+        return {
+            "schema": "engineering-delivery-review/v1",
+            "status": "recorded",
+            "delivery_id": "delivery-1",
+            "decision": "adopted",
+        }
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "record_engineering_delivery_review",
+        fake_review,
+    )
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/engineering-delivery/review",
+        json={
+            "workflow_run_id": "run-1",
+            "actor_ref": "operator://reviewer-1",
+            "delivery_id": "delivery-1",
+            "decision": "adopted",
+            "reviewed_at": "2026-08-03T10:00:00Z",
+            "evidence_refs": ["evidence://review/1"],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["review"]["decision"] == "adopted"
+    assert response.json()["workflow_state_mutation"] is False
+    assert captured == [
+        (
+            tmp_path / ".omo",
+            {
+                "delivery_id": "delivery-1",
+                "decision": "adopted",
+                "reviewed_at": "2026-08-03T10:00:00Z",
+                "evidence_refs": ["evidence://review/1"],
+            },
+            "run-1",
+            "operator://reviewer-1",
+        )
+    ]
+
+
+def test_engineering_delivery_review_api_rejects_raw_or_unknown_fields(monkeypatch):
+    called = False
+
+    def fail_review(*_args, **_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("broker must not receive an invalid envelope")
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "record_engineering_delivery_review", fail_review)
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/engineering-delivery/review",
+        json={"workflow_run_id": "run-1", "document_body": "must-not-cross-boundary"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is False
+    assert response.json()["error"] == "engineering_delivery_review_invalid"
+    assert called is False
+
+
 def test_outcome_feedback_api_forwards_safe_payload_and_actor(monkeypatch, tmp_path):
     captured: list[tuple[object, dict, str]] = []
 

@@ -41,6 +41,20 @@ except Exception as exc:  # OMO is an optional runtime dependency for Cockpit.
 else:
     _OMO_IMPORT_ERROR = None
 
+try:
+    from omo.engineering_delivery_consumer import (
+        EngineeringDeliveryConsumerError,
+        build_engineering_delivery_review_queue,
+        record_engineering_delivery_review,
+    )
+except Exception as exc:  # Keep the existing Workflow Mesh routes independently available.
+    EngineeringDeliveryConsumerError = ValueError  # type: ignore[assignment,misc]
+    build_engineering_delivery_review_queue = None  # type: ignore[assignment]
+    record_engineering_delivery_review = None  # type: ignore[assignment]
+    _ENGINEERING_DELIVERY_IMPORT_ERROR: Exception | None = exc
+else:
+    _ENGINEERING_DELIVERY_IMPORT_ERROR = None
+
 
 router = APIRouter(prefix="/api/workflow-mesh", tags=["workflow-mesh"]) if APIRouter else None
 _AGORA_HTTP_ENDPOINT = os.environ.get("AGORA_HTTP_ENDPOINT", "http://127.0.0.1:7422")
@@ -142,6 +156,110 @@ if router:
             "ok": projection.get("status") == "live",
             "status": projection.get("status", "unavailable"),
             "operations": projection,
+        }
+
+    @router.get("/engineering-delivery/review-queue")
+    async def get_engineering_delivery_review_queue(
+        workflow_run_id: str | None = Query(None, description="Optional WorkflowRun filter"),  # type: ignore[union-attr]
+    ) -> dict[str, Any]:
+        """Expose the OMO-owned engineering delivery review queue read-only."""
+        controls = {
+            "read_only": True,
+            "workflow_state_mutation": False,
+            "provider_invocation": False,
+            "automatic_promotion": False,
+        }
+        if build_engineering_delivery_review_queue is None:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "schema": "engineering-delivery-review-queue/v1",
+                "error": "engineering_delivery_review_queue_unavailable",
+                "next_action": "安装并挂载 OMO 工程交付消费者后重试。",
+                **controls,
+            }
+        try:
+            projection = build_engineering_delivery_review_queue(
+                _REPO_ROOT / ".omo",
+                workflow_run_id=workflow_run_id,
+            )
+        except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "schema": "engineering-delivery-review-queue/v1",
+                "error": type(exc).__name__,
+                "next_action": "检查 OMO 工程交付回执和反馈日志后重试。",
+                **controls,
+            }
+        return {
+            "ok": True,
+            "status": "live",
+            "projection": projection,
+            **controls,
+        }
+
+    @router.post("/engineering-delivery/review")
+    async def post_engineering_delivery_review(request: Request) -> dict[str, Any]:  # type: ignore[valid-type]
+        """Record one human engineering-delivery decision through the OMO broker."""
+        controls = {
+            "workflow_state_mutation": False,
+            "provider_invocation": False,
+            "automatic_promotion": False,
+        }
+        if record_engineering_delivery_review is None:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "engineering_delivery_review_unavailable",
+                "next_action": "安装并挂载 OMO 工程交付消费者后重试。",
+                **controls,
+            }
+        try:
+            body = await request.json()
+            if not isinstance(body, dict):
+                raise EngineeringDeliveryConsumerError("review envelope must be an object")
+            allowed = {
+                "workflow_run_id",
+                "actor_ref",
+                "delivery_id",
+                "decision",
+                "reviewed_at",
+                "evidence_refs",
+            }
+            unknown = sorted(set(body) - allowed)
+            if unknown:
+                raise EngineeringDeliveryConsumerError(f"unsupported review envelope fields: {unknown}")
+            payload = {
+                key: body[key] for key in ("delivery_id", "decision", "reviewed_at", "evidence_refs") if key in body
+            }
+            result = record_engineering_delivery_review(
+                _REPO_ROOT / ".omo",
+                payload,
+                workflow_run_id=str(body.get("workflow_run_id") or ""),
+                actor=str(body.get("actor_ref") or "cockpit-user"),
+            )
+        except (EngineeringDeliveryConsumerError, ValueError, TypeError) as exc:
+            return {
+                "ok": False,
+                "status": "invalid",
+                "error": "engineering_delivery_review_invalid",
+                "message": str(exc),
+                **controls,
+            }
+        except OSError as exc:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "engineering_delivery_review_unavailable",
+                "message": f"人工复核持久化不可用: {type(exc).__name__}",
+                **controls,
+            }
+        return {
+            "ok": True,
+            "status": result["status"],
+            "review": result,
+            **controls,
         }
 
     @router.post("/outcome-feedback")
