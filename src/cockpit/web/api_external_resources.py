@@ -24,7 +24,9 @@ try:
         ExternalResourcePackProposalError,
         record_external_resource_pack_proposal,
     )
-    from omo.omo_external_resources import read_latest_external_resource_observation
+    from omo.omo_external_resources import (
+        read_latest_external_resource_observation,
+    )
     from omo.omo_external_scene_readiness import (
         build_external_scene_trial_promotion_readiness,
     )
@@ -69,17 +71,15 @@ def _load_catalog_module() -> Any:
 try:
     _catalog_module = _load_catalog_module()
     collect_external_resources = _catalog_module.collect_external_resources
-    build_external_resource_directory_snapshot = (
-        _catalog_module.build_external_resource_directory_snapshot
-    )
-    build_external_resource_connection_plan = (
-        _catalog_module.build_external_resource_connection_plan
-    )
+    build_external_resource_directory_snapshot = _catalog_module.build_external_resource_directory_snapshot
+    build_external_resource_connection_plan = _catalog_module.build_external_resource_connection_plan
+    observe_external_resources = _catalog_module.observe_external_resources
     evaluate_external_resources = _catalog_module.evaluate_external_resources
 except Exception as exc:  # Discovery is allowed to degrade independently.
     collect_external_resources = None  # type: ignore[assignment]
     build_external_resource_directory_snapshot = None  # type: ignore[assignment]
     build_external_resource_connection_plan = None  # type: ignore[assignment]
+    observe_external_resources = None  # type: ignore[assignment]
     evaluate_external_resources = None  # type: ignore[assignment]
     _CATALOG_IMPORT_ERROR: Exception | None = exc
 else:
@@ -116,6 +116,7 @@ _SCENE_TRIAL_REVIEW_SCHEMA = "external-scene-trial-review/v1"
 _SCENE_TRIAL_READINESS_SCHEMA = "external-scene-trial-promotion-readiness/v1"
 _CAPABILITY_DIRECTORY_SCHEMA = "external-resource-directory/v1"
 _CONNECTION_PLAN_SCHEMA = "external-resource-connection-plan/v1"
+_REFRESH_STATUS_SCHEMA = "external-resource-refresh-status/v1"
 _REVIEW_SNAPSHOT_FIELDS = (
     "id",
     "provider",
@@ -241,6 +242,75 @@ def _latest_catalog() -> dict[str, Any] | None:
     if catalog.get("activation") != "forbidden":
         return None
     return dict(catalog)
+
+
+def _refresh_status_projection(
+    observation: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    """Expose freshness and the next safe recovery action from OMO state."""
+    base: dict[str, Any] = {
+        "schema": _REFRESH_STATUS_SCHEMA,
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "worker_launch": False,
+        "source": "omo.external_resource_observation",
+    }
+    if observation is None:
+        return {
+            **base,
+            "status": "empty",
+            "freshness": "unknown",
+            "observed_at": None,
+            "recorded_at": None,
+            "observation_id": None,
+            "age_seconds": None,
+            "catalog_ttl_seconds": None,
+            "change_state": None,
+            "review_required": False,
+            "risk_codes": [],
+            "next_action": "运行一次受治理刷新，建立首个外部资源观测基线。",
+        }
+    catalog = observation.get("catalog")
+    if not isinstance(catalog, Mapping):
+        raise ValueError("external resource observation catalog is invalid")
+    observed_at = str(observation.get("observed_at") or catalog.get("observed_at") or "")
+    ttl = int(catalog.get("catalog_ttl_seconds", 3600) or 3600)
+    now = datetime.datetime.now(datetime.UTC)
+    try:
+        observed_datetime = datetime.datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
+        age_seconds = max(0, int((now - observed_datetime).total_seconds()))
+        freshness = "fresh" if age_seconds <= ttl else "stale"
+    except (TypeError, ValueError):
+        age_seconds = None
+        freshness = "invalid"
+    change_summary = observation.get("change_summary")
+    if not isinstance(change_summary, Mapping):
+        change_summary = {}
+    review_required = bool(change_summary.get("review_required", False))
+    risk_codes = sorted({str(code).strip() for code in change_summary.get("risk_codes", []) if str(code).strip()})
+    next_action = (
+        "先完成人工复核，再决定是否进入场景试运行。"
+        if review_required
+        else "运行受治理刷新，确认外部资源健康和目录新鲜度。"
+        if freshness in {"stale", "invalid"}
+        else "当前观测仍在新鲜窗口内，可继续进行只读场景评估。"
+    )
+    return {
+        **base,
+        "status": "attention" if review_required else "ready",
+        "freshness": freshness,
+        "observed_at": observed_at or None,
+        "recorded_at": observation.get("recorded_at"),
+        "observation_id": observation.get("observation_id"),
+        "age_seconds": age_seconds,
+        "catalog_ttl_seconds": ttl,
+        "change_state": observation.get("change_state"),
+        "review_required": review_required,
+        "risk_codes": risk_codes,
+        "next_action": next_action,
+    }
 
 
 def _safe_review_snapshot(value: Any) -> dict[str, Any] | None:
@@ -456,6 +526,100 @@ def _default_trace_id(capability: str, scene_binding: Mapping[str, Any]) -> str:
     return f"cockpit:external-evaluation:{hashlib.sha256(material).hexdigest()[:16]}"
 
 
+@router.get("/refresh-status")
+async def get_external_resource_refresh_status() -> dict[str, Any]:
+    """Expose freshness and recovery state without performing discovery."""
+    if read_latest_external_resource_observation is None:
+        projection = _refresh_status_projection(None)
+        projection.update(
+            {
+                "status": "unavailable",
+                "next_action": "检查 OMO 外部资源观测存储后重试。",
+            }
+        )
+        return {"ok": False, "projection": projection, "external_side_effects": "disabled"}
+    try:
+        projection = _refresh_status_projection(_latest_observation())
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        projection = _refresh_status_projection(None)
+        projection.update(
+            {
+                "status": "unavailable",
+                "error": type(exc).__name__,
+                "next_action": "检查 OMO 外部资源观测格式后重试。",
+            }
+        )
+        return {"ok": False, "projection": projection, "external_side_effects": "disabled"}
+    return {"ok": True, "projection": projection, "external_side_effects": "disabled"}
+
+
+@router.post("/refresh")
+async def refresh_external_resources(request: Request) -> dict[str, Any]:
+    """Run one governed read-only catalog observation and persist its receipts."""
+    boundary = {
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "worker_launch": False,
+        "external_side_effects": "disabled",
+    }
+    if observe_external_resources is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "error": "external_resource_observer_unavailable",
+            **boundary,
+        }
+    try:
+        try:
+            body = await request.json()
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            body = {}
+        if body is None:
+            body = {}
+        if not isinstance(body, dict):
+            raise ValueError("refresh payload must be an object")
+        unsupported = set(body) - {"actor_ref", "source_ref", "run_id", "probe"}
+        if unsupported:
+            raise ValueError(f"refresh payload contains unsupported fields: {sorted(unsupported)}")
+        actor = str(body.get("actor_ref") or "cockpit-user").strip() or "cockpit-user"
+        source_ref = str(body.get("source_ref") or "cockpit:external-resources:refresh").strip()
+        run_id = str(body.get("run_id") or "").strip() or None
+        probe = body.get("probe", True)
+        if not isinstance(probe, bool):
+            raise ValueError("probe must be boolean")
+        result = observe_external_resources(
+            _REPO_ROOT,
+            actor=actor,
+            source_ref=source_ref,
+            run_id=run_id,
+            probe=probe,
+        )
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {
+            "ok": False,
+            "status": "invalid" if isinstance(exc, (ValueError, TypeError)) else "unavailable",
+            "error": "external_resource_refresh_failed",
+            "message": str(exc),
+            **boundary,
+        }
+    observation = result.get("observation")
+    catalog = result.get("catalog")
+    change_summary = observation.get("change_summary", {}) if isinstance(observation, Mapping) else {}
+    return {
+        "ok": True,
+        "status": result.get("status", "recorded"),
+        "observation_status": result.get("status", "recorded"),
+        "observation_run_status": result.get("observation_run_status", "recorded"),
+        "observation": observation,
+        "observation_run": result.get("observation_run"),
+        "catalog_summary": catalog.get("summary", {}) if isinstance(catalog, Mapping) else {},
+        "change_summary": change_summary,
+        "persistence": "omo_append_only",
+        **boundary,
+    }
+
+
 @router.get("")
 async def get_external_resources() -> dict[str, Any]:
     """Expose a governed observation, or a safe discovery fallback.
@@ -543,10 +707,7 @@ async def get_external_resource_directory() -> dict[str, Any]:
 @router.get("/connection-plan")
 async def get_external_resource_connection_plan() -> dict[str, Any]:
     """Expose evidence gaps for extending external capabilities safely."""
-    if (
-        build_external_resource_directory_snapshot is None
-        or build_external_resource_connection_plan is None
-    ):
+    if build_external_resource_directory_snapshot is None or build_external_resource_connection_plan is None:
         projection = _unavailable_connection_plan_projection(
             "external_resource_connection_plan_unavailable",
             "检查根仓 connection plan builder 后重试。",
@@ -578,11 +739,7 @@ async def get_external_resource_connection_plan() -> dict[str, Any]:
         }
     summary = projection.get("summary") or {}
     status = (
-        "empty"
-        if not summary.get("resource_count")
-        else "attention"
-        if summary.get("blocked_count")
-        else "available"
+        "empty" if not summary.get("resource_count") else "attention" if summary.get("blocked_count") else "available"
     )
     return {
         "ok": True,

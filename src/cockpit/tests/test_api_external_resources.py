@@ -52,16 +52,18 @@ def _evaluation() -> dict:
         },
         "status": "selected",
         "selected_resource_id": "source:test",
-        "candidates": [{
-            "resource_id": "source:test",
-            "capability": "search",
-            "status": "eligible",
-            "reasons": [],
-            "decision_factors": {"health": "healthy"},
-            "rank": [1, "source:test"],
-            "availability": "available",
-            "provenance_ref": "evidence://source/test",
-        }],
+        "candidates": [
+            {
+                "resource_id": "source:test",
+                "capability": "search",
+                "status": "eligible",
+                "reasons": [],
+                "decision_factors": {"health": "healthy"},
+                "rank": [1, "source:test"],
+                "availability": "available",
+                "provenance_ref": "evidence://source/test",
+            }
+        ],
         "reasons": [],
         "summary": {"candidate_count": 1, "eligible_count": 1, "rejected_count": 0, "not_applicable_count": 0},
     }
@@ -151,6 +153,102 @@ def test_external_resources_falls_back_to_safe_discovery(monkeypatch, tmp_path):
     assert response.json()["ok"] is True
     assert response.json()["source"] == "agora.external_resource_discovery"
     assert calls == [(tmp_path, True)]
+
+
+def test_external_resource_refresh_persists_governed_observation_receipts(monkeypatch, tmp_path):
+    calls: list[tuple[object, dict[str, object]]] = []
+
+    def fake_observe(root, **kwargs):
+        calls.append((root, kwargs))
+        return {
+            "schema": "external-resource-observation-result/v1",
+            "status": "recorded",
+            "observation_run_status": "recorded",
+            "catalog": {"summary": {"resource_count": 2}},
+            "observation": {
+                "observation_id": "external-resource-observation:test",
+                "change_summary": {"review_required": False, "risk_codes": []},
+            },
+            "observation_run": {"receipt_id": "external-observation-run:test"},
+        }
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "observe_external_resources", fake_observe)
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/refresh",
+        json={"actor_ref": "human:test", "run_id": "run:test", "probe": True},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["ok"] is True
+    assert payload["persistence"] == "omo_append_only"
+    assert payload["activation"] == "forbidden"
+    assert payload["provider_invocation"] is False
+    assert payload["workflow_run_creation"] is False
+    assert calls == [
+        (
+            tmp_path,
+            {
+                "actor": "human:test",
+                "source_ref": "cockpit:external-resources:refresh",
+                "run_id": "run:test",
+                "probe": True,
+            },
+        )
+    ]
+
+
+def test_external_resource_refresh_rejects_unknown_fields_without_observing(monkeypatch, tmp_path):
+    called = False
+
+    def fail_observe(*_args, **_kwargs):
+        nonlocal called
+        called = True
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "observe_external_resources", fail_observe)
+
+    response = TestClient(_app()).post(
+        "/api/external-resources/refresh",
+        json={"activation": "live"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "invalid"
+    assert response.json()["activation"] == "forbidden"
+    assert called is False
+
+
+def test_external_resource_refresh_status_exposes_stale_recovery_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_external_resources,
+        "read_latest_external_resource_observation",
+        lambda _path: {
+            "schema": "external-resource-observation/v1",
+            "observation_id": "external-resource-observation:stale",
+            "observed_at": "2020-01-01T00:00:00Z",
+            "recorded_at": "2020-01-01T00:00:01Z",
+            "change_state": "unchanged",
+            "change_summary": {"review_required": False, "risk_codes": []},
+            "catalog": {
+                "schema": "external-resource-catalog/v1",
+                "observed_at": "2020-01-01T00:00:00Z",
+                "catalog_ttl_seconds": 3600,
+            },
+        },
+    )
+
+    response = TestClient(_app()).get("/api/external-resources/refresh-status")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["ok"] is True
+    assert payload["projection"]["freshness"] == "stale"
+    assert "受治理刷新" in payload["projection"]["next_action"]
+    assert payload["projection"]["provider_invocation"] is False
 
 
 def test_external_resources_fails_closed_when_discovery_is_unavailable(monkeypatch, tmp_path):
@@ -273,9 +371,7 @@ def test_external_resource_connection_plan_prefers_latest_observed_catalog(monke
     monkeypatch.setattr(
         api_external_resources,
         "collect_external_resources",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(
-            AssertionError("discovery should not run")
-        ),
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("discovery should not run")),
     )
     monkeypatch.setattr(
         api_external_resources,
@@ -357,9 +453,7 @@ def test_external_resource_pack_preflight_is_read_only(monkeypatch, tmp_path):
     monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(api_external_resources, "check_external_resource_pack", fake_check)
 
-    response = TestClient(_app()).post(
-        "/api/external-resources/packs/preflight", json={"pack": _pack()}
-    )
+    response = TestClient(_app()).post("/api/external-resources/packs/preflight", json={"pack": _pack()})
     body = response.json()
 
     assert response.status_code == 200
@@ -400,9 +494,7 @@ def test_external_resource_pack_preflight_exposes_unobserved_catalog_preview(mon
         lambda root, pack: projection,
     )
 
-    response = TestClient(_app()).post(
-        "/api/external-resources/packs/preflight", json={"pack": _pack()}
-    )
+    response = TestClient(_app()).post("/api/external-resources/packs/preflight", json={"pack": _pack()})
 
     assert response.status_code == 200
     body = response.json()
@@ -421,9 +513,7 @@ def test_external_resource_pack_preflight_returns_invalid_without_activation(mon
 
     monkeypatch.setattr(api_external_resources, "check_external_resource_pack", reject)
 
-    response = TestClient(_app()).post(
-        "/api/external-resources/packs/preflight", json={"pack": _pack()}
-    )
+    response = TestClient(_app()).post("/api/external-resources/packs/preflight", json={"pack": _pack()})
     body = response.json()
 
     assert response.status_code == 200
@@ -435,9 +525,7 @@ def test_external_resource_pack_preflight_returns_invalid_without_activation(mon
     assert body["provider_invocation"] is False
 
 
-def test_external_resource_pack_proposal_rechecks_and_persists_only_safe_projection(
-    monkeypatch, tmp_path
-):
+def test_external_resource_pack_proposal_rechecks_and_persists_only_safe_projection(monkeypatch, tmp_path):
     calls: list[dict] = []
     projection = {
         "schema": "external-resource-pack-check/v1",
@@ -527,9 +615,7 @@ def test_external_resource_pack_proposal_does_not_persist_blocked_pack(monkeypat
     assert calls == []
 
 
-def test_external_resource_review_queue_projects_manual_review_delta_without_discovery(
-    monkeypatch, tmp_path
-):
+def test_external_resource_review_queue_projects_manual_review_delta_without_discovery(monkeypatch, tmp_path):
     calls: list[object] = []
     observation = {
         "schema": "external-resource-observation/v1",
@@ -739,9 +825,7 @@ def test_external_scene_trial_readiness_is_read_only_and_preserves_blockers(monk
     )
     monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
 
-    response = TestClient(_app()).get(
-        "/api/external-resources/scene-trials/readiness?scene_id=research-brief"
-    )
+    response = TestClient(_app()).get("/api/external-resources/scene-trials/readiness?scene_id=research-brief")
     body = response.json()
 
     assert response.status_code == 200
@@ -760,13 +844,15 @@ def test_external_resource_evaluation_returns_explainable_read_only_decision(mon
     calls: list[dict] = []
 
     def fake_evaluate(root, snapshot, *, capability, scene_binding, trace_id, now=None):
-        calls.append({
-            "root": root,
-            "snapshot": snapshot,
-            "capability": capability,
-            "scene_binding": scene_binding,
-            "trace_id": trace_id,
-        })
+        calls.append(
+            {
+                "root": root,
+                "snapshot": snapshot,
+                "capability": capability,
+                "scene_binding": scene_binding,
+                "trace_id": trace_id,
+            }
+        )
         return {
             "schema": "external-resource-evaluation/v1",
             "mode": "read_only_evaluation",
@@ -779,7 +865,9 @@ def test_external_resource_evaluation_returns_explainable_read_only_decision(mon
         }
 
     monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
-    monkeypatch.setattr(api_external_resources, "read_latest_external_resource_observation", lambda _path: {"catalog": projection})
+    monkeypatch.setattr(
+        api_external_resources, "read_latest_external_resource_observation", lambda _path: {"catalog": projection}
+    )
     monkeypatch.setattr(api_external_resources, "evaluate_external_resources", fake_evaluate)
 
     response = TestClient(_app()).post(
@@ -832,7 +920,9 @@ def test_external_resource_evaluation_persists_only_when_explicitly_requested(mo
         return {"status": "recorded", "observation": {"observation_id": "observation-1"}}
 
     monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
-    monkeypatch.setattr(api_external_resources, "read_latest_external_resource_observation", lambda _path: {"catalog": _projection()})
+    monkeypatch.setattr(
+        api_external_resources, "read_latest_external_resource_observation", lambda _path: {"catalog": _projection()}
+    )
     monkeypatch.setattr(api_external_resources, "evaluate_external_resources", fake_evaluate)
     monkeypatch.setattr(api_external_resources, "record_external_resource_evaluation", fake_record)
 
@@ -867,9 +957,7 @@ def test_selection_evaluation_projection_is_read_only(monkeypatch, tmp_path):
     monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(api_external_resources, "build_external_resource_selection_dataset", fake_dataset)
 
-    response = TestClient(_app()).get(
-        "/api/external-resources/evaluations/selection?scene_id=research-brief"
-    )
+    response = TestClient(_app()).get("/api/external-resources/evaluations/selection?scene_id=research-brief")
     body = response.json()
 
     assert response.status_code == 200
@@ -884,7 +972,9 @@ def test_selection_policy_proposal_never_applies_policy(monkeypatch, tmp_path):
     proposal = {"proposal_id": "proposal-1", "status": "proposal_only", "not_applied": True}
 
     monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
-    monkeypatch.setattr(api_external_resources, "build_external_resource_selection_dataset", lambda *_args, **_kwargs: dataset)
+    monkeypatch.setattr(
+        api_external_resources, "build_external_resource_selection_dataset", lambda *_args, **_kwargs: dataset
+    )
     monkeypatch.setattr(api_external_resources, "propose_selection_policy_feedback", lambda *_args, **_kwargs: proposal)
 
     response = TestClient(_app()).post(
