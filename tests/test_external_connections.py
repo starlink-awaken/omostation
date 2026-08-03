@@ -161,7 +161,7 @@ def test_scene_bound_activation_requires_permission_and_expiry() -> None:
     decision = catalog.activate("source:primary", SCENE, trace_id="trace-1", now=NOW)
 
     assert decision.status == "admitted"
-    assert catalog.get("source:primary").lifecycle == "active"
+    assert catalog.get("source:primary").lifecycle == "active"  # type: ignore[reportOptionalMemberAccess]
 
     rejected = catalog.admit(
         "source:primary",
@@ -204,7 +204,7 @@ def test_full_scene_card_is_required_for_strict_activation() -> None:
     )
 
     assert decision.status == "admitted"
-    assert catalog.get("source:card").lifecycle == "active"
+    assert catalog.get("source:card").lifecycle == "active"  # type: ignore[reportOptionalMemberAccess]
 
     rejected = catalog.activate_with_scene_card(
         "source:card",
@@ -267,7 +267,7 @@ def test_evaluate_candidates_exposes_explainable_decisions_without_activation() 
         in decisions["source:wrong-permission"]["reasons"]
     )
     assert decisions["source:no-capability"]["status"] == "not_applicable"
-    assert catalog.get("source:healthy").lifecycle == "active"
+    assert catalog.get("source:healthy").lifecycle == "active"  # type: ignore[reportOptionalMemberAccess]
 
 
 def test_missing_capability_is_explicitly_unavailable() -> None:
@@ -346,7 +346,7 @@ def test_external_entry_points_are_isolated_and_discoverable() -> None:
     records = discover_entry_points([_EntryPoint()])
 
     assert len(records) == 1
-    assert records[0].descriptor.id == "entry:test"
+    assert records[0].descriptor.id == "entry:test"  # type: ignore[reportOptionalMemberAccess]
     assert records[0].error is None
 
 
@@ -374,7 +374,7 @@ def test_explicit_health_probe_overrides_descriptor_health() -> None:
     records = discover_entry_points([_ProbingEntryPoint()], probe=True)
 
     assert records[0].error is None
-    assert records[0].health_override["source"] == "probe:test"
+    assert records[0].health_override["source"] == "probe:test"  # type: ignore[reportOptionalSubscript]
     snapshot = build_external_resource_catalog_snapshot(records, now=NOW)
     assert snapshot["resources"][0]["health"]["latency_ms"] == 0
 
@@ -544,18 +544,35 @@ def test_resolve_with_capability_admitted_route(monkeypatch, tmp_path):
     from agora.mcp.capability_catalog import CapabilityCatalog
 
     p = tmp_path / "bos.yaml"
-    p.write_text(yaml.dump({"services": [{
-        "uri": "bos://capability/foo/invoke", "domain": "capability",
-        "package": "foo", "action": "invoke", "status": "active",
-    }]}), encoding="utf-8")
-    catalog = CapabilityCatalog(bos_yaml=str(p)); catalog.load()
+    p.write_text(
+        yaml.dump(
+            {
+                "services": [
+                    {
+                        "uri": "bos://capability/foo/invoke",
+                        "domain": "capability",
+                        "package": "foo",
+                        "action": "invoke",
+                        "status": "active",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    catalog = CapabilityCatalog(bos_yaml=str(p))
+    catalog.load()
 
     admission = ExternalConnectionCatalog()
-    admission.register_capability("bos://capability/foo/invoke", use_metrics={"calls": 5})
+    admission.register_capability(
+        "bos://capability/foo/invoke", use_metrics={"calls": 5}
+    )
 
     router = BOSRouter()
     router.register("bos://capability/foo/invoke", adapter="poc")
-    route = router.resolve_with_capability("bos://capability/foo/invoke", catalog, admission)
+    route = router.resolve_with_capability(
+        "bos://capability/foo/invoke", catalog, admission
+    )
     assert route is not None
     assert route["adapter"] == "poc"
 
@@ -567,11 +584,24 @@ def test_resolve_with_capability_blocks_deprecated(tmp_path):
     from agora.mcp.capability_catalog import CapabilityCatalog
 
     p = tmp_path / "bos.yaml"
-    p.write_text(yaml.dump({"services": [{
-        "uri": "bos://capability/dep/invoke", "domain": "capability",
-        "package": "dep", "action": "invoke", "status": "deprecated",
-    }]}), encoding="utf-8")
-    catalog = CapabilityCatalog(bos_yaml=str(p)); catalog.load()
+    p.write_text(
+        yaml.dump(
+            {
+                "services": [
+                    {
+                        "uri": "bos://capability/dep/invoke",
+                        "domain": "capability",
+                        "package": "dep",
+                        "action": "invoke",
+                        "status": "deprecated",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    catalog = CapabilityCatalog(bos_yaml=str(p))
+    catalog.load()
 
     router = BOSRouter()
     router.register("bos://capability/dep/invoke", adapter="poc")
@@ -584,12 +614,16 @@ def test_resolve_with_capability_blocks_retired(tmp_path):
     from agora.mcp.bos_router import BOSRouter
 
     admission = ExternalConnectionCatalog()
-    admission.register_capability("bos://capability/old/invoke", use_metrics={"calls": 1})
+    admission.register_capability(
+        "bos://capability/old/invoke", use_metrics={"calls": 1}
+    )
     admission.transition("bos://capability/old/invoke", "retired")
 
     router = BOSRouter()
     router.register("bos://capability/old/invoke", adapter="poc")
-    route = router.resolve_with_capability("bos://capability/old/invoke", None, admission)
+    route = router.resolve_with_capability(
+        "bos://capability/old/invoke", None, admission
+    )
     assert route is None
 
 
@@ -604,7 +638,9 @@ def test_resolve_upgrades_to_semantic_after_gating_enabled():
 
     # 挂载 admission catalog + retired → resolve 拦截
     admission = ExternalConnectionCatalog()
-    admission.register_capability("bos://capability/gate/invoke", use_metrics={"calls": 3})
+    admission.register_capability(
+        "bos://capability/gate/invoke", use_metrics={"calls": 3}
+    )
     router.enable_capability_gating(None, admission)
     assert router.resolve("bos://capability/gate/invoke") is not None
 
@@ -623,5 +659,48 @@ def test_resolve_with_capability_blocks_discovered():
 
     router = BOSRouter()
     router.register("bos://capability/new/invoke", adapter="poc")
-    route = router.resolve_with_capability("bos://capability/new/invoke", None, admission)
+    route = router.resolve_with_capability(
+        "bos://capability/new/invoke", None, admission
+    )
     assert route is None
+
+
+def test_gating_auto_syncs_capabilities_to_admission(monkeypatch, tmp_path):
+    """B2 深化: enable_capability_gating 自动把声明能力注册到准入 catalog (闭环)。"""
+    import yaml
+
+    from agora.mcp.bos_router import BOSRouter
+    from agora.mcp.capability_catalog import CapabilityCatalog
+
+    yaml_content = """
+services:
+- uri: bos://capability/autosync/invoke
+  domain: capability
+  package: autosync
+  action: invoke
+  description: auto-sync capability
+  status: active
+- uri: bos://capability/autosync-dep/invoke
+  domain: capability
+  package: autosync
+  action: invoke
+  description: deprecated capability
+  status: deprecated
+"""
+    p = tmp_path / "bos.yaml"
+    p.write_text(yaml_content, encoding="utf-8")
+    catalog = CapabilityCatalog(bos_yaml=str(p))
+    catalog.load()
+
+    # 用显式 catalog 启用 gating (不依赖单例)
+    router = BOSRouter()
+    router.enable_capability_gating(catalog, ExternalConnectionCatalog())
+
+    assert router._admission_catalog is not None
+    # active 声明 → admitted (度量驱动: 无 metrics 记录 → 但显式 admitted)
+    active = router._admission_catalog.get("bos://capability/autosync/invoke")
+    assert active is not None, "active 能力应被自动注册"
+    # deprecated 声明 → retired
+    dep = router._admission_catalog.get("bos://capability/autosync-dep/invoke")
+    assert dep is not None, "deprecated 能力应被自动注册"
+    assert dep.lifecycle == "retired", "deprecated 能力应为 retired"

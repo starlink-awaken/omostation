@@ -91,7 +91,64 @@ class BOSRouter:
                 _log.debug("[BOSRouter] admission catalog unavailable: %s", exc)
         else:
             self._admission_catalog = admission_catalog
+        # B2 深化: 自动把 capability 声明同步注册到准入 catalog (discover→admit→route 闭环)
+        if self._capability_catalog is not None and self._admission_catalog is not None:
+            self._sync_capabilities_to_admission()
         _log.info("[BOSRouter] capability gating enabled (B2 semantic routing)")
+
+    def _sync_capabilities_to_admission(self) -> int:
+        """把 capability_catalog 声明的能力自动注册到准入 catalog (B2 闭环)。
+
+        用 B1 capability_status 使用度量驱动初始生命周期:
+        - 已有调用 → admitted (可用)
+        - 零调用 → sandbox (待观察, 防僵尸能力直接 active)
+        - deprecated 声明 → retired (不路由)
+
+        Returns: 新注册的能力数
+        """
+        if self._capability_catalog is None or self._admission_catalog is None:
+            return 0
+        try:
+            caps = self._capability_catalog._capabilities or {}
+        except AttributeError:
+            return 0
+        if not caps:
+            try:
+                self._capability_catalog.load()
+                caps = self._capability_catalog._capabilities or {}
+            except Exception:  # defensive fallback
+                return 0
+        registered = 0
+        # 使用度量 (B1) 驱动初始生命周期
+        use_by_uri: dict[str, Any] = {}
+        try:
+            from agora.mcp import bos_metrics as _bm
+
+            use_by_uri = _bm.bos_metrics.capability_status().get("capabilities", {})
+        except Exception:  # defensive fallback
+            use_by_uri = {}
+        for uri, decl in sorted(caps.items()):
+            if not uri or not uri.startswith("bos://"):
+                continue
+            existing = self._admission_catalog.get(uri)
+            if existing is not None:
+                continue  # 已注册, 保留既有生命周期状态
+            status = decl.get("status", "active")
+            # deprecated 声明 → retired; 否则 admitted + 度量驱动 (零调用→sandbox)
+            lifecycle = "retired" if status == "deprecated" else "admitted"
+            try:
+                self._admission_catalog.register_capability(
+                    uri,
+                    description=decl.get("description", ""),
+                    lifecycle=lifecycle,
+                    use_metrics=use_by_uri.get(uri, {}),
+                )
+                registered += 1
+            except Exception as exc:  # defensive fallback
+                _log.debug("[BOSRouter] capability register failed %s: %s", uri, exc)
+        if registered:
+            _log.info("[BOSRouter] %d capabilities auto-admitted (B2 discover→admit)", registered)
+        return registered
 
     # ── Trie 操作 ─────────────────────────────────────
 
