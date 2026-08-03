@@ -99,7 +99,7 @@ def _get_known_services() -> dict[str, dict[str, Any]]:
     """Merge L0 registry entries with static KNOWN_SERVICES (L0 wins)."""
     if _HAVE_L0_LOADER:
         try:
-            l0_known = _l0_load_known()
+            l0_known = _l0_load_known()  # type: ignore[reportPossiblyUnboundVariable]
             if l0_known:
                 merged = dict(_KNOWN_FALLBACK)
                 merged.update(l0_known)

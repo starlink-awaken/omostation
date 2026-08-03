@@ -47,7 +47,7 @@ def http_main() -> None:
             )
 
     async def tool_call_endpoint(request: Request):
-        from fastmcp.server.dependencies import _current_http_request
+        from fastmcp.server.dependencies import _current_http_request  # type: ignore[reportPrivateImportUsage]
 
         # FastMCP dependency injection looks at _current_http_request to find the HTTP request
         token = _current_http_request.set(request)

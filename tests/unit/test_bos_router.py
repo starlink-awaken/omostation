@@ -43,8 +43,8 @@ class TestBOSRouterRegister:
         router = BOSRouter()
         router.register("bos://memory/kos", adapter="poc")
         route = router._routes.get("bos://memory/kos/")
-        assert route[0]["config"] == {}
-        assert route[0]["admission"]["status"] == "admitted"
+        assert route[0]["config"] == {}  # type: ignore[reportOptionalSubscript]
+        assert route[0]["admission"]["status"] == "admitted"  # type: ignore[reportOptionalSubscript]
 
     def test_register_duplicate_skips(self):
         """重复注册同一 prefix 应跳过并记录 warning。"""
@@ -52,13 +52,17 @@ class TestBOSRouterRegister:
         router.register("bos://memory/kos", adapter="poc")
         router.register("bos://memory/kos", adapter="proxy")  # duplicate
         route = router._routes.get("bos://memory/kos/")
-        assert route[0]["adapter"] == "poc"  # 仍然保留第一次的
+        assert (
+            route[0]["adapter"] == "poc"  # type: ignore[reportOptionalSubscript]
+        )  # 仍然保留第一次的  # type: ignore[reportOptionalSubscript]
 
     def test_register_rejects_without_admission_and_keeps_route_absent(self):
-        router = BOSRouter(admission_evaluator=lambda _request: {
-            "status": "rejected",
-            "reasons": ["provider_unavailable"],
-        })
+        router = BOSRouter(
+            admission_evaluator=lambda _request: {
+                "status": "rejected",
+                "reasons": ["provider_unavailable"],
+            }
+        )
 
         registered = router.register(
             "bos://external/provider/search",
@@ -113,18 +117,23 @@ class TestBOSRouterRegister:
         ]
 
     def test_register_rejects_unsupported_admission_metadata(self):
-        router = BOSRouter(admission_evaluator=lambda _request: {
-            "status": "admitted",
-        })
+        router = BOSRouter(
+            admission_evaluator=lambda _request: {
+                "status": "admitted",
+            }
+        )
 
-        assert router.register(
-            "bos://external/provider/search",
-            adapter="proxy",
-            config={
-                "domain": "external",
-                "admission": {"access_token": "must-not-land"},
-            },
-        ) is False
+        assert (
+            router.register(
+                "bos://external/provider/search",
+                adapter="proxy",
+                config={
+                    "domain": "external",
+                    "admission": {"access_token": "must-not-land"},
+                },
+            )
+            is False
+        )
         assert router.resolve("bos://external/provider/search") is None
 
     def test_default_router_fails_closed_when_provider_is_missing(self, monkeypatch):
@@ -141,15 +150,19 @@ class TestBOSRouterRegister:
         reset_admission_provider_cache()
 
         router = BOSRouter()
-        assert router.register("bos://external/provider/search", adapter="proxy") is False
+        assert (
+            router.register("bos://external/provider/search", adapter="proxy") is False
+        )
         assert router.count() == 0
         assert router.admission_rejections()[0]["reasons"]
 
     def test_seed_count_excludes_rejected_routes(self):
-        router = BOSRouter(admission_evaluator=lambda _request: {
-            "status": "rejected",
-            "reasons": ["denied"],
-        })
+        router = BOSRouter(
+            admission_evaluator=lambda _request: {
+                "status": "rejected",
+                "reasons": ["denied"],
+            }
+        )
 
         count = router.seed_from_poc(
             [{"uri": "bos://external/provider/search", "domain": "external"}]

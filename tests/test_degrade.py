@@ -65,11 +65,11 @@ def sample_services() -> list[dict]:
 
 
 @pytest.fixture
-def seeded_cache(sample_services) -> None:
+def seeded_cache(sample_services) -> None:  # type: ignore[reportInvalidTypeForm]
     """Seed the cache with sample services before each test."""
     clear_service_cache()
     save_service_cache(sample_services)
-    yield
+    yield  # type: ignore[reportReturnType]
     clear_service_cache()
 
 
@@ -89,7 +89,7 @@ def cleanup_test_state():
     yield
     clear_service_cache()
     try:
-        from agent_runtime.tools import reset_agora_degrade_state
+        from agent_runtime.tools import reset_agora_degrade_state  # type: ignore[reportMissingImports]
 
         reset_agora_degrade_state()
     except ImportError:
@@ -210,8 +210,8 @@ class TestRouterCacheFallback:
             health_endpoint="http://localhost:8765/health",
             port=8765,
         )
-        router.registry.list_all.return_value = [svc]
-        router.registry.get.return_value = svc
+        router.registry.list_all.return_value = [svc]  # type: ignore[reportAttributeAccessIssue]
+        router.registry.get.return_value = svc  # type: ignore[reportAttributeAccessIssue]
 
         assert router.persist_cache() is True
         loaded = load_service_cache()

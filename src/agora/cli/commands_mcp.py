@@ -35,8 +35,8 @@ def cmd_completion(args):
 
     parser = build_parser()
     cmds = []
-    for action in parser._subparsers._group_actions:
-        for choice in action.choices:
+    for action in parser._subparsers._group_actions:  # type: ignore[reportOptionalMemberAccess]
+        for choice in action.choices:  # type: ignore[reportOptionalIterable]
             cmds.append(choice)
     cmd_str = " ".join(sorted(cmds))
 

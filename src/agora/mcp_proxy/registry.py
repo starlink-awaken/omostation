@@ -409,7 +409,7 @@ class ProxyRegistry:
                 endpoint = svc_cfg.get("mcp_endpoint", "")
                 if command or endpoint:
                     if lazy:
-                        self.save_config(svc.name, cfg)
+                        self.save_config(svc.name, cfg)  # type: ignore[reportPossiblyUnboundVariable]
                     else:
                         client = create_client(svc.name, endpoint, command, args)
                         await self.register_service(svc.name, client)

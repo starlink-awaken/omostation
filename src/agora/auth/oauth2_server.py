@@ -139,7 +139,7 @@ except ImportError:  # pragma: no cover — optional dependency
     _JWT_AVAILABLE = True
 
 try:
-    from cryptography.fernet import Fernet
+    from cryptography.fernet import Fernet  # type: ignore[reportAssignmentType]
 
     _FERNET_AVAILABLE = True
 except ImportError:  # pragma: no cover — optional dependency

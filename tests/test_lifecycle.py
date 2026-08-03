@@ -101,7 +101,7 @@ def manager(catalog, proxy):
 
 class TestLifecycleInit:
     def test_default_timeout(self):
-        lm = LifecycleManager(catalog=FakeToolCatalog())
+        lm = LifecycleManager(catalog=FakeToolCatalog())  # type: ignore[reportArgumentType]
         assert lm._idle_timeout == 300.0
         assert lm._check_interval == 60.0
         assert lm._idle_watch_task is None
@@ -109,7 +109,9 @@ class TestLifecycleInit:
 
     def test_custom_timeout(self):
         lm = LifecycleManager(
-            catalog=FakeToolCatalog(), idle_timeout=60.0, check_interval=10.0
+            catalog=FakeToolCatalog(),  # type: ignore[reportArgumentType]
+            idle_timeout=60.0,
+            check_interval=10.0,  # type: ignore[reportArgumentType]
         )
         assert lm._idle_timeout == 60.0
         assert lm._check_interval == 10.0
@@ -543,12 +545,12 @@ class TestRetryHandling:
 
     async def test_default_max_load_retries(self):
         """Default max_load_retries should be 2."""
-        lm = LifecycleManager(catalog=FakeToolCatalog())
+        lm = LifecycleManager(catalog=FakeToolCatalog())  # type: ignore[reportArgumentType]
         assert lm._max_load_retries == 2
 
     async def test_custom_max_load_retries(self):
         """max_load_retries should be configurable."""
-        lm = LifecycleManager(catalog=FakeToolCatalog(), max_load_retries=5)
+        lm = LifecycleManager(catalog=FakeToolCatalog(), max_load_retries=5)  # type: ignore[reportArgumentType]
         assert lm._max_load_retries == 5
 
 

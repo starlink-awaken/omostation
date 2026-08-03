@@ -75,7 +75,7 @@ class TestEUMiddleware:
                 def __init__(self):
                     pass
 
-                async def post(self, url, **kw):
+                async def post(self, url, **kw):  # type: ignore[reportIncompatibleMethodOverride]
                     return _MockResp()
 
                 async def aclose(self):
@@ -137,7 +137,7 @@ class TestIdentityPropagation:
             def __init__(self):
                 pass
 
-            async def post(self, url, **kw):
+            async def post(self, url, **kw):  # type: ignore[reportIncompatibleMethodOverride]
                 return _MockResp()
 
             async def aclose(self):
@@ -175,9 +175,9 @@ class TestIdentityPropagation:
 
         assert result["result"] == "data"
         record = captured["record"]
-        assert record.caller_id == "user:alice"
-        assert record.billed_to == "tenant:acme"
-        assert captured["audit"]["actor"] == "user:alice"
+        assert record.caller_id == "user:alice"  # type: ignore[reportAttributeAccessIssue]
+        assert record.billed_to == "tenant:acme"  # type: ignore[reportAttributeAccessIssue]
+        assert captured["audit"]["actor"] == "user:alice"  # type: ignore[reportIndexIssue]
 
         events = bus.get_event_log(5)
         route_event = next(
@@ -277,7 +277,7 @@ class TestIdentityPropagation:
             def __init__(self):
                 pass
 
-            async def post(self, url, **kw):
+            async def post(self, url, **kw):  # type: ignore[reportIncompatibleMethodOverride]
                 return _MockResp()
 
             async def aclose(self):
@@ -346,8 +346,8 @@ class TestAddInstance:
         )
         router._add_instance("api", "http://192.0.2.2:3000")
         svc = registry.get("api")
-        assert len(svc.instances) == 2
-        for inst in svc.instances:
+        assert len(svc.instances) == 2  # type: ignore[reportOptionalMemberAccess]
+        for inst in svc.instances:  # type: ignore[reportOptionalMemberAccess]
             assert inst["protocol"] == "rest"
             assert inst["protocol_config"] == {"method": "POST"}
 
@@ -528,7 +528,7 @@ class TestRouterAdvanced:
             def __init__(self):
                 pass
 
-            async def post(self, url, **kw):
+            async def post(self, url, **kw):  # type: ignore[reportIncompatibleMethodOverride]
                 return _MockResp()
 
             async def aclose(self):
@@ -606,7 +606,7 @@ class TestRouterAdvanced:
             def __init__(self):
                 pass
 
-            async def request(self, method, url, **kw):
+            async def request(self, method, url, **kw):  # type: ignore[reportIncompatibleMethodOverride]
                 return _MockResp()
 
             async def aclose(self):
@@ -666,7 +666,7 @@ class TestRouterAdvanced:
             def __init__(self):
                 pass
 
-            async def request(self, method, url, **kw):
+            async def request(self, method, url, **kw):  # type: ignore[reportIncompatibleMethodOverride]
                 attempts[0] += 1
                 if attempts[0] == 1:
                     req = httpx.Request("GET", url)
@@ -885,7 +885,7 @@ class TestRouterAdvanced:
         i2 = router._next_instance("lb")
         i3 = router._next_instance("lb")
         assert i1 is not None
-        urls = {i1["mcp_endpoint"], i2["mcp_endpoint"], i3["mcp_endpoint"]}
+        urls = {i1["mcp_endpoint"], i2["mcp_endpoint"], i3["mcp_endpoint"]}  # type: ignore[reportOptionalSubscript]
         assert len(urls) == 3
 
     def test_next_instance_unavailable(self):

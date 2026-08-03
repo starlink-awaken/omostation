@@ -958,7 +958,7 @@ def diff_external_resource_catalog_snapshots(
                 "change": "added",
                 "changed_fields": list(_CATALOG_DIFF_FIELDS),
                 "previous": None,
-                "current": _catalog_resource_view(new),
+                "current": _catalog_resource_view(new),  # type: ignore[reportArgumentType]
             }
             item.update(_classify_catalog_change("added", item["changed_fields"]))
             changes.append(item)
@@ -1048,7 +1048,7 @@ def discover_entry_points(
         entry_points = (
             available.select(group=group)
             if hasattr(available, "select")
-            else available.get(group, [])
+            else available.get(group, [])  # type: ignore[reportAttributeAccessIssue]
         )
     records: list[DiscoveryRecord] = []
     for entry_point in entry_points:
@@ -1397,7 +1397,7 @@ class ExternalConnectionCatalog:
             _, selected, _ = max(eligible, key=lambda item: item[0])
             selected_resource_id = selected.id
         evaluation_status = "selected" if selected_resource_id else "unavailable"
-        reasons = () if selected_resource_id else ("no_eligible_candidate", *rejected)
+        reasons = () if selected_resource_id else ("no_eligible_candidate", *rejected)  # type: ignore[reportAssignmentType]
         return ResourceEvaluation(
             capability=requested_capability,
             trace_id=trace_id,
@@ -1563,10 +1563,10 @@ class ExternalConnectionCatalog:
         return {
             "health": ExternalConnectionCatalog._health_status(health),
             "permission": 1 if resource.permission_ref == scene.permission_ref else 0,
-            "trust": float(metrics.get("trust", 0.0) or 0.0),
-            "freshness": float(metrics.get("freshness", 0.0) or 0.0),
-            "cost": float(metrics.get("cost", 0.0) or 0.0),
-            "latency": float(metrics.get("latency", 0.0) or 0.0),
+            "trust": float(metrics.get("trust", 0.0) or 0.0),  # type: ignore[reportOptionalMemberAccess]
+            "freshness": float(metrics.get("freshness", 0.0) or 0.0),  # type: ignore[reportOptionalMemberAccess]
+            "cost": float(metrics.get("cost", 0.0) or 0.0),  # type: ignore[reportOptionalMemberAccess]
+            "latency": float(metrics.get("latency", 0.0) or 0.0),  # type: ignore[reportOptionalMemberAccess]
         }
 
     @staticmethod

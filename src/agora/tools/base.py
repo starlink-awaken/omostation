@@ -109,7 +109,7 @@ def _json_object(value: Any) -> JSONDict | None:
     return {str(key): item for key, item in value.items()}
 
 
-def _surface_payload(surface: SurfaceContract) -> dict[str, Any]:
+def _surface_payload(surface: SurfaceContract) -> dict[str, Any]:  # type: ignore[reportInvalidTypeForm]
     """Return a serializable surface snapshot for tool responses."""
     return {"surface": surface.to_dict()}
 
@@ -118,8 +118,8 @@ def _mcp_surface_contract(
     params: JSONDict,
     *,
     operation: str,
-    default_kind: SurfaceIngressKind,
-) -> SurfaceContract:
+    default_kind: SurfaceIngressKind,  # type: ignore[reportInvalidTypeForm]
+) -> SurfaceContract:  # type: ignore[reportInvalidTypeForm]
     """Construct a typed MCP ingress contract from tool params."""
     control_plane = str(params.get("control_plane", "mcp") or "mcp")
     raw_kind = str(params.get("surface_kind", default_kind.value) or default_kind.value)

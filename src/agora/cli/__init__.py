@@ -12,7 +12,7 @@ def main():
     """Main entry point — build parser, parse args, dispatch."""
     print("⚠️ Agora 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     try:
-        from kairon_observability.tracing import setup_tracing
+        from kairon_observability.tracing import setup_tracing  # type: ignore[reportMissingImports]
 
         setup_tracing("agora-cli")
     except ImportError:

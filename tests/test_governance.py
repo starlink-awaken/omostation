@@ -81,8 +81,8 @@ class TestKeyManager:
     def test_check_scope(self):
         _, secret = self.km.create_key("scoped", ["read"])
         key = self.km.validate(secret)
-        assert self.km.check_scope(key, "read") is True
-        assert self.km.check_scope(key, "write") is False
+        assert self.km.check_scope(key, "read") is True  # type: ignore[reportArgumentType]
+        assert self.km.check_scope(key, "write") is False  # type: ignore[reportArgumentType]
 
 
 class TestQuotaManager:

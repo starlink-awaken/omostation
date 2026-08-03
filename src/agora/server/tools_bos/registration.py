@@ -97,7 +97,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             _duration_ms = int((_time.time() - _t0) * 1000)
             bos_cache.invalidate(uri)
             _bos_post_audit(uri, 200, _duration_ms)
-            _publish_bos_event(_bus_ref, uri, "mutate", "ok", _duration_ms)
+            _publish_bos_event(_bus_ref, uri, "mutate", "ok", _duration_ms)  # type: ignore[reportCallIssue]
             return _ok(
                 {
                     "format_version": FORMAT_VERSION,
@@ -110,7 +110,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         except Exception as e:  # defensive fallback
             _duration_ms = int((_time.time() - _t0) * 1000)
             _bos_post_audit(uri, 500, _duration_ms)
-            _publish_bos_event(_bus_ref, uri, "mutate", "error", _duration_ms)
+            _publish_bos_event(_bus_ref, uri, "mutate", "error", _duration_ms)  # type: ignore[reportCallIssue]
             logger.exception("mutate_resource_failed", uri=uri, action=action)
             return _error(f"Mutation failed: {e}")
 
@@ -163,7 +163,11 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             bos_circuit_breaker.record_success(uri)
             _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
             _publish_bos_event(
-                bus, uri, "resolve", "ok", int((_time.time() - _t0) * 1000)
+                bus,
+                uri,
+                "resolve",
+                "ok",  # type: ignore[reportCallIssue]
+                int((_time.time() - _t0) * 1000),  # type: ignore[reportCallIssue]
             )
             return _ok(
                 {
@@ -179,7 +183,11 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             bos_circuit_breaker.record_failure(uri)
             _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
             _publish_bos_event(
-                bus, uri, "resolve", "error", int((_time.time() - _t0) * 1000)
+                bus,
+                uri,
+                "resolve",
+                "error",  # type: ignore[reportCallIssue]
+                int((_time.time() - _t0) * 1000),  # type: ignore[reportCallIssue]
             )
             logger.exception("resolve_bos_uri_failed", uri=uri)
             return _error(f"BOS URI resolve failed: {e}")
@@ -232,7 +240,11 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 bos_circuit_breaker.record_success(uri)
                 _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
                 _publish_bos_event(
-                    bus, uri, "read", "ok", int((_time.time() - _t0) * 1000)
+                    bus,
+                    uri,
+                    "read",
+                    "ok",  # type: ignore[reportCallIssue]
+                    int((_time.time() - _t0) * 1000),  # type: ignore[reportCallIssue]
                 )
                 return _ok(
                     {
@@ -257,7 +269,11 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     bos_circuit_breaker.record_success(uri)
                     _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
                     _publish_bos_event(
-                        bus, uri, "read", "ok", int((_time.time() - _t0) * 1000)
+                        bus,
+                        uri,
+                        "read",
+                        "ok",  # type: ignore[reportCallIssue]
+                        int((_time.time() - _t0) * 1000),  # type: ignore[reportCallIssue]
                     )
                     return _ok(
                         {
@@ -276,7 +292,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             bos_cache.set(uri, args, result, ttl=_get_cache_ttl(uri))
             bos_circuit_breaker.record_success(uri)
             _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
-            _publish_bos_event(bus, uri, "read", "ok", int((_time.time() - _t0) * 1000))
+            _publish_bos_event(bus, uri, "read", "ok", int((_time.time() - _t0) * 1000))  # type: ignore[reportCallIssue]
             return _ok(
                 {
                     "format_version": FORMAT_VERSION,
@@ -289,7 +305,11 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             bos_circuit_breaker.record_failure(uri)
             _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
             _publish_bos_event(
-                bus, uri, "read", "error", int((_time.time() - _t0) * 1000)
+                bus,
+                uri,
+                "read",
+                "error",  # type: ignore[reportCallIssue]
+                int((_time.time() - _t0) * 1000),  # type: ignore[reportCallIssue]
             )
             logger.exception("read_resource_failed", uri=uri)
             return _error(f"Resource read failed: {e}")

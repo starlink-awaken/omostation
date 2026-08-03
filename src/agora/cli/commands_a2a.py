@@ -16,7 +16,7 @@ def cmd_a2a(args):
     """A2A Task API."""
     registry = get_registry()
     router = Router(registry)
-    from metaos.a2a.task_manager import TaskManager
+    from metaos.a2a.task_manager import TaskManager  # type: ignore[reportMissingImports]
 
     out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:

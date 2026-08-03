@@ -57,17 +57,17 @@ from agora.mcp_tools import (  # type: ignore[import-not-found]
     ToolContext,
     build_default_registry,
     tool_broadcast_event,
-    tool_evolution_status,
-    tool_execution_submit_task,
+    tool_evolution_status,  # type: ignore[reportAttributeAccessIssue]
+    tool_execution_submit_task,  # type: ignore[reportAttributeAccessIssue]
     tool_get_metrics_snapshot,
     tool_get_swarm_health,
     tool_get_system_resources,
     tool_get_task_info,
-    tool_governance_submit_request,
-    tool_memory_query,
+    tool_governance_submit_request,  # type: ignore[reportAttributeAccessIssue]
+    tool_memory_query,  # type: ignore[reportAttributeAccessIssue]
     tool_ping,
     tool_post_result,
-    tool_swarm_dispatch,
+    tool_swarm_dispatch,  # type: ignore[reportAttributeAccessIssue]
 )
 from agora.tools.base import _ParamError  # type: ignore[import-not-found]
 from agora.tools.dt import tool_tasks_list  # type: ignore[import-not-found]
@@ -290,7 +290,7 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def log_message(self, fmt: str, *args: Any) -> None:
+    def log_message(self, fmt: str, *args: Any) -> None:  # type: ignore[reportIncompatibleMethodOverride]
         """Suppress default HTTP access logging (use our logger instead)."""
         _log.debug("[MCPServer] %s", fmt % args)
 

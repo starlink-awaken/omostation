@@ -238,21 +238,21 @@ def install_local_tool(
     description: str = "",
 ) -> dict:
     """包装: agora 进程内 import forge.market.install_local_tool."""
-    from forge.market import install_local_tool as _impl
+    from forge.market import install_local_tool as _impl  # type: ignore[reportMissingImports]
 
     return _impl(name, source_path, bos_uri, description)
 
 
 def remove_tool(name: str) -> bool:
     """包装: agora 进程内 import forge.market.remove_tool."""
-    from forge.market import remove_tool as _impl
+    from forge.market import remove_tool as _impl  # type: ignore[reportMissingImports]
 
     return _impl(name)
 
 
 def list_market_tools() -> list[dict]:
     """包装: 读取注册表."""
-    from forge.market import list_tools as _impl
+    from forge.market import list_tools as _impl  # type: ignore[reportMissingImports]
 
     return _impl()
 

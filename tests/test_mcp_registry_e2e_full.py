@@ -35,14 +35,14 @@ def registry_path() -> str:
 
 
 @pytest.fixture
-def catalog() -> ToolCatalog:
+def catalog() -> ToolCatalog:  # type: ignore[reportInvalidTypeForm]
     c = ToolCatalog(db_path=":memory:")
-    yield c
+    yield c  # type: ignore[reportReturnType]
     c.close()
 
 
 @pytest.fixture
-def catalog_populated(registry_path) -> ToolCatalog:
+def catalog_populated(registry_path) -> ToolCatalog:  # type: ignore[reportInvalidTypeForm]
     """Catalog pre-populated from local registry."""
     import asyncio
 
@@ -50,14 +50,14 @@ def catalog_populated(registry_path) -> ToolCatalog:
     results = asyncio.run(search_registry(f"file://{registry_path}"))
     for svc in results:
         c.add_tool(svc)
-    yield c
+    yield c  # type: ignore[reportReturnType]
     c.close()
 
 
 @pytest.fixture
-def embeddings() -> EmbeddingStore:
+def embeddings() -> EmbeddingStore:  # type: ignore[reportInvalidTypeForm]
     e = EmbeddingStore(db_path=":memory:")
-    yield e
+    yield e  # type: ignore[reportReturnType]
     e.close()
 
 
@@ -74,7 +74,7 @@ def mock_proxy_manager():
 
 
 @pytest.fixture
-def lifecycle(catalog, mock_proxy_manager) -> LifecycleManager:
+def lifecycle(catalog, mock_proxy_manager) -> LifecycleManager:  # type: ignore[reportInvalidTypeForm]
     lm = LifecycleManager(
         catalog=catalog,
         proxy_manager=mock_proxy_manager,
@@ -82,7 +82,7 @@ def lifecycle(catalog, mock_proxy_manager) -> LifecycleManager:
         check_interval=600.0,
         max_load_retries=1,
     )
-    yield lm
+    yield lm  # type: ignore[reportReturnType]
 
 
 @pytest.fixture

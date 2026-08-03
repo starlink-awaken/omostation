@@ -719,7 +719,7 @@ For more: https://github.com/starlink-awaken/agora#readme""",
 
     feature.set_defaults(func=run_feature)
     for cmd_name in ("enable", "disable"):
-        feature_sub.choices.get(cmd_name).set_defaults(func=run_feature_cmd)
+        feature_sub.choices.get(cmd_name).set_defaults(func=run_feature_cmd)  # type: ignore[reportOptionalMemberAccess]
     domain.set_defaults(func=run_domain_cmd)
 
     # ═══════════════════════════════════════════════════════════════
@@ -743,7 +743,7 @@ For more: https://github.com/starlink-awaken/agora#readme""",
 
     proxy_group.set_defaults(func=run_proxy_group)
     for cmd_name in ("enable", "disable"):
-        proxy_group_sub.choices.get(cmd_name).set_defaults(func=run_proxy_group_cmd)
+        proxy_group_sub.choices.get(cmd_name).set_defaults(func=run_proxy_group_cmd)  # type: ignore[reportOptionalMemberAccess]
 
     return p
 

@@ -28,7 +28,7 @@ class TestBOSRouter:
         r.register("bos://memory/kos/", "specific")  # longer
 
         route = r.resolve("bos://memory/kos/search")
-        assert route["adapter"] == "specific"
+        assert route["adapter"] == "specific"  # type: ignore[reportOptionalSubscript]
 
     def test_idempotent_register(self):
         from agora.mcp.bos_router import BOSRouter
@@ -37,7 +37,7 @@ class TestBOSRouter:
         r.register("bos://test/", "poc", {"val": 1})
         r.register("bos://test/", "proxy", {"val": 2})
         assert r.count() == 1
-        config = r.resolve("bos://test/action")["config"]
+        config = r.resolve("bos://test/action")["config"]  # type: ignore[reportOptionalSubscript]
         assert config["val"] == 1  # 第一次注册保留
 
     def test_resolve_nonexistent(self):

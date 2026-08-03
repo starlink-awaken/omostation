@@ -106,7 +106,7 @@ class TestInternalTransport:
             return {"answer": "async-ok"}
 
         module = types.ModuleType("test_async_bos_handler")
-        module.handler = handler
+        module.handler = handler  # type: ignore[reportAttributeAccessIssue]
         monkeypatch.setitem(sys.modules, module.__name__, module)
         service = BosService(
             uri="bos://memory/test/async",
@@ -487,7 +487,7 @@ class TestP35W1Respawn:
         uri = "bos://memory/kos/search"
         original_svc = next((s for s in POC_SERVICES if s.uri == uri), None)
         # 确保 spawn (POC_SERVICES 中的 transport 已被 conftest 降级为 stdio)
-        _pool.get_or_spawn(original_svc)
+        _pool.get_or_spawn(original_svc)  # type: ignore[reportArgumentType]
         _pool.seen_uris.add(uri)
         pid1 = _pool.processes[uri].pid
         # kill

@@ -17,7 +17,7 @@ from agora.auth.mcp_auth import MCPAuthError, MCPAuthMiddleware
 
 
 def _mk_ctx() -> AuthContext:
-    return AuthContext(token=None, component=None)
+    return AuthContext(token=None, component=None)  # type: ignore[reportArgumentType]
 
 
 def test_require_api_key_fail_closed_without_key(monkeypatch):

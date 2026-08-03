@@ -628,7 +628,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
             sys.path.insert(0, str(runtime_src))
 
         try:
-            from runtime.arch_health import load_arch_health
+            from runtime.arch_health import load_arch_health  # type: ignore[reportMissingImports]
 
             data = load_arch_health()
             return _ok(

@@ -29,7 +29,7 @@ from agora.mcp.forge_loader import (  # noqa: E402
     list_market_tools,
     remove_tool,
 )
-from forge.market import (  # noqa: E402
+from forge.market import (  # type: ignore[reportMissingImports]  # noqa: E402
     validate_bos_uri,
     validate_tool_name,
 )
@@ -46,7 +46,7 @@ def clean_market(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     fake = tmp_path / "market.json"
     monkeypatch.setattr("agora.mcp.forge_loader.MARKET_REGISTRY", fake)
     # forge.market.install_local_tool 内部用全局 MARKET_REGISTRY
-    import forge.market as _fm
+    import forge.market as _fm  # type: ignore[reportMissingImports]
 
     monkeypatch.setattr(_fm, "MARKET_REGISTRY", fake)
     monkeypatch.setattr(_fm, "CAPS_ROOT", tmp_path)
@@ -321,8 +321,10 @@ class TestW4Integration:
         # W4 验证: POC_SERVICES 注册
         assert any(s.uri == new_uri for s in POC_SERVICES)
         svc = next((s for s in POC_SERVICES if s.uri == new_uri), None)
-        assert svc.transport == "stdio"
-        assert svc.command[0] == "uv"  # 仍是 stdio uv run
+        assert svc.transport == "stdio"  # type: ignore[reportOptionalMemberAccess]
+        assert (
+            svc.command[0] == "uv"  # type: ignore[reportOptionalMemberAccess]
+        )  # 仍是 stdio uv run  # type: ignore[reportOptionalMemberAccess]
 
     def test_dynamic_load_preserves_static_registry(
         self, clean_market: Path, fresh_loader: ForgeLoader

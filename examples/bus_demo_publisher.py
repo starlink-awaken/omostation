@@ -11,8 +11,8 @@ from agora.bus import BusEnvelope, EventType, publish
 def main() -> int:
     for i in range(3):
         env = BusEnvelope(
-            type=EventType.PIPELINE_COMPLETED,
-            source="bus_demo_publisher",
+            type=EventType.PIPELINE_COMPLETED,  # type: ignore[reportCallIssue]
+            source="bus_demo_publisher",  # type: ignore[reportCallIssue]
             payload={"iteration": i, "uuid": str(uuid.uuid4())},
             trace_id=f"demo-trace-{i}",
         )
