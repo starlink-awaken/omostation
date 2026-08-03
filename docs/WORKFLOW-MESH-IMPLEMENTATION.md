@@ -1038,6 +1038,23 @@ OCR、prompt、模型自由文本或凭据。报告固定带有 `activation=forb
 本阶段补齐了 M6 的“可重复评测报告”工程能力，但没有伪造真实业务评测集。下一阶段的唯一业务闸门仍是：由真实低风险消费者
 连续产生 receipt 和 outcome feedback，经过双人标注与 adjudication 后形成脱敏 manifest，再以该 manifest 执行影子评测并进入人工上线评审。
 
+### 7.3.31 Phase 64 工程交付真实元数据消费者
+
+Phase 64 把 `engineering-delivery` 场景从“只有场景卡和测试 dogfood”推进到一个可实际消费真实仓库/PR/CI 元数据的
+proposal-only broker。OMO 新增 `engineering-delivery-consumption/v1`，通过 `omo external-resources consume-engineering-delivery`
+接收已合并交付摘要（包括请求时间与合并时间），并要求绑定一个已经成功的、带有 `scene_binding` 的 WorkflowRun；它不会从 PR URL、commit SHA 或静态
+fixture 伪造运行记录。
+
+消费者复用现有 `external-connection-receipt/v1` 和 `outcome-feedback/v1` broker：先把合并交付摘要的 SHA-256 和证据引用写入
+`EvidenceRecorded`，再记录 `reviewed`/`adopted` 等消费状态。为满足 Workflow Mesh 的事件顺序，消费者必须在
+`WorkflowVerified`/`PRMerged`/`WorkflowClosed` 之前运行；已进入后续状态的重试只有在同一 receipt 已存在时才允许幂等通过。
+输入层拒绝原文、自由内容、凭据和未知字段，输出固定携带 `proposal_only`、`activation=forbidden`、
+`provider_invocation=false` 和 `automatic_promotion=false`。
+
+这一步形成了“真实仓库元数据消费”证据，但不等同于真实业务 provider 激活，也不等同于真实 OCR/知识图谱消费。下一道业务门仍是：
+责任人确认、连续真实结果反馈、双人标注、adjudication、脱敏 manifest 和人工上线评审；工程交付场景可以作为低风险 dogfood，
+不能替代业务侧正式场景。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
