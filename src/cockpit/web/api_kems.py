@@ -369,7 +369,7 @@ async def review_kems_entity(entity_id: str, request: Request) -> dict[str, Any]
     try:
         _graph_store().review_entity(
             entity_id=entity_id,
-            decision=str(body["decision"]),
+            decision=str(body["decision"]),  # type: ignore[arg-type]
             reviewer=str(body["reviewer"]),
             reason=str(body["reason"]),
             decision_id=str(body["decision_id"]),
@@ -458,9 +458,9 @@ async def evaluate_kems_shadow_forecast(forecast_id: str, request: Request) -> d
             raise KeyError(forecast_id)
         evaluation = evaluator(
             model_id=str(saved["model_id"]),
-            predictions=tuple(float(value) for value in saved["predictions"]),
+            predictions=tuple(float(value) for value in (saved.get("predictions") or [])),  # type: ignore[reportGeneralTypeIssues]
             actual=tuple(float(value) for value in actual),
-            baseline_value=float(saved["baseline_value"]),
+            baseline_value=float(saved["baseline_value"]),  # type: ignore[arg-type]
         )
         persisted = store.record_evaluation(str(body["evaluation_id"]), forecast_id, evaluation)
     except KeyError as exc:
@@ -503,7 +503,7 @@ async def register_kems_evaluation_manifest(request: Request) -> dict[str, Any]:
                     source_sha256=str(sample.get("source_sha256", "")),
                     source_ref=str(sample.get("source_ref", "")),
                     scenario_id=str(sample.get("scenario_id", "")),
-                    split=str(sample.get("split", "test")),
+                    split=str(sample.get("split", "test")),  # type: ignore[arg-type]
                     annotation_status="adjudicated",
                     labels=labels,
                     annotation_version=str(sample.get("annotation_version", "")),
@@ -771,7 +771,7 @@ async def build_kems_adjudicated_manifest(request: Request) -> dict[str, Any]:
                 source_sha256=str(row["source_sha256"]),
                 source_ref=str(row["source_ref"]),
                 scenario_id=str(row["scenario_id"]),
-                split=str(row["split"]),
+                split=str(row["split"]),  # type: ignore[arg-type]
                 annotation_status="adjudicated",
                 labels=row["labels"],
                 annotation_version=str(row["annotation_version"]),

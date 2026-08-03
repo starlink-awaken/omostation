@@ -96,7 +96,7 @@ def test_api_wave2_dashboard_route(monkeypatch):
         from cockpit.dashboard.routes import api_wave2_dashboard
 
         data = asyncio.get_event_loop().run_until_complete(api_wave2_dashboard())
-        assert data["schema"] == "c2g.wave2.dashboard.v1"
+        assert data["schema"] == "c2g.wave2.dashboard.v1"  # type: ignore[index]
         return
     assert res.status_code == 200
     body = res.json()

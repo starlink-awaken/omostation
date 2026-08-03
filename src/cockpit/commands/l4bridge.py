@@ -275,9 +275,9 @@ def cmd_model_driven(args: Namespace) -> int:
 
 def _md_lifecycle(args: Namespace, console) -> int:
     from cockpit.adapters.model_driven import (
-        LifecycleManager,
-        LifecycleStage,
-        TransitionEngine,
+        LifecycleManager,  # pyright: ignore[reportAttributeAccessIssue]
+        LifecycleStage,  # pyright: ignore[reportAttributeAccessIssue]
+        TransitionEngine,  # pyright: ignore[reportAttributeAccessIssue]
     )
 
     mgr = LifecycleManager()
@@ -308,7 +308,7 @@ def _md_lifecycle(args: Namespace, console) -> int:
 
 
 def _md_spec(args: Namespace, console) -> int:
-    from cockpit.adapters.model_driven import SpecManager
+    from cockpit.adapters.model_driven import SpecManager  # pyright: ignore[reportAttributeAccessIssue]
 
     mgr = SpecManager()
     action = getattr(args, "md_action", "list")
@@ -326,7 +326,7 @@ def _md_spec(args: Namespace, console) -> int:
 
 
 def _md_okr(args: Namespace, console) -> int:
-    from cockpit.adapters.model_driven import OKRManager
+    from cockpit.adapters.model_driven import OKRManager  # pyright: ignore[reportAttributeAccessIssue]
 
     mgr = OKRManager()
     action = getattr(args, "md_action", "list")
@@ -344,7 +344,10 @@ def _md_okr(args: Namespace, console) -> int:
 
 
 def _md_derive(args: Namespace, console) -> int:
-    from cockpit.adapters.model_driven import DerivationEngine, load_m1_nodes
+    from cockpit.adapters.model_driven import (
+        DerivationEngine,  # pyright: ignore[reportAttributeAccessIssue]
+        load_m1_nodes,  # pyright: ignore[reportAttributeAccessIssue]
+    )
 
     nodes = load_m1_nodes()
     engine = DerivationEngine()
@@ -358,7 +361,10 @@ def _md_derive(args: Namespace, console) -> int:
 
 
 def _md_pipeline(args: Namespace, console) -> int:
-    from cockpit.adapters.model_driven import PipelinePhase, PipelineTracker
+    from cockpit.adapters.model_driven import (
+        PipelinePhase,  # pyright: ignore[reportAttributeAccessIssue]
+        PipelineTracker,  # pyright: ignore[reportAttributeAccessIssue]
+    )
 
     entity_id = getattr(args, "md_entity", "ecos")
     action = getattr(args, "md_action", "status")

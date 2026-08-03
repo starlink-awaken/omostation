@@ -18,7 +18,7 @@ from textual.message import Message
 from textual.widget import Widget
 from textual.widgets import Input, Label, ListItem, ListView
 
-from cockpit.tui.data_loader import load_research_topics
+from cockpit.tui.data_loader import load_research_topics  # type: ignore[attr-defined]
 
 
 class ResearchListPanel(Widget):
@@ -162,7 +162,7 @@ class ResearchListPanel(Widget):
                 Label(display, classes="topic-name"),
                 Label(meta, classes="topic-meta") if meta else Label(""),
             )
-            item.data = t
+            item.data = t  # type: ignore[attr-defined]
             lv.append(item)
 
     def action_cursor_down(self) -> None:
@@ -189,7 +189,7 @@ class ResearchListPanel(Widget):
     def action_select_topic(self) -> None:
         lv = self.query_one("#topic-list", ListView)
         if lv.highlighted_child and hasattr(lv.highlighted_child, "data"):
-            self.post_message(self.TopicSelected(lv.highlighted_child.data))
+            self.post_message(self.TopicSelected(lv.highlighted_child.data))  # type: ignore[attr-defined]
 
     @on(Input.Changed, "#search-input")
     def on_search_changed(self, event: Input.Changed) -> None:
@@ -205,7 +205,7 @@ class ResearchListPanel(Widget):
     @on(ListView.Selected)
     def on_list_selected(self, event: ListView.Selected) -> None:
         if hasattr(event.item, "data"):
-            self.post_message(self.TopicSelected(event.item.data))
+            self.post_message(self.TopicSelected(event.item.data))  # type: ignore[attr-defined]
 
 
 def _status_icon(status: str) -> str:

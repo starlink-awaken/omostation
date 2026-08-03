@@ -1,3 +1,6 @@
+# mock-heavy test file: monkeypatch assigns untyped attrs, so the attribute rule is disabled here.
+# pyright: reportAttributeAccessIssue=false
+
 """测试零覆盖的 5 个命令：list/export/agent/heatmap/governance。"""
 
 from __future__ import annotations

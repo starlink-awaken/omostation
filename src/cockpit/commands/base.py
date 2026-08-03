@@ -501,7 +501,7 @@ def render_command_result(
     title: str,
     data: Any,
     output_format: str = OutputFormat.TTY,
-    columns: list[tuple[str, str]] | None = None,
+    columns: list[str | tuple[str, str]] | None = None,
     summary: str | None = None,
 ) -> None:
     """标准·优雅多形态命令结果通用输出引擎.

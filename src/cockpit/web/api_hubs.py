@@ -56,7 +56,7 @@ def build_research_hub() -> dict[str, Any]:
             continue
         research_id = record.get("id")
         full_record = (
-            _safe_call(lambda: access.get_research(int(research_id)), record) if research_id is not None else record
+            _safe_call(lambda: access.get_research(int(research_id)), record) if research_id is not None else record  # type: ignore[arg-type]
         )
         full_record = full_record if isinstance(full_record, dict) else record
         follow_ups = full_record.get("follow_ups") or []
@@ -67,7 +67,7 @@ def build_research_hub() -> dict[str, Any]:
 
         dossier = (
             _safe_call(
-                lambda: access.get_research_dossier(int(research_id)),
+                lambda: access.get_research_dossier(int(research_id)),  # type: ignore[arg-type]
                 {},
             )
             if research_id is not None
@@ -80,7 +80,7 @@ def build_research_hub() -> dict[str, Any]:
 
         timeline = (
             _safe_call(
-                lambda: access.get_research_timeline(int(research_id)),
+                lambda: access.get_research_timeline(int(research_id)),  # type: ignore[arg-type]
                 [],
             )
             if research_id is not None

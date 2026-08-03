@@ -192,6 +192,8 @@ def _invoke_kos_search(query: str, limit: int = 10, timeout: float = 60.0) -> li
         _log_kos_skip(f"spawn failed: {type(e).__name__}: {e}")
         return []
 
+    assert proc.stdin is not None and proc.stdout is not None  # Popen with PIPE
+
     try:
         proc.stdin.write(
             json.dumps(
@@ -468,8 +470,8 @@ def _writeback_search_trace(
     hit_summary = _build_hit_summary(merged_results or [], per_zone=3)
 
     try:
-        da._ensure_db()
-        _conn = da._connect()
+        da._ensure_db()  # type: ignore[attr-defined]  # SQLiteDataAccess-specific; protocol omits privates
+        _conn = da._connect()  # type: ignore[attr-defined]
         _rows = _conn.execute(
             "SELECT id, created_at FROM research "
             "WHERE topic LIKE ? AND agent = ? AND created_at > ? "

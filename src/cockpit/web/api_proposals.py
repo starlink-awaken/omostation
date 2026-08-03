@@ -11,10 +11,10 @@ router = APIRouter()
 
 try:
     from cockpit.adapters.omo import (
-        append_hitl_override,
-        approve_hitl_proposal_async,
-        list_hitl_proposals,
-        reject_hitl_proposal,
+        append_hitl_override,  # pyright: ignore[reportAttributeAccessIssue]
+        approve_hitl_proposal_async,  # pyright: ignore[reportAttributeAccessIssue]
+        list_hitl_proposals,  # pyright: ignore[reportAttributeAccessIssue]
+        reject_hitl_proposal,  # pyright: ignore[reportAttributeAccessIssue]
     )
 
     _OMO_IMPORT_ERROR: Exception | None = None
@@ -47,7 +47,7 @@ async def api_list_proposals():
     if unavailable:
         return unavailable
     try:
-        proposals = list_hitl_proposals(WORKSPACE_ROOT / ".omo")
+        proposals = list_hitl_proposals(WORKSPACE_ROOT / ".omo")  # type: ignore[union-attr]
     except Exception:  # defensive fallback
         proposals = []
     return JSONResponse({"status": "ok", "proposals": proposals})
@@ -70,7 +70,7 @@ async def _execute_mutation(proposal: dict) -> bool:
             "amount_usd": 0.10,
             "status": "applied",
         }
-        append_hitl_override(WORKSPACE_ROOT / ".omo", "budget_overrides.jsonl", record)
+        append_hitl_override(WORKSPACE_ROOT / ".omo", "budget_overrides.jsonl", record)  # type: ignore[union-attr]
         return True
     elif p_type == "model_swap":
         record = {
@@ -80,7 +80,7 @@ async def _execute_mutation(proposal: dict) -> bool:
             "target_model": proposal.get("target_model", "claude-3-haiku"),
             "status": "applied",
         }
-        append_hitl_override(WORKSPACE_ROOT / ".omo", "model_overrides.jsonl", record)
+        append_hitl_override(WORKSPACE_ROOT / ".omo", "model_overrides.jsonl", record)  # type: ignore[union-attr]
         return True
     elif p_type == "quota_reset":
         record = {
@@ -90,12 +90,12 @@ async def _execute_mutation(proposal: dict) -> bool:
             "scope": proposal.get("scope", "global"),
             "status": "applied",
         }
-        append_hitl_override(WORKSPACE_ROOT / ".omo", "quota_resets.jsonl", record)
+        append_hitl_override(WORKSPACE_ROOT / ".omo", "quota_resets.jsonl", record)  # type: ignore[union-attr]
         return True
 
     # Plugin Mechanism (BOS URI Hook)
     try:
-        from cockpit.adapters.agora import resolve_bos_uri
+        from cockpit.adapters.agora import resolve_bos_uri  # pyright: ignore[reportAttributeAccessIssue]
 
         res = await resolve_bos_uri(f"bos://governance/hitl/execute/{p_type}", proposal)
         if res and res.get("status") == "ok":
@@ -115,7 +115,7 @@ async def api_approve_proposal(proposal_id: str):
 
     _log = logging.getLogger("cockpit.hitl")
 
-    success, error = await approve_hitl_proposal_async(
+    success, error = await approve_hitl_proposal_async(  # type: ignore[union-attr]
         WORKSPACE_ROOT / ".omo",
         proposal_id,
         execute_mutation=_execute_mutation,
@@ -137,7 +137,7 @@ async def api_reject_proposal(proposal_id: str):
     unavailable = _proposals_unavailable()
     if unavailable:
         return unavailable
-    reject_hitl_proposal(WORKSPACE_ROOT / ".omo", proposal_id)
+    reject_hitl_proposal(WORKSPACE_ROOT / ".omo", proposal_id)  # type: ignore[union-attr]
     return JSONResponse({"status": "ok"})
 
 

@@ -255,7 +255,7 @@ async def queue_hitl_proposal_task(proposal_id: str):
     if not re.fullmatch(r"[A-Za-z0-9_.:-]+", proposal_id):
         raise HTTPException(status_code=400, detail="Invalid proposal id")
 
-    from cockpit.adapters.omo import list_hitl_proposals
+    from cockpit.adapters.omo import list_hitl_proposals  # pyright: ignore[reportAttributeAccessIssue]
 
     proposal = next(
         (item for item in list_hitl_proposals(WORKSPACE_DIR / ".omo") if item.get("id") == proposal_id),
@@ -432,7 +432,8 @@ async def queue_research_followup_task(research_id: int):
 
     topic = str(research.get("topic") or f"研究对象 #{research_id}").strip()
     summary = str(research.get("summary") or "").strip()
-    follow_ups = research.get("follow_ups") if isinstance(research.get("follow_ups"), list) else []
+    _fu = research.get("follow_ups")
+    follow_ups = _fu if isinstance(_fu, list) else []
     questions = [str(item.get("question") or item) for item in follow_ups[:5] if isinstance(item, dict) or item]
     task_data = {
         "id": task_id,

@@ -111,7 +111,7 @@ async def api_knowledge_put(request: Request):
         content = body.get("content")
         tags = body.get("tags") or []
 
-        if not all(isinstance(value, str) and value.strip() for value in (slug, title, content)):
+        if not isinstance(slug, str) or not isinstance(title, str) or not isinstance(content, str):
             return JSONResponse({"status": "error", "error": "slug, title, and content are required"}, status_code=400)
         slug = slug.strip()
         title = title.strip()

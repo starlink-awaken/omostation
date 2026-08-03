@@ -434,7 +434,7 @@ async def triage_notification(request: TriageRequest):
         if verdict in ("丢弃", "沉淀", "提醒"):
             votes[verdict] = votes.get(verdict, 0) + 1
 
-    max_verdict = max(votes, key=votes.get) if votes else "未知"
+    max_verdict = max(votes, key=lambda k: votes[k]) if votes else "未知"
     max_count = max(votes.values()) if votes else 0
 
     # Stage 1 一致 → 直接返回
@@ -444,6 +444,7 @@ async def triage_notification(request: TriageRequest):
             agreement=1.0,
             status="共识",
             latency=_time.time() - t0,
+            error=None,
         )
 
     # Stage 1 分歧 → 调 Stage 2
@@ -451,7 +452,7 @@ async def triage_notification(request: TriageRequest):
     if verdict2 in ("丢弃", "沉淀", "提醒"):
         votes[verdict2] = votes.get(verdict2, 0) + 1
 
-    max_verdict = max(votes, key=votes.get) if votes else "未知"
+    max_verdict = max(votes, key=lambda k: votes[k]) if votes else "未知"
     max_count = max(votes.values()) if votes else 0
     agreement = max_count / 3
 
@@ -462,4 +463,5 @@ async def triage_notification(request: TriageRequest):
         agreement=agreement,
         status=status,
         latency=_time.time() - t0,
+        error=None,
     )

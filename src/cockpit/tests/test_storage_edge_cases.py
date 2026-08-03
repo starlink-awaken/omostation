@@ -1,3 +1,6 @@
+# mock-heavy test file: monkeypatch assigns untyped attrs, so the attribute rule is disabled here.
+# pyright: reportAttributeAccessIssue=false
+
 """storage 模块边缘情况测试 — not-found 分支、空值、ALTER TABLE 迁移。"""
 
 from __future__ import annotations

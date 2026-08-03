@@ -1,3 +1,6 @@
+# mock-heavy test file: monkeypatch assigns untyped attrs, so the attribute rule is disabled here.
+# pyright: reportAttributeAccessIssue=false
+
 """测试追问(--ask)、搜索(--search)、打开(--open)命令的场景。
 
 场景覆盖：

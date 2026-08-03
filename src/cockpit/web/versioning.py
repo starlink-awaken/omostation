@@ -212,7 +212,7 @@ def _iter_effective_routes(app: FastAPI):
     for route in app.routes:
         effective_contexts = getattr(route, "effective_route_contexts", None)
         if callable(effective_contexts):
-            yield from effective_contexts()
+            yield from effective_contexts()  # type: ignore[reportGeneralTypeIssues]
             continue
         nested = getattr(route, "routes", None)
         if nested:
@@ -239,7 +239,7 @@ def register_app_routes(app: FastAPI, default_version: str = "v1") -> int:
         methods = sorted(getattr(route, "methods", set()) or {"GET"})
         business_methods = [method for method in methods if method not in {"HEAD", "OPTIONS"}]
         for method in business_methods:
-            version_manager.register(path, version, endpoint, method=method)
+            version_manager.register(path, version, endpoint, method=method)  # type: ignore[arg-type]
         registered += len(business_methods)
     return registered
 
@@ -259,13 +259,14 @@ def generate_openapi_spec(app: FastAPI) -> dict[str, Any]:
 
     # 从 FastAPI 路由表提取路径
     for route in _iter_effective_routes(app):
-        if hasattr(route, "path") and route.path.startswith("/api/"):
+        route_path = getattr(route, "path", "")
+        if route_path.startswith("/api/"):
             methods = getattr(route, "methods", set()) or set()
-            methods_str = [m.lower() for m in methods if m not in {"HEAD", "OPTIONS"}]
+            methods_str = [m.lower() for m in methods if m not in {"HEAD", "OPTIONS"}]  # type: ignore[union-attr]
             if methods_str:
-                spec["paths"][route.path] = {
+                spec["paths"][route_path] = {
                     m: {
-                        "summary": f"{m.upper()} {route.path}",
+                        "summary": f"{m.upper()} {route_path}",
                         "responses": {"200": {"description": "Success"}},
                         "tags": ["api"],
                     }

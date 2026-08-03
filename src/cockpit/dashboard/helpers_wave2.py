@@ -116,7 +116,8 @@ def enrich_proposals_for_handoff(proposals: list[Any]) -> list[dict[str, Any]]:
         title = str(p.get("title") or "")
         # Prefer stable C2G-FB-* id pattern used by governance_feedback apply
         task_query = f"C2G-FB-{pid}" if pid else (title[:48] or "C2G-FB")
-        suggested = p.get("suggested_task") if isinstance(p.get("suggested_task"), dict) else {}
+        _suggested_raw = p.get("suggested_task")
+        suggested = _suggested_raw if isinstance(_suggested_raw, dict) else {}
         if suggested.get("title"):
             # search TaskCenter by proposed title fragment
             task_query = str(suggested["title"])[:64]

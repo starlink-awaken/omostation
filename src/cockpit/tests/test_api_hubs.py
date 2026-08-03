@@ -48,7 +48,7 @@ class ResearchAccess:
 
 
 def test_research_hub_reads_existing_research_storage(monkeypatch):
-    set_data_access(ResearchAccess())
+    set_data_access(ResearchAccess())  # type: ignore[arg-type]
     payload = build_research_hub()
 
     assert payload["status"] == "ok"
@@ -61,7 +61,7 @@ def test_research_hub_reads_existing_research_storage(monkeypatch):
 
 
 def test_research_detail_includes_timeline_dossier_and_freshness(monkeypatch):
-    set_data_access(ResearchAccess())
+    set_data_access(ResearchAccess())  # type: ignore[arg-type]
 
     payload = build_research_detail(7)
 

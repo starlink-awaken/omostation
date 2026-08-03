@@ -106,7 +106,7 @@ scene_binding:
 def test_delivery_journey_api_endpoints():
     """Test FastAPI endpoints for delivery journey."""
     app = FastAPI()
-    app.include_router(router)
+    app.include_router(router)  # type: ignore[arg-type]
     client = TestClient(app)
 
     res = client.get("/api/delivery-journey?fixture=VERIFIED")

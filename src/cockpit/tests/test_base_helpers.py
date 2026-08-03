@@ -298,7 +298,7 @@ class TestHttpHealth:
                 url="http://localhost:8080/health",
                 code=503,
                 msg="Service Unavailable",
-                hdrs={},
+                hdrs={},  # type: ignore[arg-type]
                 fp=io.BytesIO(b""),
             ),
         ):
@@ -747,7 +747,7 @@ class TestIsoTime:
 
     def test_float_string_input(self):
         """字符串形式的 float 时间戳"""
-        result = _iso_time("946684800.0")
+        result = _iso_time("946684800.0")  # type: ignore[arg-type]
         assert result.endswith("Z")
 
 

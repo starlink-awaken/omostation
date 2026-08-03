@@ -40,7 +40,7 @@ def cmd_debt_score(args: argparse.Namespace) -> int:
         print(f"   有效值: {', '.join(StageType.__args__)}", file=sys.stderr)
         return 1
 
-    result = calculate_score_v2(impact, frequency, cost, stage)
+    result = calculate_score_v2(impact, frequency, cost, stage)  # type: ignore[arg-type]
     data = result.to_dict()
 
     print("📊 债务评分结果:")

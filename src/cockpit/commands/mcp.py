@@ -35,7 +35,7 @@ def cmd_mcp(args: argparse.Namespace) -> int:
         )
         import uvicorn
 
-        uvicorn.run(mcp.sse_app, host="127.0.0.1", port=port, log_level="warning")
+        uvicorn.run(mcp.sse_app, host="127.0.0.1", port=port, log_level="warning")  # type: ignore[union-attr]
     else:
         _get_console().print(
             _panel(
@@ -47,7 +47,7 @@ def cmd_mcp(args: argparse.Namespace) -> int:
                 "yellow",
             )
         )
-        mcp.run(transport="stdio")
+        mcp.run(transport="stdio")  # type: ignore[union-attr]
 
     return 0
 

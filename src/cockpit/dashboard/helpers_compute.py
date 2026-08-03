@@ -263,7 +263,7 @@ def load_compute() -> dict:
 
     available_models_list = []
     for m in healthy_models:
-        model_name = m.get("model_name") if isinstance(m, dict) else str(m)
+        model_name = (m.get("model_name") or "") if isinstance(m, dict) else str(m)
         provider = model_name.split("/")[0] if "/" in model_name else "unknown"
         available_models_list.append(
             {
@@ -276,7 +276,7 @@ def load_compute() -> dict:
             }
         )
     for m in unhealthy_models:
-        model_name = m.get("model_name") if isinstance(m, dict) else str(m)
+        model_name = (m.get("model_name") or "") if isinstance(m, dict) else str(m)
         provider = model_name.split("/")[0] if "/" in model_name else "unknown"
         available_models_list.append(
             {

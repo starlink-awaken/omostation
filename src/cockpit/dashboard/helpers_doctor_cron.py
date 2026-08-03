@@ -68,7 +68,8 @@ def load_doctor_cron_status(
     if not isinstance(snap, dict):
         return {**empty, "status": "error", "error": "latest snapshot not an object"}
 
-    highlights = snap.get("highlights") if isinstance(snap.get("highlights"), dict) else {}
+    _snap_highlights = snap.get("highlights")
+    highlights: dict[str, Any] = _snap_highlights if isinstance(_snap_highlights, dict) else {}
     # recompute streak from history if missing (older files)
     if "path_acl_warn_streak" not in highlights:
         try:
@@ -110,7 +111,8 @@ def load_doctor_cron_status(
                 except json.JSONDecodeError:
                     continue
                 if isinstance(obj, dict):
-                    h = obj.get("highlights") if isinstance(obj.get("highlights"), dict) else {}
+                    _h = obj.get("highlights")
+                    h = _h if isinstance(_h, dict) else {}
                     history_tail.append(
                         {
                             "ts": obj.get("ts"),

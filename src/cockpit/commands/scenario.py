@@ -69,7 +69,7 @@ def _score_text_match(*, query: str, parts: list[str]) -> int:
 
 def _archive_scenario_receipt(result: dict[str, Any]) -> str:
     workspace_root = _workspace_root()
-    from cockpit.adapters.omo import archive_scenario_receipt
+    from cockpit.adapters.omo import archive_scenario_receipt  # pyright: ignore[reportAttributeAccessIssue]
 
     return archive_scenario_receipt(workspace_root / ".omo", result)
 
@@ -298,7 +298,7 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
     try:
         import asyncio
 
-        from cockpit.adapters.agora import resolve_bos_uri
+        from cockpit.adapters.agora import resolve_bos_uri  # pyright: ignore[reportAttributeAccessIssue]
 
         result = asyncio.run(resolve_bos_uri("bos://persona/family-hub/health"))
         if result.get("status") == "ok":

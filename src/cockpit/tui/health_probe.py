@@ -42,9 +42,9 @@ def check_agora_health() -> bool:
 def check_kos_health() -> bool:
     """检测 KOS 是否可以从当前环境读取(通过本地存储库或套接字)."""
     try:
-        from cockpit.storage import Storage
+        from cockpit.storage import get_data_access
 
-        s = Storage()
+        s = get_data_access()
         return s is not None
     except Exception:
         return False

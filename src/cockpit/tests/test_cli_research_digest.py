@@ -1,3 +1,6 @@
+# mock-heavy test file: monkeypatch assigns untyped attrs, so the attribute rule is disabled here.
+# pyright: reportAttributeAccessIssue=false
+
 from __future__ import annotations
 
 import argparse

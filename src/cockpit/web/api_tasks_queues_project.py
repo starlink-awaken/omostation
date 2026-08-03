@@ -702,7 +702,8 @@ async def queue_debt_task(debt_id: str):
     title = str(item.get("title") or debt_id).strip()
     dimension = str(item.get("dimension") or "unknown").strip()
     owner = str(item.get("owner") or "unassigned").strip()
-    evidence_refs = item.get("evidence_refs") if isinstance(item.get("evidence_refs"), list) else []
+    _er = item.get("evidence_refs")
+    evidence_refs = _er if isinstance(_er, list) else []
     source_docs = [str(ref) for ref in evidence_refs if str(ref).strip()] or [f"cockpit:debt:{debt_id}"]
     task_data = {
         "id": task_id,

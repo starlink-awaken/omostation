@@ -146,7 +146,9 @@ async def api_run_pipeline(request: Request):
 
         env = os.environ.copy()
         # Run via agora CLI pipeline command in subprocess to leverage automatic environment load
-        proc = subprocess.run(["agora", "pipeline", name, "--goal", goal], capture_output=True, text=True, env=env)
+        proc = subprocess.run(
+            ["agora", "pipeline", str(name), "--goal", str(goal)], capture_output=True, text=True, env=env
+        )
         if proc.returncode == 0:
             return JSONResponse({"status": "ok", "result": proc.stdout})
         else:

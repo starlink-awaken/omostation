@@ -1,3 +1,6 @@
+# mock-heavy test file: monkeypatch assigns untyped attrs, so the attribute rule is disabled here.
+# pyright: reportAttributeAccessIssue=false
+
 """cockpit_mcp.py — 13 个 MCP 工具函数测试。"""
 
 from __future__ import annotations

@@ -57,9 +57,7 @@ else:
 
 def _load_catalog_module() -> Any:
     module_path = _REPO_ROOT / "bin" / "ssot" / "external-resource-catalog.py"
-    spec = importlib.util.spec_from_file_location(
-        "cockpit_external_resource_catalog_projection", module_path
-    )
+    spec = importlib.util.spec_from_file_location("cockpit_external_resource_catalog_projection", module_path)
     if spec is None or spec.loader is None:
         raise ImportError("external resource catalog projection is unavailable")
     module = importlib.util.module_from_spec(spec)
@@ -86,9 +84,7 @@ else:
 
 def _load_pack_module() -> Any:
     module_path = _REPO_ROOT / "bin" / "ssot" / "external-resource-pack.py"
-    spec = importlib.util.spec_from_file_location(
-        "cockpit_external_resource_pack_projection", module_path
-    )
+    spec = importlib.util.spec_from_file_location("cockpit_external_resource_pack_projection", module_path)
     if spec is None or spec.loader is None:
         raise ImportError("external resource pack checker is unavailable")
     module = importlib.util.module_from_spec(spec)
@@ -219,11 +215,7 @@ def _safe_review_snapshot(value: Any) -> dict[str, Any] | None:
         return None
     if not isinstance(value, Mapping):
         raise ValueError("review snapshot must be an object")
-    return {
-        field: value[field]
-        for field in _REVIEW_SNAPSHOT_FIELDS
-        if field in value
-    }
+    return {field: value[field] for field in _REVIEW_SNAPSHOT_FIELDS if field in value}
 
 
 def _review_queue_projection(observation: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -270,13 +262,7 @@ def _review_queue_projection(observation: Mapping[str, Any] | None) -> dict[str,
     for change in raw_changes:
         if not isinstance(change, Mapping):
             raise ValueError("external resource catalog change is invalid")
-        codes = sorted(
-            {
-                str(code).strip()
-                for code in change.get("risk_codes", [])
-                if str(code).strip()
-            }
-        )
+        codes = sorted({str(code).strip() for code in change.get("risk_codes", []) if str(code).strip()})
         risk_codes.update(codes)
         if not bool(change.get("review_required", False)):
             if change.get("risk_class") == "operational_observation":
@@ -286,11 +272,7 @@ def _review_queue_projection(observation: Mapping[str, Any] | None) -> dict[str,
         if not resource_id:
             raise ValueError("external resource review item is missing id")
         changed_fields = sorted(
-            {
-                str(field).strip()
-                for field in change.get("changed_fields", [])
-                if str(field).strip()
-            }
+            {str(field).strip() for field in change.get("changed_fields", []) if str(field).strip()}
         )
         items.append(
             {
@@ -622,9 +604,7 @@ async def get_external_scene_trial_promotion_readiness(
             **boundary,
         }
     try:
-        projection = build_external_scene_trial_promotion_readiness(
-            _REPO_ROOT / ".omo", scene_id=scene_id
-        )
+        projection = build_external_scene_trial_promotion_readiness(_REPO_ROOT / ".omo", scene_id=scene_id)
     except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
         return {
             "ok": False,
@@ -666,12 +646,9 @@ async def review_external_scene_trial(request: Request) -> dict[str, Any]:
                 "provider_invocation": False,
                 "workflow_run_id": None,
                 "actor": actor,
-                "source_ref": str(
-                    payload.get("source_ref") or "cockpit:external-resources:scene-trial-review"
-                ),
+                "source_ref": str(payload.get("source_ref") or "cockpit:external-resources:scene-trial-review"),
                 "observed_at": str(
-                    payload.get("observed_at")
-                    or datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+                    payload.get("observed_at") or datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
                 ),
             }
         )
@@ -865,9 +842,7 @@ async def evaluate_external_resource_candidates(request: Request) -> dict[str, A
             raise ValueError("capability is required")
         if not isinstance(scene_binding, Mapping):
             raise ValueError("scene_binding must be an object")
-        trace_id = str(body.get("trace_id") or "").strip() or _default_trace_id(
-            capability, scene_binding
-        )
+        trace_id = str(body.get("trace_id") or "").strip() or _default_trace_id(capability, scene_binding)
         projection, source = _resolve_catalog_projection()
         evaluation = evaluate_external_resources(
             _REPO_ROOT,
@@ -907,9 +882,7 @@ async def evaluate_external_resource_candidates(request: Request) -> dict[str, A
         "status": evaluation.get("status", "unavailable"),
         "source": source,
         "evaluation": evaluation,
-        "observation_status": (
-            observation_result["status"] if observation_result else "not_requested"
-        ),
+        "observation_status": (observation_result["status"] if observation_result else "not_requested"),
         "observation_persisted": observation_result is not None,
         "observation": observation_result["observation"] if observation_result else None,
         "activation": "forbidden",
@@ -931,9 +904,7 @@ async def get_external_resource_selection_evaluation(scene_id: str | None = None
             "worker_launch": False,
         }
     try:
-        dataset = build_external_resource_selection_dataset(
-            _REPO_ROOT / ".omo", scene_id=scene_id
-        )
+        dataset = build_external_resource_selection_dataset(_REPO_ROOT / ".omo", scene_id=scene_id)
     except (OSError, RuntimeError, ValueError, TypeError) as exc:
         return {
             "ok": False,
@@ -957,10 +928,7 @@ async def get_external_resource_selection_evaluation(scene_id: str | None = None
 @router.post("/evaluations/proposal")
 async def propose_external_resource_selection_policy(request: Request) -> dict[str, Any]:
     """Evaluate a candidate policy offline; never apply it to routing."""
-    if (
-        build_external_resource_selection_dataset is None
-        or propose_selection_policy_feedback is None
-    ):
+    if build_external_resource_selection_dataset is None or propose_selection_policy_feedback is None:
         return {
             "ok": False,
             "status": "unavailable",
@@ -979,12 +947,8 @@ async def propose_external_resource_selection_policy(request: Request) -> dict[s
         proposal_id = str(body.get("proposal_id") or "").strip()
         if not proposal_id:
             raise ValueError("proposal_id is required")
-        dataset = build_external_resource_selection_dataset(
-            _REPO_ROOT / ".omo", scene_id=body.get("scene_id")
-        )
-        proposal = propose_selection_policy_feedback(
-            dataset, dict(candidate), proposal_id=proposal_id
-        )
+        dataset = build_external_resource_selection_dataset(_REPO_ROOT / ".omo", scene_id=body.get("scene_id"))
+        proposal = propose_selection_policy_feedback(dataset, dict(candidate), proposal_id=proposal_id)
     except (OSError, RuntimeError, ValueError, TypeError) as exc:
         return {
             "ok": False,

@@ -9,6 +9,7 @@ import re
 import subprocess
 from datetime import UTC, datetime
 from hashlib import sha256
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
@@ -155,7 +156,7 @@ async def execute_task_endpoint(task_id: str):
     try:
         from omo.omo_ingress_task_lifecycle import execute_controlled_task
 
-        execute_kwargs: dict[str, object] = {
+        execute_kwargs: dict[str, Any] = {
             "task_id": task_id,
             "actor": "cockpit-task-center",
             "timeout_seconds": timeout_seconds,

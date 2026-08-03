@@ -64,7 +64,7 @@ def recommend_for_context(
         try:
             from cockpit.brain_core import get_preferences
 
-            prefs = get_preferences(user=user, top_n=3)
+            prefs = get_preferences(limit=3)
             if prefs:
                 pref_keywords = " ".join([p["value"] for p in prefs if p.get("value")])
                 if pref_keywords:

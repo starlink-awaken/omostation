@@ -30,7 +30,7 @@ MOF_VALIDATE = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot
 MOF_AUDIT = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-audit.py"
 
 
-def _run_tool(tool_path: Path, args: list = None) -> dict:
+def _run_tool(tool_path: Path, args: list | None = None) -> dict:
     try:
         result = subprocess.run(
             ["python3", str(tool_path)] + (args or []) + ["--json"], capture_output=True, text=True, timeout=30

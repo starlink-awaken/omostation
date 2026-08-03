@@ -38,7 +38,11 @@ def _ttl_cache(seconds: float):
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
 try:
-    from cockpit.adapters.metaos import SEngine, WorkflowPlanner, WorkflowStore
+    from cockpit.adapters.metaos import (
+        SEngine,  # pyright: ignore[reportAttributeAccessIssue]
+        WorkflowPlanner,  # pyright: ignore[reportAttributeAccessIssue]
+        WorkflowStore,  # pyright: ignore[reportAttributeAccessIssue]
+    )
 
     _METAOS_IMPORT_ERROR: Exception | None = None
 except Exception as exc:  # Optional adapter; keep read-only cockpit routes available.
@@ -66,7 +70,7 @@ def _metaos_unavailable() -> JSONResponse | None:
 
 def _get_engine():
     data_dir = str(Path.home() / ".metaos" / "data")
-    return SEngine(data_dir=data_dir)
+    return SEngine(data_dir=data_dir)  # type: ignore[union-attr]
 
 
 @router.post("/plan")
@@ -85,7 +89,7 @@ async def api_metaos_plan(request: Request):
         token = engine.register_h("metaos_system", "MetaOS Planner")
         engine.authenticate(token)
 
-        planner = WorkflowPlanner(engine, use_llm=True)
+        planner = WorkflowPlanner(engine, use_llm=True)  # type: ignore[union-attr]
         wf = planner.plan(task)
 
         # Map to frontend expected WorkflowGraph nodes/edges structure
@@ -109,7 +113,7 @@ async def _async_execute_workflow(task_description: str):
         engine = _get_engine()
         token = engine.register_h("metaos_system", "MetaOS Planner")
         engine.authenticate(token)
-        planner = WorkflowPlanner(engine, use_llm=True)
+        planner = WorkflowPlanner(engine, use_llm=True)  # type: ignore[union-attr]
         wf = planner.plan(task_description)
         await wf.run()
     except Exception as e:  # defensive fallback
@@ -143,7 +147,7 @@ async def api_metaos_workflows():
     if unavailable:
         return unavailable
     try:
-        store = WorkflowStore()
+        store = WorkflowStore()  # type: ignore[union-attr]
         records = store.list_workflows(50)
         return JSONResponse({"status": "ok", "workflows": records})
     except Exception as e:  # defensive fallback
@@ -157,7 +161,7 @@ async def api_metaos_workflow_detail(workflow_id: str):
     if unavailable:
         return unavailable
     try:
-        store = WorkflowStore()
+        store = WorkflowStore()  # type: ignore[union-attr]
         wf_detail = store.get_workflow(workflow_id)
         if not wf_detail:
             return JSONResponse({"status": "error", "error": "Workflow not found"}, status_code=404)
@@ -188,7 +192,7 @@ async def api_metaos_workflow_approve(workflow_id: str):
     if unavailable:
         return unavailable
     try:
-        store = WorkflowStore()
+        store = WorkflowStore()  # type: ignore[union-attr]
         wf_detail = store.get_workflow(workflow_id)
         if not wf_detail:
             return JSONResponse({"status": "error", "error": "Workflow not found"}, status_code=404)

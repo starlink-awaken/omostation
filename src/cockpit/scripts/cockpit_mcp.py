@@ -46,9 +46,9 @@ else:
 # ══════════════════════════════════════════════════════════════
 
 try:
-    from cockpit.storage import DataAccess
+    from cockpit.storage import get_data_access
 
-    _da = DataAccess()
+    _da = get_data_access()
 except Exception:  # defensive fallback
     _da = None  # type: ignore[assignment]
 
@@ -348,10 +348,10 @@ def daily_summary(days: int = 1) -> str:
 
 try:
     from cockpit.adapters.l4_kernel import (  # type: ignore[import-not-found]
-        CardsPlane,
-        DomainRegistry,
-        KemsPlane,
-        load_overrides_from_config,
+        CardsPlane,  # pyright: ignore[reportAttributeAccessIssue]
+        DomainRegistry,  # pyright: ignore[reportAttributeAccessIssue]
+        KemsPlane,  # pyright: ignore[reportAttributeAccessIssue]
+        load_overrides_from_config,  # pyright: ignore[reportAttributeAccessIssue]
     )
 
     _L4_CONFIG_PATH = Path(
@@ -874,7 +874,7 @@ def governance_check(dimension: str = "all") -> str:
         检查结果 JSON
     """
     try:
-        from cockpit.adapters.ecos import GovernanceRegistry
+        from cockpit.adapters.ecos import GovernanceRegistry  # pyright: ignore[reportAttributeAccessIssue]
 
         registry_path = _REPO_ROOT / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
         registry = GovernanceRegistry(registry_path)

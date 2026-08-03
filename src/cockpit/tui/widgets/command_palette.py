@@ -135,7 +135,7 @@ class CommandPalette(Widget):
             row = ListItem(
                 Label(f"[bold cyan]{name}[/]  [dim]—[/]  [dim]{summary}[/]"),
             )
-            row.data = item
+            row.data = item  # type: ignore[attr-defined]
             lv.append(row)
 
     @on(Input.Changed, "#palette-input")
@@ -157,12 +157,12 @@ class CommandPalette(Widget):
         """回车选中当前高亮条目并执行."""
         lv = self.query_one("#palette-list", ListView)
         if lv.highlighted_child and hasattr(lv.highlighted_child, "data"):
-            self._execute(lv.highlighted_child.data)
+            self._execute(lv.highlighted_child.data)  # type: ignore[attr-defined]
 
     @on(ListView.Selected)
     def on_list_selected(self, event: ListView.Selected) -> None:
         if hasattr(event.item, "data"):
-            self._execute(event.item.data)
+            self._execute(event.item.data)  # type: ignore[attr-defined]
 
     def _execute(self, cmd_data: dict) -> None:
         """异步后台执行命令，通知父应用."""

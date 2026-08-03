@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 def load_research_topics() -> list[dict]:
     """加载研究课题列表，供 TUI 列表面板使用."""
     try:
-        from cockpit.storage import Storage
+        from cockpit.storage import get_data_access
 
-        storage = Storage()
+        storage = get_data_access()
         topics = storage.list_research(limit=200, include_archived=True)
         return [_normalize(t) for t in topics]
     except Exception as e:

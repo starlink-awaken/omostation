@@ -19,7 +19,7 @@ def test_capability_health_api_projects_server_owned_agora_evidence(monkeypatch)
 
     monkeypatch.setattr(api_workflow_mesh_operations, "_read_capability_health", fake_health)
     app = FastAPI()
-    app.include_router(api_workflow_mesh_operations.router)
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
 
     response = TestClient(app).get(
         "/api/workflow-mesh/capability-health?required_capabilities=runtime&required_capabilities=ocr"
@@ -50,7 +50,7 @@ def test_capability_health_api_fails_closed_when_agora_is_unavailable(monkeypatc
 
     monkeypatch.setattr(api_workflow_mesh_operations, "_read_capability_health", fail_health)
     app = FastAPI()
-    app.include_router(api_workflow_mesh_operations.router)
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
 
     response = TestClient(app).get("/api/workflow-mesh/capability-health?required_capabilities=runtime")
 
@@ -63,7 +63,7 @@ def test_capability_health_api_fails_closed_when_agora_is_unavailable(monkeypatc
 
 def test_capability_health_api_rejects_empty_capabilities():
     app = FastAPI()
-    app.include_router(api_workflow_mesh_operations.router)
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
 
     response = TestClient(app).get("/api/workflow-mesh/capability-health")
 
@@ -89,7 +89,7 @@ def test_workflow_mesh_operations_api_is_read_only_projection(monkeypatch, tmp_p
     monkeypatch.setattr(api_workflow_mesh_operations, "build_operations_snapshot", fake_build)
 
     app = FastAPI()
-    app.include_router(api_workflow_mesh_operations.router)
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
     response = TestClient(app).get("/api/workflow-mesh/operations?scene_id=engineering-delivery")
 
     assert response.status_code == 200
@@ -102,7 +102,7 @@ def test_workflow_mesh_operations_api_degrades_without_omo(monkeypatch):
     monkeypatch.setattr(api_workflow_mesh_operations, "_OMO_IMPORT_ERROR", ImportError("missing omo"))
 
     app = FastAPI()
-    app.include_router(api_workflow_mesh_operations.router)
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
     response = TestClient(app).get("/api/workflow-mesh/operations")
 
     assert response.status_code == 200
@@ -127,7 +127,7 @@ def test_outcome_feedback_api_forwards_safe_payload_and_actor(monkeypatch, tmp_p
     monkeypatch.setattr(api_workflow_mesh_operations, "record_outcome_feedback", fake_record)
 
     app = FastAPI()
-    app.include_router(api_workflow_mesh_operations.router)
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
     response = TestClient(app).post(
         "/api/workflow-mesh/outcome-feedback",
         json={
@@ -160,7 +160,7 @@ def test_outcome_feedback_api_returns_explicit_invalid_status(monkeypatch, tmp_p
     monkeypatch.setattr(api_workflow_mesh_operations, "record_outcome_feedback", fail_record)
 
     app = FastAPI()
-    app.include_router(api_workflow_mesh_operations.router)
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
     response = TestClient(app).post(
         "/api/workflow-mesh/outcome-feedback",
         json={"workflow_run_id": "run-1"},
@@ -179,7 +179,7 @@ def test_outcome_feedback_api_returns_unavailable_on_persistence_error(monkeypat
     monkeypatch.setattr(api_workflow_mesh_operations, "record_outcome_feedback", fail_record)
 
     app = FastAPI()
-    app.include_router(api_workflow_mesh_operations.router)
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
     response = TestClient(app).post(
         "/api/workflow-mesh/outcome-feedback",
         json={"workflow_run_id": "run-1"},

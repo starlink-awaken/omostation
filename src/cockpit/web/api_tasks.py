@@ -16,6 +16,7 @@ import re
 import subprocess
 from datetime import UTC, datetime
 from hashlib import sha256
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
@@ -173,7 +174,7 @@ async def request_task_workflow(task_id: str, request: Request):
     }
 
 
-async def _workflow_admission_request(request: Request) -> dict[str, object]:
+async def _workflow_admission_request(request: Request) -> dict[str, Any]:
     try:
         body = await request.json()
     except Exception as exc:
@@ -432,8 +433,10 @@ async def create_manual_task(request: Request):
         isinstance(item, str) and item.strip() for item in evidence_required
     ):
         raise HTTPException(status_code=422, detail="evidence_required must be a list[str]")
-    if not isinstance(knowledge_refs, list) or len(knowledge_refs) > 20 or not all(
-        isinstance(item, str) and item.strip() for item in knowledge_refs
+    if (
+        not isinstance(knowledge_refs, list)
+        or len(knowledge_refs) > 20
+        or not all(isinstance(item, str) and item.strip() for item in knowledge_refs)
     ):
         raise HTTPException(status_code=422, detail="knowledge_refs must be a list[str] with at most 20 items")
     knowledge_refs = [item.strip() for item in knowledge_refs]

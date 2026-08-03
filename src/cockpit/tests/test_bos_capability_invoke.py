@@ -26,8 +26,8 @@ def test_match_capability_by_short_name():
             description="skill",
         ),
     ]
-    assert bos_mod._match_capability_service(services, "media-crawler").uri.endswith("/crawl")
-    assert bos_mod._match_capability_service(services, "last30days").uri.endswith("/fetch")
+    assert bos_mod._match_capability_service(services, "media-crawler").uri.endswith("/crawl")  # type: ignore[union-attr]
+    assert bos_mod._match_capability_service(services, "last30days").uri.endswith("/fetch")  # type: ignore[union-attr]
     assert bos_mod._match_capability_service(services, "bos://capability/media-crawler/crawl") is not None
     assert bos_mod._match_capability_service(services, "nope") is None
 

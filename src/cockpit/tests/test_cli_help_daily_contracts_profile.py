@@ -1,3 +1,6 @@
+# mock-heavy test file: monkeypatch assigns untyped attrs, so the attribute rule is disabled here.
+# pyright: reportAttributeAccessIssue=false
+
 """测试剩余 8 个零覆盖命令：help/daily/contracts validate|list|export-*/profile。"""
 
 from __future__ import annotations
