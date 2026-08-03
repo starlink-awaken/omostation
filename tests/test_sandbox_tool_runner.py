@@ -156,6 +156,7 @@ def test_sandbox_tool_rejects_raw_ref_and_missing_capability(tmp_path):
             **no_capability,
             input_ref="artifact://knowledge/demo",
             input_digest="c" * 64,
+            now="2026-08-03T00:00:10Z",
         )
 
 
