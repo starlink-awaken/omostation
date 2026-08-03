@@ -9,6 +9,7 @@ from omo.omo_external_receipt import record_external_receipt
 from omo.outcome_feedback import record_outcome_feedback
 from omo.workflow_eval import (
     build_eval_dataset,
+    build_evaluation_sample_readiness,
     build_external_resource_selection_dataset,
     build_operations_snapshot,
     build_request_eval_dataset,
@@ -233,3 +234,51 @@ def test_selection_dataset_joins_event_receipt_and_feedback_without_promoting_un
     assert policy["success_rate"] == 1.0
     assert proposal["status"] == "proposal_only"
     assert proposal["requires_human_approval"] is True
+
+
+def test_evaluation_sample_readiness_distinguishes_execution_from_full_label():
+    dataset = {
+        "dataset_version": "external-resource-selection-eval/v1",
+        "rows": [
+            {
+                "evaluation_id": "eval-ready",
+                "workflow_run_id": "run-ready",
+                "scene_binding": {"scene_id": "scene"},
+                "join": {"status": "explicit", "receipt_count": 1},
+                "labels": {
+                    "execution_outcome": "success",
+                    "selection_alignment": "aligned",
+                    "consumption_state": "adopted",
+                    "label_quality": "execution_and_consumption",
+                },
+            },
+            {
+                "evaluation_id": "eval-gap",
+                "workflow_run_id": "run-gap",
+                "scene_binding": {"scene_id": "scene"},
+                "join": {"status": "explicit", "receipt_count": 0},
+                "labels": {
+                    "execution_outcome": "success",
+                    "selection_alignment": "missing_receipt",
+                    "consumption_state": "unobserved",
+                    "label_quality": "execution",
+                },
+            },
+        ],
+    }
+
+    readiness = build_evaluation_sample_readiness(dataset)
+
+    assert readiness["schema_version"] == "workflow-mesh-evaluation-readiness/v1"
+    assert readiness["summary"] == {
+        "row_count": 2,
+        "ready_count": 1,
+        "execution_ready_count": 1,
+        "blocked_count": 1,
+        "blockers": {
+            "consumption_feedback_missing": 1,
+            "external_receipt_not_aligned": 1,
+        },
+    }
+    assert readiness["rows"][0]["status"] == "ready"
+    assert readiness["rows"][1]["status"] == "blocked"

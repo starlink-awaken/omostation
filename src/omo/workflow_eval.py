@@ -16,6 +16,7 @@ from .workflow_mesh import WorkflowMeshStore
 OPERATIONS_SCHEMA_VERSION = "workflow-mesh-operations/v1"
 REQUEST_EVAL_SCHEMA_VERSION = "workflow-request-eval/v1"
 SELECTION_EVAL_SCHEMA_VERSION = "external-resource-selection-eval/v1"
+EVALUATION_READINESS_SCHEMA_VERSION = "workflow-mesh-evaluation-readiness/v1"
 
 
 def _duration_seconds(events: list[dict[str, Any]]) -> float | None:
@@ -453,6 +454,94 @@ def build_external_resource_selection_dataset(
     return dataset
 
 
+def build_evaluation_sample_readiness(dataset: dict[str, Any]) -> dict[str, Any]:
+    """Project which event-derived selection rows are ready for real evaluation.
+
+    This is a governance projection, not a second dataset store. It exposes
+    only identifiers, labels, and blockers so operators can close evidence
+    gaps without exporting external content or model inputs.
+    """
+    rows = dataset.get("rows") or []
+    readiness_rows: list[dict[str, Any]] = []
+    blocker_counts: Counter[str] = Counter()
+    for row in rows:
+        labels = row.get("labels") or {}
+        join = row.get("join") or {}
+        blockers: list[str] = []
+        if not row.get("workflow_run_id"):
+            blockers.append("workflow_run_unlinked")
+        if join.get("status") == "ambiguous_trace":
+            blockers.append("trace_join_ambiguous")
+        if not row.get("scene_binding"):
+            blockers.append("scene_binding_missing")
+        if labels.get("execution_outcome") not in {"success", "degraded"}:
+            blockers.append("execution_not_successful")
+        if labels.get("selection_alignment") != "aligned":
+            blockers.append("external_receipt_not_aligned")
+        if labels.get("consumption_state") == "unobserved":
+            blockers.append("consumption_feedback_missing")
+        for blocker in blockers:
+            blocker_counts[blocker] += 1
+
+        execution_ready = not any(
+            blocker in blockers
+            for blocker in (
+                "workflow_run_unlinked",
+                "trace_join_ambiguous",
+                "scene_binding_missing",
+                "execution_not_successful",
+                "external_receipt_not_aligned",
+            )
+        )
+        fully_labeled = execution_ready and "consumption_feedback_missing" not in blockers
+        readiness_rows.append(
+            {
+                "evaluation_id": row.get("evaluation_id"),
+                "workflow_run_id": row.get("workflow_run_id"),
+                "scene_binding": row.get("scene_binding"),
+                "join_status": join.get("status"),
+                "receipt_count": join.get("receipt_count", 0),
+                "execution_outcome": labels.get("execution_outcome"),
+                "selection_alignment": labels.get("selection_alignment"),
+                "consumption_state": labels.get("consumption_state"),
+                "label_quality": labels.get("label_quality"),
+                "status": "ready"
+                if fully_labeled
+                else "execution_ready"
+                if execution_ready
+                else "blocked",
+                "blockers": blockers,
+            }
+        )
+
+    ready_count = sum(item["status"] == "ready" for item in readiness_rows)
+    execution_ready_count = sum(
+        item["status"] in {"ready", "execution_ready"} for item in readiness_rows
+    )
+    return {
+        "schema_version": EVALUATION_READINESS_SCHEMA_VERSION,
+        "status": "observed" if readiness_rows else "not_observed",
+        "source": {
+            "dataset_version": dataset.get("dataset_version"),
+            "kind": "event_derived_projection",
+            "raw_content_policy": "never_read_or_export",
+        },
+        "summary": {
+            "row_count": len(readiness_rows),
+            "ready_count": ready_count,
+            "execution_ready_count": execution_ready_count,
+            "blocked_count": len(readiness_rows) - execution_ready_count,
+            "blockers": dict(sorted(blocker_counts.items())),
+        },
+        "rows": readiness_rows,
+        "next_action": (
+            "review_ready_samples"
+            if ready_count
+            else "close_external_receipt_and_consumption_gaps"
+        ),
+    }
+
+
 def evaluate_selection_policy(
     dataset: dict[str, Any], candidate: dict[str, Any]
 ) -> dict[str, Any]:
@@ -700,6 +789,9 @@ def build_operations_snapshot(
             review_queue.append(item)
 
     request_rows = build_request_eval_dataset(omo_dir)["rows"]
+    selection_dataset = build_external_resource_selection_dataset(
+        omo_dir, scene_id=scene_id
+    )
     if scene_id is not None:
         request_rows = [
             row
@@ -847,6 +939,7 @@ def build_operations_snapshot(
         "review_queue": review_queue,
         "workflow_requests": workflow_requests,
         "consumption": consumption,
+        "evaluation_samples": build_evaluation_sample_readiness(selection_dataset),
         "sandbox_tools": {
             "status": "observed" if sandbox_tool_invocations else "not_observed",
             "activation": "sandbox",
@@ -868,6 +961,7 @@ __all__ = [
     "OPERATIONS_SCHEMA_VERSION",
     "SELECTION_EVAL_SCHEMA_VERSION",
     "build_eval_dataset",
+    "build_evaluation_sample_readiness",
     "build_external_resource_selection_dataset",
     "build_operations_snapshot",
     "build_request_eval_dataset",
