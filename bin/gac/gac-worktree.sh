@@ -354,12 +354,12 @@ except Exception:
     [ ! -d "$sub_wt" ] && { echo "❌ 子模块 worktree 不存在: $sub_wt" >&2; exit 1; }
     new_sha=$(git -C "$sub_wt" rev-parse HEAD 2>/dev/null)
     [ -z "$new_sha" ] && { echo "❌ 无法获取 $sub worktree HEAD" >&2; exit 1; }
-    # PASW: 验证 SHA 在 submodule origin/main 上
-    ( cd "$wt/$sub" && if git branch -r --contains "$new_sha" 2>/dev/null | grep -q "origin/main"; then
-        echo "   ✅ SHA $new_sha 在子模块 origin/main 上 (CI 可达)"
+    # PASW: 验证 SHA 在 submodule remote 上可达 (任意 branch, 不限于 main)
+    ( cd "$wt/$sub" && if git branch -r --contains "$new_sha" 2>/dev/null | grep -q .; then
+        echo "   ✅ SHA $new_sha 在子模块 remote 上 (CI 可达)"
       else
-        echo "   ❌ SHA $new_sha 不在子模块 origin/main 上" >&2
-        echo "   请先合并子模块 PR 到 main, 再运行 bump-pointer" >&2
+        echo "   ❌ SHA $new_sha 不在子模块 remote 上" >&2
+        echo "   请先 push 子模块分支: cd $sub_wt && git push origin HEAD" >&2
         exit 1
       fi )
     cd "$wt"
