@@ -142,6 +142,18 @@ dynamic_discovery:
   provider_method: external_descriptor
   failure_policy: isolate_provider_and_return_error_record
   direct_project_imports: forbidden
+  capability_directory_contract: external-resource-directory/v1
+  capability_directory_builder: bin/ssot/external-resource-catalog.py::build_external_resource_directory_snapshot
+  capability_directory_cli: bin/ssot/external-resource-catalog.py --directory
+  capability_directory_semantics:
+    source: external-resource-catalog/v1
+    purpose: capability_freshness_and_expansion_map
+    activation: forbidden
+    provider_invocation: forbidden
+    workflow_run_creation: forbidden
+    admission_mutation: forbidden
+    required_indexes: [capability_index, kind_index, next_steps]
+    next_step_policy: deterministic_review_or_probe_action
   refresh_contract:
     triggers: [startup, periodic, on_demand, descriptor_change]
     identity_fields: [id, provider, version]

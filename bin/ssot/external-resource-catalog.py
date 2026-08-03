@@ -10,6 +10,7 @@ or accepts credentials.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import os
@@ -22,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 SCHEMA = "external-resource-catalog/v1"
+DIRECTORY_SCHEMA = "external-resource-directory/v1"
 
 
 class ExternalResourceCatalogInputError(ValueError):
@@ -30,6 +32,145 @@ class ExternalResourceCatalogInputError(ValueError):
 
 _OMO_COMMAND_TIMEOUT_SECONDS = 15
 DEFAULT_CATALOG_TTL_SECONDS = 3600
+
+
+def _canonical_digest(value: Mapping[str, Any]) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return f"sha256:{hashlib.sha256(encoded.encode('utf-8')).hexdigest()}"
+
+
+def _directory_next_step(resource: Mapping[str, Any]) -> str:
+    """Return a deterministic expansion action without mutating lifecycle state."""
+    availability = str(resource.get("availability") or "").strip().lower()
+    lifecycle = str(resource.get("lifecycle") or "").strip().lower()
+    mode = str(resource.get("mode") or "").strip().lower()
+    health = resource.get("health")
+    health_status = str(health.get("status") or "").strip().lower() if isinstance(health, Mapping) else ""
+
+    if availability in {"unavailable", "stale"} or health_status in {"unhealthy", "unknown", ""}:
+        return "health_probe"
+    if availability == "proposal_only" or mode == "proposal_only":
+        return "proposal_or_evaluation"
+    if lifecycle == "discovered":
+        return "sandbox"
+    if lifecycle == "sandbox":
+        return "scene_card_and_permission_review"
+    if lifecycle == "admitted":
+        return "activation_review"
+    if lifecycle == "degraded":
+        return "health_recovery_or_quarantine"
+    if lifecycle == "quarantined":
+        return "quarantine_review"
+    if lifecycle == "retired":
+        return "retired"
+    return "route_evaluation"
+
+
+def build_external_resource_directory_snapshot(
+    catalog: Mapping[str, Any], *, now: datetime | None = None
+) -> dict[str, Any]:
+    """Build a capability-oriented, read-only projection from one catalog.
+
+    The catalog remains the discovery truth. This projection only answers which
+    capabilities are represented, their current safe availability, and the next
+    governed expansion step; it never loads providers or changes lifecycle.
+    """
+    if catalog.get("schema") != SCHEMA:
+        raise ExternalResourceCatalogInputError("directory requires an external-resource catalog")
+    raw_resources = catalog.get("resources", [])
+    if not isinstance(raw_resources, list):
+        raise ExternalResourceCatalogInputError("catalog resources must be a list")
+
+    resources: list[dict[str, Any]] = []
+    capability_index: dict[str, dict[str, list[str]]] = {}
+    kind_index: dict[str, list[str]] = {}
+    next_steps: list[dict[str, str]] = []
+    for item in raw_resources:
+        if not isinstance(item, Mapping):
+            raise ExternalResourceCatalogInputError("catalog resource must be an object")
+        resource_id = str(item.get("id") or "").strip()
+        if not resource_id:
+            raise ExternalResourceCatalogInputError("catalog resource is missing id")
+        capabilities = sorted(
+            {str(capability).strip() for capability in item.get("capabilities", []) if str(capability).strip()}
+        )
+        availability = str(item.get("availability") or "unavailable").strip().lower()
+        health = item.get("health") if isinstance(item.get("health"), Mapping) else {}
+        resource = {
+            "id": resource_id,
+            "kind": str(item.get("kind") or "unknown"),
+            "provider": str(item.get("provider") or "unknown"),
+            "capabilities": capabilities,
+            "lifecycle": str(item.get("lifecycle") or "unknown"),
+            "availability": availability,
+            "mode": str(item.get("mode") or ""),
+            "data_classification": str(item.get("data_classification") or ""),
+            "permission_ref": str(item.get("permission_ref") or ""),
+            "health": {
+                "status": str(health.get("status") or "unknown"),
+                "observed_at": health.get("observed_at"),
+                "source": health.get("source"),
+            },
+            "reason_codes": sorted(
+                {str(reason).strip() for reason in item.get("reason_codes", []) if str(reason).strip()}
+            ),
+            "next_step": _directory_next_step(item),
+        }
+        resources.append(resource)
+        kind_index.setdefault(resource["kind"], []).append(resource_id)
+        for capability in capabilities:
+            bucket = capability_index.setdefault(
+                capability, {"resource_ids": [], "available_resource_ids": []}
+            )
+            bucket["resource_ids"].append(resource_id)
+            if availability == "available":
+                bucket["available_resource_ids"].append(resource_id)
+        next_steps.append({"resource_id": resource_id, "next_step": resource["next_step"]})
+
+    for bucket in capability_index.values():
+        bucket["resource_ids"].sort()
+        bucket["available_resource_ids"].sort()
+    for resource_ids in kind_index.values():
+        resource_ids.sort()
+    catalog_state = dict(catalog)
+    catalog_state.pop("observed_at", None)
+    directory = {
+        "schema": DIRECTORY_SCHEMA,
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "admission_mutation": False,
+        "observed_at": (now or datetime.now(UTC)).isoformat(),
+        "catalog_digest": str(catalog.get("catalog_digest") or _canonical_digest(catalog_state)),
+        "resources": resources,
+        "capability_index": capability_index,
+        "kind_index": kind_index,
+        "next_steps": sorted(next_steps, key=lambda item: item["resource_id"]),
+        "summary": {
+            "resource_count": len(resources),
+            "capability_count": len(capability_index),
+            "kind_count": len(kind_index),
+            "available_count": sum(item["availability"] == "available" for item in resources),
+            "proposal_only_count": sum(item["availability"] == "proposal_only" for item in resources),
+            "unavailable_count": sum(item["availability"] in {"unavailable", "stale"} for item in resources),
+            "next_step_counts": {
+                step: sum(item["next_step"] == step for item in next_steps)
+                for step in sorted({item["next_step"] for item in next_steps})
+            },
+        },
+        "catalog_errors": list(catalog.get("errors", [])) if isinstance(catalog.get("errors"), list) else [],
+        "changes": catalog.get("changes") if isinstance(catalog.get("changes"), Mapping) else None,
+        "policy": {
+            "source": "external-resource-catalog/v1",
+            "side_effects": "disabled",
+            "next_step_semantics": "human_or_governed_review_only",
+        },
+    }
+    digest_state = dict(directory)
+    digest_state.pop("observed_at", None)
+    directory["directory_digest"] = _canonical_digest(digest_state)
+    return directory
 
 
 def _load_agora(root: Path):
@@ -320,6 +461,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="通过 OMO CLI broker 追加受治理观察记录",
     )
+    parser.add_argument(
+        "--directory",
+        action="store_true",
+        help="将只读目录转换为 capability directory，不执行观察或激活",
+    )
     parser.add_argument("--actor", default="external-resource-observer")
     parser.add_argument(
         "--source-ref", default="root:external-resource-catalog:observe"
@@ -327,6 +473,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-id", help="稳定的只读观察运行标识，用于重试幂等")
     args = parser.parse_args(argv)
     try:
+        if args.observe and args.directory:
+            raise ExternalResourceCatalogInputError(
+                "--directory cannot be combined with --observe"
+            )
         previous_snapshot = None
         if args.previous_snapshot:
             try:
@@ -349,12 +499,17 @@ def main(argv: list[str] | None = None) -> int:
                 run_id=args.run_id,
             )
         else:
-            payload = collect_external_resources(
+            catalog = collect_external_resources(
                 args.root,
                 health_ttl_seconds=args.health_ttl_seconds,
                 catalog_ttl_seconds=args.catalog_ttl_seconds,
                 probe=not args.no_health_probe,
                 previous_snapshot=previous_snapshot,
+            )
+            payload = (
+                build_external_resource_directory_snapshot(catalog)
+                if args.directory
+                else catalog
             )
     except (ExternalResourceCatalogInputError, ValueError) as exc:
         print(f"external-resource-catalog: {exc}", file=sys.stderr)
