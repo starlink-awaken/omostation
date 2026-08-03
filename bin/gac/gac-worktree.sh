@@ -385,6 +385,64 @@ except Exception:
     done
     ;;
 
+  agents)
+    # Agent 活动看板: 显示所有活跃 worktree 及其状态
+    echo "=== Agent 活动看板 $(date -u +%Y-%m-%dT%H:%M:%Z) ==="
+    echo ""
+    printf "%-30s %-12s %-10s %-8s %s\n" "SESSION" "BRANCH" "LAST_COMMIT" "PR" "PASW"
+    printf "%-30s %-12s %-10s %-8s %s\n" "------" "------" "----------" "--" "----"
+    now=$(date +%s)
+    for wt_path in "$WS_PARENT"/ws-*/; do
+      [ -d "$wt_path" ] || continue
+      wt_name=$(basename "$wt_path")
+      # 去掉 ws- 前缀得到 session 名
+      session="${wt_name#ws-}"
+
+      # 分支
+      branch=$(git -C "$wt_path" branch --show-current 2>/dev/null || echo "detached")
+
+      # 最后 commit 时间
+      last_commit=$(git -C "$wt_path" log -1 --format=%ct 2>/dev/null || echo 0)
+      if [ "$last_commit" -gt 0 ]; then
+        age_min=$(( (now - last_commit) / 60 ))
+        if [ "$age_min" -lt 60 ]; then
+          age="${age_min}m"
+        elif [ "$age_min" -lt 1440 ]; then
+          age=$(( age_min / 60 ))"h"
+        else
+          age=$(( age_min / 1440 ))"d"
+        fi
+      else
+        age="?"
+      fi
+
+      # PR 状态
+      pr_status="-"
+      if command -v gh >/dev/null 2>&1 && [ "$branch" != "detached" ]; then
+        pr_num=$(gh pr list --head "$branch" --state open --json number 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
+        [ -n "$pr_num" ] && pr_status="#${pr_num}"
+        # 检查是否已合并
+        if [ -z "$pr_num" ]; then
+          merged=$(gh pr list --head "$branch" --state merged --json number 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
+          [ -n "$merged" ] && pr_status="merged"
+        fi
+      fi
+
+      # PASW 隔离状态
+      pasw=""
+      for sub in $ISOLATED_SUBS; do
+        sub_name=$(basename "$sub")
+        [ -d "$wt_path/$PASW_SUBTREE_DIR/$sub_name" ] && pasw="$pasw $sub_name"
+      done
+      pasw=$(echo "$pasw" | xargs)
+      [ -z "$pasw" ] && pasw="-"
+
+      printf "%-30s %-12s %-10s %-8s %s\n" "$session" "$branch" "$age" "$pr_status" "$pasw"
+    done
+    echo ""
+    echo "总计: $(ls -d "$WS_PARENT"/ws-*/ 2>/dev/null | wc -l | tr -d ' ') 个活跃 worktree"
+    ;;
+
   cleanup)
     # TTL 过期 worktree 回收 (cron 调用入口; gac-worktree-cleanup.sh 委托本子命令)
     # 判定: mtime (非 atime — relatime 下 atime 不更新) 超 TTL 且无脏改动 → 删除
@@ -434,14 +492,15 @@ except Exception:
   *)
     echo "GaC worktree per session (ADR-0106 P2)"
     echo ""
-    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-pointer|list|cleanup} [args]"
+    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-pointer|list|agents|cleanup} [args]"
     echo ""
-    echo "  claim <session>      创建 worktree + 分支 work/<session> (+ PASW 子模块隔离)"
+    echo "  claim <session>      创建 worktree + 分支 work/<session>"
     echo "  submit <session>     push 分支 + 开 PR (base main)"
     echo "  merge <session>      squash 合并 PR + release worktree + 删分支"
     echo "  release <session>    清理 worktree (手动, 合并后)"
     echo "  bump-pointer <session> <submodule>  更新子模块指针到 worktree HEAD"
     echo "  list                 列所有 worktree + PASW 状态"
+    echo "  agents               Agent 活动看板 (session/分支/PR/活跃时间)"
     echo "  cleanup              回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h)"
     echo ""
     echo "PASW 隔离子模块: $ISOLATED_SUBS"
