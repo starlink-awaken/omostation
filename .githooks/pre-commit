@@ -70,7 +70,8 @@ for sub in $PASW_ISOLATED; do
   # 检查是否尝试在 root 直接 stage 子模块 gitlink 变更
   if git diff --cached --name-only | grep -qxF "$sub"; then
     sub_name=$(basename "$sub")
-    sub_wt=".subtrees/$sub_name"
+    # 用 $ROOT 绝对路径 (pre-commit 钩子环境相对路径可能解析到主仓 HEAD)
+    sub_wt="$ROOT/.subtrees/$sub_name"
 
     if [ ! -d "$sub_wt" ]; then
       echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 子模块 worktree 不存在" >&2
