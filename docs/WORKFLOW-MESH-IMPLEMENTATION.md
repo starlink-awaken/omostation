@@ -843,6 +843,29 @@ Phase 51 后，外部能力的长期扩展路径收敛为：
 
 没有真实场景时停在 directory、proposal 或 evaluation；出现真实消费者后才进入 Phase 50 已定义的 consumer contract 和 readiness 晋升链。
 
+### 7.3.20 Phase 53 外部能力连接计划与动态触达准备
+
+目录解决“有什么”和“下一步是什么”，但不同资源类型还需要一份统一的接入准备清单，才能让
+知识源、数据源、方法、工具、模型和渠道在不修改 Agora 路由特例的情况下进入相同的治理路径。
+
+Phase 53 增加 `external-resource-connection-plan/v1`，由
+`bin/ssot/external-resource-catalog.py::build_external_resource_connection_plan` 从
+`external-resource-directory/v1` 确定性生成。每个计划项只描述：
+
+- `next_step`：探活、评估、沙盒、场景/权限复核、激活复核、健康恢复或路由评估；
+- `status`：`blocked` 或 `ready_for_review`，不表示 admitted/active；
+- `blockers`：当前缺失的健康、场景、策略、权限、结果指标、回滚或人工处置证据；
+- `required_inputs`：下一阶段允许收集的最小输入；
+- `owner_ref`、`permission_ref` 和 `directory_digest`：把接入准备回接到责任人、权限和观察快照。
+
+连接计划严格是只读的：不调用 provider、不创建 WorkflowRun、不改变 admission、不激活资源。它的长期用途是把
+外部动态扩展变成一条可解释队列：
+
+`descriptor -> catalog -> directory -> connection plan -> evidence collection -> Scene Card/consumer -> OMO admission -> Workflow Mesh`
+
+没有真实消费者时，计划会停在 `blocked`，并明确缺口；出现真实消费者后，计划中的字段只能作为
+Scene Card、试运行、真实 WorkflowRun、external receipt 和 outcome feedback 的准备索引，不能代替这些事实。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
