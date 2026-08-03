@@ -100,6 +100,7 @@ M1 hard pre-gate for concurrent main conflict = 0:
 | D2 branch lock | `bash bin/gac/gac-worktree.sh claim <s>` |
 | D3 shared claim | `make install-hooks` → pre-commit `claim-check` |
 | D4 escape | `SWARM_ESCAPE_ID=...` for `CI_LOCAL_SKIP`; agents use `bin/gac/swarm-git` for `--no-verify` |
+| D5 PASW submodule | 高冲突子模块 (gbrain/cockpit/agora) 隔离 worktree; pre-commit `submodule-guard` 强制 |
 
 72h window: `python3 bin/gac/swarm-discipline-cli.py window-status`
 
@@ -258,6 +259,35 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 - **L0 萃取不破坏**: `post-commit` 是 commit 级触发(worktree 共享 `.git/hooks`),worktree 内 commit 照样萃取,派生文件进 PR。
 - **完整计划**: [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) §4 Phase 2-3 (已落地)。
 
+### 6.2 PASW — 子模块隔离 (ADR-0344)
+
+高冲突子模块 (gbrain/cockpit/agora) 使用 per-agent 独立 worktree 隔离, 根除 10 agent 并发时的指针冲突。
+
+```bash
+# claim 时自动创建子模块隔离 worktree (在 .subtrees/ 内)
+bash bin/gac/gac-worktree.sh claim <session>
+# → 创建 ws-<session>/.subtrees/gbrain/  (branch: agent/<session>-gbrain)
+# → 创建 ws-<session>/.subtrees/cockpit/ (branch: agent/<session>-cockpit)
+# → 创建 ws-<session>/.subtrees/agora/   (branch: agent/<session>-agora)
+
+# 子模块修改流程 (在隔离 worktree 内)
+cd ws-<session>/.subtrees/gbrain
+vim ... && git add . && git commit -m "..."
+git push origin HEAD                              # push 到子模块 remote
+# 合并到子模块 main 后, 回到 root worktree 更新指针
+cd ../..
+bash bin/gac/gac-worktree.sh bump-pointer <session> projects/gbrain
+git commit -m "bump gbrain" && gac-worktree.sh submit <session>
+```
+
+**强制约束 (pre-commit hook 守门)**:
+
+- 不允许 root 直接 `git add projects/<sub>` (gitlink 变更) — 必须通过 `.subtrees/` worktree
+- 指针 SHA 必须与 `.subtrees/<sub>` HEAD 一致
+- `.subtrees/` 不入 root 仓库 (.gitignore)
+
+**定时回收**: `bash bin/gac/gac-worktree-cleanup.sh` (TTL 24h, cron 每 6h)
+
 #### 6.1.1 Worktree 常见踩坑诊断(2026-07-05 多 PR 实战)
 
 | 症状 | 根因 | 解法 |
@@ -320,6 +350,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 4. Mention files changed and checks run.
 5. Mention any checks skipped or blocked.
 6. Do not create commits unless explicitly requested and confirmed.
+6a. **PASW 清理**: 确认子模块 worktree 已清理 (`gac-worktree.sh release` 或 `merge` 自动清理); 确认 `.subtrees/` 内无未 push 的 commit。
 7. **大任务后复盘+固化** (P74 常态化精神 — 不靠自觉靠机制):
    - **复盘触发**: 系统性分析/方案任务 / 多轮返工 / Stop hook 反馈后 / 判断错误发现时
    - **判断错误复盘**: 识别"基于不完整信息下结论 / grep 假阴性 / 重复造轮 / 跳过冷启动"等模式 (实证: memory `verify-claim-three-layers`)
@@ -337,7 +368,7 @@ Round X 的 7 步:
 
 0. baseline: 跑 m4-health-score, 留当前分数快照
    uv run --with "pyyaml" python bin/mof/m4-health-score.py --emit
-1. single-worktree: bash bin/gac/gac-worktree.sh claim round-{X}
+1. single-worktree: bash bin/gac/gac-worktree.sh claim round-{X}  (PASW: 自动创建 gbrain/cockpit/agora 隔离 worktree)
 2. deliver: 实施 N 个 deliverable (每 PR 1 deliverable)
    - 每次 commit: git log --oneline e2f8f4d7..HEAD
 3. tests: 加 T-X 系列测试, 跑 regression

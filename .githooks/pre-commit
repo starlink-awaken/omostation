@@ -61,6 +61,44 @@ if [ -f "$ROOT/bin/gac-audit-engine.py" ]; then
   python3 "$ROOT/bin/gac-audit-engine.py" --staged 2>&1 | sed 's/^/[audit] /' >&2
 fi
 
+# ── PASW: 子模块隔离强制执行 ──────────────────────────────────────
+# 高冲突子模块 (gbrain/cockpit/agora) 必须通过 .subtrees/ worktree 修改,
+# 不允许在 root 直接 git add projects/<sub> (gitlink 变更).
+# 合法流程: cd .subtrees/<sub> && git add . && git commit → bump-pointer
+PASW_ISOLATED="projects/gbrain projects/cockpit projects/agora"
+for sub in $PASW_ISOLATED; do
+  # 检查是否尝试在 root 直接 stage 子模块 gitlink 变更
+  if git diff --cached --name-only | grep -qxF "$sub"; then
+    sub_name=$(basename "$sub")
+    sub_wt=".subtrees/$sub_name"
+
+    if [ ! -d "$sub_wt" ]; then
+      echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 子模块 worktree 不存在" >&2
+      echo "   请先: bash bin/gac/gac-worktree.sh claim <session>" >&2
+      echo "   然后在子模块 worktree 中 commit: cd $sub_wt && git add . && git commit" >&2
+      exit 1
+    fi
+
+    # 验证 staged SHA 与 worktree HEAD 一致 (确保改动来自隔离 worktree)
+    staged_sha=$(git ls-files --stage -- "$sub" | awk '$1 == "160000" {print $2}')
+    wt_sha=$(git -C "$sub_wt" rev-parse HEAD 2>/dev/null || echo "")
+    if [ "$staged_sha" != "$wt_sha" ]; then
+      echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 与子模块 worktree HEAD 不匹配" >&2
+      echo "   staged SHA: ${staged_sha:-none}" >&2
+      echo "   worktree HEAD: $wt_sha" >&2
+      echo "   请先在子模块 worktree 中 commit: cd $sub_wt && git add . && git commit" >&2
+      echo "   然后: bash bin/gac/gac-worktree.sh bump-pointer <session> $sub" >&2
+      exit 1
+    fi
+  fi
+done
+# 禁止将 .subtrees/ 目录 commit 到 root
+if git diff --cached --name-only | grep -q '^\.subtrees/'; then
+  echo "[submodule-guard] ❌ 不允许将 .subtrees/ 提交到 root 仓库" >&2
+  echo "   .subtrees/ 是 PASW 隔离 worktree 的本地存储, 不属于 root 仓库" >&2
+  exit 1
+fi
+
 # ── Debt directory deletion guard ──
 # 禁止 unstaged 删除 .omo/debt/ 下的文件
 if git status --short -- ".omo/debt/" | grep -q "^.D"; then

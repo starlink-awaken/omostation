@@ -22,12 +22,18 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
-        continue-on-error: true
+        # PASW: 子模块 checkout 失败必须 fail fast — 指针不可达说明 bump-pointer 前未 push 子模块
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
       - name: install pyyaml
         run: pip install pyyaml
+      - name: PASW — 子模块指针可达性前置检查
+        # PASW 适配: 确保所有子模块指针在 submodule remote 上可达.
+        # 失败原因通常是 bump-pointer 前未 push 子模块分支, 或 squash merge 丢失了指针.
+        run: |
+          python3 bin/ssot/submodule-reachability-gate.py --source head --fetch 2>&1
+        continue-on-error: false
       - name: generate digests
         run: |
           python3 bin/mof/project-layer-index.py --write
@@ -36,3 +42,7 @@ jobs:
         run: python3 bin/layer-dependency-check.py
       - name: gac-local-gate (strict)
         run: python3 bin/gac/gac-local-gate.py --strict
+      - name: worktree guard (数量上限门禁)
+        # P74: 防 worktree 堆积 — 超 MAX_WORKTREES 即 fail, 触发人工清理
+        run: bash bin/gac/gac-worktree-guard.sh --check
+        continue-on-error: false
