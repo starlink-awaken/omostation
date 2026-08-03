@@ -256,6 +256,120 @@ def test_scene_cards_preflight_rejects_forbidden_input(monkeypatch):
     assert response.json()["activation"] == "forbidden"
 
 
+def test_scene_cards_task_handoff_creates_idempotent_planned_task(monkeypatch, tmp_path):
+    scene_card = {
+        "schema": "scene-card/v1",
+        "scene_id": "research-brief",
+        "journey_id": "question-to-brief",
+    }
+    intake = {
+        "status": "proposal_only",
+        "intake_id": "scene-intake:research-brief:test",
+        "source_digest": "sha256:scene-card",
+        "scene_card": {
+            "scene_id": "research-brief",
+            "journey_id": "question-to-brief",
+            "outcome_metric": "verified_brief_acceptance",
+        },
+    }
+    created: list[dict] = []
+
+    monkeypatch.setattr(api_scene_cards, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_scene_cards, "build_intake", lambda _card: intake)
+    monkeypatch.setattr(
+        api_scene_cards,
+        "_latest_catalog",
+        lambda: {"schema": "external-resource-catalog/v1"},
+    )
+    monkeypatch.setattr(
+        api_scene_cards,
+        "build_preflight",
+        lambda _card, _catalog: {
+            "status": "ready_for_admission_preview",
+            "next_action": "submit_omo_admission_preview",
+            "scene": {
+                "scene_id": "research-brief",
+                "journey_id": "question-to-brief",
+                "outcome_metric": "verified_brief_acceptance",
+            },
+        },
+    )
+
+    def fake_create(_omo_dir, *, task_data, **_kwargs):
+        created.append(task_data)
+        return task_data
+
+    monkeypatch.setattr(api_scene_cards, "create_planned_task", fake_create)
+
+    response = TestClient(_app()).post(
+        "/api/scene-cards/task",
+        json={"scene_card": scene_card, "risk_level": "L1"},
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["status"] == "created"
+    assert body["projection"]["schema"] == "scene-card-task/v1"
+    assert body["projection"]["scene_binding"] == {
+        "scene_id": "research-brief",
+        "journey_id": "question-to-brief",
+        "outcome_metric": "verified_brief_acceptance",
+    }
+    assert body["projection"]["side_effects"] == {
+        "provider_called": False,
+        "workflow_created": False,
+        "worker_launch": False,
+        "activation_attempted": False,
+    }
+    assert created[0]["metadata"]["scene_binding"]["scene_id"] == "research-brief"
+    assert "goal" not in created[0]["metadata"]
+
+
+def test_scene_cards_task_handoff_blocks_before_omo_write(monkeypatch, tmp_path):
+    monkeypatch.setattr(api_scene_cards, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_scene_cards,
+        "build_intake",
+        lambda _card: {
+            "status": "proposal_only",
+            "intake_id": "scene-intake:test",
+            "source_digest": "sha256:test",
+            "scene_card": {
+                "scene_id": "test-scene",
+                "journey_id": "test-journey",
+                "outcome_metric": "test_metric",
+            },
+        },
+    )
+    monkeypatch.setattr(api_scene_cards, "_latest_catalog", lambda: {"schema": "catalog"})
+    monkeypatch.setattr(
+        api_scene_cards,
+        "build_preflight",
+        lambda _card, _catalog: {
+            "status": "proposal_only",
+            "next_action": "replace_proposal_only_capabilities_before_admission",
+            "missing_fields": ["capability_health"],
+            "scene": {"scene_id": "test-scene", "journey_id": "test-journey", "outcome_metric": "test_metric"},
+        },
+    )
+    def create(*_args, **_kwargs):
+        raise AssertionError("must not write")
+
+    monkeypatch.setattr(api_scene_cards, "create_planned_task", create)
+
+    response = TestClient(_app()).post(
+        "/api/scene-cards/task",
+        json={"scene_card": {"schema": "scene-card/v1"}},
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] == "blocked"
+    assert body["projection"]["blockers"] == ["capability_health"]
+    assert body["persistence"] == "none"
+
+
 def test_scene_cards_degrades_when_candidate_discovery_is_unavailable(monkeypatch, tmp_path):
     monkeypatch.setattr(api_scene_cards, "_REPO_ROOT", tmp_path)
 
