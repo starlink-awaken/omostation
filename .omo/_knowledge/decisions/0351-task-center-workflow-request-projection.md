@@ -1,6 +1,10 @@
 ---
 title: Task Center Workflow request projection and admission navigation
 status: accepted
+type: adr
+lifecycle: active
+owner: architecture-governance
+last-reviewed: 2026-08-03
 type: decision
 scope: cockpit task center and workflow mesh operations
 date: 2026-08-03

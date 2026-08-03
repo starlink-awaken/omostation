@@ -1,6 +1,10 @@
 ---
 title: External Resource Connection Plan UI
 status: accepted
+type: adr
+lifecycle: active
+owner: architecture-governance
+last-reviewed: 2026-08-03
 type: decision
 scope: cockpit-ui external connection fabric
 date: 2026-08-03
