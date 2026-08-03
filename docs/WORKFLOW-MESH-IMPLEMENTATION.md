@@ -1010,6 +1010,19 @@ Cockpit 新增 `POST /api/workflow-mesh/evaluation-label`，写入仍由 OMO bro
 本阶段仍不生成训练集、不训练预测模型、不改变路由策略。下一阶段应选择一个真实低风险消费者，产生第一批双人标注并形成脱敏
 manifest，之后才进入规则基线、离线评测和 shadow 预测。
 
+### 7.3.29 Phase 62 Workflow Mesh 评测 manifest 材料化
+
+Phase 62 将人工标签闭环接入 KEMS，但只允许显式 `adjudication` 且最终 `decision=accept` 的样本进入
+`workflow-mesh-evaluation-manifest/v1` 投影。OMO 负责从评测数据集和标签回执按 `evaluation_id` 做安全 join，保留样本摘要、场景绑定、
+有限标签和证据引用；原文、prompt、模型输出和自由文本不会被读取或导出。`consensus` 仅表示两名主标注达成一致，不能替代最终裁决。
+
+Cockpit 新增 `POST /api/kems/evaluations/workflow-mesh-manifest`，将 OMO 投影转换为现有 KOS `EvaluationManifest`，复用同一套
+`EvaluationStore`、SHA-256、`vault://redacted/` 和 `adjudicated` 校验。没有显式裁决样本时接口 fail-closed，不创建空 manifest；UI
+工作台提供“从 Workflow Mesh 生成”入口，并回填 manifest 摘要与样本，供后续离线评测使用。
+
+这一步只打通“可审计材料化”能力，不代表已经拥有真实业务评测集，不启动训练、不激活预测模型、不改变外部资源路由。M2 的工程通路已具备，
+但仍必须由真实低风险消费者产生真实 receipt、outcome feedback、双人标注和 adjudication，之后才能进入规则基线和 shadow 预测。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。

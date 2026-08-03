@@ -421,6 +421,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0352: Workflow Mesh 结果回执与评测样本准备度投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 59 | 0352-workflow-result-feedback-evaluation-readiness.md
 - ADR-0353: 外部资源受治理刷新与 freshness 恢复投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 60 | 0353-external-resource-governed-refresh.md
 - ADR-0354: Workflow Mesh 人工评测标签回执与双人放行队列 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 61 | 0354-workflow-evaluation-label-receipt.md
+- ADR-0355: Workflow Mesh 显式裁决评测 manifest 材料化 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 62 | 0355-workflow-evaluation-manifest-materialization.md
 
 ---
 
