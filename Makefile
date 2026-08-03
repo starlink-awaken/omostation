@@ -50,6 +50,10 @@ help:
 	@echo "make x4-check           X4 一致性检查"
 	@echo "make x1-x4-check        X1-X4 全维度检查"
 	@echo ""
+	@echo "=== PASW 子模块隔离 (ADR-0349) ==="
+	@echo "make pasw-status         显示 PASW 子模块 worktree 状态"
+	@echo "make pasw-cleanup        TTL 回收过期子模块 worktree (默认 24h)"
+	@echo ""
 	@echo "=== 债务 ==="
 	@echo "make debt-check          检查债务状态"
 	@echo "make debt-audit          定期债务审计"
@@ -119,8 +123,21 @@ install-hooks:  ## 装 git pre-push + pre-commit + post-commit + prepare-commit-
 					fi; \
 				fi \
 			) \
-		fi; \
+ 		fi; \
 	done
+	@# PASD: 安装 launchd 定时清理 (每 6h 回收过期 worktree)
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		PLIST_SRC="$(CURDIR)/.omo/_config/pasw-cleanup-launchd.plist"; \
+		PLIST_DST="$$HOME/Library/LaunchAgents/com.omostation.pasw-cleanup.plist"; \
+		if [ ! -f "$$PLIST_DST" ] && [ -f "$$PLIST_SRC" ]; then \
+			mkdir -p "$$HOME/Library/LaunchAgents"; \
+			cp "$$PLIST_SRC" "$$PLIST_DST"; \
+			launchctl load "$$PLIST_DST" 2>/dev/null || true; \
+			echo "  ✅ 已安装 PASW 定时清理 launchd (每 6h)"; \
+		else \
+			echo "  ⏭ PASW 定时清理已存在或无需安装"; \
+		fi; \
+	fi
 
 # ── 本地 CI 预检 ────────────────────────────────────────────────────────────────
 # 目的: push 前本地跑一遍 CI 等价检查, 拦 90% CI 失败, 省等 CI 的时间.
@@ -500,3 +517,13 @@ ssot-guardian:  ## SSOT guardian (.omo 写入合规)
 # ── Agent Workflow status ─────────────────────────────────
 agent-workflow-status:
 	$(PY) bin/agent-workflow.py status --json
+
+# ── PASW: Per-Agent Submodule Worktree (ADR-0349) ──────────
+pasw-status:  ## 显示 PASW 子模块 worktree 状态
+	@bash bin/gac/gac-worktree.sh list
+
+pasw-cleanup:  ## TTL 回收过期子模块 worktree (默认 24h, 可 PASW_TTL_HOURS=12)
+	@bash bin/gac/gac-worktree-cleanup.sh
+
+pasw-cleanup-dryrun:  ## 预览回收 (不删除)
+	@bash bin/gac/gac-worktree-cleanup.sh --dry-run
