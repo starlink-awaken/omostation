@@ -150,6 +150,7 @@ gates:
     command: ["bin/gac/check-severity-registry.py"]
   - id: "check-work-landed"
     command: ["bin/gac/check-work-landed.py"]
+    timeout: 30
   - id: "check-governance-ratio"
     command: ["bin/gac/check-governance-ratio.py"]
   - id: "check-redline-coverage"
