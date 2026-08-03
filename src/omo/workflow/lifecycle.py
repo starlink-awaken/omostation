@@ -626,7 +626,16 @@ def closeout_run(
                     )
         except Exception:
             pass
-    # Phase 1b: Bridge to Workflow Mesh
+    # Phase 1b/5: Bridge to Workflow Mesh with event chain closure
+    _closeout_scene = None
+    try:
+        _, _run_record = read_run(registry, run_id)
+        _closeout_scene = extract_scene_binding(
+            context=_run_record.get("context", {}),
+            workflow=_run_record.get("plan", {}),
+        )
+    except Exception:
+        pass
     emit_workflow_mesh_event(
         "AgentWorkflowClosed",
         run_id,
@@ -638,6 +647,7 @@ def closeout_run(
             "evidence_count": len(closeout_evidence),
         },
         workspace=WORKSPACE,
+        scene_binding=_closeout_scene,
     )
     return report
 
