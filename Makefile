@@ -1,4 +1,6 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck gac-drift gac-validate agent-workflow-status worktree-prune worktree-guard worktree-cleanup worktree-audit
+
+PY := uv run --with pyyaml python
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -65,6 +67,23 @@ help:
 	@echo ""
 	@echo "=== 开发环境 ==="
 	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate)"
+	@echo ""
+	@echo "=== GaC / MOF / Mesh / ADR / State ==="
+	@echo "make gac-healthcheck    GaC 13-point 健康检查"
+	@echo "make gac-drift          GaC 规则漂移检测"
+	@echo "make gac-validate       GaC 规则验证 (--gate)"
+	@echo "make mof-bootstrap      MOF 5-check strict"
+	@echo "make m4-health          M4 health score (--emit)"
+	@echo "make m4-health-compare   M4 health score delta"
+	@echo "make registry-drift     注册表漂移检测 (code->registry)"
+	@echo "make mesh-orphan-cleanup   检查孤立 Mesh 运行 (dry-run)"
+	@echo "make mesh-orphan-cleanup-apply  关闭孤立 Mesh 运行"
+	@echo "make adr-claim SESSION=<s>  占用下一个 ADR 编号"
+	@echo "make state-sync         OMO state sync (--json)"
+	@echo "make state-sync-dry     OMO state sync dry-run (--json)"
+	@echo "make doc-ssot-lint      文档 SSOT 契约检查 (--json)"
+	@echo "make ssot-guardian      SSOT guardian (.omo 写入合规)"
+	@echo "make agent-workflow-status 当前 workflow 运行状态 (--json)"
 	@echo ""
 	@echo "=== 本地 CI ==="
 	@echo "make ci-local            本地 CI 预检 (push 前跑, ~30s, 拦 90% CI 失败)"
@@ -133,10 +152,10 @@ ci-local-fast: check-layers
 	@echo "════════════════════════════════════════════════════"
 	@CI_LOCAL_FAIL=0; \
 	echo "── GaC local gate ───────────────────────────────────"; \
-	uv run --with pyyaml python bin/gac/gac-local-gate.py 2>&1 | sed 's/^/[gac] /' || CI_LOCAL_FAIL=1; \
+	$(PY) bin/gac/gac-local-gate.py 2>&1 | sed 's/^/[gac] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
 	echo "── dir-hygiene ──────────────────────────────────────"; \
-	uv run --with pyyaml python bin/ssot/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
+	$(PY) bin/ssot/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
 	echo "── ruff check (omo + scripts) ──────────────────────"; \
 	ruff check projects/omo/src scripts --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
@@ -163,21 +182,21 @@ ci-local-fast: check-layers
 
 check-layers:
 	@echo "── 分层依赖检查 ─────────────────────────────────────"
-	uv run --with pyyaml python bin/layer-dependency-check.py
+	$(PY) bin/layer-dependency-check.py
 
 ssot-status:  ## SSOT 变更状态检查
 	@echo "── SSOT 状态 ────────────────────────────────────────"
-	uv run --with pyyaml python bin/ssot-watcher.py status
+	$(PY) bin/ssot-watcher.py status
 
 ssot-log:  ## SSOT 审计日志查看
 	@echo "── SSOT 审计日志 ────────────────────────────────────"
-	uv run --with pyyaml python bin/ssot-watcher.py log --limit 20
+	$(PY) bin/ssot-watcher.py log --limit 20
 
 ssot-sync:  ## SSOT 变更记录到审计日志
 	@echo "── SSOT 同步 ────────────────────────────────────────"
 	@read -p "Author: " author; \
 	read -p "Reason: " reason; \
-	uv run --with pyyaml python bin/ssot-watcher.py sync --author "$$author" --reason "$$reason"
+	$(PY) bin/ssot-watcher.py sync --author "$$author" --reason "$$reason"
 
 sync-submodules:  ## 推送子模块未推送的 commit 到远程
 	@echo "── 同步子模块 ────────────────────────────────────────"
@@ -210,58 +229,58 @@ evidence-smoke:  ## BOS 全量 evidence smoke (agora .venv bootstrap + resolve r
 
 
 agent-workflows:
-	uv run --with pyyaml python bin/agent-workflow.py list
+	$(PY) bin/agent-workflow.py list
 
 agent-workflow-bootstrap:
-	uv run --with pyyaml python bin/agent-workflow.py bootstrap
+	$(PY) bin/agent-workflow.py bootstrap
 
 agent-workflow-lint:
-	uv run --with pyyaml python bin/agent-workflow.py lint
+	$(PY) bin/agent-workflow.py lint
 
 agent-workflow-verify:
-	uv run --with pyyaml python bin/agent-workflow.py verify --from-diff
+	$(PY) bin/agent-workflow.py verify --from-diff
 
 agent-workflow-compliance:
-	uv run --with pyyaml python bin/agent-workflow.py compliance
+	$(PY) bin/agent-workflow.py compliance
 
 agent-workflow-closeout:
 	@test -n "$(RUN_ID)" || (echo "RUN_ID is required"; exit 2)
-	uv run --with pyyaml python bin/agent-workflow.py closeout "$(RUN_ID)"
+	$(PY) bin/agent-workflow.py closeout "$(RUN_ID)"
 
 agent-workflow-doctor:
-	uv run --with pyyaml python bin/agent-workflow.py doctor
+	$(PY) bin/agent-workflow.py doctor
 
 agent-workflow-observe:
-	uv run --with pyyaml python bin/agent-workflow.py observe
+	$(PY) bin/agent-workflow.py observe
 
 agent-workflow-agents:
-	uv run --with pyyaml python bin/agent-workflow.py agents
+	$(PY) bin/agent-workflow.py agents
 
 agent-workflow-integrations:
-	uv run --with pyyaml python bin/agent-workflow.py integrations
+	$(PY) bin/agent-workflow.py integrations
 
 agent-workflow-adapters:
-	uv run --with pyyaml python bin/agent-workflow.py adapters
+	$(PY) bin/agent-workflow.py adapters
 
 project-layer-index:
-	uv run --with pyyaml python bin/mof/project-layer-index.py --write
+	$(PY) bin/mof/project-layer-index.py --write
 
 gen-agent-redlines:  ## 生成 docs/generated/agent-redlines.md (agent 红线/灰线 severity digest, ADR-0171)
-	uv run --with pyyaml python bin/mof/gen-agent-redlines.py
+	$(PY) bin/mof/gen-agent-redlines.py
 
 domain-m1-alignment:  ## 校验 project-registry.yaml ↔ eCOS M1 domain 节点对齐 (drift 检测)
-	uv run --with pyyaml python bin/ssot/check-domain-m1-alignment.py
+	$(PY) bin/ssot/check-domain-m1-alignment.py
 
 toolbox-ssot-check:  ## 校验 ToolBox docs SSOT 契约 (硬编码值检测)
-	uv run --with pyyaml python bin/ssot/check-toolbox-ssot.py
+	$(PY) bin/ssot/check-toolbox-ssot.py
 
 gac-local-gate:
-	uv run --with pyyaml python bin/gac/gac-local-gate.py
+	$(PY) bin/gac/gac-local-gate.py
 dir-hygiene:  ## 检查根目录卫生 (未追踪未忽略的目录)
-	uv run --with pyyaml python bin/ssot/dir-hygiene-check.py
+	$(PY) bin/ssot/dir-hygiene-check.py
 
 governance-release-gate:
-	uv run --with pyyaml python bin/ssot/submodule-reachability-gate.py --source head --fetch
+	$(PY) bin/ssot/submodule-reachability-gate.py --source head --fetch
 
 submodule-pointer-transaction:
 	bash bin/ssot/submodule-pointer-transaction.sh --dry-run
@@ -329,7 +348,7 @@ doc-lint:
 	@echo "=== 文档格式检查 ==="
 	@echo ""
 	@echo "--- 文档治理 ownership/lifecycle/freshness ---"
-	@uv run --with pyyaml python bin/ssot/doc-governance-check.py --no-new-warnings
+	@$(PY) bin/ssot/doc-governance-check.py --no-new-warnings
 	@echo ""
 	@echo "--- 检查文档版本信息 ---"
 	@for f in AGENTS.md CLAUDE.md .omo/_knowledge/governance/README.md; do \
@@ -390,28 +409,81 @@ x1-x4-check:
 # ── P84 collab dual-track / control experiment ───────────────────────────────
 
 collab-dualtrack:
-	uv run --with pyyaml python bin/collab/export-dualtrack.py --quiet
+	$(PY) bin/collab/export-dualtrack.py --quiet
 
 collab-status:
-	uv run --with pyyaml python bin/collab/export-dualtrack.py --throughput-only
+	$(PY) bin/collab/export-dualtrack.py --throughput-only
 
 collab-adv-report:
-	uv run --with pyyaml python bin/collab/adv-fail-report.py
+	$(PY) bin/collab/adv-fail-report.py
 
 collab-control-exp:
-	uv run --with pyyaml python bin/collab/control_experiment.py --batch both --workers 4
+	$(PY) bin/collab/control_experiment.py --batch both --workers 4
 
 collab-recommend-mode:
-	uv run --with pyyaml python bin/collab/recommend_mode.py --list-types
+	$(PY) bin/collab/recommend_mode.py --list-types
 
 m2-ssot-inventory:
-	uv run --with pyyaml python bin/mof/m2-ssot-inventory.py
+	$(PY) bin/mof/m2-ssot-inventory.py
 
 bos-stdio-inventory:
-	uv run --with pyyaml python bin/collab/bos-stdio-inventory.py
+	$(PY) bin/collab/bos-stdio-inventory.py
 
 bos-stdio-candidates:
-	uv run --with pyyaml python bin/collab/bos-stdio-inventory.py --migrate-candidates --limit 15
+	$(PY) bin/collab/bos-stdio-inventory.py --migrate-candidates --limit 15
 
 m2-ssot-batch1:
-	uv run --with pyyaml python bin/mof/m2-ssot-inventory.py --emit-batch 1
+	$(PY) bin/mof/m2-ssot-inventory.py --emit-batch 1
+
+# ── GaC 门禁 ──────────────────────────────────────────────
+gac-healthcheck:  ## GaC 13-point 健康检查
+	$(PY) bin/gac/gac-healthcheck.py
+
+gac-drift:  ## GaC 规则漂移检测
+	$(PY) bin/gac/gac-drift.py
+
+gac-validate:  ## GaC 规则验证 (--gate)
+	$(PY) bin/gac/gac-validate.py --gate
+
+# ── MOF / 元模型 ──────────────────────────────────────────
+mof-bootstrap:  ## MOF 5-check strict (mof-bootstrap.py all)
+	$(PY) bin/mof/mof-bootstrap.py all
+
+m4-health:  ## M4 health score (--emit)
+	$(PY) bin/mof/m4-health-score.py --emit
+
+m4-health-compare:  ## M4 health score delta 对比
+	$(PY) bin/mof/m4-health-score.py --compare
+
+registry-drift:  ## 注册表漂移检测 (code->registry)
+	$(PY) bin/mof/gen-project-registry.py
+
+# ── Mesh ──────────────────────────────────────────────────
+mesh-orphan-cleanup:  ## 检查孤立 Mesh 运行 (dry-run)
+	python3 bin/mesh/mesh-orphan-cleanup.py
+
+mesh-orphan-cleanup-apply:  ## 关闭孤立 Mesh 运行
+	python3 bin/mesh/mesh-orphan-cleanup.py --apply
+
+# ── ADR ───────────────────────────────────────────────────
+adr-claim:  ## 占用下一个 ADR 编号 (SESSION=<session>)
+	@test -n "$(SESSION)" || (echo "SESSION is required"; exit 2)
+	python3 bin/adr/next-adr-id.py --session "$(SESSION)" --claim
+
+# ── State Sync ────────────────────────────────────────────
+state-sync:  ## OMO state sync (--json)
+	uv run --project projects/omo omo state sync --json
+
+state-sync-dry:  ## OMO state sync dry-run (--json)
+	uv run --project projects/omo omo state sync --dry-run --json
+
+# ── SSOT 文档检查 ─────────────────────────────────────────
+doc-ssot-lint:  ## 文档 SSOT 契约检查 (--json)
+	$(PY) bin/ssot/doc-ssot-lint.py --json
+
+ssot-guardian:  ## SSOT guardian (.omo 写入合规)
+	$(PY) bin/ssot/ssot-guardian.py
+
+# ── Agent Workflow status ─────────────────────────────────
+agent-workflow-status:
+	$(PY) bin/agent-workflow.py status --json
