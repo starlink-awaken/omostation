@@ -1023,6 +1023,21 @@ Cockpit 新增 `POST /api/kems/evaluations/workflow-mesh-manifest`，将 OMO 投
 这一步只打通“可审计材料化”能力，不代表已经拥有真实业务评测集，不启动训练、不激活预测模型、不改变外部资源路由。M2 的工程通路已具备，
 但仍必须由真实低风险消费者产生真实 receipt、outcome feedback、双人标注和 adjudication，之后才能进入规则基线和 shadow 预测。
 
+### 7.3.30 Phase 63 manifest-bound Shadow Evaluation 报告
+
+Phase 63 将“候选预测器可以运行”推进为“影子评测可以被重复审计”，但不扩大生产权限。Kairon 新增
+`scripts/kems_shadow_evaluation.py`，要求调用方提供 `run_id`、`scenario_id`、候选模型、脱敏数值输入和
+`kems.evaluation-manifest.v1`。脚本会校验：manifest 已完成脱敏且全部样本为 `adjudicated`；所有样本属于同一场景；
+输入 `case_id` 与 manifest 的 `sample_id` 精确相等；预测调用和 acceptance 结果绑定 manifest SHA、输入 SHA、样本数量和模型策略。
+
+输出为 `kems.shadow-evaluation-report.v1`，包含稳定的 `report_id`、基线对比、样本范围、相对改进和失败状态，但不导出原文、
+OCR、prompt、模型自由文本或凭据。报告固定带有 `activation=forbidden`、`automatic_promotion=false`、
+`provider_invocation=false`、`workflow_run_creation=false`，并将晋升状态保持为 `blocked_until_omo_approval`。因此
+`shadow_pass` 只是离线候选结果，不会写入 Workflow Mesh admission、不创建任务、不调用外部 provider，也不改变路由策略。
+
+本阶段补齐了 M6 的“可重复评测报告”工程能力，但没有伪造真实业务评测集。下一阶段的唯一业务闸门仍是：由真实低风险消费者
+连续产生 receipt 和 outcome feedback，经过双人标注与 adjudication 后形成脱敏 manifest，再以该 manifest 执行影子评测并进入人工上线评审。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
