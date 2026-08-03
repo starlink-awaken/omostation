@@ -353,3 +353,24 @@ WorkflowRequested(scene-bound) -> admitted -> succeeded
 消费者是幂等的，重复消费不增加证据或反馈记录；输入不完整、场景不匹配、WorkflowRun 未成功或已进入后续状态但缺少既有
 receipt 时 fail-closed。该消费者只证明“真实工程交付元数据可以回到证据链并被人消费”，不证明业务价值，也不解除 M2/M6 门槛。
 下一轮应在此接口上接入真实责任人的人工 `reviewed/adopted` 反馈，再将同一批真实 run 纳入双人标注和 adjudicated manifest。
+
+### 12.3 Phase 65 工程交付人工复核与运营队列
+
+Phase 65 将机器摄取与人工消费拆开：`consume-engineering-delivery` 的唯一初始反馈状态为 `submitted`，不得通过参数伪造
+`reviewed` 或 `adopted`。责任人必须使用 `review-engineering-delivery`，提供稳定 actor、复核时间、决策和复核证据引用；反馈仍复用
+`outcome-feedback/v1`，因此能够沿同一 `workflow_run_id/outcome_id` 追加并保持幂等。
+
+`engineering-delivery-review-queue` 是只读运营投影，输出待复核数量、最新决策、WorkflowRun 状态、receipt、交付时长和证据数量，
+后续正式 UI 直接消费该投影。它不改变 Workflow Mesh 状态、不执行 OMO 派发、不调用 provider；只有真实责任人的连续反馈完成后，
+才可把样本送入双人标注、adjudication 和脱敏评测 manifest。
+
+操作顺序固定为：
+
+```text
+omo external-resources consume-engineering-delivery --workflow-run-id <id> --stdin
+  -> omo external-resources engineering-delivery-review-queue --json
+  -> omo external-resources review-engineering-delivery --workflow-run-id <id> --actor <human-ref> --stdin
+```
+
+摄取输入只允许交付 ID、仓库引用、PR、merge SHA、时间和证据引用；人工复核输入只允许交付 ID、决策、复核时间和复核证据引用。
+原文、prompt、模型输出、凭据和任意外部 provider 数据均不得进入这两个入口。
