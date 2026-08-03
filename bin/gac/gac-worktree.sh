@@ -123,33 +123,21 @@ case "$cmd" in
       git worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
       echo "   分支: $branch (base: $ROOT_REMOTE/main, repo: $CANONICAL_ROOT_REPO)"
-      # Phase 2d ISC-3e + ADR-0204: default init set for gate + agent-workflow + cockpit/agora.
-      # worktree 默认不 init → mof-*/doc-ssot-snapshots / omo.workflow / doctor-cron 等跑不了.
-      # 默认: ecos+scripts (gate) + omo+cockpit+agora (workflow/L3/I0).
-      # INIT_ALL_SUBMODULES=1 全部 (~60s); SKIP_SUBMODULE_INIT=1 跳过.
-      # 其他子模块 agent 碰时按需: git submodule update --init <submodule>.
-      GATE_SUBS="projects/ecos scripts projects/omo projects/cockpit projects/agora"
+      # PASW: 默认 init 全部子模块 (disk 便宜, 完整环境避免按需 init 的摩擦).
+      # SKIP_SUBMODULE_INIT=1 跳过 (CI/fast-claim 场景).
       if [ "${SKIP_SUBMODULE_INIT:-}" = "1" ]; then
-        echo "   ⏭ SKIP_SUBMODULE_INIT=1 — 子模块未 init (GaC gate / agent-workflow 可能跑不了, 按需 init)"
-      elif [ "${INIT_ALL_SUBMODULES:-}" = "1" ]; then
-        echo "   init 全部子模块 (INIT_ALL_SUBMODULES=1, 完整环境, 慢 ~60s)..."
+        echo "   ⏭ SKIP_SUBMODULE_INIT=1 — 子模块未 init (按需: cd $wt && git submodule update --init <sub>)"
+      else
+        echo "   init 全部子模块 (完整环境, 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
         t0=$(date +%s)
         init_out=$(cd "$wt" && git submodule update --init 2>&1)
         init_rc=$?
         t1=$(date +%s)
         init_cnt=$(echo "$init_out" | grep -cE "checked out|initialized" || echo 0)
-        echo "   ✅ 全部 init (${init_cnt} 子模块, $((t1-t0))s)"
-      else
-        echo "   init 默认子模块 ($GATE_SUBS; 其余按需 / INIT_ALL_SUBMODULES=1)..."
-        t0=$(date +%s)
-        init_out=$(cd "$wt" && git submodule update --init $GATE_SUBS 2>&1)
-        init_rc=$?
-        t1=$(date +%s)
-        init_cnt=$(echo "$init_out" | grep -cE "checked out|initialized" || echo 0)
         if [ $init_rc -eq 0 ]; then
-          echo "   ✅ 默认子模块 init 完成 (${init_cnt} 子模块, $((t1-t0))s)"
+          echo "   ✅ 全部 init (${init_cnt} 子模块, $((t1-t0))s)"
         else
-          echo "   ⚠️  默认子模块 init 失败 (rc=$init_rc, $((t1-t0))s):"
+          echo "   ⚠️  部分子模块 init 失败 (rc=$init_rc, $((t1-t0))s), 继续..."
           echo "$init_out" | tail -3
         fi
       fi
