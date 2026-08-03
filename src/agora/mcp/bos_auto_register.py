@@ -51,7 +51,8 @@ def auto_register_from_m1(bos_router=None) -> int:
     registered = 0
     for f in sorted(wf_dir.glob("WORKFLOW-*.yaml")):
         try:
-            node = yaml.safe_load(open(f))
+            with f.open() as stream:
+                node = yaml.safe_load(stream)
             if not node or node.get("type") != "Workflow":
                 continue
 
@@ -69,7 +70,7 @@ def auto_register_from_m1(bos_router=None) -> int:
             domain = node.get("domain", "")
 
             # 注册主路由
-            router.register(
+            route_registered = router.register(
                 bos_uri,
                 adapter=adapter,
                 config={
@@ -81,10 +82,10 @@ def auto_register_from_m1(bos_router=None) -> int:
                     "entrypoint": realized.get("entrypoint", ""),
                 },
             )
-            registered += 1
+            registered += int(route_registered)
 
-        except Exception:  # defensive fallback
-            pass
+        except Exception as exc:  # noqa: BLE001 - one bad descriptor is isolated
+            _log.warning("Failed to register %s: %s", f, exc)
 
     _log.info("auto_register_from_m1: registered %d workflows", registered)
     return registered
