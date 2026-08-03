@@ -71,6 +71,48 @@ pasw_create() {
   [ "$created" -gt 0 ] && echo "   ✅ PASW: $created 个子模块 worktree 已隔离"
 }
 
+# PASW: Agent 冲突检测 — claim 文件追踪
+CLAIMS_DIR=".omo/_delivery/agent-claims"
+
+pasw_claim_record() {
+  local session="$1" wt="$2"
+  mkdir -p "$WS_ROOT/$CLAIMS_DIR"
+  local claim_file="$WS_ROOT/$CLAIMS_DIR/${session}.yaml"
+  cat > "$claim_file" << EOF
+session: $session
+branch: work/$session
+worktree: $wt
+created_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+files: []
+EOF
+  echo "   📝 已记录 claim → $CLAIMS_DIR/${session}.yaml"
+}
+
+pasw_claim_check() {
+  local session="$1"
+  [ ! -d "$WS_ROOT/$CLAIMS_DIR" ] && return 0
+  local conflicts=0
+  for claim_file in "$WS_ROOT/$CLAIMS_DIR"/*.yaml; do
+    [ -f "$claim_file" ] || continue
+    local other_session
+    other_session=$(python3 -c "import yaml; print(yaml.safe_load(open('$claim_file')).get('session',''))" 2>/dev/null)
+    [ -z "$other_session" ] && continue
+    [ "$other_session" = "$session" ] && continue
+    # 检查 worktree 是否仍然存在 (过期 claim 跳过)
+    local other_wt
+    other_wt=$(python3 -c "import yaml; print(yaml.safe_load(open('$claim_file')).get('worktree',''))" 2>/dev/null)
+    [ -d "$other_wt" ] || continue
+    conflicts=$((conflicts + 1))
+    echo "   ⚠️  活跃 session: $other_session (worktree: $other_wt)"
+  done
+  [ "$conflicts" -gt 0 ] && echo "   ℹ️  共 $conflicts 个活跃 session, 注意文件冲突风险"
+}
+
+pasw_claim_clean() {
+  local session="$1"
+  rm -f "$WS_ROOT/$CLAIMS_DIR/${session}.yaml" 2>/dev/null || true
+}
+
 pasw_cleanup() {
   local wt="$1"
   local cleaned=0
@@ -123,12 +165,20 @@ case "$cmd" in
       git worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
       echo "   分支: $branch (base: $ROOT_REMOTE/main, repo: $CANONICAL_ROOT_REPO)"
-      # PASW: 默认 init 全部子模块 (disk 便宜, 完整环境避免按需 init 的摩擦).
-      # SKIP_SUBMODULE_INIT=1 跳过 (CI/fast-claim 场景).
-      if [ "${SKIP_SUBMODULE_INIT:-}" = "1" ]; then
-        echo "   ⏭ SKIP_SUBMODULE_INIT=1 — 子模块未 init (按需: cd $wt && git submodule update --init <sub>)"
+      # PASW: 记录 claim 并检查冲突
+      pasw_claim_record "$session" "$wt"
+      pasw_claim_check "$session"
+      # PASW: 默认不 init 全部子模块 (避免大仓库/网络慢 clone 卡死 claim → worktree 半损坏;
+      # 2026-08-03 实测 runtime 网络慢致 claim 超时 600s + 子模块 .git 指针坏).
+      # pasw_create 会单独 init 隔离子模块 (gbrain/cockpit/agora, PASW 核心);
+      # 其他子模块按需 init (cd $wt && git submodule update --init <sub>).
+      # 需要完整环境: PASW_SUBMODULE_INIT=1 (原默认行为, 含卡死风险).
+      if [ "${PASW_SUBMODULE_INIT:-0}" != "1" ]; then
+        echo "   ⏭ 默认跳过全部子模块 init (防 clone 卡死 claim; PASW_SUBMODULE_INIT=1 开启完整 init)"
+        echo "   隔离子模块 (gbrain/cockpit/agora) 由 pasw_create 单独 init; 其他按需:"
+        echo "     cd $wt && git submodule update --init <sub>"
       else
-        echo "   init 全部子模块 (完整环境, 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
+        echo "   PASW_SUBMODULE_INIT=1 — init 全部子模块 (大仓库/网络慢可能卡死)..."
         t0=$(date +%s)
         init_out=$(cd "$wt" && git submodule update --init 2>&1)
         init_rc=$?
