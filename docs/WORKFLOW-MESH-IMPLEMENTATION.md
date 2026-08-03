@@ -949,6 +949,26 @@ Phase 58 修复任务中心与准入工作台之间的上下文断裂。Cockpit 
 回执、结果消费反馈和评测样本沉淀。战略架构与外部知识/数据/方法/工具动态扩展模型见
 [`docs/STRATEGY-SCENARIO-AND-EXTERNAL-EXPANSION.md`](./STRATEGY-SCENARIO-AND-EXTERNAL-EXPANSION.md)。
 
+### 7.3.26 Phase 59 真实外部回执与评测样本准备度
+
+Phase 59 把“准入后发生了什么”接回 Workflow Mesh 运营闭环。Cockpit 新增受治理的
+`POST /api/workflow-mesh/external-receipt`，只接受已经完成外部调用的最小 receipt envelope，并将其交给
+OMO `record_external_receipt()` broker。接口拒绝原文、输入输出载荷、凭据和未知 envelope 字段；它不启动 provider、
+不替调用方执行外部操作，成功或降级 receipt 仍以幂等 `EvidenceRecorded` 进入同一条事件链。
+
+OMO 在既有 `external-resource-selection-eval/v1` 事件派生评测集之上增加
+`workflow-mesh-evaluation-readiness/v1` 投影，按以下事实判断样本状态：WorkflowRun 是否唯一关联、场景绑定是否存在、
+执行结果是否成功、外部资源选择与 receipt 是否对齐、结果消费是否有显式反馈。投影只保留标识、标签、计数和阻塞原因，
+不新增训练数据存储，不读取或导出外部原文；`ready` 才代表可进入人工审核的真实评测样本，`execution_ready` 仍缺少完整
+消费标签，`blocked` 必须先补证据。
+
+Workflow Mesh 运营页现在形成顺序明确的闭环：
+
+`Task Center -> admission -> WorkflowRun -> external receipt/evidence -> outcome feedback -> evaluation readiness`
+
+这一步仍不激活真实 provider，也不把评测投影直接变成预测模型或自动策略。下一阶段应以一个真实低风险场景为样本，
+验证 receipt 来源、消费反馈和评测标注的连续产生，再决定是否建设模型训练、模型注册和预测服务。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
