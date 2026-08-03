@@ -416,6 +416,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0347: Cockpit 外部能力连接计划只读触达面 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 54 | 0347-external-resource-connection-plan-cockpit-surface.md
 - ADR-0348: 外部能力连接计划 UI 产品化 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 55 | 0348-external-resource-connection-plan-ui.md
 - ADR-0349: Scene Card 到 OMO planned task 的场景承接 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 56 | 0349-scene-card-planned-task-handoff.md
+- ADR-0350: 任务中心的场景化 Workflow 请求 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 57 | 0350-task-center-scene-workflow-request.md
 
 ---
 
