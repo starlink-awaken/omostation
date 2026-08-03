@@ -421,6 +421,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0352: Workflow Mesh 结果回执与评测样本准备度投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 59 | 0352-workflow-result-feedback-evaluation-readiness.md
 - ADR-0353: 外部资源受治理刷新与 freshness 恢复投影 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 60 | 0353-external-resource-governed-refresh.md
 - ADR-0354: Workflow Mesh 人工评测标签回执与双人放行队列 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 61 | 0354-workflow-evaluation-label-receipt.md
+- ADR-0355: Bot 撞车治理 follow-up (governance-verify 真测试 + 外部 agent swarm 感知 + claim TTL GC) — **DEFERRED** | 2026-08-03 | bot 撞车治理 (PR #877 + agora#14) | 0355-bot-taming-followup.md
 
 ---
 
