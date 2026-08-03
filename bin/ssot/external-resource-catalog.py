@@ -24,6 +24,7 @@ from typing import Any
 
 SCHEMA = "external-resource-catalog/v1"
 DIRECTORY_SCHEMA = "external-resource-directory/v1"
+CONNECTION_PLAN_SCHEMA = "external-resource-connection-plan/v1"
 
 
 class ExternalResourceCatalogInputError(ValueError):
@@ -100,6 +101,7 @@ def build_external_resource_directory_snapshot(
             "id": resource_id,
             "kind": str(item.get("kind") or "unknown"),
             "provider": str(item.get("provider") or "unknown"),
+            "owner": str(item.get("owner") or ""),
             "capabilities": capabilities,
             "lifecycle": str(item.get("lifecycle") or "unknown"),
             "availability": availability,
@@ -171,6 +173,122 @@ def build_external_resource_directory_snapshot(
     digest_state.pop("observed_at", None)
     directory["directory_digest"] = _canonical_digest(digest_state)
     return directory
+
+
+def _connection_plan_item(resource: Mapping[str, Any]) -> dict[str, Any]:
+    """Translate one directory item into a safe, deterministic connection step."""
+    next_step = str(resource.get("next_step") or "route_evaluation")
+    availability = str(resource.get("availability") or "unavailable")
+    lifecycle = str(resource.get("lifecycle") or "unknown")
+    blockers: list[str] = []
+    required_inputs: list[str] = []
+    if next_step == "health_probe":
+        blockers.append("health_observation_required")
+        required_inputs.append("health_probe")
+    elif next_step in {"proposal_or_evaluation", "route_evaluation"}:
+        blockers.extend(["scene_card_required", "policy_evaluation_required"])
+        required_inputs.extend(["scene_card", "policy_evaluation"])
+    elif next_step in {"sandbox", "scene_card_and_permission_review"}:
+        blockers.extend(["scene_card_required", "permission_review_required"])
+        required_inputs.extend(["scene_card", "permission_ref", "rollback_plan"])
+    elif next_step == "activation_review":
+        blockers.extend(["human_activation_review_required", "outcome_metric_required"])
+        required_inputs.extend(["approver_ref", "outcome_metric", "rollback_plan"])
+    elif next_step == "health_recovery_or_quarantine":
+        blockers.append("health_recovery_or_quarantine_review_required")
+        required_inputs.extend(["health_probe", "owner_ref", "rollback_plan"])
+    elif next_step == "quarantine_review":
+        blockers.append("quarantine_disposition_required")
+        required_inputs.extend(["owner_ref", "review_ref"])
+    elif next_step == "retired":
+        blockers.append("retired_resource_is_not_routable")
+
+    reviewable_steps = {
+        "proposal_or_evaluation",
+        "route_evaluation",
+        "sandbox",
+        "scene_card_and_permission_review",
+        "activation_review",
+    }
+    status = (
+        "ready_for_review"
+        if availability == "available" and next_step in reviewable_steps
+        else "blocked"
+    )
+    return {
+        "resource_id": str(resource.get("id") or ""),
+        "kind": str(resource.get("kind") or "unknown"),
+        "provider": str(resource.get("provider") or "unknown"),
+        "lifecycle": lifecycle,
+        "availability": availability,
+        "next_step": next_step,
+        "status": status,
+        "blockers": sorted(set(blockers)),
+        "required_inputs": sorted(set(required_inputs)),
+        "owner_ref": str(resource.get("owner") or ""),
+        "permission_ref": str(resource.get("permission_ref") or ""),
+    }
+
+
+def build_external_resource_connection_plan(
+    directory: Mapping[str, Any], *, now: datetime | None = None
+) -> dict[str, Any]:
+    """Build a read-only connection plan from the capability directory.
+
+    The plan makes extension work actionable without pretending that a
+    connector is approved or executable. It contains only safe metadata and
+    required evidence; OMO remains the sole owner of admission and runtime
+    state.
+    """
+    if directory.get("schema") != DIRECTORY_SCHEMA:
+        raise ExternalResourceCatalogInputError(
+            "connection plan requires an external-resource directory"
+        )
+    raw_resources = directory.get("resources", [])
+    if not isinstance(raw_resources, list):
+        raise ExternalResourceCatalogInputError("directory resources must be a list")
+    plan = [
+        _connection_plan_item(item)
+        for item in raw_resources
+        if isinstance(item, Mapping)
+    ]
+    if len(plan) != len(raw_resources):
+        raise ExternalResourceCatalogInputError("directory resource must be an object")
+    plan.sort(key=lambda item: item["resource_id"])
+    plan_state = {
+        "schema": CONNECTION_PLAN_SCHEMA,
+        "mode": "read_only_projection",
+        "directory_digest": str(directory.get("directory_digest") or ""),
+        "items": plan,
+    }
+    payload = {
+        **plan_state,
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "admission_mutation": False,
+        "observed_at": (now or datetime.now(UTC)).isoformat(),
+        "summary": {
+            "resource_count": len(plan),
+            "blocked_count": sum(item["status"] == "blocked" for item in plan),
+            "ready_for_review_count": sum(
+                item["status"] == "ready_for_review" for item in plan
+            ),
+            "next_step_counts": {
+                step: sum(item["next_step"] == step for item in plan)
+                for step in sorted({item["next_step"] for item in plan})
+            },
+        },
+        "policy": {
+            "source": DIRECTORY_SCHEMA,
+            "side_effects": "disabled",
+            "semantics": "evidence_collection_and_human_or_governed_review_only",
+        },
+    }
+    digest_state = dict(payload)
+    digest_state.pop("observed_at", None)
+    payload["plan_digest"] = _canonical_digest(digest_state)
+    return payload
 
 
 def _load_agora(root: Path):
@@ -466,6 +584,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="将只读目录转换为 capability directory，不执行观察或激活",
     )
+    parser.add_argument(
+        "--connection-plan",
+        action="store_true",
+        help="将 capability directory 转换为只读连接计划，不执行观察或激活",
+    )
     parser.add_argument("--actor", default="external-resource-observer")
     parser.add_argument(
         "--source-ref", default="root:external-resource-catalog:observe"
@@ -473,9 +596,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-id", help="稳定的只读观察运行标识，用于重试幂等")
     args = parser.parse_args(argv)
     try:
-        if args.observe and args.directory:
+        if args.observe and (args.directory or args.connection_plan):
             raise ExternalResourceCatalogInputError(
-                "--directory cannot be combined with --observe"
+                "--directory/--connection-plan cannot be combined with --observe"
+            )
+        if args.directory and args.connection_plan:
+            raise ExternalResourceCatalogInputError(
+                "--directory cannot be combined with --connection-plan"
             )
         previous_snapshot = None
         if args.previous_snapshot:
@@ -506,9 +633,16 @@ def main(argv: list[str] | None = None) -> int:
                 probe=not args.no_health_probe,
                 previous_snapshot=previous_snapshot,
             )
-            payload = (
+            directory = (
                 build_external_resource_directory_snapshot(catalog)
-                if args.directory
+                if args.directory or args.connection_plan
+                else None
+            )
+            payload = (
+                build_external_resource_connection_plan(directory)
+                if args.connection_plan and directory is not None
+                else directory
+                if directory is not None
                 else catalog
             )
     except (ExternalResourceCatalogInputError, ValueError) as exc:

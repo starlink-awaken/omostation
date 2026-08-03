@@ -145,6 +145,9 @@ dynamic_discovery:
   capability_directory_contract: external-resource-directory/v1
   capability_directory_builder: bin/ssot/external-resource-catalog.py::build_external_resource_directory_snapshot
   capability_directory_cli: bin/ssot/external-resource-catalog.py --directory
+  connection_plan_contract: external-resource-connection-plan/v1
+  connection_plan_builder: bin/ssot/external-resource-catalog.py::build_external_resource_connection_plan
+  connection_plan_cli: bin/ssot/external-resource-catalog.py --connection-plan
   capability_directory_semantics:
     source: external-resource-catalog/v1
     purpose: capability_freshness_and_expansion_map
@@ -154,6 +157,15 @@ dynamic_discovery:
     admission_mutation: forbidden
     required_indexes: [capability_index, kind_index, next_steps]
     next_step_policy: deterministic_review_or_probe_action
+  connection_plan_semantics:
+    source: external-resource-directory/v1
+    purpose: evidence_collection_and_governed_extension_queue
+    activation: forbidden
+    provider_invocation: forbidden
+    workflow_run_creation: forbidden
+    admission_mutation: forbidden
+    required_item_fields: [resource_id, next_step, status, blockers, required_inputs]
+    status_policy: blocked_until_required_evidence_exists
   refresh_contract:
     triggers: [startup, periodic, on_demand, descriptor_change]
     identity_fields: [id, provider, version]
