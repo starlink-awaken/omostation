@@ -488,3 +488,48 @@ def test_catalog_diff_marks_descriptor_changes_for_manual_review() -> None:
     assert diff["changes"][0]["risk_class"] == "manual_review"
     assert diff["changes"][0]["risk_codes"] == ["resource_added"]
     assert "descriptor_provider_changed" in diff["changes"][1]["risk_codes"]
+
+
+# ── B2: 能力准入分级 (capability 注册 + 使用度量驱动生命周期) ──────────
+
+
+def test_register_capability_admitted_with_usage():
+    """有调用记录的能力注册为 admitted。"""
+    cat = ExternalConnectionCatalog()
+    r = cat.register_capability(
+        "bos://capability/foo/invoke", use_metrics={"calls": 5}
+    )
+    assert r.lifecycle == "admitted"
+    assert r.kind == "tool_capability"
+    assert r.protocol == "bos"
+
+
+def test_register_capability_zero_usage_sandboxed():
+    """零调用能力自动降级为 sandbox (防僵尸能力直接 active)。"""
+    cat = ExternalConnectionCatalog()
+    r = cat.register_capability(
+        "bos://capability/bar/invoke", use_metrics={"calls": 0}
+    )
+    assert r.lifecycle == "sandbox"
+
+
+def test_register_capability_explicit_lifecycle():
+    """显式指定 lifecycle 不被使用度量覆盖。"""
+    cat = ExternalConnectionCatalog()
+    r = cat.register_capability(
+        "bos://capability/baz/invoke",
+        lifecycle="discovered",
+        use_metrics={"calls": 10},
+    )
+    assert r.lifecycle == "discovered"
+
+
+def test_register_capability_rejects_bad_kind():
+    """非法 kind 被拒绝。"""
+    cat = ExternalConnectionCatalog()
+    try:
+        cat.register_capability("bos://capability/x/invoke", kind="not-a-kind")
+        raised = False
+    except ExternalConnectionError:
+        raised = True
+    assert raised
