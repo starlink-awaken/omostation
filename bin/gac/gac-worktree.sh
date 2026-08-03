@@ -495,6 +495,46 @@ except Exception:
     echo "总计: $(ls -d "$WS_PARENT"/ws-*/ 2>/dev/null | wc -l | tr -d ' ') 个活跃 worktree"
     ;;
 
+  onboard)
+    # 新 Agent 入职引导: claim + 环境初始化 + 引导信息
+    [ -z "$session" ] && echo "用法: onboard <session>" >&2 && exit 1
+    validate_session "$session"
+    echo "🚀 Agent 入职引导: $session"
+    echo ""
+
+    # 1. Claim worktree (自动 PASW 隔离 + 冲突检测)
+    echo "── 1. 创建隔离 worktree ──"
+    bash "$0" claim "$session" || exit 1
+    wt="$WS_PARENT/ws-$session"
+
+    # 2. 显示项目引导
+    echo ""
+    echo "── 2. 项目引导 ──"
+    if [ -f "$wt/AGENTS.md" ]; then
+      echo "📄 项目 AGENTS.md 前 30 行:"
+      head -30 "$wt/AGENTS.md"
+      echo "..."
+    fi
+
+    # 3. 推荐 workflow
+    echo ""
+    echo "── 3. 推荐工作流 ──"
+    echo "  启动 agent-workflow:"
+    echo "    cd $wt"
+    echo "    uv run --with pyyaml python bin/agent-workflow.py bootstrap"
+    echo "    uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> --profile <agent> --objective '<summary>'"
+
+    # 4. 下一步
+    echo ""
+    echo "── 4. 快速开始 ──"
+    echo "   编辑文件: cd $wt"
+    echo "   提交改动: git add . && git commit -m '...'"
+    echo "   推送 PR:  bash bin/gac-gac-worktree.sh submit $session"
+    echo "   查看状态: bash bin/gac-gac-worktree.sh agents"
+    echo ""
+    echo "✅ 入职完成! 祝编码愉快 🎉"
+    ;;
+
   cleanup)
     # TTL 过期 worktree 回收 (cron 调用入口; gac-worktree-cleanup.sh 委托本子命令)
     # 判定: mtime (非 atime — relatime 下 atime 不更新) 超 TTL 且无脏改动 → 删除
@@ -544,7 +584,7 @@ except Exception:
   *)
     echo "GaC worktree per session (ADR-0106 P2)"
     echo ""
-    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-pointer|list|agents|cleanup} [args]"
+    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-pointer|list|agents|onboard|cleanup} [args]"
     echo ""
     echo "  claim <session>      创建 worktree + 分支 work/<session>"
     echo "  submit <session>     push 分支 + 开 PR (base main)"
@@ -553,6 +593,7 @@ except Exception:
     echo "  bump-pointer <session> <submodule>  更新子模块指针到 worktree HEAD"
     echo "  list                 列所有 worktree + PASW 状态"
     echo "  agents               Agent 活动看板 (session/分支/PR/活跃时间)"
+    echo "  onboard <session>    新 Agent 入职引导 (claim + 环境 + 引导)"
     echo "  cleanup              回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h)"
     echo ""
     echo "PASW 隔离子模块: $ISOLATED_SUBS"
