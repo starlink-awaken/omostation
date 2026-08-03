@@ -192,6 +192,13 @@ def append_ledger_event(registry: dict[str, Any], event: dict[str, Any]) -> None
         handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+def _extract_run_timestamp(run_id: str) -> str | None:
+    """Parse the timestamp embedded in a run_id like 20260723T062855Z-..."""
+    if len(run_id) < 16 or not run_id[:4].isdigit():
+        return None
+    return f"{run_id[:4]}-{run_id[4:6]}-{run_id[6:8]}T{run_id[9:11]}:{run_id[11:13]}:{run_id[13:15]}Z"
+
+
 def ledger_mentions_run(registry: dict[str, Any], run_id: str) -> bool:
     path = ledger_path(registry)
     if not path.exists() or path.stat().st_size == 0:
@@ -219,6 +226,7 @@ def heal_ledger_for_run(
     """
     if ledger_mentions_run(registry, run_id):
         return False
+    original_ts = payload.get("created_at") or _extract_run_timestamp(run_id)
     append_ledger_event(
         registry,
         {
@@ -232,10 +240,12 @@ def heal_ledger_for_run(
             "locks": payload.get("locks") or [],
             "healed": True,
             "heal_reason": "ledger_missing_run_replay_from_run_yaml",
+            "ts": original_ts or utc_now(),
         },
     )
     status = str(payload.get("status") or "")
     if status in {"ok", "failed", "blocked"}:
+        close_ts = payload.get("closed_at") or payload.get("updated_at") or original_ts
         append_ledger_event(
             registry,
             {
@@ -246,6 +256,7 @@ def heal_ledger_for_run(
                 "evidence": payload.get("evidence") or [],
                 "healed": True,
                 "heal_reason": "ledger_missing_run_replay_from_run_yaml",
+                "ts": close_ts or utc_now(),
             },
         )
     return True
