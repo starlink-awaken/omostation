@@ -103,6 +103,15 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     args = parser.parse_args()
 
+    # 防御: WORKSPACE 不存在 (worktree 被 cleanup 误清等) → 友好退出, 不 traceback
+    # (2026-08-03: 曾因 worktree 被 cleanup 清理, subprocess cwd 失效 → FileNotFoundError)
+    if not WORKSPACE.exists():
+        sys.stderr.write(
+            f"❌ WORKSPACE 不存在: {WORKSPACE}\n"
+            f"   worktree 可能被外部清理 (cleanup TTL?). 中止 push 避免误判 unreachable.\n"
+        )
+        return 2
+
     report = check(args.source, fetch=args.fetch)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
