@@ -334,3 +334,22 @@ Phase 63 将候选模型评测收敛为一个显式的、可重复的离线报�
 报告的 `controls` 必须固定表达 `activation=forbidden`、`provider_invocation=false`、`workflow_run_creation=false` 和
 `automatic_promotion=false`。`shadow_pass` 仅表示在绑定数据上的离线指标满足阈值，不是生产放行，也不会自动改变 Workflow Mesh
 准入、任务状态或外部资源路由。真实业务运行前，仍需完成低风险消费者、真实回执、双人标注、adjudication、脱敏 manifest 和人工审批。
+
+### 12.2 Phase 64 真实工程交付消费者
+
+先选工程研发交付作为低风险、可验证的真实元数据场景：消费已合并 PR、请求/合并时间、merge SHA、CI/PR 证据引用和对应 WorkflowRun，
+不读取业务原文，不调用外部 provider，不创建运行，不触发任务派发。入口为 OMO 的
+`consume-engineering-delivery --workflow-run-id <id> --stdin`，输入是脱敏的交付摘要；输出同时落
+`external-connection-receipt/v1` 和 `outcome-feedback/v1`，以统一 `scene_id/journey_id/outcome_metric` 关联到 Mesh。
+
+运行顺序必须是：
+
+```text
+WorkflowRequested(scene-bound) -> admitted -> succeeded
+  -> consume merged delivery -> receipt + outcome feedback
+  -> human verification -> PRMerged -> closed
+```
+
+消费者是幂等的，重复消费不增加证据或反馈记录；输入不完整、场景不匹配、WorkflowRun 未成功或已进入后续状态但缺少既有
+receipt 时 fail-closed。该消费者只证明“真实工程交付元数据可以回到证据链并被人消费”，不证明业务价值，也不解除 M2/M6 门槛。
+下一轮应在此接口上接入真实责任人的人工 `reviewed/adopted` 反馈，再将同一批真实 run 纳入双人标注和 adjudicated manifest。
