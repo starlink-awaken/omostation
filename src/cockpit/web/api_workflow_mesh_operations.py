@@ -25,11 +25,17 @@ if str(_OMO_SRC) not in sys.path:
     sys.path.insert(0, str(_OMO_SRC))
 
 try:
+    from omo.omo_external_receipt import (
+        ExternalReceiptError,
+        record_external_receipt,
+    )
     from omo.outcome_feedback import OutcomeFeedbackError, record_outcome_feedback
     from omo.workflow_eval import build_operations_snapshot
 except Exception as exc:  # OMO is an optional runtime dependency for Cockpit.
     build_operations_snapshot = None  # type: ignore[assignment]
+    record_external_receipt = None  # type: ignore[assignment]
     record_outcome_feedback = None  # type: ignore[assignment]
+    ExternalReceiptError = ValueError  # type: ignore[assignment,misc]
     OutcomeFeedbackError = ValueError  # type: ignore[assignment,misc]
     _OMO_IMPORT_ERROR: Exception | None = exc
 else:
@@ -172,4 +178,64 @@ if router:
             "ok": True,
             "status": result["status"],
             "feedback": result["feedback"],
+        }
+
+    @router.post("/external-receipt")
+    async def post_workflow_mesh_external_receipt(request: Request) -> dict[str, Any]:  # type: ignore[valid-type]
+        """Persist a safe receipt from an already completed external operation."""
+        if record_external_receipt is None:
+            projection = _unavailable_projection(
+                type(_OMO_IMPORT_ERROR).__name__ if _OMO_IMPORT_ERROR else "ImportError",
+                "安装并挂载 OMO 运行时后重试。",
+            )
+            return {"ok": False, "status": "unavailable", "receipt": projection}
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ExternalReceiptError("receipt payload must be an object")
+            allowed = {"workflow_run_id", "step_run_id", "producer", "receipt"}
+            unknown = sorted(set(payload) - allowed)
+            if unknown:
+                raise ExternalReceiptError(
+                    f"unsupported receipt envelope fields: {unknown}"
+                )
+            receipt = payload.get("receipt")
+            result = record_external_receipt(
+                _REPO_ROOT / ".omo",
+                receipt,
+                workflow_run_id=str(payload.get("workflow_run_id") or ""),
+                step_run_id=str(payload.get("step_run_id") or "").strip() or None,
+                producer=str(
+                    payload.get("producer")
+                    or "cockpit-ui://workflow-mesh-operations"
+                ).strip(),
+            )
+        except (ExternalReceiptError, ValueError, TypeError) as exc:
+            return {
+                "ok": False,
+                "status": "invalid",
+                "error": "external_receipt_invalid",
+                "message": str(exc),
+            }
+        except OSError as exc:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "external_receipt_unavailable",
+                "message": f"外部回执持久化不可用: {type(exc).__name__}",
+            }
+        event_payload = result.get("payload") or {}
+        return {
+            "ok": True,
+            "status": "recorded",
+            "receipt": {
+                "event_id": result.get("event_id"),
+                "evidence_id": event_payload.get("evidence_id"),
+                "receipt_id": event_payload.get("receipt_id"),
+                "workflow_run_id": result.get("workflow_run_id"),
+                "resource_id": event_payload.get("resource_id"),
+                "result_state": event_payload.get("result_state"),
+                "observed_at": event_payload.get("observed_at"),
+                "provenance_ref": event_payload.get("provenance_ref"),
+            },
         }

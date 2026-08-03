@@ -189,3 +189,84 @@ def test_outcome_feedback_api_returns_unavailable_on_persistence_error(monkeypat
     assert response.json()["ok"] is False
     assert response.json()["status"] == "unavailable"
     assert response.json()["error"] == "outcome_feedback_unavailable"
+
+
+def test_external_receipt_api_forwards_safe_envelope(monkeypatch, tmp_path):
+    captured: list[tuple[object, dict, str, str | None, str]] = []
+
+    def fake_record(omo_dir, receipt, *, workflow_run_id, step_run_id, producer):
+        captured.append((omo_dir, receipt, workflow_run_id, step_run_id, producer))
+        return {
+            "event_id": "external-evidence:event-1",
+            "workflow_run_id": workflow_run_id,
+            "payload": {
+                "evidence_id": "external:source:test-receipt-1",
+                "receipt_id": receipt["receipt_id"],
+                "resource_id": receipt["resource_id"],
+                "result_state": receipt["result_state"],
+                "observed_at": receipt["observed_at"],
+                "provenance_ref": receipt["provenance_ref"],
+            },
+        }
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_workflow_mesh_operations, "record_external_receipt", fake_record)
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/external-receipt",
+        json={
+            "workflow_run_id": "run-1",
+            "step_run_id": "run-1:execute",
+            "producer": "operator://receipt-entry",
+            "receipt": {
+                "receipt_id": "receipt-1",
+                "trace_id": "trace-1",
+                "resource_id": "source:test",
+                "operation": "search",
+                "result_state": "succeeded",
+                "observed_at": "2026-08-03T10:00:00Z",
+                "provenance_ref": "evidence://source/test",
+                "policy_digest": "policy-1",
+                "output_digest": "a" * 64,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "ok": True,
+        "status": "recorded",
+        "receipt": {
+            "event_id": "external-evidence:event-1",
+            "evidence_id": "external:source:test-receipt-1",
+            "receipt_id": "receipt-1",
+            "workflow_run_id": "run-1",
+            "resource_id": "source:test",
+            "result_state": "succeeded",
+            "observed_at": "2026-08-03T10:00:00Z",
+            "provenance_ref": "evidence://source/test",
+        },
+    }
+    assert captured[0][0] == tmp_path / ".omo"
+    assert captured[0][1]["receipt_id"] == "receipt-1"
+    assert captured[0][2:] == (
+        "run-1",
+        "run-1:execute",
+        "operator://receipt-entry",
+    )
+
+
+def test_external_receipt_api_rejects_unknown_envelope_field(monkeypatch):
+    monkeypatch.setattr(api_workflow_mesh_operations, "record_external_receipt", lambda *args, **kwargs: None)
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/external-receipt",
+        json={"workflow_run_id": "run-1", "content": "must-not-cross-boundary"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["error"] == "external_receipt_invalid"
