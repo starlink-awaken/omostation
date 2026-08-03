@@ -710,14 +710,27 @@ def compliance_report(registry: dict[str, Any], run_id: str | None) -> dict[str,
             )
         event_names = event_names_by_run.get(current_run_id, set())
         if status == "ok" and "agent_workflow_verify" not in event_names:
-            findings.append(
-                {
-                    "severity": "warn",
-                    "kind": "closed_run_missing_verify_event",
-                    "message": f"closed run has no verify event: {current_run_id}",
-                    "run_id": current_run_id,
-                }
-            )
+            # D1 (ADR-0355 方案A): close 手动 evidence 算 manual verify (ADR-0209 A1 protocol honesty),
+            # 不 warn missing_verify 噪音; 降级 info 区分 manual vs auto verify.
+            # 无 evidence 的 halt 由 closed_run_missing_evidence (上 above) 兜底.
+            if evidence:
+                findings.append(
+                    {
+                        "severity": "info",
+                        "kind": "closed_run_manual_verify",
+                        "message": f"closed run uses manual evidence (ADR-0209 A1), no auto verify event: {current_run_id}",
+                        "run_id": current_run_id,
+                    }
+                )
+            else:
+                findings.append(
+                    {
+                        "severity": "warn",
+                        "kind": "closed_run_missing_verify_event",
+                        "message": f"closed run has no verify event and no evidence: {current_run_id}",
+                        "run_id": current_run_id,
+                    }
+                )
         close_event_names = {"agent_workflow_closeout", "agent_workflow_close"}
         if status == "ok" and not event_names.intersection(close_event_names):
             findings.append(
