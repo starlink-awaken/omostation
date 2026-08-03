@@ -192,6 +192,21 @@ Phase 49 增加 `external-scene-trial-promotion-readiness/v1`，把试运行晋�
 `admission_mutation=forbidden` 和 `external_side_effects=disabled`；任何缺少真实消费者证据的场景都不能被审阅动作或
 静态 catalog 预览伪装成正式 Workflow。
 
+### 4.1.9 外部场景消费者契约
+
+Phase 50 增加 `external-scene-consumer/v1`，把“有一个 opaque consumer_ref”提升为可验证的消费者声明。
+业务方必须通过 OMO `external-resources record-scene-consumer --stdin` 登记与场景绑定一致的消费者，并提供 owner、
+entrypoint、capability、permission、metric、rollback 和至少一条脱敏证据引用。记录只允许 `status=declared`，
+固定 `activation=forbidden`、`provider_invocation=false`、`workflow_run_id=null`，因此它是晋升前置事实，不是执行授权。
+
+消费者契约写入 `.omo/_knowledge/workflow-mesh/external-scene-consumers.jsonl`，以 `consumer_id` 和稳定契约摘要幂等；
+actor、source 和观察时间不参与摘要，重复提交可安全重放，契约冲突则 fail-closed。readiness 只有在同一 `consumer_ref`
+和同一 `scene_binding` 存在 `declared` 契约时，才通过 `consumer_registered` 检查；之后仍必须有真实 WorkflowRun、
+external receipt 和显式 outcome feedback 才能显示 `ready`。
+
+该契约不允许填入原文、凭据、输入输出或模型结果，也不替代 Scene Card、admission、WorkflowRun、receipt 或结果反馈。
+它把下一次真实业务接入收敛为“登记契约 -> 运行 -> 回执 -> 结果反馈”，不需要为每个新消费者复制一套工作流。
+
 ## 4. 触达模式
 
 优先使用 `live_query` 和 `live_invoke`，仅在有边界时使用 `ttl_snapshot` 或
