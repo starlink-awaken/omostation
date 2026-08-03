@@ -71,6 +71,23 @@ Iris 同时保留 `iris.connectors` 作为自身注册组，并将同一批 conn
 
 目录命令支持调用方传入 `--previous-snapshot`，输出 `external-resource-catalog-diff/v1`，比较资源新增、移除、健康/生命周期变化以及 provider 错误恢复。上一份快照不由根命令隐式保存，避免在目录投影旁形成第二份状态真相；需要持久化的证据由 OMO 或后续受治理的观察任务承接。
 
+### 4.1.0 Capability Directory
+
+资源列表解决“发现了什么”，但业务和运营还需要知道“现在能做什么、为什么不能做、下一步怎样扩展”。根仓可以对同一份
+`external-resource-catalog/v1` 生成 `external-resource-directory/v1` capability directory：
+
+- `capability_index` 按能力列出候选资源和当前 `available_resource_ids`，不重新调用 provider，也不复制原文；
+- `kind_index` 把知识源、数据源、方法包、工具能力、渠道和模型提供方统一放入同一张能力地图；
+- 每个资源给出确定性的 `next_step`，例如 `health_probe`、`proposal_or_evaluation`、
+  `scene_card_and_permission_review` 或 `route_evaluation`，它是下一步治理动作提示，不是状态迁移；
+- `summary` 只统计当前快照事实，`catalog_digest`/`directory_digest` 用于重放和比对；
+- 投影固定 `activation=forbidden`、`provider_invocation=false`、`workflow_run_creation=false`、
+  `admission_mutation=false`，不能被当作路由、准入或 WorkflowRun 事实。
+
+命令为 `bin/ssot/external-resource-catalog.py --directory`。它只读当前目录，不能与 `--observe` 合并；需要留存时仍由
+OMO 观察 broker 记录原始 catalog observation，避免 capability directory 形成第二份资源真相。未来 Cockpit 可以直接消费该
+投影做“能力地图/扩展队列”，Agora 仍只拥有发现与路由决策，Workflow Mesh 仍只拥有执行与回执。
+
 ### 4.1.1 受治理观察
 
 当目录需要进入可审计的人机消费链时，根仓命令可以使用 `--observe` 将同一个安全目录通过

@@ -823,6 +823,26 @@ readiness 现在先检查 `consumer_contract_missing` / `consumer_contract_not_d
 消费者日志仍是 OMO 独占的 append-only 事实，字段只允许 opaque 引用，且固定 `activation=forbidden`、
 `provider_invocation=false`、`workflow_run_id=null`。当前没有业务方提交该契约时，系统明确保持 blocked，不用内部测试或静态预览冒充真实消费。
 
+### 7.3.19 Phase 51 外部能力地图与动态扩展队列
+
+Phase 51 在已有 `external-resource-catalog/v1` 之上生成 `external-resource-directory/v1`。它面向产品和运营回答三个问题：
+当前有哪些知识/数据/资料/方法/理论/渠道/工具/模型能力、每项能力当前是否可用、下一步该走探活、评测、场景绑定还是路由评估。
+
+`bin/ssot/external-resource-catalog.py --directory` 是纯只读转换：
+
+`catalog -> capability_index + kind_index + next_steps -> 人工能力地图/扩展队列`
+
+投影固定不调用 provider、不创建 WorkflowRun、不改变 admission、不激活资源。`capability_index` 让未来的 Agora 路由可以消费
+统一能力视图，`kind_index` 让 Kairon 的知识/方法扩展和 AetherForge 的模型扩展共享同一资源语言，`next_steps` 则把连接器生命周期
+变成可解释的产品队列，而不是让“能发现”被误解为“能使用”。directory 的 digest 可用于快照重放与变化评审，但不构成新的资源状态真相；
+持久化仍由 OMO observation broker 负责。
+
+Phase 51 后，外部能力的长期扩展路径收敛为：
+
+`pack manifest -> catalog discovery -> capability directory -> health/evaluation -> Scene Card/consumer -> Workflow Mesh -> receipt/feedback`
+
+没有真实场景时停在 directory、proposal 或 evaluation；出现真实消费者后才进入 Phase 50 已定义的 consumer contract 和 readiness 晋升链。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。

@@ -78,6 +78,81 @@ def test_collects_dynamic_resources_as_read_only_safe_projection(tmp_path: Path)
     assert before == after
 
 
+def test_builds_capability_directory_with_governed_next_steps() -> None:
+    catalog = {
+        "schema": "external-resource-catalog/v1",
+        "observed_at": "2026-08-02T00:00:00+00:00",
+        "resources": [
+            {
+                "id": "source:available",
+                "kind": "knowledge_source",
+                "provider": "research-provider",
+                "capabilities": ["read", "search"],
+                "lifecycle": "active",
+                "availability": "available",
+                "mode": "live_query",
+                "data_classification": "public",
+                "permission_ref": "permission://research",
+                "health": {
+                    "status": "healthy",
+                    "observed_at": "2026-08-02T00:00:00+00:00",
+                    "source": "probe:research",
+                },
+                "reason_codes": [],
+            },
+            {
+                "id": "method:proposal",
+                "kind": "method_pack",
+                "provider": "method-provider",
+                "capabilities": ["explain", "evaluate"],
+                "lifecycle": "sandbox",
+                "availability": "proposal_only",
+                "mode": "proposal_only",
+                "data_classification": "public",
+                "permission_ref": "permission://method",
+                "health": {"status": "healthy"},
+                "reason_codes": ["proposal_only"],
+            },
+            {
+                "id": "source:stale",
+                "kind": "data_source",
+                "provider": "data-provider",
+                "capabilities": ["query"],
+                "lifecycle": "active",
+                "availability": "stale",
+                "mode": "governed_snapshot",
+                "data_classification": "private",
+                "permission_ref": "permission://data",
+                "health": {"status": "healthy"},
+                "reason_codes": ["health_stale"],
+            },
+        ],
+        "errors": [],
+    }
+
+    directory = MODULE.build_external_resource_directory_snapshot(catalog)
+
+    assert directory["schema"] == "external-resource-directory/v1"
+    assert directory["activation"] == "forbidden"
+    assert directory["provider_invocation"] is False
+    assert directory["capability_index"]["search"]["available_resource_ids"] == [
+        "source:available"
+    ]
+    assert directory["capability_index"]["query"]["available_resource_ids"] == []
+    assert directory["summary"]["capability_count"] == 5
+    assert directory["summary"]["unavailable_count"] == 1
+    assert {item["resource_id"]: item["next_step"] for item in directory["next_steps"]} == {
+        "source:available": "route_evaluation",
+        "method:proposal": "proposal_or_evaluation",
+        "source:stale": "health_probe",
+    }
+    assert directory["directory_digest"].startswith("sha256:")
+
+
+def test_directory_rejects_observe_combination_at_cli_boundary() -> None:
+    assert MODULE.main(["--directory", "--observe"]) == 2
+
+
 def test_failed_probe_isolated_and_explicitly_unavailable() -> None:
     class FailingProvider:
         @staticmethod
