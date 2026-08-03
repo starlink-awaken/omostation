@@ -1066,6 +1066,23 @@ OMO 同时提供只读 `engineering-delivery-review-queue` 投影，按真实 Wo
 供 Cockpit 后续接入正式审核工作台。投影不改变 WorkflowRun，不派发任务，不调用 provider，也不自动晋升策略。相同 decision 和证据
 重复提交幂等；不同阶段的反馈可以沿 `submitted -> reviewed -> adopted/rejected` 追加，避免把反馈生命周期误判为冲突。
 
+### 7.3.33 Phase 66 Cockpit 工程交付人工复核工作台
+
+Phase 66 将 Phase 65 的 OMO review queue 接入 Cockpit L3，而不是在入口层重新实现一套状态机。新增
+`GET /api/workflow-mesh/engineering-delivery/review-queue` 只读取 OMO 的
+`engineering-delivery-review-queue/v1` 投影，支持按 `workflow_run_id` 过滤；新增
+`POST /api/workflow-mesh/engineering-delivery/review` 只接受交付 ID、人工决策、复核时间、复核证据引用、
+WorkflowRun 引用和脱敏 actor 引用，再转交 OMO review broker。
+
+两个接口都显式返回 side-effect controls：队列为 `read_only=true`，复核入口保持
+`workflow_state_mutation=false`、`provider_invocation=false`、`automatic_promotion=false`。Cockpit 不直接读取
+`.omo` 日志、不自行合并 feedback 状态、不创建 WorkflowRun、不派发 OMO 任务；OMO 继续拥有字段安全、状态约束、幂等和
+append-only 持久化。这样 UI 可以围绕队列、详情和复核表单演进，业务和模型阶段仍然依赖真实样本、双人标注与 adjudication。
+
+当前 L3/L2 链路为：
+
+`Cockpit queue -> OMO review projection -> Cockpit review envelope -> OMO broker -> outcome-feedback`
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
