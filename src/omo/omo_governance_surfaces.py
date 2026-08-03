@@ -8,8 +8,19 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# P105 R1: ingress-check 子模块 re-export
+# P105 R1: ingress-check 子模块 re-export.  These names remain a public
+# facade for CLI lint commands and downstream governance callers.
+from .omo_governance_surfaces_ingress import (
+    _check_ingress_registry,  # noqa: F401
+    _resolve_ingress_task_carrier,  # noqa: F401
+)
+
 # P106 R1: task-policy + ingress-artifacts 子模块 re-export
+from .omo_governance_surfaces_ingress_artifacts import (
+    _check_ingress_artifacts,  # noqa: F401
+)
+
+
 # P110 R1: build_governance_surfaces_report 子模块 (extracted 254L from omo_governance_surfaces.py)
 # Re-export 保持向后兼容 (cli.py / external callers)
 from .omo_governance_surfaces_report import (
