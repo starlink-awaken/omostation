@@ -896,6 +896,25 @@ Phase 55 将 Phase 54 的 API 投影接入现有 `/external-resources` 页面，
 误当成 connection plan 导致页面崩溃。任何 UI 状态都不代表准入或激活，所有写操作和执行仍沿用 Scene Card、OMO
 admission、Workflow Mesh receipt 与 outcome feedback 的既有链路。
 
+### 7.3.23 Phase 56 Scene Card 到 OMO planned task 的场景承接
+
+Phase 56 补齐“场景输入已经通过只读预检，但还没有进入真实治理队列”的产品断点。Cockpit 新增
+`POST /api/scene-cards/task`，服务端重新执行 Scene Card intake 和最新 OMO catalog preflight；只有状态为
+`ready_for_admission_preview` 时，才通过 OMO ingress broker 创建一个 planned task。
+
+任务只持久化安全的 `scene_id`、`journey_id`、`outcome_metric`、intake/source digest、固定证据计划和治理元数据，
+不落原始目标、输入载荷、提示词、provider 内容或凭据。任务 ID 由场景与 source digest 稳定生成，重复提交返回
+`deduplicated`，避免同一张卡重复产生任务。
+
+这条链把产品场景真正接到既有 Workflow Mesh，而不新增第二套状态机：
+
+`Scene Card -> intake -> catalog/preflight -> OMO planned task -> Task Center -> WorkflowRequested -> admission`
+
+承接接口严格保持 `activation=forbidden`、`provider_called=false`、`workflow_created=false` 和
+`worker_launch=false`。创建 planned task 不等于请求 Workflow、不等于准入、更不等于业务结果；任务中心仍需人工
+确认场景绑定、能力健康、预算和审批，再显式请求 Workflow Mesh。没有真实场景或目录证据时，接口只返回阻塞原因，
+不写 OMO。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
