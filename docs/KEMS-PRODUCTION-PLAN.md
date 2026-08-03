@@ -2,7 +2,7 @@
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-08-03
 review-state: content-reviewed
 content-reviewed-at: 2026-07-31
 metadata-migrated-at: 2026-07-31
@@ -11,7 +11,7 @@ metadata-migrated-at: 2026-07-31
 # KEMS 生产化实施方案
 
 > 状态：实施中，进入集成预生产
-> 更新：2026-08-02
+> 更新：2026-08-03
 > 范围：OCR 质量治理、正式 UI/表单、持久化知识图谱、OMO 任务派发、真实标注评测集、预测模型
 >
 > 本文定义实施顺序、系统边界、数据契约和放行条件。它不把目标指标冒充为当前能力，也不把真实业务材料放入代码仓库。
@@ -26,9 +26,9 @@ KEMS 当前已经具备受控导入、政策分析、运行记录、证据绑定
                                       +-> 人工/模型增强
 ```
 
-M1～M6 的工程基础已落地到 Kairon/KOS、Cockpit 和 Runtime：`kems.ocr-quality.v1` 提供 OCR 页级质量、指标门禁和 `pass/review/reject` 状态；Cockpit 提供 OCR 审核与图谱工作台；KEMS 提供持久化图谱、双人标注与 adjudication 约束、`kems.evaluation-manifest.v1`、候选模型 shadow 评测和生产 preflight。生产 preflight 现在还显式要求 `kems.persistence-recovery-evidence.v1`，证明 PostgreSQL 备份/恢复演练和图谱快照可恢复。真实源队列目前已具备结构化标签回执与双人/adjudication 队列，但仍等待真实低风险样本完成复核和脱敏 manifest；生产连接器和 OMO 批准仍未提供，因此不能宣称真实业务准确率或生产动作已开放。
+M1～M6 的工程基础已落地到 Kairon/KOS、Cockpit 和 Runtime：`kems.ocr-quality.v1` 提供 OCR 页级质量、指标门禁和 `pass/review/reject` 状态；Cockpit 提供 OCR 审核与图谱工作台；KEMS 提供持久化图谱、双人标注与 adjudication 约束、`kems.evaluation-manifest.v1`、候选模型 shadow 评测、manifest-bound Shadow Evaluation 报告和生产 preflight。生产 preflight 现在还显式要求 `kems.persistence-recovery-evidence.v1`，证明 PostgreSQL 备份/恢复演练和图谱快照可恢复。真实源队列目前已具备结构化标签回执与双人/adjudication 队列，但仍等待真实低风险样本完成复核和脱敏 manifest；生产连接器和 OMO 批准仍未提供，因此不能宣称真实业务准确率或生产动作已开放。
 
-当前实现与验收证据集中记录在 [KEMS 落地验收与上线闸门报告](</Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md>)；生产前置检查入口见 `projects/runtime/scripts/kems_production_preflight.py`。
+当前实现与验收证据集中记录在本机物理路径 `/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md`；生产前置检查入口见 `projects/runtime/scripts/kems_production_preflight.py`。
 
 本轮目标是把它推进到可审计的业务闭环：
 
@@ -290,7 +290,7 @@ evaluation/
 | M3 图谱持久化 | 工程能力已落地 | 生产 PostgreSQL 备份/恢复演练及 `persistence-recovery-evidence` 待业务/运维执行 |
 | M4 正式 UI | 核心工作台已落地 | 业务表单和评测看板仍需按试点场景扩展 |
 | M5 OMO 派发 | 草稿、审批契约和生产等价测试已落地 | 真实 OMO 批准任务与企业 ReachBridge 仍待接入 |
-| M6 预测影子 | 候选预测器、manifest 绑定和 acceptance 校验已落地 | 依赖真实低风险消费者形成可复现的 adjudicated manifest 后才能形成真实 acceptance |
+| M6 预测影子 | 候选预测器、manifest 绑定、acceptance 校验和 Shadow Evaluation 报告契约已落地 | 依赖真实低风险消费者形成可复现的 adjudicated manifest 后才能形成真实 acceptance；报告仍保持激活禁止 |
 | M7 试点收口 | 未完成 | 生产 preflight/closeout fail-closed；G1～G4 与外部恢复证据齐备后执行 |
 
 总周期预估 12～16 周。M1、M2、M3、M4 可部分并行；M5 依赖图谱主键和证据契约稳定；M6 依赖真实评测集。
@@ -323,3 +323,14 @@ Cockpit 可以审核和追踪，OMO 任务不会重复派发，完成证据可�
 4. 为 Cockpit、图谱和 OMO 保留稳定的 API 边界。
 
 后续代码实现必须从契约测试开始，再进入 KOS、Cockpit 和 OMO 子模块，避免六条链路各自定义一套状态和 ID。
+
+### 12.1 Phase 63 Shadow Evaluation 运行约束
+
+Phase 63 将候选模型评测收敛为一个显式的、可重复的离线报告步骤。运行必须同时提供 `run_id`、`scenario_id`、
+脱敏且 `adjudicated` 的 `kems.evaluation-manifest.v1`、脱敏数值输入和候选模型标识；输入 `case_id` 必须与 manifest
+中的 `sample_id` 精确一致。输出 `kems.shadow-evaluation-report.v1` 只保留 manifest SHA、输入 SHA、样本 ID、基线对比、
+模型策略和控制面，不保留原文、OCR、prompt 或模型自由文本。
+
+报告的 `controls` 必须固定表达 `activation=forbidden`、`provider_invocation=false`、`workflow_run_creation=false` 和
+`automatic_promotion=false`。`shadow_pass` 仅表示在绑定数据上的离线指标满足阈值，不是生产放行，也不会自动改变 Workflow Mesh
+准入、任务状态或外部资源路由。真实业务运行前，仍需完成低风险消费者、真实回执、双人标注、adjudication、脱敏 manifest 和人工审批。
