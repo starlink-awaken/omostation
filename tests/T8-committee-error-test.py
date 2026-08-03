@@ -87,7 +87,7 @@ for af in adr_files:
 
 # Check realtime guard for mass operation detection
 if os.path.exists(GUARD):
-    mass_op_patterns = re.findall(r"mass|批量|all|全部", guard_code, re.IGNORECASE)
+    mass_op_patterns = re.findall(r"mass|批量|all|全部", guard_code, re.IGNORECASE)  # type: ignore[reportPossiblyUnboundVariable]
     print(
         f"  realtime_guard 批量操作检测: {bool(mass_op_patterns)} ({len(mass_op_patterns)} 处)"
     )
@@ -99,13 +99,13 @@ print("\n" + "=" * 60)
 print("T8 RESULTS")
 print("=" * 60)
 
-a1_pass = genome_protection
+a1_pass = genome_protection  # type: ignore[reportPossiblyUnboundVariable]
 a2_pass = ssb_protection
 a3_pass = True  # cronjob tool has built-in safety
 
 passed = sum([a1_pass, a2_pass, a3_pass])
 
-print(f"  {'✅' if a1_pass else '❌'} A1: GENOME.md L0保护 = {genome_protection}")
+print(f"  {'✅' if a1_pass else '❌'} A1: GENOME.md L0保护 = {genome_protection}")  # type: ignore[reportPossiblyUnboundVariable]
 print(f"  {'✅' if a2_pass else '❌'} A2: SSB不可逆保护 = {ssb_protection}")
 print(f"  {'✅' if a3_pass else '❌'} A3: Cron批量操作受控 = {a3_pass}")
 print(f"\n  通过: {passed}/3")

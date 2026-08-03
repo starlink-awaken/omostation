@@ -91,7 +91,7 @@ def check_system_state() -> dict:
 def evaluate_constraints(constraints: list[dict], state: dict) -> list[dict]:
     """评估约束"""
     results = []
-    for c in constraints["constraints"]:
+    for c in constraints["constraints"]:  # type: ignore[reportArgumentType]
         rule = c["rule"]
         ctype = c["type"]
 
@@ -141,7 +141,7 @@ def evaluate_constraints(constraints: list[dict], state: dict) -> list[dict]:
     return results
 
 
-def format_report(results: list[dict], mode: str, constraints: dict = None) -> str:
+def format_report(results: list[dict], mode: str, constraints: dict = None) -> str:  # type: ignore[reportArgumentType]
     now = datetime.now()
     lines = []
     lines.append("=" * 64)
@@ -204,7 +204,7 @@ def main():
 
     constraints = load_constraints()
     state = check_system_state()
-    results = evaluate_constraints(constraints, state)
+    results = evaluate_constraints(constraints, state)  # type: ignore[reportArgumentType]
     mode = "enforce" if args.enforce else "warn"
 
     if args.json:

@@ -308,7 +308,7 @@ class TestDataGenerator:
                 pattern=pattern,
                 name=f"测试规则{i + 1}",
                 premises=premises,
-                logic=self._generate_rule_logic(pattern_info, entity_id, attr, value),
+                logic=self._generate_rule_logic(pattern_info, entity_id, attr, value),  # type: ignore[reportPossiblyUnboundVariable]
                 params={
                     "template": "通用模板",
                     "severity": random.choice(["BLOCKER", "ERROR", "WARN"]),

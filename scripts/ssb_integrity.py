@@ -1,4 +1,4 @@
-from ecos.protocol.ssb.ssb_auth import verify
+from ecos.protocol.ssb.ssb_auth import verify  # type: ignore[reportAttributeAccessIssue]
 
 
 def main():

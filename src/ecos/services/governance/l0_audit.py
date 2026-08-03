@@ -13,7 +13,7 @@ AUDIT_LOG = H / ".ecos" / "audit" / "operations.jsonl"
 
 # 集成统一审计记录器
 try:
-    from audit_unified import create_audit_debt, log_event
+    from audit_unified import create_audit_debt, log_event  # type: ignore[reportMissingImports]
 
     HAS_UNIFIED = True
 except ImportError:
@@ -33,7 +33,7 @@ def load_constraints():
         return yaml.safe_load(f).get("constraints", [])
 
 
-def validate_operation(domain_id: str, operation: str, uri: str = None) -> dict:
+def validate_operation(domain_id: str, operation: str, uri: str = None) -> dict:  # type: ignore[reportArgumentType]
     """在任何入口(MCP/HTTP/CLI)执行操作前调用此函数"""
     constraints = load_constraints()
     violations = []
@@ -98,7 +98,7 @@ def log_operation(result: dict):
         )
 
 
-def get_audit_log(domain: str = None, since: str = None, limit: int = 50) -> list:
+def get_audit_log(domain: str = None, since: str = None, limit: int = 50) -> list:  # type: ignore[reportArgumentType]
     """查询审计日志"""
     if not AUDIT_LOG.exists():
         return []

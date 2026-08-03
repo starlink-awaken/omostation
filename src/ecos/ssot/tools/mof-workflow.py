@@ -36,7 +36,7 @@ REGISTRY_FILE = SSOT_DIR / "registry" / "workflow-catalog.yaml"
 # 引入统一输出
 TOOLS_DIR = Path(__file__).parent
 sys.path.insert(0, str(TOOLS_DIR))
-from _output import OutputFormatter, print_error
+from _output import OutputFormatter, print_error  # type: ignore[reportMissingImports]
 
 
 def _load_nodes():

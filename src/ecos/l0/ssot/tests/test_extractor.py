@@ -5,7 +5,7 @@ Covers: TextSource, ExtractionCandidate, ExtractionResult, ExtractionPipeline.
 
 from unittest.mock import patch
 
-from sot_bridge.ssot_kernel.extractor import (
+from sot_bridge.ssot_kernel.extractor import (  # type: ignore[reportMissingImports]
     Conflict,
     ExtractionCandidate,
     ExtractionPipeline,
@@ -108,7 +108,7 @@ class TestExtractionPipeline:
 
 
 def test_llm_extractor_uses_standard_litellm_env(monkeypatch):
-    from sot_bridge.ssot_kernel.extractor.llm import LLMExtractor, OpenAIBackend
+    from sot_bridge.ssot_kernel.extractor.llm import LLMExtractor, OpenAIBackend  # type: ignore[reportMissingImports]
 
     monkeypatch.setenv("LLM_PROVIDER", "litellm")
     monkeypatch.setenv("LLM_BASE_URL", "http://127.0.0.1:4000/v1")

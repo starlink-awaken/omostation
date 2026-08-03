@@ -5,8 +5,8 @@ Covers: to_markdown, to_json, summary_line.
 
 import json
 
-from sot_bridge.ssot_kernel.patterns.base import CheckResult, DerivationReport
-from sot_bridge.ssot_kernel.reporter import Reporter
+from sot_bridge.ssot_kernel.patterns.base import CheckResult, DerivationReport  # type: ignore[reportMissingImports]
+from sot_bridge.ssot_kernel.reporter import Reporter  # type: ignore[reportMissingImports]
 
 
 class TestReporter:

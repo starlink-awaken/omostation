@@ -30,7 +30,7 @@ MOF_VALIDATE = Path(__file__).resolve().parent.parent / "tools" / "mof-validate.
 MOF_AUDIT = Path(__file__).resolve().parent.parent / "tools" / "mof-audit.py"
 
 
-def _run_tool(tool_path: Path, args: list = None) -> dict:
+def _run_tool(tool_path: Path, args: list = None) -> dict:  # type: ignore[reportArgumentType]
     try:
         result = subprocess.run(
             ["python3", str(tool_path)] + (args or []) + ["--json"],

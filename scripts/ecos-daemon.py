@@ -84,7 +84,7 @@ def init_state():
     return conn
 
 
-def run_script(path: Path, args: list = None, timeout: int = 60) -> tuple[int, str]:
+def run_script(path: Path, args: list = None, timeout: int = 60) -> tuple[int, str]:  # type: ignore[reportArgumentType]
     """运行脚本，try/except 兜底"""
     if not path.exists():
         return 2, f"❌ 脚本缺失: {path}"
@@ -210,9 +210,9 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
         import sys as _sys
 
         _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
-        from model_driven.toolchain.tools import tool_validate
-        from model_driven.toolchain.derivation_engine import DerivationEngine
-        from model_driven.toolchain.mof_scan import load_m1_nodes
+        from model_driven.toolchain.tools import tool_validate  # type: ignore[reportMissingImports]
+        from model_driven.toolchain.derivation_engine import DerivationEngine  # type: ignore[reportMissingImports]
+        from model_driven.toolchain.mof_scan import load_m1_nodes  # type: ignore[reportMissingImports]
 
         nodes = load_m1_nodes()
 
@@ -245,7 +245,7 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
         import sys as _sys
 
         _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
-        from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase
+        from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase  # type: ignore[reportMissingImports]
 
         pt = PipelineTracker.load("ecos-daemon") or PipelineTracker(
             "ecos-daemon", "daemon"

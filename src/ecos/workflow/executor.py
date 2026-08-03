@@ -45,6 +45,7 @@ try:
         validate_operation,
     )
 except ImportError:
+
     def validate_operation(*a, **kw):
         return None
 
@@ -222,7 +223,9 @@ def execute_m1_workflow(
             results.setdefault("violations", []).extend(mesh_violations)
             if any(v.get("severity") == "error" for v in mesh_violations):
                 logger.warning("Workflow blocked by Mesh gate (strict mode)")
-                results["error"] = "Mesh gate: Workflow Mesh not connected (strict mode)"
+                results["error"] = (
+                    "Mesh gate: Workflow Mesh not connected (strict mode)"
+                )
                 results["failed"] = 1
                 results["error_code"] = "MESH_GATE_BLOCKED"
                 results["run_metadata"]["state"] = WorkflowRunState.FAILED.value
@@ -348,9 +351,10 @@ def execute_m1_workflow(
             results["steps"] = backend_result["steps"]
             results["passed"] = backend_result.get("passed", 0)
             results["failed"] = backend_result.get("failed", 0)
-            if backend_result.get("mode") == "unavailable" or backend_result.get(
-                "error_code"
-            ) == "BACKEND_UNAVAILABLE":
+            if (
+                backend_result.get("mode") == "unavailable"
+                or backend_result.get("error_code") == "BACKEND_UNAVAILABLE"
+            ):
                 results["error_code"] = "BACKEND_UNAVAILABLE"
                 results["error"] = backend_result.get("error", "Backend unavailable")
                 results["run_metadata"]["state"] = WorkflowRunState.UNAVAILABLE.value
@@ -368,9 +372,10 @@ def execute_m1_workflow(
                 results["passed"] += 1
             else:
                 results["failed"] += 1
-            if backend_result.get("mode") == "unavailable" or backend_result.get(
-                "error_code"
-            ) == "BACKEND_UNAVAILABLE":
+            if (
+                backend_result.get("mode") == "unavailable"
+                or backend_result.get("error_code") == "BACKEND_UNAVAILABLE"
+            ):
                 results["error_code"] = "BACKEND_UNAVAILABLE"
                 results["error"] = backend_result.get("error", "Backend unavailable")
                 results["run_metadata"]["state"] = WorkflowRunState.UNAVAILABLE.value

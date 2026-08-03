@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 
 import pytest
-from sot_bridge.ssot_kernel.config_loader import ConfigLoader, load_domain
-from sot_bridge.ssot_kernel.meta_model import (
+from sot_bridge.ssot_kernel.config_loader import ConfigLoader, load_domain  # type: ignore[reportMissingImports]
+from sot_bridge.ssot_kernel.meta_model import (  # type: ignore[reportMissingImports]
     DomainConfig,
     Entity,
     Fact,

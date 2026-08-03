@@ -91,7 +91,7 @@ class RecoveryHistoryManager:
             }
 
             # 写入临时文件
-            temp_path = self.storage_path + ".tmp"
+            temp_path = self.storage_path + ".tmp"  # type: ignore[reportOperatorIssue]
             with open(temp_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
 

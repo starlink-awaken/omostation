@@ -86,7 +86,7 @@ class TestLoadWorkflow:
     def test_load_from_m1_first(self, mock_m1):
         mock_m1.return_value = {"name": "from-m1", "id": "workflow-test"}
         result = load_workflow("test")
-        assert result["name"] == "from-m1"
+        assert result["name"] == "from-m1"  # type: ignore[reportOptionalSubscript]
         mock_m1.assert_called_once_with("test")
 
     @patch("ecos.workflow.loader._load_from_m1")
@@ -850,8 +850,8 @@ class TestSymphonyBackend:
             captured["path"]
             == Path.home() / ".omo" / "state" / "llm_quota_ledger.jsonl"
         )
-        assert captured["entry"]["event"] == "cost_record"
-        assert captured["entry"]["workflow_id"] == "wf-symphony"
+        assert captured["entry"]["event"] == "cost_record"  # type: ignore[reportIndexIssue]
+        assert captured["entry"]["workflow_id"] == "wf-symphony"  # type: ignore[reportIndexIssue]
 
 
 class TestAgoraBackend:
@@ -1133,7 +1133,7 @@ class TestSubWorkflow:
         from ecos.workflow.actions import resolve_action
 
         handler = resolve_action("workflow_run")
-        result = handler({})
+        result = handler({})  # type: ignore[reportOptionalCall]
         assert result["passed"] is False
         assert "未指定" in result.get("summary", "")
 
@@ -1434,9 +1434,13 @@ class TestDefaultMeshSink:
 
         # 应该 emit WorkflowRequested 事件
         assert len(sink_calls) >= 1, "应自动 emit Mesh 事件，无需显式传入 event_sink"
-        assert any(c.get("event_type") == "WorkflowRequested" for c in sink_calls), "应包含 WorkflowRequested 事件"
+        assert any(c.get("event_type") == "WorkflowRequested" for c in sink_calls), (
+            "应包含 WorkflowRequested 事件"
+        )
 
-    def test_default_mesh_sink_graceful_degradation_when_omo_not_found(self, tmp_path, monkeypatch):
+    def test_default_mesh_sink_graceful_degradation_when_omo_not_found(
+        self, tmp_path, monkeypatch
+    ):
         """找不到 OMO 时静默降级，不阻断 workflow 执行"""
         from ecos.workflow.executor import execute_m1_workflow
         import ecos.workflow.default_mesh_sink as dms
@@ -1501,17 +1505,22 @@ class TestMeshGate:
     def test_mesh_gate_passes_when_store_available(self, tmp_path, monkeypatch):
         """Mesh gate should pass (no violations) when store is available."""
         from ecos.workflow.mesh_gate import mesh_gate_check
-        from ecos.workflow.default_mesh_sink import _get_workflow_mesh_store
 
         class MockStore:
             def __init__(self):
                 self.omo_dir = tmp_path
+
             def events(self):
                 return []
 
         monkeypatch.setattr(
             "ecos.workflow.mesh_gate._get_workflow_mesh_store"
-            if hasattr(__import__("ecos.workflow.mesh_gate", fromlist=["_get_workflow_mesh_store"]), "_get_workflow_mesh_store")
+            if hasattr(
+                __import__(
+                    "ecos.workflow.mesh_gate", fromlist=["_get_workflow_mesh_store"]
+                ),
+                "_get_workflow_mesh_store",
+            )
             else "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
             lambda: MockStore(),
         )
@@ -1563,8 +1572,7 @@ class TestMeshGate:
             result = execute_m1_workflow("test-warn-continue")
             assert result.get("error_code") != "MESH_GATE_BLOCKED"
             assert any(
-                v.get("id") == "MESH-GATE-01"
-                for v in result.get("violations", [])
+                v.get("id") == "MESH-GATE-01" for v in result.get("violations", [])
             )
         finally:
             dms._find_omo_root = original
@@ -1574,7 +1582,9 @@ class TestMeshGate:
 class TestSceneBindingBridge:
     """Phase 4: Scene binding bridge tests"""
 
-    def test_executor_emits_scene_binding_from_workflow_metadata(self, tmp_path, monkeypatch):
+    def test_executor_emits_scene_binding_from_workflow_metadata(
+        self, tmp_path, monkeypatch
+    ):
         """Executor should include scene_binding in WorkflowRequested when defined in workflow metadata."""
         sink_calls = []
 
@@ -1603,7 +1613,9 @@ class TestSceneBindingBridge:
 
         execute_m1_workflow("test-scene")
 
-        requested = [c for c in sink_calls if c.get("event_type") == "WorkflowRequested"]
+        requested = [
+            c for c in sink_calls if c.get("event_type") == "WorkflowRequested"
+        ]
         assert len(requested) >= 1
         assert requested[0]["payload"]["scene_binding"]["scene_id"] == "scene-1"
         assert requested[0]["payload"]["scene_binding"]["journey_id"] == "journey-1"
@@ -1639,7 +1651,9 @@ class TestSceneBindingBridge:
             },
         )
 
-        requested = [c for c in sink_calls if c.get("event_type") == "WorkflowRequested"]
+        requested = [
+            c for c in sink_calls if c.get("event_type") == "WorkflowRequested"
+        ]
         assert len(requested) >= 1
         assert requested[0]["payload"]["scene_binding"]["scene_id"] == "param-scene"
 
@@ -1665,7 +1679,9 @@ class TestSceneBindingBridge:
 
         execute_m1_workflow("test-no-scene")
 
-        requested = [c for c in sink_calls if c.get("event_type") == "WorkflowRequested"]
+        requested = [
+            c for c in sink_calls if c.get("event_type") == "WorkflowRequested"
+        ]
         assert len(requested) >= 1
         assert "scene_binding" not in requested[0]["payload"]
 
@@ -1718,8 +1734,16 @@ class TestMeshHealth:
         class MockActiveStore:
             def events(self):
                 return [
-                    {"event_type": "WorkflowRequested", "occurred_at": now, "producer": "agent-workflow"},
-                    {"event_type": "StepDispatched", "occurred_at": now, "producer": "omo.omo_worker_dispatch"},
+                    {
+                        "event_type": "WorkflowRequested",
+                        "occurred_at": now,
+                        "producer": "agent-workflow",
+                    },
+                    {
+                        "event_type": "StepDispatched",
+                        "occurred_at": now,
+                        "producer": "omo.omo_worker_dispatch",
+                    },
                 ]
 
         monkeypatch.setattr(
@@ -1761,7 +1785,13 @@ class TestMeshHealth:
 
         class MockStore:
             def events(self):
-                return [{"event_type": "WorkflowRequested", "occurred_at": now, "producer": "test"}]
+                return [
+                    {
+                        "event_type": "WorkflowRequested",
+                        "occurred_at": now,
+                        "producer": "test",
+                    }
+                ]
 
         monkeypatch.setattr(
             "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",

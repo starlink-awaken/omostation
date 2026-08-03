@@ -3,9 +3,9 @@
 Covers: CheckerRegistry, RuleEngine, execution, dependency validation.
 """
 
-from sot_bridge.ssot_kernel.engine import CheckerRegistry, RuleEngine
-from sot_bridge.ssot_kernel.meta_model import DomainConfig, Entity, Fact, MetaType, Rule
-from sot_bridge.ssot_kernel.patterns.base import (
+from sot_bridge.ssot_kernel.engine import CheckerRegistry, RuleEngine  # type: ignore[reportMissingImports]
+from sot_bridge.ssot_kernel.meta_model import DomainConfig, Entity, Fact, MetaType, Rule  # type: ignore[reportMissingImports]
+from sot_bridge.ssot_kernel.patterns.base import (  # type: ignore[reportMissingImports]
     BasePattern,
     CheckResult,
     DependencyValidator,

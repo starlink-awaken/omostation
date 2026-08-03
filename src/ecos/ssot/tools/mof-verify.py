@@ -397,7 +397,7 @@ def main():
     all_pass = all(
         r.get("passed", False) for r in results.values() if isinstance(r, dict)
     )
-    results["all_pass"] = all_pass
+    results["all_pass"] = all_pass  # type: ignore[reportArgumentType]
 
     if args.json:
         print(json.dumps(results, ensure_ascii=False, indent=2))

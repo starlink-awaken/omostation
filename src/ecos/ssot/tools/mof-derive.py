@@ -165,7 +165,7 @@ def load_standard_stages() -> list[dict]:
         return fallback
     try:
         sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent.parent))
-        from model_driven.mof.m3_extended import (
+        from model_driven.mof.m3_extended import (  # type: ignore[reportMissingImports]
             STANDARD_STAGES,  # type: ignore[import-not-found]
         )
 
@@ -221,7 +221,7 @@ def load_standard_gates() -> list[dict]:
         return fallback
     try:
         sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent.parent))
-        from model_driven.mof.m3_extended import (
+        from model_driven.mof.m3_extended import (  # type: ignore[reportMissingImports]
             STANDARD_GATES,  # type: ignore[import-not-found]
         )
 
@@ -268,7 +268,7 @@ def load_pipeline_phases() -> list[dict]:
         return fallback
     try:
         sys.path.insert(0, str(MODEL_DRIVEN_PIPELINE.parent.parent.parent))
-        from model_driven.lifecycle.pipeline import (
+        from model_driven.lifecycle.pipeline import (  # type: ignore[reportMissingImports]
             PipelinePhase,  # type: ignore[import-not-found]
         )
 

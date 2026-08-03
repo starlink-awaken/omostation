@@ -126,7 +126,7 @@ class SystemMetricsCollector:
                     name="system.cpu_percent",
                     value=cpu_percent,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -136,7 +136,7 @@ class SystemMetricsCollector:
                     name="system.cpu_user_time",
                     value=cpu_times.user,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -145,7 +145,7 @@ class SystemMetricsCollector:
                     name="system.cpu_system_time",
                     value=cpu_times.system,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -168,7 +168,7 @@ class SystemMetricsCollector:
                     name="system.memory_rss_mb",
                     value=memory_info.rss / 1024 / 1024,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -178,7 +178,7 @@ class SystemMetricsCollector:
                     name="system.memory_vms_mb",
                     value=memory_info.vms / 1024 / 1024,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -188,7 +188,7 @@ class SystemMetricsCollector:
                     name="system.memory_percent",
                     value=memory_percent,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -204,7 +204,7 @@ class SystemMetricsCollector:
         try:
             # 检查平台兼容性
             if hasattr(self.process, "io_counters"):
-                io_counters = self.process.io_counters()
+                io_counters = self.process.io_counters()  # type: ignore[reportAttributeAccessIssue]
 
                 # 读取字节数
                 metrics.append(
@@ -212,7 +212,7 @@ class SystemMetricsCollector:
                         name="system.io_read_bytes",
                         value=io_counters.read_bytes,
                         timestamp=datetime.now().isoformat(),
-                        tags=self.monitor.create_environment_tag(),
+                        tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                     )
                 )
 
@@ -222,7 +222,7 @@ class SystemMetricsCollector:
                         name="system.io_write_bytes",
                         value=io_counters.write_bytes,
                         timestamp=datetime.now().isoformat(),
-                        tags=self.monitor.create_environment_tag(),
+                        tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                     )
                 )
 
@@ -232,7 +232,7 @@ class SystemMetricsCollector:
                         name="system.io_read_count",
                         value=io_counters.read_count,
                         timestamp=datetime.now().isoformat(),
-                        tags=self.monitor.create_environment_tag(),
+                        tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                     )
                 )
 
@@ -241,7 +241,7 @@ class SystemMetricsCollector:
                         name="system.io_write_count",
                         value=io_counters.write_count,
                         timestamp=datetime.now().isoformat(),
-                        tags=self.monitor.create_environment_tag(),
+                        tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                     )
                 )
             else:
@@ -265,7 +265,7 @@ class SystemMetricsCollector:
                     name="system.thread_count",
                     value=thread_count,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -277,7 +277,7 @@ class SystemMetricsCollector:
                         name="system.file_descriptor_count",
                         value=fd_count,
                         timestamp=datetime.now().isoformat(),
-                        tags=self.monitor.create_environment_tag(),
+                        tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                     )
                 )
 
@@ -289,7 +289,7 @@ class SystemMetricsCollector:
                         name="system.connection_count",
                         value=len(connections),
                         timestamp=datetime.now().isoformat(),
-                        tags=self.monitor.create_environment_tag(),
+                        tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                     )
                 )
 
@@ -311,7 +311,7 @@ class SystemMetricsCollector:
                     name="system.network_bytes_sent",
                     value=net_io.bytes_sent,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -320,7 +320,7 @@ class SystemMetricsCollector:
                     name="system.network_bytes_recv",
                     value=net_io.bytes_recv,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -329,7 +329,7 @@ class SystemMetricsCollector:
                     name="system.network_packets_sent",
                     value=net_io.packets_sent,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -338,7 +338,7 @@ class SystemMetricsCollector:
                     name="system.network_packets_recv",
                     value=net_io.packets_recv,
                     timestamp=datetime.now().isoformat(),
-                    tags=self.monitor.create_environment_tag(),
+                    tags=self.monitor.create_environment_tag(),  # type: ignore[reportOptionalMemberAccess]
                 )
             )
 
@@ -361,7 +361,7 @@ class ExecutionMetricsCollector:
         """收集执行指标"""
         metrics = []
         timestamp = datetime.now().isoformat()
-        env_tags = self.monitor.create_environment_tag()
+        env_tags = self.monitor.create_environment_tag()  # type: ignore[reportOptionalMemberAccess]
 
         # 基础执行指标
         metrics.append(
@@ -534,7 +534,7 @@ class BusinessMetricsCollector:
         """收集业务指标"""
         metrics = []
         timestamp = datetime.now().isoformat()
-        env_tags = self.monitor.create_environment_tag()
+        env_tags = self.monitor.create_environment_tag()  # type: ignore[reportOptionalMemberAccess]
 
         # 实体指标
         metrics.append(
@@ -681,7 +681,7 @@ class QualityMetricsCollector:
         """收集质量指标"""
         metrics = []
         timestamp = datetime.now().isoformat()
-        env_tags = self.monitor.create_environment_tag()
+        env_tags = self.monitor.create_environment_tag()  # type: ignore[reportOptionalMemberAccess]
 
         # 基础质量指标
         metrics.append(
@@ -809,14 +809,14 @@ class EnhancedMetricsCollector:
         all_metrics = {"system": [], "execution": [], "business": [], "quality": []}
 
         # 系统指标（始终收集）
-        if self.monitor.should_collect():
+        if self.monitor.should_collect():  # type: ignore[reportOptionalMemberAccess]
             system_metrics = self.system_collector.collect_all()
             all_metrics["system"].extend(system_metrics)
             self._cache_metrics("system", system_metrics)
 
         # 执行指标
         if report:
-            if self.monitor.should_collect():
+            if self.monitor.should_collect():  # type: ignore[reportOptionalMemberAccess]
                 execution_metrics = self.execution_collector.collect(
                     report, execution_time_ms
                 )
@@ -825,14 +825,14 @@ class EnhancedMetricsCollector:
 
         # 业务指标
         if domain:
-            if self.monitor.should_collect():
+            if self.monitor.should_collect():  # type: ignore[reportOptionalMemberAccess]
                 business_metrics = self.business_collector.collect(domain)
                 all_metrics["business"].extend(business_metrics)
                 self._cache_metrics("business", business_metrics)
 
         # 质量指标
         if report:
-            if self.monitor.should_collect():
+            if self.monitor.should_collect():  # type: ignore[reportOptionalMemberAccess]
                 quality_metrics = self.quality_collector.collect(report)
                 all_metrics["quality"].extend(quality_metrics)
                 self._cache_metrics("quality", quality_metrics)
@@ -842,17 +842,17 @@ class EnhancedMetricsCollector:
     def _cache_metrics(self, category: str, metrics: list[MetricValue]):
         """缓存指标"""
         for metric in metrics:
-            key = self.monitor.generate_isolation_key(category, metric.name)
+            key = self.monitor.generate_isolation_key(category, metric.name)  # type: ignore[reportOptionalMemberAccess]
             self.metrics_cache[key].append(metric)
 
             # 记录到监控器
-            self.monitor.record_collection(metric.name, metric.value, metric.tags)
+            self.monitor.record_collection(metric.name, metric.value, metric.tags)  # type: ignore[reportOptionalMemberAccess]
 
     def aggregate_metrics(
         self, metric_name: str, time_window_minutes: int = 5
     ) -> AggregatedMetric | None:
         """聚合指标"""
-        self.monitor.generate_isolation_key("all", metric_name)
+        self.monitor.generate_isolation_key("all", metric_name)  # type: ignore[reportOptionalMemberAccess]
 
         # 从所有分类中查找指标
         all_metrics = []
@@ -903,7 +903,7 @@ class EnhancedMetricsCollector:
         """获取实时快照"""
         return {
             "timestamp": datetime.now().isoformat(),
-            "environment": self.monitor.environment_type.value,
+            "environment": self.monitor.environment_type.value,  # type: ignore[reportOptionalMemberAccess]
             "system_metrics": self._get_latest_metrics("system"),
             "execution_metrics": self._get_latest_metrics("execution"),
             "business_metrics": self._get_latest_metrics("business"),

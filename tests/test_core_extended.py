@@ -15,13 +15,13 @@ ECOS_HOME = Path(__file__).resolve().parent
 class TestConstitutionWatcher:
     def test_s03_signature_coverage_no_error(self):
         """S03 签名覆盖率检查不报错"""
-        from ecos.services.constitution_watcher import s03_signature_coverage
+        from ecos.services.constitution_watcher import s03_signature_coverage  # type: ignore[reportAttributeAccessIssue]
 
         s03_signature_coverage()  # 不报错即通过
 
     def test_write_alert_creates_event(self):
         """_write_alert 创建 SSB 事件"""
-        from ecos.services.constitution_watcher import _write_alert
+        from ecos.services.constitution_watcher import _write_alert  # type: ignore[reportAttributeAccessIssue]
 
         eid = _write_alert("INFO", "test alert", {"test": True})
         assert eid.startswith("CONSTITUTION-")
@@ -64,7 +64,7 @@ class TestPlannerV2:
         """无 API key 时 LLM 模式优雅降级"""
         import os
 
-        from ecos.services.planner import _analyze_with_llm
+        from ecos.services.planner import _analyze_with_llm  # type: ignore[reportAttributeAccessIssue]
 
         saved = os.environ.pop("DEEPSEEK_API_KEY", None)
         try:
@@ -79,7 +79,7 @@ class TestPlannerV2:
         """generate_plan LLM 模式降级"""
         import os
 
-        from ecos.services.planner import generate_plan
+        from ecos.services.planner import generate_plan  # type: ignore[reportAttributeAccessIssue]
 
         saved = os.environ.pop("DEEPSEEK_API_KEY", None)
         try:
@@ -92,7 +92,7 @@ class TestPlannerV2:
 
     def test_analyze_goal_v1_matches_keyword(self):
         """v1 模式匹配关键词"""
-        from ecos.services.planner import analyze_goal
+        from ecos.services.planner import analyze_goal  # type: ignore[reportAttributeAccessIssue]
 
         result = analyze_goal("部署KOS到新服务器")
         assert "环境检查" in result["steps"]
@@ -100,7 +100,7 @@ class TestPlannerV2:
 
     def test_analyze_goal_v1_fallback(self):
         """v1 模式无匹配时走通用规划"""
-        from ecos.services.planner import analyze_goal
+        from ecos.services.planner import analyze_goal  # type: ignore[reportAttributeAccessIssue]
 
         result = analyze_goal("给系统加上量子算法优化")
         assert len(result["steps"]) == 5
@@ -135,25 +135,25 @@ class TestContentIntegrity:
 class TestEmergenceWatch:
     def test_sign_now_zero(self):
         """分母为 0 时返回 0 (没有基线, 无偏差)"""
-        from ecos.protocol.emergence.emergence_watch import calc_deviation
+        from ecos.protocol.emergence.emergence_watch import calc_deviation  # type: ignore[reportAttributeAccessIssue]
 
         # 基线为0, 当前为10 → 分母为0, 返回0? 还是? 脚本逻辑是: if baseline == 0 → return 0
         assert calc_deviation(0, 10, "up") is not None
 
     def test_sign_now_normal(self):
         """正常偏差计算"""
-        from ecos.protocol.emergence.emergence_watch import calc_deviation
+        from ecos.protocol.emergence.emergence_watch import calc_deviation  # type: ignore[reportAttributeAccessIssue]
 
         assert round(calc_deviation(100, 150, "up"), 2) == 0.5
 
     def test_sign_now_down(self):
         """down 方向: 下降 > 阈值触发"""
-        from ecos.protocol.emergence.emergence_watch import calc_deviation
+        from ecos.protocol.emergence.emergence_watch import calc_deviation  # type: ignore[reportAttributeAccessIssue]
 
         assert round(calc_deviation(100, 50, "down"), 2) == 0.5
 
     def test_sign_now_no_deviation(self):
         """无偏差"""
-        from ecos.protocol.emergence.emergence_watch import calc_deviation
+        from ecos.protocol.emergence.emergence_watch import calc_deviation  # type: ignore[reportAttributeAccessIssue]
 
         assert calc_deviation(100, 100, "both") == 0

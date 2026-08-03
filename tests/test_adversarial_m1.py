@@ -56,7 +56,9 @@ def test_agora_connection_refused_fallback():
     # 模拟 httpx.Client 抛出 ConnectError
     with (
         patch("httpx.Client.get", side_effect=httpx.ConnectError("Connection refused")),
-        patch("ecos.workflow.agora_mcp_backend._unavailable_result") as mock_unavailable,
+        patch(
+            "ecos.workflow.agora_mcp_backend._unavailable_result"
+        ) as mock_unavailable,
     ):
         mock_unavailable.return_value = {
             "mode": "unavailable",
@@ -87,7 +89,9 @@ def test_agora_timeout_fallback():
         patch(
             "httpx.Client.get", side_effect=httpx.ConnectTimeout("Connection timed out")
         ),
-        patch("ecos.workflow.agora_mcp_backend._unavailable_result") as mock_unavailable,
+        patch(
+            "ecos.workflow.agora_mcp_backend._unavailable_result"
+        ) as mock_unavailable,
     ):
         mock_unavailable.return_value = {
             "mode": "unavailable",
@@ -109,7 +113,9 @@ def test_agora_http_error_code_fallback():
 
     with (
         patch("httpx.Client.get", return_value=mock_resp),
-        patch("ecos.workflow.agora_mcp_backend._unavailable_result") as mock_unavailable,
+        patch(
+            "ecos.workflow.agora_mcp_backend._unavailable_result"
+        ) as mock_unavailable,
     ):
         mock_unavailable.return_value = {
             "mode": "unavailable",

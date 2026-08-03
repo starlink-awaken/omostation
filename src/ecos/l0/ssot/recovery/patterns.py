@@ -9,7 +9,7 @@ SSOT Kernel — Recovery Patterns
 3. 关联历史学习数据
 """
 
-from ..strategies.base import (
+from ..strategies.base import (  # type: ignore[reportMissingImports]
     BaseRecoveryStrategy,
     RecoveryAction,
     RecoveryCondition,
@@ -192,7 +192,7 @@ PATTERN_IO_ERROR = RecoveryPattern(
 def get_strategy_by_name(strategy_name: str) -> BaseRecoveryStrategy:
     """根据名称获取策略"""
     if strategy_name == "auto":
-        from ..strategies.auto_patterns import AutoRecoveryStrategy
+        from ..strategies.auto_patterns import AutoRecoveryStrategy  # type: ignore[reportMissingImports]
 
         return AutoRecoveryStrategy()
     else:

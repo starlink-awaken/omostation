@@ -13,7 +13,7 @@ SSOT Kernel — Auto Recovery Strategy
 from dataclasses import dataclass, field
 from typing import Any
 
-from .strategies.base import (
+from .strategies.base import (  # type: ignore[reportMissingImports]
     BaseRecoveryStrategy,
     RecoveryAction,
     RecoveryCondition,
@@ -164,7 +164,7 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
             for pattern_text in pattern_info["error_patterns"]:
                 if pattern_text in error_message:
                     # 查找匹配的模式
-                    from ..strategies.patterns.auto_patterns import auto_patterns
+                    from ..strategies.patterns.auto_patterns import auto_patterns  # type: ignore[reportMissingImports]
 
                     return auto_patterns.get(pattern_info["pattern_id"])
 

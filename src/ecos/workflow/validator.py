@@ -228,7 +228,7 @@ class X2BudgetDeducer:
 
         # 读取余额
         balance = cls._read_balance()
-        if balance < token_limit:
+        if balance < token_limit:  # type: ignore[reportOperatorIssue]
             warnings.append(f"余额不足: {balance} < {token_limit}")
 
         return {

@@ -1,4 +1,4 @@
-from ecos.protocol.ssb.ssb_client import SSBClient
+from ecos.protocol.ssb.ssb_client import SSBClient  # type: ignore[reportAttributeAccessIssue]
 
 
 def main():

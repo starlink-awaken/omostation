@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 
 import pytest
 
@@ -83,6 +82,7 @@ def test_metaos_backend_accepts_valid_preflight(monkeypatch):
     )
     assert "preflight_rejected" not in str(result.get("error", ""))
     # Either ran steps or metaos missing in env
-    assert result.get("preflight_ok") is True or result.get("passed", 0) + result.get(
-        "failed", 0
-    ) >= 0
+    assert (
+        result.get("preflight_ok") is True
+        or result.get("passed", 0) + result.get("failed", 0) >= 0
+    )

@@ -256,9 +256,13 @@ class IntelligentRecoverySystem:
         # 如果有历史记录，使用成功率最高的策略
         if similar_history:
             best_record = sorted(
-                similar_history, key=lambda r: r.success_rate, reverse=True
+                similar_history,
+                key=lambda r: r.success_rate,  # type: ignore[reportAttributeAccessIssue]
+                reverse=True,  # type: ignore[reportAttributeAccessIssue]
             )[0]
-            if best_record.success_rate > 0.7:  # 成功率>70%
+            if (
+                best_record.success_rate > 0.7  # type: ignore[reportAttributeAccessIssue]
+            ):  # 成功率>70%  # type: ignore[reportAttributeAccessIssue]
                 return best_record.action_id
 
         # 根据严重程度选择

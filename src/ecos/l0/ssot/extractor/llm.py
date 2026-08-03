@@ -63,7 +63,7 @@ class OllamaBackend(LLMBackend):
             req = urllib.request.Request(f"{self.base_url}/api/tags")
             urllib.request.urlopen(req, timeout=2)
             return ""
-        except urllib.error.URLError as e:
+        except urllib.error.URLError as e:  # type: ignore[reportAttributeAccessIssue]
             if isinstance(e.reason, ConnectionRefusedError):
                 return "Ollama 服务未启动"
             return f"Ollama 不可达: {e.reason}"
@@ -117,7 +117,7 @@ class OllamaBackend(LLMBackend):
         )
         try:
             resp = urllib.request.urlopen(req, timeout=timeout)
-        except urllib.error.URLError as e:
+        except urllib.error.URLError as e:  # type: ignore[reportAttributeAccessIssue]
             raise ConnectionError(
                 f"Ollama 请求失败 ({self.base_url}): {e.reason}\n  请确认 Ollama 正在运行 (ollama ps)"
             ) from e
@@ -174,7 +174,7 @@ class OpenAIBackend(LLMBackend):
         )
         try:
             resp = urllib.request.urlopen(req, timeout=30)
-        except urllib.error.URLError as e:
+        except urllib.error.URLError as e:  # type: ignore[reportAttributeAccessIssue]
             raise ConnectionError(
                 f"无法连接到 OpenAI API ({self.base_url}): {e.reason}\n  请检查 API 地址和网络连接"
             ) from e
@@ -428,7 +428,7 @@ class LLMExtractor(Extractor):
         """从后端链中选第一个健康的后端"""
         for b in self.backends:
             if hasattr(b, "health_check"):
-                health = b.health_check()
+                health = b.health_check()  # type: ignore[reportAttributeAccessIssue]
                 if not health:
                     return b
             else:

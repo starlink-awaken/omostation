@@ -50,7 +50,7 @@ def t1_signature_forgery() -> bool:
     """攻击: 无密钥伪造签名"""
     print("\n═══ T1: SSB 签名伪造攻击 ═══")
 
-    from ssb_auth import _load_key, compute_signature
+    from ssb_auth import _load_key, compute_signature  # type: ignore[reportAttributeAccessIssue]
 
     # 1.1 无密钥计算签名返回 None
     key = _load_key()
@@ -81,7 +81,7 @@ def t1_signature_forgery() -> bool:
     import sys as _sys
 
     _sys.path.insert(0, str(SSB_DB.parent.parent.parent / "scripts"))
-    from ssb_client import SSBClient
+    from ssb_client import SSBClient  # type: ignore[reportAttributeAccessIssue]
 
     ssb = SSBClient()
     _test_eid = ssb.publish(

@@ -238,7 +238,7 @@ def handle_kv_get(key: str) -> dict:
         result = {"key": key, "note": f"未知键: {key}"}
 
     conn.close()
-    result["_key"] = key
+    result["_key"] = key  # type: ignore[reportArgumentType]
     return result
 
 
@@ -274,11 +274,11 @@ def main():
 
     # MCP stdio 模式 (供 MCP 客户端调用)
     try:
-        from mcp.server import Server, stdio_server
+        from mcp.server import Server, stdio_server  # type: ignore[reportAttributeAccessIssue]
 
         server = Server("ecos-runtime")
 
-        @server.list_tools()
+        @server.list_tools()  # type: ignore[reportArgumentType]
         async def list_tools():
             return TOOLS
 

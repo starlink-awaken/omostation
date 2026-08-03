@@ -168,8 +168,8 @@ def watch_fswatch():
 def watch_watchdog():
     """降级方案: watchdog Python 库"""
     try:
-        from watchdog.observers import Observer
-        from watchdog.events import FileSystemEventHandler
+        from watchdog.observers import Observer  # type: ignore[reportMissingImports]
+        from watchdog.events import FileSystemEventHandler  # type: ignore[reportMissingImports]
     except ImportError:
         print("  ❌ fswatch 和 watchdog 均不可用。")
         print("     安装: brew install fswatch  或  pip install watchdog")

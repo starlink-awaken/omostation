@@ -109,7 +109,7 @@ def verify(limit: int = 100):
     if stats["verified"] > 0:
         print(f"✅ 已验证: {stats['verified']}/{stats['total']}")
 
-    stats["status"] = "ok" if stats["mismatch"] == 0 else "mismatch"
+    stats["status"] = "ok" if stats["mismatch"] == 0 else "mismatch"  # type: ignore[reportArgumentType]
     return stats
 
 

@@ -573,7 +573,7 @@ class LoadBalancerExecutor:
                 __import__(
                     "ecos.l0.governance.load_balancer", fromlist=["NodeLoad"]
                 ).NodeLoad(node_id=target),
-            ).connections
+            ).connections  # type: ignore[reportOptionalMemberAccess]
             + 1,
         )
         return target

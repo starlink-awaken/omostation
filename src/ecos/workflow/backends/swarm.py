@@ -207,9 +207,7 @@ def _execute_step_swarm(
                 cmd.extend(
                     [
                         "--admission-json",
-                        json.dumps(
-                            child_admission, ensure_ascii=False, sort_keys=True
-                        ),
+                        json.dumps(child_admission, ensure_ascii=False, sort_keys=True),
                     ]
                 )
             logger.debug("Swarm subprocess: %s", " ".join(cmd))

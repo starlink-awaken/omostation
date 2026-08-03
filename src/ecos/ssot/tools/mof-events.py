@@ -37,7 +37,7 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
-def run_tool(name: str, args: list = None) -> dict:
+def run_tool(name: str, args: list = None) -> dict:  # type: ignore[reportArgumentType]
     tool = L0_TOOLS / f"{name}.py"
     if not tool.exists():
         return {"error": f"tool not found: {name}"}

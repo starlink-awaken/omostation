@@ -103,8 +103,8 @@ _DM_PATH = ECOS_SRC / "services" / "governance" / "domain_manager.py"
 _spec = _ilu.spec_from_file_location(
     "ecos.services.governance.domain_manager", _DM_PATH
 )
-dm = _ilu.module_from_spec(_spec)
-_spec.loader.exec_module(dm)
+dm = _ilu.module_from_spec(_spec)  # type: ignore[reportArgumentType]
+_spec.loader.exec_module(dm)  # type: ignore[reportOptionalMemberAccess]
 
 
 @mcp.tool()

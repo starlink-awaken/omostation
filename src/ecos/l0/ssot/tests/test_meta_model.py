@@ -4,7 +4,7 @@ Covers: enums, dataclasses, cross-reference validation, schema validation, ortho
 """
 
 import pytest
-from sot_bridge.ssot_kernel.meta_model import (
+from sot_bridge.ssot_kernel.meta_model import (  # type: ignore[reportMissingImports]
     Confidence,
     Constraint,
     DomainConfig,

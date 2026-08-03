@@ -43,9 +43,9 @@ def test_cache_returns_copy() -> None:
     result = {"passed": True, "summary": "original"}
     cache.set("wf-copy", 0, result, ttl=60)
     got = cache.get("wf-copy", 0)
-    got["summary"] = "modified"
+    got["summary"] = "modified"  # type: ignore[reportOptionalSubscript]
     second = cache.get("wf-copy", 0)
-    assert second["summary"] == "original"
+    assert second["summary"] == "original"  # type: ignore[reportOptionalSubscript]
 
 
 def test_cache_ttl_expiry() -> None:
@@ -74,10 +74,10 @@ def test_cache_multi_step() -> None:
     step1 = cache.get("wf-multi", 1)
     step2 = cache.get("wf-multi", 2)
 
-    assert step0["summary"] == "step0"
-    assert step1["summary"] == "step1"
-    assert step2["summary"] == "step2"
-    assert step2["passed"] is False
+    assert step0["summary"] == "step0"  # type: ignore[reportOptionalSubscript]
+    assert step1["summary"] == "step1"  # type: ignore[reportOptionalSubscript]
+    assert step2["summary"] == "step2"  # type: ignore[reportOptionalSubscript]
+    assert step2["passed"] is False  # type: ignore[reportOptionalSubscript]
 
 
 def test_cache_params_differentiation() -> None:

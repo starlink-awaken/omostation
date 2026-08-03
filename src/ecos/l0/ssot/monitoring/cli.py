@@ -73,8 +73,8 @@ class MonitoringCLI:
         self._generate_final_report()
 
         # 导出数据
-        if args.export:
-            self._export_monitoring_data(args.export)
+        if args.export:  # type: ignore[reportOptionalMemberAccess]
+            self._export_monitoring_data(args.export)  # type: ignore[reportOptionalMemberAccess]
 
     def _collect_and_display_metrics(self):
         """收集并显示指标"""
@@ -183,7 +183,7 @@ class MonitoringCLI:
                 print(f"  吞吐量: {exec_stats['throughput']:.1f} rules/s")
 
         # 环境统计
-        env_summary = self.monitor.get_environment_summary()
+        env_summary = self.monitor.get_environment_summary()  # type: ignore[reportOptionalMemberAccess]
         stats = env_summary["statistics"]
         print("\n📈 采样统计:")
         print(f"  总采集: {stats['collections']}")
@@ -202,7 +202,7 @@ class MonitoringCLI:
         data = {
             "export_time": datetime.now().isoformat(),
             "environment_info": self.architecture.get_environment_info(),
-            "environment_summary": self.monitor.get_environment_summary(),
+            "environment_summary": self.monitor.get_environment_summary(),  # type: ignore[reportOptionalMemberAccess]
             "system_health": self.architecture.get_system_health(),
             "alert_summary": self.alerting_system.get_alert_summary(),
             "metrics_snapshot": self.metrics_collector.get_realtime_snapshot(),

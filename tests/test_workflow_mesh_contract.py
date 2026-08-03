@@ -35,11 +35,14 @@ def test_executor_blocks_mock_success_and_emits_mesh_events():
     with (
         patch("ecos.workflow.executor.load_workflow", return_value=workflow),
         patch("ecos.workflow.executor.validate_workflow", return_value=[]),
-        patch("ecos.workflow.executor.resolve", return_value=lambda *_: {
-            "steps": [{"name": "step", "status": "ok", "result": {"mode": "mock"}}],
-            "passed": 1,
-            "failed": 0,
-        }),
+        patch(
+            "ecos.workflow.executor.resolve",
+            return_value=lambda *_: {
+                "steps": [{"name": "step", "status": "ok", "result": {"mode": "mock"}}],
+                "passed": 1,
+                "failed": 0,
+            },
+        ),
     ):
         result = execute_m1_workflow(
             "mesh-test",

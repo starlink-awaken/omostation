@@ -21,7 +21,7 @@ SCRIPTS = Path.home() / ".ecos" / "scripts"
 DOCS = Path.home() / "Documents"
 
 
-def run_script(name: str, args: list[str] = None) -> str:
+def run_script(name: str, args: list[str] = None) -> str:  # type: ignore[reportArgumentType]
     """运行脚本并捕获输出"""
     script = SCRIPTS / name
     if not script.exists():

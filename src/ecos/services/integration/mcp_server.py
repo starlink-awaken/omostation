@@ -436,7 +436,7 @@ def handle_read(args):
     }
 
 
-def handle_search(args):
+def handle_search(args):  # type: ignore[reportRedeclaration]
     r = dm.load_registry()
     query = args.get("query", "")
     domains = set(args.get("domains", [])) if args.get("domains") else None
@@ -495,7 +495,7 @@ HANDLERS = {
 }
 
 
-def main():
+def main():  # type: ignore[reportRedeclaration]
     for line in sys.stdin:
         try:
             req = json.loads(line)

@@ -52,7 +52,7 @@ def init_db():
     return conn
 
 
-def run_script(path: Path, args: list = None, timeout: int = 30) -> tuple[int, str]:
+def run_script(path: Path, args: list = None, timeout: int = 30) -> tuple[int, str]:  # type: ignore[reportArgumentType]
     if not path.exists():
         return 2, f"脚本不存在: {path}"
     cmd = ["python3", str(path)]

@@ -287,7 +287,7 @@ class IntelligentAlertingSystem:
         """评估指标并生成告警"""
         new_alerts = []
 
-        if not self.monitor.should_alert():
+        if not self.monitor.should_alert():  # type: ignore[reportOptionalMemberAccess]
             self.stats["total_suppressed"] += len(self.rules)
             return new_alerts
 
@@ -322,7 +322,7 @@ class IntelligentAlertingSystem:
                 self.stats["by_rule"][rule_id] += 1
 
                 # 记录到环境监控器
-                self.monitor.record_alert(
+                self.monitor.record_alert(  # type: ignore[reportOptionalMemberAccess]
                     alert_name=alert.name,
                     severity=alert.severity.value,
                     message=alert.message,
@@ -347,7 +347,7 @@ class IntelligentAlertingSystem:
             status=AlertStatus.ACTIVE,
             message=f"{rule.description} (当前值: {trigger_value})",
             timestamp=datetime.now().isoformat(),
-            environment=self.monitor.environment_type.value,
+            environment=self.monitor.environment_type.value,  # type: ignore[reportOptionalMemberAccess]
             metrics_data={
                 "trigger_metric": rule.metric_name,
                 "trigger_value": trigger_value,
@@ -411,9 +411,9 @@ class IntelligentAlertingSystem:
                 recommendations.append(f"存在{blocked_count}个阻塞规则，需要优先处理")
 
         # 基于环境的建议
-        if self.monitor.environment_type.value == "production":
+        if self.monitor.environment_type.value == "production":  # type: ignore[reportOptionalMemberAccess]
             recommendations.append("生产环境告警，建议立即响应")
-        elif self.monitor.environment_type.value == "development":
+        elif self.monitor.environment_type.value == "development":  # type: ignore[reportOptionalMemberAccess]
             recommendations.append("开发环境告警，建议优化后测试")
 
         return recommendations

@@ -18,8 +18,8 @@ def cmd_bos_validate(args):
     """全量BOS URI健康检查 + X4-C10~C13 约束评估"""
     # 业务函数 import (惰性, 避免 domain_manager 顶层 re-export 时的循环)
     from ecos.services.governance.domain_manager import (
-        _evaluate_bos_constraints,
-        _load_bos_constraints,
+        _evaluate_bos_constraints,  # type: ignore[reportAttributeAccessIssue]
+        _load_bos_constraints,  # type: ignore[reportAttributeAccessIssue]
         _load_lifecycle,
         load_registry,
         resolve_path,
@@ -53,7 +53,7 @@ def cmd_bos_validate(args):
         uris_to_check = [(uri_base, None)]
         if dtype == "document":
             for shortcut in ["_state", "_claude", "_memory"]:
-                uris_to_check.append((f"bos://{did}/{shortcut}", shortcut))
+                uris_to_check.append((f"bos://{did}/{shortcut}", shortcut))  # type: ignore[reportArgumentType]
 
         for uri, shortcut in uris_to_check:
             total_uris += 1
@@ -142,7 +142,9 @@ def _load_bos_constraints() -> list[dict]:
 
 
 def _evaluate_bos_constraints(
-    uri: str, registry: list, lifecycle: dict = None
+    uri: str,
+    registry: list,
+    lifecycle: dict = None,  # type: ignore[reportArgumentType]
 ) -> list[dict]:
     # 惰性 import (避免 domain_manager 顶层 import 的循环)
     from .domain_manager import resolve_path

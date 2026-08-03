@@ -19,6 +19,7 @@ _backends: dict[str, dict[str, Any]] = {}
 class BackendResolutionError(RuntimeError):
     """明确指定的后端不可用时，禁止静默回退到默认执行器。"""
 
+
 # ── 默认后端：沿用现有的硬编码 action 执行器 ──
 
 
@@ -399,7 +400,7 @@ def resolve(m1_node: dict) -> Callable:
 def list_backends() -> list[dict[str, str]]:
     """列出所有已注册的后端"""
     _ensure_backends_registered()
-    return [
+    return [  # type: ignore[reportReturnType]
         {
             "name": name,
             "module_path": info["module_path"],

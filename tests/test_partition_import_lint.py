@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 
@@ -39,7 +38,9 @@ def test_zone_resolution(zones):
 def test_full_tree_clean():
     """Live ecos tree must satisfy partition rules (baseline after Phase 3)."""
     viols = lint_tree()
-    assert viols == [], "\n".join(f"{v.rule} {v.path}:{v.line} {v.message}" for v in viols)
+    assert viols == [], "\n".join(
+        f"{v.rule} {v.path}:{v.line} {v.message}" for v in viols
+    )
 
 
 def test_core_cannot_import_metaos(tmp_path, zones):

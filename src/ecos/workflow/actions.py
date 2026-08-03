@@ -311,7 +311,7 @@ def _action_complete_quest(params: dict) -> dict:
 
     quest_id = params.get("quest_id") or payload.get("quest_id")
     try:
-        quest_id = int(quest_id)
+        quest_id = int(quest_id)  # type: ignore[reportArgumentType]
     except (TypeError, ValueError):
         return {
             "passed": False,

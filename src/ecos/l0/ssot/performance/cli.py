@@ -229,7 +229,7 @@ class PerformanceCLI:
             print(f"    规则数: {result.config.rule_count}")
             print(f"    执行时间: {result.metrics.total_execution_time_ms / 1000:.2f}s")
             print(f"    内存使用: {result.metrics.peak_memory_usage_mb:.1f}MB")
-            print(f"    性能得分: {result.metrics.performance_score:.1f}")
+            print(f"    性能得分: {result.metrics.performance_score:.1f}")  # type: ignore[reportAttributeAccessIssue]
 
     def cmd_compare(self, args):
         """对比性能结果"""

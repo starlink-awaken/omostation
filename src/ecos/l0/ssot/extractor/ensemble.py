@@ -154,7 +154,7 @@ class EnsembleExtractor(Extractor):
         )
 
         try:
-            response = self.llm.backend.complete(
+            response = self.llm.backend.complete(  # type: ignore[reportAttributeAccessIssue]
                 "你是一个严格的提取结果审核员。输出纯 YAML。",
                 prompt,
                 temperature=0.05,

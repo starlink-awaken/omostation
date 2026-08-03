@@ -20,6 +20,6 @@ def test_common_paths():
 
 
 def test_ssb_init():
-    from ecos.protocol.ssb.ssb_init import main as ssb_init
+    from ecos.protocol.ssb.ssb_init import main as ssb_init  # type: ignore[reportAttributeAccessIssue]
 
     assert callable(ssb_init)

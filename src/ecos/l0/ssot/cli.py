@@ -248,8 +248,8 @@ def cmd_compile(args):
 
 def _derive_watch(args):
     """监听 YAML 文件变更自动重跑推导"""
-    from watchdog.events import FileSystemEventHandler
-    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler  # type: ignore[reportMissingImports]
+    from watchdog.observers import Observer  # type: ignore[reportMissingImports]
 
     domain_path = Path(args.dir).resolve()
 
@@ -715,8 +715,6 @@ def cmd_stats(args):
 # P110 拆分: main() + _dispatch() → cli_main.py. 此处重导出保调用方不变.
 # P110 拆分: cmd_export / cmd_graph 提取 → cli_export.py / cli_graph.py
 # 此处 re-export 保 `from .cli import cmd_export, cmd_graph` 仍可用
-from .cli_export import cmd_export
-from .cli_graph import cmd_graph
 from .cli_main import main
 
 if __name__ == "__main__":

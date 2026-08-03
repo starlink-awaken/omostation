@@ -34,7 +34,7 @@ class TestE2E_SSB_Lifecycle:  # noqa: N801
 
     @pytest.fixture
     def ssb(self):
-        from ssb_client import SSBClient
+        from ssb_client import SSBClient  # type: ignore[reportAttributeAccessIssue]
 
         return SSBClient(auto_init=True)
 
@@ -122,29 +122,29 @@ class TestE2E_Auth:  # noqa: N801
         """签名-验证往返"""
         from ecos import ssb_auth as auth
 
-        sig = auth.compute_signature(1, "e1", "AGENT", '{"test":1}')
+        sig = auth.compute_signature(1, "e1", "AGENT", '{"test":1}')  # type: ignore[reportAttributeAccessIssue]
         assert sig is not None
         assert len(sig) == 16
 
         # Same inputs = same signature
-        sig2 = auth.compute_signature(1, "e1", "AGENT", '{"test":1}')
+        sig2 = auth.compute_signature(1, "e1", "AGENT", '{"test":1}')  # type: ignore[reportAttributeAccessIssue]
         assert sig == sig2
 
         # Different inputs ≠ same signature
-        sig3 = auth.compute_signature(2, "e2", "AGENT", '{"test":1}')
+        sig3 = auth.compute_signature(2, "e2", "AGENT", '{"test":1}')  # type: ignore[reportAttributeAccessIssue]
         assert sig != sig3
 
     def test_verify_no_tampering(self):
         """最近事件应无篡改"""
         from ecos import ssb_auth as auth
 
-        stats = auth.verify(limit=20)
+        stats = auth.verify(limit=20)  # type: ignore[reportAttributeAccessIssue]
         assert stats["mismatch"] == 0, f"Found {stats['mismatch']} tampered events"
 
     def test_key_exists(self):
         from ecos import ssb_auth as auth
 
-        key = auth._load_key()
+        key = auth._load_key()  # type: ignore[reportAttributeAccessIssue]
         assert key is not None, "SSB_KEY not configured"
 
 

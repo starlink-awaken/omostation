@@ -133,17 +133,21 @@ def mesh_health_check() -> list[dict[str, Any]]:
     health = mesh_health_snapshot()
 
     if health["status"] == "unavailable":
-        return [{
-            "id": "MESH-HEALTH-01",
-            "severity": "warning",
-            "message": f"Mesh health: {health['reason']}",
-        }]
+        return [
+            {
+                "id": "MESH-HEALTH-01",
+                "severity": "warning",
+                "message": f"Mesh health: {health['reason']}",
+            }
+        ]
 
     if health["status"] == "degraded":
-        return [{
-            "id": "MESH-HEALTH-02",
-            "severity": "warning",
-            "message": f"Mesh health degraded: {health['reason']}",
-        }]
+        return [
+            {
+                "id": "MESH-HEALTH-02",
+                "severity": "warning",
+                "message": f"Mesh health degraded: {health['reason']}",
+            }
+        ]
 
     return []

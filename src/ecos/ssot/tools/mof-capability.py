@@ -22,7 +22,7 @@ L0_M1 = Path(__file__).resolve().parent.parent / "mof" / "m1"
 CAPABILITY_TYPES = ["skill", "mcptool", "agent", "workflow"]
 
 
-def load_capabilities(m2type: str = None) -> list[dict]:
+def load_capabilities(m2type: str = None) -> list[dict]:  # type: ignore[reportArgumentType]
     types = [m2type.lower()] if m2type else CAPABILITY_TYPES
     caps = []
     for t in types:
@@ -49,7 +49,7 @@ def cmd_list(args: list[str]):
         elif a.startswith("--status="):
             status_filter = a.split("=", 1)[1]
 
-    caps = load_capabilities(m2type)
+    caps = load_capabilities(m2type)  # type: ignore[reportArgumentType]
     if status_filter:
         caps = [c for c in caps if c.get("status") == status_filter]
 

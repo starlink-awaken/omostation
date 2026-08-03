@@ -5,7 +5,7 @@ Ensures all major modules can be imported and key symbols are accessible.
 
 
 def test_core_imports():
-    from sot_bridge.ssot_kernel import config_loader, engine, meta_model, reporter, sync
+    from sot_bridge.ssot_kernel import config_loader, engine, meta_model, reporter, sync  # type: ignore[reportMissingImports]
 
     assert hasattr(meta_model, "MetaType")
     assert hasattr(meta_model, "Entity")
@@ -19,7 +19,7 @@ def test_core_imports():
 
 
 def test_patterns_import():
-    from sot_bridge.ssot_kernel.patterns import base
+    from sot_bridge.ssot_kernel.patterns import base  # type: ignore[reportMissingImports]
 
     assert hasattr(base, "CheckResult")
     assert hasattr(base, "DerivationReport")
@@ -28,14 +28,14 @@ def test_patterns_import():
 
 
 def test_extractor_import():
-    from sot_bridge.ssot_kernel.extractor import ExtractionPipeline, TextSource
+    from sot_bridge.ssot_kernel.extractor import ExtractionPipeline, TextSource  # type: ignore[reportMissingImports]
 
     assert TextSource is not None
     assert ExtractionPipeline is not None
 
 
 def test_evolution_import():
-    from sot_bridge.ssot_kernel.evolution import checkpoint, evolver, rule_miner
+    from sot_bridge.ssot_kernel.evolution import checkpoint, evolver, rule_miner  # type: ignore[reportMissingImports]
 
     assert hasattr(evolver, "Evolver")
     assert hasattr(checkpoint, "CheckpointManager")

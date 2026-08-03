@@ -60,7 +60,7 @@ class TestCollaborationEngine:
         engine.complete_task("t1", result="done")
 
         status = engine.get_task_status("t1")
-        assert status["stage"] == TaskStage.DONE.value
+        assert status["stage"] == TaskStage.DONE.value  # type: ignore[reportOptionalSubscript]
 
     def test_task_retry(self):
         config = EngineConfig(engine_id="e1", retry_count=2)
@@ -74,7 +74,7 @@ class TestCollaborationEngine:
 
         engine.fail_task("t1", "error")
         status = engine.get_task_status("t1")
-        assert status["stage"] == TaskStage.PENDING.value
+        assert status["stage"] == TaskStage.PENDING.value  # type: ignore[reportOptionalSubscript]
 
     def test_dependency(self):
         config = EngineConfig(engine_id="e1")

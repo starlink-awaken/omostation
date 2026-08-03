@@ -214,5 +214,10 @@ def _execute_step_runtime(
         "mode": "unavailable",
         "error_code": "BACKEND_UNAVAILABLE",
         "error": "Runtime CLI unavailable; step was not executed",
-        "data": {"step": step_name, "phase": phase, "action": action, "mode": "unavailable"},
+        "data": {
+            "step": step_name,
+            "phase": phase,
+            "action": action,
+            "mode": "unavailable",
+        },
     }

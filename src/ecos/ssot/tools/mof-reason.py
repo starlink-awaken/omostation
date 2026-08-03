@@ -39,7 +39,7 @@ def load_m2(schema_type: str) -> dict | None:
     return None
 
 
-def find_dependents(node_id: str, project_name: str = None) -> list[dict]:
+def find_dependents(node_id: str, project_name: str = None) -> list[dict]:  # type: ignore[reportArgumentType]
     """查找所有依赖指定节点的 M1 节点"""
     dependents = []
     search_terms = [node_id]
@@ -136,7 +136,7 @@ def reason_impact(node_id: str) -> dict:
     return impacts
 
 
-def reason_state(node_id: str, target_state: str = None) -> dict:
+def reason_state(node_id: str, target_state: str = None) -> dict:  # type: ignore[reportArgumentType]
     """推导状态转换是否合法"""
     node = load_m1(node_id)
     if not node:
@@ -207,7 +207,7 @@ def main():
             print(f"  → {d['id']} ({d['name']}, {d['type']})")
 
     elif command == "state":
-        result = reason_state(node_id, target_state)
+        result = reason_state(node_id, target_state)  # type: ignore[reportArgumentType]
         print(f"=== State Analysis: {node_id} ===")
         print(f"Current status: {result.get('current_status', 'unknown')}")
         print(f"Legal transitions: {result.get('legal_transitions', [])}")

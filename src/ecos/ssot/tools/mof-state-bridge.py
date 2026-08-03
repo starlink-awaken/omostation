@@ -408,8 +408,8 @@ def _broker_import_m1_to_omo_candidates(
     blocked: list[dict[str, str]] = []
     for item in _collect_m1_to_omo_candidates(diff):
         m1_data = item["m1_data"]
-        m1_status = str(m1_data.get("status") or "")
-        m1_id = str(m1_data["id"])
+        m1_status = str(m1_data.get("status") or "")  # type: ignore[reportAttributeAccessIssue]
+        m1_id = str(m1_data["id"])  # type: ignore[reportIndexIssue]
         source_doc = str(Path(m1_id.replace("OMOTASK-", "")).with_suffix(".yaml"))
         source_doc = str(
             Path("projects/ecos/src/ecos/ssot/mof/m1/omo_layer") / f"{m1_id}.yaml"
@@ -424,7 +424,7 @@ def _broker_import_m1_to_omo_candidates(
                 }
             )
             continue
-        payload = m1_to_planned_task_payload(m1_data, source_doc=source_doc)
+        payload = m1_to_planned_task_payload(m1_data, source_doc=source_doc)  # type: ignore[reportArgumentType]
         create_planned_task(
             omo_dir,
             task_data=payload,

@@ -5,7 +5,7 @@ Covers: handle_message, TOOLS definitions, HANDLERS map.
 P31-W1: mcp_server.py merged into sot_bridge.ssot_kernel.mcp_server.
 """
 
-from sot_bridge.ssot_kernel import mcp_server
+from sot_bridge.ssot_kernel import mcp_server  # type: ignore[reportMissingImports]
 
 handle_message = mcp_server.handle_message
 TOOLS = mcp_server.TOOLS

@@ -162,16 +162,16 @@ def log_event(
     event_type: str = "audit",
     summary: str = "",
     detail: str = "",
-    uri: str = None,
-    domain: str = None,
+    uri: str = None,  # type: ignore[reportArgumentType]
+    domain: str = None,  # type: ignore[reportArgumentType]
     passed: bool = True,
-    violations: list = None,
-    cards_id: str = None,
-    daemon_cycle_id: int = None,
-    healer_check_type: str = None,
-    duration_ms: int = None,
+    violations: list = None,  # type: ignore[reportArgumentType]
+    cards_id: str = None,  # type: ignore[reportArgumentType]
+    daemon_cycle_id: int = None,  # type: ignore[reportArgumentType]
+    healer_check_type: str = None,  # type: ignore[reportArgumentType]
+    duration_ms: int = None,  # type: ignore[reportArgumentType]
     anomaly: bool = False,
-    metadata: dict = None,
+    metadata: dict = None,  # type: ignore[reportArgumentType]
     **kwargs,
 ) -> dict:
     """统一审计日志入口 — 同时写入 SSB + 对应源 JSONL + unified.jsonl"""
@@ -186,21 +186,21 @@ def log_event(
     if domain:
         event["domain"] = domain
     if passed is not None:
-        event["passed"] = passed
+        event["passed"] = passed  # type: ignore[reportArgumentType]
     if violations:
-        event["violations"] = violations
+        event["violations"] = violations  # type: ignore[reportArgumentType]
     if cards_id:
         event["cards_id"] = cards_id
     if daemon_cycle_id is not None:
-        event["daemon_cycle_id"] = daemon_cycle_id
+        event["daemon_cycle_id"] = daemon_cycle_id  # type: ignore[reportArgumentType]
     if healer_check_type:
         event["healer_check_type"] = healer_check_type
     if duration_ms is not None:
-        event["duration_ms"] = duration_ms
+        event["duration_ms"] = duration_ms  # type: ignore[reportArgumentType]
     if anomaly:
-        event["anomaly"] = anomaly
+        event["anomaly"] = anomaly  # type: ignore[reportArgumentType]
     if metadata:
-        event["metadata"] = metadata
+        event["metadata"] = metadata  # type: ignore[reportArgumentType]
 
     event = _format_event(event)
     event["ssb_event_id"] = _ssb_publish(event)
@@ -277,7 +277,7 @@ def _parse_dt(ts: str) -> datetime | None:
         return None
 
 
-def _query_jsonl(path: Path, hours: int = 24, source_filter: str = None) -> list[dict]:
+def _query_jsonl(path: Path, hours: int = 24, source_filter: str = None) -> list[dict]:  # type: ignore[reportArgumentType]
     """从 JSONL 文件查询事件"""
     if not path.exists():
         return []
@@ -303,7 +303,7 @@ def _query_jsonl(path: Path, hours: int = 24, source_filter: str = None) -> list
     return events
 
 
-def _query_ssb(hours: int = 24, event_type: str = None) -> list[dict]:
+def _query_ssb(hours: int = 24, event_type: str = None) -> list[dict]:  # type: ignore[reportArgumentType]
     """从 SSB SQLite 查询审计事件"""
     if not SSB_DB.exists():
         return []
@@ -427,8 +427,8 @@ def _query_healer_db(hours: int = 24) -> list[dict]:
 def query_events(
     hours: int = 24,
     source: str = "all",
-    event_type: str = None,
-    domain: str = None,
+    event_type: str = None,  # type: ignore[reportArgumentType]
+    domain: str = None,  # type: ignore[reportArgumentType]
     limit: int = 100,
 ) -> dict:
     """跨源联合审计查询 — SSB + L0 + BOS + daemon + healer + unified"""
@@ -544,7 +544,10 @@ def main():
             event_type = args[i + 1]
 
     result = query_events(
-        hours=hours, source=source, domain=domain, event_type=event_type
+        hours=hours,
+        source=source,
+        domain=domain,  # type: ignore[reportArgumentType]
+        event_type=event_type,  # type: ignore[reportArgumentType]
     )
     print_audit_report(result)
     return 0

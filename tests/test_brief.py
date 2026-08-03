@@ -131,13 +131,13 @@ class TestCheckClaudeGuards:
         fresh_file.is_file.return_value = True
         fresh_file.is_symlink.return_value = False
         fresh_file.stat.return_value = MagicMock(st_mtime=datetime.now().timestamp())
-        fresh_file.__str__.return_value = "/Users/xm/Documents/fresh/CLAUDE.md"
+        fresh_file.__str__.return_value = "/Users/xm/Documents/fresh/CLAUDE.md"  # type: ignore[reportAttributeAccessIssue]
 
         stale_file = MagicMock()
         stale_file.is_file.return_value = True
         stale_file.is_symlink.return_value = False
         stale_file.stat.return_value = MagicMock(st_mtime=0)  # very old
-        stale_file.__str__.return_value = "/Users/xm/Documents/stale/CLAUDE.md"
+        stale_file.__str__.return_value = "/Users/xm/Documents/stale/CLAUDE.md"  # type: ignore[reportAttributeAccessIssue]
 
         # Need parent.relative_to and relative_to
         stale_file.parent.relative_to.return_value = Path("stale")
