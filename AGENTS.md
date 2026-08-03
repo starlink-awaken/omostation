@@ -1,6 +1,6 @@
 # AGENTS.md — Workspace Development Guide
 
-> 最后更新: 2026-08-01
+> 最后更新: 2026-08-03
 > Root operating guide for AI coding agents and developers working in this workspace.
 > Keep this file operational. Put runtime facts in SSOT files, not here.
 
@@ -36,8 +36,8 @@ Project-specific instructions override this guide only within that project and o
 **可执行闸门（ADR-0204）**：`compliance` / `status` 对 **已 stage** 的需求面路径检查是否存在 active run；无 run → **halt**（exit 1）。仅 unstaged dirty → warn。旁路：`AGCP_REQUIREMENT_ITERATION_GATE=0`（须用户授权并写入 waiver 证据）。
 
 ```bash
-uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
-uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
+make agent-workflow-bootstrap
+make agent-workflow-status
 # 有 diff 时先 suggest，避免错位 workflow（P74）
 uv run --with "pyyaml" python "bin/agent-workflow.py" suggest --from-diff --profile <agent-profile>
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
@@ -45,7 +45,7 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 # ... edit / test ...
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
-uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
+make agent-workflow-closeout RUN_ID=<run-id>
 # ADR 占号（防撞车）:
 python3 bin/adr/next-adr-id.py --session <session> --claim
 # 栈落地后清 worktree:
@@ -170,11 +170,11 @@ For `.omo` or `spaces` mutations, use the registered broker/CLI path. If a task 
 make gac-local-gate                          # 全量治理-as-Code 门禁
 make ci-local                                # 本地一键全部门 (Makefile:105)
 make check-layers                            # 分层依赖检查 (docs/layer-contract.yaml)
-uv run --with "pyyaml" python "bin/gac/gac-local-gate.py" --scope files --file <path> --json
-uv run --with "pyyaml" python "bin/ssot/doc-ssot-lint.py" --json
-uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"
-uv run --with "pyyaml" python "bin/gac/gac-validate.py" --gate
-uv run --with "pyyaml" python "bin/gac/gac-drift.py"
+make gac-local-gate --scope files --file <path> --json
+make doc-ssot-lint
+make ssot-guardian
+make gac-validate
+make gac-drift
 ```
 
 `make gac-local-gate` runs the default (non-strict) GaC gate — GaC validate/drift, agent-workflow lint/integrations/adapters/bootstrap/observe, MOF schema/state-bridge/drift, documentation SSOT, doc link/snapshot, and staged change-lane checks. Two skip rules apply in default mode, both isolating concurrent-agent dirty in a shared worktree: `verify-plan`/`compliance`/`doctor` run only when staged touches agent-workflow (`896e60ba`); `project-layer-index` (generated layer digest) is CI-only — pre-commit/`make` skip it, `--strict`/CI runs it (`d33af25c`). For run/file-scoped AGCP verification use `bin/gac/gac-local-gate.py --scope ...`. Authoritative check list + skip rules live in `bin/gac/gac-local-gate.py` (`CHECKS`, `AGENT_WORKFLOW_GATE_CHECKS`, `CI_ONLY_CHECKS`) — do not duplicate here.
@@ -191,26 +191,27 @@ make sync-submodules                         # 推送子模块未推送的 commi
 ### Agent 工作流生命周期
 
 ```bash
-uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
-uv run --with "pyyaml" python "bin/agent-workflow.py" status --json
-uv run --with "pyyaml" python "bin/agent-workflow.py" list
-uv run --with "pyyaml" python "bin/agent-workflow.py" agents
-uv run --with "pyyaml" python "bin/agent-workflow.py" lint
-uv run --with "pyyaml" python "bin/agent-workflow.py" integrations
-uv run --with "pyyaml" python "bin/agent-workflow.py" adapters
+make agent-workflow-bootstrap
+make agent-workflow-status
+make agent-workflows
+make agent-workflow-agents
+make agent-workflow-lint
+make agent-workflow-integrations
+make agent-workflow-adapters
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
-uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
-uv run --with "pyyaml" python "bin/agent-workflow.py" compliance <run-id>
-uv run --with "pyyaml" python "bin/agent-workflow.py" doctor
+make agent-workflow-closeout RUN_ID=<run-id>
+make agent-workflow-compliance  # optional: RUN_ID for specific run
+make agent-workflow-doctor
+# (raw: "bin/agent-workflow.py" bootstrap, "bin/agent-workflow.py" closeout, "bin/agent-workflow.py" compliance)
 ```
 
 ### 运行态与治理状态
 
 ```bash
-uv run --project "projects/omo" omo state sync --dry-run --json
-uv run --project "projects/omo" omo state sync --json
+make state-sync-dry
+make state-sync
 uv run --with "pyyaml" python "bin/gac/governance-evolution.py" status --json
 uv run --with "pyyaml" python "bin/gac/governance-evolution.py" validate --json
 ```
@@ -226,8 +227,8 @@ cd "projects/gbrain" && bun test             # gbrain (TypeScript)
 ### 附加诊断工具
 
 ```bash
-uv run --with "pyyaml" python "bin/gac/gac-healthcheck.py"   # GaC 13-point health check
-uv run --with "pyyaml" python "bin/gac/evidence-smoke.py"     # BOS declaration vs execution gap audit
+make gac-healthcheck
+make evidence-smoke  # BOS declaration vs execution gap audit
 uv run --with "pyyaml" python "bin/mof/gen-project-registry.py"  # Registry drift detection (code→registry)
 ```
 
@@ -277,7 +278,7 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 | Change Surface | Minimum Verification |
 |----------------|----------------------|
 | Documentation only | `make gac-local-gate` and diff review |
-| Root governance docs | `make gac-local-gate` plus `uv run --with "pyyaml" python "bin/ssot/ssot-guardian.py"` |
+| Root governance docs | `make gac-local-gate` plus `make ssot-guardian` |
 | Python code (generic) | Targeted `uv run pytest` or project Makefile `test` target |
 | kairon package | `make test-diff` from `projects/kairon` |
 | gbrain | `bun test` or targeted Bun test |
@@ -316,7 +317,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 
 1. Review `git diff --stat`.
 2. Run the verification appropriate for the change.
-3. Prefer `uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>` for governed runs.
+3. Prefer `make agent-workflow-closeout RUN_ID=<run-id>` for governed runs.
 4. Mention files changed and checks run.
 5. Mention any checks skipped or blocked.
 6. Do not create commits unless explicitly requested and confirmed.
@@ -336,7 +337,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 Round X 的 7 步:
 
 0. baseline: 跑 m4-health-score, 留当前分数快照
-   uv run --with "pyyaml" python bin/mof/m4-health-score.py --emit
+   make m4-health
 1. single-worktree: bash bin/gac/gac-worktree.sh claim round-{X}
 2. deliver: 实施 N 个 deliverable (每 PR 1 deliverable)
    - 每次 commit: git log --oneline e2f8f4d7..HEAD
@@ -346,7 +347,7 @@ Round X 的 7 步:
    uv run --with "pyyaml" python bin/mof/mof-bootstrap.py all
 5. ADR: 写新 ADR (.omo/_knowledge/decisions/{NNN}-title.md), INDEX append
 6. health-check: 跑 m4-health-score.py, delta 对比 baseline (不回退)
-   uv run --with "pyyaml" python bin/mof/m4-health-score.py --compare
+   make m4-health-compare
 7. close: 写 docs/M4-DECISIONS-INDEX.md (新 ADR 加入),
    准备 PR, 显式 commit PR | round-X-final
 
