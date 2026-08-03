@@ -24,6 +24,7 @@ import shutil
 import subprocess
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -588,7 +589,7 @@ def fix_process_health_check(context: dict | None = None) -> tuple[bool, str]:
 # Fix Registry
 # ═══════════════════════════════════════════════════════════════════════════
 
-FIX_REGISTRY: dict[str, callable] = {
+FIX_REGISTRY: dict[str, Callable] = {
     "clear_pytest_cache": fix_clear_pytest_cache,
     "restart_agora": fix_restart_agora,
     "git_gc": fix_git_gc,
@@ -626,11 +627,12 @@ def list_fixes() -> list[str]:
 
 
 def _fmt_bytes(b: int) -> str:
+    n: float = float(b)
     for unit in ("B", "KB", "MB", "GB"):
-        if b < 1024:
-            return f"{b:.1f}{unit}"
-        b /= 1024
-    return f"{b:.1f}TB"
+        if n < 1024:
+            return f"{n:.1f}{unit}"
+        n /= 1024
+    return f"{n:.1f}TB"
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -743,7 +745,7 @@ def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
                 elif self.path == "/fixes":
                     self._json(200, {"fixes": list_fixes()})
                 elif self.path == "/trends":
-                    self._json(200, {"trends": _engine_ref._trends.get_trends()})
+                    self._json(200, {"trends": _engine_ref._trends.get_trends()})  # type: ignore[attr-defined]
                 else:
                     self._json(404, {"error": "not found"})
 

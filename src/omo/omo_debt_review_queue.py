@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 from .omo_debt_metrics import collect_stale_evidence_item_ids
 from .omo_debt_registry import DebtItem
@@ -39,7 +40,7 @@ def _priority_reason(item: DebtItem, stale_ids: set[str], overdue_by: int) -> st
 
 def _entry_payload(
     item: DebtItem, *, stale_ids: set[str], overdue_by: int
-) -> dict[str, object]:
+) -> dict[str, Any]:
     return {
         "id": item.id,
         "title": item.title,
@@ -60,14 +61,14 @@ def _entry_payload(
 
 def build_review_queue(
     items: tuple[DebtItem, ...], now: str, repo_root: Path
-) -> dict[str, object]:
+) -> dict[str, Any]:
     current = _parse_iso8601(now)
     upcoming_cutoff = current + timedelta(days=REVIEW_WINDOW_DAYS)
     stale_ids = collect_stale_evidence_item_ids(items, repo_root=repo_root)
-    due_now: list[dict[str, object]] = []
-    upcoming: list[dict[str, object]] = []
-    escalation_candidates: list[dict[str, object]] = []
-    unscheduled: list[dict[str, object]] = []
+    due_now: list[dict[str, Any]] = []
+    upcoming: list[dict[str, Any]] = []
+    escalation_candidates: list[dict[str, Any]] = []
+    unscheduled: list[dict[str, Any]] = []
 
     for item in items:
         if item.lifecycle_state == "closed":

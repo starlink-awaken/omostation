@@ -19,14 +19,13 @@ OMO_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(OMO_SRC) not in sys.path:
     sys.path.insert(0, str(OMO_SRC))
 
-from omo.omo_io import (  # noqa: E402
+from omo.omo_io import (
     AppendOnlyLog,
     fcntl_lock,
     read_jsonl,
     write_text_atomic,
     write_yaml_atomic,
 )
-
 
 # ── read_jsonl ────────────────────────────────────────────
 
@@ -444,9 +443,8 @@ class TestFcntlLock:
     def test_lock_is_reentrant_after_release(self, tmp_path):
         """同一线程 2 次获取 (嵌套) 应该不卡死."""
         lock_path = tmp_path / "test.lock"
-        with fcntl_lock(lock_path):
-            with fcntl_lock(lock_path):
-                pass  # 嵌套 OK, 内层 flock 是 advisory lock 同一线程会立即返回
+        with fcntl_lock(lock_path), fcntl_lock(lock_path):
+            pass  # 嵌套 OK, 内层 flock 是 advisory lock 同一线程会立即返回
 
     def test_fcntl_lock_with_append_only_log_across_threads(self, tmp_path):
         """验证 fcntl_lock 注入 AppendOnlyLog 后, 4 线程 100 次无丢失."""

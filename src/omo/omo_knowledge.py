@@ -61,7 +61,7 @@ def cmd_knowledge_add(
             omo_dir,
             plane=plane,
             title=title,
-            content=content,
+            content=content,  # type: ignore[reportArgumentType]
             actor="projects/omo",
             source_ref=f"omo:knowledge:add:{plane}:{title}",
         )

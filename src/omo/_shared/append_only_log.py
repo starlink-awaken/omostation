@@ -158,7 +158,7 @@ class AppendOnlyLog:
         if hasattr(record, "model_dump") and callable(
             getattr(record, "model_dump", None)
         ):
-            record = record.model_dump()
+            record = record.model_dump()  # type: ignore[attr-defined]
 
         # 2. Pydantic schema 校验 (fail-fast, 不静默)
         if schema is not None:

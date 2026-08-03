@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 COST_FILE = (

@@ -20,7 +20,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from omo.omo_bos import (
     ALLOWED_DOMAINS,
     BOS_URI_PATTERN,
@@ -37,7 +36,6 @@ from omo.omo_bos import (
     verify_all_endpoints,
     verify_endpoint,
 )
-
 
 # ── 验证逻辑 ──────────────────────────────────────────────
 

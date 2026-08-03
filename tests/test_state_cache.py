@@ -1,8 +1,8 @@
 """测试 StateCache"""
 
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import time
 
 from omo.state_cache import GovernanceStateCache
 

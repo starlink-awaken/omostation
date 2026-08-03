@@ -3,16 +3,16 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import yaml
-
 import pytest
-
+import yaml
 from omo.omo_governance import (
-    approve_truth_mutation,
     apply_truth_mutation,
+    approve_truth_mutation,
     list_truth_mutations,
-    main as omo_governance_main,
     propose_truth_mutation,
+)
+from omo.omo_governance import (
+    main as omo_governance_main,
 )
 
 

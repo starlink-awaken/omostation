@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from omo.omo_task_policy import (
     ACTIVE_EXECUTION_LINKS_POLICY,
     ACTIVE_REVIEW_REF_POLICY,

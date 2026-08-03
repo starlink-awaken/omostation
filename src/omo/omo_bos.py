@@ -33,7 +33,7 @@ import re
 import sys
 import tempfile
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -111,9 +111,7 @@ class BosRegistration:
     endpoint: str
     protocol: Protocol = "internal"
     description: str = ""
-    registered_at: str = field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    registered_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     registered_by: str = "omo-bos-cli"
 
     def to_dict(self) -> dict[str, Any]:
@@ -156,14 +154,18 @@ def validate_bos_uri(uri: str) -> tuple[bool, str]:
             )
         return (
             False,
-            (f"Legacy 3-segment URI but package '{pkg}' not in domain map. "
-            f"Use 4-segment form: bos://<domain>/<package>/<action>"),
+            (
+                f"Legacy 3-segment URI but package '{pkg}' not in domain map. "
+                f"Use 4-segment form: bos://<domain>/<package>/<action>"
+            ),
         )
     return (
         False,
-        (f"Invalid BOS URI: {uri!r}. "
-        f"Expected bos://<domain>/<package>/<action> "
-        f"(domain in {ALLOWED_DOMAINS}) or legacy bos://<package>/<action>"),
+        (
+            f"Invalid BOS URI: {uri!r}. "
+            f"Expected bos://<domain>/<package>/<action> "
+            f"(domain in {ALLOWED_DOMAINS}) or legacy bos://<package>/<action>"
+        ),
     )
 
 

@@ -9,8 +9,8 @@ from omo.omo_lint import (
     cmd_lint_direct_omo_io,
     cmd_lint_mutation_ledger,
     cmd_lint_mutation_surfaces,
-    cmd_lint_sensitive_governed_writes,
     cmd_lint_self_evolution_approval,
+    cmd_lint_sensitive_governed_writes,
     cmd_lint_task_policy,
 )
 from omo.omo_paths import PROJECTS_DIR

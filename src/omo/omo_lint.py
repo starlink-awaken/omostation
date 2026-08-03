@@ -28,6 +28,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -36,29 +37,29 @@ from omo.omo_io import read_jsonl
 
 # P88 R1: doc-lifecycle 子模块 (extracted 304L from omo_lint.py)
 # Re-export 保持向后兼容 (omo.cli / scripts/ / omo_audit.py 可能直接 import)
-from .omo_lint_doc import (
-    _DOC_LIFECYCLE_NEED_FRONTMATTER,
-    _DOC_LIFECYCLE_PATTERNS,
-    _check_doc_referenced,
-    _classify_doc,
-    _parse_frontmatter,
+from .omo_lint_doc import (  # noqa: F401
+    _DOC_LIFECYCLE_NEED_FRONTMATTER,  # noqa: F401
+    _DOC_LIFECYCLE_PATTERNS,  # noqa: F401
+    _check_doc_referenced,  # noqa: F401
+    _classify_doc,  # noqa: F401
+    _parse_frontmatter,  # noqa: F401
     cmd_lint_doc_archival_suggestions,
     cmd_lint_doc_lifecycle,
 )
 
 # P100 R1: schemas 子模块 (extracted 488L from omo_lint.py)
 # Re-export 保持向后兼容 (cli.py / omo_audit.py / omo_lint_seed 可能直接 import)
-from .omo_lint_schemas import (
-    _CROSS_MODULE_SRP_ALLOWLIST,
-    _SORT_KEYS_DEFAULT_EXEMPT_MODULES,
-    CONSUMER_MODULES,
+from .omo_lint_schemas import (  # noqa: F401
+    _CROSS_MODULE_SRP_ALLOWLIST,  # noqa: F401
+    _SORT_KEYS_DEFAULT_EXEMPT_MODULES,  # noqa: F401
+    CONSUMER_MODULES,  # noqa: F401
     OMO_SRC,
-    _check_all_schemas_exported,
-    _check_cross_module_srp,
-    _check_dead_imports,
-    _check_module_append_has_schema,
-    _check_schema_registry_integrity,
-    _check_sort_keys_default,
+    _check_all_schemas_exported,  # noqa: F401
+    _check_cross_module_srp,  # noqa: F401
+    _check_dead_imports,  # noqa: F401
+    _check_module_append_has_schema,  # noqa: F401
+    _check_schema_registry_integrity,  # noqa: F401
+    _check_sort_keys_default,  # noqa: F401
     cmd_lint_schemas,
 )
 from .omo_paths import OMO_ROOT, PROJECTS_DIR, WORKSPACE_ROOT
@@ -133,8 +134,8 @@ def cmd_lint_direct_omo_io(
         ]
         cmd.extend(str(path) for path in default_paths if path.exists())
 
-    result = subprocess.run(
-        cmd, cwd=str(WORKSPACE_ROOT), capture_output=True, text=True
+    result = subprocess.run(  # noqa: PLW1510
+        cmd, cwd=str(WORKSPACE_ROOT), capture_output=True, text=True, check=False
     )
     if result.stdout:
         print(result.stdout, end="")
@@ -226,9 +227,12 @@ def _collect_name_assignments(tree: ast.AST) -> dict[str, ast.AST]:
             for target in node.targets:
                 if isinstance(target, ast.Name):
                     assignments[target.id] = node.value
-        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            if node.value is not None:
-                assignments[node.target.id] = node.value
+        elif (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.value is not None
+        ):
+            assignments[node.target.id] = node.value
     return assignments
 
 
@@ -430,16 +434,20 @@ def _check_yaml_bypass(omo_dir: Path = Path(".omo")) -> list[tuple[str, str]]:
             issues.append(
                 (
                     path.name,
-                    (f"R1: yaml 有 status={status!r} 字段但无 lifecycle_state (OMO 用 "
-                    f"lifecycle_state, 改 status 是越权写入, OMO 不认)"),
+                    (
+                        f"R1: yaml 有 status={status!r} 字段但无 lifecycle_state (OMO 用 "
+                        f"lifecycle_state, 改 status 是越权写入, OMO 不认)"
+                    ),
                 )
             )
         elif has_status and status in ("closed", "resolved") and lifecycle != status:
             issues.append(
                 (
                     path.name,
-                    (f"R2: status={status!r} 但 lifecycle_state={lifecycle!r} 不一致 "
-                    f"(越权写入, OMO 以 lifecycle_state 为准)"),
+                    (
+                        f"R2: status={status!r} 但 lifecycle_state={lifecycle!r} 不一致 "
+                        f"(越权写入, OMO 以 lifecycle_state 为准)"
+                    ),
                 )
             )
 
@@ -605,7 +613,7 @@ def cmd_lint_god_module(workspace_root: str = ".") -> int:
 
 def cmd_lint_ingress_registry(workspace_root: str = ".") -> int:
     from .omo_governance_surfaces import (
-        _check_ingress_registry,
+        _check_ingress_registry,  # type: ignore[reportAttributeAccessIssue]
         resolve_governance_workspace_root,
     )
 
@@ -730,7 +738,7 @@ def cmd_lint_c2g_omo_boundary(workspace_root: str = ".") -> int:
 
 def cmd_lint_ingress_artifacts(workspace_root: str = ".") -> int:
     from .omo_governance_surfaces import (
-        _check_ingress_artifacts,
+        _check_ingress_artifacts,  # type: ignore[reportAttributeAccessIssue]
         resolve_governance_workspace_root,
     )
 
@@ -965,7 +973,7 @@ def cmd_stamp_policy(json_output: bool = False) -> int:
     projection_paths = load_projection_paths()
     tracked = set(load_tracked_runtime_files())
 
-    orphans: list[dict[str, object]] = []
+    orphans: list[dict[str, Any]] = []
     for path in sorted(RUNTIME_DIR.rglob("*")):
         if path.is_dir():
             continue
@@ -1028,7 +1036,7 @@ def load_projection_registry() -> dict[str, dict[str, str]]:
     )
 
 
-def probe(path_str: str) -> dict[str, object]:
+def probe(path_str: str) -> dict[str, Any]:
     if not path_str:
         return {"path": "", "exists": False, "kind": "missing", "size": 0}
     path = WORKSPACE_ROOT / path_str
@@ -1056,7 +1064,7 @@ def probe(path_str: str) -> dict[str, object]:
 def cmd_projection_guard(json_output: bool = False) -> int:
     """P74: 验证 runtime-projections.yaml 声明的路径存在且可解析."""
     registry = load_projection_registry()
-    findings: list[dict[str, object]] = []
+    findings: list[dict[str, Any]] = []
     ok = True
 
     for name, payload in registry.items():

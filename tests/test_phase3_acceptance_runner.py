@@ -7,7 +7,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.phase3_acceptance import AcceptanceRun, build_markdown_report, run_suite  # noqa: E402
+from scripts.phase3_acceptance import (  # type: ignore[reportMissingImports]
+    AcceptanceRun,
+    build_markdown_report,
+    run_suite,
+)
 
 
 def test_run_suite_collects_counts_and_category(tmp_path, monkeypatch):

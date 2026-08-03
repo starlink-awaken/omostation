@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 
 def _timestamp_slug(now: str) -> str:
     return now.replace(":", "-")
@@ -17,7 +19,7 @@ def build_contract_request(
     requested_at: str,
     requested_by: str,
     request_ref: str,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     request_id = request_ref.rsplit("/", 1)[-1].removesuffix(".yaml")
     return {
         "version": 1,
@@ -41,7 +43,7 @@ def build_contract_proposal(
     deliverables: list[str],
     requested_by: str,
     request_ref: str,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     request_id = request_ref.rsplit("/", 1)[-1].removesuffix(".yaml")
     return {
         "id": f"{request_id}-proposal",

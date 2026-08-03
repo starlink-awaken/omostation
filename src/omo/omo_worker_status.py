@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from .omo_io import write_text_atomic
 from .omo_worker_core import (
@@ -14,11 +15,9 @@ from .omo_worker_core import (
 )
 
 
-def collect_worker_status(
-    root: Path, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+def collect_worker_status(root: Path, omo_dir: str | Path = ".omo") -> dict[str, Any]:
     active_dir = _omo_path(root, omo_dir) / "tasks" / "active"
-    runs: list[dict[str, object]] = []
+    runs: list[dict[str, Any]] = []
 
     for task_file in sorted(active_dir.glob("*.yaml")):
         task = _load_yaml(task_file)
@@ -59,7 +58,7 @@ def update_dispatch_checkpoint(
     note: str,
     now: str | None = None,
     omo_dir: str | Path = ".omo",
-) -> dict[str, object]:
+) -> dict[str, Any]:
     dispatch_path = _find_dispatch_file(
         _omo_path(root, omo_dir) / "workers" / "runs", dispatch_id
     )
@@ -97,10 +96,10 @@ def update_dispatch_checkpoint(
 
 def scan_runtime_watchdog(
     root: Path, now: str | None = None, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     current_time = _parse_iso8601(now) or datetime.now(UTC)
     status = collect_worker_status(root, omo_dir=omo_dir)
-    runs: list[dict[str, object]] = []
+    runs: list[dict[str, Any]] = []
     counts = {"healthy": 0, "warning": 0, "stale": 0, "reclaim_due": 0}
 
     for run in status["runs"]:

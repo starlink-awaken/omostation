@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 
 def _rate(numerator: int, denominator: int, *, empty_value: float) -> float:
@@ -9,7 +10,7 @@ def _rate(numerator: int, denominator: int, *, empty_value: float) -> float:
     return numerator / denominator
 
 
-def _owner_rollup(owner_packet: dict[str, object]) -> dict[str, object]:
+def _owner_rollup(owner_packet: dict[str, Any]) -> dict[str, Any]:
     entries = owner_packet["entries"]
     state_counts = dict(owner_packet["state_counts"])
     gate_item_count = sum(1 for entry in entries if entry.get("gate_level") == "gate")
@@ -37,9 +38,9 @@ def _owner_rollup(owner_packet: dict[str, object]) -> dict[str, object]:
     }
 
 
-def build_reporting_packet(campaign_packet: dict[str, object]) -> dict[str, object]:
+def build_reporting_packet(campaign_packet: dict[str, Any]) -> dict[str, Any]:
     owners = [_owner_rollup(owner_packet) for owner_packet in campaign_packet["owners"]]
-    summary = campaign_packet["summary"]
+    summary: dict[str, Any] = campaign_packet["summary"]
     gate_item_count = sum(owner["gate_item_count"] for owner in owners)
     approved_gate_item_count = sum(
         owner["approved_gate_item_count"] for owner in owners
@@ -68,8 +69,8 @@ def build_reporting_packet(campaign_packet: dict[str, object]) -> dict[str, obje
     }
 
 
-def render_reporting_markdown(packet: dict[str, object]) -> str:
-    summary = packet["summary"]
+def render_reporting_markdown(packet: dict[str, Any]) -> str:
+    summary: dict[str, Any] = packet["summary"]
     lines = [
         "# Debt Reporting Packet",
         "",
@@ -96,17 +97,15 @@ def render_reporting_markdown(packet: dict[str, object]) -> str:
     return "\n".join(lines)
 
 
-def _delta_metric(
-    latest: float, prior: float | None
-) -> dict[str, int | float | None]:
+def _delta_metric(latest: float, prior: float | None) -> dict[str, int | float | None]:
     if prior is None:
         return {"latest": latest, "prior": None, "delta": None}
     return {"latest": latest, "prior": prior, "delta": latest - prior}
 
 
 def _summary_diff(
-    latest_summary: dict[str, object], prior_summary: dict[str, object] | None
-) -> dict[str, object]:
+    latest_summary: dict[str, Any], prior_summary: dict[str, Any] | None
+) -> dict[str, Any]:
     prior_state_counts = prior_summary["state_counts"] if prior_summary else None
     return {
         "total_items": _delta_metric(
@@ -158,9 +157,9 @@ def _summary_diff(
 
 def _owner_diff_entry(
     owner: str,
-    latest_owner: dict[str, object],
-    prior_owner: dict[str, object],
-) -> dict[str, object]:
+    latest_owner: dict[str, Any],
+    prior_owner: dict[str, Any],
+) -> dict[str, Any]:
     latest_state_counts = latest_owner["state_counts"]
     prior_state_counts = prior_owner["state_counts"]
     return {
@@ -205,8 +204,8 @@ def _owner_diff_entry(
 
 
 def _owners_diff(
-    latest_owners: list[dict[str, object]], prior_owners: list[dict[str, object]]
-) -> dict[str, object]:
+    latest_owners: list[dict[str, Any]], prior_owners: list[dict[str, Any]]
+) -> dict[str, Any]:
     latest_by_owner = {str(owner["owner"]): owner for owner in latest_owners}
     prior_by_owner = {str(owner["owner"]): owner for owner in prior_owners}
     shared_names = sorted(latest_by_owner.keys() & prior_by_owner.keys())
@@ -227,11 +226,13 @@ def _owners_diff(
 def build_reporting_diff_packet(
     *,
     generated_at: str,
-    latest_packet: dict[str, object],
-    prior_packet: dict[str, object] | None,
-) -> dict[str, object]:
-    latest_summary = latest_packet["summary"]
-    prior_summary = prior_packet["summary"] if prior_packet else None
+    latest_packet: dict[str, Any],
+    prior_packet: dict[str, Any] | None,
+) -> dict[str, Any]:
+    latest_summary: dict[str, Any] = latest_packet["summary"]
+    prior_summary: dict[str, Any] | None = (
+        prior_packet["summary"] if prior_packet else None
+    )
     owners = (
         None
         if prior_packet is None
@@ -251,7 +252,7 @@ def build_reporting_diff_packet(
     }
 
 
-def render_reporting_diff_markdown(packet: dict[str, object]) -> str:
+def render_reporting_diff_markdown(packet: dict[str, Any]) -> str:
     lines = [
         "# Debt Reporting Diff",
         "",
@@ -323,8 +324,8 @@ def _validate_run_stamp(run_stamp: str) -> None:
 
 def _history_entry(
     dispatch_run: dict[str, str],
-    reporting_packet: dict[str, object] | None,
-) -> dict[str, object]:
+    reporting_packet: dict[str, Any] | None,
+) -> dict[str, Any]:
     run_stamp = dispatch_run["run_stamp"]
     entry = {
         "run_stamp": run_stamp,
@@ -343,7 +344,7 @@ def _history_entry(
         raise ValueError(
             f"reporting run stamp mismatch: {reporting_packet.get('run_stamp')} != {run_stamp}"
         )
-    summary = reporting_packet["summary"]
+    summary: dict[str, Any] = reporting_packet["summary"]
     entry.update(
         {
             "reporting_ref": f".omo/debt/reporting/runs/{run_stamp}/current.yaml",
@@ -362,8 +363,8 @@ def build_reporting_history_packet(
     *,
     generated_at: str,
     dispatch_runs: tuple[dict[str, str], ...],
-    reporting_packets_by_run: dict[str, dict[str, object]],
-) -> dict[str, object]:
+    reporting_packets_by_run: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
     ordered_runs = sorted(dispatch_runs, key=lambda run: run["run_stamp"], reverse=True)
     run_stamps = [run["run_stamp"] for run in ordered_runs]
     for run_stamp in run_stamps:
@@ -385,7 +386,7 @@ def build_reporting_history_packet(
     }
 
 
-def render_reporting_history_markdown(packet: dict[str, object]) -> str:
+def render_reporting_history_markdown(packet: dict[str, Any]) -> str:
     lines = [
         "# Debt Reporting History",
         "",
@@ -409,7 +410,7 @@ def render_reporting_history_markdown(packet: dict[str, object]) -> str:
     return "\n".join(lines)
 
 
-def _trend_run(entry: dict[str, object]) -> dict[str, object]:
+def _trend_run(entry: dict[str, Any]) -> dict[str, Any]:
     if not entry["reporting_exists"] or any(
         entry[field] is None
         for field in (
@@ -433,9 +434,7 @@ def _trend_run(entry: dict[str, object]) -> dict[str, object]:
     }
 
 
-def _interval(
-    previous: dict[str, object], current: dict[str, object]
-) -> dict[str, object]:
+def _interval(previous: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
     return {
         "from_run_stamp": previous["run_stamp"],
         "to_run_stamp": current["run_stamp"],
@@ -450,8 +449,8 @@ def _interval(
 
 
 def _owner_trend_run(
-    owner: str, run_stamp: str, entry: dict[str, object]
-) -> dict[str, object]:
+    owner: str, run_stamp: str, entry: dict[str, Any]
+) -> dict[str, Any]:
     if any(
         entry[field] is None
         for field in (
@@ -474,8 +473,8 @@ def _owner_trend_run(
 
 
 def _owner_interval(
-    previous: dict[str, object], current: dict[str, object]
-) -> dict[str, object]:
+    previous: dict[str, Any], current: dict[str, Any]
+) -> dict[str, Any]:
     return {
         "from_run_stamp": previous["run_stamp"],
         "to_run_stamp": current["run_stamp"],
@@ -490,9 +489,9 @@ def _owner_interval(
 
 
 def _owners_by_run(
-    ordered_runs: list[dict[str, object]],
-    reporting_packets_by_run: dict[str, dict[str, object]] | None,
-) -> list[dict[str, dict[str, object]]] | None:
+    ordered_runs: list[dict[str, Any]],
+    reporting_packets_by_run: dict[str, dict[str, Any]] | None,
+) -> list[dict[str, dict[str, Any]]] | None:
     if len(ordered_runs) < 2 or reporting_packets_by_run is None:
         return None
 
@@ -509,9 +508,9 @@ def _owners_by_run(
 
 
 def _owner_trends(
-    ordered_runs: list[dict[str, object]],
-    owners_by_run: list[dict[str, dict[str, object]]] | None,
-) -> dict[str, object] | None:
+    ordered_runs: list[dict[str, Any]],
+    owners_by_run: list[dict[str, dict[str, Any]]] | None,
+) -> dict[str, Any] | None:
     if owners_by_run is None:
         return None
 
@@ -550,10 +549,10 @@ def _owner_trends(
 
 
 def _owner_presence(
-    ordered_runs: list[dict[str, object]],
-    owners_by_run: list[dict[str, dict[str, object]]] | None,
+    ordered_runs: list[dict[str, Any]],
+    owners_by_run: list[dict[str, dict[str, Any]]] | None,
     shared_names: set[str] | None,
-) -> dict[str, object] | None:
+) -> dict[str, Any] | None:
     if owners_by_run is None or shared_names is None:
         return None
 
@@ -594,9 +593,9 @@ def _owner_presence(
 
 
 def _execution_progress_run(
-    run: dict[str, object],
+    run: dict[str, Any],
     baseline_open_item_count: int,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     open_item_count = int(run["total_items"]) - int(run["executed_item_count"])
     return {
         "run_stamp": run["run_stamp"],
@@ -611,8 +610,8 @@ def _execution_progress_run(
 
 
 def _execution_progress(
-    ordered_runs: list[dict[str, object]],
-) -> dict[str, object] | None:
+    ordered_runs: list[dict[str, Any]],
+) -> dict[str, Any] | None:
     if len(ordered_runs) < 2:
         return None
 
@@ -636,10 +635,10 @@ def _execution_progress(
 
 
 def _state_progress_run(
-    run: dict[str, object],
-    reporting_packet: dict[str, object],
+    run: dict[str, Any],
+    reporting_packet: dict[str, Any],
     baseline_pending_approval: int,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     state_counts = reporting_packet["summary"]["state_counts"]
     pending_approval = int(state_counts["pending_approval"])
     executed = int(run["executed_item_count"])
@@ -658,9 +657,9 @@ def _state_progress_run(
 
 
 def _state_progress(
-    ordered_runs: list[dict[str, object]],
-    reporting_packets_by_run: dict[str, dict[str, object]] | None,
-) -> dict[str, object] | None:
+    ordered_runs: list[dict[str, Any]],
+    reporting_packets_by_run: dict[str, dict[str, Any]] | None,
+) -> dict[str, Any] | None:
     if len(ordered_runs) < 2 or reporting_packets_by_run is None:
         return None
 
@@ -685,7 +684,7 @@ def _state_progress(
     }
 
 
-def _run_index(runs: list[dict[str, object]], run_stamp: str, *, label: str) -> int:
+def _run_index(runs: list[dict[str, Any]], run_stamp: str, *, label: str) -> int:
     for index, entry in enumerate(runs):
         if entry["run_stamp"] == run_stamp:
             return index
@@ -693,12 +692,12 @@ def _run_index(runs: list[dict[str, object]], run_stamp: str, *, label: str) -> 
 
 
 def _select_runs(
-    history_packet: dict[str, object],
+    history_packet: dict[str, Any],
     *,
     window_requested: int | None,
     from_run_stamp_requested: str | None,
     to_run_stamp_requested: str | None,
-) -> list[dict[str, object]]:
+) -> list[dict[str, Any]]:
     runs = history_packet["runs"]
     if from_run_stamp_requested is not None or to_run_stamp_requested is not None:
         if from_run_stamp_requested is None or to_run_stamp_requested is None:
@@ -726,12 +725,12 @@ def _select_runs(
 def build_reporting_trend_packet(
     *,
     generated_at: str,
-    history_packet: dict[str, object],
-    reporting_packets_by_run: dict[str, dict[str, object]] | None = None,
+    history_packet: dict[str, Any],
+    reporting_packets_by_run: dict[str, dict[str, Any]] | None = None,
     window_requested: int | None = None,
     from_run_stamp_requested: str | None = None,
     to_run_stamp_requested: str | None = None,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     selected_runs = _select_runs(
         history_packet,
         window_requested=window_requested,
@@ -778,7 +777,7 @@ def build_reporting_trend_packet(
     }
 
 
-def render_reporting_trend_markdown(packet: dict[str, object]) -> str:
+def render_reporting_trend_markdown(packet: dict[str, Any]) -> str:
     lines = [
         "# Debt Reporting Trend",
         "",

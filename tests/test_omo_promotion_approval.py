@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
 from omo.omo_promotion_approval import evaluate_promotion_approval
 
 

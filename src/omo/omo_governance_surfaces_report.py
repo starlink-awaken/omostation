@@ -45,6 +45,7 @@ P110-B 收益:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 # ingress / ingress_artifacts / mutation_surface / internal_write_profiles / state_plane
 # (each is a sibling of report, has no dependency on report)
@@ -67,7 +68,7 @@ def _load_yaml(path):
     return load_yaml_required(path)
 
 
-def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
+def build_governance_surfaces_report(workspace_root: Path) -> dict[str, Any]:
     from omo.omo_governance_surfaces import (
         _asset_ref_to_top_level,
         _check_c2g_omo_boundary,

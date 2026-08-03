@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from copy import deepcopy
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from .omo_governance_surfaces import (
@@ -37,12 +37,7 @@ _REQUIRED_FIELDS = {
 
 
 def _utc_now() -> str:
-    return (
-        datetime.now(UTC)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def propose_truth_mutation(root: Path, proposal: dict, now: str) -> dict:

@@ -1,3 +1,6 @@
+# mock-heavy test: monkeypatch + dynamic attribute setup; pyright cannot follow.
+# pyright: reportAttributeAccessIssue=false
+
 """P45-W4 并发 invoke 4 URI 测试 — 验证 P44 多连接池 max=4 加速.
 
 P44-W0 升级 _AgoraPool 单连接池为 _AgoraPoolManager (max=4 LRU).
@@ -15,9 +18,10 @@ import asyncio
 import time
 
 import pytest
-
-from omo.omo_llm_bos_bridge import invoke_bos_uri_tool, _MANAGER
-
+from omo.omo_llm_bos_bridge import (  # type: ignore[reportAttributeAccessIssue]
+    _MANAGER,
+    invoke_bos_uri_tool,
+)
 
 # 4 URI (P45 战役 1 后的 POC 子集, 跨 4 不同 package, 触发 4 个不同连接)
 URIS_4 = [
@@ -41,7 +45,7 @@ async def test_4uri_serial_vs_concurrent_speedup():
     # 并发 (reset manager 先, 避免重用上轮的连接)
     import omo.omo_llm_bos_bridge as bridge
 
-    bridge._MANAGER = None
+    bridge._MANAGER = None  # type: ignore[reportAttributeAccessIssue]
 
     t0 = time.time()
     results = await asyncio.gather(
@@ -69,7 +73,7 @@ async def test_4uri_concurrent_status_count():
     """W4 验证: 4 URI 并发都返回 status=resolved (P45 加的 POC 应真可调)."""
     import omo.omo_llm_bos_bridge as bridge
 
-    bridge._MANAGER = None
+    bridge._MANAGER = None  # type: ignore[reportAttributeAccessIssue]
 
     results = await asyncio.gather(
         *[invoke_bos_uri_tool(uri, args) for uri, args in URIS_4]
@@ -92,7 +96,7 @@ async def test_4uri_concurrent_transport():
     """W4 验证: 4 URI 并发都走 agora_pool transport (长驻池复用)."""
     import omo.omo_llm_bos_bridge as bridge
 
-    bridge._MANAGER = None
+    bridge._MANAGER = None  # type: ignore[reportAttributeAccessIssue]
 
     results = await asyncio.gather(
         *[invoke_bos_uri_tool(uri, args) for uri, args in URIS_4]
@@ -116,4 +120,4 @@ async def cleanup_manager():
     # Reset module-level lock so next test gets a fresh one on its event loop
     import omo.omo_llm_bos_bridge as bridge
 
-    bridge._MANAGER_INIT_LOCK = None
+    bridge._MANAGER_INIT_LOCK = None  # type: ignore[reportAttributeAccessIssue]

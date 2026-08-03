@@ -25,6 +25,21 @@ from omo.omo_ingress_paths import (
 from omo.omo_io import fcntl_lock, write_text_atomic, write_yaml_atomic
 
 
+# Lazy indirection: omo_ingress re-exports for the helpers used here. Imported
+# at function call time to break the circular load order between omo_ingress
+# (which re-exports omo_ingress_registry_writes) and this module.
+def _record_mutation(*a, **kw):  # type: ignore[no-redef]
+    from omo.omo_ingress import _record_mutation as _fn
+
+    return _fn(*a, **kw)
+
+
+def _record_trail(*a, **kw):  # type: ignore[no-redef]
+    from omo.omo_ingress import _record_trail as _fn
+
+    return _fn(*a, **kw)
+
+
 def write_capability_registry_bundle(
     omo_dir: Path,
     *,
@@ -80,7 +95,7 @@ def write_capability_registry_bundle(
             / f"bundle-{_timestamp_slug(timestamp)}.yaml"
         )
         write_yaml_atomic(artifact_path, artifact)
-        _register_ingress(
+        _register_ingress(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             registry,
             kind="capabilities",
             item_id="bundle",
@@ -89,7 +104,7 @@ def write_capability_registry_bundle(
             fingerprint=fingerprint,
             created_at=timestamp,
         )
-        _write_registry(omo_dir, registry)
+        _write_registry(omo_dir, registry)  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
         parent_step_id = f"ingress:capability-bundle:{timestamp}"
         details = (
             f"actor={actor} source_ref={source_ref or '-'} "
@@ -103,14 +118,14 @@ def write_capability_registry_bundle(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="write_capability_registry_bundle",
             target=".omo/capabilities/",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="write_capability_registry_bundle",
@@ -169,7 +184,7 @@ def write_manual_capabilities(
             / f"manual-capabilities-{_timestamp_slug(timestamp)}.yaml"
         )
         write_yaml_atomic(artifact_path, artifact)
-        _register_ingress(
+        _register_ingress(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             registry,
             kind="capabilities",
             item_id="manual-capabilities",
@@ -178,7 +193,7 @@ def write_manual_capabilities(
             fingerprint=fingerprint,
             created_at=timestamp,
         )
-        _write_registry(omo_dir, registry)
+        _write_registry(omo_dir, registry)  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
         parent_step_id = f"ingress:manual-capabilities:{timestamp}"
         details = (
             f"actor={actor} source_ref={source_ref or '-'} "
@@ -191,14 +206,14 @@ def write_manual_capabilities(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="write_manual_capabilities",
             target=".omo/capabilities/manual-capabilities.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="write_manual_capabilities",
@@ -223,7 +238,6 @@ def create_skill_manifest(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     skill_id = str(manifest["id"])
     timestamp = now or _utc_now()
@@ -255,14 +269,14 @@ def create_skill_manifest(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="create_skill_manifest",
             target=f".omo/_truth/task-center/skills/{skill_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="create_skill_manifest",
@@ -283,7 +297,6 @@ def write_discovery_registry(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     registry_path = omo_dir / "_truth" / "task-center" / "discovery-registry.yaml"
@@ -316,14 +329,14 @@ def write_discovery_registry(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="write_discovery_registry",
             target=".omo/_truth/task-center/discovery-registry.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="write_discovery_registry",
@@ -343,7 +356,6 @@ def write_usage_accounting(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     registry_path = omo_dir / "_truth" / "task-center" / "usage-accounting.yaml"
@@ -375,14 +387,14 @@ def write_usage_accounting(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="write_usage_accounting",
             target=".omo/_truth/task-center/usage-accounting.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="write_usage_accounting",
@@ -402,7 +414,6 @@ def write_task_center_freshness(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     report_path = omo_dir / "_delivery" / "task-center" / "freshness" / "current.yaml"
@@ -434,14 +445,14 @@ def write_task_center_freshness(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="write_task_center_freshness",
             target=".omo/_delivery/task-center/freshness/current.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="write_task_center_freshness",
@@ -461,7 +472,6 @@ def write_task_center_control_decision(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     artifact_path = omo_dir / "_delivery" / "task-center" / "control" / "current.yaml"
@@ -494,14 +504,14 @@ def write_task_center_control_decision(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="write_task_center_control_decision",
             target=".omo/_delivery/task-center/control/current.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="write_task_center_control_decision",
@@ -523,7 +533,6 @@ def update_governance_overlay_state(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     roadmap_path = omo_dir / "_truth" / "governance-overlay" / "roadmap.yaml"
@@ -561,14 +570,14 @@ def update_governance_overlay_state(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="update_governance_overlay_state",
             target=".omo/_truth/governance-overlay/roadmap.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="update_governance_overlay_state",
@@ -589,8 +598,6 @@ def apply_baseline_patches(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_trail
-
     """Broker: patch dependency-baseline.yaml 的 mismatched baseline 值 (C2 方案 C).
 
     gen-dependency-baseline 算 drift (业务), 本函数合规应用 patch
@@ -632,14 +639,14 @@ def apply_baseline_patches(
             action="apply_dependency_baseline_patches",
             debt_id="",
             actor=actor,
-            details={
+            details={  # type: ignore[reportArgumentType]
                 "applied": applied,
                 "source_ref": source_ref,
                 "timestamp": timestamp,
             },
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="apply_dependency_baseline_patches",
@@ -647,3 +654,32 @@ def apply_baseline_patches(
             parent_step_id="dependency-baseline",
         )
     return {"applied": len(applied), "patches": applied, "source_ref": source_ref}
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

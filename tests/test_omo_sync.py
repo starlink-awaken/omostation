@@ -18,7 +18,7 @@ OMO_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(OMO_SRC) not in sys.path:
     sys.path.insert(0, str(OMO_SRC))
 
-from omo.omo_sync import run_sync, AUDIT_CHECKS  # noqa: E402
+from omo.omo_sync import AUDIT_CHECKS, run_sync
 
 
 def test_omo_sync_writes_structured_record(tmp_path):
@@ -93,7 +93,7 @@ def test_omo_sync_accepts_multi_document_state_yaml(tmp_path, monkeypatch):
     """system.yaml 支持多文档 YAML, phase/health_score 仍应可读."""
     import json
 
-    import omo.omo_state as omo_state
+    from omo import omo_state
 
     system_yaml = tmp_path / "system.yaml"
     system_yaml.write_text(

@@ -4,50 +4,48 @@ import json
 import subprocess
 import sys
 import time
-from types import SimpleNamespace
-import yaml
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
-
+import yaml
 from omo.omo_ingress import (
     archive_done_task,
     complete_task,
-    create_goal,
     create_audit_report,
     create_blocked_task,
+    create_goal,
     create_knowledge_doc,
     create_planned_task,
     create_skill_manifest,
     create_standard_doc,
     execute_controlled_task,
     get_controlled_process_status,
-    restart_controlled_task,
     normalize_legacy_planned_task,
     promote_task_to_active,
-    record_task_contract_request,
     record_task_consensus,
+    record_task_contract_request,
     remove_debt_item,
     repair_task_promotion_approval,
-    revert_task_to_planned,
     request_task_promotion_approval,
+    restart_controlled_task,
+    revert_task_to_planned,
     route_self_evolution_to_remediation,
     start_controlled_task,
     stop_controlled_task,
     update_done_task_evidence_paths,
-    update_governance_overlay_state,
     update_goal_progress,
+    update_governance_overlay_state,
     upsert_debt_item,
     write_capability_registry_bundle,
-    write_system_projection_fields,
-    write_manual_capabilities,
     write_discovery_registry,
+    write_manual_capabilities,
+    write_system_projection_fields,
     write_task_center_control_decision,
     write_task_center_freshness,
     write_usage_accounting,
     yield_task_to_planned,
 )
-
 
 OMO_SRC = Path(__file__).resolve().parents[1] / "src"
 
@@ -2290,12 +2288,12 @@ def test_create_goal_cross_process_lock_keeps_single_goal_entry(tmp_path: Path) 
 
     script = f"""
 import sys
-sys.path.insert(0, {repr(str(OMO_SRC))})
+sys.path.insert(0, {str(OMO_SRC)!r})
 from pathlib import Path
 from omo.omo_ingress import create_goal
 
 create_goal(
-    Path({repr(str(tmp_path / ".omo"))}),
+    Path({str(tmp_path / ".omo")!r}),
     goal_id="BET-LOCK-1",
     title="并发 goal",
     description="Bet: 并发 goal",

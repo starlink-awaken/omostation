@@ -495,9 +495,7 @@ def project_workflow_run(
                 "request_digest",
                 "outcome",
             }
-            missing_tool_fields = sorted(
-                required_tool_fields - event["payload"].keys()
-            )
+            missing_tool_fields = sorted(required_tool_fields - event["payload"].keys())
             if missing_tool_fields:
                 raise WorkflowMeshEventError(
                     f"ToolInvocationRecorded missing fields: {missing_tool_fields}"

@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import shlex
 import subprocess
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from .omo_io import write_text_atomic, write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
@@ -18,12 +19,7 @@ def _timestamp_slug(now: str | None = None) -> str:
 
 
 def _utc_now() -> str:
-    return (
-        datetime.now(UTC)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _parse_iso8601(value: str | None) -> datetime | None:
@@ -128,7 +124,7 @@ def _launch_worker_from_prompt(
 
 def _launch_existing_dispatch(
     root: Path, dispatch_path: Path, *, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     dispatch = _load_yaml(dispatch_path)
     registry = _load_yaml(
         _omo_path(root, omo_dir) / "_truth" / "registry" / "workers.yaml"

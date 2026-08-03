@@ -2,7 +2,6 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from fastmcp import FastMCP
 from pydantic import BaseModel

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from typing import Any
+
 
 def _run_slug(dispatched_at: str) -> str:
     return dispatched_at.replace(":", "-")
 
 
-def _freeze_command(entry: dict[str, object], dispatched_at: str) -> str:
+def _freeze_command(entry: dict[str, Any], dispatched_at: str) -> str:
     entry_id = str(entry.get("id") or "<unknown>")
     lane = str(entry.get("primary_lane") or "")
     template = str(entry.get("command_template") or "")
@@ -28,7 +30,7 @@ def _freeze_command(entry: dict[str, object], dispatched_at: str) -> str:
     return shell_command
 
 
-def _dispatch_entry(entry: dict[str, object], dispatched_at: str) -> dict[str, object]:
+def _dispatch_entry(entry: dict[str, Any], dispatched_at: str) -> dict[str, Any]:
     dispatch_entry = dict(entry)
     dispatch_entry["command"] = _freeze_command(entry, dispatched_at)
     dispatch_entry.pop("command_template", None)
@@ -38,8 +40,8 @@ def _dispatch_entry(entry: dict[str, object], dispatched_at: str) -> dict[str, o
 
 
 def build_dispatch_packet(
-    owner_routing: dict[str, object], dispatched_at: str
-) -> dict[str, object]:
+    owner_routing: dict[str, Any], dispatched_at: str
+) -> dict[str, Any]:
     generated_at = owner_routing.get("generated_at")
     owners = owner_routing.get("owners")
     summary = owner_routing.get("summary")
@@ -49,7 +51,7 @@ def build_dispatch_packet(
     if not isinstance(owners, list) or not isinstance(summary, dict):
         raise ValueError("owner routing packet missing owners or summary")
 
-    dispatch_owners: list[dict[str, object]] = []
+    dispatch_owners: list[dict[str, Any]] = []
     for owner_packet in owners:
         entries = [
             _dispatch_entry(entry, dispatched_at) for entry in owner_packet["entries"]

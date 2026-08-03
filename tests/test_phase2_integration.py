@@ -1,7 +1,7 @@
 """Phase 2 integration test: Eidos ↔ OntoDerive ↔ Minerva adapters."""
 
-import sys
 import importlib
+import sys
 from pathlib import Path
 
 # Auto-detect workspace root from project structure

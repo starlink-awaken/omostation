@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from omo.omo_debt_execution import (
     build_execution_record,
     execution_record_path,

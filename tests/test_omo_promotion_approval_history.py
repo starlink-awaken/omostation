@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
 from omo.omo_promotion_approval import build_promotion_approval_history
 
 

@@ -19,7 +19,7 @@ import json
 import os
 import sys
 from collections import Counter
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from omo.omo_io import AppendOnlyLog
@@ -388,7 +388,6 @@ def cmd_logs_audit(
     # Round 39 P0: --metrics flag 输出 §17 度量 JSON + R0-R5 健康度
     if metrics:
         from datetime import datetime as _dt
-        from datetime import timezone as _tz
 
         # Round 40 P0: 基于"新债"算 density (排除历史锁)
         density = new_debt_drift / total_records if total_records > 0 else 0.0

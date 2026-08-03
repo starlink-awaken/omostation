@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from .omo_shared import load_yaml
 
@@ -20,7 +21,7 @@ def _is_promotion_envelope(path: Path) -> bool:
     return "-promotion-" in path.name and "-promotion-approval-" not in path.name
 
 
-def _history_entry(omo_ref: Path, envelope_path: Path) -> dict[str, object]:
+def _history_entry(omo_ref: Path, envelope_path: Path) -> dict[str, Any]:
     envelope = _load_yaml(envelope_path)
     required_fields = [
         ("promotion_id", envelope.get("promotion_id")),
@@ -51,7 +52,7 @@ def _history_entry(omo_ref: Path, envelope_path: Path) -> dict[str, object]:
 
 def build_promotion_history(
     root: Path, omo_dir: str | Path = ".omo", now: str = "2026-06-03T00:00:00Z"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     runs_dir = root / omo_ref / "workers" / "runs"
     entries = [

@@ -14,7 +14,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 OMO_ROOT = Path(__file__).resolve().parents[2]
 
 

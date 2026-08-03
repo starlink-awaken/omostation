@@ -12,6 +12,7 @@ Phase 5:  Event chain closure -- emits intermediate admission + dispatch +
           running + terminal events before WorkflowClosed so the Mesh state
           machine accepts the full transition chain.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -29,6 +30,7 @@ def _run_mesh_sink(workspace: Any | None = None) -> Any | None:
     """Lazy load Workflow Mesh store - breaks circular import."""
     try:
         from omo.workflow_mesh import WorkflowMeshStore
+
         ws = Path(workspace) if workspace else Path.cwd()
         omo_dir = ws / ".omo"
         (omo_dir / "_knowledge" / "workflow-mesh").mkdir(parents=True, exist_ok=True)
@@ -105,7 +107,9 @@ def _emit_admission_chain(
     }
     unsigned = {k: v for k, v in grant.items() if k != "proof"}
     grant["proof"] = hashlib.sha256(
-        json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        json.dumps(
+            unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
     ).hexdigest()
 
     # planned -> admitted
@@ -185,11 +189,15 @@ def emit_workflow_mesh_event(
             _try_append(sink, _make_event("WorkflowCancelled", run_id, event_payload))
         else:
             # Transition: planned -> admitted -> dispatched -> running
-            step_run_id, admission_id = _emit_admission_chain(sink, run_id, event_payload)
+            step_run_id, admission_id = _emit_admission_chain(
+                sink, run_id, event_payload
+            )
 
             # Transition: running -> terminal
             if ok or status in ("succeeded", "verified", "merged"):
-                _try_append(sink, _make_event("WorkflowSucceeded", run_id, event_payload))
+                _try_append(
+                    sink, _make_event("WorkflowSucceeded", run_id, event_payload)
+                )
             else:
                 # StepFailed transitions running -> failed
                 fail_payload = {

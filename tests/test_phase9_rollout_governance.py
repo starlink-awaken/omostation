@@ -3,9 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
 from omo.omo_rollout import evaluate_rollout_envelope
-
 
 ROOT = Path(__file__).resolve().parents[2]
 

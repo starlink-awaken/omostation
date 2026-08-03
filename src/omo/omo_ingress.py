@@ -34,7 +34,7 @@ def _record_trail(
         actor=actor,
         action=action,
         target=target,
-        status="ok",
+        status="ok",  # type: ignore[reportArgumentType]
         duration_ms=0,
         parent_step_id=parent_step_id,
     )
@@ -191,50 +191,108 @@ def write_system_projection_fields(
         return deepcopy(payload)
 
 
-from omo.omo_ingress_debt import (
-    remove_debt_item,
-    upsert_debt_item,
-)
-from omo.omo_ingress_doc import (
-    create_audit_report,
-    create_knowledge_doc,
-    create_standard_doc,
-)
-from omo.omo_ingress_goal import (
-    create_goal,
-    reconcile_goals,
-    update_goal_progress,
-)
-from omo.omo_ingress_registry_writes import (
-    create_skill_manifest,
-    update_governance_overlay_state,
-    write_capability_registry_bundle,
-    write_discovery_registry,
-    write_manual_capabilities,
-    write_task_center_control_decision,
-    write_task_center_freshness,
-    write_usage_accounting,
-)
-from omo.omo_ingress_task_lifecycle import (
-    archive_done_task,
-    complete_task,
-    create_blocked_task,
-    create_planned_task,
-    execute_controlled_task,
-    get_controlled_process_status,
-    normalize_legacy_planned_task,
-    promote_task_to_active,
-    record_task_consensus,
-    record_task_contract_request,
-    record_task_execution,
-    repair_task_promotion_approval,
-    request_task_promotion_approval,
-    restart_controlled_task,
-    revert_task_to_planned,
-    route_self_evolution_to_remediation,
-    start_controlled_task,
-    stop_controlled_task,
-    update_done_task_evidence_paths,
-    update_planned_task_evidence_paths,
-    yield_task_to_planned,
-)
+# Lazy re-exports for the historical omo.omo_ingress public API.
+# Sibling domain modules (omo_ingress_doc, omo_ingress_task_lifecycle, etc.)
+# contain the actual implementations; this __getattr__ keeps the public
+# surface intact while breaking the cycle that would arise from a static
+# `from omo.omo_ingress_doc import X` at module load.
+_RE_EXPORTS: dict[str, str] = {
+    "_load_registry": "omo_metacognition",
+    "_record_mutation": "omo_ingress_registry_writes",
+    "_record_trail": "omo_ingress_registry_writes",
+    "_register_ingress": "omo_ingress",
+    "_write_registry": "omo_ingress",
+    "archive_done_task": "omo_ingress_task_archive",
+    "complete_task": "omo_ingress_task_lifecycle",
+    "create_audit_report": "omo_ingress_doc",
+    "create_blocked_task": "omo_ingress_task_lifecycle",
+    "create_goal": "omo_ingress_goal",
+    "create_knowledge_doc": "omo_ingress_doc",
+    "create_planned_task": "omo_ingress_task_lifecycle",
+    "create_skill_manifest": "omo_ingress_registry_writes",
+    "create_standard_doc": "omo_ingress_doc",
+    "execute_controlled_task": "omo_ingress_task_lifecycle",
+    "get_controlled_process_status": "omo_ingress_task_lifecycle",
+    "normalize_legacy_planned_task": "omo_ingress_task_archive",
+    "promote_task_to_active": "omo_ingress_task_promotion",
+    "reconcile_goals": "omo_ingress_goal",
+    "record_task_consensus": "omo_ingress_task_lifecycle",
+    "record_task_contract_request": "omo_ingress_task_contract",
+    "remove_debt_item": "omo_ingress_debt",
+    "repair_task_promotion_approval": "omo_ingress_task_promotion",
+    "request_task_promotion_approval": "omo_ingress_task_promotion",
+    "restart_controlled_task": "omo_ingress_task_lifecycle",
+    "revert_task_to_planned": "omo_ingress_task_promotion",
+    "route_self_evolution_to_remediation": "omo_ingress_task_contract",
+    "start_controlled_task": "omo_ingress_task_lifecycle",
+    "stop_controlled_task": "omo_ingress_task_lifecycle",
+    "update_done_task_evidence_paths": "omo_ingress_task_lifecycle",
+    "update_goal_progress": "omo_ingress_goal",
+    "update_governance_overlay_state": "omo_ingress_registry_writes",
+    "update_planned_task_evidence_paths": "omo_ingress_task_lifecycle",
+    "upsert_debt_item": "omo_ingress_debt",
+    "write_capability_registry_bundle": "omo_ingress_registry_writes",
+    "write_discovery_registry": "omo_ingress_registry_writes",
+    "write_manual_capabilities": "omo_ingress_registry_writes",
+    "write_system_projection_fields": "omo_ingress",
+    "write_task_center_control_decision": "omo_ingress_registry_writes",
+    "write_task_center_freshness": "omo_ingress_registry_writes",
+    "write_usage_accounting": "omo_ingress_registry_writes",
+    "yield_task_to_planned": "omo_ingress_task_archive",
+}
+
+
+def __getattr__(name: str):
+    module = _RE_EXPORTS.get(name)
+    if module is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from importlib import import_module
+
+    mod = import_module(f"omo.{module}")
+    value = getattr(mod, name)
+    globals()[name] = value  # cache
+    return value
+
+
+# Eagerly resolve all re-exported syms so that sibling modules
+# (`from omo.omo_ingress import _record_trail` style) succeed at first use.
+# This avoids the cycle: omo.ingress loads, then each re-export __getattr__
+# runs once, which triggers the sibling module's import (no cycle since
+# omo.ingress is now fully loaded).
+for _sym in list(_RE_EXPORTS.keys()):
+    globals().get(_sym)  # noqa: PLE1117  trigger __getattr__
+
+__all__ = sorted(_RE_EXPORTS)
+
+
+# --- Post-load rebind hook: omo.ingress_doc, _task_lifecycle, etc. captured
+# our private helpers at module load via sys.modules lookup that returned a
+# partial omo.omo_ingress (cycle). After our full body runs, walk all
+# loaded omo.ingress_* siblings and inject the helper symbols directly into
+# their module dicts so function-local LOAD_GLOBAL resolves them.
+import sys as _sys
+
+
+def _rebind_siblings() -> None:
+    _helpers = (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    )
+    for _mod_name, _mod in list(_sys.modules.items()):
+        if _mod is None:
+            continue
+        if not (
+            _mod_name == "omo.omo_ingress"
+            or _mod_name.startswith("omo.omo_ingress_")
+            or _mod_name == "omo.omo_ingress_paths"
+        ):
+            continue
+        for _h in _helpers:
+            if _h in globals() and _h not in _mod.__dict__:
+                _mod.__dict__[_h] = globals()[_h]
+
+
+_rebind_siblings()

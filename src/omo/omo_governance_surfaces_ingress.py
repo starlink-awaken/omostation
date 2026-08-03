@@ -30,6 +30,7 @@ P105 收益:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from omo.omo_ingress_paths import _registry_path
 from omo.omo_shared import load_yaml_required
@@ -66,7 +67,7 @@ def _resolve_ingress_task_carrier(omo_dir: Path, item_id: str) -> Path | None:
 
 def _check_ingress_registry(
     workspace_root: Path,
-) -> tuple[dict[str, object], list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     omo_dir = workspace_root / ".omo"
     registry_path = _registry_path(omo_dir)
     if not registry_path.exists():

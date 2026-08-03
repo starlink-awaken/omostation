@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pytest
 
-
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 VERSION_FILE = WORKSPACE_ROOT / "VERSION"
 CHANGELOG = WORKSPACE_ROOT / "CHANGELOG.md"

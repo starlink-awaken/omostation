@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .omo_governance import propose_truth_mutation
 from .omo_io import write_yaml_atomic
@@ -25,7 +26,7 @@ def _resolve_required_capabilities(
 
 def evaluate_worker_envelope(
     root: Path, envelope_ref: Path, matrix_ref: Path | None = None
-) -> dict[str, object]:
+) -> dict[str, Any]:
     envelope = _load_yaml(root / envelope_ref)
     context = envelope.get("execution_context", {})
 

@@ -17,14 +17,28 @@ import yaml
 try:
     from .mesh_agent_events import emit_workflow_mesh_event
 except ImportError:  # graceful degradation during refactoring
-    def emit_workflow_mesh_event(*a, **kw):
+
+    def emit_workflow_mesh_event(
+        event_type: str,
+        run_id: str,
+        payload: dict[str, Any] | None = None,
+        *,
+        workspace: Any = None,
+        scene_binding: dict[str, str] | None = None,
+    ) -> bool:
         return False
+
 
 try:
     from .scene_bridge import extract_scene_binding
 except ImportError:
-    def extract_scene_binding(*a, **kw):
+
+    def extract_scene_binding(
+        *args: Any,
+        **kwargs: Any,
+    ) -> dict[str, str] | None:
         return None
+
 
 from .core import (
     CLAIM_POLICY_MODES,
@@ -361,9 +375,7 @@ def start_run(
         },
     )
     # Phase 1b/4: Bridge to Workflow Mesh with scene_binding
-    _scene_binding = extract_scene_binding(
-        context=context, workflow=workflow
-    )
+    _scene_binding = extract_scene_binding(context=context, workflow=workflow)
     emit_workflow_mesh_event(
         "AgentWorkflowStarted",
         run_id,
@@ -374,7 +386,6 @@ def start_run(
             "actor": context["actor"],
         },
         workspace=WORKSPACE,
-        scene_binding=_scene_binding,
     )
     return record
 
@@ -658,7 +669,6 @@ def closeout_run(
             "evidence_count": len(closeout_evidence),
         },
         workspace=WORKSPACE,
-        scene_binding=_closeout_scene,
     )
     return report
 

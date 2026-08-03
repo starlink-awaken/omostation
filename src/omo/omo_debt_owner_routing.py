@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 LANE_PRIORITY = {
     "revalidate_now": 0,
     "schedule_now": 1,
@@ -20,9 +22,7 @@ def _normalize_owner(owner: object) -> str:
     return str(owner or "unowned")
 
 
-def _priority_flags(
-    entry: dict[str, object], escalation_threshold_days: int
-) -> list[str]:
+def _priority_flags(entry: dict[str, Any], escalation_threshold_days: int) -> list[str]:
     flags: list[str] = []
     if entry.get("last_reviewed_at") is None:
         flags.append("initial_review_required")
@@ -38,13 +38,13 @@ def _priority_flags(
     return flags
 
 
-def _severity_rank(entry: dict[str, object]) -> int:
+def _severity_rank(entry: dict[str, Any]) -> int:
     return SEVERITY_PRIORITY.get(str(entry.get("severity")), 99)
 
 
-def build_owner_routing_packet(action_packet: dict[str, object]) -> dict[str, object]:
+def build_owner_routing_packet(action_packet: dict[str, Any]) -> dict[str, Any]:
     defaults = action_packet["defaults"]
-    grouped: dict[str, list[dict[str, object]]] = {}
+    grouped: dict[str, list[dict[str, Any]]] = {}
 
     for lane_name, entries in action_packet["lanes"].items():
         if lane_name not in LANE_PRIORITY:
@@ -61,7 +61,7 @@ def build_owner_routing_packet(action_packet: dict[str, object]) -> dict[str, ob
                 }
             )
 
-    owners: list[dict[str, object]] = []
+    owners: list[dict[str, Any]] = []
     for owner, entries in grouped.items():
         ordered_entries = sorted(
             entries,

@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
 from omo.omo_governance_overlay_approval_prep import (
     build_governance_overlay_approval_prep_aging,
     build_governance_overlay_approval_prep_analytics,

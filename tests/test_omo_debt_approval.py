@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from omo.omo_debt_approval import (
     APPROVAL_SCOPE_EXECUTE_REVALIDATE,
     approval_current_path,

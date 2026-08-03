@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -14,12 +14,7 @@ from .omo_shared import load_yaml_value
 
 
 def _utc_now() -> str:
-    return (
-        datetime.now(UTC)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _root() -> Path:
@@ -142,6 +137,7 @@ def baseline_command(args: argparse.Namespace) -> int:
 
         ledger = load_debt_ledger(_omo(root))
         all_items = list(ledger.items)
+        filtered: list = []
         if args.lens in ("X1", "X2", "X3"):
             if args.lens == "X1":
                 filtered = [i for i in all_items if i.x1_policy_ref]

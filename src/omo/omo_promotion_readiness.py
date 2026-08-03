@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
 
-def _ordered_tasks(tasks: tuple[dict[str, object], ...]) -> list[dict[str, object]]:
+
+def _ordered_tasks(tasks: tuple[dict[str, Any], ...]) -> list[dict[str, Any]]:
     return sorted(
         tasks,
         key=lambda entry: (
@@ -16,8 +18,8 @@ def build_promotion_readiness_packet(
     *,
     generated_at: str,
     current_phase: int,
-    tasks: tuple[dict[str, object], ...],
-) -> dict[str, object]:
+    tasks: tuple[dict[str, Any], ...],
+) -> dict[str, Any]:
     ordered = _ordered_tasks(tasks)
     return {
         "generated_at": generated_at,
@@ -30,7 +32,7 @@ def build_promotion_readiness_packet(
     }
 
 
-def render_promotion_readiness_markdown(packet: dict[str, object]) -> str:
+def render_promotion_readiness_markdown(packet: dict[str, Any]) -> str:
     lines = [
         "# Task Promotion Readiness",
         "",

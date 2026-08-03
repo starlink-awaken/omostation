@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from .omo_shared import (
     load_yaml as shared_load_yaml,
@@ -28,17 +29,17 @@ def _parse_iso8601(value: str) -> datetime:
     return datetime.fromisoformat(value)
 
 
-def _status_sort_key(entry: dict[str, object]) -> tuple[int, str]:
+def _status_sort_key(entry: dict[str, Any]) -> tuple[int, str]:
     action_order = {"request_approval": 0, "await_approval": 1}
     return (action_order.get(str(entry["action"]), 99), str(entry["task_id"]))
 
 
-def _history_sort_key(entry: dict[str, object]) -> tuple[datetime, str]:
+def _history_sort_key(entry: dict[str, Any]) -> tuple[datetime, str]:
     return (_parse_iso8601(str(entry["started_at"])), str(entry["event_id"]))
 
 
 def _approval_ref_for_target(
-    root: Path, omo_ref: Path, target: dict[str, object]
+    root: Path, omo_ref: Path, target: dict[str, Any]
 ) -> str | None:
     target_ref = str(target["target_ref"])
     if not target_ref.startswith(str(omo_ref / "tasks" / "planned")):
@@ -52,12 +53,12 @@ def _approval_ref_for_target(
 
 def build_governance_overlay_approval_prep_status(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     current = _load_yaml_required(
         root / omo_ref / "workers" / "governance-overlay" / "current.yaml"
     )
-    tasks: list[dict[str, object]] = []
+    tasks: list[dict[str, Any]] = []
     for target in current.get("active_target_states", []):
         if str(target.get("state")) not in _PREP_STATES:
             continue
@@ -115,10 +116,10 @@ def build_governance_overlay_approval_prep_status(
 
 def build_governance_overlay_approval_prep_history(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     runs_dir = root / omo_ref / "workers" / "runs"
-    events: list[dict[str, object]] = []
+    events: list[dict[str, Any]] = []
     for run_path in sorted(runs_dir.glob("governance-overlay-*.yaml")):
         run = _load_yaml_required(run_path)
         run_id = str(run["run_id"])
@@ -180,7 +181,7 @@ def build_governance_overlay_approval_prep_history(
     return {"yaml": yaml_packet, "markdown": "\n".join(markdown_lines) + "\n"}
 
 
-def _attention(entry: dict[str, object]) -> tuple[str, str]:
+def _attention(entry: dict[str, Any]) -> tuple[str, str]:
     age_bucket = str(entry.get("age_bucket") or "lt_1d")
     action = str(entry.get("action") or "")
     if age_bucket == "d3_plus":
@@ -192,7 +193,7 @@ def _attention(entry: dict[str, object]) -> tuple[str, str]:
     return ("fresh", "recent approval prep activity")
 
 
-def _task_sort_key(entry: dict[str, object]) -> tuple[int, int, str]:
+def _task_sort_key(entry: dict[str, Any]) -> tuple[int, int, str]:
     attention_order = {"escalate": 0, "watch": 1, "fresh": 2}
     age_order = {"d3_plus": 0, "d1_to_d3": 1, "lt_1d": 2}
     return (
@@ -213,7 +214,7 @@ def _age_bucket(now: datetime, started_at: str | None) -> str:
     return "d3_plus"
 
 
-def _age_bucket_ordered(entry: dict[str, object]) -> tuple[int, int, str]:
+def _age_bucket_ordered(entry: dict[str, Any]) -> tuple[int, int, str]:
     action_order = {"request_approval": 0, "await_approval": 1}
     age_order = {"d3_plus": 0, "d1_to_d3": 1, "lt_1d": 2}
     return (
@@ -223,8 +224,8 @@ def _age_bucket_ordered(entry: dict[str, object]) -> tuple[int, int, str]:
     )
 
 
-def _events_by_task(history: dict[str, object]) -> dict[str, list[dict[str, object]]]:
-    grouped: dict[str, list[dict[str, object]]] = {}
+def _events_by_task(history: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
     events = history.get("events", [])
     if not isinstance(events, list):
         return grouped
@@ -233,12 +234,12 @@ def _events_by_task(history: dict[str, object]) -> dict[str, list[dict[str, obje
     return grouped
 
 
-def _change_sort_key(entry: dict[str, object]) -> tuple[int, str]:
+def _change_sort_key(entry: dict[str, Any]) -> tuple[int, str]:
     order = {"transitioned": 0, "entered": 1, "unchanged": 2}
     return (order.get(str(entry["change_kind"]), 99), str(entry["task_id"]))
 
 
-def _point(event: dict[str, object]) -> dict[str, object]:
+def _point(event: dict[str, Any]) -> dict[str, Any]:
     return {
         "event_id": event["event_id"],
         "run_id": event["run_id"],
@@ -250,9 +251,7 @@ def _point(event: dict[str, object]) -> dict[str, object]:
     }
 
 
-def _interval(
-    previous: dict[str, object], current: dict[str, object]
-) -> dict[str, object]:
+def _interval(previous: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
     elapsed = _parse_iso8601(str(current["started_at"])) - _parse_iso8601(
         str(previous["started_at"])
     )
@@ -265,7 +264,7 @@ def _interval(
 
 def build_governance_overlay_approval_prep_aging(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     analytics = _load_yaml_required(
         root
@@ -277,7 +276,7 @@ def build_governance_overlay_approval_prep_aging(
         / "current.yaml"
     )
 
-    tasks: list[dict[str, object]] = []
+    tasks: list[dict[str, Any]] = []
     attention_summary = {"fresh_count": 0, "watch_count": 0, "escalate_count": 0}
 
     for entry in analytics.get("tasks", []):
@@ -360,7 +359,7 @@ def build_governance_overlay_approval_prep_aging(
 
 def build_governance_overlay_approval_prep_analytics(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     current = _load_yaml_required(
         root
@@ -381,7 +380,7 @@ def build_governance_overlay_approval_prep_analytics(
     )
     generated_at = _parse_iso8601(now)
 
-    latest_event_by_task: dict[str, dict[str, object]] = {}
+    latest_event_by_task: dict[str, dict[str, Any]] = {}
     for event in history.get("events", []):
         task_id = str(event["task_id"])
         if task_id not in latest_event_by_task:
@@ -390,7 +389,7 @@ def build_governance_overlay_approval_prep_analytics(
     blocker_histogram: dict[str, int] = {}
     action_queues = {"request_now": [], "awaiting_approval": []}
     age_buckets = {"lt_1d": 0, "d1_to_d3": 0, "d3_plus": 0}
-    tasks: list[dict[str, object]] = []
+    tasks: list[dict[str, Any]] = []
 
     for entry in current.get("tasks", []):
         latest_event = latest_event_by_task.get(str(entry["task_id"]), {})
@@ -463,7 +462,7 @@ def build_governance_overlay_approval_prep_analytics(
 
 def build_governance_overlay_approval_prep_diff(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     current = _load_yaml_required(
         root
@@ -487,7 +486,7 @@ def build_governance_overlay_approval_prep_diff(
     current_task_ids = {str(entry["task_id"]) for entry in current.get("tasks", [])}
     history_task_ids = set(task_events)
 
-    task_changes: list[dict[str, object]] = []
+    task_changes: list[dict[str, Any]] = []
     new_current_task_ids: list[str] = []
     changed_current_task_ids: list[str] = []
     unchanged_current_task_ids: list[str] = []
@@ -611,7 +610,7 @@ def build_governance_overlay_approval_prep_diff(
 
 def build_governance_overlay_approval_prep_trend(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     analytics = _load_yaml_required(
         root

@@ -5,7 +5,6 @@
 """
 
 from pathlib import Path
-from typing import Optional
 
 TIER_MULTIPLIERS: dict[str, float] = {
     "Axiom": 2.0,

@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
 from omo.omo_admission import evaluate_worker_envelope, request_conditional_approval
 
 

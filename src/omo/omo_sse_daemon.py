@@ -105,8 +105,8 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                                     "debt:created",
                                     "debt:reviewed",
                                 )
-                                if (
-                                    ev_type in _governance_types or ev_type.startswith(("pipeline:", "debt:"))
+                                if ev_type in _governance_types or ev_type.startswith(
+                                    ("pipeline:", "debt:")
                                 ):
                                     loop = asyncio.get_running_loop()
                                     tick_result = await loop.run_in_executor(

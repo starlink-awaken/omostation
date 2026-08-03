@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
 from omo.omo_audit_sync import FieldDiff, apply_diff
 
 

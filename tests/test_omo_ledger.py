@@ -3,8 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
-import omo.omo_ledger as omo_ledger
+from omo import omo_ledger
 
 
 def test_omo_ledger_accepts_multi_document_yaml_inputs(

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# mock-heavy test: monkeypatch + dynamic attribute setup; pyright cannot follow.
+# pyright: reportAttributeAccessIssue=false
+
 """OPC P7-H1 / P7-H3 cadence + race + mode 透传回归测试.
 
 测试 3 项修复:
@@ -30,7 +33,6 @@ import sys
 import unittest
 from pathlib import Path
 
-
 WORKSPACE = Path(__file__).resolve().parents[3]
 SCRIPTS = WORKSPACE / "scripts"
 
@@ -41,12 +43,12 @@ def _worker_init(worker_id: int, tmp_path_str: str, mode: str) -> dict:
     spec = importlib.util.spec_from_file_location(
         "daemon_worker", SCRIPTS / "opc_p7_audit_rollout_daemon.py"
     )
-    daemon = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(daemon)
-    daemon.ROOT = tmp_path
-    daemon._today = lambda: "2026-06-12"
-    daemon._now_iso = lambda: f"2026-06-12T00:00:0{worker_id}Z"
-    daemon._trigger_source = lambda: "manual"
+    daemon = importlib.util.module_from_spec(spec)  # type: ignore[reportArgumentType]
+    spec.loader.exec_module(daemon)  # type: ignore[reportOptionalMemberAccess]
+    daemon.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
+    daemon._today = lambda: "2026-06-12"  # type: ignore[reportAttributeAccessIssue]
+    daemon._now_iso = lambda: f"2026-06-12T00:00:0{worker_id}Z"  # type: ignore[reportAttributeAccessIssue]
+    daemon._trigger_source = lambda: "manual"  # type: ignore[reportAttributeAccessIssue]
 
     def fake_primary(mode_arg: str) -> dict:
         return {
@@ -87,8 +89,8 @@ def _worker_init(worker_id: int, tmp_path_str: str, mode: str) -> dict:
             "payload": payload,
         }
 
-    daemon._run_primary_audit_rollout = fake_primary
-    daemon._run_fallback_5repos = fake_fallback
+    daemon._run_primary_audit_rollout = fake_primary  # type: ignore[reportAttributeAccessIssue]
+    daemon._run_fallback_5repos = fake_fallback  # type: ignore[reportAttributeAccessIssue]
     rc = daemon.main()
     return {"worker": worker_id, "rc": rc}
 
@@ -209,9 +211,9 @@ class T02ModePassthrough(unittest.TestCase):
         spec = importlib.util.spec_from_file_location(
             "audit_5repos_worker", SCRIPTS / "opc_audit_rollout_5repos.py"
         )
-        module = importlib.util.module_from_spec(spec)
-        assert spec.loader is not None
-        spec.loader.exec_module(module)
+        module = importlib.util.module_from_spec(spec)  # type: ignore[reportArgumentType]
+        assert spec.loader is not None  # type: ignore[reportOptionalMemberAccess]
+        spec.loader.exec_module(module)  # type: ignore[reportOptionalMemberAccess]
 
         tmp_dir = Path("/tmp/opc-5repos-isolated")
         if tmp_dir.exists():
@@ -238,9 +240,9 @@ class T02ModePassthrough(unittest.TestCase):
         spec = importlib.util.spec_from_file_location(
             "audit_5repos_worker_invalid", SCRIPTS / "opc_audit_rollout_5repos.py"
         )
-        module = importlib.util.module_from_spec(spec)
-        assert spec.loader is not None
-        spec.loader.exec_module(module)
+        module = importlib.util.module_from_spec(spec)  # type: ignore[reportArgumentType]
+        assert spec.loader is not None  # type: ignore[reportOptionalMemberAccess]
+        spec.loader.exec_module(module)  # type: ignore[reportOptionalMemberAccess]
 
         tmp_dir = Path("/tmp/opc-5repos-invalid-mode")
         if tmp_dir.exists():

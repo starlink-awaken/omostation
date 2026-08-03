@@ -33,7 +33,6 @@ def create_knowledge_doc(
     actor: str,
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     safe_name = _safe_doc_name(title)
@@ -70,14 +69,14 @@ def create_knowledge_doc(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="create_knowledge_doc",
             target=f".omo/_knowledge/{plane}/{safe_name}.md",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="create_knowledge_doc",
@@ -99,7 +98,6 @@ def create_standard_doc(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     safe_name = _safe_doc_name(title)
@@ -135,14 +133,14 @@ def create_standard_doc(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="create_standard_doc",
             target=f".omo/standards/{safe_name}.md",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="create_standard_doc",
@@ -165,7 +163,6 @@ def create_audit_report(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     report_path = omo_dir / "_knowledge" / "audits" / f"{filename}.md"
@@ -200,14 +197,14 @@ def create_audit_report(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="create_audit_report",
             target=f".omo/_knowledge/audits/{filename}.md",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="create_audit_report",
@@ -218,3 +215,32 @@ def create_audit_report(
             extra={"title": title},
         )
         return artifact
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

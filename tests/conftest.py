@@ -24,7 +24,6 @@ from typing import Any
 import pytest
 import yaml
 
-
 # Ensure Workspace root is on sys.path so ``scripts.*`` imports resolve
 _ws_root = Path(__file__).resolve().parents[3]
 if str(_ws_root) not in sys.path:
@@ -216,15 +215,7 @@ def pytest_collection_modifyitems(
         needs_omo = False
 
         # 1. All tests under tests/archive/
-        if "/tests/archive/" in fspath:
-            needs_omo = True
-
-        # 2. Explicitly named modules (always skip in CI, re-enable with --run-real-omo)
-        elif basename in _EXPLICIT_MODULES:
-            needs_omo = True
-
-        # 3. Any test_phase*.py module (not already matched above)
-        elif fnmatch.fnmatch(basename, "test_phase*.py"):
+        if "/tests/archive/" in fspath or basename in _EXPLICIT_MODULES or fnmatch.fnmatch(basename, "test_phase*.py"):
             needs_omo = True
 
         # 3.5 CI-only skip: 本地全过的 unit test, CI fresh 环境缺 runtime data/time mock.
@@ -253,10 +244,7 @@ def pytest_collection_modifyitems(
             "test_task_governance_overlay_run_next_writes_run_artifact",
             "test_task_governance_overlay_run_next_dispatches_first_active_pending_target",
             "test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is_declared",
-        ):
-            needs_omo = True
-
-        elif basename == "test_worker_lifecycle.py" and testname in (
+        ) or basename == "test_worker_lifecycle.py" and testname in (
             "test_dispatch_task_launch_handles_quoted_prompt_without_shell_breakage",
             "test_dispatch_prompt_includes_required_deliverables_when_task_declares_them",
             "test_dispatch_task_creates_checkpoint_and_reclaim_artifacts",

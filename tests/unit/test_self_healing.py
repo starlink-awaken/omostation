@@ -1,9 +1,8 @@
 """OMO 自愈代谢引擎单元测试。"""
 
 import asyncio
+
 import yaml
-
-
 from omo.omo_self_healing import (
     DEFAULT_RULES,
     ErrorEventCounter,
@@ -12,7 +11,6 @@ from omo.omo_self_healing import (
     _severity_weight,
     get_healing_engine,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ErrorEventCounter

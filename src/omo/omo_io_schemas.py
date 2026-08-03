@@ -20,7 +20,7 @@ SSOT: ä¸Ž ``.omo/_knowledge/management/append-only-log-schemas-2026-06-09.md`` ä
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 

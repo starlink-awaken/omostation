@@ -7,7 +7,6 @@ import subprocess
 import sys
 from unittest.mock import patch
 
-
 from omo.omo_audit_cards import collect_metrics, find_card_db
 from omo.omo_audit_freshness import check_debt_evidence, check_mof_version_bump
 from omo.omo_audit_vault import audit_vault, content_hash, find_markdown_files
@@ -20,10 +19,9 @@ class TestAuditCards:
         """find_card_db returns None when no standard db exists."""
         with patch(
             "omo.omo_audit_cards.DEFAULT_DB_PATHS", [tmp_path / "nonexistent.db"]
-        ):
-            with patch("omo.omo_audit_cards.WORKSPACE_ROOT", tmp_path):
-                result = find_card_db()
-                assert result is None
+        ), patch("omo.omo_audit_cards.WORKSPACE_ROOT", tmp_path):
+            result = find_card_db()
+            assert result is None
 
     def test_collect_metrics_returns_error_for_missing_db(self, tmp_path):
         """collect_metrics returns error dict for nonexistent db."""
@@ -150,8 +148,9 @@ class TestAuditFreshness:
 
     def test_check_mof_version_bump_returns_ok_for_recent(self, tmp_path):
         """check_mof_version_bump returns ok for recent version."""
-        import yaml
         from datetime import UTC, datetime
+
+        import yaml
 
         truth_dir = tmp_path / "_truth"
         truth_dir.mkdir()

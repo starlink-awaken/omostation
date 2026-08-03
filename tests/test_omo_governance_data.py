@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import yaml
-
 from omo.omo_governance_data import build_governance_data, write_governance_data
 
 

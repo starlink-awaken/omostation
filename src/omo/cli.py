@@ -168,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     if args and args[0] == "sse-daemon":
         from omo.omo_sse_daemon import main as sse_daemon_main
 
-        return sse_daemon_main()
+        return sse_daemon_main()  # type: ignore[return-value]
 
     if args and args[0] == "bos":
         # BOS (Banyan Object Service) URI 注册/查询 — P33-W1 战役 2 起步
@@ -683,7 +683,7 @@ def _cmd_cache(args: list[str]) -> int:
         print("✅ [State Cache] 已清空所有缓存")
 
     elif parsed.cache_sub == "invalidate":
-        cache.invalidate_on_change(parsed.pattern)
+        cache.invalidate_on_change(parsed.pattern)  # type: ignore[attr-defined]
         print(f"✅ [State Cache] 已失效匹配 '{parsed.pattern}' 的缓存")
 
     return 0

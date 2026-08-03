@@ -12,6 +12,7 @@ The bridge extracts scene_binding from:
 If no scene context is available, events are emitted without scene_binding
 (standard Mesh behavior - scene_binding is optional but recommended).
 """
+
 from __future__ import annotations
 
 from typing import Any

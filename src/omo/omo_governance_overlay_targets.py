@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .omo_promotion_approval import evaluate_promotion_approval
 from .omo_shared import load_yaml_required
@@ -21,7 +22,7 @@ def _task_has_task_specific_promotion_approval(approval_ref: str | None) -> bool
 
 def evaluate_governance_overlay_planned_target(
     root: Path, target_ref: str, *, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     if not target_ref.startswith(".omo/tasks/planned/"):
         return {
             "target_ref": target_ref,

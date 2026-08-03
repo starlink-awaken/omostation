@@ -14,7 +14,6 @@ from pathlib import Path
 
 import pytest
 
-
 BOS_REGISTRY = Path(
     str(Path(__file__).resolve().parents[4]) + "/.omo/_knowledge/bos-registry.json"
 )

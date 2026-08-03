@@ -86,30 +86,46 @@ def _pack_summary(value: Any) -> dict[str, str | None]:
         raise ExternalResourcePackProposalError("projection.pack must be an object")
     return {
         "pack_id": _text(value.get("pack_id"), "projection.pack.pack_id"),
-        "pack_version": _text(value.get("pack_version"), "projection.pack.pack_version"),
+        "pack_version": _text(
+            value.get("pack_version"), "projection.pack.pack_version"
+        ),
         "provider": _text(value.get("provider"), "projection.pack.provider"),
     }
 
 
 def _preview_summary(value: Any, status: str) -> dict[str, Any]:
     if not isinstance(value, Mapping):
-        raise ExternalResourcePackProposalError("projection.catalog_preview must be an object")
+        raise ExternalResourcePackProposalError(
+            "projection.catalog_preview must be an object"
+        )
     if value.get("schema") != PROPOSAL_PREVIEW_SCHEMA:
         raise ExternalResourcePackProposalError("catalog preview schema is invalid")
     if value.get("mode") != "read_only_pack_preview":
-        raise ExternalResourcePackProposalError("catalog preview must be read_only_pack_preview")
+        raise ExternalResourcePackProposalError(
+            "catalog preview must be read_only_pack_preview"
+        )
     if value.get("activation") != "forbidden":
-        raise ExternalResourcePackProposalError("catalog preview activation must be forbidden")
+        raise ExternalResourcePackProposalError(
+            "catalog preview activation must be forbidden"
+        )
     if value.get("status") != status:
-        raise ExternalResourcePackProposalError("catalog preview status does not match check")
+        raise ExternalResourcePackProposalError(
+            "catalog preview status does not match check"
+        )
     resource = value.get("resource")
     if not isinstance(resource, Mapping):
-        raise ExternalResourcePackProposalError("catalog preview resource must be an object")
+        raise ExternalResourcePackProposalError(
+            "catalog preview resource must be an object"
+        )
     health = resource.get("health")
     if resource.get("availability") != "unobserved":
-        raise ExternalResourcePackProposalError("pack proposal availability must be unobserved")
+        raise ExternalResourcePackProposalError(
+            "pack proposal availability must be unobserved"
+        )
     if not isinstance(health, Mapping) or health.get("status") != "unobserved":
-        raise ExternalResourcePackProposalError("pack proposal health must be unobserved")
+        raise ExternalResourcePackProposalError(
+            "pack proposal health must be unobserved"
+        )
     capabilities = resource.get("capabilities", [])
     if not isinstance(capabilities, list) or len(capabilities) > 64:
         raise ExternalResourcePackProposalError(
@@ -120,27 +136,46 @@ def _preview_summary(value: Any, status: str) -> dict[str, Any]:
         "status": status,
         "resource": {
             "id": _text(resource.get("id"), "catalog_preview.resource.id"),
-            "kind": _text(resource.get("kind"), "catalog_preview.resource.kind", max_length=80),
-            "provider": _text(resource.get("provider"), "catalog_preview.resource.provider"),
-            "version": _text(resource.get("version"), "catalog_preview.resource.version", max_length=80),
-            "lifecycle": _text(resource.get("lifecycle"), "catalog_preview.resource.lifecycle", max_length=80),
-            "mode": _text(resource.get("mode"), "catalog_preview.resource.mode", max_length=80),
+            "kind": _text(
+                resource.get("kind"), "catalog_preview.resource.kind", max_length=80
+            ),
+            "provider": _text(
+                resource.get("provider"), "catalog_preview.resource.provider"
+            ),
+            "version": _text(
+                resource.get("version"),
+                "catalog_preview.resource.version",
+                max_length=80,
+            ),
+            "lifecycle": _text(
+                resource.get("lifecycle"),
+                "catalog_preview.resource.lifecycle",
+                max_length=80,
+            ),
+            "mode": _text(
+                resource.get("mode"), "catalog_preview.resource.mode", max_length=80
+            ),
             "capabilities": [
                 _text(item, "catalog_preview.resource.capabilities.item", max_length=80)
                 for item in capabilities
             ],
             "permission_ref": _text(
-                resource.get("permission_ref"), "catalog_preview.resource.permission_ref"
+                resource.get("permission_ref"),
+                "catalog_preview.resource.permission_ref",
             ),
             "availability": "unobserved",
             "health": {
                 "status": "unobserved",
                 "source": _text(
-                    health.get("source"), "catalog_preview.resource.health.source", max_length=160
+                    health.get("source"),
+                    "catalog_preview.resource.health.source",
+                    max_length=160,
                 ),
             },
         },
-        "next_action": _text(value.get("next_action"), "catalog_preview.next_action", max_length=500),
+        "next_action": _text(
+            value.get("next_action"), "catalog_preview.next_action", max_length=500
+        ),
     }
 
 
@@ -151,9 +186,13 @@ def _normalise_projection(projection: Mapping[str, Any]) -> dict[str, Any]:
     if projection.get("schema") != PROPOSAL_CHECK_SCHEMA:
         raise ExternalResourcePackProposalError("unexpected pack check schema")
     if projection.get("mode") != "read_only_conformance":
-        raise ExternalResourcePackProposalError("pack check must be read_only_conformance")
+        raise ExternalResourcePackProposalError(
+            "pack check must be read_only_conformance"
+        )
     if projection.get("activation") != "forbidden":
-        raise ExternalResourcePackProposalError("pack check activation must be forbidden")
+        raise ExternalResourcePackProposalError(
+            "pack check activation must be forbidden"
+        )
     status = _text(projection.get("status"), "projection.status", max_length=80)
     if status not in _STATUS:
         raise ExternalResourcePackProposalError(
@@ -161,7 +200,9 @@ def _normalise_projection(projection: Mapping[str, Any]) -> dict[str, Any]:
         )
     reason_codes = projection.get("reason_codes", [])
     if not isinstance(reason_codes, list) or len(reason_codes) > 64:
-        raise ExternalResourcePackProposalError("projection.reason_codes must be a bounded list")
+        raise ExternalResourcePackProposalError(
+            "projection.reason_codes must be a bounded list"
+        )
     return {
         "schema": PROPOSAL_CHECK_SCHEMA,
         "status": status,
@@ -205,11 +246,17 @@ def record_external_resource_pack_proposal(
     if review_action not in _REVIEW_ACTIONS:
         raise ExternalResourcePackProposalError("unsupported review_action")
     actor = _text(actor or "cockpit", "actor")
-    source_ref = _text(source_ref or "omo:external-resources:pack-proposal", "source_ref", max_length=500)
+    source_ref = _text(
+        source_ref or "omo:external-resources:pack-proposal",
+        "source_ref",
+        max_length=500,
+    )
     if review_ref is not None:
         review_ref = _text(review_ref, "review_ref", max_length=500)
         if not review_ref.startswith(("evidence://", "vault://redacted/")):
-            raise ExternalResourcePackProposalError("review_ref must be an evidence or redacted vault reference")
+            raise ExternalResourcePackProposalError(
+                "review_ref must be an evidence or redacted vault reference"
+            )
     recorded = recorded_at or _utc_now()
     try:
         datetime.fromisoformat(recorded.replace("Z", "+00:00"))

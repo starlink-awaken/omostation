@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 NEW_EXTERNAL_OMO_ROOT = Path(
     "/Users/xiamingxing/Documents/学习进化/2-knowledge/体系/OMO"
 )

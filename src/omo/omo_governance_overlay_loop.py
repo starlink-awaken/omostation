@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .omo_governance_overlay import build_governance_overlay_status
 from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
@@ -18,11 +19,11 @@ def _roadmap_item(roadmap: dict, roadmap_item_id: str) -> dict:
     raise KeyError(f"unknown roadmap item: {roadmap_item_id}")
 
 
-def _roadmap_item_sort_key(item: dict[str, object]) -> tuple[int, str]:
+def _roadmap_item_sort_key(item: dict[str, Any]) -> tuple[int, str]:
     return (0 if item["priority"] == "P0" else 1, str(item["id"]))
 
 
-def _target_state_summary(target_states: list[dict[str, object]]) -> dict[str, int]:
+def _target_state_summary(target_states: list[dict[str, Any]]) -> dict[str, int]:
     summary: dict[str, int] = {}
     for target in target_states:
         state = str(target["state"])
@@ -30,13 +31,13 @@ def _target_state_summary(target_states: list[dict[str, object]]) -> dict[str, i
     return summary
 
 
-def _target_action(root: Path, target_ref: str) -> dict[str, object]:
+def _target_action(root: Path, target_ref: str) -> dict[str, Any]:
     return evaluate_governance_overlay_planned_target(root, target_ref)
 
 
 def plan_governance_overlay_cycle(
     root: Path, *, omo_dir: str | Path = ".omo", actor: str, now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     roadmap = _load_yaml_required(
         root / omo_ref / "_truth" / "governance-overlay" / "roadmap.yaml"

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from omo.omo_debt_dispatch import build_dispatch_packet
 
 
@@ -114,7 +113,7 @@ def test_build_dispatch_packet_uses_shell_command_for_non_revalidate_lanes() -> 
 
 def test_build_dispatch_packet_rejects_missing_or_unresolved_command_metadata() -> None:
     broken = _owner_routing()
-    broken["owners"][0]["entries"][0]["command_template"] = (
+    broken["owners"][0]["entries"][0]["command_template"] = (  # type: ignore[reportIndexIssue]
         "python3 scripts/omo_debt.py revalidate --omo-dir .omo --id SB_DECOMPOSITION "
         "--reviewed-at <RUN_AT> $(date -u +%Y-%m-%dT%H:%M:%SZ)"
     )

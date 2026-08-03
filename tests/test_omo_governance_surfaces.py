@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import yaml
-
 from omo.omo_governance import main as omo_governance_main
 from omo.omo_governance_surfaces import build_governance_surfaces_report
 
@@ -1338,7 +1337,7 @@ def test_omo_governance_surfaces_cli_json(
     tmp_path: Path, capsys, monkeypatch: object
 ) -> None:
     _seed_workspace(tmp_path)
-    monkeypatch.chdir(tmp_path)
+    monkeypatch.chdir(tmp_path)  # type: ignore[reportAttributeAccessIssue]
 
     rc = omo_governance_main(["surfaces", "--workspace-root", ".", "--json"])
 
@@ -1354,7 +1353,7 @@ def test_omo_governance_surfaces_cli_auto_detects_workspace_root_from_subrepo(
     _seed_workspace(tmp_path)
     subrepo = tmp_path / "projects" / "omo"
     subrepo.mkdir(parents=True, exist_ok=True)
-    monkeypatch.chdir(subrepo)
+    monkeypatch.chdir(subrepo)  # type: ignore[reportAttributeAccessIssue]
 
     rc = omo_governance_main(["surfaces", "--workspace-root", ".", "--json"])
 

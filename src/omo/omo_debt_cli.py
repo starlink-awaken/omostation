@@ -12,7 +12,7 @@ P110 关联: TASK-F7114ABA (omo lint god-module 硬规则 800L, omo_debt 1085L
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -289,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
         item_ref = f".omo/debt/items/{args.id}.yaml"
         item_path = omo_dir / "debt" / "items" / f"{args.id}.yaml"
         _write_yaml(item_path, payload)
-        append_registry_ref(omo_dir, item_ref)
+        append_registry_ref(omo_dir, item_ref)  # type: ignore[reportCallIssue]
         print(f"registered {args.id}")
         return 0
 

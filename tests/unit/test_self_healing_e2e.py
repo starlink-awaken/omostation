@@ -4,9 +4,8 @@ import asyncio
 import tempfile
 from pathlib import Path
 
-import pytest
-
 import omo.omo_self_healing as sh
+import pytest
 from omo.omo_self_healing import (
     EventTrend,
     HealingRule,

@@ -201,7 +201,7 @@ def _check_sort_keys_default() -> list[tuple[str, str, str]]:
                 pattern = (
                     "immediate chain"
                     if is_immediate_chain
-                    else f"temp var '{node.func.value.id}'"
+                    else f"temp var '{node.func.value.id}'"  # type: ignore[union-attr]
                 )
                 issues.append(
                     (

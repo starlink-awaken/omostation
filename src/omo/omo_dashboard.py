@@ -180,7 +180,7 @@ def cmd_dashboard_serve(port: int) -> int:
             self.end_headers()
             self.wfile.write(b'{"error":"not found"}')
 
-        def log_message(self, fmt, *args):
+        def log_message(self, fmt, *args):  # type: ignore[reportIncompatibleMethodOverride]
             sys.stderr.write(f"[dashboard] {args[0]} {args[1]} {args[2]}\n")
 
     server = HTTPServer(("0.0.0.0", port), DashboardHandler)

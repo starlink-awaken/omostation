@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 WORKSPACE = Path(__file__).resolve().parents[2]
 OMO = WORKSPACE / ".omo"
 

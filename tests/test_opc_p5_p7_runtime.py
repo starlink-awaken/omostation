@@ -1,3 +1,6 @@
+# mock-heavy test: monkeypatch + dynamic attribute setup; pyright cannot follow.
+# pyright: reportAttributeAccessIssue=false
+
 from __future__ import annotations
 
 import importlib.util
@@ -20,7 +23,7 @@ def test_p5_radar_history_tracks_manual_and_cron_runs(tmp_path):
     module = _load_module(
         "opc_p5_radar_cron_test", ROOT / "scripts" / "opc_p5_radar_cron.py"
     )
-    module.ROOT = tmp_path
+    module.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
     payload = {
         "generated_at": "2026-06-12T00:00:00Z",
         "trigger_source": "manual",
@@ -66,8 +69,8 @@ def test_p6_weekly_loop_history_tracks_consecutive_weeks(tmp_path):
     module = _load_module(
         "opc_p6_weekly_loop_test", ROOT / "scripts" / "opc_p6_weekly_loop.py"
     )
-    module.ROOT = tmp_path
-    module._call_radar = lambda: {
+    module.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
+    module._call_radar = lambda: {  # type: ignore[reportAttributeAccessIssue]
         "scenario": "technical-radar",
         "candidates": [
             {
@@ -79,7 +82,7 @@ def test_p6_weekly_loop_history_tracks_consecutive_weeks(tmp_path):
             }
         ],
     }
-    module._call_drift = lambda: {"kinds": 4, "drift_count": 0, "results": []}
+    module._call_drift = lambda: {"kinds": 4, "drift_count": 0, "results": []}  # type: ignore[reportAttributeAccessIssue]
 
     payload1 = module.run_one_week("2026-W23")
     payload2 = module.run_one_week("2026-W24")
@@ -115,7 +118,10 @@ def test_p6_weekly_loop_history_tracks_consecutive_weeks(tmp_path):
 
 
 def test_p6_weekly_loop_runtime_executes_pipeline(tmp_path):
-    from omo.omo_weekly_loop import run_weekly_loop, write_weekly_evidence
+    from omo.omo_weekly_loop import (  # type: ignore[reportMissingImports]
+        run_weekly_loop,
+        write_weekly_evidence,
+    )
 
     payload = run_weekly_loop(
         tmp_path,
@@ -146,7 +152,7 @@ def test_p6_self_evolve_nop_carries_loop_history_ref(tmp_path):
     module = _load_module(
         "opc_p6_self_evolve_test", ROOT / "scripts" / "opc_p6_self_evolve.py"
     )
-    module.ROOT = tmp_path
+    module.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
     drift_dir = tmp_path / "runtime" / "omo" / "_control" / "evolution" / "drift"
     drift_dir.mkdir(parents=True, exist_ok=True)
     (drift_dir / "2026-06-12.json").write_text(
@@ -175,7 +181,7 @@ def test_p6_approval_board_writes_current_board(tmp_path):
     module = _load_module(
         "opc_p6_approval_board_test", ROOT / "scripts" / "opc_p6_approval_board.py"
     )
-    module.ROOT = tmp_path
+    module.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
     planned_dir = tmp_path / ".omo" / "tasks" / "planned"
     planned_dir.mkdir(parents=True, exist_ok=True)
     (planned_dir / "OPC-P6-SELF-EVOLUTION-sample.yaml").write_text(
@@ -204,19 +210,19 @@ def test_p7_release_cycle_uses_incrementing_index(tmp_path):
     module = _load_module(
         "opc_p7_release_cycle_test", ROOT / "scripts" / "opc_p7_release_cycle.py"
     )
-    module.ROOT = tmp_path
-    module._today = lambda: "2026-06-12"
-    module._gather_changes = lambda: {
+    module.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
+    module._today = lambda: "2026-06-12"  # type: ignore[reportAttributeAccessIssue]
+    module._gather_changes = lambda: {  # type: ignore[reportAttributeAccessIssue]
         "cutoff": "2026-06-10T00:00:00Z",
         "commit_count": 2,
         "commits": ["a1 first", "b2 second"],
         "previous_release_version": None,
     }
-    module._gather_validation = lambda: {
+    module._gather_validation = lambda: {  # type: ignore[reportAttributeAccessIssue]
         "omo_tests": {"returncode": 0, "summary": "ok"},
         "drift": {"kinds": 4, "drift_count": 0},
     }
-    module._gather_debt = lambda: {"total": 3, "open": 1, "resolved": 2}
+    module._gather_debt = lambda: {"total": 3, "open": 1, "resolved": 2}  # type: ignore[reportAttributeAccessIssue]
 
     cycle1 = module.run_one_cycle()
     cycle2 = module.run_one_cycle()
@@ -239,10 +245,10 @@ def test_p7_audit_rollout_history_index_tracks_mode_and_trigger(tmp_path):
         "opc_p7_audit_rollout_daemon_test",
         ROOT / "scripts" / "opc_p7_audit_rollout_daemon.py",
     )
-    module.ROOT = tmp_path
-    module._today = lambda: "2026-06-12"
-    module._now_iso = lambda: "2026-06-12T00:00:00Z"
-    module._trigger_source = lambda: "cron"
+    module.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
+    module._today = lambda: "2026-06-12"  # type: ignore[reportAttributeAccessIssue]
+    module._now_iso = lambda: "2026-06-12T00:00:00Z"  # type: ignore[reportAttributeAccessIssue]
+    module._trigger_source = lambda: "cron"  # type: ignore[reportAttributeAccessIssue]
     history_path = (
         tmp_path
         / "runtime"
@@ -274,8 +280,8 @@ def test_p7_audit_rollout_fallback_writes_mode_output(tmp_path):
         "opc_p7_audit_rollout_daemon_fallback_test",
         ROOT / "scripts" / "opc_p7_audit_rollout_daemon.py",
     )
-    module.ROOT = tmp_path
-    module._today = lambda: "2026-06-12"
+    module.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
+    module._today = lambda: "2026-06-12"  # type: ignore[reportAttributeAccessIssue]
     out_dir = tmp_path / "runtime" / "omo" / "_delivery" / "audit-rollout"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -316,7 +322,7 @@ def test_p7_doc_lint_tracks_run_history(tmp_path):
     module = _load_module(
         "opc_p7_doc_lint_test", ROOT / "scripts" / "opc_p7_doc_lint.py"
     )
-    module.ROOT = tmp_path
+    module.ROOT = tmp_path  # type: ignore[reportAttributeAccessIssue]
     docs = tmp_path / "docs"
     docs.mkdir()
     for rel in [

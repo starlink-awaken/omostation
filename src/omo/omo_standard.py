@@ -45,7 +45,7 @@ def cmd_standard_add(
         artifact = create_standard_doc(
             omo_dir,
             title=title,
-            content=content,
+            content=content,  # type: ignore[reportArgumentType]
             actor="projects/omo",
             source_ref=f"omo:standard:add:{title}",
         )

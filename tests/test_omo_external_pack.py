@@ -104,7 +104,7 @@ def test_blocked_pack_and_tampered_preview_fail_closed(tmp_path):
         )
 
     tampered = _projection()
-    tampered["catalog_preview"] = dict(tampered["catalog_preview"], resource={"availability": "available"})
+    tampered["catalog_preview"] = dict(tampered["catalog_preview"], resource={"availability": "available"})  # type: ignore[reportArgumentType]
     with pytest.raises(ExternalResourcePackProposalError, match="availability"):
         record_external_resource_pack_proposal(
             tmp_path,

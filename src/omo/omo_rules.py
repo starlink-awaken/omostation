@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .omo_shared import load_yaml
 
@@ -63,7 +64,7 @@ def _uses_normalized_bundle(rule: dict, envelope: dict) -> bool:
     return _resolve_delivery_contract_ref(rule) is not None
 
 
-def evaluate_rule_bundle(root: Path, envelope_ref: Path) -> dict[str, object]:
+def evaluate_rule_bundle(root: Path, envelope_ref: Path) -> dict[str, Any]:
     envelope = _load_yaml(root / envelope_ref)
     execution_context = envelope.get("execution_context", {})
     rules_context = envelope.get("rules_context", {})

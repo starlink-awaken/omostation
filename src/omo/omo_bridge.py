@@ -26,9 +26,7 @@ def _resolve_depends_on(
             continue
         matched = None
         for title, imported_id in title_to_imported.items():
-            if (
-                title == ref or title.startswith((ref + ":", ref + " "))
-            ):
+            if title == ref or title.startswith((ref + ":", ref + " ")):
                 matched = imported_id
                 break
         resolved.append(matched if matched else ref)

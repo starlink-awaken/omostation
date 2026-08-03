@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from .omo_debt_approval import dispatch_entry_requires_approval
 from .omo_debt_execution import run_slug_from_ref
 
@@ -9,7 +11,7 @@ def _empty_counts() -> dict[str, int]:
 
 
 def _campaign_state(
-    entry: dict[str, object],
+    entry: dict[str, Any],
     has_matching_approval: bool,
     execution_record_ref: str | None,
 ) -> str:
@@ -21,19 +23,19 @@ def _campaign_state(
 
 
 def build_campaign_packet(
-    run_packet: dict[str, object],
+    run_packet: dict[str, Any],
     dispatch_run_ref: str,
     generated_at: str,
     approval_lookup: dict[str, bool],
     execution_lookup: dict[str, str],
-) -> dict[str, object]:
+) -> dict[str, Any]:
     run_stamp = run_slug_from_ref(dispatch_run_ref)
     summary_counts = _empty_counts()
-    owners: list[dict[str, object]] = []
+    owners: list[dict[str, Any]] = []
 
     for owner_packet in run_packet["owners"]:
         owner_counts = _empty_counts()
-        entries: list[dict[str, object]] = []
+        entries: list[dict[str, Any]] = []
         for entry in owner_packet["entries"]:
             item_id = str(entry["id"])
             execution_record_ref = execution_lookup.get(item_id)
@@ -71,7 +73,7 @@ def build_campaign_packet(
     }
 
 
-def render_campaign_markdown(packet: dict[str, object]) -> str:
+def render_campaign_markdown(packet: dict[str, Any]) -> str:
     lines = [
         "# Debt Campaign Packet",
         "",

@@ -47,12 +47,7 @@ from omo.omo_paths import (
 
 
 def _utc_now() -> str:
-    return (
-        datetime.now(UTC)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _default_audit_file() -> Path:
@@ -281,9 +276,7 @@ def _mini_yaml_parse(text: str) -> dict:
     out: dict = {}
     for line in text.splitlines():
         line = line.rstrip()
-        if (
-            not line or line.startswith(("#", " ", "\t"))
-        ):
+        if not line or line.startswith(("#", " ", "\t")):
             continue
         if ":" not in line:
             continue

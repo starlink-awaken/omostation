@@ -47,7 +47,6 @@ def record_task_contract_request(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     task_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
@@ -108,14 +107,14 @@ def record_task_contract_request(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="record_task_contract_request",
             target=f".omo/tasks/active/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="record_task_contract_request",
@@ -141,7 +140,6 @@ def route_self_evolution_to_remediation(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
@@ -225,14 +223,14 @@ def route_self_evolution_to_remediation(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="route_self_evolution_to_remediation",
             target=f".omo/tasks/remediation/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="route_self_evolution_to_remediation",
@@ -243,3 +241,32 @@ def route_self_evolution_to_remediation(
             extra={"task_id": task_id, "review_note_ref": str(review_note_rel)},
         )
         return payload
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

@@ -113,9 +113,7 @@ def _system_payload(
 ) -> str:
     payload = load_yaml(system_path)
     if not isinstance(payload, dict):
-        raise TypeError(
-            f"state/system.yaml top-level must be a mapping: {system_path}"
-        )
+        raise TypeError(f"state/system.yaml top-level must be a mapping: {system_path}")
     payload.update(deepcopy(system_updates))
     return yaml.safe_dump(payload, allow_unicode=True, sort_keys=False)
 
@@ -208,14 +206,14 @@ def _record_state_sync(
         details=details,
         audit_file=_audit_log_path(omo_dir),
     )
-    _record_trail(
+    _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
         omo_dir,
         actor=f"broker:{actor}",
         action="sync_state_projection",
         target=STATE_SYNC_TARGET,
         parent_step_id=f"ingress:state-sync:{timestamp}",
     )
-    _record_mutation(
+    _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
         omo_dir,
         actor=actor,
         action="sync_state_projection",
@@ -348,3 +346,32 @@ def sync_state_projection(
             for item in writes
         ],
     }
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

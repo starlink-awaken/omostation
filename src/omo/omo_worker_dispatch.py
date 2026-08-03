@@ -4,8 +4,9 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from .omo_ingress import archive_done_task, create_audit_report, yield_task_to_planned
@@ -33,7 +34,7 @@ def _bridge_dispatch_to_mesh(
     dispatch_id: str,
     task_id: str,
     worker_id: str,
-    workflow_packet: dict[str, object] | None,
+    workflow_packet: dict[str, Any] | None,
     now: str,
 ) -> None:
     """Emit Workflow Mesh events for a worker dispatch.
@@ -156,7 +157,7 @@ def dispatch_task(
     transport: str = "cli_prompt",
     prior_evidence: list[str] | None = None,
     prompt_addendum: list[str] | None = None,
-    workflow_packet: dict[str, object] | None = None,
+    workflow_packet: dict[str, Any] | None = None,
     now: str | None = None,
     omo_dir: str | Path = ".omo",
 ) -> dict[str, str]:

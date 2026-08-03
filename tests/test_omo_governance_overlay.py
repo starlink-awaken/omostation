@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
 from omo.omo_governance_overlay import build_governance_overlay_status
 
 

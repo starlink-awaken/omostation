@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-
 from omo.omo_ingress_kems import create_kems_planned_task
 
 

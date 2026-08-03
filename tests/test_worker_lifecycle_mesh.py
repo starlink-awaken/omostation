@@ -144,7 +144,7 @@ def test_worker_lease_expires_only_after_deadline_and_can_be_reclaimed(tmp_path)
 def test_worker_heartbeat_requires_ack_and_owner_context(tmp_path):
     context = _context(tmp_path, "run-invalid")
     with pytest.raises(WorkerLifecycleError, match="ACK"):
-        renew_worker_lease(tmp_path, **context)
+        renew_worker_lease(tmp_path, **context)  # type: ignore[reportArgumentType]
 
     acknowledge_worker(
         tmp_path, **context, lease_seconds=60, now="2026-08-02T00:00:00Z"
@@ -152,7 +152,7 @@ def test_worker_heartbeat_requires_ack_and_owner_context(tmp_path):
     with pytest.raises(WorkerLifecycleError, match="owner"):
         renew_worker_lease(
             tmp_path,
-            **{**context, "worker_id": "worker-other"},
+            **{**context, "worker_id": "worker-other"},  # type: ignore[reportArgumentType]
             heartbeat_id="hb-other",
             now="2026-08-02T00:00:30Z",
         )

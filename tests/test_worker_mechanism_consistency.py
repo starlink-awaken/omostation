@@ -5,7 +5,6 @@ from pathlib import Path
 import yaml
 from omo.omo_task_schema import validate_task_file
 
-
 WORKSPACE = Path(__file__).resolve().parents[2]
 OMO = WORKSPACE / ".omo"
 TASKS = OMO / "tasks"

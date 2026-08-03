@@ -50,9 +50,9 @@ def _stamp(value: str | None = None) -> str:
 
 def _digest(value: Any) -> str:
     return hashlib.sha256(
-        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
-            "utf-8"
-        )
+        json.dumps(
+            value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
     ).hexdigest()
 
 
@@ -140,7 +140,10 @@ def _validate_live_context(
     if not isinstance(step, dict) or step.get("admission_id") != admission_id:
         raise SandboxToolError(f"unknown admitted StepRun: {step_run_id}")
     worker = snapshot.get("worker")
-    if not isinstance(worker, dict) or worker.get("state") not in {"acknowledged", "active"}:
+    if not isinstance(worker, dict) or worker.get("state") not in {
+        "acknowledged",
+        "active",
+    }:
         raise SandboxToolError("worker must ACK before sandbox invocation")
     try:
         if observed_at >= _utc(str(worker["lease_expires_at"])):
@@ -183,9 +186,7 @@ def run_sandbox_tool(
     input_digest = str(input_digest or "").strip().lower()
     outcome = str(outcome or "").strip().lower()
     if outcome not in TOOL_OUTCOMES:
-        raise SandboxToolError(
-            "outcome must be succeeded, failed, or unavailable"
-        )
+        raise SandboxToolError("outcome must be succeeded, failed, or unavailable")
     _validate_request(tool_id, input_ref, input_digest)
     observed_at = _utc(now)
     store = WorkflowMeshStore(omo_dir)
@@ -233,7 +234,9 @@ def run_sandbox_tool(
         if event.get("workflow_run_id") == workflow_run_id
     }
     if "WorkflowSucceeded" in event_types and prior is None:
-        raise SandboxToolError("workflow already succeeded without this sandbox invocation")
+        raise SandboxToolError(
+            "workflow already succeeded without this sandbox invocation"
+        )
 
     step_started = _append(
         store,
@@ -301,7 +304,11 @@ def run_sandbox_tool(
         }
     )
     if outcome != "succeeded":
-        events = [step_started["event_id"], invocation["event_id"], result_event["event_id"]]
+        events = [
+            step_started["event_id"],
+            invocation["event_id"],
+            result_event["event_id"],
+        ]
         return {
             "schema": SANDBOX_TOOL_SCHEMA,
             "status": "replayed" if prior is not None else "executed",

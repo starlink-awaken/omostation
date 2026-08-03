@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
 from .omo_shared import (
@@ -15,7 +16,7 @@ def _load_yaml_required(path: Path) -> dict:
     return shared_load_yaml_required(path)
 
 
-def _item_sort_key(item: dict[str, object]) -> tuple[int, str]:
+def _item_sort_key(item: dict[str, Any]) -> tuple[int, str]:
     return (0 if item["priority"] == "P0" else 1, str(item["id"]))
 
 
@@ -23,13 +24,13 @@ def _missing_target_refs(root: Path, refs: list[str]) -> list[str]:
     return [ref for ref in refs if not (root / ref).exists()]
 
 
-def _load_optional_yaml(path: Path) -> dict[str, object] | None:
+def _load_optional_yaml(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
     return shared_load_yaml(path)
 
 
-def _dispatch_payload(root: Path, run_ref: str | None) -> dict[str, object] | None:
+def _dispatch_payload(root: Path, run_ref: str | None) -> dict[str, Any] | None:
     if not run_ref:
         return None
     return _load_optional_yaml(root / run_ref)
@@ -37,7 +38,7 @@ def _dispatch_payload(root: Path, run_ref: str | None) -> dict[str, object] | No
 
 def _build_approval_prep_monitor_summary(
     root: Path, omo_ref: Path
-) -> dict[str, object] | None:
+) -> dict[str, Any] | None:
     current = _load_optional_yaml(
         root
         / omo_ref
@@ -108,8 +109,8 @@ def _build_approval_prep_monitor_summary(
 
 
 def _build_monitor_summary(
-    root: Path, omo_ref: Path, active_target_states: list[dict[str, object]]
-) -> dict[str, object] | None:
+    root: Path, omo_ref: Path, active_target_states: list[dict[str, Any]]
+) -> dict[str, Any] | None:
     if not active_target_states:
         return None
     state_histogram: dict[str, int] = {}
@@ -146,7 +147,7 @@ def _build_monitor_summary(
     return summary
 
 
-def _derived_allowed_write_paths(task: dict[str, object]) -> list[str]:
+def _derived_allowed_write_paths(task: dict[str, Any]) -> list[str]:
     paths: list[str] = []
     for deliverable in task.get("deliverables", []):
         path = str(deliverable)
@@ -164,7 +165,7 @@ def _derived_allowed_write_paths(task: dict[str, object]) -> list[str]:
 
 
 def _launch_contract_state(
-    task: dict[str, object], dispatch: dict[str, object] | None
+    task: dict[str, Any], dispatch: dict[str, Any] | None
 ) -> tuple[str, str]:
     deliverables = list(task.get("deliverables", []))
     allowed_paths = _derived_allowed_write_paths(task)
@@ -180,7 +181,7 @@ def _launch_contract_state(
 
 def _target_state(
     root: Path, target_ref: str, *, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     if not target_ref.startswith(".omo/tasks/planned/"):
         return {
             "target_ref": target_ref,
@@ -257,7 +258,7 @@ def _target_state(
 
 def build_governance_overlay_status(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     state = _load_yaml_required(
         root / omo_ref / "_control" / "governance-overlay" / "current.yaml"
@@ -272,8 +273,8 @@ def build_governance_overlay_status(
     completed_items = {
         item["id"] for item in roadmap.get("items", []) if item.get("status") == "done"
     }
-    autopilot_candidates: list[dict[str, object]] = []
-    blocked_items: list[dict[str, object]] = []
+    autopilot_candidates: list[dict[str, Any]] = []
+    blocked_items: list[dict[str, Any]] = []
     active_items = [
         item for item in roadmap.get("items", []) if item.get("status") == "in_progress"
     ]

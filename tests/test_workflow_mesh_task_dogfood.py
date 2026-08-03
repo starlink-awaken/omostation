@@ -7,8 +7,10 @@ import yaml
 from omo.omo_ingress_task_lifecycle import (
     complete_task,
     create_planned_task,
-    promote_task_to_active,
     record_task_execution,
+)
+from omo.omo_ingress_task_promotion import (
+    promote_task_to_active,
 )
 from omo.worker_lifecycle import acknowledge_worker
 from omo.workflow_dispatch import dispatch_admitted_workflow

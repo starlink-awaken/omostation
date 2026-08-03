@@ -132,7 +132,7 @@ def upsert_debt_item(
         write_yaml_atomic(debt_path, payload)
 
         debt_registry_path = omo_dir / "_truth" / "registry" / "debt.yaml"
-        debt_registry = (
+        debt_registry: dict[str, Any] = (
             _load_yaml(debt_registry_path)
             if debt_registry_path.exists()
             else {"version": 1}
@@ -162,7 +162,7 @@ def upsert_debt_item(
         artifact_path = _delivery_root(omo_dir) / "debts" / f"{debt_id}.yaml"
         write_yaml_atomic(artifact_path, artifact)
 
-        _register_ingress(
+        _register_ingress(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             registry,
             kind="debts",
             item_id=debt_id,
@@ -171,7 +171,7 @@ def upsert_debt_item(
             fingerprint=payload,
             created_at=registered_at,
         )
-        _write_registry(omo_dir, registry)
+        _write_registry(omo_dir, registry)  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
 
         parent_step_id = f"ingress:debt:{debt_id}:{timestamp}"
         details = (
@@ -185,14 +185,14 @@ def upsert_debt_item(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{ingress_plane}",
             action="upsert_debt_item",
             target=debt_ref,
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=ingress_plane,
             action="upsert_debt_item",
@@ -232,7 +232,7 @@ def remove_debt_item(
                 registry["debts"]["by_source_ref"].pop(mapped_source_ref, None)
         elif source_ref:
             registry["debts"]["by_source_ref"].pop(source_ref, None)
-        _write_registry(omo_dir, registry)
+        _write_registry(omo_dir, registry)  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
 
         if debt_registry_path.exists():
             debt_registry = _load_yaml(debt_registry_path) or {"version": 1}
@@ -255,7 +255,7 @@ def remove_debt_item(
             details=f"debt_id={debt_id} actor={actor}",
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="remove_debt_item",
@@ -263,3 +263,32 @@ def remove_debt_item(
             parent_step_id=f"ingress:debt-remove:{debt_id}:{timestamp}",
         )
         return True
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

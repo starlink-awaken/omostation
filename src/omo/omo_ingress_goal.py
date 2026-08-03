@@ -43,7 +43,7 @@ def _goal_fingerprint(
         "source_ref": source_ref,
     }
     if extra_fields:
-        payload["extra_fields"] = deepcopy(extra_fields)
+        payload["extra_fields"] = deepcopy(extra_fields)  # type: ignore[reportArgumentType]
     return payload
 
 
@@ -136,7 +136,7 @@ def create_goal(
         if existing_goal is not None:
             existing_fingerprint = _goal_existing_fingerprint(existing_goal)
             if existing_fingerprint == fingerprint:
-                _register_ingress(
+                _register_ingress(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
                     registry,
                     kind="goals",
                     item_id=goal_id,
@@ -145,7 +145,7 @@ def create_goal(
                     fingerprint=fingerprint,
                     created_at=str(existing_goal.get("created_at", timestamp)),
                 )
-                _write_registry(omo_dir, registry)
+                _write_registry(omo_dir, registry)  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
                 return existing_goal
             raise ValueError(f"goal already exists with different payload: {goal_id}")
 
@@ -181,7 +181,7 @@ def create_goal(
         }
         artifact_path = _delivery_root(omo_dir) / "goals" / f"{goal_id}.yaml"
         write_yaml_atomic(artifact_path, artifact)
-        _register_ingress(
+        _register_ingress(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             registry,
             kind="goals",
             item_id=goal_id,
@@ -190,7 +190,7 @@ def create_goal(
             fingerprint=fingerprint,
             created_at=timestamp,
         )
-        _write_registry(omo_dir, registry)
+        _write_registry(omo_dir, registry)  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
 
         parent_step_id = f"ingress:goal:{goal_id}:{timestamp}"
         details = (
@@ -204,14 +204,14 @@ def create_goal(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{ingress_plane}",
             action="create_goal",
             target=f".omo/goals/current.yaml#{goal_id}",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=ingress_plane,
             action="create_goal",
@@ -233,8 +233,6 @@ def update_goal_progress(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
-
     """更新 goals/current.yaml 中指定 goal 的 progress."""
     goal_file = omo_dir / "goals" / "current.yaml"
     if not goal_file.exists():
@@ -294,14 +292,14 @@ def update_goal_progress(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="update_goal_progress",
             target=f".omo/goals/current.yaml#{goal_id}",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="update_goal_progress",
@@ -365,11 +363,11 @@ def reconcile_goals(
     if not goal_file.exists():
         raise FileNotFoundError(f"missing goals/current.yaml: {goal_file}")
     if phase < 0 or not current_wave.strip():
-        raise ValueError("phase must be non-negative and current_wave must be non-empty")
+        raise ValueError(
+            "phase must be non-negative and current_wave must be non-empty"
+        )
     if not execution_mode.strip():
         raise ValueError("execution_mode must be non-empty")
-
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     source_ref = source_ref or f"omo:goal:reconcile:phase-{phase}-{current_wave}"
@@ -433,14 +431,14 @@ def reconcile_goals(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="reconcile_goals",
             target=".omo/goals/current.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="reconcile_goals",
@@ -456,3 +454,32 @@ def reconcile_goals(
             },
         )
         return deepcopy(payload)
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

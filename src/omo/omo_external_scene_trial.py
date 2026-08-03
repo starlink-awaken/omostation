@@ -76,7 +76,9 @@ def _refs(value: Any, field: str, *, minimum: int = 1, maximum: int = 20) -> lis
         raise ExternalSceneTrialError(f"{field} must be a list")
     refs = sorted({_opaque(item, f"{field}.item") for item in value})
     if not minimum <= len(refs) <= maximum:
-        raise ExternalSceneTrialError(f"{field} must contain {minimum}-{maximum} references")
+        raise ExternalSceneTrialError(
+            f"{field} must contain {minimum}-{maximum} references"
+        )
     return refs
 
 
@@ -93,7 +95,9 @@ def _reject_forbidden(value: Any, path: str = "trial") -> None:
     if isinstance(value, Mapping):
         for key, nested in value.items():
             if str(key).lower() in _FORBIDDEN_KEYS:
-                raise ExternalSceneTrialError(f"forbidden raw or secret field: {path}.{key}")
+                raise ExternalSceneTrialError(
+                    f"forbidden raw or secret field: {path}.{key}"
+                )
             _reject_forbidden(nested, f"{path}.{key}")
     elif isinstance(value, (list, tuple)):
         for index, nested in enumerate(value):
@@ -104,7 +108,9 @@ def _scene_binding(value: Any) -> dict[str, str]:
     if not isinstance(value, Mapping):
         raise ExternalSceneTrialError("scene_binding must be an object")
     return {
-        field: _required_text(value.get(field), f"scene_binding.{field}", max_length=240)
+        field: _required_text(
+            value.get(field), f"scene_binding.{field}", max_length=240
+        )
         for field in ("scene_id", "journey_id", "outcome_metric")
     }
 
@@ -112,22 +118,41 @@ def _scene_binding(value: Any) -> dict[str, str]:
 def _metric(value: Any) -> dict[str, Any]:
     if not isinstance(value, Mapping):
         raise ExternalSceneTrialError("metric must be an object")
-    unknown = set(value) - {"metric_id", "direction", "unit", "target", "baseline_ref", "measurement_ref"}
+    unknown = set(value) - {
+        "metric_id",
+        "direction",
+        "unit",
+        "target",
+        "baseline_ref",
+        "measurement_ref",
+    }
     if unknown:
-        raise ExternalSceneTrialError(f"metric contains unsupported fields: {sorted(unknown)}")
-    direction = _required_text(value.get("direction"), "metric.direction", max_length=32)
+        raise ExternalSceneTrialError(
+            f"metric contains unsupported fields: {sorted(unknown)}"
+        )
+    direction = _required_text(
+        value.get("direction"), "metric.direction", max_length=32
+    )
     if direction not in _DIRECTIONS:
         raise ExternalSceneTrialError(f"unsupported metric direction: {direction}")
     target = value.get("target")
-    if target is not None and (isinstance(target, bool) or not isinstance(target, (int, float))):
+    if target is not None and (
+        isinstance(target, bool) or not isinstance(target, (int, float))
+    ):
         raise ExternalSceneTrialError("metric.target must be numeric")
     return {
-        "metric_id": _required_text(value.get("metric_id"), "metric.metric_id", max_length=160),
+        "metric_id": _required_text(
+            value.get("metric_id"), "metric.metric_id", max_length=160
+        ),
         "direction": direction,
-        "unit": _required_text(value.get("unit"), "metric.unit", max_length=64) if value.get("unit") else None,
+        "unit": _required_text(value.get("unit"), "metric.unit", max_length=64)
+        if value.get("unit")
+        else None,
         "target": target,
         "baseline_ref": _opaque(value.get("baseline_ref"), "metric.baseline_ref"),
-        "measurement_ref": _opaque(value.get("measurement_ref"), "metric.measurement_ref"),
+        "measurement_ref": _opaque(
+            value.get("measurement_ref"), "metric.measurement_ref"
+        ),
     }
 
 
@@ -136,12 +161,22 @@ def _sample_plan(value: Any) -> dict[str, int]:
         raise ExternalSceneTrialError("sample_plan must be an object")
     unknown = set(value) - {"minimum_samples", "window_seconds"}
     if unknown:
-        raise ExternalSceneTrialError(f"sample_plan contains unsupported fields: {sorted(unknown)}")
+        raise ExternalSceneTrialError(
+            f"sample_plan contains unsupported fields: {sorted(unknown)}"
+        )
     samples = value.get("minimum_samples")
     window = value.get("window_seconds")
-    if isinstance(samples, bool) or not isinstance(samples, int) or not 1 <= samples <= 10000:
+    if (
+        isinstance(samples, bool)
+        or not isinstance(samples, int)
+        or not 1 <= samples <= 10000
+    ):
         raise ExternalSceneTrialError("sample_plan.minimum_samples must be 1-10000")
-    if isinstance(window, bool) or not isinstance(window, int) or not 1 <= window <= 31536000:
+    if (
+        isinstance(window, bool)
+        or not isinstance(window, int)
+        or not 1 <= window <= 31536000
+    ):
         raise ExternalSceneTrialError("sample_plan.window_seconds must be 1-31536000")
     return {"minimum_samples": samples, "window_seconds": window}
 
@@ -190,7 +225,9 @@ def _normalise(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
     unknown = set(payload) - allowed
     if unknown:
-        raise ExternalSceneTrialError(f"trial contains unsupported fields: {sorted(unknown)}")
+        raise ExternalSceneTrialError(
+            f"trial contains unsupported fields: {sorted(unknown)}"
+        )
     if payload.get("schema") != TRIAL_SCHEMA:
         raise ExternalSceneTrialError("unexpected trial schema")
     if payload.get("activation") != "forbidden":
@@ -198,7 +235,9 @@ def _normalise(payload: Mapping[str, Any]) -> dict[str, Any]:
     if payload.get("provider_invocation") is not False:
         raise ExternalSceneTrialError("provider invocation must be false")
     if payload.get("workflow_run_id") not in (None, ""):
-        raise ExternalSceneTrialError("trial cannot bind a WorkflowRun before promotion")
+        raise ExternalSceneTrialError(
+            "trial cannot bind a WorkflowRun before promotion"
+        )
     stage = _required_text(payload.get("trial_stage"), "trial_stage", max_length=32)
     if stage not in _TRIAL_STAGES:
         raise ExternalSceneTrialError(f"unsupported trial stage: {stage}")
@@ -213,9 +252,15 @@ def _normalise(payload: Mapping[str, Any]) -> dict[str, Any]:
         "owner_ref": _opaque(payload.get("owner_ref"), "owner_ref"),
         "approver_ref": _opaque(payload.get("approver_ref"), "approver_ref"),
         "permission_ref": _opaque(payload.get("permission_ref"), "permission_ref"),
-        "evidence_refs": _refs(payload.get("evidence_refs"), "evidence_refs", minimum=2),
+        "evidence_refs": _refs(
+            payload.get("evidence_refs"), "evidence_refs", minimum=2
+        ),
         "preflight_ref": _opaque(payload.get("preflight_ref"), "preflight_ref"),
-        "catalog_observation_id": _required_text(payload.get("catalog_observation_id"), "catalog_observation_id", max_length=240),
+        "catalog_observation_id": _required_text(
+            payload.get("catalog_observation_id"),
+            "catalog_observation_id",
+            max_length=240,
+        ),
         "trial_stage": stage,
         "status": status,
         "metric": _metric(payload.get("metric")),
@@ -225,8 +270,13 @@ def _normalise(payload: Mapping[str, Any]) -> dict[str, Any]:
         "provider_invocation": False,
         "workflow_run_id": None,
         "feedback_contract": _feedback_contract(payload.get("feedback_contract")),
-        "actor": _required_text(payload.get("actor") or "scene-trial", "actor", max_length=240),
-        "source_ref": _required_text(payload.get("source_ref") or "omo:external-resources:scene-trial", "source_ref"),
+        "actor": _required_text(
+            payload.get("actor") or "scene-trial", "actor", max_length=240
+        ),
+        "source_ref": _required_text(
+            payload.get("source_ref") or "omo:external-resources:scene-trial",
+            "source_ref",
+        ),
         "observed_at": _timestamp(payload.get("observed_at"), "observed_at"),
     }
 
@@ -256,7 +306,9 @@ def read_external_scene_trials(omo_dir: Path | str) -> list[dict[str, Any]]:
     return [dict(record) for record in _log(Path(omo_dir)).read_all()]
 
 
-def record_external_scene_trial(omo_dir: Path | str, payload: Mapping[str, Any]) -> dict[str, Any]:
+def record_external_scene_trial(
+    omo_dir: Path | str, payload: Mapping[str, Any]
+) -> dict[str, Any]:
     normalised = _normalise(payload)
     contract_identity = _contract_identity(normalised)
     trial_digest = _digest(contract_identity)
@@ -265,14 +317,20 @@ def record_external_scene_trial(omo_dir: Path | str, payload: Mapping[str, Any])
         **normalised,
         "trial_receipt_id": receipt_id,
         "trial_digest": trial_digest,
-        "recorded_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "recorded_at": datetime.now(UTC)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
     }
     log = _log(Path(omo_dir))
     for existing in log.read_all():
         if existing.get("trial_receipt_id") != receipt_id:
             continue
         existing_digest = _digest(_contract_identity(existing))
-        if existing.get("trial_digest") != trial_digest and existing_digest != trial_digest:
+        if (
+            existing.get("trial_digest") != trial_digest
+            and existing_digest != trial_digest
+        ):
             raise ExternalSceneTrialError("conflicting duplicate trial_id")
         return {"status": "deduplicated", "receipt": existing}
     log.append(record, sort_keys=True)

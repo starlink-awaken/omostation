@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import os
 from pathlib import Path
+from typing import Any
 
 from omo.omo_io import AppendOnlyLog
 from omo.omo_io_schemas import OmoTrailRecord
@@ -55,7 +56,7 @@ def record_step(
     duration_ms: int = 0,
     parent_step_id: str | None = None,
     log_path: Path | str = DEFAULT_TRAIL_PATH,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     """追加一条 trail step (AppendOnlyLog 写, Pydantic schema 校验).
 
     Args:
@@ -82,7 +83,7 @@ def record_step(
         actor=actor,
         action=action,
         target=target,
-        status=status,
+        status=status,  # type: ignore[reportArgumentType]
         duration_ms=duration_ms,
         parent_step_id=parent_step_id or "",
     )
@@ -98,7 +99,7 @@ def read_trail(
     limit: int = 100,
     actor: str | None = None,
     action: str | None = None,
-) -> list[dict[str, object]]:
+) -> list[dict[str, Any]]:
     """读最近 trail steps (倒序, 最新的在前).
 
     Args:

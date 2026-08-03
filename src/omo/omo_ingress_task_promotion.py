@@ -67,7 +67,6 @@ def promote_task_to_active(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
@@ -121,14 +120,14 @@ def promote_task_to_active(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="promote_task_to_active",
             target=f".omo/tasks/active/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="promote_task_to_active",
@@ -149,7 +148,6 @@ def repair_task_promotion_approval(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     located = _find_task_path(
@@ -233,14 +231,14 @@ def repair_task_promotion_approval(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="repair_task_promotion_approval",
             target=task_ref,
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="repair_task_promotion_approval",
@@ -268,7 +266,6 @@ def request_task_promotion_approval(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     task_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
@@ -330,14 +327,14 @@ def request_task_promotion_approval(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="request_task_promotion_approval",
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="request_task_promotion_approval",
@@ -363,7 +360,6 @@ def revert_task_to_planned(
     handoff_refs_override: list[str] | None = None,
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     active_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
@@ -418,14 +414,14 @@ def revert_task_to_planned(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="revert_task_to_planned",
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="revert_task_to_planned",
@@ -436,3 +432,32 @@ def revert_task_to_planned(
             extra={"task_id": task_id},
         )
         return payload
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

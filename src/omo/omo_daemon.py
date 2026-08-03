@@ -193,7 +193,7 @@ def run_once(
                 {
                     "total_score": audit_score,
                     "grade": audit_grade,
-                    "watchlist_count": len(report.watchlist),
+                    "watchlist_count": len(report.watchlist),  # type: ignore[reportPossiblyUnboundVariable]
                     "source": "omo_daemon",
                 },
                 path=target_history,

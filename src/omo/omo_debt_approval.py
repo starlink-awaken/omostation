@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 APPROVAL_SCOPE_EXECUTE_REVALIDATE = "execute_revalidate"
 VALID_APPROVAL_SCOPES = {
@@ -11,8 +12,8 @@ VALID_APPROVAL_SCOPES = {
 
 
 def find_dispatch_entry(
-    dispatch_packet: dict[str, object], item_id: str
-) -> dict[str, object] | None:
+    dispatch_packet: dict[str, Any], item_id: str
+) -> dict[str, Any] | None:
     for owner_packet in dispatch_packet.get("owners", []):
         for entry in owner_packet.get("entries", []):
             if entry.get("id") == item_id:
@@ -20,7 +21,7 @@ def find_dispatch_entry(
     return None
 
 
-def dispatch_entry_requires_approval(entry: dict[str, object] | None) -> bool:
+def dispatch_entry_requires_approval(entry: dict[str, Any] | None) -> bool:
     if entry is None:
         return False
     return (

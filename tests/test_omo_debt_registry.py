@@ -5,9 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
 from omo.omo_debt_registry import load_debt_ledger
-
 
 # ── helpers ─────────────────────────────────────────────────────────────────
 

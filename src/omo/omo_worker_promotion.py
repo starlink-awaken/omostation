@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from .omo_approval_queue import (
     build_approval_queue_packet,
@@ -79,7 +80,7 @@ def _launch_worker_from_prompt(
 
 def _launch_existing_dispatch(
     root: Path, dispatch_path: Path, *, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     dispatch = _load_yaml(dispatch_path)
     registry = _load_yaml(
         _omo_path(root, omo_dir) / "_truth" / "registry" / "workers.yaml"
@@ -107,7 +108,7 @@ def _launch_existing_dispatch(
 
 def _promotion_eval(
     root: Path, task_id: str, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo = _omo_path(root, omo_dir)
     goals = _load_yaml(omo / "goals" / "current.yaml")
     task_file = _find_planned_task_file(omo / "tasks" / "planned", task_id)
@@ -193,9 +194,9 @@ def _execute_governance_overlay_target_actions(
     actor: str,
     run_now: str,
     omo_dir: str | Path,
-    target_results: list[dict[str, object]],
-) -> tuple[list[dict[str, object]], bool, bool]:
-    executed_results: list[dict[str, object]] = []
+    target_results: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], bool, bool]:
+    executed_results: list[dict[str, Any]] = []
     any_advanced = False
     any_waiting = False
     for target in target_results:
@@ -487,7 +488,7 @@ def _write_task_promotion_history(
 
 def _promotion_readiness_entry(
     root: Path, task_path: Path, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     task = _load_yaml(task_path)
     eval_result = _promotion_eval(root, task["id"], omo_dir=omo_dir)
     return {
@@ -543,7 +544,7 @@ def _proposal_status(root: Path, proposal_ref: str) -> str:
 
 def _promotion_approval_status_entry(
     root: Path, task_path: Path, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     task = _load_yaml(task_path)
     approval_ref = str(task.get("approval_ref") or "")
     if not _task_has_task_specific_promotion_approval(approval_ref):
@@ -659,7 +660,7 @@ def _write_task_approval_queue_status(
         for path in sorted(planned_dir.glob("*.yaml"))
         if _load_yaml(path).get("human_approval_required")
     ]
-    entries: list[dict[str, object]] = []
+    entries: list[dict[str, Any]] = []
     for path in task_paths:
         task = _load_yaml(path)
         try:

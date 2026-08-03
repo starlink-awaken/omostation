@@ -4,7 +4,6 @@ from pathlib import Path
 
 from omo.omo_rules import evaluate_rule_bundle
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 

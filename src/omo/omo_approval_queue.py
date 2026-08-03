@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
+
 _PROPOSAL_STATUS_ORDER = {"missing": 0, "proposed": 1, "approved": 2, "verified": 3}
 
 
-def _entry_priority(entry: dict[str, object]) -> tuple[int, int, str]:
+def _entry_priority(entry: dict[str, Any]) -> tuple[int, int, str]:
     next_action = str(entry.get("next_action", ""))
     if next_action == "request_approval":
         bucket = 0
@@ -22,8 +24,8 @@ def _entry_priority(entry: dict[str, object]) -> tuple[int, int, str]:
 
 
 def build_approval_queue_packet(
-    *, generated_at: str, tasks: list[dict[str, object]]
-) -> dict[str, object]:
+    *, generated_at: str, tasks: list[dict[str, Any]]
+) -> dict[str, Any]:
     ordered = sorted(tasks, key=_entry_priority)
     return {
         "generated_at": generated_at,
@@ -48,7 +50,7 @@ def build_approval_queue_packet(
     }
 
 
-def render_approval_queue_markdown(packet: dict[str, object]) -> str:
+def render_approval_queue_markdown(packet: dict[str, Any]) -> str:
     lines = [
         "# Approval Queue Status",
         "",

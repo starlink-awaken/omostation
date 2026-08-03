@@ -83,7 +83,9 @@ def _reject_forbidden(value: Any, path: str = "observation_run") -> None:
     if isinstance(value, Mapping):
         for key, nested in value.items():
             if str(key).lower() in _FORBIDDEN_KEYS:
-                raise ExternalObservationRunError(f"forbidden raw or secret field: {path}.{key}")
+                raise ExternalObservationRunError(
+                    f"forbidden raw or secret field: {path}.{key}"
+                )
             _reject_forbidden(nested, f"{path}.{key}")
     elif isinstance(value, (list, tuple)):
         for index, nested in enumerate(value):
@@ -104,7 +106,9 @@ def _summary(value: Any) -> dict[str, int]:
     }
     unknown = set(value) - allowed
     if unknown:
-        raise ExternalObservationRunError(f"summary contains unsupported fields: {sorted(unknown)}")
+        raise ExternalObservationRunError(
+            f"summary contains unsupported fields: {sorted(unknown)}"
+        )
     return {
         key: int(_number(value.get(key, 0), f"summary.{key}", integer=True))
         for key in sorted(allowed)
@@ -117,7 +121,9 @@ def _latency(value: Any) -> dict[str, int | float | None]:
     allowed = {"duration_ms", "probe_latency_ms_sum", "probe_latency_ms_max"}
     unknown = set(value) - allowed
     if unknown:
-        raise ExternalObservationRunError(f"latency contains unsupported fields: {sorted(unknown)}")
+        raise ExternalObservationRunError(
+            f"latency contains unsupported fields: {sorted(unknown)}"
+        )
     result: dict[str, int | float | None] = {}
     for key in sorted(allowed):
         nested = value.get(key)
@@ -133,7 +139,9 @@ def _cost(value: Any) -> dict[str, Any]:
     allowed = {"state", "amount", "currency", "basis"}
     unknown = set(value) - allowed
     if unknown:
-        raise ExternalObservationRunError(f"cost contains unsupported fields: {sorted(unknown)}")
+        raise ExternalObservationRunError(
+            f"cost contains unsupported fields: {sorted(unknown)}"
+        )
     state = _required_text(value.get("state"), "cost.state", max_length=32).lower()
     if state not in _COST_STATES:
         raise ExternalObservationRunError(f"unsupported cost state: {state}")
@@ -145,7 +153,9 @@ def _cost(value: Any) -> dict[str, Any]:
     return {
         "state": state,
         "amount": amount,
-        "currency": _required_text(value.get("currency"), "cost.currency", max_length=16),
+        "currency": _required_text(
+            value.get("currency"), "cost.currency", max_length=16
+        ),
         "basis": _required_text(value.get("basis"), "cost.basis", max_length=160),
     }
 
@@ -174,14 +184,20 @@ def _normalise(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
     unknown = set(payload) - allowed
     if unknown:
-        raise ExternalObservationRunError(f"observation run contains unsupported fields: {sorted(unknown)}")
+        raise ExternalObservationRunError(
+            f"observation run contains unsupported fields: {sorted(unknown)}"
+        )
     if payload.get("schema") != RUN_SCHEMA:
         raise ExternalObservationRunError("unexpected observation run schema")
     if payload.get("activation") != "forbidden":
-        raise ExternalObservationRunError("observation run activation must be forbidden")
+        raise ExternalObservationRunError(
+            "observation run activation must be forbidden"
+        )
     if payload.get("provider_business_invocation") is not False:
         raise ExternalObservationRunError("provider business invocation must be false")
-    result_state = _required_text(payload.get("result_state"), "result_state", max_length=32).lower()
+    result_state = _required_text(
+        payload.get("result_state"), "result_state", max_length=32
+    ).lower()
     if result_state not in _RESULT_STATES:
         raise ExternalObservationRunError(f"unsupported result state: {result_state}")
     return {
@@ -193,14 +209,26 @@ def _normalise(payload: Mapping[str, Any]) -> dict[str, Any]:
         "health_probe_invocation": bool(payload.get("health_probe_invocation")),
         "started_at": _timestamp(payload.get("started_at"), "started_at"),
         "finished_at": _timestamp(payload.get("finished_at"), "finished_at"),
-        "catalog_observation_id": _required_text(payload.get("catalog_observation_id"), "catalog_observation_id", max_length=240),
-        "catalog_digest": _required_text(payload.get("catalog_digest"), "catalog_digest", max_length=160),
+        "catalog_observation_id": _required_text(
+            payload.get("catalog_observation_id"),
+            "catalog_observation_id",
+            max_length=240,
+        ),
+        "catalog_digest": _required_text(
+            payload.get("catalog_digest"), "catalog_digest", max_length=160
+        ),
         "result_state": result_state,
         "summary": _summary(payload.get("summary")),
         "latency": _latency(payload.get("latency")),
         "cost": _cost(payload.get("cost")),
-        "actor": _required_text(payload.get("actor") or "external-resource-observer", "actor", max_length=240),
-        "source_ref": _required_text(payload.get("source_ref") or "omo:external-resources:observe", "source_ref"),
+        "actor": _required_text(
+            payload.get("actor") or "external-resource-observer",
+            "actor",
+            max_length=240,
+        ),
+        "source_ref": _required_text(
+            payload.get("source_ref") or "omo:external-resources:observe", "source_ref"
+        ),
     }
 
 
@@ -225,7 +253,10 @@ def record_external_observation_run(
         **normalised,
         "receipt_id": receipt_id,
         "run_digest": digest,
-        "recorded_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "recorded_at": datetime.now(UTC)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
     }
     log = _log(Path(omo_dir))
     for existing in log.read_all():

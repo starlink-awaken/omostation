@@ -3,7 +3,6 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import yaml
-
 from omo import omo_capability, omo_phase14
 
 
@@ -63,7 +62,7 @@ def test_scan_command_writes_capability_registry_into_capabilities_dir(
         omo_capability, "CAPABILITIES_DIR", tmp_path / ".omo" / "capabilities"
     )
 
-    rc = omo_capability.scan_command(SimpleNamespace(write=True))
+    rc = omo_capability.scan_command(SimpleNamespace(write=True))  # type: ignore[reportArgumentType]
 
     assert rc == 0
     assert (tmp_path / ".omo" / "capabilities" / "projects-capabilities.yaml").exists()
@@ -121,7 +120,7 @@ def test_register_command_writes_manual_capabilities_via_ingress_artifact(
     monkeypatch.setattr(omo_capability, "OMO_ROOT", tmp_path / ".omo")
     monkeypatch.setattr(omo_capability, "CAPABILITIES_DIR", capabilities_dir)
 
-    rc = omo_capability.register_command(SimpleNamespace(file=str(payload_file)))
+    rc = omo_capability.register_command(SimpleNamespace(file=str(payload_file)))  # type: ignore[reportArgumentType]
 
     assert rc == 0
     manual_registry = yaml.safe_load(
@@ -182,7 +181,7 @@ def test_phase14_ecosystem_command_reads_new_capability_registry(tmp_path, monke
     monkeypatch.setattr(omo_phase14, "WORKSPACE_ROOT", tmp_path)
 
     output = tmp_path / "ecosystem.yaml"
-    rc = omo_phase14.ecosystem_command(SimpleNamespace(output=str(output)))
+    rc = omo_phase14.ecosystem_command(SimpleNamespace(output=str(output)))  # type: ignore[reportArgumentType]
 
     assert rc == 0
     payload = yaml.safe_load(output.read_text(encoding="utf-8"))

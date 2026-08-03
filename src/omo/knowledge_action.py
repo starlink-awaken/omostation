@@ -20,7 +20,13 @@ from .omo_io import AppendOnlyLog, fcntl_lock
 KNOWLEDGE_ACTION_SCHEMA = "knowledge-action/v1"
 KNOWLEDGE_ACTION_LOG = Path("_knowledge/knowledge-mesh/actions.jsonl")
 KNOWLEDGE_ACTION_KINDS = frozenset(
-    {"retrieved", "cited", "task_created", "workflow_requested", "result_feedback_recorded"}
+    {
+        "retrieved",
+        "cited",
+        "task_created",
+        "workflow_requested",
+        "result_feedback_recorded",
+    }
 )
 SCENE_BINDING_FIELDS = ("scene_id", "journey_id", "outcome_metric")
 SCENE_REQUIRED_KINDS = frozenset(
@@ -71,7 +77,9 @@ def _reject_forbidden(value: Any, path: str = "knowledge_action") -> None:
     if isinstance(value, Mapping):
         for key, nested in value.items():
             if str(key).lower() in FORBIDDEN_KEYS:
-                raise KnowledgeActionError(f"forbidden raw or secret field: {path}.{key}")
+                raise KnowledgeActionError(
+                    f"forbidden raw or secret field: {path}.{key}"
+                )
             _reject_forbidden(nested, f"{path}.{key}")
     elif isinstance(value, list):
         for index, nested in enumerate(value):
@@ -92,10 +100,17 @@ def _scene_binding(value: Any, *, required: bool) -> dict[str, str] | None:
         return None
     if not isinstance(value, Mapping):
         raise KnowledgeActionError("scene_binding must be an object")
-    missing = [field for field in SCENE_BINDING_FIELDS if not str(value.get(field) or "").strip()]
+    missing = [
+        field
+        for field in SCENE_BINDING_FIELDS
+        if not str(value.get(field) or "").strip()
+    ]
     if missing:
         raise KnowledgeActionError(f"scene_binding missing fields: {missing}")
-    return {field: _required_text(value[field], f"scene_binding.{field}", max_length=160) for field in SCENE_BINDING_FIELDS}
+    return {
+        field: _required_text(value[field], f"scene_binding.{field}", max_length=160)
+        for field in SCENE_BINDING_FIELDS
+    }
 
 
 def _knowledge_refs(value: Any, *, required: bool) -> list[dict[str, Any]]:
@@ -112,19 +127,35 @@ def _knowledge_refs(value: Any, *, required: bool) -> list[dict[str, Any]]:
         if isinstance(item, str):
             item = {"ref": item}
         if not isinstance(item, Mapping):
-            raise KnowledgeActionError(f"knowledge_refs[{index}] must be a string or object")
+            raise KnowledgeActionError(
+                f"knowledge_refs[{index}] must be a string or object"
+            )
         unknown = sorted(set(item) - KNOWLEDGE_REF_FIELDS)
         if unknown:
-            raise KnowledgeActionError(f"knowledge_refs[{index}] contains unsupported fields: {unknown}")
+            raise KnowledgeActionError(
+                f"knowledge_refs[{index}] contains unsupported fields: {unknown}"
+            )
         ref = {"ref": _required_text(item.get("ref"), f"knowledge_refs[{index}].ref")}
         if item.get("title") is not None:
-            ref["title"] = _required_text(item["title"], f"knowledge_refs[{index}].title", max_length=240)
+            ref["title"] = _required_text(
+                item["title"], f"knowledge_refs[{index}].title", max_length=240
+            )
         if item.get("source_type") is not None:
-            ref["source_type"] = _required_text(item["source_type"], f"knowledge_refs[{index}].source_type", max_length=80)
+            ref["source_type"] = _required_text(
+                item["source_type"],
+                f"knowledge_refs[{index}].source_type",
+                max_length=80,
+            )
         if item.get("rank") is not None:
-            if not isinstance(item["rank"], int) or isinstance(item["rank"], bool) or item["rank"] < 1:
-                raise KnowledgeActionError(f"knowledge_refs[{index}].rank must be a positive integer")
-            ref["rank"] = item["rank"]
+            if (
+                not isinstance(item["rank"], int)
+                or isinstance(item["rank"], bool)
+                or item["rank"] < 1
+            ):
+                raise KnowledgeActionError(
+                    f"knowledge_refs[{index}].rank must be a positive integer"
+                )
+            ref["rank"] = item["rank"]  # type: ignore[arg-type]  # ranks are stored as int (validated) for sort stability
         refs.append(ref)
     return refs
 
@@ -135,7 +166,9 @@ def _normalise_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     _reject_forbidden(payload)
     if payload.get("schema") not in (None, KNOWLEDGE_ACTION_SCHEMA):
         raise KnowledgeActionError("unsupported knowledge action schema")
-    action_kind = _required_text(payload.get("action_kind"), "action_kind", max_length=40)
+    action_kind = _required_text(
+        payload.get("action_kind"), "action_kind", max_length=40
+    )
     if action_kind not in KNOWLEDGE_ACTION_KINDS:
         raise KnowledgeActionError(f"unsupported action_kind: {action_kind}")
     query = str(payload.get("query") or "").strip()
@@ -143,9 +176,16 @@ def _normalise_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     if query:
         query_digest = _digest(query)
     if not query_digest.startswith("sha256:") or len(query_digest) != 71:
-        raise KnowledgeActionError("query_digest must be a sha256 digest or query must be provided")
-    refs = _knowledge_refs(payload.get("knowledge_refs"), required=action_kind in {"cited", *SCENE_REQUIRED_KINDS})
-    scene_binding = _scene_binding(payload.get("scene_binding"), required=action_kind in SCENE_REQUIRED_KINDS)
+        raise KnowledgeActionError(
+            "query_digest must be a sha256 digest or query must be provided"
+        )
+    refs = _knowledge_refs(
+        payload.get("knowledge_refs"),
+        required=action_kind in {"cited", *SCENE_REQUIRED_KINDS},
+    )
+    scene_binding = _scene_binding(
+        payload.get("scene_binding"), required=action_kind in SCENE_REQUIRED_KINDS
+    )
     result = {
         "action_kind": action_kind,
         "query_digest": query_digest,
@@ -165,7 +205,9 @@ def _normalise_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     if action_kind == "workflow_requested" and not result["workflow_run_id"]:
         raise KnowledgeActionError("workflow_run_id is required for workflow_requested")
     if action_kind == "result_feedback_recorded" and not result["result_feedback_id"]:
-        raise KnowledgeActionError("result_feedback_id is required for result_feedback_recorded")
+        raise KnowledgeActionError(
+            "result_feedback_id is required for result_feedback_recorded"
+        )
     return result
 
 
@@ -187,7 +229,9 @@ def _log(omo_dir: Path) -> AppendOnlyLog:
 
 
 def read_knowledge_actions(omo_dir: Path | str) -> list[dict[str, Any]]:
-    return [validate_knowledge_action(record) for record in _log(Path(omo_dir)).read_all()]
+    return [
+        validate_knowledge_action(record) for record in _log(Path(omo_dir)).read_all()
+    ]
 
 
 def record_knowledge_action(
@@ -224,7 +268,11 @@ def build_knowledge_action_snapshot(
 ) -> dict[str, Any]:
     records = read_knowledge_actions(omo_dir)
     if scene_id is not None:
-        records = [record for record in records if (record.get("scene_binding") or {}).get("scene_id") == scene_id]
+        records = [
+            record
+            for record in records
+            if (record.get("scene_binding") or {}).get("scene_id") == scene_id
+        ]
     by_kind = Counter(record["action_kind"] for record in records)
     source_counts: Counter[str] = Counter()
     for record in records:
@@ -234,7 +282,9 @@ def build_knowledge_action_snapshot(
     for record in records:
         binding = record.get("scene_binding")
         key = str((binding or {}).get("scene_id") or "_unbound")
-        row = scene_rows.setdefault(key, {"scene_binding": binding, "action_count": 0, "kinds": {}})
+        row = scene_rows.setdefault(
+            key, {"scene_binding": binding, "action_count": 0, "kinds": {}}
+        )
         row["action_count"] += 1
         kinds = row["kinds"]
         kinds[record["action_kind"]] = int(kinds.get(record["action_kind"], 0)) + 1
@@ -243,7 +293,11 @@ def build_knowledge_action_snapshot(
     return {
         "schema_version": "knowledge-action-operations/v1",
         "status": "live",
-        "source": {"kind": "omo_append_only_knowledge_action_log", "path": str(KNOWLEDGE_ACTION_LOG), "projection": "log_derived"},
+        "source": {
+            "kind": "omo_append_only_knowledge_action_log",
+            "path": str(KNOWLEDGE_ACTION_LOG),
+            "projection": "log_derived",
+        },
         "filter": {"scene_id": scene_id},
         "summary": {
             "action_count": len(records),
@@ -263,11 +317,27 @@ def build_knowledge_action_snapshot(
             {"ref": ref, "use_count": count}
             for ref, count in source_counts.most_common(20)
         ],
-        "by_scene": sorted(scene_rows.values(), key=lambda row: str((row.get("scene_binding") or {}).get("scene_id") or "_unbound")),
+        "by_scene": sorted(
+            scene_rows.values(),
+            key=lambda row: str(
+                (row.get("scene_binding") or {}).get("scene_id") or "_unbound"
+            ),
+        ),
         "recent_actions": [
             {
                 key: record[key]
-                for key in ("action_id", "action_kind", "query_digest", "knowledge_refs", "scene_binding", "task_ref", "workflow_run_id", "result_feedback_id", "observed_at", "recorded_at")
+                for key in (
+                    "action_id",
+                    "action_kind",
+                    "query_digest",
+                    "knowledge_refs",
+                    "scene_binding",
+                    "task_ref",
+                    "workflow_run_id",
+                    "result_feedback_id",
+                    "observed_at",
+                    "recorded_at",
+                )
             }
             for record in records[-20:]
         ],

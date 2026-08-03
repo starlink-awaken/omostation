@@ -212,7 +212,7 @@ def run_path_acl_doctor(
         # still scan the explicit root; missing → info
         pass
 
-    profile = load_profile(profile_path)
+    profile: dict[str, Any] = load_profile(profile_path)
     env_strict = os.environ.get("OMO_PATH_ACL_STRICT", "").lower() in (
         "1",
         "true",
@@ -385,8 +385,9 @@ def plan_named_acl_script(
     import shutil
 
     root = Path(workspace_root).resolve()
-    profile = load_profile(profile_path)
-    acl_cfg = profile.get("acl") if isinstance(profile.get("acl"), dict) else {}
+    profile: dict[str, Any] = load_profile(profile_path)
+    _acl_raw = profile.get("acl")
+    acl_cfg: dict[str, Any] = _acl_raw if isinstance(_acl_raw, dict) else {}
     group = str(
         os.environ.get("OMO_ACL_GROUP") or acl_cfg.get("group") or "omo-writers"
     )
@@ -565,8 +566,9 @@ def apply_named_acl_actions(
     results: list[dict[str, Any]] = []
 
     # Rebuild executable steps from profile (structured, not shell parse)
-    profile = load_profile(profile_path)
-    acl_cfg = profile.get("acl") if isinstance(profile.get("acl"), dict) else {}
+    profile: dict[str, Any] = load_profile(profile_path)
+    _acl_raw = profile.get("acl")
+    acl_cfg: dict[str, Any] = _acl_raw if isinstance(_acl_raw, dict) else {}
     entries = acl_cfg.get("entries")
     if not isinstance(entries, list) or not entries:
         entries = [

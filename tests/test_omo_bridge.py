@@ -81,6 +81,7 @@ def test_infer_phase_wave_from_task_id():
 def test_import_bmad_writes_task_with_phase_wave(tmp_path):
     """import 应写 phase/wave 字段, 跟 P40/P41 规范一致."""
     import hashlib
+
     from omo.omo_bridge import _import_bmad
 
     a_title = "P42-W0-MERGE-STATE: 合并"
@@ -121,6 +122,7 @@ def test_import_bmad_writes_task_with_phase_wave(tmp_path):
 def test_import_bmad_resolves_depends_on_to_imported_ids(tmp_path):
     """关键测试: 修复断链 bug. 第二次 import 看到的依赖是 IMPORTED-xxxxx 不是 P42-W0-..."""
     import hashlib
+
     from omo.omo_bridge import _import_bmad
 
     a_title = "P42-W0-MERGE-STATE: 合并"
@@ -149,6 +151,7 @@ def test_import_bmad_resolves_depends_on_to_imported_ids(tmp_path):
 def test_import_bmad_first_task_has_empty_depends_on(tmp_path):
     """第一个 task 不该有 [''] 污染."""
     import hashlib
+
     from omo.omo_bridge import _import_bmad
 
     a_title = "P42-W0-MERGE-STATE: 合并"
@@ -174,6 +177,7 @@ def test_import_bmad_first_task_has_empty_depends_on(tmp_path):
 def test_sequential_mode_uses_imported_id_chain(tmp_path):
     """--sequential 模式下, 后一个 task 的依赖应指向前一个的 IMPORTED-xxxxx."""
     import hashlib
+
     from omo.omo_bridge import _import_bmad
 
     a_id = f"IMPORTED-{hashlib.md5('P42-W0-A: 第一个'.encode()).hexdigest()[:6]}"
@@ -201,6 +205,7 @@ def test_sequential_mode_uses_imported_id_chain(tmp_path):
 def test_sequential_mode_chain_dynamic(tmp_path):
     """同上, 但用动态 hash 探测 (不写死 hash 值)."""
     import hashlib
+
     from omo.omo_bridge import _import_bmad
 
     def hash6(title: str) -> str:
@@ -236,8 +241,8 @@ def test_sequential_mode_chain_dynamic(tmp_path):
 
 def test_import_fast_track_generates_valid_yaml(tmp_path):
     """测试 Fast-Track 降维是否产生包含 context_uri 且无 TODO 阻挡的合法任务"""
-    from omo.omo_bridge import _import_fast_track
     import yaml
+    from omo.omo_bridge import _import_fast_track
 
     spec = tmp_path / "fix-typo.md"
     omo = tmp_path / ".omo"
@@ -294,6 +299,7 @@ def test_import_bmad_rejects_todo_lines(tmp_path, capfd):
 def test_import_bmad_adds_context_uri(tmp_path):
     """测试 Mode A 降维时是否附带了 context_uri"""
     import hashlib
+
     from omo.omo_bridge import _import_bmad
 
     a_title = "P42-W0-A: 测试URI"
@@ -319,8 +325,8 @@ def test_import_bmad_adds_context_uri(tmp_path):
 
 def test_import_pitch_uses_governed_goal_and_task_ingress(tmp_path, capfd):
     import hashlib
-    import yaml
 
+    import yaml
     from omo.omo_bridge import _import_pitch
 
     pitch = tmp_path / "pitch.md"

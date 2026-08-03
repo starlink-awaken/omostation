@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .omo_io import write_yaml_atomic
 from .omo_shared import load_yaml
@@ -22,7 +23,7 @@ def _is_allowed_runtime_path(path: str, allowed_roots: list[str]) -> bool:
     return any(path == root or path.startswith(f"{root}/") for root in allowed_roots)
 
 
-def evaluate_rollout_envelope(root: Path, envelope_ref: Path) -> dict[str, object]:
+def evaluate_rollout_envelope(root: Path, envelope_ref: Path) -> dict[str, Any]:
     envelope = _load_yaml(root / envelope_ref)
     execution_context = envelope.get("execution_context", {})
     rollout_context = envelope.get("rollout_context", {})

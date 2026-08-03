@@ -66,7 +66,7 @@ def test_record_step_writes_seven_fields(tmp_path):
 
 def test_read_trail_reverse_and_filters(tmp_path):
     """read_trail 默认倒序 (最新在前), 支持 actor / action 过滤."""
-    from omo.omo_trail import record_step, read_trail
+    from omo.omo_trail import read_trail, record_step
 
     log_path = tmp_path / "trail.jsonl"
 
@@ -121,7 +121,7 @@ def test_pydantic_schema_in_registry_and_validates():
         actor="user",
         action="edit",
         target="x.py",
-        status="ok",
+        status="ok",  # type: ignore[reportArgumentType]
         duration_ms=42,
     )
     assert rec.actor == "user"
@@ -146,15 +146,15 @@ def test_pydantic_schema_in_registry_and_validates():
             actor="user",
             action="edit",
             target="x.py",
-            status="ok",
+            status="ok",  # type: ignore[reportArgumentType]
         )
 
 
 def test_append_only_log_writes_via_schema_rejects_drift(tmp_path):
     """AppendOnlyLog.append(..., schema=OmoTrailRecord) 拒 drift record."""
+    import pydantic
     from omo.omo_io import AppendOnlyLog
     from omo.omo_io_schemas import OmoTrailRecord
-    import pydantic
 
     log_path = tmp_path / "trail.jsonl"
     log = AppendOnlyLog(log_path)
@@ -323,8 +323,9 @@ def test_default_trail_path():
 
 def test_trail_uses_append_only_log():
     """验证 record_step 内部用 AppendOnlyLog (而非直接 open+write)."""
-    from omo.omo_trail import record_step
     import inspect
+
+    from omo.omo_trail import record_step
 
     src = inspect.getsource(record_step)
     assert "AppendOnlyLog" in src, "record_step should use AppendOnlyLog abstraction"

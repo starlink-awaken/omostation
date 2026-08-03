@@ -6,7 +6,6 @@ from pathlib import Path
 
 import yaml
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OMO_ROOT = REPO_ROOT / ".omo"
 

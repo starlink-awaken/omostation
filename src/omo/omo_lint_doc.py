@@ -42,8 +42,13 @@ def _classify_doc(rel_path: str) -> str:
             if rel.startswith(d_clean + "/") or rel == d_clean:
                 return category
     # 默认归 history
-    if (
-        rel.startswith((".omo/_archive/", ".omo/_knowledge/audits/", ".omo/_knowledge/management/", ".omo/_knowledge/decisions/"))
+    if rel.startswith(
+        (
+            ".omo/_archive/",
+            ".omo/_knowledge/audits/",
+            ".omo/_knowledge/management/",
+            ".omo/_knowledge/decisions/",
+        )
     ):
         return "history"
     return "history"

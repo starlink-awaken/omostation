@@ -1,3 +1,6 @@
+# mock-heavy test: monkeypatch + dynamic attribute setup; pyright cannot follow.
+# pyright: reportAttributeAccessIssue=false
+
 """P43-W1 40 BOS URI smoke test — 覆盖 P33 W0 21→40 扩域全 5 Domain.
 
 跑 invoke_bos_uri_tool 全部 40 URI, 验证:
@@ -23,7 +26,6 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
-
 from omo.omo_llm_bos_bridge import invoke_bos_uri_tool
 
 OMOSTATION_ROOT = Path(__file__).resolve().parents[3]
@@ -84,7 +86,9 @@ def test_smoke_25_resolved_15_gap_single_loop():
     P43-W0 长驻池是 module-level singleton, 必须单 asyncio.run() 内调用.
     跑完显式关 pool.
     """
-    from omo.omo_llm_bos_bridge import _MANAGER
+    from omo.omo_llm_bos_bridge import (
+        _MANAGER,  # type: ignore[reportAttributeAccessIssue]
+    )
 
     async def _run_all():
         regs = _load_registry()
@@ -147,7 +151,7 @@ def test_5_domain_each_resolves_at_least_one():
     """P43-W1 验证: 5 Domain 全部有 URI, 每个域至少有 1 个 resolved (POC_SERVICES 覆盖)."""
     import omo.omo_llm_bos_bridge as bridge
 
-    bridge._MANAGER = None  # reset singleton (跨 asyncio.run 边界)
+    bridge._MANAGER = None  # reset singleton (跨 asyncio.run 边界)  # type: ignore[reportAttributeAccessIssue]
 
     async def _check():
         regs = _load_registry()

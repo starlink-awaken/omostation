@@ -40,7 +40,10 @@ def _text(value: Any, field: str, *, max_length: int = 240) -> str:
 def _scene_binding(value: Any) -> dict[str, str]:
     if not isinstance(value, Mapping):
         raise WorkflowPromotionError("scene_binding is required")
-    result = {field: _text(value.get(field), f"scene_binding.{field}", max_length=160) for field in _SCENE_FIELDS}
+    result = {
+        field: _text(value.get(field), f"scene_binding.{field}", max_length=160)
+        for field in _SCENE_FIELDS
+    }
     return result
 
 
@@ -49,7 +52,10 @@ def _evidence_plan(value: Any) -> list[str]:
         raise WorkflowPromotionError("evidence_plan must be a list of strings")
     if not value or len(value) > 12:
         raise WorkflowPromotionError("evidence_plan must contain 1 to 12 items")
-    result = [_text(item, f"evidence_plan[{index}]", max_length=300) for index, item in enumerate(value)]
+    result = [
+        _text(item, f"evidence_plan[{index}]", max_length=300)
+        for index, item in enumerate(value)
+    ]
     if len(set(result)) != len(result):
         raise WorkflowPromotionError("evidence_plan must not contain duplicates")
     return result
@@ -64,7 +70,10 @@ def _digest(value: Mapping[str, Any]) -> str:
 
 
 def _task_file(root: Path, task_id: str, omo_dir: str | Path) -> Path:
-    if not task_id or any(char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-" for char in task_id):
+    if not task_id or any(
+        char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-"
+        for char in task_id
+    ):
         raise WorkflowPromotionError("invalid task id")
     path = root / Path(omo_dir) / "tasks" / "planned" / f"{task_id}.yaml"
     if not path.is_file():
@@ -88,7 +97,9 @@ def _result(
     approval_required = bool(request["approval_required"])
     return {
         "status": status,
-        "request_state": "approval_required" if approval_required else "ready_for_admission",
+        "request_state": "approval_required"
+        if approval_required
+        else "ready_for_admission",
         "task_id": task_id,
         "task_ref": task_ref,
         "workflow_run_id": workflow_run_id,
@@ -139,17 +150,34 @@ def request_workflow_from_task(
     knowledge_refs = task.get("knowledge_refs") or []
     if not isinstance(knowledge_refs, list) or not knowledge_refs:
         raise WorkflowPromotionError("knowledge-backed task requires knowledge_refs")
-    if len(knowledge_refs) > 20 or not all(isinstance(item, str) and item.strip() for item in knowledge_refs):
-        raise WorkflowPromotionError("task knowledge_refs must be a list of up to 20 non-empty strings")
+    if len(knowledge_refs) > 20 or not all(
+        isinstance(item, str) and item.strip() for item in knowledge_refs
+    ):
+        raise WorkflowPromotionError(
+            "task knowledge_refs must be a list of up to 20 non-empty strings"
+        )
 
     name = _text(workflow_name, "workflow_name", max_length=160)
     version = _text(workflow_version, "workflow_version", max_length=40)
     binding = _scene_binding(scene_binding)
     plan = _evidence_plan(evidence_plan)
-    requested_level = str(operation_level or task.get("allowed_operation_level") or task.get("risk_level") or "L0").strip().upper()
+    requested_level = (
+        str(
+            operation_level
+            or task.get("allowed_operation_level")
+            or task.get("risk_level")
+            or "L0"
+        )
+        .strip()
+        .upper()
+    )
     if requested_level not in _OPERATION_LEVELS:
         raise WorkflowPromotionError("operation_level must be L0, L1, L2, or L3")
-    task_level = str(task.get("allowed_operation_level") or task.get("risk_level") or "L0").strip().upper()
+    task_level = (
+        str(task.get("allowed_operation_level") or task.get("risk_level") or "L0")
+        .strip()
+        .upper()
+    )
     if task_level not in _OPERATION_LEVELS:
         raise WorkflowPromotionError("task operation level is invalid")
     if _OPERATION_LEVELS[requested_level] > _OPERATION_LEVELS[task_level]:
@@ -176,7 +204,11 @@ def request_workflow_from_task(
     task_ref = str(task_path.relative_to(root))
     store = WorkflowMeshStore(root / Path(omo_dir))
     existing = next(
-        (event for event in store.events() if event.get("idempotency_key") == request_key),
+        (
+            event
+            for event in store.events()
+            if event.get("idempotency_key") == request_key
+        ),
         None,
     )
     event = existing or new_workflow_event(

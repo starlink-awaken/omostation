@@ -22,7 +22,14 @@ FEEDBACK_SCHEMA = "external-scene-trial-feedback/v1"
 FEEDBACK_LOG = Path("_knowledge/workflow-mesh/external-scene-trial-feedback.jsonl")
 _REVIEW_ACTIONS = frozenset({"continue", "request_changes", "reject"})
 _MUTABLE_FIELDS = frozenset(
-    {"actor", "source_ref", "observed_at", "recorded_at", "feedback_receipt_id", "feedback_digest"}
+    {
+        "actor",
+        "source_ref",
+        "observed_at",
+        "recorded_at",
+        "feedback_receipt_id",
+        "feedback_digest",
+    }
 )
 _FORBIDDEN_KEYS = frozenset(
     {
@@ -50,7 +57,9 @@ def _reject_forbidden(value: Any, path: str = "feedback") -> None:
     if isinstance(value, Mapping):
         for key, nested in value.items():
             if str(key).lower() in _FORBIDDEN_KEYS:
-                raise ExternalSceneTrialFeedbackError(f"forbidden raw or secret field: {path}.{key}")
+                raise ExternalSceneTrialFeedbackError(
+                    f"forbidden raw or secret field: {path}.{key}"
+                )
             _reject_forbidden(nested, f"{path}.{key}")
     elif isinstance(value, list):
         for index, nested in enumerate(value):
@@ -87,31 +96,50 @@ def _normalise(payload: Mapping[str, Any], omo_dir: Path) -> dict[str, Any]:
     }
     unknown = set(payload) - allowed
     if unknown:
-        raise ExternalSceneTrialFeedbackError(f"feedback contains unsupported fields: {sorted(unknown)}")
+        raise ExternalSceneTrialFeedbackError(
+            f"feedback contains unsupported fields: {sorted(unknown)}"
+        )
     if payload.get("schema") != FEEDBACK_SCHEMA:
         raise ExternalSceneTrialFeedbackError("unexpected feedback schema")
     trial_id = _required_text(payload.get("trial_id"), "trial_id", max_length=240)
     trials = read_external_scene_trials(omo_dir)
     trial = next((item for item in trials if item.get("trial_id") == trial_id), None)
     if trial is None:
-        raise ExternalSceneTrialFeedbackError("trial_id does not reference a recorded scene trial")
-    if trial.get("trial_stage") != "observation_only" or trial.get("status") != "proposal_only":
-        raise ExternalSceneTrialFeedbackError("only proposal-only observation trials accept review feedback")
+        raise ExternalSceneTrialFeedbackError(
+            "trial_id does not reference a recorded scene trial"
+        )
+    if (
+        trial.get("trial_stage") != "observation_only"
+        or trial.get("status") != "proposal_only"
+    ):
+        raise ExternalSceneTrialFeedbackError(
+            "only proposal-only observation trials accept review feedback"
+        )
     if payload.get("activation") != "forbidden":
         raise ExternalSceneTrialFeedbackError("feedback activation must be forbidden")
     if payload.get("provider_invocation") is not False:
-        raise ExternalSceneTrialFeedbackError("feedback provider invocation must be false")
+        raise ExternalSceneTrialFeedbackError(
+            "feedback provider invocation must be false"
+        )
     if payload.get("workflow_run_id") not in (None, ""):
-        raise ExternalSceneTrialFeedbackError("trial review feedback cannot bind a WorkflowRun")
-    action = _required_text(payload.get("review_action"), "review_action", max_length=32)
+        raise ExternalSceneTrialFeedbackError(
+            "trial review feedback cannot bind a WorkflowRun"
+        )
+    action = _required_text(
+        payload.get("review_action"), "review_action", max_length=32
+    )
     if action not in _REVIEW_ACTIONS:
         raise ExternalSceneTrialFeedbackError(f"unsupported review_action: {action}")
     return {
         "schema": FEEDBACK_SCHEMA,
-        "feedback_id": _required_text(payload.get("feedback_id"), "feedback_id", max_length=240),
+        "feedback_id": _required_text(
+            payload.get("feedback_id"), "feedback_id", max_length=240
+        ),
         "trial_id": trial_id,
         "review_action": action,
-        "evidence_refs": _refs(payload.get("evidence_refs"), "evidence_refs", minimum=1),
+        "evidence_refs": _refs(
+            payload.get("evidence_refs"), "evidence_refs", minimum=1
+        ),
         "reviewer_ref": _opaque(payload.get("reviewer_ref"), "reviewer_ref"),
         "review_ref": _opaque(payload.get("review_ref"), "review_ref"),
         "activation": "forbidden",
@@ -119,7 +147,9 @@ def _normalise(payload: Mapping[str, Any], omo_dir: Path) -> dict[str, Any]:
         "workflow_run_id": None,
         "actor": _required_text(payload.get("actor") or "scene-trial-review", "actor"),
         "source_ref": _required_text(
-            payload.get("source_ref") or "cockpit:external-resources:scene-trial-review", "source_ref"
+            payload.get("source_ref")
+            or "cockpit:external-resources:scene-trial-review",
+            "source_ref",
         ),
         "observed_at": _timestamp(payload.get("observed_at"), "observed_at"),
     }
@@ -140,7 +170,10 @@ def record_external_scene_trial_feedback(
         **normalised,
         "feedback_receipt_id": receipt_id,
         "feedback_digest": digest,
-        "recorded_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "recorded_at": datetime.now(UTC)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
     }
     log = _log(root)
     for existing in log.read_all():

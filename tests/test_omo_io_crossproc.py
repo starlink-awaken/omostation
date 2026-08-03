@@ -56,13 +56,13 @@ def test_cross_process_fcntl_lock_no_loss(tmp_path):
                 "-c",
                 f"""
 import sys
-sys.path.insert(0, {repr(str(OMO_SRC))})
+sys.path.insert(0, {str(OMO_SRC)!r})
 from pathlib import Path
 import os
 from omo.omo_io import AppendOnlyLog, fcntl_lock
 
-log_path = Path({repr(str(log_path))})
-lock_path = Path({repr(str(lock_path))})
+log_path = Path({str(log_path)!r})
+lock_path = Path({str(lock_path)!r})
 log = AppendOnlyLog(log_path, lock=fcntl_lock(lock_path))
 for j in range({writes_per_worker}):
     log.append({{"worker": {wid}, "j": j, "pid": os.getpid()}})
@@ -109,12 +109,12 @@ def test_cross_process_default_lock_loses(tmp_path):
                 "-c",
                 f"""
 import sys
-sys.path.insert(0, {repr(str(OMO_SRC))})
+sys.path.insert(0, {str(OMO_SRC)!r})
 from pathlib import Path
 import os
 from omo.omo_io import AppendOnlyLog
 
-log_path = Path({repr(str(log_path))})
+log_path = Path({str(log_path)!r})
 log = AppendOnlyLog(log_path)  # 默认 lock=threading.Lock
 for j in range({writes_per_worker}):
     log.append({{"worker": {wid}, "j": j, "pid": os.getpid()}})
@@ -156,13 +156,13 @@ def test_fcntl_lock_serial_workers_ok(tmp_path):
                 "-c",
                 f"""
 import sys
-sys.path.insert(0, {repr(str(OMO_SRC))})
+sys.path.insert(0, {str(OMO_SRC)!r})
 from pathlib import Path
 import os
 from omo.omo_io import AppendOnlyLog, fcntl_lock
 
-log_path = Path({repr(str(log_path))})
-lock_path = Path({repr(str(lock_path))})
+log_path = Path({str(log_path)!r})
+lock_path = Path({str(lock_path)!r})
 log = AppendOnlyLog(log_path, lock=fcntl_lock(lock_path))
 for j in range(10):
     log.append({{"worker": {wid}, "j": j}})

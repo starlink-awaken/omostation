@@ -248,13 +248,13 @@ def suggest_workflows(
                 "score": score,
                 "matched_files": matched,
                 "total_files": len(normalized),
-                "agents": [str(r) for r in roles if isinstance(r, str)],
+                "agents": [str(r) for r in (roles or []) if isinstance(r, str)],
                 "allowed_lanes": [
                     str(item)
-                    for item in (workflow.get("allowed_lanes") or [])
+                    for item in (workflow.get("allowed_lanes") or [])  # type: ignore[union-attr]
                     if isinstance(item, str)
                 ],
-                "profile_hint": _profile_hint(profile, roles),
+                "profile_hint": _profile_hint(profile, roles),  # type: ignore[reportArgumentType]
             }
         )
     suggestions.sort(

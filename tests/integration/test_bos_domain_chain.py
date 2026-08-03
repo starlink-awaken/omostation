@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 BOS_REGISTRY = Path(
     str(Path(__file__).resolve().parents[3]) + "/.omo/_knowledge/bos-registry.json"
 )

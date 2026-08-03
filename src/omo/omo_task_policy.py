@@ -70,7 +70,7 @@ def _validate_active_execution_links(
         "in_progress": ("assigned_to", "dispatch_id", "run_ref", "started_at"),
         "review": ("assigned_to", "dispatch_id", "run_ref", "review_ref"),
     }
-    required_fields = required_fields_by_status.get(status)
+    required_fields = required_fields_by_status.get(status)  # type: ignore[reportArgumentType]
     if required_fields is None:
         return []
     issues: list[str] = []

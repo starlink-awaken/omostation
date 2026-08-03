@@ -261,7 +261,7 @@ def test_check_all_schemas_exported_detects_missing_class(monkeypatch):
 # ── 10. Round 30 P0 新规则: consumer SRP 互不依赖 ─────
 
 
-def test_check_cross_module_srp_passes_for_real_consumers():
+def test_check_cross_module_srp_passes_for_real_consumers():  # type: ignore[reportRedeclaration]
     """7 consumer 互不依赖 (仅依赖底层 SSOT), 0 SRP 违规."""
     from omo.omo_lint import _check_cross_module_srp
 
@@ -269,7 +269,7 @@ def test_check_cross_module_srp_passes_for_real_consumers():
     assert issues == [], f"expected no SRP violations, got {issues}"
 
 
-def test_check_cross_module_srp_whitelist_omo_audit_utility():
+def test_check_cross_module_srp_whitelist_omo_audit_utility():  # type: ignore[reportRedeclaration]
     """白名单 omo_audit 工具 (e.g. _utc_now) 不算 SRP 违规.
 
     实际: omo_history / omo_bos_metrics / omo_sync / omo_trail 等多个 consumer 用了

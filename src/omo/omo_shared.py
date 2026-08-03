@@ -7,7 +7,7 @@ that was previously copy-pasted across omo_phase14/15/16 and other modules.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -44,12 +44,7 @@ def load_yaml_docs(text: str) -> dict[str, Any]:
 
 def utc_now() -> str:
     """Return current UTC time as ISO-8601 string with Z suffix."""
-    return (
-        datetime.now(UTC)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def load_yaml(path: Path) -> dict[str, Any]:

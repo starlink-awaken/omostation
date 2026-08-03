@@ -4,7 +4,6 @@ from pathlib import Path
 
 import yaml
 
-
 OMO_ROOT = Path(__file__).resolve().parents[2]
 WORKSPACE_ROOT = OMO_ROOT.parent
 

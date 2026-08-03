@@ -24,8 +24,10 @@ P104 收益:
 
 from __future__ import annotations
 
+from typing import Any
 
-def _mutation_surface_registry_snapshot() -> list[dict[str, object]]:
+
+def _mutation_surface_registry_snapshot() -> list[dict[str, Any]]:
     return [
         {
             "name": "omo-governance-ingress-goal",
@@ -332,7 +334,7 @@ def _mutation_surface_registry_snapshot() -> list[dict[str, object]]:
     ]
 
 
-def _mutation_surface_category_counts(items: list[dict[str, object]]) -> dict[str, int]:
+def _mutation_surface_category_counts(items: list[dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for item in items:
         category = str(item.get("category", "unclassified"))
@@ -340,7 +342,7 @@ def _mutation_surface_category_counts(items: list[dict[str, object]]) -> dict[st
     return dict(sorted(counts.items()))
 
 
-def _worker_internal_write_profiles_snapshot() -> list[dict[str, object]]:
+def _worker_internal_write_profiles_snapshot() -> list[dict[str, Any]]:
     return [
         {
             "name": "worker-dispatch",
@@ -563,7 +565,7 @@ def _worker_internal_write_profiles_snapshot() -> list[dict[str, object]]:
 
 
 def _worker_profile_subtype_counts(
-    items: list[dict[str, object]],
+    items: list[dict[str, Any]],
 ) -> dict[str, int]:
     counts: dict[str, int] = {}
     for item in items:

@@ -1,6 +1,6 @@
 import argparse
 import shutil
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from .omo_paths import find_omo_dir

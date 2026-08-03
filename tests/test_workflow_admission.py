@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
 from omo.omo_ingress_task_promotion import promote_task_to_active
 from omo.workflow_dispatch import (
     WorkflowDispatchError,
@@ -13,7 +12,6 @@ from omo.workflow_dispatch import (
 )
 from omo.workflow_mesh import WorkflowMeshStore
 from omo.workflow_promotion import request_workflow_from_task
-
 
 SCENE = {
     "scene_id": "engineering-delivery",

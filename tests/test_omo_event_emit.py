@@ -7,7 +7,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 OMO_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(OMO_SRC) not in sys.path:
     sys.path.insert(0, str(OMO_SRC))
@@ -79,8 +78,9 @@ def test_omo_event_emit_default_log_path():
 
 def test_omo_event_emit_uses_append_only_log():
     """验证 emit 内部用 AppendOnlyLog (而非直接 open+write)."""
-    from omo.omo_event import cmd_event_emit
     import inspect
+
+    from omo.omo_event import cmd_event_emit
 
     src = inspect.getsource(cmd_event_emit)
     assert "AppendOnlyLog" in src, "cmd_event_emit should use AppendOnlyLog abstraction"

@@ -91,7 +91,9 @@ def _feedback_summaries(
     result: list[dict[str, Any]] = []
     for record in feedback:
         run_id = str(record.get("workflow_run_id") or "").strip()
-        if run_id not in run_ids or not _same_scene(record.get("scene_binding"), binding):
+        if run_id not in run_ids or not _same_scene(
+            record.get("scene_binding"), binding
+        ):
             continue
         result.append(
             {
@@ -132,22 +134,28 @@ def _item(
     receipts: list[dict[str, Any]] = []
     for snapshot in eligible:
         receipts.extend(_receipt_summaries(snapshot))
-    outcome_records = _feedback_summaries(feedback, {
-        str(snapshot.get("workflow_run_id") or "").strip() for snapshot in eligible
-    }, binding)
+    outcome_records = _feedback_summaries(
+        feedback,
+        {str(snapshot.get("workflow_run_id") or "").strip() for snapshot in eligible},
+        binding,
+    )
     positive_outcomes = [
         record
         for record in outcome_records
         if record["consumption_state"] in _POSITIVE_FEEDBACK_STATES
     ]
     rejected_outcomes = [
-        record for record in outcome_records if record["consumption_state"] == "rejected"
+        record
+        for record in outcome_records
+        if record["consumption_state"] == "rejected"
     ]
 
     checks = {
         "trial_recorded": True,
         "consumer_registered": bool(consumer and consumer.get("status") == "declared"),
-        "review_continued": bool(review and review.get("review_action") == _REVIEW_ACTION),
+        "review_continued": bool(
+            review and review.get("review_action") == _REVIEW_ACTION
+        ),
         "workflow_run_present": bool(run_ids),
         "workflow_run_eligible": bool(eligible),
         "external_receipt_recorded": bool(receipts),
@@ -206,7 +214,11 @@ def _item(
         "checks": checks,
         "matched_workflow_run_ids": sorted(run_ids),
         "workflow_states": sorted(
-            {str(snapshot.get("state")) for snapshot in matching if snapshot.get("state")}
+            {
+                str(snapshot.get("state"))
+                for snapshot in matching
+                if snapshot.get("state")
+            }
         ),
         "external_receipts": receipts,
         "outcome_feedback": outcome_records,
@@ -240,7 +252,7 @@ def build_external_scene_trial_promotion_readiness(
         consumer = consumers.get(consumer_ref)
         if consumer and not _same_scene(consumer.get("scene_binding"), binding):
             consumer = None
-        items.append(_item(trial, reviews.get(trial_id), consumer, snapshots, feedback))
+        items.append(_item(trial, reviews.get(trial_id), consumer, snapshots, feedback))  # type: ignore[reportArgumentType]
     ready_count = sum(item["status"] == "ready" for item in items)
     blocked_count = len(items) - ready_count
     status = "empty" if not items else ("ready" if ready_count else "blocked")

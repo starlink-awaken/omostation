@@ -50,12 +50,12 @@ def test_seed_steps_count_and_fields():
 def test_cmd_trail_seed_writes_five_records_pydantic_valid(tmp_path, capsys):
     """cmd_trail_seed 写 5 条到指定 log, 每条 OmoTrailRecord.model_validate 通过."""
     from omo.omo_io_schemas import OmoTrailRecord
-    from omo.omo_trail_seed import cmd_trail_seed
     from omo.omo_trail import read_trail
+    from omo.omo_trail_seed import cmd_trail_seed
 
     log_path = tmp_path / "trail-seed.jsonl"
     args = type("Args", (), {"log": log_path})()  # 简易 Namespace
-    rc = cmd_trail_seed(args)
+    rc = cmd_trail_seed(args)  # type: ignore[reportArgumentType]
     assert rc == 0
 
     # 读出 5 条
@@ -120,8 +120,9 @@ def test_cli_trail_seed_subprocess(tmp_path):
 
 def test_seed_uses_append_only_log_via_omo_trail():
     """seed 走 omo.omo_trail.record_step (复用 AppendOnlyLog + Pydantic 校验), 不直接 open()."""
-    from omo.omo_trail_seed import cmd_trail_seed
     import inspect
+
+    from omo.omo_trail_seed import cmd_trail_seed
 
     # cmd_trail_seed 内部用 record_step (走 AppendOnlyLog)
     src = inspect.getsource(cmd_trail_seed)

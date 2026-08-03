@@ -44,7 +44,6 @@ def yield_task_to_planned(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     active_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
@@ -109,14 +108,14 @@ def yield_task_to_planned(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="yield_task_to_planned",
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="yield_task_to_planned",
@@ -138,7 +137,6 @@ def archive_done_task(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     done_path = omo_dir / "tasks" / "done" / f"{task_id}.yaml"
@@ -195,14 +193,14 @@ def archive_done_task(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="archive_done_task",
             target=archived_ref,
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="archive_done_task",
@@ -223,7 +221,6 @@ def normalize_legacy_planned_task(
     source_ref: str = "",
     now: str | None = None,
 ) -> dict[str, Any]:
-    from omo.omo_ingress import _record_mutation, _record_trail
 
     timestamp = now or _utc_now()
     planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
@@ -286,14 +283,14 @@ def normalize_legacy_planned_task(
                 ),
                 audit_file=_audit_log_path(omo_dir),
             )
-            _record_trail(
+            _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
                 omo_dir,
                 actor=f"broker:{actor}",
                 action="normalize_legacy_planned_task",
                 target=f".omo/tasks/archived/legacy-normalized/{task_id}.yaml",
                 parent_step_id=f"ingress:legacy-planned-archive:{task_id}:{timestamp}",
             )
-            _record_mutation(
+            _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
                 omo_dir,
                 actor=actor,
                 action="normalize_legacy_planned_task",
@@ -379,14 +376,14 @@ def normalize_legacy_planned_task(
             ),
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="normalize_legacy_planned_task",
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=f"ingress:legacy-planned-normalize:{task_id}:{timestamp}",
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="normalize_legacy_planned_task",
@@ -401,3 +398,32 @@ def normalize_legacy_planned_task(
             },
         )
         return {"action": "normalized", "task": normalized}
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

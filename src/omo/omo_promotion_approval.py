@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from .omo_shared import load_yaml, load_yaml_required
 
@@ -26,7 +27,7 @@ def evaluate_promotion_approval(
     approval_ref: str | None,
     task_id: str,
     task_ref: str,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     if not approval_ref:
         return {"approval_ready": False, "blocker": "approval_missing"}
     if not approval_ref.endswith(".yaml"):
@@ -70,7 +71,7 @@ def _next_action(approval_status: str, proposal_status: str) -> str:
     return "none"
 
 
-def _analytics_task_sort_key(item: dict[str, object]) -> tuple[int, int, str]:
+def _analytics_task_sort_key(item: dict[str, Any]) -> tuple[int, int, str]:
     next_action_order = {"approve": 0, "apply": 1, "check_readiness": 2, "none": 3}
     age_order = {"d3_plus": 0, "d1_to_d3": 1, "lt_1d": 2, None: 3}
     return (
@@ -82,7 +83,7 @@ def _analytics_task_sort_key(item: dict[str, object]) -> tuple[int, int, str]:
 
 def build_promotion_approval_analytics_packet(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo = Path(omo_dir)
     current = _load_yaml_required(
         root / omo / "workers" / "promotion" / "approvals" / "current.yaml"
@@ -106,7 +107,7 @@ def build_promotion_approval_analytics_packet(
     action_queues = {"approve_now": [], "apply_now": [], "check_readiness": []}
     approval_age_buckets = {"lt_1d": 0, "d1_to_d3": 0, "d3_plus": 0}
     blocker_histogram: dict[str, int] = {}
-    tasks: list[dict[str, object]] = []
+    tasks: list[dict[str, Any]] = []
 
     for entry in current.get("tasks", []):
         history_entry = history_by_task.get(entry["task_id"], {})
@@ -223,7 +224,7 @@ def _proposal_status(root: Path, proposal_ref: Path) -> str:
     return str(proposal.get("status", "missing"))
 
 
-def _history_entry(root: Path, omo_ref: Path, approval_path: Path) -> dict[str, object]:
+def _history_entry(root: Path, omo_ref: Path, approval_path: Path) -> dict[str, Any]:
     approval = _load_yaml(approval_path)
     required_fields = [
         ("approval_id", approval.get("approval_id")),
@@ -263,7 +264,7 @@ def _history_entry(root: Path, omo_ref: Path, approval_path: Path) -> dict[str, 
 
 def build_promotion_approval_history(
     root: Path, omo_dir: str | Path = ".omo", now: str = "2026-06-03T00:15:00Z"
-) -> dict[str, object]:
+) -> dict[str, Any]:
     omo_ref = Path(omo_dir)
     runs_dir = root / omo_ref / "workers" / "runs"
     entries = [
@@ -328,7 +329,7 @@ def build_promotion_approval_history(
 _PROPOSAL_STATUS_ORDER = {"proposed": 0, "approved": 1, "verified": 2, "missing": 3}
 
 
-def _ordered_tasks(tasks: list[dict[str, object]]) -> list[dict[str, object]]:
+def _ordered_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(
         tasks,
         key=lambda item: (
@@ -340,8 +341,8 @@ def _ordered_tasks(tasks: list[dict[str, object]]) -> list[dict[str, object]]:
 
 
 def build_promotion_approval_status_packet(
-    *, generated_at: str, tasks: list[dict[str, object]]
-) -> dict[str, object]:
+    *, generated_at: str, tasks: list[dict[str, Any]]
+) -> dict[str, Any]:
     ordered = _ordered_tasks(tasks)
     return {
         "generated_at": generated_at,
@@ -365,7 +366,7 @@ def build_promotion_approval_status_packet(
     }
 
 
-def _operator_action(entry: dict[str, object]) -> str:
+def _operator_action(entry: dict[str, Any]) -> str:
     if entry["proposal_status"] == "proposed":
         return "run governance approve"
     if entry["proposal_status"] == "approved":
@@ -373,7 +374,7 @@ def _operator_action(entry: dict[str, object]) -> str:
     return "approval blocker cleared; check readiness"
 
 
-def render_promotion_approval_status_markdown(packet: dict[str, object]) -> str:
+def render_promotion_approval_status_markdown(packet: dict[str, Any]) -> str:
     lines = [
         "# Promotion Approval Status",
         "",

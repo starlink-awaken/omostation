@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Any
 
 
 def _schedule_command(item_id: str, now: str, review_window_days: int) -> str:
     next_review = (
-        datetime.fromisoformat(now)
-        + timedelta(days=review_window_days)
+        datetime.fromisoformat(now) + timedelta(days=review_window_days)
     ).isoformat()
     next_review = next_review.replace("+00:00", "Z")
     return f"python3 scripts/omo_debt.py schedule --omo-dir .omo --id {item_id} --next-review-at {next_review}"
@@ -31,7 +31,7 @@ def _escalate_command(item_id: str) -> str:
     return f"python3 scripts/omo_debt.py escalate --omo-dir .omo --id {item_id} --gate-level gate"
 
 
-def build_action_packet(review_queue: dict[str, object], now: str) -> dict[str, object]:
+def build_action_packet(review_queue: dict[str, Any], now: str) -> dict[str, Any]:
     defaults = review_queue["defaults"]
     review_window_days = int(defaults["review_window_days"])
     escalation_ids = {entry["id"] for entry in review_queue["escalation_candidates"]}

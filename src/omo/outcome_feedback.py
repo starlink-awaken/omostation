@@ -56,7 +56,9 @@ def _reject_forbidden(value: Any, path: str = "feedback") -> None:
     if isinstance(value, Mapping):
         for key, nested in value.items():
             if str(key).lower() in FORBIDDEN_KEYS:
-                raise OutcomeFeedbackError(f"forbidden raw or secret field: {path}.{key}")
+                raise OutcomeFeedbackError(
+                    f"forbidden raw or secret field: {path}.{key}"
+                )
             _reject_forbidden(nested, f"{path}.{key}")
     elif isinstance(value, list):
         for index, nested in enumerate(value):
@@ -84,10 +86,17 @@ def _observed_at(value: Any) -> str:
 def _scene_binding(value: Any) -> dict[str, str]:
     if not isinstance(value, Mapping):
         raise OutcomeFeedbackError("scene_binding must be an object")
-    missing = [field for field in SCENE_BINDING_FIELDS if not str(value.get(field) or "").strip()]
+    missing = [
+        field
+        for field in SCENE_BINDING_FIELDS
+        if not str(value.get(field) or "").strip()
+    ]
     if missing:
         raise OutcomeFeedbackError(f"scene_binding missing fields: {missing}")
-    return {field: _required_text(value[field], f"scene_binding.{field}") for field in SCENE_BINDING_FIELDS}
+    return {
+        field: _required_text(value[field], f"scene_binding.{field}")
+        for field in SCENE_BINDING_FIELDS
+    }
 
 
 def _evidence_refs(value: Any) -> list[str]:
@@ -95,7 +104,9 @@ def _evidence_refs(value: Any) -> list[str]:
         return []
     if not isinstance(value, list):
         raise OutcomeFeedbackError("evidence_refs must be a list")
-    refs = [_required_text(item, "evidence_refs.item", max_length=500) for item in value]
+    refs = [
+        _required_text(item, "evidence_refs.item", max_length=500) for item in value
+    ]
     if len(refs) > 20:
         raise OutcomeFeedbackError("evidence_refs must contain at most 20 items")
     return refs
@@ -113,7 +124,9 @@ def _value_summary(value: Any) -> dict[str, Any]:
     if "unit" in result:
         result["unit"] = _required_text(result["unit"], "value.unit", max_length=64)
     if "comparison" in result:
-        result["comparison"] = _required_text(result["comparison"], "value.comparison", max_length=120)
+        result["comparison"] = _required_text(
+            result["comparison"], "value.comparison", max_length=120
+        )
     for field in ("amount", "baseline"):
         if field in result and not isinstance(result[field], (int, float)):
             raise OutcomeFeedbackError(f"value.{field} must be numeric")
@@ -126,14 +139,18 @@ def _normalise_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     _reject_forbidden(payload)
     if payload.get("schema") not in (None, OUTCOME_FEEDBACK_SCHEMA):
         raise OutcomeFeedbackError("unsupported outcome feedback schema")
-    state = _required_text(payload.get("consumption_state"), "consumption_state", max_length=32)
+    state = _required_text(
+        payload.get("consumption_state"), "consumption_state", max_length=32
+    )
     if state not in OUTCOME_FEEDBACK_STATES:
         raise OutcomeFeedbackError(f"unsupported consumption_state: {state}")
     result_ref = str(payload.get("result_ref") or "").strip()
     if len(result_ref) > 500:
         raise OutcomeFeedbackError("result_ref is too long")
     return {
-        "workflow_run_id": _required_text(payload.get("workflow_run_id"), "workflow_run_id"),
+        "workflow_run_id": _required_text(
+            payload.get("workflow_run_id"), "workflow_run_id"
+        ),
         "outcome_id": _required_text(payload.get("outcome_id"), "outcome_id"),
         "scene_binding": _scene_binding(payload.get("scene_binding")),
         "consumption_state": state,
@@ -142,7 +159,9 @@ def _normalise_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
         "evidence_refs": _evidence_refs(payload.get("evidence_refs")),
         "value": _value_summary(payload.get("value")),
         "observed_at": _observed_at(payload.get("observed_at")),
-        "note_digest": _digest(str(payload.get("note") or "")) if str(payload.get("note") or "").strip() else "",
+        "note_digest": _digest(str(payload.get("note") or ""))
+        if str(payload.get("note") or "").strip()
+        else "",
     }
 
 
@@ -166,7 +185,9 @@ def validate_outcome_feedback(record: Mapping[str, Any]) -> dict[str, Any]:
         if record.get(field) != normalised[field]:
             raise OutcomeFeedbackError(f"{field} mismatch")
     note_digest = str(record.get("note_digest") or "")
-    if note_digest and (not note_digest.startswith("sha256:") or len(note_digest) != 71):
+    if note_digest and (
+        not note_digest.startswith("sha256:") or len(note_digest) != 71
+    ):
         raise OutcomeFeedbackError("note_digest must be a sha256 digest")
     return dict(record)
 

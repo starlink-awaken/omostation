@@ -1,7 +1,9 @@
+# mock-heavy test: monkeypatch + dynamic attribute setup; pyright cannot follow.
+# pyright: reportAttributeAccessIssue=false
+
 from __future__ import annotations
 
 import pytest
-
 from omo.omo_debt_reporting import (
     build_reporting_trend_packet,
     render_reporting_trend_markdown,
@@ -412,17 +414,17 @@ def test_build_reporting_trend_packet_adds_state_progress_from_selected_reportin
             "2026-06-10T00-00-00Z", owners=[]
         ),
     }
-    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 4,
         "ready_to_execute": 6,
         "executed": 0,
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 2,
         "ready_to_execute": 6,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 1,
         "ready_to_execute": 4,
         "executed": 3,
@@ -522,12 +524,12 @@ def test_build_reporting_trend_packet_aligns_state_progress_anchor_with_executio
             "2026-06-10T00-00-00Z", owners=[]
         ),
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 2,
         "ready_to_execute": 6,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 4,
         "ready_to_execute": 1,
         "executed": 3,
@@ -581,12 +583,12 @@ def test_build_reporting_trend_packet_keeps_state_progress_unchanged_at_baseline
             "2026-06-10T00-00-00Z", owners=[]
         ),
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 2,
         "ready_to_execute": 6,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 2,
         "ready_to_execute": 3,
         "executed": 3,
@@ -649,12 +651,12 @@ def test_build_reporting_trend_packet_reports_state_progress_increase_vs_baselin
             "2026-06-10T00-00-00Z", owners=[]
         ),
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 1,
         "ready_to_execute": 6,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 3,
         "ready_to_execute": 3,
         "executed": 2,
@@ -708,12 +710,12 @@ def test_build_reporting_trend_packet_fails_closed_when_state_counts_do_not_matc
             "2026-06-10T00-00-00Z", owners=[]
         ),
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 2,
         "ready_to_execute": 99,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 1,
         "ready_to_execute": 4,
         "executed": 3,
@@ -793,12 +795,12 @@ def test_build_reporting_trend_packet_adds_shared_owner_series() -> None:
             ],
         ),
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 8,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 9,
         "executed": 0,
@@ -897,17 +899,17 @@ def test_build_reporting_trend_packet_computes_shared_owners_relative_to_selecte
             ],
         ),
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 8,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 9,
         "executed": 0,
     }
-    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 9,
         "executed": 0,
@@ -976,12 +978,12 @@ def test_build_reporting_trend_packet_writes_no_shared_owners_state() -> None:
             ],
         ),
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 8,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 9,
         "executed": 0,
@@ -1080,17 +1082,17 @@ def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_at_window
             ],
         ),
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 8,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 9,
         "executed": 0,
     }
-    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 10,
         "executed": 0,
@@ -1197,17 +1199,17 @@ def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_at_window
             ],
         ),
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 8,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 9,
         "executed": 0,
     }
-    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 10,
         "executed": 0,
@@ -1313,17 +1315,17 @@ def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_in_middle
             ],
         ),
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 8,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 9,
         "executed": 0,
     }
-    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 10,
         "executed": 0,
@@ -1401,12 +1403,12 @@ def test_build_reporting_trend_packet_writes_no_excluded_owner_presence_state() 
             ],
         ),
     }
-    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 8,
         "executed": 1,
     }
-    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {  # type: ignore[reportIndexIssue]
         "pending_approval": 0,
         "ready_to_execute": 9,
         "executed": 0,

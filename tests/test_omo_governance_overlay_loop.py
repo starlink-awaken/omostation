@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
 from omo.omo_governance_overlay_loop import plan_governance_overlay_cycle
 
 

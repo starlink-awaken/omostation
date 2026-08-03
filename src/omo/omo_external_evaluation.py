@@ -40,7 +40,14 @@ _FORBIDDEN_KEYS = frozenset(
     }
 )
 _SCENE_FIELDS = frozenset(
-    {"scene_id", "journey_id", "outcome_metric", "data_scope", "operator", "permission_ref"}
+    {
+        "scene_id",
+        "journey_id",
+        "outcome_metric",
+        "data_scope",
+        "operator",
+        "permission_ref",
+    }
 )
 _CANDIDATE_FIELDS = frozenset(
     {
@@ -112,9 +119,15 @@ def _scalar(value: Any, field: str) -> str | int | float | bool | None:
 def _scene_binding(value: Any) -> dict[str, str]:
     if not isinstance(value, Mapping):
         raise ExternalResourceEvaluationError("scene_binding must be an object")
-    missing = [field for field in ("scene_id", "journey_id", "outcome_metric") if not str(value.get(field) or "").strip()]
+    missing = [
+        field
+        for field in ("scene_id", "journey_id", "outcome_metric")
+        if not str(value.get(field) or "").strip()
+    ]
     if missing:
-        raise ExternalResourceEvaluationError(f"scene_binding missing fields: {missing}")
+        raise ExternalResourceEvaluationError(
+            f"scene_binding missing fields: {missing}"
+        )
     unknown = set(value) - _SCENE_FIELDS
     if unknown:
         raise ExternalResourceEvaluationError(
@@ -136,7 +149,9 @@ def _candidate(value: Any, index: int) -> dict[str, Any]:
         )
     reasons = value.get("reasons", [])
     if not isinstance(reasons, list) or len(reasons) > 64:
-        raise ExternalResourceEvaluationError(f"candidate[{index}].reasons must be a list")
+        raise ExternalResourceEvaluationError(
+            f"candidate[{index}].reasons must be a list"
+        )
     factors = value.get("decision_factors", {})
     if not isinstance(factors, Mapping) or len(factors) > 32:
         raise ExternalResourceEvaluationError(
@@ -146,19 +161,30 @@ def _candidate(value: Any, index: int) -> dict[str, Any]:
     if not isinstance(rank, list) or len(rank) > 16:
         raise ExternalResourceEvaluationError(f"candidate[{index}].rank must be a list")
     return {
-        "resource_id": _required_text(value.get("resource_id"), f"candidate[{index}].resource_id"),
-        "capability": _required_text(value.get("capability"), f"candidate[{index}].capability"),
-        "status": _required_text(value.get("status"), f"candidate[{index}].status", max_length=64),
-        "reasons": [_required_text(item, f"candidate[{index}].reasons.item", max_length=160) for item in reasons],
+        "resource_id": _required_text(
+            value.get("resource_id"), f"candidate[{index}].resource_id"
+        ),
+        "capability": _required_text(
+            value.get("capability"), f"candidate[{index}].capability"
+        ),
+        "status": _required_text(
+            value.get("status"), f"candidate[{index}].status", max_length=64
+        ),
+        "reasons": [
+            _required_text(item, f"candidate[{index}].reasons.item", max_length=160)
+            for item in reasons
+        ],
         "decision_factors": {
-            _required_text(key, f"candidate[{index}].decision_factors.key", max_length=80): _scalar(
-                nested, f"candidate[{index}].decision_factors"
-            )
+            _required_text(
+                key, f"candidate[{index}].decision_factors.key", max_length=80
+            ): _scalar(nested, f"candidate[{index}].decision_factors")
             for key, nested in factors.items()
         },
         "rank": [_scalar(item, f"candidate[{index}].rank") for item in rank],
         "availability": (
-            _required_text(value["availability"], f"candidate[{index}].availability", max_length=64)
+            _required_text(
+                value["availability"], f"candidate[{index}].availability", max_length=64
+            )
             if value.get("availability") is not None
             else None
         ),
@@ -200,7 +226,9 @@ def _normalise_evaluation(evaluation: Mapping[str, Any]) -> dict[str, Any]:
         raise ExternalResourceEvaluationError("evaluation activation must be forbidden")
     candidates = evaluation.get("candidates")
     if not isinstance(candidates, list) or len(candidates) > 500:
-        raise ExternalResourceEvaluationError("evaluation candidates must be a bounded list")
+        raise ExternalResourceEvaluationError(
+            "evaluation candidates must be a bounded list"
+        )
     reasons = evaluation.get("reasons", [])
     if not isinstance(reasons, list) or len(reasons) > 64:
         raise ExternalResourceEvaluationError("evaluation reasons must be a list")
@@ -210,13 +238,23 @@ def _normalise_evaluation(evaluation: Mapping[str, Any]) -> dict[str, Any]:
         if selected is not None
         else None
     )
-    normalised_candidates = [_candidate(item, index) for index, item in enumerate(candidates)]
-    if selected_id and selected_id not in {item["resource_id"] for item in normalised_candidates}:
-        raise ExternalResourceEvaluationError("selected_resource_id is not in candidates")
+    normalised_candidates = [
+        _candidate(item, index) for index, item in enumerate(candidates)
+    ]
+    if selected_id and selected_id not in {
+        item["resource_id"] for item in normalised_candidates
+    }:
+        raise ExternalResourceEvaluationError(
+            "selected_resource_id is not in candidates"
+        )
     summary = {
         "candidate_count": len(normalised_candidates),
-        "eligible_count": sum(item["status"] == "eligible" for item in normalised_candidates),
-        "rejected_count": sum(item["status"] == "rejected" for item in normalised_candidates),
+        "eligible_count": sum(
+            item["status"] == "eligible" for item in normalised_candidates
+        ),
+        "rejected_count": sum(
+            item["status"] == "rejected" for item in normalised_candidates
+        ),
         "not_applicable_count": sum(
             item["status"] == "not_applicable" for item in normalised_candidates
         ),
@@ -226,14 +264,23 @@ def _normalise_evaluation(evaluation: Mapping[str, Any]) -> dict[str, Any]:
         "mode": "read_only_evaluation",
         "activation": "forbidden",
         "raw_content_policy": "never_read_or_export",
-        "capability": _required_text(evaluation.get("capability"), "capability", max_length=160),
-        "trace_id": _required_text(evaluation.get("trace_id"), "trace_id", max_length=240),
-        "policy_digest": _required_text(evaluation.get("policy_digest"), "policy_digest"),
+        "capability": _required_text(
+            evaluation.get("capability"), "capability", max_length=160
+        ),
+        "trace_id": _required_text(
+            evaluation.get("trace_id"), "trace_id", max_length=240
+        ),
+        "policy_digest": _required_text(
+            evaluation.get("policy_digest"), "policy_digest"
+        ),
         "scene_binding": _scene_binding(evaluation.get("scene_binding")),
         "status": _required_text(evaluation.get("status"), "status", max_length=64),
         "selected_resource_id": selected_id,
         "candidates": normalised_candidates,
-        "reasons": [_required_text(item, "evaluation.reasons.item", max_length=160) for item in reasons],
+        "reasons": [
+            _required_text(item, "evaluation.reasons.item", max_length=160)
+            for item in reasons
+        ],
         "summary": summary,
     }
 
@@ -249,7 +296,9 @@ def read_external_resource_evaluations(omo_dir: Path | str) -> list[dict[str, An
     result: list[dict[str, Any]] = []
     for record in records:
         if not isinstance(record, Mapping):
-            raise ExternalResourceEvaluationError("evaluation log contains a non-object")
+            raise ExternalResourceEvaluationError(
+                "evaluation log contains a non-object"
+            )
         result.append(dict(record))
     return result
 
@@ -270,7 +319,9 @@ def record_external_resource_evaluation(
     if run_id is not None:
         run_id = _required_text(run_id, "workflow_run_id", max_length=240)
     actor = _required_text(actor or "cockpit", "actor", max_length=240)
-    source_ref = _required_text(source_ref or "omo:external-resources:evaluate", "source_ref", max_length=500)
+    source_ref = _required_text(
+        source_ref or "omo:external-resources:evaluate", "source_ref", max_length=500
+    )
     observed = _timestamp(observed_at or evaluation.get("observed_at") or _utc_now())
     evaluation_digest = _digest(normalised)
     identity = {
@@ -279,7 +330,9 @@ def record_external_resource_evaluation(
         "evaluation_digest": evaluation_digest,
     }
     derived_id = f"external-evaluation:{hashlib.sha256(_canonical(identity).encode('utf-8')).hexdigest()[:32]}"
-    observation_id = _required_text(evaluation_id or derived_id, "evaluation_id", max_length=240)
+    observation_id = _required_text(
+        evaluation_id or derived_id, "evaluation_id", max_length=240
+    )
     record = {
         **normalised,
         "schema": OBSERVATION_SCHEMA,
@@ -303,7 +356,9 @@ def record_external_resource_evaluation(
     return {"status": "recorded", "observation": record}
 
 
-def read_latest_external_resource_evaluation(omo_dir: Path | str) -> dict[str, Any] | None:
+def read_latest_external_resource_evaluation(
+    omo_dir: Path | str,
+) -> dict[str, Any] | None:
     records = read_external_resource_evaluations(omo_dir)
     return records[-1] if records else None
 

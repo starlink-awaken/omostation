@@ -6,18 +6,10 @@ import ast
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 # P105 R1: ingress-check 子模块 re-export
-from .omo_governance_surfaces_ingress import (
-    _check_ingress_registry,
-    _resolve_ingress_task_carrier,
-)
-
 # P106 R1: task-policy + ingress-artifacts 子模块 re-export
-from .omo_governance_surfaces_ingress_artifacts import (
-    _check_ingress_artifacts,
-)
-
 # P110 R1: build_governance_surfaces_report 子模块 (extracted 254L from omo_governance_surfaces.py)
 # Re-export 保持向后兼容 (cli.py / external callers)
 from .omo_governance_surfaces_report import (
@@ -43,21 +35,21 @@ from .omo_task_policy import task_policy_registry_snapshot
 # P110-G R1: gates 子模块 re-export (F7114ABA 治本 — 破 child→parent circular)
 
 
-def _load_yaml(path: Path) -> dict:
+def _load_yaml(path: Path) -> dict:  # type: ignore[no-redef]
     return load_yaml_required(path)
 
 
-def _load_yaml(path):
+def _load_yaml(path):  # type: ignore[no-redef]
     """Inline helper (P108): avoid circular import with omo_governance_surfaces."""
     return load_yaml_required(path)
 
 
 def _check_c2g_omo_boundary(
     workspace_root: Path,
-) -> tuple[dict[str, object], list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     c2g_src = workspace_root / "projects" / "c2g" / "src" / "c2g"
     facade_path = c2g_src / "omo_client.py"
-    summary: dict[str, object] = {
+    summary: dict[str, Any] = {
         "exists": c2g_src.exists(),
         "path": str(c2g_src),
         "facade_path": str(facade_path),
@@ -103,14 +95,14 @@ def _check_c2g_omo_boundary(
     return summary, violations
 
 
-def _load_yaml(path):
+def _load_yaml(path):  # type: ignore[no-redef]
     """Inline helper (P106): avoid circular import with omo_governance_surfaces."""
     return load_yaml_required(path)
 
 
 def _check_task_policy_registry(
     workspace_root: Path,
-) -> tuple[dict[str, object], list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     registry_path = (
         workspace_root / ".omo" / "_truth" / "registry" / "task-policies.yaml"
     )
@@ -200,14 +192,14 @@ def _check_task_policy_registry(
     }, issues
 
 
-def _load_yaml(path):
+def _load_yaml(path):  # type: ignore[no-redef]
     """Inline helper (P108): avoid circular import with omo_governance_surfaces."""
     return load_yaml_required(path)
 
 
 def _check_internal_write_profile_registry(
     workspace_root: Path,
-) -> tuple[dict[str, object], list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     registry_path = (
         workspace_root / ".omo" / "_truth" / "registry" / "internal-write-profiles.yaml"
     )
@@ -287,14 +279,14 @@ def _check_internal_write_profile_registry(
 # Re-export 保持向后兼容 (P102 cmd_lint_state_plane_assets / cmd_lint_mutation_surfaces wrapper)
 
 
-def _load_yaml(path):
+def _load_yaml(path):  # type: ignore[no-redef]
     """Inline helper (P107): avoid circular import with omo_governance_surfaces."""
     return load_yaml_required(path)
 
 
 def _check_mutation_surface_registry(
     workspace_root: Path,
-) -> tuple[dict[str, object], list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     registry_path = (
         workspace_root / ".omo" / "_truth" / "registry" / "mutation-surfaces.yaml"
     )
@@ -446,7 +438,7 @@ EXPECTED_ASSET_LIFECYCLE_BY_TYPE: dict[str, tuple[str, str]] = {
 
 def _check_state_plane_asset_registry(
     workspace_root: Path,
-) -> tuple[dict[str, object], list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     registry_path = (
         workspace_root / ".omo" / "_truth" / "registry" / "omo-governance-surfaces.yaml"
     )
@@ -545,10 +537,10 @@ def _top_level_entries(omo_dir: Path) -> list[str]:
     )
 
 
-def _check_goals_runtime_entry(omo_dir: Path) -> tuple[dict[str, object], list[str]]:
+def _check_goals_runtime_entry(omo_dir: Path) -> tuple[dict[str, Any], list[str]]:
     goals_path = omo_dir / "goals"
     truth_goals_path = omo_dir / "_truth" / "goals"
-    summary: dict[str, object] = {
+    summary: dict[str, Any] = {
         "path": str(goals_path),
         "truth_path": str(truth_goals_path),
         "exists": goals_path.exists(),

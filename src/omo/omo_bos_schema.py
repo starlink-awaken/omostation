@@ -14,7 +14,7 @@ W3 升级: 引入 Pydantic BaseModel, 让:
 from __future__ import annotations
 
 import re
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -43,9 +43,7 @@ class BosRegistrationModel(BaseModel):
     endpoint: str = Field(default="placeholder://", max_length=512)
     protocol: Protocol = "internal"
     description: str = Field(default="", max_length=512)
-    registered_at: str = Field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    registered_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     registered_by: str = Field(default="omo-bos-cli", max_length=64)
 
     @field_validator("uri")
@@ -66,9 +64,7 @@ class BosRegistrationModel(BaseModel):
     @classmethod
     def _validate_endpoint(cls, v: str) -> str:
         # 占位符 (seed 但尚未实装) 允许
-        if (
-            v.startswith(("placeholder://", "http://", "https://"))
-        ):
+        if v.startswith(("placeholder://", "http://", "https://")):
             return v
         # module:function 形式 — module 部分必须以字母开头
         if ":" in v:
@@ -111,9 +107,7 @@ class BosRegistryModel(BaseModel):
     """整个 BOS registry 作为一个 model — 整文件验证."""
 
     version: Literal["1.0"] = "1.0"
-    generated_at: str = Field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     registrations: list[BosRegistrationModel] = Field(default_factory=list)
 
     @property

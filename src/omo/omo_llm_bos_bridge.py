@@ -42,7 +42,6 @@ except ImportError:  # pragma: no cover - 路径旁路场景
 # ── P58-W1: 长驻池从 omo_llm_bos_bridge 抽出 ───────────
 # facade 内部只用 _resolve_via_agora_subprocess, _MANAGER 留给 tests/integration 用
 from omo.omo_agora_pool import (  # type: ignore[import-not-found]
-    _MANAGER,  # tests/integration re-export
     _resolve_via_agora_subprocess,
 )
 

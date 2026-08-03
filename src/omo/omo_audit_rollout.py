@@ -126,7 +126,7 @@ def update_history_index(
             runs.append(run_entry)
             runs.sort(key=lambda item: str(item.get("generated_at", "")))
             index["runs"] = runs
-            index["summary"] = {
+            index["summary"] = {  # type: ignore[reportArgumentType]
                 "run_count": len(runs),
                 "weekly_runs": sum(1 for item in runs if item.get("mode") == "weekly"),
                 "monthly_runs": sum(

@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
 from omo.workflow_mesh import WorkflowMeshStore
 from omo.workflow_promotion import WorkflowPromotionError, request_workflow_from_task
 

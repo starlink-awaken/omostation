@@ -11,6 +11,7 @@ import sqlite3
 import subprocess
 import sys
 from datetime import datetime, timezone
+
 try:
     from datetime import UTC
 except ImportError:
@@ -96,12 +97,7 @@ VALID_PRIORITIES = {"P0", "P1", "P2", "P3"}
 
 
 def _now() -> str:
-    return (
-        datetime.now(UTC)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _get_db() -> sqlite3.Connection:
@@ -453,9 +449,7 @@ def cmd_check(args):
     # Check incubating > 14 days
     from datetime import timedelta
 
-    two_weeks_ago = (datetime.now(UTC) - timedelta(days=14)).strftime(
-        "%Y-%m-%d"
-    )
+    two_weeks_ago = (datetime.now(UTC) - timedelta(days=14)).strftime("%Y-%m-%d")
     incubating_stale = conn.execute(
         "SELECT id, title, created_at FROM cards WHERE type='idea' AND status='incubating' AND created_at < ?",
         (two_weeks_ago,),

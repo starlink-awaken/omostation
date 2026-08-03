@@ -32,24 +32,8 @@ from omo.omo_ingress_paths import (
 from omo.omo_io import fcntl_lock, write_text_atomic, write_yaml_atomic
 from omo.omo_task_schema import validate_task_data
 
-from .omo_ingress_task_archive import (
-    archive_done_task,
-    normalize_legacy_planned_task,
-    yield_task_to_planned,
-)
-from .omo_ingress_task_contract import (
-    record_task_contract_request,
-    route_self_evolution_to_remediation,
-)
-
 # P110 R1: 3 子模块 (promotion + contract + archive) extracted 936L from omo_ingress_task_lifecycle.py
 # Re-export 保持向后兼容 (cli.py / worker / 外部 import 调用点不破)
-from .omo_ingress_task_promotion import (
-    promote_task_to_active,
-    repair_task_promotion_approval,
-    request_task_promotion_approval,
-    revert_task_to_planned,
-)
 
 
 def _task_payload_with_metadata(
@@ -109,7 +93,7 @@ def create_planned_task(
         if task_path.exists():
             existing_payload = _load_yaml(task_path)
             if existing_payload == payload:
-                _register_ingress(
+                _register_ingress(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
                     registry,
                     kind="tasks",
                     item_id=task_id,
@@ -122,7 +106,7 @@ def create_planned_task(
                         )
                     ),
                 )
-                _write_registry(omo_dir, registry)
+                _write_registry(omo_dir, registry)  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
                 return existing_payload
             raise ValueError(
                 f"planned task already exists with different payload: {task_id}"
@@ -144,7 +128,7 @@ def create_planned_task(
         }
         artifact_path = _delivery_root(omo_dir) / "tasks" / f"{task_id}.yaml"
         write_yaml_atomic(artifact_path, artifact)
-        _register_ingress(
+        _register_ingress(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             registry,
             kind="tasks",
             item_id=task_id,
@@ -153,7 +137,7 @@ def create_planned_task(
             fingerprint=payload,
             created_at=timestamp,
         )
-        _write_registry(omo_dir, registry)
+        _write_registry(omo_dir, registry)  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
 
         parent_step_id = f"ingress:task:{task_id}:{timestamp}"
         details = (
@@ -167,14 +151,14 @@ def create_planned_task(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{ingress_plane}",
             action="create_planned_task",
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=ingress_plane,
             action="create_planned_task",
@@ -244,14 +228,14 @@ def create_blocked_task(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="create_blocked_task",
             target=f".omo/tasks/blocked/{task_filename}",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="create_blocked_task",
@@ -337,14 +321,14 @@ def record_task_consensus(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="record_task_consensus",
             target=evidence_ref,
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="record_task_consensus",
@@ -381,7 +365,9 @@ def record_task_execution(
         raise ValueError("log_ref must be a non-empty workspace reference")
 
     timestamp = now or _utc_now()
-    resolved = _find_task_path(omo_dir, task_id, groups=("planned", "active", "done", "archived/done"))
+    resolved = _find_task_path(
+        omo_dir, task_id, groups=("planned", "active", "done", "archived/done")
+    )
     if resolved is None:
         raise ValueError(f"task not found in planned/active/done: {task_id}")
     group, task_path = resolved
@@ -453,14 +439,14 @@ def record_task_execution(
             ),
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="record_task_execution",
             target=execution_ref,
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="record_task_execution",
@@ -568,7 +554,9 @@ def execute_controlled_task(
                     timeout=timeout_seconds,
                     check=False,
                 )
-                probe_status = "listening" if result.returncode == 0 else "not_listening"
+                probe_status = (
+                    "listening" if result.returncode == 0 else "not_listening"
+                )
                 outputs.append(
                     f"port={port}\nstatus={probe_status}\n{result.stdout or ''}{result.stderr or ''}"
                 )
@@ -742,14 +730,14 @@ def start_controlled_task(
             details=f"task_id={task_id} pid={process.pid} log_ref={log_ref} execution_ref={execution_ref}",
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="start_task_process",
             target=execution_ref,
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="start_task_process",
@@ -836,14 +824,14 @@ def _watch_controlled_process(
             details=f"task_id={task_id} pid={process.pid} status={status} exit_code={exit_code}",
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="record_task_process_exit",
             target=execution_ref,
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="record_task_process_exit",
@@ -950,14 +938,14 @@ def stop_controlled_task(
             details=f"task_id={task_id} pid={pid} status={stop_status}",
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="stop_task_process",
             target=f".omo/tasks/active/{task_path.name}",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="stop_task_process",
@@ -1097,14 +1085,14 @@ def complete_task(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="complete_task",
             target=f".omo/tasks/done/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="complete_task",
@@ -1172,14 +1160,14 @@ def update_done_task_evidence_paths(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="update_done_task_evidence_paths",
             target=f".omo/tasks/done/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="update_done_task_evidence_paths",
@@ -1256,14 +1244,14 @@ def update_planned_task_evidence_paths(
             details=details,
             audit_file=_audit_log_path(omo_dir),
         )
-        _record_trail(
+        _record_trail(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=f"broker:{actor}",
             action="update_planned_task_evidence_paths",
             target=str(task_path.relative_to(omo_dir)),
             parent_step_id=parent_step_id,
         )
-        _record_mutation(
+        _record_mutation(  # type: ignore[reportUndefinedVariable]  # rebound at module load from omo.omo_ingress
             omo_dir,
             actor=actor,
             action="update_planned_task_evidence_paths",
@@ -1274,3 +1262,32 @@ def update_planned_task_evidence_paths(
             extra={"task_id": task_id},
         )
         return deepcopy(payload)
+
+
+# --- Lazy indirection helpers from omo.omo_ingress (avoids static cycle) ---
+# At module load, copy omo.omo_ingress's private helpers into our globals
+# so LOAD_GLOBAL inside our functions finds them directly. Use a deferred
+# try/except to handle the cycle: omo.omo_ingress may not be fully
+# initialized yet when our module loads (it imports us).
+import sys as _sys
+
+
+def _bind_helpers() -> None:
+    mod = _sys.modules.get("omo.omo_ingress")
+    if mod is None:
+        return
+    for _name in (
+        "_record_trail",
+        "_record_mutation",
+        "_load_registry",
+        "_register_ingress",
+        "_write_registry",
+    ):
+        if hasattr(mod, _name) and _name not in globals():
+            globals()[_name] = getattr(mod, _name)
+
+
+try:
+    _bind_helpers()
+except Exception:
+    pass

@@ -239,9 +239,7 @@ def preview_requested_workflow(
     omo_dir: str | Path = ".omo",
 ) -> dict[str, Any]:
     """Evaluate admission gates for an existing request without writing state."""
-    _store, event, snapshot = _request_context(
-        root, workflow_run_id, omo_dir=omo_dir
-    )
+    _store, event, snapshot = _request_context(root, workflow_run_id, omo_dir=omo_dir)
     _check_scene_binding(event, scene_binding)
     if snapshot.get("state") == "admitted":
         return {
@@ -328,9 +326,7 @@ def admit_requested_workflow(
     omo_dir: str | Path = ".omo",
 ) -> dict[str, Any]:
     """Admit only an existing request; never create an implicit request."""
-    store, event, snapshot = _request_context(
-        root, workflow_run_id, omo_dir=omo_dir
-    )
+    store, event, snapshot = _request_context(root, workflow_run_id, omo_dir=omo_dir)
     _check_scene_binding(event, scene_binding)
     if snapshot.get("state") == "admitted":
         return {
@@ -583,8 +579,8 @@ def dispatch_admitted_workflow(
 
 __all__ = [
     "WorkflowDispatchError",
-    "admit_workflow",
     "admit_requested_workflow",
+    "admit_workflow",
     "dispatch_admitted_workflow",
     "preview_requested_workflow",
 ]

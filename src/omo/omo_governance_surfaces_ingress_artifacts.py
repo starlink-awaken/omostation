@@ -23,6 +23,7 @@ P106 收益:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from omo.omo_ingress_paths import _registry_path
 from omo.omo_shared import load_yaml_required
@@ -33,7 +34,7 @@ def _load_yaml(path):
     return load_yaml_required(path)
 
 
-INGRESS_ARTIFACT_RULES: dict[str, dict[str, object]] = {
+INGRESS_ARTIFACT_RULES: dict[str, dict[str, Any]] = {
     "goals": {
         "kind": "goal_created",
         "id_field": "goal_id",
@@ -78,7 +79,7 @@ INGRESS_ARTIFACT_RULES: dict[str, dict[str, object]] = {
 
 def _check_ingress_artifacts(
     workspace_root: Path,
-) -> tuple[dict[str, object], list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     omo_dir = workspace_root / ".omo"
     registry_path = _registry_path(omo_dir)
     if not registry_path.exists():
@@ -228,7 +229,3 @@ def _check_ingress_artifacts(
 
 # P104 R1: snapshots 子模块 (extracted 553L from omo_governance_surfaces.py)
 # Re-export 保持向后兼容 (内部 call sites: L1157, L1223, L1636)
-from .omo_governance_surfaces_snapshots import (
-    _mutation_surface_registry_snapshot,
-    _worker_internal_write_profiles_snapshot,
-)

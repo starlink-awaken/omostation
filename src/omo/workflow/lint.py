@@ -88,7 +88,7 @@ def agcp_drift_findings(registry: dict[str, Any]) -> list[str]:
         cli_entries = agent_clis.get("clis") if isinstance(agent_clis, dict) else []
         clis = {
             str(item.get("name") or ""): item
-            for item in cli_entries
+            for item in (cli_entries or [])
             if isinstance(item, dict) and item.get("name")
         }
         cockpit_agent = clis.get("cockpit-agent")
@@ -127,7 +127,7 @@ def agcp_drift_findings(registry: dict[str, Any]) -> list[str]:
         )
         uris = {
             str(item.get("uri") or "")
-            for item in services
+            for item in (services or [])
             if isinstance(item, dict) and item.get("uri")
         }
         missing_routes = sorted(AGCP_BOS_ROUTES - uris)
@@ -144,7 +144,7 @@ def agcp_drift_findings(registry: dict[str, Any]) -> list[str]:
         if error:
             findings.append(error)
             continue
-        if str(document.get("id") or "") != expected_id:
+        if str((document or {}).get("id") or "") != expected_id:
             findings.append(f"{display_path(path)} id must be {expected_id}")
 
     diff_checks = {row["id"]: row for row in diff_check_rows(registry)}

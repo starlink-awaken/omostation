@@ -172,8 +172,8 @@ def test_step_run_checkpoint_and_evidence_are_queryable(tmp_path):
             payload["admission_id"] = grant["admission_id"]
         store.append(new_workflow_event(event_type, "run-query", payload=payload))
 
-    assert store.step_snapshot("run-query", "step-1")["checkpoint"]["checkpoint_id"] == "cp-1"
-    assert store.evidence_snapshot("run-query", "ev-1")["sha256"] == "abc"
+    assert store.step_snapshot("run-query", "step-1")["checkpoint"]["checkpoint_id"] == "cp-1"  # type: ignore[reportOptionalSubscript]
+    assert store.evidence_snapshot("run-query", "ev-1")["sha256"] == "abc"  # type: ignore[reportOptionalSubscript]
 
 
 def test_verified_requires_evidence(tmp_path):
@@ -320,9 +320,8 @@ def test_idempotency_key_is_authoritative_across_event_ids(tmp_path):
 
 def test_agent_workflow_mesh_bridge_start_event(tmp_path, monkeypatch):
     """Phase 1b: Agent Workflow start emits Mesh event."""
-    from pathlib import Path
+
     from omo.workflow.mesh_agent_events import emit_workflow_mesh_event
-    import os
 
     # Simulate workspace with minimal OMO structure
     omo_dir = tmp_path / ".omo"
