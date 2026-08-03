@@ -58,11 +58,14 @@ _KNOWN_MCP_SERVERS: list[dict] = [
     {"id": "ecos-integration", "name": "eCOS Integration", "layer": "L0", "file": "projects/ecos/src/ecos/services/integration/mcp_server.py", "transport": "stdio"},
     {"id": "metaos", "name": "MetaOS Orchestration", "layer": "L2", "file": "projects/metaos/src/metaos/mcp_server.py", "transport": "stdio"},
     {"id": "aetherforge", "name": "AetherForge Compute", "layer": "X", "file": "projects/aetherforge/src/aetherforge/mcp_server.py", "transport": "stdio"},
+    {"id": "aetherforge-gateway", "name": "AetherForge LLM Gateway", "layer": "X", "file": "projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py", "transport": "stdio", "note": "FastMCP(llm-gateway), 模型调度/路由网关"},
+    {"id": "aetherforge-mesh", "name": "AetherForge Compute Mesh", "layer": "X", "file": "projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py", "transport": "stdio", "note": "计算网格 API, provider 协商"},
     {"id": "model-driven", "name": "Model-Driven Lifecycle", "layer": "M0", "file": "projects/model-driven/src/model_driven/mcp_server.py", "transport": "stdio"},
     {"id": "model-driven-fastmcp", "name": "Model-Driven FastMCP", "layer": "M0", "file": "projects/model-driven/src/model_driven/fastmcp_server.py", "transport": "stdio"},
     {"id": "c2g", "name": "C2G Strategy Compass", "layer": "X", "file": "projects/c2g/src/c2g/mcp_server.py", "transport": "stdio"},
     {"id": "family-hub", "name": "Family Hub", "layer": "X", "file": "projects/family-hub/mcp_server.py", "transport": "stdio"},
     {"id": "agent-runtime", "name": "Cockpit Agent Runtime", "layer": "L3", "file": "projects/cockpit/src/cockpit/agent_runtime_mcp_server.py", "transport": "stdio"},
+    {"id": "runtime", "name": "eCOS Runtime Services", "layer": "L1", "file": "projects/runtime/src/runtime/mcp_server.py", "transport": "stdio", "note": "L1 运行时 MCP, health/failover/push 入口"},
     {"id": "cockpit-mcp", "name": "Cockpit Workspace MCP", "layer": "L3", "file": "projects/cockpit/src/cockpit/scripts/cockpit_mcp.py", "transport": "stdio", "note": "工具经 _tool() 别名注册, 含 workspace_context/cards_check 等"},
     {"id": "iris", "name": "Iris", "layer": "L2", "file": "projects/kairon/packages/iris/src/iris/mcp_server.py", "transport": "stdio"},
     {"id": "sophia", "name": "Sophia Research Paradigm", "layer": "L2", "file": "projects/kairon/packages/sophia/src/sophia/server/mcp_server.py", "transport": "stdio"},
@@ -145,10 +148,13 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
         except SyntaxError:
             pass
 
-    # 策略 5: @xxx.tool() 或 @_tool() 无名时, 从紧邻的 def/async def 提取函数名
+    # 策略 5: FastMCP @mcp.tool()/@server.tool() 无 name → 从紧邻 def 提取函数名
+    # 注意: 不能用 `A|B` alternation — 左支 @xxx.tool() 单独匹配会吞掉装饰器
+    # 却不抓 def 名, 导致 gateway/mesh 这类全用无名 @mcp.tool() 的服务器整批漏扫。
+    # 必须把 def 捕获并入 @xxx.tool() 同一分支。
     if not tools:
         for m in re.finditer(
-            r'@(?:mcp|server|app)\.tool\s*\([^)]*\)|@_tool\s*\(\s*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)',
+            r'@(?:mcp|server|app|self|_mcp)\.tool\s*\([^)]*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)',
             content,
         ):
             name = m.group(1)
