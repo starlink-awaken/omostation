@@ -30,9 +30,11 @@ jobs:
         run: pip install pyyaml
       - name: PASW — 自动同步子模块指针
         # 如果 PR 分支指针不可达, 自动 fetch 或更新到最新 origin/main
+        # 修复后需要 git add 让 reachability gate 检查更新后的 index
         run: |
           bash bin/ssot/sync-submodule-pointers.sh 2>&1 || true
-          git diff --stat -- projects/ scripts 2>/dev/null || true
+          git add -- ':!projects' . 2>/dev/null || true
+          git diff --cached --stat -- projects/ scripts 2>/dev/null || true
       - name: PASW — 子模块指针可达性前置检查
         # PASW 适配: 确保所有子模块指针在 submodule remote 上可达.
         # 失败原因通常是 bump-pointer 前未 push 子模块分支, 或 squash merge 丢失了指针.
