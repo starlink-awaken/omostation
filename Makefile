@@ -1,9 +1,9 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck gac-drift gac-validate agent-workflow-status worktree-prune worktree-guard worktree-cleanup worktree-audit
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows agent-workflow-status project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate gac-healthcheck gac-drift gac-validate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint doc-ssot-lint ssot-guardian evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry worktree-prune worktree-guard worktree-cleanup worktree-audit collab-dualtrack collab-status collab-adv-report collab-control-exp collab-recommend-mode m2-ssot-inventory bos-stdio-inventory bos-stdio-candidates m2-ssot-batch1 gen-agent-redlines check-layers check-docs-drift sync-capability-registry sync-help-docs sync-all-docs ssot-status ssot-log ssot-sync sync-submodules
 
 PY := uv run --with pyyaml python
 
 help:
-	@echo "Workspace 根 Makefile — 委派到 projects/"
+	@echo "Workspace 根 Makefile - 委派到 projects/"
 	@echo ""
 	@echo "=== 测试 ==="
 	@echo "make kairon-test       运行 kairon 全部测试"
@@ -20,6 +20,9 @@ help:
 	@echo "make ssot-log          SSOT 审计日志查看"
 	@echo "make ssot-sync         SSOT 变更记录到审计日志"
 	@echo "make sync-submodules   推送子模块未推送的 commit 到远程"
+	@echo "make doc-ssot-lint     文档 SSOT 契约检查 (--json)"
+	@echo "make ssot-guardian     SSOT guardian (.omo 写入合规)"
+	@echo "make registry-drift    注册表漂移检测 (code->registry)"
 	@echo ""
 	@echo "=== 治理 ==="
 	@echo "make agent-workflow-bootstrap 一次性输出 agent 启动上下文"
@@ -30,18 +33,36 @@ help:
 	@echo "make agent-workflow-lint 校验 agent workflow SSOT"
 	@echo "make agent-workflow-verify 基于当前 diff 规划 agent 验证"
 	@echo "make agent-workflow-compliance 审计 agent workflow 合规闭环"
+	@echo "make agent-workflow-status 当前 workflow 运行状态 (--json)"
 	@echo "make agent-workflow-closeout RUN_ID=<id> 执行验证并关闭 run"
 	@echo "make agent-workflow-doctor 检查 BMAD/OpenSpec/GStack/beads 适配器"
 	@echo "make agent-workflow-observe 审计 agent workflow run/lock/ledger"
 	@echo "make gac-local-gate     运行 GaC 本地硬门 (含 adapter/MOF/doc/lane checks)"
+	@echo "make gac-healthcheck    GaC 13-point 健康检查"
+	@echo "make gac-drift          GaC 规则漂移检测"
+	@echo "make gac-validate       GaC 规则验证 (--gate)"
 	@echo "make governance-release-gate 运行发布前远端可达性硬门"
 	@echo "make submodule-pointer-transaction 运行子模块指针事务 dry-run"
 	@echo "make governance-verify   运行 canonical .omo 验证链"
-	@echo "make governance-check    全量治理检查 (verify → index)"
+	@echo "make governance-check    全量治理检查 (verify -> index)"
 	@echo "make governance-audit    全量治理审计 (债务+文档+健康度)"
 	@echo "make governance-sync     同步 .omo/state/system.yaml"
 	@echo "make governance-validate 验证任务 Schema"
 	@echo "make governance-index-check 检查 INDEX.md 覆盖率"
+	@echo "make state-sync          OMO state sync (--json)"
+	@echo "make state-sync-dry      OMO state sync dry-run (--json)"
+	@echo ""
+	@echo "=== MOF / 元模型 ==="
+	@echo "make mof-bootstrap      MOF 5-check strict (mof-bootstrap.py all)"
+	@echo "make m4-health          M4 health score (--emit)"
+	@echo "make m4-health-compare   M4 health score delta 对比"
+	@echo ""
+	@echo "=== Mesh ==="
+	@echo "make mesh-orphan-cleanup   检查孤立 Mesh 运行 (dry-run)"
+	@echo "make mesh-orphan-cleanup-apply  关闭孤立 Mesh 运行"
+	@echo ""
+	@echo "=== ADR ==="
+	@echo "make adr-claim SESSION=<s>  占用下一个 ADR 编号"
 	@echo ""
 	@echo "=== X1-X4 治理框架 ==="
 	@echo "make x1-check           X1 审计链检查"
@@ -65,25 +86,18 @@ help:
 	@echo "make project-layer-index 重新生成项目分层索引 digest"
 	@echo "make dir-hygiene         检查根目录卫生 (未追踪未忽略的目录)"
 	@echo ""
+	@echo "=== Worktree 治理 ==="
+	@echo "make worktree-guard      检查 worktree 数量上限"
+	@echo "make worktree-prune      清理已合并/冗余 worktree"
+	@echo "make worktree-cleanup    回收 TTL 过期 worktree"
+	@echo "make worktree-audit      列出可清理的冗余分支"
+	@echo ""
 	@echo "=== 开发环境 ==="
 	@echo "make install-hooks       装 git pre-push + pre-commit 钩子 (子模块同步 + GaC/SSOT gate)"
 	@echo ""
-	@echo "=== GaC / MOF / Mesh / ADR / State ==="
-	@echo "make gac-healthcheck    GaC 13-point 健康检查"
-	@echo "make gac-drift          GaC 规则漂移检测"
-	@echo "make gac-validate       GaC 规则验证 (--gate)"
-	@echo "make mof-bootstrap      MOF 5-check strict"
-	@echo "make m4-health          M4 health score (--emit)"
-	@echo "make m4-health-compare   M4 health score delta"
-	@echo "make registry-drift     注册表漂移检测 (code->registry)"
-	@echo "make mesh-orphan-cleanup   检查孤立 Mesh 运行 (dry-run)"
-	@echo "make mesh-orphan-cleanup-apply  关闭孤立 Mesh 运行"
-	@echo "make adr-claim SESSION=<s>  占用下一个 ADR 编号"
-	@echo "make state-sync         OMO state sync (--json)"
-	@echo "make state-sync-dry     OMO state sync dry-run (--json)"
-	@echo "make doc-ssot-lint      文档 SSOT 契约检查 (--json)"
-	@echo "make ssot-guardian      SSOT guardian (.omo 写入合规)"
-	@echo "make agent-workflow-status 当前 workflow 运行状态 (--json)"
+	@echo "=== PASW 子模块隔离 (ADR-0344) ==="
+	@echo "make pasw-status         显示 PASW 子模块 worktree 状态"
+	@echo "make pasw-cleanup        TTL 回收过期子模块 worktree (默认 24h, 可 PASW_TTL_HOURS=12)"
 	@echo ""
 	@echo "=== 本地 CI ==="
 	@echo "make ci-local            本地 CI 预检 (push 前跑, ~30s, 拦 90% CI 失败)"
@@ -123,12 +137,6 @@ install-hooks:  ## 装 git pre-push + pre-commit + post-commit + prepare-commit-
 	done
 
 # ── 本地 CI 预检 ────────────────────────────────────────────────────────────────
-# 目的: push 前本地跑一遍 CI 等价检查, 拦 90% CI 失败, 省等 CI 的时间.
-# 分两档:
-#   ci-local-fast  (~5s)  — GaC gate + ruff + YAML 语法 (无 pytest)
-#   ci-local       (~30s) — 上述 + omo pytest + integration tests
-# 嵌入点: pre-push hook (见 .githooks/pre-push)
-
 ci-local: ci-local-fast
 	@echo ""; \
 	echo "── pytest (omo unit tests) ──────────────────────────"; \
@@ -148,7 +156,7 @@ ci-local: ci-local-fast
 
 ci-local-fast: check-layers
 	@echo "════════════════════════════════════════════════════"
-	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
+	@echo "  ci-local-fast - 本地 CI 预检 (快速模式, ~5s)"
 	@echo "════════════════════════════════════════════════════"
 	@CI_LOCAL_FAIL=0; \
 	echo "── GaC local gate ───────────────────────────────────"; \
@@ -171,7 +179,7 @@ ci-local-fast: check-layers
  	fi; \
 	echo ""; \
 	echo "── YAML 语法校验 (workflows + protocols) ───────────"; \
-	uv run --with pyyaml python3 bin/ssot/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
+	$(PY) bin/ssot/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
 	if [ "$$CI_LOCAL_FAIL" = "1" ]; then \
 		echo "❌ ci-local-fast: 有检查未通过"; \
@@ -198,9 +206,22 @@ ssot-sync:  ## SSOT 变更记录到审计日志
 	read -p "Reason: " reason; \
 	$(PY) bin/ssot-watcher.py sync --author "$$author" --reason "$$reason"
 
-sync-submodules:  ## 推送子模块未推送的 commit 到远程
-	@echo "── 同步子模块 ────────────────────────────────────────"
-	bash bin/sync-submodules.sh
+sync-submodules:  ## 推送子模块未推送的 commit 到远程 (PASW-aware)
+	@echo "── 同步子模块 (PASW-aware: 含 .subtrees/ 隔离 worktree) ──"
+	bash bin/ssot/sync-submodules-push.sh
+
+# ── Worktree 治理 (P74: 防堆积) ──────────────────────────
+worktree-guard:  ## 检查 worktree 数量上限 (超 MAX_WORKTREES=8 返回 1)
+	bash bin/gac/gac-worktree-guard.sh --check
+
+worktree-prune:  ## 清理已合并/冗余 worktree (gac-worktree-prune.sh --apply)
+	bash bin/gac/gac-worktree-prune.sh --apply
+
+worktree-cleanup:  ## 回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h; cron 入口)
+	bash bin/gac/gac-worktree-cleanup.sh
+
+worktree-audit:  ## 列出可清理的冗余分支 (check-branch-redundant --json)
+	python3 bin/ssot/check-branch-redundant.py --json
 
 # ── 能力注册表 + 文档自动生成 (P0-T2) ─────────────────────
 sync-capability-registry:  ## 生成能力注册表 SSOT (扫描 MCP/BOS/CLI)
@@ -227,12 +248,15 @@ evidence-smoke:  ## BOS 全量 evidence smoke (agora .venv bootstrap + resolve r
 	@test -d projects/agora || (echo "init agora: git submodule update --init projects/agora" && git submodule update --init projects/agora)
 	python3 bin/gac/evidence-smoke.py --json | python3 -c "import sys,json;d=json.load(sys.stdin);b=d.get('bos') or {};print(f\"score={d.get('evidence_health_score')} partial={d.get('partial')} resolve={b.get('resolve_rate')} gap={b.get('gap')} feedback={ (d.get('feedback_loop') or {}).get('alive')}\")"
 
-
+# ── Agent Workflow ───────────────────────────────────────
 agent-workflows:
 	$(PY) bin/agent-workflow.py list
 
 agent-workflow-bootstrap:
 	$(PY) bin/agent-workflow.py bootstrap
+
+agent-workflow-status:
+	$(PY) bin/agent-workflow.py status --json
 
 agent-workflow-lint:
 	$(PY) bin/agent-workflow.py lint
@@ -262,180 +286,10 @@ agent-workflow-integrations:
 agent-workflow-adapters:
 	$(PY) bin/agent-workflow.py adapters
 
-project-layer-index:
-	$(PY) bin/mof/project-layer-index.py --write
-
-gen-agent-redlines:  ## 生成 docs/generated/agent-redlines.md (agent 红线/灰线 severity digest, ADR-0171)
-	$(PY) bin/mof/gen-agent-redlines.py
-
-domain-m1-alignment:  ## 校验 project-registry.yaml ↔ eCOS M1 domain 节点对齐 (drift 检测)
-	$(PY) bin/ssot/check-domain-m1-alignment.py
-
-toolbox-ssot-check:  ## 校验 ToolBox docs SSOT 契约 (硬编码值检测)
-	$(PY) bin/ssot/check-toolbox-ssot.py
-
+# ── GaC 门禁 ──────────────────────────────────────────────
 gac-local-gate:
 	$(PY) bin/gac/gac-local-gate.py
-dir-hygiene:  ## 检查根目录卫生 (未追踪未忽略的目录)
-	$(PY) bin/ssot/dir-hygiene-check.py
 
-governance-release-gate:
-	$(PY) bin/ssot/submodule-reachability-gate.py --source head --fetch
-
-submodule-pointer-transaction:
-	bash bin/ssot/submodule-pointer-transaction.sh --dry-run
-
-kairon-test:
-	cd projects/kairon && make test
-
-kairon-test-fast:
-	cd projects/kairon && make test-fast
-
-kairon-test-diff:
-	cd projects/kairon && make test-diff
-
-kairon-test-e2e:
-	cd projects/kairon && make test-e2e
-
-kairon-lint:
-	cd projects/kairon && ruff check packages/
-
-kairon-build:
-	cd projects/kairon && uv sync
-
-governance-verify:
-	bash bin/ssot/verify-omo.sh
-
-governance-check: governance-verify governance-index-check
-	@echo "Governance checks complete."
-
-governance-sync:
-	python3 scripts/sync_omo_state.py --omo-dir .omo
-
-governance-validate:
-	python3 scripts/omo_task_schema.py --all-active
-
-governance-index-check:
-	python3 scripts/check-index-coverage.py
-
-# ── 治理审计 ────────────────────────────────────────────────────────────────────
-
-governance-audit: governance-check debt-check doc-lint
-	@echo "=== 治理审计完成 ==="
-
-# ── 债务检查 ────────────────────────────────────────────────────────────────────
-
-debt-check:
-	@echo "=== 债务状态检查 ==="
-	@echo ""
-	@echo "--- debt_weight ---"
-	@grep "debt_weight:" .omo/state/system.yaml | head -1
-	@echo ""
-	@echo "--- debt_health ---"
-	@grep "debt_health:" .omo/state/system.yaml | head -1
-	@echo ""
-	@echo "--- resolved_count ---"
-	@grep "resolved_count:" .omo/state/system.yaml | head -1
-	@echo ""
-	@echo "--- unresolved_count ---"
-	@grep "unresolved_count:" .omo/state/system.yaml | head -1
-	@echo ""
-	@echo "=== 债务检查完成 ==="
-
-# ── 文档检查 ────────────────────────────────────────────────────────────────────
-
-doc-lint:
-	@echo "=== 文档格式检查 ==="
-	@echo ""
-	@echo "--- 文档治理 ownership/lifecycle/freshness ---"
-	@$(PY) bin/ssot/doc-governance-check.py --no-new-warnings
-	@echo ""
-	@echo "--- 检查文档版本信息 ---"
-	@for f in AGENTS.md CLAUDE.md .omo/_knowledge/governance/README.md; do \
-		if [ -f "$$f" ]; then \
-			if grep -q "最后更新" "$$f" 2>/dev/null; then \
-				echo "  ✓ $$f — 有版本信息"; \
-			else \
-				echo "  ⚠️  $$f — 缺少版本信息"; \
-			fi; \
-		fi; \
-	done
-	@echo ""
-	@echo "=== 文档检查完成 ==="
-
-# ── 治理仪表板 ──────────────────────────────────────────────────────────────────
-
-governance-dashboard:
-	python3 scripts/generate-governance-dashboard.py -o governance-report.html
-	@echo "打开: open governance-report.html"
-
-# ── 债务审计 ────────────────────────────────────────────────────────────────────
-
-debt-audit:
-	bash scripts/debt-audit.sh
-
-# ── 治理数据 ────────────────────────────────────────────────────────────────────
-
-governance-data:
-	python3 scripts/generate-governance-data.py
-
-# ── 债务排行榜 ──────────────────────────────────────────────────────────────────
-
-debt-leaderboard:
-	bash scripts/debt-leaderboard.sh
-
-# ── 治理查询 ────────────────────────────────────────────────────────────────────
-
-governance-query:
-	python3 scripts/governance-query.py all
-
-# ── X1-X4 治理框架 ─────────────────────────────────────────────────────────────
-
-x1-check:
-	bash scripts/x1-audit-check.sh
-
-x2-check:
-	bash scripts/x2-staleness-check.sh
-
-x3-check:
-	bash scripts/x3-value-check.sh
-
-x4-check:
-	bash scripts/x4-consistency-check.sh
-
-x1-x4-check:
-	bash scripts/x1-x4-check.sh
-
-# ── P84 collab dual-track / control experiment ───────────────────────────────
-
-collab-dualtrack:
-	$(PY) bin/collab/export-dualtrack.py --quiet
-
-collab-status:
-	$(PY) bin/collab/export-dualtrack.py --throughput-only
-
-collab-adv-report:
-	$(PY) bin/collab/adv-fail-report.py
-
-collab-control-exp:
-	$(PY) bin/collab/control_experiment.py --batch both --workers 4
-
-collab-recommend-mode:
-	$(PY) bin/collab/recommend_mode.py --list-types
-
-m2-ssot-inventory:
-	$(PY) bin/mof/m2-ssot-inventory.py
-
-bos-stdio-inventory:
-	$(PY) bin/collab/bos-stdio-inventory.py
-
-bos-stdio-candidates:
-	$(PY) bin/collab/bos-stdio-inventory.py --migrate-candidates --limit 15
-
-m2-ssot-batch1:
-	$(PY) bin/mof/m2-ssot-inventory.py --emit-batch 1
-
-# ── GaC 门禁 ──────────────────────────────────────────────
 gac-healthcheck:  ## GaC 13-point 健康检查
 	$(PY) bin/gac/gac-healthcheck.py
 
@@ -484,6 +338,174 @@ doc-ssot-lint:  ## 文档 SSOT 契约检查 (--json)
 ssot-guardian:  ## SSOT guardian (.omo 写入合规)
 	$(PY) bin/ssot/ssot-guardian.py
 
-# ── Agent Workflow status ─────────────────────────────────
-agent-workflow-status:
-	$(PY) bin/agent-workflow.py status --json
+# ── 其他架构检查 ──────────────────────────────────────────
+project-layer-index:
+	$(PY) bin/mof/project-layer-index.py --write
+
+gen-agent-redlines:  ## 生成 docs/generated/agent-redlines.md (agent 红线/灰线 severity digest, ADR-0171)
+	$(PY) bin/mof/gen-agent-redlines.py
+
+domain-m1-alignment:  ## 校验 project-registry.yaml ↔ eCOS M1 domain 节点对齐 (drift 检测)
+	$(PY) bin/ssot/check-domain-m1-alignment.py
+
+toolbox-ssot-check:  ## 校验 ToolBox docs SSOT 契约 (硬编码值检测)
+	$(PY) bin/ssot/check-toolbox-ssot.py
+
+dir-hygiene:  ## 检查根目录卫生 (未追踪未忽略的目录)
+	$(PY) bin/ssot/dir-hygiene-check.py
+
+governance-release-gate:
+	$(PY) bin/ssot/submodule-reachability-gate.py --source head --fetch
+
+submodule-pointer-transaction:
+	bash bin/ssot/submodule-pointer-transaction.sh --dry-run
+
+# ── kairon ────────────────────────────────────────────────
+kairon-test:
+	cd projects/kairon && make test
+
+kairon-test-fast:
+	cd projects/kairon && make test-fast
+
+kairon-test-diff:
+	cd projects/kairon && make test-diff
+
+kairon-test-e2e:
+	cd projects/kairon && make test-e2e
+
+kairon-lint:
+	cd projects/kairon && ruff check packages/
+
+kairon-build:
+	cd projects/kairon && uv sync
+
+# ── Governance ────────────────────────────────────────────
+governance-verify:
+	bash bin/ssot/verify-omo.sh
+
+governance-check: governance-verify governance-index-check
+	@echo "Governance checks complete."
+
+governance-sync:
+	python3 scripts/sync_omo_state.py --omo-dir .omo
+
+governance-validate:
+	python3 scripts/omo_task_schema.py --all-active
+
+governance-index-check:
+	python3 scripts/check-index-coverage.py
+
+governance-audit: governance-check debt-check doc-lint
+	@echo "=== 治理审计完成 ==="
+
+# ── 债务检查 ──────────────────────────────────────────────
+debt-check:
+	@echo "=== 债务状态检查 ==="
+	@echo ""
+	@echo "--- debt_weight ---"
+	@grep "debt_weight:" .omo/state/system.yaml | head -1
+	@echo ""
+	@echo "--- debt_health ---"
+	@grep "debt_health:" .omo/state/system.yaml | head -1
+	@echo ""
+	@echo "--- resolved_count ---"
+	@grep "resolved_count:" .omo/state/system.yaml | head -1
+	@echo ""
+	@echo "--- unresolved_count ---"
+	@grep "unresolved_count:" .omo/state/system.yaml | head -1
+	@echo ""
+	@echo "=== 债务检查完成 ==="
+
+# ── 文档检查 ──────────────────────────────────────────────
+doc-lint:
+	@echo "=== 文档格式检查 ==="
+	@echo ""
+	@echo "--- 文档治理 ownership/lifecycle/freshness ---"
+	@$(PY) bin/ssot/doc-governance-check.py --no-new-warnings
+	@echo ""
+	@echo "--- 检查文档版本信息 ---"
+	@for f in AGENTS.md CLAUDE.md .omo/_knowledge/governance/README.md; do \
+		if [ -f "$$f" ]; then \
+			if grep -q "最后更新" "$$f" 2>/dev/null; then \
+				echo "  ✓ $$f - 有版本信息"; \
+			else \
+				echo "  ⚠️  $$f - 缺少版本信息"; \
+			fi; \
+		fi; \
+	done
+	@echo ""
+	@echo "=== 文档检查完成 ==="
+
+# ── 治理仪表板 / 债务审计 / 查询 ──────────────────────────
+governance-dashboard:
+	python3 scripts/generate-governance-dashboard.py -o governance-report.html
+	@echo "打开: open governance-report.html"
+
+debt-audit:
+	bash scripts/debt-audit.sh
+
+governance-data:
+	python3 scripts/generate-governance-data.py
+
+debt-leaderboard:
+	bash scripts/debt-leaderboard.sh
+
+governance-query:
+	python3 scripts/governance-query.py all
+
+# ── X1-X4 治理框架 ────────────────────────────────────────
+x1-check:
+	bash scripts/x1-audit-check.sh
+
+x2-check:
+	bash scripts/x2-staleness-check.sh
+
+x3-check:
+	bash scripts/x3-value-check.sh
+
+x4-check:
+	bash scripts/x4-consistency-check.sh
+
+x1-x4-check:
+	bash scripts/x1-x4-check.sh
+
+# ── P84 collab dual-track / control experiment ───────────
+collab-dualtrack:
+	$(PY) bin/collab/export-dualtrack.py --quiet
+
+collab-status:
+	$(PY) bin/collab/export-dualtrack.py --throughput-only
+
+collab-adv-report:
+	$(PY) bin/collab/adv-fail-report.py
+
+collab-control-exp:
+	$(PY) bin/collab/control_experiment.py --batch both --workers 4
+
+collab-recommend-mode:
+	$(PY) bin/collab/recommend_mode.py --list-types
+
+m2-ssot-inventory:
+	$(PY) bin/mof/m2-ssot-inventory.py
+
+bos-stdio-inventory:
+	$(PY) bin/collab/bos-stdio-inventory.py
+
+bos-stdio-candidates:
+	$(PY) bin/collab/bos-stdio-inventory.py --migrate-candidates --limit 15
+
+m2-ssot-batch1:
+	$(PY) bin/mof/m2-ssot-inventory.py --emit-batch 1
+
+# ── PASW: Per-Agent Submodule Worktree (ADR-0344) ─────────
+pasw-status:  ## 显示 PASW 子模块 worktree 状态
+	@echo "── PASW 子模块 Worktree 状态 ────────────────────────"
+	@bash bin/gac/gac-worktree.sh list
+	@echo ""
+	@echo "隔离子模块: projects/gbrain projects/cockpit projects/agora"
+	@echo "存储路径:   .subtrees/ (已 gitignore)"
+	@echo "TTL:        $(or $(PASW_TTL_HOURS),24)h"
+
+pasw-cleanup:  ## TTL 回收过期子模块 worktree (默认 24h)
+	@echo "── PASW 子模块 Worktree 回收 ────────────────────────"
+	bash bin/gac/gac-worktree-cleanup.sh
