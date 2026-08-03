@@ -199,6 +199,49 @@ class BOSRouter:
         best = min(routes, key=get_load)
         return best
 
+    def resolve_with_capability(
+        self,
+        uri: str,
+        capability_catalog: Any | None = None,
+        admission_catalog: Any | None = None,
+    ) -> dict[str, Any] | None:
+        """能力感知路由 (B2: 准入门禁 + 语义路由)。
+
+        在常规 resolve 前, 用 capability_catalog (B1) 检查能力声明状态,
+        用 admission_catalog (ExternalConnectionCatalog + register_capability, B2)
+        检查生命周期准入。
+
+        Args:
+            uri: BOS URI
+            capability_catalog: CapabilityCatalog 实例 (能力声明 + 使用统计)
+            admission_catalog: ExternalConnectionCatalog 实例 (能力准入生命周期)
+
+        Returns:
+            路由 (admitted/sandbox 且存在) 或 None (被准入拦截/未注册)
+        """
+        # 1. 常规路由
+        route = self.resolve(uri)
+        if route is None:
+            return None
+
+        # 2. 能力声明校验 (B1): status != active → 不路由
+        if capability_catalog is not None:
+            decl = capability_catalog.get(uri)
+            if decl is not None and decl.get("status") == "deprecated":
+                return None
+
+        # 3. 能力准入 (B2): 生命周期为 retired/quarantined → 不路由
+        if admission_catalog is not None:
+            resource = admission_catalog.get(uri)
+            if resource is not None and resource.lifecycle in {
+                "retired",
+                "quarantined",
+                "discovered",
+            }:
+                return None
+
+        return route
+
     def list_all(self, prefix_filter: str = "") -> list[dict[str, Any]]:
         """列出所有路由，可选前缀过滤。"""
         result = []

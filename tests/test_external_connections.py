@@ -532,3 +532,62 @@ def test_register_capability_rejects_bad_kind():
     except ExternalConnectionError:
         raised = True
     assert raised
+
+
+# ── B2: 能力感知路由 (resolve_with_capability: 声明 + 准入生命周期) ──────────
+
+
+def test_resolve_with_capability_admitted_route(monkeypatch, tmp_path):
+    """active + admitted 能力 → 正常路由。"""
+    import yaml
+    from agora.mcp.bos_router import BOSRouter
+    from agora.mcp.capability_catalog import CapabilityCatalog
+
+    p = tmp_path / "bos.yaml"
+    p.write_text(yaml.dump({"services": [{
+        "uri": "bos://capability/foo/invoke", "domain": "capability",
+        "package": "foo", "action": "invoke", "status": "active",
+    }]}), encoding="utf-8")
+    catalog = CapabilityCatalog(bos_yaml=str(p)); catalog.load()
+
+    admission = ExternalConnectionCatalog()
+    admission.register_capability("bos://capability/foo/invoke", use_metrics={"calls": 5})
+
+    router = BOSRouter()
+    router.register("bos://capability/foo/invoke", adapter="poc")
+    route = router.resolve_with_capability("bos://capability/foo/invoke", catalog, admission)
+    assert route is not None
+    assert route["adapter"] == "poc"
+
+
+def test_resolve_with_capability_blocks_deprecated(tmp_path):
+    """deprecated 声明 → 拦截。"""
+    import yaml
+    from agora.mcp.bos_router import BOSRouter
+    from agora.mcp.capability_catalog import CapabilityCatalog
+
+    p = tmp_path / "bos.yaml"
+    p.write_text(yaml.dump({"services": [{
+        "uri": "bos://capability/dep/invoke", "domain": "capability",
+        "package": "dep", "action": "invoke", "status": "deprecated",
+    }]}), encoding="utf-8")
+    catalog = CapabilityCatalog(bos_yaml=str(p)); catalog.load()
+
+    router = BOSRouter()
+    router.register("bos://capability/dep/invoke", adapter="poc")
+    route = router.resolve_with_capability("bos://capability/dep/invoke", catalog, None)
+    assert route is None
+
+
+def test_resolve_with_capability_blocks_retired(tmp_path):
+    """准入生命周期 retired → 拦截。"""
+    from agora.mcp.bos_router import BOSRouter
+
+    admission = ExternalConnectionCatalog()
+    admission.register_capability("bos://capability/old/invoke", use_metrics={"calls": 1})
+    admission.transition("bos://capability/old/invoke", "retired")
+
+    router = BOSRouter()
+    router.register("bos://capability/old/invoke", adapter="poc")
+    route = router.resolve_with_capability("bos://capability/old/invoke", None, admission)
+    assert route is None
