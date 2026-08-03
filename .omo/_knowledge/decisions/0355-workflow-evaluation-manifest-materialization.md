@@ -1,6 +1,10 @@
 ---
 title: Workflow Mesh explicit adjudication materialized into KEMS evaluation manifest
 status: accepted
+type: adr
+lifecycle: active
+owner: architecture-governance
+last-reviewed: 2026-08-03
 type: decision
 scope: workflow mesh evaluation and KEMS persistence
 date: 2026-08-03
