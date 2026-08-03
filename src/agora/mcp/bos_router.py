@@ -147,7 +147,10 @@ class BOSRouter:
             except Exception as exc:  # defensive fallback
                 _log.debug("[BOSRouter] capability register failed %s: %s", uri, exc)
         if registered:
-            _log.info("[BOSRouter] %d capabilities auto-admitted (B2 discover→admit)", registered)
+            _log.info(
+                "[BOSRouter] %d capabilities auto-admitted (B2 discover→admit)",
+                registered,
+            )
         return registered
 
     # ── Trie 操作 ─────────────────────────────────────
