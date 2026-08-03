@@ -363,3 +363,14 @@ Phase 65 将机器摄取与人工消费拆开：`consume-engineering-delivery` �
 `engineering-delivery-review-queue` 是只读运营投影，输出待复核数量、最新决策、WorkflowRun 状态、receipt、交付时长和证据数量，
 后续正式 UI 直接消费该投影。它不改变 Workflow Mesh 状态、不执行 OMO 派发、不调用 provider；只有真实责任人的连续反馈完成后，
 才可把样本送入双人标注、adjudication 和脱敏评测 manifest。
+
+操作顺序固定为：
+
+```text
+omo external-resources consume-engineering-delivery --workflow-run-id <id> --stdin
+  -> omo external-resources engineering-delivery-review-queue --json
+  -> omo external-resources review-engineering-delivery --workflow-run-id <id> --actor <human-ref> --stdin
+```
+
+摄取输入只允许交付 ID、仓库引用、PR、merge SHA、时间和证据引用；人工复核输入只允许交付 ID、决策、复核时间和复核证据引用。
+原文、prompt、模型输出、凭据和任意外部 provider 数据均不得进入这两个入口。
