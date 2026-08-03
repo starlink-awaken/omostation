@@ -1,4 +1,8 @@
 conflicts_resolved:
+  8000:
+  - aetherforge
+  - kairon
+  - runtime
   7422:
   - agora
   - kairon

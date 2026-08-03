@@ -286,11 +286,11 @@ evaluation/
 | --- | --- | --- |
 | M0 基础契约 | 已落地 | 持续按 SSOT 与运行证据维护 |
 | M1 OCR 治理 | 已落地 | 需要真实业务样本持续校准阈值 |
-| M2 真实评测集 | 工具与队列已落地 | 5 个真实源样本仍需双人标注和 adjudication |
+| M2 真实评测集 | 工具、双人标注队列与 Workflow Mesh manifest 材料化通路已落地 | 真实低风险消费者仍需产生双人标注、adjudication 和脱敏样本；当前不等同于已有真实评测集 |
 | M3 图谱持久化 | 工程能力已落地 | 生产 PostgreSQL 备份/恢复演练及 `persistence-recovery-evidence` 待业务/运维执行 |
 | M4 正式 UI | 核心工作台已落地 | 业务表单和评测看板仍需按试点场景扩展 |
 | M5 OMO 派发 | 草稿、审批契约和生产等价测试已落地 | 真实 OMO 批准任务与企业 ReachBridge 仍待接入 |
-| M6 预测影子 | 候选预测器、manifest 绑定和 acceptance 校验已落地 | 依赖 adjudicated manifest 后才能形成真实 acceptance |
+| M6 预测影子 | 候选预测器、manifest 绑定和 acceptance 校验已落地 | 依赖真实低风险消费者形成可复现的 adjudicated manifest 后才能形成真实 acceptance |
 | M7 试点收口 | 未完成 | 生产 preflight/closeout fail-closed；G1～G4 与外部恢复证据齐备后执行 |
 
 总周期预估 12～16 周。M1、M2、M3、M4 可部分并行；M5 依赖图谱主键和证据契约稳定；M6 依赖真实评测集。
