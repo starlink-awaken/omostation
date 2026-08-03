@@ -255,6 +255,91 @@ def test_external_resource_directory_falls_back_to_safe_discovery(monkeypatch, t
     assert calls == [(tmp_path, True)]
 
 
+def test_external_resource_connection_plan_prefers_latest_observed_catalog(monkeypatch, tmp_path):
+    catalog = _projection()
+    directory = {"schema": "external-resource-directory/v1", "resources": []}
+    plan = {
+        "schema": "external-resource-connection-plan/v1",
+        "summary": {"resource_count": 1, "blocked_count": 1},
+        "items": [{"resource_id": "tool:ocr", "status": "blocked"}],
+    }
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_external_resources,
+        "read_latest_external_resource_observation",
+        lambda _path: {"schema": "external-resource-observation/v1", "catalog": catalog},
+    )
+    monkeypatch.setattr(
+        api_external_resources,
+        "collect_external_resources",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("discovery should not run")
+        ),
+    )
+    monkeypatch.setattr(
+        api_external_resources,
+        "build_external_resource_directory_snapshot",
+        lambda _value: directory,
+    )
+    monkeypatch.setattr(
+        api_external_resources,
+        "build_external_resource_connection_plan",
+        lambda _value: plan,
+    )
+
+    response = TestClient(_app()).get("/api/external-resources/connection-plan")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert body["status"] == "attention"
+    assert body["source"] == "omo.external_resource_observation"
+    assert body["projection"] == plan
+    assert body["external_side_effects"] == "disabled"
+    assert body["worker_launch"] is False
+
+
+def test_external_resource_connection_plan_uses_safe_discovery_fallback(monkeypatch, tmp_path):
+    catalog = _projection()
+    directory = {"schema": "external-resource-directory/v1", "resources": []}
+    plan = {
+        "schema": "external-resource-connection-plan/v1",
+        "summary": {"resource_count": 0, "blocked_count": 0},
+        "items": [],
+    }
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_external_resources,
+        "read_latest_external_resource_observation",
+        lambda _path: None,
+    )
+    monkeypatch.setattr(
+        api_external_resources,
+        "collect_external_resources",
+        lambda *_args, **_kwargs: catalog,
+    )
+    monkeypatch.setattr(
+        api_external_resources,
+        "build_external_resource_directory_snapshot",
+        lambda _value: directory,
+    )
+    monkeypatch.setattr(
+        api_external_resources,
+        "build_external_resource_connection_plan",
+        lambda _value: plan,
+    )
+
+    response = TestClient(_app()).get("/api/external-resources/connection-plan")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert body["status"] == "empty"
+    assert body["source"] == "agora.external_resource_discovery"
+
+
 def test_external_resource_pack_preflight_is_read_only(monkeypatch, tmp_path):
     calls: list[tuple[object, dict]] = []
     projection = {

@@ -72,10 +72,14 @@ try:
     build_external_resource_directory_snapshot = (
         _catalog_module.build_external_resource_directory_snapshot
     )
+    build_external_resource_connection_plan = (
+        _catalog_module.build_external_resource_connection_plan
+    )
     evaluate_external_resources = _catalog_module.evaluate_external_resources
 except Exception as exc:  # Discovery is allowed to degrade independently.
     collect_external_resources = None  # type: ignore[assignment]
     build_external_resource_directory_snapshot = None  # type: ignore[assignment]
+    build_external_resource_connection_plan = None  # type: ignore[assignment]
     evaluate_external_resources = None  # type: ignore[assignment]
     _CATALOG_IMPORT_ERROR: Exception | None = exc
 else:
@@ -111,6 +115,7 @@ _REVIEW_QUEUE_SCHEMA = "external-resource-review-queue/v1"
 _SCENE_TRIAL_REVIEW_SCHEMA = "external-scene-trial-review/v1"
 _SCENE_TRIAL_READINESS_SCHEMA = "external-scene-trial-promotion-readiness/v1"
 _CAPABILITY_DIRECTORY_SCHEMA = "external-resource-directory/v1"
+_CONNECTION_PLAN_SCHEMA = "external-resource-connection-plan/v1"
 _REVIEW_SNAPSHOT_FIELDS = (
     "id",
     "provider",
@@ -182,6 +187,34 @@ def _unavailable_directory_projection(error_type: str, next_action: str) -> dict
             "side_effects": "disabled",
             "next_step_semantics": "human_or_governed_review_only",
         },
+        "status": "unavailable",
+        "next_action": next_action,
+    }
+
+
+def _unavailable_connection_plan_projection(error_type: str, next_action: str) -> dict[str, Any]:
+    return {
+        "schema": _CONNECTION_PLAN_SCHEMA,
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "admission_mutation": False,
+        "observed_at": datetime.datetime.now(datetime.UTC).isoformat(),
+        "directory_digest": "",
+        "items": [],
+        "summary": {
+            "resource_count": 0,
+            "blocked_count": 0,
+            "ready_for_review_count": 0,
+            "next_step_counts": {},
+        },
+        "policy": {
+            "source": _CAPABILITY_DIRECTORY_SCHEMA,
+            "side_effects": "disabled",
+            "semantics": "evidence_collection_and_human_or_governed_review_only",
+        },
+        "errors": [{"entry_point": "cockpit", "status": "unavailable", "error": error_type}],
         "status": "unavailable",
         "next_action": next_action,
     }
@@ -500,6 +533,60 @@ async def get_external_resource_directory() -> dict[str, Any]:
     return {
         "ok": True,
         "status": "available" if projection["summary"]["available_count"] else "attention",
+        "source": source,
+        "projection": projection,
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.get("/connection-plan")
+async def get_external_resource_connection_plan() -> dict[str, Any]:
+    """Expose evidence gaps for extending external capabilities safely."""
+    if (
+        build_external_resource_directory_snapshot is None
+        or build_external_resource_connection_plan is None
+    ):
+        projection = _unavailable_connection_plan_projection(
+            "external_resource_connection_plan_unavailable",
+            "检查根仓 connection plan builder 后重试。",
+        )
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "source": "cockpit.external_resource_connection_plan",
+            "projection": projection,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    try:
+        catalog, source = _resolve_catalog_projection()
+        directory = build_external_resource_directory_snapshot(catalog)
+        projection = build_external_resource_connection_plan(directory)
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        projection = _unavailable_connection_plan_projection(
+            type(exc).__name__,
+            "检查 OMO 外部资源观察或 Agora 只读发现后重试。",
+        )
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "source": "cockpit.external_resource_connection_plan",
+            "projection": projection,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    summary = projection.get("summary") or {}
+    status = (
+        "empty"
+        if not summary.get("resource_count")
+        else "attention"
+        if summary.get("blocked_count")
+        else "available"
+    )
+    return {
+        "ok": True,
+        "status": status,
         "source": source,
         "projection": projection,
         "external_side_effects": "disabled",
