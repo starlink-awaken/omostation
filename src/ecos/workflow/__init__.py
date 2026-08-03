@@ -76,6 +76,10 @@ from ecos.workflow.mesh_gate import (
     mesh_gate_check,
     is_strict_mode,
 )
+from ecos.workflow.mesh_health import (
+    mesh_health_snapshot,
+    mesh_health_check,
+)
 
 
 __all__ = [
@@ -114,6 +118,9 @@ __all__ = [
     "check_mesh_connection",
     "mesh_gate_check",
     "is_strict_mode",
+    # mesh health
+    "mesh_health_snapshot",
+    "mesh_health_check",
     # validator
     "validate_workflow",
     "validate_step",
