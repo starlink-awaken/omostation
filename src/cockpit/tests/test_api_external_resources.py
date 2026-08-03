@@ -173,6 +173,88 @@ def test_external_resources_fails_closed_when_discovery_is_unavailable(monkeypat
     assert body["worker_launch"] is False
 
 
+def test_external_resource_directory_prefers_latest_observed_catalog(monkeypatch, tmp_path):
+    catalog = _projection()
+    directory = {
+        "schema": "external-resource-directory/v1",
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "admission_mutation": False,
+        "summary": {
+            "resource_count": 1,
+            "available_count": 1,
+            "capability_count": 1,
+        },
+    }
+    calls: list[dict] = []
+
+    def fake_builder(received):
+        calls.append(received)
+        return directory
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_external_resources,
+        "read_latest_external_resource_observation",
+        lambda _path: {"schema": "external-resource-observation/v1", "catalog": catalog},
+    )
+    monkeypatch.setattr(api_external_resources, "build_external_resource_directory_snapshot", fake_builder)
+    monkeypatch.setattr(
+        api_external_resources,
+        "collect_external_resources",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("must use observation")),
+    )
+
+    response = TestClient(_app()).get("/api/external-resources/directory")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert body["source"] == "omo.external_resource_observation"
+    assert body["projection"] == directory
+    assert body["external_side_effects"] == "disabled"
+    assert calls == [catalog]
+
+
+def test_external_resource_directory_falls_back_to_safe_discovery(monkeypatch, tmp_path):
+    catalog = _projection()
+    directory = {
+        "schema": "external-resource-directory/v1",
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "admission_mutation": False,
+        "summary": {
+            "resource_count": 0,
+            "available_count": 0,
+            "capability_count": 0,
+        },
+    }
+    calls: list[object] = []
+
+    def fake_discovery(root, *, probe):
+        calls.append((root, probe))
+        return catalog
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_external_resources, "read_latest_external_resource_observation", lambda _path: None)
+    monkeypatch.setattr(api_external_resources, "collect_external_resources", fake_discovery)
+    monkeypatch.setattr(api_external_resources, "build_external_resource_directory_snapshot", lambda value: directory)
+
+    response = TestClient(_app()).get("/api/external-resources/directory")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert body["status"] == "attention"
+    assert body["source"] == "agora.external_resource_discovery"
+    assert body["projection"]["schema"] == "external-resource-directory/v1"
+    assert calls == [(tmp_path, True)]
+
+
 def test_external_resource_pack_preflight_is_read_only(monkeypatch, tmp_path):
     calls: list[tuple[object, dict]] = []
     projection = {

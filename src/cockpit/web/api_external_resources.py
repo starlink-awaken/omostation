@@ -25,14 +25,14 @@ try:
         record_external_resource_pack_proposal,
     )
     from omo.omo_external_resources import read_latest_external_resource_observation
+    from omo.omo_external_scene_readiness import (
+        build_external_scene_trial_promotion_readiness,
+    )
     from omo.omo_external_scene_trial import read_external_scene_trials
     from omo.omo_external_scene_trial_feedback import (
         ExternalSceneTrialFeedbackError,
         read_external_scene_trial_feedback,
         record_external_scene_trial_feedback,
-    )
-    from omo.omo_external_scene_readiness import (
-        build_external_scene_trial_promotion_readiness,
     )
     from omo.workflow_eval import (
         build_external_resource_selection_dataset,
@@ -71,9 +71,13 @@ def _load_catalog_module() -> Any:
 try:
     _catalog_module = _load_catalog_module()
     collect_external_resources = _catalog_module.collect_external_resources
+    build_external_resource_directory_snapshot = (
+        _catalog_module.build_external_resource_directory_snapshot
+    )
     evaluate_external_resources = _catalog_module.evaluate_external_resources
 except Exception as exc:  # Discovery is allowed to degrade independently.
     collect_external_resources = None  # type: ignore[assignment]
+    build_external_resource_directory_snapshot = None  # type: ignore[assignment]
     evaluate_external_resources = None  # type: ignore[assignment]
     _CATALOG_IMPORT_ERROR: Exception | None = exc
 else:
@@ -110,6 +114,7 @@ router = APIRouter(prefix="/api/external-resources", tags=["external-resources"]
 _REVIEW_QUEUE_SCHEMA = "external-resource-review-queue/v1"
 _SCENE_TRIAL_REVIEW_SCHEMA = "external-scene-trial-review/v1"
 _SCENE_TRIAL_READINESS_SCHEMA = "external-scene-trial-promotion-readiness/v1"
+_CAPABILITY_DIRECTORY_SCHEMA = "external-resource-directory/v1"
 _REVIEW_SNAPSHOT_FIELDS = (
     "id",
     "provider",
@@ -147,6 +152,39 @@ def _unavailable_projection(error_type: str, next_action: str) -> dict[str, Any]
             "error_count": 1,
             "by_kind": {},
             "by_availability": {},
+        },
+        "status": "unavailable",
+        "next_action": next_action,
+    }
+
+
+def _unavailable_directory_projection(error_type: str, next_action: str) -> dict[str, Any]:
+    return {
+        "schema": _CAPABILITY_DIRECTORY_SCHEMA,
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "admission_mutation": False,
+        "observed_at": datetime.datetime.now(datetime.UTC).isoformat(),
+        "resources": [],
+        "capability_index": {},
+        "kind_index": {},
+        "next_steps": [],
+        "summary": {
+            "resource_count": 0,
+            "capability_count": 0,
+            "kind_count": 0,
+            "available_count": 0,
+            "proposal_only_count": 0,
+            "unavailable_count": 0,
+            "next_step_counts": {},
+        },
+        "catalog_errors": [{"entry_point": "cockpit", "status": "unavailable", "error": error_type}],
+        "policy": {
+            "source": "external-resource-catalog/v1",
+            "side_effects": "disabled",
+            "next_step_semantics": "human_or_governed_review_only",
         },
         "status": "unavailable",
         "next_action": next_action,
@@ -438,6 +476,48 @@ async def get_external_resources() -> dict[str, Any]:
     return {
         "ok": True,
         "status": _projection_status(projection),
+        "source": source,
+        "projection": projection,
+        "external_side_effects": "disabled",
+        "worker_launch": False,
+    }
+
+
+@router.get("/directory")
+async def get_external_resource_directory() -> dict[str, Any]:
+    """Expose the capability map derived from the same catalog projection."""
+    if build_external_resource_directory_snapshot is None:
+        projection = _unavailable_directory_projection(
+            "external_resource_directory_unavailable",
+            "检查根仓 capability directory builder 后重试。",
+        )
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "source": "cockpit.external_resource_directory",
+            "projection": projection,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    try:
+        catalog, source = _resolve_catalog_projection()
+        projection = build_external_resource_directory_snapshot(catalog)
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        projection = _unavailable_directory_projection(
+            type(exc).__name__,
+            "检查 OMO 外部资源观察或 Agora 只读发现后重试。",
+        )
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "source": "cockpit.external_resource_directory",
+            "projection": projection,
+            "external_side_effects": "disabled",
+            "worker_launch": False,
+        }
+    return {
+        "ok": True,
+        "status": "available" if projection["summary"]["available_count"] else "attention",
         "source": source,
         "projection": projection,
         "external_side_effects": "disabled",
