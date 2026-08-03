@@ -608,7 +608,7 @@ def _probe_health(provider: Any) -> tuple[dict[str, Any] | None, str | None]:
         ) or latency_ms < 0:
             return None, "invalid_health_probe"
         return dict(result), None
-    except Exception as exc:  # noqa: BLE001 - isolate one provider failure
+    except Exception as exc:
         return None, type(exc).__name__
 
 
@@ -1080,7 +1080,7 @@ def discover_entry_points(
                     health_override=health_override,
                 )
             )
-        except Exception as exc:  # noqa: BLE001 - one bad adapter must not stop discovery
+        except Exception as exc:
             records.append(
                 DiscoveryRecord(
                     descriptor=None, entry_point=label, error=type(exc).__name__
@@ -1131,6 +1131,53 @@ class ExternalConnectionCatalog:
         )
         self._resources[resource_id] = updated
         return updated
+
+    def register_capability(
+        self,
+        uri: str,
+        *,
+        description: str = "",
+        kind: str = "tool_capability",
+        provider: str = "agora.bos",
+        protocol: str = "bos",
+        owner: str = "agora",
+        version: str = "1.0.0",
+        lifecycle: str = "admitted",
+        use_metrics: Mapping[str, Any] | None = None,
+    ) -> ExternalResourceDescriptor:
+        """Register a BOS capability as an external resource (B2: 能力准入分级).
+
+        用 B1 capability_status 使用度量判定初始生命周期:
+        - 有调用 → admitted
+        - 零调用且未显式指定 → sandbox (待观察, 避免僵尸能力直接 active)
+        """
+        if kind not in RESOURCE_KINDS:
+            raise ExternalConnectionError(f"unknown resource kind: {kind}")
+        if lifecycle not in LIFECYCLE_STATES:
+            raise ExternalConnectionError(f"unknown lifecycle state: {lifecycle}")
+        if uri not in self._resources:
+            # 用使用度量自动判定: 无调用且未显式指定 → sandbox
+            if use_metrics and lifecycle == "admitted":
+                calls = int(use_metrics.get("calls", 0) or 0)
+                if calls <= 0:
+                    lifecycle = "sandbox"
+            descriptor = ExternalResourceDescriptor(
+                id=uri,
+                kind=kind,
+                provider=provider,
+                protocol=protocol,
+                capabilities=(uri,),
+                data_classification="internal",
+                provenance={"source": provider, "uri": uri},
+                lifecycle=lifecycle,
+                health={"status": "ok", "last_check": _iso_now()},
+                owner=owner,
+                version=version,
+                permission_ref="agora.bos",
+                metadata={"description": description, "use_metrics": dict(use_metrics or {})},
+            )
+            self._resources[uri] = descriptor
+        return self._resources[uri]
 
     def admit(
         self,
@@ -1468,7 +1515,7 @@ class ExternalConnectionCatalog:
                 decision_factors=decision.to_dict(),
                 output_digest=output_digest,
             )
-        except Exception as exc:  # noqa: BLE001 - adapter failure is an explicit receipt
+        except Exception as exc:
             return ConnectionReceipt(
                 receipt_id=receipt_id,
                 trace_id=trace_id,
