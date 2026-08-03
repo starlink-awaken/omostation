@@ -309,6 +309,8 @@ except Exception:
     pasw_cleanup "$wt"
     git worktree remove "$wt" 2>&1
     echo "✅ worktree 释放: $wt"
+    # PASW: 清理 claim 记录
+    pasw_claim_clean "$session"
     # 分支清理: 已合并到 main → 删; 否则保留
     branch="work/$session"
     if git rev-parse --verify "$branch" >/dev/null 2>&1; then
