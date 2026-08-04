@@ -356,6 +356,119 @@ def release_branch_lock(root: Path, session: str) -> bool:
     return False
 
 
+def _branch_has_open_pr(root: Path, branch: str) -> bool:
+    """安全网: branch 有 open PR 则视为 active, GC 跳过 (防误清正在用的 claim)."""
+    try:
+        repo = subprocess.run(
+            ["git", "-C", str(root), "config", "--get", "remote.origin.url"],
+            capture_output=True, text=True, check=False,
+        ).stdout.strip()
+        repo = re.sub(r".*github.com[:/]", "", repo).replace(".git", "").strip()
+        if not repo:
+            return False
+        r = subprocess.run(
+            ["gh", "pr", "list", "--repo", repo, "--head", branch,
+             "--state", "open", "--json", "number"],
+            capture_output=True, text=True, check=False, timeout=15,
+        )
+        out = r.stdout.strip()
+        return bool(out and out != "[]")
+    except Exception:
+        return False
+
+
+def claim_gc(
+    root: Path, ttl_hours: int = 168, dry_run: bool = False
+) -> dict[str, Any]:
+    """GC 过期 claim 文件 (branch-claims + agent-claims + adr-claims).
+
+    D1 (2026-08-04): claim 有 acquire/release 但无 auto-expire, 长期累积垃圾
+    (本轮实证 branch-claims 含 2026-08-03 前的 ci-fix/d2-swarm-dashboard 残留).
+    GC 规则:
+      1. claimed_at/created_at + ttl_hours < now → 过期候选
+      2. 对应 branch 有 open PR → 跳过 (active safety net)
+      3. 过期 + 无 PR → 清理
+
+    ttl_hours 默认 168 (7 天): claim 是长期占位 (worktree 可能跨天), 短 TTL 误清风险高.
+    返回 {reclaimed, skipped, errors}.
+    """
+    import time
+    from datetime import datetime
+
+    now = time.time()
+    ttl_seconds = ttl_hours * 3600
+    result: dict[str, Any] = {"reclaimed": [], "skipped": [], "errors": []}
+
+    claim_sources = [
+        ("branch-claims",
+         delivery_path(root, "branch_claims_dir", ".omo/_delivery/branch-claims"),
+         ".json"),
+        ("agent-claims",
+         delivery_path(root, "agent_claims_dir", ".omo/_delivery/agent-claims"),
+         ".yaml"),
+        ("adr-claims",
+         delivery_path(root, "adr_claims_dir", ".omo/_delivery/adr-claims"),
+         ".json"),
+    ]
+
+    for kind, claims_dir, ext in claim_sources:
+        if not claims_dir.is_dir():
+            continue
+        for path in claims_dir.glob(f"*{ext}"):
+            if path.name == ".lock":
+                continue
+            label = f"{kind}/{path.name}"
+            try:
+                text = path.read_text(encoding="utf-8")
+                ts_field = None
+                branch = None
+                if ext == ".json":
+                    payload = json.loads(text)
+                    ts_field = payload.get("claimed_at") or payload.get("created_at")
+                    branch = payload.get("branch")
+                else:
+                    # agent-claims 是简单 yaml (无嵌套), 行级解析免 yaml 依赖
+                    for line in text.splitlines():
+                        stripped = line.strip()
+                        if stripped.startswith("created_at:"):
+                            ts_field = stripped.split(":", 1)[1].strip()
+                        elif stripped.startswith("branch:"):
+                            branch = stripped.split(":", 1)[1].strip()
+
+                if not ts_field:
+                    result["skipped"].append(f"{label}: 无时间戳")
+                    continue
+                try:
+                    ts = datetime.fromisoformat(
+                        ts_field.replace("Z", "+00:00")
+                    ).timestamp()
+                except (ValueError, TypeError):
+                    result["skipped"].append(f"{label}: 时间戳无法解析 ({ts_field})")
+                    continue
+
+                age_seconds = now - ts
+                if age_seconds < ttl_seconds:
+                    result["skipped"].append(
+                        f"{label}: 未过期 ({int(age_seconds / 3600)}h)"
+                    )
+                    continue
+
+                age_hours = int(age_seconds / 3600)
+                if branch and _branch_has_open_pr(root, branch):
+                    result["skipped"].append(f"{label}: branch {branch} 有 open PR")
+                    continue
+
+                if dry_run:
+                    result["reclaimed"].append(f"{label} [dry-run] ({age_hours}h)")
+                else:
+                    path.unlink()
+                    result["reclaimed"].append(f"{label} ({age_hours}h)")
+            except Exception as e:
+                result["errors"].append(f"{label}: {e}")
+
+    return result
+
+
 # ── D3 shared worktree claim ─────────────────────────────────────────
 
 
