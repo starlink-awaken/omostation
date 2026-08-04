@@ -34,8 +34,8 @@ capability_refs:
   - iris:apple_mail          # Apple Mail .emlx 公文源 (卫健委邮箱等)
   - iris:netease_mailmaster  # 网易邮箱大师 3 账号公文
   - iris:seeyon_oa           # 致远 OA 待办公文 (CDP 9222)
-  - kairon.sophia            # 方法编译 (公文规范: 国资委13号令)
-  - gbrain.evals             # 评测 (公文质量)
+  - bos://memory/sophia/mcp-server  # 方法编译 (公文规范: 国资委13号令) [kairon.sophia]
+  - bos://capability/evaluator      # 评测 (公文质量) [gbrain.evals]
 channel_binding:
   knowledge_source:
     - iris:apple_mail
@@ -46,6 +46,7 @@ sample_refs:
   - vault://redacted/document-review/sample-1
   - vault://redacted/document-review/sample-2
   - vault://redacted/document-review/sample-3
+opportunity_window: 卫健委借调 + 国转中心公文审查日常窗口 (草稿生成/格式检查/敏感审查/依据核验)
 notes:
   - P4 试点: 从 scene-card-candidate-seeds#document-review 激活
   - 公文源走 P3 收编的 iris 连接器 (apple_mail/netease_mailmaster/seeyon_oa), 走 external.resources + fabric descriptor
