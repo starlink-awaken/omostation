@@ -615,7 +615,16 @@ def main() -> int:
     # ── BOS URI 网关 ─────────────────────────────────────────
     bos_p = sub.add_parser("bos", help="BOS URI 查询与管理")
     bos_sub = bos_p.add_subparsers(dest="bos_cmd")
-    bos_sub.add_parser("list", help="列出所有 BOS URI 路由")
+    bos_list_p = bos_sub.add_parser(
+        "list",
+        help="列出 BOS URI 路由（默认 routable；--all 含 unimplemented/deprecated）",
+    )
+    bos_list_p.add_argument(
+        "--all",
+        action="store_true",
+        dest="all",
+        help="包含 yaml 中 non-routable（unimplemented/deprecated）条目",
+    )
     bos_sub.add_parser("discover", help="扫描 workspace 发现 MCP 服务")
     bos_sub.add_parser("status", help="BOS 系统状态与蜂群情况")
     bos_resolve_p = bos_sub.add_parser("resolve", help="统一 BOS URI 路由解析与目标元数据提取")
@@ -623,6 +632,17 @@ def main() -> int:
     bos_read_p = bos_sub.add_parser("read", help="通过 BOS 网关统一读取指定 URI 资源")
     bos_read_p.add_argument("uri", help="BOS URI, e.g. bos://memory/inbox/status")
     bos_read_p.add_argument("--args", default="{}", help="JSON 格式查询参数字符串")
+
+    # ECCP external-channels inventory
+    channels_p = sub.add_parser(
+        "channels",
+        help="🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml",
+    )
+    channels_p.add_argument(
+        "--quiet",
+        action="store_true",
+        help="只跑生成器，不打印 human summary",
+    )
 
     # BOS Inbox / Neural Mesh
     bos_inbox_p = bos_sub.add_parser("inbox", help="BOS Inbox 多源私有知识神经网查询与操作")
@@ -1261,6 +1281,9 @@ def main() -> int:
         "knowledge": lambda a: __import__("cockpit.commands.knowledge", fromlist=["cmd_knowledge"]).cmd_knowledge(a),
         "kems": lambda a: __import__("cockpit.commands.kems", fromlist=["cmd_kems"]).cmd_kems(a),
         "c2g": lambda a: __import__("cockpit.commands.c2g", fromlist=["cmd_c2g"]).cmd_c2g(a),
+        "channels": lambda a: __import__(
+            "cockpit.commands.channels", fromlist=["cmd_channels"]
+        ).cmd_channels(a),
         "tui": lambda a: __import__("cockpit.tui", fromlist=["launch"]).launch(a),
         "bos-capability": lambda a: __import__(
             "cockpit.commands.bos", fromlist=["cmd_bos_capability"]

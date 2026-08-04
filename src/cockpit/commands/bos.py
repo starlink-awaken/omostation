@@ -61,24 +61,73 @@ def cmd_bos_workflow(args):
         print("(output truncated) — 完整输出请使用 'mof workflow' ...'")
 
 
+def _load_bos_yaml_services() -> list[dict]:
+    """Load raw bos-services.yaml entries (includes non-routable statuses)."""
+    import yaml
+
+    # projects/cockpit → projects → workspace
+    root = Path(__file__).resolve().parents[4]
+    path = root / "agora" / "etc" / "bos-services.yaml"
+    if not path.is_file():
+        # fallback: workspace-relative via parents[5] if layout differs
+        alt = Path(__file__).resolve().parents[5] / "projects" / "agora" / "etc" / "bos-services.yaml"
+        path = alt if alt.is_file() else path
+    docs = list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
+    for d in docs:
+        if isinstance(d, dict) and "services" in d:
+            return [s for s in (d["services"] or []) if isinstance(s, dict)]
+    return []
+
+
 def cmd_bos_list(args):
-    """列出所有 BOS URI 路由。"""
+    """列出 BOS URI 路由。默认仅 routable；--all 含 unimplemented/deprecated。"""
+    show_all = bool(getattr(args, "all", False) or getattr(args, "include_all", False))
     try:
+        if show_all:
+            raw = _load_bos_yaml_services()
+            from collections import Counter
+
+            status_c = Counter((s.get("status") or "active") for s in raw)
+            by_domain: dict[str, list[tuple[str, str]]] = {}
+            for s in raw:
+                uri = s.get("uri") or ""
+                st = s.get("status") or "active"
+                domain = s.get("domain") or "unknown"
+                by_domain.setdefault(domain, []).append((uri, st))
+
+            print(f"\n  BOS URI 全量表 (yaml, {len(raw)} 条) — 含 non-routable")
+            print(f"  status: {dict(status_c)}")
+            print(f"  {'=' * 40}")
+            for domain in sorted(by_domain):
+                services = sorted(by_domain[domain], key=lambda x: x[0])
+                print(f"\n  {domain} ({len(services)}):")
+                for uri, st in services:
+                    mark = "" if st == "active" else f"  [{st}]"
+                    print(f"    {uri}{mark}")
+            print(
+                "\n  💡 默认路由表不含 unimplemented/deprecated。"
+                " 去掉 --all 仅看 routable。"
+            )
+            return 0
+
         from cockpit.adapters.agora import POC_SERVICES
 
         by_domain: dict[str, list[str]] = {}
         for s in POC_SERVICES:
             by_domain.setdefault(s.domain, []).append(s.uri)
 
-        print(f"\n  BOS URI 路由表 ({len(POC_SERVICES)} 条)")
+        print(f"\n  BOS URI 路由表 ({len(POC_SERVICES)} 条 routable)")
         print(f"  {'=' * 40}")
         for domain in sorted(by_domain):
             services = by_domain[domain]
             print(f"\n  {domain} ({len(services)}):")
             for uri in sorted(services):
                 print(f"    {uri}")
+        print("\n  💡 查看 yaml 中 unimplemented/deprecated: cockpit bos list --all")
+        return 0
     except Exception as e:  # defensive fallback
         print(f"  BOS 服务不可用: {e}")
+        return 1
 
 
 def cmd_bos_resolve(args):
