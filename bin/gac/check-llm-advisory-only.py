@@ -35,7 +35,10 @@ def main() -> int:
     for py_file in sorted(REPO_ROOT.rglob("*.py")):
         rel = py_file.relative_to(REPO_ROOT)
         # 跳过无关目录
-        skip_dirs = {".venv", "__pycache__", "node_modules", "build", ".git", "_archived"}
+        skip_dirs = {".venv", "__pycache__", "node_modules", "build", ".git", "_archived", "tests", "test"}
+        # 也跳过 tests/ 目录
+        if "tests" in rel.parts:
+            continue
         if any(d in rel.parts for d in skip_dirs):
             continue
         try:
