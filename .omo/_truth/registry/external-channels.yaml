@@ -1,0 +1,233 @@
+# External Channels Inventory SSOT (ECCP P0)
+# 自动生成, 请勿手动编辑
+# 生成器: bin/ssot/gen-external-channels-inventory.py
+# 生成时间: 2026-08-04T10:02:38Z
+# 对标: Backstage software catalog (集中 inventory)
+
+version: '1.0'
+generated_at: '2026-08-04T10:02:38Z'
+generator: bin/ssot/gen-external-channels-inventory.py
+policy_digest: external-connection-fabric/v1
+totals:
+  channels: 27
+  exposed: 21
+  orphan: 5
+  proposal: 1
+health_summary:
+  available: 10
+  unavailable: 11
+  error: 0
+  pending: 6
+  available_rate: 37.0
+
+channels:
+  - id: iris:apple_mail
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.apple_mail:AppleMailConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:applenotes
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.applenotes:AppleNotesConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:cua_browser
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.cua_browser:CuaBrowserConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:dingtalk
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.dingtalk:DingTalkConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:feishu
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.feishu:FeishuConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:github
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.github:GitHubConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:local_files
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.local_files:LocalFilesConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:netease_mailmaster
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.netease_mailmaster:NeteaseMailmasterConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:notebooklm
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.notebooklm:NotebookLMConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:obsidian
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.obsidian:ObsidianConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:openhuman
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.openhuman:OpenHumanConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:pocket
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.pocket:PocketConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:polar
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.polar:PolarConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:rss
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.rss:RssConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:seeyon_oa
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.seeyon_oa:SeeyonOAConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:telegram
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.telegram:TelegramConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:universal_private
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.universal_private:UniversalPrivateConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:wechat
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.wechat:WeChatConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:wpsnote
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.wpsnote:WPSNoteConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: iris:wxread
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.wxread:WXReadConnector
+    entry_point: external.resources
+    health: unavailable
+    status: exposed
+
+  - id: iris:zhihu
+    kind: knowledge_source
+    provider: kairon.iris
+    connector: iris.connectors.zhihu:ZhihuConnector
+    entry_point: external.resources
+    health: available
+    status: exposed
+
+  - id: ingest:apple-mail-ingest
+    kind: knowledge_source
+    provider: runtime.scripts
+    connector: runtime/scripts/apple-mail-ingest.py
+    health: pending
+    status: orphan
+
+  - id: ingest:netease-mailmaster-ingest
+    kind: knowledge_source
+    provider: runtime.scripts
+    connector: runtime/scripts/netease-mailmaster-ingest.py
+    health: pending
+    status: orphan
+
+  - id: ingest:seeyon-auto-login-fetch
+    kind: knowledge_source
+    provider: runtime.scripts
+    connector: runtime/scripts/seeyon-auto-login-fetch.py
+    health: pending
+    status: orphan
+
+  - id: ingest:seeyon-oa-cdp-ingest
+    kind: knowledge_source
+    provider: runtime.scripts
+    connector: runtime/scripts/seeyon-oa-cdp-ingest.py
+    health: pending
+    status: orphan
+
+  - id: ingest:universal-private-ingest
+    kind: knowledge_source
+    provider: runtime.scripts
+    connector: runtime/scripts/universal-private-ingest.py
+    health: pending
+    status: orphan
+
+  - id: mesh-proposal:20260804-agt-proposal
+    kind: tool_pack
+    provider: mesh.proposal
+    connector: .omo/_knowledge/workflow-mesh/external-resource-pack-proposals/20260804-agt-proposal.yaml
+    entry_point: external-resource-pack-proposals
+    health: pending
+    status: proposal

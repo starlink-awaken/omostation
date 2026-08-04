@@ -42,7 +42,7 @@ REQUIRED_FIELDS = [
 ]
 DIMENSION_ENUM = {"X1", "X2", "X3", "X4"}
 LAYER_ENUM = {"M0", "L0", "L1", "L2", "L3", "L4", "I0", "X", "meta"}
-LIFECYCLE_ENUM = {"draft", "active", "deprecated", "removed"}
+LIFECYCLE_ENUM = {"draft", "active", "deprecated", "superseded", "removed"}
 
 
 def load_gac_rules(path: Path) -> list[dict]:
