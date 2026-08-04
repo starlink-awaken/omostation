@@ -26,10 +26,18 @@ OUTPUT = WORKSPACE / ".omo/_truth/registry/external-channels.yaml"
 
 
 def scan_iris_resources() -> list[dict]:
-    """扫 iris external.resources entry points (uv in kairon monorepo)."""
+    """扫 iris external.resources entry points + health (uv in kairon monorepo)."""
     code = (
-        "import importlib.metadata as m; "
-        "[print(f'{ep.name}|{ep.value}') for ep in m.entry_points(group='external.resources')]"
+        "import importlib.metadata as m\n"
+        "for ep in m.entry_points(group='external.resources'):\n"
+        "    try:\n"
+        "        cls = ep.load()\n"
+        "        inst = cls()\n"
+        "        desc = inst.external_descriptor()\n"
+        "        avail = desc.get('health', {}).get('available', False)\n"
+        "        print(f'{ep.name}|{ep.value}|{avail}')\n"
+        "    except Exception as e:\n"
+        "        print(f'{ep.name}|{ep.value}|error:{type(e).__name__}')"
     )
     r = subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python", "-c", code],
@@ -38,16 +46,26 @@ def scan_iris_resources() -> list[dict]:
     channels: list[dict] = []
     for line in r.stdout.splitlines():
         line = line.strip()
-        if "|" not in line:
+        parts = line.split("|", 2)
+        if len(parts) < 2:
             continue
-        name, target = line.split("|", 1)
+        name, target = parts[0], parts[1]
+        avail = parts[2] if len(parts) > 2 else "unknown"
+        if avail.startswith("error:"):
+            health = "error"
+        elif avail == "True":
+            health = "available"
+        elif avail == "False":
+            health = "unavailable"
+        else:
+            health = "unknown"
         channels.append({
             "id": f"iris:{name}",
             "kind": "knowledge_source",
             "provider": "kairon.iris",
             "connector": target,
             "entry_point": "external.resources",
-            "health": "pending",
+            "health": health,
             "status": "exposed",
         })
     return channels
@@ -103,6 +121,16 @@ def emit_yaml(channels: list[dict]) -> str:
         "orphan": sum(1 for c in channels if c["status"] == "orphan"),
         "proposal": sum(1 for c in channels if c["status"] == "proposal"),
     }
+    health_summary = {
+        "available": sum(1 for c in channels if c.get("health") == "available"),
+        "unavailable": sum(1 for c in channels if c.get("health") == "unavailable"),
+        "error": sum(1 for c in channels if c.get("health") == "error"),
+        "pending": sum(1 for c in channels if c.get("health") in ("pending", "unknown")),
+        "available_rate": 0.0,
+    }
+    health_summary["available_rate"] = round(
+        health_summary["available"] / len(channels) * 100, 1
+    ) if channels else 0.0
     lines = [
         "# External Channels Inventory SSOT (ECCP P0)",
         "# 自动生成, 请勿手动编辑",
@@ -119,6 +147,12 @@ def emit_yaml(channels: list[dict]) -> str:
         f"  exposed: {totals['exposed']}",
         f"  orphan: {totals['orphan']}",
         f"  proposal: {totals['proposal']}",
+        "health_summary:",
+        f"  available: {health_summary['available']}",
+        f"  unavailable: {health_summary['unavailable']}",
+        f"  error: {health_summary['error']}",
+        f"  pending: {health_summary['pending']}",
+        f"  available_rate: {health_summary['available_rate']}",
         "",
         "channels:",
     ]
