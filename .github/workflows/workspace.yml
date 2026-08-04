@@ -17,6 +17,8 @@ jobs:
         run: |
           bash bin/ssot/sync-submodule-pointers.sh --verbose 2>&1 || sync_rc=$?
           echo "sync 退出码: ${sync_rc:-0}"
+          git add .
+          git diff --cached --stat -- projects/ scripts 2>/dev/null || true
       - name: PASW — 子模块指针可达性前置检查
         # source=index: 检查同步后的 index
         run: python3 bin/ssot/submodule-reachability-gate.py --source index --fetch 2>&1
