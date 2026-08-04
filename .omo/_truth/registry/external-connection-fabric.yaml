@@ -148,6 +148,9 @@ dynamic_discovery:
   connection_plan_contract: external-resource-connection-plan/v1
   connection_plan_builder: bin/ssot/external-resource-catalog.py::build_external_resource_connection_plan
   connection_plan_cli: bin/ssot/external-resource-catalog.py --connection-plan
+  refresh_plan_contract: external-resource-refresh-plan/v1
+  refresh_plan_builder: bin/ssot/external-resource-catalog.py::build_external_resource_refresh_plan
+  refresh_plan_cli: bin/ssot/external-resource-catalog.py --refresh-plan
   capability_directory_semantics:
     source: external-resource-catalog/v1
     purpose: capability_freshness_and_expansion_map
@@ -188,6 +191,26 @@ dynamic_discovery:
       idempotency_key: observed_at_and_catalog_digest
       provider_invocation: forbidden
       cockpit_default_view: observed_then_dynamic_fallback
+    refresh_plan:
+      purpose: observation_cadence_and_recovery_priority
+      owner: caller_or_governed_observer
+      schema: external-resource-refresh-plan/v1
+      activation: forbidden
+      provider_invocation: forbidden
+      workflow_run_creation: forbidden
+      scheduler_mutation: forbidden
+      interval_policy_by_kind:
+        knowledge_source: 86400
+        data_source: 21600
+        resource_provider: 3600
+        method_pack: 604800
+        tool_capability: 86400
+        channel: 3600
+        model_provider: 21600
+      priority_order: [urgent, high, normal, low]
+      unhealthy_action: health_probe
+      descriptor_deadline_action: human_review
+      cockpit_api: GET /api/external-resources/refresh-plan
   health_contract:
     required_probe_fields: [observed_at, status, latency_ms, source]
     expired_health_policy: unavailable
