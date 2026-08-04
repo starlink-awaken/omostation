@@ -3,13 +3,16 @@
 # Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
-status: phase7
+status: phase8
 adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
 rbac_policy: .omo/_truth/registry/memory-rbac.yaml
+ops_contract: .omo/standards/memory-os-ops.md
 neo4j_ops: docs/operations/memory-os-neo4j-local.md
+env_example: docs/operations/memory-os.env.example
 skill: .agents/skills/memory-recall/SKILL.md
+surface_check: bin/gac/check-memory-os-surfaces.py
 last_reviewed: "2026-08-05"
 phase6:
   neo4j_writer: projects/kairon/packages/mos/src/mos/neo4j_writer.py
@@ -20,12 +23,35 @@ phase7:
   startup: bin/memory-os-neo4j-up.sh
   compose: projects/kairon/packages/mos/docker-compose.yml
   notes: "temporal_fact/entity_relation prefer neo4j search; Docker preferred brew fallback"
+phase8:
+  env_inject: true
+  cockpit_memory_env: projects/cockpit/src/cockpit/web/memory_env.py
+  ports: [7474, 7687]
+  notes: "process env load + port registry + ops contract + surface check"
 ---
 control_plane:
   package_planned: projects/kairon/packages/mos
   envelope_owner: projects/kairon/packages/eidos
   layer: L2
   entry_bos_prefix: "bos://memory/mos/"
+
+env_defaults:
+  # Process defaults when unset — not secrets SSOT; override via config/memory-os.env
+  NEO4J_URI: "bolt://localhost:7687"
+  NEO4J_USER: "neo4j"
+  NEO4J_PASSWORD: "changeme"
+  MOS_TEMPORAL: "1"
+  MOS_RBAC: "1"
+  MOS_MEM0: "0"
+  MOS_GRAPHITI: "0"
+  load_order:
+    - process_env
+    - config/memory-os.env
+    - projects/cockpit/.env
+    - docs/operations/memory-os.env.example
+  inject:
+    - bin/memory-os-env.sh
+    - cockpit.web.memory_env.apply_memory_os_env
 
 bos_uris:
   active:
@@ -83,12 +109,13 @@ intent_routes:
     primary: [gbrain_facts, mem0]
     secondary: [kos]
   - intent: entity_relation
-    primary: [gbrain_graph]
-    secondary: [kos_entities]
+    primary: [neo4j, gbrain_graph]
+    secondary: [kos_entities, temporal]
   - intent: temporal_fact
-    primary: [graphiti]
+    primary: [neo4j, temporal]
     secondary: [gbrain]
-    requires_adapter: graphiti
+    requires_adapter: neo4j_or_temporal
+    notes: "neo4j when NEO4J_URI set; else TemporalShadow"
   - intent: code_structure
     primary: [codebase_memory]
     secondary: []
@@ -123,6 +150,14 @@ adapters:
       - "Raw track emits omo event via subprocess CLI"
       - "Theta track is logger-only simulation"
       - "Absorb into DualTrackWriter in Phase 1-2; do not mark complete"
+  neo4j:
+    status: production_path_gated
+    default: off_until_NEO4J_URI
+    module: projects/kairon/packages/mos/src/mos/neo4j_writer.py
+    production_ready: true
+    notes:
+      - "FACT write+recall when NEO4J_URI set"
+      - "ports 7474/7687 registered in protocols/port-registry.yaml"
   graphiti:
     status: optional_tier2
     default: off
@@ -130,6 +165,7 @@ adapters:
     production_ready: false
     notes:
       - "Scene-only; no global graph truth"
+      - "Production graph path is Neo4j Cypher FACT, not full graphiti-core"
   gbrain_dream:
     status: production_engine
     default: orchestration_only
@@ -196,3 +232,19 @@ phases:
       - fine ACL (principal/agent_profile/scene)
       - graphiti bridge flag (no Neo4j hard dep)
       - cockpit /api/memory HTTP gateway
+  6:
+    status: done
+    deliverables:
+      - Neo4jFactWriter + memory-rbac
+      - cockpit /memory panel
+  7:
+    status: done
+    deliverables:
+      - Neo4jSearchBackend recall loop
+      - bin/memory-os-neo4j-up.sh
+  8:
+    status: done
+    deliverables:
+      - env inject (memory_env + memory-os-env.sh)
+      - port registry 7474/7687
+      - ops contract + surface check

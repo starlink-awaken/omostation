@@ -34,11 +34,12 @@ CLI:   uv run --directory projects/kairon --package mos python -m mos {write,rec
 ACL:   recall 传 scope.principal_id / --principal-id
 Mem0:  MOS_MEM0=1 启用 shadow 双写（默认 off）
 Temporal: MOS_TEMPORAL=0 关闭（默认 on，内存 bi-temporal shadow）
-Neo4j: NEO4J_URI=bolt://localhost:7687 启用 FACT 写+召回（bash bin/memory-os-neo4j-up.sh）
+Neo4j: source bin/memory-os-env.sh 后 NEO4J_URI 生效；图库 bash bin/memory-os-neo4j-up.sh
 Foundry: bin/decks/memory-os-consolidate-deck.py（默认 dry-run）
-HTTP:  cockpit POST/GET /api/memory/* · 面板 /memory
+HTTP:  cockpit POST/GET /api/memory/* · 面板 /memory（dashboard 自动 load memory_env）
 ACL/RBAC: principal_id+agent_profile+scene_id + memory-rbac.yaml 角色表
 Graphiti: MOS_GRAPHITI=1 探测；生产图路径为 Neo4j Cypher（非完整 graphiti-core）
+运维契约: .omo/standards/memory-os-ops.md · make memory-os-check
 ```
 
 经 Agora：`resolve_bos_uri` / cockpit bos 代理。  

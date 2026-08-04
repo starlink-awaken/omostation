@@ -16,12 +16,20 @@ related:
 ## 一键（推荐）
 
 ```bash
-bash bin/memory-os-neo4j-up.sh          # Docker 优先，失败则 brew
+# 1) 环境（cockpit / agent shell）
+source bin/memory-os-env.sh             # 或 eval "$(bin/memory-os-env.sh --export)"
+# 2) 图库
+bash bin/memory-os-neo4j-up.sh          # Docker/podman 优先，失败则 brew
 bash bin/memory-os-neo4j-up.sh status
 bash bin/memory-os-neo4j-up.sh stop
+# 3) 治理面检查
+make memory-os-check
 ```
 
-成功后脚本会打印：
+环境加载顺序（**已设置的非空 env 不覆盖**）：  
+进程 env → `config/memory-os.env` → `projects/cockpit/.env` → `docs/operations/memory-os.env.example`
+
+成功后图库脚本也会打印：
 
 ```bash
 export NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=changeme
