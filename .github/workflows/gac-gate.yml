@@ -31,10 +31,12 @@ jobs:
       - name: PASW — 自动同步子模块指针
         # 如果 PR 分支指针不可达, 自动 fetch 或更新到最新 origin/main
         # --verbose: 显示完整错误信息到 CI log, 便于诊断
+        # actions/checkout 用 depth=1 浅克隆, 历史 commit 可能不可达, 需要同步
         run: |
           bash bin/ssot/sync-submodule-pointers.sh --verbose 2>&1 || sync_rc=$?
           echo "sync 退出码: ${sync_rc:-0} (0=正常, 1=已修复, 2=有错误)"
-          git add -- ':!projects' . 2>/dev/null || true
+          # 关键: git add 让 reachability gate 检查更新后的 index
+          git add .
           git diff --cached --stat -- projects/ scripts 2>/dev/null || true
       - name: PASW — 子模块指针可达性前置检查
         # PASW 适配: 确保所有子模块指针在 submodule remote 上可达.
