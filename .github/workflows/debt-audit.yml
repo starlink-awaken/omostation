@@ -19,12 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # 显式 init scripts, 不 recursive (避免撞 private 子模块)
+          # 显式 init scripts + omo (generate-governance-data.py 依赖 omo 包), 不 recursive
           submodules: false
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      - name: Init scripts submodule
-        run: git submodule update --init scripts
+      - name: Init required submodules
+        run: git submodule update --init scripts projects/omo
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
