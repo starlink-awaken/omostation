@@ -22,12 +22,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/resolve-root-remote.sh"
 
-WS_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+# WS_ROOT/WS_PARENT 可注入 (测试隔离用); 默认从 cwd 解析
+WS_ROOT="${WS_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 if [ -z "$WS_ROOT" ]; then
   echo "❌ 不在 git 仓库" >&2
   exit 1
 fi
-WS_PARENT="$(dirname "$WS_ROOT")"
+WS_PARENT="${WS_PARENT:-$(dirname "$WS_ROOT")}"
 
 cmd="${1:-list}"
 session="${2:-}"
