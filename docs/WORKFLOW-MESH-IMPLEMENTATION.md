@@ -1083,6 +1083,26 @@ append-only 持久化。这样 UI 可以围绕队列、详情和复核表单演�
 
 `Cockpit queue -> OMO review projection -> Cockpit review envelope -> OMO broker -> outcome-feedback`
 
+### 7.3.34 Phase 67 Cockpit UI 工程交付复核工作台
+
+Phase 67 将 Phase 66 的 L3 API 接入 Cockpit UI，新增独立的“工程交付复核”入口，形成收件箱、详情和人工复核表单三段式操作面。
+页面只消费 `engineering-delivery-review-queue/v1` 投影，按交付 ID、WorkflowRun、场景绑定、反馈阶段、交付时长和证据计数帮助责任人定位复核对象；
+提交时只发送 `workflow_run_id`、`actor_ref`、`delivery_id`、`decision`、`reviewed_at` 和 `evidence_refs`。
+
+UI 的职责边界固定为：
+
+- 显示真实队列摘要和结构化不可用状态，不把空列表当成“没有风险”；
+- 要求责任人、复核时间和至少一条证据引用，复用后端 OMO broker 的字段安全、幂等和 append-only 规则；
+- 明确展示 `workflow_state_mutation=false`、`provider_invocation=false`、`automatic_promotion=false`，不在浏览器侧推断或变更运行状态；
+- 复核成功后刷新队列，不在 UI 本地维护第二套人工状态真相。
+
+验证链路为：
+
+`Cockpit UI -> L3 review API -> OMO review broker -> outcome-feedback -> review queue projection`
+
+本阶段只完成工程交付场景的人机操作闭环，不把工程元数据误认为业务价值样本；后续仍需连续真实低风险消费者、双人标注、adjudication、脱敏 manifest
+和 shadow evaluation 才能推进 M2/M6。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
