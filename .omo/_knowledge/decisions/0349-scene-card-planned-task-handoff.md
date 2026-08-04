@@ -1,4 +1,5 @@
 ---
+id: ADR-0349
 title: Scene Card planned task handoff
 status: accepted
 type: adr

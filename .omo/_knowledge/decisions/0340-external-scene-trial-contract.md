@@ -1,4 +1,5 @@
 ---
+id: ADR-0340
 title: External scene trial contract and feedback promotion boundary
 status: accepted
 type: adr

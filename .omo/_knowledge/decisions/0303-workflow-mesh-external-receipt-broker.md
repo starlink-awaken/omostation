@@ -1,4 +1,5 @@
 ---
+id: ADR-0303
 title: Workflow Mesh 外部 receipt 回写 broker
 status: accepted
 type: decision

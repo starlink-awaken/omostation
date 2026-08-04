@@ -1,4 +1,5 @@
 ---
+id: ADR-0353
 title: External resource governed refresh and freshness recovery projection
 status: accepted
 type: adr

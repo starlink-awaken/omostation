@@ -190,7 +190,7 @@ cd "projects/gbrain" && bun test              # gbrain (TypeScript)
 
 Run a single test with each framework's native filter (see the target project's `AGENTS.md` for project-specific targets):
 
-- Python (`uv run pytest`): `pytest -k "test_name"` or `pytest path/to/test.py::TestClass::test_method`
+- Python (`uv run pytest`): `pytest -k "test_name"` or `pytest path/to/test.py::TestClass::test_method` — 根仓 `tests/` 需 `uv run --with pyyaml --with pytest python -m pytest` (裸 `uv run pytest` 命中 pipx pytest, 无 pyyaml)
 - TypeScript (`bun test`): `bun test --filter "pattern"`
 - cockpit-ui: `npm run build` / `bun run build`
 - observability: `docker compose config -q`

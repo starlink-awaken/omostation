@@ -345,15 +345,47 @@ def check_branch_available(
     return False, f"occupied by {holder.get('session')}"
 
 
-def release_branch_lock(root: Path, session: str) -> bool:
+def release_branch_lock(
+    root: Path, session: str, purge_orphans: bool = False
+) -> bool:
+    """释放 session 的 branch claim.
+
+    B3 (ADR-0367): purge_orphans=True 时顺带清理孤儿 claim —
+    分支已不存在 (本地/远端 refs 均无) 的 claim 文件直接删除,
+    防止 session 异常退出后 claim 永久残留 (G-CONV.7 D2).
+    """
     claims_dir = delivery_path(
         root, "branch_claims_dir", ".omo/_delivery/branch-claims"
     )
     path = claims_dir / f"{session}.json"
     if path.is_file():
         path.unlink()
-        return True
-    return False
+    if purge_orphans and claims_dir.is_dir():
+        for claim_file in claims_dir.glob("*.json"):
+            if claim_file.name == ".lock":
+                continue
+            try:
+                payload = json.loads(claim_file.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            branch = payload.get("branch")
+            if isinstance(branch, str) and not _branch_exists_locally(root, branch):
+                claim_file.unlink()
+    return True
+
+
+def _branch_exists_locally(root: Path, branch: str) -> bool:
+    """branch 是否仍存在于本地或远端 refs (for-each-ref, 无网络调用)."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "for-each-ref", "--format=%(refname:short)",
+             "refs/heads", "refs/remotes"],
+            capture_output=True, text=True, check=False, timeout=10,
+        )
+        refs = set(r.stdout.splitlines())
+    except Exception:
+        return True  # 无法判断时保守保留 claim
+    return branch in refs or f"remotes/origin/{branch}" in refs
 
 
 def _branch_has_open_pr(root: Path, branch: str) -> bool:

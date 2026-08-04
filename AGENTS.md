@@ -281,7 +281,7 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 |----------------|----------------------|
 | Documentation only | `make gac-local-gate` and diff review |
 | Root governance docs | `make gac-local-gate` plus `make ssot-guardian` |
-| Python code (generic) | Targeted `uv run pytest` or project Makefile `test` target |
+| Python code (generic) | Targeted `uv run pytest` or project Makefile `test` target. 根仓 `tests/` 用 `uv run --with pyyaml --with pytest python -m pytest` (裸 `uv run pytest` 会命中 pipx pytest, 缺 pyyaml) |
 | kairon package | `make test-diff` from `projects/kairon` |
 | gbrain | `bun test` or targeted Bun test |
 | cockpit-ui (TypeScript) | `npm run build` or `bun run build` from `projects/cockpit-ui` |

@@ -1,4 +1,5 @@
 ---
+id: ADR-0324
 title: BackendUnavailable 的 WorkflowRun 与 StepRun 投影一致性
 status: accepted
 type: decision

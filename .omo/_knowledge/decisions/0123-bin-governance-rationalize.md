@@ -1,4 +1,5 @@
 ---
+id: ADR-0123
 status: proposed
 lifecycle: rfc
 owner: governance-team

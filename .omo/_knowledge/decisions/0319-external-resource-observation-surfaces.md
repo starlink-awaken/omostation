@@ -1,4 +1,5 @@
 ---
+id: ADR-0319
 title: External Connection Fabric 观察与候选评审产品边界
 status: ACCEPTED
 date: 2026-08-03

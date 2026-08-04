@@ -1,4 +1,5 @@
 ---
+id: ADR-0124
 status: active
 lifecycle: retrospective
 owner: governance-team

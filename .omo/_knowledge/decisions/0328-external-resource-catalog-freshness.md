@@ -1,4 +1,5 @@
 ---
+id: ADR-0328
 title: 外部资源目录 freshness、失效与回退边界
 status: accepted
 type: decision

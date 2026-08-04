@@ -1,4 +1,5 @@
 ---
+id: ADR-0299
 title: Workflow Mesh worker 租约、失效与接管证据
 status: ACCEPTED
 type: decision

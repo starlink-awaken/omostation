@@ -72,7 +72,9 @@ def cmd_branch_check(args: argparse.Namespace) -> int:
 
 def cmd_branch_release(args: argparse.Namespace) -> int:
     root = root_from_cwd()
-    done = sd.release_branch_lock(root, args.session)
+    done = sd.release_branch_lock(
+        root, args.session, purge_orphans=not args.no_purge_orphans
+    )
     print(json.dumps({"released": done, "session": args.session}, indent=2))
     return 0
 
@@ -218,6 +220,11 @@ def main(argv: list[str] | None = None) -> int:
 
     s = sub.add_parser("branch-release")
     s.add_argument("--session", required=True)
+    s.add_argument(
+        "--purge-orphans", action="store_true", default=True,
+        help="B3 (ADR-0367): 顺带删除分支已不存在的孤儿 claim (默认开)",
+    )
+    s.add_argument("--no-purge-orphans", action="store_true", help="关闭孤儿清理")
     s.set_defaults(func=cmd_branch_release)
 
     s = sub.add_parser(

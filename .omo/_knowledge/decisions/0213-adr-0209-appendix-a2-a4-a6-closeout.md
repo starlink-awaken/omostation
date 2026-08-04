@@ -1,4 +1,5 @@
 ---
+id: ADR-0213
 status: ACCEPTED
 lifecycle: governance-audit
 owner: governance-team
