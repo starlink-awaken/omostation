@@ -15,6 +15,7 @@ from cockpit.dashboard.constants import (
     BOS_DASHBOARD_HTML,
     LAYER_SOURCES,
     M0_SNAPSHOT_PATH,
+    MEMORY_DASHBOARD_HTML,
     OVERVIEW_HTML,
     PORT,
 )
@@ -335,3 +336,10 @@ async def bos_dashboard():
 async def arch_dashboard():
     """Architecture health dashboard."""
     return ARCH_HTML
+
+
+@router.get("/memory", response_class=HTMLResponse)
+@router.get("/memory/", response_class=HTMLResponse)
+async def memory_dashboard():
+    """Memory OS control-plane panel (ADR-0372 Phase 6)."""
+    return MEMORY_DASHBOARD_HTML

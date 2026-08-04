@@ -1,7 +1,9 @@
-"""Memory OS HTTP surface — L3 thin gateway to mos CLI (ADR-0372 Phase 5).
+"""Memory OS HTTP surface — L3 thin gateway to mos CLI (ADR-0372 Phase 5–6).
 
 Does not import gbrain/kairon internals; invokes `python -m mos` via uv for
 layer compliance. Unit tests inject `invoke_mos`.
+
+Phase 6: RBAC via X-Mos-Role / X-Agent-Profile headers + body fields.
 """
 
 from __future__ import annotations
@@ -74,45 +76,66 @@ def _body(request_json: dict[str, Any] | None) -> dict[str, Any]:
     return dict(request_json or {})
 
 
+def _inject_rbac(body: dict[str, Any], request: Request) -> dict[str, Any]:
+    """Merge RBAC identity from headers into kwargs body (headers win if body empty)."""
+    role = request.headers.get("x-mos-role") or request.headers.get("X-Mos-Role")
+    profile = request.headers.get("x-agent-profile") or request.headers.get("X-Agent-Profile")
+    principal = request.headers.get("x-principal-id") or request.headers.get("X-Principal-Id")
+    if role and not body.get("role"):
+        body["role"] = role
+    if profile and not body.get("agent_profile"):
+        body["agent_profile"] = profile
+    if principal and not body.get("principal_id"):
+        body["principal_id"] = principal
+    return body
+
+
+def _status_code(result: dict[str, Any]) -> int:
+    if result.get("error") == "rbac_denied":
+        return 403
+    if result.get("ok") is False:
+        return 400
+    return 200
+
+
 @router.get("/status")
-async def memory_status() -> JSONResponse:
-    result = invoke_mos("status", {})
-    return JSONResponse(result)
+async def memory_status(request: Request) -> JSONResponse:
+    body = _inject_rbac({}, request)
+    result = invoke_mos("status", body)
+    return JSONResponse(result, status_code=_status_code(result))
 
 
 @router.post("/write")
 async def memory_write(request: Request) -> JSONResponse:
-    body = _body(await request.json())
+    body = _inject_rbac(_body(await request.json()), request)
     result = invoke_mos("write", body)
-    code = 200 if result.get("ok", True) else 400
-    return JSONResponse(result, status_code=code)
+    return JSONResponse(result, status_code=_status_code(result))
 
 
 @router.post("/recall")
 async def memory_recall(request: Request) -> JSONResponse:
-    body = _body(await request.json())
+    body = _inject_rbac(_body(await request.json()), request)
     # Allow flat principal fields → scope
     if "scope" not in body and any(k in body for k in ("principal_id", "agent_profile", "scene_id")):
         body["scope"] = {
             k: body[k] for k in ("principal_id", "agent_profile", "scene_id") if body.get(k)
         }
     result = invoke_mos("recall", body)
-    return JSONResponse(result)
+    return JSONResponse(result, status_code=_status_code(result))
 
 
 @router.post("/forget")
 async def memory_forget(request: Request) -> JSONResponse:
-    body = _body(await request.json())
+    body = _inject_rbac(_body(await request.json()), request)
     result = invoke_mos("forget", body)
-    code = 200 if result.get("ok", True) else 400
-    return JSONResponse(result, status_code=code)
+    return JSONResponse(result, status_code=_status_code(result))
 
 
 @router.post("/knowledge-ref")
 async def memory_knowledge_ref(request: Request) -> JSONResponse:
-    body = _body(await request.json())
+    body = _inject_rbac(_body(await request.json()), request)
     result = invoke_mos("knowledge-ref", body)
-    return JSONResponse(result)
+    return JSONResponse(result, status_code=_status_code(result))
 
 
 @router.post("/consolidate")
@@ -124,7 +147,10 @@ async def memory_consolidate(request: Request) -> JSONResponse:
             body = _body(json.loads(raw.decode("utf-8")))
     except Exception:  # noqa: BLE001
         body = {}
+    body = _inject_rbac(body, request)
     if "dry_run" not in body:
         body["dry_run"] = True
+    if not body.get("role") and not body.get("agent_profile"):
+        body["agent_profile"] = "governance-agent"
     result = invoke_mos("consolidate", body)
-    return JSONResponse(result)
+    return JSONResponse(result, status_code=_status_code(result))

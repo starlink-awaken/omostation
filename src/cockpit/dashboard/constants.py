@@ -96,6 +96,7 @@ a{color:#58a6ff;text-decoration:none}a:hover{text-decoration:underline}
 <div class="quick-actions">
   <a href="/bos">&#x1F4E6; BOS Dashboard</a>
   <a href="/arch">&#x1F527; &#x67b6;&#x6784;&#x5065;&#x5eb7;</a>
+  <a href="/memory">&#x1F9E0; Memory OS</a>
   <a href="/">&#x2728; Hermes Console</a>
   <a href="/api/v1/status">&#x1F4CB; API JSON</a>
   <a href="http://localhost:8090/overview">&#x1F4CA; &#x503a;&#x52a1;&#x9a7e;&#x9a76;&#x8231;</a>
@@ -606,3 +607,140 @@ async function refresh() {
 refresh();setInterval(refresh,15000);
 </script>
 </body></html>"""
+
+
+# ─── Memory OS Dashboard (ADR-0372 Phase 6) ─────────────────
+MEMORY_DASHBOARD_HTML = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cockpit — Memory OS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',monospace;background:#0d1117;color:#c9d1d9;padding:24px}
+h1{color:#58a6ff;font-size:20px;margin-bottom:4px}
+.sub{color:#8b949e;font-size:12px;margin-bottom:16px}
+.nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.nav a{padding:6px 14px;background:#161b22;border:1px solid #30363d;border-radius:6px;font-size:12px;color:#58a6ff;text-decoration:none}
+.nav a:hover{background:#1c2333;border-color:#58a6ff}
+.nav a.active{border-color:#58a6ff;background:#1c2333}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.card h2{font-size:13px;color:#8b949e;margin-bottom:10px}
+.stat{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #21262d}
+.stat:last-child{border:none}.label{color:#8b949e}.val{color:#58a6ff;font-weight:600}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-ok{background:#052e16;color:#4ade80}.badge-off{background:#21262d;color:#8b949e}.badge-warn{background:#271c00;color:#fbbf24}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+input,select,textarea{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;border-radius:6px;padding:8px;font-size:12px;font-family:inherit}
+input,select{min-width:140px}textarea{width:100%;min-height:64px}
+button{background:#238636;border:none;color:#fff;border-radius:6px;padding:8px 14px;font-size:12px;cursor:pointer;font-weight:600}
+button.secondary{background:#21262d;border:1px solid #30363d}
+button:hover{opacity:0.9}
+#out{margin-top:12px;font-size:11px;white-space:pre-wrap;background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:10px;max-height:280px;overflow:auto}
+.err{color:#f87171}
+</style>
+</head>
+<body>
+<h1>&#x1F9E0; Memory OS</h1>
+<div class="sub">ADR-0372 &middot; bos://memory/mos/* &middot; Neo4j/Graphiti + RBAC &middot; L3 thin gateway</div>
+<div class="nav">
+  <a href="/overview">Overview</a>
+  <a href="/bos">BOS</a>
+  <a href="/arch">Arch</a>
+  <a href="/memory" class="active">Memory</a>
+  <a href="/api/memory/status">API status JSON</a>
+</div>
+
+<div class="grid" id="status-grid">
+  <div class="card"><div style="color:#8b949e">Loading status...</div></div>
+</div>
+
+<div class="grid" style="margin-top:16px">
+  <div class="card" style="grid-column:1/-1">
+    <h2>&#x1F50D; Recall playground</h2>
+    <div class="row">
+      <input id="q" placeholder="query" style="flex:1;min-width:200px" value="Memory OS" />
+      <select id="role">
+        <option value="agent">role: agent</option>
+        <option value="admin">role: admin</option>
+        <option value="readonly">role: readonly</option>
+        <option value="guest">role: guest</option>
+        <option value="governance-agent">role: governance-agent</option>
+      </select>
+      <input id="profile" placeholder="agent_profile" value="claude" />
+      <input id="principal" placeholder="principal_id" value="" />
+      <button onclick="doRecall()">Recall</button>
+      <button class="secondary" onclick="doStatus()">Refresh status</button>
+      <button class="secondary" onclick="doWrite()">Write sample</button>
+    </div>
+    <div id="out"></div>
+  </div>
+</div>
+
+<script>
+function headers() {
+  const h = {'Content-Type': 'application/json', 'X-Mos-Role': document.getElementById('role').value};
+  const p = document.getElementById('profile').value.trim();
+  const u = document.getElementById('principal').value.trim();
+  if (p) h['X-Agent-Profile'] = p;
+  if (u) h['X-Principal-Id'] = u;
+  return h;
+}
+function badge(ok, onLabel, offLabel) {
+  if (ok) return '<span class="badge badge-ok">'+(onLabel||'on')+'</span>';
+  return '<span class="badge badge-off">'+(offLabel||'off')+'</span>';
+}
+async function doStatus() {
+  try {
+    const r = await fetch('/api/memory/status', {headers: headers()});
+    const d = await r.json();
+    const g = d.graphiti || {};
+    document.getElementById('status-grid').innerHTML = [
+      {t:'Control plane', body:'<div class="stat"><span class="label">version</span><span class="val">'+(d.version||'?')+'</span></div><div class="stat"><span class="label">URI</span><span class="val">'+(d.control_plane||'')+'</span></div><div class="stat"><span class="label">raw/theta</span><span class="val">'+(d.raw_events||0)+' / '+(d.theta_docs||0)+'</span></div>'},
+      {t:'Temporal / Graphiti', body:'<div class="stat"><span class="label">temporal</span><span class="val">'+badge(d.temporal_enabled)+'</span></div><div class="stat"><span class="label">edges</span><span class="val">'+(d.temporal_edges||0)+'</span></div><div class="stat"><span class="label">graphiti flag</span><span class="val">'+badge(g.graphiti_flag)+'</span></div><div class="stat"><span class="label">importable</span><span class="val">'+badge(g.graphiti_importable)+'</span></div>'},
+      {t:'Neo4j production', body:'<div class="stat"><span class="label">NEO4J_URI</span><span class="val">'+badge(d.neo4j_configured,'set','unset')+'</span></div><div class="stat"><span class="label">driver</span><span class="val">'+badge(d.neo4j_available,'ready','n/a')+'</span></div><div class="stat"><span class="label">path</span><span class="val" style="font-size:10px">'+(g.production_path||'shadow')+'</span></div>'},
+      {t:'RBAC', body:'<div class="stat"><span class="label">enforced</span><span class="val">'+badge(d.rbac_enforced)+'</span></div><div class="stat"><span class="label">default role</span><span class="val">'+(d.rbac_default_role||'agent')+'</span></div><div class="stat"><span class="label">policy</span><span class="val">memory-rbac.yaml</span></div>'},
+    ].map(c => '<div class="card"><h2>'+c.t+'</h2>'+c.body+'</div>').join('');
+    return d;
+  } catch(e) {
+    document.getElementById('status-grid').innerHTML = '<div class="card err">status failed: '+e.message+'</div>';
+  }
+}
+async function doRecall() {
+  const out = document.getElementById('out');
+  out.textContent = 'recalling...';
+  try {
+    const body = {query: document.getElementById('q').value, limit: 10};
+    const u = document.getElementById('principal').value.trim();
+    const p = document.getElementById('profile').value.trim();
+    if (u || p) body.scope = {principal_id: u||undefined, agent_profile: p||undefined};
+    const r = await fetch('/api/memory/recall', {method:'POST', headers: headers(), body: JSON.stringify(body)});
+    const d = await r.json();
+    out.textContent = 'HTTP '+r.status+'\n'+JSON.stringify(d, null, 2);
+  } catch(e) { out.innerHTML = '<span class="err">'+e.message+'</span>'; }
+}
+async function doWrite() {
+  const out = document.getElementById('out');
+  out.textContent = 'writing...';
+  try {
+    const body = {
+      type: 'semantic',
+      content: 'Memory OS panel sample '+new Date().toISOString(),
+      confidence: 0.9,
+      subject: 'MemoryOS',
+      predicate: 'has_panel',
+      object: 'cockpit',
+    };
+    const r = await fetch('/api/memory/write', {method:'POST', headers: headers(), body: JSON.stringify(body)});
+    const d = await r.json();
+    out.textContent = 'HTTP '+r.status+'\n'+JSON.stringify(d, null, 2);
+    doStatus();
+  } catch(e) { out.innerHTML = '<span class="err">'+e.message+'</span>'; }
+}
+doStatus();
+setInterval(doStatus, 20000);
+</script>
+</body></html>"""
+

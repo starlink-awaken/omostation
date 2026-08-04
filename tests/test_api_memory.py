@@ -1,4 +1,4 @@
-"""Cockpit Memory OS HTTP gateway tests (Phase 5)."""
+"""Cockpit Memory OS HTTP gateway tests (Phase 5–6)."""
 
 from __future__ import annotations
 
@@ -13,8 +13,10 @@ def test_memory_routes_use_injected_invoke():
 
     def fake(cmd: str, kwargs: dict):
         calls.append((cmd, kwargs))
+        if kwargs.get("role") == "guest" and cmd == "write":
+            return {"ok": False, "error": "rbac_denied", "detail": "role=guest denied action=write"}
         if cmd == "status":
-            return {"ok": True, "version": "0.5.0"}
+            return {"ok": True, "version": "0.6.0"}
         if cmd == "write":
             return {"ok": True, "envelope_id": "mem_x"}
         if cmd == "recall":
@@ -41,5 +43,21 @@ def test_memory_routes_use_injected_invoke():
         assert calls[-1][1].get("scope", {}).get("principal_id") == "u1"
         kref = client.post("/api/memory/knowledge-ref", json={"query": "x"}).json()
         assert kref["schema"] == "knowledge-action/v1"
+        # Phase 6: header RBAC injection
+        denied = client.post(
+            "/api/memory/write",
+            json={"type": "semantic", "content": "nope"},
+            headers={"X-Mos-Role": "guest"},
+        )
+        assert denied.status_code == 403
+        assert denied.json()["error"] == "rbac_denied"
+        assert any(c[0] == "write" and c[1].get("role") == "guest" for c in calls)
     finally:
         api_memory.invoke_mos = prev
+
+
+def test_memory_dashboard_html_exported():
+    from cockpit.dashboard.constants import MEMORY_DASHBOARD_HTML
+
+    assert "Memory OS" in MEMORY_DASHBOARD_HTML
+    assert "/api/memory/status" in MEMORY_DASHBOARD_HTML
