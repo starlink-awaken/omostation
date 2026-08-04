@@ -433,9 +433,10 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0364: KEMS repeated shadow evaluation and human promotion gate — **ACCEPTED** | 2026-08-04 | KEMS Phase 71 | 0364-kems-repeated-shadow-promotion-gate.md
 - ADR-0365: Scenario-first architecture strategy and Workflow Mesh execution spine — **ACCEPTED** | 2026-08-04 | Phase 72 architecture closeout | 0365-architecture-strategy-closeout.md
 - ADR-0366: Pyright 与 Ruff 扫描修复算法固化 — **ACCEPTED** | 2026-08-04 | Python quality sweep | 0366-pyright-sweep-algorithm.md
+- ADR-0367: Python 质量扫描基础设施规模化路线图 — **PROPOSED** | 2026-08-04 | Python quality sweep | 0367-sweep-tooling-scaling-roadmap.md
+- ADR-0368: Runtime Registry 测试契约与 TaskFallback 响应对齐 — **ACCEPTED** | 2026-08-04 | Python quality sweep | 0368-runtime-taskfallback-test-contract.md
+- ADR-0369: (保留) — **RESERVED** | 2026-08-04 | — | 0369-reserved.md
 - ADR-0370: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern — **ACCEPTED** | 2026-08-04 | Workflow Mesh Phase 73 | 0370-agt-ecos-integration.md
-- ADR-0371: PASW — Per-Agent Submodule Worktree 隔离 — **ACCEPTED** | 2026-08-04 | Swarm discipline (ADR-0220) | 0371-pasw-submodule-isolation.md
-- ADR-0372: Python 质量扫描基础设施规模化路线图 — **PROPOSED** | 2026-08-04 | Python quality sweep | 0372-sweep-tooling-scaling-roadmap.md
 
 ---
 

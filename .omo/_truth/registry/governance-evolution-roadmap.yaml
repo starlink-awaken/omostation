@@ -263,7 +263,7 @@ initiatives:
     next_step: |-
       bin/gac/gac-local-gate.py (human) + bin/agent-workflow.py (agent) + bin/gac/governance-semantic-gate.py (gate) 3 入口收敛. ADR-0115 Phase 4 (4 dashboard 合并) 留 S2/S3.
   - id: sweep-tooling-scaling
-    title: Python quality sweep tooling scaling (ADR-0372)
+    title: Python quality sweep tooling scaling (ADR-0367)
     recommendation: Promote bin/sweep and pyright-sweep workflow from pilot to enforced surface; add sweep history, suppression-ratio gating, worktree lifecycle integration tests, and a published roadmap initiative.
     status: active
     progress: 10
@@ -271,7 +271,7 @@ initiatives:
     meadows_level: 5
     owner: governance-team
     layer: X1-X4
-    ssot: .omo/_knowledge/decisions/0372-sweep-tooling-scaling-roadmap.md
+    ssot: .omo/_knowledge/decisions/0367-sweep-tooling-scaling-roadmap.md
     entrypoints:
       - uv run --with pyyaml python bin/agent-workflow.py start pyright-sweep --profile governance-agent
       - python3 bin/sweep/pyright.py <report.json>

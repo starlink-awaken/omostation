@@ -1,6 +1,6 @@
 # ROADMAP — Python 质量扫描基础设施规模化
 
-> ADR-0372 / `governance-evolution-roadmap.yaml::sweep-tooling-scaling`
+> ADR-0367 / `governance-evolution-roadmap.yaml::sweep-tooling-scaling`
 > 最后更新: 2026-08-04
 
 ## 1. 主题总览
@@ -48,4 +48,4 @@ uv run --with pyyaml python bin/gac/governance-evolution.py validate
 
 ## 5. 后续工作
 
-详见 ADR-0372 中的 Phase 1 / 2 / 3 路线图。
+详见 ADR-0367 中的 Phase 1 / 2 / 3 路线图。

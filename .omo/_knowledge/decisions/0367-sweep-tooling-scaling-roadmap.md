@@ -1,5 +1,5 @@
 ---
-id: ADR-0372
+id: ADR-0367
 title: Python 质量扫描基础设施规模化路线图
 status: PROPOSED
 date: 2026-08-04
@@ -14,7 +14,7 @@ related:
   - ../../standards/agent-workflow-contract.md
 ---
 
-# ADR-0372: Python 质量扫描基础设施规模化路线图
+# ADR-0367: Python 质量扫描基础设施规模化路线图
 
 ## 背景
 
