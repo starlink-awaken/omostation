@@ -147,6 +147,16 @@ try:
 except Exception as e:
     print(f"Warning: KnowledgeIndexer callback router not available: {e}", file=sys.stderr)
 
+# ─── Memory OS HTTP gateway (ADR-0372 Phase 5) ───────────────────
+
+try:
+    from cockpit.web.api_memory import router as _memory_router
+
+    app.include_router(_memory_router)
+    print("Successfully loaded Memory OS API routes")
+except Exception as e:
+    print(f"Warning: Memory OS API not available: {e}", file=sys.stderr)
+
 # ─── Capability Registry API (能力全景覆盖) ─────────────────────
 
 try:

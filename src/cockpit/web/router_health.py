@@ -10,6 +10,7 @@ ROUTER_MODULES = (
     "cockpit.web.api_omos",
     "cockpit.web.api_ecos",
     "cockpit.web.api_knowledge",
+    "cockpit.web.api_memory",
     "cockpit.web.api_bos",
     "cockpit.web.api_proposals",
     "cockpit.web.api_metaos",
