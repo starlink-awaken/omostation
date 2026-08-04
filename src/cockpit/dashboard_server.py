@@ -20,6 +20,14 @@ import httpx
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
+# Memory OS env (NEO4J_*/MOS_*) before routers invoke mos CLI
+try:
+    from cockpit.web.memory_env import apply_memory_os_env
+
+    apply_memory_os_env()
+except Exception as _mos_env_exc:  # noqa: BLE001
+    print(f"Warning: memory_os env load skipped: {_mos_env_exc}", file=sys.stderr)
+
 from cockpit.dashboard.constants import (
     COCKPIT_UI_DIST,
     DASHBOARD_CORS_ORIGIN,

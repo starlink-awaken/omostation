@@ -869,8 +869,23 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
 
     c.print(f"[dim]正在启动 Cockpit Dashboard (port {port})...[/]")
     cmd = [sys.executable, "-m", "cockpit.dashboard_server"]
+    # Inject Memory OS / Neo4j env so /api/memory and /memory panel see the graph
+    child_env = os.environ.copy()
     try:
-        proc = subprocess.Popen(cmd, cwd=str(workspace_root), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        from cockpit.web.memory_env import apply_memory_os_env
+
+        apply_memory_os_env()
+        child_env = os.environ.copy()
+    except Exception:
+        pass
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(workspace_root),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=child_env,
+        )
     except FileNotFoundError:
         c.print("[red]❌ 无法启动 Dashboard[/]")
         _print_dashboard_fixes()

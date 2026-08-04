@@ -1,9 +1,10 @@
-"""Memory OS HTTP surface — L3 thin gateway to mos CLI (ADR-0372 Phase 5–6).
+"""Memory OS HTTP surface — L3 thin gateway to mos CLI (ADR-0372 Phase 5–8).
 
 Does not import gbrain/kairon internals; invokes `python -m mos` via uv for
 layer compliance. Unit tests inject `invoke_mos`.
 
 Phase 6: RBAC via X-Mos-Role / X-Agent-Profile headers + body fields.
+Phase 8: load NEO4J_*/MOS_* env (memory_env) and uv --with neo4j when configured.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from cockpit.compat import WORKSPACE_ROOT
+from cockpit.web.memory_env import apply_memory_os_env, mos_subprocess_env, mos_uv_extra_args
 
 logger = logging.getLogger("cockpit.web.api_memory")
 router = APIRouter(prefix="/api/memory", tags=["memory-os"])
@@ -28,6 +30,7 @@ InvokeFn = Callable[[str, dict[str, Any]], dict[str, Any]]
 
 def _default_invoke(cmd: str, kwargs: dict[str, Any]) -> dict[str, Any]:
     """Call mos via Agora-compatible stdin JSON protocol."""
+    apply_memory_os_env()
     kairon = Path(WORKSPACE_ROOT) / "projects" / "kairon"
     proc_cmd = [
         "uv",
@@ -36,6 +39,7 @@ def _default_invoke(cmd: str, kwargs: dict[str, Any]) -> dict[str, Any]:
         str(kairon),
         "--package",
         "mos",
+        *mos_uv_extra_args(),
         "python",
         "-m",
         "mos",
@@ -50,7 +54,7 @@ def _default_invoke(cmd: str, kwargs: dict[str, Any]) -> dict[str, Any]:
             capture_output=True,
             timeout=float(os.environ.get("MOS_HTTP_TIMEOUT", "60")),
             check=False,
-            env={**os.environ, "MOS_STDIO": "1"},
+            env=mos_subprocess_env(),
         )
     except FileNotFoundError as exc:
         return {"ok": False, "error": f"uv/mos unavailable: {exc}"}
