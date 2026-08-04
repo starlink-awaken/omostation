@@ -80,10 +80,19 @@ silent_workflow_policy:
     addressed via doctor_checks / diff_checks) from A2 (run-layer silent,
     intentionally not force-triggered because gate coverage already exercises
     them). A workflow is considered silently healthy when its path appears
-    in at least one diff_checks or doctor_checks rule, or when it is in the
-    excluded_workflows list. Workflows with neither coverage AND no recent
-    run events trigger a [warn] in agent-workflow compliance (p74_solidification).
+    in at least one diff_checks or doctor_checks rule. Workflows with neither
+    coverage AND no recent run events trigger a [warn] in agent-workflow
+    compliance (p74_solidification).
   warn_after_days: 30
+  # ADR-0211 D2: per-run_frequency silence threshold (single source of truth).
+  #   on_demand  — expected to run when triggered → warn if no start in 30d
+  #   periodic   — expected to run on a schedule → warn if no start in 7d
+  #   continuous — expected to always be active → warn if no start in 1d
+  # diagnostics.py reads this map (not hardcoded) to keep threshold single-sourced.
+  warn_after_days_by_frequency:
+    on_demand: 30
+    periodic: 7
+    continuous: 1
 # ADR-0211: excluded_workflows field removed; rationale in 0211 §D1 (no double SSOT)
 # ADR-0203: every requirement iteration MUST run through agent-workflow lifecycle.
 # Complements P74 (silence of registered workflows) by forbidding bypass on delivery work.
