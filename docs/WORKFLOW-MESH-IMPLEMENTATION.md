@@ -1131,6 +1131,31 @@ Phase 69 在 Kairon/KOS 增加统一的 `kems.health` 运行态能力，面向�
 
 该能力把持久化故障从“静默丢失或人工猜测”变为可观测的运行态事实，但不扩大模型或 OMO 权限边界。
 
+### 7.3.37 Phase 70 外部资源动态刷新计划与受控触达
+
+Phase 70 为已有 External Connection Fabric 增加 `external-resource-refresh-plan/v1`。目录发现解决“系统有什么”，
+受治理刷新解决“系统最近看到什么”，刷新计划进一步解决“下一次为什么刷新、刷新哪一类证据、是否需要人工介入”。
+`build_external_resource_refresh_plan()` 从安全 catalog projection 计算每个资源的上次观察时间、资源类型周期、下一次到期时间、
+健康恢复优先级和动作类型，支持知识源、数据源、资源提供方、方法包、工具、渠道和模型提供方的差异化节奏。
+
+计划的动作只有三类：
+
+- `health_probe`: 健康未知、过期或探活失败的资源优先恢复观察；
+- `human_review`: descriptor 的 expiry/review deadline 到期或不合法时，先人工复核；
+- `catalog_refresh`: 正常资源按类型周期进入下一次只读观察。
+
+根仓 `bin/ssot/external-resource-catalog.py --refresh-plan` 和 Cockpit
+`GET /api/external-resources/refresh-plan` 都只返回 projection，不执行调度，不调用 provider 业务方法，不创建 WorkflowRun，
+不改变 OMO admission。真正的刷新仍由调用方或受治理 observer 显式触发 `--observe`，这样动态扩展具备节奏与成本边界，
+又不会因为“可发现”误变成“自动可执行”。
+
+运行链路收敛为：
+
+`resource descriptor -> catalog observation -> refresh plan -> governed refresh -> diff/review -> scene evaluation -> admission`
+
+该阶段完成外部知识、数据、资料、方法、理论、工具、模型和渠道的动态触达控制面；外部资源的真实业务启用仍必须满足 Scene Card、
+权限、责任人、回滚、真实消费者和结果指标等既有激活门槛。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
