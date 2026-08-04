@@ -1,4 +1,6 @@
 ---
+id: ADR-0369
+title: Reserved slot
 status: reserved
 lifecycle: dead
 owner: governance-team
