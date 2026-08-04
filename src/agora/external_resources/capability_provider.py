@@ -43,7 +43,9 @@ class CapabilityProvider:
         uris = sorted(caps)
         # lifecycle: 有 deprecated/僵尸候选时降级, 否则 active
         statuses = {c.get("status", "active") for c in caps.values()}
-        lifecycle = "active" if not (statuses & {"deprecated", "sandbox"}) else "admitted"
+        lifecycle = (
+            "active" if not (statuses & {"deprecated", "sandbox"}) else "admitted"
+        )
         return {
             "id": "bos://capabilities",
             "kind": "tool_capability",
