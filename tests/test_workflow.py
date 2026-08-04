@@ -1430,7 +1430,7 @@ class TestDefaultMeshSink:
         )
 
         # 关键：不传 event_sink；non-dry_run 模式会 emit WorkflowRequested
-        result = execute_m1_workflow("test-mesh-auto-connect")
+        assert execute_m1_workflow("test-mesh-auto-connect") is not None
 
         # 应该 emit WorkflowRequested 事件
         assert len(sink_calls) >= 1, "应自动 emit Mesh 事件，无需显式传入 event_sink"

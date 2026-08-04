@@ -19,7 +19,7 @@ from sot_bridge.ssot_kernel.meta_model import (  # type: ignore[reportMissingImp
 
 YAML_AVAILABLE = False
 try:
-    import yaml
+    import yaml  # noqa: F401  (availability probe)
 
     YAML_AVAILABLE = True
 except ImportError:

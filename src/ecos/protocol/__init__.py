@@ -1,5 +1,5 @@
 # L0 Protocol implementations
-from . import (
+from . import (  # noqa: F401  (re-export)
     emergence,
     ssb,
 )

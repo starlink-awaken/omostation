@@ -30,19 +30,19 @@ from .reporter import Reporter
 
 # 导入监控系统模块（可选）
 try:
-    from .monitoring.alerting import IntelligentAlertingSystem
-    from .monitoring.architecture import (
+    from .monitoring.alerting import IntelligentAlertingSystem  # noqa: F401  (availability probe)
+    from .monitoring.architecture import (  # noqa: F401  (availability probe)
         MonitoringArchitecture,
         get_monitoring_architecture,
     )
-    from .monitoring.cli import MonitoringCLI
-    from .monitoring.collectors import EnhancedMetricsCollector
-    from .monitoring.dashboard import MonitoringDashboard
-    from .monitoring.environment import (
+    from .monitoring.cli import MonitoringCLI  # noqa: F401  (availability probe)
+    from .monitoring.collectors import EnhancedMetricsCollector  # noqa: F401  (availability probe)
+    from .monitoring.dashboard import MonitoringDashboard  # noqa: F401  (availability probe)
+    from .monitoring.environment import (  # noqa: F401  (availability probe)
         EnvironmentAwareMonitor,
         get_environment_manager,
     )
-    from .monitoring.storage import InMemoryStorage, JSONStorage
+    from .monitoring.storage import InMemoryStorage, JSONStorage  # noqa: F401  (availability probe)
 
     MONITORING_AVAILABLE = True
 except ImportError:

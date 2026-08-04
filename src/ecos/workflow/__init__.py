@@ -69,7 +69,7 @@ from ecos.workflow.mesh_contract import (
     new_workflow_run_id,
 )
 from ecos.workflow.default_mesh_sink import (
-    get_default_mesh_sink,
+    get_default_mesh_sink,  # noqa: F401  (re-export)
 )
 from ecos.workflow.mesh_gate import (
     check_mesh_connection,
