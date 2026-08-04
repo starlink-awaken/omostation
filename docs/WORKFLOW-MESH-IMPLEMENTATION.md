@@ -1156,6 +1156,22 @@ Phase 70 为已有 External Connection Fabric 增加 `external-resource-refresh-
 该阶段完成外部知识、数据、资料、方法、理论、工具、模型和渠道的动态触达控制面；外部资源的真实业务启用仍必须满足 Scene Card、
 权限、责任人、回滚、真实消费者和结果指标等既有激活门槛。
 
+### 7.3.38 Phase 71 重复 Shadow 评测与晋级资格门禁
+
+已有单次 shadow acceptance 只能说明某一次 manifest 评测满足阈值，不能证明候选模型在重复运行、同一评测材料和累计观测量下稳定优于基线。
+Phase 71 增加 `kems.model-promotion-gate.v1`，由 Kairon/KOS 对多份脱敏 `kems.model-acceptance.v1` 做安全比较：必须绑定同一 manifest，
+达到最低运行次数和观测量，每次都是 `shadow_pass`，每次提升不低于门槛，且报告声明的提升值能由 MAE 重算一致得到。
+
+结果区分 `blocked` 与 `eligible_for_human_approval`。资格投影保留 manifest SHA、数据集身份、报告摘要 SHA、聚合 MAE 和阻断原因，
+不保留原文、prompt、模型自由输出或 provider 载荷。它固定 `automatic_promotion=false`、`promotion=blocked_until_omo_approval`，不写入模型注册表，
+不改变 Agora 路由，不创建 WorkflowRun，不触发外部调用。
+
+因此 Workflow Mesh 的智能化晋级边界是：
+
+`shadow candidate -> repeated gate -> human/OMO approval -> canary admission -> outcome feedback -> rollback`
+
+模型可以帮助判断候选质量，但不能取代 OMO 的审批和 Mesh 的状态机。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。

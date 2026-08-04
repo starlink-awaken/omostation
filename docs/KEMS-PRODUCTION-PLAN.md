@@ -446,3 +446,23 @@ PYTHONPATH="$KAIRON_ROOT/packages/kos/src" \
 备份和恢复使用 SQLite 原生 backup API，写入临时文件、设置 0600 权限、原子替换，并在落盘后再次执行完整性检查。已存在的目标默认拒绝覆盖，恢复必须显式提供 `--force`。恢复后的数据库仍需通过健康检查，未通过则不得继续生成 manifest 或执行 shadow 评测。
 
 该阶段只完成“可检查、可备份、可恢复、可重放”的生产基础，不改变 `shadow`、`blocked_until_omo_approval` 和 `provider_invocation=false` 等放行边界；下一步才是把健康摘要接入 Cockpit/外部资源目录，并建立真实 OCR 质量样本与预测 shadow 运行的连续指标。
+
+### 12.8 Phase 71 重复 Shadow 评测与模型晋级门禁
+
+Phase 71 在已有单次 `kems.model-acceptance.v1` 之上增加 `kems.model-promotion-gate.v1`。它接收多次、脱敏、同一
+`dataset_id`、`dataset_version` 和 `evaluation_manifest_sha256` 绑定的 shadow 报告，重新计算加权 MAE 和相对提升，并同时检查：
+
+- 最低 shadow 运行次数和最低观测量；
+- 每次运行都必须是 `shadow_pass`，且提升不低于门槛；
+- 报告中的相对提升必须与 `model_mae`/`baseline_mae` 一致；
+- 报告不能重复，不能跨 manifest 混用，不能携带原文、prompt 或模型自由输出。
+
+根仓 Kairon 提供 `scripts/kems_model_promotion_gate.py`，结果只有 `blocked` 或 `eligible_for_human_approval`。后者只是进入人工/OMO
+审批的资格投影，仍固定 `promotion=blocked_until_omo_approval`、`automatic_promotion=false`，不会写模型注册表、改变路由、创建 WorkflowRun
+或触发外部 provider。
+
+运行链路收敛为：
+
+`redacted manifest -> repeated shadow reports -> weighted metrics/reproducibility gate -> human/OMO approval -> canary -> rollback`
+
+真实业务准确率仍需真实低风险消费者持续产生样本后才能声明；fixture 通过只证明门禁逻辑正确。
