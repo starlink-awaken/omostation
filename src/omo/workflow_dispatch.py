@@ -537,6 +537,59 @@ def admit_workflow(
     }
 
 
+def _dispatch_iris_via_executor(
+    root: Path,
+    packet: dict[str, Any],
+    iris_caps: list[str],
+    omo_dir: str | Path = ".omo",
+) -> dict[str, Any]:
+    """P0 完整第一块: iris capability → mesh-iris-executor 快速路径.
+
+    capability_refs 含 ``iris:xxx`` → subprocess 调 mesh-iris-executor (新 run_id, 自 seed).
+    admission gate (admit_workflow) 已验证 iris capability 可用; executor 执行
+    list_items + record receipt (mesh 6 事件链 + EvidenceRecorded).
+    """
+    import subprocess
+
+    executor = root / "bin" / "ssot" / "mesh-iris-executor.py"
+    if not executor.exists():
+        raise WorkflowDispatchError(f"mesh-iris-executor not found: {executor}")
+
+    results: list[dict[str, Any]] = []
+    for cap in iris_caps:
+        connector = cap[len("iris:") :]
+        proc = subprocess.run(
+            [
+                "python3",
+                str(executor),
+                "--connector",
+                connector,
+                "--omo-dir",
+                str(omo_dir),
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+        results.append(
+            {
+                "capability": cap,
+                "connector": connector,
+                "returncode": proc.returncode,
+                "tail": (proc.stdout or "")[-400:],
+                "stderr_tail": (proc.stderr or "")[-200:],
+            }
+        )
+    all_ok = all(r["returncode"] == 0 for r in results)
+    return {
+        **packet,
+        "iris_dispatch": results,
+        "dispatch_state": "dispatched" if all_ok else "failed",
+    }
+
+
 def dispatch_admitted_workflow(
     root: Path,
     *,
@@ -559,6 +612,12 @@ def dispatch_admitted_workflow(
         capability_health=capability_health,
         **admission_options,
     )
+    # P0 完整第一块: iris capability → mesh-iris-executor 快速路径 (不 launch agent).
+    # admission gate 已验证 iris capability 可用, 直接调 executor 执行 + record receipt.
+    iris_caps = [c for c in required_capabilities if str(c).startswith("iris:")]
+    if iris_caps:
+        return _dispatch_iris_via_executor(root, packet, iris_caps)
+
     from .omo_worker_dispatch import dispatch_task
 
     worker_dispatch = dispatch_task(
