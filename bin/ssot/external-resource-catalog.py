@@ -332,7 +332,11 @@ def collect_external_resources(
     """Collect an external-resource snapshot through Agora's boundary."""
     root = root.resolve()
     build_snapshot, diff_snapshots, discover, _ = _load_agora(root)
-    records = discover(entry_points, probe=probe, mark_unprobed=not probe)
+    records = list(discover(entry_points, probe=probe, mark_unprobed=not probe))
+    # BOS 能力目录兜底: entry-point 发现为空时 (agora 未安装/无外部 provider),
+    # 通过 importlib 加载 CapabilityProvider, 让能力目录覆盖 bos-services.yaml 的能力.
+    if not records:
+        records.extend(_load_capability_records(root))
     snapshot = build_snapshot(
         records,
         now=now or datetime.now(UTC),
@@ -344,6 +348,48 @@ def collect_external_resources(
     if previous_snapshot is not None:
         snapshot["changes"] = diff_snapshots(previous_snapshot, snapshot)
     return snapshot
+
+
+def _load_capability_records(root: Path) -> list[Any]:
+    """importlib 加载 CapabilityProvider 并构造 DiscoveryRecord 列表。
+
+    不依赖 agora 已安装 (entry-point 不可见时也能覆盖 BOS 能力目录)。
+    """
+    try:
+        provider_path = (
+            root
+            / "projects/agora/src/agora/external_resources/capability_provider.py"
+        )
+        spec = importlib.util.spec_from_file_location(
+            "agora_capability_provider_projection", provider_path
+        )
+        if spec is None or spec.loader is None:
+            return []
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        descriptor = module.CapabilityProvider().external_descriptor()
+        # 复用 agora external_connections 的 DiscoveryRecord/解析 (已在 _load_agora 注册)
+        from agora_external_connections_projection import (
+            DiscoveryRecord as AgoraDiscoveryRecord,
+        )
+        from agora_external_connections_projection import (
+            ExternalResourceDescriptor,
+        )
+
+        parsed = ExternalResourceDescriptor.from_mapping(descriptor)
+        return [
+            AgoraDiscoveryRecord(
+                descriptor=parsed,
+                entry_point="external.resources:agora-bos-capabilities",
+            )
+        ]
+    except (ImportError, OSError, AttributeError) as exc:
+        print(
+            f"external-resource-catalog: capability fallback unavailable: {exc}",
+            file=sys.stderr,
+        )
+        return []
 
 
 def evaluate_external_resources(
