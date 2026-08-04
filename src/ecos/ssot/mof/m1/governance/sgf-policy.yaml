@@ -14,7 +14,7 @@ properties:
   policy_id: "sgf-policy"
   dimension: "all"
   thresholds:
-    gates: 31
+    gates: 32
 
 settings:
   attention:
@@ -103,6 +103,9 @@ gates:
     command: ["bin/gac/governance-convergence-lint.py"]
   - id: "governance-semantic-gate"
     command: ["bin/gac/governance-semantic-gate.py", "--json"]
+  - id: "adr-coverage"
+    command: ["bin/adr/adr-coverage.py", "--json"]
+    description: "ADR-0367 C4: ADR 编号/前端/INDEX 覆盖检查, 阻断性"
   - id: "state-freshness-check"
     command: ["bin/gac/state-freshness-check.py", "--json"]
     ci_only: true
