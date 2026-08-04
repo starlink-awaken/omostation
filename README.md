@@ -42,6 +42,10 @@ uv run ruff check "src/"
 - `src/agora/mcp/resolver/`
 - `src/agora/auth/`
 - `src/agora/bus/`
+- `src/agora/mcp/bos_metrics.py` — 能力使用度量 (capability 粒度)
+- `src/agora/mcp/capability_catalog.py` — 能力目录 + 僵尸识别
+- `src/agora/mcp/bos_router.py` — 语义路由 (能力感知)
+- `src/agora/external_resources/capability_provider.py` — BOS 能力暴露给 mesh 能力目录
 
     ## Documentation
 
