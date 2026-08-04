@@ -110,10 +110,7 @@ def _scene_binding_projection(task_data: dict) -> dict[str, str] | None:
     binding = metadata.get("scene_binding") if isinstance(metadata, dict) else None
     if not isinstance(binding, dict):
         return None
-    projection = {
-        key: str(binding.get(key) or "").strip()
-        for key in ("scene_id", "journey_id", "outcome_metric")
-    }
+    projection = {key: str(binding.get(key) or "").strip() for key in ("scene_id", "journey_id", "outcome_metric")}
     return projection if all(projection.values()) else None
 
 
@@ -156,8 +153,7 @@ def _workflow_request_projection(task_id: str) -> dict[str, Any] | None:
     safe_scene_binding = None
     if isinstance(scene_binding, dict):
         candidate = {
-            key: str(scene_binding.get(key) or "").strip()
-            for key in ("scene_id", "journey_id", "outcome_metric")
+            key: str(scene_binding.get(key) or "").strip() for key in ("scene_id", "journey_id", "outcome_metric")
         }
         if all(candidate.values()):
             safe_scene_binding = candidate
@@ -1107,8 +1103,8 @@ def _transition_task(
     try:
         from omo.omo_ingress_task_lifecycle import (
             complete_task,
-            promote_task_to_active,  # pyright: ignore[reportPrivateImportUsage]
-            revert_task_to_planned,  # pyright: ignore[reportPrivateImportUsage]
+            promote_task_to_active,  # pyright: ignore[reportPrivateImportUsage]  # type: ignore[reportAttributeAccessIssue]
+            revert_task_to_planned,  # pyright: ignore[reportPrivateImportUsage]  # type: ignore[reportAttributeAccessIssue]
         )
 
         omo_dir = WORKSPACE_DIR / ".omo"

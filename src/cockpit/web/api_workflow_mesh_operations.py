@@ -196,19 +196,14 @@ if router:
             allowed = {"workflow_run_id", "step_run_id", "producer", "receipt"}
             unknown = sorted(set(payload) - allowed)
             if unknown:
-                raise ExternalReceiptError(
-                    f"unsupported receipt envelope fields: {unknown}"
-                )
+                raise ExternalReceiptError(f"unsupported receipt envelope fields: {unknown}")
             receipt = payload.get("receipt")
             result = record_external_receipt(
                 _REPO_ROOT / ".omo",
                 receipt,
                 workflow_run_id=str(payload.get("workflow_run_id") or ""),
                 step_run_id=str(payload.get("step_run_id") or "").strip() or None,
-                producer=str(
-                    payload.get("producer")
-                    or "cockpit-ui://workflow-mesh-operations"
-                ).strip(),
+                producer=str(payload.get("producer") or "cockpit-ui://workflow-mesh-operations").strip(),
             )
         except (ExternalReceiptError, ValueError, TypeError) as exc:
             return {

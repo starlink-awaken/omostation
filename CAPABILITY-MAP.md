@@ -1,6 +1,6 @@
 # Cockpit 能力地图
 
-> 自动生成于 2026-08-03T01:04:00Z | 版本 1.0.0
+> 自动生成于 2026-08-03T09:49:40Z | 版本 1.0.0
 > 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑
 > 生成器: `bin/cockpit/gen-help-docs.py`
 
@@ -9,7 +9,7 @@
 | 通道 | 数量 |
 |------|------|
 | CLI 命令 (含子命令) | 108 |
-| MCP 工具 | 580 |
+| MCP 工具 | 581 |
 | MCP 服务器 | 28 |
 | BOS 服务 | 188 |
 | BOS 域 | 16 |
@@ -19,7 +19,7 @@
 | 服务器 | 层 | 工具数 | 传输 | 文件 |
 |--------|-----|--------|------|------|
 | `gbrain` | L2 | 75 | stdio | `projects/gbrain/src/core/operations/exports.ts` |
-| `agora` | I0 | 64 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
+| `agora` | I0 | 65 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `l4-kernel` | L4 | 45 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
@@ -184,4 +184,4 @@
 | `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
 
 ---
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T01:04:00Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T09:49:40Z 生成*

@@ -8,8 +8,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from cockpit.compat import WORKSPACE_ROOT
 from fastapi import APIRouter, Request
+
+from cockpit.compat import WORKSPACE_ROOT
 
 _REPO_ROOT = WORKSPACE_ROOT
 _OMO_SRC = _REPO_ROOT / "projects" / "omo" / "src"
@@ -37,9 +38,7 @@ def _load_script(name: str, filename: str) -> Any:
 
 
 try:
-    _candidate_module = _load_script(
-        "cockpit_scene_card_candidates", "scene-card-candidates.py"
-    )
+    _candidate_module = _load_script("cockpit_scene_card_candidates", "scene-card-candidates.py")
     collect_candidates = _candidate_module.collect_candidates
 except Exception as exc:
     collect_candidates = None  # type: ignore[assignment]
@@ -66,9 +65,7 @@ else:
     _INTAKE_IMPORT_ERROR = None
 
 try:
-    _preflight_module = _load_script(
-        "cockpit_external_activation_preflight", "external-activation-preflight.py"
-    )
+    _preflight_module = _load_script("cockpit_external_activation_preflight", "external-activation-preflight.py")
     build_preflight = _preflight_module.build_preflight
 except Exception as exc:
     build_preflight = None  # type: ignore[assignment]
@@ -98,10 +95,7 @@ def _scene_task_projection(
     preflight_status: str | None = None,
     error: str | None = None,
 ) -> dict[str, Any]:
-    safe_scene = {
-        key: str(scene.get(key) or "")
-        for key in ("scene_id", "journey_id", "outcome_metric")
-    }
+    safe_scene = {key: str(scene.get(key) or "") for key in ("scene_id", "journey_id", "outcome_metric")}
     projection: dict[str, Any] = {
         "schema": "scene-card-task/v1",
         "mode": "planned_task_handoff",
@@ -161,9 +155,7 @@ async def get_scene_card_candidates() -> dict[str, Any]:
     try:
         projection = collect_candidates(_REPO_ROOT)
     except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
-        projection = _unavailable_projection(
-            type(exc).__name__, "检查候选种子和场景契约后重试。"
-        )
+        projection = _unavailable_projection(type(exc).__name__, "检查候选种子和场景契约后重试。")
         return {"ok": False, "status": "unavailable", "projection": projection}
     return {"ok": True, "status": "live", "projection": projection}
 
@@ -234,10 +226,7 @@ def _catalog_missing_projection(
             "sample_ref_count": len(safe_scene.get("sample_refs", [])),
             "demand_evidence_ref_count": len(safe_scene.get("demand_evidence_refs", [])),
             "activation_evidence_ref_count": len(safe_scene.get("activation_evidence_refs", [])),
-            "required_capabilities": [
-                str(capability)
-                for capability in safe_scene.get("required_capabilities", [])
-            ],
+            "required_capabilities": [str(capability) for capability in safe_scene.get("required_capabilities", [])],
         },
         "capability_checks": [],
         "catalog_freshness": {
@@ -283,9 +272,7 @@ async def preflight_scene_card(request: Request) -> dict[str, Any]:
             raise ValueError("scene_card must be an object")
         intake = build_intake(scene_card)
         if _latest_catalog is None:
-            projection = _catalog_missing_projection(
-                intake, status="unavailable", error="external_catalog_unavailable"
-            )
+            projection = _catalog_missing_projection(intake, status="unavailable", error="external_catalog_unavailable")
         else:
             catalog = _latest_catalog()
             if catalog is None:
@@ -407,10 +394,7 @@ async def create_scene_card_task(request: Request) -> dict[str, Any]:
         risk_level = str(payload.get("risk_level") or "L1").upper()
         if risk_level not in {"L0", "L1", "L2", "L3"}:
             raise ValueError("risk_level must be L0, L1, L2, or L3")
-        safe_scene = {
-            key: str(scene.get(key) or "")
-            for key in ("scene_id", "journey_id", "outcome_metric")
-        }
+        safe_scene = {key: str(scene.get(key) or "") for key in ("scene_id", "journey_id", "outcome_metric")}
         task_data = {
             "id": task_id,
             "title": f"Scene Card task: {safe_scene['scene_id']}",

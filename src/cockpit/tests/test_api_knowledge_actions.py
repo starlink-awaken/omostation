@@ -40,12 +40,23 @@ def test_knowledge_action_receipt_removes_actor_ref(monkeypatch, tmp_path):
     monkeypatch.setattr(api_knowledge_actions, "record_knowledge_action", fake_record)
     response = TestClient(_app()).post(
         "/api/knowledge/action-receipt",
-        json={"action_kind": "retrieved", "query": "治理", "knowledge_refs": [{"ref": "kos:1"}], "actor_ref": "cockpit-ui://test"},
+        json={
+            "action_kind": "retrieved",
+            "query": "治理",
+            "knowledge_refs": [{"ref": "kos:1"}],
+            "actor_ref": "cockpit-ui://test",
+        },
     )
 
     assert response.status_code == 200
     assert response.json()["status"] == "recorded"
-    assert captured == [(tmp_path / ".omo", {"action_kind": "retrieved", "query": "治理", "knowledge_refs": [{"ref": "kos:1"}]}, "cockpit-ui://test")]
+    assert captured == [
+        (
+            tmp_path / ".omo",
+            {"action_kind": "retrieved", "query": "治理", "knowledge_refs": [{"ref": "kos:1"}]},
+            "cockpit-ui://test",
+        )
+    ]
 
 
 def test_knowledge_action_receipt_reports_invalid_payload(monkeypatch):

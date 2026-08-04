@@ -394,10 +394,7 @@ def _extract_scene_binding(run: dict[str, Any] | None) -> dict[str, str] | None:
     for candidate in candidates:
         if not isinstance(candidate, dict):
             continue
-        binding = {
-            key: str(candidate.get(key, "")).strip()
-            for key in ("scene_id", "journey_id", "outcome_metric")
-        }
+        binding = {key: str(candidate.get(key, "")).strip() for key in ("scene_id", "journey_id", "outcome_metric")}
         if all(binding.values()):
             return binding
     return None
@@ -441,8 +438,10 @@ def build_delivery_journey_projection(
         return _get_fixture_snapshot("UNAVAILABLE")
 
     run_id = str(latest_run.get("run_id", "")) if latest_run else "waiting-for-run"
-    title = str(latest_run.get("objective", "当前工程交付旅程")) if latest_run else (
-        f"等待受治理 WorkflowRun: {git_info.get('branch', 'unknown')}"
+    title = (
+        str(latest_run.get("objective", "当前工程交付旅程"))
+        if latest_run
+        else (f"等待受治理 WorkflowRun: {git_info.get('branch', 'unknown')}")
     )
     scene_binding = _extract_scene_binding(latest_run)
 
@@ -452,7 +451,9 @@ def build_delivery_journey_projection(
         "name": "intent",
         "status": intent_status,
         "title": "意图与需求捕获" if intent_status == "verified" else "目标不可读",
-        "details": {"objective": latest_run.get("objective", "")} if latest_run else {"reason": "no_active_workflow_run"},
+        "details": {"objective": latest_run.get("objective", "")}
+        if latest_run
+        else {"reason": "no_active_workflow_run"},
         "last_updated": now_iso,
     }
 
@@ -564,8 +565,10 @@ def build_delivery_journey_projection(
     }
 
     run_state = str(latest_run.get("status", "")).lower() if latest_run else ""
-    mode = "waiting_for_run" if latest_run is None else (
-        "failed" if run_state in {"failed", "error"} else ("completed" if is_closed else "active")
+    mode = (
+        "waiting_for_run"
+        if latest_run is None
+        else ("failed" if run_state in {"failed", "error"} else ("completed" if is_closed else "active"))
     )
     snapshot_status = "stale" if latest_run is None else ("failed" if mode == "failed" else "live")
     if latest_run is None:

@@ -150,9 +150,7 @@ def test_scene_cards_intake_rejects_invalid_payload(monkeypatch):
         raise ValueError("scene card contains forbidden field: raw_content")
 
     monkeypatch.setattr(api_scene_cards, "build_intake", fail_intake)
-    response = TestClient(_app()).post(
-        "/api/scene-cards/intake", json={"scene_card": {"raw_content": "secret"}}
-    )
+    response = TestClient(_app()).post("/api/scene-cards/intake", json={"scene_card": {"raw_content": "secret"}})
 
     assert response.status_code == 200
     assert response.json()["ok"] is False
@@ -228,9 +226,7 @@ def test_scene_cards_preflight_blocks_without_omo_catalog(monkeypatch):
     monkeypatch.setattr(api_scene_cards, "build_intake", lambda _card: intake)
     monkeypatch.setattr(api_scene_cards, "_latest_catalog", lambda: None)
 
-    response = TestClient(_app()).post(
-        "/api/scene-cards/preflight", json={"scene_card": {"schema": "scene-card/v1"}}
-    )
+    response = TestClient(_app()).post("/api/scene-cards/preflight", json={"scene_card": {"schema": "scene-card/v1"}})
 
     body = response.json()
     assert response.status_code == 200
@@ -247,9 +243,7 @@ def test_scene_cards_preflight_rejects_forbidden_input(monkeypatch):
         lambda _card: (_ for _ in ()).throw(ValueError("scene card contains forbidden field: raw_content")),
     )
 
-    response = TestClient(_app()).post(
-        "/api/scene-cards/preflight", json={"scene_card": {"raw_content": "secret"}}
-    )
+    response = TestClient(_app()).post("/api/scene-cards/preflight", json={"scene_card": {"raw_content": "secret"}})
 
     assert response.json()["ok"] is False
     assert response.json()["status"] == "invalid"
@@ -353,6 +347,7 @@ def test_scene_cards_task_handoff_blocks_before_omo_write(monkeypatch, tmp_path)
             "scene": {"scene_id": "test-scene", "journey_id": "test-journey", "outcome_metric": "test_metric"},
         },
     )
+
     def create(*_args, **_kwargs):
         raise AssertionError("must not write")
 

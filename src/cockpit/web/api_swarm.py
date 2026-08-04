@@ -83,9 +83,7 @@ async def get_swarm_status():
     active_runs = workflow_status.get("active_runs", []) if workflow_status else []
     compliance_block = workflow_status.get("compliance", {}) if workflow_status else {}
     sources_available = sum(1 for src in (workflow_status, window) if src is not None)
-    data_quality = (
-        "complete" if sources_available == 2 else "partial" if sources_available else "unavailable"
-    )
+    data_quality = "complete" if sources_available == 2 else "partial" if sources_available else "unavailable"
 
     return {
         "workflow": {
