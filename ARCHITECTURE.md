@@ -151,6 +151,7 @@ external resource -> descriptor -> scene-bound admission -> capability route -> 
 
 | Document | Role |
 |----------|------|
+| [`docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md`](docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md) | 场景优先的长周期架构战略、子项目边界与 Workflow Mesh 路线基线 |
 | [`README.md`](README.md) | Front door and quick orientation |
 | [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
 | [`CLAUDE.md`](CLAUDE.md) | AI session context loader |

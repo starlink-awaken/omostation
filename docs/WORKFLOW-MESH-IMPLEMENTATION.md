@@ -1172,6 +1172,13 @@ Phase 71 增加 `kems.model-promotion-gate.v1`，由 Kairon/KOS 对多份脱敏 
 
 模型可以帮助判断候选质量，但不能取代 OMO 的审批和 Mesh 的状态机。
 
+### 7.3.39 Phase 72 场景优先架构收敛与长期路线
+
+Phase 72 将 Workflow Mesh 的定位从“工程执行协议”进一步收敛为织星所有受治理业务旅程的唯一执行脊柱。后续新功能必须先绑定 `scene_id`、`journey_id` 和 `outcome_metric`，再进入任务、准入、派发、证据、验证和交付链；没有真实场景和结果指标的能力只进入 proposal、sandbox 或 shadow。
+
+跨项目的长期功能版图、首个低风险真实试点、外部知识/数据/方法/工具/渠道的动态扩展流水线，以及 0 至 36 个月里程碑见
+[`docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md`](ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md)。该文档不创建新的状态真相，只固化现有 OMO、ECOS、Runtime、AetherForge、Agora、Kairon/KOS、Cockpit 和 External Connection Fabric 的协作边界。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
