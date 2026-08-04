@@ -29,7 +29,8 @@ DRY_RUN=false
 [ "${1:-}" = "--dry-run" ] && DRY_RUN=true
 
 PASW_TTL_HOURS="${PASW_TTL_HOURS:-24}"
-WS_PARENT="$(dirname "$WS_ROOT")"
+# WS_PARENT 可注入 (测试隔离用); 默认 = workspace 同级目录
+WS_PARENT="${WS_PARENT:-$(dirname "$WS_ROOT")}"
 # CANONICAL_ROOT_REPO: 从 origin url 推导 owner/repo (gh pr list 需要)
 CANONICAL_ROOT_REPO=$(git -C "$WS_ROOT" config --get remote.origin.url 2>/dev/null \
   | sed 's#.*github.com[:/]##; s#\.git$##' || echo "starlink-awaken/omostation")
@@ -52,7 +53,8 @@ for wt_path in "$WS_PARENT"/ws-*/; do
   fi
 
   # open PR 检查: 有 PR = 活跃, 跳过 (防误清正在用的 worktree)
-  branch=$(git -C "$wt_path" branch --show-current 2>/dev/null)
+  # 非 git 目录时 git 返回 128, 需 || true 防止 set -e 中断整个清理
+  branch=$(git -C "$wt_path" branch --show-current 2>/dev/null || true)
   if [ -n "$branch" ] && command -v gh >/dev/null 2>&1; then
     if gh pr list --repo "$CANONICAL_ROOT_REPO" --head "$branch" --state open 2>/dev/null | grep -q .; then
       echo "⏭️  $wt_name: 分支 $branch 有 open PR, 跳过 (活跃)"
