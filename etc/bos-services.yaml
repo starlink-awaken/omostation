@@ -2619,7 +2619,7 @@ services:
   description: AGT 策略评估与合规检查引擎 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://governance/agt/policy
 - action: trust
@@ -2628,7 +2628,7 @@ services:
   description: AGT 信任评分与身份验证服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/agt/trust
 - action: sandbox
@@ -2637,7 +2637,7 @@ services:
   description: AGT 沙箱隔离与权限控制服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/agt/sandbox
 - action: sre
@@ -2646,7 +2646,7 @@ services:
   description: AGT SRE 监控与健康检查服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/agt/sre
 - action: mcp-security
@@ -2655,7 +2655,7 @@ services:
   description: AGT MCP 安全审计与权限检查服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/agt/mcp-security
 - action: marketplace
@@ -2664,7 +2664,7 @@ services:
   description: AGT 能力市场与发现服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/agt/marketplace
 - action: lightning
@@ -2673,7 +2673,7 @@ services:
   description: AGT Lightning 快速通道与缓存服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/agt/lightning
 - action: hypervisor
@@ -2682,6 +2682,6 @@ services:
   description: AGT Hypervisor 审计哈希链与完整性验证服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://governance/agt/hypervisor
