@@ -469,18 +469,14 @@ def p74_solidification_report(
         # ADR-0211 D2: run_frequency drives warn_after threshold. Single-sourced
         # from SSOT silent_workflow_policy.warn_after_days_by_frequency
         # (on_demand=30d / periodic=7d / continuous=1d). Fallback to warn_after_days.
-        freq_map = (silent_policy.get("warn_after_days_by_frequency") or {})
+        freq_map = silent_policy.get("warn_after_days_by_frequency") or {}
         warn_after = int(
-            freq_map.get(run_frequency)
-            or silent_policy.get("warn_after_days")
-            or 30
+            freq_map.get(run_frequency) or silent_policy.get("warn_after_days") or 30
         )
         has_recent_run = False
         if last_start:
             try:
-                last_dt = datetime.fromisoformat(
-                    str(last_start).replace("Z", "+00:00")
-                )
+                last_dt = datetime.fromisoformat(str(last_start).replace("Z", "+00:00"))
                 now_dt = datetime.now(UTC)
                 age_h = (now_dt - last_dt).total_seconds() / 3600
                 has_recent_run = age_h <= warn_after * 24
