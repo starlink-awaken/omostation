@@ -41,8 +41,8 @@ validate_session() {
   fi
 }
 
-# PASW: Per-Agent Submodule Worktree (ADR-0355) — 高冲突子模块 per-agent 独立 worktree
-# 设计文档: .omo/_knowledge/decisions/0355-pasw-submodule-isolation.md
+# PASW: Per-Agent Submodule Worktree (ADR-0371) — 高冲突子模块 per-agent 独立 worktree
+# 设计文档: .omo/_knowledge/decisions/0371-pasw-submodule-isolation.md
 # 核心函数在根 lib/pasw-core.sh (脚本在 bin/gac/, 需 ../../lib/ 到仓库根)
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/pasw-core.sh"
 
