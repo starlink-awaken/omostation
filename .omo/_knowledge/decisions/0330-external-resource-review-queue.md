@@ -1,4 +1,5 @@
 ---
+id: ADR-0330
 title: Cockpit 外部资源只读人工复核队列
 status: accepted
 type: decision

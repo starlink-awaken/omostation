@@ -1,4 +1,5 @@
 ---
+id: ADR-0300
 title: Adaptive Digital 副官决策循环的 Workflow Mesh 边界
 status: accepted
 type: decision

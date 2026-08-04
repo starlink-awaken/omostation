@@ -1,4 +1,5 @@
 ---
+id: ADR-0343
 title: External scene trial promotion readiness projection
 status: accepted
 type: adr

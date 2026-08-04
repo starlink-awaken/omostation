@@ -1,4 +1,5 @@
 ---
+id: ADR-0326
 title: 外部连接激活前置检查与只读提案边界
 status: accepted
 type: decision

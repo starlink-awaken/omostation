@@ -1,4 +1,5 @@
 ---
+id: ADR-0292
 status: ACCEPTED
 lifecycle: decision
 owner: governance-agent

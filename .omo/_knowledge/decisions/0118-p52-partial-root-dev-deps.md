@@ -1,4 +1,5 @@
 ---
+id: ADR-0118
 status: active
 lifecycle: contract
 owner: governance-team

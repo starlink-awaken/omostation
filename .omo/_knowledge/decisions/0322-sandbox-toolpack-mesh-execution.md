@@ -1,4 +1,5 @@
 ---
+id: ADR-0322
 title: Workflow Mesh 受控 Sandbox ToolPack 执行闭环
 status: accepted
 type: decision

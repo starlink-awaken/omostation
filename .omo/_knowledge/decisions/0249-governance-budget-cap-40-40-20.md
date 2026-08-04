@@ -1,4 +1,5 @@
 ---
+id: ADR-0249
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星

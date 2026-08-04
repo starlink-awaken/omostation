@@ -1,4 +1,5 @@
 ---
+id: ADR-0318
 title: Agora 能力健康作为 Cockpit 准入证据
 status: ACCEPTED
 date: 2026-08-03
