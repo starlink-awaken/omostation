@@ -2756,12 +2756,13 @@ gac:
       dimension: X1
       layer: meta
       name: LLM 建议不自动
-      description: "LLM 只 generate suggestion, 永不 auto-apply. 对应 P76-7-1 (llm-advisory-not-autonomous)"
+      description: "LLM 只 generate suggestion, 永不 auto-apply. 实现: bin/gac/check-llm-advisory-only.py (gac-gate CI)"
       check_type: hygiene_case
       executor: [hook_pre_edit, ci_gate]
-      lifecycle: draft
-      version: 0.1.0
+      lifecycle: active
+      version: 1.0.0
       created_at: 2026-07-08
+      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-P76-7-2-TIER-GRACEFUL-FALLBACK
@@ -2804,12 +2805,13 @@ gac:
       dimension: X4
       layer: meta
       name: 子模块 PR 独立
-      description: "跨仓 PR 独立提交, 不在主仓 commit submodule 内容. 对应 P76-8-1 (submodule-PR-not-coupling)"
+      description: "跨仓 PR 独立提交, 不在主仓 commit submodule 内容. 实现: bin/gac/check-submodule-pr-independent.py (gac-gate CI)"
       check_type: hygiene_case
       executor: [hook_pre_edit, ci_gate]
-      lifecycle: draft
-      version: 0.1.0
+      lifecycle: active
+      version: 1.0.0
       created_at: 2026-07-08
+      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
@@ -2840,12 +2842,13 @@ gac:
       dimension: X1
       layer: meta
       name: 本地启发式默认
-      description: "本地调 --no-llm 不依赖外部服务可用. 对应 P76-9A-4 (heuristic-default)"
+      description: "本地调 --no-llm 不依赖外部服务可用. 实现: bin/gac/check-heuristic-default.py (gac-gate CI)"
       check_type: hygiene_case
-      executor: [hook_pre_edit]
-      lifecycle: draft
-      version: 0.1.0
+      executor: [hook_pre_edit, ci_gate]
+      lifecycle: active
+      version: 1.0.0
       created_at: 2026-07-08
+      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-RUFF-SCOPE-STABLE
