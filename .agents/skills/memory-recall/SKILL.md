@@ -26,9 +26,10 @@ description: >
 召回:  bos://memory/mos/recall   { query, scope?, intent? }
 写入:  bos://memory/mos/write    { type, content|content_ref, confidence? }
 状态:  bos://memory/mos/status
-CLI:   uv run --directory projects/kairon --package mos python -m mos {write,recall,status}
-遗忘:  bos://memory/mos/forget   (Phase 2+)
+遗忘:  bos://memory/mos/forget   { memory_id, reason? }  # Phase 2
+CLI:   uv run --directory projects/kairon --package mos python -m mos {write,recall,forget,status}
 巩固:  bos://memory/mos/consolidate  (Phase 3+，异步)
+Mem0:  MOS_MEM0=1 启用 shadow 双写（默认 off，无 Qdrant）
 ```
 
 经 Agora：`resolve_bos_uri` / cockpit bos 代理。  

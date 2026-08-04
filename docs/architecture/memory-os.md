@@ -108,7 +108,7 @@ MOS 增加：统一 agent 默认召回、对话记忆、巩固与遗忘；事件
 |-------|------|
 | 0 | 本文 + ADR-0372 + registry + audit + skill — **done** |
 | 1 | `packages/mos` MVP + BOS + dual-track + card dual-accept — **done** |
-| 2 | Mem0 硬化 + forget bus + eval 集 |
+| 2 | Mem0 shadow + forget bus + eval v0 + BOS forget — **done** |
 | 3 | consolidate job（编排 gbrain dream） |
 | 4+ | Graphiti 场景、ACL、UI |
 

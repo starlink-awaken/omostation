@@ -3,7 +3,7 @@
 # Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
-status: phase1
+status: phase2
 adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
@@ -27,10 +27,11 @@ bos_uris:
     - uri: "bos://memory/mos/status"
       phase: 1
       role: health_and_backlog
-  planned:
+  active_extra:
     - uri: "bos://memory/mos/forget"
       phase: 2
       role: forget_propagation
+  planned:
     - uri: "bos://memory/mos/consolidate"
       phase: 3
       role: sleep_time_orchestration
@@ -160,12 +161,12 @@ phases:
       - event dual-subscribe migration (memory + brain)
 
   2:
-    status: planned
+    status: done
     deliverables:
-      - Mem0 harden
-      - real Theta
-      - forget bus
-      - eval set v0
+      - Mem0 shadow adapter (MOS_MEM0 flag, no Qdrant)
+      - forget bus (raw+theta+mem0)
+      - eval harness v0 (15 cases)
+      - BOS mos/forget
   3:
     status: planned
     deliverables:
