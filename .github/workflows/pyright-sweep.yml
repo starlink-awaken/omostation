@@ -1,0 +1,55 @@
+name: pyright-sweep
+# ADR-0367 Phase 3: sweep 自举 — 手动触发全仓 pyright 扫描 + 指标归档.
+# 产出: .omo/_knowledge/sweeps/<date>.json + 打印 suppression 指标.
+# 门禁: bin/sweep/pyright.py --suppression-gate (A3) 由各 PR 的 pyright-sweep-check diff_check 承担;
+#       本 workflow 只做全仓基线扫描, 不阻断 (报告供 A5 趋势分析).
+on:
+  workflow_dispatch:
+    inputs:
+      projects:
+        description: "Projects (space-separated, default: all with pyproject.toml)"
+        required: false
+        default: ""
+      strict:
+        description: "Exit 1 when suppression_ratio > 0.6 or file_suppressions >= 3"
+        type: boolean
+        default: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v4
+      - name: Run pyright sweep scan
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.projects }}" ]; then
+            ARGS="--projects ${{ github.event.inputs.projects }}"
+          fi
+          python3 bin/sweep/scan.py $ARGS --date "$(date -u +%Y-%m-%d)"
+      - name: Upload sweep report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-report
+          path: .omo/_knowledge/sweeps/*.json
+      - name: Suppression gate (optional strict)
+        if: ${{ github.event.inputs.strict == 'true' }}
+        run: |
+          REPORT=".omo/_knowledge/sweeps/$(date -u +%Y-%m-%d).json"
+          python3 - "$REPORT" <<'PY'
+          import json, sys
+          report = json.load(open(sys.argv[1]))
+          ratio = report["suppression_ratio"]
+          files = report["file_suppressions"]
+          print(f"total_errors={report['total_errors']} ratio={ratio:.3f} file_suppressions={files}")
+          if files >= 3 or ratio > 0.6:
+              print("❌ suppression gate: 需要修复而非禁言")
+              sys.exit(1)
+          PY
