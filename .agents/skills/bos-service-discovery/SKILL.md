@@ -191,6 +191,15 @@ result = await resolve_bos_uri(
 )
 ```
 
+
+
+## Status honesty (default discovery)
+
+- Agora **routing** excludes `status: unimplemented` always, and `deprecated` unless `AGORA_BOS_INCLUDE_DEPRECATED=1` (see `bos_registry.py`).
+- `cockpit bos list` shows **routable** services by default.
+- `cockpit bos list --all` includes non-routable YAML rows for operators debugging registrations (e.g. AGT placeholders).
+- Never treat unimplemented URIs as live product APIs.
+
 ## Related
 
 - Skills: `agent-onboarding`, `a2a-coordination`, `bos-contract-fix`
