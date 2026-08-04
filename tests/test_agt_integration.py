@@ -135,12 +135,15 @@ def test_agt_integration_config_exists() -> None:
     data = yaml.safe_load(INTEGRATION_CONFIG.read_text(encoding="utf-8"))
     assert data["status"] == "proposal_only"
     assert "AGT" in data.get("title", "")
-    assert "bos://capability/agt/sandbox" in str(data)
-    assert "bos://capability/agt/sre" in str(data)
-    assert "bos://capability/agt/mcp-security" in str(data)
-    assert "sandbox" in data
-    assert "sre" in data
-    assert "mcp_security" in data
+    components = data.get("components", [])
+    uris = {c["bos_uri"] for c in components}
+    assert "bos://capability/agt/sandbox" in uris
+    assert "bos://capability/agt/sre" in uris
+    assert "bos://capability/agt/mcp-security" in uris
+    ids = {c["id"] for c in components}
+    assert "agt-sandbox" in ids
+    assert "agt-sre" in ids
+    assert "agt-mcp-security" in ids
 
 
 def test_agt_backend_flag_in_gac_local_gate() -> None:
