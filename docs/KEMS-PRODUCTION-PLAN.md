@@ -429,3 +429,20 @@ Phase 68 选择工程交付作为当前唯一低风险 dogfood 数据源：不�
 再由第三名独立裁决者确认。没有两份独立标注和明确裁决，不得生成 `kems.evaluation-manifest.v1`。
 
 当前 M2 放行状态仍是“真实样本入口已落地，真实标注与裁决待执行”；这一步不代表已经获得业务准确率，也不开放模型训练、预测晋升或 OMO 自动派发。
+
+### 12.7 Phase 69 KEMS 持久化健康与恢复闭环
+
+Phase 69 为 KEMS 的 OCR、标注、评测、运行检查点和 shadow 预测 SQLite 存储补齐统一的只读运行态检查与恢复入口。健康报告只输出数据库路径、完整性结果、外键违规数、表名、行数和文件权限，不读取或导出任何正文、OCR、prompt、模型自由文本或私有载荷。
+
+```bash
+PYTHONPATH="$KAIRON_ROOT/packages/kos/src" \
+  uv run --project "$KAIRON_ROOT" python \
+  "$KAIRON_ROOT/scripts/kems_health_check.py" \
+  --database adjudication="$HOME/.kems/adjudication.sqlite" \
+  --database ocr="$HOME/.kems/ocr.sqlite" \
+  --database model_acceptance="$HOME/.kems/model-acceptance.sqlite"
+```
+
+备份和恢复使用 SQLite 原生 backup API，写入临时文件、设置 0600 权限、原子替换，并在落盘后再次执行完整性检查。已存在的目标默认拒绝覆盖，恢复必须显式提供 `--force`。恢复后的数据库仍需通过健康检查，未通过则不得继续生成 manifest 或执行 shadow 评测。
+
+该阶段只完成“可检查、可备份、可恢复、可重放”的生产基础，不改变 `shadow`、`blocked_until_omo_approval` 和 `provider_invocation=false` 等放行边界；下一步才是把健康摘要接入 Cockpit/外部资源目录，并建立真实 OCR 质量样本与预测 shadow 运行的连续指标。
