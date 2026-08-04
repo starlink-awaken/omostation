@@ -391,3 +391,28 @@ OMO 不可用或 envelope 不合法时 fail-closed 地返回结构化错误。
 
 这一步完成“可操作的人类入口”，但不等于真实业务场景已经验证。下一步仍需由责任人连续提交真实低风险工程交付反馈，
 再将通过复核的样本送入双人标注、adjudication、脱敏 manifest 和 shadow evaluation。
+
+### 12.5 Phase 67 Cockpit UI 工程交付复核工作台
+
+Phase 67 在 Cockpit 中新增独立的工程交付复核页面，承接 Phase 66 的两个 L3 API，不重新实现 OMO 状态机。页面提供：
+
+1. 队列摘要：交付总数、待复核、已复核及决策分布。
+2. 收件箱列表：交付 ID、WorkflowRun、Workflow 状态、场景绑定、交付时长和证据计数。
+3. 详情和表单：责任人引用、`reviewed/adopted/rejected` 决策、复核时间和证据引用。
+4. 控制面提示：只读队列、WorkflowRun 不变更、provider 不调用、自动晋升关闭。
+
+页面只提交以下窄 envelope：
+
+```json
+{
+  "workflow_run_id": "run-...",
+  "actor_ref": "operator://...",
+  "delivery_id": "delivery-...",
+  "decision": "reviewed|adopted|rejected",
+  "reviewed_at": "2026-08-04T00:00:00Z",
+  "evidence_refs": ["evidence://..."]
+}
+```
+
+UI 不读取 `.omo` 原始日志、不保存自由文本、不直接改状态，也不把“已采纳”展示为模型或业务自动放行。它只证明工程交付元数据具备可操作的人机复核链路；
+真实业务试点仍需满足 G1～G4，并补齐真实样本、双人标注、裁决、恢复证据和人工上线评审。
