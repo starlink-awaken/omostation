@@ -868,6 +868,64 @@ def main() -> int:
     knowledge_sub.add_parser("status", help="KOS 服务健康")
     knowledge_sub.add_parser("stats", help="索引统计")
 
+    # memory — Memory OS 统一控制面 (ADR-0372) → bos://memory/mos/*
+    memory_p = sub.add_parser(
+        "memory",
+        help="🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)",
+        epilog="BOS: bos://memory/mos/{write,recall,status,forget,consolidate,knowledge-ref}",
+    )
+    memory_sub = memory_p.add_subparsers(dest="memory_command")
+    mem_status = memory_sub.add_parser("status", help="控制面健康 / neo4j / rbac")
+    mem_status.add_argument("--json", action="store_true")
+    mem_status.add_argument("--role", default=None)
+    mem_status.add_argument("--agent-profile", dest="agent_profile", default=None)
+    mem_recall = memory_sub.add_parser("recall", help="意图路由召回")
+    mem_recall.add_argument("query", nargs="?", help="查询")
+    mem_recall.add_argument("--intent", default=None)
+    mem_recall.add_argument("--limit", type=int, default=10)
+    mem_recall.add_argument("--as-of", dest="as_of", default=None)
+    mem_recall.add_argument("--principal-id", dest="principal_id", default=None)
+    mem_recall.add_argument("--agent-profile", dest="agent_profile", default=None)
+    mem_recall.add_argument("--scene-id", dest="scene_id", default=None)
+    mem_recall.add_argument("--role", default=None)
+    mem_recall.add_argument("--json", action="store_true")
+    mem_write = memory_sub.add_parser("write", help="双轨写入 (+ Neo4j FACT 若配置)")
+    mem_write.add_argument("--type", dest="mem_type", required=True, help="semantic|episodic|…")
+    mem_write.add_argument("--content", default=None)
+    mem_write.add_argument("--content-ref", dest="content_ref", default=None)
+    mem_write.add_argument("--confidence", type=float, default=0.8)
+    mem_write.add_argument("--principal-id", dest="principal_id", default=None)
+    mem_write.add_argument("--agent-profile", dest="agent_profile", default=None)
+    mem_write.add_argument("--scene-id", dest="scene_id", default=None)
+    mem_write.add_argument("--subject", default=None)
+    mem_write.add_argument("--predicate", default=None)
+    mem_write.add_argument("--object", default=None)
+    mem_write.add_argument("--valid-from", dest="valid_from", default=None)
+    mem_write.add_argument("--valid-to", dest="valid_to", default=None)
+    mem_write.add_argument("--role", default=None)
+    mem_write.add_argument("--json", action="store_true")
+    mem_forget = memory_sub.add_parser("forget", help="遗忘传播")
+    mem_forget.add_argument("memory_id", nargs="?", help="memory id")
+    mem_forget.add_argument("--reason", default=None)
+    mem_forget.add_argument("--role", default=None)
+    mem_forget.add_argument("--agent-profile", dest="agent_profile", default=None)
+    mem_forget.add_argument("--json", action="store_true")
+    mem_cons = memory_sub.add_parser("consolidate", help="sleep-time 巩固 (默认 dry-run)")
+    mem_cons.add_argument("--live", action="store_true", help="非 dry-run")
+    mem_cons.add_argument("--dry-run", dest="dry_run", action="store_true", default=True)
+    mem_cons.add_argument("--phases", default=None, help="comma-separated phases")
+    mem_cons.add_argument("--role", default=None)
+    mem_cons.add_argument("--agent-profile", dest="agent_profile", default=None)
+    mem_cons.add_argument("--json", action="store_true")
+    for kref_name in ("knowledge-ref", "kref"):
+        mem_kref = memory_sub.add_parser(kref_name, help="ADR-0315 引用元数据 (无正文)")
+        mem_kref.add_argument("query", nargs="?", help="查询")
+        mem_kref.add_argument("--intent", default=None)
+        mem_kref.add_argument("--limit", type=int, default=5)
+        mem_kref.add_argument("--principal-id", dest="principal_id", default=None)
+        mem_kref.add_argument("--role", default=None)
+        mem_kref.add_argument("--json", action="store_true")
+
     # kems — KEMS 域治理 (28 域)
     kems_p = sub.add_parser("kems", help="🧬 KEMS 域治理 (domains/status/scan)")
     kems_sub = kems_p.add_subparsers(dest="kems_command")
@@ -1279,6 +1337,7 @@ def main() -> int:
         "readiness": lambda a: __import__("cockpit.commands.readiness", fromlist=["cmd_readiness"]).cmd_readiness(a),
         "debt": lambda a: _dispatch_debt(a),
         "knowledge": lambda a: __import__("cockpit.commands.knowledge", fromlist=["cmd_knowledge"]).cmd_knowledge(a),
+        "memory": lambda a: __import__("cockpit.commands.memory", fromlist=["cmd_memory"]).cmd_memory(a),
         "kems": lambda a: __import__("cockpit.commands.kems", fromlist=["cmd_kems"]).cmd_kems(a),
         "c2g": lambda a: __import__("cockpit.commands.c2g", fromlist=["cmd_c2g"]).cmd_c2g(a),
         "channels": lambda a: __import__(

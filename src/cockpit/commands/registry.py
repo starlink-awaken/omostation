@@ -48,6 +48,12 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
         category="📚 研究 (Research)",
         summary="本地知识库管理 (import / query / stats)",
     ),
+    "memory": CommandMeta(
+        name="memory",
+        category="📚 研究 (Research)",
+        summary="Memory OS 统一控制面 (status/recall/write/forget → bos://memory/mos/*)",
+        aliases=("mos",),
+    ),
     "daily": CommandMeta(
         name="daily",
         category="📚 研究 (Research)",
