@@ -43,8 +43,8 @@ validate_session() {
 
 # PASW: Per-Agent Submodule Worktree (ADR-0355) — 高冲突子模块 per-agent 独立 worktree
 # 设计文档: .omo/_knowledge/decisions/0355-pasw-submodule-isolation.md
-# 核心函数在 lib/pasw-core.sh, 这里 source 使用
-source "$(dirname "${BASH_SOURCE[0]}")/../lib/pasw-core.sh"
+# 核心函数在根 lib/pasw-core.sh (脚本在 bin/gac/, 需 ../../lib/ 到仓库根)
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/pasw-core.sh"
 
 case "$cmd" in
   claim)
@@ -334,7 +334,7 @@ except Exception:
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
       sub_list=""
-      for sub in $ISOLATED_SUBS; do
+      for sub in $PASW_ISOLATED_SUBS; do
         sub_name=$(basename "$sub")
         [ -d "$wt_path/$PASW_SUBTREE_DIR/$sub_name" ] && sub_list="$sub_list $sub_name"
       done
