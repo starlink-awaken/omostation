@@ -476,36 +476,80 @@ except Exception:
     ;;
 
   onboard)
-    # 新 Agent 入职引导: claim + 环境初始化 + 引导信息
-    [ -z "$session" ] && echo "用法: onboard <session>" >&2 && exit 1
+    # 新 Agent 入职引导: 选择类型 + claim + 环境 + 引导
+    [ -z "$session" ] && echo "用法: onboard <session> [--type <type>]" >&2 && exit 1
     validate_session "$session"
+
+    # 解析 --type 参数
+    agent_type=""
+    if [ "${3:-}" = "--type" ] && [ -n "${4:-}" ]; then
+      agent_type="$4"
+    fi
+
     echo "🚀 Agent 入职引导: $session"
     echo ""
 
-    # 1. Claim worktree (自动 PASW 隔离 + 冲突检测)
-    echo "── 1. 创建隔离 worktree ──"
+    # 1. 选择 agent 类型
+    AGENT_TYPES_CONFIG="$WS_ROOT/.omo/_config/agent-types.yaml"
+    if [ -z "$agent_type" ] && [ -f "$AGENT_TYPES_CONFIG" ] && command -v python3 >/dev/null 2>&1; then
+      echo "── 1. 选择 Agent 类型 ──"
+      echo ""
+      # 用 python 解析 yaml 并显示菜单
+      python3 -c "
+import yaml, sys
+cfg = yaml.safe_load(open('$AGENT_TYPES_CONFIG'))
+types = cfg.get('types', {})
+for i, (key, info) in enumerate(types.items(), 1):
+    print(f'  {i}. {info[\"name\"]}')
+    print(f'     {info[\"description\"]}')
+    print()
+" 2>/dev/null
+      echo -n "选择类型 (1-5, 默认 custom): "
+      read -r choice </dev/tty 2>/dev/null || choice=""
+      case "$choice" in
+        1) agent_type="engineer" ;;
+        2) agent_type="architect" ;;
+        3) agent_type="researcher" ;;
+        4) agent_type="governance" ;;
+        5) agent_type="data" ;;
+        *) agent_type="custom" ;;
+      esac
+      echo "  已选择: $agent_type"
+      echo ""
+    fi
+
+    # 2. Claim worktree (自动 PASW 隔离 + 冲突检测)
+    echo "── 2. 创建隔离 worktree ──"
     bash "$0" claim "$session" || exit 1
     wt="$WS_PARENT/ws-$session"
 
-    # 2. 显示项目引导
+    # 3. 显示项目引导 + 类型特定提示
     echo ""
-    echo "── 2. 项目引导 ──"
+    echo "── 3. 项目引导 ──"
     if [ -f "$wt/AGENTS.md" ]; then
-      echo "📄 项目 AGENTS.md 前 30 行:"
-      head -30 "$wt/AGENTS.md"
+      echo "📄 项目 AGENTS.md 前 20 行:"
+      head -20 "$wt/AGENTS.md"
       echo "..."
+      echo ""
+    fi
+    # 显示类型特定提示
+    if [ -n "$agent_type" ] && [ -f "$AGENT_TYPES_CONFIG" ] && command -v python3 >/dev/null 2>&1; then
+      python3 -c "
+import yaml
+cfg = yaml.safe_load(open('$AGENT_TYPES_CONFIG'))
+t = cfg.get('types', {}).get('$agent_type', {})
+if t:
+    print(f'📌 {t.get(\"name\", \"\")} 提示:')
+    for tip in t.get('tips', []):
+        print(f'   • {tip}')
+    wfs = t.get('recommended_workflows', [])
+    if wfs:
+        print(f'   推荐 workflow: {\", \".join(wfs)}')
+" 2>/dev/null
+      echo ""
     fi
 
-    # 3. 推荐 workflow
-    echo ""
-    echo "── 3. 推荐工作流 ──"
-    echo "  启动 agent-workflow:"
-    echo "    cd $wt"
-    echo "    uv run --with pyyaml python bin/agent-workflow.py bootstrap"
-    echo "    uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> --profile <agent> --objective '<summary>'"
-
-    # 4. 下一步
-    echo ""
+    # 4. 快速开始
     echo "── 4. 快速开始 ──"
     echo "   编辑文件: cd $wt"
     echo "   提交改动: git add . && git commit -m '...'"
