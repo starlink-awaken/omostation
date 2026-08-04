@@ -1717,6 +1717,24 @@ services:
   status: active
   transport: stdio
   uri: bos://memory/mos/forget
+- action: consolidate
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - --package
+  - mos
+  - python
+  - -m
+  - mos
+  - consolidate
+  description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372 Phase 3
+  domain: memory
+  package: mos
+  status: active
+  transport: stdio
+  uri: bos://memory/mos/consolidate
 - action: status
   description: 获取分布式蜂群实时拓扑与负载状态
   domain: swarm
