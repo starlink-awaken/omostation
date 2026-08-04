@@ -388,20 +388,35 @@ except Exception:
     ;;
 
   agents)
-    # Agent 活动看板: 显示所有活跃 worktree 及其状态
+    # Agent 活动看板: 显示所有活跃 worktree 及其状态 + 文件冲突检测
     echo "=== Agent 活动看板 $(date -u +%Y-%m-%dT%H:%M:%Z) ==="
     echo ""
-    printf "%-30s %-12s %-10s %-8s %s\n" "SESSION" "BRANCH" "LAST_COMMIT" "PR" "PASW"
-    printf "%-30s %-12s %-10s %-8s %s\n" "------" "------" "----------" "--" "----"
+
+    # 用临时文件存储每个 session 的文件列表 (兼容 bash 3.2)
+    TMP_DIR=$(mktemp -d)
+    # 清理临时目录 (脚本退出时)
+    trap "rm -rf $TMP_DIR" EXIT
+
+    # 第一遍: 收集所有 agent 的修改文件
+    for wt_path in "$WS_PARENT"/ws-*/; do
+      [ -d "$wt_path" ] || continue
+      wt_name=$(basename "$wt_path")
+      session="${wt_name#ws-}"
+      git -C "$wt_path" diff --name-only HEAD 2>/dev/null > "$TMP_DIR/$session.files" || true
+    done
+
+    # 第二遍: 显示状态 + 冲突检测
+    printf "%-28s %-22s %-10s %-8s %-12s %s\n" "SESSION" "BRANCH" "LAST" "PR" "PASW" "CONFLICT"
+    printf "%-28s %-22s %-10s %-8s %-12s %s\n" "------" "------" "----" "--" "----" "--------"
     now=$(date +%s)
     for wt_path in "$WS_PARENT"/ws-*/; do
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
-      # 去掉 ws- 前缀得到 session 名
       session="${wt_name#ws-}"
 
       # 分支
       branch=$(git -C "$wt_path" branch --show-current 2>/dev/null || echo "detached")
+      [ ${#branch} -gt 20 ] && branch="${branch:0:17}..."
 
       # 最后 commit 时间
       last_commit=$(git -C "$wt_path" log -1 --format=%ct 2>/dev/null || echo 0)
@@ -423,7 +438,6 @@ except Exception:
       if command -v gh >/dev/null 2>&1 && [ "$branch" != "detached" ]; then
         pr_num=$(gh pr list --head "$branch" --state open --json number 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
         [ -n "$pr_num" ] && pr_status="#${pr_num}"
-        # 检查是否已合并
         if [ -z "$pr_num" ]; then
           merged=$(gh pr list --head "$branch" --state merged --json number 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
           [ -n "$merged" ] && pr_status="merged"
@@ -439,7 +453,23 @@ except Exception:
       pasw=$(echo "$pasw" | xargs)
       [ -z "$pasw" ] && pasw="-"
 
-      printf "%-30s %-12s %-10s %-8s %s\n" "$session" "$branch" "$age" "$pr_status" "$pasw"
+      # 冲突检测: 检查与其他 agent 修改的文件是否重叠
+      conflict=""
+      if [ -f "$TMP_DIR/$session.files" ]; then
+        for other_file in "$TMP_DIR"/*.files; do
+          [ -f "$other_file" ] || continue
+          other_session=$(basename "$other_file" .files)
+          [ "$other_session" = "$session" ] && continue
+          # 找交集 (comm 需要排序, 用 sort + uniq -d 替代)
+          if sort "$TMP_DIR/$session.files" "$other_file" | uniq -d | grep -q .; then
+            conflict="$other_session"
+            break
+          fi
+        done
+      fi
+      [ -z "$conflict" ] && conflict="-"
+
+      printf "%-28s %-22s %-10s %-8s %-12s %s\n" "$session" "$branch" "$age" "$pr_status" "$pasw" "$conflict"
     done
     echo ""
     echo "总计: $(ls -d "$WS_PARENT"/ws-*/ 2>/dev/null | wc -l | tr -d ' ') 个活跃 worktree"
