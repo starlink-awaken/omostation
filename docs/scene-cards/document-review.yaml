@@ -17,7 +17,7 @@ approval_state: pending_business_confirmation
 scene_id: document-review
 journey_id: document-to-decision
 goal: 将公文草稿生成、格式检查、敏感项检查和依据核验放进同一条可审计、可退回的决策旅程
-trigger: 公文起草/审查需求进入确认队列 (来源: 卫健委借调 / 国转中心 / 日常公文)
+trigger: "公文起草/审查需求进入确认队列 (来源: 卫健委借调 / 国转中心 / 日常公文)"
 input_contract: 具备主题、时间、接收对象、核心内容四要素的公文任务引用 (evidence:// 或 vault://redacted/)
 result_contract: 包含草稿、格式检查、敏感项审查、依据核验、人工退回记录的 Workflow Mesh 证据
 outcome_metric: review_cycle_hours
