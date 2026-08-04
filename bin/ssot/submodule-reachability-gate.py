@@ -9,7 +9,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 WORKSPACE = Path(__file__).resolve().parents[2]
 
 # 治本 followup E (2026-07-04): pre-push hook 跑时 git 设 GIT_DIR/GIT_WORK_TREE 指向主仓,
@@ -62,6 +61,16 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
         )
         if fetch_result.returncode != 0:
             return False, f"fetch failed: {fetch_result.stderr.strip()}"
+        # CI actions/checkout 默认 depth=1 浅克隆: 历史 commit 的 --contains 会误报不可达.
+        # 检测浅克隆并加深历史, 确保指针 (可能是中间 commit) 在 remote 分支历史中可达.
+        shallow = run(["git", "rev-parse", "--is-shallow-repository"], cwd=submodule_dir)
+        if shallow.returncode == 0 and shallow.stdout.strip() == "true":
+            deepen = run(
+                ["git", "fetch", "--quiet", "--deepen=200", "origin"],
+                cwd=submodule_dir,
+            )
+            if deepen.returncode != 0:
+                return False, f"deepen failed: {deepen.stderr.strip()}"
 
     contains = run(["git", "branch", "-r", "--contains", sha], cwd=submodule_dir)
     branches = [
