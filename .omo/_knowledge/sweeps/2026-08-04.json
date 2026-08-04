@@ -1,0 +1,39 @@
+{
+  "date": "2026-08-04",
+  "tool": "pyright --outputjson",
+  "total_errors": 0,
+  "line_suppressions": 0,
+  "file_suppressions": 0,
+  "suppression_ratio": 0.0,
+  "projects": {
+    "runtime": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "omo": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "c2g": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    }
+  },
+  "argv": [
+    "--projects",
+    "runtime",
+    "omo",
+    "c2g",
+    "--date",
+    "2026-08-04"
+  ]
+}
