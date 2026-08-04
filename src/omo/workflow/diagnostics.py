@@ -404,10 +404,12 @@ def p74_solidification_report(
 
     silent_policy = registry.get("silent_workflow_policy") or {}
 
-    # run_frequency replaces excluded_workflows:
-    #   on_demand  — expected to run when triggered (30d warn threshold)
-    #   periodic   — expected to run on a schedule (7d warn threshold)
-    #   continuous — expected to always be active (1d warn threshold)
+    # P74 silent detection: workflow is silent iff has_recent_run == False
+    # AND has_check_coverage == False (per ADR-0130 §4.4).
+    # run_frequency drives warn_after threshold (on_demand=30d, periodic=7d,
+    # continuous=1d), single-sourced from SSOT
+    # silent_workflow_policy.warn_after_days_by_frequency (ADR-0211 D2/D3).
+    # Excluded workflow list removed in ADR-0211; rationale = no double SSOT.
 
     started_runs: dict[str, str] = {}
     for event in events:
@@ -463,13 +465,34 @@ def p74_solidification_report(
                 workflow_id in command for command in doctor_commands
             )
         last_start = started_runs.get(workflow_id, "")
-        has_recent_run = bool(last_start)
         run_frequency = str(workflow.get("run_frequency") or "on_demand")
+        # ADR-0211 D2: run_frequency drives warn_after threshold. Single-sourced
+        # from SSOT silent_workflow_policy.warn_after_days_by_frequency
+        # (on_demand=30d / periodic=7d / continuous=1d). Fallback to warn_after_days.
+        freq_map = (silent_policy.get("warn_after_days_by_frequency") or {})
+        warn_after = int(
+            freq_map.get(run_frequency)
+            or silent_policy.get("warn_after_days")
+            or 30
+        )
+        has_recent_run = False
+        if last_start:
+            try:
+                last_dt = datetime.fromisoformat(
+                    str(last_start).replace("Z", "+00:00")
+                )
+                now_dt = datetime.now(UTC)
+                age_h = (now_dt - last_dt).total_seconds() / 3600
+                has_recent_run = age_h <= warn_after * 24
+            except ValueError:
+                # unparseable ts → treat as no evidence of recent run
+                has_recent_run = False
         silent_health = "active" if has_recent_run or has_check_coverage else "warn"
         workflows_summary.append(
             {
                 "workflow_id": workflow_id,
                 "run_frequency": run_frequency,
+                "warn_after_days": warn_after,
                 "has_recent_run": has_recent_run,
                 "last_start_ts": last_start,
                 "has_check_coverage": has_check_coverage,
