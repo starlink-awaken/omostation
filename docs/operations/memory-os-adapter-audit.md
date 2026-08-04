@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: audit
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-04
 related:
