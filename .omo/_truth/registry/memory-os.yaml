@@ -1,0 +1,192 @@
+---
+# Memory OS registry SSOT — ADR-0372
+# Do not hardcode service counts or runtime health here.
+id: memory-os
+version: 1
+status: phase6
+adr: 0372-memory-os-control-plane.md
+architecture_doc: docs/architecture/memory-os.md
+adapter_audit: docs/operations/memory-os-adapter-audit.md
+rbac_policy: .omo/_truth/registry/memory-rbac.yaml
+skill: .agents/skills/memory-recall/SKILL.md
+last_reviewed: "2026-08-04"
+phase6:
+  neo4j_writer: projects/kairon/packages/mos/src/mos/neo4j_writer.py
+  cockpit_panel: /memory
+  notes: "NEO4J_URI-gated production writes; policy-table RBAC; no false ready claims without URI"
+---
+control_plane:
+  package_planned: projects/kairon/packages/mos
+  envelope_owner: projects/kairon/packages/eidos
+  layer: L2
+  entry_bos_prefix: "bos://memory/mos/"
+
+bos_uris:
+  active:
+    - uri: "bos://memory/mos/write"
+      phase: 1
+      role: unified_write
+    - uri: "bos://memory/mos/recall"
+      phase: 1
+      role: unified_recall
+    - uri: "bos://memory/mos/status"
+      phase: 1
+      role: health_and_backlog
+  active_extra:
+    - uri: "bos://memory/mos/forget"
+      phase: 2
+      role: forget_propagation
+  planned:
+    - uri: "bos://memory/mos/consolidate"
+      phase: 3
+      role: sleep_time_orchestration
+  event_migration:
+    from: "bos://brain/events/card_updated"
+    to: "bos://memory/events/card_updated"
+    compatibility: dual_subscribe_one_release
+    phase: 1
+    status: dual_accept_live
+  backend_keep:
+    - "bos://memory/kos/*"
+    - "bos://memory/gbrain/*"
+    - "bos://memory/kems/*"
+    - "bos://memory/inbox/*"
+    - "bos://memory/local/*"
+    - "bos://memory/vault/*"
+
+memory_types:
+  - id: working
+    description: Current context window / run buffer
+  - id: episodic
+    description: Events and conversation turns
+  - id: semantic
+    description: Stable facts and preferences
+  - id: procedural
+    description: Skills and how-to patterns
+  - id: institutional
+    description: Vault docs and engineering knowledge sources
+  - id: governance_ref
+    description: Auditable citations without full body text
+
+intent_routes:
+  # Weights are relative; implementers normalize. Do not treat as runtime SLOs.
+  - intent: file_note
+    primary: [kos]
+    secondary: [vault_search]
+  - intent: preference_self
+    primary: [gbrain_facts, mem0]
+    secondary: [kos]
+  - intent: entity_relation
+    primary: [gbrain_graph]
+    secondary: [kos_entities]
+  - intent: temporal_fact
+    primary: [graphiti]
+    secondary: [gbrain]
+    requires_adapter: graphiti
+  - intent: code_structure
+    primary: [codebase_memory]
+    secondary: []
+    note: Never RRF-merge with institutional note backends
+  - intent: task_debt
+    primary: [governance_omo]
+    secondary: []
+    note: Not a memory search path
+  - intent: card_ops
+    primary: [cards_vector, kos]
+    secondary: [gbrain]
+  - intent: general
+    primary: [kos, gbrain]
+    secondary: [mem0]
+
+adapters:
+  mem0:
+    status: stub_optional
+    default: off
+    module: projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py
+    target_module: projects/kairon/packages/mos/adapters/mem0.py
+    production_ready: false
+    notes:
+      - "Silent disable when mem0ai missing"
+      - "Default config assumes Qdrant localhost — not CI-safe"
+  memtheta:
+    status: partial_simulation
+    default: legacy
+    module: projects/kairon/packages/kos/src/kos/adapters/memtheta_adapter.py
+    production_ready: false
+    notes:
+      - "Raw track emits omo event via subprocess CLI"
+      - "Theta track is logger-only simulation"
+      - "Absorb into DualTrackWriter in Phase 1-2; do not mark complete"
+  graphiti:
+    status: optional_tier2
+    default: off
+    module_hint: projects/kairon/packages/minerva (optional extra)
+    production_ready: false
+    notes:
+      - "Scene-only; no global graph truth"
+  gbrain_dream:
+    status: production_engine
+    default: orchestration_only
+    module: projects/gbrain/src/commands/dream.ts
+    cycle: projects/gbrain/src/core/cycle.ts
+    production_ready: true
+    notes:
+      - "MOS consolidate must orchestrate, not reimplement"
+
+dual_track:
+  confidence_threshold_default: 0.6
+  raw:
+    store: omo_events
+    forbid_high_pii_body: true
+  theta:
+    stores: [gbrain_facts, kos_index_jobs]
+    on_failure: keep_raw_and_queue_retry
+
+policy:
+  recall_budget_ms_default: 2500
+  closeout_write: opt_in
+  mem0_required_for_core: false
+  single_current_state_exit: true
+
+phases:
+  0:
+    status: done
+    deliverables:
+      - ADR-0372
+      - docs/architecture/memory-os.md
+      - .omo/_truth/registry/memory-os.yaml
+      - docs/operations/memory-os-adapter-audit.md
+      - .agents/skills/memory-recall/SKILL.md
+  1:
+    status: done
+    deliverables:
+      - packages/mos MVP (write/recall/status + dual-track + tests)
+      - MemoryEnvelope validation in mos.envelope
+      - BOS registration bos://memory/mos/*
+      - event dual-subscribe migration (memory + brain)
+
+  2:
+    status: done
+    deliverables:
+      - Mem0 shadow adapter (MOS_MEM0 flag, no Qdrant)
+      - forget bus (raw+theta+mem0)
+      - eval harness v0 (15 cases)
+      - BOS mos/forget
+  3:
+    status: done
+    deliverables:
+      - mos.consolidate (gbrain dream orchestration)
+      - Foundry memory-os-consolidate deck
+      - BOS mos/consolidate
+  4:
+    status: done
+    deliverables:
+      - temporal shadow (bi-temporal, no Neo4j)
+      - scope ACL principal_id
+      - knowledge_ref (ADR-0315)
+  5:
+    status: done
+    deliverables:
+      - fine ACL (principal/agent_profile/scene)
+      - graphiti bridge flag (no Neo4j hard dep)
+      - cockpit /api/memory HTTP gateway
