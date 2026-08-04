@@ -45,6 +45,10 @@ agora-mcp = "agora.server.mcp:main"
 agora-mcp-gateway = "agora.auth.mcp_gateway:main"
 agora-watchdog = "agora.agora_watchdog:main"
 
+# external.resources entry-point: BOS 能力目录暴露给 mesh 能力目录契约
+[project.entry-points."external.resources"]
+agora-bos-capabilities = "agora.external_resources.capability_provider:CapabilityProvider"
+
 [project.optional-dependencies]
 dev = ["pytest>=8.4,<9", "pytest-asyncio>=0.24,<1.0", "ruff>=0.8", "mypy>=1.0"]
 grpc = ["grpcio>=1.60", "grpcio-tools>=1.60", "protobuf>=4.0"]
