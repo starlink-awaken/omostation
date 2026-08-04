@@ -100,8 +100,8 @@ ENFORCED_MAP = {
     "cron-real-deployment": "CR-P74-RUNTIME-STAMP-POLICY",
     # P79-5: zero-planned-tasks
     "zero-planned-tasks": "CR-X4-REGISTRY-DRIFT-AGGREGATE",
-    # P76-6-4: observability-first
-    "observability-first": "CR-P74-RUNTIME-STAMP-POLICY",
+    # P76-6-4: observability-first (already mapped above)
+    # "observability-first": "CR-P74-RUNTIME-STAMP-POLICY",
 }
 
 
