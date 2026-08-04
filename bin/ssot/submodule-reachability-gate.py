@@ -9,6 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 WORKSPACE = Path(__file__).resolve().parents[2]
 
 # 治本 followup E (2026-07-04): pre-push hook 跑时 git 设 GIT_DIR/GIT_WORK_TREE 指向主仓,
@@ -55,22 +56,22 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
         return False, "submodule working tree missing"
 
     if fetch:
-        fetch_result = run(
-            ["git", "fetch", "--quiet", "origin", "+refs/heads/*:refs/remotes/origin/*"],
-            cwd=submodule_dir,
-        )
+        # CI actions/checkout depth=1 → submodule shallow → 非 HEAD SHA 不在浅历史
+        # → branch --contains 误报 unreachable (#907 cockpit 0fa09c6 实证可达但 gate fail).
+        # shallow repo 先 --unshallow 拿 full history; 失败回退 normal fetch.
+        # 单 heads refspec (heads→remotes/origin/*, 不覆盖本地 checked-out refs/heads/main).
+        # 配合 unshallow (C 层) 拿全 main 历史 — unshallow 后 heads refs 已含所有可达 SHA.
+        refspec = "+refs/heads/*:refs/remotes/origin/*"
+        shallow_res = run(["git", "rev-parse", "--is-shallow-repository"], cwd=submodule_dir)
+        is_shallow = shallow_res.stdout.strip() == "true"
+        if is_shallow:
+            fetch_result = run(["git", "fetch", "--quiet", "--unshallow", "origin", refspec], cwd=submodule_dir)
+            if fetch_result.returncode != 0:
+                fetch_result = run(["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir)
+        else:
+            fetch_result = run(["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir)
         if fetch_result.returncode != 0:
             return False, f"fetch failed: {fetch_result.stderr.strip()}"
-        # CI actions/checkout 默认 depth=1 浅克隆: 历史 commit 的 --contains 会误报不可达.
-        # 检测浅克隆并加深历史, 确保指针 (可能是中间 commit) 在 remote 分支历史中可达.
-        shallow = run(["git", "rev-parse", "--is-shallow-repository"], cwd=submodule_dir)
-        if shallow.returncode == 0 and shallow.stdout.strip() == "true":
-            deepen = run(
-                ["git", "fetch", "--quiet", "--deepen=200", "origin"],
-                cwd=submodule_dir,
-            )
-            if deepen.returncode != 0:
-                return False, f"deepen failed: {deepen.stderr.strip()}"
 
     contains = run(["git", "branch", "-r", "--contains", sha], cwd=submodule_dir)
     branches = [
