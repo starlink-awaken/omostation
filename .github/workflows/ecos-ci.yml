@@ -17,7 +17,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
-          submodules: recursive
+          # 显式 init ecos (下方步骤), 不 recursive (避免撞 private 子模块)
+          submodules: false
         continue-on-error: true
       - name: Init ecos submodule
         run: git submodule update --init projects/ecos
