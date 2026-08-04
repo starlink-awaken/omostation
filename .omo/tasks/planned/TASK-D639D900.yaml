@@ -1,0 +1,50 @@
+id: TASK-D639D900
+title: REMEDIATE-ZOMBIE-capability:swarm:run
+description: '僵尸能力 review (B2 语义路由已拦截): bos://capability/swarm/run
+
+  - 声明状态: deprecated
+
+  - 最近调用: 15 (超 1.0 天零调用)
+
+  - 描述: AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)
+
+  决策: 移除 / 归档 / 恢复 (从 etc/bos-services.yaml 调整后重新观察)。'
+status: candidate
+task_type: remediation
+risk_level: L1
+depends_on: []
+source_docs:
+- bin/ssot/capability-zombie-tasks.py
+deliverables:
+- bos://capability/swarm/run 处置决策记录
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-D639D900
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- bos://capability/swarm/run 使用度量复查记录
+test_plan:
+- 验证 bos://capability/swarm/run 不再被路由 (deprecated 拦截)
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  priority: medium
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-08-04T03:12:53Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: omo:task:create:TASK-D639D900

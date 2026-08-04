@@ -1,4 +1,4 @@
-last_scan: 1785751046.416607
+last_scan: 1785813410.1520379
 services:
   agora-gateway:
     health_check: healthy (probe)
@@ -8,8 +8,8 @@ services:
       last_healthy_seconds: 0
       pid: '1404'
       status: running
-      uptime_seconds: 32861
-    timestamp: 1785751046.416607
+      uptime_seconds: 95225
+    timestamp: 1785813410.1520379
     type: daemon
   agora-sse:
     health_check: healthy
@@ -18,10 +18,10 @@ services:
     runtime:
       freshness_seconds: 60
       last_healthy_seconds: 0
-      pid: '57214'
+      pid: '81098'
       status: running
-      uptime_seconds: 9586
-    timestamp: 1785751046.416607
+      uptime_seconds: 5532
+    timestamp: 1785813410.1520379
     type: daemon
   cron-service:
     health_check: healthy
@@ -32,29 +32,29 @@ services:
       last_healthy_seconds: 0
       pid: '1399'
       status: running
-      uptime_seconds: 278844
-    timestamp: 1785751046.416607
+      uptime_seconds: 341207
+    timestamp: 1785813410.1520379
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785751046.416607
+    timestamp: 1785813410.1520379
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1785751046.416607
+    timestamp: 1785813410.1520379
     type: scheduled
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785751046.416607
+    timestamp: 1785813410.1520379
     type: integrated
   ollama:
     health_check: healthy
@@ -65,13 +65,13 @@ services:
       last_healthy_seconds: 0
       pid: '1403'
       status: running
-      uptime_seconds: 278904
-    timestamp: 1785751046.416607
+      uptime_seconds: 6282
+    timestamp: 1785813410.1520379
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785751046.416607
+    timestamp: 1785813410.1520379
     type: mcp
