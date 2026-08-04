@@ -265,8 +265,8 @@ initiatives:
   - id: sweep-tooling-scaling
     title: Python quality sweep tooling scaling (ADR-0367)
     recommendation: Promote bin/sweep and pyright-sweep workflow from pilot to enforced surface; add sweep history, suppression-ratio gating, worktree lifecycle integration tests, and a published roadmap initiative.
-    status: active
-    progress: 10
+    status: done
+    progress: 100
     last_evaluated: "2026-08-04"
     meadows_level: 5
     owner: governance-team
@@ -282,13 +282,20 @@ initiatives:
       - bin/sweep/pyright.py
       - bin/sweep/ruff.py
       - bin/sweep/nested-with.py
+      - bin/sweep/scan.py
+      - bin/adr/adr-coverage.py
+      - bin/adr/adr-frontmatter-backfill.py
       - tests/test_sweep_tools.py
       - tests/test_gac_worktree_lifecycle.py
+      - tests/test_gac_worktree_lifecycle_integration.py
+      - tests/test_adr_frontmatter_backfill.py
       - .omo/_truth/registry/agent-workflows.yaml
+      - .omo/_knowledge/sweeps/INDEX.md
+      - .github/workflows/pyright-sweep.yml
     verification:
-      - command: [uv, run, pytest, tests/test_sweep_tools.py, -q]
-      - command: [uv, run, pytest, tests/test_gac_worktree_lifecycle.py, -q]
+      - command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_sweep_tools.py, tests/test_gac_worktree_lifecycle.py, tests/test_gac_worktree_lifecycle_integration.py, tests/test_adr_frontmatter_backfill.py, -q]
       - command: [make, gac-local-gate]
+      - command: [python3, bin/adr/adr-coverage.py, --json]
     acceptance:
       - pyright-sweep workflow is registered with diff_checks that include bin/sweep/** and tests/test_sweep_tools.py.
       - pyright-sweep-check is required (not advisory) in the local gate.
