@@ -1,6 +1,6 @@
 # Cockpit 能力地图
 
-> 自动生成于 2026-08-03T09:49:40Z | 版本 1.0.0
+> 自动生成于 2026-08-04T11:13:40Z | 版本 1.0.0
 > 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑
 > 生成器: `bin/cockpit/gen-help-docs.py`
 
@@ -8,10 +8,10 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 108 |
+| CLI 命令 (含子命令) | 111 |
 | MCP 工具 | 581 |
 | MCP 服务器 | 28 |
-| BOS 服务 | 188 |
+| BOS 服务 | 196 |
 | BOS 域 | 16 |
 
 ## MCP 服务器清单
@@ -53,12 +53,12 @@
 |-----|--------|
 | `agora` | 3 |
 | `analysis` | 28 |
-| `capability` | 38 |
+| `capability` | 44 |
 | `cockpit` | 3 |
 | `compute` | 3 |
 | `ecos` | 10 |
 | `forge` | 1 |
-| `governance` | 32 |
+| `governance` | 34 |
 | `l4-kernel` | 1 |
 | `memory` | 41 |
 | `meta` | 1 |
@@ -75,6 +75,7 @@
 | 命令 | 描述 |
 |------|------|
 | `cockpit agent` | 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout) |
+| `cockpit agent-onboard` | 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills) |
 | `cockpit agent-runtime` | 🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令) |
 | `cockpit agent-workflow` | 🤖 Agent 可执行治理流程 (委派 root bin/agent-workflow.py) |
 | `cockpit agora` | Agora BOS 网关入口 (委派 agora CLI) |
@@ -93,6 +94,7 @@
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit cards` | 显示 CARDS 卡片状态 |
+| `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit code` | 代码库分析与审查 (基于 codeanalyze) |
 | `cockpit compass` | 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理) |
 | `cockpit compute` | 算力与 LLM 网关操作 (委派 aetherforge) |
@@ -134,7 +136,7 @@
 | `cockpit kairon` | kairon 知识引擎 monorepo 聚合入口 |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
-| `cockpit list` | 列出所有已注册的 Schema |
+| `cockpit list` | 列债务项 (委派 omo debt) |
 | `cockpit logs` | 查看日志 |
 | `cockpit mcp` | 启动 MCP server 或列出工具 |
 | `cockpit mesh` | omlx 算力网格路由入口 |
@@ -171,6 +173,7 @@
 | `cockpit ssb` | SSB 签名链操作 (委派 ecos-ssb) |
 | `cockpit stats` | 索引统计 |
 | `cockpit status` | 系统健康 |
+| `cockpit summary` | 债务摘要 (委派 omo debt) |
 | `cockpit topics` | 列出已注册 topic |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
@@ -184,4 +187,4 @@
 | `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
 
 ---
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T09:49:40Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-04T11:13:40Z 生成*
