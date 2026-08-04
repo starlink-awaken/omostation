@@ -73,10 +73,13 @@ GacRule:
       transitions: [active, removed]
     active:
       description: 活跃 (规则生效, 执行通道检查)
-      transitions: [deprecated]
+      transitions: [deprecated, superseded]
     deprecated:
       description: 废弃 (不再推荐, gc 28 天后清理 removed)
       transitions: [removed, active]
+    superseded:
+      description: 被替代 (由更强规则覆盖, 标注 superseded_by/superseded_at; 保留审计轨迹, 不再执行)
+      transitions: [removed]
     removed:
       description: 已移除 (终态, gc 清理后)
       transitions: []
