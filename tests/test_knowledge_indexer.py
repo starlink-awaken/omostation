@@ -62,7 +62,7 @@ def test_callback_invalid_payload_returns_400(callback_client):
 
 
 def test_callback_card_updated_queues_upsert(callback_client):
-    """card_updated 事件 → 返回 ok + action=upsert_queued."""
+    """card_updated 事件（legacy brain URI）→ 返回 ok + action=upsert_queued."""
     with patch("cockpit.web.knowledge_indexer._upsert_card", new_callable=AsyncMock):
         resp = callback_client.post(
             "/api/knowledge/indexer/callback",
@@ -76,6 +76,23 @@ def test_callback_card_updated_queues_upsert(callback_client):
     assert body["status"] == "ok"
     assert body.get("action") == "upsert_queued"
     assert body.get("slug") == "test-card"
+
+
+def test_callback_memory_domain_card_updated_queues_upsert(callback_client):
+    """canonical memory-domain card_updated also accepted (ADR-0372 dual-accept)."""
+    with patch("cockpit.web.knowledge_indexer._upsert_card", new_callable=AsyncMock):
+        resp = callback_client.post(
+            "/api/knowledge/indexer/callback",
+            json={
+                "type": "bos://memory/events/card_updated",
+                "data": {"slug": "mem-card", "title": "Mem Card", "action": "upsert"},
+            },
+        )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "ok"
+    assert body.get("action") == "upsert_queued"
+    assert body.get("slug") == "mem-card"
 
 
 def test_callback_card_updated_empty_slug(callback_client):
@@ -165,12 +182,11 @@ async def test_start_stop_knowledge_indexer_no_crash():
 
 @pytest.mark.asyncio
 async def test_register_subscription_calls_subscribe_event_tool():
-    """_register_subscription 必须调用 publish_event → subscribe_event tool."""
-    captured = {}
+    """_register_subscription dual-subscribes memory + brain card_updated patterns."""
+    captured_calls: list[dict] = []
 
     async def mock_post(url, json=None, **kwargs):
-        captured["url"] = url
-        captured["body"] = json
+        captured_calls.append({"url": url, "body": json})
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         mock_resp.json = lambda: {
@@ -191,11 +207,13 @@ async def test_register_subscription_calls_subscribe_event_tool():
         knowledge_indexer._subscription_id = None
         await knowledge_indexer._register_subscription()
 
-    assert "/v1/tools/call" in captured.get("url", ""), (
-        f"Expected /v1/tools/call but got: {captured.get('url')}"
-    )
-    assert captured.get("body", {}).get("tool") == "subscribe_event"
-    assert "bos://brain/events/card_updated" in str(
-        captured.get("body", {}).get("arguments", {}).get("pattern", "")
-    )
+    assert captured_calls, "expected subscribe posts"
+    assert all("/v1/tools/call" in c.get("url", "") for c in captured_calls)
+    patterns = [
+        c.get("body", {}).get("arguments", {}).get("pattern", "")
+        for c in captured_calls
+        if c.get("body", {}).get("tool") == "subscribe_event"
+    ]
+    assert "bos://memory/events/card_updated" in patterns
+    assert "bos://brain/events/card_updated" in patterns
     assert knowledge_indexer._subscription_id == "sub_abc123"

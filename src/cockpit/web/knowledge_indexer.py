@@ -1,4 +1,9 @@
-"""Knowledge Indexer — 订阅 bos://brain/events/card_updated 事件，触发增量向量索引.
+"""Knowledge Indexer — 订阅 card_updated 事件，触发增量向量索引.
+
+Accepts both:
+  - bos://memory/events/card_updated  (canonical, ADR-0372)
+  - bos://brain/events/card_updated   (legacy ADR-0294, dual-accept during migration)
+
 
 架构说明 (ADR-0294):
 - 本模块是 api_knowledge.py PUT 写后事件的"消费者 (Consumer)"
@@ -8,9 +13,9 @@
 
 事件流:
   PUT /api/knowledge/put
-    → /v1/tools/call publish_event(bos://brain/events/card_updated)
+    → /v1/tools/call publish_event(bos://memory/events/card_updated)
     → Agora EventBus → POST {cockpit}/api/knowledge/indexer/callback
-    → KnowledgeIndexer.handle_card_updated()
+    → dual-accept memory + brain card_updated
     → KOS HTTP upsert / LanceDB upsert
 
 Agora 实际 HTTP 端点:
@@ -62,7 +67,12 @@ async def knowledge_indexer_callback(request: Request):
         event_type = event.get("type", "")
         payload = event.get("data", {})
 
-        if event_type != "bos://brain/events/card_updated":
+        # Dual-accept memory (canonical) + brain (legacy) card_updated URIs
+        _CARD_UPDATED = {
+            "bos://memory/events/card_updated",
+            "bos://brain/events/card_updated",
+        }
+        if event_type not in _CARD_UPDATED:
             # 其他事件类型静默忽略（容错：订阅 pattern 可能宽泛）
             return JSONResponse({"status": "ok", "action": "ignored", "event_type": event_type})
 
@@ -120,33 +130,43 @@ async def _upsert_card(slug: str, payload: dict) -> None:
 
 
 async def _register_subscription() -> None:
-    """向 Agora 注册 card_updated 事件订阅（带指数退避重试）."""
+    """向 Agora 注册 card_updated 事件订阅（双 pattern：memory + brain，带指数退避重试）."""
     global _subscription_id
 
     callback_url = f"http://{_COCKPIT_HOST}:{_COCKPIT_PORT}/api/knowledge/indexer/callback"
-    body = {
-        "tool": "subscribe_event",
-        "arguments": {
-            "pattern": "bos://brain/events/card_updated",
-            "callback_url": callback_url,
-        },
-    }
+    # Dual-subscribe during ADR-0372 migration window
+    patterns = (
+        "bos://memory/events/card_updated",
+        "bos://brain/events/card_updated",
+    )
 
     for attempt in range(5):
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
-                resp = await client.post(f"{_AGORA_HTTP}/v1/tools/call", json=body)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    sub_id = data.get("result", {}).get("subscription_id") or data.get("subscription_id")
-                    if sub_id:
-                        _subscription_id = sub_id
-                        logger.info(
-                            "knowledge_indexer: subscribed to card_updated events sub_id=%s callback=%s",
-                            sub_id,
-                            callback_url,
-                        )
-                        return
+                last_sub_id = None
+                for pattern in patterns:
+                    body = {
+                        "tool": "subscribe_event",
+                        "arguments": {
+                            "pattern": pattern,
+                            "callback_url": callback_url,
+                        },
+                    }
+                    resp = await client.post(f"{_AGORA_HTTP}/v1/tools/call", json=body)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        sub_id = data.get("result", {}).get("subscription_id") or data.get("subscription_id")
+                        if sub_id:
+                            last_sub_id = sub_id
+                            logger.info(
+                                "knowledge_indexer: subscribed pattern=%s sub_id=%s callback=%s",
+                                pattern,
+                                sub_id,
+                                callback_url,
+                            )
+                if last_sub_id:
+                    _subscription_id = last_sub_id
+                    return
         except Exception as e:
             wait = 2**attempt
             logger.info("knowledge_indexer: agora not ready (attempt %d), retry in %ds: %s", attempt + 1, wait, e)

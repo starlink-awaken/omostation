@@ -141,8 +141,9 @@ slug: {json.dumps(slug, ensure_ascii=False)}
         file_path.write_text(card_content, encoding="utf-8")
 
         # 方案 C：写后即时分发卡片更新通知（Event-Driven Card Indexing Convergence）
+        # ADR-0372 D5: emit canonical memory-domain URI (indexer dual-accepts brain legacy).
         await _notify_knowledge_event(
-            "bos://brain/events/card_updated",
+            "bos://memory/events/card_updated",
             {
                 "slug": slug,
                 "title": title,
