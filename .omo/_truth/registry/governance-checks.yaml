@@ -126,7 +126,7 @@ gac:
     indexed_required: [source_ref]  # source_type=indexed 时必填 (指向原真策略文件)
     dimension_enum: [X1, X2, X3, X4]
     layer_enum: [M0, L0, L1, L2, L3, L4, I0, X, meta]
-    check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index, schema_integrity, yaml_bypass, sensitive_write, mutation_surface, registry_integrity, internal_write_profile, state_plane_asset, ingress_boundary, ingress_artifact, mutation_ledger, doc_lifecycle, doc_archival, self_evolution_approval, task_policy, god_module, test_coverage, ssot_lint, mesh_routing, memory_rag, ingress_precheck, consistency_drift, eval_exec, mutable_default]
+    check_type_enum: [ssot_pointer, mof_stage_gate, bos_resolve, task_field, drift_audit, freshness, value_roi, audit_chain, direct_io_gate, hygiene_zero_byte, hygiene_case, legacy_index, schema_integrity, yaml_bypass, sensitive_write, mutation_surface, registry_integrity, internal_write_profile, state_plane_asset, ingress_boundary, ingress_artifact, mutation_ledger, doc_lifecycle, doc_archival, self_evolution_approval, task_policy, god_module, test_coverage, ssot_lint, mesh_routing, memory_rag, ingress_precheck, consistency_drift, eval_exec, mutable_default, placeholder]
     lifecycle_enum: [draft, active, deprecated, superseded, removed]
     executor_enum: [hook_pre_edit, hook_post, ci_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron, gac_local_gate, foundry_cron]
 
@@ -2616,14 +2616,14 @@ gac:
       dimension: X1
       layer: meta
       name: PR 描述非空
-      description: "防止空 PR body, 要求 PR 描述包含变更动机与验证. 实现: bin/gac/check-pr-description.py (gac-gate CI)"
+      description: 防止空 PR body, 要求 PR 描述包含变更动机与验证.
       check_type: audit_chain
       executor:
+        - hook_pre_edit
         - ci_gate
-      lifecycle: active
-      version: 1.0.0
+      lifecycle: draft
+      version: 0.1.0
       created_at: 2026-07-08
-      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-PRINCIPLE-ENFORCEMENT
@@ -2656,14 +2656,14 @@ gac:
       dimension: X4
       layer: meta
       name: Worktree 清理
-      description: "防 worktree reset 残留; PR 提交前验证 worktree 干净. 实现: gac-worktree.sh submit (diff check) + gac-worktree-guard.sh (CI)"
+      description: 防 worktree reset 残留; PR 提交前验证 worktree 干净.
       check_type: hygiene_case
       executor:
+        - hook_pre_edit
         - ci_gate
-      lifecycle: active
-      version: 1.0.0
+      lifecycle: draft
+      version: 0.1.0
       created_at: 2026-07-08
-      activated_at: 2026-08-04
       source_type: native
 
     # ── indexed: 收敛 X1-X4 原有规则 (source_type=indexed, 原真是策略 SSOT) ──

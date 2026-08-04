@@ -1,5 +1,5 @@
 ---
-id: 0233-stage0-closeout-v2-promise
+id: ADR-0233
 title: "STRAT-P81 Stage 0 closeout v2 占位"
 status: SUPERSEDED
 lifecycle: placeholder
