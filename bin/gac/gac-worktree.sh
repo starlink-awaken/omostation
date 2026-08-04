@@ -43,53 +43,8 @@ validate_session() {
 
 # PASW: Per-Agent Submodule Worktree (ADR-0355) — 高冲突子模块 per-agent 独立 worktree
 # 设计文档: .omo/_knowledge/decisions/0355-pasw-submodule-isolation.md
-# 需要独立 worktree 隔离的高冲突子模块 (按冲突频率排序)
-ISOLATED_SUBS="projects/gbrain projects/cockpit projects/agora"
-# PASW: 子模块 worktree 存放路径 (root worktree 内)
-PASW_SUBTREE_DIR=".subtrees"
-# PASW: 过期 TTL (小时)
-PASW_TTL_HOURS="${PASW_TTL_HOURS:-24}"
-
-pasw_create() {
-  local wt="$1" session="$2"
-  local created=0
-  for sub in $ISOLATED_SUBS; do
-    local sub_name
-    sub_name=$(basename "$sub")
-    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
-    local sub_branch="agent/${session}-${sub_name}"
-    if [ ! -e "$wt/$sub/.git" ]; then
-      echo "   📥 init $sub (PASW 需要)..."
-      (cd "$wt" && git submodule update --init "$sub" 2>&1) || { echo "   ⚠️  $sub init 失败, 跳过"; continue; }
-    fi
-    [ -d "$sub_wt" ] && { echo "   ⏭  $sub worktree 已存在"; continue; }
-    ( cd "$wt/$sub" && local current_sha && current_sha=$(git rev-parse HEAD) && git branch -f "$sub_branch" "$current_sha" 2>/dev/null || true && mkdir -p "$(dirname "$sub_wt")" && git worktree add "$sub_wt" "$sub_branch" 2>&1 ) && {
-      echo "   🔧 PASW: $sub → $PASW_SUBTREE_DIR/$sub_name (branch: $sub_branch)"
-      created=$((created + 1))
-    } || echo "   ⚠️  $sub worktree 创建失败, 跳过"
-  done
-  [ "$created" -gt 0 ] && echo "   ✅ PASW: $created 个子模块 worktree 已隔离"
-}
-
-pasw_cleanup() {
-  local wt="$1"
-  local cleaned=0
-  for sub in $ISOLATED_SUBS; do
-    local sub_name
-    sub_name=$(basename "$sub")
-    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
-    local sub_branch
-    if [ -d "$sub_wt" ]; then
-      sub_branch=$(git -C "$sub_wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-      ( cd "$wt/$sub" && git worktree remove "$sub_wt" 2>/dev/null && [ -n "$sub_branch" ] && [ "$sub_branch" != "HEAD" ] && git branch -d "$sub_branch" 2>/dev/null || true ) && {
-        echo "   🧹 PASW: 已清理 $sub worktree"
-        cleaned=$((cleaned + 1))
-      } || { echo "   ⚠️  $sub 清理失败, 强制移除"; rm -rf "$sub_wt" 2>/dev/null || true; }
-    fi
-  done
-  rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
-  [ "$cleaned" -gt 0 ] && echo "   ✅ PASW: $cleaned 个子模块 worktree 已清理"
-}
+# 核心函数在 lib/pasw-core.sh, 这里 source 使用
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/pasw-core.sh"
 
 case "$cmd" in
   claim)
