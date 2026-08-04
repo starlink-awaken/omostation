@@ -721,6 +721,21 @@ def main() -> int:
         help="Arguments passed to bin/agent-workflow.py",
     )
 
+    # ── Agent onboarding ──────────────────────────────────
+    onboard_p = sub.add_parser(
+        "agent-onboard",
+        help="🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills)",
+        epilog=(
+            "示例:\n"
+            "  cockpit agent-onboard\n"
+            "  cockpit agent-onboard --profile governance-agent\n"
+            "  cockpit agent-onboard --json"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    onboard_p.add_argument("--profile", help="Check if a specific profile is registered")
+    onboard_p.add_argument("--json", action="store_true", help="Output JSON")
+
     # ── CLI 收敛: agent-runtime 并入 cockpit ─────────────────
     agent_runtime_p = sub.add_parser(
         "agent-runtime",
@@ -1079,6 +1094,11 @@ def main() -> int:
 
         return cmd_agent_workflow(a)
 
+    def dispatch_agent_onboard(a):
+        from cockpit.commands.agent_onboard import cmd_agent_onboard
+
+        return cmd_agent_onboard(a)
+
     def dispatch_monitor(a):
         from cockpit.commands.monitor import cmd_monitor
 
@@ -1196,6 +1216,7 @@ def main() -> int:
         "workflow": dispatch_workflow,
         "agent-workflow": dispatch_agent_workflow,
         "agent": dispatch_agent_workflow,
+        "agent-onboard": dispatch_agent_onboard,
         "agent-runtime": dispatch_agent_runtime,
         "monitor": dispatch_monitor,
         "data": dispatch_data,
