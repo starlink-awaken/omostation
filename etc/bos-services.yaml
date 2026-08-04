@@ -1653,16 +1653,19 @@ services:
   - projects/kairon
   - --package
   - mos
+  - --with
+  - neo4j
   - python
   - -m
   - mos
   - write
-  description: Memory OS unified write (dual-track raw+theta) — ADR-0372
+  description: Memory OS unified write (dual-track raw+theta; Neo4j FACT when NEO4J_URI) — ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/write
+  env_keys: [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, MOS_RBAC, MOS_TEMPORAL]
 - action: recall
   command:
   - uv
@@ -1671,16 +1674,19 @@ services:
   - projects/kairon
   - --package
   - mos
+  - --with
+  - neo4j
   - python
   - -m
   - mos
   - recall
-  description: Memory OS unified intent-aware recall (kos+gbrain fan-out) — ADR-0372
+  description: Memory OS unified intent-aware recall (neo4j+kos+gbrain fan-out) — ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/recall
+  env_keys: [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, MOS_RBAC, MOS_TEMPORAL]
 - action: status
   command:
   - uv
@@ -1689,6 +1695,8 @@ services:
   - projects/kairon
   - --package
   - mos
+  - --with
+  - neo4j
   - python
   - -m
   - mos
@@ -1699,6 +1707,7 @@ services:
   status: active
   transport: stdio
   uri: bos://memory/mos/status
+  env_keys: [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, MOS_RBAC, MOS_TEMPORAL]
 - action: forget
   command:
   - uv
@@ -1707,16 +1716,19 @@ services:
   - projects/kairon
   - --package
   - mos
+  - --with
+  - neo4j
   - python
   - -m
   - mos
   - forget
-  description: Memory OS forget propagation (raw+theta+mem0 shadow) — ADR-0372 Phase 2
+  description: Memory OS forget propagation (raw+theta+mem0+neo4j invalidate) — ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/forget
+  env_keys: [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, MOS_RBAC]
 - action: consolidate
   command:
   - uv
@@ -1725,16 +1737,40 @@ services:
   - projects/kairon
   - --package
   - mos
+  - --with
+  - neo4j
   - python
   - -m
   - mos
   - consolidate
-  description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372 Phase 3
+  description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/consolidate
+  env_keys: [MOS_RBAC, MOS_CONSOLIDATE_LIVE]
+- action: knowledge-ref
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - --package
+  - mos
+  - --with
+  - neo4j
+  - python
+  - -m
+  - mos
+  - knowledge-ref
+  description: Memory OS ADR-0315 knowledge citation metadata (no body) — ADR-0372
+  domain: memory
+  package: mos
+  status: active
+  transport: stdio
+  uri: bos://memory/mos/knowledge-ref
+  env_keys: [MOS_RBAC, MOS_TEMPORAL]
 - action: status
   description: 获取分布式蜂群实时拓扑与负载状态
   domain: swarm

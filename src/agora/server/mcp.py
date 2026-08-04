@@ -137,11 +137,63 @@ def _resolve_caller_identity(caller_identity: str | dict | None) -> str | dict:
     return "anonymous"
 
 
+def _load_memory_os_env() -> None:
+    """Best-effort load NEO4J_*/MOS_* for bos://memory/mos/* stdio children.
+
+    Does not overwrite non-empty process env. Sources (low → high fill-empty):
+    docs/operations/memory-os.env.example, projects/cockpit/.env, config/memory-os.env
+    under WORKSPACE / WORKSPACE_ROOT.
+    """
+    root = Path(
+        os.environ.get("WORKSPACE")
+        or os.environ.get("WORKSPACE_ROOT")
+        or Path(__file__).resolve().parents[5]
+    )
+    defaults = {
+        "NEO4J_URI": "bolt://localhost:7687",
+        "NEO4J_USER": "neo4j",
+        "NEO4J_PASSWORD": "changeme",
+        "MOS_TEMPORAL": "1",
+        "MOS_RBAC": "1",
+        "MOS_MEM0": "0",
+        "MOS_GRAPHITI": "0",
+    }
+    candidates = [
+        root / "docs" / "operations" / "memory-os.env.example",
+        root / "projects" / "cockpit" / ".env",
+        root / "config" / "memory-os.env",
+    ]
+    merged = dict(defaults)
+    for path in candidates:
+        if not path.is_file():
+            continue
+        try:
+            for raw in path.read_text(encoding="utf-8").splitlines():
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, _, v = line.partition("=")
+                k, v = k.strip(), v.strip().strip('"').strip("'")
+                if k:
+                    merged[k] = v
+        except OSError:
+            continue
+    for k, v in merged.items():
+        cur = os.environ.get(k)
+        if cur is None or cur == "":
+            os.environ[k] = v
+
+
 @asynccontextmanager
 async def _proxy_lifespan(server: FastMCP):
     """Initialize proxy connections within mcp.run()'s event loop."""
     from agora.server.dependencies import clear_caches, get_proxy_manager
     from agora.server.tools_proxy import proxy_sync_loop
+
+    try:
+        _load_memory_os_env()
+    except Exception:  # noqa: BLE001 — never block MCP boot
+        logger.exception("memory_os_env_load_failed")
 
     _sync_task = None
     _swarm = None
