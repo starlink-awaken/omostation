@@ -580,7 +580,7 @@ diff_checks:
       - projects/*/tests/**/*.py
       - projects/*/pyproject.toml
       - projects/*/pyrightconfig.json
-    command: [uv, run, pytest, tests/test_sweep_tools.py, -q]
+    command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_sweep_tools.py, tests/test_gac_worktree_lifecycle.py, -q]
   - id: agent-workflow-lint
     description: Workflow runner and registry contract validation.
     required: true
