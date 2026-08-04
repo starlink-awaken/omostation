@@ -28,6 +28,7 @@ Foundry = omostation 治理 cron 系统，每 6h 自动执行 10 个 deck，输�
 | 5:30 | submodule-bump | `bin/ssot/submodule-bump-check.py` | 30s |
 | 6:00 | brief-gen | `bin/mof/generate-brief.py --write` | 60s |
 | 6:30 | port-governance | `bin/decks/port-governance-deck.py` | 120s |
+| 6:45 | memory-os-consolidate | `bin/decks/memory-os-consolidate-deck.py` (default dry-run; `MOS_CONSOLIDATE_LIVE=1` for live) | 900s |
 
 ## 2. 输出
 
