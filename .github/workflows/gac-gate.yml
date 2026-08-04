@@ -28,6 +28,9 @@ jobs:
           python-version: "3.13"
       - name: install pyyaml
         run: pip install pyyaml
+      - name: CR-PR-DESCRIPTION-NON-EMPTY — PR 描述非空校验
+        # PR 描述必须包含变更动机与验证说明, 防空 PR body
+        run: python3 bin/gac/check-pr-description.py
       - name: PASW — 自动同步子模块指针
         # 如果 PR 分支指针不可达, 自动 fetch 或更新到最新 origin/main
         # --verbose: 显示完整错误信息到 CI log, 便于诊断
