@@ -416,3 +416,16 @@ Phase 67 在 Cockpit 中新增独立的工程交付复核页面，承接 Phase 6
 
 UI 不读取 `.omo` 原始日志、不保存自由文本、不直接改状态，也不把“已采纳”展示为模型或业务自动放行。它只证明工程交付元数据具备可操作的人机复核链路；
 真实业务试点仍需满足 G1～G4，并补齐真实样本、双人标注、裁决、恢复证据和人工上线评审。
+
+### 12.6 Phase 68 工程交付真实样本与双人标注入口
+
+Phase 68 选择工程交付作为当前唯一低风险 dogfood 数据源：不是读取业务私有原文，而是消费 OMO 已形成的、经过人工复核的
+工程交付元数据投影。Kairon 新增 `kems_sync_engineering_delivery_queue.py`，在输入边界检查
+`engineering-delivery-review-queue/v1`、固定场景绑定、只读控制面和稳定交付字段，仅将 `review_status=reviewed` 的行转换为
+`kems.adjudication-queue.v1` 的 pending 样本。
+
+该转换不把 `adopted` 当成标签真值。样本只带确定性的 sample ID、source SHA-256、脱敏 `vault://redacted/` 引用、场景和 split；
+真正的 `delivery_quality`、`evidence_sufficiency`、`workflow_alignment` 和 `requires_follow_up` 必须由两名独立标注员分别提交，
+再由第三名独立裁决者确认。没有两份独立标注和明确裁决，不得生成 `kems.evaluation-manifest.v1`。
+
+当前 M2 放行状态仍是“真实样本入口已落地，真实标注与裁决待执行”；这一步不代表已经获得业务准确率，也不开放模型训练、预测晋升或 OMO 自动派发。

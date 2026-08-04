@@ -1103,6 +1103,22 @@ UI 的职责边界固定为：
 本阶段只完成工程交付场景的人机操作闭环，不把工程元数据误认为业务价值样本；后续仍需连续真实低风险消费者、双人标注、adjudication、脱敏 manifest
 和 shadow evaluation 才能推进 M2/M6。
 
+### 7.3.35 Phase 68 工程交付真实样本进入 KEMS 双人标注队列
+
+Phase 68 将已经完成人工复核的 `engineering-delivery-review-queue/v1` 投影接入 Kairon/KOS 的持久化标注队列，
+但不把 `adopted` 决策直接当作金标准。新增转换脚本只接收脱敏的 OMO 队列投影，校验场景绑定、只读控制面和固定字段，
+筛选 `review_status=reviewed` 的行，按稳定 WorkflowRun、receipt 事件和结构化交付元数据生成确定性的 sample ID 与 source SHA-256。
+
+输出仍遵守 `kems.adjudication-queue.v1`：`source_ref` 使用 `vault://redacted/`，标签为空，状态为 `pending`，原文、prompt、模型输出、
+自由文本和凭据不会进入 JSONL 或 SQLite。Kairon 新增 `engineering-delivery-review-v1` 标签合同，允许标注员独立判断：
+交付质量、证据充分性、Workflow 对齐度和是否需要后续动作；两名标注员和独立 adjudicator 仍由既有 KOS 机制强制。
+
+运行链路为：
+
+`OMO reviewed queue -> Kairon redacted queue sync -> Annotator A/B -> independent adjudicator -> kems.evaluation-manifest.v1`
+
+Phase 68 只打通“真实工程元数据进入标注队列”的可复现入口，不生成金标准、不创建 manifest、不训练模型、不改变 Workflow Mesh 或 OMO 策略。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。
