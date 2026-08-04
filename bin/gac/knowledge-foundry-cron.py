@@ -23,6 +23,7 @@ schedule:
   5:50  swarm-window      --G-CONV.7/ADR-0220: 72h conflict window status (+ orphan scan)
   6:00  brief-gen         --emit BRIEF.md + INDEX sync
   6:30  port-governance   --P78/P79: hardcoded + catalog health (Foundry v2)
+  6:45  memory-os-consolidate --ADR-0372 Phase3: gbrain dream orchestration (default dry-run)
 """
 from __future__ import annotations
 
@@ -304,6 +305,15 @@ def main(argv: list[str] | None = None) -> int:
         "6:30-port-governance",
         ["uv", "run", "--with", "pyyaml", "python", "bin/decks/port-governance-deck.py"],
         retries=0, timeout=120,
+    ))
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
+    # 6:45 — Memory OS consolidate (ADR-0372 Phase 3; default dry-run)
+    print("[6:45] memory-os-consolidate (gbrain dream orchestration)...")
+    results.append(run_tool(
+        "6:45-memory-os-consolidate",
+        ["uv", "run", "--with", "pyyaml", "python", "bin/decks/memory-os-consolidate-deck.py"],
+        retries=0, timeout=900,
     ))
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
