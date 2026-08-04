@@ -147,6 +147,20 @@ service definition -> runtime scheduler/matrix/sandbox -> health observation -> 
 external resource -> descriptor -> scene-bound admission -> capability route -> receipt/evidence -> derived memory
 ```
 
+## 8. Recent Architecture Decisions
+
+| ADR | Decision | Date |
+|-----|----------|------|
+| [ADR-0371](.omo/_knowledge/decisions/0371-pasw-submodule-isolation.md) | PASW — Per-Agent Submodule Worktree 隔离 | 2026-08-04 |
+| [ADR-0370](.omo/_knowledge/decisions/0370-agt-ecos-integration.md) | AGT × eCOS v6 Integration via BOS URI External Adapter Pattern | 2026-08-04 |
+| [ADR-0368](.omo/_knowledge/decisions/0368-runtime-taskfallback-test-contract.md) | Runtime Registry 测试契约与 TaskFallback 响应对齐 | 2026-08-04 |
+| [ADR-0367](.omo/_knowledge/decisions/0367-sweep-tooling-scaling-roadmap.md) | Python 质量扫描基础设施规模化路线图 | 2026-08-04 |
+| [ADR-0366](.omo/_knowledge/decisions/0366-pyright-sweep-algorithm.md) | Pyright 与 Ruff 扫描修复算法固化 | 2026-08-04 |
+| [ADR-0365](.omo/_knowledge/decisions/0365-architecture-strategy-closeout.md) | Scenario-first architecture strategy and Workflow Mesh execution spine | 2026-08-04 |
+| [ADR-0364](.omo/_knowledge/decisions/0364-kems-repeated-shadow-promotion-gate.md) | KEMS Repeated Shadow Promotion Gate | 2026-08-04 |
+| [ADR-0363](.omo/_knowledge/decisions/0363-external-resource-refresh-plan.md) | External Resource Refresh Plan and Controlled Reachability | 2026-08-04 |
+| [ADR-0362](.omo/_knowledge/decisions/0362-kems-runtime-health-and-recovery.md) | KEMS runtime health and verified SQLite recovery | 2026-08-04 |
+
 ## 9. Related Documents
 
 | Document | Role |

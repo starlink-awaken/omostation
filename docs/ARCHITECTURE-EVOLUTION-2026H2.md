@@ -135,7 +135,7 @@ graph TD
    - 工作交付：`spaces/` 下有无新的 delivery 卡片 (工作量交付)
    - 知识复用：KOS 检索命中次数与知识链长度。
 2. **DASHBOARD 呈现逻辑**:
-   在 [bin/gac/governance-dashboard.py](file:///Users/xiamingxing/Workspace/bin/governance-dashboard.py) 中重构，当治理健康度分数 $\ge 95$ 时，折叠技术债等防御指标，置顶显示 X3 本周价值指标（创作、交付、复用数据），实现“无感治理，突出产出”。
+    在 [bin/gac/governance-dashboard.py](../bin/gac/governance-dashboard.py) 中重构，当治理健康度分数 $\ge 95$ 时，折叠技术债等防御指标，置顶显示 X3 本周价值指标（创作、交付、复用数据），实现“无感治理，突出产出”。
 
 ---
 

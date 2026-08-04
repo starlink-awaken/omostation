@@ -9,7 +9,7 @@ metadata-migrated-at: 2026-07-31
 # eCOS v6 本地运行时一键启动
 
 > **目标**: 把 eCOS v6 核心运行时服务从“手动逐个启动”变成“一条命令拉起”。
-> **工具**: [`scripts/ecos-start.py`](../scripts/ecos-start.py)
+> **工具**: `scripts/ecos-start.py`（已移除，见下方说明）
 > **SSOT**: [`protocols/port-registry.yaml`](../protocols/port-registry.yaml)
 
 ---

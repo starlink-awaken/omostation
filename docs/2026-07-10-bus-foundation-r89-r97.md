@@ -512,7 +512,7 @@ def test_required_fields(registry):
 ## 参考与上游
 
 - [bus-foundation R82 envelope PR 模式](https://github.com/starlink-awaken/omostation/pulls?q=is%3Apr+bus-foundation+merged%3A2026) — pydantic 迁移是好的参考
-- [ADR-0130 P74 workflow solidification](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) — 新 workflow 不能沉默
-- [P71 baseline recovery pattern](.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md) — 工具未接 (类 B) 治本
+- [ADR-0130 P74 workflow solidification](../.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) — 新 workflow 不能沉默
+- [P71 baseline recovery pattern](../.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md) — 工具未接 (类 B) 治本
 - [writing-plans skill](../../.agents/skills/writing-plans/SKILL.md) — 本 plan 格式来源
 - [brainstorming skill](../../.agents/skills/brainstorming/SKILL.md) — spec 流程来源
