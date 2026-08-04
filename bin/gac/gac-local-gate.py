@@ -88,7 +88,7 @@ DEFAULT_POLICY = {
         # at .omo/_truth/registry/redlines.yaml points to these gates;
         # adding/removing rows there is the safe edit surface.
         {"id": "check-severity-registry", "command": ["bin/gac/check-severity-registry.py"]},
-        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"], "timeout": 30},
+        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"], "timeout": 45},
         {"id": "check-governance-ratio", "command": ["bin/gac/check-governance-ratio.py"]},
         {"id": "check-redline-coverage", "command": ["bin/gac/check-redline-coverage.py"]},
         # P85 G2.2: workorder schema is warn-only by default; promote

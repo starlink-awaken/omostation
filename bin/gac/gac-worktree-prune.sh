@@ -89,4 +89,40 @@ done < <(git branch --format='%(refname:short)')
 
 echo "   ✅ 已清理 $stale 个过期分支"
 
-echo "=== Branch Prune 完成: 合并=$merged, 过期=$stale ==="
+# 4. 清理孤儿 worktree (worktree 目录已删除但 git 仍记录, 或分支已不存在)
+echo "── 4. 清理孤儿 worktree ──"
+orphaned=0
+while IFS= read -r wt_line; do
+  # Skip main worktree (first line)
+  wt_path=$(echo "$wt_line" | awk '{print $1}')
+  [ "$wt_path" = "$(git rev-parse --show-toplevel)" ] && continue
+
+  # Check if worktree directory exists
+  if [ ! -d "$wt_path" ]; then
+    echo "   孤儿 (目录不存在): $wt_path"
+    if [ "$DRY_RUN" = false ]; then
+      git worktree remove "$wt_path" --force 2>/dev/null || true
+    fi
+    orphaned=$((orphaned + 1))
+    continue
+  fi
+
+  # Check if branch still exists
+  wt_branch=$(echo "$wt_line" | grep -o '\[.*\]' | tr -d '[]')
+  if [ -n "$wt_branch" ] && ! git rev-parse --verify "$wt_branch" >/dev/null 2>&1; then
+    echo "   孤儿 (分支已删除): $wt_path"
+    if [ "$DRY_RUN" = false ]; then
+      git worktree remove "$wt_path" --force 2>/dev/null || true
+    fi
+    orphaned=$((orphaned + 1))
+    continue
+  fi
+done < <(git worktree list)
+
+# Prune stale worktree metadata
+if [ "$DRY_RUN" = false ]; then
+  git worktree prune --verbose 2>/dev/null || true
+fi
+echo "   ✅ 已清理 $orphaned 个孤儿 worktree"
+
+echo "=== Branch Prune 完成: 合并=$merged, 过期=$stale, 孤儿worktree=$orphaned ==="
