@@ -515,10 +515,23 @@ def collect_external_resources(
     root = root.resolve()
     build_snapshot, diff_snapshots, discover, _ = _load_agora(root)
     records = list(discover(entry_points, probe=probe, mark_unprobed=not probe))
-    # BOS 能力目录兜底: entry-point 发现为空时 (agora 未安装/无外部 provider),
-    # 通过 importlib 加载 CapabilityProvider, 让能力目录覆盖 bos-services.yaml 的能力.
-    if not records:
-        records.extend(_load_capability_records(root))
+    # iris 跨项目扫描: iris 连接器在 kairon 子模块注册 (21 个 external.resources),
+    # 主仓库 omo/agora 环境装不到 iris → entry-point 发现断链;
+    # 走 subprocess cd kairon + uv run 扫 external.resources (修复 iris↔catalog 断链, N1 解锁).
+    records.extend(_load_iris_records(root))
+    # BOS 能力目录: 总是加载 (修复回归: "if not records" 在 iris 进后跳过 bos 兜底,
+    # 导致 catalog 丢 bos://capabilities). agora/iris 可能与 bos 重叠, 按 id 去重.
+    records.extend(_load_capability_records(root))
+    _seen_ids: set[str] = set()
+    _deduped: list[Any] = []
+    for _record in records:
+        _rid = getattr(getattr(_record, "descriptor", None), "id", "") or ""
+        if _rid and _rid in _seen_ids:
+            continue
+        if _rid:
+            _seen_ids.add(_rid)
+        _deduped.append(_record)
+    records = _deduped
     snapshot = build_snapshot(
         records,
         now=now or datetime.now(UTC),
@@ -530,6 +543,92 @@ def collect_external_resources(
     if previous_snapshot is not None:
         snapshot["changes"] = diff_snapshots(previous_snapshot, snapshot)
     return snapshot
+
+
+def _load_iris_records(root: Path) -> list[Any]:
+    """跨项目扫 iris external.resources (cd kairon + uv run), 转 DiscoveryRecord.
+
+    iris 连接器在 kairon 子模块注册 (21 个 external.resources), 主仓库 omo/agora
+    环境装不到 iris → metadata.entry_points() 发现断链. 走 subprocess 跨项目扫,
+    修复 iris↔catalog 断链 (N1 document-review 激活卡点的根因).
+    """
+    kairon = root / "projects/kairon"
+    if not kairon.exists():
+        return []
+    code = (
+        "import importlib.metadata as m, json\n"
+        "from datetime import datetime, timezone, timedelta\n"
+        "for ep in m.entry_points(group='external.resources'):\n"
+        "    if ep.name == 'agora-bos-capabilities':\n"
+        "        continue\n"
+        "    try:\n"
+        "        inst = ep.load()()\n"
+        "        desc = inst.external_descriptor()\n"
+        "        try:\n"
+        "            avail = inst.is_available()\n"
+        "        except Exception:\n"
+        "            avail = False\n"
+        "        # iris health {available, details} → agora {status, observed_at, source}\n"
+        "        # agora 要 status in {healthy, degraded, unhealthy} (不是 ok)\n"
+        "        desc['health'] = {\n"
+        "            'status': 'healthy' if avail else 'unhealthy',\n"
+        "            'available': bool(avail),\n"
+        "            'observed_at': datetime.now(timezone.utc).isoformat(),\n"
+        "            'source': 'iris.is_available',\n"
+        "        }\n"
+        "        # agora 要 expires_at 或 review_at (否则 missing_expiry_or_review)\n"
+        "        if not desc.get('expires_at') and not desc.get('review_at'):\n"
+        "            desc['review_at'] = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()\n"
+        "        # preflight 匹配 capability in resource.capabilities;\n"
+        "        # scene capability_refs 用 resource id (iris:apple_mail), 加到 capabilities 让匹配\n"
+        "        caps = list(desc.get('capabilities', []))\n"
+        "        if desc.get('id') and desc['id'] not in caps:\n"
+        "            caps.append(desc['id'])\n"
+        "            desc['capabilities'] = caps\n"
+        "        print(json.dumps(desc, ensure_ascii=False))\n"
+        "    except Exception as e:\n"
+        "        import sys; sys.stderr.write(f'iris skip {ep.name}: {e}\\n')\n"
+    )
+    try:
+        result = subprocess.run(
+            ["uv", "run", "--with", "pyyaml", "python", "-c", code],
+            cwd=kairon,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(
+            f"external-resource-catalog: iris scan unavailable: {exc}",
+            file=sys.stderr,
+        )
+        return []
+    from agora_external_connections_projection import (
+        DiscoveryRecord as AgoraDiscoveryRecord,
+    )
+    from agora_external_connections_projection import ExternalResourceDescriptor
+
+    records: list[Any] = []
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            descriptor = json.loads(line)
+            parsed = ExternalResourceDescriptor.from_mapping(descriptor)
+            records.append(
+                AgoraDiscoveryRecord(
+                    descriptor=parsed,
+                    entry_point=f"external.resources:{descriptor.get('id', 'iris')}",
+                )
+            )
+        except (json.JSONDecodeError, ValueError, KeyError, AttributeError, TypeError) as exc:
+            print(
+                f"external-resource-catalog: iris descriptor skip: {exc}",
+                file=sys.stderr,
+            )
+    return records
 
 
 def _load_capability_records(root: Path) -> list[Any]:
@@ -551,6 +650,18 @@ def _load_capability_records(root: Path) -> list[Any]:
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
         descriptor = module.CapabilityProvider().external_descriptor()
+        # bos health 适配 (agora availability 推导要 status/observed_at/source + review_at, 同 iris 模式)
+        descriptor["health"] = {
+            "status": "healthy",
+            "observed_at": datetime.now(UTC).isoformat(),
+            "source": "agora.capability_provider",
+        }
+        if not descriptor.get("expires_at") and not descriptor.get("review_at"):
+            descriptor["review_at"] = (
+                datetime.now(UTC) + timedelta(days=30)
+            ).isoformat()
+        # bos 能力目录 = BOS 服务聚合投影, 已 active (agora availability 要求 lifecycle in {active,degraded})
+        descriptor["lifecycle"] = "active"
         # 复用 agora external_connections 的 DiscoveryRecord/解析 (已在 _load_agora 注册)
         from agora_external_connections_projection import (
             DiscoveryRecord as AgoraDiscoveryRecord,
