@@ -54,6 +54,19 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
     submodule_dir = WORKSPACE / path
     if not submodule_dir.exists():
         return False, "submodule working tree missing"
+    # G1 (P79, 2026-08-04): partial worktree 降级 — 子模块目录存在但非有效 git repo
+    # (PASW ISOLATED partial init / 新建 worktree 未 init) → 本地 push 降级 warning 不 block.
+    # 治本 #907 35+ iteration: partial worktree reachability gate false-positive 死路
+    # (init 子模块超时 10min, escape hatch 不覆盖 reachability).
+    # 安全网: CI (full checkout, 子模块全 init) 跑同一 gate 正常验证, 是最终守门员.
+    init_check = run(
+        ["git", "rev-parse", "--is-inside-work-tree"], cwd=submodule_dir
+    )
+    if init_check.returncode != 0 or init_check.stdout.strip() != "true":
+        return (
+            True,
+            "submodule not initialized (partial worktree) - CI full checkout will verify",
+        )
 
     if fetch:
         # CI actions/checkout depth=1 → submodule shallow → 非 HEAD SHA 不在浅历史
