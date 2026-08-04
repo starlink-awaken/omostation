@@ -33,6 +33,15 @@ make memory-os-check
 # cockpit dashboard 子进程自动带上 NEO4J_* → /api/memory 与 /memory 面板可见图
 ```
 
+## 三端接线（后续补齐）
+
+| 入口 | 状态 |
+|------|------|
+| `cockpit memory …` | ✅ CLI 一等子命令 |
+| `/api/memory/*` · `/memory` | ✅ HTTP/UI |
+| `bos://memory/mos/*`（含 knowledge-ref） | ✅ Agora BOS stdio + `--with neo4j` |
+| Agora MCP lifespan env | ✅ `_load_memory_os_env` |
+
 ## 诚实边界
 
 - `config/memory-os.env` 在 gitignore 的 `config/` 下，仅本机；仓内只有 example  

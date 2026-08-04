@@ -26,6 +26,17 @@ REQUIRED_FILES = [
     "projects/kairon/packages/mos/src/mos/neo4j_writer.py",
     "projects/kairon/packages/mos/src/mos/rbac.py",
     "projects/kairon/packages/mos/docker-compose.yml",
+    "projects/cockpit/src/cockpit/commands/memory.py",
+    "projects/agora/etc/bos-services.yaml",
+]
+
+REQUIRED_BOS_URIS = [
+    "bos://memory/mos/write",
+    "bos://memory/mos/recall",
+    "bos://memory/mos/status",
+    "bos://memory/mos/forget",
+    "bos://memory/mos/consolidate",
+    "bos://memory/mos/knowledge-ref",
 ]
 
 REQUIRED_ENV_KEYS = [
@@ -100,6 +111,17 @@ def main() -> int:
         ctext = cockpit_env.read_text(encoding="utf-8")
         if "NEO4J_URI" not in ctext:
             errors.append("cockpit_.env.example_missing_NEO4J_URI")
+
+    bos_yaml = ROOT / "projects/agora/etc/bos-services.yaml"
+    if bos_yaml.is_file():
+        btext = bos_yaml.read_text(encoding="utf-8")
+        for uri in REQUIRED_BOS_URIS:
+            if uri not in btext:
+                errors.append(f"bos_uri_missing:{uri}")
+        if "cockpit memory" not in (ROOT / "projects/cockpit/src/cockpit/commands/memory.py").read_text(
+            encoding="utf-8"
+        ):
+            warns.append("cockpit_memory_cli_marker_missing")
 
     if errors:
         print(f"FAIL memory-os surfaces ({len(errors)} errors, {len(warns)} warns)")
