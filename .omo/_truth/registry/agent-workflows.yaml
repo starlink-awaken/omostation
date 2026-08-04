@@ -569,7 +569,7 @@ diff_checks:
     command: [uv, run, --with, pyyaml, python, bin/ssot/current-state-coherence.py, --json]
   - id: pyright-sweep-check
     description: P91 pyright and ruff sweep tooling plus Python project type surfaces.
-    required: false
+    required: true
     paths:
       - bin/sweep/**
       - tests/test_sweep_tools.py
