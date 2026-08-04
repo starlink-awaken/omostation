@@ -1,9 +1,9 @@
 # Cockpit CLI 命令参考
 
-> 自动生成于 2026-08-03T01:04:00Z
+> 自动生成于 2026-08-04T11:13:40Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **108** 个命令 (含子命令)。按场景分组如下。
+共 **111** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -111,6 +111,7 @@
 
 | 命令 | 描述 |
 |------|------|
+| `cockpit agent-onboard` | 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills) |
 | `cockpit analyze` | 运行全部分析工具 |
 | `cockpit api` | 启动 API server |
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
@@ -120,6 +121,7 @@
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
+| `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
@@ -136,7 +138,7 @@
 | `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
-| `cockpit list` | 列出所有已注册的 Schema |
+| `cockpit list` | 列债务项 (委派 omo debt) |
 | `cockpit logs` | 查看日志 |
 | `cockpit metrics` | 查看 bus metrics 快照 |
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
@@ -155,6 +157,7 @@
 | `cockpit score` | 评分债务项 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit stats` | 索引统计 |
+| `cockpit summary` | 债务摘要 (委派 omo debt) |
 | `cockpit topics` | 列出已注册 topic |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
@@ -175,9 +178,9 @@
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 64 |
+| `cockpit agora` | `agora` | 65 |
 | `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 10 |
 | `cockpit compute` | `aetherforge` | 10 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T01:04:00Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-04T11:13:40Z 生成*

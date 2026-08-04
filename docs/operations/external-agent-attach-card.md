@@ -124,4 +124,4 @@ If profiles are missing from the live registry, fall back to `observer-agent` / 
 - Onboarding: `.agents/skills/agent-onboarding/SKILL.md`
 - BOS discovery: `.agents/skills/bos-service-discovery/SKILL.md`
 - Callchain: `docs/I0-AGORA-CALLCHAIN.md`
-- Capability registry: `docs/generated/capability-registry.yaml` (`python3 bin/ssot/gen-capability-registry.py`)
+- Capability registry: `docs/generated/capability-registry.yaml` (`python3 bin/cockpit/gen-capability-registry.py`)

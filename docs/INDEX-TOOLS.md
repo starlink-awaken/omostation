@@ -7,7 +7,7 @@
 > - validation: 工具数与实际扫描结果一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-08-04T11:05:52.940066+00:00
+> - generated_at: 2026-08-04T11:15:12.901494+00:00
 
 ---
 
@@ -100,6 +100,7 @@
 | `bos` | `uv run --project projects/cockpit cockpit bos --help` |
 | `resolve` | `uv run --project projects/cockpit cockpit resolve --help` |
 | `read` | `uv run --project projects/cockpit cockpit read --help` |
+| `channels` | `uv run --project projects/cockpit cockpit channels --help` |
 | `inbox` | `uv run --project projects/cockpit cockpit inbox --help` |
 | `pending` | `uv run --project projects/cockpit cockpit pending --help` |
 | `watch` | `uv run --project projects/cockpit cockpit watch --help` |
@@ -132,7 +133,7 @@
 | `c2g` | `uv run --project projects/cockpit cockpit c2g --help` |
 | `pipeline` | `uv run --project projects/cockpit cockpit pipeline --help` |
 
-**合计**: 110 个顶层命令
+**合计**: 111 个顶层命令
 
 关键通道：`bos` · `bos list --all` · `channels` · `kems` · `agent-onboard` · `mcp` · `agent-workflow`
 ## 工具分类目录
@@ -187,7 +188,7 @@
 | gen-tools-index.py | 工具索引生成 | `python3 bin/ssot/gen-tools-index.py` |
 | gen-knowledge-index.py | 知识索引生成 | `python3 bin/ssot/gen-knowledge-index.py` |
 | gen-agents-index.py | Agent索引生成 | `python3 bin/ssot/gen-agents-index.py` |
-| gen-capability-registry.py | 三通道能力注册表 | `python3 bin/ssot/gen-capability-registry.py` |
+| gen-capability-registry.py | 三通道能力注册表 | `python3 bin/cockpit/gen-capability-registry.py` |
 | mcp-attach-smoke.py | 外部 agent 接入烟测 | `python3 bin/ssot/mcp-attach-smoke.py` |
 | gen-external-channels-inventory.py | ECCP 外通道 inventory | `python3 bin/ssot/gen-external-channels-inventory.py` |
 | check-index-drift.py | 索引漂移检测 | `python3 bin/ssot/check-index-drift.py` |

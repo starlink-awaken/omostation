@@ -159,7 +159,7 @@ def generate_ssot_tools():
 | gen-tools-index.py | 工具索引生成 | `python3 bin/ssot/gen-tools-index.py` |
 | gen-knowledge-index.py | 知识索引生成 | `python3 bin/ssot/gen-knowledge-index.py` |
 | gen-agents-index.py | Agent索引生成 | `python3 bin/ssot/gen-agents-index.py` |
-| gen-capability-registry.py | 三通道能力注册表 | `python3 bin/ssot/gen-capability-registry.py` |
+| gen-capability-registry.py | 三通道能力注册表 | `python3 bin/cockpit/gen-capability-registry.py` |
 | mcp-attach-smoke.py | 外部 agent 接入烟测 | `python3 bin/ssot/mcp-attach-smoke.py` |
 | gen-external-channels-inventory.py | ECCP 外通道 inventory | `python3 bin/ssot/gen-external-channels-inventory.py` |
 | check-index-drift.py | 索引漂移检测 | `python3 bin/ssot/check-index-drift.py` |
