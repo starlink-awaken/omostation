@@ -19,10 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # 拉子模块 (c2g 在 projects/c2g 是子模块)
-          submodules: recursive
+          # 显式 init c2g (下方步骤), 不 recursive (避免撞 private 子模块)
+          submodules: false
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
+
+      - name: Init c2g submodule
+        run: git submodule update --init projects/c2g
 
       - uses: actions/setup-python@v5
         with:
