@@ -330,6 +330,17 @@ evaluation:
   model_pack:
     stages: [offline, proposal_only, shadow, approval, canary, rollback]
     direct_admission_write: forbidden
+    repeated_shadow_gate:
+      schema: kems.model-promotion-gate.v1
+      builder: projects/kairon/packages/kos/src/kos/kems/promotion_gate.py::build_model_promotion_gate
+      cli: projects/kairon/scripts/kems_model_promotion_gate.py
+      required_evidence: [manifest_binding, repeated_shadow_reports, aggregate_metrics]
+      minimum_default_runs: 2
+      minimum_default_observations: 1
+      eligible_status: eligible_for_human_approval
+      blocked_status: blocked
+      automatic_promotion: forbidden
+      decision_owner: human_or_omo
   channel_pack:
     required_receipt: delivery_receipt
     retry_policy: explicit_and_idempotent

@@ -430,6 +430,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0361: Engineering Delivery 真实复核元数据进入 KEMS 双人标注队列 — **ACCEPTED** | 2026-08-04 | Workflow Mesh Phase 68 | 0361-engineering-delivery-real-sample-queue.md
 - ADR-0362: KEMS runtime health and verified SQLite recovery — **ACCEPTED** | 2026-08-04 | Kairon/KOS Phase 69 | 0362-kems-runtime-health-and-recovery.md
 - ADR-0363: External Resource Refresh Plan and Controlled Reachability — **ACCEPTED** | 2026-08-04 | Workflow Mesh Phase 70 | 0363-external-resource-refresh-plan.md
+- ADR-0364: KEMS repeated shadow evaluation and human promotion gate — **ACCEPTED** | 2026-08-04 | KEMS Phase 71 | 0364-kems-repeated-shadow-promotion-gate.md
 
 ---
 
