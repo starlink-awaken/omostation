@@ -18,13 +18,24 @@ import subprocess
 import sys
 import time
 from collections.abc import Iterable, Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 SCHEMA = "external-resource-catalog/v1"
 DIRECTORY_SCHEMA = "external-resource-directory/v1"
 CONNECTION_PLAN_SCHEMA = "external-resource-connection-plan/v1"
+REFRESH_PLAN_SCHEMA = "external-resource-refresh-plan/v1"
+
+DEFAULT_REFRESH_INTERVALS_SECONDS = {
+    "knowledge_source": 86400,
+    "data_source": 21600,
+    "resource_provider": 3600,
+    "method_pack": 604800,
+    "tool_capability": 86400,
+    "channel": 3600,
+    "model_provider": 21600,
+}
 
 
 class ExternalResourceCatalogInputError(ValueError):
@@ -289,6 +300,177 @@ def build_external_resource_connection_plan(
     digest_state.pop("observed_at", None)
     payload["plan_digest"] = _canonical_digest(digest_state)
     return payload
+
+
+def _parse_refresh_time(value: Any, *, field_name: str) -> datetime:
+    text = str(value or "").strip()
+    if not text:
+        raise ExternalResourceCatalogInputError(f"refresh plan requires {field_name}")
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ExternalResourceCatalogInputError(
+            f"refresh plan has invalid {field_name}"
+        ) from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def build_external_resource_refresh_plan(
+    catalog: Mapping[str, Any],
+    *,
+    now: datetime | None = None,
+    force: bool = False,
+    intervals_seconds: Mapping[str, int] | None = None,
+) -> dict[str, Any]:
+    """Build a read-only schedule for the next governed catalog observation.
+
+    The plan controls observation cadence only. It never invokes a provider,
+    queues a WorkflowRun, changes admission, or writes OMO state.
+    """
+    if catalog.get("schema") != SCHEMA:
+        raise ExternalResourceCatalogInputError(
+            "refresh plan requires an external-resource catalog"
+        )
+    raw_resources = catalog.get("resources", [])
+    if not isinstance(raw_resources, list):
+        raise ExternalResourceCatalogInputError("catalog resources must be a list")
+    current = (now or datetime.now(UTC)).astimezone(UTC)
+    policy = dict(DEFAULT_REFRESH_INTERVALS_SECONDS)
+    if intervals_seconds is not None:
+        for kind, interval in intervals_seconds.items():
+            if kind not in policy:
+                raise ExternalResourceCatalogInputError(
+                    f"refresh plan has unknown resource kind: {kind}"
+                )
+            if not isinstance(interval, int) or isinstance(interval, bool) or interval <= 0:
+                raise ExternalResourceCatalogInputError(
+                    f"refresh plan interval must be positive: {kind}"
+                )
+            policy[kind] = interval
+
+    items: list[dict[str, Any]] = []
+    for item in raw_resources:
+        if not isinstance(item, Mapping):
+            raise ExternalResourceCatalogInputError("catalog resource must be an object")
+        resource_id = str(item.get("id") or "").strip()
+        if not resource_id:
+            raise ExternalResourceCatalogInputError("catalog resource is missing id")
+        kind = str(item.get("kind") or "").strip()
+        interval = policy.get(kind, DEFAULT_REFRESH_INTERVALS_SECONDS["resource_provider"])
+        health = item.get("health") if isinstance(item.get("health"), Mapping) else {}
+        health_status = str(health.get("status") or "unknown").strip().lower()
+        reason_codes = {
+            str(reason).strip()
+            for reason in item.get("reason_codes", [])
+            if str(reason).strip()
+        }
+        last_observed_raw = health.get("observed_at") or catalog.get("observed_at")
+        last_observed = _parse_refresh_time(
+            last_observed_raw, field_name="observed_at"
+        )
+        next_due = last_observed + timedelta(seconds=interval)
+        deadline_due = False
+        invalid_deadline = False
+        for field_name in ("expires_at", "review_at"):
+            deadline = item.get(field_name)
+            if not deadline:
+                continue
+            try:
+                deadline_due = deadline_due or _parse_refresh_time(
+                    deadline, field_name=field_name
+                ) <= current
+            except ExternalResourceCatalogInputError:
+                invalid_deadline = True
+        unhealthy = health_status in {"unknown", "unhealthy"} or any(
+            reason in reason_codes
+            for reason in ("health_stale", "provider_probe_failed")
+        )
+        if unhealthy:
+            status = "due"
+            priority = "urgent"
+            action = "health_probe"
+            reasons = sorted(reason_codes | {"health_recovery_due"})
+        elif force:
+            status = "due"
+            priority = "normal"
+            action = "catalog_refresh"
+            reasons = sorted(reason_codes | {"forced_refresh"})
+        elif invalid_deadline or deadline_due:
+            status = "due"
+            priority = "high"
+            action = "human_review"
+            reasons = sorted(reason_codes | ({"invalid_descriptor_deadline"} if invalid_deadline else {"descriptor_deadline_due"}))
+        elif current >= next_due:
+            status = "due"
+            priority = "normal"
+            action = "catalog_refresh"
+            reasons = sorted(reason_codes | {"schedule_due"})
+        else:
+            status = "scheduled"
+            priority = "low"
+            action = "catalog_refresh"
+            reasons = sorted(reason_codes)
+        items.append(
+            {
+                "resource_id": resource_id,
+                "kind": kind or "unknown",
+                "provider": str(item.get("provider") or "unknown"),
+                "status": status,
+                "priority": priority,
+                "action": action,
+                "reason_codes": reasons,
+                "last_observed_at": last_observed.isoformat(),
+                "next_due_at": next_due.isoformat(),
+                "interval_seconds": interval,
+                "health_status": health_status,
+                "availability": str(item.get("availability") or "unavailable"),
+            }
+        )
+    items.sort(key=lambda item: (item["status"] != "due", item["priority"], item["resource_id"]))
+    catalog_state = dict(catalog)
+    catalog_state.pop("observed_at", None)
+    catalog_digest = str(catalog.get("catalog_digest") or _canonical_digest(catalog_state))
+    state = {
+        "schema": REFRESH_PLAN_SCHEMA,
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "admission_mutation": False,
+        "worker_launch": False,
+        "generated_at": current.isoformat(),
+        "catalog_digest": catalog_digest,
+        "force": force,
+        "policy": {
+            "intervals_seconds": dict(sorted(policy.items())),
+            "unknown_kind_fallback_seconds": DEFAULT_REFRESH_INTERVALS_SECONDS["resource_provider"],
+            "unhealthy_action": "health_probe",
+            "deadline_action": "human_review",
+        },
+        "items": items,
+        "summary": {
+            "resource_count": len(items),
+            "due_count": sum(item["status"] == "due" for item in items),
+            "scheduled_count": sum(item["status"] == "scheduled" for item in items),
+            "urgent_count": sum(item["priority"] == "urgent" for item in items),
+            "high_count": sum(item["priority"] == "high" for item in items),
+            "action_counts": {
+                action: sum(item["action"] == action for item in items)
+                for action in sorted({item["action"] for item in items})
+            },
+        },
+        "policy_boundary": {
+            "side_effects": "disabled",
+            "scheduler": "caller_or_governed_observer_only",
+            "automatic_activation": False,
+        },
+    }
+    digest_state = dict(state)
+    digest_state.pop("generated_at", None)
+    state["plan_digest"] = _canonical_digest(digest_state)
+    return state
 
 
 def _load_agora(root: Path):
@@ -635,6 +817,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="将 capability directory 转换为只读连接计划，不执行观察或激活",
     )
+    parser.add_argument(
+        "--refresh-plan",
+        action="store_true",
+        help="输出只读刷新计划，不执行观察、调度或激活",
+    )
+    parser.add_argument(
+        "--force-refresh-plan",
+        action="store_true",
+        help="将所有资源标记为待刷新，仅影响只读计划输出",
+    )
     parser.add_argument("--actor", default="external-resource-observer")
     parser.add_argument(
         "--source-ref", default="root:external-resource-catalog:observe"
@@ -642,13 +834,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-id", help="稳定的只读观察运行标识，用于重试幂等")
     args = parser.parse_args(argv)
     try:
-        if args.observe and (args.directory or args.connection_plan):
+        if args.observe and (args.directory or args.connection_plan or args.refresh_plan):
             raise ExternalResourceCatalogInputError(
-                "--directory/--connection-plan cannot be combined with --observe"
+                "projection flags cannot be combined with --observe"
             )
-        if args.directory and args.connection_plan:
+        if sum(bool(flag) for flag in (args.directory, args.connection_plan, args.refresh_plan)) > 1:
             raise ExternalResourceCatalogInputError(
-                "--directory cannot be combined with --connection-plan"
+                "--directory/--connection-plan/--refresh-plan are mutually exclusive"
             )
         previous_snapshot = None
         if args.previous_snapshot:
@@ -679,16 +871,16 @@ def main(argv: list[str] | None = None) -> int:
                 probe=not args.no_health_probe,
                 previous_snapshot=previous_snapshot,
             )
-            directory = (
-                build_external_resource_directory_snapshot(catalog)
-                if args.directory or args.connection_plan
-                else None
-            )
+            directory = build_external_resource_directory_snapshot(catalog) if args.directory or args.connection_plan else None
             payload = (
                 build_external_resource_connection_plan(directory)
                 if args.connection_plan and directory is not None
                 else directory
                 if directory is not None
+                else build_external_resource_refresh_plan(
+                    catalog, force=args.force_refresh_plan
+                )
+                if args.refresh_plan
                 else catalog
             )
     except (ExternalResourceCatalogInputError, ValueError) as exc:
