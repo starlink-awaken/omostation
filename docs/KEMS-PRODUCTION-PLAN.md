@@ -466,3 +466,10 @@ Phase 71 在已有单次 `kems.model-acceptance.v1` 之上增加 `kems.model-pro
 `redacted manifest -> repeated shadow reports -> weighted metrics/reproducibility gate -> human/OMO approval -> canary -> rollback`
 
 真实业务准确率仍需真实低风险消费者持续产生样本后才能声明；fixture 通过只证明门禁逻辑正确。
+
+### 12.9 Phase 72 场景化生产策略
+
+KEMS 的后续生产化不以继续增加模型或抽取能力为目标，而以一个真实、低风险、每周重复的业务旅程为目标。建议先从资料/邮件/待办到决策收件箱开始：KEMS 负责结构化和候选建议，OMO 负责任务与审批，Workflow Mesh 负责执行和证据，Cockpit 负责人工复核，结果再回流为真实标注和评测样本。
+
+在没有持续真实消费者、真实标注裁决、脱敏 manifest 和人工/OMO 批准前，KEMS 继续保持 shadow 和 proposal-only。跨模块边界与 36 个月落地路线见
+[`docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md`](ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md)。
