@@ -73,6 +73,24 @@ def scan_bin_directory():
     
     return tools
 
+
+def scan_cockpit_commands():
+    """Parse cockpit top-level command names from cli.py add_parser calls."""
+    cli = WORKSPACE_ROOT / "projects" / "cockpit" / "src" / "cockpit" / "cli.py"
+    if not cli.is_file():
+        return []
+    import re
+    text = cli.read_text(encoding="utf-8", errors="ignore")
+    names = re.findall(r'sub\.add_parser\(\s*"([a-z0-9\-]+)"', text)
+    seen = set()
+    out = []
+    for n in names:
+        if n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out
+
+
 def scan_skills():
     skills_dir = WORKSPACE_ROOT / ".agents" / "skills"
     skills = []
@@ -141,6 +159,9 @@ def generate_ssot_tools():
 | gen-tools-index.py | 工具索引生成 | `python3 bin/ssot/gen-tools-index.py` |
 | gen-knowledge-index.py | 知识索引生成 | `python3 bin/ssot/gen-knowledge-index.py` |
 | gen-agents-index.py | Agent索引生成 | `python3 bin/ssot/gen-agents-index.py` |
+| gen-capability-registry.py | 三通道能力注册表 | `python3 bin/ssot/gen-capability-registry.py` |
+| mcp-attach-smoke.py | 外部 agent 接入烟测 | `python3 bin/ssot/mcp-attach-smoke.py` |
+| gen-external-channels-inventory.py | ECCP 外通道 inventory | `python3 bin/ssot/gen-external-channels-inventory.py` |
 | check-index-drift.py | 索引漂移检测 | `python3 bin/ssot/check-index-drift.py` |
 
 """
@@ -180,6 +201,28 @@ def generate_p74_section():
 
 """
 
+def generate_cockpit_section(commands: list) -> str:
+    section = """
+---
+
+## 0. Cockpit CLI 顶层命令 (L3 入口)
+
+> 从 `projects/cockpit/src/cockpit/cli.py` 解析。人类/Agent 统一入口。
+> 接入说明：`docs/operations/external-agent-attach-card.md`
+
+| 命令 | 调用 |
+|------|------|
+"""
+    for c in commands:
+        section += f"| `{c}` | `uv run --project projects/cockpit cockpit {c} --help` |\n"
+    section += f"\n**合计**: {len(commands)} 个顶层命令\n"
+    section += (
+        "\n关键通道：`bos` · `bos list --all` · `channels` · `kems` · "
+        "`agent-onboard` · `mcp` · `agent-workflow`\n"
+    )
+    return section
+
+
 def generate_skills_section(skills):
     section = """
 ---
@@ -210,8 +253,10 @@ def main():
     generated_at = datetime.datetime.now(UTC).isoformat()
     
     skills = scan_skills()
+    cockpit_cmds = scan_cockpit_commands()
     
     content = TEMPLATE_HEADER.format(generated_at=generated_at)
+    content += generate_cockpit_section(cockpit_cmds)
     content += generate_gac_tools()
     content += generate_adr_tools()
     content += generate_ssot_tools()
@@ -224,7 +269,7 @@ def main():
     with open(INDEX_FILE, "w") as f:
         f.write(content)
     
-    print(f"Generated: {INDEX_FILE}")
+    print(f"Generated: {INDEX_FILE} (cockpit_cmds={len(cockpit_cmds)} skills={len(skills)})")
 
 if __name__ == "__main__":
     main()

@@ -7,10 +7,134 @@
 > - validation: 工具数与实际扫描结果一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-31T13:06:00.000000+00:00
+> - generated_at: 2026-08-04T11:05:52.940066+00:00
 
 ---
 
+
+---
+
+## 0. Cockpit CLI 顶层命令 (L3 入口)
+
+> 从 `projects/cockpit/src/cockpit/cli.py` 解析。人类/Agent 统一入口。
+> 接入说明：`docs/operations/external-agent-attach-card.md`
+
+| 命令 | 调用 |
+|------|------|
+| `research` | `uv run --project projects/cockpit cockpit research --help` |
+| `import` | `uv run --project projects/cockpit cockpit import --help` |
+| `status` | `uv run --project projects/cockpit cockpit status --help` |
+| `readiness` | `uv run --project projects/cockpit cockpit readiness --help` |
+| `omo` | `uv run --project projects/cockpit cockpit omo --help` |
+| `debt` | `uv run --project projects/cockpit cockpit debt --help` |
+| `score` | `uv run --project projects/cockpit cockpit score --help` |
+| `list` | `uv run --project projects/cockpit cockpit list --help` |
+| `summary` | `uv run --project projects/cockpit cockpit summary --help` |
+| `runtime` | `uv run --project projects/cockpit cockpit runtime --help` |
+| `demo` | `uv run --project projects/cockpit cockpit demo --help` |
+| `gac` | `uv run --project projects/cockpit cockpit gac --help` |
+| `daily` | `uv run --project projects/cockpit cockpit daily --help` |
+| `data` | `uv run --project projects/cockpit cockpit data --help` |
+| `index` | `uv run --project projects/cockpit cockpit index --help` |
+| `types` | `uv run --project projects/cockpit cockpit types --help` |
+| `gc` | `uv run --project projects/cockpit cockpit gc --help` |
+| `contracts` | `uv run --project projects/cockpit cockpit contracts --help` |
+| `validate` | `uv run --project projects/cockpit cockpit validate --help` |
+| `export-research` | `uv run --project projects/cockpit cockpit export-research --help` |
+| `export` | `uv run --project projects/cockpit cockpit export --help` |
+| `identity` | `uv run --project projects/cockpit cockpit identity --help` |
+| `event` | `uv run --project projects/cockpit cockpit event --help` |
+| `dashboard` | `uv run --project projects/cockpit cockpit dashboard --help` |
+| `help` | `uv run --project projects/cockpit cockpit help --help` |
+| `quickstart` | `uv run --project projects/cockpit cockpit quickstart --help` |
+| `init` | `uv run --project projects/cockpit cockpit init --help` |
+| `profile` | `uv run --project projects/cockpit cockpit profile --help` |
+| `product-health` | `uv run --project projects/cockpit cockpit product-health --help` |
+| `audit` | `uv run --project projects/cockpit cockpit audit --help` |
+| `mcp` | `uv run --project projects/cockpit cockpit mcp --help` |
+| `gongwen` | `uv run --project projects/cockpit cockpit gongwen --help` |
+| `finance` | `uv run --project projects/cockpit cockpit finance --help` |
+| `governance` | `uv run --project projects/cockpit cockpit governance --help` |
+| `context` | `uv run --project projects/cockpit cockpit context --help` |
+| `cards` | `uv run --project projects/cockpit cockpit cards --help` |
+| `get` | `uv run --project projects/cockpit cockpit get --help` |
+| `search` | `uv run --project projects/cockpit cockpit search --help` |
+| `serve` | `uv run --project projects/cockpit cockpit serve --help` |
+| `vault` | `uv run --project projects/cockpit cockpit vault --help` |
+| `domains` | `uv run --project projects/cockpit cockpit domains --help` |
+| `skill` | `uv run --project projects/cockpit cockpit skill --help` |
+| `health` | `uv run --project projects/cockpit cockpit health --help` |
+| `brief` | `uv run --project projects/cockpit cockpit brief --help` |
+| `discover` | `uv run --project projects/cockpit cockpit discover --help` |
+| `events` | `uv run --project projects/cockpit cockpit events --help` |
+| `version` | `uv run --project projects/cockpit cockpit version --help` |
+| `tui` | `uv run --project projects/cockpit cockpit tui --help` |
+| `bos-capability` | `uv run --project projects/cockpit cockpit bos-capability --help` |
+| `bos-inbox` | `uv run --project projects/cockpit cockpit bos-inbox --help` |
+| `events-watch` | `uv run --project projects/cockpit cockpit events-watch --help` |
+| `quickstart-check` | `uv run --project projects/cockpit cockpit quickstart-check --help` |
+| `ssb` | `uv run --project projects/cockpit cockpit ssb --help` |
+| `mof` | `uv run --project projects/cockpit cockpit mof --help` |
+| `agora` | `uv run --project projects/cockpit cockpit agora --help` |
+| `model-driven` | `uv run --project projects/cockpit cockpit model-driven --help` |
+| `brain` | `uv run --project projects/cockpit cockpit brain --help` |
+| `ask` | `uv run --project projects/cockpit cockpit ask --help` |
+| `remember` | `uv run --project projects/cockpit cockpit remember --help` |
+| `history` | `uv run --project projects/cockpit cockpit history --help` |
+| `gbrain` | `uv run --project projects/cockpit cockpit gbrain --help` |
+| `kairon` | `uv run --project projects/cockpit cockpit kairon --help` |
+| `bus` | `uv run --project projects/cockpit cockpit bus --help` |
+| `topics` | `uv run --project projects/cockpit cockpit topics --help` |
+| `metrics` | `uv run --project projects/cockpit cockpit metrics --help` |
+| `publish` | `uv run --project projects/cockpit cockpit publish --help` |
+| `observe` | `uv run --project projects/cockpit cockpit observe --help` |
+| `up` | `uv run --project projects/cockpit cockpit up --help` |
+| `down` | `uv run --project projects/cockpit cockpit down --help` |
+| `logs` | `uv run --project projects/cockpit cockpit logs --help` |
+| `url` | `uv run --project projects/cockpit cockpit url --help` |
+| `family-hub` | `uv run --project projects/cockpit cockpit family-hub --help` |
+| `api` | `uv run --project projects/cockpit cockpit api --help` |
+| `mesh` | `uv run --project projects/cockpit cockpit mesh --help` |
+| `nodes` | `uv run --project projects/cockpit cockpit nodes --help` |
+| `route` | `uv run --project projects/cockpit cockpit route --help` |
+| `bos` | `uv run --project projects/cockpit cockpit bos --help` |
+| `resolve` | `uv run --project projects/cockpit cockpit resolve --help` |
+| `read` | `uv run --project projects/cockpit cockpit read --help` |
+| `inbox` | `uv run --project projects/cockpit cockpit inbox --help` |
+| `pending` | `uv run --project projects/cockpit cockpit pending --help` |
+| `watch` | `uv run --project projects/cockpit cockpit watch --help` |
+| `archive` | `uv run --project projects/cockpit cockpit archive --help` |
+| `capability` | `uv run --project projects/cockpit cockpit capability --help` |
+| `invoke` | `uv run --project projects/cockpit cockpit invoke --help` |
+| `scenario` | `uv run --project projects/cockpit cockpit scenario --help` |
+| `radar` | `uv run --project projects/cockpit cockpit radar --help` |
+| `assistant` | `uv run --project projects/cockpit cockpit assistant --help` |
+| `workflow` | `uv run --project projects/cockpit cockpit workflow --help` |
+| `agent-workflow` | `uv run --project projects/cockpit cockpit agent-workflow --help` |
+| `agent` | `uv run --project projects/cockpit cockpit agent --help` |
+| `agent-onboard` | `uv run --project projects/cockpit cockpit agent-onboard --help` |
+| `agent-runtime` | `uv run --project projects/cockpit cockpit agent-runtime --help` |
+| `iterate` | `uv run --project projects/cockpit cockpit iterate --help` |
+| `compass` | `uv run --project projects/cockpit cockpit compass --help` |
+| `wave2` | `uv run --project projects/cockpit cockpit wave2 --help` |
+| `monitor` | `uv run --project projects/cockpit cockpit monitor --help` |
+| `code` | `uv run --project projects/cockpit cockpit code --help` |
+| `analyze` | `uv run --project projects/cockpit cockpit analyze --help` |
+| `graph` | `uv run --project projects/cockpit cockpit graph --help` |
+| `pack` | `uv run --project projects/cockpit cockpit pack --help` |
+| `impact` | `uv run --project projects/cockpit cockpit impact --help` |
+| `onboarding` | `uv run --project projects/cockpit cockpit onboarding --help` |
+| `compute` | `uv run --project projects/cockpit cockpit compute --help` |
+| `knowledge` | `uv run --project projects/cockpit cockpit knowledge --help` |
+| `stats` | `uv run --project projects/cockpit cockpit stats --help` |
+| `kems` | `uv run --project projects/cockpit cockpit kems --help` |
+| `scan` | `uv run --project projects/cockpit cockpit scan --help` |
+| `c2g` | `uv run --project projects/cockpit cockpit c2g --help` |
+| `pipeline` | `uv run --project projects/cockpit cockpit pipeline --help` |
+
+**合计**: 110 个顶层命令
+
+关键通道：`bos` · `bos list --all` · `channels` · `kems` · `agent-onboard` · `mcp` · `agent-workflow`
 ## 工具分类目录
 
 ### 1. GaC 治理即代码 (bin/gac/)
@@ -63,6 +187,9 @@
 | gen-tools-index.py | 工具索引生成 | `python3 bin/ssot/gen-tools-index.py` |
 | gen-knowledge-index.py | 知识索引生成 | `python3 bin/ssot/gen-knowledge-index.py` |
 | gen-agents-index.py | Agent索引生成 | `python3 bin/ssot/gen-agents-index.py` |
+| gen-capability-registry.py | 三通道能力注册表 | `python3 bin/ssot/gen-capability-registry.py` |
+| mcp-attach-smoke.py | 外部 agent 接入烟测 | `python3 bin/ssot/mcp-attach-smoke.py` |
+| gen-external-channels-inventory.py | ECCP 外通道 inventory | `python3 bin/ssot/gen-external-channels-inventory.py` |
 | check-index-drift.py | 索引漂移检测 | `python3 bin/ssot/check-index-drift.py` |
 
 ### 4. MOF 工具 (bin/mof/)
@@ -82,45 +209,6 @@
 | commit-assist.py | 提交辅助脚本 | `python3 bin/commit-assist.py` |
 | cockpit-readiness.py | Cockpit 就绪度检查 | `python3 bin/cockpit-readiness.py` |
 
-### 5.1 能力注册表生成器 (bin/cockpit/)
-
-| 工具 | 功能 | 调用方 |
-|:-----|:-----|:-------|
-| gen-capability-registry.py | 扫描全生态 MCP/BOS/CLI → `docs/generated/capability-registry.yaml` | `make sync-capability-registry` |
-| gen-help-docs.py | 从注册表生成 CAPABILITY-MAP/CLI-REFERENCE/INDEX-MCP | `make sync-help-docs` |
-
-**CI 门禁**: `make check-docs-drift` 检测文档漂移。
-
-### 5.2 Cockpit CLI (46+ 命令)
-
-> 完整命令参考见 [`CLI-REFERENCE.md`](CLI-REFERENCE.md) · 能力地图见 [`projects/cockpit/CAPABILITY-MAP.md`](../projects/cockpit/CAPABILITY-MAP.md)
-
-| 命令组 | 说明 |
-|:-------|:-----|
-| `cockpit research/import/search/vault` | 深度研究管线 |
-| `cockpit knowledge` | KOS 知识检索 (search/status/stats) |
-| `cockpit kems` | KEMS 域治理 (domains/status/scan) |
-| `cockpit workflow mesh` | workflow-mesh 交付事件织网 |
-| `cockpit c2g` / `compass` / `iterate` | C2G 战略罗盘 |
-| `cockpit omo` / `governance` / `gac` / `debt` | 治理中枢 |
-| `cockpit agora` / `kairon` / `gbrain` / `mesh` / `compute` | 项目入口 |
-| `cockpit bos` / `mcp` | BOS URI + MCP 管理 |
-| `cockpit help` / `quickstart` / `dashboard` | 入门与导航 |
-
-### 5.3 MCP 服务器 (24 servers · 541 tools)
-
-> 完整索引见 [`INDEX-MCP.md`](INDEX-MCP.md)
-
-| 服务器 | 层 | 工具数 | 说明 |
-|:-------|:---|:-------|:-----|
-| `omo` | L2 | 19 | 治理中枢 (任务/锁/债务/CARDS) |
-| `kos` | L2 | 44 | 知识检索 (5193 篇索引) |
-| `l4-kernel` | L4 | 51 | 自我层 (域/KEMS/健康) |
-| `agora` | I0 | 71+ | BOS 服务汇聚 Hub |
-| `gbrain` | L2 | 75 | Postgres 知识库 |
-| `ecos` | L0 | 28 | SSOT 内核 + 工作流引擎 |
-| `aetherforge` | X | 10 | 算力网关 + 蜂群 |
-
 ### 6. P74 Solidification (工作流沉默治理)
 
 | 工具 | 功能 | 对应 GaC 规则 |
@@ -137,9 +225,14 @@
 
 | Skill | 用途 |
 |-------|------|
+| a2a-coordination | a2a coordination |
+| agent-onboarding | agent onboarding |
+| bdsk-virtual-board | bdsk virtual board |
 | bos-contract-fix | bos contract fix |
+| bos-service-discovery | bos service discovery |
 | ci-red-triage | ci red triage |
 | ecos-test-cycle | ecos test cycle |
+| external-agent-attach | external agent attach |
 | governance-phase-orchestrator | governance phase orchestrator |
 | governance-ssot-edit | governance ssot edit |
 | omo-audit-baseline | omo audit baseline |
