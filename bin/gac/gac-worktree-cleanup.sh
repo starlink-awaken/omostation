@@ -53,6 +53,16 @@ for wt_path in "$WS_PARENT"/ws-*/; do
     fi
   fi
 
+  # G5 (P79, 2026-08-04): active claim 检查 — branch 在 branch-claims/ 有 active 记录 → 跳过
+  # (防 cleanup 误清 active agent 的 worktree, #907 陷阱 F4: 6h TTL 误清跨 compact 长任务)
+  if [ -n "$branch" ] && [ -d "$WS_ROOT/.omo/_delivery/branch-claims" ]; then
+    if grep -rl "\"branch\": \"$branch\"" "$WS_ROOT/.omo/_delivery/branch-claims/" >/dev/null 2>&1; then
+      echo "⏭️  $wt_name: 分支 $branch 有 active claim, 跳过 (G5)"
+      skipped=$((skipped + 1))
+      continue
+    fi
+  fi
+
   # 用最近 commit 时间判断过期 (比 mtime/atime 可靠: 反映真实工作)
   last_commit=$(git -C "$wt_path" log -1 --format=%ct 2>/dev/null || echo 0)
   if [ "$last_commit" -eq 0 ]; then
