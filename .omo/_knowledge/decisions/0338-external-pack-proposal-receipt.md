@@ -1,4 +1,5 @@
 ---
+id: ADR-0338
 title: External Resource Pack Proposal Observation Receipt
 status: accepted
 type: decision

@@ -110,13 +110,13 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
                 "file": f.name,
                 "missing": missing,
             })
-        # C2 (ADR-0367): frontmatter id 必须与文件名 ADR-NNNN 一致
+        # C2 (ADR-0367): frontmatter id 必须与文件名 ADR-NNNN 一致 (缺失也算违规)
         file_id = f.name.split("-", 1)[0]  # e.g. "0233" from "0233-xxx.md"
         fm_id = str(fm.get("id", "")).strip()
-        if fm_id and fm_id.upper() != f"ADR-{file_id}":
+        if not fm_id or fm_id.upper() != f"ADR-{file_id}":
             id_mismatches.append({
                 "file": f.name,
-                "id": fm_id,
+                "id": fm_id or "<missing>",
                 "expected": f"ADR-{file_id}",
             })
 

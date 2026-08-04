@@ -62,6 +62,7 @@ DEFAULT_POLICY = {
         {"id": "dependency-baseline-drift", "command": ["bin/mof/gen-dependency-baseline.py", "--check"], "ci_only": True},
         {"id": "matrix-consistency", "command": ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"], "ci_skip": True},
         {"id": "governance-semantic-gate", "command": ["bin/gac/governance-semantic-gate.py", "--json"]},
+        {"id": "adr-coverage", "command": ["bin/adr/adr-coverage.py", "--json"]},
         {"id": "state-freshness-check", "command": ["bin/gac/state-freshness-check.py", "--json"]},
         {
             "id": "current-state-coherence",

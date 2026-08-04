@@ -1,4 +1,5 @@
 ---
+id: ADR-0321
 title: External Resource Selection 评测证据与提案边界
 status: accepted
 type: decision

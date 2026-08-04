@@ -1,4 +1,5 @@
 ---
+id: ADR-0314
 title: Workflow Mesh explicit outcome feedback contract
 status: ACCEPTED
 date: 2026-08-02

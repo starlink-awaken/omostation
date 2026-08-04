@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -325,3 +326,36 @@ def test_d3_real_pre_commit_hook_blocks_unclaimed_main(tmp_path):
         text=True,
     )
     assert r2.returncode == 0, r2.stdout + r2.stderr
+
+def test_b3_branch_release_purges_orphan_claims(tmp_path):
+    """B3 (ADR-0367): branch-release 兜底删除分支已不存在的孤儿 claim."""
+    m = _load()
+    # tmp 作为 git 仓库, for-each-ref 可查分支
+    subprocess.run(["git", "init", "-q", "-b", "main", str(tmp_path)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "config", "user.email", "it@test"], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "config", "user.name", "it"], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "commit", "--allow-empty", "-q", "-m", "init"], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "checkout", "-q", "-b", "work/alive"], check=True)
+
+    (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
+        "version: 1\ndelivery: {}\nescape_hatch_exemptions: []\n",
+        encoding="utf-8",
+    )
+    claims_dir = tmp_path / ".omo/_delivery/branch-claims"
+    claims_dir.mkdir(parents=True)
+    (claims_dir / "alive-session.json").write_text(
+        json.dumps({"branch": "work/alive", "session": "alive-session"}), encoding="utf-8"
+    )
+    (claims_dir / "dead-session.json").write_text(
+        json.dumps({"branch": "work/dead", "session": "dead-session"}), encoding="utf-8"
+    )
+    (claims_dir / "no-branch.json").write_text(
+        json.dumps({"session": "no-branch"}), encoding="utf-8"
+    )
+
+    m.release_branch_lock(tmp_path, "alive-session", purge_orphans=True)
+
+    remaining = {p.name for p in claims_dir.glob("*.json") if p.name != ".lock"}
+    # 自己的 claim 释放 + work/dead 孤儿清除; 无 branch 字段的保留
+    assert remaining == {"no-branch.json"}, remaining

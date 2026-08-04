@@ -16,6 +16,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--package", help="Only edit diagnostics whose paths contain this package")
     parser.add_argument("--test-header-threshold", type=int, default=3)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--suppression-gate",
+        action="store_true",
+        help="A3 (ADR-0367): exit 1 when file_suppressions >= 3 or suppression_ratio > 0.6",
+    )
     return parser.parse_args()
 
 
@@ -94,6 +99,15 @@ def main() -> int:
         f"errors={error_count} files={changed} line_suppressions={line_suppressions} "
         f"file_suppressions={file_suppressions} suppression_ratio={suppression_ratio:.3f}"
     )
+    if args.suppression_gate and (
+        file_suppressions >= 3 or suppression_ratio > 0.6
+    ):
+        print(
+            "❌ suppression gate: "
+            f"file_suppressions={file_suppressions} (>=3) 或 "
+            f"suppression_ratio={suppression_ratio:.3f} (>0.6), 需要修复而非禁言"
+        )
+        return 1
     return 0
 
 

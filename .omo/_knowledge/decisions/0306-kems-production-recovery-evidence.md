@@ -1,4 +1,5 @@
 ---
+id: ADR-0306
 title: KEMS 生产持久化恢复证据作为放行前置条件
 status: accepted
 type: decision

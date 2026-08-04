@@ -1,4 +1,5 @@
 ---
+id: ADR-0339
 title: External catalog observation run receipt
 status: accepted
 type: adr

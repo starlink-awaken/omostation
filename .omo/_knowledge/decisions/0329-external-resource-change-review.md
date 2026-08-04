@@ -1,4 +1,5 @@
 ---
+id: ADR-0329
 title: 外部资源目录变化风险分类与人工复核投影
 status: accepted
 type: decision

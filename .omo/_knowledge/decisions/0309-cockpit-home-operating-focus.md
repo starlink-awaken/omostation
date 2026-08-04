@@ -1,4 +1,5 @@
 ---
+id: ADR-0309
 title: Cockpit 首页工作焦点只读投影与日常入口
 status: accepted
 type: decision

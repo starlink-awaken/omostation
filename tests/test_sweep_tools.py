@@ -142,3 +142,39 @@ def test_nested_with_rejects_multiline_header() -> None:
 
     assert rendered == source
     assert merged == 0
+
+
+def test_pyright_suppression_gate_blocks_header_heavy_run(tmp_path: Path) -> None:
+    """A3 (ADR-0367): file_suppressions >= 3 必须阻断 (--suppression-gate)."""
+    diagnostics = []
+    for i in range(3):
+        source = tmp_path / "tests" / f"test_{i}.py"
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_text("a = missing\nb = missing\nc = missing\nd = missing\n")
+        for line in range(4):
+            diagnostics.append(diagnostic(source, line, "reportUndefinedVariable"))
+    report = tmp_path / "report.json"
+    report.write_text(json.dumps({"generalDiagnostics": diagnostics}))
+
+    result = run_pyright(report, "--suppression-gate")
+
+    assert result.returncode == 1, result.stdout
+    assert "file_suppressions=3" in result.stdout
+    assert "suppression gate" in result.stdout
+
+
+def test_pyright_suppression_gate_passes_clean_run(tmp_path: Path) -> None:
+    """A3 (ADR-0367): 无可禁言项 (续行跳过) 时 gate 通过."""
+    source = tmp_path / "src" / "sample.py"
+    source.parent.mkdir()
+    # 行尾反斜杠续行: 工具必须跳过, 不产生 suppression
+    source.write_text("value = missing " + chr(92) + "\n" + "    + 1" + "\n")
+    report = tmp_path / "report.json"
+    report.write_text(
+        json.dumps({"generalDiagnostics": [diagnostic(source, 0, "reportUndefinedVariable")]})
+    )
+
+    result = run_pyright(report, "--suppression-gate")
+
+    assert result.returncode == 0, result.stdout
+    assert "suppression_ratio=0.000" in result.stdout
