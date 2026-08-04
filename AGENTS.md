@@ -242,6 +242,7 @@ Prefer targeted checks for narrow edits. Broaden verification when the change to
 - Do not run `git commit`, `git push`, `git reset --hard`, destructive checkout, or branch switching unless the user explicitly asked or confirmed.
 - Root repository tracks submodule pointers and workspace metadata.
 - Most `projects/*` directories are independent repositories. Commit inside the submodule first only when the user requested commits, then update the root pointer.
+- **Submodule pointer update**: prefer `bash bin/ssot/submodule-pointer-transaction.sh --message "..."` (pushes submodules + verifies reachability + stages). If using `git update-index --cacheinfo` manually, always get the hash from `git -C <submodule> rev-parse HEAD` and verify with `git ls-tree HEAD <submodule>` before committing. Never copy-paste hashes from `git log` output (abbreviated hashes cause silent mismatches).
 - Never revert unrelated dirty files. Treat them as user or concurrent-agent work.
 
 ### 6.1 PR 工作流(Phase 2,渐进推进)
