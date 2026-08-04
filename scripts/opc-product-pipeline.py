@@ -31,14 +31,29 @@ def process_requirement_file(file_path: Path) -> str | None:
 
     now_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     now_iso = datetime.now(timezone.utc).isoformat()
-    card_id = f"IDEA-{now_date}-{int(datetime.now(timezone.utc).timestamp()) % 1000:03d}"
+    card_id = (
+        f"IDEA-{now_date}-{int(datetime.now(timezone.utc).timestamp()) % 1000:03d}"
+    )
 
     conn = sqlite3.connect(CARDS_DB)
     with conn:
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO cards (id, type, priority, domain, status, title, summary, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (card_id, "idea", "P3", "opc", "identified", f"[MVP] {title}", str(file_path), now_iso, now_iso))
+        """,
+            (
+                card_id,
+                "idea",
+                "P3",
+                "opc",
+                "identified",
+                f"[MVP] {title}",
+                str(file_path),
+                now_iso,
+                now_iso,
+            ),
+        )
     conn.close()
 
     print(f"✅ OPC 产品管线触发: 为 {file_path.name} 自动开单卡片 {card_id}")

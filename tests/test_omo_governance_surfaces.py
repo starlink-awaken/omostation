@@ -1228,7 +1228,7 @@ def test_build_governance_surfaces_report_ok(tmp_path: Path) -> None:
         "bridge_import": 4,
         "c2g_adapter": 2,
         "governance_ingress": 11,
-            "human_cli": 11,
+        "human_cli": 11,
         "runtime_cache": 2,
     }
     assert report["internal_write_profile_registry"]["runtime_profile_names"] == [

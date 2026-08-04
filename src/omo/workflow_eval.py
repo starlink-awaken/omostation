@@ -493,7 +493,9 @@ def build_evaluation_sample_readiness(dataset: dict[str, Any]) -> dict[str, Any]
                 "external_receipt_not_aligned",
             )
         )
-        fully_labeled = execution_ready and "consumption_feedback_missing" not in blockers
+        fully_labeled = (
+            execution_ready and "consumption_feedback_missing" not in blockers
+        )
         readiness_rows.append(
             {
                 "evaluation_id": row.get("evaluation_id"),

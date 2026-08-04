@@ -51,8 +51,14 @@ def test_build_eval_dataset_uses_real_event_labels(tmp_path):
         )
     )
     for event_type, payload in (
-        ("StepDispatched", {"step_run_id": f"{run_id}:execute", "admission_id": grant["admission_id"]}),
-        ("StepStarted", {"step_run_id": f"{run_id}:execute", "admission_id": grant["admission_id"]}),
+        (
+            "StepDispatched",
+            {"step_run_id": f"{run_id}:execute", "admission_id": grant["admission_id"]},
+        ),
+        (
+            "StepStarted",
+            {"step_run_id": f"{run_id}:execute", "admission_id": grant["admission_id"]},
+        ),
         ("WorkflowSucceeded", {}),
     ):
         store.append(new_workflow_event(event_type, run_id, payload=payload))
@@ -71,7 +77,11 @@ def test_policy_feedback_is_offline_and_requires_approval(tmp_path):
     run_id = "run-policy-1"
     grant = _grant(run_id)
     store.append(new_workflow_event("WorkflowRequested", run_id))
-    store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
+    store.append(
+        new_workflow_event(
+            "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
+        )
+    )
     store.append(new_workflow_event("WorkflowFailed", run_id))
     dataset = build_eval_dataset(tmp_path)
     evaluation = evaluate_policy(dataset, {"require_admission": True})
@@ -159,19 +169,44 @@ def _selection_evaluation(trace_id: str) -> dict[str, object]:
 def _selection_run(tmp_path, run_id: str = "run-selection-1") -> WorkflowMeshStore:
     store = WorkflowMeshStore(tmp_path)
     grant = _grant(run_id)
-    store.append(new_workflow_event("WorkflowRequested", run_id, trace_id=run_id, scene_binding=_selection_scene()))
-    store.append(new_workflow_event("WorkflowAdmitted", run_id, trace_id=run_id, payload={"admission": grant, **grant}))
-    context = {"step_run_id": f"{run_id}:execute", "admission_id": grant["admission_id"]}
-    store.append(new_workflow_event("StepDispatched", run_id, trace_id=run_id, payload=context))
-    store.append(new_workflow_event("StepStarted", run_id, trace_id=run_id, payload=context))
+    store.append(
+        new_workflow_event(
+            "WorkflowRequested",
+            run_id,
+            trace_id=run_id,
+            scene_binding=_selection_scene(),
+        )
+    )
+    store.append(
+        new_workflow_event(
+            "WorkflowAdmitted",
+            run_id,
+            trace_id=run_id,
+            payload={"admission": grant, **grant},
+        )
+    )
+    context = {
+        "step_run_id": f"{run_id}:execute",
+        "admission_id": grant["admission_id"],
+    }
+    store.append(
+        new_workflow_event("StepDispatched", run_id, trace_id=run_id, payload=context)
+    )
+    store.append(
+        new_workflow_event("StepStarted", run_id, trace_id=run_id, payload=context)
+    )
     store.append(new_workflow_event("WorkflowSucceeded", run_id, trace_id=run_id))
     return store
 
 
-def test_selection_dataset_joins_event_receipt_and_feedback_without_promoting_unbound(tmp_path):
+def test_selection_dataset_joins_event_receipt_and_feedback_without_promoting_unbound(
+    tmp_path,
+):
     _selection_run(tmp_path)
     record_external_resource_evaluation(
-        tmp_path, _selection_evaluation("run-selection-1"), workflow_run_id="run-selection-1"
+        tmp_path,
+        _selection_evaluation("run-selection-1"),
+        workflow_run_id="run-selection-1",
     )
     record_external_receipt(
         tmp_path,
@@ -190,15 +225,30 @@ def test_selection_dataset_joins_event_receipt_and_feedback_without_promoting_un
         workflow_run_id="run-selection-1",
     )
     store = WorkflowMeshStore(tmp_path)
-    store.append(new_workflow_event("WorkflowVerified", "run-selection-1", trace_id="run-selection-1"))
-    store.append(new_workflow_event("PRMerged", "run-selection-1", trace_id="run-selection-1"))
-    store.append(new_workflow_event("WorkflowClosed", "run-selection-1", trace_id="run-selection-1"))
+    store.append(
+        new_workflow_event(
+            "WorkflowVerified", "run-selection-1", trace_id="run-selection-1"
+        )
+    )
+    store.append(
+        new_workflow_event("PRMerged", "run-selection-1", trace_id="run-selection-1")
+    )
+    store.append(
+        new_workflow_event(
+            "WorkflowClosed", "run-selection-1", trace_id="run-selection-1"
+        )
+    )
     record_outcome_feedback(
         tmp_path,
         {
             "workflow_run_id": "run-selection-1",
             "outcome_id": "outcome:research-brief:1",
-            "scene_binding": _selection_scene() | {"data_scope": "public:research", "operator": "human:test", "permission_ref": "permission://test"},
+            "scene_binding": _selection_scene()
+            | {
+                "data_scope": "public:research",
+                "operator": "human:test",
+                "permission_ref": "permission://test",
+            },
             "consumption_state": "adopted",
             "consumer_ref": "operator://test",
             "result_ref": "evidence://outcome/1",
@@ -216,7 +266,9 @@ def test_selection_dataset_joins_event_receipt_and_feedback_without_promoting_un
     dataset = build_external_resource_selection_dataset(tmp_path)
     assert dataset["dataset_version"] == "external-resource-selection-eval/v1"
     assert dataset["summary"]["row_count"] == 2
-    linked = next(row for row in dataset["rows"] if row["workflow_run_id"] == "run-selection-1")
+    linked = next(
+        row for row in dataset["rows"] if row["workflow_run_id"] == "run-selection-1"
+    )
     assert linked["labels"]["execution_outcome"] == "success"
     assert linked["labels"]["selection_alignment"] == "aligned"
     assert linked["labels"]["consumption_state"] == "adopted"

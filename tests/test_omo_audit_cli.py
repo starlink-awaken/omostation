@@ -17,9 +17,12 @@ class TestAuditCards:
 
     def test_find_card_db_returns_none_when_missing(self, tmp_path):
         """find_card_db returns None when no standard db exists."""
-        with patch(
-            "omo.omo_audit_cards.DEFAULT_DB_PATHS", [tmp_path / "nonexistent.db"]
-        ), patch("omo.omo_audit_cards.WORKSPACE_ROOT", tmp_path):
+        with (
+            patch(
+                "omo.omo_audit_cards.DEFAULT_DB_PATHS", [tmp_path / "nonexistent.db"]
+            ),
+            patch("omo.omo_audit_cards.WORKSPACE_ROOT", tmp_path),
+        ):
             result = find_card_db()
             assert result is None
 

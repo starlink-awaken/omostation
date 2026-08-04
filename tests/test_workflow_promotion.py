@@ -8,7 +8,9 @@ from omo.workflow_mesh import WorkflowMeshStore
 from omo.workflow_promotion import WorkflowPromotionError, request_workflow_from_task
 
 
-def _task(root: Path, *, knowledge_refs: list[str] | None = None, risk_level: str = "L1") -> None:
+def _task(
+    root: Path, *, knowledge_refs: list[str] | None = None, risk_level: str = "L1"
+) -> None:
     task_dir = root / ".omo" / "tasks" / "planned"
     task_dir.mkdir(parents=True)
     payload = {
@@ -21,7 +23,9 @@ def _task(root: Path, *, knowledge_refs: list[str] | None = None, risk_level: st
         "run_ref": None,
         "approval_ref": None,
         "review_ref": None,
-        "knowledge_refs": knowledge_refs if knowledge_refs is not None else ["kos:article-1"],
+        "knowledge_refs": knowledge_refs
+        if knowledge_refs is not None
+        else ["kos:article-1"],
         "handoff_refs": [],
         "risk_level": risk_level,
         "allowed_operation_level": risk_level,
@@ -90,14 +94,21 @@ def test_request_requires_knowledge_refs(tmp_path: Path) -> None:
         _request(tmp_path)
 
 
-def test_request_requires_approval_for_high_risk_without_admitting(tmp_path: Path) -> None:
+def test_request_requires_approval_for_high_risk_without_admitting(
+    tmp_path: Path,
+) -> None:
     _task(tmp_path, risk_level="L2")
 
     result = _request(tmp_path)
 
     assert result["request_state"] == "approval_required"
     assert result["approval"] == {"required": True, "state": "pending"}
-    assert WorkflowMeshStore(tmp_path / ".omo").snapshot(result["workflow_run_id"])["state"] == "planned"
+    assert (
+        WorkflowMeshStore(tmp_path / ".omo").snapshot(result["workflow_run_id"])[
+            "state"
+        ]
+        == "planned"
+    )
 
 
 def test_request_cannot_exceed_task_operation_level(tmp_path: Path) -> None:

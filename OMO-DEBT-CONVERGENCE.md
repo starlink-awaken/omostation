@@ -333,17 +333,19 @@ Tool (0.6×)          ← 脚本、临时工作
 - 过滤: `status` 参数过滤 `lifecycle_state`
 
 ```python
-items.append({
-    "id": item.id,
-    "title": item.title,
-    "severity": item.severity,
-    "weight": item.weight,
-    "lifecycle_state": item.lifecycle_state,
-    "x1_policy_ref": item.x1_policy_ref or "",
-    "x2_freshness": item.x2_freshness or "",
-    "x3_tier": item.x3_tier or "",
-    "gate_level": item.gate_level,
-})
+items.append(
+    {
+        "id": item.id,
+        "title": item.title,
+        "severity": item.severity,
+        "weight": item.weight,
+        "lifecycle_state": item.lifecycle_state,
+        "x1_policy_ref": item.x1_policy_ref or "",
+        "x2_freshness": item.x2_freshness or "",
+        "x3_tier": item.x3_tier or "",
+        "gate_level": item.gate_level,
+    }
+)
 ```
 
 #### `omo_debt_summary`
@@ -374,7 +376,7 @@ items.append({
 ```python
 def baseline_command(args):
     records = _load_registry(root)
-    lens = getattr(args, 'lens', None)
+    lens = getattr(args, "lens", None)
 
     if lens == "X1":
         records = [r for r in records if r.get("x1_policy_ref")]
@@ -509,13 +511,13 @@ python3 -m omo.omo_metacognition baseline --lens X3                 # X3 透镜
 
 ```python
 TIER_MULTIPLIERS = {
-    "Axiom":     2.0,
+    "Axiom": 2.0,
     "Principle": 1.5,
-    "Theory":    1.5,
+    "Theory": 1.5,
     "Framework": 1.2,
     "Knowledge": 1.0,
-    "Skill":     0.8,
-    "Tool":      0.6,
+    "Skill": 0.8,
+    "Tool": 0.6,
 }
 ```
 
@@ -684,7 +686,9 @@ def evaluate_target_with_derived_chain(target: dict, ledger: DebtLedger) -> dict
     # 链: governance policy → debt item → evidence → mitigation
     if debt_item.x1_policy_ref:
         policy = _resolve_policy(debt_item.x1_policy_ref)
-        result["derived_chain"].append({"type": "governance_policy", "id": policy.get("id")})
+        result["derived_chain"].append(
+            {"type": "governance_policy", "id": policy.get("id")}
+        )
     for ref in debt_item.evidence_refs:
         result["derived_chain"].append({"type": "evidence", "ref": ref})
     for ref in debt_item.mitigation_refs:

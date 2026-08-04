@@ -24,7 +24,9 @@ def _grant(run_id: str, step_run_ids: list[str]) -> dict:
         "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
     }
     grant["proof"] = hashlib.sha256(
-        json.dumps(grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+        json.dumps(
+            grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode()
     ).hexdigest()
     return grant
 
@@ -80,9 +82,7 @@ def test_scene_binding_is_projected_and_immutable(tmp_path):
         "journey_id": "draft-to-approval",
         "outcome_metric": "review_cycle_time",
     }
-    store.append(
-        new_workflow_event("WorkflowRequested", run_id, scene_binding=binding)
-    )
+    store.append(new_workflow_event("WorkflowRequested", run_id, scene_binding=binding))
 
     assert store.snapshot(run_id)["scene_binding"] == binding
 
@@ -150,7 +150,10 @@ def test_step_run_checkpoint_and_evidence_are_queryable(tmp_path):
         ("WorkflowRequested", {}),
         ("WorkflowAdmitted", {}),
         ("StepDispatched", {"step_run_id": "step-1", "step_name": "compile"}),
-        ("StepStarted", {"step_run_id": "step-1", "step_name": "compile", "attempt": 2}),
+        (
+            "StepStarted",
+            {"step_run_id": "step-1", "step_name": "compile", "attempt": 2},
+        ),
         (
             "CheckpointSaved",
             {
@@ -172,7 +175,10 @@ def test_step_run_checkpoint_and_evidence_are_queryable(tmp_path):
             payload["admission_id"] = grant["admission_id"]
         store.append(new_workflow_event(event_type, "run-query", payload=payload))
 
-    assert store.step_snapshot("run-query", "step-1")["checkpoint"]["checkpoint_id"] == "cp-1"  # type: ignore[reportOptionalSubscript]
+    assert (
+        store.step_snapshot("run-query", "step-1")["checkpoint"]["checkpoint_id"]  # type: ignore[reportOptionalSubscript]
+        == "cp-1"
+    )  # type: ignore[reportOptionalSubscript]
     assert store.evidence_snapshot("run-query", "ev-1")["sha256"] == "abc"  # type: ignore[reportOptionalSubscript]
 
 
@@ -308,10 +314,14 @@ def test_unknown_event_is_rejected(tmp_path):
 def test_idempotency_key_is_authoritative_across_event_ids(tmp_path):
     store = WorkflowMeshStore(tmp_path)
     first = new_workflow_event(
-        "WorkflowRequested", "run-idempotent", idempotency_key="run-idempotent:requested"
+        "WorkflowRequested",
+        "run-idempotent",
+        idempotency_key="run-idempotent:requested",
     )
     duplicate = new_workflow_event(
-        "WorkflowRequested", "run-idempotent", idempotency_key="run-idempotent:requested"
+        "WorkflowRequested",
+        "run-idempotent",
+        idempotency_key="run-idempotent:requested",
     )
     store.append(first)
     with pytest.raises(WorkflowMeshEventError, match="Conflicting duplicate"):

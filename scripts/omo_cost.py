@@ -19,7 +19,7 @@ _src = Path(__file__).resolve().parent.parent / "src"
 if str(_src) not in sys.path:
     sys.path.insert(0, str(_src))
 
-from omo.omo_cost import cost_summary, query_costs, record_cost
+from omo.omo_cost import cost_summary, query_costs, record_cost  # type: ignore[reportAttributeAccessIssue]
 
 
 def main() -> int:

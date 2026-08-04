@@ -63,7 +63,7 @@ def test_sync_state_projection_skips_timestamp_only_changes(tmp_path: Path) -> N
 
     semantic_change = sync_state_projection(
         tmp_path,
-        health_content='# generated_at: 2026-07-03T00:02:00Z\nhealth_score: 92\n',
+        health_content="# generated_at: 2026-07-03T00:02:00Z\nhealth_score: 92\n",
         system_updates={
             "health_score": 92,
             "health_score_generated_at": "2026-07-03T00:02:00Z",

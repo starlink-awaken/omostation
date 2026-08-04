@@ -18,7 +18,9 @@ from pathlib import Path
 DOCS_ROOT = Path(__file__).resolve().parents[2]
 WS_ROOT = Path(os.environ.get("WORKSPACE_ROOT", DOCS_ROOT.parent / "Workspace"))
 CARDS_DB = WS_ROOT / "data" / "cards" / "cards.db"
-OUTPUT_FILE = DOCS_ROOT / "@驾驶舱" / "_knowledge" / "20-operations" / "WEEKLY-VERDICT-latest.md"
+OUTPUT_FILE = (
+    DOCS_ROOT / "@驾驶舱" / "_knowledge" / "20-operations" / "WEEKLY-VERDICT-latest.md"
+)
 
 
 def get_cards_summary() -> list[tuple[str, str, str, str]]:
@@ -26,7 +28,9 @@ def get_cards_summary() -> list[tuple[str, str, str, str]]:
         return []
     conn = sqlite3.connect(CARDS_DB)
     cur = conn.cursor()
-    cur.execute("SELECT id, priority, domain, title FROM cards WHERE status='active' ORDER BY priority ASC LIMIT 5")
+    cur.execute(
+        "SELECT id, priority, domain, title FROM cards WHERE status='active' ORDER BY priority ASC LIMIT 5"
+    )
     rows = cur.fetchall()
     conn.close()
     return rows

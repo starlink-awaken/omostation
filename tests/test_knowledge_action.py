@@ -23,15 +23,26 @@ def _task_payload() -> dict:
     return {
         "action_kind": "task_created",
         "query": "如何降低交付返工？",
-        "knowledge_refs": [{"ref": "kos:delivery-1", "title": "交付复盘", "source_type": "kos", "rank": 1}],
+        "knowledge_refs": [
+            {
+                "ref": "kos:delivery-1",
+                "title": "交付复盘",
+                "source_type": "kos",
+                "rank": 1,
+            }
+        ],
         "scene_binding": _binding(),
         "task_ref": "cockpit-manual-1",
     }
 
 
 def test_record_is_reference_only_and_idempotent(tmp_path):
-    result = record_knowledge_action(tmp_path, _task_payload(), actor="cockpit-ui://knowledge-action")
-    duplicate = record_knowledge_action(tmp_path, _task_payload(), actor="cockpit-ui://knowledge-action")
+    result = record_knowledge_action(
+        tmp_path, _task_payload(), actor="cockpit-ui://knowledge-action"
+    )
+    duplicate = record_knowledge_action(
+        tmp_path, _task_payload(), actor="cockpit-ui://knowledge-action"
+    )
 
     assert result["status"] == "recorded"
     assert duplicate["status"] == "deduplicated"
@@ -45,12 +56,21 @@ def test_record_is_reference_only_and_idempotent(tmp_path):
 def test_snapshot_projects_funnel_and_sources(tmp_path):
     record_knowledge_action(
         tmp_path,
-        {"action_kind": "retrieved", "query": "治理", "knowledge_refs": [{"ref": "kos:1"}]},
+        {
+            "action_kind": "retrieved",
+            "query": "治理",
+            "knowledge_refs": [{"ref": "kos:1"}],
+        },
     )
-    record_knowledge_action(tmp_path, {"action_kind": "cited", "query": "治理", "knowledge_refs": [{"ref": "kos:1"}]})
+    record_knowledge_action(
+        tmp_path,
+        {"action_kind": "cited", "query": "治理", "knowledge_refs": [{"ref": "kos:1"}]},
+    )
     record_knowledge_action(tmp_path, _task_payload())
 
-    snapshot = build_knowledge_action_snapshot(tmp_path, scene_id="engineering-delivery")
+    snapshot = build_knowledge_action_snapshot(
+        tmp_path, scene_id="engineering-delivery"
+    )
     assert snapshot["summary"]["action_count"] == 1
     assert snapshot["funnel"]["task_created"] == 1
     assert snapshot["top_sources"] == [{"ref": "kos:delivery-1", "use_count": 1}]
@@ -60,9 +80,24 @@ def test_snapshot_projects_funnel_and_sources(tmp_path):
 @pytest.mark.parametrize(
     "payload",
     [
-        {"action_kind": "task_created", "query": "x", "knowledge_refs": [], "scene_binding": _binding(), "task_ref": "t"},
-        {"action_kind": "cited", "query": "x", "knowledge_refs": [{"ref": "kos:1", "raw_content": "secret"}]},
-        {"action_kind": "workflow_requested", "query": "x", "knowledge_refs": [{"ref": "kos:1"}], "scene_binding": _binding()},
+        {
+            "action_kind": "task_created",
+            "query": "x",
+            "knowledge_refs": [],
+            "scene_binding": _binding(),
+            "task_ref": "t",
+        },
+        {
+            "action_kind": "cited",
+            "query": "x",
+            "knowledge_refs": [{"ref": "kos:1", "raw_content": "secret"}],
+        },
+        {
+            "action_kind": "workflow_requested",
+            "query": "x",
+            "knowledge_refs": [{"ref": "kos:1"}],
+            "scene_binding": _binding(),
+        },
     ],
 )
 def test_invalid_receipts_are_rejected(tmp_path, payload):
@@ -72,5 +107,9 @@ def test_invalid_receipts_are_rejected(tmp_path, payload):
 
 def test_log_lines_are_json_objects(tmp_path):
     record_knowledge_action(tmp_path, _task_payload())
-    line = (tmp_path / "_knowledge/knowledge-mesh/actions.jsonl").read_text(encoding="utf-8").strip()
+    line = (
+        (tmp_path / "_knowledge/knowledge-mesh/actions.jsonl")
+        .read_text(encoding="utf-8")
+        .strip()
+    )
     assert isinstance(json.loads(line), dict)

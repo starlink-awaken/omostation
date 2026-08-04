@@ -130,9 +130,11 @@ class _GatekeeperVisitor(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign) -> None:
         for target in node.targets:
             if isinstance(target, ast.Name) and "path" in target.id.lower():
-                if isinstance(node.value, ast.Constant) and isinstance(
-                    node.value.value, str
-                ) and _has_forbidden_prefix(node.value.value):
+                if (
+                    isinstance(node.value, ast.Constant)
+                    and isinstance(node.value.value, str)
+                    and _has_forbidden_prefix(node.value.value)
+                ):
                     self._add(
                         node.value,
                         f"forbidden path assigned to {target.id}: {node.value.value!r}",

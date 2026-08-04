@@ -32,7 +32,10 @@ def _trial() -> dict[str, object]:
         "owner_ref": "ref://owner/research",
         "approver_ref": "ref://approver/research",
         "permission_ref": "ref://permission/research",
-        "evidence_refs": ["evidence://demand/research", "evidence://activation/research"],
+        "evidence_refs": [
+            "evidence://demand/research",
+            "evidence://activation/research",
+        ],
         "preflight_ref": "ref://preflight/research",
         "catalog_observation_id": "external-resource-observation:test",
         "trial_stage": "observation_only",
@@ -121,9 +124,18 @@ def _grant(run_id: str) -> dict[str, object]:
 def _completed_run(tmp_path, run_id: str = "run-readiness") -> None:
     store = WorkflowMeshStore(tmp_path)
     grant = _grant(run_id)
-    store.append(new_workflow_event("WorkflowRequested", run_id, scene_binding=_binding()))
-    store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
-    context = {"step_run_id": f"{run_id}:execute", "admission_id": grant["admission_id"]}
+    store.append(
+        new_workflow_event("WorkflowRequested", run_id, scene_binding=_binding())
+    )
+    store.append(
+        new_workflow_event(
+            "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
+        )
+    )
+    context = {
+        "step_run_id": f"{run_id}:execute",
+        "admission_id": grant["admission_id"],
+    }
     store.append(new_workflow_event("StepDispatched", run_id, payload=context))
     store.append(new_workflow_event("StepStarted", run_id, payload=context))
     store.append(new_workflow_event("WorkflowSucceeded", run_id))

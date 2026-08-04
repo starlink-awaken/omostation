@@ -27,20 +27,31 @@ def _grant(run_id: str) -> dict[str, object]:
     return grant
 
 
-def _admit(store: WorkflowMeshStore, run_id: str, *, scene: dict[str, str] | None) -> dict[str, object]:
+def _admit(
+    store: WorkflowMeshStore, run_id: str, *, scene: dict[str, str] | None
+) -> dict[str, object]:
     grant = _grant(run_id)
     store.append(new_workflow_event("WorkflowRequested", run_id, scene_binding=scene))
-    store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
+    store.append(
+        new_workflow_event(
+            "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
+        )
+    )
     return grant
 
 
 def _start(store: WorkflowMeshStore, run_id: str, grant: dict[str, object]) -> None:
-    payload = {"step_run_id": f"{run_id}:execute", "admission_id": grant["admission_id"]}
+    payload = {
+        "step_run_id": f"{run_id}:execute",
+        "admission_id": grant["admission_id"],
+    }
     store.append(new_workflow_event("StepDispatched", run_id, payload=payload))
     store.append(new_workflow_event("StepStarted", run_id, payload=payload))
 
 
-def test_operations_snapshot_reports_milestones_review_queue_and_unknown_consumption(tmp_path):
+def test_operations_snapshot_reports_milestones_review_queue_and_unknown_consumption(
+    tmp_path,
+):
     store = WorkflowMeshStore(tmp_path)
     scene = {
         "scene_id": "engineering-delivery",

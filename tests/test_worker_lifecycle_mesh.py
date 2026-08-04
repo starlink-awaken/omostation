@@ -228,10 +228,7 @@ def test_mesh_watchdog_does_not_expire_a_live_lease(tmp_path):
 
 def test_mesh_watchdog_cli_uses_public_worker_command(tmp_path, capsys):
     assert (
-        cli_main(
-            ["worker", "mesh-watchdog", "--json", "--omo-dir", str(tmp_path)]
-        )
-        == 0
+        cli_main(["worker", "mesh-watchdog", "--json", "--omo-dir", str(tmp_path)]) == 0
     )
 
     payload = json.loads(capsys.readouterr().out)

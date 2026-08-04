@@ -18,7 +18,9 @@ from pathlib import Path
 # 1. 动态加载 Workspace 内置的 AetherForge Gateway SDK
 DOCS_ROOT = Path("/Users/xiamingxing/Documents")
 WS_ROOT = Path("/Users/xiamingxing/Workspace")
-AETHERFORGE_GATEWAY_SRC = WS_ROOT / "projects" / "aetherforge" / "packages" / "gateway" / "src"
+AETHERFORGE_GATEWAY_SRC = (
+    WS_ROOT / "projects" / "aetherforge" / "packages" / "gateway" / "src"
+)
 
 if AETHERFORGE_GATEWAY_SRC.exists() and str(AETHERFORGE_GATEWAY_SRC) not in sys.path:
     sys.path.insert(0, str(AETHERFORGE_GATEWAY_SRC))
@@ -27,6 +29,7 @@ if AETHERFORGE_GATEWAY_SRC.exists() and str(AETHERFORGE_GATEWAY_SRC) not in sys.
 try:
     from llm_gateway.provider import LLMRequest, MockLLMProvider
     from llm_gateway.detection import detect_backends
+
     AETHERFORGE_AVAILABLE = True
 except ImportError:
     AETHERFORGE_AVAILABLE = False
@@ -46,9 +49,9 @@ def run_bdsk_deliberation(file_path: Path) -> Path | None:
     provider_info = "不可用 (使用规则回退)"
     if AETHERFORGE_AVAILABLE:
         try:
-            backends = detect_backends()
+            backends = detect_backends()  # type: ignore[reportPossiblyUnboundVariable]
             if backends:
-                provider_info = f"已检测到 {len(backends)} 个 AetherForge LLM 后端 ({backends[0].name})"
+                provider_info = f"已检测到 {len(backends)} 个 AetherForge LLM 后端 ({backends[0].name})"  # type: ignore[reportAttributeAccessIssue]
             else:
                 provider_info = "AetherForge SDK 已载入 (后台 MockLLMProvider 就绪)"
         except Exception as e:
@@ -58,7 +61,11 @@ def run_bdsk_deliberation(file_path: Path) -> Path | None:
     has_tech = "Vite" in content or "React" in content or "代码" in content
     has_risk = "保密" in content or "合规" in content or "涉密" in content
 
-    builder = "技术细节已知，已准备通过 AetherForge LLMRequest 发起 Prompt 评议。" if has_tech else "[提示: 源文本缺乏技术选型]"
+    builder = (
+        "技术细节已知，已准备通过 AetherForge LLMRequest 发起 Prompt 评议。"
+        if has_tech
+        else "[提示: 源文本缺乏技术选型]"
+    )
     devil = "检测到合规敏感词，强化防范。" if has_risk else "[提示: 无显性涉密风险]"
 
     report_md = f"""# 📄 B.D.S.K. 评议书 (AetherForge Gateway 驱动)
@@ -83,9 +90,13 @@ def run_bdsk_deliberation(file_path: Path) -> Path | None:
 """
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    out_file = OUTPUT_DIR / f"BDSK-VERDICT-{re.sub(r'\\W+', '_', title.lower()).strip('_')}.md"
+    out_file = (
+        OUTPUT_DIR / f"BDSK-VERDICT-{re.sub(r'\\W+', '_', title.lower()).strip('_')}.md"
+    )
     out_file.write_text(report_md, encoding="utf-8")
-    print(f"✅ AetherForge 驱动评议书已落盘 ──► {out_file.name} (网关: {provider_info})")
+    print(
+        f"✅ AetherForge 驱动评议书已落盘 ──► {out_file.name} (网关: {provider_info})"
+    )
     return out_file
 
 

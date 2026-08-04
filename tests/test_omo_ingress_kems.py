@@ -42,10 +42,16 @@ def setup_omo(tmp_path: Path) -> Path:
 def test_kems_ingress_is_idempotent_and_stays_planned(tmp_path):
     omo_dir = setup_omo(tmp_path)
     first = create_kems_planned_task(
-        omo_dir, task_payload=payload(), source_ref="kems:run-1:task-1", now="2026-07-31T08:00:00Z"
+        omo_dir,
+        task_payload=payload(),
+        source_ref="kems:run-1:task-1",
+        now="2026-07-31T08:00:00Z",
     )
     second = create_kems_planned_task(
-        omo_dir, task_payload=payload(), source_ref="kems:run-1:task-1", now="2026-07-31T08:01:00Z"
+        omo_dir,
+        task_payload=payload(),
+        source_ref="kems:run-1:task-1",
+        now="2026-07-31T08:01:00Z",
     )
     assert first == second
     assert first["status"] == "candidate"

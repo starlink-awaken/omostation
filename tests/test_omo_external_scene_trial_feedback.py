@@ -13,7 +13,11 @@ def _trial_payload() -> dict[str, object]:
     return {
         "schema": "external-scene-trial/v1",
         "trial_id": "scene-trial:test-1",
-        "scene_binding": {"scene_id": "scene:test", "journey_id": "journey:test", "outcome_metric": "metric:test"},
+        "scene_binding": {
+            "scene_id": "scene:test",
+            "journey_id": "journey:test",
+            "outcome_metric": "metric:test",
+        },
         "consumer_ref": "ref://consumer/test",
         "owner_ref": "ref://owner/test",
         "approver_ref": "ref://approver/test",
@@ -23,7 +27,12 @@ def _trial_payload() -> dict[str, object]:
         "catalog_observation_id": "external-resource-observation:test",
         "trial_stage": "observation_only",
         "status": "proposal_only",
-        "metric": {"metric_id": "metric:test", "direction": "decrease", "baseline_ref": "evidence://baseline/test", "measurement_ref": "evidence://measurement/test"},
+        "metric": {
+            "metric_id": "metric:test",
+            "direction": "decrease",
+            "baseline_ref": "evidence://baseline/test",
+            "measurement_ref": "evidence://measurement/test",
+        },
         "sample_plan": {"minimum_samples": 3, "window_seconds": 604800},
         "rollback_ref": "ref://rollback/test",
         "activation": "forbidden",

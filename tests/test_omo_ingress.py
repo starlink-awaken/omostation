@@ -1654,7 +1654,9 @@ def test_archive_done_task_moves_done_task_to_archived_and_writes_artifact(
 def test_record_task_execution_updates_archived_done_task(tmp_path: Path) -> None:
     from omo.omo_ingress_task_lifecycle import record_task_execution
 
-    task_path = tmp_path / ".omo" / "tasks" / "archived" / "done" / "TASK-CLOSEOUT-1.yaml"
+    task_path = (
+        tmp_path / ".omo" / "tasks" / "archived" / "done" / "TASK-CLOSEOUT-1.yaml"
+    )
     task_path.parent.mkdir(parents=True, exist_ok=True)
     task_path.write_text(
         yaml.safe_dump(

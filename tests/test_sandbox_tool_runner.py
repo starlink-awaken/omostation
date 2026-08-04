@@ -32,12 +32,16 @@ def _grant(run_id: str, step_run_id: str, *, sandbox: bool = True) -> dict[str, 
         "issued_at": "2026-08-03T00:00:00Z",
         "expires_at": "2026-08-03T01:00:00Z",
     }
-    unsigned = json.dumps(grant, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    unsigned = json.dumps(
+        grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
     grant["proof"] = hashlib.sha256(unsigned.encode()).hexdigest()
     return grant
 
 
-def _context(tmp_path, run_id: str = "run-sandbox", *, sandbox: bool = True) -> dict[str, str]:
+def _context(
+    tmp_path, run_id: str = "run-sandbox", *, sandbox: bool = True
+) -> dict[str, str]:
     step_run_id = f"{run_id}:execute"
     grant = _grant(run_id, step_run_id, sandbox=sandbox)
     store = WorkflowMeshStore(tmp_path)
@@ -53,7 +57,11 @@ def _context(tmp_path, run_id: str = "run-sandbox", *, sandbox: bool = True) -> 
             },
         )
     )
-    store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
+    store.append(
+        new_workflow_event(
+            "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
+        )
+    )
     record_step_dispatch(
         tmp_path,
         workflow_run_id=run_id,
@@ -106,7 +114,9 @@ def test_sandbox_tool_records_deterministic_receipt_and_evidence(tmp_path):
     assert evidence["evidence_schema"] == "external-connection-receipt/v1"
     assert evidence["result_state"] == "succeeded"
     invocation = next(
-        event for event in WorkflowMeshStore(tmp_path).events() if event["event_type"] == "ToolInvocationRecorded"
+        event
+        for event in WorkflowMeshStore(tmp_path).events()
+        if event["event_type"] == "ToolInvocationRecorded"
     )
     assert invocation["payload"]["activation"] == "sandbox"
     assert "raw_input" not in json.dumps(invocation)
@@ -149,7 +159,9 @@ def test_sandbox_tool_rejects_raw_ref_and_missing_capability(tmp_path):
             input_digest="c" * 64,
         )
 
-    no_capability = _context(tmp_path / "no-capability", "run-no-capability", sandbox=False)
+    no_capability = _context(
+        tmp_path / "no-capability", "run-no-capability", sandbox=False
+    )
     with pytest.raises(SandboxToolError, match="lacks capability"):
         run_sandbox_tool(
             tmp_path / "no-capability",
@@ -215,7 +227,9 @@ def test_sandbox_tool_failure_never_creates_success_or_evidence(
     snapshot = WorkflowMeshStore(tmp_path).snapshot(context["workflow_run_id"])
     assert snapshot["state"] == run_state
     assert snapshot["step_runs"][context["step_run_id"]]["state"] == run_state
-    assert build_operations_snapshot(tmp_path)["sandbox_tools"]["outcomes"] == {outcome: 1}
+    assert build_operations_snapshot(tmp_path)["sandbox_tools"]["outcomes"] == {
+        outcome: 1
+    }
 
 
 def test_sandbox_tool_replays_after_worker_reclaim_with_new_attempt(tmp_path):
@@ -273,6 +287,7 @@ def test_sandbox_tool_replays_after_worker_reclaim_with_new_attempt(tmp_path):
     assert snapshot["state"] == "succeeded"
     assert snapshot["worker"]["worker_id"] == "worker-successor"
     assert snapshot["step_runs"][successor_step]["state"] == "succeeded"
+
 
 def test_sandbox_tool_cli_is_explicit_and_json(capsys, tmp_path):
     context = _context(tmp_path, "run-cli")

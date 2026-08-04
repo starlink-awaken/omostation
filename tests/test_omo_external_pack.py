@@ -104,7 +104,10 @@ def test_blocked_pack_and_tampered_preview_fail_closed(tmp_path):
         )
 
     tampered = _projection()
-    tampered["catalog_preview"] = dict(tampered["catalog_preview"], resource={"availability": "available"})  # type: ignore[reportArgumentType]
+    tampered["catalog_preview"] = dict(
+        tampered["catalog_preview"],  # type: ignore[reportArgumentType]
+        resource={"availability": "available"},
+    )  # type: ignore[reportArgumentType]
     with pytest.raises(ExternalResourcePackProposalError, match="availability"):
         record_external_resource_pack_proposal(
             tmp_path,
@@ -118,7 +121,11 @@ def test_conflicting_proposal_id_fails_closed(tmp_path):
         tmp_path, _projection(), proposal_id="proposal:fixed:1"
     )
     changed = _projection()
-    changed["pack"] = {"pack_id": "pack:other", "pack_version": "2.0.0", "provider": "other"}
+    changed["pack"] = {
+        "pack_id": "pack:other",
+        "pack_version": "2.0.0",
+        "provider": "other",
+    }
     with pytest.raises(ExternalResourcePackProposalError, match="conflicting"):
         record_external_resource_pack_proposal(
             tmp_path, changed, proposal_id="proposal:fixed:1"

@@ -53,7 +53,9 @@ def _diff(change_count: int = 1, *, review_required: bool = False) -> dict:
             "review_required": review_required,
             "review_required_count": change_count if review_required else 0,
             "operational_observation_count": 0 if review_required else change_count,
-            "risk_codes": ["descriptor_provider_changed"] if review_required else ["health_changed"],
+            "risk_codes": ["descriptor_provider_changed"]
+            if review_required
+            else ["health_changed"],
         },
     }
 

@@ -67,7 +67,10 @@ def _health(*, available: bool = True) -> dict:
         "source": "agora.workflow_health",
         "observed_at": "2026-08-03T10:00:00+00:00",
         "capabilities": {
-            "runtime": {"available": available, "health": "green" if available else "red"}
+            "runtime": {
+                "available": available,
+                "health": "green" if available else "red",
+            }
         },
     }
 
@@ -86,13 +89,20 @@ def test_preview_is_read_only_and_reports_eligible_request(tmp_path: Path) -> No
     _task(tmp_path)
     requested = _request(tmp_path)
 
-    preview = preview_requested_workflow(tmp_path, **_admission_args(requested["workflow_run_id"]))
+    preview = preview_requested_workflow(
+        tmp_path, **_admission_args(requested["workflow_run_id"])
+    )
 
     assert preview["status"] == "eligible"
     assert preview["dispatch_state"] == "preview"
     assert preview["worker_launch"] is False
     assert len(WorkflowMeshStore(tmp_path / ".omo").events()) == 1
-    assert WorkflowMeshStore(tmp_path / ".omo").snapshot(requested["workflow_run_id"])["state"] == "planned"
+    assert (
+        WorkflowMeshStore(tmp_path / ".omo").snapshot(requested["workflow_run_id"])[
+            "state"
+        ]
+        == "planned"
+    )
 
 
 def test_preview_is_blocked_for_health_or_approval_gates(tmp_path: Path) -> None:
@@ -115,7 +125,9 @@ def test_preview_is_blocked_for_health_or_approval_gates(tmp_path: Path) -> None
     assert "approval" in approval_preview["blocker"]
 
 
-def test_apply_requires_active_task_and_admits_existing_request_once(tmp_path: Path) -> None:
+def test_apply_requires_active_task_and_admits_existing_request_once(
+    tmp_path: Path,
+) -> None:
     _task(tmp_path)
     requested = _request(tmp_path)
     args = _admission_args(requested["workflow_run_id"])
@@ -125,7 +137,10 @@ def test_apply_requires_active_task_and_admits_existing_request_once(tmp_path: P
         admit_requested_workflow(tmp_path, **args)
 
     promote_task_to_active(
-        tmp_path / ".omo", task_id="TASK-ADMISSION-1", actor="pytest", now="2026-08-03T10:00:30Z"
+        tmp_path / ".omo",
+        task_id="TASK-ADMISSION-1",
+        actor="pytest",
+        now="2026-08-03T10:00:30Z",
     )
     first = admit_requested_workflow(tmp_path, **args)
     second = admit_requested_workflow(tmp_path, **args)

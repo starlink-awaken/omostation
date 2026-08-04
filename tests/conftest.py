@@ -215,7 +215,11 @@ def pytest_collection_modifyitems(
         needs_omo = False
 
         # 1. All tests under tests/archive/
-        if "/tests/archive/" in fspath or basename in _EXPLICIT_MODULES or fnmatch.fnmatch(basename, "test_phase*.py"):
+        if (
+            "/tests/archive/" in fspath
+            or basename in _EXPLICIT_MODULES
+            or fnmatch.fnmatch(basename, "test_phase*.py")
+        ):
             needs_omo = True
 
         # 3.5 CI-only skip: 本地全过的 unit test, CI fresh 环境缺 runtime data/time mock.
@@ -230,29 +234,36 @@ def pytest_collection_modifyitems(
 
         # 4. Specific integration test functions that need real .omo workspace
         #    (calls dispatch_task() which requires _truth/registry/workers.yaml)
-        elif basename == "test_omo_automation.py" and testname in (
-            "test_sync_omo_state_script_runs_from_repo_root",
-            "test_dispatch_task_launch_redacts_stdout_log",
-            "test_dispatch_task_and_worker_status_use_custom_omo_root",
-            "test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time",
-            "test_dispatch_task_launch_marks_dispatch_active_and_updates_lease",
-            "test_install_all_bridges_defaults_to_wrapper_only_without_running_legacy_installers",
-            "test_install_all_bridges_can_opt_into_legacy_installers",
-            "test_dispatch_task_creates_packet_and_preclaims_task",
-            "test_task_promote_apply_moves_task_and_writes_envelope",
-            "test_task_promote_apply_rolls_back_when_sync_fails",
-            "test_task_governance_overlay_run_next_writes_run_artifact",
-            "test_task_governance_overlay_run_next_dispatches_first_active_pending_target",
-            "test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is_declared",
-        ) or basename == "test_worker_lifecycle.py" and testname in (
-            "test_dispatch_task_launch_handles_quoted_prompt_without_shell_breakage",
-            "test_dispatch_prompt_includes_required_deliverables_when_task_declares_them",
-            "test_dispatch_task_creates_checkpoint_and_reclaim_artifacts",
-            "test_worker_status_command_prints_checkpoint_summary",
-            "test_update_dispatch_checkpoint_records_step_and_refreshes_lease",
-            "test_worker_admission_eval_command_prints_decision",
-            "test_reclaim_task_reassigns_from_checkpoint_context",
-            "test_write_handoff_index_links_dispatch_checkpoint_reclaim_and_review",
+        elif (
+            basename == "test_omo_automation.py"
+            and testname
+            in (
+                "test_sync_omo_state_script_runs_from_repo_root",
+                "test_dispatch_task_launch_redacts_stdout_log",
+                "test_dispatch_task_and_worker_status_use_custom_omo_root",
+                "test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time",
+                "test_dispatch_task_launch_marks_dispatch_active_and_updates_lease",
+                "test_install_all_bridges_defaults_to_wrapper_only_without_running_legacy_installers",
+                "test_install_all_bridges_can_opt_into_legacy_installers",
+                "test_dispatch_task_creates_packet_and_preclaims_task",
+                "test_task_promote_apply_moves_task_and_writes_envelope",
+                "test_task_promote_apply_rolls_back_when_sync_fails",
+                "test_task_governance_overlay_run_next_writes_run_artifact",
+                "test_task_governance_overlay_run_next_dispatches_first_active_pending_target",
+                "test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is_declared",
+            )
+            or basename == "test_worker_lifecycle.py"
+            and testname
+            in (
+                "test_dispatch_task_launch_handles_quoted_prompt_without_shell_breakage",
+                "test_dispatch_prompt_includes_required_deliverables_when_task_declares_them",
+                "test_dispatch_task_creates_checkpoint_and_reclaim_artifacts",
+                "test_worker_status_command_prints_checkpoint_summary",
+                "test_update_dispatch_checkpoint_records_step_and_refreshes_lease",
+                "test_worker_admission_eval_command_prints_decision",
+                "test_reclaim_task_reassigns_from_checkpoint_context",
+                "test_write_handoff_index_links_dispatch_checkpoint_reclaim_and_review",
+            )
         ):
             needs_omo = True
 

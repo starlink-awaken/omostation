@@ -63,7 +63,9 @@ def _worker_registry(root: Path) -> None:
     )
 
 
-def test_task_and_workflow_mesh_closeout_converge_with_scene_binding(tmp_path: Path) -> None:
+def test_task_and_workflow_mesh_closeout_converge_with_scene_binding(
+    tmp_path: Path,
+) -> None:
     omo_dir = tmp_path / ".omo"
     _worker_registry(tmp_path)
 
