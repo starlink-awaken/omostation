@@ -540,11 +540,15 @@ diff_checks:
     required: false
     paths:
       - bin/sweep/**
+      - tests/test_sweep_tools.py
+      - bin/gac/gac-worktree.sh
+      - bin/gac/gac-worktree-cleanup.sh
+      - tests/test_gac_worktree_lifecycle.py
       - projects/*/src/**/*.py
       - projects/*/tests/**/*.py
       - projects/*/pyproject.toml
       - projects/*/pyrightconfig.json
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+    command: [uv, run, pytest, tests/test_sweep_tools.py, -q]
   - id: agent-workflow-lint
     description: Workflow runner and registry contract validation.
     required: true

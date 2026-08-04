@@ -42,7 +42,8 @@ def main() -> int:
         by_file[Path(item["file"])].append(item)
 
     changed = 0
-    annotated = 0
+    line_suppressions = 0
+    file_suppressions = 0
     for path, items in sorted(by_file.items()):
         if not path.is_file():
             raise FileNotFoundError(path)
@@ -54,6 +55,7 @@ def main() -> int:
             rule for rule, count in counts.items() if test_file and count >= args.test_header_threshold
         )
         lines, offset = insert_headers(lines, header_rules)
+        file_suppressions += offset - 1 if offset else 0
 
         seen: set[tuple[int, str]] = set()
         for item in sorted(items, key=lambda value: value["range"]["start"]["line"]):
@@ -69,7 +71,7 @@ def main() -> int:
             if "type: ignore" in line or "noqa" in line or line.rstrip().endswith("\\"):
                 continue
             lines[line_number] = f"{line.rstrip()}  # type: ignore[{rule}]"
-            annotated += 1
+            line_suppressions += 1
 
         rendered = "\n".join(lines)
         if rendered != original:
@@ -77,7 +79,21 @@ def main() -> int:
             if not args.dry_run:
                 path.write_text(rendered)
 
-    print(f"errors={sum(len(items) for items in by_file.values())} files={changed} annotations={annotated}")
+    error_count = sum(len(items) for items in by_file.values())
+    suppressed_diagnostics = line_suppressions + sum(
+        sum(1 for item in items if (item.get("rule") or DEFAULT_RULE) in {
+            line.split("=", 1)[0].removeprefix("# pyright: ")
+            for line in Path(path).read_text().splitlines()
+            if line.startswith("# pyright:")
+        })
+        for path, items in by_file.items()
+        if Path(path).is_file()
+    )
+    suppression_ratio = suppressed_diagnostics / error_count if error_count else 0.0
+    print(
+        f"errors={error_count} files={changed} line_suppressions={line_suppressions} "
+        f"file_suppressions={file_suppressions} suppression_ratio={suppression_ratio:.3f}"
+    )
     return 0
 
 
