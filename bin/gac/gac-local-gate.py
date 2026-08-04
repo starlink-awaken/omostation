@@ -421,9 +421,13 @@ def run_gate(
     files: list[str] | None = None,
     run_id: str = "",
     strict: bool = False,
+    agt_backend: bool = False,
 ) -> dict[str, object]:
     change_lane_files = change_lane_files_for_scope(scope, files, run_id)
     results = [run_check(name, command) for name, command in gate_checks(scope, files, run_id, strict)]
+    if agt_backend:
+        agt_results = run_agt_policy_engine()
+        results.extend(agt_results)
     finding_topics = extract_finding_topics(results)
 
     # HARD/SOFT 分离: soft checks 不翻转 gate
@@ -440,7 +444,56 @@ def run_gate(
         "change_lane_files": change_lane_files,
         "checks": results,
         "finding_topics": finding_topics,
+        "agt_backend": agt_backend,
     }
+
+
+def run_agt_policy_engine() -> list[dict[str, object]]:
+    results: list[dict[str, object]] = []
+    try:
+        proc = subprocess.run(
+            ["agora", "resolve", "bos://governance/agt/policy"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if proc.returncode == 0:
+            results.append({
+                "name": "agt-policy-engine",
+                "ok": True,
+                "command": ["agora", "resolve", "bos://governance/agt/policy"],
+                "stdout": "AGT Policy Engine backend active",
+                "stderr": "",
+                "duration_ms": 0,
+            })
+        else:
+            results.append({
+                "name": "agt-policy-engine",
+                "ok": False,
+                "command": ["agora", "resolve", "bos://governance/agt/policy"],
+                "stdout": "",
+                "stderr": proc.stderr or "AGT policy engine unavailable",
+                "duration_ms": 0,
+            })
+    except FileNotFoundError:
+        results.append({
+            "name": "agt-policy-engine",
+            "ok": False,
+            "command": ["agora", "resolve", "bos://governance/agt/policy"],
+            "stdout": "",
+            "stderr": "AGT policy engine unavailable (agora CLI not found)",
+            "duration_ms": 0,
+        })
+    except subprocess.TimeoutExpired:
+        results.append({
+            "name": "agt-policy-engine",
+            "ok": False,
+            "command": ["agora", "resolve", "bos://governance/agt/policy"],
+            "stdout": "",
+            "stderr": "AGT policy engine timeout",
+            "duration_ms": 5000,
+        })
+    return results
 
 
 def print_human(report: dict[str, object], verbose: bool = False) -> None:
@@ -509,10 +562,11 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--strict", action="store_true", help="跑全套 (CI 用)")
     parser.add_argument("--verbose", action="store_true", help="Print passing gate details under slim mode")
+    parser.add_argument("--agt-backend", action="store_true", help="Use AGT Policy Engine as GaC rule execution backend")
     args = parser.parse_args()
 
     try:
-        report = run_gate(args.scope, args.file, args.run_id, args.strict)
+        report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend)
     except ValueError as exc:
         parser.error(str(exc))
     

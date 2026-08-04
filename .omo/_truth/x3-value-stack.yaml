@@ -145,6 +145,20 @@ domains:
       mechanism: 未实现
       implemented: false
 
+  AGT:
+    x1_audit:
+      mechanism: AGT Merkle audit hash-chain (COMP-EXT-AGT-hypervisor) + eCOS append-only log
+      implemented: true
+      note: AGT 审计哈希链作为 eCOS 审计日志的补充，Merkle 链提供防篡改证据
+    x2_freshness:
+      mechanism: AGT trust score refresh + circuit breaker state monitoring
+      implemented: true
+      note: AGT 信任评分和熔断状态作为 X2 新鲜度指标
+    x3_value:
+      mechanism: AGT trust scoring (0-1000) mapped to eCOS trust dimension (5 tiers)
+      dimensions: [trust_score, identity_tier, compliance_status]
+      implemented: true
+      note: AGT 信任评分 0-1000 映射到 eCOS 5 级信任维度; AGT 策略评估成本 = 0 (子毫秒级)
   Domain_Systems:
     x1_audit:
       mechanism: 'CARDS card_history (通过 domain 字段) + 域系统 task_history (P44+ 计划扩展到 STATE/CARDS 指针 + SIGNALS 跨域信号)'
