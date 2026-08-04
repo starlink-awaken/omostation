@@ -1699,6 +1699,24 @@ services:
   status: active
   transport: stdio
   uri: bos://memory/mos/status
+- action: forget
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - --package
+  - mos
+  - python
+  - -m
+  - mos
+  - forget
+  description: Memory OS forget propagation (raw+theta+mem0 shadow) — ADR-0372 Phase 2
+  domain: memory
+  package: mos
+  status: active
+  transport: stdio
+  uri: bos://memory/mos/forget
 - action: status
   description: 获取分布式蜂群实时拓扑与负载状态
   domain: swarm
