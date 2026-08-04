@@ -3,7 +3,7 @@
 # Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
-status: phase2
+status: phase3
 adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
@@ -168,10 +168,11 @@ phases:
       - eval harness v0 (15 cases)
       - BOS mos/forget
   3:
-    status: planned
+    status: done
     deliverables:
-      - mos.consolidate
-      - Foundry memory deck
+      - mos.consolidate (gbrain dream orchestration)
+      - Foundry memory-os-consolidate deck
+      - BOS mos/consolidate
   4:
     status: planned
     deliverables:

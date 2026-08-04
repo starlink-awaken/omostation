@@ -109,7 +109,7 @@ MOS 增加：统一 agent 默认召回、对话记忆、巩固与遗忘；事件
 | 0 | 本文 + ADR-0372 + registry + audit + skill — **done** |
 | 1 | `packages/mos` MVP + BOS + dual-track + card dual-accept — **done** |
 | 2 | Mem0 shadow + forget bus + eval v0 + BOS forget — **done** |
-| 3 | consolidate job（编排 gbrain dream） |
+| 3 | consolidate + Foundry deck + BOS — **done** |
 | 4+ | Graphiti 场景、ACL、UI |
 
 实现入口：`projects/kairon/packages/mos` · CLI `python -m mos` · 复盘 `docs/operations/memory-os-phase1-retro.md`

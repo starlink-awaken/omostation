@@ -27,9 +27,10 @@ description: >
 写入:  bos://memory/mos/write    { type, content|content_ref, confidence? }
 状态:  bos://memory/mos/status
 遗忘:  bos://memory/mos/forget   { memory_id, reason? }  # Phase 2
-CLI:   uv run --directory projects/kairon --package mos python -m mos {write,recall,forget,status}
-巩固:  bos://memory/mos/consolidate  (Phase 3+，异步)
+CLI:   uv run --directory projects/kairon --package mos python -m mos {write,recall,forget,consolidate,status}
+巩固:  bos://memory/mos/consolidate  { dry_run?, phases? }  # Phase 3 — 编排 gbrain dream
 Mem0:  MOS_MEM0=1 启用 shadow 双写（默认 off，无 Qdrant）
+Foundry: bin/decks/memory-os-consolidate-deck.py（默认 dry-run；MOS_CONSOLIDATE_LIVE=1 实跑）
 ```
 
 经 Agora：`resolve_bos_uri` / cockpit bos 代理。  
