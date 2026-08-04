@@ -87,4 +87,12 @@ for wt_path in "$WS_PARENT"/ws-*/; do
   fi
 done
 
+# ── D1: GC 过期 claim (branch/agent/adr, TTL 长于 worktree 因 claim 是长期占位) ──
+echo "── GC 过期 claim (TTL: ${CLAIM_TTL_HOURS:-168}h) ──"
+if command -v python3 >/dev/null 2>&1; then
+  python3 "$WS_ROOT/bin/gac/swarm-discipline-cli.py" claim-gc \
+    --ttl-hours "${CLAIM_TTL_HOURS:-168}" \
+    $([ "$DRY_RUN" = true ] && echo --dry-run) 2>&1 | tail -8 || true
+fi
+
 echo "=== PASW Cleanup 完成: 回收 $reclaimed, 跳过 $skipped ==="
