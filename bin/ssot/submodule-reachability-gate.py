@@ -62,7 +62,8 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
     init_check = run(
         ["git", "rev-parse", "--is-inside-work-tree"], cwd=submodule_dir
     )
-    if init_check.returncode != 0 or init_check.stdout.strip() != "true":
+    # stdout 检查覆盖失败 (空) + false 两种非 init 情况, returncode 冗余
+    if init_check.stdout.strip() != "true":
         return (
             True,
             "submodule not initialized (partial worktree) - CI full checkout will verify",
