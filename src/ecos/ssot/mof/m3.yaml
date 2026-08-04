@@ -39,7 +39,7 @@ m3:
         description: { type: string, required: true, description: "一句话定义" }
         created:   { type: datetime, required: true, description: "创建时间" }
         version:   { type: semver,  required: true,  description: "语义版本号" }
-        status:    { type: enum,    required: true,  description: "生命周期状态", values: [draft, active, deprecated, archived] }
+        status:    { type: enum,    required: true,  description: "生命周期状态", values: [draft, active, deprecated, superseded, archived] }
         tags:      { type: list,    required: false, description: "分类标签" }
 
     # ── 结构元素: 描述"是什么" ──
@@ -257,7 +257,7 @@ m3:
         executor:     { type: list,   required: true,  description: "执行器 enum (hook_pre_edit / hook_post / ci_gate / omo_audit / mcp_tool / mof_validate / mof_audit / evidence_smoke / radar_cron / gc_cron / gac_local_gate)" }
         target:       { type: string, required: false, description: "规则 target 路径 (相对 workspace)" }
         enforcement:  { type: enum,   required: true,  description: "强制级别", values: [required, preferred, advisory] }
-        lifecycle:    { type: enum,   required: true,  description: "生命周期", values: [draft, active, deprecated, archived] }
+        lifecycle:    { type: enum,   required: true,  description: "生命周期", values: [draft, active, deprecated, superseded, archived] }
         version:      { type: semver, required: true,  description: "语义版本" }
         adr:          { type: ref,    required: false, description: "锚定 ADR (→Decision)" }
         source_type:  { type: enum,   required: true,  description: "来源类型", values: [native, indexed, derived] }

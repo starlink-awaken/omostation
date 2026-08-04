@@ -45,7 +45,7 @@ GacRule:
       description: 执行通道列表 (至少一个, 防 rule 声明不执行, 机制 3 前提)
     lifecycle:
       type: enum
-      values: [draft, active, deprecated, removed]
+      values: [draft, active, deprecated, superseded, removed]
       description: 规则生命周期状态 (机制 6)
     version:
       type: semver
