@@ -27,8 +27,20 @@ related:
 - **graphiti-core 可选**：`MOS_GRAPHITI=1` 且包已装才标记 bridge；生产 FACT 写路径走 Neo4j Cypher，不强制 graphiti-core
 - **RBAC 表级非行级**：角色→动作矩阵，非 per-memory ACL 替换（细 ACL 仍是 principal/agent/scene）
 
-## 验证
+## 验证（合入后复盘）
 
-- `packages/mos` pytest 含 `test_phase6_neo4j_rbac`
-- cockpit `test_api_memory` header 403 + dashboard HTML 导出
-- PR merge 后本复盘作为 closeout 证据
+| 检查 | 结果 |
+|------|------|
+| mos pytest | **43 passed**（含 `test_phase6_neo4j_rbac`） |
+| cockpit `test_api_memory` | **2 passed**（header 403 + MEMORY_DASHBOARD_HTML） |
+| doc-governance | **PASS**（lifecycle=history；warning budget 恢复） |
+| evidence-gate | **PASS**（bos-registry live=156 同步） |
+| gac-gate / phase-gate | **PASS**（branch protection 必过项） |
+| PR #959 | **MERGED** `fbc820a43` squash 2026-08-04T13:29:45Z |
+| workflow closeout | `20260804T130023Z-project-code-change-2c9f9b0d` ok |
+
+## 教训
+
+1. **lifecycle enum 硬约束**：`retrospective`/`audit` 不在允许集，会冲 warning budget 变 error；复盘文档统一 `history`。
+2. **子模块 guard 看 `.subtrees/*`**：cockpit 推 main 后需 FF `.subtrees/cockpit`，否则 root commit 被 submodule-guard 拒绝。
+3. **诚实生产路径**：Neo4j 只在 `NEO4J_URI` 时写；未配置时 status 明确 `neo4j_configured=false`，不宣称 Graphiti 生产就绪。

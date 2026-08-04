@@ -112,9 +112,11 @@ MOS 增加：统一 agent 默认召回、对话记忆、巩固与遗忘；事件
 | 3 | consolidate + Foundry deck + BOS — **done** |
 | 4 | temporal shadow + scope ACL + knowledge_ref — **done** |
 | 5 | fine ACL + Graphiti bridge flag + cockpit `/api/memory` — **done** |
-| 6+ | 真 Neo4j Graphiti 生产图、cockpit UI 面板、策略表 RBAC |
+| 6 | Neo4j FACT 写路径 + 策略表 RBAC + cockpit `/memory` 面板 — **done** |
+| 7 | Neo4j recall 挂入 `temporal_fact`/`entity_relation` 检索闭环 + 本机 docker/brew 启动脚本 — **done** |
+| 8+ | 完整 graphiti-core 引擎、as_of 图侧 bi-temporal、Mem0 真集群 |
 
-实现入口：`projects/kairon/packages/mos` · CLI `python -m mos` · 复盘 `docs/operations/memory-os-phase1-retro.md`
+实现入口：`projects/kairon/packages/mos` · CLI `python -m mos` · 本机图：`bash bin/memory-os-neo4j-up.sh` · 运维：`docs/operations/memory-os-neo4j-local.md`
 
 ## 11. 相关入口
 

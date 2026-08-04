@@ -3,17 +3,23 @@
 # Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
-status: phase6
+status: phase7
 adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
 rbac_policy: .omo/_truth/registry/memory-rbac.yaml
+neo4j_ops: docs/operations/memory-os-neo4j-local.md
 skill: .agents/skills/memory-recall/SKILL.md
-last_reviewed: "2026-08-04"
+last_reviewed: "2026-08-05"
 phase6:
   neo4j_writer: projects/kairon/packages/mos/src/mos/neo4j_writer.py
   cockpit_panel: /memory
   notes: "NEO4J_URI-gated production writes; policy-table RBAC; no false ready claims without URI"
+phase7:
+  neo4j_recall: true
+  startup: bin/memory-os-neo4j-up.sh
+  compose: projects/kairon/packages/mos/docker-compose.yml
+  notes: "temporal_fact/entity_relation prefer neo4j search; Docker preferred brew fallback"
 ---
 control_plane:
   package_planned: projects/kairon/packages/mos

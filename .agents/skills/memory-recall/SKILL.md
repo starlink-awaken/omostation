@@ -33,11 +33,12 @@ CLI:   uv run --directory projects/kairon --package mos python -m mos {write,rec
 时序:  write --subject X --predicate Y --object Z --valid-from ... --valid-to ...
 ACL:   recall 传 scope.principal_id / --principal-id
 Mem0:  MOS_MEM0=1 启用 shadow 双写（默认 off）
-Temporal: MOS_TEMPORAL=0 关闭（默认 on，内存 bi-temporal，无 Neo4j）
+Temporal: MOS_TEMPORAL=0 关闭（默认 on，内存 bi-temporal shadow）
+Neo4j: NEO4J_URI=bolt://localhost:7687 启用 FACT 写+召回（bash bin/memory-os-neo4j-up.sh）
 Foundry: bin/decks/memory-os-consolidate-deck.py（默认 dry-run）
-HTTP:  cockpit POST/GET /api/memory/*（L3 网关 → mos CLI）
-ACL:   principal_id + agent_profile + scene_id
-Graphiti: MOS_GRAPHITI=1 探测；默认仍内存 temporal shadow
+HTTP:  cockpit POST/GET /api/memory/* · 面板 /memory
+ACL/RBAC: principal_id+agent_profile+scene_id + memory-rbac.yaml 角色表
+Graphiti: MOS_GRAPHITI=1 探测；生产图路径为 Neo4j Cypher（非完整 graphiti-core）
 ```
 
 经 Agora：`resolve_bos_uri` / cockpit bos 代理。  
@@ -52,7 +53,7 @@ Graphiti: MOS_GRAPHITI=1 探测；默认仍内存 temporal shadow
 | `file_note` / 找文档 ADR | `bos://memory/kos/search` 或 mcp-server-kos | 机构知识 |
 | `general` | kos + gbrain（MOS 内 RRF；回退时顺序扇出） | |
 | `preference_self` | mos write semantic → theta facts | Mem0 仍默认 off |
-| `entity_relation` | gbrain graph / traverse | |
+| `entity_relation` / `temporal_fact` | mos recall → neo4j FACT（需 NEO4J_URI）+ temporal shadow | |
 | `card_ops` | cockpit `/api/knowledge/*`；事件 `memory/events/card_updated` | brain URI 仍 dual-accept |
 | `code_structure` | codebase-memory / GitNexus | **禁止**与笔记混搜 |
 | `task_debt` | omo / governance | **不是** memory |
