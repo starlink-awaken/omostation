@@ -15,6 +15,7 @@ last-reviewed: 2026-06-22
 |------|:---:|------|:---:|------|
 | **health_score** | 92 | 治理健康 (manual audit post-cleanup) | ✅ **SSOT** | `.omo/state/health.yaml` (system.yaml 引用) |
 | health_score_raw | 88 | 原始自动计算 (未人工校准, 基线) | 子维度 | `.omo/state/system.yaml` |
+| health_score_evidence | 100 | 运行现实分 (evidence-smoke 声明/执行鸿沟) | 子维度 | `.omo/state/system.yaml` (evidence-smoke 写入) |
 | product-health | 30 | 产品/服务健康 (在线服务视角, 0/2 健康) | 子维度 | `cockpit product-health` 运行时 |
 | audit 总分 | 96.8 | 6 维度综合审计 (governance/lint/radar/ssot/gitlink/ops) | 综合视图 | `cockpit audit` |
 
@@ -24,6 +25,7 @@ last-reviewed: 2026-06-22
 - **看服务是否活着** → `product-health` (运行时在线服务)
 - **看综合质量** → `cockpit audit` (6 维度)
 - `health_score_raw` 是 health_score 的未校准基线, 不直接对用户暴露
+- `health_score_evidence` 是 evidence-smoke 的运行现实分 (声明/执行鸿沟), 与 health_score 偏差 >5 触发 R-GOV-2 告警
 
 ## 根因 (为何 4 值)
 
