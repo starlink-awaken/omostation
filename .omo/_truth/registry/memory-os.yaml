@@ -3,7 +3,7 @@
 # Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
-status: phase3
+status: phase4
 adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
@@ -174,7 +174,8 @@ phases:
       - Foundry memory-os-consolidate deck
       - BOS mos/consolidate
   4:
-    status: planned
+    status: done
     deliverables:
-      - graphiti scene adapter
-      - shared ACL
+      - temporal shadow (bi-temporal, no Neo4j)
+      - scope ACL principal_id
+      - knowledge_ref (ADR-0315)

@@ -27,10 +27,14 @@ description: >
 写入:  bos://memory/mos/write    { type, content|content_ref, confidence? }
 状态:  bos://memory/mos/status
 遗忘:  bos://memory/mos/forget   { memory_id, reason? }  # Phase 2
-CLI:   uv run --directory projects/kairon --package mos python -m mos {write,recall,forget,consolidate,status}
-巩固:  bos://memory/mos/consolidate  { dry_run?, phases? }  # Phase 3 — 编排 gbrain dream
-Mem0:  MOS_MEM0=1 启用 shadow 双写（默认 off，无 Qdrant）
-Foundry: bin/decks/memory-os-consolidate-deck.py（默认 dry-run；MOS_CONSOLIDATE_LIVE=1 实跑）
+CLI:   uv run --directory projects/kairon --package mos python -m mos {write,recall,forget,consolidate,knowledge-ref,status}
+巩固:  bos://memory/mos/consolidate  { dry_run?, phases? }
+引用:  python -m mos knowledge-ref "query" --intent general   # ADR-0315 元数据，无正文
+时序:  write --subject X --predicate Y --object Z --valid-from ... --valid-to ...
+ACL:   recall 传 scope.principal_id / --principal-id
+Mem0:  MOS_MEM0=1 启用 shadow 双写（默认 off）
+Temporal: MOS_TEMPORAL=0 关闭（默认 on，内存 bi-temporal，无 Neo4j）
+Foundry: bin/decks/memory-os-consolidate-deck.py（默认 dry-run）
 ```
 
 经 Agora：`resolve_bos_uri` / cockpit bos 代理。  
