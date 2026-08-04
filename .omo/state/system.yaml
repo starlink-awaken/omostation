@@ -69,8 +69,7 @@ phase30_completed_at: '2026-06-06T01:30:00Z'
 phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
 phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
-divergence_flags:
-- missing_goal_tasks:6
+divergence_flags: []
 task_gate_summary: {}
 promotion_blockers: {}
 phase12_status: completed
@@ -218,13 +217,6 @@ debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
 governance_anomaly_score: 85
 service_online_ratio: 1.0
-divergence_detail_refs:
-  missing_goal_tasks:
-    count: 6
-    ref: .omo/evidence/divergence/missing_goal_tasks.yaml
-divergence_triage_summary:
-  missing_goal_tasks:6:
-    severity: medium
-    owner: control
-    disposition: must_fix
+divergence_detail_refs: {}
+divergence_triage_summary: {}
 governance_feedback_last_run: '2026-08-03T17:57:26.783693+08:00'
