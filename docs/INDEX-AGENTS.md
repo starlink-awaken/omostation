@@ -7,7 +7,7 @@
 > - validation: skill 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-08-01T02:43:03.282321+00:00
+> - generated_at: 2026-08-04T02:46:50.587728+00:00
 
 ---
 
@@ -36,8 +36,11 @@
 
 | Skill | 用途 | 触发场景 |
 |-------|------|---------|
+| a2a-coordination | a2a coordination | 相关操作 |
+| agent-onboarding | agent onboarding | 相关操作 |
 | bdsk-virtual-board | bdsk virtual board | 相关操作 |
 | bos-contract-fix | bos contract fix | 相关操作 |
+| bos-service-discovery | bos service discovery | 相关操作 |
 | ci-red-triage | ci red triage | 相关操作 |
 | ecos-test-cycle | ecos test cycle | 相关操作 |
 | governance-phase-orchestrator | governance phase orchestrator | 相关操作 |
