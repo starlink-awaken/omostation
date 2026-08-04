@@ -1,0 +1,24 @@
+id: BOSROUTE-AGT-MCP-SECURITY
+type: Component
+subtype: BOSRoute
+name: bos://capability/agt/mcp-security
+description: AGT MCP Security Gateway — MCP tool-call interception and OWASP ASI 2026 compliance scanning
+status: active
+domain: capability
+created: '2026-08-04'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: ecos
+    entrypoint: projects/ecos/src/ecos/ssot/mof/m1/
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/bosroute/
+state_history:
+  - state: proposal_only
+    timestamp: '2026-08-04T00:00:00Z'
+    reason: agt_external_adapter_proposal

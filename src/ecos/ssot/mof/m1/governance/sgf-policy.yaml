@@ -1,7 +1,20 @@
 # SGF-v1: Starlit Self-Governance Framework Unified Policy (M1 Model Instance)
 # SSOT Source for all GAC checks configuration, replacing hardcoded checks in gac-local-gate.py.
 
+id: "sgf-policy"
+type: GovernancePolicy
+name: "SGF 统一治理策略 — GAC 门禁配置数据化 SSOT"
+description: "SGF-v1: 大仓 31 个 Gate 门禁项规则数据化注册表 + SGF 运行设置"
+status: active
+domain: "meta"
+layer: "X"
+created: "2026-08-03"
 version: "1.0.0"
+properties:
+  policy_id: "sgf-policy"
+  dimension: "all"
+  thresholds:
+    gates: 31
 
 settings:
   attention:
