@@ -28,3 +28,4 @@ x3_delivery_soft_gate:
   notes: >
     Soft gate only. Under-threshold emits Decision Inbox warning card text
     in BRIEF.md; does not fail generate-brief exit code.
+    2026-08: 交付 4/8, 环比 0→4, Δ+4. 持续追赶中。

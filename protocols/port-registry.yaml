@@ -9,6 +9,9 @@ conflicts_resolved:
   - runtime
   7430:
   - agora
+  9222:
+  - kairon
+  - runtime
   - omo
   - cockpit
   7431:

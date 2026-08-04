@@ -102,6 +102,24 @@ ENFORCED_MAP = {
     "zero-planned-tasks": "CR-X4-REGISTRY-DRIFT-AGGREGATE",
     # P76-6-4: observability-first (already mapped above)
     # "observability-first": "CR-P74-RUNTIME-STAMP-POLICY",
+    # 2026-08-04: 新增 17 条 draft 规则 (P76/P77/P79 原则对应)
+    "6h-by-9-deck": "CR-P76-6-2-MONITORING-CADENCE",
+    "vit-via-llm-deferral": "CR-P76-6-5-LLM-DEFERRAL",
+    "principle-formalization-with-context": "CR-P77-2-1-PRINCIPLE-FORMALIZATION",
+    "catalog-ssot": "CR-P77-2-2-CATALOG-SSOT",
+    "prefix-pattern-allowed": "CR-P77-3-2-PREFIX-PATTERN",
+    "tier-test-for-fallback": "CR-P77-6-2-TIER-FALLBACK-TEST",
+    "gateway-status-documentation": "CR-P77-6-3-GATEWAY-STATUS-DOC",
+    "foundry-deck-per-governance-axis": "CR-P79-3-FOUNDRY-DECK",
+    "catalog-health-metric": "CR-P79-4-CATALOG-HEALTH-METRIC",
+    "llm-advisory-not-autonomous": "CR-P76-7-1-LLM-ADVISORY-ONLY",
+    "tier-graceful-fallback": "CR-P76-7-2-TIER-GRACEFUL-FALLBACK",
+    "evidence-honest-closure": "CR-P76-7-4-EVIDENCE-HONEST-CLOSURE",
+    "resolve-not-stub": "CR-P76-7-5-RESOLVE-NOT-STUB",
+    "submodule-pr-not-coupling": "CR-P76-8-1-SUBMODULE-PR-INDEPENDENT",
+    "dead-path-tool-fallback": "CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK",
+    "incremental-commit-anti-clean": "CR-P76-8-4-INCREMENTAL-COMMIT",
+    "heuristic-default": "CR-P76-9A-4-HEURISTIC-DEFAULT",
 }
 
 
