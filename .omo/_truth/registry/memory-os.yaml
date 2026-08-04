@@ -3,7 +3,7 @@
 # Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
-status: phase0
+status: phase1
 adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
@@ -17,7 +17,7 @@ control_plane:
   entry_bos_prefix: "bos://memory/mos/"
 
 bos_uris:
-  planned:
+  active:
     - uri: "bos://memory/mos/write"
       phase: 1
       role: unified_write
@@ -27,6 +27,7 @@ bos_uris:
     - uri: "bos://memory/mos/status"
       phase: 1
       role: health_and_backlog
+  planned:
     - uri: "bos://memory/mos/forget"
       phase: 2
       role: forget_propagation
@@ -38,6 +39,7 @@ bos_uris:
     to: "bos://memory/events/card_updated"
     compatibility: dual_subscribe_one_release
     phase: 1
+    status: dual_accept_live
   backend_keep:
     - "bos://memory/kos/*"
     - "bos://memory/gbrain/*"
@@ -142,7 +144,7 @@ policy:
 
 phases:
   0:
-    status: in_progress
+    status: done
     deliverables:
       - ADR-0372
       - docs/architecture/memory-os.md
@@ -150,12 +152,13 @@ phases:
       - docs/operations/memory-os-adapter-audit.md
       - .agents/skills/memory-recall/SKILL.md
   1:
-    status: planned
+    status: done
     deliverables:
-      - packages/mos MVP
-      - eidos MemoryEnvelope
-      - BOS registration
-      - event dual-subscribe migration
+      - packages/mos MVP (write/recall/status + dual-track + tests)
+      - MemoryEnvelope validation in mos.envelope
+      - BOS registration bos://memory/mos/*
+      - event dual-subscribe migration (memory + brain)
+
   2:
     status: planned
     deliverables:

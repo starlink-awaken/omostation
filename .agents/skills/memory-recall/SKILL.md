@@ -20,12 +20,13 @@ description: >
 
 ## 默认策略（按 Phase）
 
-### Phase 1+（MOS 已注册）
+### Phase 1+（当前默认）
 
 ```text
 召回:  bos://memory/mos/recall   { query, scope?, intent? }
-写入:  bos://memory/mos/write    { envelope }
+写入:  bos://memory/mos/write    { type, content|content_ref, confidence? }
 状态:  bos://memory/mos/status
+CLI:   uv run --directory projects/kairon --package mos python -m mos {write,recall,status}
 遗忘:  bos://memory/mos/forget   (Phase 2+)
 巩固:  bos://memory/mos/consolidate  (Phase 3+，异步)
 ```
@@ -33,22 +34,21 @@ description: >
 经 Agora：`resolve_bos_uri` / cockpit bos 代理。  
 **禁止** L3 代码硬 import kairon/gbrain 内核。
 
-### Phase 0 回退（当前，MOS 包未落地）
+### 回退（MOS/Agora 不可用时）
 
 按 **intent** 选后端（与 registry `intent_routes` 对齐）：
 
 | Intent | 主路径 | 备注 |
 |--------|--------|------|
 | `file_note` / 找文档 ADR | `bos://memory/kos/search` 或 mcp-server-kos | 机构知识 |
-| `general` | kos search **再** gbrain search（顺序扇出，自行合并） | 无 RRF 时保守合并 |
-| `preference_self` | `bos://memory/gbrain/*` facts/recall（若可用） | Mem0 默认 **勿假设可用** |
+| `general` | kos + gbrain（MOS 内 RRF；回退时顺序扇出） | |
+| `preference_self` | mos write semantic → theta facts | Mem0 仍默认 off |
 | `entity_relation` | gbrain graph / traverse | |
-| `card_ops` | cockpit `/api/knowledge/search` 或 kos | |
+| `card_ops` | cockpit `/api/knowledge/*`；事件 `memory/events/card_updated` | brain URI 仍 dual-accept |
 | `code_structure` | codebase-memory / GitNexus | **禁止**与笔记混搜 |
 | `task_debt` | omo / governance | **不是** memory |
 
-卡片写入仍用 cockpit knowledge PUT（事件管线 ADR-0294）。  
-对话偏好：**不要**把全文写入 `.omo`；P1 前可记录在会话/handoff，待 mos.write。
+卡片写入仍用 cockpit knowledge PUT（emit 已迁 memory 域，indexer dual-accept）。
 
 ## Intent 快速分类提示
 

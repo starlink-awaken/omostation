@@ -134,3 +134,12 @@ rg -n 'bos://memory/events/card_updated' projects/cockpit --glob '*.py' # expect
 1. **可以依赖**: gbrain dream/cycle、ADR-0294 卡片事件管线（迁域后）、KOS/gbrain 检索后端。  
 2. **不可依赖为生产闭环**: Mem0Adapter、MemTheta Theta 轨。  
 3. **Phase 0 完成标准**: 本文件 + registry 与 ADR-0372 一致；无代码谎言。
+
+## 10. Phase 1 更新（2026-08-04）
+
+| 项 | 状态 |
+|----|------|
+| MOS DualTrackWriter | **真 raw+theta**（InMemory 可测路径）；不经 MemTheta 模拟 |
+| Card emit | **memory** 域 canonical；indexer dual-accept |
+| Mem0 / MemTheta 旧壳 | 仍非生产；新写入走 `packages/mos` |
+| Live OMO/gbrain I/O | 仍 deferred（P2） |
