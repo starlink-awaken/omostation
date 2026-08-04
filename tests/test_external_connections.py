@@ -704,3 +704,33 @@ services:
     dep = router._admission_catalog.get("bos://capability/autosync-dep/invoke")
     assert dep is not None, "deprecated 能力应被自动注册"
     assert dep.lifecycle == "retired", "deprecated 能力应为 retired"
+
+
+def test_capability_provider_exposes_bos_directory():
+    """external.resources provider: BOS 能力目录暴露为聚合 descriptor。"""
+    from agora.external_resources.capability_provider import CapabilityProvider
+
+    p = CapabilityProvider()
+    d = p.external_descriptor()
+    assert d["kind"] == "tool_capability"
+    assert d["protocol"] == "bos"
+    assert len(d["capabilities"]) > 0
+    # capabilities 均可被 ExternalResourceDescriptor 接受
+    parsed = ExternalResourceDescriptor.from_mapping(d)
+    assert parsed.id == "bos://capabilities"
+    assert len(parsed.capabilities) == len(d["capabilities"])
+
+
+def test_capability_provider_lifecycle_reflects_status():
+    """provider lifecycle: 存在 deprecated/unimplemented 时降级为 admitted。"""
+    from agora.external_resources.capability_provider import CapabilityProvider
+
+    p = CapabilityProvider()
+    d = p.external_descriptor()
+    statuses = d["metadata"]["capability_statuses"]
+    if any(status != "active" for status in statuses):
+        assert d["lifecycle"] == "admitted", (
+            "含非 active 能力时 lifecycle 应降级为 admitted"
+        )
+    else:
+        assert d["lifecycle"] == "active"
