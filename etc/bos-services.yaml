@@ -1645,6 +1645,60 @@ services:
   status: active
   transport: mcp_stdio
   uri: bos://memory/gbrain/sync
+- action: write
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - --package
+  - mos
+  - python
+  - -m
+  - mos
+  - write
+  description: Memory OS unified write (dual-track raw+theta) — ADR-0372
+  domain: memory
+  package: mos
+  status: active
+  transport: stdio
+  uri: bos://memory/mos/write
+- action: recall
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - --package
+  - mos
+  - python
+  - -m
+  - mos
+  - recall
+  description: Memory OS unified intent-aware recall (kos+gbrain fan-out) — ADR-0372
+  domain: memory
+  package: mos
+  status: active
+  transport: stdio
+  uri: bos://memory/mos/recall
+- action: status
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/kairon
+  - --package
+  - mos
+  - python
+  - -m
+  - mos
+  - status
+  description: Memory OS control plane health and backlog — ADR-0372
+  domain: memory
+  package: mos
+  status: active
+  transport: stdio
+  uri: bos://memory/mos/status
 - action: status
   description: 获取分布式蜂群实时拓扑与负载状态
   domain: swarm
