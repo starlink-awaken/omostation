@@ -220,3 +220,6 @@ service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
 governance_feedback_last_run: '2026-08-03T17:57:26.783693+08:00'
+health_score_evidence: 100.0
+health_score_evidence_source: bin/gac/evidence-smoke.py
+health_score_evidence_generated_at: '2026-08-04T11:19:16.699218+00:00'
