@@ -68,10 +68,17 @@ bos_uris:
     - uri: "bos://memory/mos/forget"
       phase: 2
       role: forget_propagation
-  planned:
     - uri: "bos://memory/mos/consolidate"
       phase: 3
       role: sleep_time_orchestration
+    - uri: "bos://memory/mos/knowledge-ref"
+      phase: 4
+      role: adr0315_citation_metadata
+  entry_points:
+    cockpit_cli: "cockpit memory {status,recall,write,forget,consolidate,knowledge-ref}"
+    cockpit_http: "/api/memory/*"
+    cockpit_panel: "/memory"
+    agora_mcp: "BOS resolve/invoke bos://memory/mos/* (stdio; env loaded at MCP lifespan)"
   event_migration:
     from: "bos://brain/events/card_updated"
     to: "bos://memory/events/card_updated"

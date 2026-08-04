@@ -26,23 +26,19 @@ description: >
 召回:  bos://memory/mos/recall   { query, scope?, intent? }
 写入:  bos://memory/mos/write    { type, content|content_ref, confidence? }
 状态:  bos://memory/mos/status
-遗忘:  bos://memory/mos/forget   { memory_id, reason? }  # Phase 2
-CLI:   uv run --directory projects/kairon --package mos python -m mos {write,recall,forget,consolidate,knowledge-ref,status}
+遗忘:  bos://memory/mos/forget   { memory_id, reason? }
 巩固:  bos://memory/mos/consolidate  { dry_run?, phases? }
-引用:  python -m mos knowledge-ref "query" --intent general   # ADR-0315 元数据，无正文
-时序:  write --subject X --predicate Y --object Z --valid-from ... --valid-to ...
+引用:  bos://memory/mos/knowledge-ref  { query, intent? }
+CLI:   cockpit memory {status,recall,write,forget,consolidate,knowledge-ref}
+Agora MCP: resolve/invoke 上列 BOS URI（stdio + --with neo4j；MCP lifespan 注入 NEO4J_*/MOS_*）
+时序:  write --subject X --predicate Y --object Z --valid-from ...
 ACL:   recall 传 scope.principal_id / --principal-id
-Mem0:  MOS_MEM0=1 启用 shadow 双写（默认 off）
-Temporal: MOS_TEMPORAL=0 关闭（默认 on，内存 bi-temporal shadow）
-Neo4j: source bin/memory-os-env.sh 后 NEO4J_URI 生效；图库 bash bin/memory-os-neo4j-up.sh
-Foundry: bin/decks/memory-os-consolidate-deck.py（默认 dry-run）
-HTTP:  cockpit POST/GET /api/memory/* · 面板 /memory（dashboard 自动 load memory_env）
-ACL/RBAC: principal_id+agent_profile+scene_id + memory-rbac.yaml 角色表
-Graphiti: MOS_GRAPHITI=1 探测；生产图路径为 Neo4j Cypher（非完整 graphiti-core）
+Neo4j: source bin/memory-os-env.sh；图库 bash bin/memory-os-neo4j-up.sh
+HTTP:  cockpit POST/GET /api/memory/* · 面板 /memory
 运维契约: .omo/standards/memory-os-ops.md · make memory-os-check
 ```
 
-经 Agora：`resolve_bos_uri` / cockpit bos 代理。  
+经 Agora：`resolve_bos_uri` / BOS invoke / cockpit bos 代理。  
 **禁止** L3 代码硬 import kairon/gbrain 内核。
 
 ### 回退（MOS/Agora 不可用时）

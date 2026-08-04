@@ -26,15 +26,25 @@ related:
 | 环境模板 | `docs/operations/memory-os.env.example` |
 | 端口 | `protocols/port-registry.yaml` · 7474 / 7687 |
 
+## 三端入口（必须对齐）
+
+| 入口 | 调用 |
+|------|------|
+| Cockpit CLI | `cockpit memory status\|recall\|write\|forget\|consolidate\|knowledge-ref` |
+| Cockpit HTTP/UI | `/api/memory/*` · `/memory` |
+| BOS / Agora MCP | `bos://memory/mos/{write,recall,status,forget,consolidate,knowledge-ref}`（stdio → mos；MCP lifespan 加载 env） |
+
 ## 环境注入（必须）
 
-Agent / cockpit / cron 调用 mos 前：
+Agent / cockpit / agora / cron 调用 mos 前：
 
 ```bash
 source bin/memory-os-env.sh
 # 或
 eval "$(bin/memory-os-env.sh --export)"
 ```
+
+Agora MCP 启动时也会 best-effort `_load_memory_os_env()`（不覆盖已有非空 env）。
 
 加载优先级（**已设置的非空环境变量永不覆盖**）：
 
