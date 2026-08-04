@@ -201,6 +201,29 @@ compliance_slo:
   doc_ssot_conflicts: 0
   generated_digest_drift: 0
 agent_profiles:
+  external-readonly-agent:
+    purpose: External MCP host with read-only oversight (no requirement writes)
+    allowed_workflows:
+    - observer-audit
+    - handoff-resume
+    - mof-state-bridge-audit
+    can_write_lanes: []
+    closeout_required: []
+    notes: Prefer for Cursor/Codex sessions that only inspect health/BOS/audit.
+  external-contributor-agent:
+    purpose: External MCP host allowed to deliver docs/code under claim
+    allowed_workflows:
+    - project-doc-change
+    - project-code-change
+    - handoff-resume
+    - observer-audit
+    can_write_lanes:
+    - docs
+    - code
+    - config
+    closeout_required:
+    - verify
+    notes: Must start+claim before edits (ADR-0203). No direct .omo governance_state.
   docs-agent:
     purpose: Maintain Markdown and project docs without duplicating SSOT facts.
     allowed_workflows: [project-doc-change]

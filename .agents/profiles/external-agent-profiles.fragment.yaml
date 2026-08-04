@@ -1,0 +1,30 @@
+# Fragment: merge into .omo/_truth/registry/agent-workflows.yaml::agent_profiles
+# (P2.5) External agent least-privilege pack
+# Apply when path lock on agent-workflows.yaml is free; until then use
+# observer-agent / engineering-agent as fallbacks (see Attach Card).
+
+agent_profiles:
+  external-readonly-agent:
+    purpose: "External MCP host with read-only oversight (no requirement writes)"
+    allowed_workflows:
+      - observer-audit
+      - handoff-resume
+      - mof-state-bridge-audit
+    can_write_lanes: []
+    closeout_required: []
+    notes: "Prefer for Cursor/Codex sessions that only inspect health/BOS/audit."
+
+  external-contributor-agent:
+    purpose: "External MCP host allowed to deliver docs/code under claim"
+    allowed_workflows:
+      - project-doc-change
+      - project-code-change
+      - handoff-resume
+      - observer-audit
+    can_write_lanes:
+      - docs
+      - code
+      - config
+    closeout_required:
+      - verify
+    notes: "Must start+claim before edits (ADR-0203). No direct .omo governance_state."
