@@ -339,6 +339,11 @@ def main() -> int:
     debt_score_p.add_argument("--stage", default="stable_growth", help="项目阶段")
     debt_score_p.add_argument("--list-stages", action="store_true", help="列出可用阶段")
     debt_score_p.set_defaults(func=_debt_mod.cmd_debt_score)
+    # list/summary 委派 omo debt (修复 US-C2: invalid choice: 'list' 被 argparse 拦)
+    debt_list_p = debt_sub.add_parser("list", help="列债务项 (委派 omo debt)")
+    debt_list_p.add_argument("omo_debt_args", nargs=argparse.REMAINDER, help="传给 omo debt 的参数")
+    debt_summary_p = debt_sub.add_parser("summary", help="债务摘要 (委派 omo debt)")
+    debt_summary_p.add_argument("omo_debt_args", nargs=argparse.REMAINDER, help="传给 omo debt 的参数")
     runtime_p = sub.add_parser(
         "runtime",
         help="runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)",
@@ -1035,7 +1040,9 @@ def main() -> int:
 
             return cmd_debt_score(a)
         # 其他子命令 (list/summary/predict 等) 委派给 omo debt
+        # 子命令名作为 omo debt 首参 (cockpit debt list → omo debt list)
         from cockpit.commands.omo import cmd_omo_debt
+        a.omo_debt_args = [sub] + list(getattr(a, "omo_debt_args", []))
 
         return cmd_omo_debt(a)
 
