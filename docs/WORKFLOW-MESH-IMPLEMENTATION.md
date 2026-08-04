@@ -1119,6 +1119,18 @@ Phase 68 将已经完成人工复核的 `engineering-delivery-review-queue/v1` �
 
 Phase 68 只打通“真实工程元数据进入标注队列”的可复现入口，不生成金标准、不创建 manifest、不训练模型、不改变 Workflow Mesh 或 OMO 策略。
 
+### 7.3.36 Phase 69 KEMS 持久化健康与恢复闭环
+
+Phase 69 在 Kairon/KOS 增加统一的 `kems.health` 运行态能力，面向已有 SQLite 存储执行只读 `integrity_check`、`foreign_key_check`、表存在性、行数和文件权限检查。它只生成运营元数据，不打开业务正文；数据库缺失、损坏、外键不一致或权限不私有时返回 `degraded`，不把异常状态伪装成“无数据”。
+
+新增 `kems_health_check.py` 作为机器可消费入口，新增 `kems_backup.py` 作为备份和恢复入口。二者都 fail-closed：备份源必须健康，目标默认不可覆盖，写入采用临时文件和原子替换，恢复后再次检查完整性。备份不是评测证据，也不改变 WorkflowRun、OMO 任务或 provider 路由。
+
+运行链路为：
+
+`SQLite stores -> read-only health projection -> verified backup/restore -> manifest/shadow preflight`
+
+该能力把持久化故障从“静默丢失或人工猜测”变为可观测的运行态事实，但不扩大模型或 OMO 权限边界。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。

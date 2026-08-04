@@ -428,6 +428,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0359: Engineering Delivery Cockpit 人工复核工作台边界 — **ACCEPTED** | 2026-08-03 | Workflow Mesh Phase 66 | 0359-engineering-delivery-cockpit-review-workbench.md
 - ADR-0360: Engineering Delivery Cockpit UI 收件箱与人工复核边界 — **ACCEPTED** | 2026-08-04 | Workflow Mesh Phase 67 | 0360-engineering-delivery-cockpit-ui.md
 - ADR-0361: Engineering Delivery 真实复核元数据进入 KEMS 双人标注队列 — **ACCEPTED** | 2026-08-04 | Workflow Mesh Phase 68 | 0361-engineering-delivery-real-sample-queue.md
+- ADR-0362: KEMS runtime health and verified SQLite recovery — **ACCEPTED** | 2026-08-04 | Kairon/KOS Phase 69 | 0362-kems-runtime-health-and-recovery.md
 
 ---
 
