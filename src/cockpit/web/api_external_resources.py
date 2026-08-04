@@ -73,12 +73,14 @@ try:
     collect_external_resources = _catalog_module.collect_external_resources
     build_external_resource_directory_snapshot = _catalog_module.build_external_resource_directory_snapshot
     build_external_resource_connection_plan = _catalog_module.build_external_resource_connection_plan
+    build_external_resource_refresh_plan = _catalog_module.build_external_resource_refresh_plan
     observe_external_resources = _catalog_module.observe_external_resources
     evaluate_external_resources = _catalog_module.evaluate_external_resources
 except Exception as exc:  # Discovery is allowed to degrade independently.
     collect_external_resources = None  # type: ignore[assignment]
     build_external_resource_directory_snapshot = None  # type: ignore[assignment]
     build_external_resource_connection_plan = None  # type: ignore[assignment]
+    build_external_resource_refresh_plan = None  # type: ignore[assignment]
     observe_external_resources = None  # type: ignore[assignment]
     evaluate_external_resources = None  # type: ignore[assignment]
     _CATALOG_IMPORT_ERROR: Exception | None = exc
@@ -551,6 +553,53 @@ async def get_external_resource_refresh_status() -> dict[str, Any]:
         )
         return {"ok": False, "projection": projection, "external_side_effects": "disabled"}
     return {"ok": True, "projection": projection, "external_side_effects": "disabled"}
+
+
+@router.get("/refresh-plan")
+async def get_external_resource_refresh_plan() -> dict[str, Any]:
+    """Expose the next safe observation cadence without scheduling work."""
+    boundary = {
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "worker_launch": False,
+        "external_side_effects": "disabled",
+    }
+    if build_external_resource_refresh_plan is None:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "source": "cockpit.external_resource_refresh_plan",
+            "error": "external_resource_refresh_plan_unavailable",
+            **boundary,
+        }
+    try:
+        catalog, source = _resolve_catalog_projection()
+        projection = build_external_resource_refresh_plan(catalog)
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "source": "cockpit.external_resource_refresh_plan",
+            "error": type(exc).__name__,
+            "message": "检查 OMO 外部资源观察或 Agora 只读发现后重试。",
+            **boundary,
+        }
+    summary = projection.get("summary") or {}
+    status = (
+        "empty"
+        if not summary.get("resource_count")
+        else "attention"
+        if summary.get("due_count")
+        else "ready"
+    )
+    return {
+        "ok": True,
+        "status": status,
+        "source": source,
+        "projection": projection,
+        **boundary,
+    }
 
 
 @router.post("/refresh")

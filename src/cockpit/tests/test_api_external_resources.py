@@ -221,6 +221,54 @@ def test_external_resource_refresh_rejects_unknown_fields_without_observing(monk
     assert called is False
 
 
+def test_external_resource_refresh_plan_reads_latest_catalog_without_scheduling(monkeypatch, tmp_path):
+    catalog = _projection()
+    plan = {
+        "schema": "external-resource-refresh-plan/v1",
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "worker_launch": False,
+        "summary": {
+            "resource_count": 1,
+            "due_count": 1,
+            "scheduled_count": 0,
+        },
+    }
+    calls: list[dict] = []
+
+    monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_external_resources,
+        "read_latest_external_resource_observation",
+        lambda _path: {"schema": "external-resource-observation/v1", "catalog": catalog},
+    )
+    monkeypatch.setattr(
+        api_external_resources,
+        "collect_external_resources",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("must use observation")),
+    )
+
+    def fake_plan(value):
+        calls.append(value)
+        return plan
+
+    monkeypatch.setattr(api_external_resources, "build_external_resource_refresh_plan", fake_plan)
+
+    response = TestClient(_app()).get("/api/external-resources/refresh-plan")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert body["status"] == "attention"
+    assert body["source"] == "omo.external_resource_observation"
+    assert body["projection"] == plan
+    assert body["external_side_effects"] == "disabled"
+    assert body["workflow_run_creation"] is False
+    assert calls == [catalog]
+
+
 def test_external_resource_refresh_status_exposes_stale_recovery_state(monkeypatch, tmp_path):
     monkeypatch.setattr(api_external_resources, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(
