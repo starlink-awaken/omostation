@@ -2630,27 +2630,28 @@ gac:
       dimension: X1
       layer: meta
       name: 原则执行化
-      description: governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行.
+      description: "governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行. 实现: bin/gac/check-principle-enforcement.py (gac-gate CI advisory)"
       check_type: audit_chain
       executor:
         - omo_audit
-      lifecycle: draft
-      version: 0.1.0
+        - ci_gate
+      lifecycle: active
+      version: 1.0.0
       created_at: 2026-07-08
+      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-RUFF-SCOPE-STABLE
       dimension: X4
       layer: X
       name: Ruff Scope 稳定
-      description: "防止 X-Plane 项目改变 ruff scope 导致 lint 面漂移. 实现: bin/gac/check-ruff-scope-stable.py (gac-gate CI)"
+      description: 防止 X-Plane 项目改变 ruff scope 导致 lint 面漂移.
       check_type: schema_integrity
       executor:
         - ci_gate
-      lifecycle: active
-      version: 1.0.0
+      lifecycle: draft
+      version: 0.1.0
       created_at: 2026-07-08
-      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-WORKTREE-CLEAN-BEFORE-PR
