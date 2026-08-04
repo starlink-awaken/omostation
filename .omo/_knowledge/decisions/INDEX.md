@@ -432,6 +432,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0363: External Resource Refresh Plan and Controlled Reachability — **ACCEPTED** | 2026-08-04 | Workflow Mesh Phase 70 | 0363-external-resource-refresh-plan.md
 - ADR-0364: KEMS repeated shadow evaluation and human promotion gate — **ACCEPTED** | 2026-08-04 | KEMS Phase 71 | 0364-kems-repeated-shadow-promotion-gate.md
 - ADR-0365: Scenario-first architecture strategy and Workflow Mesh execution spine — **ACCEPTED** | 2026-08-04 | Phase 72 architecture closeout | 0365-architecture-strategy-closeout.md
+- ADR-0366: Pyright 与 Ruff 扫描修复算法固化 — **ACCEPTED** | 2026-08-04 | Python quality sweep | 0366-pyright-sweep-algorithm.md
 
 ---
 

@@ -53,6 +53,11 @@ case "$cmd" in
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
+    claim_in_progress="$WS_PARENT/.ws-$session.claiming"
+    cleanup_claim_marker() {
+      rm -f "$claim_in_progress"
+    }
+    trap cleanup_claim_marker EXIT INT TERM
     # ── G-CONV.7 / ADR-0220 D2: branch occupancy lock ─────────────────
     # Register before creating worktree so concurrent claim of same slug fails closed.
     if [ -f "$WS_ROOT/bin/gac/swarm-discipline-cli.py" ]; then
@@ -74,6 +79,7 @@ case "$cmd" in
     if [ -d "$wt" ]; then
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
+      : > "$claim_in_progress"
       git fetch "$ROOT_REMOTE" main 2>&1 | sed '/FETCH_HEAD/d' >&2
       git worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
@@ -114,6 +120,8 @@ case "$cmd" in
       echo "     # 更新指针:    gac-worktree.sh bump-pointer $session projects/<sub_name>"
       echo "     gac-worktree.sh submit $session"
     fi
+    cleanup_claim_marker
+    trap - EXIT INT TERM
     ;;
 
   submit)

@@ -42,6 +42,14 @@ skipped=0
 for wt_path in "$WS_PARENT"/ws-*/; do
   [ -d "$wt_path" ] || continue
   wt_name=$(basename "$wt_path")
+  session=${wt_name#ws-}
+  claim_in_progress="$WS_PARENT/.ws-$session.claiming"
+
+  if [ -f "$claim_in_progress" ]; then
+    echo "⏭️  $wt_name: claim 初始化进行中, 跳过"
+    skipped=$((skipped + 1))
+    continue
+  fi
 
   # open PR 检查: 有 PR = 活跃, 跳过 (防误清正在用的 worktree)
   branch=$(git -C "$wt_path" branch --show-current 2>/dev/null)
