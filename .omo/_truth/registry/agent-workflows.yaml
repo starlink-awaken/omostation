@@ -208,12 +208,12 @@ agent_profiles:
     closeout_required: [doc-ssot-lint, ssot-guardian, gac-local-gate]
   engineering-agent:
     purpose: Implement project-local code changes with project tests and workspace gates.
-    allowed_workflows: [project-code-change]
+    allowed_workflows: [project-code-change, pyright-sweep]
     can_write_lanes: [code, config]
     closeout_required: [project-tests, gac-local-gate]
   qa-agent:
     purpose: Verify code behavior and report failures without owning broad implementation changes.
-    allowed_workflows: [project-code-change]
+    allowed_workflows: [project-code-change, pyright-sweep]
     can_write_lanes: [code]
     closeout_required: [project-tests]
   governance-agent:
@@ -221,6 +221,7 @@ agent_profiles:
     allowed_workflows:
       - project-doc-change
       - project-code-change
+      - pyright-sweep
       - governance-state-mutation
       - c2g-spec-ingress
       - mof-model-change
@@ -534,6 +535,16 @@ diff_checks:
       - docs/scene-card-candidate-seeds.yaml
       - docs/scene-cards/**
     command: [uv, run, --with, pyyaml, python, bin/ssot/current-state-coherence.py, --json]
+  - id: pyright-sweep-check
+    description: P91 pyright and ruff sweep tooling plus Python project type surfaces.
+    required: false
+    paths:
+      - bin/sweep/**
+      - projects/*/src/**/*.py
+      - projects/*/tests/**/*.py
+      - projects/*/pyproject.toml
+      - projects/*/pyrightconfig.json
+    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
   - id: agent-workflow-lint
     description: Workflow runner and registry contract validation.
     required: true
@@ -928,6 +939,60 @@ workflows:
         - id: project-tests
           mode: manual
           cwd: projects/{project}
+          command: [project-local, test-command]
+        - id: gac-local-gate
+          mode: required
+          command: [make, gac-local-gate]
+      closeout:
+        - id: diff-stat
+          mode: required
+          command: [git, diff, --stat]
+
+  - id: pyright-sweep
+    run_frequency: on_demand
+    title: Python type and style sweep
+    purpose: Route cross-package pyright and ruff debt cleanup through a bounded, test-backed convergence loop.
+    agents:
+      roles: [engineering-agent, qa-agent, governance-agent]
+      observer_policy: use_for_high_blast_radius_or_unattended_runs
+    allowed_lanes: [code, governance_code, config, docs]
+    lock_scopes: [python-type-sweep, root-gate]
+    surfaces:
+      read:
+        - projects/*/src/**/*.py
+        - projects/*/tests/**/*.py
+        - projects/*/pyproject.toml
+        - projects/*/pyrightconfig.json
+        - bin/sweep/**
+      write:
+        - projects/*/src/**/*.py
+        - projects/*/tests/**/*.py
+        - projects/*/pyproject.toml
+        - projects/*/pyrightconfig.json
+        - bin/sweep/**
+        - .omo/_knowledge/decisions/**
+        - .omo/_knowledge/patterns/**
+    phases:
+      preflight:
+        - id: root-status
+          mode: required
+          command: [git, status, --short]
+        - id: workflow-lint
+          mode: required
+          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
+      execute:
+        - id: sweep
+          mode: manual
+          command: [agent, edit, python-type-and-style-debt]
+      verification:
+        - id: project-pyright
+          mode: manual
+          command: [project-local, pyright-command]
+        - id: project-ruff
+          mode: manual
+          command: [project-local, ruff-command]
+        - id: project-tests
+          mode: manual
           command: [project-local, test-command]
         - id: gac-local-gate
           mode: required
