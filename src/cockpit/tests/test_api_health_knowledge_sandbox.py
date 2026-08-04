@@ -267,12 +267,18 @@ class TestKnowledgeIndexer:
             await ki._register_subscription()
 
         assert ki._subscription_id == "sub-abc-123"
-        mock_client.post.assert_called_once()
-        call_args, call_kwargs = mock_client.post.call_args
-        assert call_args[0] == "http://127.0.0.1:7422/v1/tools/call"
-        assert call_kwargs["json"]["tool"] == "subscribe_event"
-        assert call_kwargs["json"]["arguments"]["pattern"] == "bos://brain/events/card_updated"
-        assert "callback" in call_kwargs["json"]["arguments"]["callback_url"]
+        # Dual-subscribe: memory (canonical) + brain (legacy) — ADR-0372
+        assert mock_client.post.call_count >= 2
+        patterns = []
+        for call in mock_client.post.call_args_list:
+            call_args, call_kwargs = call
+            assert call_args[0] == "http://127.0.0.1:7422/v1/tools/call"
+            body = call_kwargs["json"]
+            assert body["tool"] == "subscribe_event"
+            patterns.append(body["arguments"]["pattern"])
+            assert "callback" in body["arguments"]["callback_url"]
+        assert "bos://memory/events/card_updated" in patterns
+        assert "bos://brain/events/card_updated" in patterns
 
     @pytest.mark.asyncio
     async def test_register_subscription_graceful_when_agora_offline(self):
