@@ -29,6 +29,7 @@
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | P74 workflow solidification (ADR-0130) | [`.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) |
 | 知识网关 L3-I0 解耦 + 事件索引管道 (ADR-0294) | [`.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md) |
+| Memory OS 控制面 (ADR-0372) | [`.omo/_knowledge/decisions/0372-memory-os-control-plane.md`](.omo/_knowledge/decisions/0372-memory-os-control-plane.md) · [architecture](docs/architecture/memory-os.md) · [registry](.omo/_truth/registry/memory-os.yaml) |
 | 外部连接织层 | [`.omo/_truth/registry/external-connection-fabric.yaml`](.omo/_truth/registry/external-connection-fabric.yaml) · [standard](.omo/standards/external-connection-fabric.md) |
 | 外部连接织层运行时边界 (ADR-0298) | [`.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md`](.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md) |
 | Workflow Mesh worker 租约与接管 (ADR-0299) | [`.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md`](.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md) |
@@ -70,6 +71,7 @@ not advance WorkflowRun state without the corresponding OMO event.
 | Governance automation | `omo` CLI/MCP broker | Governed state mutations are audited |
 | Web/API consumers | cockpit-mounted HTTP surfaces | Public web entry remains converged at L3 |
 | Knowledge write (card PUT) | `cockpit /api/knowledge/put` → EventBus → `KnowledgeIndexer` | L3 网络优先解析 + 写后事件广播 (ADR-0294) |
+| Memory recall / write (agent default) | `bos://memory/mos/*` (Phase 1+) · skill `memory-recall` | Memory OS 控制面 (ADR-0372)；P0 见 skill 回退路由 |
 
 Do not introduce a new top-level human or agent entry without updating the relevant registry, boundary documentation, and governance checks.
 
@@ -77,7 +79,7 @@ Do not introduce a new top-level human or agent entry without updating the relev
 
 | Domain | URI Prefix | Role |
 |--------|------------|------|
-| Memory | `bos://memory/` | Knowledge, facts, search, storage |
+| Memory | `bos://memory/` | Knowledge, facts, search, storage; control plane `bos://memory/mos/*` (ADR-0372) |
 | Governance | `bos://governance/` | OMO, policy, task/debt/audit flows |
 | Analysis | `bos://analysis/` | Research, ontology derivation, code analysis |
 | Persona | `bos://persona/` | Persona and personal knowledge bridges |

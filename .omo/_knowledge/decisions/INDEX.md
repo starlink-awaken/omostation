@@ -438,6 +438,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0369: (保留) — **RESERVED** | 2026-08-04 | — | 0369-reserved.md
 - ADR-0370: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern — **ACCEPTED** | 2026-08-04 | Workflow Mesh Phase 73 | 0370-agt-ecos-integration.md
 - ADR-0371: PASW — Per-Agent Submodule Worktree 隔离 — **ACCEPTED** | 2026-08-04 | Swarm discipline (ADR-0220) | 0371-pasw-submodule-isolation.md
+- ADR-0372: Memory OS 控制面 — 统一记忆写读巩固与适配器边界 — **ACCEPTED** | 2026-08-04 | Memory OS Phase 0 | 0372-memory-os-control-plane.md
 
 ---
 
