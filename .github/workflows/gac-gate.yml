@@ -48,6 +48,22 @@ jobs:
         # 本地工具应有 --no-llm 或 heuristic fallback, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-heuristic-default.py
+      - name: CR-P76-7-2-TIER-GRACEFUL-FALLBACK — LLM 3-tier fallback 检查 (advisory)
+        # LLM provider 3-tier — aetherforge → ollama → heuristic, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-llm-tier-fallback.py
+      - name: CR-P76-7-5-RESOLVE-NOT-STUB — 物理实现不占位检查 (advisory)
+        # 物理未实现的 placeholder 必须决议, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-resolve-not-stub.py
+      - name: CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK — 工具双路 fallback 检查 (advisory)
+        # 工具检查应该 first-level + projects/*/first-level 双路 fallback, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-dead-path-tool-fallback.py
+      - name: CR-P76-8-4-INCREMENTAL-COMMIT — 增量提交检查 (advisory)
+        # 每 sub-task 完成立即 commit, 防 X-Plane clean worktree 丢失工作, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-incremental-commit.py
       - name: PASW — 自动同步子模块指针
         # 如果 PR 分支指针不可达, 自动 fetch 或更新到最新 origin/main
         # --verbose: 显示完整错误信息到 CI log, 便于诊断

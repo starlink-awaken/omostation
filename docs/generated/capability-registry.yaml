@@ -1,15 +1,15 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-04T11:13:40Z
+# 生成时间: 2026-08-04T22:43:11Z
 
 version: 1.0.0
-generated_at: '2026-08-04T11:13:40Z'
+generated_at: '2026-08-04T22:43:11Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 28
   mcp_tools: 581
-  bos_services: 196
+  bos_services: 201
   bos_domains: 16
   cli_commands: 111
 mcp_servers:
@@ -832,7 +832,7 @@ bos_services:
     forge: 1
     governance: 34
     l4-kernel: 1
-    memory: 41
+    memory: 46
     meta: 1
     omo: 4
     persona: 10
@@ -1469,6 +1469,26 @@ bos_services:
     - uri: bos://memory/gbrain/sync
       description: gbrain 知识库增量同步
       transport: mcp_stdio
+      status: active
+    - uri: bos://memory/mos/write
+      description: Memory OS unified write (dual-track raw+theta) — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/recall
+      description: Memory OS unified intent-aware recall (kos+gbrain fan-out) — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/status
+      description: Memory OS control plane health and backlog — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/forget
+      description: Memory OS forget propagation (raw+theta+mem0 shadow) — ADR-0372 Phase 2
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/consolidate
+      description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372 Phase 3
+      transport: stdio
       status: active
     - uri: bos://memory/kos/query
       description: KOS 知识查询
