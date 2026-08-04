@@ -555,18 +555,31 @@ def _dispatch_iris_via_executor(
     if not executor.exists():
         raise WorkflowDispatchError(f"mesh-iris-executor not found: {executor}")
 
+    admission = packet.get("admission") or {}
+    run_id = packet.get("workflow_run_id") or admission.get("workflow_run_id")
+    admission_id = admission.get("admission_id")
     results: list[dict[str, Any]] = []
     for cap in iris_caps:
         connector = cap[len("iris:") :]
+        argv = [
+            "python3",
+            str(executor),
+            "--connector",
+            connector,
+            "--omo-dir",
+            str(omo_dir),
+        ]
+        # P0 第二块: 复用 packet (mesh 状态机一致性, 避免 packet run + executor 自 seed run)
+        if run_id and admission_id:
+            argv += [
+                "--skip-seed",
+                "--run-id",
+                str(run_id),
+                "--admission-id",
+                str(admission_id),
+            ]
         proc = subprocess.run(
-            [
-                "python3",
-                str(executor),
-                "--connector",
-                connector,
-                "--omo-dir",
-                str(omo_dir),
-            ],
+            argv,
             cwd=root,
             capture_output=True,
             text=True,
