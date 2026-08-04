@@ -437,6 +437,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0368: Runtime Registry 测试契约与 TaskFallback 响应对齐 — **ACCEPTED** | 2026-08-04 | Python quality sweep | 0368-runtime-taskfallback-test-contract.md
 - ADR-0369: (保留) — **RESERVED** | 2026-08-04 | — | 0369-reserved.md
 - ADR-0370: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern — **ACCEPTED** | 2026-08-04 | Workflow Mesh Phase 73 | 0370-agt-ecos-integration.md
+- ADR-0371: PASW — Per-Agent Submodule Worktree 隔离 — **ACCEPTED** | 2026-08-04 | Swarm discipline (ADR-0220) | 0371-pasw-submodule-isolation.md
 
 ---
 
