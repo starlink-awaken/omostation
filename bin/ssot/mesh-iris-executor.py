@@ -4,6 +4,11 @@
 固化 P0 第一块验证的 mesh 状态机要求 + iris connector sync 自动化.
 流程: seed workflow run 链 → iris connector list_items (跨项目) → WorkflowSucceeded → EvidenceRecorded.
 
+P0 第二块 (packet 复用, 方案 B):
+  --skip-seed 复用 dispatch_admitted_workflow 的 packet (已 admit),
+  跳过 Requested/Admitted, 只发 Dispatched/Started (mesh 状态机一致性,
+  避免 packet run + executor 自 seed run 两个 run).
+
 mesh 状态机要求 (fabric 红线, 深挖发现):
   1. admission grant 完整 schema (10 字段) + proof = SHA-256(canonical(admission 减 proof))
   2. StepDispatched payload 含 admission_id (跟 admission 匹配)
@@ -13,6 +18,9 @@ mesh 状态机要求 (fabric 红线, 深挖发现):
 用法:
   python3 bin/ssot/mesh-iris-executor.py --connector apple_mail --omo-dir .omo
   python3 bin/ssot/mesh-iris-executor.py --connector apple_mail --dry-run  # 测试 omo_dir
+  # P0 第二块 (packet 复用):
+  python3 bin/ssot/mesh-iris-executor.py --connector apple_mail --omo-dir .omo \
+      --skip-seed --run-id <packet.workflow_run_id> --admission-id <packet.admission_id>
 """
 
 from __future__ import annotations
@@ -50,39 +58,56 @@ def _load_mesh():
     )
 
 
-def seed_workflow_run(store, new_event, canonical, run_id, capability):
-    """seed mesh 状态机链: Requested→Admitted→Dispatched→Started (running 状态)."""
+def seed_workflow_run(
+    store,
+    new_event,
+    canonical,
+    run_id,
+    capability,
+    *,
+    skip_seed=False,
+    admission_id=None,
+):
+    """seed mesh 状态机链到 running 状态.
+
+    默认 (skip_seed=False): 自 seed Requested→Admitted→Dispatched→Started.
+    skip_seed=True: 复用 packet (已 admit), 跳过 Requested/Admitted,
+                    只发 Dispatched→Started (需 admission_id 来自 packet).
+    """
     step_run_id = f"{run_id}:execute"
-    admission_id = f"{run_id}:admission"
     now = datetime.now(timezone.utc)
-    store.append(
-        new_event(
-            "WorkflowRequested",
-            run_id,
-            producer="mesh-iris-executor",
-            payload={"capability_refs": [capability], "scene_id": "document-review"},
+    if not skip_seed:
+        admission_id = f"{run_id}:admission"
+        store.append(
+            new_event(
+                "WorkflowRequested",
+                run_id,
+                producer="mesh-iris-executor",
+                payload={"capability_refs": [capability], "scene_id": "document-review"},
+            )
         )
-    )
-    admission = {
-        "admission_id": admission_id,
-        "workflow_run_id": run_id,
-        "trace_id": run_id,
-        "status": "admitted",
-        "capabilities": [capability],
-        "step_run_ids": [step_run_id],
-        "issued_at": now.isoformat(),
-        "expires_at": (now + timedelta(hours=1)).isoformat(),
-        "policy_digest": "external-connection-fabric/v1",
-    }
-    admission["proof"] = hashlib.sha256(canonical(admission)).hexdigest()
-    store.append(
-        new_event(
-            "WorkflowAdmitted",
-            run_id,
-            producer="mesh-iris-executor",
-            payload={"admission": admission},
+        admission = {
+            "admission_id": admission_id,
+            "workflow_run_id": run_id,
+            "trace_id": run_id,
+            "status": "admitted",
+            "capabilities": [capability],
+            "step_run_ids": [step_run_id],
+            "issued_at": now.isoformat(),
+            "expires_at": (now + timedelta(hours=1)).isoformat(),
+            "policy_digest": "external-connection-fabric/v1",
+        }
+        admission["proof"] = hashlib.sha256(canonical(admission)).hexdigest()
+        store.append(
+            new_event(
+                "WorkflowAdmitted",
+                run_id,
+                producer="mesh-iris-executor",
+                payload={"admission": admission},
+            )
         )
-    )
+    elif not admission_id:
+        raise ValueError("skip_seed=True 需要 admission_id (packet 的 admission)")
     store.append(
         new_event(
             "StepDispatched",
@@ -191,6 +216,19 @@ def main() -> int:
     parser.add_argument(
         "--dry-run", action="store_true", help="用临时 omo_dir, 不污染生产"
     )
+    parser.add_argument(
+        "--run-id",
+        help="复用 packet 的 workflow_run_id (配合 --skip-seed, 不自 seed 新 run)",
+    )
+    parser.add_argument(
+        "--admission-id",
+        help="复用 packet 的 admission_id (配合 --skip-seed)",
+    )
+    parser.add_argument(
+        "--skip-seed",
+        action="store_true",
+        help="跳过 Requested/Admitted, 复用 packet (需 --run-id + --admission-id)",
+    )
     args = parser.parse_args()
 
     WorkflowMeshStore, new_event, canonical, record_receipt = _load_mesh()
@@ -202,15 +240,25 @@ def main() -> int:
         omo_dir = Path(args.omo_dir).resolve()
 
     store = WorkflowMeshStore(omo_dir)
-    run_id = (
+    run_id = args.run_id or (
         f"iris-{args.connector}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     )
 
     print(f"🚀 mesh-iris-executor: connector={args.connector} run_id={run_id}")
     step_run_id, admission_id = seed_workflow_run(
-        store, new_event, canonical, run_id, f"iris:{args.connector}"
+        store,
+        new_event,
+        canonical,
+        run_id,
+        f"iris:{args.connector}",
+        skip_seed=args.skip_seed,
+        admission_id=args.admission_id,
     )
-    print("✅ seed 链 (Requested→Admitted→Dispatched→Started)")
+    print(
+        "✅ 复用 packet (跳过 Requested/Admitted, 只发 Dispatched/Started)"
+        if args.skip_seed
+        else "✅ seed 链 (Requested→Admitted→Dispatched→Started)"
+    )
 
     items = execute_iris_connector(args.connector, args.limit)
     print(f"✅ iris {args.connector} 执行: {len(items)} items")
