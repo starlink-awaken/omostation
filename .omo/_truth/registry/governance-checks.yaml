@@ -2769,12 +2769,13 @@ gac:
       dimension: X1
       layer: meta
       name: LLM 3-tier fallback
-      description: "LLM provider 3-tier — aetherforge → ollama → heuristic. 对应 P76-7-2 (tier-graceful-fallback)"
+      description: "LLM provider 3-tier — aetherforge → ollama → heuristic. 实现: bin/gac/check-llm-tier-fallback.py (gac-gate CI, advisory)"
       check_type: schema_integrity
-      executor: [omo_audit]
-      lifecycle: draft
-      version: 0.1.0
+      executor: [ci_gate]
+      lifecycle: active
+      version: 1.0.0
       created_at: 2026-07-08
+      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
@@ -2793,12 +2794,13 @@ gac:
       dimension: X2
       layer: meta
       name: 物理实现不占位
-      description: "物理未实现的 placeholder, 必须决议. 对应 P76-7-5 (resolve-not-stub)"
+      description: "物理未实现的 placeholder, 必须决议. 实现: bin/gac/check-resolve-not-stub.py (gac-gate CI, advisory)"
       check_type: audit_chain
-      executor: [omo_audit]
-      lifecycle: draft
-      version: 0.1.0
+      executor: [ci_gate]
+      lifecycle: active
+      version: 1.0.0
       created_at: 2026-07-08
+      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
@@ -2818,24 +2820,26 @@ gac:
       dimension: X4
       layer: meta
       name: 工具双路 fallback
-      description: "工具检查应该 first-level + projects/*/first-level 双路 fallback. 对应 P76-8-3 (dead-path-tool-fallback)"
+      description: "工具检查应该 first-level + projects/*/first-level 双路 fallback. 实现: bin/gac/check-dead-path-tool-fallback.py (gac-gate CI, advisory)"
       check_type: consistency_drift
-      executor: [omo_audit]
-      lifecycle: draft
-      version: 0.1.0
+      executor: [ci_gate]
+      lifecycle: active
+      version: 1.0.0
       created_at: 2026-07-08
+      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-P76-8-4-INCREMENTAL-COMMIT
       dimension: X4
       layer: meta
       name: 增量提交防丢失
-      description: "每 sub-task 完成立即 commit, 防 X-Plane clean worktree 丢失工作. 对应 P76-8-4 (incremental-commit-anti-clean)"
+      description: "每 sub-task 完成立即 commit, 防 X-Plane clean worktree 丢失工作. 实现: bin/gac/check-incremental-commit.py (gac-gate CI, advisory)"
       check_type: hygiene_case
-      executor: [hook_pre_edit]
-      lifecycle: draft
-      version: 0.1.0
+      executor: [hook_pre_edit, ci_gate]
+      lifecycle: active
+      version: 1.0.0
       created_at: 2026-07-08
+      activated_at: 2026-08-04
       source_type: native
 
     - id: CR-P76-9A-4-HEURISTIC-DEFAULT
