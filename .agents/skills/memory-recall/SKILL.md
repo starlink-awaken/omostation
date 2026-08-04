@@ -35,6 +35,9 @@ ACL:   recall 传 scope.principal_id / --principal-id
 Mem0:  MOS_MEM0=1 启用 shadow 双写（默认 off）
 Temporal: MOS_TEMPORAL=0 关闭（默认 on，内存 bi-temporal，无 Neo4j）
 Foundry: bin/decks/memory-os-consolidate-deck.py（默认 dry-run）
+HTTP:  cockpit POST/GET /api/memory/*（L3 网关 → mos CLI）
+ACL:   principal_id + agent_profile + scene_id
+Graphiti: MOS_GRAPHITI=1 探测；默认仍内存 temporal shadow
 ```
 
 经 Agora：`resolve_bos_uri` / cockpit bos 代理。  
