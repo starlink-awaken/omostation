@@ -209,6 +209,95 @@ def test_connection_plan_rejects_directory_and_connection_plan_combination() -> 
     assert MODULE.main(["--directory", "--connection-plan"]) == 2
 
 
+def test_builds_read_only_refresh_plan_with_recovery_priority() -> None:
+    catalog = {
+        "schema": "external-resource-catalog/v1",
+        "catalog_digest": "sha256:catalog-refresh-test",
+        "observed_at": "2026-08-02T00:00:00+00:00",
+        "resources": [
+            {
+                "id": "source:scheduled",
+                "kind": "knowledge_source",
+                "provider": "research-provider",
+                "availability": "available",
+                "health": {
+                    "status": "healthy",
+                    "observed_at": "2026-08-02T00:00:00+00:00",
+                },
+                "expires_at": "2099-01-01T00:00:00+00:00",
+                "reason_codes": [],
+            },
+            {
+                "id": "tool:recovery",
+                "kind": "tool_capability",
+                "provider": "ocr-provider",
+                "availability": "unavailable",
+                "health": {
+                    "status": "unhealthy",
+                    "observed_at": "2026-08-02T00:00:00+00:00",
+                },
+                "reason_codes": ["provider_probe_failed"],
+            },
+        ],
+    }
+
+    plan = MODULE.build_external_resource_refresh_plan(
+        catalog, now=datetime(2026, 8, 3, tzinfo=UTC)
+    )
+
+    assert plan["schema"] == "external-resource-refresh-plan/v1"
+    assert plan["activation"] == "forbidden"
+    assert plan["provider_invocation"] is False
+    assert plan["workflow_run_creation"] is False
+    assert plan["summary"] == {
+        "resource_count": 2,
+        "due_count": 2,
+        "scheduled_count": 0,
+        "urgent_count": 1,
+        "high_count": 0,
+        "action_counts": {"catalog_refresh": 1, "health_probe": 1},
+    }
+    items = {item["resource_id"]: item for item in plan["items"]}
+    assert items["tool:recovery"]["priority"] == "urgent"
+    assert items["tool:recovery"]["action"] == "health_probe"
+    assert "health_recovery_due" in items["tool:recovery"]["reason_codes"]
+    assert items["source:scheduled"]["action"] == "catalog_refresh"
+    assert "schedule_due" in items["source:scheduled"]["reason_codes"]
+    assert plan["plan_digest"].startswith("sha256:")
+
+
+def test_refresh_plan_keeps_future_resources_scheduled_and_force_is_projection_only() -> None:
+    catalog = {
+        "schema": "external-resource-catalog/v1",
+        "observed_at": "2026-08-02T00:00:00+00:00",
+        "resources": [
+            {
+                "id": "method:future",
+                "kind": "method_pack",
+                "provider": "method-provider",
+                "availability": "proposal_only",
+                "health": {
+                    "status": "healthy",
+                    "observed_at": "2026-08-02T00:00:00+00:00",
+                },
+                "reason_codes": ["proposal_only"],
+            }
+        ],
+    }
+
+    scheduled = MODULE.build_external_resource_refresh_plan(
+        catalog, now=datetime(2026, 8, 2, 1, tzinfo=UTC)
+    )
+    forced = MODULE.build_external_resource_refresh_plan(
+        catalog, now=datetime(2026, 8, 2, 1, tzinfo=UTC), force=True
+    )
+
+    assert scheduled["items"][0]["status"] == "scheduled"
+    assert forced["items"][0]["status"] == "due"
+    assert forced["items"][0]["action"] == "catalog_refresh"
+    assert forced["policy_boundary"]["automatic_activation"] is False
+
+
 def test_failed_probe_isolated_and_explicitly_unavailable() -> None:
     class FailingProvider:
         @staticmethod
@@ -389,6 +478,7 @@ def test_empty_catalog_is_unavailable_not_success(monkeypatch) -> None:
         return {"ok": True, "status": "recorded", "receipt": {"receipt_id": "run:empty"}}
 
     monkeypatch.setattr(MODULE, "_run_omo", fake_omo)
+    monkeypatch.setattr(MODULE, "_load_capability_records", lambda _root: [])
     MODULE.observe_external_resources(
         Path(__file__).parents[1], entry_points=[], now=datetime(2026, 8, 2, tzinfo=UTC)
     )
