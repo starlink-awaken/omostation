@@ -13,7 +13,7 @@ metadata-migrated-at: 2026-07-31
 > **作者**: 架构审计 (X-Plane Audit Agent + human review)
 > **目标读者**: bus-foundation 维护者 / omo governance review / agora + omo + metaos consumer owners
 > **基线版本**: bus-foundation `91355d67` (R82 pydantic envelope + R87 bench)
-> **SSOT 引用**: [`docs/ARCHITECTURE-DETAILED-MAP.md`](../ARCHITECTURE-DETAILED-MAP.md), [`docs/GOVERNANCE-EVOLUTION-ROADMAP.md`](../GOVERNANCE-EVOLUTION-ROADMAP.md), [`docs/VISION-ROADMAP.md`](../VISION-ROADMAP.md)
+> **SSOT 引用**: [`docs/ARCHITECTURE-DETAILED-MAP.md`](./ARCHITECTURE-DETAILED-MAP.md), [`docs/GOVERNANCE-EVOLUTION-ROADMAP.md`](./GOVERNANCE-EVOLUTION-ROADMAP.md), [`docs/VISION-ROADMAP.md`](./VISION-ROADMAP.md)
 > **配套 Plan**: [`2026-07-10-bus-foundation-r89-r97.md`](./2026-07-10-bus-foundation-r89-r97.md) (逐 R 实施步骤)
 
 ---
@@ -50,7 +50,7 @@ I0 织层 (agora) ─── 事件路由 + A2A ─┤   ◀── 都消费 bus-
 X 横切框架 (model-driven, bus-foundation, c2g, omo-debt, observability, aetherforge, family-hub)
 ```
 
-来源: [`docs/ARCHITECTURE-DETAILED-MAP.md §1`](../ARCHITECTURE-DETAILED-MAP.md)
+来源: [`docs/ARCHITECTURE-DETAILED-MAP.md §1`](./ARCHITECTURE-DETAILED-MAP.md)
 
 **关键定位**:
 - 7 个项目直接 import `bus_foundation.*` (omo, agora, metaos, aetherforge, kairon, c2g, runtime)
@@ -553,10 +553,10 @@ Phase C (week 13):
 ## 9. 关联引用
 
 - [bus-foundation 实施 Plan](./2026-07-10-bus-foundation-r89-r97.md) — 逐 R 步骤
-- [Workspace 详细架构](../ARCHITECTURE-DETAILED-MAP.md) — bus-foundation 在 eCOS v6 的位置
-- [Governance Evolution Roadmap](../GOVERNANCE-EVOLUTION-ROADMAP.md) — 治理迭代节奏
-- [eCOS v6 Vision](../VISION-ROADMAP.md) — 蜂群式 AI 超级大脑愿景
-- [Bus-foundation 内部 RETRY-OWNERSHIP.md](../../projects/bus-foundation/RETRY-OWNERSHIP.md) — retry 责任边界
+- [Workspace 详细架构](./ARCHITECTURE-DETAILED-MAP.md) — bus-foundation 在 eCOS v6 的位置
+- [Governance Evolution Roadmap](./GOVERNANCE-EVOLUTION-ROADMAP.md) — 治理迭代节奏
+- [eCOS v6 Vision](./VISION-ROADMAP.md) — 蜂群式 AI 超级大脑愿景
+- [Bus-foundation 内部 RETRY-OWNERSHIP.md](../projects/bus-foundation/src/bus_foundation/RETRY-OWNERSHIP.md) — retry 责任边界
 
 ---
 
