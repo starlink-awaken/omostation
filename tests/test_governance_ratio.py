@@ -72,7 +72,11 @@ class TestGovernanceClassification:
 
     def test_release_agent_submodule_pointer_close(self, mod):
         evt = {"agent_profile": "release-agent", "workflow_id": "submodule-pointer-close"}
-        assert mod._classify(evt) == "governance"
+        assert mod._classify(evt) == "flex"
+
+    def test_gov_agent_submodule_pointer_close_is_flex(self, mod):
+        evt = {"agent_profile": "governance-agent", "workflow_id": "submodule-pointer-close"}
+        assert mod._classify(evt) == "flex"
 
     def test_mof_agent_mof_model_change(self, mod):
         evt = {"agent_profile": "mof-agent", "workflow_id": "mof-model-change"}
