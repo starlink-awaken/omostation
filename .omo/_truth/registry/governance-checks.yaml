@@ -2716,6 +2716,37 @@ gac:
       created_at: "2026-06-27"
       adr: "ADR-0106"
 
+    # ── ADR-0370: AGT 集成占位 (block-write 兜底, 由 ADR-0370 实际化) ──
+    - id: CR-AGT-ASI-01
+      dimension: X1
+      layer: L0
+      name: "AGT 策略执行守护 (placeholder)"
+      description: "ADR-0370 引用; 真实规则由 PR #931/#934 接管, 此处仅占位以满足 R-GOV-1."
+      check_type: placeholder
+      target: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::agt_constraints"
+      relates_to: ['CR-AGT-ASI-02', 'CR-AGT-ASI-03']
+      executor: ['omo_audit']
+      enforcement: "advisory"
+      lifecycle: deprecated
+      version: 1.0.0
+      created_at: "2026-08-04"
+      adr: "ADR-0370"
+
+    - id: CR-AGT-ASI-10
+      dimension: X1
+      layer: L0
+      name: "AGT hypervisor 审计哈希链 (placeholder)"
+      description: "ADR-0370 引用; 真实规则由 PR #931/#934 接管, 此处仅占位以满足 R-GOV-1."
+      check_type: placeholder
+      target: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml::agt_constraints"
+      relates_to: ['CR-AGT-ASI-09']
+      executor: ['omo_audit']
+      enforcement: "advisory"
+      lifecycle: deprecated
+      version: 1.0.0
+      created_at: "2026-08-04"
+      adr: "ADR-0370"
+
   drift:
     schedule: "daily"
     auto_heal: false
