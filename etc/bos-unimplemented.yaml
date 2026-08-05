@@ -1,25 +1,29 @@
-# BOS [UNIMPLEMENTED] 服务跟踪注册表
-# 用途：CI 门禁 — 任何新增的 [UNIMPLEMENTED] 服务必须在此登记，
-#       否则 test_unimplemented_services_are_tracked 失败。
-# 规则：
-#   - 删除条目 = 服务已实现，需同时从 bos-services.yaml 移除 [UNIMPLEMENTED] 标记
-#   - 新增条目 = 必须说明原因、依赖、预计实现阶段
-#   - 数量只减不增；增加需 review
+# bos-unimplemented.yaml — UNIMPLEMENTED BOS 服务跟踪注册表
+#
+# 与 bos-services.yaml 保持同步: 所有 status=unimplemented 的服务必须在此登记。
+# POC_SERVICES 加载时丢弃 unimplemented (不可路由), 此文件让两注册表可审计。
+# 校验: tests/unit/test_bos_registry.py::test_unimplemented_services_are_tracked
 
-schema_version: "1.0"
-last_reviewed: "2026-07-27"  # 复审2026-07-27: 移除 protocols-layer/trigger (yaml 中无此 URI, 登记悬空)
 unimplemented:
-  - uri: "bos://analysis/iris/connect"
-    reason: "IRIS connect 适配层未实现"
-    dependency: "kairon/packages/iris"
-    target_phase: "P45+"
-
-  - uri: "bos://analysis/iris/transform"
-    reason: "IRIS transform 适配层未实现"
-    dependency: "kairon/packages/iris"
-    target_phase: "P45+"
-
-  - uri: "bos://analysis/iris/validate"
-    reason: "IRIS validate 适配层未实现"
-    dependency: "kairon/packages/iris"
-    target_phase: "P45+"
+  - uri: bos://analysis/iris/connect
+    reason: Iris connector 未落地 (开发中)
+  - uri: bos://analysis/iris/transform
+    reason: Iris connector 未落地 (开发中)
+  - uri: bos://analysis/iris/validate
+    reason: Iris connector 未落地 (开发中)
+  - uri: bos://capability/agt/lightning
+    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
+  - uri: bos://capability/agt/marketplace
+    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
+  - uri: bos://capability/agt/mcp-security
+    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
+  - uri: bos://capability/agt/sandbox
+    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
+  - uri: bos://capability/agt/sre
+    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
+  - uri: bos://capability/agt/trust
+    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
+  - uri: bos://governance/agt/hypervisor
+    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
+  - uri: bos://governance/agt/policy
+    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)

@@ -89,6 +89,30 @@ from agora.server.tools_auth import (
 )
 
 
+def _parse_since_to_iso(since: str) -> str:
+    """解析相对时长 ("24h"/"7d"/"30m") 为 ISO 时间戳。
+
+    修复 audit stats `timestamp >= '24h'` 字符串比较恒 false 的 bug:
+    直接把 "24h" 传给 SQLite 会被当 ISO 时间解析失败 → 查询恒空。
+    """
+    import re
+    from datetime import UTC, datetime, timedelta
+
+    m = re.match(r"^(\d+)([smhdw])$", since.strip())
+    if not m:
+        return since  # 已是 ISO 时间戳则原样返回
+    n = int(m.group(1))
+    unit = m.group(2)
+    unit_map = {
+        "s": timedelta(seconds=n),
+        "m": timedelta(minutes=n),
+        "h": timedelta(hours=n),
+        "d": timedelta(days=n),
+        "w": timedelta(weeks=n),
+    }
+    return (datetime.now(UTC) - unit_map[unit]).isoformat()
+
+
 def identity_from_auth_token() -> dict | None:
     """Backward-compatible identity resolver that respects monkeypatched mcp.get_access_token."""
     token = get_access_token()
@@ -388,9 +412,12 @@ class AuditSubscriber:
         try:
             conn = _sqlite3.connect(str(self._db_path))
             if since:
+                # 解析相对时长 ("24h"/"7d") 为 ISO 时间戳, 避免 timestamp >= '24h'
+                # 字符串比较恒 false (audit_24h 恒 0 bug)
+                ts = _parse_since_to_iso(since)
                 rows = conn.execute(
                     "SELECT risk_level, COUNT(*) as cnt FROM audit_log WHERE timestamp >= ? GROUP BY risk_level",
-                    (since,),
+                    (ts,),
                 ).fetchall()
                 stats["total"] = sum(r[1] for r in rows)
             else:
