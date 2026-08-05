@@ -581,6 +581,16 @@ diff_checks:
       - projects/*/pyproject.toml
       - projects/*/pyrightconfig.json
     command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_sweep_tools.py, tests/test_gac_worktree_lifecycle.py, -q]
+  - id: submodule-hygiene
+    description: Submodule pointer hygiene and shared-worktree isolation checks (P72/PASW/ADR-0220 D5).
+    required: true
+    paths:
+      - bin/ssot/check-submodule-hygiene.py
+      - .omo/_delivery/branch-claims/**
+      - .omo/_delivery/adr-claims/**
+      - .subtrees/**
+      - projects/*/
+    command: [uv, run, --with, pyyaml, python, bin/ssot/check-submodule-hygiene.py, --strict]
   - id: agent-workflow-lint
     description: Workflow runner and registry contract validation.
     required: true
