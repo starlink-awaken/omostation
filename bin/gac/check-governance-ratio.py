@@ -86,6 +86,9 @@ FLEX_OVERRIDE_WORKFLOWS = {
     "project-code-change",
     "project-doc-change",
     "submodule-pointer-close",
+    # pyright-sweep: Python 类型/风格质量扫描 (engineering-agent), 非治理重写规则。
+    # 虽可能锁 .omo/_truth/registry 等路径 (扫描参考), 但属工程交付而非治理开销。
+    "pyright-sweep",
 }
 
 
