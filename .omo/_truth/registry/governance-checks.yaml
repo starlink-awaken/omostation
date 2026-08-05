@@ -2017,7 +2017,7 @@ gac:
     source_type: native
 
   - id: CR-X-META-HEALTH
-    dimension: X
+    dimension: X1
     layer: meta
     name: GaC 治理系统自检
     description: '检查治理系统自身健康度: 规则数 ≤ freeze, 无重复 ID, 无过期 draft. 治理系统自省能力. 实现: bin/gac/check-meta-health.py (gac-gate CI, advisory)'
