@@ -9,7 +9,7 @@ related:
   - ../../docs/operations/memory-os-neo4j-local.md
 ---
 
-# Memory OS 运维契约（Phase 8）
+# Memory OS 运维契约（Phase 8–9）
 
 ## 目的
 
@@ -22,6 +22,7 @@ related:
 | 控制面登记 | `.omo/_truth/registry/memory-os.yaml` |
 | RBAC 策略表 | `.omo/_truth/registry/memory-rbac.yaml` |
 | 架构 | `docs/architecture/memory-os.md` |
+| 史诗复盘 | `docs/operations/memory-os-epic-retro.md` |
 | 本机图运维 | `docs/operations/memory-os-neo4j-local.md` |
 | 环境模板 | `docs/operations/memory-os.env.example` |
 | 端口 | `protocols/port-registry.yaml` · 7474 / 7687 |
@@ -46,14 +47,20 @@ eval "$(bin/memory-os-env.sh --export)"
 
 Agora MCP 启动时也会 best-effort `_load_memory_os_env()`（不覆盖已有非空 env）。
 
-加载优先级（**已设置的非空环境变量永不覆盖**）：
+加载优先级（**进程非空 env 永不覆盖**）：
 
-1. 进程现有 env  
-2. `config/memory-os.env`（本机私密，gitignored）  
-3. `projects/cockpit/.env`  
-4. `docs/operations/memory-os.env.example` 默认值  
+1. 进程现有 env（最高）  
+2. 文件合并（后写覆盖前写）：`memory-os.env.example` → `projects/cockpit/.env` → `config/memory-os.env`  
+3. 代码内置默认（仅填空）
+
+因此 **本机 `config/memory-os.env` 可覆盖 example 的 `changeme` 密码**；已 export 的 shell 变量仍优先。
 
 关键变量：`NEO4J_URI` · `NEO4J_USER` · `NEO4J_PASSWORD` · `MOS_RBAC` · `MOS_TEMPORAL`
+
+## 跨进程状态
+
+- FileStore（默认 `runtime/mos/store.json` 或 `~/.mos/store.json`）持久化 theta/raw **与** `last_consolidate`
+- `cockpit memory status` / `/api/memory/status` 暴露 `consolidate` + `adapters` 诚实字段
 
 ## 图库启动
 
