@@ -98,10 +98,14 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
     return False, "not contained in fetched origin branches"
 
 
-def check(source: str, *, fetch: bool) -> dict[str, object]:
+def check(source: str, *, fetch: bool, skip_paths: set[str] | None = None) -> dict[str, object]:
     findings: list[dict[str, object]] = []
     checked = 0
+    skipped = 0
     for path in submodule_paths():
+        if skip_paths and path in skip_paths:
+            skipped += 1
+            continue
         sha = gitlink_sha(path, source)
         if sha is None:
             findings.append({"path": path, "sha": None, "ok": False, "reason": f"no {source} gitlink"})
@@ -115,6 +119,7 @@ def check(source: str, *, fetch: bool) -> dict[str, object]:
         "source": source,
         "fetch": fetch,
         "checked": checked,
+        "skipped": skipped,
         "failures": failures,
         "findings": findings,
     }
@@ -125,6 +130,8 @@ def main() -> int:
     parser.add_argument("--source", choices=("head", "index", "worktree"), default="head")
     parser.add_argument("--fetch", action="store_true", help="Fetch origin branches before checking")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    parser.add_argument("--skip", nargs="*", default=[], help="Submodule paths to skip (known false positives)")
+    parser.add_argument("--skip-file", type=str, help="File with submodule paths to skip (one per line)")
     args = parser.parse_args()
 
     # 防御: WORKSPACE 不存在 (worktree 被 cleanup 误清等) → 友好退出, 不 traceback
@@ -136,11 +143,21 @@ def main() -> int:
         )
         return 2
 
-    report = check(args.source, fetch=args.fetch)
+    skip_paths: set[str] = set(args.skip)
+    if args.skip_file:
+        skip_file = Path(args.skip_file)
+        if skip_file.exists():
+            skip_paths.update(
+                line.strip() for line in skip_file.read_text().splitlines()
+                if line.strip() and not line.strip().startswith("#")
+            )
+
+    report = check(args.source, fetch=args.fetch, skip_paths=skip_paths)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     elif report["ok"]:
-        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source})")
+        skip_msg = f", skipped={report['skipped']}" if report["skipped"] else ""
+        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg})")
     else:
         for item in report["failures"]:
             print(f"{item['path']}: {item['sha'] or '-'} unreachable: {item['reason']}")
