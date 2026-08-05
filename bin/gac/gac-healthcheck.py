@@ -309,7 +309,9 @@ def healthcheck() -> dict:
     }
 
     # 13. GaC M1 实例 drift (机制7深化: registry↔M1 双向校验, Phase 4B)
-    m1_code, m1_out = run_tool("bin/gac/gac-m1-sync.py", ["--json"])
+    # ADR-0376 G9: --tracked — 基于 git HEAD 提交态而非 working tree,
+    # 并发 agent 的 untracked M1 / 分支切换噪声不应误报 health red.
+    m1_code, m1_out = run_tool("bin/gac/gac-m1-sync.py", ["--tracked", "--json"])
     try:
         m1_json = json.loads(m1_out) if m1_out else {}
     except json.JSONDecodeError:
