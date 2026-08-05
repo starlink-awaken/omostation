@@ -2095,6 +2095,24 @@ gac:
     activated_at: '2026-08-05'
     adr: ADR-0373
     source_type: native
+  - id: CR-CI-SURFACE-SSOT
+    source_type: indexed
+    source_ref: .omo/_truth/registry/ci-surfaces.yaml::surfaces
+    dimension: X1
+    layer: meta
+    name: CI 平面检查登记 SSOT (ADR-0379 E-1)
+    description: 'ci-surfaces.yaml 是 CI 平面检查接线登记 SSOT. 所有 workflow / sgf-policy
+      中执行的 check 类工具必须登记; bin/gac/check-ci-surfaces.py 检测 unregistered /
+      gate-parity / orphan / overlap / double-trigger (on: [push, pull_request] 双跑).'
+    check_type: legacy_index
+    executor:
+    - ci_gate
+    - omo_audit
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0379
 
 
   - id: CR-SEVERITY-REGISTRY

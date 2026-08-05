@@ -354,6 +354,38 @@ initiatives:
       Phase 1 (A1+C1+D1+B1) 集中 1-2 天做阻断类修复 (README, ADR 重复清理, runtime test ADR, 集成测试).
       Phase 2 (~1 周) 推 A2/A3/A4/C2-C4/D2/B2-B3, 让 pyright-sweep-check 真正 required.
       Phase 3 (持续) 维护 sweep 历史归档、CI 自举、commit 拆分.
+
+  - id: ci-plane-convergence
+    title: CI plane convergence (ADR-0379)
+    recommendation: 42 workflows 手工 YAML 无 SSOT → ci-surfaces.yaml 登记 + check-ci-surfaces 检测 + registry-driven runner + double-trigger 去重.
+    status: in_progress
+    progress: 70
+    last_evaluated: "2026-08-05"
+    meadows_level: 5
+    owner: governance-team
+    layer: X1-X4
+    ssot: .omo/_truth/registry/ci-surfaces.yaml
+    entrypoints:
+    - python3 bin/gac/check-ci-surfaces.py --json
+    - python3 bin/gac/ci-check-runner.py --workflow governance-check.yml
+    deliverables:
+    - .omo/_truth/registry/ci-surfaces.yaml
+    - bin/gac/check-ci-surfaces.py
+    - bin/gac/ci-check-runner.py
+    - .github/workflows/governance-check.yml
+    verification:
+    - command:
+      - python3
+      - bin/gac/check-ci-surfaces.py
+      - --json
+    acceptance:
+    - CI 平面检查工具全部登记在 ci-surfaces.yaml (0 unregistered / 0 gate-parity).
+    - '无 on: [push, pull_request] 双跑 workflow (0 double-trigger).'
+    - governance-check 内嵌脚本由 registry-driven runner 执行.
+    - gac-healthcheck 含 CI平面 section 且绿色.
+    done_when: CI 平面与 GaC 规则面同级的 SSOT 化 + 可观测 + 无双跑.
+    blocked_by: []
+    next_step: 迁移剩余 standalone workflow (cross-deps/interfaces/port) 到 runner; 接线或删除 2 个 orphan 脚本.
 capability_traces:
   - id: trace.agent-governance-control-plane
     capability: Agent governance control plane

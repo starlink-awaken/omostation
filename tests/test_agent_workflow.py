@@ -5,6 +5,8 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_MODULE_PATH = ROOT / "bin" / "agent-workflow.py"
@@ -1280,3 +1282,59 @@ def test_status_command_exposes_agcp_control_plane_fields() -> None:
     assert "staged_lane" in report
     assert "claim_coverage" in report
     assert report["recommended_next"]
+
+
+def _load_workflow_core():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "workflow_core_p0", ROOT / "projects/omo/src/omo/workflow/core.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_load_registry_supports_split_directory(tmp_path, monkeypatch) -> None:
+    """ADR-0379 P0: PR #1016 把 agent-workflows.yaml 拆成目录 (workflows/profiles/adapters),
+    load_registry 必须支持目录结构, 否则 agent-workflow 全链路 (start/claim/compliance) 不可用."""
+    core = _load_workflow_core()
+    load_registry, WorkflowError = core.load_registry, core.WorkflowError
+
+    registry_dir = tmp_path / "agent-workflows"
+    (registry_dir / "workflows").mkdir(parents=True)
+    (registry_dir / "profiles").mkdir()
+    (registry_dir / "adapters").mkdir()
+    (registry_dir / "_root.yaml").write_text(
+        "version: 1\nclaim_policy:\n  mode: advisory\n", encoding="utf-8"
+    )
+    (registry_dir / "workflows" / "project-code-change.yaml").write_text(
+        "id: project-code-change\nrun_frequency: on_demand\nsurfaces:\n  write: [code]\n",
+        encoding="utf-8",
+    )
+    (registry_dir / "profiles" / "_base.yaml").write_text(
+        "agent_profiles:\n  docs-agent:\n    allowed_workflows: [project-doc-change]\n",
+        encoding="utf-8",
+    )
+    (registry_dir / "adapters" / "gstack.yaml").write_text(
+        "gstack:\n  status: optional_adapter\n", encoding="utf-8"
+    )
+
+    registry = load_registry(registry_dir.with_suffix(".yaml"))
+    assert registry["claim_policy"]["mode"] == "advisory"
+    assert [w["id"] for w in registry["workflows"]] == ["project-code-change"]
+    assert "docs-agent" in registry["agent_profiles"]
+    assert "gstack" in registry["external_patterns"]
+
+
+def test_load_registry_split_directory_missing_workflows_raises(tmp_path) -> None:
+    """P0: 目录结构缺 workflows/ → WorkflowError (不静默返回空)."""
+    core = _load_workflow_core()
+    load_registry, WorkflowError = core.load_registry, core.WorkflowError
+
+    registry_dir = tmp_path / "agent-workflows"
+    registry_dir.mkdir()
+    (registry_dir / "_root.yaml").write_text("version: 1\n", encoding="utf-8")
+    with pytest.raises(WorkflowError):
+        load_registry(registry_dir.with_suffix(".yaml"))

@@ -250,7 +250,7 @@ autonomous_growth:
 model_stats:
   # 节点计数由 bin/mof/check-mof-capabilities-drift.py 守护 (ADR-0238, P0-2)
   # source: projects/ecos/src/ecos/ssot/mof/{m1,m2}/ — 以实际文件为准 (ecos CLAUDE.md)
-  m1_nodes: 1367
+  m1_nodes: 1371
   m2_schemas: 55
   m3_elements: 8
   stats_as_of: "2026-08-05"
