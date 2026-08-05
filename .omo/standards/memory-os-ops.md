@@ -97,3 +97,28 @@ make memory-os-check
 ```
 
 必过：SSOT 文件存在 · env.example 键齐全 · 7474/7687 已注册 · cockpit `.env.example` 含 NEO4J_URI。
+
+## 冷启动一页纸（operator path）
+
+```bash
+# 1) 本机私密 env（gitignore）
+cp -n docs/operations/memory-os.env.example config/memory-os.env
+# 编辑 NEO4J_PASSWORD 等
+
+# 2) 加载 + 图库
+source bin/memory-os-env.sh
+bash bin/memory-os-neo4j-up.sh          # 可选；无图时 smoke 仍会跑并标明 degrade
+
+# 3) 发现入口
+cockpit help                            # 产品地图（与 discover 同源 help_map）
+cockpit discover                        # 精简发现页
+cockpit help memory                     # 搜 Memory OS / BOS
+cockpit --help                          # 紧凑快速入口（非 70 命令墙）
+
+# 4) 工作台（含 Memory OS 健康行）
+cockpit status
+
+# 5) 实路径冒烟
+make memory-os-smoke
+# 或: bash bin/memory-os-smoke.sh
+```

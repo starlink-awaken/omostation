@@ -24,9 +24,13 @@ source bin/memory-os-env.sh             # 或 eval "$(bin/memory-os-env.sh --exp
 bash bin/memory-os-neo4j-up.sh          # Docker/podman 优先，失败则 brew
 bash bin/memory-os-neo4j-up.sh status
 bash bin/memory-os-neo4j-up.sh stop
-# 3) 治理面检查
+# 3) 治理面检查 + 冒烟
 make memory-os-check
-# 4) CLI 帮助 / 状态
+make memory-os-smoke                    # status + write + recall + as_of
+# 4) CLI 帮助 / 状态 / 工作台
+cockpit help                            # 与 discover 同源命令地图
+cockpit discover
+cockpit status                          # 工作台含 Memory OS 健康行
 cockpit memory
 cockpit memory status --json
 ```
