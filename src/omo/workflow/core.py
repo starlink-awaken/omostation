@@ -64,11 +64,7 @@ def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any
     """
     result = dict(base)
     for key, value in override.items():
-        if (
-            key in result
-            and isinstance(result[key], dict)
-            and isinstance(value, dict)
-        ):
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
             result[key] = _deep_merge(result[key], value)
         else:
             result[key] = value
@@ -78,41 +74,61 @@ def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any
 def load_registry(path: Path = REGISTRY_PATH) -> dict[str, Any]:
     if not path.exists():
         raise WorkflowError(f"workflow registry not found: {path}")
+    documents: list[dict[str, Any]] = []
+    yaml_files: list[Path] = []
     if path.is_dir():
         yaml_files = sorted(path.glob("**/*.yaml"))
         if not yaml_files:
             raise WorkflowError(f"no YAML files found in registry directory: {path}")
-        documents: list[dict[str, Any]] = []
-        for f in yaml_files:
+        for yaml_file in yaml_files:
             try:
-                for doc in yaml.safe_load_all(f.read_text(encoding="utf-8")):
+                for doc in yaml.safe_load_all(yaml_file.read_text(encoding="utf-8")):
                     if doc and isinstance(doc, dict):
                         documents.append(doc)
             except yaml.YAMLError as exc:
                 raise WorkflowError(
-                    f"invalid YAML in {display_path(f)}: {exc}"
+                    f"invalid YAML in {display_path(yaml_file)}: {exc}"
                 ) from exc
     else:
-        documents = [
-            doc for doc in yaml.safe_load_all(path.read_text(encoding="utf-8")) if doc
-        ]
+        yaml_files = [path]
+        try:
+            for doc in yaml.safe_load_all(path.read_text(encoding="utf-8")):
+                if doc and isinstance(doc, dict):
+                    documents.append(doc)
+        except yaml.YAMLError as exc:
+            raise WorkflowError(f"invalid YAML in {display_path(path)}: {exc}") from exc
     merged: dict[str, Any] = {}
-    workflows_doc: dict[str, Any] | None = None
-    for document in documents:
-        if not isinstance(document, dict):
-            continue
-        if "workflows" in document and workflows_doc is None:
-            workflows_doc = document
-        for key, value in document.items():
-            if key == "workflows":
+    workflows_list: list[dict[str, Any]] = []
+    external_patterns: dict[str, Any] = {}
+    for yaml_file in yaml_files:
+        for doc in yaml.safe_load_all(yaml_file.read_text(encoding="utf-8")):
+            if not isinstance(doc, dict):
                 continue
-            if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
-                merged[key] = _deep_merge(merged[key], value)
-            else:
-                merged[key] = value
-    if workflows_doc is None:
-        raise WorkflowError(f"workflow registry has no workflows document: {path}")
-    merged["workflows"] = workflows_doc["workflows"]
+            is_adapter_file = "adapters" in yaml_file.parts
+            is_workflow_file = "workflows" in yaml_file.parts
+            if "workflows" in doc:
+                workflows_list.extend(doc["workflows"])
+                continue
+            if is_workflow_file and "id" in doc and "run_frequency" in doc:
+                workflows_list.append(doc)
+                continue
+            for key, value in doc.items():
+                if is_adapter_file:
+                    external_patterns[key] = value
+                elif key != "external_patterns":
+                    if (
+                        key in merged
+                        and isinstance(merged[key], dict)
+                        and isinstance(value, dict)
+                    ):
+                        merged[key] = _deep_merge(merged[key], value)
+                    else:
+                        merged[key] = value
+    if not workflows_list:
+        raise WorkflowError(f"workflow registry has no workflows: {path}")
+    merged["workflows"] = workflows_list
+    if external_patterns:
+        merged["external_patterns"] = external_patterns
     return merged
 
 
