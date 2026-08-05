@@ -204,7 +204,14 @@ def check_indexed_drift(rule: dict) -> list[str]:
         return drifts
 
     rule_id = rule.get("id", "")
-    if rule_id and rule_id not in content:
+    # ADR-0374: legacy_index 规则 (id 形如 CR-*-SSOT) 自身就是 SSOT 索引名,
+    # 不是源文件中的某条具体 rule. 因此 source_ref 存在 + 可解析 即视为对齐.
+    # 老逻辑: rule_id in content (literal string match) — 对索引规则永远 False.
+    is_ssot_index_rule = (
+        rule_id.endswith("-SSOT")
+        or rule.get("check_type") == "legacy_index"
+    )
+    if rule_id and rule_id not in content and not is_ssot_index_rule:
         drifts.append(
             f"{rule['id']}: 规则 ID 在 source_ref ({ref_path_str}) 中未找到 — 可能已重命名或删除"
         )

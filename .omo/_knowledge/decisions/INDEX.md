@@ -440,6 +440,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0371: PASW — Per-Agent Submodule Worktree 隔离 — **ACCEPTED** | 2026-08-04 | Swarm discipline (ADR-0220) | 0371-pasw-submodule-isolation.md
 - ADR-0372: Memory OS 控制面 — 统一记忆写读巩固与适配器边界 — **ACCEPTED** | 2026-08-04 | Memory OS Phase 0 | 0372-memory-os-control-plane.md
 - ADR-0373: Sweep-tooling Convergence Round — A4/C5/D3/B2/E2 + GaC iterations — **ACCEPTED** | 2026-08-05 | Sweep tooling convergence round | 0373-sweep-tooling-convergence-round.md
+- ADR-0374: GaC Registry Convergence — indexed-drift fix, m1 orphan purge, stat auto-bump, symmetry tests — **ACCEPTED** | 2026-08-05 | GaC registry convergence | 0374-gac-registry-convergence.md
 
 ---
 
