@@ -43,6 +43,7 @@ EXECUTOR_ENUM = {
     "gc_cron",
     "gac_local_gate",
     "foundry_cron",  # ADR-0220: 独立 launchd daily, 破自指死循环
+    "sweep_index_cli",  # ADR-0373 C5: bin/sweep/sweep_index.py 5 源对齐
 }
 
 # severity 推导 (宪法 Wave 2, ADR-0171): 抽取共享 bin/gac/gac_severity.py (code-review #1 DRY)

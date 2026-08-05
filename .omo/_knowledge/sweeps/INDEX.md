@@ -1,7 +1,7 @@
-# Sweep 扫描历史归档 (A5, ADR-0367)
+# Sweep 扫描历史归档 (A5, ADR-0367 + ADR-0373)
 
 > 本目录只存**指针与索引**, 不复制数据. 报告本体: `<date>.json` (由 `bin/sweep/scan.py` 落盘).
-> 生成方式: `python3 bin/sweep/scan.py --projects <p1> <p2>`
+> 生成方式: `python3 bin/sweep/scan.py [--projects <p1> <p2>]` ; 索引由 `bin/sweep/sweep_index.py` 自动维护.
 
 | 日期 | 报告 | total_errors | suppression_ratio |
 |------|------|-------------|-------------------|
@@ -18,3 +18,5 @@
 
 - `bin/sweep/pyright.py --suppression-gate`: `file_suppressions >= 3` 或 `suppression_ratio > 0.6` → exit 1 (A3)
 - `pyright-sweep-check` diff_check: `required: true` (A2)
+- `bin/sweep/scan.py --strict`: 任一项目 `file_suppressions > 0` → exit 1 (A4, ADR-0373)
+- `bin/sweep/sweep_index.py --check`: INDEX.md 与 `<date>.json` 漂移 → exit 1 (C5, ADR-0373, CR-SWEEP-INDEX-AUTO)

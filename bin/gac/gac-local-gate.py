@@ -63,6 +63,8 @@ DEFAULT_POLICY = {
         {"id": "matrix-consistency", "command": ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"], "ci_skip": True},
         {"id": "governance-semantic-gate", "command": ["bin/gac/governance-semantic-gate.py", "--json"]},
         {"id": "adr-coverage", "command": ["bin/adr/adr-coverage.py", "--json"]},
+        # ADR-0373 (C5): sweep history drift gate (CR-SWEEP-INDEX-AUTO)
+        {"id": "sweep-index-check", "command": ["bin/sweep/sweep_index.py", "--check"]},
         {"id": "state-freshness-check", "command": ["bin/gac/state-freshness-check.py", "--json"]},
         {
             "id": "current-state-coherence",
