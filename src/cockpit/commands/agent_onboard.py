@@ -16,6 +16,61 @@ def _check(label: str, ok: bool, detail: str = "") -> bool:
     return ok
 
 
+def _check_memory_os_surfaces(results: dict[str, bool]) -> None:
+    """Phase: Memory OS cold-start surfaces (skill, SSOT, light gate, CLI entry)."""
+    print("Phase 6: Memory OS (cold start)")
+    skill = WORKSPACE / ".agents" / "skills" / "memory-recall" / "SKILL.md"
+    ok_skill = skill.is_file()
+    results["skill_memory-recall"] = ok_skill
+    _check("skill 'memory-recall'", ok_skill)
+
+    registry = WORKSPACE / ".omo" / "_truth" / "registry" / "memory-os.yaml"
+    ops = WORKSPACE / ".omo" / "standards" / "memory-os-ops.md"
+    ok_ssot = registry.is_file() and ops.is_file()
+    results["memory_os_ssot"] = ok_ssot
+    _check("memory-os registry + ops contract", ok_ssot)
+
+    # Light gate (blocking SSOT; no Neo4j required)
+    check_script = WORKSPACE / "bin" / "gac" / "check-memory-os-surfaces.py"
+    if check_script.is_file():
+        try:
+            r = subprocess.run(
+                ["python3", str(check_script)],
+                capture_output=True,
+                text=True,
+                cwd=str(WORKSPACE),
+                timeout=60,
+            )
+            gate_ok = r.returncode == 0
+            results["memory_os_light_gate"] = gate_ok
+            detail = "make memory-os-check" if gate_ok else (r.stdout or r.stderr or "exit!=0")[:80]
+            _check("memory-os light gate", gate_ok, detail if not gate_ok else "ok")
+        except Exception as e:
+            results["memory_os_light_gate"] = False
+            _check("memory-os light gate", False, str(e))
+    else:
+        results["memory_os_light_gate"] = False
+        _check("memory-os light gate", False, "check-memory-os-surfaces.py missing")
+
+    # CLI entry present in help_map / cli (static — no live Neo4j)
+    help_map = WORKSPACE / "projects" / "cockpit" / "src" / "cockpit" / "commands" / "help_map.py"
+    cli_py = WORKSPACE / "projects" / "cockpit" / "src" / "cockpit" / "cli.py"
+    has_cli = False
+    if help_map.is_file():
+        t = help_map.read_text(encoding="utf-8", errors="replace")
+        has_cli = "memory" in t
+    if cli_py.is_file() and not has_cli:
+        has_cli = 'add_parser(\n        "memory"' in cli_py.read_text(encoding="utf-8", errors="replace") or (
+            '"memory"' in cli_py.read_text(encoding="utf-8", errors="replace")
+        )
+    results["memory_cli_entry"] = has_cli
+    _check("cockpit memory CLI catalogued", has_cli)
+
+    print("  next: source bin/memory-os-env.sh && cockpit memory status --json")
+    print("        make memory-os-smoke · make memory-os-asof-seed")
+    print()
+
+
 def cmd_agent_onboard(args) -> int:
     """Run the agent onboarding checklist."""
     profile = getattr(args, "profile", None)
@@ -102,6 +157,9 @@ def cmd_agent_onboard(args) -> int:
         _check(f"skill '{skill}'", ok)
     print()
 
+    # 7. Memory OS cold start (ADR-0372)
+    _check_memory_os_surfaces(results)
+
     # Summary
     all_ok = all(results.values())
     total = len(results)
@@ -110,6 +168,7 @@ def cmd_agent_onboard(args) -> int:
     if all_ok:
         print(f"  ✅ Onboarding checklist: {passed}/{total} passed")
         print("  Agent is ready to start working.")
+        print("  Memory: cockpit memory status · skill memory-recall · bos://memory/mos/*")
     else:
         print(f"  ❌ Onboarding checklist: {passed}/{total} passed")
         print("  Fix failing items before starting work.")

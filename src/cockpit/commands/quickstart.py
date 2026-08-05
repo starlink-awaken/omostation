@@ -237,6 +237,31 @@ def _cmd_quickstart_check(args: argparse.Namespace, output_format: str = "tty") 
             "detail": f"{db_res.get('research_count', 0)} 条研究记录",
         }
     )
+    # Memory OS surfaces (cold start; no live Neo4j required)
+    ws = Path(__file__).resolve().parents[5]
+    if not (ws / ".omo" / "_truth" / "registry" / "memory-os.yaml").is_file():
+        for candidate in (Path.cwd(), Path.home() / "Workspace"):
+            if (candidate / ".omo" / "_truth" / "registry" / "memory-os.yaml").is_file():
+                ws = candidate
+                break
+    mos_ok = (ws / ".omo" / "_truth" / "registry" / "memory-os.yaml").is_file() and (
+        ws / ".agents" / "skills" / "memory-recall" / "SKILL.md"
+    ).is_file()
+    neo_cfg = bool(os.environ.get("NEO4J_URI"))
+    data.append(
+        {
+            "item": "Memory OS SSOT + skill",
+            "status": "✅ 就绪" if mos_ok else "⚠️  未检出",
+            "detail": "memory-os.yaml · memory-recall",
+        }
+    )
+    data.append(
+        {
+            "item": "Memory OS NEO4J_URI",
+            "status": "✅ 已配置" if neo_cfg else "⭕ 未设置 (可选)",
+            "detail": os.environ.get("NEO4J_URI") or "source bin/memory-os-env.sh",
+        }
+    )
 
     if getattr(args, "json", False):
         output_format = "json"
@@ -379,10 +404,37 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     guide.add_row("1", "[cyan]cockpit demo[/]", "体验研究闭环（5 分钟）")
     guide.add_row("2", '[cyan]cockpit research "主题"[/]', "发起你的第一个研究")
     guide.add_row("3", "[cyan]cockpit research --list[/]", "浏览所有研究记录")
-    guide.add_row("4", "[cyan]cockpit status[/]", "查看工作台仪表板")
-    guide.add_row("5", "[cyan]cockpit daily[/]", "每日研究简报")
-    guide.add_row("6", "[cyan]cockpit dashboard[/]", "打开 Web 控制台")
+    guide.add_row("4", "[cyan]cockpit status[/]", "查看工作台（含 Memory OS 行）")
+    guide.add_row("5", "[cyan]cockpit memory status --json[/]", "Memory OS 控制面健康")
+    guide.add_row("6", "[cyan]cockpit daily[/]", "每日研究简报")
+    guide.add_row("7", "[cyan]cockpit dashboard[/]", "打开 Web 控制台")
     c.print(guide)
+    c.print()
+
+    # ── Memory OS 冷启动（ADR-0372）──
+    c.print(_panel("[bold]Memory OS 冷启动[/bold]", "cyan", title="🧠"))
+    ws_root = Path(__file__).resolve().parents[5]
+    if not (ws_root / "bin" / "memory-os-env.sh").is_file():
+        # cockpit package may live under projects/cockpit → parents[5] is workspace
+        for candidate in (Path.cwd(), Path.home() / "Workspace"):
+            if (candidate / "bin" / "memory-os-env.sh").is_file():
+                ws_root = candidate
+                break
+    mos_skill = ws_root / ".agents" / "skills" / "memory-recall" / "SKILL.md"
+    mos_reg = ws_root / ".omo" / "_truth" / "registry" / "memory-os.yaml"
+    if mos_skill.is_file() and mos_reg.is_file():
+        c.print("  [green]✅ Memory OS SSOT + skill memory-recall[/green]")
+    else:
+        c.print("  [yellow]⚠️  Memory OS SSOT/skill 未完整检出[/yellow]")
+    c.print("  [dim]一页纸冷启动:[/dim]")
+    c.print("    [cyan]source bin/memory-os-env.sh[/]     — 加载 NEO4J_* / MOS_*")
+    c.print("    [cyan]make memory-os-check[/]            — light gate（无图也可）")
+    c.print("    [cyan]bash bin/memory-os-neo4j-up.sh[/]  — 可选图库")
+    c.print("    [cyan]cockpit memory status --json[/]    — 健康（含 as_of 标志）")
+    c.print("    [cyan]make memory-os-smoke[/]            — 写/召回/as_of 冒烟")
+    c.print("    [cyan]make memory-os-asof-seed[/]        — 双时态对照种子")
+    c.print("    [cyan]cockpit help memory[/]             — 命令 / BOS 发现")
+    c.print("    skill: [cyan]memory-recall[/] · BOS: [cyan]bos://memory/mos/*[/]")
     c.print()
 
     # ── 第 4 步：BOS 服务验证 ──
