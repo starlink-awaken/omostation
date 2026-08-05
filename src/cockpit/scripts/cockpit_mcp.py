@@ -1,8 +1,13 @@
-"""cockpit MCP server — cockpit research and status MCP tools.
+"""cockpit MCP server — DEPRECATED stdio entry (Phase 4 removal planned).
 
 Provides research lifecycle tools (list, search, create, open, ask, archive,
 restore, tag, rename, dossier, half-life, agent-list) and status tools
 (summary, json, daily).
+
+.. deprecated::
+    This stdio MCP server is deprecated. All MCP access should route through
+    Agora SSE (`agora-mcp`) or the cockpit HTTP dashboard. See
+    ``docs/PANORAMA.md`` §四 for the current entry surface.
 """
 
 from __future__ import annotations
