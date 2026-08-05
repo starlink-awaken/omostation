@@ -7,6 +7,11 @@ http_main / sse_main 在 mcp.py 顶层 re-export 保持调用方不变.
 
 模式: agora/server/mcp.py 用 `from .mcp_entry import http_main, sse_main`
 顶层 re-export, 已有调用方 `from agora.server.mcp import http_main` 不破.
+
+统一路由: /v1/tools/call 与 /v1/backends/register 曾仅 HTTP 模式注册,
+SSE 模式 (7431) 无 → bos mutate 连 7431 404。现抽 `_register_common_routes`
+供 http_main / sse_main 共用, 两模式均暴露 /health + /v1/tools/call +
+/v1/backends/register (+ SSE 额外 a2a)。
 """
 
 from __future__ import annotations
@@ -16,20 +21,19 @@ import json
 import os
 import sys
 
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Route
+
 from agora.server.mcp import logger, mcp
 
-__all__ = ["http_main", "sse_main"]
 
+def _register_common_routes() -> None:
+    """Register /health + /v1/tools/call + /v1/backends/register on the shared MCP app.
 
-def http_main() -> None:
-    """Start the Agora MCP server in HTTP mode with proxy initialization.
-
-    Proxy connections are initialized inside the lifespan context manager,
-    keeping subprocesses alive for the entire server lifetime.
+    HTTP 与 SSE 模式共用: 保证 bos mutate (tools/call) 与动态后端注册在两种
+    传输下均可用。SSE 模式额外注册 a2a 路由 (在 sse_main 中追加)。
     """
-    from starlette.requests import Request
-    from starlette.responses import JSONResponse
-    from starlette.routing import Route
 
     async def health_endpoint(request):
         from agora.server.tools_health import health_self_check
@@ -41,7 +45,7 @@ def http_main() -> None:
             return JSONResponse(
                 {
                     "status": "ok",
-                    "service": "agora-mcp-http",
+                    "service": "agora-mcp",
                     "tools": len(await mcp.list_tools()),
                 }
             )
@@ -57,10 +61,9 @@ def http_main() -> None:
             arguments = payload.get("arguments", {})
             if not tool_name:
                 return JSONResponse({"error": "Missing tool name"}, status_code=400)
-            # If AGORA_API_KEY is present in env, FastMCP's AuthMiddleware will look for it
-            # It will extract it from the Authorization header of the request object we just set.
+            # AGORA_API_KEY present in env → FastMCP AuthMiddleware validates
+            # the Authorization header from the request we just set.
             result = await mcp.call_tool(tool_name, arguments)
-            # FastMCP call_tool returns a CallToolResult object or string
             res_content = ""
             if (
                 hasattr(result, "content")
@@ -126,6 +129,14 @@ def http_main() -> None:
         )
     )
 
+
+def http_main() -> None:
+    """Start the Agora MCP server in HTTP mode with proxy initialization.
+
+    Proxy connections are initialized inside the lifespan context manager,
+    keeping subprocesses alive for the entire server lifetime.
+    """
+    _register_common_routes()
     asyncio.run(
         mcp.run_http_async(
             host="0.0.0.0", port=int(os.environ.get("AGORA_MCP_HTTP_PORT", "7422"))
@@ -138,29 +149,12 @@ def sse_main() -> None:
 
     Proxy connections are initialized inside the lifespan context manager,
     keeping subprocesses alive for the entire server lifetime.
-    Exposes a /health HTTP endpoint alongside the SSE transport.
+    Exposes /health + /v1/tools/call + /v1/backends/register alongside SSE
+    transport (共用 _register_common_routes), plus a2a.
     """
-    from starlette.responses import JSONResponse
-    from starlette.routing import Route
-
-    async def health_endpoint(request):
-        from agora.server.tools_health import health_self_check
-
-        try:
-            result = await health_self_check()
-            return JSONResponse(result)
-        except Exception:  # defensive fallback
-            return JSONResponse(
-                {
-                    "status": "ok",
-                    "service": "agora-mcp-sse",
-                    "tools": len(await mcp.list_tools()),
-                }
-            )
-
     from agora.server.a2a import a2a_send_endpoint
 
-    mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))
+    _register_common_routes()
     mcp._additional_http_routes.append(
         Route("/api/v1/a2a/send", endpoint=a2a_send_endpoint, methods=["POST"])
     )
