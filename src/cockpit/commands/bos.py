@@ -1,7 +1,18 @@
 """Cockpit BOS Commands — L3 入口层 BOS URI 集成"""
 
 import subprocess
+import sys
 from pathlib import Path
+
+# commands/ → cockpit/ → src/ → cockpit package root → projects/cockpit → projects → workspace
+_WORKSPACE = Path(__file__).resolve().parents[5]
+# resolve/read 依赖 agora resolver + ecos 工具链, 需注入 src (与 agora.py 委派同理)
+for _src in (
+    _WORKSPACE / "projects" / "agora" / "src",
+    _WORKSPACE / "projects" / "ecos" / "src",
+):
+    if str(_src) not in sys.path:
+        sys.path.insert(0, str(_src))
 
 ECOS_TOOLS = Path(__file__).parent.parent.parent.parent / "ecos" / "src" / "ecos" / "ssot" / "tools"
 MOF_WORKFLOW = str(ECOS_TOOLS / "mof-workflow.py")
