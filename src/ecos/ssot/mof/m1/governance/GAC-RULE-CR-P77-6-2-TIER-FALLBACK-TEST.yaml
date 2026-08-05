@@ -4,12 +4,13 @@
 id: GAC-RULE-CR-P77-6-2-TIER-FALLBACK-TEST
 type: GacRule
 name: 层级 fallback 测试
-description: 每级 fallback 都必须有测试证明不崩溃. 对应 P77-6-2 (tier-test-for-fallback)
-status: draft
+description: '每级 fallback 都必须有测试证明不崩溃. 对应 P77-6-2 (tier-test-for-fallback). 实现: bin/gac/check-fallback-test-coverage.py
+  (gac-gate CI, advisory)'
+status: active
 domain: meta
 layer: meta
-created: &id001 2026-07-08
-version: 0.1.0
+created: '2026-08-05'
+version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-P77-6-2-TIER-FALLBACK-TEST
@@ -17,10 +18,11 @@ properties:
   layer: meta
   check_type: schema_integrity
   executor:
+  - ci_gate
   - omo_audit
-  lifecycle: draft
-  version: 0.1.0
-  created_at: *id001
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-05'
   source_type: native
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
@@ -29,6 +31,6 @@ model_driven_refs:
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
   derived_by: bin/gac/gac-m1-sync.py
 state_history:
-- state: draft
-  timestamp: '2026-07-08T00:00:00Z'
+- state: active
+  timestamp: '2026-08-05T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生

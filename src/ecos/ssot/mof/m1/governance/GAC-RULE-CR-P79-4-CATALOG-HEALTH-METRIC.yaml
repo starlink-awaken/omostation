@@ -4,12 +4,13 @@
 id: GAC-RULE-CR-P79-4-CATALOG-HEALTH-METRIC
 type: GacRule
 name: Catalog 健康指标
-description: 原则数和 GaC 规则数作为可观测指标写入 foundry. 对应 P79-4 (catalog-health-metric)
-status: draft
+description: '原则数和 GaC 规则数作为可观测指标写入 foundry. 对应 P79-4 (catalog-health-metric). 实现:
+  bin/gac/check-catalog-health.py (gac-gate CI, advisory)'
+status: active
 domain: meta
 layer: meta
-created: &id001 2026-07-08
-version: 0.1.0
+created: '2026-08-05'
+version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-P79-4-CATALOG-HEALTH-METRIC
@@ -17,10 +18,11 @@ properties:
   layer: meta
   check_type: audit_chain
   executor:
+  - ci_gate
   - omo_audit
-  lifecycle: draft
-  version: 0.1.0
-  created_at: *id001
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-05'
   source_type: native
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
@@ -29,6 +31,6 @@ model_driven_refs:
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
   derived_by: bin/gac/gac-m1-sync.py
 state_history:
-- state: draft
-  timestamp: '2026-07-08T00:00:00Z'
+- state: active
+  timestamp: '2026-08-05T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生
