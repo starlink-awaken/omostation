@@ -3,7 +3,7 @@
 # Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
-status: phase9
+status: phase10
 adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
@@ -15,6 +15,12 @@ env_example: docs/operations/memory-os.env.example
 skill: .agents/skills/memory-recall/SKILL.md
 surface_check: bin/gac/check-memory-os-surfaces.py
 last_reviewed: "2026-08-05"
+phase10:
+  neo4j_as_of: true
+  live_kos: "MOS_LIVE_KOS=1 → HTTP KOS_API_URL"
+  live_gbrain: "MOS_LIVE_GBRAIN=1 → gbrain search/query subprocess"
+  live_gbrain_write: "MOS_LIVE_GBRAIN_WRITE=1 → best-effort gbrain put on write"
+  notes: "capability deepen; defaults remain fixture-safe"
 phase6:
   neo4j_writer: projects/kairon/packages/mos/src/mos/neo4j_writer.py
   cockpit_panel: /memory
@@ -275,3 +281,10 @@ phases:
       - FileStore last_consolidate persistence
       - status.adapters + consolidate metrics for panel
       - knowledge-foundry-sop dual-accept docs
+  10:
+    status: done
+    deliverables:
+      - Neo4j SEARCH as_of bi-temporal filter
+      - LiveKosSearchBackend (MOS_LIVE_KOS)
+      - LiveGbrainSearchBackend + optional gbrain put write
+      - mos/cockpit recall --as-of

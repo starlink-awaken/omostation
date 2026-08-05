@@ -62,6 +62,17 @@ Agora MCP 启动时也会 best-effort `_load_memory_os_env()`（不覆盖已有�
 - FileStore（默认 `runtime/mos/store.json` 或 `~/.mos/store.json`）持久化 theta/raw **与** `last_consolidate`
 - `cockpit memory status` / `/api/memory/status` 暴露 `consolidate` + `adapters` 诚实字段
 
+## Phase 10 能力加深
+
+| 能力 | 开关 / 用法 |
+|------|-------------|
+| Neo4j bi-temporal as_of | `cockpit memory recall "…" --as-of 2024-06-01T00:00:00Z`（省略=当前态） |
+| Live KOS 检索 | `MOS_LIVE_KOS=1` + `KOS_API_URL`（默认 `http://localhost:8766`） |
+| Live gbrain 检索 | `MOS_LIVE_GBRAIN=1`（需 bun + `projects/gbrain`） |
+| Live gbrain 双写 | `MOS_LIVE_GBRAIN_WRITE=1`（write 时 best-effort `gbrain put`；失败不阻断 dual-track） |
+
+默认全部 off：无 live 依赖时仍用 FileStore fixture，status.adapters 标明诚实状态。
+
 ## 图库启动
 
 ```bash
