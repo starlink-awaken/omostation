@@ -1983,6 +1983,21 @@ gac:
     version: 1.0.0
     created_at: '2026-08-05'
     adr: ADR-0373
+
+  - id: CR-X3-DELIVERY-CADENCE
+    dimension: X3
+    layer: meta
+    name: PR 交付节奏
+    description: 'PR 交付节奏是 X3 价值流的关键指标. 悬挂超过 7 天的 PR 数 ≤ 5. 平衡 X3 维度覆盖, 提升价值流可见性. 实现: bin/gac/check-delivery-cadence.py (gac-gate CI, advisory)'
+    check_type: value_roi
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    source_type: native
+
   drift:
     schedule: daily
     auto_heal: false
