@@ -112,3 +112,35 @@ def test_non_indexed_rule_skips_indexed_check(gd) -> None:
     }
     drifts = gd.check_indexed_drift(rule)
     assert drifts == []
+
+
+def test_derived_plane_target_skipped(gd) -> None:
+    """ADR-0377 G11: runtime-derived target (gitignored _derived) 存在性取决于
+    本地生成, 静态 target-exists 检查必须跳过 — fresh checkout 必然缺失也不报 drift."""
+    rule = {
+        "id": "CR-M4-HEALTH-SCORE",
+        "target": "projects/ecos/.omo/_derived/m4-health.json",
+        "check_type": "freshness",
+    }
+    assert gd.check_target_exists(rule) == [], "derived file target must not flag drift"
+
+
+def test_derived_plane_dir_target_skipped(gd) -> None:
+    """G11: _derived/ 目录 target 同样跳过 (CR-M4-DERIVED-PLANE-AUDIT)."""
+    rule = {
+        "id": "CR-M4-DERIVED-PLANE-AUDIT",
+        "target": "projects/ecos/.omo/_derived/",
+        "check_type": "ssot_pointer",
+    }
+    assert gd.check_target_exists(rule) == [], "derived dir target must not flag drift"
+
+
+def test_regular_missing_target_still_flags(gd) -> None:
+    """G11 回归: 非派生面 target 缺失仍必须报 drift (排除逻辑不伤主路径)."""
+    rule = {
+        "id": "CR-ANY-REAL-TARGET",
+        "target": "projects/does-not-exist-xyz/audit.json",
+        "check_type": "freshness",
+    }
+    drifts = gd.check_target_exists(rule)
+    assert any("target 文件不存在" in d for d in drifts), f"expected drift, got: {drifts}"
