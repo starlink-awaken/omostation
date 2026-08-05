@@ -251,15 +251,35 @@ def test_governance_evolution_packages_rejects_missing_decision_template_parent(
     assert not decision_file.exists()
 
 
-def test_governance_evolution_packages_require_ready_blocks_pending_decisions() -> None:
-    result = _run_evolution("packages", "--require-ready", "--json")
+def _load_governance_evolution():
+    """ADR-0377 G12: 直接载入模块做确定性注入 (避免子进程绑定实时 repo 状态)."""
+    import importlib.util
 
-    assert result.returncode == 1
-    report = json.loads(result.stdout)
+    spec = importlib.util.spec_from_file_location("governance_evolution_round", SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_governance_evolution_packages_require_ready_blocks_pending_decisions(monkeypatch) -> None:
+    """ADR-0377 G12: require-ready 在存在 pending decisions 时阻塞.
+
+    原实现依赖实时 repo `git status` 恰好存在 pending 项 — 干净树必然失败
+    (handoff 记录 "clean tree 也失败"). 改为注入 git_status_lines 构造
+    确定性 pending 状态, 直接断言 build_package_report 的阻塞语义.
+    """
+    module = _load_governance_evolution()
+    monkeypatch.setattr(
+        module, "git_status_lines", lambda: ["?? .omo/tasks/planned/fake-review.yaml"]
+    )
+    report = module.build_package_report(require_ready=True)
+
     assert report["ok"] is False
     assert report["release_ready"] is False
     assert report["release_gate"] == {"required": True, "ok": False, "blocking": True}
     assert report["decision_summary"]["pending"] == report["decision_count"]
+    assert report["decision_count"] >= 1
     assert report["recommended_next"] == "Complete release decisions before packaging."
 
 

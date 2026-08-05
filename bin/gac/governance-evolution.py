@@ -827,7 +827,11 @@ def build_package_report(
             write_decisions_template,
             decision_default,
         )
-    release_ready = not review_findings or decision_summary["ready"]
+    # ADR-0377 G12: invalid 决策记录 = 决策数据不可信 → release 不可 ready.
+    # 旧逻辑 `not review_findings or ...` 在无 findings 时短路 True, 吞掉 invalid.
+    release_ready = decision_summary["invalid"] == 0 and (
+        not review_findings or decision_summary["ready"]
+    )
     release_gate = {
         "required": require_ready,
         "ok": release_ready,
