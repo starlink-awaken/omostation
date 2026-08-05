@@ -25,6 +25,8 @@ related:
 - cockpit UI 面板未做（API 网关可接任意前端）
 - multi-tenant 策略表/RBAC 未做
 
+> **后续 supersede（勿当现状）**: Phase 6 已交付 Neo4j 生产写路径 + `memory-rbac.yaml` + cockpit `/memory` 面板；Phase 7 补 Neo4j recall；Phase 8 环境注入/端口/运维契约；#978 补 `cockpit memory` CLI 与 BOS `knowledge-ref`。以 `memory-os.yaml` phase8 与 phase6–8 复盘为准。
+
 ## 验证
 
 - mos pytest 含 ACL/graphiti 状态
