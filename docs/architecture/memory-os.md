@@ -2,12 +2,15 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-05
 related:
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ../../.omo/_truth/registry/memory-os.yaml
+  - ../../.omo/standards/memory-os-ops.md
   - ./gbrain-three-stack-split.md
   - ../operations/memory-os-adapter-audit.md
+  - ../operations/memory-os-epic-retro.md
+  - ../operations/memory-os-neo4j-local.md
   - ../operations/knowledge-foundry-sop.md
 ---
 
@@ -73,9 +76,11 @@ Theta 失败保留 Raw 并入重试队列。详见 ADR-0372 §D3 与 adapter aud
 ## 6. 召回编排（逻辑）
 
 ```text
-query + scope + intent?
+query + scope + intent? + as_of?
   → route_table[intent]
   → parallel backends (timeout budget)
+       · neo4j / temporal：支持 as_of 双时态过滤（P10）
+       · kos / gbrain：MOS_LIVE_*=1 时 live，否则 fixture
   → scope/ACL/forgotten filter
   → RRF / weighted merge
   → citations（可挂 knowledge_ref）
@@ -83,6 +88,7 @@ query + scope + intent?
 
 **硬分流**：`code_structure` → codebase-memory；`task_debt` → governance——禁止与笔记混 RRF。
 
+**as_of（P10）**：ISO-8601；省略 = 当前态（`invalidated_at IS NULL`）。图侧过滤 `valid_from`/`valid_to`/`invalidated_at`。
 ## 7. 巩固（Sleep-time）
 
 - **引擎**: 既有 `gbrain dream` / `runCycle()`（含 extract_facts、consolidate 等 phase）
@@ -116,16 +122,25 @@ MOS 增加：统一 agent 默认召回、对话记忆、巩固与遗忘；事件
 | 4 | temporal shadow + scope ACL + knowledge_ref — **done** |
 | 5 | fine ACL + Graphiti bridge flag + cockpit `/api/memory` — **done** |
 | 6 | Neo4j FACT 写路径 + 策略表 RBAC + cockpit `/memory` 面板 — **done** |
-| 7 | Neo4j recall 挂入 `temporal_fact`/`entity_relation` 检索闭环 + 本机 docker/brew 启动脚本 — **done** |
+| 7 | Neo4j recall 挂入 `temporal_fact`/`entity_relation` + 本机 docker/brew 启动 — **done** |
 | 8 | 进程 env 注入 + 端口登记 + 运维契约 + surface check — **done** |
-| 9+ | 完整 graphiti-core 引擎、as_of 图侧 bi-temporal、Mem0 真集群 |
+| 9 | 史诗复盘 + env local 覆盖 + consolidate 持久化 + status.adapters — **done** |
+| 10 | Neo4j **as_of** bi-temporal + live KOS/gbrain（`MOS_LIVE_*`，默认 off）— **done** |
+| 11+ | 完整 graphiti-core 引擎、Mem0 真集群（backlog） |
 
-实现入口：`projects/kairon/packages/mos` · CLI `python -m mos` / `cockpit memory`  
-本机图：`bash bin/memory-os-neo4j-up.sh` · 环境：`source bin/memory-os-env.sh`  
-史诗复盘：`docs/operations/memory-os-epic-retro.md`  
+### 操作入口（人类 / Agent）
 
-运维契约：`.omo/standards/memory-os-ops.md` · 检查：`make memory-os-check`
+| 面 | 调用 |
+|----|------|
+| Cockpit CLI | `cockpit memory status\|recall\|write\|forget\|consolidate\|knowledge-ref` |
+| Cockpit help | `cockpit memory`（无子命令 = 面板 + 用法）· `cockpit memory recall -h` |
+| HTTP / UI | `/api/memory/*` · `/memory` |
+| BOS / Agora MCP | `bos://memory/mos/*`（stdio + MCP lifespan env） |
+| 本机图 | `bash bin/memory-os-neo4j-up.sh` |
+| 环境 | `source bin/memory-os-env.sh` · `config/memory-os.env` |
+| 检查 | `make memory-os-check` · `make memory-os-env` |
 
+实现：`projects/kairon/packages/mos` · 史诗复盘：`docs/operations/memory-os-epic-retro.md` · 运维：`.omo/standards/memory-os-ops.md`
 ## 11. 相关入口
 
 - Agent skill: `.agents/skills/memory-recall/SKILL.md`

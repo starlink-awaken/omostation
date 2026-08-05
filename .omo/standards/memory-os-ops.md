@@ -7,6 +7,9 @@ related:
   - ../_knowledge/decisions/0372-memory-os-control-plane.md
   - ../_truth/registry/memory-os.yaml
   - ../../docs/operations/memory-os-neo4j-local.md
+  - ../../docs/operations/memory-os-epic-retro.md
+  - ../../docs/operations/memory-os-phase10-retro.md
+  - ../../docs/architecture/memory-os.md
 ---
 
 # Memory OS 运维契约（Phase 8–9）

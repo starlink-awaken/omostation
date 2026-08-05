@@ -68,9 +68,9 @@
 
 → [Closeout 记录](closeout/) — 各轮关闭记录和复盘（详见 `docs/closeout/`）
 
-→ [操作 SOP](operations/) — 运维手册、清单、模板（详见 `docs/operations/`；含 [codebase-memory](operations/codebase-memory.md) 结构图用法）
+→ [操作 SOP](operations/) — 运维手册、清单、模板（详见 `docs/operations/`；含 [codebase-memory](operations/codebase-memory.md) 结构图用法；Memory OS： [memory-os-neo4j-local](operations/memory-os-neo4j-local.md) · [memory-os-epic-retro](operations/memory-os-epic-retro.md)）
 
-→ [架构设计](architecture/) — 方案设计文档（详见 `docs/architecture/`）
+→ [架构设计](architecture/) — 方案设计文档（详见 `docs/architecture/`；含 [Memory OS](architecture/memory-os.md) 控制面导航）
 
 → [ISA 分析](isa/) — 接口/服务/架构图（详见 `docs/isa/`）
 
