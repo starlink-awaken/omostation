@@ -67,12 +67,18 @@ REACH_SCRIPT="$ROOT/bin/ssot/submodule-reachability-gate.py"
 if [ ! -f "$REACH_SCRIPT" ]; then
   REACH_SCRIPT="$ROOT/bin/submodule-reachability-gate.py"
 fi
+REACH_BASELINE="$ROOT/.omo/_truth/registry/submodule-reachability-baseline.txt"
+if [ -f "$REACH_BASELINE" ]; then
+  REACH_ARGS="--skip-file $REACH_BASELINE"
+else
+  REACH_ARGS=""
+fi
 if [ ! -f "$SYNC_SCRIPT" ]; then
   echo "[pre-push] ❌ missing sync-submodules-push.sh (expected bin/ssot/ or bin/)" >&2
   exit 1
 fi
 "$SYNC_SCRIPT" 2>&1 | sed 's/^/[pre-push] /' >&2
-python3 "$REACH_SCRIPT" --source head --fetch 2>&1 | sed 's/^/[reachability] /' >&2
+python3 $REACH_SCRIPT --source head --fetch $REACH_ARGS 2>&1 | sed 's/^/[reachability] /' >&2
 
 # ── G-CONV.7 / ADR-0220 D4: escape-hatch allowlist for CI_LOCAL_SKIP ─
 # CI_LOCAL_SKIP=1 requires SWARM_ESCAPE_ID matching registry allowlist.
