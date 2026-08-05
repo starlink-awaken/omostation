@@ -27,6 +27,40 @@ from .base import (
 )
 
 
+def _memory_os_workbench_line() -> str:
+    """Probe Memory OS via real mos status path; never crash the workbench."""
+    try:
+        from cockpit.commands.memory import _invoke_mos
+
+        st = _invoke_mos("status", {})
+    except Exception as exc:  # noqa: BLE001
+        return f"\n[bold]Memory OS:[/bold] [red]probe failed[/] [dim]({exc})[/]"
+    if not isinstance(st, dict):
+        return "\n[bold]Memory OS:[/bold] [yellow]unexpected response[/]"
+    if st.get("error") or st.get("ok") is False:
+        err = st.get("error") or "not ok"
+        return f"\n[bold]Memory OS:[/bold] [yellow]degraded[/] [dim]{err}[/]  [cyan]cockpit memory status[/]"
+    neo_c = st.get("neo4j_configured")
+    neo_a = st.get("neo4j_available")
+    neo_r = st.get("neo4j_recall")
+    as_of = st.get("neo4j_as_of")
+    ver = st.get("version") or "?"
+    if neo_c and neo_a:
+        tag = "green"
+        neo_s = "neo4j ready"
+    elif neo_c:
+        tag = "yellow"
+        neo_s = "neo4j configured, driver n/a"
+    else:
+        tag = "dim"
+        neo_s = "neo4j unset (TemporalShadow)"
+    return (
+        f"\n[bold]Memory OS:[/bold] [{tag}]v{ver} · {neo_s}[/]  "
+        f"recall={neo_r} as_of={as_of}  "
+        f"[dim]→ cockpit memory · make memory-os-smoke[/]"
+    )
+
+
 def _render_workbench(cycle: int | None = None, interval: float | None = None) -> None:
     import sqlite3
 
@@ -40,12 +74,12 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
         _panel(
             "[bold]⚡ 快速行动[/bold]    "
             "[cyan]research <主题>[/]   "
+            "[cyan]memory[/]   "
             "[cyan]import <路径|URL>[/]   "
             "[cyan]daily[/]   "
             "[cyan]demo[/]   "
             "[dim]|[/dim]   "
-            "[cyan]contracts validate[/]   "
-            "[cyan]profile[/]   "
+            "[cyan]help[/]   "
             "[cyan]dashboard[/]",
             "bright_blue",
         )
@@ -137,7 +171,14 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
                     break
     except Exception:  # defensive fallback
         pass
-    c.print(_panel(f"{status_line}\n{stats_line}\n{hl_line}{health_line}", "bright_blue"))
+    # Memory OS control-plane health (same mos status path as `cockpit memory status`)
+    memory_line = _memory_os_workbench_line()
+    c.print(
+        _panel(
+            f"{status_line}\n{stats_line}\n{hl_line}{health_line}{memory_line}",
+            "bright_blue",
+        )
+    )
     recent = _get_data_access().list_research(limit=5)
     if recent:
         wb_table = Table(

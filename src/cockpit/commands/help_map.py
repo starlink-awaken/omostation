@@ -7,6 +7,7 @@ per-command --help). Update when adding top-level commands in cli.py.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from rich import box
 from rich.console import Console
@@ -280,3 +281,36 @@ def render_compact_help(console: Console) -> None:
 
 def all_command_names() -> list[str]:
     return sorted({r.name for _, _, rows in GROUPS for r in rows})
+
+
+def render_discover_map(console: Console) -> None:
+    """Command map for `cockpit discover` — same GROUPS SSOT as `cockpit help`."""
+    n = len(all_command_names())
+    g = len(GROUPS)
+    console.print(f"[bold]命令地图[/] ([cyan]{n}[/] 个命令 · [cyan]{g}[/] 组 · 与 [cyan]cockpit help[/] 同源)")
+    t = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold green", expand=True, pad_edge=False)
+    t.add_column("分组", style="bold green", min_width=16)
+    t.add_column("命令", style="cyan")
+    for title, _style, rows in GROUPS:
+        names = " · ".join(r.name for r in rows)
+        t.add_row(title, names)
+    console.print(t)
+    # Explicit Memory OS callout for discover consistency with help
+    console.print(
+        "\n[bold magenta]🧠 Memory OS[/]  "
+        "[cyan]cockpit memory[/] · [cyan]status/recall/write/forget/consolidate[/] · "
+        "[dim]docs/architecture/memory-os.md[/]"
+    )
+    console.print(
+        "[dim]完整说明/场景: [cyan]cockpit help[/] · 搜能力: [cyan]cockpit help memory[/] · "
+        "子命令: [cyan]cockpit <cmd> --help[/][/dim]"
+    )
+
+
+def top_level_cli_names_from_source(cli_path: Path | None = None) -> set[str]:
+    """Parse cli.py for `sub.add_parser("name"` top-level registrations."""
+    import re
+
+    path = cli_path or Path(__file__).resolve().parent.parent / "cli.py"
+    text = path.read_text(encoding="utf-8")
+    return set(re.findall(r'\bsub\.add_parser\(\s*"([^"]+)"', text))
