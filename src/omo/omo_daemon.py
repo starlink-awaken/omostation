@@ -30,7 +30,13 @@ from omo.mesh_watchdog_runner import run_once as run_mesh_watchdog_once
 from omo.omo_audit import run_governance_audit
 from omo.omo_history import DEFAULT_PATH as DEFAULT_HISTORY_PATH
 from omo.omo_history import append_entry
-from omo.omo_paths import DAEMON_LOG_FILE, DAEMON_PID_FILE, OMO_ROOT
+from omo.omo_paths import (
+    DAEMON_LOG_FILE,
+    DAEMON_PID_FILE,
+    KAIRON_DIR,
+    OMO_ROOT,
+    WORKSPACE_ROOT,
+)
 
 # ── 默认配置 ────────────────────────────────────────────
 DEFAULT_INTERVAL_SECONDS = 1800  # 30 min
@@ -78,6 +84,7 @@ class TickResult:
     history_appended: bool
     error: str | None = None
     mesh_watchdog: dict[str, Any] | None = None
+    auto_consume: dict[str, Any] | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -153,6 +160,7 @@ def run_once(
     mesh_watchdog: bool = False,
     mesh_watchdog_apply: bool = False,
     mesh_watchdog_now: str | None = None,
+    auto_consume: bool = False,
 ) -> TickResult:
     """执行一次 tick: audit -> history append -> sync (dry-run).
 
@@ -229,6 +237,11 @@ def run_once(
                 f"{len(mesh_watchdog_result['errors'])} error(s)"
             )
 
+    # P0 完整第三块: 闭环消费 pending workflow requests (planned → admit → dispatch)
+    auto_consume_result: dict[str, Any] | None = None
+    if auto_consume:
+        auto_consume_result = _run_auto_consume()
+
     result = TickResult(
         timestamp=timestamp,
         audit_score=audit_score,
@@ -237,10 +250,74 @@ def run_once(
         history_appended=history_appended,
         error=error,
         mesh_watchdog=mesh_watchdog_result,
+        auto_consume=auto_consume_result,
     )
     # Round 1: emit lifecycle event on bus-foundation. Best-effort, never raises.
     _publish_tick_event(result)
     return result
+
+
+def _run_auto_consume() -> dict[str, Any] | None:
+    """P0 第三块: 闭环消费 pending workflow requests.
+
+    调 consume_pending_workflow_requests (capability_health 从 iris entry_points 拿).
+    失败不炸 tick (log + 返回 None).
+    """
+    try:
+        from omo.workflow_dispatch import consume_pending_workflow_requests
+
+        health = _collect_iris_capability_health()
+        return consume_pending_workflow_requests(
+            WORKSPACE_ROOT, capability_health=health
+        )
+    except Exception as exc:  # defensive: auto_consume 失败不炸 tick
+        logging.getLogger("omo.daemon").error("auto_consume_failed: %s", exc)
+        return None
+
+
+def _collect_iris_capability_health() -> dict[str, Any]:
+    """P0 第三块: 枚举 iris connectors (entry_points external.resources) → capability_health.
+
+    subprocess 调 iris (uv run --package iris), 枚举 connector + is_available().
+    iris 不可用返回 unavailable (consume 全 skip, 安全 fallback).
+    """
+    import subprocess
+
+    code = (
+        "import importlib.metadata as m, json\n"
+        "result = {}\n"
+        "for ep in m.entry_points(group='external.resources'):\n"
+        "    try:\n"
+        "        inst = ep.load()()\n"
+        "        result[ep.name] = bool(inst.is_available())\n"
+        "    except Exception:\n"
+        "        result[ep.name] = False\n"
+        "print(json.dumps(result))\n"
+    )
+    try:
+        proc = subprocess.run(
+            ["uv", "run", "--package", "iris", "python", "-c", code],
+            cwd=str(KAIRON_DIR),
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        if proc.returncode != 0 or not proc.stdout.strip():
+            return {"status": "unavailable", "capabilities": {}}
+        data = json.loads(proc.stdout.strip().splitlines()[-1])
+        capabilities = {
+            f"iris:{name}": {"available": available}
+            for name, available in data.items()
+            if available
+        }
+        return {
+            "status": "healthy" if capabilities else "unavailable",
+            "capabilities": capabilities,
+            "source": "iris-entry-points",
+        }
+    except Exception:
+        return {"status": "unavailable", "capabilities": {}}
 
 
 def _publish_tick_event(result: TickResult) -> None:
@@ -287,6 +364,7 @@ def run_daemon(
     log_file: Path = DAEMON_LOG_FILE,
     mesh_watchdog: bool = True,
     mesh_watchdog_apply: bool = False,
+    auto_consume: bool = False,
 ) -> None:
     """主 daemon 循环 (阻塞). 重复跑 run_once, 直到 SIGTERM / SIGINT."""
     if (pid := _is_daemon_running(pid_file)) is not None:
@@ -316,6 +394,7 @@ def run_daemon(
             tick_result = run_once(
                 mesh_watchdog=mesh_watchdog,
                 mesh_watchdog_apply=mesh_watchdog_apply,
+                auto_consume=auto_consume,
             )
             if tick_result.error:
                 logger.error(f"tick_error: {tick_result.error}")
@@ -389,6 +468,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="显式允许 watchdog 追加 WorkerLeaseExpired（默认只读）",
     )
+    p_start.add_argument(
+        "--auto-consume",
+        action="store_true",
+        help="每个 tick 闭环消费 pending workflow requests (planned → admit → dispatch)",
+    )
 
     p_stop = sub.add_parser("stop", help="发 SIGTERM 停止 daemon")
     p_stop.add_argument(
@@ -403,6 +487,7 @@ def main(argv: list[str] | None = None) -> int:
     p_once = sub.add_parser("once", help="跑一次 tick 就退出 (用于 cron / 测试)")
     p_once.add_argument("--mesh-watchdog", action="store_true")
     p_once.add_argument("--mesh-watchdog-apply", action="store_true")
+    p_once.add_argument("--auto-consume", action="store_true")
     p_once.add_argument("--now")
 
     args = parser.parse_args(argv)
@@ -412,6 +497,7 @@ def main(argv: list[str] | None = None) -> int:
             interval_seconds=args.interval,
             mesh_watchdog=not args.no_mesh_watchdog,
             mesh_watchdog_apply=args.mesh_watchdog_apply,
+            auto_consume=args.auto_consume,
         )
         return 0
     if args.cmd == "stop":
@@ -428,6 +514,7 @@ def main(argv: list[str] | None = None) -> int:
             mesh_watchdog=args.mesh_watchdog,
             mesh_watchdog_apply=args.mesh_watchdog_apply,
             mesh_watchdog_now=args.now,
+            auto_consume=args.auto_consume,
         )
         print(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
         return 0

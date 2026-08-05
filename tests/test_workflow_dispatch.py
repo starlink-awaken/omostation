@@ -11,6 +11,7 @@ import yaml
 from omo.workflow_dispatch import (
     WorkflowDispatchError,
     admit_workflow,
+    consume_pending_workflow_requests,
     dispatch_admitted_workflow,
 )
 from omo.workflow_mesh import WorkflowMeshStore
@@ -251,3 +252,103 @@ def test_dispatch_admitted_workflow_no_double_step_dispatched(tmp_path: Path) ->
     step_dispatched = [e for e in events if e["event_type"] == "StepDispatched"]
 
     assert len(step_dispatched) == 1, "Should not double-emit StepDispatched"
+
+
+def test_consume_pending_workflow_requests_iris_fast_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """P0 完整第三块: consume 闭环 - planned run → admit → iris 快速路径."""
+    import omo.workflow_dispatch as wd
+    from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event
+
+    _task(tmp_path)  # active task TASK-MESH-1
+
+    # 手动发 WorkflowRequested event (planned state, 声明 iris capability)
+    store = WorkflowMeshStore(tmp_path / ".omo")
+    run_id = "run-consume-iris"
+    store.append(
+        new_workflow_event(
+            "WorkflowRequested",
+            run_id,
+            trace_id=run_id,
+            producer="test",
+            idempotency_key=f"{run_id}:requested",
+            payload={
+                "task_id": "TASK-MESH-1",
+                "task_ref": ".omo/tasks/active/TASK-MESH-1.yaml",
+                "required_capabilities": ["iris:apple_mail"],
+            },
+        )
+    )
+
+    # mock iris 快速路径 (避免 subprocess)
+    dispatched: list[dict] = []
+
+    def fake_iris_dispatch(root, packet, iris_caps, omo_dir=".omo"):  # noqa: ANN001
+        dispatched.append(
+            {"run_id": packet["workflow_run_id"], "caps": list(iris_caps)}
+        )
+        return {**packet, "iris_dispatch": [], "dispatch_state": "dispatched"}
+
+    monkeypatch.setattr(wd, "_dispatch_iris_via_executor", fake_iris_dispatch)
+
+    health = {
+        "status": "healthy",
+        "source": "iris-entry-points",
+        "observed_at": datetime.now(UTC).isoformat(),
+        "capabilities": {"iris:apple_mail": {"available": True, "health": "green"}},
+    }
+
+    result = consume_pending_workflow_requests(
+        tmp_path, capability_health=health, omo_dir=".omo"
+    )
+
+    assert result["total_planned"] == 1
+    assert len(result["consumed"]) == 1
+    assert result["consumed"][0]["workflow_run_id"] == run_id
+    assert result["consumed"][0]["iris"] is True
+    assert len(dispatched) == 1
+    assert dispatched[0]["caps"] == ["iris:apple_mail"]
+    assert result["failed"] == []
+
+    # verify mesh 状态机推进 (admitted 之后)
+    snap = store.snapshot(run_id)
+    assert snap["state"] in {"admitted", "dispatched", "running"}
+
+
+def test_consume_pending_workflow_requests_skips_non_planned(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """consume 跳过 non-planned run (不重复消费 admitted/succeeded)."""
+    import omo.workflow_dispatch as wd
+
+    _task(tmp_path)
+
+    # 先 admit 一个 run (state → admitted, 非 planned)
+    admit_workflow(
+        tmp_path,
+        task_id="TASK-MESH-1",
+        backend="runtime",
+        required_capabilities=["workflow.execute", "runtime"],
+        capability_health=_health(),
+        workflow_run_id="run-already-admitted",
+        now="2026-08-02T10:00:00+00:00",
+    )
+
+    dispatched: list[int] = []
+    monkeypatch.setattr(
+        wd,
+        "_dispatch_iris_via_executor",
+        lambda *a, **k: dispatched.append(1) or {},
+    )
+
+    result = consume_pending_workflow_requests(
+        tmp_path, capability_health=_health(), omo_dir=".omo"
+    )
+
+    # 没 planned run → 0 consumed, 0 skipped, 0 failed
+    assert result["total_planned"] == 0
+    assert result["consumed"] == []
+    assert result["skipped"] == []
+    assert result["failed"] == []
+    assert dispatched == []

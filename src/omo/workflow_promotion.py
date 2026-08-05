@@ -133,6 +133,7 @@ def request_workflow_from_task(
     workflow_name: str,
     scene_binding: Mapping[str, Any],
     evidence_plan: Sequence[Any],
+    required_capabilities: Sequence[str] = (),
     actor: str = "omo",
     workflow_version: str = "v1",
     operation_level: str | None = None,
@@ -194,6 +195,11 @@ def request_workflow_from_task(
         "workflow_version": version,
         "scene_binding": binding,
         "evidence_plan": plan,
+        "required_capabilities": list(
+            dict.fromkeys(
+                str(item).strip() for item in required_capabilities if str(item).strip()
+            )
+        ),
         "operation_level": requested_level,
         "approval_required": approval_required,
         "knowledge_ref_digest": _digest({"knowledge_refs": knowledge_refs}),
@@ -222,6 +228,7 @@ def request_workflow_from_task(
             "task_id": task_id,
             "task_ref": task_ref,
             "workflow": {"name": name, "version": version},
+            "required_capabilities": request["required_capabilities"],
             "operation_level": requested_level,
             "approval_required": approval_required,
             "evidence_plan": plan,

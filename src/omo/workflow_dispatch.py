@@ -649,10 +649,127 @@ def dispatch_admitted_workflow(
     }
 
 
+def consume_pending_workflow_requests(
+    root: Path,
+    *,
+    capability_health: dict[str, Any],
+    backend: str = "iris-executor",
+    worker_id: str = "omo-daemon-consumer",
+    allowed_write_paths: list[str] | None = None,
+    omo_dir: str | Path = ".omo",
+    max_per_tick: int = 10,
+) -> dict[str, Any]:
+    """扫描 planned workflow run → preview gate → admit → dispatch (闭环消费).
+
+    P0 完整第三块: daemon tick 调用, 扫描 WorkflowMeshStore 找 state == "planned"
+    的 run, 逐个 preview → admit → dispatch (iris 快速路径 / worker).
+    单 run 失败不影响其他 (错误隔离); 跳过 non-planned / blocked / deduplicated.
+
+    required_capabilities 从 WorkflowRequested event payload 读
+    (request_workflow_from_task 声明式写入). approval gate 只读不伪造.
+    """
+    store = WorkflowMeshStore(root / Path(omo_dir))
+    consumed: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+    failed: list[dict[str, Any]] = []
+
+    planned_runs = [s for s in store.snapshots() if s.get("state") == "planned"]
+    for snapshot in planned_runs[:max_per_tick]:
+        run_id = str(snapshot["workflow_run_id"])
+        try:
+            event = _requested_event(store, run_id)
+            payload = event.get("payload") or {}
+            task_id = str(payload.get("task_id") or "")
+            required = list(payload.get("required_capabilities") or [])
+        except WorkflowDispatchError as exc:
+            failed.append({"workflow_run_id": run_id, "error": str(exc)})
+            continue
+        if not task_id or not required:
+            skipped.append(
+                {
+                    "workflow_run_id": run_id,
+                    "reason": "missing task_id or required_capabilities",
+                }
+            )
+            continue
+        # 1. preview gate (approval / health / scene, 不写状态)
+        try:
+            preview = preview_requested_workflow(
+                root,
+                workflow_run_id=run_id,
+                backend=backend,
+                required_capabilities=required,
+                capability_health=capability_health,
+                omo_dir=omo_dir,
+            )
+        except WorkflowDispatchError as exc:
+            failed.append({"workflow_run_id": run_id, "error": f"preview: {exc}"})
+            continue
+        if preview.get("status") != "eligible":
+            skipped.append(
+                {
+                    "workflow_run_id": run_id,
+                    "reason": preview.get("status", "unknown"),
+                }
+            )
+            continue
+        # 2. admit (写 WorkflowAdmitted, state → admitted)
+        try:
+            packet = admit_requested_workflow(
+                root,
+                workflow_run_id=run_id,
+                backend=backend,
+                required_capabilities=required,
+                capability_health=capability_health,
+                omo_dir=omo_dir,
+            )
+        except WorkflowDispatchError as exc:
+            failed.append({"workflow_run_id": run_id, "error": f"admit: {exc}"})
+            continue
+        # 3. dispatch (iris 快速路径 / worker)
+        iris_caps = [c for c in required if str(c).startswith("iris:")]
+        try:
+            if iris_caps:
+                result = _dispatch_iris_via_executor(
+                    root, packet, iris_caps, omo_dir=omo_dir
+                )
+            else:
+                from .omo_worker_dispatch import dispatch_task
+
+                result = dispatch_task(
+                    root,
+                    task_id=task_id,
+                    worker_id=worker_id,
+                    allowed_write_paths=allowed_write_paths or [],
+                    launch=False,
+                    transport="cli_prompt",
+                    workflow_packet=packet,
+                )
+        except Exception as exc:  # defensive: 单 run dispatch 失败不炸 tick
+            failed.append({"workflow_run_id": run_id, "error": f"dispatch: {exc}"})
+            continue
+        consumed.append(
+            {
+                "workflow_run_id": run_id,
+                "task_id": task_id,
+                "dispatch_state": result.get("dispatch_state"),
+                "iris": bool(iris_caps),
+            }
+        )
+    return {
+        "consumed": consumed,
+        "skipped": skipped,
+        "failed": failed,
+        "total_planned": len(planned_runs),
+        "max_per_tick": max_per_tick,
+    }
+
+
 __all__ = [
     "WorkflowDispatchError",
     "admit_requested_workflow",
     "admit_workflow",
+    "consume_pending_workflow_requests",
     "dispatch_admitted_workflow",
     "preview_requested_workflow",
 ]
