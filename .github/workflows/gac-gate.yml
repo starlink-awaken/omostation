@@ -99,6 +99,18 @@ jobs:
         # PR 交付节奏是 X3 价值流指标, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-delivery-cadence.py
+      - name: CR-P77-3-2-PREFIX-PATTERN — URI 前缀模式检查 (advisory)
+        # URI 末尾 / 表 routing prefix, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-uri-prefix-pattern.py
+      - name: CR-P77-6-2-TIER-FALLBACK-TEST — 层级 fallback 测试检查 (advisory)
+        # 每级 fallback 必须有测试, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-fallback-test-coverage.py
+      - name: CR-P79-4-CATALOG-HEALTH-METRIC — Catalog 健康指标检查 (advisory)
+        # GaC 规则数作为可观测指标, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-catalog-health.py
       - name: PASW — 自动同步子模块指针
         # 如果 PR 分支指针不可达, 自动 fetch 或更新到最新 origin/main
         # --verbose: 显示完整错误信息到 CI log, 便于诊断
