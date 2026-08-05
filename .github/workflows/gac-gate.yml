@@ -71,10 +71,19 @@ jobs:
         # mesh executor 脚本必须有超时控制、错误处理、日志记录, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-mesh-executor-reliability.py
-      - name: CR-X4-MEMORY-OS-SURFACE-INTEGRITY — Memory-OS surface 检查 (advisory)
-        # memory-os 新增 phase 必须注册 surface, 非阻塞 advisory
-        continue-on-error: true
+      - name: CR-X4-MEMORY-OS-SURFACE-INTEGRITY — Memory OS light gate
+        # SSOT/ports/env/help catalog surfaces; blocking (no Neo4j required)
         run: python3 bin/gac/check-memory-os-surfaces.py
+      - name: Memory OS catalog SSOT tests (cockpit help/discover)
+        # help_map catalog ⊆ CLI parsers; discover shares help_map (no Neo4j)
+        run: |
+          if [[ -d projects/cockpit ]]; then
+            cd projects/cockpit
+            uv sync --quiet || true
+            uv run pytest src/cockpit/tests/test_help_discover_ssot.py src/cockpit/tests/test_status_memory_os_line.py -q
+          else
+            echo "SKIP cockpit submodule absent"
+          fi
       - name: CR-X1-EXTERNAL-AGENT-AUDIT — 外部 agent 审计检查 (advisory)
         # 外部 agent 接入必须注册 MCP 入口 + 审计链, 非阻塞 advisory
         continue-on-error: true

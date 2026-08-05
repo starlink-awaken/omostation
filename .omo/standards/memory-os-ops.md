@@ -70,11 +70,20 @@ Agora MCP 启动时也会 best-effort `_load_memory_os_env()`（不覆盖已有�
 | 能力 | 开关 / 用法 |
 |------|-------------|
 | Neo4j bi-temporal as_of | `cockpit memory recall "…" --as-of 2024-06-01T00:00:00Z`（省略=当前态） |
+| as_of 演示种子 | `make memory-os-asof-seed`（AliceDemo OldCo→NewCo；对照 2020 vs 2023） |
 | Live KOS 检索 | `MOS_LIVE_KOS=1` + `KOS_API_URL`（默认 `http://localhost:8766`） |
 | Live gbrain 检索 | `MOS_LIVE_GBRAIN=1`（需 bun + `projects/gbrain`） |
 | Live gbrain 双写 | `MOS_LIVE_GBRAIN_WRITE=1`（write 时 best-effort `gbrain put`；失败不阻断 dual-track） |
 
 默认全部 off：无 live 依赖时仍用 FileStore fixture，status.adapters 标明诚实状态。
+
+对照命令（种子后）：
+
+```bash
+make memory-os-asof-seed
+cockpit memory recall AliceDemo --intent temporal_fact --as-of 2020-06-01T00:00:00Z --json  # OldCo
+cockpit memory recall AliceDemo --intent temporal_fact --as-of 2023-01-01T00:00:00Z --json  # NewCo
+```
 
 ## 图库启动
 
@@ -89,14 +98,16 @@ bash bin/memory-os-neo4j-up.sh status
 - 不得声称 graphiti-core 生产就绪（Cypher FACT + TemporalShadow）  
 - 密码不得写入仓内 SSOT（仅 example 默认 `changeme`）
 
-## 治理检查
+## 治理检查（light gate · blocking）
 
 ```bash
 python3 bin/gac/check-memory-os-surfaces.py
 make memory-os-check
+# CI: gac-gate 中 CR-X4-MEMORY-OS-SURFACE-INTEGRITY + cockpit help/discover SSOT pytest
 ```
 
-必过：SSOT 文件存在 · env.example 键齐全 · 7474/7687 已注册 · cockpit `.env.example` 含 NEO4J_URI。
+必过：SSOT 文件存在 · env.example 键齐全 · 7474/7687 已注册 · cockpit `.env.example` 含 NEO4J_URI · help_map 含 memory · smoke/asof-seed 脚本存在。  
+**无 Neo4j 也可过** light gate；图连通性走 `make memory-os-smoke` / status。
 
 ## 冷启动一页纸（operator path）
 
@@ -119,6 +130,14 @@ cockpit --help                          # 紧凑快速入口（非 70 命令墙�
 cockpit status
 
 # 5) 实路径冒烟
+make memory-os-check
 make memory-os-smoke
 # 或: bash bin/memory-os-smoke.sh
+
+# 6) as_of 对照（可选）
+make memory-os-asof-seed
+
+# 7) Agent / 新用户冷启动
+cockpit agent-onboard
+cockpit quickstart
 ```

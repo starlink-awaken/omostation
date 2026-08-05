@@ -1882,7 +1882,7 @@ gac:
     dimension: X4
     layer: meta
     name: Memory-OS surface 一致性
-    description: 'memory-os 新增 phase 必须注册 surface (bin/gac/ 或 .omo/standards/), 禁止无治理覆盖的新 phase. 实现: bin/gac/check-memory-os-surfaces.py (gac-gate CI, advisory)'
+    description: 'Memory OS light gate: SSOT/ports/env.example/help catalog/smoke surfaces 必须齐全. 实现: bin/gac/check-memory-os-surfaces.py (gac-gate CI blocking; make memory-os-check)'
     check_type: hygiene_case
     executor:
     - ci_gate

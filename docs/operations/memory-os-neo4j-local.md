@@ -98,6 +98,7 @@ export MOS_RBAC=1
 
 ```bash
 source bin/memory-os-env.sh
+make memory-os-check                    # light gate（无 Neo4j 也可过）
 cockpit memory status --json
 # 期望: neo4j_configured/available/recall=true, neo4j_as_of=true, version=0.10.0
 
@@ -109,6 +110,42 @@ cockpit memory recall "Carol founded" --intent temporal_fact --json
 
 # bi-temporal（P10）
 cockpit memory recall "Carol" --intent temporal_fact --as-of 2020-01-01T00:00:00Z --json
+
+make memory-os-smoke                    # status + write + recall + as_of 一键
+```
+
+## as_of 对照（演示种子）
+
+写入两段**同一主体、不同世界时间窗**的事实，再按 `as_of` 对照召回：
+
+```bash
+source bin/memory-os-env.sh
+make memory-os-asof-seed                # 或: bash bin/memory-os-asof-seed.sh
+# 默认主体 AliceDemo:
+#   2019–2021 works_at OldCo
+#   2021–     works_at NewCo
+
+# 期望对照（intent=temporal_fact；有 Neo4j 时走图，否则 TemporalShadow）:
+cockpit memory recall AliceDemo --intent temporal_fact --as-of 2020-06-01T00:00:00Z --json
+# → 命中 OldCo（valid_to=2021 之前）
+
+cockpit memory recall AliceDemo --intent temporal_fact --as-of 2023-01-01T00:00:00Z --json
+# → 命中 NewCo
+
+cockpit memory recall AliceDemo --intent temporal_fact --json
+# → 当前态（省略 as_of = invalidated_at IS NULL）
+```
+
+手动等价写入：
+
+```bash
+cockpit memory write --type semantic --content "AliceDemo works_at OldCo" \
+  --subject AliceDemo --predicate works_at --object OldCo \
+  --valid-from 2019-01-01T00:00:00Z --valid-to 2021-01-01T00:00:00Z --json
+
+cockpit memory write --type semantic --content "AliceDemo works_at NewCo" \
+  --subject AliceDemo --predicate works_at --object NewCo \
+  --valid-from 2021-01-01T00:00:00Z --json
 ```
 
 BOS / MCP：`cockpit bos resolve bos://memory/mos/status` · invoke `bos://memory/mos/recall` with kwargs `{query, intent?, as_of?}`。
