@@ -442,6 +442,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0373: Sweep-tooling Convergence Round — A4/C5/D3/B2/E2 + GaC iterations — **ACCEPTED** | 2026-08-05 | Sweep tooling convergence round | 0373-sweep-tooling-convergence-round.md
 - ADR-0374: GaC Registry Convergence — indexed-drift fix, m1 orphan purge, stat auto-bump, symmetry tests — **ACCEPTED** | 2026-08-05 | GaC registry convergence | 0374-gac-registry-convergence.md
 - ADR-0375: Legacy Rule Plane Convergence — container-semantics drift fix + project-registry sync — **ACCEPTED** | 2026-08-05 | Legacy rule plane convergence | 0375-legacy-rule-plane-convergence.md
+- ADR-0376: M1 Tracked-Truth Convergence — health checks read git HEAD, not working tree — **ACCEPTED** | 2026-08-05 | M1 tracked truth | 0376-m1-tracked-truth-convergence.md
 
 ---
 
