@@ -5,13 +5,15 @@ owner: engineering-team
 last-reviewed: 2026-08-05
 related:
   - ./memory-os-phase6-retro.md
+  - ./memory-os-phase10-retro.md
   - ./minerva-local.md
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
+  - ../../.omo/standards/memory-os-ops.md
 ---
 
 # Memory OS — 本机 Neo4j 启动
 
-> Phase 6–7：`NEO4J_URI` 门控写 + 读。未设置时仅 TemporalShadow，不写图、recall 不 fan-out neo4j。
+> Phase 6–10：`NEO4J_URI` 门控写 + 读 + **as_of** 双时态过滤。未设置 URI 时仅 TemporalShadow，不写图、recall 不 fan-out neo4j。
 
 ## 一键（推荐）
 
@@ -24,10 +26,13 @@ bash bin/memory-os-neo4j-up.sh status
 bash bin/memory-os-neo4j-up.sh stop
 # 3) 治理面检查
 make memory-os-check
+# 4) CLI 帮助 / 状态
+cockpit memory
+cockpit memory status --json
 ```
 
-环境加载顺序（**已设置的非空 env 不覆盖**）：  
-进程 env → `config/memory-os.env` → `projects/cockpit/.env` → `docs/operations/memory-os.env.example`
+环境加载顺序（**进程非空 env 最高**）：  
+example → cockpit `.env` → `config/memory-os.env`（后写覆盖）；再恢复进程预设。
 
 成功后图库脚本也会打印：
 
@@ -77,21 +82,31 @@ export NEO4J_USER=neo4j
 export NEO4J_PASSWORD=changeme
 export MOS_TEMPORAL=1
 export MOS_RBAC=1
+# Phase 10 optional live backends (default off)
+# export MOS_LIVE_KOS=1
+# export MOS_LIVE_GBRAIN=1
+# export KOS_API_URL=http://localhost:8766
 ```
 
-## 冒烟（写 + 召回）
+完整模板：`docs/operations/memory-os.env.example` → 拷到 `config/memory-os.env`。
+
+## 冒烟（写 + 召回 + as_of）
 
 ```bash
-cd projects/kairon
-uv run --package mos --with neo4j python -m mos status
-# 期望: neo4j_configured=true, neo4j_available=true, neo4j_recall=true, version>=0.7.0
+source bin/memory-os-env.sh
+cockpit memory status --json
+# 期望: neo4j_configured/available/recall=true, neo4j_as_of=true, version=0.10.0
 
-echo '{"kwargs":{"type":"semantic","content":"Carol founded NeoSoft","subject":"Carol","predicate":"founded","object":"NeoSoft","confidence":0.9}}' \
-  | MOS_STDIO=1 uv run --package mos --with neo4j python -m mos write
+cockpit memory write --type semantic --content "Carol founded NeoSoft" \
+  --subject Carol --predicate founded --object NeoSoft --json
 
-echo '{"kwargs":{"query":"Carol founded","intent":"temporal_fact","limit":5}}' \
-  | MOS_STDIO=1 uv run --package mos --with neo4j python -m mos recall
-# 期望 hits 含 neo4j backend / Carol
+cockpit memory recall "Carol founded" --intent temporal_fact --json
+# 期望 hits 含 neo4j / Carol
+
+# bi-temporal（P10）
+cockpit memory recall "Carol" --intent temporal_fact --as-of 2020-01-01T00:00:00Z --json
 ```
+
+BOS / MCP：`cockpit bos resolve bos://memory/mos/status` · invoke `bos://memory/mos/recall` with kwargs `{query, intent?, as_of?}`。
 
 可选 dependency：`mos[neo4j]` / `mos[graph]`（`neo4j>=5.14`）。
