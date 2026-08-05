@@ -93,7 +93,7 @@ uv run --project projects/agora agora bos resolve "bos://memory/kos/search" \
 
 | Domain | Owner | Key Services | Transport |
 |--------|-------|-------------|-----------|
-| `memory` | kairon | KOS search, Eidos MCP, Ontoderive MCP | stdio, mcp_proxy |
+| `memory` | kairon / mos | KOS search · **Memory OS** `bos://memory/mos/*` · Eidos/Ontoderive | stdio, mcp_proxy |
 | `governance` | omo | OMO audit, state sync, governance evolution | http, stdio |
 | `brain` | agora | Knowledge cards, event publishing | http |
 | `compute` | aetherforge | Local LLM inference (AetherForge + omlxc) | http |
@@ -160,7 +160,19 @@ uv run --project projects/cockpit cockpit bos middleware-status
 
 ## Common Patterns
 
-### Pattern 1: Search the knowledge graph
+### Pattern 1: Memory OS control plane (default for agents)
+
+```bash
+# Status / recall (preferred over raw kos/gbrain for general memory)
+cockpit memory status --json
+cockpit memory recall "agent workflow governance" --json
+cockpit bos resolve bos://memory/mos/status
+# MCP: resolve_bos_uri("bos://memory/mos/recall", {query, intent?, as_of?})
+```
+
+Skill: `memory-recall` · Docs: `docs/architecture/memory-os.md`
+
+### Pattern 1b: Search the knowledge graph (direct KOS)
 
 ```python
 # Via MCP

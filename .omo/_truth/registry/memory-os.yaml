@@ -8,13 +8,16 @@ adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
 epic_retro: docs/operations/memory-os-epic-retro.md
+phase10_retro: docs/operations/memory-os-phase10-retro.md
 rbac_policy: .omo/_truth/registry/memory-rbac.yaml
 ops_contract: .omo/standards/memory-os-ops.md
 neo4j_ops: docs/operations/memory-os-neo4j-local.md
 env_example: docs/operations/memory-os.env.example
 skill: .agents/skills/memory-recall/SKILL.md
+package_readme: projects/kairon/packages/mos/README.md
 surface_check: bin/gac/check-memory-os-surfaces.py
 last_reviewed: "2026-08-05"
+
 phase10:
   neo4j_as_of: true
   live_kos: "MOS_LIVE_KOS=1 → HTTP KOS_API_URL"
