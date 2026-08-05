@@ -97,7 +97,7 @@ Agent / Skill
 | P2 | as_of bi-temporal | **Phase 10** — Neo4j + temporal `as_of`；CLI `--as-of` |
 | P3 | Graphiti/Mem0 真接或正式 deprecate | backlog |
 
-## 8. 冷启动
+## 8. 冷启动与帮助
 
 ```bash
 git submodule update --init projects/kairon projects/cockpit projects/agora
@@ -105,7 +105,20 @@ cp docs/operations/memory-os.env.example config/memory-os.env
 source bin/memory-os-env.sh
 bash bin/memory-os-neo4j-up.sh
 make memory-os-check
+cockpit memory                 # 用法帮助 + status 摘要
 cockpit memory status --json
+cockpit memory recall --help   # 含 --as-of
+cockpit bos resolve bos://memory/mos/status
 ```
+
+| 文档 | 路径 |
+|------|------|
+| 架构导航 | `docs/architecture/memory-os.md` |
+| 运维契约 | `.omo/standards/memory-os-ops.md` |
+| 本机 Neo4j | `docs/operations/memory-os-neo4j-local.md` |
+| Phase 10 复盘 | `docs/operations/memory-os-phase10-retro.md` |
+| Agent skill | `.agents/skills/memory-recall/SKILL.md` |
+| 包 README | `projects/kairon/packages/mos/README.md` |
+| 机器 SSOT | `.omo/_truth/registry/memory-os.yaml` |
 
 权威入口：ADR-0372 · `memory-os.yaml` · `memory-os-ops.md` · `docs/architecture/memory-os.md`。
